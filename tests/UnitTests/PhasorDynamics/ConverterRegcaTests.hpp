@@ -203,11 +203,10 @@ namespace GridKit
 
         // P0 and IL1 default to the makeData() values; each row breaks
         // exactly one initialize() guard.
-        const std::array<RejectionCase, 5> rejected{{
+        const std::array<RejectionCase, 4> rejected{{
             {"terminal voltage at Vhvmax", kHvrcmVoltageLimit, 0.0, 1.1},
             {"terminal voltage above Vhvmax", kHvrcmVoltageLimit + 0.1, 0.0, 1.1},
             {"terminal voltage just below VA1", kJustBelowVa1, 0.0, 1.1},
-            {"LVPL ceiling below the active current", 1.0, 0.6, 0.2},
             {"zero terminal voltage", 0.0, 0.0, 1.1},
         }};
 
@@ -222,6 +221,24 @@ namespace GridKit
           if (fixture.regca.initialize() == 0)
           {
             std::cout << "Expected rejection: " << test_case.label << "\n";
+            success = false;
+          }
+        }
+
+        // A finite ceiling binds only inside the LVPL ramp: with VL1 raised
+        // above the terminal voltage, an active current beyond the ramp value
+        // is rejected.
+        {
+          auto data                    = makeData();
+          data.parameters[Params::p0]  = 0.6;
+          data.parameters[Params::IL1] = 0.2;
+          data.parameters[Params::VL1] = 1.05;
+
+          Fixture<ScalarT> fixture(data);
+          success *= fixture.prepare();
+          if (fixture.regca.initialize() == 0)
+          {
+            std::cout << "Expected rejection: LVPL ceiling below the active current\n";
             success = false;
           }
         }
@@ -260,11 +277,14 @@ namespace GridKit
         }
 
         // The active-current state may initialize exactly on the LVPL ceiling.
+        // VA1 is lowered so the terminal voltage sits inside the LVPL ramp,
+        // where the release term vanishes.
         {
           auto data                    = makeData();
           data.parameters[Params::IL1] = 0.0;
+          data.parameters[Params::VA1] = 0.5;
 
-          Fixture<ScalarT> fixture(data);
+          Fixture<ScalarT> fixture(data, 0.6);
           success *= fixture.initialize();
           success *= (fixture.evaluate() == 0);
           success *= allResidualsZero(fixture.regca);
@@ -272,6 +292,22 @@ namespace GridKit
           const auto* y  = fixture.regca.y().getData();
           success       *= scalarMatches(y[index(Vars::IP)], 0.0, "IP at the LVPL ceiling");
           success       *= scalarMatches(y[index(Vars::IL)], 0.0, "LVPL ceiling at IP");
+        }
+
+        // Above the upper breakpoint the ceiling releases: an operating point
+        // beyond IL1 initializes at healthy voltage.
+        {
+          auto data                   = makeData();
+          data.parameters[Params::p0] = 1.3;
+
+          Fixture<ScalarT> fixture(data);
+          success *= fixture.initialize();
+          success *= (fixture.evaluate() == 0);
+          success *= allResidualsZero(fixture.regca);
+
+          const auto* y  = fixture.regca.y().getData();
+          success       *= scalarMatches(y[index(Vars::IP)], 1.3, "IP beyond IL1 with the ceiling released");
+          success       *= scalarMatches(y[index(Vars::PBR)], 1.3, "PBR beyond IL1 with the ceiling released");
         }
 
         // With LVPL bypassed a collapsed ceiling does not constrain the
@@ -462,6 +498,27 @@ namespace GridKit
           success       *= scalarMatches(f[index(Vars::IP)],
                                    -1.925,
                                    "falling ceiling drags Ip");
+        }
+
+        // Above the upper breakpoint the ceiling releases: outward motion
+        // beyond IL1 passes at healthy voltage, limited only by rrpwr.
+        {
+          Fixture<ScalarT> fixture(makeDynamicData());
+          fixture.attachIpcmd(1.5);
+          success *= fixture.initialize();
+
+          fixture.ipcmd = 1.5;
+
+          auto* y            = fixture.regca.y().getData();
+          y[index(Vars::IP)] = 1.3;
+          fixture.regca.y().setDataUpdated();
+
+          success *= (fixture.evaluate() == 0);
+
+          const auto* f  = fixture.regca.getResidual().getData();
+          success       *= scalarMatches(f[index(Vars::IP)],
+                                   0.7,
+                                   "released ceiling above the breakpoint");
         }
 
         return success.report(__func__);

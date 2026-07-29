@@ -176,6 +176,17 @@ namespace GridKit
         int setAbsoluteTolerance(RealT rel_tol) override final;
 
         /**
+         * @brief Set the LVPL release slope.
+         *
+         * Slope of the LVPL ceiling above the upper breakpoint in p.u.
+         * current per p.u. voltage. The exact unlimited characteristic is
+         * recovered as the slope approaches infinity.
+         *
+         * @param[in] KL Positive LVPL release slope.
+         */
+        void setLvplGain(RealT KL);
+
+        /**
          * @brief Evaluate the residuals and accumulate the branch current
          *        into the terminal bus.
          *
@@ -358,6 +369,12 @@ namespace GridKit
         RealT VA0_{0};      ///< LVACM lower breakpoint voltage
         RealT VA1_{0};      ///< LVACM upper breakpoint voltage
         RealT Vhvmax_{0};   ///< Terminal-voltage ceiling for HV reactive management
+
+        // LVPL release slope above the upper breakpoint [p.u./p.u.]: renders
+        // the unlimited LVPL region with finite slope; the exact
+        // characteristic is the limit of this slope approaching infinity.
+        // Adjustable at runtime through setLvplGain().
+        RealT KL_{100.0};
 
         IdxT parameter_error_count_{0}; ///< Data errors counted for verify()
 

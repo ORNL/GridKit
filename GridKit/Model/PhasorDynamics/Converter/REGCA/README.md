@@ -90,6 +90,11 @@ every other condition is a configuration error.
 \end{aligned}
 ```
 
+Above the upper breakpoint the LVPL characteristic imposes no limit: the
+release slope $K_L$ (default $100$ [p.u./p.u.], adjustable through
+`setLvplGain`) renders the unlimited region with finite slope, and
+the exact characteristic is the limit $K_L \to \infty$.
+
 ## Model Ports
 
 Name       | Port   | Init    | Description
@@ -202,7 +207,8 @@ The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
            I_q^\mathrm{extra} - (V_\mathrm{hv}^{\max} - V_T)
          \right) \\
   0 &= -I_L
-       + \text{linseg}(V_M; V_{L0}, V_{L1}, I_{L1}) \\
+       + \text{linseg}(V_M; V_{L0}, V_{L1}, I_{L1})
+       + K_L\,\text{ramp}(V_M - V_{L1}) \\
   0 &= -P^\mathrm{br}
        + V_\mathrm{r} I_\mathrm{r} + V_\mathrm{i} I_\mathrm{i} \\
   0 &= -Q^\mathrm{br}
@@ -258,7 +264,8 @@ to zero:
   A_0^\mathrm{LVACM}
     &= \text{linseg}(V_{T,0}; V_{A0}, V_{A1}, 1) \\
   I_{L,0}
-    &= \text{linseg}(V_{T,0}; V_{L0}, V_{L1}, I_{L1}) \\
+    &= \text{linseg}(V_{T,0}; V_{L0}, V_{L1}, I_{L1})
+       + K_L\,\text{ramp}(V_{T,0} - V_{L1}) \\
   I_{p,0}
     &= \dfrac{k_\mathrm{base}P_0}{V_{T,0}A_0^\mathrm{LVACM}} \\
   k_\mathrm{base} I_{p,0}^\mathrm{cmd}

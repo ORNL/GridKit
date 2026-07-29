@@ -107,6 +107,12 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
+      void Regca<scalar_type, index_type>::setLvplGain(RealT KL)
+      {
+        KL_ = KL;
+      }
+
+      template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Params = typename ModelDataT::Parameters;
@@ -299,6 +305,7 @@ namespace GridKit
         check(Rpmax_ > ZERO<RealT>, "Rpmax must be positive");
         check(Rqmin_ < ZERO<RealT> && ZERO<RealT> < Rqmax_, "Rqmin < 0 < Rqmax is required");
         check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
+        check(KL_ > ZERO<RealT>, "LVPL release slope must be positive");
         check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
         check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
               "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
@@ -365,7 +372,8 @@ namespace GridKit
         // active current through the LVACM network-interface gain.
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT ip0   = toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
-        const ScalarT il0   = Math::linseg(vt, VL0_, VL1_, IL1_);
+        const ScalarT il0   = Math::linseg(vt, VL0_, VL1_, IL1_)
+                            + KL_ * Math::ramp(vt - VL1_);
 
         if (sL_ && ip0 > il0)
         {
@@ -490,8 +498,9 @@ namespace GridKit
         // rate is the exact chain rule (inside() is the linseg slope mask
         // since ramp' = sigmoid), and a pinned Ip tracks the moving ceiling.
         const ScalarT vm_rate = (vt - vm) / TM_;
-        const ScalarT il_rate = IL1_ / (VL1_ - VL0_)
-                                * Math::inside(vm, VL0_, VL1_) * vm_rate;
+        const ScalarT il_rate = (IL1_ / (VL1_ - VL0_) * Math::inside(vm, VL0_, VL1_)
+                                 + KL_ * Math::sigmoid(vm - VL1_))
+                                * vm_rate;
 
         const ScalarT lvacm          = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT qnet           = iq - iqextra;
@@ -506,9 +515,10 @@ namespace GridKit
         f[IR]      = -toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
         f[II]      = -toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
         f[IQEXTRA] = -iqextra + Math::ramp(iqextra - voltage_margin);
-        f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_);
-        f[PBR]     = -pbr + vr * ir + vi * ii;
-        f[QBR]     = -qbr + vi * ir - vr * ii;
+        f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_)
+                + KL_ * Math::ramp(vm - VL1_);
+        f[PBR] = -pbr + vr * ir + vi * ii;
+        f[QBR] = -qbr + vi * ir - vr * ii;
 
         return 0;
       }
