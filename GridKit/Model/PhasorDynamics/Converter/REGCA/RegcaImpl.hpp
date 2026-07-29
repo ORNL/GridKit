@@ -486,15 +486,22 @@ namespace GridKit
                                 + use_rqmin_ * (Math::max(fq, Rqmin_) - fq);
         const ScalarT fp_limited = rrpwr(ip, fp, Rpmax_);
 
+        // The LVPL ceiling IL = linseg(VM) moves with the sensed voltage; its
+        // rate is the exact chain rule (inside() is the linseg slope mask
+        // since ramp' = sigmoid), and a pinned Ip tracks the moving ceiling.
+        const ScalarT vm_rate = (vt - vm) / TM_;
+        const ScalarT il_rate = IL1_ / (VL1_ - VL0_)
+                                * Math::inside(vm, VL0_, VL1_) * vm_rate;
+
         const ScalarT lvacm          = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT qnet           = iq - iqextra;
         const ScalarT voltage_margin = Vhvmax_ - vt;
 
-        f[VM] = -vm_dot + (vt - vm) / TM_;
+        f[VM] = -vm_dot + vm_rate;
         f[IQ] = -iq_dot + iq_rate;
         f[IP] = -ip_dot
                 + bypass_lvpl_ * fp_limited
-                + use_lvpl_ * awmax(ip, fp_limited, il);
+                + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
         f[VT]      = -vt * vt + vr * vr + vi * vi;
         f[IR]      = -toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
         f[II]      = -toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;

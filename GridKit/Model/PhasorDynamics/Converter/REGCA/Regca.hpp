@@ -282,15 +282,17 @@ namespace GridKit
         }
 
         /**
-         * @brief Smooth upper-limit anti-windup derivative.
+         * @brief Smooth anti-windup derivative under a moving upper bound.
          *
-         * Passes dynamics below the algebraic upper bound. At or above the
-         * bound, negative restoring motion passes while positive motion that
-         * increases the violation is smoothly blocked.
+         * Below the bound the unconstrained derivative passes. Pinned at or
+         * above the bound, the state tracks min(f, fmax), so a falling bound
+         * drags the state down with it. Equivalent to fixed-bound anti-windup
+         * on the gap x - xmax held below zero.
          *
-         * @param[in] x Limited state.
-         * @param[in] f Unconstrained derivative.
-         * @param[in] limit_max Algebraic upper bound.
+         * @param[in] x State limited from above.
+         * @param[in] f Unconstrained derivative of x.
+         * @param[in] xmax Moving upper bound on x.
+         * @param[in] fmax Derivative of the moving upper bound.
          * @return Anti-windup-limited derivative.
          *
          * @todo Move this one-sided anti-windup helper to CommonMath.
@@ -298,13 +300,15 @@ namespace GridKit
         static __attribute__((always_inline)) inline ScalarT awmax(
             const ScalarT x,
             const ScalarT f,
-            const ScalarT limit_max)
+            const ScalarT xmax,
+            const ScalarT fmax)
         {
-          const ScalarT below = Math::sigmoid(limit_max - x);
+          const ScalarT gap_rate = f - fmax;
+          const ScalarT below    = Math::sigmoid(xmax - x);
 
-          return (below
-                  + (ONE<RealT> - below) * Math::sigmoid(-f))
-                 * f;
+          return fmax
+                 + (below + (ONE<RealT> - below) * Math::sigmoid(-gap_rate))
+                       * gap_rate;
         }
 
         // Nonnegative root of q = ramp(q - margin). The root diverges as the

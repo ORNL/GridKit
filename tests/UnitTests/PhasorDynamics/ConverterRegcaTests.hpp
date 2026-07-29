@@ -324,7 +324,7 @@ namespace GridKit
         const std::array<ExpectedResidual, 10> expected{{
             {Vars::VM, "VM", 0.865},           // -VM' + (VT - VM) / TM
             {Vars::IQ, "IQ", 1.52},            // -IQ' + max(fq, Rqmin)
-            {Vars::IP, "IP", -0.03},           // -IP' + awmax(IP, fp_limited, IL)
+            {Vars::IP, "IP", 0.22},            // -IP' + IL' + awmax(IP - IL, fp_limited - IL', 0)
             {Vars::VT, "VT", -0.035},          // -VT^2 + Vr^2 + Vi^2
             {Vars::IR, "IR", 0.25},            // -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
             {Vars::II, "II", 0.251},           // -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
@@ -437,6 +437,31 @@ namespace GridKit
           success       *= scalarMatches(f[index(Vars::IP)],
                                    test_case.expected_rate,
                                    test_case.label);
+        }
+
+        // The moving-ceiling rule: with VM inside the active LVPL segment and
+        // the sensed voltage falling, a pinned Ip tracks the ceiling rate
+        // downward instead of freezing. IL' = 2.2 * (0.3 - 0.65) / 0.4.
+        {
+          Fixture<ScalarT> fixture(makeDynamicData());
+          fixture.attachIpcmd(0.7);
+          success *= fixture.initialize();
+
+          fixture.ipcmd = 0.7;
+
+          auto* y            = fixture.regca.y().getData();
+          y[index(Vars::IP)] = 0.6;
+          y[index(Vars::IL)] = 0.4;
+          y[index(Vars::VM)] = 0.65;
+          y[index(Vars::VT)] = 0.3;
+          fixture.regca.y().setDataUpdated();
+
+          success *= (fixture.evaluate() == 0);
+
+          const auto* f  = fixture.regca.getResidual().getData();
+          success       *= scalarMatches(f[index(Vars::IP)],
+                                   -1.925,
+                                   "falling ceiling drags Ip");
         }
 
         return success.report(__func__);

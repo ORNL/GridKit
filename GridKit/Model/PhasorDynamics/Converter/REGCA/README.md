@@ -152,8 +152,9 @@ Define the pre-limit current derivatives:
 ```
 
 Figure 1 places LVPL on the active-current integrator ceiling, realized by
-the `awmax` gate in the differential equations. `rrpwr` applies the
-active-current recovery rule according to the sign of $I_p$.
+the `awmax` gate in the differential equations. The ceiling moves with the
+sensed voltage, and a pinned $I_p$ tracks it as a non-windup limit. `rrpwr`
+applies the active-current recovery rule according to the sign of $I_p$.
 
 The limited active-current integrator drive applies the recovery rate rule
 of [Appendix A](#appendix-a-rrpwr):
@@ -179,13 +180,11 @@ The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
   0 &= -\dot I_p +
     \begin{cases}
       f_\mathrm{p}^{\lim} & s_L = 0 \\
-      \text{awmax}(I_p, f_\mathrm{p}^{\lim}; I_L) & s_L = 1
+      \text{awmax}(I_p, f_\mathrm{p}^{\lim}; I_L, \dot I_L) & s_L = 1
     \end{cases}
 \end{aligned}
 ```
 
-The upper-limit anti-windup gate of [Appendix B](#appendix-b-awmax)
-blocks integration of $I_p$ past the LVPL ceiling.
 
 ### Algebraic Equations
 
@@ -348,23 +347,31 @@ outward rate limit for finite $\mu$ while gradually releasing restoring motion.
 
 ## Appendix B: `awmax`
 
-The exact upper-limit anti-windup rule is
+The exact anti-windup rule under a moving upper bound $u$ with rate $\dot u$
+is
 
 ```math
-\text{awmax}(x, f; u) =
+\text{awmax}(x, f; u, \dot u) =
   \begin{cases}
     f & x < u \\
-    f & x \ge u \ \land\ f < 0 \\
-    0 & \text{otherwise}
+    \text{min}(f, \dot u) & x \ge u
   \end{cases}
 ```
+
+Below the bound the unconstrained derivative passes. Pinned at the bound, the
+state tracks $\text{min}(f, \dot u)$, so a falling bound drags the state down
+with it. The rule is fixed-bound anti-windup on the gap $g = x - u$ held below
+zero: pinned, $\dot g = \text{min}(f - \dot u, 0) \le 0$, so the gap cannot
+grow and closes whenever $f < \dot u$.
 
 The model evaluates this rule with the following smooth approximation:
 
 ```math
-\text{awmax}(x, f; u)
-  \approx \left[\sigma(u-x)+\left(1-\sigma(u-x)\right)\sigma(-f)\right] f
+\text{awmax}(x, f; u, \dot u)
+  \approx \dot u
+    + \left[\sigma(u-x)+\left(1-\sigma(u-x)\right)\sigma(\dot u-f)\right]
+      (f - \dot u)
 ```
 
-This is the `antiwindup` of CommonMath restricted to its upper limit, which
-admits an algebraic bound $u$.
+With a stationary bound ($\dot u = 0$) this reduces to the `antiwindup` of
+CommonMath restricted to its upper limit, which admits an algebraic bound $u$.
