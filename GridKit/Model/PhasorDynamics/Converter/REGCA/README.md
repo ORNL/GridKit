@@ -142,22 +142,18 @@ $I_q^\mathrm{cmd}$              | [p.u.] | Unknown | Reactive-current command in
 
 ## Model Equations
 
-Define the LVPL-limited active-current target and the pre-limit current
-derivatives:
+Define the pre-limit current derivatives:
 
 ```math
 \begin{aligned}
-  I_p^\mathrm{tgt} &= s_L^\mathrm{off} k_\mathrm{base} I_p^\mathrm{cmd}
-                    + s_L\,\text{min}(k_\mathrm{base} I_p^\mathrm{cmd}, I_L) \\
   f_\mathrm{q} &= \dfrac{1}{T_\mathrm{g}} (k_\mathrm{base} I_q^\mathrm{cmd} - I_q) \\
-  f_\mathrm{p} &= \dfrac{1}{T_\mathrm{g}} (I_p^\mathrm{tgt} - I_p)
+  f_\mathrm{p} &= \dfrac{1}{T_\mathrm{g}} (k_\mathrm{base} I_p^\mathrm{cmd} - I_p)
 \end{aligned}
 ```
 
-Figure 1 places LVPL on the active-current integrator ceiling. GridKit's smooth
-LVPL realization limits the target of the $T_\mathrm{g}$ state, so a
-falling ceiling drives $I_p$ down. `rrpwr` then applies the active-current
-recovery rule according to the sign of $I_p$.
+Figure 1 places LVPL on the active-current integrator ceiling, realized by
+the `awmax` gate in the differential equations. `rrpwr` applies the
+active-current recovery rule according to the sign of $I_p$.
 
 The limited active-current integrator drive applies the recovery rate rule
 of [Appendix A](#appendix-a-rrpwr):
@@ -246,10 +242,9 @@ excludes initialization below the nominal upper LVACM breakpoint. The strict
 upper bound is required because the smooth HVRCM constraint has no finite root
 at or above the voltage limit.
 
-With LVPL enabled, REGCA additionally requires $I_{p,0} < I_{L,0}$. The strict
-inequality is required because the smooth LVPL target has no finite inverse at
-the ceiling. Initialization rejects an operating point that violates either
-requirement.
+With LVPL enabled, REGCA additionally requires $I_{p,0} \le I_{L,0}$.
+Initialization rejects an operating point above the active-current integrator
+ceiling.
 
 Subscript $0$ denotes initial values; all internal derivatives are initialized
 to zero:
@@ -266,16 +261,8 @@ to zero:
     &= \text{linseg}(V_{T,0}; V_{L0}, V_{L1}, I_{L1}) \\
   I_{p,0}
     &= \dfrac{k_\mathrm{base}P_0}{V_{T,0}A_0^\mathrm{LVACM}} \\
-  \delta_{p,0}
-    &= 0, \qquad s_L=0 \\
-  \delta_{p,0}
-    &\leftarrow \text{nonnegative solution of }
-       \delta_{p,0}
-       = \text{ramp}\!\left(
-           \delta_{p,0}-(I_{L,0}-I_{p,0})
-         \right), \qquad s_L=1 \\
   k_\mathrm{base} I_{p,0}^\mathrm{cmd}
-    &= I_{p,0}+\delta_{p,0} \\
+    &= I_{p,0} \\
   I_{q,0}^\mathrm{extra}
     &\leftarrow \text{nonnegative solution of }
        0 = -I_{q,0}^\mathrm{extra}

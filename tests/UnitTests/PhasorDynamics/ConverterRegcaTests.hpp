@@ -203,11 +203,10 @@ namespace GridKit
 
         // P0 and IL1 default to the makeData() values; each row breaks
         // exactly one initialize() guard.
-        const std::array<RejectionCase, 6> rejected{{
+        const std::array<RejectionCase, 5> rejected{{
             {"terminal voltage at Vhvmax", kHvrcmVoltageLimit, 0.0, 1.1},
             {"terminal voltage above Vhvmax", kHvrcmVoltageLimit + 0.1, 0.0, 1.1},
             {"terminal voltage just below VA1", kJustBelowVa1, 0.0, 1.1},
-            {"LVPL ceiling at the active current", 1.0, 0.6, 0.6},
             {"LVPL ceiling below the active current", 1.0, 0.6, 0.2},
             {"zero terminal voltage", 0.0, 0.0, 1.1},
         }};
@@ -244,8 +243,7 @@ namespace GridKit
           success       *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR at the LVACM upper breakpoint");
         }
 
-        // A ceiling just above the requested current exercises the inverse
-        // smooth minimum near its divergence.
+        // A ceiling just above the requested current is admissible.
         {
           auto data                    = makeData();
           data.parameters[Params::p0]  = 0.6;
@@ -259,6 +257,21 @@ namespace GridKit
           const auto* y  = fixture.regca.y().getData();
           success       *= scalarMatches(y[index(Vars::IP)], 0.6, "IP below the LVPL ceiling");
           success       *= scalarMatches(y[index(Vars::PBR)], 0.6, "PBR below the LVPL ceiling");
+        }
+
+        // The active-current state may initialize exactly on the LVPL ceiling.
+        {
+          auto data                    = makeData();
+          data.parameters[Params::IL1] = 0.0;
+
+          Fixture<ScalarT> fixture(data);
+          success *= fixture.initialize();
+          success *= (fixture.evaluate() == 0);
+          success *= allResidualsZero(fixture.regca);
+
+          const auto* y  = fixture.regca.y().getData();
+          success       *= scalarMatches(y[index(Vars::IP)], 0.0, "IP at the LVPL ceiling");
+          success       *= scalarMatches(y[index(Vars::IL)], 0.0, "LVPL ceiling at IP");
         }
 
         // With LVPL bypassed a collapsed ceiling does not constrain the
@@ -311,7 +324,7 @@ namespace GridKit
         const std::array<ExpectedResidual, 10> expected{{
             {Vars::VM, "VM", 0.865},           // -VM' + (VT - VM) / TM
             {Vars::IQ, "IQ", 1.52},            // -IQ' + max(fq, Rqmin)
-            {Vars::IP, "IP", -3.28},           // -IP' + fp_limited
+            {Vars::IP, "IP", -0.03},           // -IP' + awmax(IP, fp_limited, IL)
             {Vars::VT, "VT", -0.035},          // -VT^2 + Vr^2 + Vi^2
             {Vars::IR, "IR", 0.25},            // -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
             {Vars::II, "II", 0.251},           // -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
@@ -334,8 +347,8 @@ namespace GridKit
       }
 
       /// Active-current control: rrpwr limits motion that increases |Ip|,
-      /// smoothly releases restoring motion, and the LVPL ceiling governs
-      /// the current command only when enabled.
+      /// smoothly releases restoring motion, and LVPL bounds the integrator
+      /// only when enabled.
       TestOutcome activeCurrentControl()
       {
         TestStatus success = true;
@@ -384,36 +397,46 @@ namespace GridKit
           }
         }
 
-        // With LVPL enabled a ceiling below the present IP drives the
-        // active current down; with LVPL bypassed the command alone governs.
-        for (const bool lvpl_enabled : {true, false})
+        struct LvplCase
+        {
+          const char* label;
+          bool        enabled;
+          RealT       command;
+          RealT       expected_rate;
+        };
+
+        // Above the LVPL ceiling, outward motion is blocked and restoring
+        // motion passes. Bypassing LVPL leaves the same outward drive intact.
+        const std::array<LvplCase, 3> cases{{
+            {"outward rate blocked by LVPL", true, 0.7, 0.0},
+            {"restoring rate passes LVPL", true, 0.5, -0.5},
+            {"outward rate with LVPL bypassed", false, 0.7, 0.5},
+        }};
+
+        for (const auto& test_case : cases)
         {
           auto data                   = makeDynamicData();
-          data.parameters[Params::sL] = lvpl_enabled;
+          data.parameters[Params::sL] = test_case.enabled;
 
           Fixture<ScalarT> fixture(data);
-          fixture.attachIpcmd(0.7);
+          fixture.attachIpcmd(test_case.command);
           success *= fixture.initialize();
 
-          // initialize() published the steady-state command; restore the
-          // driven value, then collapse the ceiling below IP.
-          fixture.ipcmd = 0.7;
+          // initialize() publishes the steady-state command; restore the
+          // driven value before evaluating the limiter behavior.
+          fixture.ipcmd = test_case.command;
 
           auto* y            = fixture.regca.y().getData();
           y[index(Vars::IP)] = 0.6;
-          y[index(Vars::IL)] = 0.5;
+          y[index(Vars::IL)] = 0.4;
           fixture.regca.y().setDataUpdated();
 
           success *= (fixture.evaluate() == 0);
 
-          // fp = (min(0.7, 0.5) - 0.6) / Tg enabled and (0.7 - 0.6) / Tg
-          // bypassed, with Tg = 0.2.
-          const RealT expected = lvpl_enabled ? -0.5 : 0.5;
-          const char* label    = lvpl_enabled ? "IP rate with LVPL enabled"
-                                              : "IP rate with LVPL bypassed";
-
           const auto* f  = fixture.regca.getResidual().getData();
-          success       *= scalarMatches(f[index(Vars::IP)], expected, label);
+          success       *= scalarMatches(f[index(Vars::IP)],
+                                   test_case.expected_rate,
+                                   test_case.label);
         }
 
         return success.report(__func__);
@@ -909,8 +932,8 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// The answer-key state moved to the HVRCM transition point, where
-      /// the Jacobian has the richest structure.
+      /// Move the answer-key state to the HVRCM and active-current limiter
+      /// transition points, where the Jacobian has the richest structure.
       template <typename T>
       void setJacobianState(
           PhasorDynamics::Converter::Regca<T, IdxT>& regca,
@@ -919,6 +942,7 @@ namespace GridKit
         setAnswerKeyState(regca);
         auto* y                 = regca.y().getData();
         y[index(Vars::IP)]      = current;
+        y[index(Vars::IL)]      = 0.0;
         y[index(Vars::VT)]      = kDynamicHvrcmVoltageLimit - hvrcmTransition();
         y[index(Vars::IQEXTRA)] = hvrcmTransition();
         regca.y().setDataUpdated();

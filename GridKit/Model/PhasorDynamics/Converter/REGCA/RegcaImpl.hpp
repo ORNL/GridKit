@@ -366,19 +366,12 @@ namespace GridKit
         const ScalarT ip0   = toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
         const ScalarT il0   = Math::linseg(vt, VL0_, VL1_, IL1_);
 
-        // The smooth LVPL target has a finite inverse only below the ceiling.
-        ScalarT ipcmd0 = ip0;
-        if (sL_)
+        if (sL_ && ip0 > il0)
         {
-          const ScalarT current_margin = il0 - ip0;
-          if (current_margin <= ZERO<RealT>)
-          {
-            Log::error() << "Regca: initial active current must be below the LVPL "
-                         << "ceiling at initialization\n";
-            return 1;
-          }
-          ipcmd0 += smoothConstraintCorrection(current_margin);
+          Log::error() << "Regca: initial active current exceeds the LVPL ceiling\n";
+          return 1;
         }
+        const ScalarT ipcmd0 = ip0;
 
         // Solve the smooth HVRCM constraint and preserve the requested Q0. The
         // Vhvmax check above keeps the voltage margin strictly positive, so the
@@ -481,15 +474,10 @@ namespace GridKit
         const ScalarT ipcmd = toComponentBase(ws[IPCMD]);
         const ScalarT iqcmd = toComponentBase(ws[IQCMD]);
 
-        // GridKit realizes the moving LVPL ceiling as a smooth current target.
-        // rrpwr then applies the sign-dependent recovery limit to its rate.
-        const ScalarT ip_target = bypass_lvpl_ * ipcmd
-                                  + use_lvpl_ * Math::min(ipcmd, il);
-
         // Form the unconstrained current derivatives, then apply the REGCA
         // recovery rate limits in p.u./s.
         const ScalarT fq = (iqcmd - iq) / Tg_;
-        const ScalarT fp = (ip_target - ip) / Tg_;
+        const ScalarT fp = (ipcmd - ip) / Tg_;
 
         const ScalarT iq_limited = iq_use_upper_ * Math::min(fq, Rqmax_)
                                    + iq_use_lower_ * Math::max(fq, Rqmin_);

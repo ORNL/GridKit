@@ -157,7 +157,7 @@ namespace GridKit
          * @pre allocate() has completed, verify() reports no errors, and
          *      the terminal bus has been initialized.
          * @pre \f$V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}\f$, and with
-         *      LVPL enabled \f$I_{p,0} < I_{L,0}\f$.
+         *      LVPL enabled \f$I_{p,0} \le I_{L,0}\f$.
          * @post All internal derivatives are zero, and unattached command
          *       ports latch the resolved setpoints as constant commands.
          * @return 0 on success, nonzero when the operating point is
