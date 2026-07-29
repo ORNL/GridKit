@@ -5,6 +5,7 @@
 :titlesonly:
 :hidden:
 
+EMT <EMT/README>
 PhasorDynamics <PhasorDynamics/README>
 PowerElectronics <PowerElectronics/README>
 PowerFlow <PowerFlow/README>
