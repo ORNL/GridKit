@@ -1,6 +1,8 @@
 # GridKit™ Usage Examples
 
-GridKit™ usage examples are organized in following way:
+GridKit™ usage examples are organized as follows:
+
+- [EMT](EMT/README.md) contains architecture skeletons for future EMT examples.
 - `Enzyme` directory contains Enzyme automatic differentiation examples.
 - `Experimental` directory contains examples of dynamic-constrained
 optimization.
@@ -13,5 +15,5 @@ GridKit™.
 - `PowerFlow` contains examples of power flow steady-state simulations with
 GridKit™.
 
-Examples are also used as integration tests for GridKit™ and are run on CI
-pipeline.
+Executable examples are also used as integration tests for GridKit™ and are
+run on CI pipeline.
