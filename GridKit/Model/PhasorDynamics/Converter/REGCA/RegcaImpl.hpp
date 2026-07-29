@@ -68,14 +68,15 @@ namespace GridKit
           bypass_lvpl_ = ZERO<RealT>;
         }
 
-        // REGCA selects the reactive-current recovery limiter from the sign of
-        // the initial reactive-power injection, before HVRCM compensation.
-        iq_use_upper_ = ZERO<RealT>;
-        iq_use_lower_ = ONE<RealT>;
+        use_rqmax_ = ZERO<RealT>;
+        use_rqmin_ = ZERO<RealT>;
         if (q0_ > ZERO<RealT>)
         {
-          iq_use_upper_ = ONE<RealT>;
-          iq_use_lower_ = ZERO<RealT>;
+          use_rqmax_ = ONE<RealT>;
+        }
+        else if (q0_ < ZERO<RealT>)
+        {
+          use_rqmin_ = ONE<RealT>;
         }
 
         va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
@@ -479,8 +480,10 @@ namespace GridKit
         const ScalarT fq = (iqcmd - iq) / Tg_;
         const ScalarT fp = (ipcmd - ip) / Tg_;
 
-        const ScalarT iq_limited = iq_use_upper_ * Math::min(fq, Rqmax_)
-                                   + iq_use_lower_ * Math::max(fq, Rqmin_);
+        // At Q0 = 0 both corrections vanish, leaving fq unrestricted.
+        const ScalarT iq_rate = fq
+                                + use_rqmax_ * (Math::min(fq, Rqmax_) - fq)
+                                + use_rqmin_ * (Math::max(fq, Rqmin_) - fq);
         const ScalarT fp_limited = rrpwr(ip, fp, Rpmax_);
 
         const ScalarT lvacm          = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
@@ -488,7 +491,7 @@ namespace GridKit
         const ScalarT voltage_margin = Vhvmax_ - vt;
 
         f[VM] = -vm_dot + (vt - vm) / TM_;
-        f[IQ] = -iq_dot + iq_limited;
+        f[IQ] = -iq_dot + iq_rate;
         f[IP] = -ip_dot
                 + bypass_lvpl_ * fp_limited
                 + use_lvpl_ * awmax(ip, fp_limited, il);

@@ -363,8 +363,8 @@ namespace GridKit
         RealT va_converter_base_{0}; ///< Component power base in VA
         RealT use_lvpl_{0};          ///< LVPL mask, complements bypass_lvpl_
         RealT bypass_lvpl_{1};       ///< LVPL bypass mask, complements use_lvpl_
-        RealT iq_use_upper_{0};      ///< Rqmax-branch mask, complements iq_use_lower_
-        RealT iq_use_lower_{1};      ///< Rqmin-branch mask, complements iq_use_upper_
+        RealT use_rqmax_{0};         ///< Positive-Q recovery-limit mask
+        RealT use_rqmin_{0};         ///< Negative-Q recovery-limit mask
 
         // Command setpoints latched by initialize(), used when the matching
         // signal port is unattached

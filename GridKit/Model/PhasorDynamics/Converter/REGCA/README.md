@@ -173,7 +173,8 @@ The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
   0 &= -\dot I_q +
     \begin{cases}
       \text{min}(f_\mathrm{q}, R_q^{\max}) & Q_0 > 0 \\
-      \text{max}(f_\mathrm{q}, R_q^{\min}) & Q_0 \le 0
+      f_\mathrm{q}                         & Q_0 = 0 \\
+      \text{max}(f_\mathrm{q}, R_q^{\min}) & Q_0 < 0
     \end{cases} \\
   0 &= -\dot I_p +
     \begin{cases}

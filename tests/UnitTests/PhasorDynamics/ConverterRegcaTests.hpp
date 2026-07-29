@@ -444,7 +444,8 @@ namespace GridKit
 
       /// The recovery-rate limiter branch is chosen by the sign of Q0 at
       /// initialization, not by the live command: positive Q0 caps rising
-      /// rates at Rqmax, non-positive Q0 floors falling rates at Rqmin.
+      /// rates at Rqmax, negative Q0 floors falling rates at Rqmin, and zero
+      /// Q0 leaves both directions unrestricted.
       TestOutcome reactiveCurrentControl()
       {
         TestStatus success = true;
@@ -457,12 +458,12 @@ namespace GridKit
           RealT       expected_rate;
         };
 
-        // The unlimited rate is (command - Q0) / Tg with Tg = 0.2. Q0 = 0
-        // selects the Rqmin branch, so its rising rate is unrestricted.
-        const std::array<RecoveryCase, 3> cases{{
+        // The unlimited rate is (command - Q0) / Tg with Tg = 0.2.
+        const std::array<RecoveryCase, 4> cases{{
             {"upper recovery limit binds", 0.2, 0.4, 0.5},
             {"lower recovery limit binds", -0.2, -0.4, -0.6},
             {"zero Q0 leaves rising rates unrestricted", 0.0, 0.4, 2.0},
+            {"zero Q0 leaves falling rates unrestricted", 0.0, -0.4, -2.0},
         }};
 
         for (const auto& test_case : cases)
