@@ -79,14 +79,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    BusInfinite<scalar_type, index_type>::~BusInfinite()
-    {
-      if (coo_jac_ != nullptr)
-      {
-        delete coo_jac_;
-        coo_jac_ = nullptr;
-      }
-    }
+    BusInfinite<scalar_type, index_type>::~BusInfinite() = default;
 
     /**
      * @brief Set the bus ID

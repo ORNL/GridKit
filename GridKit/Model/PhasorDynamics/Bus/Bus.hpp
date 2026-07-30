@@ -28,9 +28,11 @@ namespace GridKit
       using BusBase<scalar_type, index_type>::abs_tol_;
       using BusBase<scalar_type, index_type>::variable_indices_;
       using BusBase<scalar_type, index_type>::residual_indices_;
-      using BusBase<scalar_type, index_type>::coo_jac_;
       using BusBase<scalar_type, index_type>::monitor_;
       using BusBase<scalar_type, index_type>::allocated_;
+      using BusBase<scalar_type, index_type>::J_rows_buffer_;
+      using BusBase<scalar_type, index_type>::J_cols_buffer_;
+      using BusBase<scalar_type, index_type>::J_vals_buffer_;
 
     public:
       using ScalarT    = scalar_type;
@@ -98,35 +100,6 @@ namespace GridKit
       {
         return f_.getData()[1];
       }
-
-    protected:
-      int constructCoo()
-      {
-        if (coo_jac_ == nullptr)
-        {
-          IdxT num_rows = 0;
-          IdxT num_cols = 0;
-          for (IdxT i = 0; i < nnz_; ++i)
-          {
-            if (J_rows_buffer_[i] + 1 > num_rows)
-            {
-              num_rows = J_rows_buffer_[i] + 1;
-            }
-            if (J_cols_buffer_[i] + 1 > num_cols)
-            {
-              num_cols = J_cols_buffer_[i] + 1;
-            }
-          }
-          coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
-          coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST);
-        }
-
-        return 0;
-      }
-
-      IdxT*  J_rows_buffer_{nullptr};
-      IdxT*  J_cols_buffer_{nullptr};
-      RealT* J_vals_buffer_{nullptr};
 
     private:
       ScalarT Vr0_{0.0};
