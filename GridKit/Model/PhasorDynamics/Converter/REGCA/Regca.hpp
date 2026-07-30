@@ -198,7 +198,7 @@ namespace GridKit
                        * gap_rate;
         }
 
-        ScalarT smoothConstraintCorrection(ScalarT margin) const;
+        ScalarT initialHvrcmCurrent(ScalarT dv) const;
 
         ScalarT& Vr();
         ScalarT& Vi();

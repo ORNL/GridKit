@@ -285,6 +285,12 @@ to zero:
 \end{aligned}
 ```
 
+For the closed-form HVRCM solve, let
+$x = \mu(V_\mathrm{hv}^{\max} - V_{T,0})$. The implementation switches at
+$x = \log 2$ between two algebraically identical forms of
+$\log(1 - \exp(-x))$. Their values and derivatives agree at the switch; the
+split only avoids cancellation for small $x$.
+
 The remaining algebraic quantities are then initialized as follows:
 
 ```math
@@ -330,6 +336,9 @@ Output | Units  | Description                 | Note
 - `reactiveCurrentControl()` checks the positive, negative, and unrestricted reactive-current recovery-rate branches.
 - `highVoltageManagement()` checks HVRCM initialization, residual values through its transition, and its local derivative.
 - `jacobian()` compares the dependency-tracking and Enzyme Jacobians for enabled and bypassed LVPL configurations when Enzyme support is enabled.
+
+Because CommonMath limiters are smooth approximations, tests use smooth-equation
+answer keys and reserve $100 \epsilon$ for roundoff checks.
 
 ## Appendix A: `rrpwr`
 

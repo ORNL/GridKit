@@ -164,36 +164,33 @@ namespace GridKit
       }
 
       /**
-       * @brief Invert the smooth one-sided constraint for a positive margin.
+       * @brief Calculate the initial HVRCM extra current.
        *
-       * Solves \f$q = \mathrm{ramp}(q - m)\f$ for the nonnegative correction
-       * \f$q\f$. The correction diverges as the positive margin approaches zero.
+       * Solves the smooth HVRCM residual for \f$I_q^\mathrm{extra}\f$ given the
+       * strictly positive voltage margin \f$V_\mathrm{hv}^{\max} - V_T\f$.
        *
-       * @param[in] margin Strictly positive constraint margin.
-       * @return Nonnegative constraint correction.
+       * @param[in] dv Strictly positive voltage margin.
+       * @return Initial HVRCM extra current.
        */
       template <typename scalar_type, typename index_type>
-      scalar_type Regca<scalar_type, index_type>::smoothConstraintCorrection(
-          scalar_type margin) const
+      scalar_type Regca<scalar_type, index_type>::initialHvrcmCurrent(
+          scalar_type dv) const
       {
         static constexpr RealT log_two = std::numbers::ln2_v<RealT>;
 
-        const ScalarT scaled_margin = Math::MU<RealT> * margin;
+        const ScalarT x = Math::MU<RealT> * dv;
 
-        // q = ramp(q - m) gives q = -log(1 - exp(-mu * m)) / mu.
-        // Evaluate log(1 - exp(-x)) without cancellation.
-        ScalarT log_one_minus_exp;
-        if (scaled_margin < log_two)
+        // Both branches evaluate log(1 - exp(-x)) and are algebraically
+        // identical, so their values and derivatives agree at x = log(2).
+        // The split only avoids cancellation for small x.
+        if (x < log_two)
         {
-          log_one_minus_exp = log_two - HALF<RealT> * scaled_margin
-                              + std::log(std::sinh(HALF<RealT> * scaled_margin));
-        }
-        else
-        {
-          log_one_minus_exp = std::log1p(-std::exp(-scaled_margin));
+          return -(log_two - HALF<RealT> * x
+                   + std::log(std::sinh(HALF<RealT> * x)))
+                 / Math::MU<RealT>;
         }
 
-        return -log_one_minus_exp / Math::MU<RealT>;
+        return -std::log1p(-std::exp(-x)) / Math::MU<RealT>;
       }
 
       /**
@@ -539,7 +536,8 @@ namespace GridKit
         // Solve the smooth HVRCM constraint and preserve the requested Q0. The
         // Vhvmax check above keeps the voltage margin strictly positive, so the
         // solve is always finite.
-        const ScalarT iqextra0 = smoothConstraintCorrection(Vhvmax_ - vt);
+        const ScalarT dv       = Vhvmax_ - vt;
+        const ScalarT iqextra0 = initialHvrcmCurrent(dv);
         const ScalarT qnet0    = toComponentBase(static_cast<ScalarT>(q0_) / vt);
         const ScalarT iqcmd0   = qnet0 + iqextra0;
         const ScalarT ir0      = (vi * qnet0 + vr * ip0 * lvacm) / vt;
