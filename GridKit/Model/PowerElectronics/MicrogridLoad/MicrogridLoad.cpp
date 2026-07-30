@@ -19,8 +19,8 @@ namespace GridKit
    * Section D
    */
 
-  template <class ScalarT, typename IdxT>
-  MicrogridLoad<ScalarT, IdxT>::MicrogridLoad(IdxT id, RealT R, RealT L, NodeT* node_ref, NodeT* node_bus)
+  template <typename scalar_type, typename index_type>
+  MicrogridLoad<scalar_type, index_type>::MicrogridLoad(IdxT id, RealT R, RealT L, NodeT* node_ref, NodeT* node_bus)
     : R_(R),
       L_(L),
       node_ref_(node_ref),
@@ -38,16 +38,16 @@ namespace GridKit
     nnz_            = 10;
   }
 
-  template <class ScalarT, typename IdxT>
-  MicrogridLoad<ScalarT, IdxT>::~MicrogridLoad()
+  template <typename scalar_type, typename index_type>
+  MicrogridLoad<scalar_type, index_type>::~MicrogridLoad()
   {
   }
 
   /**
    * Initialization of the grid model
    */
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::initialize()
   {
     return 0;
   }
@@ -55,8 +55,8 @@ namespace GridKit
   /*
    * \brief Identify differential variables
    */
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::tagDifferentiable()
   {
     return 0;
   }
@@ -66,15 +66,13 @@ namespace GridKit
    *
    * @param rel_tol The relative tolerance which can be used to pick the
    *        absolute tolerance.
-   * @tparam ScalarT Scalar data type
-   * @tparam IdxT Index data type
    * @return int 0 if successful, non-zero otherwise.
    *
    * This represents a "noise" level close to zero for which pure relative
    * error cannot be used.
    */
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
   {
     abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
     return 0;
@@ -83,8 +81,8 @@ namespace GridKit
   /**
    * @brief Eval Micro Load
    */
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::evaluateInternalResidual()
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::evaluateInternalResidual()
   {
     const auto* y = y_.getData();
 
@@ -94,8 +92,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::evaluateExternalResidual()
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::evaluateExternalResidual()
   {
     auto* f = f_.getData();
 
@@ -116,12 +114,10 @@ namespace GridKit
   /**
    * @brief Generate Jacobian for Micro Load
    *
-   * @tparam ScalarT
-   * @tparam IdxT
    * @return int
    */
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::evaluateJacobian()
   {
     this->zeroJacMatrix();
 
@@ -147,8 +143,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::allocate()
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::allocate()
   {
     CircuitComponent<ScalarT, IdxT>::allocate();
 
@@ -159,26 +155,26 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::evaluateIntegrand()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::initializeAdjoint()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::evaluateAdjointResidual()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int MicrogridLoad<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     return 0;
   }

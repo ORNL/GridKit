@@ -26,8 +26,8 @@ namespace AnalysisManager
   namespace Sundials
   {
 
-    template <class ScalarT, typename IdxT>
-    Kinsol<ScalarT, IdxT>::Kinsol(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
+    template <typename scalar_type, typename index_type>
+    Kinsol<scalar_type, index_type>::Kinsol(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
       : SteadyStateSolver<ScalarT, IdxT>(model)
     {
       int retval = 0;
@@ -39,16 +39,16 @@ namespace AnalysisManager
       solver_ = KINCreate(context_);
     }
 
-    template <class ScalarT, typename IdxT>
-    Kinsol<ScalarT, IdxT>::~Kinsol()
+    template <typename scalar_type, typename index_type>
+    Kinsol<scalar_type, index_type>::~Kinsol()
     {
       deleteSimulation();
       SUNContext_Free(&context_);
       solver_ = nullptr;
     }
 
-    template <class ScalarT, typename IdxT>
-    int Kinsol<ScalarT, IdxT>::configureSimulation()
+    template <typename scalar_type, typename index_type>
+    int Kinsol<scalar_type, index_type>::configureSimulation()
     {
       int retval = 0;
 
@@ -76,8 +76,8 @@ namespace AnalysisManager
       return this->configureLinearSolver();
     }
 
-    template <class ScalarT, typename IdxT>
-    int Kinsol<ScalarT, IdxT>::configureLinearSolver()
+    template <typename scalar_type, typename index_type>
+    int Kinsol<scalar_type, index_type>::configureLinearSolver()
     {
       int retval = 0;
 
@@ -96,8 +96,8 @@ namespace AnalysisManager
       return retval;
     }
 
-    template <class ScalarT, typename IdxT>
-    int Kinsol<ScalarT, IdxT>::getDefaultInitialCondition()
+    template <typename scalar_type, typename index_type>
+    int Kinsol<scalar_type, index_type>::getDefaultInitialCondition()
     {
       model_->initialize();
 
@@ -106,8 +106,8 @@ namespace AnalysisManager
       return 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    int Kinsol<ScalarT, IdxT>::runSimulation()
+    template <typename scalar_type, typename index_type>
+    int Kinsol<scalar_type, index_type>::runSimulation()
     {
       int retval = 0;
       N_VConst(1.0, scale_);
@@ -118,8 +118,8 @@ namespace AnalysisManager
       return retval;
     }
 
-    template <class ScalarT, typename IdxT>
-    int Kinsol<ScalarT, IdxT>::deleteSimulation()
+    template <typename scalar_type, typename index_type>
+    int Kinsol<scalar_type, index_type>::deleteSimulation()
     {
       KINFree(&solver_);
       N_VDestroy(this->yy_);
@@ -130,8 +130,8 @@ namespace AnalysisManager
       return 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    int Kinsol<ScalarT, IdxT>::Residual(N_Vector yy, N_Vector rr, void* user_data)
+    template <typename scalar_type, typename index_type>
+    int Kinsol<scalar_type, index_type>::Residual(N_Vector yy, N_Vector rr, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model =
           static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
@@ -144,24 +144,24 @@ namespace AnalysisManager
       return 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::copyVec(const N_Vector x, VectorT& y)
+    template <typename scalar_type, typename index_type>
+    void Kinsol<scalar_type, index_type>::copyVec(const N_Vector x, VectorT& y)
     {
       const ScalarT* xdata = N_VGetArrayPointer(x);
       std::copy_n(xdata, static_cast<size_t>(y.getSize()), y.getData());
       y.setDataUpdated();
     }
 
-    template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::copyVec(const VectorT& x, N_Vector y)
+    template <typename scalar_type, typename index_type>
+    void Kinsol<scalar_type, index_type>::copyVec(const VectorT& x, N_Vector y)
     {
       const auto* xdata = x.getData();
       auto*       ydata = N_VGetArrayPointer(y);
       std::copy_n(xdata, static_cast<size_t>(x.getSize()), ydata);
     }
 
-    template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::printOutput() const
+    template <typename scalar_type, typename index_type>
+    void Kinsol<scalar_type, index_type>::printOutput() const
     {
       sunrealtype* yval = N_VGetArrayPointer(yy_);
 
@@ -173,8 +173,8 @@ namespace AnalysisManager
       std::cout << "\n";
     }
 
-    template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::printSpecial(sunrealtype t, N_Vector y) const
+    template <typename scalar_type, typename index_type>
+    void Kinsol<scalar_type, index_type>::printSpecial(sunrealtype t, N_Vector y) const
     {
       sunrealtype* yval = N_VGetArrayPointer_Serial(y);
       IdxT         N    = static_cast<IdxT>(N_VGetLength_Serial(y));
@@ -187,15 +187,15 @@ namespace AnalysisManager
       std::cout << "},\n";
     }
 
-    template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::printFinalStats() const
+    template <typename scalar_type, typename index_type>
+    void Kinsol<scalar_type, index_type>::printFinalStats() const
     {
       int retval = KINPrintAllStats(solver_, stdout, SUN_OUTPUTFORMAT_TABLE);
       checkOutput(retval, "KINPrintAllStats");
     }
 
-    template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::checkAllocation(void* v, const char* functionName)
+    template <typename scalar_type, typename index_type>
+    void Kinsol<scalar_type, index_type>::checkAllocation(void* v, const char* functionName)
     {
       if (v == NULL)
       {
@@ -204,8 +204,8 @@ namespace AnalysisManager
       }
     }
 
-    template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::checkOutput(int retval, const char* functionName)
+    template <typename scalar_type, typename index_type>
+    void Kinsol<scalar_type, index_type>::checkOutput(int retval, const char* functionName)
     {
       if (retval < 0)
       {
@@ -214,8 +214,8 @@ namespace AnalysisManager
       }
     }
 
-    template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::setTolerance(ScalarT tol)
+    template <typename scalar_type, typename index_type>
+    void Kinsol<scalar_type, index_type>::setTolerance(ScalarT tol)
     {
       int retval = KINSetFuncNormTol(solver_, tol);
       checkOutput(retval, "KINSetFuncNormTol");

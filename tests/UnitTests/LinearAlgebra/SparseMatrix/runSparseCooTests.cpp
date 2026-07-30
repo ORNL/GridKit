@@ -11,9 +11,12 @@ using namespace Testing;
  * @param[in] memspace - memory space for the tests
  * @param[out] result  - test results
  */
-template <class ScalarT, typename IdxT>
+template <typename scalar_type, typename index_type>
 void runTests(const std::string& backend, memory::MemorySpace memspace, TestingResults& result)
 {
+  using ScalarT = scalar_type;
+  using IdxT    = index_type;
+
   std::cout << "Running tests on " << backend << ":\n";
 
   SparseCooTests<ScalarT, IdxT> test(memspace);

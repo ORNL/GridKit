@@ -10,10 +10,13 @@ namespace GridKit
 {
   namespace Testing
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class NodeTests
     {
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+
       NodeTests()  = default;
       ~NodeTests() = default;
 

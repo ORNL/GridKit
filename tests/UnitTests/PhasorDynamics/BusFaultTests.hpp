@@ -17,13 +17,14 @@ namespace GridKit
   namespace Testing
   {
 
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class BusFaultTests
     {
-    private:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+
       BusFaultTests()  = default;
       ~BusFaultTests() = default;
 

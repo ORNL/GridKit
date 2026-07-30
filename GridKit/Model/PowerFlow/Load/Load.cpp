@@ -16,8 +16,8 @@ namespace GridKit
    * Calls default ModelEvaluatorImpl constructor.
    */
 
-  template <class ScalarT, typename IdxT>
-  Load<ScalarT, IdxT>::Load(bus_type* bus, ScalarT P, ScalarT Q)
+  template <typename scalar_type, typename index_type>
+  Load<scalar_type, index_type>::Load(BusT* bus, ScalarT P, ScalarT Q)
     : P_(P),
       Q_(Q),
       busID_(0),
@@ -27,8 +27,8 @@ namespace GridKit
     size_ = 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  Load<ScalarT, IdxT>::Load(bus_type* bus, LoadData& data)
+  template <typename scalar_type, typename index_type>
+  Load<scalar_type, index_type>::Load(BusT* bus, LoadData& data)
     : P_(data.Pd),
       Q_(data.Qd),
       busID_(data.bus_i),
@@ -38,16 +38,16 @@ namespace GridKit
     size_ = 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  Load<ScalarT, IdxT>::~Load()
+  template <typename scalar_type, typename index_type>
+  Load<scalar_type, index_type>::~Load()
   {
   }
 
   /*!
    * @brief allocate method computes sparsity pattern of the Jacobian.
    */
-  template <class ScalarT, typename IdxT>
-  int Load<ScalarT, IdxT>::allocate()
+  template <typename scalar_type, typename index_type>
+  int Load<scalar_type, index_type>::allocate()
   {
     return 0;
   }
@@ -55,8 +55,8 @@ namespace GridKit
   /**
    * Initialization of the grid model
    */
-  template <class ScalarT, typename IdxT>
-  int Load<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int Load<scalar_type, index_type>::initialize()
   {
     return 0;
   }
@@ -64,8 +64,8 @@ namespace GridKit
   /*
    * \brief Identify differential variables
    */
-  template <class ScalarT, typename IdxT>
-  int Load<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int Load<scalar_type, index_type>::tagDifferentiable()
   {
     return 0;
   }
@@ -75,15 +75,13 @@ namespace GridKit
    *
    * @param rel_tol The relative tolerance which can be used to pick the
    *        absolute tolerance.
-   * @tparam ScalarT Scalar data type
-   * @tparam IdxT Index data type
    * @return int 0 if successful, non-zero otherwise.
    *
    * This represents a "noise" level close to zero for which pure relative
    * error cannot be used.
    */
-  template <class ScalarT, typename IdxT>
-  int Load<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
+  template <typename scalar_type, typename index_type>
+  int Load<scalar_type, index_type>::setAbsoluteTolerance(RealT)
   {
     return 0;
   }
@@ -93,8 +91,8 @@ namespace GridKit
    *
    * Must be connected to a PQ bus.
    */
-  template <class ScalarT, typename IdxT>
-  int Load<ScalarT, IdxT>::evaluateResidual()
+  template <typename scalar_type, typename index_type>
+  int Load<scalar_type, index_type>::evaluateResidual()
   {
     // std::cout << "Evaluating load residual ...\n";
     bus_->P() -= P_;
@@ -106,32 +104,32 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Load<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int Load<scalar_type, index_type>::evaluateJacobian()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Load<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Load<scalar_type, index_type>::evaluateIntegrand()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Load<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int Load<scalar_type, index_type>::initializeAdjoint()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Load<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int Load<scalar_type, index_type>::evaluateAdjointResidual()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Load<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Load<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     return 0;
   }

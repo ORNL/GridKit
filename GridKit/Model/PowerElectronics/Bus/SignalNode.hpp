@@ -6,10 +6,13 @@ namespace GridKit
 {
   namespace PowerElectronics
   {
-    template <typename ScalarT, typename IdxT>
-    class SignalNode : public NodeBase<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class SignalNode : public NodeBase<scalar_type, index_type>
     {
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+
       SignalNode()
         : NodeBase<ScalarT, IdxT>(1, 0)
       {

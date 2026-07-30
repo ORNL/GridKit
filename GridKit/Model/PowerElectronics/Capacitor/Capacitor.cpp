@@ -17,8 +17,8 @@ namespace GridKit
    * Calls default ModelEvaluatorImpl constructor.
    */
 
-  template <class ScalarT, typename IdxT>
-  Capacitor<ScalarT, IdxT>::Capacitor(IdxT id, RealT C)
+  template <typename scalar_type, typename index_type>
+  Capacitor<scalar_type, index_type>::Capacitor(IdxT id, RealT C)
     : C_(C)
   {
     size_           = 3;
@@ -29,16 +29,16 @@ namespace GridKit
     nnz_            = 5;
   }
 
-  template <class ScalarT, typename IdxT>
-  Capacitor<ScalarT, IdxT>::~Capacitor()
+  template <typename scalar_type, typename index_type>
+  Capacitor<scalar_type, index_type>::~Capacitor()
   {
   }
 
   /**
    * Initialization of the grid model
    */
-  template <class ScalarT, typename IdxT>
-  int Capacitor<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int Capacitor<scalar_type, index_type>::initialize()
   {
     return 0;
   }
@@ -46,8 +46,8 @@ namespace GridKit
   /*
    * \brief Identify differential variables
    */
-  template <class ScalarT, typename IdxT>
-  int Capacitor<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int Capacitor<scalar_type, index_type>::tagDifferentiable()
   {
     return 0;
   }
@@ -56,8 +56,8 @@ namespace GridKit
    * @brief Evaluate the resisdual of the Capcitor
    *
    */
-  template <class ScalarT, typename IdxT>
-  int Capacitor<ScalarT, IdxT>::evaluateInternalResidual()
+  template <typename scalar_type, typename index_type>
+  int Capacitor<scalar_type, index_type>::evaluateInternalResidual()
   {
     const auto* y = y_.getData();
 
@@ -65,8 +65,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Capacitor<ScalarT, IdxT>::evaluateExternalResidual()
+  template <typename scalar_type, typename index_type>
+  int Capacitor<scalar_type, index_type>::evaluateExternalResidual()
   {
     auto* f = f_.getData();
 
@@ -81,12 +81,10 @@ namespace GridKit
   /**
    * @brief Compute the Jacobian dF/dy - a dF/dy'
    *
-   * @tparam ScalarT
-   * @tparam IdxT
    * @return int
    */
-  template <class ScalarT, typename IdxT>
-  int Capacitor<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int Capacitor<scalar_type, index_type>::evaluateJacobian()
   {
     this->zeroJacMatrix();
     // Create dF/dy
@@ -98,26 +96,26 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Capacitor<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Capacitor<scalar_type, index_type>::evaluateIntegrand()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Capacitor<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int Capacitor<scalar_type, index_type>::initializeAdjoint()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Capacitor<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int Capacitor<scalar_type, index_type>::evaluateAdjointResidual()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Capacitor<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Capacitor<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     return 0;
   }

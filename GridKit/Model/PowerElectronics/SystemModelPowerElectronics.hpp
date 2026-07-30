@@ -15,32 +15,34 @@
 
 namespace GridKit
 {
-  template <class ScalarT, typename IdxT>
-  class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
+  template <typename scalar_type, typename index_type>
+  class PowerElectronicsModel : public CircuitComponent<scalar_type, index_type>
   {
+    using CircuitComponent<scalar_type, index_type>::size_;
+    using CircuitComponent<scalar_type, index_type>::n_intern_;
+    using CircuitComponent<scalar_type, index_type>::n_extern_;
+    using CircuitComponent<scalar_type, index_type>::nnz_;
+    using CircuitComponent<scalar_type, index_type>::time_;
+    using CircuitComponent<scalar_type, index_type>::alpha_;
+    using CircuitComponent<scalar_type, index_type>::y_;
+    using CircuitComponent<scalar_type, index_type>::y_int_;
+    using CircuitComponent<scalar_type, index_type>::yp_;
+    using CircuitComponent<scalar_type, index_type>::yp_int_;
+    using CircuitComponent<scalar_type, index_type>::f_;
+    using CircuitComponent<scalar_type, index_type>::f_int_;
+    using CircuitComponent<scalar_type, index_type>::tag_;
+    using CircuitComponent<scalar_type, index_type>::abs_tol_;
+    using CircuitComponent<scalar_type, index_type>::allocated_;
+    using CircuitComponent<scalar_type, index_type>::allocateVectors;
+
+  public:
+    using ScalarT        = scalar_type;
+    using IdxT           = index_type;
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
-    using CircuitComponent<ScalarT, IdxT>::size_;
-    using CircuitComponent<ScalarT, IdxT>::n_intern_;
-    using CircuitComponent<ScalarT, IdxT>::n_extern_;
-    using CircuitComponent<ScalarT, IdxT>::nnz_;
-    using CircuitComponent<ScalarT, IdxT>::time_;
-    using CircuitComponent<ScalarT, IdxT>::alpha_;
-    using CircuitComponent<ScalarT, IdxT>::y_;
-    using CircuitComponent<ScalarT, IdxT>::y_int_;
-    using CircuitComponent<ScalarT, IdxT>::yp_;
-    using CircuitComponent<ScalarT, IdxT>::yp_int_;
-    using CircuitComponent<ScalarT, IdxT>::f_;
-    using CircuitComponent<ScalarT, IdxT>::f_int_;
-    using CircuitComponent<ScalarT, IdxT>::tag_;
-    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-    using CircuitComponent<ScalarT, IdxT>::allocated_;
-    using CircuitComponent<ScalarT, IdxT>::allocateVectors;
-
-  public:
     /**
      * @brief Default constructor for the system model
      *

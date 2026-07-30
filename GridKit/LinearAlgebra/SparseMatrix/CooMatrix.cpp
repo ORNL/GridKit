@@ -10,8 +10,8 @@ namespace GridKit
 {
   namespace LinearAlgebra
   {
-    template <typename RealT, typename IdxT>
-    CooMatrix<RealT, IdxT>::CooMatrix()
+    template <typename real_type, typename index_type>
+    CooMatrix<real_type, index_type>::CooMatrix()
     {
     }
 
@@ -22,10 +22,10 @@ namespace GridKit
      * @param[in] m   - number of columns
      * @param[in] nnz_ - number of non-zeros
      */
-    template <typename RealT, typename IdxT>
-    CooMatrix<RealT, IdxT>::CooMatrix(IdxT n,
-                                      IdxT m,
-                                      IdxT nnz)
+    template <typename real_type, typename index_type>
+    CooMatrix<real_type, index_type>::CooMatrix(IdxT n,
+                                                IdxT m,
+                                                IdxT nnz)
       : n_{n},
         m_{m},
         nnz_{nnz}
@@ -60,15 +60,15 @@ namespace GridKit
      * @param[in] memspace_src
      * @param[in] memspace_dst
      */
-    template <typename RealT, typename IdxT>
-    CooMatrix<RealT, IdxT>::CooMatrix(IdxT                n,
-                                      IdxT                m,
-                                      IdxT                nnz_,
-                                      IdxT**              rows,
-                                      IdxT**              cols,
-                                      RealT**             vals,
-                                      memory::MemorySpace memspace_src,
-                                      memory::MemorySpace memspace_dst)
+    template <typename real_type, typename index_type>
+    CooMatrix<real_type, index_type>::CooMatrix(IdxT                n,
+                                                IdxT                m,
+                                                IdxT                nnz_,
+                                                IdxT**              rows,
+                                                IdxT**              cols,
+                                                RealT**             vals,
+                                                memory::MemorySpace memspace_src,
+                                                memory::MemorySpace memspace_dst)
       : CooMatrix(n, m, nnz_)
     {
       int control = -1;
@@ -177,8 +177,8 @@ namespace GridKit
       }
     }
 
-    template <typename RealT, typename IdxT>
-    CooMatrix<RealT, IdxT>::~CooMatrix()
+    template <typename real_type, typename index_type>
+    CooMatrix<real_type, index_type>::~CooMatrix()
     {
       destroyMatrixData(memory::HOST);
       destroyMatrixData(memory::DEVICE);
@@ -189,8 +189,8 @@ namespace GridKit
     /**
      * @brief set the matrix update flags to false (for both HOST and DEVICE).
      */
-    template <typename RealT, typename IdxT>
-    void CooMatrix<RealT, IdxT>::setNotUpdated()
+    template <typename real_type, typename index_type>
+    void CooMatrix<real_type, index_type>::setNotUpdated()
     {
       h_data_updated_ = false;
       d_data_updated_ = false;
@@ -201,8 +201,8 @@ namespace GridKit
      *
      * @return number of matrix rows.
      */
-    template <typename RealT, typename IdxT>
-    IdxT CooMatrix<RealT, IdxT>::getNumRows() const
+    template <typename real_type, typename index_type>
+    index_type CooMatrix<real_type, index_type>::getNumRows() const
     {
       return n_;
     }
@@ -212,8 +212,8 @@ namespace GridKit
      *
      * @return number of matrix columns.
      */
-    template <typename RealT, typename IdxT>
-    IdxT CooMatrix<RealT, IdxT>::getNumColumns() const
+    template <typename real_type, typename index_type>
+    index_type CooMatrix<real_type, index_type>::getNumColumns() const
     {
       return m_;
     }
@@ -223,8 +223,8 @@ namespace GridKit
      *
      * @return number of non-zeros.
      */
-    template <typename RealT, typename IdxT>
-    IdxT CooMatrix<RealT, IdxT>::getNnz() const
+    template <typename real_type, typename index_type>
+    index_type CooMatrix<real_type, index_type>::getNnz() const
     {
       return nnz_;
     }
@@ -243,11 +243,11 @@ namespace GridKit
      *
      * @return 0 if successful, 1 if not.
      */
-    template <typename RealT, typename IdxT>
-    int CooMatrix<RealT, IdxT>::setDataPointers(IdxT*               row_data,
-                                                IdxT*               col_data,
-                                                RealT*              val_data,
-                                                memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    int CooMatrix<real_type, index_type>::setDataPointers(IdxT*               row_data,
+                                                          IdxT*               col_data,
+                                                          RealT*              val_data,
+                                                          memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -308,8 +308,8 @@ namespace GridKit
      * @return 0 if successful, -1 if not.
      *
      */
-    template <typename RealT, typename IdxT>
-    int CooMatrix<RealT, IdxT>::destroyMatrixData(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    int CooMatrix<real_type, index_type>::destroyMatrixData(memory::MemorySpace memspace)
     {
       using namespace memory;
       switch (memspace)
@@ -355,8 +355,8 @@ namespace GridKit
      *
      * @return Pointer to CSR row pointer array
      */
-    template <typename RealT, typename IdxT>
-    IdxT* CooMatrix<RealT, IdxT>::getCsrRowData()
+    template <typename real_type, typename index_type>
+    index_type* CooMatrix<real_type, index_type>::getCsrRowData()
     {
       if (!h_data_updated_)
       {
@@ -440,20 +440,20 @@ namespace GridKit
       return csr_row_data;
     }
 
-    template <typename RealT, typename IdxT>
-    const IdxT* CooMatrix<RealT, IdxT>::getMapToSorted() const
+    template <typename real_type, typename index_type>
+    const index_type* CooMatrix<real_type, index_type>::getMapToSorted() const
     {
       return map_to_sorted_;
     }
 
-    template <typename RealT, typename IdxT>
-    const IdxT* CooMatrix<RealT, IdxT>::getMapToDeduplicated() const
+    template <typename real_type, typename index_type>
+    const index_type* CooMatrix<real_type, index_type>::getMapToDeduplicated() const
     {
       return map_to_dedup_;
     }
 
-    template <typename RealT, typename IdxT>
-    IdxT* CooMatrix<RealT, IdxT>::getRowData(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    index_type* CooMatrix<real_type, index_type>::getRowData(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -468,8 +468,8 @@ namespace GridKit
       }
     }
 
-    template <typename RealT, typename IdxT>
-    IdxT* CooMatrix<RealT, IdxT>::getColData(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    index_type* CooMatrix<real_type, index_type>::getColData(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -484,8 +484,8 @@ namespace GridKit
       }
     }
 
-    template <typename RealT, typename IdxT>
-    RealT* CooMatrix<RealT, IdxT>::getValues(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    real_type* CooMatrix<real_type, index_type>::getValues(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -511,8 +511,8 @@ namespace GridKit
      *
      * @see CooMatrix::setUpdated
      */
-    template <typename RealT, typename IdxT>
-    int CooMatrix<RealT, IdxT>::syncData(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    int CooMatrix<real_type, index_type>::syncData(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -591,8 +591,8 @@ namespace GridKit
      *
      * @param out - Output stream where the matrix data is printed
      */
-    template <typename RealT, typename IdxT>
-    void CooMatrix<RealT, IdxT>::print(std::ostream& out, IdxT indexing_base)
+    template <typename real_type, typename index_type>
+    void CooMatrix<real_type, index_type>::print(std::ostream& out, IdxT indexing_base)
     {
       out << std::scientific << std::setprecision(std::numeric_limits<RealT>::digits10);
       for (IdxT i = 0; i < nnz_; ++i)

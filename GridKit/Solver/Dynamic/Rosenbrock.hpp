@@ -28,13 +28,15 @@ namespace AnalysisManager
      *
      *        For the list of available Rosenbrock methods, see `Rosenbrock::Tableau`.
      */
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class Rosenbrock
     {
-      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
-
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using State   = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
+
       /**
        * @brief Keeps track of a variety of notable properties of a single step.
        *

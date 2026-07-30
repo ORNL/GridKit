@@ -20,9 +20,6 @@
  * @todo should replace N and E with Node and Component classes respectively.
  *
  * @note Tested but currently not used in the rest of the code.
- *
- * @tparam IdxT
- * @tparam Label
  */
 template <typename N, typename E>
 class CircuitGraph
@@ -99,7 +96,6 @@ size_t CircuitGraph<N, E>::amountHyperEdges()
  *
  * @todo need to add verbose printing for connections display
  *
- * @tparam IdxT
  * @param[in] verbose if true will print connections,
  * otherwise just the number of nodes and edges
  */

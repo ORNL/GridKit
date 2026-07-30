@@ -21,8 +21,8 @@ namespace GridKit
      *
      * @return dot product of _x_ and _y_
      */
-    template <typename ScalarT, typename IdxT>
-    ScalarT VectorHandler<ScalarT, IdxT>::dot(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    scalar_type VectorHandler<scalar_type, index_type>::dot(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y, memory::MemorySpace memspace)
     {
       switch (memspace)
       {
@@ -42,8 +42,8 @@ namespace GridKit
      * @param[in,out] x The vector
      * @param[in] memspace Memory space the operation is computed in (HOST or DEVICE)
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandler<ScalarT, IdxT>::scal(const ScalarT alpha, Vector<ScalarT, IdxT>* x, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    void VectorHandler<scalar_type, index_type>::scal(const ScalarT alpha, Vector<ScalarT, IdxT>* x, memory::MemorySpace memspace)
     {
       switch (memspace)
       {
@@ -64,8 +64,8 @@ namespace GridKit
      *
      * @return infinity norm of _x_
      */
-    template <typename ScalarT, typename IdxT>
-    ScalarT VectorHandler<ScalarT, IdxT>::amax(Vector<ScalarT, IdxT>* x, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    scalar_type VectorHandler<scalar_type, index_type>::amax(Vector<ScalarT, IdxT>* x, memory::MemorySpace memspace)
     {
       switch (memspace)
       {
@@ -86,11 +86,11 @@ namespace GridKit
      * @param[in,out] y The second vector (result is returned in y)
      * @param[in] memspace Memory space the operation is computed in (HOST or DEVICE)
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandler<ScalarT, IdxT>::axpy(const ScalarT          alpha,
-                                            Vector<ScalarT, IdxT>* x,
-                                            Vector<ScalarT, IdxT>* y,
-                                            memory::MemorySpace    memspace)
+    template <typename scalar_type, typename index_type>
+    void VectorHandler<scalar_type, index_type>::axpy(const ScalarT          alpha,
+                                                      Vector<ScalarT, IdxT>* x,
+                                                      Vector<ScalarT, IdxT>* y,
+                                                      memory::MemorySpace    memspace)
     {
       switch (memspace)
       {
@@ -123,15 +123,15 @@ namespace GridKit
      * @note Parameter k is not the total number of columns in V but the number
      * of columns to use in matrix-vector product.
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandler<ScalarT, IdxT>::gemv(char                   transpose,
-                                            IdxT                   k,
-                                            const ScalarT          alpha,
-                                            const ScalarT          beta,
-                                            Vector<ScalarT, IdxT>* V,
-                                            Vector<ScalarT, IdxT>* y,
-                                            Vector<ScalarT, IdxT>* x,
-                                            memory::MemorySpace    memspace)
+    template <typename scalar_type, typename index_type>
+    void VectorHandler<scalar_type, index_type>::gemv(char                   transpose,
+                                                      IdxT                   k,
+                                                      const ScalarT          alpha,
+                                                      const ScalarT          beta,
+                                                      Vector<ScalarT, IdxT>* V,
+                                                      Vector<ScalarT, IdxT>* y,
+                                                      Vector<ScalarT, IdxT>* x,
+                                                      memory::MemorySpace    memspace)
     {
       switch (memspace)
       {
@@ -156,13 +156,13 @@ namespace GridKit
      *
      * @pre _k_ > 0, _size_ > 0, _size_ = x->getSize()
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandler<ScalarT, IdxT>::axpyMulti(IdxT                   size,
-                                                 Vector<ScalarT, IdxT>* alpha,
-                                                 IdxT                   k,
-                                                 Vector<ScalarT, IdxT>* x,
-                                                 Vector<ScalarT, IdxT>* y,
-                                                 memory::MemorySpace    memspace)
+    template <typename scalar_type, typename index_type>
+    void VectorHandler<scalar_type, index_type>::axpyMulti(IdxT                   size,
+                                                           Vector<ScalarT, IdxT>* alpha,
+                                                           IdxT                   k,
+                                                           Vector<ScalarT, IdxT>* x,
+                                                           Vector<ScalarT, IdxT>* y,
+                                                           memory::MemorySpace    memspace)
     {
       assert(y->getSize() == x->getSize() && "Sizes of x and y must match!\n");
       assert(alpha->getSize() == k && "Size of alpha must match k!\n");
@@ -193,13 +193,13 @@ namespace GridKit
      * @pre _size_ > 0, _k_ > 0, size = x->getSize().
      * @pre _res_ needs to be allocated to k x 2 size.
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandler<ScalarT, IdxT>::dot2Multi(IdxT                   size,
-                                                 Vector<ScalarT, IdxT>* V,
-                                                 IdxT                   k,
-                                                 Vector<ScalarT, IdxT>* x,
-                                                 Vector<ScalarT, IdxT>* res,
-                                                 memory::MemorySpace    memspace)
+    template <typename scalar_type, typename index_type>
+    void VectorHandler<scalar_type, index_type>::dot2Multi(IdxT                   size,
+                                                           Vector<ScalarT, IdxT>* V,
+                                                           IdxT                   k,
+                                                           Vector<ScalarT, IdxT>* x,
+                                                           Vector<ScalarT, IdxT>* res,
+                                                           memory::MemorySpace    memspace)
     {
       assert(x->getSize() == V->getSize() && "Sizes of V and x do not match!\n");
       assert(res->getSize() == k && "Size of `res` must match k!\n");
@@ -224,8 +224,8 @@ namespace GridKit
      *
      * @pre The diagonal vector must be of the same size as the vector.
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandler<ScalarT, IdxT>::scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    void VectorHandler<scalar_type, index_type>::scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, memory::MemorySpace memspace)
     {
       assert(diag->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
 
@@ -248,11 +248,11 @@ namespace GridKit
      * @param[in] diag_offset - the index of diag where the diagonal matrix begins (inclusive)
      * @param[in] memspace - Memory space the operation is computed in (HOST or DEVICE)
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandler<ScalarT, IdxT>::scal(Vector<ScalarT, IdxT>* diag,
-                                            Vector<ScalarT, IdxT>* vec,
-                                            IdxT                   diag_offset,
-                                            memory::MemorySpace    memspace)
+    template <typename scalar_type, typename index_type>
+    void VectorHandler<scalar_type, index_type>::scal(Vector<ScalarT, IdxT>* diag,
+                                                      Vector<ScalarT, IdxT>* vec,
+                                                      IdxT                   diag_offset,
+                                                      memory::MemorySpace    memspace)
     {
       switch (memspace)
       {
@@ -276,8 +276,8 @@ namespace GridKit
      *
      * @return 0 if successful, 1 otherwise
      */
-    template <typename ScalarT, typename IdxT>
-    int VectorHandler<ScalarT, IdxT>::diagSolve(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int VectorHandler<scalar_type, index_type>::diagSolve(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, memory::MemorySpace memspace)
     {
       assert(diag->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
 
@@ -304,8 +304,8 @@ namespace GridKit
      *
      * @return 0 if successful, 1 otherwise
      */
-    template <typename ScalarT, typename IdxT>
-    int VectorHandler<ScalarT, IdxT>::max(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y, Vector<ScalarT, IdxT>* out, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int VectorHandler<scalar_type, index_type>::max(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y, Vector<ScalarT, IdxT>* out, memory::MemorySpace memspace)
     {
       assert(x->getSize() == y->getSize() && "Vectors must be the same size.");
       assert(x->getSize() == out->getSize() && "Vectors must be the same size.");
@@ -330,8 +330,8 @@ namespace GridKit
      *
      * @return 0 if successful, 1 otherwise
      */
-    template <typename ScalarT, typename IdxT>
-    int VectorHandler<ScalarT, IdxT>::abs(Vector<ScalarT, IdxT>* in, Vector<ScalarT, IdxT>* out, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int VectorHandler<scalar_type, index_type>::abs(Vector<ScalarT, IdxT>* in, Vector<ScalarT, IdxT>* out, memory::MemorySpace memspace)
     {
       assert(in->getSize() == out->getSize() && "Vector sizes do not match!\n");
 

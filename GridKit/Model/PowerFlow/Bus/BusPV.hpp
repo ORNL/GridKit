@@ -16,20 +16,22 @@ namespace GridKit
    *
    *
    */
-  template <class ScalarT, typename IdxT>
-  class BusPV : public BaseBus<ScalarT, IdxT>
+  template <typename scalar_type, typename index_type>
+  class BusPV : public BaseBus<scalar_type, index_type>
   {
-    using BaseBus<ScalarT, IdxT>::size_;
-    using BaseBus<ScalarT, IdxT>::y_;
-    using BaseBus<ScalarT, IdxT>::yp_;
-    using BaseBus<ScalarT, IdxT>::yB_;
-    using BaseBus<ScalarT, IdxT>::ypB_;
-    using BaseBus<ScalarT, IdxT>::f_;
-    using BaseBus<ScalarT, IdxT>::fB_;
-    using BaseBus<ScalarT, IdxT>::tag_;
-    using BaseBus<ScalarT, IdxT>::abs_tol_;
+    using BaseBus<scalar_type, index_type>::size_;
+    using BaseBus<scalar_type, index_type>::y_;
+    using BaseBus<scalar_type, index_type>::yp_;
+    using BaseBus<scalar_type, index_type>::yB_;
+    using BaseBus<scalar_type, index_type>::ypB_;
+    using BaseBus<scalar_type, index_type>::f_;
+    using BaseBus<scalar_type, index_type>::fB_;
+    using BaseBus<scalar_type, index_type>::tag_;
+    using BaseBus<scalar_type, index_type>::abs_tol_;
 
   public:
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
     using RealT   = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
     using BusData = GridKit::PowerFlowData::BusData<RealT, IdxT>;
 

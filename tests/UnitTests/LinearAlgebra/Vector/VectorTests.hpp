@@ -21,10 +21,13 @@ namespace GridKit
     /**
      * @class Tests for vector operations.
      */
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class VectorTests
     {
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+
       VectorTests(memory::MemorySpace memspace = memory::HOST)
         : memspace_(memspace)
       {

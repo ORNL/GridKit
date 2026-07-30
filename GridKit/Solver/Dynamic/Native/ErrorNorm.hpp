@@ -12,13 +12,15 @@ namespace AnalysisManager
      * @brief Interface for error norms. Used to calculate the `err` parameter in `StepController::nextStep` based on a residual state error vector.
      *
      */
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class ErrorNorm
     {
-      using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
-      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
-
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using State   = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
+      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+
       /**
        * @brief Calculate an error to be used by a step controller. Typically, an error > 1 indicates an error which does not meet tolerances, while
        *        an error < 1 indicates an error which meets tolerances. For that reason, tolerances should be included in the calculation of the error.

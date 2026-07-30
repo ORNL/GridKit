@@ -11,10 +11,12 @@ namespace GridKit
 {
   namespace Model
   {
-    template <class ScalarT, typename IdxT>
-    class NullEvaluator : public Model::Evaluator<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class NullEvaluator : public Model::Evaluator<scalar_type, index_type>
     {
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
       using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
@@ -300,19 +302,21 @@ namespace GridKit
       bool allocated_{false};
     };
 
-    template <class ScalarT, typename IdxT>
-    class AlgebraicErrorControlEvaluator : public NullEvaluator<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class AlgebraicErrorControlEvaluator : public NullEvaluator<scalar_type, index_type>
     {
     protected:
-      using NullEvaluator<ScalarT, IdxT>::allocated_;
-      using NullEvaluator<ScalarT, IdxT>::y_;
-      using NullEvaluator<ScalarT, IdxT>::yp_;
-      using NullEvaluator<ScalarT, IdxT>::abs_tol_;
-      using NullEvaluator<ScalarT, IdxT>::tag_;
-      using NullEvaluator<ScalarT, IdxT>::f_;
+      using NullEvaluator<scalar_type, index_type>::allocated_;
+      using NullEvaluator<scalar_type, index_type>::y_;
+      using NullEvaluator<scalar_type, index_type>::yp_;
+      using NullEvaluator<scalar_type, index_type>::abs_tol_;
+      using NullEvaluator<scalar_type, index_type>::tag_;
+      using NullEvaluator<scalar_type, index_type>::f_;
 
     public:
-      using RealT = typename NullEvaluator<ScalarT, IdxT>::RealT;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename NullEvaluator<ScalarT, IdxT>::RealT;
 
       int initialize() override
       {
@@ -373,10 +377,13 @@ namespace GridKit
 
   namespace Testing
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class IdaTests
     {
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+
       TestOutcome callback()
       {
         const unsigned n_steps = 100;

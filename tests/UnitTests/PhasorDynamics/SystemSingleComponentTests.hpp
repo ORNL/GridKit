@@ -12,13 +12,14 @@ namespace GridKit
   {
     /// Smoke test for components (single component connected to an infinite bus)
     /// through the system model with the minimal constructors
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class SystemSingleComponentTests
     {
-    private:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+
       SystemSingleComponentTests()  = default;
       ~SystemSingleComponentTests() = default;
 

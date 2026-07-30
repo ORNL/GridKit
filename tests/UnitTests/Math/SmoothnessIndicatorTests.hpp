@@ -13,11 +13,12 @@ namespace GridKit
 {
   namespace Testing
   {
-    template <class ScalarT>
+    template <class scalar_type>
     class SmoothnessIndicatorTests
     {
     private:
-      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using ScalarT = scalar_type;
+      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
       static constexpr RealT kSmoothTolerance   = 1.0e-2;
       static constexpr RealT kNearOne           = 1.0 - kSmoothTolerance;

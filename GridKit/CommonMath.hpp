@@ -16,10 +16,10 @@ namespace GridKit
      * Used by @ref sigmoid, @ref ramp, and functions composed from them to set
      * the width of smooth transitions.
      *
-     * @tparam RealT - real data type
+     * @tparam real_type - real data type
      */
-    template <typename RealT>
-    inline constexpr RealT MU = 240.0;
+    template <typename real_type>
+    inline constexpr real_type MU = 240.0;
 
     /**
      * @brief Scaled sigmoid activation function
@@ -28,15 +28,16 @@ namespace GridKit
      * and finite derivatives. Large values more closely approximate a step
      * function, but can make the transition numerically stiff.
      *
-     * @tparam ScalarT - scalar data type
+     * @tparam scalar_type - scalar data type
      *
      * @param[in] x - expected to be of order 1
      * @return value of the sigmoid function
      */
-    template <class ScalarT>
-    __attribute__((always_inline)) inline ScalarT sigmoid(const ScalarT x)
+    template <typename scalar_type>
+    __attribute__((always_inline)) inline scalar_type sigmoid(const scalar_type x)
     {
-      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using ScalarT = scalar_type;
+      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
       return HALF<RealT> * (ONE<RealT> + std::tanh(HALF<RealT> * MU<RealT> * x));
     }
 
@@ -46,15 +47,16 @@ namespace GridKit
      * Smooth approximation to max(x, 0), using a stable softplus form with
      * the same scale as the rest of CommonMath.
      *
-     * @tparam ScalarT - scalar data type
+     * @tparam scalar_type - scalar data type
      *
      * @param[in] x - expected to be of order 1
      * @return value of the smooth ramp function
      */
-    template <class ScalarT>
-    __attribute__((always_inline)) inline ScalarT ramp(const ScalarT x)
+    template <typename scalar_type>
+    __attribute__((always_inline)) inline scalar_type ramp(const scalar_type x)
     {
-      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using ScalarT = scalar_type;
+      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
       RealT   mu = MU<RealT>;
       ScalarT a  = std::abs(mu * x);
@@ -70,13 +72,13 @@ namespace GridKit
      * @note Eventually a enzyme specialization for an exact implementation
      *       would be nice, since the piecewise definition is C^1 continuous
      *
-     * @tparam ScalarT - scalar data type
+     * @tparam scalar_type - scalar data type
      *
      * @param[in] x - input signal
      * @return value of the quadratic ramp
      */
-    template <class ScalarT>
-    __attribute__((always_inline)) inline ScalarT qramp(const ScalarT x)
+    template <typename scalar_type>
+    __attribute__((always_inline)) inline scalar_type qramp(const scalar_type x)
     {
       return x * x * sigmoid(x);
     }
@@ -87,8 +89,8 @@ namespace GridKit
      * Smooth approximation to max(x, y), composed from the smooth ramp
      * function.
      *
-     * @tparam LeftT - scalar type of x
-     * @tparam RightT - scalar type of y
+     * @tparam left_type - scalar type of x
+     * @tparam right_type - scalar type of y
      *
      * @param[in] x - First input signal
      * @param[in] y - Second input signal
@@ -100,10 +102,10 @@ namespace GridKit
      * lets the expression promote to the differentiable scalar type without
      * forcing callers to cast every parameter.
      */
-    template <class LeftT, class RightT>
+    template <typename left_type, typename right_type>
     __attribute__((always_inline)) inline auto max(
-        const LeftT  x,
-        const RightT y)
+        const left_type  x,
+        const right_type y)
     {
       return y + ramp(x - y);
     }
@@ -114,8 +116,8 @@ namespace GridKit
      * Smooth approximation to min(x, y), composed from the smooth ramp
      * function.
      *
-     * @tparam LeftT - scalar type of x
-     * @tparam RightT - scalar type of y
+     * @tparam left_type - scalar type of x
+     * @tparam right_type - scalar type of y
      *
      * @param[in] x - First input signal
      * @param[in] y - Second input signal
@@ -127,10 +129,10 @@ namespace GridKit
      * lets the expression promote to the differentiable scalar type without
      * forcing callers to cast every parameter.
      */
-    template <class LeftT, class RightT>
+    template <typename left_type, typename right_type>
     __attribute__((always_inline)) inline auto min(
-        const LeftT  x,
-        const RightT y)
+        const left_type  x,
+        const right_type y)
     {
       return x - ramp(x - y);
     }
@@ -142,20 +144,20 @@ namespace GridKit
      * smooth ramp function. Lower and upper bounds may be independent types
      * (e.g. constant Real bounds or algebraic-variable bounds).
      *
-     * @tparam ScalarT - scalar data type of the input signal
-     * @tparam LowerT - data type of the lower bound
-     * @tparam UpperT - data type of the upper bound
+     * @tparam scalar_type - scalar data type of the input signal
+     * @tparam lower_type - data type of the lower bound
+     * @tparam upper_type - data type of the upper bound
      *
      * @param[in] x - expected to be of order 1
      * @param[in] lower - Lower limit
      * @param[in] upper - Upper limit
      * @return value of the smooth clamp function
      */
-    template <class ScalarT, typename LowerT, typename UpperT>
+    template <typename scalar_type, typename lower_type, typename upper_type>
     __attribute__((always_inline)) inline auto clamp(
-        const ScalarT x,
-        const LowerT  lower,
-        const UpperT  upper)
+        const scalar_type x,
+        const lower_type  lower,
+        const upper_type  upper)
     {
       assert(lower <= upper);
       return lower + ramp(x - lower) - ramp(x - upper);
@@ -167,19 +169,19 @@ namespace GridKit
      * Smooth approximation to x - min(max(x, lower), upper), composed from the
      * smooth ramp function.
      *
-     * @tparam ScalarT - scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam scalar_type - scalar data type
+     * @tparam real_type - Real data type (see GridKit::ScalarTraits<scalar_type>::RealT)
      *
      * @param[in] x - Input signal
      * @param[in] lower - Lower breakpoint
      * @param[in] upper - Upper breakpoint
      * @return Smooth deadbanded value
      */
-    template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT deadband(
-        const ScalarT x,
-        const RealT   lower,
-        const RealT   upper)
+    template <typename scalar_type, typename real_type>
+    __attribute__((always_inline)) inline scalar_type deadband(
+        const scalar_type x,
+        const real_type   lower,
+        const real_type   upper)
     {
       assert(lower <= upper);
       return ramp(x - upper) - ramp(-(x - lower));
@@ -190,19 +192,19 @@ namespace GridKit
      *
      * Smooth approximation to min(max(f, -rate), rate).
      *
-     * @tparam ScalarT - scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam scalar_type - scalar data type
+     * @tparam real_type - Real data type (see GridKit::ScalarTraits<scalar_type>::RealT)
      *
      * @param[in] f - Pre-limit derivative or rate signal
      * @param[in] rate - Symmetric positive rate limit
      * @return Slew-rate-limited value of f
      */
-    template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT slew(
-        const ScalarT f,
-        const RealT   rate)
+    template <typename scalar_type, typename real_type>
+    __attribute__((always_inline)) inline scalar_type slew(
+        const scalar_type f,
+        const real_type   rate)
     {
-      assert(rate >= ZERO<RealT>);
+      assert(rate >= ZERO<real_type>);
       return clamp(f, -rate, rate);
     }
 
@@ -213,8 +215,8 @@ namespace GridKit
      * lower, linear over [lower, upper], and saturated at height above upper.
      * Callers should supply lower < upper; height may be positive or negative.
      *
-     * @tparam ScalarT - scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam scalar_type - scalar data type
+     * @tparam real_type - Real data type (see GridKit::ScalarTraits<scalar_type>::RealT)
      *
      * @param[in] x - Input signal
      * @param[in] lower - Lower breakpoint
@@ -222,12 +224,12 @@ namespace GridKit
      * @param[in] height - Saturated value above the upper breakpoint
      * @return Smooth linear segment contribution
      */
-    template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT linseg(
-        const ScalarT x,
-        const RealT   lower,
-        const RealT   upper,
-        const RealT   height)
+    template <typename scalar_type, typename real_type>
+    __attribute__((always_inline)) inline scalar_type linseg(
+        const scalar_type x,
+        const real_type   lower,
+        const real_type   upper,
+        const real_type   height)
     {
       assert(lower < upper);
       return height / (upper - lower) * (ramp(x - lower) - ramp(x - upper));
@@ -236,17 +238,17 @@ namespace GridKit
     /**
      * @brief Smooth above-limit indicator
      *
-     * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam scalar_type - Scalar data type
+     * @tparam real_type - Real data type (see GridKit::ScalarTraits<scalar_type>::RealT)
      *
      * @param[in] x - State variable
      * @param[in] limit_min - Minimum limit
      * @return Smooth indicator that x is above limit_min
      */
-    template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT above(
-        const ScalarT x,
-        const RealT   limit_min)
+    template <typename scalar_type, typename real_type>
+    __attribute__((always_inline)) inline scalar_type above(
+        const scalar_type x,
+        const real_type   limit_min)
     {
       return sigmoid(x - limit_min);
     }
@@ -254,17 +256,17 @@ namespace GridKit
     /**
      * @brief Smooth below-limit indicator
      *
-     * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam scalar_type - Scalar data type
+     * @tparam real_type - Real data type (see GridKit::ScalarTraits<scalar_type>::RealT)
      *
      * @param[in] x - State variable
      * @param[in] limit_max - Maximum limit
      * @return Smooth indicator that x is below limit_max
      */
-    template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT below(
-        const ScalarT x,
-        const RealT   limit_max)
+    template <typename scalar_type, typename real_type>
+    __attribute__((always_inline)) inline scalar_type below(
+        const scalar_type x,
+        const real_type   limit_max)
     {
       return sigmoid(limit_max - x);
     }
@@ -272,40 +274,40 @@ namespace GridKit
     /**
      * @brief Smooth inside-limits indicator
      *
-     * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam scalar_type - Scalar data type
+     * @tparam real_type - Real data type (see GridKit::ScalarTraits<scalar_type>::RealT)
      *
      * @param[in] x - State variable
      * @param[in] limit_min - Minimum limit
      * @param[in] limit_max - Maximum limit
      * @return Smooth indicator that x is inside [limit_min, limit_max]
      */
-    template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT inside(
-        const ScalarT x,
-        const RealT   limit_min,
-        const RealT   limit_max)
+    template <typename scalar_type, typename real_type>
+    __attribute__((always_inline)) inline scalar_type inside(
+        const scalar_type x,
+        const real_type   limit_min,
+        const real_type   limit_max)
     {
       assert(limit_min <= limit_max);
-      return above(x, limit_min) + below(x, limit_max) - ONE<RealT>;
+      return above(x, limit_min) + below(x, limit_max) - ONE<real_type>;
     }
 
     /**
      * @brief Smooth outside-limits indicator
      *
-     * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam scalar_type - Scalar data type
+     * @tparam real_type - Real data type (see GridKit::ScalarTraits<scalar_type>::RealT)
      *
      * @param[in] x - State variable
      * @param[in] limit_min - Minimum limit
      * @param[in] limit_max - Maximum limit
      * @return Smooth indicator that x is outside [limit_min, limit_max]
      */
-    template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT outside(
-        const ScalarT x,
-        const RealT   limit_min,
-        const RealT   limit_max)
+    template <typename scalar_type, typename real_type>
+    __attribute__((always_inline)) inline scalar_type outside(
+        const scalar_type x,
+        const real_type   limit_min,
+        const real_type   limit_max)
     {
       assert(limit_min <= limit_max);
       return below(x, limit_min) + above(x, limit_max);
@@ -314,8 +316,8 @@ namespace GridKit
     /**
      * @brief Smooth anti-windup indicator for a limited state variable
      *
-     * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam scalar_type - Scalar data type
+     * @tparam real_type - Real data type (see GridKit::ScalarTraits<scalar_type>::RealT)
      *
      * @param[in] x - State variable
      * @param[in] f - Pre-limit derivative of the state variable
@@ -324,14 +326,16 @@ namespace GridKit
      * @return Scalar value in [0, 1]: 1 when dynamics should pass through,
      *         0 when integration should be blocked.
      */
-    template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT indicator(
-        const ScalarT x,
-        const ScalarT f,
-        const RealT   limit_min,
-        const RealT   limit_max)
+    template <typename scalar_type, typename real_type>
+    __attribute__((always_inline)) inline scalar_type indicator(
+        const scalar_type x,
+        const scalar_type f,
+        const real_type   limit_min,
+        const real_type   limit_max)
     {
       assert(limit_min <= limit_max);
+      using ScalarT = scalar_type;
+      using RealT   = real_type;
 
       ScalarT above_min = above(x, limit_min);
       ScalarT below_max = below(x, limit_max);
@@ -349,8 +353,8 @@ namespace GridKit
      * passes interior dynamics, passes restoring motion from saturated limits,
      * and blocks motion that would push further into saturation.
      *
-     * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam scalar_type - Scalar data type
+     * @tparam real_type - Real data type (see GridKit::ScalarTraits<scalar_type>::RealT)
      *
      * @param[in] x - Limited state or limited output signal
      * @param[in] f - Pre-limit derivative
@@ -358,12 +362,12 @@ namespace GridKit
      * @param[in] limit_max - Maximum limit
      * @return Smooth anti-windup limited derivative
      */
-    template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT antiwindup(
-        const ScalarT x,
-        const ScalarT f,
-        const RealT   limit_min,
-        const RealT   limit_max)
+    template <typename scalar_type, typename real_type>
+    __attribute__((always_inline)) inline scalar_type antiwindup(
+        const scalar_type x,
+        const scalar_type f,
+        const real_type   limit_min,
+        const real_type   limit_max)
     {
       return indicator(x, f, limit_min, limit_max) * f;
     }

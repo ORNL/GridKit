@@ -24,8 +24,8 @@ namespace GridKit
       }
     }
 
-    template <class ScalarT, typename IdxT>
-    ResolveSystemSolver<ScalarT, IdxT>::ResolveSystemSolver(ReSolve::SystemSolver& lin_solver, GridKit::memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    ResolveSystemSolver<scalar_type, index_type>::ResolveSystemSolver(ReSolve::SystemSolver& lin_solver, GridKit::memory::MemorySpace memspace)
       : lin_solver_(lin_solver), memspace_(memorySpaceAsResolve(memspace))
     {
     }
@@ -37,8 +37,8 @@ namespace GridKit
      * @todo Right now preconditioning doesn't work. There should be a ReSolve PR soon for this.
      *
      */
-    template <class ScalarT, typename IdxT>
-    int ResolveSystemSolver<ScalarT, IdxT>::configureSolver(GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& matrix)
+    template <typename scalar_type, typename index_type>
+    int ResolveSystemSolver<scalar_type, index_type>::configureSolver(GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& matrix)
     {
       matrix_ = std::make_unique<ReSolve::matrix::Csr>(matrix.getNumRows(), matrix.getNumColumns(), matrix.getNnz());
 
@@ -59,8 +59,8 @@ namespace GridKit
       return 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    int ResolveSystemSolver<ScalarT, IdxT>::setupSolver(bool reuse_factors)
+    template <typename scalar_type, typename index_type>
+    int ResolveSystemSolver<scalar_type, index_type>::setupSolver(bool reuse_factors)
     {
       if (reuse_factors)
       {
@@ -82,8 +82,8 @@ namespace GridKit
      * as well, this solve should correctly fill `lhs`'s data buffer.
      *
      */
-    template <class ScalarT, typename IdxT>
-    int ResolveSystemSolver<ScalarT, IdxT>::solve(GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& rhs, GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& lhs)
+    template <typename scalar_type, typename index_type>
+    int ResolveSystemSolver<scalar_type, index_type>::solve(GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& rhs, GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& lhs)
     {
       ReSolve::vector::Vector resolve_rhs(rhs.getSize());
       ReSolve::vector::Vector resolve_lhs(lhs.getSize());

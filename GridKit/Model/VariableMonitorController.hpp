@@ -131,8 +131,8 @@ namespace GridKit
       /**
        * @brief Organize header output for this and all submonitors
        */
-      template <typename FormatT>
-      void printFullHeader(std::ostream& os, FormatT fmt) const
+      template <typename format_type>
+      void printFullHeader(std::ostream& os, format_type fmt) const
       {
         buffer_.clear();
         appendHeader(buffer_, fmt);
@@ -156,8 +156,8 @@ namespace GridKit
       /**
        * @brief Organize variable output for this and all submonitors
        */
-      template <typename FormatT>
-      void printFull(std::ostream& os, FormatT fmt) const
+      template <typename format_type>
+      void printFull(std::ostream& os, format_type fmt) const
       {
         buffer_.clear();
         append(buffer_, fmt);
@@ -187,8 +187,8 @@ namespace GridKit
       /**
        * @brief Organize footer output for this and all submonitors
        */
-      template <typename FormatT>
-      void printFullFooter(std::ostream& os, FormatT fmt) const
+      template <typename format_type>
+      void printFullFooter(std::ostream& os, format_type fmt) const
       {
         buffer_.clear();
         appendFooter(buffer_, fmt);
@@ -415,8 +415,8 @@ namespace GridKit
         FormatT                        format;
       };
 
-      template <typename ArgT, typename FormatT>
-      Sink(ArgT&&, FormatT) -> Sink<FormatT>;
+      template <typename arg_type, typename format_type>
+      Sink(arg_type&&, format_type) -> Sink<format_type>;
 
       /// Variant type for all possible sink types
       using SinkVariant = std::variant<Sink<Csv>, Sink<Json>, Sink<Yaml>>;

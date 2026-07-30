@@ -8,8 +8,8 @@ namespace GridKit
 {
   namespace LinearAlgebra
   {
-    template <typename RealT, typename IdxT>
-    CsrMatrix<RealT, IdxT>::CsrMatrix()
+    template <typename real_type, typename index_type>
+    CsrMatrix<real_type, index_type>::CsrMatrix()
     {
     }
 
@@ -20,10 +20,10 @@ namespace GridKit
      * @param[in] m   - number of columns
      * @param[in] nnz - number of non-zeros
      */
-    template <typename RealT, typename IdxT>
-    CsrMatrix<RealT, IdxT>::CsrMatrix(IdxT n,
-                                      IdxT m,
-                                      IdxT nnz)
+    template <typename real_type, typename index_type>
+    CsrMatrix<real_type, index_type>::CsrMatrix(IdxT n,
+                                                IdxT m,
+                                                IdxT nnz)
       : n_{n},
         m_{m},
         nnz_{nnz}
@@ -58,15 +58,15 @@ namespace GridKit
      * @param[in] memspace_src
      * @param[in] memspace_dst
      */
-    template <typename RealT, typename IdxT>
-    CsrMatrix<RealT, IdxT>::CsrMatrix(IdxT                n,
-                                      IdxT                m,
-                                      IdxT                nnz,
-                                      IdxT**              rows,
-                                      IdxT**              cols,
-                                      RealT**             vals,
-                                      memory::MemorySpace memspace_src,
-                                      memory::MemorySpace memspace_dst)
+    template <typename real_type, typename index_type>
+    CsrMatrix<real_type, index_type>::CsrMatrix(IdxT                n,
+                                                IdxT                m,
+                                                IdxT                nnz,
+                                                IdxT**              rows,
+                                                IdxT**              cols,
+                                                RealT**             vals,
+                                                memory::MemorySpace memspace_src,
+                                                memory::MemorySpace memspace_dst)
       : CsrMatrix(n, m, nnz)
     {
       int control = -1;
@@ -175,8 +175,8 @@ namespace GridKit
       }
     }
 
-    template <typename RealT, typename IdxT>
-    CsrMatrix<RealT, IdxT>::~CsrMatrix()
+    template <typename real_type, typename index_type>
+    CsrMatrix<real_type, index_type>::~CsrMatrix()
     {
       destroyMatrixData(memory::HOST);
       destroyMatrixData(memory::DEVICE);
@@ -185,8 +185,8 @@ namespace GridKit
     /**
      * @brief set the matrix update flags to false (for both HOST and DEVICE).
      */
-    template <typename RealT, typename IdxT>
-    void CsrMatrix<RealT, IdxT>::setNotUpdated()
+    template <typename real_type, typename index_type>
+    void CsrMatrix<real_type, index_type>::setNotUpdated()
     {
       h_data_updated_ = false;
       d_data_updated_ = false;
@@ -197,8 +197,8 @@ namespace GridKit
      *
      * @return number of matrix rows.
      */
-    template <typename RealT, typename IdxT>
-    IdxT CsrMatrix<RealT, IdxT>::getNumRows() const
+    template <typename real_type, typename index_type>
+    index_type CsrMatrix<real_type, index_type>::getNumRows() const
     {
       return n_;
     }
@@ -208,8 +208,8 @@ namespace GridKit
      *
      * @return number of matrix columns.
      */
-    template <typename RealT, typename IdxT>
-    IdxT CsrMatrix<RealT, IdxT>::getNumColumns() const
+    template <typename real_type, typename index_type>
+    index_type CsrMatrix<real_type, index_type>::getNumColumns() const
     {
       return m_;
     }
@@ -219,8 +219,8 @@ namespace GridKit
      *
      * @return number of non-zeros.
      */
-    template <typename RealT, typename IdxT>
-    IdxT CsrMatrix<RealT, IdxT>::getNnz() const
+    template <typename real_type, typename index_type>
+    index_type CsrMatrix<real_type, index_type>::getNnz() const
     {
       return nnz_;
     }
@@ -230,8 +230,8 @@ namespace GridKit
      *
      * @param[in] nnz_new - new number of non-zeros
      */
-    template <typename RealT, typename IdxT>
-    void CsrMatrix<RealT, IdxT>::setNnz(IdxT nnz_new)
+    template <typename real_type, typename index_type>
+    void CsrMatrix<real_type, index_type>::setNnz(IdxT nnz_new)
     {
       nnz_ = nnz_new;
     }
@@ -255,8 +255,8 @@ namespace GridKit
      * @note If you want to set both DEVICE and HOST memory to the same value
      * use syncData function.
      */
-    template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::setUpdated(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    int CsrMatrix<real_type, index_type>::setUpdated(memory::MemorySpace memspace)
     {
       using namespace memory;
       switch (memspace)
@@ -287,11 +287,11 @@ namespace GridKit
      *
      * @return 0 if successful, 1 if not.
      */
-    template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::setDataPointers(IdxT*               row_data,
-                                                IdxT*               col_data,
-                                                RealT*              val_data,
-                                                memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    int CsrMatrix<real_type, index_type>::setDataPointers(IdxT*               row_data,
+                                                          IdxT*               col_data,
+                                                          RealT*              val_data,
+                                                          memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -352,8 +352,8 @@ namespace GridKit
      * @return 0 if successful, -1 if not.
      *
      */
-    template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::destroyMatrixData(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    int CsrMatrix<real_type, index_type>::destroyMatrixData(memory::MemorySpace memspace)
     {
       using namespace memory;
       switch (memspace)
@@ -403,10 +403,10 @@ namespace GridKit
      *
      * @return 0 if successful, -1 if not.
      */
-    template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::copyValues(const RealT*        new_vals,
-                                           memory::MemorySpace memspace_in,
-                                           memory::MemorySpace memspace_out)
+    template <typename real_type, typename index_type>
+    int CsrMatrix<real_type, index_type>::copyValues(const RealT*        new_vals,
+                                                     memory::MemorySpace memspace_in,
+                                                     memory::MemorySpace memspace_out)
     {
 
       IdxT nnz_current = nnz_;
@@ -486,9 +486,9 @@ namespace GridKit
      *
      * @return 0 if successful, -1 if not.
      */
-    template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::setValuesPointer(RealT*              new_vals,
-                                                 memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    int CsrMatrix<real_type, index_type>::setValuesPointer(RealT*              new_vals,
+                                                           memory::MemorySpace memspace)
     {
       using namespace memory;
       setNotUpdated();
@@ -523,8 +523,8 @@ namespace GridKit
       return 0;
     }
 
-    template <typename RealT, typename IdxT>
-    IdxT* CsrMatrix<RealT, IdxT>::getRowData(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    index_type* CsrMatrix<real_type, index_type>::getRowData(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -539,8 +539,8 @@ namespace GridKit
       }
     }
 
-    template <typename RealT, typename IdxT>
-    IdxT* CsrMatrix<RealT, IdxT>::getColData(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    index_type* CsrMatrix<real_type, index_type>::getColData(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -555,8 +555,8 @@ namespace GridKit
       }
     }
 
-    template <typename RealT, typename IdxT>
-    RealT* CsrMatrix<RealT, IdxT>::getValues(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    real_type* CsrMatrix<real_type, index_type>::getValues(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -571,12 +571,12 @@ namespace GridKit
       }
     }
 
-    template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::copyDataFrom(const IdxT*         row_data,
-                                             const IdxT*         col_data,
-                                             const RealT*        val_data,
-                                             memory::MemorySpace memspace_in,
-                                             memory::MemorySpace memspace_out)
+    template <typename real_type, typename index_type>
+    int CsrMatrix<real_type, index_type>::copyDataFrom(const IdxT*         row_data,
+                                                       const IdxT*         col_data,
+                                                       const RealT*        val_data,
+                                                       memory::MemorySpace memspace_in,
+                                                       memory::MemorySpace memspace_out)
     {
       // four cases (for now)
       IdxT nnz_current = nnz_;
@@ -668,21 +668,21 @@ namespace GridKit
       return 0;
     }
 
-    template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::copyDataFrom(const IdxT*         row_data,
-                                             const IdxT*         col_data,
-                                             const RealT*        val_data,
-                                             IdxT                new_nnz,
-                                             memory::MemorySpace memspace_in,
-                                             memory::MemorySpace memspace_out)
+    template <typename real_type, typename index_type>
+    int CsrMatrix<real_type, index_type>::copyDataFrom(const IdxT*         row_data,
+                                                       const IdxT*         col_data,
+                                                       const RealT*        val_data,
+                                                       IdxT                new_nnz,
+                                                       memory::MemorySpace memspace_in,
+                                                       memory::MemorySpace memspace_out)
     {
       destroyMatrixData(memspace_out);
       nnz_ = new_nnz;
       return copyDataFrom(row_data, col_data, val_data, memspace_in, memspace_out);
     }
 
-    template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::allocateMatrixData(memory::MemorySpace memspace)
+    template <typename real_type, typename IdxT>
+    int CsrMatrix<real_type, IdxT>::allocateMatrixData(memory::MemorySpace memspace)
     {
       IdxT nnz_current = nnz_;
       destroyMatrixData(memspace); // just in case
@@ -723,8 +723,8 @@ namespace GridKit
      *
      * @see CsrMatrix::setUpdated
      */
-    template <typename RealT, typename IdxT>
-    int CsrMatrix<RealT, IdxT>::syncData(memory::MemorySpace memspace)
+    template <typename real_type, typename index_type>
+    int CsrMatrix<real_type, index_type>::syncData(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -803,8 +803,8 @@ namespace GridKit
      *
      * @param out - Output stream where the matrix data is printed
      */
-    template <typename RealT, typename IdxT>
-    void CsrMatrix<RealT, IdxT>::print(std::ostream& out, IdxT indexing_base)
+    template <typename real_type, typename index_type>
+    void CsrMatrix<real_type, index_type>::print(std::ostream& out, IdxT indexing_base)
     {
       out << std::scientific << std::setprecision(std::numeric_limits<RealT>::digits10);
       for (IdxT i = 0; i < n_; ++i)

@@ -15,9 +15,12 @@ namespace GridKit
 {
   namespace Testing
   {
-    template <typename RealT, typename IdxT>
-    std::vector<DependencyTracking::Variable::DependencyMap> MapFromCsr(LinearAlgebra::CsrMatrix<RealT, IdxT>* matrix)
+    template <typename real_type, typename index_type>
+    std::vector<DependencyTracking::Variable::DependencyMap> MapFromCsr(LinearAlgebra::CsrMatrix<real_type, index_type>* matrix)
     {
+      using RealT = real_type;
+      using IdxT  = index_type;
+
       IdxT*  row_data    = matrix->getRowData();
       IdxT*  column_data = matrix->getColData();
       RealT* values      = matrix->getValues();

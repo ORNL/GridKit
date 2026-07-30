@@ -12,9 +12,13 @@ namespace AnalysisManager
      *        based on an error estimate.
      *
      */
-    template <typename RealT>
-    class AdaptiveStep : public StepController<RealT>
+    template <typename real_type>
+    class AdaptiveStep : public StepController<real_type>
     {
+    public:
+      using RealT = real_type;
+
+    private:
       /**
        * @brief Parameters for the step controller.
        *

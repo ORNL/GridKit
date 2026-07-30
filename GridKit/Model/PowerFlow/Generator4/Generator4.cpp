@@ -18,8 +18,8 @@ namespace GridKit
    * - Number of quadratures = 1
    * - Number of optimization parameters = 2
    */
-  template <class ScalarT, typename IdxT>
-  Generator4<ScalarT, IdxT>::Generator4(bus_type* bus, ScalarT P0, ScalarT Q0)
+  template <typename scalar_type, typename index_type>
+  Generator4<scalar_type, index_type>::Generator4(BusT* bus, ScalarT P0, ScalarT Q0)
     : ModelEvaluatorImpl<ScalarT, IdxT>(6, 1, 2),
       H_(5.0),
       D_(0.04),
@@ -44,8 +44,8 @@ namespace GridKit
   {
   }
 
-  template <class ScalarT, typename IdxT>
-  Generator4<ScalarT, IdxT>::~Generator4()
+  template <typename scalar_type, typename index_type>
+  Generator4<scalar_type, index_type>::~Generator4()
   {
   }
 
@@ -53,8 +53,8 @@ namespace GridKit
    * @brief This function will be used to allocate sparse Jacobian matrices.
    *
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4<ScalarT, IdxT>::allocate()
+  template <typename scalar_type, typename index_type>
+  int Generator4<scalar_type, index_type>::allocate()
   {
     // std::cout << "Allocate Generator4..." << std::endl;
     tag_.resize(static_cast<size_t>(size_));
@@ -83,8 +83,8 @@ namespace GridKit
    * \f}
    *
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int Generator4<scalar_type, index_type>::initialize()
   {
     // std::cout << "Initialize Generator4..." << std::endl;
 
@@ -145,8 +145,8 @@ namespace GridKit
   /**
    * \brief Identify differential variables.
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int Generator4<scalar_type, index_type>::tagDifferentiable()
   {
     tag_[0] = true;
     tag_[1] = true;
@@ -166,15 +166,13 @@ namespace GridKit
    *
    * @param rel_tol The relative tolerance which can be used to pick the
    *        absolute tolerance.
-   * @tparam ScalarT Scalar data type
-   * @tparam IdxT Index data type
    * @return int 0 if successful, non-zero otherwise.
    *
    * This represents a "noise" level close to zero for which pure relative
    * error cannot be used.
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+  template <typename scalar_type, typename index_type>
+  int Generator4<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
   {
     abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
     return 0;
@@ -208,8 +206,8 @@ namespace GridKit
    * \f$ y_4 = I_d \f$, \f$ y_5 = I_q \f$.
    *
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4<ScalarT, IdxT>::evaluateResidual()
+  template <typename scalar_type, typename index_type>
+  int Generator4<scalar_type, index_type>::evaluateResidual()
   {
     // std::cout << "Evaluate residual for Generator4..." << std::endl;
     auto* f = f_.getData();
@@ -234,16 +232,16 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Generator4<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int Generator4<scalar_type, index_type>::evaluateJacobian()
   {
     std::cerr << "Evaluate Jacobian for Generator4..." << std::endl;
     std::cerr << "Jacobian evaluation not implemented!" << std::endl;
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Generator4<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Generator4<scalar_type, index_type>::evaluateIntegrand()
   {
     // std::cout << "Evaluate Integrand for Generator4..." << std::endl;
     const auto* y = y_.getData();
@@ -254,8 +252,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Generator4<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int Generator4<scalar_type, index_type>::initializeAdjoint()
   {
     // std::cout << "Initialize adjoint for Generator4..." << std::endl;
     const auto* y   = y_.getData();
@@ -289,8 +287,8 @@ namespace GridKit
    * \f}
    *
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int Generator4<scalar_type, index_type>::evaluateAdjointResidual()
   {
     // std::cout << "Evaluate adjoint residual for Generator4..." << std::endl;
     ScalarT sinPhi = sin(delta() - theta());
@@ -313,16 +311,16 @@ namespace GridKit
     return 0;
   }
 
-  // template <class ScalarT, typename IdxT>
-  // int Generator4<ScalarT, IdxT>::evaluateAdjointJacobian()
+  // template <typename scalar_type, typename index_type>
+  // int Generator4<scalar_type, index_type>::evaluateAdjointJacobian()
   // {
   //     std::cout << "Evaluate adjoint Jacobian for Generator4..." << std::endl;
   //     std::cout << "Adjoint Jacobian evaluation not implemented!" << std::endl;
   //     return 0;
   // }
 
-  template <class ScalarT, typename IdxT>
-  int Generator4<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Generator4<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     // std::cout << "Evaluate adjoint Integrand for Generator4..." << std::endl;
     const auto* yB = yB_.getData();
@@ -346,8 +344,8 @@ namespace GridKit
    * \f[ P_g = E_q' I_q + E_d' I_d + (X_q' - X_d') I_q I_d - R_a (I_d^2 + I_q^2) \f]
    *
    */
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4<ScalarT, IdxT>::Pg()
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4<scalar_type, index_type>::Pg()
   {
     const auto* y = y_.getData();
     return y[5] * V() * cos(theta() - y[0]) + y[4] * V() * sin(theta() - y[0]);
@@ -358,8 +356,8 @@ namespace GridKit
    *
    * \f[ Q_g = E_q' I_d - E_d' I_q - X_d' I_d^2 - X_q' I_q^2 \f]
    */
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4<ScalarT, IdxT>::Qg()
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4<scalar_type, index_type>::Qg()
   {
     const auto* y = y_.getData();
     return y[5] * V() * sin(theta() - y[0]) - y[4] * V() * cos(theta() - y[0]);
@@ -368,8 +366,8 @@ namespace GridKit
   /**
    * Frequency penalty is used as the objective function for the generator model.
    */
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4<ScalarT, IdxT>::frequencyPenalty(ScalarT omega)
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4<scalar_type, index_type>::frequencyPenalty(ScalarT omega)
   {
     return c_ * pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
   }
@@ -378,8 +376,8 @@ namespace GridKit
    * Derivative of frequency penalty cannot be written in terms of min/max functions.
    * Need to expand conditional statements instead.
    */
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4<ScalarT, IdxT>::frequencyPenaltyDer(ScalarT omega)
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4<scalar_type, index_type>::frequencyPenaltyDer(ScalarT omega)
   {
     if (omega > omega_up_)
     {

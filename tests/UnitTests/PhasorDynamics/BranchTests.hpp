@@ -18,13 +18,14 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class BranchTests
     {
-    private:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+
       BranchTests()  = default;
       ~BranchTests() = default;
 

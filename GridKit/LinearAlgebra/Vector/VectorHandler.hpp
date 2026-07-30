@@ -7,7 +7,7 @@ namespace GridKit
 {
   namespace LinearAlgebra
   {
-    template <typename ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class Vector;
 
     /**
@@ -21,10 +21,13 @@ namespace GridKit
      *
      * @author Slaven Peles <peless@ornl.gov>
      */
-    template <typename ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class VectorHandler
     {
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+
       VectorHandler()  = default;
       ~VectorHandler() = default;
 

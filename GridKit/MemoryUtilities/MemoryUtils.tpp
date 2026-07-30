@@ -11,69 +11,69 @@
 
 namespace GridKit
 {
-  template <class Policy>
-  void MemoryUtils<Policy>::deviceSynchronize()
+  template <typename policy>
+  void MemoryUtils<policy>::deviceSynchronize()
   {
     Policy::deviceSynchronize();
   }
 
-  template <class Policy>
-  int MemoryUtils<Policy>::getLastDeviceError()
+  template <typename policy>
+  int MemoryUtils<policy>::getLastDeviceError()
   {
     return Policy::getLastDeviceError();
   }
 
-  template <class Policy>
-  int MemoryUtils<Policy>::deleteOnDevice(void* v)
+  template <typename policy>
+  int MemoryUtils<policy>::deleteOnDevice(void* v)
   {
     return Policy::deleteOnDevice(v);
   }
 
-  template <class Policy>
+  template <typename policy>
   template <typename I, typename T>
-  int MemoryUtils<Policy>::allocateArrayOnDevice(T** v, I n)
+  int MemoryUtils<policy>::allocateArrayOnDevice(T** v, I n)
   {
     return Policy::template allocateArrayOnDevice<I, T>(v, n);
   }
 
-  template <class Policy>
+  template <typename policy>
   template <typename I, typename T>
-  int MemoryUtils<Policy>::allocateBufferOnDevice(T** v, I n)
+  int MemoryUtils<policy>::allocateBufferOnDevice(T** v, I n)
   {
     return Policy::template allocateBufferOnDevice<I, T>(v, n);
   }
 
-  template <class Policy>
+  template <typename policy>
   template <typename I, typename T>
-  int MemoryUtils<Policy>::setZeroArrayOnDevice(T* v, I n)
+  int MemoryUtils<policy>::setZeroArrayOnDevice(T* v, I n)
   {
     return Policy::template setZeroArrayOnDevice<I, T>(v, n);
   }
 
-  template <class Policy>
+  template <typename policy>
   template <typename I, typename T>
-  int MemoryUtils<Policy>::setArrayToConstOnDevice(T* v, T c, I n)
+  int MemoryUtils<policy>::setArrayToConstOnDevice(T* v, T c, I n)
   {
     return Policy::template setArrayToConstOnDevice<I, T>(v, c, n);
   }
 
-  template <class Policy>
+  template <typename policy>
   template <typename I, typename T>
-  int MemoryUtils<Policy>::copyArrayDeviceToHost(T* dst, const T* src, I n)
+  int MemoryUtils<policy>::copyArrayDeviceToHost(T* dst, const T* src, I n)
   {
     return Policy::template copyArrayDeviceToHost<I, T>(dst, src, n);
   }
 
-  template <class Policy>
+  template <typename policy>
   template <typename I, typename T>
-  int MemoryUtils<Policy>::copyArrayDeviceToDevice(T* dst, const T* src, I n)
+  int MemoryUtils<policy>::copyArrayDeviceToDevice(T* dst, const T* src, I n)
   {
     return Policy::template copyArrayDeviceToDevice<I, T>(dst, src, n);
   }
 
-  template <class Policy>
+  template <typename policy>
   template <typename I, typename T>
-  int MemoryUtils<Policy>::copyArrayHostToDevice(T* dst, const T* src, I n)
+  int MemoryUtils<policy>::copyArrayHostToDevice(T* dst, const T* src, I n)
   {
     return Policy::template copyArrayHostToDevice<I, T>(dst, src, n);
   }

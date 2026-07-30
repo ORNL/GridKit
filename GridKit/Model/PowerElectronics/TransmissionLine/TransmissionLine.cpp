@@ -19,8 +19,8 @@ namespace GridKit
    * @todo test for correctness
    */
 
-  template <class ScalarT, typename IdxT>
-  TransmissionLine<ScalarT, IdxT>::TransmissionLine(IdxT id, RealT R, RealT X, RealT B)
+  template <typename scalar_type, typename index_type>
+  TransmissionLine<scalar_type, index_type>::TransmissionLine(IdxT id, RealT R, RealT X, RealT B)
     : R_(R),
       X_(X),
       B_(B)
@@ -40,16 +40,16 @@ namespace GridKit
     YImMatDi_           = B_ / (2.0) - YImMatOff_;
   }
 
-  template <class ScalarT, typename IdxT>
-  TransmissionLine<ScalarT, IdxT>::~TransmissionLine()
+  template <typename scalar_type, typename index_type>
+  TransmissionLine<scalar_type, index_type>::~TransmissionLine()
   {
   }
 
   /**
    * Initialization of the grid model
    */
-  template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int TransmissionLine<scalar_type, index_type>::initialize()
   {
     return 0;
   }
@@ -57,8 +57,8 @@ namespace GridKit
   /*
    * \brief Identify differential variables
    */
-  template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int TransmissionLine<scalar_type, index_type>::tagDifferentiable()
   {
     return 0;
   }
@@ -81,8 +81,8 @@ namespace GridKit
    *
    * To express this for Modified Nodal Analysis the Voltages of the admittance matrix are put into voltage drops
    */
-  template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::evaluateInternalResidual()
+  template <typename scalar_type, typename index_type>
+  int TransmissionLine<scalar_type, index_type>::evaluateInternalResidual()
   {
     const auto* y = y_.getData();
 
@@ -104,8 +104,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::evaluateExternalResidual()
+  template <typename scalar_type, typename index_type>
+  int TransmissionLine<scalar_type, index_type>::evaluateExternalResidual()
   {
     auto* f = f_.getData();
 
@@ -130,12 +130,10 @@ namespace GridKit
   /**
    * @brief Generate Jacobian for Transmission Line
    *
-   * @tparam ScalarT
-   * @tparam IdxT
    * @return int
    */
-  template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int TransmissionLine<scalar_type, index_type>::evaluateJacobian()
   {
     this->zeroJacMatrix();
 
@@ -166,26 +164,26 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int TransmissionLine<scalar_type, index_type>::evaluateIntegrand()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int TransmissionLine<scalar_type, index_type>::initializeAdjoint()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int TransmissionLine<scalar_type, index_type>::evaluateAdjointResidual()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int TransmissionLine<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     return 0;
   }

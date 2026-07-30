@@ -15,16 +15,18 @@ namespace GridKit
    *
    *
    */
-  template <class ScalarT, typename IdxT>
-  class BusSlack : public BaseBus<ScalarT, IdxT>
+  template <typename scalar_type, typename index_type>
+  class BusSlack : public BaseBus<scalar_type, index_type>
   {
-    using BaseBus<ScalarT, IdxT>::size_;
-    using BaseBus<ScalarT, IdxT>::y_;
-    using BaseBus<ScalarT, IdxT>::yp_;
-    using BaseBus<ScalarT, IdxT>::f_;
-    using BaseBus<ScalarT, IdxT>::g_;
+    using BaseBus<scalar_type, index_type>::size_;
+    using BaseBus<scalar_type, index_type>::y_;
+    using BaseBus<scalar_type, index_type>::yp_;
+    using BaseBus<scalar_type, index_type>::f_;
+    using BaseBus<scalar_type, index_type>::g_;
 
   public:
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
     using RealT   = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
     using BusData = GridKit::PowerFlowData::BusData<RealT, IdxT>;
 

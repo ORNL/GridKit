@@ -19,9 +19,13 @@ namespace GridKit
     /// JSON parser function implementation for the `BusData` type
     ///
     /// See the `README.md` in `GridKit/Model/PhasorDynamics` for more information
-    template <typename RealT, typename IdxT>
-    void from_json(const json& j, BusData<RealT, IdxT>& bd)
+    template <typename real_type, typename index_type>
+    void from_json(const json& j, BusData<real_type, index_type>& bd)
     {
+      using RealT    = real_type;
+      using IdxT     = index_type;
+      using BusDataT = BusData<RealT, IdxT>;
+
       j.at("name").get_to(bd.name);
 
       std::stringstream error_context;
@@ -55,11 +59,11 @@ namespace GridKit
       auto string_class = j.at("class").get<std::string>();
       if (string_class == "bus")
       {
-        bd.bus_type = BusData<RealT, IdxT>::BusType::DEFAULT;
+        bd.bus_type = BusDataT::BusType::DEFAULT;
       }
       else if (string_class == "infinite_bus")
       {
-        bd.bus_type = BusData<RealT, IdxT>::BusType::SLACK;
+        bd.bus_type = BusDataT::BusType::SLACK;
       }
       else
       {
@@ -120,7 +124,7 @@ namespace GridKit
       {
         using magic_enum::case_insensitive;
         using magic_enum::enum_cast;
-        using MonitorableVariables = typename BusData<RealT, IdxT>::MonitorableVariables;
+        using MonitorableVariables = typename BusDataT::MonitorableVariables;
         for (auto& raw_monitored_variable : j.at("mon"))
         {
           auto var_name  = raw_monitored_variable.get<std::string>();

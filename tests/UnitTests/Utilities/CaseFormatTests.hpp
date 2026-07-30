@@ -21,10 +21,13 @@ namespace GridKit
   {
     using json = nlohmann::json;
 
-    template <typename RealT, typename IdxT>
+    template <typename real_type, typename index_type>
     class CaseFormatTests
     {
     public:
+      using RealT = real_type;
+      using IdxT  = index_type;
+
       CaseFormatTests()  = default;
       ~CaseFormatTests() = default;
 

@@ -19,7 +19,7 @@ namespace GridKit
        *
        * @return int - error code, 0 = success
        */
-      template <class scalar_type, typename index_type>
+      template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::evaluateJacobian()
       {
         Log::misc() << "Evaluate Jacobian for Ieeet1..." << std::endl;

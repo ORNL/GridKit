@@ -16,9 +16,6 @@ namespace GridKit
    * @todo This model's equations are not finished
    * @todo needs to be tested for correctness
    *
-   * @tparam ScalarT - floating point type for the model
-   * @tparam IdxT - integer index type for the model
-   *
    * @param[in] id - unique identifier for the component
    * @param[in] Lls - stator leakage inductance
    * @param[in] Llkq - tuple of damper leakage reactances
@@ -35,8 +32,8 @@ namespace GridKit
    * @param[in] mub - rated frequency
    */
 
-  template <class ScalarT, typename IdxT>
-  SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub)
+  template <typename scalar_type, typename index_type>
+  SynchronousMachine<scalar_type, index_type>::SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub)
     : Lls_(Lls),
       Llkq_(Llkq),
       Llfd_(Llfd),
@@ -58,16 +55,16 @@ namespace GridKit
     idc_            = id;
   }
 
-  template <class ScalarT, typename IdxT>
-  SynchronousMachine<ScalarT, IdxT>::~SynchronousMachine()
+  template <typename scalar_type, typename index_type>
+  SynchronousMachine<scalar_type, index_type>::~SynchronousMachine()
   {
   }
 
   /**
    * Initialization of the grid model
    */
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int SynchronousMachine<scalar_type, index_type>::initialize()
   {
     return 0;
   }
@@ -75,8 +72,8 @@ namespace GridKit
   /*
    * \brief Identify differential variables
    */
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int SynchronousMachine<scalar_type, index_type>::tagDifferentiable()
   {
     return 0;
   }
@@ -86,8 +83,8 @@ namespace GridKit
    *
    * @todo not finished
    */
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateInternalResidual()
+  template <typename scalar_type, typename index_type>
+  int SynchronousMachine<scalar_type, index_type>::evaluateInternalResidual()
   {
     ScalarT                  rkq1  = static_cast<ScalarT>(std::get<0>(Rkq_));
     [[maybe_unused]] ScalarT rkq2  = static_cast<ScalarT>(std::get<1>(Rkq_));
@@ -111,8 +108,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateExternalResidual()
+  template <typename scalar_type, typename index_type>
+  int SynchronousMachine<scalar_type, index_type>::evaluateExternalResidual()
   {
     [[maybe_unused]] ScalarT rkq2  = static_cast<ScalarT>(std::get<1>(Rkq_));
     [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
@@ -137,32 +134,32 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int SynchronousMachine<scalar_type, index_type>::evaluateJacobian()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int SynchronousMachine<scalar_type, index_type>::evaluateIntegrand()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int SynchronousMachine<scalar_type, index_type>::initializeAdjoint()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int SynchronousMachine<scalar_type, index_type>::evaluateAdjointResidual()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int SynchronousMachine<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int SynchronousMachine<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     return 0;
   }

@@ -24,13 +24,11 @@ namespace AnalysisManager
      * 1-parameter optimization problems.
      *
      */
-    template <class ScalarT, typename IdxT>
-    class DynamicConstraint : public Ipopt::TNLP, public OptimizationSolver<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class DynamicConstraint : public Ipopt::TNLP, public OptimizationSolver<scalar_type, index_type>
     {
-      using OptimizationSolver<ScalarT, IdxT>::integrator_;
-      using OptimizationSolver<ScalarT, IdxT>::model_;
-
-      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using OptimizationSolver<scalar_type, index_type>::integrator_;
+      using OptimizationSolver<scalar_type, index_type>::model_;
 
       using Index                     = Ipopt::Index;
       using Number                    = Ipopt::Number;
@@ -39,6 +37,10 @@ namespace AnalysisManager
       using IpoptData                 = Ipopt::IpoptData;
 
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+
       DynamicConstraint(Sundials::Ida<ScalarT, IdxT>* integrator,
                         RealT                         t_init,
                         RealT                         t_final,

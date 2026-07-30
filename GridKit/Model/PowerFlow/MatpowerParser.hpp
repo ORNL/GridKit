@@ -98,8 +98,8 @@ namespace GridKit
       throw std::runtime_error(matlab_syntax_error);
   }
 
-  template <typename RealT = double, typename IdxT = int>
-  void readMatPowerBusRow(const std::string& row, BusData<RealT, IdxT>& br, LoadData<RealT, IdxT>& lr)
+  template <typename real_type = double, typename index_type = int>
+  void readMatPowerBusRow(const std::string& row, BusData<real_type, index_type>& br, LoadData<real_type, index_type>& lr)
   {
     logs() << "Parsing MATPOWER bus row\n";
     std::stringstream is(row);
@@ -124,8 +124,8 @@ namespace GridKit
     // return br;
   }
 
-  template <typename RealT = double, typename IdxT = int>
-  void readMatPowerGenRow(GenData<RealT, IdxT>& gr, std::string& row)
+  template <typename real_type = double, typename index_type = int>
+  void readMatPowerGenRow(GenData<real_type, index_type>& gr, std::string& row)
   {
     logs() << "Parsing MATPOWER gen row\n";
     std::stringstream is(row);
@@ -136,8 +136,8 @@ namespace GridKit
     checkEndOfMatrixRow(is);
   }
 
-  template <typename RealT = double, typename IdxT = int>
-  void readMatPowerBranchRow(BranchData<RealT, IdxT>& br, std::string& row)
+  template <typename real_type = double, typename index_type = int>
+  void readMatPowerBranchRow(BranchData<real_type, index_type>& br, std::string& row)
   {
     logs() << "Parsing MATPOWER branch row\n";
     std::stringstream is(row);
@@ -147,9 +147,10 @@ namespace GridKit
     checkEndOfMatrixRow(is);
   }
 
-  template <typename RealT = double, typename IdxT = int>
-  void readMatPowerGenCostRow(GenCostData<RealT, IdxT>& gcr, std::string& row)
+  template <typename real_type = double, typename index_type = int>
+  void readMatPowerGenCostRow(GenCostData<real_type, index_type>& gcr, std::string& row)
   {
+    using RealT = real_type;
     logs() << "Parsing MATPOWER gen cost row\n";
     // Ensure last character is semicolon.
     rtrim(row);
@@ -165,8 +166,8 @@ namespace GridKit
     }
   }
 
-  template <typename RealT = double, typename IdxT = int>
-  void readMatPowerVersion(SystemModelData<RealT, IdxT>& mp, std::string& line)
+  template <typename real_type = double, typename index_type = int>
+  void readMatPowerVersion(SystemModelData<real_type, index_type>& mp, std::string& line)
   {
     logs() << "Parsing matpower version\n";
     std::regex  pat("mpc\\.version\\s*=\\s*'([0-9])';");
@@ -181,8 +182,8 @@ namespace GridKit
     }
   }
 
-  template <typename RealT = double, typename IdxT = int>
-  void readMatPowerBaseMVA(SystemModelData<RealT, IdxT>& mp, std::string& line)
+  template <typename real_type = double, typename index_type = int>
+  void readMatPowerBaseMVA(SystemModelData<real_type, index_type>& mp, std::string& line)
   {
     std::regex  pat("mpc\\.baseMVA\\s*=\\s*([0-9]+);");
     std::smatch matches;
@@ -197,22 +198,22 @@ namespace GridKit
     }
   }
 
-  template <typename RealT = double, typename IdxT = int>
-  void readMatPowerFile(SystemModelData<RealT, IdxT>& mp, std::string& filename)
+  template <typename real_type = double, typename index_type = int>
+  void readMatPowerFile(SystemModelData<real_type, index_type>& mp, std::string& filename)
   {
     std::ifstream ifs{filename};
     readMatPower(mp, ifs);
   }
 
-  template <typename IdxT           = int,
-            typename RealT          = double,
-            std::size_t MaxLineSize = 1028>
-  void readMatPower(SystemModelData<RealT, IdxT>& mp, std::istream& is)
+  template <typename real_type = double, typename index_type = int>
+  void readMatPower(SystemModelData<real_type, index_type>& mp, std::istream& is)
   {
+    using RealT        = real_type;
+    using IdxT         = index_type;
     using BusDataT     = BusData<RealT, IdxT>;
     using GenDataT     = GenData<RealT, IdxT>;
-    using BranchDataT  = BranchData<RealT, IdxT>;
-    using GenCostDataT = GenCostData<RealT, IdxT>;
+    using BranchDataT  = BranchData<real_type, IdxT>;
+    using GenCostDataT = GenCostData<real_type, IdxT>;
     using LoadDataT    = LoadData<RealT, IdxT>;
 
     for (std::string line; std::getline(is, line);)

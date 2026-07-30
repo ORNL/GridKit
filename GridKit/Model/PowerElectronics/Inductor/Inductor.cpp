@@ -14,8 +14,8 @@ namespace GridKit
    * Calls default ModelEvaluatorImpl constructor.
    */
 
-  template <class ScalarT, typename IdxT>
-  Inductor<ScalarT, IdxT>::Inductor(IdxT id, RealT L, NodeT* node1, NodeT* node2)
+  template <typename scalar_type, typename index_type>
+  Inductor<scalar_type, index_type>::Inductor(IdxT id, RealT L, NodeT* node1, NodeT* node2)
     : L_(L), node1_(node1), node2_(node2)
   {
     assert(node1_->size() == 1);
@@ -28,16 +28,16 @@ namespace GridKit
     nnz_            = 5;
   }
 
-  template <class ScalarT, typename IdxT>
-  Inductor<ScalarT, IdxT>::~Inductor()
+  template <typename scalar_type, typename index_type>
+  Inductor<scalar_type, index_type>::~Inductor()
   {
   }
 
   /**
    * Initialization of the grid model
    */
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::initialize()
   {
     return 0;
   }
@@ -45,8 +45,8 @@ namespace GridKit
   /*
    * \brief Identify differential variables
    */
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::tagDifferentiable()
   {
     return 0;
   }
@@ -56,15 +56,13 @@ namespace GridKit
    *
    * @param rel_tol The relative tolerance which can be used to pick the
    *        absolute tolerance.
-   * @tparam ScalarT Scalar data type
-   * @tparam IdxT Index data type
    * @return int 0 if successful, non-zero otherwise.
    *
    * This represents a "noise" level close to zero for which pure relative
    * error cannot be used.
    */
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
   {
     abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
     return 0;
@@ -74,8 +72,8 @@ namespace GridKit
    * @brief Compute the resisdual of the component
    *
    */
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::evaluateInternalResidual()
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::evaluateInternalResidual()
   {
     const auto* y = y_.getData();
 
@@ -83,8 +81,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::evaluateExternalResidual()
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::evaluateExternalResidual()
   {
     auto* f = f_.getData();
 
@@ -99,12 +97,10 @@ namespace GridKit
   /**
    * @brief Evaluate the jacobian of the component
    *
-   * @tparam ScalarT
-   * @tparam IdxT
    * @return int
    */
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::evaluateJacobian()
   {
     this->zeroJacMatrix();
 
@@ -117,8 +113,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::allocate()
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::allocate()
   {
     CircuitComponent<ScalarT, IdxT>::allocate();
 
@@ -128,26 +124,26 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::evaluateIntegrand()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::initializeAdjoint()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::evaluateAdjointResidual()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Inductor<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     return 0;
   }

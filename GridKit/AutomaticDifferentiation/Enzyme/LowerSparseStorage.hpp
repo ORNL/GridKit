@@ -191,8 +191,8 @@ namespace GridKit
        *
        * @details This takes in a row, column and value and stores them in buffers
        *
-       * @tparam ScalarT - scalar data type
-       * @tparam IdxT - matrix index data type
+       * @tparam scalar_type - scalar data type
+       * @tparam index_type - matrix index data type
        *
        * @param[in] val - value to be stored
        * @param[in] row - row to be stored
@@ -205,35 +205,35 @@ namespace GridKit
        * @param[in,out] vals - buffer where val will be stored
        * @param[in,out] nnz - number of nonzeros
        */
-      template <typename ScalarT, typename IdxT>
+      template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) static void sparse_store(
-          ScalarT     val,
-          IdxT        row,
-          IdxT        col,
-          ScalarT     scaling,
-          const IdxT* row_indices,
-          const IdxT* col_indices,
-          IdxT*       rows,
-          IdxT*       cols,
-          ScalarT*    vals,
-          IdxT&       nnz)
+          scalar_type       val,
+          index_type        row,
+          index_type        col,
+          scalar_type       scaling,
+          const index_type* row_indices,
+          const index_type* col_indices,
+          index_type*       rows,
+          index_type*       cols,
+          scalar_type*      vals,
+          index_type&       nnz)
       {
         if (val == 0.0)
           return;
 
-        row /= sizeof(ScalarT);
+        row /= sizeof(scalar_type);
 
         // this template nightmare is because __attribute__((enzyme_sparse_accumulate)) does not support templates yet
-        if constexpr (std::is_same<IdxT, size_t>::value)
+        if constexpr (std::is_same<index_type, size_t>::value)
         {
-          if constexpr (std::is_same<IdxT, float>::value)
+          if constexpr (std::is_same<index_type, float>::value)
             inner_store_float_size_t(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
           else
             inner_store_double_size_t(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
         }
-        else if constexpr (std::is_same<IdxT, long int>::value)
+        else if constexpr (std::is_same<index_type, long int>::value)
         {
-          if constexpr (std::is_same<IdxT, double>::value)
+          if constexpr (std::is_same<index_type, double>::value)
             inner_store_float_long_int(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
           else
             inner_store_double_long_int(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
@@ -247,11 +247,11 @@ namespace GridKit
       /**
        * @brief Enzyme sparse load
        *
-       * @tparam ScalarT - scalar data type
-       * @tparam IdxT - matrix index data type
+       * @tparam scalar_type - scalar data type
+       * @tparam index_type - matrix index data type
        */
-      template <typename ScalarT, typename IdxT>
-      __attribute__((always_inline)) static ScalarT sparse_load(IdxT, IdxT, IdxT*, IdxT*, ScalarT*)
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) static scalar_type sparse_load(index_type, index_type, index_type*, index_type*, scalar_type*)
       {
         return 0.0;
       }
@@ -259,11 +259,11 @@ namespace GridKit
       /**
        * @brief Enzyme identity store
        *
-       * @tparam ScalarT - scalar data type
-       * @tparam IdxT - matrix index data type
+       * @tparam scalar_type - scalar data type
+       * @tparam index_type - matrix index data type
        */
-      template <typename ScalarT, typename IdxT>
-      __attribute__((always_inline)) static void ident_store(ScalarT, IdxT, IdxT)
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) static void ident_store(scalar_type, index_type, index_type)
       {
         assert(0 && "should never store");
       }
@@ -271,14 +271,14 @@ namespace GridKit
       /**
        * @brief Enzyme identity load
        *
-       * @tparam ScalarT - scalar data type
-       * @tparam IdxT - matrix index data type
+       * @tparam scalar_type - scalar data type
+       * @tparam index_type - matrix index data type
        */
-      template <typename ScalarT, typename IdxT>
-      __attribute__((always_inline)) static ScalarT ident_load(IdxT row, IdxT col)
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) static scalar_type ident_load(index_type row, index_type col)
       {
-        row /= sizeof(ScalarT);
-        return (ScalarT) (row == col);
+        row /= sizeof(scalar_type);
+        return (scalar_type) (row == col);
       }
     } // namespace Sparse
   } // namespace Enzyme

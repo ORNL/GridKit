@@ -19,8 +19,8 @@ namespace AnalysisManager
   namespace Sundials
   {
 
-    template <class ScalarT, typename IdxT>
-    Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
+    template <typename scalar_type, typename index_type>
+    Ida<scalar_type, index_type>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
       : DynamicSolver<ScalarT, IdxT>(model)
     {
       int retval = 0;
@@ -36,11 +36,11 @@ namespace AnalysisManager
      *
      * @note if sysmodel is freed before this will fail. May want something agnostic to this
      *
-     * @tparam ScalarT
-     * @tparam IdxT
+     * @tparam scalar_type
+     * @tparam index_type
      */
-    template <class ScalarT, typename IdxT>
-    Ida<ScalarT, IdxT>::~Ida()
+    template <typename scalar_type, typename index_type>
+    Ida<scalar_type, index_type>::~Ida()
     {
       deleteQuadrature();
       deleteAdjoint();
@@ -51,12 +51,9 @@ namespace AnalysisManager
 
     /**
      * @brief Configure the simulation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::configureSimulation()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::configureSimulation()
     {
       int retval = 0;
 
@@ -106,12 +103,9 @@ namespace AnalysisManager
      *
      * @note This currently uses pre-processor directives to set dense or sparse
      * linear solvers
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::configureLinearSolver()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::configureLinearSolver()
     {
       int retval = 0;
 
@@ -143,12 +137,9 @@ namespace AnalysisManager
      * @brief Configure a sparse linear solver
      *
      * @note This method is only available if SUNDIALS is configured with KLU
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::configureLinearSolverSparse()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::configureLinearSolverSparse()
     {
       int retval = 0;
 
@@ -177,12 +168,9 @@ namespace AnalysisManager
 
     /**
      * @brief Configure a dense linear solver
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::configureLinearSolverDense()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::configureLinearSolverDense()
     {
       int retval = 0;
 
@@ -202,12 +190,9 @@ namespace AnalysisManager
 
     /**
      * @brief Get default initial condition
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::getDefaultInitialCondition()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::getDefaultInitialCondition()
     {
       model_->initialize();
 
@@ -219,12 +204,9 @@ namespace AnalysisManager
 
     /**
      * @brief Initialize the simulation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::initializeSimulation(RealT t0, bool findConsistent)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::initializeSimulation(RealT t0, bool findConsistent)
     {
       int retval = 0;
 
@@ -262,8 +244,8 @@ namespace AnalysisManager
      * the final interval is epsilon-sized, it is folded into the previous
      * monitor step.
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::getMonitorStepCount(RealT tf, RealT dt_monitor) const
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::getMonitorStepCount(RealT tf, RealT dt_monitor) const
     {
       if (dt_monitor <= 0.0)
       {
@@ -283,8 +265,8 @@ namespace AnalysisManager
      * The final monitor target is pinned exactly to `tf` to avoid roundoff in
      * repeated time-step arithmetic.
      */
-    template <class ScalarT, typename IdxT>
-    typename Ida<ScalarT, IdxT>::RealT Ida<ScalarT, IdxT>::getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const
+    template <typename scalar_type, typename index_type>
+    typename Ida<scalar_type, index_type>::RealT Ida<scalar_type, index_type>::getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const
     {
       return step == nsteps ? tf : std::fma((RealT) step, dt_monitor, t_init_);
     }
@@ -292,8 +274,8 @@ namespace AnalysisManager
     /**
      * @brief Copy the current IDA solution vectors into the model and set time.
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::updateModelState(RealT t)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::updateModelState(RealT t)
     {
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
@@ -306,8 +288,8 @@ namespace AnalysisManager
      * When `dt_monitor` is zero, the simulation runs directly to the final
      * time. The final time is always solved and monitored.
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<std::function<void(RealT)>> step_callback)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<std::function<void(RealT)>> step_callback)
     {
       int retval = 0;
       int nsteps = getMonitorStepCount(tf, dt_monitor);
@@ -344,12 +326,9 @@ namespace AnalysisManager
 
     /**
      * @brief Delete the simulation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::deleteSimulation()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::deleteSimulation()
     {
       N_VDestroy(yy_);
       N_VDestroy(yp_);
@@ -364,12 +343,9 @@ namespace AnalysisManager
 
     /**
      * @brief Configure quadrature
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::configureQuadrature()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::configureQuadrature()
     {
       int retval = 0;
 
@@ -393,12 +369,9 @@ namespace AnalysisManager
 
     /**
      * @brief Initialize quadrature
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::initializeQuadrature()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::initializeQuadrature()
     {
       int retval = 0;
 
@@ -418,8 +391,8 @@ namespace AnalysisManager
      * When `dt_monitor` is zero, the simulation runs directly to the final
      * time. The final time is always solved.
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulationQuadrature(RealT tf, RealT dt_monitor)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::runSimulationQuadrature(RealT tf, RealT dt_monitor)
     {
       int retval = 0;
       int nsteps = getMonitorStepCount(tf, dt_monitor);
@@ -448,12 +421,9 @@ namespace AnalysisManager
 
     /**
      * @brief Delete quadrature
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::deleteQuadrature()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::deleteQuadrature()
     {
       IDAQuadFree(solver_);
       N_VDestroy(q_);
@@ -463,12 +433,9 @@ namespace AnalysisManager
 
     /**
      * @brief Configure adjoint
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::configureAdjoint()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::configureAdjoint()
     {
       // Allocate adjoint vector, derivatives and quadrature
       yyB_ = N_VNew_Serial(static_cast<sunindextype>(model_->size()), context_);
@@ -485,12 +452,9 @@ namespace AnalysisManager
 
     /**
      * @brief Initialize adjoint
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::initializeAdjoint(IdxT steps)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::initializeAdjoint(IdxT steps)
     {
       int retval = 0;
 
@@ -503,12 +467,9 @@ namespace AnalysisManager
 
     /**
      * @brief Initialize backward simulation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::initializeBackwardSimulation(RealT tf)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::initializeBackwardSimulation(RealT tf)
     {
       int retval = 0;
 
@@ -572,12 +533,9 @@ namespace AnalysisManager
      * @brief Configure linear solver for backward simulation
      *
      * @note This only supports dense linear solvers at the moment
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::configureLinearSolverBackward()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::configureLinearSolverBackward()
     {
       int retval = 0;
 
@@ -604,8 +562,8 @@ namespace AnalysisManager
      * When `dt_monitor` is zero, the simulation runs directly to the final
      * time. The final time is always solved.
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runForwardSimulation(RealT tf, RealT dt_monitor)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::runForwardSimulation(RealT tf, RealT dt_monitor)
     {
       int retval = 0;
       int ncheck;
@@ -635,12 +593,9 @@ namespace AnalysisManager
 
     /**
      * @brief Run backward simulation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runBackwardSimulation(RealT t_init)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::runBackwardSimulation(RealT t_init)
     {
       int      retval = 0;
       long int nstB;
@@ -669,12 +624,9 @@ namespace AnalysisManager
 
     /**
      * @brief Delete adjoint
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::deleteAdjoint()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::deleteAdjoint()
     {
       IDAAdjFree(solver_);
       return 0;
@@ -682,12 +634,9 @@ namespace AnalysisManager
 
     /**
      * @brief Delete backward simulation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::deleteBackwardSimulation()
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::deleteBackwardSimulation()
     {
       N_VDestroy(yyB_);
       N_VDestroy(ypB_);
@@ -700,12 +649,9 @@ namespace AnalysisManager
 
     /**
      * @brief Residual evaluation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Residual(RealT tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::Residual(RealT tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -723,12 +669,9 @@ namespace AnalysisManager
      * @brief Jacobian evaluation
      *
      * @note The model Jacobian is stored in CSR format.
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Jac(RealT t, RealT cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::Jac(RealT t, RealT cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -765,12 +708,9 @@ namespace AnalysisManager
 
     /**
      * @brief Integrand evaluation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Integrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::Integrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -786,12 +726,9 @@ namespace AnalysisManager
 
     /**
      * @brief Adjoint residual evaluation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointResidual(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::adjointResidual(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -809,12 +746,9 @@ namespace AnalysisManager
 
     /**
      * @brief Adjoint integrand evaluation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointIntegrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
+    template <typename scalar_type, typename index_type>
+    int Ida<scalar_type, index_type>::adjointIntegrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -832,12 +766,9 @@ namespace AnalysisManager
 
     /**
      * @brief Copy SUNDIALS N_Vector to Vector
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, VectorT& y)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::copyVec(const N_Vector x, VectorT& y)
     {
       const auto xsize = static_cast<size_t>(N_VGetLength(x));
       const auto ysize = static_cast<size_t>(y.getSize());
@@ -855,12 +786,9 @@ namespace AnalysisManager
 
     /**
      * @brief Copy Vector to SUNDIALS N_Vector
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const VectorT& x, N_Vector y)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::copyVec(const VectorT& x, N_Vector y)
     {
       const auto ysize = static_cast<size_t>(N_VGetLength(y));
       const auto xsize = static_cast<size_t>(x.getSize());
@@ -878,12 +806,9 @@ namespace AnalysisManager
 
     /**
      * @brief Copy std::vector to SUNDIALS N_Vector
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::copyVec(const std::vector<bool>& x, N_Vector y)
     {
       const auto ysize = static_cast<size_t>(N_VGetLength(y));
       if (x.size() != ysize)
@@ -899,12 +824,9 @@ namespace AnalysisManager
 
     /**
      * @brief Print output
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printOutput(RealT t) const
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::printOutput(RealT t) const
     {
       RealT* yval  = N_VGetArrayPointer(yy_);
       RealT* ypval = N_VGetArrayPointer(yp_);
@@ -923,12 +845,9 @@ namespace AnalysisManager
 
     /**
      * @brief Special print
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printSpecial(RealT t, N_Vector y) const
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::printSpecial(RealT t, N_Vector y) const
     {
       RealT* yval = N_VGetArrayPointer(y);
       IdxT   N    = static_cast<IdxT>(N_VGetLength(y));
@@ -943,12 +862,9 @@ namespace AnalysisManager
 
     /**
      * @brief Print final stats
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printFinalStats() const
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::printFinalStats() const
     {
       int retval = IDAPrintAllStats(solver_, stdout, SUN_OUTPUTFORMAT_TABLE);
       checkOutput(retval, "IDAPrintAllStats");
@@ -996,8 +912,8 @@ namespace AnalysisManager
      *        Several statistics returned by IDA are ignored because they are about the current state of IDA,
      *        rather than about the simulation at large.
      */
-    template <class ScalarT, typename IdxT>
-    IdaStats Ida<ScalarT, IdxT>::getStats() const
+    template <typename scalar_type, typename index_type>
+    IdaStats Ida<scalar_type, index_type>::getStats() const
     {
       IdaStats stats;
 
@@ -1026,12 +942,9 @@ namespace AnalysisManager
 
     /**
      * @brief Check SUNDIALS allocation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::checkAllocation(void* v, const char* functionName)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::checkAllocation(void* v, const char* functionName)
     {
       if (v == NULL)
       {
@@ -1042,12 +955,9 @@ namespace AnalysisManager
 
     /**
      * @brief Check SUNDIALS output
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::checkOutput(int retval, const char* functionName)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::checkOutput(int retval, const char* functionName)
     {
       if (retval < 0)
       {
@@ -1060,11 +970,9 @@ namespace AnalysisManager
      * @brief Set fixed step size and tolerances for the nonlinear solver
      *
      * @param time_step The fixed step size to use or 0 for adaptive
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setFixedStep(ScalarT time_step)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setFixedStep(ScalarT time_step)
     {
       time_step_ = time_step;
     }
@@ -1074,11 +982,9 @@ namespace AnalysisManager
      *        the backward simulation
      *
      * @param time_step The fixed step size to use or 0 for adaptive
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardFixedStep(ScalarT time_step)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setBackwardFixedStep(ScalarT time_step)
     {
       backward_time_step_ = time_step;
     }
@@ -1091,12 +997,10 @@ namespace AnalysisManager
      * @param abs_tol_override If positive, this value will be used as the
      *        absolute tolerance rather than the model's default absolute
      *        tolerance
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setTolerance(ScalarT rel_tol,
-                                          ScalarT abs_tol_override)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setTolerance(ScalarT rel_tol,
+                                                    ScalarT abs_tol_override)
     {
       rel_tol_          = rel_tol;
       abs_tol_override_ = abs_tol_override;
@@ -1110,12 +1014,10 @@ namespace AnalysisManager
      * @param abs_tol_override If positive, this value will be used as the
      *        absolute tolerance rather than the model's default absolute
      *        tolerance
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardTolerance(ScalarT rel_tol,
-                                                  ScalarT abs_tol_override)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setBackwardTolerance(ScalarT rel_tol,
+                                                            ScalarT abs_tol_override)
     {
       backward_rel_tol_          = rel_tol;
       backward_abs_tol_override_ = abs_tol_override;
@@ -1129,12 +1031,10 @@ namespace AnalysisManager
      * @param abs_tol_override If positive, this value will be used as the
      *        absolute tolerance rather than the model's default absolute
      *        tolerance
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setQuadratureTolerance(ScalarT rel_tol,
-                                                    ScalarT abs_tol_override)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setQuadratureTolerance(ScalarT rel_tol,
+                                                              ScalarT abs_tol_override)
     {
       quadrature_rel_tol_          = rel_tol;
       quadrature_abs_tol_override_ = abs_tol_override;
@@ -1148,12 +1048,10 @@ namespace AnalysisManager
      * @param abs_tol_override If positive, this value will be used as the
      *        absolute tolerance rather than the model's default absolute
      *        tolerance
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardQuadratureTolerance(ScalarT rel_tol,
-                                                            ScalarT abs_tol_override)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setBackwardQuadratureTolerance(ScalarT rel_tol,
+                                                                      ScalarT abs_tol_override)
     {
       backward_quadrature_rel_tol_          = rel_tol;
       backward_quadrature_abs_tol_override_ = abs_tol_override;
@@ -1164,11 +1062,9 @@ namespace AnalysisManager
      *
      * @param suppress If true, algebraic variables are excluded from IDA's
      *        local error test
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setSuppressAlgebraicErrors(bool suppress)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setSuppressAlgebraicErrors(bool suppress)
     {
       suppress_alg_ = suppress;
     }
@@ -1179,11 +1075,9 @@ namespace AnalysisManager
      *
      * @param suppress If true, algebraic variables are excluded from IDA's
      *        local error test
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardSuppressAlgebraicErrors(bool suppress)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setBackwardSuppressAlgebraicErrors(bool suppress)
     {
       backward_suppress_alg_ = suppress;
     }
@@ -1192,11 +1086,9 @@ namespace AnalysisManager
      * @brief Set the maximum number of steps
      *
      * @param max_steps The maximum number of steps
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setMaxSteps(IdxT max_steps)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setMaxSteps(IdxT max_steps)
     {
       max_steps_ = max_steps;
     }
@@ -1205,11 +1097,9 @@ namespace AnalysisManager
      * @brief Set the maximum number of steps for the backward simulation
      *
      * @param max_steps The maximum number of steps
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardMaxSteps(IdxT max_steps)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setBackwardMaxSteps(IdxT max_steps)
     {
       backward_max_steps_ = max_steps;
     }
@@ -1226,16 +1116,14 @@ namespace AnalysisManager
      * @param max_steps The maximum number of steps
      * @param suppress_alg If true, algebraic variables are excluded from IDA's
      *        local error test
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setIDAOptions(void*   mem,
-                                           ScalarT time_step,
-                                           ScalarT rel_tol,
-                                           ScalarT abs_tol_override,
-                                           IdxT    max_steps,
-                                           bool    suppress_alg)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setIDAOptions(void*   mem,
+                                                     ScalarT time_step,
+                                                     ScalarT rel_tol,
+                                                     ScalarT abs_tol_override,
+                                                     IdxT    max_steps,
+                                                     bool    suppress_alg)
     {
       int retval = 0;
       retval     = IDASetMinStep(mem, time_step);
@@ -1290,14 +1178,12 @@ namespace AnalysisManager
      *        tolerance
      * @param abs_tol_fac A factor to apply to the absolute tolerance if not
      *        overridden
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setTolerance(void*   mem,
-                                          ScalarT rel_tol,
-                                          ScalarT abs_tol_override,
-                                          ScalarT abs_tol_fac)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setTolerance(void*   mem,
+                                                    ScalarT rel_tol,
+                                                    ScalarT abs_tol_override,
+                                                    ScalarT abs_tol_fac)
     {
       int retval = 0;
 
@@ -1331,13 +1217,11 @@ namespace AnalysisManager
      *        tolerance
      * @param abs_tol_fac A factor to apply to the absolute tolerance if not
      *        overridden
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
      */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setQuadratureTolerance(void*   mem,
-                                                    ScalarT rel_tol,
-                                                    ScalarT abs_tol_override)
+    template <typename scalar_type, typename index_type>
+    void Ida<scalar_type, index_type>::setQuadratureTolerance(void*   mem,
+                                                              ScalarT rel_tol,
+                                                              ScalarT abs_tol_override)
     {
       int retval = 0;
 

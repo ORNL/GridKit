@@ -20,8 +20,8 @@ namespace GridKit
    * - Number of optimization parameters = 2
    *
    */
-  template <class ScalarT, typename IdxT>
-  Generator4Governor<ScalarT, IdxT>::Generator4Governor(bus_type* bus, ScalarT P0, ScalarT Q0)
+  template <typename scalar_type, typename index_type>
+  Generator4Governor<scalar_type, index_type>::Generator4Governor(BusT* bus, ScalarT P0, ScalarT Q0)
     : ModelEvaluatorImpl<ScalarT, IdxT>(9, 1, 2),
       H_(5.0),
       D_(0.04),
@@ -54,8 +54,8 @@ namespace GridKit
   {
   }
 
-  template <class ScalarT, typename IdxT>
-  Generator4Governor<ScalarT, IdxT>::~Generator4Governor()
+  template <typename scalar_type, typename index_type>
+  Generator4Governor<scalar_type, index_type>::~Generator4Governor()
   {
     // std::cout << "Destroy Gen2..." << std::endl;
   }
@@ -63,8 +63,8 @@ namespace GridKit
   /*!
    * @brief allocate method computes sparsity pattern of the Jacobian.
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4Governor<ScalarT, IdxT>::allocate()
+  template <typename scalar_type, typename index_type>
+  int Generator4Governor<scalar_type, index_type>::allocate()
   {
     // std::cout << "Allocate Gen2..." << std::endl;
     tag_.resize(static_cast<size_t>(size_));
@@ -93,8 +93,8 @@ namespace GridKit
    * \f}
    *
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4Governor<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int Generator4Governor<scalar_type, index_type>::initialize()
   {
     // std::cout << "Initialize Generator4Governor..." << std::endl;
 
@@ -162,8 +162,8 @@ namespace GridKit
   /**
    * \brief Identify differential variables.
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4Governor<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int Generator4Governor<scalar_type, index_type>::tagDifferentiable()
   {
     // std::cout << "size of tag vector is " << tag_.size() << "\n";
     tag_[static_cast<size_t>(offsetGen_ + 0)] = true;
@@ -180,8 +180,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Generator4Governor<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+  template <typename scalar_type, typename index_type>
+  int Generator4Governor<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
   {
     abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
     return 0;
@@ -223,8 +223,8 @@ namespace GridKit
    *
    */
 
-  template <class ScalarT, typename IdxT>
-  int Generator4Governor<ScalarT, IdxT>::evaluateResidual()
+  template <typename scalar_type, typename index_type>
+  int Generator4Governor<scalar_type, index_type>::evaluateResidual()
   {
     const auto* y  = y_.getData();
     const auto* yp = yp_.getData();
@@ -261,16 +261,16 @@ namespace GridKit
    *
    *
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4Governor<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int Generator4Governor<scalar_type, index_type>::evaluateJacobian()
   {
     std::cout << "Evaluate Jacobian for Gen2..." << std::endl;
     std::cout << "Jacobian evaluation not implemented!" << std::endl;
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Generator4Governor<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Generator4Governor<scalar_type, index_type>::evaluateIntegrand()
   {
     // std::cout << "Evaluate Integrand for Gen2..." << std::endl;
     auto* g = g_.getData();
@@ -280,8 +280,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Generator4Governor<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int Generator4Governor<scalar_type, index_type>::initializeAdjoint()
   {
     // std::cout << "Initialize adjoint for Generator4Governor..." << std::endl;
     auto* yB  = yB_.getData();
@@ -327,8 +327,8 @@ namespace GridKit
    *
    *
    */
-  template <class ScalarT, typename IdxT>
-  int Generator4Governor<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int Generator4Governor<scalar_type, index_type>::evaluateAdjointResidual()
   {
     // std::cout << "Evaluate adjoint residual for Gen2..." << std::endl;
     ScalarT sinPhi = sin(delta() - theta());
@@ -370,16 +370,16 @@ namespace GridKit
     return 0;
   }
 
-  // template <class ScalarT, typename IdxT>
-  // int Generator4Governor<ScalarT, IdxT>::evaluateAdjointJacobian()
+  // template <typename scalar_type, typename index_type>
+  // int Generator4Governor<scalar_type, index_type>::evaluateAdjointJacobian()
   // {
   //     std::cout << "Evaluate adjoint Jacobian for Gen2..." << std::endl;
   //     std::cout << "Adjoint Jacobian evaluation not implemented!" << std::endl;
   //     return 0;
   // }
 
-  template <class ScalarT, typename IdxT>
-  int Generator4Governor<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Generator4Governor<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     // std::cout << "Evaluate adjoint Integrand for Gen2..." << std::endl;
     const auto* y  = y_.getData();
@@ -407,8 +407,8 @@ namespace GridKit
    * \f[ P_g = E_q' I_q + E_d' I_d + (X_q' - X_d') I_q I_d - R_a (I_d^2 + I_q^2) \f]
    *
    */
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4Governor<ScalarT, IdxT>::Pg()
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4Governor<scalar_type, index_type>::Pg()
   {
     return Iq() * Eqp() + Id() * Edp() + (Xqp_ - Xdp_) * Id() * Iq() - Rs_ * (Id() * Id() + Iq() * Iq());
   }
@@ -418,8 +418,8 @@ namespace GridKit
    *
    * \f[ Q_g = E_q' I_d - E_d' I_q - X_d' I_d^2 - X_q' I_q^2 \f]
    */
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4Governor<ScalarT, IdxT>::Qg()
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4Governor<scalar_type, index_type>::Qg()
   {
     return -Iq() * Edp() + Id() * Eqp() - Xdp_ * Id() * Id() - Xqp_ * Iq() * Iq();
   }
@@ -430,8 +430,8 @@ namespace GridKit
    * @todo Use smooth penalty function!
    *
    */
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4Governor<ScalarT, IdxT>::frequencyPenalty(ScalarT omega)
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4Governor<scalar_type, index_type>::frequencyPenalty(ScalarT omega)
   {
     return c_ * pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
   }
@@ -443,8 +443,8 @@ namespace GridKit
    * @todo Use smooth penalty function!
    *
    */
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4Governor<ScalarT, IdxT>::frequencyPenaltyDer(ScalarT omega)
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4Governor<scalar_type, index_type>::frequencyPenaltyDer(ScalarT omega)
   {
     if (omega > omega_up_)
     {
@@ -460,26 +460,26 @@ namespace GridKit
     }
   }
 
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4Governor<ScalarT, IdxT>::Lm(ScalarT Pm)
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4Governor<scalar_type, index_type>::Lm(ScalarT Pm)
   {
     return Pm0_ + deltaPm_ * std::tanh(Pm);
   }
 
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4Governor<ScalarT, IdxT>::dLm(ScalarT Pm)
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4Governor<scalar_type, index_type>::dLm(ScalarT Pm)
   {
     return deltaPm_ / (std::cosh(Pm) * std::cosh(Pm));
   }
 
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4Governor<ScalarT, IdxT>::Ln(ScalarT Pn)
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4Governor<scalar_type, index_type>::Ln(ScalarT Pn)
   {
     return deltaPn_ * std::tanh(Pn);
   }
 
-  template <class ScalarT, typename IdxT>
-  ScalarT Generator4Governor<ScalarT, IdxT>::dLn(ScalarT Pn)
+  template <typename scalar_type, typename index_type>
+  scalar_type Generator4Governor<scalar_type, index_type>::dLn(ScalarT Pn)
   {
     return deltaPn_ / (std::cosh(Pn) * std::cosh(Pn));
   }

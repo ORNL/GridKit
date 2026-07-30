@@ -10,18 +10,20 @@ namespace GridKit
    * @brief Implementation of a power grid.
    *
    */
-  template <class ScalarT, typename IdxT>
-  class MiniGrid : public ModelEvaluatorImpl<ScalarT, IdxT>
+  template <typename scalar_type, typename index_type>
+  class MiniGrid : public ModelEvaluatorImpl<scalar_type, index_type>
   {
-    using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::nnz_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::time_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
-
-    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using ModelEvaluatorImpl<scalar_type, index_type>::size_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::nnz_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::time_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::y_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::f_;
 
   public:
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
+    using RealT   = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+
     MiniGrid();
     virtual ~MiniGrid();
 
