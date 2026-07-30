@@ -163,11 +163,11 @@ namespace GridKit
         const ScalarT Ir1{15.0};  ///< Solution: real current entering bus-1
         const ScalarT Ii1{-20.0}; ///< Solution: imaginary current entering bus-1
 
-        auto* bus0 = system->getBus(0);
-        auto* bus1 = system->getBus(1);
+        auto* branch = system->getComponent(0);
+        auto* bus1   = system->getBus(1);
 
-        success *= isEqual(bus0->Ir(), Ir0);
-        success *= isEqual(bus0->Ii(), Ii0);
+        success *= isEqual(branch->getExternalResidual()[0], Ir0);
+        success *= isEqual(branch->getExternalResidual()[1], Ii0);
         success *= isEqual(bus1->Ir(), Ir1);
         success *= isEqual(bus1->Ii(), Ii1);
 
@@ -214,8 +214,8 @@ namespace GridKit
         system.initialize();
         system.evaluateResidual();
 
-        success *= isEqual(bus1.Ir(), Ir1);
-        success *= isEqual(bus1.Ii(), Ii1);
+        success *= isEqual(branch.getExternalResidual()[0], Ir1);
+        success *= isEqual(branch.getExternalResidual()[1], Ii1);
         success *= isEqual(bus2.Ir(), Ir2);
         success *= isEqual(bus2.Ii(), Ii2);
 

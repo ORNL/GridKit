@@ -232,6 +232,16 @@ namespace GridKit
         return residual_indices_;
       }
 
+      const std::vector<ScalarT>& getExternalResidual() const
+      {
+        return f_ext_;
+      }
+
+      const std::vector<IdxT>& getExternalResidualIndices() const
+      {
+        return residual_indices_ext_;
+      }
+
       CsrMatrixT* getCsrJacobian() const override
       {
         return csr_jac_;
