@@ -64,14 +64,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    BusSignalVoltageIn<scalar_type, index_type>::~BusSignalVoltageIn()
-    {
-      if (coo_jac_ != nullptr)
-      {
-        delete coo_jac_;
-        coo_jac_ = nullptr;
-      }
-    }
+    BusSignalVoltageIn<scalar_type, index_type>::~BusSignalVoltageIn() = default;
 
     /*!
      * @brief Allocate (empty) bus storage and link output signals.
@@ -212,7 +205,7 @@ namespace GridKit
      * _before_ component model residuals.
      */
     template <typename scalar_type, typename index_type>
-    int BusSignalVoltageIn<scalar_type, index_type>::evaluateResidual()
+    int BusSignalVoltageIn<scalar_type, index_type>::evaluateInternalResidual()
     {
       Ir_ = 0.0;
       Ii_ = 0.0;

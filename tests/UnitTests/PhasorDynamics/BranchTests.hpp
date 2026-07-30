@@ -145,8 +145,6 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
         PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
         PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
-        PhasorDynamics::Branch<ScalarT, IdxT>     branch(R, X, G, B, tap, phase);
-        wireBranch(bus1, bus2, branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
 
         bus1.allocate();
         bus1.initialize();
@@ -168,7 +166,10 @@ namespace GridKit
         data.parameters[Parameter::tap]   = tap;
         data.parameters[Parameter::phase] = phase;
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, data);
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(data);
+        wireBranch(bus1, bus2, branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
+        bus1.allocate();
+        bus2.allocate();
         branch.allocate();
         branch.evaluateResidual();
 
@@ -363,6 +364,7 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(1.0, 0.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr, bus1_vi, bus2_vr, bus2_vi;
 
         PhasorDynamics::Branch<ScalarT, IdxT> valid_branch(0.0, 0.1, 0.0, 0.0);
         wireBranch(bus1, bus2, valid_branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
@@ -373,7 +375,6 @@ namespace GridKit
         // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(&bus1, &bus2, 0.0, 0.0, 0.0, 0.0);
         PhasorDynamics::Branch<ScalarT, IdxT> unwired_branch(0.0, 0.1, 0.0, 0.0);
         success *= (unwired_branch.verify() != 0);
 

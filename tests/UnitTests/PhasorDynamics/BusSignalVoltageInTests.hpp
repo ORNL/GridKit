@@ -123,7 +123,7 @@ namespace GridKit
         Vi       = 0.41;
         success *= isEqual(bus.Vr(), 1.17);
         success *= isEqual(bus.Vi(), 0.41);
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
         success *= isEqual(bus.Vr(), 1.17);
         success *= isEqual(bus.Vi(), 0.41);
 
@@ -183,7 +183,7 @@ namespace GridKit
         success *= (ir_node.getVariableIndex() == INVALID_INDEX<IdxT>);
         success *= (ii_node.getVariableIndex() == INVALID_INDEX<IdxT>);
 
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
         success *= isEqual(ir_node.read(), 0.0);
         success *= isEqual(ii_node.read(), 0.0);
 
@@ -196,7 +196,7 @@ namespace GridKit
         success  *= isEqual(ii_node.read(), 1.6);
 
         // Re-evaluating resets the sums
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
         success *= isEqual(ir_node.read(), 0.0);
         success *= isEqual(ii_node.read(), 0.0);
 
@@ -270,7 +270,7 @@ namespace GridKit
         bus.getPorts().in.template port<SignalIn::vi>().connect(&vi_node);
         bus.allocate();
         bus.initialize();
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<DependencyTracking::Variable, IdxT>&>(bus).evaluateInternalResidual();
         bus.evaluateJacobian();
 
         success *= isEqual(bus.Vr().getValue(), 0.93);

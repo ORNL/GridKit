@@ -63,24 +63,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    BusSignalVoltageOut<scalar_type, index_type>::~BusSignalVoltageOut()
-    {
-      if (J_rows_buffer_ != nullptr)
-      {
-        delete[] J_rows_buffer_;
-        delete[] J_cols_buffer_;
-        delete[] J_vals_buffer_;
-        J_rows_buffer_ = nullptr;
-        J_cols_buffer_ = nullptr;
-        J_vals_buffer_ = nullptr;
-      }
-
-      if (coo_jac_ != nullptr)
-      {
-        delete coo_jac_;
-        coo_jac_ = nullptr;
-      }
-    }
+    BusSignalVoltageOut<scalar_type, index_type>::~BusSignalVoltageOut() = default;
 
     /*!
      * @brief Allocate bus storage and index maps, and link output signals.
@@ -108,6 +91,21 @@ namespace GridKit
       {
         this->setVariableIndex(j, j);
         this->setResidualIndex(j, j);
+      }
+
+      // Publish voltage signals assigned to this bus
+      static constexpr auto VR = BusInternalVariables::VR;
+      static constexpr auto VI = BusInternalVariables::VI;
+
+      if (this->signals_.template isAssigned<VR>())
+      {
+        this->signals_.template getSignalNode<VR>()->link(
+            &y_.getData()[0], &this->getVariableIndex(0), &this->getResidualIndex(0));
+      }
+      if (this->signals_.template isAssigned<VI>())
+      {
+        this->signals_.template getSignalNode<VI>()->link(
+            &y_.getData()[1], &this->getVariableIndex(1), &this->getResidualIndex(1));
       }
 
       // Publish bus voltage on the signal outlets
@@ -255,7 +253,7 @@ namespace GridKit
      * _before_ component model residuals.
      */
     template <typename scalar_type, typename index_type>
-    int BusSignalVoltageOut<scalar_type, index_type>::evaluateResidual()
+    int BusSignalVoltageOut<scalar_type, index_type>::evaluateInternalResidual()
     {
       auto* f = f_.getData();
 

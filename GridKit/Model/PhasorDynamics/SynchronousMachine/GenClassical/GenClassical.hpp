@@ -72,6 +72,8 @@ namespace GridKit
       using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT     = Model::VariableMonitor<GenClassical, GenClassicalData>;
 
+      GenClassical();
+      GenClassical(RealT p0, RealT q0, RealT H, RealT D, RealT Ra, RealT Xdp);
       GenClassical(const ModelDataT& data);
       ~GenClassical();
 
@@ -83,22 +85,6 @@ namespace GridKit
       int setAbsoluteTolerance(RealT rel_tol) override final;
       int evaluateInternalResidual() override final;
       int evaluateExternalResidual() override final;
-
-      int verify() const override final
-      {
-        int error_count = 0;
-        if (!signals_.template isAttached<GenClassicalExternalVariables::VR>())
-        {
-          Log::error() << "GenClassical: VR signal is not attached\n";
-          ++error_count;
-        }
-        if (!signals_.template isAttached<GenClassicalExternalVariables::VI>())
-        {
-          Log::error() << "GenClassical: VI signal is not attached\n";
-          ++error_count;
-        }
-        return error_count;
-      }
 
       /// Get the `ComponentSignals` from this component
       auto getSignals()
@@ -145,6 +131,7 @@ namespace GridKit
 
       /// Component signal ports
       SignalPortsT ports_;
+      ComponentSignals<ScalarT, IdxT, NoVariables, GenClassicalExternalVariables> signals_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};
