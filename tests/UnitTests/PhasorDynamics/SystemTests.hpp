@@ -101,7 +101,9 @@ namespace GridKit
         const ScalarT Ir1{15.0};  ///< Solution: real current entering bus-1
         const ScalarT Ii1{-20.0}; ///< Solution: imaginary current entering bus-1
 
-        auto* branch = system->getComponent(0);
+        // Components are stored in insertion order and the composer adds the
+        // two buses before the branch.
+        auto* branch = system->getComponent(2);
         auto* bus1   = system->getBus(1);
 
         success *= isEqual(branch->getExternalResidual()[0], Ir0);

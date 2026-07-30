@@ -19,11 +19,6 @@ namespace GridKit
         has_jacobian = has_jacobian && component->hasJacobian();
       }
 
-      for (const auto& bus : buses_)
-      {
-        has_jacobian = has_jacobian && bus->hasJacobian();
-      }
-
       if (!has_jacobian)
       {
         Log::warning() << "GridKit was built with Enzyme, but some models "

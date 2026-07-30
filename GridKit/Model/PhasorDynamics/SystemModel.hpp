@@ -110,9 +110,12 @@ namespace GridKit
       BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id);
 
     private:
-      std::vector<BusT*>       buses_;
       std::vector<SignalT*>    signals_;
       std::vector<ComponentT*> components_;
+
+      /// Non-owning bus lookup for composer wiring and diagnostics. Buses are
+      /// owned and evaluated as ordinary members of components_.
+      std::vector<BusT*> bus_lookup_;
 
       /// Voltage signal nodes created and assigned to composed buses
       std::vector<std::unique_ptr<SignalT>> bus_signals_;
