@@ -7,6 +7,7 @@
  */
 
 #pragma once
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
@@ -66,12 +67,12 @@ namespace GridKit
       using ScalarT      = scalar_type;
       using IdxT         = index_type;
       using RealT        = typename Component<ScalarT, IdxT>::RealT;
-      using BusT         = BusBase<ScalarT, IdxT>;
+
       using ModelDataT   = GenClassicalData<RealT, IdxT>;
       using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT     = Model::VariableMonitor<GenClassical, GenClassicalData>;
 
-      GenClassical(BusT* bus, const ModelDataT& data);
+      GenClassical(const ModelDataT& data);
       ~GenClassical();
 
       int setGridKitComponentID(IdxT) override final;
@@ -83,6 +84,29 @@ namespace GridKit
       int evaluateInternalResidual() override final;
       int evaluateResidual() override final;
       int evaluateExternalResidual() override final;
+
+      int verify() const override final
+      {
+        int error_count = 0;
+        if (!signals_.template isAttached<GenClassicalExternalVariables::VR>())
+        {
+          Log::error() << "GenClassical: VR signal is not attached\n";
+          ++error_count;
+        }
+        if (!signals_.template isAttached<GenClassicalExternalVariables::VI>())
+        {
+          Log::error() << "GenClassical: VI signal is not attached\n";
+          ++error_count;
+        }
+        return error_count;
+      }
+
+      /// Get the `ComponentSignals` from this component
+      auto getSignals()
+          -> ComponentSignals<ScalarT, IdxT, NoVariables, GenClassicalExternalVariables>&
+      {
+        return signals_;
+      }
 
       // Still to be implemented
       int evaluateJacobian() override final;
@@ -101,24 +125,14 @@ namespace GridKit
       void gatherExternalVariables();
       void setDerivedParams();
 
-      ScalarT& Vr()
+      ScalarT Vr() const
       {
-        return bus_->Vr();
+        return signals_.template readExternalVariable<GenClassicalExternalVariables::VR>();
       }
 
-      ScalarT& Vi()
+      ScalarT Vi() const
       {
-        return bus_->Vi();
-      }
-
-      ScalarT& Ir()
-      {
-        return bus_->Ir();
-      }
-
-      ScalarT& Ii()
-      {
-        return bus_->Ii();
+        return signals_.template readExternalVariable<GenClassicalExternalVariables::VI>();
       }
 
     public:
@@ -129,7 +143,6 @@ namespace GridKit
 
     private:
       /* Identification */
-      BusT* bus_;
 
       /// Component signal ports
       SignalPortsT ports_;

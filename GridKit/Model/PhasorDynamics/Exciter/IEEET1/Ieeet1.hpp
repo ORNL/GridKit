@@ -8,6 +8,7 @@
  */
 
 #pragma once
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
@@ -74,14 +75,14 @@ namespace GridKit
         using ScalarT        = scalar_type;
         using IdxT           = index_type;
         using RealT          = typename Component<ScalarT, IdxT>::RealT;
-        using BusT           = BusBase<ScalarT, IdxT>;
+
         using ModelDataT     = Ieeet1Data<RealT, IdxT>;
         using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
 
-        Ieeet1(BusT* bus);
-        Ieeet1(BusT* bus, const ModelDataT& data);
+        Ieeet1();
+        Ieeet1(const ModelDataT& data);
         ~Ieeet1();
 
         int setGridKitComponentID(IdxT) override final;
@@ -104,12 +105,11 @@ namespace GridKit
         __attribute__((always_inline)) inline int evaluateInternalResidual(
             const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
+      public:
+      auto& getSignals() { return signals_; }
       private:
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
-
-        // Signal pointers
-        BusT* bus_;
 
         // Model Input parameters
         RealT Tr_{0.0};      ///< Time constant for voltage sensing

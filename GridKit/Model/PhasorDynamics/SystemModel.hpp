@@ -66,6 +66,7 @@ namespace GridKit
       using BusT           = BusBase<ScalarT, IdxT>;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
+      using SignalT = SignalNodeT;
       using ComponentT     = Component<ScalarT, IdxT>;
       using MonitorT       = Model::VariableMonitorController<ScalarT>;
 
@@ -114,6 +115,7 @@ namespace GridKit
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;
 
+      std::vector<std::unique_ptr<SignalT>> bus_signals_;
       std::map<IdxT, IdxT> gridkit_bus_indices_;   ///< Map between gridkit_bus_id and bus_id
       std::map<IdxT, IdxT> gridkit_fault_indices_; ///< Map between fault_id and component_id
 

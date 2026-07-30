@@ -1,4 +1,5 @@
 #pragma once
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
@@ -48,13 +49,12 @@ namespace GridKit
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = LoadZData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
 
-      LoadZ(BusT* bus);
-      LoadZ(BusT* bus, RealT R, RealT X);
-      LoadZ(BusT* bus, const ModelDataT& data);
+      LoadZ();
+      LoadZ(RealT R, RealT X);
+      LoadZ(const ModelDataT& data);
       virtual ~LoadZ();
 
       virtual int setGridKitComponentID(IdxT) override final;
@@ -69,7 +69,25 @@ namespace GridKit
 
       virtual int verify() const override final
       {
-        return 0;
+        int error_count = 0;
+        if (!signals_.template isAttached<LoadZExternalVariables::VR>())
+        {
+          Log::error() << "LoadZ: VR signal is not attached\n";
+          ++error_count;
+        }
+        if (!signals_.template isAttached<LoadZExternalVariables::VI>())
+        {
+          Log::error() << "LoadZ: VI signal is not attached\n";
+          ++error_count;
+        }
+        return error_count;
+      }
+
+      /// Get the `ComponentSignals` from this component
+      auto getSignals()
+          -> ComponentSignals<ScalarT, IdxT, NoVariables, LoadZExternalVariables>&
+      {
+        return signals_;
       }
 
     public:
@@ -90,24 +108,14 @@ namespace GridKit
       void gatherExternalVariables();
       void setDerivedParams();
 
-      ScalarT& Vr()
+      ScalarT Vr() const
       {
-        return bus_->Vr();
+        return signals_.template readExternalVariable<LoadZExternalVariables::VR>();
       }
 
-      ScalarT& Vi()
+      ScalarT Vi() const
       {
-        return bus_->Vi();
-      }
-
-      ScalarT& Ir()
-      {
-        return bus_->Ir();
-      }
-
-      ScalarT& Ii()
-      {
-        return bus_->Ii();
+        return signals_.template readExternalVariable<LoadZExternalVariables::VI>();
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;
@@ -119,7 +127,6 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      BusT* bus_{nullptr};
       RealT R_{0.1};
       RealT X_{0.01};
 
@@ -128,6 +135,9 @@ namespace GridKit
       RealT g_;
 
       std::unique_ptr<MonitorT> monitor_;
+
+      /// Component signals
+      ComponentSignals<ScalarT, IdxT, NoVariables, LoadZExternalVariables> signals_;
     };
 
   } // namespace PhasorDynamics

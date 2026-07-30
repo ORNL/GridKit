@@ -6,6 +6,7 @@
  */
 
 #pragma once
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
@@ -75,14 +76,14 @@ namespace GridKit
       using ScalarT        = scalar_type;
       using IdxT           = index_type;
       using RealT          = typename Component<ScalarT, IdxT>::RealT;
-      using BusT           = BusBase<ScalarT, IdxT>;
+
       using ModelDataT     = GensalData<RealT, IdxT>;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT       = Model::VariableMonitor<Gensal, GensalData>;
 
-      Gensal(BusT* bus, const ModelDataT& data);
+      Gensal(const ModelDataT& data);
       ~Gensal();
 
       int setGridKitComponentID(IdxT) override final;
@@ -112,24 +113,14 @@ namespace GridKit
       void gatherExternalVariables();
       void setDerivedParams();
 
-      ScalarT& Vr()
+      ScalarT Vr() const
       {
-        return bus_->Vr();
+        return signals_.template readExternalVariable<GensalExternalVariables::VR>();
       }
 
-      ScalarT& Vi()
+      ScalarT Vi() const
       {
-        return bus_->Vi();
-      }
-
-      ScalarT& Ir()
-      {
-        return bus_->Ir();
-      }
-
-      ScalarT& Ii()
-      {
-        return bus_->Ii();
+        return signals_.template readExternalVariable<GensalExternalVariables::VI>();
       }
 
     public:
@@ -140,10 +131,10 @@ namespace GridKit
 
     private:
       /* Identification */
-      BusT* bus_;
 
       /* Component ports */
       SignalPortsT ports_;
+      ComponentSignals<ScalarT, IdxT, GensalInternalVariables, GensalExternalVariables> signals_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};

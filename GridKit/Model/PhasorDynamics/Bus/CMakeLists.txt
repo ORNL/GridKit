@@ -32,6 +32,7 @@ gridkit_add_library(
   phasor_dynamics_bus
   SOURCES ${_bus_sources}
   HEADERS ${_install_headers}
+  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
   LINK_LIBRARIES
     PUBLIC
     GridKit::phasor_dynamics_core
@@ -44,6 +45,7 @@ gridkit_add_library(
           BusInfiniteDependencyTracking.cpp
           BusSignalVoltageOut/BusSignalVoltageOutDependencyTracking.cpp
           BusSignalVoltageIn/BusSignalVoltageInDependencyTracking.cpp
+  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
   LINK_LIBRARIES
     PUBLIC
     GridKit::phasor_dynamics_core

@@ -59,10 +59,19 @@ namespace GridKit
         signal_nodes_.add(signaldata);
       }
 
-      // Add electrical buses
+      // Add electrical buses. Each bus publishes its voltage on two signal
+      // nodes the system creates and assigns here.
       for (const auto& busdata : data.bus)
       {
         BusBase<ScalarT, IdxT>* bus = BusFactory<ScalarT, IdxT>::create(busdata, signal_nodes_);
+
+        auto vr = std::make_unique<SignalNode<ScalarT, IdxT>>();
+        auto vi = std::make_unique<SignalNode<ScalarT, IdxT>>();
+        bus->getSignals().template assignSignalNode<BusInternalVariables::VR>(vr.get());
+        bus->getSignals().template assignSignalNode<BusInternalVariables::VI>(vi.get());
+        bus_signals_.push_back(std::move(vr));
+        bus_signals_.push_back(std::move(vi));
+
         addBus(bus);
       }
 
@@ -96,9 +105,18 @@ namespace GridKit
           bus2_index = branchdata.buses.at(BranchBuses::bus2);
         }
 
-        auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index),
-                                                 getBus(bus2_index),
-                                                 branchdata);
+        auto* branch = new Branch<ScalarT, IdxT>(branchdata);
+
+        auto& bus1_signals = getBus(bus1_index)->getSignals();
+        auto& bus2_signals = getBus(bus2_index)->getSignals();
+        branch->getSignals().template attachSignalNode<BranchExternalVariables::VR1>(
+            bus1_signals.template getSignalNode<BusInternalVariables::VR>());
+        branch->getSignals().template attachSignalNode<BranchExternalVariables::VI1>(
+            bus1_signals.template getSignalNode<BusInternalVariables::VI>());
+        branch->getSignals().template attachSignalNode<BranchExternalVariables::VR2>(
+            bus2_signals.template getSignalNode<BusInternalVariables::VR>());
+        branch->getSignals().template attachSignalNode<BranchExternalVariables::VI2>(
+            bus2_signals.template getSignalNode<BusInternalVariables::VI>());
         addComponent(branch);
       }
 
@@ -111,7 +129,13 @@ namespace GridKit
         {
           bus_index = loaddata.buses.at(LoadZBuses::bus);
         }
-        auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
+        auto* load = new LoadZ<ScalarT, IdxT>(loaddata);
+
+        auto& bus_signals = getBus(bus_index)->getSignals();
+        load->getSignals().template attachSignalNode<LoadZExternalVariables::VR>(
+            bus_signals.template getSignalNode<BusInternalVariables::VR>());
+        load->getSignals().template attachSignalNode<LoadZExternalVariables::VI>(
+            bus_signals.template getSignalNode<BusInternalVariables::VI>());
         addComponent(load);
       }
 
@@ -124,8 +148,13 @@ namespace GridKit
         {
           bus_index = loadzipdata.buses.at(LoadZIPBuses::bus);
         }
-        auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
-                                                   loadzipdata);
+        auto* loadzip = new LoadZIP<ScalarT, IdxT>(loadzipdata);
+
+        auto& bus_signals = getBus(bus_index)->getSignals();
+        loadzip->getSignals().template attachSignalNode<LoadZIPExternalVariables::VR>(
+            bus_signals.template getSignalNode<BusInternalVariables::VR>());
+        loadzip->getSignals().template attachSignalNode<LoadZIPExternalVariables::VI>(
+            bus_signals.template getSignalNode<BusInternalVariables::VI>());
         addComponent(loadzip);
       }
 
@@ -137,7 +166,15 @@ namespace GridKit
         {
           bus_index = gendata.buses.at(GenrouBuses::bus);
         }
-        auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
+
+        auto* gen = new Genrou<ScalarT, IdxT>(gendata);
+
+        auto& bus_signals = getBus(bus_index)->getSignals();
+        gen->getSignals().template attachSignalNode<GenrouExternalVariables::VR>(
+            bus_signals.template getSignalNode<BusInternalVariables::VR>());
+        gen->getSignals().template attachSignalNode<GenrouExternalVariables::VI>(
+            bus_signals.template getSignalNode<BusInternalVariables::VI>());
+
         gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
       }
@@ -151,7 +188,14 @@ namespace GridKit
           bus_index = gendata.buses.at(GensalBuses::bus);
         }
 
-        auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
+        auto* gen = new Gensal<ScalarT, IdxT>(gendata);
+
+        auto& bus_signals = getBus(bus_index)->getSignals();
+        gen->getSignals().template attachSignalNode<GensalExternalVariables::VR>(
+            bus_signals.template getSignalNode<BusInternalVariables::VR>());
+        gen->getSignals().template attachSignalNode<GensalExternalVariables::VI>(
+            bus_signals.template getSignalNode<BusInternalVariables::VI>());
+
         gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
       }
@@ -164,7 +208,13 @@ namespace GridKit
         {
           bus_index = gendata.buses.at(GenClassicalBuses::bus);
         }
-        auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
+        auto* gen = new GenClassical<ScalarT, IdxT>(gendata);
+
+        auto& bus_signals = getBus(bus_index)->getSignals();
+        gen->getSignals().template attachSignalNode<GenClassicalExternalVariables::VR>(
+            bus_signals.template getSignalNode<BusInternalVariables::VR>());
+        gen->getSignals().template attachSignalNode<GenClassicalExternalVariables::VI>(
+            bus_signals.template getSignalNode<BusInternalVariables::VI>());
         gen->getPorts().connect(gendata, signal_nodes_);
         addComponent(gen);
       }
@@ -229,7 +279,13 @@ namespace GridKit
           bus_index = excitedata.buses.at(Ieeet1Buses::bus);
         }
 
-        auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
+        auto* exciter = new Ieeet1<ScalarT, IdxT>(excitedata);
+
+        auto& bus_signals = getBus(bus_index)->getSignals();
+        exciter->getSignals().template attachSignalNode<Ieeet1ExternalVariables::VREAL>(
+            bus_signals.template getSignalNode<BusInternalVariables::VR>());
+        exciter->getSignals().template attachSignalNode<Ieeet1ExternalVariables::VIMAG>(
+            bus_signals.template getSignalNode<BusInternalVariables::VI>());
         exciter->getPorts().connect(excitedata, signal_nodes_);
 
         addComponent(exciter);
@@ -257,7 +313,27 @@ namespace GridKit
           bus_index = excitedata.buses.at(SexsPtiBuses::bus);
         }
 
-        auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
+        auto* exciter = new SexsPti<ScalarT, IdxT>(excitedata);
+
+        auto& bus_signals = getBus(bus_index)->getSignals();
+        exciter->getSignals().template attachSignalNode<SexsPtiExternalVariables::VREAL>(
+            bus_signals.template getSignalNode<BusInternalVariables::VR>());
+        exciter->getSignals().template attachSignalNode<SexsPtiExternalVariables::VIMAG>(
+            bus_signals.template getSignalNode<BusInternalVariables::VI>());
+
+        if (excitedata.signal_outputs.contains(SexsPtiSignalOutputs::efd))
+        {
+          IdxT           efd = excitedata.signal_outputs.at(SexsPtiSignalOutputs::efd);
+          constexpr auto EFD = SexsPtiInternalVariables::EFD;
+          exciter->getSignals().template assignSignalNode<EFD>(getSignal(efd));
+        }
+
+        if (excitedata.signal_inputs.contains(SexsPtiSignalInputs::vs))
+        {
+          IdxT           vs = excitedata.signal_inputs.at(SexsPtiSignalInputs::vs);
+          constexpr auto VS = SexsPtiExternalVariables::VS;
+          exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
+        }
         exciter->getPorts().connect(excitedata, signal_nodes_);
 
         addComponent(exciter);
@@ -303,7 +379,13 @@ namespace GridKit
         {
           bus_index = faultdata.buses.at(BusFaultBuses::bus);
         }
-        auto* fault = new BusFault<ScalarT, IdxT>(getBus(bus_index), faultdata);
+        auto* fault = new BusFault<ScalarT, IdxT>(faultdata);
+
+        auto& bus_signals = getBus(bus_index)->getSignals();
+        fault->getSignals().template attachSignalNode<BusFaultExternalVariables::VR>(
+            bus_signals.template getSignalNode<BusInternalVariables::VR>());
+        fault->getSignals().template attachSignalNode<BusFaultExternalVariables::VI>(
+            bus_signals.template getSignalNode<BusInternalVariables::VI>());
         addFault(fault);
       }
 
