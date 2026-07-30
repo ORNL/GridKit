@@ -414,11 +414,6 @@ namespace GridKit
         {
           delete component;
         }
-
-        for (auto bus : buses_)
-        {
-          delete bus;
-        }
       }
     }
 
@@ -453,11 +448,6 @@ namespace GridKit
     int SystemModel<scalar_type, index_type>::allocate()
     {
       size_ = 0;
-
-      for (const auto& bus : buses_)
-      {
-        size_ += bus->size();
-      }
 
       for (const auto& component : components_)
       {
@@ -499,30 +489,6 @@ namespace GridKit
       }
 
       IdxT offset = 0;
-
-      for (const auto& bus : buses_)
-      {
-        const int bind_status = bus->bind(y_, yp_, f_, abs_tol_, offset);
-        if (bind_status != 0)
-        {
-          Log::error() << "Failed to bind bus vectors to system storage\n";
-          throw std::runtime_error("SystemModel allocation failed");
-        }
-
-        if (bus->allocate() != 0)
-        {
-          Log::error() << "Failed to allocate bus data\n";
-          throw std::runtime_error("SystemModel allocation failed");
-        }
-
-        for (IdxT j = 0; j < bus->size(); ++j)
-        {
-          bus->setVariableIndex(j, offset + j);
-          bus->setResidualIndex(j, offset + j);
-        }
-
-        offset += bus->size();
-      }
 
       for (const auto& component : components_)
       {
@@ -629,12 +595,6 @@ namespace GridKit
     int SystemModel<scalar_type, index_type>::initialize()
     {
       int status = 0;
-
-      for (const auto& bus : buses_)
-      {
-        status += bus->initialize();
-      }
-
       for (const auto& component : components_)
       {
         status += component->initialize();
@@ -658,15 +618,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::initializeMonitor()
     {
-      for (const auto* bus : buses_)
-      {
-        auto* mon = bus->getMonitor();
-        if (mon && !mon->empty())
-        {
-          monitor_->addMonitor(mon);
-        }
-      }
-
       for (const auto* component : components_)
       {
         auto* mon = component->getMonitor();
@@ -712,15 +663,6 @@ namespace GridKit
     int SystemModel<scalar_type, index_type>::tagDifferentiable()
     {
       // Set initial values for global solution vectors
-      for (const auto& bus : buses_)
-      {
-        bus->tagDifferentiable();
-        for (IdxT j = 0; j < bus->size(); ++j)
-        {
-          tag_[bus->getVariableIndex(j)] = bus->tag()[j];
-        }
-      }
-
       for (const auto& component : components_)
       {
         component->tagDifferentiable();
@@ -746,11 +688,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      for (const auto& bus : buses_)
-      {
-        bus->setAbsoluteTolerance(rel_tol);
-      }
-
       for (const auto& component : components_)
       {
         component->setAbsoluteTolerance(rel_tol);
@@ -764,18 +701,13 @@ namespace GridKit
     /**
      * @brief Compute the residuals each bus and component owns.
      *
-     * Buses and components read and write their bound system-vector slices
-     * directly. Buses assign their residual values first, so that external
-     * residuals can accumulate into them.
+     * Components read and write their bound system-vector slices directly.
+     * Every owned residual row, including the bus current balance rows, is
+     * assigned here before external contributions accumulate in phase two.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateInternalResidual()
     {
-      for (const auto& bus : buses_)
-      {
-        bus->evaluateResidual();
-      }
-
       for (const auto& component : components_)
       {
         component->evaluateInternalResidual();
@@ -815,9 +747,9 @@ namespace GridKit
         }
       }
 
-      for (const auto& bus : buses_)
+      for (const auto& component : components_)
       {
-        bus->getResidual().setDataUpdated();
+        component->getResidual().setDataUpdated();
       }
 
       return 0;
@@ -858,16 +790,17 @@ namespace GridKit
     /**
      * @brief Add bus
      *
-     * Add bus at the end of the bus array and map bus ID with GridKit's ID for the bus
+     * Register the bus for ID lookup and add it to the system as an ordinary
+     * component.
      *
      */
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::addBus(BusT* bus)
     {
-      IdxT gridkit_bus_id                = static_cast<IdxT>(buses_.size());
+      IdxT gridkit_bus_id                = static_cast<IdxT>(bus_lookup_.size());
       gridkit_bus_indices_[bus->busID()] = gridkit_bus_id;
-      buses_.push_back(bus);
-      allocated_ = false;
+      bus_lookup_.push_back(bus);
+      addComponent(bus);
     }
 
     /**
@@ -934,8 +867,8 @@ namespace GridKit
     {
       // Should fail if user-provided bus_id is incorrect
       IdxT gridkit_bus_id = gridkit_bus_indices_.at(bus_id);
-      assert((buses_[gridkit_bus_id])->busID() == bus_id);
-      return buses_[gridkit_bus_id];
+      assert((bus_lookup_[gridkit_bus_id])->busID() == bus_id);
+      return bus_lookup_[gridkit_bus_id];
     }
 
     /**
