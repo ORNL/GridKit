@@ -81,7 +81,91 @@ investigating first to avoid the Julia dependency. Full generator commitment opt
 
 ---
 
+## Task 0b: Fault-response sensitivity prototype (before committing to 8760 scenarios)
+
+### Motivation
+
+`pf_helper.md` Section 13 found that steady-state PF solutions across both Illinois
+(ACTIVSg200, 24.5% regulated buses) and Hawaii40 (24.3% regulated buses) are dominated by
+**angle** response; voltage magnitude barely moves even under large perturbations (10 gens
+offline, ±80% load). This raises an obvious question for Track 1: if |V| doesn't fluctuate
+between operating points at steady state, will it fluctuate any more once a fault is applied?
+Put differently — is it worth generating and simulating 8760 fault-response scenarios if the
+outcome is largely insensitive to which hourly operating point is used as the initial
+condition?
+
+### Working hypothesis: pre-fault |V| flatness does NOT imply flat fault response
+
+The Section 13 finding is specific to steady-state redispatch: PV/slack buses absorb real
+power imbalance almost entirely through angle because AVR control pins |V| at its setpoint.
+A fault is a different regime — during the fault, the faulted bus voltage is driven toward
+zero by the network's short-circuit impedance, not by generator voltage setpoints, so the
+"AVR keeps |V| flat" mechanism is locally broken regardless of which operating point the
+disturbance starts from.
+
+What *does* vary substantially across operating points, per Section 13, is bus **angle**
+(swings of 10-16 degrees observed under generator-offline and heavy-load perturbations).
+Pre-fault angle separation between generators sets the accelerating power in the swing
+equation:
+
+$$
+M\ddot{\delta}_i = P_{m,i} - P_{e,i}(\delta) - D\dot{\delta}_i
+$$
+
+Higher pre-fault loading on a line/generator near the fault produces larger pre-fault
+angle separation and power transfer, which produces larger accelerating power when
+$P_e$ collapses during the fault, which produces larger post-fault rotor-angle swing
+amplitude (equal-area criterion). This is a genuinely nonlinear, operating-point-sensitive
+mechanism that a steady-state PF perturbation study does not exercise at all.
+
+### Expected sensitivity by quantity of interest
+
+| Quantity | Expected sensitivity to pre-fault operating point | Why |
+|---|---|---|
+| Pre-fault \|V\| | Low (confirmed, Section 13) | PV/slack regulation absorbs P imbalance into angle |
+| During-fault \|V\| dip shape/depth | Low-moderate | Dominated by fixed network Thevenin impedance to the fault; some sensitivity via pre-fault loading changing fault current contribution |
+| Post-fault rotor angle swing (delta excursion) | **High** | Directly driven by pre-fault power transfer / angle separation (equal-area criterion) |
+| Frequency nadir / ROCOF | **High**, especially once Task 0 thins inertia | Nadir is roughly a function of (disturbance size) / (system inertia); thinning spinning generators is likely a larger lever than hour-to-hour dispatch differences |
+| Post-fault V recovery time | Moderate | Depends on reactive reserve near the fault, which correlates with loading level and which generators are online that hour |
+
+### Caveat carried over from Section 13
+
+GridKit does not enforce `Qmax`/`Qmin` (no PV to PQ switching mid-solve). Post-fault
+reactive demand spikes are exactly when a real system risks voltage collapse if a
+generator hits its Q limit. If GridKit's dynamic model has the same limitation, its
+fault-response |V| recovery may look artificially uniform across scenarios compared to
+what a full model would produce — the same bias flagged for the static PowerModels.jl
+cross-validation (Task 0 / pf_helper.md Section 13), just surfacing in the dynamic
+track instead.
+
+### Proposed cheap test (prototype, before full 8760 commitment)
+
+Reuses existing assets (illinois-v2 fault solver.json, `patch_case_from_m`). No new
+implementation is needed beyond running the existing pipeline on a handful of hours:
+
+1. Pick 4-6 representative PCM hours: min load, peak load, peak wind, peak-load +
+   low-wind (worst line loading), and one "typical" hour.
+2. Patch each into `case.json` via `patch_case_from_m` (already implemented).
+3. Run the same fault (same `solver.json` as illinois-v2) against each patched case.
+4. Compare across hours: rotor angle swing amplitude, minimum V during fault, frequency
+   nadir.
+5. Repeat once with full inertia and once with thinned inertia (per Task 0's generator
+   thinning step) to separate whether operating-point diversity or inertia reduction is
+   the dominant driver of response diversity across the 8760 scenarios.
+
+If this prototype shows fault-response QoIs (angle swing, frequency nadir) varying
+meaningfully across the sampled hours, that justifies the full 8760-scenario aleatoric
+run. If QoIs turn out flat across hours too, that would argue for a smaller/representative
+scenario subset instead of the full 8760, or for reconsidering which QoIs the aleatoric
+track should target.
+
+Status: not yet implemented. This is a planning note only; no code or notebook changes
+have been made for this task.
+
+---
+
 ## Track 1: Aleatoric UQ (PCM operating conditions)
+
 
 ### Goal
 Run GridKit dynamic simulation for each of the 8760 hourly power-flow solutions

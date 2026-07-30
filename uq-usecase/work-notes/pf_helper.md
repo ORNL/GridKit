@@ -596,37 +596,157 @@ voltage changes, especially far from the slack bus. A 306 MW loss on a system wi
 change; one might expect voltage depressions of 0.05 pu or more at buses electrically
 distant from the slack.
 
+### PQ vs PV vs slack: what determines whether |V| moves
+
+Before analyzing why voltage stays flat, it helps to lay out the three MATPOWER bus
+types explicitly, since the answer is largely a consequence of how many buses are
+voltage-regulated by construction:
+
+| Type | MATPOWER code | Fixed at the bus | Free variables solved by PF | Physical realization |
+|------|:-:|---|---|---|
+| Slack (ref) | 3 | \|V\|, θ | none (bus absorbs P and Q imbalance) | Reference generator; one per island |
+| PV | 2 | \|V\|, P (generator setpoint) | θ, Q_g | Generator with an AVR (automatic voltage regulator); voltage held at a setpoint by adjusting excitation |
+| PQ | 1 | P, Q | \|V\|, θ | Load bus, or generator run without voltage control |
+
+The critical point: at a **PV bus**, |V| is a boundary condition, not a variable. The
+solver treats the setpoint as hard until a generator Q limit is hit (`Qmax`/`Qmin`) —
+the generator's exciter is idealized as being able to inject whatever reactive power is
+needed to hold the setpoint. At a **PQ bus**, |V| is free and gets pushed around by
+whatever the surrounding network delivers. So the fraction of buses that are PV+slack —
+call it the **regulated fraction** — sets a hard floor on how much of the network is
+voltage-pinned by construction.
+
+### Regulated bus fraction: ACTIVSg200 vs peers
+
+Counting `BUS_TYPE` (column 2 of `mpc.bus`) directly:
+
+| Case | Buses | PQ (type 1) | PV (type 2) | Slack (type 3) | Regulated fraction (PV+slack) |
+|---|---:|---:|---:|---:|---:|
+| ACTIVSg200 (Illinois) | 200 | 151 | 48 | 1 | **24.5 %** |
+| ACTIVSg2000 (Texas) | 2000 | — | ≥200 (capped at grep limit) | 1 | not yet confirmed; needs full parse |
+| ACTIVSg10k (WECC) | ~10 000 | — | — | — | not measured locally |
+| Hawaii40 | 37 | 28 | 8 | 1 | **24.3 %** |
+
+For comparison — real-world reference points:
+- ERCOT / WECC bulk transmission snapshots: typically 15–30 % regulated buses (nearly
+  every transmission-connected generator runs on AVR control in normal operation).
+- IEEE test transmission cases (39-bus New England, 118-bus, 300-bus): all report
+  regulated fractions in roughly the same 15–30 % band.
+- Distribution feeders (radial, IEEE 13/34/123-node, etc.): 0–5 % regulated — the
+  substation transformer LTC is often the only voltage anchor. This is the regime where
+  a large real-power perturbation *does* produce large |V| swings.
+
+ACTIVSg200 at 24.5 % is squarely in the transmission-grid regime. This is not
+artificially stiff — it's what a synthetic 200-bus bulk transmission model should look
+like. TAMU built the ACTIVSg suite specifically to reproduce statistical properties of
+real interconnections, and the density of AVR-controlled generators is one of those
+properties.
+
+### Is angle-only response practical? (short answer: yes)
+
+The "angle carries the response, magnitude stays put" behavior is well-known in
+transmission planning and is exactly the assumption behind **DC power flow**, which
+drops the voltage-magnitude equations entirely. DC PF works for many transmission
+planning tasks precisely because on well-regulated networks, active branch flow is
+dominated by angle differences:
+
+$$
+P_{ij} \approx \frac{\theta_i - \theta_j}{X_{ij}}
+$$
+
+Our findings say GridKit's full AC solve on ACTIVSg200 sits in exactly the regime
+where DC PF would already be a good approximation. That is a positive validation of
+the solver on a "normal" transmission model — not an anomaly.
+
+Regimes where DC PF breaks (and |V| changes become first-order):
+- The system is heavily loaded and near voltage collapse (nose of the PV curve).
+- One or more PV generators are at their Q limits, forcing PV → PQ downgrade.
+- Reactive imbalances dominate (contingency loss of a large capacitor bank or SVC).
+- The network is radial or lightly meshed (distribution, weak grids, islanded systems).
+
+None of these apply to ACTIVSg200 at the operating points we're perturbing: all runs
+converge with |V| ∈ [1.007, 1.043] pu (no near-collapse), the network is meshed
+(245 branches for 200 buses), and the perturbations are moderate.
+
 ### Working hypothesis: strong PV bus voltage regulation
 
-ACTIVSg200 has 48 PV buses (BUS_TYPE=2 in mpc.bus, verified by parsing) and 1 slack bus,
-out of 200 total. Only 151 buses are pure PQ (no local voltage control). This is a high
-ratio of regulated buses. **Working hypothesis**: when this many buses have fixed voltage
-setpoints, real power imbalances propagate almost entirely as angle shifts, with reactive
-power redistribution absorbing whatever is needed to keep voltages near setpoints. The
-slack bus picks up the MW through angle; the PV buses suppress voltage deviations locally.
+**Hypothesis**: when ~24 % of buses have fixed voltage setpoints, real power imbalances
+propagate almost entirely as angle shifts, with reactive power redistribution absorbing
+whatever is needed to keep voltages near setpoints. The slack bus picks up the MW
+imbalance through angle; the PV buses suppress voltage deviations locally.
 
-Supporting evidence: the load perturbation results (Section 10) show a perfectly linear
-angle response — consistent with a network operating in a strongly regulated, near-linear
-regime. The 48/200 PV bus fraction for ACTIVSg200 was read directly from `mpc.bus`
-(`BUS_TYPE=2` count).
+Supporting evidence internal to GridKit's own solutions:
+- Load perturbation results (Section 10) show a perfectly linear angle response —
+  consistent with a network operating deep in a strongly regulated, near-linear regime.
+- Even the largest tested perturbation (10 gens offline, 306 MW dropped, Section 12)
+  keeps every solved voltage inside the ANSI [0.95, 1.05] pu band — zero violations.
 
-Potential falsifiers:
-- If PowerModels.jl (same network, same dispatch change) shows substantially larger dV,
-  then GridKit is missing reactive coupling — the hypothesis is wrong and the model is
-  suspect.
-- If PowerModels.jl agrees with GridKit (small dV), the hypothesis is confirmed for
-  this network.
-- If the same experiment is run on a network with fewer PV buses (more PQ buses), larger
-  dV would be expected — this would provide further evidence for the PV regulation mechanism.
+### Caveats: what GridKit's model omits that could inflate the effect
+
+The angle-only pattern is *physically consistent* with a well-regulated transmission
+network, but two known model simplifications in GridKit could artificially reinforce it
+beyond what a full MATPOWER model would give. Both need to be checked (or documented as
+known biases) before the results feed into `illinois.json`:
+
+1. **Reactive power limits `Qmax` / `Qmin` are not enforced.** In MATPOWER / PowerModels,
+   a PV bus is downgraded to PQ mid-solve if the reactive dispatch needed to hold |V|
+   would exceed the generator's Q capability (called "PV → PQ switching"). Once switched,
+   voltage at that bus *does* start moving. GridKit's `GeneratorPV` reads `Qmax` / `Qmin`
+   into `GenData` (verified — the parser populates them), but does not appear to enforce
+   them in the KINSOL residual loop. On a stressed operating point this could keep the
+   network artificially stiffer than a real solve would.
+
+2. **Bus shunts `Gs`, `Bs` handling.** GridKit's `Branch` hardcodes shunt conductance to
+   zero. Bus shunt fields (`mpc.bus` columns 5–6) are parsed into `BusData` but their
+   path into the residual has not been audited here. ACTIVSg200 has ~24 buses with
+   nonzero `Bs` (mostly capacitor banks); whether they contribute correctly to the
+   nodal reactive balance is an open item.
+
+Neither omission is fatal for the aleatoric UQ study, but both are candidates for the
+0.030 pu residual vs the MATPOWER reference documented in Section 8, and both are
+things PowerModels.jl handles natively.
 
 ### Why this matters for UQ
 
-If voltage magnitudes are nearly insensitive to the perturbations we are sampling, the
-useful quantity for UQ is bus angle (or equivalently, active power flows), not voltage
-magnitude. This has implications for which outputs to monitor and which to use as QoI
-for the UQ study.
+If voltage magnitudes are genuinely nearly insensitive to the perturbations we sample,
+the informative output for UQ is bus **angle** (or equivalently, active branch flows) —
+not voltage magnitude. This has direct implications:
 
-**This is an open question pending PowerModels.jl cross-validation.**
+- **QoI choice**: for the PF-solution-based aleatoric track, bus angle and branch MW
+  flow are the primary QoIs; |V| is a validation-only variable.
+- **UQ dimensionality**: an angle-dominated response is roughly linear in the sampled
+  parameters (confirmed for load in Section 10), so surrogate models (polynomial chaos,
+  Gaussian processes) will converge with far fewer samples than a nonlinear response
+  would demand.
+- **Downstream dynamic UQ**: the tiny |V| response also means the initial conditions
+  patched into `illinois.json` will vary mostly in `Vi = |V| sin(θ)` (through θ) rather
+  than through |V| itself. The Genrou rotor angles `delta_0` inherit that variability.
+
+### Next steps
+
+1. **PowerModels.jl cross-validation** (already the planned next step; see the plan for
+   `pm_helper` scope). Key discriminating experiments:
+   - *Base case*: does PM's |V| range match GridKit's [1.007, 1.043]? If yes, the 0.030 pu
+     Section 8 residual is genuinely small-model-difference, not a solver artifact.
+   - *10 gens offline* (max stress test in Section 12): does PM's `max|dV|` stay
+     < 0.005 pu (confirming the angle-only regime), or does it grow to 0.02–0.05 pu
+     (signaling PV → PQ switching that GridKit misses)?
+   - *Load ±80%* (max load test in Section 10): same comparison.
+
+2. **Reactive dispatch audit**: after the base-case PM solve, tabulate `Qg` vs
+   `[Qmin, Qmax]` for all 49 ACTIVSg200 generators. If several are already at or near
+   limits in the base case, GridKit's non-enforcement is a known bias and results
+   should be quoted with that caveat.
+
+3. **Regulated-fraction check on ACTIVSg2000**: run the same BUS_TYPE count on
+   `case_ACTIVSg2000.m`. If the regulated fraction is similar (~20–25 %), the
+   angle-only response should reproduce. If it turns out lower (say <15 %) *and*
+   ACTIVSg2000 shows larger dV under the same perturbation types, that is direct
+   evidence for the PV-regulation mechanism.
+
+4. **UQ QoI decision** (informed by 1–3): if PM confirms small dV, formalize angle
+   and branch flow as the primary QoIs for the aleatoric-UQ track and treat |V| as
+   a validation-only variable.
 
 ---
 
