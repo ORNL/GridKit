@@ -209,17 +209,5 @@ namespace GridKit
       return 0;
     }
 
-    /*!
-     * @brief Evaluate the internal residual and external residual
-     * contributions.
-     */
-    template <typename scalar_type, typename index_type>
-    int Bus<scalar_type, index_type>::evaluateResidual()
-    {
-      evaluateInternalResidual();
-      this->evaluateExternalResidual();
-
-      return 0;
-    }
   } // namespace PhasorDynamics
 } // namespace GridKit
