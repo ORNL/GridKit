@@ -19,11 +19,6 @@ namespace GridKit
         has_jacobian = has_jacobian && component->hasJacobian();
       }
 
-      for (const auto& bus : buses_)
-      {
-        has_jacobian = has_jacobian && bus->hasJacobian();
-      }
-
       if (!has_jacobian)
       {
         Log::warning() << "GridKit was built with Enzyme, but some models "
@@ -46,13 +41,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
-      // Initialize bus Jacobians
-      for (const auto& bus : buses_)
-      {
-        bus->evaluateJacobian();
-      }
-
-      // Evaluate component Jacobians, including contribution to the bus Jacobians
+      // Evaluate component Jacobians, including the bus placeholder blocks
       for (const auto& component : components_)
       {
         component->evaluateJacobian();
@@ -65,7 +54,7 @@ namespace GridKit
         IdxT nnz_dup = 0;
         for (const auto& component : components_)
         {
-          const auto component_jacobian = component->getCooJacobian();
+          auto component_jacobian = component->getCooJacobian();
 
           if (component_jacobian != nullptr)
           {
@@ -74,20 +63,6 @@ namespace GridKit
           else
           {
             Log::warning() << "A component has returned a nullptr Jacobian.\n";
-          }
-        }
-
-        for (const auto& bus : buses_)
-        {
-          auto bus_jacobian = bus->getCooJacobian();
-
-          if (bus_jacobian != nullptr)
-          {
-            nnz_dup += bus_jacobian->getNnz();
-          }
-          else
-          {
-            Log::warning() << "A bus has returned a nullptr Jacobian.\n";
           }
         }
 
@@ -117,29 +92,6 @@ namespace GridKit
           else
           {
             Log::warning() << "A component has returned a nullptr Jacobian.\n";
-          }
-        }
-
-        for (const auto& bus : buses_)
-        {
-          auto bus_jacobian = bus->getCooJacobian();
-
-          if (bus_jacobian != nullptr)
-          {
-            const IdxT*  rows    = bus_jacobian->getRowData();
-            const IdxT*  columns = bus_jacobian->getColData();
-            const RealT* values  = bus_jacobian->getValues();
-            for (IdxT i = 0; i < bus_jacobian->getNnz(); ++i)
-            {
-              rows_dup[counter] = rows[i];
-              cols_dup[counter] = columns[i];
-              vals_dup[counter] = values[i];
-              counter++;
-            }
-          }
-          else
-          {
-            Log::warning() << "A bus has returned a nullptr Jacobian.\n";
           }
         }
 
@@ -197,25 +149,10 @@ namespace GridKit
             }
           }
         }
-
-        for (const auto& bus : buses_)
-        {
-          auto bus_jacobian = bus->getCooJacobian();
-
-          if (bus_jacobian != nullptr)
-          {
-            const RealT* values = bus_jacobian->getValues();
-            for (IdxT i = 0; i < bus_jacobian->getNnz(); ++i)
-            {
-              vals[map_to_csr_[counter]] += values[i];
-              counter++;
-            }
-          }
-        }
       }
 
-      // Log::misc() << "System Enzyme Jacobian\n";
-      // csr_jac_->print(Log::misc());
+      // std::cout << "System Jacobian\n";
+      // csr_jac_->print(std::cout);
 
       return 0;
     }
