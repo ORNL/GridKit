@@ -2,7 +2,6 @@
 
 #include <cmath>
 
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -19,17 +18,15 @@ namespace GridKit
      * - Number of independent variables = 2
      */
     template <typename scalar_type, typename index_type>
-    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus)
-      : bus_(bus)
+    LoadZIP<scalar_type, index_type>::LoadZIP()
     {
       size_ = 2;
       setDerivedParams();
     }
 
     template <typename scalar_type, typename index_type>
-    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT Vnom, RealT alphaI, RealT alphaP)
-      : bus_(bus),
-        Pnom_(Pnom),
+    LoadZIP<scalar_type, index_type>::LoadZIP(RealT Pnom, RealT Qnom, RealT Vnom, RealT alphaI, RealT alphaP)
+      : Pnom_(Pnom),
         Qnom_(Qnom),
         Vnom_(Vnom),
         alphaI_(alphaI),
@@ -40,10 +37,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    LoadZIP<scalar_type, index_type>::LoadZIP(BusT*             bus,
-                                              const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    LoadZIP<scalar_type, index_type>::LoadZIP(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -214,15 +209,15 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::gatherExternalVariables()
     {
-      y_ext_[0] = Vr();
-      y_ext_[1] = Vi();
-      if (bus_->size() > 0)
-      {
-        variable_indices_ext_[0] = bus_->getVariableIndex(0);
-        variable_indices_ext_[1] = bus_->getVariableIndex(1);
-        residual_indices_ext_[0] = bus_->getResidualIndex(0);
-        residual_indices_ext_[1] = bus_->getResidualIndex(1);
-      }
+      static constexpr auto VR = LoadZIPExternalVariables::VR;
+      static constexpr auto VI = LoadZIPExternalVariables::VI;
+
+      y_ext_[0]                = Vr();
+      y_ext_[1]                = Vi();
+      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
+      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
+      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR>();
+      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI>();
     }
 
     /**
@@ -258,7 +253,8 @@ namespace GridKit
     }
 
     /**
-     * @brief Residual contribution of the load is pushed to the bus.
+     * @brief Evaluate the internal residual and external residual
+     * contributions.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -266,14 +262,6 @@ namespace GridKit
     {
       evaluateInternalResidual();
       evaluateExternalResidual();
-
-      // Standalone evaluation scatters directly to the bus
-      Ir() += f_ext_[0];
-      Ii() += f_ext_[1];
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
 
       return 0;
     }

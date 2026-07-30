@@ -8,6 +8,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
@@ -31,10 +32,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
-
         PhasorDynamics::Component<ScalarT, IdxT>* fault =
-            new PhasorDynamics::BusFault<ScalarT, IdxT>(bus);
+            new PhasorDynamics::BusFault<ScalarT, IdxT>();
 
         success *= (fault != nullptr);
 
@@ -42,7 +41,6 @@ namespace GridKit
         {
           delete fault;
         }
-        delete bus;
 
         return success.report(__func__);
       }
@@ -57,8 +55,16 @@ namespace GridKit
         ScalarT Vr1{1.0}; ///< Bus real voltage
         ScalarT Vi1{1.0}; ///< Bus imaginary voltage
 
-        PhasorDynamics::Bus<ScalarT, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, 0.0, 1e-3, status);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(Vr1, Vi1);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        PhasorDynamics::BusFault<ScalarT, IdxT>   fault(0.0, 1e-3, status);
+
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::VR>(&vr_signal);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::VI>(&vi_signal);
+
         bus.allocate();
         bus.initialize();
         fault.allocate();
@@ -115,8 +121,15 @@ namespace GridKit
         DependencyTracking::Variable Vr1{1.0}; ///< Bus-1 real voltage
         DependencyTracking::Variable Vi1{1.0}; ///< Bus-1 imaginary voltage
 
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<DependencyTracking::Variable, IdxT> fault(&bus, R, X, status);
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>        bus(Vr1, Vi1);
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> vi_signal;
+        PhasorDynamics::BusFault<DependencyTracking::Variable, IdxT>   fault(R, X, status);
+
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::VR>(&vr_signal);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         fault.allocate();
@@ -221,8 +234,15 @@ namespace GridKit
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
-        PhasorDynamics::Bus<ScalarT, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, R, X, status);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(Vr1, Vi1);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        PhasorDynamics::BusFault<ScalarT, IdxT>   fault(R, X, status);
+
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::VR>(&vr_signal);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         fault.allocate();

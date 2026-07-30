@@ -25,17 +25,14 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       template <typename scalar_type, typename index_type>
-      SexsPti<scalar_type, index_type>::SexsPti(BusT* bus)
-        : bus_(bus)
+      SexsPti<scalar_type, index_type>::SexsPti()
       {
         size_ = 3;
       }
 
       template <typename scalar_type, typename index_type>
-      SexsPti<scalar_type, index_type>::SexsPti(BusT*             bus,
-                                                const ModelDataT& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      SexsPti<scalar_type, index_type>::SexsPti(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
         initModelParams(data);
         initializeMonitor();
@@ -93,9 +90,14 @@ namespace GridKit
       {
         int ret = missing_param_count_;
 
-        if (bus_ == nullptr)
+        if (!signals_.template isAttached<SexsPtiExternalVariables::VR>())
         {
-          Log::error() << "SexsPti: bus pointer is null\n";
+          Log::error() << "SexsPti: VR signal is not attached\n";
+          ret += 1;
+        }
+        if (!signals_.template isAttached<SexsPtiExternalVariables::VI>())
+        {
+          Log::error() << "SexsPti: VI signal is not attached\n";
           ret += 1;
         }
         if (Ta_ < 0.0)
@@ -154,8 +156,8 @@ namespace GridKit
           efd0 = y[1];
         }
 
-        ScalarT vreal = bus_->Vr();
-        ScalarT vimag = bus_->Vi();
+        ScalarT vreal = signals_.template readExternalVariable<SexsPtiExternalVariables::VR>();
+        ScalarT vimag = signals_.template readExternalVariable<SexsPtiExternalVariables::VI>();
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
         ScalarT vtr   = efd0 / K_;
         ScalarT vr    = (Ta_ - Tb_) * vtr;
@@ -238,13 +240,13 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void SexsPti<scalar_type, index_type>::gatherExternalVariables()
       {
-        y_ext_[0] = bus_->Vr();
-        y_ext_[1] = bus_->Vi();
-        if (bus_->size() > 0)
-        {
-          variable_indices_ext_[0] = bus_->getVariableIndex(0);
-          variable_indices_ext_[1] = bus_->getVariableIndex(1);
-        }
+        static constexpr auto VR = SexsPtiExternalVariables::VR;
+        static constexpr auto VI = SexsPtiExternalVariables::VI;
+
+        y_ext_[0]                = signals_.template readExternalVariable<VR>();
+        y_ext_[1]                = signals_.template readExternalVariable<VI>();
+        variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
+        variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
 
         y_ext_[2]                = 0.0;
         variable_indices_ext_[2] = INVALID_INDEX<IdxT>;

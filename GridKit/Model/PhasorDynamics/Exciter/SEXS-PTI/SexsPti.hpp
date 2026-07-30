@@ -21,9 +21,6 @@ namespace GridKit
     } // namespace Exciter
 
     template <typename scalar_type, typename index_type>
-    class BusBase;
-
-    template <typename scalar_type, typename index_type>
     class SignalNode;
 
   } // namespace PhasorDynamics
@@ -79,13 +76,12 @@ namespace GridKit
         using ScalarT    = scalar_type;
         using IdxT       = index_type;
         using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using BusT       = BusBase<ScalarT, IdxT>;
         using ModelDataT = SexsPtiData<RealT, IdxT>;
         using SignalT    = SignalNode<ScalarT, IdxT>;
         using MonitorT   = Model::VariableMonitor<SexsPti, SexsPtiData>;
 
-        SexsPti(BusT* bus);
-        SexsPti(BusT* bus, const ModelDataT& data);
+        SexsPti();
+        SexsPti(const ModelDataT& data);
         ~SexsPti();
 
         int setGridKitComponentID(IdxT) override final;
@@ -113,8 +109,6 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
-        BusT* bus_{nullptr};
-
         RealT Ta_{0};
         RealT Tb_{0};
         RealT Te_{0};

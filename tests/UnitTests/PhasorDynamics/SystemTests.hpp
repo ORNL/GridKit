@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -144,7 +145,20 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
         system.addBus(&bus2);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus1_vr);
+        bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus1_vi);
+        bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus2_vr);
+        bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus2_vi);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(R, X, G, B);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR1>(&bus1_vr);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI1>(&bus1_vi);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR2>(&bus2_vr);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI2>(&bus2_vi);
         system.addComponent(&branch);
 
         system.allocate();
@@ -166,7 +180,14 @@ namespace GridKit
         PhasorDynamics::SystemModel<ScalarT, IdxT> system;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(1.0, 0.0);
-        PhasorDynamics::BusFault<ScalarT, IdxT>    fault(&bus1);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus1_vi;
+        PhasorDynamics::BusFault<ScalarT, IdxT>    fault;
+
+        bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus1_vr);
+        bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus1_vi);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::VR>(&bus1_vr);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::VI>(&bus1_vi);
 
         system.addBus(&bus1);
         system.addComponent(&fault);
@@ -190,7 +211,16 @@ namespace GridKit
         }
 #endif
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus2_vr);
+        bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus2_vi);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch;
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR1>(&bus1_vr);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI1>(&bus1_vi);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR2>(&bus2_vr);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI2>(&bus2_vi);
         system.addComponent(&branch);
         success *= system.allocate() == 0;
         success *= system.evaluateJacobian() == 0;
@@ -217,8 +247,23 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 2.0);
         PhasorDynamics::BusInfinite<ScalarT, IdxT> infinite_bus;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(3.0, 4.0);
-        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2);
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus2, 1.0, 1.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus2_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  bus1_vi;
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch;
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(1.0, 1.0);
+
+        bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus1_vr);
+        bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus1_vi);
+        bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus2_vr);
+        bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus2_vi);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR1>(&bus1_vr);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI1>(&bus1_vi);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR2>(&bus2_vr);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI2>(&bus2_vi);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZExternalVariables::VR>(&bus2_vr);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZExternalVariables::VI>(&bus2_vi);
 
         system.addBus(&bus1);
         system.addBus(&infinite_bus);

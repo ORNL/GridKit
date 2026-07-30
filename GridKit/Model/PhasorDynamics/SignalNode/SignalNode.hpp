@@ -33,7 +33,7 @@ namespace GridKit
 
       virtual ~SignalNode() = default;
 
-      void    set(ScalarT* signal_in, IdxT* global_index);
+      void    set(ScalarT* signal_in, IdxT* variable_index, IdxT* residual_index = nullptr);
       bool    linked() const;
       ScalarT read() const;
       void    init(ScalarT signal_in);
@@ -46,6 +46,11 @@ namespace GridKit
       IdxT getVariableIndex() const
       {
         return *variable_index_;
+      }
+
+      IdxT getResidualIndex() const
+      {
+        return residual_index_ ? *residual_index_ : INVALID_INDEX<IdxT>;
       }
 
       virtual const IdxT busID() const
@@ -61,6 +66,8 @@ namespace GridKit
       const IdxT bus_id_{INVALID_INDEX<IdxT>};
 
       IdxT* variable_index_{nullptr};
+
+      IdxT* residual_index_{nullptr};
     };
 
   } // namespace PhasorDynamics

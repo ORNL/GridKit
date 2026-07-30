@@ -25,9 +25,6 @@ namespace GridKit
     } // namespace Exciter
 
     template <typename scalar_type, typename index_type>
-    class BusBase;
-
-    template <typename scalar_type, typename index_type>
     class SignalNode;
 
   } // namespace PhasorDynamics
@@ -90,14 +87,12 @@ namespace GridKit
         using ScalarT    = scalar_type;
         using IdxT       = index_type;
         using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using BusT       = BusBase<ScalarT, IdxT>;
         using ModelDataT = Ieeet1Data<RealT, IdxT>;
         using SignalT    = SignalNode<ScalarT, IdxT>;
         using MonitorT   = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
 
-        Ieeet1(BusT* bus);
-        Ieeet1(BusT*             bus,
-               const ModelDataT& data);
+        Ieeet1();
+        Ieeet1(const ModelDataT& data);
         ~Ieeet1();
 
         int setGridKitComponentID(IdxT) override final;
@@ -127,9 +122,6 @@ namespace GridKit
 
       private:
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-
-        // Signal pointers
-        BusT* bus_;
 
         // Model Input parameters
         RealT Tr_{0.0};      ///< Time constant for voltage sensing

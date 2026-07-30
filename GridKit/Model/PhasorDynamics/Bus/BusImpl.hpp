@@ -106,6 +106,21 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
+      // Publish voltage signals assigned to this bus
+      static constexpr auto VR = BusInternalVariables::VR;
+      static constexpr auto VI = BusInternalVariables::VI;
+
+      if (signals_.template isAssigned<VR>())
+      {
+        signals_.template getSignalNode<VR>()->set(
+            &y_.getData()[0], &this->getVariableIndex(0), &this->getResidualIndex(0));
+      }
+      if (signals_.template isAssigned<VI>())
+      {
+        signals_.template getSignalNode<VI>()->set(
+            &y_.getData()[1], &this->getVariableIndex(1), &this->getResidualIndex(1));
+      }
+
       allocated_ = true;
       return 0;
     }

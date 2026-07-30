@@ -14,7 +14,6 @@
 
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
@@ -29,10 +28,8 @@ namespace GridKit
      * - Number of internal variables = 0
      */
     template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2)
-      : bus1_(bus1),
-        bus2_(bus2),
-        R_(0.0),
+    Branch<scalar_type, index_type>::Branch()
+      : R_(0.0),
         X_(0.01),
         G_(0.0),
         B_(0.0),
@@ -58,17 +55,13 @@ namespace GridKit
      * @param phase - phase shift angle in radians
      */
     template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>::Branch(BusT* bus1,
-                                            BusT* bus2,
-                                            RealT R,
+    Branch<scalar_type, index_type>::Branch(RealT R,
                                             RealT X,
                                             RealT G,
                                             RealT B,
                                             RealT tap,
                                             RealT phase)
-      : bus1_(bus1),
-        bus2_(bus2),
-        R_(R),
+      : R_(R),
         X_(X),
         G_(G),
         B_(B),
@@ -82,10 +75,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2, const ModelDataT& data)
-      : bus1_(bus1),
-        bus2_(bus2),
-        monitor_(std::make_unique<MonitorT>(data))
+    Branch<scalar_type, index_type>::Branch(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -169,8 +160,10 @@ namespace GridKit
         }
       };
 
-      check(bus1_ != nullptr, "bus1 pointer is null");
-      check(bus2_ != nullptr, "bus2 pointer is null");
+      check(signals_.template isAttached<BranchExternalVariables::VR1>(), "VR1 signal is not attached");
+      check(signals_.template isAttached<BranchExternalVariables::VI1>(), "VI1 signal is not attached");
+      check(signals_.template isAttached<BranchExternalVariables::VR2>(), "VR2 signal is not attached");
+      check(signals_.template isAttached<BranchExternalVariables::VI2>(), "VI2 signal is not attached");
 
       check(std::isfinite(R_), "R must be finite");
       check(std::isfinite(X_), "X must be finite");
@@ -256,24 +249,23 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::gatherExternalVariables()
     {
-      y_ext_[0] = Vr1();
-      y_ext_[1] = Vi1();
-      y_ext_[2] = Vr2();
-      y_ext_[3] = Vi2();
-      if (bus1_->size() > 0)
-      {
-        variable_indices_ext_[0] = bus1_->getVariableIndex(0);
-        variable_indices_ext_[1] = bus1_->getVariableIndex(1);
-        residual_indices_ext_[0] = bus1_->getResidualIndex(0);
-        residual_indices_ext_[1] = bus1_->getResidualIndex(1);
-      }
-      if (bus2_->size() > 0)
-      {
-        variable_indices_ext_[2] = bus2_->getVariableIndex(0);
-        variable_indices_ext_[3] = bus2_->getVariableIndex(1);
-        residual_indices_ext_[2] = bus2_->getResidualIndex(0);
-        residual_indices_ext_[3] = bus2_->getResidualIndex(1);
-      }
+      static constexpr auto VR1 = BranchExternalVariables::VR1;
+      static constexpr auto VI1 = BranchExternalVariables::VI1;
+      static constexpr auto VR2 = BranchExternalVariables::VR2;
+      static constexpr auto VI2 = BranchExternalVariables::VI2;
+
+      y_ext_[0]                = Vr1();
+      y_ext_[1]                = Vi1();
+      y_ext_[2]                = Vr2();
+      y_ext_[3]                = Vi2();
+      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR1>();
+      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI1>();
+      variable_indices_ext_[2] = signals_.template readExternalVariableIndex<VR2>();
+      variable_indices_ext_[3] = signals_.template readExternalVariableIndex<VI2>();
+      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR1>();
+      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI1>();
+      residual_indices_ext_[2] = signals_.template readExternalResidualIndex<VR2>();
+      residual_indices_ext_[3] = signals_.template readExternalResidualIndex<VI2>();
     }
 
     /**
@@ -293,7 +285,8 @@ namespace GridKit
     }
 
     /**
-     * @brief Residual contribution of the branch is computed and pushed to the terminal buses.
+     * @brief Evaluate the internal residual and external residual
+     * contributions.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -301,20 +294,6 @@ namespace GridKit
     {
       evaluateInternalResidual();
       evaluateExternalResidual();
-
-      // Standalone evaluation scatters directly to the buses
-      Ir1() += f_ext_[0];
-      Ii1() += f_ext_[1];
-      Ir2() += f_ext_[2];
-      Ii2() += f_ext_[3];
-      if (bus1_->size() > 0)
-      {
-        bus1_->getResidual().setDataUpdated();
-      }
-      if (bus2_->size() > 0)
-      {
-        bus2_->getResidual().setDataUpdated();
-      }
 
       return 0;
     }

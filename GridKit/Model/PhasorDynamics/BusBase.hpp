@@ -5,12 +5,27 @@
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Internal variables for buses
+    enum class BusInternalVariables : size_t
+    {
+      VR,
+      VI,
+      MAXIMUM,
+    };
+
+    /// No external variables for buses
+    enum class BusExternalVariables : size_t
+    {
+      MAXIMUM,
+    };
+
     /*!
      * @brief BusBase model implementation base class.
      *
@@ -71,11 +86,21 @@ namespace GridKit
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
+      /// Get the `ComponentSignals` from this bus
+      auto getSignals()
+          -> ComponentSignals<ScalarT, IdxT, BusInternalVariables, BusExternalVariables>&
+      {
+        return signals_;
+      }
+
     protected:
       IdxT bus_id_{INVALID_INDEX<IdxT>};
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
+
+      /// Component signals
+      ComponentSignals<ScalarT, IdxT, BusInternalVariables, BusExternalVariables> signals_;
     };
 
   } // namespace PhasorDynamics

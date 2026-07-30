@@ -106,6 +106,20 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
+      // Publish voltage signals assigned to this bus. The voltages are
+      // constant, so the signals carry no solver indices.
+      static constexpr auto VR = BusInternalVariables::VR;
+      static constexpr auto VI = BusInternalVariables::VI;
+
+      if (signals_.template isAssigned<VR>())
+      {
+        signals_.template getSignalNode<VR>()->set(&Vr_, &vr_index_);
+      }
+      if (signals_.template isAssigned<VI>())
+      {
+        signals_.template getSignalNode<VI>()->set(&Vi_, &vi_index_);
+      }
+
       allocated_ = true;
       return 0;
     }

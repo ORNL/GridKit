@@ -8,6 +8,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -28,16 +29,36 @@ namespace GridKit
       BranchTests()  = default;
       ~BranchTests() = default;
 
+      /// Wire a branch to the voltage signal nodes of its two terminal buses.
+      template <typename T>
+      static void wireBranch(PhasorDynamics::BusBase<T, IdxT>&    bus1,
+                             PhasorDynamics::BusBase<T, IdxT>&    bus2,
+                             PhasorDynamics::Branch<T, IdxT>&     branch,
+                             PhasorDynamics::SignalNode<T, IdxT>& bus1_vr,
+                             PhasorDynamics::SignalNode<T, IdxT>& bus1_vi,
+                             PhasorDynamics::SignalNode<T, IdxT>& bus2_vr,
+                             PhasorDynamics::SignalNode<T, IdxT>& bus2_vi)
+      {
+        using PhasorDynamics::BranchExternalVariables;
+        using PhasorDynamics::BusInternalVariables;
+
+        bus1.getSignals().template assignSignalNode<BusInternalVariables::VR>(&bus1_vr);
+        bus1.getSignals().template assignSignalNode<BusInternalVariables::VI>(&bus1_vi);
+        bus2.getSignals().template assignSignalNode<BusInternalVariables::VR>(&bus2_vr);
+        bus2.getSignals().template assignSignalNode<BusInternalVariables::VI>(&bus2_vi);
+        branch.getSignals().template attachSignalNode<BranchExternalVariables::VR1>(&bus1_vr);
+        branch.getSignals().template attachSignalNode<BranchExternalVariables::VI1>(&bus1_vi);
+        branch.getSignals().template attachSignalNode<BranchExternalVariables::VR2>(&bus2_vr);
+        branch.getSignals().template attachSignalNode<BranchExternalVariables::VI2>(&bus2_vi);
+      }
+
       TestOutcome constructor()
       {
         // Verifies Branch construction through the component interface.
         TestStatus success = true;
 
-        auto* bus1 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
-        auto* bus2 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.1);
-
         PhasorDynamics::Component<ScalarT, IdxT>* branch =
-            new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2);
+            new PhasorDynamics::Branch<ScalarT, IdxT>();
 
         success *= (branch != nullptr);
 
@@ -45,8 +66,6 @@ namespace GridKit
         {
           delete branch;
         }
-        delete bus1;
-        delete bus2;
 
         return success.report(__func__);
       }
@@ -71,8 +90,15 @@ namespace GridKit
         const ScalarT Ir2{15.0};  ///< Solution: real current entering bus-2
         const ScalarT Ii2{-20.0}; ///< Solution: imaginary current entering bus-2
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus1(Vr1, Vi1);
-        PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus1(Vr1, Vi1);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus2(Vr2, Vi2);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        PhasorDynamics::Branch<ScalarT, IdxT>     branch(R, X, G, B);
+        wireBranch(bus1, bus2, branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
+
         bus1.allocate();
         bus1.initialize();
         bus1.evaluateResidual();
@@ -80,14 +106,13 @@ namespace GridKit
         bus2.initialize();
         bus2.evaluateResidual();
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
         branch.allocate();
         branch.evaluateResidual();
 
-        success *= isEqual(bus1.Ir(), Ir1);
-        success *= isEqual(bus1.Ii(), Ii1);
-        success *= isEqual(bus2.Ir(), Ir2);
-        success *= isEqual(bus2.Ii(), Ii2);
+        success *= isEqual(branch.getExternalResidual()[0], Ir1);
+        success *= isEqual(branch.getExternalResidual()[1], Ii1);
+        success *= isEqual(branch.getExternalResidual()[2], Ir2);
+        success *= isEqual(branch.getExternalResidual()[3], Ii2);
 
         return success.report(__func__);
       }
@@ -114,8 +139,15 @@ namespace GridKit
         const ScalarT Ir2{13.821345956502421};
         const ScalarT Ii2{-21.182080826645354};
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus1(Vr1, Vi1);
-        PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus1(Vr1, Vi1);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus2(Vr2, Vi2);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        PhasorDynamics::Branch<ScalarT, IdxT>     branch(R, X, G, B, tap, phase);
+        wireBranch(bus1, bus2, branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
+
         bus1.allocate();
         bus1.initialize();
         bus1.evaluateResidual();
@@ -123,14 +155,13 @@ namespace GridKit
         bus2.initialize();
         bus2.evaluateResidual();
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B, tap, phase);
         branch.allocate();
         branch.evaluateResidual();
 
-        success *= isEqual(bus1.Ir(), Ir1);
-        success *= isEqual(bus1.Ii(), Ii1);
-        success *= isEqual(bus2.Ir(), Ir2);
-        success *= isEqual(bus2.Ii(), Ii2);
+        success *= isEqual(branch.getExternalResidual()[0], Ir1);
+        success *= isEqual(branch.getExternalResidual()[1], Ii1);
+        success *= isEqual(branch.getExternalResidual()[2], Ir2);
+        success *= isEqual(branch.getExternalResidual()[3], Ii2);
 
         return success.report(__func__);
       }
@@ -150,8 +181,15 @@ namespace GridKit
         DependencyTracking::Variable Vr2{30.0}; ///< Bus-2 real voltage
         DependencyTracking::Variable Vi2{40.0}; ///< Bus-2 imaginary voltage
 
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus1(Vr1, Vi1);
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus2(Vr2, Vi2);
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>        bus1(Vr1, Vi1);
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>        bus2(Vr2, Vi2);
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> bus2_vi;
+        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT>     branch(R, X, G, B);
+        wireBranch(bus1, bus2, branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
+
         bus1.allocate();
         bus1.initialize();
         bus1.evaluateResidual();
@@ -163,12 +201,12 @@ namespace GridKit
         bus2.Vr().setVariableNumber(2);
         bus2.Vi().setVariableNumber(3);
 
-        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, R, X, G, B);
         branch.allocate();
         branch.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                    ///< the dependencies
 
-        std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
+        const auto&                                              f_ext = branch.getExternalResidual();
+        std::vector<DependencyTracking::Variable>                residuals{f_ext[0], f_ext[1], f_ext[2], f_ext[3]};
         std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B);
 
         /// Compare dependencies computed automatically to the ones computed analytically
@@ -205,19 +243,26 @@ namespace GridKit
 
         PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus1(Vr1, Vi1);
         PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus2(Vr2, Vi2);
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>  bus1_vr;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>  bus1_vi;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>  bus2_vr;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>  bus2_vi;
 
-        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1,
-                                                                          &bus2,
-                                                                          R,
+        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(R,
                                                                           X,
                                                                           G,
                                                                           B,
                                                                           tap,
                                                                           phase);
+        wireBranch(bus1, bus2, branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
+
+        bus1.allocate();
+        bus2.allocate();
         branch.allocate();
         branch.evaluateResidual();
 
-        std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
+        const auto&                                              f_ext = branch.getExternalResidual();
+        std::vector<DependencyTracking::Variable>                residuals{f_ext[0], f_ext[1], f_ext[2], f_ext[3]};
         std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B, tap, phase);
 
         for (size_t i = 0; i < residuals.size(); ++i)
@@ -247,26 +292,36 @@ namespace GridKit
         const ScalarT Vr2{30.0};
         const ScalarT Vi2{40.0};
 
-        PhasorDynamics::Bus<ScalarT, IdxT> ref_bus1(Vr1, Vi1);
-        PhasorDynamics::Bus<ScalarT, IdxT> ref_bus2(Vr2, Vi2);
+        PhasorDynamics::Bus<ScalarT, IdxT>        ref_bus1(Vr1, Vi1);
+        PhasorDynamics::Bus<ScalarT, IdxT>        ref_bus2(Vr2, Vi2);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ref_bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ref_bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ref_bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ref_bus2_vi;
+        PhasorDynamics::Branch<ScalarT, IdxT>     ref_branch(R, X, G, B, tap, phase);
+        wireBranch(ref_bus1, ref_bus2, ref_branch, ref_bus1_vr, ref_bus1_vi, ref_bus2_vr, ref_bus2_vi);
         ref_bus1.allocate();
         ref_bus1.initialize();
         ref_bus1.evaluateResidual();
         ref_bus2.allocate();
         ref_bus2.initialize();
         ref_bus2.evaluateResidual();
-        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, tap, phase);
         ref_branch.allocate();
 
-        PhasorDynamics::Bus<ScalarT, IdxT> test_bus1(Vr1, Vi1);
-        PhasorDynamics::Bus<ScalarT, IdxT> test_bus2(Vr2, Vi2);
+        PhasorDynamics::Bus<ScalarT, IdxT>        test_bus1(Vr1, Vi1);
+        PhasorDynamics::Bus<ScalarT, IdxT>        test_bus2(Vr2, Vi2);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> test_bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> test_bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> test_bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> test_bus2_vi;
+        PhasorDynamics::Branch<ScalarT, IdxT>     test_branch(1.0, 1.0, 0.0, 0.0);
+        wireBranch(test_bus1, test_bus2, test_branch, test_bus1_vr, test_bus1_vi, test_bus2_vr, test_bus2_vi);
         test_bus1.allocate();
         test_bus1.initialize();
         test_bus1.evaluateResidual();
         test_bus2.allocate();
         test_bus2.initialize();
         test_bus2.evaluateResidual();
-        PhasorDynamics::Branch<ScalarT, IdxT> test_branch(&test_bus1, &test_bus2, 1.0, 1.0, 0.0, 0.0);
         test_branch.allocate();
 
         test_branch.setR(R);
@@ -279,10 +334,10 @@ namespace GridKit
         ref_branch.evaluateResidual();
         test_branch.evaluateResidual();
 
-        success *= isEqual(test_bus1.Ir(), ref_bus1.Ir());
-        success *= isEqual(test_bus1.Ii(), ref_bus1.Ii());
-        success *= isEqual(test_bus2.Ir(), ref_bus2.Ir());
-        success *= isEqual(test_bus2.Ii(), ref_bus2.Ii());
+        success *= isEqual(test_branch.getExternalResidual()[0], ref_branch.getExternalResidual()[0]);
+        success *= isEqual(test_branch.getExternalResidual()[1], ref_branch.getExternalResidual()[1]);
+        success *= isEqual(test_branch.getExternalResidual()[2], ref_branch.getExternalResidual()[2]);
+        success *= isEqual(test_branch.getExternalResidual()[3], ref_branch.getExternalResidual()[3]);
 
         return success.report(__func__);
       }
@@ -297,23 +352,35 @@ namespace GridKit
                     << "Logged errors are are expected.\n";
         Log::setVerbosity(Log::Verbosity::WARNINGS);
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 0.0);
-        PhasorDynamics::Bus<ScalarT, IdxT> bus2(1.0, 0.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus1(1.0, 0.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus2(1.0, 0.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
 
-        PhasorDynamics::Branch<ScalarT, IdxT> valid_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> valid_branch(0.0, 0.1, 0.0, 0.0);
+        wireBranch(bus1, bus2, valid_branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
         success *= (valid_branch.verify() == 0);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(&bus1, &bus2, 0.0, 0.0, 0.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> unwired_branch(0.0, 0.1, 0.0, 0.0);
+        success *= (unwired_branch.verify() != 0);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(0.0, 0.0, 0.0, 0.0);
+        wireBranch(bus1, bus2, zero_impedance_branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
         success *= (zero_impedance_branch.verify() != 0);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> zero_tap_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> zero_tap_branch(0.0, 0.1, 0.0, 0.0, 0.0, 0.0);
+        wireBranch(bus1, bus2, zero_tap_branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
         success *= (zero_tap_branch.verify() != 0);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> negative_tap_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0, -1.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> negative_tap_branch(0.0, 0.1, 0.0, 0.0, -1.0, 0.0);
+        wireBranch(bus1, bus2, negative_tap_branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
         success *= (negative_tap_branch.verify() != 0);
 
         const RealT                           nan = std::numeric_limits<RealT>::quiet_NaN();
-        PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, nan, 0.1, 0.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(nan, 0.1, 0.0, 0.0);
+        wireBranch(bus1, bus2, nonfinite_branch, bus1_vr, bus1_vi, bus2_vr, bus2_vi);
         success *= (nonfinite_branch.verify() != 0);
 
         return success.report(__func__);
@@ -346,8 +413,25 @@ namespace GridKit
         data.parameters[Parameter::G] = G;
         data.parameters[Parameter::B] = B;
 
-        PhasorDynamics::Bus<ScalarT, IdxT> data_bus1(Vr1, Vi1);
-        PhasorDynamics::Bus<ScalarT, IdxT> data_bus2(Vr2, Vi2);
+        PhasorDynamics::Bus<ScalarT, IdxT>        data_bus1(Vr1, Vi1);
+        PhasorDynamics::Bus<ScalarT, IdxT>        data_bus2(Vr2, Vi2);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> data_bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> data_bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> data_bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> data_bus2_vi;
+
+        PhasorDynamics::Bus<ScalarT, IdxT>        ref_bus1(Vr1, Vi1);
+        PhasorDynamics::Bus<ScalarT, IdxT>        ref_bus2(Vr2, Vi2);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ref_bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ref_bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ref_bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ref_bus2_vi;
+
+        PhasorDynamics::Branch<ScalarT, IdxT> data_branch(data);
+        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(R, X, G, B, 1.0, 0.0);
+        wireBranch(data_bus1, data_bus2, data_branch, data_bus1_vr, data_bus1_vi, data_bus2_vr, data_bus2_vi);
+        wireBranch(ref_bus1, ref_bus2, ref_branch, ref_bus1_vr, ref_bus1_vi, ref_bus2_vr, ref_bus2_vi);
+
         data_bus1.allocate();
         data_bus1.initialize();
         data_bus1.evaluateResidual();
@@ -355,8 +439,6 @@ namespace GridKit
         data_bus2.initialize();
         data_bus2.evaluateResidual();
 
-        PhasorDynamics::Bus<ScalarT, IdxT> ref_bus1(Vr1, Vi1);
-        PhasorDynamics::Bus<ScalarT, IdxT> ref_bus2(Vr2, Vi2);
         ref_bus1.allocate();
         ref_bus1.initialize();
         ref_bus1.evaluateResidual();
@@ -364,18 +446,16 @@ namespace GridKit
         ref_bus2.initialize();
         ref_bus2.evaluateResidual();
 
-        PhasorDynamics::Branch<ScalarT, IdxT> data_branch(&data_bus1, &data_bus2, data);
-        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, 1.0, 0.0);
         data_branch.allocate();
         ref_branch.allocate();
 
         data_branch.evaluateResidual();
         ref_branch.evaluateResidual();
 
-        success *= isEqual(data_bus1.Ir(), ref_bus1.Ir());
-        success *= isEqual(data_bus1.Ii(), ref_bus1.Ii());
-        success *= isEqual(data_bus2.Ir(), ref_bus2.Ir());
-        success *= isEqual(data_bus2.Ii(), ref_bus2.Ii());
+        success *= isEqual(data_branch.getExternalResidual()[0], ref_branch.getExternalResidual()[0]);
+        success *= isEqual(data_branch.getExternalResidual()[1], ref_branch.getExternalResidual()[1]);
+        success *= isEqual(data_branch.getExternalResidual()[2], ref_branch.getExternalResidual()[2]);
+        success *= isEqual(data_branch.getExternalResidual()[3], ref_branch.getExternalResidual()[3]);
 
         return success.report(__func__);
       }

@@ -99,13 +99,20 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
         PhasorDynamics::SignalNode<ScalarT, IdxT>      omega;
-        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
+        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&omega, &pmech, gendata);
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
 
         // Test answer keys
         const std::vector<ScalarT> res_answer = {0.0,
                                                  -1.0,
                                                  -0.2};
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VR>(&vr_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         gen.allocate();
@@ -202,9 +209,16 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
         PhasorDynamics::SignalNode<ScalarT, IdxT>      omega;
-        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
+        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&omega, &pmech, gendata);
         // Create governor to be tested
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VR>(&vr_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         gov.allocate();
@@ -304,9 +318,16 @@ namespace GridKit
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>      pmech;
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>      omega;
-        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT>          gen(&bus, &omega, &pmech, gendata);
+        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT>          gen(&omega, &pmech, gendata);
         // Create governor to be tested
         PhasorDynamics::Governor::Tgov1<DependencyTracking::Variable, IdxT> gov(&pmech, &omega);
+
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VR>(&vr_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         gov.allocate();
@@ -410,9 +431,16 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
         PhasorDynamics::SignalNode<ScalarT, IdxT>      omega;
-        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
+        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&omega, &pmech, gendata);
         // Create governor to be tested
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VR>(&vr_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         gov.allocate();

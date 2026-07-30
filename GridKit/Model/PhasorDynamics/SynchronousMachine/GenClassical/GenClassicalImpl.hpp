@@ -10,7 +10,6 @@
 #include <cmath>
 #include <iostream>
 
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -23,9 +22,8 @@ namespace GridKit
      * @brief Constructor for a classical generator model
      */
     template <typename scalar_type, typename index_type>
-    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus)
-      : bus_(bus),
-        bus_id_(0),
+    GenClassical<scalar_type, index_type>::GenClassical()
+      : bus_id_(0),
         p0_(0.0),
         q0_(0.0),
         H_(3.0),
@@ -42,15 +40,13 @@ namespace GridKit
      * @brief Constructor for a classical generator model
      */
     template <typename scalar_type, typename index_type>
-    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus,
-                                                        RealT p0,
+    GenClassical<scalar_type, index_type>::GenClassical(RealT p0,
                                                         RealT q0,
                                                         RealT H,
                                                         RealT D,
                                                         RealT Ra,
                                                         RealT Xdp)
-      : bus_(bus),
-        bus_id_(0),
+      : bus_id_(0),
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -67,9 +63,8 @@ namespace GridKit
      * @brief Constructor for a classical generator model
      */
     template <typename scalar_type, typename index_type>
-    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus, const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    GenClassical<scalar_type, index_type>::GenClassical(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
@@ -342,15 +337,15 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::gatherExternalVariables()
     {
-      y_ext_[0] = Vr();
-      y_ext_[1] = Vi();
-      if (bus_->size() > 0)
-      {
-        variable_indices_ext_[0] = bus_->getVariableIndex(0);
-        variable_indices_ext_[1] = bus_->getVariableIndex(1);
-        residual_indices_ext_[0] = bus_->getResidualIndex(0);
-        residual_indices_ext_[1] = bus_->getResidualIndex(1);
-      }
+      static constexpr auto VR = GenClassicalExternalVariables::VR;
+      static constexpr auto VI = GenClassicalExternalVariables::VI;
+
+      y_ext_[0]                = Vr();
+      y_ext_[1]                = Vi();
+      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
+      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
+      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR>();
+      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI>();
     }
 
     /**
@@ -394,14 +389,6 @@ namespace GridKit
     {
       evaluateInternalResidual();
       evaluateExternalResidual();
-
-      // Standalone evaluation scatters directly to the bus
-      Ir() += f_ext_[0];
-      Ii() += f_ext_[1];
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
 
       return 0;
     }

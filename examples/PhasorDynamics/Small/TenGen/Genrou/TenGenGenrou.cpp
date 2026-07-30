@@ -41,27 +41,73 @@ int main()
   Bus<scalar_type, index_type> bus9(0.938638861502395, 0.344901620288291);
   Bus<scalar_type, index_type> bus10(0.937739191669114, 0.347340277548916);
 
-  Branch<scalar_type, index_type> branch12(&bus1, &bus2, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch23(&bus2, &bus3, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch34(&bus3, &bus4, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch45(&bus4, &bus5, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch56(&bus5, &bus6, 0.001, 0.1, 0, 0);
-  Branch<scalar_type, index_type> branch67(&bus6, &bus7, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch78(&bus7, &bus8, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch89(&bus8, &bus9, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch910(&bus9, &bus10, 0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch12(0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch23(0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch34(0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch45(0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch56(0.001, 0.1, 0, 0);
+  Branch<scalar_type, index_type> branch67(0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch78(0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch89(0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch910(0.001, 0.005, 0, 0);
 
-  Genrou<scalar_type, index_type> gen2(&bus2, 0.5, -0.00442101, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen3(&bus3, 0.5, -0.02510812, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen4(&bus4, 0.5, -0.04339553, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen5(&bus5, 0.5, -0.2334993, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen6(&bus6, 0.5, 0.69907194, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen7(&bus7, 0.5, -0.08318208, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen8(&bus8, 0.5, -0.09123614, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen9(&bus9, 0.5, -0.09662372, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen10(&bus10, 0.5, -0.09932297, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen2(0.5, -0.00442101, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen3(0.5, -0.02510812, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen4(0.5, -0.04339553, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen5(0.5, -0.2334993, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen6(0.5, 0.69907194, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen7(0.5, -0.08318208, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen8(0.5, -0.09123614, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen9(0.5, -0.09662372, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen10(0.5, -0.09932297, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
 
-  BusFault<scalar_type, index_type> fault(&bus10, 0, 1e-5, 0);
+  BusFault<scalar_type, index_type> fault(0, 1e-5, 0);
+
+  /* Wire components to the bus voltage signal nodes */
+  SignalNode<scalar_type, index_type> bus_vr[10];
+  SignalNode<scalar_type, index_type> bus_vi[10];
+
+  BusBase<scalar_type, index_type>* buses[10] = {&bus1, &bus2, &bus3, &bus4, &bus5, &bus6, &bus7, &bus8, &bus9, &bus10};
+  for (int i = 0; i < 10; ++i)
+  {
+    buses[i]->getSignals().assignSignalNode<BusInternalVariables::VR>(&bus_vr[i]);
+    buses[i]->getSignals().assignSignalNode<BusInternalVariables::VI>(&bus_vi[i]);
+  }
+
+  auto wire_branch = [&](Branch<scalar_type, index_type>& branch, int i, int j)
+  {
+    branch.getSignals().attachSignalNode<BranchExternalVariables::VR1>(&bus_vr[i]);
+    branch.getSignals().attachSignalNode<BranchExternalVariables::VI1>(&bus_vi[i]);
+    branch.getSignals().attachSignalNode<BranchExternalVariables::VR2>(&bus_vr[j]);
+    branch.getSignals().attachSignalNode<BranchExternalVariables::VI2>(&bus_vi[j]);
+  };
+  wire_branch(branch12, 0, 1);
+  wire_branch(branch23, 1, 2);
+  wire_branch(branch34, 2, 3);
+  wire_branch(branch45, 3, 4);
+  wire_branch(branch56, 4, 5);
+  wire_branch(branch67, 5, 6);
+  wire_branch(branch78, 6, 7);
+  wire_branch(branch89, 7, 8);
+  wire_branch(branch910, 8, 9);
+
+  auto wire_gen = [&](Genrou<scalar_type, index_type>& gen, int i)
+  {
+    gen.getSignals().attachSignalNode<GenrouExternalVariables::VR>(&bus_vr[i]);
+    gen.getSignals().attachSignalNode<GenrouExternalVariables::VI>(&bus_vi[i]);
+  };
+  wire_gen(gen2, 1);
+  wire_gen(gen3, 2);
+  wire_gen(gen4, 3);
+  wire_gen(gen5, 4);
+  wire_gen(gen6, 5);
+  wire_gen(gen7, 6);
+  wire_gen(gen8, 7);
+  wire_gen(gen9, 8);
+  wire_gen(gen10, 9);
+
+  fault.getSignals().attachSignalNode<BusFaultExternalVariables::VR>(&bus_vr[9]);
+  fault.getSignals().attachSignalNode<BusFaultExternalVariables::VI>(&bus_vi[9]);
 
   /* Connect everything together */
   SystemModel<scalar_type, index_type> sys;

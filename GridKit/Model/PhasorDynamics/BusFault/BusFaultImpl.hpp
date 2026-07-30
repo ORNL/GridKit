@@ -3,7 +3,6 @@
 #include <cmath>
 #include <iostream>
 
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -20,8 +19,8 @@ namespace GridKit
      * - Number of independent variables = 0
      */
     template <typename scalar_type, typename index_type>
-    BusFault<scalar_type, index_type>::BusFault(BusT* bus)
-      : bus_(bus), R_(0), X_(0.01), status_(0), bus_id_(0)
+    BusFault<scalar_type, index_type>::BusFault()
+      : R_(0), X_(0.01), status_(0), bus_id_(0)
     {
       (void) bus_id_;
       size_ = 2;
@@ -39,8 +38,8 @@ namespace GridKit
      * @param B - line shunt charging
      */
     template <typename scalar_type, typename index_type>
-    BusFault<scalar_type, index_type>::BusFault(BusT* bus, RealT R, RealT X, int status)
-      : bus_(bus), R_(R), X_(X), status_(status), bus_id_(0)
+    BusFault<scalar_type, index_type>::BusFault(RealT R, RealT X, int status)
+      : R_(R), X_(X), status_(status), bus_id_(0)
     {
       size_ = 2;
       setDerivedParams();
@@ -53,9 +52,8 @@ namespace GridKit
      * @param bus2 - pointer to bus-2
      */
     template <typename scalar_type, typename index_type>
-    BusFault<scalar_type, index_type>::BusFault(BusT* bus, const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    BusFault<scalar_type, index_type>::BusFault(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
@@ -253,6 +251,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void BusFault<scalar_type, index_type>::gatherExternalVariables()
     {
+      static constexpr auto VR = BusFaultExternalVariables::VR;
+      static constexpr auto VI = BusFaultExternalVariables::VI;
+
       if (status_)
       {
         y_ext_[0] = Vr();
@@ -263,13 +264,10 @@ namespace GridKit
         y_ext_[0] = 0.0;
         y_ext_[1] = 0.0;
       }
-      if (bus_->size() > 0)
-      {
-        variable_indices_ext_[0] = bus_->getVariableIndex(0);
-        variable_indices_ext_[1] = bus_->getVariableIndex(1);
-        residual_indices_ext_[0] = bus_->getResidualIndex(0);
-        residual_indices_ext_[1] = bus_->getResidualIndex(1);
-      }
+      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
+      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
+      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR>();
+      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI>();
     }
 
     /**
@@ -314,7 +312,8 @@ namespace GridKit
     }
 
     /**
-     * \brief Residual contribution of the fault is pushed to the bus.
+     * \brief Evaluate the internal residual and external residual
+     * contributions.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -322,17 +321,6 @@ namespace GridKit
     {
       evaluateInternalResidual();
       evaluateExternalResidual();
-
-      // Standalone evaluation scatters directly to the bus
-      if (status_)
-      {
-        Ir() += f_ext_[0];
-        Ii() += f_ext_[1];
-        if (bus_->size() > 0)
-        {
-          bus_->getResidual().setDataUpdated();
-        }
-      }
 
       return 0;
     }

@@ -159,6 +159,23 @@ namespace GridKit
         return (*external_variable_signals_[static_cast<size_t>(variable)])->getVariableIndex();
       }
 
+      /// Returns the global residual index of the specified external variable
+      ///
+      /// @tparam variable The external variable to read from
+      /// @pre A signal node has been assigned to the requested external
+      ///      variable
+      template <ExternalVariables variable>
+      auto readExternalResidualIndex() const -> IdxT
+      {
+        static_assert(variable < ExternalVariables::MAXIMUM);
+        if (!external_variable_signals_[static_cast<size_t>(variable)])
+        {
+          throw std::logic_error("A signal node has not been assigned to this external variable");
+        }
+
+        return (*external_variable_signals_[static_cast<size_t>(variable)])->getResidualIndex();
+      }
+
       /// Writes a value to the specified external variable
       ///
       /// @warning This method should be used only in component initialization

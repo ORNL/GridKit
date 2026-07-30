@@ -4,7 +4,6 @@
 #include <cmath>
 #include <iostream>
 
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -21,19 +20,15 @@ namespace GridKit
      * - Number of independent variables = 2
      */
     template <typename scalar_type, typename index_type>
-    LoadZ<scalar_type, index_type>::LoadZ(BusT* bus)
-      : bus_(bus)
+    LoadZ<scalar_type, index_type>::LoadZ()
     {
       size_ = 2;
       setDerivedParams();
     }
 
     template <typename scalar_type, typename index_type>
-    LoadZ<scalar_type, index_type>::LoadZ(BusT* bus,
-                                          RealT R,
-                                          RealT X)
-      : bus_(bus),
-        R_(R),
+    LoadZ<scalar_type, index_type>::LoadZ(RealT R, RealT X)
+      : R_(R),
         X_(X)
     {
       size_ = 2;
@@ -41,10 +36,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    LoadZ<scalar_type, index_type>::LoadZ(BusT*             bus,
-                                          const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    LoadZ<scalar_type, index_type>::LoadZ(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       using Parameter = typename ModelDataT::Parameters;
       if (data.parameters.contains(Parameter::R))
@@ -215,15 +208,15 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZ<scalar_type, index_type>::gatherExternalVariables()
     {
-      y_ext_[0] = Vr();
-      y_ext_[1] = Vi();
-      if (bus_->size() > 0)
-      {
-        variable_indices_ext_[0] = bus_->getVariableIndex(0);
-        variable_indices_ext_[1] = bus_->getVariableIndex(1);
-        residual_indices_ext_[0] = bus_->getResidualIndex(0);
-        residual_indices_ext_[1] = bus_->getResidualIndex(1);
-      }
+      static constexpr auto VR = LoadZExternalVariables::VR;
+      static constexpr auto VI = LoadZExternalVariables::VI;
+
+      y_ext_[0]                = Vr();
+      y_ext_[1]                = Vi();
+      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
+      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
+      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR>();
+      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI>();
     }
 
     template <typename scalar_type, typename index_type>
@@ -255,7 +248,8 @@ namespace GridKit
     }
 
     /**
-     * @brief Residual contribution of the load is pushed to the bus.
+     * @brief Evaluate the internal residual and external residual
+     * contributions.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -263,14 +257,6 @@ namespace GridKit
     {
       evaluateInternalResidual();
       evaluateExternalResidual();
-
-      // Standalone evaluation scatters directly to the bus
-      Ir() += f_ext_[0];
-      Ii() += f_ext_[1];
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
 
       return 0;
     }

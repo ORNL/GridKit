@@ -20,10 +20,11 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void SignalNode<scalar_type, index_type>::set(ScalarT* signal, IdxT* variable_index)
+    void SignalNode<scalar_type, index_type>::set(ScalarT* signal, IdxT* variable_index, IdxT* residual_index)
     {
       signal_         = signal;
       variable_index_ = variable_index;
+      residual_index_ = residual_index;
     }
 
     template <typename scalar_type, typename index_type>

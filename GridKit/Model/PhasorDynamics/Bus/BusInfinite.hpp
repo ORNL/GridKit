@@ -27,6 +27,7 @@ namespace GridKit
       using BusBase<scalar_type, index_type>::coo_jac_;
       using BusBase<scalar_type, index_type>::monitor_;
       using BusBase<scalar_type, index_type>::allocated_;
+      using BusBase<scalar_type, index_type>::signals_;
 
     public:
       using ScalarT    = scalar_type;
@@ -105,6 +106,10 @@ namespace GridKit
       ScalarT ViB_{0.0};
       ScalarT IrB_{0.0};
       ScalarT IiB_{0.0};
+
+      // Placeholders for variable indices
+      IdxT vr_index_{INVALID_INDEX<IdxT>};
+      IdxT vi_index_{INVALID_INDEX<IdxT>};
     };
 
   } // namespace PhasorDynamics

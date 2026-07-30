@@ -19,9 +19,6 @@ namespace GridKit
   namespace PhasorDynamics
   {
     template <typename scalar_type, typename index_type>
-    class BusBase;
-
-    template <typename scalar_type, typename index_type>
     class SignalNode;
 
     template <typename real_type, typename index_type>
@@ -96,24 +93,20 @@ namespace GridKit
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = GenrouData<RealT, IdxT>;
       using SignalT    = SignalNode<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<Genrou, GenrouData>;
 
-      Genrou(BusT* bus);
-      Genrou(BusT*             bus,
-             SignalT*          omega,
+      Genrou();
+      Genrou(SignalT*          omega,
              SignalT*          pmech,
              const ModelDataT& data);
-      Genrou(BusT*             bus,
-             SignalT*          omega,
+      Genrou(SignalT*          omega,
              SignalT*          pmech,
              SignalT*          efd,
              const ModelDataT& data);
-      Genrou(BusT* bus, const ModelDataT& data);
-      Genrou(BusT* bus,
-             RealT p0,
+      Genrou(const ModelDataT& data);
+      Genrou(RealT p0,
              RealT q0,
              RealT H,
              RealT D,
@@ -185,24 +178,14 @@ namespace GridKit
        */
       ScalarT toSystemBase(ScalarT value) const;
 
-      ScalarT& Vr()
+      ScalarT Vr() const
       {
-        return bus_->Vr();
+        return signals_.template readExternalVariable<GenrouExternalVariables::VR>();
       }
 
-      ScalarT& Vi()
+      ScalarT Vi() const
       {
-        return bus_->Vi();
-      }
-
-      ScalarT& Ir()
-      {
-        return bus_->Ir();
-      }
-
-      ScalarT& Ii()
-      {
-        return bus_->Ii();
+        return signals_.template readExternalVariable<GenrouExternalVariables::VI>();
       }
 
     public:
@@ -213,8 +196,7 @@ namespace GridKit
 
     private:
       /* Identification */
-      BusT* bus_;
-      IdxT  bus_id_{0};
+      IdxT bus_id_{0};
 
       /// Component signal extension
       ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;

@@ -56,13 +56,12 @@ namespace GridKit
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = BusFaultData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<BusFault, BusFaultData>;
 
-      BusFault(BusT* bus);
-      BusFault(BusT* bus, RealT R, RealT X, int status);
-      BusFault(BusT* bus, const ModelDataT& data);
+      BusFault();
+      BusFault(RealT R, RealT X, int status);
+      BusFault(const ModelDataT& data);
       ~BusFault();
 
       int setGridKitComponentID(IdxT) override final;
@@ -77,7 +76,25 @@ namespace GridKit
 
       int verify() const override final
       {
-        return 0;
+        int error_count = 0;
+        if (!signals_.template isAttached<BusFaultExternalVariables::VR>())
+        {
+          Log::error() << "BusFault: VR signal is not attached\n";
+          ++error_count;
+        }
+        if (!signals_.template isAttached<BusFaultExternalVariables::VI>())
+        {
+          Log::error() << "BusFault: VI signal is not attached\n";
+          ++error_count;
+        }
+        return error_count;
+      }
+
+      /// Get the `ComponentSignals` from this component
+      auto getSignals()
+          -> ComponentSignals<ScalarT, IdxT, NoVariables, BusFaultExternalVariables>&
+      {
+        return signals_;
       }
 
       void updateTime(RealT /* t */, RealT /* a */) override final
@@ -108,24 +125,14 @@ namespace GridKit
       void gatherExternalVariables();
       void setDerivedParams();
 
-      ScalarT& Vr()
+      ScalarT Vr() const
       {
-        return bus_->Vr();
+        return signals_.template readExternalVariable<BusFaultExternalVariables::VR>();
       }
 
-      ScalarT& Vi()
+      ScalarT Vi() const
       {
-        return bus_->Vi();
-      }
-
-      ScalarT& Ir()
-      {
-        return bus_->Ir();
-      }
-
-      ScalarT& Ii()
-      {
-        return bus_->Ii();
+        return signals_.template readExternalVariable<BusFaultExternalVariables::VI>();
       }
 
     public:
@@ -135,7 +142,6 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      BusT* bus_;
       RealT R_{0.0};
       RealT X_{0.0};
       bool  status_{false};
@@ -144,6 +150,9 @@ namespace GridKit
       /* Derivied parameters */
       RealT B_;
       RealT G_;
+
+      /// Component signals
+      ComponentSignals<ScalarT, IdxT, NoVariables, BusFaultExternalVariables> signals_;
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;

@@ -10,6 +10,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -33,10 +34,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
-
         PhasorDynamics::Component<ScalarT, IdxT>* load =
-            new PhasorDynamics::LoadZIP<ScalarT, IdxT>(bus);
+            new PhasorDynamics::LoadZIP<ScalarT, IdxT>();
 
         success *= (load != nullptr);
 
@@ -46,11 +45,9 @@ namespace GridKit
         }
 
         auto                                      data = makeData();
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>    monitored_load(bus, data);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>    monitored_load(data);
         PhasorDynamics::Component<ScalarT, IdxT>& monitored_component  = monitored_load;
         success                                                       *= (monitored_component.getMonitor() != nullptr);
-
-        delete bus;
 
         return success.report(__func__);
       }
@@ -60,7 +57,14 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.5, 0.2, 0.4);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  vi_signal;
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(2.0, 0.5, 0.5, 0.2, 0.4);
+
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::VR>(&vr_signal);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         load.allocate();
@@ -83,7 +87,14 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.5, 0.2, 0.4);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  vi_signal;
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(2.0, 0.5, 0.5, 0.2, 0.4);
+
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::VR>(&vr_signal);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         load.allocate();
@@ -101,8 +112,8 @@ namespace GridKit
         const auto* f  = load.getResidual().getData();
         success       *= isEqual(f[0], static_cast<ScalarT>(128.0 / 75.0), tol_);
         success       *= isEqual(f[1], static_cast<ScalarT>(104.0 / 75.0), tol_);
-        success       *= isEqual(bus.Ir(), static_cast<ScalarT>(-3.2), tol_);
-        success       *= isEqual(bus.Ii(), static_cast<ScalarT>(-2.6), tol_);
+        success       *= isEqual(load.getExternalResidual()[0], static_cast<ScalarT>(-3.2), tol_);
+        success       *= isEqual(load.getExternalResidual()[1], static_cast<ScalarT>(-2.6), tol_);
 
         return success.report(__func__);
       }
@@ -112,8 +123,15 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  vi_signal;
         auto                                       data = makeData();
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, data);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(data);
+
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::VR>(&vr_signal);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         load.allocate();
@@ -176,8 +194,15 @@ namespace GridKit
         DependencyTracking::Variable Vr{0.3};
         DependencyTracking::Variable Vi{0.4};
 
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT> load(&bus, Pnom, Qnom, Vnom, alphaI, alphaP);
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>        bus(Vr, Vi);
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> vi_signal;
+        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT>    load(Pnom, Qnom, Vnom, alphaI, alphaP);
+
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::VR>(&vr_signal);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         load.allocate();
@@ -257,8 +282,15 @@ namespace GridKit
         ScalarT Vr{0.3};
         ScalarT Vi{0.4};
 
-        PhasorDynamics::Bus<ScalarT, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, Pnom, Qnom, Vnom, alphaI, alphaP);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(Vr, Vi);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>    load(Pnom, Qnom, Vnom, alphaI, alphaP);
+
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::VR>(&vr_signal);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::VI>(&vi_signal);
 
         bus.allocate();
         load.allocate();
