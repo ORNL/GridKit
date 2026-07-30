@@ -159,8 +159,8 @@ namespace GridKit
         success *= scalarMatches(pbranch_node.read(), 0.4, "pbranch signal");
 
         // The accumulated bus injection is the system-base branch current.
-        success *= scalarMatches(fixture.bus.Ir(), 0.26, "bus real injection");
-        success *= scalarMatches(fixture.bus.Ii(), 0.32, "bus imaginary injection");
+        success *= scalarMatches(fixture.regca.getExternalResidual()[0], 0.26, "bus real injection");
+        success *= scalarMatches(fixture.regca.getExternalResidual()[1], 0.32, "bus imaginary injection");
 
         success *= allResidualsZero(fixture.regca);
 

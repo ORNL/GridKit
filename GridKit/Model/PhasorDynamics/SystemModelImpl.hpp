@@ -334,19 +334,6 @@ namespace GridKit
         exciter->getSignals().template attachSignalNode<SexsPtiExternalVariables::VIMAG>(
             bus_signals.template getSignalNode<BusInternalVariables::VI>());
 
-        if (excitedata.signal_outputs.contains(SexsPtiSignalOutputs::efd))
-        {
-          IdxT           efd = excitedata.signal_outputs.at(SexsPtiSignalOutputs::efd);
-          constexpr auto EFD = SexsPtiInternalVariables::EFD;
-          exciter->getSignals().template assignSignalNode<EFD>(getSignal(efd));
-        }
-
-        if (excitedata.signal_inputs.contains(SexsPtiSignalInputs::vs))
-        {
-          IdxT           vs = excitedata.signal_inputs.at(SexsPtiSignalInputs::vs);
-          constexpr auto VS = SexsPtiExternalVariables::VS;
-          exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
-        }
         exciter->getPorts().connect(excitedata, signal_nodes_);
 
         addComponent(exciter);
@@ -597,8 +584,11 @@ namespace GridKit
         evaluateJacobian();
       }
 
-      initializeMonitor();
-      startMonitor();
+      if (!bound_)
+      {
+        initializeMonitor();
+        startMonitor();
+      }
 
       allocated_ = true;
       return 0;
@@ -664,19 +654,25 @@ namespace GridKit
     }
 
     /**
-     * @brief Add monitors from buses and components and start monitor
+     * @brief Forward the monitor controller to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::collectMonitors(MonitorT& controller)
+    {
+      for (const auto& component : components_)
+      {
+        component->collectMonitors(controller);
+      }
+    }
+
+    /**
+     * @brief Register every monitor in the component tree with this model's
+     * controller.
      */
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::initializeMonitor()
     {
-      for (const auto* component : components_)
-      {
-        auto* mon = component->getMonitor();
-        if (mon && !mon->empty())
-        {
-          monitor_->addMonitor(mon);
-        }
-      }
+      this->collectMonitors(*monitor_);
     }
 
     template <typename scalar_type, typename index_type>
@@ -713,13 +709,14 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::tagDifferentiable()
     {
-      // Set initial values for global solution vectors
-      for (const auto& component : components_)
+      // Copy component tags into this model's tag vector. Local storage is
+      // indexed locally; global indices live only in the routed index maps.
+      for (size_t c = 0; c < components_.size(); ++c)
       {
-        component->tagDifferentiable();
-        for (IdxT j = 0; j < component->size(); ++j)
+        components_[c]->tagDifferentiable();
+        for (IdxT j = 0; j < components_[c]->size(); ++j)
         {
-          tag_[component->getVariableIndex(j)] = component->tag()[j];
+          tag_[static_cast<size_t>(component_offsets_[c] + j)] = components_[c]->tag()[j];
         }
       }
 
@@ -827,6 +824,63 @@ namespace GridKit
       this->scatterExternalResidual(f_.getData());
 
       f_.setDataUpdated();
+
+      return 0;
+    }
+
+    /**
+     * @brief Refresh Jacobian entries throughout the component tree.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::fillJacobian()
+    {
+      for (const auto& component : components_)
+      {
+        component->fillJacobian();
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Raw COO entry count of the component tree.
+     */
+    template <typename scalar_type, typename index_type>
+    index_type SystemModel<scalar_type, index_type>::jacobianNnz()
+    {
+      IdxT nnz_dup = 0;
+      for (const auto& component : components_)
+      {
+        nnz_dup += component->jacobianNnz();
+      }
+
+      return nnz_dup;
+    }
+
+    /**
+     * @brief Forward the root COO arrays to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::scatterJacobian(IdxT* rows, IdxT* cols, RealT* vals, IdxT& counter)
+    {
+      for (const auto& component : components_)
+      {
+        component->scatterJacobian(rows, cols, vals, counter);
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Forward the root CSR values and map to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::scatterJacobianValues(RealT* vals_csr, const IdxT* map_to_csr, IdxT& counter)
+    {
+      for (const auto& component : components_)
+      {
+        component->scatterJacobianValues(vals_csr, map_to_csr, counter);
+      }
 
       return 0;
     }

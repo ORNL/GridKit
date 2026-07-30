@@ -179,13 +179,13 @@ namespace GridKit
         model_jacobian->print();
 
         auto        dependencies  = GridKit::Testing::MapFromCsr(model_jacobian);
-        const auto& bus_residual  = bus.getResidual();
+        const auto bus_residual = fault.getExternalResidual();
         const auto  internal_rows = dependencies.size();
-        dependencies.resize(internal_rows + bus_residual.getSize());
-        for (IdxT row = 0; row < bus_residual.getSize(); ++row)
+        dependencies.resize(internal_rows + bus_residual.size());
+        for (IdxT row = 0; row < bus_residual.size(); ++row)
         {
           // Merge even y and odd yp indices at alpha = 1, including bus rows.
-          for (const auto& [column, value] : bus_residual.getData()[row].getDependencies())
+          for (const auto& [column, value] : bus_residual[row].getDependencies())
           {
             dependencies[internal_rows + row][column / 2] += value;
           }

@@ -145,6 +145,7 @@ namespace GridKit
 
         /// Component ports
         SignalPortsT ports_;
+        ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
 
         /// Variable monitor
         std::unique_ptr<MonitorT> monitor_;

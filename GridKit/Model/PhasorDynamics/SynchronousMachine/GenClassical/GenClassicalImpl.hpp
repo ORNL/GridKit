@@ -25,8 +25,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     GenClassical<scalar_type, index_type>::GenClassical()
-      : bus_id_(0),
-        p0_(0.0),
+      : p0_(0.0),
         q0_(0.0),
         H_(3.0),
         D_(0.0),
@@ -48,8 +47,7 @@ namespace GridKit
                                                         RealT D,
                                                         RealT Ra,
                                                         RealT Xdp)
-      : bus_id_(0),
-        p0_(p0),
+      : p0_(p0),
         q0_(q0),
         H_(H),
         D_(D),
@@ -202,7 +200,18 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::verify() const
     {
-      int ret = 0;
+        int ret = 0;
+        if (!signals_.template isAttached<GenClassicalExternalVariables::VR>())
+        {
+          Log::error() << "GenClassical: VR signal is not attached\n";
+          ++ret;
+        }
+        if (!signals_.template isAttached<GenClassicalExternalVariables::VI>())
+        {
+          Log::error() << "GenClassical: VI signal is not attached\n";
+          ++ret;
+        }
+
 
       auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>();
       if (pmech_port.connected() && !pmech_port.linked())
