@@ -66,9 +66,9 @@ namespace GridKit
      * @pre `local_index` *must* be the index of an internal variable. Using this method for
      * an external variable will not properly setup the data pointers for that variable.
      */
-    int setInternalConnectionNodes(size_t local_index, size_t global_index)
+    int setInternalConnectionNodes(size_t local_index, IdxT global_index)
     {
-      assert(!extern_indices_.contains(local_index));
+      assert(!extern_indices_.contains(static_cast<IdxT>(local_index)));
       connection_nodes_[local_index] = global_index;
       return 0;
     }
@@ -135,7 +135,7 @@ namespace GridKit
       y_ext_            = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
       yp_ext_           = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
       f_ext_            = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
-      connection_nodes_ = std::make_unique<size_t[]>(static_cast<size_t>(size_));
+      connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
       if (!allocated_)
       {
@@ -472,22 +472,22 @@ namespace GridKit
     }
 
     /// Number of external variables in this component - ones which are referenced but not owned by this component.
-    size_t                    n_extern_;
+    size_t                  n_extern_;
     /// Number of internal variables in this component - ones which are only referenced by this component.
-    size_t                    n_intern_;
+    size_t                  n_intern_;
     /**
      * @brief A set of variable indices which correspond to the external variables. Variables indices not in this set are internal.
      *
      * @invariant Must have a size of n_extern_. Each element must be in the range [0, `size_` - 1]. Not currently verified anywhere.
      */
-    std::set<IdxT>            extern_indices_;
+    std::set<IdxT>          extern_indices_;
     /**
      * @brief A map from local variable indices to system (global) variable indices. Used for Jacobian construction in
      * \ref PowerElectronicsModel::evaluateJacobian().
      * @note If a variable does not map to a corresponding variable in the system (such as with reference nodes), a special
      * sentinel value of \ref INVALID_INDEX is used. During Jacobian construction, such rows and columns will be pruned.
      */
-    std::unique_ptr<size_t[]> connection_nodes_;
+    std::unique_ptr<IdxT[]> connection_nodes_;
 
   protected:
     /// The number of variables in this component. Should be equal to \ref n_extern_ plus \ref n_intern_ \see getSize()

@@ -185,7 +185,7 @@ namespace GridKit
           comp->setInternalResidualPointer(&f_int_[component_internal_idx]);
 
           const auto& external_indices = comp->getExternIndices();
-          for (size_t i = 0; i < comp->size(); i++)
+          for (IdxT i = 0; i < comp->size(); i++)
           {
             if (!external_indices.contains(i))
             {

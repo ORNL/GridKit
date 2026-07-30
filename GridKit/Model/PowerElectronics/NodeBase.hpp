@@ -132,7 +132,7 @@ namespace GridKit
             .y_   = y_ext_[local_index],
             .yp_  = yp_ext_[local_index],
             .f_   = f_ext_[local_index],
-            .idx_ = static_cast<IdxT>(connection_nodes_[local_index]),
+            .idx_ = connection_nodes_[local_index],
         };
       }
 
@@ -152,7 +152,7 @@ namespace GridKit
         y_ext_            = std::make_unique<const ScalarT*[]>(size);
         yp_ext_           = std::make_unique<const ScalarT*[]>(size);
         f_ext_            = std::make_unique<ScalarT*[]>(size);
-        connection_nodes_ = std::make_unique<size_t[]>(size);
+        connection_nodes_ = std::make_unique<IdxT[]>(size);
 
         allocated_ = true;
         return 0;
@@ -239,7 +239,7 @@ namespace GridKit
       VectorT param_up_{};
       VectorT param_lo_{};
 
-      std::unique_ptr<size_t[]> connection_nodes_;
+      std::unique_ptr<IdxT[]> connection_nodes_;
 
       bool allocated_{false};
 
