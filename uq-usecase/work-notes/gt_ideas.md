@@ -83,7 +83,7 @@ Key properties that make this ML-ready:
 
 ## 3. Literature landscape: GT/GNN in power-system dynamics
 
-Established application buckets (roughly by maturity):
+### 3.1 Established application buckets (roughly by maturity)
 
 1. **Transient stability assessment (TSA).** Spatio-temporal GCN / graph-attention models
    classify stable vs. unstable post-fault from PMU-like signals. The most mature area; lots of
@@ -98,14 +98,108 @@ Established application buckets (roughly by maturity):
 5. **Fast surrogates / emulation.** GNN and Graph-Neural-ODE trajectory predictors that replace
    or accelerate the dynamic solver, enabling cheap forward UQ and screening.
 
-**Why a graph *transformer* rather than a plain GNN?**
-- **Global attention** captures long-range electrical coupling (a fault propagates well beyond
-  1–2 hops), which message-passing GNNs approximate only through many layers.
-- **Positional/structural encodings** (Laplacian eigenvectors, random-walk PE) inject graph
-  geometry, letting attention respect electrical distance.
-- **Avoids over-smoothing** that limits deep MPNNs on larger grids like ACTIVSg200.
-- Mature backbones exist: Graphormer, GraphGPS (hybrid MPNN + global attention), Exphormer,
-  TokenGT.
+### 3.2 Why *graph* models at all — the grid is the primary reason
+
+The dominant structure in this problem **is the graph**. Power-system dynamics are governed by
+the network: the admittance matrix `Y` (hence the swing/DAE coupling) is literally a weighted
+graph Laplacian over buses, and a fault at one bus propagates through branch impedances to the
+rest of the system. The physics is a message-passing process on the grid graph. This has direct
+modeling consequences:
+
+- **Inductive bias that matches the physics.** A model that operates *on the grid graph* encodes
+  the same locality and coupling the equations do, rather than having to relearn it from raw
+  signals. A plain MLP/CNN on stacked per-bus signals throws the topology away and must
+  rediscover "which buses are electrically close" from data.
+- **Permutation invariance / equivariance.** Bus numbering is arbitrary; graph models are
+  invariant to relabeling, so they don't waste capacity on spurious index order.
+- **Weight/feature sharing across the grid.** The same learned "how a bus responds to its
+  neighborhood" is reused everywhere, which is far more sample-efficient — important because each
+  training example costs an expensive dynamic simulation.
+- **Topology as a first-class input.** Edge features (R, X, B, rating) and connectivity are part
+  of the input, so the model can, in principle, **generalize across topology changes** — thinned
+  generator fleets (aleatoric track), different fault locations, or even a different grid.
+
+So the graph structure is the primary reason to use a graph neural network of *some* kind. The
+next question is *which* — plain message-passing GNN (GCN/GAT/MPNN) or a graph **transformer**.
+
+### 3.3 Why a graph *transformer* specifically
+
+Message-passing GNNs aggregate information one hop per layer. That is a poor match for
+post-fault dynamics, where the electrically relevant interactions are **long-range and global**:
+
+- **Global attention captures long-range electrical coupling.** A fault's effect is felt system-
+  wide (coherent generator groups, inter-area oscillations) far beyond 1–2 hops. A GT lets every
+  bus attend to every other bus in one layer, weighted by learned + structural distance —
+  message-passing GNNs only approximate this by stacking many layers.
+- **Positional / structural encodings inject the electrical geometry.** Laplacian eigenvectors or
+  random-walk PE give the transformer a notion of *electrical distance* (the Laplacian spectrum
+  is exactly the modal structure that governs oscillations), so attention can respect grid
+  geometry instead of ignoring it. This is a natural fit: the same eigenstructure that defines
+  slow coherency modes is handed to the model as features.
+- **Avoids over-smoothing.** Deep MPNNs blur node features together as depth grows, losing the
+  per-bus detail that inverse problems (per-generator H) depend on. GTs reach long range without
+  stacking many message-passing layers, so they stay expressive on larger grids like ACTIVSg200.
+- **Mature, reusable backbones.** Graphormer, GraphGPS (hybrid MPNN + global attention),
+  Exphormer, TokenGT — several are hybrids that keep local message passing *and* add global
+  attention, so we get both the physics-aligned locality and the long-range reach.
+
+Caveat kept honest: GTs cost more (attention is quadratic in nodes unless a sparse/linear variant
+is used) and need more data. On a 37-bus grid a good MPNN may match a GT; the GT advantage should
+grow with grid size (200-bus Illinois and up) and with the range of the phenomenon (inter-area
+modes, distant faults). The plan therefore always benchmarks GT **against** MPNN/GAT baselines
+(see §7) rather than assuming GT wins.
+
+### 3.4 How graph models help *sampling-based* UQ
+
+Our UQ is Monte-Carlo / LHS over parameters (and, via the aleatoric track, over operating
+points). Each sample is one expensive GridKit solve. Graph models help this loop in several
+concrete ways:
+
+- **Cheap surrogate → many more "samples".** A trained forward surrogate (problem B) replaces the
+  solver at inference time, so forward UQ can push from thousands to millions of parameter/
+  operating-point samples, tightening tail/quantile estimates (e.g. P(frequency nadir < limit))
+  that raw sampling can't afford. This is emulator-based UQ, with the emulator respecting grid
+  structure.
+- **Amortized inference for the epistemic posterior.** Instead of re-running expensive Bayesian
+  inference per observation, an inference network (problem A) is trained once on the sampled
+  (parameter → trajectory) pairs and then maps a new observed trajectory straight to a posterior
+  over H — amortized/simulation-based inference. The sampling we already do *is* the training set
+  for this.
+- **Active / smarter sampling.** A surrogate with uncertainty can tell us **where** to spend the
+  next expensive solves (high model-variance regions, near stability boundaries), turning brute-
+  force LHS into active-learning-guided sampling.
+- **Variance reduction.** A cheap graph surrogate can serve as a control variate / multifidelity
+  low-fidelity model, reducing the number of full GridKit runs needed for a target accuracy.
+
+### 3.5 Epistemic vs. aleatoric — and what topology could teach us
+
+The two UQ tracks map onto graph learning differently, and the **graph itself** carries
+information relevant to the epistemic track:
+
+- **Epistemic (parameter) UQ.** This is uncertainty in H, D, machine reactances — *node/
+  generator* properties. The key question is **identifiability**: which parameters are recoverable
+  from which measurements, and how sharply. Topology drives this directly:
+  - *Sensitivity is a graph quantity.* How strongly generator `i`'s H shows up at bus `j` falls
+    off with electrical distance; the Laplacian/`Y` structure predicts which parameters are
+    well- vs. weakly-observed. A GT's attention/sensitivity map is essentially a learned version
+    of this — potentially telling us *which generators are practically identifiable and from
+    where* (feeds problems A and D).
+  - *Coherency structure.* Graph-spectral clustering of the grid predicts coherent generator
+    groups; parameters within a tightly coupled group may be jointly (un)identifiable. Learning
+    this structure could tell us the effective *dimension* of the epistemic problem (how many
+    independent parameter combinations the data can actually constrain).
+  - So yes — we may **learn something about the grid topology that directly helps the epistemic
+    track**: an electrical-distance / identifiability map that says where to measure and which
+    H's we can hope to pin down.
+- **Aleatoric (operating-point) UQ.** This is irreducible variability in load/dispatch/wind —
+  entering as *node injection features* and (via fleet thinning) as *topology/status changes*.
+  A graph model conditions on the operating point as input and predicts how transient risk shifts
+  across the 8760×year envelope (problem E). Here topology matters because generator on/off status
+  and injection patterns change the effective graph the dynamics live on.
+- **Combining both.** Because the model takes parameters *and* operating point *and* topology as
+  inputs, it can, in principle, produce a **combined predictive distribution** that separates the
+  reducible (epistemic, parameter) part from the irreducible (aleatoric, operating-point) part —
+  the practical goal of the whole UQ effort.
 
 ---
 
