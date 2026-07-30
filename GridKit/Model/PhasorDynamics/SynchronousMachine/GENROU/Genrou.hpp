@@ -7,6 +7,7 @@
  */
 
 #pragma once
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
@@ -79,27 +80,23 @@ namespace GridKit
       using ScalarT        = scalar_type;
       using IdxT           = index_type;
       using RealT          = typename Component<ScalarT, IdxT>::RealT;
-      using BusT           = BusBase<ScalarT, IdxT>;
+
       using ModelDataT     = GenrouData<RealT, IdxT>;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
       using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT       = Model::VariableMonitor<Genrou, GenrouData>;
 
-      Genrou(BusT* bus);
-      Genrou(BusT*             bus,
-             SignalNodeT*      omega,
+      Genrou();
+      Genrou(SignalNodeT*      omega,
              SignalNodeT*      pmech,
              const ModelDataT& data);
-      Genrou(BusT*             bus,
-             SignalNodeT*      omega,
+      Genrou(SignalNodeT*      omega,
              SignalNodeT*      pmech,
              SignalNodeT*      efd,
              const ModelDataT& data);
-      Genrou(BusT*             bus,
-             const ModelDataT& data);
-      Genrou(BusT* bus,
-             RealT p0,
+      Genrou(const ModelDataT& data);
+      Genrou(RealT p0,
              RealT q0,
              RealT H,
              RealT D,
@@ -146,24 +143,14 @@ namespace GridKit
       void gatherExternalVariables();
       void setDerivedParams();
 
-      ScalarT& Vr()
+      ScalarT Vr() const
       {
-        return bus_->Vr();
+        return signals_.template readExternalVariable<GenrouExternalVariables::VR>();
       }
 
-      ScalarT& Vi()
+      ScalarT Vi() const
       {
-        return bus_->Vi();
-      }
-
-      ScalarT& Ir()
-      {
-        return bus_->Ir();
-      }
-
-      ScalarT& Ii()
-      {
-        return bus_->Ii();
+        return signals_.template readExternalVariable<GenrouExternalVariables::VI>();
       }
 
     public:
@@ -174,11 +161,11 @@ namespace GridKit
 
     private:
       /* Identification */
-      BusT* bus_;
-      IdxT  bus_id_{0};
+      IdxT bus_id_{0};
 
       /* Component ports */
       SignalPortsT ports_;
+      ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};

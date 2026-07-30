@@ -15,6 +15,7 @@ if(GRIDKIT_ENABLE_ENZYME)
       ClangEnzymeFlags
       PUBLIC
       GridKit::phasor_dynamics_core
+      GridKit::phasor_dynamics_signal
     COMPILE_OPTIONS
       PRIVATE
       -mllvm

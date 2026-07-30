@@ -64,10 +64,11 @@ namespace GridKit
       }
 
       [[gnu::always_inline]]
-      void link(ScalarT* signal_in, IdxT* global_index) noexcept
+      void link(ScalarT* signal_in, IdxT* global_index, IdxT* residual_index = nullptr) noexcept
       {
         signal_         = signal_in;
         variable_index_ = global_index;
+        residual_index_ = residual_index;
       }
 
       [[gnu::always_inline]]
@@ -97,11 +98,14 @@ namespace GridKit
         *signal_ = signal_in;
       }
 
+      IdxT getResidualIndex() const { return residual_index_ ? *residual_index_ : INVALID_INDEX<IdxT>; }
+
     private:
       ScalarT* signal_{nullptr};
       IdxT     signal_id_{0};
       IdxT*    variable_index_{nullptr};
       bool     assigned_{false};
+      IdxT* residual_index_{nullptr};
     };
 
   } // namespace PhasorDynamics
