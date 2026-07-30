@@ -316,6 +316,134 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// A nested system at nonzero offset matches its flat twin
+      TestOutcome nestedTwin()
+      {
+        TestStatus success = true;
+
+        RealT R{2.0}; ///< Branch series resistance
+        RealT X{4.0}; ///< Branch series reactance
+        RealT G{0.2}; ///< Branch shunt conductance
+        RealT B{1.2}; ///< Branch shunt charging
+
+        // Both systems hold a slack bus and two PQ buses in the same
+        // variable order; the twin nests the second PQ bus and its branch.
+        auto build = [&](PhasorDynamics::SystemModel<ScalarT, IdxT>& head,
+                         PhasorDynamics::SystemModel<ScalarT, IdxT>& tail,
+                         PhasorDynamics::BusInfinite<ScalarT, IdxT>& bus1,
+                         PhasorDynamics::Bus<ScalarT, IdxT>&         bus2,
+                         PhasorDynamics::Bus<ScalarT, IdxT>&         bus3,
+                         PhasorDynamics::Branch<ScalarT, IdxT>&      branch12,
+                         PhasorDynamics::Branch<ScalarT, IdxT>&      branch23,
+                         PhasorDynamics::SignalNode<ScalarT, IdxT>*  nodes)
+        {
+          head.addBus(&bus1);
+          head.addBus(&bus2);
+
+          bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&nodes[0]);
+          bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&nodes[1]);
+          bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&nodes[2]);
+          bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&nodes[3]);
+          bus3.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&nodes[4]);
+          bus3.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&nodes[5]);
+
+          branch12.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR1>(&nodes[0]);
+          branch12.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI1>(&nodes[1]);
+          branch12.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR2>(&nodes[2]);
+          branch12.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI2>(&nodes[3]);
+          head.addComponent(&branch12);
+
+          branch23.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR1>(&nodes[2]);
+          branch23.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI1>(&nodes[3]);
+          branch23.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR2>(&nodes[4]);
+          branch23.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI2>(&nodes[5]);
+          tail.addBus(&bus3);
+          tail.addComponent(&branch23);
+        };
+
+        // Flat reference: tail IS the head, so every component is direct.
+        PhasorDynamics::SystemModel<ScalarT, IdxT> flat;
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> fbus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         fbus2(30.0, 40.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         fbus3(25.0, 35.0);
+        PhasorDynamics::Branch<ScalarT, IdxT>      fbranch12(R, X, G, B);
+        PhasorDynamics::Branch<ScalarT, IdxT>      fbranch23(R, X, G, B);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  fnodes[6];
+        build(flat, flat, fbus1, fbus2, fbus3, fbranch12, fbranch23, fnodes);
+
+        // Hierarchical twin: bus-3 and branch 2-3 nest at offset 2.
+        PhasorDynamics::SystemModel<ScalarT, IdxT> root;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> nested;
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> nbus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         nbus2(30.0, 40.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         nbus3(25.0, 35.0);
+        PhasorDynamics::Branch<ScalarT, IdxT>      nbranch12(R, X, G, B);
+        PhasorDynamics::Branch<ScalarT, IdxT>      nbranch23(R, X, G, B);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>  nnodes[6];
+        build(root, nested, nbus1, nbus2, nbus3, nbranch12, nbranch23, nnodes);
+        root.addComponent(&nested);
+
+        flat.allocate();
+        flat.initialize();
+        flat.evaluateResidual();
+        flat.tagDifferentiable();
+
+        root.allocate();
+        root.initialize();
+        root.evaluateResidual();
+        root.tagDifferentiable();
+
+        success *= (root.size() == flat.size());
+
+        // States, residuals, and tags match entry for entry.
+        for (IdxT j = 0; j < flat.size(); ++j)
+        {
+          success *= isEqual(root.y().getData()[j], flat.y().getData()[j]);
+          success *= isEqual(root.getResidual().getData()[j], flat.getResidual().getData()[j]);
+          success *= (root.tag()[j] == flat.tag()[j]);
+        }
+
+        // The nested system's own tag vector is indexed locally.
+        for (IdxT j = 0; j < nested.size(); ++j)
+        {
+          success *= (nested.tag()[j] == flat.tag()[2 + j]);
+        }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        // Jacobians assemble to the same CSR matrix. Allocation primed the
+        // pattern, so these evaluations exercise the refill path.
+        flat.evaluateJacobian();
+        root.evaluateJacobian();
+
+        auto* flat_jac = flat.getCsrJacobian();
+        auto* root_jac = root.getCsrJacobian();
+
+        success *= (flat_jac != nullptr && root_jac != nullptr);
+        if (flat_jac != nullptr && root_jac != nullptr)
+        {
+          success *= (root_jac->getNnz() == flat_jac->getNnz());
+          for (IdxT i = 0; i < flat.size() + 1; ++i)
+          {
+            success *= (root_jac->getRowData()[i] == flat_jac->getRowData()[i]);
+          }
+          for (IdxT i = 0; i < flat_jac->getNnz(); ++i)
+          {
+            success *= (root_jac->getColData()[i] == flat_jac->getColData()[i]);
+            success *= isEqual(root_jac->getValues()[i], flat_jac->getValues()[i]);
+          }
+        }
+#endif
+
+        // A bound system is not assembled standalone.
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing Jacobian assembly of a bound system model. "
+                    << "A logged error is expected.\n";
+        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        success *= (nested.evaluateJacobian() != 0);
+
+        return success.report(__func__);
+      }
+
       TestOutcome reallocateAfterTopologyChange()
       {
         TestStatus success = true;

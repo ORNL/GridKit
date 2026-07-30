@@ -89,13 +89,18 @@ namespace GridKit
       bool monitoring() const override;
       void printMonitoredVariables() const override;
 
-      int tagDifferentiable() override;
-      int setAbsoluteTolerance(RealT rel_tol) override;
-      int evaluateInternalResidual() override;
-      int evaluateExternalResidual() override;
-      int scatterExternalResidual(ScalarT* f_root) override;
-      int evaluateResidual() override;
-      int evaluateJacobian() override;
+      int  tagDifferentiable() override;
+      int  setAbsoluteTolerance(RealT rel_tol) override;
+      int  evaluateInternalResidual() override;
+      int  evaluateExternalResidual() override;
+      int  scatterExternalResidual(ScalarT* f_root) override;
+      int  evaluateResidual() override;
+      int  fillJacobian() override;
+      IdxT jacobianNnz() override;
+      int  scatterJacobian(IdxT* rows, IdxT* cols, RealT* vals, IdxT& counter) override;
+      int  scatterJacobianValues(RealT* vals_csr, const IdxT* map_to_csr, IdxT& counter) override;
+      int  evaluateJacobian() override;
+      void collectMonitors(MonitorT& controller) override;
 
       void updateTime(RealT t, RealT a) override;
 

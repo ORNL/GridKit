@@ -592,9 +592,13 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
-      // Start variable monitors
-      initializeMonitor();
-      startMonitor();
+      // Start variable monitors. Only a root model drives monitoring; a
+      // nested system's monitors are collected by its root.
+      if (!bound_)
+      {
+        initializeMonitor();
+        startMonitor();
+      }
 
       // Perform an initial Jacobian evaluation for sparse Jacobians, such that
       // the dynamic solver can querry the NNZ value when it is configured.
@@ -665,19 +669,25 @@ namespace GridKit
     }
 
     /**
-     * @brief Add monitors from buses and components and start monitor
+     * @brief Forward the monitor controller to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::collectMonitors(MonitorT& controller)
+    {
+      for (const auto& component : components_)
+      {
+        component->collectMonitors(controller);
+      }
+    }
+
+    /**
+     * @brief Register every monitor in the component tree with this model's
+     * controller.
      */
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::initializeMonitor()
     {
-      for (const auto* component : components_)
-      {
-        auto* mon = component->getMonitor();
-        if (mon && !mon->empty())
-        {
-          monitor_->addMonitor(mon);
-        }
-      }
+      this->collectMonitors(*monitor_);
     }
 
     template <typename scalar_type, typename index_type>
@@ -714,13 +724,14 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::tagDifferentiable()
     {
-      // Set initial values for global solution vectors
-      for (const auto& component : components_)
+      // Copy component tags into this model's tag vector. Local storage is
+      // indexed locally; global indices live only in the routed index maps.
+      for (size_t c = 0; c < components_.size(); ++c)
       {
-        component->tagDifferentiable();
-        for (IdxT j = 0; j < component->size(); ++j)
+        components_[c]->tagDifferentiable();
+        for (IdxT j = 0; j < components_[c]->size(); ++j)
         {
-          tag_[component->getVariableIndex(j)] = component->tag()[j];
+          tag_[static_cast<size_t>(component_offsets_[c] + j)] = components_[c]->tag()[j];
         }
       }
 
@@ -833,42 +844,88 @@ namespace GridKit
     }
 
     /**
-     * @brief Evaluate system Jacobian.
+     * @brief Refresh Jacobian entries throughout the component tree.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::fillJacobian()
+    {
+      for (const auto& component : components_)
+      {
+        component->fillJacobian();
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Raw COO entry count of the component tree.
+     */
+    template <typename scalar_type, typename index_type>
+    index_type SystemModel<scalar_type, index_type>::jacobianNnz()
+    {
+      IdxT nnz_dup = 0;
+      for (const auto& component : components_)
+      {
+        nnz_dup += component->jacobianNnz();
+      }
+
+      return nnz_dup;
+    }
+
+    /**
+     * @brief Forward the root COO arrays to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::scatterJacobian(IdxT* rows, IdxT* cols, RealT* vals, IdxT& counter)
+    {
+      for (const auto& component : components_)
+      {
+        component->scatterJacobian(rows, cols, vals, counter);
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Forward the root CSR values and map to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::scatterJacobianValues(RealT* vals_csr, const IdxT* map_to_csr, IdxT& counter)
+    {
+      for (const auto& component : components_)
+      {
+        component->scatterJacobianValues(vals_csr, map_to_csr, counter);
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Evaluate the system Jacobian.
      *
-     * First, initialize bus Jacobians to 0.
-     * Then, evaluate component Jacobians (internal block and bus Jacobian contributions).
-     * Once component Jacobians are evaluated, store the result in the system Jacobian.
-     * Finally, store bus Jacobians into the system Jacobian after all component have added their
-     * contributions.
-     *
+     * Jacobian entries are refreshed throughout the component tree, then
+     * scattered into the system COO arrays with their global indices. The
+     * first evaluation sorts and deduplicates the entries into the CSR
+     * Jacobian and keeps a positional map for later evaluations, which only
+     * scatter values. Only a root model assembles; a bound system is
+     * assembled by its root.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
-      // Evaluate component Jacobians, including the bus placeholder blocks
-      for (const auto& component : components_)
+      if (bound_)
       {
-        component->evaluateJacobian();
+        Log::error() << "A bound system model is assembled by its root model\n";
+        return 1;
       }
+
+      this->fillJacobian();
 
       // Build or update system CSR Jacobian
       if (csr_jac_ == nullptr)
       {
         // Count the number of non-zeros
-        IdxT nnz_dup = 0;
-        for (const auto& component : components_)
-        {
-          auto component_jacobian = component->getCooJacobian();
-
-          if (component_jacobian != nullptr)
-          {
-            nnz_dup += component_jacobian->getNnz();
-          }
-          else
-          {
-            Log::warning() << "A component has returned a nullptr Jacobian.\n";
-          }
-        }
+        IdxT nnz_dup = this->jacobianNnz();
 
         // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
         IdxT*  rows_dup = new IdxT[static_cast<size_t>(nnz_dup)];
@@ -876,28 +933,7 @@ namespace GridKit
         RealT* vals_dup = new RealT[static_cast<size_t>(nnz_dup)];
 
         IdxT counter = 0;
-        for (const auto& component : components_)
-        {
-          auto component_jacobian = component->getCooJacobian();
-
-          if (component_jacobian != nullptr)
-          {
-            const IdxT*  rows    = component_jacobian->getRowData();
-            const IdxT*  columns = component_jacobian->getColData();
-            const RealT* values  = component_jacobian->getValues();
-            for (IdxT i = 0; i < component_jacobian->getNnz(); ++i)
-            {
-              rows_dup[counter] = rows[i];
-              cols_dup[counter] = columns[i];
-              vals_dup[counter] = values[i];
-              counter++;
-            }
-          }
-          else
-          {
-            Log::warning() << "A component has returned a nullptr Jacobian.\n";
-          }
-        }
+        this->scatterJacobian(rows_dup, cols_dup, vals_dup, counter);
 
         // Build the system COO Jacobian
         CooMatrixT jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
@@ -937,22 +973,9 @@ namespace GridKit
           vals[i] = 0.0;
         }
 
-        // Update CSR values from component and bus Jacobians
+        // Update CSR values from the component tree
         IdxT counter = 0;
-        for (const auto& component : components_)
-        {
-          auto component_jacobian = component->getCooJacobian();
-
-          if (component_jacobian != nullptr)
-          {
-            const RealT* values = component_jacobian->getValues();
-            for (IdxT i = 0; i < component_jacobian->getNnz(); ++i)
-            {
-              vals[map_to_csr_[counter]] += values[i];
-              counter++;
-            }
-          }
-        }
+        this->scatterJacobianValues(vals, map_to_csr_, counter);
       }
 
       // std::cout << "System Jacobian\n";

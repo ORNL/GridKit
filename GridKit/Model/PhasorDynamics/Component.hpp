@@ -6,6 +6,7 @@
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -104,6 +105,94 @@ namespace GridKit
           }
         }
         return 0;
+      }
+
+      /**
+       * @brief Refresh this component's Jacobian entries.
+       *
+       * A leaf's standalone Jacobian evaluation is exactly its entry
+       * refresh; a composite model recurses instead.
+       */
+      virtual int fillJacobian()
+      {
+        return this->evaluateJacobian();
+      }
+
+      /**
+       * @brief Raw COO entry count of this component's subtree.
+       */
+      virtual IdxT jacobianNnz()
+      {
+        if (coo_jac_ == nullptr)
+        {
+          Log::warning() << "A component has returned a nullptr Jacobian.\n";
+          return 0;
+        }
+        return coo_jac_->getNnz();
+      }
+
+      /**
+       * @brief Append this subtree's COO triplets to the root arrays.
+       *
+       * Entries carry global indices. A composite model forwards the call
+       * to its children.
+       */
+      virtual int scatterJacobian(IdxT* rows, IdxT* cols, RealT* vals, IdxT& counter)
+      {
+        if (coo_jac_ == nullptr)
+        {
+          Log::warning() << "A component has returned a nullptr Jacobian.\n";
+          return 0;
+        }
+        const IdxT*  entry_rows = coo_jac_->getRowData();
+        const IdxT*  entry_cols = coo_jac_->getColData();
+        const RealT* entry_vals = coo_jac_->getValues();
+        for (IdxT i = 0; i < coo_jac_->getNnz(); ++i)
+        {
+          rows[counter] = entry_rows[i];
+          cols[counter] = entry_cols[i];
+          vals[counter] = entry_vals[i];
+          counter++;
+        }
+        return 0;
+      }
+
+      /**
+       * @brief Add this subtree's COO values into CSR storage through the
+       * root map.
+       *
+       * The map is positional in scatter order, so the traversal must match
+       * the scatterJacobian() call that built it. A composite model
+       * forwards the call to its children.
+       */
+      virtual int scatterJacobianValues(RealT* vals_csr, const IdxT* map_to_csr, IdxT& counter)
+      {
+        if (coo_jac_ == nullptr)
+        {
+          return 0;
+        }
+        const RealT* entry_vals = coo_jac_->getValues();
+        for (IdxT i = 0; i < coo_jac_->getNnz(); ++i)
+        {
+          vals_csr[map_to_csr[counter]] += entry_vals[i];
+          counter++;
+        }
+        return 0;
+      }
+
+      /**
+       * @brief Register this subtree's variable monitors with a controller.
+       *
+       * A composite model forwards the call to its children, so the root
+       * controller sees every monitor at any depth.
+       */
+      virtual void collectMonitors(Model::VariableMonitorController<ScalarT>& controller)
+      {
+        const auto* mon = this->getMonitor();
+        if (mon != nullptr && !mon->empty())
+        {
+          controller.addMonitor(mon);
+        }
       }
 
       IdxT size() override final
