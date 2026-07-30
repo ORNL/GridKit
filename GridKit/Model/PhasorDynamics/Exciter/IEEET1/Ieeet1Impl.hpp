@@ -11,7 +11,6 @@
 #include <iostream>
 #include <mutex>
 
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -31,20 +30,19 @@ namespace GridKit
        * @brief  Constructor for IEEET1 Exciter
        */
       template <typename scalar_type, typename index_type>
-      Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus)
-        : Ieeet1(bus, ModelDataT{})
+      Ieeet1<scalar_type, index_type>::Ieeet1()
+        : Ieeet1(ModelDataT{})
       {
       }
 
       /**
        * @brief  Constructor for IEEET1 Exciter
        *
-       * @param bus   Signal used for terminal reference vmag
        * @param data  Data object to store parameters
        */
       template <typename scalar_type, typename index_type>
-      Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus, const ModelDataT& data)
-        : bus_(bus),
+      Ieeet1<scalar_type, index_type>::Ieeet1(const ModelDataT& data)
+        :
           monitor_(std::make_unique<MonitorT>(data))
       {
         // Parse data struct into model
@@ -132,6 +130,9 @@ namespace GridKit
             ret += 1;
           }
         };
+
+        check(signals_.template isAttached<Ieeet1ExternalVariables::VREAL>(), "VREAL signal is not attached");
+        check(signals_.template isAttached<Ieeet1ExternalVariables::VIMAG>(), "VIMAG signal is not attached");
 
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
@@ -249,8 +250,8 @@ namespace GridKit
         }
 
         // Terminal Voltage
-        ScalarT vreal = bus_->Vr();
-        ScalarT vimag = bus_->Vi();
+        ScalarT vreal = signals_.template readExternalVariable<Ieeet1ExternalVariables::VREAL>();
+        ScalarT vimag = signals_.template readExternalVariable<Ieeet1ExternalVariables::VIMAG>();
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
         ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
@@ -461,12 +462,11 @@ namespace GridKit
         // Bus voltages
         const auto VREAL = static_cast<size_t>(Ieeet1ExternalVariables::VREAL);
         const auto VIMAG = static_cast<size_t>(Ieeet1ExternalVariables::VIMAG);
-        y_ext[VREAL]     = bus_->Vr();
-        y_ext[VIMAG]     = bus_->Vi();
-        if (bus_->size() > 0)
+        y_ext[VREAL]     = signals_.template readExternalVariable<Ieeet1ExternalVariables::VREAL>();
+        y_ext[VIMAG]     = signals_.template readExternalVariable<Ieeet1ExternalVariables::VIMAG>();
+          variable_indices_ext_[VREAL] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VREAL>();
+          variable_indices_ext_[VIMAG] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VIMAG>();
         {
-          variable_indices_ext_[VREAL] = bus_->getVariableIndex(0);
-          variable_indices_ext_[VIMAG] = bus_->getVariableIndex(1);
         }
       }
 
