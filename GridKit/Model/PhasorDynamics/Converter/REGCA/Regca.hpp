@@ -61,23 +61,10 @@ namespace GridKit
       };
 
       /**
-       * @brief First-generation WECC renewable generator/converter model
-       *        (REGCA) for inverter-coupled resources.
-       *
-       * Tracks the active- and reactive-current commands through the
-       * converter current-control lag and the REGCA limit logic (LVPL,
-       * LVACM, HVRCM, and the recovery rate limits) and injects the
-       * resulting branch current into the terminal bus. The model README
-       * derives the equations and initialization realized here.
-       *
-       * Internal current states and limiter quantities are on component
-       * base. Signal ports, monitor outputs, branch currents, and branch
-       * powers are on system base.
+       * @brief First-generation WECC renewable generator/converter model (REGCA).
        *
        * @tparam scalar_type Plain real or differentiable scalar type.
        * @tparam index_type Integer index type.
-       *
-       * @see RegcaData for the parameter keys, ports, and monitor selections.
        */
       template <typename scalar_type, typename index_type>
       class Regca : public Component<scalar_type, index_type>
@@ -112,97 +99,19 @@ namespace GridKit
         using InternalVariablesT = RegcaInternalVariables;
         using ExternalVariablesT = RegcaExternalVariables;
 
-        /**
-         * @brief Construct a REGCA converter without model data.
-         *
-         * @param[in] bus Terminal bus the converter injects into.
-         */
         Regca(BusT* bus);
-
-        /**
-         * @brief Construct a REGCA converter from model data.
-         *
-         * @param[in] bus Terminal bus the converter injects into.
-         * @param[in] data Parameters and monitored-variable selections.
-         *
-         * Model-data errors are recorded for verify() rather than thrown.
-         */
         Regca(BusT* bus, const ModelDataT& data);
         ~Regca();
 
-        int setGridKitComponentID(IdxT component_id) override final;
-
-        /// Allocate model storage and connect assigned output signals.
-        int allocate() override final;
-
-        /**
-         * @brief Validate the REGCA configuration.
-         *
-         * Applies the parameter conditions in the README, requires a
-         * terminal bus, and requires attached command ports to be linked.
-         * Operating-point admissibility is checked by initialize().
-         *
-         * @return Number of configuration errors, zero when valid.
-         */
-        int verify() const override final;
-
-        /**
-         * @brief Initialize REGCA from the power-flow operating point.
-         *
-         * Resolves the internal states and current-command setpoints from
-         * the initialized terminal-bus voltage and the system-base P0/Q0
-         * injections, and publishes the resolved commands to attached
-         * command ports.
-         *
-         * @pre allocate() has completed, verify() reports no errors, and
-         *      the terminal bus has been initialized.
-         * @pre \f$V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}\f$, and with
-         *      LVPL enabled \f$I_{p,0} \le I_{L,0}\f$.
-         * @post All internal derivatives are zero, and unattached command
-         *       ports latch the resolved setpoints as constant commands.
-         * @return 0 on success, nonzero when the operating point is
-         *         rejected.
-         */
-        int initialize() override final;
-
-        /// Tag VM, IQ, and IP as differential variables.
-        int tagDifferentiable() override final;
-
-        /**
-         * @brief Set every REGCA absolute tolerance to @p rel_tol.
-         *
-         * @param[in] rel_tol Solver relative tolerance.
-         */
-        int setAbsoluteTolerance(RealT rel_tol) override final;
-
-        /**
-         * @brief Set the LVPL release slope.
-         *
-         * Slope of the LVPL ceiling above the upper breakpoint in p.u.
-         * current per p.u. voltage. The exact unlimited characteristic is
-         * recovered as the slope approaches infinity.
-         *
-         * @param[in] KL Positive LVPL release slope.
-         */
+        int  setGridKitComponentID(IdxT component_id) override final;
+        int  allocate() override final;
+        int  verify() const override final;
+        int  initialize() override final;
+        int  tagDifferentiable() override final;
+        int  setAbsoluteTolerance(RealT rel_tol) override final;
         void setLvplGain(RealT KL);
-
-        /**
-         * @brief Evaluate the residuals and accumulate the branch current
-         *        into the terminal bus.
-         *
-         * @pre The terminal-bus residual has been zeroed this evaluation.
-         */
-        int evaluateResidual() override final;
-
-        /**
-         * @brief Assemble the sparse component Jacobian when built with Enzyme.
-         *
-         * Plain and dependency-tracking instantiations do not assemble a
-         * separate Jacobian.
-         *
-         * @pre evaluateResidual() has run at the current state.
-         */
-        int evaluateJacobian() override final;
+        int  evaluateResidual() override final;
+        int  evaluateJacobian() override final;
 
         auto getSignals()
             -> ComponentSignals<ScalarT,
@@ -213,35 +122,11 @@ namespace GridKit
           return signals_;
         }
 
-        /**
-         * @brief Access the monitor.
-         * @return Monitor for this model, or nullptr when the model was
-         *         constructed without data.
-         */
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        /**
-         * @brief Internal residual: the README differential and algebraic
-         *        equations in RegcaInternalVariables order.
-         *
-         * @param[in] y Internal variables.
-         * @param[in] yp Internal variable derivatives.
-         * @param[in] wb Terminal-bus voltage components.
-         * @param[in] ws Current-command signal values on system base.
-         * @param[out] f Internal residuals.
-         */
         __attribute__((always_inline)) inline int evaluateInternalResidual(
             const ScalarT* y, const ScalarT* yp, const ScalarT* wb, const ScalarT* ws, ScalarT* f);
 
-        /**
-         * @brief Bus residual: the system-base branch current injected
-         *        into the terminal bus.
-         *
-         * @param[in] y Internal variables.
-         * @param[in] yp Internal variable derivatives, unused.
-         * @param[in] wb Terminal-bus voltage components, unused.
-         * @param[out] h Current injected into the terminal bus.
-         */
         __attribute__((always_inline)) inline int evaluateBusResidual(
             const ScalarT* y, const ScalarT* yp, const ScalarT* wb, ScalarT* h);
 
@@ -250,17 +135,8 @@ namespace GridKit
         void initializeMonitor();
         void setDerivedParameters();
 
-        /// Convert a system-base per-unit value to the component base.
-        ScalarT toComponentBase(ScalarT value) const
-        {
-          return value * va_system_base_ / va_converter_base_;
-        }
-
-        /// Convert a component-base per-unit value to the system base.
-        ScalarT toSystemBase(ScalarT value) const
-        {
-          return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
-        }
+        ScalarT toComponentBase(ScalarT value) const;
+        ScalarT toSystemBase(ScalarT value) const;
 
         /**
          * @brief Smooth approximation of the REGCA `rrpwr` rate limiter.
@@ -322,82 +198,54 @@ namespace GridKit
                        * gap_rate;
         }
 
-        // Nonnegative root of q = ramp(q - margin). The root diverges as the
-        // positive margin approaches zero.
         ScalarT smoothConstraintCorrection(ScalarT margin) const;
 
-        // Terminal-bus accessors. Ir() and Ii() are accumulation targets,
-        // not assignment targets.
-        ScalarT& Vr()
-        {
-          return bus_->Vr();
-        }
+        ScalarT& Vr();
+        ScalarT& Vi();
+        ScalarT& Ir();
+        ScalarT& Ii();
 
-        ScalarT& Vi()
-        {
-          return bus_->Vi();
-        }
-
-        ScalarT& Ir()
-        {
-          return bus_->Ir();
-        }
-
-        ScalarT& Ii()
-        {
-          return bus_->Ii();
-        }
-
-        // Well-posedness floor for the current-control and voltage-sensor lags
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
 
-        BusT* bus_{nullptr}; ///< Terminal bus the converter injects into
+        BusT* bus_{nullptr};
 
         // Input parameters
-        RealT p0_{0};       ///< Initial active power injection on system base
-        RealT q0_{0};       ///< Initial reactive power injection on system base
-        RealT mva_base_{0}; ///< REGCA component power base
-        RealT Tg_{0};       ///< Converter current-control lag time constant
-        RealT TM_{0};       ///< Terminal voltage sensor time constant
-        RealT Rqmax_{0};    ///< Reactive-current recovery positive rate limit
-        RealT Rqmin_{0};    ///< Reactive-current recovery negative rate limit
-        RealT Rpmax_{0};    ///< Active-current magnitude recovery rate limit
-        bool  sL_{false};   ///< LVPL switch
-        RealT IL1_{0};      ///< LVPL upper-current ceiling
-        RealT VL0_{0};      ///< LVPL zero-crossing voltage
-        RealT VL1_{0};      ///< LVPL upper breakpoint voltage
-        RealT VA0_{0};      ///< LVACM lower breakpoint voltage
-        RealT VA1_{0};      ///< LVACM upper breakpoint voltage
-        RealT Vhvmax_{0};   ///< Terminal-voltage ceiling for HV reactive management
-
-        // LVPL release slope above the upper breakpoint [p.u./p.u.]: renders
-        // the unlimited LVPL region with finite slope; the exact
-        // characteristic is the limit of this slope approaching infinity.
-        // Adjustable at runtime through setLvplGain().
+        RealT p0_{0};
+        RealT q0_{0};
+        RealT mva_base_{0};
+        RealT Tg_{0};
+        RealT TM_{0};
+        RealT Rqmax_{0};
+        RealT Rqmin_{0};
+        RealT Rpmax_{0};
+        bool  sL_{false};
+        RealT IL1_{0};
+        RealT VL0_{0};
+        RealT VL1_{0};
+        RealT VA0_{0};
+        RealT VA1_{0};
+        RealT Vhvmax_{0};
         RealT KL_{100.0};
 
-        IdxT parameter_error_count_{0}; ///< Data errors counted for verify()
+        IdxT parameter_error_count_{0};
 
-        // Derived parameters. The complementary runtime LVPL masks keep a
-        // configuration-independent Jacobian sparsity pattern: both AD paths
-        // retain the IL expression even when its contribution is zero.
-        RealT va_converter_base_{0}; ///< Component power base in VA
-        RealT use_lvpl_{0};          ///< LVPL mask, complements bypass_lvpl_
-        RealT bypass_lvpl_{1};       ///< LVPL bypass mask, complements use_lvpl_
-        RealT use_rqmax_{0};         ///< Positive-Q recovery-limit mask
-        RealT use_rqmin_{0};         ///< Negative-Q recovery-limit mask
+        // Derived parameters
+        RealT va_converter_base_{0};
+        RealT use_lvpl_{0};
+        RealT bypass_lvpl_{1};
+        RealT use_rqmax_{0};
+        RealT use_rqmin_{0};
 
-        // Command setpoints latched by initialize(), used when the matching
-        // signal port is unattached
-        ScalarT ipcmd_set_{0}; ///< Active-current command setpoint on system base
-        ScalarT iqcmd_set_{0}; ///< Reactive-current command setpoint on system base
+        // Unattached command setpoints
+        ScalarT ipcmd_set_{0};
+        ScalarT iqcmd_set_{0};
 
         ComponentSignals<ScalarT, IdxT, RegcaInternalVariables, RegcaExternalVariables> signals_;
         std::unique_ptr<MonitorT>                                                       monitor_;
 
         // Local copies of signal variables
-        std::vector<ScalarT> ws_;         ///< Command signal values on system base
-        std::vector<IdxT>    ws_indices_; ///< Global indices of attached command signals
+        std::vector<ScalarT> ws_;
+        std::vector<IdxT>    ws_indices_;
       };
     } // namespace Converter
   } // namespace PhasorDynamics

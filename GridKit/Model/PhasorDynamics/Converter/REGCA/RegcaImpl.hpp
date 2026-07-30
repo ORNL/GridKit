@@ -26,6 +26,11 @@ namespace GridKit
     {
       using Log = ::GridKit::Utilities::Logger;
 
+      /**
+       * @brief Construct a sized but unconfigured REGCA converter.
+       *
+       * @param[in] bus Terminal bus the converter injects into.
+       */
       template <typename scalar_type, typename index_type>
       Regca<scalar_type, index_type>::Regca(BusT* bus)
         : bus_(bus)
@@ -33,6 +38,15 @@ namespace GridKit
         size_ = static_cast<IdxT>(RegcaInternalVariables::MAXIMUM);
       }
 
+      /**
+       * @brief Construct a REGCA converter from model data.
+       *
+       * Parameters are loaded and the monitor is created. Model-data errors
+       * are recorded for verify() rather than thrown.
+       *
+       * @param[in] bus Terminal bus the converter injects into.
+       * @param[in] data Parameters and monitored-variable selections.
+       */
       template <typename scalar_type, typename index_type>
       Regca<scalar_type, index_type>::Regca(BusT* bus, const ModelDataT& data)
         : bus_(bus),
@@ -48,6 +62,13 @@ namespace GridKit
       {
       }
 
+      /**
+       * @brief Resolve parameter-derived constants and limiter selections.
+       *
+       * The time constants are raised to the well-posedness floor. Complementary
+       * LVPL masks keep the residual branchless, while the sign of the initial
+       * reactive-power injection selects the applicable recovery-rate limit.
+       */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::setDerivedParameters()
       {
@@ -82,6 +103,75 @@ namespace GridKit
         va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
       }
 
+      /**
+       * @brief Convert a system-base per-unit value to the component base.
+       *
+       * @param[in] value Value on the system base.
+       * @return Value on the REGCA component base.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type Regca<scalar_type, index_type>::toComponentBase(scalar_type value) const
+      {
+        return value * va_system_base_ / va_converter_base_;
+      }
+
+      /**
+       * @brief Convert a component-base per-unit value to the system base.
+       *
+       * @param[in] value Value on the REGCA component base.
+       * @return Value on the system base.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type Regca<scalar_type, index_type>::toSystemBase(scalar_type value) const
+      {
+        return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
+      }
+
+      /**
+       * @brief Access the terminal-bus real voltage component.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type& Regca<scalar_type, index_type>::Vr()
+      {
+        return bus_->Vr();
+      }
+
+      /**
+       * @brief Access the terminal-bus imaginary voltage component.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type& Regca<scalar_type, index_type>::Vi()
+      {
+        return bus_->Vi();
+      }
+
+      /**
+       * @brief Access the terminal-bus real-current accumulation target.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type& Regca<scalar_type, index_type>::Ir()
+      {
+        return bus_->Ir();
+      }
+
+      /**
+       * @brief Access the terminal-bus imaginary-current accumulation target.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type& Regca<scalar_type, index_type>::Ii()
+      {
+        return bus_->Ii();
+      }
+
+      /**
+       * @brief Invert the smooth one-sided constraint for a positive margin.
+       *
+       * Solves \f$q = \mathrm{ramp}(q - m)\f$ for the nonnegative correction
+       * \f$q\f$. The correction diverges as the positive margin approaches zero.
+       *
+       * @param[in] margin Strictly positive constraint margin.
+       * @return Nonnegative constraint correction.
+       */
       template <typename scalar_type, typename index_type>
       scalar_type Regca<scalar_type, index_type>::smoothConstraintCorrection(
           scalar_type margin) const
@@ -106,12 +196,29 @@ namespace GridKit
         return -log_one_minus_exp / Math::MU<RealT>;
       }
 
+      /**
+       * @brief Set the LVPL release slope above the upper breakpoint.
+       *
+       * The finite slope is measured in p.u. current per p.u. voltage. The
+       * unlimited characteristic is recovered as the slope approaches infinity.
+       *
+       * @param[in] KL Positive LVPL release slope.
+       */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::setLvplGain(RealT KL)
       {
         KL_ = KL;
       }
 
+      /**
+       * @brief Read the required parameters from the model data.
+       *
+       * Missing keys and invalid value types are counted for verify(). Integer
+       * JSON values are accepted for real parameters, and the LVPL switch accepts
+       * a boolean or the integer values zero and one.
+       *
+       * @param[in] data REGCA parameter data.
+       */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
@@ -189,12 +296,23 @@ namespace GridKit
         setDerivedParameters();
       }
 
+      /**
+       * @brief Access the model monitor.
+       *
+       * @return Monitor for this model, or nullptr when constructed without data.
+       */
       template <typename scalar_type, typename index_type>
       const Model::VariableMonitorBase* Regca<scalar_type, index_type>::getMonitor() const
       {
         return monitor_.get();
       }
 
+      /**
+       * @brief Bind monitorable variables to their internal states.
+       *
+       * Branch currents and powers are already on the system base and therefore
+       * require no conversion before publication.
+       */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::initializeMonitor()
       {
@@ -214,6 +332,11 @@ namespace GridKit
                       { return y_.getData()[index(RegcaInternalVariables::QBR)]; });
       }
 
+      /**
+       * @brief Set the component identifier assigned by the system model.
+       *
+       * @param[in] component_id Component identifier.
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
       {
@@ -221,6 +344,13 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Allocate model storage and connect assigned output signals.
+       *
+       * State, residual, tolerance, and interface buffers are sized; local index
+       * maps are initialized; and assigned output signals are connected to the
+       * states they publish. Repeated calls reuse the allocated model vectors.
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::allocate()
       {
@@ -281,6 +411,15 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Validate the REGCA configuration.
+       *
+       * Applies the parameter conditions documented in the README, requires a
+       * terminal bus, and checks that attached command ports have linked sources.
+       * Operating-point admissibility is checked by initialize().
+       *
+       * @return Number of configuration errors, zero when valid.
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::verify() const
       {
@@ -331,6 +470,21 @@ namespace GridKit
         return ret;
       }
 
+      /**
+       * @brief Initialize REGCA from the power-flow operating point.
+       *
+       * Resolves the internal states and current-command setpoints from the
+       * initialized terminal-bus voltage and system-base P0/Q0 injections, then
+       * publishes the resolved commands to attached ports.
+       *
+       * @pre allocate() has completed, verify() reports no errors, and the
+       *      terminal bus has been initialized.
+       * @pre \f$V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}\f$, and with LVPL
+       *      enabled \f$I_{p,0} \le I_{L,0}\f$.
+       * @post All internal derivatives are zero. Unattached command ports retain
+       *       the resolved setpoints as constant commands.
+       * @return Zero on success; nonzero when the operating point is rejected.
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::initialize()
       {
@@ -422,6 +576,9 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Tag VM, IQ, and IP as differential variables.
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::tagDifferentiable()
       {
@@ -432,6 +589,11 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Set every REGCA absolute tolerance to the solver relative tolerance.
+       *
+       * @param[in] rel_tol Solver relative tolerance.
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
@@ -439,6 +601,19 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Evaluate the REGCA internal residual equations.
+       *
+       * Evaluates the converter states and algebraic rows in
+       * RegcaInternalVariables order. The body remains branchless so sparse
+       * automatic differentiation sees a configuration-independent structure.
+       *
+       * @param[in] y Internal variables.
+       * @param[in] yp Internal variable derivatives.
+       * @param[in] wb Terminal-bus voltage components.
+       * @param[in] ws Current-command signal values on the system base.
+       * @param[out] f Internal residuals.
+       */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int
       Regca<scalar_type, index_type>::evaluateInternalResidual(
@@ -489,8 +664,7 @@ namespace GridKit
         const ScalarT fp = (ipcmd - ip) / Tg_;
 
         // At Q0 = 0 both corrections vanish, leaving fq unrestricted.
-        const ScalarT iq_rate = fq
-                                + use_rqmax_ * (Math::min(fq, Rqmax_) - fq)
+        const ScalarT iq_rate = fq + use_rqmax_ * (Math::min(fq, Rqmax_) - fq)
                                 + use_rqmin_ * (Math::max(fq, Rqmin_) - fq);
         const ScalarT fp_limited = rrpwr(ip, fp, Rpmax_);
 
@@ -501,20 +675,17 @@ namespace GridKit
         const ScalarT il_rate = (IL1_ / (VL1_ - VL0_) * Math::inside(vm, VL0_, VL1_)
                                  + KL_ * Math::sigmoid(vm - VL1_))
                                 * vm_rate;
-
-        const ScalarT lvacm          = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        const ScalarT qnet           = iq - iqextra;
-        const ScalarT voltage_margin = Vhvmax_ - vt;
+        const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        const ScalarT qnet  = iq - iqextra;
 
         f[VM] = -vm_dot + vm_rate;
         f[IQ] = -iq_dot + iq_rate;
-        f[IP] = -ip_dot
-                + bypass_lvpl_ * fp_limited
+        f[IP] = -ip_dot + bypass_lvpl_ * fp_limited
                 + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
         f[VT]      = -vt * vt + vr * vr + vi * vi;
         f[IR]      = -toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
         f[II]      = -toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
-        f[IQEXTRA] = -iqextra + Math::ramp(iqextra - voltage_margin);
+        f[IQEXTRA] = -iqextra + Math::ramp(iqextra - (Vhvmax_ - vt));
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_)
                 + KL_ * Math::ramp(vm - VL1_);
         f[PBR] = -pbr + vr * ir + vi * ii;
@@ -523,6 +694,16 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Evaluate the current injected into the terminal bus.
+       *
+       * The branch-current states are already on the system base.
+       *
+       * @param[in] y Internal variables.
+       * @param[in] yp Internal variable derivatives, unused.
+       * @param[in] wb Terminal-bus voltage components, unused.
+       * @param[out] h Current injected into the terminal bus.
+       */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::evaluateBusResidual(
           const ScalarT*                  y,
@@ -538,6 +719,15 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Evaluate model residuals and accumulate the branch current.
+       *
+       * Refreshes the bus and signal interface buffers, evaluates the internal
+       * and bus residuals, and accumulates the converter current into the terminal
+       * bus. Unattached command ports use the setpoints latched by initialize().
+       *
+       * @pre The terminal-bus residual has been zeroed for this evaluation.
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::evaluateResidual()
       {

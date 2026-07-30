@@ -12,8 +12,11 @@ namespace GridKit
   {
     namespace Converter
     {
-      // Dependency tracking recovers the sparsity pattern from the residual,
-      // so this instantiation does not assemble a separate Jacobian.
+      /**
+       * @brief Report that dependency tracking does not assemble a separate Jacobian.
+       *
+       * Dependency tracking recovers the sparsity pattern from the residual.
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::evaluateJacobian()
       {

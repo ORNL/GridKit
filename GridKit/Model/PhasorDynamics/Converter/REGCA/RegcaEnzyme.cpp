@@ -14,6 +14,11 @@ namespace GridKit
   {
     namespace Converter
     {
+      /**
+       * @brief Assemble the sparse component Jacobian with Enzyme.
+       *
+       * @pre evaluateResidual() has run at the current state.
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::evaluateJacobian()
       {
