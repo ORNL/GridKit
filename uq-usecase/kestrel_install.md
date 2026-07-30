@@ -113,6 +113,30 @@ rsync -avz --delete kestrel:~/gridkit/uq-usecase/mkdocs-site/ ~/projects/scidac/
   && open ~/projects/scidac/gridkit/gridkit-mkdocs/index.html
 ```
 
+### Mixed HPC + local workflow (notes on local, code on HPC)
+
+`wip.sh` does not pull before pushing. If `.md` notes were committed and pushed from a
+local clone since the last HPC WIP push, a plain `git push` will be rejected
+(non-fast-forward). Always pull on HPC first:
+
+```bash
+# Start of each HPC work session (before rebuild or wip):
+git pull --rebase origin isatkaus/uq-usecase
+```
+
+Safe full sequence when combining a rebuild with a WIP push:
+
+```bash
+git pull --rebase origin isatkaus/uq-usecase   # sync local notes commits first
+bash rebuild_if_updated.sh 2>&1 | tee logs/rebuild.log   # merges upstream/develop + builds
+# ... do notebook/code work ...
+bash uq-usecase/scripts/wip.sh "WIP: ..."      # commits + pushes everything
+```
+
+**Rule:** only edit `uq-usecase/*.md` notes (e.g. `gt_ideas.md`, `plan.md`) from the
+local clone, never from HPC. This keeps the two machines working on non-overlapping
+files and makes `git pull --rebase` always a clean fast-forward with no conflicts.
+
 To force a rebuild even without new commits:
 ```bash
 bash rebuild_if_updated.sh --force 2>&1 | tee logs/rebuild.log
