@@ -41,30 +41,19 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
-      // Evaluate component Jacobians, including the bus placeholder blocks
-      for (const auto& component : components_)
+      if (bound_)
       {
-        component->evaluateJacobian();
+        Log::error() << "A bound system model is assembled by its root model\n";
+        return 1;
       }
+
+      this->fillJacobian();
 
       // Build or update system CSR Jacobian
       if (csr_jac_ == nullptr)
       {
         // Count the number of non-zeros
-        IdxT nnz_dup = 0;
-        for (const auto& component : components_)
-        {
-          auto component_jacobian = component->getCooJacobian();
-
-          if (component_jacobian != nullptr)
-          {
-            nnz_dup += component_jacobian->getNnz();
-          }
-          else
-          {
-            Log::warning() << "A component has returned a nullptr Jacobian.\n";
-          }
-        }
+        IdxT nnz_dup = this->jacobianNnz();
 
         // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
         IdxT*  rows_dup = new IdxT[static_cast<size_t>(nnz_dup)];
@@ -72,28 +61,7 @@ namespace GridKit
         RealT* vals_dup = new RealT[static_cast<size_t>(nnz_dup)];
 
         IdxT counter = 0;
-        for (const auto& component : components_)
-        {
-          auto component_jacobian = component->getCooJacobian();
-
-          if (component_jacobian != nullptr)
-          {
-            const IdxT*  rows    = component_jacobian->getRowData();
-            const IdxT*  columns = component_jacobian->getColData();
-            const RealT* values  = component_jacobian->getValues();
-            for (IdxT i = 0; i < component_jacobian->getNnz(); ++i)
-            {
-              rows_dup[counter] = rows[i];
-              cols_dup[counter] = columns[i];
-              vals_dup[counter] = values[i];
-              counter++;
-            }
-          }
-          else
-          {
-            Log::warning() << "A component has returned a nullptr Jacobian.\n";
-          }
-        }
+        this->scatterJacobian(rows_dup, cols_dup, vals_dup, counter);
 
         // Build the system COO Jacobian
         CooMatrixT jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
@@ -133,22 +101,9 @@ namespace GridKit
           vals[i] = 0.0;
         }
 
-        // Update CSR values from component and bus Jacobians
+        // Update CSR values from the component tree
         IdxT counter = 0;
-        for (const auto& component : components_)
-        {
-          auto component_jacobian = component->getCooJacobian();
-
-          if (component_jacobian != nullptr)
-          {
-            const RealT* values = component_jacobian->getValues();
-            for (IdxT i = 0; i < component_jacobian->getNnz(); ++i)
-            {
-              vals[map_to_csr_[counter]] += values[i];
-              counter++;
-            }
-          }
-        }
+        this->scatterJacobianValues(vals, map_to_csr_, counter);
       }
 
       // std::cout << "System Jacobian\n";

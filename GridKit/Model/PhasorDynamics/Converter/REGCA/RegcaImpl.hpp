@@ -742,14 +742,6 @@ namespace GridKit
         evaluateExternalResidual(y, yp, y_ext, f_ext);
 
         // Regca contribution to bus algebraic equations
-        Ir() += f_ext[0];
-        Ii() += f_ext[1];
-
-        if (bus_->size() > 0)
-        {
-          bus_->getResidual().setDataUpdated();
-        }
-
         return 0;
       }
 

@@ -156,7 +156,7 @@ namespace GridKit
      * @brief Residual evaluation
      */
     template <typename scalar_type, typename index_type>
-    int BusToSignalAdapter<scalar_type, index_type>::evaluateResidual()
+    int BusToSignalAdapter<scalar_type, index_type>::evaluateInternalResidual()
     {
       using SignalIn = BusToSignalAdapterSignalInputs;
 

@@ -112,11 +112,11 @@ namespace GridKit
 
       if (signals_.template isAssigned<VR>())
       {
-        signals_.template getSignalNode<VR>()->set(&Vr_, &vr_index_);
+        signals_.template getSignalNode<VR>()->link(&Vr_, &vr_index_);
       }
       if (signals_.template isAssigned<VI>())
       {
-        signals_.template getSignalNode<VI>()->set(&Vi_, &vi_index_);
+        signals_.template getSignalNode<VI>()->link(&Vi_, &vi_index_);
       }
 
       allocated_ = true;
