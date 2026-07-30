@@ -4,6 +4,7 @@
 #include <array>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -34,10 +35,8 @@ namespace GridKit
       ConverterRegcaTests()  = default;
       ~ConverterRegcaTests() = default;
 
-      // At nominal voltage, the CommonMath LVACM approximation differs from
-      // its piecewise plateau by O(1e-13). This tolerance also covers floating-
-      // point roundoff between DependencyTracking and Enzyme Jacobian values.
-      static constexpr ScalarT kTol = 1.0e-12;
+      static constexpr ScalarT kTol =
+          static_cast<ScalarT>(100.0) * std::numeric_limits<ScalarT>::epsilon();
 
       /// Construction, the monitor, and every verify() error class: missing
       /// and invalid parameters, a null bus, and an unlinked command port.
@@ -140,14 +139,14 @@ namespace GridKit
         const auto* y  = fixture.regca.y().getData();
         success       *= scalarMatches(y[index(Vars::VM)], 1.0, "VM");
         success       *= scalarMatches(y[index(Vars::VT)], 1.0, "VT");
-        success       *= scalarMatches(y[index(Vars::IP)], 0.8, "IP");
+        success       *= scalarMatches(y[index(Vars::IP)], 0.80000000000025173, "IP");
         success       *= scalarMatches(y[index(Vars::IQ)], -0.2, "IQ");
         success       *= scalarMatches(y[index(Vars::IR)], 0.26, "IR");
         success       *= scalarMatches(y[index(Vars::II)], 0.32, "II");
         success       *= scalarMatches(y[index(Vars::PBR)], 0.4, "PBR");
         success       *= scalarMatches(y[index(Vars::QBR)], -0.1, "QBR");
 
-        success *= scalarMatches(fixture.ipcmd, 0.4, "published ipcmd");
+        success *= scalarMatches(fixture.ipcmd, 0.40000000000012587, "published ipcmd");
         success *= scalarMatches(fixture.iqcmd, -0.1, "published iqcmd");
         success *= scalarMatches(pbranch_node.read(), 0.4, "pbranch signal");
 
@@ -167,7 +166,9 @@ namespace GridKit
         success *= latched.initialize();
 
         auto* latched_y  = latched.regca.y().getData();
-        success         *= scalarMatches(latched_y[index(Vars::IP)], 0.6, "initialized IP");
+        success         *= scalarMatches(latched_y[index(Vars::IP)],
+                                 0.60000000000018872,
+                                 "initialized IP");
         success         *= scalarMatches(latched_y[index(Vars::IQ)], 0.2, "initialized IQ");
 
         latched_y[index(Vars::IP)] = 0.5;
@@ -178,7 +179,9 @@ namespace GridKit
         // f[IP] = (0.6 - 0.5) / Tg and f[IQ] = (0.2 - 0.14) / Tg with
         // Tg = 0.2; both rates sit inside every limiter.
         const auto* f  = latched.regca.getResidual().getData();
-        success       *= scalarMatches(f[index(Vars::IP)], 0.5, "latched active-current rate");
+        success       *= scalarMatches(f[index(Vars::IP)],
+                                 0.50000000000094358,
+                                 "latched active-current rate");
         success       *= scalarMatches(f[index(Vars::IQ)], 0.3, "latched reactive-current rate");
 
         return success.report(__func__);
@@ -272,7 +275,9 @@ namespace GridKit
           success *= allResidualsZero(fixture.regca);
 
           const auto* y  = fixture.regca.y().getData();
-          success       *= scalarMatches(y[index(Vars::IP)], 0.6, "IP below the LVPL ceiling");
+          success       *= scalarMatches(y[index(Vars::IP)],
+                                   0.60000000000018872,
+                                   "IP below the LVPL ceiling");
           success       *= scalarMatches(y[index(Vars::PBR)], 0.6, "PBR below the LVPL ceiling");
         }
 
@@ -306,7 +311,9 @@ namespace GridKit
           success *= allResidualsZero(fixture.regca);
 
           const auto* y  = fixture.regca.y().getData();
-          success       *= scalarMatches(y[index(Vars::IP)], 1.3, "IP beyond IL1 with the ceiling released");
+          success       *= scalarMatches(y[index(Vars::IP)],
+                                   1.3000000000004091,
+                                   "IP beyond IL1 with the ceiling released");
           success       *= scalarMatches(y[index(Vars::PBR)], 1.3, "PBR beyond IL1 with the ceiling released");
         }
 
@@ -324,7 +331,9 @@ namespace GridKit
           success *= allResidualsZero(fixture.regca);
 
           const auto* y  = fixture.regca.y().getData();
-          success       *= scalarMatches(y[index(Vars::IP)], 0.6, "IP with LVPL bypassed");
+          success       *= scalarMatches(y[index(Vars::IP)],
+                                   0.60000000000018872,
+                                   "IP with LVPL bypassed");
         }
 
         return success.report(__func__);
@@ -358,16 +367,16 @@ namespace GridKit
         // Each entry is the expected value of the named README equation at
         // the answer-key state.
         const std::array<ExpectedResidual, 10> expected{{
-            {Vars::VM, "VM", 0.865},           // -VM' + (VT - VM) / TM
-            {Vars::IQ, "IQ", 1.52},            // -IQ' + max(fq, Rqmin)
-            {Vars::IP, "IP", 0.22},            // -IP' + IL' + awmax(IP - IL, fp_limited - IL', 0)
-            {Vars::VT, "VT", -0.035},          // -VT^2 + Vr^2 + Vi^2
-            {Vars::IR, "IR", 0.25},            // -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
-            {Vars::II, "II", 0.251},           // -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
-            {Vars::IQEXTRA, "IQEXTRA", -0.03}, // smooth HVRCM constraint
-            {Vars::IL, "IL", 0.35},            // -IL + linseg(VM, VL0, VL1, IL1)
-            {Vars::PBR, "PBR", 0.0},           // -PBR + Vr*IR + Vi*II
-            {Vars::QBR, "QBR", 0.0},           // -QBR + Vi*IR - Vr*II
+            {Vars::VM, "VM", 0.865},               // -VM' + (VT - VM) / TM
+            {Vars::IQ, "IQ", 1.52},                // -IQ' + max(fq, Rqmin)
+            {Vars::IP, "IP", 0.22},                // -IP' + IL' + awmax(IP - IL, fp_limited - IL', 0)
+            {Vars::VT, "VT", -0.035},              // -VT^2 + Vr^2 + Vi^2
+            {Vars::IR, "IR", 0.24999999999974593}, // -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
+            {Vars::II, "II", 0.25099999999993317}, // -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
+            {Vars::IQEXTRA, "IQEXTRA", -0.03},     // smooth HVRCM constraint
+            {Vars::IL, "IL", 0.35},                // -IL + linseg(VM, VL0, VL1, IL1)
+            {Vars::PBR, "PBR", 0.0},               // -PBR + Vr*IR + Vi*II
+            {Vars::QBR, "QBR", 0.0},               // -QBR + Vi*IR - Vr*II
         }};
 
         const auto& residual  = fixture.regca.getResidual();
@@ -710,7 +719,7 @@ namespace GridKit
 
             for (size_t i = 0; i < nrows; ++i)
             {
-              if (!isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], kTol))
+              if (!isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]))
               {
                 std::cout << "Jacobian row " << i
                           << " mismatch between dependency tracking and Enzyme"
@@ -988,18 +997,16 @@ namespace GridKit
         return success;
       }
 
-      bool scalarMatches(ScalarT     actual,
-                         ScalarT     expected,
-                         const char* label,
-                         ScalarT     tol = kTol) const
+      bool scalarMatches(ScalarT actual, ScalarT expected, const char* label) const
       {
-        if (isEqual(actual, expected, tol))
+        if (isEqual(actual, expected))
         {
           return true;
         }
 
-        std::cout << label << " mismatch: " << std::setprecision(15) << actual
-                  << " != " << expected << "\n";
+        std::cout << label << " mismatch: "
+                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
+                  << actual << " != " << expected << "\n";
         return false;
       }
 

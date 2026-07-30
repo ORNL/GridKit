@@ -320,6 +320,17 @@ Output | Units  | Description                 | Note
 `p`    | [p.u.] | Active-power output         | System base; exported through `pbranch` when assigned
 `q`    | [p.u.] | Reactive-power output       | System base; exported through `qbranch` when assigned
 
+## Testing
+
+- `validation()` checks construction, monitor creation, parameter validation, bus and signal configuration, and minimum time-constant handling.
+- `initializationAndSignals()` checks power-flow initialization, base conversion, signal publication, bus injection, and unattached-command latching.
+- `initializationDomain()` checks rejected and accepted voltage and LVPL initialization boundaries.
+- `residualEquations()` checks every model residual against a fixed numerical answer key.
+- `activeCurrentControl()` checks `rrpwr`, enabled and bypassed LVPL behavior, and tracking of a moving LVPL ceiling.
+- `reactiveCurrentControl()` checks the positive, negative, and unrestricted reactive-current recovery-rate branches.
+- `highVoltageManagement()` checks HVRCM initialization, residual values through its transition, and its local derivative.
+- `jacobian()` compares the dependency-tracking and Enzyme Jacobians for enabled and bypassed LVPL configurations when Enzyme support is enabled.
+
 ## Appendix A: `rrpwr`
 
 The exact active-current rate-limit rule is
