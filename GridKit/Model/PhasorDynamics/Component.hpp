@@ -64,11 +64,7 @@ namespace GridKit
 
       virtual int verify() const = 0;
 
-      // @todo This is much clearer if we write it this way
-      virtual int evaluateInternalResidual()
-      {
-        return this->evaluateResidual();
-      }
+      virtual int evaluateInternalResidual() = 0;
 
       virtual int evaluateExternalResidual()
       {
