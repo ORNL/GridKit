@@ -118,7 +118,8 @@ namespace GridKit
        * @return Turbine power at nominal head.
        */
       template <typename scalar_type, typename index_type>
-      scalar_type Hygov<scalar_type, index_type>::gatePower(scalar_type gate) const
+      __attribute__((always_inline)) inline scalar_type
+      Hygov<scalar_type, index_type>::gatePower(scalar_type gate) const
       {
         return ScalarT{Pgv_[0]}
                + Math::linseg(gate, Gv_[0], Gv_[1], Pgv_[1] - Pgv_[0])
@@ -126,35 +127,6 @@ namespace GridKit
                + Math::linseg(gate, Gv_[2], Gv_[3], Pgv_[3] - Pgv_[2])
                + Math::linseg(gate, Gv_[3], Gv_[4], Pgv_[4] - Pgv_[3])
                + Math::linseg(gate, Gv_[4], Gv_[5], Pgv_[5] - Pgv_[4]);
-      }
-
-      /**
-       * @brief Slope of the smooth gate-to-power curve
-       *
-       * Analytic derivative of gatePower(): each smooth linear segment
-       * contributes its slope gated by the logistic derivative of the smooth
-       * CommonMath ramp. Used to stamp the one Jacobian entry the Enzyme
-       * auto-sparsity pass drops from the gate-curve row.
-       *
-       * @param[in] gate Gate position.
-       * @return Derivative of the turbine power with respect to the gate.
-       */
-      template <typename scalar_type, typename index_type>
-      typename Hygov<scalar_type, index_type>::RealT
-      Hygov<scalar_type, index_type>::gatePowerDerivative(RealT gate) const
-      {
-        auto ramp_slope = [](RealT x)
-        {
-          return ONE<RealT> / (ONE<RealT> + std::exp(-Math::MU<RealT> * x));
-        };
-        auto segment_slope = [&](size_t i)
-        {
-          return (Pgv_[i + 1] - Pgv_[i]) / (Gv_[i + 1] - Gv_[i])
-                 * (ramp_slope(gate - Gv_[i]) - ramp_slope(gate - Gv_[i + 1]));
-        };
-
-        return segment_slope(0) + segment_slope(1) + segment_slope(2)
-               + segment_slope(3) + segment_slope(4);
       }
 
       /**

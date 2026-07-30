@@ -142,11 +142,7 @@ namespace GridKit
 
         /// Evaluate the nonlinear gate-to-power curve as a fixed sum of
         /// smooth linear segments.
-        ScalarT gatePower(ScalarT gate) const;
-
-        /// Analytic slope of the smooth gate-to-power curve, used to stamp
-        /// the Jacobian entry the Enzyme auto-sparsity pass drops.
-        RealT gatePowerDerivative(RealT gate) const;
+        __attribute__((always_inline)) inline ScalarT gatePower(ScalarT gate) const;
 
         /// Solve the steady gate position that reproduces a seeded
         /// component-base mechanical power at an initial speed deviation.
