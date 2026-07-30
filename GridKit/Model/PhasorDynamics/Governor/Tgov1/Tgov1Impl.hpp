@@ -361,12 +361,6 @@ namespace GridKit
         return 0;
       }
 
-      template <typename scalar_type, typename index_type>
-      int Tgov1<scalar_type, index_type>::evaluateResidual()
-      {
-        evaluateInternalResidual();
-        return this->evaluateExternalResidual();
-      }
     } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit

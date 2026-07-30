@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 
@@ -433,8 +434,8 @@ namespace GridKit
     /**
      * @brief Set component ID
      *
-     * @note Should default to 0. Nested system models are not currently
-     * supported.
+     * @note Defaults to 0 for a root model; a parent model assigns the ID
+     * of a nested system like any other component.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
@@ -444,15 +445,64 @@ namespace GridKit
     }
 
     /**
-     * @brief Allocate system storage and bind buses and components to it.
+     * @brief Find the component that owns a system-local variable index.
      *
-     * First sum the bus and component sizes, then allocate the system vectors
-     * and bind each bus and component to its portion of those vectors.
+     * Component offsets are monotonically increasing, so the owner is the
+     * last component whose offset is not past the index. Zero-size
+     * components share their successor's offset and are never selected.
      *
-     * @pre Buses and components with nonzero size are unallocated or already
-     * bound to external system storage.
+     * @pre allocate() has populated component_offsets_ and
+     * 0 <= local_index < size().
+     */
+    template <typename scalar_type, typename index_type>
+    size_t SystemModel<scalar_type, index_type>::findOwningComponent(IdxT local_index) const
+    {
+      auto it = std::upper_bound(component_offsets_.begin(), component_offsets_.end(), local_index);
+      return static_cast<size_t>(std::distance(component_offsets_.begin(), it)) - 1;
+    }
+
+    /**
+     * @brief Assign a global variable index to a system-local variable.
      *
-     * @note System model composition is flat; nested systems are not supported.
+     * The write is routed to the component that owns the variable, so the
+     * global index lands in the component's index-map slot, where published
+     * signal nodes point. The system's own index map is kept in sync.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::setVariableIndex(IdxT local_index, IdxT global_index)
+    {
+      ComponentT::setVariableIndex(local_index, global_index);
+      const size_t c = findOwningComponent(local_index);
+      return components_[c]->setVariableIndex(local_index - component_offsets_[c], global_index);
+    }
+
+    /**
+     * @brief Assign a global residual index to a system-local residual.
+     *
+     * The write is routed to the component that owns the residual, so the
+     * global index lands in the component's index-map slot, where published
+     * signal nodes point. The system's own index map is kept in sync.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::setResidualIndex(IdxT local_index, IdxT global_index)
+    {
+      ComponentT::setResidualIndex(local_index, global_index);
+      const size_t c = findOwningComponent(local_index);
+      return components_[c]->setResidualIndex(local_index - component_offsets_[c], global_index);
+    }
+
+    /**
+     * @brief Allocate system storage and bind components to it.
+     *
+     * First sum the component sizes, then allocate the system vectors and
+     * bind each component to its portion of those vectors.
+     *
+     * @pre Components with nonzero size are unallocated or already bound to
+     * external system storage.
+     *
+     * @note System models compose hierarchically: a nested system binds to
+     * its parent's storage and allocates like any other component. Residual
+     * assembly and Jacobian priming run only on the root model.
      *
      * @throws std::runtime_error if storage allocation, child binding, or
      * model verification fails.
@@ -494,17 +544,14 @@ namespace GridKit
       variable_indices_.resize(size_);
       residual_indices_.resize(size_);
 
-      // Default variable and residual index mapping to local index
-      for (IdxT j = 0; j < size_; ++j)
-      {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
-      }
+      component_offsets_.clear();
 
       IdxT offset = 0;
 
       for (const auto& component : components_)
       {
+        component_offsets_.push_back(offset);
+
         const int bind_status = component->bind(y_, yp_, f_, abs_tol_, offset);
         if (bind_status != 0)
         {
@@ -518,12 +565,6 @@ namespace GridKit
           throw std::runtime_error("SystemModel allocation failed");
         }
 
-        for (IdxT j = 0; j < component->size(); ++j)
-        {
-          component->setVariableIndex(j, offset + j);
-          component->setResidualIndex(j, offset + j);
-        }
-
         offset += component->size();
       }
 
@@ -531,6 +572,16 @@ namespace GridKit
       {
         Log::error() << "Bound vector sizes do not match the system size\n";
         throw std::runtime_error("SystemModel allocation failed");
+      }
+
+      // Default variable and residual index mapping to local index. The
+      // routed writes land in the owning component's index-map slots, where
+      // published signal nodes point. A parent model can reassign global
+      // indices later through the same setters.
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
       }
 
       // Verify component configuration
@@ -547,9 +598,10 @@ namespace GridKit
 
       // Perform an initial Jacobian evaluation for sparse Jacobians, such that
       // the dynamic solver can querry the NNZ value when it is configured.
+      // Only a root model primes; a bound system is assembled by its root.
       // @todo Replace with a sparsity analysis that sets the NNZ and allocates the Jacobian
       // without needing the Jacobian values.
-      if (hasJacobian())
+      if (!bound_ && hasJacobian())
       {
         initialize();
         evaluateResidual();
@@ -717,13 +769,12 @@ namespace GridKit
     }
 
     /**
-     * @brief Accumulate component contributions to residuals owned elsewhere,
+     * @brief Fill component contributions to residuals owned elsewhere,
      * e.g. bus current balances.
      *
-     * Components fill their external residual buffers first, then the system
-     * scatters every contribution through the components' external residual
-     * index maps. Entries mapped to INVALID_INDEX, e.g. infinite bus rows,
-     * are dropped.
+     * Every component fills its external residual buffer; composite
+     * children recurse. Contributions are not scattered here; the root
+     * model assembles them in evaluateResidual().
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateExternalResidual()
@@ -731,20 +782,6 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->evaluateExternalResidual();
-      }
-
-      auto* f = f_.getData();
-      for (const auto& component : components_)
-      {
-        const auto& f_ext   = component->getExternalResidual();
-        const auto& indices = component->getExternalResidualIndices();
-        for (size_t i = 0; i < f_ext.size(); ++i)
-        {
-          if (indices[i] != INVALID_INDEX<IdxT>)
-          {
-            f[static_cast<size_t>(indices[i])] += f_ext[i];
-          }
-        }
       }
 
       for (const auto& component : components_)
@@ -756,16 +793,39 @@ namespace GridKit
     }
 
     /**
+     * @brief Forward the root residual vector to every child.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::scatterExternalResidual(ScalarT* f_root)
+    {
+      for (const auto& component : components_)
+      {
+        component->scatterExternalResidual(f_root);
+      }
+
+      return 0;
+    }
+
+    /**
      * @brief Compute system residual vector
      *
      * Internal residuals assign every owned entry of the residual vector,
-     * then external residuals accumulate the remaining contributions.
+     * external residuals fill the component contribution buffers, and the
+     * scatter assembles every contribution at its global row. Only a root
+     * model assembles; a bound system is evaluated by its root.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateResidual()
     {
+      if (bound_)
+      {
+        Log::error() << "A bound system model is evaluated by its root model\n";
+        return 1;
+      }
+
       evaluateInternalResidual();
       evaluateExternalResidual();
+      this->scatterExternalResidual(f_.getData());
 
       f_.setDataUpdated();
 
@@ -964,7 +1024,11 @@ namespace GridKit
       component->setSystemBase(this->freq_system_base_,
                                this->va_system_base_);
       components_.push_back(component);
-      allocated_ = false;
+
+      // Keep the size current so a parent model can read it before this
+      // model allocates. allocate() recomputes and checks the sum.
+      size_      += component->size();
+      allocated_  = false;
     }
 
     /**

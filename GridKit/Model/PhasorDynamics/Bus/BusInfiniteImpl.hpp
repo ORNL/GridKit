@@ -174,19 +174,6 @@ namespace GridKit
       return 0;
     }
 
-    /*!
-     * @brief Evaluate the internal residual and external residual
-     * contributions.
-     */
-    template <typename scalar_type, typename index_type>
-    int BusInfinite<scalar_type, index_type>::evaluateResidual()
-    {
-      evaluateInternalResidual();
-      this->evaluateExternalResidual();
-
-      return 0;
-    }
-
     /**
      * @brief There is no Jacobian for slack variables
      *

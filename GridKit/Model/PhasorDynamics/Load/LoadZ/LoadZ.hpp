@@ -73,7 +73,6 @@ namespace GridKit
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
-      virtual int evaluateResidual() override final;
       virtual int evaluateExternalResidual() override final;
       virtual int evaluateJacobian() override final;
 

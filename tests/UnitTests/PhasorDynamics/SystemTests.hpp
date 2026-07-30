@@ -175,6 +175,147 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Global index writes on the system route to the owning component
+      TestOutcome indexRouting()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus1(10.0, 20.0);
+        system.addBus(&bus1);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
+        system.addBus(&bus2);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus1_vr);
+        bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus1_vi);
+        bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus2_vr);
+        bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus2_vi);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(2.0, 4.0, 0.2, 1.2);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR1>(&bus1_vr);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI1>(&bus1_vi);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR2>(&bus2_vr);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI2>(&bus2_vi);
+        system.addComponent(&branch);
+
+        system.allocate();
+
+        // Bus-2 owns both system variables and allocate() default-maps them
+        // to the local index.
+        success *= (bus2.getVariableIndex(0) == 0);
+        success *= (bus2_vr.getVariableIndex() == 0);
+
+        // A parent model reassigns global indices through the system setters.
+        for (IdxT j = 0; j < system.size(); ++j)
+        {
+          system.setVariableIndex(j, j + 100);
+          system.setResidualIndex(j, j + 200);
+        }
+
+        // Routed writes land in the owning component's index map ...
+        success *= (bus2.getVariableIndex(0) == 100);
+        success *= (bus2.getVariableIndex(1) == 101);
+        success *= (bus2.getResidualIndex(0) == 200);
+        success *= (bus2.getResidualIndex(1) == 201);
+
+        // ... where the published signal nodes point ...
+        success *= (bus2_vr.getVariableIndex() == 100);
+        success *= (bus2_vi.getVariableIndex() == 101);
+        success *= (bus2_vr.getResidualIndex() == 200);
+        success *= (bus2_vi.getResidualIndex() == 201);
+
+        // ... and consumers gather them through their attached signals.
+        success *= (branch.getSignals().template readExternalVariableIndex<PhasorDynamics::BranchExternalVariables::VR2>() == 100);
+        success *= (branch.getSignals().template readExternalVariableIndex<PhasorDynamics::BranchExternalVariables::VI2>() == 101);
+        success *= (branch.getSignals().template readExternalResidualIndex<PhasorDynamics::BranchExternalVariables::VR2>() == 200);
+        success *= (branch.getSignals().template readExternalResidualIndex<PhasorDynamics::BranchExternalVariables::VI2>() == 201);
+
+        // The system's own index map mirrors the assignment.
+        success *= (system.getVariableIndex(0) == 100);
+        success *= (system.getResidualIndex(1) == 201);
+
+        // Constant slack voltages carry no solver indices before or after.
+        success *= (bus1_vr.getVariableIndex() == INVALID_INDEX<IdxT>);
+        success *= (branch.getSignals().template readExternalVariableIndex<PhasorDynamics::BranchExternalVariables::VR1>() == INVALID_INDEX<IdxT>);
+
+        return success.report(__func__);
+      }
+
+      /// A system model binds into a parent system like any other component
+      TestOutcome nestedSystem()
+      {
+        TestStatus success = true;
+
+        RealT R{2.0}; ///< Branch series resistance
+        RealT X{4.0}; ///< Branch series reactance
+        RealT G{0.2}; ///< Branch shunt conductance
+        RealT B{1.2}; ///< Branch shunt charging
+
+        const ScalarT Ir1{17.0};  ///< Solution: real current entering bus-1
+        const ScalarT Ii1{-10.0}; ///< Solution: imaginary current entering bus-1
+        const ScalarT Ir2{15.0};  ///< Solution: real current entering bus-2
+        const ScalarT Ii2{-20.0}; ///< Solution: imaginary current entering bus-2
+
+        // The root system owns the slack bus; a nested system owns the PQ
+        // bus and the branch.
+        PhasorDynamics::SystemModel<ScalarT, IdxT> root;
+        PhasorDynamics::SystemModel<ScalarT, IdxT> nested;
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus1(10.0, 20.0);
+        root.addBus(&bus1);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
+        nested.addBus(&bus2);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus1_vi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> bus2_vi;
+        bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus1_vr);
+        bus1.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus1_vi);
+        bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&bus2_vr);
+        bus2.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&bus2_vi);
+
+        // The branch lives in the nested system and connects buses across
+        // system levels.
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(R, X, G, B);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR1>(&bus1_vr);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI1>(&bus1_vi);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VR2>(&bus2_vr);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::VI2>(&bus2_vi);
+        nested.addComponent(&branch);
+
+        root.addComponent(&nested);
+
+        root.allocate();
+        root.initialize();
+        root.evaluateResidual();
+
+        success *= isEqual(branch.getExternalResidual()[0], Ir1);
+        success *= isEqual(branch.getExternalResidual()[1], Ii1);
+        success *= isEqual(bus2.Ir(), Ir2);
+        success *= isEqual(bus2.Ii(), Ii2);
+
+        // The nested system's variables live in root storage.
+        success *= isEqual(root.y().getData()[0], 30.0);
+        success *= isEqual(root.y().getData()[1], 40.0);
+
+        // A bound system is not evaluated standalone.
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing evaluation of a bound system model. "
+                    << "A logged error is expected.\n";
+        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        success *= (nested.evaluateResidual() != 0);
+
+        return success.report(__func__);
+      }
+
       TestOutcome reallocateAfterTopologyChange()
       {
         TestStatus success = true;

@@ -284,20 +284,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Evaluate the internal residual and external residual
-     * contributions.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::evaluateResidual()
-    {
-      evaluateInternalResidual();
-      evaluateExternalResidual();
-
-      return 0;
-    }
-
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::terminalCurrent1(ScalarT& Ir, ScalarT& Ii)
     {

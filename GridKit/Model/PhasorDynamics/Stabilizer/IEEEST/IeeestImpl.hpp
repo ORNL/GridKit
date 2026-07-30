@@ -347,13 +347,6 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::evaluateResidual()
-      {
-        evaluateInternalResidual();
-        return this->evaluateExternalResidual();
-      }
-
-      template <typename scalar_type, typename index_type>
       const Model::VariableMonitorBase* Ieeest<scalar_type, index_type>::getMonitor() const
       {
         return monitor_.get();

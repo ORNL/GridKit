@@ -273,13 +273,6 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int SexsPti<scalar_type, index_type>::evaluateResidual()
-      {
-        evaluateInternalResidual();
-        return this->evaluateExternalResidual();
-      }
-
-      template <typename scalar_type, typename index_type>
       void SexsPti<scalar_type, index_type>::initModelParams(const ModelDataT& data)
       {
         using Params = typename ModelDataT::Parameters;

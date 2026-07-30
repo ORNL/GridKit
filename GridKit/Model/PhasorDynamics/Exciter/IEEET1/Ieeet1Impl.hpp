@@ -398,13 +398,6 @@ namespace GridKit
         return 0;
       }
 
-      template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::evaluateResidual()
-      {
-        evaluateInternalResidual();
-        return this->evaluateExternalResidual();
-      }
-
       /**
        * @brief Initialization Exciter Parameters from data structure
        */

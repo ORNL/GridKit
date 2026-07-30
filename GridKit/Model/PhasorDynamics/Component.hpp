@@ -64,10 +64,45 @@ namespace GridKit
 
       virtual int verify() const = 0;
 
+      /**
+       * @brief Evaluate this component's residual buffers standalone.
+       *
+       * Owned rows are assigned first, then external contributions are
+       * filled. Contributions are not scattered; a composite model that
+       * owns global storage assembles them through
+       * scatterExternalResidual().
+       */
+      virtual int evaluateResidual() override
+      {
+        evaluateInternalResidual();
+        evaluateExternalResidual();
+        return 0;
+      }
+
       virtual int evaluateInternalResidual() = 0;
 
       virtual int evaluateExternalResidual()
       {
+        return 0;
+      }
+
+      /**
+       * @brief Add this component's external contributions to the root
+       * residual vector.
+       *
+       * Rows map through the external residual index map. Entries mapped
+       * to INVALID_INDEX, e.g. constant voltage rows, are dropped. A
+       * composite model forwards the call to its children.
+       */
+      virtual int scatterExternalResidual(ScalarT* f_root)
+      {
+        for (size_t i = 0; i < f_ext_.size(); ++i)
+        {
+          if (residual_indices_ext_[i] != INVALID_INDEX<IdxT>)
+          {
+            f_root[static_cast<size_t>(residual_indices_ext_[i])] += f_ext_[i];
+          }
+        }
         return 0;
       }
 
@@ -193,10 +228,11 @@ namespace GridKit
         }
 
         allocated_ = true;
+        bound_     = true;
         return 0;
       }
 
-      int setVariableIndex(IdxT local_index, IdxT global_index)
+      virtual int setVariableIndex(IdxT local_index, IdxT global_index)
       {
         variable_indices_[static_cast<size_t>(local_index)] = global_index;
         return 0;
@@ -212,7 +248,7 @@ namespace GridKit
         return variable_indices_;
       }
 
-      int setResidualIndex(IdxT local_index, IdxT global_index)
+      virtual int setResidualIndex(IdxT local_index, IdxT global_index)
       {
         residual_indices_[static_cast<size_t>(local_index)] = global_index;
         return 0;
@@ -369,6 +405,8 @@ namespace GridKit
       VectorT              f_;
       std::vector<ScalarT> f_ext_;
       bool                 allocated_{false};
+      /// True once bound to a parent model's storage
+      bool                 bound_{false};
 
       std::vector<ScalarT> g_;
 
