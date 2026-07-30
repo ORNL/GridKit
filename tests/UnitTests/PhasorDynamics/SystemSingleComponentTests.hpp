@@ -130,7 +130,6 @@ namespace GridKit
         // Suppress the expected time-constant-floor warning from the default parameters.
         // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus);
         Log::setVerbosity(previous_verbosity);
         PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;

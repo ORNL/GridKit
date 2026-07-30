@@ -59,7 +59,12 @@ namespace GridKit
             static_cast<ScalarT>(1.0),
             static_cast<ScalarT>(0.0));
         PhasorDynamics::SignalNode<ScalarT, IdxT> efd;
-        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus);
+        PhasorDynamics::Genrou<ScalarT, IdxT>     machine;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal, vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        machine.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VR>(&vr_signal);
+        machine.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VI>(&vi_signal);
 
         PhasorDynamics::Exciter::Esdc1aData<RealT, IdxT> exciter_data;
         exciter_data.parameters[ExciterParams::Tr] = static_cast<RealT>(0.02);
@@ -107,7 +112,12 @@ namespace GridKit
             static_cast<ScalarT>(1.0),
             static_cast<ScalarT>(0.0));
         PhasorDynamics::SignalNode<ScalarT, IdxT> pmech;
-        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus);
+        PhasorDynamics::Genrou<ScalarT, IdxT>     machine;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal, vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        machine.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VR>(&vr_signal);
+        machine.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::VI>(&vi_signal);
 
         PhasorDynamics::Governor::HygovData<RealT, IdxT> governor_data;
         governor_data.parameters[GovernorParams::Trate] = static_cast<RealT>(100.0);
@@ -155,7 +165,12 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> efd;
 
         PhasorDynamics::GenClassicalData<RealT, IdxT> machine_data;
-        PhasorDynamics::GenClassical<ScalarT, IdxT>   machine(&bus, machine_data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT>   machine(machine_data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal, vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        machine.getSignals().template attachSignalNode<PhasorDynamics::GenClassicalExternalVariables::VR>(&vr_signal);
+        machine.getSignals().template attachSignalNode<PhasorDynamics::GenClassicalExternalVariables::VI>(&vi_signal);
 
         PhasorDynamics::Exciter::Esdc1aData<RealT, IdxT> exciter_data;
         exciter_data.parameters[ExciterParams::Tr] = static_cast<RealT>(0.02);
@@ -203,7 +218,12 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> pmech;
 
         PhasorDynamics::GenClassicalData<RealT, IdxT> machine_data;
-        PhasorDynamics::GenClassical<ScalarT, IdxT>   machine(&bus, machine_data);
+        PhasorDynamics::GenClassical<ScalarT, IdxT>   machine(machine_data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal, vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        machine.getSignals().template attachSignalNode<PhasorDynamics::GenClassicalExternalVariables::VR>(&vr_signal);
+        machine.getSignals().template attachSignalNode<PhasorDynamics::GenClassicalExternalVariables::VI>(&vi_signal);
 
         PhasorDynamics::Governor::HygovData<RealT, IdxT> governor_data;
         governor_data.parameters[GovernorParams::Trate] = static_cast<RealT>(100.0);
@@ -473,8 +493,8 @@ namespace GridKit
       static constexpr IdxT kSpeedSignalId       = static_cast<IdxT>(101);
       static constexpr IdxT kPmechSignalId       = static_cast<IdxT>(102);
       static constexpr IdxT kPrefSignalId        = static_cast<IdxT>(103);
-      static constexpr IdxT kMachineComponentId  = static_cast<IdxT>(0);
-      static constexpr IdxT kGovernorComponentId = static_cast<IdxT>(1);
+      static constexpr IdxT kMachineComponentId  = static_cast<IdxT>(1);
+      static constexpr IdxT kGovernorComponentId = static_cast<IdxT>(2);
 
       static constexpr RealT kSystemBaseVa         = static_cast<RealT>(100.0e6);
       static constexpr RealT kMachineBaseMva       = static_cast<RealT>(100.0);

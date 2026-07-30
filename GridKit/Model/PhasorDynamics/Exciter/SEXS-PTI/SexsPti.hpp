@@ -115,6 +115,7 @@ namespace GridKit
         ScalarT voel_set_{0};
 
         SignalPortsT ports_;
+        ComponentSignals<ScalarT, IdxT, SexsPtiInternalVariables, SexsPtiExternalVariables> signals_;
 
         std::unique_ptr<MonitorT> monitor_;
 

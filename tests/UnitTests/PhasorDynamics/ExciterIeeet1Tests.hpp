@@ -237,7 +237,12 @@ namespace GridKit
         auto data = makeTestData();
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal, vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VREAL>(&vr_signal);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VIMAG>(&vi_signal);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT>      vref_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT>      vuel_node;

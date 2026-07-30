@@ -135,6 +135,8 @@ namespace GridKit
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
+      auto& getSignals() { return signals_; }
+
     private:
       void initializeParameters(const ModelDataT& data);
       /// Associate variable getter functions with enum values

@@ -92,6 +92,9 @@ namespace GridKit
         auto vr_node = SignalT({.name = "vr", .signal_id = 0});
         auto vi_node = SignalT({.name = "vi", .signal_id = 1});
 
+        auto network_vr = SignalT({.name = "network_vr", .signal_id = 4});
+        auto network_vi = SignalT({.name = "network_vi", .signal_id = 5});
+
         // Mandatory current inlets
         ScalarT Ir{-3.7};
         ScalarT Ii{2.4};
@@ -103,6 +106,8 @@ namespace GridKit
         ii_node.link(&Ii, &ii_index);
 
         BusT bus(Vr, Vi);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&network_vr);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&network_vi);
         bus.getPorts().out.template port<SignalOut::vr>().connect(&vr_node);
         bus.getPorts().out.template port<SignalOut::vi>().connect(&vi_node);
         bus.getPorts().in.template port<SignalIn::ir>().connect(&ir_node);
@@ -124,6 +129,15 @@ namespace GridKit
         success *= isEqual(vi_node.read(), Vi);
         success *= (vr_node.getVariableIndex() == vr_index);
         success *= (vi_node.getVariableIndex() == vi_index);
+
+        success *= network_vr.linked();
+        success *= network_vi.linked();
+        success *= (&network_vr.read() == &bus.Vr());
+        success *= (&network_vi.read() == &bus.Vi());
+        success *= (network_vr.getVariableIndex() == vr_index);
+        success *= (network_vi.getVariableIndex() == vi_index);
+        success *= (network_vr.getResidualIndex() == bus.getResidualIndex(0));
+        success *= (network_vi.getResidualIndex() == bus.getResidualIndex(1));
 
         // Signal follows the live bus voltage
         bus.Vr()  = 1.17;
@@ -169,7 +183,7 @@ namespace GridKit
         bus.initialize();
         success *= (bus.verify() == 0);
 
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
         success *= isEqual(bus.Ir(), Ir);
         success *= isEqual(bus.Ii(), Ii);
         success *= isEqual(bus.getResidual().getData()[0], Ir);
@@ -184,7 +198,7 @@ namespace GridKit
         // Re-evaluating resets and re-reads the signals
         Ir = 0.55;
         Ii = -1.25;
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
         success *= isEqual(bus.Ir(), Ir);
         success *= isEqual(bus.Ii(), Ii);
 
@@ -257,7 +271,7 @@ namespace GridKit
         bus.setVariableIndex(0, 3);
         bus.setVariableIndex(1, 4);
         bus.initialize();
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<DependencyTracking::Variable, IdxT>&>(bus).evaluateInternalResidual();
         bus.evaluateJacobian();
 
         const auto* f = bus.getResidual().getData();
@@ -300,7 +314,7 @@ namespace GridKit
           bus.setResidualIndex(i, i + var_offset);
         }
         bus.initialize();
-        bus.evaluateResidual();
+        static_cast<PhasorDynamics::Component<ScalarT, IdxT>&>(bus).evaluateInternalResidual();
         bus.evaluateJacobian();
 
         auto* jac  = bus.getCooJacobian();
