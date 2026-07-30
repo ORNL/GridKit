@@ -8,6 +8,9 @@ resources.
 - REECB is a control model only. It measures the terminal bus and publishes
   current commands; it injects no current into the network.
 - When used with REPCA active-power control, connect REPCA `pext` to REECB `pref`.
+- Internal power/current states and limiter quantities are on component base.
+- Power/current signal ports and the `iqcmd`/`ipcmd` outputs are on system base;
+  `pmeas` is monitored on component base.
 
 ## Block Diagram
 
@@ -51,9 +54,14 @@ $P^{\max}$                          | [p.u.]   | `Pmax`   | Maximum active-power
 $P^{\min}$                          | [p.u.]   | `Pmin`   | Minimum active-power order limit                        | 0.0           |
 $I^{\max}$                          | [p.u.]   | `Imax`   | Maximum total converter current                         | 1.3           |
 
+Only `mva` is required. Every omitted control parameter uses the Typical Value
+shown above; when `Vref0` is omitted, it is initialized from terminal voltage.
+
 ### Parameter Validation
 
-Invalid REECB parameter sets are rejected by the following checks:
+Invalid REECB parameter sets are rejected by the following checks. Nonnegative
+time constants below $\epsilon_T=10^{-3}\ \mathrm{s}$ are raised to
+$\epsilon_T$ and logged as a warning.
 
 ```math
 \begin{aligned}
@@ -83,13 +91,12 @@ Invalid REECB parameter sets are rejected by the following checks:
 
 ### Model Derived Parameters
 
-Let $\epsilon_T=10^{-3}\ \mathrm{s}$. A time constant below $\epsilon_T$ is
-raised to that floor in place, so every equation below uses the raised value:
+Every equation below uses the raised time constants:
 
 ```math
 \begin{aligned}
   T_x
-    &\leftarrow \max\!\left(T_x,\epsilon_T\right),
+    &\leftarrow \text{max}\left(T_x,\epsilon_T\right),
        \quad x\in\{\mathrm{rv},\mathrm{p},\mathrm{iq},\mathrm{pord}\} \\
   s_{\mathrm{pf}}^\mathrm{off}
     &= 1 - s_{\mathrm{pf}} \\
@@ -307,13 +314,13 @@ target and smooth approximation.
     + s_Q^\mathrm{off}Q_V
     + \left(1-s_{\mathrm{dip}}\right)I_q^\mathrm{inj} \\
   0 &=
-    -I_q^\mathrm{cmd}
-    + \dfrac{1}{k_\mathrm{base}}\text{clamp}
+    -k_\mathrm{base} I_q^\mathrm{cmd}
+    + \text{clamp}
       \left(I_q^\mathrm{raw};\,
             -I_q^{\max}, I_q^{\max}\right) \\
   0 &=
-    -I_p^\mathrm{cmd}
-    + \dfrac{1}{k_\mathrm{base}}\text{clamp}
+    -k_\mathrm{base} I_p^\mathrm{cmd}
+    + \text{clamp}
       \left(
         \dfrac{P^\mathrm{ord}}{V_{\mathrm{safe}}^\mathrm{meas}};\,
         0,\,
@@ -354,7 +361,25 @@ the limiter *input*, not its output. With initialization tolerance
 $\epsilon_0=10^{-10}$, $\text{clamp}^{-1}(z;\ell,u)$ is the input producing
 output $z$, and $u_0^\mathrm{aw}(a,f;\ell,u)$ the input holding an anti-windup
 path stationary: $a$ when $|f|\le\epsilon_0$, else just past the limit $f$
-drives toward. Both reject $z$ outside $[\ell,u]$.
+drives toward. The inverse clamp rejects a requested output outside
+$[\ell,u]$; the anti-windup initializer always returns a stationary input.
+
+Initialization rejects an operating point when any of the following holds:
+
+- the bus voltage or either command seed is not finite;
+- $I_p^\mathrm{seed}<0$;
+- the command seeds leave the $I^{\max}$ circle, or a selected priority-circle
+  radicand is less than $-\epsilon_0$;
+- the physical active-power target
+  $V_{\mathrm{safe},0}^\mathrm{meas}I_p^\mathrm{seed}$ lies outside
+  $[P^{\min},P^{\max}]$ by more than $\epsilon_0$;
+- a required current, ramp-rate, reactive-power, voltage, or controller output
+  has no limiter input on its selected limits; or
+- $s_{\mathrm{pf}}=1$, $|P_0^\mathrm{meas}|\le\epsilon_0$, and
+  $|Q_0^\mathrm{ref}|>\epsilon_0$.
+
+Every check resolves before any storage is written, so a rejected
+initialization leaves state, command nodes, and external signals unchanged.
 
 Subscript $0$ denotes initial values; all internal derivatives start at zero:
 
@@ -507,23 +532,6 @@ Subscript $0$ denotes initial values; all internal derivatives start at zero:
 The $s_Q=1$ path initializes the voltage PI output to reproduce
 $I_{q,0}^\mathrm{control}$. The $s_Q=0$ path instead carries that target in
 $Q_{V,0}$ and parks the otherwise inactive voltage PI path consistently.
-
-Initialization rejects an operating point when any of the following holds:
-
-- the bus voltage or either command seed is not finite;
-- $I_p^\mathrm{seed}<0$;
-- the command seeds leave the $I^{\max}$ circle, or a selected priority-circle
-  radicand is less than $-\epsilon_0$;
-- the physical active-power target
-  $V_{\mathrm{safe},0}^\mathrm{meas}I_p^\mathrm{seed}$ lies outside
-  $[P^{\min},P^{\max}]$ by more than $\epsilon_0$;
-- a required current, ramp-rate, reactive-power, voltage, or controller output
-  has no limiter input on its selected limits; or
-- $s_{\mathrm{pf}}=1$, $|P_0^\mathrm{meas}|\le\epsilon_0$, and
-  $|Q_0^\mathrm{ref}|>\epsilon_0$.
-
-Every check resolves before any storage is written, so a rejected
-initialization leaves state, command nodes, and external signals unchanged.
 
 ### Output Initialization
 

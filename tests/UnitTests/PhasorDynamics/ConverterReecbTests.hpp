@@ -36,10 +36,12 @@ namespace GridKit
       ConverterReecbTests()  = default;
       ~ConverterReecbTests() = default;
 
+      // Fixed answer keys should agree to ordinary double-precision roundoff.
+      static constexpr RealT kBehaviorTol = 1.0e-12;
+
       // REECB initialization solves smooth-limiter inputs near their asymptotes.
-      // The resulting steady residuals are O(1e-10), so behavioral comparisons
-      // use a tolerance one order above the initialization guard.
-      static constexpr RealT kBehaviorTol = 1.0e-9;
+      // The resulting steady residuals are O(1e-10).
+      static constexpr RealT kSteadyStateTol = 1.0e-9;
 
       // Enzyme and dependency tracking traverse the same smooth expressions
       // differently; their double-precision derivatives agree to O(1e-10).
@@ -54,11 +56,11 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
         PhasorDynamics::Converter::Reecb<ScalarT, IdxT> empty(&bus);
-        success *= (empty.size() == static_cast<IdxT>(I::MAXIMUM));
+        success *= (empty.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
         success *= (empty.getMonitor() == nullptr);
 
         PhasorDynamics::Converter::Reecb<ScalarT, IdxT> configured(&bus, makeData());
-        success *= (configured.size() == static_cast<IdxT>(I::MAXIMUM));
+        success *= (configured.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
         success *= (configured.getMonitor() != nullptr);
         success *= (configured.verify() == 0);
 
@@ -166,19 +168,19 @@ namespace GridKit
         success *= (fixture.evaluate() == 0);
 
         const auto* y  = fixture.reecb.y().getData();
-        success       *= scalarMatches(y[I::VT], 1.0, "VT");
-        success       *= scalarMatches(y[I::VMEAS], 1.0, "VMEAS");
-        success       *= scalarMatches(y[I::PMEAS], 0.5, "PMEAS on component base");
-        success       *= scalarMatches(y[I::QREF], 0.1, "QREF on component base");
-        success       *= scalarMatches(y[I::PORD], 0.5, "PORD on component base");
+        success       *= scalarMatches(y[index(Vars::VT)], 1.0, "VT");
+        success       *= scalarMatches(y[index(Vars::VMEAS)], 1.0, "VMEAS");
+        success       *= scalarMatches(y[index(Vars::PMEAS)], 0.5, "PMEAS on component base");
+        success       *= scalarMatches(y[index(Vars::QREF)], 0.1, "QREF on component base");
+        success       *= scalarMatches(y[index(Vars::PORD)], 0.5, "PORD on component base");
         success       *= scalarMatches(fixture.iqcmd(), 0.05, "seeded iqcmd");
         success       *= scalarMatches(fixture.ipcmd(), 0.25, "seeded ipcmd");
 
-        success *= scalarMatches(fixture.input(E::PE), 0.25, "published pe");
-        success *= scalarMatches(fixture.input(E::QGEN), 0.05, "published qgen");
-        success *= scalarMatches(fixture.input(E::QEXT), 0.05, "published qext");
-        success *= scalarMatches(fixture.input(E::PFAREF), 0.0, "inactive pfaref fallback");
-        success *= scalarMatches(fixture.input(E::PREF), 0.25, "published pref");
+        success *= scalarMatches(fixture.input(Ext::PE), 0.25, "published pe");
+        success *= scalarMatches(fixture.input(Ext::QGEN), 0.05, "published qgen");
+        success *= scalarMatches(fixture.input(Ext::QEXT), 0.05, "published qext");
+        success *= scalarMatches(fixture.input(Ext::PFAREF), 0.0, "inactive pfaref fallback");
+        success *= scalarMatches(fixture.input(Ext::PREF), 0.25, "published pref");
 
         RealT                                     time = 0.0;
         Model::VariableMonitorController<ScalarT> monitor(time);
@@ -212,7 +214,7 @@ namespace GridKit
 
         for (size_t i = 0; i < static_cast<size_t>(fixture.reecb.size()); ++i)
         {
-          const bool expected = i <= I::PORD;
+          const bool expected = i <= index(Vars::PORD);
           if (fixture.reecb.tag()[i] != expected)
           {
             std::cout << "REECB differentiability tag " << i << " mismatch\n";
@@ -254,8 +256,8 @@ namespace GridKit
                 success *= allResidualsZero(scenario.reecb);
                 success *= scalarMatches(scenario.iqcmd(), 0.05, "scenario iqcmd preservation");
                 success *= scalarMatches(scenario.ipcmd(), 0.2, "scenario ipcmd preservation");
-                success *= scalarMatches(scenario.input(E::PE), 0.2, "scenario pe publication");
-                success *= scalarMatches(scenario.input(E::QGEN), 0.05, "scenario qgen publication");
+                success *= scalarMatches(scenario.input(Ext::PE), 0.2, "scenario pe publication");
+                success *= scalarMatches(scenario.input(Ext::QGEN), 0.05, "scenario qgen publication");
               }
             }
           }
@@ -413,32 +415,32 @@ namespace GridKit
 
         // Values are pinned after an independent one-time evaluation of the
         // documented equations at setAnswerKeyState()/setAnswerKeyInputs().
-        const std::array<Row, I::MAXIMUM> expected{{
-            {I::VMEAS, 0.2400000000000002},
-            {I::PMEAS, 0.1449999999999998},
-            {I::XPIQ, 0.03399999970642038},
-            {I::XPIV, 0.0},
-            {I::QV, 0.1222222222222222},
-            {I::PORD, 0.26},
-            {I::VT, -0.02999999999999992},
-            {I::VMEASSAFE, -0.01000000000000001},
-            {I::SDIP, 0.2},
-            {I::VERR, 2.821917786596795e-7},
-            {I::IQV, -0.06999999999999998},
-            {I::QREF, -0.2668756300679377},
-            {I::EQ, 0.3499999999999999},
-            {I::VPIQ, -0.1000000000000002},
-            {I::EPIV, -0.04999999999999993},
-            {I::FPORD, -0.1000000000000003},
-            {I::RPORD, 0.05000000000000004},
-            {I::IQCIRC, 0.3999999999999997},
-            {I::IPCIRC, 0.8100000000000001},
-            {I::IQMAX, 0.1000000000000001},
-            {I::IPMAX, 0.2},
-            {I::IQBASE, -0.3699999999999998},
-            {I::IQRAW, -0.17},
-            {I::IQCMD, -0.05000000000000004},
-            {I::IPCMD, -0.06145833333333334},
+        const std::array<Row, index(Vars::MAXIMUM)> expected{{
+            {index(Vars::VMEAS), 0.2400000000000002},
+            {index(Vars::PMEAS), 0.1449999999999998},
+            {index(Vars::XPIQ), 0.03399999970642038},
+            {index(Vars::XPIV), 0.0},
+            {index(Vars::QV), 0.1222222222222222},
+            {index(Vars::PORD), 0.26},
+            {index(Vars::VT), -0.02999999999999992},
+            {index(Vars::VMEASSAFE), -0.01000000000000001},
+            {index(Vars::SDIP), 0.2},
+            {index(Vars::VERR), 2.821917786596795e-7},
+            {index(Vars::IQV), -0.06999999999999998},
+            {index(Vars::QREF), -0.2668756300679377},
+            {index(Vars::EQ), 0.3499999999999999},
+            {index(Vars::VPIQ), -0.1000000000000002},
+            {index(Vars::EPIV), -0.04999999999999993},
+            {index(Vars::FPORD), -0.1000000000000003},
+            {index(Vars::RPORD), 0.05000000000000004},
+            {index(Vars::IQCIRC), 0.3999999999999997},
+            {index(Vars::IPCIRC), 0.8100000000000001},
+            {index(Vars::IQMAX), 0.1000000000000001},
+            {index(Vars::IPMAX), 0.2},
+            {index(Vars::IQBASE), -0.3699999999999998},
+            {index(Vars::IQRAW), -0.17},
+            {index(Vars::IQCMD), -0.1000000000000001},
+            {index(Vars::IPCMD), -0.1229166666666667},
         }};
 
         success *= (static_cast<size_t>(fixture.reecb.getResidual().getSize()) == expected.size());
@@ -484,29 +486,29 @@ namespace GridKit
           fixture.attachAllInputs();
           success *= fixture.initialize(0.1, 0.2);
 
-          fixture.input(E::PFAREF) = 0.2;
-          fixture.input(E::QEXT)   = 0.2; // 0.4 on the 50 MVA component base.
+          fixture.input(Ext::PFAREF) = 0.2;
+          fixture.input(Ext::QEXT)   = 0.2; // 0.4 on the 50 MVA component base.
           setState(fixture.reecb,
-                   {{I::PMEAS, 0.55},
-                    {I::VMEAS, 0.95},
-                    {I::VPIQ, 1.0},
-                    {I::QREF, test_case.qref},
-                    {I::IQBASE, 0.2},
-                    {I::QV, 0.3},
-                    {I::SDIP, 0.9},
-                    {I::IQV, 0.1},
-                    {I::EPIV, test_case.epiv},
-                    {I::IQRAW, test_case.iqraw}});
+                   {{index(Vars::PMEAS), 0.55},
+                    {index(Vars::VMEAS), 0.95},
+                    {index(Vars::VPIQ), 1.0},
+                    {index(Vars::QREF), test_case.qref},
+                    {index(Vars::IQBASE), 0.2},
+                    {index(Vars::QV), 0.3},
+                    {index(Vars::SDIP), 0.9},
+                    {index(Vars::IQV), 0.1},
+                    {index(Vars::EPIV), test_case.epiv},
+                    {index(Vars::IQRAW), test_case.iqraw}});
           success *= (fixture.evaluate() == 0);
           success *= residualsMatch(fixture.reecb,
-                                    {{I::QREF, 0.0}, {I::EPIV, 0.0}, {I::IQRAW, 0.0}},
+                                    {{index(Vars::QREF), 0.0}, {index(Vars::EPIV), 0.0}, {index(Vars::IQRAW), 0.0}},
                                     test_case.label);
         }
 
         Fixture<ScalarT> limit_fixture(makeDynamicData());
         limit_fixture.attachAllInputs();
-        success                      *= limit_fixture.initialize(0.1, 0.2);
-        limit_fixture.input(E::QGEN)  = 0.0;
+        success                        *= limit_fixture.initialize(0.1, 0.2);
+        limit_fixture.input(Ext::QGEN)  = 0.0;
 
         // A Q reference driven past each limit; EQ is the clamped reference
         // less the zeroed qgen feedback.
@@ -515,10 +517,10 @@ namespace GridKit
                  {-2.0, -0.7},
              }})
         {
-          setState(limit_fixture.reecb, {{I::QREF, qref}, {I::EQ, 0.0}});
+          setState(limit_fixture.reecb, {{index(Vars::QREF), qref}, {index(Vars::EQ), 0.0}});
           success *= (limit_fixture.evaluate() == 0);
           success *= residualsMatch(limit_fixture.reecb,
-                                    {{I::EQ, expected_eq}},
+                                    {{index(Vars::EQ), expected_eq}},
                                     "reactive-power limit");
         }
 
@@ -528,10 +530,10 @@ namespace GridKit
                  {-4.0, 0.7},
              }})
         {
-          setState(limit_fixture.reecb, {{I::EQ, eq}, {I::XPIQ, 0.0}, {I::VPIQ, 0.0}});
+          setState(limit_fixture.reecb, {{index(Vars::EQ), eq}, {index(Vars::XPIQ), 0.0}, {index(Vars::VPIQ), 0.0}});
           success *= (limit_fixture.evaluate() == 0);
           success *= residualsMatch(limit_fixture.reecb,
-                                    {{I::VPIQ, expected_vpiq}},
+                                    {{index(Vars::VPIQ), expected_vpiq}},
                                     "reactive-power PI voltage limit");
         }
 
@@ -559,15 +561,16 @@ namespace GridKit
         for (const auto& test_case : voltage_cases)
         {
           setState(voltage_fixture.reecb,
-                   {{I::VT, test_case.voltage},
-                    {I::VMEAS, test_case.vmeas},
-                    {I::SDIP, test_case.expected_sdip_rhs},
-                    {I::VERR, test_case.expected_verr_rhs},
-                    {I::IQV, test_case.expected_iqv_rhs}});
+                   {{index(Vars::VT), test_case.voltage},
+                    {index(Vars::VMEAS), test_case.vmeas},
+                    {index(Vars::SDIP), test_case.expected_sdip_rhs},
+                    {index(Vars::VERR), test_case.expected_verr_rhs},
+                    {index(Vars::IQV), test_case.expected_iqv_rhs}});
           success *= (voltage_fixture.evaluate() == 0);
           success *= residualsMatch(voltage_fixture.reecb,
-                                    {{I::SDIP, 0.0}, {I::VERR, 0.0}, {I::IQV, 0.0}},
-                                    "voltage band, deadband, and injection limit");
+                                    {{index(Vars::SDIP), 0.0}, {index(Vars::VERR), 0.0}, {index(Vars::IQV), 0.0}},
+                                    "voltage band, deadband, and injection limit",
+                                    kSteadyStateTol);
         }
 
         // The QV lag and both PI anti-windup rows are evaluated at three
@@ -594,25 +597,25 @@ namespace GridKit
         for (const auto& test_case : antiwindup_cases)
         {
           setState(controller_fixture.reecb,
-                   {{I::SDIP, 1.0},
-                    {I::XPIQ, test_case.xpiq},
-                    {I::EQ, test_case.eq},
-                    {I::XPIV, test_case.xpiv},
-                    {I::EPIV, test_case.epiv},
-                    {I::IQMAX, 1.0}});
+                   {{index(Vars::SDIP), 1.0},
+                    {index(Vars::XPIQ), test_case.xpiq},
+                    {index(Vars::EQ), test_case.eq},
+                    {index(Vars::XPIV), test_case.xpiv},
+                    {index(Vars::EPIV), test_case.epiv},
+                    {index(Vars::IQMAX), 1.0}});
           success *= (controller_fixture.evaluate() == 0);
           success *= residualsMatch(controller_fixture.reecb,
-                                    {{I::XPIQ, test_case.expected_xpiq},
-                                     {I::XPIV, test_case.expected_xpiv}},
+                                    {{index(Vars::XPIQ), test_case.expected_xpiq},
+                                     {index(Vars::XPIV), test_case.expected_xpiv}},
                                     "anti-windup");
         }
 
         setState(controller_fixture.reecb,
-                 {{I::SDIP, 1.0}, {I::QREF, 0.4}, {I::VMEASSAFE, 1.0}, {I::QV, 0.2}});
-        setDerivative(controller_fixture.reecb, {{I::QV, 0.1}});
+                 {{index(Vars::SDIP), 1.0}, {index(Vars::QREF), 0.4}, {index(Vars::VMEASSAFE), 1.0}, {index(Vars::QV), 0.2}});
+        setDerivative(controller_fixture.reecb, {{index(Vars::QV), 0.1}});
         success *= (controller_fixture.evaluate() == 0);
         success *= residualsMatch(controller_fixture.reecb,
-                                  {{I::QV, 0.5666666666666667}},
+                                  {{index(Vars::QV), 0.5666666666666667}},
                                   "reactive-current lag");
 
         return success.report(__func__);
@@ -655,18 +658,18 @@ namespace GridKit
 
         for (const auto& test_case : cases)
         {
-          fixture.input(E::PREF) = test_case.pref_system;
+          fixture.input(Ext::PREF) = test_case.pref_system;
           setState(fixture.reecb,
-                   {{I::PORD, test_case.pord},
-                    {I::FPORD, test_case.fpord},
-                    {I::RPORD, test_case.rpord},
-                    {I::SDIP, 1.0}});
-          setDerivative(fixture.reecb, {{I::PORD, 0.0}});
+                   {{index(Vars::PORD), test_case.pord},
+                    {index(Vars::FPORD), test_case.fpord},
+                    {index(Vars::RPORD), test_case.rpord},
+                    {index(Vars::SDIP), 1.0}});
+          setDerivative(fixture.reecb, {{index(Vars::PORD), 0.0}});
           success *= (fixture.evaluate() == 0);
           success *= residualsMatch(fixture.reecb,
-                                    {{I::FPORD, test_case.expected_fpord},
-                                     {I::RPORD, test_case.expected_rpord},
-                                     {I::PORD, test_case.expected_pord}},
+                                    {{index(Vars::FPORD), test_case.expected_fpord},
+                                     {index(Vars::RPORD), test_case.expected_rpord},
+                                     {index(Vars::PORD), test_case.expected_pord}},
                                     "active-power order");
         }
 
@@ -685,29 +688,29 @@ namespace GridKit
         for (const auto& test_case : lower_bound_cases)
         {
           setState(fixture.reecb,
-                   {{I::PORD, -0.2}, {I::RPORD, test_case.rate}, {I::SDIP, 1.0}});
-          setDerivative(fixture.reecb, {{I::PORD, 0.0}});
+                   {{index(Vars::PORD), -0.2}, {index(Vars::RPORD), test_case.rate}, {index(Vars::SDIP), 1.0}});
+          setDerivative(fixture.reecb, {{index(Vars::PORD), 0.0}});
           success *= (fixture.evaluate() == 0);
           success *= residualsMatch(fixture.reecb,
-                                    {{I::PORD, test_case.expected_residual}},
+                                    {{index(Vars::PORD), test_case.expected_residual}},
                                     test_case.label);
         }
 
         // PE is 0.3 on system base and 0.6 on the 50 MVA component base.
-        fixture.input(E::PE) = 0.3;
+        fixture.input(Ext::PE) = 0.3;
         setState(fixture.reecb,
-                 {{I::PMEAS, 0.5},
-                  {I::VMEAS, 0.005},
-                  {I::VMEASSAFE, 0.01},
-                  {I::PORD, 0.004},
-                  {I::IPMAX, 1.0},
-                  {I::IPCMD, 0.2}});
-        setDerivative(fixture.reecb, {{I::PMEAS, 0.1}});
+                 {{index(Vars::PMEAS), 0.5},
+                  {index(Vars::VMEAS), 0.005},
+                  {index(Vars::VMEASSAFE), 0.01},
+                  {index(Vars::PORD), 0.004},
+                  {index(Vars::IPMAX), 1.0},
+                  {index(Vars::IPCMD), 0.2}});
+        setDerivative(fixture.reecb, {{index(Vars::PMEAS), 0.1}});
         success *= (fixture.evaluate() == 0);
         success *= residualsMatch(fixture.reecb,
-                                  {{I::PMEAS, 0.3},
-                                   {I::VMEASSAFE, 0.00109701028057513},
-                                   {I::IPCMD, 0.0}},
+                                  {{index(Vars::PMEAS), 0.3},
+                                   {index(Vars::VMEASSAFE), 0.00109701028057513},
+                                   {index(Vars::IPCMD), 0.0}},
                                   "safe-voltage active-power path");
 
         return success.report(__func__);
@@ -747,13 +750,13 @@ namespace GridKit
           success *= (fixture.evaluate() == 0);
 
           success *= stateMatches(fixture.reecb,
-                                  {{I::IQCIRC, test_case.iqcirc},
-                                   {I::IPCIRC, test_case.ipcirc},
-                                   {I::IQMAX, test_case.iqmax},
-                                   {I::IPMAX, test_case.ipmax}},
+                                  {{index(Vars::IQCIRC), test_case.iqcirc},
+                                   {index(Vars::IPCIRC), test_case.ipcirc},
+                                   {index(Vars::IQMAX), test_case.iqmax},
+                                   {index(Vars::IPMAX), test_case.ipmax}},
                                   test_case.label);
           success *= residualsMatch(fixture.reecb,
-                                    {{I::IQCMD, 0.0}, {I::IPCMD, 0.0}},
+                                    {{index(Vars::IQCMD), 0.0}, {index(Vars::IPCMD), 0.0}},
                                     test_case.label);
           success *= scalarMatches(fixture.iqcmd(), test_case.iqcmd, "priority iqcmd preservation");
           success *= scalarMatches(fixture.ipcmd(), test_case.ipcmd, "priority ipcmd preservation");
@@ -764,27 +767,146 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// A single rich state and all five external inputs drive both
-      /// sensitivity paths; every Enzyme CSR row must match dependency tracking.
+      /// Representative selector modes drive both sensitivity paths. Every
+      /// Enzyme CSR row must match dependency tracking, and fixed derivatives
+      /// independently pin the four selector contracts.
       TestOutcome jacobian()
       {
         TestStatus success = true;
 
-        const auto data = makeDynamicData();
-
-        const auto dependency_jacobian = dependencyTrackingJacobian(data, success);
-        const auto enzyme_jacobian     = enzymeJacobian(data, success);
-
-        success         *= (dependency_jacobian.size() == enzyme_jacobian.size());
-        const auto rows  = std::min(dependency_jacobian.size(), enzyme_jacobian.size());
-        for (size_t row = 0; row < rows; ++row)
+        struct SelectorCase
         {
-          if (!isEqual(dependency_jacobian[row], enzyme_jacobian[row], kJacobianTol))
+          const char* label;
+          bool        pf;
+          bool        voltage;
+          bool        reactive;
+          bool        p_priority;
+        };
+
+        // Start with every selector off, then activate one at a time. This keeps
+        // each expected structural change attributable to exactly one flag.
+        const std::array<SelectorCase, 5> cases{{
+            {"all selectors off", false, false, false, false},
+            {"power-factor control", true, false, false, false},
+            {"voltage control", false, true, false, false},
+            {"reactive-current control", false, false, true, false},
+            {"active-current priority", false, false, false, true},
+        }};
+
+        for (const auto& test_case : cases)
+        {
+          auto data                       = makeDynamicData();
+          data.parameters[Params::PfFlag] = test_case.pf;
+          data.parameters[Params::VFlag]  = test_case.voltage;
+          data.parameters[Params::QFlag]  = test_case.reactive;
+          data.parameters[Params::Pqflag] = test_case.p_priority;
+
+          const auto dependency_jacobian = dependencyTrackingJacobian(data, success);
+          const auto enzyme_jacobian     = enzymeJacobian(data, success);
+
+          success         *= (dependency_jacobian.size() == index(Vars::MAXIMUM));
+          success         *= (dependency_jacobian.size() == enzyme_jacobian.size());
+          const auto rows  = std::min(dependency_jacobian.size(), enzyme_jacobian.size());
+          for (size_t row = 0; row < rows; ++row)
           {
-            std::cout << "REECB Jacobian row " << row
-                      << " mismatch between dependency tracking and Enzyme\n";
-            success = false;
+            if (!isEqual(dependency_jacobian[row], enzyme_jacobian[row], kJacobianTol))
+            {
+              std::cout << "REECB Jacobian row " << row
+                        << " mismatch between dependency tracking and Enzyme for "
+                        << test_case.label << '\n';
+              success = false;
+            }
           }
+
+          if (dependency_jacobian.size() != index(Vars::MAXIMUM))
+          {
+            continue;
+          }
+
+          // Fixed derivatives at setAnswerKeyState()/setAnswerKeyInputs(). The
+          // component/system power-base ratio is two in makeDynamicData().
+          RealT qext_derivative   = 2.0;
+          RealT pfaref_derivative = 0.0;
+          if (test_case.pf)
+          {
+            qext_derivative   = 0.0;
+            pfaref_derivative = 0.5625630197756407;
+          }
+
+          RealT vpiq_derivative = 0.0;
+          RealT qref_derivative = 1.0;
+          if (test_case.voltage)
+          {
+            vpiq_derivative = 1.0;
+            qref_derivative = 0.0;
+          }
+
+          RealT iqbase_derivative = 0.0;
+          RealT qv_derivative     = 1.0;
+          if (test_case.reactive)
+          {
+            iqbase_derivative = 1.0;
+            qv_derivative     = 0.0;
+          }
+
+          RealT iqcirc_ipcmd_derivative = 0.0;
+          RealT ipcirc_iqcmd_derivative = -2.0;
+          if (test_case.p_priority)
+          {
+            iqcirc_ipcmd_derivative = -3.2;
+            ipcirc_iqcmd_derivative = 0.0;
+          }
+
+          success *= dependencyMatches(dependency_jacobian,
+                                       Vars::QREF,
+                                       Ext::QEXT,
+                                       qext_derivative,
+                                       test_case.label);
+          success *= dependencyMatches(dependency_jacobian,
+                                       Vars::QREF,
+                                       Ext::PFAREF,
+                                       pfaref_derivative,
+                                       test_case.label);
+          success *= dependencyMatches(dependency_jacobian,
+                                       Vars::EPIV,
+                                       Vars::VPIQ,
+                                       vpiq_derivative,
+                                       test_case.label);
+          success *= dependencyMatches(dependency_jacobian,
+                                       Vars::EPIV,
+                                       Vars::QREF,
+                                       qref_derivative,
+                                       test_case.label);
+          success *= dependencyMatches(dependency_jacobian,
+                                       Vars::IQRAW,
+                                       Vars::IQBASE,
+                                       iqbase_derivative,
+                                       test_case.label);
+          success *= dependencyMatches(dependency_jacobian,
+                                       Vars::IQRAW,
+                                       Vars::QV,
+                                       qv_derivative,
+                                       test_case.label);
+          success *= dependencyMatches(dependency_jacobian,
+                                       Vars::IQCIRC,
+                                       Vars::IPCMD,
+                                       iqcirc_ipcmd_derivative,
+                                       test_case.label);
+          success *= dependencyMatches(dependency_jacobian,
+                                       Vars::IPCIRC,
+                                       Vars::IQCMD,
+                                       ipcirc_iqcmd_derivative,
+                                       test_case.label);
+          success *= dependencyMatches(dependency_jacobian,
+                                       Vars::IQCMD,
+                                       Vars::IQCMD,
+                                       -2.0,
+                                       test_case.label);
+          success *= dependencyMatches(dependency_jacobian,
+                                       Vars::IPCMD,
+                                       Vars::IPCMD,
+                                       -2.0,
+                                       test_case.label);
         }
 
         return success.report(__func__);
@@ -797,12 +919,20 @@ namespace GridKit
       using Ext    = PhasorDynamics::Converter::ReecbExternalVariables;
       using Mon    = PhasorDynamics::Converter::ReecbMonitorableVariables;
       using Data   = PhasorDynamics::Converter::ReecbData<RealT, IdxT>;
-      using I      = PhasorDynamics::Converter::ReecbIdx;
-      using E      = PhasorDynamics::Converter::ReecbExt;
 
-      /// A vector row paired with a value: either an input to write or an
-      /// expected result. Rows are `ReecbIdx`/`ReecbExt` constants, so a
-      /// failure report locates itself without any name string to maintain.
+      static constexpr size_t index(Vars variable)
+      {
+        return static_cast<size_t>(variable);
+      }
+
+      static constexpr size_t index(Ext variable)
+      {
+        return static_cast<size_t>(variable);
+      }
+
+      /// A model-vector row paired with an expected value. Rows are converted
+      /// from `ReecbInternalVariables`, so the enum remains the single ordering
+      /// contract shared with the implementation and README.
       using Row    = std::pair<size_t, RealT>;
       using Rows   = std::initializer_list<Row>;
       using ReecbT = PhasorDynamics::Converter::Reecb<ScalarT, IdxT>;
@@ -823,9 +953,9 @@ namespace GridKit
       class Fixture
       {
       private:
-        std::array<T, E::MAXIMUM>                                   input_values_{};
-        std::array<IdxT, E::MAXIMUM>                                input_indices_{};
-        std::array<PhasorDynamics::SignalNode<T, IdxT>, E::MAXIMUM> input_nodes_{};
+        std::array<T, index(Ext::MAXIMUM)>                                   input_values_{};
+        std::array<IdxT, index(Ext::MAXIMUM)>                                input_indices_{};
+        std::array<PhasorDynamics::SignalNode<T, IdxT>, index(Ext::MAXIMUM)> input_nodes_{};
 
         PhasorDynamics::SignalNode<T, IdxT> iqcmd_node_;
         PhasorDynamics::SignalNode<T, IdxT> ipcmd_node_;
@@ -851,7 +981,7 @@ namespace GridKit
         {
           const IdxT external_index_base = reecb.size() + bus.size();
 
-          for (size_t port = 0; port < E::MAXIMUM; ++port)
+          for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
           {
             input_values_[port]  = static_cast<T>(initial_value);
             input_indices_[port] = external_index_base + static_cast<IdxT>(port);
@@ -859,11 +989,11 @@ namespace GridKit
           }
 
           auto& signals = reecb.getSignals();
-          signals.template attachSignalNode<Ext::PE>(&input_nodes_[E::PE]);
-          signals.template attachSignalNode<Ext::QGEN>(&input_nodes_[E::QGEN]);
-          signals.template attachSignalNode<Ext::QEXT>(&input_nodes_[E::QEXT]);
-          signals.template attachSignalNode<Ext::PFAREF>(&input_nodes_[E::PFAREF]);
-          signals.template attachSignalNode<Ext::PREF>(&input_nodes_[E::PREF]);
+          signals.template attachSignalNode<Ext::PE>(&input_nodes_[index(Ext::PE)]);
+          signals.template attachSignalNode<Ext::QGEN>(&input_nodes_[index(Ext::QGEN)]);
+          signals.template attachSignalNode<Ext::QEXT>(&input_nodes_[index(Ext::QEXT)]);
+          signals.template attachSignalNode<Ext::PFAREF>(&input_nodes_[index(Ext::PFAREF)]);
+          signals.template attachSignalNode<Ext::PREF>(&input_nodes_[index(Ext::PREF)]);
         }
 
         /// Seed the assigned command nodes on the system base.
@@ -919,14 +1049,14 @@ namespace GridKit
           return ipcmd_node_.read();
         }
 
-        T& input(size_t port)
+        T& input(Ext port)
         {
-          return input_values_[port];
+          return input_values_[index(port)];
         }
 
-        IdxT inputIndex(size_t port) const
+        IdxT inputIndex(Ext port) const
         {
-          return input_indices_[port];
+          return input_indices_[index(port)];
         }
 
         PhasorDynamics::Bus<T, IdxT>              bus;
@@ -1064,11 +1194,11 @@ namespace GridKit
       template <typename T>
       void setAnswerKeyInputs(Fixture<T>& fixture) const
       {
-        fixture.input(E::PE)     = 0.3;
-        fixture.input(E::QGEN)   = -0.1;
-        fixture.input(E::QEXT)   = 0.2;
-        fixture.input(E::PFAREF) = 0.15;
-        fixture.input(E::PREF)   = 0.35;
+        fixture.input(Ext::PE)     = 0.3;
+        fixture.input(Ext::QGEN)   = -0.1;
+        fixture.input(Ext::QEXT)   = 0.2;
+        fixture.input(Ext::PFAREF) = 0.15;
+        fixture.input(Ext::PREF)   = 0.35;
       }
 
       /// The rich state shared by the residual answer key and the Jacobian
@@ -1077,14 +1207,38 @@ namespace GridKit
       void setAnswerKeyState(PhasorDynamics::Converter::Reecb<T, IdxT>& reecb) const
       {
         setState(reecb,
-                 {{I::VMEAS, 0.95}, {I::PMEAS, 0.55}, {I::XPIQ, 0.10}, {I::XPIV, -0.05}, {I::QV, 0.30}, {I::PORD, 0.65}, {I::VT, 1.00}, {I::VMEASSAFE, 0.96}, {I::SDIP, 0.80}, {I::VERR, 0.04}, {I::IQV, 0.15}, {I::QREF, 0.35}, {I::EQ, 0.20}, {I::VPIQ, 0.80}, {I::EPIV, -0.10}, {I::FPORD, 0.30}, {I::RPORD, 0.25}, {I::IQCIRC, 1.10}, {I::IPCIRC, 1.20}, {I::IQMAX, 1.00}, {I::IPMAX, 1.30}, {I::IQBASE, 0.20}, {I::IQRAW, 0.40}, {I::IQCMD, 0.25}, {I::IPCMD, 0.40}});
+                 {{index(Vars::VMEAS), 0.95},
+                  {index(Vars::PMEAS), 0.55},
+                  {index(Vars::XPIQ), 0.10},
+                  {index(Vars::XPIV), -0.05},
+                  {index(Vars::QV), 0.30},
+                  {index(Vars::PORD), 0.65},
+                  {index(Vars::VT), 1.00},
+                  {index(Vars::VMEASSAFE), 0.96},
+                  {index(Vars::SDIP), 0.80},
+                  {index(Vars::VERR), 0.04},
+                  {index(Vars::IQV), 0.15},
+                  {index(Vars::QREF), 0.35},
+                  {index(Vars::EQ), 0.20},
+                  {index(Vars::VPIQ), 0.80},
+                  {index(Vars::EPIV), -0.10},
+                  {index(Vars::FPORD), 0.30},
+                  {index(Vars::RPORD), 0.25},
+                  {index(Vars::IQCIRC), 1.10},
+                  {index(Vars::IPCIRC), 1.20},
+                  {index(Vars::IQMAX), 1.00},
+                  {index(Vars::IPMAX), 1.30},
+                  {index(Vars::IQBASE), 0.20},
+                  {index(Vars::IQRAW), 0.40},
+                  {index(Vars::IQCMD), 0.25},
+                  {index(Vars::IPCMD), 0.40}});
         setDerivative(reecb,
-                      {{I::VMEAS, 0.01},
-                       {I::PMEAS, -0.02},
-                       {I::XPIQ, 0.03},
-                       {I::XPIV, -0.04},
-                       {I::QV, 0.05},
-                       {I::PORD, -0.06}});
+                      {{index(Vars::VMEAS), 0.01},
+                       {index(Vars::PMEAS), -0.02},
+                       {index(Vars::XPIQ), 0.03},
+                       {index(Vars::XPIV), -0.04},
+                       {index(Vars::QV), 0.05},
+                       {index(Vars::PORD), -0.06}});
       }
 
       /// Omitting every optional parameter must give exactly the model built
@@ -1209,9 +1363,13 @@ namespace GridKit
 
         success *= scalarMatches(fixture.iqcmd(), iqcmd, "rejected iqcmd preservation");
         success *= scalarMatches(fixture.ipcmd(), ipcmd, "rejected ipcmd preservation");
-        for (size_t port = 0; port < E::MAXIMUM; ++port)
+        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
         {
-          success &= rowMatches(fixture.input(port), 77.0, "external input", port, "changed");
+          success &= rowMatches(fixture.input(static_cast<Ext>(port)),
+                                77.0,
+                                "external input",
+                                port,
+                                "changed");
         }
         success *= vectorUnchanged(fixture.reecb.y(), y_before, "state");
         success *= vectorUnchanged(fixture.reecb.yp(), yp_before, "derivative");
@@ -1245,15 +1403,16 @@ namespace GridKit
 
       /// Compare one vector row against its expected value. Every row check in
       /// this suite reports through here, so failures share one format. Rows
-      /// are named by position, which is the `ReecbIdx` constant the
-      /// expectation was written with, leaving no name string to maintain.
+      /// are named by the `ReecbInternalVariables` position the expectation was
+      /// written with, leaving no parallel name string to maintain.
       static bool rowMatches(RealT       actual,
                              RealT       expected,
                              const char* what,
                              size_t      row,
-                             const char* context)
+                             const char* context,
+                             RealT       tolerance = kBehaviorTol)
       {
-        if (isEqual(actual, expected, kBehaviorTol))
+        if (isEqual(actual, expected, tolerance))
         {
           return true;
         }
@@ -1269,42 +1428,50 @@ namespace GridKit
                      const Row*     rows,
                      size_t         count,
                      const char*    what,
-                     const char*    context) const
+                     const char*    context,
+                     RealT          tolerance = kBehaviorTol) const
       {
         bool        success = true;
         const auto* values  = vector.getData();
         for (size_t i = 0; i < count; ++i)
         {
-          const auto& [row, expected]  = rows[i];
-          success                     &= rowMatches(static_cast<RealT>(values[row]), expected, what, row, context);
+          const auto& [row, expected] = rows[i];
+
+          success &= rowMatches(static_cast<RealT>(values[row]),
+                                expected,
+                                what,
+                                row,
+                                context,
+                                tolerance);
         }
         return success;
       }
 
-      bool residualsMatch(const ReecbT& reecb, Rows rows, const char* context = "") const
+      bool residualsMatch(const ReecbT& reecb,
+                          Rows          rows,
+                          const char*   context   = "",
+                          RealT         tolerance = kBehaviorTol) const
       {
-        return rowsMatch(reecb.getResidual(), rows.begin(), rows.size(), "residual", context);
+        return rowsMatch(reecb.getResidual(),
+                         rows.begin(),
+                         rows.size(),
+                         "residual",
+                         context,
+                         tolerance);
       }
 
       template <size_t size>
       bool residualsMatch(const ReecbT&                reecb,
                           const std::array<Row, size>& rows,
-                          const char*                  context = "") const
+                          const char*                  context   = "",
+                          RealT                        tolerance = kBehaviorTol) const
       {
-        return rowsMatch(reecb.getResidual(), rows.data(), size, "residual", context);
+        return rowsMatch(reecb.getResidual(), rows.data(), size, "residual", context, tolerance);
       }
 
       bool stateMatches(const ReecbT& reecb, Rows rows, const char* context = "") const
       {
         return rowsMatch(reecb.y(), rows.begin(), rows.size(), "state", context);
-      }
-
-      template <size_t size>
-      bool stateMatches(const ReecbT&                reecb,
-                        const std::array<Row, size>& rows,
-                        const char*                  context = "") const
-      {
-        return rowsMatch(reecb.y(), rows.data(), size, "state", context);
       }
 
       /// The model sits at a steady state: every residual and every derivative
@@ -1316,8 +1483,18 @@ namespace GridKit
         const auto* yp      = reecb.yp().getData();
         for (size_t row = 0; row < static_cast<size_t>(reecb.getResidual().getSize()); ++row)
         {
-          success &= rowMatches(static_cast<RealT>(f[row]), 0.0, "residual", row, "at rest");
-          success &= rowMatches(static_cast<RealT>(yp[row]), 0.0, "derivative", row, "at rest");
+          success &= rowMatches(static_cast<RealT>(f[row]),
+                                0.0,
+                                "residual",
+                                row,
+                                "at rest",
+                                kSteadyStateTol);
+          success &= rowMatches(static_cast<RealT>(yp[row]),
+                                0.0,
+                                "derivative",
+                                row,
+                                "at rest",
+                                kSteadyStateTol);
         }
         return success;
       }
@@ -1345,6 +1522,60 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
+      using DependencyMap = DependencyTracking::Variable::DependencyMap;
+
+      static constexpr size_t externalVariableIndex(Ext variable)
+      {
+        constexpr size_t terminal_bus_size = 2;
+        return index(Vars::MAXIMUM) + terminal_bus_size + index(variable);
+      }
+
+      bool dependencyMatches(const std::vector<DependencyMap>& jacobian,
+                             Vars                              row,
+                             size_t                            column,
+                             RealT                             expected,
+                             const char*                       context) const
+      {
+        const auto& dependencies = jacobian[index(row)];
+        const auto  entry        = dependencies.find(column);
+        RealT       actual       = 0.0;
+        if (entry != dependencies.end())
+        {
+          actual = entry->second;
+        }
+        if (isEqual(actual, expected, kJacobianTol))
+        {
+          return true;
+        }
+
+        std::cout << "REECB Jacobian derivative (" << index(row) << ", " << column
+                  << ") mismatch for " << context << ": " << std::setprecision(16)
+                  << actual << " != " << expected << '\n';
+        return false;
+      }
+
+      bool dependencyMatches(const std::vector<DependencyMap>& jacobian,
+                             Vars                              row,
+                             Vars                              column,
+                             RealT                             expected,
+                             const char*                       context) const
+      {
+        return dependencyMatches(jacobian, row, index(column), expected, context);
+      }
+
+      bool dependencyMatches(const std::vector<DependencyMap>& jacobian,
+                             Vars                              row,
+                             Ext                               column,
+                             RealT                             expected,
+                             const char*                       context) const
+      {
+        return dependencyMatches(jacobian,
+                                 row,
+                                 externalVariableIndex(column),
+                                 expected,
+                                 context);
+      }
+
       void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const
       {
         auto* y     = fixture.reecb.y().getData();
@@ -1361,9 +1592,10 @@ namespace GridKit
         {
           bus_y[i].setVariableNumber(model_size + i);
         }
-        for (size_t port = 0; port < E::MAXIMUM; ++port)
+        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
         {
-          fixture.input(port).setVariableNumber(fixture.inputIndex(port));
+          const auto variable = static_cast<Ext>(port);
+          fixture.input(variable).setVariableNumber(fixture.inputIndex(variable));
         }
 
         fixture.reecb.y().setDataUpdated();

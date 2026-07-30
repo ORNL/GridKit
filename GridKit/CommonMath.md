@@ -67,8 +67,8 @@ q(x)=x^2\,\sigma(x)
 | `linseg` | Saturated linear segment contribution | `REGCA`, `REECA` |
 | `above` | Above-lower-limit indicator | `REPCA` |
 | `below` | Below-upper-limit indicator | - |
-| `inside` | Interior pulse indicator | - |
-| `outside` | Outside-band indicator | `REECA`, `REECB` |
+| `inside` | Interior pulse indicator | `REECB` |
+| `outside` | Outside-band indicator | `REECA` |
 | `antiwindup` | Anti-windup limited derivative | `IEEET1`, `SEXS-PTI`, `TGOV1`, `REECA`, `REECB`, `REPCA` |
 
 ### `max`

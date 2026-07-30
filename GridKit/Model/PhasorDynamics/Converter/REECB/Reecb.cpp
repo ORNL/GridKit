@@ -12,6 +12,9 @@ namespace GridKit
   {
     namespace Converter
     {
+      /**
+       * @brief Report that a separate Jacobian is unavailable in the plain build.
+       */
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::evaluateJacobian()
       {

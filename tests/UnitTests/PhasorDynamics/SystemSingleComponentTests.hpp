@@ -1,3 +1,5 @@
+#include <array>
+#include <iomanip>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
@@ -326,6 +328,126 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome reecb()
+      {
+        using ConstantParams  = PhasorDynamics::ConstantSignalSourceParameters;
+        using ConstantOutputs = PhasorDynamics::ConstantSignalSourceSignalOutputs;
+        using Vars            = PhasorDynamics::Converter::ReecbInternalVariables;
+        using Ext             = PhasorDynamics::Converter::ReecbExternalVariables;
+        using ReecbT          = PhasorDynamics::Converter::Reecb<ScalarT, IdxT>;
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.va_base = static_cast<RealT>(100.0e6);
+        data.bus.resize(1);
+        data.bus[0].bus_id   = static_cast<IdxT>(1);
+        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = static_cast<RealT>(1.0);
+        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+
+        data.signal.resize(static_cast<size_t>(ipcmd_signal_id));
+        for (size_t signal = 0; signal < data.signal.size(); ++signal)
+        {
+          data.signal[signal].signal_id = pe_signal_id + static_cast<IdxT>(signal);
+        }
+
+        data.reecb.push_back(makeReecbData());
+
+        typename PhasorDynamics::SystemModelData<RealT, IdxT>::ConstantSourceT source;
+        source.parameters[ConstantParams::Sr]      = static_cast<RealT>(0.0);
+        source.parameters[ConstantParams::Si]      = static_cast<RealT>(0.0);
+        source.signal_outputs[ConstantOutputs::sr] = pe_signal_id;
+        source.signal_outputs[ConstantOutputs::si] = qgen_signal_id;
+        data.constant_source.push_back(source);
+
+        source.signal_outputs[ConstantOutputs::sr] = qext_signal_id;
+        source.signal_outputs[ConstantOutputs::si] = pfaref_signal_id;
+        data.constant_source.push_back(source);
+
+        source.signal_outputs.erase(ConstantOutputs::si);
+        source.signal_outputs[ConstantOutputs::sr] = pref_signal_id;
+        data.constant_source.push_back(source);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        success *= system.allocate() == 0;
+        system.getSignal(iqcmd_signal_id)->init(static_cast<ScalarT>(0.05));
+        system.getSignal(ipcmd_signal_id)->init(static_cast<ScalarT>(0.25));
+        success *= system.verify() == 0;
+        for (IdxT signal_id = pe_signal_id; signal_id <= ipcmd_signal_id; ++signal_id)
+        {
+          success *= system.getSignal(signal_id)->linked();
+        }
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+
+        auto* reecb  = dynamic_cast<ReecbT*>(system.getComponent(static_cast<IdxT>(0)));
+        success     *= reecb != nullptr;
+        if (reecb != nullptr)
+        {
+          auto& signals  = reecb->getSignals();
+          success       *= signals.template readExternalVariableIndex<Ext::PE>()
+                     == system.getSignal(pe_signal_id)->getVariableIndex();
+          success *= signals.template readExternalVariableIndex<Ext::QGEN>()
+                     == system.getSignal(qgen_signal_id)->getVariableIndex();
+          success *= signals.template readExternalVariableIndex<Ext::QEXT>()
+                     == system.getSignal(qext_signal_id)->getVariableIndex();
+          success *= signals.template readExternalVariableIndex<Ext::PFAREF>()
+                     == system.getSignal(pfaref_signal_id)->getVariableIndex();
+          success *= signals.template readExternalVariableIndex<Ext::PREF>()
+                     == system.getSignal(pref_signal_id)->getVariableIndex();
+          success *= signals.template getSignalNode<Vars::IQCMD>()
+                     == system.getSignal(iqcmd_signal_id);
+          success *= signals.template getSignalNode<Vars::IPCMD>()
+                     == system.getSignal(ipcmd_signal_id);
+
+          const auto* residual = reecb->getResidual().getData();
+          for (size_t row = 0; row < static_cast<size_t>(reecb->size()); ++row)
+          {
+            if (!isEqual(static_cast<RealT>(residual[row]),
+                         static_cast<RealT>(0.0),
+                         static_cast<RealT>(1.0e-9)))
+            {
+              std::cout << "REECB SystemModel residual row " << row
+                        << " is not at steady state: " << std::setprecision(16)
+                        << residual[row] << '\n';
+              success = false;
+            }
+          }
+
+          const std::array<RealT, static_cast<size_t>(ipcmd_signal_id)> expected_signals{
+              0.25,
+              0.05,
+              0.05,
+              0.0,
+              0.25,
+              0.05,
+              0.25,
+          };
+          for (size_t signal = 0; signal < expected_signals.size(); ++signal)
+          {
+            success *= isEqual(
+                static_cast<RealT>(system.getSignal(pe_signal_id + static_cast<IdxT>(signal))->read()),
+                expected_signals[signal],
+                static_cast<RealT>(1.0e-9));
+          }
+
+          // The component/system base ratio is two. Perturbing only the
+          // system-base command therefore changes its component-base residual
+          // by twice the perturbation.
+          system.getSignal(iqcmd_signal_id)->init(static_cast<ScalarT>(0.06));
+          success *= system.evaluateResidual() == 0;
+          success *= isEqual(static_cast<RealT>(residual[static_cast<size_t>(Vars::IQCMD)]),
+                             static_cast<RealT>(-0.02),
+                             static_cast<RealT>(1.0e-9));
+        }
+        return success.report(__func__);
+      }
+
       TestOutcome genrou()
       {
         TestStatus success = true;
@@ -472,6 +594,36 @@ namespace GridKit
         data.parameters[Params::VA0]    = static_cast<RealT>(0.4);
         data.parameters[Params::VA1]    = static_cast<RealT>(0.9);
         data.parameters[Params::Vhvmax] = static_cast<RealT>(1.2);
+        return data;
+      }
+
+      static constexpr IdxT pe_signal_id     = 1;
+      static constexpr IdxT qgen_signal_id   = 2;
+      static constexpr IdxT qext_signal_id   = 3;
+      static constexpr IdxT pfaref_signal_id = 4;
+      static constexpr IdxT pref_signal_id   = 5;
+      static constexpr IdxT iqcmd_signal_id  = 6;
+      static constexpr IdxT ipcmd_signal_id  = 7;
+
+      auto makeReecbData() const -> PhasorDynamics::Converter::ReecbData<RealT, IdxT>
+      {
+        using Params  = PhasorDynamics::Converter::ReecbParameters;
+        using Buses   = PhasorDynamics::Converter::ReecbBuses;
+        using Inputs  = PhasorDynamics::Converter::ReecbSignalInputs;
+        using Outputs = PhasorDynamics::Converter::ReecbSignalOutputs;
+
+        PhasorDynamics::Converter::ReecbData<RealT, IdxT> data;
+        data.device_class                   = "Reecb";
+        data.disambiguation_string          = "reecb_test";
+        data.buses[Buses::bus]              = static_cast<IdxT>(1);
+        data.parameters[Params::mva]        = static_cast<RealT>(50.0);
+        data.signal_inputs[Inputs::pe]      = pe_signal_id;
+        data.signal_inputs[Inputs::qgen]    = qgen_signal_id;
+        data.signal_inputs[Inputs::qext]    = qext_signal_id;
+        data.signal_inputs[Inputs::pfaref]  = pfaref_signal_id;
+        data.signal_inputs[Inputs::pref]    = pref_signal_id;
+        data.signal_outputs[Outputs::iqcmd] = iqcmd_signal_id;
+        data.signal_outputs[Outputs::ipcmd] = ipcmd_signal_id;
         return data;
       }
     };

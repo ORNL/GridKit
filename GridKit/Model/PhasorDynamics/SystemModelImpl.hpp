@@ -313,45 +313,45 @@ namespace GridKit
 
         if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pe))
         {
-          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::pe);
-          constexpr auto PE     = ReecbExternalVariables::PE;
-          reecb->getSignals().template attachSignalNode<PE>(getSignal(signal));
+          const IdxT     pe = reecbdata.signal_inputs.at(ReecbSignalInputs::pe);
+          constexpr auto PE = ReecbExternalVariables::PE;
+          reecb->getSignals().template attachSignalNode<PE>(getSignal(pe));
         }
         if (reecbdata.signal_inputs.contains(ReecbSignalInputs::qgen))
         {
-          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::qgen);
-          constexpr auto QGEN   = ReecbExternalVariables::QGEN;
-          reecb->getSignals().template attachSignalNode<QGEN>(getSignal(signal));
+          const IdxT     qgen = reecbdata.signal_inputs.at(ReecbSignalInputs::qgen);
+          constexpr auto QGEN = ReecbExternalVariables::QGEN;
+          reecb->getSignals().template attachSignalNode<QGEN>(getSignal(qgen));
         }
         if (reecbdata.signal_inputs.contains(ReecbSignalInputs::qext))
         {
-          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::qext);
-          constexpr auto QEXT   = ReecbExternalVariables::QEXT;
-          reecb->getSignals().template attachSignalNode<QEXT>(getSignal(signal));
+          const IdxT     qext = reecbdata.signal_inputs.at(ReecbSignalInputs::qext);
+          constexpr auto QEXT = ReecbExternalVariables::QEXT;
+          reecb->getSignals().template attachSignalNode<QEXT>(getSignal(qext));
         }
         if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pfaref))
         {
-          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::pfaref);
+          const IdxT     pfaref = reecbdata.signal_inputs.at(ReecbSignalInputs::pfaref);
           constexpr auto PFAREF = ReecbExternalVariables::PFAREF;
-          reecb->getSignals().template attachSignalNode<PFAREF>(getSignal(signal));
+          reecb->getSignals().template attachSignalNode<PFAREF>(getSignal(pfaref));
         }
         if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pref))
         {
-          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::pref);
-          constexpr auto PREF   = ReecbExternalVariables::PREF;
-          reecb->getSignals().template attachSignalNode<PREF>(getSignal(signal));
+          const IdxT     pref = reecbdata.signal_inputs.at(ReecbSignalInputs::pref);
+          constexpr auto PREF = ReecbExternalVariables::PREF;
+          reecb->getSignals().template attachSignalNode<PREF>(getSignal(pref));
         }
         if (reecbdata.signal_outputs.contains(ReecbSignalOutputs::iqcmd))
         {
-          const IdxT     signal = reecbdata.signal_outputs.at(ReecbSignalOutputs::iqcmd);
-          constexpr auto IQCMD  = ReecbInternalVariables::IQCMD;
-          reecb->getSignals().template assignSignalNode<IQCMD>(getSignal(signal));
+          const IdxT     iqcmd = reecbdata.signal_outputs.at(ReecbSignalOutputs::iqcmd);
+          constexpr auto IQCMD = ReecbInternalVariables::IQCMD;
+          reecb->getSignals().template assignSignalNode<IQCMD>(getSignal(iqcmd));
         }
         if (reecbdata.signal_outputs.contains(ReecbSignalOutputs::ipcmd))
         {
-          const IdxT     signal = reecbdata.signal_outputs.at(ReecbSignalOutputs::ipcmd);
-          constexpr auto IPCMD  = ReecbInternalVariables::IPCMD;
-          reecb->getSignals().template assignSignalNode<IPCMD>(getSignal(signal));
+          const IdxT     ipcmd = reecbdata.signal_outputs.at(ReecbSignalOutputs::ipcmd);
+          constexpr auto IPCMD = ReecbInternalVariables::IPCMD;
+          reecb->getSignals().template assignSignalNode<IPCMD>(getSignal(ipcmd));
         }
 
         addComponent(reecb);
