@@ -5,6 +5,7 @@
  */
 
 #pragma once
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
@@ -63,14 +64,14 @@ namespace GridKit
         using ScalarT        = scalar_type;
         using IdxT           = index_type;
         using RealT          = typename Component<ScalarT, IdxT>::RealT;
-        using BusT           = BusBase<ScalarT, IdxT>;
+
         using ModelDataT     = SexsPtiData<RealT, IdxT>;
         using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
         using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT       = Model::VariableMonitor<SexsPti, SexsPtiData>;
 
-        SexsPti(BusT* bus);
-        SexsPti(BusT* bus, const ModelDataT& data);
+        SexsPti();
+        SexsPti(const ModelDataT& data);
         ~SexsPti();
 
         int setGridKitComponentID(IdxT) override final;
@@ -93,9 +94,9 @@ namespace GridKit
         __attribute__((always_inline)) inline int evaluateInternalResidual(
             const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
+      public:
+      auto& getSignals() { return signals_; }
       private:
-        BusT* bus_{nullptr};
-
         RealT Ta_{0};
         RealT Tb_{0};
         RealT Te_{0};

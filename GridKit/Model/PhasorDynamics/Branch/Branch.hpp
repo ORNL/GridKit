@@ -7,6 +7,7 @@
  *
  */
 #pragma once
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -60,20 +61,17 @@ namespace GridKit
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = BranchData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<Branch, BranchData>;
 
-      Branch(BusT* bus1, BusT* bus2);
-      Branch(BusT* bus1,
-             BusT* bus2,
-             RealT R,
+      Branch();
+      Branch(RealT R,
              RealT X,
              RealT G,
              RealT B,
              RealT tap   = 1.0,
              RealT phase = 0.0);
-      Branch(BusT* bus1, BusT* bus2, const ModelDataT& data);
+      Branch(const ModelDataT& data);
       virtual ~Branch();
 
       virtual int setGridKitComponentID(IdxT) override final;
@@ -86,6 +84,13 @@ namespace GridKit
       virtual int evaluateExternalResidual() override final;
       virtual int evaluateJacobian() override final;
       virtual int verify() const override final;
+
+      /// Get the `ComponentSignals` from this component
+      auto getSignals()
+          -> ComponentSignals<ScalarT, IdxT, NoVariables, BranchExternalVariables>&
+      {
+        return signals_;
+      }
 
       void setR(RealT R)
       {
@@ -143,44 +148,24 @@ namespace GridKit
                                                                                   ScalarT&      Ir,
                                                                                   ScalarT&      Ii);
 
-      ScalarT& Vr1()
+      ScalarT Vr1() const
       {
-        return bus1_->Vr();
+        return signals_.template readExternalVariable<BranchExternalVariables::VR1>();
       }
 
-      ScalarT& Vi1()
+      ScalarT Vi1() const
       {
-        return bus1_->Vi();
+        return signals_.template readExternalVariable<BranchExternalVariables::VI1>();
       }
 
-      ScalarT& Ir1()
+      ScalarT Vr2() const
       {
-        return bus1_->Ir();
+        return signals_.template readExternalVariable<BranchExternalVariables::VR2>();
       }
 
-      ScalarT& Ii1()
+      ScalarT Vi2() const
       {
-        return bus1_->Ii();
-      }
-
-      ScalarT& Vr2()
-      {
-        return bus2_->Vr();
-      }
-
-      ScalarT& Vi2()
-      {
-        return bus2_->Vi();
-      }
-
-      ScalarT& Ir2()
-      {
-        return bus2_->Ir();
-      }
-
-      ScalarT& Ii2()
-      {
-        return bus2_->Ii();
+        return signals_.template readExternalVariable<BranchExternalVariables::VI2>();
       }
 
     public:
@@ -188,8 +173,6 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      BusT* bus1_;
-      BusT* bus2_;
       RealT R_{0.0};
       RealT X_{0.0};
       RealT G_{0.0};
@@ -200,6 +183,9 @@ namespace GridKit
       RealT phase_{0.0};
       IdxT  bus1_id_{0};
       IdxT  bus2_id_{0};
+
+      /// Component signals
+      ComponentSignals<ScalarT, IdxT, NoVariables, BranchExternalVariables> signals_;
 
       RealT g11_{0.0};
       RealT b11_{0.0};

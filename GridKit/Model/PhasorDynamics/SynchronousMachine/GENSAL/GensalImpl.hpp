@@ -21,9 +21,8 @@ namespace GridKit
      * @brief Constructor for a GENSAL generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Gensal<scalar_type, index_type>::Gensal(BusT* bus, const ModelDataT& data)
-      : bus_(bus),
-        monitor_(std::make_unique<MonitorT>(data))
+    Gensal<scalar_type, index_type>::Gensal(const ModelDataT& data)
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -450,15 +449,15 @@ namespace GridKit
       auto* y_ext = y_ext_.getData();
 
       // Bus voltages
-      y_ext[0] = Vr();
-      y_ext[1] = Vi();
-      if (bus_->size() > 0)
-      {
-        variable_indices_ext_[0] = bus_->getVariableIndex(0);
-        variable_indices_ext_[1] = bus_->getVariableIndex(1);
-        residual_indices_ext_[0] = bus_->getResidualIndex(0);
-        residual_indices_ext_[1] = bus_->getResidualIndex(1);
-      }
+      static constexpr auto VR = GensalExternalVariables::VR;
+      static constexpr auto VI = GensalExternalVariables::VI;
+
+      y_ext_.getData()[0]                = Vr();
+      y_ext_.getData()[1]                = Vi();
+      variable_indices_ext_[0] = signals_.template readExternalVariableIndex<VR>();
+      variable_indices_ext_[1] = signals_.template readExternalVariableIndex<VI>();
+      residual_indices_ext_[0] = signals_.template readExternalResidualIndex<VR>();
+      residual_indices_ext_[1] = signals_.template readExternalResidualIndex<VI>();
 
       // Mechanical Power
       y_ext[2] = pmech_set_;
@@ -513,7 +512,8 @@ namespace GridKit
     }
 
     /**
-     * \brief Residual evaluation and contribution to the connected bus
+     * \brief Evaluate the internal residual and external residual
+     * contributions.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -521,14 +521,6 @@ namespace GridKit
     {
       evaluateInternalResidual();
       evaluateExternalResidual();
-
-      // Standalone evaluation scatters directly to the bus
-      Ir() += f_ext_[0];
-      Ii() += f_ext_[1];
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
 
       return 0;
     }

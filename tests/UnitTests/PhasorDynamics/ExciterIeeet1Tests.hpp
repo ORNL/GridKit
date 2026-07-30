@@ -35,9 +35,15 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(3.0, 4.0);
-        auto                               data    = makeTestData();
-        auto*                              exciter = new PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>(&bus, data);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(3.0, 4.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        auto  data    = makeTestData();
+        auto* exciter = new PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>(data);
+        exciter->getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VREAL>(&vr_signal);
+        exciter->getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VIMAG>(&vi_signal);
 
         success *= (exciter != nullptr);
         success *= (exciter->size() == 9);
@@ -54,8 +60,14 @@ namespace GridKit
 
         auto data = makeTestData();
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(3.0, 4.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VREAL>(&vr_signal);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VIMAG>(&vi_signal);
 
         bus.allocate();
         exciter.allocate();
@@ -97,11 +109,17 @@ namespace GridKit
         data.parameters[Params::Se1] = 0.0;
         data.parameters[Params::Se2] = 0.0;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
-        PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
-        ScalarT                                        efd_value{0.0};
-        IdxT                                           efd_index = INVALID_INDEX<IdxT>;
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(3.0, 4.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VREAL>(&vr_signal);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VIMAG>(&vi_signal);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> efd_node;
+        ScalarT                                   efd_value{0.0};
+        IdxT                                      efd_index = INVALID_INDEX<IdxT>;
 
         efd_node.link(&efd_value, &efd_index);
         exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
@@ -194,8 +212,14 @@ namespace GridKit
         auto data                    = makeTestData();
         data.parameters[Params::Se1] = -0.1;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(3.0, 4.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VREAL>(&vr_signal);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VIMAG>(&vi_signal);
 
         bus.allocate();
         exciter.allocate();
@@ -295,10 +319,16 @@ namespace GridKit
       {
         auto data = makeTestData();
 
-        DependencyTracking::Variable                                        Vr1{3.0};
-        DependencyTracking::Variable                                        Vi1{4.0};
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>             bus(Vr1, Vi1);
-        PhasorDynamics::Exciter::Ieeet1<DependencyTracking::Variable, IdxT> exciter(&bus, data);
+        DependencyTracking::Variable                                   Vr1{3.0};
+        DependencyTracking::Variable                                   Vi1{4.0};
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>        bus(Vr1, Vi1);
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        PhasorDynamics::Exciter::Ieeet1<DependencyTracking::Variable, IdxT> exciter(data);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VREAL>(&vr_signal);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VIMAG>(&vi_signal);
 
         bus.allocate();
         exciter.allocate();
@@ -330,8 +360,14 @@ namespace GridKit
       {
         auto data = makeTestData();
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(3.0, 4.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vr_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vi_signal;
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VR>(&vr_signal);
+        bus.getSignals().template assignSignalNode<PhasorDynamics::BusInternalVariables::VI>(&vi_signal);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VREAL>(&vr_signal);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VIMAG>(&vi_signal);
 
         bus.allocate();
         exciter.allocate();

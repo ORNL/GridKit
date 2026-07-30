@@ -47,17 +47,19 @@ namespace GridKit
       IdxT    signalId() const noexcept;
       void    setAssigned() noexcept;
       bool    assigned() const noexcept;
-      void    link(ScalarT* signal_in, IdxT* global_index) noexcept;
+      void    link(ScalarT* signal_in, IdxT* global_index, IdxT* residual_index = nullptr) noexcept;
       bool    linked() const noexcept;
       ScalarT read() const noexcept;
       IdxT    getVariableIndex() const noexcept;
       void    init(ScalarT signal_in) noexcept;
+      IdxT getResidualIndex() const { return residual_index_ ? *residual_index_ : INVALID_INDEX<IdxT>; }
 
     private:
       ScalarT* signal_{nullptr};
       IdxT     signal_id_{0};
       IdxT*    variable_index_{nullptr};
       bool     assigned_{false};
+      IdxT* residual_index_{nullptr};
     };
 
   } // namespace PhasorDynamics

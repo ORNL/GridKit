@@ -42,10 +42,11 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void SignalNode<scalar_type, index_type>::link(ScalarT* signal, IdxT* variable_index) noexcept
+    void SignalNode<scalar_type, index_type>::link(ScalarT* signal, IdxT* variable_index, IdxT* residual_index) noexcept
     {
       signal_         = signal;
       variable_index_ = variable_index;
+      residual_index_ = residual_index;
     }
 
     template <typename scalar_type, typename index_type>
