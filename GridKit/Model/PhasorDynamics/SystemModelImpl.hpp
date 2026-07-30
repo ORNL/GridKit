@@ -1,6 +1,7 @@
 #include <cassert>
 #include <iostream>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -760,6 +761,11 @@ namespace GridKit
     /**
      * @brief Accumulate component contributions to residuals owned elsewhere,
      * e.g. bus current balances.
+     *
+     * Components fill their external residual buffers first, then the system
+     * scatters every contribution through the components' external residual
+     * index maps. Entries mapped to INVALID_INDEX, e.g. infinite bus rows,
+     * are dropped.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateExternalResidual()
@@ -767,6 +773,25 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->evaluateExternalResidual();
+      }
+
+      auto* f = f_.getData();
+      for (const auto& component : components_)
+      {
+        const auto& f_ext   = component->getExternalResidual();
+        const auto& indices = component->getExternalResidualIndices();
+        for (size_t i = 0; i < f_ext.size(); ++i)
+        {
+          if (indices[i] != INVALID_INDEX<IdxT>)
+          {
+            f[static_cast<size_t>(indices[i])] += f_ext[i];
+          }
+        }
+      }
+
+      for (const auto& bus : buses_)
+      {
+        bus->getResidual().setDataUpdated();
       }
 
       return 0;

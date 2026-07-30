@@ -277,7 +277,7 @@ namespace GridKit
     }
 
     /**
-     * @brief External residual contributions to the two terminal buses.
+     * @brief External residual contributions to rows owned by the two terminal buses.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -288,20 +288,6 @@ namespace GridKit
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
       evaluateExternalResidual(y, yp, y_ext_.data(), f_ext_.data());
-
-      Ir1() += f_ext_[0];
-      Ii1() += f_ext_[1];
-      Ir2() += f_ext_[2];
-      Ii2() += f_ext_[3];
-
-      if (bus1_->size() > 0)
-      {
-        bus1_->getResidual().setDataUpdated();
-      }
-      if (bus2_->size() > 0)
-      {
-        bus2_->getResidual().setDataUpdated();
-      }
 
       return 0;
     }
@@ -314,7 +300,23 @@ namespace GridKit
     int Branch<scalar_type, index_type>::evaluateResidual()
     {
       evaluateInternalResidual();
-      return evaluateExternalResidual();
+      evaluateExternalResidual();
+
+      // Standalone evaluation scatters directly to the buses
+      Ir1() += f_ext_[0];
+      Ii1() += f_ext_[1];
+      Ir2() += f_ext_[2];
+      Ii2() += f_ext_[3];
+      if (bus1_->size() > 0)
+      {
+        bus1_->getResidual().setDataUpdated();
+      }
+      if (bus2_->size() > 0)
+      {
+        bus2_->getResidual().setDataUpdated();
+      }
+
+      return 0;
     }
 
     template <typename scalar_type, typename index_type>

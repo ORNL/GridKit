@@ -244,7 +244,7 @@ namespace GridKit
     }
 
     /**
-     * @brief External residual contributions to the bus.
+     * @brief External residual contributions to rows owned by the bus.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -253,12 +253,6 @@ namespace GridKit
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
       evaluateExternalResidual(y, yp, y_ext_.data(), f_ext_.data());
-      Ir() += f_ext_[0];
-      Ii() += f_ext_[1];
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
 
       return 0;
     }
@@ -271,7 +265,17 @@ namespace GridKit
     int LoadZIP<scalar_type, index_type>::evaluateResidual()
     {
       evaluateInternalResidual();
-      return evaluateExternalResidual();
+      evaluateExternalResidual();
+
+      // Standalone evaluation scatters directly to the bus
+      Ir() += f_ext_[0];
+      Ii() += f_ext_[1];
+      if (bus_->size() > 0)
+      {
+        bus_->getResidual().setDataUpdated();
+      }
+
+      return 0;
     }
 
     /**
