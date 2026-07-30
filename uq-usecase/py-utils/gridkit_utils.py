@@ -11,7 +11,6 @@ from numbers import Number
 
 import numpy as np
 import pandas as pd
-from scipy.stats import qmc, norm as sp_norm
 
 # ---------------------------------------------------------------------------
 # Monitorable variables by element class
@@ -59,6 +58,8 @@ MONITORABLE_VARS_BY_ELEMENT = {
 
 
 def generate_samples(param_specs, N, seed=None, method="lhs"):
+    from scipy.stats import qmc, norm as sp_norm  # lazy: not needed by m_viz
+
     """
     Sample parameters according to per-spec distributions.
 
