@@ -53,6 +53,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::csr_jac_;
       using Component<scalar_type, index_type>::map_to_csr_;
       using Component<scalar_type, index_type>::allocated_;
+      using Component<scalar_type, index_type>::bound_;
 
     public:
       using ScalarT        = scalar_type;
@@ -91,10 +92,14 @@ namespace GridKit
       int setAbsoluteTolerance(RealT rel_tol) override;
       int evaluateInternalResidual() override;
       int evaluateExternalResidual() override;
+      int scatterExternalResidual(ScalarT* f_root) override;
       int evaluateResidual() override;
       int evaluateJacobian() override;
 
       void updateTime(RealT t, RealT a) override;
+
+      int setVariableIndex(IdxT local_index, IdxT global_index) override;
+      int setResidualIndex(IdxT local_index, IdxT global_index) override;
 
       void addBus(BusT* bus);
       void addComponent(ComponentT* component);
@@ -106,8 +111,13 @@ namespace GridKit
       ComponentT*  getComponent(IdxT gridkit_component_id);
 
     private:
+      size_t findOwningComponent(IdxT local_index) const;
       SignalNodeSetT signal_nodes_;
       std::vector<ComponentT*> components_;
+
+      /// Offset of each component's slice in the system vectors, parallel to
+      /// components_. Populated during allocate().
+      std::vector<IdxT> component_offsets_;
 
       /// Non-owning bus lookup for composer wiring and diagnostics. Buses are
       /// owned and evaluated as ordinary members of components_.
