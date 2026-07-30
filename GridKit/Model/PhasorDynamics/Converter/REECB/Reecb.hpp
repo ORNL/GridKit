@@ -40,7 +40,7 @@ namespace GridKit
         VMEASSAFE, ///< \f$V_\mathrm{safe}^\mathrm{meas}\f$ Safe filtered voltage
         SDIP,      ///< \f$s_\mathrm{dip}\f$ Voltage inside-band control gate
         VERR,      ///< \f$e_V^\mathrm{db}\f$ Deadbanded voltage error
-        IQV,       ///< \f$I_q^\mathrm{inj}\f$ Reactive-current injection candidate
+        IQV,       ///< \f$I_q^\mathrm{inj}\f$ Reactive-current injection
         QREF,      ///< \f$Q^\mathrm{ref}\f$ Selected reactive-power reference
         EQ,        ///< \f$e_Q\f$ Reactive-power control error
         VPIQ,      ///< \f$V_Q^\mathrm{PI}\f$ Reactive-power PI output
@@ -207,8 +207,8 @@ namespace GridKit
         RealT v_off_{1};
         RealT q_on_{0};
         RealT q_off_{1};
-        RealT p_priority_{0};
-        RealT q_priority_{1};
+        RealT pq_on_{0};
+        RealT pq_off_{1};
 
         // Unattached signal setpoints
         ScalarT pe_set_{0};

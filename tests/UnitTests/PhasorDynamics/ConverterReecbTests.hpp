@@ -239,6 +239,7 @@ namespace GridKit
                 scenario_data.parameters[Params::VFlag]  = v_flag;
                 scenario_data.parameters[Params::QFlag]  = q_flag;
                 scenario_data.parameters[Params::Pqflag] = p_priority;
+                scenario_data.parameters[Params::kqv]    = 0.0;
 
                 Fixture<ScalarT> scenario(scenario_data);
                 scenario.attachAllInputs(99.0);
@@ -263,14 +264,17 @@ namespace GridKit
           }
         }
 
-        // Both voltage-band exits exercise the initialization compensation
-        // that removes Iq injection from the selected reactive-control path.
-        for (const RealT terminal_voltage : {static_cast<RealT>(0.6), static_cast<RealT>(1.3)})
+        // An in-band point and both voltage-band exits exercise the direct
+        // Iq-injection compensation during initialization.
+        for (const RealT terminal_voltage :
+             {static_cast<RealT>(0.6), static_cast<RealT>(1.1), static_cast<RealT>(1.3)})
         {
           auto voltage_data                      = makeDynamicData();
-          voltage_data.parameters[Params::QFlag] = false;
+          voltage_data.parameters[Params::QFlag] = true;
           voltage_data.parameters[Params::VFlag] = true;
           voltage_data.parameters[Params::Vref0] = 1.0;
+          voltage_data.parameters[Params::Vmin]  = 0.5;
+          voltage_data.parameters[Params::Vmax]  = 1.4;
 
           Fixture<ScalarT> voltage_scenario(voltage_data, terminal_voltage);
           voltage_scenario.attachAllInputs();
@@ -431,14 +435,14 @@ namespace GridKit
             {index(Vars::EQ), 0.3499999999999999},
             {index(Vars::VPIQ), -0.1000000000000002},
             {index(Vars::EPIV), -0.04999999999999993},
-            {index(Vars::FPORD), -0.1000000000000003},
+            {index(Vars::FPORD), -0.02500000000000002},
             {index(Vars::RPORD), 0.05000000000000004},
             {index(Vars::IQCIRC), 0.3999999999999997},
             {index(Vars::IPCIRC), 0.8100000000000001},
             {index(Vars::IQMAX), 0.1000000000000001},
             {index(Vars::IPMAX), 0.2},
             {index(Vars::IQBASE), -0.3699999999999998},
-            {index(Vars::IQRAW), -0.17},
+            {index(Vars::IQRAW), -0.05000000000000002},
             {index(Vars::IQCMD), -0.1000000000000001},
             {index(Vars::IPCMD), -0.1229166666666667},
         }};
@@ -469,10 +473,10 @@ namespace GridKit
         // Toggle exactly one selector at a time so an accidental swap between
         // PfFlag, VFlag, and QFlag cannot satisfy the same answer key.
         const std::array<FlagCase, 4> cases{{
-            {"all-off selectors", false, false, false, 0.4, -0.55, 0.31},
-            {"PfFlag-only selectors", true, false, false, 0.11149051952976989, -0.8385094804702301, 0.31},
-            {"VFlag-only selectors", false, true, false, 0.4, 0.05, 0.31},
-            {"QFlag-only selectors", false, false, true, 0.4, -0.55, 0.21},
+            {"all-off selectors", false, false, false, 0.4, -0.55, 0.4},
+            {"PfFlag-only selectors", true, false, false, 0.11149051952976989, -0.8385094804702301, 0.4},
+            {"VFlag-only selectors", false, true, false, 0.4, 0.05, 0.4},
+            {"QFlag-only selectors", false, false, true, 0.4, -0.55, 0.3},
         }};
 
         for (const auto& test_case : cases)

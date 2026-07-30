@@ -130,12 +130,12 @@ namespace GridKit
         v_off_  = ONE<RealT> - v_on_;
         q_off_  = ONE<RealT> - q_on_;
 
-        p_priority_ = ZERO<RealT>;
+        pq_on_ = ZERO<RealT>;
         if (Pqflag_)
         {
-          p_priority_ = ONE<RealT>;
+          pq_on_ = ONE<RealT>;
         }
-        q_priority_ = ONE<RealT> - p_priority_;
+        pq_off_ = ONE<RealT> - pq_on_;
       }
 
       /**
@@ -724,8 +724,8 @@ namespace GridKit
           return 1;
         }
 
-        const RealT iqcirc_squared0 = current_limit_squared0 - p_priority_ * ipcmd0_value * ipcmd0_value;
-        const RealT ipcirc_squared0 = current_limit_squared0 - q_priority_ * iqcmd0_value * iqcmd0_value;
+        const RealT iqcirc_squared0 = current_limit_squared0 - pq_on_ * ipcmd0_value * ipcmd0_value;
+        const RealT ipcirc_squared0 = current_limit_squared0 - pq_off_ * iqcmd0_value * iqcmd0_value;
         if (iqcirc_squared0 < -INITIALIZATION_TOLERANCE || ipcirc_squared0 < -INITIALIZATION_TOLERANCE)
         {
           Log::error() << "Reecb: initial current commands violate the selected priority circle\n";
@@ -734,13 +734,12 @@ namespace GridKit
 
         const ScalarT iqcirc0 = static_cast<ScalarT>(std::sqrt(std::max(iqcirc_squared0, ZERO<RealT>)));
         const ScalarT ipcirc0 = static_cast<ScalarT>(std::sqrt(std::max(ipcirc_squared0, ZERO<RealT>)));
-        const ScalarT iqmax0  = q_priority_ * static_cast<ScalarT>(Imax_) + p_priority_ * iqcirc0;
-        const ScalarT ipmax0  = p_priority_ * static_cast<ScalarT>(Imax_) + q_priority_ * ipcirc0;
+        const ScalarT iqmax0  = pq_off_ * static_cast<ScalarT>(Imax_) + pq_on_ * iqcirc0;
+        const ScalarT ipmax0  = pq_on_ * static_cast<ScalarT>(Imax_) + pq_off_ * ipcirc0;
 
-        const ScalarT sdip0  = Math::inside(vt0, Vdip_, Vup_);
-        const ScalarT verr0  = Math::deadband2(static_cast<ScalarT>(vref0) - vmeas0, dbd1_, dbd2_);
-        const ScalarT iqv0   = Math::clamp(kqv_ * verr0, Iql1_, Iqh1_);
-        const ScalarT iqinj0 = (ONE<RealT> - sdip0) * iqv0;
+        const ScalarT sdip0 = Math::inside(vt0, Vdip_, Vup_);
+        const ScalarT verr0 = Math::deadband2(static_cast<ScalarT>(vref0) - vmeas0, dbd1_, dbd2_);
+        const ScalarT iqv0  = Math::clamp(kqv_ * verr0, Iql1_, Iqh1_);
 
         ScalarT iqraw0{};
         if (!solveLimiterInput(iqcmd0, -iqmax0, iqmax0, iqraw0))
@@ -766,7 +765,7 @@ namespace GridKit
         const ScalarT rpord0 = Math::clamp(fpord0, dPmin_, dPmax_);
         const ScalarT pref0  = pord0 + Tpord_ * fpord0;
 
-        const ScalarT iq_control0 = iqraw0 - iqinj0;
+        const ScalarT iq_control0 = iqraw0 - iqv0;
 
         struct ReactiveSeed
         {
@@ -1075,14 +1074,14 @@ namespace GridKit
         f[EQ]        = -eq + Math::clamp(qref, Qmin_, Qmax_) - qgen;
         f[VPIQ]      = -vpiq + Math::clamp(Kqp_ * eq + xpiq, Vmin_, Vmax_);
         f[EPIV]      = -epiv + v_on_ * vpiq + v_off_ * qref - vmeas;
-        f[FPORD]     = -fpord + (pref - pord) / Tpord_;
+        f[FPORD]     = -Tpord_ * fpord + pref - pord;
         f[RPORD]     = -rpord + Math::clamp(fpord, dPmin_, dPmax_);
-        f[IQCIRC]    = -iqcirc * iqcirc + Imax_ * Imax_ - p_priority_ * ipcmd * ipcmd;
-        f[IPCIRC]    = -ipcirc * ipcirc + Imax_ * Imax_ - q_priority_ * iqcmd * iqcmd;
-        f[IQMAX]     = -iqmax + q_priority_ * Imax_ + p_priority_ * iqcirc;
-        f[IPMAX]     = -ipmax + p_priority_ * Imax_ + q_priority_ * ipcirc;
+        f[IQCIRC]    = -iqcirc * iqcirc + Imax_ * Imax_ - pq_on_ * ipcmd * ipcmd;
+        f[IPCIRC]    = -ipcirc * ipcirc + Imax_ * Imax_ - pq_off_ * iqcmd * iqcmd;
+        f[IQMAX]     = -iqmax + pq_off_ * Imax_ + pq_on_ * iqcirc;
+        f[IPMAX]     = -ipmax + pq_on_ * Imax_ + pq_off_ * ipcirc;
         f[IQBASE]    = -iqbase + Math::clamp(Kvp_ * epiv + xpiv, -iqmax, iqmax);
-        f[IQRAW]     = -iqraw + q_on_ * iqbase + q_off_ * qv + (ONE<RealT> - sdip) * iqv;
+        f[IQRAW]     = -iqraw + q_on_ * iqbase + q_off_ * qv + iqv;
         f[IQCMD]     = -iqcmd + Math::clamp(iqraw, -iqmax, iqmax);
         f[IPCMD]     = -ipcmd + Math::clamp(pord / vmeas_safe, ZERO<RealT>, ipmax);
 

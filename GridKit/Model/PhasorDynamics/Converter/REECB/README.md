@@ -35,7 +35,7 @@ $V_{\mathrm{dip}}$                  | [p.u.]   | `Vdip`   | Low-voltage threshol
 $V_{\mathrm{up}}$                   | [p.u.]   | `Vup`    | High-voltage threshold for the voltage-band gate        | 1.15          |
 $D_1^\mathrm{db}$                   | [p.u.]   | `dbd1`   | Lower deadband threshold for voltage-error response     | 0.0           |
 $D_2^\mathrm{db}$                   | [p.u.]   | `dbd2`   | Upper deadband threshold for voltage-error response     | 0.0           |
-$K_{\mathrm{qv}}$                   | [p.u.]   | `kqv`    | Reactive-current injection gain outside the voltage band | 5.0          |
+$K_{\mathrm{qv}}$                   | [p.u.]   | `kqv`    | Reactive-current injection gain                          | 5.0          |
 $I_{q,\mathrm{inj}}^{\min}$         | [p.u.]   | `Iql1`   | Minimum reactive-current injection limit                | -1.1          |
 $I_{q,\mathrm{inj}}^{\max}$         | [p.u.]   | `Iqh1`   | Maximum reactive-current injection limit                | 1.1           |
 $Q^{\max}$                          | [p.u.]   | `Qmax`   | Maximum reactive-power control limit                    | 0.436         |
@@ -104,6 +104,8 @@ Every equation below uses the raised time constants:
     &= 1 - s_V \\
   s_Q^\mathrm{off}
     &= 1 - s_Q \\
+  s_{PQ}^\mathrm{off}
+    &= 1 - s_{PQ} \\
   k_\mathrm{base}
     &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}}
 \end{aligned}
@@ -151,7 +153,7 @@ $V_T$                               | [p.u.]   | Terminal voltage magnitude     
 $V_{\mathrm{safe}}^\mathrm{meas}$   | [p.u.]   | Safe filtered terminal voltage for divider blocks | Lower bounded by 0.01
 $s_{\mathrm{dip}}$                  | [-]      | Smooth voltage inside-band control gate | Approximately 1 inside the voltage band
 $e_V^\mathrm{db}$                   | [p.u.]   | Deadbanded voltage error            |
-$I_q^\mathrm{inj}$                  | [p.u.]   | Reactive-current injection candidate | Component base
+$I_q^\mathrm{inj}$                  | [p.u.]   | Reactive-current injection           | Component base
 $Q^\mathrm{ref}$                    | [p.u.]   | Selected reactive-power reference   |
 $e_Q$                               | [p.u.]   | Reactive-power control error        |
 $V_Q^\mathrm{PI}$                   | [p.u.]   | Reactive-power control PI output    |
@@ -280,9 +282,9 @@ target and smooth approximation.
     + s_V^\mathrm{off}Q^\mathrm{ref}
     - V^\mathrm{meas} \\
   0 &=
-    -f_P^\mathrm{ord}
-    + \dfrac{1}{T_{\mathrm{pord}}}
-      \left(k_\mathrm{base}P^\mathrm{ref} - P^\mathrm{ord}\right) \\
+    -T_{\mathrm{pord}}f_P^\mathrm{ord}
+    + k_\mathrm{base}P^\mathrm{ref}
+    - P^\mathrm{ord} \\
   0 &=
     -r_P^\mathrm{ord}
     + \text{clamp}
@@ -294,15 +296,15 @@ target and smooth approximation.
   0 &=
     -\left(I_p^\mathrm{circ}\right)^2
     + \left(I^{\max}\right)^2
-    - \left(1-s_{PQ}\right)\left(k_\mathrm{base}I_q^\mathrm{cmd}\right)^2 \\
+    - s_{PQ}^\mathrm{off}\left(k_\mathrm{base}I_q^\mathrm{cmd}\right)^2 \\
   0 &=
     -I_q^{\max}
-    + \left(1-s_{PQ}\right)I^{\max}
+    + s_{PQ}^\mathrm{off}I^{\max}
     + s_{PQ}I_q^\mathrm{circ} \\
   0 &=
     -I_p^{\max}
     + s_{PQ}I^{\max}
-    + \left(1-s_{PQ}\right)I_p^\mathrm{circ} \\
+    + s_{PQ}^\mathrm{off}I_p^\mathrm{circ} \\
   0 &=
     -I_q^\mathrm{base}
     + \text{clamp}
@@ -312,7 +314,7 @@ target and smooth approximation.
     -I_q^\mathrm{raw}
     + s_Q I_q^\mathrm{base}
     + s_Q^\mathrm{off}Q_V
-    + \left(1-s_{\mathrm{dip}}\right)I_q^\mathrm{inj} \\
+    + I_q^\mathrm{inj} \\
   0 &=
     -k_\mathrm{base} I_q^\mathrm{cmd}
     + \text{clamp}
@@ -412,9 +414,9 @@ Subscript $0$ denotes initial values; all internal derivatives start at zero:
         I^{\max} & s_{PQ}=1
       \end{cases} \\
   I_{q,0}^{\max}
-    &= (1-s_{PQ})I^{\max}+s_{PQ}I_{q,0}^\mathrm{circ} \\
+    &= s_{PQ}^\mathrm{off}I^{\max}+s_{PQ}I_{q,0}^\mathrm{circ} \\
   I_{p,0}^{\max}
-    &= s_{PQ}I^{\max}+(1-s_{PQ})I_{p,0}^\mathrm{circ}
+    &= s_{PQ}I^{\max}+s_{PQ}^\mathrm{off}I_{p,0}^\mathrm{circ}
 \end{aligned}
 ```
 
@@ -439,7 +441,7 @@ Subscript $0$ denotes initial values; all internal derivatives start at zero:
              -I_{q,0}^{\max},I_{q,0}^{\max}\right) \\
   I_{q,0}^\mathrm{control}
     &= I_{q,0}^\mathrm{raw}
-       -(1-s_{\mathrm{dip},0})I_{q,0}^\mathrm{inj} \\
+       -I_{q,0}^\mathrm{inj} \\
   u_{p,0}
     &= \text{clamp}^{-1}
        \left(I_p^\mathrm{seed};\,0,I_{p,0}^{\max}\right) \\
@@ -525,7 +527,7 @@ Subscript $0$ denotes initial values; all internal derivatives start at zero:
     &= -I_{q,0}^\mathrm{raw}
        +s_Q I_{q,0}^\mathrm{base}
        +s_Q^\mathrm{off}Q_{V,0}
-       +(1-s_{\mathrm{dip},0})I_{q,0}^\mathrm{inj}
+       +I_{q,0}^\mathrm{inj}
 \end{aligned}
 ```
 
