@@ -95,16 +95,8 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        // Resize bus data
-        wb_.resize(2);
-
-        // Resize signal variable data
-        ws_.resize(2);
-        ws_indices_.resize(2);
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
-        ws_[1]         = 0.0;
-        ws_indices_[1] = INVALID_INDEX<IdxT>;
+        // Resize coupling data
+        this->allocateExternalVectors(static_cast<IdxT>(Ieeet1ExternalVariables::MAXIMUM));
 
         // Set output signals
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
@@ -304,13 +296,12 @@ namespace GridKit
       __attribute__((always_inline)) inline int Ieeet1<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
         // Read bus voltage components
-        ScalarT vreal = wb[0];
-        ScalarT vimag = wb[1];
+        ScalarT vreal = y_ext[1];
+        ScalarT vimag = y_ext[2];
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
         // Read Internal Variables
@@ -331,8 +322,8 @@ namespace GridKit
         ScalarT vfx_dot  = yp[3];
 
         // Set signal variable aliases
-        ScalarT omega     = ws[0];
-        ScalarT vs_signal = ws[1];
+        ScalarT omega     = y_ext[0];
+        ScalarT vs_signal = y_ext[3];
 
         // The 'pre-limit' derivative of Vr.
         ScalarT func = (-vr + Ka_ * vtr) / Ta_;
@@ -354,41 +345,63 @@ namespace GridKit
       }
 
       /**
-       * @brief Residual evaluation
+       * @brief Gather external variables and index maps.
        *
        */
       template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::evaluateResidual()
+      void Ieeet1<scalar_type, index_type>::gatherExternalVariables()
       {
         // Set input variables.
         if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
         {
-          ws_[0]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::OMEGA>();
-        }
-
-        // VS signal (stabilizer output, optional)
-        ws_[1]         = 0.0;
-        ws_indices_[1] = INVALID_INDEX<IdxT>;
-        if (signals_.template isAttached<Ieeet1ExternalVariables::VS>())
-        {
-          ws_[1]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
-          ws_indices_[1] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VS>();
+          y_ext_[0]                = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
+          variable_indices_ext_[0] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::OMEGA>();
         }
 
         // Bus voltages
-        wb_[0] = bus_->Vr();
-        wb_[1] = bus_->Vi();
+        y_ext_[1] = bus_->Vr();
+        y_ext_[2] = bus_->Vi();
+        if (bus_->size() > 0)
+        {
+          variable_indices_ext_[1] = bus_->getVariableIndex(0);
+          variable_indices_ext_[2] = bus_->getVariableIndex(1);
+        }
+
+        // VS signal (stabilizer output, optional)
+        y_ext_[3]                = 0.0;
+        variable_indices_ext_[3] = INVALID_INDEX<IdxT>;
+        if (signals_.template isAttached<Ieeet1ExternalVariables::VS>())
+        {
+          y_ext_[3]                = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
+          variable_indices_ext_[3] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VS>();
+        }
+      }
+
+      /**
+       * @brief Residual evaluation
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         // Residual evaluation
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, y_ext_.data(), f);
 
         f_.setDataUpdated();
 
         return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
 
       /**

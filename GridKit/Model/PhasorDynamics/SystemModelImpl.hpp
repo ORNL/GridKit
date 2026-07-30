@@ -735,20 +735,14 @@ namespace GridKit
     }
 
     /**
-     * @brief Compute system residual vector
+     * @brief Compute the residuals each bus and component owns.
      *
      * Buses and components read and write their bound system-vector slices
-     * directly.
-     *
-     * @warning Residuals must be computed for buses, before component
-     * residuals are computed. Buses own residuals for currents
-     * Ir and Ii, but the contributions to these residuals come
-     * from components. Buses assign their residual values, while components
-     * add to those values by in-place adition. This is why (for now) bus
-     * residuals need to be computed first.
+     * directly. Buses assign their residual values first, so that external
+     * residuals can accumulate into them.
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateResidual()
+    int SystemModel<scalar_type, index_type>::evaluateInternalResidual()
     {
       for (const auto& bus : buses_)
       {
@@ -757,8 +751,38 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        component->evaluateResidual();
+        component->evaluateInternalResidual();
       }
+
+      return 0;
+    }
+
+    /**
+     * @brief Accumulate component contributions to residuals owned elsewhere,
+     * e.g. bus current balances.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      for (const auto& component : components_)
+      {
+        component->evaluateExternalResidual();
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Compute system residual vector
+     *
+     * Internal residuals assign every owned entry of the residual vector,
+     * then external residuals accumulate the remaining contributions.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::evaluateResidual()
+    {
+      evaluateInternalResidual();
+      evaluateExternalResidual();
 
       f_.setDataUpdated();
 

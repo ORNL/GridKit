@@ -185,11 +185,8 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        // Resize signal variable data
-        ws_.resize(1);
-        ws_indices_.resize(1);
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
+        // Resize coupling data
+        this->allocateExternalVectors(static_cast<IdxT>(Tgov1ExternalVariables::MAXIMUM));
 
         // Set output signals
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
@@ -299,11 +296,10 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int Tgov1<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT*                  y,
-          const ScalarT*                  yp,
-          [[maybe_unused]] const ScalarT* wb,
-          const ScalarT*                  ws,
-          ScalarT*                        f)
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* y_ext,
+          ScalarT*       f)
       {
         // Read Internal Variables
         ScalarT ptx   = y[0]; // y0 - Ptx
@@ -315,7 +311,7 @@ namespace GridKit
         ScalarT pv_dot  = yp[1];
 
         // Set signal variable aliases
-        ScalarT omega = ws[0];
+        ScalarT omega = y_ext[0];
 
         // The 'pre-limit' target of Pv
         ScalarT func = -pv + (pref_ - omega) / R_;
@@ -335,24 +331,41 @@ namespace GridKit
        * @brief Residuals of system equations
        *
        */
+      /**
+       * @brief Gather external variables and index maps.
+       *
+       */
       template <typename scalar_type, typename index_type>
-      int Tgov1<scalar_type, index_type>::evaluateResidual()
+      void Tgov1<scalar_type, index_type>::gatherExternalVariables()
       {
         // Input Variables
         if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
         {
-          ws_[0]         = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
+          y_ext_[0]                = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+          variable_indices_ext_[0] = signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
         }
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Tgov1<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, y_ext_.data(), f);
 
         f_.setDataUpdated();
 
         return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Tgov1<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
     } // namespace Governor
   } // namespace PhasorDynamics

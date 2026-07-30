@@ -256,6 +256,7 @@ namespace GridKit
         ref_bus2.initialize();
         ref_bus2.evaluateResidual();
         PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, tap, phase);
+        ref_branch.allocate();
 
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus1(Vr1, Vi1);
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus2(Vr2, Vi2);
@@ -266,6 +267,7 @@ namespace GridKit
         test_bus2.initialize();
         test_bus2.evaluateResidual();
         PhasorDynamics::Branch<ScalarT, IdxT> test_branch(&test_bus1, &test_bus2, 1.0, 1.0, 0.0, 0.0);
+        test_branch.allocate();
 
         test_branch.setR(R);
         test_branch.setX(X);
@@ -364,6 +366,8 @@ namespace GridKit
 
         PhasorDynamics::Branch<ScalarT, IdxT> data_branch(&data_bus1, &data_bus2, data);
         PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, 1.0, 0.0);
+        data_branch.allocate();
+        ref_branch.allocate();
 
         data_branch.evaluateResidual();
         ref_branch.evaluateResidual();

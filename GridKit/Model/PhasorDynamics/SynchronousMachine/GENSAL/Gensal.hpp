@@ -74,8 +74,10 @@ namespace GridKit
       using Component<scalar_type, index_type>::time_;
       using Component<scalar_type, index_type>::y_;
       using Component<scalar_type, index_type>::yp_;
-      using Component<scalar_type, index_type>::wb_;
-      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::y_ext_;
+      using Component<scalar_type, index_type>::variable_indices_ext_;
+      using Component<scalar_type, index_type>::residual_indices_ext_;
+      using Component<scalar_type, index_type>::f_ext_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -102,7 +104,9 @@ namespace GridKit
       int initialize() override final;
       int tagDifferentiable() override final;
       int setAbsoluteTolerance(RealT rel_tol) override final;
+      int evaluateInternalResidual() override final;
       int evaluateResidual() override final;
+      int evaluateExternalResidual() override final;
 
       // Still to be implemented
       int evaluateJacobian() override final;
@@ -123,6 +127,7 @@ namespace GridKit
       void initializeParameters(const ModelDataT& data);
       /// Associate variable getter functions with enum values
       void initializeMonitor();
+      void gatherExternalVariables();
       void setDerivedParams();
 
       /**
@@ -167,8 +172,8 @@ namespace GridKit
 
     public:
       __attribute__((always_inline)) inline int evaluateInternalResidual(
-          const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateExternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
@@ -214,10 +219,6 @@ namespace GridKit
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set
       ScalarT efd_set_{0.0};   // TODO remove default initialization and ensure this gets set
-
-      /* Local copies of signal variables */
-      std::vector<ScalarT> ws_;
-      std::vector<IdxT>    ws_indices_;
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
