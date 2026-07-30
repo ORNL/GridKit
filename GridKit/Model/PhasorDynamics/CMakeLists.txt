@@ -34,7 +34,6 @@ target_link_libraries(
 add_subdirectory(Branch)
 add_subdirectory(Bus)
 add_subdirectory(BusFault)
-add_subdirectory(BusToSignalAdapter)
 add_subdirectory(Exciter)
 add_subdirectory(Governor)
 add_subdirectory(Load)

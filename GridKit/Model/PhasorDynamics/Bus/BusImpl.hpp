@@ -187,21 +187,33 @@ namespace GridKit
     }
 
     /*!
-     * @brief PQ bus does not compute residuals, so here we just reset residual values.
+     * @brief Assign the bus current balance rows.
      *
-     * @warning This implementation assumes bus residuals are always evaluated
-     * _before_ component model residuals.
-     *
+     * The bus owns the KCL rows and assigns them to zero; connected
+     * components accumulate their current contributions in the external
+     * residual phase.
      */
     template <typename scalar_type, typename index_type>
-    int Bus<scalar_type, index_type>::evaluateResidual()
+    int Bus<scalar_type, index_type>::evaluateInternalResidual()
     {
-      // std::cout << "Evaluating residual of a PQ bus ...\n";
       auto* f = f_.getData();
 
       f[0] = 0.0;
       f[1] = 0.0;
       f_.setDataUpdated();
+      return 0;
+    }
+
+    /*!
+     * @brief Evaluate the internal residual and external residual
+     * contributions.
+     */
+    template <typename scalar_type, typename index_type>
+    int Bus<scalar_type, index_type>::evaluateResidual()
+    {
+      evaluateInternalResidual();
+      this->evaluateExternalResidual();
+
       return 0;
     }
   } // namespace PhasorDynamics

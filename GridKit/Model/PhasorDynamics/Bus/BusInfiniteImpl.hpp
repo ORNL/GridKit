@@ -161,22 +161,29 @@ namespace GridKit
     }
 
     /*!
-     * @brief Reset slack currents to zero.
+     * @brief Reset the slack current accumulators.
      *
-     * Infinite bus does not compute residuals, so here we just reset
-     * current values to zero. Components connected to the infinite bus
-     * will add their currents to Ir_ and Ii_. The resultant will be slack
-     * current that the infinite bus has to pick up.
-     *
-     * @warning This implementation assumes bus residuals are always evaluated
-     * _before_ component model residuals.
-     *
+     * The infinite bus owns no solver rows. The dummy current accumulators
+     * only serve diagnostics and are reset here.
+     */
+    template <typename scalar_type, typename index_type>
+    int BusInfinite<scalar_type, index_type>::evaluateInternalResidual()
+    {
+      Ir_ = 0.0;
+      Ii_ = 0.0;
+      return 0;
+    }
+
+    /*!
+     * @brief Evaluate the internal residual and external residual
+     * contributions.
      */
     template <typename scalar_type, typename index_type>
     int BusInfinite<scalar_type, index_type>::evaluateResidual()
     {
-      Ir_ = 0.0;
-      Ii_ = 0.0;
+      evaluateInternalResidual();
+      this->evaluateExternalResidual();
+
       return 0;
     }
 

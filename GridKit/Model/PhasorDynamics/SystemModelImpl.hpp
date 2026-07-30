@@ -73,48 +73,6 @@ namespace GridKit
         addSignal(signal);
       }
 
-      // Add bus-to-signal adapters
-      for (const auto& adapterdata : data.adapter)
-      {
-        IdxT bus_index = 0;
-        if (adapterdata.buses.contains(BusToSignalAdapterBuses::bus))
-        {
-          bus_index = adapterdata.buses.at(BusToSignalAdapterBuses::bus);
-        }
-
-        auto* adapter = new BusToSignalAdapter<ScalarT, IdxT>(getBus(bus_index));
-
-        if (adapterdata.signal_outputs.contains(BusToSignalAdapterSignalOutputs::vr))
-        {
-          IdxT           vr    = adapterdata.signal_outputs.at(BusToSignalAdapterSignalOutputs::vr);
-          constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
-          adapter->getSignals().template assignSignalNode<VREAL>(getSignal(vr));
-        }
-
-        if (adapterdata.signal_outputs.contains(BusToSignalAdapterSignalOutputs::vi))
-        {
-          IdxT           vi    = adapterdata.signal_outputs.at(BusToSignalAdapterSignalOutputs::vi);
-          constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
-          adapter->getSignals().template assignSignalNode<VIMAG>(getSignal(vi));
-        }
-
-        if (adapterdata.signal_inputs.contains(BusToSignalAdapterSignalInputs::ir))
-        {
-          IdxT           ir    = adapterdata.signal_inputs.at(BusToSignalAdapterSignalInputs::ir);
-          constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-          adapter->getSignals().template attachSignalNode<IREAL>(getSignal(ir));
-        }
-
-        if (adapterdata.signal_inputs.contains(BusToSignalAdapterSignalInputs::ii))
-        {
-          IdxT           ii    = adapterdata.signal_inputs.at(BusToSignalAdapterSignalInputs::ii);
-          constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
-          adapter->getSignals().template attachSignalNode<IIMAG>(getSignal(ii));
-        }
-
-        addComponent(adapter);
-      }
-
       // Add branches
       for (const auto& branchdata : data.branch)
       {
