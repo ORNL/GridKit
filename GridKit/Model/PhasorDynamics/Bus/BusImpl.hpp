@@ -217,20 +217,33 @@ namespace GridKit
     }
 
     /*!
-     * @brief Reset the current balance to the fault current.
+     * @brief Assign the bus current balance rows.
      *
-     * @warning This implementation assumes bus residuals are always evaluated
-     * _before_ component model residuals.
-     *
+     * The bus owns the KCL rows and assigns the fault current; connected
+     * components accumulate their current contributions in the external
+     * residual phase.
      */
     template <typename scalar_type, typename index_type>
-    int Bus<scalar_type, index_type>::evaluateResidual()
+    int Bus<scalar_type, index_type>::evaluateInternalResidual()
     {
       auto* f = f_.getData();
 
       f[0] = -(fault_g_ * Vr() - fault_b_ * Vi());
       f[1] = -(fault_b_ * Vr() + fault_g_ * Vi());
       f_.setDataUpdated();
+      return 0;
+    }
+
+    /*!
+     * @brief Evaluate the internal residual and external residual
+     * contributions.
+     */
+    template <typename scalar_type, typename index_type>
+    int Bus<scalar_type, index_type>::evaluateResidual()
+    {
+      evaluateInternalResidual();
+      this->evaluateExternalResidual();
+
       return 0;
     }
   } // namespace PhasorDynamics
