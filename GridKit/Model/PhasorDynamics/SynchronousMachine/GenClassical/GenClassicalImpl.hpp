@@ -447,19 +447,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * \brief Residual evaluation and contribution to the connected bus
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int GenClassical<scalar_type, index_type>::evaluateResidual()
-    {
-      evaluateInternalResidual();
-      evaluateExternalResidual();
-
-      return 0;
-    }
-
     template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::setDerivedParams()
     {
