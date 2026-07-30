@@ -170,6 +170,33 @@ def diff_vs_base(
     return cmp
 
 
+def parse_raw_m_bus(m_path: Path) -> pd.DataFrame:
+    """Read Vm/Va directly from an mpc.bus block (no solve).
+
+    Works on any MATPOWER .m file: the raw/unsolved case (Vm/Va = flat or the
+    original TAMU/PowerWorld reference solution embedded by the data provider),
+    or an already-"solved" .m (e.g. GridKit's `solve_pf --output-m` / PowerModels'
+    `--output-m` output) - both are plain MATPOWER files with the same mpc.bus
+    column layout, so this one parser covers both use cases. Returns columns
+    matching `_parse_pf_stdout`'s bus_df (bus_i, V_pu, theta_deg, type) so it can
+    be used interchangeably with solve_pf/pm_solve.jl stdout output in
+    `diff_vs_base`/`pm_summary`/`pf_summary`.
+    """
+    content = m_path.read_text()
+    rows = []
+    for row in _parse_block(content, "bus"):
+        cols = row.split()
+        rows.append(
+            {
+                "bus_i": int(float(cols[0])),
+                "type": int(float(cols[1])),
+                "V_pu": float(cols[7]),
+                "theta_deg": float(cols[8]),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 # ---------------------------------------------------------------------------
 # .m file block manipulation helpers
 # ---------------------------------------------------------------------------
