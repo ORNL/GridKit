@@ -51,16 +51,21 @@ namespace GridKit
       /**
        * Verifies the residual evaluates to zero for the initial conditions
        */
-      TestOutcome zeroInitialResidual(bool status = false)
+      TestOutcome zeroInitialResidual(bool active = false)
       {
         TestStatus success = true;
 
         ScalarT Vr1{1.0}; ///< Bus real voltage
         ScalarT Vi1{1.0}; ///< Bus imaginary voltage
 
-        PhasorDynamics::Bus<ScalarT, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, 0.0, 1e-3);
-        fault.setStatus(status);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(Vr1, Vi1);
+        PhasorDynamics::BusFault<ScalarT, IdxT>   fault(&bus, 0.0, 1e-3);
+        ScalarT                                   active_value{active ? 1.0 : 0.0};
+        IdxT                                      active_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> active_signal;
+        active_signal.set(&active_value, &active_index);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::ACTIVE>(
+            &active_signal);
         bus.allocate();
         bus.initialize();
         fault.allocate();
@@ -88,7 +93,7 @@ namespace GridKit
       /**
        * A test case to verify Jacobian values
        */
-      TestOutcome jacobian(bool status = false)
+      TestOutcome jacobian(bool active = false)
       {
         TestStatus success = true;
 
@@ -96,10 +101,10 @@ namespace GridKit
         RealT X = 1e-3;
 
         // Jacobian via DependencyTracking
-        auto dependency_tracking_jacobian = DependencyTrackingJacobian(R, X, status);
+        auto dependency_tracking_jacobian = DependencyTrackingJacobian(R, X, active);
 
         // Jacobian via Enzyme
-        auto enzyme_jacobian = EnzymeJacobian(R, X, status);
+        auto enzyme_jacobian = EnzymeJacobian(R, X, active);
 
         if (!status)
         {
@@ -123,14 +128,19 @@ namespace GridKit
 
     private:
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
-          const RealT R, const RealT X, const bool status)
+          const RealT R, const RealT X, const bool active)
       {
         DependencyTracking::Variable Vr1{1.0}; ///< Bus-1 real voltage
         DependencyTracking::Variable Vi1{1.0}; ///< Bus-1 imaginary voltage
 
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<DependencyTracking::Variable, IdxT> fault(&bus, R, X);
-        fault.setStatus(status);
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>        bus(Vr1, Vi1);
+        PhasorDynamics::BusFault<DependencyTracking::Variable, IdxT>   fault(&bus, R, X);
+        DependencyTracking::Variable                                   active_value{active ? 1.0 : 0.0};
+        IdxT                                                           active_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> active_signal;
+        active_signal.set(&active_value, &active_index);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::ACTIVE>(
+            &active_signal);
 
         bus.allocate();
         fault.allocate();
@@ -158,14 +168,19 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          const RealT R, const RealT X, const bool status)
+          const RealT R, const RealT X, const bool active)
       {
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
-        PhasorDynamics::Bus<ScalarT, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, R, X);
-        fault.setStatus(status);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(Vr1, Vi1);
+        PhasorDynamics::BusFault<ScalarT, IdxT>   fault(&bus, R, X);
+        ScalarT                                   active_value{active ? 1.0 : 0.0};
+        IdxT                                      active_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> active_signal;
+        active_signal.set(&active_value, &active_index);
+        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::ACTIVE>(
+            &active_signal);
 
         bus.allocate();
         fault.allocate();

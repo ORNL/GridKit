@@ -80,10 +80,13 @@ This is where we store stateful information like connectivity and dispatch, whic
     "online": true,
     "p": 55,
     "q": -12
-}
+},
 "br_id_2":{
     "open": false,
     "tap": 1,
     "phase": 0
+},
+"fault_1":{
+    "active": false
 }
 ```
