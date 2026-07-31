@@ -42,6 +42,7 @@ namespace GridKit
       using namespace Governor;
       using namespace Exciter;
       using namespace Stabilizer;
+      using namespace Converter;
 
       owns_components_ = true;
 

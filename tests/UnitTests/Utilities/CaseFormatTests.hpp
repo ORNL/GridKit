@@ -8,7 +8,6 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
-#include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
@@ -98,6 +97,7 @@ namespace GridKit
         success *= result.bus_fault.size() == 1;
         success *= result.genrou.size() == 1;
         success *= result.gensal.size() == 1;
+        success *= result.regca.size() == 1;
         success *= result.loadz.size() == 0;
 
         success *= result.bus[0].bus_id == 1;

@@ -25,8 +25,6 @@ GridKit uses the smooth HVRCM form shown in the algebraic equations below.
 
 ![](../../../../../docs/Figures/PhasorDynamics_REGCA_Diagram.png)
 
-![](../../../../../docs/Figures/PhasorDynamics_REGCA_Diagram.png)
-
 Figure 1: Generator/Converter REGCA model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
