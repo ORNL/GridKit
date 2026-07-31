@@ -1,0 +1,71 @@
+{
+    "header": {
+        "version": 1,
+        "time": null,
+        "created": "2026-07-31T05:55:01-05:00",
+        "description": "Steady state solution at nominal dispatch"
+    },
+    "buses": {
+        "bus_id_0": {
+            "vr": 1.06,
+            "vi": 0.0,
+            "injections": {}
+        },
+        "bus_id_1": {
+            "vr": 1.0599558398065716,
+            "vi": -0.009675621941024773,
+            "injections": {
+                "genrou_2_1": {
+                    "ir": 0.4723318850980517,
+                    "ii": 0.06727628885191374
+                }
+            }
+        },
+        "bus_id_2": {
+            "vr": 0.9610827543495831,
+            "vi": -0.13122476630506485,
+            "injections": {
+                "load_3_1": {
+                    "ir": -1.6759645095841416,
+                    "ii": 1.0612281268078756
+                },
+                "genrou_3_1": {
+                    "ir": 0.21828245293853565,
+                    "ii": -0.30643985915101485
+                }
+            }
+        }
+    },
+    "devices": {
+        "BR_1_2": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_1_3": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_2_3": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "load_3_1": {
+            "online": true,
+            "p": -1.75,
+            "q": -0.8
+        },
+        "genrou_2_1": {
+            "online": true,
+            "p": 0.5,
+            "q": -0.07588
+        },
+        "genrou_3_1": {
+            "online": true,
+            "p": 0.25,
+            "q": 0.26587
+        }
+    }
+}

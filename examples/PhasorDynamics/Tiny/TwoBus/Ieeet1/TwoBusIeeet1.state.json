@@ -1,0 +1,37 @@
+{
+    "header": {
+        "version": 1,
+        "time": null,
+        "created": "2026-07-31T05:55:01-05:00",
+        "description": "Steady state solution at nominal dispatch"
+    },
+    "buses": {
+        "bus_id_0": {
+            "vr": 0.9949877346411762,
+            "vi": 0.09999703952427966,
+            "injections": {
+                "DV1": {
+                    "ir": 1.0000005862325285,
+                    "ii": 0.0501183043867175
+                }
+            }
+        },
+        "bus_id_1": {
+            "vr": 1.0,
+            "vi": 0.0,
+            "injections": {}
+        }
+    },
+    "devices": {
+        "BR1": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "DV1": {
+            "online": true,
+            "p": 1.0,
+            "q": 0.05013
+        }
+    }
+}
