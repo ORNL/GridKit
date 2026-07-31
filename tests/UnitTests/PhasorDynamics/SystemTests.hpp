@@ -177,6 +177,248 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome busStateInputs()
+      {
+        using namespace PhasorDynamics;
+
+        SystemModelData<ScalarT, IdxT> data;
+        data.bus.resize(2);
+
+        data.bus[0].bus_id            = 4;
+        data.bus[0].bus_type          = BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0               = 10.0;
+        data.bus[0].Vi0               = 20.0;
+        data.bus[0].initial_state     = Model::BusState{};
+        data.bus[0].initial_state->vr = 1.1;
+        data.bus[0].initial_state->vi = -0.1;
+
+        data.bus[1].bus_id            = 5;
+        data.bus[1].bus_type          = BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].Vr0               = 30.0;
+        data.bus[1].Vi0               = 40.0;
+        data.bus[1].initial_state     = Model::BusState{};
+        data.bus[1].initial_state->vr = 0.9;
+        data.bus[1].initial_state->vi = 0.2;
+
+        SystemModel<ScalarT, IdxT> system(data);
+        system.allocate();
+        system.initialize();
+
+        TestStatus success  = true;
+        success            *= isEqual(system.getBus(4)->Vr(), ScalarT{1.1});
+        success            *= isEqual(system.getBus(4)->Vi(), ScalarT{-0.1});
+        success            *= isEqual(system.getBus(5)->Vr(), ScalarT{0.9});
+        success            *= isEqual(system.getBus(5)->Vi(), ScalarT{0.2});
+
+        return success.report(__func__);
+      }
+
+      TestOutcome deviceInputSignals()
+      {
+        using namespace PhasorDynamics;
+
+        SystemModelData<ScalarT, IdxT> data;
+        data.bus.resize(2);
+        data.bus[0].bus_id   = 0;
+        data.bus[0].bus_type = BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = 10.0;
+        data.bus[0].Vi0      = 20.0;
+        data.bus[1].bus_id   = 1;
+        data.bus[1].bus_type = BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].Vr0      = 30.0;
+        data.bus[1].Vi0      = 40.0;
+
+        data.branch.resize(1);
+        auto& branch                               = data.branch[0];
+        branch.disambiguation_string               = "branch_0_1";
+        branch.buses[BranchBuses::bus1]            = 0;
+        branch.buses[BranchBuses::bus2]            = 1;
+        branch.parameters[BranchParameters::R]     = 2.0;
+        branch.parameters[BranchParameters::X]     = 4.0;
+        branch.parameters[BranchParameters::G]     = 0.2;
+        branch.parameters[BranchParameters::B]     = 1.2;
+        branch.parameters[BranchParameters::tap]   = 2.0;
+        branch.parameters[BranchParameters::phase] = 0.25;
+        branch.initial_state                       = Model::DeviceState{};
+        branch.initial_state->tap                  = 1.0;
+        branch.initial_state->phase                = 0.0;
+        branch.initial_state->open                 = true;
+
+        SystemModel<ScalarT, IdxT> system(data);
+        system.allocate();
+        system.initialize();
+        system.evaluateResidual();
+
+        TestStatus success  = true;
+        success            *= isEqual(system.getBus(0)->Ir(), ScalarT{0.0});
+        success            *= isEqual(system.getBus(0)->Ii(), ScalarT{0.0});
+        success            *= isEqual(system.getBus(1)->Ir(), ScalarT{0.0});
+        success            *= isEqual(system.getBus(1)->Ii(), ScalarT{0.0});
+
+        system.setInput("branch_0_1", "open", 0.0);
+        system.evaluateResidual();
+
+        // State tap/phase override the temporary legacy parameters. Reclosing
+        // therefore reproduces the nominal-transformer answer.
+        success *= isEqual(system.getBus(0)->Ir(), ScalarT{17.0});
+        success *= isEqual(system.getBus(0)->Ii(), ScalarT{-10.0});
+        success *= isEqual(system.getBus(1)->Ir(), ScalarT{15.0});
+        success *= isEqual(system.getBus(1)->Ii(), ScalarT{-20.0});
+
+        system.setInput("branch_0_1", "open", 1.0);
+        system.evaluateResidual();
+        success *= isEqual(system.getBus(0)->Ir(), ScalarT{0.0});
+        success *= isEqual(system.getBus(0)->Ii(), ScalarT{0.0});
+        success *= isEqual(system.getBus(1)->Ir(), ScalarT{0.0});
+        success *= isEqual(system.getBus(1)->Ii(), ScalarT{0.0});
+
+        return success.report(__func__);
+      }
+
+      TestOutcome loadZIPStateInputs()
+      {
+        using namespace PhasorDynamics;
+
+        auto makeData = []
+        {
+          SystemModelData<ScalarT, IdxT> data;
+          data.bus.resize(1);
+          data.bus[0].bus_id   = 9;
+          data.bus[0].bus_type = BusData<ScalarT, IdxT>::BusType::SLACK;
+          data.bus[0].Vr0      = 0.6;
+          data.bus[0].Vi0      = 0.8;
+
+          data.loadzip.resize(1);
+          auto& load                                 = data.loadzip[0];
+          load.disambiguation_string                 = "loadzip_9";
+          load.buses[LoadZIPBuses::bus]              = 9;
+          load.parameters[LoadZIPParameters::Pnom]   = 2.0;
+          load.parameters[LoadZIPParameters::Qnom]   = 0.5;
+          load.parameters[LoadZIPParameters::Vnom]   = 0.5;
+          load.parameters[LoadZIPParameters::alphaI] = 0.2;
+          load.parameters[LoadZIPParameters::alphaP] = 0.4;
+          return data;
+        };
+
+        TestStatus success = true;
+
+        // Legacy nominal dispatch remains unchanged during the transition.
+        auto                       legacy_data = makeData();
+        SystemModel<ScalarT, IdxT> legacy_system(legacy_data);
+        legacy_system.allocate();
+        legacy_system.initialize();
+        legacy_system.evaluateResidual();
+        success *= isEqual(legacy_system.getBus(9)->Ir(), ScalarT{-3.84});
+        success *= isEqual(legacy_system.getBus(9)->Ii(), ScalarT{-3.12});
+
+        // State p is a terminal injection at the stored voltage. Missing q
+        // retains the temporary legacy fallback, and irrelevant state is
+        // harmless.
+        auto state_data                             = makeData();
+        state_data.loadzip[0].initial_state         = Model::DeviceState{};
+        state_data.loadzip[0].initial_state->p      = -1.0;
+        state_data.loadzip[0].initial_state->online = true;
+        state_data.loadzip[0].initial_state->open   = true;
+
+        SystemModel<ScalarT, IdxT> state_system(state_data);
+        state_system.allocate();
+        state_system.initialize();
+        state_system.evaluateResidual();
+        success *= isEqual(state_system.getBus(9)->Ir(), ScalarT{-1.56});
+        success *= isEqual(state_system.getBus(9)->Ii(), ScalarT{-0.08});
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        auto* jacobian  = state_system.getCsrJacobian();
+        success        *= jacobian != nullptr;
+        if (jacobian == nullptr)
+        {
+          return success.report(__func__);
+        }
+
+        const IdxT        nnz = jacobian->getNnz();
+        std::vector<IdxT> rows(
+            jacobian->getRowData(), jacobian->getRowData() + state_system.size() + 1);
+        std::vector<IdxT> cols(
+            jacobian->getColData(), jacobian->getColData() + nnz);
+
+        state_system.setInput("loadzip_9", "p", 0.0);
+        state_system.setInput("loadzip_9", "q", 0.0);
+        state_system.initialize();
+        state_system.evaluateResidual();
+        state_system.evaluateJacobian();
+        success *= jacobian->getNnz() == nnz;
+        for (IdxT i = 0; i < state_system.size() + 1; ++i)
+        {
+          success *= jacobian->getRowData()[i] == rows[static_cast<size_t>(i)];
+        }
+        for (IdxT i = 0; i < nnz; ++i)
+        {
+          success *= jacobian->getColData()[i] == cols[static_cast<size_t>(i)];
+        }
+
+        state_system.setInput("loadzip_9", "p", -1.0);
+        state_system.setInput("loadzip_9", "q", -0.25);
+#endif
+
+        state_system.setInput("loadzip_9", "online", 0.0);
+        state_system.evaluateResidual();
+        success *= isEqual(state_system.getBus(9)->Ir(), ScalarT{0.0});
+        success *= isEqual(state_system.getBus(9)->Ii(), ScalarT{0.0});
+
+        state_system.setInput("loadzip_9", "p", -2.0);
+        state_system.setInput("loadzip_9", "q", -0.5);
+        state_system.setInput("loadzip_9", "online", 1.0);
+        state_system.initialize();
+        state_system.evaluateResidual();
+        success *= isEqual(state_system.getBus(9)->Ir(), ScalarT{-1.6});
+        success *= isEqual(state_system.getBus(9)->Ii(), ScalarT{-1.3});
+
+        return success.report(__func__);
+      }
+
+      TestOutcome generatorStateInputs()
+      {
+        using namespace PhasorDynamics;
+
+        SystemModelData<ScalarT, IdxT> data;
+        data.bus.resize(1);
+        data.bus[0].bus_id   = 3;
+        data.bus[0].bus_type = BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = 1.0;
+
+        data.genclassical.resize(1);
+        auto& gen                                   = data.genclassical[0];
+        gen.disambiguation_string                   = "genclassical_3";
+        gen.buses[GenClassicalBuses::bus]           = 3;
+        gen.parameters[GenClassicalParameters::p0]  = 9.0;
+        gen.parameters[GenClassicalParameters::q0]  = 8.0;
+        gen.parameters[GenClassicalParameters::H]   = 0.5;
+        gen.parameters[GenClassicalParameters::D]   = 0.0;
+        gen.parameters[GenClassicalParameters::Ra]  = 0.0;
+        gen.parameters[GenClassicalParameters::Xdp] = 0.5;
+        gen.initial_state                           = Model::DeviceState{};
+        gen.initial_state->p                        = 0.4;
+        gen.initial_state->q                        = -0.2;
+        gen.initial_state->online                   = false;
+        gen.initial_state->tap                      = 7.0; // Irrelevant state is harmless.
+
+        SystemModel<ScalarT, IdxT> system(data);
+        system.allocate();
+        system.initialize();
+        system.evaluateResidual();
+
+        TestStatus success  = true;
+        success            *= isEqual(system.getBus(3)->Ir(), ScalarT{0.0});
+        success            *= isEqual(system.getBus(3)->Ii(), ScalarT{0.0});
+
+        system.setInput("genclassical_3", "online", 1.0);
+        system.evaluateResidual();
+        success *= isEqual(system.getBus(3)->Ir(), ScalarT{0.4});
+        success *= isEqual(system.getBus(3)->Ii(), ScalarT{0.2});
+
+        return success.report(__func__);
+      }
+
       TestOutcome composer()
       {
         TestStatus success = true;

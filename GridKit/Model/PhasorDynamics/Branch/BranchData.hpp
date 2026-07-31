@@ -19,8 +19,8 @@ namespace GridKit
       X,     ///< Line series reactance
       G,     ///< Total shunt conductance
       B,     ///< Total shunt susceptance
-      tap,   ///< Off-nominal tap magnitude on bus1 side
-      phase, ///< Phase shift angle in radians
+      tap,   ///< Legacy fallback for the tap input
+      phase, ///< Legacy fallback for the phase input
     };
 
     /// Buses for a branch
@@ -34,6 +34,9 @@ namespace GridKit
     /// Signal inputs supported for a branch
     enum class BranchSignalInputs : size_t
     {
+      tap,   ///< Off-nominal tap magnitude
+      phase, ///< Phase shift angle in radians
+      open,  ///< Open status (zero is closed, nonzero is open)
       SIZE
     };
 

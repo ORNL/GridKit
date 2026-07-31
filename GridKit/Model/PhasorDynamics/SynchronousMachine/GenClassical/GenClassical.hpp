@@ -29,6 +29,14 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// External variables consumed by a `GenClassical`.
+    enum class GenClassicalExternalVariables : size_t
+    {
+      P,      ///< Initial active-power injection
+      Q,      ///< Initial reactive-power injection
+      ONLINE, ///< In-service status (zero is offline, nonzero is online)
+      MAXIMUM,
+    };
 
     template <typename scalar_type, typename index_type>
     class GenClassical : public Component<scalar_type, index_type>
@@ -98,11 +106,23 @@ namespace GridKit
         ep_set_ = ep;
       }
 
+      /// Get the `ComponentSignals` from this `GenClassical`.
+      auto getSignals()
+          -> ComponentSignals<ScalarT,
+                              IdxT,
+                              NoVariables,
+                              GenClassicalExternalVariables>&
+      {
+        return signals_;
+      }
+
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
-      void initializeMonitor();
-      void setDerivedParams();
+      void    initializeMonitor();
+      void    setDerivedParams();
+      bool    isOnline() const;
+      ScalarT onlineFactor() const;
 
       /**
        * @brief Convert per-unit current or power from system base to machine base.
@@ -154,6 +174,9 @@ namespace GridKit
       /* Identification */
       BusT* bus_;
       IdxT  bus_id_{0};
+
+      /// Component signal extension
+      ComponentSignals<ScalarT, IdxT, NoVariables, GenClassicalExternalVariables> signals_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};

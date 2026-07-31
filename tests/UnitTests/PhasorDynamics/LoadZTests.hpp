@@ -85,6 +85,53 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome reconnectableJacobianStructure()
+      {
+        using Variable = DependencyTracking::Variable;
+
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<Variable, IdxT>   bus(Variable{10.0}, Variable{20.0});
+        PhasorDynamics::LoadZ<Variable, IdxT> load(&bus, 2.0, 4.0);
+
+        Variable                                   online_value{0.0};
+        IdxT                                       online_index{0};
+        PhasorDynamics::SignalNode<Variable, IdxT> online_node;
+        online_node.set(&online_value, &online_index);
+        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZExternalVariables::ONLINE>(&online_node);
+
+        bus.allocate();
+        load.allocate();
+        bus.initialize();
+        load.initialize();
+
+        auto* y = load.y().getData();
+        y[0].setVariableNumber(0);
+        y[1].setVariableNumber(1);
+        load.y().setDataUpdated();
+
+        bus.evaluateResidual();
+        load.evaluateResidual();
+        const auto                    offline_ir_dependencies = bus.Ir().getDependencies();
+        const auto                    offline_ii_dependencies = bus.Ii().getDependencies();
+        const Variable::DependencyMap offline_ir_reference{{0, 0.0}};
+        const Variable::DependencyMap offline_ii_reference{{1, 0.0}};
+        success *= isEqual(offline_ir_dependencies, offline_ir_reference);
+        success *= isEqual(offline_ii_dependencies, offline_ii_reference);
+
+        online_node.init(Variable{1.0});
+        bus.evaluateResidual();
+        load.evaluateResidual();
+        const auto                    online_ir_dependencies = bus.Ir().getDependencies();
+        const auto                    online_ii_dependencies = bus.Ii().getDependencies();
+        const Variable::DependencyMap online_ir_reference{{0, 1.0}};
+        const Variable::DependencyMap online_ii_reference{{1, 1.0}};
+        success *= isEqual(online_ir_dependencies, online_ir_reference);
+        success *= isEqual(online_ii_dependencies, online_ii_reference);
+
+        return success.report(__func__);
+      }
+
       TestOutcome jacobian()
       {
         TestStatus success = true;

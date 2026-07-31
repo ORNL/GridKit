@@ -81,6 +81,7 @@ namespace GridKit
                                                                                                        J_vals_buffer_,
                                                                                                        nnz_);
 
+      const IdxT bus_jacobian_begin = nnz_;
       GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
                                                                                                  static_cast<size_t>(bus_->size()),
@@ -94,6 +95,14 @@ namespace GridKit
                                                                                                  J_cols_buffer_,
                                                                                                  J_vals_buffer_,
                                                                                                  nnz_);
+
+      if (!isOnline())
+      {
+        for (IdxT i = bus_jacobian_begin; i < nnz_; ++i)
+        {
+          J_vals_buffer_[i] = ZERO<RealT>;
+        }
+      }
 
       this->constructCoo();
 

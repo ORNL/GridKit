@@ -15,8 +15,8 @@ namespace GridKit
     /// Initial parameters for a Gensal generator model
     enum class GensalParameters
     {
-      p0,    ///< Initial active power
-      q0,    ///< Initial reactive power
+      p0,    ///< Legacy fallback for the p input
+      q0,    ///< Legacy fallback for the q input
       H,     ///< Rotor inertia
       D,     ///< Damping coefficient
       Ra,    ///< Winding resistance
@@ -43,8 +43,11 @@ namespace GridKit
     /// Signal inputs for a Gensal generator model
     enum class GensalSignalInputs : size_t
     {
-      pmech, ///< Unique ID of the signal providing mechanical power
-      efd,   ///< Unique ID of the signal providing exciter field voltage
+      pmech,  ///< Unique ID of the signal providing mechanical power
+      efd,    ///< Unique ID of the signal providing exciter field voltage
+      p,      ///< Initial active-power injection
+      q,      ///< Initial reactive-power injection
+      online, ///< In-service status (zero is offline, nonzero is online)
       SIZE
     };
 

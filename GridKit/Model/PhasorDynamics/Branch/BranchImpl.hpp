@@ -142,6 +142,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::initialize()
     {
+      updateSignalInputs();
       return 0;
     }
 
@@ -327,21 +328,33 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::terminalCurrent1(ScalarT& Ir, ScalarT& Ii)
     {
+      updateSignalInputs();
+
       Ir = ScalarT{0.0};
       Ii = ScalarT{0.0};
 
       addAdmittanceContribution(g11_, b11_, Vr1(), Vi1(), Ir, Ii);
       addAdmittanceContribution(g12_, b12_, Vr2(), Vi2(), Ir, Ii);
+
+      const RealT in_service  = inServiceFactor();
+      Ir                     *= in_service;
+      Ii                     *= in_service;
     }
 
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::terminalCurrent2(ScalarT& Ir, ScalarT& Ii)
     {
+      updateSignalInputs();
+
       Ir = ScalarT{0.0};
       Ii = ScalarT{0.0};
 
       addAdmittanceContribution(g21_, b21_, Vr1(), Vi1(), Ir, Ii);
       addAdmittanceContribution(g22_, b22_, Vr2(), Vi2(), Ir, Ii);
+
+      const RealT in_service  = inServiceFactor();
+      Ir                     *= in_service;
+      Ii                     *= in_service;
     }
 
     template <typename scalar_type, typename index_type>
@@ -365,6 +378,52 @@ namespace GridKit
       if (data.buses.contains(Buses::bus2))
       {
         bus2_id_ = data.buses.at(Buses::bus2);
+      }
+    }
+
+    /**
+     * @brief Refresh externally supplied operating inputs.
+     *
+     * Operating signals are constant while a solve is running. They may be
+     * changed while the solve is stopped; the next model evaluation observes
+     * the new values and refreshes the cached branch admittance if needed.
+     */
+    template <typename scalar_type, typename index_type>
+    void Branch<scalar_type, index_type>::updateSignalInputs()
+    {
+      bool update_admittance = false;
+
+      if (signals_.template isAttached<BranchExternalVariables::TAP>())
+      {
+        const RealT tap = static_cast<RealT>(
+            signals_.template readExternalVariable<BranchExternalVariables::TAP>());
+        if (tap != tap_)
+        {
+          tap_              = tap;
+          update_admittance = true;
+        }
+      }
+
+      if (signals_.template isAttached<BranchExternalVariables::PHASE>())
+      {
+        const RealT phase = static_cast<RealT>(
+            signals_.template readExternalVariable<BranchExternalVariables::PHASE>());
+        if (phase != phase_)
+        {
+          phase_            = phase;
+          update_admittance = true;
+        }
+      }
+
+      if (signals_.template isAttached<BranchExternalVariables::OPEN>())
+      {
+        open_ = static_cast<RealT>(
+            signals_.template readExternalVariable<BranchExternalVariables::OPEN>());
+      }
+
+      if (update_admittance)
+      {
+        setDerivedParams();
       }
     }
 

@@ -10,6 +10,8 @@ int main()
 
   result += test.constructor();
   result += test.initialization();
+  result += test.signalInputs();
+  result += test.reconnectableJacobianStructure();
   result += test.residual();
   result += test.monitor();
 #ifdef GRIDKIT_ENABLE_ENZYME

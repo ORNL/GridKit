@@ -29,12 +29,24 @@ $R$         | [p.u.]  | Branch series resistance                         |      
 $X$         | [p.u.]  | Branch series reactance                          |               |
 $G$         | [p.u.]  | Total branch shunt conductance                   | 0             |
 $B$         | [p.u.]  | Total branch shunt susceptance                   | 0             |
-$\tau$      | [p.u.]  | Off-nominal tap magnitude on bus-1 side          | 1             | Parameter name: `tap`
-$\theta$    | [rad]   | Phase-shift angle                                | 0             | Parameter name: `phase`
 
-### Parameter Validation
+## Model Inputs
 
-Invalid Branch parameter sets are rejected by the following checks:
+Input   | Symbol     | Units  | Description                                  | Default
+--------|------------|--------|----------------------------------------------|--------
+`tap`   | $\tau$     | [p.u.] | Off-nominal tap magnitude on bus-1 side      | 1
+`phase` | $\theta$   | [rad]  | Phase-shift angle                            | 0
+`open`  | $o$        |        | Open status; zero is closed and nonzero is open | 0
+
+These inputs are constant while a solve is running. They may be changed while
+the solve is stopped; the next model evaluation uses the new values. Legacy
+constructor/data values remain fallbacks when no corresponding input signal is
+attached.
+
+### Configuration Validation
+
+The existing `verify()` method checks the Branch definition and legacy
+constructor/data fallback values:
 
 ```math
 \begin{aligned}
@@ -127,18 +139,20 @@ None.
 
 ### Algebraic Equations
 
-The branch current relation is $0 = -\mathbf{I} + \mathbf{Y}\mathbf{V}$.
+Define the closed indicator as $c(o)=1$ when $o=0$ and $c(o)=0$ otherwise. The
+branch current relation is
+$0 = -\mathbf{I} + c(o)\mathbf{Y}\mathbf{V}$.
 
 ```math
 \begin{aligned}
-  I_{r1} &= G_{11} V_{r1} - B_{11} V_{i1}
-         + G_{12} V_{r2} - B_{12} V_{i2} \\
-  I_{i1} &= B_{11} V_{r1} + G_{11} V_{i1}
-         + B_{12} V_{r2} + G_{12} V_{i2} \\
-  I_{r2} &= G_{21} V_{r1} - B_{21} V_{i1}
-         + G_{22} V_{r2} - B_{22} V_{i2} \\
-  I_{i2} &= B_{21} V_{r1} + G_{21} V_{i1}
-         + B_{22} V_{r2} + G_{22} V_{i2}
+  I_{r1} &= c(o)\left(G_{11} V_{r1} - B_{11} V_{i1}
+         + G_{12} V_{r2} - B_{12} V_{i2}\right) \\
+  I_{i1} &= c(o)\left(B_{11} V_{r1} + G_{11} V_{i1}
+         + B_{12} V_{r2} + G_{12} V_{i2}\right) \\
+  I_{r2} &= c(o)\left(G_{21} V_{r1} - B_{21} V_{i1}
+         + G_{22} V_{r2} - B_{22} V_{i2}\right) \\
+  I_{i2} &= c(o)\left(B_{21} V_{r1} + G_{21} V_{i1}
+         + B_{22} V_{r2} + G_{22} V_{i2}\right)
 \end{aligned}
 ```
 
@@ -147,11 +161,10 @@ positive sign because branch current is oriented entering the bus.
 
 ## Initialization
 
-The Branch model has no internal state to initialize. During construction or
-parameter updates, the component computes $\mathbf{Y}$ from the current
-parameter values. Initial terminal current and power monitor values are
-evaluated from the connected bus voltages. Parameter verification rejects the
-invalid cases listed above.
+The Branch model has no internal state to initialize. It reads `tap`, `phase`,
+and `open`, then computes $\mathbf{Y}$ from the current definition parameters
+and operating inputs. Initial terminal current and power monitor values are
+evaluated from the connected bus voltages.
 
 ## Model Outputs
 

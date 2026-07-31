@@ -5,6 +5,7 @@
 #include <limits>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -375,6 +376,143 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      TestOutcome signalInputs()
+      {
+        // Attached operating signals supersede constructor fallbacks and can
+        // be changed between stopped solve intervals.
+        TestStatus success = true;
+
+        const RealT R{2.0};
+        const RealT X{4.0};
+        const RealT G{0.2};
+        const RealT B{1.2};
+
+        ScalarT tap_value{1.25};
+        ScalarT phase_value{0.3};
+        ScalarT open_value{0.0};
+        IdxT    input_index{INVALID_INDEX<IdxT>};
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> tap_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> phase_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> open_signal;
+        tap_signal.set(&tap_value, &input_index);
+        phase_signal.set(&phase_value, &input_index);
+        open_signal.set(&open_value, &input_index);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
+        bus1.allocate();
+        bus2.allocate();
+        bus1.initialize();
+        bus2.initialize();
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        auto&                                 signals = branch.getSignals();
+        signals.template attachSignalNode<PhasorDynamics::BranchExternalVariables::TAP>(&tap_signal);
+        signals.template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
+        signals.template attachSignalNode<PhasorDynamics::BranchExternalVariables::OPEN>(&open_signal);
+
+        bus1.evaluateResidual();
+        bus2.evaluateResidual();
+        branch.evaluateResidual();
+        success *= isEqual(bus1.Ir(), ScalarT{12.719793434963478});
+        success *= isEqual(bus1.Ii(), ScalarT{-4.047960563981182});
+        success *= isEqual(bus2.Ir(), ScalarT{13.821345956502421});
+        success *= isEqual(bus2.Ii(), ScalarT{-21.182080826645354});
+
+        open_signal.init(ScalarT{1.0});
+        bus1.evaluateResidual();
+        bus2.evaluateResidual();
+        branch.evaluateResidual();
+        success *= isEqual(bus1.Ir(), ScalarT{0.0});
+        success *= isEqual(bus1.Ii(), ScalarT{0.0});
+        success *= isEqual(bus2.Ir(), ScalarT{0.0});
+        success *= isEqual(bus2.Ii(), ScalarT{0.0});
+
+        tap_signal.init(ScalarT{1.0});
+        phase_signal.init(ScalarT{0.0});
+        open_signal.init(ScalarT{0.0});
+        bus1.evaluateResidual();
+        bus2.evaluateResidual();
+        branch.evaluateResidual();
+        success *= isEqual(bus1.Ir(), ScalarT{17.0});
+        success *= isEqual(bus1.Ii(), ScalarT{-10.0});
+        success *= isEqual(bus2.Ir(), ScalarT{15.0});
+        success *= isEqual(bus2.Ii(), ScalarT{-20.0});
+
+        return success.report(__func__);
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome openJacobianStructure()
+      {
+        TestStatus success = true;
+
+        ScalarT                                   open_value{0.0};
+        ScalarT                                   phase_value{0.0};
+        IdxT                                      input_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> open_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> phase_signal;
+        open_signal.set(&open_value, &input_index);
+        phase_signal.set(&phase_value, &input_index);
+
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus2(30.0, 40.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, 0.0, 1.0, 0.0, 0.0);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::OPEN>(&open_signal);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
+
+        bus1.allocate();
+        bus2.allocate();
+        branch.allocate();
+        for (IdxT i = 0; i < bus1.size(); ++i)
+        {
+          bus1.setVariableIndex(i, i);
+          bus1.setResidualIndex(i, i);
+          bus2.setVariableIndex(i, bus1.size() + i);
+          bus2.setResidualIndex(i, bus1.size() + i);
+        }
+
+        branch.evaluateJacobian();
+        auto* jacobian  = branch.getCooJacobian();
+        success        *= jacobian != nullptr;
+        if (jacobian == nullptr)
+        {
+          return success.report(__func__);
+        }
+
+        const IdxT nnz  = jacobian->getNnz();
+        success        *= nnz > 0;
+        std::vector<IdxT> rows(jacobian->getRowData(), jacobian->getRowData() + nnz);
+        std::vector<IdxT> cols(jacobian->getColData(), jacobian->getColData() + nnz);
+
+        open_signal.init(ScalarT{1.0});
+        branch.evaluateJacobian();
+        success *= jacobian->getNnz() == nnz;
+        for (IdxT i = 0; i < nnz; ++i)
+        {
+          success *= jacobian->getRowData()[i] == rows[static_cast<size_t>(i)];
+          success *= jacobian->getColData()[i] == cols[static_cast<size_t>(i)];
+          success *= isEqual(jacobian->getValues()[i], ScalarT{0.0});
+        }
+
+        open_signal.init(ScalarT{0.0});
+        phase_signal.init(ScalarT{0.3});
+        branch.evaluateJacobian();
+        success          *= jacobian->getNnz() == nnz;
+        bool any_nonzero  = false;
+        for (IdxT i = 0; i < nnz; ++i)
+        {
+          success     *= jacobian->getRowData()[i] == rows[static_cast<size_t>(i)];
+          success     *= jacobian->getColData()[i] == cols[static_cast<size_t>(i)];
+          any_nonzero  = any_nonzero || jacobian->getValues()[i] != ScalarT{0.0};
+        }
+        success *= any_nonzero;
+
+        return success.report(__func__);
+      }
+#endif
 
     private:
       std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,

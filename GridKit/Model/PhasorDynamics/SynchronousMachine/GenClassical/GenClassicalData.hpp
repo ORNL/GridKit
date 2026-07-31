@@ -15,8 +15,8 @@ namespace GridKit
     /// Initial parameters for a classical generator model
     enum class GenClassicalParameters
     {
-      p0,  ///< Initial active power
-      q0,  ///< Initial reactive power
+      p0,  ///< Legacy fallback for the p input
+      q0,  ///< Legacy fallback for the q input
       H,   ///< Rotor inertia
       D,   ///< Damping coefficient
       Ra,  ///< Winding resistance
@@ -41,6 +41,9 @@ namespace GridKit
     {
       exciter_signal,  ///< Unique ID of the bus providing the exciter signal
       governor_signal, ///< Unique ID of the bus providing the governor signal
+      p,               ///< Initial active-power injection
+      q,               ///< Initial reactive-power injection
+      online,          ///< In-service status (zero is offline, nonzero is online)
       SIZE
     };
 

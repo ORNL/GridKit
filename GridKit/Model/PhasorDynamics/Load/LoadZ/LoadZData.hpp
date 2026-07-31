@@ -29,6 +29,7 @@ namespace GridKit
     /// Signal inputs supported for a load
     enum class LoadZSignalInputs : size_t
     {
+      online, ///< Connection status (zero is disconnected, nonzero is connected)
       SIZE
     };
 

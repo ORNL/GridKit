@@ -38,6 +38,13 @@ namespace GridKit
         success *= isEqual(bus->Vi(), Vi);
         delete bus;
 
+        bus = new PhasorDynamics::BusInfinite<ScalarT, IdxT>();
+        bus->setVr(Vr);
+        bus->setVi(Vi);
+        success *= isEqual(bus->Vr(), Vr);
+        success *= isEqual(bus->Vi(), Vi);
+        delete bus;
+
         // Create an default bus
         bus = new PhasorDynamics::Bus<ScalarT, IdxT>();
         bus->allocate();
@@ -47,6 +54,15 @@ namespace GridKit
         delete bus;
 
         bus = new PhasorDynamics::Bus<ScalarT, IdxT>(Vr, Vi);
+        bus->allocate();
+        bus->initialize();
+        success *= isEqual(bus->Vr(), Vr);
+        success *= isEqual(bus->Vi(), Vi);
+        delete bus;
+
+        bus = new PhasorDynamics::Bus<ScalarT, IdxT>();
+        bus->setVr(Vr);
+        bus->setVi(Vi);
         bus->allocate();
         bus->initialize();
         success *= isEqual(bus->Vr(), Vr);

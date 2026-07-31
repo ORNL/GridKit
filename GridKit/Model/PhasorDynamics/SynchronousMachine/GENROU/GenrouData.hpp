@@ -15,8 +15,8 @@ namespace GridKit
     /// Initial parameters for a Genrou generator model
     enum class GenrouParameters
     {
-      p0,    ///< Initial active power
-      q0,    ///< Initial reactive power
+      p0,    ///< Legacy fallback for the p input
+      q0,    ///< Legacy fallback for the q input
       H,     ///< Rotor inertia
       D,     ///< Damping coefficient
       Ra,    ///< Winding resistance
@@ -46,8 +46,11 @@ namespace GridKit
     /// Signal inputs for a Genrou generator model
     enum class GenrouSignalInputs : size_t
     {
-      pmech, ///< Unique ID of the signal providing mechanical power
-      efd,   ///< Unique ID of the signal providing exciter field signal
+      pmech,  ///< Unique ID of the signal providing mechanical power
+      efd,    ///< Unique ID of the signal providing exciter field signal
+      p,      ///< Initial active-power injection
+      q,      ///< Initial reactive-power injection
+      online, ///< In-service status (zero is offline, nonzero is online)
       SIZE
     };
 

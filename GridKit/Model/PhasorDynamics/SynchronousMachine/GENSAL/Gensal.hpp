@@ -54,10 +54,13 @@ namespace GridKit
     /// External variables of a `Gensal`
     enum class GensalExternalVariables : size_t
     {
-      VR,  ///< network real voltage
-      VI,  ///< network imaginary voltage
-      PM,  ///< mechanical power
-      EFD, ///< field voltage
+      VR,     ///< network real voltage
+      VI,     ///< network imaginary voltage
+      PM,     ///< mechanical power
+      EFD,    ///< field voltage
+      P,      ///< Initial active-power injection
+      Q,      ///< Initial reactive-power injection
+      ONLINE, ///< In-service status (zero is offline, nonzero is online)
       MAXIMUM,
     };
 
@@ -120,10 +123,12 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
-      void initializeParameters(const ModelDataT& data);
+      void    initializeParameters(const ModelDataT& data);
       /// Associate variable getter functions with enum values
-      void initializeMonitor();
-      void setDerivedParams();
+      void    initializeMonitor();
+      void    setDerivedParams();
+      bool    isOnline() const;
+      ScalarT onlineFactor() const;
 
       /**
        * @brief Convert per-unit current or power from system base to machine base.

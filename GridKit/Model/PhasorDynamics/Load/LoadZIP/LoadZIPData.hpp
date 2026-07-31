@@ -10,8 +10,8 @@ namespace GridKit
     /// Parameters for a loadZIP
     enum class LoadZIPParameters
     {
-      Pnom,   ///< Nominal real power
-      Qnom,   ///< Nominal reactive power
+      Pnom,   ///< Legacy fallback for the p input
+      Qnom,   ///< Legacy fallback for the q input
       Vnom,   ///< Nominal voltage magnitude
       alphaI, ///< Fraction of load represented as constant current
       alphaP, ///< Fraction of load represented as constant power
@@ -27,6 +27,9 @@ namespace GridKit
     /// Signal inputs supported for a loadZIP
     enum class LoadZIPSignalInputs : size_t
     {
+      p,      ///< Initial terminal active-power injection
+      q,      ///< Initial terminal reactive-power injection
+      online, ///< Connection status (zero is disconnected, nonzero is connected)
       SIZE
     };
 

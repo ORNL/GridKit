@@ -221,8 +221,11 @@ namespace GridKit
       auto*       f  = f_.getData();
       evaluateInternalResidual(y, yp, wb_.data(), f);
       evaluateBusResidual(y, yp, wb_.data(), h_.data());
-      Ir() += h_[0];
-      Ii() += h_[1];
+      const ScalarT connected  = online();
+      h_[0]                   *= connected;
+      h_[1]                   *= connected;
+      Ir()                    += h_[0];
+      Ii()                    += h_[1];
       if (bus_->size() > 0)
       {
         bus_->getResidual().setDataUpdated();
@@ -244,6 +247,21 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
+    scalar_type LoadZ<scalar_type, index_type>::online() const
+    {
+      if (signals_.template isAttached<LoadZExternalVariables::ONLINE>())
+      {
+        if (signals_.template readExternalVariable<LoadZExternalVariables::ONLINE>()
+            != ScalarT{ZERO<RealT>})
+        {
+          return ScalarT{ONE<RealT>};
+        }
+        return ScalarT{ZERO<RealT>};
+      }
+      return ScalarT{ONE<RealT>};
+    }
+
+    template <typename scalar_type, typename index_type>
     const Model::VariableMonitorBase* LoadZ<scalar_type, index_type>::getMonitor() const
     {
       return monitor_.get();
@@ -255,9 +273,13 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
 
       monitor_->set(Variable::p, [this]
-                    { return Vr() * y_.getData()[0] + Vi() * y_.getData()[1]; });
+                    {
+                      const ScalarT connected = online();
+                      return connected * (Vr() * y_.getData()[0] + Vi() * y_.getData()[1]); });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * y_.getData()[0] - Vr() * y_.getData()[1]; });
+                    {
+                      const ScalarT connected = online();
+                      return connected * (Vi() * y_.getData()[0] - Vr() * y_.getData()[1]); });
     }
 
   } // namespace PhasorDynamics

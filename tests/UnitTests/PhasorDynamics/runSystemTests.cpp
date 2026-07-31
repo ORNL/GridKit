@@ -10,6 +10,10 @@ int main()
 
   result += test.constructor();
   result += test.stateDataAttachment();
+  result += test.busStateInputs();
+  result += test.deviceInputSignals();
+  result += test.loadZIPStateInputs();
+  result += test.generatorStateInputs();
   result += test.composer();
   result += test.reallocateAfterTopologyChange();
   result += test.modelVectorsAliasSystemStorage();

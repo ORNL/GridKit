@@ -29,8 +29,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT Vnom, RealT alphaI, RealT alphaP)
       : bus_(bus),
-        Pnom_(Pnom),
-        Qnom_(Qnom),
+        p_(-Pnom),
+        q_(-Qnom),
         Vnom_(Vnom),
         alphaI_(alphaI),
         alphaP_(alphaP)
@@ -61,12 +61,12 @@ namespace GridKit
       using Parameter = typename ModelDataT::Parameters;
       if (data.parameters.contains(Parameter::Pnom))
       {
-        Pnom_ = std::get<RealT>(data.parameters.at(Parameter::Pnom));
+        p_ = -std::get<RealT>(data.parameters.at(Parameter::Pnom));
       }
 
       if (data.parameters.contains(Parameter::Qnom))
       {
-        Qnom_ = std::get<RealT>(data.parameters.at(Parameter::Qnom));
+        q_ = -std::get<RealT>(data.parameters.at(Parameter::Qnom));
       }
 
       if (data.parameters.contains(Parameter::Vnom))
@@ -137,8 +137,25 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::initialize()
     {
+      bool set_p = false;
+      bool set_q = false;
+      if (signals_.template isAttached<LoadZIPExternalVariables::P>())
+      {
+        p_    = signals_.template readExternalVariable<LoadZIPExternalVariables::P>();
+        set_p = true;
+      }
+      if (signals_.template isAttached<LoadZIPExternalVariables::Q>())
+      {
+        q_    = signals_.template readExternalVariable<LoadZIPExternalVariables::Q>();
+        set_q = true;
+      }
+      setDerivedParams();
+
       const ScalarT vr = Vr();
       const ScalarT vi = Vi();
+      // The terminal inputs and initialized bus voltage are one initial
+      // condition, so derive their ZIP coefficients together on every reset.
+      setInputDispatchAtVoltage(vr, vi, set_p, set_q);
 
       const RealT   Vnom2 = Vnom_ * Vnom_;
       const ScalarT V2    = vr * vr + vi * vi;
@@ -220,8 +237,11 @@ namespace GridKit
       auto*       f  = f_.getData();
       evaluateInternalResidual(y, yp, wb_.data(), f);
       evaluateBusResidual(y, yp, wb_.data(), h_.data());
-      Ir() += h_[0];
-      Ii() += h_[1];
+      const ScalarT connected  = online();
+      h_[0]                   *= connected;
+      h_[1]                   *= connected;
+      Ir()                    += h_[0];
+      Ii()                    += h_[1];
       if (bus_->size() > 0)
       {
         bus_->getResidual().setDataUpdated();
@@ -266,9 +286,50 @@ namespace GridKit
     {
       const RealT Vnom2 = Vnom_ * Vnom_;
 
-      G_      = Pnom_ / Vnom2;
-      B_      = Qnom_ / Vnom2;
+      G_      = -p_ / Vnom2;
+      B_      = -q_ / Vnom2;
       alphaZ_ = ONE<RealT> - alphaI_ - alphaP_;
+    }
+
+    /**
+     * @brief Convert terminal p/q inputs into the ZIP nominal admittance.
+     */
+    template <typename scalar_type, typename index_type>
+    void LoadZIP<scalar_type, index_type>::setInputDispatchAtVoltage(
+        ScalarT vr,
+        ScalarT vi,
+        bool    set_p,
+        bool    set_q)
+    {
+      const ScalarT V2    = vr * vr + vi * vi;
+      const ScalarT V     = std::sqrt(V2);
+      const RealT   Vnom2 = Vnom_ * Vnom_;
+      const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
+      const ScalarT scale = V2 * zip;
+
+      if (set_p)
+      {
+        G_ = -p_ / scale;
+      }
+      if (set_q)
+      {
+        B_ = -q_ / scale;
+      }
+    }
+
+    template <typename scalar_type, typename index_type>
+    scalar_type LoadZIP<scalar_type, index_type>::online() const
+    {
+      if (signals_.template isAttached<LoadZIPExternalVariables::ONLINE>())
+      {
+        if (signals_.template readExternalVariable<LoadZIPExternalVariables::ONLINE>()
+            != ScalarT{ZERO<RealT>})
+        {
+          return ScalarT{ONE<RealT>};
+        }
+        return ScalarT{ZERO<RealT>};
+      }
+      return ScalarT{ONE<RealT>};
     }
 
     template <typename scalar_type, typename index_type>
@@ -283,15 +344,22 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
 
       monitor_->set(Variable::ir, [this]
-                    { return y_.getData()[0]; });
+                    { return online() * y_.getData()[0]; });
       monitor_->set(Variable::ii, [this]
-                    { return y_.getData()[1]; });
+                    { return online() * y_.getData()[1]; });
       monitor_->set(Variable::im, [this]
-                    { return std::sqrt(y_.getData()[0] * y_.getData()[0] + y_.getData()[1] * y_.getData()[1]); });
+                    {
+                      const ScalarT ir = online() * y_.getData()[0];
+                      const ScalarT ii = online() * y_.getData()[1];
+                      return std::sqrt(ir * ir + ii * ii); });
       monitor_->set(Variable::p, [this]
-                    { return Vr() * y_.getData()[0] + Vi() * y_.getData()[1]; });
+                    {
+                      const ScalarT connected = online();
+                      return connected * (Vr() * y_.getData()[0] + Vi() * y_.getData()[1]); });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * y_.getData()[0] - Vr() * y_.getData()[1]; });
+                    {
+                      const ScalarT connected = online();
+                      return connected * (Vi() * y_.getData()[0] - Vr() * y_.getData()[1]); });
     }
 
   } // namespace PhasorDynamics
