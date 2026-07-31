@@ -1,0 +1,122 @@
+name: ST3C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0]
+  - name: KA
+    symbol: 'K_{\mathrm{A}}'
+    description: Voltage regulator gain
+    unit: pu
+    typical_values: [200]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Thyristor bridge firing control equivalent time constant
+    unit: s
+    typical_values: [0]
+  - name: TB
+    symbol: 'T_{\mathrm{B}}'
+    description: Voltage regulator denominator (lag) time constant
+    unit: s
+    typical_values: [10, 6.67]
+  - name: TC
+    symbol: 'T_{\mathrm{C}}'
+    description: Voltage regulator numerator (lead) time constant
+    unit: s
+    typical_values: [1]
+  - name: VRmax
+    symbol: 'V_{\mathrm{Rmax}}'
+    description: Maximum voltage regulator output
+    unit: pu
+    typical_values: [10]
+  - name: VRmin
+    symbol: 'V_{\mathrm{Rmin}}'
+    description: Minimum voltage regulator output
+    unit: pu
+    typical_values: [-10]
+  - name: VImax
+    symbol: 'V_{\mathrm{Imax}}'
+    description: Maximum voltage error (regulator input)
+    unit: pu
+    typical_values: [0.2]
+  - name: VImin
+    symbol: 'V_{\mathrm{Imin}}'
+    description: Minimum voltage error (regulator input)
+    unit: pu
+    typical_values: [-0.2]
+  - name: KM
+    symbol: 'K_{\mathrm{M}}'
+    description: Forward gain of inner loop field regulator
+    unit: pu
+    typical_values: [7.93, 7.04]
+  - name: TM
+    symbol: 'T_{\mathrm{M}}'
+    description: Forward time constant of inner loop field regulator
+    unit: s
+    typical_values: [0.4 a]
+  - name: VMmax
+    symbol: 'V_{\mathrm{Mmax}}'
+    description: Maximum output of field current regulator
+    unit: pu
+    typical_values: [1]
+  - name: VMmin
+    symbol: 'V_{\mathrm{Mmin}}'
+    description: Minimum output of field current regulator
+    unit: pu
+    typical_values: [0]
+  - name: KG
+    symbol: 'K_{\mathrm{G}}'
+    description: Feedback gain of field current regulator
+    unit: pu
+    typical_values: [1]
+  - name: VGmax
+    symbol: 'V_{\mathrm{Gmax}}'
+    description: Maximum feedback voltage for field current regulator
+    unit: pu
+    typical_values: [5.8, 6.53]
+  - name: SW1
+    symbol: '\mathrm{SW}_{1}'
+    description: Power source selector
+    unit: null
+    typical_values: [pos. A]
+  - name: KC
+    symbol: 'K_{\mathrm{C}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0.2, 1.1]
+  - name: KP
+    symbol: 'K_{\mathrm{P}}'
+    description: Potential circuit (voltage) gain coefficient
+    unit: pu
+    typical_values: [6.15, 4.37]
+  - name: KI
+    symbol: 'K_{\mathrm{I}}'
+    description: Compound circuit (current) gain coefficient
+    unit: pu
+    typical_values: [0, 4.83]
+  - name: XL
+    symbol: 'X_{\mathrm{L}}'
+    description: Reactance associated with potential source
+    unit: pu
+    typical_values: [0.081, 0.09]
+  - name: θP
+    symbol: '\theta_{\mathrm{P}}'
+    description: Potential circuit phase angle (degrees)
+    unit: degrees
+    typical_values: [0 b, 20]
+  - name: VBmax
+    symbol: 'V_{\mathrm{Bmax}}'
+    description: Maximum available exciter voltage
+    unit: pu
+    typical_values: [6.9, 8.63]

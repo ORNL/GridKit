@@ -1,0 +1,107 @@
+name: PSS5C
+parameters:
+  - name: KVL
+    symbol: 'K_{\mathrm{VL}}'
+    description: Very low band gain
+    unit: pu
+    typical_values: [0.5]
+  - name: FVL
+    symbol: 'F_{\mathrm{VL}}'
+    description: Very low band central frequency
+    unit: Hz
+    typical_values: [0.01]
+  - name: VVLmax
+    symbol: 'V_{\mathrm{VLmax}}'
+    description: Very low band upper limit
+    unit: pu
+    typical_values: [0.01]
+  - name: VVLmin
+    symbol: 'V_{\mathrm{VLmin}}'
+    description: Very low band lower limit
+    unit: pu
+    typical_values: [-0.01]
+  - name: KL
+    symbol: 'K_{\mathrm{L}}'
+    description: Low band gain
+    unit: pu
+    typical_values: [3]
+  - name: FL
+    symbol: 'F_{\mathrm{L}}'
+    description: Low band central frequency
+    unit: Hz
+    typical_values: [0.07]
+  - name: VLmax
+    symbol: 'V_{\mathrm{Lmax}}'
+    description: Low band upper limit
+    unit: pu
+    typical_values: [0.075]
+  - name: VLmin
+    symbol: 'V_{\mathrm{Lmin}}'
+    description: Low band lower limit
+    unit: pu
+    typical_values: [-0.075]
+  - name: KI
+    symbol: 'K_{\mathrm{I}}'
+    description: Intermediate band gain
+    unit: pu
+    typical_values: [20]
+  - name: FI
+    symbol: 'F_{\mathrm{I}}'
+    description: Intermediate band central frequency
+    unit: Hz
+    typical_values: [0.6]
+  - name: VImax
+    symbol: 'V_{\mathrm{Imax}}'
+    description: Intermediate band upper limit
+    unit: pu
+    typical_values: [0.6]
+  - name: VImin
+    symbol: 'V_{\mathrm{Imin}}'
+    description: Intermediate band lower limit
+    unit: pu
+    typical_values: [-0.6]
+  - name: KH
+    symbol: 'K_{\mathrm{H}}'
+    description: High band gain
+    unit: pu
+    typical_values: [80]
+  - name: FH
+    symbol: 'F_{\mathrm{H}}'
+    description: High band central frequency
+    unit: Hz
+    typical_values: [9]
+  - name: VHmax
+    symbol: 'V_{\mathrm{Hmax}}'
+    description: High band upper limit
+    unit: pu
+    typical_values: [0.6]
+  - name: VHmin
+    symbol: 'V_{\mathrm{Hmin}}'
+    description: High band lower limit
+    unit: pu
+    typical_values: [-0.6]
+  - name: k1
+    symbol: 'k_{1}'
+    description: null
+    unit: null
+    typical_values: [5.736]
+  - name: k2
+    symbol: 'k_{2}'
+    description: null
+    unit: null
+    typical_values: [6.883]
+  - name: k3
+    symbol: 'k_{3}'
+    description: null
+    unit: null
+    typical_values: [8.259]
+  - name: VSTMAX
+    symbol: 'V_{\mathrm{STMAX}}'
+    description: Maximum PSS output
+    unit: pu
+    typical_values: [0.15]
+  - name: VSTMIN
+    symbol: 'V_{\mathrm{STMIN}}'
+    description: Minimum PSS output
+    unit: pu
+    typical_values: [-0.15]

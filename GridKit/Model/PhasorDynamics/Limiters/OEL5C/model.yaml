@@ -1,0 +1,137 @@
+name: OEL5C
+parameters:
+  - name: IFDpu
+    symbol: 'I_{\mathrm{FDpu}}'
+    description: OEL inverse time integrator pickup level
+    unit: pu
+    typical_values: [1.02]
+  - name: IFDlim
+    symbol: 'I_{\mathrm{FDlim}}'
+    description: OEL inverse time limit active level
+    unit: pu.s
+    typical_values: [6.58]
+  - name: VOELmax1
+    symbol: 'V_{\mathrm{OELmax1}}'
+    description: OEL inverse time time upper limit
+    unit: pu.s
+    typical_values: [9.49]
+  - name: TOEL
+    symbol: 'T_{\mathrm{OEL}}'
+    description: OEL inverse time integrator time constant
+    unit: s
+    typical_values: [1]
+  - name: KIFDT
+    symbol: 'K_{\mathrm{IFDT}}'
+    description: OEL inverse time leak gain
+    unit: pu
+    typical_values: [0.0043]
+  - name: K
+    symbol: 'K'
+    description: OEL lead-lag gain
+    unit: pu
+    typical_values: [1, 0]
+  - name: TCoel
+    symbol: 'T_{\mathrm{Coel}}'
+    description: OEL lead time constant
+    unit: s
+    typical_values: [0, 0.9]
+  - name: TBoel
+    symbol: 'T_{\mathrm{Boel}}'
+    description: OEL lag time constant
+    unit: s
+    typical_values: [0, 0.32]
+  - name: IFDpulev
+    symbol: 'I_{\mathrm{FDpulev}}'
+    description: OEL activation logic pickup level
+    unit: pu
+    typical_values: [1.4]
+  - name: TIFDlev
+    symbol: 'T_{\mathrm{IFDlev}}'
+    description: OEL activation logic timer setpoint
+    unit: s
+    typical_values: [1]
+  - name: IFDref1
+    symbol: 'I_{\mathrm{FDref1}}'
+    description: OEL reference 1
+    unit: pu
+    typical_values: [1.25]
+  - name: IFDref2
+    symbol: 'I_{\mathrm{FDref2}}'
+    description: OEL reference 2
+    unit: pu
+    typical_values: [1]
+  - name: KPoel
+    symbol: 'K_{\mathrm{Poel}}'
+    description: OEL proportional gain
+    unit: pu
+    typical_values: [0.46, 2.861, 1.0753]
+  - name: KIoel
+    symbol: 'K_{\mathrm{Ioel}}'
+    description: OEL integral gain
+    unit: pu/s
+    typical_values: [17.36, 8.94, 0]
+  - name: VOELmax
+    symbol: 'V_{\mathrm{OELmax}}'
+    description: OEL PI control upper limit
+    unit: pu
+    typical_values: [1]
+  - name: VOELmin
+    symbol: 'V_{\mathrm{OELmin}}'
+    description: OEL PI control lower limit
+    unit: pu
+    typical_values: [-0.99]
+  - name: KPvfe
+    symbol: 'K_{\mathrm{Pvfe}}'
+    description: Exciter field current regulator proportional gain
+    unit: pu
+    typical_values: [0, 1.522]
+  - name: KIvfe
+    symbol: 'K_{\mathrm{Ivfe}}'
+    description: Exciter field current regulator integral gain
+    unit: pu/s
+    typical_values: [0, 169.1]
+  - name: VVFEmax
+    symbol: 'V_{\mathrm{VFEmax}}'
+    description: Exciter field current regulator upper limit
+    unit: pu
+    typical_values: [1]
+  - name: VVFEmin
+    symbol: 'V_{\mathrm{VFEmin}}'
+    description: Exciter field current regulator lower limit
+    unit: pu
+    typical_values: [-0.99]
+  - name: KSCALE1
+    symbol: 'K_{\mathrm{SCALE1}}'
+    description: Scale factor for OEL input
+    unit: null
+    typical_values: [0.295, 0.3503, 0.2296]
+  - name: TF2
+    symbol: 'T_{\mathrm{F2}}'
+    description: OEL input or exciter field current transducer time constant
+    unit: s
+    typical_values: [0, 1.22]
+  - name: KSCALE2
+    symbol: 'K_{\mathrm{SCALE2}}'
+    description: Scale factor I /I FEbase FErated
+    unit: null
+    typical_values: [0, 0.2317]
+  - name: VFEref
+    symbol: 'V_{\mathrm{FEref}}'
+    description: Exciter field current reference setpoint
+    unit: pu
+    typical_values: [0, 2.151]
+  - name: SW1
+    symbol: '\mathrm{SW}_{1}'
+    description: OEL reference logic switch
+    unit: null
+    typical_values: [pos. A, pos. B]
+  - name: Ibias
+    symbol: 'I_{\mathrm{bias}}'
+    description: OEL reference bias
+    unit: pu
+    typical_values: [1, 2.15]
+  - name: K1
+    symbol: 'K_{1}'
+    description: Exponent for inverse time function
+    unit: null
+    typical_values: [1]
