@@ -1,0 +1,62 @@
+name: AC4C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0]
+  - name: TB
+    symbol: 'T_{\mathrm{B}}'
+    description: Regulator denominator (lag) time constant
+    unit: s
+    typical_values: [10]
+  - name: TC
+    symbol: 'T_{\mathrm{C}}'
+    description: Regulator numerator (lead) time constant
+    unit: s
+    typical_values: [1]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Regulator output time constant
+    unit: s
+    typical_values: [0.015]
+  - name: VImax
+    symbol: 'V_{\mathrm{Imax}}'
+    description: Voltage regulator input (voltage error) maximum limit
+    unit: pu
+    typical_values: [10]
+  - name: VImin
+    symbol: 'V_{\mathrm{Imin}}'
+    description: Voltage regulator input (voltage error) minimum limit
+    unit: pu
+    typical_values: [-10]
+  - name: VRmax
+    symbol: 'V_{\mathrm{Rmax}}'
+    description: Maximum regulator output
+    unit: pu
+    typical_values: [5.64]
+  - name: VRmin
+    symbol: 'V_{\mathrm{Rmin}}'
+    description: Minimum regulator output
+    unit: pu
+    typical_values: [-4.53]
+  - name: KA
+    symbol: 'K_{\mathrm{A}}'
+    description: Regulator output gain
+    unit: pu
+    typical_values: [200]
+  - name: KC
+    symbol: 'K_{\mathrm{C}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0]

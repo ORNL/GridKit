@@ -1,0 +1,152 @@
+name: AC3C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0]
+  - name: KPR
+    symbol: 'K_{\mathrm{PR}}'
+    description: Voltage regulator proportional gain
+    unit: pu
+    typical_values: [1]
+  - name: KIR
+    symbol: 'K_{\mathrm{IR}}'
+    description: Voltage regulator integral gain
+    unit: pu/s
+    typical_values: [0]
+  - name: KDR
+    symbol: 'K_{\mathrm{DR}}'
+    description: Voltage regulator derivative gain
+    unit: pu.s
+    typical_values: [0]
+  - name: TDR
+    symbol: 'T_{\mathrm{DR}}'
+    description: Lag time constant for derivative channel of PID controller
+    unit: s
+    typical_values: [1]
+  - name: VPIDmax
+    symbol: 'V_{\mathrm{PIDmax}}'
+    description: Maximum PID regulator output
+    unit: pu
+    typical_values: [3.2]
+  - name: VPIDmin
+    symbol: 'V_{\mathrm{PIDmin}}'
+    description: Minimum PID regulator output
+    unit: pu
+    typical_values: [-3.2]
+  - name: TC
+    symbol: 'T_{\mathrm{C}}'
+    description: Regulator numerator (lead) time constant
+    unit: s
+    typical_values: [0]
+  - name: TB
+    symbol: 'T_{\mathrm{B}}'
+    description: Regulator denominator (lag) time constant
+    unit: s
+    typical_values: [0]
+  - name: KA
+    symbol: 'K_{\mathrm{A}}'
+    description: Regulator output gain
+    unit: pu
+    typical_values: [45.62]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Regulator output time constant
+    unit: s
+    typical_values: [0.013]
+  - name: VAmax
+    symbol: 'V_{\mathrm{Amax}}'
+    description: Maximum regulator output
+    unit: pu
+    typical_values: [1]
+  - name: VAmin
+    symbol: 'V_{\mathrm{Amin}}'
+    description: Minimum regulator output
+    unit: pu
+    typical_values: [-0.95]
+  - name: TE
+    symbol: 'T_{\mathrm{E}}'
+    description: Exciter field time constant
+    unit: s
+    typical_values: [1.17]
+  - name: TF
+    symbol: 'T_{\mathrm{F}}'
+    description: Rate feedback time constant
+    unit: s
+    typical_values: [1]
+  - name: EFDN
+    symbol: 'E_{\mathrm{FDN}}'
+    description: Value of E at which feedback gain changes FD
+    unit: pu
+    typical_values: [2.36]
+  - name: VEmin
+    symbol: 'V_{\mathrm{Emin}}'
+    description: Minimum exciter voltage output
+    unit: pu
+    typical_values: [0.1]
+  - name: E1
+    symbol: 'E_{1}'
+    description: Exciter output voltage for saturation factor S (E ) E 1
+    unit: pu
+    typical_values: [6.24]
+  - name: SE(E1)
+    symbol: 'S_{\mathrm{E}}(E_{1})'
+    description: Exciter saturation factor at exciter output voltage E 1
+    unit: null
+    typical_values: [1.143]
+  - name: E2
+    symbol: 'E_{2}'
+    description: Exciter output voltage for saturation factor S (E ) E 2
+    unit: pu
+    typical_values: [4.68]
+  - name: SE(E2)
+    symbol: 'S_{\mathrm{E}}(E_{2})'
+    description: Exciter saturation factor at exciter output voltage E 2
+    unit: null
+    typical_values: [0.1]
+  - name: KR
+    symbol: 'K_{\mathrm{R}}'
+    description: Gain associated with regulator and alternator field power supply
+    unit: pu
+    typical_values: [3.77]
+  - name: KC
+    symbol: 'K_{\mathrm{C}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0.104]
+  - name: KD
+    symbol: 'K_{\mathrm{D}}'
+    description: Demagnetizing factor, function of exciter alternator reactances
+    unit: pu
+    typical_values: [0.499]
+  - name: KE
+    symbol: 'K_{\mathrm{E}}'
+    description: Exciter field proportional constant
+    unit: pu
+    typical_values: [1.0]
+  - name: KF
+    symbol: 'K_{\mathrm{F}}'
+    description: Rate feedback excitation system stabilizer gain
+    unit: pu
+    typical_values: [0.143]
+  - name: KN
+    symbol: 'K_{\mathrm{N}}'
+    description: Rate feedback excitation system stabilizer gain
+    unit: pu
+    typical_values: [0.05]
+  - name: VFEmax
+    symbol: 'V_{\mathrm{FEmax}}'
+    description: Exciter field current limit
+    unit: pu
+    typical_values: [16]

@@ -1,0 +1,62 @@
+name: PF1
+parameters:
+  - name: Tslew
+    symbol: 'T_{\mathrm{slew}}'
+    description: Voltage adjuster travel time
+    unit: s
+    typical_values: [300]
+  - name: VREFmax
+    symbol: 'V_{\mathrm{REFmax}}'
+    description: Voltage adjuster maximum output
+    unit: pu
+    typical_values: [1.1]
+  - name: VREFmin
+    symbol: 'V_{\mathrm{REFmin}}'
+    description: Voltage adjuster minimum output
+    unit: pu
+    typical_values: [0.9]
+  - name: Ton
+    symbol: 'T_{\mathrm{on}}'
+    description: Voltage adjuster pulse generator time on
+    unit: s
+    typical_values: [0.1]
+  - name: Toff
+    symbol: 'T_{\mathrm{off}}'
+    description: Voltage adjuster pulse generator time off
+    unit: s
+    typical_values: [0.5]
+  - name: VADJF
+    symbol: 'V_{\mathrm{ADJF}}'
+    description: Voltage adjuster bypass of pulse generator
+    unit: null
+    typical_values: [0]
+  - name: PFREFnorm
+    symbol: '\mathrm{PF}_{\mathrm{REFnorm}}'
+    description: Power factor controller normalized reference setpoint
+    unit: pu
+    typical_values: [0.95]
+  - name: VITmin
+    symbol: 'V_{\mathrm{ITmin}}'
+    description: Power factor controller minimum terminal current limit
+    unit: pu
+    typical_values: [0.1]
+  - name: VVTmin
+    symbol: 'V_{\mathrm{VTmin}}'
+    description: Power factor controller minimum terminal voltage limit
+    unit: pu
+    typical_values: [0.95]
+  - name: VVTmax
+    symbol: 'V_{\mathrm{VTmax}}'
+    description: Power factor controller maximum terminal voltage limit
+    unit: pu
+    typical_values: [1.05]
+  - name: VPFC_BW
+    symbol: 'V_{\mathrm{PFC_BW}}'
+    description: Power factor controller deadband magnitude
+    unit: pu
+    typical_values: [0.02]
+  - name: TPFC
+    symbol: 'T_{\mathrm{PFC}}'
+    description: Power factor controller delay time
+    unit: s
+    typical_values: [0.5]

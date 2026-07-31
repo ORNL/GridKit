@@ -1,0 +1,87 @@
+name: ST7C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0]
+  - name: TG
+    symbol: 'T_{\mathrm{G}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [1]
+  - name: TF
+    symbol: 'T_{\mathrm{F}}'
+    description: Voltage regulator denominator (lag) time constant
+    unit: s
+    typical_values: [1]
+  - name: Vmax
+    symbol: 'V_{\mathrm{max}}'
+    description: Maximum voltage reference
+    unit: pu
+    typical_values: [1.1]
+  - name: Vmin
+    symbol: 'V_{\mathrm{min}}'
+    description: Minimum voltage reference
+    unit: pu
+    typical_values: [0.9]
+  - name: KPA
+    symbol: 'K_{\mathrm{PA}}'
+    description: Voltage regulator gain
+    unit: pu
+    typical_values: [40]
+  - name: TB
+    symbol: 'T_{\mathrm{B}}'
+    description: Voltage regulator denominator (lag) time constant
+    unit: s
+    typical_values: [1]
+  - name: TC
+    symbol: 'T_{\mathrm{C}}'
+    description: Voltage regulator numerator (lead) time constant
+    unit: s
+    typical_values: [1]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Thyristor bridge firing control equivalent time constant
+    unit: s
+    typical_values: [0]
+  - name: VRmax
+    symbol: 'V_{\mathrm{Rmax}}'
+    description: Maximum regulator output
+    unit: pu
+    typical_values: [5]
+  - name: VRmin
+    symbol: 'V_{\mathrm{Rmin}}'
+    description: Minimum regulator output
+    unit: pu
+    typical_values: [-4.5]
+  - name: KL
+    symbol: 'K_{\mathrm{L}}'
+    description: Minimum excitation limit gain
+    unit: pu
+    typical_values: [1]
+  - name: KH
+    symbol: 'K_{\mathrm{H}}'
+    description: Maximum excitation limit gain
+    unit: pu
+    typical_values: [1]
+  - name: KIA
+    symbol: 'K_{\mathrm{IA}}'
+    description: PI regulator feedback gain
+    unit: pu
+    typical_values: [1]
+  - name: TIA
+    symbol: 'T_{\mathrm{IA}}'
+    description: PI regulator feedback time constant
+    unit: s
+    typical_values: [3]

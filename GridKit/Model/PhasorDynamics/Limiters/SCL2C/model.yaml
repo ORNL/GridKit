@@ -1,0 +1,347 @@
+name: SCL2C
+parameters:
+  - name: TB1oel
+    symbol: 'T_{\mathrm{B1oel}}'
+    description: Overexcited regulator denominator (lag) time constant 1
+    unit: s
+    typical_values: [0.1, 12.5]
+  - name: TC1oel
+    symbol: 'T_{\mathrm{C1oel}}'
+    description: Overexcited regulator numerator (lead) time constant 1
+    unit: s
+    typical_values: [0.1, 1.5]
+  - name: TB2oel
+    symbol: 'T_{\mathrm{B2oel}}'
+    description: Overexcited regulator denominator (lag) time constant 2
+    unit: s
+    typical_values: [0.1]
+  - name: TC2oel
+    symbol: 'T_{\mathrm{C2oel}}'
+    description: Overexcited regulator numerator (lead) time constant 2
+    unit: s
+    typical_values: [0.1]
+  - name: KPoel
+    symbol: 'K_{\mathrm{Poel}}'
+    description: Overexcited PID regulator proportional gain
+    unit: pu
+    typical_values: [0.5, 250, 0.3]
+  - name: KIoel
+    symbol: 'K_{\mathrm{Ioel}}'
+    description: Overexcited PID regulator integral gain
+    unit: pu
+    typical_values: [0, 1]
+  - name: KDoel
+    symbol: 'K_{\mathrm{Doel}}'
+    description: Overexcited PID regulator differential gain
+    unit: pu
+    typical_values: [0]
+  - name: TDoel
+    symbol: 'T_{\mathrm{Doel}}'
+    description: Overexcited PID regulator differential time constant
+    unit: s
+    typical_values: [0.1]
+  - name: VOELmax3
+    symbol: 'V_{\mathrm{OELmax3}}'
+    description: Maximum OEL PID output limit
+    unit: pu
+    typical_values: [100, 0]
+  - name: VOELmin3
+    symbol: 'V_{\mathrm{OELmin3}}'
+    description: Minimum OEL PID output limit
+    unit: pu
+    typical_values: [-100, -0.1]
+  - name: VOELmax2
+    symbol: 'V_{\mathrm{OELmax2}}'
+    description: Maximum OEL lead-lag 1 output limit
+    unit: pu
+    typical_values: [100, 20, 0]
+  - name: VOELmin2
+    symbol: 'V_{\mathrm{OELmin2}}'
+    description: Minimum OEL lead-lag 1 output limit
+    unit: pu
+    typical_values: [-100, -20, -0.1]
+  - name: VOELmax1
+    symbol: 'V_{\mathrm{OELmax1}}'
+    description: Maximum OEL output limit
+    unit: pu
+    typical_values: [10, 0]
+  - name: VOELmin1
+    symbol: 'V_{\mathrm{OELmin1}}'
+    description: Minimum OEL output limit
+    unit: pu
+    typical_values: [-10, -8.7, -0.1]
+  - name: TB1uel
+    symbol: 'T_{\mathrm{B1uel}}'
+    description: Underexcited regulator denominator (lag) time constant 1
+    unit: s
+    typical_values: [0.1, 12.5]
+  - name: TC1uel
+    symbol: 'T_{\mathrm{C1uel}}'
+    description: Underexcited regulator numerator (lead) time constant 1
+    unit: s
+    typical_values: [0.1, 1.5]
+  - name: TB2uel
+    symbol: 'T_{\mathrm{B2uel}}'
+    description: Underexcited regulator denominator (lag) time constant 2
+    unit: s
+    typical_values: [0.1]
+  - name: TC2uel
+    symbol: 'T_{\mathrm{C2uel}}'
+    description: Underexcited regulator numerator (lead) time constant 2
+    unit: s
+    typical_values: [0.1]
+  - name: KPuel
+    symbol: 'K_{\mathrm{Puel}}'
+    description: Underexcited PID regulator proportional gain
+    unit: pu
+    typical_values: [0.5, 250, 0.3]
+  - name: KIuel
+    symbol: 'K_{\mathrm{Iuel}}'
+    description: Underexcited PID regulator integral gain
+    unit: pu
+    typical_values: [0, 1]
+  - name: KDuel
+    symbol: 'K_{\mathrm{Duel}}'
+    description: Underexcited PID regulator differential gain
+    unit: pu
+    typical_values: [0]
+  - name: TDuel
+    symbol: 'T_{\mathrm{Duel}}'
+    description: Underexcited PID regulator differential time constant
+    unit: s
+    typical_values: [0.1]
+  - name: VUELmax3
+    symbol: 'V_{\mathrm{UELmax3}}'
+    description: Maximum UEL PID output limit
+    unit: pu
+    typical_values: [100, 0.1]
+  - name: VUELmin3
+    symbol: 'V_{\mathrm{UELmin3}}'
+    description: Minimum UEL PID output limit
+    unit: pu
+    typical_values: [-100, 0]
+  - name: VUELmax2
+    symbol: 'V_{\mathrm{UELmax2}}'
+    description: Maximum UEL lead-lag 1 output limit
+    unit: pu
+    typical_values: [100, 0.1]
+  - name: VUELmin2
+    symbol: 'V_{\mathrm{UELmin2}}'
+    description: Minimum UEL lead-lag 1 output limit
+    unit: pu
+    typical_values: [-100, 0]
+  - name: VUELmax1
+    symbol: 'V_{\mathrm{UELmax1}}'
+    description: Maximum UEL output limit
+    unit: pu
+    typical_values: [10, 0.1]
+  - name: VUELmin1
+    symbol: 'V_{\mathrm{UELmin1}}'
+    description: Minimum UEL output limit
+    unit: pu
+    typical_values: [-10, -8.7, 0]
+  - name: Ireset
+    symbol: 'I_{\mathrm{reset}}'
+    description: SCL reset-reference, if inactive
+    unit: pu
+    typical_values: [100]
+  - name: TenOEL
+    symbol: 'T_{\mathrm{enOEL}}'
+    description: Overexcited activation delay time
+    unit: s
+    typical_values: [0.01]
+  - name: TenUEL
+    symbol: 'T_{\mathrm{enUEL}}'
+    description: Underexcited activation delay time
+    unit: s
+    typical_values: [0]
+  - name: Toff
+    symbol: 'T_{\mathrm{off}}'
+    description: SCL reset delay time
+    unit: s
+    typical_values: [5]
+  - name: ITHoff
+    symbol: 'I_{\mathrm{THoff}}'
+    description: SCL reset threshold value
+    unit: pu
+    typical_values: [0.05]
+  - name: TIQoel
+    symbol: 'T_{\mathrm{IQoel}}'
+    description: Overexcited reactive current time constant
+    unit: s
+    typical_values: [0.01]
+  - name: KIQoel
+    symbol: 'K_{\mathrm{IQoel}}'
+    description: Overexcited reactive current scaling factor
+    unit: pu/pu
+    typical_values: [1]
+  - name: TIPoel
+    symbol: 'T_{\mathrm{IPoel}}'
+    description: Overexcited active current time constant
+    unit: s
+    typical_values: [0.01]
+  - name: KIPoel
+    symbol: 'K_{\mathrm{IPoel}}'
+    description: Overexcited active current scaling factor
+    unit: pu/pu
+    typical_values: [1]
+  - name: TIQuel
+    symbol: 'T_{\mathrm{IQuel}}'
+    description: Underexcited reactive current time constant
+    unit: s
+    typical_values: [0.01]
+  - name: KIQuel
+    symbol: 'K_{\mathrm{IQuel}}'
+    description: Underexcited reactive current scaling factor
+    unit: pu/pu
+    typical_values: [1]
+  - name: TIPuel
+    symbol: 'T_{\mathrm{IPuel}}'
+    description: Underexcited active current time constant
+    unit: s
+    typical_values: [0.01]
+  - name: KIPuel
+    symbol: 'K_{\mathrm{IPuel}}'
+    description: Underexcited active current scaling factor
+    unit: pu/pu
+    typical_values: [1]
+  - name: TITscl
+    symbol: 'T_{\mathrm{ITscl}}'
+    description: Stator current transducer time constant
+    unit: s
+    typical_values: [0.01]
+  - name: ITFpu
+    symbol: 'I_{\mathrm{TFpu}}'
+    description: SCL thermal reference for inverse time calculations
+    unit: pu
+    typical_values: [1.1]
+  - name: Iinst
+    symbol: 'I_{\mathrm{inst}}'
+    description: SCL instantaneous stator current limit
+    unit: pu
+    typical_values: [5]
+  - name: IinstUEL
+    symbol: 'I_{\mathrm{instUEL}}'
+    description: Underexcited region instantaneous stator current limit
+    unit: pu
+    typical_values: [1.1]
+  - name: Ilim
+    symbol: 'I_{\mathrm{lim}}'
+    description: SCL thermal stator current limit
+    unit: pu
+    typical_values: [1.1]
+  - name: TAoel
+    symbol: 'T_{\mathrm{Aoel}}'
+    description: SCL reference filter time constant
+    unit: s
+    typical_values: [0.04]
+  - name: c1
+    symbol: 'c_{1}'
+    description: SCL exponent for calculation of I ERRinv1
+    unit: pu
+    typical_values: [0]
+  - name: K1
+    symbol: 'K_{1}'
+    description: SCL gain for calculation of I ERRinv1
+    unit: pu/pu
+    typical_values: [0]
+  - name: c2
+    symbol: 'c_{2}'
+    description: SCL exponent for calculation of I c ERRinv2
+    unit: pu
+    typical_values: [2]
+  - name: K2
+    symbol: 'K_{2}'
+    description: SCL gain for calculation of I c ERRinv2
+    unit: pu/pu
+    typical_values: [0.0333]
+  - name: VINVmax
+    symbol: 'V_{\mathrm{INVmax}}'
+    description: SCL maximum inverse time output
+    unit: pu
+    typical_values: [100]
+  - name: VINVmin
+    symbol: 'V_{\mathrm{INVmin}}'
+    description: SCL minimum inverse time output
+    unit: pu
+    typical_values: [0]
+  - name: Fixedru
+    symbol: '\mathrm{Fixed}_{\mathrm{ru}}'
+    description: SCL fixed delay time output
+    unit: pu
+    typical_values: [0]
+  - name: Fixedrd
+    symbol: '\mathrm{Fixed}_{\mathrm{rd}}'
+    description: SCL fixed cooling-down time output
+    unit: pu
+    typical_values: [-0.001]
+  - name: TSCL
+    symbol: 'T_{\mathrm{SCL}}'
+    description: SCL timer reference
+    unit: pu
+    typical_values: [1]
+  - name: Tmax
+    symbol: 'T_{\mathrm{max}}'
+    description: SCL timer maximum level
+    unit: pu
+    typical_values: [1]
+  - name: Tmin
+    symbol: 'T_{\mathrm{min}}'
+    description: SCL timer minimum level
+    unit: pu
+    typical_values: [0]
+  - name: KFB
+    symbol: 'K_{\mathrm{FB}}'
+    description: SCL timer feedback gain
+    unit: pu
+    typical_values: [0]
+  - name: SW1
+    symbol: '\mathrm{SW1}'
+    description: OEL reference ramp logic selection
+    unit: null
+    typical_values: [0]
+  - name: Krd
+    symbol: 'K_{\mathrm{rd}}'
+    description: SCL reference ramp-down rate
+    unit: pu/s
+    typical_values: [-1000]
+  - name: Kru
+    symbol: 'K_{\mathrm{ru}}'
+    description: SCL reference ramp-up rate
+    unit: pu/s
+    typical_values: [1000]
+  - name: KZRU
+    symbol: 'K_{\mathrm{ZRU}}'
+    description: SCL thermal reference release threshold
+    unit: pu
+    typical_values: [0.99]
+  - name: TVTscl
+    symbol: 'T_{\mathrm{VTscl}}'
+    description: Terminal voltage transducer time constant
+    unit: s
+    typical_values: [0.01]
+  - name: VTmin
+    symbol: 'V_{\mathrm{Tmin}}'
+    description: SCL minimum voltage reference value OEL
+    unit: pu
+    typical_values: [0.9]
+  - name: VTreset
+    symbol: 'V_{\mathrm{Treset}}'
+    description: SCL voltage reset value b, d OEL
+    unit: pu
+    typical_values: [0.8]
+  - name: IQminOEL
+    symbol: 'I_{\mathrm{QminOEL}}'
+    description: SCL minimum reactive current reference value OEL
+    unit: pu
+    typical_values: [0.02]
+  - name: IQmaxUEL
+    symbol: 'I_{\mathrm{QmaxUEL}}'
+    description: SCL maximum reactive current reference value UEL
+    unit: pu
+    typical_values: [-0.02]
+  - name: KPref
+    symbol: 'K_{\mathrm{Pref}}'
+    description: SCL reference scaling factor based on active current
+    unit: pu
+    typical_values: [0]

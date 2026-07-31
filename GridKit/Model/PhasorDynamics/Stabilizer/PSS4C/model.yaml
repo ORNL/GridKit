@@ -1,0 +1,392 @@
+name: PSS4C
+parameters:
+  - name: KVL
+    symbol: 'K_{\mathrm{VL}}'
+    description: Very low band gain
+    unit: pu
+    typical_values: [0.5]
+  - name: KVL1
+    symbol: 'K_{\mathrm{VL1}}'
+    description: Very low band differential filter gain
+    unit: pu
+    typical_values: [66]
+  - name: KVL11
+    symbol: 'K_{\mathrm{VL11}}'
+    description: Very low band first lead-lag block coefficient
+    unit: pu
+    typical_values: [1]
+  - name: TVL1
+    symbol: 'T_{\mathrm{VL1}}'
+    description: Very low band numerator time constant (first lead-lag block)
+    unit: s
+    typical_values: [12.1]
+  - name: TVL2
+    symbol: 'T_{\mathrm{VL2}}'
+    description: Very low band denominator time constant (first lead-lag block)
+    unit: s
+    typical_values: [14.5]
+  - name: TVL3
+    symbol: 'T_{\mathrm{VL3}}'
+    description: Very low band numerator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TVL4
+    symbol: 'T_{\mathrm{VL4}}'
+    description: Very low band denominator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TVL5
+    symbol: 'T_{\mathrm{VL5}}'
+    description: Very low band numerator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TVL6
+    symbol: 'T_{\mathrm{VL6}}'
+    description: Very low band denominator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: KVL2
+    symbol: 'K_{\mathrm{VL2}}'
+    description: Very low band differential filter gain
+    unit: pu
+    typical_values: [66]
+  - name: KVL17
+    symbol: 'K_{\mathrm{VL17}}'
+    description: Very low band first lead-lag block coefficient
+    unit: pu
+    typical_values: [1]
+  - name: TVL7
+    symbol: 'T_{\mathrm{VL7}}'
+    description: Very low band numerator time constant (first lead-lag block)
+    unit: s
+    typical_values: [14.5]
+  - name: TVL8
+    symbol: 'T_{\mathrm{VL8}}'
+    description: Very low band denominator time constant (first lead-lag block)
+    unit: s
+    typical_values: [17.4]
+  - name: TVL9
+    symbol: 'T_{\mathrm{VL9}}'
+    description: Very low band numerator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TVL10
+    symbol: 'T_{\mathrm{VL10}}'
+    description: Very low band denominator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TVL11
+    symbol: 'T_{\mathrm{VL11}}'
+    description: Very low band numerator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TVL12
+    symbol: 'T_{\mathrm{VL12}}'
+    description: Very low band denominator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: VVLmax
+    symbol: 'V_{\mathrm{VLmax}}'
+    description: Very low band upper limit
+    unit: pu
+    typical_values: [0.01]
+  - name: VVLmin
+    symbol: 'V_{\mathrm{VLmin}}'
+    description: Very low band lower limit
+    unit: pu
+    typical_values: [-0.01]
+  - name: KL
+    symbol: 'K_{\mathrm{L}}'
+    description: Low band gain
+    unit: pu
+    typical_values: [3]
+  - name: KL1
+    symbol: 'K_{\mathrm{L1}}'
+    description: Low band differential filter gain
+    unit: pu
+    typical_values: [66]
+  - name: KL11
+    symbol: 'K_{\mathrm{L11}}'
+    description: Low band first lead-lag block coefficient
+    unit: pu
+    typical_values: [1]
+  - name: TL1
+    symbol: 'T_{\mathrm{L1}}'
+    description: Low band numerator time constant (first lead-lag block)
+    unit: s
+    typical_values: [1.73]
+  - name: TL2
+    symbol: 'T_{\mathrm{L2}}'
+    description: Low band denominator time constant (first lead-lag block)
+    unit: s
+    typical_values: [2.075]
+  - name: TL3
+    symbol: 'T_{\mathrm{L3}}'
+    description: Low band numerator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TL4
+    symbol: 'T_{\mathrm{L4}}'
+    description: Low band denominator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TL5
+    symbol: 'T_{\mathrm{L5}}'
+    description: Low band numerator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TL6
+    symbol: 'T_{\mathrm{L6}}'
+    description: Low band denominator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: KL2
+    symbol: 'K_{\mathrm{L2}}'
+    description: Low band differential filter gain
+    unit: pu
+    typical_values: [66]
+  - name: KL17
+    symbol: 'K_{\mathrm{L17}}'
+    description: Low band first lead-lag block coefficient
+    unit: pu
+    typical_values: [1]
+  - name: TL7
+    symbol: 'T_{\mathrm{L7}}'
+    description: Low band numerator time constant (first lead-lag block)
+    unit: s
+    typical_values: [2.075]
+  - name: TL8
+    symbol: 'T_{\mathrm{L8}}'
+    description: Low band denominator time constant (first lead-lag block)
+    unit: s
+    typical_values: [2.491]
+  - name: TL9
+    symbol: 'T_{\mathrm{L9}}'
+    description: Low band numerator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TL10
+    symbol: 'T_{\mathrm{L10}}'
+    description: Low band denominator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TL11
+    symbol: 'T_{\mathrm{L11}}'
+    description: Low band numerator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TL12
+    symbol: 'T_{\mathrm{L12}}'
+    description: Low band denominator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: VLmax
+    symbol: 'V_{\mathrm{Lmax}}'
+    description: Low band upper limit
+    unit: pu
+    typical_values: [0.075]
+  - name: VLmin
+    symbol: 'V_{\mathrm{Lmin}}'
+    description: Low band lower limit
+    unit: pu
+    typical_values: [-0.075]
+  - name: KI
+    symbol: 'K_{\mathrm{I}}'
+    description: Intermediate band gain
+    unit: pu
+    typical_values: [20]
+  - name: KI1
+    symbol: 'K_{\mathrm{I1}}'
+    description: Intermediate band differential filter gain
+    unit: pu
+    typical_values: [66]
+  - name: KI11
+    symbol: 'K_{\mathrm{I11}}'
+    description: Intermediate band first lead-lag block coefficient
+    unit: pu
+    typical_values: [1]
+  - name: TI1
+    symbol: 'T_{\mathrm{I1}}'
+    description: Intermediate band numerator time constant (first lead-lag block)
+    unit: s
+    typical_values: [0.2018]
+  - name: TI2
+    symbol: 'T_{\mathrm{I2}}'
+    description: Intermediate band denominator time constant (first block)
+    unit: s
+    typical_values: [0.2421]
+  - name: TI3
+    symbol: 'T_{\mathrm{I3}}'
+    description: Intermediate band numerator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TI4
+    symbol: 'T_{\mathrm{I4}}'
+    description: Intermediate band denominator time constant (second block)
+    unit: s
+    typical_values: [0]
+  - name: TI5
+    symbol: 'T_{\mathrm{I5}}'
+    description: Intermediate band numerator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TI6
+    symbol: 'T_{\mathrm{I6}}'
+    description: Intermediate band denominator time constant (third block)
+    unit: s
+    typical_values: [0]
+  - name: KI2
+    symbol: 'K_{\mathrm{I2}}'
+    description: Intermediate band differential filter gain
+    unit: pu
+    typical_values: [66]
+  - name: KI17
+    symbol: 'K_{\mathrm{I17}}'
+    description: Intermediate band first lead-lag block coefficient
+    unit: pu
+    typical_values: [1]
+  - name: TI7
+    symbol: 'T_{\mathrm{I7}}'
+    description: Intermediate band numerator time constant (first lead-lag block)
+    unit: s
+    typical_values: [0.2421]
+  - name: TI8
+    symbol: 'T_{\mathrm{I8}}'
+    description: Intermediate band denominator time constant (first block)
+    unit: s
+    typical_values: [0.2906]
+  - name: TI9
+    symbol: 'T_{\mathrm{I9}}'
+    description: Intermediate band numerator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TI10
+    symbol: 'T_{\mathrm{I10}}'
+    description: Intermediate band denominator time constant (second block)
+    unit: s
+    typical_values: [0]
+  - name: TI11
+    symbol: 'T_{\mathrm{I11}}'
+    description: Intermediate band numerator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TI12
+    symbol: 'T_{\mathrm{I12}}'
+    description: Intermediate band denominator time constant (third block)
+    unit: s
+    typical_values: [0]
+  - name: VImax
+    symbol: 'V_{\mathrm{Imax}}'
+    description: Intermediate band upper limit
+    unit: pu
+    typical_values: [0.6]
+  - name: VImin
+    symbol: 'V_{\mathrm{Imin}}'
+    description: Intermediate band lower limit
+    unit: pu
+    typical_values: [-0.6]
+  - name: KH
+    symbol: 'K_{\mathrm{H}}'
+    description: High band gain
+    unit: pu
+    typical_values: [80]
+  - name: KH1
+    symbol: 'K_{\mathrm{H1}}'
+    description: High band differential filter gain
+    unit: pu
+    typical_values: [66]
+  - name: KH11
+    symbol: 'K_{\mathrm{H11}}'
+    description: High band first lead-lag block coefficient
+    unit: pu
+    typical_values: [1]
+  - name: TH1
+    symbol: 'T_{\mathrm{H1}}'
+    description: High band numerator time constant (first lead-lag block)
+    unit: s
+    typical_values: [0.01345]
+  - name: TH2
+    symbol: 'T_{\mathrm{H2}}'
+    description: High band denominator time constant (first lead-lag block)
+    unit: s
+    typical_values: [0.01614]
+  - name: TH3
+    symbol: 'T_{\mathrm{H3}}'
+    description: High band numerator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TH4
+    symbol: 'T_{\mathrm{H4}}'
+    description: High band denominator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TH5
+    symbol: 'T_{\mathrm{H5}}'
+    description: High band numerator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TH6
+    symbol: 'T_{\mathrm{H6}}'
+    description: High band denominator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: KH2
+    symbol: 'K_{\mathrm{H2}}'
+    description: High band differential filter gain
+    unit: pu
+    typical_values: [66]
+  - name: KH17
+    symbol: 'K_{\mathrm{H17}}'
+    description: High band first lead-lag block coefficient
+    unit: pu
+    typical_values: [1]
+  - name: TH7
+    symbol: 'T_{\mathrm{H7}}'
+    description: High band numerator time constant (first lead-lag block)
+    unit: s
+    typical_values: [0.01614]
+  - name: TH8
+    symbol: 'T_{\mathrm{H8}}'
+    description: High band denominator time constant (first lead-lag block)
+    unit: s
+    typical_values: [0.01937]
+  - name: TH9
+    symbol: 'T_{\mathrm{H9}}'
+    description: High band numerator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TH10
+    symbol: 'T_{\mathrm{H10}}'
+    description: High band denominator time constant (second lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TH11
+    symbol: 'T_{\mathrm{H11}}'
+    description: High band numerator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: TH12
+    symbol: 'T_{\mathrm{H12}}'
+    description: High band denominator time constant (third lead-lag block)
+    unit: s
+    typical_values: [0]
+  - name: VHmax
+    symbol: 'V_{\mathrm{Hmax}}'
+    description: High band upper limit
+    unit: pu
+    typical_values: [0.6]
+  - name: VHmin
+    symbol: 'V_{\mathrm{Hmin}}'
+    description: High band lower limit
+    unit: pu
+    typical_values: [-0.6]
+  - name: VSTMAX
+    symbol: 'V_{\mathrm{STMAX}}'
+    description: Maximum PSS output
+    unit: pu
+    typical_values: [0.15]
+  - name: VSTMIN
+    symbol: 'V_{\mathrm{STMIN}}'
+    description: Minimum PSS output
+    unit: pu
+    typical_values: [-0.15]

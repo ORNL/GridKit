@@ -1,0 +1,87 @@
+name: DC1C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0]
+  - name: KA
+    symbol: 'K_{\mathrm{A}}'
+    description: Regulator output gain
+    unit: pu
+    typical_values: [46]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Regulator time constant
+    unit: s
+    typical_values: [0.06]
+  - name: TB
+    symbol: 'T_{\mathrm{B}}'
+    description: Regulator denominator (lag) time constant
+    unit: s
+    typical_values: [0]
+  - name: TC
+    symbol: 'T_{\mathrm{C}}'
+    description: Regulator numerator (lead) time constant
+    unit: s
+    typical_values: [0]
+  - name: KE
+    symbol: 'K_{\mathrm{E}}'
+    description: Exciter field proportional constant
+    unit: pu
+    typical_values: [a]
+  - name: TE
+    symbol: 'T_{\mathrm{E}}'
+    description: Exciter field time constant
+    unit: s
+    typical_values: [0.46]
+  - name: VRMAX
+    symbol: 'V_{\mathrm{RMAX}}'
+    description: Maximum controller output
+    unit: pu
+    typical_values: [1]
+  - name: VRMIN
+    symbol: 'V_{\mathrm{RMIN}}'
+    description: Minimum controller output
+    unit: pu
+    typical_values: [-0.9]
+  - name: KF
+    symbol: 'K_{\mathrm{F}}'
+    description: Rate feedback gain
+    unit: pu
+    typical_values: [0.1]
+  - name: TF
+    symbol: 'T_{\mathrm{F}}'
+    description: Rate feedback time constant
+    unit: s
+    typical_values: [1]
+  - name: E1
+    symbol: 'E_{1}'
+    description: Exciter output voltage for saturation factor S (E ) E 1
+    unit: pu
+    typical_values: [3.1]
+  - name: SE1
+    symbol: 'S_{\mathrm{E1}}'
+    description: Exciter saturation factor at exciter output voltage E 1
+    unit: null
+    typical_values: [0.33]
+  - name: E2
+    symbol: 'E_{2}'
+    description: Exciter output voltage for saturation factor S (E ) E 2
+    unit: pu
+    typical_values: [2.3]
+  - name: SE2
+    symbol: 'S_{\mathrm{E2}}'
+    description: Exciter saturation factor at exciter output voltage E 2
+    unit: null
+    typical_values: [0.1]
