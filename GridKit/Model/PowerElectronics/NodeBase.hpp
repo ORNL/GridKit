@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Model/PowerElectronics/ExternalConnection.hpp>
 
 namespace GridKit
 {
@@ -102,29 +103,37 @@ namespace GridKit
       }
 
       /**
-       * @brief Create the mappings from local to global indices
+       * @brief Create the mappings from local to global indices for a node variable (either internal or external),
+       * to be used from an attached component. \see CircuitComponent::setExternalConnectionNodes()
        *
-       * @param local_index
-       * @param global_index
-       * @return int
+       * @param local_index The index of the local variable
+       * @param connection The necessary connection information for the variable
+       *
+       * @pre `local_index` *must* be the index of an external variable. As of now, using this method
+       * to set information for a local variable will silently discard the unnecessary information, but
+       * this may change in the future.
        */
-      int setExternalConnectionNodes(IdxT local_index, IdxT global_index)
+      int setExternalConnectionNodes(IdxT local_index, ExternalConnection<ScalarT, IdxT> connection)
       {
-        connection_nodes_[local_index] = global_index;
+        y_ext_[local_index]            = connection.y_;
+        yp_ext_[local_index]           = connection.yp_;
+        f_ext_[local_index]            = connection.f_;
+        connection_nodes_[local_index] = connection.idx_;
         return 0;
       }
 
       /**
-       * @brief Given the location of value in the local vector map to global index
-       *
-       * f(local_index) = global_index
-       *
-       * @param local_index index of local value in vector
-       * @return IdxT Index of the same value in the global vector
+       * @brief Get connection information for a particular variable, to be consumed by an attached
+       * component so they can properly access their externals.
        */
-      IdxT getNodeConnection(IdxT local_index) const
+      ExternalConnection<ScalarT, IdxT> getNodeConnection(size_t local_index) const
       {
-        return connection_nodes_[static_cast<size_t>(local_index)];
+        return ExternalConnection<ScalarT, IdxT>{
+            .y_   = y_ext_[local_index],
+            .yp_  = yp_ext_[local_index],
+            .f_   = f_ext_[local_index],
+            .idx_ = connection_nodes_[local_index],
+        };
       }
 
       int allocate() override
@@ -140,6 +149,9 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
+        y_ext_            = std::make_unique<const ScalarT*[]>(size);
+        yp_ext_           = std::make_unique<const ScalarT*[]>(size);
+        f_ext_            = std::make_unique<ScalarT*[]>(size);
         connection_nodes_ = std::make_unique<IdxT[]>(size);
 
         allocated_ = true;
@@ -185,7 +197,7 @@ namespace GridKit
         return 0;
       }
 
-    private:
+    protected:
       IdxT bus_id_{INVALID_INDEX<IdxT>};
 
       size_t n_intern_;
@@ -195,11 +207,19 @@ namespace GridKit
       std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
       std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
-      VectorT           y_;
-      VectorT           yp_;
       std::vector<bool> tag_;
       VectorT           abs_tol_;
-      VectorT           f_;
+
+      /// @brief A pointer to the internal variables of this component.
+      const ScalarT* y_int_;
+      /// @brief A pointer to the internal derivatives of this component.
+      const ScalarT* yp_int_;
+      /// @brief A pointer to the internal residuals of this component
+      ScalarT*       f_int_;
+
+      std::unique_ptr<const ScalarT*[]> y_ext_;
+      std::unique_ptr<const ScalarT*[]> yp_ext_;
+      std::unique_ptr<ScalarT*[]>       f_ext_;
 
       IdxT*  J_rows_buffer_{nullptr};
       IdxT*  J_cols_buffer_{nullptr};
@@ -223,8 +243,14 @@ namespace GridKit
 
       bool allocated_{false};
 
+    private:
+      VectorT y_;
+      VectorT yp_;
+      VectorT f_;
+
     public:
-      virtual IdxT sizeQuadrature() final
+      virtual IdxT
+      sizeQuadrature() final
       {
         throw "ERROR: Method not implemented!\n";
         return 0;
@@ -369,9 +395,6 @@ namespace GridKit
     private:
       void allocateVectors(IdxT n)
       {
-        y_.resize(n);
-        yp_.resize(n);
-        f_.resize(n);
         abs_tol_.resize(n);
       }
     };

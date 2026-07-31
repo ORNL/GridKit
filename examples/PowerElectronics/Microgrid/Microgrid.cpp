@@ -190,7 +190,7 @@ int main(int /* argc */, char const** /* argv */)
   }
 
   // since the intial P_com = 0
-  y[dg_signal.getNodeConnection(0)] = parms1.wb_;
+  y[dg_signal.getNodeConnection(0).idx_] = parms1.wb_;
 
   sysmodel->y().setDataUpdated();
   sysmodel->yp().setDataUpdated();

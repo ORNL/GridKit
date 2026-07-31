@@ -91,14 +91,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridBusDQ<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    const auto* y = y_.getData();
-    auto*       f = f_.getData();
-
     // bus voltage
-    f[0] = -y[0] / RN_;
-    f[1] = -y[1] / RN_;
-
-    f_.setDataUpdated();
+    *f_ext_[0] += -*y_ext_[0] / RN_;
+    *f_ext_[1] += -*y_ext_[1] / RN_;
 
     return 0;
   }

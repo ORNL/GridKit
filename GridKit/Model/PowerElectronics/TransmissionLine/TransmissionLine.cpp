@@ -84,13 +84,11 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int TransmissionLine<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    const auto* y = y_.getData();
-
     // Voltage drop accross terminals
-    ScalarT V1re = y[0] - y[4];
-    ScalarT V1im = y[1] - y[5];
-    ScalarT V2re = y[2] - y[6];
-    ScalarT V2im = y[3] - y[7];
+    ScalarT V1re = *y_ext_[0] - *y_ext_[4];
+    ScalarT V1im = *y_ext_[1] - *y_ext_[5];
+    ScalarT V2re = *y_ext_[2] - *y_ext_[6];
+    ScalarT V2im = *y_ext_[3] - *y_ext_[7];
 
     // Internal variables
     // row 1
@@ -107,22 +105,18 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int TransmissionLine<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    auto* f = f_.getData();
-
     // input
-    f[0] = y_int_[0];
-    f[1] = y_int_[1];
+    *f_ext_[0] += y_int_[0];
+    *f_ext_[1] += y_int_[1];
 
-    f[2] = y_int_[2];
-    f[3] = y_int_[3];
+    *f_ext_[2] += y_int_[2];
+    *f_ext_[3] += y_int_[3];
     // ouput
-    f[4] = -y_int_[0];
-    f[5] = -y_int_[1];
+    *f_ext_[4] += -y_int_[0];
+    *f_ext_[5] += -y_int_[1];
 
-    f[6] = -y_int_[2];
-    f[7] = -y_int_[3];
-
-    f_.setDataUpdated();
+    *f_ext_[6] += -y_int_[2];
+    *f_ext_[7] += -y_int_[3];
 
     return 0;
   }
