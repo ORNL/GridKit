@@ -35,6 +35,9 @@ namespace GridKit
     {
       pmech, ///< \f$P_m\f$ Unique ID of the signal providing mechanical power
       efd,   ///< \f$E_{fd}\f$ Unique ID of the signal providing exciter field voltage
+      p,
+      q,
+      online,
     };
 
     /// Signal outputs for a classical generator model

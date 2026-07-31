@@ -273,18 +273,42 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
+    bool Genrou<scalar_type, index_type>::isOnline() const
+    {
+      static constexpr auto ONLINE = GenrouExternalVariables::ONLINE;
+
+      if (signals_.template isAttached<ONLINE>()
+          && signals_.template isLinked<ONLINE>())
+      {
+        return signals_.template readExternalVariable<ONLINE>() != ScalarT{ZERO<RealT>};
+      }
+
+      return true;
+    }
+
+    template <typename scalar_type, typename index_type>
+    scalar_type Genrou<scalar_type, index_type>::onlineFactor() const
+    {
+      if (isOnline())
+      {
+        return ScalarT{ONE<RealT>};
+      }
+      return ScalarT{ZERO<RealT>};
+    }
+
+    template <typename scalar_type, typename index_type>
     void Genrou<scalar_type, index_type>::initializeMonitor()
     {
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
-                    { return this->toSystemBase(y_.getData()[15]); });
+                    { return onlineFactor() * this->toSystemBase(y_.getData()[15]); });
       monitor_->set(Variable::ii, [this]
-                    { return this->toSystemBase(y_.getData()[16]); });
+                    { return onlineFactor() * this->toSystemBase(y_.getData()[16]); });
       monitor_->set(Variable::p, [this]
-                    { return this->toSystemBase(Vr() * y_.getData()[15] + Vi() * y_.getData()[16]); });
+                    { return onlineFactor() * this->toSystemBase(Vr() * y_.getData()[15] + Vi() * y_.getData()[16]); });
       monitor_->set(Variable::q, [this]
-                    { return this->toSystemBase(Vi() * y_.getData()[15] - Vr() * y_.getData()[16]); });
+                    { return onlineFactor() * this->toSystemBase(Vi() * y_.getData()[15] - Vr() * y_.getData()[16]); });
       monitor_->set(Variable::delta, [this]
                     { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
@@ -378,10 +402,23 @@ namespace GridKit
     int Genrou<scalar_type, index_type>::initialize()
     {
       // Network Frame Terminal Values
-      ScalarT vr  = Vr();
-      ScalarT vi  = Vi();
-      ScalarT p   = this->toComponentBase(static_cast<ScalarT>(p0_));
-      ScalarT q   = this->toComponentBase(static_cast<ScalarT>(q0_));
+      ScalarT vr       = Vr();
+      ScalarT vi       = Vi();
+      ScalarT p_system = static_cast<ScalarT>(p0_);
+      ScalarT q_system = static_cast<ScalarT>(q0_);
+
+      static constexpr auto P = GenrouExternalVariables::P;
+      static constexpr auto Q = GenrouExternalVariables::Q;
+      if (signals_.template isAttached<P>() && signals_.template isLinked<P>())
+      {
+        p_system = signals_.template readExternalVariable<P>();
+      }
+      if (signals_.template isAttached<Q>() && signals_.template isLinked<Q>())
+      {
+        q_system = signals_.template readExternalVariable<Q>();
+      }
+      ScalarT p   = this->toComponentBase(p_system);
+      ScalarT q   = this->toComponentBase(q_system);
       ScalarT vm2 = vr * vr + vi * vi;
       ScalarT ir  = (p * vr + q * vi) / vm2;
       ScalarT ii  = (p * vi - q * vr) / vm2;
@@ -630,9 +667,9 @@ namespace GridKit
       evaluateInternalResidual(y, yp, wb, ws, f);
       evaluateBusResidual(y, yp, wb, h);
 
-      // Genrou contribution to bus algebraic equations
-      Ir() += h[0];
-      Ii() += h[1];
+      const ScalarT connected  = onlineFactor();
+      Ir()                    += connected * h_[0];
+      Ii()                    += connected * h_[1];
 
       if (bus_->size() > 0)
       {

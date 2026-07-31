@@ -35,6 +35,9 @@ namespace GridKit
     /// Signal inputs supported for a branch
     enum class BranchSignalInputs : size_t
     {
+      tap,   ///< Off-nominal tap magnitude
+      phase, ///< Phase shift angle in radians
+      open,  ///< Open status (zero is closed, nonzero is open)
     };
 
     /// Signal outputs supported for a branch

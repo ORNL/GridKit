@@ -7,6 +7,9 @@ int main()
   GridKit::Testing::GenClassicalTests<double, size_t> test;
 
   result += test.constructor();
+  result += test.residual();
+  result += test.monitor_system_base();
+  result += test.operating_state_signals();
   result += test.initial();
   result += test.residual();
   result += test.residual_nonzero_ra();

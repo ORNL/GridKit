@@ -35,6 +35,9 @@ namespace GridKit
       VI,  ///< \f$V_i\f$ network imaginary voltage
       PM,  ///< \f$P_m\f$ mechanical power
       EFD, ///< \f$E_{fd}\f$ field voltage
+      P,
+      Q,
+      ONLINE,
     };
 
     template <typename scalar_type, typename index_type>
@@ -90,6 +93,16 @@ namespace GridKit
         return ports_;
       }
 
+      /// Get the `ComponentSignals` from this `GenClassical`.
+      auto getSignals()
+          -> ComponentSignals<ScalarT,
+                              IdxT,
+                              NoVariables,
+                              GenClassicalExternalVariables>&
+      {
+        return signals_;
+      }
+
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
@@ -97,6 +110,8 @@ namespace GridKit
       /// Associate variable getter functions with enum values
       void initializeMonitor();
       void setDerivedParams();
+      bool isOnline() const;
+      ScalarT onlineFactor() const;
 
       ScalarT& Vr()
       {
@@ -130,6 +145,9 @@ namespace GridKit
 
       /// Component signal ports
       SignalPortsT ports_;
+
+      /// Component signal extension
+      ComponentSignals<ScalarT, IdxT, NoVariables, GenClassicalExternalVariables> signals_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};

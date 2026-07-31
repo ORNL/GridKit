@@ -90,18 +90,42 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
+bool GenClassical<scalar_type, index_type>::isOnline() const
+    {
+      static constexpr auto ONLINE = GenClassicalExternalVariables::ONLINE;
+
+      if (signals_.template isAttached<ONLINE>()
+          && signals_.template isLinked<ONLINE>())
+      {
+        return signals_.template readExternalVariable<ONLINE>() != ScalarT{ZERO<RealT>};
+      }
+
+      return true;
+    }
+
+    template <typename scalar_type, typename index_type>
+    scalar_type GenClassical<scalar_type, index_type>::onlineFactor() const
+    {
+      if (isOnline())
+      {
+        return ScalarT{ONE<RealT>};
+      }
+      return ScalarT{ZERO<RealT>};
+    }
+
+    template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::initializeMonitor()
     {
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
-                    { return this->toSystemBase(y_.getData()[3]); });
+                    { return onlineFactor() * this->toSystemBase(y_.getData()[3]); });
       monitor_->set(Variable::ii, [this]
-                    { return this->toSystemBase(y_.getData()[4]); });
+                    { return onlineFactor() * this->toSystemBase(y_.getData()[4]); });
       monitor_->set(Variable::p, [this]
-                    { return this->toSystemBase(Vr() * y_.getData()[3] + Vi() * y_.getData()[4]); });
+                    { return onlineFactor() * this->toSystemBase(Vr() * y_.getData()[3] + Vi() * y_.getData()[4]); });
       monitor_->set(Variable::q, [this]
-                    { return this->toSystemBase(Vi() * y_.getData()[3] - Vr() * y_.getData()[4]); });
+                    { return onlineFactor() * this->toSystemBase(Vi() * y_.getData()[3] - Vr() * y_.getData()[4]); });
       monitor_->set(Variable::delta, [this]
                     { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
@@ -193,17 +217,28 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::initialize()
     {
-      // Network frame terminal values
-      ScalarT vr  = Vr();
-      ScalarT vi  = Vi();
-      ScalarT p   = this->toComponentBase(static_cast<ScalarT>(p0_));
-      ScalarT q   = this->toComponentBase(static_cast<ScalarT>(q0_));
-      ScalarT vm2 = vr * vr + vi * vi;
-      ScalarT ir  = (p * vr + q * vi) / vm2;
-      ScalarT ii  = (p * vi - q * vr) / vm2;
+      ScalarT vr       = Vr();
+      ScalarT vi       = Vi();
+      ScalarT p_system = static_cast<ScalarT>(p0_);
+      ScalarT q_system = static_cast<ScalarT>(q0_);
 
-      ScalarT Er    = vr + Ra_ * ir - Xdp_ * ii;
-      ScalarT Ei    = vi + Ra_ * ii + Xdp_ * ir;
+      static constexpr auto P = GenClassicalExternalVariables::P;
+      static constexpr auto Q = GenClassicalExternalVariables::Q;
+      if (signals_.template isAttached<P>() && signals_.template isLinked<P>())
+      {
+        p_system = signals_.template readExternalVariable<P>();
+      }
+      if (signals_.template isAttached<Q>() && signals_.template isLinked<Q>())
+      {
+        q_system = signals_.template readExternalVariable<Q>();
+      }
+      ScalarT p     = this->toComponentBase(p_system);
+      ScalarT q     = this->toComponentBase(q_system);
+      ScalarT vm2   = vr * vr + vi * vi;
+      ScalarT ir    = (p * vr + q * vi) / vm2;
+      ScalarT ii    = (p * vi - q * vr) / vm2;
+      ScalarT Er    = Ra_ * ir - Xdp_ * ii + vr;
+      ScalarT Ei    = Ra_ * ii + Xdp_ * ir + vi;
       ScalarT delta = std::atan2(Ei, Er);
       ScalarT omega = static_cast<ScalarT>(0.0);
 
@@ -379,8 +414,9 @@ namespace GridKit
       evaluateInternalResidual(y, yp, wb, ws, f);
       evaluateBusResidual(y, yp, wb, h);
 
-      Ir() += h[0];
-      Ii() += h[1];
+      const ScalarT connected  = onlineFactor();
+      Ir()                    += connected * h_[0];
+      Ii()                    += connected * h_[1];
 
       if (bus_->size() > 0)
       {

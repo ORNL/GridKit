@@ -5,6 +5,9 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <optional>
+#include <string>
+#include <utility>
 
 namespace GridKit
 {
@@ -107,10 +110,47 @@ namespace GridKit
       ComponentT*              getComponent(IdxT gridkit_component_id);
       BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id);
 
+      /**
+       * @brief Set every input signal registered for a device and input name.
+       *
+       * The caller is responsible for changing inputs only at a valid model
+       * transition point, such as while a dynamic simulation is stopped for
+       * an event. Each component determines whether it samples an input during
+       * initialization or during model evaluation. If the input is explicitly
+       * mapped to a shared signal, the change is visible to every consumer of
+       * that signal.
+       */
+      void setInput(const std::string& device_id,
+                    const std::string& input_name,
+                    RealT              value);
+
     private:
+      struct InputSignal
+      {
+        ScalarT value;
+        IdxT    index{INVALID_INDEX<IdxT>};
+        SignalT node;
+
+        explicit InputSignal(ScalarT initial_value)
+          : value(initial_value)
+        {
+          node.set(&value, &index);
+        }
+      };
+
+      using InputKey = std::pair<std::string, std::string>;
+
+      SignalT* addInputSignal(const std::string&  device_id,
+                              const std::string&  input_name,
+                              RealT               initial_value,
+                              std::optional<IdxT> signal_id = std::nullopt);
+
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;
+
+      std::vector<std::unique_ptr<InputSignal>> owned_input_signals_;
+      std::map<InputKey, std::vector<SignalT*>> input_signals_;
 
       std::map<IdxT, IdxT> gridkit_bus_indices_;   ///< Map between gridkit_bus_id and bus_id
       std::map<IdxT, IdxT> gridkit_fault_indices_; ///< Map between fault_id and component_id

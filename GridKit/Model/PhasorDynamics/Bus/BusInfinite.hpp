@@ -95,6 +95,16 @@ namespace GridKit
         return Ii_;
       }
 
+      void setVr(RealT vr) override final
+      {
+        Vr_ = static_cast<ScalarT>(vr);
+      }
+
+      void setVi(RealT vi) override final
+      {
+        Vi_ = static_cast<ScalarT>(vi);
+      }
+
     private:
       ScalarT Vr_{0.0};
       ScalarT Vi_{0.0};
