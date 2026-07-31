@@ -74,6 +74,12 @@ namespace GridKit
       using SignalPortsT = SignalPorts<ScalarT, ModelDataT>;
       using MonitorT     = Model::VariableMonitor<GenClassical, GenClassicalData>;
 
+      GenClassical(BusT* bus);
+      GenClassical(BusT* bus,
+                   RealT H,
+                   RealT D,
+                   RealT Ra,
+                   RealT Xdp);
       GenClassical(BusT* bus, const ModelDataT& data);
       ~GenClassical();
 
@@ -148,10 +154,6 @@ namespace GridKit
 
       /// Component signal extension
       ComponentSignals<ScalarT, IdxT, NoVariables, GenClassicalExternalVariables> signals_;
-
-      /* Initial terminal conditions */
-      RealT p0_{0.0};
-      RealT q0_{0.0};
 
       /* Input parameters */
       RealT H_{3.0};

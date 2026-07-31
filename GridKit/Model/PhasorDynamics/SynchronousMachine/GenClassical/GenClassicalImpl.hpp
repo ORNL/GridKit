@@ -21,6 +21,43 @@ namespace GridKit
   namespace PhasorDynamics
   {
     using Log = ::GridKit::Utilities::Logger;
+    /**
+     * @brief Constructor for a classical generator model
+     */
+    template <typename scalar_type, typename index_type>
+    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus)
+      : bus_(bus),
+        bus_id_(0),
+        H_(3.0),
+        D_(0.0),
+        Ra_(0.0),
+        Xdp_(0.5),
+        mva_base_(100.)
+    {
+      size_ = 5;
+      setDerivedParams();
+    }
+
+    /**
+     * @brief Constructor for a classical generator model
+     */
+    template <typename scalar_type, typename index_type>
+    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus,
+                                                        RealT H,
+                                                        RealT D,
+                                                        RealT Ra,
+                                                        RealT Xdp)
+      : bus_(bus),
+        bus_id_(0),
+        H_(H),
+        D_(D),
+        Ra_(Ra),
+        Xdp_(Xdp),
+        mva_base_(100.)
+    {
+      size_ = 5;
+      setDerivedParams();
+    }
 
     /**
      * @brief Constructor for a classical generator model
@@ -47,16 +84,7 @@ namespace GridKit
     void GenClassical<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::p0))
-      {
-        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
-      }
-
-      if (data.parameters.contains(Parameter::q0))
-      {
-        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
-      }
-
+      using Buses     = typename ModelDataT::Buses;
       if (data.parameters.contains(Parameter::H))
       {
         H_ = std::get<RealT>(data.parameters.at(Parameter::H));
@@ -219,8 +247,8 @@ bool GenClassical<scalar_type, index_type>::isOnline() const
     {
       ScalarT vr       = Vr();
       ScalarT vi       = Vi();
-      ScalarT p_system = static_cast<ScalarT>(p0_);
-      ScalarT q_system = static_cast<ScalarT>(q0_);
+      ScalarT p_system = ScalarT{0.0};
+      ScalarT q_system = ScalarT{0.0};
 
       static constexpr auto P = GenClassicalExternalVariables::P;
       static constexpr auto Q = GenClassicalExternalVariables::Q;
