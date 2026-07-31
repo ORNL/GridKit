@@ -14,6 +14,7 @@ int main()
   result += test.ieeet1();
   result += test.load();
   result += test.loadZIP();
+  result += test.regca();
   result += test.genrou();
   result += test.genClassical();
   result += test.tgov1();

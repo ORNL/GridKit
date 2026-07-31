@@ -55,7 +55,31 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome deadband()
+      TestOutcome deadband1()
+      {
+        TestStatus success = true;
+
+        const ScalarT lower = scalar(-0.05);
+        const ScalarT upper = scalar(0.10);
+        const ScalarT tol   = scalar(kSmoothTolerance);
+
+        // Type 1 (no-offset) deadband returns ~0 inside the band ...
+        const ScalarT inside_input  = scalar(0.02);
+        success                    *= (std::abs(Math::deadband1(inside_input, lower, upper)) < tol * tol);
+
+        // ... and passes the input through unchanged (no offset) outside the band.
+        const ScalarT far_above_input = scalar(4.0);
+        const ScalarT far_below_input = scalar(-4.0);
+
+        success *= std::isfinite(Math::deadband1(far_above_input, lower, upper));
+        success *= within(Math::deadband1(far_above_input, lower, upper), far_above_input, tol);
+        success *= std::isfinite(Math::deadband1(far_below_input, lower, upper));
+        success *= within(Math::deadband1(far_below_input, lower, upper), far_below_input, tol);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome deadband2()
       {
         TestStatus success = true;
 
@@ -69,12 +93,12 @@ namespace GridKit
         const ScalarT expected_below = below_input - lower;
         const ScalarT expected_above = above_input - upper;
 
-        success *= within(Math::deadband(below_input, lower, upper), expected_below, tol);
-        success *= (std::abs(Math::deadband(inside_input, lower, upper)) < tol * tol);
-        success *= within(Math::deadband(above_input, lower, upper), expected_above, tol);
+        success *= within(Math::deadband2(below_input, lower, upper), expected_below, tol);
+        success *= (std::abs(Math::deadband2(inside_input, lower, upper)) < tol * tol);
+        success *= within(Math::deadband2(above_input, lower, upper), expected_above, tol);
 
-        const ScalarT lower_breakpoint = Math::deadband(lower, lower, upper);
-        const ScalarT upper_breakpoint = Math::deadband(upper, lower, upper);
+        const ScalarT lower_breakpoint = Math::deadband2(lower, lower, upper);
+        const ScalarT upper_breakpoint = Math::deadband2(upper, lower, upper);
 
         success *= (lower_breakpoint < scalar(0.0));
         success *= (upper_breakpoint > scalar(0.0));
@@ -82,7 +106,7 @@ namespace GridKit
         success *= (std::abs(upper_breakpoint) < tol);
 
         const ScalarT x  = scalar(-0.4);
-        success         *= (std::abs(Math::deadband(x, lower, upper)
+        success         *= (std::abs(Math::deadband2(x, lower, upper)
                              - (x - Math::clamp(x, lower, upper)))
                     < scalar(kRoundoffTolerance));
 
@@ -91,17 +115,17 @@ namespace GridKit
         const ScalarT expected_far_above = far_above_input - upper;
         const ScalarT expected_far_below = far_below_input - lower;
 
-        success *= std::isfinite(Math::deadband(far_above_input, lower, upper));
-        success *= within(Math::deadband(far_above_input, lower, upper), expected_far_above, tol);
-        success *= std::isfinite(Math::deadband(far_below_input, lower, upper));
-        success *= within(Math::deadband(far_below_input, lower, upper), expected_far_below, tol);
+        success *= std::isfinite(Math::deadband2(far_above_input, lower, upper));
+        success *= within(Math::deadband2(far_above_input, lower, upper), expected_far_above, tol);
+        success *= std::isfinite(Math::deadband2(far_below_input, lower, upper));
+        success *= within(Math::deadband2(far_below_input, lower, upper), expected_far_below, tol);
 
         const ScalarT point        = scalar(0.25);
         const ScalarT above_point  = scalar(0.75);
         const ScalarT below_point  = scalar(-0.25);
-        success                   *= (std::abs(Math::deadband(above_point, point, point) - (above_point - point))
+        success                   *= (std::abs(Math::deadband2(above_point, point, point) - (above_point - point))
                     < scalar(kRoundoffTolerance));
-        success                   *= (std::abs(Math::deadband(below_point, point, point) - (below_point - point))
+        success                   *= (std::abs(Math::deadband2(below_point, point, point) - (below_point - point))
                     < scalar(kRoundoffTolerance));
 
         return success.report(__func__);

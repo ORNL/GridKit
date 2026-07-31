@@ -7,7 +7,8 @@ int main()
   GridKit::Testing::SmoothnessIndicatorTests<double> test;
 
   result += test.clamp();
-  result += test.deadband();
+  result += test.deadband1();
+  result += test.deadband2();
   result += test.limitIndicators();
   result += test.slew();
   result += test.linseg();
