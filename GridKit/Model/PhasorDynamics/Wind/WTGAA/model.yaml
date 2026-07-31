@@ -1,0 +1,12 @@
+name: WTGAA
+parameters:
+  - name: Ka
+    symbol: K_{\mathrm{a}}
+    description: Aero-dynamic gain factor
+    unit: pu
+    typical_values: [0.007]
+  - name: theta0
+    symbol: T_{\mathrm{heta0}}
+    description: Initial blade pitch angle; 0 at maximum available power, 5-10 if curtailed
+    unit: deg
+    typical_values: [0.0]

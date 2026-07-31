@@ -1,0 +1,182 @@
+name: IEEEG1
+parameters:
+  - name: K
+    symbol: K
+    description: Governor gain (recirpocal of droop)
+    unit: pu
+    typical_values: []
+  - name: T1
+    symbol: T_{1}
+    description: Governor lag time constant
+    unit: s
+    typical_values: []
+  - name: T2
+    symbol: T_{2}
+    description: governor lead time constant
+    unit: s
+    typical_values: []
+  - name: T3
+    symbol: T_{3}
+    description: Valve positioner time constant
+    unit: s
+    typical_values: []
+  - name: Uo
+    symbol: U_{\mathrm{o}}
+    description: Maximum valve opening velocity
+    unit: pu/s
+    typical_values: []
+  - name: Uc
+    symbol: U_{\mathrm{c}}
+    description: Maximum valve closing velocity
+    unit: pu/s
+    typical_values: []
+  - name: Pmax
+    symbol: P_{\mathrm{max}}
+    description: Maximum valve opening
+    unit: pu of mwcap
+    typical_values: []
+  - name: Pmin
+    symbol: P_{\mathrm{min}}
+    description: Minimum valve opening
+    unit: pu of mwcap
+    typical_values: []
+  - name: T4
+    symbol: T_{4}
+    description: High pressure turbine bowl time constant
+    unit: s
+    typical_values: []
+  - name: K1
+    symbol: K_{1}
+    description: Fraction of hp shaft power after first boiler pass
+    unit: null
+    typical_values: []
+  - name: K2
+    symbol: K_{2}
+    description: Fraction of lp shaft power after first boiler pass
+    unit: null
+    typical_values: []
+  - name: T5
+    symbol: T_{5}
+    description: Reheater time constant
+    unit: s
+    typical_values: []
+  - name: K3
+    symbol: K_{3}
+    description: Fraction of hp shaft power after second boiler pass
+    unit: null
+    typical_values: []
+  - name: K4
+    symbol: K_{4}
+    description: Fraction of lp shaft power after second boiler pass
+    unit: null
+    typical_values: []
+  - name: T6
+    symbol: T_{6}
+    description: Crossover time constant
+    unit: s
+    typical_values: []
+  - name: K5
+    symbol: K_{5}
+    description: Fraction of hp shaft power after third boiler pass
+    unit: null
+    typical_values: []
+  - name: K6
+    symbol: K_{6}
+    description: Fraction of lp shaft power after third boiler pass
+    unit: null
+    typical_values: []
+  - name: T7
+    symbol: T_{7}
+    description: Double reheat time constant
+    unit: s
+    typical_values: []
+  - name: K7
+    symbol: K_{7}
+    description: Fraction of hp shaft power after fourth boiler pass
+    unit: null
+    typical_values: []
+  - name: K8
+    symbol: K_{8}
+    description: Fraction of lp shaft power after fourth boiler pass
+    unit: null
+    typical_values: []
+  - name: db1
+    symbol: d_{\mathrm{b1}}
+    description: Intentional deadband width
+    unit: Hz
+    typical_values: []
+  - name: Eps
+    symbol: E_{\mathrm{ps}}
+    description: Intentional db hysteresis
+    unit: Hz
+    typical_values: []
+  - name: db2
+    symbol: d_{\mathrm{b2}}
+    description: Unintentional deadband
+    unit: MW
+    typical_values: []
+  - name: Gv1
+    symbol: G_{\mathrm{v1}}
+    description: Nonlinear gain point 1
+    unit: pu gv
+    typical_values: []
+  - name: Pgv1
+    symbol: P_{\mathrm{gv1}}
+    description: Nonlinear gain point 1
+    unit: pu power
+    typical_values: []
+  - name: Gv2
+    symbol: G_{\mathrm{v2}}
+    description: Nonlinear gain point 2
+    unit: pu gv
+    typical_values: []
+  - name: Pgv2
+    symbol: P_{\mathrm{gv2}}
+    description: Nonlinear gain point 2
+    unit: pu power
+    typical_values: []
+  - name: Gv3
+    symbol: G_{\mathrm{v3}}
+    description: Nonlinear gain point 3
+    unit: pu gv
+    typical_values: []
+  - name: Pgv3
+    symbol: P_{\mathrm{gv3}}
+    description: Nonlinear gain point 3
+    unit: pu power
+    typical_values: []
+  - name: Gv4
+    symbol: G_{\mathrm{v4}}
+    description: Nonlinear gain point 4
+    unit: pu gv
+    typical_values: []
+  - name: Pgv4
+    symbol: P_{\mathrm{gv4}}
+    description: Nonlinear gain point 4
+    unit: pu power
+    typical_values: []
+  - name: Gv5
+    symbol: G_{\mathrm{v5}}
+    description: Nonlinear gain point 5
+    unit: pu gv
+    typical_values: []
+  - name: Pgv5
+    symbol: P_{\mathrm{gv5}}
+    description: Nonlinear gain point 5
+    unit: pu power
+    typical_values: []
+  - name: Gv6
+    symbol: G_{\mathrm{v6}}
+    description: Nonlinear gain point 6
+    unit: pu gv
+    typical_values: []
+  - name: Pgv6
+    symbol: P_{\mathrm{gv6}}
+    description: Nonlinear gain point 6
+    unit: pu power
+    typical_values: []
+  - name: Trate
+    symbol: T_{\mathrm{rate}}
+    description: Turbine rating
+    unit: MW
+    typical_values: []

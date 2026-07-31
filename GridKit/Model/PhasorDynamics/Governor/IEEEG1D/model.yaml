@@ -1,0 +1,117 @@
+name: IEEEG1D
+parameters:
+  - name: K
+    symbol: K
+    description: Governor gain (recirpocal of droop)
+    unit: pu
+    typical_values: []
+  - name: T1
+    symbol: T_{1}
+    description: Governor lag time constant
+    unit: s
+    typical_values: []
+  - name: T2
+    symbol: T_{2}
+    description: governor lead time constant
+    unit: s
+    typical_values: []
+  - name: T3
+    symbol: T_{3}
+    description: Valve positioner time constant
+    unit: s
+    typical_values: []
+  - name: Uo
+    symbol: U_{\mathrm{o}}
+    description: Maximum valve opening velocity
+    unit: pu/s
+    typical_values: []
+  - name: Uc
+    symbol: U_{\mathrm{c}}
+    description: Maximum valve closing velocity
+    unit: pu/s
+    typical_values: []
+  - name: Pmax
+    symbol: P_{\mathrm{max}}
+    description: Maximum valve opening
+    unit: pu of mwcap
+    typical_values: []
+  - name: Pmin
+    symbol: P_{\mathrm{min}}
+    description: Minimum valve opening
+    unit: pu of mwcap
+    typical_values: []
+  - name: T4
+    symbol: T_{4}
+    description: High pressure turbine bowl time constant
+    unit: s
+    typical_values: []
+  - name: K1
+    symbol: K_{1}
+    description: Fraction of hp shaft power after first boiler pass
+    unit: null
+    typical_values: []
+  - name: K2
+    symbol: K_{2}
+    description: Fraction of lp shaft power after first boiler pass
+    unit: null
+    typical_values: []
+  - name: T5
+    symbol: T_{5}
+    description: Reheater time constant
+    unit: s
+    typical_values: []
+  - name: K3
+    symbol: K_{3}
+    description: Fraction of hp shaft power after second boiler pass
+    unit: null
+    typical_values: []
+  - name: K4
+    symbol: K_{4}
+    description: Fraction of lp shaft power after second boiler pass
+    unit: null
+    typical_values: []
+  - name: T6
+    symbol: T_{6}
+    description: Crossover time constant
+    unit: s
+    typical_values: []
+  - name: K5
+    symbol: K_{5}
+    description: Fraction of hp shaft power after third boiler pass
+    unit: null
+    typical_values: []
+  - name: K6
+    symbol: K_{6}
+    description: Fraction of lp shaft power after third boiler pass
+    unit: null
+    typical_values: []
+  - name: T7
+    symbol: T_{7}
+    description: Double reheat time constant
+    unit: s
+    typical_values: []
+  - name: K7
+    symbol: K_{7}
+    description: Fraction of hp shaft power after fourth boiler pass
+    unit: null
+    typical_values: []
+  - name: K8
+    symbol: K_{8}
+    description: Fraction of lp shaft power after fourth boiler pass
+    unit: null
+    typical_values: []
+  - name: dbH
+    symbol: d_{\mathrm{bH}}
+    description: Deadband High
+    unit: pu
+    typical_values: []
+  - name: dbL
+    symbol: d_{\mathrm{bL}}
+    description: Deadband Low
+    unit: pu
+    typical_values: []
+  - name: Trate
+    symbol: T_{\mathrm{rate}}
+    description: Turbine rating
+    unit: MW
+    typical_values: []

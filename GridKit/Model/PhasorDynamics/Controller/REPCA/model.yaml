@@ -1,0 +1,157 @@
+name: REPCA
+parameters:
+  - name: tfltr
+    symbol: T_{\mathrm{fltr}}
+    description: Measurement transducer time constant
+    unit: s
+    typical_values: [0.02]
+  - name: kp
+    symbol: K_{\mathrm{p}}
+    description: Proportional gain of reactive power controller
+    unit: pu
+    typical_values: []
+  - name: ki
+    symbol: K_{\mathrm{i}}
+    description: Integral gain of reactive power controller
+    unit: pu
+    typical_values: []
+  - name: tft
+    symbol: T_{\mathrm{ft}}
+    description: Lead time constant
+    unit: s
+    typical_values: [0.0]
+  - name: tfv
+    symbol: T_{\mathrm{fv}}
+    description: Lag time constant
+    unit: s
+    typical_values: []
+  - name: refflg
+    symbol: R_{\mathrm{efflg}}
+    description: 0 reactive power control, 1 voltage control, 2 power factor control (REPC_C only)
+    unit: null
+    typical_values: [1.0]
+  - name: vfrz
+    symbol: V_{\mathrm{frz}}
+    description: Voltage below which controller states are frozen
+    unit: pu
+    typical_values: [0.7]
+  - name: rc
+    symbol: R_{\mathrm{c}}
+    description: Current compensation resistance
+    unit: pu
+    typical_values: []
+  - name: xc
+    symbol: X_{\mathrm{c}}
+    description: Current compensation reactance
+    unit: pu
+    typical_values: []
+  - name: kc
+    symbol: K_{\mathrm{c}}
+    description: Reactive droop gain
+    unit: pu/pu
+    typical_values: []
+  - name: vcmpflg
+    symbol: V_{\mathrm{cmpflg}}
+    description: 'Flag: 0 reactive droop, 1 current compensation'
+    unit: null
+    typical_values: [0.0]
+  - name: emax
+    symbol: E_{\mathrm{max}}
+    description: Maximum error limit
+    unit: pu
+    typical_values: [999.0]
+  - name: emin
+    symbol: E_{\mathrm{min}}
+    description: Minimum error limit
+    unit: pu
+    typical_values: [-999.0]
+  - name: dbd
+    symbol: D_{\mathrm{bd}}
+    description: Deadband
+    unit: pu
+    typical_values: [0.0]
+  - name: qvmax
+    symbol: Q_{\mathrm{vmax}}
+    description: Maximum limit of the reactive power (or voltage) for the PI controller
+    unit: pu
+    typical_values: []
+  - name: qvmin
+    symbol: Q_{\mathrm{vmin}}
+    description: Minimum limit of the reactive power (or voltage) for the PI controller
+    unit: pu
+    typical_values: []
+  - name: kpg
+    symbol: K_{\mathrm{pg}}
+    description: Proportional gain for active power control
+    unit: pu/pu
+    typical_values: []
+  - name: kig
+    symbol: K_{\mathrm{ig}}
+    description: Integral gain for active power control
+    unit: pu/pu/s
+    typical_values: []
+  - name: tp
+    symbol: T_{\mathrm{p}}
+    description: Lag time constant on electric power measurement
+    unit: s
+    typical_values: [0.02]
+  - name: fdbd1
+    symbol: F_{\mathrm{dbd1}}
+    description: Deadband for primary frequency response for overfrequency events
+    unit: pu
+    typical_values: [-0.0006]
+  - name: fdbd2
+    symbol: F_{\mathrm{dbd2}}
+    description: Deadband for primary frequency response for underfrequency events
+    unit: pu
+    typical_values: [0.0006]
+  - name: femax
+    symbol: F_{\mathrm{emax}}
+    description: Maximum frequency error limit
+    unit: pu
+    typical_values: [999.0]
+  - name: femin
+    symbol: F_{\mathrm{emin}}
+    description: Minimum frequency error limit
+    unit: pu
+    typical_values: [-999.0]
+  - name: pimax
+    symbol: P_{\mathrm{imax}}
+    description: Maximum limit of the active power PI controller
+    unit: pu
+    typical_values: [1.0]
+  - name: pimin
+    symbol: P_{\mathrm{imin}}
+    description: Minimum limit of the active power PI controller
+    unit: pu
+    typical_values: [0.0]
+  - name: pmax
+    symbol: P_{\mathrm{max}}
+    description: Maximum active power limit
+    unit: pu
+    typical_values: [1.0]
+  - name: pmin
+    symbol: P_{\mathrm{min}}
+    description: Minimum active power limit
+    unit: pu
+    typical_values: [0.0]
+  - name: tlag
+    symbol: T_{\mathrm{lag}}
+    description: Lag time constant
+    unit: s
+    typical_values: []
+  - name: ddn
+    symbol: D_{\mathrm{dn}}
+    description: Downside droop for PFR (overfrequency event, pushes power down)
+    unit: pu/pu
+    typical_values: [20.0]
+  - name: dup
+    symbol: D_{\mathrm{up}}
+    description: Upside droop for PFR (underfrequency event, pushes power up)
+    unit: pu/pu
+    typical_values: [20.0]
+  - name: frqflg
+    symbol: F_{\mathrm{rqflg}}
+    description: 'Flag: 1 turns on PFR functionality, 0 turns it off'
+    unit: null
+    typical_values: [1.0]
