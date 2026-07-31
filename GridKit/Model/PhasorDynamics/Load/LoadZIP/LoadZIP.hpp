@@ -9,6 +9,15 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// External variables of a ZIP load
+    enum class LoadZIPExternalVariables : size_t
+    {
+      P,      ///< Initial terminal active-power injection
+      Q,      ///< Initial terminal reactive-power injection
+      ONLINE, ///< Connection status (zero is disconnected, nonzero is connected)
+      MAXIMUM
+    };
+
     /*!
      * @brief Implementation of a ZIP load.
      *
@@ -42,6 +51,10 @@ namespace GridKit
       using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = LoadZIPData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZIP, LoadZIPData>;
+      using SignalsT   = ComponentSignals<ScalarT,
+                                          IdxT,
+                                          NoVariables,
+                                          LoadZIPExternalVariables>;
 
       LoadZIP(BusT* bus);
       LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT alphaI, RealT alphaP);
@@ -56,21 +69,28 @@ namespace GridKit
       int evaluateResidual() override final;
       int evaluateJacobian() override final;
 
+      /// Get the signal connections for this ZIP load.
+      SignalsT& getSignals()
+      {
+        return signals_;
+      }
+
       int verify() const override final
       {
         return 0;
       }
 
     public:
+      // Temporary compatibility with the positive-consumption parameters.
       void setPnom(RealT Pnom)
       {
-        Pnom_ = Pnom;
+        p_ = static_cast<ScalarT>(-Pnom);
         setDerivedParams();
       }
 
       void setQnom(RealT Qnom)
       {
-        Qnom_ = Qnom;
+        q_ = static_cast<ScalarT>(-Qnom);
         setDerivedParams();
       }
 
@@ -87,9 +107,14 @@ namespace GridKit
       }
 
     private:
-      void initializeParameters(const ModelDataT& data);
-      void initializeMonitor();
-      void setDerivedParams();
+      void    initializeParameters(const ModelDataT& data);
+      void    initializeMonitor();
+      void    setDerivedParams();
+      void    setInputDispatchAtVoltage(ScalarT vr,
+                                        ScalarT vi,
+                                        bool    set_p,
+                                        bool    set_q);
+      ScalarT online() const;
 
       ScalarT& Vr()
       {
@@ -120,16 +145,17 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      BusT* bus_{nullptr};
-      RealT Pnom_{0};
-      RealT Qnom_{0};
-      /// ZIP anchor voltage, derived from the bus voltage at initialization
-      RealT Vnom_{1.0};
-      RealT alphaI_{0};
-      RealT alphaP_{0};
-      RealT G_{0};
-      RealT B_{0};
-      RealT alphaZ_{1.0};
+      BusT*   bus_{nullptr};
+      ScalarT p_{0.0};
+      ScalarT q_{0.0};
+      RealT   Vnom_{1.0};
+      RealT   alphaI_{0};
+      RealT   alphaP_{0};
+      ScalarT G_{0.0};
+      ScalarT B_{0.0};
+      RealT   alphaZ_{1.0};
+
+      SignalsT signals_;
 
       std::unique_ptr<MonitorT> monitor_;
     };

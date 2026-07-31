@@ -237,6 +237,12 @@ namespace GridKit
       virtual ScalarT&       Ii()       = 0;
       virtual const ScalarT& Ii() const = 0;
 
+      /// Set the real-voltage value used to initialize this bus.
+      virtual void setVr(RealT) = 0;
+
+      /// Set the imaginary-voltage value used to initialize this bus.
+      virtual void setVi(RealT) = 0;
+
       virtual int setBusID(IdxT) = 0;
 
       /// Apply (status true) or clear a fault to ground with impedance R + jX.

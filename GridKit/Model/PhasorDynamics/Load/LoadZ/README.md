@@ -23,11 +23,16 @@ B &= -\dfrac{X}{R^2 + X^2}
 \end{aligned}
 ```
 
-## Model Ports
+## Model Inputs
 
-Name  | Port | Init  | Description
-------|------|-------|------------
-`bus` | Bus  | Known | Connected bus that owns terminal voltage variables and current-balance residuals
+Input    | Units | Description                                      | Default
+---------|-------|--------------------------------------------------|--------
+`online` | [-]   | Connection status; zero is disconnected          | 1
+
+Any nonzero `online` value connects the load. The input is read when the
+network contribution and monitors are evaluated. Disconnecting the load does
+not remove its internal algebraic equations. Change the input only while the
+solve is stopped.
 
 ## Model Variables
 

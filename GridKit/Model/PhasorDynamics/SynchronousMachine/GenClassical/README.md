@@ -1,4 +1,41 @@
-# **Classical Generator Model (GENCLS)**
+# Classical Generator
+
+An electrical machine model with two differential variables (i.e. second-order
+model) is often called classical generator model. While its predictive ability
+is limited, it is useful for studies of grid network properties. Mathematically,
+it is equivalent to a driven damped pendulum model.
+
+## Model Parameters
+
+Symbol      | Units   | Description                     | Note
+------------|---------|---------------------------------|----------------------
+$P_0$       | [p.u.]  | legacy active-power fallback    |
+$Q_0$       | [p.u.]  | legacy reactive-power fallback  |
+$H$         | [s]     | rotor inertia                   |
+$D$         | [p.u.]  | damping coefficient             |
+$R_a$       | [p.u.]  | winding resistance              |
+$X_{dp}$    | [p.u.]  | machine reactance parameter     |
+$S_\mathrm{mach}$ | [MVA] | machine power base        |
+
+## Model Inputs
+
+Input    | Units  | Description                                      | Default
+---------|--------|--------------------------------------------------|--------
+`p`      | [p.u.] | Initial terminal active-power injection          | Legacy $P_0$
+`q`      | [p.u.] | Initial terminal reactive-power injection        | Legacy $Q_0$
+`online` | [-]    | In-service status; zero is offline               | 1
+
+`p` and `q` are sampled during initialization. Any nonzero `online` value
+connects the machine to the network. An offline machine retains its initialized
+internal state while its network contribution and terminal monitors are zero.
+Change inputs only while the solve is stopped.
+
+## Model Derived Parameters
+
+- $G = \dfrac{R_a}{R_a^2 + X_{dp}^2} ~~~$ equivalent stator winding conductance
+- $B = \dfrac{-X_{dp}}{R_a^2 + X_{dp}^2} ~~~$ equivalent stator winding susceptance
+- $f_\mathrm{base} = f_\mathrm{sys} ~~~$ frequency base taken from the system at initialization
+- $S_\mathrm{mach,VA} = 10^6 S_\mathrm{mach} ~~~$ derived machine base used for machine-base/system-base conversions
 
 GENCLS is the 2nd order synchronous machine model: a constant transient EMF
 behind the transient reactance. See the

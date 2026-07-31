@@ -40,10 +40,13 @@ namespace GridKit
     /// External variables of a `Gensal`
     enum class GensalExternalVariables : size_t
     {
-      VR,  ///< \f$V_r\f$ network real voltage
-      VI,  ///< \f$V_i\f$ network imaginary voltage
-      PM,  ///< \f$P_m\f$ mechanical power
-      EFD, ///< \f$E_{fd}\f$ field voltage
+      VR,     ///< network real voltage
+      VI,     ///< network imaginary voltage
+      PM,     ///< mechanical power
+      EFD,    ///< field voltage
+      P,      ///< Initial active-power injection
+      Q,      ///< Initial reactive-power injection
+      ONLINE, ///< In-service status (zero is offline, nonzero is online)
     };
 
     template <typename scalar_type, typename index_type>
@@ -104,10 +107,12 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
-      void initializeParameters(const ModelDataT& data);
+      void    initializeParameters(const ModelDataT& data);
       /// Associate variable getter functions with enum values
-      void initializeMonitor();
-      void setDerivedParams();
+      void    initializeMonitor();
+      void    setDerivedParams();
+      bool    isOnline() const;
+      ScalarT onlineFactor() const;
 
       ScalarT& Vr()
       {
