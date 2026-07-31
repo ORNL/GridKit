@@ -207,11 +207,19 @@ namespace GridKit
       std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
       std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
-      VectorT           y_;
-      VectorT           yp_;
       std::vector<bool> tag_;
       VectorT           abs_tol_;
-      VectorT           f_;
+
+      /// @brief A pointer to the internal variables of this component.
+      const ScalarT* y_int_;
+      /// @brief A pointer to the internal derivatives of this component.
+      const ScalarT* yp_int_;
+      /// @brief A pointer to the internal residuals of this component
+      ScalarT*       f_int_;
+
+      std::unique_ptr<const ScalarT*[]> y_ext_;
+      std::unique_ptr<const ScalarT*[]> yp_ext_;
+      std::unique_ptr<ScalarT*[]>       f_ext_;
 
       IdxT*  J_rows_buffer_{nullptr};
       IdxT*  J_cols_buffer_{nullptr};
@@ -234,6 +242,11 @@ namespace GridKit
       std::unique_ptr<IdxT[]> connection_nodes_;
 
       bool allocated_{false};
+
+    private:
+      VectorT y_;
+      VectorT yp_;
+      VectorT f_;
 
     public:
       virtual IdxT
@@ -382,9 +395,6 @@ namespace GridKit
     private:
       void allocateVectors(IdxT n)
       {
-        y_.resize(n);
-        yp_.resize(n);
-        f_.resize(n);
         abs_tol_.resize(n);
       }
     };

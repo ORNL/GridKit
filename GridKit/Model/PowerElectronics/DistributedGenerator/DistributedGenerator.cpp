@@ -103,13 +103,12 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int DistributedGenerator<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    ScalarT     omega = wb_ - mp_ * y_int_[0];
-    ScalarT     delta = refframe_ ? ScalarT(0.0) : y_int_[12];
-    const auto* y     = y_.getData();
+    ScalarT omega = wb_ - mp_ * y_int_[0];
+    ScalarT delta = refframe_ ? ScalarT(0.0) : y_int_[12];
 
     // Take incoming voltages to current rotator reference frame
-    ScalarT vbd_in = std::cos(delta) * y[1] + std::sin(delta) * y[2];
-    ScalarT vbq_in = -std::sin(delta) * y[1] + std::cos(delta) * y[2];
+    ScalarT vbd_in = std::cos(delta) * *y_ext_[1] + std::sin(delta) * *y_ext_[2];
+    ScalarT vbq_in = -std::sin(delta) * *y_ext_[1] + std::cos(delta) * *y_ext_[2];
 
     // ### Internal Componenets ##
     // P and Q equations
@@ -146,7 +145,7 @@ namespace GridKit
 
     // Rotor difference angle
     if (!refframe_)
-      f_int_[12] = -yp_int_[12] + omega - y[0];
+      f_int_[12] = -yp_int_[12] + omega - *y_ext_[0];
 
     return 0;
   }
@@ -154,26 +153,19 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int DistributedGenerator<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    ScalarT     omega = wb_ - mp_ * y_int_[0];
-    ScalarT     delta = refframe_ ? ScalarT(0.0) : y_int_[12];
-    const auto* y     = y_.getData();
-    auto*       f     = f_.getData();
+    ScalarT omega = wb_ - mp_ * y_int_[0];
+    ScalarT delta = refframe_ ? ScalarT(0.0) : y_int_[12];
 
     // ref common ref motor angle
     if (refframe_)
     {
-      f[0] = omega - y[0];
-    }
-    else
-    {
-      f[0] = 0.0;
+      *f_ext_[0] += omega - *y_ext_[0];
     }
 
     // output
     // current transformed to common frame
-    f[1] = std::cos(delta) * y_int_[10] - std::sin(delta) * y_int_[11];
-    f[2] = std::sin(delta) * y_int_[10] + std::cos(delta) * y_int_[11];
-    f_.setDataUpdated();
+    *f_ext_[1] += std::cos(delta) * y_int_[10] - std::sin(delta) * y_int_[11];
+    *f_ext_[2] += std::sin(delta) * y_int_[10] + std::cos(delta) * y_int_[11];
     return 0;
   }
 
@@ -354,8 +346,7 @@ namespace GridKit
     };
     if (!refframe_)
     {
-      const auto* y = y_.getData();
-      valtemp.push_back((1.0 / Lc_) * (sin(delta) * static_cast<RealT>(y[1]) - cos(delta) * static_cast<RealT>(y[2])));
+      valtemp.push_back((1.0 / Lc_) * (sin(delta) * static_cast<RealT>(*y_ext_[1]) - cos(delta) * static_cast<RealT>(*y_ext_[2])));
     }
     this->setJacValues(rtemp, ctemp, valtemp);
 
@@ -372,8 +363,7 @@ namespace GridKit
     };
     if (!refframe_)
     {
-      const auto* y = y_.getData();
-      valtemp.push_back((1.0 / Lc_) * (cos(delta) * static_cast<RealT>(y[1]) + sin(delta) * static_cast<RealT>(y[2])));
+      valtemp.push_back((1.0 / Lc_) * (cos(delta) * static_cast<RealT>(*y_ext_[1]) + sin(delta) * static_cast<RealT>(*y_ext_[2])));
     }
     this->setJacValues(rtemp, ctemp, valtemp);
 

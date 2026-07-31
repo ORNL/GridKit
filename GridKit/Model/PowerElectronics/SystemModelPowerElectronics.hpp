@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
@@ -24,22 +23,22 @@ namespace GridKit
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
-    using CircuitComponent<ScalarT, IdxT>::size_;
-    using CircuitComponent<ScalarT, IdxT>::n_intern_;
-    using CircuitComponent<ScalarT, IdxT>::n_extern_;
-    using CircuitComponent<ScalarT, IdxT>::nnz_;
-    using CircuitComponent<ScalarT, IdxT>::time_;
-    using CircuitComponent<ScalarT, IdxT>::alpha_;
-    using CircuitComponent<ScalarT, IdxT>::y_;
-    using CircuitComponent<ScalarT, IdxT>::y_int_;
-    using CircuitComponent<ScalarT, IdxT>::yp_;
-    using CircuitComponent<ScalarT, IdxT>::yp_int_;
-    using CircuitComponent<ScalarT, IdxT>::f_;
-    using CircuitComponent<ScalarT, IdxT>::f_int_;
-    using CircuitComponent<ScalarT, IdxT>::tag_;
-    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-    using CircuitComponent<ScalarT, IdxT>::allocated_;
-    using CircuitComponent<ScalarT, IdxT>::allocateVectors;
+    using Base::abs_tol_;
+    using Base::allocated_;
+    using Base::allocateVectors;
+    using Base::alpha_;
+    using Base::f_ext_;
+    using Base::f_int_;
+    using Base::n_extern_;
+    using Base::n_intern_;
+    using Base::nnz_;
+    using Base::size_;
+    using Base::tag_;
+    using Base::time_;
+    using Base::y_ext_;
+    using Base::y_int_;
+    using Base::yp_ext_;
+    using Base::yp_int_;
 
   public:
     /**
@@ -145,11 +144,8 @@ namespace GridKit
 
       if (!allocated_)
       {
-        allocateVectors(static_cast<IdxT>(size_));
+        allocateVectors(static_cast<IdxT>(size_), true);
         // Component and node offsets can change when topology is modified.
-        y_.setToZero(memory::HOST);
-        yp_.setToZero(memory::HOST);
-        f_.setToZero(memory::HOST);
         abs_tol_.setToZero(memory::HOST);
       }
 
@@ -178,18 +174,15 @@ namespace GridKit
       {
         // The offset for each component's internal variables in the system vector.
         // They start at 0, and are stacked on top of each other.
-        size_t      component_internal_idx = 0;
-        const auto* y                      = y_.getData();
-        const auto* yp                     = yp_.getData();
-        auto*       f                      = f_.getData();
+        size_t component_internal_idx = 0;
         for (component_type* comp : components_)
         {
           comp->allocate();
 
           // Update component internal pointers to their correct offsets
-          comp->setInternalPointer(&y[component_internal_idx]);
-          comp->setInternalDerivativePointer(&yp[component_internal_idx]);
-          comp->setInternalResidualPointer(&f[component_internal_idx]);
+          comp->setInternalPointer(&y_int_[component_internal_idx]);
+          comp->setInternalDerivativePointer(&yp_int_[component_internal_idx]);
+          comp->setInternalResidualPointer(&f_int_[component_internal_idx]);
 
           const auto& external_indices = comp->getExternIndices();
           for (IdxT i = 0; i < comp->size(); i++)
@@ -296,48 +289,8 @@ namespace GridKit
       {
         component->initialize();
       }
-      y_.setDataUpdated();
-      yp_.setDataUpdated();
-      this->distributeVectors();
 
-      return 0;
-    }
-
-    /**
-     * @brief Distribute y and y' to each component based of node connection graph
-     *
-     * @post Each component has y and y' set
-     *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
-     */
-    int distributeVectors()
-    {
-      const auto* y_system  = y_.getData();
-      const auto* yp_system = yp_.getData();
-
-      for (component_type* component : components_)
-      {
-        auto*                   y         = component->y().getData();
-        auto*                   yp        = component->yp().getData();
-        const std::set<size_t>& externals = component->getExternIndices();
-
-        for (size_t j : externals)
-        {
-          if (component->getNodeConnection(j) != neg1_)
-          {
-            y[j]  = y_system[component->getNodeConnection(j)];
-            yp[j] = yp_system[component->getNodeConnection(j)];
-          }
-          else
-          {
-            y[j]  = 0.0;
-            yp[j] = 0.0;
-          }
-        }
-        component->y().setDataUpdated();
-        component->yp().setDataUpdated();
-      }
-      return 0;
+      return Base::initialize();
     }
 
     int tagDifferentiable() final
@@ -370,11 +323,9 @@ namespace GridKit
      */
     int evaluateInternalResidual() final
     {
-      auto* f = f_.getData();
-
-      for (IdxT i = 0; i < f_.getSize(); i++)
+      for (IdxT i = 0; i < size_; i++)
       {
-        f[i] = 0.0;
+        f_int_[i] = 0.0;
       }
 
       // Update system residual vector
@@ -390,21 +341,7 @@ namespace GridKit
       {
         if (int err_code = component->evaluateExternalResidual())
           return err_code;
-
-        const auto*             residual  = component->getResidual().getData();
-        const std::set<size_t>& externals = component->getExternIndices();
-
-        for (size_t j : externals)
-        {
-          //@todo should do a different grounding check
-          if (component->getNodeConnection(j) != neg1_)
-          {
-            f[component->getNodeConnection(j)] += residual[j];
-          }
-        }
       }
-
-      f_.setDataUpdated();
 
       return 0;
     }

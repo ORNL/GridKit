@@ -77,23 +77,17 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int VoltageSource<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    // internal
-    const auto* y = y_.getData();
-
-    f_int_[0] = y[1] - y[0] - V_;
+    f_int_[0] = *y_ext_[1] - *y_ext_[0] - V_;
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int VoltageSource<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    auto* f = f_.getData();
-
     // input
-    f[0] = -y_int_[0];
+    *f_ext_[0] += -y_int_[0];
     // ouput
-    f[1] = y_int_[0];
-    f_.setDataUpdated();
+    *f_ext_[1] += y_int_[0];
     return 0;
   }
 
