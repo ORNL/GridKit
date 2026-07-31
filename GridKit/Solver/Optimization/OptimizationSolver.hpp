@@ -1,34 +1,34 @@
-
 #pragma once
 
 #include <GridKit/Model/Evaluator.hpp>
-#include <GridKit/Solver/Dynamic/Ida.hpp>
 
 namespace AnalysisManager
 {
   template <class ScalarT, typename IdxT>
-  class DynamicSolver;
-
-  template <class ScalarT, typename IdxT>
   class OptimizationSolver
   {
   public:
-    OptimizationSolver()
+    using EvaluatorT = GridKit::Model::Evaluator<ScalarT, IdxT>;
+
+    explicit OptimizationSolver(EvaluatorT* model)
+      : model_(model)
     {
     }
 
-    OptimizationSolver(Sundials::Ida<ScalarT, IdxT>* integrator)
-      : integrator_(integrator)
+    virtual ~OptimizationSolver() = default;
+
+    EvaluatorT* getModel()
     {
+      return model_;
     }
 
-    virtual ~OptimizationSolver()
+    const EvaluatorT* getModel() const
     {
+      return model_;
     }
 
   protected:
-    GridKit::Model::Evaluator<ScalarT, IdxT>* model_;
-    Sundials::Ida<ScalarT, IdxT>*             integrator_;
+    EvaluatorT* model_{nullptr};
   };
 
 } // namespace AnalysisManager

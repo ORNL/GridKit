@@ -14,12 +14,12 @@ namespace AnalysisManager
                                                         RealT                         t_init,
                                                         RealT                         t_final,
                                                         RealT                         dt_monitor)
-      : OptimizationSolver<ScalarT, IdxT>(integrator),
+      : OptimizationSolver<ScalarT, IdxT>(integrator->getModel()),
+        integrator_(integrator),
         t_init_(t_init),
         t_final_(t_final),
         dt_monitor_(dt_monitor)
     {
-      model_ = integrator_->getModel();
     }
 
     template <class ScalarT, typename IdxT>
