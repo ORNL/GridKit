@@ -100,7 +100,7 @@ parameters:
     description: Exciter output voltage for saturation factor S (E ) E 1
     unit: pu
     typical_values: [6.24]
-  - name: SE(E1)
+  - name: Se1
     symbol: 'S_{\mathrm{E}}(E_{1})'
     description: Exciter saturation factor at exciter output voltage E 1
     unit: null
@@ -110,7 +110,7 @@ parameters:
     description: Exciter output voltage for saturation factor S (E ) E 2
     unit: pu
     typical_values: [4.68]
-  - name: SE(E2)
+  - name: Se2
     symbol: 'S_{\mathrm{E}}(E_{2})'
     description: Exciter saturation factor at exciter output voltage E 2
     unit: null

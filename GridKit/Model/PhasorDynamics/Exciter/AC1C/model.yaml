@@ -1,107 +1,107 @@
 name: AC1C
 parameters:
-  - name: RC
+  - name: Rc
     symbol: 'R_{\mathrm{C}}'
     description: Resistive component of load compensation
     unit: pu
     typical_values: [0]
-  - name: XC
+  - name: Xc
     symbol: 'X_{\mathrm{C}}'
     description: Reactance component of load compensation
     unit: pu
     typical_values: [0]
-  - name: TR
+  - name: Tr
     symbol: 'T_{\mathrm{R}}'
     description: Regulator input filter time constant
     unit: s
     typical_values: [0]
-  - name: KA
+  - name: Ka
     symbol: 'K_{\mathrm{A}}'
     description: Regulator output gain
     unit: pu
     typical_values: [400]
-  - name: TA
+  - name: Ta
     symbol: 'T_{\mathrm{A}}'
     description: Regulator output time constant
     unit: s
     typical_values: [0.02]
-  - name: TB
+  - name: Tb
     symbol: 'T_{\mathrm{B}}'
     description: Regulator denominator (lag) time constant
     unit: s
     typical_values: [0]
-  - name: TC
+  - name: Tc
     symbol: 'T_{\mathrm{C}}'
     description: Regulator numerator (lead) time constant
     unit: s
     typical_values: [0]
-  - name: KF
+  - name: Kf
     symbol: 'K_{\mathrm{F}}'
     description: Rate feedback excitation system stabilizer gain
     unit: pu
     typical_values: [0.03]
-  - name: TF
+  - name: Tf
     symbol: 'T_{\mathrm{F}}'
     description: Rate feedback time constant
     unit: s
     typical_values: [1]
-  - name: VAmax
+  - name: Vamax
     symbol: 'V_{\mathrm{Amax}}'
     description: Maximum regulator output
     unit: pu
     typical_values: [14.5]
-  - name: VAmin
+  - name: Vamin
     symbol: 'V_{\mathrm{Amin}}'
     description: Minimum regulator output
     unit: pu
     typical_values: [-14.5]
-  - name: EFEmax
+  - name: Efemax
     symbol: 'E_{\mathrm{FEmax}}'
     description: Maximum exciter field voltage
     unit: pu
     typical_values: [6.03]
-  - name: EFEmin
+  - name: Efemin
     symbol: 'E_{\mathrm{FEmin}}'
     description: Minimum exciter field voltage
     unit: pu
     typical_values: [-5.43]
-  - name: KE
+  - name: Ke
     symbol: 'K_{\mathrm{E}}'
     description: Exciter field proportional constant
     unit: pu
     typical_values: [1.0]
-  - name: TE
+  - name: Te
     symbol: 'T_{\mathrm{E}}'
     description: Exciter field time constant
     unit: s
     typical_values: [0.8]
-  - name: KC
+  - name: Kc
     symbol: 'K_{\mathrm{C}}'
     description: Rectifier loading factor proportional to commutating reactance
     unit: pu
     typical_values: [0.2]
-  - name: KD
+  - name: Kd
     symbol: 'K_{\mathrm{D}}'
     description: Demagnetizing factor, function of exciter alternator reactances
     unit: pu
     typical_values: [0.38]
   - name: E1
     symbol: 'E_{1}'
-    description: Exciter output voltage for saturation factor S (E ) E 1
+    description: Exciter output voltage defining saturation factor S_E(E_1)
     unit: pu
     typical_values: [4.18]
-  - name: SE(E1)
+  - name: Se1
     symbol: 'S_{\mathrm{E}}(E_{1})'
-    description: Exciter saturation factor at exciter output voltage E 1
+    description: Exciter saturation factor at exciter output voltage E_1
     unit: null
     typical_values: [0.1]
   - name: E2
     symbol: 'E_{2}'
-    description: Exciter output voltage for saturation factor S (E ) E 2
+    description: Exciter output voltage defining saturation factor S_E(E_2)
     unit: pu
     typical_values: [3.14]
-  - name: SE(E2)
+  - name: Se2
     symbol: 'S_{\mathrm{E}}(E_{2})'
-    description: Exciter saturation factor at exciter output voltage E 2
+    description: Exciter saturation factor at exciter output voltage E_2
     unit: null
     typical_values: [0.03]

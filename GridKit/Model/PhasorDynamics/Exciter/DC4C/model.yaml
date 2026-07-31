@@ -105,7 +105,7 @@ parameters:
     description: Potential circuit gain coefficient
     unit: pu
     typical_values: [1]
-  - name: θP
+  - name: ThetaP
     symbol: '\theta_{\mathrm{P}}'
     description: Potential circuit phase angle (degrees)
     unit: pu
