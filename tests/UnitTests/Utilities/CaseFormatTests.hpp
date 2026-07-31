@@ -7,6 +7,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
@@ -32,8 +33,9 @@ namespace GridKit
       {
         using namespace GridKit::PhasorDynamics;
         using namespace GridKit::Model;
-        using BusData = BusData<RealT, IdxT>;
-        using BusType = typename BusData::BusType;
+        using BusData   = BusData<RealT, IdxT>;
+        using BusType   = typename BusData::BusType;
+        using RegcaData = Converter::RegcaData<RealT, IdxT>;
 
         const char data[] =
             R"({
@@ -66,7 +68,8 @@ namespace GridKit
                           "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Gensal", "ports": {"bus":1}, "id": "2", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
                           "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
-                   { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
+                   { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} },
+                   { "class": "Regca", "ports": {"bus":1}, "id": "CV1", "params": {"p0":0.0, "q0":0.0, "mva":100, "Tg":0.02, "TM":0.02, "Rqmax":999.0, "Rqmin":-999.0, "Rpmax":999.0, "sL":true, "IL1":1.1, "VL0":0.4, "VL1":0.9, "VA0":0.4, "VA1":0.9, "Vhvmax":1.2}, "mon": ["ir", "ii", "p", "q"] }
                ]
             })";
 
@@ -92,6 +95,7 @@ namespace GridKit
         success *= result.bus_fault.size() == 1;
         success *= result.genrou.size() == 1;
         success *= result.gensal.size() == 1;
+        success *= result.regca.size() == 1;
         success *= result.loadz.size() == 0;
 
         success *= result.bus[0].bus_id == 1;
@@ -152,6 +156,19 @@ namespace GridKit
         success *= result.gensal[0].disambiguation_string == "2";
         success *= result.gensal[0].monitored_variables.contains(GensalMonitorableVariables::delta);
         success *= result.gensal[0].monitored_variables.contains(GensalMonitorableVariables::omega);
+
+        success *= std::get<RealT>(result.regca[0].parameters[RegcaData::Parameters::p0]) == 0.0;
+        success *= std::get<RealT>(result.regca[0].parameters[RegcaData::Parameters::q0]) == 0.0;
+        success *= std::get<IdxT>(result.regca[0].parameters[RegcaData::Parameters::mva]) == 100;
+        success *= std::get<bool>(result.regca[0].parameters[RegcaData::Parameters::sL]);
+        success *= result.regca[0].buses[RegcaData::Buses::bus] == 1;
+        success *= result.regca[0].disambiguation_string == "CV1";
+        success *= result.regca[0].signal_inputs.empty();
+        success *= result.regca[0].signal_outputs.empty();
+        success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::ir);
+        success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::ii);
+        success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::p);
+        success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::q);
 
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;

@@ -8,7 +8,7 @@ The scale $\mu=4\cdot f_{\text{sync}}=240$ is chosen so $\sigma$ behaves like a 
 
 | Name | Description | Usage |
 |------|-------------|-------|
-| `sigmoid` | Step function | `GENSAL`, `GENROU`, `REGCA`, `REECA` |
+| `sigmoid` | Step function | `GENSAL`, `GENROU`, `REECA` |
 | `ramp` | Smooth one-sided ramp | `REGCA`, `REECA`, `REPCA` |
 | `qramp` | Exact one-sided quadratic ramp | `IEEET1` |
 
@@ -58,9 +58,9 @@ q(x)=x^2\,\sigma(x)
 
 | Name | Description | Usage |
 |------|-------------|-------|
-| `max` | Smooth binary maximum | `REECA`, `REECB` |
-| `min` | Smooth binary minimum | `REECA` |
-| `clamp` | Bounded saturation | `IEEEST`, `REECA`, `REECB`, `REPCA` |
+| `max` | Smooth binary maximum | `REGCA`, `REECA`, `REECB` |
+| `min` | Smooth binary minimum | `REGCA`, `REECA` |
+| `clamp` | Bounded saturation | `IEEEST`, `REGCA`, `REECA`, `REECB`, `REPCA` |
 | `deadband1` | Type 1 no-offset signed two-sided deadband | - |
 | `deadband2` | Type 2 offset signed two-sided deadband | `REECA`, `REECB`, `REPCA` |
 | `slew` | Symmetric slew-rate limiter | - |
