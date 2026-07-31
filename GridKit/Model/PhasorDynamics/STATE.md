@@ -87,20 +87,3 @@ This is where we store stateful information like connectivity and dispatch, whic
     "phase": 0
 }
 ```
-
-
-# Migration
-
-`Bus`:
-- Remove the `init` fields from `Bus` in the `INPUT_FORMAT.md` 
-- make an interface `setVr(..)` and `setVi(..)`.
-
-`Branch`:
-- Remove `tap` and `phase` as parameters
-- make an interface `setTap(..)` and `setPhase(..)`.
-- add `setOpen(..)` interface 
-
-`LoadZIP`, `GENROU`, `GENSAL`, `GenClassical`:
-- Remove `p0` and `q0` as parameters
-- make an interface `setP(..)` and `setQ(..)`.
-- add `setOnline(..)` interface 
