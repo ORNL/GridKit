@@ -120,7 +120,7 @@ parameters:
     description: Reactance associated with potential source
     unit: pu
     typical_values: [0]
-  - name: θP
+  - name: ThetaP
     symbol: '\theta_{\mathrm{P}}'
     description: Potential circuit phase angle (degrees)
     unit: degrees
