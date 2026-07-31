@@ -37,6 +37,7 @@ namespace GridKit
     /// State associated with a device.
     struct DeviceState
     {
+      std::optional<bool>   active;
       std::optional<bool>   online;
       std::optional<bool>   open;
       std::optional<double> p;

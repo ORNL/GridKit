@@ -28,7 +28,7 @@ namespace GridKit
     /// Signal inputs supported for a bus fault
     enum class BusFaultSignalInputs : size_t
     {
-      control_signal, ///< Unique ID of the bus providing a control signal
+      active, ///< Fault status (zero is inactive, nonzero is active)
     };
 
     /// Signal outputs supported for a bus fault
@@ -39,7 +39,7 @@ namespace GridKit
     /// Variables able to be monitored for a bus fault
     enum class BusFaultMonitorableVariables : size_t
     {
-      state,
+      active,
       ir,
       ii,
     };

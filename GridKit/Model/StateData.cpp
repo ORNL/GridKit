@@ -72,6 +72,7 @@ namespace GridKit
         requireObject(value, "Device state");
 
         DeviceState state;
+        parseOptional(value, "active", state.active);
         parseOptional(value, "online", state.online);
         parseOptional(value, "open", state.open);
         parseOptional(value, "p", state.p);

@@ -5,8 +5,8 @@
     "dt_monitor": 0.004166666666666667,
     "tmax": 10.0,
     "events": [
-        { "time": 1.0, "type": "fault_on", "element_id": 0 },
-        { "time": 1.15, "type": "fault_off", "element_id": 0 }
+        {"time": 1.0, "device_id": "fault_1", "input": "active", "value": 1.0},
+        {"time": 1.15, "device_id": "fault_1", "input": "active", "value": 0.0}
     ],
     "reference_file": "reference/ACTIVSg500.omega.ref.csv",
     "error_type": "relative",
