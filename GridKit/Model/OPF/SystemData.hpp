@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <filesystem>
+#include <istream>
 #include <optional>
 #include <string>
 #include <variant>
@@ -57,6 +59,12 @@ namespace GridKit
       std::vector<BusDataT>    buses;
       std::vector<DeviceDataT> devices;
     };
+
+    /// Parse OPF system data from a JSON stream.
+    SystemData<> parseSystemData(std::istream& stream);
+
+    /// Parse OPF system data from a JSON file.
+    SystemData<> parseSystemData(const std::filesystem::path& file_path);
 
   } // namespace OPF
 } // namespace GridKit
