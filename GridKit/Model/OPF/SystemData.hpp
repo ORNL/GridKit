@@ -6,6 +6,12 @@
 #include <variant>
 #include <vector>
 
+#include <GridKit/Model/OPF/Branch/BranchData.hpp>
+#include <GridKit/Model/OPF/Bus/BusData.hpp>
+#include <GridKit/Model/OPF/Generator/GeneratorData.hpp>
+#include <GridKit/Model/OPF/Load/LoadData.hpp>
+#include <GridKit/Model/OPF/Shunt/ShuntData.hpp>
+
 namespace GridKit
 {
   namespace OPF
@@ -20,6 +26,7 @@ namespace GridKit
       std::optional<std::string> case_comments;
     };
 
+    /// System-wide base quantities from the `.opf.json` params object.
     template <typename real_type>
     struct SystemParameters
     {
@@ -29,86 +36,7 @@ namespace GridKit
       RealT va_base{};
     };
 
-    enum class BusClass
-    {
-      BUS,
-      SLACK
-    };
-
-    template <typename real_type, typename index_type>
-    struct BusData
-    {
-      using RealT = real_type;
-      using IdxT  = index_type;
-
-      BusClass             bus_class{BusClass::BUS};
-      std::string          id;
-      IdxT                 number{};
-      RealT                kv{};
-      std::optional<RealT> vmin;
-      std::optional<RealT> vmax;
-    };
-
-    template <typename real_type, typename index_type>
-    struct BranchData
-    {
-      using RealT = real_type;
-      using IdxT  = index_type;
-
-      std::string          id;
-      IdxT                 from{};
-      IdxT                 to{};
-      RealT                R{};
-      RealT                X{};
-      RealT                G{};
-      RealT                B{};
-      std::optional<RealT> smax;
-    };
-
-    template <typename real_type, typename index_type>
-    struct GeneratorData
-    {
-      using RealT = real_type;
-      using IdxT  = index_type;
-
-      std::string          id;
-      IdxT                 bus{};
-      std::optional<RealT> pmin;
-      std::optional<RealT> pmax;
-      std::optional<RealT> qmin;
-      std::optional<RealT> qmax;
-      RealT                mva{};
-      RealT                c0{};
-      RealT                c1{};
-      RealT                c2{};
-    };
-
-    template <typename real_type, typename index_type>
-    struct LoadData
-    {
-      using RealT = real_type;
-      using IdxT  = index_type;
-
-      std::string          id;
-      IdxT                 bus{};
-      std::optional<RealT> pmin;
-      std::optional<RealT> pmax;
-      std::optional<RealT> qmin;
-      std::optional<RealT> qmax;
-    };
-
-    template <typename real_type, typename index_type>
-    struct ShuntData
-    {
-      using RealT = real_type;
-      using IdxT  = index_type;
-
-      std::string id;
-      IdxT        bus{};
-      RealT       G{};
-      RealT       B{};
-    };
-
+    /// Immutable topology and model parameters parsed from an `.opf.json` file.
     template <typename real_type = double, typename index_type = std::size_t>
     struct SystemData
     {

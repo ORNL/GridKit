@@ -2,11 +2,11 @@
 
 #include <cstddef>
 
-#include <GridKit/Model/OPF/Branch.hpp>
-#include <GridKit/Model/OPF/Bus.hpp>
-#include <GridKit/Model/OPF/Generator.hpp>
-#include <GridKit/Model/OPF/Load.hpp>
-#include <GridKit/Model/OPF/Shunt.hpp>
+#include <GridKit/Model/OPF/Branch/Branch.hpp>
+#include <GridKit/Model/OPF/Bus/Bus.hpp>
+#include <GridKit/Model/OPF/Generator/Generator.hpp>
+#include <GridKit/Model/OPF/Load/Load.hpp>
+#include <GridKit/Model/OPF/Shunt/Shunt.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 
 namespace GridKit
@@ -14,9 +14,9 @@ namespace GridKit
   namespace OPF
   {
     template <class ScalarT, typename IdxT>
-    System<ScalarT, IdxT>::System(const SystemDataT&      case_data,
+    System<ScalarT, IdxT>::System(const SystemDataT&      system_data,
                                   const Model::StateData& state)
-      : case_data_(case_data),
+      : system_data_(system_data),
         input_state_(state)
     {
     }
@@ -144,9 +144,9 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    const typename System<ScalarT, IdxT>::SystemDataT& System<ScalarT, IdxT>::caseData() const
+    const typename System<ScalarT, IdxT>::SystemDataT& System<ScalarT, IdxT>::systemData() const
     {
-      return case_data_;
+      return system_data_;
     }
 
     template <class ScalarT, typename IdxT>

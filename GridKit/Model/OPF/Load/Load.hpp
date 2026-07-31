@@ -5,7 +5,7 @@
 #include <GridKit/Model/OPF/Component.hpp>
 #include <GridKit/Model/OPF/ComponentConstraints.hpp>
 #include <GridKit/Model/OPF/ComponentVariables.hpp>
-#include <GridKit/Model/OPF/SystemData.hpp>
+#include <GridKit/Model/OPF/Load/LoadData.hpp>
 #include <GridKit/Model/StateData.hpp>
 
 namespace GridKit
@@ -14,15 +14,15 @@ namespace GridKit
   {
     enum class LoadExternalVariables : std::size_t
     {
-      VOLTAGE_MAGNITUDE,
-      VOLTAGE_ANGLE,
+      VM, ///< Bus voltage magnitude
+      VA, ///< Bus voltage angle
       MAXIMUM
     };
 
     enum class LoadExternalConstraints : std::size_t
     {
-      ACTIVE_POWER_BALANCE,
-      REACTIVE_POWER_BALANCE,
+      DIVP, ///< Bus active-power balance
+      DIVQ, ///< Bus reactive-power balance
       MAXIMUM
     };
 
@@ -31,16 +31,16 @@ namespace GridKit
      *
      * The base OPF formulation does not dispatch load. Its p/q state is held
      * fixed while contributing to the connected bus balances. Load limits in
-     * the case data are retained for validation and future controllable-load
-     * formulations.
+     * the system data validate that operating state.
      */
     template <class scalar_type, typename index_type>
-    class Load : public Component<scalar_type, index_type>
+    class Load final : public Component<scalar_type, index_type>
     {
     public:
       using ScalarT      = scalar_type;
       using IdxT         = index_type;
-      using RealT        = typename Component<ScalarT, IdxT>::RealT;
+      using ComponentT   = Component<ScalarT, IdxT>;
+      using RealT        = typename ComponentT::RealT;
       using DataT        = LoadData<RealT, IdxT>;
       using StateT       = Model::DeviceState;
       using VariablesT   = ComponentVariables<ScalarT,
