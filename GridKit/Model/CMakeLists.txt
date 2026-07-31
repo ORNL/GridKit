@@ -14,6 +14,7 @@ gridkit_add_library(
 add_subdirectory(PhasorDynamics)
 add_subdirectory(PowerFlow)
 add_subdirectory(PowerElectronics)
+add_subdirectory(OPF)
 
 install(FILES Evaluator.hpp VariableMonitor.hpp VariableMonitorController.hpp
         DESTINATION include/GridKit/Model)
