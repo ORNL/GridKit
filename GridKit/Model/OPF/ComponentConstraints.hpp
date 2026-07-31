@@ -17,7 +17,9 @@ namespace GridKit
     };
 
     template <typename EnumT>
-    concept ConstraintEnum = std::is_enum_v<EnumT> && std::is_same_v<std::underlying_type_t<EnumT>, std::size_t> && requires { EnumT::MAXIMUM; };
+    concept ConstraintEnum = std::is_enum_v<EnumT>
+                             && std::is_same_v<std::underlying_type_t<EnumT>, std::size_t>
+                             && requires { EnumT::MAXIMUM; };
 
     /**
      * @brief Global constraint rows owned and consumed by an OPF component.

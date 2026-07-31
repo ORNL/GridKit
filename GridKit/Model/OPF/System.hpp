@@ -35,17 +35,17 @@ namespace GridKit
       using SystemDataT = SystemData<RealT, IdxT>;
 
       /**
-       * @brief Compose an OPF problem from immutable case data and an operating state.
+       * @brief Compose an OPF problem from immutable system data and an operating state.
        *
-       * @pre case_data satisfies INPUT_FORMAT.md, including unique bus ids and
-       *      numbers, unique device ids, resolvable bus references, and exactly
-       *      one Slack bus.
+       * @pre system_data satisfies INPUT_FORMAT.md, including unique bus ids
+       *      and numbers, unique device ids, resolvable bus references, and
+       *      exactly one Slack bus.
        * @pre Bus state is keyed as `bus_id_<number>` and device state by device id.
        * @pre Every load has finite p and q values in state.
        *
        * allocate() validates these conditions before assigning global indices.
        */
-      System(const SystemDataT& case_data, const Model::StateData& state);
+      System(const SystemDataT& system_data, const Model::StateData& state);
       ~System() override = default;
 
       int allocate() override;
@@ -77,7 +77,7 @@ namespace GridKit
       VectorT&       getObjectiveGradient() override;
       const VectorT& getObjectiveGradient() const override;
 
-      const SystemDataT&      caseData() const;
+      const SystemDataT&      systemData() const;
       const Model::StateData& inputState() const;
 
       /**
@@ -92,7 +92,7 @@ namespace GridKit
       Model::StateData solutionState() const;
 
     private:
-      SystemDataT      case_data_;
+      SystemDataT      system_data_;
       Model::StateData input_state_;
 
       std::vector<std::unique_ptr<ComponentT>> components_;

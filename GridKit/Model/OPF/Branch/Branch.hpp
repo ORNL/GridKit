@@ -1,11 +1,12 @@
 #pragma once
 
 #include <cstddef>
+#include <vector>
 
+#include <GridKit/Model/OPF/Branch/BranchData.hpp>
 #include <GridKit/Model/OPF/Component.hpp>
 #include <GridKit/Model/OPF/ComponentConstraints.hpp>
 #include <GridKit/Model/OPF/ComponentVariables.hpp>
-#include <GridKit/Model/OPF/SystemData.hpp>
 #include <GridKit/Model/StateData.hpp>
 
 namespace GridKit
@@ -14,17 +15,17 @@ namespace GridKit
   {
     enum class BranchExternalVariables : std::size_t
     {
-      FROM_VOLTAGE_MAGNITUDE,
-      FROM_VOLTAGE_ANGLE,
-      TO_VOLTAGE_MAGNITUDE,
-      TO_VOLTAGE_ANGLE,
+      VMF, ///< Voltage magnitude at the from bus
+      VAF, ///< Voltage angle at the from bus
+      VMT, ///< Voltage magnitude at the to bus
+      VAT, ///< Voltage angle at the to bus
       MAXIMUM
     };
 
     enum class BranchInternalConstraints : std::size_t
     {
-      FROM_APPARENT_POWER,
-      TO_APPARENT_POWER,
+      SF2, ///< Squared apparent power at the from terminal
+      ST2, ///< Squared apparent power at the to terminal
       MAXIMUM
     };
 
@@ -33,20 +34,22 @@ namespace GridKit
 
     enum class BranchExternalConstraints : std::size_t
     {
-      FROM_ACTIVE_POWER_BALANCE,
-      FROM_REACTIVE_POWER_BALANCE,
-      TO_ACTIVE_POWER_BALANCE,
-      TO_REACTIVE_POWER_BALANCE,
+      DIVPF, ///< Active-power balance at the from bus
+      DIVQF, ///< Reactive-power balance at the from bus
+      DIVPT, ///< Active-power balance at the to bus
+      DIVQT, ///< Reactive-power balance at the to bus
       MAXIMUM
     };
 
+    /// Pi-model branch contribution with optional terminal power limits.
     template <class scalar_type, typename index_type>
-    class Branch : public Component<scalar_type, index_type>
+    class Branch final : public Component<scalar_type, index_type>
     {
     public:
       using ScalarT      = scalar_type;
       using IdxT         = index_type;
-      using RealT        = typename Component<ScalarT, IdxT>::RealT;
+      using ComponentT   = Component<ScalarT, IdxT>;
+      using RealT        = typename ComponentT::RealT;
       using DataT        = BranchData<RealT, IdxT>;
       using StateT       = Model::DeviceState;
       using VariablesT   = ComponentVariables<ScalarT,
@@ -69,12 +72,11 @@ namespace GridKit
       IdxT sizeInternalConstraints() const override;
       IdxT nnz() const override;
       void setConstraintOffset(IdxT offset) override;
-      void addJacobianSparsity(
-          std::vector<typename Component<ScalarT, IdxT>::JacobianEntry>& entries) const override;
-      int setJacobianSlots(const std::vector<IdxT>& slots) override;
-      int setConstraintBounds(RealT* lower, RealT* upper) const override;
-      int addConstraints(const ScalarT* values, ScalarT* constraints) const override;
-      int addJacobian(const ScalarT* values, RealT* jacobian_values) const override;
+      void addJacobianSparsity(std::vector<typename ComponentT::JacobianEntry>& entries) const override;
+      int  setJacobianSlots(const std::vector<IdxT>& slots) override;
+      int  setConstraintBounds(RealT* lower, RealT* upper) const override;
+      int  addConstraints(const ScalarT* values, ScalarT* constraints) const override;
+      int  addJacobian(const ScalarT* values, RealT* jacobian_values) const override;
 
     private:
       DataT             data_;
