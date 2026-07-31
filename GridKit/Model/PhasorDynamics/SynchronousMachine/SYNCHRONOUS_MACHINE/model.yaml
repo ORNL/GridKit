@@ -1,0 +1,72 @@
+name: SYNCHRONOUS_MACHINE
+parameters:
+  - name: MBASE
+    symbol: '\mathrm{MBASE}'
+    description: Generator rated MVA
+    unit: MVA
+    typical_values: [100]
+  - name: H
+    symbol: 'H'
+    description: Inertia
+    unit: MW-s/MVA
+    typical_values: [3.25]
+  - name: D
+    symbol: 'D'
+    description: Damping
+    unit: pu
+    typical_values: [0]
+  - name: T′do
+    symbol: 'T''_{\mathrm{do}}'
+    description: d-axis OC transient time constant
+    unit: s
+    typical_values: [6.35]
+  - name: Tʺdo
+    symbol: 'T''''_{\mathrm{do}}'
+    description: d-axis OC sub-transient time constant
+    unit: s
+    typical_values: [0.06]
+  - name: Tʺqo
+    symbol: 'T''''_{\mathrm{qo}}'
+    description: q-axis OC sub-transient time constant
+    unit: s
+    typical_values: [0.077]
+  - name: Xd
+    symbol: 'X_{\mathrm{d}}'
+    description: d-axis synchronous reactance
+    unit: pu
+    typical_values: [1.071]
+  - name: Xq
+    symbol: 'X_{\mathrm{q}}'
+    description: q-axis synchronous reactance
+    unit: pu
+    typical_values: [0.704]
+  - name: X′d
+    symbol: 'X''_{\mathrm{d}}'
+    description: d-axis transient reactance
+    unit: pu
+    typical_values: [0.351]
+  - name: Xʺd=Xʺq
+    symbol: 'X''''_{\mathrm{d}} = X''''_{\mathrm{q}}'
+    description: Sub-transient reactance
+    unit: pu
+    typical_values: [0.296]
+  - name: Xl
+    symbol: 'X_{\mathrm{l}}'
+    description: Leakage reactance
+    unit: pu
+    typical_values: [0.154]
+  - name: S(1.0)
+    symbol: 'S(1.0)'
+    description: Saturation factor at 1.0 pu terminal voltage
+    unit: null
+    typical_values: [0.07]
+  - name: S(1.2)
+    symbol: 'S(1.2)'
+    description: Saturation factor at 1.2 pu terminal voltage
+    unit: null
+    typical_values: [0.203]
+  - name: Ra
+    symbol: 'R_{\mathrm{a}}'
+    description: Armature resistance
+    unit: pu
+    typical_values: [0.004]
