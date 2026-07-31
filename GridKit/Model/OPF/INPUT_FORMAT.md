@@ -15,7 +15,8 @@ format through bus numbers and device id strings.
 
 All electrical quantities are given in per unit on the system power base
 `va_base`. Bus voltage bases are given by the bus parameter `kv`. Missing
-limit parameters are treated as unbounded.
+limit parameters are treated as unbounded. Optional header metadata and limit
+parameters may be omitted or set to `null`.
 
 ## Format
 
@@ -110,7 +111,9 @@ Device parameters.
 
 Branch parameters follow the same pi model conventions as the PhasorDynamics
 `Branch` class. Generator cost is `c0 + c1 p + c2 p^2` in currency per hour
-with active power `p` in per unit.
+with active power `p` in per unit. Missing generation cost coefficients are
+treated as zero; when present, they must be numerical values rather than
+`null`.
 
 ## Example File for a 2-Bus System
 

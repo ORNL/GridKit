@@ -6,7 +6,7 @@ set(opf_shunt_headers Shunt/Shunt.hpp Shunt/ShuntData.hpp)
 
 gridkit_add_library(
   model_opf
-  SOURCES System.cpp
+  SOURCES System.cpp SystemData.cpp
   HEADERS Component.hpp
           ComponentConstraints.hpp
           ComponentVariables.hpp
@@ -18,7 +18,8 @@ gridkit_add_library(
     PUBLIC
     GridKit::dense_vector
     PUBLIC
-    GridKit::sparse_matrix)
+    GridKit::sparse_matrix
+  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
 target_sources(
   model_opf
