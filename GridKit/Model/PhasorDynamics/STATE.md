@@ -21,12 +21,7 @@ For example `texas-summer2025.state.json` might be structured as:
 }
 ```
 
-Inside the `buses` and `devices` we have:
-
-- The `states` represents the internal variables
-- The `injections` represent residuals contributed by each device
-
-Then Model initialization at a higher or lower fidelity `PowerFlow`$\leftrightarrow$ `PhasorDynamics`$\leftrightarrow$ `EMT` requires no API.
+Inside the `buses` and `devices` the relevant boundary states needed for intiailziation are given for each component. Then Model initialization at a higher or lower fidelity `PowerFlow`$\leftrightarrow$ `PhasorDynamics`$\leftrightarrow$ `EMT` requires no direct API.
 
 ## Bus
 
@@ -36,10 +31,8 @@ RMS state initialization/storage is written with real and imaginary parts:
 
 ```json
 "bus_id_2533":{
-    "states": {
-        "vr": 0.9289638822595822,
-        "vi": -0.39534548980249884
-    },
+    "vr": 0.9289638822595822,
+    "vi": -0.39534548980249884,
     "injections": {
         "6533_C":{
             "ir": 13.185009956359863,
@@ -59,11 +52,9 @@ EMT should support balanced initialization (see previous section) but also unbal
 
 ```json
 "bus_id_2533":{
-    "states": {
-        "va": 0.9289638822595822,
-        "vb": -0.39534548980249884,
-        "vc": -0.39534548980249884
-    },
+    "va": 0.9289638822595822,
+    "vb": -0.39534548980249884,
+    "vc": -0.39534548980249884,
     "injections": {
         "gen_325":{
             "ia": 13.185009956359863,
@@ -86,18 +77,14 @@ This is where we store stateful information like connectivity and dispatch, whic
 
 ```json
 "gen_id_2":{
-    "states":{
-        "online": true,
-        "p": 55,
-        "q": -12,
-    },
+    "online": true,
+    "p": 55,
+    "q": -12
 }
 "br_id_2":{
-    "states":{
-        "open": false,
-        "tap": 1,
-        "phase": 0
-    },
+    "open": false,
+    "tap": 1,
+    "phase": 0
 }
 ```
 
