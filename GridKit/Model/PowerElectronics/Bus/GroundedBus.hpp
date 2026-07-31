@@ -31,7 +31,7 @@ namespace GridKit
 
     private:
       ScalarT voltage_;
-      ScalarT dummy_;
+      ScalarT dummy_ = 0;
     };
   } // namespace PowerElectronics
 } // namespace GridKit
