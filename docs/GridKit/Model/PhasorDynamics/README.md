@@ -11,12 +11,13 @@ Bus <Bus/README>
 BusFault <BusFault/README>
 BusToSignalAdapter <BusToSignalAdapter/README>
 Converter <Converter/README>
+Controller <Controller/README>
 Exciter <Exciter/README>
 Governor <Governor/README>
 Load <Load/README>
 SignalNode <SignalNode/README>
 Stabilizer <Stabilizer/README>
-SynchronousMachine <SynchronousMachine/README>
+Machine <Machine/README>
 ```
 
 ```{include} ../../../../GridKit/Model/PhasorDynamics/README.md

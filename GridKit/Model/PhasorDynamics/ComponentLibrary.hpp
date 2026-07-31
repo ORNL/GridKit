@@ -10,9 +10,9 @@
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
+#include <GridKit/Model/PhasorDynamics/Machine/GENROU/Genrou.hpp>
+#include <GridKit/Model/PhasorDynamics/Machine/GENSAL/Gensal.hpp>
+#include <GridKit/Model/PhasorDynamics/Machine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSource.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>

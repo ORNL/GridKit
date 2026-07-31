@@ -14,7 +14,7 @@ Model       | Count
 ------------|--------
 [Bus](../../../../GridKit/Model/PhasorDynamics/Bus/README.md)         | 10
 [Branch](../../../../GridKit/Model/PhasorDynamics/Branch/README.md)     | 15 
-[GENROU](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/README.md)       | 3
+[GENROU](../../../../GridKit/Model/PhasorDynamics/Machine/GENROU/README.md)       | 3
 [TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 3
 [IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 3
 

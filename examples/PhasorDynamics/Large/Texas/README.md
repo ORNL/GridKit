@@ -12,7 +12,7 @@ Model | Count
 [Bus](../../../../GridKit/Model/PhasorDynamics/Bus/README.md) | 2000
 [Branch](../../../../GridKit/Model/PhasorDynamics/Branch/README.md) | 3206
 [LoadZ](../../../../GridKit/Model/PhasorDynamics/Load/LoadZ/README.md) | 1507
-[GENROU](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/README.md) | 544
+[GENROU](../../../../GridKit/Model/PhasorDynamics/Machine/GENROU/README.md) | 544
 [TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md) | 544
 [IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md) | 544
 

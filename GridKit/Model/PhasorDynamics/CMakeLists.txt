@@ -41,7 +41,7 @@ add_subdirectory(Load)
 add_subdirectory(SignalNode)
 add_subdirectory(SignalSource)
 add_subdirectory(Stabilizer)
-add_subdirectory(SynchronousMachine)
+add_subdirectory(Machine)
 
 add_library(GridKit::phasor_dynamics_components ALIAS phasor_dynamics_components)
 add_library(GridKit::phasor_dynamics_components_dependency_tracking ALIAS

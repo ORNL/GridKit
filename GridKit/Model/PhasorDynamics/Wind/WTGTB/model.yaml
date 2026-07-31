@@ -1,0 +1,32 @@
+name: WTGTB
+parameters:
+  - name: ht
+    symbol: H_{\mathrm{t}}
+    description: Turbine inertia
+    unit: MWs/MVA
+    typical_values: []
+  - name: hg
+    symbol: H_{\mathrm{g}}
+    description: Generator inertia
+    unit: MWs/MVA
+    typical_values: []
+  - name: dshaft
+    symbol: D_{\mathrm{shaft}}
+    description: Damping coefficient
+    unit: pu
+    typical_values: []
+  - name: kshaft
+    symbol: K_{\mathrm{shaft}}
+    description: Stiffness constant
+    unit: pu
+    typical_values: []
+  - name: wo
+    symbol: W_{\mathrm{o}}
+    description: Initial shaft speed
+    unit: pu
+    typical_values: [1.0]
+  - name: Tp
+    symbol: T_{\mathrm{p}}
+    description: Time constant
+    unit: s
+    typical_values: [0.5]
