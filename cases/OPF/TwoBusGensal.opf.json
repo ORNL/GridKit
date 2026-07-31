@@ -1,0 +1,75 @@
+{
+    "header": {
+        "format_version": 0,
+        "format_revision": 1,
+        "case_name": "GENSAL two-bus validation",
+        "case_description": "Derived from the PhasorDynamics case with fictitious data where no dynamics source exists"
+    },
+    "params": {
+        "freq_base": 60.0,
+        "va_base": 100000000.0
+    },
+    "buses": [
+        {
+            "class": "Slack",
+            "id": "Bus_1",
+            "params": {
+                "number": 1,
+                "kv": 138.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "Bus_2",
+            "params": {
+                "number": 2,
+                "kv": 138.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        }
+    ],
+    "devices": [
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 1,
+                "to": 2
+            },
+            "id": "BR_1_2",
+            "params": {
+                "R": 0.0,
+                "X": 0.1,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 1
+            },
+            "id": "gensal_1_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 1.2,
+                "qmin": -0.5,
+                "qmax": 0.5,
+                "mva": 100.0,
+                "c0": 0.0,
+                "c1": 10.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 2
+            },
+            "id": "load_2",
+            "params": {}
+        }
+    ]
+}
