@@ -1,6 +1,6 @@
 name: PSS1A
 parameters:
-  - name: KS
+  - name: Ks
     symbol: 'K_{\mathrm{S}}'
     description: Power system stabilizer (PSS) gain
     unit: pu
@@ -45,13 +45,23 @@ parameters:
     description: PSS transducer time constant
     unit: s
     typical_values: [0.0, 0.016]
-  - name: VSTmax
+  - name: Vstmax
     symbol: 'V_{\mathrm{STmax}}'
     description: Maximum PSS output
     unit: pu
     typical_values: [0.09, 0.05, 0.1]
-  - name: VSTmin
+  - name: Vstmin
     symbol: 'V_{\mathrm{STmin}}'
     description: Minimum PSS output
     unit: pu
     typical_values: [-0.09, -0.05, -0.066]
+  - name: Vcu
+    symbol: 'V_{\mathrm{cu}}'
+    description: Upper stabilizer input cutout threshold
+    unit: pu
+    typical_values: []
+  - name: Vcl
+    symbol: 'V_{\mathrm{cl}}'
+    description: Lower stabilizer input cutout threshold
+    unit: pu
+    typical_values: []

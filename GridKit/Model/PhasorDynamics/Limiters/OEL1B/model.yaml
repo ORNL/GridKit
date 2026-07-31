@@ -1,36 +1,36 @@
 name: OEL1B
 parameters:
-  - name: ITFPU
+  - name: Itfpu
     symbol: 'I_{\mathrm{TFPU}}'
-    description: OEL timed field current limiter pick up levela
+    description: OEL timed field current limiter pickup level
     unit: pu
     typical_values: [1.05]
-  - name: IFDMAX
+  - name: Ifdmax
     symbol: 'I_{\mathrm{FDMAX}}'
     description: OEL instantaneous field current limit
     unit: pu
     typical_values: [1.5]
-  - name: IFDLIM
+  - name: Ifdlim
     symbol: 'I_{\mathrm{FDLIM}}'
     description: OEL timed field current limit
     unit: pu
     typical_values: [1.05]
-  - name: HYST
+  - name: Hyst
     symbol: '\mathrm{HYST}'
     description: OEL pick up/drop out hysteresis
     unit: pu
     typical_values: [0.03]
-  - name: KCD
+  - name: Kcd
     symbol: 'K_{\mathrm{CD}}'
     description: OEL cool-down gain
     unit: pu
     typical_values: [1]
-  - name: KRAMP
+  - name: Kramp
     symbol: 'K_{\mathrm{RAMP}}'
-    description: Low band central frequency
+    description: OEL output ramp rate
     unit: pu/s
     typical_values: [10]
-  - name: IFDrated
+  - name: Ifdrated
     symbol: 'I_{\mathrm{FDrated}}'
     description: Rated field current
     unit: pu
