@@ -243,7 +243,8 @@ namespace GridKit
                    { "signal_id": 25, "name": "Power Factor Reference"},
                    { "signal_id": 26, "name": "Active Power Reference"},
                    { "signal_id": 27, "name": "Reactive Current Command"},
-                   { "signal_id": 28, "name": "Active Current Command"}
+                   { "signal_id": 28, "name": "Active Current Command"},
+                   { "signal_id": 29, "name": "Fault Active"}
                ],
                "devices": [
                    { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "tap":1.05, "phase":0.1} },
@@ -633,6 +634,10 @@ namespace GridKit
                   "tap": 1.05,
                   "phase": 0.02,
                   "rating": 100.0
+                },
+                "fault_1": {
+                  "active": false,
+                  "future_fault_data": "ignored"
                 }
               },
               "future_metadata": {
@@ -659,12 +664,14 @@ namespace GridKit
 
         const auto& generator  = state.devices.at("gen_7");
         const auto& branch     = state.devices.at("branch_1");
+        const auto& fault      = state.devices.at("fault_1");
         success               *= generator.online == true;
         success               *= generator.p == 0.8;
         success               *= generator.q == 0.1;
         success               *= branch.open == false;
         success               *= branch.tap == 1.05;
         success               *= branch.phase == 0.02;
+        success               *= fault.active == false;
 
         std::istringstream null_time_stream(
             R"({"header": {"time": null, "future_time_kind": "snapshot"}})");

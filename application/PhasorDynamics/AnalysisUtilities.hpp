@@ -35,11 +35,11 @@ namespace GridKit
      */
     struct SystemEvent
     {
-      /// Type of event determines action performed
       enum class Type
       {
         FAULT_ON,
-        FAULT_OFF
+        FAULT_OFF,
+        INPUT
       };
 
       /// Time event takes place
@@ -52,6 +52,12 @@ namespace GridKit
       double      R{0.0};
       /// Fault reactance [p.u.]
       double      X{0.0};
+      /// Case device ID receiving the input change
+      std::string device_id;
+      /// Name of the device input to change
+      std::string input;
+      /// Scalar value assigned to the input
+      double      value{0.0};
     };
 
     /**
@@ -144,7 +150,7 @@ namespace GridKit
         raw_event.at("time").get_to(event.time);
         event.bus = raw_event.value("bus", INVALID_INDEX<std::size_t>);
 
-        auto type_str   = raw_event.at("type").get<std::string>();
+        auto type_str   = raw_event.value("type", std::string("input"));
         using EventType = SystemEvent::Type;
         auto type_wrap  = enum_cast<EventType>(type_str, case_insensitive);
         if (!type_wrap.has_value())
@@ -156,6 +162,12 @@ namespace GridKit
         {
           raw_event.at("R").get_to(event.R);
           raw_event.at("X").get_to(event.X);
+        }
+        if (event.type == EventType::INPUT)
+        {
+          raw_event.at("device_id").get_to(event.device_id);
+          raw_event.at("input").get_to(event.input);
+          raw_event.at("value").get_to(event.value);
         }
       }
 
