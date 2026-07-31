@@ -37,6 +37,7 @@ TestStatus runStudy(StudyData study_data)
   Ida<scalar_type, index_type> ida(&sys);
   ida.setTolerance(study_data.rel_tol, study_data.abs_tol);
   ida.setFixedStep(study_data.dt_fixed);
+  ida.setMaxSteps(study_data.max_steps);
   ida.configureSimulation();
 
   using EventType = SystemEvent::Type;

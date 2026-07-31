@@ -72,7 +72,7 @@
 - Add new `LinearSolver` interface for linear solvers.
 - Added new `Rosenbrock` integrator.
 - Clarified naming conventions for macros.
-- Added `dt_fixed`, `rel_tol`, and `abs_tol` options to phasor dynamics solver JSON files and renamed the `dt` option to `dt_monitor`.
+- Added `dt_fixed`, `rel_tol`, `abs_tol`, and `max_steps` options to phasor dynamics solver JSON files and renamed the `dt` option to `dt_monitor`.
 - Added EMT model and operator documentation.
 
 ## v0.1

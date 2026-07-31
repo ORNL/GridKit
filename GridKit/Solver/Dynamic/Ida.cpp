@@ -844,8 +844,8 @@ namespace AnalysisManager
       const auto ysize = static_cast<size_t>(y.getSize());
       if (xsize != ysize)
       {
-        std::cerr << "\nN_Vector size (" << xsize << ") does not match vector size ("
-                  << y.getSize() << ").\n\n";
+        GridKit::Utilities::Logger::error() << "N_Vector size (" << xsize << ") does not match vector size ("
+                                            << y.getSize() << ").\n";
         throw SundialsException();
       }
 
@@ -867,8 +867,8 @@ namespace AnalysisManager
       const auto xsize = static_cast<size_t>(x.getSize());
       if (xsize != ysize)
       {
-        std::cerr << "\nvector size (" << x.getSize() << ") does not match N_Vector size ("
-                  << ysize << ").\n\n";
+        GridKit::Utilities::Logger::error() << "vector size (" << x.getSize() << ") does not match N_Vector size ("
+                                            << ysize << ").\n";
         throw SundialsException();
       }
 
@@ -889,8 +889,8 @@ namespace AnalysisManager
       const auto ysize = static_cast<size_t>(N_VGetLength(y));
       if (x.size() != ysize)
       {
-        std::cerr << "\nstd::vector size (" << x.size() << ") does not match N_Vector size ("
-                  << ysize << ").\n\n";
+        GridKit::Utilities::Logger::error() << "std::vector size (" << x.size() << ") does not match N_Vector size ("
+                                            << ysize << ").\n";
         throw SundialsException();
       }
 
