@@ -1,5 +1,7 @@
 #include <cassert>
+#include <cmath>
 #include <iostream>
+#include <stdexcept>
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
@@ -45,15 +47,97 @@ namespace GridKit
       using namespace Controller;
       using namespace Converter;
 
+      auto parameterValue = [](const auto& component_data,
+                               auto        parameter,
+                               RealT       fallback)
+      {
+        auto value = component_data.parameters.find(parameter);
+        if (value == component_data.parameters.end())
+        {
+          return fallback;
+        }
+
+        return std::visit(
+            [](const auto& raw_value)
+            { return static_cast<RealT>(raw_value); },
+            value->second);
+      };
+
+      auto mappedSignalId = [](const auto& component_data,
+                               auto        signal_input) -> std::optional<IdxT>
+      {
+        auto signal = component_data.signal_inputs.find(signal_input);
+        if (signal == component_data.signal_inputs.end())
+        {
+          return std::nullopt;
+        }
+        return signal->second;
+      };
+
+      auto addMappedInput = [this, &mappedSignalId](const auto& component_data,
+                                                    auto        signal_input,
+                                                    const char* input_name,
+                                                    RealT       initial_value)
+      {
+        return addInputSignal(component_data.disambiguation_string,
+                              input_name,
+                              initial_value,
+                              mappedSignalId(component_data, signal_input));
+      };
+
+      struct DispatchInputs
+      {
+        RealT p;
+        RealT q;
+        RealT online;
+      };
+
+      auto dispatchInputs = [](const auto& component_data,
+                               RealT       p,
+                               RealT       q)
+      {
+        DispatchInputs inputs{p, q, RealT{1.0}};
+        if (component_data.initial_state)
+        {
+          const auto& state = *component_data.initial_state;
+          inputs.p          = state.p.value_or(inputs.p);
+          inputs.q          = state.q.value_or(inputs.q);
+          inputs.online     = static_cast<RealT>(state.online.value_or(true));
+        }
+        return inputs;
+      };
+
       owns_components_ = true;
 
       // Store parsed system bases before constructing data-driven components.
       this->setSystemBase(data.freq_base, data.va_base);
 
+      std::map<IdxT, std::pair<RealT, RealT>> initial_bus_voltages;
+
       // Add electrical buses
       for (const auto& busdata : data.bus)
       {
         BusBase<ScalarT, IdxT>* bus = BusFactory<ScalarT, IdxT>::create(busdata);
+
+        RealT vr = busdata.Vr0;
+        RealT vi = busdata.Vi0;
+
+        if (busdata.initial_state)
+        {
+          const auto& state = *busdata.initial_state;
+          if (state.vr)
+          {
+            vr = *state.vr;
+            bus->setVr(vr);
+          }
+          if (state.vi)
+          {
+            vi = *state.vi;
+            bus->setVi(vi);
+          }
+        }
+
+        initial_bus_voltages[busdata.bus_id] = {vr, vi};
         addBus(bus);
       }
 
@@ -107,9 +191,27 @@ namespace GridKit
           bus2_index = branchdata.buses.at(BranchBuses::bus2);
         }
 
-        auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index),
-                                                 getBus(bus2_index),
-                                                 branchdata);
+        auto* branch = new Branch<ScalarT, IdxT>(
+            getBus(bus1_index), getBus(bus2_index), branchdata);
+
+        RealT tap   = parameterValue(branchdata, BranchParameters::tap, RealT{1.0});
+        RealT phase = parameterValue(branchdata, BranchParameters::phase, RealT{0.0});
+        RealT open  = RealT{0.0};
+        if (branchdata.initial_state)
+        {
+          const auto& state = *branchdata.initial_state;
+          tap               = state.tap.value_or(tap);
+          phase             = state.phase.value_or(phase);
+          open              = static_cast<RealT>(state.open.value_or(false));
+        }
+
+        auto* tap_signal   = addMappedInput(branchdata, BranchSignalInputs::tap, "tap", tap);
+        auto* phase_signal = addMappedInput(branchdata, BranchSignalInputs::phase, "phase", phase);
+        auto* open_signal  = addMappedInput(branchdata, BranchSignalInputs::open, "open", open);
+
+        branch->getSignals().template attachSignalNode<BranchExternalVariables::TAP>(tap_signal);
+        branch->getSignals().template attachSignalNode<BranchExternalVariables::PHASE>(phase_signal);
+        branch->getSignals().template attachSignalNode<BranchExternalVariables::OPEN>(open_signal);
         addComponent(branch);
       }
 
@@ -123,6 +225,16 @@ namespace GridKit
           bus_index = loaddata.buses.at(LoadZBuses::bus);
         }
         auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
+
+        RealT online = RealT{1.0};
+        if (loaddata.initial_state)
+        {
+          online = static_cast<RealT>(loaddata.initial_state->online.value_or(true));
+        }
+
+        auto* online_signal = addMappedInput(
+            loaddata, LoadZSignalInputs::online, "online", online);
+        load->getSignals().template attachSignalNode<LoadZExternalVariables::ONLINE>(online_signal);
         addComponent(load);
       }
 
@@ -135,8 +247,38 @@ namespace GridKit
         {
           bus_index = loadzipdata.buses.at(LoadZIPBuses::bus);
         }
-        auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
-                                                   loadzipdata);
+        auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index), loadzipdata);
+
+        const auto [vr, vi] = initial_bus_voltages.at(bus_index);
+        const RealT V       = std::sqrt(vr * vr + vi * vi);
+        const RealT Vnom    = parameterValue(
+            loadzipdata, LoadZIPParameters::Vnom, RealT{1.0});
+        const RealT alphaI = parameterValue(
+            loadzipdata, LoadZIPParameters::alphaI, RealT{0.0});
+        const RealT alphaP = parameterValue(
+            loadzipdata, LoadZIPParameters::alphaP, RealT{0.0});
+        const RealT alphaZ = RealT{1.0} - alphaI - alphaP;
+        const RealT ratio  = V / Vnom;
+        const RealT legacy_dispatch_factor =
+            alphaZ * ratio * ratio + alphaI * ratio + alphaP;
+
+        auto inputs = dispatchInputs(
+            loadzipdata,
+            -parameterValue(loadzipdata, LoadZIPParameters::Pnom, RealT{0.0})
+                * legacy_dispatch_factor,
+            -parameterValue(loadzipdata, LoadZIPParameters::Qnom, RealT{0.0})
+                * legacy_dispatch_factor);
+
+        auto* p_signal = addMappedInput(
+            loadzipdata, LoadZIPSignalInputs::p, "p", inputs.p);
+        auto* q_signal = addMappedInput(
+            loadzipdata, LoadZIPSignalInputs::q, "q", inputs.q);
+        auto* online_signal = addMappedInput(
+            loadzipdata, LoadZIPSignalInputs::online, "online", inputs.online);
+
+        loadzip->getSignals().template attachSignalNode<LoadZIPExternalVariables::P>(p_signal);
+        loadzip->getSignals().template attachSignalNode<LoadZIPExternalVariables::Q>(q_signal);
+        loadzip->getSignals().template attachSignalNode<LoadZIPExternalVariables::ONLINE>(online_signal);
         addComponent(loadzip);
       }
 
@@ -149,7 +291,47 @@ namespace GridKit
           bus_index = gendata.buses.at(GenrouBuses::bus);
         }
         auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
+
+        /// @todo Genrou (and likely other components) would need to name multiple
+        /// signal inlets and outlets. For now we have only speed out and mechanical
+        /// power in.
+        if (gendata.signal_outputs.contains(GenrouSignalOutputs::speed))
+        {
+          IdxT           speed = gendata.signal_outputs.at(GenrouSignalOutputs::speed);
+          constexpr auto OMEGA = GenrouInternalVariables::OMEGA;
+          gen->getSignals().template assignSignalNode<OMEGA>(getSignal(speed));
+        }
+
+        if (gendata.signal_inputs.contains(GenrouSignalInputs::pmech))
+        {
+          IdxT           pmech = gendata.signal_inputs.at(GenrouSignalInputs::pmech);
+          constexpr auto PM    = GenrouExternalVariables::PM;
+          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
+        }
+
+        if (gendata.signal_inputs.contains(GenrouSignalInputs::efd))
+        {
+          IdxT           efd = gendata.signal_inputs.at(GenrouSignalInputs::efd);
+          constexpr auto EFD = GenrouExternalVariables::EFD;
+          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
+        }
+
+        auto inputs = dispatchInputs(
+            gendata,
+            parameterValue(gendata, GenrouParameters::p0, RealT{0.0}),
+            parameterValue(gendata, GenrouParameters::q0, RealT{0.0}));
+
+        auto* p_signal = addMappedInput(
+            gendata, GenrouSignalInputs::p, "p", inputs.p);
+        auto* q_signal = addMappedInput(
+            gendata, GenrouSignalInputs::q, "q", inputs.q);
+        auto* online_signal = addMappedInput(
+            gendata, GenrouSignalInputs::online, "online", inputs.online);
+
+        gen->getSignals().template attachSignalNode<GenrouExternalVariables::P>(p_signal);
+        gen->getSignals().template attachSignalNode<GenrouExternalVariables::Q>(q_signal);
+        gen->getSignals().template attachSignalNode<GenrouExternalVariables::ONLINE>(online_signal);
+
         addComponent(gen);
       }
 
@@ -163,7 +345,44 @@ namespace GridKit
         }
 
         auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
+
+        if (gendata.signal_outputs.contains(GensalSignalOutputs::speed))
+        {
+          IdxT           speed = gendata.signal_outputs.at(GensalSignalOutputs::speed);
+          constexpr auto OMEGA = GensalInternalVariables::OMEGA;
+          gen->getSignals().template assignSignalNode<OMEGA>(getSignal(speed));
+        }
+
+        if (gendata.signal_inputs.contains(GensalSignalInputs::pmech))
+        {
+          IdxT           pmech = gendata.signal_inputs.at(GensalSignalInputs::pmech);
+          constexpr auto PM    = GensalExternalVariables::PM;
+          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
+        }
+
+        if (gendata.signal_inputs.contains(GensalSignalInputs::efd))
+        {
+          IdxT           efd = gendata.signal_inputs.at(GensalSignalInputs::efd);
+          constexpr auto EFD = GensalExternalVariables::EFD;
+          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
+        }
+
+        auto inputs = dispatchInputs(
+            gendata,
+            parameterValue(gendata, GensalParameters::p0, RealT{0.0}),
+            parameterValue(gendata, GensalParameters::q0, RealT{0.0}));
+
+        auto* p_signal = addMappedInput(
+            gendata, GensalSignalInputs::p, "p", inputs.p);
+        auto* q_signal = addMappedInput(
+            gendata, GensalSignalInputs::q, "q", inputs.q);
+        auto* online_signal = addMappedInput(
+            gendata, GensalSignalInputs::online, "online", inputs.online);
+
+        gen->getSignals().template attachSignalNode<GensalExternalVariables::P>(p_signal);
+        gen->getSignals().template attachSignalNode<GensalExternalVariables::Q>(q_signal);
+        gen->getSignals().template attachSignalNode<GensalExternalVariables::ONLINE>(online_signal);
+
         addComponent(gen);
       }
 
@@ -176,7 +395,22 @@ namespace GridKit
           bus_index = gendata.buses.at(GenClassicalBuses::bus);
         }
         auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
-        gen->getPorts().connect(gendata, signal_nodes_);
+
+        auto inputs = dispatchInputs(
+            gendata,
+            parameterValue(gendata, GenClassicalParameters::p0, RealT{0.0}),
+            parameterValue(gendata, GenClassicalParameters::q0, RealT{0.0}));
+
+        auto* p_signal = addMappedInput(
+            gendata, GenClassicalSignalInputs::p, "p", inputs.p);
+        auto* q_signal = addMappedInput(
+            gendata, GenClassicalSignalInputs::q, "q", inputs.q);
+        auto* online_signal = addMappedInput(
+            gendata, GenClassicalSignalInputs::online, "online", inputs.online);
+
+        gen->getSignals().template attachSignalNode<GenClassicalExternalVariables::P>(p_signal);
+        gen->getSignals().template attachSignalNode<GenClassicalExternalVariables::Q>(q_signal);
+        gen->getSignals().template attachSignalNode<GenClassicalExternalVariables::ONLINE>(online_signal);
         addComponent(gen);
       }
 
@@ -465,6 +699,19 @@ namespace GridKit
         offset += component->size();
       }
 
+      for (const auto& [key, signals] : input_signals_)
+      {
+        for (const auto* signal : signals)
+        {
+          if (!signal->linked())
+          {
+            throw std::runtime_error(
+                "SystemModel input signal has no backing storage: "
+                + key.first + "." + key.second);
+          }
+        }
+      }
+
       if (offset != size_)
       {
         Log::error() << "Bound vector sizes do not match the system size\n";
@@ -737,6 +984,60 @@ namespace GridKit
       gridkit_bus_indices_[bus->busID()] = gridkit_bus_id;
       buses_.push_back(bus);
       allocated_ = false;
+    }
+
+    /**
+     * @brief Add a model input signal and register its semantic endpoint.
+     */
+    template <typename scalar_type, typename index_type>
+    typename SystemModel<scalar_type, index_type>::SignalT*
+    SystemModel<scalar_type, index_type>::addInputSignal(
+        const std::string&  device_id,
+        const std::string&  input_name,
+        RealT               initial_value,
+        std::optional<IdxT> signal_id)
+    {
+      InputKey key{device_id, input_name};
+      SignalT* signal = nullptr;
+      if (signal_id)
+      {
+        // An explicit graph connection supplies the value and takes
+        // precedence over state and legacy fallbacks.
+        signal = getSignal(*signal_id);
+      }
+      else
+      {
+        auto input = std::make_unique<InputSignal>(
+            static_cast<ScalarT>(initial_value));
+        signal = &input->node;
+        owned_input_signals_.push_back(std::move(input));
+      }
+
+      input_signals_[std::move(key)].push_back(signal);
+      return signal;
+    }
+
+    /**
+     * @brief Set a named model input signal.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::setInput(
+        const std::string& device_id,
+        const std::string& input_name,
+        RealT              value)
+    {
+      auto& signals = input_signals_.at({device_id, input_name});
+      for (auto* signal : signals)
+      {
+        if (!signal->linked())
+        {
+          throw std::logic_error("SystemModel input signal has no backing storage");
+        }
+      }
+      for (auto* signal : signals)
+      {
+        signal->init(static_cast<ScalarT>(value));
+      }
     }
 
     /**

@@ -186,6 +186,117 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /**
+       * @brief Checks operating inputs override legacy initialization and online
+       * status disconnects and reconnects the network contribution.
+       */
+      TestOutcome operating_state_signals()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
+        auto                                  data = makeGenrouData();
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, data);
+
+        ScalarT p{0.4};
+        ScalarT q{-0.2};
+        ScalarT online{0.0};
+        IdxT    p_index      = INVALID_INDEX<IdxT>;
+        IdxT    q_index      = INVALID_INDEX<IdxT>;
+        IdxT    online_index = INVALID_INDEX<IdxT>;
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> p_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> q_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> online_signal;
+        p_signal.set(&p, &p_index);
+        q_signal.set(&q, &q_index);
+        online_signal.set(&online, &online_index);
+
+        auto& signals = gen.getSignals();
+        signals.template attachSignalNode<PhasorDynamics::GenrouExternalVariables::P>(&p_signal);
+        signals.template attachSignalNode<PhasorDynamics::GenrouExternalVariables::Q>(&q_signal);
+        signals.template attachSignalNode<PhasorDynamics::GenrouExternalVariables::ONLINE>(&online_signal);
+
+        bus.allocate();
+        bus.initialize();
+        gen.setSystemBase(60.0, 100.0e6);
+        gen.allocate();
+
+        gen.initialize();
+        success *= isEqual(gen.y().getData()[15], p, tol_);
+        success *= isEqual(gen.y().getData()[16], -q, tol_);
+
+        bus.evaluateResidual();
+        gen.evaluateResidual();
+        success *= isEqual(bus.getResidual().getData()[0], 0.0, tol_);
+        success *= isEqual(bus.getResidual().getData()[1], 0.0, tol_);
+
+        online = 1.0;
+        bus.evaluateResidual();
+        gen.evaluateResidual();
+        success *= isEqual(bus.getResidual().getData()[0], p, tol_);
+        success *= isEqual(bus.getResidual().getData()[1], -q, tol_);
+
+        online = 0.0;
+        bus.evaluateResidual();
+        gen.evaluateResidual();
+        success *= isEqual(bus.getResidual().getData()[0], 0.0, tol_);
+        success *= isEqual(bus.getResidual().getData()[1], 0.0, tol_);
+
+        online = 1.0;
+        bus.evaluateResidual();
+        gen.evaluateResidual();
+        success *= isEqual(bus.getResidual().getData()[0], p, tol_);
+        success *= isEqual(bus.getResidual().getData()[1], -q, tol_);
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        gen.updateTime(0.0, 1.0);
+        for (IdxT i = 0; i < bus.size(); ++i)
+        {
+          bus.setVariableIndex(i, gen.size() + i);
+          bus.setResidualIndex(i, gen.size() + i);
+        }
+
+        gen.evaluateJacobian();
+        auto* jacobian  = gen.getCooJacobian();
+        success        *= jacobian != nullptr;
+        if (jacobian != nullptr)
+        {
+          const IdxT        nnz = jacobian->getNnz();
+          std::vector<IdxT> rows(jacobian->getRowData(), jacobian->getRowData() + nnz);
+          std::vector<IdxT> cols(jacobian->getColData(), jacobian->getColData() + nnz);
+
+          online = 0.0;
+          gen.evaluateJacobian();
+          success *= jacobian->getNnz() == nnz;
+          for (IdxT i = 0; i < nnz; ++i)
+          {
+            success *= jacobian->getRowData()[i] == rows[static_cast<size_t>(i)];
+            success *= jacobian->getColData()[i] == cols[static_cast<size_t>(i)];
+            if (jacobian->getRowData()[i] >= gen.size())
+            {
+              success *= isEqual(jacobian->getValues()[i], 0.0, tol_);
+            }
+          }
+
+          online               = 1.0;
+          bool bus_has_nonzero = false;
+          gen.evaluateJacobian();
+          success *= jacobian->getNnz() == nnz;
+          for (IdxT i = 0; i < nnz; ++i)
+          {
+            if (jacobian->getRowData()[i] >= gen.size())
+            {
+              bus_has_nonzero = bus_has_nonzero || jacobian->getValues()[i] != 0.0;
+            }
+          }
+          success *= bus_has_nonzero;
+        }
+#endif
+
+        return success.report(__func__);
+      }
+
       // A test to verify that the hard coded answers match those given by the residual functions
       // Hard coded parameters, differential, and algebraic terms
       TestOutcome hard_coded_residual()

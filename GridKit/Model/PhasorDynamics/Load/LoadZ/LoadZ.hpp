@@ -9,6 +9,13 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// External variables of a constant-impedance load
+    enum class LoadZExternalVariables : size_t
+    {
+      ONLINE, ///< Connection status (zero is disconnected, nonzero is connected)
+      MAXIMUM
+    };
+
     /*!
      * @brief Implementation of a constant load.
      *
@@ -42,6 +49,10 @@ namespace GridKit
       using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = LoadZData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
+      using SignalsT   = ComponentSignals<ScalarT,
+                                          IdxT,
+                                          NoVariables,
+                                          LoadZExternalVariables>;
 
       LoadZ(BusT* bus);
       LoadZ(BusT* bus, RealT R, RealT X);
@@ -55,6 +66,12 @@ namespace GridKit
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
+
+      /// Get the signal connections for this load.
+      SignalsT& getSignals()
+      {
+        return signals_;
+      }
 
       virtual int verify() const override final
       {
@@ -75,8 +92,9 @@ namespace GridKit
       }
 
     private:
-      void initializeMonitor();
-      void setDerivedParams();
+      void    initializeMonitor();
+      void    setDerivedParams();
+      ScalarT online() const;
 
       ScalarT& Vr()
       {
@@ -110,10 +128,11 @@ namespace GridKit
       BusT* bus_{nullptr};
       RealT R_{0.1};
       RealT X_{0.01};
-
       /* Derivied parameters */
       RealT b_;
       RealT g_;
+
+      SignalsT signals_;
 
       std::unique_ptr<MonitorT> monitor_;
     };

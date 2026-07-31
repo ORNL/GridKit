@@ -12,6 +12,7 @@ int main()
   result += test.residual_nonzero_ra();
   result += test.frequency_base();
   result += test.monitor_system_base();
+  result += test.operating_state_signals();
 
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();

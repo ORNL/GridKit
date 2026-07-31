@@ -13,6 +13,27 @@
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
+// Forward declarations.
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    /// External signal variables of a `Branch`
+    enum class BranchExternalVariables : size_t
+    {
+      TAP,   ///< Off-nominal tap magnitude
+      PHASE, ///< Phase shift angle in radians
+      OPEN,  ///< Open status (zero is closed, nonzero is open)
+    };
+
+    template <typename scalar_type, typename index_type>
+    class BusBase;
+
+    template <typename real_type, typename index_type>
+    struct BranchData;
+  } // namespace PhasorDynamics
+} // namespace GridKit
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -74,6 +95,13 @@ namespace GridKit
       virtual int evaluateJacobian() override final;
       virtual int verify() const override final;
 
+      /// Get the `ComponentSignals` from this `Branch`
+      auto getSignals()
+          -> ComponentSignals<ScalarT, IdxT, NoVariables, BranchExternalVariables>&
+      {
+        return signals_;
+      }
+
       void setR(RealT R)
       {
         R_ = R;
@@ -115,9 +143,20 @@ namespace GridKit
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
+      void updateSignalInputs();
       void setDerivedParams();
       void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
       void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
+
+      RealT inServiceFactor() const
+      {
+        if (open_ != ZERO<RealT>)
+        {
+          return ZERO<RealT>;
+        }
+        return ONE<RealT>;
+      }
+
       bool readRealParameter(const ModelDataT&               data,
                              typename ModelDataT::Parameters parameter,
                              RealT&                          target);
@@ -187,6 +226,11 @@ namespace GridKit
     private:
       BusT* bus1_;
       BusT* bus2_;
+
+      /// Branch operating inputs. Attached signals take precedence over the
+      /// legacy constructor/data fallbacks stored below.
+      ComponentSignals<ScalarT, IdxT, NoVariables, BranchExternalVariables> signals_;
+
       RealT R_{0.0};
       RealT X_{0.0};
       RealT G_{0.0};
@@ -195,6 +239,7 @@ namespace GridKit
       RealT Bmag_{0.0};
       RealT tap_{1.0};
       RealT phase_{0.0};
+      RealT open_{0.0};
       IdxT  bus1_id_{0};
       IdxT  bus2_id_{0};
 
