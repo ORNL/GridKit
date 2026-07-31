@@ -1,0 +1,204 @@
+name: REGFMC1
+parameters:
+  - name: FFlag
+    symbol: F_{\mathrm{Flag}}
+    description: A flag to determine whether the power-frequency droop is enabled (1) or disabled (0)
+    unit: null
+    typical_values: []
+  - name: PQFlag
+    symbol: P_{\mathrm{QFlag}}
+    description: A flag to determine whether P priority (1) or Q priority (0) is selected
+    unit: null
+    typical_values: []
+  - name: Rs
+    symbol: R_{\mathrm{s}}
+    description: Virtual resistance (0 pu <= Rs <= Xs/4)
+    unit: pu
+    typical_values: []
+  - name: Xs
+    symbol: X_{\mathrm{s}}
+    description: Virtual reactance (0.04 pu <= Xs <= 0.4 pu)
+    unit: pu
+    typical_values: []
+  - name: mq
+    symbol: m_{\mathrm{q}}
+    description: Q-V droop gain of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: kq
+    symbol: k_{\mathrm{q}}
+    description: A binary value that is either 0 or 1
+    unit: null
+    typical_values: []
+  - name: kpE
+    symbol: k_{\mathrm{pE}}
+    description: Proportional gain of the voltage PI loop of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: kiE
+    symbol: k_{\mathrm{iE}}
+    description: Integral gain of the voltage PI loop of the GFM branch
+    unit: pu/s
+    typical_values: []
+  - name: dEmax
+    symbol: \Delta E_{\mathrm{max}}
+    description: Upper limit of the voltage PI loop of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: dEmin
+    symbol: \Delta E_{\mathrm{min}}
+    description: Lower limit of the voltage PI loop of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: Vrefmax
+    symbol: V_{\mathrm{refmax}}
+    description: Upper limit of the voltage reference of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: Vrefmin
+    symbol: V_{\mathrm{refmin}}
+    description: Lower limit of the voltage reference of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: TVref
+    symbol: T_{\mathrm{Vref}}
+    description: Time constant of low-pass filter of the GFM branch (voltage reference)
+    unit: s
+    typical_values: []
+  - name: TVSM
+    symbol: T_{\mathrm{VSM}}
+    description: Time constant of low-pass filter of the GFM branch (internal voltage)
+    unit: s
+    typical_values: []
+  - name: TVf
+    symbol: T_{\mathrm{Vf}}
+    description: Time constant of low-pass filter of the GFM branch (voltage measurement)
+    unit: s
+    typical_values: []
+  - name: TIf
+    symbol: T_{\mathrm{If}}
+    description: Time constant of low-pass filter of the GFM branch (current measurement)
+    unit: s
+    typical_values: []
+  - name: H
+    symbol: H
+    description: Inertia time constant of the GFM branch
+    unit: s
+    typical_values: []
+  - name: D1
+    symbol: D_{1}
+    description: Damping of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: D2
+    symbol: D_{2}
+    description: Transient damping of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: wD
+    symbol: \omega_{\mathrm{D}}
+    description: Angular frequency of the washout block of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: mp
+    symbol: m_{\mathrm{p}}
+    description: P-f droop gain of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: dwmax
+    symbol: \Delta\omega_{\mathrm{max}}
+    description: Upper limit of the VSM integrator of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: dwmin
+    symbol: \Delta\omega_{\mathrm{min}}
+    description: Lower limit of the VSM integrator of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: wrefmax
+    symbol: \omega_{\mathrm{refmax}}
+    description: Upper limit of the frequency reference of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: wrefmin
+    symbol: \omega_{\mathrm{refmin}}
+    description: Lower limit of the frequency reference of the GFM branch
+    unit: pu
+    typical_values: []
+  - name: Twr
+    symbol: T_{\mathrm{wr}}
+    description: Time constant of low-pass filter of the GFM branch (frequency reference)
+    unit: s
+    typical_values: []
+  - name: Twm
+    symbol: T_{\mathrm{wm}}
+    description: Time constant of low-pass filter of the GFM branch (measured frequency)
+    unit: s
+    typical_values: []
+  - name: TPf
+    symbol: T_{\mathrm{Pf}}
+    description: Time constant of low-pass filter of the GFM branch (active power)
+    unit: s
+    typical_values: []
+  - name: Pcmd_GFL_max
+    symbol: P_{\mathrm{cmdGFLmax}}
+    description: Upper limit of the active power reference for the GFL branch
+    unit: pu
+    typical_values: []
+  - name: Pcmd_GFL_min
+    symbol: P_{\mathrm{cmdGFLmin}}
+    description: Lower limit of the active power reference for the GFL branch
+    unit: pu
+    typical_values: []
+  - name: Qcmd_GFL_max
+    symbol: Q_{\mathrm{cmdGFLmax}}
+    description: Upper limit of the reactive power reference for the GFL branch
+    unit: pu
+    typical_values: []
+  - name: Qcmd_GFL_min
+    symbol: Q_{\mathrm{cmdGFLmin}}
+    description: Lower limit of the reactive power reference for the GFL branch
+    unit: pu
+    typical_values: []
+  - name: Vmin
+    symbol: V_{\mathrm{min}}
+    description: Lower voltage limit of the GFL branch
+    unit: pu
+    typical_values: []
+  - name: Vref0
+    symbol: V_{\mathrm{ref0}}
+    description: Voltage reference of the GFL branch
+    unit: pu
+    typical_values: []
+  - name: kqv
+    symbol: k_{\mathrm{qv}}
+    description: Voltage control factor of the GFL branch
+    unit: pu
+    typical_values: []
+  - name: dbVL1
+    symbol: d_{\mathrm{bVL1}}
+    description: Lower threshold of the deadband of the GFL branch
+    unit: pu
+    typical_values: []
+  - name: dbVH1
+    symbol: d_{\mathrm{bVH1}}
+    description: Upper threshold of the deadband of the GFL branch
+    unit: pu
+    typical_values: []
+  - name: kf
+    symbol: k_{\mathrm{f}}
+    description: Factor determining Iqmax (PQFlag=0) or Idmax (PQFlag=1) of the GFL branch; if 0 the software
+      resets it to 1 with a warning
+    unit: pu
+    typical_values: []
+  - name: Imax
+    symbol: I_{\mathrm{max}}
+    description: Maximum output current
+    unit: pu
+    typical_values: []
+  - name: w0
+    symbol: \omega_{0}
+    description: Rated angular frequency; usually set in the solution environment rather than as a model
+      input
+    unit: rad/s
+    typical_values: []

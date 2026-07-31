@@ -1,0 +1,52 @@
+name: TGOV1D
+parameters:
+  - name: R
+    symbol: R
+    description: Permanent droop
+    unit: pu
+    typical_values: []
+  - name: T1
+    symbol: T_{1}
+    description: Steam bowl time constant
+    unit: s
+    typical_values: []
+  - name: Vmax
+    symbol: V_{\mathrm{max}}
+    description: Maximum valve position limit
+    unit: null
+    typical_values: []
+  - name: Vmin
+    symbol: V_{\mathrm{min}}
+    description: Minimum valve position limit
+    unit: null
+    typical_values: []
+  - name: T2
+    symbol: T_{2}
+    description: Numerator time constant of T2, T3 block
+    unit: s
+    typical_values: []
+  - name: T3
+    symbol: T_{3}
+    description: Reheater time constant
+    unit: s
+    typical_values: []
+  - name: Dt
+    symbol: D_{\mathrm{t}}
+    description: Turbine damping coefficient
+    unit: pu
+    typical_values: []
+  - name: dbH
+    symbol: d_{\mathrm{bH}}
+    description: Deadband High
+    unit: pu
+    typical_values: []
+  - name: dbL
+    symbol: d_{\mathrm{bL}}
+    description: Deadband Low
+    unit: pu
+    typical_values: []
+  - name: Trate
+    symbol: T_{\mathrm{rate}}
+    description: Turbine rating
+    unit: MW
+    typical_values: []
