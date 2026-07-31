@@ -1,0 +1,242 @@
+name: AC10C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0.01]
+  - name: KR
+    symbol: 'K_{\mathrm{R}}'
+    description: Regulator gain
+    unit: pu
+    typical_values: [600]
+  - name: TB1
+    symbol: 'T_{\mathrm{B1}}'
+    description: Voltage regulator denominator (lag) time constant 1
+    unit: s
+    typical_values: [22.5]
+  - name: TC1
+    symbol: 'T_{\mathrm{C1}}'
+    description: Voltage regulator numerator (lead) time constant 1
+    unit: s
+    typical_values: [3]
+  - name: TB2
+    symbol: 'T_{\mathrm{B2}}'
+    description: Voltage regulator denominator (lag) time constant 2
+    unit: s
+    typical_values: [0.13]
+  - name: TC2
+    symbol: 'T_{\mathrm{C2}}'
+    description: Voltage regulator numerator (lead) time constant 2
+    unit: s
+    typical_values: [0.9]
+  - name: TUB1
+    symbol: 'T_{\mathrm{UB1}}'
+    description: UEL regulator denominator (lag) time constant 1
+    unit: s
+    typical_values: [22.5]
+  - name: TUC1
+    symbol: 'T_{\mathrm{UC1}}'
+    description: UEL regulator numerator (lead) time constant 1
+    unit: s
+    typical_values: [3]
+  - name: TUB2
+    symbol: 'T_{\mathrm{UB2}}'
+    description: UEL regulator denominator (lag) time constant 2
+    unit: s
+    typical_values: [0.13]
+  - name: TUC2
+    symbol: 'T_{\mathrm{UC2}}'
+    description: UEL regulator numerator (lead) time constant 2
+    unit: s
+    typical_values: [0.9]
+  - name: TOB1
+    symbol: 'T_{\mathrm{OB1}}'
+    description: OEL regulator denominator (lag) time constant 1
+    unit: s
+    typical_values: [18]
+  - name: TOC1
+    symbol: 'T_{\mathrm{OC1}}'
+    description: OEL regulator numerator (lead) time constant 1
+    unit: s
+    typical_values: [0.9]
+  - name: TOB2
+    symbol: 'T_{\mathrm{OB2}}'
+    description: OEL regulator denominator (lag) time constant 2
+    unit: s
+    typical_values: [0.1]
+  - name: TOC2
+    symbol: 'T_{\mathrm{OC2}}'
+    description: OEL regulator numerator (lead) time constant 2
+    unit: s
+    typical_values: [0.1]
+  - name: VRSmax
+    symbol: 'V_{\mathrm{RSmax}}'
+    description: Maximum PSS regulator output
+    unit: pu
+    typical_values: [20]
+  - name: VRSmin
+    symbol: 'V_{\mathrm{RSmin}}'
+    description: Minimum PSS regulator output
+    unit: pu
+    typical_values: [-20]
+  - name: VRmax
+    symbol: 'V_{\mathrm{Rmax}}'
+    description: Maximum regulator output
+    unit: pu
+    typical_values: [40]
+  - name: VRmin
+    symbol: 'V_{\mathrm{Rmin}}'
+    description: Minimum regulator output
+    unit: pu
+    typical_values: [-35]
+  - name: SWEXC
+    symbol: '\mathrm{SW}_{\mathrm{EXC}}'
+    description: Exciter field current regulator feedback selector
+    unit: null
+    typical_values: [pos. B]
+  - name: TEXC
+    symbol: 'T_{\mathrm{EXC}}'
+    description: Exciter field current regulator measurement time constant
+    unit: s
+    typical_values: [0]
+  - name: KEXC
+    symbol: 'K_{\mathrm{EXC}}'
+    description: Exciter field current regulator feedback gain
+    unit: pu
+    typical_values: [1]
+  - name: KCR
+    symbol: 'K_{\mathrm{CR}}'
+    description: Exciter field current regulator proportional gain
+    unit: pu
+    typical_values: [0]
+  - name: TF1
+    symbol: 'T_{\mathrm{F1}}'
+    description: Exciter field current regulator numerator (lead) time constant
+    unit: s
+    typical_values: [0.1]
+  - name: TF2
+    symbol: 'T_{\mathrm{F2}}'
+    description: Exciter field current regulator denominator (lag) time constant
+    unit: s
+    typical_values: [0.1]
+  - name: KVFE
+    symbol: 'K_{\mathrm{VFE}}'
+    description: Exciter field current limiter feedback gain
+    unit: pu
+    typical_values: [1]
+  - name: KLIM
+    symbol: 'K_{\mathrm{LIM}}'
+    description: Exciter field current limiter proportional gain
+    unit: pu
+    typical_values: [0]
+  - name: VFELIM
+    symbol: 'V_{\mathrm{FELIM}}'
+    description: Exciter field current limiter reference
+    unit: pu
+    typical_values: [20]
+  - name: TE
+    symbol: 'T_{\mathrm{E}}'
+    description: Exciter field time constant
+    unit: s
+    typical_values: [1.3]
+  - name: KC
+    symbol: 'K_{\mathrm{C}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0.13]
+  - name: KD
+    symbol: 'K_{\mathrm{D}}'
+    description: Demagnetizing factor, function of exciter alternator reactances
+    unit: pu
+    typical_values: [1.15]
+  - name: KE
+    symbol: 'K_{\mathrm{E}}'
+    description: Exciter field proportional constant
+    unit: pu
+    typical_values: [1.0]
+  - name: VFEmax
+    symbol: 'V_{\mathrm{FEmax}}'
+    description: Maximum exciter field current
+    unit: pu
+    typical_values: [44]
+  - name: E1
+    symbol: 'E_{1}'
+    description: Exciter output voltage for saturation factor S (E) E 1
+    unit: pu
+    typical_values: [10]
+  - name: SE(E1)
+    symbol: 'S_{\mathrm{E}}(E_{1})'
+    description: Exciter saturation factor at exciter output voltage E 1
+    unit: null
+    typical_values: [0.214]
+  - name: E2
+    symbol: 'E_{2}'
+    description: Exciter output voltage for saturation factor S (E) E 2
+    unit: pu
+    typical_values: [7.5]
+  - name: SE(E2)
+    symbol: 'S_{\mathrm{E}}(E_{2})'
+    description: Exciter saturation factor at exciter output voltage E 2
+    unit: null
+    typical_values: [0.044]
+  - name: SW1
+    symbol: '\mathrm{SW}_{1}'
+    description: Power source selector
+    unit: null
+    typical_values: [pos. B]
+  - name: KP
+    symbol: 'K_{\mathrm{P}}'
+    description: Potential circuit (voltage) gain coefficient
+    unit: pu
+    typical_values: [1]
+  - name: KI
+    symbol: 'K_{\mathrm{I}}'
+    description: Potential circuit (current) gain coefficient
+    unit: pu
+    typical_values: [0]
+  - name: XL
+    symbol: 'X_{\mathrm{L}}'
+    description: Reactance associated with potential source
+    unit: pu
+    typical_values: [0]
+  - name: θP
+    symbol: '\theta_{\mathrm{P}}'
+    description: Potential circuit phase angle (degrees)
+    unit: degrees
+    typical_values: [0]
+  - name: KC1
+    symbol: 'K_{\mathrm{C1}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0]
+  - name: VB1max
+    symbol: 'V_{\mathrm{B1max}}'
+    description: Maximum available exciter voltage
+    unit: pu
+    typical_values: [1.5]
+  - name: KI2
+    symbol: 'K_{\mathrm{I2}}'
+    description: Additive potential circuit (current) gain coefficient
+    unit: pu
+    typical_values: [0]
+  - name: KC2
+    symbol: 'K_{\mathrm{C2}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0]
+  - name: VB2max
+    symbol: 'V_{\mathrm{B2max}}'
+    description: Maximum available exciter voltage
+    unit: pu
+    typical_values: [0]

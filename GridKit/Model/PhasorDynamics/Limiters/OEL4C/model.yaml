@@ -1,0 +1,27 @@
+name: OEL4C
+parameters:
+  - name: QREF
+    symbol: 'Q_{\mathrm{REF}}'
+    description: OEL timed reactive power limiter pick up level
+    unit: pu
+    typical_values: [0.4]
+  - name: Tdelay
+    symbol: 'T_{\mathrm{delay}}'
+    description: OEL integral time constant
+    unit: s
+    typical_values: [20]
+  - name: KP
+    symbol: 'K_{\mathrm{P}}'
+    description: OEL proportional gain
+    unit: pu
+    typical_values: [1]
+  - name: KI
+    symbol: 'K_{\mathrm{I}}'
+    description: OEL integral gain
+    unit: pu/s
+    typical_values: [1]
+  - name: Vmin
+    symbol: 'V_{\mathrm{min}}'
+    description: OEL minimum output
+    unit: pu
+    typical_values: [-0.2]

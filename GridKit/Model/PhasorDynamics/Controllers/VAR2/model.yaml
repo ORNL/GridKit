@@ -1,0 +1,37 @@
+name: VAR2
+parameters:
+  - name: QREF
+    symbol: 'Q_{\mathrm{REF}}'
+    description: Var controller reference setpoint
+    unit: pu
+    typical_values: [0.1]
+  - name: VITmin
+    symbol: 'V_{\mathrm{ITmin}}'
+    description: Var controller minimum terminal current limit
+    unit: pu
+    typical_values: [0.1]
+  - name: VVTmin
+    symbol: 'V_{\mathrm{VTmin}}'
+    description: Var controller minimum terminal voltage limit
+    unit: pu
+    typical_values: [0.95]
+  - name: VVTmax
+    symbol: 'V_{\mathrm{VTmax}}'
+    description: Var controller maximum terminal voltage limit
+    unit: pu
+    typical_values: [1.05]
+  - name: KPvar
+    symbol: 'K_{\mathrm{Pvar}}'
+    description: Var controller proportional gain
+    unit: pu
+    typical_values: [1]
+  - name: KIvar
+    symbol: 'K_{\mathrm{Ivar}}'
+    description: Var controller integral gain
+    unit: pu/s
+    typical_values: [1]
+  - name: VVARLMT
+    symbol: 'V_{\mathrm{VARLMT}}'
+    description: Var controller output limit
+    unit: pu
+    typical_values: [0.1]

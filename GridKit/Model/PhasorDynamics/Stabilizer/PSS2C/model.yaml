@@ -1,0 +1,147 @@
+name: PSS2C
+parameters:
+  - name: KS1
+    symbol: 'K_{\mathrm{S1}}'
+    description: Power system stabilizer gain
+    unit: pu
+    typical_values: [20, 5]
+  - name: KS2
+    symbol: 'K_{\mathrm{S2}}'
+    description: Power system stabilizer gain
+    unit: pu
+    typical_values: [a]
+  - name: KS3
+    symbol: 'K_{\mathrm{S3}}'
+    description: Power system stabilizer gain
+    unit: pu
+    typical_values: [1]
+  - name: T6
+    symbol: 'T_{6}'
+    description: PSS transducer time constant
+    unit: s
+    typical_values: [0.0]
+  - name: T7
+    symbol: 'T_{7}'
+    description: PSS transducer time constant
+    unit: s
+    typical_values: [10]
+  - name: Tw1
+    symbol: 'T_{\mathrm{w1}}'
+    description: PSS washout time constant
+    unit: s
+    typical_values: [10]
+  - name: Tw2
+    symbol: 'T_{\mathrm{w2}}'
+    description: PSS washout time constant
+    unit: s
+    typical_values: [10]
+  - name: Tw3
+    symbol: 'T_{\mathrm{w3}}'
+    description: PSS washout time constant
+    unit: s
+    typical_values: [10]
+  - name: Tw4
+    symbol: 'T_{\mathrm{w4}}'
+    description: PSS washout time constant
+    unit: s
+    typical_values: [c]
+  - name: T8
+    symbol: 'T_{8}'
+    description: PSS transducer time constant
+    unit: s
+    typical_values: [0.3, 0.5]
+  - name: T9
+    symbol: 'T_{9}'
+    description: PSS washout time constant
+    unit: s
+    typical_values: [0.15, 0.1]
+  - name: M
+    symbol: 'M'
+    description: PSS transducer time constant
+    unit: null
+    typical_values: [2, 5]
+  - name: N
+    symbol: 'N'
+    description: PSS washout time constant
+    unit: null
+    typical_values: [4, 1]
+  - name: T1
+    symbol: 'T_{1}'
+    description: PSS numerator (lead) compensating time constant (first block)
+    unit: s
+    typical_values: [0.16]
+  - name: T2
+    symbol: 'T_{2}'
+    description: PSS denominator (lag) compensating time constant (first block)
+    unit: s
+    typical_values: [0.02, 0.04]
+  - name: T3
+    symbol: 'T_{3}'
+    description: PSS numerator (lead) compensating time constant (second block)
+    unit: s
+    typical_values: [0.16]
+  - name: T4
+    symbol: 'T_{4}'
+    description: PSS denominator (lag) compensating time constant (second block)
+    unit: s
+    typical_values: [0.02, 0.04]
+  - name: T10
+    symbol: 'T_{10}'
+    description: PSS numerator (lead) compensating time constant (third block)
+    unit: s
+    typical_values: [d, 0.18]
+  - name: T11
+    symbol: 'T_{11}'
+    description: PSS denominator (lag) compensating time constant (third block)
+    unit: s
+    typical_values: [d, 0.03]
+  - name: T12
+    symbol: 'T_{12}'
+    description: PSS numerator (lead) compensating time constant (fourth block)
+    unit: s
+    typical_values: [e, d]
+  - name: T13
+    symbol: 'T_{13}'
+    description: PSS denominator (lag) compensating time constant (fourth block)
+    unit: s
+    typical_values: [e, d]
+  - name: VSTmax
+    symbol: 'V_{\mathrm{STmax}}'
+    description: Maximum PSS output
+    unit: pu
+    typical_values: [0.2, 0.1]
+  - name: VSTmin
+    symbol: 'V_{\mathrm{STmin}}'
+    description: Minimum PSS output
+    unit: pu
+    typical_values: [-0.066, -0.1]
+  - name: VSI1max
+    symbol: 'V_{\mathrm{SI1max}}'
+    description: 'Input signal #1 maximum limit'
+    unit: pu
+    typical_values: [2]
+  - name: VSI1min
+    symbol: 'V_{\mathrm{SI1min}}'
+    description: 'Input signal #1 minimum limit'
+    unit: pu
+    typical_values: [-2]
+  - name: VSI2max
+    symbol: 'V_{\mathrm{SI2max}}'
+    description: 'Input signal #2 maximum limit'
+    unit: pu
+    typical_values: [2]
+  - name: VSI2min
+    symbol: 'V_{\mathrm{SI2min}}'
+    description: 'Input signal #2 minimum limit'
+    unit: pu
+    typical_values: [-2]
+  - name: PPSSon
+    symbol: 'P_{\mathrm{PSSon}}'
+    description: Generator MW threshold for PSS activation
+    unit: pu
+    typical_values: [0]
+  - name: PPSSoff
+    symbol: 'P_{\mathrm{PSSoff}}'
+    description: Generator MW threshold for PSS de-activation
+    unit: pu
+    typical_values: [0]

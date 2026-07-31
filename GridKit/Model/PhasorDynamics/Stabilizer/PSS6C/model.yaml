@@ -1,0 +1,142 @@
+name: PSS6C
+parameters:
+  - name: KS1
+    symbol: 'K_{\mathrm{S1}}'
+    description: PSS gain for input channel 1
+    unit: pu
+    typical_values: [1]
+  - name: T1
+    symbol: 'T_{1}'
+    description: PSS transducer time constant for input channel 1
+    unit: s
+    typical_values: [0.01]
+  - name: T3
+    symbol: 'T_{3}'
+    description: PSS time constant for input channel 1
+    unit: s
+    typical_values: [0.4405]
+  - name: KS2
+    symbol: 'K_{\mathrm{S2}}'
+    description: PSS gain for input channel 2
+    unit: pu
+    typical_values: [1]
+  - name: Macc
+    symbol: 'M_{\mathrm{acc}}'
+    description: PSS washout time constant for input channel 2
+    unit: pu
+    typical_values: [20.6838]
+  - name: T2
+    symbol: 'T_{2}'
+    description: PSS transducer time constant for input channel 2
+    unit: s
+    typical_values: [0.01]
+  - name: T4
+    symbol: 'T_{4}'
+    description: PSS time constant for input channel 2
+    unit: s
+    typical_values: [0.4405]
+  - name: TD
+    symbol: 'T_{\mathrm{D}}'
+    description: PSS washout time constant
+    unit: s
+    typical_values: [1.7809]
+  - name: K0
+    symbol: 'K_{0}'
+    description: PSS canonical gain 0
+    unit: pu
+    typical_values: [1.3322]
+  - name: K1
+    symbol: 'K_{1}'
+    description: PSS canonical gain 1
+    unit: pu
+    typical_values: [0.2903]
+  - name: K2
+    symbol: 'K_{2}'
+    description: PSS canonical gain 2
+    unit: pu
+    typical_values: [0.7371]
+  - name: K3
+    symbol: 'K_{3}'
+    description: PSS canonical gain 3
+    unit: pu
+    typical_values: [0.0813]
+  - name: K4
+    symbol: 'K_{4}'
+    description: PSS canonical gain 4
+    unit: pu
+    typical_values: [0]
+  - name: Ki3
+    symbol: 'K_{\mathrm{i3}}'
+    description: PSS third block gain
+    unit: pu
+    typical_values: [1]
+  - name: Ki4
+    symbol: 'K_{\mathrm{i4}}'
+    description: PSS fourth block gain
+    unit: pu
+    typical_values: [0]
+  - name: Ks
+    symbol: 'K_{\mathrm{s}}'
+    description: PSS main gain
+    unit: pu
+    typical_values: [1]
+  - name: Ti1
+    symbol: 'T_{\mathrm{i1}}'
+    description: PSS time constant (first block)
+    unit: s
+    typical_values: [0.06]
+  - name: Ti2
+    symbol: 'T_{\mathrm{i2}}'
+    description: PSS time constant (second block)
+    unit: s
+    typical_values: [0.5794]
+  - name: Ti3
+    symbol: 'T_{\mathrm{i3}}'
+    description: PSS time constant (third block)
+    unit: s
+    typical_values: [3.5414]
+  - name: Ti4
+    symbol: 'T_{\mathrm{i4}}'
+    description: PSS time constant (fourth block)
+    unit: s
+    typical_values: [1]
+  - name: VSI1max
+    symbol: 'V_{\mathrm{SI1max}}'
+    description: 'Input signal #1 maximum limit'
+    unit: pu
+    typical_values: [2]
+  - name: VSI1min
+    symbol: 'V_{\mathrm{SI1min}}'
+    description: 'Input signal #1 minimum limit'
+    unit: pu
+    typical_values: [-2]
+  - name: VSI2max
+    symbol: 'V_{\mathrm{SI2max}}'
+    description: 'Input signal #2 maximum limit'
+    unit: pu
+    typical_values: [2]
+  - name: VSI2min
+    symbol: 'V_{\mathrm{SI2min}}'
+    description: 'Input signal #2 minimum limit'
+    unit: pu
+    typical_values: [-2]
+  - name: VSTMAX
+    symbol: 'V_{\mathrm{STMAX}}'
+    description: Maximum PSS output
+    unit: pu
+    typical_values: [0.05]
+  - name: VSTMIN
+    symbol: 'V_{\mathrm{STMIN}}'
+    description: Minimum PSS output
+    unit: pu
+    typical_values: [-0.05]
+  - name: PPSSon
+    symbol: 'P_{\mathrm{PSSon}}'
+    description: Generator MW threshold for PSS activation
+    unit: pu
+    typical_values: [0.21]
+  - name: PPSSoff
+    symbol: 'P_{\mathrm{PSSoff}}'
+    description: Generator MW threshold for PSS de-activation
+    unit: pu
+    typical_values: [0.19]

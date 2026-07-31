@@ -1,0 +1,57 @@
+name: PSS1A
+parameters:
+  - name: KS
+    symbol: 'K_{\mathrm{S}}'
+    description: Power system stabilizer (PSS) gain
+    unit: pu
+    typical_values: [3.15, 1.4, 16.7, 5]
+  - name: A1
+    symbol: 'A_{1}'
+    description: PSS denominator constant for second-order block
+    unit: null
+    typical_values: [0, 0.061]
+  - name: A2
+    symbol: 'A_{2}'
+    description: PSS denominator constant for second-order block
+    unit: null
+    typical_values: [0, 0.0017]
+  - name: T1
+    symbol: 'T_{1}'
+    description: PSS numerator (lead) compensating time constant
+    unit: s
+    typical_values: [0.76, 0.5, 0.15, 0.3]
+  - name: T2
+    symbol: 'T_{2}'
+    description: PSS denominator (lag) compensating time constant
+    unit: s
+    typical_values: [0.01, 0.06, 0.03]
+  - name: T3
+    symbol: 'T_{3}'
+    description: PSS numerator (lead) compensating time constant
+    unit: s
+    typical_values: [0.76, 0.5, 0.15, 0.3]
+  - name: T4
+    symbol: 'T_{4}'
+    description: PSS denominator (lag) compensating time constant
+    unit: s
+    typical_values: [0.01, 0.06, 0.03]
+  - name: T5
+    symbol: 'T_{5}'
+    description: PSS washout time constant
+    unit: s
+    typical_values: [10, 30, 1.65]
+  - name: T6
+    symbol: 'T_{6}'
+    description: PSS transducer time constant
+    unit: s
+    typical_values: [0.0, 0.016]
+  - name: VSTmax
+    symbol: 'V_{\mathrm{STmax}}'
+    description: Maximum PSS output
+    unit: pu
+    typical_values: [0.09, 0.05, 0.1]
+  - name: VSTmin
+    symbol: 'V_{\mathrm{STmin}}'
+    description: Minimum PSS output
+    unit: pu
+    typical_values: [-0.09, -0.05, -0.066]

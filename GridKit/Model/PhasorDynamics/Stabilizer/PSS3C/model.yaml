@@ -1,0 +1,97 @@
+name: PSS3C
+parameters:
+  - name: KS1
+    symbol: 'K_{\mathrm{S1}}'
+    description: Power system stabilizer gain for input channel 1
+    unit: pu
+    typical_values: [1]
+  - name: KS2
+    symbol: 'K_{\mathrm{S2}}'
+    description: Power system stabilizer gain for input channel 2
+    unit: pu
+    typical_values: [0]
+  - name: T1
+    symbol: 'T_{1}'
+    description: PSS transducer time constant for input channel 1
+    unit: s
+    typical_values: [0.02]
+  - name: T2
+    symbol: 'T_{2}'
+    description: PSS transducer time constant for input channel 2
+    unit: s
+    typical_values: [1.5]
+  - name: Tw1
+    symbol: 'T_{\mathrm{w1}}'
+    description: washout time constant (input channel 1)
+    unit: s
+    typical_values: [1.5]
+  - name: Tw2
+    symbol: 'T_{\mathrm{w2}}'
+    description: washout time constant (input channel 2)
+    unit: s
+    typical_values: [1.5]
+  - name: Tw3
+    symbol: 'T_{\mathrm{w3}}'
+    description: washout time constant (combined channels)
+    unit: s
+    typical_values: [0]
+  - name: A1
+    symbol: 'A_{1}'
+    description: PSS numerator coefficient (first block)
+    unit: null
+    typical_values: [0]
+  - name: A2
+    symbol: 'A_{2}'
+    description: PSS numerator coefficient (first block)
+    unit: null
+    typical_values: [0]
+  - name: A3
+    symbol: 'A_{3}'
+    description: PSS denominator coefficient (first block)
+    unit: null
+    typical_values: [0.02]
+  - name: A4
+    symbol: 'A_{4}'
+    description: PSS denominator coefficient (first block)
+    unit: null
+    typical_values: [0]
+  - name: A5
+    symbol: 'A_{5}'
+    description: PSS numerator coefficient (second block)
+    unit: null
+    typical_values: [0]
+  - name: A6
+    symbol: 'A_{6}'
+    description: PSS numerator coefficient (second block)
+    unit: null
+    typical_values: [0]
+  - name: A7
+    symbol: 'A_{7}'
+    description: PSS denominator coefficient (second block)
+    unit: null
+    typical_values: [0]
+  - name: A8
+    symbol: 'A_{8}'
+    description: PSS denominator coefficient (second block)
+    unit: null
+    typical_values: [0]
+  - name: VSTMAX
+    symbol: 'V_{\mathrm{STMAX}}'
+    description: Maximum PSS output
+    unit: pu
+    typical_values: [0.1]
+  - name: VSTMIN
+    symbol: 'V_{\mathrm{STMIN}}'
+    description: Minimum PSS output
+    unit: pu
+    typical_values: [-0.1]
+  - name: PPSSon
+    symbol: 'P_{\mathrm{PSSon}}'
+    description: Generator MW threshold for PSS activation
+    unit: pu
+    typical_values: [0]
+  - name: PPSSoff
+    symbol: 'P_{\mathrm{PSSoff}}'
+    description: Generator MW threshold for PSS de-activation
+    unit: pu
+    typical_values: [0]

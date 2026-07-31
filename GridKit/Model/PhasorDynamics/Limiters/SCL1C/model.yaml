@@ -1,0 +1,82 @@
+name: SCL1C
+parameters:
+  - name: ISCLlim
+    symbol: 'I_{\mathrm{SCLlim}}'
+    description: SCL terminal current pick up level
+    unit: pu
+    typical_values: [1.05]
+  - name: TIT
+    symbol: 'T_{\mathrm{IT}}'
+    description: Terminal current transducer equivalent time constant
+    unit: s
+    typical_values: [0.005, 0.1]
+  - name: K
+    symbol: 'K'
+    description: SCL timing characteristic factor
+    unit: null
+    typical_values: [1]
+  - name: TQSCL
+    symbol: 'T_{\mathrm{QSCL}}'
+    description: Reactive current transducer equivalent time constant
+    unit: s
+    typical_values: [0, 0.02]
+  - name: IQmin
+    symbol: 'I_{\mathrm{Qmin}}'
+    description: Dead-band for reactive current
+    unit: pu
+    typical_values: [0, 0.1]
+  - name: VSCLdb
+    symbol: 'V_{\mathrm{SCLdb}}'
+    description: Dead-band for reactive power or power factor
+    unit: pu
+    typical_values: [0.1]
+  - name: TINV
+    symbol: 'T_{\mathrm{INV}}'
+    description: Inverse time delay after pickup
+    unit: s
+    typical_values: [30, 0]
+  - name: TDSCL
+    symbol: 'T_{\mathrm{DSCL}}'
+    description: Fixed-time delay after pickup
+    unit: s
+    typical_values: [0, 10]
+  - name: SW1
+    symbol: '\mathrm{SW}_{1}'
+    description: Reactive current/reactive power selector
+    unit: null
+    typical_values: [pos. A, pos. B]
+  - name: SW2
+    symbol: '\mathrm{SW}_{2}'
+    description: Fixed-time or inverse time selector
+    unit: null
+    typical_values: [1, 0]
+  - name: KPoex
+    symbol: 'K_{\mathrm{Poex}}'
+    description: SCL proportional gain (overexcited range)
+    unit: pu
+    typical_values: [0, 0.1]
+  - name: KIoex
+    symbol: 'K_{\mathrm{Ioex}}'
+    description: SCL integral gain (overexcited range)
+    unit: pu/s
+    typical_values: [0.2, 1, 0.0303]
+  - name: KPuex
+    symbol: 'K_{\mathrm{Puex}}'
+    description: SCL proportional gain (underexcited range)
+    unit: pu
+    typical_values: [0, 0.1]
+  - name: KIuex
+    symbol: 'K_{\mathrm{Iuex}}'
+    description: SCL integral gain (underexcited range)
+    unit: pu/s
+    typical_values: [0.2, 1, 0.0303]
+  - name: VSCLmax
+    symbol: 'V_{\mathrm{SCLmax}}'
+    description: SCL upper integrator limit
+    unit: pu
+    typical_values: [1, 0.3, 0.2]
+  - name: VSCLmin
+    symbol: 'V_{\mathrm{SCLmin}}'
+    description: SCL lower integrator limit
+    unit: pu
+    typical_values: [0, -0.1]

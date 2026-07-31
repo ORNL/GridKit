@@ -1,0 +1,77 @@
+name: UEL1
+parameters:
+  - name: KUC
+    symbol: 'K_{\mathrm{UC}}'
+    description: UEL center setting
+    unit: pu
+    typical_values: [1.38]
+  - name: KUR
+    symbol: 'K_{\mathrm{UR}}'
+    description: UEL radius setting
+    unit: pu
+    typical_values: [1.95]
+  - name: VURmax
+    symbol: 'V_{\mathrm{URmax}}'
+    description: null
+    unit: pu
+    typical_values: [5.8]
+  - name: VUCmax
+    symbol: 'V_{\mathrm{UCmax}}'
+    description: null
+    unit: pu
+    typical_values: [5.8]
+  - name: KUF
+    symbol: 'K_{\mathrm{UF}}'
+    description: UEL excitation system stabilizer gain
+    unit: pu
+    typical_values: [3.3]
+  - name: KUI
+    symbol: 'K_{\mathrm{UI}}'
+    description: UEL integral gain
+    unit: pu/s
+    typical_values: [0]
+  - name: KUL
+    symbol: 'K_{\mathrm{UL}}'
+    description: UEL proportional gain
+    unit: pu
+    typical_values: [100]
+  - name: VUImax
+    symbol: 'V_{\mathrm{UImax}}'
+    description: UEL PI control maximum output
+    unit: pu
+    typical_values: [18]
+  - name: VUImin
+    symbol: 'V_{\mathrm{UImin}}'
+    description: UEL PI control minimum output
+    unit: pu
+    typical_values: [-18]
+  - name: TU1
+    symbol: 'T_{\mathrm{U1}}'
+    description: UEL numerator (lead) time constant (first block)
+    unit: s
+    typical_values: [0]
+  - name: TU2
+    symbol: 'T_{\mathrm{U2}}'
+    description: UEL denominator (lag) time constant (first block)
+    unit: s
+    typical_values: [0.05]
+  - name: TU3
+    symbol: 'T_{\mathrm{U3}}'
+    description: UEL numerator (lead) time constant (second block)
+    unit: s
+    typical_values: [0]
+  - name: TU4
+    symbol: 'T_{\mathrm{U4}}'
+    description: UEL denominator (lag) time constant (second block)
+    unit: s
+    typical_values: [0]
+  - name: VUELmax
+    symbol: 'V_{\mathrm{UELmax}}'
+    description: UEL maximum output
+    unit: pu
+    typical_values: [18]
+  - name: VUELmin
+    symbol: 'V_{\mathrm{UELmin}}'
+    description: UEL minimum output
+    unit: pu
+    typical_values: [-18]

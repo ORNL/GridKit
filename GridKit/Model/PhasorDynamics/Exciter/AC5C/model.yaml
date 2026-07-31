@@ -1,0 +1,87 @@
+name: AC5C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0]
+  - name: KA
+    symbol: 'K_{\mathrm{A}}'
+    description: Regulator output gain
+    unit: pu
+    typical_values: [400]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Regulator output time constant
+    unit: s
+    typical_values: [0.02]
+  - name: VAmax
+    symbol: 'V_{\mathrm{Amax}}'
+    description: Maximum regulator output
+    unit: pu
+    typical_values: [7.3]
+  - name: VAmin
+    symbol: 'V_{\mathrm{Amin}}'
+    description: Minimum regulator output
+    unit: pu
+    typical_values: [-7.3]
+  - name: TE
+    symbol: 'T_{\mathrm{E}}'
+    description: Exciter field time constant
+    unit: s
+    typical_values: [0.8]
+  - name: KE
+    symbol: 'K_{\mathrm{E}}'
+    description: Exciter field proportional constant
+    unit: pu
+    typical_values: [1.0]
+  - name: E1
+    symbol: 'E_{1}'
+    description: Exciter output voltage for saturation factor S (E ) E 1
+    unit: pu
+    typical_values: [5.6]
+  - name: SE(E1)
+    symbol: 'S_{\mathrm{E}}(E_{1})'
+    description: Exciter saturation factor at exciter output voltage E 1
+    unit: null
+    typical_values: [0.86]
+  - name: E2
+    symbol: 'E_{2}'
+    description: Exciter output voltage for saturation factor S (E ) E 2
+    unit: pu
+    typical_values: [4.2]
+  - name: SE(E2)
+    symbol: 'S_{\mathrm{E}}(E_{2})'
+    description: Exciter saturation factor at exciter output voltage E 2
+    unit: null
+    typical_values: [0.5]
+  - name: KF
+    symbol: 'K_{\mathrm{F}}'
+    description: Rate feedback excitation system stabilizer gain
+    unit: pu
+    typical_values: [0.03]
+  - name: TF1
+    symbol: 'T_{\mathrm{F1}}'
+    description: Rate feedback excitation system stabilizer time constant
+    unit: s
+    typical_values: [1]
+  - name: TF2
+    symbol: 'T_{\mathrm{F2}}'
+    description: Rate feedback excitation system stabilizer time constant
+    unit: s
+    typical_values: [0]
+  - name: TF3
+    symbol: 'T_{\mathrm{F3}}'
+    description: Rate feedback excitation system stabilizer time constant
+    unit: s
+    typical_values: [0]

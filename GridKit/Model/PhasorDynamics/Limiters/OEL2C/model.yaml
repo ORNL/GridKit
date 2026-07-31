@@ -1,0 +1,207 @@
+name: OEL2C
+parameters:
+  - name: TC1oel
+    symbol: 'T_{\mathrm{C1oel}}'
+    description: OEL regulator denominator (lag) time constant 1
+    unit: s
+    typical_values: [0.1, 0.2]
+  - name: TB1oel
+    symbol: 'T_{\mathrm{B1oel}}'
+    description: OEL regulator numerator (lead) time constant 1
+    unit: s
+    typical_values: [0.1, 2]
+  - name: TC2oel
+    symbol: 'T_{\mathrm{C2oel}}'
+    description: OEL regulator denominator (lag) time constant 2
+    unit: s
+    typical_values: [0.1]
+  - name: TB2oel
+    symbol: 'T_{\mathrm{B2oel}}'
+    description: OEL regulator numerator (lead) time constant 2
+    unit: s
+    typical_values: [0.1]
+  - name: KPoel
+    symbol: 'K_{\mathrm{Poel}}'
+    description: OEL PID regulator proportional gain
+    unit: pu
+    typical_values: [0.5, 500, 0.3]
+  - name: KIoel
+    symbol: 'K_{\mathrm{Ioel}}'
+    description: OEL PID regulator integral gain
+    unit: pu/s
+    typical_values: [0, 1]
+  - name: KDoel
+    symbol: 'K_{\mathrm{Doel}}'
+    description: OEL PID regulator differential gain
+    unit: pu
+    typical_values: [0]
+  - name: TDoel
+    symbol: 'T_{\mathrm{Doel}}'
+    description: OEL PID regulator differential time constant
+    unit: s
+    typical_values: [0.1]
+  - name: VOELmax3
+    symbol: 'V_{\mathrm{OELmax3}}'
+    description: Maximum OEL PID output limit
+    unit: pu
+    typical_values: [100, 0]
+  - name: VOELmin3
+    symbol: 'V_{\mathrm{OELmin3}}'
+    description: Minimum OEL PID output limit
+    unit: pu
+    typical_values: [-100]
+  - name: VOELmax2
+    symbol: 'V_{\mathrm{OELmax2}}'
+    description: Maximum OEL lead-lag 1 output limit
+    unit: pu
+    typical_values: [100, 0]
+  - name: VOELmin2
+    symbol: 'V_{\mathrm{OELmin2}}'
+    description: Minimum OEL lead-lag 1 output limit
+    unit: pu
+    typical_values: [-100]
+  - name: VOELmax1
+    symbol: 'V_{\mathrm{OELmax1}}'
+    description: Maximum OEL output limit
+    unit: pu
+    typical_values: [10, 0]
+  - name: VOELmin1
+    symbol: 'V_{\mathrm{OELmin1}}'
+    description: Minimum OEL output limit
+    unit: pu
+    typical_values: [-10]
+  - name: Ireset
+    symbol: 'I_{\mathrm{reset}}'
+    description: OEL reset-reference, if OEL is inactive
+    unit: pu
+    typical_values: [100]
+  - name: Ten
+    symbol: 'T_{\mathrm{en}}'
+    description: OEL activation delay time
+    unit: s
+    typical_values: [0.2]
+  - name: Toff
+    symbol: 'T_{\mathrm{off}}'
+    description: OEL reset delay time
+    unit: s
+    typical_values: [5]
+  - name: ITHoff
+    symbol: 'I_{\mathrm{THoff}}'
+    description: OEL reset threshold value
+    unit: pu
+    typical_values: [0.05]
+  - name: KSCALE
+    symbol: 'K_{\mathrm{SCALE}}'
+    description: OEL input signal scaling factord
+    unit: pu
+    typical_values: [1]
+  - name: TRoel
+    symbol: 'T_{\mathrm{Roel}}'
+    description: OEL input signal filter time constant
+    unit: s
+    typical_values: [0.01]
+  - name: Kact
+    symbol: 'K_{\mathrm{act}}'
+    description: OEL actual value scaling factor
+    unit: pu
+    typical_values: [1]
+  - name: ITFpu
+    symbol: 'I_{\mathrm{TFpu}}'
+    description: OEL reference for inverse time calculations
+    unit: pu
+    typical_values: [3]
+  - name: Iinst
+    symbol: 'I_{\mathrm{inst}}'
+    description: OEL instantaneous field current limit
+    unit: pu
+    typical_values: [6]
+  - name: Ilim
+    symbol: 'I_{\mathrm{lim}}'
+    description: OEL thermal field current limit
+    unit: pu
+    typical_values: [3]
+  - name: TAoel
+    symbol: 'T_{\mathrm{Aoel}}'
+    description: OEL reference filter time constant
+    unit: s
+    typical_values: [0.04]
+  - name: c1
+    symbol: 'c_{1}'
+    description: OEL exponent for calculation of I ERRinv1
+    unit: null
+    typical_values: [0]
+  - name: K1
+    symbol: 'K_{1}'
+    description: OEL gain for calculation of I ERRinv1
+    unit: pu/pu
+    typical_values: [0]
+  - name: c2
+    symbol: 'c_{2}'
+    description: OEL exponent for calculation of I b ERRinv2
+    unit: null
+    typical_values: [2]
+  - name: K2
+    symbol: 'K_{2}'
+    description: OEL gain for calculation of I b ERRinv2
+    unit: pu/pu
+    typical_values: [0.0296]
+  - name: VINVmax
+    symbol: 'V_{\mathrm{INVmax}}'
+    description: OEL maximum inverse time output
+    unit: pu
+    typical_values: [100]
+  - name: VINVmin
+    symbol: 'V_{\mathrm{INVmin}}'
+    description: OEL minimum inverse time output
+    unit: pu
+    typical_values: [0]
+  - name: Fixedru
+    symbol: '\mathrm{Fixed}_{\mathrm{ru}}'
+    description: OEL fixed delay time output
+    unit: pu
+    typical_values: [0]
+  - name: Fixedrd
+    symbol: '\mathrm{Fixed}_{\mathrm{rd}}'
+    description: OEL fixed cooling-down time output
+    unit: pu
+    typical_values: [-0.001]
+  - name: TFCL
+    symbol: 'T_{\mathrm{FCL}}'
+    description: OEL timer reference
+    unit: pu
+    typical_values: [10, 1]
+  - name: Tmax
+    symbol: 'T_{\mathrm{max}}'
+    description: OEL timer maximum level
+    unit: pu
+    typical_values: [10, 1]
+  - name: Tmin
+    symbol: 'T_{\mathrm{min}}'
+    description: OEL timer minimum level
+    unit: pu
+    typical_values: [0]
+  - name: KFB
+    symbol: 'K_{\mathrm{FB}}'
+    description: OEL timer feedback gain
+    unit: pu
+    typical_values: [0]
+  - name: Krd
+    symbol: 'K_{\mathrm{rd}}'
+    description: OEL reference ramp-down rate
+    unit: pu/s
+    typical_values: [-1000]
+  - name: Kru
+    symbol: 'K_{\mathrm{ru}}'
+    description: OEL reference ramp-up rate
+    unit: pu/s
+    typical_values: [1000]
+  - name: KZRU
+    symbol: 'K_{\mathrm{ZRU}}'
+    description: OEL thermal reference release threshold
+    unit: null
+    typical_values: [0.99]
+  - name: IFDrated
+    symbol: 'I_{\mathrm{FDrated}}'
+    description: Rated field current
+    unit: pu
+    typical_values: [3]
