@@ -3,6 +3,7 @@
 
 #include <IpTNLP.hpp>
 
+#include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Solver/Optimization/OptimizationSolver.hpp>
 
 namespace AnalysisManager
@@ -23,7 +24,6 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     class DynamicObjective : public Ipopt::TNLP, public OptimizationSolver<ScalarT, IdxT>
     {
-      using OptimizationSolver<ScalarT, IdxT>::integrator_;
       using OptimizationSolver<ScalarT, IdxT>::model_;
 
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
@@ -79,9 +79,10 @@ namespace AnalysisManager
                                      IpoptCalculatedQuantities* ip_cq);
 
     private:
-      RealT t_init_;
-      RealT t_final_;
-      RealT dt_monitor_;
+      Sundials::Ida<ScalarT, IdxT>* integrator_{nullptr};
+      RealT                         t_init_;
+      RealT                         t_final_;
+      RealT                         dt_monitor_;
     };
 
   } // namespace IpoptInterface
