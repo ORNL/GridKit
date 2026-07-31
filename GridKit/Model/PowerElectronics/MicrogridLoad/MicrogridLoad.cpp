@@ -95,9 +95,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLoad<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    // ref motor
-    *f_ext_[0] += 0.0;
-
     // only input for loads
 
     // input

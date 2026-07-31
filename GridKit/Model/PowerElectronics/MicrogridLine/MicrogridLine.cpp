@@ -100,9 +100,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLine<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    // ref motor
-    *f_ext_[0] += 0.0;
-
     // Port 1
     *f_ext_[1] += -y_int_[0];
     *f_ext_[2] += -y_int_[1];
