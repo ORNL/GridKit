@@ -15,9 +15,8 @@ namespace GridKit
     /// Initial parameters for a bus fault
     enum class BusFaultParameters
     {
-      state0, ///< Whether or not the fault has happened
-      R,      ///< Short to ground resistance
-      X,      ///< Short to ground reactance
+      R, ///< Short to ground resistance
+      X, ///< Short to ground reactance
     };
 
     /// Buses supported for a bus fault

@@ -124,7 +124,15 @@ namespace GridKit
         bus2.initialize();
         bus2.evaluateResidual();
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B, tap, phase);
+        IdxT                                      input_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> tap_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> phase_signal;
+        tap_signal.set(&tap, &input_index);
+        phase_signal.set(&phase, &input_index);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::TAP>(&tap_signal);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
         branch.allocate();
         branch.evaluateResidual();
 
@@ -207,14 +215,17 @@ namespace GridKit
         PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus1(Vr1, Vi1);
         PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus2(Vr2, Vi2);
 
-        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1,
-                                                                          &bus2,
-                                                                          R,
-                                                                          X,
-                                                                          G,
-                                                                          B,
-                                                                          tap,
-                                                                          phase);
+        DependencyTracking::Variable                                   tap_value{tap};
+        DependencyTracking::Variable                                   phase_value{phase};
+        IdxT                                                           input_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> tap_signal;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> phase_signal;
+        tap_signal.set(&tap_value, &input_index);
+        phase_signal.set(&phase_value, &input_index);
+
+        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::TAP>(&tap_signal);
+        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
         branch.allocate();
         branch.evaluateResidual();
 
@@ -256,7 +267,17 @@ namespace GridKit
         ref_bus2.allocate();
         ref_bus2.initialize();
         ref_bus2.evaluateResidual();
-        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, tap, phase);
+        ScalarT                                   tap_value{tap};
+        ScalarT                                   phase_value{phase};
+        IdxT                                      input_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> tap_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> phase_signal;
+        tap_signal.set(&tap_value, &input_index);
+        phase_signal.set(&phase_value, &input_index);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B);
+        ref_branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::TAP>(&tap_signal);
+        ref_branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
 
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus1(Vr1, Vi1);
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus2(Vr2, Vi2);
@@ -272,8 +293,8 @@ namespace GridKit
         test_branch.setX(X);
         test_branch.setG(G);
         test_branch.setB(B);
-        test_branch.setTap(tap);
-        test_branch.setPhase(phase);
+        test_branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::TAP>(&tap_signal);
+        test_branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
 
         ref_branch.evaluateResidual();
         test_branch.evaluateResidual();
@@ -305,12 +326,6 @@ namespace GridKit
         PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(&bus1, &bus2, 0.0, 0.0, 0.0, 0.0);
         success *= (zero_impedance_branch.verify() != 0);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> zero_tap_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0);
-        success *= (zero_tap_branch.verify() != 0);
-
-        PhasorDynamics::Branch<ScalarT, IdxT> negative_tap_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0, -1.0, 0.0);
-        success *= (negative_tap_branch.verify() != 0);
-
         const RealT                           nan = std::numeric_limits<RealT>::quiet_NaN();
         PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, nan, 0.1, 0.0, 0.0);
         success *= (nonfinite_branch.verify() != 0);
@@ -320,7 +335,7 @@ namespace GridKit
 
       TestOutcome dataConstructorDefaults()
       {
-        // Verifies omitted data parameters use tap and phase defaults.
+        // Verifies omitted operating inputs use tap and phase defaults.
         TestStatus success = true;
 
         const RealT R{2.0};
@@ -364,7 +379,7 @@ namespace GridKit
         ref_bus2.evaluateResidual();
 
         PhasorDynamics::Branch<ScalarT, IdxT> data_branch(&data_bus1, &data_bus2, data);
-        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, 1.0, 0.0);
+        PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B);
 
         data_branch.evaluateResidual();
         ref_branch.evaluateResidual();
@@ -379,8 +394,8 @@ namespace GridKit
 
       TestOutcome signalInputs()
       {
-        // Attached operating signals supersede constructor fallbacks and can
-        // be changed between stopped solve intervals.
+        // Attached operating signals can be changed between stopped solve
+        // intervals.
         TestStatus success = true;
 
         const RealT R{2.0};

@@ -61,8 +61,6 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     BusInfinite<scalar_type, index_type>::BusInfinite(const ModelDataT& data)
-      : Vr_(data.Vr0),
-        Vi_(data.Vi0)
     {
       bus_id_        = data.bus_id;
       size_          = 0;

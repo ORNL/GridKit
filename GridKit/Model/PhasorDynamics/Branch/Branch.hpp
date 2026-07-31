@@ -81,9 +81,7 @@ namespace GridKit
              RealT R,
              RealT X,
              RealT G,
-             RealT B,
-             RealT tap   = 1.0,
-             RealT phase = 0.0);
+             RealT B);
       Branch(BusT* bus1, BusT* bus2, const ModelDataT& data);
       virtual ~Branch();
 
@@ -124,18 +122,6 @@ namespace GridKit
       void setB(RealT B)
       {
         B_ = B;
-        setDerivedParams();
-      }
-
-      void setTap(RealT tap)
-      {
-        tap_ = tap;
-        setDerivedParams();
-      }
-
-      void setPhase(RealT phase)
-      {
-        phase_ = phase;
         setDerivedParams();
       }
 
@@ -228,8 +214,7 @@ namespace GridKit
       BusT* bus1_;
       BusT* bus2_;
 
-      /// Branch operating inputs. Attached signals take precedence over the
-      /// legacy constructor/data fallbacks stored below.
+      /// Branch operating inputs.
       ComponentSignals<ScalarT, IdxT, NoVariables, BranchExternalVariables> signals_;
 
       RealT R_{0.0};

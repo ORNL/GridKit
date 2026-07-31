@@ -71,14 +71,10 @@ namespace GridKit
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
         busdata.bus_id   = 0;
         busdata.bus_type = BusType::DEFAULT;
-        busdata.Vr0      = 1.0;
-        busdata.Vi0      = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
         gendata.buses[Buses::bus] = 0;
 
-        gendata.parameters[Parameter::p0]    = 1.;
-        gendata.parameters[Parameter::q0]    = 0.05013;
         gendata.parameters[Parameter::H]     = 3.;
         gendata.parameters[Parameter::D]     = 0.;
         gendata.parameters[Parameter::Ra]    = 0.;
@@ -101,6 +97,18 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT>      omega;
         PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
+        ScalarT                                        p{1.0};
+        ScalarT                                        q{0.05013};
+        IdxT                                           p_index{INVALID_INDEX<IdxT>};
+        IdxT                                           q_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      p_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      q_signal;
+        bus.setVr(1.0);
+        bus.setVi(0.0);
+        p_signal.set(&p, &p_index);
+        q_signal.set(&q, &q_index);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::P>(&p_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::Q>(&q_signal);
 
         // Test answer keys
         const std::vector<ScalarT> res_answer = {0.0,
@@ -174,14 +182,10 @@ namespace GridKit
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
         busdata.bus_id   = 0;
         busdata.bus_type = BusType::DEFAULT;
-        busdata.Vr0      = 1.0;
-        busdata.Vi0      = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
         gendata.buses[Buses::bus] = 0;
 
-        gendata.parameters[Parameter::p0]    = 1.;
-        gendata.parameters[Parameter::q0]    = 0.05013;
         gendata.parameters[Parameter::H]     = 3.;
         gendata.parameters[Parameter::D]     = 0.;
         gendata.parameters[Parameter::Ra]    = 0.;
@@ -205,6 +209,18 @@ namespace GridKit
         PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
         // Create governor to be tested
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
+        ScalarT                                        p{1.0};
+        ScalarT                                        q{0.05013};
+        IdxT                                           p_index{INVALID_INDEX<IdxT>};
+        IdxT                                           q_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      p_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      q_signal;
+        bus.setVr(1.0);
+        bus.setVi(0.0);
+        p_signal.set(&p, &p_index);
+        q_signal.set(&q, &q_index);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::P>(&p_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::Q>(&q_signal);
 
         bus.allocate();
         gov.allocate();
@@ -256,14 +272,10 @@ namespace GridKit
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
         busdata.bus_id   = 0;
         busdata.bus_type = BusType::DEFAULT;
-        busdata.Vr0      = 1.0;
-        busdata.Vi0      = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
         gendata.buses[Buses::bus] = 0;
 
-        gendata.parameters[Parameter::p0]    = 1.;
-        gendata.parameters[Parameter::q0]    = 0.05013;
         gendata.parameters[Parameter::H]     = 3.;
         gendata.parameters[Parameter::D]     = 0.;
         gendata.parameters[Parameter::Ra]    = 0.;
@@ -307,6 +319,18 @@ namespace GridKit
         PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT>          gen(&bus, &omega, &pmech, gendata);
         // Create governor to be tested
         PhasorDynamics::Governor::Tgov1<DependencyTracking::Variable, IdxT> gov(&pmech, &omega);
+        DependencyTracking::Variable                                        p{1.0};
+        DependencyTracking::Variable                                        q{0.05013};
+        IdxT                                                                p_index{INVALID_INDEX<IdxT>};
+        IdxT                                                                q_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>      p_signal;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT>      q_signal;
+        bus.setVr(1.0);
+        bus.setVi(0.0);
+        p_signal.set(&p, &p_index);
+        q_signal.set(&q, &q_index);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::P>(&p_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::Q>(&q_signal);
 
         bus.allocate();
         gov.allocate();
@@ -413,6 +437,18 @@ namespace GridKit
         PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
         // Create governor to be tested
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
+        ScalarT                                        p{1.0};
+        ScalarT                                        q{0.05013};
+        IdxT                                           p_index{INVALID_INDEX<IdxT>};
+        IdxT                                           q_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      p_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      q_signal;
+        bus.setVr(1.0);
+        bus.setVi(0.0);
+        p_signal.set(&p, &p_index);
+        q_signal.set(&q, &q_index);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::P>(&p_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::Q>(&q_signal);
 
         bus.allocate();
         gov.allocate();

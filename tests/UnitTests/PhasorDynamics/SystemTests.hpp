@@ -67,16 +67,18 @@ namespace GridKit
         data.bus.resize(2);
 
         // Bus 0
-        data.bus[0].bus_id   = 0;
-        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = 10.0;
-        data.bus[0].Vi0      = 20.0;
+        data.bus[0].bus_id            = 0;
+        data.bus[0].bus_type          = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].initial_state     = Model::BusState{};
+        data.bus[0].initial_state->vr = 10.0;
+        data.bus[0].initial_state->vi = 20.0;
 
         // Bus 1
-        data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
-        data.bus[1].Vr0      = 30.0;
-        data.bus[1].Vi0      = 40.0;
+        data.bus[1].bus_id            = 1;
+        data.bus[1].bus_type          = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].initial_state     = Model::BusState{};
+        data.bus[1].initial_state->vr = 30.0;
+        data.bus[1].initial_state->vi = 40.0;
 
         // Set branch data
         data.branch.resize(1);
@@ -122,7 +124,6 @@ namespace GridKit
         SystemModelData<> model_data;
         model_data.bus.resize(2);
         model_data.bus[0].bus_id = 7;
-        model_data.bus[0].Vr0    = 0.9;
         model_data.bus[1].bus_id = 8;
 
         Model::StateData state_data;
@@ -154,7 +155,6 @@ namespace GridKit
         {
           success *= model_data.bus[0].initial_state->vr == 1.025;
         }
-        success *= model_data.bus[0].Vr0 == 0.9;
         success *= !model_data.bus[1].initial_state.has_value();
 
         auto checkDevice = [&](const auto& devices, const char* id)
@@ -186,16 +186,12 @@ namespace GridKit
 
         data.bus[0].bus_id            = 4;
         data.bus[0].bus_type          = BusData<ScalarT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0               = 10.0;
-        data.bus[0].Vi0               = 20.0;
         data.bus[0].initial_state     = Model::BusState{};
         data.bus[0].initial_state->vr = 1.1;
         data.bus[0].initial_state->vi = -0.1;
 
         data.bus[1].bus_id            = 5;
         data.bus[1].bus_type          = BusData<ScalarT, IdxT>::BusType::DEFAULT;
-        data.bus[1].Vr0               = 30.0;
-        data.bus[1].Vi0               = 40.0;
         data.bus[1].initial_state     = Model::BusState{};
         data.bus[1].initial_state->vr = 0.9;
         data.bus[1].initial_state->vi = 0.2;
@@ -219,30 +215,30 @@ namespace GridKit
 
         SystemModelData<ScalarT, IdxT> data;
         data.bus.resize(2);
-        data.bus[0].bus_id   = 0;
-        data.bus[0].bus_type = BusData<ScalarT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = 10.0;
-        data.bus[0].Vi0      = 20.0;
-        data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = BusData<ScalarT, IdxT>::BusType::DEFAULT;
-        data.bus[1].Vr0      = 30.0;
-        data.bus[1].Vi0      = 40.0;
+        data.bus[0].bus_id            = 0;
+        data.bus[0].bus_type          = BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].initial_state     = Model::BusState{};
+        data.bus[0].initial_state->vr = 10.0;
+        data.bus[0].initial_state->vi = 20.0;
+        data.bus[1].bus_id            = 1;
+        data.bus[1].bus_type          = BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].initial_state     = Model::BusState{};
+        data.bus[1].initial_state->vr = 30.0;
+        data.bus[1].initial_state->vi = 40.0;
 
         data.branch.resize(1);
-        auto& branch                               = data.branch[0];
-        branch.disambiguation_string               = "branch_0_1";
-        branch.buses[BranchBuses::bus1]            = 0;
-        branch.buses[BranchBuses::bus2]            = 1;
-        branch.parameters[BranchParameters::R]     = 2.0;
-        branch.parameters[BranchParameters::X]     = 4.0;
-        branch.parameters[BranchParameters::G]     = 0.2;
-        branch.parameters[BranchParameters::B]     = 1.2;
-        branch.parameters[BranchParameters::tap]   = 2.0;
-        branch.parameters[BranchParameters::phase] = 0.25;
-        branch.initial_state                       = Model::DeviceState{};
-        branch.initial_state->tap                  = 1.0;
-        branch.initial_state->phase                = 0.0;
-        branch.initial_state->open                 = true;
+        auto& branch                           = data.branch[0];
+        branch.disambiguation_string           = "branch_0_1";
+        branch.buses[BranchBuses::bus1]        = 0;
+        branch.buses[BranchBuses::bus2]        = 1;
+        branch.parameters[BranchParameters::R] = 2.0;
+        branch.parameters[BranchParameters::X] = 4.0;
+        branch.parameters[BranchParameters::G] = 0.2;
+        branch.parameters[BranchParameters::B] = 1.2;
+        branch.initial_state                   = Model::DeviceState{};
+        branch.initial_state->tap              = 1.0;
+        branch.initial_state->phase            = 0.0;
+        branch.initial_state->open             = true;
 
         SystemModel<ScalarT, IdxT> system(data);
         system.allocate();
@@ -258,8 +254,7 @@ namespace GridKit
         system.setInput("branch_0_1", "open", 0.0);
         system.evaluateResidual();
 
-        // State tap/phase override the temporary legacy parameters. Reclosing
-        // therefore reproduces the nominal-transformer answer.
+        // Reclosing uses the tap and phase supplied by State.
         success *= isEqual(system.getBus(0)->Ir(), ScalarT{17.0});
         success *= isEqual(system.getBus(0)->Ii(), ScalarT{-10.0});
         success *= isEqual(system.getBus(1)->Ir(), ScalarT{15.0});
@@ -283,17 +278,16 @@ namespace GridKit
         {
           SystemModelData<ScalarT, IdxT> data;
           data.bus.resize(1);
-          data.bus[0].bus_id   = 9;
-          data.bus[0].bus_type = BusData<ScalarT, IdxT>::BusType::SLACK;
-          data.bus[0].Vr0      = 0.6;
-          data.bus[0].Vi0      = 0.8;
+          data.bus[0].bus_id            = 9;
+          data.bus[0].bus_type          = BusData<ScalarT, IdxT>::BusType::SLACK;
+          data.bus[0].initial_state     = Model::BusState{};
+          data.bus[0].initial_state->vr = 0.6;
+          data.bus[0].initial_state->vi = 0.8;
 
           data.loadzip.resize(1);
           auto& load                                 = data.loadzip[0];
           load.disambiguation_string                 = "loadzip_9";
           load.buses[LoadZIPBuses::bus]              = 9;
-          load.parameters[LoadZIPParameters::Pnom]   = 2.0;
-          load.parameters[LoadZIPParameters::Qnom]   = 0.5;
           load.parameters[LoadZIPParameters::Vnom]   = 0.5;
           load.parameters[LoadZIPParameters::alphaI] = 0.2;
           load.parameters[LoadZIPParameters::alphaP] = 0.4;
@@ -302,21 +296,11 @@ namespace GridKit
 
         TestStatus success = true;
 
-        // Legacy nominal dispatch remains unchanged during the transition.
-        auto                       legacy_data = makeData();
-        SystemModel<ScalarT, IdxT> legacy_system(legacy_data);
-        legacy_system.allocate();
-        legacy_system.initialize();
-        legacy_system.evaluateResidual();
-        success *= isEqual(legacy_system.getBus(9)->Ir(), ScalarT{-3.84});
-        success *= isEqual(legacy_system.getBus(9)->Ii(), ScalarT{-3.12});
-
-        // State p is a terminal injection at the stored voltage. Missing q
-        // retains the temporary legacy fallback, and irrelevant state is
-        // harmless.
+        // State p and q are terminal injections at the stored voltage.
         auto state_data                             = makeData();
         state_data.loadzip[0].initial_state         = Model::DeviceState{};
         state_data.loadzip[0].initial_state->p      = -1.0;
+        state_data.loadzip[0].initial_state->q      = -0.25;
         state_data.loadzip[0].initial_state->online = true;
         state_data.loadzip[0].initial_state->open   = true;
 
@@ -324,8 +308,8 @@ namespace GridKit
         state_system.allocate();
         state_system.initialize();
         state_system.evaluateResidual();
-        success *= isEqual(state_system.getBus(9)->Ir(), ScalarT{-1.56});
-        success *= isEqual(state_system.getBus(9)->Ii(), ScalarT{-0.08});
+        success *= isEqual(state_system.getBus(9)->Ir(), ScalarT{-0.8});
+        success *= isEqual(state_system.getBus(9)->Ii(), ScalarT{-0.65});
 
 #ifdef GRIDKIT_ENABLE_ENZYME
         auto* jacobian  = state_system.getCsrJacobian();
@@ -382,16 +366,16 @@ namespace GridKit
 
         SystemModelData<ScalarT, IdxT> data;
         data.bus.resize(1);
-        data.bus[0].bus_id   = 3;
-        data.bus[0].bus_type = BusData<ScalarT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = 1.0;
+        data.bus[0].bus_id            = 3;
+        data.bus[0].bus_type          = BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].initial_state     = Model::BusState{};
+        data.bus[0].initial_state->vr = 1.0;
+        data.bus[0].initial_state->vi = 0.0;
 
         data.genclassical.resize(1);
         auto& gen                                   = data.genclassical[0];
         gen.disambiguation_string                   = "genclassical_3";
         gen.buses[GenClassicalBuses::bus]           = 3;
-        gen.parameters[GenClassicalParameters::p0]  = 9.0;
-        gen.parameters[GenClassicalParameters::q0]  = 8.0;
         gen.parameters[GenClassicalParameters::H]   = 0.5;
         gen.parameters[GenClassicalParameters::D]   = 0.0;
         gen.parameters[GenClassicalParameters::Ra]  = 0.0;
@@ -657,16 +641,18 @@ namespace GridKit
         data.bus.resize(2);
 
         // Bus 0
-        data.bus[0].bus_id   = 0;
-        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = 10.0;
-        data.bus[0].Vi0      = 20.0;
+        data.bus[0].bus_id            = 0;
+        data.bus[0].bus_type          = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].initial_state     = Model::BusState{};
+        data.bus[0].initial_state->vr = 10.0;
+        data.bus[0].initial_state->vi = 20.0;
 
         // Bus 1
-        data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
-        data.bus[1].Vr0      = 30.0;
-        data.bus[1].Vi0      = 40.0;
+        data.bus[1].bus_id            = 1;
+        data.bus[1].bus_type          = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].initial_state     = Model::BusState{};
+        data.bus[1].initial_state->vr = 30.0;
+        data.bus[1].initial_state->vi = 40.0;
 
         // Set branch data
         data.branch.resize(1);

@@ -46,8 +46,6 @@ namespace GridKit
 
           success *= abus.bus_id == bbus.bus_id;
           success *= abus.bus_type == bbus.bus_type;
-          success *= abus.Vr0 == bbus.Vr0;
-          success *= abus.Vi0 == bbus.Vi0;
         }
 
         success *= a.signal.size() == b.signal.size();
@@ -86,8 +84,6 @@ namespace GridKit
           const auto& bg = b.genrou[i];
 
           success *= ag.buses.at(BUS) == bg.buses.at(BUS);
-          success *= ag.parameters.at(Param::p0) == bg.parameters.at(Param::p0);
-          success *= ag.parameters.at(Param::q0) == bg.parameters.at(Param::q0);
           success *= ag.parameters.at(Param::H) == bg.parameters.at(Param::H);
           success *= ag.parameters.at(Param::D) == bg.parameters.at(Param::D);
           success *= ag.parameters.at(Param::Ra) == bg.parameters.at(Param::Ra);
@@ -116,8 +112,6 @@ namespace GridKit
           const auto& bg = b.genclassical[i];
 
           success *= ag.buses.at(BUS) == bg.buses.at(BUS);
-          success *= ag.parameters.at(Param::p0) == bg.parameters.at(Param::p0);
-          success *= ag.parameters.at(Param::q0) == bg.parameters.at(Param::q0);
           success *= ag.parameters.at(Param::H) == bg.parameters.at(Param::H);
           success *= ag.parameters.at(Param::D) == bg.parameters.at(Param::D);
           success *= ag.parameters.at(Param::Ra) == bg.parameters.at(Param::Ra);
@@ -216,7 +210,6 @@ namespace GridKit
           success *= af.buses.at(BusFaultBuses::bus) == bf.buses.at(BusFaultBuses::bus);
           success *= af.parameters.at(Param::R) == bf.parameters.at(Param::R);
           success *= af.parameters.at(Param::X) == bf.parameters.at(Param::X);
-          success *= af.parameters.at(Param::state0) == bf.parameters.at(Param::state0);
         }
 
         return success;
@@ -271,16 +264,18 @@ namespace GridKit
         SystemModelDataT set_data;
 
         set_data.bus.resize(2);
-        set_data.bus[0].bus_id   = 0;
-        set_data.bus[0].bus_type = BusType::DEFAULT;
-        set_data.bus[0].Vr0      = 0.9949877346411762;
-        set_data.bus[0].Vi0      = 0.09999703952427966;
+        set_data.bus[0].bus_id            = 0;
+        set_data.bus[0].bus_type          = BusType::DEFAULT;
+        set_data.bus[0].initial_state     = BusState{};
+        set_data.bus[0].initial_state->vr = 0.9949877346411762;
+        set_data.bus[0].initial_state->vi = 0.09999703952427966;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
 
-        set_data.bus[1].bus_id   = 1;
-        set_data.bus[1].bus_type = BusType::SLACK;
-        set_data.bus[1].Vr0      = 1.0;
-        set_data.bus[1].Vi0      = 0.0;
+        set_data.bus[1].bus_id            = 1;
+        set_data.bus[1].bus_type          = BusType::SLACK;
+        set_data.bus[1].initial_state     = BusState{};
+        set_data.bus[1].initial_state->vr = 1.0;
+        set_data.bus[1].initial_state->vi = 0.0;
 
         set_data.branch.resize(1);
         set_data.branch[0].buses[BranchBuses::bus1]        = set_data.bus[0].bus_id;
@@ -292,8 +287,9 @@ namespace GridKit
 
         set_data.genrou.resize(1);
         set_data.genrou[0].buses[GenrouBuses::bus]             = 0;
-        set_data.genrou[0].parameters[GenrouParameters::p0]    = 1.;
-        set_data.genrou[0].parameters[GenrouParameters::q0]    = 0.05013;
+        set_data.genrou[0].initial_state                       = DeviceState{};
+        set_data.genrou[0].initial_state->p                    = 1.0;
+        set_data.genrou[0].initial_state->q                    = 0.05013;
         set_data.genrou[0].parameters[GenrouParameters::H]     = 3.;
         set_data.genrou[0].parameters[GenrouParameters::D]     = 0.;
         set_data.genrou[0].parameters[GenrouParameters::Ra]    = 0.;
@@ -313,10 +309,9 @@ namespace GridKit
         set_data.genrou[0].monitored_variables.insert(GenrouVar::speed);
 
         set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+        set_data.bus_fault[0].buses[BusFaultBuses::bus]         = 0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::R] = 0.0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::X] = 1e-3;
 
         std::string      base_name = "TwoBus/Basic/TwoBusBasic";
         std::string      in_file   = base_name + ".case.json";
@@ -350,13 +345,9 @@ namespace GridKit
         set_data.bus.resize(2);
         set_data.bus[0].bus_id   = 0;
         set_data.bus[0].bus_type = BusType::DEFAULT;
-        set_data.bus[0].Vr0      = 0.9949877346411762;
-        set_data.bus[0].Vi0      = 0.09999703952427966;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
         set_data.bus[1].bus_id   = 1;
         set_data.bus[1].bus_type = BusType::SLACK;
-        set_data.bus[1].Vr0      = 1.0;
-        set_data.bus[1].Vi0      = 0.0;
 
         set_data.signal.resize(3);
         set_data.signal[0].name      = "Machine Speed Deviation";
@@ -375,18 +366,15 @@ namespace GridKit
         set_data.branch[0].parameters[BranchParameters::B] = 0.0;
 
         set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+        set_data.bus_fault[0].buses[BusFaultBuses::bus]         = 0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::R] = 0.0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::X] = 1e-3;
 
         set_data.genrou.resize(1);
         set_data.genrou[0].buses[GenrouBuses::bus]                    = 0;
         set_data.genrou[0].signal_outputs[GenrouSignalOutputs::speed] = 0;
         set_data.genrou[0].signal_inputs[GenrouSignalInputs::pmech]   = 1;
         set_data.genrou[0].signal_inputs[GenrouSignalInputs::efd]     = 2;
-        set_data.genrou[0].parameters[GenrouParameters::p0]           = 1.;
-        set_data.genrou[0].parameters[GenrouParameters::q0]           = 0.05013;
         set_data.genrou[0].parameters[GenrouParameters::H]            = 3.;
         set_data.genrou[0].parameters[GenrouParameters::D]            = 0.;
         set_data.genrou[0].parameters[GenrouParameters::Ra]           = 0.;
@@ -460,13 +448,9 @@ namespace GridKit
         set_data.bus.resize(2);
         set_data.bus[0].bus_id   = 0;
         set_data.bus[0].bus_type = BusType::DEFAULT;
-        set_data.bus[0].Vr0      = 0.9949877346411762;
-        set_data.bus[0].Vi0      = 0.09999703952427966;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
         set_data.bus[1].bus_id   = 1;
         set_data.bus[1].bus_type = BusType::SLACK;
-        set_data.bus[1].Vr0      = 1.0;
-        set_data.bus[1].Vi0      = 0.0;
 
         set_data.signal.resize(2);
         set_data.signal[0].name      = "Machine Speed Deviation";
@@ -483,17 +467,14 @@ namespace GridKit
         set_data.branch[0].parameters[BranchParameters::B] = 0.0;
 
         set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+        set_data.bus_fault[0].buses[BusFaultBuses::bus]         = 0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::R] = 0.0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::X] = 1e-3;
 
         set_data.genrou.resize(1);
         set_data.genrou[0].buses[GenrouBuses::bus]                    = 0;
         set_data.genrou[0].signal_outputs[GenrouSignalOutputs::speed] = 0;
         set_data.genrou[0].signal_inputs[GenrouSignalInputs::pmech]   = 1;
-        set_data.genrou[0].parameters[GenrouParameters::p0]           = 1.;
-        set_data.genrou[0].parameters[GenrouParameters::q0]           = 0.05013;
         set_data.genrou[0].parameters[GenrouParameters::H]            = 3.;
         set_data.genrou[0].parameters[GenrouParameters::D]            = 0.;
         set_data.genrou[0].parameters[GenrouParameters::Ra]           = 0.;
@@ -545,18 +526,12 @@ namespace GridKit
         set_data.bus.resize(3);
         set_data.bus[0].bus_id   = 0;
         set_data.bus[0].bus_type = BusType::SLACK;
-        set_data.bus[0].Vr0      = 1.06;
-        set_data.bus[0].Vi0      = 0.0;
         set_data.bus[0].monitored_variables.insert(BusVar::Vm);
         set_data.bus[1].bus_id   = 1;
         set_data.bus[1].bus_type = BusType::DEFAULT;
-        set_data.bus[1].Vr0      = 1.0599558398065716;
-        set_data.bus[1].Vi0      = -0.009675621941024773;
         set_data.bus[1].monitored_variables.insert(BusVar::Vm);
         set_data.bus[2].bus_id   = 2;
         set_data.bus[2].bus_type = BusType::DEFAULT;
-        set_data.bus[2].Vr0      = 0.9610827543495831;
-        set_data.bus[2].Vi0      = -0.13122476630506485;
         set_data.bus[2].monitored_variables.insert(BusVar::Vm);
 
         set_data.branch.resize(3);
@@ -581,8 +556,6 @@ namespace GridKit
 
         set_data.genrou.resize(2);
         set_data.genrou[0].buses[GenrouBuses::bus]             = 1;
-        set_data.genrou[0].parameters[GenrouParameters::p0]    = 0.5;
-        set_data.genrou[0].parameters[GenrouParameters::q0]    = -0.07588;
         set_data.genrou[0].parameters[GenrouParameters::H]     = 2.7;
         set_data.genrou[0].parameters[GenrouParameters::D]     = 0.;
         set_data.genrou[0].parameters[GenrouParameters::Ra]    = 0.;
@@ -601,8 +574,6 @@ namespace GridKit
         set_data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
         set_data.genrou[0].monitored_variables.insert(GenrouVar::speed);
         set_data.genrou[1].buses[GenrouBuses::bus]             = 2;
-        set_data.genrou[1].parameters[GenrouParameters::p0]    = 0.25;
-        set_data.genrou[1].parameters[GenrouParameters::q0]    = 0.26587;
         set_data.genrou[1].parameters[GenrouParameters::H]     = 1.6;
         set_data.genrou[1].parameters[GenrouParameters::D]     = 0.;
         set_data.genrou[1].parameters[GenrouParameters::Ra]    = 0.;
@@ -627,10 +598,9 @@ namespace GridKit
         set_data.loadz[0].parameters[LoadZParameters::X] = 0.20330047265361242;
 
         set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 2;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-5;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+        set_data.bus_fault[0].buses[BusFaultBuses::bus]         = 2;
+        set_data.bus_fault[0].parameters[BusFaultParameters::R] = 0.0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::X] = 1e-5;
 
         std::string      in_file   = "ThreeBus/Basic/ThreeBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
@@ -651,17 +621,11 @@ namespace GridKit
         set_data.bus.resize(3);
         set_data.bus[0].bus_id   = 0;
         set_data.bus[0].bus_type = BusType::SLACK;
-        set_data.bus[0].Vr0      = 1.06;
-        set_data.bus[0].Vi0      = 0.0;
         set_data.bus[1].bus_id   = 1;
         set_data.bus[1].bus_type = BusType::DEFAULT;
-        set_data.bus[1].Vr0      = 1.0599558398065716;
-        set_data.bus[1].Vi0      = -0.009675621941024773;
         set_data.bus[1].monitored_variables.insert(BusVar::Vm);
         set_data.bus[2].bus_id   = 2;
         set_data.bus[2].bus_type = BusType::DEFAULT;
-        set_data.bus[2].Vr0      = 0.9610827543495831;
-        set_data.bus[2].Vi0      = -0.13122476630506485;
         set_data.bus[2].monitored_variables.insert(BusVar::Vm);
 
         set_data.branch.resize(3);
@@ -686,16 +650,12 @@ namespace GridKit
 
         set_data.genclassical.resize(2);
         set_data.genclassical[0].buses[GenClassicalBuses::bus]           = set_data.bus[1].bus_id;
-        set_data.genclassical[0].parameters[GenClassicalParameters::p0]  = 0.5;
-        set_data.genclassical[0].parameters[GenClassicalParameters::q0]  = -0.07588;
         set_data.genclassical[0].parameters[GenClassicalParameters::H]   = 2.7;
         set_data.genclassical[0].parameters[GenClassicalParameters::D]   = 0.;
         set_data.genclassical[0].parameters[GenClassicalParameters::Ra]  = 0.;
         set_data.genclassical[0].parameters[GenClassicalParameters::Xdp] = 0.17;
         set_data.genclassical[0].monitored_variables.insert(GenVar::speed);
         set_data.genclassical[1].buses[GenClassicalBuses::bus]           = set_data.bus[2].bus_id;
-        set_data.genclassical[1].parameters[GenClassicalParameters::p0]  = 0.25;
-        set_data.genclassical[1].parameters[GenClassicalParameters::q0]  = 0.26587;
         set_data.genclassical[1].parameters[GenClassicalParameters::H]   = 1.6;
         set_data.genclassical[1].parameters[GenClassicalParameters::D]   = 0.;
         set_data.genclassical[1].parameters[GenClassicalParameters::Ra]  = 0.;
@@ -708,10 +668,9 @@ namespace GridKit
         set_data.loadz[0].parameters[LoadZParameters::X] = 0.20330047265361242;
 
         set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 2;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-5;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+        set_data.bus_fault[0].buses[BusFaultBuses::bus]         = 2;
+        set_data.bus_fault[0].parameters[BusFaultParameters::R] = 0.0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::X] = 1e-5;
 
         std::string      in_file   = "ThreeBus/Classical/ThreeBusClassical.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);

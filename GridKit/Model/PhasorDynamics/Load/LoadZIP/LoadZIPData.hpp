@@ -10,8 +10,6 @@ namespace GridKit
     /// Parameters for a loadZIP
     enum class LoadZIPParameters
     {
-      Pnom,   ///< Legacy fallback for the p input
-      Qnom,   ///< Legacy fallback for the q input
       Vnom,   ///< Nominal voltage magnitude
       alphaI, ///< Fraction of load represented as constant current
       alphaP, ///< Fraction of load represented as constant power

@@ -15,8 +15,6 @@ namespace GridKit
     /// Initial parameters for a classical generator model
     enum class GenClassicalParameters
     {
-      p0,  ///< Legacy fallback for the p input
-      q0,  ///< Legacy fallback for the q input
       H,   ///< Rotor inertia
       D,   ///< Damping coefficient
       Ra,  ///< Winding resistance
@@ -33,7 +31,7 @@ namespace GridKit
 
     /// Signal inputs supported for a classical generator model
     ///
-    /// @warning GenClassical signal support is incomplete. These legacy signal
+    /// @warning GenClassical signal support is incomplete. These signal
     /// names are not wired by SystemModel today; the intended refactor is to
     /// align this model with Genrou/Gensal by supporting `pmech`, `speed`, and
     /// `efd` signals through ComponentSignals.

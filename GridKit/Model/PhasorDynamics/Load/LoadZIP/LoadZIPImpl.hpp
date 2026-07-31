@@ -27,10 +27,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT Vnom, RealT alphaI, RealT alphaP)
+    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT Vnom, RealT alphaI, RealT alphaP)
       : bus_(bus),
-        p_(-Pnom),
-        q_(-Qnom),
         Vnom_(Vnom),
         alphaI_(alphaI),
         alphaP_(alphaP)
@@ -59,16 +57,6 @@ namespace GridKit
     void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::Pnom))
-      {
-        p_ = -std::get<RealT>(data.parameters.at(Parameter::Pnom));
-      }
-
-      if (data.parameters.contains(Parameter::Qnom))
-      {
-        q_ = -std::get<RealT>(data.parameters.at(Parameter::Qnom));
-      }
-
       if (data.parameters.contains(Parameter::Vnom))
       {
         Vnom_ = std::get<RealT>(data.parameters.at(Parameter::Vnom));
@@ -137,17 +125,15 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::initialize()
     {
-      bool set_p = false;
-      bool set_q = false;
+      p_ = ScalarT{0.0};
+      q_ = ScalarT{0.0};
       if (signals_.template isAttached<LoadZIPExternalVariables::P>())
       {
-        p_    = signals_.template readExternalVariable<LoadZIPExternalVariables::P>();
-        set_p = true;
+        p_ = signals_.template readExternalVariable<LoadZIPExternalVariables::P>();
       }
       if (signals_.template isAttached<LoadZIPExternalVariables::Q>())
       {
-        q_    = signals_.template readExternalVariable<LoadZIPExternalVariables::Q>();
-        set_q = true;
+        q_ = signals_.template readExternalVariable<LoadZIPExternalVariables::Q>();
       }
       setDerivedParams();
 
@@ -155,7 +141,7 @@ namespace GridKit
       const ScalarT vi = Vi();
       // The terminal inputs and initialized bus voltage are one initial
       // condition, so derive their ZIP coefficients together on every reset.
-      setInputDispatchAtVoltage(vr, vi, set_p, set_q);
+      setInputDispatchAtVoltage(vr, vi);
 
       const RealT   Vnom2 = Vnom_ * Vnom_;
       const ScalarT V2    = vr * vr + vi * vi;
@@ -284,10 +270,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::setDerivedParams()
     {
-      const RealT Vnom2 = Vnom_ * Vnom_;
-
-      G_      = -p_ / Vnom2;
-      B_      = -q_ / Vnom2;
       alphaZ_ = ONE<RealT> - alphaI_ - alphaP_;
     }
 
@@ -297,9 +279,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::setInputDispatchAtVoltage(
         ScalarT vr,
-        ScalarT vi,
-        bool    set_p,
-        bool    set_q)
+        ScalarT vi)
     {
       const ScalarT V2    = vr * vr + vi * vi;
       const ScalarT V     = std::sqrt(V2);
@@ -307,14 +287,8 @@ namespace GridKit
       const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
       const ScalarT scale = V2 * zip;
 
-      if (set_p)
-      {
-        G_ = -p_ / scale;
-      }
-      if (set_q)
-      {
-        B_ = -q_ / scale;
-      }
+      G_ = -p_ / scale;
+      B_ = -q_ / scale;
     }
 
     template <typename scalar_type, typename index_type>

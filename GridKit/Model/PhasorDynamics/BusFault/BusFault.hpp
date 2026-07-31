@@ -51,7 +51,7 @@ namespace GridKit
       using MonitorT   = Model::VariableMonitor<BusFault, BusFaultData>;
 
       BusFault(BusT* bus);
-      BusFault(BusT* bus, RealT R, RealT X, int status);
+      BusFault(BusT* bus, RealT R, RealT X);
       BusFault(BusT* bus, const ModelDataT& data);
       ~BusFault();
 

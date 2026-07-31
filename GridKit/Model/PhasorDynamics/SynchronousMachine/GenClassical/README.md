@@ -9,8 +9,6 @@ it is equivalent to a driven damped pendulum model.
 
 Symbol      | Units   | Description                     | Note
 ------------|---------|---------------------------------|----------------------
-$P_0$       | [p.u.]  | legacy active-power fallback    |
-$Q_0$       | [p.u.]  | legacy reactive-power fallback  |
 $H$         | [s]     | rotor inertia                   |
 $D$         | [p.u.]  | damping coefficient             |
 $R_a$       | [p.u.]  | winding resistance              |
@@ -21,8 +19,8 @@ $S_\mathrm{mach}$ | [MVA] | machine power base        |
 
 Input    | Units  | Description                                      | Default
 ---------|--------|--------------------------------------------------|--------
-`p`      | [p.u.] | Initial terminal active-power injection          | Legacy $P_0$
-`q`      | [p.u.] | Initial terminal reactive-power injection        | Legacy $Q_0$
+`p`      | [p.u.] | Initial terminal active-power injection          | 0
+`q`      | [p.u.] | Initial terminal reactive-power injection        | 0
 `online` | [-]    | In-service status; zero is offline               | 1
 
 `p` and `q` are sampled during initialization. Any nonzero `online` value

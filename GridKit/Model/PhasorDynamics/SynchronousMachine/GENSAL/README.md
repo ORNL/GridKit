@@ -22,8 +22,6 @@ Figure 2: GENSAL. Figure courtesy of
 
 Symbol      | Units   | Description                                | Typical Value | Note
 ------------|---------|--------------------------------------------|---------------| ------
-$P_0$       | [p.u.]  | Legacy active-power fallback               | 1.0 |
-$Q_0$       | [p.u.]  | Legacy reactive-power fallback             | 0.0 |
 $H$         | [s]     | rotor inertia                              | 3
 $D$         | [p.u.]  | damping coefficient                        | 0
 $R_a$       | [p.u.]  | winding resistance                         | 0
@@ -43,8 +41,8 @@ $S_\mathrm{mach}$ | [MVA] | Machine power base                  | 100 |
 
 Input    | Units  | Description                                      | Default
 ---------|--------|--------------------------------------------------|--------
-`p`      | [p.u.] | Initial terminal active-power injection          | Legacy $P_0$
-`q`      | [p.u.] | Initial terminal reactive-power injection        | Legacy $Q_0$
+`p`      | [p.u.] | Initial terminal active-power injection          | 0
+`q`      | [p.u.] | Initial terminal reactive-power injection        | 0
 `online` | [-]    | In-service status; zero is offline               | 1
 
 `p` and `q` are sampled during initialization. Any nonzero `online` value

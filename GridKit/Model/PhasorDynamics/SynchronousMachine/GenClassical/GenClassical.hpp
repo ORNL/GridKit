@@ -72,8 +72,6 @@ namespace GridKit
 
       GenClassical(BusT* bus);
       GenClassical(BusT* bus,
-                   RealT p0,
-                   RealT q0,
                    RealT H,
                    RealT D,
                    RealT Ra,
@@ -177,10 +175,6 @@ namespace GridKit
 
       /// Component signal extension
       ComponentSignals<ScalarT, IdxT, NoVariables, GenClassicalExternalVariables> signals_;
-
-      /* Initial terminal conditions */
-      RealT p0_{0.0};
-      RealT q0_{0.0};
 
       /* Input parameters */
       RealT H_{0.0};

@@ -242,10 +242,11 @@ namespace GridKit
 
         SystemModelData<RealT, IdxT> data;
         data.bus.resize(1);
-        data.bus[0].bus_id   = 1;
-        data.bus[0].bus_type = BusData<RealT, IdxT>::BusType::DEFAULT;
-        data.bus[0].Vr0      = 1.0;
-        data.bus[0].Vi0      = 0.0;
+        data.bus[0].bus_id            = 1;
+        data.bus[0].bus_type          = BusData<RealT, IdxT>::BusType::DEFAULT;
+        data.bus[0].initial_state     = Model::BusState{};
+        data.bus[0].initial_state->vr = 1.0;
+        data.bus[0].initial_state->vi = 0.0;
 
         data.signal.resize(1);
         data.signal[0].signal_id = 3;
@@ -287,10 +288,11 @@ namespace GridKit
 
         SystemModelData<RealT, IdxT> data;
         data.bus.resize(1);
-        data.bus[0].bus_id   = 1;
-        data.bus[0].bus_type = BusData<RealT, IdxT>::BusType::DEFAULT;
-        data.bus[0].Vr0      = 1.0;
-        data.bus[0].Vi0      = 0.0;
+        data.bus[0].bus_id            = 1;
+        data.bus[0].bus_type          = BusData<RealT, IdxT>::BusType::DEFAULT;
+        data.bus[0].initial_state     = Model::BusState{};
+        data.bus[0].initial_state->vr = 1.0;
+        data.bus[0].initial_state->vi = 0.0;
 
         data.signal.resize(2);
         data.signal[0].signal_id = 10;

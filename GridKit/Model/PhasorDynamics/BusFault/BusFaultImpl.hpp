@@ -39,8 +39,8 @@ namespace GridKit
      * @param B - line shunt charging
      */
     template <typename scalar_type, typename index_type>
-    BusFault<scalar_type, index_type>::BusFault(BusT* bus, RealT R, RealT X, int status)
-      : bus_(bus), R_(R), X_(X), status_(status), bus_id_(0)
+    BusFault<scalar_type, index_type>::BusFault(BusT* bus, RealT R, RealT X)
+      : bus_(bus), R_(R), X_(X), status_(0), bus_id_(0)
     {
       size_ = 2;
       setDerivedParams();
@@ -68,11 +68,6 @@ namespace GridKit
       if (data.parameters.contains(Parameter::X))
       {
         X_ = std::get<RealT>(data.parameters.at(Parameter::X));
-      }
-
-      if (data.parameters.contains(Parameter::state0))
-      {
-        status_ = std::get<bool>(data.parameters.at(Parameter::state0));
       }
 
       if (data.buses.contains(Buses::bus))

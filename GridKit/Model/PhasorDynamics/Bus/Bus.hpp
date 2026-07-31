@@ -101,12 +101,12 @@ namespace GridKit
 
       void setVr(RealT vr) override final
       {
-        Vr0_ = static_cast<ScalarT>(vr);
+        vr_init_ = static_cast<ScalarT>(vr);
       }
 
       void setVi(RealT vi) override final
       {
-        Vi0_ = static_cast<ScalarT>(vi);
+        vi_init_ = static_cast<ScalarT>(vi);
       }
 
     protected:
@@ -139,8 +139,8 @@ namespace GridKit
       RealT* J_vals_buffer_{nullptr};
 
     private:
-      ScalarT Vr0_{0.0};
-      ScalarT Vi0_{0.0};
+      ScalarT vr_init_{0.0};
+      ScalarT vi_init_{0.0};
     };
 
   } // namespace PhasorDynamics

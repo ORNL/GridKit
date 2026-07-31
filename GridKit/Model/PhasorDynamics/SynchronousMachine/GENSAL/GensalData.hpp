@@ -15,8 +15,6 @@ namespace GridKit
     /// Initial parameters for a Gensal generator model
     enum class GensalParameters
     {
-      p0,    ///< Legacy fallback for the p input
-      q0,    ///< Legacy fallback for the q input
       H,     ///< Rotor inertia
       D,     ///< Damping coefficient
       Ra,    ///< Winding resistance

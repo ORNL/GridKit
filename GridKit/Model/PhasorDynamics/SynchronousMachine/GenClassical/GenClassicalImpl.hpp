@@ -26,8 +26,6 @@ namespace GridKit
     GenClassical<scalar_type, index_type>::GenClassical(BusT* bus)
       : bus_(bus),
         bus_id_(0),
-        p0_(0.0),
-        q0_(0.0),
         H_(3.0),
         D_(0.0),
         Ra_(0.0),
@@ -43,16 +41,12 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     GenClassical<scalar_type, index_type>::GenClassical(BusT* bus,
-                                                        RealT p0,
-                                                        RealT q0,
                                                         RealT H,
                                                         RealT D,
                                                         RealT Ra,
                                                         RealT Xdp)
       : bus_(bus),
         bus_id_(0),
-        p0_(p0),
-        q0_(q0),
         H_(H),
         D_(D),
         Ra_(Ra),
@@ -73,16 +67,6 @@ namespace GridKit
     {
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
-      if (data.parameters.contains(Parameter::p0))
-      {
-        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
-      }
-
-      if (data.parameters.contains(Parameter::q0))
-      {
-        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
-      }
-
       if (data.parameters.contains(Parameter::H))
       {
         H_ = std::get<RealT>(data.parameters.at(Parameter::H));
@@ -234,8 +218,8 @@ namespace GridKit
     {
       ScalarT vr       = Vr();
       ScalarT vi       = Vi();
-      ScalarT p_system = static_cast<ScalarT>(p0_);
-      ScalarT q_system = static_cast<ScalarT>(q0_);
+      ScalarT p_system = ScalarT{0.0};
+      ScalarT q_system = ScalarT{0.0};
 
       static constexpr auto P = GenClassicalExternalVariables::P;
       static constexpr auto Q = GenClassicalExternalVariables::Q;

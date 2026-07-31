@@ -19,20 +19,12 @@
             "number": 1,
             "class": "bus",
             "name": "Bus_1",
-            "init": {
-                "Vr": 1.0,
-                "Vi": 0.0
-            },
             "params": {"kv": 138.0}
         },
         {
             "number": 2,
             "class": "bus",
             "name": "Bus_2",
-            "init": {
-                "Vr": 0.9898978476307575,
-                "Vi": -0.09999998417733978
-            },
             "params": {"kv": 138.0}
         }
     ],
@@ -47,8 +39,6 @@
             "ports": {"bus": 1, "speed": 0, "pmech": 1, "efd": 2},
             "id": "gensal_1_1",
             "params": {
-                "p0": 1.0,
-                "q0": 0.10102,
                 "H": 3.0,
                 "D": 0.0,
                 "Ra": 0.0,
@@ -118,8 +108,6 @@
             "ports": {"bus": 2},
             "id": "load_2",
             "params": {
-                "Pnom": 1.0,
-                "Qnom": 0.0,
                 "Vnom": 0.99494,
                 "alphaI": 0.0,
                 "alphaP": 0.0
@@ -130,7 +118,6 @@
             "ports": {"bus": 2},
             "id": "0",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.01
             }

@@ -42,16 +42,6 @@ namespace GridKit
     void Gensal<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::p0))
-      {
-        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
-      }
-
-      if (data.parameters.contains(Parameter::q0))
-      {
-        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
-      }
-
       if (data.parameters.contains(Parameter::H))
       {
         H_ = std::get<RealT>(data.parameters.at(Parameter::H));
@@ -301,8 +291,8 @@ namespace GridKit
       // Network frame terminal values
       ScalarT vr       = Vr();
       ScalarT vi       = Vi();
-      ScalarT p_system = static_cast<ScalarT>(p0_);
-      ScalarT q_system = static_cast<ScalarT>(q0_);
+      ScalarT p_system = ScalarT{0.0};
+      ScalarT q_system = ScalarT{0.0};
 
       static constexpr auto P = GensalExternalVariables::P;
       static constexpr auto Q = GensalExternalVariables::Q;

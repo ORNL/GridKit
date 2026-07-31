@@ -70,7 +70,7 @@ namespace GridKit
                                           LoadZIPExternalVariables>;
 
       LoadZIP(BusT* bus);
-      LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT Vnom, RealT alphaI, RealT alphaP);
+      LoadZIP(BusT* bus, RealT Vnom, RealT alphaI, RealT alphaP);
       LoadZIP(BusT* bus, const ModelDataT& data);
       ~LoadZIP();
 
@@ -94,19 +94,6 @@ namespace GridKit
       }
 
     public:
-      // Temporary compatibility with the positive-consumption parameters.
-      void setPnom(RealT Pnom)
-      {
-        p_ = static_cast<ScalarT>(-Pnom);
-        setDerivedParams();
-      }
-
-      void setQnom(RealT Qnom)
-      {
-        q_ = static_cast<ScalarT>(-Qnom);
-        setDerivedParams();
-      }
-
       void setVnom(RealT Vnom)
       {
         Vnom_ = Vnom;
@@ -129,10 +116,7 @@ namespace GridKit
       void    initializeParameters(const ModelDataT& data);
       void    initializeMonitor();
       void    setDerivedParams();
-      void    setInputDispatchAtVoltage(ScalarT vr,
-                                        ScalarT vi,
-                                        bool    set_p,
-                                        bool    set_q);
+      void    setInputDispatchAtVoltage(ScalarT vr, ScalarT vi);
       ScalarT online() const;
 
       ScalarT& Vr()

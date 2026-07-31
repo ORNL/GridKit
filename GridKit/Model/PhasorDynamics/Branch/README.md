@@ -39,20 +39,16 @@ Input   | Symbol     | Units  | Description                                  | D
 `open`  | $o$        |        | Open status; zero is closed and nonzero is open | 0
 
 These inputs are constant while a solve is running. They may be changed while
-the solve is stopped; the next model evaluation uses the new values. Legacy
-constructor/data values remain fallbacks when no corresponding input signal is
-attached.
+the solve is stopped; the next model evaluation uses the new values.
 
 ### Configuration Validation
 
-The existing `verify()` method checks the Branch definition and legacy
-constructor/data fallback values:
+The existing `verify()` method checks the Branch parameters:
 
 ```math
 \begin{aligned}
-  &R, X, G, B, \tau, \theta \in \mathbb{R}\ \text{and finite} \\
-  &R^2 + X^2 > 0 \\
-  &\tau > 0
+  &R, X, G, B \in \mathbb{R}\ \text{and finite} \\
+  &R^2 + X^2 > 0
 \end{aligned}
 ```
 

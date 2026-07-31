@@ -55,9 +55,6 @@ namespace GridKit
 
       std::string name; ///< A name given to this bus
 
-      RealT Vr0{1.0}; ///< Initial value for the real bus voltage
-      RealT Vi0{0.0}; ///< Initial value for the imaginary bus voltage
-
       IdxT bus_id{0}; ///< The unique ID of the bus
 
       /// Enumeration over the kinds of bus this data structure can be for

@@ -32,7 +32,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Bus<scalar_type, index_type>::Bus()
-      : Vr0_(0.0), Vi0_(0.0)
+      : vr_init_(0.0), vi_init_(0.0)
     {
       size_ = 2;
     }
@@ -40,7 +40,7 @@ namespace GridKit
     /*!
      * @brief Bus constructor.
      *
-     * This constructor sets initial values for active and reactive voltage.
+     * This constructor sets initial values for the real and imaginary voltage components.
      *
      * @todo Arguments that should be passed to ModelEvaluatorImpl constructor:
      * - Number of equations = 2 (size_)
@@ -50,7 +50,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Bus<scalar_type, index_type>::Bus(ScalarT Vr, ScalarT Vi)
-      : Vr0_(Vr), Vi0_(Vi)
+      : vr_init_(Vr), vi_init_(Vi)
     {
       size_ = 2;
     }
@@ -62,8 +62,6 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Bus<scalar_type, index_type>::Bus(const ModelDataT& data)
-      : Vr0_(data.Vr0),
-        Vi0_(data.Vi0)
     {
       bus_id_        = data.bus_id;
       size_          = 2;
@@ -178,8 +176,8 @@ namespace GridKit
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      y[0]  = Vr0_;
-      y[1]  = Vi0_;
+      y[0]  = vr_init_;
+      y[1]  = vi_init_;
       yp[0] = 0.0;
       yp[1] = 0.0;
 

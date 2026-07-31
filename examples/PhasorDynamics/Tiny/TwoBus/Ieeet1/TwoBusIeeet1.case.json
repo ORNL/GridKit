@@ -19,10 +19,6 @@
             "number": 0,
             "class": "bus",
             "name": "Bus 1",
-            "init": {
-                "Vr":0.9949877346411762,
-                "Vi":0.09999703952427966
-            },
             "params": {"kv": 115.0},
             "mon": ["Vm"]
         },
@@ -30,10 +26,6 @@
             "number": 1,
             "class": "infinite_bus",
             "name": "Bus 2",
-            "init": {
-                "Vr":1.0,
-                "Vi":0.0
-            },
             "params": {"kv": 115.0}
         }
     ],
@@ -54,8 +46,6 @@
             "ports": {"bus":0, "speed": 0, "pmech":1, "efd": 2},
             "id": "DV1",
             "params": {
-                "p0":1.0,
-                "q0":0.05013,
                 "H":3.0,
                 "D":0.0,
                 "Ra":0.0,
@@ -117,7 +107,7 @@
             "class": "BusFault",
             "ports": {"bus":0},
             "id": "0",
-            "params": {"state0": false, "R":0.0, "X":1e-3}
+            "params": {"R":0.0, "X":1e-3}
         }
     ]
 }

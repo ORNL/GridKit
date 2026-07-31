@@ -15,12 +15,10 @@ namespace GridKit
     /// Initial parameters for a branch
     enum class BranchParameters
     {
-      R,     ///< Line series resistance
-      X,     ///< Line series reactance
-      G,     ///< Total shunt conductance
-      B,     ///< Total shunt susceptance
-      tap,   ///< Legacy fallback for the tap input
-      phase, ///< Legacy fallback for the phase input
+      R, ///< Line series resistance
+      X, ///< Line series reactance
+      G, ///< Total shunt conductance
+      B, ///< Total shunt susceptance
     };
 
     /// Buses for a branch

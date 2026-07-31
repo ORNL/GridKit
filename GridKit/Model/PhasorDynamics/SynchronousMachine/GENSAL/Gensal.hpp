@@ -183,10 +183,6 @@ namespace GridKit
       /// Component signal extension
       ComponentSignals<ScalarT, IdxT, GensalInternalVariables, GensalExternalVariables> signals_;
 
-      /* Initial terminal conditions */
-      RealT p0_{0.0};
-      RealT q0_{0.0};
-
       /* Input parameters */
       RealT H_{3.0};
       RealT D_{0.0};

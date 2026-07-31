@@ -35,8 +35,6 @@ namespace GridKit
         data.device_class                 = "Genrou";
         data.disambiguation_string        = "1";
         data.buses[Buses::bus]            = 1;
-        data.parameters[Parameter::p0]    = RealT{1.0};
-        data.parameters[Parameter::q0]    = RealT{0.05013};
         data.parameters[Parameter::H]     = RealT{3.0};
         data.parameters[Parameter::D]     = RealT{0.0};
         data.parameters[Parameter::Ra]    = RealT{0.0};
@@ -94,10 +92,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
-                                                  1,
-                                                  0.05013,
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(1.0, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT>     gen(&bus,
                                                   3,
                                                   0,
                                                   0,
@@ -114,6 +110,16 @@ namespace GridKit
                                                   0.15,
                                                   0,
                                                   0);
+        ScalarT                                   p{1.0};
+        ScalarT                                   q{0.05013};
+        IdxT                                      p_index{INVALID_INDEX<IdxT>};
+        IdxT                                      q_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> p_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> q_signal;
+        p_signal.set(&p, &p_index);
+        q_signal.set(&q, &q_index);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::P>(&p_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::Q>(&q_signal);
 
         bus.allocate();
         bus.initialize();
@@ -152,8 +158,18 @@ namespace GridKit
         data.monitored_variables.insert(Variable::ir);
         data.monitored_variables.insert(Variable::p);
 
-        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, data);
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(1.0, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT>     gen(&bus, data);
+        ScalarT                                   p{1.0};
+        ScalarT                                   q{0.05013};
+        IdxT                                      p_index{INVALID_INDEX<IdxT>};
+        IdxT                                      q_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> p_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> q_signal;
+        p_signal.set(&p, &p_index);
+        q_signal.set(&q, &q_index);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::P>(&p_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::Q>(&q_signal);
 
         bus.allocate();
         bus.initialize();
@@ -187,8 +203,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Checks operating inputs override legacy initialization and online
-       * status disconnects and reconnects the network contribution.
+       * @brief Checks operating inputs and online status disconnect and
+       * reconnect the network contribution.
        */
       TestOutcome operating_state_signals()
       {
@@ -304,8 +320,6 @@ namespace GridKit
         TestStatus success = true;
 
         // GenRou generator parameters
-        RealT p0{1};
-        RealT q0{.05013};
         RealT H{3};
         RealT D{.5};
         RealT Ra{.1};
@@ -327,7 +341,7 @@ namespace GridKit
         ScalarT Vi1{0};   ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12);
 
         // Answer key is available only in double precision.
         // Therefore, only double precision tests are done at this time.
@@ -449,12 +463,10 @@ namespace GridKit
     private:
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian()
       {
-        DependencyTracking::Variable                               Vr1{1.0}; ///< Bus real voltage
-        DependencyTracking::Variable                               Vi1{0.0}; ///< Bus imaginary voltage
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT> gen(&bus,
-                                                                       1,
-                                                                       0.05013,
+        DependencyTracking::Variable                                   Vr1{1.0}; ///< Bus real voltage
+        DependencyTracking::Variable                                   Vi1{0.0}; ///< Bus imaginary voltage
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>        bus(Vr1, Vi1);
+        PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT>     gen(&bus,
                                                                        3,
                                                                        0,
                                                                        0,
@@ -471,6 +483,16 @@ namespace GridKit
                                                                        0.15,
                                                                        0,
                                                                        0);
+        DependencyTracking::Variable                                   p{1.0};
+        DependencyTracking::Variable                                   q{0.05013};
+        IdxT                                                           p_index{INVALID_INDEX<IdxT>};
+        IdxT                                                           q_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> p_signal;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> q_signal;
+        p_signal.set(&p, &p_index);
+        q_signal.set(&q, &q_index);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::P>(&p_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::Q>(&q_signal);
 
         bus.allocate();
         gen.allocate();
@@ -567,12 +589,10 @@ namespace GridKit
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian()
       {
-        ScalarT                               Vr1{1.0}; ///< Bus real voltage
-        ScalarT                               Vi1{0.0}; ///< Bus imaginary voltage
-        PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
-                                                  1,
-                                                  0.05013,
+        ScalarT                                   Vr1{1.0}; ///< Bus real voltage
+        ScalarT                                   Vi1{0.0}; ///< Bus imaginary voltage
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(Vr1, Vi1);
+        PhasorDynamics::Genrou<ScalarT, IdxT>     gen(&bus,
                                                   3,
                                                   0,
                                                   0,
@@ -589,6 +609,16 @@ namespace GridKit
                                                   0.15,
                                                   0,
                                                   0);
+        ScalarT                                   p{1.0};
+        ScalarT                                   q{0.05013};
+        IdxT                                      p_index{INVALID_INDEX<IdxT>};
+        IdxT                                      q_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> p_signal;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> q_signal;
+        p_signal.set(&p, &p_index);
+        q_signal.set(&q, &q_index);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::P>(&p_signal);
+        gen.getSignals().template attachSignalNode<PhasorDynamics::GenrouExternalVariables::Q>(&q_signal);
 
         bus.allocate();
         gen.allocate();

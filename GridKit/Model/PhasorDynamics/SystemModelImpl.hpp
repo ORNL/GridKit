@@ -1,5 +1,4 @@
 #include <cassert>
-#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
@@ -45,22 +44,6 @@ namespace GridKit
       using namespace Exciter;
       using namespace Stabilizer;
 
-      auto parameterValue = [](const auto& component_data,
-                               auto        parameter,
-                               RealT       fallback)
-      {
-        auto value = component_data.parameters.find(parameter);
-        if (value == component_data.parameters.end())
-        {
-          return fallback;
-        }
-
-        return std::visit(
-            [](const auto& raw_value)
-            { return static_cast<RealT>(raw_value); },
-            value->second);
-      };
-
       auto mappedSignalId = [](const auto& component_data,
                                auto        signal_input) -> std::optional<IdxT>
       {
@@ -90,11 +73,9 @@ namespace GridKit
         RealT online;
       };
 
-      auto dispatchInputs = [](const auto& component_data,
-                               RealT       p,
-                               RealT       q)
+      auto dispatchInputs = [](const auto& component_data)
       {
-        DispatchInputs inputs{p, q, RealT{1.0}};
+        DispatchInputs inputs{RealT{0.0}, RealT{0.0}, RealT{1.0}};
         if (component_data.initial_state)
         {
           const auto& state = *component_data.initial_state;
@@ -110,32 +91,24 @@ namespace GridKit
       // Store parsed system bases before constructing data-driven components.
       this->setSystemBase(data.freq_base, data.va_base);
 
-      std::map<IdxT, std::pair<RealT, RealT>> initial_bus_voltages;
-
       // Add electrical buses
       for (const auto& busdata : data.bus)
       {
         BusBase<ScalarT, IdxT>* bus = BusFactory<ScalarT, IdxT>::create(busdata);
-
-        RealT vr = busdata.Vr0;
-        RealT vi = busdata.Vi0;
 
         if (busdata.initial_state)
         {
           const auto& state = *busdata.initial_state;
           if (state.vr)
           {
-            vr = *state.vr;
-            bus->setVr(vr);
+            bus->setVr(*state.vr);
           }
           if (state.vi)
           {
-            vi = *state.vi;
-            bus->setVi(vi);
+            bus->setVi(*state.vi);
           }
         }
 
-        initial_bus_voltages[busdata.bus_id] = {vr, vi};
         addBus(bus);
       }
 
@@ -207,8 +180,8 @@ namespace GridKit
         auto* branch = new Branch<ScalarT, IdxT>(
             getBus(bus1_index), getBus(bus2_index), branchdata);
 
-        RealT tap   = parameterValue(branchdata, BranchParameters::tap, RealT{1.0});
-        RealT phase = parameterValue(branchdata, BranchParameters::phase, RealT{0.0});
+        RealT tap   = RealT{1.0};
+        RealT phase = RealT{0.0};
         RealT open  = RealT{0.0};
         if (branchdata.initial_state)
         {
@@ -262,25 +235,7 @@ namespace GridKit
         }
         auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index), loadzipdata);
 
-        const auto [vr, vi] = initial_bus_voltages.at(bus_index);
-        const RealT V       = std::sqrt(vr * vr + vi * vi);
-        const RealT Vnom    = parameterValue(
-            loadzipdata, LoadZIPParameters::Vnom, RealT{1.0});
-        const RealT alphaI = parameterValue(
-            loadzipdata, LoadZIPParameters::alphaI, RealT{0.0});
-        const RealT alphaP = parameterValue(
-            loadzipdata, LoadZIPParameters::alphaP, RealT{0.0});
-        const RealT alphaZ = RealT{1.0} - alphaI - alphaP;
-        const RealT ratio  = V / Vnom;
-        const RealT legacy_dispatch_factor =
-            alphaZ * ratio * ratio + alphaI * ratio + alphaP;
-
-        auto inputs = dispatchInputs(
-            loadzipdata,
-            -parameterValue(loadzipdata, LoadZIPParameters::Pnom, RealT{0.0})
-                * legacy_dispatch_factor,
-            -parameterValue(loadzipdata, LoadZIPParameters::Qnom, RealT{0.0})
-                * legacy_dispatch_factor);
+        auto inputs = dispatchInputs(loadzipdata);
 
         auto* p_signal = addMappedInput(
             loadzipdata, LoadZIPSignalInputs::p, "p", inputs.p);
@@ -330,10 +285,7 @@ namespace GridKit
           gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
         }
 
-        auto inputs = dispatchInputs(
-            gendata,
-            parameterValue(gendata, GenrouParameters::p0, RealT{0.0}),
-            parameterValue(gendata, GenrouParameters::q0, RealT{0.0}));
+        auto inputs = dispatchInputs(gendata);
 
         auto* p_signal = addMappedInput(
             gendata, GenrouSignalInputs::p, "p", inputs.p);
@@ -381,10 +333,7 @@ namespace GridKit
           gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
         }
 
-        auto inputs = dispatchInputs(
-            gendata,
-            parameterValue(gendata, GensalParameters::p0, RealT{0.0}),
-            parameterValue(gendata, GensalParameters::q0, RealT{0.0}));
+        auto inputs = dispatchInputs(gendata);
 
         auto* p_signal = addMappedInput(
             gendata, GensalSignalInputs::p, "p", inputs.p);
@@ -410,10 +359,7 @@ namespace GridKit
         }
         auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
 
-        auto inputs = dispatchInputs(
-            gendata,
-            parameterValue(gendata, GenClassicalParameters::p0, RealT{0.0}),
-            parameterValue(gendata, GenClassicalParameters::q0, RealT{0.0}));
+        auto inputs = dispatchInputs(gendata);
 
         auto* p_signal = addMappedInput(
             gendata, GenClassicalSignalInputs::p, "p", inputs.p);
@@ -1218,7 +1164,7 @@ namespace GridKit
       if (signal_id)
       {
         // An explicit graph connection supplies the value and takes
-        // precedence over state and legacy fallbacks.
+        // precedence over State.
         signal = getSignal(*signal_id);
       }
       else

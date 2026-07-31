@@ -54,8 +54,6 @@ namespace GridKit
      * @param X - line series reactance
      * @param G - total shunt conductance
      * @param B - total shunt susceptance
-     * @param tap - off-nominal tap magnitude on bus1 side
-     * @param phase - phase shift angle in radians
      */
     template <typename scalar_type, typename index_type>
     Branch<scalar_type, index_type>::Branch(BusT* bus1,
@@ -63,17 +61,13 @@ namespace GridKit
                                             RealT R,
                                             RealT X,
                                             RealT G,
-                                            RealT B,
-                                            RealT tap,
-                                            RealT phase)
+                                            RealT B)
       : bus1_(bus1),
         bus2_(bus2),
         R_(R),
         X_(X),
         G_(G),
         B_(B),
-        tap_(tap),
-        phase_(phase),
         bus1_id_(0),
         bus2_id_(0)
     {
@@ -176,10 +170,7 @@ namespace GridKit
       check(std::isfinite(X_), "X must be finite");
       check(std::isfinite(G_), "G must be finite");
       check(std::isfinite(B_), "B must be finite");
-      check(std::isfinite(tap_), "tap must be finite");
-      check(std::isfinite(phase_), "phase must be finite");
       check(R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero");
-      check(tap_ > RealT{0.0}, "tap must be positive");
 
       return ret;
     }
@@ -367,8 +358,6 @@ namespace GridKit
       readRealParameter(data, Parameter::X, X_);
       readRealParameter(data, Parameter::G, G_);
       readRealParameter(data, Parameter::B, B_);
-      readRealParameter(data, Parameter::tap, tap_);
-      readRealParameter(data, Parameter::phase, phase_);
 
       if (data.buses.contains(Buses::bus1))
       {
