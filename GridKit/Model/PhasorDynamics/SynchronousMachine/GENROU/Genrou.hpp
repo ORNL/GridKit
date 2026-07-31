@@ -102,8 +102,6 @@ namespace GridKit
       Genrou(BusT*             bus,
              const ModelDataT& data);
       Genrou(BusT* bus,
-             RealT p0,
-             RealT q0,
              RealT H,
              RealT D,
              RealT Ra,
@@ -181,10 +179,6 @@ namespace GridKit
 
       /* Component ports */
       SignalPortsT ports_;
-
-      /* Initial terminal conditions */
-      RealT p0_{0.0};
-      RealT q0_{0.0};
 
       /* Input parameters */
       RealT H_{0.0};

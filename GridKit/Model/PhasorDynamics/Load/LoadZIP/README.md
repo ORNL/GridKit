@@ -8,8 +8,6 @@ contribution to the connected bus residual.
 
 Symbol          | Units  | JSON     | Description                    | Typical Value
 ----------------|--------|----------|--------------------------------|--------------
-$P_\text{nom}$  | [p.u.] | `Pnom`   | Legacy nominal real-power fallback | 0.0
-$Q_\text{nom}$  | [p.u.] | `Qnom`   | Legacy nominal reactive-power fallback | 0.0
 $V_\text{nom}$  | [p.u.] | `Vnom`   | Nominal voltage magnitude      | 1.0
 $\alpha_I$      | [-]    | `alphaI` | Constant current load fraction | 0.0
 $\alpha_P$      | [-]    | `alphaP` | Constant power load fraction   | 0.0
@@ -34,8 +32,8 @@ B &= -\dfrac{Q_\mathrm{nom}}{V_\mathrm{nom}^2} \\
 
 Input    | Units  | Description                                      | Default
 ---------|--------|--------------------------------------------------|--------
-`p`      | [p.u.] | Initial terminal active-power injection          | Derived from `Pnom`
-`q`      | [p.u.] | Initial terminal reactive-power injection        | Derived from `Qnom`
+`p`      | [p.u.] | Initial terminal active-power injection          | 0
+`q`      | [p.u.] | Initial terminal reactive-power injection        | 0
 `online` | [-]    | Connection status; zero is disconnected          | 1
 
 Positive `p` and `q` inject power into the bus. They are sampled during
@@ -115,8 +113,8 @@ I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i
 Initialization solves the algebraic current states from the connected bus
 voltage. Let $V_{m0} = \sqrt{V_{r0}^2 + V_{i0}^2}$.
 
-When terminal inputs $p$ and $q$ are attached, the model first chooses $G$ and
-$B$ so those injections are reproduced at the initialized voltage:
+The model chooses $G$ and $B$ so the terminal inputs $p$ and $q$ are reproduced
+at the initialized voltage:
 
 ```math
 \begin{aligned}

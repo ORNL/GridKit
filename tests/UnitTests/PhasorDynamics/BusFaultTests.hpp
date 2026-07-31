@@ -61,7 +61,8 @@ namespace GridKit
         ScalarT Vi1{1.0}; ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<ScalarT, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, 0.0, 1e-3, status);
+        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, 0.0, 1e-3);
+        fault.setStatus(status);
         bus.allocate();
         bus.initialize();
         fault.allocate();
@@ -130,7 +131,8 @@ namespace GridKit
         DependencyTracking::Variable Vi1{1.0}; ///< Bus-1 imaginary voltage
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<DependencyTracking::Variable, IdxT> fault(&bus, R, X, status);
+        PhasorDynamics::BusFault<DependencyTracking::Variable, IdxT> fault(&bus, R, X);
+        fault.setStatus(status);
 
         bus.allocate();
         fault.allocate();
@@ -165,7 +167,8 @@ namespace GridKit
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
         PhasorDynamics::Bus<ScalarT, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, R, X, status);
+        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, R, X);
+        fault.setStatus(status);
 
         bus.allocate();
         fault.allocate();
