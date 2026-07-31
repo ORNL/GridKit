@@ -6,3 +6,5 @@ add_test(
   NAME IEEE39_validation
   COMMAND DynamicSimulation IEEE39.solver.json
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/IEEE39/IEEE39.state.json)
