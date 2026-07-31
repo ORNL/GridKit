@@ -1,0 +1,163 @@
+{
+    "header": {
+        "version": 1,
+        "time": null,
+        "created": "2026-07-31T12:52:58-05:00",
+        "description": "Steady state solution at nominal dispatch"
+    },
+    "buses": {
+        "bus_id_1": {
+            "vr": 0.8417632907983953,
+            "vi": 0.5398467951782767,
+            "injections": {}
+        },
+        "bus_id_2": {
+            "vr": 0.9305542572926901,
+            "vi": 0.3595857457779554,
+            "injections": {}
+        },
+        "bus_id_3": {
+            "vr": 0.9461473466531829,
+            "vi": 0.1773726063411831,
+            "injections": {}
+        },
+        "bus_id_4": {
+            "vr": 0.7311328197493693,
+            "vi": 0.3643895204006644,
+            "injections": {}
+        },
+        "bus_id_5": {
+            "vr": 0.8685212337220097,
+            "vi": 0.45238511469039194,
+            "injections": {}
+        },
+        "bus_id_6": {
+            "vr": 0.919614611832545,
+            "vi": 0.2683138874430543,
+            "injections": {}
+        },
+        "bus_id_7": {
+            "vr": 0.928670340372285,
+            "vi": 0.1184863350395493,
+            "injections": {}
+        },
+        "bus_id_8": {
+            "vr": 0.8761848072516336,
+            "vi": -0.070766649365215,
+            "injections": {}
+        },
+        "bus_id_9": {
+            "vr": 0.8866370706078832,
+            "vi": 0.08324885886884298,
+            "injections": {}
+        },
+        "bus_id_10": {
+            "vr": 0.7830220631762669,
+            "vi": 0.27399232263759193,
+            "injections": {}
+        }
+    },
+    "devices": {
+        "BR_1_5_1": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_2_6_1": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_3_9_1": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_4_10_1": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_5_6_1": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_5_6_2": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_6_7_1": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_6_7_2": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_7_8_1": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_7_8_2": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_7_8_3": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_8_9_1": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_8_9_2": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_9_10_1": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "BR_9_10_2": {
+            "open": false,
+            "tap": 1.0,
+            "phase": 0.0
+        },
+        "load_7_2": {
+            "online": true
+        },
+        "load_8_1": {
+            "online": true
+        },
+        "1_1": {
+            "online": true,
+            "p": 7.4586119652,
+            "q": 1.4361202717000001
+        },
+        "2_1": {
+            "online": true,
+            "p": 7.0,
+            "q": 3.0
+        },
+        "3_1": {
+            "online": true,
+            "p": 7.0,
+            "q": 5.5
+        },
+        "4_1": {
+            "online": true,
+            "p": 7.0,
+            "q": -1.0
+        }
+    }
+}

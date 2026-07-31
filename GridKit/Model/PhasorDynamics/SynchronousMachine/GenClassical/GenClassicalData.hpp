@@ -15,13 +15,11 @@ namespace GridKit
     /// Initial parameters for a classical generator model
     enum class GenClassicalParameters : size_t
     {
-      p0,  ///< \f$P_0\f$ Initial active power
-      q0,  ///< \f$Q_0\f$ Initial reactive power
-      H,   ///< \f$H\f$ Rotor inertia
-      D,   ///< \f$D\f$ Damping coefficient
-      Ra,  ///< \f$R_a\f$ Armature resistance
-      Xdp, ///< \f$X'_d\f$ Direct-axis transient reactance
-      mva, ///< \f$S^\mathrm{base}\f$ Component power base
+      H,   ///< Rotor inertia
+      D,   ///< Damping coefficient
+      Ra,  ///< Winding resistance
+      Xdp, ///< Direct axis transient reactance
+      mva  ///< MVA Base of the generator
     };
 
     /// Buses for a classical generator model

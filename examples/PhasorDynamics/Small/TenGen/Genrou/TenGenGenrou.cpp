@@ -9,6 +9,7 @@
  * by a high-impedance branch, which makes connection between them weak.
  *
  */
+#include <array>
 #include <cstdio>
 #include <ctime>
 #include <fstream>
@@ -51,17 +52,43 @@ int main()
   Branch<scalar_type, index_type> branch89(&bus8, &bus9, 0.001, 0.005, 0, 0);
   Branch<scalar_type, index_type> branch910(&bus9, &bus10, 0.001, 0.005, 0, 0);
 
-  Genrou<scalar_type, index_type> gen2(&bus2, 0.5, -0.00442101, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen3(&bus3, 0.5, -0.02510812, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen4(&bus4, 0.5, -0.04339553, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen5(&bus5, 0.5, -0.2334993, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen6(&bus6, 0.5, 0.69907194, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen7(&bus7, 0.5, -0.08318208, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen8(&bus8, 0.5, -0.09123614, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen9(&bus9, 0.5, -0.09662372, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen10(&bus10, 0.5, -0.09932297, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen2(&bus2, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen3(&bus3, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen4(&bus4, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen5(&bus5, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen6(&bus6, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen7(&bus7, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen8(&bus8, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen9(&bus9, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen10(&bus10, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
 
-  BusFault<scalar_type, index_type> fault(&bus10, 0, 1e-5, 0);
+  std::array<scalar_type, 9> p{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
+  std::array<scalar_type, 9> q{-0.00442101,
+                               -0.02510812,
+                               -0.04339553,
+                               -0.2334993,
+                               0.69907194,
+                               -0.08318208,
+                               -0.09123614,
+                               -0.09662372,
+                               -0.09932297};
+  std::array<index_type, 9>  p_indices;
+  std::array<index_type, 9>  q_indices;
+  p_indices.fill(GridKit::INVALID_INDEX<index_type>);
+  q_indices.fill(GridKit::INVALID_INDEX<index_type>);
+  std::array<SignalNode<scalar_type, index_type>, 9> p_signals;
+  std::array<SignalNode<scalar_type, index_type>, 9> q_signals;
+  std::array<Genrou<scalar_type, index_type>*, 9>    generators{
+      &gen2, &gen3, &gen4, &gen5, &gen6, &gen7, &gen8, &gen9, &gen10};
+  for (std::size_t i = 0; i < generators.size(); ++i)
+  {
+    p_signals[i].set(&p[i], &p_indices[i]);
+    q_signals[i].set(&q[i], &q_indices[i]);
+    generators[i]->getSignals().template attachSignalNode<GenrouExternalVariables::P>(&p_signals[i]);
+    generators[i]->getSignals().template attachSignalNode<GenrouExternalVariables::Q>(&q_signals[i]);
+  }
+
+  BusFault<scalar_type, index_type> fault(&bus10, 0, 1e-5);
 
   /* Connect everything together */
   SystemModel<scalar_type, index_type> sys;

@@ -10,6 +10,8 @@ Figure 1: Oneline of the two-area Case, courtesy of [PowerWorld](https://www.pow
 
 This is a model derived from the well-known Kundur case in Literature. It has been modified to include exciters for the sake of implementation within GridKit.
 
+The network and model definitions are in `twoarea.json`; the operating point is in `twoarea.state.json`.
+
 Model       | Count  
 ------------|--------
 [Bus](../../../../GridKit/Model/PhasorDynamics/Bus/README.md)         | 10

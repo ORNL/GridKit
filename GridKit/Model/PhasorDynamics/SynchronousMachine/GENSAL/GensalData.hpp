@@ -15,22 +15,20 @@ namespace GridKit
     /// Initial parameters for a Gensal generator model
     enum class GensalParameters : size_t
     {
-      p0,    ///< \f$P_0\f$ Initial active power
-      q0,    ///< \f$Q_0\f$ Initial reactive power
-      H,     ///< \f$H\f$ Rotor inertia
-      D,     ///< \f$D\f$ Damping coefficient
-      Ra,    ///< \f$R_a\f$ Winding resistance
-      Tdop,  ///< \f$T'_{d0}\f$ Open circuit direct axis transient time
-      Tdopp, ///< \f$T''_{d0}\f$ Open circuit direct axis sub-transient time
-      Tqopp, ///< \f$T''_{q0}\f$ Open circuit quadrature axis sub-transient time
-      Xd,    ///< \f$X_d\f$ Direct axis synchronous reactance
-      Xdp,   ///< \f$X'_d\f$ Direct axis transient reactance
-      Xdpp,  ///< \f$X''_d\f$ Direct axis sub-transient reactance
-      Xq,    ///< \f$X_q\f$ Quadrature axis synchronous reactance
-      Xl,    ///< \f$X_{\ell}\f$ Stator leakage reactance
-      S10,   ///< \f$S_{10}\f$ Saturation factor at 1.0 pu flux
-      S12,   ///< \f$S_{12}\f$ Saturation factor at 1.2 pu flux
-      mva,   ///< \f$S_\mathrm{mach}\f$ MVA base of the gensal model
+      H,     ///< Rotor inertia
+      D,     ///< Damping coefficient
+      Ra,    ///< Winding resistance
+      Tdop,  ///< Open circuit direct axis transient time
+      Tdopp, ///< Open circuit direct axis sub-transient time
+      Tqopp, ///< Open circuit quadrature axis sub-transient time
+      Xd,    ///< Direct axis synchronous reactance
+      Xdp,   ///< Direct axis transient reactance
+      Xdpp,  ///< Direct axis sub-transient reactance
+      Xq,    ///< Quadrature axis synchronous reactance
+      Xl,    ///< Stator leakage reactance
+      S10,   ///< Saturation factor at 1.0 pu flux
+      S12,   ///< Saturation factor at 1.2 pu flux
+      mva,   ///< MVA base of the gensal model
     };
 
     /// Buses for a Gensal generator model
