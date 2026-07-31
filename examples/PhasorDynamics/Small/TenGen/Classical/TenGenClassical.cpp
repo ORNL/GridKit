@@ -89,7 +89,13 @@ int main()
     generators[i]->getSignals().template attachSignalNode<GenClassicalExternalVariables::Q>(&q_signals[i]);
   }
 
-  BusFault<scalar_type, index_type> fault(&bus10, 0, 1e-5);
+  BusFault<scalar_type, index_type>   fault(&bus10, 0, 1e-5);
+  scalar_type                         fault_active{0.0};
+  index_type                          fault_active_index{GridKit::INVALID_INDEX<index_type>};
+  SignalNode<scalar_type, index_type> fault_active_signal;
+  fault_active_signal.set(&fault_active, &fault_active_index);
+  fault.getSignals().template attachSignalNode<BusFaultExternalVariables::ACTIVE>(
+      &fault_active_signal);
 
   /* Connect everything together */
   SystemModel<scalar_type, index_type> sys;
@@ -195,12 +201,12 @@ int main()
   ida.runSimulation(1.0, dt, output_cb);
 
   // Introduce fault to ground and run for 0.1s
-  fault.setStatus(1);
+  fault_active = 1.0;
   ida.initializeSimulation(1.0);
   ida.runSimulation(1.1, dt, output_cb);
 
   // Clear fault and run until t = 10s.
-  fault.setStatus(0);
+  fault_active = 0.0;
   ida.initializeSimulation(1.1);
   ida.runSimulation(10.0, dt, output_cb);
   real_type stop = static_cast<real_type>(clock());

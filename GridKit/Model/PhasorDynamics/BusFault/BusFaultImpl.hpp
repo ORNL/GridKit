@@ -21,7 +21,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     BusFault<scalar_type, index_type>::BusFault(BusT* bus)
-      : bus_(bus), R_(0), X_(0.01), status_(0), bus_id_(0)
+      : bus_(bus), R_(0), X_(0.01), bus_id_(0)
     {
       (void) bus_id_;
       size_ = 2;
@@ -40,7 +40,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     BusFault<scalar_type, index_type>::BusFault(BusT* bus, RealT R, RealT X)
-      : bus_(bus), R_(R), X_(X), status_(0), bus_id_(0)
+      : bus_(bus), R_(R), X_(X), bus_id_(0)
     {
       size_ = 2;
       setDerivedParams();
@@ -76,8 +76,8 @@ namespace GridKit
       }
 
       using Variable = typename ModelDataT::MonitorableVariables;
-      monitor_->set(Variable::state, [this]
-                    { return status_; });
+      monitor_->set(Variable::active, [this]
+                    { return active(); });
       monitor_->set(Variable::ir, [this]
                     { return y_.getData()[0]; });
       monitor_->set(Variable::ii, [this]
@@ -145,7 +145,7 @@ namespace GridKit
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      if (status_)
+      if (active())
       {
         ScalarT vr = Vr();
         ScalarT vi = Vi();
@@ -248,7 +248,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::evaluateResidual()
     {
-      if (status_)
+      if (active())
       {
         wb_[0]         = Vr();
         wb_[1]         = Vi();
@@ -283,6 +283,16 @@ namespace GridKit
     const Model::VariableMonitorBase* BusFault<scalar_type, index_type>::getMonitor() const
     {
       return monitor_.get();
+    }
+
+    template <typename scalar_type, typename index_type>
+    bool BusFault<scalar_type, index_type>::active() const
+    {
+      static constexpr auto ACTIVE = BusFaultExternalVariables::ACTIVE;
+
+      return signals_.template isAttached<ACTIVE>()
+             && signals_.template isLinked<ACTIVE>()
+             && signals_.template readExternalVariable<ACTIVE>() != ScalarT{0.0};
     }
 
     /**

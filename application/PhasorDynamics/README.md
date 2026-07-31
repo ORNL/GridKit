@@ -2,15 +2,16 @@
 
 ## Root elements
 
-   Name               | Value
+  Name               | Value
  ---------------------|-------------------------------------------------------
   `system_model_file` | Path to the system model file[^1]
+  `state_file`        | Path to the initial operating State file
   `dt_monitor`        | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
   `tmax`              | A floating-point value for max time
   `rel_tol`           | Relative solver tolerance (default: 1.0e-7)
   `abs_tol`           | Absolute solver tolerance override (default: 1.0e-9)
   `dt_fixed`          | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
-  `events`            | An array of event groups (see [Events](#events) below)
+  `events`            | An array of named input events (see [Events](#events) below)
   `output_file`       | Path to output (CSV) file (optional)
   `reference_file`    | A string containing the name of the case (optional)
   `error_type`        | One of { "relative" (default), "absolute" }
@@ -21,10 +22,23 @@
 
 ## Events
 
-Each event group describes a system event that occurs at a given time point
+Each event assigns a scalar value to a named model input at a simulation time.
+Events must be listed in chronological order. Adjacent events at the same time
+are applied together before the solver is reinitialized.
 
    Name              | Value
  --------------------|-------------------------------------------------------
   `time`             | A floating point value for time event occurs
-  `type`             | Event type (one of { "fault_on", "fault_off" })
-  `element_id`       | An integer value referencing the element associated with the event (e.g., bus fault id)
+  `device_id`        | Case device ID receiving the input change
+  `input`            | Name of the model input to change
+  `value`            | Scalar value assigned to the input
+
+For example, a six-cycle bus fault is represented by changing its `active`
+input:
+
+```json
+"events": [
+  { "time": 1.0, "device_id": "fault_1", "input": "active", "value": 1.0 },
+  { "time": 1.1, "device_id": "fault_1", "input": "active", "value": 0.0 }
+]
+```

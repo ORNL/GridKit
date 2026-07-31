@@ -4,7 +4,7 @@
     "dt_monitor": 0.004166666666666667,
     "tmax": 20.0,
     "events": [
-        { "time": 10.0, "type": "fault_on", "element_id": 0 },
-        { "time": 10.05, "type": "fault_off", "element_id": 0 }
+        { "time": 10.0, "device_id": "fault_1", "input": "active", "value": 1.0 },
+        { "time": 10.05, "device_id": "fault_1", "input": "active", "value": 0.0 }
     ]
 }

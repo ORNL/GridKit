@@ -79,7 +79,7 @@ namespace GridKit
         system->addBus(&bus);
 
         PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus);
-        system->addFault(&fault);
+        system->addComponent(&fault);
 
         success *= system->allocate() == 0;
         success *= system->initialize() == 0;

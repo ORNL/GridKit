@@ -510,7 +510,20 @@ namespace GridKit
           bus_index = faultdata.buses.at(BusFaultBuses::bus);
         }
         auto* fault = new BusFault<ScalarT, IdxT>(getBus(bus_index), faultdata);
-        addFault(fault);
+
+        RealT active = RealT{0.0};
+        if (faultdata.initial_state)
+        {
+          active = static_cast<RealT>(
+              faultdata.initial_state->active.value_or(false));
+        }
+
+        auto* active_signal = addMappedInput(
+            faultdata, BusFaultSignalInputs::active, "active", active);
+        fault->getSignals().template attachSignalNode<BusFaultExternalVariables::ACTIVE>(
+            active_signal);
+
+        addComponent(fault);
       }
 
       for (const auto& sink : data.monitor_sink)
@@ -1223,22 +1236,6 @@ namespace GridKit
     }
 
     /**
-     * @brief Add fault
-     *
-     * The fault is added to the components array, and we keep a map to its
-     * location, so it can easily be accessed.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::addFault(ComponentT* component)
-    {
-      IdxT gridkit_component_id                = static_cast<IdxT>(components_.size());
-      IdxT gridkit_fault_id                    = static_cast<IdxT>(gridkit_fault_indices_.size());
-      gridkit_fault_indices_[gridkit_fault_id] = gridkit_component_id;
-      addComponent(component);
-    }
-
-    /**
      * @brief Set system bases and propagate them to existing components.
      *
      * @param[in] freq_system_base - System frequency base in Hz.
@@ -1294,21 +1291,6 @@ namespace GridKit
     {
       // gridkit_component_id_ is set by System model and guarantied to be unique
       return components_[gridkit_component_id];
-    }
-
-    /**
-     * @brief Return pointer to a bus fault model
-     *
-     * This function is used to provide easier access to setting and
-     * clearing faults from the SystemModel interface.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    BusFault<scalar_type, index_type>*
-    SystemModel<scalar_type, index_type>::getBusFault(IdxT fault_id)
-    {
-      IdxT component_id = gridkit_fault_indices_.at(fault_id);
-      return dynamic_cast<BusFault<ScalarT, IdxT>*>(components_[component_id]);
     }
 
   } // namespace PhasorDynamics

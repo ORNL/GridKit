@@ -66,7 +66,8 @@ namespace GridKit
                                                                                                        J_cols_buffer_,
                                                                                                        J_vals_buffer_,
                                                                                                        nnz_);
-      if (!status_) // Value contributions from DfDwb only when status_
+      // DfDwb contributes only while the fault is active.
+      if (!active())
       {
         for (IdxT i = nnz_tmp; i < nnz_; ++i)
         {

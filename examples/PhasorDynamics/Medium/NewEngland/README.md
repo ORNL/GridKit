@@ -36,7 +36,7 @@ The following event types are provided for this case.
 Only one exciter model is outstanding:
 - EXST1_GE
 
-The following examples needs to be constructed with this case. Currently the only events that have been implemented are faults. This is a practical case to use for modeling outages, or even forced oscillations.
+Named input events can model the following additional disturbances:
 - Line Outage
 - Generator Outage
 - Forced Oscillations

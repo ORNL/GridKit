@@ -1,7 +1,6 @@
 #include <filesystem>
 #include <fstream>
 
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -36,30 +35,28 @@ int main(int argc, const char* argv[])
   // Start timer
   real_type start = static_cast<real_type>(clock());
 
-  using EventType = SystemEvent::Type;
-
   // Initilize simultation for first run
   auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
   ida.initializeSimulation(0.0);
-  for (const auto& event : study.events)
+  for (std::size_t i = 0; i < study.events.size();)
   {
-    // Run to event time
-    ida.runSimulation(event.time, dt_monitor);
+    const real_type event_time = study.events[i].time;
 
-    // Set up run for event (to start at event time)
-    switch (event.type)
+    // Run to event time
+    ida.runSimulation(event_time, dt_monitor);
+
+    // Apply every input change scheduled for this time before reinitializing.
+    do
     {
-    case EventType::FAULT_ON:
-      sys.getBusFault(event.element_id)->setStatus(true);
-      break;
-    case EventType::FAULT_OFF:
-      sys.getBusFault(event.element_id)->setStatus(false);
-      break;
-    }
+      const auto& event = study.events[i];
+      sys.setInput(event.device_id, event.input, event.value);
+      ++i;
+    } while (i < study.events.size()
+             && study.events[i].time == event_time);
 
     // Re-initialize simulation at event time
-    ida.initializeSimulation(event.time);
+    ida.initializeSimulation(event_time);
   }
 
   // Run to final time

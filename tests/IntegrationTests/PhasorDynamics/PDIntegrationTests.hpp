@@ -224,8 +224,7 @@ namespace GridKit
         SystemModel<RealT, IdxT> sys(system_data);
         sys.allocate();
 
-        // Get access to the fault
-        auto* fault = sys.getBusFault(0);
+        const auto& fault_id = system_data.bus_fault.front().disambiguation_string;
 
         // Set time step to 1/4 of a 60Hz cycle
         real_type dt = 1.0 / 4.0 / 60.0;
@@ -239,12 +238,12 @@ namespace GridKit
         ida.runSimulation(1.0, dt);
 
         // Introduce fault and run for the next 0.1s
-        fault->setStatus(true);
+        sys.setInput(fault_id, "active", 1.0);
         ida.initializeSimulation(1.0);
         ida.runSimulation(1.1, dt);
 
         // Clear the fault and run until t = 10s.
-        fault->setStatus(false);
+        sys.setInput(fault_id, "active", 0.0);
         ida.initializeSimulation(1.1);
         ida.runSimulation(10.0, dt);
 

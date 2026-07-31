@@ -48,7 +48,7 @@ The following models are not implemented in GridKit and are represented using su
 - EXST1_PTI
 - ESST1A
 
-The following examples needs to be constructed with this case. Currently the only events that have been implemented are faults. This is a practical case to use for modeling outages, or even forced oscillations.
+Named input events can model the following additional disturbances:
 - Line Outage
 - Generator Outage
 - Forced Oscillations

@@ -22,7 +22,8 @@ Model       | Count
 
 ## Case Events
 
-The following examples needs to be constructed with this case. Currently the only events that have been implemented are faults. This is a practical case to use for modeling a line or generator outage.
+Named input events can construct:
+
 - Bus Fault
 - Line Outage
 - Generator Outage

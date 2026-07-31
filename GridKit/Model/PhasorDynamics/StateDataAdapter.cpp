@@ -43,6 +43,7 @@ namespace GridKit
       attachDeviceStates(model_data.genclassical, state_data.devices);
       attachDeviceStates(model_data.loadz, state_data.devices);
       attachDeviceStates(model_data.loadzip, state_data.devices);
+      attachDeviceStates(model_data.bus_fault, state_data.devices);
     }
   } // namespace PhasorDynamics
 } // namespace GridKit

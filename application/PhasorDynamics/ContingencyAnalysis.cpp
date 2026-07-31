@@ -7,7 +7,6 @@
 #include <omp.h>
 #endif
 
-#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -40,31 +39,29 @@ TestStatus runStudy(StudyData study_data)
   ida.setFixedStep(study_data.dt_fixed);
   ida.configureSimulation();
 
-  using EventType = SystemEvent::Type;
-
   // Initilize simultation for first run
   real_type dt_monitor = study_data.dt_monitor;
   real_type final_time = study_data.tmax;
   ida.initializeSimulation(0.0, false);
 
-  for (const auto& event : study_data.events)
+  for (std::size_t i = 0; i < study_data.events.size();)
   {
-    // Run to event time
-    ida.runSimulation(event.time, dt_monitor);
+    const real_type event_time = study_data.events[i].time;
 
-    // Set up run for event (to start at event time)
-    switch (event.type)
+    // Run to event time
+    ida.runSimulation(event_time, dt_monitor);
+
+    // Apply every input change scheduled for this time before reinitializing.
+    do
     {
-    case EventType::FAULT_ON:
-      sys.getBusFault(event.element_id)->setStatus(true);
-      break;
-    case EventType::FAULT_OFF:
-      sys.getBusFault(event.element_id)->setStatus(false);
-      break;
-    }
+      const auto& event = study_data.events[i];
+      sys.setInput(event.device_id, event.input, event.value);
+      ++i;
+    } while (i < study_data.events.size()
+             && study_data.events[i].time == event_time);
 
     // Re-initialize simulation at event time
-    ida.initializeSimulation(event.time, true);
+    ida.initializeSimulation(event_time, true);
   }
 
   // Run to final time
@@ -76,12 +73,17 @@ TestStatus runStudy(StudyData study_data)
   return checkErrors(study_data, false);
 }
 
-TestStatus singleFaultStudy(std::size_t fault_id, StudyData study_data)
+TestStatus singleFaultStudy(const std::string& fault_id,
+                            std::size_t        fault_index,
+                            StudyData          study_data)
 {
-  // Change id in schedule to current fault id
+  // Retarget fault-activation events while preserving all other input events.
   for (auto& event : study_data.events)
   {
-    event.element_id = fault_id;
+    if (event.input == "active")
+    {
+      event.device_id = fault_id;
+    }
   }
 
   // Make distinct output files
@@ -90,7 +92,7 @@ TestStatus singleFaultStudy(std::size_t fault_id, StudyData study_data)
     auto path      = std::filesystem::path(sink.file_name);
     auto ext       = path.extension().string();
     auto name      = path.stem().string();
-    sink.file_name = name + "_" + std::to_string(fault_id) + ext;
+    sink.file_name = name + "_" + std::to_string(fault_index) + ext;
   }
 
   try
@@ -108,7 +110,10 @@ void runStudySerial(const StudyData& study_data, std::vector<TestStatus>& stat_v
 {
   for (std::size_t i = 0; i < study_data.model_data.bus_fault.size(); ++i)
   {
-    auto stat   = singleFaultStudy(i, study_data);
+    auto stat = singleFaultStudy(
+        study_data.model_data.bus_fault[i].disambiguation_string,
+        i,
+        study_data);
     stat_vec[i] = stat;
   }
 }
@@ -123,7 +128,12 @@ void runStudyAsync(const StudyData& study_data, std::vector<TestStatus>& stat_ve
   for (std::size_t i = 0; i < n_faults; ++i)
   {
     futures.emplace_back(
-        std::async(std::launch::async, singleFaultStudy, i, study_data));
+        std::async(
+            std::launch::async,
+            singleFaultStudy,
+            study_data.model_data.bus_fault[i].disambiguation_string,
+            i,
+            study_data));
   }
 
   for (std::size_t i = 0; i < n_faults; ++i)
@@ -141,7 +151,10 @@ void runStudyOpenMP(const StudyData& study_data, std::vector<TestStatus>& stat_v
 #pragma omp parallel for
   for (std::size_t i = 0; i < n_faults; ++i)
   {
-    auto stat   = singleFaultStudy(i, study_data);
+    auto stat = singleFaultStudy(
+        study_data.model_data.bus_fault[i].disambiguation_string,
+        i,
+        study_data);
     stat_vec[i] = stat;
   }
 }

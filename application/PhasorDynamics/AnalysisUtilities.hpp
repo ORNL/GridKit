@@ -30,19 +30,14 @@ namespace GridKit
      */
     struct SystemEvent
     {
-      /// Type of event determines action performed
-      enum class Type
-      {
-        FAULT_ON,
-        FAULT_OFF
-      };
-
       /// Time event takes place
       double      time;
-      /// Event type
-      Type        type;
-      /// ID of element used in event (e.g., bus fault id)
-      std::size_t element_id;
+      /// Case device ID receiving the input change
+      std::string device_id;
+      /// Name of the device input to change
+      std::string input;
+      /// Scalar value assigned to the input
+      double      value;
     };
 
     /**
@@ -106,16 +101,9 @@ namespace GridKit
       {
         auto& event = c.events.emplace_back();
         raw_event.at("time").get_to(event.time);
-        raw_event.at("element_id").get_to(event.element_id);
-
-        auto type_str   = raw_event.at("type").get<std::string>();
-        using EventType = SystemEvent::Type;
-        auto type_wrap  = enum_cast<EventType>(type_str, case_insensitive);
-        if (!type_wrap.has_value())
-        {
-          Log::error() << "Unable to parse event type \"" << type_str << "\"\n";
-        }
-        event.type = type_wrap.value();
+        raw_event.at("device_id").get_to(event.device_id);
+        raw_event.at("input").get_to(event.input);
+        raw_event.at("value").get_to(event.value);
       }
 
       if (j.contains("output_file"))

@@ -178,7 +178,8 @@ namespace GridKit
                "signals": [
                    { "signal_id": 1, "name": "Machine Speed Deviation"},
                    { "signal_id": 2, "name": "Mechanical Power"},
-                   { "signal_id": 3, "name": "Excitation Field"}
+                   { "signal_id": 3, "name": "Excitation Field"},
+                   { "signal_id": 4, "name": "Fault Active"}
                ],
                "devices": [
                    { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0} },
@@ -186,7 +187,7 @@ namespace GridKit
                    { "class": "Tgov1", "ports": {"bus":1, "speed": 1, "pmech":2}, "id": "DV2", "params": {"R":0.05, "T1":0.5,"T2":2.5, "T3":7.5, "Pvmax":0.0, "Pvmin":1.0, "Dt":0.0}},
                    { "class": "Ieeet1", "ports": {"bus":1, "speed": 1, "efd":3}, "id": "DV3", "params": {"Tr":0.0, "Ka":50.0, "Ta":0.04, "Ke":-0.06, "Te":0.6, "Kf":0.09, "Tf":1.46, "Vrmin":-1.0, "Vrmax":1.0, "E1":2.8, "E2":3.373, "Se1":0.04, "Se2":0.33, "Ispdlim":0.0}},
                    { "class": "SexsPti", "ports": {"bus":1, "efd":3}, "id": "DV4", "params": {"Ta":0.1, "Tb":0.5, "Te":0.8, "K":10.0, "Efdmax":5.0, "Efdmin":-5.0}},
-                   { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"R":0.0, "X":1e-3} }
+                   { "class": "BusFault", "ports": {"bus":1, "active":4}, "id": "1", "params": {"R":0.0, "X":1e-3}, "mon": ["active"] }
                ]
             })";
 
@@ -307,8 +308,9 @@ namespace GridKit
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;
         success *= result.bus_fault[0].buses[BusFaultBuses::bus] == 1;
+        success *= result.bus_fault[0].signal_inputs[BusFaultSignalInputs::active] == 4;
         success *= result.bus_fault[0].disambiguation_string == "1";
-        success *= result.bus_fault[0].monitored_variables.empty();
+        success *= result.bus_fault[0].monitored_variables.contains(BusFaultMonitorableVariables::active);
 
         return success.report(__func__);
       }
@@ -350,6 +352,10 @@ namespace GridKit
                   "tap": 1.05,
                   "phase": 0.02,
                   "rating": 100.0
+                },
+                "fault_1": {
+                  "active": false,
+                  "future_fault_data": "ignored"
                 }
               },
               "future_metadata": {
@@ -376,12 +382,14 @@ namespace GridKit
 
         const auto& generator  = state.devices.at("gen_7");
         const auto& branch     = state.devices.at("branch_1");
+        const auto& fault      = state.devices.at("fault_1");
         success               *= generator.online == true;
         success               *= generator.p == 0.8;
         success               *= generator.q == 0.1;
         success               *= branch.open == false;
         success               *= branch.tap == 1.05;
         success               *= branch.phase == 0.02;
+        success               *= fault.active == false;
 
         std::istringstream null_time_stream(
             R"({"header": {"time": null, "future_time_kind": "snapshot"}})");
