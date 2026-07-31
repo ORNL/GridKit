@@ -28,4 +28,5 @@ install(
         CircuitGraph.hpp
         SystemModelPowerElectronics.hpp
         NodeBase.hpp
+        ExternalConnection.hpp
   DESTINATION include/GridKit/Model/PowerElectronics)

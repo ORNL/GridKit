@@ -84,14 +84,10 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Resistor<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    const auto* y = y_.getData();
-    auto*       f = f_.getData();
-
     // input
-    f[0] = (y[0] - y[1]) / R_;
+    *f_ext_[0] += (*y_ext_[0] - *y_ext_[1]) / R_;
     // ouput
-    f[1] = (y[1] - y[0]) / R_;
-    f_.setDataUpdated();
+    *f_ext_[1] += (*y_ext_[1] - *y_ext_[0]) / R_;
     return 0;
   }
 

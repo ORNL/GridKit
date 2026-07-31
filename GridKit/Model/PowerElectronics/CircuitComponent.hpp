@@ -9,6 +9,7 @@
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Model/PowerElectronics/ExternalConnection.hpp>
 
 namespace GridKit
 {
@@ -56,15 +57,41 @@ namespace GridKit
     }
 
     /**
-     * @brief Create the mappings from local to global indices
+     * @brief Create the mappings from local to global indices for an internal variable.
+     * Used for constructing system Jacobians \see connection_nodes_.
      *
-     * @param local_index
-     * @param global_index
-     * @return int
+     * @param local_index The index of the local variable
+     * @param global_index The index of the corresponding system variable.
+     *
+     * @pre `local_index` *must* be the index of an internal variable. Using this method for
+     * an external variable will not properly setup the data pointers for that variable.
      */
-    int setExternalConnectionNodes(IdxT local_index, IdxT global_index)
+    int setInternalConnectionNodes(size_t local_index, IdxT global_index)
     {
-      connection_nodes_[static_cast<size_t>(local_index)] = global_index;
+      assert(!extern_indices_.contains(static_cast<IdxT>(local_index)));
+      connection_nodes_[local_index] = global_index;
+      return 0;
+    }
+
+    /**
+     * @brief Create the mappings from local to global indices for an external variable.
+     * External variables need extra information than internal variables - their data
+     * pointers \ref y_ext_, \ref yp_ext_, and \ref f_ext_.
+     *
+     * @param local_index The index of the local variable
+     * @param connection The necessary connection information for the variable
+     *
+     * @pre `local_index` *must* be the index of an external variable. As of now, using this method
+     * to set information for a local variable will silently discard the unnecessary information, but
+     * this may change in the future.
+     */
+    int setExternalConnectionNodes(size_t local_index, ExternalConnection<ScalarT, IdxT> connection)
+    {
+      assert(extern_indices_.contains(local_index));
+      y_ext_[local_index]            = connection.y_;
+      yp_ext_[local_index]           = connection.yp_;
+      f_ext_[local_index]            = connection.f_;
+      connection_nodes_[local_index] = connection.idx_;
       return 0;
     }
 
@@ -74,11 +101,19 @@ namespace GridKit
      * f(local_index) = global_index
      *
      * @param local_index index of local value in vector
-     * @return IdxT Index of the same value in the global vector
+     * @return size_t Index of the same value in the global vector
      */
-    IdxT getNodeConnection(IdxT local_index) const
+    IdxT getNodeConnection(size_t local_index) const
     {
       return connection_nodes_[local_index];
+    }
+
+    int initialize() override
+    {
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+
+      return 0;
     }
 
     /**
@@ -97,6 +132,9 @@ namespace GridKit
       jacobian_coo_cols_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
       jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
 
+      y_ext_            = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+      yp_ext_           = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+      f_ext_            = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
       connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
       if (!allocated_)
@@ -150,6 +188,8 @@ namespace GridKit
     {
       if (int err_code = evaluateInternalResidual())
         return err_code;
+
+      f_.setDataUpdated();
 
       return evaluateExternalResidual();
     }
@@ -402,23 +442,57 @@ namespace GridKit
   protected:
     /**
      * @brief Allocate state and residual storage owned by this component.
+     *
+     * Most components do not need state and residual storages. The most notable exception
+     * is currently the system, so a separate flag is provided for the system.
+     * Systems still can't directly access \ref y_, \ref yp_, and \ref f_, so they need
+     * their corresponding \ref y_int_, \ref yp_int_, and \ref f_int_ set, since there isn't
+     * another system above them to set it.
+     *
+     * @todo This is a weird exception specifically for systems - and in a hierarchical setting
+     * will only be needed by the *topmost* system - subsystems shouldn't allocate and should have their
+     * internal pointers set by the system above them. Ideally we can remove this exception by having
+     * the integrator allocate these buffers instead of the system and set the internal pointers for the
+     * topmost system.
      */
-    void allocateVectors(IdxT n)
+    void allocateVectors(IdxT n, bool system = false)
     {
-      y_.resize(n);
-      yp_.resize(n);
-      f_.resize(n);
       abs_tol_.resize(n);
+
+      if (system)
+      {
+        y_.resize(n);
+        yp_.resize(n);
+        f_.resize(n);
+
+        y_int_  = y_.getData();
+        yp_int_ = yp_.getData();
+        f_int_  = f_.getData();
+      }
     }
 
+    /// Number of external variables in this component - ones which are referenced but not owned by this component.
     size_t                  n_extern_;
+    /// Number of internal variables in this component - ones which are only referenced by this component.
     size_t                  n_intern_;
+    /**
+     * @brief A set of variable indices which correspond to the external variables. Variables indices not in this set are internal.
+     *
+     * @invariant Must have a size of n_extern_. Each element must be in the range [0, `size_` - 1]. Not currently verified anywhere.
+     */
     std::set<IdxT>          extern_indices_;
-    ///@todo may want to replace the mapping of connection_nodes to Node objects instead of IdxT. Allows for container free setup
+    /**
+     * @brief A map from local variable indices to system (global) variable indices. Used for Jacobian construction in
+     * \ref PowerElectronicsModel::evaluateJacobian().
+     * @note If a variable does not map to a corresponding variable in the system (such as with reference nodes), a special
+     * sentinel value of \ref INVALID_INDEX is used. During Jacobian construction, such rows and columns will be pruned.
+     */
     std::unique_ptr<IdxT[]> connection_nodes_;
 
   protected:
+    /// The number of variables in this component. Should be equal to \ref n_extern_ plus \ref n_intern_ \see getSize()
     IdxT size_{0};
+    /// The number of nonzero elements in this component's Jacobian. \see nnz()
     IdxT nnz_{0};
     IdxT size_quad_{0};
     IdxT size_opt_{0};
@@ -438,11 +512,33 @@ namespace GridKit
     /// @brief A pointer to the internal residuals of this component
     ScalarT*       f_int_;
 
-    VectorT           y_;
-    VectorT           yp_;
+    /**
+     * An array of (input) pointers to state values for external variables.
+     * \note The size of this array is equal to \ref size_, allowing you to index it with the index
+     * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
+     * and dereferencing the pointer in an internal variable index is undefined behavior.
+     * \see setExternalConnectionNodes()
+     */
+    std::unique_ptr<const ScalarT*[]> y_ext_;
+    /**
+     * An array of (input) pointers to derivative values for external variables.
+     * \note The size of this array is equal to \ref size_, allowing you to index it with the index
+     * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
+     * and dereferencing the pointer in an internal variable index is undefined behavior.
+     * \see setExternalConnectionNodes()
+     */
+    std::unique_ptr<const ScalarT*[]> yp_ext_;
+    /**
+     * An array of (output) pointers to residuals for external variables.
+     * \note The size of this array is equal to \ref size_, allowing you to index it with the index
+     * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
+     * and dereferencing the pointer in an internal variable index is undefined behavior.
+     * \see setExternalConnectionNodes()
+     */
+    std::unique_ptr<ScalarT*[]>       f_ext_;
+
     std::vector<bool> tag_;
     VectorT           abs_tol_;
-    VectorT           f_;
 
     VectorT g_;
 
@@ -463,6 +559,29 @@ namespace GridKit
     IdxT idc_;
 
     bool allocated_{false};
+
+  private:
+    /**
+     * The internal buffer for state for the component. For most components, it will be empty and shouldn't be accessed.
+     * Instead use \ref y_int_ for an internal variable or \ref y_ext_ for an external variable, respectively.
+     * For components which want an internal buffer (such as a system), make sure that \ref y_int_ points here.
+     * \see allocateVectors()
+     */
+    VectorT y_;
+    /**
+     * The internal buffer for derivatives for the component. For most components, it will be empty and shouldn't be accessed.
+     * Instead use \ref yp_int_ for an internal variable or \ref yp_ext_ for an external variable, respectively.
+     * For components which want an internal buffer (such as a system), make sure that \ref yp_int_ points here.
+     * \see allocateVectors()
+     */
+    VectorT yp_;
+    /**
+     * The internal buffer for state for the component. For most components, it will be empty and shouldn't be accessed.
+     * Instead use \ref f_int_ for an internal variable or \ref f_ext_ for an external variable, respectively.
+     * For components which want an internal buffer (such as a system), make sure that \ref f_int_ points here.
+     * \see allocateVectors()
+     */
+    VectorT f_;
   };
 
 } // namespace GridKit
