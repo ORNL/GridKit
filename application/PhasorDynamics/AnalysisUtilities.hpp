@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -60,6 +61,8 @@ namespace GridKit
       double                   abs_tol;
       /// fixed solver time step size, or 0 for adaptive stepping
       double                   dt_fixed;
+      /// maximum number of solver time steps, or 0 for the IDA default
+      std::size_t              max_steps;
       /// set of system events
       std::vector<SystemEvent> events;
       /// path to output file
@@ -93,9 +96,10 @@ namespace GridKit
       j.at("system_model_file").get_to(c.system_model_file);
       c.dt_monitor = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);
-      c.rel_tol  = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
-      c.abs_tol  = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
-      c.dt_fixed = j.value("dt_fixed", 0.0);
+      c.rel_tol   = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
+      c.abs_tol   = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
+      c.dt_fixed  = j.value("dt_fixed", 0.0);
+      c.max_steps = j.value("max_steps", std::size_t{0});
 
       for (auto& raw_event : j.at("events"))
       {
