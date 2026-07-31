@@ -11,6 +11,7 @@ int main()
   result += test.constructor();
   result += test.stateDataAttachment();
   result += test.busStateInputs();
+  result += test.busFaultStateInput();
   result += test.deviceInputSignals();
   result += test.loadZIPStateInputs();
   result += test.generatorStateInputs();

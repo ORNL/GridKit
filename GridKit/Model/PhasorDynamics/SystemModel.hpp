@@ -26,9 +26,6 @@ namespace GridKit
     class BusBase;
 
     template <typename scalar_type, typename index_type>
-    class BusFault;
-
-    template <typename scalar_type, typename index_type>
     class SignalNode;
 
     /**
@@ -101,7 +98,6 @@ namespace GridKit
 
       void addBus(BusT* bus);
       void addComponent(ComponentT* component);
-      void addFault(ComponentT* component);
 
       void setSystemBase(RealT freq_system_base, RealT va_system_base);
 

@@ -75,11 +75,8 @@ int main(int argc, const char* argv[])
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
 
-  // Get access to the fault
-  auto* fault = sys.getBusFault(0);
-
-  // Monitor every quarter cycle at 60 Hz
-  real_type dt_monitor = 1.0 / 4.0 / 60.0;
+  // Set time step to 1/4 of a 60Hz cycle
+  real_type dt = 1.0 / 4.0 / 60.0;
 
   // Set up simulation
   Ida<scalar_type, size_t> ida(&sys);
@@ -94,12 +91,12 @@ int main(int argc, const char* argv[])
   ida.runSimulation(1.0, dt_monitor);
 
   // Introduce fault and run for the next 0.1s
-  fault->setStatus(true);
+  sys.setInput("0", "active", 1.0);
   ida.initializeSimulation(1.0);
   ida.runSimulation(1.1, dt_monitor);
 
   // Clear the fault and run until t = 10s.
-  fault->setStatus(false);
+  sys.setInput("0", "active", 0.0);
   ida.initializeSimulation(1.1);
   ida.runSimulation(10.0, dt_monitor);
   real_type stop = static_cast<real_type>(clock());

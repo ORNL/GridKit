@@ -4,8 +4,8 @@
     "dt_monitor": 0.004166666666666667,
     "tmax":  10,
     "events": [
-        {"time": 1, "type": "fault_on", "element_id": 0},
-        {"time": 1.1, "type": "fault_off", "element_id": 0}
+        {"time": 1, "device_id": "bus_fault_2", "input": "active", "value": 1.0},
+        {"time": 1.1, "device_id": "bus_fault_2", "input": "active", "value": 0.0}
     ],
     "output_file": "ThreeBus_six_cycle_fault_bus1.csv",
     "reference_file": "ThreeBusZipLoad.ref.csv",

@@ -4,8 +4,8 @@
     "dt_monitor": 0.004166666666666667,
     "tmax": 30.0,
     "events": [
-        {"time": 1.0, "type": "fault_on",  "element_id": 0},
-        {"time": 1.1, "type": "fault_off", "element_id": 0}
+        {"time": 1.0, "device_id": "0", "input": "active", "value": 1.0},
+        {"time": 1.1, "device_id": "0", "input": "active", "value": 0.0}
     ],
     "reference_file": "TwoBusGensal.ref.csv",
     "error_tolerance": 5e-2

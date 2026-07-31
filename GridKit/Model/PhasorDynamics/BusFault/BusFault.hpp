@@ -10,6 +10,13 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// External variables of a bus fault.
+    enum class BusFaultExternalVariables : size_t
+    {
+      ACTIVE, ///< Fault status (zero is inactive, nonzero is active)
+      MAXIMUM
+    };
+
     template <typename scalar_type, typename index_type>
     class BusFault : public Component<scalar_type, index_type>
     {
@@ -39,6 +46,10 @@ namespace GridKit
       using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = BusFaultData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<BusFault, BusFaultData>;
+      using SignalsT   = ComponentSignals<ScalarT,
+                                          IdxT,
+                                          NoVariables,
+                                          BusFaultExternalVariables>;
 
       BusFault(BusT* bus);
       BusFault(BusT* bus, RealT R, RealT X);
@@ -62,6 +73,11 @@ namespace GridKit
       {
       }
 
+      SignalsT& getSignals()
+      {
+        return signals_;
+      }
+
     public:
       void setR(RealT R)
       {
@@ -75,15 +91,11 @@ namespace GridKit
         setDerivedParams();
       }
 
-      void setStatus(bool status)
-      {
-        status_ = status;
-      }
-
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
       void setDerivedParams();
+      bool active() const;
 
       ScalarT& Vr()
       {
@@ -115,8 +127,9 @@ namespace GridKit
       BusT* bus_;
       RealT R_{0.0};
       RealT X_{0.0};
-      bool  status_{false};
       IdxT  bus_id_{0};
+
+      SignalsT signals_;
 
       /* Derivied parameters */
       RealT B_;

@@ -66,6 +66,15 @@ namespace GridKit
                                                                                                        J_cols_buffer_,
                                                                                                        J_vals_buffer_,
                                                                                                        nnz_);
+      // DfDwb contributes only while the fault is active.
+      if (!active())
+      {
+        for (IdxT i = nnz_tmp; i < nnz_; ++i)
+        {
+          J_vals_buffer_[i] = 0.0;
+        }
+      }
+
       GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::BusFault<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
                                                                                                  static_cast<size_t>(bus_->size()),
