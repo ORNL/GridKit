@@ -1,0 +1,102 @@
+name: ST5C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0]
+  - name: KR
+    symbol: 'K_{\mathrm{R}}'
+    description: Regulator gain
+    unit: pu
+    typical_values: [200]
+  - name: TB1
+    symbol: 'T_{\mathrm{B1}}'
+    description: Voltage regulator denominator (lag) time constant (first block)
+    unit: s
+    typical_values: [6]
+  - name: TC1
+    symbol: 'T_{\mathrm{C1}}'
+    description: Voltage regulator numerator (lead) time constant (first block)
+    unit: s
+    typical_values: [0.8]
+  - name: TB2
+    symbol: 'T_{\mathrm{B2}}'
+    description: Voltage regulator denominator (lag) time constant (second block)
+    unit: s
+    typical_values: [0.01]
+  - name: TC2
+    symbol: 'T_{\mathrm{C2}}'
+    description: Voltage regulator numerator (lead) time constant (second block)
+    unit: s
+    typical_values: [0.08]
+  - name: TUB1
+    symbol: 'T_{\mathrm{UB1}}'
+    description: UEL regulator denominator (lag) time constant (first block)
+    unit: s
+    typical_values: [10]
+  - name: TUC1
+    symbol: 'T_{\mathrm{UC1}}'
+    description: UEL regulator numerator (lead) time constant (first block)
+    unit: s
+    typical_values: [2]
+  - name: TUB2
+    symbol: 'T_{\mathrm{UB2}}'
+    description: UEL regulator denominator (lag) time constant (second block)
+    unit: s
+    typical_values: [0.05]
+  - name: TUC2
+    symbol: 'T_{\mathrm{UC2}}'
+    description: UEL regulator numerator (lead) time constant (second block)
+    unit: s
+    typical_values: [0.1]
+  - name: TOB1
+    symbol: 'T_{\mathrm{OB1}}'
+    description: OEL regulator denominator (lag) time constant (first block)
+    unit: s
+    typical_values: [2]
+  - name: TOC1
+    symbol: 'T_{\mathrm{OC1}}'
+    description: OEL regulator numerator (lead) time constant (first block)
+    unit: s
+    typical_values: [0.1]
+  - name: TOB2
+    symbol: 'T_{\mathrm{OB2}}'
+    description: OEL regulator denominator (lag) time constant (second block)
+    unit: s
+    typical_values: [0.08]
+  - name: TOC2
+    symbol: 'T_{\mathrm{OC2}}'
+    description: OEL regulator numerator (lead) time constant (second block)
+    unit: s
+    typical_values: [0.08]
+  - name: VRmax
+    symbol: 'V_{\mathrm{Rmax}}'
+    description: Maximum regulator output
+    unit: pu
+    typical_values: [5]
+  - name: VRmin
+    symbol: 'V_{\mathrm{Rmin}}'
+    description: Minimum regulator output
+    unit: pu
+    typical_values: [-4]
+  - name: KC
+    symbol: 'K_{\mathrm{C}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0.004]
+  - name: T1
+    symbol: 'T_{1}'
+    description: Thyristor bridge firing control equivalent time constant
+    unit: s
+    typical_values: [0.004]

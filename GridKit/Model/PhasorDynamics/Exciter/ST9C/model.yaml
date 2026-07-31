@@ -1,0 +1,107 @@
+name: ST9C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0]
+  - name: TCD
+    symbol: 'T_{\mathrm{CD}}'
+    description: Time constant of differential part of AVR
+    unit: s
+    typical_values: [0.06]
+  - name: TBD
+    symbol: 'T_{\mathrm{BD}}'
+    description: Filter time constant of differential part of AVR
+    unit: s
+    typical_values: [0.03]
+  - name: ZA
+    symbol: 'Z_{\mathrm{A}}'
+    description: Dead-band for differential part influence on AVR
+    unit: null
+    typical_values: [0.036]
+  - name: KA
+    symbol: 'K_{\mathrm{A}}'
+    description: AVR gain
+    unit: null
+    typical_values: [12]
+  - name: KU
+    symbol: 'K_{\mathrm{U}}'
+    description: Gain associated with activation of takeover UEL
+    unit: null
+    typical_values: [10000]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Time constant of AVR
+    unit: s
+    typical_values: [2]
+  - name: TAUEL
+    symbol: 'T_{\mathrm{AUEL}}'
+    description: Time constant of underexcitation limiter
+    unit: s
+    typical_values: [2]
+  - name: VRmin
+    symbol: 'V_{\mathrm{Rmin}}'
+    description: Minimum regulator output
+    unit: pu
+    typical_values: [-0.866]
+  - name: VRmax
+    symbol: 'V_{\mathrm{Rmax}}'
+    description: Maximum regulator output
+    unit: pu
+    typical_values: [1]
+  - name: KAS
+    symbol: 'K_{\mathrm{AS}}'
+    description: Power converter gain (proportional to supply voltage)
+    unit: pu
+    typical_values: [6.1]
+  - name: TAS
+    symbol: 'T_{\mathrm{AS}}'
+    description: Equivalent time constant of power converter firing control
+    unit: s
+    typical_values: [0.0018]
+  - name: KP
+    symbol: 'K_{\mathrm{P}}'
+    description: Potential circuit (voltage) gain coefficient
+    unit: null
+    typical_values: [1]
+  - name: θP
+    symbol: '\theta_{\mathrm{P}}'
+    description: Potential circuit phase angle (degrees)
+    unit: degrees
+    typical_values: [0]
+  - name: KI
+    symbol: 'K_{\mathrm{I}}'
+    description: Potential circuit (current) gain coefficient
+    unit: null
+    typical_values: [0]
+  - name: XL
+    symbol: 'X_{\mathrm{L}}'
+    description: Reactance associated with the compound source
+    unit: null
+    typical_values: [0]
+  - name: SW1
+    symbol: '\mathrm{SW}_{1}'
+    description: Switch to select exciter supply configuration
+    unit: null
+    typical_values: [pos. A]
+  - name: KC
+    symbol: 'K_{\mathrm{C}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: null
+    typical_values: [0]
+  - name: VBmax
+    symbol: 'V_{\mathrm{Bmax}}'
+    description: Maximum limit on exciter voltage based on supply condition
+    unit: pu
+    typical_values: [1.2]

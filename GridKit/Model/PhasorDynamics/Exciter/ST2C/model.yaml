@@ -1,0 +1,92 @@
+name: ST2C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0]
+  - name: KA
+    symbol: 'K_{\mathrm{A}}'
+    description: Voltage regulator gain
+    unit: pu
+    typical_values: [120]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Voltage regulator time constant
+    unit: s
+    typical_values: [0.15]
+  - name: VRmax
+    symbol: 'V_{\mathrm{Rmax}}'
+    description: Maximum regulator output
+    unit: pu
+    typical_values: [1]
+  - name: VRmin
+    symbol: 'V_{\mathrm{Rmin}}'
+    description: Minimum regulator output
+    unit: pu
+    typical_values: [0]
+  - name: KF
+    symbol: 'K_{\mathrm{F}}'
+    description: Rate feedback gain
+    unit: pu
+    typical_values: [0.05]
+  - name: TF
+    symbol: 'T_{\mathrm{F}}'
+    description: Rate feedback time constant
+    unit: s
+    typical_values: [1]
+  - name: KC
+    symbol: 'K_{\mathrm{C}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0.1]
+  - name: KE
+    symbol: 'K_{\mathrm{E}}'
+    description: Exciter field proportional constant
+    unit: pu
+    typical_values: [1]
+  - name: TE
+    symbol: 'T_{\mathrm{E}}'
+    description: Exciter field time constant
+    unit: s
+    typical_values: [0.5]
+  - name: EFDmax
+    symbol: 'E_{\mathrm{FDmax}}'
+    description: Maximum generator field voltage
+    unit: pu
+    typical_values: [4.4]
+  - name: KP
+    symbol: 'K_{\mathrm{P}}'
+    description: Potential circuit (voltage) gain coefficient
+    unit: pu
+    typical_values: [4.88]
+  - name: KI
+    symbol: 'K_{\mathrm{I}}'
+    description: Compound circuit (current) gain coefficient
+    unit: pu
+    typical_values: [0]
+  - name: XL
+    symbol: 'X_{\mathrm{L}}'
+    description: Reactance associated with potential source
+    unit: pu
+    typical_values: [0]
+  - name: θP
+    symbol: '\theta_{\mathrm{P}}'
+    description: Potential circuit phase angle (degrees)
+    unit: degrees
+    typical_values: [0]
+  - name: VBmax
+    symbol: 'V_{\mathrm{Bmax}}'
+    description: Maximum available exciter voltage
+    unit: pu
+    typical_values: [5.2]

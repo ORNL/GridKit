@@ -1,0 +1,102 @@
+name: ST1C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0.02, 0.04]
+  - name: KA
+    symbol: 'K_{\mathrm{A}}'
+    description: Voltage regulator gain
+    unit: pu
+    typical_values: [210, 190]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Voltage regulator time constant
+    unit: s
+    typical_values: [0]
+  - name: TB
+    symbol: 'T_{\mathrm{B}}'
+    description: Regulator denominator (lag) time constant
+    unit: s
+    typical_values: [1, 10]
+  - name: TC
+    symbol: 'T_{\mathrm{C}}'
+    description: Regulator numerator (lead) time constant
+    unit: s
+    typical_values: [1]
+  - name: TB1
+    symbol: 'T_{\mathrm{B1}}'
+    description: Regulator denominator (lag) time constant
+    unit: s
+    typical_values: [0]
+  - name: TC1
+    symbol: 'T_{\mathrm{C1}}'
+    description: Regulator numerator (lead) time constant
+    unit: s
+    typical_values: [0]
+  - name: VRmax
+    symbol: 'V_{\mathrm{Rmax}}'
+    description: Maximum exciter output
+    unit: pu
+    typical_values: [6.43, 7.8]
+  - name: VRmin
+    symbol: 'V_{\mathrm{Rmin}}'
+    description: Minimum exciter output
+    unit: pu
+    typical_values: [-6, -6.7]
+  - name: VAmax
+    symbol: 'V_{\mathrm{Amax}}'
+    description: Maximum regulator output
+    unit: pu
+    typical_values: [6.43, 7.8]
+  - name: VAmin
+    symbol: 'V_{\mathrm{Amin}}'
+    description: Minimum regulator output
+    unit: pu
+    typical_values: [-6, -6.7]
+  - name: VImax
+    symbol: 'V_{\mathrm{Imax}}'
+    description: Maximum voltage error (regulator input)
+    unit: pu
+    typical_values: [99]
+  - name: VImin
+    symbol: 'V_{\mathrm{Imin}}'
+    description: Minimum voltage error (regulator input)
+    unit: pu
+    typical_values: [-99]
+  - name: KF
+    symbol: 'K_{\mathrm{F}}'
+    description: Rate feedback gain
+    unit: pu
+    typical_values: [0]
+  - name: TF
+    symbol: 'T_{\mathrm{F}}'
+    description: Rate feedback time constant
+    unit: s
+    typical_values: [1]
+  - name: KC
+    symbol: 'K_{\mathrm{C}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0.038, 0.08]
+  - name: KLR
+    symbol: 'K_{\mathrm{LR}}'
+    description: Exciter output current limiter gain
+    unit: pu
+    typical_values: [4.54, 0]
+  - name: ILR
+    symbol: 'I_{\mathrm{LR}}'
+    description: Exciter output current limit reference
+    unit: pu
+    typical_values: [4.4, 0]

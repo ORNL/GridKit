@@ -1,0 +1,37 @@
+name: PF2
+parameters:
+  - name: PFREFnorm
+    symbol: '\mathrm{PF}_{\mathrm{REFnorm}}'
+    description: Power factor controller normalized reference setpoint
+    unit: pu
+    typical_values: [0.95]
+  - name: VITmin
+    symbol: 'V_{\mathrm{ITmin}}'
+    description: Power factor controller minimum terminal current limit
+    unit: pu
+    typical_values: [0.1]
+  - name: VVTmin
+    symbol: 'V_{\mathrm{VTmin}}'
+    description: Power factor controller minimum terminal voltage limit
+    unit: pu
+    typical_values: [0.95]
+  - name: VVTmax
+    symbol: 'V_{\mathrm{VTmax}}'
+    description: Power factor controller maximum terminal voltage limit
+    unit: pu
+    typical_values: [1.05]
+  - name: KPpf
+    symbol: 'K_{\mathrm{Ppf}}'
+    description: Power factor controller proportional gain
+    unit: pu
+    typical_values: [1]
+  - name: KIpf
+    symbol: 'K_{\mathrm{Ipf}}'
+    description: Power factor controller integral gain
+    unit: pu/s
+    typical_values: [1]
+  - name: VPFLMT
+    symbol: 'V_{\mathrm{PFLMT}}'
+    description: Power factor controller output limit
+    unit: pu
+    typical_values: [0.1]

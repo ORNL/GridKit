@@ -1,0 +1,132 @@
+name: AC6C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0.02]
+  - name: KA
+    symbol: 'K_{\mathrm{A}}'
+    description: Regulator output gain
+    unit: pu
+    typical_values: [536]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Regulator output time constant
+    unit: s
+    typical_values: [0.086]
+  - name: TC
+    symbol: 'T_{\mathrm{C}}'
+    description: Regulator numerator (lead) time constant
+    unit: s
+    typical_values: [3]
+  - name: TB
+    symbol: 'T_{\mathrm{B}}'
+    description: Regulator denominator (lag) time constant
+    unit: s
+    typical_values: [9]
+  - name: TK
+    symbol: 'T_{\mathrm{K}}'
+    description: Regulator numerator (lead) time constant
+    unit: s
+    typical_values: [0.18]
+  - name: KH
+    symbol: 'K_{\mathrm{H}}'
+    description: Exciter field current limiter gain
+    unit: pu
+    typical_values: [92]
+  - name: TE
+    symbol: 'T_{\mathrm{E}}'
+    description: Exciter field time constant
+    unit: s
+    typical_values: [1]
+  - name: TH
+    symbol: 'T_{\mathrm{H}}'
+    description: Exciter field current limiter denominator (lag) time constant
+    unit: s
+    typical_values: [0.08]
+  - name: TJ
+    symbol: 'T_{\mathrm{J}}'
+    description: Exciter field current limiter numerator (lead) time constant
+    unit: s
+    typical_values: [0.02]
+  - name: KC
+    symbol: 'K_{\mathrm{C}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0.173]
+  - name: KD
+    symbol: 'K_{\mathrm{D}}'
+    description: Demagnetizing factor, function of exciter alternator reactances
+    unit: pu
+    typical_values: [1.91]
+  - name: KE
+    symbol: 'K_{\mathrm{E}}'
+    description: Exciter field proportional constant
+    unit: pu
+    typical_values: [1.6]
+  - name: VAmax
+    symbol: 'V_{\mathrm{Amax}}'
+    description: Maximum voltage regulator outputs
+    unit: pu
+    typical_values: [75]
+  - name: VAmin
+    symbol: 'V_{\mathrm{Amin}}'
+    description: Minimum voltage regulator outputs
+    unit: pu
+    typical_values: [-75]
+  - name: EFEmax
+    symbol: 'E_{\mathrm{FEmax}}'
+    description: Maximum exciter field voltage
+    unit: pu
+    typical_values: [44]
+  - name: EFEmin
+    symbol: 'E_{\mathrm{FEmin}}'
+    description: Minimum exciter field voltage
+    unit: pu
+    typical_values: [-36]
+  - name: VHmax
+    symbol: 'V_{\mathrm{Hmax}}'
+    description: Exciter field current limiter maximum output
+    unit: pu
+    typical_values: [75]
+  - name: VFELIM
+    symbol: 'V_{\mathrm{FELIM}}'
+    description: Exciter field current limiter reference
+    unit: pu
+    typical_values: [19]
+  - name: VFEmax
+    symbol: 'V_{\mathrm{FEmax}}'
+    description: Maximum exciter field current
+    unit: pu
+    typical_values: [999]
+  - name: E1
+    symbol: 'E_{1}'
+    description: Exciter output voltage for saturation factor S (E ) E 1
+    unit: pu
+    typical_values: [7.4]
+  - name: SE(E1)
+    symbol: 'S_{\mathrm{E}}(E_{1})'
+    description: Exciter saturation factor at exciter output voltage E 1
+    unit: null
+    typical_values: [0.214]
+  - name: E2
+    symbol: 'E_{2}'
+    description: Exciter output voltage for saturation factor S (E ) E 2
+    unit: pu
+    typical_values: [5.55]
+  - name: SE(E2)
+    symbol: 'S_{\mathrm{E}}(E_{2})'
+    description: Exciter saturation factor at exciter output voltage E 2
+    unit: null
+    typical_values: [0.044]

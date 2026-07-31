@@ -1,0 +1,137 @@
+name: AC8C
+parameters:
+  - name: RC
+    symbol: 'R_{\mathrm{C}}'
+    description: Resistive component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: XC
+    symbol: 'X_{\mathrm{C}}'
+    description: Reactance component of load compensation
+    unit: pu
+    typical_values: [0]
+  - name: TR
+    symbol: 'T_{\mathrm{R}}'
+    description: Regulator input filter time constant
+    unit: s
+    typical_values: [0]
+  - name: KPR
+    symbol: 'K_{\mathrm{PR}}'
+    description: Voltage regulator proportional gain
+    unit: pu
+    typical_values: [80]
+  - name: KIR
+    symbol: 'K_{\mathrm{IR}}'
+    description: Voltage regulator integral gain
+    unit: pu/s
+    typical_values: [5]
+  - name: KDR
+    symbol: 'K_{\mathrm{DR}}'
+    description: Voltage regulator derivative gain
+    unit: pu.s
+    typical_values: [10]
+  - name: TDR
+    symbol: 'T_{\mathrm{DR}}'
+    description: Lag time constant for derivative channel of PID controller
+    unit: s
+    typical_values: [0.02]
+  - name: VRmax
+    symbol: 'V_{\mathrm{Rmax}}'
+    description: Maximum regulator output
+    unit: pu
+    typical_values: [35]
+  - name: VRmin
+    symbol: 'V_{\mathrm{Rmin}}'
+    description: Minimum regulator output
+    unit: pu
+    typical_values: [0]
+  - name: KA
+    symbol: 'K_{\mathrm{A}}'
+    description: Rectifier bridge gain
+    unit: pu
+    typical_values: [1]
+  - name: TA
+    symbol: 'T_{\mathrm{A}}'
+    description: Rectifier bridge time constant
+    unit: s
+    typical_values: [0.01]
+  - name: KP
+    symbol: 'K_{\mathrm{P}}'
+    description: Potential circuit gain coefficient
+    unit: pu
+    typical_values: [1]
+  - name: θP
+    symbol: '\theta_{\mathrm{P}}'
+    description: Potential circuit phase angle (degrees)
+    unit: pu
+    typical_values: [0]
+  - name: KI
+    symbol: 'K_{\mathrm{I}}'
+    description: Potential circuit (current) gain coefficient
+    unit: pu
+    typical_values: [0]
+  - name: XL
+    symbol: 'X_{\mathrm{L}}'
+    description: Reactance associated with potential source
+    unit: pu
+    typical_values: [0]
+  - name: KC1
+    symbol: 'K_{\mathrm{C1}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0]
+  - name: VBmax
+    symbol: 'V_{\mathrm{Bmax}}'
+    description: Maximum available exciter field voltage
+    unit: pu
+    typical_values: [1.25]
+  - name: SW1
+    symbol: '\mathrm{SW}_{1}'
+    description: Logical switch 1
+    unit: null
+    typical_values: [pos. A]
+  - name: KC
+    symbol: 'K_{\mathrm{C}}'
+    description: Rectifier loading factor proportional to commutating reactance
+    unit: pu
+    typical_values: [0.55]
+  - name: KD
+    symbol: 'K_{\mathrm{D}}'
+    description: Demagnetizing factor, function of exciter alternator reactances
+    unit: pu
+    typical_values: [1.1]
+  - name: KE
+    symbol: 'K_{\mathrm{E}}'
+    description: Exciter field proportional constant
+    unit: pu
+    typical_values: [1]
+  - name: TE
+    symbol: 'T_{\mathrm{E}}'
+    description: Exciter field time constant
+    unit: s
+    typical_values: [1.2]
+  - name: VFEMAX
+    symbol: 'V_{\mathrm{FEMAX}}'
+    description: Maximum exciter field current
+    unit: pu
+    typical_values: [6]
+  - name: E1
+    symbol: 'E_{1}'
+    description: Exciter output voltage for saturation factor S (E ) E 1
+    unit: pu
+    typical_values: [9]
+  - name: SE(E1)
+    symbol: 'S_{\mathrm{E}}(E_{1})'
+    description: Exciter saturation factor at exciter output voltage E 1
+    unit: null
+    typical_values: [3]
+  - name: E2
+    symbol: 'E_{2}'
+    description: Exciter output voltage for saturation factor S (E ) E 2
+    unit: pu
+    typical_values: [6.5]
+  - name: SE(E2)
+    symbol: 'S_{\mathrm{E}}(E_{2})'
+    description: Exciter saturation factor at exciter output voltage E 2
+    unit: null
+    typical_values: [0.3]

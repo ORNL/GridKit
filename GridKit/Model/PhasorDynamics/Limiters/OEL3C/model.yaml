@@ -1,0 +1,57 @@
+name: OEL3C
+parameters:
+  - name: ITFpu
+    symbol: 'I_{\mathrm{TFpu}}'
+    description: OEL timed field current limiter pick up level
+    unit: pu
+    typical_values: [3.7]
+  - name: KSCALE
+    symbol: 'K_{\mathrm{SCALE}}'
+    description: OEL input signal scaling factor
+    unit: pu
+    typical_values: [a]
+  - name: TF
+    symbol: 'T_{\mathrm{F}}'
+    description: OEL field current measurement time constant
+    unit: s
+    typical_values: [0.02]
+  - name: K1
+    symbol: 'K_{1}'
+    description: Exponent for OEL error calculation
+    unit: null
+    typical_values: [1]
+  - name: KOEL
+    symbol: 'K_{\mathrm{OEL}}'
+    description: OEL gain
+    unit: pu
+    typical_values: [1]
+  - name: TOEL
+    symbol: 'T_{\mathrm{OEL}}'
+    description: OEL integral time constant
+    unit: s
+    typical_values: [24]
+  - name: KPOEL
+    symbol: 'K_{\mathrm{POEL}}'
+    description: OEL proportional gain
+    unit: pu
+    typical_values: [1]
+  - name: VOELmax1
+    symbol: 'V_{\mathrm{OELmax1}}'
+    description: OEL integrator maximum output
+    unit: pu
+    typical_values: [0.66]
+  - name: VOELmin1
+    symbol: 'V_{\mathrm{OELmin1}}'
+    description: OEL integrator minimum output
+    unit: pu
+    typical_values: [-1]
+  - name: VOELmax2
+    symbol: 'V_{\mathrm{OELmax2}}'
+    description: OEL maximum output
+    unit: pu
+    typical_values: [0]
+  - name: VOELmin2
+    symbol: 'V_{\mathrm{OELmin2}}'
+    description: OEL minimum output
+    unit: pu
+    typical_values: [-1]

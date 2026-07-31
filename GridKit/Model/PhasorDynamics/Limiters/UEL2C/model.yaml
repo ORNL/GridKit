@@ -1,0 +1,167 @@
+name: UEL2C
+parameters:
+  - name: TUP
+    symbol: 'T_{\mathrm{UP}}'
+    description: UEL real power filter time constant
+    unit: s
+    typical_values: [5]
+  - name: TUQ
+    symbol: 'T_{\mathrm{UQ}}'
+    description: UEL reactive power filter time constant
+    unit: s
+    typical_values: [0]
+  - name: TUV
+    symbol: 'T_{\mathrm{UV}}'
+    description: UEL voltage filter time constant
+    unit: s
+    typical_values: [5]
+  - name: Vbias
+    symbol: 'V_{\mathrm{bias}}'
+    description: UEL voltage bias
+    unit: pu
+    typical_values: [1]
+  - name: K1
+    symbol: 'K_{1}'
+    description: Voltage exponent for real power input to UEL table
+    unit: null
+    typical_values: [2]
+  - name: K2
+    symbol: 'K_{2}'
+    description: Voltage exponent for reactive power output of UEL table
+    unit: null
+    typical_values: [2]
+  - name: KUF
+    symbol: 'K_{\mathrm{UF}}'
+    description: UEL excitation system stabilizer gain
+    unit: pu
+    typical_values: [0]
+  - name: TQref
+    symbol: 'T_{\mathrm{Qref}}'
+    description: UEL reactive power reference time constant
+    unit: s
+    typical_values: [0]
+  - name: Kfix
+    symbol: 'K_{\mathrm{fix}}'
+    description: UEL fixed gain reduction factor
+    unit: pu
+    typical_values: [1]
+  - name: Tadj
+    symbol: 'T_{\mathrm{adj}}'
+    description: UEL adjustable gain reduction time constant
+    unit: s
+    typical_values: [3]
+  - name: SW1
+    symbol: '\mathrm{SW}_{1}'
+    description: UEL logic switch for adjustable gain reduction
+    unit: null
+    typical_values: [pos. A]
+  - name: KUI
+    symbol: 'K_{\mathrm{UI}}'
+    description: UEL integral gain
+    unit: pu/s
+    typical_values: [0.5]
+  - name: KUL
+    symbol: 'K_{\mathrm{UL}}'
+    description: UEL proportional gain
+    unit: pu
+    typical_values: [0.8]
+  - name: VUImax
+    symbol: 'V_{\mathrm{UImax}}'
+    description: UEL PI control maximum output
+    unit: pu
+    typical_values: [0.25]
+  - name: VUImin
+    symbol: 'V_{\mathrm{UImin}}'
+    description: UEL PI control minimum output
+    unit: pu
+    typical_values: [0]
+  - name: TU1
+    symbol: 'T_{\mathrm{U1}}'
+    description: UEL numerator (lead) time constant (first block)
+    unit: s
+    typical_values: [0]
+  - name: TU2
+    symbol: 'T_{\mathrm{U2}}'
+    description: UEL denominator (lag) time constant (first block)
+    unit: s
+    typical_values: [0]
+  - name: TU3
+    symbol: 'T_{\mathrm{U3}}'
+    description: UEL numerator (lead) time constant (second block)
+    unit: s
+    typical_values: [0]
+  - name: TU4
+    symbol: 'T_{\mathrm{U4}}'
+    description: UEL denominator (lag) time constant (second block)
+    unit: s
+    typical_values: [0]
+  - name: VUELmax1
+    symbol: 'V_{\mathrm{UELmax1}}'
+    description: UEL maximum output
+    unit: pu
+    typical_values: [0.25]
+  - name: VUELmin1
+    symbol: 'V_{\mathrm{UELmin1}}'
+    description: UEL minimum output
+    unit: pu
+    typical_values: [0]
+  - name: VUELmax2
+    symbol: 'V_{\mathrm{UELmax2}}'
+    description: UEL maximum output
+    unit: pu
+    typical_values: [99]
+  - name: VUELmin2
+    symbol: 'V_{\mathrm{UELmin2}}'
+    description: UEL minimum output
+    unit: pu
+    typical_values: [-99]
+  - name: P0
+    symbol: 'P_{0}'
+    description: UEL lookup table real power (first point)
+    unit: pu
+    typical_values: [0]
+  - name: Q0
+    symbol: 'Q_{0}'
+    description: UEL lookup table reactive power (first point)
+    unit: pu
+    typical_values: [-0.31]
+  - name: P1
+    symbol: 'P_{1}'
+    description: UEL lookup table real power (second point)
+    unit: pu
+    typical_values: [0.3]
+  - name: Q1
+    symbol: 'Q_{1}'
+    description: UEL lookup table reactive power (second point)
+    unit: pu
+    typical_values: [-0.31]
+  - name: P2
+    symbol: 'P_{2}'
+    description: UEL lookup table real power (third point)
+    unit: pu
+    typical_values: [0.6]
+  - name: Q2
+    symbol: 'Q_{2}'
+    description: UEL lookup table reactive power (third point)
+    unit: pu
+    typical_values: [-0.28]
+  - name: P3
+    symbol: 'P_{3}'
+    description: UEL lookup table real power (fourth point)
+    unit: pu
+    typical_values: [0.9]
+  - name: Q3
+    symbol: 'Q_{3}'
+    description: UEL lookup table reactive power (fourth point)
+    unit: pu
+    typical_values: [-0.21]
+  - name: P4
+    symbol: 'P_{4}'
+    description: UEL lookup table real power (fifth point)
+    unit: pu
+    typical_values: [1.02]
+  - name: Q4
+    symbol: 'Q_{4}'
+    description: UEL lookup table reactive power (fifth point)
+    unit: pu
+    typical_values: [0]
