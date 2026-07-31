@@ -99,6 +99,16 @@ namespace GridKit
         return f_.getData()[1];
       }
 
+      void setVr(RealT vr) override final
+      {
+        Vr0_ = static_cast<ScalarT>(vr);
+      }
+
+      void setVi(RealT vi) override final
+      {
+        Vi0_ = static_cast<ScalarT>(vi);
+      }
+
     protected:
       int constructCoo()
       {

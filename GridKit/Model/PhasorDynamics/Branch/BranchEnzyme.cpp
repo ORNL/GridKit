@@ -4,8 +4,6 @@
  *
  */
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
-
 #include "BranchImpl.hpp"
 
 namespace GridKit
@@ -21,82 +19,55 @@ namespace GridKit
     int Branch<scalar_type, index_type>::evaluateJacobian()
     {
       Log::misc() << "Evaluate Jacobian for Branch..." << std::endl;
-      Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
+
+      updateSignalInputs();
 
       if (J_rows_buffer_ == nullptr)
       {
-        // Reserve space for the dense blocks.
-        // The size of the buffer is the sum of maximum capacities of the blocks.
-        // Enyme will compute the appropriate nnz from sparsification.
-        auto bus1_size   = static_cast<size_t>(bus1_->size());
-        auto bus2_size   = static_cast<size_t>(bus2_->size());
-        auto buffer_size = (bus1_size + bus2_size) * (bus1_size + bus2_size);
-        J_rows_buffer_   = new IdxT[buffer_size];
-        J_cols_buffer_   = new IdxT[buffer_size];
-        J_vals_buffer_   = new RealT[buffer_size];
+        J_rows_buffer_ = new IdxT[16];
+        J_cols_buffer_ = new IdxT[16];
+        J_vals_buffer_ = new RealT[16];
       }
 
-      nnz_ = 0;
+      const RealT in_service = inServiceFactor();
+      nnz_                   = 0;
 
-      // Bus 1 diagonal Jacobian block owned by the bus
-      GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual11>::eval(this,
-                                                                                                    static_cast<size_t>(bus1_->size()),
-                                                                                                    static_cast<size_t>((bus1_->y()).getSize()),
-                                                                                                    (bus1_->getResidualIndices()).data(),
-                                                                                                    (bus1_->getVariableIndices()).data(),
-                                                                                                    y_.getData(),
-                                                                                                    yp_.getData(),
-                                                                                                    bus1_->y().getData(),
-                                                                                                    J_rows_buffer_,
-                                                                                                    J_cols_buffer_,
-                                                                                                    J_vals_buffer_,
-                                                                                                    nnz_);
+      auto stampBlock = [&](BusT* row_bus,
+                            BusT* col_bus,
+                            RealT G,
+                            RealT B)
+      {
+        if (row_bus->size() == 0 || col_bus->size() == 0)
+        {
+          return;
+        }
 
-      // Bus 2 diagonal Jacobian block owned by the bus
-      GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual22>::eval(this,
-                                                                                                    static_cast<size_t>(bus2_->size()),
-                                                                                                    static_cast<size_t>((bus2_->y()).getSize()),
-                                                                                                    (bus2_->getResidualIndices()).data(),
-                                                                                                    (bus2_->getVariableIndices()).data(),
-                                                                                                    y_.getData(),
-                                                                                                    yp_.getData(),
-                                                                                                    bus2_->y().getData(),
-                                                                                                    J_rows_buffer_,
-                                                                                                    J_cols_buffer_,
-                                                                                                    J_vals_buffer_,
-                                                                                                    nnz_);
+        const auto& rows      = row_bus->getResidualIndices();
+        const auto& cols      = col_bus->getVariableIndices();
+        const RealT values[4] = {
+            in_service * G,
+            -in_service * B,
+            in_service * B,
+            in_service * G};
 
-      // Off-diagonal Jacobian block (Bus2 variables) owned by the branch
-      GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual12>::eval(this,
-                                                                                                    static_cast<size_t>(bus1_->size()),
-                                                                                                    static_cast<size_t>((bus2_->y()).getSize()),
-                                                                                                    (bus1_->getResidualIndices()).data(),
-                                                                                                    (bus2_->getVariableIndices()).data(),
-                                                                                                    y_.getData(),
-                                                                                                    yp_.getData(),
-                                                                                                    bus2_->y().getData(),
-                                                                                                    J_rows_buffer_,
-                                                                                                    J_cols_buffer_,
-                                                                                                    J_vals_buffer_,
-                                                                                                    nnz_);
+        for (IdxT row = 0; row < 2; ++row)
+        {
+          for (IdxT col = 0; col < 2; ++col)
+          {
+            J_rows_buffer_[nnz_] = rows[static_cast<size_t>(row)];
+            J_cols_buffer_[nnz_] = cols[static_cast<size_t>(col)];
+            J_vals_buffer_[nnz_] = values[static_cast<size_t>(2 * row + col)];
+            ++nnz_;
+          }
+        }
+      };
 
-      // Off-diagonal Jacobian block (Bus1 variables) owned by the branch
-      GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual21>::eval(this,
-                                                                                                    static_cast<size_t>(bus2_->size()),
-                                                                                                    static_cast<size_t>((bus1_->y()).getSize()),
-                                                                                                    (bus2_->getResidualIndices()).data(),
-                                                                                                    (bus1_->getVariableIndices()).data(),
-                                                                                                    y_.getData(),
-                                                                                                    yp_.getData(),
-                                                                                                    bus1_->y().getData(),
-                                                                                                    J_rows_buffer_,
-                                                                                                    J_cols_buffer_,
-                                                                                                    J_vals_buffer_,
-                                                                                                    nnz_);
+      // Stamp full 2x2 blocks, including numerical zeros, so tap/phase/open
+      // changes cannot alter the fixed system sparsity map.
+      stampBlock(bus1_, bus1_, g11_, b11_);
+      stampBlock(bus1_, bus2_, g12_, b12_);
+      stampBlock(bus2_, bus1_, g21_, b21_);
+      stampBlock(bus2_, bus2_, g22_, b22_);
 
       this->constructCoo();
 

@@ -42,8 +42,11 @@ namespace GridKit
     /// Signal inputs for a Gensal generator model
     enum class GensalSignalInputs : size_t
     {
-      pmech, ///< \f$P_m\f$ Unique ID of the signal providing mechanical power
-      efd,   ///< \f$E_{fd}\f$ Unique ID of the signal providing exciter field voltage
+      pmech,  ///< Unique ID of the signal providing mechanical power
+      efd,    ///< Unique ID of the signal providing exciter field voltage
+      p,      ///< Initial active-power injection
+      q,      ///< Initial reactive-power injection
+      online, ///< In-service status (zero is offline, nonzero is online)
     };
 
     /// Signal outputs for a Gensal generator model

@@ -66,6 +66,7 @@ namespace GridKit
                                                                                                        J_vals_buffer_,
                                                                                                        nnz_);
 
+      const IdxT bus_block_begin = nnz_;
       GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::LoadZ<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
                                                                                                  static_cast<size_t>(bus_->size()),
@@ -79,6 +80,15 @@ namespace GridKit
                                                                                                  J_cols_buffer_,
                                                                                                  J_vals_buffer_,
                                                                                                  nnz_);
+
+      // Differentiate the connected load so an initially offline load retains
+      // the bus-coupling entries needed to reconnect. Apply only the current
+      // numerical status to that structural block.
+      const RealT connected = static_cast<RealT>(online());
+      for (IdxT i = bus_block_begin; i < nnz_; ++i)
+      {
+        J_vals_buffer_[static_cast<size_t>(i)] *= connected;
+      }
 
       this->constructCoo();
 

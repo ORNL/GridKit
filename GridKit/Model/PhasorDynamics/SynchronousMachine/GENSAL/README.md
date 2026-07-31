@@ -17,31 +17,40 @@ Figure 2: GENSAL. Figure courtesy of
 
 ## Model Parameters
 
-Symbol            | Units  | JSON    | Description                                            | Typical Value | Note
-------------------|--------|---------|--------------------------------------------------------|---------------|-----
-$P_0$             | [p.u.] | `p0`    | Initial active power injection                         | 1.0           |
-$Q_0$             | [p.u.] | `q0`    | Initial reactive power injection                       | 0.0           |
-$H$               | [s]    | `H`     | rotor inertia                                          | 3             |
-$D$               | [p.u.] | `D`     | damping coefficient                                    | 0             |
-$R_\mathrm{a}$             | [p.u.] | `Ra`    | winding resistance                                     | 0             |
-$T'_{d0}$         | [s]    | `Tdop`  | Open circuit direct axis transient time const.         | 7             |
-$T''_{d0}$        | [s]    | `Tdopp` | Open circuit direct axis sub-transient time const.     | 0.04          |
-$T''_{q0}$        | [s]    | `Tqopp` | Open circuit quadrature axis sub-transient time const. | 0.05          |
-$X_d$             | [p.u.] | `Xd`    | Direct axis synchronous reactance                      | 2.1           |
-$X'_d$            | [p.u.] | `Xdp`   | Direct axis transient reactance                        | 0.2           |
-$X''_d$           | [p.u.] | `Xdpp`  | Direct axis sub-transient reactance                    | 0.18          |
-$X_q$             | [p.u.] | `Xq`    | Quadrature axis synchronous reactance                  | 0.5           |
-$X_{\ell}$        | [p.u.] | `Xl`    | Stator leakage reactance                               | 0.15          |
-$S_{10}$          | [p.u.] | `S10`   | Saturation factor at 1.0 pu flux                       | 0             |
-$S_{12}$          | [p.u.] | `S12`   | Saturation factor at 1.2 pu flux                       | 0             |
-$S^\mathrm{base}$ | [MVA]  | `mva`   | Machine power base                                     | 100           |
+Symbol      | Units   | Description                                | Typical Value | Note
+------------|---------|--------------------------------------------|---------------| ------
+$P_0$       | [p.u.]  | Legacy active-power fallback               | 1.0 |
+$Q_0$       | [p.u.]  | Legacy reactive-power fallback             | 0.0 |
+$H$         | [s]     | rotor inertia                              | 3
+$D$         | [p.u.]  | damping coefficient                        | 0
+$R_a$       | [p.u.]  | winding resistance                         | 0
+$T'_{d0}$   | [s]     | Open circuit direct axis transient time const. | 7 |
+$T''_{d0}$  | [s]     | Open circuit direct axis sub-transient time const. | 0.04 |
+$T''_{q0}$  | [s]     | Open circuit quadrature axis sub-transient time const. | 0.05 |
+$X_d$       | [p.u.]  | Direct axis synchronous reactance          | 2.1 |
+$X'_d$      | [p.u.]  | Direct axis transient reactance            | 0.2 |
+$X''_d$     | [p.u.]  | Direct axis sub-transient reactance        | 0.18 |
+$X_q$       | [p.u.]  | Quadrature axis synchronous reactance      | 0.5 |
+$X_{\ell}$  | [p.u.]  | Stator leakage reactance                   | 0.15 |
+$S_{10}$    | [p.u.]  | Saturation factor at 1.0 pu flux           | 0 |
+$S_{12}$    | [p.u.]  | Saturation factor at 1.2 pu flux           | 0 |
+$S_\mathrm{mach}$ | [MVA] | Machine power base                  | 100 |
 
-### Parameter Validation
+## Model Inputs
 
-None.
+Input    | Units  | Description                                      | Default
+---------|--------|--------------------------------------------------|--------
+`p`      | [p.u.] | Initial terminal active-power injection          | Legacy $P_0$
+`q`      | [p.u.] | Initial terminal reactive-power injection        | Legacy $Q_0$
+`online` | [-]    | In-service status; zero is offline               | 1
 
-### Model Derived Parameters
-```math
+`p` and `q` are sampled during initialization. Any nonzero `online` value
+connects the machine to the network. An offline machine retains its initialized
+internal state while its network contribution and terminal monitors are zero.
+Change inputs only while the solve is stopped.
+
+## Model Derived Parameters
+``` math
 \begin{aligned}
   G      &=  \dfrac{R_\mathrm{a}}{R_\mathrm{a}^2+(X''_d)^2} &
   B      &= -\dfrac{X''_d}{R_\mathrm{a}^2+(X''_d)^2}\\
