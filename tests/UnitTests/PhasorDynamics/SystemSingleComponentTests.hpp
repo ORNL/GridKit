@@ -3,6 +3,7 @@
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
@@ -165,6 +166,31 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome regca()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.bus.resize(1);
+        data.bus[0].bus_id   = static_cast<IdxT>(1);
+        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = static_cast<RealT>(1.0);
+        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+        data.regca.push_back(makeRegcaData());
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size()
+                   == static_cast<IdxT>(PhasorDynamics::Converter::RegcaInternalVariables::MAXIMUM);
+
+        return success.report(__func__);
+      }
+
       TestOutcome genrou()
       {
         TestStatus success = true;
@@ -232,6 +258,34 @@ namespace GridKit
         system = nullptr;
 
         return success.report(__func__);
+      }
+
+    private:
+      auto makeRegcaData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
+      {
+        using Params = PhasorDynamics::Converter::RegcaParameters;
+        using Buses  = PhasorDynamics::Converter::RegcaBuses;
+
+        PhasorDynamics::Converter::RegcaData<RealT, IdxT> data;
+        data.device_class               = "Regca";
+        data.disambiguation_string      = "regca_test";
+        data.buses[Buses::bus]          = static_cast<IdxT>(1);
+        data.parameters[Params::p0]     = static_cast<RealT>(1.0);
+        data.parameters[Params::q0]     = static_cast<RealT>(0.0);
+        data.parameters[Params::mva]    = static_cast<RealT>(100.0);
+        data.parameters[Params::Tg]     = static_cast<RealT>(0.02);
+        data.parameters[Params::TM]     = static_cast<RealT>(0.02);
+        data.parameters[Params::Rqmax]  = static_cast<RealT>(999.0);
+        data.parameters[Params::Rqmin]  = static_cast<RealT>(-999.0);
+        data.parameters[Params::Rpmax]  = static_cast<RealT>(999.0);
+        data.parameters[Params::sL]     = true;
+        data.parameters[Params::IL1]    = static_cast<RealT>(1.1);
+        data.parameters[Params::VL0]    = static_cast<RealT>(0.4);
+        data.parameters[Params::VL1]    = static_cast<RealT>(0.9);
+        data.parameters[Params::VA0]    = static_cast<RealT>(0.4);
+        data.parameters[Params::VA1]    = static_cast<RealT>(0.9);
+        data.parameters[Params::Vhvmax] = static_cast<RealT>(1.2);
+        return data;
       }
     };
 
