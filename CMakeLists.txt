@@ -122,7 +122,7 @@ endif("${isSystemDir}" STREQUAL "-1")
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 if(GRIDKIT_ENABLE_IPOPT)
-  include(FindIpopt)
+  find_package(Ipopt REQUIRED)
   enable_language(Fortran) # Needed for linking to HSL
 endif()
 
@@ -216,4 +216,4 @@ configure_package_config_file(
 # Install configuration file
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/GridKitConfig.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/GridKitConfigVersion.cmake
-        DESTINATION share/cmake/gridkit)
+              ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindIpopt.cmake DESTINATION share/cmake/gridkit)
