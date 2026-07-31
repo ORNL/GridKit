@@ -1,0 +1,93 @@
+name: REGCC
+parameters:
+  - name: rrpwr
+    symbol: R_{\mathrm{rpwr}}
+    description: Rate of increase of active current after fault clearing
+    unit: pu/s
+    typical_values: [10.0]
+  - name: tg
+    symbol: T_{\mathrm{g}}
+    description: Converter controls delay emulation time-constant
+    unit: s
+    typical_values: [0.02]
+  - name: tfltr
+    symbol: T_{\mathrm{fltr}}
+    description: Voltage measurement transducer filter time-constant
+    unit: s
+    typical_values: [0.02]
+  - name: iqrmax
+    symbol: I_{\mathrm{qrmax}}
+    description: Upward rate limit on reactive current command
+    unit: pu/s
+    typical_values: [999.0]
+  - name: iqrmin
+    symbol: I_{\mathrm{qrmin}}
+    description: Downward rate limit on reactive current command
+    unit: pu/s
+    typical_values: [-999.0]
+  - name: xe
+    symbol: X_{\mathrm{e}}
+    description: Source reactance
+    unit: pu
+    typical_values: []
+  - name: re
+    symbol: R_{\mathrm{e}}
+    description: Source resistance
+    unit: pu
+    typical_values: []
+  - name: te
+    symbol: T_{\mathrm{e}}
+    description: Converter firing delay emulation time-constant
+    unit: s
+    typical_values: [0.0083]
+  - name: rateflg
+    symbol: R_{\mathrm{ateflg}}
+    description: 'Rate limit flag: 0 means rrpwr is an active current rate limit, 1 means rrpwr is an
+      active power rate limit'
+    unit: null
+    typical_values: [1.0]
+  - name: dqflag
+    symbol: D_{\mathrm{qflag}}
+    description: 'P/Q priority flag: 0 means Q priority, 1 means P priority'
+    unit: null
+    typical_values: [0.0]
+  - name: imax
+    symbol: I_{\mathrm{max}}
+    description: Maximum continuous converter current rating
+    unit: pu
+    typical_values: []
+  - name: kip
+    symbol: K_{\mathrm{ip}}
+    description: Proportional gain of the inner-current control loops
+    unit: pu/pu
+    typical_values: []
+  - name: kii
+    symbol: K_{\mathrm{ii}}
+    description: Integral gain of the inner-current control loops
+    unit: pu/pu.s-1
+    typical_values: []
+  - name: kppll
+    symbol: K_{\mathrm{ppll}}
+    description: Proportional gain of phase-locked loop
+    unit: rad.s-1/pu
+    typical_values: []
+  - name: kipll
+    symbol: K_{\mathrm{ipll}}
+    description: Integral gain of the phase-locked loop
+    unit: rad.s-1/pu.s-1
+    typical_values: []
+  - name: wmax
+    symbol: W_{\mathrm{max}}
+    description: Phase-locked loop maximum output
+    unit: rad.s-1
+    typical_values: []
+  - name: wmin
+    symbol: W_{\mathrm{min}}
+    description: Phase-locked loop minimum output
+    unit: rad.s-1
+    typical_values: []
+  - name: vdip
+    symbol: V_{\mathrm{dip}}
+    description: When filtered voltage is below vdip, freeze the PLL state
+    unit: pu
+    typical_values: []

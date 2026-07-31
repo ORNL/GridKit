@@ -1,0 +1,202 @@
+name: HYGOV
+parameters:
+  - name: Trate
+    symbol: T_{\mathrm{rate}}
+    description: Turbine rating
+    unit: MW
+    typical_values: []
+  - name: Rperm
+    symbol: R_{\mathrm{perm}}
+    description: Permanent droop
+    unit: pu
+    typical_values: []
+  - name: Rtemp
+    symbol: R_{\mathrm{temp}}
+    description: Temporary droop
+    unit: pu
+    typical_values: []
+  - name: Tr
+    symbol: T_{\mathrm{r}}
+    description: Washout time constant
+    unit: s
+    typical_values: []
+  - name: Tf
+    symbol: T_{\mathrm{f}}
+    description: Filter time constant
+    unit: s
+    typical_values: []
+  - name: Tg
+    symbol: T_{\mathrm{g}}
+    description: Gate servo time constant
+    unit: s
+    typical_values: []
+  - name: Velm
+    symbol: V_{\mathrm{elm}}
+    description: Maximum gate velocity
+    unit: pu/s
+    typical_values: []
+  - name: Gmax
+    symbol: G_{\mathrm{max}}
+    description: Maximum gate velocity
+    unit: pu of mwcap
+    typical_values: []
+  - name: Gmin
+    symbol: G_{\mathrm{min}}
+    description: Minimum gate velocity
+    unit: pu of mwcap
+    typical_values: []
+  - name: Tw
+    symbol: T_{\mathrm{w}}
+    description: Water inertia time constant
+    unit: s
+    typical_values: []
+  - name: At
+    symbol: A_{\mathrm{t}}
+    description: Turbine gain
+    unit: pu
+    typical_values: []
+  - name: Dturb
+    symbol: D_{\mathrm{turb}}
+    description: Turbine damping coefficient
+    unit: pu
+    typical_values: []
+  - name: Qnl
+    symbol: Q_{\mathrm{nl}}
+    description: No-load flow at nominal head
+    unit: pu
+    typical_values: []
+  - name: Ttur
+    symbol: T_{\mathrm{tur}}
+    description: Turbine trip flag
+    unit: null
+    typical_values: []
+  - name: Tn
+    symbol: T_{\mathrm{n}}
+    description: Lag time constant
+    unit: s
+    typical_values: []
+  - name: Tnp
+    symbol: T_{\mathrm{np}}
+    description: Lead time constant
+    unit: s
+    typical_values: []
+  - name: db1
+    symbol: d_{\mathrm{b1}}
+    description: Intentional deadband width
+    unit: Hz
+    typical_values: []
+  - name: Eps
+    symbol: E_{\mathrm{ps}}
+    description: Intentional db hysteresis
+    unit: Hz
+    typical_values: []
+  - name: db2
+    symbol: d_{\mathrm{b2}}
+    description: Unintentional deadband
+    unit: MW
+    typical_values: []
+  - name: Gv0
+    symbol: G_{\mathrm{v0}}
+    description: Nonlinear gain point 0
+    unit: pu gv
+    typical_values: []
+  - name: Pgv0
+    symbol: P_{\mathrm{gv0}}
+    description: Nonlinear gain point 0
+    unit: pu power
+    typical_values: []
+  - name: Gv1
+    symbol: G_{\mathrm{v1}}
+    description: Nonlinear gain point 1
+    unit: pu gv
+    typical_values: []
+  - name: Pgv1
+    symbol: P_{\mathrm{gv1}}
+    description: Nonlinear gain point 1
+    unit: pu power
+    typical_values: []
+  - name: Gv2
+    symbol: G_{\mathrm{v2}}
+    description: Nonlinear gain point 2
+    unit: pu gv
+    typical_values: []
+  - name: Pgv2
+    symbol: P_{\mathrm{gv2}}
+    description: Nonlinear gain point 2
+    unit: pu power
+    typical_values: []
+  - name: Gv3
+    symbol: G_{\mathrm{v3}}
+    description: Nonlinear gain point 3
+    unit: pu gv
+    typical_values: []
+  - name: Pgv3
+    symbol: P_{\mathrm{gv3}}
+    description: Nonlinear gain point 3
+    unit: pu power
+    typical_values: []
+  - name: Gv4
+    symbol: G_{\mathrm{v4}}
+    description: Nonlinear gain point 4
+    unit: pu gv
+    typical_values: []
+  - name: Pgv4
+    symbol: P_{\mathrm{gv4}}
+    description: Nonlinear gain point 4
+    unit: pu power
+    typical_values: []
+  - name: Gv5
+    symbol: G_{\mathrm{v5}}
+    description: Nonlinear gain point 5
+    unit: pu gv
+    typical_values: []
+  - name: Pgv5
+    symbol: P_{\mathrm{gv5}}
+    description: Nonlinear gain point 5
+    unit: pu power
+    typical_values: []
+  - name: Hdam
+    symbol: H_{\mathrm{dam}}
+    description: Head available at dam
+    unit: pu
+    typical_values: []
+  - name: Bgv0
+    symbol: B_{\mathrm{gv0}}
+    description: Kaplan blade servo point 0
+    unit: pu
+    typical_values: []
+  - name: Bgv1
+    symbol: B_{\mathrm{gv1}}
+    description: Kaplan blade servo point 1
+    unit: pu
+    typical_values: []
+  - name: Bgv2
+    symbol: B_{\mathrm{gv2}}
+    description: Kaplan blade servo point 2
+    unit: pu
+    typical_values: []
+  - name: Bgv3
+    symbol: B_{\mathrm{gv3}}
+    description: Kaplan blade servo point 3
+    unit: pu
+    typical_values: []
+  - name: Bgv4
+    symbol: B_{\mathrm{gv4}}
+    description: Kaplan blade servo point 4
+    unit: pu
+    typical_values: []
+  - name: Bgv5
+    symbol: B_{\mathrm{gv5}}
+    description: Kaplan blade servo point 5
+    unit: pu
+    typical_values: []
+  - name: Bmax
+    symbol: B_{\mathrm{max}}
+    description: Maximum blade adjustment factor
+    unit: null
+    typical_values: []
+  - name: Tblade
+    symbol: T_{\mathrm{blade}}
+    description: Blade servo time constant
+    unit: s
+    typical_values: []

@@ -1,0 +1,171 @@
+name: REGFMB1
+parameters:
+  - name: wFlag
+    symbol: \omega_{\mathrm{Flag}}
+    description: A flag to select whether to use the measured frequency from PLL as the input for the
+      P-f droop
+    unit: null
+    typical_values: []
+  - name: VdrpFlag
+    symbol: V_{\mathrm{drpFlag}}
+    description: A flag to select whether to use Q or Iq as the input of the Q-V droop control
+    unit: null
+    typical_values: []
+  - name: QVFlag
+    symbol: Q_{\mathrm{VFlag}}
+    description: A flag to determine whether Qref or Vref should be used to interact with the plant controller
+    unit: null
+    typical_values: []
+  - name: PQFlag
+    symbol: P_{\mathrm{QFlag}}
+    description: A flag to determine whether P priority (1) or Q priority (0) should be selected
+    unit: null
+    typical_values: []
+  - name: FFlag
+    symbol: F_{\mathrm{Flag}}
+    description: A flag to determine whether the power-frequency droop is enabled (1) or disabled (0)
+    unit: null
+    typical_values: []
+  - name: ESFlag
+    symbol: E_{\mathrm{SFlag}}
+    description: A flag to determine if the model represents a battery source (1) or a non-battery source
+      (0)
+    unit: null
+    typical_values: []
+  - name: Re
+    symbol: R_{\mathrm{e}}
+    description: Inverter coupling resistance (0 pu <= Re <= XL/4)
+    unit: pu
+    typical_values: []
+  - name: XL
+    symbol: X_{\mathrm{L}}
+    description: Inverter coupling reactance (0.04 pu <= XL <= 0.4 pu)
+    unit: pu
+    typical_values: []
+  - name: mq
+    symbol: m_{\mathrm{q}}
+    description: Q-V droop gain; when VdrpFlag=1 this represents a per unit virtual impedance
+    unit: pu
+    typical_values: []
+  - name: kpv
+    symbol: k_{\mathrm{pv}}
+    description: Proportional gain of the voltage controller
+    unit: pu
+    typical_values: []
+  - name: kiv
+    symbol: k_{\mathrm{iv}}
+    description: Integral gain of the voltage controller
+    unit: pu/s
+    typical_values: []
+  - name: mp
+    symbol: m_{\mathrm{p}}
+    description: P-f droop gain
+    unit: pu
+    typical_values: []
+  - name: dwmax
+    symbol: \Delta\omega_{\mathrm{max}}
+    description: Upper limit of the VSM integrator output
+    unit: pu
+    typical_values: []
+  - name: dwmin
+    symbol: \Delta\omega_{\mathrm{min}}
+    description: Lower limit of the VSM integrator output
+    unit: pu
+    typical_values: []
+  - name: kpPLL
+    symbol: k_{\mathrm{pPLL}}
+    description: Proportional gain of PLL
+    unit: pu
+    typical_values: []
+  - name: kiPLL
+    symbol: k_{\mathrm{iPLL}}
+    description: Integral gain of PLL
+    unit: pu/s
+    typical_values: []
+  - name: dwPLLmax
+    symbol: \Delta\omega_{\mathrm{PLLmax}}
+    description: Upper limit of the PLL output
+    unit: pu
+    typical_values: []
+  - name: dwPLLmin
+    symbol: \Delta\omega_{\mathrm{PLLmin}}
+    description: Lower limit of the PLL output
+    unit: pu
+    typical_values: []
+  - name: Tp
+    symbol: T_{\mathrm{p}}
+    description: Time constant of the low-pass filter in the VSM control block (Tp >= 0)
+    unit: s
+    typical_values: []
+  - name: H
+    symbol: H
+    description: Inertia time constant
+    unit: s
+    typical_values: []
+  - name: D1
+    symbol: D_{1}
+    description: Damping
+    unit: pu
+    typical_values: []
+  - name: D2
+    symbol: D_{2}
+    description: Transient damping
+    unit: pu
+    typical_values: []
+  - name: wD
+    symbol: \omega_{\mathrm{D}}
+    description: Angular frequency of the washout block
+    unit: pu
+    typical_values: []
+  - name: ImaxSS
+    symbol: I_{\mathrm{maxSS}}
+    description: Steady-state current limit; ImaxSS <= 0 is treated as 1/XL, and ImaxSS <= ImaxF
+    unit: pu
+    typical_values: []
+  - name: kf
+    symbol: k_{\mathrm{f}}
+    description: Factor determining Iqmax (PQFlag=0) or Idmax (PQFlag=1); if 0 the software resets it
+      to 1 with a warning
+    unit: null
+    typical_values: []
+  - name: kI
+    symbol: k_{\mathrm{I}}
+    description: Integral gain for the active current limiting loop
+    unit: pu/s
+    typical_values: []
+  - name: ImaxF
+    symbol: I_{\mathrm{maxF}}
+    description: Transient current limit
+    unit: pu
+    typical_values: []
+  - name: TPf
+    symbol: T_{\mathrm{Pf}}
+    description: Time constant of the low-pass filter for active power measurement
+    unit: s
+    typical_values: []
+  - name: TQf
+    symbol: T_{\mathrm{Qf}}
+    description: Time constant of the low-pass filter for reactive power measurement
+    unit: s
+    typical_values: []
+  - name: TVf
+    symbol: T_{\mathrm{Vf}}
+    description: Time constant of the low-pass filter for voltage measurement
+    unit: s
+    typical_values: []
+  - name: TIf
+    symbol: T_{\mathrm{If}}
+    description: Time constant of the low-pass filter for current measurement
+    unit: s
+    typical_values: []
+  - name: Ke
+    symbol: K_{\mathrm{e}}
+    description: Scalar on Idmax for negative active steady-state current limitation (0 <= Ke <= 1)
+    unit: null
+    typical_values: []
+  - name: w0
+    symbol: \omega_{0}
+    description: Rated angular frequency; usually set in the solution environment rather than as a model
+      input
+    unit: rad/s
+    typical_values: []

@@ -1,0 +1,77 @@
+name: HYGOVD
+parameters:
+  - name: Rperm
+    symbol: R_{\mathrm{perm}}
+    description: Permanent droop
+    unit: pu
+    typical_values: []
+  - name: Rtemp
+    symbol: R_{\mathrm{temp}}
+    description: Temporary droop
+    unit: pu
+    typical_values: []
+  - name: Tr
+    symbol: T_{\mathrm{r}}
+    description: Washout time constant
+    unit: s
+    typical_values: []
+  - name: Tf
+    symbol: T_{\mathrm{f}}
+    description: Filter time constant
+    unit: s
+    typical_values: []
+  - name: Tg
+    symbol: T_{\mathrm{g}}
+    description: Gate servo time constant
+    unit: s
+    typical_values: []
+  - name: Velm
+    symbol: V_{\mathrm{elm}}
+    description: Maximum gate velocity
+    unit: pu/s
+    typical_values: []
+  - name: Gmax
+    symbol: G_{\mathrm{max}}
+    description: Maximum gate velocity
+    unit: pu of mwcap
+    typical_values: []
+  - name: Gmin
+    symbol: G_{\mathrm{min}}
+    description: Minimum gate velocity
+    unit: pu of mwcap
+    typical_values: []
+  - name: Tw
+    symbol: T_{\mathrm{w}}
+    description: Water inertia time constant
+    unit: s
+    typical_values: []
+  - name: At
+    symbol: A_{\mathrm{t}}
+    description: Turbine gain
+    unit: pu
+    typical_values: []
+  - name: Dturb
+    symbol: D_{\mathrm{turb}}
+    description: Turbine damping coefficient
+    unit: pu
+    typical_values: []
+  - name: Qnl
+    symbol: Q_{\mathrm{nl}}
+    description: No-load flow at nominal head
+    unit: pu
+    typical_values: []
+  - name: dbH
+    symbol: d_{\mathrm{bH}}
+    description: Deadband High
+    unit: pu
+    typical_values: []
+  - name: dbL
+    symbol: d_{\mathrm{bL}}
+    description: Deadband Low
+    unit: pu
+    typical_values: []
+  - name: Trate
+    symbol: T_{\mathrm{rate}}
+    description: Turbine rating
+    unit: MW
+    typical_values: []

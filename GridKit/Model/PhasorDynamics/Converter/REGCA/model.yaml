@@ -1,0 +1,81 @@
+name: REGCA
+parameters:
+  - name: lvplsw
+    symbol: L_{\mathrm{vplsw}}
+    description: A flag set according to OEM instructions to turn on (1) or off (0) the LVPL curve
+    unit: null
+    typical_values: [0.0]
+  - name: brkpt
+    symbol: B_{\mathrm{rkpt}}
+    description: Used only when Lvplsw = 1; voltage point below which active current is linearly reduced
+      as a function of voltage until it reaches zero at zerox
+    unit: pu
+    typical_values: [0.9]
+  - name: zerox
+    symbol: Z_{\mathrm{erox}}
+    description: Used only when Lvplsw = 1; voltage point below which active current become zero
+    unit: pu
+    typical_values: [0.4]
+  - name: lvpl1
+    symbol: L_{\mathrm{vpl1}}
+    description: Active current limit at Brkpt voltage and above
+    unit: pu
+    typical_values: [1.22]
+  - name: vtmax
+    symbol: V_{\mathrm{tmax}}
+    description: Network-interface numerical-stability parameter (see High Voltage Reactive Current Management
+      logic)
+    unit: pu
+    typical_values: [1.2]
+  - name: lvpnt1
+    symbol: L_{\mathrm{vpnt1}}
+    description: Network-interface numerical-stability parameter
+    unit: pu
+    typical_values: [0.8]
+  - name: lvpnt0
+    symbol: L_{\mathrm{vpnt0}}
+    description: Network-interface numerical-stability parameter
+    unit: pu
+    typical_values: [0.4]
+  - name: qmin
+    symbol: Q_{\mathrm{min}}
+    description: Network-interface numerical-stability parameter; not the minimum reactive power of the
+      device
+    unit: pu
+    typical_values: [-1.3]
+  - name: accel
+    symbol: A_{\mathrm{ccel}}
+    description: Acceleration factor for the numerical solution of the network interface to help with
+      network convergence
+    unit: null
+    typical_values: [0.7]
+  - name: rrpwr
+    symbol: R_{\mathrm{rpwr}}
+    description: Rate of increase of active current after fault clearing
+    unit: pu/s
+    typical_values: [10.0]
+  - name: tg
+    symbol: T_{\mathrm{g}}
+    description: Converter controls delay emulation time-constant
+    unit: s
+    typical_values: [0.02]
+  - name: tfltr
+    symbol: T_{\mathrm{fltr}}
+    description: Voltage measurement transducer filter time-constant
+    unit: s
+    typical_values: [0.02]
+  - name: iqrmax
+    symbol: I_{\mathrm{qrmax}}
+    description: Upward rate limit on reactive current command
+    unit: pu/s
+    typical_values: [999.0]
+  - name: iqrmin
+    symbol: I_{\mathrm{qrmin}}
+    description: Downward rate limit on reactive current command
+    unit: pu/s
+    typical_values: [-999.0]
+  - name: xe
+    symbol: X_{\mathrm{e}}
+    description: Source reactance
+    unit: pu
+    typical_values: []

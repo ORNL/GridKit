@@ -1,0 +1,441 @@
+name: REECD
+parameters:
+  - name: vdip
+    symbol: V_{\mathrm{dip}}
+    description: The voltage below which voltage-dip logic is initiated; set to -1 to disable
+    unit: pu
+    typical_values: [0.9]
+  - name: vup
+    symbol: V_{\mathrm{up}}
+    description: The voltage above which voltage-dip/up logic is initiated; set to 2 to disable
+    unit: pu
+    typical_values: [1.1]
+  - name: trv
+    symbol: T_{\mathrm{rv}}
+    description: Voltage measurement transducer time constant
+    unit: s
+    typical_values: [0.02]
+  - name: dbd1
+    symbol: D_{\mathrm{bd1}}
+    description: Lower deadband in voltage error
+    unit: pu
+    typical_values: []
+  - name: dbd2
+    symbol: D_{\mathrm{bd2}}
+    description: Upper deadband in voltage error
+    unit: pu
+    typical_values: []
+  - name: kqv
+    symbol: K_{\mathrm{qv}}
+    description: Reactive current injection proportional gain; active only during a voltage-dip/rise;
+      0 to disable
+    unit: pu
+    typical_values: []
+  - name: iqh1
+    symbol: I_{\mathrm{qh1}}
+    description: Maximum limit on reactive current injection during a voltage-dip/rise
+    unit: pu
+    typical_values: [1.0]
+  - name: iql1
+    symbol: I_{\mathrm{ql1}}
+    description: Minimum limit on reactive current injection during a voltage-dip/rise
+    unit: pu
+    typical_values: [-1.0]
+  - name: vref0
+    symbol: V_{\mathrm{ref0}}
+    description: If left as zero most commercial tools initialize it appropriately; otherwise set to 1
+      pu
+    unit: pu
+    typical_values: [0.0]
+  - name: iqfrz
+    symbol: I_{\mathrm{qfrz}}
+    description: Reactive current held during the voltage-dip state transition; see model text
+    unit: pu
+    typical_values: [0.0]
+  - name: thld
+    symbol: T_{\mathrm{hld}}
+    description: Hold time for the reactive current command after a voltage dip; sign selects the logic
+      branch
+    unit: s
+    typical_values: [0.0]
+  - name: thld2
+    symbol: T_{\mathrm{hld2}}
+    description: Hold time for the active current command after a voltage dip
+    unit: s
+    typical_values: [0.0]
+  - name: tp
+    symbol: T_{\mathrm{p}}
+    description: Electrical power measurement transducer time constant
+    unit: s
+    typical_values: [0.02]
+  - name: qmax
+    symbol: Q_{\mathrm{max}}
+    description: Maximum reactive output limit; set to 9999 to disable
+    unit: pu
+    typical_values: []
+  - name: qmin
+    symbol: Q_{\mathrm{min}}
+    description: Minimum reactive output limit; set to -9999 to disable
+    unit: pu
+    typical_values: []
+  - name: vmax
+    symbol: V_{\mathrm{max}}
+    description: Voltage control maximum limit
+    unit: pu
+    typical_values: [1.1]
+  - name: vmin
+    symbol: V_{\mathrm{min}}
+    description: Voltage control minimum limit
+    unit: pu
+    typical_values: [0.9]
+  - name: kqp
+    symbol: K_{\mathrm{qp}}
+    description: Proportional gain of the local Q-control PI regulator
+    unit: pu/pu
+    typical_values: []
+  - name: kqi
+    symbol: K_{\mathrm{qi}}
+    description: Integral gain of the local Q-control PI regulator
+    unit: pu/pu/s
+    typical_values: []
+  - name: kvp
+    symbol: K_{\mathrm{vp}}
+    description: Proportional gain of the local V-control PI regulator
+    unit: pu/pu
+    typical_values: []
+  - name: kvi
+    symbol: K_{\mathrm{vi}}
+    description: Integral gain of the local V-control PI regulator
+    unit: pu/pu/s
+    typical_values: []
+  - name: vref1
+    symbol: V_{\mathrm{ref1}}
+    description: Reference bias; typically zero, change only if instructed by OEM data
+    unit: pu
+    typical_values: [0.0]
+  - name: tiq
+    symbol: T_{\mathrm{iq}}
+    description: Controller time-constant
+    unit: s
+    typical_values: [0.02]
+  - name: dpmax
+    symbol: D_{\mathrm{pmax}}
+    description: Up ramp-rate on power reference; set to 999 to disable
+    unit: pu/s
+    typical_values: [999.0]
+  - name: dpmin
+    symbol: D_{\mathrm{pmin}}
+    description: Down ramp-rate on power reference; set to -999 to disable
+    unit: pu/s
+    typical_values: [-999.0]
+  - name: pmax
+    symbol: P_{\mathrm{max}}
+    description: Maximum power reference
+    unit: pu
+    typical_values: [1.0]
+  - name: pmin
+    symbol: P_{\mathrm{min}}
+    description: Minimum power reference; must not be negative for REEC_A, may be negative for REEC_C/D
+      when modeling storage
+    unit: pu
+    typical_values: [0.0]
+  - name: imax
+    symbol: I_{\mathrm{max}}
+    description: Maximum current limit of the device
+    unit: pu
+    typical_values: []
+  - name: tpord
+    symbol: T_{\mathrm{pord}}
+    description: Time constant for power order
+    unit: s
+    typical_values: [0.02]
+  - name: pfflag
+    symbol: P_{\mathrm{fflag}}
+    description: Power-factor control flag; depends on actual control strategy, obtain from OEM
+    unit: null
+    typical_values: []
+  - name: vflag
+    symbol: V_{\mathrm{flag}}
+    description: Voltage control flag; depends on actual control strategy, obtain from OEM
+    unit: null
+    typical_values: []
+  - name: qflag
+    symbol: Q_{\mathrm{flag}}
+    description: Reactive control flag; depends on actual control strategy, obtain from OEM
+    unit: null
+    typical_values: []
+  - name: pflag
+    symbol: P_{\mathrm{flag}}
+    description: Active power flag; depends on actual control strategy, obtain from OEM
+    unit: null
+    typical_values: []
+  - name: pqflag
+    symbol: P_{\mathrm{qflag}}
+    description: 'Current-limit priority flag: 0 means Q priority, 1 means P priority'
+    unit: null
+    typical_values: []
+  - name: SOCini
+    symbol: S_{\mathrm{OCini}}
+    description: Initial state of charge of the battery
+    unit: pu
+    typical_values: [0.5]
+  - name: SOCmax
+    symbol: S_{\mathrm{OCmax}}
+    description: Maximum state of charge of the battery
+    unit: pu
+    typical_values: [0.8]
+  - name: SOCmin
+    symbol: S_{\mathrm{OCmin}}
+    description: Minimum state of charge of the battery
+    unit: pu
+    typical_values: [0.2]
+  - name: T
+    symbol: T
+    description: Charging/discharging time constant; many thousands of seconds
+    unit: s
+    typical_values: []
+  - name: vcmpflag
+    symbol: V_{\mathrm{cmpflag}}
+    description: 'Type of compensation: 1 current compensation, 0 reactive droop'
+    unit: null
+    typical_values: [0.0]
+  - name: rc
+    symbol: R_{\mathrm{c}}
+    description: Current compensation resistance
+    unit: pu
+    typical_values: [0.0]
+  - name: xc
+    symbol: X_{\mathrm{c}}
+    description: Current compensation reactance
+    unit: pu
+    typical_values: [0.0]
+  - name: tr1
+    symbol: T_{\mathrm{r1}}
+    description: Filter time constant
+    unit: s
+    typical_values: [0.02]
+  - name: kc
+    symbol: K_{\mathrm{c}}
+    description: Reactive droop gain
+    unit: pu/pu
+    typical_values: [0.05]
+  - name: ke
+    symbol: K_{\mathrm{e}}
+    description: Scaling on Ipmin; 0 for a generator, non-zero for a storage device
+    unit: pu
+    typical_values: [0.0]
+  - name: vblkh
+    symbol: V_{\mathrm{blkh}}
+    description: Voltage above which the converter will block
+    unit: pu
+    typical_values: []
+  - name: vblkl
+    symbol: V_{\mathrm{blkl}}
+    description: Voltage below which the converter will block
+    unit: pu
+    typical_values: []
+  - name: tblkdelay
+    symbol: T_{\mathrm{blkdelay}}
+    description: Time delay for unblocking after voltage recovers
+    unit: s
+    typical_values: [0.04]
+  - name: vq1
+    symbol: V_{\mathrm{q1}}
+    description: Voltage-dependent limit table point 1 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vq2
+    symbol: V_{\mathrm{q2}}
+    description: Voltage-dependent limit table point 2 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vq3
+    symbol: V_{\mathrm{q3}}
+    description: Voltage-dependent limit table point 3 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vq4
+    symbol: V_{\mathrm{q4}}
+    description: Voltage-dependent limit table point 4 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vq5
+    symbol: V_{\mathrm{q5}}
+    description: Voltage-dependent limit table point 5 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vq6
+    symbol: V_{\mathrm{q6}}
+    description: Voltage-dependent limit table point 6 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vq7
+    symbol: V_{\mathrm{q7}}
+    description: Voltage-dependent limit table point 7 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vq8
+    symbol: V_{\mathrm{q8}}
+    description: Voltage-dependent limit table point 8 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vq9
+    symbol: V_{\mathrm{q9}}
+    description: Voltage-dependent limit table point 9 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vq10
+    symbol: V_{\mathrm{q10}}
+    description: Voltage-dependent limit table point 10 (voltage)
+    unit: pu
+    typical_values: []
+  - name: iq1
+    symbol: I_{\mathrm{q1}}
+    description: Voltage-dependent limit table point 1 (reactive current)
+    unit: pu
+    typical_values: []
+  - name: iq2
+    symbol: I_{\mathrm{q2}}
+    description: Voltage-dependent limit table point 2 (reactive current)
+    unit: pu
+    typical_values: []
+  - name: iq3
+    symbol: I_{\mathrm{q3}}
+    description: Voltage-dependent limit table point 3 (reactive current)
+    unit: pu
+    typical_values: []
+  - name: iq4
+    symbol: I_{\mathrm{q4}}
+    description: Voltage-dependent limit table point 4 (reactive current)
+    unit: pu
+    typical_values: []
+  - name: iq5
+    symbol: I_{\mathrm{q5}}
+    description: Voltage-dependent limit table point 5 (reactive current)
+    unit: pu
+    typical_values: []
+  - name: iq6
+    symbol: I_{\mathrm{q6}}
+    description: Voltage-dependent limit table point 6 (reactive current)
+    unit: pu
+    typical_values: []
+  - name: iq7
+    symbol: I_{\mathrm{q7}}
+    description: Voltage-dependent limit table point 7 (reactive current)
+    unit: pu
+    typical_values: []
+  - name: iq8
+    symbol: I_{\mathrm{q8}}
+    description: Voltage-dependent limit table point 8 (reactive current)
+    unit: pu
+    typical_values: []
+  - name: iq9
+    symbol: I_{\mathrm{q9}}
+    description: Voltage-dependent limit table point 9 (reactive current)
+    unit: pu
+    typical_values: []
+  - name: iq10
+    symbol: I_{\mathrm{q10}}
+    description: Voltage-dependent limit table point 10 (reactive current)
+    unit: pu
+    typical_values: []
+  - name: vp1
+    symbol: V_{\mathrm{p1}}
+    description: Voltage-dependent limit table point 1 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vp2
+    symbol: V_{\mathrm{p2}}
+    description: Voltage-dependent limit table point 2 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vp3
+    symbol: V_{\mathrm{p3}}
+    description: Voltage-dependent limit table point 3 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vp4
+    symbol: V_{\mathrm{p4}}
+    description: Voltage-dependent limit table point 4 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vp5
+    symbol: V_{\mathrm{p5}}
+    description: Voltage-dependent limit table point 5 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vp6
+    symbol: V_{\mathrm{p6}}
+    description: Voltage-dependent limit table point 6 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vp7
+    symbol: V_{\mathrm{p7}}
+    description: Voltage-dependent limit table point 7 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vp8
+    symbol: V_{\mathrm{p8}}
+    description: Voltage-dependent limit table point 8 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vp9
+    symbol: V_{\mathrm{p9}}
+    description: Voltage-dependent limit table point 9 (voltage)
+    unit: pu
+    typical_values: []
+  - name: vp10
+    symbol: V_{\mathrm{p10}}
+    description: Voltage-dependent limit table point 10 (voltage)
+    unit: pu
+    typical_values: []
+  - name: ip1
+    symbol: I_{\mathrm{p1}}
+    description: Voltage-dependent limit table point 1 (active current)
+    unit: pu
+    typical_values: []
+  - name: ip2
+    symbol: I_{\mathrm{p2}}
+    description: Voltage-dependent limit table point 2 (active current)
+    unit: pu
+    typical_values: []
+  - name: ip3
+    symbol: I_{\mathrm{p3}}
+    description: Voltage-dependent limit table point 3 (active current)
+    unit: pu
+    typical_values: []
+  - name: ip4
+    symbol: I_{\mathrm{p4}}
+    description: Voltage-dependent limit table point 4 (active current)
+    unit: pu
+    typical_values: []
+  - name: ip5
+    symbol: I_{\mathrm{p5}}
+    description: Voltage-dependent limit table point 5 (active current)
+    unit: pu
+    typical_values: []
+  - name: ip6
+    symbol: I_{\mathrm{p6}}
+    description: Voltage-dependent limit table point 6 (active current)
+    unit: pu
+    typical_values: []
+  - name: ip7
+    symbol: I_{\mathrm{p7}}
+    description: Voltage-dependent limit table point 7 (active current)
+    unit: pu
+    typical_values: []
+  - name: ip8
+    symbol: I_{\mathrm{p8}}
+    description: Voltage-dependent limit table point 8 (active current)
+    unit: pu
+    typical_values: []
+  - name: ip9
+    symbol: I_{\mathrm{p9}}
+    description: Voltage-dependent limit table point 9 (active current)
+    unit: pu
+    typical_values: []
+  - name: ip10
+    symbol: I_{\mathrm{p10}}
+    description: Voltage-dependent limit table point 10 (active current)
+    unit: pu
+    typical_values: []
