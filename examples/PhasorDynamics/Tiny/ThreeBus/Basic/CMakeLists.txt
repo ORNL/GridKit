@@ -1,5 +1,6 @@
 gridkit_example_add_file(ThreeBusBasic.case.json)
 gridkit_example_add_file(ThreeBusBasic.ref.csv)
+gridkit_example_add_file(ThreeBusBasic.state.json)
 gridkit_example_add_file(ThreeBusBasic.solver.json)
 
 add_test(

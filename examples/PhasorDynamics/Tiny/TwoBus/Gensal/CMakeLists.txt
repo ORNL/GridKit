@@ -1,6 +1,7 @@
 gridkit_example_current_install_path(_install_path)
 
 gridkit_example_add_file(TwoBusGensal.case.json)
+gridkit_example_add_file(TwoBusGensal.state.json)
 gridkit_example_add_file(TwoBusGensal.solver.json)
 gridkit_example_add_file(TwoBusGensal.ref.csv)
 add_test(

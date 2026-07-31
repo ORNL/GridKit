@@ -1,4 +1,5 @@
 gridkit_example_add_file(ThreeBusZipLoad.case.json)
+gridkit_example_add_file(ThreeBusZipLoad.state.json)
 gridkit_example_add_file(ThreeBusZipLoad.solver.json)
 gridkit_example_add_file(ThreeBusZipLoad.ref.csv)
 

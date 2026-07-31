@@ -1,4 +1,5 @@
 gridkit_example_add_file(TwoBusTgov1.case.json)
+gridkit_example_add_file(TwoBusTgov1.state.json)
 gridkit_example_add_file(TwoBusTgov1.solver.json)
 gridkit_example_add_file(TwoBusTgov1.ref.csv)
 

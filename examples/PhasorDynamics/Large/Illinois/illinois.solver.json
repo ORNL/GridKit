@@ -1,5 +1,6 @@
 {
     "system_model_file": "illinois.case.json",
+    "state_file": "illinois.state.json",
     "dt_monitor": 0.004166666666666667,
     "tmax": 20.0,
     "events": [

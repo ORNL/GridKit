@@ -1,4 +1,5 @@
 gridkit_example_add_file(ThreeBusConstantSource.case.json)
+gridkit_example_add_file(ThreeBusConstantSource.state.json)
 gridkit_example_add_file(ThreeBusConstantSource.solver.json)
 
 add_test(

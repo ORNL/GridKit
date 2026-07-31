@@ -12,6 +12,8 @@
 #include <type_traits>
 #include <variant>
 
+#include <GridKit/Model/StateData.hpp>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -69,6 +71,8 @@ namespace GridKit
 
       std::map<Parameters, ParameterValue> parameters; ///< Mapping of parameters to parameter values
 
+      /// Initial operating state supplied separately from model parameters
+      std::optional<Model::BusState> initial_state;
       /// Alias
       using MonitorableVariables = BusMonitorableVariables;
 
