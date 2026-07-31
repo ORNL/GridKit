@@ -11,6 +11,8 @@
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 
+#include <GridKit/Model/StateData.hpp>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -89,6 +91,9 @@ namespace GridKit
       };
 
       BusType bus_type{BusType::INVALID}; ///< The kind of bus this data is for
+
+      /// Initial operating state supplied separately from model parameters
+      std::optional<Model::BusState> initial_state;
     };
 
   } // namespace PhasorDynamics

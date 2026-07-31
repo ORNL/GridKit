@@ -7,6 +7,7 @@ int main()
 
   result += test.simpleParse();
   result += test.signalParse();
+  result += test.stateDataParse();
 
   return result.summary();
 }

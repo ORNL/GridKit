@@ -9,6 +9,7 @@ int main()
   GridKit::Testing::SystemTests<double, size_t> test;
 
   result += test.constructor();
+  result += test.stateDataAttachment();
   result += test.composer();
   result += test.reallocateAfterTopologyChange();
   result += test.modelVectorsAliasSystemStorage();

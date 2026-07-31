@@ -6,3 +6,5 @@ add_test(
   NAME TwoBusBasic_validation
   COMMAND DynamicSimulation TwoBusBasic.solver.json
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Toy/TwoBusBasic.state.json)

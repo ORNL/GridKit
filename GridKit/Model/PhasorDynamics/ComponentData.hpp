@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <variant>
 
+#include <GridKit/Model/StateData.hpp>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -72,6 +74,8 @@ namespace GridKit
 
       /// Disambiguation string for this device
       std::string disambiguation_string;
+      /// Initial operating state supplied separately from model parameters
+      std::optional<Model::DeviceState> initial_state;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit
