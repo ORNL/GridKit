@@ -24,9 +24,9 @@ Model | Count
 
 ## Events
 
-The following event types are provided for this case.
-
-- Bus fault
+At $t=1$ second, circuit `BR_5317_5260_1` between buses 5317 and
+5260 opens and remains out of service. The buses remain connected through
+the surrounding meshed network.
 
 
 ## Outstanding
@@ -46,8 +46,7 @@ Have not been implemented in GridKit:
 - GENSAL (In GridKit, not added to this case yet)
 - IEEEST (In GridKit, not added to this case yet)
 
-The following examples needs to be constructed with this case.
-- Line Outage
+The following examples need to be constructed with this case.
 - Generator Outage
 - Forced Oscillations
 

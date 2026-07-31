@@ -2,9 +2,8 @@
     "system_model_file": "texas.case.json",
     "state_file": "texas.state.json",
     "dt_monitor": 0.004166666666666667,
-    "tmax": 20.0,
+    "tmax": 10.0,
     "events": [
-        { "time": 10.0, "device_id": "fault_1", "input": "active", "value": 1.0 },
-        { "time": 10.15, "device_id": "fault_1", "input": "active", "value": 0.0 }
+        { "time": 1.0, "device_id": "BR_5317_5260_1", "input": "open", "value": 1.0 }
     ]
 }
