@@ -13,6 +13,8 @@
 #include <type_traits>
 #include <variant>
 
+#include <GridKit/Model/StateData.hpp>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -74,6 +76,9 @@ namespace GridKit
       // Prefer removing them as bus parameters in a future cleanup.
       std::optional<RealT> freq_base; ///< Override for the system-wide base frequency
       std::optional<RealT> va_base;   ///< Override for the system-wide power base
+
+      /// Initial operating state supplied separately from model parameters
+      std::optional<Model::BusState> initial_state;
 
       /// Alias
       using MonitorableVariables = BusMonitorableVariables;

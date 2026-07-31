@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 
 #include <nlohmann/json.hpp>
 
@@ -12,6 +13,7 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
+#include <GridKit/Model/StateData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
@@ -327,6 +329,85 @@ namespace GridKit
         success *= result.bus_fault[0].buses[BusFaultBuses::bus] == 1;
         success *= result.bus_fault[0].disambiguation_string == "1";
         success *= result.bus_fault[0].monitored_variables.empty();
+
+        return success.report(__func__);
+      }
+
+      TestOutcome stateDataParse()
+      {
+        const char data[] =
+            R"({
+              "header": {
+                "version": 1,
+                "time": 12.5,
+                "created": "2026-07-31T05:55:01-05:00",
+                "description": "Checkpoint state",
+                "producer": "future tool"
+              },
+              "buses": {
+                "bus_id_7": {
+                  "vr": 1.025,
+                  "vi": -0.125,
+                  "frequency": 60.0,
+                  "injections": {
+                    "gen_7": {
+                      "ir": 0.75,
+                      "ii": -0.25,
+                      "sequence": "positive"
+                    }
+                  }
+                }
+              },
+              "devices": {
+                "gen_7": {
+                  "online": true,
+                  "p": 0.8,
+                  "q": 0.1,
+                  "omega": 1.0
+                },
+                "branch_1": {
+                  "open": false,
+                  "tap": 1.05,
+                  "phase": 0.02,
+                  "rating": 100.0
+                }
+              },
+              "future_metadata": {
+                "source": "ignored"
+              }
+            })";
+
+        std::istringstream stream(data);
+        auto               state = Model::parseStateData(stream);
+
+        TestStatus success  = true;
+        success            *= state.header.has_value();
+        success            *= state.header->version == 1U;
+        success            *= state.header->time == 12.5;
+        success            *= state.header->created == "2026-07-31T05:55:01-05:00";
+        success            *= state.header->description == "Checkpoint state";
+
+        const auto& bus        = state.buses.at("bus_id_7");
+        const auto& injection  = bus.injections.at("gen_7");
+        success               *= bus.vr == 1.025;
+        success               *= bus.vi == -0.125;
+        success               *= injection.ir == 0.75;
+        success               *= injection.ii == -0.25;
+
+        const auto& generator  = state.devices.at("gen_7");
+        const auto& branch     = state.devices.at("branch_1");
+        success               *= generator.online == true;
+        success               *= generator.p == 0.8;
+        success               *= generator.q == 0.1;
+        success               *= branch.open == false;
+        success               *= branch.tap == 1.05;
+        success               *= branch.phase == 0.02;
+
+        std::istringstream null_time_stream(
+            R"({"header": {"time": null, "future_time_kind": "snapshot"}})");
+        auto null_time_state  = Model::parseStateData(null_time_stream);
+        success              *= null_time_state.header.has_value();
+        success              *= !null_time_state.header->time.has_value();
 
         return success.report(__func__);
       }

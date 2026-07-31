@@ -4,6 +4,7 @@
 #]]
 
 gridkit_example_add_file(ThreeBusClassical.case.json)
+gridkit_example_add_file(ThreeBusClassical.state.json)
 gridkit_example_add_file(ThreeBusClassical.solver.json)
 gridkit_example_add_file(ThreeBusClassical.ref.csv)
 

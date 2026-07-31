@@ -18,6 +18,8 @@ gridkit_add_library(
     INTERFACE
     GridKit::definitions
     INTERFACE
+    GridKit::model_state_data
+    INTERFACE
     GridKit::utilities_logger
     INTERFACE
     GridKit::dense_vector
@@ -55,8 +57,8 @@ endif()
 
 gridkit_add_library(
   phasor_dynamics_systemmodel
-  SOURCES ${_system_model_source} SystemModelData.cpp
-  HEADERS SystemModel.hpp SystemModelData.hpp
+  SOURCES ${_system_model_source} StateDataAdapter.cpp SystemModelData.cpp
+  HEADERS StateDataAdapter.hpp SystemModel.hpp SystemModelData.hpp
   LINK_LIBRARIES
     PUBLIC
     GridKit::phasor_dynamics_core

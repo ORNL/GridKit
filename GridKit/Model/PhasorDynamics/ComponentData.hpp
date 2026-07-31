@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <variant>
 
+#include <GridKit/Model/StateData.hpp>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -53,6 +55,9 @@ namespace GridKit
 
       /// Set of variables being monitored
       std::set<MonitorableVariables> monitored_variables;
+
+      /// Initial operating state supplied separately from model parameters
+      std::optional<Model::DeviceState> initial_state;
 
       std::string disambiguation_string; ///< Disambiguation string for this device
 

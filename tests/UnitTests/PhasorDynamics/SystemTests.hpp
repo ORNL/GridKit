@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/PhasorDynamics/StateDataAdapter.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -110,6 +111,68 @@ namespace GridKit
 
         delete system;
         system = nullptr;
+
+        return success.report(__func__);
+      }
+
+      TestOutcome stateDataAttachment()
+      {
+        using namespace PhasorDynamics;
+
+        SystemModelData<> model_data;
+        model_data.bus.resize(2);
+        model_data.bus[0].bus_id = 7;
+        model_data.bus[0].Vr0    = 0.9;
+        model_data.bus[1].bus_id = 8;
+
+        Model::StateData state_data;
+        state_data.buses["bus_id_7"].vr = 1.025;
+        state_data.buses.emplace("bus_id_999", Model::BusState{});
+
+        double state_value = 1.0;
+        auto   addDevice   = [&](auto& devices, const char* id)
+        {
+          devices.resize(1);
+          devices[0].disambiguation_string = id;
+          state_data.devices[id].p         = state_value++;
+        };
+
+        addDevice(model_data.branch, "branch_1");
+        addDevice(model_data.genrou, "genrou_1");
+        addDevice(model_data.gensal, "gensal_1");
+        addDevice(model_data.genclassical, "genclassical_1");
+        addDevice(model_data.loadz, "loadz_1");
+        addDevice(model_data.loadzip, "loadzip_1");
+        model_data.branch[0].parameters[BranchParameters::R] = 0.1;
+        state_data.devices.emplace("unknown_1", Model::DeviceState{});
+
+        applyState(model_data, state_data);
+
+        TestStatus success  = true;
+        success            *= model_data.bus[0].initial_state.has_value();
+        if (model_data.bus[0].initial_state.has_value())
+        {
+          success *= model_data.bus[0].initial_state->vr == 1.025;
+        }
+        success *= model_data.bus[0].Vr0 == 0.9;
+        success *= !model_data.bus[1].initial_state.has_value();
+
+        auto checkDevice = [&](const auto& devices, const char* id)
+        {
+          success *= devices[0].initial_state.has_value();
+          if (devices[0].initial_state.has_value())
+          {
+            success *= devices[0].initial_state->p == state_data.devices.at(id).p;
+          }
+        };
+
+        checkDevice(model_data.branch, "branch_1");
+        checkDevice(model_data.genrou, "genrou_1");
+        checkDevice(model_data.gensal, "gensal_1");
+        checkDevice(model_data.genclassical, "genclassical_1");
+        checkDevice(model_data.loadz, "loadz_1");
+        checkDevice(model_data.loadzip, "loadzip_1");
+        success *= std::get<RealT>(model_data.branch[0].parameters[BranchParameters::R]) == 0.1;
 
         return success.report(__func__);
       }

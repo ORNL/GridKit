@@ -1,4 +1,5 @@
 gridkit_example_add_file(newengland.case.json)
+gridkit_example_add_file(newengland.state.json)
 gridkit_example_add_file(newengland.solver.json)
 
 add_test(
