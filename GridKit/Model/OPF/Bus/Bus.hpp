@@ -2,10 +2,10 @@
 
 #include <cstddef>
 
+#include <GridKit/Model/OPF/Bus/BusData.hpp>
 #include <GridKit/Model/OPF/Component.hpp>
 #include <GridKit/Model/OPF/ComponentConstraints.hpp>
 #include <GridKit/Model/OPF/ComponentVariables.hpp>
-#include <GridKit/Model/OPF/SystemData.hpp>
 #include <GridKit/Model/StateData.hpp>
 
 namespace GridKit
@@ -14,25 +14,27 @@ namespace GridKit
   {
     enum class BusInternalVariables : std::size_t
     {
-      VOLTAGE_MAGNITUDE,
-      VOLTAGE_ANGLE,
+      VM, ///< Voltage magnitude
+      VA, ///< Voltage angle
       MAXIMUM
     };
 
     enum class BusInternalConstraints : std::size_t
     {
-      ACTIVE_POWER_BALANCE,
-      REACTIVE_POWER_BALANCE,
+      DIVP, ///< Active-power balance
+      DIVQ, ///< Reactive-power balance
       MAXIMUM
     };
 
+    /// OPF bus owning voltage variables and power-balance constraints.
     template <class scalar_type, typename index_type>
-    class Bus : public Component<scalar_type, index_type>
+    class Bus final : public Component<scalar_type, index_type>
     {
     public:
       using ScalarT      = scalar_type;
       using IdxT         = index_type;
-      using RealT        = typename Component<ScalarT, IdxT>::RealT;
+      using ComponentT   = Component<ScalarT, IdxT>;
+      using RealT        = typename ComponentT::RealT;
       using DataT        = BusData<RealT, IdxT>;
       using StateT       = Model::BusState;
       using VariablesT   = ComponentVariables<ScalarT,
