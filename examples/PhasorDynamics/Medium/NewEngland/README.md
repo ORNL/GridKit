@@ -10,18 +10,6 @@ Figure 1: Oneline of the New England IEEE 39-bus case, courtesy of [PowerWorld](
 
 This case is a modified version of the NE 39-bus case, available at the Texas A&M University [Electric Grid Test Case Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/). It has been modified to include GridKit-compatible generator models.
 
-Model       | Count
-------------|--------
-[Bus](../../../../GridKit/Model/PhasorDynamics/Bus/README.md)         | 39
-[Branch](../../../../GridKit/Model/PhasorDynamics/Branch/README.md)     | 46
-[GENROU](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/README.md)       | 10
-[TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 10
-[IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 10
-[IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 10
-[LoadZIP](../../../../GridKit/Model/PhasorDynamics/Load/LoadZIP/README.md) | 19
-[SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 40
-
-
 ## Events
 
 The following event types are provided for this case.

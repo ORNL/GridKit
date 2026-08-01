@@ -10,17 +10,6 @@ Figure 1: Oneline of the synthetic Hawaii case, courtesy of [PowerWorld](https:/
 
 This case is a modified version of the synthetic Hawaii case, available at the Texas A&M University [Electric Grid Test Case Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/). It has been modified to include GridKit-compatible generator models.
 
-Model       | Count
-------------|--------
-[Bus](../../../../GridKit/Model/PhasorDynamics/Bus/README.md)         | 37
-[Branch](../../../../GridKit/Model/PhasorDynamics/Branch/README.md)     | 89
-[GENROU](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/README.md)       | 39
-[TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 39
-[IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 39
-[IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 14
-[LoadZIP](../../../../GridKit/Model/PhasorDynamics/Load/LoadZIP/README.md) | 28
-[SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 131
-
 ## Data Notes
 
 None.

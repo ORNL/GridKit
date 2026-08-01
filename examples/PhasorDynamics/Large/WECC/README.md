@@ -12,17 +12,6 @@ This case is adapted from the [National Laboratory of the Rockies](https://www.n
 
 It is configured with GridKit-compatible dynamic models.
 
-Model | Count
----|---
-[Bus](../../../../GridKit/Model/PhasorDynamics/Bus/README.md) | 243
-[Branch](../../../../GridKit/Model/PhasorDynamics/Branch/README.md) | 447
-[GENROU](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/README.md) | 140
-[TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md) | 103
-[SEXS-PTI](../../../../GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/README.md) | 103
-[IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 10
-[LoadZIP](../../../../GridKit/Model/PhasorDynamics/Load/LoadZIP/README.md) | 146
-[SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 319
-
 ## Data Notes
 
 None.
