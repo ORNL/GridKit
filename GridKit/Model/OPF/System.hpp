@@ -92,6 +92,8 @@ namespace GridKit
       Model::StateData solutionState() const;
 
     private:
+      void validate() const;
+
       SystemDataT      system_data_;
       Model::StateData input_state_;
 
@@ -111,6 +113,9 @@ namespace GridKit
       IdxT  size_constraints_{};
       IdxT  nnz_{};
       RealT objective_{};
+
+      bool allocated_{false};
+      bool initialized_{false};
     };
 
   } // namespace OPF
