@@ -1,11 +1,13 @@
-# **Two-Area Kundur Case**
+# Two-Area Kundur Case
 
 ## One-Line Diagram
 
-![](twoarea_oneline.png)
+![](oneline.png)
 
-Figure 1: Oneline of the two-area Case, courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
+Figure 1: One-line diagram of the two-area case. Source:
+[PowerWorld](https://www.powerworld.com/WebHelp/).
 
 ## Case Description
 
-This is a model derived from the well-known Kundur case in Literature. It has been modified to include exciters for the sake of implementation within GridKit.
+This case is derived from Kundur's two-area system and includes exciters
+compatible with GridKit.

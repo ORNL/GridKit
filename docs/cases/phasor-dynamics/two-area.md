@@ -7,10 +7,10 @@
 
 ## Model Inventory
 
-```{case-models} examples/PhasorDynamics/Small/TwoArea/twoarea.json
+```{case-models} examples/PhasorDynamics/Small/TwoArea/twoarea.case.json
 ```
 
 ## Examples
 
-```{case-examples} examples/PhasorDynamics/Small/TwoArea/twoarea.json
+```{case-examples} examples/PhasorDynamics/Small/TwoArea/twoarea.case.json
 ```

@@ -1,29 +1,23 @@
-# **IEEE New England**
+# IEEE New England
 
 ## One-Line Diagram
 
-![](newengland.png)
+![](oneline.png)
 
-Figure 1: Oneline of the New England IEEE 39-bus case, courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
+Figure 1: One-line diagram of the IEEE 39-bus New England case. Source:
+[PowerWorld](https://www.powerworld.com/WebHelp/).
 
 ## Case Description
 
-This case is a modified version of the NE 39-bus case, available at the Texas A&M University [Electric Grid Test Case Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/). It has been modified to include GridKit-compatible generator models.
+This case is a modified version of the Texas A&M University New England 39-bus
+system[^newengland39] and includes GridKit-compatible generator models.
 
 ## Outstanding
 
-### Dynamics
+- [EXST1_GE](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20EXST1_GE.htm)
+- Switched shunts represented as [LoadZ](../../../../docs/GridKit/Model/PhasorDynamics/Load/LoadZ/README.md)
+- LTC transformers and non-unit tap ratios
 
-Only one exciter model is outstanding:
-- EXST1_GE
-
-The following examples needs to be constructed with this case. Currently the only events that have been implemented are faults. This is a practical case to use for modeling outages, or even forced oscillations.
-- Line Outage
-- Generator Outage
-- Forced Oscillations
-
-### Statics
-
-GridKit models Switched Shunts as [LoadZ](../../../../GridKit/Model/PhasorDynamics/Load/LoadZ/README.md) with constant impedance,but this erases information and our ability to statically re-initialze the model if initalizing at a different operating point.
-
-- Transformers (LTC and Tap Ratios $\neq 1$)
+[^newengland39]: Texas A&M University,
+    “[New England IEEE 39-Bus System](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/new-england-ieee-39-bus-system/),”
+    *Electric Grid Test Case Repository*.
