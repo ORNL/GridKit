@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gridkit-notebooks"
+version = "0.1.0"
+description = "Python utilities backing the GridKit application/notebooks notebooks"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "pandas",
+    "plotly",
+    "scipy",
+    "pyarrow",
+    "matpowercaseframes==2.1.0",
+]
+
+[project.optional-dependencies]
+notebook = ["jupyter"]
+test = ["pytest"]
+
+[tool.setuptools]
+packages = ["m_viz", "gridkit_common", "uq_sampling"]

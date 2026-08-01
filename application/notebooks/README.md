@@ -1,22 +1,38 @@
-# Conda environment setup
+# application/notebooks
 
-The notebooks were developed and tested with Python 3.12. Other versions (3.11+) should also work.
-
-More notebooks will be added in future PRs. The environment below covers all currently included
-notebooks.
+Python notebooks and supporting packages for exploratory analysis and
+visualization of GridKit cases. Not part of the C++ build; enabled via the
+`GridKit_ENABLE_NOTEBOOKS` CMake option (see below) or usable standalone
+with `pip`.
 
 ## Packages
 
-| Channel | Packages |
+| Package | Purpose |
 |---|---|
-| conda | `python=3.12 numpy pandas plotly scipy jupyter` |
-| pip | `matpowercaseframes==2.1.0` |
+| `m_viz/` | MATPOWER `.m` case parsing, geo-coordinate attachment, and Plotly geo plotting. Used by `m_viz.ipynb`. |
+| `gridkit_common/` | Small helpers shared across notebooks (linking MATPOWER tables back to GridKit JSON case IDs). |
+| `uq_sampling/` | Parameter sampling (Latin Hypercube / random), run-directory orchestration, and Genrou dispatch patching for uncertainty-quantification sweeps. Not yet exercised by a notebook in this repo — added ahead of the UQ sweep notebook that will use it. |
 
-```bash
-conda create --prefix ./my-env python=3.12 numpy pandas plotly scipy jupyter --yes
+## Environment setup
+
+Developed and tested with Python 3.12; 3.11+ should also work.
+
+```sh
+conda create --prefix ./my-env python=3.12 --yes
 conda activate ./my-env
-pip install matpowercaseframes==2.1.0
+pip install -e .[notebook,test]
 ```
+
+Or with a plain venv:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .[notebook,test]
+```
+
+This installs `m_viz`, `gridkit_common`, and `uq_sampling` as regular
+importable packages — no `sys.path` manipulation needed in notebooks.
 
 ## Notebooks
 
@@ -28,7 +44,7 @@ or `.AUX` file. The map shows bus loads (PD), dispatched generation (fuel-colore
 and branch loading percentage (viridis color scale).
 
 Optionally, set `GRIDKIT_REPO` to the root of a local GridKit repository clone to augment hover
-labels with GridKit-assigned bus and branch IDs (`gridkit_utils.py`, requires `scipy`). Set
+labels with GridKit-assigned bus and branch IDs (`gridkit_common.ids`, requires `scipy`). Set
 `GRIDKIT_REPO = None` to skip this.
 
 Supported cases: **Hawaii40**, **Illinois (ACTIVSg200)**, **Texas (ACTIVSg2000)**, **WECC (ACTIVSg10k)**.
@@ -37,8 +53,8 @@ Supported cases: **Hawaii40**, **Illinois (ACTIVSg200)**, **Texas (ACTIVSg2000)*
 
 Download TAMU synthetic grid cases from
 [Texas A&M Electric Grid Test Cases](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/).
-After unzipping, set `CASE_DATA_DIR` to the folder containing the extracted files and `CASE_NAME`
-to match. Everything else is auto-detected.
+After unzipping, set `CASE_DATA_DIR` (or the `GRIDKIT_CASE_DATA_DIR` environment variable) to the
+folder containing the extracted files and `CASE_NAME` to match. Everything else is auto-detected.
 
 ##### Hawaii40
 
@@ -71,9 +87,4 @@ to match. Everything else is auto-detected.
 | `case_ACTIVSg10k.m` | MATPOWER case (buses, generators, branches) |
 | `ACTIVSg10k_GIC_data.gic` | Geographic coordinates |
 
-#### Supporting files
-
-| File | Purpose |
-|---|---|
-| `py-utils/m_viz_utils.py` | MATPOWER `.m` parsing, geo merge, colocated bus splitting, generator fan-out, plotting |
-| `py-utils/gridkit_utils.py` | GridKit JSON ID augmentation for hover labels (optional) |
+More notebooks will be added in future PRs.
