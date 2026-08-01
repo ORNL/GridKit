@@ -30,55 +30,28 @@ namespace GridKit
       /// Internal variables of an `Esdc1a`.
       enum class Esdc1aInternalVariables : size_t
       {
-        EFDP, ///< Field-voltage state before optional speed multiplier
-        VC,   ///< Sensed compensated voltage
-        VR,   ///< Voltage-regulator output
-        VF,   ///< Stabilizing feedback output
-        XLL,  ///< Lead-lag state
-        EV,   ///< Voltage-regulator input error
-        VLL,  ///< Lead-lag block output
-        VHV,  ///< High-value gate output
-        SE,   ///< Saturation coefficient
-        VFE,  ///< Exciter feedback signal
-        EFD,  ///< Field-voltage output
+        EFDP, ///< \f$E_{\mathrm{fd}}'\f$ Exciter field-voltage state
+        VC,   ///< \f$V_C\f$ Filtered terminal-voltage magnitude
+        VR,   ///< \f$V_R\f$ Voltage-regulator output
+        VF,   ///< \f$V_F\f$ Stabilizing feedback state
+        XLL,  ///< \f$x_{\mathrm{LL}}\f$ Input lead-lag denominator state
+        EV,   ///< \f$e_V\f$ Voltage-error summing output
+        VLL,  ///< \f$V_{\mathrm{LL}}\f$ Input lead-lag output
+        VHV,  ///< \f$V_{\mathrm{HV}}\f$ High-value gate output
+        SE,   ///< \f$S_E\f$ Exciter saturation coefficient
+        VFE,  ///< \f$V_{\mathrm{FE}}\f$ Exciter feedback drive
+        EFD,  ///< \f$E_{\mathrm{fd}}\f$ Field-voltage output
         MAXIMUM,
       };
 
       /// External variables of an `Esdc1a`.
       enum class Esdc1aExternalVariables : size_t
       {
-        OMEGA, ///< Machine speed deviation
-        VREF,  ///< Voltage-control reference
-        VS,    ///< Stabilizer input signal
-        VUEL,  ///< Under-excitation limiter input
+        OMEGA, ///< \f$\omega\f$ Machine speed deviation
+        VREF,  ///< \f$V_{\mathrm{ref}}\f$ Voltage-control reference
+        VS,    ///< \f$V_S\f$ Stabilizer input signal
+        VUEL,  ///< \f$V_{\mathrm{UEL}}\f$ Under-excitation limiter input
         MAXIMUM,
-      };
-
-      /// Indices into the ESDC1A state, derivative, and residual vectors.
-      struct Esdc1aIdx
-      {
-        static constexpr size_t EFDP    = static_cast<size_t>(Esdc1aInternalVariables::EFDP);
-        static constexpr size_t VC      = static_cast<size_t>(Esdc1aInternalVariables::VC);
-        static constexpr size_t VR      = static_cast<size_t>(Esdc1aInternalVariables::VR);
-        static constexpr size_t VF      = static_cast<size_t>(Esdc1aInternalVariables::VF);
-        static constexpr size_t XLL     = static_cast<size_t>(Esdc1aInternalVariables::XLL);
-        static constexpr size_t EV      = static_cast<size_t>(Esdc1aInternalVariables::EV);
-        static constexpr size_t VLL     = static_cast<size_t>(Esdc1aInternalVariables::VLL);
-        static constexpr size_t VHV     = static_cast<size_t>(Esdc1aInternalVariables::VHV);
-        static constexpr size_t SE      = static_cast<size_t>(Esdc1aInternalVariables::SE);
-        static constexpr size_t VFE     = static_cast<size_t>(Esdc1aInternalVariables::VFE);
-        static constexpr size_t EFD     = static_cast<size_t>(Esdc1aInternalVariables::EFD);
-        static constexpr size_t MAXIMUM = static_cast<size_t>(Esdc1aInternalVariables::MAXIMUM);
-      };
-
-      /// Indices into the ESDC1A external-signal buffers.
-      struct Esdc1aExt
-      {
-        static constexpr size_t OMEGA   = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
-        static constexpr size_t VREF    = static_cast<size_t>(Esdc1aExternalVariables::VREF);
-        static constexpr size_t VS      = static_cast<size_t>(Esdc1aExternalVariables::VS);
-        static constexpr size_t VUEL    = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
-        static constexpr size_t MAXIMUM = static_cast<size_t>(Esdc1aExternalVariables::MAXIMUM);
       };
 
       template <typename scalar_type, typename index_type>
@@ -102,13 +75,15 @@ namespace GridKit
         using Component<scalar_type, index_type>::yp_;
 
       public:
-        using ScalarT    = scalar_type;
-        using IdxT       = index_type;
-        using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using BusT       = BusBase<ScalarT, IdxT>;
-        using SignalT    = SignalNode<ScalarT, IdxT>;
-        using ModelDataT = Esdc1aData<RealT, IdxT>;
-        using MonitorT   = Model::VariableMonitor<Esdc1a, Esdc1aData>;
+        using ScalarT            = scalar_type;
+        using IdxT               = index_type;
+        using RealT              = typename Component<ScalarT, IdxT>::RealT;
+        using BusT               = BusBase<ScalarT, IdxT>;
+        using SignalT            = SignalNode<ScalarT, IdxT>;
+        using ModelDataT         = Esdc1aData<RealT, IdxT>;
+        using MonitorT           = Model::VariableMonitor<Esdc1a, Esdc1aData>;
+        using InternalVariablesT = Esdc1aInternalVariables;
+        using ExternalVariablesT = Esdc1aExternalVariables;
 
         Esdc1a(BusT* bus);
         Esdc1a(BusT* bus, const ModelDataT& data);
@@ -126,8 +101,8 @@ namespace GridKit
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
-                                Esdc1aInternalVariables,
-                                Esdc1aExternalVariables>&
+                                InternalVariablesT,
+                                ExternalVariablesT>&
         {
           return signals_;
         }
@@ -138,6 +113,19 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
+        using I = InternalVariablesT;
+        using E = ExternalVariablesT;
+
+        static constexpr size_t index(I variable)
+        {
+          return static_cast<size_t>(variable);
+        }
+
+        static constexpr size_t index(E variable)
+        {
+          return static_cast<size_t>(variable);
+        }
+
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
@@ -173,9 +161,7 @@ namespace GridKit
         bool  exclim_{true};
         RealT spd_on_{0};
         RealT uel_on_{0};
-        RealT uel_off_{1};
         RealT lim_on_{1};
-        RealT lim_off_{0};
         RealT SA_{0};
         RealT SB_{0};
 
@@ -186,8 +172,8 @@ namespace GridKit
         ScalarT vs_set_{0};
         ScalarT vuel_set_{0};
 
-        ComponentSignals<ScalarT, IdxT, Esdc1aInternalVariables, Esdc1aExternalVariables> signals_;
-        std::unique_ptr<MonitorT>                                                         monitor_;
+        ComponentSignals<ScalarT, IdxT, InternalVariablesT, ExternalVariablesT> signals_;
+        std::unique_ptr<MonitorT>                                               monitor_;
 
         std::vector<ScalarT> ws_;
         std::vector<IdxT>    ws_indices_;

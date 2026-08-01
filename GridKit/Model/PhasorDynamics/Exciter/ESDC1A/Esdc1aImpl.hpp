@@ -38,7 +38,7 @@ namespace GridKit
       Esdc1a<scalar_type, index_type>::Esdc1a(BusT* bus)
         : bus_(bus)
       {
-        size_ = static_cast<IdxT>(Esdc1aIdx::MAXIMUM);
+        size_ = static_cast<IdxT>(I::MAXIMUM);
         setDerivedParameters();
       }
 
@@ -55,7 +55,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(Esdc1aIdx::MAXIMUM);
+        size_ = static_cast<IdxT>(I::MAXIMUM);
       }
 
       template <typename scalar_type, typename index_type>
@@ -88,9 +88,9 @@ namespace GridKit
       /**
        * @brief Resolve the parameter-derived constants and selector masks
        *
-       * Raises the transducer, lead-lag, and feedback lags to the
-       * well-posedness floor, fits the quadratic saturation curve, and turns
-       * the three selectors into complementary multiplicative masks. The
+       * Raises the transducer, regulator, lead-lag, exciter, and feedback
+       * lags to the well-posedness floor, fits the quadratic saturation
+       * curve, and turns the three selectors into multiplicative masks. The
        * masks let the residual select signal routing without
        * parameter-dependent control flow, which keeps its structure fixed for
        * sparse automatic differentiation.
@@ -111,26 +111,43 @@ namespace GridKit
         };
 
         check_non_negative(Tr_, "Tr");
+        check_non_negative(Ta_, "Ta");
         check_non_negative(Tb_, "Tb");
+        check_non_negative(Te_, "Te");
         check_non_negative(Tf1_, "Tf1");
 
-        if (Tr_ < TIME_CONSTANT_MINIMUM || Tb_ < TIME_CONSTANT_MINIMUM
+        if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
+            || Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM
             || Tf1_ < TIME_CONSTANT_MINIMUM)
         {
-          Log::warning() << "Esdc1a: Tr, Tb, and Tf1 below "
+          Log::warning() << "Esdc1a: Tr, Ta, Tb, Te, and Tf1 below "
                          << TIME_CONSTANT_MINIMUM
                          << " s are raised to that floor to keep the exciter lags well posed\n";
         }
 
         Tr_  = std::max(Tr_, TIME_CONSTANT_MINIMUM);
+        Ta_  = std::max(Ta_, TIME_CONSTANT_MINIMUM);
         Tb_  = std::max(Tb_, TIME_CONSTANT_MINIMUM);
+        Te_  = std::max(Te_, TIME_CONSTANT_MINIMUM);
         Tf1_ = std::max(Tf1_, TIME_CONSTANT_MINIMUM);
 
-        spd_on_  = Spdmlt_ ? ONE<RealT> : ZERO<RealT>;
-        uel_on_  = UEL_ >= static_cast<IdxT>(2) ? ONE<RealT> : ZERO<RealT>;
-        uel_off_ = ONE<RealT> - uel_on_;
-        lim_on_  = exclim_ ? ONE<RealT> : ZERO<RealT>;
-        lim_off_ = ONE<RealT> - lim_on_;
+        spd_on_ = ZERO<RealT>;
+        if (Spdmlt_)
+        {
+          spd_on_ = ONE<RealT>;
+        }
+
+        uel_on_ = ZERO<RealT>;
+        if (UEL_ >= static_cast<IdxT>(2))
+        {
+          uel_on_ = ONE<RealT>;
+        }
+
+        lim_on_ = ZERO<RealT>;
+        if (exclim_)
+        {
+          lim_on_ = ONE<RealT>;
+        }
 
         // A disabled or inconsistent saturation curve keeps the zero fit so
         // the coefficients stay finite; verify() reports inconsistent data.
@@ -313,21 +330,20 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Esdc1a<scalar_type, index_type>::initializeMonitor()
       {
-        using I        = Esdc1aIdx;
         using Variable = typename ModelDataT::MonitorableVariables;
 
         monitor_->set(Variable::efd, [this]
-                      { return y_.getData()[I::EFD]; });
+                      { return y_.getData()[index(I::EFD)]; });
         monitor_->set(Variable::vc, [this]
-                      { return y_.getData()[I::VC]; });
+                      { return y_.getData()[index(I::VC)]; });
         monitor_->set(Variable::vr, [this]
-                      { return y_.getData()[I::VR]; });
+                      { return y_.getData()[index(I::VR)]; });
         monitor_->set(Variable::vf, [this]
-                      { return y_.getData()[I::VF]; });
+                      { return y_.getData()[index(I::VF)]; });
         monitor_->set(Variable::se, [this]
-                      { return y_.getData()[I::SE]; });
+                      { return y_.getData()[index(I::SE)]; });
         monitor_->set(Variable::vfe, [this]
-                      { return y_.getData()[I::VFE]; });
+                      { return y_.getData()[index(I::VFE)]; });
       }
 
       /**
@@ -357,9 +373,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Esdc1a<scalar_type, index_type>::allocate()
       {
-        using I = Esdc1aIdx;
-        using E = Esdc1aExt;
-
         if (!allocated_)
         {
           this->allocateVectors(size_);
@@ -372,7 +385,7 @@ namespace GridKit
 
         wb_.assign(2, ScalarT{0});
 
-        auto signal_size = E::MAXIMUM;
+        const auto signal_size = index(E::MAXIMUM);
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -384,10 +397,10 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        if (signals_.template isAssigned<Esdc1aInternalVariables::EFD>())
+        if (signals_.template isAssigned<I::EFD>())
         {
-          signals_.template getSignalNode<Esdc1aInternalVariables::EFD>()->set(
-              &y[I::EFD],
+          signals_.template getSignalNode<I::EFD>()->set(
+              &y[index(I::EFD)],
               &(this->getVariableIndex(static_cast<IdxT>(I::EFD))));
         }
 
@@ -426,8 +439,6 @@ namespace GridKit
         }
 
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
-        check(Ta_ > ZERO<RealT>, "Ta must be positive");
-        check(Te_ > ZERO<RealT>, "Te must be positive");
         check(Tc_ >= ZERO<RealT>, "Tc must be non-negative");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
         check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
@@ -443,13 +454,13 @@ namespace GridKit
           check(Se1_ != Se2_, "Se1 and Se2 must differ when saturation is enabled");
         }
 
-        if (!signals_.template isAssigned<Esdc1aInternalVariables::EFD>())
+        if (!signals_.template isAssigned<I::EFD>())
         {
           Log::error() << "Esdc1a: required efd output signal is not assigned\n";
           ret += 1;
         }
 
-        if (Spdmlt_ && !signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
+        if (Spdmlt_ && !signals_.template isAttached<E::OMEGA>())
         {
           Log::error() << "Esdc1a: speed signal is required when Spdmlt is enabled\n";
           ret += 1;
@@ -458,7 +469,7 @@ namespace GridKit
         // An attached port must resolve to writable signal storage. The
         // enumerator is a template argument, so each port names itself once.
         auto check_attached_signal =
-            [&]<Esdc1aExternalVariables variable>(const char* name)
+            [&]<E variable>(const char* name)
         {
           if (signals_.template isAttached<variable>()
               && !signals_.template isLinked<variable>())
@@ -468,10 +479,10 @@ namespace GridKit
           }
         };
 
-        check_attached_signal.template operator()<Esdc1aExternalVariables::OMEGA>("speed");
-        check_attached_signal.template operator()<Esdc1aExternalVariables::VREF>("vref");
-        check_attached_signal.template operator()<Esdc1aExternalVariables::VS>("vs");
-        check_attached_signal.template operator()<Esdc1aExternalVariables::VUEL>("vuel");
+        check_attached_signal.template operator()<E::OMEGA>("speed");
+        check_attached_signal.template operator()<E::VREF>("vref");
+        check_attached_signal.template operator()<E::VS>("vs");
+        check_attached_signal.template operator()<E::VUEL>("vuel");
 
         return ret;
       }
@@ -499,8 +510,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Esdc1a<scalar_type, index_type>::initialize()
       {
-        using I = Esdc1aIdx;
-
         if (verify() > 0)
         {
           Log::error() << "Esdc1a: cannot initialize with invalid configuration\n";
@@ -511,30 +520,30 @@ namespace GridKit
 
         // The assigned efd node aliases this entry after allocate(). Its
         // seeded value remains untouched throughout initialization.
-        const ScalarT efd0 = y[I::EFD];
+        const ScalarT efd0 = y[index(I::EFD)];
 
         ScalarT omega0{ZERO<RealT>};
-        if (signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
+        if (signals_.template isAttached<E::OMEGA>())
         {
-          omega0 = signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
+          omega0 = signals_.template readExternalVariable<E::OMEGA>();
         }
 
         ScalarT vs0{ZERO<RealT>};
-        if (signals_.template isAttached<Esdc1aExternalVariables::VS>())
+        if (signals_.template isAttached<E::VS>())
         {
-          vs0 = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
+          vs0 = signals_.template readExternalVariable<E::VS>();
         }
 
         ScalarT vuel0{ZERO<RealT>};
-        if (signals_.template isAttached<Esdc1aExternalVariables::VUEL>())
+        if (signals_.template isAttached<E::VUEL>())
         {
-          vuel0 = signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
+          vuel0 = signals_.template readExternalVariable<E::VUEL>();
         }
 
-        const ScalarT ec0 = std::sqrt(Vr() * Vr() + Vi() * Vi());
+        const ScalarT vc0 = std::sqrt(Vr() * Vr() + Vi() * Vi());
 
         if (!std::isfinite(static_cast<RealT>(efd0))
-            || !std::isfinite(static_cast<RealT>(ec0)))
+            || !std::isfinite(static_cast<RealT>(vc0)))
         {
           Log::error() << "Esdc1a: initial bus voltage and field-voltage seed must be finite\n";
           return 1;
@@ -547,10 +556,11 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT efdp0 = efd0 / d0;
-        const ScalarT se0   = SB_ * Math::qramp(efdp0 - SA_);
-        const ScalarT vfe0  = lim_off_ * (Ke_ + se0) * efdp0
-                             + lim_on_ * Math::ramp((Ke_ + se0) * efdp0);
+        const ScalarT efdp0      = efd0 / d0;
+        const ScalarT se0        = SB_ * Math::qramp(efdp0 - SA_);
+        const ScalarT vfe_drive0 = (Ke_ + se0) * efdp0;
+        const ScalarT vfe0 =
+            (ONE<RealT> - lim_on_) * vfe_drive0 + lim_on_ * Math::ramp(vfe_drive0);
         const ScalarT vr0  = vfe0;
         const ScalarT vhv0 = vr0 / Ka_;
 
@@ -562,7 +572,7 @@ namespace GridKit
 
         // An inactive high-value gate is seeded with the gate input, so the
         // residual reproduces VHV through the same smooth maximum.
-        ScalarT gate_input0 = vhv0;
+        ScalarT vll0 = vhv0;
         if (uel_on_ == ZERO<RealT>)
         {
           const RealT gate_margin0 = static_cast<RealT>(vhv0 - vuel0);
@@ -571,36 +581,34 @@ namespace GridKit
             Log::error() << "Esdc1a: smooth high-value gate is active at initialization\n";
             return 1;
           }
-          gate_input0 = vuel0 + inverseRamp(gate_margin0);
+          vll0 = vuel0 + inverseRamp(gate_margin0);
         }
 
-        const ScalarT vc0   = ec0;
         const ScalarT vf0   = ScalarT{ZERO<RealT>};
-        const ScalarT ev0   = gate_input0;
-        const ScalarT xll0  = gate_input0;
-        const ScalarT vll0  = gate_input0;
+        const ScalarT ev0   = vll0;
+        const ScalarT xll0  = ev0;
         const ScalarT vref0 = ev0 + vc0 + vf0 - vs0 - uel_on_ * vuel0;
 
-        y[I::EFDP] = efdp0;
-        y[I::VC]   = vc0;
-        y[I::VR]   = vr0;
-        y[I::VF]   = vf0;
-        y[I::XLL]  = xll0;
-        y[I::EV]   = ev0;
-        y[I::VLL]  = vll0;
-        y[I::VHV]  = vhv0;
-        y[I::SE]   = se0;
-        y[I::VFE]  = vfe0;
-        y[I::EFD]  = efd0;
+        y[index(I::EFDP)] = efdp0;
+        y[index(I::VC)]   = vc0;
+        y[index(I::VR)]   = vr0;
+        y[index(I::VF)]   = vf0;
+        y[index(I::XLL)]  = xll0;
+        y[index(I::EV)]   = ev0;
+        y[index(I::VLL)]  = vll0;
+        y[index(I::VHV)]  = vhv0;
+        y[index(I::SE)]   = se0;
+        y[index(I::VFE)]  = vfe0;
+        y[index(I::EFD)]  = efd0;
 
         omega_set_ = omega0;
         vref_set_  = vref0;
         vs_set_    = vs0;
         vuel_set_  = vuel0;
 
-        if (signals_.template isAttached<Esdc1aExternalVariables::VREF>())
+        if (signals_.template isAttached<E::VREF>())
         {
-          signals_.template writeExternalVariable<Esdc1aExternalVariables::VREF>(vref_set_);
+          signals_.template writeExternalVariable<E::VREF>(vref_set_);
         }
 
         y_.setDataUpdated();
@@ -620,14 +628,12 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Esdc1a<scalar_type, index_type>::tagDifferentiable()
       {
-        using I = Esdc1aIdx;
-
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[I::EFDP] = true;
-        tag_[I::VC]   = true;
-        tag_[I::VR]   = true;
-        tag_[I::VF]   = true;
-        tag_[I::XLL]  = true;
+        tag_[index(I::EFDP)] = true;
+        tag_[index(I::VC)]   = true;
+        tag_[index(I::VR)]   = true;
+        tag_[index(I::VF)]   = true;
+        tag_[index(I::XLL)]  = true;
         return 0;
       }
 
@@ -672,46 +678,46 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
-        using I = Esdc1aIdx;
-        using E = Esdc1aExt;
+        const ScalarT efdp = y[index(I::EFDP)];
+        const ScalarT vc   = y[index(I::VC)];
+        const ScalarT vr   = y[index(I::VR)];
+        const ScalarT vf   = y[index(I::VF)];
+        const ScalarT xll  = y[index(I::XLL)];
+        const ScalarT ev   = y[index(I::EV)];
+        const ScalarT vll  = y[index(I::VLL)];
+        const ScalarT vhv  = y[index(I::VHV)];
+        const ScalarT se   = y[index(I::SE)];
+        const ScalarT vfe  = y[index(I::VFE)];
+        const ScalarT efd  = y[index(I::EFD)];
 
-        const ScalarT efdp = y[I::EFDP];
-        const ScalarT vc   = y[I::VC];
-        const ScalarT vr   = y[I::VR];
-        const ScalarT vf   = y[I::VF];
-        const ScalarT xll  = y[I::XLL];
-        const ScalarT ev   = y[I::EV];
-        const ScalarT vll  = y[I::VLL];
-        const ScalarT vhv  = y[I::VHV];
-        const ScalarT se   = y[I::SE];
-        const ScalarT vfe  = y[I::VFE];
-        const ScalarT efd  = y[I::EFD];
+        const ScalarT efdp_dot = yp[index(I::EFDP)];
+        const ScalarT vc_dot   = yp[index(I::VC)];
+        const ScalarT vr_dot   = yp[index(I::VR)];
+        const ScalarT vf_dot   = yp[index(I::VF)];
+        const ScalarT xll_dot  = yp[index(I::XLL)];
 
-        const ScalarT efdp_dot = yp[I::EFDP];
-        const ScalarT vc_dot   = yp[I::VC];
-        const ScalarT vr_dot   = yp[I::VR];
-        const ScalarT vf_dot   = yp[I::VF];
-        const ScalarT xll_dot  = yp[I::XLL];
-
-        const ScalarT omega = ws[E::OMEGA];
-        const ScalarT vref  = ws[E::VREF];
-        const ScalarT vs    = ws[E::VS];
-        const ScalarT vuel  = ws[E::VUEL];
+        const ScalarT omega = ws[index(E::OMEGA)];
+        const ScalarT vref  = ws[index(E::VREF)];
+        const ScalarT vs    = ws[index(E::VS)];
+        const ScalarT vuel  = ws[index(E::VUEL)];
 
         const ScalarT ec        = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
         const ScalarT ev_target = vref + vs + uel_on_ * vuel - vc - vf;
+        const ScalarT vfe_drive = (Ke_ + se) * efdp;
 
-        f[I::EFDP] = -efdp_dot + (vr - vfe) / Te_;
-        f[I::VC]   = -vc_dot + (ec - vc) / Tr_;
-        f[I::VR]   = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
-        f[I::VF]   = -vf_dot + (-vf + Kf_ * (vr - vfe) / Te_) / Tf1_;
-        f[I::XLL]  = -xll_dot + (ev - xll) / Tb_;
-        f[I::EV]   = -ev + ev_target;
-        f[I::VLL]  = -vll + xll + (Tc_ / Tb_) * (ev - xll);
-        f[I::VHV]  = -vhv + uel_on_ * vll + uel_off_ * Math::max(vll, vuel);
-        f[I::SE]   = -se + SB_ * Math::qramp(efdp - SA_);
-        f[I::VFE]  = -vfe + lim_off_ * (Ke_ + se) * efdp + lim_on_ * Math::ramp((Ke_ + se) * efdp);
-        f[I::EFD]  = -efd + (ONE<RealT> + spd_on_ * omega) * efdp;
+        f[index(I::EFDP)] = -efdp_dot + (vr - vfe) / Te_;
+        f[index(I::VC)]   = -vc_dot + (ec - vc) / Tr_;
+        f[index(I::VR)]   = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
+        f[index(I::VF)]   = -vf_dot + (-vf + Kf_ * (vr - vfe) / Te_) / Tf1_;
+        f[index(I::XLL)]  = -xll_dot + (ev - xll) / Tb_;
+        f[index(I::EV)]   = -ev + ev_target;
+        f[index(I::VLL)]  = -vll + xll + (Tc_ / Tb_) * (ev - xll);
+        f[index(I::VHV)]  = -vhv + uel_on_ * vll
+                           + (ONE<RealT> - uel_on_) * Math::max(vll, vuel);
+        f[index(I::SE)]  = -se + SB_ * Math::qramp(efdp - SA_);
+        f[index(I::VFE)] = -vfe + (ONE<RealT> - lim_on_) * vfe_drive
+                           + lim_on_ * Math::ramp(vfe_drive);
+        f[index(I::EFD)] = -efd + (ONE<RealT> + spd_on_ * omega) * efdp;
 
         return 0;
       }
@@ -729,33 +735,35 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Esdc1a<scalar_type, index_type>::evaluateResidual()
       {
-        using E = Esdc1aExt;
-
-        ws_[E::OMEGA] = omega_set_;
-        ws_[E::VREF]  = vref_set_;
-        ws_[E::VS]    = vs_set_;
-        ws_[E::VUEL]  = vuel_set_;
+        ws_[index(E::OMEGA)] = omega_set_;
+        ws_[index(E::VREF)]  = vref_set_;
+        ws_[index(E::VS)]    = vs_set_;
+        ws_[index(E::VUEL)]  = vuel_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
+        if (signals_.template isAttached<E::OMEGA>())
         {
-          ws_[E::OMEGA]         = signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
-          ws_indices_[E::OMEGA] = signals_.template readExternalVariableIndex<Esdc1aExternalVariables::OMEGA>();
+          ws_[index(E::OMEGA)] = signals_.template readExternalVariable<E::OMEGA>();
+          ws_indices_[index(E::OMEGA)] =
+              signals_.template readExternalVariableIndex<E::OMEGA>();
         }
-        if (signals_.template isAttached<Esdc1aExternalVariables::VREF>())
+        if (signals_.template isAttached<E::VREF>())
         {
-          ws_[E::VREF]         = signals_.template readExternalVariable<Esdc1aExternalVariables::VREF>();
-          ws_indices_[E::VREF] = signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VREF>();
+          ws_[index(E::VREF)] = signals_.template readExternalVariable<E::VREF>();
+          ws_indices_[index(E::VREF)] =
+              signals_.template readExternalVariableIndex<E::VREF>();
         }
-        if (signals_.template isAttached<Esdc1aExternalVariables::VS>())
+        if (signals_.template isAttached<E::VS>())
         {
-          ws_[E::VS]         = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
-          ws_indices_[E::VS] = signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VS>();
+          ws_[index(E::VS)] = signals_.template readExternalVariable<E::VS>();
+          ws_indices_[index(E::VS)] =
+              signals_.template readExternalVariableIndex<E::VS>();
         }
-        if (signals_.template isAttached<Esdc1aExternalVariables::VUEL>())
+        if (signals_.template isAttached<E::VUEL>())
         {
-          ws_[E::VUEL]         = signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
-          ws_indices_[E::VUEL] = signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VUEL>();
+          ws_[index(E::VUEL)] = signals_.template readExternalVariable<E::VUEL>();
+          ws_indices_[index(E::VUEL)] =
+              signals_.template readExternalVariableIndex<E::VUEL>();
         }
 
         wb_[0] = Vr();

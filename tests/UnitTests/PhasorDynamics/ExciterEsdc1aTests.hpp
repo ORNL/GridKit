@@ -79,8 +79,8 @@ namespace GridKit
         success *= (unassigned.verify() > 0);
 
         success *= invalidParameterCase(Params::Ka, 0.0);
-        success *= invalidParameterCase(Params::Ta, 0.0);
-        success *= invalidParameterCase(Params::Te, 0.0);
+        success *= invalidParameterCase(Params::Ta, -0.1);
+        success *= invalidParameterCase(Params::Te, -0.1);
         success *= invalidParameterCase(Params::Tc, -0.1);
         success *= invalidParameterCase(Params::Tr, -0.1);
         success *= invalidParameterCase(Params::Tb, -0.1);
@@ -133,20 +133,22 @@ namespace GridKit
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>      busless_efd_node;
         PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> busless(nullptr, makeData());
-        busless.getSignals().template assignSignalNode<Vars::EFD>(&busless_efd_node);
+        busless.getSignals().template assignSignalNode<I::EFD>(&busless_efd_node);
         success *= (busless.verify() > 0);
 
-        success *= unlinkedSignalRejected<Ext::OMEGA>();
-        success *= unlinkedSignalRejected<Ext::VREF>();
-        success *= unlinkedSignalRejected<Ext::VS>();
-        success *= unlinkedSignalRejected<Ext::VUEL>();
+        success *= unlinkedSignalRejected<E::OMEGA>();
+        success *= unlinkedSignalRejected<E::VREF>();
+        success *= unlinkedSignalRejected<E::VS>();
+        success *= unlinkedSignalRejected<E::VUEL>();
 
-        // All three floored time constants at zero use the documented
+        // All five floored time constants at zero use the documented
         // numerical floor and still admit a consistent steady-state
         // initialization.
         auto zero_time                    = makeData();
         zero_time.parameters[Params::Tr]  = 0.0;
+        zero_time.parameters[Params::Ta]  = 0.0;
         zero_time.parameters[Params::Tb]  = 0.0;
+        zero_time.parameters[Params::Te]  = 0.0;
         zero_time.parameters[Params::Tf1] = 0.0;
 
         Fixture<ScalarT> floored(zero_time);
@@ -175,14 +177,14 @@ namespace GridKit
         success                 *= (fixture.evaluate() == 0);
 
         const auto* y  = fixture.esdc1a.y().getData();
-        success       *= scalarMatches(y[I::EFDP], 1.2, "EFDP");
-        success       *= scalarMatches(y[I::VC], 1.0, "VC");
-        success       *= scalarMatches(y[I::VR], 0.12, "VR");
-        success       *= scalarMatches(y[I::VF], 0.0, "VF");
-        success       *= scalarMatches(y[I::EV], 0.003, "EV gate input");
-        success       *= scalarMatches(y[I::VHV], 0.003, "VHV");
-        success       *= scalarMatches(y[I::SE], 0.0, "SE");
-        success       *= scalarMatches(y[I::VFE], 0.12, "VFE");
+        success       *= scalarMatches(y[index(I::EFDP)], 1.2, "EFDP");
+        success       *= scalarMatches(y[index(I::VC)], 1.0, "VC");
+        success       *= scalarMatches(y[index(I::VR)], 0.12, "VR");
+        success       *= scalarMatches(y[index(I::VF)], 0.0, "VF");
+        success       *= scalarMatches(y[index(I::EV)], 0.003, "EV gate input");
+        success       *= scalarMatches(y[index(I::VHV)], 0.003, "VHV");
+        success       *= scalarMatches(y[index(I::SE)], 0.0, "SE");
+        success       *= scalarMatches(y[index(I::VFE)], 0.12, "VFE");
         success       *= scalarMatches(fixture.efd(), 1.2, "seeded efd");
 
         success *= scalarMatches(fixture.input(E::VREF), 0.973, "published vref");
@@ -225,7 +227,7 @@ namespace GridKit
 
         for (size_t i = 0; i < static_cast<size_t>(fixture.esdc1a.size()); ++i)
         {
-          const bool expected = i <= I::XLL;
+          const bool expected = i <= index(I::XLL);
           if (fixture.esdc1a.tag()[i] != expected)
           {
             std::cout << "ESDC1A differentiability tag " << i << " mismatch\n";
@@ -294,7 +296,10 @@ namespace GridKit
         speed_data.parameters[Params::Spdmlt]  = true;
         success                               *= initializationRejectedAtomically(speed_data,
                                                     1.2,
-                                                                                  {-1.0, 77.0, 77.0, -77.0},
+                                                                                  {{E::OMEGA, -1.0},
+                                                                                   {E::VREF, 77.0},
+                                                                                   {E::VS, 77.0},
+                                                                                   {E::VUEL, -77.0}},
                                                     "zero speed-multiplier denominator");
 
         // The seeded field voltage maps to a regulator output above Vrmax.
@@ -303,14 +308,20 @@ namespace GridKit
         limit_data.parameters[Params::Vrmin]  = -0.05;
         success                              *= initializationRejectedAtomically(limit_data,
                                                     1.2,
-                                                                                 {0.0, 77.0, 77.0, -77.0},
+                                                                                 {{E::OMEGA, 0.0},
+                                                                                  {E::VREF, 77.0},
+                                                                                  {E::VS, 77.0},
+                                                                                  {E::VUEL, -77.0}},
                                                     "regulator output outside limits");
 
         // A UEL input above the gate operating point holds the high-value
         // gate active, which the smooth gate cannot represent at rest.
         success *= initializationRejectedAtomically(makeData(),
                                                     1.2,
-                                                    {0.0, 77.0, 77.0, 0.5},
+                                                    {{E::OMEGA, 0.0},
+                                                     {E::VREF, 77.0},
+                                                     {E::VS, 77.0},
+                                                     {E::VUEL, 0.5}},
                                                     "active high-value gate");
 
         // A non-finite field-voltage seed is rejected before any signal is
@@ -347,7 +358,7 @@ namespace GridKit
         success                       *= speed_fixture.initialize(1.2);
         success                       *= (speed_fixture.evaluate() == 0);
         success                       *= allResidualsZero(speed_fixture.esdc1a);
-        success                       *= scalarMatches(speed_fixture.esdc1a.y().getData()[I::EFDP],
+        success                       *= scalarMatches(speed_fixture.esdc1a.y().getData()[index(I::EFDP)],
                                  2.4,
                                  "rescaled EFDP");
 
@@ -387,7 +398,7 @@ namespace GridKit
 
         // Values are pinned after an independent one-time evaluation of the
         // documented equations at setAnswerKeyState()/setAnswerKeyInputs().
-        const std::array<Row, I::MAXIMUM> expected{{
+        const std::array<InternalRow, index(I::MAXIMUM)> expected{{
             {I::EFDP, 0.04000000000000004},
             {I::VC, 0.19442890089805262},
             {I::VR, 0.13666666666666663},
@@ -643,20 +654,27 @@ namespace GridKit
 #endif
 
     private:
-      using Params = PhasorDynamics::Exciter::Esdc1aParameters;
-      using Vars   = PhasorDynamics::Exciter::Esdc1aInternalVariables;
-      using Ext    = PhasorDynamics::Exciter::Esdc1aExternalVariables;
-      using Mon    = PhasorDynamics::Exciter::Esdc1aMonitorableVariables;
-      using Data   = PhasorDynamics::Exciter::Esdc1aData<RealT, IdxT>;
-      using I      = PhasorDynamics::Exciter::Esdc1aIdx;
-      using E      = PhasorDynamics::Exciter::Esdc1aExt;
-
-      /// A vector row paired with a value: either an input to write or an
-      /// expected result. Rows are `Esdc1aIdx`/`Esdc1aExt` constants, so a
-      /// failure report locates itself without any name string to maintain.
-      using Row     = std::pair<size_t, RealT>;
-      using Rows    = std::initializer_list<Row>;
       using Esdc1aT = PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT>;
+      using Data    = typename Esdc1aT::ModelDataT;
+      using Params  = typename Data::Parameters;
+      using Mon     = typename Data::MonitorableVariables;
+      using I       = typename Esdc1aT::InternalVariablesT;
+      using E       = typename Esdc1aT::ExternalVariablesT;
+
+      using InternalRow  = std::pair<I, RealT>;
+      using InternalRows = std::vector<InternalRow>;
+      using ExternalRow  = std::pair<E, RealT>;
+      using ExternalRows = std::vector<ExternalRow>;
+
+      static constexpr size_t index(I variable)
+      {
+        return static_cast<size_t>(variable);
+      }
+
+      static constexpr size_t index(E variable)
+      {
+        return static_cast<size_t>(variable);
+      }
 
       /// Owns the terminal bus, ESDC1A, the assigned field-voltage node, and
       /// the attached input nodes. Signal storage is declared before the
@@ -666,9 +684,10 @@ namespace GridKit
       class Fixture
       {
       private:
-        std::array<T, E::MAXIMUM>                                   input_values_{};
-        std::array<IdxT, E::MAXIMUM>                                input_indices_{};
-        std::array<PhasorDynamics::SignalNode<T, IdxT>, E::MAXIMUM> input_nodes_{};
+        std::array<T, index(E::MAXIMUM)>    input_values_{};
+        std::array<IdxT, index(E::MAXIMUM)> input_indices_{};
+        std::array<PhasorDynamics::SignalNode<T, IdxT>, index(E::MAXIMUM)>
+            input_nodes_{};
 
         PhasorDynamics::SignalNode<T, IdxT> efd_node_;
 
@@ -677,7 +696,7 @@ namespace GridKit
           : bus(static_cast<T>(vr), static_cast<T>(vi)),
             esdc1a(&bus, data)
         {
-          esdc1a.getSignals().template assignSignalNode<Vars::EFD>(&efd_node_);
+          esdc1a.getSignals().template assignSignalNode<I::EFD>(&efd_node_);
         }
 
         Fixture(const Fixture&)            = delete;
@@ -688,7 +707,7 @@ namespace GridKit
         {
           const IdxT external_index_base = esdc1a.size() + bus.size();
 
-          for (size_t port = 0; port < E::MAXIMUM; ++port)
+          for (size_t port = 0; port < input_values_.size(); ++port)
           {
             input_values_[port]  = static_cast<T>(initial_value);
             input_indices_[port] = external_index_base + static_cast<IdxT>(port);
@@ -696,10 +715,10 @@ namespace GridKit
           }
 
           auto& signals = esdc1a.getSignals();
-          signals.template attachSignalNode<Ext::OMEGA>(&input_nodes_[E::OMEGA]);
-          signals.template attachSignalNode<Ext::VREF>(&input_nodes_[E::VREF]);
-          signals.template attachSignalNode<Ext::VS>(&input_nodes_[E::VS]);
-          signals.template attachSignalNode<Ext::VUEL>(&input_nodes_[E::VUEL]);
+          signals.template attachSignalNode<E::OMEGA>(&input_nodes_[index(E::OMEGA)]);
+          signals.template attachSignalNode<E::VREF>(&input_nodes_[index(E::VREF)]);
+          signals.template attachSignalNode<E::VS>(&input_nodes_[index(E::VS)]);
+          signals.template attachSignalNode<E::VUEL>(&input_nodes_[index(E::VUEL)]);
         }
 
         /// Seed the assigned field-voltage node.
@@ -750,14 +769,14 @@ namespace GridKit
           return efd_node_.read();
         }
 
-        T& input(size_t port)
+        T& input(E port)
         {
-          return input_values_[port];
+          return input_values_[index(port)];
         }
 
-        IdxT inputIndex(size_t port) const
+        IdxT inputIndex(E port) const
         {
-          return input_indices_[port];
+          return input_indices_[index(port)];
         }
 
         PhasorDynamics::Bus<T, IdxT>             bus;
@@ -878,7 +897,17 @@ namespace GridKit
       void setAnswerKeyState(PhasorDynamics::Exciter::Esdc1a<T, IdxT>& esdc1a) const
       {
         setState(esdc1a,
-                 {{I::EFDP, 2.00}, {I::VC, 0.95}, {I::VR, 0.45}, {I::VF, 0.06}, {I::XLL, 0.30}, {I::EV, 0.36}, {I::VLL, 0.33}, {I::VHV, 0.02}, {I::SE, 0.09}, {I::VFE, 0.42}, {I::EFD, 1.15}});
+                 {{I::EFDP, 2.00},
+                  {I::VC, 0.95},
+                  {I::VR, 0.45},
+                  {I::VF, 0.06},
+                  {I::XLL, 0.30},
+                  {I::EV, 0.36},
+                  {I::VLL, 0.33},
+                  {I::VHV, 0.02},
+                  {I::SE, 0.09},
+                  {I::VFE, 0.42},
+                  {I::EFD, 1.15}});
         setDerivative(esdc1a,
                       {{I::EFDP, 0.01},
                        {I::VC, -0.02},
@@ -937,7 +966,7 @@ namespace GridKit
         return fixture.esdc1a.verify() > 0;
       }
 
-      template <Ext variable>
+      template <E variable>
       bool unlinkedSignalRejected() const
       {
         PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
@@ -986,16 +1015,16 @@ namespace GridKit
         fixture.esdc1a.yp().setDataUpdated();
       }
 
-      bool initializationRejectedAtomically(const Data&                          data,
-                                            RealT                                efd_seed,
-                                            const std::array<RealT, E::MAXIMUM>& inputs,
-                                            const char*                          label) const
+      bool initializationRejectedAtomically(const Data&         data,
+                                            RealT               efd_seed,
+                                            const ExternalRows& inputs,
+                                            const char*         label) const
       {
         Fixture<ScalarT> fixture(data);
         fixture.attachAllInputs();
-        for (size_t port = 0; port < E::MAXIMUM; ++port)
+        for (const auto& [port, value] : inputs)
         {
-          fixture.input(port) = inputs[port];
+          fixture.input(port) = value;
         }
         if (!fixture.prepare(efd_seed))
         {
@@ -1014,12 +1043,12 @@ namespace GridKit
         }
 
         success *= scalarMatches(fixture.efd(), efd_seed, "rejected efd preservation");
-        for (size_t port = 0; port < E::MAXIMUM; ++port)
+        for (const auto& [port, value] : inputs)
         {
           success &= rowMatches(static_cast<RealT>(fixture.input(port)),
-                                inputs[port],
+                                value,
                                 "external input",
-                                port,
+                                index(port),
                                 "changed");
         }
         success *= vectorUnchanged(fixture.esdc1a.y(), y_before, "state");
@@ -1030,32 +1059,33 @@ namespace GridKit
       /// Write state rows and publish the update, folding in the
       /// setDataUpdated() that a hand-written write block has to remember.
       template <typename T>
-      void setState(PhasorDynamics::Exciter::Esdc1a<T, IdxT>& esdc1a, Rows rows) const
+      void setState(PhasorDynamics::Exciter::Esdc1a<T, IdxT>& esdc1a,
+                    const InternalRows&                       rows) const
       {
         auto* y = esdc1a.y().getData();
-        for (const auto& [row, value] : rows)
+        for (const auto& [variable, value] : rows)
         {
-          y[row] = static_cast<T>(value);
+          y[index(variable)] = static_cast<T>(value);
         }
         esdc1a.y().setDataUpdated();
       }
 
       /// setState() for the derivative vector.
       template <typename T>
-      void setDerivative(PhasorDynamics::Exciter::Esdc1a<T, IdxT>& esdc1a, Rows rows) const
+      void setDerivative(PhasorDynamics::Exciter::Esdc1a<T, IdxT>& esdc1a,
+                         const InternalRows&                       rows) const
       {
         auto* yp = esdc1a.yp().getData();
-        for (const auto& [row, value] : rows)
+        for (const auto& [variable, value] : rows)
         {
-          yp[row] = static_cast<T>(value);
+          yp[index(variable)] = static_cast<T>(value);
         }
         esdc1a.yp().setDataUpdated();
       }
 
       /// Compare one vector row against its expected value. Every row check
       /// in this suite reports through here, so failures share one format.
-      /// Rows are named by position, which is the `Esdc1aIdx` constant the
-      /// expectation was written with, leaving no name string to maintain.
+      /// Rows are named by their canonical internal-variable enumeration.
       static bool rowMatches(RealT       actual,
                              RealT       expected,
                              const char* what,
@@ -1073,34 +1103,35 @@ namespace GridKit
       }
 
       /// Check selected rows of a model vector against expected values.
-      template <typename VectorT>
+      template <typename VectorT, typename RowsT>
       bool rowsMatch(const VectorT& vector,
-                     const Row*     rows,
-                     size_t         count,
+                     const RowsT&   rows,
                      const char*    what,
                      const char*    context) const
       {
         bool        success = true;
         const auto* values  = vector.getData();
-        for (size_t i = 0; i < count; ++i)
+        for (const auto& [variable, expected] : rows)
         {
-          const auto& [row, expected]  = rows[i];
-          success                     &= rowMatches(static_cast<RealT>(values[row]), expected, what, row, context);
+          const auto row  = index(variable);
+          success        &= rowMatches(static_cast<RealT>(values[row]), expected, what, row, context);
         }
         return success;
       }
 
-      bool residualsMatch(const Esdc1aT& esdc1a, Rows rows, const char* context = "") const
+      bool residualsMatch(const Esdc1aT&      esdc1a,
+                          const InternalRows& rows,
+                          const char*         context = "") const
       {
-        return rowsMatch(esdc1a.getResidual(), rows.begin(), rows.size(), "residual", context);
+        return rowsMatch(esdc1a.getResidual(), rows, "residual", context);
       }
 
       template <size_t size>
-      bool residualsMatch(const Esdc1aT&               esdc1a,
-                          const std::array<Row, size>& rows,
-                          const char*                  context = "") const
+      bool residualsMatch(const Esdc1aT&                       esdc1a,
+                          const std::array<InternalRow, size>& rows,
+                          const char*                          context = "") const
       {
-        return rowsMatch(esdc1a.getResidual(), rows.data(), size, "residual", context);
+        return rowsMatch(esdc1a.getResidual(), rows, "residual", context);
       }
 
       /// The model sits at a steady state: every residual and every
@@ -1157,7 +1188,7 @@ namespace GridKit
         {
           bus_y[i].setVariableNumber(model_size + i);
         }
-        for (size_t port = 0; port < E::MAXIMUM; ++port)
+        for (E port : {E::OMEGA, E::VREF, E::VS, E::VUEL})
         {
           fixture.input(port).setVariableNumber(fixture.inputIndex(port));
         }
