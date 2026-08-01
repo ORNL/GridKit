@@ -316,39 +316,39 @@ namespace GridKit
       }
 
       // Add HYGOV governors
-      for (const auto& govdata : data.hygov)
+      for (const auto& hygovdata : data.hygov)
       {
-        auto* gov = new Hygov<ScalarT, IdxT>(govdata);
+        auto* hygov = new Hygov<ScalarT, IdxT>(hygovdata);
 
-        if (govdata.signal_inputs.contains(HygovSignalInputs::speed))
+        if (hygovdata.signal_inputs.contains(HygovSignalInputs::speed))
         {
-          IdxT           speed = govdata.signal_inputs.at(HygovSignalInputs::speed);
+          IdxT           speed = hygovdata.signal_inputs.at(HygovSignalInputs::speed);
           constexpr auto OMEGA = HygovExternalVariables::OMEGA;
-          gov->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
+          hygov->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
         }
 
-        if (govdata.signal_outputs.contains(HygovSignalOutputs::pmech))
+        if (hygovdata.signal_inputs.contains(HygovSignalInputs::pref))
         {
-          IdxT           pmech = govdata.signal_outputs.at(HygovSignalOutputs::pmech);
-          constexpr auto PMECH = HygovInternalVariables::PMECH;
-          gov->getSignals().template assignSignalNode<PMECH>(getSignal(pmech));
-        }
-
-        if (govdata.signal_inputs.contains(HygovSignalInputs::pref))
-        {
-          IdxT           pref = govdata.signal_inputs.at(HygovSignalInputs::pref);
+          IdxT           pref = hygovdata.signal_inputs.at(HygovSignalInputs::pref);
           constexpr auto PREF = HygovExternalVariables::PREF;
-          gov->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+          hygov->getSignals().template attachSignalNode<PREF>(getSignal(pref));
         }
 
-        if (govdata.signal_inputs.contains(HygovSignalInputs::paux))
+        if (hygovdata.signal_inputs.contains(HygovSignalInputs::paux))
         {
-          IdxT           paux = govdata.signal_inputs.at(HygovSignalInputs::paux);
+          IdxT           paux = hygovdata.signal_inputs.at(HygovSignalInputs::paux);
           constexpr auto PAUX = HygovExternalVariables::PAUX;
-          gov->getSignals().template attachSignalNode<PAUX>(getSignal(paux));
+          hygov->getSignals().template attachSignalNode<PAUX>(getSignal(paux));
         }
 
-        addComponent(gov);
+        if (hygovdata.signal_outputs.contains(HygovSignalOutputs::pmech))
+        {
+          IdxT           pmech = hygovdata.signal_outputs.at(HygovSignalOutputs::pmech);
+          constexpr auto PMECH = HygovInternalVariables::PMECH;
+          hygov->getSignals().template assignSignalNode<PMECH>(getSignal(pmech));
+        }
+
+        addComponent(hygov);
       }
 
       for (const auto& excitedata : data.exciter)
@@ -750,20 +750,22 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
+      int status = 0;
+
       for (const auto& bus : buses_)
       {
-        bus->initialize();
+        status += bus->initialize();
       }
 
       for (const auto& component : components_)
       {
-        component->initialize();
+        status += component->initialize();
       }
 
       y_.setDataUpdated();
       yp_.setDataUpdated();
 
-      return 0;
+      return status;
     }
 
     /**

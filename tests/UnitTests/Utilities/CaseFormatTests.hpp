@@ -9,6 +9,7 @@
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
@@ -213,13 +214,15 @@ namespace GridKit
                    { "signal_id": 3, "name": "Excitation Field"},
                    { "signal_id": 4, "name": "Voltage Reference"},
                    { "signal_id": 5, "name": "Stabilizer Signal"},
-                   { "signal_id": 6, "name": "Under-excitation Limiter"}
+                   { "signal_id": 6, "name": "Under-excitation Limiter"},
+                   { "signal_id": 7, "name": "Hydro Mechanical Power"}
                ],
                "devices": [
                    { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "tap":1.05, "phase":0.1} },
                    { "class": "Genrou", "ports": {"bus":1, "speed": 1, "pmech":2, "efd":3}, "id": "DV1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05, "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Tgov1", "ports": {"speed": 1, "pmech":2}, "id": "DV2", "params": {"R":0.05, "T1":0.5,"T2":2.5, "T3":7.5, "Pvmax":0.0, "Pvmin":1.0, "Dt":0.0}},
                    { "class": "Esdc1a", "ports": {"bus":1, "speed":1, "vref":4, "vs":5, "vuel":6, "efd":3}, "id": "DV5", "params": {"Tr":0.0, "Ka":40.0, "Ta":0.1, "Tb":0.0, "Tc":0.0, "Vrmax":1.0, "Vrmin":-1.0, "Ke":0.1, "Te":0.5, "Kf":0.05, "Tf1":0.7, "Spdmlt":false, "E1":2.8, "Se1":0.08, "E2":3.7, "Se2":0.33, "UEL":0, "exclim":true}, "mon": ["efd", "vc", "vr", "vf", "se", "vfe"] },
+                   { "class": "Hygov", "ports": {"speed": 1, "pmech": 7}, "id": "DV6", "params": {"Trate": 80.0, "Rperm": 0.05, "Rtemp": 0.35, "Tw": 1.2, "Qnl": 0.08}},
                    { "class": "Ieeet1", "ports": {"bus":1, "speed": 1, "efd":3}, "id": "DV3", "params": {"Tr":0.0, "Ka":50.0, "Ta":0.04, "Ke":-0.06, "Te":0.6, "Kf":0.09, "Tf":1.46, "Vrmin":-1.0, "Vrmax":1.0, "E1":2.8, "E2":3.373, "Se1":0.04, "Se2":0.33, "Ispdlim":0.0}},
                    { "class": "SexsPti", "ports": {"bus":1, "efd":3}, "id": "DV4", "params": {"Ta":0.1, "Tb":0.5, "Te":0.8, "K":10.0, "Efdmax":5.0, "Efdmin":-5.0}},
                    { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
@@ -244,6 +247,7 @@ namespace GridKit
         success *= result.genrou.size() == 1;
         success *= result.gov.size() == 1;
         success *= result.esdc1a.size() == 1;
+        success *= result.hygov.size() == 1;
         success *= result.loadz.size() == 0;
         success *= result.exciter.size() == 1;
         success *= result.sexspti.size() == 1;
@@ -276,6 +280,8 @@ namespace GridKit
         success *= result.signal[4].name == "Stabilizer Signal";
         success *= result.signal[5].signal_id == 6;
         success *= result.signal[5].name == "Under-excitation Limiter";
+        success *= result.signal[6].signal_id == 7;
+        success *= result.signal[6].name == "Hydro Mechanical Power";
 
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::R]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
@@ -356,6 +362,16 @@ namespace GridKit
         success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::vf);
         success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::se);
         success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::vfe);
+
+        success *= std::get<RealT>(result.hygov[0].parameters[Governor::HygovParameters::Trate]) == 80.0;
+        success *= std::get<RealT>(result.hygov[0].parameters[Governor::HygovParameters::Rperm]) == 0.05;
+        success *= std::get<RealT>(result.hygov[0].parameters[Governor::HygovParameters::Rtemp]) == 0.35;
+        success *= std::get<RealT>(result.hygov[0].parameters[Governor::HygovParameters::Tw]) == 1.2;
+        success *= std::get<RealT>(result.hygov[0].parameters[Governor::HygovParameters::Qnl]) == 0.08;
+        success *= result.hygov[0].signal_inputs[Governor::HygovSignalInputs::speed] == 1;
+        success *= result.hygov[0].signal_outputs[Governor::HygovSignalOutputs::pmech] == 7;
+        success *= result.hygov[0].disambiguation_string == "DV6";
+        success *= result.hygov[0].monitored_variables.empty();
 
         success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]) == 0.0;
         success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]) == 50.0;

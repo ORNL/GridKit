@@ -9,6 +9,7 @@ int main()
   result += test.validation();
   result += test.initializationAndSignals();
   result += test.initializationDomain();
+  result += test.initializationExactness();
   result += test.residualEquations();
   result += test.governorControl();
   result += test.turbineDynamics();

@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -28,57 +29,37 @@ namespace GridKit
       /// Internal variables of a `Hygov`.
       enum class HygovInternalVariables : size_t
       {
-        XN,      ///< Speed lead-lag denominator state
-        XF,      ///< Governor error filter output
-        C,       ///< Desired-gate position
-        G,       ///< Gate position
-        Q,       ///< Turbine flow
-        OMEGADB, ///< Deadbanded speed deviation
-        EF,      ///< Governor error into the filter
-        FC,      ///< Desired-gate derivative target
-        RC,      ///< Rate-limited desired-gate derivative target
-        PGV,     ///< Nonlinear gate-to-power curve output
-        H,       ///< Turbine head
-        PMECH,   ///< Mechanical-power output
+        XN,      ///< \f$x_n\f$ Speed lead-lag denominator state
+        XF,      ///< \f$x_f\f$ Governor error filter output on component base
+        C,       ///< \f$c\f$ Desired-gate position on component base
+        G,       ///< \f$g\f$ Gate position on component base
+        Q,       ///< \f$q\f$ Turbine flow on component base
+        OMEGADB, ///< \f$\omega_{\mathrm{db}}\f$ Deadbanded speed deviation
+        EF,      ///< \f$e_f\f$ Governor error on component base
+        FC,      ///< \f$f_c\f$ Desired-gate derivative target
+        RC,      ///< \f$r_c\f$ Rate-limited desired-gate derivative target
+        PGV,     ///< \f$P_{\mathrm{GV}}\f$ Gate-to-power curve output on component base
+        H,       ///< \f$H\f$ Turbine head on component base
+        PMECH,   ///< \f$P_{\mathrm{m}}\f$ Mechanical-power output on system base
         MAXIMUM,
       };
 
       /// External variables of a `Hygov`.
       enum class HygovExternalVariables : size_t
       {
-        OMEGA, ///< Machine speed deviation
-        PREF,  ///< Active-power/load reference
-        PAUX,  ///< Auxiliary power input
+        OMEGA, ///< \f$\omega\f$ Machine speed deviation
+        PREF,  ///< \f$P^{\mathrm{ref}}\f$ Active-power/load reference on system base
+        PAUX,  ///< \f$P^{\mathrm{aux}}\f$ Auxiliary power input on system base
         MAXIMUM,
       };
 
-      /// Indices into the HYGOV state, derivative, and residual vectors.
-      struct HygovIdx
-      {
-        static constexpr size_t XN      = static_cast<size_t>(HygovInternalVariables::XN);
-        static constexpr size_t XF      = static_cast<size_t>(HygovInternalVariables::XF);
-        static constexpr size_t C       = static_cast<size_t>(HygovInternalVariables::C);
-        static constexpr size_t G       = static_cast<size_t>(HygovInternalVariables::G);
-        static constexpr size_t Q       = static_cast<size_t>(HygovInternalVariables::Q);
-        static constexpr size_t OMEGADB = static_cast<size_t>(HygovInternalVariables::OMEGADB);
-        static constexpr size_t EF      = static_cast<size_t>(HygovInternalVariables::EF);
-        static constexpr size_t FC      = static_cast<size_t>(HygovInternalVariables::FC);
-        static constexpr size_t RC      = static_cast<size_t>(HygovInternalVariables::RC);
-        static constexpr size_t PGV     = static_cast<size_t>(HygovInternalVariables::PGV);
-        static constexpr size_t H       = static_cast<size_t>(HygovInternalVariables::H);
-        static constexpr size_t PMECH   = static_cast<size_t>(HygovInternalVariables::PMECH);
-        static constexpr size_t MAXIMUM = static_cast<size_t>(HygovInternalVariables::MAXIMUM);
-      };
-
-      /// Indices into the HYGOV external-signal buffers.
-      struct HygovExt
-      {
-        static constexpr size_t OMEGA   = static_cast<size_t>(HygovExternalVariables::OMEGA);
-        static constexpr size_t PREF    = static_cast<size_t>(HygovExternalVariables::PREF);
-        static constexpr size_t PAUX    = static_cast<size_t>(HygovExternalVariables::PAUX);
-        static constexpr size_t MAXIMUM = static_cast<size_t>(HygovExternalVariables::MAXIMUM);
-      };
-
+      /**
+       * @brief Hydro turbine-governor model with temporary droop, gate servo,
+       *        and a nonlinear single-penstock turbine.
+       *
+       * @tparam scalar_type Plain real or differentiable scalar type.
+       * @tparam index_type Integer index type.
+       */
       template <typename scalar_type, typename index_type>
       class Hygov : public Component<scalar_type, index_type>
       {
@@ -101,23 +82,25 @@ namespace GridKit
         using Component<scalar_type, index_type>::yp_;
 
       public:
-        using ScalarT    = scalar_type;
-        using IdxT       = index_type;
-        using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using SignalT    = SignalNode<ScalarT, IdxT>;
-        using ModelDataT = HygovData<RealT, IdxT>;
-        using MonitorT   = Model::VariableMonitor<Hygov, HygovData>;
+        using ScalarT            = scalar_type;
+        using IdxT               = index_type;
+        using RealT              = typename Component<ScalarT, IdxT>::RealT;
+        using SignalT            = SignalNode<ScalarT, IdxT>;
+        using ModelDataT         = HygovData<RealT, IdxT>;
+        using MonitorT           = Model::VariableMonitor<Hygov, HygovData>;
+        using InternalVariablesT = HygovInternalVariables;
+        using ExternalVariablesT = HygovExternalVariables;
 
         Hygov();
         explicit Hygov(const ModelDataT& data);
         ~Hygov();
 
-        int setGridKitComponentID(IdxT) override final;
+        int setGridKitComponentID(IdxT component_id) override final;
         int allocate() override final;
         int verify() const override final;
         int initialize() override final;
         int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT) override final;
+        int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
@@ -133,7 +116,11 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+            const ScalarT* y,
+            const ScalarT* yp,
+            const ScalarT* wb,
+            const ScalarT* ws,
+            ScalarT*       f);
 
       private:
         void initializeParameters(const ModelDataT& data);
@@ -144,17 +131,23 @@ namespace GridKit
         /// smooth linear segments.
         __attribute__((always_inline)) inline ScalarT gatePower(ScalarT gate) const;
 
-        /// Solve the steady gate position that reproduces a seeded
-        /// component-base mechanical power at an initial speed deviation.
-        RealT solveInitialGate(RealT pmech, RealT omega) const;
+        /// Steady component-base mechanical power at a gate position,
+        /// composed as the runtime PGV, H, and PMECH rows compose it.
+        RealT initialMechanicalPower(RealT gate) const;
+
+        /// Solve the gate position whose steady mechanical power reproduces
+        /// the given component-base value, exact to machine rounding.
+        RealT solveInitialGate(RealT pmech) const;
 
         ScalarT toComponentBase(ScalarT value) const;
         ScalarT toSystemBase(ScalarT value) const;
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM    = static_cast<RealT>(1.0e-3);
-        static constexpr RealT INITIALIZATION_TOLERANCE = static_cast<RealT>(1.0e-10);
+        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
 
-        RealT                Trate_{ZERO<RealT>};
+        /// Accepted seed distance beyond the achievable-power range edge.
+        static constexpr RealT INITIALIZATION_TOLERANCE =
+            static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+
         RealT                Rperm_{static_cast<RealT>(0.04)};
         RealT                Rtemp_{static_cast<RealT>(0.3)};
         RealT                Tr_{static_cast<RealT>(5.0)};

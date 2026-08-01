@@ -17,36 +17,36 @@ namespace GridKit
       /// Parameter keys for the HYGOV governor model.
       enum class HygovParameters
       {
-        Trate, ///< Turbine-rating power base
-        Rperm, ///< Permanent droop
-        Rtemp, ///< Temporary droop
-        Tr,    ///< Temporary-droop reset time constant
-        Tf,    ///< Governor error filter time constant
-        Tg,    ///< Gate servo time constant
-        Velm,  ///< Maximum desired-gate velocity magnitude
-        Gmax,  ///< Maximum desired-gate position
-        Gmin,  ///< Minimum desired-gate position
-        Tw,    ///< Water inertia time constant
-        At,    ///< Turbine gain
-        Dturb, ///< Turbine damping coefficient
-        Qnl,   ///< No-load flow at nominal head
-        Tn,    ///< Speed lead-lag numerator time constant
-        Tnp,   ///< Speed lead-lag denominator time constant
-        db1,   ///< Type 1 speed deadband threshold
-        db2,   ///< Unsupported mechanical backlash deadband
-        Hdam,  ///< Head available at dam
-        Gv0,   ///< Gate point 0
-        Gv1,   ///< Gate point 1
-        Gv2,   ///< Gate point 2
-        Gv3,   ///< Gate point 3
-        Gv4,   ///< Gate point 4
-        Gv5,   ///< Gate point 5
-        Pgv0,  ///< Power point 0
-        Pgv1,  ///< Power point 1
-        Pgv2,  ///< Power point 2
-        Pgv3,  ///< Power point 3
-        Pgv4,  ///< Power point 4
-        Pgv5   ///< Power point 5
+        Trate, ///< \f$T^\mathrm{rate}\f$ Turbine-rating power base
+        Rperm, ///< \f$R_{\mathrm{perm}}\f$ Permanent droop
+        Rtemp, ///< \f$R_{\mathrm{temp}}\f$ Temporary droop
+        Tr,    ///< \f$T_r\f$ Temporary-droop reset time constant
+        Tf,    ///< \f$T_f\f$ Governor error filter time constant
+        Tg,    ///< \f$T_g\f$ Gate servo time constant
+        Velm,  ///< \f$V_{\mathrm{elm}}\f$ Maximum desired-gate velocity magnitude
+        Gmax,  ///< \f$G^{\max}\f$ Maximum desired-gate position
+        Gmin,  ///< \f$G^{\min}\f$ Minimum desired-gate position
+        Tw,    ///< \f$T_w\f$ Water inertia time constant
+        At,    ///< \f$A_t\f$ Turbine gain
+        Dturb, ///< \f$D_{\mathrm{turb}}\f$ Turbine damping coefficient
+        Qnl,   ///< \f$q_{\mathrm{NL}}\f$ No-load flow at nominal head
+        Tn,    ///< \f$T_n\f$ Speed lead-lag numerator time constant
+        Tnp,   ///< \f$T_{\mathrm{np}}\f$ Speed lead-lag denominator time constant
+        db1,   ///< \f$D_{\omega}\f$ Type 1 speed deadband threshold
+        db2,   ///< \f$D_2\f$ Mechanical backlash deadband
+        Hdam,  ///< \f$H_{\mathrm{dam}}\f$ Head available at dam
+        Gv0,   ///< \f$G_V^{(0)}\f$ Gate point 0
+        Gv1,   ///< \f$G_V^{(1)}\f$ Gate point 1
+        Gv2,   ///< \f$G_V^{(2)}\f$ Gate point 2
+        Gv3,   ///< \f$G_V^{(3)}\f$ Gate point 3
+        Gv4,   ///< \f$G_V^{(4)}\f$ Gate point 4
+        Gv5,   ///< \f$G_V^{(5)}\f$ Gate point 5
+        Pgv0,  ///< \f$P_{\mathrm{GV}}^{(0)}\f$ Power point 0
+        Pgv1,  ///< \f$P_{\mathrm{GV}}^{(1)}\f$ Power point 1
+        Pgv2,  ///< \f$P_{\mathrm{GV}}^{(2)}\f$ Power point 2
+        Pgv3,  ///< \f$P_{\mathrm{GV}}^{(3)}\f$ Power point 3
+        Pgv4,  ///< \f$P_{\mathrm{GV}}^{(4)}\f$ Power point 4
+        Pgv5   ///< \f$P_{\mathrm{GV}}^{(5)}\f$ Power point 5
       };
 
       /// Buses for the HYGOV governor model.
@@ -58,7 +58,7 @@ namespace GridKit
       /// Signal inputs for the HYGOV governor model.
       enum class HygovSignalInputs : size_t
       {
-        speed, ///< Machine speed-deviation signal ID
+        speed, ///< Optional machine speed-deviation signal ID
         pref,  ///< Optional active-power/load reference signal ID
         paux,  ///< Optional auxiliary power input signal ID
         SIZE
@@ -67,21 +67,30 @@ namespace GridKit
       /// Signal outputs for the HYGOV governor model.
       enum class HygovSignalOutputs : size_t
       {
-        pmech, ///< Mechanical-power output signal ID
+        pmech, ///< Required mechanical-power output signal ID
         SIZE
       };
 
       /// Variables available through the monitor interface.
       enum class HygovMonitorableVariables
       {
-        pmech,       ///< Mechanical power output
-        filter,      ///< Governor error filter output
-        desiredgate, ///< Desired-gate position
-        gate,        ///< Gate position
-        flow,        ///< Turbine flow
-        head         ///< Turbine head
+        pmech,       ///< Mechanical power output on system base
+        filter,      ///< Governor error filter output on component base
+        desiredgate, ///< Desired-gate position on component base
+        gate,        ///< Gate position on component base
+        flow,        ///< Turbine flow on component base
+        head         ///< Turbine head on component base
       };
 
+      /**
+       * @brief Model data for HYGOV: parameters, optional input signals, the
+       *        required mechanical-power output, and monitored variables.
+       *
+       * @tparam real_type Real parameter value type.
+       * @tparam index_type Integer index type.
+       *
+       * @see Hygov
+       */
       template <typename real_type, typename index_type>
       struct HygovData : public ComponentData<real_type,
                                               index_type,

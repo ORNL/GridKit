@@ -321,6 +321,40 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// HYGOV through the production path: model data to system
+      /// construction to signal wiring. The declared pmech signal starts at
+      /// zero mechanical power, an admissible operating point.
+      TestOutcome hygov()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.freq_base = 60.0;
+        data.va_base   = 100.0e6;
+        data.signal.resize(1);
+        data.signal[0].signal_id = 2;
+        data.signal[0].name      = "Mechanical Power";
+
+        typename PhasorDynamics::SystemModelData<RealT, IdxT>::HygovDataT hygov_data;
+        hygov_data.device_class                                                        = "Hygov";
+        hygov_data.disambiguation_string                                               = "hygov_system";
+        hygov_data.parameters[PhasorDynamics::Governor::HygovParameters::Trate]        = 100.0;
+        hygov_data.signal_outputs[PhasorDynamics::Governor::HygovSignalOutputs::pmech] = 2;
+        data.hygov.push_back(hygov_data);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size()
+                   == static_cast<IdxT>(PhasorDynamics::Governor::HygovInternalVariables::MAXIMUM);
+
+        return success.report(__func__);
+      }
+
     private:
       auto makeRegcaData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
       {

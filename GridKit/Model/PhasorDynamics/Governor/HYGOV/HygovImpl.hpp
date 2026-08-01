@@ -28,15 +28,13 @@ namespace GridKit
       /**
        * @brief Construct a HYGOV governor without parameters
        *
-       * The model is sized but left unconfigured. Every parameter keeps its
-       * documented default, the required power base is absent, and no monitor
-       * is created, so verify() reports configuration errors until the data
-       * constructor is used instead.
+       * The model is sized with the documented parameter defaults but without
+       * a monitor or assigned mechanical-power output.
        */
       template <typename scalar_type, typename index_type>
       Hygov<scalar_type, index_type>::Hygov()
       {
-        size_ = static_cast<IdxT>(HygovIdx::MAXIMUM);
+        size_ = static_cast<IdxT>(HygovInternalVariables::MAXIMUM);
       }
 
       /**
@@ -50,7 +48,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(HygovIdx::MAXIMUM);
+        size_ = static_cast<IdxT>(HygovInternalVariables::MAXIMUM);
       }
 
       template <typename scalar_type, typename index_type>
@@ -61,10 +59,8 @@ namespace GridKit
       /**
        * @brief Resolve the parameter-derived constants
        *
-       * Raises each governor lag to the well-posedness floor, sizes the
-       * component power base, and derives the speed lead-lag gain from the
-       * floored denominator so the residual keeps a fixed structure for
-       * sparse automatic differentiation.
+       * Raises each governor lag to the well-posedness floor and derives the
+       * speed lead-lag gain from the floored denominator.
        */
       template <typename scalar_type, typename index_type>
       void Hygov<scalar_type, index_type>::setDerivedParameters()
@@ -102,8 +98,6 @@ namespace GridKit
         Tw_  = std::max(Tw_, TIME_CONSTANT_MINIMUM);
         Tnp_ = std::max(Tnp_, TIME_CONSTANT_MINIMUM);
 
-        va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
-
         leadlag_gain_ = Tn_ / Tnp_;
       }
 
@@ -130,61 +124,108 @@ namespace GridKit
       }
 
       /**
-       * @brief Solve the steady gate position for a seeded mechanical power
+       * @brief Steady component-base mechanical power at a gate position
        *
-       * At the steady state the head rests at the dam head, the flow rides
-       * the gate curve, and the turbine power less the speed-damping loss
-       * reproduces the seed:
+       * At the steady state the head equals the dam head and the flow
+       * follows the gate curve, so the PGV, H, and PMECH rows collapse to
        * @f[
-       *   A_t H_0 \left(\sqrt{H_0}\,N_{\mathrm{GV}}(g) - q_{\mathrm{NL}}\right)
-       *   - D_{\mathrm{turb}}\,\omega_0\, g = P_{\mathrm{m},0}.
+       *   P_{\mathrm{m}}(g)
+       *     = A_t H_{\mathrm{dam}}
+       *       \left(\sqrt{H_{\mathrm{dam}}}\,N_{\mathrm{GV}}(g)
+       *             - q_{\mathrm{NL}}\right).
        * @f]
-       * The curve is linear on each rising segment, so the equation is solved
-       * segment by segment and the lowest admissible gate is selected. Flat
-       * segments carry no power information and are skipped.
+       * The expression is composed exactly as those rows compose it, so a
+       * gate solved against it zeros the implemented residual at machine
+       * rounding.
        *
-       * @param[in] pmech Seeded mechanical power on the component base.
-       * @param[in] omega Initial machine speed deviation.
-       * @return The gate position, or a quiet NaN when no rising segment
-       *         reproduces the seed.
+       * @param[in] gate Gate position.
+       * @return Steady mechanical power on the component base.
        */
       template <typename scalar_type, typename index_type>
       typename Hygov<scalar_type, index_type>::RealT
-      Hygov<scalar_type, index_type>::solveInitialGate(RealT pmech, RealT omega) const
+      Hygov<scalar_type, index_type>::initialMechanicalPower(RealT gate) const
       {
-        const RealT h0      = Hdam_;
-        const RealT gain    = At_ * h0 * std::sqrt(h0);
-        const RealT damping = Dturb_ * omega;
-        const RealT target  = pmech + At_ * h0 * Qnl_;
+        const RealT pgv = static_cast<RealT>(gatePower(static_cast<ScalarT>(gate)));
+        const RealT q   = std::sqrt(Hdam_) * pgv;
+        return At_ * Hdam_ * (q - Qnl_);
+      }
 
-        if (std::abs(gain * Pgv_[0] - damping * Gv_[0] - target) <= INITIALIZATION_TOLERANCE)
+      /**
+       * @brief Solve the steady gate position for a given mechanical power
+       *
+       * Initialization requires a zero speed deviation and verify() requires
+       * the steady power to rise across [Gmin, Gmax], so the endpoint
+       * residuals decide feasibility and bisection converges to a root of
+       * the nondecreasing steady-power curve.
+       *
+       * @pre verify() reports no errors.
+       *
+       * @param[in] pmech Mechanical power on the component base.
+       * @return The gate position, or a quiet NaN when no gate inside
+       *         [Gmin, Gmax] reproduces the value within the initialization
+       *         tolerance.
+       */
+      template <typename scalar_type, typename index_type>
+      typename Hygov<scalar_type, index_type>::RealT
+      Hygov<scalar_type, index_type>::solveInitialGate(RealT pmech) const
+      {
+        // NaN is unreproducible by any gate and would otherwise slip
+        // through the sign tests below.
+        if (std::isnan(pmech))
         {
-          return Gv_[0];
+          return std::numeric_limits<RealT>::quiet_NaN();
         }
 
-        for (size_t i = 0; i < 5; ++i)
+        RealT a  = Gmin_;
+        RealT b  = Gmax_;
+        RealT fa = initialMechanicalPower(a) - pmech;
+        RealT fb = initialMechanicalPower(b) - pmech;
+
+        // A value just outside the achievable range pins to the gate limit
+        // when it is within the initialization tolerance of the range edge.
+        if (fa > ZERO<RealT>)
         {
-          if (Pgv_[i + 1] <= Pgv_[i])
+          if (fa <= INITIALIZATION_TOLERANCE)
           {
-            continue;
+            return a;
           }
-
-          const RealT slope       = (Pgv_[i + 1] - Pgv_[i]) / (Gv_[i + 1] - Gv_[i]);
-          const RealT denominator = gain * slope - damping;
-          if (std::abs(denominator) <= INITIALIZATION_TOLERANCE)
+          return std::numeric_limits<RealT>::quiet_NaN();
+        }
+        if (fb < ZERO<RealT>)
+        {
+          if (-fb <= INITIALIZATION_TOLERANCE)
           {
-            continue;
+            return b;
           }
-
-          const RealT gate = (target - gain * (Pgv_[i] - slope * Gv_[i])) / denominator;
-          if (Gv_[i] - INITIALIZATION_TOLERANCE <= gate
-              && gate <= Gv_[i + 1] + INITIALIZATION_TOLERANCE)
-          {
-            return gate;
-          }
+          return std::numeric_limits<RealT>::quiet_NaN();
         }
 
-        return std::numeric_limits<RealT>::quiet_NaN();
+        // Bisect until no representable midpoint remains, then keep the
+        // endpoint with the smaller residual.
+        while (true)
+        {
+          const RealT mid = HALF<RealT> * (a + b);
+          if (mid <= a || b <= mid)
+          {
+            break;
+          }
+          const RealT fmid = initialMechanicalPower(mid) - pmech;
+          if (fmid <= ZERO<RealT>)
+          {
+            a  = mid;
+            fa = fmid;
+          }
+          else
+          {
+            b  = mid;
+            fb = fmid;
+          }
+        }
+        if (std::abs(fa) <= std::abs(fb))
+        {
+          return a;
+        }
+        return b;
       }
 
       /**
@@ -214,12 +255,10 @@ namespace GridKit
       /**
        * @brief Read the parameters out of the model data
        *
-       * Only the turbine-rating power base is required; every other parameter
-       * keeps the default documented in the model README when omitted. A
-       * missing required key or a non-numeric value is counted and reported
-       * by verify() rather than throwing. Integer JSON values are accepted
-       * for real parameters. All-zero `Gv` and `Pgv` source points select the
-       * identity gate curve.
+       * Every omitted parameter keeps the default documented in the model
+       * README. A non-numeric value is counted and reported by verify() rather
+       * than throwing. Integer JSON values are accepted for real parameters.
+       * All-zero `Gv` and `Pgv` source points select the identity gate curve.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -230,35 +269,39 @@ namespace GridKit
 
         parameter_error_count_ = 0;
 
-        auto load_real = [&](auto key, RealT& target, const char* name)
+        auto load_real = [&](auto key, RealT& target, const char* name) -> bool
         {
           if (!data.parameters.contains(key))
           {
-            return;
+            return false;
           }
 
           const auto& value = data.parameters.at(key);
           if (const auto* real_value = std::get_if<RealT>(&value))
           {
             target = *real_value;
+            return true;
           }
-          else if (const auto* index_value = std::get_if<IdxT>(&value))
+          if (const auto* index_value = std::get_if<IdxT>(&value))
           {
             target = static_cast<RealT>(*index_value);
+            return true;
           }
-          else
-          {
-            Log::error() << "Hygov: parameter '" << name << "' must be numeric\n";
-            ++parameter_error_count_;
-          }
+
+          Log::error() << "Hygov: parameter '" << name << "' must be numeric\n";
+          ++parameter_error_count_;
+          return false;
         };
 
-        if (!data.parameters.contains(Params::Trate))
+        if (load_real(Params::Trate, va_component_base_, "Trate"))
         {
-          Log::error() << "Hygov: missing required parameter 'Trate'\n";
-          ++parameter_error_count_;
+          if (!(va_component_base_ > ZERO<RealT>) )
+          {
+            Log::error() << "Hygov: Trate must be positive when provided\n";
+            ++parameter_error_count_;
+          }
+          va_component_base_ *= static_cast<RealT>(1.0e6);
         }
-        load_real(Params::Trate, Trate_, "Trate");
         load_real(Params::Rperm, Rperm_, "Rperm");
         load_real(Params::Rtemp, Rtemp_, "Rtemp");
         load_real(Params::Tr, Tr_, "Tr");
@@ -330,21 +373,20 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Hygov<scalar_type, index_type>::initializeMonitor()
       {
-        using I        = HygovIdx;
         using Variable = typename ModelDataT::MonitorableVariables;
 
         monitor_->set(Variable::pmech, [this]
-                      { return y_.getData()[I::PMECH]; });
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::PMECH)]; });
         monitor_->set(Variable::filter, [this]
-                      { return y_.getData()[I::XF]; });
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::XF)]; });
         monitor_->set(Variable::desiredgate, [this]
-                      { return y_.getData()[I::C]; });
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::C)]; });
         monitor_->set(Variable::gate, [this]
-                      { return y_.getData()[I::G]; });
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::G)]; });
         monitor_->set(Variable::flow, [this]
-                      { return y_.getData()[I::Q]; });
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::Q)]; });
         monitor_->set(Variable::head, [this]
-                      { return y_.getData()[I::H]; });
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::H)]; });
       }
 
       /**
@@ -363,10 +405,10 @@ namespace GridKit
       /**
        * @brief Allocate the model vectors and wire the mechanical-power output
        *
-       * Sizes the state, residual, and signal-interface buffers, seeds the
-       * identity index maps, and points the assigned `pmech` node at the
+       * Sizes the state, residual, and signal-interface buffers, initializes
+       * the identity index maps, and points the assigned `pmech` node at the
        * internal state it publishes. That node aliases HYGOV storage from
-       * here on, which is how initialize() reads the seed the machine wrote.
+       * here on, which is how initialize() reads the machine value.
        * HYGOV attaches to no bus, so the bus-interface buffer stays empty.
        * Repeated calls reuse the allocated vectors.
        *
@@ -375,8 +417,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Hygov<scalar_type, index_type>::allocate()
       {
-        using I = HygovIdx;
-        using E = HygovExt;
+        const auto PMECH = static_cast<size_t>(HygovInternalVariables::PMECH);
 
         if (!allocated_)
         {
@@ -390,7 +431,7 @@ namespace GridKit
 
         wb_.clear();
 
-        auto signal_size = E::MAXIMUM;
+        const auto signal_size = static_cast<size_t>(HygovExternalVariables::MAXIMUM);
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -404,8 +445,8 @@ namespace GridKit
         {
           auto* y = y_.getData();
           signals_.template getSignalNode<HygovInternalVariables::PMECH>()->set(
-              &y[I::PMECH],
-              &(this->getVariableIndex(static_cast<IdxT>(I::PMECH))));
+              &y[PMECH],
+              &(this->getVariableIndex(static_cast<IdxT>(PMECH))));
         }
 
         allocated_ = true;
@@ -416,9 +457,10 @@ namespace GridKit
        * @brief Validate the HYGOV configuration
        *
        * Checks parameter-loading errors, static parameter relationships, the
-       * gate-curve monotonicity, and attached external signals. Seed
-       * feasibility is operating-point dependent and is checked by
-       * initialize().
+       * gate-curve shape, the gate-limit domain, the assigned
+       * mechanical-power output, and attached external signals.
+       * Mechanical-power feasibility is operating-point dependent and is
+       * checked by initialize().
        *
        * @return int Number of configuration errors; zero when valid.
        */
@@ -436,21 +478,51 @@ namespace GridKit
           }
         };
 
-        check(Trate_ > ZERO<RealT>, "Trate must be positive");
         check(Rtemp_ != ZERO<RealT>, "Rtemp must be nonzero");
         check(Tn_ >= ZERO<RealT>, "Tn must be non-negative");
         check(Velm_ >= ZERO<RealT>, "Velm must be non-negative");
-        check(Gmin_ <= Gmax_, "Gmin must be less than or equal to Gmax");
+        check(Gmin_ < Gmax_, "Gmin must be less than Gmax");
         check(At_ > ZERO<RealT>, "At must be positive");
         check(Dturb_ >= ZERO<RealT>, "Dturb must be non-negative");
         check(db1_ >= ZERO<RealT>, "db1 must be non-negative");
         check(Hdam_ > ZERO<RealT>, "Hdam must be positive");
 
+        bool curve_shape_is_valid = true;
         for (size_t i = 1; i < Gv_.size(); ++i)
         {
-          check(Gv_[i - 1] < Gv_[i], "Gv points must be strictly increasing");
-          check(Pgv_[i - 1] <= Pgv_[i], "Pgv points must be non-decreasing");
+          const bool gate_points_increase  = Gv_[i - 1] < Gv_[i];
+          const bool power_points_increase = Pgv_[i - 1] <= Pgv_[i];
+
+          check(gate_points_increase, "Gv points must be strictly increasing");
+          check(power_points_increase, "Pgv points must be non-decreasing");
+
+          if (!gate_points_increase || !power_points_increase)
+          {
+            curve_shape_is_valid = false;
+          }
         }
+        const bool minimum_gate_is_valid = Gv_[0] <= Gmin_;
+        const bool maximum_gate_is_valid = Gmax_ <= Gv_[5];
+        check(minimum_gate_is_valid, "Gmin must be at or above the first Gv point");
+        check(maximum_gate_is_valid, "Gmax must be at or below the last Gv point");
+
+        if (curve_shape_is_valid
+            && Gmin_ < Gmax_
+            && minimum_gate_is_valid
+            && maximum_gate_is_valid
+            && At_ > ZERO<RealT>
+            && Hdam_ > ZERO<RealT>)
+        {
+          // A rise no wider than the tolerance that pins a seed to a range
+          // edge leaves the gate undetermined by the mechanical power.
+          const RealT minimum_power = initialMechanicalPower(Gmin_);
+          const RealT maximum_power = initialMechanicalPower(Gmax_);
+          check(maximum_power - minimum_power > INITIALIZATION_TOLERANCE,
+                "mechanical power must rise across [Gmin, Gmax]");
+        }
+
+        check(signals_.template isAssigned<HygovInternalVariables::PMECH>(),
+              "pmech output signal must be assigned");
 
         // An attached port must resolve to readable signal storage. The
         // enumerator is a template argument, so each port names itself once.
@@ -473,25 +545,41 @@ namespace GridKit
       }
 
       /**
-       * @brief Initialize HYGOV from the seeded mechanical-power port
+       * @brief Initialize HYGOV from the mechanical-power port
        *
        * Reads the assigned system-base `pmech` node and the attached speed
        * and auxiliary-power inputs, solves the component-base steady state
-       * that preserves the seed, and publishes the resolved load reference to
-       * an attached `pref` signal. All operating-point checks are completed
-       * before model or signal storage is modified.
+       * that preserves the given value, and publishes the resolved load reference
+       * to an attached `pref` signal.
        *
        * @pre allocate() has completed.
-       * @pre The machine model has seeded the assigned `pmech` node.
+       * @pre The machine model has initialized the assigned `pmech` node.
        *
-       * @return int 0 on success; nonzero when the configuration is invalid,
-       *             no rising segment of the gate curve reproduces the seeded
-       *             power, or the resulting gate is outside Gmin/Gmax.
+       * @post On success the state zeros every residual row at machine
+       *       rounding; a value clipped to the achievable-power range edge
+       *       leaves a mechanical-power residual up to the initialization
+       *       tolerance.
+       * @post On failure no state or signal storage has changed.
+       *
+       * @return int 0 on success; nonzero when the configuration is
+       *             invalid, the initial speed deviation is nonzero, or no
+       *             gate inside [Gmin, Gmax] reproduces the given power.
        */
       template <typename scalar_type, typename index_type>
       int Hygov<scalar_type, index_type>::initialize()
       {
-        using I = HygovIdx;
+        const auto XN      = static_cast<size_t>(HygovInternalVariables::XN);
+        const auto XF      = static_cast<size_t>(HygovInternalVariables::XF);
+        const auto C       = static_cast<size_t>(HygovInternalVariables::C);
+        const auto G       = static_cast<size_t>(HygovInternalVariables::G);
+        const auto Q       = static_cast<size_t>(HygovInternalVariables::Q);
+        const auto OMEGADB = static_cast<size_t>(HygovInternalVariables::OMEGADB);
+        const auto EF      = static_cast<size_t>(HygovInternalVariables::EF);
+        const auto FC      = static_cast<size_t>(HygovInternalVariables::FC);
+        const auto RC      = static_cast<size_t>(HygovInternalVariables::RC);
+        const auto PGV     = static_cast<size_t>(HygovInternalVariables::PGV);
+        const auto H       = static_cast<size_t>(HygovInternalVariables::H);
+        const auto PMECH   = static_cast<size_t>(HygovInternalVariables::PMECH);
 
         if (verify() > 0)
         {
@@ -499,16 +587,30 @@ namespace GridKit
           return 1;
         }
 
+        if (!(va_component_base_ > ZERO<RealT>) )
+        {
+          va_component_base_ = va_system_base_;
+        }
+
         auto* y = y_.getData();
 
         // The assigned pmech node aliases this entry after allocate(). Its
-        // system-base seed remains untouched throughout initialization.
-        const ScalarT pmech0 = toComponentBase(y[I::PMECH]);
+        // system-base value remains untouched throughout initialization.
+        const ScalarT pmech0 = toComponentBase(y[PMECH]);
 
         ScalarT omega0{ZERO<RealT>};
         if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
         {
           omega0 = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
+        }
+
+        // Synchronous machines provide an exactly zero speed deviation. A
+        // moving machine would need a multi-root gate search, which this
+        // model does not support.
+        if (static_cast<RealT>(omega0) != ZERO<RealT>)
+        {
+          Log::error() << "Hygov: initialization requires zero speed deviation\n";
+          return 1;
         }
 
         ScalarT paux0_system{ZERO<RealT>};
@@ -518,17 +620,11 @@ namespace GridKit
         }
         const ScalarT paux0 = toComponentBase(paux0_system);
 
-        const RealT gate0 = solveInitialGate(static_cast<RealT>(pmech0),
-                                             static_cast<RealT>(omega0));
+        const RealT gate0 = solveInitialGate(static_cast<RealT>(pmech0));
         if (std::isnan(gate0))
         {
-          Log::error() << "Hygov: initial mechanical power is outside the invertible gate curve\n";
-          return 1;
-        }
-        if (gate0 < Gmin_ - INITIALIZATION_TOLERANCE
-            || gate0 > Gmax_ + INITIALIZATION_TOLERANCE)
-        {
-          Log::error() << "Hygov: initialized gate is outside Gmin/Gmax\n";
+          Log::error()
+              << "Hygov: no gate inside [Gmin, Gmax] reproduces the given mechanical power\n";
           return 1;
         }
 
@@ -540,17 +636,17 @@ namespace GridKit
         const ScalarT yomega0  = xn0 + leadlag_gain_ * (omegadb0 - xn0);
         const ScalarT pref0    = toSystemBase(yomega0 + Rperm_ * gate0 - paux0);
 
-        y[I::XN]      = xn0;
-        y[I::XF]      = ZERO<RealT>;
-        y[I::C]       = gate0;
-        y[I::G]       = gate0;
-        y[I::Q]       = q0;
-        y[I::OMEGADB] = omegadb0;
-        y[I::EF]      = ZERO<RealT>;
-        y[I::FC]      = ZERO<RealT>;
-        y[I::RC]      = ZERO<RealT>;
-        y[I::PGV]     = pgv0;
-        y[I::H]       = h0;
+        y[XN]      = xn0;
+        y[XF]      = ZERO<RealT>;
+        y[C]       = gate0;
+        y[G]       = gate0;
+        y[Q]       = q0;
+        y[OMEGADB] = omegadb0;
+        y[EF]      = ZERO<RealT>;
+        y[FC]      = ZERO<RealT>;
+        y[RC]      = ZERO<RealT>;
+        y[PGV]     = pgv0;
+        y[H]       = h0;
 
         pref_set_ = pref0;
         paux_set_ = paux0_system;
@@ -577,14 +673,18 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Hygov<scalar_type, index_type>::tagDifferentiable()
       {
-        using I = HygovIdx;
+        const auto XN = static_cast<size_t>(HygovInternalVariables::XN);
+        const auto XF = static_cast<size_t>(HygovInternalVariables::XF);
+        const auto C  = static_cast<size_t>(HygovInternalVariables::C);
+        const auto G  = static_cast<size_t>(HygovInternalVariables::G);
+        const auto Q  = static_cast<size_t>(HygovInternalVariables::Q);
 
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[I::XN] = true;
-        tag_[I::XF] = true;
-        tag_[I::C]  = true;
-        tag_[I::G]  = true;
-        tag_[I::Q]  = true;
+        tag_[XN] = true;
+        tag_[XF] = true;
+        tag_[C]  = true;
+        tag_[G]  = true;
+        tag_[Q]  = true;
         return 0;
       }
 
@@ -630,46 +730,60 @@ namespace GridKit
           const ScalarT*                  ws,
           ScalarT*                        f)
       {
-        using I = HygovIdx;
-        using E = HygovExt;
+        const auto XN      = static_cast<size_t>(HygovInternalVariables::XN);
+        const auto XF      = static_cast<size_t>(HygovInternalVariables::XF);
+        const auto C       = static_cast<size_t>(HygovInternalVariables::C);
+        const auto G       = static_cast<size_t>(HygovInternalVariables::G);
+        const auto Q       = static_cast<size_t>(HygovInternalVariables::Q);
+        const auto OMEGADB = static_cast<size_t>(HygovInternalVariables::OMEGADB);
+        const auto EF      = static_cast<size_t>(HygovInternalVariables::EF);
+        const auto FC      = static_cast<size_t>(HygovInternalVariables::FC);
+        const auto RC      = static_cast<size_t>(HygovInternalVariables::RC);
+        const auto PGV     = static_cast<size_t>(HygovInternalVariables::PGV);
+        const auto H       = static_cast<size_t>(HygovInternalVariables::H);
+        const auto PMECH   = static_cast<size_t>(HygovInternalVariables::PMECH);
 
-        const ScalarT xn      = y[I::XN];
-        const ScalarT xf      = y[I::XF];
-        const ScalarT c       = y[I::C];
-        const ScalarT g       = y[I::G];
-        const ScalarT q       = y[I::Q];
-        const ScalarT omegadb = y[I::OMEGADB];
-        const ScalarT ef      = y[I::EF];
-        const ScalarT fc      = y[I::FC];
-        const ScalarT rc      = y[I::RC];
-        const ScalarT pgv     = y[I::PGV];
-        const ScalarT head    = y[I::H];
-        const ScalarT pmech   = y[I::PMECH];
+        const auto OMEGA = static_cast<size_t>(HygovExternalVariables::OMEGA);
+        const auto PREF  = static_cast<size_t>(HygovExternalVariables::PREF);
+        const auto PAUX  = static_cast<size_t>(HygovExternalVariables::PAUX);
 
-        const ScalarT xn_dot = yp[I::XN];
-        const ScalarT xf_dot = yp[I::XF];
-        const ScalarT c_dot  = yp[I::C];
-        const ScalarT g_dot  = yp[I::G];
-        const ScalarT q_dot  = yp[I::Q];
+        const ScalarT xn      = y[XN];
+        const ScalarT xf      = y[XF];
+        const ScalarT c       = y[C];
+        const ScalarT g       = y[G];
+        const ScalarT q       = y[Q];
+        const ScalarT omegadb = y[OMEGADB];
+        const ScalarT ef      = y[EF];
+        const ScalarT fc      = y[FC];
+        const ScalarT rc      = y[RC];
+        const ScalarT pgv     = y[PGV];
+        const ScalarT head    = y[H];
+        const ScalarT pmech   = y[PMECH];
 
-        const ScalarT omega = ws[E::OMEGA];
-        const ScalarT pref  = toComponentBase(ws[E::PREF]);
-        const ScalarT paux  = toComponentBase(ws[E::PAUX]);
+        const ScalarT xn_dot = yp[XN];
+        const ScalarT xf_dot = yp[XF];
+        const ScalarT c_dot  = yp[C];
+        const ScalarT g_dot  = yp[G];
+        const ScalarT q_dot  = yp[Q];
+
+        const ScalarT omega = ws[OMEGA];
+        const ScalarT pref  = ws[PREF];
+        const ScalarT paux  = ws[PAUX];
 
         const ScalarT yomega = xn + leadlag_gain_ * (omegadb - xn);
 
-        f[I::XN]      = -xn_dot + (omegadb - xn) / Tnp_;
-        f[I::XF]      = -xf_dot + (ef - xf) / Tf_;
-        f[I::C]       = -c_dot + Math::antiwindup(c, rc, Gmin_, Gmax_);
-        f[I::G]       = -g_dot + (c - g) / Tg_;
-        f[I::Q]       = -q_dot + (Hdam_ - head) / Tw_;
-        f[I::OMEGADB] = -omegadb + Math::deadband1(omega, -db1_, db1_);
-        f[I::EF]      = -ef + pref + paux - yomega - Rperm_ * c;
-        f[I::FC]      = -fc + (xf / Tr_ + (ef - xf) / Tf_) / Rtemp_;
-        f[I::RC]      = -rc + Math::clamp(fc, -Velm_, Velm_);
-        f[I::PGV]     = -pgv + gatePower(g);
-        f[I::H]       = -q * q + head * pgv * pgv;
-        f[I::PMECH]   = -toComponentBase(pmech) + At_ * head * (q - Qnl_) - Dturb_ * omega * g;
+        f[XN]      = -xn_dot + (omegadb - xn) / Tnp_;
+        f[XF]      = -xf_dot + (ef - xf) / Tf_;
+        f[C]       = -c_dot + Math::antiwindup(c, rc, Gmin_, Gmax_);
+        f[G]       = -g_dot + (c - g) / Tg_;
+        f[Q]       = -q_dot + (Hdam_ - head) / Tw_;
+        f[OMEGADB] = -omegadb + Math::deadband1(omega, -db1_, db1_);
+        f[EF]      = -ef + toComponentBase(pref + paux) - yomega - Rperm_ * c;
+        f[FC]      = -Rtemp_ * fc + xf / Tr_ + (ef - xf) / Tf_;
+        f[RC]      = -rc + Math::clamp(fc, -Velm_, Velm_);
+        f[PGV]     = -pgv + gatePower(g);
+        f[H]       = -q * q + head * pgv * pgv;
+        f[PMECH]   = -toComponentBase(pmech) + At_ * head * (q - Qnl_) - Dturb_ * omega * g;
 
         return 0;
       }
@@ -688,29 +802,31 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Hygov<scalar_type, index_type>::evaluateResidual()
       {
-        using E = HygovExt;
+        const auto OMEGA = static_cast<size_t>(HygovExternalVariables::OMEGA);
+        const auto PREF  = static_cast<size_t>(HygovExternalVariables::PREF);
+        const auto PAUX  = static_cast<size_t>(HygovExternalVariables::PAUX);
 
-        ws_[E::OMEGA] = ZERO<RealT>;
-        ws_[E::PREF]  = pref_set_;
-        ws_[E::PAUX]  = paux_set_;
+        ws_[OMEGA] = ZERO<RealT>;
+        ws_[PREF]  = pref_set_;
+        ws_[PAUX]  = paux_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
         {
-          ws_[E::OMEGA] = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
-          ws_indices_[E::OMEGA] =
+          ws_[OMEGA] = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
+          ws_indices_[OMEGA] =
               signals_.template readExternalVariableIndex<HygovExternalVariables::OMEGA>();
         }
         if (signals_.template isAttached<HygovExternalVariables::PREF>())
         {
-          ws_[E::PREF] = signals_.template readExternalVariable<HygovExternalVariables::PREF>();
-          ws_indices_[E::PREF] =
+          ws_[PREF] = signals_.template readExternalVariable<HygovExternalVariables::PREF>();
+          ws_indices_[PREF] =
               signals_.template readExternalVariableIndex<HygovExternalVariables::PREF>();
         }
         if (signals_.template isAttached<HygovExternalVariables::PAUX>())
         {
-          ws_[E::PAUX] = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
-          ws_indices_[E::PAUX] =
+          ws_[PAUX] = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
+          ws_indices_[PAUX] =
               signals_.template readExternalVariableIndex<HygovExternalVariables::PAUX>();
         }
 

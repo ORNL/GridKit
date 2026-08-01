@@ -149,9 +149,9 @@ namespace GridKit
         }
         else if (kind == "Hygov")
         {
-          typename SystemModelData<RealT, IdxT>::HygovDataT gov;
-          raw_component.get_to(gov);
-          sm.hygov.push_back(gov);
+          typename SystemModelData<RealT, IdxT>::HygovDataT hygov;
+          raw_component.get_to(hygov);
+          sm.hygov.push_back(hygov);
         }
         else if (kind == "Ieeet1")
         {
