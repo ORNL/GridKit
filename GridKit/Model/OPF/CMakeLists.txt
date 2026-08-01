@@ -6,7 +6,13 @@ set(opf_shunt_headers Shunt/Shunt.hpp Shunt/ShuntData.hpp)
 
 gridkit_add_library(
   model_opf
-  SOURCES System.cpp SystemData.cpp
+  SOURCES Branch/Branch.cpp
+          Bus/Bus.cpp
+          Generator/Generator.cpp
+          Load/Load.cpp
+          Shunt/Shunt.cpp
+          System.cpp
+          SystemData.cpp
   HEADERS Component.hpp
           ComponentConstraints.hpp
           ComponentVariables.hpp
