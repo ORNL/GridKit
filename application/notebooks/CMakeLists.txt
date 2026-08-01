@@ -1,12 +1,13 @@
 option(GridKit_ENABLE_NOTEBOOKS_PYENV
-  "Create a venv and install application/notebooks Python dependencies" OFF)
+       "Create a venv and install application/notebooks Python dependencies" OFF)
 
 find_package(Python3 COMPONENTS Interpreter)
 
 if(Python3_FOUND)
   set(_nb_venv ${CMAKE_CURRENT_BINARY_DIR}/notebooks-venv)
 
-  add_custom_target(notebooks_pyenv
+  add_custom_target(
+    notebooks_pyenv
     COMMAND ${Python3_EXECUTABLE} -m venv ${_nb_venv}
     COMMAND ${_nb_venv}/bin/pip install --upgrade pip
     COMMAND ${_nb_venv}/bin/pip install -e ${CMAKE_CURRENT_SOURCE_DIR}[notebook,test]

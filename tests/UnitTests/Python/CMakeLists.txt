@@ -17,8 +17,9 @@ if(Python3_FOUND)
     NAME PythonNotebookUtilsTest
     COMMAND ${_nb_venv_python} -m pytest ${CMAKE_CURRENT_SOURCE_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-  set_tests_properties(PythonNotebookUtilsTest PROPERTIES
-    ENVIRONMENT "PYTHONPATH=${CMAKE_SOURCE_DIR}/application/notebooks")
+  set_tests_properties(
+    PythonNotebookUtilsTest PROPERTIES ENVIRONMENT
+                                       "PYTHONPATH=${CMAKE_SOURCE_DIR}/application/notebooks")
 else()
   message(STATUS "Python3 interpreter not found; PythonNotebookUtilsTest unavailable")
 endif()
