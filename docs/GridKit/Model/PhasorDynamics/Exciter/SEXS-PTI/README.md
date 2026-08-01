@@ -6,3 +6,13 @@
 :start-line: 1
 :relative-images:
 ```
+
+## Ports
+
+```{model-ports} SexsPti
+```
+
+## Cases
+
+```{model-cases} SexsPti
+```

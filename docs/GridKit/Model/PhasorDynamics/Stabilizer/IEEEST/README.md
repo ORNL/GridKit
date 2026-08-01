@@ -6,3 +6,13 @@
 :start-line: 1
 :relative-images:
 ```
+
+## Ports
+
+```{model-ports} Ieeest
+```
+
+## Cases
+
+```{model-cases} Ieeest
+```

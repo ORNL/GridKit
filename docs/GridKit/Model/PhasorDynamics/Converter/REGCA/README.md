@@ -6,3 +6,13 @@
 :start-line: 1
 :relative-images:
 ```
+
+## Ports
+
+```{model-ports} Regca
+```
+
+## Cases
+
+```{model-cases} Regca
+```

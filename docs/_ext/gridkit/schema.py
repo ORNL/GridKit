@@ -1,3 +1,10 @@
+"""The JSON Schema for case files, generated from the model definitions.
+
+The hand-written base holds everything that is not per model. Model classes,
+their ports, parameters, and monitorable variables come from the same records
+the documentation tables use.
+"""
+
 from __future__ import annotations
 
 import json
@@ -5,10 +12,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from .inventory import Item, Model, read_models
-
-
-BUS_CLASS_NAMES = {"Bus": "bus", "BusInfinite": "infinite_bus"}
+from .doxygen import JSON_NAMES, Item, Model
 
 
 def _annotations(item: Item) -> dict[str, str]:
@@ -33,8 +37,7 @@ def _parameters(model: Model) -> dict[str, Any]:
 
 
 def _ports(model: Model) -> dict[str, Any]:
-    items = (*model.buses, *model.signal_inputs, *model.signal_outputs)
-    names = [item.name for item in items]
+    names = [item.name for item in model.ports]
     if len(names) != len(set(names)):
         raise ValueError(f"{model.name} has duplicate port names")
     return _closed(
@@ -43,7 +46,7 @@ def _ports(model: Model) -> dict[str, Any]:
                 "$ref": "#/$defs/nonnegative_id",
                 **_annotations(item),
             }
-            for item in items
+            for item in model.ports
         }
     )
 
@@ -60,7 +63,7 @@ def _monitors(model: Model) -> dict[str, Any]:
 def _device(model: Model) -> dict[str, Any]:
     schema = _closed(
         {
-            "class": {"const": model.name},
+            "class": {"const": model.json_name},
             "ports": _ports(model),
             "id": {"type": "string", "minLength": 1},
             "params": _parameters(model),
@@ -76,7 +79,7 @@ def _bus(model: Model) -> dict[str, Any]:
     schema = _closed(
         {
             "number": {"$ref": "#/$defs/nonnegative_id"},
-            "class": {"const": BUS_CLASS_NAMES[model.name]},
+            "class": {"const": model.json_name},
             "name": {"type": "string"},
             "init": {"$ref": "#/$defs/bus_init"},
             "params": _parameters(model),
@@ -100,20 +103,19 @@ def _dispatch(title: str, models: list[Model]) -> dict[str, Any]:
     }
 
 
-def build_schema(xml: Path, base: Path) -> dict[str, Any]:
-    models = list(read_models(xml).values())
-    buses = [model for model in models if model.kind == "bus"]
-    devices = [model for model in models if model.kind == "device"]
+def build_schema(models: dict[str, Model], base: Path) -> dict[str, Any]:
+    buses = [model for model in models.values() if model.kind == "bus"]
+    devices = [model for model in models.values() if model.kind == "device"]
 
-    unknown_buses = {model.name for model in buses} - BUS_CLASS_NAMES.keys()
-    if unknown_buses:
-        raise ValueError(f"missing JSON names for bus models: {sorted(unknown_buses)}")
+    unnamed = {model.name for model in buses} - JSON_NAMES.keys()
+    if unnamed:
+        raise ValueError(f"missing JSON names for bus models: {sorted(unnamed)}")
 
     schema = json.loads(base.read_text(encoding="utf-8"))
     if canonical := os.environ.get("READTHEDOCS_CANONICAL_URL"):
         schema["$id"] = canonical.rstrip("/") + "/case.schema.json"
     schema["$comment"] = (
-        "Generated from Doxygen XML by the GridKit Sphinx schema extension. "
+        "Generated from Doxygen XML by the GridKit Sphinx extension. "
         "Edit case.schema.base.json or the C++ model documentation instead."
     )
     definitions = schema["$defs"]
@@ -124,9 +126,8 @@ def build_schema(xml: Path, base: Path) -> dict[str, Any]:
     return schema
 
 
-def write_schema(xml: Path, base: Path, output: Path) -> None:
-    schema = build_schema(xml, base)
+def write_schema(models: dict[str, Model], base: Path, output: Path) -> None:
     output.write_text(
-        json.dumps(schema, indent=2, ensure_ascii=False) + "\n",
+        json.dumps(build_schema(models, base), indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )

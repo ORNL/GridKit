@@ -13,8 +13,8 @@ sys.path.insert(0, str(docs_dir / "_ext"))
 extensions = [
     "breathe",
     "exhale",
+    "gridkit",
     "myst_parser",
-    "schema",
     "sphinx-jsonschema",
     "sphinx_design",
 ]
@@ -46,7 +46,7 @@ primary_domain = "cpp"
 html_theme = "sphinx_rtd_theme"
 html_extra_path = ["../GridKit/Model/case.schema.json"]
 html_static_path = ["_static"]
-html_css_files = ["css/model-inventory.css"]
+html_css_files = ["css/gridkit.css"]
 html_theme_options = {
     "collapse_navigation": True,
     "navigation_depth": 2,

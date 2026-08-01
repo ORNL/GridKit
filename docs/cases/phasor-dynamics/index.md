@@ -4,8 +4,16 @@
 
 Reusable datasets for Phasor Dynamics studies.
 
+```{case-gallery}
+```
+
+## Catalog
+
+```{case-catalog}
+```
+
 ```{toctree}
-:maxdepth: 1
+:hidden:
 :titlesonly:
 
 Hawaii <hawaii>

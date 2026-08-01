@@ -1,0 +1,26 @@
+/* Generated tables. The Read the Docs theme keeps every cell on one line, which
+ * turns a description column into an endless horizontal scroll. */
+.gk-table table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.gk-table th,
+.gk-table td {
+  white-space: normal;
+  vertical-align: top;
+}
+
+.gk-table td:first-child {
+  white-space: nowrap;
+}
+
+/* Gallery cards. One-line diagrams are drawn at whatever aspect the source
+ * network happens to have, so give every card the same window onto its
+ * figure instead of letting tall diagrams set the row height. */
+.gk-card .sd-card-img-top {
+  height: 11rem;
+  object-fit: contain;
+  background: #fff;
+  padding: 0.5rem;
+}

@@ -7,3 +7,13 @@
 :start-line: 1
 :relative-images:
 ```
+
+## Ports
+
+```{model-ports} Bus
+```
+
+## Cases
+
+```{model-cases} Bus
+```

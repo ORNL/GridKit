@@ -1,3 +1,12 @@
+"""GridKit model definitions, read from Doxygen XML.
+
+A model declares its parameters, ports, and monitorable variables as documented
+enums, reached through its `ModelDataT` alias. The value applied when a case
+omits a parameter is the initializer on the matching `<parameter>_` member.
+Reading both from here keeps the JSON schema and the documentation tables from
+diverging.
+"""
+
 from __future__ import annotations
 
 import re
@@ -7,8 +16,11 @@ from pathlib import Path
 from typing import Literal
 
 
+DOMAIN = "phasor-dynamics"
 NAMESPACE = "GridKit::PhasorDynamics"
 BUS_BASE = f"{NAMESPACE}::BusBase"
+SOURCE_ROOT = Path("GridKit/Model/PhasorDynamics")
+
 ALIASES = {
     "Parameters": "parameters",
     "Buses": "buses",
@@ -17,6 +29,12 @@ ALIASES = {
     "MonitorableVariables": "monitors",
 }
 
+# Bus models are named differently in case files than they are in C++.
+JSON_NAMES = {"Bus": "bus", "BusInfinite": "infinite_bus"}
+
+_UNIT = re.compile(r"^\[([^]]*)\]\s*")
+_ALNUM = re.compile(r"[^a-z0-9]")
+
 
 class InventoryError(RuntimeError):
     pass
@@ -24,19 +42,43 @@ class InventoryError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class Item:
+    """One documented enum value: a parameter, a port, or a monitor."""
+
     name: str
+    symbol: str = ""
+    unit: str = ""
     description: str = ""
+    default: str = ""
 
 
 @dataclass(frozen=True, slots=True)
 class Model:
     name: str
     kind: Literal["bus", "device"]
+    directory: Path
+    family: str = ""
     parameters: tuple[Item, ...] = ()
     buses: tuple[Item, ...] = ()
     signal_inputs: tuple[Item, ...] = ()
     signal_outputs: tuple[Item, ...] = ()
     monitors: tuple[Item, ...] = ()
+
+    @property
+    def json_name(self) -> str:
+        """The value of `class` in a case file."""
+        return JSON_NAMES.get(self.name, self.name)
+
+    @property
+    def slug(self) -> str:
+        return _ALNUM.sub("", self.json_name.lower())
+
+    @property
+    def label(self) -> str:
+        return f"model-{DOMAIN}-{self.slug}"
+
+    @property
+    def ports(self) -> tuple[Item, ...]:
+        return (*self.buses, *self.signal_inputs, *self.signal_outputs)
 
 
 def _text(node: ET.Element | None) -> str:
@@ -45,13 +87,28 @@ def _text(node: ET.Element | None) -> str:
     return re.sub(r"\s+", " ", "".join(node.itertext())).strip()
 
 
-def _item(node: ET.Element) -> Item:
+def _number(text: str) -> str:
+    try:
+        return f"{float(text):g}"
+    except ValueError:
+        return text
+
+
+def _item(node: ET.Element, defaults: dict[str, str]) -> Item:
     brief = node.find("briefdescription")
     description = _text(brief)
-    formula = brief.find(".//formula") if brief is not None else None
-    if formula is not None:
-        description = description.removeprefix(_text(formula)).strip(" -:.")
-    return Item(_text(node.find("name")), description)
+
+    # A leading formula is the quantity's symbol, and a bracketed word after it
+    # is its unit: `///< \f$H\f$ [s] Rotor inertia`.
+    symbol = _text(brief.find(".//formula")) if brief is not None else ""
+    if symbol:
+        description = description.removeprefix(symbol).strip(" -:.")
+    unit = ""
+    if match := _UNIT.match(description):
+        unit, description = match.group(1), description[match.end() :]
+
+    name = _text(node.find("name"))
+    return Item(name, symbol, unit, description, defaults.get(f"{name}_", ""))
 
 
 def _members(compound: ET.Element, kind: str):
@@ -121,7 +178,12 @@ def _inherits(index: _Index, refid: str, base_name: str) -> bool:
     return False
 
 
-def _items(index: _Index, owner: ET.Element, alias: str) -> tuple[Item, ...]:
+def _items(
+    index: _Index,
+    owner: ET.Element,
+    alias: str,
+    defaults: dict[str, str],
+) -> tuple[Item, ...]:
     enum_refid = _alias(owner, alias, "member")
     if enum_refid is None:
         return ()
@@ -131,10 +193,31 @@ def _items(index: _Index, owner: ET.Element, alias: str) -> tuple[Item, ...]:
         raise InventoryError(f"{alias} does not name a documented enum")
 
     return tuple(
-        _item(value)
+        _item(value, defaults)
         for value in enum.findall("enumvalue")
         if _text(value.find("name")) not in {"", "NONE", "SIZE"}
     )
+
+
+def _defaults(compound: ET.Element) -> dict[str, str]:
+    """Member initializers, keyed by member name."""
+    values = {}
+    for member in _members(compound, "variable"):
+        initializer = _text(member.find("initializer")).strip("{}= ")
+        if initializer:
+            values[_text(member.find("name"))] = _number(initializer)
+    return values
+
+
+def _placement(compound: ET.Element) -> tuple[Path, str]:
+    location = compound.find("location")
+    directory = Path(location.get("file", "")).parent if location is not None else Path()
+    try:
+        parts = directory.relative_to(SOURCE_ROOT).parts
+    except ValueError:
+        return directory, ""
+    # A model nested one level deeper than the domain root belongs to a family.
+    return directory, parts[0] if len(parts) > 1 else ""
 
 
 def read_models(directory: Path) -> dict[str, Model]:
@@ -154,13 +237,17 @@ def read_models(directory: Path) -> dict[str, Model]:
         if name in models:
             raise InventoryError(f"duplicate model class {name}")
 
+        defaults = _defaults(compound)
         sections = {
-            field: _items(index, data, alias)
+            field: _items(index, data, alias, defaults if field == "parameters" else {})
             for alias, field in ALIASES.items()
         }
+        location, family = _placement(compound)
         models[name] = Model(
             name=name,
             kind="bus" if _inherits(index, refid, BUS_BASE) else "device",
+            directory=location,
+            family=family,
             **sections,
         )
 
