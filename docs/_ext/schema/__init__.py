@@ -5,7 +5,7 @@ from sphinx.config import Config
 from sphinx.errors import ExtensionError
 from sphinx.util.typing import ExtensionMetadata
 
-from .cases import CaseModelsDirective
+from .cases import CaseExamplesDirective, CaseModelsDirective
 from .generate import write_schema
 from .inventory import InventoryError
 
@@ -28,6 +28,7 @@ def setup(app: Sphinx) -> ExtensionMetadata:
     # stable /case.schema.json URL instead of only exposing a hashed download.
     app.connect("config-inited", _generate)
     app.add_directive("case-models", CaseModelsDirective)
+    app.add_directive("case-examples", CaseExamplesDirective)
     return {
         "version": "1.0",
         "parallel_read_safe": True,

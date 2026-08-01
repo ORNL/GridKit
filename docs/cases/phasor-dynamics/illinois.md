@@ -9,3 +9,8 @@
 
 ```{case-models} examples/PhasorDynamics/Large/Illinois/illinois.case.json
 ```
+
+## Examples
+
+```{case-examples} examples/PhasorDynamics/Large/Illinois/illinois.case.json
+```

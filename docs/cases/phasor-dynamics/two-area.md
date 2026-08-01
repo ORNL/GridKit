@@ -9,3 +9,8 @@
 
 ```{case-models} examples/PhasorDynamics/Small/TwoArea/twoarea.json
 ```
+
+## Examples
+
+```{case-examples} examples/PhasorDynamics/Small/TwoArea/twoarea.json
+```

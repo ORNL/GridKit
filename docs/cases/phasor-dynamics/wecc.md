@@ -9,3 +9,8 @@
 
 ```{case-models} examples/PhasorDynamics/Large/WECC/wecc.case.json
 ```
+
+## Examples
+
+```{case-examples} examples/PhasorDynamics/Large/WECC/wecc.case.json
+```

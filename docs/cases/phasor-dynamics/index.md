@@ -1,3 +1,5 @@
+(cases-phasor-dynamics)=
+
 # Phasor Dynamics
 
 Reusable datasets for Phasor Dynamics studies.

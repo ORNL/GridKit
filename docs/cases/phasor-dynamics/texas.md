@@ -9,3 +9,8 @@
 
 ```{case-models} examples/PhasorDynamics/Large/Texas/texas.case.json
 ```
+
+## Examples
+
+```{case-examples} examples/PhasorDynamics/Large/Texas/texas.case.json
+```

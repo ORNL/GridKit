@@ -9,3 +9,8 @@
 
 ```{case-models} examples/PhasorDynamics/Medium/Hawaii/hawaii.case.json
 ```
+
+## Examples
+
+```{case-examples} examples/PhasorDynamics/Medium/Hawaii/hawaii.case.json
+```
