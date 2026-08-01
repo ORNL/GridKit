@@ -47,13 +47,7 @@ def translate(case):
             if signal is not None:
                 governors[signal] = governor
 
-    # The slack bus is the first infinite bus if present, otherwise the bus
-    # of the machine with the largest mva rating.
     infinite = [b["number"] for b in case["buses"] if b["class"] == "infinite_bus"]
-    if infinite:
-        slack = infinite[0]
-    else:
-        slack = max(machines, key=lambda m: m["params"].get("mva", base_mva))["ports"]["bus"]
 
     # Bus names are not always unique in dynamics cases, so colliding names
     # are suffixed with the bus number
@@ -65,7 +59,7 @@ def translate(case):
     for bus in sorted(case["buses"], key=lambda b: b["number"]):
         unique = name_counts[bus["name"]] == 1
         buses.append({
-            "class": "Slack" if bus["number"] == slack else "Bus",
+            "class": "Bus",
             "id": bus["name"] if unique else f'{bus["name"]}_{bus["number"]}',
             "params": {
                 "number": bus["number"],
@@ -165,9 +159,6 @@ def validate(opf):
         for number in device["buses"].values():
             if number not in numbers:
                 raise SystemExit(f"Device {device['id']} references unknown bus {number}")
-    slacks = [b for b in opf["buses"] if b["class"] == "Slack"]
-    if len(slacks) != 1:
-        raise SystemExit(f"Expected one slack bus, found {len(slacks)}")
 
 
 def main():

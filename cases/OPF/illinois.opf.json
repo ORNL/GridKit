@@ -1891,7 +1891,7 @@
             }
         },
         {
-            "class": "Slack",
+            "class": "Bus",
             "id": "CLINTON 1 2",
             "params": {
                 "number": 189,

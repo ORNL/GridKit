@@ -332,19 +332,11 @@ namespace GridKit
                             context + ".params");
 
         BusDataT bus;
-        if (bus_class == "Bus")
-        {
-          bus.bus_class = BusClass::BUS;
-        }
-        else if (bus_class == "Slack")
-        {
-          bus.bus_class = BusClass::SLACK;
-        }
-        else
+        if (bus_class != "Bus")
         {
           throwParseError(base_context + ".class",
                           "unsupported bus class \"" + bus_class
-                              + "\"; expected \"Bus\" or \"Slack\"");
+                              + "\"; expected \"Bus\"");
         }
 
         bus.id     = id;

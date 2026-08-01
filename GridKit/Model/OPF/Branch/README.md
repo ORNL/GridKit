@@ -68,7 +68,7 @@ checks:
 
 Each branch `id` must be nonempty and unique across all devices. Its `from` and
 `to` values must identify two distinct existing buses. The closed-branch
-topology must connect every bus to the single `Slack` bus.
+topology must connect all buses.
 
 ### Model Derived Parameters
 

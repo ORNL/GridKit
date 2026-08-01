@@ -15061,7 +15061,7 @@
             }
         },
         {
-            "class": "Slack",
+            "class": "Bus",
             "id": "WADSWORTH 3",
             "params": {
                 "number": 7098,

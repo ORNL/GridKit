@@ -58,12 +58,12 @@ a bus and has the following fields.
 
 Bus classes.
 
-  Bus class | Description                             | Parameters
-  ----------|-----------------------------------------|------------------------------
-  `Bus`     | A standard bus                          | `number`, `kv`, `vmin`, `vmax`
-  `Slack`   | The slack bus giving the angle reference | `number`, `kv`, `vmin`, `vmax`
+  Bus class | Description    | Parameters
+  ----------|----------------|------------------------------
+  `Bus`     | A standard bus | `number`, `kv`, `vmin`, `vmax`
 
-Exactly one bus should have the class `Slack`.
+The voltage angle reference is chosen by the consuming application and is not
+part of the format.
 
 Bus parameters.
 
@@ -136,7 +136,7 @@ treated as zero; when present, they must be numerical values rather than
             "params": {"number": 0, "kv": 115.0, "vmin": 0.95, "vmax": 1.05}
         },
         {
-            "class": "Slack",
+            "class": "Bus",
             "id": "Bus_2",
             "params": {"number": 1, "kv": 115.0, "vmin": 0.95, "vmax": 1.05}
         }

@@ -7,7 +7,7 @@ int main()
 
   result += test.polymorphicSizesAndBindings();
   result += test.busInitializationAndBounds();
-  result += test.slackBoundsAndStateOutput();
+  result += test.boundsAndStateOutput();
   result += test.generatorInitializationBoundsAndObjective();
   result += test.generatorConstraintsAndJacobian();
   result += test.generatorOfflineBehavior();

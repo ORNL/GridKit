@@ -37,13 +37,16 @@ namespace GridKit
       /**
        * @brief Compose an OPF problem from immutable system data and an operating state.
        *
-       * @pre system_data satisfies INPUT_FORMAT.md, including unique bus ids
-       *      and numbers, unique device ids, resolvable bus references, and
-       *      exactly one Slack bus.
+       * @pre system_data satisfies INPUT_FORMAT.md, including at least one
+       *      bus, unique bus ids and numbers, unique device ids, and
+       *      resolvable bus references.
        * @pre Bus state is keyed as `bus_id_<number>` and device state by device id.
        * @pre Every load has finite p and q values in state.
        *
        * allocate() validates these conditions before assigning global indices.
+       * The first bus provides the voltage angle gauge, which fixes the
+       * rotational degeneracy of the formulation and has no modeling
+       * significance.
        */
       System(const SystemDataT& system_data, const Model::StateData& state);
       ~System() override = default;
