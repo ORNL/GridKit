@@ -1214,7 +1214,6 @@
       },
       "id": "load_3_1",
       "params": {
-        "Vnom": 1.00380042,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1226,7 +1225,6 @@
       },
       "id": "load_4_1",
       "params": {
-        "Vnom": 0.98126332,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1238,7 +1236,6 @@
       },
       "id": "load_7_1",
       "params": {
-        "Vnom": 0.9716747,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1250,7 +1247,6 @@
       },
       "id": "load_8_1",
       "params": {
-        "Vnom": 0.9723422,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1262,7 +1258,6 @@
       },
       "id": "load_12_1",
       "params": {
-        "Vnom": 0.95753299,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1274,7 +1269,6 @@
       },
       "id": "load_15_1",
       "params": {
-        "Vnom": 0.98016622,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1286,7 +1280,6 @@
       },
       "id": "load_16_1",
       "params": {
-        "Vnom": 0.99565886,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1298,7 +1291,6 @@
       },
       "id": "load_18_1",
       "params": {
-        "Vnom": 1.00044357,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1310,7 +1302,6 @@
       },
       "id": "load_20_1",
       "params": {
-        "Vnom": 0.98826742,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1322,7 +1313,6 @@
       },
       "id": "load_21_1",
       "params": {
-        "Vnom": 1.00049849,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1334,7 +1324,6 @@
       },
       "id": "load_23_1",
       "params": {
-        "Vnom": 1.02322064,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1346,7 +1335,6 @@
       },
       "id": "load_24_1",
       "params": {
-        "Vnom": 1.00338067,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1358,7 +1346,6 @@
       },
       "id": "load_25_1",
       "params": {
-        "Vnom": 1.03217426,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1370,7 +1357,6 @@
       },
       "id": "load_26_1",
       "params": {
-        "Vnom": 1.0225076,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1382,7 +1368,6 @@
       },
       "id": "load_27_1",
       "params": {
-        "Vnom": 1.00629822,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1394,7 +1379,6 @@
       },
       "id": "load_28_1",
       "params": {
-        "Vnom": 1.02180162,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1406,7 +1390,6 @@
       },
       "id": "load_29_1",
       "params": {
-        "Vnom": 1.02257633,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1418,7 +1401,6 @@
       },
       "id": "load_31_1",
       "params": {
-        "Vnom": 0.98199999,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1430,7 +1412,6 @@
       },
       "id": "load_39_1",
       "params": {
-        "Vnom": 1.02999997,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1442,7 +1423,6 @@
       },
       "id": "bus_shunt_4",
       "params": {
-        "Vnom": 0.98126332,
         "alphaI": 0.0,
         "alphaP": 0.0
       }
@@ -1454,7 +1434,6 @@
       },
       "id": "bus_shunt_5",
       "params": {
-        "Vnom": 0.98209174,
         "alphaI": 0.0,
         "alphaP": 0.0
       }

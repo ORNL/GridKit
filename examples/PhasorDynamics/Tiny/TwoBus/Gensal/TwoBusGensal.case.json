@@ -108,7 +108,6 @@
             "ports": {"bus": 2},
             "id": "load_2",
             "params": {
-                "Vnom": 0.99494,
                 "alphaI": 0.0,
                 "alphaP": 0.0
             }

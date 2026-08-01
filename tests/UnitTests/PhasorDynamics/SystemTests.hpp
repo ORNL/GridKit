@@ -338,7 +338,6 @@ namespace GridKit
           auto& load                                 = data.loadzip[0];
           load.disambiguation_string                 = "loadzip_9";
           load.buses[LoadZIPBuses::bus]              = 9;
-          load.parameters[LoadZIPParameters::Vnom]   = 0.5;
           load.parameters[LoadZIPParameters::alphaI] = 0.2;
           load.parameters[LoadZIPParameters::alphaP] = 0.4;
           return data;

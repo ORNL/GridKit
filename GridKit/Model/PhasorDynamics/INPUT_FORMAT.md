@@ -137,7 +137,7 @@ are specified:
   ---------------------|------------------------------------------------------|----------------------------------|---------------------------- | -------------------------
   `Branch`             | algebraic pi model for a line or off-nominal transformer branch | `bus1`, `bus2`, `tap`\*, `phase`\*, `open`\* | `R`, `X`, `G`, `B` | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
   `Load`               | a basic static impedence load model                  | `bus`, `online`\*                | `R`, `X` | `p`, `q`
-  `LoadZIP`            | static ZIP load model                                | `bus`, `p`\*, `q`\*, `online`\* | `Vnom`, `alphaI`, `alphaP` | `ir`, `ii`, `im`, `p`, `q`
+  `LoadZIP`            | static ZIP load model                                | `bus`, `p`\*, `q`\*, `online`\* | `alphaI`, `alphaP` | `ir`, `ii`, `im`, `p`, `q`
   `Genrou`             | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*, `p`\*, `q`\*, `online`\* | `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqop`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`, `mva`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`
   `Gensal`             | 5th order salient-pole machine model                 | `bus`, `pmech`\*, `speed`\*, `efd`\*, `p`\*, `q`\*, `online`\* | `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xl`, `S10`, `S12`, `mva`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`, `Eqp`, `psidp`, `psiqpp`, `psidpp`, `vd`, `vq`, `te`, `id`, `iq`
   `GenClassical`       | the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*, `p`\*, `q`\*, `online`\* | `H`, `D`, `Ra`, `Xdp`, `mva` | `ir`, `ii`, `p`, `q`, `delta`, `omega`

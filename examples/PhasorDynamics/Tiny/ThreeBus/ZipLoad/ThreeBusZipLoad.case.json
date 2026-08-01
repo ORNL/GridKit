@@ -80,7 +80,6 @@
             },
             "id": "load_3_1",
             "params": {
-                "Vnom": 0.97,
                 "alphaI": 0.1,
                 "alphaP": 0.1
             }

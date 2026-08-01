@@ -70,7 +70,7 @@ namespace GridKit
                                           LoadZIPExternalVariables>;
 
       LoadZIP(BusT* bus);
-      LoadZIP(BusT* bus, RealT Vnom, RealT alphaI, RealT alphaP);
+      LoadZIP(BusT* bus, RealT alphaI, RealT alphaP);
       LoadZIP(BusT* bus, const ModelDataT& data);
       ~LoadZIP();
 
@@ -94,12 +94,6 @@ namespace GridKit
       }
 
     public:
-      void setVnom(RealT Vnom)
-      {
-        Vnom_ = Vnom;
-        setDerivedParams();
-      }
-
       void setAlphaI(RealT alphaI)
       {
         alphaI_ = alphaI;
@@ -151,6 +145,7 @@ namespace GridKit
       BusT*   bus_{nullptr};
       ScalarT p_{0.0};
       ScalarT q_{0.0};
+      /// ZIP anchor voltage, derived from the bus voltage at initialization
       RealT   Vnom_{1.0};
       RealT   alphaI_{0};
       RealT   alphaP_{0};

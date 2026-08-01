@@ -8,7 +8,6 @@ contribution to the connected bus residual.
 
 Symbol          | Units  | JSON     | Description                    | Typical Value
 ----------------|--------|----------|--------------------------------|--------------
-$V_\text{nom}$  | [p.u.] | `Vnom`   | Nominal voltage magnitude      | 1.0
 $\alpha_I$      | [-]    | `alphaI` | Constant current load fraction | 0.0
 $\alpha_P$      | [-]    | `alphaP` | Constant power load fraction   | 0.0
 
@@ -18,7 +17,9 @@ None.
 
 ### Model Derived Parameters
 
-$\alpha_Z = 1 - \alpha_I - \alpha_P$.
+$\alpha_Z = 1 - \alpha_I - \alpha_P$. The anchor voltage
+$V_\text{nom} = V_{m0}$ is the connected bus voltage magnitude sampled at
+initialization.
 
 ## Model Inputs
 
@@ -98,7 +99,10 @@ None.
 ## Initialization
 
 Initialization solves the algebraic current states from the connected bus
-voltage. Let $V_{m0} = \sqrt{V_{r0}^2 + V_{i0}^2}$.
+voltage. Let $V_{m0} = \sqrt{V_{r0}^2 + V_{i0}^2}$. Initialization fails when
+$V_{m0}$ is zero or not finite. The anchor $V_\text{nom} = V_{m0}$ makes
+$z_0 = 1$, so the terminal inputs are reproduced exactly at the initialized
+voltage for any load fractions.
 
 The model chooses $G$ and $B$ so the terminal inputs $p$ and $q$ are reproduced
 at the initialized voltage:

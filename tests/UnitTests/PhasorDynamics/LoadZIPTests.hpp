@@ -60,7 +60,7 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 0.5, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 0.2, 0.4);
         ScalarT                                    p_value{-2.0};
         ScalarT                                    q_value{-0.5};
         IdxT                                       p_index{0};
@@ -92,8 +92,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // |V| differs from Vnom, so this also verifies that p/q are terminal
-        // injections rather than nominal ZIP dispatch values.
+        // p/q are terminal injections sampled at the initialized voltage.
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.6, 0.8);
         auto                                       data = makeData();
         PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, data);
@@ -159,7 +158,7 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::Bus<Variable, IdxT>     bus(Variable{0.3}, Variable{0.4});
-        PhasorDynamics::LoadZIP<Variable, IdxT> load(&bus, 0.5, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<Variable, IdxT> load(&bus, 0.2, 0.4);
 
         Variable                                   online_value{0.0};
         IdxT                                       online_index{0};
@@ -204,7 +203,7 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 0.5, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 0.2, 0.4);
         ScalarT                                    p_value{-2.0};
         ScalarT                                    q_value{-0.5};
         IdxT                                       p_index{0};
@@ -295,12 +294,11 @@ namespace GridKit
 
         const RealT p{-2.0};
         const RealT q{-0.5};
-        const RealT Vnom{0.5};
         const RealT alphaI{4.0};
         const RealT alphaP{2.0};
 
-        auto dependency_tracking_jacobian = DependencyTrackingJacobian(p, q, Vnom, alphaI, alphaP);
-        auto enzyme_jacobian              = EnzymeJacobian(p, q, Vnom, alphaI, alphaP);
+        auto dependency_tracking_jacobian = DependencyTrackingJacobian(p, q, alphaI, alphaP);
+        auto enzyme_jacobian              = EnzymeJacobian(p, q, alphaI, alphaP);
 
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
@@ -312,13 +310,13 @@ namespace GridKit
 
     private:
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
-          const RealT p, const RealT q, const RealT Vnom, const RealT alphaI, const RealT alphaP)
+          const RealT p, const RealT q, const RealT alphaI, const RealT alphaP)
       {
         DependencyTracking::Variable Vr{0.3};
         DependencyTracking::Variable Vi{0.4};
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>        bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT>    load(&bus, Vnom, alphaI, alphaP);
+        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT>    load(&bus, alphaI, alphaP);
         DependencyTracking::Variable                                   p_value{p};
         DependencyTracking::Variable                                   q_value{q};
         IdxT                                                           p_index{0};
@@ -403,13 +401,13 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          const RealT p, const RealT q, const RealT Vnom, const RealT alphaI, const RealT alphaP)
+          const RealT p, const RealT q, const RealT alphaI, const RealT alphaP)
       {
         ScalarT Vr{0.3};
         ScalarT Vi{0.4};
 
         PhasorDynamics::Bus<ScalarT, IdxT>        bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>    load(&bus, Vnom, alphaI, alphaP);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>    load(&bus, alphaI, alphaP);
         ScalarT                                   p_value{p};
         ScalarT                                   q_value{q};
         IdxT                                      p_index{0};
@@ -461,7 +459,6 @@ namespace GridKit
         data.device_class          = "LoadZIP";
         data.disambiguation_string = "loadzip_test";
 
-        data.parameters[Params::Vnom]   = static_cast<RealT>(0.5);
         data.parameters[Params::alphaI] = static_cast<RealT>(0.2);
         data.parameters[Params::alphaP] = static_cast<RealT>(0.4);
 
