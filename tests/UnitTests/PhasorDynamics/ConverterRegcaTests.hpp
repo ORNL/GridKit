@@ -719,7 +719,9 @@ namespace GridKit
 
             for (size_t i = 0; i < nrows; ++i)
             {
-              if (!isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]))
+              if (!isEqual(dependency_tracking_jacobian[i],
+                           enzyme_jacobian[i],
+                           kTol))
               {
                 std::cout << "Jacobian row " << i
                           << " mismatch between dependency tracking and Enzyme"
