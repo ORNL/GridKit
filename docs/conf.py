@@ -16,6 +16,7 @@ extensions = [
     "myst_parser",
     "schema",
     "sphinx-jsonschema",
+    "sphinx_design",
 ]
 
 breathe_projects = {"GridKit": str(docs_dir / "xml")}
@@ -53,6 +54,7 @@ html_theme_options = {
 myst_enable_extensions = [
     "alert",
     "amsmath",
+    "colon_fence",
     "dollarmath",
     "html_image",
     "substitution",
