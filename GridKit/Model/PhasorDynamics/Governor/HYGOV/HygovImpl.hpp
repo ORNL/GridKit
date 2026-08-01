@@ -57,339 +57,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Resolve the parameter-derived constants
-       *
-       * Raises each governor lag to the well-posedness floor and derives the
-       * speed lead-lag gain from the floored denominator.
-       */
-      template <typename scalar_type, typename index_type>
-      void Hygov<scalar_type, index_type>::setDerivedParameters()
-      {
-        // The lags are raised to the floor in place, so a negative value is
-        // rejected here while the value as read is still available. verify()
-        // reports the count.
-        auto check_non_negative = [&](RealT value, const char* name)
-        {
-          if (value < ZERO<RealT>)
-          {
-            Log::error() << "Hygov: " << name << " must be non-negative\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        check_non_negative(Tr_, "Tr");
-        check_non_negative(Tf_, "Tf");
-        check_non_negative(Tg_, "Tg");
-        check_non_negative(Tw_, "Tw");
-        check_non_negative(Tnp_, "Tnp");
-
-        if (Tr_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM
-            || Tg_ < TIME_CONSTANT_MINIMUM || Tw_ < TIME_CONSTANT_MINIMUM
-            || Tnp_ < TIME_CONSTANT_MINIMUM)
-        {
-          Log::warning() << "Hygov: Tr, Tf, Tg, Tw, and Tnp below "
-                         << TIME_CONSTANT_MINIMUM
-                         << " s are raised to that floor to keep the governor lags well posed\n";
-        }
-
-        Tr_  = std::max(Tr_, TIME_CONSTANT_MINIMUM);
-        Tf_  = std::max(Tf_, TIME_CONSTANT_MINIMUM);
-        Tg_  = std::max(Tg_, TIME_CONSTANT_MINIMUM);
-        Tw_  = std::max(Tw_, TIME_CONSTANT_MINIMUM);
-        Tnp_ = std::max(Tnp_, TIME_CONSTANT_MINIMUM);
-
-        leadlag_gain_ = Tn_ / Tnp_;
-      }
-
-      /**
-       * @brief Evaluate the nonlinear gate-to-power curve
-       *
-       * Sums the five smooth CommonMath linear segments spanned by the
-       * `Gv`/`Pgv` points, so the same fixed expression serves the residual
-       * and both scalar instantiations.
-       *
-       * @param[in] gate Gate position.
-       * @return Turbine power at nominal head.
-       */
-      template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline scalar_type
-      Hygov<scalar_type, index_type>::gatePower(scalar_type gate) const
-      {
-        return ScalarT{Pgv_[0]}
-               + Math::linseg(gate, Gv_[0], Gv_[1], Pgv_[1] - Pgv_[0])
-               + Math::linseg(gate, Gv_[1], Gv_[2], Pgv_[2] - Pgv_[1])
-               + Math::linseg(gate, Gv_[2], Gv_[3], Pgv_[3] - Pgv_[2])
-               + Math::linseg(gate, Gv_[3], Gv_[4], Pgv_[4] - Pgv_[3])
-               + Math::linseg(gate, Gv_[4], Gv_[5], Pgv_[5] - Pgv_[4]);
-      }
-
-      /**
-       * @brief Steady component-base mechanical power at a gate position
-       *
-       * At the steady state the head equals the dam head and the flow
-       * follows the gate curve, so the PGV, H, and PMECH rows collapse to
-       * @f[
-       *   P_{\mathrm{m}}(g)
-       *     = A_t H_{\mathrm{dam}}
-       *       \left(\sqrt{H_{\mathrm{dam}}}\,N_{\mathrm{GV}}(g)
-       *             - q_{\mathrm{NL}}\right).
-       * @f]
-       * The expression is composed exactly as those rows compose it, so a
-       * gate solved against it zeros the implemented residual at machine
-       * rounding.
-       *
-       * @param[in] gate Gate position.
-       * @return Steady mechanical power on the component base.
-       */
-      template <typename scalar_type, typename index_type>
-      typename Hygov<scalar_type, index_type>::RealT
-      Hygov<scalar_type, index_type>::initialMechanicalPower(RealT gate) const
-      {
-        const RealT pgv = static_cast<RealT>(gatePower(static_cast<ScalarT>(gate)));
-        const RealT q   = std::sqrt(Hdam_) * pgv;
-        return At_ * Hdam_ * (q - Qnl_);
-      }
-
-      /**
-       * @brief Solve the steady gate position for a given mechanical power
-       *
-       * Initialization requires a zero speed deviation and verify() requires
-       * the steady power to rise across [Gmin, Gmax], so the endpoint
-       * residuals decide feasibility and bisection converges to a root of
-       * the nondecreasing steady-power curve.
-       *
-       * @pre verify() reports no errors.
-       *
-       * @param[in] pmech Mechanical power on the component base.
-       * @return The gate position, or a quiet NaN when no gate inside
-       *         [Gmin, Gmax] reproduces the value within the initialization
-       *         tolerance.
-       */
-      template <typename scalar_type, typename index_type>
-      typename Hygov<scalar_type, index_type>::RealT
-      Hygov<scalar_type, index_type>::solveInitialGate(RealT pmech) const
-      {
-        // NaN is unreproducible by any gate and would otherwise slip
-        // through the sign tests below.
-        if (std::isnan(pmech))
-        {
-          return std::numeric_limits<RealT>::quiet_NaN();
-        }
-
-        RealT a  = Gmin_;
-        RealT b  = Gmax_;
-        RealT fa = initialMechanicalPower(a) - pmech;
-        RealT fb = initialMechanicalPower(b) - pmech;
-
-        // A value just outside the achievable range pins to the gate limit
-        // when it is within the initialization tolerance of the range edge.
-        if (fa > ZERO<RealT>)
-        {
-          if (fa <= INITIALIZATION_TOLERANCE)
-          {
-            return a;
-          }
-          return std::numeric_limits<RealT>::quiet_NaN();
-        }
-        if (fb < ZERO<RealT>)
-        {
-          if (-fb <= INITIALIZATION_TOLERANCE)
-          {
-            return b;
-          }
-          return std::numeric_limits<RealT>::quiet_NaN();
-        }
-
-        // Bisect until no representable midpoint remains, then keep the
-        // endpoint with the smaller residual.
-        while (true)
-        {
-          const RealT mid = HALF<RealT> * (a + b);
-          if (mid <= a || b <= mid)
-          {
-            break;
-          }
-          const RealT fmid = initialMechanicalPower(mid) - pmech;
-          if (fmid <= ZERO<RealT>)
-          {
-            a  = mid;
-            fa = fmid;
-          }
-          else
-          {
-            b  = mid;
-            fb = fmid;
-          }
-        }
-        if (std::abs(fa) <= std::abs(fb))
-        {
-          return a;
-        }
-        return b;
-      }
-
-      /**
-       * @brief Convert a system-base power to HYGOV component base
-       *
-       * @param[in] value Quantity on the system base.
-       * @return The same quantity on the component base.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Hygov<scalar_type, index_type>::toComponentBase(scalar_type value) const
-      {
-        return value * va_system_base_ / va_component_base_;
-      }
-
-      /**
-       * @brief Convert a component-base power to the system base
-       *
-       * @param[in] value Quantity on the component base.
-       * @return The same quantity on the system base.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Hygov<scalar_type, index_type>::toSystemBase(scalar_type value) const
-      {
-        return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
-      }
-
-      /**
-       * @brief Read the parameters out of the model data
-       *
-       * Every omitted parameter keeps the default documented in the model
-       * README. A non-numeric value is counted and reported by verify() rather
-       * than throwing. Integer JSON values are accepted for real parameters.
-       * All-zero `Gv` and `Pgv` source points select the identity gate curve.
-       *
-       * @param[in] data Parameters and monitored-variable selections.
-       */
-      template <typename scalar_type, typename index_type>
-      void Hygov<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
-      {
-        using Params = typename ModelDataT::Parameters;
-
-        parameter_error_count_ = 0;
-
-        auto load_real = [&](auto key, RealT& target, const char* name) -> bool
-        {
-          if (!data.parameters.contains(key))
-          {
-            return false;
-          }
-
-          const auto& value = data.parameters.at(key);
-          if (const auto* real_value = std::get_if<RealT>(&value))
-          {
-            target = *real_value;
-            return true;
-          }
-          if (const auto* index_value = std::get_if<IdxT>(&value))
-          {
-            target = static_cast<RealT>(*index_value);
-            return true;
-          }
-
-          Log::error() << "Hygov: parameter '" << name << "' must be numeric\n";
-          ++parameter_error_count_;
-          return false;
-        };
-
-        if (load_real(Params::Trate, va_component_base_, "Trate"))
-        {
-          if (!(va_component_base_ > ZERO<RealT>) )
-          {
-            Log::error() << "Hygov: Trate must be positive when provided\n";
-            ++parameter_error_count_;
-          }
-          va_component_base_ *= static_cast<RealT>(1.0e6);
-        }
-        load_real(Params::Rperm, Rperm_, "Rperm");
-        load_real(Params::Rtemp, Rtemp_, "Rtemp");
-        load_real(Params::Tr, Tr_, "Tr");
-        load_real(Params::Tf, Tf_, "Tf");
-        load_real(Params::Tg, Tg_, "Tg");
-        load_real(Params::Velm, Velm_, "Velm");
-        load_real(Params::Gmax, Gmax_, "Gmax");
-        load_real(Params::Gmin, Gmin_, "Gmin");
-        load_real(Params::Tw, Tw_, "Tw");
-        load_real(Params::At, At_, "At");
-        load_real(Params::Dturb, Dturb_, "Dturb");
-        load_real(Params::Qnl, Qnl_, "Qnl");
-        load_real(Params::Tn, Tn_, "Tn");
-        load_real(Params::Tnp, Tnp_, "Tnp");
-        load_real(Params::db1, db1_, "db1");
-        load_real(Params::db2, db2_, "db2");
-        load_real(Params::Hdam, Hdam_, "Hdam");
-        load_real(Params::Gv0, Gv_[0], "Gv0");
-        load_real(Params::Gv1, Gv_[1], "Gv1");
-        load_real(Params::Gv2, Gv_[2], "Gv2");
-        load_real(Params::Gv3, Gv_[3], "Gv3");
-        load_real(Params::Gv4, Gv_[4], "Gv4");
-        load_real(Params::Gv5, Gv_[5], "Gv5");
-        load_real(Params::Pgv0, Pgv_[0], "Pgv0");
-        load_real(Params::Pgv1, Pgv_[1], "Pgv1");
-        load_real(Params::Pgv2, Pgv_[2], "Pgv2");
-        load_real(Params::Pgv3, Pgv_[3], "Pgv3");
-        load_real(Params::Pgv4, Pgv_[4], "Pgv4");
-        load_real(Params::Pgv5, Pgv_[5], "Pgv5");
-
-        const bool source_default_curve =
-            std::all_of(Gv_.begin(), Gv_.end(), [](RealT value)
-                        { return value == ZERO<RealT>; })
-            && std::all_of(Pgv_.begin(), Pgv_.end(), [](RealT value)
-                           { return value == ZERO<RealT>; });
-        if (source_default_curve)
-        {
-          Gv_  = {ZERO<RealT>,
-                  static_cast<RealT>(0.2),
-                  static_cast<RealT>(0.4),
-                  static_cast<RealT>(0.6),
-                  static_cast<RealT>(0.8),
-                  ONE<RealT>};
-          Pgv_ = Gv_;
-        }
-
-        setDerivedParameters();
-      }
-
-      /**
-       * @brief Access the monitor
-       *
-       * @return Monitor for this model, or nullptr when the model was
-       *         constructed without data.
-       */
-      template <typename scalar_type, typename index_type>
-      const Model::VariableMonitorBase* Hygov<scalar_type, index_type>::getMonitor() const
-      {
-        return monitor_.get();
-      }
-
-      /**
-       * @brief Bind the monitorable variables to their internal states
-       *
-       * The mechanical-power output is published on the system base and the
-       * remaining outputs on the component base, as documented in the model
-       * README.
-       */
-      template <typename scalar_type, typename index_type>
-      void Hygov<scalar_type, index_type>::initializeMonitor()
-      {
-        using Variable = typename ModelDataT::MonitorableVariables;
-
-        monitor_->set(Variable::pmech, [this]
-                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::PMECH)]; });
-        monitor_->set(Variable::filter, [this]
-                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::XF)]; });
-        monitor_->set(Variable::desiredgate, [this]
-                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::C)]; });
-        monitor_->set(Variable::gate, [this]
-                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::G)]; });
-        monitor_->set(Variable::flow, [this]
-                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::Q)]; });
-        monitor_->set(Variable::head, [this]
-                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::H)]; });
-      }
-
-      /**
        * @brief Set the component ID
        *
        * @param[in] component_id Identifier assigned by the system model.
@@ -692,8 +359,8 @@ namespace GridKit
        * @brief Compute the absolute tolerance for each variable in the model
        *
        * All HYGOV variables are per-unit speeds, gates, flows, heads, and
-       * powers of the same order, so they share the relative tolerance as
-       * their absolute floor.
+       * powers of the same order, so their absolute and relative tolerance
+       * have the same value.
        *
        * @param[in] rel_tol Solver relative tolerance.
        * @return int 0 on success.
@@ -703,6 +370,69 @@ namespace GridKit
       {
         abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
+      }
+
+      /**
+       * @brief Residuals of system equations
+       *
+       * Refreshes the signal interface buffers and evaluates the internal
+       * residual. HYGOV attaches to no bus, so there is no bus interface to
+       * refresh. An unattached reference or auxiliary port falls back to the
+       * value latched by initialize(); an unattached speed port reads zero
+       * deviation.
+       *
+       * @return int 0 on success.
+       */
+      template <typename scalar_type, typename index_type>
+      int Hygov<scalar_type, index_type>::evaluateResidual()
+      {
+        const auto OMEGA = static_cast<size_t>(HygovExternalVariables::OMEGA);
+        const auto PREF  = static_cast<size_t>(HygovExternalVariables::PREF);
+        const auto PAUX  = static_cast<size_t>(HygovExternalVariables::PAUX);
+
+        ws_[OMEGA] = ZERO<RealT>;
+        ws_[PREF]  = pref_set_;
+        ws_[PAUX]  = paux_set_;
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+
+        if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
+        {
+          ws_[OMEGA] = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
+          ws_indices_[OMEGA] =
+              signals_.template readExternalVariableIndex<HygovExternalVariables::OMEGA>();
+        }
+        if (signals_.template isAttached<HygovExternalVariables::PREF>())
+        {
+          ws_[PREF] = signals_.template readExternalVariable<HygovExternalVariables::PREF>();
+          ws_indices_[PREF] =
+              signals_.template readExternalVariableIndex<HygovExternalVariables::PREF>();
+        }
+        if (signals_.template isAttached<HygovExternalVariables::PAUX>())
+        {
+          ws_[PAUX] = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
+          ws_indices_[PAUX] =
+              signals_.template readExternalVariableIndex<HygovExternalVariables::PAUX>();
+        }
+
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
+
+        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        f_.setDataUpdated();
+        return 0;
+      }
+
+      /**
+       * @brief Access the monitor
+       *
+       * @return Monitor for this model, or nullptr when the model was
+       *         constructed without data.
+       */
+      template <typename scalar_type, typename index_type>
+      const Model::VariableMonitorBase* Hygov<scalar_type, index_type>::getMonitor() const
+      {
+        return monitor_.get();
       }
 
       /**
@@ -788,56 +518,339 @@ namespace GridKit
         return 0;
       }
 
+      //
+      //  Private methods
+      //
+
       /**
-       * @brief Residuals of system equations
+       * @brief Read the parameters out of the model data
        *
-       * Refreshes the signal interface buffers and evaluates the internal
-       * residual. HYGOV attaches to no bus, so there is no bus interface to
-       * refresh. An unattached reference or auxiliary port falls back to the
-       * value latched by initialize(); an unattached speed port reads zero
-       * deviation.
+       * Every omitted parameter keeps the default documented in the model
+       * README. A non-numeric value is counted and reported by verify() rather
+       * than throwing. Integer JSON values are accepted for real parameters.
+       * All-zero `Gv` and `Pgv` source points select the identity gate curve.
        *
-       * @return int 0 on success.
+       * @param[in] data Parameters and monitored-variable selections.
        */
       template <typename scalar_type, typename index_type>
-      int Hygov<scalar_type, index_type>::evaluateResidual()
+      void Hygov<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        const auto OMEGA = static_cast<size_t>(HygovExternalVariables::OMEGA);
-        const auto PREF  = static_cast<size_t>(HygovExternalVariables::PREF);
-        const auto PAUX  = static_cast<size_t>(HygovExternalVariables::PAUX);
+        using Params = typename ModelDataT::Parameters;
 
-        ws_[OMEGA] = ZERO<RealT>;
-        ws_[PREF]  = pref_set_;
-        ws_[PAUX]  = paux_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        parameter_error_count_ = 0;
 
-        if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
+        auto load_real = [&](auto key, RealT& target, const char* name) -> bool
         {
-          ws_[OMEGA] = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
-          ws_indices_[OMEGA] =
-              signals_.template readExternalVariableIndex<HygovExternalVariables::OMEGA>();
-        }
-        if (signals_.template isAttached<HygovExternalVariables::PREF>())
+          if (!data.parameters.contains(key))
+          {
+            return false;
+          }
+
+          const auto& value = data.parameters.at(key);
+          if (const auto* real_value = std::get_if<RealT>(&value))
+          {
+            target = *real_value;
+            return true;
+          }
+          if (const auto* index_value = std::get_if<IdxT>(&value))
+          {
+            target = static_cast<RealT>(*index_value);
+            return true;
+          }
+
+          Log::error() << "Hygov: parameter '" << name << "' must be numeric\n";
+          ++parameter_error_count_;
+          return false;
+        };
+
+        if (load_real(Params::Trate, va_component_base_, "Trate"))
         {
-          ws_[PREF] = signals_.template readExternalVariable<HygovExternalVariables::PREF>();
-          ws_indices_[PREF] =
-              signals_.template readExternalVariableIndex<HygovExternalVariables::PREF>();
+          if (!(va_component_base_ > ZERO<RealT>) )
+          {
+            Log::error() << "Hygov: Trate must be positive when provided\n";
+            ++parameter_error_count_;
+          }
+          va_component_base_ *= static_cast<RealT>(1.0e6);
         }
-        if (signals_.template isAttached<HygovExternalVariables::PAUX>())
+        load_real(Params::Rperm, Rperm_, "Rperm");
+        load_real(Params::Rtemp, Rtemp_, "Rtemp");
+        load_real(Params::Tr, Tr_, "Tr");
+        load_real(Params::Tf, Tf_, "Tf");
+        load_real(Params::Tg, Tg_, "Tg");
+        load_real(Params::Velm, Velm_, "Velm");
+        load_real(Params::Gmax, Gmax_, "Gmax");
+        load_real(Params::Gmin, Gmin_, "Gmin");
+        load_real(Params::Tw, Tw_, "Tw");
+        load_real(Params::At, At_, "At");
+        load_real(Params::Dturb, Dturb_, "Dturb");
+        load_real(Params::Qnl, Qnl_, "Qnl");
+        load_real(Params::Tn, Tn_, "Tn");
+        load_real(Params::Tnp, Tnp_, "Tnp");
+        load_real(Params::db1, db1_, "db1");
+        load_real(Params::db2, db2_, "db2");
+        load_real(Params::Hdam, Hdam_, "Hdam");
+        load_real(Params::Gv0, Gv_[0], "Gv0");
+        load_real(Params::Gv1, Gv_[1], "Gv1");
+        load_real(Params::Gv2, Gv_[2], "Gv2");
+        load_real(Params::Gv3, Gv_[3], "Gv3");
+        load_real(Params::Gv4, Gv_[4], "Gv4");
+        load_real(Params::Gv5, Gv_[5], "Gv5");
+        load_real(Params::Pgv0, Pgv_[0], "Pgv0");
+        load_real(Params::Pgv1, Pgv_[1], "Pgv1");
+        load_real(Params::Pgv2, Pgv_[2], "Pgv2");
+        load_real(Params::Pgv3, Pgv_[3], "Pgv3");
+        load_real(Params::Pgv4, Pgv_[4], "Pgv4");
+        load_real(Params::Pgv5, Pgv_[5], "Pgv5");
+
+        const bool source_default_curve =
+            std::all_of(Gv_.begin(), Gv_.end(), [](RealT value)
+                        { return value == ZERO<RealT>; })
+            && std::all_of(Pgv_.begin(), Pgv_.end(), [](RealT value)
+                           { return value == ZERO<RealT>; });
+        if (source_default_curve)
         {
-          ws_[PAUX] = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
-          ws_indices_[PAUX] =
-              signals_.template readExternalVariableIndex<HygovExternalVariables::PAUX>();
+          Gv_  = {ZERO<RealT>,
+                  static_cast<RealT>(0.2),
+                  static_cast<RealT>(0.4),
+                  static_cast<RealT>(0.6),
+                  static_cast<RealT>(0.8),
+                  ONE<RealT>};
+          Pgv_ = Gv_;
         }
 
-        const auto* y  = y_.getData();
-        const auto* yp = yp_.getData();
-        auto*       f  = f_.getData();
-
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
-        f_.setDataUpdated();
-        return 0;
+        setDerivedParameters();
       }
+
+      /**
+       * @brief Bind the monitorable variables to their internal states
+       *
+       * The mechanical-power output is published on the system base and the
+       * remaining outputs on the component base, as documented in the model
+       * README.
+       */
+      template <typename scalar_type, typename index_type>
+      void Hygov<scalar_type, index_type>::initializeMonitor()
+      {
+        using Variable = typename ModelDataT::MonitorableVariables;
+
+        monitor_->set(Variable::pmech, [this]
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::PMECH)]; });
+        monitor_->set(Variable::filter, [this]
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::XF)]; });
+        monitor_->set(Variable::desiredgate, [this]
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::C)]; });
+        monitor_->set(Variable::gate, [this]
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::G)]; });
+        monitor_->set(Variable::flow, [this]
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::Q)]; });
+        monitor_->set(Variable::head, [this]
+                      { return y_.getData()[static_cast<size_t>(HygovInternalVariables::H)]; });
+      }
+
+      /**
+       * @brief Resolve the parameter-derived constants
+       *
+       * Floors each governor time constant so the residual equations retain
+       * Hessenberg form, then derives the speed lead-lag gain.
+       */
+      template <typename scalar_type, typename index_type>
+      void Hygov<scalar_type, index_type>::setDerivedParameters()
+      {
+        // The lags are raised to the floor in place, so a negative value is
+        // rejected here while the value as read is still available. verify()
+        // reports the count.
+        auto check_non_negative = [&](RealT value, const char* name)
+        {
+          if (value < ZERO<RealT>)
+          {
+            Log::error() << "Hygov: " << name << " must be non-negative\n";
+            ++parameter_error_count_;
+          }
+        };
+
+        check_non_negative(Tr_, "Tr");
+        check_non_negative(Tf_, "Tf");
+        check_non_negative(Tg_, "Tg");
+        check_non_negative(Tw_, "Tw");
+        check_non_negative(Tnp_, "Tnp");
+
+        if (Tr_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM
+            || Tg_ < TIME_CONSTANT_MINIMUM || Tw_ < TIME_CONSTANT_MINIMUM
+            || Tnp_ < TIME_CONSTANT_MINIMUM)
+        {
+          Log::warning() << "Hygov: Tr, Tf, Tg, Tw, and Tnp below "
+                         << TIME_CONSTANT_MINIMUM
+                         << " s are raised to preserve Hessenberg form\n";
+        }
+
+        // HYGOV residuals solve explicitly for the state derivatives to preserve
+        // Hessenberg form. A zero time constant would instead require an implicit
+        // residual formulation, so enforce a strictly positive lower bound.
+        Tr_  = std::max(Tr_, TIME_CONSTANT_MINIMUM);
+        Tf_  = std::max(Tf_, TIME_CONSTANT_MINIMUM);
+        Tg_  = std::max(Tg_, TIME_CONSTANT_MINIMUM);
+        Tw_  = std::max(Tw_, TIME_CONSTANT_MINIMUM);
+        Tnp_ = std::max(Tnp_, TIME_CONSTANT_MINIMUM);
+
+        leadlag_gain_ = Tn_ / Tnp_;
+      }
+
+      /**
+       * @brief Evaluate the nonlinear gate-to-power curve
+       *
+       * Sums the five smooth CommonMath linear segments spanned by the
+       * `Gv`/`Pgv` points, so the same fixed expression serves the residual
+       * and both scalar instantiations.
+       *
+       * @param[in] gate Gate position.
+       * @return Turbine power at nominal head.
+       */
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline scalar_type
+      Hygov<scalar_type, index_type>::gatePower(scalar_type gate) const
+      {
+        ScalarT retval = Pgv_[0]
+                         + Math::linseg(gate, Gv_[0], Gv_[1], Pgv_[1] - Pgv_[0])
+                         + Math::linseg(gate, Gv_[1], Gv_[2], Pgv_[2] - Pgv_[1])
+                         + Math::linseg(gate, Gv_[2], Gv_[3], Pgv_[3] - Pgv_[2])
+                         + Math::linseg(gate, Gv_[3], Gv_[4], Pgv_[4] - Pgv_[3])
+                         + Math::linseg(gate, Gv_[4], Gv_[5], Pgv_[5] - Pgv_[4]);
+
+        return retval;
+      }
+
+      /**
+       * @brief Steady component-base mechanical power at a gate position
+       *
+       * At the steady state the head equals the dam head and the flow
+       * follows the gate curve, so the PGV, H, and PMECH rows collapse to
+       * @f[
+       *   P_{\mathrm{m}}(g)
+       *     = A_t H_{\mathrm{dam}}
+       *       \left(\sqrt{H_{\mathrm{dam}}}\,N_{\mathrm{GV}}(g)
+       *             - q_{\mathrm{NL}}\right).
+       * @f]
+       * The expression is composed exactly as those rows compose it, so a
+       * gate solved against it zeros the implemented residual at machine
+       * rounding.
+       *
+       * @param[in] gate Gate position.
+       * @return Steady mechanical power on the component base.
+       */
+      template <typename scalar_type, typename index_type>
+      typename Hygov<scalar_type, index_type>::RealT
+      Hygov<scalar_type, index_type>::initialMechanicalPower(RealT gate) const
+      {
+        const RealT pgv = static_cast<RealT>(gatePower(static_cast<ScalarT>(gate)));
+        const RealT q   = std::sqrt(Hdam_) * pgv;
+        return At_ * Hdam_ * (q - Qnl_);
+      }
+
+      /**
+       * @brief Solve the steady gate position for a given mechanical power
+       *
+       * Initialization requires a zero speed deviation and verify() requires
+       * the steady power to rise across [Gmin, Gmax], so the endpoint
+       * residuals decide feasibility and bisection converges to a root of
+       * the nondecreasing steady-power curve.
+       *
+       * @pre verify() reports no errors.
+       *
+       * @param[in] pmech Mechanical power on the component base.
+       * @return The gate position, or a quiet NaN when no gate inside
+       *         [Gmin, Gmax] reproduces the value within the initialization
+       *         tolerance.
+       *
+       * @warning This function contains conditional branching and may be used
+       *          during initialization, but not during residual evaluation.
+       */
+      template <typename scalar_type, typename index_type>
+      typename Hygov<scalar_type, index_type>::RealT
+      Hygov<scalar_type, index_type>::solveInitialGate(RealT pmech) const
+      {
+        // NaN is unreproducible by any gate and would otherwise slip
+        // through the sign tests below.
+        if (std::isnan(pmech))
+        {
+          return std::numeric_limits<RealT>::quiet_NaN();
+        }
+
+        RealT a  = Gmin_;
+        RealT b  = Gmax_;
+        RealT fa = initialMechanicalPower(a) - pmech;
+        RealT fb = initialMechanicalPower(b) - pmech;
+
+        // A value just outside the achievable range pins to the gate limit
+        // when it is within the initialization tolerance of the range edge.
+        if (fa > ZERO<RealT>)
+        {
+          if (fa <= INITIALIZATION_TOLERANCE)
+          {
+            return a;
+          }
+          return std::numeric_limits<RealT>::quiet_NaN();
+        }
+        if (fb < ZERO<RealT>)
+        {
+          if (-fb <= INITIALIZATION_TOLERANCE)
+          {
+            return b;
+          }
+          return std::numeric_limits<RealT>::quiet_NaN();
+        }
+
+        // Bisect until no representable midpoint remains, then keep the
+        // endpoint with the smaller residual.
+        while (true)
+        {
+          const RealT mid = HALF<RealT> * (a + b);
+          if (mid <= a || b <= mid)
+          {
+            break;
+          }
+          const RealT fmid = initialMechanicalPower(mid) - pmech;
+          if (fmid <= ZERO<RealT>)
+          {
+            a  = mid;
+            fa = fmid;
+          }
+          else
+          {
+            b  = mid;
+            fb = fmid;
+          }
+        }
+        if (std::abs(fa) <= std::abs(fb))
+        {
+          return a;
+        }
+        return b;
+      }
+
+      /**
+       * @brief Convert a system-base power to HYGOV component base
+       *
+       * @param[in] value Quantity on the system base.
+       * @return The same quantity on the component base.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type Hygov<scalar_type, index_type>::toComponentBase(scalar_type value) const
+      {
+        return value * va_system_base_ / va_component_base_;
+      }
+
+      /**
+       * @brief Convert a component-base power to the system base
+       *
+       * @param[in] value Quantity on the component base.
+       * @return The same quantity on the system base.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type Hygov<scalar_type, index_type>::toSystemBase(scalar_type value) const
+      {
+        return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
+      }
+
     } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit
