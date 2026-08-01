@@ -653,19 +653,18 @@ namespace GridKit
         }
       }
 
-      // The first bus provides the voltage angle gauge. Pinning one angle
-      // removes the rotational degeneracy of the formulation and has no
+      // The lowest-numbered bus provides the voltage angle gauge. Pinning one
+      // angle removes the rotational degeneracy of the formulation and has no
       // modeling significance.
       {
-        const auto& gauge_bus   = system_data_.buses.front();
-        const auto& gauge_state = input_state_.buses.at(busStateId(gauge_bus.number));
-        const RealT gauge_angle = std::atan2(static_cast<RealT>(*gauge_state.vi),
+        const auto  gauge        = buses.begin();
+        const IdxT  gauge_number = gauge->first;
+        const auto& gauge_state  = input_state_.buses.at(busStateId(gauge_number));
+        const RealT gauge_angle  = std::atan2(static_cast<RealT>(*gauge_state.vi),
                                              static_cast<RealT>(*gauge_state.vr));
-        const IdxT  va          = buses.at(gauge_bus.number)
-                            ->variables()
-                            .template internalIndex<BusInternalVariables::VA>();
-        variable_lower[va] = gauge_angle;
-        variable_upper[va] = gauge_angle;
+        const IdxT  va           = gauge->second->variables().template internalIndex<BusInternalVariables::VA>();
+        variable_lower[va]       = gauge_angle;
+        variable_upper[va]       = gauge_angle;
       }
 
       variable_lower_.setDataUpdated();
