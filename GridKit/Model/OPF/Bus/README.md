@@ -9,8 +9,8 @@ Notes:
 - Power entering the bus has positive sign, and power leaving the bus has
   negative sign.
 - Each bus is identified by its `id` and `number`.
-- The first bus in the system provides the voltage-angle gauge fixed by
-  `System` during allocation.
+- The lowest-numbered bus in the system provides the voltage-angle gauge fixed
+  by `System` during allocation.
 
 ## Model Parameters
 
@@ -66,8 +66,8 @@ Missing voltage-magnitude limits are treated as unbounded. For a standard
 ```
 
 When `vmin` or `vmax` is omitted, the corresponding bound above is
-$-\infty$ or $\infty$, respectively. For the gauge bus, `System` sets the
-lower and upper voltage-angle bounds equal during allocation.
+$-\infty$ or $\infty$, respectively. For the lowest-numbered gauge bus,
+`System` sets the lower and upper voltage-angle bounds equal during allocation.
 
 ### External Variables
 
@@ -127,7 +127,8 @@ The initial polar voltage is:
 \end{aligned}
 ```
 
-For the gauge bus, the initialized angle defines the fixed reference bounds:
+For the lowest-numbered gauge bus, the initialized angle defines the fixed
+reference bounds:
 
 ```math
 \underline{V}_A = \overline{V}_A = V_{A,0}

@@ -9,9 +9,9 @@ power flow and optimal power flow studies. The format is implemented as UTF-8
 encoded JSON and uses the file extension `.opf.json`.
 
 The format stores no operating state. Bus voltages, device dispatch, load
-demand, service statuses, and tap positions belong to the companion state
-format with the extension `.state.json`. State records are matched to this
-format through bus numbers and device id strings.
+demand, service statuses, branch tap magnitudes, and branch phase shifts belong
+to the companion state format with the extension `.state.json`. State records
+are matched to this format through bus numbers and device id strings.
 
 All electrical quantities are given in per unit on the system power base
 `va_base`. Bus voltage bases are given by the bus parameter `kv`. Missing
@@ -62,8 +62,8 @@ Bus classes.
   ----------|----------------|------------------------------
   `Bus`     | A standard bus | `number`, `kv`, `vmin`, `vmax`
 
-The voltage angle reference is chosen by the consuming application and is not
-part of the format.
+The consuming OPF system selects the lowest-numbered bus as the voltage angle
+gauge. No separate gauge designation is part of the format.
 
 Bus parameters.
 

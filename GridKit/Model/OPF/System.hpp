@@ -44,8 +44,8 @@ namespace GridKit
        * @pre Every load has finite p and q values in state.
        *
        * allocate() validates these conditions before assigning global indices.
-       * The first bus provides the voltage angle gauge, which fixes the
-       * rotational degeneracy of the formulation and has no modeling
+       * The lowest-numbered bus provides the voltage angle gauge, which fixes
+       * the rotational degeneracy of the formulation and has no modeling
        * significance.
        */
       System(const SystemDataT& system_data, const Model::StateData& state);
