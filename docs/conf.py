@@ -45,6 +45,8 @@ primary_domain = "cpp"
 
 html_theme = "sphinx_rtd_theme"
 html_extra_path = ["../GridKit/Model/case.schema.json"]
+html_static_path = ["_static"]
+html_css_files = ["css/model-inventory.css"]
 html_theme_options = {
     "collapse_navigation": True,
     "navigation_depth": 6,
