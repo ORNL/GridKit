@@ -6,7 +6,7 @@
 :hidden:
 
 EMT <EMT/README>
-PhasorDynamics <PhasorDynamics/README>
+Phasor Dynamics <phasor-dynamics/index>
 PowerElectronics <PowerElectronics/README>
 PowerFlow <PowerFlow/README>
 ```
