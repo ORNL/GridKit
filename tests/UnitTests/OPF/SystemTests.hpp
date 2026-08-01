@@ -45,21 +45,6 @@ namespace GridKit
           success              *= rejects(data, state);
         }
         {
-          auto [data, state]       = validProblem();
-          data.buses[0].bus_class  = OPF::BusClass::BUS;
-          success                 *= rejects(data, state);
-        }
-        {
-          auto [data, state]       = validProblem();
-          data.buses[1].bus_class  = OPF::BusClass::SLACK;
-          success                 *= rejects(data, state);
-        }
-        {
-          auto [data, state]       = validProblem();
-          data.buses[1].bus_class  = static_cast<OPF::BusClass>(99);
-          success                 *= rejects(data, state);
-        }
-        {
           auto [data, state] = validProblem();
           state.buses.erase("bus_id_1");
           success *= rejects(data, state);
@@ -261,10 +246,9 @@ namespace GridKit
         data.params.va_base         = 100.0e6;
 
         SystemDataT::BusDataT bus;
-        bus.bus_class = OPF::BusClass::SLACK;
-        bus.id        = "B0";
-        bus.number    = 0;
-        bus.kv        = 230.0;
+        bus.id     = "B0";
+        bus.number = 0;
+        bus.kv     = 230.0;
         data.buses.push_back(bus);
 
         const RealT half_max = std::numeric_limits<RealT>::max() / 2.0;
@@ -467,22 +451,20 @@ namespace GridKit
         data.params.freq_base       = 60.0;
         data.params.va_base         = 100.0e6;
 
-        SystemDataT::BusDataT slack;
-        slack.bus_class = OPF::BusClass::SLACK;
-        slack.id        = "B0";
-        slack.number    = 0;
-        slack.kv        = 230.0;
-        slack.vmin      = 0.90;
-        slack.vmax      = 1.10;
-        data.buses.push_back(slack);
+        SystemDataT::BusDataT bus0;
+        bus0.id     = "B0";
+        bus0.number = 0;
+        bus0.kv     = 230.0;
+        bus0.vmin   = 0.90;
+        bus0.vmax   = 1.10;
+        data.buses.push_back(bus0);
 
         SystemDataT::BusDataT bus;
-        bus.bus_class = OPF::BusClass::BUS;
-        bus.id        = "B1";
-        bus.number    = 1;
-        bus.kv        = 230.0;
-        bus.vmin      = 0.80;
-        bus.vmax      = 1.20;
+        bus.id     = "B1";
+        bus.number = 1;
+        bus.kv     = 230.0;
+        bus.vmin   = 0.80;
+        bus.vmax   = 1.20;
         data.buses.push_back(bus);
 
         SystemDataT::BranchDataT branch;

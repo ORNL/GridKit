@@ -150,11 +150,14 @@ namespace GridKit
       requirePositive(system_data_.params.freq_base, "params.freq_base");
       requirePositive(system_data_.params.va_base, "params.va_base");
 
+      if (system_data_.buses.empty())
+      {
+        throwValidationError("buses", "at least one bus is required");
+      }
+
       std::set<std::string>             bus_ids;
       std::set<IdxT>                    bus_numbers;
       std::map<IdxT, std::vector<IdxT>> adjacency;
-      IdxT                              slack_number{};
-      std::size_t                       slack_count = 0;
 
       for (std::size_t i = 0; i < system_data_.buses.size(); ++i)
       {
@@ -180,12 +183,6 @@ namespace GridKit
           throwValidationError(context + ".params.number",
                                "duplicate bus number");
         }
-        if (bus.bus_class != BusClass::BUS
-            && bus.bus_class != BusClass::SLACK)
-        {
-          throwValidationError(context + ".class", "unsupported bus class");
-        }
-
         requirePositive(bus.kv, context + ".params.kv");
         validateLimits(bus.vmin,
                        bus.vmax,
@@ -226,18 +223,6 @@ namespace GridKit
         }
 
         adjacency.emplace(bus.number, std::vector<IdxT>{});
-        if (bus.bus_class == BusClass::SLACK)
-        {
-          slack_number = bus.number;
-          ++slack_count;
-        }
-      }
-
-      if (slack_count != 1)
-      {
-        throwValidationError("buses",
-                             "expected exactly one Slack bus; found "
-                                 + std::to_string(slack_count));
       }
 
       std::set<std::string> device_ids;
@@ -427,7 +412,7 @@ namespace GridKit
       }
 
       std::set<IdxT>    visited;
-      std::vector<IdxT> pending{slack_number};
+      std::vector<IdxT> pending{system_data_.buses.front().number};
       while (!pending.empty())
       {
         const IdxT current = pending.back();
@@ -447,7 +432,7 @@ namespace GridKit
       if (visited.size() != system_data_.buses.size())
       {
         throwValidationError("topology",
-                             "closed branches do not connect every bus to the Slack bus");
+                             "closed branches do not connect all buses");
       }
     }
 
@@ -667,6 +652,22 @@ namespace GridKit
           return status;
         }
       }
+
+      // The first bus provides the voltage angle gauge. Pinning one angle
+      // removes the rotational degeneracy of the formulation and has no
+      // modeling significance.
+      {
+        const auto& gauge_bus   = system_data_.buses.front();
+        const auto& gauge_state = input_state_.buses.at(busStateId(gauge_bus.number));
+        const RealT gauge_angle = std::atan2(static_cast<RealT>(*gauge_state.vi),
+                                             static_cast<RealT>(*gauge_state.vr));
+        const IdxT  va          = buses.at(gauge_bus.number)
+                            ->variables()
+                            .template internalIndex<BusInternalVariables::VA>();
+        variable_lower[va] = gauge_angle;
+        variable_upper[va] = gauge_angle;
+      }
+
       variable_lower_.setDataUpdated();
       variable_upper_.setDataUpdated();
       constraint_lower_.setDataUpdated();
