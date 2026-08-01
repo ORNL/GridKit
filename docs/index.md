@@ -60,15 +60,40 @@ Contributor guidance, shared utilities, and build documentation.
 ::::
 
 ```{toctree}
-:maxdepth: 5
+:caption: Start Here
+:maxdepth: 1
 :titlesonly:
 :hidden:
 
+Overview <self>
 Installation <INSTALL>
-Applications <application/README>
-Models <GridKit/Model/README>
-Cases <cases/index>
+```
+
+```{toctree}
+:caption: Using GridKit
+:maxdepth: 1
+:titlesonly:
+:hidden:
+
 Examples <examples/README>
-API Reference <api>
+Apps <application/README>
+```
+
+```{toctree}
+:caption: Reference
+:maxdepth: 1
+:titlesonly:
+:hidden:
+
+Cases <cases/index>
+Models <GridKit/Model/README>
+API <api>
+```
+
+```{toctree}
+:maxdepth: 1
+:titlesonly:
+:hidden:
+
 Development <development/README>
 ```

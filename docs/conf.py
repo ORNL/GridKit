@@ -49,7 +49,7 @@ html_static_path = ["_static"]
 html_css_files = ["css/model-inventory.css"]
 html_theme_options = {
     "collapse_navigation": True,
-    "navigation_depth": 6,
+    "navigation_depth": 2,
     "titles_only": True,
 }
 
