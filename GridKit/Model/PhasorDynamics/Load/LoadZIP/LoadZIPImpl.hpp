@@ -25,9 +25,8 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT Vnom, RealT alphaI, RealT alphaP)
+    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT alphaI, RealT alphaP)
       : bus_(bus),
-        Vnom_(Vnom),
         alphaI_(alphaI),
         alphaP_(alphaP)
     {
@@ -55,11 +54,6 @@ namespace GridKit
     void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::Vnom))
-      {
-        Vnom_ = std::get<RealT>(data.parameters.at(Parameter::Vnom));
-      }
-
       if (data.parameters.contains(Parameter::alphaI))
       {
         alphaI_ = std::get<RealT>(data.parameters.at(Parameter::alphaI));
@@ -135,10 +129,18 @@ namespace GridKit
       }
       setDerivedParams();
 
-      const ScalarT vr = Vr();
-      const ScalarT vi = Vi();
-      // The terminal inputs and initialized bus voltage are one initial
-      // condition, so derive their ZIP coefficients together on every reset.
+      const ScalarT vr  = Vr();
+      const ScalarT vi  = Vi();
+      // The terminal inputs, initialized bus voltage, and ZIP anchor are one
+      // initial condition, so derive them together on every reset. Anchoring
+      // at the initialized voltage makes the dispatch exact there for any
+      // voltage sensitivity.
+      const RealT   vm0 = static_cast<RealT>(std::sqrt(vr * vr + vi * vi));
+      if (!(vm0 > RealT{0}) || !std::isfinite(vm0))
+      {
+        return 1;
+      }
+      Vnom_ = vm0;
       setInputDispatchAtVoltage(vr, vi);
 
       // The nominal dispatch, initialized bus voltage, and ZIP anchor are one
