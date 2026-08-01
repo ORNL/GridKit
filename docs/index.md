@@ -9,52 +9,52 @@ or contribute to the project.
 :gutter: 2
 
 :::{grid-item-card} Installation
-:link: INSTALL
-:link-type: doc
+:link: installation
+:link-type: ref
 
 Build GridKit and configure its optional dependencies.
 :::
 
 :::{grid-item-card} Applications
-:link: application/README
-:link-type: doc
+:link: apps
+:link-type: ref
 
-Runnable applications.
+Command line programs that read a case and run a study.
 :::
 
 :::{grid-item-card} Models
-:link: GridKit/Model/README
-:link-type: doc
+:link: models
+:link-type: ref
 
-Equations, parameters, and implementation documentation.
+Equations, parameters, and ports for every model.
 :::
 
 :::{grid-item-card} Cases
-:link: cases/index
-:link-type: doc
+:link: cases
+:link-type: ref
 
 Machine-readable datasets for GridKit applications.
 :::
 
 :::{grid-item-card} Examples
-:link: examples/README
-:link-type: doc
+:link: examples
+:link-type: ref
 
 Worked examples with solver configurations and validation results.
 :::
 
 :::{grid-item-card} API Reference
 :link: api
-:link-type: doc
+:link-type: ref
 
 Generated reference documentation for the C++ API.
 :::
 
 :::{grid-item-card} Development
-:link: development/README
-:link-type: doc
+:link: development
+:link-type: ref
 
-Contributor guidance, shared utilities, and build documentation.
+Contributor guidance, build system, and documentation build.
 :::
 
 ::::
@@ -66,29 +66,29 @@ Contributor guidance, shared utilities, and build documentation.
 :hidden:
 
 Overview <self>
-Installation <INSTALL>
+Installation <installation>
 ```
 
 ```{toctree}
 :caption: Using GridKit
-:maxdepth: 1
+:maxdepth: 2
 :titlesonly:
 :hidden:
 
-Examples <examples/README>
-Apps <application/README>
+Examples <examples/index>
+Applications <applications/index>
 Troubleshooting <troubleshooting>
 ```
 
 ```{toctree}
 :caption: Reference
-:maxdepth: 1
+:maxdepth: 2
 :titlesonly:
 :hidden:
 
 Cases <cases/index>
-Models <GridKit/Model/README>
-API <api>
+Models <models/index>
+API <api/index>
 ```
 
 ```{toctree}
@@ -107,5 +107,5 @@ Numerical Methods <concepts/numerical-methods>
 :titlesonly:
 :hidden:
 
-Development <development/README>
+Development <development/index>
 ```

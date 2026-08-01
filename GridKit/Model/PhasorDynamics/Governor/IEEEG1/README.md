@@ -20,7 +20,7 @@ Notes:
 
 Standard model of the IEEEG1 Governor.
 
-![](../../../../../docs/Figures/PhasorDynamics/IEEEG1_diagram.png)
+![](diagram.png)
 
 Figure 1: Governor IEEEG1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

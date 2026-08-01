@@ -42,7 +42,7 @@ We use the logistic function as a smooth approximation to the Heaviside function
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/sigmoid.svg)
+![](CommonMath/sigmoid.svg)
 
 ### Ramp
 
@@ -68,7 +68,7 @@ We implement the Ramp function as the $\text{softplus}(x)$, non-negative approxi
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/ramp.svg)
+![](CommonMath/ramp.svg)
 
 Although $\rho(x)$ is real-analytic, the implemented form is an overflow-safe representation of the function:
 
@@ -126,7 +126,7 @@ We implement an approximation to $\text{ReQU}$ using the logistic function.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/qramp.svg)
+![](CommonMath/qramp.svg)
 
 ## Derived Functions
 
@@ -159,7 +159,7 @@ We implement an approximation to $\text{ReQU}$ using the logistic function.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/max.svg)
+![](CommonMath/max.svg)
 
 ### Minimum
 
@@ -175,7 +175,7 @@ We implement an approximation to $\text{ReQU}$ using the logistic function.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/min.svg)
+![](CommonMath/min.svg)
 
 ### Clamp
 
@@ -194,7 +194,7 @@ The limits satisfy $\ell\le u$.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/clamp.svg)
+![](CommonMath/clamp.svg)
 
 ### Type I Deadband
 
@@ -213,7 +213,7 @@ The limits satisfy $\ell\le u$.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/deadband1.svg)
+![](CommonMath/deadband1.svg)
 
 ### Type II Deadband
 
@@ -232,7 +232,7 @@ The limits satisfy $\ell\le u$.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/deadband2.svg)
+![](CommonMath/deadband2.svg)
 
 ### Slew
 
@@ -251,7 +251,7 @@ The rate limit satisfies $r\ge0$.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/slew.svg)
+![](CommonMath/slew.svg)
 
 ### Linear Segment
 
@@ -270,7 +270,7 @@ The breakpoints satisfy $a<b$.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/linseg.svg)
+![](CommonMath/linseg.svg)
 
 ### Above
 
@@ -286,7 +286,7 @@ The breakpoints satisfy $a<b$.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/above.svg)
+![](CommonMath/above.svg)
 
 ### Below
 
@@ -302,7 +302,7 @@ The breakpoints satisfy $a<b$.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/below.svg)
+![](CommonMath/below.svg)
 
 ### Inside
 
@@ -320,7 +320,7 @@ The limits satisfy $\ell\le u$.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/inside.svg)
+![](CommonMath/inside.svg)
 
 ### Outside
 
@@ -338,7 +338,7 @@ The limits satisfy $\ell\le u$.
 \end{aligned}
 ```
 
-![](../docs/Figures/CommonMath/outside.svg)
+![](CommonMath/outside.svg)
 
 ### Antiwindup
 

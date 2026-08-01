@@ -4,7 +4,7 @@
 
 Standard model of the stream turbine
 
-![](../../../../../docs/Figures/TGOV1.JPG)
+![](diagram.jpg)
 
 Figure 1: Governor TGOV1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

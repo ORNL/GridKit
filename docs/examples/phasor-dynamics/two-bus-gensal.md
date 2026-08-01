@@ -2,7 +2,6 @@
 
 ```{include} ../../../examples/PhasorDynamics/Tiny/TwoBus/Gensal/README.md
 :relative-images:
-:relative-docs: .
 ```
 
 ## Solver Configuration

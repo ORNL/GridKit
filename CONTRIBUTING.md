@@ -130,7 +130,6 @@ A wrapper page starts with a stable label and includes the README:
 
 ```{include} ../../../examples/PhasorDynamics/Small/TwoArea/README.md
 :relative-images:
-:relative-docs: .
 ```
 ````
 

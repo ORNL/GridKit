@@ -18,7 +18,7 @@ Notes:
 
 Standard model of the SCRX Exciter.
 
-![](../../../../../docs/Figures/PhasorDynamics/SCRX_diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter SCRX model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

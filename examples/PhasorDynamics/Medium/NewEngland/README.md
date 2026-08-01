@@ -15,7 +15,7 @@ system[^newengland39] and includes GridKit-compatible generator models.
 ## Outstanding
 
 - [EXST1_GE](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20EXST1_GE.htm)
-- Switched shunts represented as [LoadZ](../../../../docs/GridKit/Model/PhasorDynamics/Load/LoadZ/README.md)
+- Switched shunts represented as [LoadZ](../../../../GridKit/Model/PhasorDynamics/Load/LoadZ/README.md)
 - LTC transformers and non-unit tap ratios
 
 [^newengland39]: Texas A&M University,

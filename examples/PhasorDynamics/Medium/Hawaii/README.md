@@ -16,12 +16,12 @@ case[^hawaii37] and includes GridKit-compatible generator models.
 
 The following source models are represented by surrogate models in this case.
 
-- [IEEEST](../../../../docs/GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)
-- [REGCA](../../../../docs/GridKit/Model/PhasorDynamics/Converter/REGCA/README.md)
-- [IEEEG1](../../../../docs/GridKit/Model/PhasorDynamics/Governor/IEEEG1/README.md)
-- [GGOV1](../../../../docs/GridKit/Model/PhasorDynamics/Governor/GGOV1/README.md)
-- [ESST4B](../../../../docs/GridKit/Model/PhasorDynamics/Exciter/ESST4B/README.md)
-- [REECA1](../../../../docs/GridKit/Model/PhasorDynamics/Converter/REECA/README.md)
+- [IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)
+- [REGCA](../../../../GridKit/Model/PhasorDynamics/Converter/REGCA/README.md)
+- [IEEEG1](../../../../GridKit/Model/PhasorDynamics/Governor/IEEEG1/README.md)
+- [GGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/GGOV1/README.md)
+- [ESST4B](../../../../GridKit/Model/PhasorDynamics/Exciter/ESST4B/README.md)
+- [REECA1](../../../../GridKit/Model/PhasorDynamics/Converter/REECA/README.md)
 - [EXST1_PTI](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20EXST1_PTI.htm)
 - [ESST1A](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20ESST1A%20and%20ESST1A_GE.htm)
 

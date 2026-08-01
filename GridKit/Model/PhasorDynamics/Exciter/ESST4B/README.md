@@ -18,7 +18,7 @@ Notes:
 
 Standard model of the ESST4B Exciter.
 
-![](../../../../../docs/Figures/PhasorDynamics/ESST4B_diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter ESST4B model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

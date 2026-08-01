@@ -16,7 +16,7 @@ Notes:
 
 Standard model of the EXAC2 Exciter.
 
-![](../../../../../docs/Figures/PhasorDynamics/EXAC2_diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter EXAC2 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

@@ -19,7 +19,7 @@ The following source models are not represented directly in this case:
 
 - [REECB1](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20REEC_B.htm)
 - [GAST_PTI](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Governor%20GAST_PTI%20and%20GASTD.htm)
-- [REGCA](../../../../docs/GridKit/Model/PhasorDynamics/Converter/REGCA/README.md)
+- [REGCA](../../../../GridKit/Model/PhasorDynamics/Converter/REGCA/README.md)
 - [REPCA1](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Plant%20Controller%20REPC_A.htm)
 
 Other outstanding modeling:

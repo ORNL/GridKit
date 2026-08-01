@@ -27,7 +27,7 @@ physical constraints.
 
 ## Block Diagram
 
-![VectorFit rational-operator block diagram](../../../../../../docs/Figures/EMT/VectorFit/diagram.png)
+![VectorFit rational-operator block diagram](diagram.png)
 
 Figure 1: VectorFit model
 

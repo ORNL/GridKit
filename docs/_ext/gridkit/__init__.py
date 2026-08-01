@@ -15,6 +15,7 @@ from sphinx.util.typing import ExtensionMetadata
 
 from .directives import DIRECTIVES
 from .doxygen import InventoryError
+from .links import setup as setup_links
 from .repository import RepositoryError, repository
 from .schema import write_schema
 
@@ -36,6 +37,7 @@ def _generate(app: Sphinx, _config: Config) -> None:
 
 def setup(app: Sphinx) -> ExtensionMetadata:
     app.connect("config-inited", _generate)
+    setup_links(app)
     for name, directive in DIRECTIVES.items():
         app.add_directive(name, directive)
     return {

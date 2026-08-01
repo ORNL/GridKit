@@ -16,15 +16,15 @@ The following source models are not represented directly in this case:
 
 - [ESAC1A](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20ESAC1A.htm)
 - [ESDC1A](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20ESDC1A.htm)
-- [ESST4B](../../../../docs/GridKit/Model/PhasorDynamics/Exciter/ESST4B/README.md)
-- [EXAC2](../../../../docs/GridKit/Model/PhasorDynamics/Exciter/EXAC2/README.md)
-- [EXPIC1](../../../../docs/GridKit/Model/PhasorDynamics/Exciter/EXPIC1/README.md)
-- [SCRX](../../../../docs/GridKit/Model/PhasorDynamics/Exciter/SCRX/README.md)
-- [GGOV1](../../../../docs/GridKit/Model/PhasorDynamics/Governor/GGOV1/README.md)
+- [ESST4B](../../../../GridKit/Model/PhasorDynamics/Exciter/ESST4B/README.md)
+- [EXAC2](../../../../GridKit/Model/PhasorDynamics/Exciter/EXAC2/README.md)
+- [EXPIC1](../../../../GridKit/Model/PhasorDynamics/Exciter/EXPIC1/README.md)
+- [SCRX](../../../../GridKit/Model/PhasorDynamics/Exciter/SCRX/README.md)
+- [GGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/GGOV1/README.md)
 - [HYGOV](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Governor%20HYGOV%20and%20HYGOVD.htm)
-- [IEEEG1](../../../../docs/GridKit/Model/PhasorDynamics/Governor/IEEEG1/README.md)
-- [GENSAL](../../../../docs/GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/README.md)
-- [IEEEST](../../../../docs/GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)
+- [IEEEG1](../../../../GridKit/Model/PhasorDynamics/Governor/IEEEG1/README.md)
+- [GENSAL](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/README.md)
+- [IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)
 
 Other outstanding modeling:
 

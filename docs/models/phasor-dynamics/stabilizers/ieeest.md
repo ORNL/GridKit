@@ -1,0 +1,17 @@
+(model-phasor-dynamics-ieeest)=
+# IEEEST
+
+```{include} ../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md
+:start-line: 1
+:relative-images:
+```
+
+## Ports
+
+```{model-ports} Ieeest
+```
+
+## Cases
+
+```{model-cases} Ieeest
+```
