@@ -19,7 +19,7 @@ Build GridKit and configure its optional dependencies.
 :link: application/README
 :link-type: doc
 
-Runnable applications and end-to-end workflows.
+Runnable applications.
 :::
 
 :::{grid-item-card} Models
@@ -77,6 +77,7 @@ Installation <INSTALL>
 
 Examples <examples/README>
 Apps <application/README>
+Troubleshooting <troubleshooting>
 ```
 
 ```{toctree}
@@ -88,6 +89,17 @@ Apps <application/README>
 Cases <cases/index>
 Models <GridKit/Model/README>
 API <api>
+```
+
+```{toctree}
+:caption: Concepts
+:maxdepth: 1
+:titlesonly:
+:hidden:
+
+Architecture <concepts/architecture>
+Initialization <concepts/initialization>
+Numerical Methods <concepts/numerical-methods>
 ```
 
 ```{toctree}
