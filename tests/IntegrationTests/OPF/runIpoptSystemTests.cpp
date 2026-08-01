@@ -29,7 +29,7 @@ namespace
         "params": {"freq_base": 60.0, "va_base": 100000000.0},
         "buses": [
           {
-            "class": "Slack",
+            "class": "Bus",
             "id": "B0",
             "params": {"number": 0, "kv": 230.0, "vmin": 1.0, "vmax": 1.0}
           },
