@@ -11,7 +11,7 @@
     },
     "buses": [
         {
-            "class": "Slack",
+            "class": "Bus",
             "id": "Bus_1",
             "params": {
                 "number": 1,

@@ -391,7 +391,7 @@
             }
         },
         {
-            "class": "Slack",
+            "class": "Bus",
             "id": "39",
             "params": {
                 "number": 39,

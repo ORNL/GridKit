@@ -111,14 +111,13 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome slackBoundsAndStateOutput()
+      TestOutcome boundsAndStateOutput()
       {
         OPF::BusData<ScalarT, IdxT> data;
-        data.bus_class = OPF::BusClass::SLACK;
-        data.number    = 9;
-        data.kv        = 115.0;
-        data.vmin      = 0.9;
-        data.vmax      = 1.1;
+        data.number = 9;
+        data.kv     = 115.0;
+        data.vmin   = 0.9;
+        data.vmax   = 1.1;
 
         Model::BusState initial_state;
         initial_state.vr = 0.0;
@@ -133,9 +132,8 @@ namespace GridKit
         success                        *= bus.setVariableBounds(lower.data(), upper.data()) == 0;
         success                        *= isEqual(lower[1], 0.9);
         success                        *= isEqual(upper[1], 1.1);
-        const ScalarT reference_angle   = std::atan2(1.0, 0.0);
-        success                        *= isEqual(lower[2], reference_angle);
-        success                        *= isEqual(upper[2], reference_angle);
+        success                        *= std::isinf(lower[2]) && lower[2] < 0.0;
+        success                        *= std::isinf(upper[2]) && upper[2] > 0.0;
 
         std::array<ScalarT, 4> values{};
         values[1] = 2.0;

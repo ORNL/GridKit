@@ -1971,7 +1971,7 @@
             }
         },
         {
-            "class": "Slack",
+            "class": "Bus",
             "id": "CMAIN GM",
             "params": {
                 "number": 5032,

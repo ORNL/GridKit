@@ -9,7 +9,8 @@ Notes:
 - Power entering the bus has positive sign, and power leaving the bus has
   negative sign.
 - Each bus is identified by its `id` and `number`.
-- A bus with class `Slack` provides the voltage-angle reference.
+- The first bus in the system provides the voltage-angle gauge fixed by
+  `System` during allocation.
 
 ## Model Parameters
 
@@ -42,9 +43,8 @@ Invalid Bus parameter data are rejected by the following checks:
 ### Configuration Validation
 
 Bus `id` values must be nonempty and unique. Bus `number` values must be
-unique, with $n\in\mathbb{Z}_{\ge 0}$. The connected system must contain
-exactly one `Slack` bus, and the closed-branch topology must connect every bus
-to that `Slack` bus.
+unique, with $n\in\mathbb{Z}_{\ge 0}$. The system must contain at least one
+bus, and the closed-branch topology must connect all buses.
 
 ## Model Variables
 
@@ -66,8 +66,8 @@ Missing voltage-magnitude limits are treated as unbounded. For a standard
 ```
 
 When `vmin` or `vmax` is omitted, the corresponding bound above is
-$-\infty$ or $\infty$, respectively. For a `Slack` bus, the lower and upper
-voltage-angle bounds are equal.
+$-\infty$ or $\infty$, respectively. For the gauge bus, `System` sets the
+lower and upper voltage-angle bounds equal during allocation.
 
 ### External Variables
 
@@ -127,7 +127,7 @@ The initial polar voltage is:
 \end{aligned}
 ```
 
-For a `Slack` bus, the initialized angle defines the fixed reference bounds:
+For the gauge bus, the initialized angle defines the fixed reference bounds:
 
 ```math
 \underline{V}_A = \overline{V}_A = V_{A,0}

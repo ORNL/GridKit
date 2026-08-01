@@ -21,7 +21,7 @@
             }
         },
         {
-            "class": "Slack",
+            "class": "Bus",
             "id": "Bus 2",
             "params": {
                 "number": 1,
