@@ -41,9 +41,11 @@ Input   | Symbol | Units  | Description                              | Default
 --------|--------|--------|------------------------------------------|--------
 `tap`   | $\tau$ | [p.u.] | Off-nominal tap magnitude on from-bus side | 1
 `phase` | $\theta$ | [rad] | Phase-shift angle                        | 0
-`open`  | $o$    | [-]    | Branch open status                       | 0
+`open`  | $o$    | [-]    | Branch open status                       | `false`
 
-These inputs are constant while a solve is running.
+These fixed operating inputs are constant while a solve is running. They do
+not occupy entries in the optimization vector and do not introduce Jacobian
+columns.
 
 ### Configuration Validation
 
@@ -65,6 +67,8 @@ checks:
   &\theta \in \mathbb{R}\ \text{and finite}
 \end{aligned}
 ```
+
+The fixed `open` input must be Boolean when supplied.
 
 Each branch `id` must be nonempty and unique across all devices. Its `from` and
 `to` values must identify two distinct existing buses. The closed-branch
@@ -130,8 +134,9 @@ Therefore:
 All four derived terminal-admittance entries must be finite.
 
 For the constraints below, write $Y_{mn}=G_{mn}+jB_{mn}$ and define the
-closed indicator as $c(o)=1$ when `open` is false or omitted and $c(o)=0$
-when `open` is true.
+closed indicator from the fixed Boolean input $o$ as $c(o)=1$ when `open` is
+`false` or omitted and $c(o)=0$ when `open` is `true`. The value of $c(o)$ is
+fixed for the complete solve.
 
 ## Model Variables
 
@@ -225,9 +230,9 @@ because they are oriented entering the buses:
 
 ## Initialization
 
-The Branch model has no internal variables to initialize. The fixed `tap`,
-`phase`, and `open` operating inputs use the defaults in the Model Inputs table
-when their companion-state values are omitted.
+The Branch model has no internal variables to initialize. It reads the fixed
+`tap`, `phase`, and `open` operating inputs from the companion state. Omitted
+values use the defaults in the Model Inputs table.
 
 ## Model Outputs
 
