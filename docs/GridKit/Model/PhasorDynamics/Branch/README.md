@@ -1,3 +1,5 @@
+(model-phasor-dynamics-branch)=
+
 # Branch
 
 ```{include} ../../../../../GridKit/Model/PhasorDynamics/Branch/README.md

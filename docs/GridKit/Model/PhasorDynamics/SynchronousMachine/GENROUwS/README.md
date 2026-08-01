@@ -1,3 +1,5 @@
+(model-phasor-dynamics-genrou)=
+
 # GENROU
 
 ```{include} ../../../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/README.md

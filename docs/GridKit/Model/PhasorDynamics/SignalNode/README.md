@@ -1,3 +1,5 @@
+(model-phasor-dynamics-signalnode)=
+
 # SignalNode
 
 ```{include} ../../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md

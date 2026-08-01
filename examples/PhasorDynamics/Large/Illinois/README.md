@@ -14,13 +14,6 @@ Figure 1: Oneline of the ACTIVSg200 Case, from Texas A&M University [Grid Reposi
 
   The reference case from the `.pwb` file had a missing machien model at `Bus 197 GIBSON CITY 1 2`, so I inserted a `GENROU` machine model. The case will not initialize in steady state without it, and its best not to add a negative impedance load.
 
-  ## Events
-
-  The following event types are provided for this case.
-
-  - Bus fault
-
-
   ## Outstanding
 
   ### Dynamics

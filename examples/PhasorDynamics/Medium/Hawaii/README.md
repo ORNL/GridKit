@@ -14,14 +14,6 @@ This case is a modified version of the synthetic Hawaii case, available at the T
 
 None.
 
-
-## Events
-
-The following event types are provided for this case.
-
-- Bus fault
-
-
 ## Outstanding
 
 ### Dynamics

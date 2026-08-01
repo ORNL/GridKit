@@ -116,6 +116,47 @@ is clearer than
 ```
 when read in plain text and in formatted documentation.
 
+## Documenting Cases
+
+Each case keeps a README next to its data. The README is the canonical
+description of the case and must stay readable on GitHub, so it contains no
+Sphinx syntax. The documentation site brings the README in through a small
+wrapper page under `docs/cases/`.
+
+A wrapper page starts with a stable label and includes the README:
+
+````markdown
+(case-phasor-dynamics-two-area)=
+
+```{include} ../../../examples/PhasorDynamics/Small/TwoArea/README.md
+:relative-images:
+:relative-docs: .
+```
+````
+
+Model pages follow the same convention. The label comes from the class string
+used in case JSON, lowercased with punctuation removed. For example, the class
+`Tgov1` is labeled `(model-phasor-dynamics-tgov1)=` and any documentation page
+can link to it:
+
+```markdown
+The case relies on [TGOV1](#model-phasor-dynamics-tgov1) governors.
+```
+
+Do not write model count tables by hand. The wrapper page generates a linked
+table directly from the case JSON:
+
+````markdown
+## Model Inventory
+
+```{case-models} examples/PhasorDynamics/Small/TwoArea/twoarea.json
+```
+````
+
+If a case uses a class with no matching model label, the build reports a
+cross reference warning. This makes the generated table a consistency check
+between the case data and the model documentation.
+
 
 ## Code Style
 

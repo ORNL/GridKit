@@ -1,3 +1,5 @@
+(model-phasor-dynamics-ieeet1)=
+
 # IEEET1
 
 ```{include} ../../../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md

@@ -16,14 +16,6 @@ It is configured with GridKit-compatible dynamic models.
 
 None.
 
-
-## Events
-
-The following event types are provided for this case.
-
-- Bus fault
-
-
 ## Outstanding
 
 ### Dynamics

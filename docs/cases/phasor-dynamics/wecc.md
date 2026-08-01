@@ -1,4 +1,11 @@
+(case-phasor-dynamics-wecc)=
+
 ```{include} ../../../examples/PhasorDynamics/Large/WECC/README.md
 :relative-images:
 :relative-docs: .
+```
+
+## Model Inventory
+
+```{case-models} examples/PhasorDynamics/Large/WECC/wecc.case.json
 ```

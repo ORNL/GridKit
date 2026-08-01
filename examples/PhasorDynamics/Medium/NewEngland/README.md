@@ -10,13 +10,6 @@ Figure 1: Oneline of the New England IEEE 39-bus case, courtesy of [PowerWorld](
 
 This case is a modified version of the NE 39-bus case, available at the Texas A&M University [Electric Grid Test Case Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/). It has been modified to include GridKit-compatible generator models.
 
-## Events
-
-The following event types are provided for this case.
-
-- Bus fault
-
-
 ## Outstanding
 
 ### Dynamics

@@ -1,3 +1,5 @@
+(model-phasor-dynamics-loadz)=
+
 # LoadZ
 
 ```{include} ../../../../../../GridKit/Model/PhasorDynamics/Load/LoadZ/README.md

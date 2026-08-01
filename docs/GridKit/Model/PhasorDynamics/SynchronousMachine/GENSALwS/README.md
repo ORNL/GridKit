@@ -1,3 +1,5 @@
+(model-phasor-dynamics-gensal)=
+
 # GENSAL
 
 ```{include} ../../../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/README.md

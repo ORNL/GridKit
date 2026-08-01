@@ -1,3 +1,5 @@
+(model-phasor-dynamics-ieeest)=
+
 # IEEEST
 
 ```{include} ../../../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md

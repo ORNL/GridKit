@@ -1,3 +1,5 @@
+(model-phasor-dynamics-busfault)=
+
 # BusFault
 
 ```{include} ../../../../../GridKit/Model/PhasorDynamics/BusFault/README.md

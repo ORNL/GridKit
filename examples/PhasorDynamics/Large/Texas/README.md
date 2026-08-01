@@ -12,14 +12,6 @@ It is configured with GridKit-compatible dynamic models.
 - Generator `6215_1` in source data had `Xl == Xdpp == Xqpp = 0.2011`, which can trigger division-by-zero during GENROU initialization.
 - In this case, `Xl` was reduced to `0.1911` to satisfy `Xl < Xdpp`.
 
-
-## Events
-
-The following event types are provided for this case.
-
-- Bus fault
-
-
 ## Outstanding
 
 ### Dynamics

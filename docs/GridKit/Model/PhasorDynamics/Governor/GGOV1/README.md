@@ -1,3 +1,5 @@
+(model-phasor-dynamics-ggov1)=
+
 # GGOV1
 
 ```{include} ../../../../../../GridKit/Model/PhasorDynamics/Governor/GGOV1/README.md

@@ -1,3 +1,5 @@
+(model-phasor-dynamics-bustosignaladapter)=
+
 # BusToSignalAdapter
 
 ```{include} ../../../../../GridKit/Model/PhasorDynamics/BusToSignalAdapter/README.md

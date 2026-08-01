@@ -1,3 +1,5 @@
+(model-phasor-dynamics-exac2)=
+
 # EXAC2
 
 ```{include} ../../../../../../GridKit/Model/PhasorDynamics/Exciter/EXAC2/README.md

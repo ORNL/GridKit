@@ -1,3 +1,5 @@
+(model-phasor-dynamics-regca)=
+
 # REGCA
 
 ```{include} ../../../../../../GridKit/Model/PhasorDynamics/Converter/REGCA/README.md

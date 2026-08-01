@@ -1,3 +1,5 @@
+(model-phasor-dynamics-exdc1)=
+
 # EXDC1
 
 ```{include} ../../../../../../GridKit/Model/PhasorDynamics/Exciter/EXDC1/README.md
