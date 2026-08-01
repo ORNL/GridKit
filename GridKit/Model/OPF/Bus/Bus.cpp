@@ -111,24 +111,8 @@ namespace GridKit
       const IdxT va = variables_.template internalIndex<BusInternalVariables::VA>();
       lower[vm]     = vm_lower;
       upper[vm]     = vm_upper;
-
-      if (data_.bus_class == BusClass::SLACK)
-      {
-        if (!state_.vr.has_value() || !state_.vi.has_value()
-            || !std::isfinite(*state_.vr) || !std::isfinite(*state_.vi)
-            || std::hypot(*state_.vr, *state_.vi) <= RealT{0})
-        {
-          return 1;
-        }
-        const RealT reference_angle = std::atan2(*state_.vi, *state_.vr);
-        lower[va]                   = reference_angle;
-        upper[va]                   = reference_angle;
-      }
-      else
-      {
-        lower[va] = -infinity;
-        upper[va] = infinity;
-      }
+      lower[va]     = -infinity;
+      upper[va]     = infinity;
       return 0;
     }
 

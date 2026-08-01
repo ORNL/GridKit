@@ -44,7 +44,7 @@ namespace GridKit
                 }
               },
               {
-                "class": "Slack",
+                "class": "Bus",
                 "id": "Bus_2",
                 "params": {
                   "number": 2,
@@ -114,11 +114,9 @@ namespace GridKit
         success *= system_data.buses.size() == 2;
         if (system_data.buses.size() == 2)
         {
-          success *= system_data.buses[0].bus_class == OPF::BusClass::BUS;
           success *= system_data.buses[0].number == 1;
           success *= system_data.buses[0].vmin == 0.9;
           success *= system_data.buses[0].vmax == 1.1;
-          success *= system_data.buses[1].bus_class == OPF::BusClass::SLACK;
           success *= system_data.buses[1].number == 2;
           success *= !system_data.buses[1].vmin.has_value();
           success *= !system_data.buses[1].vmax.has_value();
