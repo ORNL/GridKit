@@ -233,6 +233,21 @@ namespace GridKit
         success                     *= near(outside_values[4], 3.0);
         success                     *= near(outside_values[5], -4.0);
 
+        auto [reversed_data, reversed_state] = validProblem();
+        std::reverse(reversed_data.buses.begin(), reversed_data.buses.end());
+        const RealT gauge_angle             = 0.25;
+        reversed_state.buses["bus_id_0"].vr = std::cos(gauge_angle);
+        reversed_state.buses["bus_id_0"].vi = std::sin(gauge_angle);
+        SystemT reversed_model(reversed_data, reversed_state);
+        success        *= reversed_model.allocate() == 0;
+        success        *= reversed_model.getVariableBounds(lower, upper) == 0;
+        variable_lower  = lower.getData();
+        variable_upper  = upper.getData();
+        success        *= std::isinf(variable_lower[1]) && variable_lower[1] < 0.0;
+        success        *= std::isinf(variable_upper[1]) && variable_upper[1] > 0.0;
+        success        *= near(variable_lower[3], gauge_angle);
+        success        *= near(variable_upper[3], gauge_angle);
+
         return success.report(__func__);
       }
 
