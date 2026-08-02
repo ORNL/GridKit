@@ -12,6 +12,7 @@ int main()
   result += test.dtMonitorZero();
   result += test.dtMonitorSuppressesEpsilonFinalStep();
   result += test.fixedStep();
+  result += test.solverLimits();
   result += test.suppressAlgebraicErrors();
   result += test.consistentICType();
 

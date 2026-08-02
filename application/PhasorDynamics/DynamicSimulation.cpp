@@ -34,6 +34,14 @@ int main(int argc, const char* argv[])
   ida.setMaxSteps(study.max_steps);
   ida.setConsistentICType(study.consistent_ic_type);
   ida.configureSimulation();
+  if (study.dt_max.has_value())
+  {
+    ida.setMaxStep(*study.dt_max);
+  }
+  if (study.max_ord.has_value())
+  {
+    ida.setMaxOrder(*study.max_ord);
+  }
 
   // Start timer
   real_type start = static_cast<real_type>(clock());

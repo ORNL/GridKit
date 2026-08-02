@@ -40,6 +40,14 @@ TestStatus runStudy(StudyData study_data)
   ida.setMaxSteps(study_data.max_steps);
   ida.setConsistentICType(study_data.consistent_ic_type);
   ida.configureSimulation();
+  if (study_data.dt_max.has_value())
+  {
+    ida.setMaxStep(*study_data.dt_max);
+  }
+  if (study_data.max_ord.has_value())
+  {
+    ida.setMaxOrder(*study_data.max_ord);
+  }
 
   using EventType = SystemEvent::Type;
 

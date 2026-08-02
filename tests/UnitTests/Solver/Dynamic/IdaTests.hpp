@@ -544,6 +544,26 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome solverLimits()
+      {
+        const unsigned min_steps = 32;
+        TestStatus     success   = true;
+
+        Model::NullEvaluator<ScalarT, IdxT> model;
+
+        Ida<double, size_t> ida(&model);
+        ida.configureSimulation();
+        ida.setMaxStep(1.0 / min_steps);
+        ida.setMaxOrder(1);
+
+        ida.initializeSimulation(0.0, false);
+        ida.runSimulation(1.0);
+
+        success *= (ida.getStats().num_steps_ >= min_steps);
+
+        return success.report(__func__);
+      }
+
       TestOutcome suppressAlgebraicErrors()
       {
         TestStatus success = true;
