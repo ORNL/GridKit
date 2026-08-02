@@ -1,11 +1,11 @@
-add_executable(test_pd_component_integration runPDComponentIntegrationTests.cpp)
+add_executable(test_phasor_gastpti_integration runGastPtiIntegrationTests.cpp)
 target_link_libraries(
-  test_pd_component_integration
+  test_phasor_gastpti_integration
   PRIVATE GridKit::phasor_dynamics_systemmodel GridKit::testing)
 
-add_test(NAME PhasorDynamicsComponentIntegrationTest COMMAND test_pd_component_integration)
+add_test(NAME PhasorDynamicsGastPtiIntegrationTest COMMAND test_phasor_gastpti_integration)
 
-install(TARGETS test_pd_component_integration)
+install(TARGETS test_phasor_gastpti_integration)
 
 if(TARGET SUNDIALS::idas)
   add_executable(test_pd_integration runPDIntegrationTests.cpp)

@@ -5,9 +5,9 @@ exhaust-temperature low-value selector.
 
 ## Notes
 
-- The source $k_{\mathrm{base}}P^\mathrm{ref}>A_T$ reference clip and GASTD-only
-  `dbL`/`dbH` speed deadband are not modeled
-  
+- PowerWorld caps its load reference at $A_T$ during transient simulation;
+  GridKit does not.
+- The GASTD-only `dbL`/`dbH` speed deadband is not part of GASTPTI.
 - Unlike PowerWorld, GridKit rejects
   rather than swaps reversed $V^{\min}$ and $V^{\max}$ values.
 

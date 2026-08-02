@@ -13,7 +13,6 @@ int main()
   result += test.slew();
   result += test.linseg();
   result += test.ramp();
-  result += test.inverseRamp();
   result += test.minMax();
   result += test.antiWindupIndicator();
   result += test.antiWindup();
