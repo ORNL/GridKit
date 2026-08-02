@@ -165,13 +165,13 @@ namespace GridKit
       // Add REPCA plant controllers
       for (const auto& repcadata : data.repca)
       {
-        IdxT bus_index = 0;
+        BusT* bus = nullptr;
         if (repcadata.buses.contains(RepcaBuses::bus))
         {
-          bus_index = repcadata.buses.at(RepcaBuses::bus);
+          bus = getBus(repcadata.buses.at(RepcaBuses::bus));
         }
 
-        auto* repca = new Repca<ScalarT, IdxT>(getBus(bus_index), repcadata);
+        auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
 
         if (repcadata.signal_inputs.contains(RepcaSignalInputs::ibranchr))
         {

@@ -27,98 +27,55 @@ namespace GridKit
 
     namespace Converter
     {
-      /// Internal variables of a `Repca`.
+      /// Internal variables and residual rows of a `Repca`.
       enum class RepcaInternalVariables : size_t
       {
-        VMEAS,  ///< Filtered regulated voltage
-        QMEAS,  ///< Filtered reactive-power signal
-        XQPI,   ///< Reactive-power PI controller state
-        XQLAG,  ///< Reactive-command lead-lag state
-        PMEAS,  ///< Filtered active-power signal
-        XPPI,   ///< Active-power PI controller state
-        PREF,   ///< Active-power command lag state
-        V,      ///< Regulated-bus voltage magnitude
-        VLDC,   ///< Line-drop compensated voltage magnitude
-        VDROOP, ///< Reactive-droop-compensated voltage
-        VCTRL,  ///< Selected voltage-measurement input
-        SFRZ,   ///< Reactive-power PI voltage-enable gate
-        ERQ,    ///< Selected reactive-loop error
-        ERQDB,  ///< Deadbanded reactive-loop error
-        ERQLIM, ///< Limited reactive-loop error
-        QPI,    ///< Reactive-power PI output
-        QEXT,   ///< Reactive-power command output
-        EF,     ///< Frequency error after deadband
-        EP,     ///< Active-power control error
-        EPLIM,  ///< Limited active-power control error
-        PPI,    ///< Active-power PI output
-        PEXT,   ///< Active-power command output
-        MAXIMUM,
+        VMEAS,  ///< \f$V^\mathrm{meas}\f$ Differential filtered regulated voltage [p.u.]
+        QMEAS,  ///< \f$Q^\mathrm{meas}\f$ Differential filtered reactive power on component base [p.u.]
+        XQPI,   ///< \f$x_Q^\mathrm{PI}\f$ Differential reactive-power PI state on component base [p.u.]
+        XQLAG,  ///< \f$x_Q^\mathrm{lag}\f$ Differential reactive-command lead-lag state on component base [p.u.]
+        PMEAS,  ///< \f$P^\mathrm{meas}\f$ Differential filtered active power on component base [p.u.]
+        XPPI,   ///< \f$x_P^\mathrm{PI}\f$ Differential active-power PI state on component base [p.u.]
+        PREF,   ///< \f$P^\mathrm{ref}\f$ Differential active-power command lag state on component base [p.u.]
+        V,      ///< \f$V\f$ Algebraic regulated-bus voltage magnitude [p.u.]
+        VLDC,   ///< \f$V^\mathrm{ldc}\f$ Algebraic line-drop compensated voltage magnitude [p.u.]
+        VDROOP, ///< \f$V^\mathrm{droop}\f$ Algebraic reactive-droop-compensated voltage [p.u.]
+        VCTRL,  ///< \f$V^\mathrm{ctrl}\f$ Algebraic selected voltage-measurement input [p.u.]
+        SFRZ,   ///< \f$s_\mathrm{frz}\f$ Algebraic reactive-power PI voltage-enable gate [-]
+        ERQ,    ///< \f$e_\mathrm{RQ}\f$ Algebraic selected reactive-loop error [p.u.]
+        ERQDB,  ///< \f$e_\mathrm{RQ}^\mathrm{db}\f$ Algebraic deadbanded reactive-loop error [p.u.]
+        ERQLIM, ///< \f$e_\mathrm{RQ}^\mathrm{lim}\f$ Algebraic limited reactive-loop error [p.u.]
+        QPI,    ///< \f$Q^\mathrm{PI}\f$ Algebraic reactive-power PI output on component base [p.u.]
+        QEXT,   ///< \f$Q^\mathrm{ext}\f$ Algebraic reactive-power command on system base [p.u.]
+        EF,     ///< \f$e_f\f$ Algebraic frequency error after deadband [p.u.]
+        EP,     ///< \f$e_P\f$ Algebraic active-power control error on component base [p.u.]
+        EPLIM,  ///< \f$e_P^\mathrm{lim}\f$ Algebraic limited active-power control error on component base [p.u.]
+        PPI,    ///< \f$P^\mathrm{PI}\f$ Algebraic active-power PI output on component base [p.u.]
+        PEXT,   ///< \f$P^\mathrm{ext}\f$ Algebraic active-power command on system base [p.u.]
+        MAXIMUM ///< Number of REPCA internal variables and residual rows
       };
 
-      /// External variables of a `Repca`.
+      /// External signal variables read or initialized by a `Repca`.
       enum class RepcaExternalVariables : size_t
       {
-        IBRANCHR,  ///< Required branch-current real component
-        IBRANCHI,  ///< Required branch-current imaginary component
-        PBRANCH,   ///< Required branch active power
-        QBRANCH,   ///< Required branch reactive power
-        FREQ,      ///< Required frequency input
-        FREQREF,   ///< Optional frequency reference
-        VREF,      ///< Optional voltage-control reference
-        QREF,      ///< Optional reactive-power reference
-        PPLANTREF, ///< Optional plant active-power reference
-        MAXIMUM,
-      };
-
-      /// Indices into the REPCA state, derivative, and residual vectors.
-      struct RepcaIdx
-      {
-        static constexpr size_t VMEAS   = static_cast<size_t>(RepcaInternalVariables::VMEAS);
-        static constexpr size_t QMEAS   = static_cast<size_t>(RepcaInternalVariables::QMEAS);
-        static constexpr size_t XQPI    = static_cast<size_t>(RepcaInternalVariables::XQPI);
-        static constexpr size_t XQLAG   = static_cast<size_t>(RepcaInternalVariables::XQLAG);
-        static constexpr size_t PMEAS   = static_cast<size_t>(RepcaInternalVariables::PMEAS);
-        static constexpr size_t XPPI    = static_cast<size_t>(RepcaInternalVariables::XPPI);
-        static constexpr size_t PREF    = static_cast<size_t>(RepcaInternalVariables::PREF);
-        static constexpr size_t V       = static_cast<size_t>(RepcaInternalVariables::V);
-        static constexpr size_t VLDC    = static_cast<size_t>(RepcaInternalVariables::VLDC);
-        static constexpr size_t VDROOP  = static_cast<size_t>(RepcaInternalVariables::VDROOP);
-        static constexpr size_t VCTRL   = static_cast<size_t>(RepcaInternalVariables::VCTRL);
-        static constexpr size_t SFRZ    = static_cast<size_t>(RepcaInternalVariables::SFRZ);
-        static constexpr size_t ERQ     = static_cast<size_t>(RepcaInternalVariables::ERQ);
-        static constexpr size_t ERQDB   = static_cast<size_t>(RepcaInternalVariables::ERQDB);
-        static constexpr size_t ERQLIM  = static_cast<size_t>(RepcaInternalVariables::ERQLIM);
-        static constexpr size_t QPI     = static_cast<size_t>(RepcaInternalVariables::QPI);
-        static constexpr size_t QEXT    = static_cast<size_t>(RepcaInternalVariables::QEXT);
-        static constexpr size_t EF      = static_cast<size_t>(RepcaInternalVariables::EF);
-        static constexpr size_t EP      = static_cast<size_t>(RepcaInternalVariables::EP);
-        static constexpr size_t EPLIM   = static_cast<size_t>(RepcaInternalVariables::EPLIM);
-        static constexpr size_t PPI     = static_cast<size_t>(RepcaInternalVariables::PPI);
-        static constexpr size_t PEXT    = static_cast<size_t>(RepcaInternalVariables::PEXT);
-        static constexpr size_t MAXIMUM = static_cast<size_t>(RepcaInternalVariables::MAXIMUM);
-      };
-
-      /// Indices into the REPCA external-signal buffers.
-      struct RepcaExt
-      {
-        static constexpr size_t IBRANCHR  = static_cast<size_t>(RepcaExternalVariables::IBRANCHR);
-        static constexpr size_t IBRANCHI  = static_cast<size_t>(RepcaExternalVariables::IBRANCHI);
-        static constexpr size_t PBRANCH   = static_cast<size_t>(RepcaExternalVariables::PBRANCH);
-        static constexpr size_t QBRANCH   = static_cast<size_t>(RepcaExternalVariables::QBRANCH);
-        static constexpr size_t FREQ      = static_cast<size_t>(RepcaExternalVariables::FREQ);
-        static constexpr size_t FREQREF   = static_cast<size_t>(RepcaExternalVariables::FREQREF);
-        static constexpr size_t VREF      = static_cast<size_t>(RepcaExternalVariables::VREF);
-        static constexpr size_t QREF      = static_cast<size_t>(RepcaExternalVariables::QREF);
-        static constexpr size_t PPLANTREF = static_cast<size_t>(RepcaExternalVariables::PPLANTREF);
-        static constexpr size_t MAXIMUM   = static_cast<size_t>(RepcaExternalVariables::MAXIMUM);
+        IBRANCHR,  ///< \f$I_\mathrm{r}\f$ Required branch-current real component on system base [p.u.]
+        IBRANCHI,  ///< \f$I_\mathrm{i}\f$ Required branch-current imaginary component on system base [p.u.]
+        PBRANCH,   ///< \f$P^\mathrm{br}\f$ Required branch active power on system base [p.u.]
+        QBRANCH,   ///< \f$Q^\mathrm{br}\f$ Required branch reactive power on system base [p.u.]
+        FREQ,      ///< \f$f\f$ Required frequency input [p.u.]
+        FREQREF,   ///< \f$f^\mathrm{ref}\f$ Optional frequency reference [p.u.]
+        VREF,      ///< \f$V^\mathrm{ref}\f$ Optional voltage-control reference [p.u.]
+        QREF,      ///< \f$Q^\mathrm{ref}\f$ Optional reactive-power reference on system base [p.u.]
+        PPLANTREF, ///< \f$P_\mathrm{plant}^\mathrm{ref}\f$ Optional plant active-power reference on system base [p.u.]
+        MAXIMUM    ///< Number of REPCA external signal variables
       };
 
       template <typename scalar_type, typename index_type>
       class Repca : public Component<scalar_type, index_type>
       {
-        using Component<scalar_type, index_type>::alpha_;
         using Component<scalar_type, index_type>::abs_tol_;
         using Component<scalar_type, index_type>::allocated_;
+        using Component<scalar_type, index_type>::alpha_;
         using Component<scalar_type, index_type>::f_;
         using Component<scalar_type, index_type>::gridkit_component_id_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
@@ -135,24 +92,26 @@ namespace GridKit
         using Component<scalar_type, index_type>::yp_;
 
       public:
-        using ScalarT    = scalar_type;
-        using IdxT       = index_type;
-        using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using BusT       = BusBase<ScalarT, IdxT>;
-        using SignalT    = SignalNode<ScalarT, IdxT>;
-        using ModelDataT = RepcaData<RealT, IdxT>;
-        using MonitorT   = Model::VariableMonitor<Repca, RepcaData>;
+        using ScalarT            = scalar_type;
+        using IdxT               = index_type;
+        using RealT              = typename Component<ScalarT, IdxT>::RealT;
+        using BusT               = BusBase<ScalarT, IdxT>;
+        using SignalT            = SignalNode<ScalarT, IdxT>;
+        using ModelDataT         = RepcaData<RealT, IdxT>;
+        using MonitorT           = Model::VariableMonitor<Repca, RepcaData>;
+        using InternalVariablesT = RepcaInternalVariables;
+        using ExternalVariablesT = RepcaExternalVariables;
 
         Repca(BusT* bus);
         Repca(BusT* bus, const ModelDataT& data);
         ~Repca();
 
-        int setGridKitComponentID(IdxT) override final;
+        int setGridKitComponentID(IdxT component_id) override final;
         int allocate() override final;
         int verify() const override final;
         int initialize() override final;
         int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT) override final;
+        int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
@@ -160,31 +119,51 @@ namespace GridKit
             -> ComponentSignals<ScalarT,
                                 IdxT,
                                 RepcaInternalVariables,
-                                RepcaExternalVariables>&
-        {
-          return signals_;
-        }
+                                RepcaExternalVariables>&;
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+        [[gnu::always_inline]] inline int evaluateInternalResidual(
+            const ScalarT* y,
+            const ScalarT* yp,
+            const ScalarT* wb,
+            const ScalarT* ws,
+            ScalarT*       f);
 
       private:
-        void initializeParameters(const ModelDataT& data);
-        void initializeMonitor();
-        void setDerivedParameters();
+        static constexpr size_t index(RepcaInternalVariables variable)
+        {
+          return static_cast<size_t>(variable);
+        }
+
+        static constexpr size_t index(RepcaExternalVariables variable)
+        {
+          return static_cast<size_t>(variable);
+        }
+
+        static void checkConfiguration(bool condition, const char* message, int& errors);
+        void        loadRealParameter(const ModelDataT& data,
+                                      RepcaParameters   parameter,
+                                      RealT&            target,
+                                      const char*       name);
+        void        loadSwitchParameter(const ModelDataT& data,
+                                        RepcaParameters   parameter,
+                                        bool&             target,
+                                        const char*       name);
+        bool        floorTimeConstant(RealT& value, const char* name);
+        void        initializeParameters(const ModelDataT& data);
+        void        initializeMonitor();
+        void        setDerivedParameters();
 
         bool solveLimiterInput(ScalarT  requested_output,
                                RealT    lower_limit,
                                RealT    upper_limit,
                                ScalarT& limiter_input) const;
 
-        /// Evaluate log(1 - exp(-x)) without cancellation for positive x.
         RealT logOneMinusExp(RealT x) const;
 
-        ScalarT toComponentBase(ScalarT value) const;
-        ScalarT toSystemBase(ScalarT value) const;
+        [[gnu::always_inline]] inline ScalarT toComponentBase(ScalarT value) const;
+        ScalarT                               toSystemBase(ScalarT value) const;
 
         ScalarT& Vr();
         ScalarT& Vi();
@@ -192,8 +171,6 @@ namespace GridKit
         static constexpr RealT TIME_CONSTANT_MINIMUM    = static_cast<RealT>(1.0e-3);
         static constexpr RealT INITIALIZATION_TOLERANCE = static_cast<RealT>(1.0e-10);
 
-        /// Distance past a smooth-clamp bound; with CommonMath MU = 240,
-        /// this keeps exact-limit initialization residuals below 2e-13.
         static constexpr RealT INITIALIZATION_LIMIT_OFFSET = static_cast<RealT>(0.1);
 
         BusT* bus_{nullptr};

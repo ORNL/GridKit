@@ -23,22 +23,38 @@ namespace GridKit
   {
     namespace Converter
     {
+      /// Logger used for REPCA diagnostics.
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @brief Construct REPCA with its documented parameter defaults.
+       * @class Repca
+       * @brief WECC renewable plant controller with reactive-power and
+       *        active-power control paths.
+       *
+       * @tparam scalar_type Plain real or differentiable scalar type.
+       * @tparam index_type Integer index type.
+       */
+
+      /**
+       * @brief Construct REPCA with its documented parameter defaults
+       *
+       * The regulated bus is retained, the model is sized, and every
+       * parameter keeps its documented default. No monitor or signal
+       * connection is created.
+       *
        * @param[in] bus Regulated bus measured by the controller.
        */
       template <typename scalar_type, typename index_type>
       Repca<scalar_type, index_type>::Repca(BusT* bus)
         : bus_(bus)
       {
-        size_ = static_cast<IdxT>(RepcaIdx::MAXIMUM);
+        size_ = static_cast<IdxT>(index(RepcaInternalVariables::MAXIMUM));
         setDerivedParameters();
       }
 
       /**
-       * @brief Construct REPCA from parameters and monitor selections.
+       * @brief Construct REPCA from model data
+       *
        * @param[in] bus Regulated bus measured by the controller.
        * @param[in] data Model parameters and monitor selections.
        */
@@ -49,257 +65,22 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(RepcaIdx::MAXIMUM);
+        size_ = static_cast<IdxT>(index(RepcaInternalVariables::MAXIMUM));
       }
 
+      /**
+       * @brief Destroy the plant controller and its optional variable monitor.
+       */
       template <typename scalar_type, typename index_type>
       Repca<scalar_type, index_type>::~Repca()
       {
       }
 
-      /// Regulated-bus voltage, real component.
-      template <typename scalar_type, typename index_type>
-      scalar_type& Repca<scalar_type, index_type>::Vr()
-      {
-        return bus_->Vr();
-      }
-
-      /// Regulated-bus voltage, imaginary component.
-      template <typename scalar_type, typename index_type>
-      scalar_type& Repca<scalar_type, index_type>::Vi()
-      {
-        return bus_->Vi();
-      }
-
       /**
-       * @brief Load provided parameters and retain documented defaults for omissions.
+       * @brief Set the component ID
        *
-       * Numeric parameters accept real or integer values. Mode switches accept
-       * bool and numeric 0/1 values; invalid types are counted for verify().
+       * @param[in] component_id Identifier assigned by the system model.
        */
-      template <typename scalar_type, typename index_type>
-      void Repca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
-      {
-        using Params = typename ModelDataT::Parameters;
-
-        parameter_error_count_ = 0;
-
-        auto load_real = [&](auto key, RealT& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            return;
-          }
-
-          const auto& value = data.parameters.at(key);
-          if (const auto* real_value = std::get_if<RealT>(&value))
-          {
-            target = *real_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value))
-          {
-            target = static_cast<RealT>(*index_value);
-          }
-          else
-          {
-            Log::error() << "Repca: parameter '" << name << "' must be numeric\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        auto load_switch = [&](auto key, bool& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            return;
-          }
-
-          const auto& value = data.parameters.at(key);
-          if (const auto* bool_value = std::get_if<bool>(&value))
-          {
-            target = *bool_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value);
-                   index_value && (*index_value == 0 || *index_value == 1))
-          {
-            target = (*index_value == 1);
-          }
-          else if (const auto* real_value = std::get_if<RealT>(&value);
-                   real_value && (*real_value == RealT{0} || *real_value == RealT{1}))
-          {
-            target = (*real_value == RealT{1});
-          }
-          else
-          {
-            Log::error() << "Repca: parameter '" << name << "' must be bool or 0/1\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        load_real(Params::mva, mva_base_, "mva");
-        load_switch(Params::VcompFlag, VcompFlag_, "VcompFlag");
-        load_switch(Params::RefFlag, RefFlag_, "RefFlag");
-        load_switch(Params::Freqflag, Freqflag_, "Freqflag");
-        load_real(Params::Tfltr, Tfltr_, "Tfltr");
-        load_real(Params::Vfrz, Vfrz_, "Vfrz");
-        load_real(Params::Rc, Rc_, "Rc");
-        load_real(Params::Xc, Xc_, "Xc");
-        load_real(Params::Kc, Kc_, "Kc");
-        load_real(Params::dbdlow, dbdlow_, "dbdlow");
-        load_real(Params::dbdupper, dbdupper_, "dbdupper");
-        load_real(Params::emax, emax_, "emax");
-        load_real(Params::emin, emin_, "emin");
-        load_real(Params::Kp, Kp_, "Kp");
-        load_real(Params::Ki, Ki_, "Ki");
-        load_real(Params::Qmax, Qmax_, "Qmax");
-        load_real(Params::Qmin, Qmin_, "Qmin");
-        load_real(Params::Tft, Tft_, "Tft");
-        load_real(Params::Tfv, Tfv_, "Tfv");
-        load_real(Params::Tp, Tp_, "Tp");
-        load_real(Params::fdbd1, fdbd1_, "fdbd1");
-        load_real(Params::fdbd2, fdbd2_, "fdbd2");
-        load_real(Params::Ddn, Ddn_, "Ddn");
-        load_real(Params::Dup, Dup_, "Dup");
-        load_real(Params::femax, femax_, "femax");
-        load_real(Params::femin, femin_, "femin");
-        load_real(Params::Kpg, Kpg_, "Kpg");
-        load_real(Params::Kig, Kig_, "Kig");
-        load_real(Params::Pmax, Pmax_, "Pmax");
-        load_real(Params::Pmin, Pmin_, "Pmin");
-        load_real(Params::Tlag, Tlag_, "Tlag");
-        setDerivedParameters();
-      }
-
-      /**
-       * @brief Resolve time floors, the component power base, and mode masks.
-       */
-      template <typename scalar_type, typename index_type>
-      void Repca<scalar_type, index_type>::setDerivedParameters()
-      {
-        if (Tfltr_ < TIME_CONSTANT_MINIMUM || Tp_ < TIME_CONSTANT_MINIMUM
-            || Tlag_ < TIME_CONSTANT_MINIMUM)
-        {
-          Log::warning() << "Repca: Tfltr, Tp, and Tlag below " << TIME_CONSTANT_MINIMUM
-                         << " s are raised to that floor to keep the controller lags well posed\n";
-        }
-
-        Tfltr_ = std::max(Tfltr_, TIME_CONSTANT_MINIMUM);
-        Tp_    = std::max(Tp_, TIME_CONSTANT_MINIMUM);
-        Tlag_  = std::max(Tlag_, TIME_CONSTANT_MINIMUM);
-
-        va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
-
-        vcomp_on_  = VcompFlag_ ? ONE<RealT> : ZERO<RealT>;
-        vcomp_off_ = ONE<RealT> - vcomp_on_;
-        ref_on_    = RefFlag_ ? ONE<RealT> : ZERO<RealT>;
-        ref_off_   = ONE<RealT> - ref_on_;
-        freq_on_   = Freqflag_ ? ONE<RealT> : ZERO<RealT>;
-      }
-
-      /// Evaluate log(1 - exp(-x)) accurately for a positive argument.
-      template <typename scalar_type, typename index_type>
-      typename Repca<scalar_type, index_type>::RealT
-      Repca<scalar_type, index_type>::logOneMinusExp(RealT x) const
-      {
-        const RealT log_two = std::log(static_cast<RealT>(2.0));
-
-        if (x < log_two)
-        {
-          return log_two - HALF<RealT> * x + std::log(std::sinh(HALF<RealT> * x));
-        }
-        return std::log1p(-std::exp(-x));
-      }
-
-      /**
-       * @brief Recover an input for a requested smooth-clamp output.
-       * @return false when the limits are invalid or the requested output lies outside them.
-       */
-      template <typename scalar_type, typename index_type>
-      bool Repca<scalar_type, index_type>::solveLimiterInput(
-          ScalarT  requested_output,
-          RealT    lower_limit,
-          RealT    upper_limit,
-          ScalarT& limiter_input) const
-      {
-        const RealT output_value = static_cast<RealT>(requested_output);
-
-        if (lower_limit > upper_limit || output_value < lower_limit || output_value > upper_limit)
-        {
-          return false;
-        }
-
-        const RealT width = upper_limit - lower_limit;
-        if (width <= INITIALIZATION_TOLERANCE)
-        {
-          limiter_input = static_cast<ScalarT>(lower_limit);
-          return true;
-        }
-
-        const RealT distance_from_lower = output_value - lower_limit;
-        const RealT distance_from_upper = upper_limit - output_value;
-        if (distance_from_lower <= INITIALIZATION_TOLERANCE)
-        {
-          limiter_input = static_cast<ScalarT>(lower_limit - INITIALIZATION_LIMIT_OFFSET);
-          return true;
-        }
-        if (distance_from_upper <= INITIALIZATION_TOLERANCE)
-        {
-          limiter_input = static_cast<ScalarT>(upper_limit + INITIALIZATION_LIMIT_OFFSET);
-          return true;
-        }
-
-        const RealT mu                    = Math::MU<RealT>;
-        const RealT scaled_lower_distance = mu * distance_from_lower;
-        const RealT scaled_upper_distance = mu * distance_from_upper;
-        const RealT log_lower             = logOneMinusExp(scaled_lower_distance);
-        const RealT log_upper             = logOneMinusExp(scaled_upper_distance);
-        const RealT correction            = (scaled_lower_distance + log_lower - log_upper) / mu;
-
-        limiter_input = static_cast<ScalarT>(lower_limit + correction);
-        return true;
-      }
-
-      /// Convert a system-base power quantity to REPCA component base.
-      template <typename scalar_type, typename index_type>
-      scalar_type Repca<scalar_type, index_type>::toComponentBase(scalar_type value) const
-      {
-        return value * va_system_base_ / va_converter_base_;
-      }
-
-      /// Convert a component-base power quantity to system base.
-      template <typename scalar_type, typename index_type>
-      scalar_type Repca<scalar_type, index_type>::toSystemBase(scalar_type value) const
-      {
-        return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
-      }
-
-      /// Access the configured monitor, or nullptr for the default constructor.
-      template <typename scalar_type, typename index_type>
-      const Model::VariableMonitorBase* Repca<scalar_type, index_type>::getMonitor() const
-      {
-        return monitor_.get();
-      }
-
-      /// Bind monitor selections to REPCA state entries in public monitor order.
-      template <typename scalar_type, typename index_type>
-      void Repca<scalar_type, index_type>::initializeMonitor()
-      {
-        using I        = RepcaIdx;
-        using Variable = typename ModelDataT::MonitorableVariables;
-
-        monitor_->set(Variable::qext, [this]
-                      { return y_.getData()[I::QEXT]; });
-        monitor_->set(Variable::pext, [this]
-                      { return y_.getData()[I::PEXT]; });
-        monitor_->set(Variable::vmeas, [this]
-                      { return y_.getData()[I::VMEAS]; });
-        monitor_->set(Variable::qmeas, [this]
-                      { return y_.getData()[I::QMEAS]; });
-        monitor_->set(Variable::pmeas, [this]
-                      { return y_.getData()[I::PMEAS]; });
-      }
-
-      /// Set the component identifier used by monitor labels.
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
       {
@@ -308,14 +89,18 @@ namespace GridKit
       }
 
       /**
-       * @brief Allocate model buffers and bind assigned command-output nodes.
-       * @return 0 on success.
+       * @brief Allocate model vectors and wire assigned command outputs
+       *
+       * Sizes the state, residual, bus, and signal-interface buffers, initializes
+       * identity index maps, and points assigned `qext` and `pext` nodes at
+       * the internal system-base states that REPCA publishes. Repeated
+       * allocation reuses the existing model vectors and signal links.
        */
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::allocate()
       {
-        using I = RepcaIdx;
-        using E = RepcaExt;
+        using I = RepcaInternalVariables;
+        using E = RepcaExternalVariables;
 
         if (!allocated_)
         {
@@ -329,7 +114,7 @@ namespace GridKit
 
         wb_.assign(2, ScalarT{0});
 
-        const auto signal_size = E::MAXIMUM;
+        const auto signal_size = index(E::MAXIMUM);
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -344,15 +129,15 @@ namespace GridKit
         if (signals_.template isAssigned<RepcaInternalVariables::QEXT>())
         {
           signals_.template getSignalNode<RepcaInternalVariables::QEXT>()->set(
-              &y[I::QEXT],
-              &(this->getVariableIndex(static_cast<IdxT>(I::QEXT))));
+              &y[index(I::QEXT)],
+              &(this->getVariableIndex(static_cast<IdxT>(index(I::QEXT)))));
         }
 
         if (signals_.template isAssigned<RepcaInternalVariables::PEXT>())
         {
           signals_.template getSignalNode<RepcaInternalVariables::PEXT>()->set(
-              &y[I::PEXT],
-              &(this->getVariableIndex(static_cast<IdxT>(I::PEXT))));
+              &y[index(I::PEXT)],
+              &(this->getVariableIndex(static_cast<IdxT>(index(I::PEXT)))));
         }
 
         allocated_ = true;
@@ -360,41 +145,142 @@ namespace GridKit
       }
 
       /**
-       * @brief Validate parameters, the regulated bus, and signal connections.
-       * @return The number of configuration errors.
+       * @brief Validate the REPCA configuration
+       *
+       * Checks parameter-loading errors, finiteness and static parameter
+       * relationships, system/component bases and both conversion ratios,
+       * the regulated bus, required measurement signals, and attached
+       * optional reference signals. Command-output assignment is optional.
+       * Operating-point feasibility is checked by initialize().
+       *
+       * @return Number of configuration errors; zero when valid.
        */
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::verify() const
       {
         int ret = static_cast<int>(parameter_error_count_);
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Repca: " << message << '\n';
-            ret += 1;
-          }
-        };
+        checkConfiguration(bus_ != nullptr, "regulated bus is required", ret);
 
-        if (bus_ == nullptr)
+        const bool valid_converter_base = std::isfinite(mva_base_)
+                                          && mva_base_ > ZERO<RealT>
+                                          && std::isfinite(va_converter_base_)
+                                          && va_converter_base_ > ZERO<RealT>;
+        const bool valid_system_base = std::isfinite(va_system_base_)
+                                       && va_system_base_ > ZERO<RealT>;
+        checkConfiguration(valid_converter_base,
+                           "mva must define a finite positive converter power base",
+                           ret);
+        checkConfiguration(valid_system_base,
+                           "system power base must be finite and positive",
+                           ret);
+        if (valid_converter_base && valid_system_base)
         {
-          Log::error() << "Repca: bus pointer is null\n";
-          ret += 1;
+          const RealT system_to_converter = va_system_base_ / va_converter_base_;
+          const RealT converter_to_system = va_converter_base_ / va_system_base_;
+          checkConfiguration(
+              std::isfinite(system_to_converter)
+                  && system_to_converter > ZERO<RealT>
+                  && std::isfinite(converter_to_system)
+                  && converter_to_system > ZERO<RealT>,
+              "system/converter power-base conversion ratios must be finite and positive",
+              ret);
         }
 
-        check(mva_base_ > ZERO<RealT>, "mva must be positive");
-        check(Tfv_ > ZERO<RealT>, "Tfv must be positive");
-        check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
-              "dbdlow <= 0 <= dbdupper is required");
-        check(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,
-              "emin <= 0 <= emax is required");
-        check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
-        check(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
-              "fdbd1 <= 0 <= fdbd2 is required");
-        check(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
-              "femin <= 0 <= femax is required");
-        check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
+        checkConfiguration(std::isfinite(Tfltr_), "Tfltr must be finite", ret);
+        checkConfiguration(std::isfinite(Vfrz_), "Vfrz must be finite", ret);
+        checkConfiguration(std::isfinite(Rc_), "Rc must be finite", ret);
+        checkConfiguration(std::isfinite(Xc_), "Xc must be finite", ret);
+        checkConfiguration(std::isfinite(Kc_), "Kc must be finite", ret);
+
+        const bool finite_reactive_deadband = std::isfinite(dbdlow_)
+                                              && std::isfinite(dbdupper_);
+        checkConfiguration(finite_reactive_deadband,
+                           "dbdlow and dbdupper must be finite",
+                           ret);
+        if (finite_reactive_deadband)
+        {
+          checkConfiguration(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
+                             "dbdlow <= 0 <= dbdupper is required",
+                             ret);
+        }
+
+        const bool finite_reactive_error_limits = std::isfinite(emin_)
+                                                  && std::isfinite(emax_);
+        checkConfiguration(finite_reactive_error_limits,
+                           "emin and emax must be finite",
+                           ret);
+        if (finite_reactive_error_limits)
+        {
+          checkConfiguration(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,
+                             "emin <= 0 <= emax is required",
+                             ret);
+        }
+
+        checkConfiguration(std::isfinite(Kp_), "Kp must be finite", ret);
+        checkConfiguration(std::isfinite(Ki_), "Ki must be finite", ret);
+
+        const bool finite_reactive_limits = std::isfinite(Qmin_)
+                                            && std::isfinite(Qmax_);
+        checkConfiguration(finite_reactive_limits,
+                           "Qmin and Qmax must be finite",
+                           ret);
+        if (finite_reactive_limits)
+        {
+          checkConfiguration(Qmin_ <= Qmax_,
+                             "Qmin must be less than or equal to Qmax",
+                             ret);
+        }
+
+        checkConfiguration(std::isfinite(Tft_), "Tft must be finite", ret);
+        checkConfiguration(std::isfinite(Tfv_) && Tfv_ > ZERO<RealT>,
+                           "Tfv must be finite and positive",
+                           ret);
+        checkConfiguration(std::isfinite(Tp_), "Tp must be finite", ret);
+
+        const bool finite_frequency_deadband = std::isfinite(fdbd1_)
+                                               && std::isfinite(fdbd2_);
+        checkConfiguration(finite_frequency_deadband,
+                           "fdbd1 and fdbd2 must be finite",
+                           ret);
+        if (finite_frequency_deadband)
+        {
+          checkConfiguration(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
+                             "fdbd1 <= 0 <= fdbd2 is required",
+                             ret);
+        }
+
+        checkConfiguration(std::isfinite(Ddn_), "Ddn must be finite", ret);
+        checkConfiguration(std::isfinite(Dup_), "Dup must be finite", ret);
+
+        const bool finite_active_error_limits = std::isfinite(femin_)
+                                                && std::isfinite(femax_);
+        checkConfiguration(finite_active_error_limits,
+                           "femin and femax must be finite",
+                           ret);
+        if (finite_active_error_limits)
+        {
+          checkConfiguration(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
+                             "femin <= 0 <= femax is required",
+                             ret);
+        }
+
+        checkConfiguration(std::isfinite(Kpg_), "Kpg must be finite", ret);
+        checkConfiguration(std::isfinite(Kig_), "Kig must be finite", ret);
+
+        const bool finite_active_limits = std::isfinite(Pmin_)
+                                          && std::isfinite(Pmax_);
+        checkConfiguration(finite_active_limits,
+                           "Pmin and Pmax must be finite",
+                           ret);
+        if (finite_active_limits)
+        {
+          checkConfiguration(Pmin_ <= Pmax_,
+                             "Pmin must be less than or equal to Pmax",
+                             ret);
+        }
+
+        checkConfiguration(std::isfinite(Tlag_), "Tlag must be finite", ret);
 
         auto check_required_signal = [&]<RepcaExternalVariables variable>(const char* name)
         {
@@ -435,23 +321,45 @@ namespace GridKit
       }
 
       /**
-       * @brief Initialize from seeded qext and, when frequency control is enabled, pext.
+       * @brief Initialize REPCA from the initial plant commands
        *
-       * All feasibility checks precede state, derivative, latch, and signal
-       * writes, so failure leaves model and signal storage unchanged.
+       * Reads the required bus and measurement ports, preserves the initial
+       * system-base `qext` value and, when frequency control is enabled, `pext`,
+       * reconstructs the steady controller state, and publishes the resolved
+       * optional references.
        *
-       * @pre allocate() has completed and verify() returned zero.
-       * @return 0 on success; nonzero for an inadmissible operating point.
+       * @pre allocate() has completed.
+       * @pre verify() reports a valid parameter and port configuration.
+       * @pre `qext` and, when frequency control is enabled, `pext` contain the
+       *      initial plant commands.
+       *
+       * @post On failure no state, derivative, latch, or signal storage is
+       *       modified.
+       *
+       * @return 0 on success; nonzero when allocation, configuration, initial-
+       *         value, candidate, command-limit, or steady-state checks fail.
        */
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::initialize()
       {
-        using I = RepcaIdx;
+        using I = RepcaInternalVariables;
+
+        if (!allocated_)
+        {
+          Log::error() << "Repca: allocate must complete before initialize\n";
+          return 1;
+        }
+
+        if (verify() > 0)
+        {
+          Log::error() << "Repca: cannot initialize with invalid configuration\n";
+          return 1;
+        }
 
         auto* y = y_.getData();
 
-        const ScalarT qext0_system = y[I::QEXT];
-        const ScalarT pext0_system = y[I::PEXT];
+        const ScalarT qext0_system = y[index(I::QEXT)];
+        const ScalarT pext0_system = y[index(I::PEXT)];
         const ScalarT qext0        = toComponentBase(qext0_system);
         const ScalarT pext0        = toComponentBase(pext0_system);
 
@@ -511,10 +419,11 @@ namespace GridKit
         }
         const ScalarT xqpi0      = qpi_input0 - Kp_ * erqlim0;
         const ScalarT q_aw_rate0 = Math::antiwindup(qpi0, Ki_ * erqlim0, Qmin_, Qmax_);
-        if (!is_finite(q_aw_rate0)
-            || std::abs(static_cast<RealT>(q_aw_rate0)) > INITIALIZATION_TOLERANCE)
+        const ScalarT xqpi_rate0 = sfrz0 * q_aw_rate0;
+        if (!is_finite(q_aw_rate0) || !is_finite(xqpi_rate0)
+            || std::abs(static_cast<RealT>(xqpi_rate0)) > INITIALIZATION_TOLERANCE)
         {
-          Log::error() << "Repca: reactive-power PI antiwindup rate is nonzero at initialization\n";
+          Log::error() << "Repca: reactive-power PI state rate is nonzero at initialization\n";
           return 1;
         }
 
@@ -552,28 +461,74 @@ namespace GridKit
         const ScalarT qref0_system      = qbranch_system;
         const ScalarT pplantref0_system = toSystemBase(pmeas0 - pfreq0);
 
-        y[I::VMEAS]  = vmeas0;
-        y[I::QMEAS]  = qmeas0;
-        y[I::XQPI]   = xqpi0;
-        y[I::XQLAG]  = xqlag0;
-        y[I::PMEAS]  = pmeas0;
-        y[I::XPPI]   = xppi0;
-        y[I::PREF]   = pref0;
-        y[I::V]      = v0;
-        y[I::VLDC]   = vldc0;
-        y[I::VDROOP] = vdroop0;
-        y[I::VCTRL]  = vctrl0;
-        y[I::SFRZ]   = sfrz0;
-        y[I::ERQ]    = erq0;
-        y[I::ERQDB]  = erqdb0;
-        y[I::ERQLIM] = erqlim0;
-        y[I::QPI]    = qpi0;
-        y[I::QEXT]   = qext0_system;
-        y[I::EF]     = ef0;
-        y[I::EP]     = ep0;
-        y[I::EPLIM]  = eplim0;
-        y[I::PPI]    = ppi0;
-        y[I::PEXT]   = pext_output0;
+        const bool candidates_are_finite =
+            is_finite(qext0_system)
+            && (!Freqflag_ || is_finite(pext0_system))
+            && is_finite(qext0)
+            && (!Freqflag_ || is_finite(pext0))
+            && is_finite(pbranch)
+            && is_finite(qbranch)
+            && is_finite(vldc_r)
+            && is_finite(vldc_i)
+            && is_finite(v0)
+            && is_finite(vldc0)
+            && is_finite(vdroop0)
+            && is_finite(vctrl0)
+            && is_finite(vmeas0)
+            && is_finite(qmeas0)
+            && is_finite(pmeas0)
+            && is_finite(sfrz0)
+            && is_finite(erq0)
+            && is_finite(erqdb0)
+            && is_finite(erqlim0)
+            && is_finite(qpi0)
+            && is_finite(xqlag0)
+            && is_finite(qpi_input0)
+            && is_finite(xqpi0)
+            && is_finite(q_aw_rate0)
+            && is_finite(xqpi_rate0)
+            && is_finite(ef0)
+            && is_finite(pfreq0)
+            && is_finite(ep0)
+            && is_finite(eplim0)
+            && is_finite(pref0)
+            && is_finite(ppi0)
+            && is_finite(ppi_input0)
+            && is_finite(xppi0)
+            && is_finite(p_aw_rate0)
+            && is_finite(pext_output0)
+            && is_finite(freqref0)
+            && is_finite(vref0)
+            && is_finite(qref0_system)
+            && is_finite(pplantref0_system);
+        if (!candidates_are_finite)
+        {
+          Log::error() << "Repca: derived initial values must be finite\n";
+          return 1;
+        }
+
+        y[index(I::VMEAS)]  = vmeas0;
+        y[index(I::QMEAS)]  = qmeas0;
+        y[index(I::XQPI)]   = xqpi0;
+        y[index(I::XQLAG)]  = xqlag0;
+        y[index(I::PMEAS)]  = pmeas0;
+        y[index(I::XPPI)]   = xppi0;
+        y[index(I::PREF)]   = pref0;
+        y[index(I::V)]      = v0;
+        y[index(I::VLDC)]   = vldc0;
+        y[index(I::VDROOP)] = vdroop0;
+        y[index(I::VCTRL)]  = vctrl0;
+        y[index(I::SFRZ)]   = sfrz0;
+        y[index(I::ERQ)]    = erq0;
+        y[index(I::ERQDB)]  = erqdb0;
+        y[index(I::ERQLIM)] = erqlim0;
+        y[index(I::QPI)]    = qpi0;
+        y[index(I::QEXT)]   = qext0_system;
+        y[index(I::EF)]     = ef0;
+        y[index(I::EP)]     = ep0;
+        y[index(I::EPLIM)]  = eplim0;
+        y[index(I::PPI)]    = ppi0;
+        y[index(I::PEXT)]   = pext_output0;
 
         freqref_set_   = freqref0;
         vref_set_      = vref0;
@@ -605,28 +560,36 @@ namespace GridKit
       }
 
       /**
-       * @brief Tag the seven controller states as differential variables.
-       * @return 0 on success.
+       * @brief Identify the differential variables
+       *
+       * The voltage and power filters, reactive PI and lead-lag states, and
+       * active PI and command-lag states carry derivatives; every other
+       * internal variable is algebraic.
        */
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::tagDifferentiable()
       {
-        using I = RepcaIdx;
+        using I = RepcaInternalVariables;
 
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[I::VMEAS] = true;
-        tag_[I::QMEAS] = true;
-        tag_[I::XQPI]  = true;
-        tag_[I::XQLAG] = true;
-        tag_[I::PMEAS] = true;
-        tag_[I::XPPI]  = true;
-        tag_[I::PREF]  = true;
+        tag_[index(I::VMEAS)] = true;
+        tag_[index(I::QMEAS)] = true;
+        tag_[index(I::XQPI)]  = true;
+        tag_[index(I::XQLAG)] = true;
+        tag_[index(I::PMEAS)] = true;
+        tag_[index(I::XPPI)]  = true;
+        tag_[index(I::PREF)]  = true;
         return 0;
       }
 
       /**
-       * @brief Set the common absolute-tolerance floor for all REPCA variables.
-       * @return 0 on success.
+       * @brief Compute the absolute tolerance for each variable in the model
+       *
+       * REPCA variables are dimensionless per-unit signals and controller
+       * states of the same order, so they share the relative tolerance as
+       * their absolute floor.
+       *
+       * @param[in] rel_tol Solver relative tolerance.
        */
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
@@ -636,160 +599,70 @@ namespace GridKit
       }
 
       /**
-       * @brief Evaluate the seven differential and fifteen algebraic rows.
+       * @brief Evaluate the REPCA-owned residual rows
        *
-       * Mode selections enter through fixed masks so the residual remains
-       * branch-free for sparse automatic differentiation.
-       */
-      template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int
-      Repca<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT* y,
-          const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
-          ScalarT*       f)
-      {
-        using I = RepcaIdx;
-        using E = RepcaExt;
-
-        const ScalarT vmeas  = y[I::VMEAS];
-        const ScalarT qmeas  = y[I::QMEAS];
-        const ScalarT xqpi   = y[I::XQPI];
-        const ScalarT xqlag  = y[I::XQLAG];
-        const ScalarT pmeas  = y[I::PMEAS];
-        const ScalarT xppi   = y[I::XPPI];
-        const ScalarT pref   = y[I::PREF];
-        const ScalarT v      = y[I::V];
-        const ScalarT vldc   = y[I::VLDC];
-        const ScalarT vdroop = y[I::VDROOP];
-        const ScalarT vctrl  = y[I::VCTRL];
-        const ScalarT sfrz   = y[I::SFRZ];
-        const ScalarT erq    = y[I::ERQ];
-        const ScalarT erqdb  = y[I::ERQDB];
-        const ScalarT erqlim = y[I::ERQLIM];
-        const ScalarT qpi    = y[I::QPI];
-        const ScalarT qext   = toComponentBase(y[I::QEXT]);
-        const ScalarT ef     = y[I::EF];
-        const ScalarT ep     = y[I::EP];
-        const ScalarT eplim  = y[I::EPLIM];
-        const ScalarT ppi    = y[I::PPI];
-        const ScalarT pext   = toComponentBase(y[I::PEXT]);
-
-        const ScalarT vmeas_dot = yp[I::VMEAS];
-        const ScalarT qmeas_dot = yp[I::QMEAS];
-        const ScalarT xqpi_dot  = yp[I::XQPI];
-        const ScalarT xqlag_dot = yp[I::XQLAG];
-        const ScalarT pmeas_dot = yp[I::PMEAS];
-        const ScalarT xppi_dot  = yp[I::XPPI];
-        const ScalarT pref_dot  = yp[I::PREF];
-
-        const ScalarT vr = wb[0];
-        const ScalarT vi = wb[1];
-
-        const ScalarT ibranchr  = ws[E::IBRANCHR];
-        const ScalarT ibranchi  = ws[E::IBRANCHI];
-        const ScalarT pbranch   = toComponentBase(ws[E::PBRANCH]);
-        const ScalarT qbranch   = toComponentBase(ws[E::QBRANCH]);
-        const ScalarT freq      = ws[E::FREQ];
-        const ScalarT freqref   = ws[E::FREQREF];
-        const ScalarT vref      = ws[E::VREF];
-        const ScalarT qref      = toComponentBase(ws[E::QREF]);
-        const ScalarT pplantref = toComponentBase(ws[E::PPLANTREF]);
-
-        const ScalarT vldc_r = vr - Rc_ * ibranchr + Xc_ * ibranchi;
-        const ScalarT vldc_i = vi - Rc_ * ibranchi - Xc_ * ibranchr;
-        const ScalarT pfreq  = Ddn_ * Math::ramp(ef) - Dup_ * Math::ramp(-ef);
-
-        f[I::VMEAS] = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
-        f[I::QMEAS] = -qmeas_dot + (qbranch - qmeas) / Tfltr_;
-        f[I::XQPI]  = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
-        f[I::XQLAG] = -xqlag_dot + (qpi - xqlag) / Tfv_;
-        f[I::PMEAS] = -pmeas_dot + (pbranch - pmeas) / Tp_;
-        f[I::XPPI]  = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
-        f[I::PREF]  = -pref_dot + (ppi - pref) / Tlag_;
-
-        f[I::V]      = -v * v + vr * vr + vi * vi;
-        f[I::VLDC]   = -vldc * vldc + vldc_r * vldc_r + vldc_i * vldc_i;
-        f[I::VDROOP] = -vdroop + v + Kc_ * qbranch;
-        f[I::VCTRL]  = -vctrl + vcomp_on_ * vldc + vcomp_off_ * vdroop;
-        f[I::SFRZ]   = -sfrz + Math::above(v, Vfrz_);
-        f[I::ERQ]    = -erq + ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
-        f[I::ERQDB]  = -erqdb + Math::deadband2(erq, dbdlow_, dbdupper_);
-        f[I::ERQLIM] = -erqlim + Math::clamp(erqdb, emin_, emax_);
-        f[I::QPI]    = -qpi + Math::clamp(Kp_ * erqlim + xqpi, Qmin_, Qmax_);
-        f[I::QEXT]   = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
-
-        f[I::EF]    = -ef + Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
-        f[I::EP]    = -ep + pplantref - pmeas + pfreq;
-        f[I::EPLIM] = -eplim + Math::clamp(ep, femin_, femax_);
-        f[I::PPI]   = -ppi + Math::clamp(Kpg_ * eplim + xppi, Pmin_, Pmax_);
-        f[I::PEXT]  = -pext + freq_on_ * pref;
-
-        return 0;
-      }
-
-      /**
-       * @brief Refresh bus and signal buffers and evaluate the REPCA residual.
-       *
-       * Required measurements are read directly; unattached optional references
-       * use the values latched by initialize(). REPCA has no bus residual.
-       *
-       * @return 0 on success.
+       * Refreshes required bus and measurement inputs, starts optional
+       * references from the values latched by initialize(), then overwrites
+       * them from attached signals. REPCA contributes no bus residual.
        */
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::evaluateResidual()
       {
-        using E = RepcaExt;
+        using E = RepcaExternalVariables;
 
-        ws_[E::FREQREF]   = freqref_set_;
-        ws_[E::VREF]      = vref_set_;
-        ws_[E::QREF]      = qref_set_;
-        ws_[E::PPLANTREF] = pplantref_set_;
+        ws_[index(E::FREQREF)]   = freqref_set_;
+        ws_[index(E::VREF)]      = vref_set_;
+        ws_[index(E::QREF)]      = qref_set_;
+        ws_[index(E::PPLANTREF)] = pplantref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        ws_[E::IBRANCHR] =
+        ws_[index(E::IBRANCHR)] =
             signals_.template readExternalVariable<RepcaExternalVariables::IBRANCHR>();
-        ws_indices_[E::IBRANCHR] =
+        ws_indices_[index(E::IBRANCHR)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::IBRANCHR>();
-        ws_[E::IBRANCHI] =
+        ws_[index(E::IBRANCHI)] =
             signals_.template readExternalVariable<RepcaExternalVariables::IBRANCHI>();
-        ws_indices_[E::IBRANCHI] =
+        ws_indices_[index(E::IBRANCHI)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::IBRANCHI>();
-        ws_[E::PBRANCH] = signals_.template readExternalVariable<RepcaExternalVariables::PBRANCH>();
-        ws_indices_[E::PBRANCH] =
+        ws_[index(E::PBRANCH)] =
+            signals_.template readExternalVariable<RepcaExternalVariables::PBRANCH>();
+        ws_indices_[index(E::PBRANCH)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::PBRANCH>();
-        ws_[E::QBRANCH] = signals_.template readExternalVariable<RepcaExternalVariables::QBRANCH>();
-        ws_indices_[E::QBRANCH] =
+        ws_[index(E::QBRANCH)] =
+            signals_.template readExternalVariable<RepcaExternalVariables::QBRANCH>();
+        ws_indices_[index(E::QBRANCH)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::QBRANCH>();
-        ws_[E::FREQ] = signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
-        ws_indices_[E::FREQ] =
+        ws_[index(E::FREQ)] =
+            signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
+        ws_indices_[index(E::FREQ)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQ>();
 
         if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
         {
-          ws_[E::FREQREF] =
+          ws_[index(E::FREQREF)] =
               signals_.template readExternalVariable<RepcaExternalVariables::FREQREF>();
-          ws_indices_[E::FREQREF] =
+          ws_indices_[index(E::FREQREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::VREF>())
         {
-          ws_[E::VREF] = signals_.template readExternalVariable<RepcaExternalVariables::VREF>();
-          ws_indices_[E::VREF] =
+          ws_[index(E::VREF)] =
+              signals_.template readExternalVariable<RepcaExternalVariables::VREF>();
+          ws_indices_[index(E::VREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::VREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::QREF>())
         {
-          ws_[E::QREF] = signals_.template readExternalVariable<RepcaExternalVariables::QREF>();
-          ws_indices_[E::QREF] =
+          ws_[index(E::QREF)] =
+              signals_.template readExternalVariable<RepcaExternalVariables::QREF>();
+          ws_indices_[index(E::QREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::QREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::PPLANTREF>())
         {
-          ws_[E::PPLANTREF] =
+          ws_[index(E::PPLANTREF)] =
               signals_.template readExternalVariable<RepcaExternalVariables::PPLANTREF>();
-          ws_indices_[E::PPLANTREF] =
+          ws_indices_[index(E::PPLANTREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::PPLANTREF>();
         }
 
@@ -804,6 +677,511 @@ namespace GridKit
         f_.setDataUpdated();
         return 0;
       }
+
+      /**
+       * @brief Access the REPCA signal interface
+       *
+       * @return Interface used to assign optional plant-command outputs and
+       *         attach required measurements and optional references.
+       */
+      template <typename scalar_type, typename index_type>
+      auto Repca<scalar_type, index_type>::getSignals()
+          -> ComponentSignals<ScalarT,
+                              IdxT,
+                              RepcaInternalVariables,
+                              RepcaExternalVariables>&
+      {
+        return signals_;
+      }
+
+      /**
+       * @brief Access the configured monitor
+       *
+       * @return Monitor for this model, or nullptr when constructed without data.
+       */
+      template <typename scalar_type, typename index_type>
+      const Model::VariableMonitorBase* Repca<scalar_type, index_type>::getMonitor() const
+      {
+        return monitor_.get();
+      }
+
+      /**
+       * @brief Evaluate the REPCA internal residual
+       *
+       * Evaluates seven differential and fifteen algebraic rows in enum order.
+       * Precomputed mode masks keep the differentiated path branch- and
+       * loop-free with a fixed dependency structure.
+       *
+       * @param[in] y Internal variables in `RepcaInternalVariables` order and
+       *              on the bases documented by their enums.
+       * @param[in] yp Internal derivatives in the same enum order and bases.
+       * @param[in] wb Regulated-bus real and imaginary voltage components.
+       * @param[in] ws External signals in `RepcaExternalVariables` order.
+       * @param[out] f Model-owned residuals in `RepcaInternalVariables` order.
+       */
+      template <typename scalar_type, typename index_type>
+      [[gnu::always_inline]] inline int
+      Repca<scalar_type, index_type>::evaluateInternalResidual(
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f)
+      {
+        using I = RepcaInternalVariables;
+        using E = RepcaExternalVariables;
+
+        const ScalarT vmeas  = y[index(I::VMEAS)];
+        const ScalarT qmeas  = y[index(I::QMEAS)];
+        const ScalarT xqpi   = y[index(I::XQPI)];
+        const ScalarT xqlag  = y[index(I::XQLAG)];
+        const ScalarT pmeas  = y[index(I::PMEAS)];
+        const ScalarT xppi   = y[index(I::XPPI)];
+        const ScalarT pref   = y[index(I::PREF)];
+        const ScalarT v      = y[index(I::V)];
+        const ScalarT vldc   = y[index(I::VLDC)];
+        const ScalarT vdroop = y[index(I::VDROOP)];
+        const ScalarT vctrl  = y[index(I::VCTRL)];
+        const ScalarT sfrz   = y[index(I::SFRZ)];
+        const ScalarT erq    = y[index(I::ERQ)];
+        const ScalarT erqdb  = y[index(I::ERQDB)];
+        const ScalarT erqlim = y[index(I::ERQLIM)];
+        const ScalarT qpi    = y[index(I::QPI)];
+        const ScalarT qext   = toComponentBase(y[index(I::QEXT)]);
+        const ScalarT ef     = y[index(I::EF)];
+        const ScalarT ep     = y[index(I::EP)];
+        const ScalarT eplim  = y[index(I::EPLIM)];
+        const ScalarT ppi    = y[index(I::PPI)];
+        const ScalarT pext   = toComponentBase(y[index(I::PEXT)]);
+
+        const ScalarT vmeas_dot = yp[index(I::VMEAS)];
+        const ScalarT qmeas_dot = yp[index(I::QMEAS)];
+        const ScalarT xqpi_dot  = yp[index(I::XQPI)];
+        const ScalarT xqlag_dot = yp[index(I::XQLAG)];
+        const ScalarT pmeas_dot = yp[index(I::PMEAS)];
+        const ScalarT xppi_dot  = yp[index(I::XPPI)];
+        const ScalarT pref_dot  = yp[index(I::PREF)];
+
+        const ScalarT vr = wb[0];
+        const ScalarT vi = wb[1];
+
+        const ScalarT ibranchr  = ws[index(E::IBRANCHR)];
+        const ScalarT ibranchi  = ws[index(E::IBRANCHI)];
+        const ScalarT pbranch   = toComponentBase(ws[index(E::PBRANCH)]);
+        const ScalarT qbranch   = toComponentBase(ws[index(E::QBRANCH)]);
+        const ScalarT freq      = ws[index(E::FREQ)];
+        const ScalarT freqref   = ws[index(E::FREQREF)];
+        const ScalarT vref      = ws[index(E::VREF)];
+        const ScalarT qref      = toComponentBase(ws[index(E::QREF)]);
+        const ScalarT pplantref = toComponentBase(ws[index(E::PPLANTREF)]);
+
+        const ScalarT vldc_r = vr - Rc_ * ibranchr + Xc_ * ibranchi;
+        const ScalarT vldc_i = vi - Rc_ * ibranchi - Xc_ * ibranchr;
+        const ScalarT pfreq  = Ddn_ * Math::ramp(ef) - Dup_ * Math::ramp(-ef);
+
+        f[index(I::VMEAS)] = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
+        f[index(I::QMEAS)] = -qmeas_dot + (qbranch - qmeas) / Tfltr_;
+        f[index(I::XQPI)]  = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
+        f[index(I::XQLAG)] = -xqlag_dot + (qpi - xqlag) / Tfv_;
+        f[index(I::PMEAS)] = -pmeas_dot + (pbranch - pmeas) / Tp_;
+        f[index(I::XPPI)]  = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
+        f[index(I::PREF)]  = -pref_dot + (ppi - pref) / Tlag_;
+
+        f[index(I::V)]      = -v * v + vr * vr + vi * vi;
+        f[index(I::VLDC)]   = -vldc * vldc + vldc_r * vldc_r + vldc_i * vldc_i;
+        f[index(I::VDROOP)] = -vdroop + v + Kc_ * qbranch;
+        f[index(I::VCTRL)]  = -vctrl + vcomp_on_ * vldc + vcomp_off_ * vdroop;
+        f[index(I::SFRZ)]   = -sfrz + Math::above(v, Vfrz_);
+        f[index(I::ERQ)]    = -erq + ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
+        f[index(I::ERQDB)]  = -erqdb + Math::deadband2(erq, dbdlow_, dbdupper_);
+        f[index(I::ERQLIM)] = -erqlim + Math::clamp(erqdb, emin_, emax_);
+        f[index(I::QPI)]    = -qpi + Math::clamp(Kp_ * erqlim + xqpi, Qmin_, Qmax_);
+        f[index(I::QEXT)]   = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
+
+        f[index(I::EF)]    = -ef + Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
+        f[index(I::EP)]    = -ep + pplantref - pmeas + pfreq;
+        f[index(I::EPLIM)] = -eplim + Math::clamp(ep, femin_, femax_);
+        f[index(I::PPI)]   = -ppi + Math::clamp(Kpg_ * eplim + xppi, Pmin_, Pmax_);
+        f[index(I::PEXT)]  = -pext + freq_on_ * pref;
+
+        return 0;
+      }
+
+      //
+      //  Private methods
+      //
+
+      /**
+       * @brief Record one failed configuration condition
+       *
+       * @param[in] condition Required condition.
+       * @param[in] message Error message when `condition` is false.
+       * @param[in,out] errors Accumulated configuration-error count.
+       */
+      template <typename scalar_type, typename index_type>
+      void Repca<scalar_type, index_type>::checkConfiguration(
+          bool condition, const char* message, int& errors)
+      {
+        if (!condition)
+        {
+          Log::error() << "Repca: " << message << '\n';
+          errors += 1;
+        }
+      }
+
+      /**
+       * @brief Load one optional real-valued parameter
+       *
+       * Real and integer serialized values are accepted. Any other stored
+       * type records a loading error while preserving the existing default.
+       *
+       * @param[in] data Model parameter data.
+       * @param[in] parameter Parameter key to load.
+       * @param[in,out] target Stored parameter value.
+       * @param[in] name Serialized parameter name for diagnostics.
+       */
+      template <typename scalar_type, typename index_type>
+      void Repca<scalar_type, index_type>::loadRealParameter(
+          const ModelDataT& data,
+          RepcaParameters   parameter,
+          RealT&            target,
+          const char*       name)
+      {
+        if (!data.parameters.contains(parameter))
+        {
+          return;
+        }
+
+        const auto& value = data.parameters.at(parameter);
+        if (const auto* real_value = std::get_if<RealT>(&value))
+        {
+          target = *real_value;
+        }
+        else if (const auto* index_value = std::get_if<IdxT>(&value))
+        {
+          target = static_cast<RealT>(*index_value);
+        }
+        else
+        {
+          Log::error() << "Repca: parameter '" << name << "' must be numeric\n";
+          ++parameter_error_count_;
+        }
+      }
+
+      /**
+       * @brief Load one optional binary selector
+       *
+       * Boolean values and numeric values exactly equal to zero or one are
+       * accepted. Any other value or stored type records a loading error
+       * while preserving the existing default.
+       *
+       * @param[in] data Model parameter data.
+       * @param[in] parameter Parameter key to load.
+       * @param[in,out] target Stored selector value.
+       * @param[in] name Serialized parameter name for diagnostics.
+       */
+      template <typename scalar_type, typename index_type>
+      void Repca<scalar_type, index_type>::loadSwitchParameter(
+          const ModelDataT& data,
+          RepcaParameters   parameter,
+          bool&             target,
+          const char*       name)
+      {
+        if (!data.parameters.contains(parameter))
+        {
+          return;
+        }
+
+        const auto& value = data.parameters.at(parameter);
+        if (const auto* bool_value = std::get_if<bool>(&value))
+        {
+          target = *bool_value;
+        }
+        else if (const auto* index_value = std::get_if<IdxT>(&value);
+                 index_value && (*index_value == 0 || *index_value == 1))
+        {
+          target = (*index_value == 1);
+        }
+        else if (const auto* real_value = std::get_if<RealT>(&value);
+                 real_value && (*real_value == ZERO<RealT> || *real_value == ONE<RealT>) )
+        {
+          target = (*real_value == ONE<RealT>);
+        }
+        else
+        {
+          Log::error() << "Repca: parameter '" << name << "' must be bool or 0/1\n";
+          ++parameter_error_count_;
+        }
+      }
+
+      /**
+       * @brief Validate and floor one controller lag
+       *
+       * A nonfinite value records a loading error and is replaced by the
+       * floor so later calculations remain well posed. A finite value below
+       * the floor is raised and reported through the return value.
+       *
+       * @param[in,out] value Time constant to validate and floor.
+       * @param[in] name Parameter name for diagnostics.
+       * @return true when a finite value was raised to the floor.
+       */
+      template <typename scalar_type, typename index_type>
+      bool Repca<scalar_type, index_type>::floorTimeConstant(
+          RealT& value, const char* name)
+      {
+        if (!std::isfinite(value))
+        {
+          Log::error() << "Repca: " << name << " must be finite\n";
+          ++parameter_error_count_;
+          value = TIME_CONSTANT_MINIMUM;
+          return false;
+        }
+
+        const bool raised = value < TIME_CONSTANT_MINIMUM;
+        value             = std::max(value, TIME_CONSTANT_MINIMUM);
+        return raised;
+      }
+
+      /**
+       * @brief Read optional parameters from model data
+       *
+       * Omitted parameters retain their documented defaults. Numeric parameters
+       * accept real and integer values; selectors also accept Boolean values.
+       * Loading errors are counted for verify() rather than thrown.
+       *
+       * @param[in] data Parameters and monitored-variable selections.
+       */
+      template <typename scalar_type, typename index_type>
+      void Repca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+      {
+        using Params = typename ModelDataT::Parameters;
+
+        parameter_error_count_ = 0;
+
+        loadRealParameter(data, Params::mva, mva_base_, "mva");
+        loadSwitchParameter(data, Params::VcompFlag, VcompFlag_, "VcompFlag");
+        loadSwitchParameter(data, Params::RefFlag, RefFlag_, "RefFlag");
+        loadSwitchParameter(data, Params::Freqflag, Freqflag_, "Freqflag");
+        loadRealParameter(data, Params::Tfltr, Tfltr_, "Tfltr");
+        loadRealParameter(data, Params::Vfrz, Vfrz_, "Vfrz");
+        loadRealParameter(data, Params::Rc, Rc_, "Rc");
+        loadRealParameter(data, Params::Xc, Xc_, "Xc");
+        loadRealParameter(data, Params::Kc, Kc_, "Kc");
+        loadRealParameter(data, Params::dbdlow, dbdlow_, "dbdlow");
+        loadRealParameter(data, Params::dbdupper, dbdupper_, "dbdupper");
+        loadRealParameter(data, Params::emax, emax_, "emax");
+        loadRealParameter(data, Params::emin, emin_, "emin");
+        loadRealParameter(data, Params::Kp, Kp_, "Kp");
+        loadRealParameter(data, Params::Ki, Ki_, "Ki");
+        loadRealParameter(data, Params::Qmax, Qmax_, "Qmax");
+        loadRealParameter(data, Params::Qmin, Qmin_, "Qmin");
+        loadRealParameter(data, Params::Tft, Tft_, "Tft");
+        loadRealParameter(data, Params::Tfv, Tfv_, "Tfv");
+        loadRealParameter(data, Params::Tp, Tp_, "Tp");
+        loadRealParameter(data, Params::fdbd1, fdbd1_, "fdbd1");
+        loadRealParameter(data, Params::fdbd2, fdbd2_, "fdbd2");
+        loadRealParameter(data, Params::Ddn, Ddn_, "Ddn");
+        loadRealParameter(data, Params::Dup, Dup_, "Dup");
+        loadRealParameter(data, Params::femax, femax_, "femax");
+        loadRealParameter(data, Params::femin, femin_, "femin");
+        loadRealParameter(data, Params::Kpg, Kpg_, "Kpg");
+        loadRealParameter(data, Params::Kig, Kig_, "Kig");
+        loadRealParameter(data, Params::Pmax, Pmax_, "Pmax");
+        loadRealParameter(data, Params::Pmin, Pmin_, "Pmin");
+        loadRealParameter(data, Params::Tlag, Tlag_, "Tlag");
+
+        setDerivedParameters();
+      }
+
+      /**
+       * @brief Bind monitor selections to REPCA internal states
+       */
+      template <typename scalar_type, typename index_type>
+      void Repca<scalar_type, index_type>::initializeMonitor()
+      {
+        using I        = RepcaInternalVariables;
+        using Variable = typename ModelDataT::MonitorableVariables;
+
+        monitor_->set(Variable::qext, [this]
+                      { return y_.getData()[index(I::QEXT)]; });
+        monitor_->set(Variable::pext, [this]
+                      { return y_.getData()[index(I::PEXT)]; });
+        monitor_->set(Variable::vmeas, [this]
+                      { return y_.getData()[index(I::VMEAS)]; });
+        monitor_->set(Variable::qmeas, [this]
+                      { return y_.getData()[index(I::QMEAS)]; });
+        monitor_->set(Variable::pmeas, [this]
+                      { return y_.getData()[index(I::PMEAS)]; });
+      }
+
+      /**
+       * @brief Resolve parameter-derived constants
+       *
+       * Raises the explicit controller lags in place, computes the converter
+       * power base, and resolves selector masks. Nonfinite lag inputs are
+       * recorded before replacement so verify() retains the error.
+       */
+      template <typename scalar_type, typename index_type>
+      void Repca<scalar_type, index_type>::setDerivedParameters()
+      {
+        bool floor_warning = false;
+
+        floor_warning |= floorTimeConstant(Tfltr_, "Tfltr");
+        floor_warning |= floorTimeConstant(Tp_, "Tp");
+        floor_warning |= floorTimeConstant(Tlag_, "Tlag");
+
+        if (floor_warning)
+        {
+          Log::warning() << "Repca: any of Tfltr, Tp, or Tlag below "
+                         << TIME_CONSTANT_MINIMUM
+                         << " s is raised to that floor to keep the controller lags well posed\n";
+        }
+
+        va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
+
+        vcomp_on_  = VcompFlag_ ? ONE<RealT> : ZERO<RealT>;
+        vcomp_off_ = ONE<RealT> - vcomp_on_;
+        ref_on_    = RefFlag_ ? ONE<RealT> : ZERO<RealT>;
+        ref_off_   = ONE<RealT> - ref_on_;
+        freq_on_   = Freqflag_ ? ONE<RealT> : ZERO<RealT>;
+      }
+
+      /**
+       * @brief Recover an input for a requested smooth-clamp output
+       *
+       * This initialization-only helper inverts the CommonMath smooth clamp,
+       * including collapsed limits. Exact-bound requests use a 0.1 offset,
+       * leaving less than 2e-13 at CommonMath MU = 240. It must not be called
+       * from residual evaluation.
+       *
+       * @param[in] requested_output Requested smooth-clamp output.
+       * @param[in] lower_limit Lower clamp limit.
+       * @param[in] upper_limit Upper clamp limit.
+       * @param[out] limiter_input Recovered clamp input on success.
+       * @return true when a finite admissible input was recovered.
+       */
+      template <typename scalar_type, typename index_type>
+      bool Repca<scalar_type, index_type>::solveLimiterInput(
+          ScalarT  requested_output,
+          RealT    lower_limit,
+          RealT    upper_limit,
+          ScalarT& limiter_input) const
+      {
+        const RealT output_value = static_cast<RealT>(requested_output);
+
+        if (!std::isfinite(output_value)
+            || !std::isfinite(lower_limit)
+            || !std::isfinite(upper_limit)
+            || lower_limit > upper_limit
+            || output_value < lower_limit
+            || output_value > upper_limit)
+        {
+          return false;
+        }
+
+        const RealT width = upper_limit - lower_limit;
+        if (width <= INITIALIZATION_TOLERANCE)
+        {
+          limiter_input = static_cast<ScalarT>(lower_limit);
+          return true;
+        }
+
+        const RealT distance_from_lower = output_value - lower_limit;
+        const RealT distance_from_upper = upper_limit - output_value;
+        if (distance_from_lower <= INITIALIZATION_TOLERANCE)
+        {
+          limiter_input = static_cast<ScalarT>(lower_limit - INITIALIZATION_LIMIT_OFFSET);
+          return true;
+        }
+        if (distance_from_upper <= INITIALIZATION_TOLERANCE)
+        {
+          limiter_input = static_cast<ScalarT>(upper_limit + INITIALIZATION_LIMIT_OFFSET);
+          return true;
+        }
+
+        const RealT mu                    = Math::MU<RealT>;
+        const RealT scaled_lower_distance = mu * distance_from_lower;
+        const RealT scaled_upper_distance = mu * distance_from_upper;
+        const RealT log_lower             = logOneMinusExp(scaled_lower_distance);
+        const RealT log_upper             = logOneMinusExp(scaled_upper_distance);
+        const RealT correction =
+            (scaled_lower_distance + log_lower - log_upper) / mu;
+
+        limiter_input = static_cast<ScalarT>(lower_limit + correction);
+        return std::isfinite(static_cast<RealT>(limiter_input));
+      }
+
+      /**
+       * @brief Evaluate log(1 - exp(-x)) accurately for positive x
+       *
+       * The small-x form avoids cancellation in `1 - exp(-x)`; the large-x
+       * form uses `log1p`. The two algebraically equivalent forms agree in
+       * value and first derivative at x = log(2).
+       *
+       * @param[in] x Positive argument.
+       * @return Numerically stable value of log(1 - exp(-x)).
+       */
+      template <typename scalar_type, typename index_type>
+      typename Repca<scalar_type, index_type>::RealT
+      Repca<scalar_type, index_type>::logOneMinusExp(RealT x) const
+      {
+        const RealT log_two = std::log(static_cast<RealT>(2.0));
+
+        if (x < log_two)
+        {
+          return log_two - HALF<RealT> * x
+                 + std::log(std::sinh(HALF<RealT> * x));
+        }
+        return std::log1p(-std::exp(-x));
+      }
+
+      /**
+       * @brief Convert a system-base power quantity to REPCA component base
+       *
+       * @param[in] value Quantity on the system base.
+       * @return The same quantity on the REPCA component base.
+       */
+      template <typename scalar_type, typename index_type>
+      [[gnu::always_inline]] inline scalar_type
+      Repca<scalar_type, index_type>::toComponentBase(scalar_type value) const
+      {
+        return value * (va_system_base_ / va_converter_base_);
+      }
+
+      /**
+       * @brief Convert a component-base power quantity to system base
+       *
+       * @param[in] value Quantity on the REPCA component base.
+       * @return The same quantity on the system base.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type Repca<scalar_type, index_type>::toSystemBase(scalar_type value) const
+      {
+        return value * (va_converter_base_ / va_system_base_);
+      }
+
+      /**
+       * @brief Access the regulated-bus real voltage component
+       *
+       * @return Mutable reference to the bus real voltage state.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type& Repca<scalar_type, index_type>::Vr()
+      {
+        return bus_->Vr();
+      }
+
+      /**
+       * @brief Access the regulated-bus imaginary voltage component
+       *
+       * @return Mutable reference to the bus imaginary voltage state.
+       */
+      template <typename scalar_type, typename index_type>
+      scalar_type& Repca<scalar_type, index_type>::Vi()
+      {
+        return bus_->Vi();
+      }
+
     } // namespace Converter
   } // namespace PhasorDynamics
 } // namespace GridKit

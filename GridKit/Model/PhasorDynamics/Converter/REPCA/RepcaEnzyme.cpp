@@ -14,6 +14,19 @@ namespace GridKit
   {
     namespace Converter
     {
+      /**
+       * @brief Assemble the sparse REPCA Jacobian with Enzyme.
+       *
+       * Differentiates the internal residual with respect to state, derivative,
+       * regulated-bus, and linked signal variables, then constructs the model
+       * COO matrix.
+       *
+       * @pre allocate() has sized the model and Jacobian index maps.
+       * @pre evaluateResidual() has refreshed the current bus/signal values and
+       *      signal indices.
+       * @pre The containing solver has set the current integration coefficient
+       *      and global variable/residual indices.
+       */
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::evaluateJacobian()
       {

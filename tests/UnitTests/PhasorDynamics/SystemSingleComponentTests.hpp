@@ -1,3 +1,4 @@
+#include <array>
 #include <iomanip>
 #include <iostream>
 
@@ -248,6 +249,139 @@ namespace GridKit
         success *= system.evaluateJacobian() == 0;
         success *= system.size()
                    == static_cast<IdxT>(PhasorDynamics::Converter::RegcaInternalVariables::MAXIMUM);
+
+        return success.report(__func__);
+      }
+
+      /// Construct REPCA through SystemModel, check its required bus mapping,
+      /// and prove assigned command outputs alias the assembled signals.
+      TestOutcome repca()
+      {
+        using Repca   = PhasorDynamics::Converter::Repca<ScalarT, IdxT>;
+        using Buses   = PhasorDynamics::Converter::RepcaBuses;
+        using Inputs  = PhasorDynamics::Converter::RepcaSignalInputs;
+        using Outputs = PhasorDynamics::Converter::RepcaSignalOutputs;
+        using Params  = PhasorDynamics::Converter::RepcaParameters;
+        using Vars    = PhasorDynamics::Converter::RepcaInternalVariables;
+
+        constexpr size_t input_count = static_cast<size_t>(Inputs::SIZE);
+        constexpr IdxT   bus_id      = static_cast<IdxT>(1);
+        constexpr IdxT   qext_id     = static_cast<IdxT>(input_count + 1);
+        constexpr IdxT   pext_id     = static_cast<IdxT>(input_count + 2);
+
+        constexpr std::array<Inputs, input_count>      input_ports{{
+            Inputs::ibranchr,
+            Inputs::ibranchi,
+            Inputs::pbranch,
+            Inputs::qbranch,
+            Inputs::freq,
+            Inputs::freqref,
+            Inputs::vref,
+            Inputs::qref,
+            Inputs::pplantref,
+        }};
+        constexpr std::array<const char*, input_count> input_names{{
+            "Branch Current Real",
+            "Branch Current Imaginary",
+            "Branch Active Power",
+            "Branch Reactive Power",
+            "Frequency",
+            "Frequency Reference",
+            "Voltage Reference",
+            "Reactive Power Reference",
+            "Plant Active Power Reference",
+        }};
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.bus.resize(1);
+        data.bus[0].bus_id   = bus_id;
+        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = static_cast<RealT>(1.0);
+        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+
+        data.signal.resize(input_count + 2);
+        for (size_t port = 0; port < input_count; ++port)
+        {
+          data.signal[port].signal_id = static_cast<IdxT>(port + 1);
+          data.signal[port].name      = input_names[port];
+        }
+        data.signal[input_count].signal_id     = qext_id;
+        data.signal[input_count].name          = "Reactive Power Command";
+        data.signal[input_count + 1].signal_id = pext_id;
+        data.signal[input_count + 1].name      = "Active Power Command";
+
+        typename PhasorDynamics::SystemModelData<RealT, IdxT>::RepcaDataT repca_data;
+        repca_data.device_class           = "Repca";
+        repca_data.disambiguation_string  = "repca_system";
+        repca_data.buses[Buses::bus]      = bus_id;
+        repca_data.parameters[Params::Tp] = static_cast<RealT>(0.05);
+        for (size_t port = 0; port < input_count; ++port)
+        {
+          repca_data.signal_inputs[input_ports[port]] = static_cast<IdxT>(port + 1);
+        }
+        repca_data.signal_outputs[Outputs::qext] = qext_id;
+        repca_data.signal_outputs[Outputs::pext] = pext_id;
+        data.repca.push_back(repca_data);
+
+        std::array<ScalarT, input_count> input_values{};
+        std::array<IdxT, input_count>    input_indices{};
+        input_values[static_cast<size_t>(Inputs::freq)]    = static_cast<ScalarT>(1.0);
+        input_values[static_cast<size_t>(Inputs::freqref)] = static_cast<ScalarT>(1.0);
+        input_values[static_cast<size_t>(Inputs::vref)]    = static_cast<ScalarT>(1.0);
+        input_indices.fill(INVALID_INDEX<IdxT>);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+        TestStatus                                 success = true;
+        for (size_t port = 0; port < input_count; ++port)
+        {
+          auto* signal = system.getSignal(static_cast<IdxT>(port + 1));
+          signal->set(&input_values[port], &input_indices[port]);
+          success *= signal->linked();
+        }
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+
+        auto* repca  = dynamic_cast<Repca*>(system.getComponent(0));
+        success     *= repca != nullptr;
+        auto* qext   = system.getSignal(qext_id);
+        auto* pext   = system.getSignal(pext_id);
+        success     *= qext != nullptr;
+        success     *= pext != nullptr;
+        if (repca != nullptr && qext != nullptr && pext != nullptr)
+        {
+          success *= qext->linked();
+          success *= pext->linked();
+          if (qext->linked() && pext->linked())
+          {
+            success *= qext->getVariableIndex()
+                       == repca->getVariableIndex(static_cast<IdxT>(Vars::QEXT));
+            success *= pext->getVariableIndex()
+                       == repca->getVariableIndex(static_cast<IdxT>(Vars::PEXT));
+            success *= isEqual(qext->read(),
+                               repca->y().getData()[static_cast<size_t>(Vars::QEXT)],
+                               static_cast<RealT>(1.0e-12));
+            success *= isEqual(pext->read(),
+                               repca->y().getData()[static_cast<size_t>(Vars::PEXT)],
+                               static_cast<RealT>(1.0e-12));
+          }
+        }
+
+        auto missing_bus_data          = data;
+        missing_bus_data.bus[0].bus_id = static_cast<IdxT>(0);
+        missing_bus_data.repca[0].buses.clear();
+        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_bus_system(missing_bus_data);
+        for (size_t port = 0; port < input_count; ++port)
+        {
+          missing_bus_system.getSignal(static_cast<IdxT>(port + 1))
+              ->set(&input_values[port], &input_indices[port]);
+        }
+        std::cout << "Testing expected REPCA missing-bus configuration error.\n";
+        success *= missing_bus_system.verify() > 0;
 
         return success.report(__func__);
       }
