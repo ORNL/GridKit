@@ -60,7 +60,7 @@ def _conductor_type() -> dict[str, Any]:
         "title": "Conductor type",
         "type": "object",
         "additionalProperties": False,
-        "required": ["radius", "conductivity", "permeability", "weight"],
+        "required": ["outer_radius", "conductivity", "permeability", "weight"],
         "description": (
             "Conductor dimensions, material, and weight. Phase, circuit, "
             "tension, and the attachment point are line data and belong to "
@@ -69,7 +69,7 @@ def _conductor_type() -> dict[str, Any]:
         "properties": {
             "description": {"type": "string"},
             "source": {"type": "string", "description": _PROVENANCE},
-            "radius": {
+            "outer_radius": {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "description": "Outer radius [m].",
@@ -111,7 +111,7 @@ def _attachment() -> dict[str, Any]:
         "title": "Attachment point",
         "type": "object",
         "additionalProperties": False,
-        "required": ["x", "height"],
+        "required": ["x", "h"],
         "properties": {
             "x": {
                 "type": "number",
@@ -120,7 +120,7 @@ def _attachment() -> dict[str, Any]:
                     "Positive to the right when looking along the route."
                 ),
             },
-            "height": {
+            "h": {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "description": (

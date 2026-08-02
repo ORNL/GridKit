@@ -9,16 +9,14 @@
     "conductors": {
       "phase-acsr": {
         "description": "Illustrative distribution-class phase ACSR",
-        "radius": 0.00915,
-        "inner_radius": 0.0,
+        "outer_radius": 0.00915,
         "conductivity": 3.5e7,
         "permeability": 1.2566370614e-6,
         "weight": 6.7
       },
       "neutral-acsr": {
         "description": "Illustrative reduced underbuilt neutral",
-        "radius": 0.00501,
-        "inner_radius": 0.0,
+        "outer_radius": 0.00501,
         "conductivity": 3.5e7,
         "permeability": 1.2566370614e-6,
         "weight": 2.1
@@ -28,10 +26,10 @@
       "69kv-wood-pole": {
         "description": "Wood pole with alternating davit arms and underbuilt neutral",
         "attachments": {
-          "top":     { "x": -1.0668, "height": 14.9352 },
-          "middle":  { "x":  1.0668, "height": 13.7160 },
-          "bottom":  { "x": -1.0668, "height": 12.4968 },
-          "neutral": { "x":  0.0,    "height": 10.3632 }
+          "top":     { "x": -1.0668, "h": 14.9352 },
+          "middle":  { "x":  1.0668, "h": 13.7160 },
+          "bottom":  { "x": -1.0668, "h": 12.4968 },
+          "neutral": { "x":  0.0,    "h": 10.3632 }
         }
       }
     }

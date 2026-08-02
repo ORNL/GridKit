@@ -13,7 +13,7 @@ Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 `conductor` | [-] | - | Static conductor data | [`Conductor`](../Conductor/README.md)
 $x_i$ | [m] | `conductors[*].x` | Horizontal attachment coordinate | real
-$H_i$ | [m] | `conductors[*].height` | Attachment height above earth | $H_i>0$
+$H_i$ | [m] | `conductors[*].h` | Attachment height above earth | $H_i>0$
 $S$ | [m] | `path.span` | Support-to-support span length | $S>0$
 $T_i$ | [N] | `conductors[*].tension` | Tension | optional
 

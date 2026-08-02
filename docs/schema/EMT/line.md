@@ -29,7 +29,7 @@ name: Common North American overhead types
 conductors:
   drake-acsr:
     description: Drake 795 kcmil 26/7 ACSR
-    radius: 0.01407               # m, outer
+    outer_radius: 0.01407         # m
     inner_radius: 0.00514         # m, aluminum annulus over the steel core
     conductivity: 3.5e+7          # S/m
     permeability: 1.2566370614e-6 # H/m
@@ -38,10 +38,10 @@ conductors:
 towers:
   345kv-h-frame:
     attachments:
-      left-1:      { x: -7.4285, height: 24.0 }
-      left-2:      { x: -6.9715, height: 24.0 }
+      left-1:      { x: -7.4285, h: 24.0 }
+      left-2:      { x: -6.9715, h: 24.0 }
       # ...
-      shield-left: { x: -4.3,    height: 29.5 }
+      shield-left: { x: -4.3,    h: 29.5 }
 ```
 
 A line document names its tower type and maps each physical conductor onto

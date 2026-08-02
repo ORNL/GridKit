@@ -17,10 +17,10 @@ Model | Description
 Quantity | Description
 -------- | -----------
 `conductors[*].x` | Horizontal conductor attachment coordinates
-`conductors[*].height` | Conductor attachment heights above earth
+`conductors[*].h` | Conductor attachment heights above earth
 `path.span` | Support-to-support span length
 `conductors[*].tension` | Optional per-conductor tension
-`conductors[*].radius` | Outer conductor radius
+`conductors[*].outer_radius` | Outer conductor radius
 `conductors[*].inner_radius` | Inner conductor radius
 `conductors[*].conductivity` | Conductor conductivity
 `conductors[*].permeability` | Conductor permeability

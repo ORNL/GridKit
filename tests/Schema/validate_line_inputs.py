@@ -79,7 +79,7 @@ def resolve(doc, doc_path):
     """Resolve a line document against its catalogs.
 
     Returns (rows, errors). Rows are flat per-conductor records in document
-    order: x, height, phase, circuit, tension, and the conductor type data.
+    order: x, h, phase, circuit, tension, and the conductor type data.
     These are the quantities the parameter models consume; type names do
     not survive resolution.
     """
@@ -134,11 +134,11 @@ def resolve(doc, doc_path):
             continue
         rows.append({
             "x": point["x"],
-            "height": point["height"],
+            "h": point["h"],
             "phase": entry["phase"],
             "circuit": entry.get("circuit", 1),
             "tension": entry.get("tension"),
-            "radius": ctype["radius"],
+            "outer_radius": ctype["outer_radius"],
             "inner_radius": ctype.get("inner_radius", 0.0),
             "conductivity": ctype["conductivity"],
             "permeability": ctype["permeability"],
@@ -154,7 +154,7 @@ def resolve(doc, doc_path):
             sag = a * (math.cosh(span / (2.0 * a)) - 1.0)
         except OverflowError:
             sag = math.inf
-        if row["height"] - sag <= 0:
+        if row["h"] - sag <= 0:
             errs.append(f"tension leaves nonpositive minimum height at "
                         f"x={row['x']}")
     return rows, errs
@@ -168,7 +168,7 @@ for f in catalogs:
     doc = yaml.safe_load(f.read_text(encoding="utf-8"))
     check(f.name, not schema_errors(catalog_validator, doc))
 
-# Expected (x, height) per conductor, in document order.
+# Expected (x, h) per conductor, in document order.
 GOLDEN = {
     "69kv-wood-pole.line.json": (
         [-1.0668, 1.0668, -1.0668, 0.0],
@@ -206,9 +206,9 @@ for f in examples:
     check(f.name, not errs, "; ".join(errs))
     if errs or f.name not in GOLDEN:
         continue
-    x, height = GOLDEN[f.name]
+    x, h = GOLDEN[f.name]
     ok = ([row["x"] for row in rows] == x
-          and [row["height"] for row in rows] == height)
+          and [row["h"] for row in rows] == h)
     check(f"{f.name} resolves to the expected coordinates", ok)
 
 # ---- negative cases -----------------------------------------------------
@@ -233,7 +233,7 @@ NEGATIVE = [
     ("legacy phase label s", local_doc,
      lambda d: d["conductors"][0].update({"phase": "s"})),
     ("inline conductor data on an entry", include_doc,
-     lambda d: d["conductors"][0].update({"radius": 0.01})),
+     lambda d: d["conductors"][0].update({"outer_radius": 0.01})),
     ("entry without an attachment point", local_doc,
      lambda d: d["conductors"][0].pop("at")),
     ("entry without a type", include_doc,
@@ -253,7 +253,7 @@ for label, base, fn in NEGATIVE:
 
 BAD_CATALOGS = [
     ("catalog file without a header", {"conductors": {
-        "a1": {"radius": 0.01, "conductivity": 3.5e7,
+        "a1": {"outer_radius": 0.01, "conductivity": 3.5e7,
                "permeability": 1.26e-6, "weight": 16.0}}}),
     ("catalog file without sections", {"catalog": "1.0", "name": "empty"}),
     ("catalog file with a stray section", {"catalog": "1.0", "earths": {}}),
@@ -275,7 +275,7 @@ SEMANTIC = [
      lambda d: d["conductors"][1].update({"at": "left-1"}), "more than once"),
     ("local/include name collision", include_doc, lambda d: d.update(
         {"catalog": {"conductors": {"drake-acsr": {
-            "radius": 0.01, "conductivity": 3.5e7,
+            "outer_radius": 0.01, "conductivity": 3.5e7,
             "permeability": 1.26e-6, "weight": 16.0}}}}), "collision"),
     ("missing include", include_doc,
      lambda d: d.update({"include": ["missing.catalog.yaml"]}), "not found"),

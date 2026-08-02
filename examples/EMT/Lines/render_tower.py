@@ -63,7 +63,7 @@ def groups(doc, points):
     for cond in doc["conductors"]:
         point = points[cond["at"]]
         key = (cond["phase"], cond.get("circuit", 1))
-        out.setdefault(key, []).append((point["x"], point["height"]))
+        out.setdefault(key, []).append((point["x"], point["h"]))
     return out
 
 

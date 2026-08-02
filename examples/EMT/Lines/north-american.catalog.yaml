@@ -10,7 +10,7 @@ source: illustrative values, not manufacturer data
 conductors:
   drake-acsr:
     description: Drake 795 kcmil 26/7 ACSR
-    radius: 0.01407               # m, outer
+    outer_radius: 0.01407         # m
     inner_radius: 0.00514         # m, aluminum annulus over the steel core
     conductivity: 3.5e+7          # S/m
     permeability: 1.2566370614e-6 # H/m
@@ -18,7 +18,7 @@ conductors:
 
   cardinal-acsr:
     description: Cardinal 954 kcmil 54/7 ACSR
-    radius: 0.01519
+    outer_radius: 0.01519
     inner_radius: 0.00464
     conductivity: 3.5e+7
     permeability: 1.2566370614e-6
@@ -26,7 +26,7 @@ conductors:
 
   ehs-3-8-steel:
     description: 3/8 in EHS steel shield wire
-    radius: 0.00457
+    outer_radius: 0.00457
     conductivity: 5.8e+6
     permeability: 1.2566370614e-6
     weight: 4.0
@@ -37,51 +37,51 @@ towers:
       345 kV single-circuit horizontal H-frame. Twin-bundle attachment
       pairs 0.457 m apart, two shield-wire peaks.
     attachments:
-      left-1:       { x: -7.4285, height: 24.0 }
-      left-2:       { x: -6.9715, height: 24.0 }
-      center-1:     { x: -0.2285, height: 24.0 }
-      center-2:     { x:  0.2285, height: 24.0 }
-      right-1:      { x:  6.9715, height: 24.0 }
-      right-2:      { x:  7.4285, height: 24.0 }
-      shield-left:  { x: -4.3,    height: 29.5 }
-      shield-right: { x:  4.3,    height: 29.5 }
+      left-1:       { x: -7.4285, h: 24.0 }
+      left-2:       { x: -6.9715, h: 24.0 }
+      center-1:     { x: -0.2285, h: 24.0 }
+      center-2:     { x:  0.2285, h: 24.0 }
+      right-1:      { x:  6.9715, h: 24.0 }
+      right-2:      { x:  7.4285, h: 24.0 }
+      shield-left:  { x: -4.3,    h: 29.5 }
+      shield-right: { x:  4.3,    h: 29.5 }
 
   500kv-double-circuit:
     description: >-
       500 kV double-circuit vertical lattice. Three arm levels per side,
       twin-bundle attachment pairs 0.457 m apart, two shield-wire peaks.
     attachments:
-      left-lower-1:  { x: -8.7285,  height: 30.0 }
-      left-lower-2:  { x: -8.2715,  height: 30.0 }
-      left-mid-1:    { x: -10.0285, height: 38.0 }
-      left-mid-2:    { x: -9.5715,  height: 38.0 }
-      left-upper-1:  { x: -8.7285,  height: 46.0 }
-      left-upper-2:  { x: -8.2715,  height: 46.0 }
-      right-lower-1: { x:  8.2715,  height: 30.0 }
-      right-lower-2: { x:  8.7285,  height: 30.0 }
-      right-mid-1:   { x:  9.5715,  height: 38.0 }
-      right-mid-2:   { x:  10.0285, height: 38.0 }
-      right-upper-1: { x:  8.2715,  height: 46.0 }
-      right-upper-2: { x:  8.7285,  height: 46.0 }
-      shield-left:   { x: -5.5,     height: 53.0 }
-      shield-right:  { x:  5.5,     height: 53.0 }
+      left-lower-1:  { x: -8.7285,  h: 30.0 }
+      left-lower-2:  { x: -8.2715,  h: 30.0 }
+      left-mid-1:    { x: -10.0285, h: 38.0 }
+      left-mid-2:    { x: -9.5715,  h: 38.0 }
+      left-upper-1:  { x: -8.7285,  h: 46.0 }
+      left-upper-2:  { x: -8.2715,  h: 46.0 }
+      right-lower-1: { x:  8.2715,  h: 30.0 }
+      right-lower-2: { x:  8.7285,  h: 30.0 }
+      right-mid-1:   { x:  9.5715,  h: 38.0 }
+      right-mid-2:   { x:  10.0285, h: 38.0 }
+      right-upper-1: { x:  8.2715,  h: 46.0 }
+      right-upper-2: { x:  8.7285,  h: 46.0 }
+      shield-left:   { x: -5.5,     h: 53.0 }
+      shield-right:  { x:  5.5,     h: 53.0 }
 
   765kv-horizontal:
     description: >-
       765 kV single-circuit horizontal. Four-conductor square-bundle
       attachments 0.457 m on a side, two shield-wire peaks.
     attachments:
-      left-1:       { x: -13.9285, height: 31.7715 }
-      left-2:       { x: -13.4715, height: 31.7715 }
-      left-3:       { x: -13.9285, height: 32.2285 }
-      left-4:       { x: -13.4715, height: 32.2285 }
-      center-1:     { x: -0.2285,  height: 31.7715 }
-      center-2:     { x:  0.2285,  height: 31.7715 }
-      center-3:     { x: -0.2285,  height: 32.2285 }
-      center-4:     { x:  0.2285,  height: 32.2285 }
-      right-1:      { x:  13.4715, height: 31.7715 }
-      right-2:      { x:  13.9285, height: 31.7715 }
-      right-3:      { x:  13.4715, height: 32.2285 }
-      right-4:      { x:  13.9285, height: 32.2285 }
-      shield-left:  { x: -9.8,     height: 40.0 }
-      shield-right: { x:  9.8,     height: 40.0 }
+      left-1:       { x: -13.9285, h: 31.7715 }
+      left-2:       { x: -13.4715, h: 31.7715 }
+      left-3:       { x: -13.9285, h: 32.2285 }
+      left-4:       { x: -13.4715, h: 32.2285 }
+      center-1:     { x: -0.2285,  h: 31.7715 }
+      center-2:     { x:  0.2285,  h: 31.7715 }
+      center-3:     { x: -0.2285,  h: 32.2285 }
+      center-4:     { x:  0.2285,  h: 32.2285 }
+      right-1:      { x:  13.4715, h: 31.7715 }
+      right-2:      { x:  13.9285, h: 31.7715 }
+      right-3:      { x:  13.4715, h: 32.2285 }
+      right-4:      { x:  13.9285, h: 32.2285 }
+      shield-left:  { x: -9.8,     h: 40.0 }
+      shield-right: { x:  9.8,     h: 40.0 }
