@@ -25,7 +25,7 @@ Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 `path` | [-] | `path.length`, `path.points` | Path definition used to compute line length | passed to [`Path`](Geometry/Path/README.md)
 `tower` | [-] | `conductors[*].x`, `conductors[*].h`, `conductors[*].tension`, `path.span` | Tower attachment geometry and tension | passed to [`Tower`](Geometry/Tower/README.md)
-`conductor` | [-] | `conductors[*].outer_radius`, `conductors[*].inner_radius`, `conductors[*].conductivity`, `conductors[*].permeability`, `conductors[*].weight`, `conductors[*].phase` | Conductor dimensions, material, weight, and phase data | passed to [`Conductor`](Geometry/Conductor/README.md)
+`conductor` | [-] | `conductors[*].radius.outer`, `conductors[*].radius.inner`, `conductors[*].conductivity`, `conductors[*].permeability`, `conductors[*].weight`, `conductors[*].phase` | Conductor dimensions, material, weight, and phase data | passed to [`Conductor`](Geometry/Conductor/README.md)
 $\sigma_g$ | [S/m] | `earth.conductivity` | Earth conductivity | passed to [`Carson`](Effects/Carson/README.md)
 $\varepsilon_g$ | [F/m] | `earth.permittivity` | Earth permittivity | passed to [`Carson`](Effects/Carson/README.md)
 
@@ -35,9 +35,10 @@ The aggregate parser rejects invalid line-data fields before constructing the
 child models. The document is resolved first: the tower type and every
 conductor type reference from the document's `catalog` section and included
 catalogs are replaced with their catalog data, giving one flat record per
-physical conductor (`conductors[*]` in the tables above); names of each kind
-must be unique across a document and its includes. Detailed validation
-belongs to the child models.
+physical conductor (`conductors[*]` in the tables above), and relative
+material properties are scaled by the vacuum permeability and permittivity;
+names of each kind must be unique across a document and its includes.
+Detailed validation belongs to the child models.
 
 #### Model Derived Parameters
 

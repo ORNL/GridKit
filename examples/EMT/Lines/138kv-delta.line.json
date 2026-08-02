@@ -9,16 +9,14 @@
     "conductors": {
       "hawk-acsr": {
         "description": "Hawk 477 kcmil 26/7 ACSR",
-        "outer_radius": 0.01092,
+        "radius": { "outer": 0.01092 },
         "conductivity": 3.5e7,
-        "permeability": 1.2566370614e-6,
         "weight": 9.6
       },
       "ehs-3-8-steel": {
         "description": "3/8 in EHS steel shield wire",
-        "outer_radius": 0.00457,
+        "radius": { "outer": 0.00457 },
         "conductivity": 5.8e6,
-        "permeability": 1.2566370614e-6,
         "weight": 4.0
       }
     },
@@ -55,6 +53,6 @@
 
   "earth": {
     "conductivity": 0.01,
-    "permittivity": 8.8541878128e-12
+    "permittivity": 10.0
   }
 }

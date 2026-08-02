@@ -8,7 +8,7 @@ drift.
 
 One schema describes both document kinds. The root is the line document.
 ``$defs/catalog`` is the catalog of named conductor and tower types as it
-appears embedded in a line document, and ``$defs/catalog_document`` is the
+appears embedded in a line document, and ``$defs/catalog-document`` is the
 standalone form written as a YAML catalog file.
 """
 
@@ -43,12 +43,12 @@ def _named_section(ref: str, description: str) -> dict[str, Any]:
 def _catalog_sections() -> dict[str, Any]:
     return {
         "conductors": _named_section(
-            "#/$defs/conductor_type",
+            "#/$defs/conductor-type",
             "Conductor types by name. Conductor entries reference these "
             "names.",
         ),
         "towers": _named_section(
-            "#/$defs/tower_type",
+            "#/$defs/tower-type",
             "Tower types by name. The line document's tower field "
             "references one of these names.",
         ),
@@ -60,7 +60,7 @@ def _conductor_type() -> dict[str, Any]:
         "title": "Conductor type",
         "type": "object",
         "additionalProperties": False,
-        "required": ["outer_radius", "conductivity", "permeability", "weight"],
+        "required": ["radius", "conductivity", "weight"],
         "description": (
             "Conductor dimensions, material, and weight. Phase, circuit, "
             "tension, and the attachment point are line data and belong to "
@@ -69,20 +69,31 @@ def _conductor_type() -> dict[str, Any]:
         "properties": {
             "description": {"type": "string"},
             "source": {"type": "string", "description": _PROVENANCE},
-            "outer_radius": {
-                "type": "number",
-                "exclusiveMinimum": 0,
-                "description": "Outer radius [m].",
-            },
-            "inner_radius": {
-                "type": "number",
-                "minimum": 0,
-                "default": 0,
+            "radius": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["outer"],
                 "description": (
-                    "Inner radius [m]. Zero for solid conductors; positive "
-                    "for tubular conduction regions such as the aluminum "
-                    "annulus of ACSR."
+                    "Conduction region radii [m]. The loader requires "
+                    "inner below outer."
                 ),
+                "properties": {
+                    "outer": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "description": "Outer radius [m].",
+                    },
+                    "inner": {
+                        "type": "number",
+                        "minimum": 0,
+                        "default": 0,
+                        "description": (
+                            "Inner radius [m]. Omit for solid conductors; "
+                            "positive for tubular conduction regions such "
+                            "as the aluminum annulus of ACSR."
+                        ),
+                    },
+                },
             },
             "conductivity": {
                 "type": "number",
@@ -91,8 +102,15 @@ def _conductor_type() -> dict[str, Any]:
             },
             "permeability": {
                 "type": "number",
-                "exclusiveMinimum": 0,
-                "description": "Conductor permeability [H/m].",
+                "minimum": 0.1,
+                "default": 1,
+                "description": (
+                    "Relative conductor permeability [-]. Omit for "
+                    "nonmagnetic conductors; steel wires are much higher. "
+                    "The lower bound rejects absolute values entered by "
+                    "mistake; the loader scales by the vacuum "
+                    "permeability."
+                ),
             },
             "weight": {
                 "type": "number",
@@ -325,7 +343,7 @@ def _earth() -> dict[str, Any]:
     return {
         "type": "object",
         "additionalProperties": False,
-        "required": ["conductivity", "permittivity"],
+        "required": ["conductivity"],
         "properties": {
             "conductivity": {
                 "type": "number",
@@ -337,10 +355,13 @@ def _earth() -> dict[str, Any]:
             },
             "permittivity": {
                 "type": "number",
-                "minimum": 8.8541878128e-12,
+                "minimum": 1,
+                "default": 1,
                 "description": (
-                    "Earth permittivity [F/m]. At least the vacuum "
-                    "permittivity."
+                    "Relative earth permittivity [-]. At least 1, the "
+                    "vacuum value, which is also the default; moist soil "
+                    "is typically 10 to 30. The loader scales by the "
+                    "vacuum permittivity."
                 ),
             },
         },
@@ -425,11 +446,11 @@ def build_schema() -> dict[str, Any]:
             "phase": _phase(),
             "circuit": _circuit(),
             "conductor": _conductor(),
-            "conductor_type": _conductor_type(),
+            "conductor-type": _conductor_type(),
             "attachment": _attachment(),
-            "tower_type": _tower_type(),
+            "tower-type": _tower_type(),
             "catalog": _catalog(),
-            "catalog_document": _catalog_document(),
+            "catalog-document": _catalog_document(),
             "path": _path(),
             "earth": _earth(),
         },

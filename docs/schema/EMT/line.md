@@ -29,11 +29,9 @@ name: Common North American overhead types
 conductors:
   drake-acsr:
     description: Drake 795 kcmil 26/7 ACSR
-    outer_radius: 0.01407         # m
-    inner_radius: 0.00514         # m, aluminum annulus over the steel core
-    conductivity: 3.5e+7          # S/m
-    permeability: 1.2566370614e-6 # H/m
-    weight: 16.0                  # N/m
+    radius: { outer: 0.01407, inner: 0.00514 } # m, aluminum annulus
+    conductivity: 3.5e+7                       # S/m
+    weight: 16.0                               # N/m
 
 towers:
   345kv-h-frame:
@@ -61,6 +59,13 @@ self-contained. Write YAML exponents with an explicit sign (`3.5e+7`, not
 `3.5e7`): YAML 1.1 loaders read unsigned exponents as strings, and
 catalog validation rejects them.
 
+Material properties with a vacuum reference are relative: conductor
+`permeability` and earth `permittivity` are dimensionless multiples of the
+vacuum values, default 1, so nonmagnetic conductors and vacuum-like earth
+simply omit them. The loader scales them to absolute SI values during
+resolution, and the schema bounds reject absolute values entered by
+mistake.
+
 ## Generated Schema
 
 The schema is authored in `docs/_ext/gridkit/line_schema.py` and generated
@@ -72,7 +77,7 @@ validation for an individual document:
 {{ line_schema_example }}
 
 Standalone catalog files validate against the catalog document definition
-inside the same schema, `#/$defs/catalog_document`.
+inside the same schema, `#/$defs/catalog-document`.
 
 ## Semantic Validation
 
@@ -86,13 +91,15 @@ The loader enforces what JSON Schema cannot express:
   defined type.
 - Every conductor `at` names an attachment point of the tower type, and
   no attachment point carries more than one conductor.
+- Every conductor type's inner radius is below its outer radius.
 - When `tension` is supplied, the conductor weight and `path.span` give a
   positive minimum conductor height.
 
 Resolution replaces every reference with its catalog data and produces one
 flat record per physical conductor — attachment coordinates, phase,
-circuit, tension, and the conductor type data, in `conductors` order.
-These records are the quantities the
+circuit, tension, and the conductor type data with relative material
+properties scaled to absolute SI, in `conductors` order. These records are
+the quantities the
 [parameter models](../../GridKit/Model/EMT/Parameters/README.md) consume;
 type names do not survive resolution.
 

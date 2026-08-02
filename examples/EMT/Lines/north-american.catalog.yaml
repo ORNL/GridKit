@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://gridkit.readthedocs.io/en/schema/line.schema.json#/$defs/catalog_document
+# yaml-language-server: $schema=https://gridkit.readthedocs.io/en/schema/line.schema.json#/$defs/catalog-document
 #
 # Exponents carry an explicit sign (3.5e+7, not 3.5e7) so YAML 1.1 loaders
 # read them as numbers rather than strings.
@@ -10,25 +10,21 @@ source: illustrative values, not manufacturer data
 conductors:
   drake-acsr:
     description: Drake 795 kcmil 26/7 ACSR
-    outer_radius: 0.01407         # m
-    inner_radius: 0.00514         # m, aluminum annulus over the steel core
-    conductivity: 3.5e+7          # S/m
-    permeability: 1.2566370614e-6 # H/m
-    weight: 16.0                  # N/m
+    radius: { outer: 0.01407, inner: 0.00514 } # m, aluminum annulus
+    conductivity: 3.5e+7                       # S/m
+    weight: 16.0                               # N/m
 
   cardinal-acsr:
     description: Cardinal 954 kcmil 54/7 ACSR
-    outer_radius: 0.01519
-    inner_radius: 0.00464
+    radius: { outer: 0.01519, inner: 0.00464 }
     conductivity: 3.5e+7
-    permeability: 1.2566370614e-6
     weight: 18.0
 
   ehs-3-8-steel:
     description: 3/8 in EHS steel shield wire
-    outer_radius: 0.00457
+    radius: { outer: 0.00457 }
     conductivity: 5.8e+6
-    permeability: 1.2566370614e-6
+    permeability: 1.0 # relative; illustrative, real EHS steel is magnetic
     weight: 4.0
 
 towers:

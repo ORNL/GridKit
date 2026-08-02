@@ -32,7 +32,6 @@
   },
 
   "earth": {
-    "conductivity": 0.01,
-    "permittivity": 8.8541878128e-12
+    "conductivity": 0.01
   }
 }

@@ -20,8 +20,8 @@ Quantity | Description
 `conductors[*].h` | Conductor attachment heights above earth
 `path.span` | Support-to-support span length
 `conductors[*].tension` | Optional per-conductor tension
-`conductors[*].outer_radius` | Outer conductor radius
-`conductors[*].inner_radius` | Inner conductor radius
+`conductors[*].radius.outer` | Outer conductor radius
+`conductors[*].radius.inner` | Inner conductor radius
 `conductors[*].conductivity` | Conductor conductivity
 `conductors[*].permeability` | Conductor permeability
 `conductors[*].weight` | Conductor weight per unit length
@@ -30,7 +30,8 @@ Quantity | Description
 
 Quantities are those of the resolved line document: the loader replaces the
 tower type and conductor type references with their catalog data, giving one
-flat record per physical conductor.
+flat record per physical conductor, and scales relative material properties
+to absolute SI values.
 
 The number of physical conductors $K$ is inferred from the conductor list.
 Child models own their detailed validation for geometry, material, and path

@@ -62,7 +62,7 @@ line_validator = Draft202012Validator(schema)
 catalog_validator = Draft202012Validator(
     {
         "$schema": schema["$schema"],
-        "$ref": "#/$defs/catalog_document",
+        "$ref": "#/$defs/catalog-document",
         "$defs": schema["$defs"],
     }
 )
@@ -75,13 +75,17 @@ def schema_errors(validator, doc):
 # ---- reference resolver -------------------------------------------------
 
 
+MU0 = 4e-7 * math.pi
+
+
 def resolve(doc, doc_path):
     """Resolve a line document against its catalogs.
 
     Returns (rows, errors). Rows are flat per-conductor records in document
-    order: x, h, phase, circuit, tension, and the conductor type data.
-    These are the quantities the parameter models consume; type names do
-    not survive resolution.
+    order: x, h, phase, circuit, tension, and the conductor type data with
+    relative material properties scaled to absolute SI. These are the
+    quantities the parameter models consume; type names do not survive
+    resolution.
     """
     errs = []
     tables = {"conductors": {}, "towers": {}}
@@ -107,6 +111,12 @@ def resolve(doc, doc_path):
                         + "; ".join(inc_errs))
             continue
         merge(catalog, inc)
+
+    for name, ctype in tables["conductors"].items():
+        radius = ctype["radius"]
+        if radius.get("inner", 0.0) >= radius["outer"]:
+            errs.append(f"conductor type {name}: inner radius must be "
+                        f"below the outer radius")
 
     tower = tables["towers"].get(doc["tower"])
     if tower is None:
@@ -138,10 +148,12 @@ def resolve(doc, doc_path):
             "phase": entry["phase"],
             "circuit": entry.get("circuit", 1),
             "tension": entry.get("tension"),
-            "outer_radius": ctype["outer_radius"],
-            "inner_radius": ctype.get("inner_radius", 0.0),
+            "radius": {
+                "outer": ctype["radius"]["outer"],
+                "inner": ctype["radius"].get("inner", 0.0),
+            },
             "conductivity": ctype["conductivity"],
-            "permeability": ctype["permeability"],
+            "permeability": ctype.get("permeability", 1.0) * MU0,
             "weight": ctype["weight"],
         })
 
@@ -233,7 +245,7 @@ NEGATIVE = [
     ("legacy phase label s", local_doc,
      lambda d: d["conductors"][0].update({"phase": "s"})),
     ("inline conductor data on an entry", include_doc,
-     lambda d: d["conductors"][0].update({"outer_radius": 0.01})),
+     lambda d: d["conductors"][0].update({"radius": {"outer": 0.01}})),
     ("entry without an attachment point", local_doc,
      lambda d: d["conductors"][0].pop("at")),
     ("entry without a type", include_doc,
@@ -246,6 +258,13 @@ NEGATIVE = [
         "conductors"].update({"Drake": d["catalog"]["conductors"]["phase-acsr"]})),
     ("empty catalog section", local_doc,
      lambda d: d["catalog"].update({"towers": {}})),
+    ("radius without outer", local_doc, lambda d: d["catalog"]["conductors"][
+        "phase-acsr"].update({"radius": {"inner": 0.005}})),
+    ("absolute conductor permeability", local_doc,
+     lambda d: d["catalog"]["conductors"]["phase-acsr"].update(
+         {"permeability": 1.2566370614e-6})),
+    ("absolute earth permittivity", local_doc,
+     lambda d: d["earth"].update({"permittivity": 8.8541878128e-12})),
 ]
 
 for label, base, fn in NEGATIVE:
@@ -253,8 +272,8 @@ for label, base, fn in NEGATIVE:
 
 BAD_CATALOGS = [
     ("catalog file without a header", {"conductors": {
-        "a1": {"outer_radius": 0.01, "conductivity": 3.5e7,
-               "permeability": 1.26e-6, "weight": 16.0}}}),
+        "a1": {"radius": {"outer": 0.01}, "conductivity": 3.5e7,
+               "weight": 16.0}}}),
     ("catalog file without sections", {"catalog": "1.0", "name": "empty"}),
     ("catalog file with a stray section", {"catalog": "1.0", "earths": {}}),
 ]
@@ -275,13 +294,16 @@ SEMANTIC = [
      lambda d: d["conductors"][1].update({"at": "left-1"}), "more than once"),
     ("local/include name collision", include_doc, lambda d: d.update(
         {"catalog": {"conductors": {"drake-acsr": {
-            "outer_radius": 0.01, "conductivity": 3.5e7,
-            "permeability": 1.26e-6, "weight": 16.0}}}}), "collision"),
+            "radius": {"outer": 0.01}, "conductivity": 3.5e7,
+            "weight": 16.0}}}}), "collision"),
     ("missing include", include_doc,
      lambda d: d.update({"include": ["missing.catalog.yaml"]}), "not found"),
     ("tension exceeding the attachment height", include_doc,
      lambda d: d["conductors"][0].update({"tension": 2000.0}),
      "minimum height"),
+    ("inner radius above the outer radius", local_doc,
+     lambda d: d["catalog"]["conductors"]["phase-acsr"].update(
+         {"radius": {"outer": 0.00915, "inner": 0.01}}), "inner radius"),
 ]
 
 for label, base, fn, needle in SEMANTIC:

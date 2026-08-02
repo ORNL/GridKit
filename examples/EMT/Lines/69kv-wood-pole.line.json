@@ -9,16 +9,14 @@
     "conductors": {
       "phase-acsr": {
         "description": "Illustrative distribution-class phase ACSR",
-        "outer_radius": 0.00915,
+        "radius": { "outer": 0.00915 },
         "conductivity": 3.5e7,
-        "permeability": 1.2566370614e-6,
         "weight": 6.7
       },
       "neutral-acsr": {
         "description": "Illustrative reduced underbuilt neutral",
-        "outer_radius": 0.00501,
+        "radius": { "outer": 0.00501 },
         "conductivity": 3.5e7,
-        "permeability": 1.2566370614e-6,
         "weight": 2.1
       }
     },
@@ -50,7 +48,6 @@
   },
 
   "earth": {
-    "conductivity": 0.01,
-    "permittivity": 8.8541878128e-12
+    "conductivity": 0.01
   }
 }

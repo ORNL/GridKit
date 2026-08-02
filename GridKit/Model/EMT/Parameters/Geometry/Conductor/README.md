@@ -11,8 +11,8 @@ For $K$ physical conductors:
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$r_i$ | [m] | `outer_radius` | Outer radius | $r_i>0$
-$q_i$ | [m] | `inner_radius` | Inner radius | $0\le q_i<r_i$; $q_i=0$ for solid conductors
+$r_i$ | [m] | `radius.outer` | Outer radius | $r_i>0$
+$q_i$ | [m] | `radius.inner` | Inner radius | $0\le q_i<r_i$; $q_i=0$ for solid conductors
 $\sigma_i$ | [S/m] | `conductivity` | Conductivity | $\sigma_i>0$
 $\mu_i$ | [H/m] | `permeability` | Permeability | $\mu_i>0$
 $w_i$ | [N/m] | `weight` | Conductor weight per unit length | $w_i>0$
