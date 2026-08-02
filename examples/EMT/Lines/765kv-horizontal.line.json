@@ -1,31 +1,30 @@
 {
-  "$schema": "https://gridkit.readthedocs.io/en/latest/line.schema.json",
+  "$schema": "https://gridkit.readthedocs.io/en/schema/line.schema.json",
   "line": "1.0",
   "name": "765 kV single-circuit horizontal",
-  "description": "Four-conductor square bundle at 0.457 m, two shield wires.",
+  "description": "Four-conductor square bundle at 0.457 m, two shield wires. Conductor and tower types come from an included catalog.",
   "source": "synthetic example; conductor and earth data illustrative",
 
-  "conductors": [
-    { "phase": "a", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "a", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "a", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "a", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "b", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "b", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "b", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "b", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "c", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "c", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "c", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "c", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
-    { "phase": "g", "radius": 0.00457, "inner_radius": 0.0, "conductivity": 5.8e6, "permeability": 1.2566370614e-6, "weight": 4.0 },
-    { "phase": "g", "radius": 0.00457, "inner_radius": 0.0, "conductivity": 5.8e6, "permeability": 1.2566370614e-6, "weight": 4.0 }
-  ],
+  "include": ["north-american.catalog.yaml"],
 
-  "tower": {
-    "x":      [-13.9285, -13.4715, -13.9285, -13.4715, -0.2285, 0.2285, -0.2285, 0.2285, 13.4715, 13.9285, 13.4715, 13.9285, -9.8, 9.8],
-    "height": [31.7715, 31.7715, 32.2285, 32.2285, 31.7715, 31.7715, 32.2285, 32.2285, 31.7715, 31.7715, 32.2285, 32.2285, 40.0, 40.0]
-  },
+  "tower": "765kv-horizontal",
+
+  "conductors": [
+    { "at": "left-1",       "phase": "a", "type": "drake-acsr" },
+    { "at": "left-2",       "phase": "a", "type": "drake-acsr" },
+    { "at": "left-3",       "phase": "a", "type": "drake-acsr" },
+    { "at": "left-4",       "phase": "a", "type": "drake-acsr" },
+    { "at": "center-1",     "phase": "b", "type": "drake-acsr" },
+    { "at": "center-2",     "phase": "b", "type": "drake-acsr" },
+    { "at": "center-3",     "phase": "b", "type": "drake-acsr" },
+    { "at": "center-4",     "phase": "b", "type": "drake-acsr" },
+    { "at": "right-1",      "phase": "c", "type": "drake-acsr" },
+    { "at": "right-2",      "phase": "c", "type": "drake-acsr" },
+    { "at": "right-3",      "phase": "c", "type": "drake-acsr" },
+    { "at": "right-4",      "phase": "c", "type": "drake-acsr" },
+    { "at": "shield-left",  "phase": "g", "type": "ehs-3-8-steel" },
+    { "at": "shield-right", "phase": "g", "type": "ehs-3-8-steel" }
+  ],
 
   "path": {
     "span": 450.0,

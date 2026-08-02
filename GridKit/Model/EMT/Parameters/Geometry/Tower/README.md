@@ -1,6 +1,7 @@
 # Tower Model
 
-`Tower` stores conductor attachment coordinates and span-scale geometry.
+`Tower` stores conductor attachment coordinates and derives span-scale
+geometry from the route span.
 
 ![Tower model block diagram](../../../../../../docs/Figures/EMT/Tower/diagram.png)
 
@@ -11,10 +12,10 @@ For physical conductors $i=1,\dots,K$:
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 `conductor` | [-] | - | Static conductor data | [`Conductor`](../Conductor/README.md)
-$x_i$ | [m] | `tower.x` | Horizontal attachment coordinate | real
-$H_i$ | [m] | `tower.height` | Attachment height above earth | $H_i>0$
+$x_i$ | [m] | `conductors[*].x` | Horizontal attachment coordinate | real
+$H_i$ | [m] | `conductors[*].height` | Attachment height above earth | $H_i>0$
 $S$ | [m] | `path.span` | Support-to-support span length | $S>0$
-$T_i$ | [N] | `tower.tension` | Tension | optional
+$T_i$ | [N] | `conductors[*].tension` | Tension | optional
 
 `Tower` does not own conductor phase labels. Phase labels are conductor
 metadata owned by [`Conductor`](../Conductor/README.md).
@@ -49,6 +50,10 @@ D'_{ij} &= \sqrt{d_{ij}^2+(h_i+h_j)^2} \\
 
 Here $w_i$ is supplied by `Conductor`. $\rho_{\mathrm{sag}}$ is one
 conductor-averaged scalar.
+
+When tension data is not supplied, sag is zero: $h_i = H_i$,
+$D_{ij}$ and $D'_{ij}$ use the attachment heights directly, and
+$\rho_{\mathrm{sag}} = 1$.
 
 ![Image-conductor distances](../../../../../../docs/Figures/EMT/Tower/images.png)
 

@@ -6,6 +6,8 @@ import sys
 from collections import OrderedDict
 from pathlib import Path
 
+import yaml
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -46,13 +48,22 @@ plt.rcParams.update({
 })
 
 
-def groups(doc):
+def attachments(doc, path):
+    """Attachment coordinates of the document's tower type."""
+    towers = dict((doc.get("catalog") or {}).get("towers") or {})
+    for inc in doc.get("include", []):
+        catalog = yaml.safe_load((path.parent / inc).read_text(encoding="utf-8"))
+        towers.update(catalog.get("towers") or {})
+    return towers[doc["tower"]]["attachments"]
+
+
+def groups(doc, points):
     """Group conductors by (phase, circuit), preserving file order."""
     out = OrderedDict()
-    tower = doc["tower"]
-    for cond, x, height in zip(doc["conductors"], tower["x"], tower["height"]):
+    for cond in doc["conductors"]:
+        point = points[cond["at"]]
         key = (cond["phase"], cond.get("circuit", 1))
-        out.setdefault(key, []).append((x, height))
+        out.setdefault(key, []).append((point["x"], point["height"]))
     return out
 
 
@@ -68,9 +79,10 @@ def cluster(values, tol):
 
 
 def render(path, out_path):
-    doc = json.load(open(path))
+    path = Path(path)
+    doc = json.loads(path.read_text(encoding="utf-8"))
     unit = "m"
-    grp = groups(doc)
+    grp = groups(doc, attachments(doc, path))
     multi_circuit = max(k[1] for k in grp) > 1
 
     xs = [x for pts in grp.values() for x, _ in pts]

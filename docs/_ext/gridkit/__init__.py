@@ -1,7 +1,9 @@
 """Sphinx extension providing GridKit model, case, and example documentation.
 
 The C++ model documentation is the sole authority on what a model accepts, so
-the JSON schema and every generated table are built from the same records.
+the case schema and every generated table are built from the same records.
+The overhead-line schema is authored as code in line_schema.py. Both schemas
+are generated at build time; the repository commits neither JSON artifact.
 """
 
 from __future__ import annotations
@@ -15,6 +17,7 @@ from sphinx.util.typing import ExtensionMetadata
 
 from .directives import DIRECTIVES
 from .doxygen import InventoryError
+from .line_schema import write_schema as write_line_schema
 from .links import setup as setup_links
 from .repository import RepositoryError, repository
 from .schema import write_schema
@@ -22,17 +25,18 @@ from .schema import write_schema
 
 def _generate(app: Sphinx, _config: Config) -> None:
     # Sphinx validates html_extra_path before the builder-inited event. Generate
-    # the schema during configuration so a clean RTD checkout can copy it to the
-    # stable /case.schema.json URL instead of only exposing a hashed download.
+    # the schemas during configuration so a clean RTD checkout can copy them to
+    # their stable URLs instead of only exposing hashed downloads.
     models = Path(app.srcdir).parent / "GridKit" / "Model"
     try:
+        write_line_schema(models / "EMT" / "line.schema.json")
         write_schema(
             repository(app).models,
             models / "case.schema.base.json",
             models / "case.schema.json",
         )
     except (InventoryError, RepositoryError, OSError, ValueError, KeyError) as error:
-        raise ExtensionError(f"cannot generate case schema: {error}") from error
+        raise ExtensionError(f"cannot generate schemas: {error}") from error
 
 
 def setup(app: Sphinx) -> ExtensionMetadata:

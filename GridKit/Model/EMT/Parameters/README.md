@@ -5,7 +5,7 @@ studies. The family READMEs describe the model groups:
 
 Family | Description
 ------ | -----------
-[`Geometry`](Geometry/README.md) | Static line geometry, conductor data, span data, and path length
+[`Geometry`](Geometry/README.md) | Static line geometry, conductor data, and route data
 [`Effects`](Effects/README.md) | Physical effects used to assemble per-unit-length series and shunt quantities
 [`Response`](Response/README.md) | Propagation, finite-length response, and characteristic quantities derived from the assembled parameters
 
@@ -24,7 +24,7 @@ or study driver.
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 `path` | [-] | `path.length`, `path.points` | Path definition used to compute line length | passed to [`Path`](Geometry/Path/README.md)
-`tower` | [-] | `tower.x`, `tower.height`, `tower.tension`, `path.span` | Tower attachment and span geometry | passed to [`Tower`](Geometry/Tower/README.md)
+`tower` | [-] | `conductors[*].x`, `conductors[*].height`, `conductors[*].tension`, `path.span` | Tower attachment geometry and tension | passed to [`Tower`](Geometry/Tower/README.md)
 `conductor` | [-] | `conductors[*].radius`, `conductors[*].inner_radius`, `conductors[*].conductivity`, `conductors[*].permeability`, `conductors[*].weight`, `conductors[*].phase` | Conductor dimensions, material, weight, and phase data | passed to [`Conductor`](Geometry/Conductor/README.md)
 $\sigma_g$ | [S/m] | `earth.conductivity` | Earth conductivity | passed to [`Carson`](Effects/Carson/README.md)
 $\varepsilon_g$ | [F/m] | `earth.permittivity` | Earth permittivity | passed to [`Carson`](Effects/Carson/README.md)
@@ -32,7 +32,12 @@ $\varepsilon_g$ | [F/m] | `earth.permittivity` | Earth permittivity | passed to 
 #### Parameter Validation
 
 The aggregate parser rejects invalid line-data fields before constructing the
-child models. Detailed validation belongs to the child models.
+child models. The document is resolved first: the tower type and every
+conductor type reference from the document's `catalog` section and included
+catalogs are replaced with their catalog data, giving one flat record per
+physical conductor (`conductors[*]` in the tables above); names of each kind
+must be unique across a document and its includes. Detailed validation
+belongs to the child models.
 
 #### Model Derived Parameters
 

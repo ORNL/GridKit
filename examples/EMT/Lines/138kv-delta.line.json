@@ -1,21 +1,48 @@
 {
-  "$schema": "https://gridkit.readthedocs.io/en/latest/line.schema.json",
+  "$schema": "https://gridkit.readthedocs.io/en/schema/line.schema.json",
   "line": "1.0",
   "name": "138 kV single-circuit delta",
-  "description": "Single conductor per phase, one shield wire at the peak. Route given as a GIS centreline.",
+  "description": "Single conductor per phase, one shield wire at the peak. Route given as a GIS centreline. Self-contained: conductor and tower types are defined in the document's catalog.",
   "source": "synthetic example; conductor and earth data illustrative",
 
-  "conductors": [
-    { "phase": "a", "radius": 0.01092, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 9.6 },
-    { "phase": "b", "radius": 0.01092, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 9.6 },
-    { "phase": "c", "radius": 0.01092, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 9.6 },
-    { "phase": "g", "radius": 0.00457, "inner_radius": 0.0, "conductivity": 5.8e6, "permeability": 1.2566370614e-6, "weight": 4.0 }
-  ],
-
-  "tower": {
-    "x":      [-3.0, 3.0,  0.0,  0.0],
-    "height": [17.0, 17.0, 21.5, 25.0]
+  "catalog": {
+    "conductors": {
+      "hawk-acsr": {
+        "description": "Hawk 477 kcmil 26/7 ACSR",
+        "radius": 0.01092,
+        "conductivity": 3.5e7,
+        "permeability": 1.2566370614e-6,
+        "weight": 9.6
+      },
+      "ehs-3-8-steel": {
+        "description": "3/8 in EHS steel shield wire",
+        "radius": 0.00457,
+        "conductivity": 5.8e6,
+        "permeability": 1.2566370614e-6,
+        "weight": 4.0
+      }
+    },
+    "towers": {
+      "138kv-delta": {
+        "description": "Delta arrangement with a single shield-wire peak",
+        "attachments": {
+          "left":   { "x": -3.0, "height": 17.0 },
+          "right":  { "x":  3.0, "height": 17.0 },
+          "top":    { "x":  0.0, "height": 21.5 },
+          "shield": { "x":  0.0, "height": 25.0 }
+        }
+      }
+    }
   },
+
+  "tower": "138kv-delta",
+
+  "conductors": [
+    { "at": "left",   "phase": "a", "type": "hawk-acsr" },
+    { "at": "right",  "phase": "b", "type": "hawk-acsr" },
+    { "at": "top",    "phase": "c", "type": "hawk-acsr" },
+    { "at": "shield", "phase": "g", "type": "ehs-3-8-steel" }
+  ],
 
   "path": {
     "span": 250.0,

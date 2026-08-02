@@ -1,21 +1,50 @@
 {
-  "$schema": "https://gridkit.readthedocs.io/en/latest/line.schema.json",
+  "$schema": "https://gridkit.readthedocs.io/en/schema/line.schema.json",
   "line": "1.0",
   "name": "69 kV wood pole, vertical with neutral",
-  "description": "Alternating davit arms, single conductor per phase, underbuilt neutral, no shield wire.",
+  "description": "Alternating davit arms, single conductor per phase, underbuilt neutral, no shield wire. Self-contained: conductor and tower types are defined in the document's catalog.",
   "source": "synthetic example; geometry converted from feet, conductor and earth data illustrative",
 
-  "conductors": [
-    { "phase": "a", "radius": 0.00915, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 6.7 },
-    { "phase": "b", "radius": 0.00915, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 6.7 },
-    { "phase": "c", "radius": 0.00915, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 6.7 },
-    { "phase": "n", "radius": 0.00501, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 2.1 }
-  ],
-
-  "tower": {
-    "x":      [-1.0668,  1.0668, -1.0668,  0.0],
-    "height": [14.9352, 13.7160, 12.4968, 10.3632]
+  "catalog": {
+    "conductors": {
+      "phase-acsr": {
+        "description": "Illustrative distribution-class phase ACSR",
+        "radius": 0.00915,
+        "inner_radius": 0.0,
+        "conductivity": 3.5e7,
+        "permeability": 1.2566370614e-6,
+        "weight": 6.7
+      },
+      "neutral-acsr": {
+        "description": "Illustrative reduced underbuilt neutral",
+        "radius": 0.00501,
+        "inner_radius": 0.0,
+        "conductivity": 3.5e7,
+        "permeability": 1.2566370614e-6,
+        "weight": 2.1
+      }
+    },
+    "towers": {
+      "69kv-wood-pole": {
+        "description": "Wood pole with alternating davit arms and underbuilt neutral",
+        "attachments": {
+          "top":     { "x": -1.0668, "height": 14.9352 },
+          "middle":  { "x":  1.0668, "height": 13.7160 },
+          "bottom":  { "x": -1.0668, "height": 12.4968 },
+          "neutral": { "x":  0.0,    "height": 10.3632 }
+        }
+      }
+    }
   },
+
+  "tower": "69kv-wood-pole",
+
+  "conductors": [
+    { "at": "top",     "phase": "a", "type": "phase-acsr" },
+    { "at": "middle",  "phase": "b", "type": "phase-acsr" },
+    { "at": "bottom",  "phase": "c", "type": "phase-acsr" },
+    { "at": "neutral", "phase": "n", "type": "neutral-acsr" }
+  ],
 
   "path": {
     "span": 90.0,

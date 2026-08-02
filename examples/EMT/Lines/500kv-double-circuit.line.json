@@ -1,31 +1,30 @@
 {
-  "$schema": "https://gridkit.readthedocs.io/en/latest/line.schema.json",
+  "$schema": "https://gridkit.readthedocs.io/en/schema/line.schema.json",
   "line": "1.0",
   "name": "500 kV double-circuit vertical lattice",
-  "description": "Three arm levels per side, twin bundle at 0.457 m, two shield wires at the peak.",
+  "description": "Three arm levels per side, twin bundle at 0.457 m, two shield wires at the peak. Conductor and tower types come from an included catalog.",
   "source": "synthetic example; conductor and earth data illustrative",
 
-  "conductors": [
-    { "phase": "a", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "a", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "b", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "b", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "c", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "c", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "a", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "a", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "b", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "b", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "c", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "c", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
-    { "phase": "g", "radius": 0.00457, "inner_radius": 0.0, "conductivity": 5.8e6, "permeability": 1.2566370614e-6, "weight": 4.0 },
-    { "phase": "g", "radius": 0.00457, "inner_radius": 0.0, "conductivity": 5.8e6, "permeability": 1.2566370614e-6, "weight": 4.0 }
-  ],
+  "include": ["north-american.catalog.yaml"],
 
-  "tower": {
-    "x":      [-8.7285, -8.2715, -10.0285, -9.5715, -8.7285, -8.2715, 8.2715, 8.7285, 9.5715, 10.0285, 8.2715, 8.7285, -5.5, 5.5],
-    "height": [30.0, 30.0, 38.0, 38.0, 46.0, 46.0, 30.0, 30.0, 38.0, 38.0, 46.0, 46.0, 53.0, 53.0]
-  },
+  "tower": "500kv-double-circuit",
+
+  "conductors": [
+    { "at": "left-lower-1",  "phase": "a", "circuit": 1, "type": "cardinal-acsr" },
+    { "at": "left-lower-2",  "phase": "a", "circuit": 1, "type": "cardinal-acsr" },
+    { "at": "left-mid-1",    "phase": "b", "circuit": 1, "type": "cardinal-acsr" },
+    { "at": "left-mid-2",    "phase": "b", "circuit": 1, "type": "cardinal-acsr" },
+    { "at": "left-upper-1",  "phase": "c", "circuit": 1, "type": "cardinal-acsr" },
+    { "at": "left-upper-2",  "phase": "c", "circuit": 1, "type": "cardinal-acsr" },
+    { "at": "right-lower-1", "phase": "a", "circuit": 2, "type": "cardinal-acsr" },
+    { "at": "right-lower-2", "phase": "a", "circuit": 2, "type": "cardinal-acsr" },
+    { "at": "right-mid-1",   "phase": "b", "circuit": 2, "type": "cardinal-acsr" },
+    { "at": "right-mid-2",   "phase": "b", "circuit": 2, "type": "cardinal-acsr" },
+    { "at": "right-upper-1", "phase": "c", "circuit": 2, "type": "cardinal-acsr" },
+    { "at": "right-upper-2", "phase": "c", "circuit": 2, "type": "cardinal-acsr" },
+    { "at": "shield-left",   "phase": "g", "type": "ehs-3-8-steel" },
+    { "at": "shield-right",  "phase": "g", "type": "ehs-3-8-steel" }
+  ],
 
   "path": {
     "span": 400.0,
