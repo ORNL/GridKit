@@ -114,7 +114,7 @@ Name        | Port   | Init    | Description
 `ibranchi`  | Input  | Known   | Branch-current imaginary component on system base
 `pbranch`   | Input  | Known   | Branch active power on system base
 `qbranch`   | Input  | Known   | Branch reactive power on system base
-`freq`      | Input  | Known   | Frequency input
+`freq`      | Input  | Known   | Frequency input[^frequency-measurement] Not supported yet.
 `freqref`   | Input  | Unknown | Frequency reference
 `vref`      | Input  | Unknown | Voltage-control reference
 `qref`      | Input  | Unknown | Reactive-power reference on system base
@@ -294,12 +294,6 @@ and [ramp primitive](../../../../CommonMath.md#primitives) used above.
 
 ### External Equations
 
-#### Differential
-
-None.
-
-#### Algebraic
-
 None.
 
 ## Initialization
@@ -455,3 +449,7 @@ Output          | Units  | Description                         | Note
 - `derivatives()` checks differential-row derivative signs.
 - `jacobian()` checks fixed numerical and structural oracles, plus Enzyme
   agreement to $10^{-9}$ when enabled.
+
+[^frequency-measurement]: Background for phase-derived, filtered frequency
+    measurement: [PSCAD Frequency/Phase/Magnitude Meter](https://www.pscad.com/webhelp-pscad-v5.1.0-ol/Master_Library_Models/Meters/Frequency_Phase_Magnitude_Meter.htm) and
+    [Ting et al., *Evaluating Methods for Measuring Grid Frequency in Low-Inertia Power Systems*](https://research-hub.nrel.gov/en/publications/evaluating-methods-for-measuring-grid-frequency-in-low-inertia-po-3/).
