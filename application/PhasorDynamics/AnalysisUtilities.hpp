@@ -5,6 +5,8 @@
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -62,6 +64,10 @@ namespace GridKit
       double                                         abs_tol;
       /// fixed solver time step size, or 0 for adaptive stepping
       double                                         dt_fixed;
+      /// maximum internal solver time step size
+      std::optional<double>                          dt_max;
+      /// maximum integration method order
+      std::optional<int>                             max_ord;
       /// maximum number of solver time steps, or 0 for the IDA default
       std::size_t                                    max_steps;
       /// IDA consistent initial condition calculation type
@@ -121,6 +127,19 @@ namespace GridKit
                        << consistent_ic_type_str << "\"; "
                        << "must be either \"y\" or \"ya_ydp\"";
         }
+      }
+
+      if (j.contains("dt_max"))
+      {
+        c.dt_max = j.at("dt_max").get<double>();
+      }
+      if (j.contains("max_ord"))
+      {
+        c.max_ord = j.at("max_ord").get<int>();
+      }
+      if (c.dt_max.has_value() && c.dt_fixed != 0.0)
+      {
+        throw std::invalid_argument("dt_max cannot be combined with dt_fixed");
       }
 
       for (auto& raw_event : j.at("events"))

@@ -10,6 +10,8 @@
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)
   `abs_tol`            | Absolute solver tolerance override (default: 1.0e-9)
   `dt_fixed`           | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
+  `dt_max`             | Positive maximum internal solver time step size; cannot be combined with `dt_fixed` (optional)
+  `max_ord`            | Maximum integration method order from 1 to 5 (optional)
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
   `events`             | An array of event groups (see [Events](#events) below)

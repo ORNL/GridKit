@@ -130,6 +130,8 @@ namespace AnalysisManager
 
       void setFixedStep(ScalarT time_step);
       void setBackwardFixedStep(ScalarT time_step);
+      int  setMaxStep(RealT max_step);
+      int  setMaxOrder(int max_order);
       using DynamicSolver<ScalarT, IdxT>::setTolerance;
       void setTolerance(ScalarT rel_tol, ScalarT abs_tol_override) override;
       void setBackwardTolerance(ScalarT rel_tol, ScalarT abs_tol_override = 0);

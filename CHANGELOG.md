@@ -73,7 +73,7 @@
 - Add new `LinearSolver` interface for linear solvers.
 - Added new `Rosenbrock` integrator.
 - Clarified naming conventions for macros.
-- Added `dt_fixed`, `rel_tol`, `abs_tol`, and `max_steps` options to phasor dynamics solver JSON files and renamed the `dt` option to `dt_monitor`.
+- Added `dt_fixed`, `dt_max`, `max_ord`, `rel_tol`, `abs_tol`, and `max_steps` options to phasor dynamics solver JSON files and renamed the `dt` option to `dt_monitor`.
 - Added EMT model and operator documentation.
 - Added `REGCA` converter model implementation for PhasorDynamics.
 - Remove unnecessary data copying while evaluating `PowerElectronics` models, speeding up large simulations by up to 3x

@@ -1107,6 +1107,38 @@ namespace AnalysisManager
     }
 
     /**
+     * @brief Set the maximum internal step size
+     *
+     * @param max_step The maximum internal step size
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int zero if successful, error code otherwise
+     */
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::setMaxStep(RealT max_step)
+    {
+      int retval = IDASetMaxStep(solver_, max_step);
+      checkOutput(retval, "IDASetMaxStep");
+      return retval;
+    }
+
+    /**
+     * @brief Set the maximum integration method order
+     *
+     * @param max_order The maximum integration method order
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int zero if successful, error code otherwise
+     */
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::setMaxOrder(int max_order)
+    {
+      int retval = IDASetMaxOrd(solver_, max_order);
+      checkOutput(retval, "IDASetMaxOrd");
+      return retval;
+    }
+
+    /**
      * @brief Set the relative tolerance and optionally override the absolute
      *        tolerance
      *
