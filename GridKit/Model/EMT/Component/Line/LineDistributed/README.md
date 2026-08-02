@@ -192,7 +192,7 @@ $\mathbf{P}_\phi=\mathbf{I}_3$.
 \end{aligned}
 ```
 
-the external equations reduce to
+For the initial three-phase formulation, the external equations reduce to
 
 ```math
 \begin{aligned}
