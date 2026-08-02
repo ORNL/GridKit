@@ -1,0 +1,29 @@
+{
+  "$schema": "https://gridkit.readthedocs.io/en/latest/line.schema.json",
+  "line": "1.0",
+  "name": "69 kV wood pole, vertical with neutral",
+  "description": "Alternating davit arms, single conductor per phase, underbuilt neutral, no shield wire.",
+  "source": "synthetic example; geometry converted from feet, conductor and earth data illustrative",
+
+  "conductors": [
+    { "phase": "a", "radius": 0.00915, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 6.7 },
+    { "phase": "b", "radius": 0.00915, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 6.7 },
+    { "phase": "c", "radius": 0.00915, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 6.7 },
+    { "phase": "n", "radius": 0.00501, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 2.1 }
+  ],
+
+  "tower": {
+    "x":      [-1.0668,  1.0668, -1.0668,  0.0],
+    "height": [14.9352, 13.7160, 12.4968, 10.3632]
+  },
+
+  "path": {
+    "span": 90.0,
+    "length": 16000.0
+  },
+
+  "earth": {
+    "conductivity": 0.01,
+    "permittivity": 8.8541878128e-12
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://gridkit.readthedocs.io/en/latest/line.schema.json",
+  "line": "1.0",
+  "name": "345 kV single-circuit horizontal H-frame",
+  "description": "Twin bundle at 0.457 m, two shield wires. Tension supplied, so sag is computed from the catenary.",
+  "source": "synthetic example; conductor, tension, and earth data illustrative",
+
+  "conductors": [
+    { "phase": "a", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
+    { "phase": "a", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
+    { "phase": "b", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
+    { "phase": "b", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
+    { "phase": "c", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
+    { "phase": "c", "radius": 0.01407, "inner_radius": 0.00514, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 16.0 },
+    { "phase": "g", "radius": 0.00457, "inner_radius": 0.0, "conductivity": 5.8e6, "permeability": 1.2566370614e-6, "weight": 4.0 },
+    { "phase": "g", "radius": 0.00457, "inner_radius": 0.0, "conductivity": 5.8e6, "permeability": 1.2566370614e-6, "weight": 4.0 }
+  ],
+
+  "tower": {
+    "x":      [-7.4285, -6.9715, -0.2285, 0.2285, 6.9715, 7.4285, -4.3, 4.3],
+    "height": [24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 29.5, 29.5],
+    "tension": [28000.0, 28000.0, 28000.0, 28000.0, 28000.0, 28000.0, 12000.0, 12000.0]
+  },
+
+  "path": {
+    "span": 350.0,
+    "length": 100000.0
+  },
+
+  "earth": {
+    "conductivity": 0.01,
+    "permittivity": 8.8541878128e-12
+  }
+}

@@ -23,11 +23,11 @@ or study driver.
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-`path` | [-] | `length`, `path` | Path definition used to compute line length | passed to [`Path`](Geometry/Path/README.md)
-`tower` | [-] | `tower.x`, `tower.height`, `tower.span`, `tower.tension` | Tower attachment and span geometry | passed to [`Tower`](Geometry/Tower/README.md)
+`path` | [-] | `path.length`, `path.points` | Path definition used to compute line length | passed to [`Path`](Geometry/Path/README.md)
+`tower` | [-] | `tower.x`, `tower.height`, `tower.tension`, `path.span` | Tower attachment and span geometry | passed to [`Tower`](Geometry/Tower/README.md)
 `conductor` | [-] | `conductors[*].radius`, `conductors[*].inner_radius`, `conductors[*].conductivity`, `conductors[*].permeability`, `conductors[*].weight`, `conductors[*].phase` | Conductor dimensions, material, weight, and phase data | passed to [`Conductor`](Geometry/Conductor/README.md)
-$\sigma_g$ | [S/m] | `earth_conductivity` | Earth conductivity | passed to [`Carson`](Effects/Carson/README.md)
-$\varepsilon_g$ | [F/m] | `earth_permittivity` | Earth permittivity | passed to [`Carson`](Effects/Carson/README.md)
+$\sigma_g$ | [S/m] | `earth.conductivity` | Earth conductivity | passed to [`Carson`](Effects/Carson/README.md)
+$\varepsilon_g$ | [F/m] | `earth.permittivity` | Earth permittivity | passed to [`Carson`](Effects/Carson/README.md)
 
 #### Parameter Validation
 
@@ -44,7 +44,7 @@ Submodel | Inputs | Outputs
 -------- | ------ | -------
 [`Conductor`](Geometry/Conductor/README.md) | `conductor` | $r_i$, $q_i$, $\sigma_i$, $\mu_i$, $w_i$, $\phi_i$
 [`Tower`](Geometry/Tower/README.md) | `tower`, `conductor` | $x_i$, $h_i$, $S$, $d_{ij}$, $D_{ij}$, $D'_{ij}$, $\ell_i^{\mathrm{span}}$, $\rho_{\mathrm{sag}}$
-[`Path`](Geometry/Path/README.md) | `length`, `path`, `Tower` | $\ell$
+[`Path`](Geometry/Path/README.md) | `path.length`, `path.points`, `Tower` | $\ell$
 [`GeometricInductance`](Effects/GeometricInductance/README.md) | `tower`, `conductor` | $\mathbf{L}^{\mathrm{geo}}$
 [`SkinEffect`](Effects/SkinEffect/README.md) | `conductor` | $\mathbf{r}^{\mathrm{skin}}$, $\mathbf{l}^{\mathrm{skin}}$
 [`Carson`](Effects/Carson/README.md) | `tower`, $\sigma_g$, $\varepsilon_g$ | $\mathbf{R}^{\mathrm{carson}}$, $\mathbf{L}^{\mathrm{carson}}$
@@ -135,7 +135,7 @@ Geometry data | `tower` | [`Carson`](Effects/Carson/README.md) | $h_i$, $h_j$, $
 Geometry data | `tower` | [`ShuntPotential`](Effects/ShuntPotential/README.md) | $h_i$, $D_{ij}$, $D'_{ij}$
 Geometry data | `conductor` | [`ShuntPotential`](Effects/ShuntPotential/README.md) | $r_i$
 Material data | `conductor` | [`SkinEffect`](Effects/SkinEffect/README.md) | $r_i$, $\sigma_i$, $\mu_i$
-Earth material | `earth_conductivity`, `earth_permittivity` | [`Carson`](Effects/Carson/README.md) | $\sigma_g$, $\varepsilon_g$
+Earth material | `earth.conductivity`, `earth.permittivity` | [`Carson`](Effects/Carson/README.md) | $\sigma_g$, $\varepsilon_g$
 Span geometry | `tower`, `conductor` | [`Tower`](Geometry/Tower/README.md) | $S$, $\ell_i^{\mathrm{span}}$, $\rho_{\mathrm{sag}}$
 Series assembly | [`SkinEffect`](Effects/SkinEffect/README.md) | [`SeriesImpedance`](Effects/SeriesImpedance/README.md) | $\mathbf{r}^{\mathrm{skin}}$, $\mathbf{l}^{\mathrm{skin}}$
 Series assembly | [`GeometricInductance`](Effects/GeometricInductance/README.md) | [`SeriesImpedance`](Effects/SeriesImpedance/README.md) | $\mathbf{L}^{\mathrm{geo}}$
@@ -143,7 +143,7 @@ Series assembly | [`Carson`](Effects/Carson/README.md) | [`SeriesImpedance`](Eff
 Shunt assembly | [`ShuntPotential`](Effects/ShuntPotential/README.md) | [`ShuntAdmittance`](Effects/ShuntAdmittance/README.md) | $\mathbf{G}^{\mathrm{pot}}$, $\mathbf{C}^{\mathrm{pot}}$
 Response inputs | [`SeriesImpedance`](Effects/SeriesImpedance/README.md) | [`Gamma`](Response/Gamma/README.md), [`Yc`](Response/Yc/README.md), [`Zc`](Response/Zc/README.md) | $\mathbf{R}'$, $\mathbf{L}'$
 Response inputs | [`ShuntAdmittance`](Effects/ShuntAdmittance/README.md) | [`Gamma`](Response/Gamma/README.md), [`Yc`](Response/Yc/README.md), [`Zc`](Response/Zc/README.md) | $\mathbf{G}'$, $\mathbf{C}'$
-Finite-line inputs | `length`, `path`, [`Tower`](Geometry/Tower/README.md) | [`Path`](Geometry/Path/README.md) | $\ell$
+Finite-line inputs | `path.length`, `path.points`, [`Tower`](Geometry/Tower/README.md) | [`Path`](Geometry/Path/README.md) | $\ell$
 Finite-line response | [`Gamma`](Response/Gamma/README.md) | [`Tau`](Response/Tau/README.md) | $\mathbf{b}$
 Finite-line response | [`Path`](Geometry/Path/README.md) | [`Tau`](Response/Tau/README.md) | $\ell$
 Finite-line response | [`Gamma`](Response/Gamma/README.md) | [`H`](Response/H/README.md) | $\mathbf{a}$, $\mathbf{b}$, $\dot{\mathbf{a}}$, $\dot{\mathbf{b}}$

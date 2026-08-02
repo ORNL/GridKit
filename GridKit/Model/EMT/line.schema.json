@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gridkit.readthedocs.io/en/latest/line.schema.json",
+  "title": "Overhead line",
+  "description": "One homogeneous overhead-line section: conductor data, tower attachment geometry, route, and earth return. Field names and units match the EMT parameter model documentation. All values are SI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["line", "conductors", "tower", "path", "earth"],
+  "properties": {
+    "line": {
+      "const": "1.0",
+      "description": "Format identifier and version. Present on every document."
+    },
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. Points an editor at this schema for completion and inline validation."
+    },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "source": {
+      "type": "string",
+      "description": "Provenance: drawing number, survey, publication, or an explicit statement that the data was assumed."
+    },
+    "conductors": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Every physical conductor on the structure, one entry each, in the same order as tower.x and tower.height. Array order defines the row and column order of every matrix built from this line. Bundles are not a distinct construct: sub-conductors are listed individually and are related only by sharing a phase and circuit.",
+      "items": { "$ref": "#/$defs/conductor" }
+    },
+    "tower": { "$ref": "#/$defs/tower" },
+    "path": { "$ref": "#/$defs/path" },
+    "earth": { "$ref": "#/$defs/earth" }
+  },
+
+  "$defs": {
+    "conductor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "radius", "conductivity", "permeability", "weight"],
+      "properties": {
+        "phase": {
+          "enum": ["a", "b", "c", "n", "g"],
+          "description": "a, b, c: phase conductors. n: neutral, a return conductor carrying load current. g: grounded conductor, such as a shield or static wire, not intended to carry load current. Conductors sharing a phase and circuit are at the same potential."
+        },
+        "circuit": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "Circuit index on multi-circuit structures. Meaningful for a, b and c; readers ignore it for n and g."
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Outer radius [m]."
+        },
+        "inner_radius": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0,
+          "description": "Inner radius [m]. Zero for solid conductors; positive for tubular conduction regions such as the aluminum annulus of ACSR."
+        },
+        "conductivity": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Conductor conductivity [S/m]."
+        },
+        "permeability": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Conductor permeability [H/m]."
+        },
+        "weight": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Conductor weight per unit length [N/m]. Used with tension to compute catenary sag."
+        }
+      }
+    },
+
+    "tower": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "height"],
+      "description": "Cross-sectional attachment geometry of the representative structure. Span length is route data and lives in path.",
+      "properties": {
+        "x": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "number" },
+          "description": "Horizontal attachment offsets from the tower centreline [m], one per conductor in conductor order. Positive to the right when looking along the route."
+        },
+        "height": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "number", "exclusiveMinimum": 0 },
+          "description": "Attachment heights above earth [m], one per conductor in conductor order. This is where the conductor hangs, already net of insulator string length; it is not the crossarm elevation."
+        },
+        "tension": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "number", "exclusiveMinimum": 0 },
+          "description": "Optional horizontal tension [N], one per conductor in conductor order. When present, sag and effective heights are computed from the catenary; when absent, attachment heights are used directly."
+        }
+      }
+    },
+
+    "path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["span"],
+      "oneOf": [
+        { "required": ["length"] },
+        { "required": ["points"] }
+      ],
+      "description": "Route of the line: the representative support-to-support span, and exactly one of length or points: an explicit length, or an ordered GIS centreline whose great-circle length is scaled by the sagged-to-span ratio.",
+      "properties": {
+        "span": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Representative support-to-support span length [m]."
+        },
+        "length": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Explicit line length [m]."
+        },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["latitude", "longitude"],
+            "properties": {
+              "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+              "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+            }
+          },
+          "description": "Ordered GIS centreline [deg]. Intervals are route segments, not tower spans."
+        }
+      }
+    },
+
+    "earth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["conductivity", "permittivity"],
+      "properties": {
+        "conductivity": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Homogeneous earth conductivity [S/m] for the Carson return path."
+        },
+        "permittivity": {
+          "type": "number",
+          "minimum": 8.8541878128e-12,
+          "description": "Earth permittivity [F/m]. At least the vacuum permittivity."
+        }
+      }
+    }
+  }
+}

@@ -3,9 +3,7 @@
 `Path` computes the path length $\ell$ used by finite-line response models from
 an explicit length or an ordered GIS route.
 
-<p align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/Path/diagram.png" width="70%">
-</p>
+![Path model block diagram](../../../../../../docs/Figures/EMT/Path/diagram.png)
 
 ## Model Parameters
 
@@ -13,9 +11,9 @@ For GIS points $n=1,\dots,N_p$:
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$\ell^{\mathrm{in}}$ | [m] | `length` | Explicit path length | optional; overrides GIS-derived length
-$\Phi_n$ | [deg] | `path[*].latitude` | Latitude of point $n$ |
-$\Lambda_n$ | [deg] | `path[*].longitude` | Longitude of point $n$ |
+$\ell^{\mathrm{in}}$ | [m] | `path.length` | Explicit path length | exactly one of `path.length` or `path.points`
+$\Phi_n$ | [deg] | `path.points[*].latitude` | Latitude of point $n$ |
+$\Lambda_n$ | [deg] | `path.points[*].longitude` | Longitude of point $n$ |
 `tower` | [-] | - | Sagged-to-span ratio | from [`Tower`](../Tower/README.md)
 
 The GIS path intervals are not tower spans. GIS points define a long-route
@@ -37,8 +35,8 @@ N_p\ge2,\qquad
 -180\le\Lambda_n\le180
 ```
 
-If `length` is not supplied, the GIS route length and sagged-to-span ratio must
-give $\ell>0$.
+If `path.length` is not supplied, the GIS route length and sagged-to-span ratio
+must give $\ell>0$.
 
 ### Model Derived Parameters
 
@@ -48,7 +46,7 @@ For fixed mean earth radius
 R_\oplus = 6371008.8\ \mathrm{m}
 ```
 
-If `length` is supplied,
+If `path.length` is supplied,
 
 ```math
 \ell=\ell^{\mathrm{in}}

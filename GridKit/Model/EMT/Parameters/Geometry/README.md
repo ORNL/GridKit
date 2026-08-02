@@ -18,7 +18,7 @@ Quantity | Description
 -------- | -----------
 `tower.x` | Horizontal conductor attachment coordinates
 `tower.height` | Conductor attachment heights above earth
-`tower.span` | Support-to-support span length
+`path.span` | Support-to-support span length
 `tower.tension` | Optional span tension parameter
 `conductors[*].radius` | Outer conductor radius
 `conductors[*].inner_radius` | Inner conductor radius
@@ -26,7 +26,7 @@ Quantity | Description
 `conductors[*].permeability` | Conductor permeability
 `conductors[*].weight` | Conductor weight per unit length
 `conductors[*].phase` | Conductor phase label
-`length`, `path` | Explicit length or GIS path data
+`path.length`, `path.points` | Explicit length or GIS route data
 
 The number of physical conductors $K$ is inferred from the conductor list.
 Child models own their detailed validation for geometry, material, and path

@@ -44,7 +44,12 @@ exhale_args = {
 primary_domain = "cpp"
 
 html_theme = "sphinx_rtd_theme"
-html_extra_path = ["../GridKit/Model/case.schema.json"]
+# Both schemas are generated at config-inited by the gridkit extension; the
+# repository does not commit the JSON artifacts.
+html_extra_path = [
+    "../GridKit/Model/case.schema.json",
+    "../GridKit/Model/EMT/line.schema.json",
+]
 html_static_path = ["_static"]
 html_css_files = ["css/gridkit.css"]
 html_theme_options = {
@@ -63,17 +68,20 @@ myst_enable_extensions = [
     "substitution",
 ]
 
-# The published schema URL follows the version RTD is building. The fallback
+# The published schema URLs follow the version RTD is building. The fallback
 # matches the schema version slug configured on RTD for local builds.
-schema_url = (
-    os.environ.get(
-        "READTHEDOCS_CANONICAL_URL", "https://gridkit.readthedocs.io/en/schema/"
-    ).rstrip("/")
-    + "/case.schema.json"
-)
+schema_base_url = os.environ.get(
+    "READTHEDOCS_CANONICAL_URL", "https://gridkit.readthedocs.io/en/schema/"
+).rstrip("/")
+schema_url = f"{schema_base_url}/case.schema.json"
+line_schema_url = f"{schema_base_url}/line.schema.json"
 myst_substitutions = {
     "schema_url": f"<{schema_url}>",
     "schema_example": f'```json\n{{\n  "$schema": "{schema_url}"\n}}\n```',
+    "line_schema_url": f"<{line_schema_url}>",
+    "line_schema_example": (
+        f'```json\n{{\n  "$schema": "{line_schema_url}"\n}}\n```'
+    ),
 }
 myst_fence_as_directive = ["math"]
 myst_heading_anchors = 5

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://gridkit.readthedocs.io/en/latest/line.schema.json",
+  "line": "1.0",
+  "name": "500 kV double-circuit vertical lattice",
+  "description": "Three arm levels per side, twin bundle at 0.457 m, two shield wires at the peak.",
+  "source": "synthetic example; conductor and earth data illustrative",
+
+  "conductors": [
+    { "phase": "a", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "a", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "b", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "b", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "c", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "c", "circuit": 1, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "a", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "a", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "b", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "b", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "c", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "c", "circuit": 2, "radius": 0.01519, "inner_radius": 0.00464, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 18.0 },
+    { "phase": "g", "radius": 0.00457, "inner_radius": 0.0, "conductivity": 5.8e6, "permeability": 1.2566370614e-6, "weight": 4.0 },
+    { "phase": "g", "radius": 0.00457, "inner_radius": 0.0, "conductivity": 5.8e6, "permeability": 1.2566370614e-6, "weight": 4.0 }
+  ],
+
+  "tower": {
+    "x":      [-8.7285, -8.2715, -10.0285, -9.5715, -8.7285, -8.2715, 8.2715, 8.7285, 9.5715, 10.0285, 8.2715, 8.7285, -5.5, 5.5],
+    "height": [30.0, 30.0, 38.0, 38.0, 46.0, 46.0, 30.0, 30.0, 38.0, 38.0, 46.0, 46.0, 53.0, 53.0]
+  },
+
+  "path": {
+    "span": 400.0,
+    "length": 250000.0
+  },
+
+  "earth": {
+    "conductivity": 0.01,
+    "permittivity": 8.8541878128e-12
+  }
+}

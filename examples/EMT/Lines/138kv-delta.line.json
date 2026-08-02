@@ -1,0 +1,33 @@
+{
+  "$schema": "https://gridkit.readthedocs.io/en/latest/line.schema.json",
+  "line": "1.0",
+  "name": "138 kV single-circuit delta",
+  "description": "Single conductor per phase, one shield wire at the peak. Route given as a GIS centreline.",
+  "source": "synthetic example; conductor and earth data illustrative",
+
+  "conductors": [
+    { "phase": "a", "radius": 0.01092, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 9.6 },
+    { "phase": "b", "radius": 0.01092, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 9.6 },
+    { "phase": "c", "radius": 0.01092, "inner_radius": 0.0, "conductivity": 3.5e7, "permeability": 1.2566370614e-6, "weight": 9.6 },
+    { "phase": "g", "radius": 0.00457, "inner_radius": 0.0, "conductivity": 5.8e6, "permeability": 1.2566370614e-6, "weight": 4.0 }
+  ],
+
+  "tower": {
+    "x":      [-3.0, 3.0,  0.0,  0.0],
+    "height": [17.0, 17.0, 21.5, 25.0]
+  },
+
+  "path": {
+    "span": 250.0,
+    "points": [
+      { "latitude": 40.0000, "longitude": -105.2000 },
+      { "latitude": 40.0500, "longitude": -105.1500 },
+      { "latitude": 40.1200, "longitude": -105.1000 }
+    ]
+  },
+
+  "earth": {
+    "conductivity": 0.01,
+    "permittivity": 8.8541878128e-12
+  }
+}

@@ -2,9 +2,7 @@
 
 `Tower` stores conductor attachment coordinates and span-scale geometry.
 
-<p align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/Tower/diagram.png" width="70%">
-</p>
+![Tower model block diagram](../../../../../../docs/Figures/EMT/Tower/diagram.png)
 
 ## Model Parameters
 
@@ -15,15 +13,13 @@ Symbol | Units | JSON | Description | Note
 `conductor` | [-] | - | Static conductor data | [`Conductor`](../Conductor/README.md)
 $x_i$ | [m] | `tower.x` | Horizontal attachment coordinate | real
 $H_i$ | [m] | `tower.height` | Attachment height above earth | $H_i>0$
-$S$ | [m] | `tower.span` | Support-to-support span length | $S>0$
+$S$ | [m] | `path.span` | Support-to-support span length | $S>0$
 $T_i$ | [N] | `tower.tension` | Tension | optional
 
 `Tower` does not own conductor phase labels. Phase labels are conductor
 metadata owned by [`Conductor`](../Conductor/README.md).
 
-<p align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/Tower/arrangement.png" width="70%">
-</p>
+![Conductor attachment arrangement](../../../../../../docs/Figures/EMT/Tower/arrangement.png)
 
 ### Parameter Validation
 
@@ -54,9 +50,7 @@ D'_{ij} &= \sqrt{d_{ij}^2+(h_i+h_j)^2} \\
 Here $w_i$ is supplied by `Conductor`. $\rho_{\mathrm{sag}}$ is one
 conductor-averaged scalar.
 
-<p align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/Tower/images.png" width="70%">
-</p>
+![Image-conductor distances](../../../../../../docs/Figures/EMT/Tower/images.png)
 
 ## Model Variables
 

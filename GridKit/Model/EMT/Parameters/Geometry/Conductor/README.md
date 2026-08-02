@@ -3,9 +3,7 @@
 `Conductor` stores conductor dimensions, material properties, weight, and phase
 labels for the physical conductors in an overhead line.
 
-<p align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/Conductor/diagram.png" width="70%">
-</p>
+![Conductor model block diagram](../../../../../../docs/Figures/EMT/Conductor/diagram.png)
 
 ## Model Parameters
 

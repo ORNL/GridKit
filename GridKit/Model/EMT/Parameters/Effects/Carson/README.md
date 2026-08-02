@@ -9,8 +9,8 @@ Carson's homogeneous-earth return term.
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 `tower` | [-] | - | Static conductor tower | [`Tower`](../../Geometry/Tower/README.md)
-$\sigma_g$ | [S/m] | `earth_conductivity` | Earth conductivity | $\sigma_g\ge0$
-$\varepsilon_g$ | [F/m] | `earth_permittivity` | Earth permittivity | $\varepsilon_g\ge\varepsilon_0$
+$\sigma_g$ | [S/m] | `earth.conductivity` | Earth conductivity | $\sigma_g\ge0$
+$\varepsilon_g$ | [F/m] | `earth.permittivity` | Earth permittivity | $\varepsilon_g\ge\varepsilon_0$
 $\mu_0$ | [H/m] | - | Vacuum permeability | constant
 $\varepsilon_0$ | [F/m] | - | Vacuum permittivity | constant
 
