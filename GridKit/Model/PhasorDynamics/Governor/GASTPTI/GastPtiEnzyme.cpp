@@ -14,6 +14,18 @@ namespace GridKit
   {
     namespace Governor
     {
+      /**
+       * @brief Assemble the sparse GASTPTI Jacobian with Enzyme.
+       *
+       * Differentiates the internal residual with respect to state, derivative,
+       * and linked signal variables, then constructs the model COO matrix.
+       *
+       * @pre allocate() has sized the model and Jacobian index maps.
+       * @pre evaluateResidual() has refreshed the current signal values and
+       *      signal indices.
+       * @pre The containing solver has set the current integration coefficient
+       *      and global variable/residual indices.
+       */
       template <typename scalar_type, typename index_type>
       int GastPti<scalar_type, index_type>::evaluateJacobian()
       {

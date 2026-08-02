@@ -9,12 +9,11 @@ int main()
   result += test.validation();
   result += test.initializationAndSignals();
   result += test.initializationDomain();
+  result += test.initializationExactness();
   result += test.residualEquations();
   result += test.governorControl();
   result += test.temperatureLimiting();
-#ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
-#endif
 
   return result.summary();
 }

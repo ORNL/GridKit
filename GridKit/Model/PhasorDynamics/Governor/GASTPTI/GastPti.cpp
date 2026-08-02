@@ -12,6 +12,9 @@ namespace GridKit
   {
     namespace Governor
     {
+      /**
+       * @brief Report that a separate Jacobian is unavailable in the plain-real build.
+       */
       template <typename scalar_type, typename index_type>
       int GastPti<scalar_type, index_type>::evaluateJacobian()
       {

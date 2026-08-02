@@ -12,6 +12,10 @@ namespace GridKit
   {
     namespace Governor
     {
+      /**
+       * @brief Report that DependencyTracking exposes structure through the
+       *        residual rather than a separately assembled Jacobian.
+       */
       template <typename scalar_type, typename index_type>
       int GastPti<scalar_type, index_type>::evaluateJacobian()
       {

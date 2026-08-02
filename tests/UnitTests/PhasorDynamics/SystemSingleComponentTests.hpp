@@ -296,6 +296,50 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Construct GASTPTI through SystemModel and prove its required pmech
+      /// output aliases the assembled system signal.
+      TestOutcome gastpti()
+      {
+        using GastPti = PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
+        using Vars    = PhasorDynamics::Governor::GastPtiInternalVariables;
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.signal.resize(1);
+        data.signal[0].signal_id = static_cast<IdxT>(1);
+        data.signal[0].name      = "Mechanical Power";
+        data.gastpti.push_back(makeGastPtiData());
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+
+        auto* gastpti  = dynamic_cast<GastPti*>(system.getComponent(0));
+        success       *= gastpti != nullptr;
+        auto* pmech    = system.getSignal(static_cast<IdxT>(1));
+        success       *= pmech != nullptr;
+        if (gastpti != nullptr && pmech != nullptr)
+        {
+          success *= pmech->linked();
+          if (pmech->linked())
+          {
+            success *= pmech->getVariableIndex()
+                       == gastpti->getVariableIndex(static_cast<IdxT>(Vars::PMECH));
+            success *= isEqual(pmech->read(),
+                               gastpti->y().getData()[static_cast<size_t>(Vars::PMECH)],
+                               static_cast<RealT>(1.0e-12));
+          }
+        }
+
+        return success.report(__func__);
+      }
+
       TestOutcome genrou()
       {
         TestStatus success = true;
@@ -442,6 +486,18 @@ namespace GridKit
         data.parameters[Params::VA0]    = static_cast<RealT>(0.4);
         data.parameters[Params::VA1]    = static_cast<RealT>(0.9);
         data.parameters[Params::Vhvmax] = static_cast<RealT>(1.2);
+        return data;
+      }
+
+      auto makeGastPtiData()
+          -> PhasorDynamics::Governor::GastPtiData<RealT, IdxT>
+      {
+        using Outputs = PhasorDynamics::Governor::GastPtiSignalOutputs;
+
+        PhasorDynamics::Governor::GastPtiData<RealT, IdxT> data;
+        data.device_class                   = "GastPti";
+        data.disambiguation_string          = "gastpti_test";
+        data.signal_outputs[Outputs::pmech] = static_cast<IdxT>(1);
         return data;
       }
     };

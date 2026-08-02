@@ -13,57 +13,34 @@
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/ResponseMode.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename scalar_type, typename index_type>
-    class SignalNode;
-
     namespace Governor
     {
-      /// Internal variables of a `GastPti`.
+      /// Internal variables and residual rows of a `GastPti`.
       enum class GastPtiInternalVariables : size_t
       {
-        XVALVE, ///< Fuel-valve state
-        XFLOW,  ///< Fuel-flow state
-        XTEMP,  ///< Exhaust-temperature feedback state
-        VLOAD,  ///< Speed/load fuel demand
-        VTEMP,  ///< Temperature-limit fuel demand
-        VLV,    ///< LV gate output
-        PMECH,  ///< Mechanical power output
-        MAXIMUM,
+        XVALVE, ///< \f$x_V\f$ Differential fuel-valve state on component base [p.u.]
+        XFLOW,  ///< \f$x_F\f$ Differential fuel-flow state on component base [p.u.]
+        XTEMP,  ///< \f$x_T\f$ Differential exhaust-temperature feedback state on component base [p.u.]
+        VLOAD,  ///< \f$V_D\f$ Algebraic speed/load fuel demand on component base [p.u.]
+        VTEMP,  ///< \f$V_T\f$ Algebraic temperature-limit demand on component base [p.u.]
+        VLV,    ///< \f$V\f$ Algebraic smooth low-value selector output on component base [p.u.]
+        PMECH,  ///< \f$P_{\text{m}}\f$ Algebraic mechanical-power output on system base [p.u.]
+        MAXIMUM ///< Number of GASTPTI internal variables and residual rows
       };
 
-      /// External variables of a `GastPti`.
+      /// External signal variables read or initialized by a `GastPti`.
       enum class GastPtiExternalVariables : size_t
       {
-        OMEGA, ///< Machine speed deviation
-        PREF,  ///< Active-power/load reference
-        MAXIMUM,
-      };
-
-      /// Indices into the GASTPTI state, derivative, and residual vectors.
-      struct GastPtiIdx
-      {
-        static constexpr size_t XVALVE  = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
-        static constexpr size_t XFLOW   = static_cast<size_t>(GastPtiInternalVariables::XFLOW);
-        static constexpr size_t XTEMP   = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
-        static constexpr size_t VLOAD   = static_cast<size_t>(GastPtiInternalVariables::VLOAD);
-        static constexpr size_t VTEMP   = static_cast<size_t>(GastPtiInternalVariables::VTEMP);
-        static constexpr size_t VLV     = static_cast<size_t>(GastPtiInternalVariables::VLV);
-        static constexpr size_t PMECH   = static_cast<size_t>(GastPtiInternalVariables::PMECH);
-        static constexpr size_t MAXIMUM = static_cast<size_t>(GastPtiInternalVariables::MAXIMUM);
-      };
-
-      /// Indices into the GASTPTI external-signal buffers.
-      struct GastPtiExt
-      {
-        static constexpr size_t OMEGA   = static_cast<size_t>(GastPtiExternalVariables::OMEGA);
-        static constexpr size_t PREF    = static_cast<size_t>(GastPtiExternalVariables::PREF);
-        static constexpr size_t MAXIMUM = static_cast<size_t>(GastPtiExternalVariables::MAXIMUM);
+        OMEGA,  ///< \f$\omega\f$ Machine speed deviation [p.u.]
+        PREF,   ///< \f$P^\mathrm{ref}\f$ Active-power/load reference on system base [p.u.]
+        MAXIMUM ///< Number of GASTPTI external signal variables
       };
 
       template <typename scalar_type, typename index_type>
@@ -88,23 +65,24 @@ namespace GridKit
         using Component<scalar_type, index_type>::yp_;
 
       public:
-        using ScalarT    = scalar_type;
-        using IdxT       = index_type;
-        using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using SignalT    = SignalNode<ScalarT, IdxT>;
-        using ModelDataT = GastPtiData<RealT, IdxT>;
-        using MonitorT   = Model::VariableMonitor<GastPti, GastPtiData>;
+        using ScalarT            = scalar_type;
+        using IdxT               = index_type;
+        using RealT              = typename Component<ScalarT, IdxT>::RealT;
+        using ModelDataT         = GastPtiData<RealT, IdxT>;
+        using MonitorT           = Model::VariableMonitor<GastPti, GastPtiData>;
+        using InternalVariablesT = GastPtiInternalVariables;
+        using ExternalVariablesT = GastPtiExternalVariables;
 
         GastPti();
         explicit GastPti(const ModelDataT& data);
         ~GastPti();
 
-        int setGridKitComponentID(IdxT) override final;
+        int setGridKitComponentID(IdxT component_id) override final;
         int allocate() override final;
         int verify() const override final;
         int initialize() override final;
         int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT) override final;
+        int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
@@ -112,23 +90,41 @@ namespace GridKit
             -> ComponentSignals<ScalarT,
                                 IdxT,
                                 GastPtiInternalVariables,
-                                GastPtiExternalVariables>&
-        {
-          return signals_;
-        }
+                                GastPtiExternalVariables>&;
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+        [[gnu::always_inline]] inline int evaluateInternalResidual(
+            const ScalarT* y,
+            const ScalarT* yp,
+            const ScalarT* wb,
+            const ScalarT* ws,
+            ScalarT*       f);
 
       private:
-        void initializeParameters(const ModelDataT& data);
-        void initializeMonitor();
-        void setDerivedParameters();
+        static constexpr size_t index(GastPtiInternalVariables variable)
+        {
+          return static_cast<size_t>(variable);
+        }
 
-        ScalarT toComponentBase(ScalarT value) const;
-        ScalarT toSystemBase(ScalarT value) const;
+        static constexpr size_t index(GastPtiExternalVariables variable)
+        {
+          return static_cast<size_t>(variable);
+        }
+
+        static void checkConfiguration(bool condition, const char* message, int& errors);
+        void        loadRealParameter(const ModelDataT& data,
+                                      GastPtiParameters parameter,
+                                      RealT&            target,
+                                      const char*       name);
+        bool        floorTimeConstant(RealT& value, const char* name);
+        void        initializeParameters(const ModelDataT& data);
+        void        initializeMonitor();
+        void        setDerivedParameters();
+
+        static RealT                              iramp(RealT value);
+        [[gnu::always_inline]] inline scalar_type toComponentBase(scalar_type value) const;
+        RealT                                     toSystemBase(RealT value) const;
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
 
@@ -145,7 +141,9 @@ namespace GridKit
         ResponseMode mode_{ResponseMode::Normal};
 
         RealT va_component_base_{ZERO<RealT>};
-        RealT sfix_{ONE<RealT>};
+        RealT Vmin_response_{ZERO<RealT>};
+        RealT Vmax_response_{ONE<RealT>};
+        RealT s_valve_{ONE<RealT>};
 
         IdxT parameter_error_count_{0};
 
