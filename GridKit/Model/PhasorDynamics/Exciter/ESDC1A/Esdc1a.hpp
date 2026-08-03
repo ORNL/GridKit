@@ -127,6 +127,11 @@ namespace GridKit
         void initializeMonitor();
         void setDerivedParameters();
 
+        static __attribute__((always_inline)) inline ScalarT awmin(
+            ScalarT x,
+            ScalarT f,
+            RealT   xmin);
+
         /// Recover the input that the smooth CommonMath ramp maps to a
         /// requested strictly positive output.
         RealT inverseRamp(RealT ramp_output) const;

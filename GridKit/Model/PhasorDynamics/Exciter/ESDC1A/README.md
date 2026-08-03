@@ -40,7 +40,7 @@ $S_E(E_1)$                          | [p.u.]    | `Se1`     | Saturation coeffic
 $E_2$                               | [p.u.]    | `E2`      | Second saturation voltage point                 | 3.7
 $S_E(E_2)$                          | [p.u.]    | `Se2`     | Saturation coefficient at $E_2$                 | 0.33
 $I_{\mathrm{UEL}}$                  | [integer] | `UEL`     | Under-excitation limiter input-routing selector | 0
-$s_{\mathrm{lim}}$                  | [binary]  | `exclim`  | Exciter feedback lower-limit flag               | 1
+$s_{\mathrm{lim}}$                  | [binary]  | `exclim`  | Exciter field-voltage-state lower-limit flag     | 1
 
 Every parameter is optional.
 
@@ -170,14 +170,21 @@ $V_{\mathrm{UEL}}$                  | [p.u.] | Known   | Under-excitation limite
 
 ## Model Equations
 
+Define the pre-limit exciter field-voltage rate:
+
+```math
+r_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
+```
+
 ### Differential Equations
 
 ```math
 \begin{aligned}
   0 &=
     -\dot{E}_{\mathrm{fd}}'
-    + \dfrac{1}{T_E}
-      \left(V_R - V_{\mathrm{FE}}\right) \\
+    + \left(1-s_{\mathrm{lim}}\right)r_E
+    + s_{\mathrm{lim}}\,
+      \text{awmin}\left(E_{\mathrm{fd}}',r_E;0\right) \\
   0 &=
     -\dot{V}_C
     + \dfrac{1}{T_R}
@@ -210,7 +217,16 @@ $V_{\mathrm{UEL}}$                  | [p.u.] | Known   | Under-excitation limite
 ```
 
 CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
-target and smooth approximation.
+target and smooth approximation. ESDC1A uses its fixed-lower-bound form,
+
+```math
+\text{awmin}(x,f;\ell)
+  \approx
+  \left[
+    \text{above}(x;\ell)
+    + \left(1-\text{above}(x;\ell)\right)\sigma(f)
+  \right]f.
+```
 
 ### Algebraic Equations
 
@@ -241,12 +257,7 @@ target and smooth approximation.
     + S_B q\left(E_{\mathrm{fd}}' - S_A\right) \\
   0 &=
     -V_{\mathrm{FE}}
-    + \begin{cases}
-        \left(K_E + S_E\right)E_{\mathrm{fd}}'
-          & s_{\mathrm{lim}} = 0 \\
-        \rho\!\left(\left(K_E + S_E\right)E_{\mathrm{fd}}'\right)
-          & s_{\mathrm{lim}} = 1
-      \end{cases} \\
+    + \left(K_E + S_E\right)E_{\mathrm{fd}}' \\
   0 &=
     -E_{\mathrm{fd}}
     + \left(1 + s_{\mathrm{spd}}\omega\right)E_{\mathrm{fd}}'
@@ -296,13 +307,7 @@ routed through the gate:
   S_E
     &\leftarrow S_B q\left(E_{\mathrm{fd}}' - S_A\right) \\
   V_{\mathrm{FE}}
-    &\leftarrow
-      \begin{cases}
-        \left(K_E + S_E\right)E_{\mathrm{fd}}'
-          & s_{\mathrm{lim}} = 0 \\
-        \rho\!\left(\left(K_E + S_E\right)E_{\mathrm{fd}}'\right)
-          & s_{\mathrm{lim}} = 1
-      \end{cases} \\
+    &\leftarrow \left(K_E + S_E\right)E_{\mathrm{fd}}' \\
   V_R
     &\leftarrow V_{\mathrm{FE}} \\
   V_{\mathrm{HV}}
@@ -327,6 +332,7 @@ routed through the gate:
 ```
 
 Initialization rejects a non-finite bus voltage or field-voltage seed,
+$E_{\mathrm{fd}}'<0$ while $s_{\mathrm{lim}}=1$,
 $1 + s_{\mathrm{spd}}\omega = 0$, $V_R$ outside
 $[V_R^{\min},V_R^{\max}]$, and high-value-gate active starts with
 $s_{\mathrm{UEL}} = 0$ and
@@ -377,7 +383,7 @@ Output          | Units  | Description                         | Note
   numerical answer key.
 - `voltageRegulation()` checks the transducer, summing junction, lead-lag,
   stabilizing feedback, and regulator anti-windup behavior.
-- `excitationLimits()` checks high-value-gate routing, saturation, exciter
-  limiting, and the optional speed multiplier.
+- `excitationLimits()` checks high-value-gate routing, saturation,
+  field-voltage-state limiting, and the optional speed multiplier.
 - `jacobian()` compares the dependency-tracking and Enzyme Jacobians when
   Enzyme support is enabled.

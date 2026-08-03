@@ -280,11 +280,15 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT efdp0      = efd0 / d0;
-        const ScalarT se0        = SB_ * Math::qramp(efdp0 - SA_);
-        const ScalarT vfe_drive0 = (Ke_ + se0) * efdp0;
-        const ScalarT vfe0 =
-            (ONE<RealT> - lim_on_) * vfe_drive0 + lim_on_ * Math::ramp(vfe_drive0);
+        const ScalarT efdp0 = efd0 / d0;
+        if (exclim_ && efdp0 < ZERO<RealT>)
+        {
+          Log::error() << "Esdc1a: initial Efd' is below its enabled zero limit\n";
+          return 1;
+        }
+
+        const ScalarT se0  = SB_ * Math::qramp(efdp0 - SA_);
+        const ScalarT vfe0 = (Ke_ + se0) * efdp0;
         const ScalarT vr0  = vfe0;
         const ScalarT vhv0 = vr0 / Ka_;
 
@@ -522,22 +526,24 @@ namespace GridKit
         const ScalarT vs    = ws[VS];
         const ScalarT vuel  = ws[VUEL];
 
-        const ScalarT ec        = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
-        const ScalarT ev_target = vref + vs + uel_on_ * vuel - vc - vf;
-        const ScalarT vfe_drive = (Ke_ + se) * efdp;
+        const ScalarT ec                = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
+        const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
+        const ScalarT vfe_target        = (Ke_ + se) * efdp;
+        const ScalarT efdp_rate         = (vr - vfe) / Te_;
+        const ScalarT limited_efdp_rate = awmin(efdp, efdp_rate, ZERO<RealT>);
 
-        f[EFDP] = -efdp_dot + (vr - vfe) / Te_;
-        f[VC]   = -vc_dot + (ec - vc) / Tr_;
-        f[VR]   = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
-        f[VF]   = -vf_dot + (-vf + Kf_ * (vr - vfe) / Te_) / Tf1_;
-        f[XLL]  = -xll_dot + (ev - xll) / Tb_;
-        f[EV]   = -ev + ev_target;
-        f[VLL]  = -vll + xll + (Tc_ / Tb_) * (ev - xll);
-        f[VHV]  = -vhv + uel_on_ * vll
+        f[EFDP] = -efdp_dot + (ONE<RealT> - lim_on_) * efdp_rate
+                  + lim_on_ * limited_efdp_rate;
+        f[VC]  = -vc_dot + (ec - vc) / Tr_;
+        f[VR]  = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
+        f[VF]  = -vf_dot + (-vf + Kf_ * (vr - vfe) / Te_) / Tf1_;
+        f[XLL] = -xll_dot + (ev - xll) / Tb_;
+        f[EV]  = -ev + ev_target;
+        f[VLL] = -vll + xll + (Tc_ / Tb_) * (ev - xll);
+        f[VHV] = -vhv + uel_on_ * vll
                  + (ONE<RealT> - uel_on_) * Math::max(vll, vuel);
         f[SE]  = -se + SB_ * Math::qramp(efdp - SA_);
-        f[VFE] = -vfe + (ONE<RealT> - lim_on_) * vfe_drive
-                 + lim_on_ * Math::ramp(vfe_drive);
+        f[VFE] = -vfe + vfe_target;
         f[EFD] = -efd + (ONE<RealT> + spd_on_ * omega) * efdp;
 
         return 0;
@@ -546,6 +552,29 @@ namespace GridKit
       //
       //  Private methods
       //
+
+      /**
+       * @brief Smooth anti-windup derivative above a fixed lower bound
+       *
+       * Passes the unconstrained rate above the bound, admits restoring
+       * motion from below it, and smoothly blocks outward motion.
+       *
+       * @param[in] x State limited from below.
+       * @param[in] f Unconstrained derivative of @p x.
+       * @param[in] xmin Fixed lower bound on @p x.
+       * @return Anti-windup-limited derivative.
+       */
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline scalar_type
+      Esdc1a<scalar_type, index_type>::awmin(
+          const ScalarT x,
+          const ScalarT f,
+          const RealT   xmin)
+      {
+        const ScalarT above = Math::above(x, xmin);
+
+        return (above + (ONE<RealT> - above) * Math::sigmoid(f)) * f;
+      }
 
       /**
        * @brief Read the parameters out of the model data

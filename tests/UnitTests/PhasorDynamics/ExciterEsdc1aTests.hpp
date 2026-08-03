@@ -302,6 +302,16 @@ namespace GridKit
                                                                                    {External::VUEL, -77.0}},
                                                     "zero speed-multiplier denominator");
 
+        // The enabled exciter lower limit rejects a negative field-voltage
+        // state before initialization writes any storage.
+        success *= initializationRejectedAtomically(makeData(),
+                                                    -0.2,
+                                                    {{External::OMEGA, 0.0},
+                                                     {External::VREF, 77.0},
+                                                     {External::VS, 77.0},
+                                                     {External::VUEL, -0.5}},
+                                                    "field-voltage state below zero limit");
+
         // The seeded field voltage maps to a regulator output above Vrmax.
         auto limit_data                       = makeData();
         limit_data.parameters[Params::Vrmax]  = 0.05;
@@ -348,6 +358,24 @@ namespace GridKit
         }
         success *= vectorUnchanged(invalid_fixture.esdc1a.y(), invalid_y, "state");
         success *= vectorUnchanged(invalid_fixture.esdc1a.yp(), invalid_yp, "derivative");
+
+        // The zero boundary is admissible, and disabling the limiter admits
+        // the same negative seed rejected above.
+        Fixture<ScalarT> zero_boundary(makeData());
+        zero_boundary.attachAllInputs();
+        zero_boundary.input(External::VUEL)  = -0.5;
+        success                             *= zero_boundary.initialize(0.0);
+        success                             *= (zero_boundary.evaluate() == 0);
+        success                             *= allResidualsZero(zero_boundary.esdc1a);
+
+        auto unlimited_data                       = makeData();
+        unlimited_data.parameters[Params::exclim] = false;
+        Fixture<ScalarT> unlimited(unlimited_data);
+        unlimited.attachAllInputs();
+        unlimited.input(External::VUEL)  = -0.5;
+        success                         *= unlimited.initialize(-0.2);
+        success                         *= (unlimited.evaluate() == 0);
+        success                         *= allResidualsZero(unlimited.esdc1a);
 
         // A depressed speed input rescales the seed without rejection.
         auto admissible_speed                       = makeData();
@@ -520,9 +548,9 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// High-value gate selection, quadratic saturation, the exciter
-      /// feedback lower limit, and the speed multiplier at driven states
-      /// with literal expectations.
+      /// High-value gate selection, quadratic saturation, field-voltage-state
+      /// limiting, and the speed multiplier at driven states with literal
+      /// expectations.
       TestOutcome excitationLimits()
       {
         TestStatus success = true;
@@ -579,30 +607,88 @@ namespace GridKit
         success *= (disabled.evaluate() == 0);
         success *= residualsMatch(disabled.esdc1a, {{Internal::SE, -0.05}}, "saturation disabled");
 
-        // The exciter feedback lower limit clamps a negative feedback drive
-        // to zero only while enabled.
+        // The field-voltage-state lower limit blocks outward motion, admits
+        // restoring motion, and preserves the CommonMath transition at zero.
+        struct FieldLimitCase
+        {
+          const char* label;
+          bool        enabled;
+          RealT       efdp;
+          RealT       vr;
+          RealT       expected;
+        };
+
+        const std::array<FieldLimitCase, 5> field_limit_cases{{
+            {"below zero blocks an outward field-voltage rate", true, -0.2, -0.1, 0.0},
+            {"zero retains the smooth lower-limit transition", true, 0.0, -0.1, -0.1},
+            {"above zero admits a downward field-voltage rate", true, 0.2, -0.1, -0.2},
+            {"below zero admits a restoring field-voltage rate", true, -0.2, 0.1, 0.2},
+            {"disabled lower limit admits an outward rate", false, -0.2, -0.1, -0.2},
+        }};
+
+        for (const auto& test_case : field_limit_cases)
+        {
+          auto data                       = makeData();
+          data.parameters[Params::exclim] = test_case.enabled;
+          Fixture<ScalarT> limit(data);
+          limit.attachAllInputs();
+          success *= limit.initialize(1.2);
+          setState(limit.esdc1a,
+                   {{Internal::EFDP, test_case.efdp},
+                    {Internal::VR, test_case.vr},
+                    {Internal::VFE, 0.0}});
+          setDerivative(limit.esdc1a, {{Internal::EFDP, 0.0}});
+          success *= (limit.evaluate() == 0);
+          success *= residualsMatch(limit.esdc1a,
+                                    {{Internal::EFDP, test_case.expected}},
+                                    test_case.label);
+        }
+
+        // The lower-limit selector does not alter the algebraic exciter
+        // feedback drive.
         auto feedback_data                    = makeData();
         feedback_data.parameters[Params::Ke]  = -0.2;
         feedback_data.parameters[Params::Se1] = 0.0;
         feedback_data.parameters[Params::Se2] = 0.0;
-
-        for (const auto& [limited, expected] : std::array<std::pair<bool, RealT>, 2>{{
-                 {true, 0.0},
-                 {false, -0.2},
-             }})
+        for (const bool enabled : {false, true})
         {
           auto data                       = feedback_data;
-          data.parameters[Params::exclim] = limited;
+          data.parameters[Params::exclim] = enabled;
           Fixture<ScalarT> feedback(data);
           feedback.attachAllInputs();
           feedback.input(External::VUEL)  = -0.5;
           success                        *= feedback.initialize(1.2);
-          setState(feedback.esdc1a, {{Internal::EFDP, 1.0}, {Internal::SE, 0.0}, {Internal::VFE, 0.0}});
+          setState(feedback.esdc1a,
+                   {{Internal::EFDP, 1.0}, {Internal::SE, 0.0}, {Internal::VFE, 0.0}});
           success *= (feedback.evaluate() == 0);
           success *= residualsMatch(feedback.esdc1a,
-                                    {{Internal::VFE, expected}},
-                                    limited ? "feedback lower limit engaged"
-                                            : "feedback lower limit disabled");
+                                    {{Internal::VFE, -0.2}},
+                                    enabled ? "feedback with lower limit enabled"
+                                            : "feedback with lower limit disabled");
+        }
+
+        // At the lower-limit transition, pin the assembled alpha = 1
+        // field-voltage-state row independently of either Jacobian backend.
+        {
+          using DepVar = DependencyTracking::Variable;
+
+          Fixture<DepVar> transition(makeData());
+          transition.attachAllInputs();
+          success *= transition.initialize(1.2);
+          setState(transition.esdc1a,
+                   {{Internal::EFDP, 0.0}, {Internal::VR, -0.1}, {Internal::VFE, 0.0}});
+          setDerivative(transition.esdc1a, {{Internal::EFDP, 0.0}});
+          numberVariables(transition);
+          success *= (transition.evaluate() == 0);
+
+          const auto& dependencies =
+              transition.esdc1a.getResidual().getData()[static_cast<size_t>(Internal::EFDP)].getDependencies();
+          const DepVar::DependencyMap expected{{
+              {static_cast<size_t>(Internal::EFDP), -13.0},
+              {static_cast<size_t>(Internal::VR), 1.0},
+              {static_cast<size_t>(Internal::VFE), -1.0},
+          }};
+          success *= isEqual(dependencies, expected, kJacobianTol);
         }
 
         // The speed multiplier scales the published field voltage only when
@@ -1171,7 +1257,6 @@ namespace GridKit
         Log::setVerbosity(previous_verbosity);
       }
 
-#ifdef GRIDKIT_ENABLE_ENZYME
       void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const
       {
         auto* y     = fixture.esdc1a.y().getData();
@@ -1198,6 +1283,7 @@ namespace GridKit
         fixture.bus.y().setDataUpdated();
       }
 
+#ifdef GRIDKIT_ENABLE_ENZYME
       std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian(
           const Data& data,
           TestStatus& success) const
