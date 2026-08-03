@@ -681,7 +681,7 @@ namespace GridKit
       return copyDataFrom(row_data, col_data, val_data, memspace_in, memspace_out);
     }
 
-    template <typename real_type, typename IdxT>
+    template <typename real_type, typename index_type>
     int CsrMatrix<real_type, IdxT>::allocateMatrixData(memory::MemorySpace memspace)
     {
       IdxT nnz_current = nnz_;
