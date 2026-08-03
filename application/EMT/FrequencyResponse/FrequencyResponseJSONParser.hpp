@@ -175,6 +175,18 @@ namespace GridKit
           data.ida.suppress_algebraic_error =
               ida.value("suppress_algebraic_error",
                         data.ida.suppress_algebraic_error);
+
+          data.ida.tolerance = ida.value("tolerance", data.ida.tolerance);
+          if (!std::isfinite(data.ida.tolerance) || data.ida.tolerance <= 0.0)
+          {
+            throw std::runtime_error("ida: \"tolerance\" must be positive");
+          }
+
+          data.ida.max_steps = ida.value("max_steps", data.ida.max_steps);
+          if (data.ida.max_steps == 0)
+          {
+            throw std::runtime_error("ida: \"max_steps\" must be positive");
+          }
         }
 
         const auto& frequency = j.at("frequency");

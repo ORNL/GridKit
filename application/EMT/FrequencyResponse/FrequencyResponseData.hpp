@@ -30,7 +30,9 @@ namespace GridKit
       /// IDA solver settings for the frequency sweep.
       struct IdaSettings
       {
-        bool suppress_algebraic_error{true};
+        bool   suppress_algebraic_error{true};
+        double tolerance{1.0e-7}; ///< Relative tolerance.
+        size_t max_steps{200000}; ///< Maximum internal solver steps.
       };
 
       struct FrequencyResponseData

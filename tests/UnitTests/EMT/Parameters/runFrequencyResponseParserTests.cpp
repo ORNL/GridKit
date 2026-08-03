@@ -12,7 +12,7 @@
 #include <GridKit/Model/EMT/Parameters/OverheadDataJSONParser.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-#include <application/EMT/FrequencyResponseJSONParser.hpp>
+#include <application/EMT/FrequencyResponse/FrequencyResponseJSONParser.hpp>
 
 namespace
 {

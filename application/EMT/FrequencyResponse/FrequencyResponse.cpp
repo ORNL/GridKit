@@ -6,19 +6,15 @@
  */
 
 #include <chrono>
-#include <cmath>
 #include <filesystem>
 #include <iostream>
 
-#include <GridKit/Model/EMT/Constants.hpp>
-#include <GridKit/Model/EMT/Parameters/Overhead.hpp>
 #include <GridKit/Model/EMT/Parameters/OverheadDataJSONParser.hpp>
-#include <GridKit/Model/LogEvaluator.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
-#include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 #include "FrequencyResponseJSONParser.hpp"
+#include "FrequencySweep.hpp"
 
 using scalar_type = double;
 using index_type  = size_t;
@@ -43,7 +39,6 @@ namespace
 
   int runFrequencyResponse(const fs::path& solver_file)
   {
-    using namespace AnalysisManager::Sundials;
     using namespace GridKit::EMT::Application;
     using namespace GridKit::EMT::Parameters;
 
@@ -54,31 +49,9 @@ namespace
     data.monitor_sink        = {{GridKit::Model::VariableMonitorFormat::CSV,
                                  spec.output_file.string()}};
 
-    constexpr scalar_type pi          = GridKit::EMT::Constants::pi<scalar_type>();
-    const scalar_type     omega_start = 2.0 * pi * spec.frequency.start;
-    const scalar_type     omega_stop  = 2.0 * pi * spec.frequency.stop;
-
-    Overhead<scalar_type, index_type>                     model(data);
-    GridKit::Model::LogEvaluator<scalar_type, index_type> log_model(model, omega_start);
-    log_model.allocate();
-
-    const scalar_type s_start = std::log(omega_start);
-    const scalar_type s_stop  = std::log(omega_stop);
-
-    Ida<scalar_type, index_type> ida(&log_model);
-    ida.setSuppressAlgebraicErrors(spec.ida.suppress_algebraic_error);
-    ida.setTolerance(1.0e-7);
-    ida.setMaxSteps(200000);
-    ida.configureSimulation();
-    ida.initializeSimulation(s_start, true);
-
-    log_model.printMonitoredVariables();
-    const scalar_type dt_monitor =
-        (s_stop - s_start) / static_cast<scalar_type>(spec.frequency.points - 1);
-    ida.runSimulation(s_stop, dt_monitor);
-    log_model.stopMonitor();
-
-    return 0;
+    return runFrequencySweep<scalar_type, index_type>(data,
+                                                      spec.frequency,
+                                                      spec.ida);
   }
 } // namespace
 

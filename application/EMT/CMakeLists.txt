@@ -1,12 +1,4 @@
-add_executable(FrequencyResponse FrequencyResponse.cpp)
-target_link_libraries(
-  FrequencyResponse
-  PUBLIC GridKit::emt_overhead GridKit::solvers_dyn GridKit::Utilities)
-target_include_directories(
-  FrequencyResponse
-  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
+add_subdirectory(FrequencyResponse)
 
-install(
-  TARGETS FrequencyResponse
-  EXPORT gridkit-targets
-  RUNTIME)
+# Pending the GridKit::vector_fitting implementation.
+# add_subdirectory(UniversalLineModel)
