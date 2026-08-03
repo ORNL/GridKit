@@ -1350,35 +1350,62 @@ namespace GridKit
           return false;
         }
 
-        success &= (implicit_defaults.repca.evaluateResidual() == 0);
-        success &= (explicit_defaults.repca.evaluateResidual() == 0);
-        success &= vectorsMatch(implicit_defaults.repca.y(),
-                                explicit_defaults.repca.y(),
-                                "documented-default state");
-        success &= vectorsMatch(implicit_defaults.repca.yp(),
-                                explicit_defaults.repca.yp(),
-                                "documented-default derivative");
-        success &= vectorsMatch(implicit_defaults.repca.getResidual(),
-                                explicit_defaults.repca.getResidual(),
-                                "documented-default residual");
+        if (implicit_defaults.repca.evaluateResidual() != 0)
+        {
+          success = false;
+        }
+        if (explicit_defaults.repca.evaluateResidual() != 0)
+        {
+          success = false;
+        }
+        if (!vectorsMatch(implicit_defaults.repca.y(),
+                          explicit_defaults.repca.y(),
+                          "documented-default state"))
+        {
+          success = false;
+        }
+        if (!vectorsMatch(implicit_defaults.repca.yp(),
+                          explicit_defaults.repca.yp(),
+                          "documented-default derivative"))
+        {
+          success = false;
+        }
+        if (!vectorsMatch(implicit_defaults.repca.getResidual(),
+                          explicit_defaults.repca.getResidual(),
+                          "documented-default residual"))
+        {
+          success = false;
+        }
         for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
         {
-          success &= rowMatches(implicit_defaults.input(port),
-                                explicit_defaults.input(port),
-                                "documented-default signal",
-                                port,
-                                "");
+          if (!rowMatches(implicit_defaults.input(port),
+                          explicit_defaults.input(port),
+                          "documented-default signal",
+                          port,
+                          ""))
+          {
+            success = false;
+          }
         }
 
         setAnswerKeyInputs(implicit_defaults);
         setAnswerKeyInputs(explicit_defaults);
         setAnswerKeyState(implicit_defaults.repca);
         setAnswerKeyState(explicit_defaults.repca);
-        success &= (implicit_defaults.repca.evaluateResidual() == 0);
-        success &= (explicit_defaults.repca.evaluateResidual() == 0);
-        success &= vectorsMatch(implicit_defaults.repca.getResidual(),
-                                explicit_defaults.repca.getResidual(),
-                                "documented-default dynamic residual");
+        if (implicit_defaults.repca.evaluateResidual() != 0)
+        {
+          success = false;
+        }
+        if (explicit_defaults.repca.evaluateResidual() != 0)
+        {
+          success = false;
+        }
+        if (!vectorsMatch(implicit_defaults.repca.getResidual(),
+                          explicit_defaults.repca.getResidual(),
+                          "documented-default dynamic residual"))
+        {
+          success = false;
+        }
         return success;
       }
 
@@ -1457,17 +1484,35 @@ namespace GridKit
           success = false;
         }
 
-        success &= valueUnchanged(fixture.qext(), qext, "qext signal", index(Vars::QEXT));
-        success &= valueUnchanged(fixture.pext(), pext, "pext signal", index(Vars::PEXT));
-        success &= vectorUnchanged(fixture.repca.y(), y_before, "state");
-        success &= vectorUnchanged(fixture.repca.yp(), yp_before, "derivative");
-        success &= vectorUnchanged(fixture.bus.y(), bus_before, "bus state");
+        if (!valueUnchanged(fixture.qext(), qext, "qext signal", index(Vars::QEXT)))
+        {
+          success = false;
+        }
+        if (!valueUnchanged(fixture.pext(), pext, "pext signal", index(Vars::PEXT)))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.repca.y(), y_before, "state"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.repca.yp(), yp_before, "derivative"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.bus.y(), bus_before, "bus state"))
+        {
+          success = false;
+        }
         for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
         {
-          success &= valueUnchanged(fixture.input(port),
-                                    inputs_before[port],
-                                    "external signal",
-                                    port);
+          if (!valueUnchanged(fixture.input(port),
+                              inputs_before[port],
+                              "external signal",
+                              port))
+          {
+            success = false;
+          }
         }
         return success;
       }
@@ -1613,11 +1658,14 @@ namespace GridKit
 
         for (size_t i = 0; i < expected.size(); ++i)
         {
-          success &= rowMatches(values[i + 1],
-                                expected[i],
-                                "monitor",
-                                i,
-                                context);
+          if (!rowMatches(values[i + 1],
+                          expected[i],
+                          "monitor",
+                          i,
+                          context))
+          {
+            success = false;
+          }
         }
         return success;
       }
@@ -1651,11 +1699,14 @@ namespace GridKit
           const auto& [variable, expected] = rows[i];
           const size_t row                 = index(variable);
 
-          success &= variableMatches(static_cast<RealT>(values[row]),
-                                     expected,
-                                     what,
-                                     variable,
-                                     context);
+          if (!variableMatches(static_cast<RealT>(values[row]),
+                               expected,
+                               what,
+                               variable,
+                               context))
+          {
+            success = false;
+          }
         }
         return success;
       }
@@ -1681,17 +1732,23 @@ namespace GridKit
         const auto* yp      = repca.yp().getData();
         for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
         {
-          const auto variable  = static_cast<Vars>(row);
-          success             &= variableMatches(f[row],
-                                     0.0,
-                                     "residual",
-                                     variable,
-                                     "at rest");
-          success             &= variableMatches(yp[row],
-                                     0.0,
-                                     "derivative",
-                                     variable,
-                                     "at rest");
+          const auto variable = static_cast<Vars>(row);
+          if (!variableMatches(f[row],
+                               0.0,
+                               "residual",
+                               variable,
+                               "at rest"))
+          {
+            success = false;
+          }
+          if (!variableMatches(yp[row],
+                               0.0,
+                               "derivative",
+                               variable,
+                               "at rest"))
+          {
+            success = false;
+          }
         }
         return success;
       }
@@ -1717,10 +1774,13 @@ namespace GridKit
         const auto* values  = vector.getData();
         for (size_t row = 0; row < snapshot.size(); ++row)
         {
-          success &= valueUnchanged(static_cast<RealT>(values[row]),
-                                    snapshot[row],
-                                    what,
-                                    row);
+          if (!valueUnchanged(static_cast<RealT>(values[row]),
+                              snapshot[row],
+                              what,
+                              row))
+          {
+            success = false;
+          }
         }
         return success;
       }
@@ -1740,11 +1800,14 @@ namespace GridKit
         const auto* right_values = right.getData();
         for (size_t row = 0; row < static_cast<size_t>(left.getSize()); ++row)
         {
-          success &= rowMatches(static_cast<RealT>(left_values[row]),
-                                static_cast<RealT>(right_values[row]),
-                                what,
-                                row,
-                                "");
+          if (!rowMatches(static_cast<RealT>(left_values[row]),
+                          static_cast<RealT>(right_values[row]),
+                          what,
+                          row,
+                          ""))
+          {
+            success = false;
+          }
         }
         return success;
       }
