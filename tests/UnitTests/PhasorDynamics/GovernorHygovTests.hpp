@@ -46,9 +46,9 @@ namespace GridKit
           static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Construction and every verify() error class, including parameter
-      /// types, parameter relationships, curve shape, gate-limit domain,
-      /// the required pmech assignment, and signal linkage, plus
-      /// differentiability tagging.
+      /// types and finiteness, parameter relationships, power bases, curve
+      /// shape, gate-limit domain, the required pmech assignment, and signal
+      /// linkage, plus differentiability tagging.
       TestOutcome validation()
       {
         TestStatus success = true;
@@ -70,6 +70,49 @@ namespace GridKit
         success *= defaultsMatchDocumentedValues();
 
         success *= (empty.verify() > 0);
+
+        const RealT nan      = std::numeric_limits<RealT>::quiet_NaN();
+        const RealT infinity = std::numeric_limits<RealT>::infinity();
+
+        for (const Params parameter : std::array<Params, 30>{{
+                 Params::Trate,
+                 Params::Rperm,
+                 Params::Rtemp,
+                 Params::Tr,
+                 Params::Tf,
+                 Params::Tg,
+                 Params::Velm,
+                 Params::Gmax,
+                 Params::Gmin,
+                 Params::Tw,
+                 Params::At,
+                 Params::Dturb,
+                 Params::Qnl,
+                 Params::Tn,
+                 Params::Tnp,
+                 Params::db1,
+                 Params::db2,
+                 Params::Hdam,
+                 Params::Gv0,
+                 Params::Gv1,
+                 Params::Gv2,
+                 Params::Gv3,
+                 Params::Gv4,
+                 Params::Gv5,
+                 Params::Pgv0,
+                 Params::Pgv1,
+                 Params::Pgv2,
+                 Params::Pgv3,
+                 Params::Pgv4,
+                 Params::Pgv5,
+             }})
+        {
+          for (const RealT value : std::array<RealT, 3>{{nan, infinity, -infinity}})
+          {
+            Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
+            success *= (invalid_fixture.hygov.verify() > 0);
+          }
+        }
 
         // The pmech output is required, so a model without an assigned node
         // is rejected even when every parameter is valid.
@@ -139,6 +182,29 @@ namespace GridKit
         bad_numeric_type.parameters[Params::Trate] = true;
         Fixture<ScalarT> bad_numeric_model(bad_numeric_type);
         success *= (bad_numeric_model.hygov.verify() > 0);
+
+        Fixture<ScalarT> overflowing_component_base(
+            makeData(),
+            {{Params::Trate, std::numeric_limits<RealT>::max()}});
+        success *= (overflowing_component_base.hygov.verify() > 0);
+
+        Fixture<ScalarT> overflowing_base_ratio(
+            makeData(),
+            {{Params::Trate, std::numeric_limits<RealT>::min()}});
+        success *= (overflowing_base_ratio.hygov.verify() > 0);
+
+        for (const RealT system_base : std::array<RealT, 6>{{
+                 0.0,
+                 -1.0,
+                 nan,
+                 infinity,
+                 -infinity,
+                 std::numeric_limits<RealT>::min(),
+             }})
+        {
+          Fixture<ScalarT> invalid_base(makeData(), {}, system_base);
+          success *= (invalid_base.hygov.verify() > 0);
+        }
 
         success *= unlinkedSignalRejected<External::OMEGA>();
         success *= unlinkedSignalRejected<External::PREF>();
@@ -261,10 +327,10 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Mechanical-power, gate-limit, and speed-deviation initialization
-      /// domains. Every rejection is atomic; values inside the achievable
-      /// range initialize at rest, and values within the initialization
-      /// tolerance of a range edge pin to the gate limit.
+      /// Mechanical-power, gate-limit, speed-deviation, and finite-input
+      /// initialization domains. Every rejection is atomic; values inside the
+      /// achievable range initialize at rest, and values within the
+      /// initialization tolerance of a range edge pin to the gate limit.
       TestOutcome initializationDomain()
       {
         TestStatus success = true;
@@ -372,10 +438,28 @@ namespace GridKit
             p_min - 2.0 * kTol,
             "twice the tolerance below the achievable minimum");
 
-        // NaN is unreproducible by any gate and must be rejected.
-        Fixture<ScalarT> nan_power_fixture(makeData());
-        success *= nan_power_fixture.prepare(std::numeric_limits<RealT>::quiet_NaN());
-        success *= (nan_power_fixture.hygov.initialize() != 0);
+        const RealT nan      = std::numeric_limits<RealT>::quiet_NaN();
+        const RealT infinity = std::numeric_limits<RealT>::infinity();
+
+        for (const RealT value : std::array<RealT, 3>{{nan, infinity, -infinity}})
+        {
+          Fixture<ScalarT> pmech_fixture(makeData());
+          pmech_fixture.attachAllInputs();
+          success *= pmech_fixture.prepare(value);
+          success *= (pmech_fixture.hygov.initialize() != 0);
+
+          Fixture<ScalarT> omega_fixture(makeData());
+          omega_fixture.attachAllInputs();
+          success                              *= omega_fixture.prepare(0.4);
+          omega_fixture.input(External::OMEGA)  = value;
+          success                              *= (omega_fixture.hygov.initialize() != 0);
+
+          Fixture<ScalarT> paux_fixture(makeData());
+          paux_fixture.attachAllInputs();
+          success                            *= paux_fixture.prepare(0.4);
+          paux_fixture.input(External::PAUX)  = value;
+          success                            *= (paux_fixture.hygov.initialize() != 0);
+        }
 
         return success.report(__func__);
       }

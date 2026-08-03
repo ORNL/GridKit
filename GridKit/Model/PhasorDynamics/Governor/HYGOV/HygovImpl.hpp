@@ -124,10 +124,10 @@ namespace GridKit
        * @brief Validate the HYGOV configuration
        *
        * Checks parameter-loading errors, static parameter relationships, the
-       * gate-curve shape, the gate-limit domain, the assigned
-       * mechanical-power output, and attached external signals.
-       * Mechanical-power feasibility is operating-point dependent and is
-       * checked by initialize().
+       * power-base domain, gate-curve shape, gate-limit domain, the assigned
+       * mechanical-power output, and attached external signals. Mechanical-
+       * power feasibility is operating-point dependent and is checked by
+       * initialize().
        *
        * @return int Number of configuration errors; zero when valid.
        */
@@ -144,6 +144,34 @@ namespace GridKit
             ret += 1;
           }
         };
+
+        RealT      component_power_base = va_component_base_;
+        const bool component_base_is_omitted =
+            !(component_power_base > ZERO<RealT>);
+        if (component_base_is_omitted)
+        {
+          component_power_base = va_system_base_;
+        }
+
+        const bool valid_component_base = std::isfinite(component_power_base)
+                                          && component_power_base > ZERO<RealT>;
+        const bool valid_system_base = std::isfinite(va_system_base_)
+                                       && va_system_base_ > ZERO<RealT>;
+        check(valid_component_base,
+              "component power base must be finite and positive");
+        check(valid_system_base,
+              "system power base must be finite and positive");
+        if (valid_component_base && valid_system_base)
+        {
+          const RealT system_to_component = va_system_base_ / component_power_base;
+          const RealT component_to_system = component_power_base / va_system_base_;
+          const bool  valid_base_ratios   = std::isfinite(system_to_component)
+                                         && system_to_component > ZERO<RealT>
+                                         && std::isfinite(component_to_system)
+                                         && component_to_system > ZERO<RealT>;
+          check(valid_base_ratios,
+                "system/component power-base conversion ratios must be finite and positive");
+        }
 
         check(Rtemp_ != ZERO<RealT>, "Rtemp must be nonzero");
         check(Tn_ >= ZERO<RealT>, "Tn must be non-negative");
@@ -173,19 +201,29 @@ namespace GridKit
         check(minimum_gate_is_valid, "Gmin must be at or above the first Gv point");
         check(maximum_gate_is_valid, "Gmax must be at or below the last Gv point");
 
-        if (curve_shape_is_valid
-            && Gmin_ < Gmax_
-            && minimum_gate_is_valid
-            && maximum_gate_is_valid
-            && At_ > ZERO<RealT>
-            && Hdam_ > ZERO<RealT>)
+        const bool can_check_power_range = curve_shape_is_valid
+                                           && Gmin_ < Gmax_
+                                           && minimum_gate_is_valid
+                                           && maximum_gate_is_valid
+                                           && At_ > ZERO<RealT>
+                                           && Hdam_ > ZERO<RealT>;
+        if (can_check_power_range)
         {
           // A rise no wider than the tolerance that pins a seed to a range
           // edge leaves the gate undetermined by the mechanical power.
-          const RealT minimum_power = initialMechanicalPower(Gmin_);
-          const RealT maximum_power = initialMechanicalPower(Gmax_);
-          check(maximum_power - minimum_power > INITIALIZATION_TOLERANCE,
-                "mechanical power must rise across [Gmin, Gmax]");
+          const RealT minimum_power      = initialMechanicalPower(Gmin_);
+          const RealT maximum_power      = initialMechanicalPower(Gmax_);
+          const RealT power_range        = maximum_power - minimum_power;
+          const bool  finite_power_range = std::isfinite(minimum_power)
+                                          && std::isfinite(maximum_power)
+                                          && std::isfinite(power_range);
+          check(finite_power_range,
+                "mechanical-power range must be finite");
+          if (finite_power_range)
+          {
+            check(power_range > INITIALIZATION_TOLERANCE,
+                  "mechanical power must rise across [Gmin, Gmax]");
+          }
         }
 
         check(signals_.template isAssigned<HygovInternalVariables::PMECH>(),
@@ -228,9 +266,10 @@ namespace GridKit
        *       tolerance.
        * @post On failure no state or signal storage has changed.
        *
-       * @return int 0 on success; nonzero when the configuration is
-       *             invalid, the initial speed deviation is nonzero, or no
-       *             gate inside [Gmin, Gmax] reproduces the given power.
+       * @return int 0 on success; nonzero when the configuration or initial
+       *             values are invalid, the initial speed deviation is
+       *             nonzero, or no gate inside [Gmin, Gmax] reproduces the
+       *             given power.
        */
       template <typename scalar_type, typename index_type>
       int Hygov<scalar_type, index_type>::initialize()
@@ -248,13 +287,15 @@ namespace GridKit
         const auto H       = static_cast<size_t>(HygovInternalVariables::H);
         const auto PMECH   = static_cast<size_t>(HygovInternalVariables::PMECH);
 
-        if (verify() > 0)
+        bool ret = verify() == 0;
+        if (!ret)
         {
           Log::error() << "Hygov: cannot initialize with invalid configuration\n";
           return 1;
         }
 
-        if (!(va_component_base_ > ZERO<RealT>) )
+        ret = va_component_base_ > ZERO<RealT>;
+        if (!ret)
         {
           va_component_base_ = va_system_base_;
         }
@@ -263,7 +304,7 @@ namespace GridKit
 
         // The assigned pmech node aliases this entry after allocate(). Its
         // system-base value remains untouched throughout initialization.
-        const ScalarT pmech0 = toComponentBase(y[PMECH]);
+        const ScalarT pmech0_system = y[PMECH];
 
         ScalarT omega0{ZERO<RealT>};
         if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
@@ -271,24 +312,48 @@ namespace GridKit
           omega0 = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
         }
 
-        // Synchronous machines provide an exactly zero speed deviation. A
-        // moving machine would need a multi-root gate search, which this
-        // model does not support.
-        if (static_cast<RealT>(omega0) != ZERO<RealT>)
-        {
-          Log::error() << "Hygov: initialization requires zero speed deviation\n";
-          return 1;
-        }
-
         ScalarT paux0_system{ZERO<RealT>};
         if (signals_.template isAttached<HygovExternalVariables::PAUX>())
         {
           paux0_system = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
         }
-        const ScalarT paux0 = toComponentBase(paux0_system);
+
+        auto is_finite = [](ScalarT value)
+        {
+          return std::isfinite(static_cast<RealT>(value));
+        };
+        ret = is_finite(pmech0_system)
+              && is_finite(omega0)
+              && is_finite(paux0_system);
+        if (!ret)
+        {
+          Log::error() << "Hygov: initial pmech, speed, and paux values must be finite\n";
+          return 1;
+        }
+
+        const ScalarT pmech0 = toComponentBase(pmech0_system);
+        const ScalarT paux0  = toComponentBase(paux0_system);
+        ret                  = is_finite(pmech0)
+              && is_finite(paux0);
+        if (!ret)
+        {
+          Log::error() << "Hygov: initial power-base conversions must be finite\n";
+          return 1;
+        }
+
+        // Synchronous machines provide an exactly zero speed deviation. A
+        // moving machine would need a multi-root gate search, which this
+        // model does not support.
+        ret = static_cast<RealT>(omega0) == ZERO<RealT>;
+        if (!ret)
+        {
+          Log::error() << "Hygov: initialization requires zero speed deviation\n";
+          return 1;
+        }
 
         const RealT gate0 = solveInitialGate(static_cast<RealT>(pmech0));
-        if (std::isnan(gate0))
+        ret               = std::isfinite(gate0);
+        if (!ret)
         {
           Log::error()
               << "Hygov: no gate inside [Gmin, Gmax] reproduces the given mechanical power\n";
@@ -302,6 +367,19 @@ namespace GridKit
         const ScalarT xn0      = omegadb0;
         const ScalarT yomega0  = xn0 + leadlag_gain_ * (omegadb0 - xn0);
         const ScalarT pref0    = toSystemBase(yomega0 + Rperm_ * gate0 - paux0);
+
+        ret = is_finite(h0)
+              && is_finite(pgv0)
+              && is_finite(q0)
+              && is_finite(omegadb0)
+              && is_finite(xn0)
+              && is_finite(yomega0)
+              && is_finite(pref0);
+        if (!ret)
+        {
+          Log::error() << "Hygov: initialization produced a nonfinite value\n";
+          return 1;
+        }
 
         y[XN]      = xn0;
         y[XF]      = ZERO<RealT>;
@@ -526,9 +604,10 @@ namespace GridKit
        * @brief Read the parameters out of the model data
        *
        * Every omitted parameter keeps the default documented in the model
-       * README. A non-numeric value is counted and reported by verify() rather
-       * than throwing. Integer JSON values are accepted for real parameters.
-       * All-zero `Gv` and `Pgv` source points select the identity gate curve.
+       * README. A non-numeric or nonfinite value is counted and reported by
+       * verify() rather than throwing. Integer JSON values are accepted for
+       * real parameters. All-zero `Gv` and `Pgv` source points select the
+       * identity gate curve.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -547,25 +626,39 @@ namespace GridKit
           }
 
           const auto& value = data.parameters.at(key);
+          RealT       parsed_value{};
           if (const auto* real_value = std::get_if<RealT>(&value))
           {
-            target = *real_value;
-            return true;
+            parsed_value = *real_value;
           }
-          if (const auto* index_value = std::get_if<IdxT>(&value))
+          else if (const auto* index_value = std::get_if<IdxT>(&value))
           {
-            target = static_cast<RealT>(*index_value);
-            return true;
+            parsed_value = static_cast<RealT>(*index_value);
+          }
+          else
+          {
+            Log::error() << "Hygov: parameter '" << name << "' must be numeric\n";
+            ++parameter_error_count_;
+            return false;
           }
 
-          Log::error() << "Hygov: parameter '" << name << "' must be numeric\n";
-          ++parameter_error_count_;
-          return false;
+          const bool ret = std::isfinite(parsed_value);
+          if (!ret)
+          {
+            Log::error() << "Hygov: parameter '" << name << "' must be finite\n";
+            ++parameter_error_count_;
+            return false;
+          }
+
+          target = parsed_value;
+          return true;
         };
 
-        if (load_real(Params::Trate, va_component_base_, "Trate"))
+        bool ret = load_real(Params::Trate, va_component_base_, "Trate");
+        if (ret)
         {
-          if (!(va_component_base_ > ZERO<RealT>) )
+          ret = va_component_base_ > ZERO<RealT>;
+          if (!ret)
           {
             Log::error() << "Hygov: Trate must be positive when provided\n";
             ++parameter_error_count_;
@@ -768,9 +861,10 @@ namespace GridKit
       typename Hygov<scalar_type, index_type>::RealT
       Hygov<scalar_type, index_type>::solveInitialGate(RealT pmech) const
       {
-        // NaN is unreproducible by any gate and would otherwise slip
-        // through the sign tests below.
-        if (std::isnan(pmech))
+        // A nonfinite seed is unreproducible by any gate and would otherwise
+        // slip through the sign tests below.
+        const bool ret = std::isfinite(pmech);
+        if (!ret)
         {
           return std::numeric_limits<RealT>::quiet_NaN();
         }

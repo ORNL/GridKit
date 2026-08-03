@@ -40,12 +40,14 @@ $H_{\mathrm{dam}}$      | [p.u.]   | `Hdam`        | Head available at dam      
 $G_V^{(k)}$             | [p.u.]   | `Gv0`-`Gv5`   | Gate point $k$ of the gain curve         | 0.0           | $k=0,\ldots,5$
 $P_{\mathrm{GV}}^{(k)}$ | [p.u.]   | `Pgv0`-`Pgv5` | Power point $k$ of the gain curve        | 0.0           | $k=0,\ldots,5$
 
-Every parameter is optional. All-zero `Gv` and `Pgv` source points select the
-identity curve.
+Every parameter is optional. Real-valued parameters accept real or integer
+JSON values. All-zero `Gv` and `Pgv` source points select the identity curve.
 
 ### Parameter Validation
 
-Invalid HYGOV parameter sets are rejected by the following checks:
+Real-valued parameters, `Known` initial values, power bases, and base-conversion
+ratios must be finite. The bases and ratios must also be positive. Invalid
+HYGOV parameter sets are rejected by the following checks:
 
 ```math
 \begin{aligned}
@@ -128,7 +130,7 @@ Name    | Port   | Init    | Description
 `Known` ports hold their initial values before `initialize()` and are preserved
 by it. `Unknown` inputs are resolved during initialization and written to
 attached signal storage, or retained as constant inputs when unattached. The
-`pmech` output must be assigned; the signal inputs are optional. Unattached
+`pmech` output must be assigned. The signal inputs are optional. Unattached
 `speed` and `paux` inputs default to zero.
 
 ## Model Variables
@@ -139,7 +141,7 @@ attached signal storage, or retained as constant inputs when unattached. The
 
 Symbol                  | Units  | Description                         | Note
 ------------------------|--------|-------------------------------------|------
-$x_n$                   | [p.u.] | Speed lead-lag denominator state    | Not circled in Fig. 1; realizes the `Tn`/`Tnp` block
+$x_n$                   | [p.u.] | Speed lead-lag denominator state    | Not circled in Fig. 1. Realizes the `Tn`/`Tnp` block
 $x_f$                   | [p.u.] | Governor error filter output        | State 1 in Fig. 1
 $c$                     | [p.u.] | Desired-gate position               | State 2 in Fig. 1
 $g$                     | [p.u.] | Gate position                       | State 3 in Fig. 1
@@ -167,9 +169,9 @@ None.
 
 Symbol            | Units  | Init    | Description                 | Note
 ------------------|--------|---------|-----------------------------|------
-$\omega$          | [p.u.] | Known   | Machine speed deviation     | Optional signal port `speed`; defaults to zero
-$P^\mathrm{ref}$  | [p.u.] | Unknown | Active-power/load reference | Optional signal port `pref`; system base
-$P^\mathrm{aux}$  | [p.u.] | Known   | Auxiliary power input       | Optional signal port `paux`; system base; defaults to zero
+$\omega$          | [p.u.] | Known   | Machine speed deviation     | Optional signal port `speed`. Defaults to zero
+$P^\mathrm{ref}$  | [p.u.] | Unknown | Active-power/load reference | Optional signal port `pref`, system base
+$P^\mathrm{aux}$  | [p.u.] | Known   | Auxiliary power input       | Optional signal port `paux`, system base, defaults to zero
 
 ## Model Equations
 
@@ -260,8 +262,8 @@ Initialization never replaces the system-base value held in $P_{\mathrm{m}}$.
 
 ### Internal Initialization
 
-Initialization requires an exactly zero speed deviation, $\omega = 0$;
-restart initialization of a moving machine is not supported. All internal
+Initialization requires an exactly zero speed deviation, $\omega = 0$.
+Restart initialization of a moving machine is not supported. All internal
 derivatives are set to zero.
 
 The gate is found by bisection over the validated nondecreasing steady-power
@@ -298,7 +300,7 @@ curve using the same smooth $N_{\mathrm{GV}}$ curve as the residual:
 
 Initialization rejects an operating point when no gate in
 $[G^{\min}, G^{\max}]$ reproduces the given mechanical power. An in-range
-value initializes with every residual at machine rounding; a value within
+value initializes with every residual at machine rounding. A value within
 $\epsilon_{\mathrm{init}} = 100\,\epsilon_{\mathrm{mach}}$ of the
 achievable-power range initializes at the corresponding gate limit with a
 mechanical-power residual up to $\epsilon_{\mathrm{init}}$.
@@ -336,12 +338,12 @@ Output         | Units  | Description                  | Note
 
 ## Testing
 
-- `validation()` checks construction, monitor creation, parameter
-  validation, signal configuration, and minimum time-constant handling.
+- `validation()` checks construction, monitor creation, parameter validation,
+  signal configuration, and minimum time-constant handling.
 - `initializationAndSignals()` checks initialization, base conversion,
   signal publication, monitor output, and unattached-reference latching.
 - `initializationDomain()` checks rejected and accepted mechanical-power,
-  gate-limit, and speed-deviation initialization boundaries.
+  gate-limit, speed-deviation, and input initialization boundaries.
 - `initializationExactness()` checks that initialized steady residuals rest
   at machine rounding across the gate curve.
 - `residualEquations()` checks every model residual against a fixed
