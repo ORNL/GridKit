@@ -24,6 +24,11 @@ namespace
    * structure enumerated row-major, and the dense symmetric Hessian is
    * exposed through its lower triangle. The solution vector doubles as
    * the starting point; finalize_solution writes the result back into it.
+   *
+   * Ipopt treats a false evaluator return as a recoverable point
+   * failure, so the model's negative (fatal) returns are recorded here:
+   * the intermediate callback then stops the iteration and the solver
+   * reports the failure through its own error code.
    */
   template <typename scalar_type, typename index_type>
   class ModelAdapter final : public Ipopt::TNLP
@@ -65,6 +70,12 @@ namespace
       return true;
     }
 
+    /// The latest negative model return; zero while none occurred.
+    int fatalError() const
+    {
+      return fatal_;
+    }
+
     bool get_bounds_info(Ipopt::Index,
                          Ipopt::Number* x_l,
                          Ipopt::Number* x_u,
@@ -72,7 +83,7 @@ namespace
                          Ipopt::Number* g_l,
                          Ipopt::Number* g_u) override
     {
-      return model_.variableBounds(x_l, x_u) == 0 && model_.constraintBounds(g_l, g_u) == 0;
+      return accept(model_.variableBounds(x_l, x_u)) && accept(model_.constraintBounds(g_l, g_u));
     }
 
     bool get_starting_point(Ipopt::Index   n,
@@ -104,7 +115,7 @@ namespace
                 bool,
                 Ipopt::Number& obj_value) override
     {
-      return model_.evaluateObjective(x, obj_value) == 0;
+      return accept(model_.evaluateObjective(x, obj_value));
     }
 
     bool eval_grad_f(Ipopt::Index,
@@ -112,7 +123,7 @@ namespace
                      bool,
                      Ipopt::Number* grad_f) override
     {
-      return model_.evaluateGradient(x, grad_f) == 0;
+      return accept(model_.evaluateGradient(x, grad_f));
     }
 
     bool eval_g(Ipopt::Index,
@@ -121,7 +132,7 @@ namespace
                 Ipopt::Index,
                 Ipopt::Number* g) override
     {
-      return model_.evaluateConstraints(x, g) == 0;
+      return accept(model_.evaluateConstraints(x, g));
     }
 
     bool eval_jac_g(Ipopt::Index         n,
@@ -147,7 +158,7 @@ namespace
         }
         return true;
       }
-      return model_.evaluateJacobian(x, values) == 0;
+      return accept(model_.evaluateJacobian(x, values));
     }
 
     bool eval_h(Ipopt::Index         n,
@@ -182,7 +193,7 @@ namespace
         return true;
       }
 
-      if (model_.evaluateHessian(x, obj_factor, lambda, hessian_buffer_.data()) != 0)
+      if (!accept(model_.evaluateHessian(x, obj_factor, lambda, hessian_buffer_.data())))
       {
         return false;
       }
@@ -219,12 +230,40 @@ namespace
       stats_.final_objective = obj_value;
     }
 
+    bool intermediate_callback(Ipopt::AlgorithmMode,
+                               Ipopt::Index,
+                               Ipopt::Number,
+                               Ipopt::Number,
+                               Ipopt::Number,
+                               Ipopt::Number,
+                               Ipopt::Number,
+                               Ipopt::Number,
+                               Ipopt::Number,
+                               Ipopt::Number,
+                               Ipopt::Index,
+                               const Ipopt::IpoptData*,
+                               Ipopt::IpoptCalculatedQuantities*) override
+    {
+      return fatal_ == 0;
+    }
+
   private:
+    /// Record a negative model return as fatal; true only on success.
+    bool accept(int retval)
+    {
+      if (retval < 0)
+      {
+        fatal_ = retval;
+      }
+      return retval == 0;
+    }
+
     const ModelT&       model_;
     std::vector<RealT>& solution_;
     StatsT&             stats_;
     bool                exact_hessian_;
     std::vector<RealT>  hessian_buffer_;
+    int                 fatal_{0};
   };
 } // namespace
 
@@ -255,7 +294,9 @@ namespace GridKit
      * Normalizes @p x to a valid starting point (the model's default when
      * @p x is not sized to the problem), configures one Ipopt application,
      * and maps its return status onto the GridKit error convention:
-     * 0 optimal, 1 acceptable, 2 iteration limit, negative otherwise.
+     * 0 optimal, 1 acceptable, 2 iteration limit, negative otherwise. A
+     * negative model-evaluator return aborts the iteration and is
+     * reported as -3, honoring the OptimizationModel fatal contract.
      */
     template <typename scalar_type, typename index_type>
     int IpoptSolver<scalar_type, index_type>::solve(std::vector<RealT>& x)
@@ -312,15 +353,21 @@ namespace GridKit
         return -1;
       }
 
-      Ipopt::SmartPtr<Ipopt::TNLP> adapter = new ModelAdapter<ScalarT, IdxT>(
-          *this->model_, x, stats_, exact_hessian);
+      ModelAdapter<ScalarT, IdxT>* adapter =
+          new ModelAdapter<ScalarT, IdxT>(*this->model_, x, stats_, exact_hessian);
+      Ipopt::SmartPtr<Ipopt::TNLP> owner(adapter);
 
-      const auto status = application->OptimizeTNLP(adapter);
+      const auto status = application->OptimizeTNLP(owner);
       stats_.status     = static_cast<int>(status);
       if (Ipopt::IsValid(application->Statistics()))
       {
         stats_.iterations = static_cast<IdxT>(
             application->Statistics()->IterationCount());
+      }
+
+      if (adapter->fatalError() != 0)
+      {
+        return -3;
       }
 
       switch (status)

@@ -5,6 +5,7 @@
  */
 
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -405,7 +406,11 @@ namespace GridKit
             return;
           }
           file_stream = std::make_unique<std::ofstream>(file_name);
-          os          = file_stream.get();
+          if (!file_stream->is_open())
+          {
+            throw std::runtime_error("Failed to open monitor sink: " + file_name);
+          }
+          os = file_stream.get();
         }
 
         void stop()

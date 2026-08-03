@@ -65,13 +65,16 @@ namespace GridKit
           throw std::runtime_error("Zc initialization requires an invertible shunt admittance matrix");
         }
 
-        const MatrixXc quotient = y_lu.solve(Z);
-        const MatrixXc root     = quotient.sqrt();
+        // Zc = Y^-1 sqrt(Y Z) solves the sandwich equation Zc Y Zc = Z
+        // exactly, so the residual vanishes at this point and the result
+        // is symmetric whenever Z and Y are.
+        const MatrixXc product   = Y * Z;
+        const MatrixXc impedance = y_lu.solve(product.sqrt());
         for (IdxT i = 0; i < layout.K; ++i)
         {
           for (IdxT j = 0; j < layout.K; ++j)
           {
-            const auto value = root(eigenIndex(i), eigenIndex(j));
+            const auto value = impedance(eigenIndex(i), eigenIndex(j));
             Rc(i, j)         = value.real();
             Xc(i, j)         = value.imag();
           }
@@ -100,13 +103,17 @@ namespace GridKit
         auto          G      = input(u, shunt_.G());
         auto          C      = input(u, shunt_.C());
 
-        auto X   = omega * L;
-        auto BC  = omega * C;
-        auto Z2r = Rc * Rc - Xc * Xc;
-        auto Z2i = Rc * Xc + Xc * Rc;
+        auto X  = omega * L;
+        auto BC = omega * C;
 
-        equation(RFc) = -R + G * Z2r - BC * Z2i;
-        equation(XFc) = -X + G * Z2i + BC * Z2r;
+        // The sandwich equation 0 = -Z + Zc Y Zc, split over P = Y Zc.
+        // The commuting form Y Zc Zc holds only when Z and Y commute and
+        // loses the exact symmetry of the characteristic impedance.
+        auto Pr = G * Rc - BC * Xc;
+        auto Pi = G * Xc + BC * Rc;
+
+        equation(RFc) = -R + Rc * Pr - Xc * Pi;
+        equation(XFc) = -X + Rc * Pi + Xc * Pr;
       }
 
       template <typename ScalarT, typename IdxT>

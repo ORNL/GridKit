@@ -56,12 +56,11 @@ def conductor_count(fieldnames: list[str]) -> int:
 
 
 def write_yc_csv(path: Path, rows: list[dict[str, str]], k: int) -> None:
-    """Write symmetrized Yc samples: omega, then one re/im pair per entry.
+    """Write Yc samples: omega, then one re/im pair per entry.
 
-    The characteristic admittance of a reciprocal line is exactly
-    symmetric; the monitored samples carry percent-level asymmetry from
-    the modal reconstruction, so the samples are projected back onto the
-    symmetric manifold before fitting.
+    The monitored characteristic admittance solves the sandwich equation
+    Yc Z Yc = Y and is symmetric to sweep tolerance, so the samples pass
+    through unchanged.
     """
     with path.open("w", newline="") as stream:
         writer = csv.writer(stream)
@@ -72,21 +71,15 @@ def write_yc_csv(path: Path, rows: list[dict[str, str]], k: int) -> None:
         writer.writerow(header)
 
         for row in rows:
-            values = [
-                [
-                    complex(
-                        float(row[f"Overhead_Yc_real_{i}_{j}"]),
-                        float(row[f"Overhead_Yc_imag_{i}_{j}"]),
-                    )
-                    for j in range(k)
-                ]
-                for i in range(k)
-            ]
             record = [row["omega"]]
             for i in range(k):
                 for j in range(k):
-                    mean = 0.5 * (values[i][j] + values[j][i])
-                    record.extend([f"{mean.real:.17e}", f"{mean.imag:.17e}"])
+                    record.extend(
+                        [
+                            row[f"Overhead_Yc_real_{i}_{j}"],
+                            row[f"Overhead_Yc_imag_{i}_{j}"],
+                        ]
+                    )
             writer.writerow(record)
 
 

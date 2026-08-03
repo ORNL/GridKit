@@ -120,8 +120,9 @@ namespace GridKit
         }
       }
 
-      // Refine a sign change of the conductance floor by bisection.
-      const auto crossing = [&model](RealT inside, RealT outside) -> RealT
+      // Refine a sign change of the conductance floor by bisection; an
+      // eigensolver failure propagates instead of truncating the search.
+      const auto crossing = [&model](RealT inside, RealT outside, RealT& edge) -> int
       {
         for (size_t step = 0; step < BISECTION_STEPS; ++step)
         {
@@ -129,7 +130,7 @@ namespace GridKit
           RealT       floor  = RealT{0};
           if (Detail::conductanceFloor(model, middle, floor) != 0)
           {
-            break;
+            return -2;
           }
           if (floor < RealT{0})
           {
@@ -140,7 +141,8 @@ namespace GridKit
             outside = middle;
           }
         }
-        return std::sqrt(inside * outside);
+        edge = std::sqrt(inside * outside);
+        return 0;
       };
 
       using ReportT   = PassivityReport<scalar_type, index_type>;
@@ -154,12 +156,18 @@ namespace GridKit
         const bool now = floors[k] < RealT{0};
         if (now && !violating)
         {
-          band.omega_start = crossing(grid[k], grid[k - 1]);
-          violating        = true;
+          if (crossing(grid[k], grid[k - 1], band.omega_start) != 0)
+          {
+            return -2;
+          }
+          violating = true;
         }
         else if (!now && violating)
         {
-          band.omega_end = crossing(grid[k - 1], grid[k]);
+          if (crossing(grid[k - 1], grid[k], band.omega_end) != 0)
+          {
+            return -2;
+          }
           report.violations.push_back(band);
           violating = false;
         }

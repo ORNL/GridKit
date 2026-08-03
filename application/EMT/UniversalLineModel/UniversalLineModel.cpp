@@ -25,6 +25,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -157,26 +158,53 @@ namespace
          .flag = true}};
   }
 
+  /// One fit target from its option prefix, validated before the raw
+  /// integers are widened to index_type.
+  Settings::Target makeTarget(const GridKit::Utilities::CliArgs& args,
+                              const std::string&                 prefix)
+  {
+    const int    min_poles = args.get<int>(prefix + "-min-poles");
+    const int    max_poles = args.get<int>(prefix + "-max-poles");
+    const double target    = args.get<double>(prefix + "-target");
+
+    if (min_poles < 1 || max_poles < min_poles)
+    {
+      throw std::runtime_error("--" + prefix + "-min-poles and --" + prefix
+                               + "-max-poles must satisfy 1 <= min <= max");
+    }
+    if (!(target > 0.0))
+    {
+      throw std::runtime_error("--" + prefix + "-target must be positive");
+    }
+
+    return {.min_poles      = static_cast<index_type>(min_poles),
+            .max_poles      = static_cast<index_type>(max_poles),
+            .target_rel_rms = target};
+  }
+
+  /// Settings from the parsed options; the JSON validation layer is
+  /// bypassed here, so the sweep and fitter preconditions are enforced
+  /// on the raw values.
   Settings makeSettings(const GridKit::Utilities::CliArgs& args)
   {
     Settings settings;
-    settings.fmin   = args.get<double>("fmin");
-    settings.fmax   = args.get<double>("fmax");
-    settings.points = static_cast<size_t>(args.get<int>("points"));
+    settings.fmin = args.get<double>("fmin");
+    settings.fmax = args.get<double>("fmax");
+    if (!(settings.fmin > 0.0) || !(settings.fmax > settings.fmin))
+    {
+      throw std::runtime_error("Sweep range requires 0 < --fmin < --fmax");
+    }
+
+    const int points = args.get<int>("points");
+    if (points < 2)
+    {
+      throw std::runtime_error("--points must be at least 2");
+    }
+    settings.points = static_cast<size_t>(points);
+
     settings.output = args.get("output");
-
-    settings.yc.min_poles =
-        static_cast<index_type>(args.get<int>("yc-min-poles"));
-    settings.yc.max_poles =
-        static_cast<index_type>(args.get<int>("yc-max-poles"));
-    settings.yc.target_rel_rms = args.get<double>("yc-target");
-
-    settings.h.min_poles =
-        static_cast<index_type>(args.get<int>("h-min-poles"));
-    settings.h.max_poles =
-        static_cast<index_type>(args.get<int>("h-max-poles"));
-    settings.h.target_rel_rms = args.get<double>("h-target");
-
+    settings.yc     = makeTarget(args, "yc");
+    settings.h      = makeTarget(args, "h");
     settings.refine = args.get<bool>("refine");
     return settings;
   }
@@ -269,7 +297,7 @@ namespace
     {
       throw std::runtime_error(
           "Monitor CSV holds no Overhead_Yc columns; "
-          "the sweep must monitor Yc, H, Tau, and Ti");
+          "the sweep must monitor Yc, H, Tau, Tv, and Ti");
     }
     return count;
   }
@@ -285,28 +313,25 @@ namespace
     return table.columns[static_cast<size_t>(index)];
   }
 
-  /// Assemble the complex response named prefix_real/imag_... row-major.
-  ResponseT gatherResponse(const MonitorTable& table,
-                           const std::string&  prefix,
-                           index_type          rows,
-                           index_type          cols)
+  /// Assemble the complex matrix response prefix_real/imag_row_col; the
+  /// monitor writes both indices at every conductor count.
+  ResponseT gatherMatrix(const MonitorTable& table,
+                         const std::string&  prefix,
+                         index_type          k)
   {
     ResponseT samples;
-    samples.rows  = rows;
-    samples.cols  = cols;
+    samples.rows  = k;
+    samples.cols  = k;
     samples.omega = column(table, "omega");
-    samples.response.assign(samples.omega.size() * static_cast<size_t>(rows) * static_cast<size_t>(cols),
+    samples.response.assign(samples.omega.size() * static_cast<size_t>(k) * static_cast<size_t>(k),
                             {});
 
-    for (index_type row = 0; row < rows; ++row)
+    for (index_type row = 0; row < k; ++row)
     {
-      for (index_type col = 0; col < cols; ++col)
+      for (index_type col = 0; col < k; ++col)
       {
-        std::string suffix = "_" + std::to_string(row);
-        if (cols > 1)
-        {
-          suffix += "_" + std::to_string(col);
-        }
+        const std::string suffix =
+            "_" + std::to_string(row) + "_" + std::to_string(col);
         const auto real_part = column(table, prefix + "_real" + suffix);
         const auto imag_part = column(table, prefix + "_imag" + suffix);
 
@@ -314,6 +339,33 @@ namespace
         {
           samples(m, row, col) = {real_part[m], imag_part[m]};
         }
+      }
+    }
+    return samples;
+  }
+
+  /// Assemble the complex per-mode response prefix_real/imag_mode as a
+  /// one-column sample set.
+  ResponseT gatherModes(const MonitorTable& table,
+                        const std::string&  prefix,
+                        index_type          modes)
+  {
+    ResponseT samples;
+    samples.rows  = modes;
+    samples.cols  = 1;
+    samples.omega = column(table, "omega");
+    samples.response.assign(samples.omega.size() * static_cast<size_t>(modes),
+                            {});
+
+    for (index_type mode = 0; mode < modes; ++mode)
+    {
+      const std::string suffix = "_" + std::to_string(mode);
+      const auto        real_part = column(table, prefix + "_real" + suffix);
+      const auto        imag_part = column(table, prefix + "_imag" + suffix);
+
+      for (size_t m = 0; m < samples.omega.size(); ++m)
+      {
+        samples(m, mode, 0) = {real_part[m], imag_part[m]};
       }
     }
     return samples;
@@ -530,29 +582,11 @@ namespace
     const auto table = readMonitorCsv(response_csv);
     const auto k     = conductorCount(table);
 
-    auto       yc  = gatherResponse(table, "Overhead_Yc", k, k);
-    auto       h   = gatherResponse(table, "Overhead_H", k, 1);
-    const auto tv  = gatherResponse(table, "Overhead_Tv", k, k);
-    const auto ti  = gatherResponse(table, "Overhead_Ti", k, k);
+    const auto yc  = gatherMatrix(table, "Overhead_Yc", k);
+    auto       h   = gatherModes(table, "Overhead_H", k);
+    const auto tv  = gatherMatrix(table, "Overhead_Tv", k);
+    const auto ti  = gatherMatrix(table, "Overhead_Ti", k);
     const auto tau = gatherDelays(table, k);
-
-    // The characteristic admittance of a reciprocal line is exactly
-    // symmetric; the monitored samples carry percent-level asymmetry
-    // from the modal reconstruction in the near-degenerate aerial
-    // subspace. Project back onto the symmetric manifold before
-    // fitting.
-    for (size_t m = 0; m < yc.omega.size(); ++m)
-    {
-      for (index_type row = 0; row < k; ++row)
-      {
-        for (index_type col = row + 1; col < k; ++col)
-        {
-          const ComplexT mean = ComplexT{0.5, 0.0} * (yc(m, row, col) + yc(m, col, row));
-          yc(m, row, col)     = mean;
-          yc(m, col, row)     = mean;
-        }
-      }
-    }
 
     // Modal delays and the minimum-phase shift of the propagation
     // function; tau = min over omega of tau(omega) per mode.

@@ -4,23 +4,33 @@
 per-unit-length series impedance and shunt admittance matrices.
 
 Notes:
-- For multiconductor lines, the V-definition and I-definition differ by the
-  ordering of the matrix products.
-- This model uses the V-definition: the shunt matrix pair multiplies
-  $\mathbf{Z}_c^2$ on the left.
-- The I-definition places the shunt matrix pair on the right.
+- With $\mathbf{Z}'=\mathbf{R}'+j\mathbf{X}'$ and
+  $\mathbf{Y}'=\mathbf{G}'+j\mathbf{B}'$, the characteristic impedance
+  of a coupled line satisfies the sandwich equation
+  $\mathbf{Z}_c\mathbf{Y}'\mathbf{Z}_c=\mathbf{Z}'$. The commuting forms
+  $\mathbf{Y}'\mathbf{Z}_c^2=\mathbf{Z}'$ and
+  $\mathbf{Z}_c^2\mathbf{Y}'=\mathbf{Z}'$ agree with it only when
+  $\mathbf{Z}'$ and $\mathbf{Y}'$ commute, as in the scalar and ideally
+  transposed cases.
+- Because $\mathbf{Z}'$ and $\mathbf{Y}'$ are symmetric for reciprocal
+  lines, $\mathbf{Z}_c$ is exactly symmetric. The voltage- and
+  current-wave conventions differ only in the propagation matrix,
+  $\mathbf{Z}'\mathbf{Y}'$ versus
+  $\mathbf{Y}'\mathbf{Z}'=(\mathbf{Z}'\mathbf{Y}')^\top$; the
+  characteristic impedance is the same in both.
 - The real and imaginary parts of $\mathbf{Z}_c$ are $\mathbf{R}_c$ and
   $\mathbf{X}_c$.
 
 The characteristic impedance is decomposed as
 $\mathbf{Z}_c=\mathbf{R}_c+j\mathbf{X}_c$.
 
-The complex form typically given for this convention is:
+The closed form is:
 
 ```math
 \mathbf{Z}_c =
-\sqrt{
 (\mathbf{G}' + j\mathbf{B}')^{-1}
+\sqrt{
+(\mathbf{G}' + j\mathbf{B}')
 (\mathbf{R}' + j\mathbf{X}')
 }
 ```
@@ -76,26 +86,29 @@ None.
 
 ### Algebraic Equations
 
+The real and imaginary parts of
+$\mathbf{0}=-\mathbf{Z}'+\mathbf{Z}_c\mathbf{Y}'\mathbf{Z}_c$, split
+over the product $\mathbf{P}=\mathbf{Y}'\mathbf{Z}_c$:
+
 ```math
 \begin{aligned}
+\mathbf{P}_r &= \mathbf{G}'\mathbf{R}_c - \mathbf{B}'\mathbf{X}_c \\
+\mathbf{P}_i &= \mathbf{G}'\mathbf{X}_c + \mathbf{B}'\mathbf{R}_c \\
 \mathbf{0} &= -\mathbf{R}'
-  + \mathbf{G}'\left(\mathbf{R}_c\mathbf{R}_c
-  - \mathbf{X}_c\mathbf{X}_c\right)
-  - \mathbf{B}'\left(\mathbf{R}_c\mathbf{X}_c
-  + \mathbf{X}_c\mathbf{R}_c\right) \\
+  + \mathbf{R}_c\mathbf{P}_r
+  - \mathbf{X}_c\mathbf{P}_i \\
 \mathbf{0} &= -\mathbf{X}'
-  + \mathbf{G}'\left(\mathbf{R}_c\mathbf{X}_c
-  + \mathbf{X}_c\mathbf{R}_c\right)
-  + \mathbf{B}'\left(\mathbf{R}_c\mathbf{R}_c
-  - \mathbf{X}_c\mathbf{X}_c\right)
+  + \mathbf{R}_c\mathbf{P}_i
+  + \mathbf{X}_c\mathbf{P}_r
 \end{aligned}
 ```
 
 ## Initialization
 
-Validate the full-conductor matrix dimensions. Initialize
-$\mathbf{R}_c$ and $\mathbf{X}_c$ from the current $\mathbf{R}'$,
-$\mathbf{X}'$, $\mathbf{G}'$, and $\mathbf{B}'$ inputs.
+Validate the full-conductor matrix dimensions. Initialize from the
+closed form
+$\mathbf{Z}_c=\mathbf{Y}'^{-1}\sqrt{\mathbf{Y}'\mathbf{Z}'}$ at the
+current inputs, which solves the algebraic equations exactly.
 
 ## Model Outputs
 

@@ -28,6 +28,31 @@ namespace
     return std::abs(value - ref) <= tol * (1.0 + std::abs(ref));
   }
 
+  using Complex2x2 = std::array<std::complex<scalar_type>, 4>;
+
+  Complex2x2 multiply2(const Complex2x2& A, const Complex2x2& B)
+  {
+    Complex2x2 product;
+    for (index_type i = 0; i < 2; ++i)
+    {
+      for (index_type j = 0; j < 2; ++j)
+      {
+        product[i * 2 + j] = A[i * 2] * B[j] + A[i * 2 + 1] * B[2 + j];
+      }
+    }
+    return product;
+  }
+
+  scalar_type maxAbs2(const Complex2x2& A)
+  {
+    scalar_type value = 0.0;
+    for (const auto& entry : A)
+    {
+      value = std::max(value, std::abs(entry));
+    }
+    return value;
+  }
+
   GridKit::EMT::Parameters::OverheadData<scalar_type, index_type> makeData()
   {
     GridKit::EMT::Parameters::OverheadData<scalar_type, index_type> data;
@@ -587,6 +612,40 @@ namespace
       success *= close(model.getResidual().getData()[Gc.offset + i], 0.0, 1.0e-8);
     }
 
+    // Independent physical reference: the characteristic admittance
+    // solves the sandwich equation Yc Z Yc = Y and is symmetric for the
+    // symmetric per-unit-length inputs; the model's own residual cannot
+    // certify either.
+    {
+      const auto R = model.seriesImpedance().R();
+      const auto L = model.seriesImpedance().L();
+      const auto G = model.shuntAdmittance().G();
+      const auto C = model.shuntAdmittance().C();
+
+      const auto* y = model.y().getData();
+
+      Complex2x2 Z;
+      Complex2x2 Y;
+      Complex2x2 Yc;
+      for (index_type e = 0; e < 4; ++e)
+      {
+        Z[e]  = {y[R.offset + e], omega * y[L.offset + e]};
+        Y[e]  = {y[G.offset + e], omega * y[C.offset + e]};
+        Yc[e] = {y[Gc.offset + e], y[Bc.offset + e]};
+      }
+
+      const auto sandwich = multiply2(multiply2(Yc, Z), Yc);
+      const auto scale    = maxAbs2(Y);
+      for (index_type e = 0; e < 4; ++e)
+      {
+        success *= (std::abs(sandwich[e] - Y[e]) <= 1.0e-10 * scale);
+      }
+      success *= (std::abs(Yc[1] - Yc[2]) <= 1.0e-10 * maxAbs2(Yc));
+    }
+
+    success *= jacobianMatchesFiniteDifference(model, Gc.offset + 1, Gc.offset + 0, 1.0, 1.0e-5);
+    success *= jacobianMatchesFiniteDifference(model, Bc.offset + 1, Bc.offset + 3, 1.0, 1.0e-5);
+
     GridKit::EMT::Parameters::Overhead<scalar_type, index_type> scalar_model(makeScalarData());
     scalar_model.updateTime(omega, 1.0);
     scalar_model.allocate();
@@ -645,6 +704,40 @@ namespace
     {
       success *= close(model.getResidual().getData()[Rc.offset + i], 0.0, 1.0e-8);
     }
+
+    // Independent physical reference: the characteristic impedance
+    // solves the sandwich equation Zc Y Zc = Z and is symmetric for the
+    // symmetric per-unit-length inputs; the model's own residual cannot
+    // certify either.
+    {
+      const auto R = model.seriesImpedance().R();
+      const auto L = model.seriesImpedance().L();
+      const auto G = model.shuntAdmittance().G();
+      const auto C = model.shuntAdmittance().C();
+
+      const auto* y = model.y().getData();
+
+      Complex2x2 Z;
+      Complex2x2 Y;
+      Complex2x2 Zc;
+      for (index_type e = 0; e < 4; ++e)
+      {
+        Z[e]  = {y[R.offset + e], omega * y[L.offset + e]};
+        Y[e]  = {y[G.offset + e], omega * y[C.offset + e]};
+        Zc[e] = {y[Rc.offset + e], y[Xc.offset + e]};
+      }
+
+      const auto sandwich = multiply2(multiply2(Zc, Y), Zc);
+      const auto scale    = maxAbs2(Z);
+      for (index_type e = 0; e < 4; ++e)
+      {
+        success *= (std::abs(sandwich[e] - Z[e]) <= 1.0e-10 * scale);
+      }
+      success *= (std::abs(Zc[1] - Zc[2]) <= 1.0e-10 * maxAbs2(Zc));
+    }
+
+    success *= jacobianMatchesFiniteDifference(model, Rc.offset + 1, Rc.offset + 0, 1.0, 1.0e-5);
+    success *= jacobianMatchesFiniteDifference(model, Xc.offset + 1, Xc.offset + 3, 1.0, 1.0e-5);
 
     GridKit::EMT::Parameters::Overhead<scalar_type, index_type> scalar_model(makeScalarData());
     scalar_model.updateTime(omega, 1.0);

@@ -65,13 +65,16 @@ namespace GridKit
           throw std::runtime_error("Yc initialization requires an invertible series impedance matrix");
         }
 
-        const MatrixXc quotient = z_lu.solve(Y);
-        const MatrixXc root     = quotient.sqrt();
+        // Yc = Z^-1 sqrt(Z Y) solves the sandwich equation Yc Z Yc = Y
+        // exactly, so the residual vanishes at this point and the result
+        // is symmetric whenever Z and Y are.
+        const MatrixXc product    = Z * Y;
+        const MatrixXc admittance = z_lu.solve(product.sqrt());
         for (IdxT i = 0; i < layout.K; ++i)
         {
           for (IdxT j = 0; j < layout.K; ++j)
           {
-            const auto value = root(eigenIndex(i), eigenIndex(j));
+            const auto value = admittance(eigenIndex(i), eigenIndex(j));
             Gc(i, j)         = value.real();
             Bc(i, j)         = value.imag();
           }
@@ -100,13 +103,17 @@ namespace GridKit
         auto          G      = input(u, shunt_.G());
         auto          C      = input(u, shunt_.C());
 
-        auto B   = omega * C;
-        auto XL  = omega * L;
-        auto Y2r = Gc * Gc - Bc * Bc;
-        auto Y2i = Gc * Bc + Bc * Gc;
+        auto B  = omega * C;
+        auto XL = omega * L;
 
-        equation(GFc) = -G + R * Y2r - XL * Y2i;
-        equation(BFc) = -B + R * Y2i + XL * Y2r;
+        // The sandwich equation 0 = -Y + Yc Z Yc, split over P = Z Yc.
+        // The commuting form Z Yc Yc holds only when Z and Y commute and
+        // loses the exact symmetry of the characteristic admittance.
+        auto Pr = R * Gc - XL * Bc;
+        auto Pi = R * Bc + XL * Gc;
+
+        equation(GFc) = -G + Gc * Pr - Bc * Pi;
+        equation(BFc) = -B + Gc * Pi + Bc * Pr;
       }
 
       template <typename ScalarT, typename IdxT>

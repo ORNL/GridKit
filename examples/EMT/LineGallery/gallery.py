@@ -181,16 +181,11 @@ def evaluate_factor(factor: dict, omega: np.ndarray) -> np.ndarray:
     return (1.0 / (s - factor["poles"][None, :])) @ factor["residues"] + factor["d"][None, :]
 
 
-def symmetrized(values: np.ndarray, k: int) -> np.ndarray:
-    matrices = values.reshape(len(values), k, k)
-    return (0.5 * (matrices + np.transpose(matrices, (0, 2, 1)))).reshape(len(values), -1)
-
-
 def write_ycfit_figure(name: str, omega, k, yc_samples, model_file: Path, plot_file: Path) -> float:
     model = json.loads(model_file.read_text())
     factor = load_factor(model)
     fitted = evaluate_factor(factor, omega)
-    source = symmetrized(yc_samples, k)
+    source = yc_samples
     frequency = omega / (2.0 * math.pi)
     rel_rms = float(
         np.sqrt(np.mean(np.abs(fitted - source) ** 2) / np.mean(np.abs(source) ** 2))
