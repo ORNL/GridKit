@@ -167,7 +167,13 @@ namespace GridKit
         check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
               "UEL must be 0, 1, 2, or 3");
 
-        if (!(Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>) )
+        // Saturation is enabled when either coefficient deviates from zero
+        // in any direction; load_real() has already rejected non-finite
+        // values, so the sign tests are exact.
+        auto deviates_from_zero = [](RealT value)
+        { return value < ZERO<RealT> || value > ZERO<RealT>; };
+
+        if (deviates_from_zero(Se1_) || deviates_from_zero(Se2_))
         {
           check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
           check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
@@ -322,9 +328,11 @@ namespace GridKit
         }
 
         // An inactive high-value gate is seeded with the gate input, so the
-        // residual reproduces VHV through the same smooth maximum.
+        // residual reproduces VHV through the same smooth maximum. UEL modes
+        // below 2 route VUEL through the gate; setDerivedParameters() derives
+        // the uel_on_ blend mask from the same threshold.
         ScalarT vll0 = vhv0;
-        if (uel_on_ == ZERO<RealT>)
+        if (UEL_ < static_cast<IdxT>(2))
         {
           const RealT gate_margin0 = static_cast<RealT>(vhv0 - vuel0);
 
@@ -804,7 +812,13 @@ namespace GridKit
 
         // A disabled or inconsistent saturation curve keeps the zero fit so
         // the coefficients stay finite; verify() reports inconsistent data.
-        const bool saturation_enabled = !(Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>);
+        // Saturation is enabled when either coefficient deviates from zero,
+        // matching the verify() predicate.
+        auto deviates_from_zero = [](RealT value)
+        { return value < ZERO<RealT> || value > ZERO<RealT>; };
+
+        const bool saturation_enabled =
+            deviates_from_zero(Se1_) || deviates_from_zero(Se2_);
         const bool saturation_points_are_ordered =
             (E2_ > E1_ && Se2_ > Se1_)
             || (E2_ < E1_ && Se2_ < Se1_);
