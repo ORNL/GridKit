@@ -1,0 +1,62 @@
+{
+  "$schema": "https://gridkit.readthedocs.io/en/schema/line.schema.json",
+  "line": "1.0",
+  "name": "345 kV horizontal H-frame, staggered",
+  "description": "Gallery variant of the catalog 345 kV H-frame with staggered attachment heights and offsets. The exact mirror symmetry of the catalog tower produces degenerate aerial modes that the frequency sweep's eigenvector continuation cannot traverse; the stagger breaks the symmetry while staying structurally realistic.",
+  "source": "synthetic example; conductor, tension, and earth data illustrative",
+
+  "catalog": {
+    "conductors": {
+      "drake-acsr": {
+        "description": "Drake 795 kcmil 26/7 ACSR",
+        "radius": { "outer": 0.01407, "inner": 0.00514 },
+        "conductivity": 3.5e7,
+        "weight": 16.0
+      },
+      "ehs-3-8-steel": {
+        "description": "3/8 in EHS steel shield wire",
+        "radius": { "outer": 0.00457 },
+        "conductivity": 5.8e6,
+        "permeability": 1.0,
+        "weight": 4.0
+      }
+    },
+    "towers": {
+      "345kv-h-frame-staggered": {
+        "description": "H-frame with staggered phase heights and offsets",
+        "attachments": {
+          "left-1":       { "x": -7.6285, "h": 23.4 },
+          "left-2":       { "x": -7.1715, "h": 23.4 },
+          "center-1":     { "x": -0.0285, "h": 24.6 },
+          "center-2":     { "x":  0.4285, "h": 24.6 },
+          "right-1":      { "x":  6.7715, "h": 24.0 },
+          "right-2":      { "x":  7.2285, "h": 24.0 },
+          "shield-left":  { "x": -4.5,    "h": 29.5 },
+          "shield-right": { "x":  4.1,    "h": 29.9 }
+        }
+      }
+    }
+  },
+
+  "tower": "345kv-h-frame-staggered",
+
+  "conductors": [
+    { "at": "left-1",       "phase": "a", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "left-2",       "phase": "a", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "center-1",     "phase": "b", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "center-2",     "phase": "b", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "right-1",      "phase": "c", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "right-2",      "phase": "c", "type": "drake-acsr", "tension": 28000.0 },
+    { "at": "shield-left",  "phase": "g", "type": "ehs-3-8-steel", "tension": 12000.0 },
+    { "at": "shield-right", "phase": "g", "type": "ehs-3-8-steel", "tension": 12000.0 }
+  ],
+
+  "path": {
+    "span": 350.0,
+    "length": 100000.0
+  },
+
+  "earth": {
+    "conductivity": 0.01
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "$schema": "https://gridkit.readthedocs.io/en/schema/line.schema.json",
+  "line": "1.0",
+  "name": "765 kV horizontal quad bundle, staggered",
+  "description": "Gallery variant of the catalog 765 kV horizontal line with staggered phase heights and offsets. The exact mirror symmetry of the catalog tower produces degenerate aerial modes that the frequency sweep's eigenvector continuation cannot traverse; the stagger breaks the symmetry while staying structurally realistic.",
+  "source": "synthetic example; conductor and earth data illustrative",
+  "catalog": {
+    "conductors": {
+      "drake-acsr": {
+        "description": "Drake 795 kcmil 26/7 ACSR",
+        "radius": {
+          "outer": 0.01407,
+          "inner": 0.00514
+        },
+        "conductivity": 35000000.0,
+        "weight": 16.0
+      },
+      "ehs-3-8-steel": {
+        "description": "3/8 in EHS steel shield wire",
+        "radius": {
+          "outer": 0.00457
+        },
+        "conductivity": 5800000.0,
+        "permeability": 1.0,
+        "weight": 4.0
+      }
+    },
+    "towers": {
+      "765kv-horizontal-staggered": {
+        "description": "Horizontal quad bundle with staggered phases",
+        "attachments": {
+          "left-1": {
+            "x": -14.3285,
+            "h": 31.1715
+          },
+          "left-2": {
+            "x": -13.8715,
+            "h": 31.1715
+          },
+          "left-3": {
+            "x": -14.3285,
+            "h": 31.6285
+          },
+          "left-4": {
+            "x": -13.8715,
+            "h": 31.6285
+          },
+          "center-1": {
+            "x": 0.1715,
+            "h": 32.3715
+          },
+          "center-2": {
+            "x": 0.6285,
+            "h": 32.3715
+          },
+          "center-3": {
+            "x": 0.1715,
+            "h": 32.8285
+          },
+          "center-4": {
+            "x": 0.6285,
+            "h": 32.8285
+          },
+          "right-1": {
+            "x": 13.3715,
+            "h": 31.7715
+          },
+          "right-2": {
+            "x": 13.8285,
+            "h": 31.7715
+          },
+          "right-3": {
+            "x": 13.3715,
+            "h": 32.2285
+          },
+          "right-4": {
+            "x": 13.8285,
+            "h": 32.2285
+          },
+          "shield-left": {
+            "x": -10.1,
+            "h": 40.0
+          },
+          "shield-right": {
+            "x": 9.5,
+            "h": 40.6
+          }
+        }
+      }
+    }
+  },
+  "tower": "765kv-horizontal-staggered",
+  "conductors": [
+    {
+      "at": "left-1",
+      "phase": "a",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "left-2",
+      "phase": "a",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "left-3",
+      "phase": "a",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "left-4",
+      "phase": "a",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "center-1",
+      "phase": "b",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "center-2",
+      "phase": "b",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "center-3",
+      "phase": "b",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "center-4",
+      "phase": "b",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "right-1",
+      "phase": "c",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "right-2",
+      "phase": "c",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "right-3",
+      "phase": "c",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "right-4",
+      "phase": "c",
+      "type": "drake-acsr"
+    },
+    {
+      "at": "shield-left",
+      "phase": "g",
+      "type": "ehs-3-8-steel"
+    },
+    {
+      "at": "shield-right",
+      "phase": "g",
+      "type": "ehs-3-8-steel"
+    }
+  ],
+  "path": {
+    "span": 400.0,
+    "length": 150000.0
+  },
+  "earth": {
+    "conductivity": 0.01
+  }
+}
