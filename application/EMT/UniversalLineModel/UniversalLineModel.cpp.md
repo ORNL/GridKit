@@ -1,0 +1,638 @@
+```cpp
+/**
+ * @file UniversalLineModel.cpp
+ *
+ * @brief Build universal line model coefficients from a line description.
+ *
+ * Sweeps the line-parameter model over frequency, extracts the modal
+ * delays, and fits the characteristic admittance and the two propagation
+ * factors at the lowest pole order meeting each error target:
+ *
+ *   Yc(s)                       -> yc.model.json
+ *   Gin(s)  = Hmps(s) Ti^-1(s)  \
+ *   delays                       > propagation.model.json
+ *   Gout(s) = Ti(s)             /
+ *
+ * matching the Propagation operator contract (submodel keys input,
+ * delays, output; both rational factors stable with no term linear
+ * in s).
+ *
+ * @author Luke Lowery (lukel@tamu.edu)
+ */
+
+#include <algorithm>
+#include <chrono>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <nlohmann/json.hpp>
+
+#include <GridKit/Model/EMT/Parameters/OverheadDataJSONParser.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/Solver/Optimization/Rational/MinimumPhase.hpp>
+#include <GridKit/Solver/Optimization/Rational/Passivity.hpp>
+#include <GridKit/Solver/Optimization/Rational/RationalModel.hpp>
+#include <GridKit/Solver/Optimization/Rational/SampledResponse.hpp>
+#include <GridKit/Solver/Optimization/VectorFitting/VectorFitting.hpp>
+#include <GridKit/Utilities/CliArgs/CliArgs.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
+#include "FrequencySweep.hpp"
+
+using scalar_type = double;
+using index_type  = size_t;
+using Clock       = std::chrono::high_resolution_clock;
+
+namespace
+{
+  namespace fs = std::filesystem;
+
+  using Log       = GridKit::Utilities::Logger;
+  using ResponseT = GridKit::Optimization::SampledResponse<scalar_type,
+                                                           index_type>;
+  using ModelT    = GridKit::Optimization::RationalModel<scalar_type,
+                                                         index_type>;
+  using FitterT   = GridKit::Optimization::VectorFitting<scalar_type,
+                                                         index_type>;
+  using ComplexT  = ResponseT::ComplexT;
+
+  constexpr double BIORTHOGONALITY_WARNING = 1.0e-5;
+
+  /// Application settings; every field has a CLI override.
+  struct Settings
+  {
+    struct Target
+    {
+      index_type min_poles{2};
+      index_type max_poles{30};
+      double     target_rel_rms{1.0e-3};
+    };
+
+    double   fmin{1.0};
+    double   fmax{1.0e6};
+    size_t   points{201};
+    fs::path output{"output"};
+    Target   yc;
+    Target   h;
+    bool     refine{false};
+  };
+
+  int usage()
+  {
+    std::cout << "\n"
+              << "Usage:\n"
+              << "       UniversalLineModel <line-json-file> [options]\n"
+              << "\n"
+              << "Please provide an overhead line description JSON file.\n"
+              << "Pass --help after the line file to list the options.\n"
+              << "\n";
+    return 1;
+  }
+
+  /// CLI table; the line description is positional as argv[1] until
+  /// CliArgs grows positional-argument support (Option.hpp todo).
+  GridKit::Utilities::CliArgs makeArgs()
+  {
+    using GridKit::Utilities::ArgType;
+
+    return GridKit::Utilities::CliArgs{
+        {.name     = {"--fmin"},
+         .help     = "Sweep start frequency in Hz",
+         .type     = ArgType::Real,
+         .defaults = 1.0},
+
+        {.name     = {"--fmax"},
+         .help     = "Sweep stop frequency in Hz",
+         .type     = ArgType::Real,
+         .defaults = 1.0e6},
+
+        {.name     = {"--points"},
+         .help     = "Sweep sample count on the log grid",
+         .type     = ArgType::Integer,
+         .defaults = 201},
+
+        {.name     = {"--output", "-o"},
+         .help     = "Output directory for the model files",
+         .type     = ArgType::String,
+         .defaults = "output"},
+
+        {.name     = {"--yc-min-poles"},
+         .help     = "Lowest pole count tried for the Yc fit",
+         .type     = ArgType::Integer,
+         .defaults = 2},
+
+        {.name     = {"--yc-max-poles"},
+         .help     = "Highest pole count tried for the Yc fit",
+         .type     = ArgType::Integer,
+         .defaults = 30},
+
+        {.name     = {"--yc-target"},
+         .help     = "Relative RMS error target for the Yc fit",
+         .type     = ArgType::Real,
+         .defaults = 1.0e-3},
+
+        {.name     = {"--h-min-poles"},
+         .help     = "Lowest pole count tried for each propagation factor",
+         .type     = ArgType::Integer,
+         .defaults = 2},
+
+        {.name     = {"--h-max-poles"},
+         .help     = "Highest pole count tried for each propagation factor",
+         .type     = ArgType::Integer,
+         .defaults = 30},
+
+        {.name     = {"--h-target"},
+         .help     = "Relative RMS error target for each propagation factor",
+         .type     = ArgType::Real,
+         .defaults = 1.0e-3},
+
+        {.name = {"--refine"},
+         .help = "Polish each fit with the constrained refinement stage",
+         .flag = true}};
+  }
+
+  Settings makeSettings(const GridKit::Utilities::CliArgs& args)
+  {
+    Settings settings;
+    settings.fmin   = args.get<double>("fmin");
+    settings.fmax   = args.get<double>("fmax");
+    settings.points = static_cast<size_t>(args.get<int>("points"));
+    settings.output = args.get("output");
+
+    settings.yc.min_poles =
+        static_cast<index_type>(args.get<int>("yc-min-poles"));
+    settings.yc.max_poles =
+        static_cast<index_type>(args.get<int>("yc-max-poles"));
+    settings.yc.target_rel_rms = args.get<double>("yc-target");
+
+    settings.h.min_poles =
+        static_cast<index_type>(args.get<int>("h-min-poles"));
+    settings.h.max_poles =
+        static_cast<index_type>(args.get<int>("h-max-poles"));
+    settings.h.target_rel_rms = args.get<double>("h-target");
+
+    settings.refine = args.get<bool>("refine");
+    return settings;
+  }
+
+  /// One monitor CSV loaded whole: header tokens and value columns.
+  struct MonitorTable
+  {
+    std::vector<std::string>         header;
+    std::vector<std::vector<double>> columns;
+
+    size_t rowCount() const
+    {
+      return columns.empty() ? 0 : columns.front().size();
+    }
+
+    /// Column index of an exact header token; -1 when absent.
+    long find(const std::string& name) const
+    {
+      for (size_t k = 0; k < header.size(); ++k)
+      {
+        if (header[k] == name)
+        {
+          return static_cast<long>(k);
+        }
+      }
+      return -1;
+    }
+  };
+
+  MonitorTable readMonitorCsv(const fs::path& file_path)
+  {
+    std::ifstream stream(file_path);
+    if (!stream)
+    {
+      throw std::runtime_error("Failed to open monitor CSV: " +
+                               file_path.string());
+    }
+
+    MonitorTable table;
+    std::string  line;
+    while (std::getline(stream, line))
+    {
+      if (!line.empty() && line.back() == '\r')
+      {
+        line.pop_back();
+      }
+      if (line.empty())
+      {
+        continue;
+      }
+
+      std::vector<std::string> tokens;
+      std::stringstream        splitter(line);
+      std::string              token;
+      while (std::getline(splitter, token, ','))
+      {
+        tokens.push_back(token);
+      }
+
+      if (table.header.empty())
+      {
+        table.header = tokens;
+        table.columns.assign(tokens.size(), {});
+        continue;
+      }
+      if (tokens.size() != table.header.size())
+      {
+        throw std::runtime_error("Ragged monitor CSV row in " +
+                                 file_path.string());
+      }
+      for (size_t k = 0; k < tokens.size(); ++k)
+      {
+        table.columns[k].push_back(std::stod(tokens[k]));
+      }
+    }
+    if (table.header.empty() || table.rowCount() < 2)
+    {
+      throw std::runtime_error("Monitor CSV holds no samples: " +
+                               file_path.string());
+    }
+    return table;
+  }
+
+  /// Conductor count from the largest contiguous Overhead_Yc index.
+  index_type conductorCount(const MonitorTable& table)
+  {
+    index_type count = 0;
+    while (table.find("Overhead_Yc_real_" + std::to_string(count) + "_" +
+                      std::to_string(count)) >= 0)
+    {
+      ++count;
+    }
+    if (count == 0)
+    {
+      throw std::runtime_error(
+          "Monitor CSV holds no Overhead_Yc columns; "
+          "the sweep must monitor Yc, H, Tau, and Ti");
+    }
+    return count;
+  }
+
+  std::vector<double> column(const MonitorTable& table,
+                             const std::string&  name)
+  {
+    const long index = table.find(name);
+    if (index < 0)
+    {
+      throw std::runtime_error("Monitor CSV misses column: " + name);
+    }
+    return table.columns[static_cast<size_t>(index)];
+  }
+
+  /// Assemble the complex response named prefix_real/imag_... row-major.
+  ResponseT gatherResponse(const MonitorTable& table,
+                           const std::string&  prefix,
+                           index_type          rows,
+                           index_type          cols)
+  {
+    ResponseT samples;
+    samples.rows  = rows;
+    samples.cols  = cols;
+    samples.omega = column(table, "omega");
+    samples.response.assign(samples.omega.size() *
+                                static_cast<size_t>(rows) *
+                                static_cast<size_t>(cols),
+                            {});
+
+    for (index_type row = 0; row < rows; ++row)
+    {
+      for (index_type col = 0; col < cols; ++col)
+      {
+        std::string suffix = "_" + std::to_string(row);
+        if (cols > 1)
+        {
+          suffix += "_" + std::to_string(col);
+        }
+        const auto real_part = column(table, prefix + "_real" + suffix);
+        const auto imag_part = column(table, prefix + "_imag" + suffix);
+
+        for (size_t m = 0; m < samples.omega.size(); ++m)
+        {
+          samples(m, row, col) = {real_part[m], imag_part[m]};
+        }
+      }
+    }
+    return samples;
+  }
+
+  /// Real delay trace Overhead_Tau_m as a one-column response per mode.
+  ResponseT gatherDelays(const MonitorTable& table, index_type modes)
+  {
+    ResponseT samples;
+    samples.rows  = modes;
+    samples.cols  = 1;
+    samples.omega = column(table, "omega");
+    samples.response.assign(samples.omega.size() *
+                                static_cast<size_t>(modes),
+                            {});
+
+    for (index_type mode = 0; mode < modes; ++mode)
+    {
+      const auto values =
+          column(table, "Overhead_Tau_" + std::to_string(mode));
+      for (size_t m = 0; m < samples.omega.size(); ++m)
+      {
+        samples(m, mode, 0) = {values[m], 0.0};
+      }
+    }
+    return samples;
+  }
+
+  /**
+   * @brief The propagation fitting targets per the Propagation contract,
+   *        assembled without any matrix inversion.
+   *
+   * Convention note: the monitored transforms satisfy the adjoint
+   * pairing Ti^H Tv = I enforced by the Gamma element, while the
+   * physical current transformation of a reciprocal line follows the
+   * transpose pairing Ti = Tv^-T, from Y'Z' = (Z'Y')^T with symmetric
+   * per-unit-length matrices. The correct current-form factors are
+   * therefore rearrangements of the monitored data:
+   *
+   *   Gout = Tv^-T = conj(monitored Ti),
+   *   Gin  = diag(Hmps) Tv^T.
+   *
+   * The biorthogonality residual max |Ti^H Tv - I| is checked per
+   * sample: it is the identity both assemblies rest on, and it measures
+   * how well the sweep tolerance held the eigenvector tracking.
+   */
+  void buildPropagationFactors(const ResponseT& tv,
+                               const ResponseT& ti,
+                               const ResponseT& hmps,
+                               ResponseT&       gin,
+                               ResponseT&       gout)
+  {
+    const auto k = tv.rows;
+
+    gin.rows  = k;
+    gin.cols  = k;
+    gin.omega = tv.omega;
+    gin.response.assign(tv.response.size(), {});
+    gout = gin;
+
+    double worst = 0.0;
+    for (size_t m = 0; m < tv.omega.size(); ++m)
+    {
+      for (index_type row = 0; row < k; ++row)
+      {
+        const ComplexT mode = hmps(m, row, 0);
+        for (index_type col = 0; col < k; ++col)
+        {
+          gin(m, row, col)  = mode * tv(m, col, row);
+          gout(m, row, col) = std::conj(ti(m, row, col));
+        }
+      }
+
+      for (index_type row = 0; row < k; ++row)
+      {
+        for (index_type col = 0; col < k; ++col)
+        {
+          ComplexT entry{0.0, 0.0};
+          for (index_type i = 0; i < k; ++i)
+          {
+            entry += std::conj(ti(m, i, row)) * tv(m, i, col);
+          }
+          if (row == col)
+          {
+            entry -= 1.0;
+          }
+          worst = std::max(worst, std::abs(entry));
+        }
+      }
+    }
+
+    if (worst > BIORTHOGONALITY_WARNING)
+    {
+      std::cout << "Warning: transform biorthogonality residual reaches "
+                << worst << "; tighten the sweep tolerance\n";
+    }
+  }
+
+  nlohmann::json modelToJson(const ModelT& model)
+  {
+    nlohmann::json j;
+    j["rows"] = model.rows;
+    j["cols"] = model.cols;
+
+    if (!model.d.empty())
+    {
+      j["D"] = model.d;
+    }
+    if (!model.e.empty())
+    {
+      j["E"] = model.e;
+    }
+
+    auto poles = nlohmann::json::array();
+    for (const auto& pole : model.poles)
+    {
+      poles.push_back({pole.real(), pole.imag()});
+    }
+    j["poles"] = poles;
+
+    const auto channels = static_cast<size_t>(model.rows) *
+                          static_cast<size_t>(model.cols);
+    auto residues = nlohmann::json::array();
+    for (size_t q = 0; q < model.poles.size(); ++q)
+    {
+      auto per_channel = nlohmann::json::array();
+      for (size_t ch = 0; ch < channels; ++ch)
+      {
+        const auto value = model.residues[q * channels + ch];
+        per_channel.push_back({value.real(), value.imag()});
+      }
+      residues.push_back(per_channel);
+    }
+    j["residues"] = residues;
+    return j;
+  }
+
+  void writeJson(const fs::path& file_path, const nlohmann::json& j)
+  {
+    std::ofstream stream(file_path);
+    if (!stream)
+    {
+      throw std::runtime_error("Failed to write " + file_path.string());
+    }
+    stream << j.dump(2) << "\n";
+  }
+
+  /**
+   * @brief Lowest-order fit of one target with a constant term and no
+   *        term linear in s, per the Propagation submodel validation.
+   *
+   * @return the fitter status: 0 target met and converged, positive
+   *         usable-but-degraded, negative hard failure
+   */
+  int fitTarget(const ResponseT&        samples,
+                const Settings::Target& target,
+                bool                    refine,
+                const std::string&      label,
+                ModelT&                 model)
+  {
+    FitterT fitter(samples);
+
+    typename FitterT::Parameters options;
+    options.terms = GridKit::Optimization::RationalTerms::CONSTANT;
+    options.weighting =
+        GridKit::Optimization::Weighting::INVERSE_MAGNITUDE;
+    options.order_search.enabled        = true;
+    options.order_search.min_poles      = target.min_poles;
+    options.order_search.max_poles      = target.max_poles;
+    options.order_search.target_rel_rms = target.target_rel_rms;
+    options.refine                      = refine;
+
+    const int status = fitter.fit(model, options);
+    if (status < 0)
+    {
+      Log::error() << label << " fit failed with code " << status
+                   << std::endl;
+      return status;
+    }
+    std::cout << label << ": " << fitter.getStats().report() << "\n";
+    return status;
+  }
+
+  int runUniversalLineModel(const fs::path& line_file,
+                            const Settings& settings)
+  {
+    using namespace GridKit::EMT::Application;
+    using namespace GridKit::EMT::Parameters;
+    using Variable =
+        OverheadData<scalar_type, index_type>::MonitorableVariables;
+
+    auto data = parseOverheadData<scalar_type, index_type>(line_file);
+
+    fs::create_directories(settings.output);
+    const auto response_csv = settings.output / "response.csv";
+
+    data.monitored_variables = {Variable::Yc, Variable::H, Variable::Tau,
+                                Variable::Tv, Variable::Ti};
+    data.monitor_sink        = {{GridKit::Model::VariableMonitorFormat::CSV,
+                                 response_csv.string()}};
+
+    const FrequencyGrid frequency{settings.fmin, settings.fmax,
+                                  settings.points, "log"};
+    const IdaSettings   ida;
+
+    const int sweep = runFrequencySweep<scalar_type, index_type>(
+        data, frequency, ida);
+    if (sweep != 0)
+    {
+      return sweep;
+    }
+
+    const auto table = readMonitorCsv(response_csv);
+    const auto k     = conductorCount(table);
+
+    auto       yc  = gatherResponse(table, "Overhead_Yc", k, k);
+    auto       h   = gatherResponse(table, "Overhead_H", k, 1);
+    const auto tv  = gatherResponse(table, "Overhead_Tv", k, k);
+    const auto ti  = gatherResponse(table, "Overhead_Ti", k, k);
+    const auto tau = gatherDelays(table, k);
+
+    // Modal delays and the minimum-phase shift of the propagation
+    // function; tau = min over omega of tau(omega) per mode.
+    const auto delays =
+        GridKit::Optimization::minimumDelay<scalar_type, index_type>(tau);
+    GridKit::Optimization::applyDelayShift<scalar_type, index_type>(h,
+                                                                    delays);
+
+    ResponseT gin;
+    ResponseT gout;
+    buildPropagationFactors(tv, ti, h, gin, gout);
+
+    ModelT    yc_model;
+    const int yc_status =
+        fitTarget(yc, settings.yc, settings.refine, "Yc", yc_model);
+    if (yc_status < 0)
+    {
+      return yc_status;
+    }
+
+    ModelT    gin_model;
+    const int gin_status =
+        fitTarget(gin, settings.h, settings.refine, "Gin", gin_model);
+    if (gin_status < 0)
+    {
+      return gin_status;
+    }
+
+    ModelT    gout_model;
+    const int gout_status =
+        fitTarget(gout, settings.h, settings.refine, "Gout", gout_model);
+    if (gout_status < 0)
+    {
+      return gout_status;
+    }
+
+    GridKit::Optimization::PassivityReport<scalar_type, index_type> report;
+    const int passivity =
+        GridKit::Optimization::assessPassivity(yc_model, report);
+    if (passivity != 0)
+    {
+      Log::error() << "Passivity assessment failed with code " << passivity
+                   << std::endl;
+      return passivity;
+    }
+    if (!report.passive)
+    {
+      std::cout << "Warning: Yc fit violates passivity in "
+                << report.violations.size() << " band(s)\n";
+    }
+
+    writeJson(settings.output / "yc.model.json", modelToJson(yc_model));
+
+    nlohmann::json propagation;
+    propagation["K"]      = k;
+    propagation["input"]  = modelToJson(gin_model);
+    propagation["delays"] = delays;
+    propagation["output"] = modelToJson(gout_model);
+    writeJson(settings.output / "propagation.model.json", propagation);
+
+    // Zero only when every target was met with a converged fit.
+    return std::max({yc_status, gin_status, gout_status});
+  }
+} // namespace
+
+int main(int argc, const char* argv[])
+{
+  if (argc < 2)
+  {
+    return usage();
+  }
+
+  auto args = makeArgs();
+  if (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")
+  {
+    args.printHelp();
+    return 0;
+  }
+
+  const auto start = Clock::now();
+  try
+  {
+    args.parseArgs(argc - 1, argv + 1);
+
+    const int  retval =
+        runUniversalLineModel(argv[1], makeSettings(args));
+    const auto stop = Clock::now();
+    const auto dur  = std::chrono::duration<double>(stop - start);
+    std::cout << "\n\nComplete in " << dur << "\n";
+    return retval;
+  }
+  catch (const std::exception& e)
+  {
+    Log::error() << e.what() << std::endl;
+    return 1;
+  }
+}
+```

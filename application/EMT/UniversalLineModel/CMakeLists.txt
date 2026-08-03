@@ -1,7 +1,7 @@
 # UniversalLineModel: line description in, fitted line model out.
 #
 # Enabled from the parent directory once GridKit::vector_fitting is
-# implemented.
+# implemented. GridKit::Utilities carries the CliArgs interface.
 
 add_executable(UniversalLineModel UniversalLineModel.cpp)
 target_link_libraries(
