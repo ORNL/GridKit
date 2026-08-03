@@ -16,9 +16,9 @@ import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-RESPONSE = ROOT / "response"
-DEFAULT_CSV = RESPONSE / "overhead.response.csv"
-DEFAULT_PNG = RESPONSE / "Overhead_YcZc.png"
+OUTPUT_DIR = ROOT / "output"
+DEFAULT_CSV = OUTPUT_DIR / "overhead.response.csv"
+DEFAULT_PNG = OUTPUT_DIR / "Overhead_YcZc.png"
 PARAMETERS = (
     ("Yc", "|Yc(f)| [S]", "angle(Yc(f)) [rad]"),
     ("Zc", "|Zc(f)| [ohm]", "angle(Zc(f)) [rad]"),

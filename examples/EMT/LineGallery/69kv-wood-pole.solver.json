@@ -1,5 +1,5 @@
 {
-    "model": "overhead.line.json",
+    "model": "../Lines/69kv-wood-pole.line.json",
     "ida": {
         "suppress_algebraic_error": false
     },
@@ -10,7 +10,7 @@
         "scale": "log"
     },
     "output": {
-        "file": "output/overhead.response.csv",
-        "variables": ["R", "L", "G", "C", "Tv", "Ti", "Alpha", "Beta", "Tau", "H", "Yc", "Zc"]
+        "file": "output/69kv-wood-pole.response.csv",
+        "variables": ["Alpha", "Beta", "Tau", "H", "Yc", "Zc"]
     }
 }

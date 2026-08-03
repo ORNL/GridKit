@@ -536,6 +536,24 @@ namespace
     const auto ti  = gatherResponse(table, "Overhead_Ti", k, k);
     const auto tau = gatherDelays(table, k);
 
+    // The characteristic admittance of a reciprocal line is exactly
+    // symmetric; the monitored samples carry percent-level asymmetry
+    // from the modal reconstruction in the near-degenerate aerial
+    // subspace. Project back onto the symmetric manifold before
+    // fitting.
+    for (size_t m = 0; m < yc.omega.size(); ++m)
+    {
+      for (index_type row = 0; row < k; ++row)
+      {
+        for (index_type col = row + 1; col < k; ++col)
+        {
+          const ComplexT mean = ComplexT{0.5, 0.0} * (yc(m, row, col) + yc(m, col, row));
+          yc(m, row, col)     = mean;
+          yc(m, col, row)     = mean;
+        }
+      }
+    }
+
     // Modal delays and the minimum-phase shift of the propagation
     // function; tau = min over omega of tau(omega) per mode.
     const auto delays =
@@ -580,7 +598,11 @@ namespace
                    << std::endl;
       return passivity;
     }
-    if (!report.passive)
+    if (report.passive)
+    {
+      std::cout << "Yc fit is passive over the screened band\n";
+    }
+    else
     {
       std::cout << "Warning: Yc fit violates passivity in "
                 << report.violations.size() << " band(s)\n";

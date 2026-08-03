@@ -3,9 +3,9 @@
 
 Reads the monitor CSV written by the FrequencyResponse application,
 extracts the characteristic admittance and the minimum-phase-shifted
-propagation function, writes the sampled-response CSVs and solver
-specifications consumed by the VectorFitting application, and runs the
-application on both targets.
+propagation function, writes the sampled-response CSVs consumed by the
+committed solver specifications, and runs the VectorFitting application
+on both.
 """
 
 from __future__ import annotations
@@ -19,12 +19,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 EXAMPLE_DIR = HERE.parent
-INPUT_CSV = EXAMPLE_DIR / "response" / "overhead.response.csv"
+INPUT_CSV = EXAMPLE_DIR / "output" / "overhead.response.csv"
 OUTPUT_DIR = EXAMPLE_DIR / "output"
+SOLVER_SPECS = [EXAMPLE_DIR / "yc.solver.json", EXAMPLE_DIR / "hmin.solver.json"]
 DEFAULT_APP = HERE.parents[3] / "build" / "application" / "Fitting" / "VectorFitting"
-
-YC_POLES = 10
-HMIN_POLES = 20
 
 
 def parse_args() -> argparse.Namespace:
@@ -57,28 +55,42 @@ def conductor_count(fieldnames: list[str]) -> int:
     return count
 
 
-def write_samples_csv(
-    path: Path, rows: list[dict[str, str]], channels: list[tuple[str, str]]
-) -> None:
-    """Write the VectorFitting sampled-response CSV: omega, re, im per channel."""
+def write_yc_csv(path: Path, rows: list[dict[str, str]], k: int) -> None:
+    """Write symmetrized Yc samples: omega, then one re/im pair per entry.
+
+    The characteristic admittance of a reciprocal line is exactly
+    symmetric; the monitored samples carry percent-level asymmetry from
+    the modal reconstruction, so the samples are projected back onto the
+    symmetric manifold before fitting.
+    """
     with path.open("w", newline="") as stream:
         writer = csv.writer(stream)
         header = ["omega"]
-        for real_name, _ in channels:
-            label = real_name.removeprefix("Overhead_").replace("real_", "")
-            header.extend([f"re_{label}", f"im_{label}"])
+        for i in range(k):
+            for j in range(k):
+                header.extend([f"re_Yc_{i}_{j}", f"im_Yc_{i}_{j}"])
         writer.writerow(header)
 
         for row in rows:
+            values = [
+                [
+                    complex(
+                        float(row[f"Overhead_Yc_real_{i}_{j}"]),
+                        float(row[f"Overhead_Yc_imag_{i}_{j}"]),
+                    )
+                    for j in range(k)
+                ]
+                for i in range(k)
+            ]
             record = [row["omega"]]
-            for real_name, imag_name in channels:
-                record.extend([row[real_name], row[imag_name]])
+            for i in range(k):
+                for j in range(k):
+                    mean = 0.5 * (values[i][j] + values[j][i])
+                    record.extend([f"{mean.real:.17e}", f"{mean.imag:.17e}"])
             writer.writerow(record)
 
 
-def write_hmin_csv(
-    path: Path, rows: list[dict[str, str]], modes: int
-) -> list[float]:
+def write_hmin_csv(path: Path, rows: list[dict[str, str]], modes: int) -> list[float]:
     """Shift each propagation mode to minimum phase and write its samples."""
     tau_min = [
         min(float(row[f"Overhead_Tau_{mode}"]) for row in rows)
@@ -110,37 +122,6 @@ def write_hmin_csv(
     return tau_min
 
 
-def fit_model(
-    app: Path,
-    samples: Path,
-    model: Path,
-    rows: int,
-    cols: int,
-    poles: int,
-    terms: str,
-) -> None:
-    solver = {
-        "samples": samples.name,
-        "rows": rows,
-        "cols": cols,
-        "fit": {
-            "poles": poles,
-            "terms": terms,
-            "weighting": "inverse_magnitude",
-        },
-        "output": {"model": model.name},
-    }
-    solver_file = model.with_suffix("").with_suffix(".solver.json")
-    solver_file.write_text(json.dumps(solver, indent=2) + "\n")
-
-    subprocess.run(
-        [str(app), str(solver_file)],
-        check=True,
-        stdout=subprocess.DEVNULL,
-    )
-    print(f"wrote {rows}x{cols} {poles}-pole model: {model}")
-
-
 def main() -> None:
     args = parse_args()
     if not args.app.exists():
@@ -150,27 +131,19 @@ def main() -> None:
     k = conductor_count(fieldnames)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    yc_channels = [
-        (f"Overhead_Yc_real_{i}_{j}", f"Overhead_Yc_imag_{i}_{j}")
-        for i in range(k)
-        for j in range(k)
-    ]
-    write_samples_csv(OUTPUT_DIR / "yc.csv", rows, yc_channels)
+    write_yc_csv(OUTPUT_DIR / "yc.csv", rows, k)
     tau_min = write_hmin_csv(OUTPUT_DIR / "hmin.csv", rows, k)
     (OUTPUT_DIR / "delay.json").write_text(json.dumps(tau_min, indent=2) + "\n")
 
     print(f"wrote {k}x{k} Yc samples and {k}x1 Hmin samples to {OUTPUT_DIR}")
     print(f"wrote modal tau_min delays: {OUTPUT_DIR / 'delay.json'}")
 
-    fit_model(
-        args.app, OUTPUT_DIR / "yc.csv", OUTPUT_DIR / "yc.model.json",
-        k, k, YC_POLES, "constant",
-    )
-    fit_model(
-        args.app, OUTPUT_DIR / "hmin.csv", OUTPUT_DIR / "hmin.model.json",
-        k, 1, HMIN_POLES, "none",
-    )
+    for spec in SOLVER_SPECS:
+        subprocess.run(
+            [str(args.app), str(spec)], check=True, stdout=subprocess.DEVNULL
+        )
+        model = json.loads(spec.read_text())["output"]["model"]
+        print(f"fitted {spec.name}: {EXAMPLE_DIR / model}")
 
 
 if __name__ == "__main__":

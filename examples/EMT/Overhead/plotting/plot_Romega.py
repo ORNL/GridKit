@@ -15,9 +15,9 @@ import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-RESPONSE = ROOT / "response"
-DEFAULT_CSV = RESPONSE / "overhead.response.csv"
-DEFAULT_PNG = RESPONSE / "Overhead_Romega.png"
+OUTPUT_DIR = ROOT / "output"
+DEFAULT_CSV = OUTPUT_DIR / "overhead.response.csv"
+DEFAULT_PNG = OUTPUT_DIR / "Overhead_Romega.png"
 PARAMETERS = (
     ("R", "R(w) [ohm/m]"),
     ("L", "L(w) [H/m]"),

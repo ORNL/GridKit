@@ -21,24 +21,46 @@ namespace GridKit
     {
       /**
        * @brief Serialize a rational model with the VectorFit operator
-       *        vocabulary: D, E, poles as [real, imag] pairs, residues
-       *        pole-major over row-major channels.
+       *        vocabulary and shapes: D and E as rows x cols real
+       *        matrices, poles as [real, imag] pairs, and residues as
+       *        one rows x cols matrix of [real, imag] entries per pole.
        */
       template <typename scalar_type, typename index_type>
       nlohmann::json
       modelToJson(const RationalModel<scalar_type, index_type>& model)
       {
+        const auto rows = static_cast<size_t>(model.rows);
+        const auto cols = static_cast<size_t>(model.cols);
+
+        const auto real_matrix =
+            [rows, cols](const std::vector<typename RationalModel<
+                             scalar_type,
+                             index_type>::RealT>& flat)
+        {
+          auto matrix = nlohmann::json::array();
+          for (size_t row = 0; row < rows; ++row)
+          {
+            auto values = nlohmann::json::array();
+            for (size_t col = 0; col < cols; ++col)
+            {
+              values.push_back(flat[row * cols + col]);
+            }
+            matrix.push_back(values);
+          }
+          return matrix;
+        };
+
         nlohmann::json j;
         j["rows"] = model.rows;
         j["cols"] = model.cols;
 
         if (!model.d.empty())
         {
-          j["D"] = model.d;
+          j["D"] = real_matrix(model.d);
         }
         if (!model.e.empty())
         {
-          j["E"] = model.e;
+          j["E"] = real_matrix(model.e);
         }
 
         auto poles = nlohmann::json::array();
@@ -48,18 +70,22 @@ namespace GridKit
         }
         j["poles"] = poles;
 
-        const auto channels = static_cast<size_t>(model.rows) * static_cast<size_t>(model.cols);
-
         auto residues = nlohmann::json::array();
         for (size_t q = 0; q < model.poles.size(); ++q)
         {
-          auto per_channel = nlohmann::json::array();
-          for (size_t ch = 0; ch < channels; ++ch)
+          auto matrix = nlohmann::json::array();
+          for (size_t row = 0; row < rows; ++row)
           {
-            const auto value = model.residues[q * channels + ch];
-            per_channel.push_back({value.real(), value.imag()});
+            auto values = nlohmann::json::array();
+            for (size_t col = 0; col < cols; ++col)
+            {
+              const auto value =
+                  model.residues[(q * rows + row) * cols + col];
+              values.push_back({value.real(), value.imag()});
+            }
+            matrix.push_back(values);
           }
-          residues.push_back(per_channel);
+          residues.push_back(matrix);
         }
         j["residues"] = residues;
         return j;

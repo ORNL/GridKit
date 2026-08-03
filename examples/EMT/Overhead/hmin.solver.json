@@ -1,0 +1,13 @@
+{
+    "samples": "output/hmin.csv",
+    "rows": 3,
+    "cols": 1,
+    "fit": {
+        "poles": 20,
+        "terms": "none",
+        "weighting": "inverse_magnitude"
+    },
+    "output": {
+        "model": "output/hmin.model.json"
+    }
+}

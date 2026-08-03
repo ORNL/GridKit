@@ -16,9 +16,9 @@ import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-RESPONSE = ROOT / "response"
-DEFAULT_CSV = RESPONSE / "overhead.response.csv"
-DEFAULT_OUTPUT = RESPONSE / "Overhead_H.png"
+OUTPUT_DIR = ROOT / "output"
+DEFAULT_CSV = OUTPUT_DIR / "overhead.response.csv"
+DEFAULT_OUTPUT = OUTPUT_DIR / "Overhead_H.png"
 
 
 def parse_args() -> argparse.Namespace:
