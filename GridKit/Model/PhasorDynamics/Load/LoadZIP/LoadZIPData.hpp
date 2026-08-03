@@ -12,7 +12,6 @@ namespace GridKit
     {
       Pnom,   ///< Nominal real power
       Qnom,   ///< Nominal reactive power
-      Vnom,   ///< Nominal voltage magnitude
       alphaI, ///< Fraction of load represented as constant current
       alphaP, ///< Fraction of load represented as constant power
     };

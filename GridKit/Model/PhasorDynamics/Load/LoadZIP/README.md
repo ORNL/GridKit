@@ -10,7 +10,6 @@ Symbol          | Units  | JSON     | Description                    | Typical V
 ----------------|--------|----------|--------------------------------|--------------
 $P_\text{nom}$  | [p.u.] | `Pnom`   | Nominal consumed real power    | 0.0
 $Q_\text{nom}$  | [p.u.] | `Qnom`   | Nominal consumed reactive power | 0.0
-$V_\text{nom}$  | [p.u.] | `Vnom`   | Nominal voltage magnitude      | 1.0
 $\alpha_I$      | [-]    | `alphaI` | Constant current load fraction | 0.0
 $\alpha_P$      | [-]    | `alphaP` | Constant power load fraction   | 0.0
 
@@ -19,6 +18,8 @@ $\alpha_P$      | [-]    | `alphaP` | Constant power load fraction   | 0.0
 None.
 
 ### Model Derived Parameters
+
+$V_\text{nom}$ is the initial voltage magnitude of the respective bus.
 
 ```math
 \begin{aligned}
@@ -91,23 +92,10 @@ None.
 
 ## Initialization
 
-Initialization solves the algebraic current states from the connected bus
-voltage. Let $V_{m0} = \sqrt{V_{r0}^2 + V_{i0}^2}$.
-
 ```math
 \begin{aligned}
-I_r &= -(G V_{r0} + B V_{i0})
-\left[
-\alpha_Z
-+ \alpha_I \frac{V_\text{nom}}{V_{m0}}
-+ \alpha_P \frac{V_\text{nom}^2}{V_{m0}^2}
-\right] \\
-I_i &= -(G V_{i0} - B V_{r0})
-\left[
-\alpha_Z
-+ \alpha_I \frac{V_\text{nom}}{V_{m0}}
-+ \alpha_P \frac{V_\text{nom}^2}{V_{m0}^2}
-\right]
+    I_r &\leftarrow -G V_{r} - B V_{i} \\
+    I_i &\leftarrow -G V_{i} + B V_{r} 
 \end{aligned}
 ```
 

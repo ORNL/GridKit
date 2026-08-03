@@ -120,7 +120,6 @@
             "params": {
                 "Pnom": 1.0,
                 "Qnom": 0.0,
-                "Vnom": 0.99494,
                 "alphaI": 0.0,
                 "alphaP": 0.0
             }

@@ -94,7 +94,6 @@
             "params": {
                 "Pnom": 1.75,
                 "Qnom": 0.8,
-                "Vnom": 0.97,
                 "alphaI": 0.1,
                 "alphaP": 0.1
             }
