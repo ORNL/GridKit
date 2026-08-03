@@ -1,4 +1,5 @@
 #pragma once
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
@@ -50,11 +51,10 @@ namespace GridKit
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = LoadZIPData<RealT, IdxT>;
+      using PortsT = SignalPorts<ScalarT, ModelDataT>;
+      PortsT& getPorts() { return ports_; }
+      const PortsT& getPorts() const { return ports_; }
       using MonitorT   = Model::VariableMonitor<LoadZIP, LoadZIPData>;
-      using SignalsT   = ComponentSignals<ScalarT,
-                                          IdxT,
-                                          NoVariables,
-                                          LoadZIPExternalVariables>;
 
       LoadZIP(BusT* bus);
       LoadZIP(BusT* bus, RealT alphaI, RealT alphaP);
@@ -70,10 +70,6 @@ namespace GridKit
       int evaluateJacobian() override final;
 
       /// Get the signal connections for this ZIP load.
-      SignalsT& getSignals()
-      {
-        return signals_;
-      }
 
       int verify() const override final
       {
@@ -94,6 +90,7 @@ namespace GridKit
       }
 
     private:
+      PortsT ports_;
       void    initializeParameters(const ModelDataT& data);
       void    initializeMonitor();
       void    setDerivedParams();
@@ -136,11 +133,11 @@ namespace GridKit
       RealT   Vnom_{1.0};
       RealT   alphaI_{0};
       RealT   alphaP_{0};
-      ScalarT G_{0.0};
-      ScalarT B_{0.0};
+      // Nominal admittance is frozen at initialization.
+      RealT G_{0.0};
+      RealT B_{0.0};
       RealT   alphaZ_{1.0};
 
-      SignalsT signals_;
 
       std::unique_ptr<MonitorT> monitor_;
     };

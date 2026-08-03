@@ -41,8 +41,8 @@ namespace GridKit
     /**
      * @brief Construct a new BusSignalVoltageIn from bus data.
      *
-     * The initial voltage in `data` is ignored; this bus reads its voltage
-     * from its input signals only.
+     * Model data sets bus identity and monitoring. The voltage is read
+     * from input signals only.
      *
      * @param[in] data - structure with bus data
      */

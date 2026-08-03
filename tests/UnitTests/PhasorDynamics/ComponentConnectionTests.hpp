@@ -564,8 +564,9 @@ namespace GridKit
         auto& bus    = data.bus.emplace_back();
         bus.bus_id   = kBusId;
         bus.bus_type = BusData<RealT, IdxT>::BusType::SLACK;
-        bus.Vr0      = ONE<RealT>;
-        bus.Vi0      = ZERO<RealT>;
+        bus.initial_state.emplace();
+        bus.initial_state->vr = ONE<RealT>;
+        bus.initial_state->vi = ZERO<RealT>;
 
         data.signal = {{"Machine Speed Deviation", kSpeedSignalId},
                        {"Mechanical Power", kPmechSignalId},
@@ -594,8 +595,9 @@ namespace GridKit
         machine.buses[GenrouBuses::bus]                    = kBusId;
         machine.signal_outputs[GenrouSignalOutputs::speed] = kSpeedSignalId;
         machine.signal_inputs[GenrouSignalInputs::pmech]   = kPmechSignalId;
-        machine.parameters[GenrouParameters::p0]           = kInitialActivePower;
-        machine.parameters[GenrouParameters::q0]           = kInitialReactivePower;
+        machine.initial_state.emplace();
+        machine.initial_state->p = kInitialActivePower;
+        machine.initial_state->q = kInitialReactivePower;
         machine.parameters[GenrouParameters::H]            = RealT{3.0};
         machine.parameters[GenrouParameters::D]            = ZERO<RealT>;
         machine.parameters[GenrouParameters::Ra]           = ZERO<RealT>;
@@ -627,8 +629,9 @@ namespace GridKit
         machine.buses[GensalBuses::bus]                    = kBusId;
         machine.signal_outputs[GensalSignalOutputs::speed] = kSpeedSignalId;
         machine.signal_inputs[GensalSignalInputs::pmech]   = kPmechSignalId;
-        machine.parameters[GensalParameters::p0]           = kInitialActivePower;
-        machine.parameters[GensalParameters::q0]           = kInitialReactivePower;
+        machine.initial_state.emplace();
+        machine.initial_state->p = kInitialActivePower;
+        machine.initial_state->q = kInitialReactivePower;
         machine.parameters[GensalParameters::mva]          = kMachineBaseMva;
 
         return data;
@@ -644,8 +647,9 @@ namespace GridKit
         machine.buses[GenClassicalBuses::bus]                    = kBusId;
         machine.signal_outputs[GenClassicalSignalOutputs::speed] = kSpeedSignalId;
         machine.signal_inputs[GenClassicalSignalInputs::pmech]   = kPmechSignalId;
-        machine.parameters[GenClassicalParameters::p0]           = kInitialActivePower;
-        machine.parameters[GenClassicalParameters::q0]           = kInitialReactivePower;
+        machine.initial_state.emplace();
+        machine.initial_state->p = kInitialActivePower;
+        machine.initial_state->q = kInitialReactivePower;
         machine.parameters[GenClassicalParameters::mva]          = kMachineBaseMva;
 
         return data;

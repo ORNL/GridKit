@@ -25,14 +25,14 @@ else()
   gridkit_add_library(
     phasor_dynamics_loadz
     SOURCES LoadZ.cpp
-    LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core
+    LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core GridKit::phasor_dynamics_signal
     HEADERS ${_install_headers})
 endif()
 
 gridkit_add_library(
   phasor_dynamics_loadz_dependency_tracking
   SOURCES LoadZDependencyTracking.cpp
-  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core)
+  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core GridKit::phasor_dynamics_signal_dependency_tracking)
 
 # Link to interface target for all components
 target_link_libraries(

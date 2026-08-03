@@ -119,6 +119,16 @@ namespace GridKit
         return f_.getData()[1];
       }
 
+      void setVr(RealT vr) override final
+      {
+        vr_init_ = static_cast<ScalarT>(vr);
+      }
+
+      void setVi(RealT vi) override final
+      {
+        vi_init_ = static_cast<ScalarT>(vi);
+      }
+
       SignalPortsT& getPorts()
       {
         return ports_;
@@ -188,8 +198,8 @@ namespace GridKit
       RealT* J_vals_buffer_{nullptr};
 
     private:
-      ScalarT Vr0_{0.0};
-      ScalarT Vi0_{0.0};
+      ScalarT vr_init_{0.0};
+      ScalarT vi_init_{0.0};
 
       /// Signal ports
       SignalPortsT ports_;

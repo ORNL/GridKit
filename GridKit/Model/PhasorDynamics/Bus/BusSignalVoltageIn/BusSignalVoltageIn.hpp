@@ -64,7 +64,7 @@ namespace GridKit
       BusSignalVoltageIn();
       /// Initial voltage arguments are ignored; the voltage comes from signals.
       BusSignalVoltageIn(ScalarT Vr, ScalarT Vi);
-      /// Initial voltage in `data` is ignored; the voltage comes from signals.
+      /// Model data sets bus identity and monitoring; voltage comes from signals.
       BusSignalVoltageIn(const ModelDataT& data);
       virtual ~BusSignalVoltageIn();
 
@@ -131,6 +131,18 @@ namespace GridKit
       virtual const ScalarT& Ii() const override final
       {
         return Ii_;
+      }
+
+      /// State initialization must set the voltage source, not this bus.
+      void setVr(RealT) override final
+      {
+        throw std::logic_error("BusSignalVoltageIn voltage must be initialized at its signal source");
+      }
+
+      /// State initialization must set the voltage source, not this bus.
+      void setVi(RealT) override final
+      {
+        throw std::logic_error("BusSignalVoltageIn voltage must be initialized at its signal source");
       }
 
       SignalPortsT& getPorts()

@@ -118,6 +118,29 @@ namespace GridKit
         success *= (&bus.Vr() == &Vr);
         success *= (&bus.Vi() == &Vi);
 
+        // A bus state cannot overwrite voltage owned by its signal source.
+        PhasorDynamics::BusBase<ScalarT, IdxT>& base     = bus;
+        int                                     rejected = 0;
+        try
+        {
+          base.setVr(0.0);
+        }
+        catch (const std::logic_error&)
+        {
+          ++rejected;
+        }
+        try
+        {
+          base.setVi(0.0);
+        }
+        catch (const std::logic_error&)
+        {
+          ++rejected;
+        }
+        success *= (rejected == 2);
+        success *= isEqual(Vr, 0.93);
+        success *= isEqual(Vi, -0.27);
+
         // Voltage follows the signals
         Vr       = 1.17;
         Vi       = 0.41;

@@ -74,6 +74,17 @@ namespace GridKit
         success *= isEqual(bus->Vi(), Vi);
         delete bus;
 
+        // Model data no longer carries initial voltage; the state setter does.
+        typename BusT::ModelDataT data{};
+        bus = new BusT(data);
+        bus->setVr(0.81);
+        bus->setVi(-0.19);
+        bus->allocate();
+        bus->initialize();
+        success *= isEqual(bus->Vr(), 0.81);
+        success *= isEqual(bus->Vi(), -0.19);
+        delete bus;
+
         bus = nullptr;
 
         return success.report(__func__);

@@ -206,8 +206,6 @@ namespace GridKit
         addDevice(model_data.genclassical, "genclassical_1");
         addDevice(model_data.loadz, "loadz_1");
         addDevice(model_data.loadzip, "loadzip_1");
-        addDevice(model_data.bus_fault, "fault_1");
-        state_data.devices["fault_1"].active                 = true;
         model_data.branch[0].parameters[BranchParameters::R] = 0.1;
         state_data.devices.emplace("unknown_1", Model::DeviceState{});
 
@@ -236,14 +234,12 @@ namespace GridKit
         checkDevice(model_data.genclassical, "genclassical_1");
         checkDevice(model_data.loadz, "loadz_1");
         checkDevice(model_data.loadzip, "loadzip_1");
-        checkDevice(model_data.bus_fault, "fault_1");
-        success *= model_data.bus_fault[0].initial_state->active == true;
         success *= std::get<RealT>(model_data.branch[0].parameters[BranchParameters::R]) == 0.1;
 
         return success.report(__func__);
       }
 
-      TestOutcome busFaultStateInput()
+      TestOutcome busFaultEvents()
       {
         using namespace PhasorDynamics;
 
@@ -251,19 +247,10 @@ namespace GridKit
         data.bus.resize(1);
         auto& bus             = data.bus[0];
         bus.bus_id            = 0;
-        bus.bus_type          = BusData<ScalarT, IdxT>::BusType::SLACK;
+        bus.bus_type          = BusData<ScalarT, IdxT>::BusType::DEFAULT;
         bus.initial_state     = Model::BusState{};
         bus.initial_state->vr = 1.0;
         bus.initial_state->vi = 0.0;
-
-        data.bus_fault.resize(1);
-        auto& fault                             = data.bus_fault[0];
-        fault.disambiguation_string             = "fault_1";
-        fault.buses[BusFaultBuses::bus]         = 0;
-        fault.parameters[BusFaultParameters::R] = 0.0;
-        fault.parameters[BusFaultParameters::X] = 1.0e-3;
-        fault.initial_state                     = Model::DeviceState{};
-        fault.initial_state->active             = false;
 
         SystemModel<ScalarT, IdxT> system(data);
         system.allocate();
@@ -274,13 +261,13 @@ namespace GridKit
         success            *= isEqual(system.getBus(0)->Ir(), ScalarT{0.0});
         success            *= isEqual(system.getBus(0)->Ii(), ScalarT{0.0});
 
-        system.setInput("fault_1", "active", 1.0);
+        success *= system.getBus(0)->setFault(true, 0.0, 1.0e-3) == 0;
         system.initialize();
         system.evaluateResidual();
         success *= isEqual(system.getBus(0)->Ir(), ScalarT{0.0});
         success *= isEqual(system.getBus(0)->Ii(), ScalarT{1000.0});
 
-        system.setInput("fault_1", "active", 0.0);
+        success *= system.getBus(0)->clearFault() == 0;
         system.initialize();
         system.evaluateResidual();
         success *= isEqual(system.getBus(0)->Ir(), ScalarT{0.0});

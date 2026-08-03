@@ -7,6 +7,7 @@
  *
  */
 #pragma once
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -29,8 +30,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     class BusBase;
 
-    template <typename real_type, typename index_type>
-    struct BranchData;
   } // namespace PhasorDynamics
 } // namespace GridKit
 
@@ -72,6 +71,9 @@ namespace GridKit
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = BranchData<RealT, IdxT>;
+      using PortsT = SignalPorts<ScalarT, ModelDataT>;
+      PortsT& getPorts() { return ports_; }
+      const PortsT& getPorts() const { return ports_; }
       using MonitorT   = Model::VariableMonitor<Branch, BranchData>;
 
       Branch(BusT* bus1, BusT* bus2);
@@ -93,12 +95,6 @@ namespace GridKit
       virtual int evaluateJacobian() override final;
       virtual int verify() const override final;
 
-      /// Get the `ComponentSignals` from this `Branch`
-      auto getSignals()
-          -> ComponentSignals<ScalarT, IdxT, NoVariables, BranchExternalVariables>&
-      {
-        return signals_;
-      }
 
       void setR(RealT R)
       {
@@ -127,6 +123,7 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
+      PortsT ports_;
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
       void updateSignalInputs();
@@ -214,7 +211,6 @@ namespace GridKit
       BusT* bus2_;
 
       /// Branch operating inputs.
-      ComponentSignals<ScalarT, IdxT, NoVariables, BranchExternalVariables> signals_;
 
       RealT R_{0.0};
       RealT X_{0.0};

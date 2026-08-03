@@ -65,7 +65,8 @@ where $\mathcal{D}$ is the set of devices attached directly to the bus.
 ## Initialization
 
 Current sums are set to zero. The voltage is owned by the signal sources and
-is not initialized by the bus; the initial voltage in bus data is ignored.
+is not initialized by the bus. `setVr()` and `setVi()` reject attempts to
+set bus-owned initial voltage; initialize the connected signal sources instead.
 
 ## Monitors
 

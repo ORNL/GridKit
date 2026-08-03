@@ -287,7 +287,7 @@ namespace GridKit
         success *= result.exciter.size() == 1;
         success *= result.sexspti.size() == 1;
         success *= result.reecb.size() == 1;
-        success *= result.signal.size() == 28;
+        success *= result.signal.size() == 29;
 
         success *= result.bus[0].bus_id == 1;
         success *= result.bus[0].bus_type == BusType::DEFAULT;

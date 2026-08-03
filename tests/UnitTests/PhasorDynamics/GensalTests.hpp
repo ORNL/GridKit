@@ -93,10 +93,10 @@ namespace GridKit
         IdxT                                      q_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<ScalarT, IdxT> p_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> q_signal;
-        p_signal.set(&p, &p_index);
-        q_signal.set(&q, &q_index);
-        gen.getSignals().template attachSignalNode<PhasorDynamics::GensalExternalVariables::P>(&p_signal);
-        gen.getSignals().template attachSignalNode<PhasorDynamics::GensalExternalVariables::Q>(&q_signal);
+        p_signal.link(&p, &p_index);
+        q_signal.link(&q, &q_index);
+        gen.getPorts().in.template port<PhasorDynamics::GensalSignalInputs::p>().connect(&p_signal);
+        gen.getPorts().in.template port<PhasorDynamics::GensalSignalInputs::q>().connect(&q_signal);
 
         bus.allocate();
         bus.initialize();
@@ -142,10 +142,10 @@ namespace GridKit
         IdxT                                      q_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<ScalarT, IdxT> p_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> q_signal;
-        p_signal.set(&p, &p_index);
-        q_signal.set(&q, &q_index);
-        gen.getSignals().template attachSignalNode<PhasorDynamics::GensalExternalVariables::P>(&p_signal);
-        gen.getSignals().template attachSignalNode<PhasorDynamics::GensalExternalVariables::Q>(&q_signal);
+        p_signal.link(&p, &p_index);
+        q_signal.link(&q, &q_index);
+        gen.getPorts().in.template port<PhasorDynamics::GensalSignalInputs::p>().connect(&p_signal);
+        gen.getPorts().in.template port<PhasorDynamics::GensalSignalInputs::q>().connect(&q_signal);
 
         bus.allocate();
         bus.initialize();
@@ -224,10 +224,10 @@ namespace GridKit
         IdxT                                      q_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<ScalarT, IdxT> p_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> q_signal;
-        p_signal.set(&p, &p_index);
-        q_signal.set(&q, &q_index);
-        gen.getSignals().template attachSignalNode<PhasorDynamics::GensalExternalVariables::P>(&p_signal);
-        gen.getSignals().template attachSignalNode<PhasorDynamics::GensalExternalVariables::Q>(&q_signal);
+        p_signal.link(&p, &p_index);
+        q_signal.link(&q, &q_index);
+        gen.getPorts().in.template port<PhasorDynamics::GensalSignalInputs::p>().connect(&p_signal);
+        gen.getPorts().in.template port<PhasorDynamics::GensalSignalInputs::q>().connect(&q_signal);
 
         bus.allocate();
         bus.initialize();
@@ -282,14 +282,14 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> p_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> q_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> online_signal;
-        p_signal.set(&p, &p_index);
-        q_signal.set(&q, &q_index);
-        online_signal.set(&online, &online_index);
+        p_signal.link(&p, &p_index);
+        q_signal.link(&q, &q_index);
+        online_signal.link(&online, &online_index);
 
-        auto& signals = gen.getSignals();
-        signals.template attachSignalNode<PhasorDynamics::GensalExternalVariables::P>(&p_signal);
-        signals.template attachSignalNode<PhasorDynamics::GensalExternalVariables::Q>(&q_signal);
-        signals.template attachSignalNode<PhasorDynamics::GensalExternalVariables::ONLINE>(&online_signal);
+        auto& signals = gen.getPorts();
+        signals.in.template port<PhasorDynamics::GensalSignalInputs::p>().connect(&p_signal);
+        signals.in.template port<PhasorDynamics::GensalSignalInputs::q>().connect(&q_signal);
+        signals.in.template port<PhasorDynamics::GensalSignalInputs::online>().connect(&online_signal);
 
         bus.allocate();
         bus.initialize();
@@ -503,10 +503,10 @@ namespace GridKit
         IdxT                                                           q_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> p_signal;
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> q_signal;
-        p_signal.set(&p, &p_index);
-        q_signal.set(&q, &q_index);
-        gen.getSignals().template attachSignalNode<PhasorDynamics::GensalExternalVariables::P>(&p_signal);
-        gen.getSignals().template attachSignalNode<PhasorDynamics::GensalExternalVariables::Q>(&q_signal);
+        p_signal.link(&p, &p_index);
+        q_signal.link(&q, &q_index);
+        gen.getPorts().in.template port<PhasorDynamics::GensalSignalInputs::p>().connect(&p_signal);
+        gen.getPorts().in.template port<PhasorDynamics::GensalSignalInputs::q>().connect(&q_signal);
 
         bus.allocate();
         gen.allocate();
@@ -548,10 +548,10 @@ namespace GridKit
         IdxT                                      q_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<ScalarT, IdxT> p_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> q_signal;
-        p_signal.set(&p, &p_index);
-        q_signal.set(&q, &q_index);
-        gen.getSignals().template attachSignalNode<PhasorDynamics::GensalExternalVariables::P>(&p_signal);
-        gen.getSignals().template attachSignalNode<PhasorDynamics::GensalExternalVariables::Q>(&q_signal);
+        p_signal.link(&p, &p_index);
+        q_signal.link(&q, &q_index);
+        gen.getPorts().in.template port<PhasorDynamics::GensalSignalInputs::p>().connect(&p_signal);
+        gen.getPorts().in.template port<PhasorDynamics::GensalSignalInputs::q>().connect(&q_signal);
 
         bus.allocate();
         gen.allocate();
