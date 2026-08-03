@@ -965,8 +965,12 @@ namespace GridKit
       };
 
       /**
-       * @brief Run the refinement program and keep the result only when
-       *        it improves the weighted misfit.
+       * @brief Run the refinement program and unpack its candidate.
+       *
+       * Acceptance is not decided here: the caller compares the
+       * candidate against the pre-refinement model under the same
+       * unweighted metric that decides the fit verdict, so refinement
+       * can never flip a met target into a failure.
        */
       template <typename scalar_type, typename index_type>
       int refineModel(
@@ -985,18 +989,6 @@ namespace GridKit
         RefinementProblem<scalar_type, index_type> problem(
             samples, weights, model, terms, margin);
 
-        std::vector<RealT> start(
-            static_cast<size_t>(problem.variableCount()), RealT{0});
-        if (problem.startingPoint(start.data()) != 0)
-        {
-          return -2;
-        }
-        RealT before = RealT{0};
-        if (problem.evaluateObjective(start.data(), before) != 0)
-        {
-          return -2;
-        }
-
         typename SolverT::Parameters options;
         options.tolerance = REFINE_TOLERANCE;
         options.max_iterations =
@@ -1004,21 +996,13 @@ namespace GridKit
         options.hessian = HessianMode::LIMITED_MEMORY;
 
         SolverT            solver(&problem, options);
-        std::vector<RealT> x = start;
+        std::vector<RealT> x;
         if (solver.solve(x) < 0)
         {
           return -2;
         }
 
-        RealT after = RealT{0};
-        if (problem.evaluateObjective(x.data(), after) != 0)
-        {
-          return -2;
-        }
-        if (after < before)
-        {
-          problem.unpack(x.data(), model);
-        }
+        problem.unpack(x.data(), model);
         return 0;
       }
     } // namespace Detail
@@ -1282,17 +1266,26 @@ namespace GridKit
 
       if (params.refine)
       {
-        const int refinement =
+        RationalModel<ScalarT, IdxT> refined = model;
+        const int                    refinement =
             Detail::refineModel<ScalarT, IdxT>(samples_,
                                                sample_weights,
                                                params.terms,
                                                params.stability_margin,
-                                               model);
+                                               refined);
         if (refinement != 0)
         {
           return refinement;
         }
-        Detail::computeStats<ScalarT, IdxT>(samples_, model, stats_);
+
+        // Accept the candidate only under the verdict metric itself.
+        Stats refined_stats = stats_;
+        Detail::computeStats<ScalarT, IdxT>(samples_, refined, refined_stats);
+        if (refined_stats.final_rel_rms < stats_.final_rel_rms)
+        {
+          model  = refined;
+          stats_ = refined_stats;
+        }
       }
 
       if (model.validate(RealT{0}) != 0)

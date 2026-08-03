@@ -109,6 +109,39 @@ namespace
     return success.report(__func__);
   }
 
+  /// Refinement is accepted under the same unweighted metric that
+  /// decides the verdict, so enabling it can never worsen the reported
+  /// error or flip a met target into a failure.
+  GridKit::Testing::TestOutcome fit_refine_never_worsens_verdict()
+  {
+    using GridKit::Testing::TestStatus;
+
+    const Reference reference;
+    const auto      samples = makeSamples(reference);
+
+    FitterT::Parameters params;
+    params.pole_count = 3;
+    params.terms      = GridKit::Optimization::RationalTerms::CONSTANT;
+    params.weighting  = GridKit::Optimization::Weighting::INVERSE_MAGNITUDE;
+
+    FitterT   plain_fitter(samples);
+    ModelT    plain_model;
+    const int plain_status = plain_fitter.fit(plain_model, params);
+
+    params.refine = true;
+    FitterT   refined_fitter(samples);
+    ModelT    refined_model;
+    const int refined_status = refined_fitter.fit(refined_model, params);
+
+    TestStatus success  = true;
+    success            *= (plain_status >= 0);
+    success            *= (refined_status >= 0);
+    success            *= (refined_fitter.getStats().final_rel_rms
+                <= plain_fitter.getStats().final_rel_rms * (1.0 + 1.0e-12));
+
+    return success.report(__func__);
+  }
+
   /// Invalid order ranges are hard errors, never a default-constructed
   /// model reported as success.
   GridKit::Testing::TestOutcome fit_rejects_invalid_order_ranges()
@@ -146,6 +179,7 @@ int main()
 {
   GridKit::Testing::TestingResults result;
   result += fit_recovers_exact_rational();
+  result += fit_refine_never_worsens_verdict();
   result += fit_rejects_invalid_order_ranges();
   return result.summary();
 }
