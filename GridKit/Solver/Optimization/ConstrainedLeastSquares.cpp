@@ -1,4 +1,3 @@
-```cpp
 /**
  * @file ConstrainedLeastSquares.cpp
  *
@@ -29,8 +28,8 @@ namespace GridKit
         return -1;
       }
 
-      const auto variables = static_cast<size_t>(variable_count);
-      const auto residuals = static_cast<size_t>(residual_count);
+      const auto variables  = static_cast<size_t>(variable_count);
+      const auto residuals  = static_cast<size_t>(residual_count);
       const auto equalities = static_cast<size_t>(equality_count);
 
       if (a.size() != residuals * variables || b.size() != residuals)
@@ -41,8 +40,7 @@ namespace GridKit
       {
         return -1;
       }
-      if (a_eq.size() != equalities * variables ||
-          b_eq.size() != equalities)
+      if (a_eq.size() != equalities * variables || b_eq.size() != equalities)
       {
         return -1;
       }
@@ -287,4 +285,3 @@ namespace GridKit
     template class ConstrainedLeastSquares<double, size_t>;
   } // namespace Optimization
 } // namespace GridKit
-```

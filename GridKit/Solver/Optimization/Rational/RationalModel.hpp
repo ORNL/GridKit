@@ -23,7 +23,8 @@ namespace GridKit
      * Coefficient conventions and conjugate-pair ordering follow the
      * VectorFit model contract: real poles carry real residues, and every
      * nonreal pole and residue is immediately followed by its conjugate.
-     * Fitted instances satisfy the contract by construction.
+     * Fitted instances satisfy the contract by construction; validate()
+     * gates instances arriving from any other source.
      */
     template <typename scalar_type, typename index_type>
     struct RationalModel
@@ -52,10 +53,21 @@ namespace GridKit
 
       /**
        * @brief Whether every pole satisfies Re(p) <= -margin.
-       *
-       * Computed from the poles; never a cached flag.
        */
       bool isStable(RealT margin = 0.0) const;
+
+      /**
+       * @brief Check the coefficient contract.
+       *
+       * @param[in] tolerance Relative comparison tolerance; zero demands
+       *                      exact conjugacy
+       * @return 0 when valid, -1 on inconsistent sizes, -2 on a nonfinite
+       *         value, -3 on a conjugate-pair violation
+       *
+       * @pre tolerance >= 0
+       */
+      [[nodiscard("May fail. Check error code.")]]
+      int validate(RealT tolerance = 0.0) const;
     };
   } // namespace Optimization
 } // namespace GridKit

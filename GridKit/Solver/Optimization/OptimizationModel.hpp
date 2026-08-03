@@ -1,4 +1,3 @@
-```cpp
 /**
  * @file OptimizationModel.hpp
  *
@@ -96,4 +95,3 @@ namespace GridKit
     };
   } // namespace Optimization
 } // namespace GridKit
-```

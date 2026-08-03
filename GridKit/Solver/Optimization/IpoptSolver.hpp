@@ -1,4 +1,3 @@
-```cpp
 /**
  * @file IpoptSolver.hpp
  *
@@ -22,8 +21,8 @@ namespace GridKit
     /// Hessian supply strategy for the interior-point iteration.
     enum class HessianMode
     {
-      EXACT,          ///< The model provides the Lagrangian Hessian.
-      LIMITED_MEMORY  ///< Quasi-Newton approximation inside Ipopt.
+      EXACT,         ///< The model provides the Lagrangian Hessian.
+      LIMITED_MEMORY ///< Quasi-Newton approximation inside Ipopt.
     };
 
     /**
@@ -61,7 +60,7 @@ namespace GridKit
       };
 
       explicit IpoptSolver(OptimizationModel<ScalarT, IdxT>* model,
-                           Parameters params = {});
+                           Parameters                        params = {});
 
       /**
        * @brief Solve the bound model.
@@ -84,4 +83,3 @@ namespace GridKit
     };
   } // namespace Optimization
 } // namespace GridKit
-```

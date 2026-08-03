@@ -50,9 +50,10 @@ namespace GridKit
      * @brief Relaxed vector fitting in the real-augmented formulation.
      *
      * Each pole-relocation pass and the coefficient identification are
-     * equality-constrained convex quadratic programs; the optional
-     * refinement stage is a nonlinear program with stability inequality
-     * constraints. See README.md for the algorithm specification.
+     * equality-constrained convex quadratic programs solved through the
+     * Optimization family; the optional refinement stage is a
+     * bound-constrained nonlinear program. See README.md for the
+     * algorithm specification.
      */
     template <typename scalar_type, typename index_type>
     class VectorFitting
@@ -107,7 +108,6 @@ namespace GridKit
       struct IterationInfo
       {
         IdxT  iteration{0};
-        RealT rel_rms{0.0};
         RealT max_pole_shift{0.0};
       };
 
@@ -138,10 +138,11 @@ namespace GridKit
        *
        * @param[out] model  Fitted poles, residues, and polynomial terms
        * @param[in]  params Algorithm options
-       * @return 0 on success, positive when the iteration limit was reached
-       *         above tolerance (result still usable), negative on a hard
-       *         failure (inconsistent options, dimension mismatch,
-       *         optimizer or eigensolver error)
+       * @return 0 on success, 1 when the relocation iteration limit was
+       *         reached (result usable), 2 when the order search ended
+       *         without meeting its target (best model returned),
+       *         negative on a hard failure (inconsistent options,
+       *         dimension mismatch, optimizer or eigensolver error)
        *
        * @pre The sample set has strictly increasing, positive frequencies
        * @post Every pole satisfies the stability margin

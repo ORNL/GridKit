@@ -1,4 +1,3 @@
-```cpp
 /**
  * @file IpoptSolver.cpp
  *
@@ -46,8 +45,7 @@ namespace
         solution_(solution),
         stats_(stats),
         exact_hessian_(exact_hessian),
-        hessian_buffer_(static_cast<size_t>(model.variableCount()) *
-                            static_cast<size_t>(model.variableCount()),
+        hessian_buffer_(static_cast<size_t>(model.variableCount()) * static_cast<size_t>(model.variableCount()),
                         RealT{0})
     {
     }
@@ -73,18 +71,17 @@ namespace
                          Ipopt::Number* g_l,
                          Ipopt::Number* g_u) override
     {
-      return model_.variableBounds(x_l, x_u) == 0 &&
-             model_.constraintBounds(g_l, g_u) == 0;
+      return model_.variableBounds(x_l, x_u) == 0 && model_.constraintBounds(g_l, g_u) == 0;
     }
 
-    bool get_starting_point(Ipopt::Index n,
-                            bool         init_x,
+    bool get_starting_point(Ipopt::Index   n,
+                            bool           init_x,
                             Ipopt::Number* x,
-                            bool         init_z,
+                            bool           init_z,
                             Ipopt::Number*,
                             Ipopt::Number*,
                             Ipopt::Index,
-                            bool         init_lambda,
+                            bool init_lambda,
                             Ipopt::Number*) override
     {
       if (init_z || init_lambda)
@@ -126,13 +123,13 @@ namespace
       return model_.evaluateConstraints(x, g) == 0;
     }
 
-    bool eval_jac_g(Ipopt::Index n,
+    bool eval_jac_g(Ipopt::Index         n,
                     const Ipopt::Number* x,
                     bool,
                     Ipopt::Index m,
                     Ipopt::Index,
-                    Ipopt::Index* iRow,
-                    Ipopt::Index* jCol,
+                    Ipopt::Index*  iRow,
+                    Ipopt::Index*  jCol,
                     Ipopt::Number* values) override
     {
       if (values == nullptr)
@@ -152,7 +149,7 @@ namespace
       return model_.evaluateJacobian(x, values) == 0;
     }
 
-    bool eval_h(Ipopt::Index n,
+    bool eval_h(Ipopt::Index         n,
                 const Ipopt::Number* x,
                 bool,
                 Ipopt::Number obj_factor,
@@ -160,8 +157,8 @@ namespace
                 const Ipopt::Number* lambda,
                 bool,
                 Ipopt::Index,
-                Ipopt::Index* iRow,
-                Ipopt::Index* jCol,
+                Ipopt::Index*  iRow,
+                Ipopt::Index*  jCol,
                 Ipopt::Number* values) override
     {
       if (!exact_hessian_)
@@ -184,8 +181,7 @@ namespace
         return true;
       }
 
-      if (model_.evaluateHessian(x, obj_factor, lambda,
-                                 hessian_buffer_.data()) != 0)
+      if (model_.evaluateHessian(x, obj_factor, lambda, hessian_buffer_.data()) != 0)
       {
         return false;
       }
@@ -196,8 +192,7 @@ namespace
       {
         for (Ipopt::Index col = 0; col <= row; ++col)
         {
-          values[entry] = hessian_buffer_[static_cast<size_t>(row) * columns +
-                                          static_cast<size_t>(col)];
+          values[entry] = hessian_buffer_[static_cast<size_t>(row) * columns + static_cast<size_t>(col)];
           ++entry;
         }
       }
@@ -205,7 +200,7 @@ namespace
     }
 
     void finalize_solution(Ipopt::SolverReturn,
-                           Ipopt::Index n,
+                           Ipopt::Index         n,
                            const Ipopt::Number* x,
                            const Ipopt::Number*,
                            const Ipopt::Number*,
@@ -299,8 +294,7 @@ namespace GridKit
           new ModelAdapter<ScalarT, IdxT>(*this->model_,
                                           x,
                                           stats_,
-                                          params_.hessian ==
-                                              HessianMode::EXACT);
+                                          params_.hessian == HessianMode::EXACT);
 
       const auto status = application->OptimizeTNLP(adapter);
       stats_.status     = static_cast<int>(status);
@@ -312,14 +306,14 @@ namespace GridKit
 
       switch (status)
       {
-        case Ipopt::Solve_Succeeded:
-          return 0;
-        case Ipopt::Solved_To_Acceptable_Level:
-          return 1;
-        case Ipopt::Maximum_Iterations_Exceeded:
-          return 2;
-        default:
-          return -2;
+      case Ipopt::Solve_Succeeded:
+        return 0;
+      case Ipopt::Solved_To_Acceptable_Level:
+        return 1;
+      case Ipopt::Maximum_Iterations_Exceeded:
+        return 2;
+      default:
+        return -2;
       }
     }
 
@@ -327,4 +321,3 @@ namespace GridKit
     template class IpoptSolver<double, size_t>;
   } // namespace Optimization
 } // namespace GridKit
-```

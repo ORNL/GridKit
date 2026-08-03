@@ -1,16 +1,18 @@
+# Optimization solver family: the nonlinear-program contract, dense
+# constrained least squares, the Ipopt backend, the rational-approximation
+# model space, and the vector fitting estimator. The legacy dynamic
+# optimization stubs are retired by this family.
 #
-
-# [[
-#  Author(s):
-#    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
-#]]
+# The imported Ipopt target name follows cmake/FindIpopt.cmake.
 
 gridkit_add_library(
-  solvers_opt
-  SOURCES DynamicObjective.cpp DynamicConstraint.cpp
-  HEADERS DynamicConstraint.hpp DynamicObjective.hpp OptimizationSolver.hpp
-  LINK_LIBRARIES
-    PUBLIC
-    IPOPT
-    PUBLIC
-    GridKit::solvers_dyn)
+  optimization
+  SOURCES ConstrainedLeastSquares.cpp IpoptSolver.cpp
+  HEADERS OptimizationModel.hpp
+          OptimizationSolver.hpp
+          ConstrainedLeastSquares.hpp
+          IpoptSolver.hpp
+  LINK_LIBRARIES PRIVATE Ipopt::Ipopt)
+
+add_subdirectory(Rational)
+add_subdirectory(VectorFitting)

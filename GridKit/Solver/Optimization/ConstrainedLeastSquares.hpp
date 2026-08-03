@@ -1,4 +1,3 @@
-```cpp
 /**
  * @file ConstrainedLeastSquares.hpp
  *
@@ -94,4 +93,3 @@ namespace GridKit
     };
   } // namespace Optimization
 } // namespace GridKit
-```
