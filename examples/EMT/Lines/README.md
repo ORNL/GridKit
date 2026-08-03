@@ -9,8 +9,8 @@ illustrative, not normative specifications.
 
 Conductor and tower types come from a catalog, and the examples cover both
 forms: types defined in the document's own `catalog` section
-(self-contained), and types shared through an included YAML catalog
-([`north-american.catalog.yaml`](north-american.catalog.yaml)).
+(self-contained), and types shared through an included catalog file
+([`north-american.catalog.json`](north-american.catalog.json)).
 
 File | Structure | Types
 ---- | --------- | -----
@@ -35,7 +35,7 @@ File | Structure | Types
 ## Rendering
 
 [`render_tower.py`](render_tower.py) regenerates the cross-section figures
-(requires matplotlib and PyYAML):
+(requires matplotlib):
 
 ```sh
 python render_tower.py *.line.json

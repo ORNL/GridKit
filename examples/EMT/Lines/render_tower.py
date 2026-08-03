@@ -6,8 +6,6 @@ import sys
 from collections import OrderedDict
 from pathlib import Path
 
-import yaml
-
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -52,7 +50,7 @@ def attachments(doc, path):
     """Attachment coordinates of the document's tower type."""
     towers = dict((doc.get("catalog") or {}).get("towers") or {})
     for inc in doc.get("include", []):
-        catalog = yaml.safe_load((path.parent / inc).read_text(encoding="utf-8"))
+        catalog = json.loads((path.parent / inc).read_text(encoding="utf-8"))
         towers.update(catalog.get("towers") or {})
     return towers[doc["tower"]]["attachments"]
 

@@ -5,7 +5,7 @@
   "description": "Three arm levels per side, twin bundle at 0.457 m, two shield wires at the peak. Conductor and tower types come from an included catalog.",
   "source": "synthetic example; conductor and earth data illustrative",
 
-  "include": ["north-american.catalog.yaml"],
+  "include": ["north-american.catalog.json"],
 
   "tower": "500kv-double-circuit",
 

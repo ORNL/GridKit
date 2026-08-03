@@ -30,6 +30,8 @@ namespace GridKit
         std::vector<ScalarT>     mu;
         std::vector<ScalarT>     weight;
         std::vector<std::string> phase;
+        /// Circuit index on multi-circuit structures; meaningful for phases a, b, and c
+        std::vector<IdxT>        circuit;
       };
     } // namespace Parameters
   } // namespace EMT

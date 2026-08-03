@@ -209,16 +209,15 @@ namespace GridKit
             }
           }
 
-          if (data_.tension.has_value())
+          if (!data_.tension.empty())
           {
-            const auto& tension = data_.tension.value();
-            if (tension.size() != static_cast<size_t>(data_.K))
+            if (data_.tension.size() != static_cast<size_t>(data_.K))
             {
               throw std::runtime_error("Tower tension size must match conductor count");
             }
-            for (IdxT i = 0; i < data_.K; ++i)
+            for (const auto& tension : data_.tension)
             {
-              if (!positiveFinite(tension[static_cast<size_t>(i)]))
+              if (tension.has_value() && !positiveFinite(tension.value()))
               {
                 throw std::runtime_error("Tower tension entries must be positive and finite");
               }
@@ -234,22 +233,28 @@ namespace GridKit
           effective_height_     = data_.height;
           sagged_to_span_ratio_ = static_cast<ScalarT>(1.0);
 
-          if (!data_.tension.has_value())
+          if (data_.tension.empty())
           {
             return;
           }
 
-          const auto& tension = data_.tension.value();
-          ScalarT     ratio_sum{0.0};
+          ScalarT ratio_sum{0.0};
           for (IdxT i = 0; i < data_.K; ++i)
           {
+            const auto& tension = data_.tension[static_cast<size_t>(i)];
+            if (!tension.has_value())
+            {
+              ratio_sum += static_cast<ScalarT>(1.0);
+              continue;
+            }
+
             const ScalarT weight = conductor_.weight(i);
             if (!positiveFinite(weight))
             {
               throw std::runtime_error("Tower conductor weights must be positive and finite");
             }
 
-            const ScalarT a        = tension[static_cast<size_t>(i)] / weight;
+            const ScalarT a        = tension.value() / weight;
             const ScalarT eta      = data_.span / (static_cast<ScalarT>(2.0) * a);
             const ScalarT sinh_eta = std::sinh(eta);
             const ScalarT sag      = a * (std::cosh(eta) - static_cast<ScalarT>(1.0));

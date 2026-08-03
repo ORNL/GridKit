@@ -1,45 +1,46 @@
 {
-    "class": "Overhead",
-    "length": 100000.0,
-    "tower": {
-        "x": [
-            -8.0,
-            0.4,
-            8.8
-        ],
-        "height": [
-            21.5,
-            25.0,
-            23.0
-        ],
-        "span": 300.0
+  "$schema": "https://gridkit.readthedocs.io/en/schema/line.schema.json",
+  "line": "1.0",
+  "name": "Frequency-response overhead example",
+  "description": "Three-phase single-conductor line used by the FrequencyResponse example. Self-contained: conductor and tower types are defined in the document's catalog.",
+  "source": "synthetic example; conductor and earth data illustrative",
+
+  "catalog": {
+    "conductors": {
+      "phase-acsr": {
+        "description": "Illustrative transmission-class phase conductor",
+        "radius": { "outer": 0.0143 },
+        "conductivity": 3.45e7,
+        "weight": 12.5
+      }
     },
-    "conductors": [
-        {
-            "radius": 0.0143,
-            "inner_radius": 0.0,
-            "conductivity": 34500000.0,
-            "permeability": 0.0000012566370614359173,
-            "weight": 12.5,
-            "phase": "a"
-        },
-        {
-            "radius": 0.0143,
-            "inner_radius": 0.0,
-            "conductivity": 34500000.0,
-            "permeability": 0.0000012566370614359173,
-            "weight": 12.5,
-            "phase": "b"
-        },
-        {
-            "radius": 0.0143,
-            "inner_radius": 0.0,
-            "conductivity": 34500000.0,
-            "permeability": 0.0000012566370614359173,
-            "weight": 12.5,
-            "phase": "c"
+    "towers": {
+      "unsymmetric-flat": {
+        "description": "Unsymmetric flat arrangement, no shield wire",
+        "attachments": {
+          "left":   { "x": -8.0, "h": 21.5 },
+          "center": { "x":  0.4, "h": 25.0 },
+          "right":  { "x":  8.8, "h": 23.0 }
         }
-    ],
-    "earth_conductivity": 0.01,
-    "earth_permittivity": 0.00000000008854187817
+      }
+    }
+  },
+
+  "tower": "unsymmetric-flat",
+
+  "conductors": [
+    { "at": "left",   "phase": "a", "type": "phase-acsr" },
+    { "at": "center", "phase": "b", "type": "phase-acsr" },
+    { "at": "right",  "phase": "c", "type": "phase-acsr" }
+  ],
+
+  "path": {
+    "span": 300.0,
+    "length": 100000.0
+  },
+
+  "earth": {
+    "conductivity": 0.01,
+    "permittivity": 10.0
+  }
 }

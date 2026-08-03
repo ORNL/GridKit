@@ -9,7 +9,7 @@ drift.
 One schema describes both document kinds. The root is the line document.
 ``$defs/catalog`` is the catalog of named conductor and tower types as it
 appears embedded in a line document, and ``$defs/catalog-document`` is the
-standalone form written as a YAML catalog file.
+standalone form written as a JSON catalog file.
 """
 
 from __future__ import annotations
@@ -198,9 +198,9 @@ def _catalog_document() -> dict[str, Any]:
         "required": ["catalog"],
         "anyOf": [{"required": ["conductors"]}, {"required": ["towers"]}],
         "description": (
-            "A standalone catalog file, written in YAML: a header plus the "
-            "same sections a line document embeds in its catalog object. "
-            "Line documents pull catalog files in through include."
+            "A standalone catalog file: a header plus the same sections a "
+            "line document embeds in its catalog object. Line documents "
+            "pull catalog files in through include."
         ),
         "properties": {
             "catalog": {
@@ -208,6 +208,14 @@ def _catalog_document() -> dict[str, Any]:
                 "description": (
                     "Format identifier and version. Present on every "
                     "catalog file."
+                ),
+            },
+            "$schema": {
+                "type": "string",
+                "format": "uri",
+                "description": (
+                    "Optional. Points an editor at the catalog document "
+                    "definition for completion and inline validation."
                 ),
             },
             "name": {"type": "string"},
@@ -409,7 +417,7 @@ def build_schema() -> dict[str, Any]:
                 "minItems": 1,
                 "items": {"type": "string"},
                 "description": (
-                    "Catalog files (YAML), relative to this document. "
+                    "Catalog files (JSON), relative to this document. "
                     "Names of each kind must be unique across this "
                     "document's catalog section and every included "
                     "catalog; the loader rejects collisions rather than "

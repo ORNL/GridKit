@@ -96,6 +96,16 @@ namespace GridKit
           return data_.phase[static_cast<size_t>(i)];
         }
 
+        const std::vector<IdxT>& circuit() const
+        {
+          return data_.circuit;
+        }
+
+        IdxT circuit(IdxT i) const
+        {
+          return data_.circuit[static_cast<size_t>(i)];
+        }
+
         int initialize() override
         {
           validateInputs();
@@ -185,6 +195,21 @@ namespace GridKit
               if (!validPhase(phase))
               {
                 throw std::runtime_error("Conductor phase labels must be one of a, b, c, n, or g");
+              }
+            }
+          }
+
+          if (!data_.circuit.empty())
+          {
+            if (data_.circuit.size() != K)
+            {
+              throw std::runtime_error("Conductor circuit size must match conductor count");
+            }
+            for (const auto circuit : data_.circuit)
+            {
+              if (circuit < static_cast<IdxT>(1))
+              {
+                throw std::runtime_error("Conductor circuit indices must be at least one");
               }
             }
           }

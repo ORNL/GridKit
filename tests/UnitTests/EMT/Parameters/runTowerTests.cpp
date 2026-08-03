@@ -1,4 +1,5 @@
 #include <cmath>
+#include <optional>
 #include <vector>
 
 #include <GridKit/Model/EMT/Parameters/Geometry/Conductor/Conductor.hpp>
@@ -95,7 +96,7 @@ namespace
     Conductor conductor(makeConductorData());
     conductor.initialize();
     auto tower_data    = makeTowerData();
-    tower_data.tension = std::vector<scalar_type>{2000.0, 1800.0};
+    tower_data.tension = {2000.0, 1800.0};
     Tower tower(tower_data, conductor);
     tower.initialize();
 
@@ -126,6 +127,39 @@ namespace
     return success.report(__func__);
   }
 
+  GridKit::Testing::TestOutcome tower_mixed_tension_outputs()
+  {
+    using GridKit::Testing::TestStatus;
+
+    Conductor conductor(makeConductorData());
+    conductor.initialize();
+    auto tower_data    = makeTowerData();
+    tower_data.tension = {2000.0, std::nullopt};
+    Tower tower(tower_data, conductor);
+    tower.initialize();
+
+    const scalar_type a0        = 2000.0 / 10.0;
+    const scalar_type eta0      = 100.0 / (2.0 * a0);
+    const scalar_type sag0      = a0 * (std::cosh(eta0) - 1.0);
+    const scalar_type length0   = 2.0 * a0 * std::sinh(eta0);
+    const scalar_type eff0      = 20.0 - sag0 + (2.0 * a0 * a0 / 100.0) * std::sinh(eta0) - a0;
+    const scalar_type ratio_ref = 0.5 * (length0 / 100.0 + 1.0);
+
+    TestStatus success  = true;
+    success            *= close(tower.sag(0), sag0);
+    success            *= close(tower.sag(1), 0.0);
+    success            *= close(tower.spanLength(0), length0);
+    success            *= close(tower.spanLength(1), 100.0);
+    success            *= close(tower.minimumHeight(0), 20.0 - sag0);
+    success            *= close(tower.minimumHeight(1), 24.0);
+    success            *= close(tower.height(0), eff0);
+    success            *= close(tower.height(1), 24.0);
+    success            *= close(tower.saggedToSpanRatio(), ratio_ref);
+    success            *= (tower.saggedToSpanRatio() > 1.0);
+
+    return success.report(__func__);
+  }
+
   GridKit::Testing::TestOutcome tower_invalid_data()
   {
     using GridKit::Testing::TestStatus;
@@ -150,14 +184,14 @@ namespace
                       {
                         Conductor conductor(makeConductorData());
                         auto tower_data    = makeTowerData();
-                        tower_data.tension = std::vector<scalar_type>{2000.0};
+                        tower_data.tension = {2000.0};
                         Tower tower(tower_data, conductor);
                         tower.initialize(); });
     success *= throws([&]
                       {
                         Conductor conductor(makeConductorData());
                         auto tower_data    = makeTowerData();
-                        tower_data.tension = std::vector<scalar_type>{2000.0, 0.0};
+                        tower_data.tension = {2000.0, 0.0};
                         Tower tower(tower_data, conductor);
                         tower.initialize(); });
 
@@ -170,6 +204,7 @@ int main()
   GridKit::Testing::TestingResults result;
   result += tower_geometry_outputs();
   result += tower_optional_tension_outputs();
+  result += tower_mixed_tension_outputs();
   result += tower_invalid_data();
   return result.summary();
 }

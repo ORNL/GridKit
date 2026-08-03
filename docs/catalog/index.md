@@ -3,9 +3,9 @@
 
 Catalogs name the reusable conductor and tower types that
 [overhead-line input documents](#models-emt-parameters-schema) reference,
-in YAML files that stay readable, commentable, and easy to extend. The
+in JSON files that stay readable and easy to extend. The
 pages below render the shipped catalog,
-[`north-american.catalog.yaml`](../../examples/EMT/Lines/north-american.catalog.yaml);
+[`north-american.catalog.json`](../../examples/EMT/Lines/north-american.catalog.json);
 values are illustrative, not manufacturer data.
 
 ::::{grid} 1 2 2 2

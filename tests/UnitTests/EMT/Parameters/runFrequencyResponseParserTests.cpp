@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <GridKit/Model/EMT/Constants.hpp>
 #include <GridKit/Model/EMT/Parameters/Geometry/Conductor/Conductor.hpp>
@@ -75,74 +76,105 @@ namespace
     return false;
   }
 
-  std::string validLineJson()
+  /// A line 1.0 document assembled section by section, so a test can replace
+  /// or drop one member. An empty member is omitted from the rendered
+  /// document. Mirrors the mutation pattern of
+  /// tests/Schema/validate_line_inputs.py.
+  struct LineDoc
   {
-    return R"({
-      "class": "Overhead",
-      "length": 100000.0,
-      "tower": {
-        "x": [0.0, 30.0],
-        "height": [10.0, 10.0],
-        "span": 300.0,
-        "tension": [200000.0, 200000.0]
+    std::string line    = R"("1.0")";
+    std::string catalog = R"({
+      "conductors": {
+        "wire": { "radius": { "outer": 0.01 }, "conductivity": 3.7e7, "weight": 11.0 }
       },
-      "conductors": [
-        {
-          "radius": 0.01,
-          "inner_radius": 0.0,
-          "conductivity": 37000000.0,
-          "permeability": 0.0000012566370614359173,
-          "weight": 11.0,
-          "phase": "a"
-        },
-        {
-          "radius": 0.02,
-          "inner_radius": 0.0,
-          "conductivity": 58000000.0,
-          "permeability": 0.0000012566370614359173,
-          "weight": 12.0,
-          "phase": "b"
+      "towers": {
+        "flat": {
+          "attachments": {
+            "left":  { "x":  0.0, "h": 10.0 },
+            "right": { "x": 30.0, "h": 10.0 }
+          }
         }
-      ],
-      "earth_conductivity": 0.000001,
-      "earth_permittivity": 0.000000000022135469532
+      }
     })";
+    std::string include;
+    std::string tower      = R"("flat")";
+    std::string conductors = R"([{ "at": "left", "phase": "a", "type": "wire" }])";
+    std::string path       = R"({ "span": 300.0, "length": 100000.0 })";
+    std::string earth      = R"({ "conductivity": 1.0e-6 })";
+    std::string extra;
+  };
+
+  std::string render(const LineDoc& doc)
+  {
+    std::string rendered = "{";
+    const auto  member   = [&](const char* key, const std::string& value)
+    {
+      if (value.empty())
+      {
+        return;
+      }
+      if (rendered.size() > 1)
+      {
+        rendered += ", ";
+      }
+      rendered += "\"" + std::string(key) + "\": " + value;
+    };
+    member("line", doc.line);
+    member("catalog", doc.catalog);
+    member("include", doc.include);
+    member("tower", doc.tower);
+    member("conductors", doc.conductors);
+    member("path", doc.path);
+    member("earth", doc.earth);
+    if (!doc.extra.empty())
+    {
+      rendered += ", " + doc.extra;
+    }
+    rendered += "}";
+    return rendered;
   }
 
-  std::string gisLineJson()
+  bool rejects(const std::string& file_name, const LineDoc& doc)
   {
-    return R"({
-      "class": "Overhead",
-      "tower": {
-        "x": [0.0],
-        "height": [10.0],
-        "span": 300.0
-      },
-      "path": [
-        {"latitude": 0.0, "longitude": 0.0},
-        {"latitude": 0.0, "longitude": 1.0}
-      ],
-      "conductors": [
-        {
-          "radius": 0.01,
-          "inner_radius": 0.0,
-          "conductivity": 37000000.0,
-          "permeability": 0.0000012566370614359173,
-          "weight": 11.0
-        }
-      ],
-      "earth_conductivity": 0.000001,
-      "earth_permittivity": 0.000000000022135469532
-    })";
+    using GridKit::EMT::Parameters::parseOverheadData;
+
+    const auto path = testPath(file_name);
+    writeFile(path, render(doc));
+    const bool thrown = throws([&]
+                               { parseOverheadData<scalar_type, index_type>(path); });
+    fs::remove(path);
+    return thrown;
   }
 
-  GridKit::Testing::TestOutcome overhead_line_parser_valid()
+  GridKit::Testing::TestOutcome line_parser_valid()
   {
     using GridKit::EMT::Parameters::parseOverheadData;
     using GridKit::Testing::TestStatus;
 
-    const auto path = testPath("gridkit_frequency_response_valid.line.json");
-    writeFile(path, validLineJson());
+    LineDoc doc;
+    doc.catalog    = R"({
+      "conductors": {
+        "first":  { "radius": { "outer": 0.01 }, "conductivity": 3.7e7, "weight": 11.0 },
+        "second": { "radius": { "outer": 0.02, "inner": 0.005 }, "conductivity": 5.8e7,
+                    "permeability": 2.0, "weight": 12.0 }
+      },
+      "towers": {
+        "flat": {
+          "attachments": {
+            "left":  { "x":  0.0, "h": 10.0 },
+            "right": { "x": 30.0, "h": 10.0 }
+          }
+        }
+      }
+    })";
+    doc.conductors = R"([
+      { "at": "left",  "phase": "a", "type": "first", "tension": 200000.0 },
+      { "at": "right", "phase": "b", "circuit": 2, "type": "second" }
+    ])";
+    doc.earth      = R"({ "conductivity": 1.0e-6, "permittivity": 2.5 })";
+
+    const auto path = testPath("gridkit_line_valid.line.json");
+    writeFile(path, render(doc));
 
     const auto data = parseOverheadData<scalar_type, index_type>(path);
     fs::remove(path);
@@ -151,36 +183,52 @@ namespace
     success            *= (data.tower.K == 2);
     success            *= (data.conductor.K == 2);
     success            *= close(data.tower.position[0], 0.0);
+    success            *= close(data.tower.position[1], 30.0);
+    success            *= close(data.tower.height[0], 10.0);
+    success            *= close(data.tower.span, 300.0);
     success            *= data.path.length.has_value();
     success            *= close(data.path.length.value(), 100000.0);
     success            *= data.path.path.empty();
-    success            *= close(data.tower.span, 300.0);
-    success            *= data.tower.tension.has_value();
-    success            *= close(data.tower.tension.value()[0], 200000.0);
-    success            *= close(data.tower.position[1], 30.0);
-    success            *= close(data.tower.height[0], 10.0);
+    success            *= (data.tower.tension.size() == 2);
+    success            *= data.tower.tension[0].has_value();
+    success            *= close(data.tower.tension[0].value(), 200000.0);
+    success            *= !data.tower.tension[1].has_value();
     success            *= close(data.conductor.radius[0], 0.01);
     success            *= close(data.conductor.radius[1], 0.02);
     success            *= close(data.conductor.inner_radius[0], 0.0);
+    success            *= close(data.conductor.inner_radius[1], 0.005);
     success            *= close(data.conductor.sigma[0], 3.7e7);
+    success            *= close(data.conductor.sigma[1], 5.8e7);
     success            *= close(data.conductor.mu[0], mu0);
+    success            *= close(data.conductor.mu[1], 2.0 * mu0);
     success            *= close(data.conductor.weight[0], 11.0);
     success            *= close(data.conductor.weight[1], 12.0);
     success            *= (data.conductor.phase[0] == "a");
     success            *= (data.conductor.phase[1] == "b");
+    success            *= (data.conductor.circuit[0] == 1);
+    success            *= (data.conductor.circuit[1] == 2);
     success            *= close(data.carson.earth_sigma, 1.0e-6);
     success            *= close(data.carson.earth_eps, 2.5 * eps0);
 
     return success.report(__func__);
   }
 
-  GridKit::Testing::TestOutcome overhead_line_parser_gis_path()
+  GridKit::Testing::TestOutcome line_parser_gis_path()
   {
     using GridKit::EMT::Parameters::parseOverheadData;
     using GridKit::Testing::TestStatus;
 
-    const auto path = testPath("gridkit_frequency_response_gis.line.json");
-    writeFile(path, gisLineJson());
+    LineDoc doc;
+    doc.path = R"({
+      "span": 300.0,
+      "points": [
+        { "latitude": 0.0, "longitude": 0.0 },
+        { "latitude": 0.0, "longitude": 1.0 }
+      ]
+    })";
+
+    const auto path = testPath("gridkit_line_gis.line.json");
+    writeFile(path, render(doc));
 
     const auto data = parseOverheadData<scalar_type, index_type>(path);
     fs::remove(path);
@@ -192,372 +240,410 @@ namespace
     TestStatus success  = true;
     success            *= !data.path.length.has_value();
     success            *= (data.path.path.size() == 2);
+    success            *= data.tower.tension.empty();
     success            *= close(parsedPathLength(data), ref, 1.0e-12);
 
     return success.report(__func__);
   }
 
-  GridKit::Testing::TestOutcome overhead_line_parser_length_override()
+  // The golden coordinates below duplicate the GOLDEN table of
+  // tests/Schema/validate_line_inputs.py, so the C++ loader and the Python
+  // reference resolver are pinned to the same fixtures.
+  GridKit::Testing::TestOutcome line_parser_golden_wood_pole()
   {
     using GridKit::EMT::Parameters::parseOverheadData;
     using GridKit::Testing::TestStatus;
 
-    const auto path = testPath("gridkit_frequency_response_override.line.json");
+    // examples/EMT/Lines/69kv-wood-pole.line.json, document catalog only.
+    const auto path = testPath("gridkit_line_wood_pole.line.json");
     writeFile(path, R"({
-      "class": "Overhead",
-      "length": 100000.0,
-      "tower": {
-        "x": [0.0],
-        "height": [10.0],
-        "span": 300.0
+      "line": "1.0",
+      "catalog": {
+        "conductors": {
+          "phase-acsr":   { "radius": { "outer": 0.00915 }, "conductivity": 3.5e7, "weight": 6.7 },
+          "neutral-acsr": { "radius": { "outer": 0.00501 }, "conductivity": 3.5e7, "weight": 2.1 }
+        },
+        "towers": {
+          "69kv-wood-pole": {
+            "attachments": {
+              "top":     { "x": -1.0668, "h": 14.9352 },
+              "middle":  { "x":  1.0668, "h": 13.7160 },
+              "bottom":  { "x": -1.0668, "h": 12.4968 },
+              "neutral": { "x":  0.0,    "h": 10.3632 }
+            }
+          }
+        }
       },
-      "path": [
-        {"latitude": 0.0, "longitude": 0.0},
-        {"latitude": 0.0, "longitude": 1.0}
+      "tower": "69kv-wood-pole",
+      "conductors": [
+        { "at": "top",     "phase": "a", "type": "phase-acsr" },
+        { "at": "middle",  "phase": "b", "type": "phase-acsr" },
+        { "at": "bottom",  "phase": "c", "type": "phase-acsr" },
+        { "at": "neutral", "phase": "n", "type": "neutral-acsr" }
       ],
-      "conductors": [{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0,
-        "weight":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
+      "path": { "span": 90.0, "length": 16000.0 },
+      "earth": { "conductivity": 0.01 }
     })");
 
     const auto data = parseOverheadData<scalar_type, index_type>(path);
     fs::remove(path);
 
+    const std::vector<scalar_type> x = {-1.0668, 1.0668, -1.0668, 0.0};
+    const std::vector<scalar_type> h = {14.9352, 13.7160, 12.4968, 10.3632};
+
     TestStatus success  = true;
-    success            *= data.path.length.has_value();
-    success            *= (data.path.path.size() == 2);
-    success            *= close(parsedPathLength(data), 100000.0);
+    success            *= (data.tower.K == 4);
+    for (size_t i = 0; i < x.size(); ++i)
+    {
+      success *= (data.tower.position[i] == x[i]);
+      success *= (data.tower.height[i] == h[i]);
+    }
+    success *= (data.conductor.phase[3] == "n");
+    success *= data.tower.tension.empty();
 
     return success.report(__func__);
   }
 
-  GridKit::Testing::TestOutcome overhead_line_parser_invalid_inputs()
+  GridKit::Testing::TestOutcome line_parser_included_catalog()
   {
     using GridKit::EMT::Parameters::parseOverheadData;
     using GridKit::Testing::TestStatus;
 
-    const auto invalid_class = testPath("gridkit_frequency_response_invalid_class.line.json");
-    writeFile(invalid_class, R"({"class":"UndergroundTransmission","conductors":[]})");
-
-    const auto empty_conductors = testPath("gridkit_frequency_response_empty.line.json");
-    writeFile(empty_conductors, R"({
-      "class":"Overhead",
-      "conductors":[],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto bad_radius = testPath("gridkit_frequency_response_bad_radius.line.json");
-    writeFile(bad_radius, R"({
-      "class":"Overhead",
-      "length":100000.0,
-      "tower":{"x":[0.0],"height":[10.0],"span":300.0},
-      "conductors":[{
-        "radius":0.0,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0,
-        "weight":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto bad_length = testPath("gridkit_frequency_response_bad_length.line.json");
-    writeFile(bad_length, R"({
-      "class":"Overhead",
-      "length":0.0,
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto missing_length_path = testPath("gridkit_frequency_response_missing_path.line.json");
-    writeFile(missing_length_path, R"({
-      "class":"Overhead",
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto bad_path_type = testPath("gridkit_frequency_response_bad_path_type.line.json");
-    writeFile(bad_path_type, R"({
-      "class":"Overhead",
-      "path":{"latitude":0.0,"longitude":0.0},
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto short_path = testPath("gridkit_frequency_response_short_path.line.json");
-    writeFile(short_path, R"({
-      "class":"Overhead",
-      "path":[{"latitude":0.0,"longitude":0.0}],
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto bad_latitude = testPath("gridkit_frequency_response_bad_latitude.line.json");
-    writeFile(bad_latitude, R"({
-      "class":"Overhead",
-      "path":[{"latitude":91.0,"longitude":0.0},{"latitude":0.0,"longitude":0.0}],
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto bad_longitude = testPath("gridkit_frequency_response_bad_longitude.line.json");
-    writeFile(bad_longitude, R"({
-      "class":"Overhead",
-      "path":[{"latitude":0.0,"longitude":181.0},{"latitude":0.0,"longitude":0.0}],
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto zero_path = testPath("gridkit_frequency_response_zero_path.line.json");
-    writeFile(zero_path, R"({
-      "class":"Overhead",
-      "tower":{"x":[0.0],"height":[10.0],"span":300.0},
-      "path":[{"latitude":0.0,"longitude":0.0},{"latitude":0.0,"longitude":0.0}],
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0,
-        "weight":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto stale_skin_effect = testPath("gridkit_frequency_response_stale_skin_effect.line.json");
-    writeFile(stale_skin_effect, R"({
-      "class":"Overhead",
-      "length":100000.0,
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0,
-      "skin_effect":{"root_count":8}
-    })");
-
-    const auto bad_span = testPath("gridkit_frequency_response_bad_span.line.json");
-    writeFile(bad_span, R"({
-      "class":"Overhead",
-      "length":100000.0,
-      "tower":{"x":[0.0],"height":[10.0],"span":0.0},
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0,
-        "weight":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto stale_segment = testPath("gridkit_frequency_response_stale_segment.line.json");
-    writeFile(stale_segment, R"({
-      "class":"Overhead",
-      "length":100000.0,
-      "tower":{"x":[0.0],"height":[10.0],"span":300.0},
-      "segment":{"span":300.0},
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0,
-        "weight":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
-    })");
-
-    const auto unsupported_tower_field =
-        testPath("gridkit_frequency_response_unsupported_tower_field.line.json");
-    writeFile(unsupported_tower_field, R"({
-      "class":"Overhead",
-      "length":100000.0,
-      "tower":{
-        "x":[0.0],
-        "height":[10.0],
-        "span":300.0,
-        "unsupported":true
+    // examples/EMT/Lines/345kv-horizontal.line.json and the shipped catalog,
+    // reduced to the types the document references.
+    const auto catalog_path = testPath("gridkit_line_included.catalog.json");
+    writeFile(catalog_path, R"({
+      "catalog": "1.0",
+      "name": "Included test catalog",
+      "conductors": {
+        "drake-acsr": {
+          "radius": { "outer": 0.01407, "inner": 0.00514 },
+          "conductivity": 3.5e7,
+          "weight": 16.0
+        },
+        "ehs-3-8-steel": {
+          "radius": { "outer": 0.00457 },
+          "conductivity": 5.8e6,
+          "permeability": 1.0,
+          "weight": 4.0
+        }
       },
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0,
-        "weight":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
+      "towers": {
+        "345kv-h-frame": {
+          "attachments": {
+            "left-1":       { "x": -7.4285, "h": 24.0 },
+            "left-2":       { "x": -6.9715, "h": 24.0 },
+            "center-1":     { "x": -0.2285, "h": 24.0 },
+            "center-2":     { "x":  0.2285, "h": 24.0 },
+            "right-1":      { "x":  6.9715, "h": 24.0 },
+            "right-2":      { "x":  7.4285, "h": 24.0 },
+            "shield-left":  { "x": -4.3,    "h": 29.5 },
+            "shield-right": { "x":  4.3,    "h": 29.5 }
+          }
+        }
+      }
     })");
 
-    const auto missing_weight = testPath("gridkit_frequency_response_missing_weight.line.json");
-    writeFile(missing_weight, R"({
-      "class":"Overhead",
-      "length":100000.0,
-      "tower":{"x":[0.0],"height":[10.0],"span":300.0},
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0
-      }],
-      "earth_conductivity":1.0,
-      "earth_permittivity":1.0
+    const auto path = testPath("gridkit_line_included.line.json");
+    writeFile(path, R"({
+      "line": "1.0",
+      "include": ["gridkit_line_included.catalog.json"],
+      "tower": "345kv-h-frame",
+      "conductors": [
+        { "at": "left-1",       "phase": "a", "type": "drake-acsr", "tension": 28000.0 },
+        { "at": "left-2",       "phase": "a", "type": "drake-acsr", "tension": 28000.0 },
+        { "at": "center-1",     "phase": "b", "type": "drake-acsr", "tension": 28000.0 },
+        { "at": "center-2",     "phase": "b", "type": "drake-acsr", "tension": 28000.0 },
+        { "at": "right-1",      "phase": "c", "type": "drake-acsr", "tension": 28000.0 },
+        { "at": "right-2",      "phase": "c", "type": "drake-acsr", "tension": 28000.0 },
+        { "at": "shield-left",  "phase": "g", "type": "ehs-3-8-steel", "tension": 12000.0 },
+        { "at": "shield-right", "phase": "g", "type": "ehs-3-8-steel", "tension": 12000.0 }
+      ],
+      "path": { "span": 350.0, "length": 100000.0 },
+      "earth": { "conductivity": 0.01 }
     })");
 
-    const auto bad_phase = testPath("gridkit_frequency_response_bad_phase.line.json");
-    writeFile(bad_phase, R"({
-	      "class":"Overhead",
-	      "length":100000.0,
-	      "tower":{"x":[0.0],"height":[10.0],"span":300.0},
-      "conductors":[{
-        "radius":0.01,
-        "inner_radius":0.0,
-        "conductivity":1.0,
-        "permeability":1.0,
-        "weight":1.0,
-        "phase":"x"
-      }],
-	      "earth_conductivity":1.0,
-	      "earth_permittivity":1.0
-	    })");
+    const auto data = parseOverheadData<scalar_type, index_type>(path);
+    fs::remove(path);
+    fs::remove(catalog_path);
 
-    const auto stale_earth = testPath("gridkit_frequency_response_stale_earth.line.json");
-    writeFile(stale_earth, R"({
-	      "class":"Overhead",
-	      "length":100000.0,
-	      "tower":{"x":[0.0],"height":[10.0],"span":300.0},
-	      "conductors":[{
-	        "radius":0.01,
-	        "inner_radius":0.0,
-	        "conductivity":1.0,
-	        "permeability":1.0,
-	        "weight":1.0
-	      }],
-	      "earth":{"conductivity":1.0,"permittivity":1.0}
-	    })");
-
-    const auto bad_earth_permittivity =
-        testPath("gridkit_frequency_response_bad_earth_permittivity.line.json");
-    writeFile(bad_earth_permittivity, R"({
-	      "class":"Overhead",
-	      "length":100000.0,
-	      "tower":{"x":[0.0],"height":[10.0],"span":300.0},
-	      "conductors":[{
-	        "radius":0.01,
-	        "inner_radius":0.0,
-	        "conductivity":1.0,
-	        "permeability":1.0,
-	        "weight":1.0
-	      }],
-	      "earth_conductivity":1.0,
-	      "earth_permittivity":0.0
-	    })");
+    const std::vector<scalar_type> x = {-7.4285, -6.9715, -0.2285, 0.2285, 6.9715, 7.4285, -4.3, 4.3};
+    const std::vector<scalar_type> h = {24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 29.5, 29.5};
 
     TestStatus success  = true;
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(invalid_class); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(empty_conductors); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(bad_radius); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(bad_length); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(missing_length_path); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(bad_path_type); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(short_path); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(bad_latitude); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(bad_longitude); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(zero_path); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(stale_skin_effect); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(bad_span); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(stale_segment); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(unsupported_tower_field); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(missing_weight); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(bad_phase); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(stale_earth); });
-    success            *= throws([&]
-                      { parseOverheadData<scalar_type, index_type>(bad_earth_permittivity); });
+    success            *= (data.tower.K == 8);
+    for (size_t i = 0; i < x.size(); ++i)
+    {
+      success *= (data.tower.position[i] == x[i]);
+      success *= (data.tower.height[i] == h[i]);
+    }
+    success *= (data.tower.tension.size() == 8);
+    success *= close(data.tower.tension[0].value(), 28000.0);
+    success *= close(data.tower.tension[7].value(), 12000.0);
+    success *= close(data.conductor.radius[0], 0.01407);
+    success *= close(data.conductor.inner_radius[0], 0.00514);
+    success *= close(data.conductor.mu[6], mu0);
+    success *= (data.conductor.phase[6] == "g");
 
-    fs::remove(invalid_class);
-    fs::remove(empty_conductors);
-    fs::remove(bad_radius);
-    fs::remove(bad_length);
-    fs::remove(missing_length_path);
-    fs::remove(bad_path_type);
-    fs::remove(short_path);
-    fs::remove(bad_latitude);
-    fs::remove(bad_longitude);
-    fs::remove(zero_path);
-    fs::remove(stale_skin_effect);
-    fs::remove(bad_span);
-    fs::remove(stale_segment);
-    fs::remove(unsupported_tower_field);
-    fs::remove(missing_weight);
-    fs::remove(bad_phase);
-    fs::remove(stale_earth);
-    fs::remove(bad_earth_permittivity);
+    return success.report(__func__);
+  }
+
+  GridKit::Testing::TestOutcome line_parser_invalid_documents()
+  {
+    using GridKit::Testing::TestStatus;
+
+    TestStatus success = true;
+
+    // Ports of the schema-level negative cases of
+    // tests/Schema/validate_line_inputs.py.
+    {
+      LineDoc doc;
+      doc.path  = R"({ "span": 300.0, "length": 100000.0,
+                      "points": [{ "latitude": 0.0, "longitude": 0.0 },
+                                 { "latitude": 1.0, "longitude": 1.0 }] })";
+      success  *= rejects("gridkit_line_both_length_points.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.path  = R"({ "span": 300.0 })";
+      success  *= rejects("gridkit_line_neither_length_points.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.path  = R"({ "length": 100000.0 })";
+      success  *= rejects("gridkit_line_no_span.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.conductors  = R"([{ "at": "left", "phase": "s", "type": "wire" }])";
+      success        *= rejects("gridkit_line_bad_phase.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.conductors =
+          R"([{ "at": "left", "phase": "a", "type": "wire", "radius": { "outer": 0.01 } }])";
+      success *= rejects("gridkit_line_inline_conductor_data.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.conductors  = R"([{ "phase": "a", "type": "wire" }])";
+      success        *= rejects("gridkit_line_no_attachment.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.conductors  = R"([{ "at": "left", "phase": "a" }])";
+      success        *= rejects("gridkit_line_no_type.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.tower  = R"({ "x": [0.0], "height": [10.0] })";
+      success   *= rejects("gridkit_line_inline_tower.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.conductors  = R"([{ "at": "left", "phase": "a", "type": "wire", "tension": 0.0 }])";
+      success        *= rejects("gridkit_line_zero_tension.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.catalog  = R"({
+        "conductors": {
+          "Drake": { "radius": { "outer": 0.01 }, "conductivity": 3.7e7, "weight": 11.0 }
+        },
+        "towers": {
+          "flat": { "attachments": { "left": { "x": 0.0, "h": 10.0 } } }
+        }
+      })";
+      success     *= rejects("gridkit_line_uppercase_type.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.catalog  = R"({
+        "conductors": {
+          "wire": { "radius": { "outer": 0.01 }, "conductivity": 3.7e7, "weight": 11.0 }
+        },
+        "towers": {}
+      })";
+      success     *= rejects("gridkit_line_empty_catalog_section.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.catalog  = R"({
+        "conductors": {
+          "wire": { "radius": { "inner": 0.005 }, "conductivity": 3.7e7, "weight": 11.0 }
+        },
+        "towers": {
+          "flat": { "attachments": { "left": { "x": 0.0, "h": 10.0 } } }
+        }
+      })";
+      success     *= rejects("gridkit_line_no_outer_radius.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.catalog  = R"({
+        "conductors": {
+          "wire": { "radius": { "outer": 0.01 }, "conductivity": 3.7e7,
+                    "permeability": 1.2566370614e-6, "weight": 11.0 }
+        },
+        "towers": {
+          "flat": { "attachments": { "left": { "x": 0.0, "h": 10.0 } } }
+        }
+      })";
+      success     *= rejects("gridkit_line_absolute_permeability.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.earth  = R"({ "conductivity": 1.0e-6, "permittivity": 8.8541878128e-12 })";
+      success   *= rejects("gridkit_line_absolute_permittivity.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.catalog  = R"({
+        "conductors": {
+          "wire": { "radius": { "outer": 0.01, "inner": 0.02 }, "conductivity": 3.7e7,
+                    "weight": 11.0 }
+        },
+        "towers": {
+          "flat": { "attachments": { "left": { "x": 0.0, "h": 10.0 } } }
+        }
+      })";
+      success     *= rejects("gridkit_line_inner_above_outer.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.line  = "";
+      success  *= rejects("gridkit_line_missing_version.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.line  = R"("2.0")";
+      success  *= rejects("gridkit_line_unsupported_version.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.extra  = R"("segment": { "span": 300.0 })";
+      success   *= rejects("gridkit_line_unknown_field.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.conductors  = "[]";
+      success        *= rejects("gridkit_line_empty_conductors.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.path  = R"({ "span": 300.0,
+                      "points": [{ "latitude": 91.0, "longitude": 0.0 },
+                                 { "latitude": 0.0, "longitude": 0.0 }] })";
+      success  *= rejects("gridkit_line_bad_latitude.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.path  = R"({ "span": 300.0,
+                      "points": [{ "latitude": 0.0, "longitude": 181.0 },
+                                 { "latitude": 0.0, "longitude": 0.0 }] })";
+      success  *= rejects("gridkit_line_bad_longitude.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.path  = R"({ "span": 300.0, "points": [{ "latitude": 0.0, "longitude": 0.0 }] })";
+      success  *= rejects("gridkit_line_short_points.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.path  = R"({ "span": 300.0,
+                      "points": [{ "latitude": 0.0, "longitude": 0.0 },
+                                 { "latitude": 0.0, "longitude": 0.0 }] })";
+      success  *= rejects("gridkit_line_zero_length_path.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.path  = R"({ "span": 0.0, "length": 100000.0 })";
+      success  *= rejects("gridkit_line_zero_span.line.json", doc);
+    }
+
+    return success.report(__func__);
+  }
+
+  GridKit::Testing::TestOutcome line_parser_invalid_references()
+  {
+    using GridKit::Testing::TestStatus;
+
+    TestStatus success = true;
+
+    // Ports of the loader-level negative cases of
+    // tests/Schema/validate_line_inputs.py.
+    {
+      LineDoc doc;
+      doc.conductors  = R"([{ "at": "left", "phase": "a", "type": "nope" }])";
+      success        *= rejects("gridkit_line_unknown_type.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.tower  = R"("nope")";
+      success   *= rejects("gridkit_line_unknown_tower.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.conductors  = R"([{ "at": "nowhere", "phase": "a", "type": "wire" }])";
+      success        *= rejects("gridkit_line_unknown_attachment.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.conductors  = R"([
+        { "at": "left", "phase": "a", "type": "wire" },
+        { "at": "left", "phase": "b", "type": "wire" }
+      ])";
+      success        *= rejects("gridkit_line_attachment_reuse.line.json", doc);
+    }
+    {
+      LineDoc doc;
+      doc.include  = R"(["missing.catalog.json"])";
+      success     *= rejects("gridkit_line_missing_include.line.json", doc);
+    }
+    {
+      // Tension whose catenary sag exceeds the attachment height.
+      LineDoc doc;
+      doc.conductors  = R"([{ "at": "left", "phase": "a", "type": "wire", "tension": 2000.0 }])";
+      success        *= rejects("gridkit_line_sagged_underground.line.json", doc);
+    }
+
+    // Include-based negatives share one catalog file on disk.
+    const auto catalog_path = testPath("gridkit_line_negative.catalog.json");
+    writeFile(catalog_path, R"({
+      "catalog": "1.0",
+      "conductors": {
+        "wire": { "radius": { "outer": 0.01 }, "conductivity": 3.7e7, "weight": 11.0 }
+      }
+    })");
+    {
+      // Local catalog and include both define the type name.
+      LineDoc doc;
+      doc.include  = R"(["gridkit_line_negative.catalog.json"])";
+      success     *= rejects("gridkit_line_name_collision.line.json", doc);
+    }
+    fs::remove(catalog_path);
+
+    const auto headerless_path = testPath("gridkit_line_headerless.catalog.json");
+    writeFile(headerless_path, R"({
+      "conductors": {
+        "spare": { "radius": { "outer": 0.01 }, "conductivity": 3.7e7, "weight": 11.0 }
+      }
+    })");
+    {
+      LineDoc doc;
+      doc.include  = R"(["gridkit_line_headerless.catalog.json"])";
+      success     *= rejects("gridkit_line_headerless_include.line.json", doc);
+    }
+    fs::remove(headerless_path);
+
+    const auto stray_path = testPath("gridkit_line_stray.catalog.json");
+    writeFile(stray_path, R"({ "catalog": "1.0", "earths": {} })");
+    {
+      LineDoc doc;
+      doc.include  = R"(["gridkit_line_stray.catalog.json"])";
+      success     *= rejects("gridkit_line_stray_include.line.json", doc);
+    }
+    fs::remove(stray_path);
 
     return success.report(__func__);
   }
@@ -727,10 +813,12 @@ namespace
 int main()
 {
   GridKit::Testing::TestingResults result;
-  result += overhead_line_parser_valid();
-  result += overhead_line_parser_gis_path();
-  result += overhead_line_parser_length_override();
-  result += overhead_line_parser_invalid_inputs();
+  result += line_parser_valid();
+  result += line_parser_gis_path();
+  result += line_parser_golden_wood_pole();
+  result += line_parser_included_catalog();
+  result += line_parser_invalid_documents();
+  result += line_parser_invalid_references();
   result += frequency_response_parser_valid();
   result += frequency_response_parser_ida_options();
   result += frequency_response_parser_invalid_inputs();

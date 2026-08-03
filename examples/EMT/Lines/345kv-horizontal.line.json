@@ -5,7 +5,7 @@
   "description": "Twin bundle at 0.457 m, two shield wires. Tension supplied, so sag is computed from the catenary. Conductor and tower types come from an included catalog.",
   "source": "synthetic example; conductor, tension, and earth data illustrative",
 
-  "include": ["north-american.catalog.yaml"],
+  "include": ["north-american.catalog.json"],
 
   "tower": "345kv-h-frame",
 

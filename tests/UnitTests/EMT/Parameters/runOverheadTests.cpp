@@ -241,7 +241,7 @@ namespace
     success *= jacobianMatchesFiniteDifference(model, Lgeo.offset, Lgeo.offset, 1.0, 1.0e-7);
 
     auto sagged_data          = makeData();
-    sagged_data.tower.tension = std::vector<scalar_type>{200000.0, 120000.0};
+    sagged_data.tower.tension = {200000.0, 120000.0};
 
     GridKit::EMT::Parameters::Overhead<scalar_type, index_type> sagged_model(sagged_data);
     sagged_model.updateTime(2.0 * pi * 50.0, 1.0);

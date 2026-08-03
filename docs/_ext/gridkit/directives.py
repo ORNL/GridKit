@@ -7,11 +7,11 @@ unresolved label is a build warning rather than a silent gap.
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
-import yaml
 from docutils import nodes
 from sphinx.util.docutils import SphinxDirective
 
@@ -315,8 +315,8 @@ class CatalogDirective(GridKitDirective):
         path = Path(self.env.app.srcdir).parent / self.arguments[0]
         self.env.note_dependency(str(path))
         try:
-            found = yaml.safe_load(path.read_text(encoding="utf-8"))
-        except (OSError, yaml.YAMLError) as error:
+            found = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
             raise self.error(
                 f"cannot read catalog {self.arguments[0]}: {error}"
             ) from error

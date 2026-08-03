@@ -8,7 +8,7 @@ builder, so the tests and the published schema cannot drift.
 Checks, in order:
 
 1. The built schema is valid JSON Schema 2020-12.
-2. Every examples/EMT/Lines/*.catalog.yaml validates against the catalog
+2. Every examples/EMT/Lines/*.catalog.json validates against the catalog
    document definition.
 3. Every examples/EMT/Lines/*.line.json validates against the line schema
    and resolves: includes exist and are valid catalogs, names of each kind
@@ -19,7 +19,7 @@ Checks, in order:
    (golden arrays, in document order).
 5. Known-invalid documents are rejected (negative cases).
 
-Exits nonzero on any failure. Requires jsonschema >= 4.18 and PyYAML.
+Exits nonzero on any failure. Requires jsonschema >= 4.18.
 """
 
 import importlib.util
@@ -28,7 +28,6 @@ import math
 import sys
 from pathlib import Path
 
-import yaml
 from jsonschema import Draft202012Validator
 
 REPO = Path(__file__).resolve().parents[2]
@@ -111,7 +110,7 @@ def resolve(doc, doc_path):
         if not inc_path.is_file():
             errs.append(f"include not found: {inc}")
             continue
-        catalog = yaml.safe_load(inc_path.read_text(encoding="utf-8"))
+        catalog = json.loads(inc_path.read_text(encoding="utf-8"))
         inc_errs = schema_errors(catalog_validator, catalog)
         if inc_errs:
             errs.append(f"include {inc} is not a valid catalog: "
@@ -181,11 +180,10 @@ def resolve(doc, doc_path):
 
 # ---- catalogs and examples ----------------------------------------------
 
-catalogs = sorted(EXAMPLES.glob("*.catalog.yaml"))
+catalogs = sorted(EXAMPLES.glob("*.catalog.json"))
 check("found a catalog file", bool(catalogs))
 for f in catalogs:
-    doc = yaml.safe_load(f.read_text(encoding="utf-8"))
-    check(f.name, not schema_errors(catalog_validator, doc))
+    check(f.name, not schema_errors(catalog_validator, load(f)))
 
 # Expected (x, h) per conductor, in document order.
 GOLDEN = {
@@ -304,7 +302,7 @@ SEMANTIC = [
             "radius": {"outer": 0.01}, "conductivity": 3.5e7,
             "weight": 16.0}}}}), "collision"),
     ("missing include", include_doc,
-     lambda d: d.update({"include": ["missing.catalog.yaml"]}), "not found"),
+     lambda d: d.update({"include": ["missing.catalog.json"]}), "not found"),
     ("tension exceeding the attachment height", include_doc,
      lambda d: d["conductors"][0].update({"tension": 2000.0}),
      "minimum height"),

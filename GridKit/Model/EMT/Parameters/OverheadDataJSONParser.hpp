@@ -1,8 +1,16 @@
 /**
  * @file OverheadDataJSONParser.hpp
  *
- * @brief JSON parser for physical overhead transmission line data.
+ * @brief Parser for overhead transmission line documents in the line 1.0
+ * format.
  *
+ * The format is described by the JSON Schema authored in
+ * docs/_ext/gridkit/line_schema.py; tests/Schema/validate_line_inputs.py
+ * holds the reference resolver semantics and golden fixtures this parser
+ * mirrors. A line document maps physical conductors onto the attachment
+ * points of a tower type; conductor and tower types come from the
+ * document's own catalog section or from included JSON catalog files.
+ * Type and attachment names do not survive resolution.
  */
 
 #pragma once
@@ -11,10 +19,15 @@
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
+#include <initializer_list>
 #include <limits>
+#include <map>
+#include <optional>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -52,7 +65,12 @@ namespace GridKit
         template <typename ScalarT>
         ScalarT requireFinite(const json& j, const char* key, const std::string& context)
         {
-          const auto value = j.at(key).template get<ScalarT>();
+          const auto& raw = j.at(key);
+          if (!raw.is_number())
+          {
+            throw std::runtime_error(context + ": \"" + key + "\" must be a number");
+          }
+          const auto value = raw.template get<ScalarT>();
           if (!std::isfinite(static_cast<double>(value)))
           {
             throw std::runtime_error(context + ": \"" + key + "\" must be finite");
@@ -94,11 +112,6 @@ namespace GridKit
           return value;
         }
 
-        inline bool validConductorPhase(const std::string& phase)
-        {
-          return phase == "a" || phase == "b" || phase == "c" || phase == "n" || phase == "g";
-        }
-
         template <typename ScalarT>
         ScalarT requireBounded(const json&        j,
                                const char*        key,
@@ -114,24 +127,257 @@ namespace GridKit
           return value;
         }
 
-        template <typename ScalarT>
-        std::vector<PathPoint<ScalarT>> parsePath(const json& raw_path)
+        inline std::string
+        requireString(const json& j, const char* key, const std::string& context)
         {
-          if (!raw_path.is_array() || raw_path.size() < 2)
+          const auto& raw = j.at(key);
+          if (!raw.is_string())
           {
-            throw std::runtime_error("Overhead \"path\" must be an array with at least two points");
+            throw std::runtime_error(context + ": \"" + key + "\" must be a string");
+          }
+          return raw.template get<std::string>();
+        }
+
+        inline const json&
+        requireObject(const json& j, const char* key, const std::string& context)
+        {
+          const auto& raw = j.at(key);
+          if (!raw.is_object())
+          {
+            throw std::runtime_error(context + ": \"" + key + "\" must be an object");
+          }
+          return raw;
+        }
+
+        inline void rejectUnknownKeys(const json&                        j,
+                                      std::initializer_list<const char*> allowed,
+                                      const std::string&                 context)
+        {
+          for (const auto& entry : j.items())
+          {
+            const auto& key   = entry.key();
+            bool        found = false;
+            for (const auto* candidate : allowed)
+            {
+              if (key == candidate)
+              {
+                found = true;
+                break;
+              }
+            }
+            if (!found)
+            {
+              throw std::runtime_error(context + " contains unsupported field: " + key);
+            }
+          }
+        }
+
+        /// Catalog and attachment names are lower-case kebab-case.
+        inline bool validName(const std::string& name)
+        {
+          if (name.empty() || name.front() == '-')
+          {
+            return false;
+          }
+          for (const char c : name)
+          {
+            if (!((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-'))
+            {
+              return false;
+            }
+          }
+          return true;
+        }
+
+        inline std::string
+        requireName(const json& j, const char* key, const std::string& context)
+        {
+          auto name = requireString(j, key, context);
+          if (!validName(name))
+          {
+            throw std::runtime_error(context + ": \"" + key
+                                     + "\" must be a lower-case kebab-case name");
+          }
+          return name;
+        }
+
+        inline bool validConductorPhase(const std::string& phase)
+        {
+          return phase == "a" || phase == "b" || phase == "c" || phase == "n" || phase == "g";
+        }
+
+        template <typename ScalarT>
+        void validateConductorType(const json& j, const std::string& context)
+        {
+          rejectUnknownKeys(j,
+                            {"description", "source", "radius", "conductivity", "permeability", "weight"},
+                            context);
+          const auto& radius = requireObject(j, "radius", context);
+          rejectUnknownKeys(radius, {"outer", "inner"}, context + " \"radius\"");
+          const auto outer = requirePositive<ScalarT>(radius, "outer", context + " \"radius\"");
+          if (radius.contains("inner"))
+          {
+            const auto inner =
+                requireNonnegative<ScalarT>(radius, "inner", context + " \"radius\"");
+            if (inner >= outer)
+            {
+              throw std::runtime_error(context + ": inner radius must be below the outer radius");
+            }
+          }
+          requirePositive<ScalarT>(j, "conductivity", context);
+          if (j.contains("permeability"))
+          {
+            // Relative permeability; the lower bound rejects absolute values
+            // entered by mistake.
+            requireAtLeast<ScalarT>(j, "permeability", context, static_cast<ScalarT>(0.1));
+          }
+          requirePositive<ScalarT>(j, "weight", context);
+        }
+
+        template <typename ScalarT>
+        void validateTowerType(const json& j, const std::string& context)
+        {
+          rejectUnknownKeys(j, {"description", "source", "attachments"}, context);
+          const auto& attachments = requireObject(j, "attachments", context);
+          if (attachments.empty())
+          {
+            throw std::runtime_error(context + ": \"attachments\" must not be empty");
+          }
+          for (const auto& entry : attachments.items())
+          {
+            const auto point_context = context + " attachment \"" + entry.key() + "\"";
+            if (!validName(entry.key()))
+            {
+              throw std::runtime_error(point_context + ": name must be lower-case kebab-case");
+            }
+            const auto& point = entry.value();
+            if (!point.is_object())
+            {
+              throw std::runtime_error(point_context + " must be an object");
+            }
+            rejectUnknownKeys(point, {"x", "h"}, point_context);
+            requireFinite<ScalarT>(point, "x", point_context);
+            requirePositive<ScalarT>(point, "h", point_context);
+          }
+        }
+
+        /// Named conductor and tower types merged from a document's catalog
+        /// section and its included catalog files.
+        struct CatalogTables
+        {
+          std::map<std::string, json> conductors;
+          std::map<std::string, json> towers;
+        };
+
+        inline void mergeCatalogSections(CatalogTables&     tables,
+                                         const json&        sections,
+                                         const std::string& origin)
+        {
+          const auto merge = [&](const char* kind, std::map<std::string, json>& table)
+          {
+            if (!sections.contains(kind))
+            {
+              return;
+            }
+            const auto& section = requireObject(sections, kind, origin);
+            if (section.empty())
+            {
+              throw std::runtime_error(origin + ": \"" + std::string(kind)
+                                       + "\" must not be empty");
+            }
+            for (const auto& entry : section.items())
+            {
+              const auto& name = entry.key();
+              if (!validName(name))
+              {
+                throw std::runtime_error(origin + " " + kind + " \"" + name
+                                         + "\": name must be lower-case kebab-case");
+              }
+              if (table.count(name) != 0)
+              {
+                throw std::runtime_error(std::string(kind) + " name collision: " + name + " ("
+                                         + origin + ")");
+              }
+              table.emplace(name, entry.value());
+            }
+          };
+          merge("conductors", tables.conductors);
+          merge("towers", tables.towers);
+        }
+
+        inline void loadIncludedCatalogs(CatalogTables&  tables,
+                                         const json&     doc,
+                                         const fs::path& doc_path)
+        {
+          if (!doc.contains("include"))
+          {
+            return;
+          }
+          const auto& includes = doc.at("include");
+          if (!includes.is_array() || includes.empty())
+          {
+            throw std::runtime_error("Line \"include\" must be a nonempty array");
+          }
+          for (const auto& raw : includes)
+          {
+            if (!raw.is_string())
+            {
+              throw std::runtime_error("Line \"include\" entries must be strings");
+            }
+            const auto name     = raw.template get<std::string>();
+            const auto inc_path = doc_path.parent_path() / name;
+            if (!fs::is_regular_file(inc_path))
+            {
+              throw std::runtime_error("include not found: " + name);
+            }
+            auto       stream  = openJsonFile(inc_path);
+            const auto catalog = json::parse(stream);
+            const auto context = "include \"" + name + "\"";
+            if (!catalog.is_object())
+            {
+              throw std::runtime_error(context + " is not a valid catalog");
+            }
+            rejectUnknownKeys(catalog,
+                              {"catalog", "$schema", "name", "description", "source", "conductors", "towers"},
+                              context);
+            if (requireString(catalog, "catalog", context) != "1.0")
+            {
+              throw std::runtime_error(context + ": unsupported catalog format version");
+            }
+            for (const auto* key : {"$schema", "name", "description", "source"})
+            {
+              if (catalog.contains(key))
+              {
+                requireString(catalog, key, context);
+              }
+            }
+            if (!catalog.contains("conductors") && !catalog.contains("towers"))
+            {
+              throw std::runtime_error(context + " defines no conductor or tower types");
+            }
+            mergeCatalogSections(tables, catalog, context);
+          }
+        }
+
+        template <typename ScalarT>
+        std::vector<PathPoint<ScalarT>> parsePoints(const json& raw_points)
+        {
+          if (!raw_points.is_array() || raw_points.size() < 2)
+          {
+            throw std::runtime_error("path \"points\" must be an array with at least two points");
           }
 
-          std::vector<PathPoint<ScalarT>> path;
-          path.reserve(raw_path.size());
-          for (size_t i = 0; i < raw_path.size(); ++i)
+          std::vector<PathPoint<ScalarT>> points;
+          points.reserve(raw_points.size());
+          for (size_t i = 0; i < raw_points.size(); ++i)
           {
-            const auto& raw_point = raw_path.at(i);
-            const auto  context   = "path[" + std::to_string(i) + "]";
+            const auto& raw_point = raw_points.at(i);
+            const auto  context   = "points[" + std::to_string(i) + "]";
             if (!raw_point.is_object())
             {
               throw std::runtime_error(context + " must be an object");
             }
+            rejectUnknownKeys(raw_point, {"latitude", "longitude"}, context);
 
             PathPoint<ScalarT> point;
             point.latitude  = requireBounded<ScalarT>(raw_point,
@@ -144,57 +390,10 @@ namespace GridKit
                                                       context,
                                                       static_cast<ScalarT>(-180.0),
                                                       static_cast<ScalarT>(180.0));
-            path.push_back(point);
+            points.push_back(point);
           }
-          return path;
+          return points;
         }
-
-        template <typename ScalarT>
-        std::vector<ScalarT>
-        requireFiniteVector(const json&        j,
-                            const char*        key,
-                            size_t             expected_size,
-                            const std::string& context)
-        {
-          const auto& raw_values = j.at(key);
-          if (!raw_values.is_array() || raw_values.size() != expected_size)
-          {
-            throw std::runtime_error(context + ": \"" + key
-                                     + "\" size must match conductor count");
-          }
-
-          std::vector<ScalarT> values;
-          values.reserve(expected_size);
-          for (size_t i = 0; i < raw_values.size(); ++i)
-          {
-            const auto value = raw_values.at(i).template get<ScalarT>();
-            if (!std::isfinite(static_cast<double>(value)))
-            {
-              throw std::runtime_error(context + ": \"" + key + "\" entries must be finite");
-            }
-            values.push_back(value);
-          }
-          return values;
-        }
-
-        template <typename ScalarT>
-        std::vector<ScalarT>
-        requirePositiveVector(const json&        j,
-                              const char*        key,
-                              size_t             expected_size,
-                              const std::string& context)
-        {
-          auto values = requireFiniteVector<ScalarT>(j, key, expected_size, context);
-          for (const auto value : values)
-          {
-            if (value <= static_cast<ScalarT>(0.0))
-            {
-              throw std::runtime_error(context + ": \"" + key + "\" entries must be positive");
-            }
-          }
-          return values;
-        }
-
       } // namespace Detail
 
       template <typename RealT = double, typename IdxT = size_t>
@@ -203,142 +402,216 @@ namespace GridKit
       {
         using json = Detail::json;
 
-        const auto j = json::parse(Detail::openJsonFile(file_path));
+        auto       stream = Detail::openJsonFile(file_path);
+        const auto j      = json::parse(stream);
+        if (!j.is_object())
+        {
+          throw std::runtime_error("Line document must be an object");
+        }
 
-        const auto model_class = j.at("class").template get<std::string>();
-        if (model_class != "Overhead")
+        Detail::rejectUnknownKeys(j,
+                                  {"line", "$schema", "name", "description", "source", "include", "catalog", "tower", "conductors", "path", "earth"},
+                                  "Line");
+        if (Detail::requireString(j, "line", "Line") != "1.0")
         {
-          throw std::runtime_error("Unsupported line model class: " + model_class);
+          throw std::runtime_error("Unsupported line format version");
         }
-        if (j.contains("skin_effect"))
+        for (const auto* key : {"$schema", "name", "description", "source"})
         {
-          throw std::runtime_error("Overhead line JSON does not support \"skin_effect\"");
+          if (j.contains(key))
+          {
+            Detail::requireString(j, key, "Line");
+          }
         }
-        if (j.contains("span"))
+
+        Detail::CatalogTables tables;
+        if (j.contains("catalog"))
         {
-          throw std::runtime_error("Overhead line JSON requires \"span\" under \"tower\"");
+          const auto& catalog = Detail::requireObject(j, "catalog", "Line");
+          Detail::rejectUnknownKeys(catalog, {"conductors", "towers"}, "catalog");
+          if (catalog.empty())
+          {
+            throw std::runtime_error("Line \"catalog\" must not be empty");
+          }
+          Detail::mergeCatalogSections(tables, catalog, "catalog");
         }
-        if (j.contains("segment"))
+        Detail::loadIncludedCatalogs(tables, j, file_path);
+
+        for (const auto& [name, ctype] : tables.conductors)
         {
-          throw std::runtime_error("Overhead line JSON does not support \"segment\"");
+          Detail::validateConductorType<RealT>(ctype, "conductor type \"" + name + "\"");
         }
-        if (j.contains("earth"))
+        for (const auto& [name, ttype] : tables.towers)
         {
-          throw std::runtime_error(
-              "Overhead line JSON uses top-level \"earth_conductivity\" and \"earth_permittivity\"");
+          Detail::validateTowerType<RealT>(ttype, "tower type \"" + name + "\"");
         }
+
+        const auto tower_name = Detail::requireName(j, "tower", "Line");
+        const auto tower_type = tables.towers.find(tower_name);
+        if (tower_type == tables.towers.end())
+        {
+          throw std::runtime_error("unknown tower type: " + tower_name);
+        }
+        const auto& attachments = tower_type->second.at("attachments");
 
         const auto& conductors = j.at("conductors");
         if (!conductors.is_array() || conductors.empty())
         {
-          throw std::runtime_error("Overhead line JSON requires a nonempty \"conductors\" array");
-        }
-
-        OverheadData<RealT, IdxT> data;
-        if (j.contains("length"))
-        {
-          data.path.length = Detail::requirePositive<RealT>(j, "length", "Overhead");
-        }
-        if (j.contains("path"))
-        {
-          data.path.path = Detail::parsePath<RealT>(j.at("path"));
-        }
-        if (!data.path.length.has_value() && data.path.path.empty())
-        {
-          throw std::runtime_error("Overhead line JSON requires \"length\" or \"path\"");
+          throw std::runtime_error("Line requires a nonempty \"conductors\" array");
         }
         if (conductors.size() > std::numeric_limits<IdxT>::max())
         {
-          throw std::runtime_error("Overhead line JSON has too many conductors");
+          throw std::runtime_error("Line has too many conductors");
         }
 
-        const auto conductor_count = static_cast<IdxT>(conductors.size());
-        data.tower.K               = conductor_count;
-        data.conductor.K           = conductor_count;
+        const auto& path = Detail::requireObject(j, "path", "Line");
+        Detail::rejectUnknownKeys(path, {"span", "length", "points"}, "path");
+        const auto span = Detail::requirePositive<RealT>(path, "span", "path");
+        if (path.contains("length") == path.contains("points"))
+        {
+          throw std::runtime_error("path requires exactly one of \"length\" or \"points\"");
+        }
 
-        const auto& raw_tower = j.at("tower");
-        if (!raw_tower.is_object())
+        OverheadData<RealT, IdxT> data;
+        const auto                conductor_count = static_cast<IdxT>(conductors.size());
+        data.tower.K                              = conductor_count;
+        data.tower.span                           = span;
+        data.conductor.K                          = conductor_count;
+
+        if (path.contains("length"))
         {
-          throw std::runtime_error("Overhead \"tower\" must be an object");
+          data.path.length = Detail::requirePositive<RealT>(path, "length", "path");
         }
-        for (const auto& entry : raw_tower.items())
+        else
         {
-          const auto& key = entry.key();
-          if (key != "x" && key != "height" && key != "span" && key != "tension")
-          {
-            throw std::runtime_error("Overhead \"tower\" contains unsupported field: " + key);
-          }
+          data.path.path = Detail::parsePoints<RealT>(path.at("points"));
         }
-        data.tower.position =
-            Detail::requireFiniteVector<RealT>(raw_tower, "x", conductors.size(), "tower");
-        data.tower.height =
-            Detail::requirePositiveVector<RealT>(raw_tower, "height", conductors.size(), "tower");
-        data.tower.span = Detail::requirePositive<RealT>(raw_tower, "span", "tower");
-        if (raw_tower.contains("tension"))
-        {
-          data.tower.tension =
-              Detail::requirePositiveVector<RealT>(raw_tower,
-                                                   "tension",
-                                                   conductors.size(),
-                                                   "tower");
-        }
+
+        data.tower.position.reserve(conductors.size());
+        data.tower.height.reserve(conductors.size());
         data.conductor.radius.reserve(conductors.size());
         data.conductor.inner_radius.reserve(conductors.size());
         data.conductor.sigma.reserve(conductors.size());
         data.conductor.mu.reserve(conductors.size());
-        const bool has_weight = conductors.at(0).contains("weight");
-        const bool has_phase  = conductors.at(0).contains("phase");
-        if (!has_weight)
-        {
-          throw std::runtime_error("Overhead line JSON requires conductor weights");
-        }
         data.conductor.weight.reserve(conductors.size());
-        if (has_phase)
-        {
-          data.conductor.phase.reserve(conductors.size());
-        }
+        data.conductor.phase.reserve(conductors.size());
+        data.conductor.circuit.reserve(conductors.size());
+
+        std::vector<std::optional<RealT>> tension(conductors.size());
+        std::set<std::string>             used;
+        bool                              has_tension = false;
 
         for (size_t i = 0; i < conductors.size(); ++i)
         {
           const auto& raw     = conductors.at(i);
           const auto  context = "conductors[" + std::to_string(i) + "]";
-          if (raw.contains("x") || raw.contains("height"))
+          if (!raw.is_object())
           {
-            throw std::runtime_error(context + ": tower placement belongs in \"tower\"");
+            throw std::runtime_error(context + " must be an object");
           }
-          const auto radius       = Detail::requirePositive<RealT>(raw, "radius", context);
-          const auto inner_radius = Detail::requireNonnegative<RealT>(raw, "inner_radius", context);
-          if (inner_radius >= radius)
+          Detail::rejectUnknownKeys(raw, {"at", "phase", "circuit", "type", "tension"}, context);
+
+          const auto at         = Detail::requireName(raw, "at", context);
+          const auto attachment = attachments.find(at);
+          if (attachment == attachments.end())
           {
-            throw std::runtime_error(context + ": \"inner_radius\" must be less than \"radius\"");
+            throw std::runtime_error(context + " references unknown attachment: " + at);
+          }
+          if (!used.insert(at).second)
+          {
+            throw std::runtime_error("attachment used more than once: " + at);
           }
 
-          data.conductor.radius.push_back(radius);
-          data.conductor.inner_radius.push_back(inner_radius);
-          data.conductor.sigma.push_back(Detail::requirePositive<RealT>(raw, "conductivity", context));
-          data.conductor.mu.push_back(Detail::requirePositive<RealT>(raw, "permeability", context));
-          if (raw.contains("weight") != has_weight)
+          const auto type_name = Detail::requireName(raw, "type", context);
+          const auto type      = tables.conductors.find(type_name);
+          if (type == tables.conductors.end())
+          {
+            throw std::runtime_error(context + " references unknown conductor type: "
+                                     + type_name);
+          }
+          const auto& ctype  = type->second;
+          const auto& radius = ctype.at("radius");
+
+          const auto phase = Detail::requireString(raw, "phase", context);
+          if (!Detail::validConductorPhase(phase))
           {
             throw std::runtime_error(
-                "Overhead line JSON conductor weights must be specified for all conductors or none");
+                context + ": \"phase\" must be one of \"a\", \"b\", \"c\", \"n\", or \"g\"");
           }
-          data.conductor.weight.push_back(Detail::requirePositive<RealT>(raw, "weight", context));
-          if (raw.contains("phase") != has_phase)
+
+          IdxT circuit{1};
+          if (raw.contains("circuit"))
           {
-            throw std::runtime_error(
-                "Overhead line JSON conductor phases must be specified for all conductors or none");
-          }
-          if (has_phase)
-          {
-            auto phase = raw.at("phase").template get<std::string>();
-            if (!Detail::validConductorPhase(phase))
+            const auto& raw_circuit = raw.at("circuit");
+            if (!raw_circuit.is_number_integer() || raw_circuit.template get<long long>() < 1)
             {
               throw std::runtime_error(context
-                                       + ": \"phase\" must be one of \"a\", \"b\", \"c\", \"n\", or \"g\"");
+                                       + ": \"circuit\" must be an integer of at least one");
             }
-            data.conductor.phase.push_back(std::move(phase));
+            circuit = raw_circuit.template get<IdxT>();
           }
+
+          if (raw.contains("tension"))
+          {
+            tension[i]  = Detail::requirePositive<RealT>(raw, "tension", context);
+            has_tension = true;
+          }
+
+          data.tower.position.push_back(Detail::requireFinite<RealT>(*attachment, "x", context));
+          data.tower.height.push_back(Detail::requirePositive<RealT>(*attachment, "h", context));
+          data.conductor.radius.push_back(radius.at("outer").template get<RealT>());
+          data.conductor.inner_radius.push_back(
+              radius.contains("inner") ? radius.at("inner").template get<RealT>()
+                                       : static_cast<RealT>(0.0));
+          data.conductor.sigma.push_back(ctype.at("conductivity").template get<RealT>());
+          data.conductor.mu.push_back(
+              (ctype.contains("permeability") ? ctype.at("permeability").template get<RealT>()
+                                              : static_cast<RealT>(1.0))
+              * Constants::mu0<RealT>());
+          data.conductor.weight.push_back(ctype.at("weight").template get<RealT>());
+          data.conductor.phase.push_back(phase);
+          data.conductor.circuit.push_back(circuit);
         }
+
+        if (has_tension)
+        {
+          // Supplied tensions must leave a positive minimum conductor height;
+          // rejecting here reports the offending position instead of a later
+          // geometry failure inside the parameter models.
+          for (size_t i = 0; i < tension.size(); ++i)
+          {
+            if (!tension[i].has_value())
+            {
+              continue;
+            }
+            const RealT a   = tension[i].value() / data.conductor.weight[i];
+            const RealT sag = a
+                              * (std::cosh(span / (static_cast<RealT>(2.0) * a))
+                                 - static_cast<RealT>(1.0));
+            if (!(data.tower.height[i] - sag > static_cast<RealT>(0.0)))
+            {
+              throw std::runtime_error(
+                  "tension leaves nonpositive minimum height at x="
+                  + std::to_string(static_cast<double>(data.tower.position[i])));
+            }
+          }
+          data.tower.tension = std::move(tension);
+        }
+
+        const auto& earth = Detail::requireObject(j, "earth", "Line");
+        Detail::rejectUnknownKeys(earth, {"conductivity", "permittivity"}, "earth");
+        data.carson.earth_sigma =
+            Detail::requireNonnegative<RealT>(earth, "conductivity", "earth");
+        // Relative permittivity; the lower bound of one rejects absolute
+        // values entered by mistake.
+        data.carson.earth_eps =
+            (earth.contains("permittivity")
+                 ? Detail::requireAtLeast<RealT>(earth,
+                                                 "permittivity",
+                                                 "earth",
+                                                 static_cast<RealT>(1.0))
+                 : static_cast<RealT>(1.0))
+            * Constants::epsilon0<RealT>();
 
         Conductor<RealT, IdxT> conductor(data.conductor);
         conductor.initialize();
@@ -346,14 +619,6 @@ namespace GridKit
         tower.initialize();
         Path<RealT, IdxT> parsed_path(data.path, tower);
         parsed_path.initialize();
-
-        data.carson.earth_sigma =
-            Detail::requireNonnegative<RealT>(j, "earth_conductivity", "Overhead");
-        data.carson.earth_eps =
-            Detail::requireAtLeast<RealT>(j,
-                                          "earth_permittivity",
-                                          "Overhead",
-                                          Constants::epsilon0<RealT>());
 
         return data;
       }

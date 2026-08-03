@@ -26,7 +26,8 @@ namespace GridKit
         ScalarT                             span{0.0};
         std::vector<ScalarT>                height;
         std::vector<ScalarT>                position;
-        std::optional<std::vector<ScalarT>> tension;
+        /// Per-conductor horizontal tension; empty when no conductor supplies one
+        std::vector<std::optional<ScalarT>> tension;
       };
     } // namespace Parameters
   } // namespace EMT
