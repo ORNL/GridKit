@@ -1,10 +1,11 @@
 
 #include "BusPartitionInterface.hpp"
 
-#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+
+#include "GridKit/Model/PowerElectronics/ExternalConnection.hpp"
 
 namespace GridKit
 {
@@ -40,17 +41,53 @@ namespace GridKit
       extern_indices_.insert(i);
     }
 
+    // The subsystem needs access to the interface connection indices before
+    // the interface is fully allocated.
+    connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
+
+    const IdxT bus_i = bus_.getNodeConnection(0).idx_;
+    const IdxT bus_j = bus_.getNodeConnection(1).idx_;
+
+    bool port_i_set = false;
+    bool port_j_set = false;
+
+    // Copy the wrapped component topology and identify the two bus ports.
+    for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
+    {
+      const IdxT connection_index = component_.getNodeConnection(i);
+
+      this->setConnectionNodes(i, connection_index);
+
+      if (connection_index == bus_i)
+      {
+        bus_port_i_ = i;
+        port_i_set  = true;
+      }
+      else if (connection_index == bus_j)
+      {
+        bus_port_j_ = i;
+        port_j_set  = true;
+      }
+    }
+
+    if (!port_i_set || !port_j_set)
+    {
+      std::cerr << "ERROR: Invalid partition interface detected. "
+                << "Bus(ID=" << bus_.busID()
+                << "), Component(ID=" << component_.getIDcomponent()
+                << "). Please verify connection-node mappings and "
+                   "internal/external index assignments."
+                << std::endl;
+    }
+
     const IdxT* cooRow = component_.jacobianCooRows();
     const IdxT* cooCol = component_.jacobianCooCols();
-
-    const IdxT bus_i = bus.getNodeConnection(0);
-    const IdxT bus_j = bus.getNodeConnection(1);
 
     nnz_ = 0;
     for (IdxT k = 0; k < component_.nnz(); ++k)
     {
-      const IdxT row_node = component_.getNodeConnection(cooRow[k]);
-      const IdxT col_node = component_.getNodeConnection(cooCol[k]);
+      const IdxT row_node = component_.getNodeConnection(static_cast<size_t>(cooRow[k]));
+      const IdxT col_node = component_.getNodeConnection(static_cast<size_t>(cooCol[k]));
 
       const bool row_is_bus = (row_node == bus_i || row_node == bus_j);
       const bool col_is_bus = (col_node == bus_i || col_node == bus_j);
@@ -76,37 +113,6 @@ namespace GridKit
   {
 
     CircuitComponent<ScalarT, IdxT>::allocate();
-
-    std::fill_n(f_.getData(), size_, 0);
-
-    bool port_i_set = false;
-    bool port_j_set = false;
-
-    for (size_t i = 0; i < static_cast<size_t>(size_); i++)
-    {
-      if (bus_.getNodeConnection(0) == component_.getNodeConnection(static_cast<IdxT>(i)))
-      {
-        bus_port_i_ = i;
-        port_i_set  = true;
-      }
-      else if (bus_.getNodeConnection(1) == component_.getNodeConnection(static_cast<IdxT>(i)))
-      {
-        bus_port_j_ = i;
-        port_j_set  = true;
-      }
-      IdxT global_idx = component_.getNodeConnection(static_cast<IdxT>(i));
-      this->setExternalConnectionNodes(static_cast<IdxT>(i), global_idx);
-    }
-
-    if (!port_i_set || !port_j_set)
-    {
-      std::cerr << "ERROR: Invalid partition interface detected. "
-                << "Bus(ID=" << bus_.busID()
-                << "), Component(ID=" << component_.getIDcomponent()
-                << "). Please verify connection-node mappings and internal/external index assignments."
-                << std::endl;
-      return 1;
-    }
 
     const auto n = component_.getInternalSize();
 
@@ -158,48 +164,17 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    size_t internal = 0;
-    size_t external = 0;
+    std::vector<ScalarT> component_residual(static_cast<size_t>(component_.size()));
 
-    ScalarT* y  = y_.getData();
-    ScalarT* yp = yp_.getData();
-    ScalarT* f  = f_.getData();
+    updateComponentPointers(component_residual.data());
 
-    ScalarT* component_y  = component_.y().getData();
-    ScalarT* component_yp = component_.yp().getData();
-
-    const auto& extern_indices = component_.getExternIndices();
-
-    for (size_t i = 0; i < static_cast<size_t>(component_.size()); ++i)
+    if (int err_code = component_.evaluateResidual())
     {
-      if (extern_indices.contains(static_cast<IdxT>(i)))
-      {
-        component_y[external]  = y[i];
-        component_yp[external] = yp[i];
-        ++external;
-      }
-      else
-      {
-        y_ptr[internal]  = y[i];
-        yp_ptr[internal] = yp[i];
-        ++internal;
-      }
+      return err_code;
     }
 
-    component_.y().setDataUpdated();
-    component_.y().setDataUpdated();
-
-    component_.evaluateResidual();
-
-    const auto* residual = component_.getResidual().getData();
-
-    // TODO: This assumes that external variables are ordered after all internal
-    // variables in the indexing. To make this more robust, we need to get rid of this assumption
-    // (although true for all components that we have in GridKit).
-    f[bus_port_i_] = residual[bus_port_i_];
-    f[bus_port_j_] = residual[bus_port_j_];
-
-    f_.setDataUpdated();
+    *f_ext_[bus_port_i_] += component_residual[bus_port_i_];
+    *f_ext_[bus_port_j_] += component_residual[bus_port_j_];
 
     return 0;
   }
@@ -214,7 +189,12 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::evaluateJacobian()
   {
+
     this->zeroJacMatrix();
+
+    // The Jacobian only requires the component state pointers. Residual
+    // contributions are redirected to dummy storage.
+    updateComponentPointers(nullptr);
 
     component_.evaluateJacobian();
 
@@ -234,6 +214,37 @@ namespace GridKit
     }
 
     this->setJacValues(r, c, v);
+
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int BusPartitionInterface<ScalarT, IdxT>::updateComponentPointers(ScalarT* residual)
+  {
+    size_t internal_index = 0;
+
+    const auto& external_indices = component_.getExternIndices();
+
+    for (size_t i = 0; i < static_cast<size_t>(component_.size()); ++i)
+    {
+      if (external_indices.contains(static_cast<IdxT>(i)))
+      {
+        ExternalConnection<ScalarT, IdxT> connection{
+            .y_   = y_ext_[i],
+            .yp_  = yp_ext_[i],
+            .f_   = residual ? &residual[i] : &dummy_residual_,
+            .idx_ = component_.getNodeConnection(i)};
+
+        component_.setExternalConnectionNodes(i, connection);
+      }
+      else
+      {
+        y_ptr[internal_index]  = *y_ext_[i];
+        yp_ptr[internal_index] = *yp_ext_[i];
+
+        ++internal_index;
+      }
+    }
 
     return 0;
   }

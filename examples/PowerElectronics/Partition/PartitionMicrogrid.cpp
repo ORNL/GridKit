@@ -175,8 +175,7 @@ int main()
   GridKit::MicrogridLine<double, size_t>          l2copy(*l2);
   GridKit::BusPartitionInterface<double, size_t>* busInterface1 = new GridKit::BusPartitionInterface<double, size_t>(bus2, l2copy, 14);
 
-  busInterface1->allocate();
-
+  // busInterface1->allocate();
   partition1->addNode(&dg_signal);
   partition1->addComponent(dg1);
   partition1->addComponent(dg2);
@@ -233,10 +232,11 @@ int main()
   for (auto* partition : partitions)
   {
     partition->allocate();
+    partition->initialize();
 
     // test hold and release methods
-    partition->release();
-    partition->hold();
+    // partition->release();
+    // partition->hold();
 
     partition->updateTime(2, 5);
 

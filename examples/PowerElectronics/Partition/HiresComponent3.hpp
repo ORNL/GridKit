@@ -19,13 +19,13 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
-    using CircuitComponent<ScalarT, IdxT>::y_;
+    using CircuitComponent<ScalarT, IdxT>::y_ext_;
     using CircuitComponent<ScalarT, IdxT>::y_int_;
-    using CircuitComponent<ScalarT, IdxT>::yp_;
+    using CircuitComponent<ScalarT, IdxT>::yp_ext_;
     using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-    using CircuitComponent<ScalarT, IdxT>::f_;
+    using CircuitComponent<ScalarT, IdxT>::f_ext_;
     using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::g_;
     using CircuitComponent<ScalarT, IdxT>::yB_;
@@ -77,10 +77,9 @@ namespace GridKit
 
     int evaluateInternalResidual()
     {
-      auto* y = y_.getData();
 
       // Internals
-      f_int_[0] = -yp_int_[0] - 280 * y_int_[0] * y_int_[2] + 0.69 * y[0] + 1.71 * y[1] - 0.43 * y_int_[0] + 0.69 * y_int_[1];
+      f_int_[0] = -yp_int_[0] - 280 * y_int_[0] * y_int_[2] + 0.69 * *y_ext_[0] + 1.71 * *y_ext_[1] - 0.43 * y_int_[0] + 0.69 * y_int_[1];
       f_int_[1] = -yp_int_[1] + 280 * y_int_[0] * y_int_[2] - 1.81 * y_int_[1];
       f_int_[2] = -yp_int_[2] - 280 * y_int_[0] * y_int_[2] + 1.81 * y_int_[1];
 
@@ -89,14 +88,9 @@ namespace GridKit
 
     int evaluateExternalResidual()
     {
-      auto* y = y_.getData();
-      auto* f = f_.getData();
-
       // Externals
-      f[0] = -0.02 * y[0];
-      f[1] = -0.045 * y[1] + 0.43 * y_int_[0] + 0.43 * y_int_[1];
-
-      f_.setDataUpdated();
+      *f_ext_[0] = -0.02 * *y_ext_[0];
+      *f_ext_[1] = -0.045 * *y_ext_[1] + 0.43 * y_int_[0] + 0.43 * y_int_[1];
 
       return 0;
     }

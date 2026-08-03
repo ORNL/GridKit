@@ -37,7 +37,6 @@ namespace GridKit
     using SystemModel::allocated_;
     using SystemModel::allocateVectors;
     using SystemModel::alpha_;
-    using SystemModel::f_;
     using SystemModel::f_int_;
     using SystemModel::n_extern_;
     using SystemModel::n_intern_;
@@ -45,9 +44,7 @@ namespace GridKit
     using SystemModel::size_;
     using SystemModel::tag_;
     using SystemModel::time_;
-    using SystemModel::y_;
     using SystemModel::y_int_;
-    using SystemModel::yp_;
     using SystemModel::yp_int_;
 
     using SystemModel::components_;
@@ -87,6 +84,11 @@ namespace GridKit
       n_extern_ = external_map_.size();
       size_     = n_intern_;
 
+      if (!allocated_)
+      {
+        allocateVectors(static_cast<IdxT>(size_), true);
+      }
+
       CircuitComponent<ScalarT, IdxT>::allocate();
 
       // Allocation always rebuilds the system Jacobian and its COO-to-CSR map.
@@ -99,16 +101,16 @@ namespace GridKit
       tag_.resize(size_);
 
       // Allocate subsystem vectors.
-      y_ext_.resize(n_extern_);
-      yp_ext_.resize(n_extern_);
-      f_ext_.resize(n_extern_);
+      y_ext_data_.resize(n_extern_);
+      yp_ext_data_.resize(n_extern_);
+      f_ext_data_.resize(n_extern_);
 
       external_data_indices_.resize(n_extern_);
 
       // Store the mapping from local subsystem indices back to their global system indices
       for (const auto [global_idx, local_idx] : internal_map_)
       {
-        this->setExternalConnectionNodes(local_idx, global_idx);
+        this->setConnectionNodes(local_idx, global_idx);
       }
 
       // Store the global indices of all external coupling variables.
@@ -117,22 +119,80 @@ namespace GridKit
         external_data_indices_[local_idx - n_intern_] = global_idx;
       }
 
-      size_t      component_internal_idx = 0;
-      const auto* y                      = y_.getData();
-      const auto* yp                     = yp_.getData();
-      auto*       f                      = f_.getData();
-      for (component_type* comp : components_)
+      tag_.resize(size_);
+
+      { // Start node internal indexing after all component internals for proper KLU ordering
+        size_t node_internal_idx;
+        for (node_type* node : nodes_)
+        {
+          for (size_t i = 0; i < node->getInternalSize(); i++)
+          {
+            node_internal_idx = node->getNodeConnection(i).idx_;
+
+            ExternalConnection<ScalarT, IdxT> node_connection{
+                .y_   = y_int_ + node_internal_idx,
+                .yp_  = yp_int_ + node_internal_idx,
+                .f_   = f_int_ + node_internal_idx,
+                .idx_ = static_cast<IdxT>(node_internal_idx)};
+
+            node->setExternalConnectionNodes(i, node_connection);
+            node_internal_idx++;
+          }
+        }
+      }
+
       {
+        // The offset for each component's internal variables in the system vector.
+        // They start at 0, and are stacked on top of each other.
+        size_t component_internal_idx = 0;
+        for (component_type* comp : components_)
+        {
+          if (!comp->isAllocated())
+          {
+            comp->allocate();
+          }
+          // Update component internal pointers to their correct offsets
+          comp->setInternalPointer(&y_int_[component_internal_idx]);
+          comp->setInternalDerivativePointer(&yp_int_[component_internal_idx]);
+          comp->setInternalResidualPointer(&f_int_[component_internal_idx]);
 
-        comp->setInternalPointer(&y[component_internal_idx]);
-        comp->setInternalDerivativePointer(&yp[component_internal_idx]);
-        comp->setInternalResidualPointer(&f[component_internal_idx]);
+          component_internal_idx += comp->getInternalSize();
 
-        component_internal_idx += comp->getInternalSize();
+          const auto& external_indices = comp->getExternIndices();
+
+          for (IdxT local_index : external_indices)
+          {
+            const IdxT connection_index = comp->getNodeConnection(local_index);
+
+            // External to the component but internal to the subsystem.
+            if (connection_index < n_intern_)
+            {
+              ExternalConnection<ScalarT, IdxT> connection{
+                  .y_   = y_int_ + connection_index,
+                  .yp_  = yp_int_ + connection_index,
+                  .f_   = f_int_ + connection_index,
+                  .idx_ = connection_index};
+
+              comp->setExternalConnectionNodes(local_index, connection);
+
+              continue;
+            }
+
+            // External to both the component and subsystem.
+            const IdxT external_offset = connection_index - static_cast<IdxT>(n_intern_);
+
+            ExternalConnection<ScalarT, IdxT> connection{
+                .y_   = &y_ext_data_[external_offset],
+                .yp_  = &yp_ext_data_[external_offset],
+                .f_   = &f_ext_data_[external_offset],
+                .idx_ = connection_index};
+
+            comp->setExternalConnectionNodes(local_index, connection);
+          }
+        }
       }
 
       // Evaluate component Jacobians to get sparsity
-      distributeVectors();
       for (component_type* component : components_)
       {
         component->evaluateJacobian();
@@ -243,52 +303,51 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int distributeVectors() override
+    int distributeExternalVectors()
     {
 
       if (forcing_function_)
       {
         const auto [y_forcing, yp_forcing] = (*forcing_function_)(time_);
 
-        assert(y_forcing.size() == y_ext_.size());
-        assert(yp_forcing.size() == yp_ext_.size());
+        assert(y_forcing.size() == y_ext_data_.size());
+        assert(yp_forcing.size() == yp_ext_data_.size());
 
-        std::copy(y_forcing.begin(), y_forcing.end(), y_ext_.begin());
-        std::copy(yp_forcing.begin(), yp_forcing.end(), yp_ext_.begin());
+        std::copy(y_forcing.begin(), y_forcing.end(), y_ext_data_.begin());
+        std::copy(yp_forcing.begin(), yp_forcing.end(), yp_ext_data_.begin());
       }
 
-      const auto* y_system  = y_.getData();
-      const auto* yp_system = yp_.getData();
+      return 0;
+    }
 
-      for (component_type* component : components_)
-      {
-        auto*       y         = component->y().getData();
-        auto*       yp        = component->yp().getData();
-        const auto& externals = component->getExternIndices();
+    /**
+     * @brief Evaluate Residuals at each component then collect them
+     *
+     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+     */
+    int evaluateInternalResidual() override
+    {
+      distributeExternalVectors();
 
-        for (size_t j : externals)
-        {
-          IdxT local_idx = component->getNodeConnection(j);
+      SystemModel::evaluateInternalResidual();
 
-          if (local_idx == neg1_)
-          {
-            y[j]  = 0.0;
-            yp[j] = 0.0;
-          }
-          else if (local_idx < this->getInternalSize())
-          {
-            y[j]  = y_system[local_idx];
-            yp[j] = yp_system[local_idx];
-          }
-          else
-          {
-            y[j]  = y_ext_[local_idx - this->getInternalSize()];
-            yp[j] = yp_ext_[local_idx - this->getInternalSize()];
-          }
-        }
-        component->y().setDataUpdated();
-        component->yp().setDataUpdated();
-      }
+      return 0;
+    }
+
+    /**
+     * @brief Creates the system Jacobian representing \f$\alpha dF/dy' + dF/dy\f$
+     *
+     * Updates the CSR Jacobian values using the per-component mappings
+     * computed during allocate().
+     *
+     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+     */
+    int evaluateJacobian() override
+    {
+      distributeExternalVectors();
+
+      SystemModel::evaluateJacobian();
+
       return 0;
     }
 
@@ -301,7 +360,9 @@ namespace GridKit
      *
      * @param[in] component Component to add.
      */
-    void addComponent(component_type* component)
+    void
+    addComponent(component_type* component)
+
     {
       if (is_comp_in_local_state)
       {
@@ -359,35 +420,35 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Release the subsystem's global-to-local index mappings.
-     *
-     * If components/nodes currently hold local indices, they are first
-     * converted back to their original global indices via
-     * mapLocalToGlobal(). The internal/external index maps built by
-     * buildIndexMappings() are then cleared, and the model is marked as
-     * not allocated.
-     *
-     *
-     * Call this before modifying subsystem topology (adding or removing
-     * components/nodes), so stale local indices aren't left dangling.
-     *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
-     */
-    int release()
-    {
-      if (int err_code = mapLocalToGlobal())
-      {
-        return err_code;
-      }
+    // /**
+    //  * @brief Release the subsystem's global-to-local index mappings.
+    //  *
+    //  * If components/nodes currently hold local indices, they are first
+    //  * converted back to their original global indices via
+    //  * mapLocalToGlobal(). The internal/external index maps built by
+    //  * buildIndexMappings() are then cleared, and the model is marked as
+    //  * not allocated.
+    //  *
+    //  *
+    //  * Call this before modifying subsystem topology (adding or removing
+    //  * components/nodes), so stale local indices aren't left dangling.
+    //  *
+    //  * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+    //  */
+    // int release()
+    // {
+    //   if (int err_code = mapLocalToGlobal())
+    //   {
+    //     return err_code;
+    //   }
 
-      internal_map_.clear();
-      external_map_.clear();
+    //   internal_map_.clear();
+    //   external_map_.clear();
 
-      allocated_ = false;
+    //   allocated_ = false;
 
-      return 0;
-    }
+    //   return 0;
+    // }
 
     const std::vector<IdxT>& getExternalDataIndices()
     {
@@ -396,17 +457,17 @@ namespace GridKit
 
     std::vector<ScalarT>& getExternalDataY()
     {
-      return y_ext_;
+      return y_ext_data_;
     }
 
     std::vector<ScalarT>& getExternalDataYP()
     {
-      return yp_ext_;
+      return yp_ext_data_;
     }
 
     std::vector<ScalarT>& getExternalDataF()
     {
-      return f_ext_;
+      return f_ext_data_;
     }
 
     void setTimeFunction(TimeFunction function)
@@ -425,73 +486,66 @@ namespace GridKit
     }
 
   private:
-    /**
-     * @brief Replace local subsystem connection indices with their original global indices
-     * for every component and node.
-     *
-     * Inverse of mapGlobalToLocal(). Internal connections (index < internal
-     * size) are mapped back through this subsystem's own node-connection
-     * table; external connections are mapped back through
-     * @c external_data_indices_. Entries equal to @c neg1_ represent no
-     * connection and are left unchanged.
-     *
-     * @return Always returns 0.
-     */
-    int mapLocalToGlobal()
-    {
-      if (!is_comp_in_local_state)
-      {
-        return 0;
-      }
+    // /**
+    //  * @brief Replace local subsystem connection indices with their original global indices
+    //  * for every component and node.
+    //  *
+    //  * Inverse of mapGlobalToLocal(). Internal connections (index < internal
+    //  * size) are mapped back through this subsystem's own node-connection
+    //  * table; external connections are mapped back through
+    //  * @c external_data_indices_. Entries equal to @c neg1_ represent no
+    //  * connection and are left unchanged.
+    //  *
+    //  * @return Always returns 0.
+    //  */
+    // int mapLocalToGlobal()
+    // {
+    //   if (!is_comp_in_local_state)
+    //   {
+    //     return 0;
+    //   }
 
-      for (auto* component : components_)
-      {
+    //   for (auto* component : components_)
+    //   {
 
-        for (IdxT i = 0; i < component->size(); i++)
-        {
-          IdxT index = component->getNodeConnection(i);
+    //     for (IdxT i = 0; i < component->size(); i++)
+    //     {
+    //       IdxT index = component->getNodeConnection(i);
 
-          if (index == neg1_)
-          {
-            continue;
-          }
-          else if (index < this->getInternalSize())
-          {
-            component->setExternalConnectionNodes(i, this->getNodeConnection(index));
-          }
-          else
-          {
-            component->setExternalConnectionNodes(i, external_data_indices_[index - this->getInternalSize()]);
-          }
-        }
-      }
+    //       if (index == neg1_)
+    //       {
+    //         continue;
+    //       }
+    //       else if (index < this->getInternalSize())
+    //       {
+    //         component->setExternalConnectionNodes(i, this->getNodeConnection(index));
+    //       }
+    //       else
+    //       {
+    //         component->setExternalConnectionNodes(i, external_data_indices_[index - this->getInternalSize()]);
+    //       }
+    //     }
+    //   }
 
-      for (auto* node : nodes_)
-      {
+    //   for (auto* node : nodes_)
+    //   {
 
-        for (IdxT i = 0; i < node->size(); i++)
-        {
-          IdxT index = node->getNodeConnection(i);
+    //     for (IdxT i = 0; i < node->size(); i++)
+    //     {
+    //       IdxT index = node->getNodeConnection(i);
 
-          if (index == neg1_)
-          {
-            continue;
-          }
-          else if (index < this->getInternalSize())
-          {
-            node->setExternalConnectionNodes(i, this->getNodeConnection(index));
-          }
-          else
-          {
-            node->setExternalConnectionNodes(i, external_data_indices_[index - this->getInternalSize()]);
-          }
-        }
-      }
+    //       if (index == neg1_)
+    //       {
+    //         continue;
+    //       }
+    //       node->setExternalConnectionNodes(i, this->getNodeConnection(index));
+    //     }
+    //   }
 
-      is_comp_in_local_state = false;
+    //   is_comp_in_local_state = false;
 
-      return 0;
-    }
+    //   return 0;
+    // }
 
     /**
      * @brief Replace global connection indices with local subsystem indices for every component
@@ -512,7 +566,6 @@ namespace GridKit
 
     int mapGlobalToLocal()
     {
-
       if (is_comp_in_local_state)
       {
         return 0;
@@ -520,45 +573,38 @@ namespace GridKit
 
       for (auto* component : components_)
       {
-
-        for (IdxT i = 0; i < component->size(); i++)
+        for (IdxT i = 0; i < component->size(); ++i)
         {
-          IdxT index = component->getNodeConnection(i);
+          const IdxT index = component->getNodeConnection(i);
 
           if (index == neg1_)
           {
             continue;
           }
-          else if (internal_map_.count(index) > 0)
+
+          if (internal_map_.contains(index))
           {
-            component->setExternalConnectionNodes(i, internal_map_.at(index));
+            component->setConnectionNodes(i, internal_map_.at(index));
           }
           else
           {
-            component->setExternalConnectionNodes(i, external_map_.at(index));
+            component->setConnectionNodes(i, external_map_.at(index));
           }
         }
       }
 
       for (auto* node : nodes_)
       {
-
-        for (IdxT i = 0; i < node->size(); i++)
+        for (IdxT i = 0; i < node->size(); ++i)
         {
-          IdxT index = node->getNodeConnection(i);
+          const IdxT index = node->getNodeConnection(i).idx_;
 
           if (index == neg1_)
           {
             continue;
           }
-          else if (internal_map_.count(index) > 0)
-          {
-            node->setExternalConnectionNodes(i, internal_map_.at(index));
-          }
-          else
-          {
-            node->setExternalConnectionNodes(i, external_map_.at(index));
-          }
+
+          node->setConnectionNodes(i, internal_map_.at(index));
         }
       }
 
@@ -612,7 +658,7 @@ namespace GridKit
 
         for (IdxT i = 0; i < node->size(); i++)
         {
-          IdxT index = node->getNodeConnection(i);
+          IdxT index = node->getNodeConnection(i).idx_;
 
           if (index != neg1_)
           {
@@ -644,9 +690,9 @@ namespace GridKit
     std::unordered_map<IdxT, IdxT> external_map_;
     std::vector<IdxT>              external_data_indices_;
 
-    std::vector<ScalarT> y_ext_;
-    std::vector<ScalarT> yp_ext_;
-    std::vector<ScalarT> f_ext_;
+    std::vector<ScalarT> y_ext_data_;
+    std::vector<ScalarT> yp_ext_data_;
+    std::vector<ScalarT> f_ext_data_;
 
     std::optional<TimeFunction> forcing_function_;
 

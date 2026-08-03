@@ -25,13 +25,13 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
-    using CircuitComponent<ScalarT, IdxT>::y_;
+    using CircuitComponent<ScalarT, IdxT>::y_ext_;
     using CircuitComponent<ScalarT, IdxT>::y_int_;
-    using CircuitComponent<ScalarT, IdxT>::yp_;
+    using CircuitComponent<ScalarT, IdxT>::yp_ext_;
     using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-    using CircuitComponent<ScalarT, IdxT>::f_;
+    using CircuitComponent<ScalarT, IdxT>::f_ext_;
     using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::g_;
     using CircuitComponent<ScalarT, IdxT>::yB_;
@@ -44,6 +44,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::extern_indices_;
     using CircuitComponent<ScalarT, IdxT>::n_extern_;
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
+    using CircuitComponent<ScalarT, IdxT>::connection_nodes_;
 
     using PartitionInterface<ScalarT, IdxT>::bus_port_i_;
     using PartitionInterface<ScalarT, IdxT>::bus_port_j_;
@@ -65,6 +66,7 @@ namespace GridKit
     int evaluateAdjointResidual();
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
+    int updateComponentPointers(ScalarT* residual);
 
   private:
     component_type& component_;
@@ -73,6 +75,8 @@ namespace GridKit
     std::unique_ptr<ScalarT[]> y_ptr;
     std::unique_ptr<ScalarT[]> yp_ptr;
     std::unique_ptr<ScalarT[]> f_ptr;
+
+    ScalarT dummy_residual_{};
 
     std::vector<IdxT> jac_map_;
   };

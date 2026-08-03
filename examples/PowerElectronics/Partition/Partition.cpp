@@ -1,5 +1,8 @@
 // #include <cstddef>
 
+#include <cstddef>
+
+#include "GridKit/ScalarTraits.hpp"
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstdio>
@@ -8,6 +11,7 @@
 #include <string>
 
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
+#include <GridKit/Model/PowerElectronics/ExternalConnection.hpp>
 #include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 
@@ -32,28 +36,36 @@ int main(int /* argc */, char const** /* argv */)
 
   bus.allocate();
 
-  bus.setExternalConnectionNodes(0, 3);
-  bus.setExternalConnectionNodes(1, 4);
+  GridKit::ExternalConnection<double, size_t> connection_node1{
+      .y_   = nullptr,
+      .yp_  = nullptr,
+      .f_   = nullptr,
+      .idx_ = 3};
+
+  GridKit::ExternalConnection<double, size_t> connection_node2{
+      .y_   = nullptr,
+      .yp_  = nullptr,
+      .f_   = nullptr,
+      .idx_ = 4};
+
+  bus.setExternalConnectionNodes(0, connection_node1);
+  bus.setExternalConnectionNodes(1, connection_node2);
 
   comp1->allocate();
   comp3->allocate();
   bus1->allocate();
 
-  comp1->setExternalConnectionNodes(2, 0);
-  comp1->setExternalConnectionNodes(3, 1);
-  comp1->setExternalConnectionNodes(4, 2);
+  comp1->setInternalConnectionNodes(2, 0);
+  comp1->setInternalConnectionNodes(3, 1);
+  comp1->setInternalConnectionNodes(4, 2);
 
-  bus1->setExternalConnectionNodes(0, 3);
-  bus1->setExternalConnectionNodes(1, 4);
-
-  comp3->setExternalConnectionNodes(2, 5);
-  comp3->setExternalConnectionNodes(3, 6);
-  comp3->setExternalConnectionNodes(4, 7);
+  comp3->setInternalConnectionNodes(2, 5);
+  comp3->setInternalConnectionNodes(3, 6);
+  comp3->setInternalConnectionNodes(4, 7);
 
   GridKit::HiresComponent3<double, size_t>        comp3copy(*comp3);
   GridKit::BusPartitionInterface<double, size_t>* busInterface = new GridKit::BusPartitionInterface<double, size_t>(bus, comp3copy, 4);
 
-  busInterface->allocate();
   partition1->addComponent(comp1);
   partition1->addComponent(bus1);
   partition1->addComponent(busInterface);
@@ -71,6 +83,7 @@ int main(int /* argc */, char const** /* argv */)
   for (auto* partition : subsystems)
   {
     partition->allocate();
+    partition->initialize();
     partition->updateTime(2, 5);
 
     for (size_t i = 0; i < partition->getExternSize(); i++)

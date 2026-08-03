@@ -20,13 +20,13 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
-    using CircuitComponent<ScalarT, IdxT>::y_;
+    using CircuitComponent<ScalarT, IdxT>::y_ext_;
     using CircuitComponent<ScalarT, IdxT>::y_int_;
-    using CircuitComponent<ScalarT, IdxT>::yp_;
+    using CircuitComponent<ScalarT, IdxT>::yp_ext_;
     using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-    using CircuitComponent<ScalarT, IdxT>::f_;
+    using CircuitComponent<ScalarT, IdxT>::f_ext_;
     using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::g_;
     using CircuitComponent<ScalarT, IdxT>::yB_;
@@ -83,14 +83,10 @@ namespace GridKit
 
     int evaluateExternalResidual()
     {
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
-      auto* f  = f_.getData();
+      *f_ext_[0] += -*yp_ext_[0] - *y_ext_[0];
+      *f_ext_[1] += -*yp_ext_[1] - *y_ext_[1];
 
-      f[0] = -yp[0] - y[0];
-      f[1] = -yp[1] - y[1];
-
-      f_.setDataUpdated();
+      this->getResidual().setDataUpdated();
 
       return 0;
     }

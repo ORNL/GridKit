@@ -68,7 +68,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions);
  */
 int main()
 {
-  index_type N_size = 5000;
+  index_type N_size = 5;
 
   std::cout << std::format("{:<16}{:>16}{:>18}{:>12}{:>14}{:>16}\n",
                            "num_partitions",
@@ -80,7 +80,7 @@ int main()
 
   std::cout << std::string(93, '-') << "\n";
 
-  for (index_type p : {10, 48, 100, 500, 1000, 2000, 5000})
+  for (index_type p : {2, 3, 4, 5})
   {
     assert(p <= 2 * N_size);
 
@@ -214,7 +214,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
   using Load               = MicrogridLoad<real_type, index_type>;
   using PartitionInterface = BusPartitionInterface<real_type, index_type>;
 
-  std::vector<Bus*>                buses(num_ibrs, nullptr);
+  std::vector<Bus>                 buses(num_ibrs);
   std::vector<BusDQ*>              busesDQ(num_ibrs, nullptr);
   std::vector<Generator*>          generators(num_ibrs, nullptr);
   std::vector<Line*>               lines(num_ibrs, nullptr);
@@ -225,18 +225,18 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
   SignalNode dg_signal;
   // sys_model_control->addNode(&dg_signal);
 
-  for (size_t i = 0; i < 2 * N_size; i++)
-  {
-    buses[i] = new Bus();
-    // sys_model_control->addNode(buses[i]);
-  }
+  // for (size_t i = 0; i < 2 * N_size; i++)
+  // {
+  //   buses[i] = new Bus();
+  //   sys_model_control->addNode(buses[i]);
+  // }
 
   // Create the reference DG
   auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
                                                                  DGParams_list[0],
                                                                  true,
                                                                  &dg_signal,
-                                                                 buses[0]);
+                                                                 &buses[0]);
   // sys_model_control->addComponent(dg_ref);
 
   generators[0] = dg_ref;
@@ -251,7 +251,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
                                                                DGParams_list[i],
                                                                false,
                                                                &dg_signal,
-                                                               buses[i]);
+                                                               &buses[i]);
 
     generators[i] = dg;
     // sys_model_control->addComponent(dg);
@@ -265,8 +265,8 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
                                                                 rline_list[i],
                                                                 Lline_list[i],
                                                                 &dg_signal,
-                                                                buses[i],
-                                                                buses[i + 1]);
+                                                                &buses[i],
+                                                                &buses[i + 1]);
     lines[i + 1]     = line_model;
     // sys_model_control->addComponent(line_model);
   }
@@ -278,7 +278,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
                                                                 rload_list[i],
                                                                 Lload_list[i],
                                                                 &dg_signal,
-                                                                buses[2 * i]);
+                                                                &buses[2 * i]);
     loads[2 * i]     = load_model;
     // sys_model_control->addComponent(load_model);
   }
@@ -286,7 +286,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
   // Add all the microgrid Virtual DQ Buses
   for (index_type i = 0; i < 2 * N_size; i++)
   {
-    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN, buses[i]);
+    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN, &buses[i]);
 
     busesDQ[i] = virDQbus_model;
     // sys_model_control->addComponent(virDQbus_model);
@@ -307,7 +307,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
     {
       sys_model_control->addComponent(lines[i]);
     }
-    sys_model_control->addNode(buses[i]);
+    sys_model_control->addNode(&buses[i]);
   }
 
   sys_model_control->allocate();
@@ -390,15 +390,13 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
         partition->addComponent(lines[index]);
       }
 
-      partition->addNode(buses[index]);
+      partition->addNode(&buses[index]);
     }
     // Add the partition interface to the left partition
     if (index < num_ibrs)
     {
       auto* linecopy     = new GridKit::MicrogridLine<real_type, index_type>(*lines[index]);
-      auto* busInterface = new GridKit::BusPartitionInterface<real_type, index_type>(*buses[index - 1], *linecopy, model_id++);
-
-      busInterface->allocate();
+      auto* busInterface = new GridKit::BusPartitionInterface<real_type, index_type>(buses[index - 1], *linecopy, model_id++);
       partitionInterface.push_back(busInterface);
       linesCopies.push_back(linecopy);
 

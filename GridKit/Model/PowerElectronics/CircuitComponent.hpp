@@ -73,13 +73,11 @@ namespace GridKit
        */
       if (other.connection_nodes_)
       {
-        connection_nodes_ =
-            std::make_unique<IdxT[]>(static_cast<size_t>(size_));
+        connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
         for (IdxT i = 0; i < size_; ++i)
         {
-          connection_nodes_[static_cast<size_t>(i)] =
-              other.connection_nodes_[static_cast<size_t>(i)];
+          connection_nodes_[static_cast<size_t>(i)] = other.connection_nodes_[static_cast<size_t>(i)];
         }
       }
 
@@ -88,13 +86,11 @@ namespace GridKit
        */
       if (other.jacobian_coo_rows_)
       {
-        jacobian_coo_rows_ =
-            std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
+        jacobian_coo_rows_ = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
 
         for (IdxT i = 0; i < nnz_; ++i)
         {
-          jacobian_coo_rows_[static_cast<size_t>(i)] =
-              other.jacobian_coo_rows_[static_cast<size_t>(i)];
+          jacobian_coo_rows_[static_cast<size_t>(i)] = other.jacobian_coo_rows_[static_cast<size_t>(i)];
         }
       }
 
@@ -103,13 +99,11 @@ namespace GridKit
        */
       if (other.jacobian_coo_cols_)
       {
-        jacobian_coo_cols_ =
-            std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
+        jacobian_coo_cols_ = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
 
         for (IdxT i = 0; i < nnz_; ++i)
         {
-          jacobian_coo_cols_[static_cast<size_t>(i)] =
-              other.jacobian_coo_cols_[static_cast<size_t>(i)];
+          jacobian_coo_cols_[static_cast<size_t>(i)] = other.jacobian_coo_cols_[static_cast<size_t>(i)];
         }
       }
 
@@ -118,13 +112,25 @@ namespace GridKit
        */
       if (other.jacobian_coo_values_)
       {
-        jacobian_coo_values_ =
-            std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
+        jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
 
         for (IdxT i = 0; i < nnz_; ++i)
         {
-          jacobian_coo_values_[static_cast<size_t>(i)] =
-              other.jacobian_coo_values_[static_cast<size_t>(i)];
+          jacobian_coo_values_[static_cast<size_t>(i)] = other.jacobian_coo_values_[static_cast<size_t>(i)];
+        }
+      }
+
+      if (size_ > 0)
+      {
+        y_ext_  = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+        yp_ext_ = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+        f_ext_  = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
+
+        for (IdxT i = 0; i < size_; ++i)
+        {
+          y_ext_[i]  = nullptr;
+          yp_ext_[i] = nullptr;
+          f_ext_[i]  = nullptr;
         }
       }
 
@@ -133,17 +139,11 @@ namespace GridKit
       copyVector(yp_, other.yp_);
       copyVector(f_, other.f_);
       copyVector(abs_tol_, other.abs_tol_);
-
-      // Quadrature vector.
       copyVector(g_, other.g_);
-
-      // Adjoint vectors.
       copyVector(yB_, other.yB_);
       copyVector(ypB_, other.ypB_);
       copyVector(fB_, other.fB_);
       copyVector(gB_, other.gB_);
-
-      // Parameter vectors.
       copyVector(param_, other.param_);
       copyVector(param_up_, other.param_up_);
       copyVector(param_lo_, other.param_lo_);
@@ -191,7 +191,7 @@ namespace GridKit
     int setInternalConnectionNodes(size_t local_index, IdxT global_index)
     {
       assert(!extern_indices_.contains(static_cast<IdxT>(local_index)));
-      connection_nodes_[local_index] = global_index;
+      setConnectionNodes(local_index, global_index);
       return 0;
     }
 
@@ -214,6 +214,23 @@ namespace GridKit
       yp_ext_[local_index]           = connection.yp_;
       f_ext_[local_index]            = connection.f_;
       connection_nodes_[local_index] = connection.idx_;
+      return 0;
+    }
+
+    /**
+     * @brief Update the connection index for a variable.
+     *
+     * Changes only the connection index without modifying the variable's
+     * internal/external classification or its associated data pointers.
+     *
+     * @param local_index Index of the local variable.
+     * @param connection_index New connection index for the variable.
+     *
+     * @return int 0 if successful.
+     */
+    int setConnectionNodes(size_t local_index, IdxT connection_index)
+    {
+      connection_nodes_[local_index] = connection_index;
       return 0;
     }
 
@@ -254,10 +271,15 @@ namespace GridKit
       jacobian_coo_cols_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
       jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
 
-      y_ext_            = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
-      yp_ext_           = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
-      f_ext_            = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
-      connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
+      y_ext_  = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+      yp_ext_ = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+      f_ext_  = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
+
+      // Make the existing allocation code idempotent:
+      if (!connection_nodes_)
+      {
+        connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
+      }
 
       if (!allocated_)
       {
@@ -345,6 +367,51 @@ namespace GridKit
     void setInternalResidualPointer(ScalarT* internal_res)
     {
       f_int_ = internal_res;
+    }
+
+    /**
+     * @brief Clear all internal and external data pointers.
+     *
+     * This disconnects the component from the data storage currently associated
+     * with its internal and external variables. The external pointer arrays
+     * themselves remain allocated so that the component can be connected to
+     * new data later.
+     *
+     * @return int 0 if successful.
+     */
+    int clearPointers()
+    {
+      // Clear internal data pointers.
+      y_int_  = nullptr;
+      yp_int_ = nullptr;
+      f_int_  = nullptr;
+
+      // Clear external data pointers, but keep the pointer arrays allocated.
+      if (y_ext_)
+      {
+        for (IdxT i = 0; i < size_; ++i)
+        {
+          y_ext_[i] = nullptr;
+        }
+      }
+
+      if (yp_ext_)
+      {
+        for (IdxT i = 0; i < size_; ++i)
+        {
+          yp_ext_[i] = nullptr;
+        }
+      }
+
+      if (f_ext_)
+      {
+        for (IdxT i = 0; i < size_; ++i)
+        {
+          f_ext_[i] = nullptr;
+        }
+      }
+
+      return 0;
     }
 
   protected:
@@ -559,6 +626,16 @@ namespace GridKit
     IdxT getIDcomponent() const
     {
       return idc_;
+    }
+
+    /**
+     * @brief Check whether the component has already been allocated.
+     *
+     * @return true if allocate() has previously completed, false otherwise.
+     */
+    bool isAllocated() const
+    {
+      return allocated_;
     }
 
   protected:

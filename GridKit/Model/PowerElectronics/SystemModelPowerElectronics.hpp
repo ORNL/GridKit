@@ -23,6 +23,7 @@ namespace GridKit
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
+  protected:
     using Base::abs_tol_;
     using Base::allocated_;
     using Base::allocateVectors;
