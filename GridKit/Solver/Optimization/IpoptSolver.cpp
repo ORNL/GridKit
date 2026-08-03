@@ -12,6 +12,7 @@
 #include <type_traits>
 
 #include <IpIpoptApplication.hpp>
+#include <IpSolveStatistics.hpp>
 #include <IpTNLP.hpp>
 
 namespace
@@ -271,6 +272,24 @@ namespace GridKit
       }
       stats_ = Stats{};
 
+      // Honor the availability contract: a positive return from
+      // evaluateHessian declares it unavailable, so the solve falls back
+      // to the quasi-Newton approximation instead of failing later.
+      bool exact_hessian = params_.hessian == HessianMode::EXACT;
+      if (exact_hessian)
+      {
+        std::vector<RealT>       probe(variables * variables);
+        const std::vector<RealT> multipliers(
+            static_cast<size_t>(this->model_->constraintCount()));
+        const int available = this->model_->evaluateHessian(
+            x.data(), RealT{1}, multipliers.data(), probe.data());
+        if (available < 0)
+        {
+          return -1;
+        }
+        exact_hessian = available == 0;
+      }
+
       Ipopt::SmartPtr<Ipopt::IpoptApplication> application =
           IpoptApplicationFactory();
       application->Options()->SetNumericValue("tol", params_.tolerance);
@@ -279,7 +298,10 @@ namespace GridKit
       application->Options()->SetIntegerValue(
           "print_level", static_cast<Ipopt::Index>(params_.print_level));
       application->Options()->SetStringValue("sb", "yes");
-      if (params_.hessian == HessianMode::LIMITED_MEMORY)
+      // Variable bounds carry model contracts such as stability margins;
+      // never let the interior point relax them.
+      application->Options()->SetNumericValue("bound_relax_factor", 0.0);
+      if (!exact_hessian)
       {
         application->Options()->SetStringValue("hessian_approximation",
                                                "limited-memory");
@@ -290,11 +312,8 @@ namespace GridKit
         return -1;
       }
 
-      Ipopt::SmartPtr<Ipopt::TNLP> adapter =
-          new ModelAdapter<ScalarT, IdxT>(*this->model_,
-                                          x,
-                                          stats_,
-                                          params_.hessian == HessianMode::EXACT);
+      Ipopt::SmartPtr<Ipopt::TNLP> adapter = new ModelAdapter<ScalarT, IdxT>(
+          *this->model_, x, stats_, exact_hessian);
 
       const auto status = application->OptimizeTNLP(adapter);
       stats_.status     = static_cast<int>(status);

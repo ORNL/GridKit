@@ -297,9 +297,9 @@ namespace GridKit
         }
 
         // Zeros of sigma: eigenvalues of A - b gamma^T / sigma_scale with
-        // the pole matrix in its real block form. The second member of
-        // each pair carries a sign flip mapping the rotated basis onto
-        // the block realization with b = [2, 0]^T.
+        // the pole matrix in its real block form. With b = [2, 0]^T per
+        // pair the basis coefficients enter gamma unchanged: the block
+        // realizes c' phi + c'' psi exactly.
         Eigen::MatrixXd companion =
             Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(order),
                                   static_cast<Eigen::Index>(order));
@@ -326,7 +326,7 @@ namespace GridKit
           companion(row + 1, row + 1)  = poles[q].real();
           b_vec(row)                   = 2.0;
           gamma(row)                   = solution[sigma_offset + q];
-          gamma(row + 1)               = -solution[sigma_offset + q + 1];
+          gamma(row + 1)               = solution[sigma_offset + q + 1];
           q                           += 2;
         }
         companion -= (b_vec * gamma.transpose()) / sigma_scale;

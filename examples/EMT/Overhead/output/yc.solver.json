@@ -1,0 +1,13 @@
+{
+  "samples": "yc.csv",
+  "rows": 3,
+  "cols": 3,
+  "fit": {
+    "poles": 10,
+    "terms": "constant",
+    "weighting": "inverse_magnitude"
+  },
+  "output": {
+    "model": "yc.model.json"
+  }
+}

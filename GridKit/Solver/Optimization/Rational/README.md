@@ -61,12 +61,13 @@ coefficient contract (`D`, `E`, `poles`, `C`, `B`).
 
 ## Passivity
 
-A fitted admittance intended for time-domain use is screened by a
-singular-value sweep and certified by the Hamiltonian eigenvalue test [1]:
-purely imaginary eigenvalues locate the exact boundaries of passivity
-violations, reported as frequency bands. Enforcement by minimal coefficient
-perturbation is a planned follow-on that reuses the constrained coefficient
-identification of the estimator.
+A fitted admittance intended for time-domain use is screened by sweeping the
+smallest eigenvalue of the Hermitian part of $\mathbf{Y}(\mathrm{j}\omega)$
+over a logarithmic grid spanning the pole magnitudes, with violation band
+edges refined by bisection and reported as frequency bands. The exact
+Hamiltonian eigenvalue certification [1] and enforcement by minimal
+coefficient perturbation are planned follow-ons; the latter reuses the
+constrained coefficient identification of the estimator.
 
 ## Files
 

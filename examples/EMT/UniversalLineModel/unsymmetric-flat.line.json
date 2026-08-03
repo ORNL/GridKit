@@ -1,0 +1,46 @@
+{
+  "$schema": "https://gridkit.readthedocs.io/en/schema/line.schema.json",
+  "line": "1.0",
+  "name": "Universal line model example",
+  "description": "Three-phase single-conductor line fitted by the UniversalLineModel application. Self-contained: conductor and tower types are defined in the document's catalog.",
+  "source": "synthetic example; conductor and earth data illustrative",
+
+  "catalog": {
+    "conductors": {
+      "phase-acsr": {
+        "description": "Illustrative transmission-class phase conductor",
+        "radius": { "outer": 0.0143 },
+        "conductivity": 3.45e7,
+        "weight": 12.5
+      }
+    },
+    "towers": {
+      "unsymmetric-flat": {
+        "description": "Unsymmetric flat arrangement, no shield wire",
+        "attachments": {
+          "left":   { "x": -8.0, "h": 21.5 },
+          "center": { "x":  0.4, "h": 25.0 },
+          "right":  { "x":  8.8, "h": 23.0 }
+        }
+      }
+    }
+  },
+
+  "tower": "unsymmetric-flat",
+
+  "conductors": [
+    { "at": "left",   "phase": "a", "type": "phase-acsr" },
+    { "at": "center", "phase": "b", "type": "phase-acsr" },
+    { "at": "right",  "phase": "c", "type": "phase-acsr" }
+  ],
+
+  "path": {
+    "span": 300.0,
+    "length": 100000.0
+  },
+
+  "earth": {
+    "conductivity": 0.01,
+    "permittivity": 10.0
+  }
+}

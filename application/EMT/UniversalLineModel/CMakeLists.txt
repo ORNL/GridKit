@@ -1,15 +1,14 @@
 # UniversalLineModel: line description in, fitted line model out.
-#
-# Enabled from the parent directory once GridKit::vector_fitting is
-# implemented. GridKit::Utilities carries the CliArgs interface.
+# GridKit::Utilities carries the CliArgs interface; fitting_model_json the
+# shared rational-model JSON vocabulary.
 
 add_executable(UniversalLineModel UniversalLineModel.cpp)
 target_link_libraries(
-  UniversalLineModel PRIVATE emt_frequency_sweep GridKit::vector_fitting
-                             GridKit::Utilities)
-target_include_directories(
   UniversalLineModel
-  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
+  PRIVATE emt_frequency_sweep
+          GridKit::vector_fitting
+          GridKit::Utilities
+          fitting_model_json)
 
 install(
   TARGETS UniversalLineModel

@@ -21,6 +21,7 @@
 #include <GridKit/Solver/Optimization/VectorFitting/VectorFitting.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
+#include "RationalModelJSON.hpp"
 #include "VectorFittingJSONParser.hpp"
 
 using scalar_type = double;
@@ -117,44 +118,6 @@ namespace
     return samples;
   }
 
-  nlohmann::json modelToJson(const ModelT& model)
-  {
-    nlohmann::json j;
-    j["rows"] = model.rows;
-    j["cols"] = model.cols;
-
-    if (!model.d.empty())
-    {
-      j["D"] = model.d;
-    }
-    if (!model.e.empty())
-    {
-      j["E"] = model.e;
-    }
-
-    auto poles = nlohmann::json::array();
-    for (const auto& pole : model.poles)
-    {
-      poles.push_back({pole.real(), pole.imag()});
-    }
-    j["poles"] = poles;
-
-    const auto channels = static_cast<size_t>(model.rows) * static_cast<size_t>(model.cols);
-    auto       residues = nlohmann::json::array();
-    for (size_t q = 0; q < model.poles.size(); ++q)
-    {
-      auto per_channel = nlohmann::json::array();
-      for (size_t ch = 0; ch < channels; ++ch)
-      {
-        const auto value = model.residues[q * channels + ch];
-        per_channel.push_back({value.real(), value.imag()});
-      }
-      residues.push_back(per_channel);
-    }
-    j["residues"] = residues;
-    return j;
-  }
-
   int runVectorFitting(const fs::path& solver_file)
   {
     using namespace GridKit::Optimization::Application;
@@ -200,7 +163,9 @@ namespace
                    "StateSpaceRealization implementation; skipped.\n";
     }
 
-    return status;
+    // A relocation iteration that stops at its pass limit still yields a
+    // usable model; only a missed order-search target is a failure here.
+    return status == 2 ? 2 : 0;
   }
 } // namespace
 

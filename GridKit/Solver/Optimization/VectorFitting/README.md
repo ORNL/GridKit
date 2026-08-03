@@ -90,8 +90,9 @@ relocation pass is the equality-constrained convex quadratic program
 Classical implementations append the relaxation condition as a weighted
 extra row of an augmented least-squares system; here it is an honest linear
 equality constraint handled by the optimizer. The problem sizes are small
-enough that the full coupled system is solved directly, with its block
-sparsity exposed to the solver.
+enough that the full coupled system is solved directly as a dense program;
+exploiting its block sparsity is the fast variant of [3], left to a
+follow-on.
 
 The relocated poles are the zeros of $\sigma$, obtained as the eigenvalues
 of the companion update assembled in its real block form (a 2-by-2 rotation

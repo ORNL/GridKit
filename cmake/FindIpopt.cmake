@@ -1,7 +1,7 @@
 #
 #[[
 
-Finds Ipopt include directory and libraries and exports target `Ipopt`
+Finds Ipopt include directory and libraries and exports target `Ipopt::Ipopt`
 
 User may set:
 - IPOPT_ROOT_DIR
@@ -59,9 +59,9 @@ find_path(
 if(IPOPT_LIBRARY)
   message(STATUS "Found Ipopt include: ${IPOPT_INCLUDE_DIR}")
   mark_as_advanced(IPOPT_INCLUDE_DIR)
-  add_library(IPOPT INTERFACE IMPORTED)
-  target_link_libraries(IPOPT INTERFACE ${IPOPT_LIBRARY})
-  target_include_directories(IPOPT INTERFACE ${IPOPT_INCLUDE_DIR})
+  add_library(Ipopt::Ipopt INTERFACE IMPORTED)
+  target_link_libraries(Ipopt::Ipopt INTERFACE ${IPOPT_LIBRARY})
+  target_include_directories(Ipopt::Ipopt INTERFACE ${IPOPT_INCLUDE_DIR})
 else()
   if(NOT IPOPT_ROOT_DIR)
     message(STATUS "Ipopt dir not found! Please provide correct filepath.")

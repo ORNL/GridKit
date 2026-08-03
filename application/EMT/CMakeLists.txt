@@ -1,4 +1,5 @@
 add_subdirectory(FrequencyResponse)
 
-# Pending the GridKit::vector_fitting implementation.
-# add_subdirectory(UniversalLineModel)
+if(GRIDKIT_ENABLE_IPOPT)
+  add_subdirectory(UniversalLineModel)
+endif()

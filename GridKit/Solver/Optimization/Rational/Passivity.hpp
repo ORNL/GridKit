@@ -40,14 +40,15 @@ namespace GridKit
     /**
      * @brief Assess passivity of a fitted admittance model.
      *
-     * Screens with a singular-value sweep and certifies violation band
-     * edges with the Hamiltonian eigenvalue test.
+     * Screens the conductance eigenvalue floor over a logarithmic
+     * frequency grid spanning the pole magnitudes and refines violation
+     * band edges by bisection.
      *
      * @return 0 on success, negative on an eigensolver failure
      */
     template <typename scalar_type, typename index_type>
     [[nodiscard("May fail. Check error code.")]]
     int assessPassivity(const RationalModel<scalar_type, index_type>& model,
-                        PassivityReport<scalar_type, index_type>& report);
+                        PassivityReport<scalar_type, index_type>&     report);
   } // namespace Optimization
 } // namespace GridKit

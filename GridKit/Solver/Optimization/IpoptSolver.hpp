@@ -21,7 +21,7 @@ namespace GridKit
     /// Hessian supply strategy for the interior-point iteration.
     enum class HessianMode
     {
-      EXACT,         ///< The model provides the Lagrangian Hessian.
+      EXACT,         ///< The model's Hessian; quasi-Newton when unavailable.
       LIMITED_MEMORY ///< Quasi-Newton approximation inside Ipopt.
     };
 

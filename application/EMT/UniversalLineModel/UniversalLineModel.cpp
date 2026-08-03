@@ -41,6 +41,7 @@
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 #include "FrequencySweep.hpp"
+#include "RationalModelJSON.hpp"
 
 using scalar_type = double;
 using index_type  = size_t;
@@ -58,6 +59,8 @@ namespace
   using FitterT   = GridKit::Optimization::VectorFitting<scalar_type,
                                                          index_type>;
   using ComplexT  = ResponseT::ComplexT;
+
+  using GridKit::Optimization::Application::modelToJson;
 
   constexpr double BIORTHOGONALITY_WARNING = 1.0e-5;
 
@@ -352,6 +355,15 @@ namespace
    *   Gout = Tv^-T = conj(monitored Ti),
    *   Gin  = diag(Hmps) Tv^T.
    *
+   * Gauge note: each monitored eigenvector pair (tv, ti) is defined only
+   * up to a per-sample phase, and any drift of that phase across the
+   * sweep breaks the conjugate symmetry a real rational fit requires.
+   * Both columns of every mode are therefore rotated to the
+   * real-positive-anchor gauge: the tv entry on the mode's anchor row
+   * (largest sweep-mean magnitude) is made real positive at every
+   * sample. The pairing Ti^H Tv = I is invariant because ti and tv
+   * rotate by the same phase.
+   *
    * The biorthogonality residual max |Ti^H Tv - I| is checked per
    * sample: it is the identity both assemblies rest on, and it measures
    * how well the sweep tolerance held the eigenvector tracking.
@@ -362,7 +374,27 @@ namespace
                                ResponseT&       gin,
                                ResponseT&       gout)
   {
-    const auto k = tv.rows;
+    const auto k            = tv.rows;
+    const auto sample_count = tv.omega.size();
+
+    std::vector<index_type> anchor(static_cast<size_t>(k), 0);
+    for (index_type mode = 0; mode < k; ++mode)
+    {
+      double best = -1.0;
+      for (index_type row = 0; row < k; ++row)
+      {
+        double mean = 0.0;
+        for (size_t m = 0; m < sample_count; ++m)
+        {
+          mean += std::abs(tv(m, row, mode));
+        }
+        if (mean > best)
+        {
+          best                              = mean;
+          anchor[static_cast<size_t>(mode)] = row;
+        }
+      }
+    }
 
     gin.rows  = k;
     gin.cols  = k;
@@ -370,16 +402,27 @@ namespace
     gin.response.assign(tv.response.size(), {});
     gout = gin;
 
-    double worst = 0.0;
-    for (size_t m = 0; m < tv.omega.size(); ++m)
+    double                worst = 0.0;
+    std::vector<ComplexT> rotation(static_cast<size_t>(k));
+    for (size_t m = 0; m < sample_count; ++m)
     {
+      for (index_type mode = 0; mode < k; ++mode)
+      {
+        const ComplexT v =
+            tv(m, anchor[static_cast<size_t>(mode)], mode);
+        const double magnitude = std::abs(v);
+        rotation[static_cast<size_t>(mode)] =
+            magnitude > 0.0 ? std::conj(v) / magnitude : ComplexT{1.0, 0.0};
+      }
+
       for (index_type row = 0; row < k; ++row)
       {
-        const ComplexT mode = hmps(m, row, 0);
+        const ComplexT mode = hmps(m, row, 0) * rotation[static_cast<size_t>(row)];
         for (index_type col = 0; col < k; ++col)
         {
           gin(m, row, col)  = mode * tv(m, col, row);
-          gout(m, row, col) = std::conj(ti(m, row, col));
+          gout(m, row, col) = std::conj(
+              ti(m, row, col) * rotation[static_cast<size_t>(col)]);
         }
       }
 
@@ -408,44 +451,6 @@ namespace
     }
   }
 
-  nlohmann::json modelToJson(const ModelT& model)
-  {
-    nlohmann::json j;
-    j["rows"] = model.rows;
-    j["cols"] = model.cols;
-
-    if (!model.d.empty())
-    {
-      j["D"] = model.d;
-    }
-    if (!model.e.empty())
-    {
-      j["E"] = model.e;
-    }
-
-    auto poles = nlohmann::json::array();
-    for (const auto& pole : model.poles)
-    {
-      poles.push_back({pole.real(), pole.imag()});
-    }
-    j["poles"] = poles;
-
-    const auto channels = static_cast<size_t>(model.rows) * static_cast<size_t>(model.cols);
-    auto       residues = nlohmann::json::array();
-    for (size_t q = 0; q < model.poles.size(); ++q)
-    {
-      auto per_channel = nlohmann::json::array();
-      for (size_t ch = 0; ch < channels; ++ch)
-      {
-        const auto value = model.residues[q * channels + ch];
-        per_channel.push_back({value.real(), value.imag()});
-      }
-      residues.push_back(per_channel);
-    }
-    j["residues"] = residues;
-    return j;
-  }
-
   void writeJson(const fs::path& file_path, const nlohmann::json& j)
   {
     std::ofstream stream(file_path);
@@ -460,8 +465,11 @@ namespace
    * @brief Lowest-order fit of one target with a constant term and no
    *        term linear in s, per the Propagation submodel validation.
    *
-   * @return the fitter status: 0 target met and converged, positive
-   *         usable-but-degraded, negative hard failure
+   * A relocation iteration that stops at its pass limit still yields a
+   * usable model, so only the error target decides success here.
+   *
+   * @return 0 when the target was met, 2 when the order search ended
+   *         above it (best model returned), negative on a hard failure
    */
   int fitTarget(const ResponseT&        samples,
                 const Settings::Target& target,
@@ -489,7 +497,7 @@ namespace
       return status;
     }
     std::cout << label << ": " << fitter.getStats().report() << "\n";
-    return status;
+    return status == 2 ? 2 : 0;
   }
 
   int runUniversalLineModel(const fs::path& line_file,
@@ -587,7 +595,7 @@ namespace
     propagation["output"] = modelToJson(gout_model);
     writeJson(settings.output / "propagation.model.json", propagation);
 
-    // Zero only when every target was met with a converged fit.
+    // Zero only when every error target was met.
     return std::max({yc_status, gin_status, gout_status});
   }
 } // namespace
