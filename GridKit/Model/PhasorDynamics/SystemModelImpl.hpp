@@ -294,22 +294,17 @@ namespace GridKit
         addComponent(gen);
       }
 
-      // Add REECB electrical controllers
-      //
-      // Added after the machines and converters that drive them: a source
-      // publishes its resolved current commands into the assigned iqcmd/ipcmd
-      // nodes during its own initialize(), and REECB reads those seeds when it
-      // initializes. Components initialize in insertion order, so REECB must
-      // come after anything that seeds it.
+      // Add REECB after its current-command and feedback producers because
+      // components initialize in insertion order.
       for (const auto& reecbdata : data.reecb)
       {
-        IdxT bus_index = 0;
+        BusT* bus = nullptr;
         if (reecbdata.buses.contains(ReecbBuses::bus))
         {
-          bus_index = reecbdata.buses.at(ReecbBuses::bus);
+          bus = getBus(reecbdata.buses.at(ReecbBuses::bus));
         }
 
-        auto* reecb = new Reecb<ScalarT, IdxT>(getBus(bus_index), reecbdata);
+        auto* reecb = new Reecb<ScalarT, IdxT>(bus, reecbdata);
 
         if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pe))
         {

@@ -22,55 +22,38 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     class BusBase;
 
-    template <typename scalar_type, typename index_type>
-    class SignalNode;
-
     namespace Converter
     {
-      /// Internal variables of a `Reecb`
+      /// Internal variables and residual rows of a `Reecb`.
       enum class ReecbInternalVariables : size_t
       {
-        VMEAS,     ///< \f$V^\mathrm{meas}\f$ Filtered terminal voltage
-        PMEAS,     ///< \f$P^\mathrm{meas}\f$ Filtered active power on component base
-        XPIQ,      ///< \f$x_Q^\mathrm{PI}\f$ Reactive-power PI state
-        XPIV,      ///< \f$x_V^\mathrm{PI}\f$ Voltage-control PI state
-        QV,        ///< \f$Q_V\f$ Reactive-current command lag state
-        PORD,      ///< \f$P^\mathrm{ord}\f$ Filtered active-power order
-        VT,        ///< \f$V_T\f$ Terminal voltage magnitude
-        VMEASSAFE, ///< \f$V_\mathrm{safe}^\mathrm{meas}\f$ Safe filtered voltage
-        SDIP,      ///< \f$s_\mathrm{dip}\f$ Voltage inside-band control gate
-        VERR,      ///< \f$e_V^\mathrm{db}\f$ Deadbanded voltage error
-        IQV,       ///< \f$I_q^\mathrm{inj}\f$ Reactive-current injection
-        QREF,      ///< \f$Q^\mathrm{ref}\f$ Selected reactive-power reference
-        EQ,        ///< \f$e_Q\f$ Reactive-power control error
-        VPIQ,      ///< \f$V_Q^\mathrm{PI}\f$ Reactive-power PI output
-        EPIV,      ///< \f$e_V^\mathrm{PI}\f$ Voltage-control PI error
-        FPORD,     ///< \f$f_P^\mathrm{ord}\f$ Active-power derivative target
-        RPORD,     ///< \f$r_P^\mathrm{ord}\f$ Ramp-limited active-power derivative
-        IQCIRC,    ///< \f$I_q^\mathrm{circ}\f$ Reactive-current circle limit
-        IPCIRC,    ///< \f$I_p^\mathrm{circ}\f$ Active-current circle limit
-        IQMAX,     ///< \f$I_q^\max\f$ Reactive-current upper limit
-        IPMAX,     ///< \f$I_p^\max\f$ Active-current upper limit
-        IQBASE,    ///< \f$I_q^\mathrm{base}\f$ Base reactive-current command
-        IQRAW,     ///< \f$I_q^\mathrm{raw}\f$ Raw reactive-current command
-        IQCMD,     ///< \f$I_q^\mathrm{cmd}\f$ Command output on system base
-        IPCMD,     ///< \f$I_p^\mathrm{cmd}\f$ Command output on system base
-        MAXIMUM,
+        VMEAS,  ///< \f$V^\mathrm{meas}\f$ Differential filtered terminal voltage [p.u.]
+        PMEAS,  ///< \f$P^\mathrm{meas}\f$ Differential filtered electrical power on component base [p.u.]
+        XPIQ,   ///< \f$x_Q^\mathrm{PI}\f$ Differential reactive-power PI state [p.u.]
+        XPIV,   ///< \f$x_V^\mathrm{PI}\f$ Differential voltage-control PI state on component base [p.u.]
+        QV,     ///< \f$Q_V\f$ Differential reactive-current command lag state on component base [p.u.]
+        PORD,   ///< \f$P^\mathrm{ord}\f$ Differential filtered active-power order on component base [p.u.]
+        VT,     ///< \f$V_T\f$ Algebraic terminal-voltage magnitude [p.u.]
+        ILMAX,  ///< \f$I_L^\max\f$ Algebraic current limit available to the low-priority command on component base [p.u.]
+        IQCMD,  ///< \f$I_q^\mathrm{cmd}\f$ Algebraic reactive-current command output on system base [p.u.]
+        IPCMD,  ///< \f$I_p^\mathrm{cmd}\f$ Algebraic active-current command output on system base [p.u.]
+        MAXIMUM ///< Number of REECB internal variables and residual rows
       };
 
-      /// External variables of a `Reecb`
+      /// External signal variables read or initialized by a `Reecb`.
       enum class ReecbExternalVariables : size_t
       {
-        PE,     ///< \f$P_e\f$ Active-power feedback on system base
-        QGEN,   ///< \f$Q^\mathrm{gen}\f$ Reactive-power feedback on system base
-        QEXT,   ///< \f$Q^\mathrm{ext}\f$ Reactive-power command on system base
-        PFAREF, ///< \f$\phi^\mathrm{ref}\f$ Power-factor angle reference in radians
-        PREF,   ///< \f$P^\mathrm{ref}\f$ Active-power reference on system base
-        MAXIMUM,
+        PE,     ///< \f$P_e\f$ Optional Known active-power feedback input on system base [p.u.]
+        QGEN,   ///< \f$Q^\mathrm{gen}\f$ Optional Known reactive-power feedback input on system base [p.u.]
+        QEXT,   ///< \f$Q^\mathrm{ext}\f$ Optional Unknown Volt/VAr reference input: system-base reactive power [p.u.], or the terminal-voltage reference [p.u.] when \f$s_Q=1\f$ and \f$s_V=0\f$
+        PFAREF, ///< \f$\phi^\mathrm{ref}\f$ Optional Unknown power-factor angle-reference input [rad]
+        PREF,   ///< \f$P^\mathrm{ref}\f$ Optional Unknown active-power reference input on system base [p.u.]
+        MAXIMUM ///< Number of REECB external signal variables
       };
 
       /**
-       * @brief Second-generation WECC renewable electrical-control model (REECB).
+       * @brief WECC renewable electrical controller with reactive-power,
+       *        voltage, and active-power command paths (REECB).
        *
        * @tparam scalar_type Plain real or differentiable scalar type.
        * @tparam index_type Integer index type.
@@ -101,7 +84,6 @@ namespace GridKit
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
         using BusT               = BusBase<ScalarT, IdxT>;
-        using SignalT            = SignalNode<ScalarT, IdxT>;
         using ModelDataT         = ReecbData<RealT, IdxT>;
         using MonitorT           = Model::VariableMonitor<Reecb, ReecbData>;
         using InternalVariablesT = ReecbInternalVariables;
@@ -139,28 +121,45 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        void initializeParameters(const ModelDataT& data);
-        void initializeMonitor();
-        void setDerivedParameters();
+        static constexpr size_t index(ReecbInternalVariables variable)
+        {
+          return static_cast<size_t>(variable);
+        }
 
-        template <typename LowerT, typename UpperT>
-        bool solveLimiterInput(ScalarT requested_output, LowerT lower_limit, UpperT upper_limit, ScalarT& limiter_input) const;
+        static constexpr size_t index(ReecbExternalVariables variable)
+        {
+          return static_cast<size_t>(variable);
+        }
 
-        template <typename LowerT, typename UpperT>
-        ScalarT steadyAntiWindupInput(ScalarT nominal_input, ScalarT rate, LowerT lower_limit, UpperT upper_limit) const;
+        static void checkConfiguration(bool condition, const char* message, int& errors);
+        void        loadRealParameter(const ModelDataT& data,
+                                      ReecbParameters   parameter,
+                                      RealT&            target,
+                                      const char*       name);
+        void        loadSwitchParameter(const ModelDataT& data,
+                                        ReecbParameters   parameter,
+                                        bool&             target,
+                                        const char*       name);
+        bool        floorTimeConstant(RealT& value, const char* name);
+        void        initializeParameters(const ModelDataT& data);
+        void        initializeMonitor();
+        void        setDerivedParameters();
 
         RealT logOneMinusExp(RealT x) const;
+        RealT unclamp(RealT output, RealT lower, RealT upper) const;
+        RealT componentPowerBase() const;
 
-        ScalarT toComponentBase(ScalarT value) const;
-        ScalarT toSystemBase(ScalarT value) const;
+        template <typename ValueT>
+        __attribute__((always_inline)) inline ValueT toComponentBase(ValueT value) const;
+
+        template <typename ValueT>
+        ValueT toSystemBase(ValueT value) const;
 
         ScalarT& Vr();
         ScalarT& Vi();
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM       = static_cast<RealT>(1.0e-3);
-        static constexpr RealT VMEAS_MINIMUM               = static_cast<RealT>(0.01);
-        static constexpr RealT INITIALIZATION_TOLERANCE    = static_cast<RealT>(1.0e-10);
-        static constexpr RealT INITIALIZATION_LIMIT_OFFSET = static_cast<RealT>(0.1);
+        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
+        static constexpr RealT VMEAS_MINIMUM         = static_cast<RealT>(0.01);
 
         BusT* bus_{nullptr};
 
@@ -196,17 +195,19 @@ namespace GridKit
         RealT Pmin_{0};
         RealT Imax_{1.3};
 
+        bool mva_given_{false};
         bool Vref0_given_{false};
         IdxT parameter_error_count_{0};
 
         // Derived parameters
-        RealT va_converter_base_{0};
+        RealT va_component_base_{0};
         RealT pf_on_{0};
         RealT pf_off_{1};
-        RealT v_on_{0};
-        RealT v_off_{1};
         RealT q_on_{0};
         RealT q_off_{1};
+        RealT q_pi_on_{0};
+        RealT v_ref_on_{0};
+        RealT q_ref_on_{1};
         RealT pq_on_{0};
         RealT pq_off_{1};
 

@@ -348,6 +348,7 @@ namespace GridKit
      * @param[in] limit_max - Maximum limit
      * @return Scalar value in [0, 1]: 1 when dynamics should pass through,
      *         0 when integration should be blocked.
+     * @pre `limit_min <= limit_max`; equal bounds are supported.
      *
      * @note The limit types intentionally may differ from the scalar type so
      * that constant Real limits and algebraic-variable limits both work.
@@ -388,6 +389,7 @@ namespace GridKit
      * @param[in] limit_min - Minimum limit
      * @param[in] limit_max - Maximum limit
      * @return Smooth anti-windup limited derivative
+     * @pre `limit_min <= limit_max`; equal bounds are supported.
      *
      * @note The limit types intentionally may differ from the scalar type so
      * that constant Real limits and algebraic-variable limits both work.

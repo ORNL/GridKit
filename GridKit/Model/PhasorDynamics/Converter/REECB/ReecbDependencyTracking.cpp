@@ -13,15 +13,14 @@ namespace GridKit
     namespace Converter
     {
       /**
-       * @brief Report that dependency tracking does not assemble a separate Jacobian.
-       *
-       * Dependency tracking recovers the sparsity pattern from the residual.
+       * @brief Report that DependencyTracking exposes structure through the
+       *        residual rather than a separately assembled Jacobian.
        */
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for Reecb..." << std::endl;
-        Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
+        Log::misc() << "Evaluate Jacobian for Reecb...\n";
+        Log::misc() << "Jacobian evaluation is not implemented!\n";
         return 0;
       }
 

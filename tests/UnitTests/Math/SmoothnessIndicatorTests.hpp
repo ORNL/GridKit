@@ -390,6 +390,26 @@ namespace GridKit
           }
         }
 
+        const RealT    real_lower{-0.05};
+        const Variable mixed_upper{0.05, 4};
+        const auto     mixed_gate = Math::indicator(state, rate, real_lower, mixed_upper);
+        static_assert(std::is_same<typename std::decay<decltype(mixed_gate)>::type,
+                                   Variable>::value,
+                      "A real lower bound and dynamic upper bound should retain the scalar type.");
+        success *= mixed_gate.getDependencies().contains(4);
+
+        const Variable equal_lower{0.0, 5};
+        const Variable equal_upper{0.0, 6};
+        const auto     equal_gate = Math::indicator(state, rate, equal_lower, equal_upper);
+        const auto     equal_limited =
+            Math::antiwindup(state, rate, equal_lower, equal_upper);
+        success *= within(equal_gate.getValue(), 0.75, kRoundoffTolerance);
+        success *= within(equal_limited.getValue(), 0.75 * rate.getValue(), kRoundoffTolerance);
+        success *= equal_gate.getDependencies().contains(5);
+        success *= equal_gate.getDependencies().contains(6);
+        success *= equal_limited.getDependencies().contains(5);
+        success *= equal_limited.getDependencies().contains(6);
+
         return success.report(__func__);
       }
     };
