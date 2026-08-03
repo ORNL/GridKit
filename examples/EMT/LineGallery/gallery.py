@@ -239,8 +239,13 @@ def run_line(name: str, args: argparse.Namespace) -> dict:
         *ULM_LINE_ARGS.get(name, []),
     ]
     result = subprocess.run(command, check=False, capture_output=True, text=True)
-    if result.returncode < 0 or "failed" in result.stdout + result.stderr:
-        raise RuntimeError(f"UniversalLineModel failed for {name}:\n{result.stdout}")
+    # Exit codes: 0 all targets met and passive, 2 a target missed,
+    # 3 targets met but nonpassive. Anything else is a hard failure.
+    if result.returncode not in (0, 2, 3) or "failed" in result.stdout + result.stderr:
+        raise RuntimeError(
+            f"UniversalLineModel failed for {name} "
+            f"(exit {result.returncode}):\n{result.stdout}\n{result.stderr}"
+        )
 
     fits = {}
     for line in result.stdout.splitlines():
@@ -251,7 +256,9 @@ def run_line(name: str, args: argparse.Namespace) -> dict:
                 "rel_rms": float(match.group("rms")),
                 "worst_channel_rel_rms": float(match.group("worst")),
             }
-    passive = "Yc fit is passive" in result.stdout
+    # The passivity verdict travels inside the artifact itself.
+    yc_model = json.loads((model_dir / "yc.model.json").read_text())
+    passive = bool(yc_model.get("passivity", {}).get("passive", False))
 
     yc_rel_rms = write_ycfit_figure(
         name, omega, k, data["Yc"], model_dir / "yc.model.json",
@@ -262,7 +269,7 @@ def run_line(name: str, args: argparse.Namespace) -> dict:
     return {
         "line": name,
         "conductors": k,
-        "targets_met": result.returncode == 0,
+        "targets_met": result.returncode in (0, 3),
         "yc_passive": passive,
         "yc_rel_rms_check": yc_rel_rms,
         "delays_us": [1.0e6 * tau for tau in propagation["delays"]],

@@ -7,20 +7,26 @@
  * delays, and fits the characteristic admittance and the two propagation
  * factors at the lowest pole order meeting each error target:
  *
- *   Yc(s)                       -> yc.model.json
- *   Gin(s)  = Hmps(s) Ti^-1(s)  \
- *   delays                       > propagation.model.json
- *   Gout(s) = Ti(s)             /
+ *   Yc(s)                             -> yc.model.json
+ *   Gin(s)  = diag(Hmps(s)) Tv(s)^T   \
+ *   delays                             > propagation.model.json
+ *   Gout(s) = Tv(s)^-T = conj(Ti(s))  /
  *
  * matching the Propagation operator contract (submodel keys input,
  * delays, output; both rational factors stable with no term linear
  * in s).
+ *
+ * Exit codes: 0 when every error target was met and the Yc fit is
+ * passive, 1 on a hard failure, 2 when an error target was missed,
+ * 3 when the targets were met but the Yc fit is nonpassive (the
+ * passivity report also travels inside yc.model.json).
  *
  * @author Luke Lowery (lukel@tamu.edu)
  */
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -64,6 +70,7 @@ namespace
   using GridKit::Optimization::Application::modelToJson;
 
   constexpr double BIORTHOGONALITY_WARNING = 1.0e-5;
+  constexpr double BIORTHOGONALITY_ERROR   = 1.0e-2;
 
   /// Application settings; every field has a CLI override.
   struct Settings
@@ -517,15 +524,34 @@ namespace
           {
             entry -= 1.0;
           }
-          worst = std::max(worst, std::abs(entry));
+          const double magnitude = std::abs(entry);
+          if (!std::isfinite(magnitude))
+          {
+            throw std::runtime_error(
+                "Non-finite transform sample in the monitored sweep data");
+          }
+          worst = std::max(worst, magnitude);
         }
       }
     }
 
+    // The identity Ti^H Tv = I is what both factor assemblies rest on:
+    // beyond the error threshold the rearrangements Gout = conj(Ti) and
+    // Gin = diag(Hmps) Tv^T no longer hold and the fitted model would be
+    // silently wrong, so the run stops instead.
+    if (worst > BIORTHOGONALITY_ERROR)
+    {
+      std::ostringstream message;
+      message << "Transform biorthogonality residual reaches " << worst
+              << ", beyond " << BIORTHOGONALITY_ERROR
+              << "; the propagation factor assembly is invalid. "
+                 "Tighten --rtol or reduce the sweep span.";
+      throw std::runtime_error(message.str());
+    }
     if (worst > BIORTHOGONALITY_WARNING)
     {
       std::cout << "Warning: transform biorthogonality residual reaches "
-                << worst << "; tighten the sweep tolerance\n";
+                << worst << "; tighten --rtol\n";
     }
   }
 
@@ -668,11 +694,37 @@ namespace
     }
     else
     {
+      constexpr double two_pi =
+          2.0 * GridKit::EMT::Constants::pi<double>();
       std::cout << "Warning: Yc fit violates passivity in "
-                << report.violations.size() << " band(s)\n";
+                << report.violations.size() << " band(s):\n";
+      for (const auto& band : report.violations)
+      {
+        std::cout << "  " << band.omega_start / two_pi << " Hz to "
+                  << band.omega_end / two_pi << " Hz\n";
+      }
     }
 
-    writeJson(settings.output / "yc.model.json", modelToJson(yc_model));
+    // The verdict travels with the artifact, so a consumer can reject a
+    // nonpassive model without reparsing this run's output.
+    nlohmann::json yc_json = modelToJson(yc_model);
+    nlohmann::json passivity_json;
+    passivity_json["passive"] = report.passive;
+    passivity_json["stable"]  = report.stable;
+    auto violations           = nlohmann::json::array();
+    for (const auto& band : report.violations)
+    {
+      nlohmann::json entry;
+      entry["omega_start"] = band.omega_start;
+      if (std::isfinite(band.omega_end))
+      {
+        entry["omega_end"] = band.omega_end;
+      }
+      violations.push_back(entry);
+    }
+    passivity_json["violations"] = violations;
+    yc_json["passivity"]         = passivity_json;
+    writeJson(settings.output / "yc.model.json", yc_json);
 
     nlohmann::json propagation;
     propagation["K"]      = k;
@@ -681,8 +733,15 @@ namespace
     propagation["output"] = modelToJson(gout_model);
     writeJson(settings.output / "propagation.model.json", propagation);
 
-    // Zero only when every error target was met.
-    return std::max({yc_status, gin_status, gout_status});
+    // Zero only when every error target was met and the Yc fit is
+    // passive: 2 flags a missed error target, 3 a nonpassive Yc fit
+    // whose targets were met.
+    const int fit_status = std::max({yc_status, gin_status, gout_status});
+    if (fit_status == 0 && !report.passive)
+    {
+      return 3;
+    }
+    return fit_status;
   }
 } // namespace
 
@@ -710,7 +769,9 @@ int main(int argc, const char* argv[])
     const auto stop = Clock::now();
     const auto dur  = std::chrono::duration<double>(stop - start);
     std::cout << "\n\nComplete in " << dur << "\n";
-    return retval;
+    // Internal negative failure codes would wrap modulo 256 into
+    // large shell statuses; 1 is the documented hard-failure exit.
+    return retval < 0 ? 1 : retval;
   }
   catch (const std::exception& e)
   {
