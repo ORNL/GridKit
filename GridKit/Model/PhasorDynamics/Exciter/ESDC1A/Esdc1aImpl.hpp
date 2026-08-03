@@ -272,10 +272,21 @@ namespace GridKit
         const ScalarT vc0 = std::sqrt(Vr() * Vr() + Vi() * Vi());
 
         ret = std::isfinite(static_cast<RealT>(efd0))
-              && std::isfinite(static_cast<RealT>(vc0));
+              && std::isfinite(static_cast<RealT>(vc0))
+              && vc0 > ZERO<RealT>;
         if (!ret)
         {
-          Log::error() << "Esdc1a: initial bus voltage and field-voltage seed must be finite\n";
+          Log::error() << "Esdc1a: initial bus-voltage magnitude must be finite and positive, "
+                          "and the field-voltage seed must be finite\n";
+          return 1;
+        }
+
+        ret = std::isfinite(static_cast<RealT>(omega0))
+              && std::isfinite(static_cast<RealT>(vs0))
+              && std::isfinite(static_cast<RealT>(vuel0));
+        if (!ret)
+        {
+          Log::error() << "Esdc1a: initial speed, stabilizer, and UEL inputs must be finite\n";
           return 1;
         }
 
@@ -616,19 +627,31 @@ namespace GridKit
           }
 
           const auto& value = data.parameters.at(key);
+          RealT       parsed_value{};
           if (const auto* real_value = std::get_if<RealT>(&value))
           {
-            target = *real_value;
+            parsed_value = *real_value;
           }
           else if (const auto* index_value = std::get_if<IdxT>(&value))
           {
-            target = static_cast<RealT>(*index_value);
+            parsed_value = static_cast<RealT>(*index_value);
           }
           else
           {
             Log::error() << "Esdc1a: parameter '" << name << "' must be numeric\n";
             ++parameter_error_count_;
+            return;
           }
+
+          const bool ret = std::isfinite(parsed_value);
+          if (!ret)
+          {
+            Log::error() << "Esdc1a: parameter '" << name << "' must be finite\n";
+            ++parameter_error_count_;
+            return;
+          }
+
+          target = parsed_value;
         };
 
         auto load_switch = [&](auto key, bool& target, const char* name)
@@ -643,19 +666,9 @@ namespace GridKit
           {
             target = *bool_value;
           }
-          else if (const auto* index_value = std::get_if<IdxT>(&value);
-                   index_value && (*index_value == 0 || *index_value == 1))
-          {
-            target = (*index_value == 1);
-          }
-          else if (const auto* real_value = std::get_if<RealT>(&value);
-                   real_value && (*real_value == ZERO<RealT> || *real_value == ONE<RealT>) )
-          {
-            target = (*real_value == ONE<RealT>);
-          }
           else
           {
-            Log::error() << "Esdc1a: parameter '" << name << "' must be bool or 0/1\n";
+            Log::error() << "Esdc1a: parameter '" << name << "' must be boolean\n";
             ++parameter_error_count_;
           }
         };
@@ -671,12 +684,6 @@ namespace GridKit
           if (const auto* index_value = std::get_if<IdxT>(&value))
           {
             target = *index_value;
-          }
-          else if (const auto* real_value = std::get_if<RealT>(&value);
-                   real_value && *real_value >= ZERO<RealT>
-                   && *real_value == std::round(*real_value))
-          {
-            target = static_cast<IdxT>(std::round(*real_value));
           }
           else
           {

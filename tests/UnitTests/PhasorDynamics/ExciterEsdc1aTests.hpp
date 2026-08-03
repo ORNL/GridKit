@@ -87,12 +87,33 @@ namespace GridKit
         success *= invalidParameterCase(Params::Tf1, -0.1);
         success *= invalidParameterCase(Params::Vrmin, 2.0);
         success *= invalidParameterCase(Params::UEL, static_cast<IdxT>(4));
+        success *= invalidParameterCase(Params::UEL, static_cast<RealT>(2.0));
         success *= invalidParameterCase(Params::UEL, static_cast<RealT>(2.5));
         success *= invalidParameterCase(Params::UEL, true);
         success *= invalidParameterCase(Params::Se1, 0.0);
         success *= invalidParameterCase(Params::E2, 2.8);
         success *= invalidParameterCase(Params::Se2, 0.08);
         success *= invalidParameterCase(Params::E1, -1.0);
+
+        for (const Params parameter : {Params::Tr,
+                                       Params::Ka,
+                                       Params::Ta,
+                                       Params::Tb,
+                                       Params::Tc,
+                                       Params::Vrmax,
+                                       Params::Vrmin,
+                                       Params::Ke,
+                                       Params::Te,
+                                       Params::Kf,
+                                       Params::Tf1,
+                                       Params::E1,
+                                       Params::Se1,
+                                       Params::E2,
+                                       Params::Se2})
+        {
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
+        }
 
         // Saturation voltage and coefficient pairs must move in the same
         // direction; either enumeration direction is otherwise valid.
@@ -124,28 +145,23 @@ namespace GridKit
         success *= (integer_real_fixture.esdc1a.verify() == 0);
         success *= invalidParameterCase(Params::Ka, true);
 
+        // Binary selectors accept JSON booleans only.
+        auto boolean_switches                       = makeData();
+        boolean_switches.parameters[Params::Spdmlt] = true;
+        boolean_switches.parameters[Params::exclim] = false;
+        Fixture<ScalarT> boolean_switch_fixture(boolean_switches);
+        boolean_switch_fixture.attachAllInputs();
+        success *= (boolean_switch_fixture.esdc1a.verify() == 0);
+
         for (const Params flag : {Params::Spdmlt, Params::exclim})
         {
-          auto bad_integer             = makeData();
-          bad_integer.parameters[flag] = static_cast<IdxT>(2);
-          Fixture<ScalarT> bad_integer_fixture(bad_integer);
-          success *= (bad_integer_fixture.esdc1a.verify() > 0);
-
-          auto bad_real             = makeData();
-          bad_real.parameters[flag] = static_cast<RealT>(0.5);
-          Fixture<ScalarT> bad_real_fixture(bad_real);
-          success *= (bad_real_fixture.esdc1a.verify() > 0);
+          success *= invalidParameterCase(flag, static_cast<IdxT>(0));
+          success *= invalidParameterCase(flag, static_cast<IdxT>(1));
+          success *= invalidParameterCase(flag, static_cast<IdxT>(2));
+          success *= invalidParameterCase(flag, static_cast<RealT>(0.0));
+          success *= invalidParameterCase(flag, static_cast<RealT>(0.5));
+          success *= invalidParameterCase(flag, static_cast<RealT>(1.0));
         }
-
-        // Real-valued 0/1, integer 0/1, and JSON booleans are all accepted
-        // for the two switches, matching ESDC1A's REPCA-style parameter
-        // contract.
-        auto switch_forms                       = makeData();
-        switch_forms.parameters[Params::Spdmlt] = static_cast<RealT>(1.0);
-        switch_forms.parameters[Params::exclim] = static_cast<IdxT>(0);
-        Fixture<ScalarT> switch_fixture(switch_forms);
-        switch_fixture.attachAllInputs();
-        success *= (switch_fixture.esdc1a.verify() == 0);
 
         // The enabled speed multiplier requires an attached speed input.
         auto speed_required                       = makeData();
@@ -375,17 +391,43 @@ namespace GridKit
         success *= (nonfinite.esdc1a.initialize() != 0);
         success *= scalarMatches(nonfinite.input(External::VREF), 77.0, "rejected vref preservation");
 
-        // A non-finite speed multiplier is rejected before any signal is
-        // published.
-        Fixture<ScalarT> nonfinite_speed(speed_data);
-        nonfinite_speed.attachAllInputs(77.0);
-        nonfinite_speed.input(External::OMEGA)  = std::numeric_limits<RealT>::infinity();
-        nonfinite_speed.input(External::VUEL)   = -77.0;
-        success                                *= nonfinite_speed.prepare(1.2);
-        success                                *= (nonfinite_speed.esdc1a.initialize() != 0);
-        success                                *= scalarMatches(nonfinite_speed.input(External::VREF),
-                                 77.0,
-                                 "rejected vref preservation");
+        success *= initializationRejectedAtomically(
+            speed_data,
+            1.2,
+            {{External::OMEGA, std::numeric_limits<RealT>::infinity()},
+             {External::VREF, 77.0},
+             {External::VS, 0.0},
+             {External::VUEL, -77.0}},
+            "non-finite speed input");
+
+        success *= initializationRejectedAtomically(
+            makeData(),
+            1.2,
+            {{External::OMEGA, 0.0},
+             {External::VREF, 77.0},
+             {External::VS, std::numeric_limits<RealT>::infinity()},
+             {External::VUEL, -0.5}},
+            "non-finite stabilizer input");
+
+        success *= initializationRejectedAtomically(
+            makeData(),
+            1.2,
+            {{External::OMEGA, 0.0},
+             {External::VREF, 77.0},
+             {External::VS, 0.0},
+             {External::VUEL, -std::numeric_limits<RealT>::infinity()}},
+            "non-finite UEL input");
+
+        success *= initializationRejectedAtomically(
+            makeData(),
+            1.2,
+            {{External::OMEGA, 0.0},
+             {External::VREF, 77.0},
+             {External::VS, 0.0},
+             {External::VUEL, -0.5}},
+            "zero terminal voltage",
+            0.0,
+            0.0);
 
         // An invalid configuration is rejected before any state is written.
         auto invalid_data                   = makeData();
@@ -1165,6 +1207,26 @@ namespace GridKit
         return success;
       }
 
+      /// An initialization input retains exactly the value supplied by its
+      /// owner, including signed infinities and NaN.
+      bool scalarPreserved(RealT       actual,
+                           RealT       expected,
+                           const char* what,
+                           size_t      row) const
+      {
+        bool ret = actual == expected;
+        if (std::isnan(expected))
+        {
+          ret = std::isnan(actual);
+        }
+        if (!ret)
+        {
+          std::cout << "ESDC1A " << what << " row " << row
+                    << " changed mismatch: " << actual << " != " << expected << "\n";
+        }
+        return ret;
+      }
+
       /// Fill the state and derivative with a recognizable ramp, then re-seed
       /// the aliased efd entry, so any write by a rejected initialization
       /// is visible.
@@ -1185,9 +1247,11 @@ namespace GridKit
       bool initializationRejectedAtomically(const Data&         data,
                                             RealT               efd_seed,
                                             const ExternalRows& inputs,
-                                            const char*         label) const
+                                            const char*         label,
+                                            RealT               vr = 0.8,
+                                            RealT               vi = 0.6) const
       {
-        Fixture<ScalarT> fixture(data);
+        Fixture<ScalarT> fixture(data, vr, vi);
         fixture.attachAllInputs();
         for (const auto& [port, value] : inputs)
         {
@@ -1212,11 +1276,10 @@ namespace GridKit
         success &= scalarMatches(fixture.efd(), efd_seed, "rejected efd preservation");
         for (const auto& [port, value] : inputs)
         {
-          success &= rowMatches(static_cast<RealT>(fixture.input(port)),
-                                value,
-                                "external input",
-                                static_cast<size_t>(port),
-                                "changed");
+          success &= scalarPreserved(static_cast<RealT>(fixture.input(port)),
+                                     value,
+                                     "external input",
+                                     static_cast<size_t>(port));
         }
         success &= vectorUnchanged(fixture.esdc1a.y(), y_before, "state");
         success &= vectorUnchanged(fixture.esdc1a.yp(), yp_before, "derivative");

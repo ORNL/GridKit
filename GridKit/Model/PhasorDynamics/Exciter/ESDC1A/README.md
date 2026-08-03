@@ -34,15 +34,17 @@ $K_E$                               | [p.u.]    | `Ke`      | Exciter constant  
 $T_E$                               | [sec]     | `Te`      | Exciter time constant                           | 0.5
 $K_F$                               | [p.u.]    | `Kf`      | Stabilizing feedback gain                       | 0.05
 $T_{F1}$                            | [sec]     | `Tf1`     | Stabilizing feedback time constant              | 0.7
-$s_{\mathrm{spd}}$                  | [binary]  | `Spdmlt`  | Field-voltage speed-multiplier flag             | 0
+$s_{\mathrm{spd}}$                  | [boolean] | `Spdmlt`  | Field-voltage speed-multiplier flag             | `false`
 $E_1$                               | [p.u.]    | `E1`      | First saturation voltage point                  | 2.8
 $S_E(E_1)$                          | [p.u.]    | `Se1`     | Saturation coefficient at $E_1$                 | 0.08
 $E_2$                               | [p.u.]    | `E2`      | Second saturation voltage point                 | 3.7
 $S_E(E_2)$                          | [p.u.]    | `Se2`     | Saturation coefficient at $E_2$                 | 0.33
 $I_{\mathrm{UEL}}$                  | [integer] | `UEL`     | Under-excitation limiter input-routing selector | 0
-$s_{\mathrm{lim}}$                  | [binary]  | `exclim`  | Exciter field-voltage-state lower-limit flag     | 1
+$s_{\mathrm{lim}}$                  | [boolean] | `exclim`  | Exciter field-voltage-state lower-limit flag     | `true`
 
 Every parameter is optional.
+All real-valued parameters must be finite. `Spdmlt` and `exclim` must be
+JSON booleans, and `UEL` must be a JSON integer.
 
 ### Parameter Validation
 
@@ -322,9 +324,9 @@ routed through the gate:
 \end{aligned}
 ```
 
-Initialization rejects a non-finite bus voltage or field-voltage seed,
-a non-finite or nonpositive speed multiplier
-$1 + s_{\mathrm{spd}}\omega$, $E_{\mathrm{fd}}'<0$ while
+Initialization rejects a non-finite or zero bus-voltage magnitude, a
+non-finite field-voltage seed, non-finite Known signal inputs, a nonpositive
+speed multiplier $1 + s_{\mathrm{spd}}\omega$, $E_{\mathrm{fd}}'<0$ while
 $s_{\mathrm{lim}}=1$, $V_R$ outside
 $[V_R^{\min},V_R^{\max}]$, and high-value-gate active starts with
 $s_{\mathrm{UEL}} = 0$ and
@@ -364,13 +366,14 @@ Output          | Units  | Description                         | Note
 
 ## Testing
 
-- `validation()` checks construction, documented defaults, parameter
-  validation, signal configuration, and minimum time-constant handling.
+- `validation()` checks construction, documented defaults, parameter types
+  and domains, signal configuration, and minimum time-constant handling.
 - `initializationAndSignals()` checks steady initialization, selector
   combinations, signal publication and latching, monitor output, and
   differentiability tags.
 - `initializationDomain()` checks rejected and accepted field-voltage,
-  speed-multiplier, regulator-limit, and high-value-gate operating points.
+  terminal-voltage, Known-input, speed-multiplier, regulator-limit, and
+  high-value-gate operating points.
 - `residualEquations()` checks every model residual against a fixed
   numerical answer key.
 - `voltageRegulation()` checks the transducer, summing junction, lead-lag,

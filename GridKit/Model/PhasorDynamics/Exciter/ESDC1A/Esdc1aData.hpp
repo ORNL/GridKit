@@ -29,13 +29,13 @@ namespace GridKit
         Te,     ///< \f$T_E\f$ Exciter time constant [sec]
         Kf,     ///< \f$K_F\f$ Stabilizing feedback gain [p.u.]
         Tf1,    ///< \f$T_{F1}\f$ Stabilizing feedback time constant [sec]
-        Spdmlt, ///< \f$s_{\mathrm{spd}}\f$ Field-voltage speed-multiplier flag [binary]
+        Spdmlt, ///< \f$s_{\mathrm{spd}}\f$ Field-voltage speed-multiplier flag [boolean]
         E1,     ///< \f$E_1\f$ First saturation voltage point [p.u.]
         Se1,    ///< \f$S_E(E_1)\f$ Saturation coefficient at \f$E_1\f$ [p.u.]
         E2,     ///< \f$E_2\f$ Second saturation voltage point [p.u.]
         Se2,    ///< \f$S_E(E_2)\f$ Saturation coefficient at \f$E_2\f$ [p.u.]
         UEL,    ///< \f$I_{\mathrm{UEL}}\f$ UEL input-routing selector [integer]
-        exclim  ///< \f$s_{\mathrm{lim}}\f$ Exciter field-voltage-state lower-limit flag [binary]
+        exclim  ///< \f$s_{\mathrm{lim}}\f$ Exciter field-voltage-state lower-limit flag [boolean]
       };
 
       /// Buses for the ESDC1A exciter model.
