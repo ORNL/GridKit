@@ -14,7 +14,6 @@
 #include <sstream>
 #include <utility>
 
-#include <GridKit/Solver/Optimization/ConstrainedLeastSquares.hpp>
 #include <GridKit/Solver/Optimization/IpoptSolver.hpp>
 
 #include <Eigen/Dense>
@@ -29,13 +28,10 @@ namespace
   constexpr double WEIGHT_FLOOR_RATIO    = 1.0e-8;
   constexpr double COLUMN_NORM_FLOOR     = 1.0e-30;
   constexpr double DEGENERATE_RELOCATION = 1.0e-14;
-  constexpr double QP_TOLERANCE          = 1.0e-10;
-  constexpr size_t QP_MAX_ITERATIONS     = 500;
   constexpr double REFINE_TOLERANCE      = 1.0e-8;
   constexpr size_t REFINE_MAX_ITERATIONS = 300;
   constexpr double RESTART_GOLDEN_FRACT  = 0.6180339887;
 
-  using GridKit::Optimization::ConstrainedLeastSquares;
   using GridKit::Optimization::HessianMode;
   using GridKit::Optimization::IpoptSolver;
   using GridKit::Optimization::OptimizationModel;
@@ -164,6 +160,114 @@ namespace
     }
     return shift;
   }
+
+  /// Sampled responses viewed as a samples-by-channels matrix.
+  using ResponseView =
+      Eigen::Map<const Eigen::Matrix<std::complex<double>,
+                                     Eigen::Dynamic,
+                                     Eigen::Dynamic,
+                                     Eigen::RowMajor>>;
+
+  /**
+   * @brief Basis values for every sample: entry (m, k) holds basis
+   *        function k evaluated at s = j omega_m.
+   */
+  Eigen::MatrixXcd
+  basisTable(const Eigen::Ref<const Eigen::VectorXd>& omega,
+             const std::vector<std::complex<double>>& poles)
+  {
+    Eigen::MatrixXcd                  table(omega.size(),
+                           static_cast<Eigen::Index>(poles.size()));
+    std::vector<std::complex<double>> phi(poles.size());
+    for (Eigen::Index m = 0; m < omega.size(); ++m)
+    {
+      fillBasis(poles, omega(m), phi);
+      table.row(m) =
+          Eigen::Map<const Eigen::RowVectorXcd>(phi.data(), table.cols());
+    }
+    return table;
+  }
+
+  /**
+   * @brief Weighted real-augmented regression matrix over the numerator
+   *        columns: the top half carries sqrt(w_m) times the real part
+   *        of each column at sample m, the bottom half the imaginary
+   *        part. Pole columns come first, then the optional constant
+   *        and linear-in-omega columns. Both estimation stages regress
+   *        on this matrix.
+   */
+  Eigen::MatrixXd
+  regressionMatrix(const Eigen::MatrixXcd&                  table,
+                   const Eigen::Ref<const Eigen::VectorXd>& omega,
+                   const Eigen::VectorXd&                   root_weight,
+                   RationalTerms                            terms)
+  {
+    const auto samples = table.rows();
+    const auto order   = table.cols();
+    const auto columns =
+        order + static_cast<Eigen::Index>(termColumns(terms));
+
+    Eigen::MatrixXd matrix = Eigen::MatrixXd::Zero(2 * samples, columns);
+    matrix.topLeftCorner(samples, order) =
+        root_weight.asDiagonal() * table.real();
+    matrix.bottomLeftCorner(samples, order) =
+        root_weight.asDiagonal() * table.imag();
+    if (termColumns(terms) > 0)
+    {
+      matrix.col(order).head(samples) = root_weight;
+    }
+    if (termColumns(terms) > 1)
+    {
+      matrix.col(order + 1).tail(samples) = root_weight.cwiseProduct(omega);
+    }
+    return matrix;
+  }
+
+  /**
+   * @brief Reciprocal column norms as equilibration scales; a column
+   *        below the norm floor keeps unit scale.
+   */
+  Eigen::VectorXd columnScales(const Eigen::VectorXd& norms)
+  {
+    return norms.unaryExpr(
+        [](double norm)
+        { return norm > COLUMN_NORM_FLOOR ? 1.0 / norm : 1.0; });
+  }
+
+  /**
+   * @brief Minimizer of ||matrix x|| subject to direction . x = target.
+   *
+   * The Householder rotation taking direction onto its leading
+   * coordinate turns the constraint into a fixed leading component of
+   * the rotated variables and leaves their tail as an unconstrained
+   * least squares, so the equality is honored exactly without an
+   * iterative solver.
+   *
+   * @return the minimizer, or an empty vector when the constraint
+   *         direction degenerates
+   */
+  Eigen::VectorXd constrainedMinimizer(const Eigen::MatrixXd& matrix,
+                                       const Eigen::VectorXd& direction,
+                                       double                 target)
+  {
+    const Eigen::HouseholderQR<Eigen::MatrixXd> rotation(direction);
+
+    const double leading = rotation.matrixQR()(0, 0);
+    if (std::abs(leading) < COLUMN_NORM_FLOOR)
+    {
+      return {};
+    }
+
+    const Eigen::MatrixXd rotated  = matrix * rotation.householderQ();
+    const auto            trailing = matrix.cols() - 1;
+
+    Eigen::VectorXd z(matrix.cols());
+    z(0)             = target / leading;
+    z.tail(trailing) = rotated.rightCols(trailing)
+                           .colPivHouseholderQr()
+                           .solve(-z(0) * rotated.col(0));
+    return rotation.householderQ() * z;
+  }
 } // namespace
 
 namespace GridKit
@@ -173,101 +277,138 @@ namespace GridKit
     namespace Detail
     {
       /**
-       * @brief Solve one convex quadratic program through the family
-       *        backend with the exact precomputed Hessian.
+       * @brief Solve the relaxed sigma program by block elimination.
        *
-       * The columns are equilibrated to unit weighted norm before the
-       * solve: the basis magnitudes span the sampled band's decades, and
-       * the precomputed normal-equations Hessian squares that spread
-       * into its condition number. The solution is mapped back to the
-       * caller's variables afterwards.
+       * The stage-A least squares is block arrow: the rows of a channel
+       * touch only that channel's numerator coefficients and the shared
+       * sigma coefficients, and the numerator basis is the same for
+       * every channel. A thin QR per channel therefore eliminates the
+       * numerator block exactly, the surviving triangles stack into a
+       * reduced problem over sigma alone, and the relaxation equality
+       * is absorbed by a Householder change of variables. The result is
+       * the exact minimizer of the fast formulation of Deschrijver et
+       * al.: cost grows linearly in the channel count, no normal
+       * equations are formed, and no iterative solver runs. Only sigma
+       * is returned, because relocation consumes nothing else.
        *
-       * @return 0 when the solver certifies optimal or acceptable
-       *         convergence; -2 otherwise, including an iteration-limit
-       *         stop, which carries no convergence certificate.
+       * Columns are equilibrated first: numerator columns by their own
+       * weighted norm, sigma columns by their norm over all channels,
+       * since the stacked triangles share the sigma variables and
+       * per-channel scales would make the blocks incommensurate.
+       *
+       * @return 0 on success with sigma of size order + 1; -2 when the
+       *         samples cannot determine the requested order or the
+       *         relaxation direction degenerates
        */
       template <typename scalar_type, typename index_type>
-      int solveQuadraticProgram(
-          typename ConstrainedLeastSquares<scalar_type,
-                                           index_type>::Problem problem,
-          std::vector<typename ConstrainedLeastSquares<
+      int solveSigmaProgram(
+          const SampledResponse<scalar_type, index_type>& samples,
+          const std::vector<typename SampledResponse<
               scalar_type,
-              index_type>::RealT>&                              x)
+              index_type>::RealT>&                        sample_weights,
+          const std::vector<typename SampledResponse<
+              scalar_type,
+              index_type>::ComplexT>&                     poles,
+          RationalTerms                                   terms,
+          std::vector<typename SampledResponse<
+              scalar_type,
+              index_type>::RealT>&                        sigma)
       {
-        using SolverT = IpoptSolver<scalar_type, index_type>;
-        using RealT   = typename ConstrainedLeastSquares<scalar_type,
-                                                         index_type>::RealT;
+        using RealT = typename SampledResponse<scalar_type,
+                                               index_type>::RealT;
 
-        const auto variables  = static_cast<size_t>(problem.variable_count);
-        const auto residuals  = static_cast<size_t>(problem.residual_count);
-        const auto equalities = static_cast<size_t>(problem.equality_count);
+        const auto channels = static_cast<Eigen::Index>(samples.rows)
+                              * static_cast<Eigen::Index>(samples.cols);
+        const auto sample_count =
+            static_cast<Eigen::Index>(samples.omega.size());
+        const auto order = static_cast<Eigen::Index>(poles.size());
+        const auto numerator =
+            order + static_cast<Eigen::Index>(termColumns(terms));
+        const auto sigma_count = order + 1;
 
-        std::vector<RealT> scale(variables, RealT{1});
-        for (size_t c = 0; c < variables; ++c)
-        {
-          RealT norm = RealT{0};
-          for (size_t m = 0; m < residuals; ++m)
-          {
-            const RealT w =
-                problem.weights.empty() ? RealT{1} : problem.weights[m];
-            const RealT entry  = problem.a[m * variables + c];
-            norm              += w * entry * entry;
-          }
-          norm = std::sqrt(norm);
-          if (norm > RealT{COLUMN_NORM_FLOOR})
-          {
-            scale[c] = RealT{1} / norm;
-          }
-        }
-        for (size_t m = 0; m < residuals; ++m)
-        {
-          for (size_t c = 0; c < variables; ++c)
-          {
-            problem.a[m * variables + c] *= scale[c];
-          }
-        }
-        for (size_t i = 0; i < equalities; ++i)
-        {
-          for (size_t c = 0; c < variables; ++c)
-          {
-            problem.a_eq[i * variables + c] *= scale[c];
-          }
-        }
-
-        try
-        {
-          ConstrainedLeastSquares<scalar_type, index_type> model(
-              std::move(problem));
-
-          typename SolverT::Parameters options;
-          options.tolerance = QP_TOLERANCE;
-          options.max_iterations =
-              static_cast<index_type>(QP_MAX_ITERATIONS);
-          options.hessian = HessianMode::EXACT;
-
-          SolverT   solver(&model, options);
-          const int status = solver.solve(x);
-          if (status < 0 || status > 1)
-          {
-            return -2;
-          }
-          for (size_t c = 0; c < variables; ++c)
-          {
-            x[c] *= scale[c];
-          }
-          return 0;
-        }
-        catch (const std::exception&)
+        if (2 * sample_count < numerator + sigma_count)
         {
           return -2;
         }
+
+        const Eigen::Map<const Eigen::VectorXd> omega(samples.omega.data(),
+                                                      sample_count);
+        const Eigen::Map<const Eigen::VectorXd> weights(
+            sample_weights.data(), sample_count);
+        const ResponseView    response(samples.response.data(), sample_count, channels);
+        const Eigen::VectorXd root_weight = weights.cwiseSqrt();
+
+        const Eigen::MatrixXcd table = basisTable(omega, poles);
+
+        Eigen::MatrixXd basis =
+            regressionMatrix(table, omega, root_weight, terms);
+        basis = basis
+                * columnScales(basis.colwise().norm().transpose())
+                      .asDiagonal();
+
+        // The weighted norm of sigma column k over every channel's rows
+        // collapses to a sample sum against the per-sample response
+        // energy, so the global scales come without touching a channel.
+        const Eigen::VectorXd energy =
+            weights.cwiseProduct(response.rowwise().squaredNorm());
+        Eigen::VectorXd sigma_norms(sigma_count);
+        sigma_norms.head(order) =
+            (energy.transpose() * table.cwiseAbs2()).transpose().cwiseSqrt();
+        sigma_norms(order)                 = std::sqrt(energy.sum());
+        const Eigen::VectorXd sigma_scales = columnScales(sigma_norms);
+
+        // The relaxation equality lives on the sigma block alone and
+        // rides the same equilibration.
+        Eigen::VectorXd relaxation(sigma_count);
+        relaxation.head(order) = table.real().colwise().sum().transpose();
+        relaxation(order)      = static_cast<RealT>(sample_count);
+        relaxation             = relaxation.cwiseProduct(sigma_scales);
+
+        // Eliminate each channel's numerator block. The QR must stay
+        // unpivoted: column pivoting would mix numerator and sigma
+        // columns and break the block split the elimination rests on.
+        Eigen::MatrixXd stacked(2 * sample_count, numerator + sigma_count);
+        stacked.leftCols(numerator) = basis;
+
+        Eigen::MatrixXd  reduced(channels * sigma_count, sigma_count);
+        Eigen::MatrixXcd modulated(sample_count, sigma_count);
+        for (Eigen::Index ch = 0; ch < channels; ++ch)
+        {
+          modulated.leftCols(order) = response.col(ch).asDiagonal() * table;
+          modulated.col(order)      = response.col(ch);
+
+          auto block = stacked.rightCols(sigma_count);
+          block.topRows(sample_count) =
+              -(root_weight.asDiagonal() * modulated.real())
+              * sigma_scales.asDiagonal();
+          block.bottomRows(sample_count) =
+              -(root_weight.asDiagonal() * modulated.imag())
+              * sigma_scales.asDiagonal();
+
+          const Eigen::HouseholderQR<Eigen::MatrixXd> qr(stacked);
+          reduced.middleRows(ch * sigma_count, sigma_count) =
+              qr.matrixQR()
+                  .block(numerator, numerator, sigma_count, sigma_count)
+                  .triangularView<Eigen::Upper>();
+        }
+
+        const Eigen::VectorXd minimizer = constrainedMinimizer(
+            reduced, relaxation, static_cast<RealT>(sample_count));
+        if (minimizer.size() == 0)
+        {
+          return -2;
+        }
+
+        const Eigen::VectorXd solution =
+            minimizer.cwiseProduct(sigma_scales);
+        sigma.assign(solution.data(), solution.data() + solution.size());
+        return 0;
       }
 
       /**
-       * @brief One relaxed relocation pass: solve the sigma quadratic
-       *        program with the relaxation equality, then relocate the
-       *        poles to the zeros of sigma via the real companion
-       *        eigenproblem.
+       * @brief One relaxed relocation pass: solve the sigma program by
+       *        block elimination, then relocate the poles to the zeros
+       *        of sigma via the real companion eigenproblem.
        *
        * A solution with numerator coefficients vanishing against the
        * relaxation constant makes sigma effectively constant: the
@@ -293,83 +434,18 @@ namespace GridKit
                                                   index_type>::RealT;
         using ComplexT = typename SampledResponse<scalar_type,
                                                   index_type>::ComplexT;
-        using ProblemT = typename ConstrainedLeastSquares<
-            scalar_type,
-            index_type>::Problem;
 
-        const auto channels =
-            static_cast<size_t>(samples.rows) * static_cast<size_t>(samples.cols);
-        const auto sample_count = samples.omega.size();
-        const auto order        = poles.size();
-        const auto numerator    = order + termColumns(terms);
-        const auto variables    = channels * numerator + order + 1;
-        const auto rows         = 2 * sample_count * channels;
+        const auto order = poles.size();
 
-        ProblemT problem;
-        problem.variable_count = static_cast<index_type>(variables);
-        problem.residual_count = static_cast<index_type>(rows);
-        problem.equality_count = 1;
-        problem.a.assign(rows * variables, RealT{0});
-        problem.b.assign(rows, RealT{0});
-        problem.weights.assign(rows, RealT{1});
-        problem.a_eq.assign(variables, RealT{0});
-        problem.b_eq.assign(1, static_cast<RealT>(sample_count));
-
-        const size_t          sigma_offset = channels * numerator;
-        std::vector<ComplexT> phi(order);
-
-        for (size_t m = 0; m < sample_count; ++m)
+        std::vector<RealT> sigma;
+        const int          solved = solveSigmaProgram<scalar_type, index_type>(
+            samples, sample_weights, poles, terms, sigma);
+        if (solved != 0)
         {
-          fillBasis(poles, samples.omega[m], phi);
-
-          for (size_t k = 0; k < order; ++k)
-          {
-            problem.a_eq[sigma_offset + k] += phi[k].real();
-          }
-          problem.a_eq[sigma_offset + order] += RealT{1};
-
-          for (size_t ch = 0; ch < channels; ++ch)
-          {
-            const ComplexT response = samples.response[m * channels + ch];
-            const size_t   row_re   = 2 * (m * channels + ch);
-            const size_t   row_im   = row_re + 1;
-            RealT*         re       = &problem.a[row_re * variables];
-            RealT*         im       = &problem.a[row_im * variables];
-
-            for (size_t k = 0; k < order; ++k)
-            {
-              re[ch * numerator + k] = phi[k].real();
-              im[ch * numerator + k] = phi[k].imag();
-
-              const ComplexT scaled = response * phi[k];
-              re[sigma_offset + k]  = -scaled.real();
-              im[sigma_offset + k]  = -scaled.imag();
-            }
-            if (termColumns(terms) > 0)
-            {
-              re[ch * numerator + order] = RealT{1};
-            }
-            if (termColumns(terms) > 1)
-            {
-              im[ch * numerator + order + 1] = samples.omega[m];
-            }
-            re[sigma_offset + order] = -response.real();
-            im[sigma_offset + order] = -response.imag();
-
-            problem.weights[row_re] = sample_weights[m];
-            problem.weights[row_im] = sample_weights[m];
-          }
+          return solved;
         }
 
-        std::vector<RealT> solution;
-        if (solveQuadraticProgram<scalar_type, index_type>(
-                std::move(problem), solution)
-            != 0)
-        {
-          return -2;
-        }
-
-        RealT sigma_scale = solution[sigma_offset + order];
+        RealT sigma_scale = sigma[order];
         if (std::abs(sigma_scale) < RealT{SIGMA_SCALE_FLOOR})
         {
           sigma_scale = sigma_scale < RealT{0} ? -RealT{SIGMA_SCALE_FLOOR}
@@ -380,7 +456,7 @@ namespace GridKit
         RealT pole_scale = RealT{0};
         for (size_t k = 0; k < order; ++k)
         {
-          gamma_norm += solution[sigma_offset + k] * solution[sigma_offset + k];
+          gamma_norm += sigma[k] * sigma[k];
           pole_scale  = std::max(pole_scale, std::abs(poles[k]));
         }
         gamma_norm = std::sqrt(gamma_norm);
@@ -414,7 +490,7 @@ namespace GridKit
           {
             companion(row, row)  = poles[q].real();
             b_vec(row)           = 1.0;
-            gamma(row)           = solution[sigma_offset + q];
+            gamma(row)           = sigma[q];
             q                   += 1;
             continue;
           }
@@ -423,8 +499,8 @@ namespace GridKit
           companion(row + 1, row)      = -poles[q].imag();
           companion(row + 1, row + 1)  = poles[q].real();
           b_vec(row)                   = 2.0;
-          gamma(row)                   = solution[sigma_offset + q];
-          gamma(row + 1)               = solution[sigma_offset + q + 1];
+          gamma(row)                   = sigma[q];
+          gamma(row + 1)               = sigma[q + 1];
           q                           += 2;
         }
         companion -= (b_vec * gamma.transpose()) / sigma_scale;
@@ -451,8 +527,9 @@ namespace GridKit
 
       /**
        * @brief Identify residues and polynomial terms with the poles
-       *        frozen: one unconstrained convex quadratic program per
-       *        channel over the shared real basis.
+       *        frozen: every channel regresses on the same weighted
+       *        basis, so it is factored once and back-substituted per
+       *        channel.
        */
       template <typename scalar_type, typename index_type>
       int identifyCoefficients(
@@ -470,9 +547,6 @@ namespace GridKit
                                                   index_type>::RealT;
         using ComplexT = typename SampledResponse<scalar_type,
                                                   index_type>::ComplexT;
-        using ProblemT = typename ConstrainedLeastSquares<
-            scalar_type,
-            index_type>::Problem;
 
         const auto channels =
             static_cast<size_t>(samples.rows) * static_cast<size_t>(samples.cols);
@@ -495,57 +569,37 @@ namespace GridKit
           model.e.assign(channels, RealT{0});
         }
 
-        std::vector<ComplexT>              phi(order);
-        std::vector<std::vector<ComplexT>> basis(sample_count);
-        for (size_t m = 0; m < sample_count; ++m)
-        {
-          fillBasis(poles, samples.omega[m], phi);
-          basis[m] = phi;
-        }
+        const auto                              rows = static_cast<Eigen::Index>(sample_count);
+        const Eigen::Map<const Eigen::VectorXd> omega(samples.omega.data(),
+                                                      rows);
+        const ResponseView                      response(samples.response.data(), rows, static_cast<Eigen::Index>(channels));
+        const Eigen::VectorXd                   root_weight =
+            Eigen::Map<const Eigen::VectorXd>(sample_weights.data(), rows)
+                .cwiseSqrt();
 
+        const Eigen::MatrixXcd table = basisTable(omega, poles);
+
+        Eigen::MatrixXd basis =
+            regressionMatrix(table, omega, root_weight, terms);
+        const Eigen::VectorXd scales =
+            columnScales(basis.colwise().norm().transpose());
+        basis = basis * scales.asDiagonal();
+
+        const Eigen::ColPivHouseholderQR<Eigen::MatrixXd> factorization(
+            basis);
+
+        std::vector<RealT> solution;
+        Eigen::VectorXd    rhs(2 * rows);
         for (size_t ch = 0; ch < channels; ++ch)
         {
-          ProblemT problem;
-          problem.variable_count = static_cast<index_type>(numerator);
-          problem.residual_count =
-              static_cast<index_type>(2 * sample_count);
-          problem.equality_count = 0;
-          problem.a.assign(2 * sample_count * numerator, RealT{0});
-          problem.b.assign(2 * sample_count, RealT{0});
-          problem.weights.assign(2 * sample_count, RealT{1});
+          const auto column = response.col(static_cast<Eigen::Index>(ch));
+          rhs.head(rows)    = root_weight.cwiseProduct(column.real());
+          rhs.tail(rows)    = root_weight.cwiseProduct(column.imag());
 
-          for (size_t m = 0; m < sample_count; ++m)
-          {
-            const ComplexT response = samples.response[m * channels + ch];
-            RealT*         re       = &problem.a[(2 * m) * numerator];
-            RealT*         im       = &problem.a[(2 * m + 1) * numerator];
-
-            for (size_t k = 0; k < order; ++k)
-            {
-              re[k] = basis[m][k].real();
-              im[k] = basis[m][k].imag();
-            }
-            if (termColumns(terms) > 0)
-            {
-              re[order] = RealT{1};
-            }
-            if (termColumns(terms) > 1)
-            {
-              im[order + 1] = samples.omega[m];
-            }
-            problem.b[2 * m]           = response.real();
-            problem.b[2 * m + 1]       = response.imag();
-            problem.weights[2 * m]     = sample_weights[m];
-            problem.weights[2 * m + 1] = sample_weights[m];
-          }
-
-          std::vector<RealT> solution;
-          if (solveQuadraticProgram<scalar_type, index_type>(
-                  std::move(problem), solution)
-              != 0)
-          {
-            return -2;
-          }
+          const Eigen::VectorXd coefficients =
+              scales.cwiseProduct(factorization.solve(rhs));
+          solution.assign(coefficients.data(),
+                          coefficients.data() + coefficients.size());
 
           size_t q = 0;
           while (q < order)
@@ -1078,6 +1132,14 @@ namespace GridKit
       {
         return -1;
       }
+      if (params.order_search.enabled
+          && (params.order_search.plateau_improvement < RealT{0}
+              || params.order_search.plateau_improvement >= RealT{1}
+              || (params.order_search.plateau_improvement > RealT{0}
+                  && params.order_search.plateau_passes < 1)))
+      {
+        return -1;
+      }
 
       // Per-sample weights by the documented conventions.
       std::vector<RealT> sample_weights(sample_count, RealT{1});
@@ -1129,6 +1191,9 @@ namespace GridKit
       Stats                        best_stats;
       RationalModel<ScalarT, IdxT> best_model;
       bool                         have_best = false;
+
+      RealT plateau_reference = std::numeric_limits<RealT>::infinity();
+      IdxT  plateau_stalls    = 0;
 
       for (const auto count : counts)
       {
@@ -1267,6 +1332,24 @@ namespace GridKit
         if (params.order_search.enabled && best_stats.final_rel_rms <= params.order_search.target_rel_rms)
         {
           break;
+        }
+        if (params.order_search.enabled
+            && params.order_search.plateau_improvement > RealT{0})
+        {
+          if (attempt_stats.final_rel_rms
+              < (RealT{1} - params.order_search.plateau_improvement)
+                    * plateau_reference)
+          {
+            plateau_reference = attempt_stats.final_rel_rms;
+            plateau_stalls    = 0;
+          }
+          else if (++plateau_stalls >= params.order_search.plateau_passes)
+          {
+            // Additional poles have stopped paying for themselves; the
+            // best model and the order-search verdict stand as they
+            // are.
+            break;
+          }
         }
       }
 

@@ -50,10 +50,11 @@ namespace GridKit
      * @brief Relaxed vector fitting in the real-augmented formulation.
      *
      * Each pole-relocation pass and the coefficient identification are
-     * equality-constrained convex quadratic programs solved through the
-     * Optimization family; the optional refinement stage is a
-     * bound-constrained nonlinear program. See README.md for the
-     * algorithm specification.
+     * convex least squares problems solved in closed form by orthogonal
+     * block elimination; the optional refinement stage is a
+     * bound-constrained nonlinear program solved through the
+     * Optimization family. See README.md for the algorithm
+     * specification.
      */
     template <typename scalar_type, typename index_type>
     class VectorFitting
@@ -84,7 +85,7 @@ namespace GridKit
 
         /// Largest nearest-match relative pole movement that counts a
         /// relocation pass as converged. The default sits above the
-        /// noise floor of the equilibrated quadratic programs.
+        /// noise floor of the equilibrated least squares solves.
         RealT pole_shift_tolerance = 1.0e-6;
         RealT stability_margin     = 0.0;
 
@@ -95,6 +96,15 @@ namespace GridKit
           IdxT  min_poles      = 2;
           IdxT  max_poles      = 30;
           RealT target_rel_rms = 1.0e-3;
+
+          /// Plateau stop: end the search once the best relative error
+          /// has failed to improve by this fraction for plateau_passes
+          /// consecutive pole counts, so a structurally unreachable
+          /// target does not force the full ladder. Zero disables; an
+          /// early stop carries the same verdict as an exhausted
+          /// search.
+          RealT plateau_improvement = 0.0;
+          IdxT  plateau_passes      = 2;
         } order_search;
 
         /// Deterministic perturbation restarts; zero restarts disables.

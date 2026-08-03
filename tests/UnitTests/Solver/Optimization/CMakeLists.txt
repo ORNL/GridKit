@@ -1,5 +1,5 @@
 # Optimization family unit tests; the fitter needs the Ipopt-backed
-# quadratic-program stack, while the rational-model operations do not.
+# refinement stage, while the rational-model operations do not.
 
 add_executable(test_rational_passivity runPassivityTests.cpp)
 target_link_libraries(

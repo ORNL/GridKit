@@ -1,10 +1,11 @@
 # Vector Fitting
 
 `VectorFitting` computes a rational approximation of a sampled frequency
-response. It is the first static optimization algorithm in the `Optimization`
-solver family: every subproblem is posed as a constrained optimization
-problem and solved through the Ipopt backend, with one small eigenvalue
-computation per pole-relocation pass. The estimator consumes and produces the
+response. Its two linear stages are convex least squares problems solved in
+closed form by orthogonal block elimination, with one small eigenvalue
+computation per pole-relocation pass; only the genuinely nonlinear
+refinement stage is posed to the `Optimization` family's Ipopt backend. The
+estimator consumes and produces the
 [rational-approximation model space](../Rational/README.md): a
 `SampledResponse` in, a `RationalModel` out.
 
@@ -89,10 +90,15 @@ relocation pass is the equality-constrained convex quadratic program
 
 Classical implementations append the relaxation condition as a weighted
 extra row of an augmented least-squares system; here it is an honest linear
-equality constraint handled by the optimizer. The problem sizes are small
-enough that the full coupled system is solved directly as a dense program;
-exploiting its block sparsity is the fast variant of [3], left to a
-follow-on.
+equality, honored exactly. The coupled system is block arrow — each matrix
+element's rows touch only that element's surrogate coefficients plus the
+shared $(\tilde{\mathbf{c}}, \tilde{d})$ — so the surrogate blocks are
+eliminated by one unpivoted thin QR per element, the fast formulation of
+[3]. The surviving triangles stack into a small least-squares problem over
+$(\tilde{\mathbf{c}}, \tilde{d})$ alone, and the relaxation equality is
+absorbed by a Householder change of variables. Cost grows linearly with the
+element count, no normal equations are formed, and the pass yields the
+exact minimizer of the surrogate program.
 
 The relocated poles are the zeros of $\sigma$, obtained as the eigenvalues
 of the companion update assembled in its real block form (a 2-by-2 rotation
@@ -103,14 +109,9 @@ until the largest relative pole displacement falls below the tolerance.
 ### Stage B: Coefficient Identification
 
 With poles frozen, identifying $\mathbf{D}$, $\mathbf{E}$, and the residues
-is a convex quadratic program. Optional constraints enter naturally:
-
-- a DC equality $\hat{\mathbf{H}}(0) = \mathbf{H}_{\mathrm{dc}}$,
-- symmetry equalities between matrix elements,
-- passivity inequalities at the sample frequencies.
-
-The unconstrained case is the same program without constraint rows; both
-take the identical path through the optimizer.
+is linear: every matrix element regresses on the same weighted basis, so
+one rank-revealing factorization serves all elements with a triangular
+solve each.
 
 ### Stage C: Refinement (optional)
 
@@ -130,6 +131,11 @@ When enabled, the pole count starts at a minimum and increases (in conjugate
 pairs) until the target relative error is met, returning the lowest-order
 model that satisfies it. This realizes the lowest-pole-count contract used
 by the EMT line-fitting application.
+
+An optional plateau stop ends the search once the best error has failed to
+improve by a configured fraction for a configured number of consecutive
+pole counts, so a structurally unreachable target does not force the full
+ladder. An early stop carries the same verdict as an exhausted search.
 
 ## Restarts
 
@@ -167,10 +173,10 @@ optimizer are reported as errors, never as silent convergence.
 
 ## Configuration
 
-The module requires `GRIDKIT_ENABLE_EIGEN` (eigenvalue computations) and
-`GRIDKIT_ENABLE_IPOPT` (quadratic and nonlinear programs). Both dependencies
-are linked privately; public headers expose only the standard library and
-the model space.
+The module requires `GRIDKIT_ENABLE_EIGEN` (dense factorizations and
+eigenvalue computations) and `GRIDKIT_ENABLE_IPOPT` (the nonlinear
+refinement stage). Both dependencies are linked privately; public headers
+expose only the standard library and the model space.
 
 ## Files
 
