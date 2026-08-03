@@ -14,6 +14,18 @@ namespace GridKit
   {
     namespace Exciter
     {
+      /**
+       * @brief Assemble the sparse ESDC1A component Jacobian with Enzyme.
+       *
+       * Differentiates the internal residual with respect to internal states,
+       * state derivatives, terminal-bus variables, and linked signal values,
+       * then assembles the resulting entries in COO form.
+       *
+       * @pre allocate() has completed.
+       * @pre evaluateResidual() has refreshed the interface buffers at the
+       *      current state.
+       * @pre Solver alpha and global variable and residual indices are set.
+       */
       template <typename scalar_type, typename index_type>
       int Esdc1a<scalar_type, index_type>::evaluateJacobian()
       {

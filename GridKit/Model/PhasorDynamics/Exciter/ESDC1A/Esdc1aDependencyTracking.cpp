@@ -12,6 +12,12 @@ namespace GridKit
   {
     namespace Exciter
     {
+      /**
+       * @brief Report that dependency tracking does not assemble a separate Jacobian.
+       *
+       * Dependency tracking exposes the Jacobian structure through the
+       * residual rather than a separately assembled matrix.
+       */
       template <typename scalar_type, typename index_type>
       int Esdc1a<scalar_type, index_type>::evaluateJacobian()
       {

@@ -23,14 +23,15 @@ namespace GridKit
   {
     namespace Exciter
     {
+      /// Logger used for ESDC1A diagnostics.
       using Log = ::GridKit::Utilities::Logger;
 
       /**
        * @brief Construct an ESDC1A exciter without parameters
        *
        * The model is sized but left unconfigured. Every parameter keeps its
-       * documented default and no monitor is created, so verify() reports a
-       * configuration error until an `efd` output node is assigned.
+       * documented default, and no monitor is created. verify() rejects the
+       * model until an `efd` output node is assigned.
        *
        * @param[in] bus Terminal bus the exciter measures.
        */
@@ -38,7 +39,7 @@ namespace GridKit
       Esdc1a<scalar_type, index_type>::Esdc1a(BusT* bus)
         : bus_(bus)
       {
-        size_ = static_cast<IdxT>(I::MAXIMUM);
+        size_ = static_cast<IdxT>(Esdc1aInternalVariables::MAXIMUM);
         setDerivedParameters();
       }
 
@@ -55,150 +56,503 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(I::MAXIMUM);
+        size_ = static_cast<IdxT>(Esdc1aInternalVariables::MAXIMUM);
       }
 
+      /**
+       * @brief Destroy the ESDC1A exciter.
+       */
       template <typename scalar_type, typename index_type>
       Esdc1a<scalar_type, index_type>::~Esdc1a()
       {
       }
 
       /**
-       * @brief Terminal-bus voltage, real component
+       * @brief Set the component ID
        *
-       * @return Reference to the bus variable.
+       * @param[in] component_id Identifier assigned by the system model.
+       * @return Zero on success.
        */
       template <typename scalar_type, typename index_type>
-      scalar_type& Esdc1a<scalar_type, index_type>::Vr()
+      int Esdc1a<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
       {
-        return bus_->Vr();
+        gridkit_component_id_ = component_id;
+        return 0;
       }
 
       /**
-       * @brief Terminal-bus voltage, imaginary component
+       * @brief Allocate the model vectors and wire the field-voltage output
        *
-       * @return Reference to the bus variable.
+       * Sizes the state, residual, bus-interface, and signal-interface
+       * buffers, seeds the identity index maps, and points an assigned `efd`
+       * node at the internal field-voltage state. That node aliases ESDC1A
+       * storage from here on, which is how initialize() reads the seed a
+       * machine model wrote. Repeated calls reuse the allocated vectors.
+       *
+       * @return Zero on success.
        */
       template <typename scalar_type, typename index_type>
-      scalar_type& Esdc1a<scalar_type, index_type>::Vi()
+      int Esdc1a<scalar_type, index_type>::allocate()
       {
-        return bus_->Vi();
-      }
+        const auto EFD = static_cast<size_t>(Esdc1aInternalVariables::EFD);
 
-      /**
-       * @brief Resolve the parameter-derived constants and selector masks
-       *
-       * Raises the transducer, regulator, lead-lag, exciter, and feedback
-       * lags to the well-posedness floor, fits the quadratic saturation
-       * curve, and turns the three selectors into multiplicative masks. The
-       * masks let the residual select signal routing without
-       * parameter-dependent control flow, which keeps its structure fixed for
-       * sparse automatic differentiation.
-       */
-      template <typename scalar_type, typename index_type>
-      void Esdc1a<scalar_type, index_type>::setDerivedParameters()
-      {
-        // The lags are raised to the floor in place, so a negative value is
-        // rejected here while the value as read is still available. verify()
-        // reports the count.
-        auto check_non_negative = [&](RealT value, const char* name)
+        if (!allocated_)
         {
-          if (value < ZERO<RealT>)
+          this->allocateVectors(size_);
+        }
+        auto size = static_cast<size_t>(size_);
+
+        tag_.assign(size, false);
+        variable_indices_.resize(size);
+        residual_indices_.resize(size);
+
+        wb_.assign(2, ScalarT{0});
+
+        const auto signal_size = static_cast<size_t>(Esdc1aExternalVariables::MAXIMUM);
+        ws_.assign(signal_size, ScalarT{0});
+        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          this->setVariableIndex(j, j);
+          this->setResidualIndex(j, j);
+        }
+
+        auto* y = y_.getData();
+
+        if (signals_.template isAssigned<Esdc1aInternalVariables::EFD>())
+        {
+          signals_.template getSignalNode<Esdc1aInternalVariables::EFD>()->set(
+              &y[EFD],
+              &(this->getVariableIndex(static_cast<IdxT>(EFD))));
+        }
+
+        allocated_ = true;
+        return 0;
+      }
+
+      /**
+       * @brief Validate the ESDC1A configuration
+       *
+       * Checks parameter-loading errors, static parameter relationships,
+       * terminal-bus association, the required field-voltage output, and
+       * attached external signals. Seed feasibility is operating-point
+       * dependent and is checked by initialize().
+       *
+       * @return Number of configuration errors; zero when valid.
+       */
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::verify() const
+      {
+        int ret = static_cast<int>(parameter_error_count_);
+
+        auto check = [&](bool condition, const char* message)
+        {
+          if (!condition)
           {
-            Log::error() << "Esdc1a: " << name << " must be non-negative\n";
-            ++parameter_error_count_;
+            Log::error() << "Esdc1a: " << message << '\n';
+            ret += 1;
           }
         };
 
-        check_non_negative(Tr_, "Tr");
-        check_non_negative(Ta_, "Ta");
-        check_non_negative(Tb_, "Tb");
-        check_non_negative(Te_, "Te");
-        check_non_negative(Tf1_, "Tf1");
-
-        if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
-            || Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM
-            || Tf1_ < TIME_CONSTANT_MINIMUM)
+        if (bus_ == nullptr)
         {
-          Log::warning() << "Esdc1a: Tr, Ta, Tb, Te, and Tf1 below "
-                         << TIME_CONSTANT_MINIMUM
-                         << " s are raised to that floor to keep the exciter lags well posed\n";
+          Log::error() << "Esdc1a: bus pointer is null\n";
+          ret += 1;
         }
 
-        Tr_  = std::max(Tr_, TIME_CONSTANT_MINIMUM);
-        Ta_  = std::max(Ta_, TIME_CONSTANT_MINIMUM);
-        Tb_  = std::max(Tb_, TIME_CONSTANT_MINIMUM);
-        Te_  = std::max(Te_, TIME_CONSTANT_MINIMUM);
-        Tf1_ = std::max(Tf1_, TIME_CONSTANT_MINIMUM);
+        check(Ka_ > ZERO<RealT>, "Ka must be positive");
+        check(Tc_ >= ZERO<RealT>, "Tc must be non-negative");
+        check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
+        check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
+              "UEL must be 0, 1, 2, or 3");
 
-        spd_on_ = ZERO<RealT>;
-        if (Spdmlt_)
+        if (!(Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>) )
         {
-          spd_on_ = ONE<RealT>;
+          check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
+          check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
+          check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
+          check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
+          check(E1_ != E2_, "E1 and E2 must differ when saturation is enabled");
+          check(Se1_ != Se2_, "Se1 and Se2 must differ when saturation is enabled");
         }
 
-        uel_on_ = ZERO<RealT>;
-        if (UEL_ >= static_cast<IdxT>(2))
+        if (!signals_.template isAssigned<Esdc1aInternalVariables::EFD>())
         {
-          uel_on_ = ONE<RealT>;
+          Log::error() << "Esdc1a: required efd output signal is not assigned\n";
+          ret += 1;
         }
 
-        lim_on_ = ZERO<RealT>;
-        if (exclim_)
+        if (Spdmlt_ && !signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
         {
-          lim_on_ = ONE<RealT>;
+          Log::error() << "Esdc1a: speed signal is required when Spdmlt is enabled\n";
+          ret += 1;
         }
 
-        // A disabled or inconsistent saturation curve keeps the zero fit so
-        // the coefficients stay finite; verify() reports inconsistent data.
-        const bool saturation_enabled = !(Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>);
-        const bool saturation_consistent =
-            E1_ > ZERO<RealT> && E2_ > ZERO<RealT> && E1_ != E2_
-            && Se1_ > ZERO<RealT> && Se2_ > ZERO<RealT> && Se1_ != Se2_;
-        if (!saturation_enabled || !saturation_consistent)
+        // An attached port must resolve to writable signal storage. The
+        // enumerator is a template argument, so each port names itself once.
+        auto check_attached_signal =
+            [&]<Esdc1aExternalVariables variable>(const char* name)
         {
-          SA_ = ZERO<RealT>;
-          SB_ = ZERO<RealT>;
-          return;
-        }
+          if (signals_.template isAttached<variable>()
+              && !signals_.template isLinked<variable>())
+          {
+            Log::error() << "Esdc1a: " << name << " signal attached with no linked source\n";
+            ret += 1;
+          }
+        };
 
-        const RealT C = std::sqrt(Se2_ / Se1_);
-        SA_           = (C * E1_ - E2_) / (C - ONE<RealT>);
-        SB_           = Se1_ / ((E1_ - SA_) * (E1_ - SA_));
+        check_attached_signal.template operator()<Esdc1aExternalVariables::OMEGA>("speed");
+        check_attached_signal.template operator()<Esdc1aExternalVariables::VREF>("vref");
+        check_attached_signal.template operator()<Esdc1aExternalVariables::VS>("vs");
+        check_attached_signal.template operator()<Esdc1aExternalVariables::VUEL>("vuel");
+
+        return ret;
       }
 
       /**
-       * @brief Invert the smooth CommonMath ramp
+       * @brief Initialize ESDC1A from the field-voltage output
        *
-       * Initialization seeds the inactive high-value gate with the gate
-       * *input*, so the residual reproduces the requested output through the
-       * same smooth ramp it evaluates. Beyond the softplus width the smooth
-       * ramp is the identity to double precision, so the output is returned
-       * unchanged there.
+       * Resolves the steady internal state and voltage reference while
+       * preserving the seeded `efd`, latches attached Known inputs, and
+       * publishes the reference to an attached `vref` signal.
        *
-       * @param[in] ramp_output Strictly positive requested ramp output.
-       * @return The input the smooth ramp maps to the requested output.
+       * @return Zero on success; nonzero when the configuration or operating point is rejected.
        */
       template <typename scalar_type, typename index_type>
-      typename Esdc1a<scalar_type, index_type>::RealT
-      Esdc1a<scalar_type, index_type>::inverseRamp(RealT ramp_output) const
+      int Esdc1a<scalar_type, index_type>::initialize()
       {
-        static constexpr RealT SOFTPLUS_WIDTH = static_cast<RealT>(50.0);
+        const auto EFDP = static_cast<size_t>(Esdc1aInternalVariables::EFDP);
+        const auto VC   = static_cast<size_t>(Esdc1aInternalVariables::VC);
+        const auto VR   = static_cast<size_t>(Esdc1aInternalVariables::VR);
+        const auto VF   = static_cast<size_t>(Esdc1aInternalVariables::VF);
+        const auto XLL  = static_cast<size_t>(Esdc1aInternalVariables::XLL);
+        const auto EV   = static_cast<size_t>(Esdc1aInternalVariables::EV);
+        const auto VLL  = static_cast<size_t>(Esdc1aInternalVariables::VLL);
+        const auto VHV  = static_cast<size_t>(Esdc1aInternalVariables::VHV);
+        const auto SE   = static_cast<size_t>(Esdc1aInternalVariables::SE);
+        const auto VFE  = static_cast<size_t>(Esdc1aInternalVariables::VFE);
+        const auto EFD  = static_cast<size_t>(Esdc1aInternalVariables::EFD);
 
-        const RealT scaled_output = Math::MU<RealT> * ramp_output;
-        if (scaled_output > SOFTPLUS_WIDTH)
+        if (verify() > 0)
         {
-          return ramp_output;
+          Log::error() << "Esdc1a: cannot initialize with invalid configuration\n";
+          return 1;
         }
-        return std::log(std::expm1(scaled_output)) / Math::MU<RealT>;
+
+        auto* y = y_.getData();
+
+        // The assigned efd node aliases this entry after allocate(). Its
+        // seeded value remains untouched throughout initialization.
+        const ScalarT efd0 = y[EFD];
+
+        ScalarT omega0{ZERO<RealT>};
+        if (signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
+        {
+          omega0 = signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
+        }
+
+        ScalarT vs0{ZERO<RealT>};
+        if (signals_.template isAttached<Esdc1aExternalVariables::VS>())
+        {
+          vs0 = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
+        }
+
+        ScalarT vuel0{ZERO<RealT>};
+        if (signals_.template isAttached<Esdc1aExternalVariables::VUEL>())
+        {
+          vuel0 = signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
+        }
+
+        const ScalarT vc0 = std::sqrt(Vr() * Vr() + Vi() * Vi());
+
+        if (!std::isfinite(static_cast<RealT>(efd0))
+            || !std::isfinite(static_cast<RealT>(vc0)))
+        {
+          Log::error() << "Esdc1a: initial bus voltage and field-voltage seed must be finite\n";
+          return 1;
+        }
+
+        const ScalarT d0 = ONE<RealT> + spd_on_ * omega0;
+        if (d0 == ZERO<RealT>)
+        {
+          Log::error() << "Esdc1a: speed multiplier denominator is zero at initialization\n";
+          return 1;
+        }
+
+        const ScalarT efdp0      = efd0 / d0;
+        const ScalarT se0        = SB_ * Math::qramp(efdp0 - SA_);
+        const ScalarT vfe_drive0 = (Ke_ + se0) * efdp0;
+        const ScalarT vfe0 =
+            (ONE<RealT> - lim_on_) * vfe_drive0 + lim_on_ * Math::ramp(vfe_drive0);
+        const ScalarT vr0  = vfe0;
+        const ScalarT vhv0 = vr0 / Ka_;
+
+        if (vr0 < Vrmin_ || vr0 > Vrmax_)
+        {
+          Log::error() << "Esdc1a: initialized VR is outside limits\n";
+          return 1;
+        }
+
+        // An inactive high-value gate is seeded with the gate input, so the
+        // residual reproduces VHV through the same smooth maximum.
+        ScalarT vll0 = vhv0;
+        if (uel_on_ == ZERO<RealT>)
+        {
+          const RealT gate_margin0 = static_cast<RealT>(vhv0 - vuel0);
+          if (gate_margin0 <= ZERO<RealT>)
+          {
+            Log::error() << "Esdc1a: smooth high-value gate is active at initialization\n";
+            return 1;
+          }
+          vll0 = vuel0 + inverseRamp(gate_margin0);
+        }
+
+        const ScalarT vf0   = ScalarT{ZERO<RealT>};
+        const ScalarT ev0   = vll0;
+        const ScalarT xll0  = ev0;
+        const ScalarT vref0 = ev0 + vc0 + vf0 - vs0 - uel_on_ * vuel0;
+
+        y[EFDP] = efdp0;
+        y[VC]   = vc0;
+        y[VR]   = vr0;
+        y[VF]   = vf0;
+        y[XLL]  = xll0;
+        y[EV]   = ev0;
+        y[VLL]  = vll0;
+        y[VHV]  = vhv0;
+        y[SE]   = se0;
+        y[VFE]  = vfe0;
+        y[EFD]  = efd0;
+
+        omega_set_ = omega0;
+        vref_set_  = vref0;
+        vs_set_    = vs0;
+        vuel_set_  = vuel0;
+
+        if (signals_.template isAttached<Esdc1aExternalVariables::VREF>())
+        {
+          signals_.template writeExternalVariable<Esdc1aExternalVariables::VREF>(vref_set_);
+        }
+
+        y_.setDataUpdated();
+        yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
+        return 0;
       }
+
+      /**
+       * @brief Identify the differential variables
+       *
+       * The field-voltage state, the voltage transducer, the regulator, the
+       * stabilizing feedback, and the lead-lag state carry derivatives;
+       * every other internal variable is algebraic.
+       *
+       * @return Zero on success.
+       */
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::tagDifferentiable()
+      {
+        const auto EFDP = static_cast<size_t>(Esdc1aInternalVariables::EFDP);
+        const auto VC   = static_cast<size_t>(Esdc1aInternalVariables::VC);
+        const auto VR   = static_cast<size_t>(Esdc1aInternalVariables::VR);
+        const auto VF   = static_cast<size_t>(Esdc1aInternalVariables::VF);
+        const auto XLL  = static_cast<size_t>(Esdc1aInternalVariables::XLL);
+
+        std::fill(tag_.begin(), tag_.end(), false);
+        tag_[EFDP] = true;
+        tag_[VC]   = true;
+        tag_[VR]   = true;
+        tag_[VF]   = true;
+        tag_[XLL]  = true;
+        return 0;
+      }
+
+      /**
+       * @brief Compute the absolute tolerance for each variable in the model
+       *
+       * Every internal variable receives @p rel_tol as its absolute
+       * tolerance.
+       *
+       * @param[in] rel_tol Solver relative tolerance.
+       * @return Zero on success.
+       */
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+      {
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+        return 0;
+      }
+
+      /**
+       * @brief Residuals of system equations
+       *
+       * Refreshes the bus and signal interface buffers and evaluates the
+       * internal residual. ESDC1A injects no current, so there is no bus
+       * residual. An unattached input port falls back to the value latched
+       * by initialize().
+       *
+       * @return Zero on success.
+       */
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::evaluateResidual()
+      {
+        const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
+        const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
+
+        ws_[OMEGA] = omega_set_;
+        ws_[VREF]  = vref_set_;
+        ws_[VS]    = vs_set_;
+        ws_[VUEL]  = vuel_set_;
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+
+        if (signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
+        {
+          ws_[OMEGA] = signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
+          ws_indices_[OMEGA] =
+              signals_.template readExternalVariableIndex<Esdc1aExternalVariables::OMEGA>();
+        }
+        if (signals_.template isAttached<Esdc1aExternalVariables::VREF>())
+        {
+          ws_[VREF] = signals_.template readExternalVariable<Esdc1aExternalVariables::VREF>();
+          ws_indices_[VREF] =
+              signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VREF>();
+        }
+        if (signals_.template isAttached<Esdc1aExternalVariables::VS>())
+        {
+          ws_[VS] = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
+          ws_indices_[VS] =
+              signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VS>();
+        }
+        if (signals_.template isAttached<Esdc1aExternalVariables::VUEL>())
+        {
+          ws_[VUEL] = signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
+          ws_indices_[VUEL] =
+              signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VUEL>();
+        }
+
+        wb_[0] = Vr();
+        wb_[1] = Vi();
+
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
+
+        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        f_.setDataUpdated();
+        return 0;
+      }
+
+      /**
+       * @brief Access the monitor
+       *
+       * @return Monitor for this model, or nullptr when the model was
+       *         constructed without data.
+       */
+      template <typename scalar_type, typename index_type>
+      const Model::VariableMonitorBase* Esdc1a<scalar_type, index_type>::getMonitor() const
+      {
+        return monitor_.get();
+      }
+
+      /**
+       * @brief Evaluate the ESDC1A internal residual.
+       *
+       * Evaluates the five exciter states and the six algebraic equations
+       * documented in the model README. The body is kept free of branches
+       * and loops so sparse automatic differentiation resolves a fixed
+       * structure; the three selector decisions enter as multiplicative
+       * masks set by setDerivedParameters().
+       *
+       * @param[in] y Internal variables in Esdc1aInternalVariables order.
+       * @param[in] yp Internal derivatives in the same enum order.
+       * @param[in] wb Terminal-bus \f$(V_{\mathrm{r}},V_{\mathrm{i}})\f$
+       *               voltage components.
+       * @param[in] ws Signal values in Esdc1aExternalVariables order.
+       * @param[out] f Residuals in Esdc1aInternalVariables order.
+       * @return Zero on success.
+       */
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline int
+      Esdc1a<scalar_type, index_type>::evaluateInternalResidual(
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f)
+      {
+        const auto EFDP = static_cast<size_t>(Esdc1aInternalVariables::EFDP);
+        const auto VC   = static_cast<size_t>(Esdc1aInternalVariables::VC);
+        const auto VR   = static_cast<size_t>(Esdc1aInternalVariables::VR);
+        const auto VF   = static_cast<size_t>(Esdc1aInternalVariables::VF);
+        const auto XLL  = static_cast<size_t>(Esdc1aInternalVariables::XLL);
+        const auto EV   = static_cast<size_t>(Esdc1aInternalVariables::EV);
+        const auto VLL  = static_cast<size_t>(Esdc1aInternalVariables::VLL);
+        const auto VHV  = static_cast<size_t>(Esdc1aInternalVariables::VHV);
+        const auto SE   = static_cast<size_t>(Esdc1aInternalVariables::SE);
+        const auto VFE  = static_cast<size_t>(Esdc1aInternalVariables::VFE);
+        const auto EFD  = static_cast<size_t>(Esdc1aInternalVariables::EFD);
+
+        const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
+        const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
+
+        const ScalarT efdp = y[EFDP];
+        const ScalarT vc   = y[VC];
+        const ScalarT vr   = y[VR];
+        const ScalarT vf   = y[VF];
+        const ScalarT xll  = y[XLL];
+        const ScalarT ev   = y[EV];
+        const ScalarT vll  = y[VLL];
+        const ScalarT vhv  = y[VHV];
+        const ScalarT se   = y[SE];
+        const ScalarT vfe  = y[VFE];
+        const ScalarT efd  = y[EFD];
+
+        const ScalarT efdp_dot = yp[EFDP];
+        const ScalarT vc_dot   = yp[VC];
+        const ScalarT vr_dot   = yp[VR];
+        const ScalarT vf_dot   = yp[VF];
+        const ScalarT xll_dot  = yp[XLL];
+
+        const ScalarT omega = ws[OMEGA];
+        const ScalarT vref  = ws[VREF];
+        const ScalarT vs    = ws[VS];
+        const ScalarT vuel  = ws[VUEL];
+
+        const ScalarT ec        = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
+        const ScalarT ev_target = vref + vs + uel_on_ * vuel - vc - vf;
+        const ScalarT vfe_drive = (Ke_ + se) * efdp;
+
+        f[EFDP] = -efdp_dot + (vr - vfe) / Te_;
+        f[VC]   = -vc_dot + (ec - vc) / Tr_;
+        f[VR]   = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
+        f[VF]   = -vf_dot + (-vf + Kf_ * (vr - vfe) / Te_) / Tf1_;
+        f[XLL]  = -xll_dot + (ev - xll) / Tb_;
+        f[EV]   = -ev + ev_target;
+        f[VLL]  = -vll + xll + (Tc_ / Tb_) * (ev - xll);
+        f[VHV]  = -vhv + uel_on_ * vll
+                 + (ONE<RealT> - uel_on_) * Math::max(vll, vuel);
+        f[SE]  = -se + SB_ * Math::qramp(efdp - SA_);
+        f[VFE] = -vfe + (ONE<RealT> - lim_on_) * vfe_drive
+                 + lim_on_ * Math::ramp(vfe_drive);
+        f[EFD] = -efd + (ONE<RealT> + spd_on_ * omega) * efdp;
+
+        return 0;
+      }
+
+      //
+      //  Private methods
+      //
 
       /**
        * @brief Read the parameters out of the model data
        *
        * No parameter is required; every parameter keeps the default
        * documented in the model README when omitted. A non-numeric value, a
-       * switch outside {0, 1}, or a non-integer selector is counted and
+       * switch outside \f$\{0,1\}\f$, or a non-integer selector is counted and
        * reported by verify() rather than throwing. Integer JSON values are
        * accepted for real parameters.
        *
@@ -310,22 +664,10 @@ namespace GridKit
       }
 
       /**
-       * @brief Access the monitor
-       *
-       * @return Monitor for this model, or nullptr when the model was
-       *         constructed without data.
-       */
-      template <typename scalar_type, typename index_type>
-      const Model::VariableMonitorBase* Esdc1a<scalar_type, index_type>::getMonitor() const
-      {
-        return monitor_.get();
-      }
-
-      /**
        * @brief Bind the monitorable variables to their internal states
        *
-       * Every monitored quantity is a per-unit exciter voltage, as documented
-       * in the model README.
+       * Binds configured monitor keys to their corresponding internal
+       * variables.
        */
       template <typename scalar_type, typename index_type>
       void Esdc1a<scalar_type, index_type>::initializeMonitor()
@@ -333,450 +675,154 @@ namespace GridKit
         using Variable = typename ModelDataT::MonitorableVariables;
 
         monitor_->set(Variable::efd, [this]
-                      { return y_.getData()[index(I::EFD)]; });
+                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::EFD)]; });
         monitor_->set(Variable::vc, [this]
-                      { return y_.getData()[index(I::VC)]; });
+                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::VC)]; });
         monitor_->set(Variable::vr, [this]
-                      { return y_.getData()[index(I::VR)]; });
+                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::VR)]; });
         monitor_->set(Variable::vf, [this]
-                      { return y_.getData()[index(I::VF)]; });
+                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::VF)]; });
         monitor_->set(Variable::se, [this]
-                      { return y_.getData()[index(I::SE)]; });
+                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::SE)]; });
         monitor_->set(Variable::vfe, [this]
-                      { return y_.getData()[index(I::VFE)]; });
+                      { return y_.getData()[static_cast<size_t>(Esdc1aInternalVariables::VFE)]; });
       }
 
       /**
-       * @brief Set the component ID
+       * @brief Resolve the parameter-derived constants and selector masks
        *
-       * @param[in] component_id Identifier assigned by the system model.
-       * @return int 0 on success.
+       * Raises the transducer, regulator, lead-lag, exciter, and feedback
+       * lags to the well-posedness floor, fits the quadratic saturation
+       * curve, and turns the three selectors into multiplicative masks. The
+       * masks let the residual select signal routing without
+       * parameter-dependent control flow, which keeps its structure fixed for
+       * sparse automatic differentiation.
        */
       template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      void Esdc1a<scalar_type, index_type>::setDerivedParameters()
       {
-        gridkit_component_id_ = component_id;
-        return 0;
-      }
-
-      /**
-       * @brief Allocate the model vectors and wire the field-voltage output
-       *
-       * Sizes the state, residual, bus-interface, and signal-interface
-       * buffers, seeds the identity index maps, and points an assigned `efd`
-       * node at the internal field-voltage state. That node aliases ESDC1A
-       * storage from here on, which is how initialize() reads the seed a
-       * machine model wrote. Repeated calls reuse the allocated vectors.
-       *
-       * @return int 0 on success.
-       */
-      template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::allocate()
-      {
-        if (!allocated_)
+        // The lags are raised to the floor in place, so a negative value is
+        // rejected here while the value as read is still available. verify()
+        // reports the count.
+        auto check_non_negative = [&](RealT value, const char* name)
         {
-          this->allocateVectors(size_);
-        }
-        auto size = static_cast<size_t>(size_);
-
-        tag_.assign(size, false);
-        variable_indices_.resize(size);
-        residual_indices_.resize(size);
-
-        wb_.assign(2, ScalarT{0});
-
-        const auto signal_size = index(E::MAXIMUM);
-        ws_.assign(signal_size, ScalarT{0});
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
-
-        for (IdxT j = 0; j < size_; ++j)
-        {
-          this->setVariableIndex(j, j);
-          this->setResidualIndex(j, j);
-        }
-
-        auto* y = y_.getData();
-
-        if (signals_.template isAssigned<I::EFD>())
-        {
-          signals_.template getSignalNode<I::EFD>()->set(
-              &y[index(I::EFD)],
-              &(this->getVariableIndex(static_cast<IdxT>(I::EFD))));
-        }
-
-        allocated_ = true;
-        return 0;
-      }
-
-      /**
-       * @brief Validate the ESDC1A configuration
-       *
-       * Checks parameter-loading errors, static parameter relationships,
-       * terminal-bus association, the required field-voltage output, and
-       * attached external signals. Seed feasibility is operating-point
-       * dependent and is checked by initialize().
-       *
-       * @return int Number of configuration errors; zero when valid.
-       */
-      template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::verify() const
-      {
-        int ret = static_cast<int>(parameter_error_count_);
-
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
+          if (value < ZERO<RealT>)
           {
-            Log::error() << "Esdc1a: " << message << '\n';
-            ret += 1;
+            Log::error() << "Esdc1a: " << name << " must be non-negative\n";
+            ++parameter_error_count_;
           }
         };
 
-        if (bus_ == nullptr)
+        check_non_negative(Tr_, "Tr");
+        check_non_negative(Ta_, "Ta");
+        check_non_negative(Tb_, "Tb");
+        check_non_negative(Te_, "Te");
+        check_non_negative(Tf1_, "Tf1");
+
+        if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
+            || Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM
+            || Tf1_ < TIME_CONSTANT_MINIMUM)
         {
-          Log::error() << "Esdc1a: bus pointer is null\n";
-          ret += 1;
+          Log::warning() << "Esdc1a: Tr, Ta, Tb, Te, and Tf1 below "
+                         << TIME_CONSTANT_MINIMUM
+                         << " s are raised to that floor to keep the exciter lags well posed\n";
         }
 
-        check(Ka_ > ZERO<RealT>, "Ka must be positive");
-        check(Tc_ >= ZERO<RealT>, "Tc must be non-negative");
-        check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
-        check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
-              "UEL must be 0, 1, 2, or 3");
+        Tr_  = std::max(Tr_, TIME_CONSTANT_MINIMUM);
+        Ta_  = std::max(Ta_, TIME_CONSTANT_MINIMUM);
+        Tb_  = std::max(Tb_, TIME_CONSTANT_MINIMUM);
+        Te_  = std::max(Te_, TIME_CONSTANT_MINIMUM);
+        Tf1_ = std::max(Tf1_, TIME_CONSTANT_MINIMUM);
 
-        if (!(Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>) )
+        spd_on_ = ZERO<RealT>;
+        if (Spdmlt_)
         {
-          check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
-          check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
-          check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
-          check(E1_ != E2_, "E1 and E2 must differ when saturation is enabled");
-          check(Se1_ != Se2_, "Se1 and Se2 must differ when saturation is enabled");
+          spd_on_ = ONE<RealT>;
         }
 
-        if (!signals_.template isAssigned<I::EFD>())
+        uel_on_ = ZERO<RealT>;
+        if (UEL_ >= static_cast<IdxT>(2))
         {
-          Log::error() << "Esdc1a: required efd output signal is not assigned\n";
-          ret += 1;
+          uel_on_ = ONE<RealT>;
         }
 
-        if (Spdmlt_ && !signals_.template isAttached<E::OMEGA>())
+        lim_on_ = ZERO<RealT>;
+        if (exclim_)
         {
-          Log::error() << "Esdc1a: speed signal is required when Spdmlt is enabled\n";
-          ret += 1;
+          lim_on_ = ONE<RealT>;
         }
 
-        // An attached port must resolve to writable signal storage. The
-        // enumerator is a template argument, so each port names itself once.
-        auto check_attached_signal =
-            [&]<E variable>(const char* name)
+        // A disabled or inconsistent saturation curve keeps the zero fit so
+        // the coefficients stay finite; verify() reports inconsistent data.
+        const bool saturation_enabled = !(Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>);
+        const bool saturation_consistent =
+            E1_ > ZERO<RealT> && E2_ > ZERO<RealT> && E1_ != E2_
+            && Se1_ > ZERO<RealT> && Se2_ > ZERO<RealT> && Se1_ != Se2_;
+        if (!saturation_enabled || !saturation_consistent)
         {
-          if (signals_.template isAttached<variable>()
-              && !signals_.template isLinked<variable>())
-          {
-            Log::error() << "Esdc1a: " << name << " signal attached with no linked source\n";
-            ret += 1;
-          }
-        };
+          SA_ = ZERO<RealT>;
+          SB_ = ZERO<RealT>;
+          return;
+        }
 
-        check_attached_signal.template operator()<E::OMEGA>("speed");
-        check_attached_signal.template operator()<E::VREF>("vref");
-        check_attached_signal.template operator()<E::VS>("vs");
-        check_attached_signal.template operator()<E::VUEL>("vuel");
-
-        return ret;
+        const RealT C = std::sqrt(Se2_ / Se1_);
+        SA_           = (C * E1_ - E2_) / (C - ONE<RealT>);
+        SB_           = Se1_ / ((E1_ - SA_) * (E1_ - SA_));
       }
 
       /**
-       * @brief Initialize ESDC1A from the seeded field-voltage output
+       * @brief Invert the smooth CommonMath ramp
        *
-       * Reads the assigned `efd` node, resolves the steady state that
-       * preserves that seed in dependency order, latches the attached input
-       * values as constant fallbacks, and publishes the resolved
-       * voltage-control reference to an attached `vref` signal. All
-       * operating-point checks are completed before model or signal storage
-       * is modified, so a rejected initialization leaves both unchanged.
+       * Initialization seeds the inactive high-value gate with the gate
+       * *input*, so the residual reproduces the requested output through the
+       * same smooth ramp it evaluates. Beyond the softplus width the smooth
+       * ramp is the identity to double precision, so the output is returned
+       * unchanged there.
        *
-       * @pre allocate() has completed.
-       * @pre The terminal bus and the assigned `efd` node have been
-       *      initialized.
+       * @param[in] ramp_output Strictly positive requested ramp output.
+       * @return The input the smooth ramp maps to the requested output.
        *
-       * @return int 0 on success; nonzero when the configuration is invalid,
-       *             the bus voltage or field-voltage seed is not finite, the
-       *             speed-multiplier denominator vanishes, the regulator
-       *             output falls outside its limits, or the high-value gate
-       *             is active at the start.
+       * @pre @p ramp_output is finite and strictly positive.
+       * @warning This function contains conditional branching and may be used
+       *          during initialization, but not during residual or Jacobian
+       *          evaluation.
        */
       template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::initialize()
+      typename Esdc1a<scalar_type, index_type>::RealT
+      Esdc1a<scalar_type, index_type>::inverseRamp(RealT ramp_output) const
       {
-        if (verify() > 0)
+        static constexpr RealT SOFTPLUS_WIDTH = static_cast<RealT>(50.0);
+
+        const RealT scaled_output = Math::MU<RealT> * ramp_output;
+        if (scaled_output > SOFTPLUS_WIDTH)
         {
-          Log::error() << "Esdc1a: cannot initialize with invalid configuration\n";
-          return 1;
+          return ramp_output;
         }
-
-        auto* y = y_.getData();
-
-        // The assigned efd node aliases this entry after allocate(). Its
-        // seeded value remains untouched throughout initialization.
-        const ScalarT efd0 = y[index(I::EFD)];
-
-        ScalarT omega0{ZERO<RealT>};
-        if (signals_.template isAttached<E::OMEGA>())
-        {
-          omega0 = signals_.template readExternalVariable<E::OMEGA>();
-        }
-
-        ScalarT vs0{ZERO<RealT>};
-        if (signals_.template isAttached<E::VS>())
-        {
-          vs0 = signals_.template readExternalVariable<E::VS>();
-        }
-
-        ScalarT vuel0{ZERO<RealT>};
-        if (signals_.template isAttached<E::VUEL>())
-        {
-          vuel0 = signals_.template readExternalVariable<E::VUEL>();
-        }
-
-        const ScalarT vc0 = std::sqrt(Vr() * Vr() + Vi() * Vi());
-
-        if (!std::isfinite(static_cast<RealT>(efd0))
-            || !std::isfinite(static_cast<RealT>(vc0)))
-        {
-          Log::error() << "Esdc1a: initial bus voltage and field-voltage seed must be finite\n";
-          return 1;
-        }
-
-        const ScalarT d0 = ONE<RealT> + spd_on_ * omega0;
-        if (d0 == ZERO<RealT>)
-        {
-          Log::error() << "Esdc1a: speed multiplier denominator is zero at initialization\n";
-          return 1;
-        }
-
-        const ScalarT efdp0      = efd0 / d0;
-        const ScalarT se0        = SB_ * Math::qramp(efdp0 - SA_);
-        const ScalarT vfe_drive0 = (Ke_ + se0) * efdp0;
-        const ScalarT vfe0 =
-            (ONE<RealT> - lim_on_) * vfe_drive0 + lim_on_ * Math::ramp(vfe_drive0);
-        const ScalarT vr0  = vfe0;
-        const ScalarT vhv0 = vr0 / Ka_;
-
-        if (vr0 < Vrmin_ || vr0 > Vrmax_)
-        {
-          Log::error() << "Esdc1a: initialized VR is outside limits\n";
-          return 1;
-        }
-
-        // An inactive high-value gate is seeded with the gate input, so the
-        // residual reproduces VHV through the same smooth maximum.
-        ScalarT vll0 = vhv0;
-        if (uel_on_ == ZERO<RealT>)
-        {
-          const RealT gate_margin0 = static_cast<RealT>(vhv0 - vuel0);
-          if (gate_margin0 <= ZERO<RealT>)
-          {
-            Log::error() << "Esdc1a: smooth high-value gate is active at initialization\n";
-            return 1;
-          }
-          vll0 = vuel0 + inverseRamp(gate_margin0);
-        }
-
-        const ScalarT vf0   = ScalarT{ZERO<RealT>};
-        const ScalarT ev0   = vll0;
-        const ScalarT xll0  = ev0;
-        const ScalarT vref0 = ev0 + vc0 + vf0 - vs0 - uel_on_ * vuel0;
-
-        y[index(I::EFDP)] = efdp0;
-        y[index(I::VC)]   = vc0;
-        y[index(I::VR)]   = vr0;
-        y[index(I::VF)]   = vf0;
-        y[index(I::XLL)]  = xll0;
-        y[index(I::EV)]   = ev0;
-        y[index(I::VLL)]  = vll0;
-        y[index(I::VHV)]  = vhv0;
-        y[index(I::SE)]   = se0;
-        y[index(I::VFE)]  = vfe0;
-        y[index(I::EFD)]  = efd0;
-
-        omega_set_ = omega0;
-        vref_set_  = vref0;
-        vs_set_    = vs0;
-        vuel_set_  = vuel0;
-
-        if (signals_.template isAttached<E::VREF>())
-        {
-          signals_.template writeExternalVariable<E::VREF>(vref_set_);
-        }
-
-        y_.setDataUpdated();
-        yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
-        return 0;
+        return std::log(std::expm1(scaled_output)) / Math::MU<RealT>;
       }
 
       /**
-       * @brief Identify the differential variables
+       * @brief Access the terminal-bus real voltage component.
        *
-       * The field-voltage state, the voltage transducer, the regulator, the
-       * stabilizing feedback, and the lead-lag state carry derivatives;
-       * every other internal variable is algebraic.
-       *
-       * @return int 0 on success.
+       * @return Reference to the bus variable.
        */
       template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::tagDifferentiable()
+      scalar_type& Esdc1a<scalar_type, index_type>::Vr()
       {
-        std::fill(tag_.begin(), tag_.end(), false);
-        tag_[index(I::EFDP)] = true;
-        tag_[index(I::VC)]   = true;
-        tag_[index(I::VR)]   = true;
-        tag_[index(I::VF)]   = true;
-        tag_[index(I::XLL)]  = true;
-        return 0;
+        return bus_->Vr();
       }
 
       /**
-       * @brief Compute the absolute tolerance for each variable in the model
+       * @brief Access the terminal-bus imaginary voltage component.
        *
-       * All ESDC1A variables are per-unit exciter voltages of the same
-       * order, so they share the relative tolerance as their absolute floor.
-       *
-       * @param[in] rel_tol Solver relative tolerance.
-       * @return int 0 on success.
+       * @return Reference to the bus variable.
        */
       template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+      scalar_type& Esdc1a<scalar_type, index_type>::Vi()
       {
-        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
-        return 0;
+        return bus_->Vi();
       }
 
-      /**
-       * @brief Internal residual
-       *
-       * Evaluates the five exciter states and the six algebraic rows
-       * documented in the model README. The body is kept free of branches
-       * and loops so that sparse automatic differentiation resolves a fixed
-       * structure; the three selector decisions enter as the multiplicative
-       * masks set by setDerivedParameters().
-       *
-       * @param[in] y Internal variables.
-       * @param[in] yp Internal variable derivatives.
-       * @param[in] wb Terminal-bus voltage components.
-       * @param[in] ws External signal values.
-       * @param[out] f Internal residuals.
-       * @return int 0 on success.
-       */
-      template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int
-      Esdc1a<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT* y,
-          const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
-          ScalarT*       f)
-      {
-        const ScalarT efdp = y[index(I::EFDP)];
-        const ScalarT vc   = y[index(I::VC)];
-        const ScalarT vr   = y[index(I::VR)];
-        const ScalarT vf   = y[index(I::VF)];
-        const ScalarT xll  = y[index(I::XLL)];
-        const ScalarT ev   = y[index(I::EV)];
-        const ScalarT vll  = y[index(I::VLL)];
-        const ScalarT vhv  = y[index(I::VHV)];
-        const ScalarT se   = y[index(I::SE)];
-        const ScalarT vfe  = y[index(I::VFE)];
-        const ScalarT efd  = y[index(I::EFD)];
-
-        const ScalarT efdp_dot = yp[index(I::EFDP)];
-        const ScalarT vc_dot   = yp[index(I::VC)];
-        const ScalarT vr_dot   = yp[index(I::VR)];
-        const ScalarT vf_dot   = yp[index(I::VF)];
-        const ScalarT xll_dot  = yp[index(I::XLL)];
-
-        const ScalarT omega = ws[index(E::OMEGA)];
-        const ScalarT vref  = ws[index(E::VREF)];
-        const ScalarT vs    = ws[index(E::VS)];
-        const ScalarT vuel  = ws[index(E::VUEL)];
-
-        const ScalarT ec        = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
-        const ScalarT ev_target = vref + vs + uel_on_ * vuel - vc - vf;
-        const ScalarT vfe_drive = (Ke_ + se) * efdp;
-
-        f[index(I::EFDP)] = -efdp_dot + (vr - vfe) / Te_;
-        f[index(I::VC)]   = -vc_dot + (ec - vc) / Tr_;
-        f[index(I::VR)]   = -vr_dot + Math::antiwindup(vr, -vr + Ka_ * vhv, Vrmin_, Vrmax_) / Ta_;
-        f[index(I::VF)]   = -vf_dot + (-vf + Kf_ * (vr - vfe) / Te_) / Tf1_;
-        f[index(I::XLL)]  = -xll_dot + (ev - xll) / Tb_;
-        f[index(I::EV)]   = -ev + ev_target;
-        f[index(I::VLL)]  = -vll + xll + (Tc_ / Tb_) * (ev - xll);
-        f[index(I::VHV)]  = -vhv + uel_on_ * vll
-                           + (ONE<RealT> - uel_on_) * Math::max(vll, vuel);
-        f[index(I::SE)]  = -se + SB_ * Math::qramp(efdp - SA_);
-        f[index(I::VFE)] = -vfe + (ONE<RealT> - lim_on_) * vfe_drive
-                           + lim_on_ * Math::ramp(vfe_drive);
-        f[index(I::EFD)] = -efd + (ONE<RealT> + spd_on_ * omega) * efdp;
-
-        return 0;
-      }
-
-      /**
-       * @brief Residuals of system equations
-       *
-       * Refreshes the bus and signal interface buffers and evaluates the
-       * internal residual. ESDC1A injects no current, so there is no bus
-       * residual. An unattached input port falls back to the value latched
-       * by initialize().
-       *
-       * @return int 0 on success.
-       */
-      template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::evaluateResidual()
-      {
-        ws_[index(E::OMEGA)] = omega_set_;
-        ws_[index(E::VREF)]  = vref_set_;
-        ws_[index(E::VS)]    = vs_set_;
-        ws_[index(E::VUEL)]  = vuel_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
-
-        if (signals_.template isAttached<E::OMEGA>())
-        {
-          ws_[index(E::OMEGA)] = signals_.template readExternalVariable<E::OMEGA>();
-          ws_indices_[index(E::OMEGA)] =
-              signals_.template readExternalVariableIndex<E::OMEGA>();
-        }
-        if (signals_.template isAttached<E::VREF>())
-        {
-          ws_[index(E::VREF)] = signals_.template readExternalVariable<E::VREF>();
-          ws_indices_[index(E::VREF)] =
-              signals_.template readExternalVariableIndex<E::VREF>();
-        }
-        if (signals_.template isAttached<E::VS>())
-        {
-          ws_[index(E::VS)] = signals_.template readExternalVariable<E::VS>();
-          ws_indices_[index(E::VS)] =
-              signals_.template readExternalVariableIndex<E::VS>();
-        }
-        if (signals_.template isAttached<E::VUEL>())
-        {
-          ws_[index(E::VUEL)] = signals_.template readExternalVariable<E::VUEL>();
-          ws_indices_[index(E::VUEL)] =
-              signals_.template readExternalVariableIndex<E::VUEL>();
-        }
-
-        wb_[0] = Vr();
-        wb_[1] = Vi();
-
-        const auto* y  = y_.getData();
-        const auto* yp = yp_.getData();
-        auto*       f  = f_.getData();
-
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
-        f_.setDataUpdated();
-        return 0;
-      }
     } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit

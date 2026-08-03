@@ -12,6 +12,9 @@ namespace GridKit
   {
     namespace Exciter
     {
+      /**
+       * @brief Report that a separate Jacobian is unavailable in the plain build.
+       */
       template <typename scalar_type, typename index_type>
       int Esdc1a<scalar_type, index_type>::evaluateJacobian()
       {

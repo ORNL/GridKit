@@ -30,30 +30,36 @@ namespace GridKit
       /// Internal variables of an `Esdc1a`.
       enum class Esdc1aInternalVariables : size_t
       {
-        EFDP, ///< \f$E_{\mathrm{fd}}'\f$ Exciter field-voltage state
-        VC,   ///< \f$V_C\f$ Filtered terminal-voltage magnitude
-        VR,   ///< \f$V_R\f$ Voltage-regulator output
-        VF,   ///< \f$V_F\f$ Stabilizing feedback state
-        XLL,  ///< \f$x_{\mathrm{LL}}\f$ Input lead-lag denominator state
-        EV,   ///< \f$e_V\f$ Voltage-error summing output
-        VLL,  ///< \f$V_{\mathrm{LL}}\f$ Input lead-lag output
-        VHV,  ///< \f$V_{\mathrm{HV}}\f$ High-value gate output
-        SE,   ///< \f$S_E\f$ Exciter saturation coefficient
-        VFE,  ///< \f$V_{\mathrm{FE}}\f$ Exciter feedback drive
-        EFD,  ///< \f$E_{\mathrm{fd}}\f$ Field-voltage output
-        MAXIMUM,
+        EFDP,    ///< \f$E_{\mathrm{fd}}'\f$ Differential exciter field-voltage state [p.u.]
+        VC,      ///< \f$V_C\f$ Differential filtered terminal-voltage magnitude [p.u.]
+        VR,      ///< \f$V_R\f$ Differential voltage-regulator output [p.u.]
+        VF,      ///< \f$V_F\f$ Differential stabilizing feedback state [p.u.]
+        XLL,     ///< \f$x_{\mathrm{LL}}\f$ Differential input lead-lag denominator state [p.u.]
+        EV,      ///< \f$e_V\f$ Algebraic voltage-error summing output [p.u.]
+        VLL,     ///< \f$V_{\mathrm{LL}}\f$ Algebraic input lead-lag output [p.u.]
+        VHV,     ///< \f$V_{\mathrm{HV}}\f$ Algebraic high-value gate output [p.u.]
+        SE,      ///< \f$S_E\f$ Algebraic exciter saturation coefficient [p.u.]
+        VFE,     ///< \f$V_{\mathrm{FE}}\f$ Algebraic exciter feedback drive [p.u.]
+        EFD,     ///< \f$E_{\mathrm{fd}}\f$ Algebraic field-voltage output [p.u.]
+        MAXIMUM, ///< Number of ESDC1A internal variables
       };
 
-      /// External variables of an `Esdc1a`.
+      /// External signal variables read or initialized by an `Esdc1a`.
       enum class Esdc1aExternalVariables : size_t
       {
-        OMEGA, ///< \f$\omega\f$ Machine speed deviation
-        VREF,  ///< \f$V_{\mathrm{ref}}\f$ Voltage-control reference
-        VS,    ///< \f$V_S\f$ Stabilizer input signal
-        VUEL,  ///< \f$V_{\mathrm{UEL}}\f$ Under-excitation limiter input
-        MAXIMUM,
+        OMEGA,   ///< \f$\omega\f$ Known machine speed deviation [p.u.]
+        VREF,    ///< \f$V_{\mathrm{ref}}\f$ Unknown voltage-control reference [p.u.]
+        VS,      ///< \f$V_S\f$ Known stabilizer input signal [p.u.]
+        VUEL,    ///< \f$V_{\mathrm{UEL}}\f$ Known under-excitation limiter input [p.u.]
+        MAXIMUM, ///< Number of ESDC1A external signal variables
       };
 
+      /**
+       * @brief IEEE DC1A excitation-system model (ESDC1A).
+       *
+       * @tparam scalar_type Plain real or differentiable scalar type.
+       * @tparam index_type Integer index type.
+       */
       template <typename scalar_type, typename index_type>
       class Esdc1a : public Component<scalar_type, index_type>
       {
@@ -89,20 +95,20 @@ namespace GridKit
         Esdc1a(BusT* bus, const ModelDataT& data);
         ~Esdc1a();
 
-        int setGridKitComponentID(IdxT) override final;
+        int setGridKitComponentID(IdxT component_id) override final;
         int allocate() override final;
         int verify() const override final;
         int initialize() override final;
         int tagDifferentiable() override final;
-        int setAbsoluteTolerance(RealT) override final;
+        int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
-                                InternalVariablesT,
-                                ExternalVariablesT>&
+                                Esdc1aInternalVariables,
+                                Esdc1aExternalVariables>&
         {
           return signals_;
         }
@@ -110,22 +116,13 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+            const ScalarT* y,
+            const ScalarT* yp,
+            const ScalarT* wb,
+            const ScalarT* ws,
+            ScalarT*       f);
 
       private:
-        using I = InternalVariablesT;
-        using E = ExternalVariablesT;
-
-        static constexpr size_t index(I variable)
-        {
-          return static_cast<size_t>(variable);
-        }
-
-        static constexpr size_t index(E variable)
-        {
-          return static_cast<size_t>(variable);
-        }
-
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
@@ -172,8 +169,9 @@ namespace GridKit
         ScalarT vs_set_{0};
         ScalarT vuel_set_{0};
 
-        ComponentSignals<ScalarT, IdxT, InternalVariablesT, ExternalVariablesT> signals_;
-        std::unique_ptr<MonitorT>                                               monitor_;
+        ComponentSignals<ScalarT, IdxT, Esdc1aInternalVariables, Esdc1aExternalVariables>
+                                  signals_;
+        std::unique_ptr<MonitorT> monitor_;
 
         std::vector<ScalarT> ws_;
         std::vector<IdxT>    ws_indices_;
