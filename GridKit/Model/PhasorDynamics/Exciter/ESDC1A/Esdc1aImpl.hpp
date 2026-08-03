@@ -173,8 +173,12 @@ namespace GridKit
           check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
           check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
           check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
-          check(E1_ != E2_, "E1 and E2 must differ when saturation is enabled");
-          check(Se1_ != Se2_, "Se1 and Se2 must differ when saturation is enabled");
+
+          const bool saturation_points_are_ordered =
+              (E2_ > E1_ && Se2_ > Se1_)
+              || (E2_ < E1_ && Se2_ < Se1_);
+          check(saturation_points_are_ordered,
+                "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
         if (!signals_.template isAssigned<Esdc1aInternalVariables::EFD>())
@@ -784,9 +788,13 @@ namespace GridKit
         // A disabled or inconsistent saturation curve keeps the zero fit so
         // the coefficients stay finite; verify() reports inconsistent data.
         const bool saturation_enabled = !(Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>);
+        const bool saturation_points_are_ordered =
+            (E2_ > E1_ && Se2_ > Se1_)
+            || (E2_ < E1_ && Se2_ < Se1_);
         const bool saturation_consistent =
-            E1_ > ZERO<RealT> && E2_ > ZERO<RealT> && E1_ != E2_
-            && Se1_ > ZERO<RealT> && Se2_ > ZERO<RealT> && Se1_ != Se2_;
+            E1_ > ZERO<RealT> && E2_ > ZERO<RealT>
+            && Se1_ > ZERO<RealT> && Se2_ > ZERO<RealT>
+            && saturation_points_are_ordered;
         if (!saturation_enabled || !saturation_consistent)
         {
           SA_ = ZERO<RealT>;

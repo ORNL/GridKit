@@ -94,6 +94,28 @@ namespace GridKit
         success *= invalidParameterCase(Params::Se2, 0.08);
         success *= invalidParameterCase(Params::E1, -1.0);
 
+        // Saturation voltage and coefficient pairs must move in the same
+        // direction; either enumeration direction is otherwise valid.
+        auto reversed_saturation                    = makeData();
+        reversed_saturation.parameters[Params::E1]  = 3.7;
+        reversed_saturation.parameters[Params::Se1] = 0.33;
+        reversed_saturation.parameters[Params::E2]  = 2.8;
+        reversed_saturation.parameters[Params::Se2] = 0.08;
+        Fixture<ScalarT> reversed_saturation_fixture(reversed_saturation);
+        success *= (reversed_saturation_fixture.esdc1a.verify() == 0);
+
+        auto crossed_ascending                    = makeData();
+        crossed_ascending.parameters[Params::Se1] = 0.33;
+        crossed_ascending.parameters[Params::Se2] = 0.08;
+        Fixture<ScalarT> crossed_ascending_fixture(crossed_ascending);
+        success *= (crossed_ascending_fixture.esdc1a.verify() > 0);
+
+        auto crossed_descending                   = makeData();
+        crossed_descending.parameters[Params::E1] = 3.7;
+        crossed_descending.parameters[Params::E2] = 2.8;
+        Fixture<ScalarT> crossed_descending_fixture(crossed_descending);
+        success *= (crossed_descending_fixture.esdc1a.verify() > 0);
+
         // Integer JSON values are accepted for real parameters; booleans are
         // not numeric.
         auto integer_real                   = makeData();
@@ -581,21 +603,57 @@ namespace GridKit
           success *= residualsMatch(gate.esdc1a, {{Internal::VHV, test_case.expected}}, test_case.label);
         }
 
-        // Quadratic saturation above and below the fitted knee, then with
-        // the fit disabled at the same field voltage.
-        Fixture<ScalarT> saturation(makeResidualData());
-        saturation.attachAllInputs();
-        success *= saturation.initialize(1.2);
-        setState(saturation.esdc1a, {{Internal::EFDP, 2.0}, {Internal::SE, 0.05}});
-        success *= (saturation.evaluate() == 0);
-        success *= residualsMatch(saturation.esdc1a,
-                                  {{Internal::SE, -0.035410196624968436}},
-                                  "saturation above the knee");
-        setState(saturation.esdc1a, {{Internal::EFDP, 1.0}});
-        success *= (saturation.evaluate() == 0);
-        success *= residualsMatch(saturation.esdc1a,
-                                  {{Internal::SE, -0.05}},
-                                  "saturation below the knee");
+        // Both valid point orderings produce the same quadratic curve at the
+        // supplied points and on either side of the fitted knee.
+        struct SaturationOrderCase
+        {
+          const char* label;
+          RealT       e1;
+          RealT       se1;
+          RealT       e2;
+          RealT       se2;
+        };
+
+        const std::array<SaturationOrderCase, 2> saturation_order_cases{{
+            {"ascending saturation points", 2.4, 0.1, 3.2, 0.5},
+            {"descending saturation points", 3.2, 0.5, 2.4, 0.1},
+        }};
+
+        for (const auto& test_case : saturation_order_cases)
+        {
+          auto data                    = makeResidualData();
+          data.parameters[Params::E1]  = test_case.e1;
+          data.parameters[Params::Se1] = test_case.se1;
+          data.parameters[Params::E2]  = test_case.e2;
+          data.parameters[Params::Se2] = test_case.se2;
+          Fixture<ScalarT> saturation(data);
+          saturation.attachAllInputs();
+          success *= saturation.initialize(1.2);
+
+          setState(saturation.esdc1a, {{Internal::EFDP, 2.4}, {Internal::SE, 0.0}});
+          success *= (saturation.evaluate() == 0);
+          success *= residualsMatch(saturation.esdc1a,
+                                    {{Internal::SE, 0.1}},
+                                    test_case.label);
+
+          setState(saturation.esdc1a, {{Internal::EFDP, 3.2}});
+          success *= (saturation.evaluate() == 0);
+          success *= residualsMatch(saturation.esdc1a,
+                                    {{Internal::SE, 0.5}},
+                                    test_case.label);
+
+          setState(saturation.esdc1a, {{Internal::EFDP, 2.0}, {Internal::SE, 0.05}});
+          success *= (saturation.evaluate() == 0);
+          success *= residualsMatch(saturation.esdc1a,
+                                    {{Internal::SE, -0.035410196624968436}},
+                                    test_case.label);
+
+          setState(saturation.esdc1a, {{Internal::EFDP, 1.0}});
+          success *= (saturation.evaluate() == 0);
+          success *= residualsMatch(saturation.esdc1a,
+                                    {{Internal::SE, -0.05}},
+                                    test_case.label);
+        }
 
         auto disabled_data                    = makeResidualData();
         disabled_data.parameters[Params::Se1] = 0.0;

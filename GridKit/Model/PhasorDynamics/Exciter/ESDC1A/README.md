@@ -74,8 +74,8 @@ or define a valid two-point quadratic fit:
 ```math
 \begin{aligned}
   E_1, E_2, S_E(E_1), S_E(E_2) &> 0 \\
-  E_1 &\ne E_2 \\
-  S_E(E_1) &\ne S_E(E_2)
+  \left(E_2-E_1\right)
+  \left[S_E(E_2)-S_E(E_1)\right] &> 0
 \end{aligned}
 ```
 
@@ -134,7 +134,7 @@ $s_{\mathrm{spd}} = 1$; every other signal input is optional. Unattached `speed`
 
 Symbol                              | Units  | Description                                      | Note
 ------------------------------------|--------|--------------------------------------------------|------
-$E_{\mathrm{fd}}'$                  | [p.u.] | Exciter field-voltage state                     | State 1 in Fig. 1; before the optional speed multiplier
+$E_{\mathrm{fd}}'$                  | [p.u.] | Exciter field-voltage state                     | State 1 in Fig. 1; lower bounded at zero when $s_{\mathrm{lim}} = 1$; before the optional speed multiplier
 $V_C$                               | [p.u.] | Filtered terminal-voltage magnitude              | State 2 in Fig. 1
 $V_R$                               | [p.u.] | Voltage-regulator output                         | State 3 in Fig. 1
 $V_F$                               | [p.u.] | Stabilizing feedback state                       | State 4 in Fig. 1
@@ -148,7 +148,7 @@ $e_V$                               | [p.u.] | Voltage-error summing output     
 $V_{\mathrm{LL}}$                   | [p.u.] | Input lead-lag output             |
 $V_{\mathrm{HV}}$                   | [p.u.] | High-value gate output            |
 $S_E$                               | [p.u.] | Exciter saturation coefficient    | Evaluated at $E_{\mathrm{fd}}'$
-$V_{\mathrm{FE}}$                   | [p.u.] | Exciter feedback drive            | Lower limited at zero when $s_{\mathrm{lim}} = 1$
+$V_{\mathrm{FE}}$                   | [p.u.] | Exciter feedback drive            |
 $E_{\mathrm{fd}}$                   | [p.u.] | Field-voltage output              | Published through `efd`
 
 ### External Variables
@@ -173,7 +173,7 @@ $V_{\mathrm{UEL}}$                  | [p.u.] | Known   | Under-excitation limite
 Define the pre-limit exciter field-voltage rate:
 
 ```math
-r_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
+f_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
 ```
 
 ### Differential Equations
@@ -182,9 +182,9 @@ r_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
 \begin{aligned}
   0 &=
     -\dot{E}_{\mathrm{fd}}'
-    + \left(1-s_{\mathrm{lim}}\right)r_E
+    + \left(1-s_{\mathrm{lim}}\right)f_E
     + s_{\mathrm{lim}}\,
-      \text{awmin}\left(E_{\mathrm{fd}}',r_E;0\right) \\
+      \text{awmin}\left(E_{\mathrm{fd}}',f_E;0\right) \\
   0 &=
     -\dot{V}_C
     + \dfrac{1}{T_R}
@@ -216,17 +216,8 @@ r_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
 \end{aligned}
 ```
 
-CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
-target and smooth approximation. ESDC1A uses its fixed-lower-bound form,
-
-```math
-\text{awmin}(x,f;\ell)
-  \approx
-  \left[
-    \text{above}(x;\ell)
-    + \left(1-\text{above}(x;\ell)\right)\sigma(f)
-  \right]f.
-```
+The field-voltage-state limiter uses the fixed-lower-bound anti-windup rule
+of [Appendix A](#appendix-a-awmin).
 
 ### Algebraic Equations
 
@@ -387,3 +378,33 @@ Output          | Units  | Description                         | Note
   field-voltage-state limiting, and the optional speed multiplier.
 - `jacobian()` compares the dependency-tracking and Enzyme Jacobians when
   Enzyme support is enabled.
+
+## Appendix A: `awmin`
+
+The exact anti-windup rule at a fixed lower bound $\ell$ is
+
+```math
+\text{awmin}(x,f;\ell) =
+  \begin{cases}
+    f & x > \ell \\
+    \text{max}(f,0) & x \le \ell
+  \end{cases}
+```
+
+Above the bound the unconstrained derivative passes. At or below the bound,
+outward motion is blocked and restoring motion is admitted.
+
+The model evaluates this rule with the following smooth approximation:
+
+```math
+\text{awmin}(x,f;\ell)
+  \approx
+  \left[
+    \sigma(f)
+    + \left(1-\sigma(f)\right)\text{above}(x;\ell)
+  \right]f.
+```
+
+CommonMath defines the [`above`](../../../../CommonMath.md#derived-functions)
+and [`sigmoid`](../../../../CommonMath.md#primitives) targets and smooth
+approximations.
