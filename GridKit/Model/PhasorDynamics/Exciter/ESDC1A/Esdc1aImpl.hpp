@@ -238,7 +238,8 @@ namespace GridKit
         const auto VFE  = static_cast<size_t>(Esdc1aInternalVariables::VFE);
         const auto EFD  = static_cast<size_t>(Esdc1aInternalVariables::EFD);
 
-        if (verify() > 0)
+        bool ret = verify() == 0;
+        if (!ret)
         {
           Log::error() << "Esdc1a: cannot initialize with invalid configuration\n";
           return 1;
@@ -270,22 +271,28 @@ namespace GridKit
 
         const ScalarT vc0 = std::sqrt(Vr() * Vr() + Vi() * Vi());
 
-        if (!std::isfinite(static_cast<RealT>(efd0))
-            || !std::isfinite(static_cast<RealT>(vc0)))
+        ret = std::isfinite(static_cast<RealT>(efd0))
+              && std::isfinite(static_cast<RealT>(vc0));
+        if (!ret)
         {
           Log::error() << "Esdc1a: initial bus voltage and field-voltage seed must be finite\n";
           return 1;
         }
 
-        const ScalarT d0 = ONE<RealT> + spd_on_ * omega0;
-        if (d0 == ZERO<RealT>)
+        const ScalarT speed_multiplier = ONE<RealT> + spd_on_ * omega0;
+
+        ret = std::isfinite(static_cast<RealT>(speed_multiplier))
+              && speed_multiplier > ZERO<RealT>;
+        if (!ret)
         {
-          Log::error() << "Esdc1a: speed multiplier denominator is zero at initialization\n";
+          Log::error() << "Esdc1a: speed multiplier must be finite and positive at initialization\n";
           return 1;
         }
 
-        const ScalarT efdp0 = efd0 / d0;
-        if (exclim_ && efdp0 < ZERO<RealT>)
+        const ScalarT efdp0 = efd0 / speed_multiplier;
+
+        ret = !exclim_ || efdp0 >= ZERO<RealT>;
+        if (!ret)
         {
           Log::error() << "Esdc1a: initial Efd' is below its enabled zero limit\n";
           return 1;
@@ -296,7 +303,8 @@ namespace GridKit
         const ScalarT vr0  = vfe0;
         const ScalarT vhv0 = vr0 / Ka_;
 
-        if (vr0 < Vrmin_ || vr0 > Vrmax_)
+        ret = vr0 >= Vrmin_ && vr0 <= Vrmax_;
+        if (!ret)
         {
           Log::error() << "Esdc1a: initialized VR is outside limits\n";
           return 1;
@@ -308,7 +316,9 @@ namespace GridKit
         if (uel_on_ == ZERO<RealT>)
         {
           const RealT gate_margin0 = static_cast<RealT>(vhv0 - vuel0);
-          if (gate_margin0 <= ZERO<RealT>)
+
+          ret = gate_margin0 > ZERO<RealT>;
+          if (!ret)
           {
             Log::error() << "Esdc1a: smooth high-value gate is active at initialization\n";
             return 1;

@@ -312,17 +312,28 @@ namespace GridKit
         noteExpectedLogs("Testing inadmissible ESDC1A initialization points. "
                          "Logged errors are expected.");
 
-        // An enabled speed multiplier with omega = -1 zeroes the seed
-        // denominator.
+        // An enabled speed multiplier must remain finite and strictly
+        // positive. Other initialization limits are relaxed so these cases
+        // isolate that domain.
         auto speed_data                        = makeData();
         speed_data.parameters[Params::Spdmlt]  = true;
+        speed_data.parameters[Params::exclim]  = false;
+        speed_data.parameters[Params::Vrmin]   = -100.0;
+        speed_data.parameters[Params::Vrmax]   = 100.0;
         success                               *= initializationRejectedAtomically(speed_data,
                                                     1.2,
                                                                                   {{External::OMEGA, -1.0},
                                                                                    {External::VREF, 77.0},
                                                                                    {External::VS, 77.0},
                                                                                    {External::VUEL, -77.0}},
-                                                    "zero speed-multiplier denominator");
+                                                    "zero speed multiplier");
+        success                               *= initializationRejectedAtomically(speed_data,
+                                                    1.2,
+                                                                                  {{External::OMEGA, -1.1},
+                                                                                   {External::VREF, 77.0},
+                                                                                   {External::VS, 77.0},
+                                                                                   {External::VUEL, -77.0}},
+                                                    "negative speed multiplier");
 
         // The enabled exciter lower limit rejects a negative field-voltage
         // state before initialization writes any storage.
@@ -363,6 +374,18 @@ namespace GridKit
         success *= nonfinite.prepare(std::numeric_limits<RealT>::quiet_NaN());
         success *= (nonfinite.esdc1a.initialize() != 0);
         success *= scalarMatches(nonfinite.input(External::VREF), 77.0, "rejected vref preservation");
+
+        // A non-finite speed multiplier is rejected before any signal is
+        // published.
+        Fixture<ScalarT> nonfinite_speed(speed_data);
+        nonfinite_speed.attachAllInputs(77.0);
+        nonfinite_speed.input(External::OMEGA)  = std::numeric_limits<RealT>::infinity();
+        nonfinite_speed.input(External::VUEL)   = -77.0;
+        success                                *= nonfinite_speed.prepare(1.2);
+        success                                *= (nonfinite_speed.esdc1a.initialize() != 0);
+        success                                *= scalarMatches(nonfinite_speed.input(External::VREF),
+                                 77.0,
+                                 "rejected vref preservation");
 
         // An invalid configuration is rejected before any state is written.
         auto invalid_data                   = makeData();

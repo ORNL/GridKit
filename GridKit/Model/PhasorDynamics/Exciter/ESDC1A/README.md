@@ -323,8 +323,9 @@ routed through the gate:
 ```
 
 Initialization rejects a non-finite bus voltage or field-voltage seed,
-$E_{\mathrm{fd}}'<0$ while $s_{\mathrm{lim}}=1$,
-$1 + s_{\mathrm{spd}}\omega = 0$, $V_R$ outside
+a non-finite or nonpositive speed multiplier
+$1 + s_{\mathrm{spd}}\omega$, $E_{\mathrm{fd}}'<0$ while
+$s_{\mathrm{lim}}=1$, $V_R$ outside
 $[V_R^{\min},V_R^{\max}]$, and high-value-gate active starts with
 $s_{\mathrm{UEL}} = 0$ and
 $V_{\mathrm{HV}}\le V_{\mathrm{UEL}}$.
