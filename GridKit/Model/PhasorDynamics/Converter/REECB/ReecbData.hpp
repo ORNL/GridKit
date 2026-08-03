@@ -18,10 +18,10 @@ namespace GridKit
       enum class ReecbParameters
       {
         mva,    ///< \f$S^\mathrm{base}\f$ Component power base [MVA]
-        PfFlag, ///< \f$s_\mathrm{pf}\f$ Power-factor control selector: 1 = power-factor control, 0 = reactive-power control [binary]
-        VFlag,  ///< \f$s_V\f$ Voltage-reference selector under \f$s_Q=1\f$: 1 = cascaded Q-PI voltage command, 0 = direct external voltage reference [binary]
-        QFlag,  ///< \f$s_Q\f$ Reactive-path selector: 1 = Volt/VAr PI control, 0 = reactive-current lag [binary]
-        Pqflag, ///< \f$s_{PQ}\f$ Converter current-priority selector: 1 = P priority, 0 = Q priority [binary]
+        PfFlag, ///< \f$s_\mathrm{pf}\f$ Power-factor control selector: true = power-factor control, false = reactive-power control [boolean]
+        VFlag,  ///< \f$s_V\f$ Voltage-reference selector under \f$s_Q=1\f$: true = cascaded Q-PI voltage command, false = direct external voltage reference [boolean]
+        QFlag,  ///< \f$s_Q\f$ Reactive-path selector: true = Volt/VAr PI control, false = reactive-current lag [boolean]
+        Pqflag, ///< \f$s_{PQ}\f$ Converter current-priority selector: true = P priority, false = Q priority [boolean]
         Trv,    ///< \f$T_\mathrm{rv}\f$ Voltage-measurement filter time constant [sec]
         Tp,     ///< \f$T_\mathrm{p}\f$ Electrical-power measurement filter time constant [sec]
         Vref0,  ///< \f$V^\mathrm{ref}\f$ Reactive-current-injection voltage reference [p.u.]
@@ -88,7 +88,7 @@ namespace GridKit
        * @brief Model data for REECB parameters, bus and signal ports, and monitored variables.
        *
        * @tparam real_type Real parameter value type.
-       * @tparam index_type Integer index and serialized selector type.
+       * @tparam index_type Integer index type.
        *
        * @see Reecb
        */

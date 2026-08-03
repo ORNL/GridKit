@@ -98,7 +98,8 @@ namespace GridKit
           }
         }
 
-        const RealT nan = std::numeric_limits<RealT>::quiet_NaN();
+        const RealT nan      = std::numeric_limits<RealT>::quiet_NaN();
+        const RealT infinity = std::numeric_limits<RealT>::infinity();
         for (const Params parameter : {Params::mva, Params::Trv, Params::Tp, Params::Vref0, Params::Vdip, Params::Vup, Params::dbd1, Params::dbd2, Params::kqv, Params::Iql1, Params::Iqh1, Params::Qmax, Params::Qmin, Params::Kqp, Params::Kqi, Params::Vmax, Params::Vmin, Params::Kvp, Params::Kvi, Params::Tiq, Params::Tpord, Params::dPmax, Params::dPmin, Params::Pmax, Params::Pmin, Params::Imax})
         {
           success *= invalidParameterCase(bus, parameter, nan);
@@ -119,15 +120,28 @@ namespace GridKit
         success *= invalidParameterCase(bus, Params::Imax, -std::numeric_limits<RealT>::infinity());
         success *= invalidParameterCase(bus, Params::mva, true);
 
-        // Selectors accept only bool and integer 0/1 encodings.
         for (const Params flag : {Params::PfFlag, Params::VFlag, Params::QFlag, Params::Pqflag})
         {
-          success *= !invalidParameterCase(bus, flag, static_cast<IdxT>(0));
-          success *= !invalidParameterCase(bus, flag, static_cast<IdxT>(1));
-          success *= invalidParameterCase(bus, flag, static_cast<RealT>(0.0));
-          success *= invalidParameterCase(bus, flag, static_cast<RealT>(1.0));
-          success *= invalidParameterCase(bus, flag, static_cast<IdxT>(2));
-          success *= invalidParameterCase(bus, flag, static_cast<RealT>(0.5));
+          for (const bool value : {false, true})
+          {
+            success *= !invalidParameterCase(bus, flag, value);
+          }
+
+          for (const IdxT value : {static_cast<IdxT>(0),
+                                   static_cast<IdxT>(1),
+                                   static_cast<IdxT>(2)})
+          {
+            success *= invalidParameterCase(bus, flag, value);
+          }
+
+          for (const RealT value : {static_cast<RealT>(0.0),
+                                    static_cast<RealT>(0.5),
+                                    static_cast<RealT>(1.0),
+                                    nan,
+                                    infinity})
+          {
+            success *= invalidParameterCase(bus, flag, value);
+          }
         }
 
         PhasorDynamics::Converter::Reecb<ScalarT, IdxT> busless(nullptr, makeData());

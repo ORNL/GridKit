@@ -764,19 +764,18 @@ namespace GridKit
       }
 
       /**
-       * @brief Load one binary selector
+       * @brief Load one optional Boolean parameter
        *
-       * Boolean values and integer values equal to zero or one are accepted.
-       * Any other value or stored type records a loading error while
-       * preserving the existing default.
+       * Any non-Boolean stored type records a loading error while preserving
+       * the existing default.
        *
        * @param[in] data Model parameter data.
        * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored selector value.
+       * @param[in,out] target Stored Boolean value.
        * @param[in] name Serialized parameter name for diagnostics.
        */
       template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::loadSwitchParameter(
+      void Reecb<scalar_type, index_type>::loadBooleanParameter(
           const ModelDataT& data,
           ReecbParameters   parameter,
           bool&             target,
@@ -792,14 +791,9 @@ namespace GridKit
         {
           target = *bool_value;
         }
-        else if (const auto* index_value = std::get_if<IdxT>(&value);
-                 index_value && (*index_value == 0 || *index_value == 1))
-        {
-          target = (*index_value == 1);
-        }
         else
         {
-          Log::error() << "Reecb: parameter '" << name << "' must be bool or 0/1\n";
+          Log::error() << "Reecb: parameter '" << name << "' must be boolean\n";
           ++parameter_error_count_;
         }
       }
@@ -858,10 +852,10 @@ namespace GridKit
         Vref0_given_           = false;
 
         loadRealParameter(data, Params::mva, mva_base_, "mva");
-        loadSwitchParameter(data, Params::PfFlag, PfFlag_, "PfFlag");
-        loadSwitchParameter(data, Params::VFlag, VFlag_, "VFlag");
-        loadSwitchParameter(data, Params::QFlag, QFlag_, "QFlag");
-        loadSwitchParameter(data, Params::Pqflag, Pqflag_, "Pqflag");
+        loadBooleanParameter(data, Params::PfFlag, PfFlag_, "PfFlag");
+        loadBooleanParameter(data, Params::VFlag, VFlag_, "VFlag");
+        loadBooleanParameter(data, Params::QFlag, QFlag_, "QFlag");
+        loadBooleanParameter(data, Params::Pqflag, Pqflag_, "Pqflag");
         loadRealParameter(data, Params::Trv, Trv_, "Trv");
         loadRealParameter(data, Params::Tp, Tp_, "Tp");
         if (data.parameters.contains(Params::Vref0))

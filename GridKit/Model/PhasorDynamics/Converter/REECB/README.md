@@ -23,41 +23,42 @@ Figure 1: REECB electrical-control model. Figure courtesy of the
 
 ## Model Parameters
 
-Symbol                              | Units    | JSON     | Description                                             | Typical Value | Note
-------------------------------------|----------|----------|---------------------------------------------------------|---------------|-----
-$S^\mathrm{base}$                   | [MVA]    | `mva`    | REECB component power base                              | 100.0         | System power base when omitted
-$s_\mathrm{pf}$                     | [binary] | `PfFlag` | Power-factor control selector                           | 0             | 1 = power-factor control, 0 = reactive-power control
-$s_V$                               | [binary] | `VFlag`  | Voltage-reference selector under $s_Q=1$                | 0             | 1 = cascaded Q-PI voltage command, 0 = direct external voltage reference
-$s_Q$                               | [binary] | `QFlag`  | Reactive-path selector                                  | 0             | 1 = Volt/VAr PI control, 0 = reactive-current lag
-$s_{PQ}$                            | [binary] | `Pqflag` | Converter current-priority selector                     | 0             | 1 = P priority, 0 = Q priority
-$T_\mathrm{rv}$                     | [sec]    | `Trv`    | Voltage-measurement filter time constant                | 0.02          | State 1 in Fig. 1
-$T_\mathrm{p}$                      | [sec]    | `Tp`     | Electrical-power measurement filter time constant       | 0.0           | State 2 in Fig. 1
-$V^\mathrm{ref}$                    | [p.u.]   | `Vref0`  | Reactive-current-injection voltage reference            | $V_T$         | Initialized from terminal voltage when omitted
-$V_\mathrm{dip}$                    | [p.u.]   | `Vdip`   | Low-voltage threshold for the voltage-band gate         | 0.85          |
-$V_\mathrm{up}$                     | [p.u.]   | `Vup`    | High-voltage threshold for the voltage-band gate        | 1.15          |
-$D_1^\mathrm{db}$                   | [p.u.]   | `dbd1`   | Lower deadband threshold for voltage-error response     | 0.0           |
-$D_2^\mathrm{db}$                   | [p.u.]   | `dbd2`   | Upper deadband threshold for voltage-error response     | 0.0           |
-$K_\mathrm{qv}$                     | [p.u.]   | `kqv`    | Reactive-current injection gain                         | 5.0           |
-$I_{q,\mathrm{inj}}^{\min}$         | [p.u.]   | `Iql1`   | Minimum reactive-current injection                      | -1.1          |
-$I_{q,\mathrm{inj}}^{\max}$         | [p.u.]   | `Iqh1`   | Maximum reactive-current injection                      | 1.1           |
-$Q^{\max}$                          | [p.u.]   | `Qmax`   | Maximum reactive-power control output                   | 0.436         |
-$Q^{\min}$                          | [p.u.]   | `Qmin`   | Minimum reactive-power control output                   | -0.436        |
-$K_\mathrm{qp}$                     | [p.u.]   | `Kqp`    | Reactive-power controller proportional gain            | 0.0           |
-$K_\mathrm{qi}$                     | [p.u./s] | `Kqi`    | Reactive-power controller integral gain                | 0.1           |
-$V^{\max}$                          | [p.u.]   | `Vmax`   | Maximum voltage-control output                          | 1.1           |
-$V^{\min}$                          | [p.u.]   | `Vmin`   | Minimum voltage-control output                          | 0.9           |
-$K_\mathrm{vp}$                     | [p.u.]   | `Kvp`    | Voltage controller proportional gain                   | 18.0          |
-$K_\mathrm{vi}$                     | [p.u./s] | `Kvi`    | Voltage controller integral gain                       | 5.0           |
-$T_\mathrm{iq}$                     | [sec]    | `Tiq`    | Reactive-current command lag time constant              | 0.02          | State 5 in Fig. 1
-$T_\mathrm{pord}$                   | [sec]    | `Tpord`  | Active-power order filter time constant                 | 0.02          | State 6 in Fig. 1
-$R_P^{\max}$                        | [p.u./s] | `dPmax`  | Positive active-power order ramp-rate limit             | 99.0          |
-$R_P^{\min}$                        | [p.u./s] | `dPmin`  | Negative active-power order ramp-rate limit             | -99.0         |
-$P^{\max}$                          | [p.u.]   | `Pmax`   | Maximum active-power order                              | 1.0           |
-$P^{\min}$                          | [p.u.]   | `Pmin`   | Minimum active-power order                              | 0.0           |
-$I^{\max}$                          | [p.u.]   | `Imax`   | Maximum converter current                               | 1.3           |
+Symbol                              | Units     | JSON     | Description                                             | Typical Value | Note
+------------------------------------|-----------|----------|---------------------------------------------------------|---------------|-----
+$S^\mathrm{base}$                   | [MVA]     | `mva`    | REECB component power base                              | 100.0         | System power base when omitted
+$s_\mathrm{pf}$                     | [boolean] | `PfFlag` | Power-factor control selector                           | `false`       | `true` = power-factor control, `false` = reactive-power control
+$s_V$                               | [boolean] | `VFlag`  | Voltage-reference selector under $s_Q=1$                | `false`       | `true` = cascaded Q-PI voltage command, `false` = direct external voltage reference
+$s_Q$                               | [boolean] | `QFlag`  | Reactive-path selector                                  | `false`       | `true` = Volt/VAr PI control, `false` = reactive-current lag
+$s_{PQ}$                            | [boolean] | `Pqflag` | Converter current-priority selector                     | `false`       | `true` = P priority, `false` = Q priority
+$T_\mathrm{rv}$                     | [sec]     | `Trv`    | Voltage-measurement filter time constant                | 0.02          | State 1 in Fig. 1
+$T_\mathrm{p}$                      | [sec]     | `Tp`     | Electrical-power measurement filter time constant       | 0.0           | State 2 in Fig. 1
+$V^\mathrm{ref}$                    | [p.u.]    | `Vref0`  | Reactive-current-injection voltage reference            | $V_T$         | Initialized from terminal voltage when omitted
+$V_\mathrm{dip}$                    | [p.u.]    | `Vdip`   | Low-voltage threshold for the voltage-band gate         | 0.85          |
+$V_\mathrm{up}$                     | [p.u.]    | `Vup`    | High-voltage threshold for the voltage-band gate        | 1.15          |
+$D_1^\mathrm{db}$                   | [p.u.]    | `dbd1`   | Lower deadband threshold for voltage-error response     | 0.0           |
+$D_2^\mathrm{db}$                   | [p.u.]    | `dbd2`   | Upper deadband threshold for voltage-error response     | 0.0           |
+$K_\mathrm{qv}$                     | [p.u.]    | `kqv`    | Reactive-current injection gain                         | 5.0           |
+$I_{q,\mathrm{inj}}^{\min}$         | [p.u.]    | `Iql1`   | Minimum reactive-current injection                      | -1.1          |
+$I_{q,\mathrm{inj}}^{\max}$         | [p.u.]    | `Iqh1`   | Maximum reactive-current injection                      | 1.1           |
+$Q^{\max}$                          | [p.u.]    | `Qmax`   | Maximum reactive-power control output                   | 0.436         |
+$Q^{\min}$                          | [p.u.]    | `Qmin`   | Minimum reactive-power control output                   | -0.436        |
+$K_\mathrm{qp}$                     | [p.u.]    | `Kqp`    | Reactive-power controller proportional gain             | 0.0           |
+$K_\mathrm{qi}$                     | [p.u./s]  | `Kqi`    | Reactive-power controller integral gain                 | 0.1           |
+$V^{\max}$                          | [p.u.]    | `Vmax`   | Maximum voltage-control output                          | 1.1           |
+$V^{\min}$                          | [p.u.]    | `Vmin`   | Minimum voltage-control output                          | 0.9           |
+$K_\mathrm{vp}$                     | [p.u.]    | `Kvp`    | Voltage controller proportional gain                    | 18.0          |
+$K_\mathrm{vi}$                     | [p.u./s]  | `Kvi`    | Voltage controller integral gain                        | 5.0           |
+$T_\mathrm{iq}$                     | [sec]     | `Tiq`    | Reactive-current command lag time constant              | 0.02          | State 5 in Fig. 1
+$T_\mathrm{pord}$                   | [sec]     | `Tpord`  | Active-power order filter time constant                 | 0.02          | State 6 in Fig. 1
+$R_P^{\max}$                        | [p.u./s]  | `dPmax`  | Positive active-power order ramp-rate limit             | 99.0          |
+$R_P^{\min}$                        | [p.u./s]  | `dPmin`  | Negative active-power order ramp-rate limit             | -99.0         |
+$P^{\max}$                          | [p.u.]    | `Pmax`   | Maximum active-power order                              | 1.0           |
+$P^{\min}$                          | [p.u.]    | `Pmin`   | Minimum active-power order                              | 0.0           |
+$I^{\max}$                          | [p.u.]    | `Imax`   | Maximum converter current                               | 1.3           |
 
 All parameters are optional. An omitted parameter starts from its Typical
-Value; the time-constant floor below is then applied.
+Value; the time-constant floor below is then applied. Real-valued parameters
+accept real or integer JSON values; selectors require Boolean JSON values.
 
 ### Parameter Validation
 
@@ -66,7 +67,6 @@ Invalid REECB parameter sets are rejected by the following checks:
 ```math
 \begin{aligned}
   S^\mathrm{base} &> 0,\quad \text{when provided} \\
-  s_\mathrm{pf},s_V,s_Q,s_{PQ} &\in\{0,1\} \\
   T_\mathrm{rv},T_\mathrm{p},T_\mathrm{iq},T_\mathrm{pord} &\ge 0 \\
   V_\mathrm{dip} &< V_\mathrm{up} \\
   D_1^\mathrm{db} &\le 0 \le D_2^\mathrm{db} \\
