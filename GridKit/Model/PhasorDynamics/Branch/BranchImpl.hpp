@@ -361,6 +361,8 @@ namespace GridKit
       readRealParameter(data, Parameter::B, B_);
       readRealParameter(data, Parameter::Gmag, Gmag_);
       readRealParameter(data, Parameter::Bmag, Bmag_);
+      readRealParameter(data, Parameter::tap, tap_);
+      readRealParameter(data, Parameter::phase, phase_);
 
       if (data.buses.contains(Buses::bus1))
       {
@@ -385,10 +387,10 @@ namespace GridKit
     {
       bool update_admittance = false;
 
-      if (signals_.template isAttached<BranchExternalVariables::TAP>())
+      if (ports_.in.template port<BranchSignalInputs::tap>().connected())
       {
         const RealT tap = static_cast<RealT>(
-            signals_.template readExternalVariable<BranchExternalVariables::TAP>());
+            ports_.in.template port<BranchSignalInputs::tap>().readSignal());
         if (tap != tap_)
         {
           tap_              = tap;
@@ -396,10 +398,10 @@ namespace GridKit
         }
       }
 
-      if (signals_.template isAttached<BranchExternalVariables::PHASE>())
+      if (ports_.in.template port<BranchSignalInputs::phase>().connected())
       {
         const RealT phase = static_cast<RealT>(
-            signals_.template readExternalVariable<BranchExternalVariables::PHASE>());
+            ports_.in.template port<BranchSignalInputs::phase>().readSignal());
         if (phase != phase_)
         {
           phase_            = phase;
@@ -407,10 +409,10 @@ namespace GridKit
         }
       }
 
-      if (signals_.template isAttached<BranchExternalVariables::OPEN>())
+      if (ports_.in.template port<BranchSignalInputs::open>().connected())
       {
         open_ = static_cast<RealT>(
-            signals_.template readExternalVariable<BranchExternalVariables::OPEN>());
+            ports_.in.template port<BranchSignalInputs::open>().readSignal());
       }
 
       if (update_admittance)

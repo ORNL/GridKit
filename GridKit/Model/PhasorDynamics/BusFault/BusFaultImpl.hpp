@@ -295,11 +295,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     bool BusFault<scalar_type, index_type>::active() const
     {
-      static constexpr auto ACTIVE = BusFaultExternalVariables::ACTIVE;
+      static constexpr auto ACTIVE = BusFaultSignalInputs::active;
 
-      return signals_.template isAttached<ACTIVE>()
-             && signals_.template isLinked<ACTIVE>()
-             && signals_.template readExternalVariable<ACTIVE>() != ScalarT{0.0};
+      return ports_.in.template port<ACTIVE>().connected()
+             && ports_.in.template port<ACTIVE>().linked()
+             && ports_.in.template port<ACTIVE>().readSignal() != ScalarT{0.0};
     }
 
     /**

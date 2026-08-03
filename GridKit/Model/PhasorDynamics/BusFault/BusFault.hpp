@@ -1,5 +1,6 @@
 /* Bus Fault Component - Adam Birchfield */
 #pragma once
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
@@ -45,11 +46,10 @@ namespace GridKit
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = BusFaultData<RealT, IdxT>;
+      using PortsT = SignalPorts<ScalarT, ModelDataT>;
+      PortsT& getPorts() { return ports_; }
+      const PortsT& getPorts() const { return ports_; }
       using MonitorT   = Model::VariableMonitor<BusFault, BusFaultData>;
-      using SignalsT   = ComponentSignals<ScalarT,
-                                          IdxT,
-                                          NoVariables,
-                                          BusFaultExternalVariables>;
 
       BusFault(BusT* bus);
       BusFault(BusT* bus, RealT R, RealT X);
@@ -73,10 +73,6 @@ namespace GridKit
       {
       }
 
-      SignalsT& getSignals()
-      {
-        return signals_;
-      }
 
     public:
       void setR(RealT R)
@@ -94,6 +90,7 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
+      PortsT ports_;
       void setDerivedParams();
       bool active() const;
 
@@ -129,7 +126,6 @@ namespace GridKit
       RealT X_{0.0};
       IdxT  bus_id_{0};
 
-      SignalsT signals_;
 
       /* Derivied parameters */
       RealT B_;

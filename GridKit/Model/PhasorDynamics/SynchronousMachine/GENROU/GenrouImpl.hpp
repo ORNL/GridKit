@@ -259,12 +259,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     bool Genrou<scalar_type, index_type>::isOnline() const
     {
-      static constexpr auto ONLINE = GenrouExternalVariables::ONLINE;
+      static constexpr auto ONLINE = GenrouSignalInputs::online;
 
-      if (signals_.template isAttached<ONLINE>()
-          && signals_.template isLinked<ONLINE>())
+      if (ports_.in.template port<ONLINE>().connected()
+          && ports_.in.template port<ONLINE>().linked())
       {
-        return signals_.template readExternalVariable<ONLINE>() != ScalarT{ZERO<RealT>};
+        return ports_.in.template port<ONLINE>().readSignal() != ScalarT{ZERO<RealT>};
       }
 
       return true;
@@ -391,15 +391,15 @@ namespace GridKit
       ScalarT p_system = ScalarT{0.0};
       ScalarT q_system = ScalarT{0.0};
 
-      static constexpr auto P = GenrouExternalVariables::P;
-      static constexpr auto Q = GenrouExternalVariables::Q;
-      if (signals_.template isAttached<P>() && signals_.template isLinked<P>())
+      static constexpr auto P = GenrouSignalInputs::p;
+      static constexpr auto Q = GenrouSignalInputs::q;
+      if (ports_.in.template port<P>().connected() && ports_.in.template port<P>().linked())
       {
-        p_system = signals_.template readExternalVariable<P>();
+        p_system = ports_.in.template port<P>().readSignal();
       }
-      if (signals_.template isAttached<Q>() && signals_.template isLinked<Q>())
+      if (ports_.in.template port<Q>().connected() && ports_.in.template port<Q>().linked())
       {
-        q_system = signals_.template readExternalVariable<Q>();
+        q_system = ports_.in.template port<Q>().readSignal();
       }
       ScalarT p   = this->toComponentBase(p_system);
       ScalarT q   = this->toComponentBase(q_system);
@@ -652,8 +652,8 @@ namespace GridKit
       evaluateBusResidual(y, yp, wb, h);
 
       const ScalarT connected  = onlineFactor();
-      Ir()                    += connected * h_[0];
-      Ii()                    += connected * h_[1];
+      Ir()                    += connected * h_.getData()[0];
+      Ii()                    += connected * h_.getData()[1];
 
       if (bus_->size() > 0)
       {

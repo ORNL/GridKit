@@ -89,7 +89,7 @@ namespace GridKit
                                                                                                  J_vals_buffer_,
                                                                                                  nnz_);
 
-      if (!status_) // Value contributions from DfDwb and DhDy only when status_
+      if (!active()) // Value contributions from DfDwb and DhDy only when status_
       {
         for (IdxT i = nnz_tmp; i < nnz_; ++i)
         {

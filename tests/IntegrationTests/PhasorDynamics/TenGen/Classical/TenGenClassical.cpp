@@ -27,22 +27,6 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
-/// Machine data shared by the example generators
-GridKit::PhasorDynamics::GenClassicalData<real_type, index_type> genData(real_type p0, real_type q0)
-{
-  using Parameter = GridKit::PhasorDynamics::GenClassicalParameters;
-
-  GridKit::PhasorDynamics::GenClassicalData<real_type, index_type> data;
-  data.parameters[Parameter::p0]  = p0;
-  data.parameters[Parameter::q0]  = q0;
-  data.parameters[Parameter::H]   = 3.0;
-  data.parameters[Parameter::D]   = 0.1;
-  data.parameters[Parameter::Ra]  = 0.0;
-  data.parameters[Parameter::Xdp] = 0.2;
-
-  return data;
-}
-
 int main()
 {
   using namespace GridKit::PhasorDynamics;
@@ -104,18 +88,18 @@ int main()
       &gen2, &gen3, &gen4, &gen5, &gen6, &gen7, &gen8, &gen9, &gen10};
   for (std::size_t i = 0; i < generators.size(); ++i)
   {
-    p_signals[i].set(&p[i], &p_indices[i]);
-    q_signals[i].set(&q[i], &q_indices[i]);
-    generators[i]->getSignals().template attachSignalNode<GenClassicalExternalVariables::P>(&p_signals[i]);
-    generators[i]->getSignals().template attachSignalNode<GenClassicalExternalVariables::Q>(&q_signals[i]);
+    p_signals[i].link(&p[i], &p_indices[i]);
+    q_signals[i].link(&q[i], &q_indices[i]);
+    generators[i]->getPorts().in.template port<GenClassicalSignalInputs::p>().connect(&p_signals[i]);
+    generators[i]->getPorts().in.template port<GenClassicalSignalInputs::q>().connect(&q_signals[i]);
   }
 
   BusFault<scalar_type, index_type>   fault(&bus10, 0, 1e-5);
   scalar_type                         fault_active{0.0};
   index_type                          fault_active_index{GridKit::INVALID_INDEX<index_type>};
   SignalNode<scalar_type, index_type> fault_active_signal;
-  fault_active_signal.set(&fault_active, &fault_active_index);
-  fault.getSignals().template attachSignalNode<BusFaultExternalVariables::ACTIVE>(
+  fault_active_signal.link(&fault_active, &fault_active_index);
+  fault.getPorts().in.template port<BusFaultSignalInputs::active>().connect(
       &fault_active_signal);
 
   /* Connect everything together */
