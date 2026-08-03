@@ -170,6 +170,15 @@ namespace GridKit
         RealT tap   = RealT{1.0};
         RealT phase = RealT{0.0};
         RealT open  = RealT{0.0};
+        auto readOperatingParameter = [&](auto parameter, RealT& value)
+        {
+          if (auto entry = branchdata.parameters.find(parameter); entry != branchdata.parameters.end())
+          {
+            std::visit([&](auto supplied) { value = static_cast<RealT>(supplied); }, entry->second);
+          }
+        };
+        readOperatingParameter(BranchParameters::tap, tap);
+        readOperatingParameter(BranchParameters::phase, phase);
         if (branchdata.initial_state)
         {
           const auto& state = *branchdata.initial_state;
@@ -182,9 +191,9 @@ namespace GridKit
         auto* phase_signal = addMappedInput(branchdata, BranchSignalInputs::phase, "phase", phase);
         auto* open_signal  = addMappedInput(branchdata, BranchSignalInputs::open, "open", open);
 
-        branch->getSignals().template attachSignalNode<BranchExternalVariables::TAP>(tap_signal);
-        branch->getSignals().template attachSignalNode<BranchExternalVariables::PHASE>(phase_signal);
-        branch->getSignals().template attachSignalNode<BranchExternalVariables::OPEN>(open_signal);
+        branch->getPorts().in.template port<BranchSignalInputs::tap>().connect(tap_signal);
+        branch->getPorts().in.template port<BranchSignalInputs::phase>().connect(phase_signal);
+        branch->getPorts().in.template port<BranchSignalInputs::open>().connect(open_signal);
         addComponent(branch);
       }
 
@@ -207,7 +216,7 @@ namespace GridKit
 
         auto* online_signal = addMappedInput(
             loaddata, LoadZSignalInputs::online, "online", online);
-        load->getSignals().template attachSignalNode<LoadZExternalVariables::ONLINE>(online_signal);
+        load->getPorts().in.template port<LoadZSignalInputs::online>().connect(online_signal);
         addComponent(load);
       }
 
@@ -231,9 +240,9 @@ namespace GridKit
         auto* online_signal = addMappedInput(
             loadzipdata, LoadZIPSignalInputs::online, "online", inputs.online);
 
-        loadzip->getSignals().template attachSignalNode<LoadZIPExternalVariables::P>(p_signal);
-        loadzip->getSignals().template attachSignalNode<LoadZIPExternalVariables::Q>(q_signal);
-        loadzip->getSignals().template attachSignalNode<LoadZIPExternalVariables::ONLINE>(online_signal);
+        loadzip->getPorts().in.template port<LoadZIPSignalInputs::p>().connect(p_signal);
+        loadzip->getPorts().in.template port<LoadZIPSignalInputs::q>().connect(q_signal);
+        loadzip->getPorts().in.template port<LoadZIPSignalInputs::online>().connect(online_signal);
         addComponent(loadzip);
       }
 
@@ -253,22 +262,22 @@ namespace GridKit
         if (gendata.signal_outputs.contains(GenrouSignalOutputs::speed))
         {
           IdxT           speed = gendata.signal_outputs.at(GenrouSignalOutputs::speed);
-          constexpr auto OMEGA = GenrouInternalVariables::OMEGA;
-          gen->getSignals().template assignSignalNode<OMEGA>(getSignal(speed));
+          constexpr auto OMEGA = GenrouSignalOutputs::speed;
+          gen->getPorts().out.template port<OMEGA>().connect(signal_nodes_[speed]);
         }
 
         if (gendata.signal_inputs.contains(GenrouSignalInputs::pmech))
         {
           IdxT           pmech = gendata.signal_inputs.at(GenrouSignalInputs::pmech);
-          constexpr auto PM    = GenrouExternalVariables::PM;
-          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
+          constexpr auto PM    = GenrouSignalInputs::pmech;
+          gen->getPorts().in.template port<PM>().connect(signal_nodes_[pmech]);
         }
 
         if (gendata.signal_inputs.contains(GenrouSignalInputs::efd))
         {
           IdxT           efd = gendata.signal_inputs.at(GenrouSignalInputs::efd);
-          constexpr auto EFD = GenrouExternalVariables::EFD;
-          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
+          constexpr auto EFD = GenrouSignalInputs::efd;
+          gen->getPorts().in.template port<EFD>().connect(signal_nodes_[efd]);
         }
 
         auto inputs = dispatchInputs(gendata);
@@ -280,9 +289,9 @@ namespace GridKit
         auto* online_signal = addMappedInput(
             gendata, GenrouSignalInputs::online, "online", inputs.online);
 
-        gen->getSignals().template attachSignalNode<GenrouExternalVariables::P>(p_signal);
-        gen->getSignals().template attachSignalNode<GenrouExternalVariables::Q>(q_signal);
-        gen->getSignals().template attachSignalNode<GenrouExternalVariables::ONLINE>(online_signal);
+        gen->getPorts().in.template port<GenrouSignalInputs::p>().connect(p_signal);
+        gen->getPorts().in.template port<GenrouSignalInputs::q>().connect(q_signal);
+        gen->getPorts().in.template port<GenrouSignalInputs::online>().connect(online_signal);
 
         addComponent(gen);
       }
@@ -301,22 +310,22 @@ namespace GridKit
         if (gendata.signal_outputs.contains(GensalSignalOutputs::speed))
         {
           IdxT           speed = gendata.signal_outputs.at(GensalSignalOutputs::speed);
-          constexpr auto OMEGA = GensalInternalVariables::OMEGA;
-          gen->getSignals().template assignSignalNode<OMEGA>(getSignal(speed));
+          constexpr auto OMEGA = GensalSignalOutputs::speed;
+          gen->getPorts().out.template port<OMEGA>().connect(signal_nodes_[speed]);
         }
 
         if (gendata.signal_inputs.contains(GensalSignalInputs::pmech))
         {
           IdxT           pmech = gendata.signal_inputs.at(GensalSignalInputs::pmech);
-          constexpr auto PM    = GensalExternalVariables::PM;
-          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
+          constexpr auto PM    = GensalSignalInputs::pmech;
+          gen->getPorts().in.template port<PM>().connect(signal_nodes_[pmech]);
         }
 
         if (gendata.signal_inputs.contains(GensalSignalInputs::efd))
         {
           IdxT           efd = gendata.signal_inputs.at(GensalSignalInputs::efd);
-          constexpr auto EFD = GensalExternalVariables::EFD;
-          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
+          constexpr auto EFD = GensalSignalInputs::efd;
+          gen->getPorts().in.template port<EFD>().connect(signal_nodes_[efd]);
         }
 
         auto inputs = dispatchInputs(gendata);
@@ -328,9 +337,9 @@ namespace GridKit
         auto* online_signal = addMappedInput(
             gendata, GensalSignalInputs::online, "online", inputs.online);
 
-        gen->getSignals().template attachSignalNode<GensalExternalVariables::P>(p_signal);
-        gen->getSignals().template attachSignalNode<GensalExternalVariables::Q>(q_signal);
-        gen->getSignals().template attachSignalNode<GensalExternalVariables::ONLINE>(online_signal);
+        gen->getPorts().in.template port<GensalSignalInputs::p>().connect(p_signal);
+        gen->getPorts().in.template port<GensalSignalInputs::q>().connect(q_signal);
+        gen->getPorts().in.template port<GensalSignalInputs::online>().connect(online_signal);
 
         addComponent(gen);
       }
@@ -344,6 +353,7 @@ namespace GridKit
           bus_index = gendata.buses.at(GenClassicalBuses::bus);
         }
         auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
+        gen->getPorts().connect(gendata, signal_nodes_);
 
         auto inputs = dispatchInputs(gendata);
 
@@ -354,9 +364,9 @@ namespace GridKit
         auto* online_signal = addMappedInput(
             gendata, GenClassicalSignalInputs::online, "online", inputs.online);
 
-        gen->getSignals().template attachSignalNode<GenClassicalExternalVariables::P>(p_signal);
-        gen->getSignals().template attachSignalNode<GenClassicalExternalVariables::Q>(q_signal);
-        gen->getSignals().template attachSignalNode<GenClassicalExternalVariables::ONLINE>(online_signal);
+        gen->getPorts().in.template port<GenClassicalSignalInputs::p>().connect(p_signal);
+        gen->getPorts().in.template port<GenClassicalSignalInputs::q>().connect(q_signal);
+        gen->getPorts().in.template port<GenClassicalSignalInputs::online>().connect(online_signal);
         addComponent(gen);
       }
 
@@ -497,7 +507,7 @@ namespace GridKit
 
         auto* active_signal = addMappedInput(
             faultdata, BusFaultSignalInputs::active, "active", active);
-        fault->getSignals().template attachSignalNode<BusFaultExternalVariables::ACTIVE>(
+        fault->getPorts().in.template port<BusFaultSignalInputs::active>().connect(
             active_signal);
 
         addComponent(fault);
@@ -962,7 +972,7 @@ namespace GridKit
       {
         // An explicit graph connection supplies the value and takes
         // precedence over State.
-        signal = getSignal(*signal_id);
+        signal = signal_nodes_[*signal_id];
       }
       else
       {

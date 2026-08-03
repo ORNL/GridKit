@@ -1,3 +1,4 @@
+gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Hawaii/Hawaii.state.json)
 gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/Hawaii/Hawaii.case.json)
 gridkit_example_add_file(Hawaii.solver.json)
 add_subdirectory(reference)

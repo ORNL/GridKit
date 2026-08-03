@@ -1,3 +1,4 @@
+gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/WECC240/WECC240.state.json)
 gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/WECC240/WECC240.case.json)
 gridkit_example_add_file(WECC240.solver.json)
 add_subdirectory(reference)

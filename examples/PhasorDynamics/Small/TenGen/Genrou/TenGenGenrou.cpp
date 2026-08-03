@@ -82,18 +82,18 @@ int main()
       &gen2, &gen3, &gen4, &gen5, &gen6, &gen7, &gen8, &gen9, &gen10};
   for (std::size_t i = 0; i < generators.size(); ++i)
   {
-    p_signals[i].set(&p[i], &p_indices[i]);
-    q_signals[i].set(&q[i], &q_indices[i]);
-    generators[i]->getSignals().template attachSignalNode<GenrouExternalVariables::P>(&p_signals[i]);
-    generators[i]->getSignals().template attachSignalNode<GenrouExternalVariables::Q>(&q_signals[i]);
+    p_signals[i].link(&p[i], &p_indices[i]);
+    q_signals[i].link(&q[i], &q_indices[i]);
+    generators[i]->getPorts().in.template port<GenrouSignalInputs::p>().connect(&p_signals[i]);
+    generators[i]->getPorts().in.template port<GenrouSignalInputs::q>().connect(&q_signals[i]);
   }
 
   BusFault<scalar_type, index_type>   fault(&bus10, 0, 1e-5);
   scalar_type                         fault_active{0.0};
   index_type                          fault_active_index{GridKit::INVALID_INDEX<index_type>};
   SignalNode<scalar_type, index_type> fault_active_signal;
-  fault_active_signal.set(&fault_active, &fault_active_index);
-  fault.getSignals().template attachSignalNode<BusFaultExternalVariables::ACTIVE>(
+  fault_active_signal.link(&fault_active, &fault_active_index);
+  fault.getPorts().in.template port<BusFaultSignalInputs::active>().connect(
       &fault_active_signal);
 
   /* Connect everything together */

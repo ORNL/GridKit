@@ -21,13 +21,13 @@ else()
     phasor_dynamics_bus_fault
     SOURCES BusFault.cpp
     HEADERS ${_install_headers}
-    LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core)
+    LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core GridKit::phasor_dynamics_signal)
 endif()
 
 gridkit_add_library(
   phasor_dynamics_bus_fault_dependency_tracking
   SOURCES BusFaultDependencyTracking.cpp
-  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core)
+  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core GridKit::phasor_dynamics_signal_dependency_tracking)
 
 # Link to interface target for all components
 target_link_libraries(

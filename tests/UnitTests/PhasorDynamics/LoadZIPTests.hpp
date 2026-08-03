@@ -65,10 +65,10 @@ namespace GridKit
         IdxT                                       q_index{1};
         PhasorDynamics::SignalNode<ScalarT, IdxT>  p_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT>  q_node;
-        p_node.set(&p_value, &p_index);
-        q_node.set(&q_value, &q_index);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::P>(&p_node);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::Q>(&q_node);
+        p_node.link(&p_value, &p_index);
+        q_node.link(&q_value, &q_index);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::p>().connect(&p_node);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::q>().connect(&q_node);
 
         bus.allocate();
         load.allocate();
@@ -96,7 +96,14 @@ namespace GridKit
         const RealT Qnom{0.5};
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.2, 0.9);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, Pnom, Qnom, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 0.2, 0.4);
+        ScalarT p_input{-Pnom}, q_input{-Qnom};
+        IdxT input_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> p_node, q_node;
+        p_node.link(&p_input, &input_index);
+        q_node.link(&q_input, &input_index);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::p>().connect(&p_node);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::q>().connect(&q_node);
 
         bus.allocate();
         load.allocate();
@@ -127,6 +134,9 @@ namespace GridKit
         bus.Vi() = 0.0;
         bus.y().setDataUpdated();
         success *= load.initialize() != 0;
+        return success.report(__func__);
+      }
+
       TestOutcome signalInputs()
       {
         TestStatus success = true;
@@ -146,14 +156,14 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> p_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT> q_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT> online_node;
-        p_node.set(&p_value, &p_index);
-        q_node.set(&q_value, &q_index);
-        online_node.set(&online_value, &online_index);
+        p_node.link(&p_value, &p_index);
+        q_node.link(&q_value, &q_index);
+        online_node.link(&online_value, &online_index);
 
-        auto& signals = load.getSignals();
-        signals.template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::P>(&p_node);
-        signals.template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::Q>(&q_node);
-        signals.template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::ONLINE>(&online_node);
+        auto& signals = load.getPorts();
+        signals.in.template port<PhasorDynamics::LoadZIPSignalInputs::p>().connect(&p_node);
+        signals.in.template port<PhasorDynamics::LoadZIPSignalInputs::q>().connect(&q_node);
+        signals.in.template port<PhasorDynamics::LoadZIPSignalInputs::online>().connect(&online_node);
 
         bus.allocate();
         load.allocate();
@@ -202,8 +212,8 @@ namespace GridKit
         Variable                                   online_value{0.0};
         IdxT                                       online_index{0};
         PhasorDynamics::SignalNode<Variable, IdxT> online_node;
-        online_node.set(&online_value, &online_index);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::ONLINE>(&online_node);
+        online_node.link(&online_value, &online_index);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::online>().connect(&online_node);
 
         bus.allocate();
         load.allocate();
@@ -249,10 +259,10 @@ namespace GridKit
         IdxT                                       q_index{1};
         PhasorDynamics::SignalNode<ScalarT, IdxT>  p_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT>  q_node;
-        p_node.set(&p_value, &p_index);
-        q_node.set(&q_value, &q_index);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::P>(&p_node);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::Q>(&q_node);
+        p_node.link(&p_value, &p_index);
+        q_node.link(&q_value, &q_index);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::p>().connect(&p_node);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::q>().connect(&q_node);
 
         bus.allocate();
         load.allocate();
@@ -289,10 +299,10 @@ namespace GridKit
         IdxT                                       q_index{1};
         PhasorDynamics::SignalNode<ScalarT, IdxT>  p_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT>  q_node;
-        p_node.set(&p_value, &p_index);
-        q_node.set(&q_value, &q_index);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::P>(&p_node);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::Q>(&q_node);
+        p_node.link(&p_value, &p_index);
+        q_node.link(&q_value, &q_index);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::p>().connect(&p_node);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::q>().connect(&q_node);
 
         bus.allocate();
         load.allocate();
@@ -358,77 +368,40 @@ namespace GridKit
         PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT>    load(&bus, alphaI, alphaP);
         DependencyTracking::Variable                                   p_value{p};
         DependencyTracking::Variable                                   q_value{q};
-        IdxT                                                           p_index{0};
-        IdxT                                                           q_index{1};
+        IdxT                                      p_index{0};
+        IdxT                                      q_index{1};
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> p_node;
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> q_node;
-        p_node.set(&p_value, &p_index);
-        q_node.set(&q_value, &q_index);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::P>(&p_node);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::Q>(&q_node);
+        p_node.link(&p_value, &p_index);
+        q_node.link(&q_value, &q_index);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::p>().connect(&p_node);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::q>().connect(&q_node);
 
         bus.allocate();
         load.allocate();
-
-        for (size_t i = 0; i < bus.size(); ++i)
+        for (IdxT i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+          bus.setVariableIndex(i, i + load.size());
+          bus.setResidualIndex(i, i + load.size());
         }
-        bus.y().setDataUpdated();
-
-        bus.evaluateResidual();
-        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                 ///< the dependencies
-        auto&                                     residual_y_view = load.getResidual();
-        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         bus.initialize();
         load.initialize();
 
-        auto* load_yp = load.yp().getData();
-        for (size_t i = 0; i < load.size(); ++i)
-        {
-          load_yp[i].setVariableNumber(i);
-        }
-        load.yp().setDataUpdated();
+        load.updateTime(0.0, 1.0);
 
         bus.evaluateResidual();
-        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                 ///< the dependencies
-        auto&                                     residual_yp_view = load.getResidual();
-        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
+        load.evaluateResidual(); //< Tracks dependencies
+        bus.evaluateJacobian();
+        load.evaluateJacobian();
+        load.constructCsr();
+        auto* model_jacobian = load.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: LoadZIP DependencyTracking Jacobian\n";
+        model_jacobian->print();
 
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
-        for (IdxT i = 0; i < residual_y.size(); ++i)
-        {
-          auto dependency_y  = residual_y[i].getDependencies();
-          auto dependency_yp = residual_yp[i].getDependencies();
-
-          for (const auto& pair_y : dependency_y)
-          {
-            auto it_yp = dependency_yp.find(pair_y.first);
-            if (it_yp != dependency_yp.end())
-            {
-              dependencies[i].insert(std::make_pair(pair_y.first, pair_y.second + it_yp->second));
-            }
-            else
-            {
-              dependencies[i].insert(std::make_pair(pair_y.first, pair_y.second));
-            }
-          }
-
-          for (const auto& pair_yp : dependency_yp)
-          {
-            if (!dependency_y.contains(pair_yp.first))
-            {
-              dependencies[i].insert(std::make_pair(pair_yp.first, pair_yp.second));
-            }
-          }
-        }
-
-        return dependencies;
+        return GridKit::Testing::MapFromCsr(model_jacobian);
       }
+
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
           const RealT p, const RealT q, const RealT alphaI, const RealT alphaP)
@@ -444,45 +417,17 @@ namespace GridKit
         IdxT                                      q_index{1};
         PhasorDynamics::SignalNode<ScalarT, IdxT> p_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT> q_node;
-        p_node.set(&p_value, &p_index);
-        q_node.set(&q_value, &q_index);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::P>(&p_node);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZIPExternalVariables::Q>(&q_node);
+        p_node.link(&p_value, &p_index);
+        q_node.link(&q_value, &q_index);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::p>().connect(&p_node);
+        load.getPorts().in.template port<PhasorDynamics::LoadZIPSignalInputs::q>().connect(&q_node);
 
         bus.allocate();
         load.allocate();
-
-        bus.initialize();
-        load.initialize();
-
-        load.updateTime(0.0, 1.0);
-
-        bus.evaluateResidual();
-        load.evaluateResidual(); //< Tracks dependencies
-        load.evaluateJacobian(); //< Converts dependencies to CSR
-        auto* model_jacobian = load.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: LoadZIP DependencyTracking Jacobian\n";
-        model_jacobian->print();
-
-        return GridKit::Testing::MapFromCsr(model_jacobian);
-      }
-
-      std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          const RealT Pnom, const RealT Qnom, const RealT alphaI, const RealT alphaP)
-      {
-        ScalarT Vr{0.3};
-        ScalarT Vi{0.4};
-
-        PhasorDynamics::Bus<ScalarT, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, Pnom, Qnom, alphaI, alphaP);
-
-        bus.allocate();
-        load.allocate();
-
-        for (size_t i = 0; i < bus.size(); ++i)
+        for (IdxT i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+          bus.setVariableIndex(i, i + load.size());
+          bus.setResidualIndex(i, i + load.size());
         }
 
         bus.initialize();
@@ -491,8 +436,7 @@ namespace GridKit
         load.updateTime(0.0, 1.0);
 
         bus.evaluateResidual();
-        load.evaluateResidual();
-
+        load.evaluateResidual(); //< Tracks dependencies
         bus.evaluateJacobian();
         load.evaluateJacobian();
         load.constructCsr();
@@ -502,6 +446,8 @@ namespace GridKit
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
+
+
 #endif
 
     private:

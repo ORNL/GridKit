@@ -97,8 +97,8 @@ namespace GridKit
         Variable                                   online_value{0.0};
         IdxT                                       online_index{0};
         PhasorDynamics::SignalNode<Variable, IdxT> online_node;
-        online_node.set(&online_value, &online_index);
-        load.getSignals().template attachSignalNode<PhasorDynamics::LoadZExternalVariables::ONLINE>(&online_node);
+        online_node.link(&online_value, &online_index);
+        load.getPorts().in.template port<PhasorDynamics::LoadZSignalInputs::online>().connect(&online_node);
 
         bus.allocate();
         load.allocate();

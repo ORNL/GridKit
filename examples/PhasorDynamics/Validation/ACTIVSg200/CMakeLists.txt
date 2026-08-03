@@ -1,3 +1,4 @@
+gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/ACTIVSg200/ACTIVSg200.state.json)
 gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/PhasorDynamics/ACTIVSg200/ACTIVSg200.case.json)
 gridkit_example_add_file(ACTIVSg200.solver.json)
 add_subdirectory(reference)

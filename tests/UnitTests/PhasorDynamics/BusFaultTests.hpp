@@ -63,8 +63,8 @@ namespace GridKit
         ScalarT                                   active_value{active ? 1.0 : 0.0};
         IdxT                                      active_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<ScalarT, IdxT> active_signal;
-        active_signal.set(&active_value, &active_index);
-        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::ACTIVE>(
+        active_signal.link(&active_value, &active_index);
+        fault.getPorts().in.template port<PhasorDynamics::BusFaultSignalInputs::active>().connect(
             &active_signal);
         bus.allocate();
         bus.initialize();
@@ -106,7 +106,7 @@ namespace GridKit
         // Jacobian via Enzyme
         auto enzyme_jacobian = EnzymeJacobian(R, X, active);
 
-        if (!status)
+        if (!active)
         {
           // HACK: Enzyme retains the fixed DfDwb/DhDy structure and masks its
           // inactive values to exact zero, while DependencyTracking omits them.
@@ -138,8 +138,8 @@ namespace GridKit
         DependencyTracking::Variable                                   active_value{active ? 1.0 : 0.0};
         IdxT                                                           active_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> active_signal;
-        active_signal.set(&active_value, &active_index);
-        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::ACTIVE>(
+        active_signal.link(&active_value, &active_index);
+        fault.getPorts().in.template port<PhasorDynamics::BusFaultSignalInputs::active>().connect(
             &active_signal);
 
         bus.allocate();
@@ -178,8 +178,8 @@ namespace GridKit
         ScalarT                                   active_value{active ? 1.0 : 0.0};
         IdxT                                      active_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<ScalarT, IdxT> active_signal;
-        active_signal.set(&active_value, &active_index);
-        fault.getSignals().template attachSignalNode<PhasorDynamics::BusFaultExternalVariables::ACTIVE>(
+        active_signal.link(&active_value, &active_index);
+        fault.getPorts().in.template port<PhasorDynamics::BusFaultSignalInputs::active>().connect(
             &active_signal);
 
         bus.allocate();

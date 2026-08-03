@@ -1,4 +1,5 @@
 #pragma once
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
@@ -48,11 +49,10 @@ namespace GridKit
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using BusT       = BusBase<ScalarT, IdxT>;
       using ModelDataT = LoadZData<RealT, IdxT>;
+      using PortsT = SignalPorts<ScalarT, ModelDataT>;
+      PortsT& getPorts() { return ports_; }
+      const PortsT& getPorts() const { return ports_; }
       using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
-      using SignalsT   = ComponentSignals<ScalarT,
-                                          IdxT,
-                                          NoVariables,
-                                          LoadZExternalVariables>;
 
       LoadZ(BusT* bus);
       LoadZ(BusT* bus, RealT R, RealT X);
@@ -68,10 +68,6 @@ namespace GridKit
       virtual int evaluateJacobian() override final;
 
       /// Get the signal connections for this load.
-      SignalsT& getSignals()
-      {
-        return signals_;
-      }
 
       virtual int verify() const override final
       {
@@ -92,6 +88,7 @@ namespace GridKit
       }
 
     private:
+      PortsT ports_;
       void    initializeMonitor();
       void    setDerivedParams();
       ScalarT online() const;
@@ -132,7 +129,6 @@ namespace GridKit
       RealT b_;
       RealT g_;
 
-      SignalsT signals_;
 
       std::unique_ptr<MonitorT> monitor_;
     };
