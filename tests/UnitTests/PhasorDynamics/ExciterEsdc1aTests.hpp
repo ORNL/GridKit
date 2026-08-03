@@ -1134,36 +1134,60 @@ namespace GridKit
         implicit_defaults.attachAllInputs();
         explicit_defaults.attachAllInputs();
 
-        TestStatus success = implicit_defaults.initialize(1.2)
-                             && explicit_defaults.initialize(1.2);
+        bool success = implicit_defaults.initialize(1.2)
+                       && explicit_defaults.initialize(1.2);
         if (!success)
         {
           std::cout << "ESDC1A documented-default comparison failed to initialize\n";
           return false;
         }
 
-        success *= (implicit_defaults.evaluate() == 0);
-        success *= (explicit_defaults.evaluate() == 0);
-        success *= vectorUnchanged(implicit_defaults.esdc1a.y(),
-                                   copyVector(explicit_defaults.esdc1a.y()),
-                                   "documented-default state");
-        success *= vectorUnchanged(implicit_defaults.esdc1a.yp(),
-                                   copyVector(explicit_defaults.esdc1a.yp()),
-                                   "documented-default derivative");
-        success *= vectorUnchanged(implicit_defaults.esdc1a.getResidual(),
-                                   copyVector(explicit_defaults.esdc1a.getResidual()),
-                                   "documented-default residual");
+        if (implicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (explicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.esdc1a.y(),
+                             copyVector(explicit_defaults.esdc1a.y()),
+                             "documented-default state"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.esdc1a.yp(),
+                             copyVector(explicit_defaults.esdc1a.yp()),
+                             "documented-default derivative"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.esdc1a.getResidual(),
+                             copyVector(explicit_defaults.esdc1a.getResidual()),
+                             "documented-default residual"))
+        {
+          success = false;
+        }
 
         setAnswerKeyInputs(implicit_defaults);
         setAnswerKeyInputs(explicit_defaults);
         setAnswerKeyState(implicit_defaults.esdc1a);
         setAnswerKeyState(explicit_defaults.esdc1a);
-        success *= (implicit_defaults.evaluate() == 0);
-        success *= (explicit_defaults.evaluate() == 0);
-        success *= vectorUnchanged(implicit_defaults.esdc1a.getResidual(),
-                                   copyVector(explicit_defaults.esdc1a.getResidual()),
-                                   "documented-default dynamic residual");
-        return static_cast<bool>(success);
+        if (implicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (explicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.esdc1a.getResidual(),
+                             copyVector(explicit_defaults.esdc1a.getResidual()),
+                             "documented-default dynamic residual"))
+        {
+          success = false;
+        }
+        return success;
       }
 
       template <typename ValueT>
@@ -1198,13 +1222,16 @@ namespace GridKit
                            const std::vector<RealT>& snapshot,
                            const char*               what) const
       {
-        TestStatus  success = true;
+        bool        success = true;
         const auto* values  = vector.getData();
         for (size_t i = 0; i < snapshot.size(); ++i)
         {
-          success *= rowMatches(static_cast<RealT>(values[i]), snapshot[i], what, i, "changed");
+          if (!rowMatches(static_cast<RealT>(values[i]), snapshot[i], what, i, "changed"))
+          {
+            success = false;
+          }
         }
-        return static_cast<bool>(success);
+        return success;
       }
 
       /// An initialization input retains exactly the value supplied by its
@@ -1266,24 +1293,36 @@ namespace GridKit
         const auto y_before  = copyVector(fixture.esdc1a.y());
         const auto yp_before = copyVector(fixture.esdc1a.yp());
 
-        TestStatus success = true;
+        bool success = true;
         if (fixture.esdc1a.initialize() == 0)
         {
           std::cout << "Expected initialization rejection: " << label << "\n";
           success = false;
         }
 
-        success *= scalarMatches(fixture.efd(), efd_seed, "rejected efd preservation");
+        if (!scalarMatches(fixture.efd(), efd_seed, "rejected efd preservation"))
+        {
+          success = false;
+        }
         for (const auto& [port, value] : inputs)
         {
-          success *= scalarPreserved(static_cast<RealT>(fixture.input(port)),
-                                     value,
-                                     "external input",
-                                     static_cast<size_t>(port));
+          if (!scalarPreserved(static_cast<RealT>(fixture.input(port)),
+                               value,
+                               "external input",
+                               static_cast<size_t>(port)))
+          {
+            success = false;
+          }
         }
-        success *= vectorUnchanged(fixture.esdc1a.y(), y_before, "state");
-        success *= vectorUnchanged(fixture.esdc1a.yp(), yp_before, "derivative");
-        return static_cast<bool>(success);
+        if (!vectorUnchanged(fixture.esdc1a.y(), y_before, "state"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.esdc1a.yp(), yp_before, "derivative"))
+        {
+          success = false;
+        }
+        return success;
       }
 
       /// Write state rows and publish the update, folding in the
@@ -1339,14 +1378,17 @@ namespace GridKit
                      const char*    what,
                      const char*    context) const
       {
-        TestStatus  success = true;
+        bool        success = true;
         const auto* values  = vector.getData();
         for (const auto& [variable, expected] : rows)
         {
-          const auto row  = static_cast<size_t>(variable);
-          success        *= rowMatches(static_cast<RealT>(values[row]), expected, what, row, context);
+          const auto row = static_cast<size_t>(variable);
+          if (!rowMatches(static_cast<RealT>(values[row]), expected, what, row, context))
+          {
+            success = false;
+          }
         }
-        return static_cast<bool>(success);
+        return success;
       }
 
       bool residualsMatch(const Esdc1aT&      esdc1a,
@@ -1368,15 +1410,21 @@ namespace GridKit
       /// derivative is zero.
       bool allResidualsZero(const Esdc1aT& esdc1a) const
       {
-        TestStatus  success = true;
+        bool        success = true;
         const auto* f       = esdc1a.getResidual().getData();
         const auto* yp      = esdc1a.yp().getData();
         for (size_t row = 0; row < static_cast<size_t>(esdc1a.getResidual().getSize()); ++row)
         {
-          success *= rowMatches(static_cast<RealT>(f[row]), 0.0, "residual", row, "at rest");
-          success *= rowMatches(static_cast<RealT>(yp[row]), 0.0, "derivative", row, "at rest");
+          if (!rowMatches(static_cast<RealT>(f[row]), 0.0, "residual", row, "at rest"))
+          {
+            success = false;
+          }
+          if (!rowMatches(static_cast<RealT>(yp[row]), 0.0, "derivative", row, "at rest"))
+          {
+            success = false;
+          }
         }
-        return static_cast<bool>(success);
+        return success;
       }
 
       bool scalarMatches(ScalarT     actual,
