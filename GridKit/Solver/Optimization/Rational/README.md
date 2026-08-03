@@ -3,7 +3,8 @@
 This directory holds the model space for rational approximation of sampled
 frequency responses: the sampled-data carrier, the rational model itself, and
 the operations performed on a model or its samples — delay preprocessing,
-exact-rank state-space realization, and passivity assessment. Estimators live
+passivity assessment, and (planned) exact-rank state-space realization.
+Estimators live
 beside this directory; [vector fitting](../VectorFitting/README.md) is the
 first. In short: everything one does with a rational model except fit it.
 
@@ -50,21 +51,26 @@ operators.
 
 ## State-Space Realization
 
-For consumers of the factorized form
+`StateSpaceRealization.hpp` fixes the carrier for the factorized form
 $\hat{\mathbf{H}}(s) = \mathbf{D} + s\mathbf{E}
-+ \mathbf{C}(s\mathbf{I} - \mathbf{P})^{-1}\mathbf{B}$, each residue matrix
-is factored at its numerical rank, so the realization is exact and reduces to
-the rank-one form for scalar and vector responses automatically. The output
-matches the
++ \mathbf{C}(s\mathbf{I} - \mathbf{P})^{-1}\mathbf{B}$, matching the
 [`StateSpace` model](../../../Model/EMT/Operators/Rational/StateSpace/README.md)
-coefficient contract (`D`, `E`, `poles`, `C`, `B`).
+coefficient contract (`D`, `E`, `poles`, `C`, `B`). The factorization of
+a rational model into this carrier -- each residue matrix at its
+numerical rank, so the realization is exact and reduces to the rank-one
+form for scalar and vector responses -- is planned and not implemented
+yet; nothing exports it today.
 
 ## Passivity
 
-A fitted admittance intended for time-domain use is screened by sweeping the
-smallest eigenvalue of the Hermitian part of $\mathbf{Y}(\mathrm{j}\omega)$
-over a logarithmic grid spanning the pole magnitudes, with violation band
-edges refined by bisection and reported as frequency bands. The exact
+A fitted admittance intended for time-domain use is first gated on
+stability, then screened by sweeping the smallest eigenvalue of the
+Hermitian part of $\mathbf{Y}(\mathrm{j}\omega)$ at DC, over a
+logarithmic grid spanning the union of the fitted band and the pole
+magnitudes, and at the asymptotic limit through the constant term.
+Violation band edges inside the grid are refined by bisection and
+reported as frequency bands; a DC violation starts at zero exactly, and
+an indefinite constant term extends its band to infinity. The exact
 Hamiltonian eigenvalue certification [1] and enforcement by minimal
 coefficient perturbation are planned follow-ons; the latter reuses the
 constrained coefficient identification of the estimator.

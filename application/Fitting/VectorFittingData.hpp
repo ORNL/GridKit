@@ -23,8 +23,8 @@ namespace GridKit
       struct FitSettings
       {
         size_t        poles{10};
-        size_t        min_poles{2};   ///< Order search bounds.
-        size_t        max_poles{0};   ///< Order search when > 0.
+        size_t        min_poles{2}; ///< Order search bounds.
+        size_t        max_poles{0}; ///< Order search when > 0.
         double        target_rel_rms{1.0e-3};
         RationalTerms terms{RationalTerms::CONSTANT};
         Weighting     weighting{Weighting::UNIFORM};
@@ -32,12 +32,11 @@ namespace GridKit
 
       struct VectorFittingData
       {
-        std::filesystem::path samples;      ///< Sampled-response CSV.
-        size_t                rows{1};      ///< Output dimension N.
-        size_t                cols{1};      ///< Input dimension K.
+        std::filesystem::path samples; ///< Sampled-response CSV.
+        size_t                rows{1}; ///< Output dimension N.
+        size_t                cols{1}; ///< Input dimension K.
         FitSettings           fit;
         std::filesystem::path output_model; ///< Rational model JSON.
-        std::filesystem::path output_state_space; ///< Optional, empty skips.
       };
     } // namespace Application
   } // namespace Optimization

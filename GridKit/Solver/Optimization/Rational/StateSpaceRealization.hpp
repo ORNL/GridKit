@@ -43,14 +43,9 @@ namespace GridKit
       IdxT                  cols{1};
     };
 
-    /**
-     * @brief Factor a rational model into its state-space realization.
-     *
-     * @return 0 on success, negative when a residue factorization fails
-     */
-    template <typename scalar_type, typename index_type>
-    [[nodiscard("May fail. Check error code.")]]
-    int toStateSpace(const RationalModel<scalar_type, index_type>& model,
-                     StateSpaceRealization<scalar_type, index_type>& realization);
+    // The factorization of a rational model into this realization is
+    // planned alongside the StateSpace operator; the carrier above fixes
+    // the target contract, and the function lands with the
+    // implementation.
   } // namespace Optimization
 } // namespace GridKit

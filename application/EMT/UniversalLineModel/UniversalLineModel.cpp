@@ -652,7 +652,10 @@ namespace
 
     GridKit::Optimization::PassivityReport<scalar_type, index_type> report;
     const int                                                       passivity =
-        GridKit::Optimization::assessPassivity(yc_model, report);
+        GridKit::Optimization::assessPassivity(yc_model,
+                                               report,
+                                               yc.omega.front(),
+                                               yc.omega.back());
     if (passivity != 0)
     {
       Log::error() << "Passivity assessment failed with code " << passivity

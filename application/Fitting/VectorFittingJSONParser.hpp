@@ -167,9 +167,10 @@ namespace GridKit
         }
         if (output.contains("state_space"))
         {
-          data.output_state_space =
-              output.at("state_space")
-                  .template get<std::filesystem::path>();
+          throw std::runtime_error(
+              "VectorFitting output \"state_space\" is not supported yet; "
+              "the export arrives with the StateSpaceRealization "
+              "implementation");
         }
 
         const auto base_path = solver_file.parent_path();
@@ -180,10 +181,6 @@ namespace GridKit
         if (!data.output_model.is_absolute())
         {
           data.output_model = base_path / data.output_model;
-        }
-        if (!data.output_state_space.empty() && !data.output_state_space.is_absolute())
-        {
-          data.output_state_space = base_path / data.output_state_space;
         }
 
         return data;

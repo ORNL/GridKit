@@ -157,12 +157,6 @@ namespace
     }
     stream << modelToJson(model).dump(2) << "\n";
 
-    if (!spec.output_state_space.empty())
-    {
-      std::cout << "Note: state-space export arrives with the "
-                   "StateSpaceRealization implementation; skipped.\n";
-    }
-
     // A relocation iteration that stops at its pass limit still yields a
     // usable model; only a missed order-search target is a failure here.
     return status == 2 ? 2 : 0;
