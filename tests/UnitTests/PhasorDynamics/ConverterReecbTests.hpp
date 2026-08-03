@@ -1599,8 +1599,14 @@ namespace GridKit
         const auto* yp      = reecb.yp().getData();
         for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
         {
-          success &= scalarMatches(f[row], 0.0, "steady residual");
-          success &= scalarMatches(yp[row], 0.0, "steady derivative");
+          if (!scalarMatches(f[row], 0.0, "steady residual"))
+          {
+            success = false;
+          }
+          if (!scalarMatches(yp[row], 0.0, "steady derivative"))
+          {
+            success = false;
+          }
         }
         return success;
       }
