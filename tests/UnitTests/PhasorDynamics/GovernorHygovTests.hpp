@@ -1039,27 +1039,51 @@ namespace GridKit
           return false;
         }
 
-        success *= (implicit_defaults.evaluate() == 0);
-        success *= (explicit_defaults.evaluate() == 0);
-        success *= vectorUnchanged(implicit_defaults.hygov.y(),
-                                   copyVector(explicit_defaults.hygov.y()),
-                                   "documented-default state");
-        success *= vectorUnchanged(implicit_defaults.hygov.yp(),
-                                   copyVector(explicit_defaults.hygov.yp()),
-                                   "documented-default derivative");
-        success *= vectorUnchanged(implicit_defaults.hygov.getResidual(),
-                                   copyVector(explicit_defaults.hygov.getResidual()),
-                                   "documented-default residual");
+        if (implicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (explicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.hygov.y(),
+                             copyVector(explicit_defaults.hygov.y()),
+                             "documented-default state"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.hygov.yp(),
+                             copyVector(explicit_defaults.hygov.yp()),
+                             "documented-default derivative"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.hygov.getResidual(),
+                             copyVector(explicit_defaults.hygov.getResidual()),
+                             "documented-default residual"))
+        {
+          success = false;
+        }
 
         setAnswerKeyInputs(implicit_defaults);
         setAnswerKeyInputs(explicit_defaults);
         setAnswerKeyState(implicit_defaults.hygov);
         setAnswerKeyState(explicit_defaults.hygov);
-        success *= (implicit_defaults.evaluate() == 0);
-        success *= (explicit_defaults.evaluate() == 0);
-        success *= vectorUnchanged(implicit_defaults.hygov.getResidual(),
-                                   copyVector(explicit_defaults.hygov.getResidual()),
-                                   "documented-default dynamic residual");
+        if (implicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (explicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.hygov.getResidual(),
+                             copyVector(explicit_defaults.hygov.getResidual()),
+                             "documented-default dynamic residual"))
+        {
+          success = false;
+        }
         return success;
       }
 
@@ -1090,7 +1114,10 @@ namespace GridKit
         const auto* values  = vector.getData();
         for (size_t i = 0; i < snapshot.size(); ++i)
         {
-          success &= rowMatches(static_cast<RealT>(values[i]), snapshot[i], what, i, "changed");
+          if (!rowMatches(static_cast<RealT>(values[i]), snapshot[i], what, i, "changed"))
+          {
+            success = false;
+          }
         }
         return success;
       }
@@ -1140,13 +1167,30 @@ namespace GridKit
           success = false;
         }
 
-        success *= scalarMatches(fixture.pmech(), pmech, "rejected pmech preservation");
-        success *= scalarMatches(
-            fixture.input(External::OMEGA), omega, "rejected omega preservation");
-        success *= scalarMatches(fixture.input(External::PREF), 77.0, "rejected pref preservation");
-        success *= scalarMatches(fixture.input(External::PAUX), 0.02, "rejected paux preservation");
-        success *= vectorUnchanged(fixture.hygov.y(), y_before, "state");
-        success *= vectorUnchanged(fixture.hygov.yp(), yp_before, "derivative");
+        if (!scalarMatches(fixture.pmech(), pmech, "rejected pmech preservation"))
+        {
+          success = false;
+        }
+        if (!scalarMatches(fixture.input(External::OMEGA), omega, "rejected omega preservation"))
+        {
+          success = false;
+        }
+        if (!scalarMatches(fixture.input(External::PREF), 77.0, "rejected pref preservation"))
+        {
+          success = false;
+        }
+        if (!scalarMatches(fixture.input(External::PAUX), 0.02, "rejected paux preservation"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.hygov.y(), y_before, "state"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.hygov.yp(), yp_before, "derivative"))
+        {
+          success = false;
+        }
         return success;
       }
 
@@ -1188,15 +1232,24 @@ namespace GridKit
         {
           Fixture<ScalarT> fixture(data);
           fixture.attachAllInputs();
-          success &= fixture.initialize(pmech);
+          if (!fixture.initialize(pmech))
+          {
+            success = false;
+          }
           for (const auto& [port, value] : test_case.inputs)
           {
             fixture.input(port) = static_cast<ScalarT>(value);
           }
           setState(fixture.hygov, test_case.state);
           setDerivative(fixture.hygov, test_case.derivative);
-          success &= (fixture.evaluate() == 0);
-          success &= residualsMatch(fixture.hygov, test_case.expected, test_case.label);
+          if (fixture.evaluate() != 0)
+          {
+            success = false;
+          }
+          if (!residualsMatch(fixture.hygov, test_case.expected, test_case.label))
+          {
+            success = false;
+          }
         }
         return success;
       }
@@ -1239,8 +1292,11 @@ namespace GridKit
         const auto* values  = vector.getData();
         for (const auto& [variable, expected] : rows)
         {
-          const auto row  = static_cast<size_t>(variable);
-          success        &= rowMatches(static_cast<RealT>(values[row]), expected, what, row, context);
+          const auto row = static_cast<size_t>(variable);
+          if (!rowMatches(static_cast<RealT>(values[row]), expected, what, row, context))
+          {
+            success = false;
+          }
         }
         return success;
       }
@@ -1268,8 +1324,14 @@ namespace GridKit
         const auto* yp      = hygov.yp().getData();
         for (size_t row = 0; row < static_cast<size_t>(hygov.getResidual().getSize()); ++row)
         {
-          success &= rowMatches(static_cast<RealT>(f[row]), 0.0, "residual", row, "at rest");
-          success &= rowMatches(static_cast<RealT>(yp[row]), 0.0, "derivative", row, "at rest");
+          if (!rowMatches(static_cast<RealT>(f[row]), 0.0, "residual", row, "at rest"))
+          {
+            success = false;
+          }
+          if (!rowMatches(static_cast<RealT>(yp[row]), 0.0, "derivative", row, "at rest"))
+          {
+            success = false;
+          }
         }
         return success;
       }
