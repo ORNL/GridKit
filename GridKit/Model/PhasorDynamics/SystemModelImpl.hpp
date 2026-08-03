@@ -351,13 +351,13 @@ namespace GridKit
 
       for (const auto& excitedata : data.esdc1a)
       {
-        IdxT bus_index = 0;
+        BusT* bus = nullptr;
         if (excitedata.buses.contains(Esdc1aBuses::bus))
         {
-          bus_index = excitedata.buses.at(Esdc1aBuses::bus);
+          bus = getBus(excitedata.buses.at(Esdc1aBuses::bus));
         }
 
-        auto* exciter = new Esdc1a<ScalarT, IdxT>(getBus(bus_index), excitedata);
+        auto* exciter = new Esdc1a<ScalarT, IdxT>(bus, excitedata);
 
         if (excitedata.signal_inputs.contains(Esdc1aSignalInputs::speed))
         {
