@@ -30,6 +30,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -462,20 +463,24 @@ namespace
     const auto k            = tv.rows;
     const auto sample_count = tv.omega.size();
 
+    // The anchor row maximizes the mode's minimum magnitude over the
+    // sweep: the gauge rotation divides by the anchor entry at every
+    // sample, so the row must stay away from zero everywhere, which a
+    // sweep-mean winner does not guarantee.
     std::vector<index_type> anchor(static_cast<size_t>(k), 0);
     for (index_type mode = 0; mode < k; ++mode)
     {
       double best = -1.0;
       for (index_type row = 0; row < k; ++row)
       {
-        double mean = 0.0;
+        double smallest = std::numeric_limits<double>::infinity();
         for (size_t m = 0; m < sample_count; ++m)
         {
-          mean += std::abs(tv(m, row, mode));
+          smallest = std::min(smallest, std::abs(tv(m, row, mode)));
         }
-        if (mean > best)
+        if (smallest > best)
         {
-          best                              = mean;
+          best                              = smallest;
           anchor[static_cast<size_t>(mode)] = row;
         }
       }

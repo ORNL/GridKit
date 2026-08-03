@@ -28,11 +28,12 @@ namespace GridKit
        *
        * Poses the sweep as a DAE in s = ln(omega) and integrates it with
        * IDA, emitting one monitor sample per grid point. The model's
-       * monitor configuration decides where samples go, so drivers that
-       * collect samples in memory attach their own monitor sink before
-       * calling. Every state is algebraic and error-controlled against
-       * the model's per-variable absolute tolerances scaled by
-       * ida_settings.tolerance.
+       * monitor configuration decides where samples go; the monitor has
+       * no in-memory sink today, so a driver that needs the samples
+       * points a CSV sink at a file and reads it back, as
+       * UniversalLineModel does. Every state is algebraic and
+       * error-controlled against the model's per-variable absolute
+       * tolerances scaled by ida_settings.tolerance.
        *
        * @return 0 only when the sweep reached the stop frequency and
        *         emitted exactly frequency.points monitor samples; -1 on

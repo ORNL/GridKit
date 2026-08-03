@@ -177,7 +177,9 @@ int main(int argc, const char* argv[])
     const auto stop   = Clock::now();
     const auto dur    = std::chrono::duration<double>(stop - start);
     std::cout << "\n\nComplete in " << dur << "\n";
-    return retval;
+    // Internal negative failure codes would wrap modulo 256 into large
+    // shell statuses; 1 is the documented hard-failure exit.
+    return retval < 0 ? 1 : retval;
   }
   catch (const std::exception& e)
   {

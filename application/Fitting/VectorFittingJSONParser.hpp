@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -129,9 +130,17 @@ namespace GridKit
           const auto& fit = j.at("fit");
           Detail::rejectUnsupportedVocabulary(fit);
 
-          data.fit.poles     = fit.value("poles", data.fit.poles);
-          data.fit.min_poles = fit.value("min_poles", data.fit.min_poles);
-          data.fit.max_poles = fit.value("max_poles", data.fit.max_poles);
+          // Pole counts are read signed and validated before the cast:
+          // a negative JSON value converted straight into size_t would
+          // wrap to a huge count and sail past the positivity checks.
+          const auto poles =
+              fit.value("poles", static_cast<long long>(data.fit.poles));
+          const auto min_poles =
+              fit.value("min_poles",
+                        static_cast<long long>(data.fit.min_poles));
+          const auto max_poles =
+              fit.value("max_poles",
+                        static_cast<long long>(data.fit.max_poles));
           data.fit.target_rel_rms =
               fit.value("target_rel_rms", data.fit.target_rel_rms);
           data.fit.terms = Detail::parseTerms(
@@ -139,16 +148,20 @@ namespace GridKit
           data.fit.weighting = Detail::parseWeighting(
               fit.value("weighting", std::string{"uniform"}));
 
-          if (data.fit.poles < 1)
+          if (poles < 1)
           {
             throw std::runtime_error(
                 "fit: \"poles\" must be positive");
           }
-          if (data.fit.max_poles != 0 && (data.fit.min_poles < 1 || data.fit.max_poles < data.fit.min_poles))
+          if (max_poles < 0
+              || (max_poles != 0 && (min_poles < 1 || max_poles < min_poles)))
           {
             throw std::runtime_error(
                 "fit: pole bounds must satisfy 1 <= min <= max");
           }
+          data.fit.poles     = static_cast<size_t>(poles);
+          data.fit.min_poles = static_cast<size_t>(std::max(min_poles, 1LL));
+          data.fit.max_poles = static_cast<size_t>(max_poles);
           if (!(data.fit.target_rel_rms > 0.0))
           {
             throw std::runtime_error(
