@@ -1311,27 +1311,51 @@ namespace GridKit
           return false;
         }
 
-        success *= (implicit_defaults.evaluate() == 0);
-        success *= (explicit_defaults.evaluate() == 0);
-        success *= vectorUnchanged(implicit_defaults.gastpti.y(),
-                                   copyVector(explicit_defaults.gastpti.y()),
-                                   "documented-default state");
-        success *= vectorUnchanged(implicit_defaults.gastpti.yp(),
-                                   copyVector(explicit_defaults.gastpti.yp()),
-                                   "documented-default derivative");
-        success *= vectorUnchanged(implicit_defaults.gastpti.getResidual(),
-                                   copyVector(explicit_defaults.gastpti.getResidual()),
-                                   "documented-default residual");
+        if (implicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (explicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.gastpti.y(),
+                             copyVector(explicit_defaults.gastpti.y()),
+                             "documented-default state"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.gastpti.yp(),
+                             copyVector(explicit_defaults.gastpti.yp()),
+                             "documented-default derivative"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.gastpti.getResidual(),
+                             copyVector(explicit_defaults.gastpti.getResidual()),
+                             "documented-default residual"))
+        {
+          success = false;
+        }
 
         setAnswerKeyInputs(implicit_defaults);
         setAnswerKeyInputs(explicit_defaults);
         setAnswerKeyState(implicit_defaults.gastpti);
         setAnswerKeyState(explicit_defaults.gastpti);
-        success *= (implicit_defaults.evaluate() == 0);
-        success *= (explicit_defaults.evaluate() == 0);
-        success *= vectorUnchanged(implicit_defaults.gastpti.getResidual(),
-                                   copyVector(explicit_defaults.gastpti.getResidual()),
-                                   "documented-default dynamic residual");
+        if (implicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (explicit_defaults.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(implicit_defaults.gastpti.getResidual(),
+                             copyVector(explicit_defaults.gastpti.getResidual()),
+                             "documented-default dynamic residual"))
+        {
+          success = false;
+        }
         return success;
       }
 
@@ -1372,15 +1396,27 @@ namespace GridKit
         ModelT pref_alias(makeData());
         pref_alias.getSignals().template assignSignalNode<Vars::PMECH>(&pmech_pref);
         pref_alias.getSignals().template attachSignalNode<Ext::PREF>(&pmech_pref);
-        success *= (pref_alias.allocate() == 0);
-        success *= (pref_alias.verify() > 0);
+        if (pref_alias.allocate() != 0)
+        {
+          success = false;
+        }
+        if (!(pref_alias.verify() > 0))
+        {
+          success = false;
+        }
 
         NodeT  pmech_speed;
         ModelT speed_alias(makeData());
         speed_alias.getSignals().template assignSignalNode<Vars::PMECH>(&pmech_speed);
         speed_alias.getSignals().template attachSignalNode<Ext::OMEGA>(&pmech_speed);
-        success *= (speed_alias.allocate() == 0);
-        success *= (speed_alias.verify() > 0);
+        if (speed_alias.allocate() != 0)
+        {
+          success = false;
+        }
+        if (!(speed_alias.verify() > 0))
+        {
+          success = false;
+        }
 
         ScalarT shared_value{ZERO<RealT>};
         IdxT    shared_index{static_cast<IdxT>(99)};
@@ -1392,8 +1428,14 @@ namespace GridKit
         input_alias.getSignals().template assignSignalNode<Vars::PMECH>(&pmech);
         input_alias.getSignals().template attachSignalNode<Ext::OMEGA>(&shared_input);
         input_alias.getSignals().template attachSignalNode<Ext::PREF>(&shared_input);
-        success *= (input_alias.allocate() == 0);
-        success *= (input_alias.verify() > 0);
+        if (input_alias.allocate() != 0)
+        {
+          success = false;
+        }
+        if (!(input_alias.verify() > 0))
+        {
+          success = false;
+        }
 
         return success;
       }
@@ -1471,17 +1513,32 @@ namespace GridKit
           success = false;
         }
 
-        success *= scalarExactlyMatches(fixture.pmech(),
-                                        pmech,
-                                        "rejected pmech seed preservation");
-        success *= scalarExactlyMatches(fixture.input(index(Ext::OMEGA)),
-                                        omega,
-                                        "rejected omega preservation");
-        success *= scalarExactlyMatches(fixture.input(index(Ext::PREF)),
-                                        77.0,
-                                        "rejected pref preservation");
-        success *= vectorUnchanged(fixture.gastpti.y(), y_before, "state");
-        success *= vectorUnchanged(fixture.gastpti.yp(), yp_before, "derivative");
+        if (!scalarExactlyMatches(fixture.pmech(),
+                                  pmech,
+                                  "rejected pmech seed preservation"))
+        {
+          success = false;
+        }
+        if (!scalarExactlyMatches(fixture.input(index(Ext::OMEGA)),
+                                  omega,
+                                  "rejected omega preservation"))
+        {
+          success = false;
+        }
+        if (!scalarExactlyMatches(fixture.input(index(Ext::PREF)),
+                                  77.0,
+                                  "rejected pref preservation"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.gastpti.y(), y_before, "state"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.gastpti.yp(), yp_before, "derivative"))
+        {
+          success = false;
+        }
         return success;
       }
 
@@ -1543,8 +1600,11 @@ namespace GridKit
         const auto* values  = vector.getData();
         for (size_t i = 0; i < count; ++i)
         {
-          const auto& [row, expected]  = rows[i];
-          success                     &= rowMatches(static_cast<RealT>(values[row]), expected, what, row, context);
+          const auto& [row, expected] = rows[i];
+          if (!rowMatches(static_cast<RealT>(values[row]), expected, what, row, context))
+          {
+            success = false;
+          }
         }
         return success;
       }
@@ -1576,8 +1636,14 @@ namespace GridKit
         const auto* yp      = gastpti.yp().getData();
         for (size_t row = 0; row < static_cast<size_t>(gastpti.getResidual().getSize()); ++row)
         {
-          success &= rowMatches(static_cast<RealT>(f[row]), 0.0, "residual", row, "at rest");
-          success &= rowMatches(static_cast<RealT>(yp[row]), 0.0, "derivative", row, "at rest");
+          if (!rowMatches(static_cast<RealT>(f[row]), 0.0, "residual", row, "at rest"))
+          {
+            success = false;
+          }
+          if (!rowMatches(static_cast<RealT>(yp[row]), 0.0, "derivative", row, "at rest"))
+          {
+            success = false;
+          }
         }
         return success;
       }
@@ -1659,17 +1725,23 @@ namespace GridKit
                   {index(Vars::VLV), boundary + 0.25}});
         setDerivative(fixture.gastpti, {{index(Vars::XVALVE), 0.0}});
         numberVariables(fixture);
-        success &= fixture.evaluate() == 0;
+        if (fixture.evaluate() != 0)
+        {
+          success = false;
+        }
 
         const DependencyMap expected{
             {index(Vars::XVALVE), -45.285714285714285},
             {index(Vars::VLV), 1.4285714285714286},
         };
-        success &= jacobianRowMatches(
-            fixture.gastpti.getResidual().getData()[index(Vars::XVALVE)].getDependencies(),
-            expected,
-            index(Vars::XVALVE),
-            label);
+        if (!jacobianRowMatches(
+                fixture.gastpti.getResidual().getData()[index(Vars::XVALVE)].getDependencies(),
+                expected,
+                index(Vars::XVALVE),
+                label))
+        {
+          success = false;
+        }
         return success;
       }
 
@@ -1683,14 +1755,18 @@ namespace GridKit
         for (const auto& [column, value] : actual)
         {
           static_cast<void>(value);
-          success &= jacobianColumnMatches(actual, expected, row, column, context);
+          if (!jacobianColumnMatches(actual, expected, row, column, context))
+          {
+            success = false;
+          }
         }
         for (const auto& [column, value] : expected)
         {
           static_cast<void>(value);
-          if (!actual.contains(column))
+          if (!actual.contains(column)
+              && !jacobianColumnMatches(actual, expected, row, column, context))
           {
-            success &= jacobianColumnMatches(actual, expected, row, column, context);
+            success = false;
           }
         }
         return success;
@@ -1730,7 +1806,10 @@ namespace GridKit
         bool success = true;
         for (size_t row = 0; row < actual.size(); ++row)
         {
-          success &= jacobianRowMatches(actual[row], expected[row], row, context);
+          if (!jacobianRowMatches(actual[row], expected[row], row, context))
+          {
+            success = false;
+          }
         }
         return success;
       }

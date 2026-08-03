@@ -374,15 +374,10 @@ namespace GridKit
                             "response limits are adjusted to include the initialized value\n";
         }
 
-        RealT s_valve = ONE<RealT>;
-        if (Vmin_response == Vmax_response)
-        {
-          s_valve = ZERO<RealT>;
-        }
-
-        RealT vload0 = xflow0;
-        RealT vlv0   = ZERO<RealT>;
-        if (s_valve != ZERO<RealT>)
+        const bool valve_active = Vmin_response < Vmax_response;
+        RealT      vload0       = xflow0;
+        RealT      vlv0         = ZERO<RealT>;
+        if (valve_active)
         {
           const RealT margin = vtemp0 - xflow0;
           if (!std::isfinite(margin) || margin <= ZERO<RealT>)
@@ -417,7 +412,8 @@ namespace GridKit
 
         Vmin_response_ = Vmin_response;
         Vmax_response_ = Vmax_response;
-        s_valve_       = s_valve;
+        s_valve_       = valve_active ? ONE<RealT> : ZERO<RealT>;
+        ;
 
         y[index(I::XVALVE)] = static_cast<ScalarT>(xflow0);
         y[index(I::XFLOW)]  = static_cast<ScalarT>(xflow0);
