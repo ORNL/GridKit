@@ -13,6 +13,10 @@ int main()
   result += test.dtMonitorSuppressesEpsilonFinalStep();
   result += test.fixedStep();
   result += test.suppressAlgebraicErrors();
+  result += test.algebraicErrorControl();
+  result += test.logEvaluatorAlgebraic();
+  result += test.logEvaluatorDerivativeScaling();
+  result += test.logEvaluatorAlphaScaling();
 
   return result.summary();
 }

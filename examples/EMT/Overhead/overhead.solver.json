@@ -1,0 +1,16 @@
+{
+    "model": "overhead.line.json",
+    "ida": {
+        "suppress_algebraic_error": false
+    },
+    "frequency": {
+        "start": 1.0,
+        "stop": 1000000.0,
+        "points": 201,
+        "scale": "log"
+    },
+    "output": {
+        "file": "response/overhead.response.csv",
+        "variables": ["R", "L", "G", "C", "Tv", "Ti", "Alpha", "Beta", "Tau", "H", "Yc", "Zc"]
+    }
+}

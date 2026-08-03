@@ -1,0 +1,45 @@
+{
+    "class": "Overhead",
+    "length": 100000.0,
+    "tower": {
+        "x": [
+            -8.0,
+            0.4,
+            8.8
+        ],
+        "height": [
+            21.5,
+            25.0,
+            23.0
+        ],
+        "span": 300.0
+    },
+    "conductors": [
+        {
+            "radius": 0.0143,
+            "inner_radius": 0.0,
+            "conductivity": 34500000.0,
+            "permeability": 0.0000012566370614359173,
+            "weight": 12.5,
+            "phase": "a"
+        },
+        {
+            "radius": 0.0143,
+            "inner_radius": 0.0,
+            "conductivity": 34500000.0,
+            "permeability": 0.0000012566370614359173,
+            "weight": 12.5,
+            "phase": "b"
+        },
+        {
+            "radius": 0.0143,
+            "inner_radius": 0.0,
+            "conductivity": 34500000.0,
+            "permeability": 0.0000012566370614359173,
+            "weight": 12.5,
+            "phase": "c"
+        }
+    ],
+    "earth_conductivity": 0.01,
+    "earth_permittivity": 0.00000000008854187817
+}

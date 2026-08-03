@@ -249,8 +249,7 @@ namespace AnalysisManager
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
         checkOutput(retval, "IDAGetConsistentIC");
 
-        copyVec(yy_, model_->y());
-        copyVec(yp_, model_->yp());
+        updateModelState(t0);
       }
 
       return retval;

@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <type_traits>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
@@ -226,14 +227,14 @@ namespace GridKit
         // this template nightmare is because __attribute__((enzyme_sparse_accumulate)) does not support templates yet
         if constexpr (std::is_same<IdxT, size_t>::value)
         {
-          if constexpr (std::is_same<IdxT, float>::value)
+          if constexpr (std::is_same<ScalarT, float>::value)
             inner_store_float_size_t(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
           else
             inner_store_double_size_t(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
         }
         else if constexpr (std::is_same<IdxT, long int>::value)
         {
-          if constexpr (std::is_same<IdxT, double>::value)
+          if constexpr (std::is_same<ScalarT, float>::value)
             inner_store_float_long_int(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
           else
             inner_store_double_long_int(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);

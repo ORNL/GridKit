@@ -8,6 +8,10 @@
 include ( "${CMAKE_CURRENT_LIST_DIR}/GridKitTargets.cmake" )
 
 include(CMakeFindDependencyMacro)
+set(GridKit_ENABLE_EIGEN @GRIDKIT_ENABLE_EIGEN@)
+if(GridKit_ENABLE_EIGEN)
+  find_dependency(Eigen3 3.3 CONFIG)
+endif()
 set(GridKit_ENABLE_SUNDIALS @GRIDKIT_ENABLE_SUNDIALS@)
 if(GridKit_ENABLE_SUNDIALS)
   list(APPEND CMAKE_PREFIX_PATH @SUNDIALS_DIR@)

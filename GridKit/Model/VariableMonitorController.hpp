@@ -6,6 +6,7 @@
 
 #include <ostream>
 #include <string>
+#include <utility>
 
 namespace GridKit
 {
@@ -43,6 +44,15 @@ namespace GridKit
        */
       explicit VariableMonitorController(const RealT& time_var)
         : time_(&time_var)
+      {
+      }
+
+      /**
+       * @brief Constructor expects a coordinate variable and output label.
+       */
+      VariableMonitorController(std::string coordinate_label, const RealT& coordinate)
+        : time_(&coordinate),
+          coordinate_label_(std::move(coordinate_label))
       {
       }
 
@@ -211,7 +221,7 @@ namespace GridKit
     protected:
       void appendHeader(std::string& out, Csv csv) const override
       {
-        out += "t";
+        out += coordinate_label_;
         for (auto&& var : variables_)
         {
           out += csv.delim;
@@ -348,6 +358,9 @@ namespace GridKit
     private:
       /// Time variable; printed first
       const RealT* time_{nullptr};
+
+      /// CSV label for the leading coordinate column
+      std::string coordinate_label_{"t"};
 
       /**
        * @brief Define sink for a specific output format

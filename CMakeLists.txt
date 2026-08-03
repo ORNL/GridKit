@@ -51,6 +51,9 @@ option(GridKit_ENABLE_THREADS "Enable THreads" OFF)
 # ZeroMQ support is disabled by default
 option(GridKit_ENABLE_ZMQ "Enable ZeroMQ support" OFF)
 
+# Eigen support is disabled by default
+option(GridKit_ENABLE_EIGEN "Enable Eigen support" OFF)
+
 # This allows use of "GRIDKIT_*" versions of the above options
 list(
   APPEND
@@ -63,7 +66,8 @@ list(
   UBSAN
   OPENMP
   THREADS
-  ZMQ)
+  ZMQ
+  EIGEN)
 foreach(_opt IN LISTS _gridkit_enable_options)
   if(NOT DEFINED GRIDKIT_ENABLE_${_opt})
     set(GRIDKIT_ENABLE_${_opt} ${GridKit_ENABLE_${_opt}})
@@ -173,6 +177,14 @@ if(GRIDKIT_ENABLE_RESOLVE)
     ENV
     DYLD_LIBRARY_PATH
     REQUIRED)
+endif()
+
+if(GRIDKIT_ENABLE_EIGEN)
+  find_package(
+    Eigen3
+    3.3
+    REQUIRED
+    CONFIG)
 endif()
 
 # Macro that adds libraries
