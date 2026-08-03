@@ -1,7 +1,18 @@
 # **IEEE Stabilizer Model (IEEEST)**
 
-Standard IEEE power system stabilizer: 4th-order notch filter, two lead–lag
-blocks, washout, and output limiter.
+Standard IEEE power system stabilizer: a selectable-order notch filter, two
+lead–lag blocks, washout, and output limiter.
+
+## Notes
+
+- The notch order $n$ is the degree of the expanded denominator, so $n$ is the
+  largest index with $a_n \ne 0$. Order $0$ bypasses the filter.
+- The numerator is truncated to the selected order. $A_5$ and $A_6$ are
+  inactive for $n=0$, and $A_6$ is inactive for $n=1$.
+- A zero denominator time constant bypasses its block. $T_2=0$ gives
+  $v_5=v_4$, $T_4=0$ gives $v_6=v_5$, and $T_6=0$ gives $v_7=K_s v_6$.
+- $V_{cl}$, $V_{cu}$, and $T_{delay}$ are accepted for input-format
+  compatibility but are not modeled.
 
 ## Block Diagram
 
@@ -29,11 +40,7 @@ $K_s$       | [p.u.] | Stabilizer gain                      | 3.0
 $L_s^{\min}$ | [p.u.] | Minimum stabilizer output limit      | -0.1
 $L_s^{\max}$ | [p.u.] | Maximum stabilizer output limit      | 0.1
 
-The IEEE 421.5 IEEEST also defines a cutout window ($V_{cl}$, $V_{cu}$) and an
-input delay ($T_{delay}$). These parameters are accepted for input-format
-compatibility but are not modeled here.
-
-### Derived Parameters
+### Model Derived Parameters
 
 ```math
 \begin{aligned}
@@ -51,12 +58,15 @@ a_4 &= A_2 A_4
 
 #### Differential
 
-Symbol                | Units  | Description
-----------------------|--------|------------
-$x_1, x_2, x_3, x_4$  | [-]    | Notch filter states
-$x_5$                 | [-]    | Lead–lag 1 state
-$x_6$                 | [-]    | Lead–lag 2 state
-$x_7$                 | [-]    | Washout state
+Symbol | Units       | Description                          | Note
+-------|-------------|--------------------------------------|------
+$x_1$  | [p.u.]      | Notch filter signal state            | Active for $n\ge1$
+$x_2$  | [p.u./sec]  | First derivative of filtered signal  | Active for $n\ge2$
+$x_3$  | [p.u./sec²] | Second derivative of filtered signal | Active for $n\ge3$
+$x_4$  | [p.u./sec³] | Third derivative of filtered signal  | Active for $n=4$
+$x_5$  | [p.u.]      | Lead–lag 1 state                     |
+$x_6$  | [p.u.]      | Lead–lag 2 state                     |
+$x_7$  | [p.u.]      | Washout state                        |
 
 #### Algebraic
 
@@ -80,12 +90,25 @@ $u$    | [p.u.] | Stabilizer input signal
 
 ### Differential Equations
 
+Only the notch states $x_1,\ldots,x_n$ are active. The remaining chain
+equations reduce to $\dot{x}_i = 0$.
+
 ```math
 \begin{aligned}
-0 &= -\dot{x}_1 + x_2 \\
-0 &= -\dot{x}_2 + x_3 \\
-0 &= -\dot{x}_3 + x_4 \\
-0 &= -\dot{x}_4 - \dfrac{a_0}{a_4}x_1 - \dfrac{a_1}{a_4}x_2 - \dfrac{a_2}{a_4}x_3 - \dfrac{a_3}{a_4}x_4 + \dfrac{1}{a_4}u \\
+0 &= -\dot{x}_1 + \begin{cases}
+      \dfrac{1}{a_1}\left(-a_0 x_1 + u\right) & n = 1 \\
+      x_2 & n \in \{2,3,4\}
+    \end{cases} \\
+0 &= -\dot{x}_2 + \begin{cases}
+      \dfrac{1}{a_2}\left(-a_0 x_1 - a_1 x_2 + u\right) & n = 2 \\
+      x_3 & n \in \{3,4\}
+    \end{cases} \\
+0 &= -\dot{x}_3 + \begin{cases}
+      \dfrac{1}{a_3}\left(-a_0 x_1 - a_1 x_2 - a_2 x_3 + u\right) & n = 3 \\
+      x_4 & n = 4
+    \end{cases} \\
+0 &= -\dot{x}_4 + \dfrac{1}{a_4}\left(-a_0 x_1 - a_1 x_2 - a_2 x_3 - a_3 x_4 + u\right),
+    \quad n = 4 \\
 0 &= -T_2 \dot{x}_5 - x_5 + v_4 \\
 0 &= -T_4 \dot{x}_6 - x_6 + v_5 \\
 0 &= -T_6 \dot{x}_7 - x_7 + v_6
@@ -94,9 +117,18 @@ $u$    | [p.u.] | Stabilizer input signal
 
 ### Algebraic Equations
 
+The numerator $1 + A_5 s + A_6 s^2$ is applied to the filtered signal. Its
+derivatives are chain states where those exist, and the rate of the highest
+active state otherwise.
+
 ```math
 \begin{aligned}
-0 &= -v_4 + x_1 + A_5 x_2 + A_6 x_3 \\
+0 &= -v_4 + \begin{cases}
+      u & n = 0 \\
+      x_1 + \dfrac{A_5}{a_1}\left(-a_0 x_1 + u\right) & n = 1 \\
+      x_1 + A_5 x_2 + \dfrac{A_6}{a_2}\left(-a_0 x_1 - a_1 x_2 + u\right) & n = 2 \\
+      x_1 + A_5 x_2 + A_6 x_3 & n \in \{3,4\}
+    \end{cases} \\
 0 &= -T_2(v_5 - x_5) + T_1(v_4 - x_5) \\
 0 &= -T_4(v_6 - x_6) + T_3(v_5 - x_6) \\
 0 &= -T_6 v_7 + K_s T_5(v_6 - x_7) \\
@@ -109,6 +141,40 @@ The output limiter uses GridKit's smooth
 
 ## Initialization
 
-All states and their derivatives initialize to zero. The stabilizer comes
-online at rest and produces signal only in response to deviations in the input
-$u$.
+### Input Initialization
+
+```math
+\begin{aligned}
+  u_0 &\leftarrow \text{stabilizer input signal}
+\end{aligned}
+```
+
+### Internal Initialization
+
+The notch filter and both lead–lag blocks have unity DC gain, so every block
+output settles at $u_0$ while the washout removes the DC component. The
+initial residual therefore vanishes for any $u_0$, and the stabilizer comes
+online at rest.
+
+```math
+\begin{aligned}
+  x_1 &\leftarrow u_0
+    \quad n\ge1 \\
+  x_i &\leftarrow 0
+    \quad i=2,\ldots,4 \\
+  v_4, x_5, v_5, x_6, v_6, x_7 &\leftarrow u_0 \\
+  v_7 &\leftarrow 0 \\
+  V_{ss} &\leftarrow \text{clamp}(v_7, L_s^{\min}, L_s^{\max}) \\
+  \dot{x}_i &\leftarrow 0
+\end{aligned}
+```
+
+### Output Initialization
+
+None.
+
+## Monitorable Outputs
+
+Output | Units  | Description
+-------|--------|------------
+`vss`  | [p.u.] | Limited stabilizer signal $V_{ss}$

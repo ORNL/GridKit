@@ -35,28 +35,40 @@ namespace GridKit
       /// Internal variables of a `Ieeest`
       enum class IeeestInternalVariables : size_t
       {
-        X1,  ///< Notch filter state 1
-        X2,  ///< Notch filter state 2
-        X3,  ///< Notch filter state 3
-        X4,  ///< Notch filter state 4
-        X5,  ///< Lead-lag 1 state
-        X6,  ///< Lead-lag 2 state
-        X7,  ///< Washout state
-        V4,  ///< Notch filter output
-        V5,  ///< Lead-lag 1 output
-        V6,  ///< Lead-lag 2 output
-        V7,  ///< Unlimited stabilizer signal
-        VSS, ///< Limited stabilizer signal (model output)
+        X1,  ///< \f$x_1\f$ Notch filter signal state [p.u.], active for \f$n\ge1\f$
+        X2,  ///< \f$x_2\f$ First derivative of the filtered signal [p.u./sec], active for \f$n\ge2\f$
+        X3,  ///< \f$x_3\f$ Second derivative of the filtered signal [p.u./sec^2], active for \f$n\ge3\f$
+        X4,  ///< \f$x_4\f$ Third derivative of the filtered signal [p.u./sec^3], active for \f$n=4\f$
+        X5,  ///< \f$x_5\f$ Lead-lag 1 state [p.u.]
+        X6,  ///< \f$x_6\f$ Lead-lag 2 state [p.u.]
+        X7,  ///< \f$x_7\f$ Washout state [p.u.]
+        V4,  ///< \f$v_4\f$ Notch filter output [p.u.]
+        V5,  ///< \f$v_5\f$ Lead-lag 1 output [p.u.]
+        V6,  ///< \f$v_6\f$ Lead-lag 2 output [p.u.]
+        V7,  ///< \f$v_7\f$ Unlimited stabilizer signal [p.u.]
+        VSS, ///< \f$V_{ss}\f$ Limited stabilizer signal, the model output [p.u.]
         MAXIMUM,
       };
 
       /// External variables of a `Ieeest`
       enum class IeeestExternalVariables : size_t
       {
-        U, ///< Stabilizer input signal
+        U, ///< \f$u\f$ Stabilizer input signal [p.u.]
         MAXIMUM,
       };
 
+      /**
+       * @brief IEEE type ST power system stabilizer (IEEEST).
+       *
+       * A selectable-order notch filter, two lead-lag blocks, a washout, and an
+       * output limiter. The notch order \f$n\in\{0,1,2,3,4\}\f$ is the degree of
+       * the expanded denominator derived from \f$A_1,\ldots,A_4\f$.
+       *
+       * @tparam scalar_type Plain real or differentiable scalar type.
+       * @tparam index_type Integer index type.
+       *
+       * @see IeeestData
+       */
       template <typename scalar_type, typename index_type>
       class Ieeest : public Component<scalar_type, index_type>
       {
@@ -139,6 +151,7 @@ namespace GridKit
         RealT Vcu_{0};
         RealT Tdelay_{0};
 
+        /// Expanded notch denominator \f$a_0 + a_1 s + a_2 s^2 + a_3 s^3 + a_4 s^4\f$
         RealT a0_{1};
         RealT a1_{0};
         RealT a2_{0};
@@ -151,9 +164,13 @@ namespace GridKit
         RealT use_4th_order_{0};
         RealT use_3rd_order_{0};
         RealT use_2nd_order_{0};
+        RealT use_1st_order_{0};
+        RealT notch_order_ge_2_{0};
+        RealT notch_order_ge_3_{0};
         RealT safe_inv_a4_{0};
         RealT safe_inv_a3_{0};
         RealT safe_inv_a2_{0};
+        RealT safe_inv_a1_{0};
         RealT use_T2_block_{1};
         RealT bypass_T2_block_{0};
         RealT use_T4_block_{1};
@@ -167,6 +184,7 @@ namespace GridKit
 
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
+        void setDerivedParameters();
 
         std::vector<ScalarT> ws_;
         std::vector<IdxT>    ws_indices_;
