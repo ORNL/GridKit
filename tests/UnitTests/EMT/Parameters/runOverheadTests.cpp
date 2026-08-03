@@ -131,6 +131,24 @@ namespace
     return 0.0;
   }
 
+  /// Whether the sparsity pattern stores an entry at (row, col); a
+  /// stored zero and an absent entry are different structural claims.
+  bool csrHasEntry(GridKit::LinearAlgebra::CsrMatrix<scalar_type, index_type>* csr,
+                   index_type                                                  row,
+                   index_type                                                  col)
+  {
+    index_type* rowptr = csr->getRowData();
+    index_type* colind = csr->getColData();
+    for (index_type p = rowptr[row]; p < rowptr[row + 1]; ++p)
+    {
+      if (colind[p] == col)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
   using Overhead =
       GridKit::EMT::Parameters::Overhead<scalar_type, index_type>;
 
@@ -166,6 +184,10 @@ namespace
     return (fp - fm) / (2.0 * h);
   }
 
+  /// The checked coupling must exist in the sparsity pattern: csrValue
+  /// reads an absent entry as zero, and several reference derivatives
+  /// here sit below the value tolerance, so without the structural
+  /// requirement a Jacobian missing the entry entirely would still pass.
   bool jacobianMatchesFiniteDifference(Overhead&   model,
                                        index_type  row,
                                        index_type  col,
@@ -173,6 +195,10 @@ namespace
                                        scalar_type tol = 1.0e-5)
   {
     model.evaluateJacobian();
+    if (!csrHasEntry(model.getCsrJacobian(), row, col))
+    {
+      return false;
+    }
     const scalar_type actual = csrValue(model.getCsrJacobian(), row, col);
     const scalar_type ref    = finiteDifferenceJacobianValue(model, row, col, alpha);
     return std::isfinite(actual) && close(actual, ref, tol);
@@ -646,6 +672,13 @@ namespace
     success *= jacobianMatchesFiniteDifference(model, Gc.offset + 1, Gc.offset + 0, 1.0, 1.0e-5);
     success *= jacobianMatchesFiniteDifference(model, Bc.offset + 1, Bc.offset + 3, 1.0, 1.0e-5);
 
+    // Exact sparsity: the sandwich residual entry (0,0) reads only row 0
+    // and column 0 of the admittance blocks, so a coupling to the (1,1)
+    // entry must be structurally absent, not merely small.
+    model.evaluateJacobian();
+    success *= !csrHasEntry(model.getCsrJacobian(), Gc.offset + 0, Gc.offset + 3);
+    success *= !csrHasEntry(model.getCsrJacobian(), Gc.offset + 0, Bc.offset + 3);
+
     GridKit::EMT::Parameters::Overhead<scalar_type, index_type> scalar_model(makeScalarData());
     scalar_model.updateTime(omega, 1.0);
     scalar_model.allocate();
@@ -738,6 +771,13 @@ namespace
 
     success *= jacobianMatchesFiniteDifference(model, Rc.offset + 1, Rc.offset + 0, 1.0, 1.0e-5);
     success *= jacobianMatchesFiniteDifference(model, Xc.offset + 1, Xc.offset + 3, 1.0, 1.0e-5);
+
+    // Exact sparsity: the sandwich residual entry (0,0) reads only row 0
+    // and column 0 of the impedance blocks, so a coupling to the (1,1)
+    // entry must be structurally absent, not merely small.
+    model.evaluateJacobian();
+    success *= !csrHasEntry(model.getCsrJacobian(), Rc.offset + 0, Rc.offset + 3);
+    success *= !csrHasEntry(model.getCsrJacobian(), Rc.offset + 0, Xc.offset + 3);
 
     GridKit::EMT::Parameters::Overhead<scalar_type, index_type> scalar_model(makeScalarData());
     scalar_model.updateTime(omega, 1.0);
