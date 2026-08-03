@@ -146,10 +146,10 @@ namespace GridKit
                                       RepcaParameters   parameter,
                                       RealT&            target,
                                       const char*       name);
-        void        loadSwitchParameter(const ModelDataT& data,
-                                        RepcaParameters   parameter,
-                                        bool&             target,
-                                        const char*       name);
+        void        loadBooleanParameter(const ModelDataT& data,
+                                         RepcaParameters   parameter,
+                                         bool&             target,
+                                         const char*       name);
         bool        floorTimeConstant(RealT& value, const char* name);
         void        initializeParameters(const ModelDataT& data);
         void        initializeMonitor();

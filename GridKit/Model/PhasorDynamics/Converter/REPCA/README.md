@@ -19,42 +19,42 @@ Figure 1: REPCA plant-control model. Figure courtesy of
 
 ## Model Parameters
 
-Symbol                              | Units    | JSON        | Description                                             | Typical Value | Note
-------------------------------------|----------|-------------|---------------------------------------------------------|---------------|------
-$S^\mathrm{base}$                  | [MVA]    | `mva`       | REPCA component power base                              | 100.0         | Component base
-$s_\mathrm{comp}$                  | [binary] | `VcompFlag` | Voltage-compensation selector                           | 1             | 1 = line-drop compensation, 0 = reactive droop
-$s_\mathrm{ref}$                   | [binary] | `RefFlag`   | Reactive-loop reference selector                        | 1             | 1 = voltage control, 0 = reactive-power control
-$s_\mathrm{freq}$                  | [binary] | `Freqflag`  | Active-power output selector                            | 0             | 1 = command enabled, 0 = zero output
-$T_\mathrm{fltr}$                  | [sec]    | `Tfltr`     | Voltage and reactive-power measurement filter time constant | 0.05      |
-$V^\mathrm{frz}$                   | [p.u.]   | `Vfrz`      | Reactive-power PI freeze-voltage threshold              | 0.7           |
-$R_c$                               | [p.u.]   | `Rc`        | Line-drop compensation resistance                       | 0.0           | System base
-$X_c$                               | [p.u.]   | `Xc`        | Line-drop compensation reactance                        | 0.0           | System base
-$K_c$                               | [p.u.]   | `Kc`        | Reactive-current compensation gain                      | 1.0           |
-$D_\mathrm{bd1}$                   | [p.u.]   | `dbdlow`    | Lower reactive-loop deadband threshold                  | 0.0           |
-$D_\mathrm{bd2}$                   | [p.u.]   | `dbdupper`  | Upper reactive-loop deadband threshold                  | 0.0           |
-$e^{\max}$                          | [p.u.]   | `emax`      | Maximum reactive-loop error limit                       | 1.0           |
-$e^{\min}$                          | [p.u.]   | `emin`      | Minimum reactive-loop error limit                       | -1.0          |
-$K_\mathrm{p}$                     | [p.u.]   | `Kp`        | Reactive-power controller proportional gain             | 10.0          |
-$K_\mathrm{i}$                     | [p.u./s] | `Ki`        | Reactive-power controller integral gain                 | 10.0          |
-$Q^{\max}$                          | [p.u.]   | `Qmax`      | Maximum reactive-power command                          | 1.0           | Component base
-$Q^{\min}$                          | [p.u.]   | `Qmin`      | Minimum reactive-power command                          | -1.0          | Component base
-$T_\mathrm{ft}$                    | [sec]    | `Tft`       | Reactive-command lead time constant                     | 0.0           |
-$T_\mathrm{fv}$                    | [sec]    | `Tfv`       | Reactive-command lag time constant                      | 3.0           |
-$T_\mathrm{p}$                     | [sec]    | `Tp`        | Active-power measurement filter time constant           | 0.0           |
-$D_\mathrm{bd1}^{f}$               | [p.u.]   | `fdbd1`     | Lower frequency-error deadband threshold                | 0.0           |
-$D_\mathrm{bd2}^{f}$               | [p.u.]   | `fdbd2`     | Upper frequency-error deadband threshold                | 0.0           |
-$D_\mathrm{dn}$                    | [p.u.]   | `Ddn`       | Down-frequency droop response gain                      | 20.0          |
-$D_\mathrm{up}$                    | [p.u.]   | `Dup`       | Up-frequency droop response gain                        | 0.0           |
-$e_P^{\max}$                        | [p.u.]   | `femax`     | Maximum active-power error limit                        | 1.0           |
-$e_P^{\min}$                        | [p.u.]   | `femin`     | Minimum active-power error limit                        | -1.0          |
-$K_\mathrm{pg}$                    | [p.u.]   | `Kpg`       | Active-power controller proportional gain               | 10.0          |
-$K_\mathrm{ig}$                    | [p.u./s] | `Kig`       | Active-power controller integral gain                   | 10.0          |
-$P^{\max}$                          | [p.u.]   | `Pmax`      | Maximum active-power command                            | 2.0           | Component base
-$P^{\min}$                          | [p.u.]   | `Pmin`      | Minimum active-power command                            | 0.0           | Component base
-$T_\mathrm{lag}$                   | [sec]    | `Tlag`      | Active-power command lag time constant                  | 3.0           |
+Symbol                              | Units     | JSON        | Description                                             | Typical Value | Note
+------------------------------------|-----------|-------------|---------------------------------------------------------|---------------|------
+$S^\mathrm{base}$                  | [MVA]     | `mva`       | REPCA component power base                              | 100.0         | Component base
+$s_\mathrm{comp}$                  | [boolean] | `VcompFlag` | Voltage-compensation selector                           | `true`        | `true` = line-drop compensation, `false` = reactive droop
+$s_\mathrm{ref}$                   | [boolean] | `RefFlag`   | Reactive-loop reference selector                        | `true`        | `true` = voltage control, `false` = reactive-power control
+$s_\mathrm{freq}$                  | [boolean] | `Freqflag`  | Active-power output selector                            | `false`       | `true` = command enabled, `false` = zero output
+$T_\mathrm{fltr}$                  | [sec]     | `Tfltr`     | Voltage and reactive-power filter time constant         | 0.05          |
+$V^\mathrm{frz}$                   | [p.u.]    | `Vfrz`      | Reactive-power PI freeze-voltage threshold              | 0.7           |
+$R_c$                               | [p.u.]    | `Rc`        | Line-drop compensation resistance                       | 0.0           | System base
+$X_c$                               | [p.u.]    | `Xc`        | Line-drop compensation reactance                        | 0.0           | System base
+$K_c$                               | [p.u.]    | `Kc`        | Reactive-current compensation gain                      | 1.0           |
+$D_\mathrm{bd1}$                   | [p.u.]    | `dbdlow`    | Lower reactive-loop deadband threshold                  | 0.0           |
+$D_\mathrm{bd2}$                   | [p.u.]    | `dbdupper`  | Upper reactive-loop deadband threshold                  | 0.0           |
+$e^{\max}$                          | [p.u.]    | `emax`      | Maximum reactive-loop error limit                       | 1.0           |
+$e^{\min}$                          | [p.u.]    | `emin`      | Minimum reactive-loop error limit                       | -1.0          |
+$K_\mathrm{p}$                     | [p.u.]    | `Kp`        | Reactive-power controller proportional gain             | 10.0          |
+$K_\mathrm{i}$                     | [p.u./s]  | `Ki`        | Reactive-power controller integral gain                 | 10.0          |
+$Q^{\max}$                          | [p.u.]    | `Qmax`      | Maximum reactive-power command                          | 1.0           | Component base
+$Q^{\min}$                          | [p.u.]    | `Qmin`      | Minimum reactive-power command                          | -1.0          | Component base
+$T_\mathrm{ft}$                    | [sec]     | `Tft`       | Reactive-command lead time constant                     | 0.0           |
+$T_\mathrm{fv}$                    | [sec]     | `Tfv`       | Reactive-command lag time constant                      | 3.0           |
+$T_\mathrm{p}$                     | [sec]     | `Tp`        | Active-power measurement filter time constant           | 0.0           |
+$D_\mathrm{bd1}^{f}$               | [p.u.]    | `fdbd1`     | Lower frequency-error deadband threshold                | 0.0           |
+$D_\mathrm{bd2}^{f}$               | [p.u.]    | `fdbd2`     | Upper frequency-error deadband threshold                | 0.0           |
+$D_\mathrm{dn}$                    | [p.u.]    | `Ddn`       | Down-frequency droop response gain                      | 20.0          |
+$D_\mathrm{up}$                    | [p.u.]    | `Dup`       | Up-frequency droop response gain                        | 0.0           |
+$e_P^{\max}$                        | [p.u.]    | `femax`     | Maximum active-power error limit                        | 1.0           |
+$e_P^{\min}$                        | [p.u.]    | `femin`     | Minimum active-power error limit                        | -1.0          |
+$K_\mathrm{pg}$                    | [p.u.]    | `Kpg`       | Active-power controller proportional gain               | 10.0          |
+$K_\mathrm{ig}$                    | [p.u./s]  | `Kig`       | Active-power controller integral gain                   | 10.0          |
+$P^{\max}$                          | [p.u.]    | `Pmax`      | Maximum active-power command                            | 2.0           | Component base
+$P^{\min}$                          | [p.u.]    | `Pmin`      | Minimum active-power command                            | 0.0           | Component base
+$T_\mathrm{lag}$                   | [sec]     | `Tlag`      | Active-power command lag time constant                  | 3.0           |
 
 Every parameter is optional and uses the Typical Value when omitted. Real-valued
-parameters accept real or integer JSON values; selectors accept Boolean or numeric 0/1.
+parameters accept real or integer JSON values; selectors require Boolean JSON values.
 
 ### Parameter Validation
 
@@ -64,8 +64,6 @@ All real parameters must be finite. Invalid parameter sets are rejected by:
 \begin{aligned}
   S^\mathrm{base}
     &> 0 \\
-  s_\mathrm{comp}, s_\mathrm{ref}, s_\mathrm{freq}
-    &\in \{0,1\} \\
   T_\mathrm{fv}
     &> 0 \\
   D_\mathrm{bd1}

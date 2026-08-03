@@ -136,7 +136,7 @@ namespace GridKit
 
         for (const Params flag : {Params::VcompFlag, Params::RefFlag, Params::Freqflag})
         {
-          for (const auto value : {static_cast<IdxT>(0), static_cast<IdxT>(1)})
+          for (const bool value : {false, true})
           {
             auto data             = makeData();
             data.parameters[flag] = value;
@@ -145,19 +145,21 @@ namespace GridKit
             success *= (model.repca.verify() == 0);
           }
 
-          for (const auto value : {static_cast<RealT>(0.0), static_cast<RealT>(1.0)})
+          for (const IdxT value : {static_cast<IdxT>(0),
+                                   static_cast<IdxT>(1),
+                                   static_cast<IdxT>(2)})
           {
-            auto data             = makeData();
-            data.parameters[flag] = value;
-            Fixture<ScalarT> model(data);
-            model.attachAllInputs();
-            success *= (model.repca.verify() == 0);
+            success *= invalidParameterCase(flag, value);
           }
 
-          success *= invalidParameterCase(flag, static_cast<IdxT>(2));
-          success *= invalidParameterCase(flag, static_cast<RealT>(0.5));
-          success *= invalidParameterCase(flag, nan);
-          success *= invalidParameterCase(flag, infinity);
+          for (const RealT value : {static_cast<RealT>(0.0),
+                                    static_cast<RealT>(0.5),
+                                    static_cast<RealT>(1.0),
+                                    nan,
+                                    infinity})
+          {
+            success *= invalidParameterCase(flag, value);
+          }
         }
 
         PhasorDynamics::Converter::Repca<ScalarT, IdxT> busless(nullptr, makeData());

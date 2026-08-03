@@ -18,9 +18,9 @@ namespace GridKit
       enum class RepcaParameters
       {
         mva,       ///< \f$S^\mathrm{base}\f$ Component power base [MVA]
-        VcompFlag, ///< \f$s_\mathrm{comp}\f$ Voltage-compensation selector [binary]
-        RefFlag,   ///< \f$s_\mathrm{ref}\f$ Reactive-loop reference selector [binary]
-        Freqflag,  ///< \f$s_\mathrm{freq}\f$ Active-power output selector [binary]
+        VcompFlag, ///< \f$s_\mathrm{comp}\f$ Voltage-compensation selector [boolean]
+        RefFlag,   ///< \f$s_\mathrm{ref}\f$ Reactive-loop reference selector [boolean]
+        Freqflag,  ///< \f$s_\mathrm{freq}\f$ Active-power output selector [boolean]
         Tfltr,     ///< \f$T_\mathrm{fltr}\f$ Voltage and reactive-power filter time constant [sec]
         Vfrz,      ///< \f$V^\mathrm{frz}\f$ Reactive-power PI freeze threshold [p.u.]
         Rc,        ///< \f$R_c\f$ Line-drop resistance on system base [p.u.]
@@ -94,7 +94,7 @@ namespace GridKit
        * @brief Model data for REPCA parameters, bus and signal ports, and monitored variables.
        *
        * @tparam real_type Real parameter value type.
-       * @tparam index_type Integer index and serialized selector type.
+       * @tparam index_type Integer index type.
        *
        * @see Repca
        */

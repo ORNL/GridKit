@@ -869,19 +869,18 @@ namespace GridKit
       }
 
       /**
-       * @brief Load one optional binary selector
+       * @brief Load one optional Boolean parameter
        *
-       * Boolean values and numeric values exactly equal to zero or one are
-       * accepted. Any other value or stored type records a loading error
-       * while preserving the existing default.
+       * Any non-Boolean stored type records a loading error while preserving
+       * the existing default.
        *
        * @param[in] data Model parameter data.
        * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored selector value.
+       * @param[in,out] target Stored Boolean value.
        * @param[in] name Serialized parameter name for diagnostics.
        */
       template <typename scalar_type, typename index_type>
-      void Repca<scalar_type, index_type>::loadSwitchParameter(
+      void Repca<scalar_type, index_type>::loadBooleanParameter(
           const ModelDataT& data,
           RepcaParameters   parameter,
           bool&             target,
@@ -897,19 +896,9 @@ namespace GridKit
         {
           target = *bool_value;
         }
-        else if (const auto* index_value = std::get_if<IdxT>(&value);
-                 index_value && (*index_value == 0 || *index_value == 1))
-        {
-          target = (*index_value == 1);
-        }
-        else if (const auto* real_value = std::get_if<RealT>(&value);
-                 real_value && (*real_value == ZERO<RealT> || *real_value == ONE<RealT>) )
-        {
-          target = (*real_value == ONE<RealT>);
-        }
         else
         {
-          Log::error() << "Repca: parameter '" << name << "' must be bool or 0/1\n";
+          Log::error() << "Repca: parameter '" << name << "' must be boolean\n";
           ++parameter_error_count_;
         }
       }
@@ -959,9 +948,9 @@ namespace GridKit
         parameter_error_count_ = 0;
 
         loadRealParameter(data, Params::mva, mva_base_, "mva");
-        loadSwitchParameter(data, Params::VcompFlag, VcompFlag_, "VcompFlag");
-        loadSwitchParameter(data, Params::RefFlag, RefFlag_, "RefFlag");
-        loadSwitchParameter(data, Params::Freqflag, Freqflag_, "Freqflag");
+        loadBooleanParameter(data, Params::VcompFlag, VcompFlag_, "VcompFlag");
+        loadBooleanParameter(data, Params::RefFlag, RefFlag_, "RefFlag");
+        loadBooleanParameter(data, Params::Freqflag, Freqflag_, "Freqflag");
         loadRealParameter(data, Params::Tfltr, Tfltr_, "Tfltr");
         loadRealParameter(data, Params::Vfrz, Vfrz_, "Vfrz");
         loadRealParameter(data, Params::Rc, Rc_, "Rc");
