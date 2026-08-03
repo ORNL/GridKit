@@ -16,6 +16,7 @@
 #include <GridKit/Model/EMT/Parameters/Effects/Carson/Carson.hpp>
 #include <GridKit/Model/EMT/Parameters/Effects/GeometricInductance/GeometricInductance.hpp>
 #include <GridKit/Model/EMT/Parameters/Effects/SkinEffect/SkinEffect.hpp>
+#include <GridKit/Model/EMT/Parameters/Views.hpp>
 
 namespace GridKit
 {
@@ -24,7 +25,8 @@ namespace GridKit
     namespace Parameters
     {
       template <typename scalar_type, typename index_type>
-      class SeriesImpedance : public Element<scalar_type, index_type>
+      class SeriesImpedance : public Element<scalar_type, index_type>,
+                              public SeriesView<scalar_type, index_type>
       {
       public:
         using ScalarT = scalar_type;
@@ -50,12 +52,12 @@ namespace GridKit
           return inputs_;
         }
 
-        SignalT R() const
+        SignalT R() const override
         {
           return {base_ + layout_.r, layout_.K, layout_.K};
         }
 
-        SignalT L() const
+        SignalT L() const override
         {
           return {base_ + layout_.l, layout_.K, layout_.K};
         }

@@ -17,6 +17,9 @@
 #include <GridKit/Model/EMT/Element.hpp>
 #include <GridKit/Model/EMT/Parameters/Effects/Carson/Carson.hpp>
 #include <GridKit/Model/EMT/Parameters/Effects/GeometricInductance/GeometricInductance.hpp>
+#include <GridKit/Model/EMT/Parameters/Effects/Reduction/ReductionMap.hpp>
+#include <GridKit/Model/EMT/Parameters/Effects/Reduction/SeriesReduction.hpp>
+#include <GridKit/Model/EMT/Parameters/Effects/Reduction/ShuntReduction.hpp>
 #include <GridKit/Model/EMT/Parameters/Effects/SeriesImpedance/SeriesImpedance.hpp>
 #include <GridKit/Model/EMT/Parameters/Effects/ShuntAdmittance/ShuntAdmittance.hpp>
 #include <GridKit/Model/EMT/Parameters/Effects/ShuntPotential/ShuntPotential.hpp>
@@ -114,6 +117,24 @@ namespace GridKit
         const ShuntAdmittance<ScalarT, IdxT>& shuntAdmittance() const
         {
           return shunt_admittance_;
+        }
+
+        const ReductionMap<ScalarT, IdxT>& reductionMap() const
+        {
+          return reduction_map_;
+        }
+
+        /// Null when the reduction is the identity and the modal stage
+        /// consumes the full-conductor matrices directly.
+        const SeriesReduction<ScalarT, IdxT>* seriesReduction() const
+        {
+          return series_reduction_.get();
+        }
+
+        /// Null when the reduction is the identity.
+        const ShuntReduction<ScalarT, IdxT>* shuntReduction() const
+        {
+          return shunt_reduction_.get();
         }
 
         const Gamma<ScalarT, IdxT>& gamma() const
@@ -358,12 +379,40 @@ namespace GridKit
         SeriesImpedance<ScalarT, IdxT>     series_impedance_;
         ShuntPotential<ScalarT, IdxT>      shunt_potential_;
         ShuntAdmittance<ScalarT, IdxT>     shunt_admittance_;
-        Gamma<ScalarT, IdxT>               gamma_;
-        Tau<ScalarT, IdxT>                 tau_;
-        H<ScalarT, IdxT>                   h_;
-        Yc<ScalarT, IdxT>                  yc_;
-        Zc<ScalarT, IdxT>                  zc_;
-        std::vector<ElementT*>             elements_;
+
+        /// Terminal incidence and the optional reduction stage; absent
+        /// when every conductor is its own terminal.
+        ReductionMap<ScalarT, IdxT>                     reduction_map_;
+        std::unique_ptr<SeriesReduction<ScalarT, IdxT>> series_reduction_;
+        std::unique_ptr<ShuntReduction<ScalarT, IdxT>>  shunt_reduction_;
+
+        /// The series pair the modal stage consumes: the reduction when
+        /// present, the full-conductor assembly otherwise.
+        const SeriesView<ScalarT, IdxT>& modalSeries() const
+        {
+          if (series_reduction_)
+          {
+            return *series_reduction_;
+          }
+          return series_impedance_;
+        }
+
+        /// The shunt pair the modal stage consumes.
+        const ShuntView<ScalarT, IdxT>& modalShunt() const
+        {
+          if (shunt_reduction_)
+          {
+            return *shunt_reduction_;
+          }
+          return shunt_admittance_;
+        }
+
+        Gamma<ScalarT, IdxT>   gamma_;
+        Tau<ScalarT, IdxT>     tau_;
+        H<ScalarT, IdxT>       h_;
+        Yc<ScalarT, IdxT>      yc_;
+        Zc<ScalarT, IdxT>      zc_;
+        std::vector<ElementT*> elements_;
 
         VectorT           y_;
         VectorT           yp_;

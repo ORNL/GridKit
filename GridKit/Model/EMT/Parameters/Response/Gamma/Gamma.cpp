@@ -24,8 +24,8 @@ namespace GridKit
     namespace Parameters
     {
       template <typename ScalarT, typename IdxT>
-      Gamma<ScalarT, IdxT>::Gamma(const SeriesImpedance<ScalarT, IdxT>& series,
-                                  const ShuntAdmittance<ScalarT, IdxT>& shunt)
+      Gamma<ScalarT, IdxT>::Gamma(const SeriesView<ScalarT, IdxT>& series,
+                                  const ShuntView<ScalarT, IdxT>&  shunt)
         : series_(series),
           shunt_(shunt),
           layout_(series.R().rows)

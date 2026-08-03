@@ -1,8 +1,8 @@
 /**
- * @file ShuntAdmittance.hpp
+ * @file ShuntReduction.hpp
  *
- * @brief Full-conductor shunt conductance and capacitance assembly for
- * overhead conductors.
+ * @brief Bundle merge and grounded-shield elimination of the shunt
+ * admittance by exact congruence.
  *
  */
 
@@ -13,7 +13,7 @@
 #include <vector>
 
 #include <GridKit/Model/EMT/Element.hpp>
-#include <GridKit/Model/EMT/Parameters/Effects/ShuntPotential/ShuntPotential.hpp>
+#include <GridKit/Model/EMT/Parameters/Effects/Reduction/ReductionMap.hpp>
 #include <GridKit/Model/EMT/Parameters/Views.hpp>
 
 namespace GridKit
@@ -22,16 +22,28 @@ namespace GridKit
   {
     namespace Parameters
     {
+      /**
+       * @brief Terminal-level shunt admittance from the full-conductor
+       *        matrix.
+       *
+       * In the admittance domain the reduction is the exact congruence
+       * Yred = E^T Y E: grounded conductors hold zero potential, so
+       * their columns vanish through the incidence's zero rows, while
+       * their electrostatic shielding already entered when the
+       * full-conductor potential matrix was inverted. Bundle members
+       * share the terminal potential and their injected currents sum.
+       */
       template <typename scalar_type, typename index_type>
-      class ShuntAdmittance : public Element<scalar_type, index_type>,
-                              public ShuntView<scalar_type, index_type>
+      class ShuntReduction : public Element<scalar_type, index_type>,
+                             public ShuntView<scalar_type, index_type>
       {
       public:
         using ScalarT = scalar_type;
         using IdxT    = index_type;
         using SignalT = typename Element<ScalarT, IdxT>::SignalT;
+        using MapT    = ReductionMap<ScalarT, IdxT>;
 
-        explicit ShuntAdmittance(const ShuntPotential<ScalarT, IdxT>& shunt);
+        ShuntReduction(const ShuntView<ScalarT, IdxT>& full, MapT map);
 
         IdxT size() const override
         {
@@ -40,19 +52,19 @@ namespace GridKit
 
         std::span<const SignalT> inputs() const override
         {
-          inputs_[0] = shunt_.Gpot();
-          inputs_[1] = shunt_.Cpot();
+          inputs_[0] = full_.G();
+          inputs_[1] = full_.C();
           return inputs_;
         }
 
         SignalT G() const override
         {
-          return {base_ + layout_.g, layout_.K, layout_.K};
+          return {base_ + layout_.g, layout_.P, layout_.P};
         }
 
         SignalT C() const override
         {
-          return {base_ + layout_.c, layout_.K, layout_.K};
+          return {base_ + layout_.c, layout_.P, layout_.P};
         }
 
         int initialize() override;
@@ -72,21 +84,19 @@ namespace GridKit
       private:
         struct Layout
         {
-          explicit Layout(IdxT conductor_count)
-            : K(conductor_count),
-              KK(K * K),
-              g_ext(0),
-              c_ext(KK),
-              g(2 * KK),
-              c(3 * KK),
-              n(4 * KK)
+          Layout(IdxT conductor_count, IdxT terminal_count)
+            : C(conductor_count),
+              P(terminal_count),
+              PP(P * P),
+              g(0),
+              c(PP),
+              n(2 * PP)
           {
           }
 
-          const IdxT K;
-          const IdxT KK;
-          const IdxT g_ext;
-          const IdxT c_ext;
+          const IdxT C;
+          const IdxT P;
+          const IdxT PP;
           const IdxT g;
           const IdxT c;
           const IdxT n;
@@ -100,9 +110,10 @@ namespace GridKit
         using Element<ScalarT, IdxT>::slice;
         using Element<ScalarT, IdxT>::input;
 
-        const ShuntPotential<ScalarT, IdxT>& shunt_;
-        const Layout                         layout_;
-        mutable std::array<SignalT, 2>       inputs_{};
+        const ShuntView<ScalarT, IdxT>& full_;
+        const MapT                      map_;
+        const Layout                    layout_;
+        mutable std::array<SignalT, 2>  inputs_{};
       };
     } // namespace Parameters
   } // namespace EMT

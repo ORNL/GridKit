@@ -12,8 +12,7 @@
 #include <vector>
 
 #include <GridKit/Model/EMT/Element.hpp>
-#include <GridKit/Model/EMT/Parameters/Effects/SeriesImpedance/SeriesImpedance.hpp>
-#include <GridKit/Model/EMT/Parameters/Effects/ShuntAdmittance/ShuntAdmittance.hpp>
+#include <GridKit/Model/EMT/Parameters/Views.hpp>
 
 namespace GridKit
 {
@@ -29,8 +28,8 @@ namespace GridKit
         using IdxT    = index_type;
         using SignalT = typename Element<ScalarT, IdxT>::SignalT;
 
-        Yc(const SeriesImpedance<ScalarT, IdxT>& series,
-           const ShuntAdmittance<ScalarT, IdxT>& shunt);
+        Yc(const SeriesView<ScalarT, IdxT>& series,
+           const ShuntView<ScalarT, IdxT>&  shunt);
 
         IdxT size() const override
         {
@@ -98,10 +97,10 @@ namespace GridKit
         using Element<ScalarT, IdxT>::input;
         using Element<ScalarT, IdxT>::coordinate;
 
-        const SeriesImpedance<ScalarT, IdxT>& series_;
-        const ShuntAdmittance<ScalarT, IdxT>& shunt_;
-        const Layout                          layout_;
-        mutable std::array<SignalT, 4>        inputs_{};
+        const SeriesView<ScalarT, IdxT>& series_;
+        const ShuntView<ScalarT, IdxT>&  shunt_;
+        const Layout                     layout_;
+        mutable std::array<SignalT, 4>   inputs_{};
       };
     } // namespace Parameters
   } // namespace EMT

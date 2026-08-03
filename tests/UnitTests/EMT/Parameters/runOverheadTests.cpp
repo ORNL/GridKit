@@ -14,6 +14,9 @@
 #include <GridKit/Model/EMT/Parameters/Overhead.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
+#include <Eigen/Dense>
+#include <Eigen/LU>
+
 namespace
 {
   using scalar_type = double;
@@ -86,6 +89,29 @@ namespace
     data.conductor.mu           = {mu0};
     data.conductor.weight       = {11.0};
     data.conductor.phase        = {"a"};
+    return data;
+  }
+
+  /// Two twin bundles and one grounded shield: five conductors that
+  /// reduce to two electrical terminals. The bundles are asymmetric so
+  /// the reduced matrices have no accidental structure.
+  GridKit::EMT::Parameters::OverheadData<scalar_type, index_type> makeBundledData()
+  {
+    GridKit::EMT::Parameters::OverheadData<scalar_type, index_type> data;
+    data.path.length            = 100000.0;
+    data.tower.K                = 5;
+    data.tower.span             = 300.0;
+    data.tower.height           = {20.0, 20.0, 22.0, 22.0, 30.0};
+    data.tower.position         = {-10.0, -9.6, 10.0, 10.4, 0.0};
+    data.conductor.K            = 5;
+    data.conductor.radius       = {0.012, 0.012, 0.014, 0.014, 0.006};
+    data.conductor.inner_radius = {0.0, 0.0, 0.0, 0.0, 0.0};
+    data.conductor.sigma        = {3.7e7, 3.7e7, 3.7e7, 3.7e7, 5.0e6};
+    data.conductor.mu           = {mu0, mu0, mu0, mu0, mu0};
+    data.conductor.weight       = {11.0, 11.0, 12.0, 12.0, 4.0};
+    data.conductor.phase        = {"a", "a", "b", "b", "g"};
+    data.carson.earth_sigma     = 1.0e-2;
+    data.carson.earth_eps       = 10.0 * eps0;
     return data;
   }
 
@@ -1228,6 +1254,257 @@ namespace
 
     return success.report(__func__);
   }
+
+  GridKit::Testing::TestOutcome reduction_map_model()
+  {
+    using GridKit::Testing::TestStatus;
+    using MapT = GridKit::EMT::Parameters::ReductionMap<scalar_type, index_type>;
+
+    TestStatus success = true;
+
+    // Distinct phases and no grounding: the identity, so the aggregate
+    // skips the reduction stage entirely.
+    const auto plain  = MapT::fromConductors(makeData().conductor);
+    success          *= plain.identity();
+    success          *= (plain.terminals == 2);
+    success          *= (plain.terminal[0] == 0 && plain.terminal[1] == 1);
+
+    const auto bundled  = MapT::fromConductors(makeBundledData().conductor);
+    success            *= !bundled.identity();
+    success            *= (bundled.conductors == 5);
+    success            *= (bundled.terminals == 2);
+    success            *= (bundled.terminal[0] == 0 && bundled.terminal[1] == 0);
+    success            *= (bundled.terminal[2] == 1 && bundled.terminal[3] == 1);
+    success            *= (bundled.terminal[4] == MapT::kGrounded);
+    success            *= (bundled.members[0] == std::vector<index_type>{0, 1});
+    success            *= (bundled.members[1] == std::vector<index_type>{2, 3});
+
+    // The same phase on different circuits is a different terminal.
+    auto circuits     = makeData().conductor;
+    circuits.phase    = {"a", "a"};
+    circuits.circuit  = {1, 2};
+    const auto split  = MapT::fromConductors(circuits);
+    success          *= (split.terminals == 2);
+    success          *= split.identity();
+
+    // A line with every conductor grounded has no terminals.
+    auto grounded  = makeData().conductor;
+    grounded.phase = {"g", "g"};
+    bool thrown    = false;
+    try
+    {
+      MapT::fromConductors(grounded);
+    }
+    catch (const std::exception&)
+    {
+      thrown = true;
+    }
+    success *= thrown;
+
+    return success.report(__func__);
+  }
+
+  GridKit::Testing::TestOutcome series_reduction_model()
+  {
+    using GridKit::Testing::TestStatus;
+    using ComplexT = std::complex<scalar_type>;
+    using MatrixXc = Eigen::MatrixXcd;
+
+    const scalar_type                                           omega = 2.0 * pi * 50.0;
+    auto                                                        data  = makeBundledData();
+    GridKit::EMT::Parameters::Overhead<scalar_type, index_type> model(data);
+    model.updateTime(omega, 1.0);
+    model.allocate();
+
+    TestStatus success  = true;
+    success            *= (model.seriesReduction() != nullptr);
+    if (model.seriesReduction() == nullptr)
+    {
+      return success.report(__func__);
+    }
+
+    const auto& reduction  = *model.seriesReduction();
+    const auto  Drs        = reduction.Dr();
+    const auto  Rr         = reduction.R();
+    const auto  Lr         = reduction.L();
+    success               *= (Rr.rows == 2 && Rr.cols == 2);
+
+    // Exact initialization: every reduction residual row vanishes.
+    const auto* f = model.getResidual().getData();
+    for (index_type i = 0; i < 2 * 10 + 2 * 4; ++i)
+    {
+      success *= close(f[Drs.offset + i], 0.0, 1.0e-10);
+    }
+
+    // Independent dense reference through the explicit inverses the
+    // element never forms: Kron-eliminate the grounded conductor, then
+    // Zred = (E^T Zk^-1 E)^-1.
+    const auto  R = model.seriesImpedance().R();
+    const auto  L = model.seriesImpedance().L();
+    const auto* y = model.y().getData();
+
+    MatrixXc Z(5, 5);
+    for (index_type i = 0; i < 5; ++i)
+    {
+      for (index_type j = 0; j < 5; ++j)
+      {
+        Z(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) =
+            ComplexT{y[R.offset + i * 5 + j], omega * y[L.offset + i * 5 + j]};
+      }
+    }
+    const MatrixXc Zk = Z.topLeftCorner(4, 4)
+                        - Z.topRightCorner(4, 1)
+                              * Z.bottomRightCorner(1, 1).inverse()
+                              * Z.bottomLeftCorner(1, 4);
+    MatrixXc incidence = MatrixXc::Zero(4, 2);
+    incidence(0, 0) = incidence(1, 0) = ComplexT{1.0, 0.0};
+    incidence(2, 1) = incidence(3, 1) = ComplexT{1.0, 0.0};
+    const MatrixXc reference =
+        (incidence.transpose() * Zk.inverse() * incidence).inverse();
+
+    const scalar_type scale = reference.cwiseAbs().maxCoeff();
+    for (index_type t = 0; t < 2; ++t)
+    {
+      for (index_type q = 0; q < 2; ++q)
+      {
+        const ComplexT value{y[Rr.offset + t * 2 + q],
+                             omega * y[Lr.offset + t * 2 + q]};
+        success *= (std::abs(value
+                             - reference(static_cast<Eigen::Index>(t),
+                                         static_cast<Eigen::Index>(q)))
+                    <= 1.0e-10 * scale);
+      }
+    }
+
+    // The current-sum rows have exact unit couplings to D, and the
+    // distribution rows couple to Zred with exact -1.
+    success *= jacobianMatchesFiniteDifference(model, Rr.offset, Drs.offset, 1.0, 1.0e-7);
+    success *= jacobianMatchesFiniteDifference(model, Drs.offset, Rr.offset, 1.0, 1.0e-7);
+
+    // Conductor 0 belongs to terminal 0, so its distribution rows must
+    // be structurally blind to the terminal-1 impedance entries.
+    model.evaluateJacobian();
+    success *= !csrHasEntry(model.getCsrJacobian(), Drs.offset, Rr.offset + 3);
+
+    return success.report(__func__);
+  }
+
+  GridKit::Testing::TestOutcome shunt_reduction_model()
+  {
+    using GridKit::Testing::TestStatus;
+
+    const scalar_type                                           omega = 2.0 * pi * 50.0;
+    auto                                                        data  = makeBundledData();
+    GridKit::EMT::Parameters::Overhead<scalar_type, index_type> model(data);
+    model.updateTime(omega, 1.0);
+    model.allocate();
+
+    TestStatus success  = true;
+    success            *= (model.shuntReduction() != nullptr);
+    if (model.shuntReduction() == nullptr)
+    {
+      return success.report(__func__);
+    }
+
+    const auto& reduction  = *model.shuntReduction();
+    const auto  Gr         = reduction.G();
+    const auto  Cr         = reduction.C();
+    success               *= (Gr.rows == 2 && Gr.cols == 2);
+
+    const auto* f = model.getResidual().getData();
+    for (index_type i = 0; i < 2 * 4; ++i)
+    {
+      success *= close(f[Gr.offset + i], 0.0, 1.0e-10);
+    }
+
+    // Independent congruence reference: Yred = E^T Y E is a plain sum
+    // over bundle members.
+    const auto                      G          = model.shuntAdmittance().G();
+    const auto                      C          = model.shuntAdmittance().C();
+    const auto*                     y          = model.y().getData();
+    const std::array<index_type, 2> members[2] = {{0, 1}, {2, 3}};
+
+    for (index_type t = 0; t < 2; ++t)
+    {
+      for (index_type q = 0; q < 2; ++q)
+      {
+        scalar_type sum_g = 0.0;
+        scalar_type sum_c = 0.0;
+        for (const index_type a : members[t])
+        {
+          for (const index_type b : members[q])
+          {
+            sum_g += y[G.offset + a * 5 + b];
+            sum_c += y[C.offset + a * 5 + b];
+          }
+        }
+        success *= close(y[Gr.offset + t * 2 + q], sum_g, 1.0e-12);
+        success *= close(y[Cr.offset + t * 2 + q], sum_c, 1.0e-12);
+      }
+    }
+
+    success *= jacobianMatchesFiniteDifference(model, Gr.offset, Gr.offset, 1.0, 1.0e-7);
+    success *= jacobianMatchesFiniteDifference(model, Gr.offset, G.offset, 1.0, 1.0e-7);
+
+    // The conductance rows never touch the capacitance states.
+    model.evaluateJacobian();
+    success *= !csrHasEntry(model.getCsrJacobian(), Gr.offset, Cr.offset);
+
+    return success.report(__func__);
+  }
+
+  GridKit::Testing::TestOutcome overhead_reduced_chain()
+  {
+    using GridKit::Testing::TestStatus;
+
+    const scalar_type                                           omega = 2.0 * pi * 50.0;
+    auto                                                        data  = makeBundledData();
+    GridKit::EMT::Parameters::Overhead<scalar_type, index_type> model(data);
+    model.updateTime(omega, 1.0);
+    model.allocate();
+
+    // The whole modal stage runs at the terminal count.
+    const auto Gc = model.yc().Gc();
+    const auto Bc = model.yc().Bc();
+
+    TestStatus success  = true;
+    success            *= (Gc.rows == 2 && Gc.cols == 2);
+    success            *= (model.gamma().alphaM().rows == 2);
+
+    if (model.seriesReduction() == nullptr || model.shuntReduction() == nullptr)
+    {
+      success *= false;
+      return success.report(__func__);
+    }
+
+    // The reduced characteristic admittance satisfies the sandwich
+    // equation against the reduced per-unit-length pair.
+    const auto  Rr = model.seriesReduction()->R();
+    const auto  Lr = model.seriesReduction()->L();
+    const auto  Gr = model.shuntReduction()->G();
+    const auto  Cr = model.shuntReduction()->C();
+    const auto* y  = model.y().getData();
+
+    Complex2x2 Z;
+    Complex2x2 Y;
+    Complex2x2 Yc;
+    for (index_type e = 0; e < 4; ++e)
+    {
+      Z[e]  = {y[Rr.offset + e], omega * y[Lr.offset + e]};
+      Y[e]  = {y[Gr.offset + e], omega * y[Cr.offset + e]};
+      Yc[e] = {y[Gc.offset + e], y[Bc.offset + e]};
+    }
+
+    const auto sandwich = multiply2(multiply2(Yc, Z), Yc);
+    const auto scale    = maxAbs2(Y);
+    for (index_type e = 0; e < 4; ++e)
+    {
+      success *= (std::abs(sandwich[e] - Y[e]) <= 1.0e-10 * scale);
+    }
+    success *= (std::abs(Yc[1] - Yc[2]) <= 1.0e-10 * maxAbs2(Yc));
+
+    return success.report(__func__);
+  }
 } // namespace
 
 int main()
@@ -1249,5 +1526,9 @@ int main()
   result += overhead_gis_path_length();
   result += overhead_layout();
   result += overhead_monitor_outputs();
+  result += reduction_map_model();
+  result += series_reduction_model();
+  result += shunt_reduction_model();
+  result += overhead_reduced_chain();
   return result.summary();
 }

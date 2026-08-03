@@ -2,6 +2,12 @@
 #  EMT frequency-domain parameter models and the Overhead aggregate.
 # ]]
 
+gridkit_add_library(
+  emt_parameter_views
+  INTERFACE_TARGET
+  HEADERS Views.hpp
+  LINK_LIBRARIES INTERFACE GridKit::emt_core)
+
 add_subdirectory(Geometry/Conductor)
 add_subdirectory(Geometry/Tower)
 add_subdirectory(Geometry/Path)
@@ -11,6 +17,7 @@ add_subdirectory(Effects/Carson)
 add_subdirectory(Effects/SeriesImpedance)
 add_subdirectory(Effects/ShuntPotential)
 add_subdirectory(Effects/ShuntAdmittance)
+add_subdirectory(Effects/Reduction)
 add_subdirectory(Response/Gamma)
 add_subdirectory(Response/H)
 add_subdirectory(Response/Tau)
@@ -43,6 +50,8 @@ gridkit_add_library(
     GridKit::emt_shunt_potential
     INTERFACE
     GridKit::emt_shunt_admittance
+    INTERFACE
+    GridKit::emt_reduction
     INTERFACE
     GridKit::emt_gamma
     INTERFACE

@@ -248,11 +248,23 @@ namespace GridKit
           series_impedance_(skin_effect_, geometric_inductance_, carson_),
           shunt_potential_(tower_, conductor_),
           shunt_admittance_(shunt_potential_),
-          gamma_(series_impedance_, shunt_admittance_),
+          reduction_map_(
+              ReductionMap<ScalarT, IdxT>::fromConductors(data.conductor)),
+          series_reduction_(
+              reduction_map_.identity()
+                  ? nullptr
+                  : std::make_unique<SeriesReduction<ScalarT, IdxT>>(
+                        series_impedance_, reduction_map_)),
+          shunt_reduction_(
+              reduction_map_.identity()
+                  ? nullptr
+                  : std::make_unique<ShuntReduction<ScalarT, IdxT>>(
+                        shunt_admittance_, reduction_map_)),
+          gamma_(modalSeries(), modalShunt()),
           tau_(gamma_, path_),
           h_(gamma_, path_),
-          yc_(series_impedance_, shunt_admittance_),
-          zc_(series_impedance_, shunt_admittance_),
+          yc_(modalSeries(), modalShunt()),
+          zc_(modalSeries(), modalShunt()),
           monitor_(std::make_unique<Detail::OverheadMonitor<ScalarT, IdxT>>(
               "Overhead", data.monitored_variables)),
           monitor_controller_(std::make_unique<MonitorControllerT>("omega", omega_))
@@ -265,12 +277,14 @@ namespace GridKit
                      &carson_,
                      &series_impedance_,
                      &shunt_potential_,
-                     &shunt_admittance_,
-                     &gamma_,
-                     &tau_,
-                     &h_,
-                     &yc_,
-                     &zc_};
+                     &shunt_admittance_};
+        if (series_reduction_)
+        {
+          elements_.push_back(series_reduction_.get());
+          elements_.push_back(shunt_reduction_.get());
+        }
+        elements_.insert(elements_.end(),
+                         {&gamma_, &tau_, &h_, &yc_, &zc_});
         for (const auto& sink : data.monitor_sink)
         {
           monitor_controller_->addSink(sink);

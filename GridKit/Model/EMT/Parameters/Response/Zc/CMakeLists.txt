@@ -5,7 +5,6 @@ gridkit_add_library(
   LINK_LIBRARIES
     PUBLIC
     GridKit::emt_core
-    GridKit::emt_series_impedance
-    GridKit::emt_shunt_admittance
+    GridKit::emt_parameter_views
     PRIVATE
     Eigen3::Eigen)

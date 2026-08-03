@@ -1,6 +1,9 @@
 add_executable(test_emt_overhead runOverheadTests.cpp)
 target_link_libraries(
-  test_emt_overhead GridKit::emt_overhead GridKit::testing)
+  test_emt_overhead
+  GridKit::emt_overhead
+  GridKit::testing
+  Eigen3::Eigen)
 
 add_test(NAME EMTOverheadTest COMMAND $<TARGET_FILE:test_emt_overhead>)
 
