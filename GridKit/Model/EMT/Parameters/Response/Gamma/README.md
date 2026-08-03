@@ -193,16 +193,23 @@ Both $\mathbf{T}_v$ and $\mathbf{T}_i$ are reported as $K\times K$
 conductor-by-mode matrices. Column $m$ matches the ordering of `Alpha_m` and
 `Beta_m`.
 
-The voltage and current modal transforms are dual:
+The voltage modal transform follows directly from the monitored pairing:
 
 ```math
 \mathbf{v}=\mathbf{T}_v\hat{\mathbf{v}},\qquad
-\hat{\mathbf{v}}=\mathbf{T}_i^{\mathsf H}\mathbf{v}
+\hat{\mathbf{v}}=\mathbf{T}_i^{\mathsf H}\mathbf{v}.
 ```
 
+The physical current transformation of a reciprocal line follows the
+transpose pairing instead. The symmetric per-unit-length matrices give
+$\mathbf{Y}'\mathbf{Z}'=(\mathbf{Z}'\mathbf{Y}')^{\mathsf T}$, so the
+matrix that diagonalizes $\mathbf{Y}'\mathbf{Z}'$ is
+$\mathbf{T}_v^{-\mathsf T}=\overline{\mathbf{T}_i}$, not the monitored
+$\mathbf{T}_i=\mathbf{T}_v^{-\mathsf H}$:
+
 ```math
-\mathbf{i}=\mathbf{T}_i\hat{\mathbf{i}},\qquad
-\hat{\mathbf{i}}=\mathbf{T}_v^{\mathsf H}\mathbf{i}.
+\mathbf{i}=\overline{\mathbf{T}_i}\hat{\mathbf{i}},\qquad
+\hat{\mathbf{i}}=\mathbf{T}_v^{\mathsf T}\mathbf{i}.
 ```
 
 GridKit uses the current-form propagation matrix because `LineDistributed`
@@ -211,17 +218,20 @@ propagates reflected current to incident current:
 ```math
 \mathbf{H}^{\mathrm{mps}}_i(s)
 =
-\mathbf{T}_i(s)\widehat{\mathbf{H}}^{\mathrm{mps}}(s)
-\mathbf{T}_v(s)^{\mathsf H}.
+\overline{\mathbf{T}_i(s)}\widehat{\mathbf{H}}^{\mathrm{mps}}(s)
+\mathbf{T}_v(s)^{\mathsf T}.
 ```
 
-The dual voltage-form propagation matrix is
+The dual voltage-form propagation matrix uses the monitored pairing
+exactly, since $\mathbf{T}_v^{-1}=\mathbf{T}_i^{\mathsf H}$:
 
 ```math
 \mathbf{H}^{\mathrm{mps}}_v(s)
 =
 \mathbf{T}_v(s)\widehat{\mathbf{H}}^{\mathrm{mps}}(s)
-\mathbf{T}_i(s)^{\mathsf H}.
+\mathbf{T}_i(s)^{\mathsf H},
+\qquad
+\mathbf{H}^{\mathrm{mps}}_i=\left(\mathbf{H}^{\mathrm{mps}}_v\right)^{\mathsf T}.
 ```
 
 The phase-domain matrices $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$ are
