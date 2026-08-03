@@ -12,9 +12,13 @@ Editors can enable validation for an individual case without workspace settings:
 
 {{ schema_example }}
 
+:::{div} gk-table
+
 ```{jsonschema} ../../../GridKit/Model/case.schema.json
 :lift_description:
 :lift_definitions:
 :auto_reference:
 :auto_target:
 ```
+
+:::

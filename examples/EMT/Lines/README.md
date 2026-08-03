@@ -50,7 +50,7 @@ catalog resolution, and a set of known-invalid documents:
 python ../../../tests/Schema/validate_line_inputs.py
 ```
 
-The loader additionally enforces the semantic rules listed in the schema
-documentation: include resolution, unique type names, resolvable tower,
+The loader additionally enforces the semantic rules the schema cannot
+express: include resolution, unique type names, resolvable tower,
 conductor, and attachment references, single-use attachment points, and a
 positive minimum conductor height when tension is supplied.

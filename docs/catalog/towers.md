@@ -1,17 +1,12 @@
 (catalog-towers)=
 # Towers
 
-Tower types carry the cross-sectional attachment geometry of a
-representative structure: one named attachment point per physical
-conductor, so bundle sub-conductor positions are separate points. Line
-documents hang conductors on these names; span length is route data and
-stays in the line document.
+A tower type carries the cross-sectional attachment geometry of a
+representative structure, one named point per physical conductor; line
+documents hang conductors on these names with `at`.
 
 ```{catalog-towers} examples/EMT/Lines/north-american.catalog.yaml
 ```
-
-The cross-section figures come from the
-[overhead line examples](#examples-emt-lines) built on each type.
 
 ## 345 kV H-Frame
 

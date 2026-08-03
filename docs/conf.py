@@ -17,6 +17,7 @@ extensions = [
     "myst_parser",
     "sphinx-jsonschema",
     "sphinx_design",
+    "sphinxcontrib.mermaid",
 ]
 
 breathe_projects = {"GridKit": str(docs_dir / "xml")}
@@ -83,7 +84,7 @@ myst_substitutions = {
         f'```json\n{{\n  "$schema": "{line_schema_url}"\n}}\n```'
     ),
 }
-myst_fence_as_directive = ["math"]
+myst_fence_as_directive = ["math", "mermaid"]
 myst_heading_anchors = 5
 
 

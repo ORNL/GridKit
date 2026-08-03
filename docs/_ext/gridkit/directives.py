@@ -87,17 +87,24 @@ class GridKitDirective(SphinxDirective):
         self,
         headers: Sequence[str],
         rows: Iterable[Sequence[object]],
+        align: Sequence[str] | None = None,
     ) -> list[nodes.Node]:
-        """Render rows as a MyST table, omitting columns with no content."""
+        """Render rows as a MyST table, omitting columns with no content.
+
+        `align` gives one entry per header: "right" or "center" sets that
+        column's alignment, anything else keeps the default.
+        """
         cells = [[str(value).replace("|", r"\|") for value in row] for row in rows]
         if not cells:
             return self.parse_text_to_nodes(self.empty)
 
         keep = [index for index in range(len(headers)) if any(row[index] for row in cells)]
         head = [headers[index] for index in keep]
+        marks = {"right": "---:", "center": ":---:"}
+        rules = [marks.get(align[index] if align else "", "---") for index in keep]
         lines = [
             f"| {' | '.join(head)} |",
-            f"|{' --- |' * len(head)}",
+            f"| {' | '.join(rules)} |",
             *(f"| {' | '.join(row[index] for index in keep)} |" for row in cells),
         ]
         return self.parse_text_to_nodes(
@@ -319,7 +326,13 @@ class CatalogDirective(GridKitDirective):
 
     @staticmethod
     def number(value: object) -> str:
-        return f"{value:g}" if isinstance(value, (int, float)) else ""
+        """Format a quantity, in math notation once `:g` turns exponential."""
+        if not isinstance(value, (int, float)):
+            return ""
+        mantissa, _, exponent = f"{value:g}".partition("e")
+        if not exponent:
+            return mantissa
+        return rf"${mantissa} \times 10^{{{int(exponent)}}}$"
 
 
 class CatalogConductors(CatalogDirective):
@@ -331,22 +344,36 @@ class CatalogConductors(CatalogDirective):
         conductors = self.catalog().get("conductors") or {}
         return self.table(
             (
-                "Type", "Description", "Outer radius [m]", "Inner radius [m]",
+                "Type", "Description", "Radius (outer / inner) [m]",
                 "Conductivity [S/m]", "Permeability [-]", "Weight [N/m]",
             ),
             (
                 (
                     f"`{name}`",
                     item.get("description", ""),
-                    self.number(item.get("radius", {}).get("outer")),
-                    self.number(item.get("radius", {}).get("inner")),
+                    self._radius(item),
                     self.number(item.get("conductivity")),
-                    self.number(item.get("permeability", 1)),
+                    self._permeability(item),
                     self.number(item.get("weight")),
                 )
                 for name, item in conductors.items()
             ),
+            align=("", "", "right", "right", "right", "right"),
         )
+
+    @classmethod
+    def _radius(cls, item: dict) -> str:
+        """One cell for both radii; solid types show the outer alone."""
+        radius = item.get("radius") or {}
+        outer = cls.number(radius.get("outer"))
+        inner = radius.get("inner")
+        return f"{outer} / {cls.number(inner)}" if inner else outer
+
+    @classmethod
+    def _permeability(cls, item: dict) -> str:
+        """Blank at the default, so an all-default column drops out."""
+        value = item.get("permeability", 1)
+        return "" if value == 1 else cls.number(value)
 
 
 class CatalogTowers(CatalogDirective):
@@ -366,6 +393,7 @@ class CatalogTowers(CatalogDirective):
                 )
                 for name, item in towers.items()
             ),
+            align=("", "", "right"),
         )
 
 
@@ -389,6 +417,7 @@ class CatalogTower(CatalogDirective):
                  self.number(point.get("h")))
                 for name, point in (tower.get("attachments") or {}).items()
             ),
+            align=("", "right", "right"),
         )
 
 

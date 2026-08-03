@@ -1,17 +1,12 @@
 (catalog)=
 # Catalog
 
-The catalog names the reusable types that overhead-line input documents
-reference: conductors (dimensions, material, and weight) and towers
-(attachment geometry of representative structures). Types live in YAML
-catalog files that line documents pull in through `include`, so one
-library serves many lines and users extend it by adding entries or files.
-The [overhead line input format](#models-emt-parameters-schema) documents
-the file formats and how references resolve.
-
-The pages below render the shipped catalog,
-[`north-american.catalog.yaml`](../../examples/EMT/Lines/north-american.catalog.yaml).
-Values are illustrative, not manufacturer data.
+Catalogs name the reusable conductor and tower types that
+[overhead-line input documents](#models-emt-parameters-schema) reference,
+in YAML files that stay readable, commentable, and easy to extend. The
+pages below render the shipped catalog,
+[`north-american.catalog.yaml`](../../examples/EMT/Lines/north-american.catalog.yaml);
+values are illustrative, not manufacturer data.
 
 ::::{grid} 1 2 2 2
 :gutter: 3
@@ -20,14 +15,14 @@ Values are illustrative, not manufacturer data.
 :link: catalog-conductors
 :link-type: ref
 
-Conductor types: radii, conductivity, permeability, and weight.
+Dimensions, material, and weight of each conductor type.
 :::
 
 :::{grid-item-card} Towers
 :link: catalog-towers
 :link-type: ref
 
-Tower types: named attachment points with cross-section figures.
+Named attachment points of each tower type, with cross-sections.
 :::
 
 ::::
