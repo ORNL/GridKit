@@ -24,3 +24,90 @@ Proposed fix: change the residual to the sandwich form — equation: −Y + Yc·
 One connecting observation: issue #2 is not caused by issue #1 — Yc/Zc never touch the eigenvectors — but both were exposed by the same probe, and together they account for every anomaly seen tonight: the four sweep failures (crossings), the 765kv-staggered failure (bundle clusters), the ~1% Yc/Zc asymmetry (formula), the Gin/Gout plateau and 477 Hz composition spike (veering ill-conditioning), and the eigenvector phase drift (unpinned gauge).
 
 Where things stand meanwhile: the Overhead reorg is done and regenerated (scripts in plotting/, everything in output/, response/ gone, solver specs committed at the example root, gamma α/β plot restored), model JSONs now carry nested rows×cols matrices, and the gallery is built with the staggered 345kv working end to end — I paused it mid-run when you interrupted. Say the word and I'll finish the gallery run and stats table as-is (documenting the symmetric-line failures in the table), or hold everything until you decide on the two fixes above.
+
+
+
+I found three major correctness problems and several system-level risks. The first two affect the generated line model even when every existing test passes.
+
+## Major findings
+
+1. **Critical — `Yc` and `Zc` use scalar identities that are invalid for coupled matrices.**
+
+   [Yc.cpp](/home/lukel/GridKit/GridKit/Model/EMT/Parameters/Response/Yc/Yc.cpp:62) initializes
+   \[
+   Y_c=\sqrt{Z^{-1}Y}
+   \]
+   and its residual enforces \(Z Y_c^2=Y\). [Zc.cpp](/home/lukel/GridKit/GridKit/Model/EMT/Parameters/Response/Zc/Zc.cpp:62) does the dual operation.
+
+   For a coupled multiconductor line with \(\Gamma^2=ZY\), the characteristic admittance is
+   \[
+   Y_c=Z^{-1}\Gamma,
+   \]
+   which satisfies
+   \[
+   Y_c Z Y_c=Y,
+   \]
+   not \(Z Y_c^2=Y\). The current equation is valid only when the matrices commute, including the scalar case.
+
+   This explains why [UniversalLineModel.cpp](/home/lukel/GridKit/application/EMT/UniversalLineModel/UniversalLineModel.cpp:539) sees percent-level nonsymmetry and manually averages \(Y_c\). That comment attributes the asymmetry to modal reconstruction, but `Yc` is computed directly from \(Z^{-1}Y\). Symmetrizing afterward does not restore the correct Riccati equation.
+
+   A read-only check against the tracked overhead response produced a physical Riccati residual between roughly **0.6% and 1.4%**. The tests miss this because the multiconductor test only checks the implementation’s own residual, while the independent physical reference is scalar-only in [runOverheadTests.cpp](/home/lukel/GridKit/tests/UnitTests/EMT/Parameters/runOverheadTests.cpp:570).
+
+2. **Critical — phase, circuit, bundle, and grounded-conductor semantics disappear before model export.**
+
+   The parser preserves `phase` and `circuit` in [OverheadDataJSONParser.hpp](/home/lukel/GridKit/GridKit/Model/EMT/Parameters/OverheadDataJSONParser.hpp:535), and the schema says conductors sharing phase and circuit have the same potential while `g` conductors are grounded in [line_schema.py](/home/lukel/GridKit/docs/_ext/gridkit/line_schema.py:272).
+
+   However, production code never uses those fields after parsing. [UniversalLineModel.cpp](/home/lukel/GridKit/application/EMT/UniversalLineModel/UniversalLineModel.cpp:260) infers `K` from the full-conductor `Yc` matrix and exports that physical-conductor count directly.
+
+   Consequently:
+
+   - The twin-bundle 345 kV line is exported as `K=8`, not three electrical phase terminals.
+   - The twin-bundle double-circuit line is exported as `K=14`, not six phase/circuit terminals.
+   - The quad-bundle 765 kV line is exported as `K=14`, not three phase terminals.
+
+   See [345kv-horizontal.line.json](/home/lukel/GridKit/examples/EMT/Lines/345kv-horizontal.line.json:12), [500kv-double-circuit.line.json](/home/lukel/GridKit/examples/EMT/Lines/500kv-double-circuit.line.json:12), and [765kv-horizontal.line.json](/home/lukel/GridKit/examples/EMT/Lines/765kv-horizontal.line.json:12).
+
+   Full-conductor matrices are reasonable intermediates, but the exported system model must either perform bundle/ground reduction or carry explicit constraints and mapping. It currently does neither.
+
+3. **High — `inner_radius` is accepted and validated but ignored by the conductor model.**
+
+   The schema explicitly models annular conduction regions, and the parser loads the inner radius. But [SkinEffect.cpp](/home/lukel/GridKit/GridKit/Model/EMT/Parameters/Effects/SkinEffect/SkinEffect.cpp:27) uses only the outer radius:
+   \[
+   R_k\propto\frac{1}{\sigma r_\text{outer}^2}.
+   \]
+
+   No production call to `innerRadius()` exists. The supplied Drake and Cardinal catalog entries have nonzero inner radii in [north-american.catalog.json](/home/lukel/GridKit/examples/EMT/Lines/north-american.catalog.json:8). Even at DC, their annular resistance should be approximately **15.4% and 10.3% higher**, respectively, than the current solid-area result. Their frequency-dependent response is also different.
+
+   All skin-effect tests force inner radius to zero in [runSkinEffectTests.cpp](/home/lukel/GridKit/tests/UnitTests/EMT/Parameters/runSkinEffectTests.cpp:24), so this path is untested.
+
+4. **High — modal tracking assumes simple eigenvalues, but supported line geometries naturally produce degenerate modes.**
+
+   [Gamma.cpp](/home/lukel/GridKit/GridKit/Model/EMT/Parameters/Response/Gamma/Gamma.cpp:75) independently sorts eigenvalues and directly inverts the eigenvector matrix without condition checks. The derivative tracking equations then track individual vectors. The model’s own [README](/home/lukel/GridKit/GridKit/Model/EMT/Parameters/Response/Gamma/README.md:11) acknowledges that every tracked branch must be simple.
+
+   Symmetric or transposed three-phase lines naturally contain repeated or near-repeated modal subspaces. Individual eigenvectors are then non-unique, making the tracking Jacobian singular or ill-conditioned and allowing branch rotation/swapping. The accepted input contract does not reject this case, detect it, or provide subspace tracking.
+
+## Additional system-level problems
+
+5. **Absolute tolerances are too loose for small parameter states.**
+
+   [Overhead.hpp](/home/lukel/GridKit/GridKit/Model/EMT/Parameters/Overhead.hpp:169) sets
+   \[
+   \mathrm{atol}_i=\mathrm{rtol}(1+|y_i|).
+   \]
+   At the default \(10^{-7}\), every state below one receives an absolute tolerance near \(10^{-7}\), including propagation quantities around \(10^{-8}\). This contradicts the comment claiming scaling to each variable’s initialization magnitude. IDA really uses this vector through [Ida.cpp](/home/lukel/GridKit/GridKit/Solver/Dynamic/Ida.cpp:1298).
+
+6. **Nonpassive fitted models are still emitted as successful artifacts.**
+
+   Passivity checking is explicitly grid-limited in [Passivity.cpp](/home/lukel/GridKit/GridKit/Solver/Optimization/Rational/Passivity.cpp:71). More importantly, [UniversalLineModel.cpp](/home/lukel/GridKit/application/EMT/UniversalLineModel/UniversalLineModel.cpp:592) only prints a warning when the fit is nonpassive, then writes the model and returns success based solely on fit error. A nonpassive EMT line can inject energy or destabilize the simulation; it should not silently become an apparently successful production artifact.
+
+7. **Geometry validation permits physically invalid configurations, followed by release-unsafe inversion.**
+
+   `Tower` verifies distinct conductor centers but not conductor overlap or surface clearance from ground. Yet inductance and potential use logarithms such as \(\log(2h/r)\) in [GeometricInductance.hpp](/home/lukel/GridKit/GridKit/Model/EMT/Parameters/Effects/GeometricInductance/GeometricInductance.hpp:119). The capacitance inversion in [ShuntPotential.cpp](/home/lukel/GridKit/GridKit/Model/EMT/Parameters/Effects/ShuntPotential/ShuntPotential.cpp:116) protects singular pivots only with `assert`; release builds can divide by zero and propagate NaNs.
+
+8. **The aggregate DAE/Jacobian path will scale poorly.**
+
+   The current layout contains approximately \(26K^2+18K+3\) states—about **5,351 states for a 14-conductor line**. Each Jacobian evaluation allocates new jet vectors in [Element.hpp](/home/lukel/GridKit/GridKit/Model/EMT/Element.hpp:260), while every sparse derivative is stored in a dynamic vector and merged through linear searches in [SparseJet.hpp](/home/lukel/GridKit/GridKit/LinearAlgebra/SparseJet.hpp:59). This is a substantial avoidable cost inside an IDA continuation sweep, especially around the dense Gamma tracking equations.
+
+My recommended fix order is: correct the matrix `Yc/Zc` equations, define the physical-conductor-to-electrical-terminal reduction, implement or remove annular conductor support, and then address modal degeneracy. The other issues are important, but those first four determine whether the produced model represents the requested line.
+
+No files were changed, and I did not build or run tests because of the read-only boundary. The pre-existing untracked LineGallery files remain untouched.
