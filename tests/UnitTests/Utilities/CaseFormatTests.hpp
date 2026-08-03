@@ -298,7 +298,7 @@ namespace GridKit
         success *= result.exciter.size() == 1;
         success *= result.sexspti.size() == 1;
         success *= result.reecb.size() == 1;
-        success *= result.signal.size() == 28;
+        success *= result.signal.size() == 29;
 
         success *= result.bus[0].bus_id == 1;
         success *= result.bus[0].bus_type == BusType::DEFAULT;
@@ -608,7 +608,7 @@ namespace GridKit
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;
         success *= result.bus_fault[0].buses[BusFaultBuses::bus] == 1;
-        success *= result.bus_fault[0].signal_inputs[BusFaultSignalInputs::active] == 4;
+        success *= result.bus_fault[0].signal_inputs[BusFaultSignalInputs::active] == 29;
         success *= result.bus_fault[0].disambiguation_string == "1";
         success *= result.bus_fault[0].monitored_variables.contains(BusFaultMonitorableVariables::active);
 

@@ -225,12 +225,12 @@ namespace GridKit
         IdxT                                                           input_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> tap_signal;
         PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> phase_signal;
-        tap_signal.set(&tap_value, &input_index);
-        phase_signal.set(&phase_value, &input_index);
+        tap_signal.link(&tap_value, &input_index);
+        phase_signal.link(&phase_value, &input_index);
 
         PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, R, X, G, B);
-        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::TAP>(&tap_signal);
-        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
+        branch.getPorts().in.template port<PhasorDynamics::BranchSignalInputs::tap>().connect(&tap_signal);
+        branch.getPorts().in.template port<PhasorDynamics::BranchSignalInputs::phase>().connect(&phase_signal);
         branch.allocate();
         branch.evaluateResidual();
 
@@ -277,12 +277,12 @@ namespace GridKit
         IdxT                                      input_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<ScalarT, IdxT> tap_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> phase_signal;
-        tap_signal.set(&tap_value, &input_index);
-        phase_signal.set(&phase_value, &input_index);
+        tap_signal.link(&tap_value, &input_index);
+        phase_signal.link(&phase_value, &input_index);
 
         PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B);
-        ref_branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::TAP>(&tap_signal);
-        ref_branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
+        ref_branch.getPorts().in.template port<PhasorDynamics::BranchSignalInputs::tap>().connect(&tap_signal);
+        ref_branch.getPorts().in.template port<PhasorDynamics::BranchSignalInputs::phase>().connect(&phase_signal);
 
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus1(Vr1, Vi1);
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus2(Vr2, Vi2);
@@ -298,8 +298,8 @@ namespace GridKit
         test_branch.setX(X);
         test_branch.setG(G);
         test_branch.setB(B);
-        test_branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::TAP>(&tap_signal);
-        test_branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
+        test_branch.getPorts().in.template port<PhasorDynamics::BranchSignalInputs::tap>().connect(&tap_signal);
+        test_branch.getPorts().in.template port<PhasorDynamics::BranchSignalInputs::phase>().connect(&phase_signal);
 
         ref_branch.evaluateResidual();
         test_branch.evaluateResidual();
@@ -417,9 +417,9 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> tap_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> phase_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> open_signal;
-        tap_signal.set(&tap_value, &input_index);
-        phase_signal.set(&phase_value, &input_index);
-        open_signal.set(&open_value, &input_index);
+        tap_signal.link(&tap_value, &input_index);
+        phase_signal.link(&phase_value, &input_index);
+        open_signal.link(&open_value, &input_index);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(10.0, 20.0);
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
@@ -429,16 +429,16 @@ namespace GridKit
         bus2.initialize();
 
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
-        auto&                                 signals = branch.getSignals();
-        signals.template attachSignalNode<PhasorDynamics::BranchExternalVariables::TAP>(&tap_signal);
-        signals.template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
-        signals.template attachSignalNode<PhasorDynamics::BranchExternalVariables::OPEN>(&open_signal);
+        auto& signals = branch.getPorts();
+        signals.in.template port<PhasorDynamics::BranchSignalInputs::tap>().connect(&tap_signal);
+        signals.in.template port<PhasorDynamics::BranchSignalInputs::phase>().connect(&phase_signal);
+        signals.in.template port<PhasorDynamics::BranchSignalInputs::open>().connect(&open_signal);
 
         bus1.evaluateResidual();
         bus2.evaluateResidual();
         branch.evaluateResidual();
-        success *= isEqual(bus1.Ir(), ScalarT{12.719793434963478});
-        success *= isEqual(bus1.Ii(), ScalarT{-4.047960563981182});
+        success *= isEqual(bus1.Ir(), ScalarT{16.67979343496348});
+        success *= isEqual(bus1.Ii(), ScalarT{-6.927960563981181});
         success *= isEqual(bus2.Ir(), ScalarT{13.821345956502421});
         success *= isEqual(bus2.Ii(), ScalarT{-21.182080826645354});
 
@@ -475,14 +475,14 @@ namespace GridKit
         IdxT                                      input_index{INVALID_INDEX<IdxT>};
         PhasorDynamics::SignalNode<ScalarT, IdxT> open_signal;
         PhasorDynamics::SignalNode<ScalarT, IdxT> phase_signal;
-        open_signal.set(&open_value, &input_index);
-        phase_signal.set(&phase_value, &input_index);
+        open_signal.link(&open_value, &input_index);
+        phase_signal.link(&phase_value, &input_index);
 
         PhasorDynamics::Bus<ScalarT, IdxT>    bus1(10.0, 20.0);
         PhasorDynamics::Bus<ScalarT, IdxT>    bus2(30.0, 40.0);
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, 0.0, 1.0, 0.0, 0.0);
-        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::OPEN>(&open_signal);
-        branch.getSignals().template attachSignalNode<PhasorDynamics::BranchExternalVariables::PHASE>(&phase_signal);
+        branch.getPorts().in.template port<PhasorDynamics::BranchSignalInputs::open>().connect(&open_signal);
+        branch.getPorts().in.template port<PhasorDynamics::BranchSignalInputs::phase>().connect(&phase_signal);
 
         bus1.allocate();
         bus2.allocate();

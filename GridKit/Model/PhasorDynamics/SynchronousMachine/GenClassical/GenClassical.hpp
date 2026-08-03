@@ -99,15 +99,6 @@ namespace GridKit
         return ports_;
       }
 
-      /// Get the `ComponentSignals` from this `GenClassical`.
-      auto getSignals()
-          -> ComponentSignals<ScalarT,
-                              IdxT,
-                              NoVariables,
-                              GenClassicalExternalVariables>&
-      {
-        return signals_;
-      }
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
@@ -153,7 +144,6 @@ namespace GridKit
       SignalPortsT ports_;
 
       /// Component signal extension
-      ComponentSignals<ScalarT, IdxT, NoVariables, GenClassicalExternalVariables> signals_;
 
       /* Input parameters */
       RealT H_{3.0};

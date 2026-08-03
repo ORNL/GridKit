@@ -736,8 +736,9 @@ namespace GridKit
         auto& bus    = data.bus.emplace_back();
         bus.bus_id   = RENEWABLE_BUS_ID;
         bus.bus_type = BusDataT::BusType::SLACK;
-        bus.Vr0      = ONE<RealT>;
-        bus.Vi0      = ZERO<RealT>;
+        bus.initial_state.emplace();
+        bus.initial_state->vr = ONE<RealT>;
+        bus.initial_state->vi = ZERO<RealT>;
 
         data.signal = {{"Active Current Command", signalId(LoopSignal::IPCMD)},
                        {"Reactive Current Command", signalId(LoopSignal::IQCMD)},

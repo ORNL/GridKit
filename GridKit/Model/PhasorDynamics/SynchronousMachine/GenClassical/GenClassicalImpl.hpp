@@ -27,7 +27,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     GenClassical<scalar_type, index_type>::GenClassical(BusT* bus)
       : bus_(bus),
-        bus_id_(0),
         H_(3.0),
         D_(0.0),
         Ra_(0.0),
@@ -48,7 +47,6 @@ namespace GridKit
                                                         RealT Ra,
                                                         RealT Xdp)
       : bus_(bus),
-        bus_id_(0),
         H_(H),
         D_(D),
         Ra_(Ra),
@@ -120,12 +118,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
 bool GenClassical<scalar_type, index_type>::isOnline() const
     {
-      static constexpr auto ONLINE = GenClassicalExternalVariables::ONLINE;
+      static constexpr auto ONLINE = GenClassicalSignalInputs::online;
 
-      if (signals_.template isAttached<ONLINE>()
-          && signals_.template isLinked<ONLINE>())
+      if (ports_.in.template port<ONLINE>().connected()
+          && ports_.in.template port<ONLINE>().linked())
       {
-        return signals_.template readExternalVariable<ONLINE>() != ScalarT{ZERO<RealT>};
+        return ports_.in.template port<ONLINE>().readSignal() != ScalarT{ZERO<RealT>};
       }
 
       return true;
@@ -250,15 +248,15 @@ bool GenClassical<scalar_type, index_type>::isOnline() const
       ScalarT p_system = ScalarT{0.0};
       ScalarT q_system = ScalarT{0.0};
 
-      static constexpr auto P = GenClassicalExternalVariables::P;
-      static constexpr auto Q = GenClassicalExternalVariables::Q;
-      if (signals_.template isAttached<P>() && signals_.template isLinked<P>())
+      static constexpr auto P = GenClassicalSignalInputs::p;
+      static constexpr auto Q = GenClassicalSignalInputs::q;
+      if (ports_.in.template port<P>().connected() && ports_.in.template port<P>().linked())
       {
-        p_system = signals_.template readExternalVariable<P>();
+        p_system = ports_.in.template port<P>().readSignal();
       }
-      if (signals_.template isAttached<Q>() && signals_.template isLinked<Q>())
+      if (ports_.in.template port<Q>().connected() && ports_.in.template port<Q>().linked())
       {
-        q_system = signals_.template readExternalVariable<Q>();
+        q_system = ports_.in.template port<Q>().readSignal();
       }
       ScalarT p     = this->toComponentBase(p_system);
       ScalarT q     = this->toComponentBase(q_system);
@@ -443,8 +441,8 @@ bool GenClassical<scalar_type, index_type>::isOnline() const
       evaluateBusResidual(y, yp, wb, h);
 
       const ScalarT connected  = onlineFactor();
-      Ir()                    += connected * h_[0];
-      Ii()                    += connected * h_[1];
+      Ir()                    += connected * h_.getData()[0];
+      Ii()                    += connected * h_.getData()[1];
 
       if (bus_->size() > 0)
       {

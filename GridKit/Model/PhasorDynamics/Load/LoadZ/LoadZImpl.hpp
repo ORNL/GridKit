@@ -254,9 +254,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     scalar_type LoadZ<scalar_type, index_type>::online() const
     {
-      if (signals_.template isAttached<LoadZExternalVariables::ONLINE>())
+      if (ports_.in.template port<LoadZSignalInputs::online>().connected())
       {
-        if (signals_.template readExternalVariable<LoadZExternalVariables::ONLINE>()
+        if (ports_.in.template port<LoadZSignalInputs::online>().readSignal()
             != ScalarT{ZERO<RealT>})
         {
           return ScalarT{ONE<RealT>};

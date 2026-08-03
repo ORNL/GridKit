@@ -119,13 +119,13 @@ namespace GridKit
     {
       p_ = ScalarT{0.0};
       q_ = ScalarT{0.0};
-      if (signals_.template isAttached<LoadZIPExternalVariables::P>())
+      if (ports_.in.template port<LoadZIPSignalInputs::p>().connected())
       {
-        p_ = signals_.template readExternalVariable<LoadZIPExternalVariables::P>();
+        p_ = ports_.in.template port<LoadZIPSignalInputs::p>().readSignal();
       }
-      if (signals_.template isAttached<LoadZIPExternalVariables::Q>())
+      if (ports_.in.template port<LoadZIPSignalInputs::q>().connected())
       {
-        q_ = signals_.template readExternalVariable<LoadZIPExternalVariables::Q>();
+        q_ = ports_.in.template port<LoadZIPSignalInputs::q>().readSignal();
       }
       setDerivedParams();
 
@@ -142,18 +142,6 @@ namespace GridKit
       }
       Vnom_ = vm0;
       setInputDispatchAtVoltage(vr, vi);
-
-      // The nominal dispatch, initialized bus voltage, and ZIP anchor are one
-      // initial condition, so derive them together on every reset. Anchoring
-      // at the initialized voltage makes the dispatch exact there for any
-      // load fractions.
-      const RealT vm0 = static_cast<RealT>(std::sqrt(vr * vr + vi * vi));
-      if (!(vm0 > RealT{0}) || !std::isfinite(vm0))
-      {
-        return 1;
-      }
-      Vnom_ = vm0;
-      setDerivedParams();
 
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
@@ -302,16 +290,16 @@ namespace GridKit
       const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
       const ScalarT scale = V2 * zip;
 
-      G_ = -p_ / scale;
-      B_ = -q_ / scale;
+      G_ = static_cast<RealT>(-p_ / scale);
+      B_ = static_cast<RealT>(-q_ / scale);
     }
 
     template <typename scalar_type, typename index_type>
     scalar_type LoadZIP<scalar_type, index_type>::online() const
     {
-      if (signals_.template isAttached<LoadZIPExternalVariables::ONLINE>())
+      if (ports_.in.template port<LoadZIPSignalInputs::online>().connected())
       {
-        if (signals_.template readExternalVariable<LoadZIPExternalVariables::ONLINE>()
+        if (ports_.in.template port<LoadZIPSignalInputs::online>().readSignal()
             != ScalarT{ZERO<RealT>})
         {
           return ScalarT{ONE<RealT>};

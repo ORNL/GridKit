@@ -26,6 +26,9 @@ namespace GridKit
     class BusBase;
 
     template <typename scalar_type, typename index_type>
+    class BusFault;
+
+    template <typename scalar_type, typename index_type>
     class SignalNode;
 
     /**
@@ -66,6 +69,7 @@ namespace GridKit
       using BusT           = BusBase<ScalarT, IdxT>;
       using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
       using SignalNodeT    = SignalNodeSetT::SignalNodeT;
+      using SignalT = SignalNodeT;
       using ComponentT     = Component<ScalarT, IdxT>;
       using MonitorT       = Model::VariableMonitorController<ScalarT>;
 
@@ -130,7 +134,7 @@ namespace GridKit
         explicit InputSignal(ScalarT initial_value)
           : value(initial_value)
         {
-          node.set(&value, &index);
+          node.link(&value, &index);
         }
       };
 

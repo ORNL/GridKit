@@ -145,8 +145,9 @@ namespace GridKit
         data.bus.resize(1);
         data.bus[0].bus_id   = bus_id;
         data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = static_cast<RealT>(1.0);
-        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+        data.bus[0].initial_state.emplace();
+        data.bus[0].initial_state->vr = static_cast<RealT>(1.0);
+        data.bus[0].initial_state->vi = static_cast<RealT>(0.0);
 
         data.signal.resize(1);
         data.signal[0].signal_id = efd_id;
@@ -246,8 +247,9 @@ namespace GridKit
         data.bus.resize(1);
         data.bus[0].bus_id   = static_cast<IdxT>(1);
         data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = static_cast<RealT>(1.0);
-        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+        data.bus[0].initial_state.emplace();
+        data.bus[0].initial_state->vr = static_cast<RealT>(1.0);
+        data.bus[0].initial_state->vi = static_cast<RealT>(0.0);
         data.regca.push_back(makeRegcaData());
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
@@ -279,8 +281,9 @@ namespace GridKit
         data.bus.resize(1);
         data.bus[0].bus_id   = bus_id;
         data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = static_cast<RealT>(1.0);
-        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+        data.bus[0].initial_state.emplace();
+        data.bus[0].initial_state->vr = static_cast<RealT>(1.0);
+        data.bus[0].initial_state->vi = static_cast<RealT>(0.0);
 
         data.signal.resize(1);
         data.signal[0].signal_id = input_id;
@@ -358,8 +361,9 @@ namespace GridKit
         data.bus.resize(1);
         data.bus[0].bus_id   = bus_id;
         data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = static_cast<RealT>(1.0);
-        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+        data.bus[0].initial_state.emplace();
+        data.bus[0].initial_state->vr = static_cast<RealT>(1.0);
+        data.bus[0].initial_state->vi = static_cast<RealT>(0.0);
 
         Data reecb_data;
         reecb_data.buses[Buses::bus]        = bus_id;
