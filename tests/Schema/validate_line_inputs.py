@@ -22,6 +22,7 @@ Checks, in order:
 Exits nonzero on any failure. Requires jsonschema >= 4.18 and PyYAML.
 """
 
+import importlib.util
 import json
 import math
 import sys
@@ -33,8 +34,14 @@ from jsonschema import Draft202012Validator
 REPO = Path(__file__).resolve().parents[2]
 EXAMPLES = REPO / "examples" / "EMT" / "Lines"
 
-sys.path.insert(0, str(REPO / "docs" / "_ext"))
-from gridkit.line_schema import build_schema  # noqa: E402
+# Load the builder module directly so the tests do not import the gridkit
+# Sphinx extension package, which needs a documentation environment.
+_spec = importlib.util.spec_from_file_location(
+    "line_schema", REPO / "docs" / "_ext" / "gridkit" / "line_schema.py"
+)
+_module = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_module)
+build_schema = _module.build_schema
 
 failures = []
 

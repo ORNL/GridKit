@@ -11,6 +11,7 @@ import os
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
+import yaml
 from docutils import nodes
 from sphinx.util.docutils import SphinxDirective
 
@@ -295,6 +296,102 @@ class CaseCatalog(GridKitDirective):
         )
 
 
+class CatalogDirective(GridKitDirective):
+    """Base class for directives that read an overhead-line type catalog.
+
+    The first argument is the catalog file, relative to the repository root.
+    """
+
+    required_arguments = 1
+
+    def catalog(self) -> dict:
+        path = Path(self.env.app.srcdir).parent / self.arguments[0]
+        self.env.note_dependency(str(path))
+        try:
+            found = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError) as error:
+            raise self.error(
+                f"cannot read catalog {self.arguments[0]}: {error}"
+            ) from error
+        if not isinstance(found, dict):
+            raise self.error(f"{self.arguments[0]} is not a catalog document")
+        return found
+
+    @staticmethod
+    def number(value: object) -> str:
+        return f"{value:g}" if isinstance(value, (int, float)) else ""
+
+
+class CatalogConductors(CatalogDirective):
+    """Conductor types of one catalog file."""
+
+    empty = "This catalog defines no conductor types."
+
+    def run(self) -> list[nodes.Node]:
+        conductors = self.catalog().get("conductors") or {}
+        return self.table(
+            (
+                "Type", "Description", "Outer radius [m]", "Inner radius [m]",
+                "Conductivity [S/m]", "Permeability [-]", "Weight [N/m]",
+            ),
+            (
+                (
+                    f"`{name}`",
+                    item.get("description", ""),
+                    self.number(item.get("radius", {}).get("outer")),
+                    self.number(item.get("radius", {}).get("inner")),
+                    self.number(item.get("conductivity")),
+                    self.number(item.get("permeability", 1)),
+                    self.number(item.get("weight")),
+                )
+                for name, item in conductors.items()
+            ),
+        )
+
+
+class CatalogTowers(CatalogDirective):
+    """Tower types of one catalog file."""
+
+    empty = "This catalog defines no tower types."
+
+    def run(self) -> list[nodes.Node]:
+        towers = self.catalog().get("towers") or {}
+        return self.table(
+            ("Type", "Description", "Attachment points"),
+            (
+                (
+                    f"`{name}`",
+                    item.get("description", ""),
+                    len(item.get("attachments") or {}),
+                )
+                for name, item in towers.items()
+            ),
+        )
+
+
+class CatalogTower(CatalogDirective):
+    """Attachment points of one tower type from one catalog file."""
+
+    required_arguments = 2
+    empty = "This tower type defines no attachment points."
+
+    def run(self) -> list[nodes.Node]:
+        towers = self.catalog().get("towers") or {}
+        tower = towers.get(self.arguments[1])
+        if tower is None:
+            raise self.error(
+                f"no tower type {self.arguments[1]} in {self.arguments[0]}"
+            )
+        return self.table(
+            ("Attachment", "x [m]", "h [m]"),
+            (
+                (f"`{name}`", self.number(point.get("x")),
+                 self.number(point.get("h")))
+                for name, point in (tower.get("attachments") or {}).items()
+            ),
+        )
+
+
 class CaseGallery(GridKitDirective):
     """The same cases as cards, each led by its one-line diagram."""
 
@@ -327,4 +424,7 @@ DIRECTIVES = {
     "case-examples": CaseExamples,
     "case-catalog": CaseCatalog,
     "case-gallery": CaseGallery,
+    "catalog-conductors": CatalogConductors,
+    "catalog-towers": CatalogTowers,
+    "catalog-tower": CatalogTower,
 }

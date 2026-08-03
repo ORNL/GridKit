@@ -1,18 +1,19 @@
-(schema-emt-line)=
+(models-emt-parameters-schema)=
 # Overhead Line Input
 
 The `line` 1.0 format describes one homogeneous overhead-line section:
 `conductors` hangs physical conductors on the named attachment points of a
 tower type, `path` gives the span and route, and `earth` gives the Carson
 return path. Field names and units match the
-[EMT parameter model documentation](../../GridKit/Model/EMT/Parameters/README.md);
+[EMT parameter model documentation](../../../../GridKit/Model/EMT/Parameters/README.md);
 all values are SI. Complete instances are in the
-[overhead line examples](../../examples/EMT/Lines/README.md).
+[overhead line examples](../../../../examples/EMT/Lines/README.md).
 
 Conductor data and tower geometry are always referenced by type name.
 Types live in catalogs: the document's own `catalog` section for
 self-contained files, or shared catalog files listed in `include`, so many
-line documents can draw on one library.
+line documents can draw on one library. The shipped types are rendered in
+the [catalog reference](#catalog).
 
 ## Catalogs
 
@@ -100,12 +101,12 @@ flat record per physical conductor — attachment coordinates, phase,
 circuit, tension, and the conductor type data with relative material
 properties scaled to absolute SI, in `conductors` order. These records are
 the quantities the
-[parameter models](../../GridKit/Model/EMT/Parameters/README.md) consume;
-type names do not survive resolution.
+[parameter models](../../../../GridKit/Model/EMT/Parameters/README.md)
+consume; type names do not survive resolution.
 
 ## Schema Reference
 
-```{jsonschema} ../../../GridKit/Model/EMT/line.schema.json
+```{jsonschema} ../../../../GridKit/Model/EMT/line.schema.json
 :lift_description:
 :lift_definitions:
 :auto_reference:

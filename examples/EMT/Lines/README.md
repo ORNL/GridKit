@@ -1,7 +1,7 @@
 # Overhead Line Inputs
 
 Complete overhead-line input documents in the `line` 1.0 format described
-by the [overhead line schema documentation](../../../docs/schema/EMT/line.md).
+by the [overhead line schema documentation](../../../docs/models/emt/parameters/schema.md).
 Each file describes one homogeneous line section: physical conductors hung
 on the attachment points of a tower type, the route, and the earth return.
 All values are SI. Conductor materials, tensions, and earth data are

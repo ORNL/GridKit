@@ -36,6 +36,13 @@ Equations, parameters, and ports for every model.
 Machine-readable datasets for GridKit applications.
 :::
 
+:::{grid-item-card} Catalog
+:link: catalog
+:link-type: ref
+
+Reusable conductor and tower types for overhead-line inputs.
+:::
+
 :::{grid-item-card} Examples
 :link: examples
 :link-type: ref
@@ -87,6 +94,7 @@ Applications <applications/index>
 
 Models <models/index>
 Cases <cases/index>
+Catalog <catalog/index>
 API <api/index>
 ```
 

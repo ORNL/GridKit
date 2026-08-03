@@ -12,3 +12,4 @@ docs/xml/
 __pycache__
 .venv/
 GridKit/Model/case.schema.json
+GridKit/Model/EMT/line.schema.json

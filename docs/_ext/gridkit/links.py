@@ -79,7 +79,7 @@ class SourceLinks(SphinxPostTransform):
             target, anchor = self._target(node)
             if target is None:
                 continue
-            docname = found.of(target)
+            docname = found.of(target) or self._page(target)
             if docname is None:
                 continue
 
@@ -93,6 +93,21 @@ class SourceLinks(SphinxPostTransform):
                     content,
                 )
             )
+
+    def _page(self, target: Path) -> str | None:
+        """A documentation page referenced directly from an included source.
+
+        Source READMEs may point at pages that exist only in the
+        documentation tree, such as generated schema references. On GitHub
+        the relative path reaches the page source; here it becomes the
+        ordinary page link.
+        """
+        try:
+            relative = target.relative_to(Path(self.app.srcdir))
+        except ValueError:
+            return None
+        docname = relative.with_suffix("").as_posix()
+        return docname if docname in self.env.found_docs else None
 
     def _target(self, node: nodes.Element) -> tuple[Path | None, str | None]:
         reference = node.get("reftarget", "")

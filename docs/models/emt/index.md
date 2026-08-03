@@ -24,6 +24,11 @@
 :link-type: ref
 :::
 
+:::{grid-item-card} Parameter Models
+:link: models-emt-parameters
+:link-type: ref
+:::
+
 ::::
 
 ```{toctree}
@@ -34,4 +39,5 @@
 Bus <bus>
 Component Models <components/index>
 Operator Models <operators/index>
+Parameter Models <parameters/index>
 ```
