@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numeric>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/Hygov.hpp>
@@ -898,10 +899,13 @@ namespace GridKit
         }
 
         // Bisect until no representable midpoint remains, then keep the
-        // endpoint with the smaller residual.
+        // endpoint with the smaller residual. Termination is guaranteed:
+        // std::midpoint cannot overflow and lands inside [a, b], so every
+        // accepted step strictly shrinks the finite set of representable
+        // values between the endpoints.
         while (true)
         {
-          const RealT mid = HALF<RealT> * (a + b);
+          const RealT mid = std::midpoint(a, b);
           if (mid <= a || b <= mid)
           {
             break;
