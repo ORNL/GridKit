@@ -79,10 +79,14 @@ namespace GridKit
         /// otherwise; any mismatch is a hard error.
         std::vector<ComplexT> starting_poles;
 
-        PoleSeeding seeding              = PoleSeeding::LOG_COMPLEX;
-        IdxT        max_iterations       = 30;
-        RealT       pole_shift_tolerance = 1.0e-9;
-        RealT       stability_margin     = 0.0;
+        PoleSeeding seeding        = PoleSeeding::LOG_COMPLEX;
+        IdxT        max_iterations = 30;
+
+        /// Largest nearest-match relative pole movement that counts a
+        /// relocation pass as converged. The default sits above the
+        /// noise floor of the equilibrated quadratic programs.
+        RealT pole_shift_tolerance = 1.0e-6;
+        RealT stability_margin     = 0.0;
 
         /// Lowest-order search over the pole count.
         struct OrderSearch

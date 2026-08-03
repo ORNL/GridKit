@@ -27,6 +27,8 @@ namespace
   constexpr double SHIFT_NORM_FLOOR      = 1.0e-15;
   constexpr double REAL_EIGENVALUE_TOL   = 1.0e-12;
   constexpr double WEIGHT_FLOOR_RATIO    = 1.0e-8;
+  constexpr double COLUMN_NORM_FLOOR     = 1.0e-30;
+  constexpr double DEGENERATE_RELOCATION = 1.0e-14;
   constexpr double QP_TOLERANCE          = 1.0e-10;
   constexpr size_t QP_MAX_ITERATIONS     = 500;
   constexpr double REFINE_TOLERANCE      = 1.0e-8;
@@ -134,17 +136,31 @@ namespace
     return poles;
   }
 
+  /**
+   * @brief Largest relative distance from a relocated pole to its
+   *        nearest previous pole. Nearest-match distances are immune to
+   *        the re-sorting canonicalizePoles performs, which a positional
+   *        comparison would misread as a large shift.
+   */
   template <typename real_type>
   real_type
   maxRelativeShift(const std::vector<std::complex<real_type>>& previous,
                    const std::vector<std::complex<real_type>>& current)
   {
     real_type shift = real_type{0};
-    for (size_t q = 0; q < previous.size() && q < current.size(); ++q)
+    for (const auto& pole : current)
     {
-      const real_type scale =
-          std::abs(previous[q]) + real_type{SHIFT_NORM_FLOOR};
-      shift = std::max(shift, std::abs(current[q] - previous[q]) / scale);
+      real_type nearest = std::numeric_limits<real_type>::infinity();
+      for (const auto& reference : previous)
+      {
+        const real_type scale =
+            std::abs(reference) + real_type{SHIFT_NORM_FLOOR};
+        nearest = std::min(nearest, std::abs(pole - reference) / scale);
+      }
+      if (!previous.empty())
+      {
+        shift = std::max(shift, nearest);
+      }
     }
     return shift;
   }
@@ -159,6 +175,16 @@ namespace GridKit
       /**
        * @brief Solve one convex quadratic program through the family
        *        backend with the exact precomputed Hessian.
+       *
+       * The columns are equilibrated to unit weighted norm before the
+       * solve: the basis magnitudes span the sampled band's decades, and
+       * the precomputed normal-equations Hessian squares that spread
+       * into its condition number. The solution is mapped back to the
+       * caller's variables afterwards.
+       *
+       * @return 0 when the solver certifies optimal or acceptable
+       *         convergence; -2 otherwise, including an iteration-limit
+       *         stop, which carries no convergence certificate.
        */
       template <typename scalar_type, typename index_type>
       int solveQuadraticProgram(
@@ -169,6 +195,44 @@ namespace GridKit
               index_type>::RealT>&                              x)
       {
         using SolverT = IpoptSolver<scalar_type, index_type>;
+        using RealT   = typename ConstrainedLeastSquares<scalar_type,
+                                                         index_type>::RealT;
+
+        const auto variables  = static_cast<size_t>(problem.variable_count);
+        const auto residuals  = static_cast<size_t>(problem.residual_count);
+        const auto equalities = static_cast<size_t>(problem.equality_count);
+
+        std::vector<RealT> scale(variables, RealT{1});
+        for (size_t c = 0; c < variables; ++c)
+        {
+          RealT norm = RealT{0};
+          for (size_t m = 0; m < residuals; ++m)
+          {
+            const RealT w =
+                problem.weights.empty() ? RealT{1} : problem.weights[m];
+            const RealT entry  = problem.a[m * variables + c];
+            norm              += w * entry * entry;
+          }
+          norm = std::sqrt(norm);
+          if (norm > RealT{COLUMN_NORM_FLOOR})
+          {
+            scale[c] = RealT{1} / norm;
+          }
+        }
+        for (size_t m = 0; m < residuals; ++m)
+        {
+          for (size_t c = 0; c < variables; ++c)
+          {
+            problem.a[m * variables + c] *= scale[c];
+          }
+        }
+        for (size_t i = 0; i < equalities; ++i)
+        {
+          for (size_t c = 0; c < variables; ++c)
+          {
+            problem.a_eq[i * variables + c] *= scale[c];
+          }
+        }
 
         try
         {
@@ -181,8 +245,17 @@ namespace GridKit
               static_cast<index_type>(QP_MAX_ITERATIONS);
           options.hessian = HessianMode::EXACT;
 
-          SolverT solver(&model, options);
-          return solver.solve(x) >= 0 ? 0 : -2;
+          SolverT   solver(&model, options);
+          const int status = solver.solve(x);
+          if (status < 0 || status > 1)
+          {
+            return -2;
+          }
+          for (size_t c = 0; c < variables; ++c)
+          {
+            x[c] *= scale[c];
+          }
+          return 0;
         }
         catch (const std::exception&)
         {
@@ -195,6 +268,12 @@ namespace GridKit
        *        program with the relaxation equality, then relocate the
        *        poles to the zeros of sigma via the real companion
        *        eigenproblem.
+       *
+       * A solution with numerator coefficients vanishing against the
+       * relaxation constant makes sigma effectively constant: the
+       * companion update is below machine noise and the poles do not
+       * move for structural reasons. Such a pass reports @p degenerate
+       * and must not count as a convergence certificate.
        */
       template <typename scalar_type, typename index_type>
       int relocatePoles(
@@ -207,7 +286,8 @@ namespace GridKit
           std::vector<typename SampledResponse<
               scalar_type,
               index_type>::ComplexT>&                               poles,
-          typename SampledResponse<scalar_type, index_type>::RealT& shift)
+          typename SampledResponse<scalar_type, index_type>::RealT& shift,
+          bool&                                                     degenerate)
       {
         using RealT    = typename SampledResponse<scalar_type,
                                                   index_type>::RealT;
@@ -294,6 +374,24 @@ namespace GridKit
         {
           sigma_scale = sigma_scale < RealT{0} ? -RealT{SIGMA_SCALE_FLOOR}
                                                : RealT{SIGMA_SCALE_FLOOR};
+        }
+
+        RealT gamma_norm = RealT{0};
+        RealT pole_scale = RealT{0};
+        for (size_t k = 0; k < order; ++k)
+        {
+          gamma_norm += solution[sigma_offset + k] * solution[sigma_offset + k];
+          pole_scale  = std::max(pole_scale, std::abs(poles[k]));
+        }
+        gamma_norm = std::sqrt(gamma_norm);
+
+        degenerate = RealT{2} * gamma_norm
+                     < RealT{DEGENERATE_RELOCATION} * std::abs(sigma_scale)
+                           * (RealT{1} + pole_scale);
+        if (degenerate)
+        {
+          shift = RealT{0};
+          return 0;
         }
 
         // Zeros of sigma: eigenvalues of A - b gamma^T / sigma_scale with
@@ -980,6 +1078,13 @@ namespace GridKit
       {
         return -1;
       }
+      if (params.order_search.enabled
+              ? (params.order_search.min_poles < 1
+                 || params.order_search.max_poles < params.order_search.min_poles)
+              : params.pole_count < 1)
+      {
+        return -1;
+      }
 
       // Per-sample weights by the documented conventions.
       std::vector<RealT> sample_weights(sample_count, RealT{1});
@@ -1103,19 +1208,27 @@ namespace GridKit
           auto  poles = seed;
           for (IdxT pass = 0; pass < params.max_iterations; ++pass)
           {
-            RealT     shift = RealT{0};
+            RealT     shift      = RealT{0};
+            bool      degenerate = false;
             const int relocation =
                 Detail::relocatePoles<ScalarT, IdxT>(samples_,
                                                      sample_weights,
                                                      params.terms,
                                                      params.stability_margin,
                                                      poles,
-                                                     shift);
+                                                     shift,
+                                                     degenerate);
             if (relocation != 0)
             {
               return relocation;
             }
             trial_stats.iterations.push_back({pass, shift});
+            if (degenerate)
+            {
+              // A null relocation is a fixed point without a convergence
+              // certificate; iterating further cannot move the poles.
+              break;
+            }
             if (shift < params.pole_shift_tolerance)
             {
               trial_stats.converged = true;
