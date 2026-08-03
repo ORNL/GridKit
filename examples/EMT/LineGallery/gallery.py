@@ -272,7 +272,7 @@ def run_line(name: str, args: argparse.Namespace) -> dict:
         "targets_met": result.returncode in (0, 3),
         "yc_passive": passive,
         "yc_rel_rms_check": yc_rel_rms,
-        "delays_us": [1.0e6 * tau for tau in propagation["delays"]],
+        "delays_us": [1.0e6 * tau for tau in propagation["delays"]["tau"]],
         "fits": fits,
     }
 

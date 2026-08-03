@@ -110,7 +110,7 @@ def main() -> None:
 
     omega, sweep = read_sweep(args.csv)
     spec = json.loads(args.model.read_text())
-    delays = np.array(spec["delays"])
+    delays = np.array(spec["delays"]["tau"])
     gin = evaluate_factor(load_factor(spec["input"]), omega)
     gout = evaluate_factor(load_factor(spec["output"]), omega)
 

@@ -729,7 +729,9 @@ namespace
     nlohmann::json propagation;
     propagation["K"]      = k;
     propagation["input"]  = modelToJson(gin_model);
-    propagation["delays"] = delays;
+    // The delay bank is a Delay submodel, so its coefficients follow
+    // that operator's documented parameter set.
+    propagation["delays"] = {{"M", k}, {"tau", delays}};
     propagation["output"] = modelToJson(gout_model);
     writeJson(settings.output / "propagation.model.json", propagation);
 

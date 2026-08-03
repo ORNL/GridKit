@@ -38,10 +38,12 @@ $[u]$, and output units $[y]$:
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$\mathbf{D}$ | $[y]/[u]$ | `D` | Constant coefficient | $\mathbf{D} \in \mathbb{R}^{N \times K}$
-$\mathbf{E}$ | $\mathrm{s}[y]/[u]$ | `E` | Linear coefficient | $\mathbf{E} \in \mathbb{R}^{N \times K}$
-$\mathbf{p}$ | $[\mathrm{s}^{-1}]$ | `poles` | Poles | $\mathbf{p} \in \mathbb{C}^Q$
-$\mathbf{R}$ | $[y]/(\mathrm{s}[u])$ | `residues` | Residues | $\mathbf{R} \in \mathbb{C}^{N \times K \times Q}$
+$N$ | [-] | `rows` | Output dimension | Required, positive integer
+$K$ | [-] | `cols` | Input dimension | Required, positive integer
+$\mathbf{D}$ | $[y]/[u]$ | `D` | Constant coefficient | $\mathbf{D} \in \mathbb{R}^{N \times K}$ as rows of reals, omitted means zero
+$\mathbf{E}$ | $\mathrm{s}[y]/[u]$ | `E` | Linear coefficient | $\mathbf{E} \in \mathbb{R}^{N \times K}$ as rows of reals, omitted means zero
+$\mathbf{p}$ | $[\mathrm{s}^{-1}]$ | `poles` | Poles | $\mathbf{p} \in \mathbb{C}^Q$ as `[real, imag]` pairs
+$\mathbf{R}$ | $[y]/(\mathrm{s}[u])$ | `residues` | Residues | Pole-major $[Q][N][K]$, one $N \times K$ matrix of `[real, imag]` entries per pole, so $\mathbf{R}_q \in \mathbb{C}^{N \times K}$
 
 ### Parameter Validation
 
