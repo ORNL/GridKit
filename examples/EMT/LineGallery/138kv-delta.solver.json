@@ -1,8 +1,5 @@
 {
     "model": "../Lines/138kv-delta.line.json",
-    "ida": {
-        "suppress_algebraic_error": false
-    },
     "frequency": {
         "start": 1.0,
         "stop": 1000000.0,

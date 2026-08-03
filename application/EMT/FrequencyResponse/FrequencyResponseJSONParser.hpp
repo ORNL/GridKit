@@ -172,9 +172,12 @@ namespace GridKit
             throw std::runtime_error("FrequencyResponse \"ida\" must be an object");
           }
 
-          data.ida.suppress_algebraic_error =
-              ida.value("suppress_algebraic_error",
-                        data.ida.suppress_algebraic_error);
+          if (ida.contains("suppress_algebraic_error"))
+          {
+            throw std::runtime_error(
+                "ida: \"suppress_algebraic_error\" was removed; the sweep "
+                "error-controls every state unconditionally");
+          }
 
           data.ida.tolerance = ida.value("tolerance", data.ida.tolerance);
           if (!std::isfinite(data.ida.tolerance) || data.ida.tolerance <= 0.0)

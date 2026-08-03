@@ -679,7 +679,8 @@ namespace
     success            *= close(data.frequency.stop, 159154.94309189535);
     success            *= (data.frequency.points == 21);
     success            *= (data.frequency.scale == "log");
-    success            *= (data.ida.suppress_algebraic_error == true);
+    success            *= close(data.ida.tolerance, 1.0e-7);
+    success            *= (data.ida.max_steps == 200000);
     success            *= (data.output_file == dir / "overhead.response.csv");
     success            *= data.variables.contains(MonitorVariable::R);
     success            *= data.variables.contains(MonitorVariable::Tv);
@@ -703,7 +704,8 @@ namespace
     writeFile(path, R"({
       "model": "overhead.line.json",
       "ida": {
-        "suppress_algebraic_error": false
+        "tolerance": 1.0e-9,
+        "max_steps": 500
       },
       "frequency": {
         "start": 1.0,
@@ -720,7 +722,8 @@ namespace
     fs::remove(path);
 
     TestStatus success  = true;
-    success            *= (data.ida.suppress_algebraic_error == false);
+    success            *= close(data.ida.tolerance, 1.0e-9);
+    success            *= (data.ida.max_steps == 500);
 
     return success.report(__func__);
   }
@@ -777,7 +780,15 @@ namespace
     const auto bad_ida_value = testPath("gridkit_frequency_response_bad_ida_value.solver.json");
     writeFile(bad_ida_value, R"({
       "model":"overhead.line.json",
-      "ida":{"suppress_algebraic_error":"false"},
+      "ida":{"tolerance":-1.0e-7},
+      "frequency":{"start":1.0,"stop":2.0,"points":2},
+      "output":{"file":"overhead.response.csv","variables":["R"]}
+    })");
+
+    const auto removed_ida_suppress = testPath("gridkit_frequency_response_removed_ida_suppress.solver.json");
+    writeFile(removed_ida_suppress, R"({
+      "model":"overhead.line.json",
+      "ida":{"suppress_algebraic_error":false},
       "frequency":{"start":1.0,"stop":2.0,"points":2},
       "output":{"file":"overhead.response.csv","variables":["R"]}
     })");
@@ -797,6 +808,8 @@ namespace
                       { parseFrequencyResponseData(bad_ida_type); });
     success            *= throws([&]
                       { parseFrequencyResponseData(bad_ida_value); });
+    success            *= throws([&]
+                      { parseFrequencyResponseData(removed_ida_suppress); });
 
     fs::remove(bad_points);
     fs::remove(bad_scale);
@@ -805,6 +818,7 @@ namespace
     fs::remove(bad_vocabulary);
     fs::remove(bad_ida_type);
     fs::remove(bad_ida_value);
+    fs::remove(removed_ida_suppress);
 
     return success.report(__func__);
   }

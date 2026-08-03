@@ -75,9 +75,12 @@ namespace
       double     target_rel_rms{1.0e-3};
     };
 
-    double   fmin{1.0};
-    double   fmax{1.0e6};
-    size_t   points{201};
+    double fmin{1.0};
+    double fmax{1.0e6};
+    size_t points{201};
+
+    GridKit::EMT::Application::IdaSettings ida;
+
     fs::path output{"output"};
     Target   yc;
     Target   h;
@@ -117,6 +120,16 @@ namespace
          .help     = "Sweep sample count on the log grid",
          .type     = ArgType::Integer,
          .defaults = 201},
+
+        {.name     = {"--rtol"},
+         .help     = "Sweep relative tolerance",
+         .type     = ArgType::Real,
+         .defaults = 1.0e-7},
+
+        {.name     = {"--max-steps"},
+         .help     = "Maximum internal integrator steps for the sweep",
+         .type     = ArgType::Integer,
+         .defaults = 200000},
 
         {.name     = {"--output", "-o"},
          .help     = "Output directory for the model files",
@@ -201,6 +214,19 @@ namespace
       throw std::runtime_error("--points must be at least 2");
     }
     settings.points = static_cast<size_t>(points);
+
+    settings.ida.tolerance = args.get<double>("rtol");
+    if (!(settings.ida.tolerance > 0.0) || settings.ida.tolerance >= 1.0e-1)
+    {
+      throw std::runtime_error("--rtol must be in (0, 0.1)");
+    }
+
+    const int max_steps = args.get<int>("max-steps");
+    if (max_steps < 1)
+    {
+      throw std::runtime_error("--max-steps must be positive");
+    }
+    settings.ida.max_steps = static_cast<size_t>(max_steps);
 
     settings.output = args.get("output");
     settings.yc     = makeTarget(args, "yc");
@@ -359,7 +385,7 @@ namespace
 
     for (index_type mode = 0; mode < modes; ++mode)
     {
-      const std::string suffix = "_" + std::to_string(mode);
+      const std::string suffix    = "_" + std::to_string(mode);
       const auto        real_part = column(table, prefix + "_real" + suffix);
       const auto        imag_part = column(table, prefix + "_imag" + suffix);
 
@@ -570,12 +596,13 @@ namespace
                                  response_csv.string()}};
 
     const FrequencyGrid frequency{settings.fmin, settings.fmax, settings.points, "log"};
-    const IdaSettings   ida;
 
     const int sweep = runFrequencySweep<scalar_type, index_type>(
-        data, frequency, ida);
+        data, frequency, settings.ida);
     if (sweep != 0)
     {
+      Log::error() << "Frequency sweep failed with code " << sweep
+                   << std::endl;
       return sweep;
     }
 

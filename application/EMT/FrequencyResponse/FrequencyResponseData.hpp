@@ -28,9 +28,13 @@ namespace GridKit
       };
 
       /// IDA solver settings for the frequency sweep.
+      ///
+      /// The sweep DAE is purely algebraic, so every state always
+      /// participates in the local error test; there is no
+      /// algebraic-suppression option because for this system the only
+      /// correct value would be "off".
       struct IdaSettings
       {
-        bool   suppress_algebraic_error{true};
         double tolerance{1.0e-7}; ///< Relative tolerance.
         size_t max_steps{200000}; ///< Maximum internal solver steps.
       };

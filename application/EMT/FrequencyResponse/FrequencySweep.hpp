@@ -30,9 +30,14 @@ namespace GridKit
        * IDA, emitting one monitor sample per grid point. The model's
        * monitor configuration decides where samples go, so drivers that
        * collect samples in memory attach their own monitor sink before
-       * calling.
+       * calling. Every state is algebraic and error-controlled against
+       * the model's per-variable absolute tolerances scaled by
+       * ida_settings.tolerance.
        *
-       * @return 0 on success
+       * @return 0 only when the sweep reached the stop frequency and
+       *         emitted exactly frequency.points monitor samples; -1 on
+       *         a monitor-grid mismatch. Hard integrator failures throw
+       *         SundialsException.
        */
       template <typename scalar_type, typename index_type>
       int runFrequencySweep(
@@ -48,7 +53,7 @@ namespace GridKit
         const scalar_type omega_stop =
             2.0 * pi * static_cast<scalar_type>(frequency.stop);
 
-        Parameters::Overhead<scalar_type, index_type> model(data);
+        Parameters::Overhead<scalar_type, index_type>         model(data);
         GridKit::Model::LogEvaluator<scalar_type, index_type> log_model(
             model, omega_start);
         log_model.allocate();
@@ -57,7 +62,6 @@ namespace GridKit
         const scalar_type s_stop  = std::log(omega_stop);
 
         Ida<scalar_type, index_type> ida(&log_model);
-        ida.setSuppressAlgebraicErrors(ida_settings.suppress_algebraic_error);
         ida.setTolerance(static_cast<scalar_type>(ida_settings.tolerance));
         ida.setMaxSteps(static_cast<index_type>(ida_settings.max_steps));
         ida.configureSimulation();
@@ -65,12 +69,20 @@ namespace GridKit
 
         log_model.printMonitoredVariables();
         const scalar_type dt_monitor =
-            (s_stop - s_start) /
-            static_cast<scalar_type>(frequency.points - 1);
-        ida.runSimulation(s_stop, dt_monitor);
+            (s_stop - s_start) / static_cast<scalar_type>(frequency.points - 1);
+
+        size_t    samples = 1;
+        const int retval  = ida.runSimulation(s_stop,
+                                             dt_monitor,
+                                             [&samples](scalar_type)
+                                             { ++samples; });
         log_model.stopMonitor();
 
-        return 0;
+        if (retval != 0)
+        {
+          return retval;
+        }
+        return samples == frequency.points ? 0 : -1;
       }
     } // namespace Application
   } // namespace EMT
