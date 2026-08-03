@@ -1100,15 +1100,15 @@ namespace GridKit
           return false;
         }
 
-        success *= (implicit_defaults.evaluate() == 0);
-        success *= (explicit_defaults.evaluate() == 0);
-        success *= vectorUnchanged(implicit_defaults.esdc1a.y(),
+        success &= (implicit_defaults.evaluate() == 0);
+        success &= (explicit_defaults.evaluate() == 0);
+        success &= vectorUnchanged(implicit_defaults.esdc1a.y(),
                                    copyVector(explicit_defaults.esdc1a.y()),
                                    "documented-default state");
-        success *= vectorUnchanged(implicit_defaults.esdc1a.yp(),
+        success &= vectorUnchanged(implicit_defaults.esdc1a.yp(),
                                    copyVector(explicit_defaults.esdc1a.yp()),
                                    "documented-default derivative");
-        success *= vectorUnchanged(implicit_defaults.esdc1a.getResidual(),
+        success &= vectorUnchanged(implicit_defaults.esdc1a.getResidual(),
                                    copyVector(explicit_defaults.esdc1a.getResidual()),
                                    "documented-default residual");
 
@@ -1116,9 +1116,9 @@ namespace GridKit
         setAnswerKeyInputs(explicit_defaults);
         setAnswerKeyState(implicit_defaults.esdc1a);
         setAnswerKeyState(explicit_defaults.esdc1a);
-        success *= (implicit_defaults.evaluate() == 0);
-        success *= (explicit_defaults.evaluate() == 0);
-        success *= vectorUnchanged(implicit_defaults.esdc1a.getResidual(),
+        success &= (implicit_defaults.evaluate() == 0);
+        success &= (explicit_defaults.evaluate() == 0);
+        success &= vectorUnchanged(implicit_defaults.esdc1a.getResidual(),
                                    copyVector(explicit_defaults.esdc1a.getResidual()),
                                    "documented-default dynamic residual");
         return success;
@@ -1209,7 +1209,7 @@ namespace GridKit
           success = false;
         }
 
-        success *= scalarMatches(fixture.efd(), efd_seed, "rejected efd preservation");
+        success &= scalarMatches(fixture.efd(), efd_seed, "rejected efd preservation");
         for (const auto& [port, value] : inputs)
         {
           success &= rowMatches(static_cast<RealT>(fixture.input(port)),
@@ -1218,8 +1218,8 @@ namespace GridKit
                                 static_cast<size_t>(port),
                                 "changed");
         }
-        success *= vectorUnchanged(fixture.esdc1a.y(), y_before, "state");
-        success *= vectorUnchanged(fixture.esdc1a.yp(), yp_before, "derivative");
+        success &= vectorUnchanged(fixture.esdc1a.y(), y_before, "state");
+        success &= vectorUnchanged(fixture.esdc1a.yp(), yp_before, "derivative");
         return success;
       }
 
