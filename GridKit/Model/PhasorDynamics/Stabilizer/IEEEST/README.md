@@ -52,6 +52,16 @@ a_4 &= A_2 A_4
 \end{aligned}
 ```
 
+The order indicators select the active notch states:
+
+```math
+O_k = \begin{cases}
+  1 & n \ge k \\
+  0 & n < k
+\end{cases},
+\qquad k = 1, 2, 3
+```
+
 ## Model Variables
 
 ### Internal Variables
@@ -60,10 +70,10 @@ a_4 &= A_2 A_4
 
 Symbol | Units       | Description                          | Note
 -------|-------------|--------------------------------------|------
-$x_1$  | [p.u.]      | Notch filter signal state            | Active for $n\ge1$
-$x_2$  | [p.u./sec]  | First derivative of filtered signal  | Active for $n\ge2$
-$x_3$  | [p.u./sec²] | Second derivative of filtered signal | Active for $n\ge3$
-$x_4$  | [p.u./sec³] | Third derivative of filtered signal  | Active for $n=4$
+$x_1$  | [p.u.]      | Notch filter signal state            | Differential for $n\ge1$
+$x_2$  | [p.u./sec]  | First derivative of filtered signal  | Differential for $n\ge2$
+$x_3$  | [p.u./sec²] | Second derivative of filtered signal | Differential for $n\ge3$
+$x_4$  | [p.u./sec³] | Third derivative of filtered signal  | Differential for $n=4$
 $x_5$  | [p.u.]      | Lead–lag 1 state                     |
 $x_6$  | [p.u.]      | Lead–lag 2 state                     |
 $x_7$  | [p.u.]      | Washout state                        |
@@ -90,25 +100,16 @@ $u$    | [p.u.] | Stabilizer input signal
 
 ### Differential Equations
 
-Only the notch states $x_1,\ldots,x_n$ are active. The remaining chain
-equations reduce to $\dot{x}_i = 0$.
+Only the notch states $x_1,\ldots,x_n$ are differential. The accumulated
+fourth row defines $x_{n+1}$ algebraically as the rate of $x_n$, and each
+chain row above the order instead pins its unused state, $x_{i+1} = 0$.
 
 ```math
 \begin{aligned}
-0 &= -\dot{x}_1 + \begin{cases}
-      \dfrac{1}{a_1}\left(-a_0 x_1 + u\right) & n = 1 \\
-      x_2 & n \in \{2,3,4\}
-    \end{cases} \\
-0 &= -\dot{x}_2 + \begin{cases}
-      \dfrac{1}{a_2}\left(-a_0 x_1 - a_1 x_2 + u\right) & n = 2 \\
-      x_3 & n \in \{3,4\}
-    \end{cases} \\
-0 &= -\dot{x}_3 + \begin{cases}
-      \dfrac{1}{a_3}\left(-a_0 x_1 - a_1 x_2 - a_2 x_3 + u\right) & n = 3 \\
-      x_4 & n = 4
-    \end{cases} \\
-0 &= -\dot{x}_4 + \dfrac{1}{a_4}\left(-a_0 x_1 - a_1 x_2 - a_2 x_3 - a_3 x_4 + u\right),
-    \quad n = 4 \\
+0 &= -O_1 \dot{x}_1 + x_2 \\
+0 &= -O_2 \dot{x}_2 + x_3 \\
+0 &= -O_3 \dot{x}_3 + x_4 \\
+0 &= -a_0 x_1 - a_1 x_2 - a_2 x_3 - a_3 x_4 - a_4 \dot{x}_4 + u \\
 0 &= -T_2 \dot{x}_5 - x_5 + v_4 \\
 0 &= -T_4 \dot{x}_6 - x_6 + v_5 \\
 0 &= -T_6 \dot{x}_7 - x_7 + v_6
@@ -117,18 +118,13 @@ equations reduce to $\dot{x}_i = 0$.
 
 ### Algebraic Equations
 
-The numerator $1 + A_5 s + A_6 s^2$ is applied to the filtered signal. Its
-derivatives are chain states where those exist, and the rate of the highest
-active state otherwise.
+The numerator $1 + A_5 s + A_6 s^2$ is applied to the filtered signal through
+its derivative states. Numerator terms above the notch order vanish with the
+pinned states.
 
 ```math
 \begin{aligned}
-0 &= -v_4 + \begin{cases}
-      u & n = 0 \\
-      x_1 + \dfrac{A_5}{a_1}\left(-a_0 x_1 + u\right) & n = 1 \\
-      x_1 + A_5 x_2 + \dfrac{A_6}{a_2}\left(-a_0 x_1 - a_1 x_2 + u\right) & n = 2 \\
-      x_1 + A_5 x_2 + A_6 x_3 & n \in \{3,4\}
-    \end{cases} \\
+0 &= -v_4 + x_1 + A_5 x_2 + A_6 x_3 \\
 0 &= -T_2(v_5 - x_5) + T_1(v_4 - x_5) \\
 0 &= -T_4(v_6 - x_6) + T_3(v_5 - x_6) \\
 0 &= -T_6 v_7 + K_s T_5(v_6 - x_7) \\
@@ -158,8 +154,7 @@ online at rest.
 
 ```math
 \begin{aligned}
-  x_1 &\leftarrow u_0
-    \quad n\ge1 \\
+  x_1 &\leftarrow u_0 \\
   x_i &\leftarrow 0
     \quad i=2,\ldots,4 \\
   v_4, x_5, v_5, x_6, v_6, x_7 &\leftarrow u_0 \\

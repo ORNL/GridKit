@@ -35,10 +35,10 @@ namespace GridKit
       /// Internal variables of a `Ieeest`
       enum class IeeestInternalVariables : size_t
       {
-        X1,  ///< \f$x_1\f$ Notch filter signal state [p.u.], active for \f$n\ge1\f$
-        X2,  ///< \f$x_2\f$ First derivative of the filtered signal [p.u./sec], active for \f$n\ge2\f$
-        X3,  ///< \f$x_3\f$ Second derivative of the filtered signal [p.u./sec^2], active for \f$n\ge3\f$
-        X4,  ///< \f$x_4\f$ Third derivative of the filtered signal [p.u./sec^3], active for \f$n=4\f$
+        X1,  ///< \f$x_1\f$ Notch filter signal state [p.u.], differential for \f$n\ge1\f$
+        X2,  ///< \f$x_2\f$ First derivative of the filtered signal [p.u./sec], differential for \f$n\ge2\f$
+        X3,  ///< \f$x_3\f$ Second derivative of the filtered signal [p.u./sec^2], differential for \f$n\ge3\f$
+        X4,  ///< \f$x_4\f$ Third derivative of the filtered signal [p.u./sec^3], differential for \f$n=4\f$
         X5,  ///< \f$x_5\f$ Lead-lag 1 state [p.u.]
         X6,  ///< \f$x_6\f$ Lead-lag 2 state [p.u.]
         X7,  ///< \f$x_7\f$ Washout state [p.u.]
@@ -158,25 +158,15 @@ namespace GridKit
         RealT a3_{0};
         RealT a4_{0};
 
-        // Precomputed masks and safe inverse coefficients for branch-free degenerate paths.
-        RealT use_notch_{0};
-        RealT bypass_notch_{1};
-        RealT use_4th_order_{0};
-        RealT use_3rd_order_{0};
-        RealT use_2nd_order_{0};
-        RealT use_1st_order_{0};
-        RealT notch_order_ge_2_{0};
-        RealT notch_order_ge_3_{0};
-        RealT safe_inv_a4_{0};
-        RealT safe_inv_a3_{0};
-        RealT safe_inv_a2_{0};
-        RealT safe_inv_a1_{0};
-        RealT use_T2_block_{1};
-        RealT bypass_T2_block_{0};
-        RealT use_T4_block_{1};
-        RealT bypass_T4_block_{0};
-        RealT use_T6_block_{1};
-        RealT bypass_T6_block_{0};
+        /// Order indicators \f$O_k\f$, one when the notch order is at least \f$k\f$
+        RealT O1_{0};
+        RealT O2_{0};
+        RealT O3_{0};
+
+        // A denominator time constant that is not positive bypasses its block.
+        RealT bypass_T2_{0};
+        RealT bypass_T4_{0};
+        RealT bypass_T6_{0};
 
         ComponentSignals<ScalarT, IdxT, IeeestInternalVariables, IeeestExternalVariables> signals_;
 

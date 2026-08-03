@@ -129,7 +129,7 @@ namespace GridKit
             0.19,   // f[0]:  -x1_dot + x2
             0.28,   // f[1]:  -x2_dot + x3
             0.37,   // f[2]:  -x3_dot + x4
-            1.0975, // f[3]:  -x4_dot + (-a0*x1 - a1*x2 - a2*x3 - a3*x4 + u) / a4
+            0.0878, // f[3]:  -a0*x1 - a1*x2 - a2*x3 - a3*x4 - a4*x4_dot + u
             0.25,   // f[4]:  -T2*x5_dot - x5 + v4
             0.24,   // f[5]:  -T4*x6_dot - x6 + v5
             -0.05,  // f[6]:  -T6*x7_dot - x7 + v6
@@ -159,6 +159,37 @@ namespace GridKit
 
         // Verify output signal reads the stabilizer output
         success *= isEqual(vss_node.read(), static_cast<ScalarT>(0.05), loose_tol);
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief verify() rejects negative filter constants and time constants.
+       *
+       * The order and bypass masks compare against zero from above, so the
+       * nonnegativity of A1-A4 and T2, T4, T6 is a validated invariant. One
+       * error is expected from each violated group.
+       */
+      TestOutcome verifyNegativeParameters()
+      {
+        TestStatus success = true;
+
+        using Params = PhasorDynamics::Stabilizer::IeeestParameters;
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
+        ScalarT                                   u_value{0.0};
+        IdxT                                      u_index = 12;
+        u_node.set(&u_value, &u_index);
+
+        auto data                   = makeTestData();
+        data.parameters[Params::A3] = -0.3;
+        data.parameters[Params::T6] = -5.0;
+
+        PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> stab(data);
+        stab.getSignals().template attachSignalNode<PhasorDynamics::Stabilizer::IeeestExternalVariables::U>(&u_node);
+        stab.allocate();
+
+        success *= (stab.verify() == 2);
 
         return success.report(__func__);
       }
