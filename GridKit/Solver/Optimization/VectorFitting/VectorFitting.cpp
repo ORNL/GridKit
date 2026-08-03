@@ -1010,11 +1010,20 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     std::string VectorFitting<scalar_type, index_type>::Stats::report() const
     {
+      // The global rel rms is norm-weighted, so a channel whose response
+      // has collapsed can be arbitrarily wrong without moving it; the
+      // worst per-channel figure is the one that sees such a channel.
+      RealT worst = RealT{0};
+      for (const auto value : channel_rel_rms)
+      {
+        worst = std::max(worst, value);
+      }
+
       std::ostringstream stream;
       stream << "VectorFitting: " << iterations.size() << " passes, "
              << (converged ? "converged" : "not converged")
-             << ", rel rms " << final_rel_rms << ", order "
-             << order_selected;
+             << ", rel rms " << final_rel_rms << ", worst channel " << worst
+             << ", order " << order_selected;
       return stream.str();
     }
 

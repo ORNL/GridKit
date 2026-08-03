@@ -45,7 +45,8 @@ ULM_ARGS = ["--h-target", "0.05"]
 ULM_LINE_ARGS = {"500kv-double-circuit": ["--yc-max-poles", "16"]}
 
 FIT_LINE = re.compile(
-    r"^(?P<label>\w+): VectorFitting: .*rel rms (?P<rms>[0-9.e+-]+), order (?P<order>\d+)"
+    r"^(?P<label>\w+): VectorFitting: .*rel rms (?P<rms>[0-9.e+-]+), "
+    r"worst channel (?P<worst>[0-9.e+-]+), order (?P<order>\d+)"
 )
 
 
@@ -248,6 +249,7 @@ def run_line(name: str, args: argparse.Namespace) -> dict:
             fits[match.group("label")] = {
                 "poles": int(match.group("order")),
                 "rel_rms": float(match.group("rms")),
+                "worst_channel_rel_rms": float(match.group("worst")),
             }
     passive = "Yc fit is passive" in result.stdout
 

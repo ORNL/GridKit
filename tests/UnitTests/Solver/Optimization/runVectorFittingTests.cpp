@@ -106,6 +106,11 @@ namespace
       success *= (std::abs(model.d[0] - reference.d) < 1.0e-6);
     }
 
+    // The report surfaces the worst per-channel error so a collapsed
+    // channel cannot hide inside the norm-weighted global figure.
+    success *= (fitter.getStats().report().find("worst channel")
+                != std::string::npos);
+
     return success.report(__func__);
   }
 
