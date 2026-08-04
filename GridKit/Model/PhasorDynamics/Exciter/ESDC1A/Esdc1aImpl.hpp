@@ -838,9 +838,11 @@ namespace GridKit
        *
        * Initialization seeds the inactive high-value gate with the gate
        * *input*, so the residual reproduces the requested output through the
-       * same smooth ramp it evaluates. Beyond the softplus width the smooth
-       * ramp is the identity to double precision, so the output is returned
-       * unchanged there.
+       * same smooth ramp it evaluates. 
+       * 
+       * For large positive values, the ramp is effectively equal to the input, so the
+       * inverse is effectively the output. In that regime this function returns `ramp_output` directly.
+       * This branching is numerically more robust.
        *
        * @param[in] ramp_output Strictly positive requested ramp output.
        * @return The input the smooth ramp maps to the requested output.
