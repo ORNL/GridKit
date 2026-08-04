@@ -284,7 +284,6 @@ namespace GridKit
           success *= model.initialize() == 0;
 
           Ipopt::SmartPtr<Ipopt::IpoptApplication> application  = IpoptApplicationFactory();
-          success                                              *= application->Options()->SetStringValue("hessian_approximation", "exact");
           success                                              *= application->Options()->SetStringValue("derivative_test", "second-order");
           success                                              *= application->Options()->SetStringValue("derivative_test_print_all", "yes");
           success                                              *= application->Options()->SetNumericValue("derivative_test_perturbation", 1.0e-8);
