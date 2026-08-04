@@ -15,10 +15,10 @@ namespace GridKit
 {
   namespace Testing
   {
-    /// Verify that a pair of components wired through a shared signal node
-    /// resolves that node and agrees on its value across system assembly.
-    /// These cases exercise component-to-component connections only; the
-    /// solver-driven cases live in @ref PDIntegrationTests.
+    /// Connection tests for pairs of components that share a signal node.
+    /// Each case checks that the node links both components and that they
+    /// agree on its value after initialization. Solver-driven cases live
+    /// in @ref PDIntegrationTests.
     template <typename scalar_type, typename index_type>
     class ComponentConnectionTests
     {
@@ -30,15 +30,12 @@ namespace GridKit
       ComponentConnectionTests()  = default;
       ~ComponentConnectionTests() = default;
 
-      // Initialization and evaluateResidual() reassociate the same
-      // expressions, so a steady state lands within a few ulps of exact zero
-      // rather than on it. The cases here are exact to within one ulp; 100
-      // eps is the shared margin used across the phasor-dynamics suites.
-      static constexpr RealT kTol =
-          static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+      // The tolerance only absorbs floating-point roundoff.
+      static constexpr RealT kTol = std::numeric_limits<RealT>::epsilon();
 
-      /// GENROU seeds the shared field-voltage node before ESDC1A consumes
-      /// and preserves that value during system initialization.
+      /// GENROU initializes first and writes the field voltage it needs to
+      /// the shared node. ESDC1A then initializes around that value and
+      /// must leave it unchanged at a steady state.
       TestOutcome genrouEsdc1a()
       {
         using MachineExternal = PhasorDynamics::GenrouExternalVariables;
@@ -71,6 +68,8 @@ namespace GridKit
         success *= efd.linked();
         success *= system.initialize() == 0;
         success *= system.evaluateResidual() == 0;
+
+        // At zero power the required field voltage equals the terminal voltage.
         success *= isEqual(efd.read(), static_cast<ScalarT>(1.0), kTol);
 
         const auto* residual = exciter.getResidual().getData();
