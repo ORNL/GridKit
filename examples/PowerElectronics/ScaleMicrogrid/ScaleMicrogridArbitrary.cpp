@@ -85,7 +85,8 @@ int printMicrogridSystems(index_type N_size)
 
   // DG Params Vector
   // All DGs have the same set of parameters except for the first two.
-  static constexpr auto                                          pi = std::numbers::pi_v<real_type>;
+  static constexpr auto pi = std::numbers::pi_v<real_type>;
+
   GridKit::DistributedGeneratorParameters<real_type, index_type> DG_parms1;
   DG_parms1.wb_  = 2.0 * pi * 50.0;
   DG_parms1.wc_  = 31.41;
