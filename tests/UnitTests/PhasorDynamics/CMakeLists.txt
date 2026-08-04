@@ -96,6 +96,16 @@ target_link_libraries(
   GridKit::phasor_dynamics_components_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_exciter_esdc1a runExciterEsdc1aTests.cpp)
+target_link_libraries(
+  test_phasor_exciter_esdc1a
+  GridKit::definitions
+  GridKit::phasor_dynamics_exciter_esdc1a
+  GridKit::phasor_dynamics_exciter_esdc1a_dependency_tracking
+  GridKit::phasor_dynamics_bus
+  GridKit::phasor_dynamics_bus_dependency_tracking
+  GridKit::testing)
+
 add_executable(test_phasor_exciter_sexspti runExciterSexsPtiTests.cpp)
 target_link_libraries(
   test_phasor_exciter_sexspti
@@ -150,6 +160,13 @@ target_link_libraries(
   GridKit::phasor_dynamics_systemmodel_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_component_connection runComponentConnectionTests.cpp)
+target_link_libraries(
+  test_phasor_component_connection
+  GridKit::definitions
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::testing)
+
 add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
 add_test(NAME PhasorDynamicsBusFaultTest COMMAND test_phasor_bus_fault)
 add_test(NAME PhasorDynamicsBusToSignalAdapterTest COMMAND test_phasor_bustosignaladapter)
@@ -157,6 +174,7 @@ add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governor_tgov1)
 add_test(NAME PhasorDynamicsExciterIeeet1Test COMMAND test_phasor_exciter_ieeet1)
+add_test(NAME PhasorDynamicsExciterEsdc1aTest COMMAND test_phasor_exciter_esdc1a)
 add_test(NAME PhasorDynamicsGensalTest COMMAND test_phasor_gensal)
 add_test(NAME PhasorDynamicsExciterSexsPtiTest COMMAND test_phasor_exciter_sexspti)
 add_test(NAME PhasorDynamicsConverterRegcaTest COMMAND test_phasor_converter_regca)
@@ -169,6 +187,7 @@ add_test(
   COMMAND test_phasor_system
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
+add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_component_connection)
 
 install(
   TARGETS test_phasor_bus
@@ -180,6 +199,7 @@ install(
           test_phasor_genrou
           test_phasor_governor_tgov1
           test_phasor_exciter_ieeet1
+          test_phasor_exciter_esdc1a
           test_phasor_gensal
           test_phasor_exciter_sexspti
           test_phasor_converter_regca
@@ -187,4 +207,5 @@ install(
           test_phasor_gen_classical
           test_phasor_system
           test_phasor_system_single_component
+          test_phasor_component_connection
   RUNTIME DESTINATION bin)

@@ -151,6 +151,12 @@ namespace GridKit
           raw_component.get_to(exciter);
           sm.exciter.push_back(exciter);
         }
+        else if (kind == "Esdc1a")
+        {
+          typename SystemModelData<RealT, IdxT>::Esdc1aDataT exciter;
+          raw_component.get_to(exciter);
+          sm.esdc1a.push_back(exciter);
+        }
         else if (kind == "SexsPti")
         {
           typename SystemModelData<RealT, IdxT>::SexsPtiDataT exciter;
