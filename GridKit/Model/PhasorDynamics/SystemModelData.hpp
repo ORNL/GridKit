@@ -11,6 +11,7 @@
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusToSignalAdapter/BusToSignalAdapterData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
@@ -105,6 +106,7 @@ namespace GridKit
       std::vector<LoadZDataT>              loadz;           ///< LoadZ instances within the model
       std::vector<LoadZIPDataT>            loadzip;         ///< LoadZIP instances within the model
       std::vector<Tgov1DataT>              gov;             ///< Governors within the model
+      std::vector<Esdc1aDataT>             esdc1a;          ///< ESDC1A exciters within the model
       std::vector<Ieeet1DataT>             exciter;         ///< Exciters within the model
       std::vector<SexsPtiDataT>            sexspti;         ///< SEXS-PTI exciters within the model
       std::vector<IeeestDataT>             stabilizer;      ///< Stabilizers within the model

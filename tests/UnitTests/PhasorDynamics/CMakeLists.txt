@@ -160,6 +160,13 @@ target_link_libraries(
   GridKit::phasor_dynamics_systemmodel_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_component_connection runComponentConnectionTests.cpp)
+target_link_libraries(
+  test_phasor_component_connection
+  GridKit::definitions
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::testing)
+
 add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
 add_test(NAME PhasorDynamicsBusFaultTest COMMAND test_phasor_bus_fault)
 add_test(NAME PhasorDynamicsBusToSignalAdapterTest COMMAND test_phasor_bustosignaladapter)
