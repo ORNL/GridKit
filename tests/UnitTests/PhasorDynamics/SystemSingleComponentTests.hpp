@@ -118,6 +118,67 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// ESDC1A through the production path: model data to system
+      /// construction to required bus and field-voltage signal wiring. UEL
+      /// mode 2 makes zero field voltage an admissible standalone state.
+      TestOutcome esdc1a()
+      {
+        using Data    = PhasorDynamics::Exciter::Esdc1aData<RealT, IdxT>;
+        using Buses   = typename Data::Buses;
+        using Outputs = typename Data::SignalOutputs;
+        using Params  = typename Data::Parameters;
+        using Vars    = PhasorDynamics::Exciter::Esdc1aInternalVariables;
+
+        constexpr IdxT bus_id = static_cast<IdxT>(1);
+        constexpr IdxT efd_id = static_cast<IdxT>(1);
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.bus.resize(1);
+        data.bus[0].bus_id   = bus_id;
+        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = static_cast<RealT>(1.0);
+        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+
+        data.signal.resize(1);
+        data.signal[0].signal_id = efd_id;
+        data.signal[0].name      = "Field Voltage";
+
+        Data esdc1a_data;
+        esdc1a_data.device_class                 = "Esdc1a";
+        esdc1a_data.disambiguation_string        = "esdc1a_system";
+        esdc1a_data.buses[Buses::bus]            = bus_id;
+        esdc1a_data.parameters[Params::Tr]       = static_cast<RealT>(0.02);
+        esdc1a_data.parameters[Params::Tb]       = static_cast<RealT>(0.5);
+        esdc1a_data.parameters[Params::UEL]      = static_cast<IdxT>(2);
+        esdc1a_data.signal_outputs[Outputs::efd] = efd_id;
+        data.esdc1a.push_back(esdc1a_data);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+
+        auto* efd  = system.getSignal(efd_id);
+        success   *= efd->linked();
+        success   *= efd->getVariableIndex() == static_cast<IdxT>(Vars::EFD);
+
+        auto missing_bus_data          = data;
+        missing_bus_data.bus[0].bus_id = static_cast<IdxT>(0);
+        missing_bus_data.esdc1a[0].buses.clear();
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_bus_system(missing_bus_data);
+        std::cout << "Testing expected ESDC1A missing-bus configuration error.\n";
+        success *= missing_bus_system.verify() > 0;
+
+        return success.report(__func__);
+      }
+
       TestOutcome load()
       {
         TestStatus success = true;
