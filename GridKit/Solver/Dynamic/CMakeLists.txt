@@ -64,4 +64,11 @@ if(GRIDKIT_ENABLE_RESOLVE)
       GridKit::sparse_matrix)
 endif()
 
+gridkit_add_library(
+  solvers_dyn_io
+  SOURCES IdaDiagnostics.cpp
+  HEADERS IdaDiagnostics.hpp
+  LINK_LIBRARIES PUBLIC GridKit::solvers_dyn
+  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
+
 add_subdirectory(Native)
