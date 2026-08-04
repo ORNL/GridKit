@@ -838,8 +838,8 @@ namespace GridKit
        *
        * Initialization seeds the inactive high-value gate with the gate
        * *input*, so the residual reproduces the requested output through the
-       * same smooth ramp it evaluates. 
-       * 
+       * same smooth ramp it evaluates.
+       *
        * For large positive values, the ramp is effectively equal to the input, so the
        * inverse is effectively the output. In that regime this function returns `ramp_output` directly.
        * This branching is numerically more robust.
