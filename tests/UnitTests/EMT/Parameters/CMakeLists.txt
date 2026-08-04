@@ -7,6 +7,15 @@ target_link_libraries(
 
 add_test(NAME EMTOverheadTest COMMAND $<TARGET_FILE:test_emt_overhead>)
 
+add_executable(test_emt_modal runModalDecompositionTests.cpp)
+target_link_libraries(
+  test_emt_modal
+  GridKit::emt_modal
+  GridKit::testing
+  Eigen3::Eigen)
+
+add_test(NAME EMTModalDecompositionTest COMMAND $<TARGET_FILE:test_emt_modal>)
+
 add_executable(test_emt_conductor runConductorTests.cpp)
 target_link_libraries(
   test_emt_conductor GridKit::emt_conductor GridKit::testing)

@@ -1,0 +1,15 @@
+{
+    "samples": "/home/lukel/GridKit/examples/EMT/LineGallery/output/345kv-horizontal.z.samples.csv",
+    "rows": 8,
+    "cols": 8,
+    "fit": {
+        "min_poles": 2,
+        "max_poles": 30,
+        "target_rel_rms": 0.001,
+        "terms": "linear",
+        "weighting": "inverse_magnitude"
+    },
+    "output": {
+        "model": "/home/lukel/GridKit/examples/EMT/LineGallery/output/345kv-horizontal.z.model.json"
+    }
+}

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -128,6 +129,18 @@ namespace GridKit
           bool empty() const override
           {
             return entries_.empty();
+          }
+
+          bool selectedAny(std::initializer_list<Variable> variables) const
+          {
+            for (const auto variable : variables)
+            {
+              if (selected(variable))
+              {
+                return true;
+              }
+            }
+            return false;
           }
 
         private:
@@ -261,8 +274,6 @@ namespace GridKit
                   : std::make_unique<ShuntReduction<ScalarT, IdxT>>(
                         shunt_admittance_, reduction_map_)),
           gamma_(modalSeries(), modalShunt()),
-          tau_(gamma_, path_),
-          h_(gamma_, path_),
           yc_(modalSeries(), modalShunt()),
           zc_(modalSeries(), modalShunt()),
           monitor_(std::make_unique<Detail::OverheadMonitor<ScalarT, IdxT>>(
@@ -283,8 +294,7 @@ namespace GridKit
           elements_.push_back(series_reduction_.get());
           elements_.push_back(shunt_reduction_.get());
         }
-        elements_.insert(elements_.end(),
-                         {&gamma_, &tau_, &h_, &yc_, &zc_});
+        elements_.insert(elements_.end(), {&gamma_, &yc_, &zc_});
         for (const auto& sink : data.monitor_sink)
         {
           monitor_controller_->addSink(sink);
@@ -405,14 +415,37 @@ namespace GridKit
         monitor->setMatrix(Variable::L, series_impedance_.L(), y_.getData());
         monitor->setMatrix(Variable::G, shunt_admittance_.G(), y_.getData());
         monitor->setMatrix(Variable::C, shunt_admittance_.C(), y_.getData());
-        monitor->setComplexMatrix(Variable::Tv, gamma_.tvReal(), gamma_.tvImag(), y_.getData());
-        monitor->setComplexMatrix(Variable::Ti, gamma_.tiReal(), gamma_.tiImag(), y_.getData());
-        monitor->setVector(Variable::Alpha, gamma_.alphaM(), y_.getData());
-        monitor->setVector(Variable::Beta, gamma_.betaM(), y_.getData());
-        monitor->setVector(Variable::Tau, tau_.tau(), y_.getData());
-        monitor->setComplexVector(Variable::H, h_.Hr(), h_.Hi(), y_.getData());
         monitor->setComplexMatrix(Variable::Yc, yc_.Gc(), yc_.Bc(), y_.getData());
         monitor->setComplexMatrix(Variable::Zc, zc_.Rc(), zc_.Xc(), y_.getData());
+
+        // Modal variables are observations of gamma, not DAE states:
+        // they live in the decomposition's buffer and are refreshed at
+        // every emission by printMonitoredVariables().
+        if (monitor->selectedAny({Variable::Tv,
+                                  Variable::Ti,
+                                  Variable::Alpha,
+                                  Variable::Beta,
+                                  Variable::Tau,
+                                  Variable::H}))
+        {
+          modes_ = std::make_unique<ModalDecomposition<ScalarT, IdxT>>(
+              gamma_.alpha().rows, path_.length());
+          monitor->setComplexMatrix(Variable::Tv,
+                                    modes_->tvReal(),
+                                    modes_->tvImag(),
+                                    modes_->data());
+          monitor->setComplexMatrix(Variable::Ti,
+                                    modes_->tiReal(),
+                                    modes_->tiImag(),
+                                    modes_->data());
+          monitor->setVector(Variable::Alpha, modes_->alphaM(), modes_->data());
+          monitor->setVector(Variable::Beta, modes_->betaM(), modes_->data());
+          monitor->setVector(Variable::Tau, modes_->tau(), modes_->data());
+          monitor->setComplexVector(Variable::H,
+                                    modes_->hReal(),
+                                    modes_->hImag(),
+                                    modes_->data());
+        }
 
         monitor_controller_->addMonitor(monitor_.get());
         monitor_initialized_ = true;
@@ -439,6 +472,19 @@ namespace GridKit
       template <typename ScalarT, typename IdxT>
       void Overhead<ScalarT, IdxT>::printMonitoredVariables() const
       {
+        if (modes_)
+        {
+          const int status = modes_->decompose(omega_,
+                                               y_.getData()
+                                                   + gamma_.alpha().offset,
+                                               y_.getData()
+                                                   + gamma_.beta().offset);
+          if (status != 0)
+          {
+            throw std::runtime_error(
+                "Modal decomposition failed during monitor emission");
+          }
+        }
         monitor_controller_->print();
       }
 

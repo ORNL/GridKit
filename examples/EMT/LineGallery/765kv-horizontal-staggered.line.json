@@ -2,7 +2,7 @@
   "$schema": "https://gridkit.readthedocs.io/en/schema/line.schema.json",
   "line": "1.0",
   "name": "765 kV horizontal quad bundle, staggered",
-  "description": "Gallery variant of the catalog 765 kV horizontal line with staggered phase heights and offsets. The exact mirror symmetry of the catalog tower produces degenerate aerial modes that the frequency sweep's eigenvector continuation cannot traverse; the stagger breaks the symmetry while staying structurally realistic.",
+  "description": "Gallery variant of the catalog 765 kV horizontal line with staggered phase heights and offsets, exercising a structurally realistic tower without the catalog geometry's exact mirror symmetry.",
   "source": "synthetic example; conductor and earth data illustrative",
   "catalog": {
     "conductors": {

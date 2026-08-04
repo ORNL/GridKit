@@ -7,7 +7,8 @@ Family | Description
 ------ | -----------
 [`Geometry`](Geometry/README.md) | Static line geometry, conductor data, and route data
 [`Effects`](Effects/README.md) | Physical effects used to assemble per-unit-length series and shunt quantities
-[`Response`](Response/README.md) | Propagation, finite-length response, and characteristic quantities derived from the assembled parameters
+[`Response`](Response/README.md) | Propagation and characteristic quantities derived from the assembled parameters
+[`Modal`](Modal/README.md) | Identity-preserving modal observation of the propagation matrix at monitor emission
 
 ## Overhead Aggregate
 
@@ -57,11 +58,15 @@ Submodel | Inputs | Outputs
 [`SeriesImpedance`](Effects/SeriesImpedance/README.md) | `SkinEffect`, `GeometricInductance`, `Carson` | $\mathbf{R}'$, $\mathbf{L}'$
 [`ShuntPotential`](Effects/ShuntPotential/README.md) | `tower`, `conductor` | $\mathbf{G}^{\mathrm{pot}}$, $\mathbf{C}^{\mathrm{pot}}$
 [`ShuntAdmittance`](Effects/ShuntAdmittance/README.md) | `ShuntPotential` | $\mathbf{G}'$, $\mathbf{C}'$
-[`Gamma`](Response/Gamma/README.md) | `SeriesImpedance`, `ShuntAdmittance` | $\boldsymbol{\Gamma}$, $\mathbf{T}_v$, $\mathbf{T}_i$, $\mathbf{a}$, $\mathbf{b}$
-[`Tau`](Response/Tau/README.md) | `Gamma`, `Path` | $\boldsymbol{\tau}$
-[`H`](Response/H/README.md) | `Gamma`, `Path` | $\mathbf{H}$
+[`Gamma`](Response/Gamma/README.md) | `SeriesImpedance`, `ShuntAdmittance` | $\boldsymbol{\Gamma}$
 [`Yc`](Response/Yc/README.md) | `SeriesImpedance`, `ShuntAdmittance` | $\mathbf{Y}_c$
 [`Zc`](Response/Zc/README.md) | `SeriesImpedance`, `ShuntAdmittance` | $\mathbf{Z}_c$
+
+Modal quantities are not submodels: [`ModalDecomposition`](Modal/README.md)
+observes $\boldsymbol{\Gamma}$ at every monitor emission and produces
+$\mathbf{T}_v$, $\mathbf{T}_i$, $\mathbf{a}$, $\mathbf{b}$,
+$\boldsymbol{\tau}$, and $\mathbf{H}$ outside the DAE, so mode identity
+survives eigenvalue crossings and exact degeneracy.
 
 ### Signal Wiring
 
@@ -90,15 +95,14 @@ flowchart LR
 
   subgraph response["Response"]
     direction TB
-    tau[Tau]
-    h[H]
     gamma[Gamma]
     yc[Yc]
     zc[Zc]
   end
 
-  path --> tau
-  path --> h
+  modal[ModalDecomposition]
+
+  path --> modal
 
   tower --> path
 
@@ -118,8 +122,7 @@ flowchart LR
   series --> zc
   shuntadm --> zc
 
-  gamma --> tau
-  gamma --> h
+  gamma --> modal
 
   classDef geometry fill:#edf3e6,stroke:#78915c,stroke-width:1.2px,color:#243315;
   classDef effect fill:#f5ecd9,stroke:#9a7b43,stroke-width:1.2px,color:#3b2b11;
@@ -128,7 +131,7 @@ flowchart LR
   class tower,path geometry;
   class geo,skin,carson,shuntpot effect;
   class series,shuntadm assembled;
-  class gamma,tau,h,yc,zc derived;
+  class gamma,yc,zc,modal derived;
 ```
 
 #### Directional Wiring Table
@@ -150,10 +153,8 @@ Shunt assembly | [`ShuntPotential`](Effects/ShuntPotential/README.md) | [`ShuntA
 Response inputs | [`SeriesImpedance`](Effects/SeriesImpedance/README.md) | [`Gamma`](Response/Gamma/README.md), [`Yc`](Response/Yc/README.md), [`Zc`](Response/Zc/README.md) | $\mathbf{R}'$, $\mathbf{L}'$
 Response inputs | [`ShuntAdmittance`](Effects/ShuntAdmittance/README.md) | [`Gamma`](Response/Gamma/README.md), [`Yc`](Response/Yc/README.md), [`Zc`](Response/Zc/README.md) | $\mathbf{G}'$, $\mathbf{C}'$
 Finite-line inputs | `path.length`, `path.points`, [`Tower`](Geometry/Tower/README.md) | [`Path`](Geometry/Path/README.md) | $\ell$
-Finite-line response | [`Gamma`](Response/Gamma/README.md) | [`Tau`](Response/Tau/README.md) | $\mathbf{b}$
-Finite-line response | [`Path`](Geometry/Path/README.md) | [`Tau`](Response/Tau/README.md) | $\ell$
-Finite-line response | [`Gamma`](Response/Gamma/README.md) | [`H`](Response/H/README.md) | $\mathbf{a}$, $\mathbf{b}$, $\dot{\mathbf{a}}$, $\dot{\mathbf{b}}$
-Finite-line response | [`Path`](Geometry/Path/README.md) | [`H`](Response/H/README.md) | $\ell$
+Modal observation | [`Gamma`](Response/Gamma/README.md) | [`ModalDecomposition`](Modal/README.md) | $\boldsymbol{\alpha}$, $\boldsymbol{\beta}$
+Modal observation | [`Path`](Geometry/Path/README.md) | [`ModalDecomposition`](Modal/README.md) | $\ell$
 
 ### Model Variables
 
@@ -192,3 +193,7 @@ Monitor | Symbol | Units | Shape | Description
 `H` | $\mathbf{H}$ | [-] | $K$ | Modal finite-length propagation function
 `Yc` | $\mathbf{Y}_c=\mathbf{G}_c+j\mathbf{B}_c$ | [S] | $K\times K$ | Characteristic admittance
 `Zc` | $\mathbf{Z}_c=\mathbf{R}_c+j\mathbf{X}_c$ | [$\Omega$] | $K\times K$ | Characteristic impedance
+
+The modal monitors (`Tv`, `Ti`, `Alpha`, `Beta`, `Tau`, `H`) are produced by
+[`ModalDecomposition`](Modal/README.md), refreshed at every emission; the
+remaining monitors read child-model states directly.

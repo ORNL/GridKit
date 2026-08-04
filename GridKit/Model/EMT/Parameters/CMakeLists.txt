@@ -18,9 +18,8 @@ add_subdirectory(Effects/SeriesImpedance)
 add_subdirectory(Effects/ShuntPotential)
 add_subdirectory(Effects/ShuntAdmittance)
 add_subdirectory(Effects/Reduction)
+add_subdirectory(Modal)
 add_subdirectory(Response/Gamma)
-add_subdirectory(Response/H)
-add_subdirectory(Response/Tau)
 add_subdirectory(Response/Yc)
 add_subdirectory(Response/Zc)
 
@@ -55,9 +54,7 @@ gridkit_add_library(
     INTERFACE
     GridKit::emt_gamma
     INTERFACE
-    GridKit::emt_tau
-    INTERFACE
-    GridKit::emt_h
+    GridKit::emt_modal
     INTERFACE
     GridKit::emt_yc
     INTERFACE

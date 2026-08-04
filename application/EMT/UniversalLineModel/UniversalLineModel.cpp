@@ -441,18 +441,13 @@ namespace
    *   Gout = Tv^-T = conj(monitored Ti),
    *   Gin  = diag(Hmps) Tv^T.
    *
-   * Gauge note: each monitored eigenvector pair (tv, ti) is defined only
-   * up to a per-sample phase, and any drift of that phase across the
-   * sweep breaks the conjugate symmetry a real rational fit requires.
-   * Both columns of every mode are therefore rotated to the
-   * real-positive-anchor gauge: the tv entry on the mode's anchor row
-   * (largest sweep-mean magnitude) is made real positive at every
-   * sample. The pairing Ti^H Tv = I is invariant because ti and tv
-   * rotate by the same phase.
+   * Gauge note: the monitored transforms arrive in the modal
+   * decomposition's gauge, exact and continuous per sample, and are
+   * consumed exactly as monitored: no per-sample rephasing happens
+   * here.
    *
    * The biorthogonality residual max |Ti^H Tv - I| is checked per
-   * sample: it is the identity both assemblies rest on, and it measures
-   * how well the sweep tolerance held the eigenvector tracking.
+   * sample: it is the identity both assemblies rest on.
    */
   void buildPropagationFactors(const ResponseT& tv,
                                const ResponseT& ti,
@@ -463,56 +458,22 @@ namespace
     const auto k            = tv.rows;
     const auto sample_count = tv.omega.size();
 
-    // The anchor row maximizes the mode's minimum magnitude over the
-    // sweep: the gauge rotation divides by the anchor entry at every
-    // sample, so the row must stay away from zero everywhere, which a
-    // sweep-mean winner does not guarantee.
-    std::vector<index_type> anchor(static_cast<size_t>(k), 0);
-    for (index_type mode = 0; mode < k; ++mode)
-    {
-      double best = -1.0;
-      for (index_type row = 0; row < k; ++row)
-      {
-        double smallest = std::numeric_limits<double>::infinity();
-        for (size_t m = 0; m < sample_count; ++m)
-        {
-          smallest = std::min(smallest, std::abs(tv(m, row, mode)));
-        }
-        if (smallest > best)
-        {
-          best                              = smallest;
-          anchor[static_cast<size_t>(mode)] = row;
-        }
-      }
-    }
-
     gin.rows  = k;
     gin.cols  = k;
     gin.omega = tv.omega;
     gin.response.assign(tv.response.size(), {});
     gout = gin;
 
-    double                worst = 0.0;
-    std::vector<ComplexT> rotation(static_cast<size_t>(k));
+    double worst = 0.0;
     for (size_t m = 0; m < sample_count; ++m)
     {
-      for (index_type mode = 0; mode < k; ++mode)
-      {
-        const ComplexT v =
-            tv(m, anchor[static_cast<size_t>(mode)], mode);
-        const double magnitude = std::abs(v);
-        rotation[static_cast<size_t>(mode)] =
-            magnitude > 0.0 ? std::conj(v) / magnitude : ComplexT{1.0, 0.0};
-      }
-
       for (index_type row = 0; row < k; ++row)
       {
-        const ComplexT mode = hmps(m, row, 0) * rotation[static_cast<size_t>(row)];
+        const ComplexT mode = hmps(m, row, 0);
         for (index_type col = 0; col < k; ++col)
         {
           gin(m, row, col)  = mode * tv(m, col, row);
-          gout(m, row, col) = std::conj(
-              ti(m, row, col) * rotation[static_cast<size_t>(col)]);
+          gout(m, row, col) = std::conj(ti(m, row, col));
         }
       }
 
@@ -549,14 +510,15 @@ namespace
       std::ostringstream message;
       message << "Transform biorthogonality residual reaches " << worst
               << ", beyond " << BIORTHOGONALITY_ERROR
-              << "; the propagation factor assembly is invalid. "
-                 "Tighten --rtol or reduce the sweep span.";
+              << "; the propagation factor assembly is invalid. The "
+                 "modal decomposition guarantees this identity, so the "
+                 "monitored data is corrupt.";
       throw std::runtime_error(message.str());
     }
     if (worst > BIORTHOGONALITY_WARNING)
     {
       std::cout << "Warning: transform biorthogonality residual reaches "
-                << worst << "; tighten --rtol\n";
+                << worst << "\n";
     }
   }
 

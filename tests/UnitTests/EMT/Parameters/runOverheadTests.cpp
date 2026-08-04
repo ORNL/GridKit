@@ -847,47 +847,13 @@ namespace
     model.updateTime(omega, 1.0);
     model.allocate();
 
-    const auto alpha  = model.gamma().alpha();
-    const auto beta   = model.gamma().beta();
-    const auto alphaM = model.gamma().alphaM();
-    const auto betaM  = model.gamma().betaM();
-    const auto tvReal = model.gamma().tvReal();
-    const auto tvImag = model.gamma().tvImag();
-    const auto tiReal = model.gamma().tiReal();
-    const auto tiImag = model.gamma().tiImag();
+    const auto alpha = model.gamma().alpha();
+    const auto beta  = model.gamma().beta();
 
     TestStatus success  = true;
-    success            *= (model.gamma().size() == 28);
+    success            *= (model.gamma().size() == 8);
     success            *= (alpha.rows == 2 && alpha.cols == 2);
     success            *= (beta.rows == 2 && beta.cols == 2);
-    success            *= (alphaM.rows == 2 && alphaM.cols == 1);
-    success            *= (betaM.rows == 2 && betaM.cols == 1);
-    success            *= (tvReal.rows == 2 && tvReal.cols == 2);
-    success            *= (tvImag.rows == 2 && tvImag.cols == 2);
-    success            *= (tiReal.rows == 2 && tiReal.cols == 2);
-    success            *= (tiImag.rows == 2 && tiImag.cols == 2);
-
-    for (index_type m = 0; m < tvReal.cols; ++m)
-    {
-      for (index_type n = 0; n < tvReal.cols; ++n)
-      {
-        scalar_type real = 0.0;
-        scalar_type imag = 0.0;
-        for (index_type i = 0; i < tvReal.rows; ++i)
-        {
-          const auto r_index  = i * tvReal.cols + n;
-          const auto l_index  = i * tiReal.cols + m;
-          const auto xr       = model.y().getData()[tvReal.offset + r_index];
-          const auto xi       = model.y().getData()[tvImag.offset + r_index];
-          const auto lr       = model.y().getData()[tiReal.offset + l_index];
-          const auto li       = model.y().getData()[tiImag.offset + l_index];
-          real               += lr * xr + li * xi;
-          imag               += lr * xi - li * xr;
-        }
-        success *= close(real, (m == n) ? 1.0 : 0.0, 1.0e-8);
-        success *= close(imag, 0.0, 1.0e-8);
-      }
-    }
 
     model.evaluateResidual();
     for (index_type i = 0; i < model.gamma().size(); ++i)
@@ -905,18 +871,14 @@ namespace
     const auto C1 = scalar_model.shuntAdmittance().C();
     const auto ar = scalar_model.gamma().alpha();
     const auto bi = scalar_model.gamma().beta();
-    const auto am = scalar_model.gamma().alphaM();
-    const auto bm = scalar_model.gamma().betaM();
 
     const std::complex<scalar_type> Z{scalar_model.y().getData()[R1.offset], omega * scalar_model.y().getData()[L1.offset]};
     const std::complex<scalar_type> Y{scalar_model.y().getData()[G1.offset], omega * scalar_model.y().getData()[C1.offset]};
     const auto                      gamma_ref = std::sqrt(Z * Y);
 
-    success *= (scalar_model.gamma().size() == 8);
+    success *= (scalar_model.gamma().size() == 2);
     success *= close(scalar_model.y().getData()[ar.offset], gamma_ref.real(), 1.0e-8);
     success *= close(scalar_model.y().getData()[bi.offset], gamma_ref.imag(), 1.0e-8);
-    success *= close(scalar_model.y().getData()[am.offset], gamma_ref.real(), 1.0e-8);
-    success *= close(scalar_model.y().getData()[bm.offset], gamma_ref.imag(), 1.0e-8);
 
     scalar_model.evaluateResidual();
     for (index_type i = 0; i < scalar_model.gamma().size(); ++i)
@@ -932,111 +894,104 @@ namespace
     return success.report(__func__);
   }
 
-  GridKit::Testing::TestOutcome tau_model()
+  /// Modal quantities are observations refreshed at emission, not DAE
+  /// states: after printMonitoredVariables() the decomposition must be
+  /// biorthogonal, satisfy the eigen-relation against the integrated
+  /// gamma states, and carry the closed-form modal responses.
+  GridKit::Testing::TestOutcome overhead_modal_observation()
   {
     using GridKit::Testing::TestStatus;
+    using MonitorVariable =
+        GridKit::EMT::Parameters::OverheadData<scalar_type, index_type>::MonitorableVariables;
+    using ComplexT = std::complex<scalar_type>;
 
-    const scalar_type                                           omega = 2.0 * pi * 50.0;
-    auto                                                        data  = makeData();
+    const scalar_type omega  = 2.0 * pi * 50.0;
+    auto              data   = makeData();
+    data.monitored_variables = {MonitorVariable::Tv,
+                                MonitorVariable::Ti,
+                                MonitorVariable::Alpha,
+                                MonitorVariable::Beta,
+                                MonitorVariable::Tau,
+                                MonitorVariable::H};
+
     GridKit::EMT::Parameters::Overhead<scalar_type, index_type> model(data);
     model.updateTime(omega, 1.0);
     model.allocate();
 
-    const auto betaM = model.gamma().betaM();
-    const auto tau   = model.tau().tau();
-    const auto ell   = model.path().length();
-
     TestStatus success  = true;
-    success            *= (model.tau().size() == 2);
-    success            *= (tau.rows == 2 && tau.cols == 1);
-
-    for (index_type m = 0; m < tau.rows; ++m)
+    success            *= (model.modes() != nullptr);
+    if (model.modes() == nullptr)
     {
-      success *= close(model.y().getData()[tau.offset + m],
-                       ell * model.y().getData()[betaM.offset + m] / omega,
+      return success.report(__func__);
+    }
+
+    // Two emissions: the first fixes the canonical frame, the second
+    // exercises the identity-tracked path.
+    model.printMonitoredVariables();
+    model.printMonitoredVariables();
+    model.stopMonitor();
+
+    const auto&      modes   = *model.modes();
+    const auto*      values  = modes.data();
+    const auto       ell     = model.path().length();
+    const index_type k       = modes.modeCount();
+    success                 *= (k == 2);
+
+    // Biorthogonality is exact by construction.
+    for (index_type m = 0; m < k; ++m)
+    {
+      for (index_type n = 0; n < k; ++n)
+      {
+        ComplexT pairing{0.0, 0.0};
+        for (index_type i = 0; i < k; ++i)
+        {
+          const auto     entry = i * k;
+          const ComplexT tv{values[modes.tvReal().offset + entry + n],
+                            values[modes.tvImag().offset + entry + n]};
+          const ComplexT ti{values[modes.tiReal().offset + entry + m],
+                            values[modes.tiImag().offset + entry + m]};
+          pairing += std::conj(ti) * tv;
+        }
+        success *= close(pairing.real(), (m == n) ? 1.0 : 0.0, 1.0e-12);
+        success *= close(pairing.imag(), 0.0, 1.0e-12);
+      }
+    }
+
+    // The eigen-relation certifies the observation against the
+    // integrated gamma states.
+    const auto alpha = model.gamma().alpha();
+    const auto beta  = model.gamma().beta();
+    for (index_type m = 0; m < k; ++m)
+    {
+      const ComplexT lambda{values[modes.alphaM().offset + m],
+                            values[modes.betaM().offset + m]};
+      for (index_type i = 0; i < k; ++i)
+      {
+        ComplexT product{0.0, 0.0};
+        for (index_type j = 0; j < k; ++j)
+        {
+          const ComplexT gamma_entry{
+              model.y().getData()[alpha.offset + i * k + j],
+              model.y().getData()[beta.offset + i * k + j]};
+          const ComplexT tv{values[modes.tvReal().offset + j * k + m],
+                            values[modes.tvImag().offset + j * k + m]};
+          product += gamma_entry * tv;
+        }
+        const ComplexT scaled =
+            lambda
+            * ComplexT{values[modes.tvReal().offset + i * k + m],
+                       values[modes.tvImag().offset + i * k + m]};
+        success *= close(product.real(), scaled.real(), 1.0e-8);
+        success *= close(product.imag(), scaled.imag(), 1.0e-8);
+      }
+
+      // Closed-form modal responses.
+      const ComplexT factor  = std::exp(-ell * lambda);
+      success               *= close(values[modes.hReal().offset + m], factor.real(), 1.0e-10);
+      success               *= close(values[modes.hImag().offset + m], factor.imag(), 1.0e-10);
+      success               *= close(values[modes.tau().offset + m],
+                       ell * lambda.imag() / omega,
                        1.0e-10);
-    }
-
-    model.evaluateResidual();
-    for (index_type m = 0; m < tau.rows; ++m)
-    {
-      success *= close(model.getResidual().getData()[tau.offset + m], 0.0, 1.0e-10);
-    }
-
-    for (index_type m = 0; m < tau.rows; ++m)
-    {
-      success *= jacobianMatchesFiniteDifference(model, tau.offset + m, tau.offset + m, 1.0, 1.0e-7);
-      success *= jacobianMatchesFiniteDifference(model, tau.offset + m, betaM.offset + m, 1.0, 1.0e-7);
-    }
-
-    return success.report(__func__);
-  }
-
-  GridKit::Testing::TestOutcome h_model()
-  {
-    using GridKit::Testing::TestStatus;
-
-    const scalar_type omega = 2.0 * pi * 50.0;
-    auto              data  = makeData();
-
-    GridKit::EMT::Parameters::Overhead<scalar_type, index_type> model(data);
-    model.updateTime(omega, 1.0);
-    model.allocate();
-
-    const auto alphaM = model.gamma().alphaM();
-    const auto betaM  = model.gamma().betaM();
-    const auto alphaD = model.gamma().alphaMDot();
-    const auto betaD  = model.gamma().betaMDot();
-    const auto Hr     = model.h().Hr();
-    const auto Hi     = model.h().Hi();
-    const auto ell    = model.path().length();
-
-    TestStatus success  = true;
-    success            *= (model.h().size() == 4);
-    success            *= (Hr.rows == 2 && Hr.cols == 1);
-    success            *= (Hi.rows == 2 && Hi.cols == 1);
-    success            *= (alphaD.offset == alphaM.offset);
-    success            *= (betaD.offset == betaM.offset);
-    success            *= (alphaD.storage == decltype(alphaD)::Storage::Derivative);
-    success            *= (betaD.storage == decltype(betaD)::Storage::Derivative);
-
-    for (index_type m = 0; m < Hr.rows; ++m)
-    {
-      const scalar_type attenuation =
-          std::exp(-model.y().getData()[alphaM.offset + m] * ell);
-      const scalar_type phase  = model.y().getData()[betaM.offset + m] * ell;
-      const scalar_type c      = std::cos(phase);
-      const scalar_type s      = std::sin(phase);
-      success                 *= close(model.y().getData()[Hr.offset + m], attenuation * c, 1.0e-10);
-      success                 *= close(model.y().getData()[Hi.offset + m], -attenuation * s, 1.0e-10);
-    }
-
-    for (index_type m = 0; m < Hr.rows; ++m)
-    {
-      const scalar_type ad = 1.0e-9 * static_cast<scalar_type>(m + 1);
-      const scalar_type bd = -2.0e-9 * static_cast<scalar_type>(m + 1);
-      const scalar_type hr = model.y().getData()[Hr.offset + m];
-      const scalar_type hi = model.y().getData()[Hi.offset + m];
-
-      model.yp().getData()[alphaM.offset + m] = ad;
-      model.yp().getData()[betaM.offset + m]  = bd;
-      model.yp().getData()[Hr.offset + m]     = -ell * (ad * hr - bd * hi);
-      model.yp().getData()[Hi.offset + m]     = -ell * (ad * hi + bd * hr);
-    }
-
-    model.evaluateResidual();
-    for (index_type i = 0; i < model.h().size(); ++i)
-    {
-      success *= close(model.getResidual().getData()[Hr.offset + i], 0.0, 1.0e-10);
-    }
-
-    for (index_type m = 0; m < Hr.rows; ++m)
-    {
-      success *= jacobianMatchesFiniteDifference(model, Hr.offset + m, Hr.offset + m, 1.0, 1.0e-5);
-      success *= jacobianMatchesFiniteDifference(model, Hr.offset + m, Hi.offset + m, 1.0, 1.0e-5);
-      success *= jacobianMatchesFiniteDifference(model, Hr.offset + m, alphaM.offset + m, 1.0, 1.0e-5);
-      success *= jacobianMatchesFiniteDifference(model, Hr.offset + m, betaM.offset + m, 1.0, 1.0e-5);
-      success *= jacobianMatchesFiniteDifference(model, Hi.offset + m, Hi.offset + m, 1.0, 1.0e-5);
     }
 
     return success.report(__func__);
@@ -1055,10 +1010,6 @@ namespace
     model.updateTime(omega, 1.0);
     model.allocate();
 
-    const auto        betaM = model.gamma().betaM();
-    const auto        tau   = model.tau().tau();
-    const auto        Hr    = model.h().Hr();
-    const auto        Hi    = model.h().Hi();
     const scalar_type ell_ref =
         GridKit::EMT::Parameters::Path<scalar_type, index_type>::earthRadius() * pi / 180.0
         * model.tower().saggedToSpanRatio();
@@ -1066,20 +1017,6 @@ namespace
 
     TestStatus success  = true;
     success            *= close(ell, ell_ref, 1.0e-12);
-    for (index_type m = 0; m < tau.rows; ++m)
-    {
-      success *= close(model.y().getData()[tau.offset + m],
-                       ell * model.y().getData()[betaM.offset + m] / omega,
-                       1.0e-10);
-    }
-    for (index_type m = 0; m < Hr.rows; ++m)
-    {
-      const auto        alphaM  = model.gamma().alphaM();
-      const scalar_type atten   = std::exp(-model.y().getData()[alphaM.offset + m] * ell);
-      const scalar_type phase   = model.y().getData()[betaM.offset + m] * ell;
-      success                  *= close(model.y().getData()[Hr.offset + m], atten * std::cos(phase), 1.0e-10);
-      success                  *= close(model.y().getData()[Hi.offset + m], -atten * std::sin(phase), 1.0e-10);
-    }
 
     return success.report(__func__);
   }
@@ -1110,15 +1047,6 @@ namespace
     const auto C       = model.shuntAdmittance().C();
     const auto alpha   = model.gamma().alpha();
     const auto beta    = model.gamma().beta();
-    const auto alphaM  = model.gamma().alphaM();
-    const auto betaM   = model.gamma().betaM();
-    const auto tvReal  = model.gamma().tvReal();
-    const auto tvImag  = model.gamma().tvImag();
-    const auto tiReal  = model.gamma().tiReal();
-    const auto tiImag  = model.gamma().tiImag();
-    const auto tau     = model.tau().tau();
-    const auto Hr      = model.h().Hr();
-    const auto Hi      = model.h().Hi();
     const auto Gc      = model.yc().Gc();
     const auto Bc      = model.yc().Bc();
     const auto Rc      = model.zc().Rc();
@@ -1142,9 +1070,7 @@ namespace
     success *= (model.seriesImpedance().size() == 24);
     success *= (model.shuntPotential().size() == 12);
     success *= (model.shuntAdmittance().size() == 16);
-    success *= (model.gamma().size() == 28);
-    success *= (model.tau().size() == 2);
-    success *= (model.h().size() == 4);
+    success *= (model.gamma().size() == 8);
     success *= (model.yc().size() == 8);
     success *= (model.zc().size() == 8);
     success *= (Lgeo.offset == 0);
@@ -1163,16 +1089,7 @@ namespace
     success *= (C.offset == G.offset + G.size());
     success *= (alpha.offset == C.offset + C.size());
     success *= (beta.offset == alpha.offset + alpha.size());
-    success *= (alphaM.offset == beta.offset + beta.size());
-    success *= (betaM.offset == alphaM.offset + alphaM.size());
-    success *= (tvReal.offset == betaM.offset + betaM.size());
-    success *= (tvImag.offset == tvReal.offset + tvReal.size());
-    success *= (tiReal.offset == tvImag.offset + tvImag.size());
-    success *= (tiImag.offset == tiReal.offset + tiReal.size());
-    success *= (tau.offset == alpha.offset + model.gamma().size());
-    success *= (Hr.offset == tau.offset + tau.size());
-    success *= (Hi.offset == Hr.offset + Hr.size());
-    success *= (Gc.offset == Hi.offset + Hi.size());
+    success *= (Gc.offset == beta.offset + beta.size());
     success *= (Bc.offset == Gc.offset + Gc.size());
     success *= (Rc.offset == Bc.offset + Bc.size());
     success *= (Xc.offset == Rc.offset + Rc.size());
@@ -1469,7 +1386,7 @@ namespace
 
     TestStatus success  = true;
     success            *= (Gc.rows == 2 && Gc.cols == 2);
-    success            *= (model.gamma().alphaM().rows == 2);
+    success            *= (model.gamma().alpha().rows == 2);
 
     if (model.seriesReduction() == nullptr || model.shuntReduction() == nullptr)
     {
@@ -1521,8 +1438,7 @@ int main()
   result += yc_model();
   result += zc_model();
   result += gamma_model();
-  result += tau_model();
-  result += h_model();
+  result += overhead_modal_observation();
   result += overhead_gis_path_length();
   result += overhead_layout();
   result += overhead_monitor_outputs();

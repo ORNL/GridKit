@@ -2,7 +2,7 @@
   "$schema": "https://gridkit.readthedocs.io/en/schema/line.schema.json",
   "line": "1.0",
   "name": "345 kV horizontal H-frame, staggered",
-  "description": "Gallery variant of the catalog 345 kV H-frame with staggered attachment heights and offsets. The exact mirror symmetry of the catalog tower produces degenerate aerial modes that the frequency sweep's eigenvector continuation cannot traverse; the stagger breaks the symmetry while staying structurally realistic.",
+  "description": "Gallery variant of the catalog 345 kV H-frame with staggered attachment heights and offsets, exercising a structurally realistic tower without the catalog geometry's exact mirror symmetry.",
   "source": "synthetic example; conductor, tension, and earth data illustrative",
 
   "catalog": {

@@ -96,15 +96,6 @@ namespace GridKit
           IdxT  min_poles      = 2;
           IdxT  max_poles      = 30;
           RealT target_rel_rms = 1.0e-3;
-
-          /// Plateau stop: end the search once the best relative error
-          /// has failed to improve by this fraction for plateau_passes
-          /// consecutive pole counts, so a structurally unreachable
-          /// target does not force the full ladder. Zero disables; an
-          /// early stop carries the same verdict as an exhausted
-          /// search.
-          RealT plateau_improvement = 0.0;
-          IdxT  plateau_passes      = 2;
         } order_search;
 
         /// Deterministic perturbation restarts; zero restarts disables.

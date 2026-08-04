@@ -27,10 +27,9 @@
 #include <GridKit/Model/EMT/Parameters/Geometry/Conductor/Conductor.hpp>
 #include <GridKit/Model/EMT/Parameters/Geometry/Path/Path.hpp>
 #include <GridKit/Model/EMT/Parameters/Geometry/Tower/Tower.hpp>
+#include <GridKit/Model/EMT/Parameters/Modal/ModalDecomposition.hpp>
 #include <GridKit/Model/EMT/Parameters/OverheadData.hpp>
 #include <GridKit/Model/EMT/Parameters/Response/Gamma/Gamma.hpp>
-#include <GridKit/Model/EMT/Parameters/Response/H/H.hpp>
-#include <GridKit/Model/EMT/Parameters/Response/Tau/Tau.hpp>
 #include <GridKit/Model/EMT/Parameters/Response/Yc/Yc.hpp>
 #include <GridKit/Model/EMT/Parameters/Response/Zc/Zc.hpp>
 #include <GridKit/Model/Evaluator.hpp>
@@ -142,14 +141,11 @@ namespace GridKit
           return gamma_;
         }
 
-        const Tau<ScalarT, IdxT>& tau() const
+        /// Null unless a modal variable is monitored; refreshed at
+        /// every monitor emission.
+        const ModalDecomposition<ScalarT, IdxT>* modes() const
         {
-          return tau_;
-        }
-
-        const H<ScalarT, IdxT>& h() const
-        {
-          return h_;
+          return modes_.get();
         }
 
         const Yc<ScalarT, IdxT>& yc() const
@@ -408,11 +404,14 @@ namespace GridKit
         }
 
         Gamma<ScalarT, IdxT>   gamma_;
-        Tau<ScalarT, IdxT>     tau_;
-        H<ScalarT, IdxT>       h_;
         Yc<ScalarT, IdxT>      yc_;
         Zc<ScalarT, IdxT>      zc_;
         std::vector<ElementT*> elements_;
+
+        /// Modal observation of gamma, refreshed inside the const
+        /// monitor-emission path; null when no modal variable is
+        /// monitored.
+        mutable std::unique_ptr<ModalDecomposition<ScalarT, IdxT>> modes_;
 
         VectorT           y_;
         VectorT           yp_;

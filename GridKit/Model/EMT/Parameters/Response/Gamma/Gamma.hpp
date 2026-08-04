@@ -20,6 +20,15 @@ namespace GridKit
   {
     namespace Parameters
     {
+      /**
+       * @brief The propagation matrix Gamma = sqrt(ZY) as an algebraic
+       *        element: the states are pinned by Gamma^2 = ZY on the
+       *        branch fixed at initialization.
+       *
+       * Gamma is analytic in omega for every conductor geometry, so it
+       * belongs in the sweep DAE. Its spectral factorization is not,
+       * and is observed outside the DAE by ModalDecomposition.
+       */
       template <typename scalar_type, typename index_type>
       class Gamma : public Element<scalar_type, index_type>
       {
@@ -56,46 +65,6 @@ namespace GridKit
           return {base_ + layout_.beta, layout_.K, layout_.K};
         }
 
-        SignalT alphaM() const
-        {
-          return {base_ + layout_.a, layout_.K, 1};
-        }
-
-        SignalT alphaMDot() const
-        {
-          return {base_ + layout_.a, layout_.K, 1, SignalStorageT::Derivative};
-        }
-
-        SignalT betaM() const
-        {
-          return {base_ + layout_.b, layout_.K, 1};
-        }
-
-        SignalT betaMDot() const
-        {
-          return {base_ + layout_.b, layout_.K, 1, SignalStorageT::Derivative};
-        }
-
-        SignalT tvReal() const
-        {
-          return {base_ + layout_.tv_r, layout_.K, layout_.K};
-        }
-
-        SignalT tvImag() const
-        {
-          return {base_ + layout_.tv_i, layout_.K, layout_.K};
-        }
-
-        SignalT tiReal() const
-        {
-          return {base_ + layout_.ti_r, layout_.K, layout_.K};
-        }
-
-        SignalT tiImag() const
-        {
-          return {base_ + layout_.ti_i, layout_.K, layout_.K};
-        }
-
         int initialize() override;
 
         template <typename V>
@@ -116,13 +85,7 @@ namespace GridKit
               KK(K * K),
               alpha(0),
               beta(KK),
-              a(2 * KK),
-              b(a + K),
-              tv_r(b + K),
-              tv_i(tv_r + KK),
-              ti_r(tv_i + KK),
-              ti_i(ti_r + KK),
-              n(ti_i + KK)
+              n(2 * KK)
           {
           }
 
@@ -130,12 +93,6 @@ namespace GridKit
           const IdxT KK;
           const IdxT alpha;
           const IdxT beta;
-          const IdxT a;
-          const IdxT b;
-          const IdxT tv_r;
-          const IdxT tv_i;
-          const IdxT ti_r;
-          const IdxT ti_i;
           const IdxT n;
         };
 

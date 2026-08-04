@@ -1132,14 +1132,6 @@ namespace GridKit
       {
         return -1;
       }
-      if (params.order_search.enabled
-          && (params.order_search.plateau_improvement < RealT{0}
-              || params.order_search.plateau_improvement >= RealT{1}
-              || (params.order_search.plateau_improvement > RealT{0}
-                  && params.order_search.plateau_passes < 1)))
-      {
-        return -1;
-      }
 
       // Per-sample weights by the documented conventions.
       std::vector<RealT> sample_weights(sample_count, RealT{1});
@@ -1191,9 +1183,6 @@ namespace GridKit
       Stats                        best_stats;
       RationalModel<ScalarT, IdxT> best_model;
       bool                         have_best = false;
-
-      RealT plateau_reference = std::numeric_limits<RealT>::infinity();
-      IdxT  plateau_stalls    = 0;
 
       for (const auto count : counts)
       {
@@ -1332,24 +1321,6 @@ namespace GridKit
         if (params.order_search.enabled && best_stats.final_rel_rms <= params.order_search.target_rel_rms)
         {
           break;
-        }
-        if (params.order_search.enabled
-            && params.order_search.plateau_improvement > RealT{0})
-        {
-          if (attempt_stats.final_rel_rms
-              < (RealT{1} - params.order_search.plateau_improvement)
-                    * plateau_reference)
-          {
-            plateau_reference = attempt_stats.final_rel_rms;
-            plateau_stalls    = 0;
-          }
-          else if (++plateau_stalls >= params.order_search.plateau_passes)
-          {
-            // Additional poles have stopped paying for themselves; the
-            // best model and the order-search verdict stand as they
-            // are.
-            break;
-          }
         }
       }
 

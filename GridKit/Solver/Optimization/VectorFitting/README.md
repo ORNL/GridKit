@@ -132,11 +132,6 @@ pairs) until the target relative error is met, returning the lowest-order
 model that satisfies it. This realizes the lowest-pole-count contract used
 by the EMT line-fitting application.
 
-An optional plateau stop ends the search once the best error has failed to
-improve by a configured fraction for a configured number of consecutive
-pole counts, so a structurally unreachable target does not force the full
-ladder. An early stop carries the same verdict as an exhausted search.
-
 ## Restarts
 
 When a fit stalls above the restart threshold, the current best poles are

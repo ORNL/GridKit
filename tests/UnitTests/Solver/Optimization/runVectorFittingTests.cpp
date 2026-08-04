@@ -184,52 +184,6 @@ namespace
     return success.report(__func__);
   }
 
-  /// A response with a deterministic noise floor keeps every target
-  /// unreachable: the plateau stop must end the ladder early with the
-  /// same verdict an exhausted search would carry.
-  GridKit::Testing::TestOutcome fit_order_search_plateau_stops_early()
-  {
-    using GridKit::Testing::TestStatus;
-
-    const Reference reference;
-    auto            samples = makeSamples(reference);
-    for (size_t m = 0; m < samples.response.size(); ++m)
-    {
-      const scalar_type ripple =
-          1.0e-3 * std::sin(29.0 * static_cast<scalar_type>(m) + 1.0);
-      samples.response[m] *= (1.0 + ripple);
-    }
-
-    FitterT::Parameters params;
-    params.terms                       = GridKit::Optimization::RationalTerms::CONSTANT;
-    params.order_search.enabled        = true;
-    params.order_search.min_poles      = 4;
-    params.order_search.max_poles      = 12;
-    params.order_search.target_rel_rms = 1.0e-10;
-
-    FitterT   exhaustive_fitter(samples);
-    ModelT    exhaustive_model;
-    const int exhaustive_status =
-        exhaustive_fitter.fit(exhaustive_model, params);
-
-    params.order_search.plateau_improvement = 0.3;
-    params.order_search.plateau_passes      = 2;
-
-    FitterT   plateau_fitter(samples);
-    ModelT    plateau_model;
-    const int plateau_status = plateau_fitter.fit(plateau_model, params);
-
-    TestStatus success  = true;
-    success            *= (exhaustive_status == 2);
-    success            *= (plateau_status == 2);
-    success            *= (plateau_fitter.getStats().order_selected
-                < params.order_search.max_poles);
-    success            *= (plateau_fitter.getStats().final_rel_rms < 0.1);
-    success            *= (plateau_fitter.getStats().final_rel_rms > 1.0e-6);
-
-    return success.report(__func__);
-  }
-
   /// Refinement is accepted under the same unweighted metric that
   /// decides the verdict, so enabling it can never worsen the reported
   /// error or flip a met target into a failure.
@@ -287,21 +241,10 @@ namespace
     FitterT::Parameters zero_count;
     zero_count.pole_count = 0;
 
-    FitterT::Parameters excessive_plateau;
-    excessive_plateau.order_search.enabled             = true;
-    excessive_plateau.order_search.plateau_improvement = 1.5;
-
-    FitterT::Parameters zero_plateau_passes;
-    zero_plateau_passes.order_search.enabled             = true;
-    zero_plateau_passes.order_search.plateau_improvement = 0.1;
-    zero_plateau_passes.order_search.plateau_passes      = 0;
-
     TestStatus success  = true;
     success            *= (fitter.fit(model, empty_range) == -1);
     success            *= (fitter.fit(model, zero_min) == -1);
     success            *= (fitter.fit(model, zero_count) == -1);
-    success            *= (fitter.fit(model, excessive_plateau) == -1);
-    success            *= (fitter.fit(model, zero_plateau_passes) == -1);
 
     return success.report(__func__);
   }
@@ -312,7 +255,6 @@ int main()
   GridKit::Testing::TestingResults result;
   result += fit_recovers_exact_rational();
   result += fit_recovers_exact_matrix_rational();
-  result += fit_order_search_plateau_stops_early();
   result += fit_refine_never_worsens_verdict();
   result += fit_rejects_invalid_order_ranges();
   return result.summary();
