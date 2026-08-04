@@ -1,8 +1,6 @@
-#include <cmath>
 #include <complex>
 #include <iomanip>
 #include <iostream>
-#include <limits>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
