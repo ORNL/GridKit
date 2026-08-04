@@ -217,3 +217,7 @@ configure_package_config_file(
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/GridKitConfig.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/GridKitConfigVersion.cmake
         DESTINATION share/cmake/gridkit)
+
+if(GRIDKIT_ENABLE_IPOPT)
+  install(FILES cmake/FindIpopt.cmake DESTINATION share/cmake/gridkit)
+endif()

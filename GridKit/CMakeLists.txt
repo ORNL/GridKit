@@ -23,6 +23,9 @@ add_subdirectory(LinearAlgebra)
 # Dependency tracking
 add_subdirectory(AutomaticDifferentiation)
 
+# Nonlinear optimization model interfaces
+add_subdirectory(Optimization)
+
 # Create solvers
 add_subdirectory(Solver)
 

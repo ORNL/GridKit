@@ -5,12 +5,28 @@
 
 @PACKAGE_INIT@
 
-include ( "${CMAKE_CURRENT_LIST_DIR}/GridKitTargets.cmake" )
-
 include(CMakeFindDependencyMacro)
+
 set(GridKit_ENABLE_SUNDIALS @GRIDKIT_ENABLE_SUNDIALS@)
 if(GridKit_ENABLE_SUNDIALS)
   list(APPEND CMAKE_PREFIX_PATH @SUNDIALS_DIR@)
   enable_language(C)
   find_dependency(SUNDIALS)
 endif()
+
+set(GridKit_ENABLE_ENZYME @GRIDKIT_ENABLE_ENZYME@)
+if(GridKit_ENABLE_ENZYME)
+  list(APPEND CMAKE_PREFIX_PATH @ENZYME_DIR@)
+  find_dependency(Enzyme CONFIG)
+endif()
+
+set(GridKit_ENABLE_IPOPT @GRIDKIT_ENABLE_IPOPT@)
+if(GridKit_ENABLE_IPOPT)
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+  if(NOT IPOPT_DIR)
+    set(IPOPT_DIR "@IPOPT_DIR@")
+  endif()
+  find_dependency(Ipopt)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/GridKitTargets.cmake")
