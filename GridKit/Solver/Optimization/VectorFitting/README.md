@@ -111,7 +111,11 @@ until the largest relative pole displacement falls below the tolerance.
 With poles frozen, identifying $\mathbf{D}$, $\mathbf{E}$, and the residues
 is linear: every matrix element regresses on the same weighted basis, so
 one rank-revealing factorization serves all elements with a triangular
-solve each.
+solve each. When the basis is numerically rank deficient — redundant poles
+at orders beyond what the data supports — the minimum-norm SVD solution
+replaces the basic solution, here and in the reduced Stage A solve: a
+basic solution zeroes pivoted-out columns abruptly, while the minimum-norm
+solution degrades smoothly and keeps high-order ladder rungs productive.
 
 ### Stage C: Refinement (optional)
 
@@ -136,16 +140,24 @@ by the EMT line-fitting application.
 
 When a fit stalls above the restart threshold, the current best poles are
 perturbed by a deterministic bounded scaling and the iteration re-enters
-Stage A. The perturbation sequence is reproducible; no random state exists.
+Stage A. Every pole receives its own scale factor — a uniform dilation
+would preserve the pole set's internal geometry and flow back to the same
+relocation fixed point — with conjugate pairs sharing one factor so the
+canonical structure survives. Attempts compete under the verdict metric,
+so enabling restarts can never worsen the reported error. The perturbation
+sequence is reproducible; no random state exists.
 
 ## Initial Poles
 
-Starting poles are logarithmically spaced over the sampled band as weakly
-damped conjugate pairs, $p = -\alpha\beta \pm \mathrm{j}\beta$ with
-$\alpha = 0.01$, following [1]. Real-only seeding and user-supplied starting
-poles are supported; option combinations that conflict (custom weights
-without the custom scheme, user poles without user seeding) are hard errors,
-never silent precedence.
+Starting poles are logarithmically spaced as weakly damped conjugate
+pairs, $p = -\alpha\beta \pm \mathrm{j}\beta$ with $\alpha = 0.01$,
+following [1], over the sampled band extended past its edges (half the
+lowest to one-and-a-half times the highest frequency): poles just outside
+the band capture edge curvature that strictly in-band seeding leaves to
+the farthest pole. Real-only seeding and user-supplied starting poles are
+supported; option combinations that conflict (custom weights without the
+custom scheme, user poles without user seeding) are hard errors, never
+silent precedence.
 
 ## Weighting
 

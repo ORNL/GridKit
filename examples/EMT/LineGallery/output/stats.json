@@ -1,10 +1,69 @@
 [
   {
+    "line": "69kv-wood-pole",
+    "conductors": 4,
+    "targets_met": false,
+    "yc_passive": true,
+    "yc_rel_rms_check": 0.0006829225513146958,
+    "delays_us": [
+      53.668195825670956,
+      53.67679741927151,
+      53.58478360477655,
+      53.61871365697562
+    ],
+    "fits": {
+      "Yc": {
+        "poles": 8,
+        "rel_rms": 0.000682923,
+        "worst_channel_rel_rms": 0.00292233
+      },
+      "Gin": {
+        "poles": 30,
+        "rel_rms": 0.239732,
+        "worst_channel_rel_rms": 0.653911
+      },
+      "Gout": {
+        "poles": 30,
+        "rel_rms": 0.239331,
+        "worst_channel_rel_rms": 0.66495
+      }
+    }
+  },
+  {
+    "line": "138kv-delta",
+    "conductors": 3,
+    "targets_met": true,
+    "yc_passive": true,
+    "yc_rel_rms_check": 0.0006223265608978852,
+    "delays_us": [
+      53.20821333973772,
+      53.21946783976374,
+      53.12303297383808
+    ],
+    "fits": {
+      "Yc": {
+        "poles": 8,
+        "rel_rms": 0.000622327,
+        "worst_channel_rel_rms": 0.00223875
+      },
+      "Gin": {
+        "poles": 4,
+        "rel_rms": 0.0410718,
+        "worst_channel_rel_rms": 0.0622396
+      },
+      "Gout": {
+        "poles": 2,
+        "rel_rms": 0.0216892,
+        "worst_channel_rel_rms": 0.0584441
+      }
+    }
+  },
+  {
     "line": "345kv-horizontal",
     "conductors": 3,
     "targets_met": true,
     "yc_passive": true,
-    "yc_rel_rms_check": 0.0005058250076927797,
+    "yc_rel_rms_check": 0.0005059015353768508,
     "delays_us": [
       334.78892088931383,
       334.6361122540547,
@@ -13,8 +72,8 @@
     "fits": {
       "Yc": {
         "poles": 8,
-        "rel_rms": 0.000505825,
-        "worst_channel_rel_rms": 0.00260535
+        "rel_rms": 0.000505902,
+        "worst_channel_rel_rms": 0.00260519
       },
       "Gin": {
         "poles": 8,
@@ -23,8 +82,69 @@
       },
       "Gout": {
         "poles": 2,
-        "rel_rms": 0.0105396,
-        "worst_channel_rel_rms": 0.0195434
+        "rel_rms": 0.0104866,
+        "worst_channel_rel_rms": 0.0191675
+      }
+    }
+  },
+  {
+    "line": "500kv-double-circuit",
+    "conductors": 6,
+    "targets_met": false,
+    "yc_passive": true,
+    "yc_rel_rms_check": 0.0006666306193420329,
+    "delays_us": [
+      835.9199249130029,
+      836.9255397913776,
+      836.8945917028117,
+      836.5359372017034,
+      836.4477259128893,
+      835.9923270093074
+    ],
+    "fits": {
+      "Yc": {
+        "poles": 6,
+        "rel_rms": 0.000666631,
+        "worst_channel_rel_rms": 0.0038254
+      },
+      "Gin": {
+        "poles": 30,
+        "rel_rms": 0.25655,
+        "worst_channel_rel_rms": 0.54801
+      },
+      "Gout": {
+        "poles": 30,
+        "rel_rms": 0.320434,
+        "worst_channel_rel_rms": 0.564264
+      }
+    }
+  },
+  {
+    "line": "765kv-horizontal",
+    "conductors": 3,
+    "targets_met": true,
+    "yc_passive": true,
+    "yc_rel_rms_check": 0.0008886895870763037,
+    "delays_us": [
+      1076.2070253056104,
+      1076.0503222450207,
+      1076.5342183564337
+    ],
+    "fits": {
+      "Yc": {
+        "poles": 6,
+        "rel_rms": 0.00088869,
+        "worst_channel_rel_rms": 0.00564318
+      },
+      "Gin": {
+        "poles": 8,
+        "rel_rms": 0.0430632,
+        "worst_channel_rel_rms": 0.0717569
+      },
+      "Gout": {
+        "poles": 2,
+        "rel_rms": 0.00712014,
+        "worst_channel_rel_rms": 0.013571
       }
     }
   }

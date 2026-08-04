@@ -22,6 +22,8 @@
 namespace
 {
   constexpr double SEED_DAMPING_RATIO    = 0.01;
+  constexpr double SEED_BAND_LOW_EXTEND  = 0.5;
+  constexpr double SEED_BAND_HIGH_EXTEND = 1.5;
   constexpr double SIGMA_SCALE_FLOOR     = 1.0e-30;
   constexpr double SHIFT_NORM_FLOOR      = 1.0e-15;
   constexpr double REAL_EIGENVALUE_TOL   = 1.0e-12;
@@ -235,6 +237,29 @@ namespace
   }
 
   /**
+   * @brief Least squares solution by column-pivoted QR with a
+   *        minimum-norm SVD fallback at numerical rank deficiency.
+   *
+   * A rank-deficient basis appears whenever the requested order exceeds
+   * what the data supports and poles land near each other. The basic
+   * solution of a pivoted QR zeroes the pivoted-out columns abruptly,
+   * feeding junk coefficients into the next relocation pass; the
+   * minimum-norm solution degrades smoothly as columns become
+   * redundant, so high-order ladder rungs stay productive.
+   */
+  Eigen::VectorXd solveRankAware(const Eigen::MatrixXd& matrix,
+                                 const Eigen::VectorXd& rhs)
+  {
+    const Eigen::ColPivHouseholderQR<Eigen::MatrixXd> factorization(matrix);
+    if (factorization.rank() == matrix.cols())
+    {
+      return factorization.solve(rhs);
+    }
+    return matrix.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV)
+        .solve(rhs);
+  }
+
+  /**
    * @brief Minimizer of ||matrix x|| subject to direction . x = target.
    *
    * The Householder rotation taking direction onto its leading
@@ -263,9 +288,8 @@ namespace
 
     Eigen::VectorXd z(matrix.cols());
     z(0)             = target / leading;
-    z.tail(trailing) = rotated.rightCols(trailing)
-                           .colPivHouseholderQr()
-                           .solve(-z(0) * rotated.col(0));
+    z.tail(trailing) = solveRankAware(rotated.rightCols(trailing),
+                                      -z(0) * rotated.col(0));
     return rotation.householderQ() * z;
   }
 } // namespace
@@ -584,8 +608,18 @@ namespace GridKit
             columnScales(basis.colwise().norm().transpose());
         basis = basis * scales.asDiagonal();
 
+        // One rank-revealing factorization serves every channel; at
+        // numerical rank deficiency the minimum-norm SVD replaces the
+        // basic solution, for the same reason as in the reduced sigma
+        // solve.
         const Eigen::ColPivHouseholderQR<Eigen::MatrixXd> factorization(
             basis);
+        const bool                     deficient = factorization.rank() < basis.cols();
+        Eigen::BDCSVD<Eigen::MatrixXd> svd;
+        if (deficient)
+        {
+          svd.compute(basis, Eigen::ComputeThinU | Eigen::ComputeThinV);
+        }
 
         std::vector<RealT> solution;
         Eigen::VectorXd    rhs(2 * rows);
@@ -595,8 +629,10 @@ namespace GridKit
           rhs.head(rows)    = root_weight.cwiseProduct(column.real());
           rhs.tail(rows)    = root_weight.cwiseProduct(column.imag());
 
-          const Eigen::VectorXd coefficients =
-              scales.cwiseProduct(factorization.solve(rhs));
+          const Eigen::VectorXd raw =
+              deficient ? Eigen::VectorXd(svd.solve(rhs))
+                        : Eigen::VectorXd(factorization.solve(rhs));
+          const Eigen::VectorXd coefficients = scales.cwiseProduct(raw);
           solution.assign(coefficients.data(),
                           coefficients.data() + coefficients.size());
 
@@ -1261,9 +1297,14 @@ namespace GridKit
         }
         else
         {
-          const RealT low  = samples_.omega.front();
-          const RealT high = samples_.omega.back();
-          const bool  complex_seed =
+          // Seed slightly beyond the sampled band: poles just outside
+          // the edges capture band-edge curvature that strictly
+          // in-band seeding leaves to the farthest pole.
+          const RealT low =
+              RealT{SEED_BAND_LOW_EXTEND} * samples_.omega.front();
+          const RealT high =
+              RealT{SEED_BAND_HIGH_EXTEND} * samples_.omega.back();
+          const bool complex_seed =
               params.seeding == PoleSeeding::LOG_COMPLEX;
           const auto pair_count =
               complex_seed ? static_cast<size_t>(count) / 2
@@ -1302,14 +1343,34 @@ namespace GridKit
         {
           if (attempt > 0)
           {
-            // Deterministic bounded perturbation of the previous poles.
-            const RealT phase = std::fmod(
-                static_cast<RealT>(attempt) * RealT{RESTART_GOLDEN_FRACT},
-                RealT{1});
-            const RealT factor = RealT{0.7} + RealT{0.6} * phase;
-            for (auto& pole : seed)
+            // Deterministic bounded perturbation with a different
+            // factor per pole: a uniform dilation preserves the set's
+            // internal geometry and tends to flow straight back to the
+            // same relocation fixed point. Conjugate pairs share one
+            // factor so the canonical structure survives the scaling.
+            size_t q      = 0;
+            size_t member = 0;
+            while (q < seed.size())
             {
-              pole = ComplexT{pole.real() * factor, pole.imag() * factor};
+              const RealT phase =
+                  std::fmod(static_cast<RealT>(member + 1)
+                                * static_cast<RealT>(attempt)
+                                * RealT{RESTART_GOLDEN_FRACT},
+                            RealT{1});
+              const RealT factor = RealT{0.7} + RealT{0.6} * phase;
+
+              seed[q] = ComplexT{seed[q].real() * factor,
+                                 seed[q].imag() * factor};
+              if (seed[q].imag() == RealT{0})
+              {
+                q += 1;
+              }
+              else
+              {
+                seed[q + 1]  = std::conj(seed[q]);
+                q           += 2;
+              }
+              member += 1;
             }
             seed = canonicalizePoles(seed, params.stability_margin);
           }

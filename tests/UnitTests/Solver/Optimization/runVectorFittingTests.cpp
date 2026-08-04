@@ -301,6 +301,89 @@ namespace
     return success.report(__func__);
   }
 
+  /// Restarts explore per-pole perturbed seeds deterministically: two
+  /// identical runs agree bitwise, and because every attempt competes
+  /// under the verdict metric, enabling restarts can never worsen the
+  /// reported error.
+  GridKit::Testing::TestOutcome fit_restarts_deterministic_never_worsen()
+  {
+    using GridKit::Testing::TestStatus;
+
+    // A smooth non-rational modulation keeps the order-2 error above
+    // the restart trigger, so the perturbation path actually runs.
+    const Reference reference;
+    auto            samples = makeSamples(reference);
+    for (size_t m = 0; m < samples.omega.size(); ++m)
+    {
+      samples.response[m] *=
+          1.0 + 0.25 * std::sin(3.0 * std::log(samples.omega[m]));
+    }
+
+    FitterT::Parameters params;
+    params.pole_count = 2;
+    params.terms      = GridKit::Optimization::RationalTerms::CONSTANT;
+
+    FitterT   plain_fitter(samples);
+    ModelT    plain_model;
+    const int plain_status = plain_fitter.fit(plain_model, params);
+
+    params.restarts.max_restarts = 3;
+    FitterT   first_fitter(samples);
+    ModelT    first_model;
+    const int first_status = first_fitter.fit(first_model, params);
+
+    FitterT   second_fitter(samples);
+    ModelT    second_model;
+    const int second_status = second_fitter.fit(second_model, params);
+
+    TestStatus success  = true;
+    success            *= (plain_status >= 0);
+    success            *= (first_status >= 0);
+    success            *= (second_status >= 0);
+    success            *= (plain_fitter.getStats().final_rel_rms > 0.05);
+    success            *= (first_fitter.getStats().final_rel_rms
+                <= plain_fitter.getStats().final_rel_rms);
+    success            *= (first_fitter.getStats().final_rel_rms
+                == second_fitter.getStats().final_rel_rms);
+
+    return success.report(__func__);
+  }
+
+  /// A duplicated pole makes the identification basis numerically rank
+  /// deficient; the minimum-norm fallback must still resolve the exact
+  /// response instead of returning a basic-solution artifact.
+  GridKit::Testing::TestOutcome fit_resolves_rank_deficient_basis()
+  {
+    using GridKit::Testing::TestStatus;
+
+    const Reference reference;
+    const auto      samples = makeSamples(reference);
+
+    FitterT fitter(samples);
+
+    FitterT::Parameters params;
+    params.pole_count     = 5;
+    params.terms          = GridKit::Optimization::RationalTerms::CONSTANT;
+    params.seeding        = GridKit::Optimization::PoleSeeding::USER;
+    params.max_iterations = 0;
+    params.starting_poles = {reference.real_pole,
+                             reference.pair_pole,
+                             std::conj(reference.pair_pole),
+                             reference.pair_pole,
+                             std::conj(reference.pair_pole)};
+
+    ModelT    model;
+    const int status = fitter.fit(model, params);
+
+    TestStatus success  = true;
+    success            *= (status >= 0);
+    success            *= (model.poles.size() == 5);
+    success            *= (fitter.getStats().final_rel_rms < 1.0e-8);
+    success            *= (std::isfinite(fitter.getStats().final_abs_rms));
+
+    return success.report(__func__);
+  }
+
   /// The relative floor must lie in [0, 1); anything else is a hard
   /// error, never a silent clamp.
   GridKit::Testing::TestOutcome fit_rejects_invalid_min_magnitude()
@@ -371,6 +454,8 @@ int main()
   result += fit_recovers_exact_matrix_rational();
   result += fit_refine_never_worsens_verdict();
   result += fit_min_magnitude_declares_structural_zero();
+  result += fit_restarts_deterministic_never_worsen();
+  result += fit_resolves_rank_deficient_basis();
   result += fit_rejects_invalid_min_magnitude();
   result += fit_rejects_invalid_order_ranges();
   return result.summary();

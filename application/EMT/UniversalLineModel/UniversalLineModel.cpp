@@ -93,10 +93,11 @@ namespace
 
     GridKit::EMT::Application::IdaSettings ida;
 
-    fs::path output{"output"};
-    Target   yc;
-    Target   h;
-    bool     refine{false};
+    fs::path   output{"output"};
+    Target     yc;
+    Target     h;
+    index_type restarts{3};
+    bool       refine{false};
   };
 
   int usage()
@@ -184,6 +185,12 @@ namespace
          .type     = ArgType::Real,
          .defaults = 1.0e-4},
 
+        {.name     = {"--restarts"},
+         .help     = "Perturbation restarts per fit when the error stays "
+                     "above the fitter's restart threshold",
+         .type     = ArgType::Integer,
+         .defaults = 3},
+
         {.name = {"--refine"},
          .help = "Polish each fit with the constrained refinement stage",
          .flag = true}};
@@ -260,6 +267,13 @@ namespace
     {
       throw std::runtime_error("--min-mag must lie in [0, 1)");
     }
+
+    const int restarts = args.get<int>("restarts");
+    if (restarts < 0)
+    {
+      throw std::runtime_error("--restarts must be nonnegative");
+    }
+    settings.restarts = static_cast<index_type>(restarts);
 
     settings.refine = args.get<bool>("refine");
     return settings;
@@ -566,6 +580,7 @@ namespace
    */
   int fitTarget(const ResponseT&        samples,
                 const Settings::Target& target,
+                index_type              restarts,
                 bool                    refine,
                 const std::string&      label,
                 ModelT&                 model)
@@ -581,6 +596,7 @@ namespace
     options.order_search.min_poles      = target.min_poles;
     options.order_search.max_poles      = target.max_poles;
     options.order_search.target_rel_rms = target.target_rel_rms;
+    options.restarts.max_restarts       = restarts;
     options.refine                      = refine;
 
     const int status = fitter.fit(model, options);
@@ -644,7 +660,7 @@ namespace
 
     ModelT    yc_model;
     const int yc_status =
-        fitTarget(yc, settings.yc, settings.refine, "Yc", yc_model);
+        fitTarget(yc, settings.yc, settings.restarts, settings.refine, "Yc", yc_model);
     if (yc_status < 0)
     {
       return yc_status;
@@ -652,7 +668,7 @@ namespace
 
     ModelT    gin_model;
     const int gin_status =
-        fitTarget(gin, settings.h, settings.refine, "Gin", gin_model);
+        fitTarget(gin, settings.h, settings.restarts, settings.refine, "Gin", gin_model);
     if (gin_status < 0)
     {
       return gin_status;
@@ -660,7 +676,7 @@ namespace
 
     ModelT    gout_model;
     const int gout_status =
-        fitTarget(gout, settings.h, settings.refine, "Gout", gout_model);
+        fitTarget(gout, settings.h, settings.restarts, settings.refine, "Gout", gout_model);
     if (gout_status < 0)
     {
       return gout_status;
