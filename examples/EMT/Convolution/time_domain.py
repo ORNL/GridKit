@@ -1,43 +1,24 @@
 #!/usr/bin/env python3
 """Time-domain form of every fitted function in this directory.
 
-Each *.model.json holds one or more pole-residue models
+Each *.model.json holds pole-residue models
 
     F(s) = E s + D + sum_q R_q / (s - p_q)
+    f(t) = E delta'(t) + D delta(t) + sum_q R_q exp(p_q t),  t >= 0.
 
-whose time-domain form is
-
-    f(t) = E delta'(t) + D delta(t) + sum_q R_q exp(p_q t),   t >= 0.
-
-The two singular terms live only at t = 0 and cannot be drawn, so they
-are reported in the corner of each figure and what is plotted is the
-regular part, entry by entry: a linear time axis on top, and log time
-against log magnitude below, where each pole's decay rate reads off as
-a straight segment.
+The singular terms live only at t = 0, so they are reported in the
+corner of each figure and the regular part is what is drawn: linear
+time on top, log time against log magnitude below.
 
 propagation.model.json carries one fitted matrix and one transport
-delay per mode, so it yields a figure per unwound modal kernel
-Hmin_m(t) and one for the propagation function itself,
+delay per mode, yielding a figure per unwound modal kernel Hmin_m(t)
+and one for the propagation function H(t) = sum_m Hmin_m(t - tau_m).
 
-    H(t) = sum_m Hmin_m(t - tau_m),
-
-the modal kernels standing off the origin by their own delays.
-
-Recursive convolution is what an EMT step does with these kernels, so
-the same recursion
-
-    z_q[n] = alpha_q z_q[n-1] + beta_q x[n] + gamma_q x[n-1]
-    alpha_q = exp(p_q dt),  I0 = (alpha_q - 1) / p_q
-    I1      = (dt alpha_q - I0) / p_q
-    beta_q  = I0 - I1 / dt,  gamma_q = I1 / dt
-
-is driven here with a numerical impulse and compared against the
-analytic kernel, so the plotted functions and the recursion that will
-consume them are checked against each other.
+Every kernel is also driven through the recursive convolution an EMT
+step would run and compared against the closed form, so the plots and
+the recursion that will consume them are checked against each other.
 
 Coefficients came from the 345 kV horizontal line of the line gallery.
-Yc and the propagation function are 3 by 3 after reduction; Z, Y, and
-gamma are fit on the raw 8 conductor description.
 """
 
 from __future__ import annotations
@@ -78,6 +59,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--models", nargs="*", type=Path,
                         default=sorted(HERE.glob("*.model.json")))
+    parser.add_argument("--output", type=Path, default=HERE)
     return parser.parse_args()
 
 
@@ -271,7 +253,7 @@ def main() -> None:
                   f"convolution agrees to {agreement:.2e}")
             figure(name, components,
                    UNITS.get(name.lower().rstrip("0123456789"), "-"),
-                   HERE / f"{name.lower()}_time.png")
+                   args.output / f"{name.lower()}_time.png")
 
 
 if __name__ == "__main__":

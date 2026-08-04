@@ -7,35 +7,23 @@ $\mathbf{H}(s)$ to `propagation.model.json`.
 
 ## Propagation
 
-The propagation function is one rational matrix behind one shared delay,
-the smallest transport delay the line carries:
+The propagation function is a sum of rational matrices, one per mode, each
+behind its own transport delay:
 
 ```math
-\mathbf{H}(s) = \mathbf{H}^{\min}(s)\,e^{-s\tau},
-\qquad \tau = \min_{m,\omega}\tau_m(\omega)
+\mathbf{H}(s) = \sum_m \mathbf{H}^{\min}_m(s)\,e^{-s\tau_m}
 ```
 
-The fitting target $\mathbf{H}^{\min}$ is the modal propagation unwound by
-that delay and carried back to phase coordinates:
+Each fitting target is the mode's rank-one dyad unwound by its own delay,
 
 ```math
-\mathbf{H}^{\min}(s) = \mathrm{conj}(\mathbf{T}_i)\,
-  \mathrm{diag}\!\left(h_1(s)e^{+s\tau},\ldots,h_M(s)e^{+s\tau}\right)
-  \mathbf{T}_v^{\mathsf{T}}
+\mathbf{H}^{\min}_m(s) = \mathrm{conj}(\mathbf{t}_{i,m})\,
+  h_m(s)\,e^{+s\tau_m}\,\mathbf{t}_{v,m}^{\mathsf{T}},
 ```
 
-The eigenvector normalization cancels identically in that product, so the
-target carries no per-frequency phase convention and no structural zeros,
-and the inter-mode cancellation survives into the fit. What the single
-delay leaves behind is the spread of the modal delays, which the fit must
-absorb as a residual winding growing with frequency; the application
-reports that spread, and a line whose modal delays separate widely needs
-either more poles or a narrower band.
+where $\tau_m$ is the smallest sampled delay over the frequencies at which
+$|h_m|$ still stands above the fitter's magnitude floor, so samples the fit
+treats as zeros never decide a delay. The eigenvector normalization cancels
+inside each dyad, so the targets carry no per-frequency phase convention.
 
-## Files
-
-| File | Contents |
-| ---- | -------- |
-| `UniversalLineModel.cpp` | Sweep, delay extraction, fits, artifacts |
-
-Run `UniversalLineModel <line-json-file> --help` for the full option list.
+Run `UniversalLineModel <line-json-file> --help` for the option list.

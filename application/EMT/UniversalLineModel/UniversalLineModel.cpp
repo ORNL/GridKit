@@ -3,24 +3,11 @@
  *
  * @brief Build universal line model coefficients from a line description.
  *
- * Sweeps the line-parameter model over frequency, extracts one
- * transport delay per mode, and fits the characteristic admittance and
- * the propagation function at the lowest pole order meeting each error
- * target. Yc(s) goes to yc.model.json; the propagation function goes
- * to propagation.model.json as the modal sum
- *
- *   H(s) = sum_m Hmin_m(s) exp(-s tau_m),
- *
- * where each mode's phase-domain contribution is its rank-one dyad
- * unwound by that mode's own delay,
- *
- *   Hmin_m(s) = conj(ti_m) h_m(s) exp(+s tau_m) tv_m^T,
- *
- * and fit individually; keys K, modes [{Hmin, delay {tau}}]. Each
- * tau_m is the smallest sampled delay over the frequencies where the
- * mode still carries magnitude, so samples the fit treats as zeros
- * never decide a delay. See README.md for the model form. All rational
- * fits are stable with no term linear in s.
+ * Sweeps the line-parameter model over frequency and fits Yc(s) to
+ * yc.model.json and the propagation function to propagation.model.json
+ * as the modal sum H(s) = sum_m Hmin_m(s) exp(-s tau_m), keys K,
+ * modes [{Hmin, delay {tau}}]; see README.md for the fitting targets.
+ * All rational fits are stable with no term linear in s.
  *
  * Exit codes: 0 when every error target was met and the Yc fit is
  * passive, 1 on a hard failure, 2 when an error target was missed,
@@ -262,10 +249,8 @@ namespace
     settings.yc     = makeTarget(args, "yc");
     settings.h      = makeTarget(args, "h");
 
-    // Propagation decays across decades of the band, so its top-end
-    // entries carry no information the error metric should chase; the
-    // cleaning applies to the propagation fit only, and Yc data, which
-    // has no such values, keeps the fitter default.
+    // The magnitude floor applies to the propagation fit only; Yc has
+    // no decayed entries and keeps the fitter default.
     settings.h.min_mag = args.get<double>("min-mag");
     if (!(settings.h.min_mag >= 0.0
           && settings.h.min_mag < 1.0))
@@ -469,11 +454,9 @@ namespace
   }
 
   /**
-   * @brief Stop on corrupt transform data: the identity Ti^H Tv = I is
-   *        guaranteed by the modal decomposition, and the propagation
-   *        assembly consumes the transforms exactly as monitored, so a
-   *        residual beyond the error threshold means the monitored data
-   *        is corrupt and the fitting target would be silently wrong.
+   * @brief Stop on corrupt transform data: the modal decomposition
+   *        guarantees Ti^H Tv = I, so a residual beyond the threshold
+   *        means the monitored data is corrupt.
    */
   void validateTransforms(const ResponseT& tv, const ResponseT& ti)
   {
@@ -525,18 +508,12 @@ namespace
 
   /**
    * @brief One mode's phase-domain contribution, the rank-one dyad
-   *        conj(ti_mode) modal_mode tv_mode^T per sample, assembled
-   *        without any matrix inversion.
+   *        conj(ti_mode) modal_mode tv_mode^T per sample.
    *
-   * Convention note: the monitored transforms satisfy the adjoint
-   * pairing Ti^H Tv = I enforced by the Gamma element, while the
-   * physical current transformation of a reciprocal line follows the
-   * transpose pairing Ti = Tv^-T, from Y'Z' = (Z'Y')^T with symmetric
-   * per-unit-length matrices, so the current-form assembly consumes
-   * conj(Ti) against the monitored data.
-   *
-   * The eigenvector normalization cancels between the paired columns,
-   * so each dyad carries no per-frequency phase convention on its own,
+   * The monitored transforms satisfy the adjoint pairing Ti^H Tv = I
+   * while the physical current transformation follows the transpose
+   * pairing Ti = Tv^-T, so the current-form assembly consumes
+   * conj(Ti). The eigenvector normalization cancels inside each dyad,
    * and the dyads over all modes sum to the full propagation function.
    */
   ResponseT modeDyad(const ResponseT& modal,
@@ -620,10 +597,9 @@ namespace
   }
 
   /**
-   * @brief One delay per mode from the alive samples of its delay
-   *        trace, each mode's rank-one dyad unwound by its own delay,
-   *        and fit individually; the propagation function is the sum
-   *        of the fitted modes behind their delays.
+   * @brief Each mode's rank-one dyad unwound by its own delay and fit
+   *        individually; the propagation function is the sum of the
+   *        fitted modes behind their delays.
    */
   int fitPropagation(const ResponseT& tv,
                      const ResponseT& ti,
@@ -632,9 +608,8 @@ namespace
                      const Settings&  settings,
                      nlohmann::json&  propagation)
   {
-    // The same magnitude floor the fitter cleans with decides which
-    // samples may carry a delay, so the delay is identified from
-    // exactly the data the fit sees.
+    // The fitter's magnitude floor also gates the delay extraction, so
+    // delays are identified from exactly the data the fit sees.
     const auto delays =
         GridKit::Optimization::modalDelays<scalar_type, index_type>(
             tau, h, settings.h.min_mag);
@@ -644,8 +619,6 @@ namespace
     int              worst           = 0;
     for (index_type mode = 0; mode < tv.rows; ++mode)
     {
-      // Unwind the dyad by its own delay so the rational part never
-      // has to synthesize transport delay as ringing.
       auto target = modeDyad(h, tv, ti, mode);
       GridKit::Optimization::applyDelayShift<scalar_type, index_type>(
           target, delays[mode]);
@@ -666,8 +639,7 @@ namespace
       }
       worst = std::max(worst, status);
 
-      // Each delay line is a Delay submodel, so its coefficient
-      // follows that operator's documented parameter set.
+      // The delay coefficient follows the Delay operator's parameter set.
       modes.push_back({{"Hmin", modelToJson(model)},
                        {"delay", {{"tau", delays[mode]}}}});
     }

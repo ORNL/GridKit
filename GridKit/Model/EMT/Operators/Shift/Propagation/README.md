@@ -1,8 +1,8 @@
 # Propagation Model
 
 For input units $[u]$, `Propagation` is the $K$-channel current-form propagation
-operator used by `LineDistributed`. It applies a fitted input factor, one scalar
-delay per mode, and a fitted output factor while preserving the input units.
+operator used by `LineDistributed`. It sums one branch per mode: a scalar
+delay feeding that mode's fitted matrix.
 
 ## Block Diagram
 
@@ -24,65 +24,38 @@ K \in \mathbb{Z}_{>0}
 
 ### Derived Parameters
 
-The full modal basis has one mode per channel:
+The mode count is the length of the `modes` coefficient list, one branch
+per mode:
 
 ```math
-\begin{aligned}
-M &= K \\
-\boldsymbol{\tau} &= [\tau_1,\ldots,\tau_M]^\mathsf T
-\end{aligned}
+M = |\texttt{modes}|
 ```
-
-The modal delays are produced by the offline propagation fitting and enter
-through the delay bank's `delays` coefficient set.
-
-## Model Ports
-
-Symbol | Port | Type | Units | Description | Note
------- | ---- | ---- | ----- | ----------- | ----
-$\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
-$\mathbf{y}$ | `out` | Output | $[u]$ | Output vector port | $\mathbf{y} \in \mathbb{R}^K$
 
 ## Submodels
 
+Each entry of `modes` supplies one branch, $m = 1,\ldots,M$:
+
 Symbol | Description | Type | Order | JSON | Inputs | Outputs
 ------ | ----------- | ---- | ----- | ---- | ------ | -------
-$\mathbf{g}_\mathrm{in}$ | Input factor | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_{\mathbf{g}_\mathrm{in}}$ | `input` | $\mathbb{R}^K$ | $\mathbb{R}^M$
-$\mathbf{d}$ | Modal delay bank | [Delay](../Delay/README.md) | History | `delays` | $\mathbb{R}^M$ | $\mathbb{R}^M$
-$\mathbf{g}_\mathrm{out}$ | Output factor | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_{\mathbf{g}_\mathrm{out}}$ | `output` | $\mathbb{R}^M$ | $\mathbb{R}^K$
+$d_m$ | Mode delay | [Delay](../Delay/README.md) | History | `modes[m].delay` | $\mathbb{R}^K$ | $\mathbb{R}^K$
+$\mathbf{H}^{\min}_m$ | Mode matrix | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_m$ | `modes[m].Hmin` | $\mathbb{R}^K$ | $\mathbb{R}^K$
 
-The offline fitting targets and propagation factorization are
+The represented propagation function is
 
 ```math
-\begin{aligned}
-\mathbf{G}^\mathrm{in}(s)
-  &\approx \mathbf{H}^\mathrm{mps}(s)\mathbf{T}_i^{-1}(s) \\
-\mathbf{G}^\mathrm{out}(s) &\approx \mathbf{T}_i(s) \\
-\mathbf{H}^\mathrm{mps}(s)
-  &= \mathrm{diag}(h_1^\mathrm{mps}(s),\ldots,h_M^\mathrm{mps}(s)) \\
-\mathbf{D}_{\boldsymbol{\tau}}(s)
-  &= \mathrm{diag}(\exp(-s\tau_1),\ldots,\exp(-s\tau_M)) \\
-\mathbf{H}(s)
-  &= \mathbf{T}_i(s)\mathbf{D}_{\boldsymbol{\tau}}(s)
-     \mathbf{H}^\mathrm{mps}(s)\mathbf{T}_i^{-1}(s) \\
-  &\approx \mathbf{G}^\mathrm{out}(s)\mathbf{D}_{\boldsymbol{\tau}}(s)
-     \mathbf{G}^\mathrm{in}(s)
-\end{aligned}
+\mathbf{H}(s) = \sum_{m=1}^{M} \mathbf{H}^{\min}_m(s)\,\exp(-s\tau_m),
 ```
 
-$\mathbf{H}^\mathrm{mps}$ is the diagonal modal minimum-phase-shift propagation
-function with the modal delays removed. The current modal transformation
-$\mathbf{T}_i$ maps modal currents to phase coordinates, and
-$\mathbf{T}_i^{-1}$ maps phase currents to modal coordinates.
+where each $\mathbf{H}^{\min}_m$ was fit on that mode's rank-one dyad
+unwound by its own delay; see the `UniversalLineModel` application README
+for the fitting targets.
 
 ### Submodel Validation
 
-Both rational factors must have stable poles and no term linear in $s$. The
-input factor has algebraic input; the output factor has differential input
-from the modal delay bank.
+Every mode matrix must have stable poles and no term linear in $s$:
 
 ```math
-\mathbf{E}^\mathrm{in}=\mathbf{E}^\mathrm{out}=\mathbf{0}
+\mathbf{E}_m = \mathbf{0}
 ```
 
 ### Submodel Wiring
@@ -133,7 +106,7 @@ None.
 ### External Equations
 
 ```math
-\mathbf{y} \leftarrow \mathbf{g}_\mathrm{out}[\mathbf{z}]
+\mathbf{y} \leftarrow \sum_{m=1}^{M} \mathbf{H}^{\min}_m\!\left[d_m[\mathbf{u}]\right]
 ```
 
 ## Initialization

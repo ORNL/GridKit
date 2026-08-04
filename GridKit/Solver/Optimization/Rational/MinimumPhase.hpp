@@ -18,23 +18,19 @@ namespace GridKit
   namespace Optimization
   {
     /**
-     * @brief Per-mode transport delays, each the smallest sampled delay
-     *        over the frequencies where that mode still carries
+     * @brief Per-mode transport delays, each the smallest sampled
+     *        delay over the frequencies where the mode still carries
      *        magnitude, |h_m| >= mag_floor * max |h_m|.
      *
      * Below its alive band a mode's phase delay keeps sliding toward
      * the lossless front, which carries no energy, so samples the fit
-     * treats as zeros must not decide the delay. Restricted to the
-     * alive band, each delay is the largest one that unwinds no fitted
-     * sample of its mode past zero phase.
+     * treats as zeros must not decide the delay.
      *
      * @param[in] tau       Delay traces, one row per mode, values in
      *                      the real part
-     * @param[in] h         Modal propagation on the same grid, one row
-     *                      per mode
-     * @param[in] mag_floor Fraction of the per-mode peak magnitude
-     *                      below which samples are ignored; zero keeps
-     *                      every sample
+     * @param[in] h         Modal propagation on the same grid
+     * @param[in] mag_floor Per-mode peak fraction below which samples
+     *                      are ignored; zero keeps every sample
      *
      * @pre tau and h share their grid and mode count, with at least
      *      one sample

@@ -45,12 +45,12 @@ namespace GridKit
 
       ComplexT operator()(IdxT sample, IdxT row, IdxT col) const
       {
-        return response[(sample * rows + row) * cols + col];
+        return response[static_cast<size_t>((sample * rows + row) * cols + col)];
       }
 
       ComplexT& operator()(IdxT sample, IdxT row, IdxT col)
       {
-        return response[(sample * rows + row) * cols + col];
+        return response[static_cast<size_t>((sample * rows + row) * cols + col)];
       }
     };
   } // namespace Optimization
