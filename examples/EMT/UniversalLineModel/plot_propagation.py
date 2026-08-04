@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-"""Validate the fitted propagation factors by composition.
+"""Validate the fitted propagation function against the sweep.
 
-The factor split Gout, delays, Gin is gauge dependent, but the composed
-phase-domain propagation matrix
+The application fits the unwound matrix Hmin, so the propagation function
+it represents is
 
-    P(j omega) = Gout(j omega) diag(exp(-j omega tau)) Gin(j omega)
+    H(j omega) = Hmin(j omega) exp(-j omega tau)
 
-is not: per mode the eigenvector phase cancels between the input and
-output factors. This script assembles the model-free reference
-P_ref = conj(Ti) diag(H) Tv^T from the sweep monitors and compares it
-against the composition of the three fitted pieces, so any real fitting
-or convention error shows up as composed error rather than as gauge
-noise.
+with the one shared delay taken from the artifact. This script assembles
+the model-free reference H_ref = conj(Ti) diag(h) Tv^T from the sweep
+monitors, where h holds the modal propagation, and compares it against
+that composition, so any fitting or convention error shows up directly.
 """
 
 from __future__ import annotations
@@ -84,7 +82,7 @@ def read_sweep(csv_path: Path) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     return omega, {"Tv": matrix("Overhead_Tv"), "Ti": matrix("Overhead_Ti"), "H": h}
 
 
-def load_factor(model: dict) -> dict:
+def load_model(model: dict) -> dict:
     rows, cols = model["rows"], model["cols"]
     poles = np.array([complex(re, im) for re, im in model["poles"]])
     residues = np.array(
@@ -98,11 +96,11 @@ def load_factor(model: dict) -> dict:
     return {"poles": poles, "residues": residues, "d": d}
 
 
-def evaluate_factor(factor: dict, omega: np.ndarray) -> np.ndarray:
+def evaluate(model: dict, omega: np.ndarray) -> np.ndarray:
     s = 1j * omega[:, None]
-    weights = 1.0 / (s - factor["poles"][None, :])
-    values = np.einsum("mq,qrc->mrc", weights, factor["residues"])
-    return values + factor["d"][None, :, :]
+    weights = 1.0 / (s - model["poles"][None, :])
+    values = np.einsum("mq,qrc->mrc", weights, model["residues"])
+    return values + model["d"][None, :, :]
 
 
 def main() -> None:
@@ -110,17 +108,15 @@ def main() -> None:
 
     omega, sweep = read_sweep(args.csv)
     spec = json.loads(args.model.read_text())
-    delays = np.array(spec["delays"]["tau"])
-    gin = evaluate_factor(load_factor(spec["input"]), omega)
-    gout = evaluate_factor(load_factor(spec["output"]), omega)
+    tau = spec["delay"]["tau"]
 
-    # Model-free reference: gauge-invariant dyad assembly of the raw sweep.
+    # Model-free dyad assembly of the raw sweep.
     reference = np.einsum(
         "mik,mk,mjk->mij", np.conj(sweep["Ti"]), sweep["H"], sweep["Tv"]
     )
-    # Composition of the fitted factors with the extracted delays.
-    phase = np.exp(-1j * omega[:, None] * delays[None, :])
-    composed = np.einsum("mik,mk,mkj->mij", gout, phase, gin)
+    # The fitted matrix with the shared delay reapplied.
+    hmin = evaluate(load_model(spec["Hmin"]), omega)
+    composed = hmin * np.exp(-1j * omega * tau)[:, None, None]
 
     frequency = omega / (2.0 * math.pi)
     k = reference.shape[1]
@@ -140,7 +136,7 @@ def main() -> None:
     fig, axes = plt.subplots(1, 3, figsize=(15.0, 4.8))
     for ax, values, title in (
         (axes[0], reference, "Sweep dyad assembly"),
-        (axes[1], composed, "Composed fitted factors"),
+        (axes[1], composed, "Fitted Hmin with delay"),
     ):
         flat = values.reshape(len(omega), -1)
         for channel, label in enumerate(labels):
@@ -150,27 +146,27 @@ def main() -> None:
         ax.set_title(title)
         ax.set_xlabel("frequency [Hz]")
         ax.grid(True, which="both", alpha=0.3)
-        ax.legend(title="P", fontsize=7, ncol=3)
+        ax.legend(title="H", fontsize=7, ncol=3)
     axes[1].sharey(axes[0])
-    axes[0].set_ylabel("|P| [-]")
+    axes[0].set_ylabel("|H| [-]")
 
     axes[2].plot(frequency, error, linewidth=1.2, color="tab:red")
     axes[2].set_xscale("log")
     axes[2].set_yscale("log")
-    axes[2].set_title("Pointwise composition error")
+    axes[2].set_title("Pointwise error")
     axes[2].set_xlabel("frequency [Hz]")
     axes[2].set_ylabel("max |error| / rms reference")
     axes[2].grid(True, which="both", alpha=0.3)
 
     fig.suptitle(
-        "Phase-domain propagation: composed fitted factors vs sweep, "
+        f"Propagation function: fit vs sweep, delay {1.0e6 * tau:.2f} us, "
         f"relative RMS {rel_rms:.2e}"
     )
     fig.tight_layout()
     fig.savefig(args.output, dpi=180)
     plt.close(fig)
 
-    print(f"wrote {args.output} (composed relative RMS {rel_rms:.2e})")
+    print(f"wrote {args.output} (relative RMS {rel_rms:.2e})")
 
 
 if __name__ == "__main__":

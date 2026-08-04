@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <vector>
-
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Solver/Optimization/Rational/SampledResponse.hpp>
 
@@ -18,27 +16,16 @@ namespace GridKit
   namespace Optimization
   {
     /**
-     * @brief Smallest delay over the sweep, tau = min over omega of
-     *        tau(omega), per column of the sampled delay trace.
+     * @brief Smallest delay carried by a sampled delay trace,
+     *        tau = min over every channel and every sample.
      */
     template <typename scalar_type, typename index_type>
-    std::vector<typename GridKit::ScalarTraits<scalar_type>::RealT>
+    typename GridKit::ScalarTraits<scalar_type>::RealT
     minimumDelay(const SampledResponse<scalar_type, index_type>& tau);
 
     /**
-     * @brief Shift each column of the sampled response to minimum phase by
-     *        multiplying with exp(j omega tau) for that column's delay.
-     */
-    template <typename scalar_type, typename index_type>
-    void applyDelayShift(
-        SampledResponse<scalar_type, index_type>& samples,
-        const std::vector<typename GridKit::ScalarTraits<scalar_type>::RealT>&
-            tau);
-
-    /**
      * @brief Shift every channel of the sampled response to minimum
-     *        phase by multiplying with exp(j omega tau) for one shared
-     *        delay.
+     *        phase by multiplying with exp(j omega tau).
      */
     template <typename scalar_type, typename index_type>
     void applyDelayShift(SampledResponse<scalar_type, index_type>&          samples,

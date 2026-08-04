@@ -4,11 +4,11 @@
 For each line with a committed solver specification the gallery runs the
 FrequencyResponse application, renders the pre-fitting response overview
 (Yc, Zc, gamma as alpha and beta, tau, H), runs the UniversalLineModel
-application, renders the Yc fit accuracy figure, the modal factor element
-figures, the sweep-vs-fit diagnostic, and the composed propagation
-comparison, and collects pole counts and error statistics into
-output/stats.json and output/stats.md. Every artifact for a line lands in
-output/<line>/.
+application, renders the Yc fit accuracy figure, the sweep-vs-fit
+diagnostic, and the propagation comparison against both the fitted
+function and its unwound target, and collects pole counts and error
+statistics into output/stats.json and output/stats.md. Every artifact for
+a line lands in output/<line>/.
 """
 
 from __future__ import annotations
@@ -27,7 +27,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-import plot_factors
 import plot_propagation_fit
 import sweep_vs_fit
 from common import (HERE, OUTPUT_DIR, SWEEP_APP, ULM_APP, gallery_lines,
@@ -239,24 +238,20 @@ def run_line(name: str, args: argparse.Namespace) -> dict:
         line_dir / "ycfit.png",
     )
 
-    # The rest of the per-line plot set: modal factor elements, the
-    # sweep-vs-fit diagnostic, and the composed propagation comparison.
-    plot_factors.run(name, args.sweep_app)
+    # The rest of the per-line plot set: the sweep-vs-fit diagnostic and
+    # the propagation comparison.
     sweep_vs_fit.run(name, args.sweep_app)
-    composed_rel_rms = plot_propagation_fit.render(name)
+    propagation_rel_rms = plot_propagation_fit.render(name)
 
     propagation = json.loads((line_dir / "propagation.model.json").read_text())
-    delays = (propagation["delays"]["tau"]
-              if propagation["domain"] == "modal"
-              else [propagation["delay"]["tau"]])
     return {
         "line": name,
         "conductors": k,
         "targets_met": result.returncode in (0, 3),
         "yc_passive": passive,
         "yc_rel_rms_check": yc_rel_rms,
-        "composed_rel_rms": composed_rel_rms,
-        "delays_us": [1.0e6 * tau for tau in delays],
+        "propagation_rel_rms": propagation_rel_rms,
+        "delay_us": 1.0e6 * propagation["delay"]["tau"],
         "fits": fits,
     }
 
@@ -267,10 +262,14 @@ def write_stats(records: list[dict]) -> None:
     lines = [
         "# Line gallery fit statistics",
         "",
-        "| Line | K | Yc poles | Yc rel RMS | H poles | H rel RMS "
-        "| Composed rel RMS | Targets met | Yc passive |",
-        "| ---- | - | -------- | ---------- | ------- | --------- "
-        "| ---------------- | ----------- | ---------- |",
+        "The Hmin columns report the fitter's own error on the unwound "
+        "target; the H column recomputes the error of the delayed "
+        "propagation function against the sweep.",
+        "",
+        "| Line | K | Delay [us] | Yc poles | Yc rel RMS | Hmin poles "
+        "| Hmin rel RMS | H rel RMS | Targets met | Yc passive |",
+        "| ---- | - | ---------- | -------- | ---------- | ---------- "
+        "| ------------ | --------- | ----------- | ---------- |",
     ]
     for r in records:
         fits = r["fits"]
@@ -284,22 +283,14 @@ def write_stats(records: list[dict]) -> None:
             return f"{entry['rel_rms']:.2e}"
 
         lines.append(
-            f"| {r['line']} | {r['conductors']} "
+            f"| {r['line']} | {r['conductors']} | {r['delay_us']:.2f} "
             f"| {cell('Yc', 'poles')} | {cell('Yc', 'rms')} "
-            f"| {cell('H', 'poles')} | {cell('H', 'rms')} "
-            f"| {r['composed_rel_rms']:.2e} "
+            f"| {cell('Hmin', 'poles')} | {cell('Hmin', 'rms')} "
+            f"| {r['propagation_rel_rms']:.2e} "
             f"| {'yes' if r['targets_met'] else 'no'} "
             f"| {'yes' if r['yc_passive'] else 'no'} |"
         )
-    lines += [
-        "",
-        "Delays [us]: "
-        + "; ".join(
-            f"{r['line']}: " + ", ".join(f"{tau:.2f}" for tau in r["delays_us"])
-            for r in records
-        ),
-        "",
-    ]
+    lines.append("")
     (OUTPUT_DIR / "stats.md").write_text("\n".join(lines))
     print(f"wrote {OUTPUT_DIR / 'stats.json'}")
     print(f"wrote {OUTPUT_DIR / 'stats.md'}")

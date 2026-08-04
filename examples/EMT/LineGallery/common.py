@@ -9,8 +9,11 @@ the solver specs in this directory.
 
 from __future__ import annotations
 
+import csv
 import subprocess
 from pathlib import Path
+
+import numpy as np
 
 HERE = Path(__file__).resolve().parent
 OUTPUT_DIR = HERE / "output"
@@ -46,7 +49,44 @@ def line_output_dir(name: str) -> Path:
     return line_dir
 
 
-def run_ulm(name: str, h_domain: str = "phase",
+def read_modal_response(path: Path):
+    """Monitored transforms and modal propagation from a sweep CSV.
+
+    Returns omega, the conductor count, Tv, Ti, the modal propagation H,
+    and the modal delay traces tau.
+    """
+    with path.open(newline="") as stream:
+        reader = csv.DictReader(stream)
+        rows = list(reader)
+        names = reader.fieldnames or []
+    omega = np.array([float(r["omega"]) for r in rows])
+    m = len(rows)
+
+    k = 0
+    while f"Overhead_H_real_{k}" in names:
+        k += 1
+    if k == 0:
+        raise ValueError(f"{path} lacks Overhead_H columns")
+
+    def matrix(prefix: str) -> np.ndarray:
+        out = np.zeros((m, k, k), complex)
+        for s, r in enumerate(rows):
+            for i in range(k):
+                for j in range(k):
+                    out[s, i, j] = complex(
+                        float(r[f"{prefix}_real_{i}_{j}"]),
+                        float(r[f"{prefix}_imag_{i}_{j}"]))
+        return out
+
+    h = np.array([[complex(float(r[f"Overhead_H_real_{q}"]),
+                           float(r[f"Overhead_H_imag_{q}"]))
+                   for q in range(k)] for r in rows])
+    tau = np.array([[float(r[f"Overhead_Tau_{q}"]) for q in range(k)]
+                    for r in rows])
+    return omega, k, matrix("Overhead_Tv"), matrix("Overhead_Ti"), h, tau
+
+
+def run_ulm(name: str,
             ulm_app: Path = ULM_APP) -> tuple[Path, subprocess.CompletedProcess]:
     """Fit one line into output/<line>/, echoing the fit report lines.
 
@@ -59,14 +99,12 @@ def run_ulm(name: str, h_domain: str = "phase",
         str(line_model_file(name)),
         "-o",
         str(line_dir),
-        "--h-domain",
-        h_domain,
         *ULM_ARGS,
         *ULM_LINE_ARGS.get(name, []),
     ]
     result = subprocess.run(command, capture_output=True, text=True, cwd=HERE)
     for line in result.stdout.splitlines():
-        if "VectorFitting:" in line:
+        if "VectorFitting:" in line or line.startswith("Propagation:"):
             print(line.strip())
     if result.returncode not in (0, 2, 3) or "failed" in result.stdout + result.stderr:
         raise RuntimeError(

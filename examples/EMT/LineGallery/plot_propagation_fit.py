@@ -3,18 +3,18 @@
 
 Assembles the model-free reference
 
-    P_ref(j omega) = conj(Ti) diag(H) Tv^T
+    H_ref(j omega) = conj(Ti) diag(h) Tv^T
 
-from the UniversalLineModel sweep monitors and composes the fitted
-approximation from propagation.model.json according to its domain:
+from the UniversalLineModel sweep monitors, where h holds the modal
+propagation, and composes the fitted approximation from
+propagation.model.json as
 
-    modal: P_fit = Gout_fit diag(exp(-j omega tau_m)) Gin_fit
-    phase: P_fit = H_fit exp(-j omega tau)
+    H_fit = Hmin_fit exp(-j omega tau)
 
-The composition is gauge invariant, so the comparison shows real fitting
-error only. Two figures land in output/<line>/: element magnitudes and
-element phases, each with the actual response on the left and the
-approximation on the right.
+with the one shared delay the fit removed. Four figures land in
+output/<line>/: the propagation element magnitudes and phases, actual
+beside approximation, and the same pair for the unwound matrix Hmin the
+fitter actually sees.
 """
 
 from __future__ import annotations
@@ -29,8 +29,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from common import OUTPUT_DIR, ULM_APP, gallery_lines, run_ulm
-from plot_factors import read_factors
+from common import OUTPUT_DIR, ULM_APP, gallery_lines, read_modal_response, run_ulm
 from sweep_vs_fit import eval_model
 
 
@@ -39,32 +38,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--line", default="345kv-horizontal")
     parser.add_argument("--all", action="store_true",
                         help="run every line with a gallery solver spec")
-    parser.add_argument("--h-domain", default="phase",
-                        choices=("modal", "phase"))
     parser.add_argument("--ulm-app", type=Path, default=ULM_APP)
     return parser.parse_args()
 
 
-def compose_fit(propagation: dict, omega: np.ndarray, k: int) -> np.ndarray:
-    """The fitted propagation matrix per sample, by artifact domain."""
-    domain = propagation["domain"]
-    if domain == "modal":
-        tau = np.array(propagation["delays"]["tau"])
-        gin = eval_model(propagation["input"], omega).reshape(len(omega), k, k)
-        gout = eval_model(propagation["output"], omega).reshape(len(omega), k, k)
-        out = np.zeros((len(omega), k, k), complex)
-        for m in range(len(omega)):
-            out[m] = gout[m] @ np.diag(np.exp(-1j * omega[m] * tau)) @ gin[m]
-        return out
-    if domain == "phase":
-        tau = propagation["delay"]["tau"]
-        h = eval_model(propagation["H"], omega).reshape(len(omega), k, k)
-        return h * np.exp(-1j * omega * tau)[:, None, None]
-    raise ValueError(f"unknown propagation domain: {domain}")
-
-
 def side_by_side(name, omega, reference, fitted, transform, ylabel, title,
-                 path, log_y, suptitle="propagation function P = Gout diag(H) Gin"):
+                 path, log_y, suptitle):
     k = reference.shape[1]
     fig, axes = plt.subplots(1, 2, figsize=(13, 6), sharex=True, sharey=True)
     colors = plt.cm.viridis(np.linspace(0.0, 0.85, k * k))
@@ -91,7 +70,7 @@ def side_by_side(name, omega, reference, fitted, transform, ylabel, title,
 
     error = np.sqrt(np.mean(np.abs(fitted - reference) ** 2)
                     / max(np.mean(np.abs(reference) ** 2), 1e-30))
-    axes[1].annotate(f"composed rel rms {error:.2e}",
+    axes[1].annotate(f"rel rms {error:.2e}",
                      xy=(0.03, 0.03), xycoords="axes fraction", fontsize=9)
 
     fig.suptitle(f"{name}: {suptitle}", fontsize=13)
@@ -104,60 +83,57 @@ def side_by_side(name, omega, reference, fitted, transform, ylabel, title,
 def render(name: str) -> float:
     """Figures from the artifacts already in output/<line>/.
 
-    Returns the composed relative rms error of the approximation.
+    Returns the relative rms error of the fitted propagation function.
     """
     line_dir = OUTPUT_DIR / name
-    omega, k, tv, ti, h, _ = read_factors(line_dir / "response.csv")
+    omega, k, tv, ti, h, _ = read_modal_response(line_dir / "response.csv")
     propagation = json.loads((line_dir / "propagation.model.json").read_text())
+    tau = propagation["delay"]["tau"]
 
     reference = np.zeros((len(omega), k, k), complex)
     for m in range(len(omega)):
         reference[m] = np.conj(ti[m]) @ np.diag(h[m]) @ tv[m].T
 
-    fitted = compose_fit(propagation, omega, k)
+    hmin = eval_model(propagation["Hmin"], omega).reshape(len(omega), k, k)
+    fitted = hmin * np.exp(-1j * omega * tau)[:, None, None]
 
-    domain = propagation["domain"]
+    suptitle = "propagation function H = conj(Ti) diag(h) Tv^T"
     side_by_side(name, omega, reference, fitted,
-                 np.abs, "|P entry|", f"element magnitudes ({domain})",
-                 line_dir / "propagation_mag.png", log_y=True)
+                 np.abs, "|H entry|", "element magnitudes",
+                 line_dir / "propagation_mag.png", log_y=True,
+                 suptitle=suptitle)
     side_by_side(name, omega, reference, fitted,
                  lambda entry: np.degrees(np.unwrap(np.angle(entry))),
-                 "unwrapped phase [deg]", f"element phases ({domain})",
-                 line_dir / "propagation_phase.png", log_y=False)
+                 "unwrapped phase [deg]", "element phases",
+                 line_dir / "propagation_phase.png", log_y=False,
+                 suptitle=suptitle)
 
-    if domain == "phase":
-        # The fitter's own view: the time-shifted target
-        # Hmps = P exp(+j omega tau) against the rational approximation,
-        # before the delay is reapplied.
-        tau = propagation["delay"]["tau"]
-        target = reference * np.exp(1j * omega * tau)[:, None, None]
-        approx = eval_model(propagation["H"], omega).reshape(len(omega), k, k)
-        suptitle = "time-shifted target Hmps = P exp(+s tau) vs rational fit"
-        side_by_side(name, omega, target, approx,
-                     np.abs, "|Hmps entry|", "element magnitudes",
-                     line_dir / "hmps_mag.png", log_y=True,
-                     suptitle=suptitle)
-        side_by_side(name, omega, target, approx,
-                     lambda entry: np.degrees(np.unwrap(np.angle(entry))),
-                     "unwrapped phase [deg]", "element phases",
-                     line_dir / "hmps_phase.png", log_y=False,
-                     suptitle=suptitle)
+    # The fitter's own view: the unwound target against its rational
+    # approximation, before the delay is reapplied.
+    target = reference * np.exp(1j * omega * tau)[:, None, None]
+    suptitle = "unwound target Hmin = H exp(+s tau) vs rational fit"
+    side_by_side(name, omega, target, hmin,
+                 np.abs, "|Hmin entry|", "element magnitudes",
+                 line_dir / "hmin_mag.png", log_y=True, suptitle=suptitle)
+    side_by_side(name, omega, target, hmin,
+                 lambda entry: np.degrees(np.unwrap(np.angle(entry))),
+                 "unwrapped phase [deg]", "element phases",
+                 line_dir / "hmin_phase.png", log_y=False, suptitle=suptitle)
 
     return float(np.sqrt(np.mean(np.abs(fitted - reference) ** 2)
                          / max(np.mean(np.abs(reference) ** 2), 1e-30)))
 
 
-def run(name: str, h_domain: str = "phase",
-        ulm_app: Path = ULM_APP) -> float:
+def run(name: str, ulm_app: Path = ULM_APP) -> float:
     print(f"=== {name} ===")
-    run_ulm(name, h_domain=h_domain, ulm_app=ulm_app)
+    run_ulm(name, ulm_app=ulm_app)
     return render(name)
 
 
 def main() -> None:
     args = parse_args()
     for name in gallery_lines() if args.all else [args.line]:
-        run(name, args.h_domain, args.ulm_app)
+        run(name, args.ulm_app)
 
 
 if __name__ == "__main__":

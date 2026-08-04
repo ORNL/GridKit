@@ -3,38 +3,34 @@
 `UniversalLineModel` sweeps an overhead line description over frequency and
 fits the time-domain line model coefficients: the characteristic admittance
 $\mathbf{Y}_c(s)$ to `yc.model.json`, and the propagation function
-$\mathbf{H}(s)$ to `propagation.model.json` under one of two treatments
-selected by `--h-domain` (default `phase`). The artifact names its
-treatment in a top-level `domain` field.
+$\mathbf{H}(s)$ to `propagation.model.json`.
 
-## Propagation Treatments
+## Propagation
 
-`--h-domain modal` extracts one minimum delay per mode and fits the
-backwound factor pair:
+The propagation function is one rational matrix behind one shared delay,
+the smallest transport delay the line carries:
 
 ```math
-\mathbf{H}(s) = \mathbf{G}^{\mathrm{out}}(s)\,
-  \mathrm{diag}\!\left(e^{-s\tau_1},\ldots,e^{-s\tau_M}\right)
-  \mathbf{G}^{\mathrm{in}}(s)
+\mathbf{H}(s) = \mathbf{H}^{\min}(s)\,e^{-s\tau},
+\qquad \tau = \min_{m,\omega}\tau_m(\omega)
 ```
 
-`--h-domain phase` extracts the single minimum delay among all modes and
-fits one phase-domain matrix:
+The fitting target $\mathbf{H}^{\min}$ is the modal propagation unwound by
+that delay and carried back to phase coordinates:
 
 ```math
-\mathbf{H}(s) = \hat{\mathbf{H}}(s)\,e^{-s\tau},
-\qquad \tau = \min_m \tau_m
+\mathbf{H}^{\min}(s) = \mathrm{conj}(\mathbf{T}_i)\,
+  \mathrm{diag}\!\left(h_1(s)e^{+s\tau},\ldots,h_M(s)e^{+s\tau}\right)
+  \mathbf{T}_v^{\mathsf{T}}
 ```
 
-The phase-domain target $\hat{\mathbf{H}}$ is assembled per sample as
-$\mathrm{conj}(\mathbf{T}_i)\,\mathrm{diag}(\mathbf{H})\,\mathbf{T}_v^{\mathsf{T}}$
-before backwinding, so the eigenvector gauge cancels identically and the
-fit carries no per-frequency phase convention. The modal treatment keeps
-per-mode delays and is preferable when the modal delays separate into
-distinct groups; the phase treatment fits one function and is preferable
-when they cluster. The single delay carries the inter-mode spread as
-residual winding proportional to frequency, so wider sweep bands shift
-the balance toward the modal treatment.
+The eigenvector normalization cancels identically in that product, so the
+target carries no per-frequency phase convention and no structural zeros,
+and the inter-mode cancellation survives into the fit. What the single
+delay leaves behind is the spread of the modal delays, which the fit must
+absorb as a residual winding growing with frequency; the application
+reports that spread, and a line whose modal delays separate widely needs
+either more poles or a narrower band.
 
 ## Files
 

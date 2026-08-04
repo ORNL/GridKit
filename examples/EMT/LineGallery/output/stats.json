@@ -5,17 +5,15 @@
     "targets_met": true,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0006223265608978852,
-    "composed_rel_rms": 0.04866264539365572,
-    "delays_us": [
-      53.12303297383808
-    ],
+    "propagation_rel_rms": 0.048662645393653316,
+    "delay_us": 53.12303297383808,
     "fits": {
       "Yc": {
         "poles": 8,
         "rel_rms": 0.000622327,
         "worst_channel_rel_rms": 0.00223875
       },
-      "H": {
+      "Hmin": {
         "poles": 22,
         "rel_rms": 0.0486626,
         "worst_channel_rel_rms": 0.133002
@@ -28,17 +26,15 @@
     "targets_met": true,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0005059015353768508,
-    "composed_rel_rms": 0.03716892836274748,
-    "delays_us": [
-      334.6361122540547
-    ],
+    "propagation_rel_rms": 0.03716892836299542,
+    "delay_us": 334.6361122540547,
     "fits": {
       "Yc": {
         "poles": 8,
         "rel_rms": 0.000505902,
         "worst_channel_rel_rms": 0.00260519
       },
-      "H": {
+      "Hmin": {
         "poles": 30,
         "rel_rms": 0.0371689,
         "worst_channel_rel_rms": 0.0897984
@@ -51,17 +47,15 @@
     "targets_met": true,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0005131109686411038,
-    "composed_rel_rms": 0.03894941756982101,
-    "delays_us": [
-      334.6350538975668
-    ],
+    "propagation_rel_rms": 0.0389494175857413,
+    "delay_us": 334.6350538975668,
     "fits": {
       "Yc": {
         "poles": 8,
         "rel_rms": 0.000513111,
         "worst_channel_rel_rms": 0.00267593
       },
-      "H": {
+      "Hmin": {
         "poles": 30,
         "rel_rms": 0.0389494,
         "worst_channel_rel_rms": 0.100356
@@ -74,20 +68,18 @@
     "targets_met": false,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0006666306193420329,
-    "composed_rel_rms": 0.3953617162827545,
-    "delays_us": [
-      835.9199249130029
-    ],
+    "propagation_rel_rms": 0.3952046982124697,
+    "delay_us": 835.9199249130029,
     "fits": {
       "Yc": {
         "poles": 6,
         "rel_rms": 0.000666631,
         "worst_channel_rel_rms": 0.0038254
       },
-      "H": {
+      "Hmin": {
         "poles": 26,
-        "rel_rms": 0.395362,
-        "worst_channel_rel_rms": 0.859361
+        "rel_rms": 0.395205,
+        "worst_channel_rel_rms": 0.858924
       }
     }
   },
@@ -97,17 +89,15 @@
     "targets_met": true,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0006829225513146958,
-    "composed_rel_rms": 0.027543393221764512,
-    "delays_us": [
-      53.58478360477655
-    ],
+    "propagation_rel_rms": 0.027543393221768006,
+    "delay_us": 53.58478360477655,
     "fits": {
       "Yc": {
         "poles": 8,
         "rel_rms": 0.000682923,
         "worst_channel_rel_rms": 0.00292233
       },
-      "H": {
+      "Hmin": {
         "poles": 22,
         "rel_rms": 0.0275434,
         "worst_channel_rel_rms": 0.0752728
@@ -120,17 +110,15 @@
     "targets_met": true,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0008886895870763037,
-    "composed_rel_rms": 0.034444573891736815,
-    "delays_us": [
-      1076.0503222450207
-    ],
+    "propagation_rel_rms": 0.03444457389183299,
+    "delay_us": 1076.0503222450207,
     "fits": {
       "Yc": {
         "poles": 6,
         "rel_rms": 0.00088869,
         "worst_channel_rel_rms": 0.00564318
       },
-      "H": {
+      "Hmin": {
         "poles": 24,
         "rel_rms": 0.0344446,
         "worst_channel_rel_rms": 0.0834128
@@ -143,17 +131,15 @@
     "targets_met": true,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0008960851934872497,
-    "composed_rel_rms": 0.04515867938642845,
-    "delays_us": [
-      501.2585886490791
-    ],
+    "propagation_rel_rms": 0.045158679386428466,
+    "delay_us": 501.2585886490791,
     "fits": {
       "Yc": {
         "poles": 6,
         "rel_rms": 0.000896085,
         "worst_channel_rel_rms": 0.00568536
       },
-      "H": {
+      "Hmin": {
         "poles": 20,
         "rel_rms": 0.0451587,
         "worst_channel_rel_rms": 0.1056
