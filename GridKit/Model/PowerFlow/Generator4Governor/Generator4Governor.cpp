@@ -52,7 +52,7 @@ namespace GridKit
       Q0_(Q0),
       bus_(bus)
   {
-  } 
+  }
 
   template <class ScalarT, typename IdxT>
   Generator4Governor<ScalarT, IdxT>::~Generator4Governor()
