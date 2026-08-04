@@ -5,7 +5,7 @@
    Name                | Value
  ----------------------|-------------------------------------------------------
   `system_model_file`  | Path to the system model file[^1]
-  `dt_monitor`         | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
+  `dt_monitor`         | Monitor output time interval for recorded simulation results, 0 for no intermediate monitoring, or a negative number to output at solver-selected steps (default: 0)
   `tmax`               | A floating-point value for max time
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)
   `abs_tol`            | Absolute solver tolerance override (default: 1.0e-9)
@@ -13,8 +13,12 @@
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `max_order`          | Maximum IDA integration method order from 1 to 5 (default: 5; fixed stepping is capped at 2)
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
+  `ida_max_order`      | Optional diagnostic override of `max_order`, from 1 to 5 (fixed stepping remains capped at 2)
+  `ida_max_dt`         | Optional positive floating point value limiting IDA's internal max step
   `events`             | An array of event groups (see [Events](#events) below)
-  `output_file`        | Path to output (CSV) file (optional)
+  `output_file`        | Path to monitor output (CSV) file; omitted means monitors are disabled (optional)
+  `ida_stats`          | Optional path to IDA aggregate statistics JSON
+  `ida_steps`          | Optional path to IDA accepted-step JSON
   `reference_file`     | A string containing the name of the case (optional)
   `error_type`         | One of { "relative" (default), "absolute" }
   `error_tolerance`    | A floating-point value for highest allowable total error (default: 1.0e-4)
