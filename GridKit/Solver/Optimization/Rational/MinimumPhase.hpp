@@ -34,5 +34,14 @@ namespace GridKit
         SampledResponse<scalar_type, index_type>& samples,
         const std::vector<typename GridKit::ScalarTraits<scalar_type>::RealT>&
             tau);
+
+    /**
+     * @brief Shift every channel of the sampled response to minimum
+     *        phase by multiplying with exp(j omega tau) for one shared
+     *        delay.
+     */
+    template <typename scalar_type, typename index_type>
+    void applyDelayShift(SampledResponse<scalar_type, index_type>&          samples,
+                         typename GridKit::ScalarTraits<scalar_type>::RealT tau);
   } // namespace Optimization
 } // namespace GridKit

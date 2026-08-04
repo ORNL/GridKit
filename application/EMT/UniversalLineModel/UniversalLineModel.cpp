@@ -3,18 +3,24 @@
  *
  * @brief Build universal line model coefficients from a line description.
  *
- * Sweeps the line-parameter model over frequency, extracts the modal
- * delays, and fits the characteristic admittance and the two propagation
- * factors at the lowest pole order meeting each error target:
+ * Sweeps the line-parameter model over frequency, extracts delays, and
+ * fits the characteristic admittance and the propagation function at the
+ * lowest pole order meeting each error target. Yc(s) always goes to
+ * yc.model.json; the propagation treatment is selected by --h-domain and
+ * goes to propagation.model.json with a "domain" discriminator:
  *
- *   Yc(s)                             -> yc.model.json
- *   Gin(s)  = diag(Hmps(s)) Tv(s)^T   \
- *   delays                             > propagation.model.json
- *   Gout(s) = Tv(s)^-T = conj(Ti(s))  /
+ *   modal: per-mode delays tau_m = min over omega of tau_m(omega),
+ *          Gin(s)  = diag(Hmps(s)) Tv(s)^T
+ *          Gout(s) = Tv(s)^-T = conj(Ti(s))
+ *          keys input, delays {M, tau}, output
  *
- * matching the Propagation operator contract (submodel keys input,
- * delays, output; both rational factors stable with no term linear
- * in s).
+ *   phase: one shared delay tau = min over modes of tau_m, the
+ *          gauge-invariant matrix P(s) = conj(Ti) diag(H) Tv^T backwound
+ *          by tau and fit whole,
+ *          keys H, delay {tau}
+ *
+ * See README.md for the two model forms. All rational fits are stable
+ * with no term linear in s.
  *
  * Exit codes: 0 when every error target was met and the Yc fit is
  * passive, 1 on a hard failure, 2 when an error target was missed,
@@ -73,6 +79,13 @@ namespace
   constexpr double BIORTHOGONALITY_WARNING = 1.0e-5;
   constexpr double BIORTHOGONALITY_ERROR   = 1.0e-2;
 
+  /// Propagation fitting treatments; see README.md for the two forms.
+  enum class HDomain
+  {
+    MODAL, ///< Per-mode minimum delays; fit the factor pair Gin, Gout.
+    PHASE  ///< One shared delay; fit the phase-domain matrix H.
+  };
+
   /// Application settings; every field has a CLI override.
   struct Settings
   {
@@ -96,6 +109,7 @@ namespace
     fs::path   output{"output"};
     Target     yc;
     Target     h;
+    HDomain    h_domain{HDomain::PHASE};
     index_type restarts{3};
     bool       refine{false};
   };
@@ -178,6 +192,13 @@ namespace
          .help     = "Relative RMS error target for each propagation factor",
          .type     = ArgType::Real,
          .defaults = 1.0e-3},
+
+        {.name     = {"--h-domain"},
+         .help     = "Propagation treatment: modal fits the factor pair "
+                     "with per-mode delays, phase fits one matrix with "
+                     "one shared delay",
+         .type     = ArgType::String,
+         .defaults = "phase"},
 
         {.name     = {"--min-mag"},
          .help     = "Fraction of the peak magnitude below which propagation "
@@ -266,6 +287,20 @@ namespace
           && settings.h.min_mag < 1.0))
     {
       throw std::runtime_error("--min-mag must lie in [0, 1)");
+    }
+
+    const auto domain = args.get("h-domain");
+    if (domain == "modal")
+    {
+      settings.h_domain = HDomain::MODAL;
+    }
+    else if (domain == "phase")
+    {
+      settings.h_domain = HDomain::PHASE;
+    }
+    else
+    {
+      throw std::runtime_error("--h-domain must be modal or phase");
     }
 
     const int restarts = args.get<int>("restarts");
@@ -464,55 +499,21 @@ namespace
   }
 
   /**
-   * @brief The propagation fitting targets per the Propagation contract,
-   *        assembled without any matrix inversion.
-   *
-   * Convention note: the monitored transforms satisfy the adjoint
-   * pairing Ti^H Tv = I enforced by the Gamma element, while the
-   * physical current transformation of a reciprocal line follows the
-   * transpose pairing Ti = Tv^-T, from Y'Z' = (Z'Y')^T with symmetric
-   * per-unit-length matrices. The correct current-form factors are
-   * therefore rearrangements of the monitored data:
-   *
-   *   Gout = Tv^-T = conj(monitored Ti),
-   *   Gin  = diag(Hmps) Tv^T.
-   *
-   * Gauge note: the monitored transforms arrive in the modal
-   * decomposition's gauge, exact and continuous per sample, and are
-   * consumed exactly as monitored: no per-sample rephasing happens
-   * here.
-   *
-   * The biorthogonality residual max |Ti^H Tv - I| is checked per
-   * sample: it is the identity both assemblies rest on.
+   * @brief Stop on corrupt transform data: the identity Ti^H Tv = I is
+   *        guaranteed by the modal decomposition, and both propagation
+   *        treatments consume the transforms exactly as monitored, so a
+   *        residual beyond the error threshold means the monitored data
+   *        is corrupt and every downstream assembly would be silently
+   *        wrong.
    */
-  void buildPropagationFactors(const ResponseT& tv,
-                               const ResponseT& ti,
-                               const ResponseT& hmps,
-                               ResponseT&       gin,
-                               ResponseT&       gout)
+  void validateTransforms(const ResponseT& tv, const ResponseT& ti)
   {
     const auto k            = tv.rows;
     const auto sample_count = tv.omega.size();
 
-    gin.rows  = k;
-    gin.cols  = k;
-    gin.omega = tv.omega;
-    gin.response.assign(tv.response.size(), {});
-    gout = gin;
-
     double worst = 0.0;
     for (size_t m = 0; m < sample_count; ++m)
     {
-      for (index_type row = 0; row < k; ++row)
-      {
-        const ComplexT mode = hmps(m, row, 0);
-        for (index_type col = 0; col < k; ++col)
-        {
-          gin(m, row, col)  = mode * tv(m, col, row);
-          gout(m, row, col) = std::conj(ti(m, row, col));
-        }
-      }
-
       for (index_type row = 0; row < k; ++row)
       {
         for (index_type col = 0; col < k; ++col)
@@ -537,18 +538,13 @@ namespace
       }
     }
 
-    // The identity Ti^H Tv = I is what both factor assemblies rest on:
-    // beyond the error threshold the rearrangements Gout = conj(Ti) and
-    // Gin = diag(Hmps) Tv^T no longer hold and the fitted model would be
-    // silently wrong, so the run stops instead.
     if (worst > BIORTHOGONALITY_ERROR)
     {
       std::ostringstream message;
       message << "Transform biorthogonality residual reaches " << worst
               << ", beyond " << BIORTHOGONALITY_ERROR
-              << "; the propagation factor assembly is invalid. The "
-                 "modal decomposition guarantees this identity, so the "
-                 "monitored data is corrupt.";
+              << "; the modal decomposition guarantees this identity, so "
+                 "the monitored data is corrupt.";
       throw std::runtime_error(message.str());
     }
     if (worst > BIORTHOGONALITY_WARNING)
@@ -556,6 +552,95 @@ namespace
       std::cout << "Warning: transform biorthogonality residual reaches "
                 << worst << "\n";
     }
+  }
+
+  /**
+   * @brief The modal-treatment fitting targets per the Propagation
+   *        contract, assembled without any matrix inversion.
+   *
+   * Convention note: the monitored transforms satisfy the adjoint
+   * pairing Ti^H Tv = I enforced by the Gamma element, while the
+   * physical current transformation of a reciprocal line follows the
+   * transpose pairing Ti = Tv^-T, from Y'Z' = (Z'Y')^T with symmetric
+   * per-unit-length matrices. The correct current-form factors are
+   * therefore rearrangements of the monitored data:
+   *
+   *   Gout = Tv^-T = conj(monitored Ti),
+   *   Gin  = diag(Hmps) Tv^T.
+   *
+   * Gauge note: the monitored transforms arrive in the modal
+   * decomposition's gauge, exact and continuous per sample, and are
+   * consumed exactly as monitored: no per-sample rephasing happens
+   * here.
+   */
+  void buildPropagationFactors(const ResponseT& tv,
+                               const ResponseT& ti,
+                               const ResponseT& hmps,
+                               ResponseT&       gin,
+                               ResponseT&       gout)
+  {
+    const auto k            = tv.rows;
+    const auto sample_count = tv.omega.size();
+
+    gin.rows  = k;
+    gin.cols  = k;
+    gin.omega = tv.omega;
+    gin.response.assign(tv.response.size(), {});
+    gout = gin;
+
+    for (size_t m = 0; m < sample_count; ++m)
+    {
+      for (index_type row = 0; row < k; ++row)
+      {
+        const ComplexT mode = hmps(m, row, 0);
+        for (index_type col = 0; col < k; ++col)
+        {
+          gin(m, row, col)  = mode * tv(m, col, row);
+          gout(m, row, col) = std::conj(ti(m, row, col));
+        }
+      }
+    }
+  }
+
+  /**
+   * @brief The phase-treatment fitting target: the phase-domain
+   *        propagation matrix P = conj(Ti) diag(H) Tv^T per sample,
+   *        assembled without any matrix inversion.
+   *
+   * The eigenvector gauge cancels identically in the product, so the
+   * target carries no per-frequency phase convention, no structural
+   * zeros, and preserves the inter-mode cancellation the factor split
+   * cannot.
+   */
+  ResponseT buildPhaseMatrix(const ResponseT& tv,
+                             const ResponseT& ti,
+                             const ResponseT& h)
+  {
+    const auto k            = tv.rows;
+    const auto sample_count = tv.omega.size();
+
+    ResponseT phase;
+    phase.rows  = k;
+    phase.cols  = k;
+    phase.omega = tv.omega;
+    phase.response.assign(tv.response.size(), {});
+
+    for (size_t m = 0; m < sample_count; ++m)
+    {
+      for (index_type row = 0; row < k; ++row)
+      {
+        for (index_type col = 0; col < k; ++col)
+        {
+          ComplexT entry{0.0, 0.0};
+          for (index_type i = 0; i < k; ++i)
+          {
+            entry += std::conj(ti(m, row, i)) * h(m, i, 0) * tv(m, col, i);
+          }
+          phase(m, row, col) = entry;
+        }
+      }
+    }
+    return phase;
   }
 
   void writeJson(const fs::path& file_path, const nlohmann::json& j)
@@ -610,6 +695,103 @@ namespace
     return status == 2 ? 2 : 0;
   }
 
+  /**
+   * @brief The modal treatment: per-mode minimum delays, the backwound
+   *        factor pair, one fit per factor, and the Propagation
+   *        contract with submodel keys input, delays, output.
+   */
+  int fitModalPropagation(const ResponseT& tv,
+                          const ResponseT& ti,
+                          const ResponseT& h,
+                          const ResponseT& tau,
+                          const Settings&  settings,
+                          nlohmann::json&  propagation)
+  {
+    // Per-mode delays and the minimum-phase shift of the propagation
+    // function; tau_m = min over omega of tau_m(omega).
+    const auto delays =
+        GridKit::Optimization::minimumDelay<scalar_type, index_type>(tau);
+    auto hmps = h;
+    GridKit::Optimization::applyDelayShift<scalar_type, index_type>(hmps,
+                                                                    delays);
+
+    ResponseT gin;
+    ResponseT gout;
+    buildPropagationFactors(tv, ti, hmps, gin, gout);
+
+    ModelT    gin_model;
+    const int gin_status = fitTarget(gin,
+                                     settings.h,
+                                     settings.restarts,
+                                     settings.refine,
+                                     "Gin",
+                                     gin_model);
+    if (gin_status < 0)
+    {
+      return gin_status;
+    }
+
+    ModelT    gout_model;
+    const int gout_status = fitTarget(gout,
+                                      settings.h,
+                                      settings.restarts,
+                                      settings.refine,
+                                      "Gout",
+                                      gout_model);
+    if (gout_status < 0)
+    {
+      return gout_status;
+    }
+
+    propagation["domain"] = "modal";
+    propagation["K"]      = tv.rows;
+    propagation["input"]  = modelToJson(gin_model);
+    // The delay bank is a Delay submodel, so its coefficients follow
+    // that operator's documented parameter set.
+    propagation["delays"] = {{"M", tv.rows}, {"tau", delays}};
+    propagation["output"] = modelToJson(gout_model);
+    return std::max(gin_status, gout_status);
+  }
+
+  /**
+   * @brief The phase treatment: one shared delay tau = min over the
+   *        modal delays, the gauge-invariant phase-domain matrix
+   *        P = conj(Ti) diag(H) Tv^T backwound by tau, one matrix fit.
+   */
+  int fitPhasePropagation(const ResponseT& tv,
+                          const ResponseT& ti,
+                          const ResponseT& h,
+                          const ResponseT& tau,
+                          const Settings&  settings,
+                          nlohmann::json&  propagation)
+  {
+    const auto delays =
+        GridKit::Optimization::minimumDelay<scalar_type, index_type>(tau);
+    const double shared = *std::min_element(delays.begin(), delays.end());
+
+    auto phase = buildPhaseMatrix(tv, ti, h);
+    GridKit::Optimization::applyDelayShift<scalar_type, index_type>(phase,
+                                                                    shared);
+
+    ModelT    h_model;
+    const int h_status = fitTarget(phase,
+                                   settings.h,
+                                   settings.restarts,
+                                   settings.refine,
+                                   "H",
+                                   h_model);
+    if (h_status < 0)
+    {
+      return h_status;
+    }
+
+    propagation["domain"] = "phase";
+    propagation["K"]      = tv.rows;
+    propagation["H"]      = modelToJson(h_model);
+    propagation["delay"]  = {{"tau", shared}};
+    return h_status;
+  }
+
   int runUniversalLineModel(const fs::path& line_file,
                             const Settings& settings)
   {
@@ -642,21 +824,12 @@ namespace
     const auto k     = conductorCount(table);
 
     const auto yc  = gatherMatrix(table, "Overhead_Yc", k);
-    auto       h   = gatherModes(table, "Overhead_H", k);
+    const auto h   = gatherModes(table, "Overhead_H", k);
     const auto tv  = gatherMatrix(table, "Overhead_Tv", k);
     const auto ti  = gatherMatrix(table, "Overhead_Ti", k);
     const auto tau = gatherDelays(table, k);
 
-    // Modal delays and the minimum-phase shift of the propagation
-    // function; tau = min over omega of tau(omega) per mode.
-    const auto delays =
-        GridKit::Optimization::minimumDelay<scalar_type, index_type>(tau);
-    GridKit::Optimization::applyDelayShift<scalar_type, index_type>(h,
-                                                                    delays);
-
-    ResponseT gin;
-    ResponseT gout;
-    buildPropagationFactors(tv, ti, h, gin, gout);
+    validateTransforms(tv, ti);
 
     ModelT    yc_model;
     const int yc_status =
@@ -666,20 +839,14 @@ namespace
       return yc_status;
     }
 
-    ModelT    gin_model;
-    const int gin_status =
-        fitTarget(gin, settings.h, settings.restarts, settings.refine, "Gin", gin_model);
-    if (gin_status < 0)
+    nlohmann::json propagation;
+    const int      h_status =
+        settings.h_domain == HDomain::MODAL
+                 ? fitModalPropagation(tv, ti, h, tau, settings, propagation)
+                 : fitPhasePropagation(tv, ti, h, tau, settings, propagation);
+    if (h_status < 0)
     {
-      return gin_status;
-    }
-
-    ModelT    gout_model;
-    const int gout_status =
-        fitTarget(gout, settings.h, settings.restarts, settings.refine, "Gout", gout_model);
-    if (gout_status < 0)
-    {
-      return gout_status;
+      return h_status;
     }
 
     GridKit::Optimization::PassivityReport<scalar_type, index_type> report;
@@ -732,19 +899,12 @@ namespace
     yc_json["passivity"]         = passivity_json;
     writeJson(settings.output / "yc.model.json", yc_json);
 
-    nlohmann::json propagation;
-    propagation["K"]      = k;
-    propagation["input"]  = modelToJson(gin_model);
-    // The delay bank is a Delay submodel, so its coefficients follow
-    // that operator's documented parameter set.
-    propagation["delays"] = {{"M", k}, {"tau", delays}};
-    propagation["output"] = modelToJson(gout_model);
     writeJson(settings.output / "propagation.model.json", propagation);
 
     // Zero only when every error target was met and the Yc fit is
     // passive: 2 flags a missed error target, 3 a nonpassive Yc fit
     // whose targets were met.
-    const int fit_status = std::max({yc_status, gin_status, gout_status});
+    const int fit_status = std::max(yc_status, h_status);
     if (fit_status == 0 && !report.passive)
     {
       return 3;

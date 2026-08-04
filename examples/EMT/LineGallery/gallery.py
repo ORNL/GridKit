@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Sweep and fit every catalog line, then plot responses and fit quality.
+"""Sweep and fit every gallery line, producing the complete plot set.
 
-For each line in ../Lines the gallery runs the FrequencyResponse
-application on the committed solver specification, renders a pre-fitting
-response overview (Yc, Zc, gamma as alpha and beta, tau, H), runs the
-UniversalLineModel application to fit the line, renders the Yc fit
-accuracy figure, and collects pole counts and error statistics into
-output/stats.json and output/stats.md.
+For each line with a committed solver specification the gallery runs the
+FrequencyResponse application, renders the pre-fitting response overview
+(Yc, Zc, gamma as alpha and beta, tau, H), runs the UniversalLineModel
+application, renders the Yc fit accuracy figure, the modal factor element
+figures, the sweep-vs-fit diagnostic, and the composed propagation
+comparison, and collects pole counts and error statistics into
+output/stats.json and output/stats.md. Every artifact for a line lands in
+output/<line>/.
 """
 
 from __future__ import annotations
@@ -25,24 +27,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-OUTPUT_DIR = HERE / "output"
-BUILD = HERE.parents[2] / "build"
-DEFAULT_SWEEP_APP = BUILD / "application" / "EMT" / "FrequencyResponse" / "FrequencyResponse"
-DEFAULT_ULM_APP = BUILD / "application" / "EMT" / "UniversalLineModel" / "UniversalLineModel"
-
-LINES = [
-    "69kv-wood-pole",
-    "138kv-delta",
-    "345kv-horizontal",
-    "500kv-double-circuit",
-    "765kv-horizontal",
-]
-
-# The propagation factor target reflects what factor-based fitting
-# supports for untransposed lines with nearly degenerate aerial modes.
-ULM_ARGS = ["--h-target", "0.05"]
-ULM_LINE_ARGS = {"500kv-double-circuit": ["--yc-max-poles", "16"]}
+import plot_factors
+import plot_propagation_fit
+import sweep_vs_fit
+from common import (HERE, OUTPUT_DIR, SWEEP_APP, ULM_APP, gallery_lines,
+                    line_output_dir, run_ulm)
 
 FIT_LINE = re.compile(
     r"^(?P<label>\w+): VectorFitting: .*rel rms (?P<rms>[0-9.e+-]+), "
@@ -52,9 +41,9 @@ FIT_LINE = re.compile(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--sweep-app", type=Path, default=DEFAULT_SWEEP_APP)
-    parser.add_argument("--ulm-app", type=Path, default=DEFAULT_ULM_APP)
-    parser.add_argument("--lines", nargs="*", default=LINES)
+    parser.add_argument("--sweep-app", type=Path, default=SWEEP_APP)
+    parser.add_argument("--ulm-app", type=Path, default=ULM_APP)
+    parser.add_argument("--lines", nargs="*", default=gallery_lines())
     return parser.parse_args()
 
 
@@ -218,16 +207,9 @@ def write_ycfit_figure(name: str, omega, k, yc_samples, model_file: Path, plot_f
     return rel_rms
 
 
-def line_model_file(name: str) -> Path:
-    """Catalog lines live in ../Lines; gallery-only variants live here."""
-    local = HERE / f"{name}.line.json"
-    return local if local.exists() else HERE.parent / "Lines" / f"{name}.line.json"
-
-
 def run_line(name: str, args: argparse.Namespace) -> dict:
     print(f"=== {name} ===")
-    line_dir = OUTPUT_DIR / name
-    line_dir.mkdir(parents=True, exist_ok=True)
+    line_dir = line_output_dir(name)
     subprocess.run(
         [str(args.sweep_app), f"{name}.solver.json"],
         check=True,
@@ -237,23 +219,7 @@ def run_line(name: str, args: argparse.Namespace) -> dict:
     omega, k, data = read_response(line_dir / "overview.csv")
     write_responses_figure(name, omega, k, data, line_dir / "overview.png")
 
-    model_dir = line_dir
-    command = [
-        str(args.ulm_app),
-        str(line_model_file(name)),
-        "-o",
-        str(model_dir),
-        *ULM_ARGS,
-        *ULM_LINE_ARGS.get(name, []),
-    ]
-    result = subprocess.run(command, check=False, capture_output=True, text=True)
-    # Exit codes: 0 all targets met and passive, 2 a target missed,
-    # 3 targets met but nonpassive. Anything else is a hard failure.
-    if result.returncode not in (0, 2, 3) or "failed" in result.stdout + result.stderr:
-        raise RuntimeError(
-            f"UniversalLineModel failed for {name} "
-            f"(exit {result.returncode}):\n{result.stdout}\n{result.stderr}"
-        )
+    _, result = run_ulm(name, ulm_app=args.ulm_app)
 
     fits = {}
     for line in result.stdout.splitlines():
@@ -265,22 +231,32 @@ def run_line(name: str, args: argparse.Namespace) -> dict:
                 "worst_channel_rel_rms": float(match.group("worst")),
             }
     # The passivity verdict travels inside the artifact itself.
-    yc_model = json.loads((model_dir / "yc.model.json").read_text())
+    yc_model = json.loads((line_dir / "yc.model.json").read_text())
     passive = bool(yc_model.get("passivity", {}).get("passive", False))
 
     yc_rel_rms = write_ycfit_figure(
-        name, omega, k, data["Yc"], model_dir / "yc.model.json",
-        model_dir / "ycfit.png",
+        name, omega, k, data["Yc"], line_dir / "yc.model.json",
+        line_dir / "ycfit.png",
     )
 
-    propagation = json.loads((model_dir / "propagation.model.json").read_text())
+    # The rest of the per-line plot set: modal factor elements, the
+    # sweep-vs-fit diagnostic, and the composed propagation comparison.
+    plot_factors.run(name, args.sweep_app)
+    sweep_vs_fit.run(name, args.sweep_app)
+    composed_rel_rms = plot_propagation_fit.render(name)
+
+    propagation = json.loads((line_dir / "propagation.model.json").read_text())
+    delays = (propagation["delays"]["tau"]
+              if propagation["domain"] == "modal"
+              else [propagation["delay"]["tau"]])
     return {
         "line": name,
         "conductors": k,
         "targets_met": result.returncode in (0, 3),
         "yc_passive": passive,
         "yc_rel_rms_check": yc_rel_rms,
-        "delays_us": [1.0e6 * tau for tau in propagation["delays"]["tau"]],
+        "composed_rel_rms": composed_rel_rms,
+        "delays_us": [1.0e6 * tau for tau in delays],
         "fits": fits,
     }
 
@@ -291,10 +267,10 @@ def write_stats(records: list[dict]) -> None:
     lines = [
         "# Line gallery fit statistics",
         "",
-        "| Line | K | Yc poles | Yc rel RMS | Gin poles | Gin rel RMS "
-        "| Gout poles | Gout rel RMS | Targets met | Yc passive |",
-        "| ---- | - | -------- | ---------- | --------- | ----------- "
-        "| ---------- | ------------ | ----------- | ---------- |",
+        "| Line | K | Yc poles | Yc rel RMS | H poles | H rel RMS "
+        "| Composed rel RMS | Targets met | Yc passive |",
+        "| ---- | - | -------- | ---------- | ------- | --------- "
+        "| ---------------- | ----------- | ---------- |",
     ]
     for r in records:
         fits = r["fits"]
@@ -310,14 +286,14 @@ def write_stats(records: list[dict]) -> None:
         lines.append(
             f"| {r['line']} | {r['conductors']} "
             f"| {cell('Yc', 'poles')} | {cell('Yc', 'rms')} "
-            f"| {cell('Gin', 'poles')} | {cell('Gin', 'rms')} "
-            f"| {cell('Gout', 'poles')} | {cell('Gout', 'rms')} "
+            f"| {cell('H', 'poles')} | {cell('H', 'rms')} "
+            f"| {r['composed_rel_rms']:.2e} "
             f"| {'yes' if r['targets_met'] else 'no'} "
             f"| {'yes' if r['yc_passive'] else 'no'} |"
         )
     lines += [
         "",
-        "Modal delays [us]: "
+        "Delays [us]: "
         + "; ".join(
             f"{r['line']}: " + ", ".join(f"{tau:.2f}" for tau in r["delays_us"])
             for r in records

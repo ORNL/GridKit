@@ -1,0 +1,18 @@
+{
+    "model": "/home/lukel/GridKit/examples/EMT/LineGallery/765kv-horizontal-staggered.line.json",
+    "frequency": {
+        "start": 10.0,
+        "stop": 100000000.0,
+        "points": 401,
+        "scale": "log"
+    },
+    "output": {
+        "file": "factors.csv",
+        "variables": [
+            "Tv",
+            "Ti",
+            "H",
+            "Tau"
+        ]
+    }
+}

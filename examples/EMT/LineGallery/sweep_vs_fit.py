@@ -25,22 +25,15 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from gallery import line_model_file
-
-HERE = Path(__file__).resolve().parent
-OUTPUT_DIR = HERE / "output"
-BUILD = HERE.parents[2] / "build"
-DEFAULT_SWEEP_APP = BUILD / "application" / "EMT" / "FrequencyResponse" / "FrequencyResponse"
-DEFAULT_FIT_APP = BUILD / "application" / "Fitting" / "VectorFitting"
-
-FREQUENCY = {"start": 10.0, "stop": 1.0e8, "points": 401, "scale": "log"}
+from common import (FIT_APP, FREQUENCY, HERE, SWEEP_APP, line_model_file,
+                    line_output_dir)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--line", default="345kv-horizontal")
-    parser.add_argument("--sweep-app", type=Path, default=DEFAULT_SWEEP_APP)
-    parser.add_argument("--fit-app", type=Path, default=DEFAULT_FIT_APP)
+    parser.add_argument("--sweep-app", type=Path, default=SWEEP_APP)
+    parser.add_argument("--fit-app", type=Path, default=FIT_APP)
     return parser.parse_args()
 
 
@@ -204,10 +197,10 @@ def panel_pair(axes_row, omega, data_curves, fit_curves, title, ylabel,
         left.legend(fontsize=7, ncol=2)
 
 
-def main() -> None:
-    args = parse_args()
-    line_dir = OUTPUT_DIR / args.line
-    line_dir.mkdir(parents=True, exist_ok=True)
+def run(name: str, sweep_app: Path = SWEEP_APP,
+        fit_app: Path = FIT_APP) -> None:
+    args = argparse.Namespace(line=name, sweep_app=sweep_app, fit_app=fit_app)
+    line_dir = line_output_dir(args.line)
 
     sweep_csv = run_sweep(args.line, line_dir, args.sweep_app)
     omega, n, k, R, L, G, C, alpha, beta = read_sweep(sweep_csv)
@@ -279,6 +272,11 @@ def main() -> None:
     plot_file = line_dir / "sweep_vs_fit.png"
     fig.savefig(plot_file, dpi=130)
     print(f"wrote {plot_file}")
+
+
+def main() -> None:
+    args = parse_args()
+    run(args.line, args.sweep_app, args.fit_app)
 
 
 if __name__ == "__main__":

@@ -74,6 +74,32 @@ namespace GridKit
       }
     }
 
+    /**
+     * @brief Shift every channel to minimum phase with one shared
+     *        delay, removing the bulk transport delay of the whole
+     *        response before fitting.
+     */
+    template <typename scalar_type, typename index_type>
+    void applyDelayShift(SampledResponse<scalar_type, index_type>&          samples,
+                         typename GridKit::ScalarTraits<scalar_type>::RealT tau)
+    {
+      using RealT    = typename GridKit::ScalarTraits<scalar_type>::RealT;
+      using ComplexT = std::complex<RealT>;
+
+      const auto channels     = static_cast<size_t>(samples.rows) * static_cast<size_t>(samples.cols);
+      const auto sample_count = samples.omega.size();
+
+      for (size_t m = 0; m < sample_count; ++m)
+      {
+        const RealT    angle = samples.omega[m] * tau;
+        const ComplexT shift{std::cos(angle), std::sin(angle)};
+        for (size_t ch = 0; ch < channels; ++ch)
+        {
+          samples.response[m * channels + ch] *= shift;
+        }
+      }
+    }
+
     template std::vector<double>
     minimumDelay<double, long int>(const SampledResponse<double, long int>&);
     template std::vector<double>
@@ -85,5 +111,11 @@ namespace GridKit
     template void
     applyDelayShift<double, size_t>(SampledResponse<double, size_t>&,
                                     const std::vector<double>&);
+
+    template void
+    applyDelayShift<double, long int>(SampledResponse<double, long int>&,
+                                      double);
+    template void
+    applyDelayShift<double, size_t>(SampledResponse<double, size_t>&, double);
   } // namespace Optimization
 } // namespace GridKit

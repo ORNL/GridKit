@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Plot every element of the propagation fitting targets Gin and Gout.
+"""Plot every element of the modal propagation fitting targets Gin, Gout.
 
-Reproduces the UniversalLineModel construction exactly from a sweep that
-monitors Tv, Ti, H, and Tau: per mode the delay is the minimum of the
+Reproduces the UniversalLineModel modal construction exactly from a sweep
+that monitors Tv, Ti, H, and Tau: per mode the delay is the minimum of the
 monitored tau trace, the backwound propagation is
 hmps_m = H_m exp(+j omega tau_m), and the factors are
 
@@ -29,20 +29,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from gallery import line_model_file
-
-HERE = Path(__file__).resolve().parent
-OUTPUT_DIR = HERE / "output"
-BUILD = HERE.parents[2] / "build"
-DEFAULT_SWEEP_APP = BUILD / "application" / "EMT" / "FrequencyResponse" / "FrequencyResponse"
-
-FREQUENCY = {"start": 10.0, "stop": 1.0e8, "points": 401, "scale": "log"}
+from common import FREQUENCY, HERE, SWEEP_APP, line_model_file, line_output_dir
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--line", default="345kv-horizontal")
-    parser.add_argument("--sweep-app", type=Path, default=DEFAULT_SWEEP_APP)
+    parser.add_argument("--sweep-app", type=Path, default=SWEEP_APP)
     return parser.parse_args()
 
 
@@ -118,7 +111,7 @@ def factor_figure(name: str, omega, factor, title: str, path: Path) -> None:
         for j in range(k):
             entry = factor[:, i, j]
             color = colors[i * k + j]
-            label = f"({i},{j})"
+            label = f"({i},{j})" if k <= 3 else None
             axes[0].plot(omega, np.abs(entry), color=color, lw=1.1,
                          label=label)
             axes[1].plot(omega, np.degrees(np.unwrap(np.angle(entry))),
@@ -136,7 +129,8 @@ def factor_figure(name: str, omega, factor, title: str, path: Path) -> None:
     for ax in axes:
         ax.set_xscale("log")
         ax.grid(True, which="both", alpha=0.25)
-    axes[0].legend(fontsize=8, ncol=3)
+    if k <= 3:
+        axes[0].legend(fontsize=8, ncol=3)
     axes[-1].set_xlabel("omega [rad/s]")
     fig.suptitle(f"{name}: {title}", fontsize=13)
     fig.tight_layout(rect=(0, 0, 1, 0.985))
@@ -145,23 +139,25 @@ def factor_figure(name: str, omega, factor, title: str, path: Path) -> None:
     print(f"wrote {path}")
 
 
-def main() -> None:
-    args = parse_args()
-    line_dir = OUTPUT_DIR / args.line
-    line_dir.mkdir(parents=True, exist_ok=True)
-
-    factors_csv = run_sweep(args.line, line_dir, args.sweep_app)
+def run(name: str, sweep_app: Path = SWEEP_APP) -> None:
+    line_dir = line_output_dir(name)
+    factors_csv = run_sweep(name, line_dir, sweep_app)
     omega, k, tv, ti, h, tau = read_factors(factors_csv)
     gin, gout, delays = build_targets(omega, k, tv, ti, h, tau)
-    print(f"{args.line}: {len(omega)} samples, {k} modes, "
+    print(f"{name}: {len(omega)} samples, {k} modes, "
           f"delays [us] {1e6 * delays}")
 
-    factor_figure(args.line, omega, gin,
-                  "Gin = diag(Hmps) Tv^T (fitter input)",
+    factor_figure(name, omega, gin,
+                  "Gin = diag(Hmps) Tv^T (modal fitter input)",
                   line_dir / "gin.png")
-    factor_figure(args.line, omega, gout,
-                  "Gout = conj(Ti) (fitter input)",
+    factor_figure(name, omega, gout,
+                  "Gout = conj(Ti) (modal fitter input)",
                   line_dir / "gout.png")
+
+
+def main() -> None:
+    args = parse_args()
+    run(args.line, args.sweep_app)
 
 
 if __name__ == "__main__":

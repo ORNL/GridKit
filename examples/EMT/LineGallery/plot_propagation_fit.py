@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """Compare the true propagation function against its fitted approximation.
 
-Runs the UniversalLineModel application for one gallery line (or all of
-them with --all), assembles the model-free reference
+Assembles the model-free reference
 
     P_ref(j omega) = conj(Ti) diag(H) Tv^T
 
-from the sweep monitors, and composes the fitted approximation
+from the UniversalLineModel sweep monitors and composes the fitted
+approximation from propagation.model.json according to its domain:
 
-    P_fit(j omega) = Gout_fit diag(exp(-j omega tau)) Gin_fit
+    modal: P_fit = Gout_fit diag(exp(-j omega tau_m)) Gin_fit
+    phase: P_fit = H_fit exp(-j omega tau)
 
-from propagation.model.json. The composition is gauge invariant, so the
-comparison shows real fitting error only. Two figures land in
-output/<line>/: element magnitudes and element phases, each with the
-actual response on the left and the approximation on the right.
+The composition is gauge invariant, so the comparison shows real fitting
+error only. Two figures land in output/<line>/: element magnitudes and
+element phases, each with the actual response on the left and the
+approximation on the right.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 from pathlib import Path
 
 import matplotlib
@@ -29,19 +29,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from gallery import ULM_ARGS, ULM_LINE_ARGS, line_model_file
+from common import OUTPUT_DIR, ULM_APP, gallery_lines, run_ulm
 from plot_factors import read_factors
 from sweep_vs_fit import eval_model
-
-HERE = Path(__file__).resolve().parent
-OUTPUT_DIR = HERE / "output"
-BUILD = HERE.parents[2] / "build"
-DEFAULT_ULM_APP = BUILD / "application" / "EMT" / "UniversalLineModel" / "UniversalLineModel"
-
-
-def gallery_lines() -> list[str]:
-    return sorted(spec.name.replace(".solver.json", "")
-                  for spec in HERE.glob("*.solver.json"))
 
 
 def parse_args() -> argparse.Namespace:
@@ -49,44 +39,32 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--line", default="345kv-horizontal")
     parser.add_argument("--all", action="store_true",
                         help="run every line with a gallery solver spec")
-    parser.add_argument("--ulm-app", type=Path, default=DEFAULT_ULM_APP)
+    parser.add_argument("--h-domain", default="phase",
+                        choices=("modal", "phase"))
+    parser.add_argument("--ulm-app", type=Path, default=ULM_APP)
     return parser.parse_args()
 
 
-def run_ulm(name: str, ulm_app: Path) -> Path:
-    line_dir = OUTPUT_DIR / name
-    command = [
-        str(ulm_app),
-        str(line_model_file(name)),
-        "-o",
-        str(line_dir),
-        *ULM_ARGS,
-        *ULM_LINE_ARGS.get(name, []),
-    ]
-    result = subprocess.run(command, capture_output=True, text=True, cwd=HERE)
-    for line in result.stdout.splitlines():
-        if "VectorFitting:" in line:
-            print(line.strip())
-    # Exit codes: 0 all targets met and passive, 2 a target missed,
-    # 3 targets met but nonpassive. Anything else is a hard failure.
-    if result.returncode not in (0, 2, 3):
-        raise RuntimeError(
-            f"UniversalLineModel failed ({result.returncode}):\n"
-            f"{result.stdout}\n{result.stderr}")
-    return line_dir
-
-
-def compose(omega, k, gout, tau, gin):
-    """P[m] = Gout[m] diag(exp(-j omega[m] tau)) Gin[m]."""
-    out = np.zeros((len(omega), k, k), complex)
-    for m in range(len(omega)):
-        delay = np.exp(-1j * omega[m] * tau)
-        out[m] = gout[m] @ np.diag(delay) @ gin[m]
-    return out
+def compose_fit(propagation: dict, omega: np.ndarray, k: int) -> np.ndarray:
+    """The fitted propagation matrix per sample, by artifact domain."""
+    domain = propagation["domain"]
+    if domain == "modal":
+        tau = np.array(propagation["delays"]["tau"])
+        gin = eval_model(propagation["input"], omega).reshape(len(omega), k, k)
+        gout = eval_model(propagation["output"], omega).reshape(len(omega), k, k)
+        out = np.zeros((len(omega), k, k), complex)
+        for m in range(len(omega)):
+            out[m] = gout[m] @ np.diag(np.exp(-1j * omega[m] * tau)) @ gin[m]
+        return out
+    if domain == "phase":
+        tau = propagation["delay"]["tau"]
+        h = eval_model(propagation["H"], omega).reshape(len(omega), k, k)
+        return h * np.exp(-1j * omega * tau)[:, None, None]
+    raise ValueError(f"unknown propagation domain: {domain}")
 
 
 def side_by_side(name, omega, reference, fitted, transform, ylabel, title,
-                 path, log_y):
+                 path, log_y, suptitle="propagation function P = Gout diag(H) Gin"):
     k = reference.shape[1]
     fig, axes = plt.subplots(1, 2, figsize=(13, 6), sharex=True, sharey=True)
     colors = plt.cm.viridis(np.linspace(0.0, 0.85, k * k))
@@ -116,44 +94,70 @@ def side_by_side(name, omega, reference, fitted, transform, ylabel, title,
     axes[1].annotate(f"composed rel rms {error:.2e}",
                      xy=(0.03, 0.03), xycoords="axes fraction", fontsize=9)
 
-    fig.suptitle(f"{name}: propagation function P = Gout diag(H) Gin",
-                 fontsize=13)
+    fig.suptitle(f"{name}: {suptitle}", fontsize=13)
     fig.tight_layout(rect=(0, 0, 1, 0.94))
     fig.savefig(path, dpi=130)
     plt.close(fig)
     print(f"wrote {path}")
 
 
-def run_line(name: str, ulm_app: Path) -> None:
-    print(f"=== {name} ===")
-    line_dir = run_ulm(name, ulm_app)
-    omega, k, tv, ti, h, _ = read_factors(line_dir / "response.csv")
+def render(name: str) -> float:
+    """Figures from the artifacts already in output/<line>/.
 
+    Returns the composed relative rms error of the approximation.
+    """
+    line_dir = OUTPUT_DIR / name
+    omega, k, tv, ti, h, _ = read_factors(line_dir / "response.csv")
     propagation = json.loads((line_dir / "propagation.model.json").read_text())
-    tau = np.array(propagation["delays"]["tau"])
-    gin_fit = eval_model(propagation["input"], omega).reshape(len(omega), k, k)
-    gout_fit = eval_model(propagation["output"], omega).reshape(len(omega), k, k)
 
     reference = np.zeros((len(omega), k, k), complex)
     for m in range(len(omega)):
         reference[m] = np.conj(ti[m]) @ np.diag(h[m]) @ tv[m].T
 
-    fitted = compose(omega, k, gout_fit, tau, gin_fit)
+    fitted = compose_fit(propagation, omega, k)
 
+    domain = propagation["domain"]
     side_by_side(name, omega, reference, fitted,
-                 np.abs, "|P entry|", "element magnitudes",
+                 np.abs, "|P entry|", f"element magnitudes ({domain})",
                  line_dir / "propagation_mag.png", log_y=True)
     side_by_side(name, omega, reference, fitted,
                  lambda entry: np.degrees(np.unwrap(np.angle(entry))),
-                 "unwrapped phase [deg]", "element phases",
+                 "unwrapped phase [deg]", f"element phases ({domain})",
                  line_dir / "propagation_phase.png", log_y=False)
+
+    if domain == "phase":
+        # The fitter's own view: the time-shifted target
+        # Hmps = P exp(+j omega tau) against the rational approximation,
+        # before the delay is reapplied.
+        tau = propagation["delay"]["tau"]
+        target = reference * np.exp(1j * omega * tau)[:, None, None]
+        approx = eval_model(propagation["H"], omega).reshape(len(omega), k, k)
+        suptitle = "time-shifted target Hmps = P exp(+s tau) vs rational fit"
+        side_by_side(name, omega, target, approx,
+                     np.abs, "|Hmps entry|", "element magnitudes",
+                     line_dir / "hmps_mag.png", log_y=True,
+                     suptitle=suptitle)
+        side_by_side(name, omega, target, approx,
+                     lambda entry: np.degrees(np.unwrap(np.angle(entry))),
+                     "unwrapped phase [deg]", "element phases",
+                     line_dir / "hmps_phase.png", log_y=False,
+                     suptitle=suptitle)
+
+    return float(np.sqrt(np.mean(np.abs(fitted - reference) ** 2)
+                         / max(np.mean(np.abs(reference) ** 2), 1e-30)))
+
+
+def run(name: str, h_domain: str = "phase",
+        ulm_app: Path = ULM_APP) -> float:
+    print(f"=== {name} ===")
+    run_ulm(name, h_domain=h_domain, ulm_app=ulm_app)
+    return render(name)
 
 
 def main() -> None:
     args = parse_args()
-    OUTPUT_DIR.mkdir(exist_ok=True)
     for name in gallery_lines() if args.all else [args.line]:
-        run_line(name, args.ulm_app)
+        run(name, args.h_domain, args.ulm_app)
 
 
 if __name__ == "__main__":
