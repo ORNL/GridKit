@@ -423,11 +423,11 @@ namespace GridKit
 
       /* 5 Gensal differential equations */
       static constexpr auto pi = std::numbers::pi_v<RealT>;
-      f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
-      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
-      f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + ksat));
-      f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
-      f[4] = psiqpp_dot - (ONE<RealT> / Tqopp_) * (-psiqpp - Xq2_ * iq);
+      f[0]                     = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
+      f[1]                     = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
+      f[2]                     = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + ksat));
+      f[3]                     = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
+      f[4]                     = psiqpp_dot - (ONE<RealT> / Tqopp_) * (-psiqpp - Xq2_ * iq);
 
       /* 9 Gensal algebraic equations */
       f[5]            = psidpp - (psidp * Xd4_ + Eqp * Xd5_);

@@ -304,7 +304,7 @@ namespace GridKit
 
     // r = 10
     rtemp.assign(8, 10);
-    ctemp = {3, 6, 8, 9, 10, 11, 12, 14};
+    ctemp   = {3, 6, 8, 9, 10, 11, 12, 14};
     valtemp = {mp_ * static_cast<RealT>(y_int_[6]),
                (Kiv_ * Kpc_) / Lf_,
                Kic_ / Lf_,

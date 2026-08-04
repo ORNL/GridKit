@@ -32,7 +32,7 @@ int main(int /* argc */, char const** /* argv */)
   double RN = 1.0e4;
 
   // DG Params
-  static constexpr auto pi = std::numbers::pi_v<double>;
+  static constexpr auto                                   pi = std::numbers::pi_v<double>;
   GridKit::DistributedGeneratorParameters<double, size_t> parms1;
   parms1.wb_  = 2.0 * pi * 50.0;
   parms1.wc_  = 31.41;
