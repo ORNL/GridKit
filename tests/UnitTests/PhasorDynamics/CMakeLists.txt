@@ -160,6 +160,13 @@ target_link_libraries(
   GridKit::phasor_dynamics_systemmodel_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_component_connection runComponentConnectionTests.cpp)
+target_link_libraries(
+  test_phasor_component_connection
+  GridKit::definitions
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::testing)
+
 add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
 add_test(NAME PhasorDynamicsBusFaultTest COMMAND test_phasor_bus_fault)
 add_test(NAME PhasorDynamicsBusToSignalAdapterTest COMMAND test_phasor_bustosignaladapter)
@@ -180,6 +187,7 @@ add_test(
   COMMAND test_phasor_system
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
+add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_component_connection)
 
 install(
   TARGETS test_phasor_bus
@@ -199,4 +207,5 @@ install(
           test_phasor_gen_classical
           test_phasor_system
           test_phasor_system_single_component
+          test_phasor_component_connection
   RUNTIME DESTINATION bin)
