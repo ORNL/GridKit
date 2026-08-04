@@ -1,10 +1,10 @@
 
-#define _USE_MATH_DEFINES
 #include "Generator2.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <numbers>
 
 #include <GridKit/Model/PowerFlow/Bus/BusSlack.hpp>
 
@@ -28,7 +28,7 @@ namespace GridKit
       Xdp_(0.5),
       Eqp_(0.93),
       omega_s_(1.0),
-      omega_b_(2.0 * 60.0 * M_PI),
+      omega_b_(2.0 * 60.0 * std::numbers::pi_v<RealT>),
       omega_up_(omega_s_ + 0.0002),
       omega_lo_(omega_s_ - 0.0002),
       theta_s_(1.0),
@@ -105,7 +105,7 @@ namespace GridKit
     const auto* param = param_.getData();
 
     f[0] = -yp[0] + omega_b_ * (y[1] - omega_s_);
-    f[1] = -yp[1] + omega_s_ / (2.0 * H_) * (param[0] - Eqp_ / Xdp_ * V() * sin(y[0] - theta()) - D_ * (y[1] - omega_s_));
+    f[1] = -yp[1] + omega_s_ / (2.0 * H_) * (param[0] - Eqp_ / Xdp_ * V() * std::sin(y[0] - theta()) - D_ * (y[1] - omega_s_));
     f_.setDataUpdated();
     return 0;
   }
@@ -155,7 +155,7 @@ namespace GridKit
     const auto* ypB = ypB_.getData();
     auto*       fB  = fB_.getData();
 
-    fB[0] = -ypB[0] + omega_s_ / (2.0 * H_) * Eqp_ / Xdp_ * V() * cos(y[0] - theta()) * yB[1];
+    fB[0] = -ypB[0] + omega_s_ / (2.0 * H_) * Eqp_ / Xdp_ * V() * std::cos(y[0] - theta()) * yB[1];
     fB[1] = -ypB[1] + omega_s_ / (2.0 * H_) * D_ * yB[1] - omega_b_ * yB[0] + frequencyPenaltyDer(y[1]);
     fB_.setDataUpdated();
     return 0;
@@ -191,7 +191,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator2<ScalarT, IdxT>::frequencyPenalty(ScalarT omega)
   {
-    return c_ * pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
+    return c_ * std::pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
   }
 
   /**
@@ -203,11 +203,11 @@ namespace GridKit
   {
     if (omega > omega_up_)
     {
-      return beta_ * c_ * pow(omega - omega_up_, beta_ - 1.0);
+      return beta_ * c_ * std::pow(omega - omega_up_, beta_ - 1.0);
     }
     else if (omega < omega_lo_)
     {
-      return beta_ * c_ * pow(omega - omega_lo_, beta_ - 1.0);
+      return beta_ * c_ * std::pow(omega - omega_lo_, beta_ - 1.0);
     }
     else
     {

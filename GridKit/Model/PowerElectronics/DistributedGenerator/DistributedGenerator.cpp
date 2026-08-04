@@ -217,11 +217,11 @@ namespace GridKit
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(1);
     valtemp = {
-        cos(delta),
-        -sin(delta),
+        std::cos(delta),
+        -std::sin(delta),
     };
     if (!refframe_)
-      valtemp.push_back(-sin(delta) * static_cast<RealT>(y_int_[10]) - cos(delta) * static_cast<RealT>(y_int_[11]));
+      valtemp.push_back(-std::sin(delta) * static_cast<RealT>(y_int_[10]) - std::cos(delta) * static_cast<RealT>(y_int_[11]));
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 2
@@ -233,11 +233,11 @@ namespace GridKit
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(2);
     valtemp = {
-        sin(delta),
-        cos(delta),
+        std::sin(delta),
+        std::cos(delta),
     };
     if (!refframe_)
-      valtemp.push_back(cos(delta) * static_cast<RealT>(y_int_[10]) - sin(delta) * static_cast<RealT>(y_int_[11]));
+      valtemp.push_back(std::cos(delta) * static_cast<RealT>(y_int_[10]) - std::sin(delta) * static_cast<RealT>(y_int_[11]));
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 0
@@ -366,8 +366,8 @@ namespace GridKit
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(13);
     valtemp = {
-        (1.0 / Lc_) * -cos(delta),
-        (1.0 / Lc_) * -sin(delta),
+        (1.0 / Lc_) * -std::cos(delta),
+        (1.0 / Lc_) * -std::sin(delta),
         -mp_ * static_cast<RealT>(y_int_[11]),
         1.0 / Lc_,
         -rLc_ / Lc_ - alpha_,
@@ -375,7 +375,7 @@ namespace GridKit
     };
     if (!refframe_)
     {
-      valtemp.push_back((1.0 / Lc_) * (sin(delta) * static_cast<RealT>(*y_ext_[1]) - cos(delta) * static_cast<RealT>(*y_ext_[2])));
+      valtemp.push_back((1.0 / Lc_) * (std::sin(delta) * static_cast<RealT>(*y_ext_[1]) - std::cos(delta) * static_cast<RealT>(*y_ext_[2])));
     }
     this->setJacValues(rtemp, ctemp, valtemp);
 
@@ -387,8 +387,8 @@ namespace GridKit
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(14);
     valtemp = {
-        (1.0 / Lc_) * sin(delta),
-        (1.0 / Lc_) * -cos(delta),
+        (1.0 / Lc_) * std::sin(delta),
+        (1.0 / Lc_) * -std::cos(delta),
         mp_ * static_cast<RealT>(y_int_[10]),
         1.0 / Lc_,
         -wb_ + mp_ * static_cast<RealT>(y_int_[0]),
@@ -396,7 +396,7 @@ namespace GridKit
     };
     if (!refframe_)
     {
-      valtemp.push_back((1.0 / Lc_) * (cos(delta) * static_cast<RealT>(*y_ext_[1]) + sin(delta) * static_cast<RealT>(*y_ext_[2])));
+      valtemp.push_back((1.0 / Lc_) * (std::cos(delta) * static_cast<RealT>(*y_ext_[1]) + std::sin(delta) * static_cast<RealT>(*y_ext_[2])));
     }
     this->setJacValues(rtemp, ctemp, valtemp);
 

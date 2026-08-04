@@ -1,10 +1,10 @@
-#define _USE_MATH_DEFINES
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <numbers>
 
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
@@ -32,8 +32,9 @@ int main(int /* argc */, char const** /* argv */)
   double RN = 1.0e4;
 
   // DG Params
+  static constexpr auto pi = std::numbers::pi_v<double>;
   GridKit::DistributedGeneratorParameters<double, size_t> parms1;
-  parms1.wb_  = 2.0 * M_PI * 50.0;
+  parms1.wb_  = 2.0 * pi * 50.0;
   parms1.wc_  = 31.41;
   parms1.mp_  = 9.4e-5;
   parms1.Vn_  = 380.0;
@@ -51,7 +52,7 @@ int main(int /* argc */, char const** /* argv */)
 
   GridKit::DistributedGeneratorParameters<double, size_t> parms2;
   // Parameters from MATLAB Microgrid code for first DG
-  parms2.wb_  = 2.0 * M_PI * 50.0;
+  parms2.wb_  = 2.0 * pi * 50.0;
   parms2.wc_  = 31.41;
   parms2.mp_  = 12.5e-5;
   parms2.Vn_  = 380.0;
@@ -69,20 +70,20 @@ int main(int /* argc */, char const** /* argv */)
 
   // Line params
   double rline1 = 0.23;
-  double Lline1 = 0.1 / (2.0 * M_PI * 50.0);
+  double Lline1 = 0.1 / (2.0 * pi * 50.0);
 
   double rline2 = 0.35;
-  double Lline2 = 0.58 / (2.0 * M_PI * 50.0);
+  double Lline2 = 0.58 / (2.0 * pi * 50.0);
 
   double rline3 = 0.23;
-  double Lline3 = 0.1 / (2.0 * M_PI * 50.0);
+  double Lline3 = 0.1 / (2.0 * pi * 50.0);
 
   // load parms
   double rload1 = 3.0;
-  double Lload1 = 2.0 / (2.0 * M_PI * 50.0);
+  double Lload1 = 2.0 / (2.0 * pi * 50.0);
 
   double rload2 = 2.0;
-  double Lload2 = 1.0 / (2.0 * M_PI * 50.0);
+  double Lload2 = 1.0 / (2.0 * pi * 50.0);
 
   using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
   SignalNode dg_signal;

@@ -148,7 +148,7 @@ namespace GridKit
         ScalarT y02 = y[0] * y[0];
         ScalarT y12 = y[1] * y[1];
 
-        f[0] = y02 / (y[1] * sqrt(std::pow(y[0] / y[1], 2) - 1));
+        f[0] = y02 / (y[1] * std::sqrt(std::pow(y[0] / y[1], 2) - 1));
         f[1] = y12 + 1 / (1 + y02) - (y02 / y12 - y02);
 
         f_.setDataUpdated();
