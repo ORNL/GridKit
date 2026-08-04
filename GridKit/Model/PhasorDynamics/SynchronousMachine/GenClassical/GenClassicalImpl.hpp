@@ -303,10 +303,11 @@ namespace GridKit
       const ScalarT vr = wb[0];
       const ScalarT vi = wb[1];
 
-      // GenClassical differential equations
       static constexpr auto pi = std::numbers::pi_v<RealT>;
-      f[0]                     = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
-      f[1]                     = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
+
+      // GenClassical differential equations
+      f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
+      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
 
       // GenClassical algebraic equations
       f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));
