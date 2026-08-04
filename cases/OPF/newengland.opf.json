@@ -1,0 +1,1388 @@
+{
+    "header": {
+        "format_version": 0,
+        "format_revision": 1,
+        "case_name": "IEEE New England Case",
+        "case_description": "Derived from the PhasorDynamics case with fictitious data where no dynamics source exists"
+    },
+    "params": {
+        "freq_base": 60.0,
+        "va_base": 100000000.0
+    },
+    "buses": [
+        {
+            "class": "Bus",
+            "id": "1",
+            "params": {
+                "number": 1,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "2",
+            "params": {
+                "number": 2,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "3",
+            "params": {
+                "number": 3,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "4",
+            "params": {
+                "number": 4,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "5",
+            "params": {
+                "number": 5,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "6",
+            "params": {
+                "number": 6,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "7",
+            "params": {
+                "number": 7,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "8",
+            "params": {
+                "number": 8,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "9",
+            "params": {
+                "number": 9,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "10",
+            "params": {
+                "number": 10,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "11",
+            "params": {
+                "number": 11,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "12",
+            "params": {
+                "number": 12,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "13",
+            "params": {
+                "number": 13,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "14",
+            "params": {
+                "number": 14,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "15",
+            "params": {
+                "number": 15,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "16",
+            "params": {
+                "number": 16,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "17",
+            "params": {
+                "number": 17,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "18",
+            "params": {
+                "number": 18,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "19",
+            "params": {
+                "number": 19,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "20",
+            "params": {
+                "number": 20,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "21",
+            "params": {
+                "number": 21,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "22",
+            "params": {
+                "number": 22,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "23",
+            "params": {
+                "number": 23,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "24",
+            "params": {
+                "number": 24,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "25",
+            "params": {
+                "number": 25,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "26",
+            "params": {
+                "number": 26,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "27",
+            "params": {
+                "number": 27,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "28",
+            "params": {
+                "number": 28,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "29",
+            "params": {
+                "number": 29,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "30",
+            "params": {
+                "number": 30,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "31",
+            "params": {
+                "number": 31,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "32",
+            "params": {
+                "number": 32,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "33",
+            "params": {
+                "number": 33,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "34",
+            "params": {
+                "number": 34,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "35",
+            "params": {
+                "number": 35,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "36",
+            "params": {
+                "number": 36,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "37",
+            "params": {
+                "number": 37,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "38",
+            "params": {
+                "number": 38,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "39",
+            "params": {
+                "number": 39,
+                "kv": 1.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        }
+    ],
+    "devices": [
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 1,
+                "to": 2
+            },
+            "id": "BR_1_2_1",
+            "params": {
+                "R": 0.0035,
+                "X": 0.0411,
+                "G": 0.0,
+                "B": 0.69870001
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 1,
+                "to": 39
+            },
+            "id": "BR_1_39_1",
+            "params": {
+                "R": 0.001,
+                "X": 0.025,
+                "G": 0.0,
+                "B": 0.75
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 2,
+                "to": 3
+            },
+            "id": "BR_2_3_1",
+            "params": {
+                "R": 0.0013,
+                "X": 0.0151,
+                "G": 0.0,
+                "B": 0.2572
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 2,
+                "to": 25
+            },
+            "id": "BR_2_25_1",
+            "params": {
+                "R": 0.007,
+                "X": 0.0086,
+                "G": 0.0,
+                "B": 0.146
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 2,
+                "to": 30
+            },
+            "id": "BR_2_30_1",
+            "params": {
+                "R": 1e-07,
+                "X": 0.0181,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 3,
+                "to": 4
+            },
+            "id": "BR_3_4_1",
+            "params": {
+                "R": 0.0013,
+                "X": 0.0213,
+                "G": 0.0,
+                "B": 0.22139999
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 3,
+                "to": 18
+            },
+            "id": "BR_3_18_1",
+            "params": {
+                "R": 0.0011,
+                "X": 0.0133,
+                "G": 0.0,
+                "B": 0.2138
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 4,
+                "to": 5
+            },
+            "id": "BR_4_5_1",
+            "params": {
+                "R": 0.0008,
+                "X": 0.0128,
+                "G": 0.0,
+                "B": 0.13420001
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 4,
+                "to": 14
+            },
+            "id": "BR_4_14_1",
+            "params": {
+                "R": 0.0008,
+                "X": 0.0129,
+                "G": 0.0,
+                "B": 0.1382
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 5,
+                "to": 6
+            },
+            "id": "BR_5_6_1",
+            "params": {
+                "R": 0.0002,
+                "X": 0.0026,
+                "G": 0.0,
+                "B": 0.0434
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 5,
+                "to": 8
+            },
+            "id": "BR_5_8_1",
+            "params": {
+                "R": 0.0008,
+                "X": 0.0112,
+                "G": 0.0,
+                "B": 0.1476
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 6,
+                "to": 7
+            },
+            "id": "BR_6_7_1",
+            "params": {
+                "R": 0.0006,
+                "X": 0.0092,
+                "G": 0.0,
+                "B": 0.113
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 6,
+                "to": 11
+            },
+            "id": "BR_6_11_1",
+            "params": {
+                "R": 0.0007,
+                "X": 0.0082,
+                "G": 0.0,
+                "B": 0.1389
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 31,
+                "to": 6
+            },
+            "id": "BR_31_6_1",
+            "params": {
+                "R": 1e-07,
+                "X": 0.025,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 7,
+                "to": 8
+            },
+            "id": "BR_7_8_1",
+            "params": {
+                "R": 0.0004,
+                "X": 0.0046,
+                "G": 0.0,
+                "B": 0.078
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 8,
+                "to": 9
+            },
+            "id": "BR_8_9_1",
+            "params": {
+                "R": 0.0023,
+                "X": 0.0363,
+                "G": 0.0,
+                "B": 0.3804
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 9,
+                "to": 39
+            },
+            "id": "BR_9_39_1",
+            "params": {
+                "R": 0.001,
+                "X": 0.025,
+                "G": 0.0,
+                "B": 1.20000005
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 10,
+                "to": 11
+            },
+            "id": "BR_10_11_1",
+            "params": {
+                "R": 0.0004,
+                "X": 0.0043,
+                "G": 0.0,
+                "B": 0.0729
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 10,
+                "to": 13
+            },
+            "id": "BR_10_13_1",
+            "params": {
+                "R": 0.0004,
+                "X": 0.0043,
+                "G": 0.0,
+                "B": 0.0729
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 10,
+                "to": 32
+            },
+            "id": "BR_10_32_1",
+            "params": {
+                "R": 1e-07,
+                "X": 0.02,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 12,
+                "to": 11
+            },
+            "id": "BR_12_11_1",
+            "params": {
+                "R": 0.0016,
+                "X": 0.0435,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 12,
+                "to": 13
+            },
+            "id": "BR_12_13_1",
+            "params": {
+                "R": 0.0016,
+                "X": 0.0435,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 13,
+                "to": 14
+            },
+            "id": "BR_13_14_1",
+            "params": {
+                "R": 0.0009,
+                "X": 0.0101,
+                "G": 0.0,
+                "B": 0.1723
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 14,
+                "to": 15
+            },
+            "id": "BR_14_15_1",
+            "params": {
+                "R": 0.0018,
+                "X": 0.0217,
+                "G": 0.0,
+                "B": 0.366
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 15,
+                "to": 16
+            },
+            "id": "BR_15_16_1",
+            "params": {
+                "R": 0.0009,
+                "X": 0.0094,
+                "G": 0.0,
+                "B": 0.171
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 16,
+                "to": 17
+            },
+            "id": "BR_16_17_1",
+            "params": {
+                "R": 0.0007,
+                "X": 0.0089,
+                "G": 0.0,
+                "B": 0.13420001
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 16,
+                "to": 19
+            },
+            "id": "BR_16_19_1",
+            "params": {
+                "R": 0.0016,
+                "X": 0.0195,
+                "G": 0.0,
+                "B": 0.30399999
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 16,
+                "to": 21
+            },
+            "id": "BR_16_21_1",
+            "params": {
+                "R": 0.0008,
+                "X": 0.0135,
+                "G": 0.0,
+                "B": 0.25479999
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 16,
+                "to": 24
+            },
+            "id": "BR_16_24_1",
+            "params": {
+                "R": 0.0003,
+                "X": 0.0059,
+                "G": 0.0,
+                "B": 0.068
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 17,
+                "to": 18
+            },
+            "id": "BR_17_18_1",
+            "params": {
+                "R": 0.0007,
+                "X": 0.0082,
+                "G": 0.0,
+                "B": 0.1319
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 17,
+                "to": 27
+            },
+            "id": "BR_17_27_1",
+            "params": {
+                "R": 0.0013,
+                "X": 0.0173,
+                "G": 0.0,
+                "B": 0.32159999
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 19,
+                "to": 20
+            },
+            "id": "BR_19_20_1",
+            "params": {
+                "R": 0.0007,
+                "X": 0.0138,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 19,
+                "to": 33
+            },
+            "id": "BR_19_33_1",
+            "params": {
+                "R": 0.0007,
+                "X": 0.0142,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 20,
+                "to": 34
+            },
+            "id": "BR_20_34_1",
+            "params": {
+                "R": 0.0009,
+                "X": 0.018,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 21,
+                "to": 22
+            },
+            "id": "BR_21_22_1",
+            "params": {
+                "R": 0.0008,
+                "X": 0.014,
+                "G": 0.0,
+                "B": 0.25650001
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 22,
+                "to": 23
+            },
+            "id": "BR_22_23_1",
+            "params": {
+                "R": 0.0006,
+                "X": 0.0096,
+                "G": 0.0,
+                "B": 0.1846
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 22,
+                "to": 35
+            },
+            "id": "BR_22_35_1",
+            "params": {
+                "R": 1e-07,
+                "X": 0.0143,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 23,
+                "to": 24
+            },
+            "id": "BR_23_24_1",
+            "params": {
+                "R": 0.0022,
+                "X": 0.035,
+                "G": 0.0,
+                "B": 0.361
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 23,
+                "to": 36
+            },
+            "id": "BR_23_36_1",
+            "params": {
+                "R": 0.0005,
+                "X": 0.0272,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 25,
+                "to": 26
+            },
+            "id": "BR_25_26_1",
+            "params": {
+                "R": 0.0032,
+                "X": 0.0323,
+                "G": 0.0,
+                "B": 0.51300001
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 25,
+                "to": 37
+            },
+            "id": "BR_25_37_1",
+            "params": {
+                "R": 0.0006,
+                "X": 0.0232,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 26,
+                "to": 27
+            },
+            "id": "BR_26_27_1",
+            "params": {
+                "R": 0.0014,
+                "X": 0.0147,
+                "G": 0.0,
+                "B": 0.2396
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 26,
+                "to": 28
+            },
+            "id": "BR_26_28_1",
+            "params": {
+                "R": 0.0043,
+                "X": 0.0474,
+                "G": 0.0,
+                "B": 0.7802
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 26,
+                "to": 29
+            },
+            "id": "BR_26_29_1",
+            "params": {
+                "R": 0.0057,
+                "X": 0.0625,
+                "G": 0.0,
+                "B": 1.02900004
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 28,
+                "to": 29
+            },
+            "id": "BR_28_29_1",
+            "params": {
+                "R": 0.0014,
+                "X": 0.0151,
+                "G": 0.0,
+                "B": 0.249
+            }
+        },
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 29,
+                "to": 38
+            },
+            "id": "BR_29_38_1",
+            "params": {
+                "R": 0.0008,
+                "X": 0.0156,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 30
+            },
+            "id": "30_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 20.0,
+                "qmin": -1.0,
+                "qmax": 1.0,
+                "mva": 200.0,
+                "c0": 0.0,
+                "c1": 10.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 31
+            },
+            "id": "31_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 10.0,
+                "qmin": -0.5,
+                "qmax": 0.5,
+                "mva": 100.0,
+                "c0": 0.0,
+                "c1": 12.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 32
+            },
+            "id": "32_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 20.0,
+                "qmin": -1.0,
+                "qmax": 1.0,
+                "mva": 200.0,
+                "c0": 0.0,
+                "c1": 14.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 33
+            },
+            "id": "33_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 20.0,
+                "qmin": -1.0,
+                "qmax": 1.0,
+                "mva": 200.0,
+                "c0": 0.0,
+                "c1": 16.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 34
+            },
+            "id": "34_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 10.0,
+                "qmin": -0.5,
+                "qmax": 0.5,
+                "mva": 100.0,
+                "c0": 0.0,
+                "c1": 18.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 35
+            },
+            "id": "35_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 20.0,
+                "qmin": -1.0,
+                "qmax": 1.0,
+                "mva": 200.0,
+                "c0": 0.0,
+                "c1": 20.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 36
+            },
+            "id": "36_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 20.0,
+                "qmin": -1.0,
+                "qmax": 1.0,
+                "mva": 200.0,
+                "c0": 0.0,
+                "c1": 10.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 37
+            },
+            "id": "37_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 20.0,
+                "qmin": -1.0,
+                "qmax": 1.0,
+                "mva": 200.0,
+                "c0": 0.0,
+                "c1": 12.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 38
+            },
+            "id": "38_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 20.0,
+                "qmin": -1.0,
+                "qmax": 1.0,
+                "mva": 200.0,
+                "c0": 0.0,
+                "c1": 14.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 39
+            },
+            "id": "39_1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 200.0,
+                "qmin": -10.0,
+                "qmax": 10.0,
+                "mva": 2000.0,
+                "c0": 0.0,
+                "c1": 16.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 3
+            },
+            "id": "load_3_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 4
+            },
+            "id": "load_4_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 7
+            },
+            "id": "load_7_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 8
+            },
+            "id": "load_8_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 12
+            },
+            "id": "load_12_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 15
+            },
+            "id": "load_15_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 16
+            },
+            "id": "load_16_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 18
+            },
+            "id": "load_18_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 20
+            },
+            "id": "load_20_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 21
+            },
+            "id": "load_21_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 23
+            },
+            "id": "load_23_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 24
+            },
+            "id": "load_24_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 25
+            },
+            "id": "load_25_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 26
+            },
+            "id": "load_26_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 27
+            },
+            "id": "load_27_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 28
+            },
+            "id": "load_28_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 29
+            },
+            "id": "load_29_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 31
+            },
+            "id": "load_31_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 39
+            },
+            "id": "load_39_1",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 4
+            },
+            "id": "bus_shunt_4",
+            "params": {}
+        },
+        {
+            "class": "Load",
+            "buses": {
+                "bus": 5
+            },
+            "id": "bus_shunt_5",
+            "params": {}
+        }
+    ]
+}

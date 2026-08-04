@@ -1,0 +1,84 @@
+{
+    "header": {
+        "format_version": 0,
+        "format_revision": 1,
+        "case_name": "2-bus test case with governor and exciter",
+        "case_description": "Derived from the PhasorDynamics case with fictitious data where no dynamics source exists"
+    },
+    "params": {
+        "freq_base": 60.0,
+        "va_base": 100000000.0
+    },
+    "buses": [
+        {
+            "class": "Bus",
+            "id": "Bus 1",
+            "params": {
+                "number": 0,
+                "kv": 115.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        },
+        {
+            "class": "Bus",
+            "id": "Bus 2",
+            "params": {
+                "number": 1,
+                "kv": 115.0,
+                "vmin": 0.95,
+                "vmax": 1.05
+            }
+        }
+    ],
+    "devices": [
+        {
+            "class": "Branch",
+            "buses": {
+                "from": 0,
+                "to": 1
+            },
+            "id": "BR1",
+            "params": {
+                "R": 0.0,
+                "X": 0.1,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 0
+            },
+            "id": "DV1",
+            "params": {
+                "pmin": 0.0,
+                "pmax": 1.0,
+                "qmin": -0.5,
+                "qmax": 0.5,
+                "mva": 100.0,
+                "c0": 0.0,
+                "c1": 10.0,
+                "c2": 0.01
+            }
+        },
+        {
+            "class": "Generator",
+            "buses": {
+                "bus": 1
+            },
+            "id": "EQ1",
+            "params": {
+                "pmin": -10.0,
+                "pmax": 10.0,
+                "qmin": -10.0,
+                "qmax": 10.0,
+                "mva": 1000.0,
+                "c0": 0.0,
+                "c1": 25.0,
+                "c2": 0.0
+            }
+        }
+    ]
+}
