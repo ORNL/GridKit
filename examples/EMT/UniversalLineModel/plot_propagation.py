@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Validate the fitted propagation function against the sweep.
 
-The application fits the unwound matrix Hmin, so the propagation function
-it represents is
+The application fits one unwound matrix per mode, so the propagation
+function it represents is the modal sum
 
-    H(j omega) = Hmin(j omega) exp(-j omega tau)
+    H(j omega) = sum_m Hmin_m(j omega) exp(-j omega tau_m)
 
-with the one shared delay taken from the artifact. This script assembles
+with the per-mode delays taken from the artifact. This script assembles
 the model-free reference H_ref = conj(Ti) diag(h) Tv^T from the sweep
 monitors, where h holds the modal propagation, and compares it against
 that composition, so any fitting or convention error shows up directly.
@@ -108,15 +108,18 @@ def main() -> None:
 
     omega, sweep = read_sweep(args.csv)
     spec = json.loads(args.model.read_text())
-    tau = spec["delay"]["tau"]
+    delays = [mode["delay"]["tau"] for mode in spec["modes"]]
 
     # Model-free dyad assembly of the raw sweep.
     reference = np.einsum(
         "mik,mk,mjk->mij", np.conj(sweep["Ti"]), sweep["H"], sweep["Tv"]
     )
-    # The fitted matrix with the shared delay reapplied.
-    hmin = evaluate(load_model(spec["Hmin"]), omega)
-    composed = hmin * np.exp(-1j * omega * tau)[:, None, None]
+    # The fitted modal sum with each mode's delay reapplied.
+    composed = sum(
+        evaluate(load_model(mode["Hmin"]), omega)
+        * np.exp(-1j * omega * mode["delay"]["tau"])[:, None, None]
+        for mode in spec["modes"]
+    )
 
     frequency = omega / (2.0 * math.pi)
     k = reference.shape[1]
@@ -136,7 +139,7 @@ def main() -> None:
     fig, axes = plt.subplots(1, 3, figsize=(15.0, 4.8))
     for ax, values, title in (
         (axes[0], reference, "Sweep dyad assembly"),
-        (axes[1], composed, "Fitted Hmin with delay"),
+        (axes[1], composed, "Fitted modal sum with delays"),
     ):
         flat = values.reshape(len(omega), -1)
         for channel, label in enumerate(labels):
@@ -158,8 +161,9 @@ def main() -> None:
     axes[2].set_ylabel("max |error| / rms reference")
     axes[2].grid(True, which="both", alpha=0.3)
 
+    listed = ", ".join(f"{1.0e6 * tau:.2f}" for tau in delays)
     fig.suptitle(
-        f"Propagation function: fit vs sweep, delay {1.0e6 * tau:.2f} us, "
+        f"Propagation function: fit vs sweep, modal delays {listed} us, "
         f"relative RMS {rel_rms:.2e}"
     )
     fig.tight_layout()

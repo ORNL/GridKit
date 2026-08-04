@@ -16,30 +16,52 @@ namespace GridKit
   namespace Optimization
   {
     /**
-     * @brief Smallest delay over the whole sampled delay trace,
-     *        tau = min over channels and samples. Delay samples carry
-     *        their values in the real part.
-     *
-     * @pre The trace holds at least one sample
+     * @brief Per-mode minimum over the alive samples of the delay
+     *        trace. The per-mode peak sample is always alive, so every
+     *        mode yields a delay.
      */
     template <typename scalar_type, typename index_type>
-    typename GridKit::ScalarTraits<scalar_type>::RealT
-    minimumDelay(const SampledResponse<scalar_type, index_type>& tau)
+    std::vector<typename GridKit::ScalarTraits<scalar_type>::RealT>
+    modalDelays(const SampledResponse<scalar_type, index_type>&    tau,
+                const SampledResponse<scalar_type, index_type>&    h,
+                typename GridKit::ScalarTraits<scalar_type>::RealT mag_floor)
     {
       using RealT = typename GridKit::ScalarTraits<scalar_type>::RealT;
 
-      RealT smallest = tau.response.front().real();
-      for (const auto& sample : tau.response)
+      const auto modes        = tau.rows;
+      const auto sample_count = tau.sampleCount();
+
+      std::vector<RealT> delays(static_cast<size_t>(modes));
+      for (index_type mode = 0; mode < modes; ++mode)
       {
-        smallest = std::min(smallest, sample.real());
+        RealT peak = RealT{0};
+        for (index_type m = 0; m < sample_count; ++m)
+        {
+          peak = std::max(peak, std::abs(h(m, mode, 0)));
+        }
+        const RealT floor_value = mag_floor * peak;
+
+        bool  seen     = false;
+        RealT smallest = RealT{0};
+        for (index_type m = 0; m < sample_count; ++m)
+        {
+          if (std::abs(h(m, mode, 0)) < floor_value)
+          {
+            continue;
+          }
+          const RealT value = tau(m, mode, 0).real();
+          smallest          = seen ? std::min(smallest, value) : value;
+          seen              = true;
+        }
+        delays[static_cast<size_t>(mode)] = smallest;
       }
-      return smallest;
+      return delays;
     }
 
     /**
-     * @brief Shift every channel to minimum phase with one shared
-     *        delay, removing the bulk transport delay of the whole
-     *        response before fitting.
+     * @brief Shift every channel to minimum phase with one delay,
+     *        removing the transport delay of the response before
+     *        fitting.
      */
     template <typename scalar_type, typename index_type>
     void applyDelayShift(SampledResponse<scalar_type, index_type>&          samples,
@@ -62,10 +84,14 @@ namespace GridKit
       }
     }
 
-    template double
-    minimumDelay<double, long int>(const SampledResponse<double, long int>&);
-    template double
-    minimumDelay<double, size_t>(const SampledResponse<double, size_t>&);
+    template std::vector<double>
+    modalDelays<double, long int>(const SampledResponse<double, long int>&,
+                                  const SampledResponse<double, long int>&,
+                                  double);
+    template std::vector<double>
+    modalDelays<double, size_t>(const SampledResponse<double, size_t>&,
+                                const SampledResponse<double, size_t>&,
+                                double);
 
     template void
     applyDelayShift<double, long int>(SampledResponse<double, long int>&,

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Solver/Optimization/Rational/SampledResponse.hpp>
 
@@ -16,12 +18,32 @@ namespace GridKit
   namespace Optimization
   {
     /**
-     * @brief Smallest delay carried by a sampled delay trace,
-     *        tau = min over every channel and every sample.
+     * @brief Per-mode transport delays, each the smallest sampled delay
+     *        over the frequencies where that mode still carries
+     *        magnitude, |h_m| >= mag_floor * max |h_m|.
+     *
+     * Below its alive band a mode's phase delay keeps sliding toward
+     * the lossless front, which carries no energy, so samples the fit
+     * treats as zeros must not decide the delay. Restricted to the
+     * alive band, each delay is the largest one that unwinds no fitted
+     * sample of its mode past zero phase.
+     *
+     * @param[in] tau       Delay traces, one row per mode, values in
+     *                      the real part
+     * @param[in] h         Modal propagation on the same grid, one row
+     *                      per mode
+     * @param[in] mag_floor Fraction of the per-mode peak magnitude
+     *                      below which samples are ignored; zero keeps
+     *                      every sample
+     *
+     * @pre tau and h share their grid and mode count, with at least
+     *      one sample
      */
     template <typename scalar_type, typename index_type>
-    typename GridKit::ScalarTraits<scalar_type>::RealT
-    minimumDelay(const SampledResponse<scalar_type, index_type>& tau);
+    std::vector<typename GridKit::ScalarTraits<scalar_type>::RealT>
+    modalDelays(const SampledResponse<scalar_type, index_type>&    tau,
+                const SampledResponse<scalar_type, index_type>&    h,
+                typename GridKit::ScalarTraits<scalar_type>::RealT mag_floor);
 
     /**
      * @brief Shift every channel of the sampled response to minimum

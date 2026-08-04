@@ -1,8 +1,7 @@
 # Universal line model example: fit the committed line description and
-# regenerate the model files in the build tree. One shared delay leaves
-# the inter-mode spread as residual winding that grows with frequency,
-# so the example runs on the band where a single delay is apt; see the
-# application README.
+# regenerate the model files in the build tree. Every mode is unwound
+# by its own delay, so no residual winding constrains the band; the
+# reduced band and loose target just keep the example quick.
 
 gridkit_example_current_install_path(_install_path)
 

@@ -7,14 +7,14 @@ Assembles the model-free reference
 
 from the UniversalLineModel sweep monitors, where h holds the modal
 propagation, and composes the fitted approximation from
-propagation.model.json as
+propagation.model.json as the modal sum
 
-    H_fit = Hmin_fit exp(-j omega tau)
+    H_fit = sum_m Hmin_m exp(-j omega tau_m)
 
-with the one shared delay the fit removed. Four figures land in
+with the per-mode delays the fit removed. Figures land in
 output/<line>/: the propagation element magnitudes and phases, actual
-beside approximation, and the same pair for the unwound matrix Hmin the
-fitter actually sees.
+beside approximation, and the same pair per mode for the unwound
+rank-one dyad each Hmin_m fit actually sees.
 """
 
 from __future__ import annotations
@@ -88,14 +88,19 @@ def render(name: str) -> float:
     line_dir = OUTPUT_DIR / name
     omega, k, tv, ti, h, _ = read_modal_response(line_dir / "response.csv")
     propagation = json.loads((line_dir / "propagation.model.json").read_text())
-    tau = propagation["delay"]["tau"]
+    modes = propagation["modes"]
 
     reference = np.zeros((len(omega), k, k), complex)
     for m in range(len(omega)):
         reference[m] = np.conj(ti[m]) @ np.diag(h[m]) @ tv[m].T
 
-    hmin = eval_model(propagation["Hmin"], omega).reshape(len(omega), k, k)
-    fitted = hmin * np.exp(-1j * omega * tau)[:, None, None]
+    fitted_modes = [
+        eval_model(mode["Hmin"], omega).reshape(len(omega), k, k)
+        for mode in modes
+    ]
+    delays = [mode["delay"]["tau"] for mode in modes]
+    fitted = sum(hmin * np.exp(-1j * omega * tau)[:, None, None]
+                 for hmin, tau in zip(fitted_modes, delays))
 
     suptitle = "propagation function H = conj(Ti) diag(h) Tv^T"
     side_by_side(name, omega, reference, fitted,
@@ -108,17 +113,26 @@ def render(name: str) -> float:
                  line_dir / "propagation_phase.png", log_y=False,
                  suptitle=suptitle)
 
-    # The fitter's own view: the unwound target against its rational
-    # approximation, before the delay is reapplied.
-    target = reference * np.exp(1j * omega * tau)[:, None, None]
-    suptitle = "unwound target Hmin = H exp(+s tau) vs rational fit"
-    side_by_side(name, omega, target, hmin,
-                 np.abs, "|Hmin entry|", "element magnitudes",
-                 line_dir / "hmin_mag.png", log_y=True, suptitle=suptitle)
-    side_by_side(name, omega, target, hmin,
-                 lambda entry: np.degrees(np.unwrap(np.angle(entry))),
-                 "unwrapped phase [deg]", "element phases",
-                 line_dir / "hmin_phase.png", log_y=False, suptitle=suptitle)
+    # The fitter's own view, mode by mode: each unwound rank-one dyad
+    # against its rational approximation, before the delay and the
+    # other modes are reapplied.
+    for stale in line_dir.glob("hmin_*.png"):
+        stale.unlink()
+    for q, (hmin, tau) in enumerate(zip(fitted_modes, delays)):
+        dyad = np.einsum("mi,m,mj->mij", np.conj(ti[:, :, q]), h[:, q],
+                         tv[:, :, q])
+        target = dyad * np.exp(1j * omega * tau)[:, None, None]
+        suptitle = (f"unwound mode {q} dyad Hmin{q} = "
+                    "conj(ti_m) h_m exp(+s tau_m) tv_m^T vs rational fit")
+        side_by_side(name, omega, target, hmin,
+                     np.abs, f"|Hmin{q} entry|", "element magnitudes",
+                     line_dir / f"hmin{q}_mag.png", log_y=True,
+                     suptitle=suptitle)
+        side_by_side(name, omega, target, hmin,
+                     lambda entry: np.degrees(np.unwrap(np.angle(entry))),
+                     "unwrapped phase [deg]", "element phases",
+                     line_dir / f"hmin{q}_phase.png", log_y=False,
+                     suptitle=suptitle)
 
     return float(np.sqrt(np.mean(np.abs(fitted - reference) ** 2)
                          / max(np.mean(np.abs(reference) ** 2), 1e-30)))

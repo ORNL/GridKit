@@ -6,9 +6,9 @@ FrequencyResponse application, renders the pre-fitting response overview
 (Yc, Zc, gamma as alpha and beta, tau, H), runs the UniversalLineModel
 application, renders the Yc fit accuracy figure, the sweep-vs-fit
 diagnostic, and the propagation comparison against both the fitted
-function and its unwound target, and collects pole counts and error
-statistics into output/stats.json and output/stats.md. Every artifact for
-a line lands in output/<line>/.
+modal sum and the unwound per-mode targets, and collects pole counts and
+error statistics into output/stats.json and output/stats.md. Every
+artifact for a line lands in output/<line>/.
 """
 
 from __future__ import annotations
@@ -251,7 +251,8 @@ def run_line(name: str, args: argparse.Namespace) -> dict:
         "yc_passive": passive,
         "yc_rel_rms_check": yc_rel_rms,
         "propagation_rel_rms": propagation_rel_rms,
-        "delay_us": 1.0e6 * propagation["delay"]["tau"],
+        "delay_us": [1.0e6 * mode["delay"]["tau"]
+                     for mode in propagation["modes"]],
         "fits": fits,
     }
 
@@ -263,12 +264,13 @@ def write_stats(records: list[dict]) -> None:
         "# Line gallery fit statistics",
         "",
         "The Hmin columns report the fitter's own error on the unwound "
-        "target; the H column recomputes the error of the delayed "
-        "propagation function against the sweep.",
+        "per-mode targets, poles summed and the worst mode's error; the "
+        "H column recomputes the error of the delayed modal sum against "
+        "the sweep.",
         "",
-        "| Line | K | Delay [us] | Yc poles | Yc rel RMS | Hmin poles "
+        "| Line | K | Delays [us] | Yc poles | Yc rel RMS | Hmin poles "
         "| Hmin rel RMS | H rel RMS | Targets met | Yc passive |",
-        "| ---- | - | ---------- | -------- | ---------- | ---------- "
+        "| ---- | - | ----------- | -------- | ---------- | ---------- "
         "| ------------ | --------- | ----------- | ---------- |",
     ]
     for r in records:
@@ -282,10 +284,18 @@ def write_stats(records: list[dict]) -> None:
                 return str(entry["poles"])
             return f"{entry['rel_rms']:.2e}"
 
+        modal = [fits[label] for label in sorted(fits) if label.startswith("Hmin")]
+        hmin_poles = str(sum(entry["poles"] for entry in modal)) if modal else "-"
+        hmin_rms = (f"{max(entry['rel_rms'] for entry in modal):.2e}"
+                    if modal else "-")
+        delays = sorted(r["delay_us"])
+        delay_span = (f"{delays[0]:.2f}" if len(delays) == 1
+                      else f"{delays[0]:.2f}-{delays[-1]:.2f}")
+
         lines.append(
-            f"| {r['line']} | {r['conductors']} | {r['delay_us']:.2f} "
+            f"| {r['line']} | {r['conductors']} | {delay_span} "
             f"| {cell('Yc', 'poles')} | {cell('Yc', 'rms')} "
-            f"| {cell('Hmin', 'poles')} | {cell('Hmin', 'rms')} "
+            f"| {hmin_poles} | {hmin_rms} "
             f"| {r['propagation_rel_rms']:.2e} "
             f"| {'yes' if r['targets_met'] else 'no'} "
             f"| {'yes' if r['yc_passive'] else 'no'} |"

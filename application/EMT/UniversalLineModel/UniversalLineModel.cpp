@@ -3,21 +3,24 @@
  *
  * @brief Build universal line model coefficients from a line description.
  *
- * Sweeps the line-parameter model over frequency, extracts the transport
- * delay, and fits the characteristic admittance and the propagation
- * function at the lowest pole order meeting each error target. Yc(s)
- * goes to yc.model.json; the propagation function goes to
- * propagation.model.json as
+ * Sweeps the line-parameter model over frequency, extracts one
+ * transport delay per mode, and fits the characteristic admittance and
+ * the propagation function at the lowest pole order meeting each error
+ * target. Yc(s) goes to yc.model.json; the propagation function goes
+ * to propagation.model.json as the modal sum
  *
- *   H(s) = Hmin(s) exp(-s tau),  tau = min over modes and omega of tau_m,
+ *   H(s) = sum_m Hmin_m(s) exp(-s tau_m),
  *
- * where the modal propagation is unwound by the one shared delay and
- * transformed back to phase coordinates,
+ * where each mode's phase-domain contribution is its rank-one dyad
+ * unwound by that mode's own delay,
  *
- *   Hmin(s) = conj(Ti) diag(H exp(+s tau)) Tv^T,
+ *   Hmin_m(s) = conj(ti_m) h_m(s) exp(+s tau_m) tv_m^T,
  *
- * and fit whole; keys K, Hmin, delay {tau}. See README.md for the model
- * form. All rational fits are stable with no term linear in s.
+ * and fit individually; keys K, modes [{Hmin, delay {tau}}]. Each
+ * tau_m is the smallest sampled delay over the frequencies where the
+ * mode still carries magnitude, so samples the fit treats as zeros
+ * never decide a delay. See README.md for the model form. All rational
+ * fits are stable with no term linear in s.
  *
  * Exit codes: 0 when every error target was met and the Yc fit is
  * passive, 1 on a hard failure, 2 when an error target was missed,
@@ -33,7 +36,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -522,8 +524,8 @@ namespace
   }
 
   /**
-   * @brief Transform a modal diagonal response back to phase
-   *        coordinates, conj(Ti) diag(modal) Tv^T per sample, assembled
+   * @brief One mode's phase-domain contribution, the rank-one dyad
+   *        conj(ti_mode) modal_mode tv_mode^T per sample, assembled
    *        without any matrix inversion.
    *
    * Convention note: the monitored transforms satisfy the adjoint
@@ -533,23 +535,23 @@ namespace
    * per-unit-length matrices, so the current-form assembly consumes
    * conj(Ti) against the monitored data.
    *
-   * The eigenvector normalization cancels identically in the product,
-   * so the result carries no per-frequency phase convention, no
-   * structural zeros, and preserves the inter-mode cancellation a
-   * factored form cannot.
+   * The eigenvector normalization cancels between the paired columns,
+   * so each dyad carries no per-frequency phase convention on its own,
+   * and the dyads over all modes sum to the full propagation function.
    */
-  ResponseT toPhaseDomain(const ResponseT& modal,
-                          const ResponseT& tv,
-                          const ResponseT& ti)
+  ResponseT modeDyad(const ResponseT& modal,
+                     const ResponseT& tv,
+                     const ResponseT& ti,
+                     index_type       mode)
   {
     const auto k            = tv.rows;
     const auto sample_count = tv.omega.size();
 
-    ResponseT phase;
-    phase.rows  = k;
-    phase.cols  = k;
-    phase.omega = tv.omega;
-    phase.response.assign(tv.response.size(), {});
+    ResponseT dyad;
+    dyad.rows  = k;
+    dyad.cols  = k;
+    dyad.omega = tv.omega;
+    dyad.response.assign(tv.response.size(), {});
 
     for (size_t m = 0; m < sample_count; ++m)
     {
@@ -557,44 +559,12 @@ namespace
       {
         for (index_type col = 0; col < k; ++col)
         {
-          ComplexT entry{0.0, 0.0};
-          for (index_type i = 0; i < k; ++i)
-          {
-            entry += std::conj(ti(m, row, i)) * modal(m, i, 0) * tv(m, col, i);
-          }
-          phase(m, row, col) = entry;
+          dyad(m, row, col) =
+              std::conj(ti(m, row, mode)) * modal(m, mode, 0) * tv(m, col, mode);
         }
       }
     }
-    return phase;
-  }
-
-  /**
-   * @brief Spread of the per-mode minimum delays, the width the one
-   *        shared delay cannot remove.
-   *
-   * What the fit must absorb instead is a residual winding growing as
-   * omega times this spread, so it decides whether one shared delay is
-   * apt over the swept band.
-   */
-  double delaySpread(const ResponseT& tau)
-  {
-    const auto modes        = tau.rows;
-    const auto sample_count = tau.omega.size();
-
-    double widest    = std::numeric_limits<double>::lowest();
-    double narrowest = std::numeric_limits<double>::max();
-    for (index_type mode = 0; mode < modes; ++mode)
-    {
-      double smallest = tau(0, mode, 0).real();
-      for (size_t m = 1; m < sample_count; ++m)
-      {
-        smallest = std::min(smallest, tau(m, mode, 0).real());
-      }
-      widest    = std::max(widest, smallest);
-      narrowest = std::min(narrowest, smallest);
-    }
-    return widest - narrowest;
+    return dyad;
   }
 
   void writeJson(const fs::path& file_path, const nlohmann::json& j)
@@ -650,9 +620,10 @@ namespace
   }
 
   /**
-   * @brief One shared delay tau = min over modes and omega, the modal
-   *        propagation unwound by it, transformed back to phase
-   *        coordinates as Hmin, and fit whole.
+   * @brief One delay per mode from the alive samples of its delay
+   *        trace, each mode's rank-one dyad unwound by its own delay,
+   *        and fit individually; the propagation function is the sum
+   *        of the fitted modes behind their delays.
    */
   int fitPropagation(const ResponseT& tv,
                      const ResponseT& ti,
@@ -661,40 +632,49 @@ namespace
                      const Settings&  settings,
                      nlohmann::json&  propagation)
   {
-    const double shared =
-        GridKit::Optimization::minimumDelay<scalar_type, index_type>(tau);
-
-    // Unwind the bulk transport delay while the propagation is still
-    // diagonal, then carry the result back to phase coordinates.
-    auto modal = h;
-    GridKit::Optimization::applyDelayShift<scalar_type, index_type>(modal,
-                                                                    shared);
-    const auto hmin = toPhaseDomain(modal, tv, ti);
+    // The same magnitude floor the fitter cleans with decides which
+    // samples may carry a delay, so the delay is identified from
+    // exactly the data the fit sees.
+    const auto delays =
+        GridKit::Optimization::modalDelays<scalar_type, index_type>(
+            tau, h, settings.h.min_mag);
 
     constexpr double to_microseconds = 1.0e6;
-    const double     spread          = delaySpread(tau);
-    std::cout << "Propagation: shared delay " << to_microseconds * shared
-              << " us, inter-mode spread " << to_microseconds * spread
-              << " us (" << 100.0 * spread / shared << "%)\n";
-
-    ModelT    hmin_model;
-    const int status = fitTarget(hmin,
-                                 settings.h,
-                                 settings.restarts,
-                                 settings.refine,
-                                 "Hmin",
-                                 hmin_model);
-    if (status < 0)
+    auto             modes           = nlohmann::json::array();
+    int              worst           = 0;
+    for (index_type mode = 0; mode < tv.rows; ++mode)
     {
-      return status;
+      // Unwind the dyad by its own delay so the rational part never
+      // has to synthesize transport delay as ringing.
+      auto target = modeDyad(h, tv, ti, mode);
+      GridKit::Optimization::applyDelayShift<scalar_type, index_type>(
+          target, delays[mode]);
+
+      std::cout << "Propagation mode " << mode << ": delay "
+                << to_microseconds * delays[mode] << " us\n";
+
+      ModelT    model;
+      const int status = fitTarget(target,
+                                   settings.h,
+                                   settings.restarts,
+                                   settings.refine,
+                                   "Hmin" + std::to_string(mode),
+                                   model);
+      if (status < 0)
+      {
+        return status;
+      }
+      worst = std::max(worst, status);
+
+      // Each delay line is a Delay submodel, so its coefficient
+      // follows that operator's documented parameter set.
+      modes.push_back({{"Hmin", modelToJson(model)},
+                       {"delay", {{"tau", delays[mode]}}}});
     }
 
     propagation["K"]     = tv.rows;
-    propagation["Hmin"]  = modelToJson(hmin_model);
-    // The delay line is a Delay submodel, so its coefficient follows
-    // that operator's documented parameter set.
-    propagation["delay"] = {{"tau", shared}};
-    return status;
+    propagation["modes"] = std::move(modes);
+    return worst;
   }
 
   int runUniversalLineModel(const fs::path& line_file,

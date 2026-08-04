@@ -104,7 +104,7 @@ def run_ulm(name: str,
     ]
     result = subprocess.run(command, capture_output=True, text=True, cwd=HERE)
     for line in result.stdout.splitlines():
-        if "VectorFitting:" in line or line.startswith("Propagation:"):
+        if "VectorFitting:" in line or line.startswith("Propagation"):
             print(line.strip())
     if result.returncode not in (0, 2, 3) or "failed" in result.stdout + result.stderr:
         raise RuntimeError(

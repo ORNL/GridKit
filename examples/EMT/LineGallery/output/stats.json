@@ -5,60 +5,102 @@
     "targets_met": true,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0006223265608978852,
-    "propagation_rel_rms": 0.048662645393653316,
-    "delay_us": 53.12303297383808,
+    "propagation_rel_rms": 0.02630343896123412,
+    "delay_us": [
+      53.20821333973772,
+      53.21946783976374,
+      53.4214762231831
+    ],
     "fits": {
       "Yc": {
         "poles": 8,
         "rel_rms": 0.000622327,
         "worst_channel_rel_rms": 0.00223875
       },
-      "Hmin": {
-        "poles": 22,
-        "rel_rms": 0.0486626,
-        "worst_channel_rel_rms": 0.133002
+      "Hmin0": {
+        "poles": 2,
+        "rel_rms": 0.0111243,
+        "worst_channel_rel_rms": 0.0111243
+      },
+      "Hmin1": {
+        "poles": 4,
+        "rel_rms": 0.0327448,
+        "worst_channel_rel_rms": 0.0531325
+      },
+      "Hmin2": {
+        "poles": 8,
+        "rel_rms": 0.0324996,
+        "worst_channel_rel_rms": 0.0356315
       }
     }
   },
   {
     "line": "345kv-horizontal",
     "conductors": 3,
-    "targets_met": true,
+    "targets_met": false,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0005059015353768508,
-    "propagation_rel_rms": 0.03716892836299542,
-    "delay_us": 334.6361122540547,
+    "propagation_rel_rms": 0.04717599988691635,
+    "delay_us": [
+      334.78892088931383,
+      334.80384489230954,
+      346.00701098155344
+    ],
     "fits": {
       "Yc": {
         "poles": 8,
         "rel_rms": 0.000505902,
         "worst_channel_rel_rms": 0.00260519
       },
-      "Hmin": {
-        "poles": 30,
-        "rel_rms": 0.0371689,
-        "worst_channel_rel_rms": 0.0897984
+      "Hmin0": {
+        "poles": 14,
+        "rel_rms": 0.0471864,
+        "worst_channel_rel_rms": 0.0512693
+      },
+      "Hmin1": {
+        "poles": 6,
+        "rel_rms": 0.0413593,
+        "worst_channel_rel_rms": 0.0413593
+      },
+      "Hmin2": {
+        "poles": 22,
+        "rel_rms": 0.0555271,
+        "worst_channel_rel_rms": 0.0558616
       }
     }
   },
   {
     "line": "345kv-horizontal-staggered",
     "conductors": 3,
-    "targets_met": true,
+    "targets_met": false,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0005131109686411038,
-    "propagation_rel_rms": 0.0389494175857413,
-    "delay_us": 334.6350538975668,
+    "propagation_rel_rms": 0.0496720204024149,
+    "delay_us": [
+      334.821543497167,
+      334.787232434529,
+      346.1007349910089
+    ],
     "fits": {
       "Yc": {
         "poles": 8,
         "rel_rms": 0.000513111,
         "worst_channel_rel_rms": 0.00267593
       },
-      "Hmin": {
+      "Hmin0": {
+        "poles": 6,
+        "rel_rms": 0.0456282,
+        "worst_channel_rel_rms": 0.621079
+      },
+      "Hmin1": {
         "poles": 30,
-        "rel_rms": 0.0389494,
-        "worst_channel_rel_rms": 0.100356
+        "rel_rms": 0.0563305,
+        "worst_channel_rel_rms": 0.099428
+      },
+      "Hmin2": {
+        "poles": 24,
+        "rel_rms": 0.0551467,
+        "worst_channel_rel_rms": 0.0580055
       }
     }
   },
@@ -68,60 +110,126 @@
     "targets_met": false,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0006666306193420329,
-    "propagation_rel_rms": 0.3952046982124697,
-    "delay_us": 835.9199249130029,
+    "propagation_rel_rms": 0.18108252632867824,
+    "delay_us": [
+      836.1544550732102,
+      836.9255397913776,
+      836.8945917028117,
+      836.5359372017034,
+      836.4504195465755,
+      869.3403839884953
+    ],
     "fits": {
       "Yc": {
         "poles": 6,
         "rel_rms": 0.000666631,
         "worst_channel_rel_rms": 0.0038254
       },
-      "Hmin": {
+      "Hmin0": {
+        "poles": 16,
+        "rel_rms": 0.435214,
+        "worst_channel_rel_rms": 0.68607
+      },
+      "Hmin1": {
         "poles": 26,
-        "rel_rms": 0.395205,
-        "worst_channel_rel_rms": 0.858924
+        "rel_rms": 0.513631,
+        "worst_channel_rel_rms": 0.634561
+      },
+      "Hmin2": {
+        "poles": 26,
+        "rel_rms": 0.281078,
+        "worst_channel_rel_rms": 0.398764
+      },
+      "Hmin3": {
+        "poles": 30,
+        "rel_rms": 0.455368,
+        "worst_channel_rel_rms": 0.814224
+      },
+      "Hmin4": {
+        "poles": 30,
+        "rel_rms": 0.0535639,
+        "worst_channel_rel_rms": 0.340642
+      },
+      "Hmin5": {
+        "poles": 28,
+        "rel_rms": 0.0546348,
+        "worst_channel_rel_rms": 0.0778309
       }
     }
   },
   {
     "line": "69kv-wood-pole",
     "conductors": 4,
-    "targets_met": true,
+    "targets_met": false,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0006829225513146958,
-    "propagation_rel_rms": 0.027543393221768006,
-    "delay_us": 53.58478360477655,
+    "propagation_rel_rms": 0.05631150903408261,
+    "delay_us": [
+      53.668195825670956,
+      53.67679741927151,
+      54.665936747829605,
+      53.61871365697562
+    ],
     "fits": {
       "Yc": {
         "poles": 8,
         "rel_rms": 0.000682923,
         "worst_channel_rel_rms": 0.00292233
       },
-      "Hmin": {
-        "poles": 22,
-        "rel_rms": 0.0275434,
-        "worst_channel_rel_rms": 0.0752728
+      "Hmin0": {
+        "poles": 30,
+        "rel_rms": 0.202005,
+        "worst_channel_rel_rms": 0.710144
+      },
+      "Hmin1": {
+        "poles": 24,
+        "rel_rms": 0.182408,
+        "worst_channel_rel_rms": 0.795029
+      },
+      "Hmin2": {
+        "poles": 30,
+        "rel_rms": 0.183584,
+        "worst_channel_rel_rms": 0.361394
+      },
+      "Hmin3": {
+        "poles": 12,
+        "rel_rms": 0.250068,
+        "worst_channel_rel_rms": 0.521593
       }
     }
   },
   {
     "line": "765kv-horizontal",
     "conductors": 3,
-    "targets_met": true,
+    "targets_met": false,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0008886895870763037,
-    "propagation_rel_rms": 0.03444457389183299,
-    "delay_us": 1076.0503222450207,
+    "propagation_rel_rms": 0.046468028932342816,
+    "delay_us": [
+      1076.2070253056104,
+      1076.8616454693015,
+      1114.698889732182
+    ],
     "fits": {
       "Yc": {
         "poles": 6,
         "rel_rms": 0.00088869,
         "worst_channel_rel_rms": 0.00564318
       },
-      "Hmin": {
-        "poles": 24,
-        "rel_rms": 0.0344446,
-        "worst_channel_rel_rms": 0.0834128
+      "Hmin0": {
+        "poles": 4,
+        "rel_rms": 0.0438603,
+        "worst_channel_rel_rms": 0.045444
+      },
+      "Hmin1": {
+        "poles": 6,
+        "rel_rms": 0.0424139,
+        "worst_channel_rel_rms": 0.0424139
+      },
+      "Hmin2": {
+        "poles": 22,
+        "rel_rms": 0.0600783,
+        "worst_channel_rel_rms": 0.0604417
       }
     }
   },
@@ -131,18 +239,32 @@
     "targets_met": true,
     "yc_passive": true,
     "yc_rel_rms_check": 0.0008960851934872497,
-    "propagation_rel_rms": 0.045158679386428466,
-    "delay_us": 501.2585886490791,
+    "propagation_rel_rms": 0.04067362705801205,
+    "delay_us": [
+      501.33677353037217,
+      501.4501216763967,
+      511.75946906155207
+    ],
     "fits": {
       "Yc": {
         "poles": 6,
         "rel_rms": 0.000896085,
         "worst_channel_rel_rms": 0.00568536
       },
-      "Hmin": {
-        "poles": 20,
-        "rel_rms": 0.0451587,
-        "worst_channel_rel_rms": 0.1056
+      "Hmin0": {
+        "poles": 4,
+        "rel_rms": 0.0452788,
+        "worst_channel_rel_rms": 0.069231
+      },
+      "Hmin1": {
+        "poles": 6,
+        "rel_rms": 0.034303,
+        "worst_channel_rel_rms": 0.410289
+      },
+      "Hmin2": {
+        "poles": 10,
+        "rel_rms": 0.0431104,
+        "worst_channel_rel_rms": 0.044289
       }
     }
   }
