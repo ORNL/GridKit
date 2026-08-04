@@ -167,13 +167,12 @@ namespace GridKit
         check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
               "UEL must be 0, 1, 2, or 3");
 
-        // Saturation is enabled when either coefficient deviates from zero
-        // in any direction; load_real() has already rejected non-finite
-        // values, so the sign tests are exact.
-        auto deviates_from_zero = [](RealT value)
-        { return value < ZERO<RealT> || value > ZERO<RealT>; };
+        // Model data uses an exact zero to mean "saturation bypassed", so
+        // this is an exact comparison by intent rather than a tolerance test.
+        const bool saturation_disabled =
+            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
-        if (deviates_from_zero(Se1_) || deviates_from_zero(Se2_))
+        if (!saturation_disabled)
         {
           check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
           check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
@@ -812,13 +811,9 @@ namespace GridKit
 
         // A disabled or inconsistent saturation curve keeps the zero fit so
         // the coefficients stay finite; verify() reports inconsistent data.
-        // Saturation is enabled when either coefficient deviates from zero,
-        // matching the verify() predicate.
-        auto deviates_from_zero = [](RealT value)
-        { return value < ZERO<RealT> || value > ZERO<RealT>; };
-
-        const bool saturation_enabled =
-            deviates_from_zero(Se1_) || deviates_from_zero(Se2_);
+        // The disabled test matches the verify() predicate exactly.
+        const bool saturation_disabled =
+            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
         const bool saturation_points_are_ordered =
             (E2_ > E1_ && Se2_ > Se1_)
             || (E2_ < E1_ && Se2_ < Se1_);
@@ -826,7 +821,7 @@ namespace GridKit
             E1_ > ZERO<RealT> && E2_ > ZERO<RealT>
             && Se1_ > ZERO<RealT> && Se2_ > ZERO<RealT>
             && saturation_points_are_ordered;
-        if (!saturation_enabled || !saturation_consistent)
+        if (saturation_disabled || !saturation_consistent)
         {
           SA_ = ZERO<RealT>;
           SB_ = ZERO<RealT>;

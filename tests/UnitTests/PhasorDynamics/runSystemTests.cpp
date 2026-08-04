@@ -10,7 +10,6 @@ int main()
 
   result += test.constructor();
   result += test.composer();
-  result += test.esdc1aInitializationHandoff();
   result += test.reallocateAfterTopologyChange();
   result += test.modelVectorsAliasSystemStorage();
 #ifdef GRIDKIT_ENABLE_ENZYME

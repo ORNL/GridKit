@@ -38,14 +38,10 @@ namespace GridKit
       ExciterEsdc1aTests()  = default;
       ~ExciterEsdc1aTests() = default;
 
-      // ESDC1A initialization seeds the smooth high-value gate through the
-      // ramp inverse, leaving steady residuals of O(1e-12). Behavioral
-      // comparisons use a tolerance three orders above that guard.
-      static constexpr RealT kBehaviorTol = 1.0e-9;
-
-      // Enzyme and dependency tracking traverse the same smooth expressions
-      // differently; their double-precision derivatives agree to O(1e-10).
-      static constexpr RealT kJacobianTol = 1.0e-9;
+      // Rows that divide by a time constant amplify by 1/T; the
+      // worst here is VR, which recovers Ka*(Vr/Ka) through 1/Ta at 31 eps.
+      static constexpr RealT kTol =
+          static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Construction and every verify() error class, including parameter
       /// types, parameter relationships, bus ownership, and signal linkage.
@@ -811,7 +807,7 @@ namespace GridKit
               {static_cast<size_t>(Internal::VR), 1.0},
               {static_cast<size_t>(Internal::VFE), -1.0},
           }};
-          success *= isEqual(dependencies, expected, kJacobianTol);
+          success *= isEqual(dependencies, expected, kTol);
         }
 
         // The speed multiplier scales the published field voltage only when
@@ -855,7 +851,7 @@ namespace GridKit
         const auto rows  = std::min(dependency_jacobian.size(), enzyme_jacobian.size());
         for (size_t row = 0; row < rows; ++row)
         {
-          if (!isEqual(dependency_jacobian[row], enzyme_jacobian[row], kJacobianTol))
+          if (!isEqual(dependency_jacobian[row], enzyme_jacobian[row], kTol))
           {
             std::cout << "ESDC1A Jacobian row " << row
                       << " mismatch between dependency tracking and Enzyme\n";
@@ -1361,7 +1357,7 @@ namespace GridKit
                              size_t      row,
                              const char* context)
       {
-        if (isEqual(actual, expected, kBehaviorTol))
+        if (isEqual(actual, expected, kTol))
         {
           return true;
         }
@@ -1430,7 +1426,7 @@ namespace GridKit
       bool scalarMatches(ScalarT     actual,
                          ScalarT     expected,
                          const char* label,
-                         ScalarT     tolerance = kBehaviorTol) const
+                         ScalarT     tolerance = kTol) const
       {
         if (isEqual(actual, expected, tolerance))
         {
