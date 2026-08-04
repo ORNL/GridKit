@@ -132,6 +132,7 @@ namespace
     options.pole_count = spec.fit.poles;
     options.terms      = spec.fit.terms;
     options.weighting  = spec.fit.weighting;
+    options.min_mag    = spec.fit.min_mag;
     if (spec.fit.max_poles > 0)
     {
       options.order_search.enabled        = true;

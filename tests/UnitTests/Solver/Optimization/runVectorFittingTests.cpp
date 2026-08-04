@@ -217,6 +217,120 @@ namespace
     return success.report(__func__);
   }
 
+  /// The reference matrix response with one channel replaced by
+  /// deterministic noise at the numerical floor, the shape a monitored
+  /// structural zero arrives in.
+  ResponseT makeNoisyChannelSamples(const Reference& reference)
+  {
+    auto samples = makeMatrixSamples(reference, 2, 2);
+
+    const auto channels = static_cast<size_t>(samples.rows)
+                          * static_cast<size_t>(samples.cols);
+    for (size_t m = 0; m < samples.omega.size(); ++m)
+    {
+      const auto phase = static_cast<scalar_type>(m);
+      samples.response[m * channels + (channels - 1)] =
+          ComplexT{1.0e-12 * std::cos(3.7 * phase),
+                   1.0e-12 * std::sin(2.9 * phase)};
+    }
+    return samples;
+  }
+
+  /// Values below the relative floor are fit as exact zeros: the noise
+  /// channel is flagged structural, its error measures leakage against
+  /// the floor instead of a noise ratio, and the live channels still
+  /// recover exactly. Without the floor the same channel poisons the
+  /// per-channel metric.
+  GridKit::Testing::TestOutcome fit_min_magnitude_declares_structural_zero()
+  {
+    using GridKit::Testing::TestStatus;
+
+    const Reference reference;
+    const auto      samples  = makeNoisyChannelSamples(reference);
+    const auto      channels = static_cast<size_t>(samples.rows)
+                          * static_cast<size_t>(samples.cols);
+
+    FitterT::Parameters params;
+    params.pole_count = 3;
+    params.terms      = GridKit::Optimization::RationalTerms::CONSTANT;
+
+    FitterT   raw_fitter(samples);
+    ModelT    raw_model;
+    const int raw_status = raw_fitter.fit(raw_model, params);
+
+    params.min_mag = 1.0e-4;
+    FitterT   cleaned_fitter(samples);
+    ModelT    cleaned_model;
+    const int cleaned_status = cleaned_fitter.fit(cleaned_model, params);
+
+    const auto& raw     = raw_fitter.getStats();
+    const auto& cleaned = cleaned_fitter.getStats();
+
+    TestStatus success  = true;
+    success            *= (raw_status >= 0);
+    success            *= (cleaned_status == 0);
+
+    // Without the floor the noise channel dominates the per-channel
+    // metric and nothing is flagged.
+    success *= (raw.channel_rel_rms[channels - 1] > 0.1);
+    success *= (raw.report().find("structural zeros") == std::string::npos);
+
+    // With the floor the channel is a declared zero: recovered exactly,
+    // flagged, and reported.
+    success *= (cleaned.final_rel_rms < 1.0e-8);
+    success *= (cleaned.channel_structural_zero.size() == channels);
+    for (size_t ch = 0; ch + 1 < channels; ++ch)
+    {
+      success *= (cleaned.channel_structural_zero[ch] == false);
+    }
+    success *= (cleaned.channel_structural_zero[channels - 1] == true);
+    success *= (cleaned.channel_rel_rms[channels - 1] < 1.0e-8);
+    success *= (cleaned.report().find("structural zeros 1")
+                != std::string::npos);
+
+    // The fitted model puts nothing where the target is zero.
+    const auto rows = static_cast<index_type>(samples.rows);
+    for (const auto omega : samples.omega)
+    {
+      success *= (std::abs(cleaned_model.evaluate(omega,
+                                                  rows - 1,
+                                                  rows - 1))
+                  < 1.0e-10);
+    }
+
+    return success.report(__func__);
+  }
+
+  /// The relative floor must lie in [0, 1); anything else is a hard
+  /// error, never a silent clamp.
+  GridKit::Testing::TestOutcome fit_rejects_invalid_min_magnitude()
+  {
+    using GridKit::Testing::TestStatus;
+
+    const Reference reference;
+    const auto      samples = makeSamples(reference);
+
+    FitterT fitter(samples);
+    ModelT  model;
+
+    FitterT::Parameters negative;
+    negative.min_mag = -0.1;
+
+    FitterT::Parameters saturated;
+    saturated.min_mag = 1.0;
+
+    FitterT::Parameters undefined;
+    undefined.min_mag =
+        std::numeric_limits<scalar_type>::quiet_NaN();
+
+    TestStatus success  = true;
+    success            *= (fitter.fit(model, negative) == -1);
+    success            *= (fitter.fit(model, saturated) == -1);
+    success            *= (fitter.fit(model, undefined) == -1);
+
+    return success.report(__func__);
+  }
+
   /// Invalid order ranges are hard errors, never a default-constructed
   /// model reported as success.
   GridKit::Testing::TestOutcome fit_rejects_invalid_order_ranges()
@@ -256,6 +370,8 @@ int main()
   result += fit_recovers_exact_rational();
   result += fit_recovers_exact_matrix_rational();
   result += fit_refine_never_worsens_verdict();
+  result += fit_min_magnitude_declares_structural_zero();
+  result += fit_rejects_invalid_min_magnitude();
   result += fit_rejects_invalid_order_ranges();
   return result.summary();
 }

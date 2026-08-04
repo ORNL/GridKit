@@ -89,6 +89,13 @@ namespace GridKit
         RealT pole_shift_tolerance = 1.0e-6;
         RealT stability_margin     = 0.0;
 
+        /// Response values below this fraction of the peak sample
+        /// magnitude are treated as exactly zero: the fit targets zero
+        /// there and the error metrics use the same floor as their
+        /// relative reference. Zero disables the cleaning. Must lie in
+        /// [0, 1).
+        RealT min_mag = 0.0;
+
         /// Lowest-order search over the pole count.
         struct OrderSearch
         {
@@ -121,11 +128,18 @@ namespace GridKit
       {
         std::vector<IterationInfo> iterations;
         std::vector<RealT>         channel_rel_rms;
-        RealT                      final_rel_rms{0.0};
-        RealT                      final_abs_rms{0.0};
-        bool                       converged{false};
-        IdxT                       restarts_used{0};
-        IdxT                       order_selected{0};
+
+        /// Channels whose response is identically zero after the
+        /// minimum-magnitude cleaning. Their relative error measures
+        /// model leakage against the cleaning floor, not against their
+        /// own (zero) signal.
+        std::vector<bool> channel_structural_zero;
+
+        RealT final_rel_rms{0.0};
+        RealT final_abs_rms{0.0};
+        bool  converged{false};
+        IdxT  restarts_used{0};
+        IdxT  order_selected{0};
 
         std::string report() const;
       };

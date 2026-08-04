@@ -1,13 +1,20 @@
 {
     "model": "345kv-horizontal-staggered.line.json",
     "frequency": {
-        "start": 1.0,
-        "stop": 1000000.0,
-        "points": 201,
+        "start": 10.0,
+        "stop": 100000000.0,
+        "points": 401,
         "scale": "log"
     },
     "output": {
-        "file": "output/345kv-horizontal-staggered.response.csv",
-        "variables": ["Alpha", "Beta", "Tau", "H", "Yc", "Zc"]
+        "file": "output/345kv-horizontal-staggered/overview.csv",
+        "variables": [
+            "Alpha",
+            "Beta",
+            "Tau",
+            "H",
+            "Yc",
+            "Zc"
+        ]
     }
 }

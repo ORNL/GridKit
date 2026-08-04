@@ -1,0 +1,31 @@
+[
+  {
+    "line": "345kv-horizontal",
+    "conductors": 3,
+    "targets_met": true,
+    "yc_passive": true,
+    "yc_rel_rms_check": 0.0005058250076927797,
+    "delays_us": [
+      334.78892088931383,
+      334.6361122540547,
+      334.72320886591666
+    ],
+    "fits": {
+      "Yc": {
+        "poles": 8,
+        "rel_rms": 0.000505825,
+        "worst_channel_rel_rms": 0.00260535
+      },
+      "Gin": {
+        "poles": 8,
+        "rel_rms": 0.0492261,
+        "worst_channel_rel_rms": 0.0683055
+      },
+      "Gout": {
+        "poles": 2,
+        "rel_rms": 0.0105396,
+        "worst_channel_rel_rms": 0.0195434
+      }
+    }
+  }
+]

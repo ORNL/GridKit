@@ -552,7 +552,6 @@ namespace GridKit
             static_cast<size_t>(samples.rows) * static_cast<size_t>(samples.cols);
         const auto sample_count = samples.omega.size();
         const auto order        = poles.size();
-        const auto numerator    = order + termColumns(terms);
 
         model.rows  = samples.rows;
         model.cols  = samples.cols;
@@ -630,12 +629,20 @@ namespace GridKit
 
       /**
        * @brief Unweighted error statistics over all samples and channels.
+       *
+       * Per-channel relative errors divide by the channel's own signal,
+       * floored at @p min_mag times the global signal
+       * rms: a channel zeroed by the cleaning then reports model
+       * leakage against the care floor instead of a meaningless ratio
+       * of noise over noise. Such channels are flagged as structural
+       * zeros.
        */
       template <typename scalar_type, typename index_type>
       void computeStats(
-          const SampledResponse<scalar_type, index_type>&         samples,
-          const RationalModel<scalar_type, index_type>&           model,
-          typename VectorFitting<scalar_type, index_type>::Stats& stats)
+          const SampledResponse<scalar_type, index_type>&          samples,
+          const RationalModel<scalar_type, index_type>&            model,
+          typename SampledResponse<scalar_type, index_type>::RealT min_mag,
+          typename VectorFitting<scalar_type, index_type>::Stats&  stats)
       {
         using RealT    = typename SampledResponse<scalar_type,
                                                   index_type>::RealT;
@@ -648,6 +655,7 @@ namespace GridKit
         RealT misfit    = RealT{0};
         RealT reference = RealT{0};
         stats.channel_rel_rms.assign(channels, RealT{0});
+        stats.channel_structural_zero.assign(channels, false);
         std::vector<RealT> channel_reference(channels, RealT{0});
 
         for (size_t m = 0; m < sample_count; ++m)
@@ -668,14 +676,27 @@ namespace GridKit
           }
         }
 
-        const auto entries  = static_cast<RealT>(sample_count * channels);
-        stats.final_abs_rms = std::sqrt(misfit / entries);
+        const auto  entries     = static_cast<RealT>(sample_count * channels);
+        const auto  per_channel = static_cast<RealT>(sample_count);
+        const RealT global_rms  = std::sqrt(reference / entries);
+        stats.final_abs_rms     = std::sqrt(misfit / entries);
         stats.final_rel_rms =
-            stats.final_abs_rms / std::max(std::sqrt(reference / entries), RealT{SHIFT_NORM_FLOOR});
+            stats.final_abs_rms / std::max(global_rms, RealT{SHIFT_NORM_FLOOR});
+
+        const RealT floor_rms =
+            min_mag > RealT{0}
+                ? min_mag * global_rms
+                : RealT{SHIFT_NORM_FLOOR};
         for (size_t ch = 0; ch < channels; ++ch)
         {
-          stats.channel_rel_rms[ch] = std::sqrt(
-              stats.channel_rel_rms[ch] / std::max(channel_reference[ch], RealT{SHIFT_NORM_FLOOR}));
+          const RealT error_rms =
+              std::sqrt(stats.channel_rel_rms[ch] / per_channel);
+          const RealT signal_rms =
+              std::sqrt(channel_reference[ch] / per_channel);
+          stats.channel_rel_rms[ch] =
+              error_rms / std::max(signal_rms, floor_rms);
+          stats.channel_structural_zero[ch] =
+              min_mag > RealT{0} && signal_rms == RealT{0};
         }
       }
 
@@ -1067,10 +1088,19 @@ namespace GridKit
       // The global rel rms is norm-weighted, so a channel whose response
       // has collapsed can be arbitrarily wrong without moving it; the
       // worst per-channel figure is the one that sees such a channel.
+      // Structural zeros stay in the maximum: their figure measures
+      // model leakage against the cleaning floor, so a large value is a
+      // real defect, not a noise ratio.
       RealT worst = RealT{0};
       for (const auto value : channel_rel_rms)
       {
         worst = std::max(worst, value);
+      }
+
+      size_t zeros = 0;
+      for (const auto flagged : channel_structural_zero)
+      {
+        zeros += flagged ? 1 : 0;
       }
 
       std::ostringstream stream;
@@ -1078,6 +1108,10 @@ namespace GridKit
              << (converged ? "converged" : "not converged")
              << ", rel rms " << final_rel_rms << ", worst channel " << worst
              << ", order " << order_selected;
+      if (zeros > 0)
+      {
+        stream << ", structural zeros " << zeros;
+      }
       return stream.str();
     }
 
@@ -1132,6 +1166,35 @@ namespace GridKit
       {
         return -1;
       }
+      if (!(params.min_mag >= RealT{0}
+            && params.min_mag < RealT{1}))
+      {
+        return -1;
+      }
+
+      // Values below the relative floor are declared don't-cares: the
+      // cleaned copy is the working target that fitting, weighting, and
+      // statistics all agree on. The bound samples stay untouched.
+      SampledResponse<ScalarT, IdxT> cleaned;
+      if (params.min_mag > RealT{0})
+      {
+        RealT peak = RealT{0};
+        for (const auto& value : samples_.response)
+        {
+          peak = std::max(peak, std::abs(value));
+        }
+        cleaned           = samples_;
+        const RealT floor = params.min_mag * peak;
+        for (auto& value : cleaned.response)
+        {
+          if (std::abs(value) < floor)
+          {
+            value = ComplexT{};
+          }
+        }
+      }
+      const SampledResponse<ScalarT, IdxT>& target =
+          params.min_mag > RealT{0} ? cleaned : samples_;
 
       // Per-sample weights by the documented conventions.
       std::vector<RealT> sample_weights(sample_count, RealT{1});
@@ -1148,7 +1211,7 @@ namespace GridKit
           RealT norm = RealT{0};
           for (size_t ch = 0; ch < channels; ++ch)
           {
-            norm += std::norm(samples_.response[m * channels + ch]);
+            norm += std::norm(target.response[m * channels + ch]);
           }
           norms[m] = std::sqrt(norm);
           peak     = std::max(peak, norms[m]);
@@ -1258,7 +1321,7 @@ namespace GridKit
             RealT     shift      = RealT{0};
             bool      degenerate = false;
             const int relocation =
-                Detail::relocatePoles<ScalarT, IdxT>(samples_,
+                Detail::relocatePoles<ScalarT, IdxT>(target,
                                                      sample_weights,
                                                      params.terms,
                                                      params.stability_margin,
@@ -1285,7 +1348,7 @@ namespace GridKit
 
           RationalModel<ScalarT, IdxT> trial_model;
           const int                    identification =
-              Detail::identifyCoefficients<ScalarT, IdxT>(samples_,
+              Detail::identifyCoefficients<ScalarT, IdxT>(target,
                                                           sample_weights,
                                                           poles,
                                                           params.terms,
@@ -1295,7 +1358,10 @@ namespace GridKit
             return identification;
           }
 
-          Detail::computeStats<ScalarT, IdxT>(samples_, trial_model, trial_stats);
+          Detail::computeStats<ScalarT, IdxT>(target,
+                                              trial_model,
+                                              params.min_mag,
+                                              trial_stats);
           trial_stats.restarts_used = attempt;
 
           if (!have_attempt || trial_stats.final_rel_rms < attempt_stats.final_rel_rms)
@@ -1331,7 +1397,7 @@ namespace GridKit
       {
         RationalModel<ScalarT, IdxT> refined = model;
         const int                    refinement =
-            Detail::refineModel<ScalarT, IdxT>(samples_,
+            Detail::refineModel<ScalarT, IdxT>(target,
                                                sample_weights,
                                                params.terms,
                                                params.stability_margin,
@@ -1343,7 +1409,10 @@ namespace GridKit
 
         // Accept the candidate only under the verdict metric itself.
         Stats refined_stats = stats_;
-        Detail::computeStats<ScalarT, IdxT>(samples_, refined, refined_stats);
+        Detail::computeStats<ScalarT, IdxT>(target,
+                                            refined,
+                                            params.min_mag,
+                                            refined_stats);
         if (refined_stats.final_rel_rms < stats_.final_rel_rms)
         {
           model  = refined;

@@ -5,10 +5,10 @@ For one catalog line the script sweeps Alpha, Beta, R, L, G, C with the
 FrequencyResponse application, hands gamma = alpha + j beta, Z = R + j w L,
 and Y = G + j w C straight to the standalone VectorFitting application, and
 renders the monitored curves (left column) next to the fitted rational
-model (right column). Every fitter input, fitted model, and the figure land
-in output/. This isolates the estimator and the sweep from the propagation
-factor construction: if these fits are clean, any remaining fitting trouble
-lives in the quantities the UniversalLineModel builds, not here.
+model (right column). Everything generated lands in output/<line>/. This
+isolates the estimator and the sweep from the propagation factor
+construction: if these fits are clean, any remaining fitting trouble lives
+in the quantities the UniversalLineModel builds, not here.
 """
 
 from __future__ import annotations
@@ -25,11 +25,15 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
+from gallery import line_model_file
+
 HERE = Path(__file__).resolve().parent
 OUTPUT_DIR = HERE / "output"
 BUILD = HERE.parents[2] / "build"
 DEFAULT_SWEEP_APP = BUILD / "application" / "EMT" / "FrequencyResponse" / "FrequencyResponse"
 DEFAULT_FIT_APP = BUILD / "application" / "Fitting" / "VectorFitting"
+
+FREQUENCY = {"start": 10.0, "stop": 1.0e8, "points": 401, "scale": "log"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -40,27 +44,22 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def run_sweep(name: str, sweep_app: Path) -> Path:
+def run_sweep(name: str, line_dir: Path, sweep_app: Path) -> Path:
     # Paths inside the spec resolve relative to the spec file, which
-    # lives in output/ alongside every other generated artifact.
+    # lives in output/<line>/ alongside every other generated artifact.
     spec = {
-        "model": f"../../Lines/{name}.line.json",
-        "frequency": {
-            "start": 1.0,
-            "stop": 1000000.0,
-            "points": 201,
-            "scale": "log",
-        },
+        "model": str(line_model_file(name)),
+        "frequency": FREQUENCY,
         "output": {
-            "file": f"{name}.rlgc.csv",
+            "file": "rlgc.csv",
             "variables": ["Alpha", "Beta", "R", "L", "G", "C"],
         },
     }
-    spec_path = OUTPUT_DIR / f"{name}.rlgc.solver.json"
+    spec_path = line_dir / "rlgc.solver.json"
     spec_path.write_text(json.dumps(spec, indent=4) + "\n")
     subprocess.run([str(sweep_app), str(spec_path)],
                    check=True, cwd=HERE, stdout=subprocess.DEVNULL)
-    return OUTPUT_DIR / f"{name}.rlgc.csv"
+    return line_dir / "rlgc.csv"
 
 
 def read_sweep(path: Path):
@@ -108,9 +107,10 @@ def write_samples(path: Path, omega: np.ndarray, values: np.ndarray) -> None:
             stream.write(",".join(row) + "\n")
 
 
-def run_fit(fit_app: Path, name: str, rows: int, cols: int) -> dict:
+def run_fit(fit_app: Path, line_dir: Path, name: str,
+            rows: int, cols: int) -> dict:
     spec = {
-        "samples": str(OUTPUT_DIR / f"{name}.samples.csv"),
+        "samples": f"{name}.samples.csv",
         "rows": rows,
         "cols": cols,
         "fit": {
@@ -120,9 +120,9 @@ def run_fit(fit_app: Path, name: str, rows: int, cols: int) -> dict:
             "terms": "linear",
             "weighting": "inverse_magnitude",
         },
-        "output": {"model": str(OUTPUT_DIR / f"{name}.model.json")},
+        "output": {"model": f"{name}.model.json"},
     }
-    spec_path = OUTPUT_DIR / f"{name}.fit.json"
+    spec_path = line_dir / f"{name}.fit.json"
     spec_path.write_text(json.dumps(spec, indent=4) + "\n")
     result = subprocess.run([str(fit_app), str(spec_path)],
                             capture_output=True, text=True, timeout=600)
@@ -130,7 +130,7 @@ def run_fit(fit_app: Path, name: str, rows: int, cols: int) -> dict:
     print(f"{name}: " + (stats[-1].strip() if stats else f"exit {result.returncode}"))
     if result.returncode not in (0, 1, 2):
         raise RuntimeError(f"{name} fit failed:\n{result.stdout}\n{result.stderr}")
-    return json.loads((OUTPUT_DIR / f"{name}.model.json").read_text())
+    return json.loads((line_dir / f"{name}.model.json").read_text())
 
 
 def eval_model(model: dict, omega: np.ndarray) -> np.ndarray:
@@ -206,9 +206,10 @@ def panel_pair(axes_row, omega, data_curves, fit_curves, title, ylabel,
 
 def main() -> None:
     args = parse_args()
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    line_dir = OUTPUT_DIR / args.line
+    line_dir.mkdir(parents=True, exist_ok=True)
 
-    sweep_csv = run_sweep(args.line, args.sweep_app)
+    sweep_csv = run_sweep(args.line, line_dir, args.sweep_app)
     omega, n, k, R, L, G, C, alpha, beta = read_sweep(sweep_csv)
     print(f"{args.line}: {len(omega)} samples, {n}x{n} conductor matrices, {k} modes")
 
@@ -216,14 +217,14 @@ def main() -> None:
     Z = (R + 1j * omega[:, None, None] * L).reshape(len(omega), n * n)
     Y = (G + 1j * omega[:, None, None] * C).reshape(len(omega), n * n)
 
-    write_samples(OUTPUT_DIR / f"{args.line}.gamma.samples.csv", omega, gamma)
-    write_samples(OUTPUT_DIR / f"{args.line}.z.samples.csv", omega, Z)
-    write_samples(OUTPUT_DIR / f"{args.line}.y.samples.csv", omega, Y)
+    write_samples(line_dir / "gamma.samples.csv", omega, gamma)
+    write_samples(line_dir / "z.samples.csv", omega, Z)
+    write_samples(line_dir / "y.samples.csv", omega, Y)
 
     gamma_fit = eval_model(
-        run_fit(args.fit_app, f"{args.line}.gamma", k, 1), omega)
-    z_fit = eval_model(run_fit(args.fit_app, f"{args.line}.z", n, n), omega)
-    y_fit = eval_model(run_fit(args.fit_app, f"{args.line}.y", n, n), omega)
+        run_fit(args.fit_app, line_dir, "gamma", k, 1), omega)
+    z_fit = eval_model(run_fit(args.fit_app, line_dir, "z", n, n), omega)
+    y_fit = eval_model(run_fit(args.fit_app, line_dir, "y", n, n), omega)
 
     R_fit = z_fit.reshape(len(omega), n, n).real
     L_fit = z_fit.reshape(len(omega), n, n).imag / omega[:, None, None]
@@ -275,7 +276,7 @@ def main() -> None:
     fig.suptitle(f"{args.line}: monitored sweep vs VectorFitting rational model",
                  fontsize=13)
     fig.tight_layout(rect=(0, 0, 1, 0.985))
-    plot_file = OUTPUT_DIR / f"{args.line}.sweep_vs_fit.png"
+    plot_file = line_dir / "sweep_vs_fit.png"
     fig.savefig(plot_file, dpi=130)
     print(f"wrote {plot_file}")
 

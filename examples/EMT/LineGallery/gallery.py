@@ -218,21 +218,29 @@ def write_ycfit_figure(name: str, omega, k, yc_samples, model_file: Path, plot_f
     return rel_rms
 
 
+def line_model_file(name: str) -> Path:
+    """Catalog lines live in ../Lines; gallery-only variants live here."""
+    local = HERE / f"{name}.line.json"
+    return local if local.exists() else HERE.parent / "Lines" / f"{name}.line.json"
+
+
 def run_line(name: str, args: argparse.Namespace) -> dict:
     print(f"=== {name} ===")
+    line_dir = OUTPUT_DIR / name
+    line_dir.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         [str(args.sweep_app), f"{name}.solver.json"],
         check=True,
         cwd=HERE,
         stdout=subprocess.DEVNULL,
     )
-    omega, k, data = read_response(OUTPUT_DIR / f"{name}.response.csv")
-    write_responses_figure(name, omega, k, data, OUTPUT_DIR / f"{name}.responses.png")
+    omega, k, data = read_response(line_dir / "overview.csv")
+    write_responses_figure(name, omega, k, data, line_dir / "overview.png")
 
-    model_dir = OUTPUT_DIR / name
+    model_dir = line_dir
     command = [
         str(args.ulm_app),
-        str(HERE.parent / "Lines" / f"{name}.line.json"),
+        str(line_model_file(name)),
         "-o",
         str(model_dir),
         *ULM_ARGS,
@@ -262,7 +270,7 @@ def run_line(name: str, args: argparse.Namespace) -> dict:
 
     yc_rel_rms = write_ycfit_figure(
         name, omega, k, data["Yc"], model_dir / "yc.model.json",
-        OUTPUT_DIR / f"{name}.ycfit.png",
+        model_dir / "ycfit.png",
     )
 
     propagation = json.loads((model_dir / "propagation.model.json").read_text())

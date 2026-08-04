@@ -26,6 +26,7 @@ namespace GridKit
         size_t        min_poles{2}; ///< Order search bounds.
         size_t        max_poles{0}; ///< Order search when > 0.
         double        target_rel_rms{1.0e-3};
+        double        min_mag{0.0}; ///< Zero disables.
         RationalTerms terms{RationalTerms::CONSTANT};
         Weighting     weighting{Weighting::UNIFORM};
       };

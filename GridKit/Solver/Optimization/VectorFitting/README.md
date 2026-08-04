@@ -159,12 +159,35 @@ the problem statement. Named schemes:
 | `INVERSE_SQUARED_MAGNITUDE` | $1 / \max(\lVert\mathbf{H}_m\rVert_F^2, \epsilon)$ | relative error |
 | `CUSTOM` | user supplied | caller defined |
 
+## Minimum Magnitude
+
+An optional relative floor declares part of the response out of scope:
+response values below `min_mag` times the peak sample
+magnitude are treated as exactly zero. The cleaned copy is the working
+target for fitting, weighting, and statistics alike; the bound samples are
+never modified. Any error the cleaning introduces is bounded by the floor
+itself, since every affected value is smaller than the floor by
+construction.
+
+The floor exists for targets that carry manufactured dead values — the
+structural zeros of symmetric line geometries arrive as solver round-off
+with random phase, and decayed propagation tails span decades below any
+accuracy of interest. Zero disables the cleaning, and values outside
+$[0, 1)$ are hard errors.
+
 ## Error Metrics
 
 The fit statistics report absolute and relative root-mean-square error over
 all samples and channels, the same metrics per channel, and the per-pass
 pole displacement history. Failures of the eigenvalue computation or the
 optimizer are reported as errors, never as silent convergence.
+
+Per-channel relative errors divide by the channel's own signal, floored at
+`min_mag` times the global signal rms. A channel that is
+identically zero after the cleaning is flagged as a structural zero and
+counted in the report; its figure then measures model leakage against the
+care floor, so a large value is a real defect rather than a ratio of noise
+over noise.
 
 ## Configuration
 

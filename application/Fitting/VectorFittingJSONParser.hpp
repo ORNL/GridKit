@@ -143,6 +143,9 @@ namespace GridKit
                         static_cast<long long>(data.fit.max_poles));
           data.fit.target_rel_rms =
               fit.value("target_rel_rms", data.fit.target_rel_rms);
+          data.fit.min_mag =
+              fit.value("min_mag",
+                        data.fit.min_mag);
           data.fit.terms = Detail::parseTerms(
               fit.value("terms", std::string{"constant"}));
           data.fit.weighting = Detail::parseWeighting(
@@ -166,6 +169,12 @@ namespace GridKit
           {
             throw std::runtime_error(
                 "fit: \"target_rel_rms\" must be positive");
+          }
+          if (!(data.fit.min_mag >= 0.0
+                && data.fit.min_mag < 1.0))
+          {
+            throw std::runtime_error(
+                "fit: \"min_mag\" must lie in [0, 1)");
           }
         }
 

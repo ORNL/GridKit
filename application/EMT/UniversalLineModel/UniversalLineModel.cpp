@@ -81,11 +81,15 @@ namespace
       index_type min_poles{2};
       index_type max_poles{30};
       double     target_rel_rms{1.0e-3};
+
+      /// Fraction of the peak sample magnitude below which values are
+      /// fit as exact zeros; zero disables the cleaning.
+      double min_mag{0.0};
     };
 
-    double fmin{1.0};
-    double fmax{1.0e6};
-    size_t points{201};
+    double fmin{10.0};
+    double fmax{1.0e8};
+    size_t points{401};
 
     GridKit::EMT::Application::IdaSettings ida;
 
@@ -117,17 +121,17 @@ namespace
         {.name     = {"--fmin"},
          .help     = "Sweep start frequency in Hz",
          .type     = ArgType::Real,
-         .defaults = 1.0},
+         .defaults = 10.0},
 
         {.name     = {"--fmax"},
          .help     = "Sweep stop frequency in Hz",
          .type     = ArgType::Real,
-         .defaults = 1.0e6},
+         .defaults = 1.0e8},
 
         {.name     = {"--points"},
          .help     = "Sweep sample count on the log grid",
          .type     = ArgType::Integer,
-         .defaults = 201},
+         .defaults = 401},
 
         {.name     = {"--rtol"},
          .help     = "Sweep relative tolerance",
@@ -173,6 +177,12 @@ namespace
          .help     = "Relative RMS error target for each propagation factor",
          .type     = ArgType::Real,
          .defaults = 1.0e-3},
+
+        {.name     = {"--min-mag"},
+         .help     = "Fraction of the peak magnitude below which propagation "
+                     "factor values are fit as exact zeros",
+         .type     = ArgType::Real,
+         .defaults = 1.0e-4},
 
         {.name = {"--refine"},
          .help = "Polish each fit with the constrained refinement stage",
@@ -239,6 +249,18 @@ namespace
     settings.output = args.get("output");
     settings.yc     = makeTarget(args, "yc");
     settings.h      = makeTarget(args, "h");
+
+    // The factor construction manufactures dead values (structural
+    // zeros of symmetric towers, the decayed ground-mode tail), so the
+    // cleaning applies to the propagation factor fits only; Yc data
+    // has no such values and keeps the fitter default.
+    settings.h.min_mag = args.get<double>("min-mag");
+    if (!(settings.h.min_mag >= 0.0
+          && settings.h.min_mag < 1.0))
+    {
+      throw std::runtime_error("--min-mag must lie in [0, 1)");
+    }
+
     settings.refine = args.get<bool>("refine");
     return settings;
   }
@@ -554,6 +576,7 @@ namespace
     options.terms = GridKit::Optimization::RationalTerms::CONSTANT;
     options.weighting =
         GridKit::Optimization::Weighting::INVERSE_MAGNITUDE;
+    options.min_mag                     = target.min_mag;
     options.order_search.enabled        = true;
     options.order_search.min_poles      = target.min_poles;
     options.order_search.max_poles      = target.max_poles;
