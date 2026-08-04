@@ -212,14 +212,14 @@ namespace GridKit
     // r = 0
     if (refframe_)
     {
-      rtemp   = {0, 0};
+      rtemp.assign(2, 0);
       ctemp   = {0, 3};
       valtemp = {-1.0, -mp_};
       this->setJacValues(rtemp, ctemp, valtemp);
     }
 
     // r = 1
-    rtemp   = {1, 1};
+    rtemp.assign(2, 1);
     ctemp   = {13, 14};
     valtemp = {std::cos(delta), -std::sin(delta)};
     if (!refframe_)
@@ -232,7 +232,7 @@ namespace GridKit
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 2
-    rtemp   = {2, 2};
+    rtemp.assign(2, 2);
     ctemp   = {13, 14};
     valtemp = {std::sin(delta), std::cos(delta)};
     if (!refframe_)
@@ -245,7 +245,7 @@ namespace GridKit
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 3
-    rtemp   = {3, 3, 3, 3, 3};
+    rtemp.assign(5, 3);
     ctemp   = {3, 11, 12, 13, 14};
     valtemp = {-wc_ - alpha_,
                wc_ * static_cast<RealT>(y_int_[10]),
@@ -255,7 +255,7 @@ namespace GridKit
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 4
-    rtemp   = {4, 4, 4, 4, 4};
+    rtemp.assign(5, 4);
     ctemp   = {4, 11, 12, 13, 14};
     valtemp = {-wc_ - alpha_,
                -wc_ * static_cast<RealT>(y_int_[11]),
@@ -265,31 +265,31 @@ namespace GridKit
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 5
-    rtemp   = {5, 5, 5};
+    rtemp.assign(3, 5);
     ctemp   = {4, 5, 11};
     valtemp = {-nq_, -alpha_, -1.0};
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 6
-    rtemp   = {6, 6};
+    rtemp.assign(2, 6);
     ctemp   = {6, 12};
     valtemp = {-alpha_, -1.0};
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 7
-    rtemp   = {7, 7, 7, 7, 7, 7, 7};
+    rtemp.assign(7, 7);
     ctemp   = {4, 5, 7, 9, 11, 12, 13};
     valtemp = {-Kpv_ * nq_, Kiv_, -alpha_, -1.0, -Kpv_, -Cf_ * wb_, F_};
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 8
-    rtemp   = {8, 8, 8, 8, 8, 8};
+    rtemp.assign(6, 8);
     ctemp   = {6, 8, 10, 11, 12, 14};
     valtemp = {Kiv_, -alpha_, -1.0, Cf_ * wb_, -Kpv_, F_};
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 9
-    rtemp   = {9, 9, 9, 9, 9, 9, 9, 9, 9};
+    rtemp.assign(9, 9);
     ctemp   = {3, 4, 5, 7, 9, 10, 11, 12, 13};
     valtemp = {-mp_ * static_cast<RealT>(y_int_[7]),
                -(Kpc_ * Kpv_ * nq_) / Lf_,
@@ -303,7 +303,7 @@ namespace GridKit
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 10
-    rtemp = {10, 10, 10, 10, 10, 10, 10, 10};
+    rtemp.assign(8, 10);
     ctemp = {3, 6, 8, 9, 10, 11, 12, 14};
     valtemp = {mp_ * static_cast<RealT>(y_int_[6]),
                (Kiv_ * Kpc_) / Lf_,
@@ -316,7 +316,7 @@ namespace GridKit
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 11
-    rtemp   = {11, 11, 11, 11, 11};
+    rtemp.assign(5, 11);
     ctemp   = {3, 9, 11, 12, 13};
     valtemp = {-mp_ * static_cast<RealT>(y_int_[9]),
                1.0 / Cf_,
@@ -326,7 +326,7 @@ namespace GridKit
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 12
-    rtemp   = {12, 12, 12, 12, 12};
+    rtemp.assign(5, 12);
     ctemp   = {3, 10, 11, 12, 14};
     valtemp = {mp_ * static_cast<RealT>(y_int_[8]),
                1.0 / Cf_,
@@ -336,7 +336,7 @@ namespace GridKit
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 13
-    rtemp   = {13, 13, 13, 13, 13, 13};
+    rtemp.assign(6, 13);
     ctemp   = {1, 2, 3, 11, 13, 14};
     valtemp = {
         (1.0 / Lc_) * -std::cos(delta),
@@ -355,7 +355,7 @@ namespace GridKit
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 14
-    rtemp   = {14, 14, 14, 14, 14, 14};
+    rtemp.assign(6, 14);
     ctemp   = {1, 2, 3, 12, 13, 14};
     valtemp = {
         (1.0 / Lc_) * std::sin(delta),
@@ -376,7 +376,7 @@ namespace GridKit
     // r = 15
     if (!refframe_)
     {
-      rtemp   = {15, 15, 15};
+      rtemp.assign(3, 15);
       ctemp   = {0, 3, 15};
       valtemp = {-1.0, -mp_, -alpha_};
       this->setJacValues(rtemp, ctemp, valtemp);
