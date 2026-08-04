@@ -1,7 +1,7 @@
 #
 #[[
 
-Finds Ipopt include directory and libraries and exports target `Ipopt`
+Finds Ipopt include directory and libraries and exports target `IPOPT`
 
 User may set:
 - IPOPT_ROOT_DIR
@@ -56,13 +56,16 @@ find_path(
     include/coin-or
     include/coinor)
 
-if(IPOPT_LIBRARY)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Ipopt REQUIRED_VARS IPOPT_LIBRARY IPOPT_INCLUDE_DIR)
+
+if(Ipopt_FOUND AND NOT TARGET IPOPT)
   message(STATUS "Found Ipopt include: ${IPOPT_INCLUDE_DIR}")
   mark_as_advanced(IPOPT_INCLUDE_DIR)
   add_library(IPOPT INTERFACE IMPORTED)
   target_link_libraries(IPOPT INTERFACE ${IPOPT_LIBRARY})
   target_include_directories(IPOPT INTERFACE ${IPOPT_INCLUDE_DIR})
-else()
+elseif(NOT Ipopt_FOUND)
   if(NOT IPOPT_ROOT_DIR)
     message(STATUS "Ipopt dir not found! Please provide correct filepath.")
     set(IPOPT_DIR
@@ -71,10 +74,10 @@ else()
     unset(IPOPT_INCLUDE_DIR CACHE)
     unset(IPOPT_LIBRARY CACHE)
     unset(IPOPT_LIBRARY_DIR CACHE)
-  elseif(NOT IPOPT_LIB)
+  elseif(NOT IPOPT_LIBRARY)
     message(STATUS "Ipopt library not found! Please provide correct filepath.")
   endif()
   if(IPOPT_ROOT_DIR AND NOT IPOPT_INCLUDE_DIR)
-    message(STATUS "Ipopt include directory  not found! Please provide correct path.")
+    message(STATUS "Ipopt include directory not found! Please provide correct path.")
   endif()
 endif()

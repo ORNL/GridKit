@@ -23,6 +23,18 @@ namespace GridKit
 {
   namespace Enzyme
   {
+    /**
+     * @brief Generic reverse-mode Enzyme intrinsic.
+     */
+    template <typename ReturnT, typename... Args>
+    extern ReturnT __enzyme_autodiff(void*, Args...);
+
+    /**
+     * @brief Generic forward-mode Enzyme intrinsic.
+     */
+    template <typename ReturnT, typename... Args>
+    extern ReturnT __enzyme_fwddiff(void*, Args...) noexcept;
+
     namespace Scalar
     {
       /**
