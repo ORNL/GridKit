@@ -5,6 +5,7 @@
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -52,7 +53,8 @@ namespace GridKit
     {
       /// path to system model JSON file
       fs::path                                       system_model_file;
-      /// monitor output time step size, or 0 for no intermediate monitoring
+      /// monitor output time step size, 0 for no intermediate monitoring,
+      /// or a negative number to output at solver-selected steps
       double                                         dt_monitor;
       /// max time
       double                                         tmax;
@@ -66,10 +68,18 @@ namespace GridKit
       std::size_t                                    max_steps;
       /// IDA consistent initial condition calculation type
       AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
+      /// optional IDA maximum integrator order
+      std::optional<int>                             ida_max_order;
+      /// optional IDA maximum internal time step
+      std::optional<double>                          ida_max_dt;
       /// set of system events
       std::vector<SystemEvent>                       events;
-      /// path to output file
+      /// path to monitor output file
       fs::path                                       output_file;
+      /// path to IDA statistics JSON output file (empty = disabled)
+      fs::path                                       ida_stats;
+      /// path to IDA accepted-step JSON output file (empty = disabled)
+      fs::path                                       ida_steps;
       /// path to reference file for validation
       fs::path                                       reference_file;
       /// Error tolerance (between output file and reference file)
@@ -122,6 +132,14 @@ namespace GridKit
                        << "must be either \"y\" or \"ya_ydp\"";
         }
       }
+      if (j.contains("ida_max_dt"))
+      {
+        c.ida_max_dt = j.at("ida_max_dt").get<double>();
+      }
+      if (j.contains("ida_max_order"))
+      {
+        c.ida_max_order = j.at("ida_max_order").get<int>();
+      }
 
       for (auto& raw_event : j.at("events"))
       {
@@ -142,6 +160,16 @@ namespace GridKit
       if (j.contains("output_file"))
       {
         j.at("output_file").get_to(c.output_file);
+      }
+
+      if (j.contains("ida_stats"))
+      {
+        j.at("ida_stats").get_to(c.ida_stats);
+      }
+
+      if (j.contains("ida_steps"))
+      {
+        j.at("ida_steps").get_to(c.ida_steps);
       }
 
       if (j.contains("reference_file"))
@@ -203,6 +231,36 @@ namespace GridKit
       return fs;
     }
 
+    template <typename DataContainerT>
+    void clearMonitoredVariables(DataContainerT& data)
+    {
+      for (auto& entry : data)
+      {
+        entry.monitored_variables.clear();
+      }
+    }
+
+    template <typename RealT, typename IdxT>
+    void disableVariableMonitoring(SystemModelData<RealT, IdxT>& model_data)
+    {
+      model_data.monitor_sink.clear();
+      clearMonitoredVariables(model_data.bus);
+      clearMonitoredVariables(model_data.adapter);
+      clearMonitoredVariables(model_data.branch);
+      clearMonitoredVariables(model_data.bus_fault);
+      clearMonitoredVariables(model_data.regca);
+      clearMonitoredVariables(model_data.genrou);
+      clearMonitoredVariables(model_data.gensal);
+      clearMonitoredVariables(model_data.genclassical);
+      clearMonitoredVariables(model_data.loadz);
+      clearMonitoredVariables(model_data.loadzip);
+      clearMonitoredVariables(model_data.gov);
+      clearMonitoredVariables(model_data.exciter);
+      clearMonitoredVariables(model_data.sexspti);
+      clearMonitoredVariables(model_data.stabilizer);
+      clearMonitoredVariables(model_data.constant_source);
+    }
+
     /**
      * @brief Wrapper function to parse `StudyData` from JSON and perform
      * follow-up configuration
@@ -223,9 +281,27 @@ namespace GridKit
           data.reference_file = loc / data.reference_file;
         }
       }
+      if (!data.output_file.empty() && !data.output_file.is_absolute())
+      {
+        data.output_file = loc / data.output_file;
+      }
+      if (!data.ida_stats.empty() && !data.ida_stats.is_absolute())
+      {
+        data.ida_stats = loc / data.ida_stats;
+      }
+      if (!data.ida_steps.empty() && !data.ida_steps.is_absolute())
+      {
+        data.ida_steps = loc / data.ida_steps;
+      }
 
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
       data.model_data = parseSystemModelData(data.system_model_file);
+      if (data.output_file.empty())
+      {
+        disableVariableMonitoring(data.model_data);
+        return data;
+      }
+
       std::string model_output_file;
       // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)
