@@ -5,6 +5,7 @@
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -64,7 +65,8 @@ namespace GridKit
     {
       /// path to system model JSON file
       fs::path                                       system_model_file;
-      /// monitor output time step size, or 0 for no intermediate monitoring
+      /// monitor output time step size, 0 for no intermediate monitoring,
+      /// or a negative number to output at solver-selected steps
       double                                         dt_monitor;
       /// max time
       double                                         tmax;
@@ -80,12 +82,18 @@ namespace GridKit
       int                                            max_order;
       /// IDA consistent initial condition calculation type
       AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
+      /// optional IDA maximum internal time step
+      std::optional<double>                          ida_max_dt;
       /// set of system events
       std::vector<SystemEvent>                       events;
-      /// path to output file
+      /// path to monitor output file
       fs::path                                       output_file;
       /// table layout of the output file
       ::GridKit::Model::VariableMonitorLayout        output_layout;
+      /// path to IDA statistics JSON output file (empty = disabled)
+      fs::path                                       ida_stats;
+      /// path to IDA accepted-step JSON output file (empty = disabled)
+      fs::path                                       ida_steps;
       /// path to reference file for validation
       fs::path                                       reference_file;
       /// Error tolerance (between output file and reference file)
@@ -139,6 +147,10 @@ namespace GridKit
                        << "must be either \"y\" or \"ya_ydp\"";
         }
       }
+      if (j.contains("ida_max_dt"))
+      {
+        c.ida_max_dt = j.at("ida_max_dt").get<double>();
+      }
 
       for (auto& raw_event : j.at("events"))
       {
@@ -182,6 +194,16 @@ namespace GridKit
       else
       {
         c.output_layout = OutputLayout::WIDE;
+      }
+
+      if (j.contains("ida_stats"))
+      {
+        j.at("ida_stats").get_to(c.ida_stats);
+      }
+
+      if (j.contains("ida_steps"))
+      {
+        j.at("ida_steps").get_to(c.ida_steps);
       }
 
       if (j.contains("reference_file"))
@@ -262,6 +284,18 @@ namespace GridKit
         {
           data.reference_file = loc / data.reference_file;
         }
+      }
+      if (!data.output_file.empty() && !data.output_file.is_absolute())
+      {
+        data.output_file = loc / data.output_file;
+      }
+      if (!data.ida_stats.empty() && !data.ida_stats.is_absolute())
+      {
+        data.ida_stats = loc / data.ida_stats;
+      }
+      if (!data.ida_steps.empty() && !data.ida_steps.is_absolute())
+      {
+        data.ida_steps = loc / data.ida_steps;
       }
 
       // TODO: Support reference comparison for the long layout

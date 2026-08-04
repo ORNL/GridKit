@@ -9,6 +9,7 @@ int main()
   GridKit::Testing::IdaTests<double, size_t> test;
 
   result += test.callback();
+  result += test.stepHistory();
   result += test.dtMonitorZero();
   result += test.dtMonitorSuppressesEpsilonFinalStep();
   result += test.fixedStep();

@@ -2,7 +2,11 @@
 
 if(TARGET SUNDIALS::idas)
   add_executable(test_ida runIdaTests.cpp)
-  target_link_libraries(test_ida GridKit::solvers_dyn GridKit::testing)
+  target_link_libraries(
+    test_ida
+    GridKit::solvers_dyn
+    GridKit::solvers_dyn_io
+    GridKit::testing)
 
   add_test(NAME IDATest COMMAND $<TARGET_FILE:test_ida>)
 

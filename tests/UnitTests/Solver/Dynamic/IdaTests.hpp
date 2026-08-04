@@ -1,7 +1,10 @@
 #include <cmath>
+#include <optional>
+#include <vector>
 
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Solver/Dynamic/IdaDiagnostics.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
@@ -453,6 +456,7 @@ namespace GridKit
         Model::NullEvaluator<ScalarT, IdxT> model;
 
         Ida<double, size_t> ida(&model);
+        ida.setMaxOrder(2);
         ida.configureSimulation();
 
         unsigned observed_steps = 0;
@@ -466,6 +470,83 @@ namespace GridKit
 
         success *= (observed_steps == n_steps);
 
+        Model::NullEvaluator<ScalarT, IdxT> solver_step_model;
+        Ida<double, size_t>                 solver_step_ida(&solver_step_model);
+        solver_step_ida.configureSimulation();
+
+        unsigned observed_solver_steps = 0;
+        auto     solver_step_cb        = [&]([[maybe_unused]] double t)
+        {
+          observed_solver_steps++;
+        };
+
+        solver_step_ida.initializeSimulation(0.0, false);
+        solver_step_ida.runSimulation(1.0, std::nullopt, solver_step_cb);
+
+        const auto solver_step_stats  = solver_step_ida.getStats();
+        success                      *= (observed_solver_steps > 0);
+        success                      *= (observed_solver_steps == static_cast<unsigned>(solver_step_stats.num_steps_));
+
+        return success.report(__func__);
+      }
+
+      TestOutcome stepHistory()
+      {
+        using namespace AnalysisManager::Sundials;
+        TestStatus success = true;
+        for (const auto interval : {std::optional<double>{0.1}, std::optional<double>{0.0}, std::optional<double>{}})
+        {
+          Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model;
+          Ida<ScalarT, IdxT>                              ida(&model);
+          ida.setTolerance(1.0e-9);
+          ida.configureSimulation();
+          IdaStatsRecorder       stats_recorder(true);
+          IdaStepHistoryRecorder steps_recorder(true);
+          double                 start = 0.0;
+          for (const double end : {0.25, 0.5})
+          {
+            ida.initializeSimulation(start);
+            stats_recorder.beginSegment(ida);
+            steps_recorder.beginSegment(ida, start, end);
+            std::vector<double> outputs;
+            success *= ida.runSimulationWithStepHistory(
+                           end, interval, [&](const IdaStats& stats)
+                           { steps_recorder.recordStep(stats); },
+                           [&](double t)
+                           {
+                             outputs.push_back(t);
+                             success *= std::abs(model.y().getData()[0] - 0.5 * (1.0 - std::exp(-2.0 * t))) < 1.0e-6;
+                           })
+                       == 0;
+            success *= !outputs.empty() && outputs.back() == end;
+            if (interval)
+            {
+              success *= outputs.size() == (*interval == 0.0 ? 1U : 3U);
+            }
+            else
+            {
+              success *= outputs.size() == static_cast<std::size_t>(ida.getStats().num_steps_);
+            }
+            steps_recorder.endSegment(ida, static_cast<int>(outputs.size()));
+            stats_recorder.endSegment(ida, start, end, static_cast<int>(outputs.size()));
+            start = end;
+          }
+          const auto stats      = stats_recorder.report();
+          const auto steps      = steps_recorder.report();
+          success              *= stats.segments.size() == 2 && steps.segments.size() == 2;
+          std::size_t accepted  = 0;
+          for (std::size_t i = 0; i < steps.segments.size(); ++i)
+          {
+            success *= steps.segments[i].output_steps == stats.segments[i].output_steps;
+            success *= steps.segments[i].steps.size() == static_cast<std::size_t>(stats.segments[i].stats.num_steps_);
+            for (const auto& step : steps.segments[i].steps)
+            {
+              success *= step.global_step == ++accepted;
+              success *= step.counter_delta.num_steps_ == 1;
+            }
+          }
+          success *= accepted == static_cast<std::size_t>(stats.summary.num_steps_);
+        }
         return success.report(__func__);
       }
 
