@@ -14,3 +14,5 @@ target_link_libraries(
 add_test(NAME EnzymeTest COMMAND $<TARGET_FILE:test_enzyme>)
 
 install(TARGETS test_enzyme RUNTIME DESTINATION bin)
+
+add_subdirectory(Optimization)
