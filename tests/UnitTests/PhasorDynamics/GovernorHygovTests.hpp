@@ -329,15 +329,14 @@ namespace GridKit
       }
 
       /// Mechanical-power, gate-limit, speed-deviation, and finite-input
-      /// initialization domains. Every rejection is atomic; values inside the
-      /// achievable range initialize at rest, and values within the
-      /// initialization tolerance of a range edge pin to the gate limit.
+      /// initialization domains. High mechanical power raises the effective
+      /// dam head; every rejected initialization is atomic.
       TestOutcome initializationDomain()
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing inadmissible HYGOV initialization points. "
-                         "Logged errors are expected.");
+        noteExpectedLogs("Testing HYGOV initialization boundaries. "
+                         "Logged errors and dam-head warnings are expected.");
 
         struct RejectionCase
         {
@@ -347,10 +346,8 @@ namespace GridKit
           RealT       gmax;
         };
 
-        const std::array<RejectionCase, 4> rejection_cases{{
-            {"mechanical power above the gate curve", 1.0, 0.05, 0.95},
+        const std::array<RejectionCase, 2> rejection_cases{{
             {"mechanical power below the gate curve", -0.3, 0.05, 0.95},
-            {"mechanical power above the Gmax limit", 0.4, 0.05, 0.5},
             {"mechanical power below the Gmin limit", 0.4, 0.6, 0.95},
         }};
 
@@ -364,6 +361,77 @@ namespace GridKit
               {{External::OMEGA, 0.0}, {External::PREF, 77.0}, {External::PAUX, 0.02}},
               test_case.label);
         }
+
+        const auto no_finite_head = withParameters(
+            makeData(),
+            {{Params::Pgv0, -1.0},
+             {Params::Pgv1, -0.8},
+             {Params::Pgv2, -0.6},
+             {Params::Pgv3, -0.4},
+             {Params::Pgv4, -0.2},
+             {Params::Pgv5, 0.0}});
+        success *= initializationRejectedAtomically(
+            no_finite_head,
+            0.0,
+            {{External::OMEGA, 0.0}, {External::PREF, 77.0}, {External::PAUX, 0.02}},
+            "no finite effective Hdam");
+
+        // 4.5 MW on the system base is 2.5 pu on a 1.8 MW turbine base.
+        Fixture<ScalarT> effective_fixture(
+            makeData(),
+            {{Params::Trate, 1.8}, {Params::At, 1.25}, {Params::Qnl, 0.07}});
+        effective_fixture.attachAllInputs();
+        success *= effective_fixture.initialize(0.045);
+        success *= stateMatches(
+            effective_fixture.hygov,
+            {{Internal::C, 1.0},
+             {Internal::G, 1.0},
+             {Internal::Q, 1.2812656647316965},
+             {Internal::PGV, 0.9971118867476669},
+             {Internal::H, 1.6511654364800423}},
+            "effective dam head");
+        success *= scalarMatches(effective_fixture.pmech(), 0.045, "preserved pmech value");
+        success *= scalarMatches(effective_fixture.input(External::PREF),
+                                 0.0009,
+                                 "published pref");
+        success *= (effective_fixture.evaluate() == 0);
+        success *= allResidualsZero(effective_fixture.hygov);
+
+        Fixture<ScalarT> limited_fixture(makeResidualData(), {{Params::Gmax, 0.5}});
+        success *= limited_fixture.initialize(0.4);
+        success *= stateMatches(
+            limited_fixture.hygov,
+            {{Internal::C, 0.5},
+             {Internal::G, 0.5},
+             {Internal::Q, 0.6242359695868803},
+             {Internal::PGV, 0.5399999999999371},
+             {Internal::H, 1.3363187439168838}},
+            "effective head at Gmax");
+        success *= (limited_fixture.evaluate() == 0);
+        success *= allResidualsZero(limited_fixture.hygov);
+
+        // A failed retry preserves the effective head from the prior success.
+        const auto effective_y                    = copyVector(effective_fixture.hygov.y());
+        const auto effective_yp                   = copyVector(effective_fixture.hygov.yp());
+        effective_fixture.input(External::OMEGA)  = 0.03;
+        success                                  *= (effective_fixture.hygov.initialize() != 0);
+        success                                  *= vectorUnchanged(effective_fixture.hygov.y(), effective_y, "state");
+        success                                  *= vectorUnchanged(effective_fixture.hygov.yp(), effective_yp, "derivative");
+        success                                  *= scalarMatches(effective_fixture.input(External::PREF),
+                                 0.0009,
+                                 "preserved pref");
+        effective_fixture.input(External::OMEGA)  = 0.0;
+        success                                  *= (effective_fixture.evaluate() == 0);
+        success                                  *= allResidualsZero(effective_fixture.hygov);
+
+        // A later feasible initialization starts again from configured Hdam.
+        effective_fixture.setPmech(0.009);
+        success *= (effective_fixture.hygov.initialize() == 0);
+        success *= stateMatches(effective_fixture.hygov,
+                                {{Internal::H, 1.0}},
+                                "configured dam head after reinitialization");
+        success *= (effective_fixture.evaluate() == 0);
+        success *= allResidualsZero(effective_fixture.hygov);
 
         // Initialization supports only a zero speed deviation; a moving
         // machine would need a multi-root gate search.
@@ -401,47 +469,37 @@ namespace GridKit
 
         // The smooth identity curve leaves a ln(2)/MU knee at each end, so
         // makeData()'s achievable component-base power range is
-        // [knee - 0.1, 0.9 - knee]. kTol equals the model's initialization
-        // tolerance, so values half of it beyond an edge pin to the gate
-        // limit and still rest within kTol; values twice beyond are
-        // rejected.
+        // [knee - 0.1, 0.9 - knee].
         const RealT knee  = std::log(static_cast<RealT>(2.0)) / Math::MU<RealT>;
         const RealT p_max = static_cast<RealT>(0.9) - knee;
         const RealT p_min = knee - static_cast<RealT>(0.1);
 
-        struct BoundaryCase
-        {
-          const char* label;
-          RealT       pmech;
-          RealT       gate;
-        };
+        Fixture<ScalarT> lower_edge(makeData());
+        success *= lower_edge.initialize(p_min - 0.5 * kTol);
+        success *= stateMatches(lower_edge.hygov,
+                                {{Internal::C, 0.0}, {Internal::G, 0.0}},
+                                "half the tolerance below the achievable minimum");
+        success *= scalarMatches(lower_edge.pmech(),
+                                 p_min - 0.5 * kTol,
+                                 "clipped pmech value");
+        success *= (lower_edge.evaluate() == 0);
+        success *= allResidualsZero(lower_edge.hygov);
 
-        const std::array<BoundaryCase, 2> boundary_cases{{
-            {"half the tolerance beyond the achievable maximum",
-             p_max + 0.5 * kTol,
-             1.0},
-            {"half the tolerance below the achievable minimum",
-             p_min - 0.5 * kTol,
-             0.0},
-        }};
-
-        for (const auto& clipped : boundary_cases)
+        Fixture<ScalarT> effective_edge(makeData());
+        success                         *= effective_edge.initialize(p_max + 0.5 * kTol);
+        success                         *= stateMatches(effective_edge.hygov,
+                                                        {{Internal::C, 1.0}, {Internal::G, 1.0}},
+                                "half the tolerance beyond the achievable maximum");
+        const RealT effective_edge_head  = static_cast<RealT>(
+            effective_edge.hygov.y().getData()[static_cast<size_t>(Internal::H)]);
+        if (!(effective_edge_head > 1.0))
         {
-          Fixture<ScalarT> fixture(makeData());
-          success *= fixture.initialize(clipped.pmech);
-          success *= stateMatches(fixture.hygov,
-                                  {{Internal::C, clipped.gate}, {Internal::G, clipped.gate}},
-                                  clipped.label);
-          success *= scalarMatches(fixture.pmech(), clipped.pmech, "clipped pmech value");
-          success *= (fixture.evaluate() == 0);
-          success *= allResidualsZero(fixture.hygov);
+          std::cout << "effective head was not raised above configured Hdam\n";
+          success = false;
         }
+        success *= (effective_edge.evaluate() == 0);
+        success *= allResidualsZero(effective_edge.hygov);
 
-        success *= initializationRejectedAtomically(
-            makeData(),
-            p_max + 2.0 * kTol,
-            {{External::OMEGA, 0.0}, {External::PREF, 77.0}, {External::PAUX, 0.02}},
-            "twice the tolerance beyond the achievable maximum");
         success *= initializationRejectedAtomically(
             makeData(),
             p_min - 2.0 * kTol,

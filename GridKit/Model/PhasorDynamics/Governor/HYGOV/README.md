@@ -36,7 +36,7 @@ $T_n$                   | [sec]    | `Tn`          | Speed lead-lag numerator ti
 $T_{\mathrm{np}}$       | [sec]    | `Tnp`         | Speed lead-lag denominator time constant | 0.0           |
 $D_{\omega}$            | [p.u.]   | `db1`         | Type 1 speed deadband threshold          | 0.0           |
 $D_2$                   | [p.u.]   | `db2`         | Mechanical backlash deadband             | 0.0           |
-$H_{\mathrm{dam}}$      | [p.u.]   | `Hdam`        | Head available at dam                    | 1.0           |
+$H_{\mathrm{dam}}$      | [p.u.]   | `Hdam`        | Configured dam head                      | 1.0           | Lower bound on effective head
 $G_V^{(k)}$             | [p.u.]   | `Gv0`-`Gv5`   | Gate point $k$ of the gain curve         | 0.0           | $k=0,\ldots,5$
 $P_{\mathrm{GV}}^{(k)}$ | [p.u.]   | `Pgv0`-`Pgv5` | Power point $k$ of the gain curve        | 0.0           | $k=0,\ldots,5$
 
@@ -177,6 +177,9 @@ $P^\mathrm{aux}$  | [p.u.] | Known   | Auxiliary power input       | Optional si
 
 ### Differential Equations
 
+The effective dam head $H_{\mathrm{dam}}^{\mathrm{eff}}$ is resolved during
+initialization.
+
 ```math
 \begin{aligned}
   0 &=
@@ -198,7 +201,7 @@ $P^\mathrm{aux}$  | [p.u.] | Known   | Auxiliary power input       | Optional si
   0 &=
     -\dot{q}
     + \dfrac{1}{T_w}
-      \left(H_{\mathrm{dam}} - H\right)
+      \left(H_{\mathrm{dam}}^{\mathrm{eff}} - H\right)
 \end{aligned}
 ```
 
@@ -266,13 +269,19 @@ Initialization requires an exactly zero speed deviation, $\omega = 0$.
 Restart initialization of a moving machine is not supported. All internal
 derivatives are set to zero.
 
-The gate is found by bisection over the validated nondecreasing steady-power
-curve using the same smooth $N_{\mathrm{GV}}$ curve as the residual:
+Initialization solves the gate at the configured dam head unless the required
+mechanical power exceeds the value at $G^{\max}$. In that case it pins the gate
+at $G^{\max}$ and raises an effective dam head
+$H_{\mathrm{dam}}^{\mathrm{eff}} \ge H_{\mathrm{dam}}$ to reproduce the
+operating point. Both searches use the same smooth $N_{\mathrm{GV}}$ curve as
+the residual. No upper limit is applied to this adjustment. The raised head
+remains the water-column setpoint during simulation, and the gate has no
+initial upward margin.
 
 ```math
 \begin{aligned}
   H
-    &\leftarrow H_{\mathrm{dam}} \\
+    &\leftarrow H_{\mathrm{dam}}^{\mathrm{eff}} \\
   g
     &\leftarrow \text{gate in } [G^{\min}, G^{\max}] \text{ satisfying} \\
   &\qquad k_{\mathrm{base}}P_{\mathrm{m}}
@@ -298,15 +307,14 @@ curve using the same smooth $N_{\mathrm{GV}}$ curve as the residual:
 \end{aligned}
 ```
 
-Initialization rejects an operating point when no gate in
-$[G^{\min}, G^{\max}]$ reproduces the given mechanical power. An in-range
-value initializes with every residual at machine rounding. A value within
-$\epsilon_{\mathrm{init}} = 100\,\epsilon_{\mathrm{mach}}$ of the
-achievable-power range initializes at the corresponding gate limit with a
-mechanical-power residual up to $\epsilon_{\mathrm{init}}$.
+A value within $\epsilon_{\mathrm{init}} = 100\,\epsilon_{\mathrm{mach}}$
+below the $G^{\min}$ endpoint initializes at $G^{\min}$ with a mechanical-power
+residual up to $\epsilon_{\mathrm{init}}$. A lower value, or a high-side value
+without a finite effective dam head, is rejected. All other accepted values
+initialize with every residual at machine rounding.
 
-Every check resolves before any storage is written, so a rejected
-initialization leaves state, `pmech`, and external signals unchanged.
+Every check resolves before state, the effective dam head, or signals are
+written, so a rejected initialization leaves them unchanged.
 
 ### Output Initialization
 
@@ -342,8 +350,8 @@ Output         | Units  | Description                  | Note
   signal configuration, and minimum time-constant handling.
 - `initializationAndSignals()` checks initialization, base conversion,
   signal publication, monitor output, and unattached-reference latching.
-- `initializationDomain()` checks rejected and accepted mechanical-power,
-  gate-limit, speed-deviation, and input initialization boundaries.
+- `initializationDomain()` checks effective-head initialization, rejection
+  atomicity, and initialization boundaries.
 - `initializationExactness()` checks that initialized steady residuals rest
   at machine rounding across the gate curve.
 - `residualEquations()` checks every model residual against a fixed

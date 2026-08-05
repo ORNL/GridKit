@@ -131,13 +131,22 @@ namespace GridKit
         /// smooth linear segments.
         __attribute__((always_inline)) inline ScalarT gatePower(ScalarT gate) const;
 
-        /// Steady component-base mechanical power at a gate position,
-        /// composed as the runtime PGV, H, and PMECH rows compose it.
-        RealT initialMechanicalPower(RealT gate) const;
+        /// Steady component-base mechanical power at a gate and dam head.
+        RealT initialMechanicalPower(RealT gate, RealT Hdam) const;
 
-        /// Solve the gate position whose steady mechanical power reproduces
-        /// the given component-base value, exact to machine rounding.
+        /// Bisect a bracketed initialization residual to machine rounding.
+        template <typename FuncT>
+        static RealT bisectInitialRoot(RealT a,
+                                       RealT b,
+                                       RealT fa,
+                                       RealT fb,
+                                       FuncT residual);
+
+        /// Solve the gate at the configured dam head.
         RealT solveInitialGate(RealT pmech) const;
+
+        /// Solve the dam head that reproduces mechanical power at Gmax.
+        RealT solveInitialDamHead(RealT pmech) const;
 
         ScalarT toComponentBase(ScalarT value) const;
         ScalarT toSystemBase(ScalarT value) const;
@@ -173,6 +182,7 @@ namespace GridKit
 
         IdxT parameter_error_count_{0};
 
+        RealT   Hdam_eff_{Hdam_};
         ScalarT pref_set_{0};
         ScalarT paux_set_{0};
 
