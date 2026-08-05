@@ -7,8 +7,8 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
@@ -194,7 +194,7 @@ namespace GridKit
         using BusType    = typename BusData::BusType;
         using Esdc1aData = Exciter::Esdc1aData<RealT, IdxT>;
         using HygovData  = Governor::HygovData<RealT, IdxT>;
-        using RepcaData  = Converter::RepcaData<RealT, IdxT>;
+        using RepcaData  = Controller::RepcaData<RealT, IdxT>;
 
         const char data[] =
             R"({

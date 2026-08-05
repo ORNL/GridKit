@@ -132,12 +132,12 @@ target_link_libraries(
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
 
-add_executable(test_phasor_converter_repca runConverterRepcaTests.cpp)
+add_executable(test_phasor_controller_repca runControllerRepcaTests.cpp)
 target_link_libraries(
-  test_phasor_converter_repca
+  test_phasor_controller_repca
   GridKit::definitions
-  GridKit::phasor_dynamics_converter_repca
-  GridKit::phasor_dynamics_converter_repca_dependency_tracking
+  GridKit::phasor_dynamics_controller_repca
+  GridKit::phasor_dynamics_controller_repca_dependency_tracking
   GridKit::phasor_dynamics_bus
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
@@ -197,7 +197,7 @@ add_test(NAME PhasorDynamicsExciterEsdc1aTest COMMAND test_phasor_exciter_esdc1a
 add_test(NAME PhasorDynamicsGensalTest COMMAND test_phasor_gensal)
 add_test(NAME PhasorDynamicsExciterSexsPtiTest COMMAND test_phasor_exciter_sexspti)
 add_test(NAME PhasorDynamicsConverterRegcaTest COMMAND test_phasor_converter_regca)
-add_test(NAME PhasorDynamicsConverterRepcaTest COMMAND test_phasor_converter_repca)
+add_test(NAME PhasorDynamicsControllerRepcaTest COMMAND test_phasor_controller_repca)
 add_test(NAME PhasorDynamicsStabilizerIeeestTest COMMAND test_phasor_stabilizer_ieeest)
 add_test(NAME PhasorDynamicsGenClassicalTest COMMAND test_phasor_gen_classical)
 add_test(NAME PhasorDynamicsLoadZTest COMMAND test_phasor_loadz)
@@ -224,7 +224,7 @@ install(
           test_phasor_gensal
           test_phasor_exciter_sexspti
           test_phasor_converter_regca
-          test_phasor_converter_repca
+          test_phasor_controller_repca
           test_phasor_stabilizer_ieeest
           test_phasor_gen_classical
           test_phasor_system

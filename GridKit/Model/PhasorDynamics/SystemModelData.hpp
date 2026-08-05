@@ -10,8 +10,8 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusToSignalAdapter/BusToSignalAdapterData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
@@ -46,7 +46,7 @@ namespace GridKit
       using BusToSignalAdapterDataT = BusToSignalAdapterData<RealT, IdxT>;
       using BusFaultDataT           = BusFaultData<RealT, IdxT>;
       using RegcaDataT              = Converter::RegcaData<RealT, IdxT>;
-      using RepcaDataT              = Converter::RepcaData<RealT, IdxT>;
+      using RepcaDataT              = Controller::RepcaData<RealT, IdxT>;
       using Tgov1DataT              = Governor::Tgov1Data<RealT, IdxT>;
       using Esdc1aDataT             = Exciter::Esdc1aData<RealT, IdxT>;
       using HygovDataT              = Governor::HygovData<RealT, IdxT>;

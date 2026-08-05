@@ -10,8 +10,8 @@
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REPCA/Repca.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REPCA/RepcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -20,7 +20,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Converter
+    namespace Controller
     {
       /// Logger used for REPCA diagnostics.
       using Log = ::GridKit::Utilities::Logger;
@@ -1038,6 +1038,6 @@ namespace GridKit
         return bus_->Vi();
       }
 
-    } // namespace Converter
+    } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

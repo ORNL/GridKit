@@ -4,6 +4,10 @@
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1a.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/Hygov.hpp>
@@ -140,8 +144,8 @@ namespace GridKit
       {
         using ConverterInternal = PhasorDynamics::Converter::RegcaInternalVariables;
         using ConverterParams   = PhasorDynamics::Converter::RegcaParameters;
-        using PlantExternal     = PhasorDynamics::Converter::RepcaExternalVariables;
-        using PlantParams       = PhasorDynamics::Converter::RepcaParameters;
+        using PlantExternal     = PhasorDynamics::Controller::RepcaExternalVariables;
+        using PlantParams       = PhasorDynamics::Controller::RepcaParameters;
 
         TestStatus success = true;
 
@@ -177,11 +181,11 @@ namespace GridKit
         converter_data.parameters[ConverterParams::VA1]    = static_cast<RealT>(0.9);
         converter_data.parameters[ConverterParams::Vhvmax] = static_cast<RealT>(1.2);
 
-        PhasorDynamics::Converter::RepcaData<RealT, IdxT> plant_data;
+        PhasorDynamics::Controller::RepcaData<RealT, IdxT> plant_data;
         plant_data.parameters[PlantParams::Tp] = static_cast<RealT>(0.05);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> converter(&bus, converter_data);
-        PhasorDynamics::Converter::Repca<ScalarT, IdxT> plant(&bus, plant_data);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT>  converter(&bus, converter_data);
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> plant(&bus, plant_data);
 
         auto& converter_signals = converter.getSignals();
         converter_signals.template assignSignalNode<ConverterInternal::IR>(&ir);

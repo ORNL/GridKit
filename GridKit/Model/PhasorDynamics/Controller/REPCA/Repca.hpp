@@ -12,7 +12,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REPCA/RepcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -25,7 +25,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     class SignalNode;
 
-    namespace Converter
+    namespace Controller
     {
       /// Internal variables of `Repca`.
       enum class RepcaInternalVariables : size_t
@@ -219,6 +219,6 @@ namespace GridKit
         std::vector<ScalarT> ws_;
         std::vector<IdxT>    ws_indices_;
       };
-    } // namespace Converter
+    } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

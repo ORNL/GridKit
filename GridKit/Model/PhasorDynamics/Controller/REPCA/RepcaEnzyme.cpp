@@ -12,7 +12,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Converter
+    namespace Controller
     {
       /**
        * @brief Assemble the sparse REPCA Jacobian with Enzyme.
@@ -45,7 +45,7 @@ namespace GridKit
           J_vals_buffer_ = new RealT[buffer_size];
         }
 
-        using ModelT = GridKit::PhasorDynamics::Converter::Repca<scalar_type, index_type>;
+        using ModelT = GridKit::PhasorDynamics::Controller::Repca<scalar_type, index_type>;
         using Fn     = GridKit::Enzyme::Sparse::MemberFunctions;
 
         nnz_ = 0;
@@ -117,6 +117,6 @@ namespace GridKit
 
       template class Repca<double, long int>;
       template class Repca<double, size_t>;
-    } // namespace Converter
+    } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

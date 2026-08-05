@@ -1,10 +1,10 @@
-#include "ConverterRepcaTests.hpp"
+#include "ControllerRepcaTests.hpp"
 
 int main()
 {
   GridKit::Testing::TestingResults result;
 
-  GridKit::Testing::ConverterRepcaTests<double, size_t> test;
+  GridKit::Testing::ControllerRepcaTests<double, size_t> test;
 
   result += test.validation();
   result += test.initializationAndSignals();

@@ -257,11 +257,11 @@ namespace GridKit
       /// and prove assigned command outputs alias the assembled signals.
       TestOutcome repca()
       {
-        using Buses   = PhasorDynamics::Converter::RepcaBuses;
-        using Inputs  = PhasorDynamics::Converter::RepcaSignalInputs;
-        using Outputs = PhasorDynamics::Converter::RepcaSignalOutputs;
-        using Params  = PhasorDynamics::Converter::RepcaParameters;
-        using Vars    = PhasorDynamics::Converter::RepcaInternalVariables;
+        using Buses   = PhasorDynamics::Controller::RepcaBuses;
+        using Inputs  = PhasorDynamics::Controller::RepcaSignalInputs;
+        using Outputs = PhasorDynamics::Controller::RepcaSignalOutputs;
+        using Params  = PhasorDynamics::Controller::RepcaParameters;
+        using Vars    = PhasorDynamics::Controller::RepcaInternalVariables;
 
         constexpr size_t input_count = static_cast<size_t>(Inputs::SIZE);
         constexpr IdxT   bus_id      = static_cast<IdxT>(1);

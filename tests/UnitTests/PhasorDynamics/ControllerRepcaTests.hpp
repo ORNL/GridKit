@@ -13,8 +13,8 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REPCA/Repca.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REPCA/RepcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -29,15 +29,15 @@ namespace GridKit
     using Log = ::GridKit::Utilities::Logger;
 
     template <typename scalar_type, typename index_type>
-    class ConverterRepcaTests
+    class ControllerRepcaTests
     {
     public:
       using ScalarT = scalar_type;
       using IdxT    = index_type;
       using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
 
-      ConverterRepcaTests()  = default;
-      ~ConverterRepcaTests() = default;
+      ControllerRepcaTests()  = default;
+      ~ControllerRepcaTests() = default;
 
       // Every probe state clears its smooth transitions by a margin, so the
       // widest gap to an ideal expected value is the floored-lag PREF row at
@@ -60,7 +60,7 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        PhasorDynamics::Converter::Repca<ScalarT, IdxT> empty(&bus);
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> empty(&bus);
         success *= (empty.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
         success *= (empty.getMonitor() == nullptr);
         success *= (empty.verify() > 0);
@@ -82,7 +82,7 @@ namespace GridKit
         integer_parameter.attachAllInputs();
         success *= (integer_parameter.repca.verify() == 0);
 
-        PhasorDynamics::Converter::Repca<ScalarT, IdxT> missing_signals(&bus, makeData());
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> missing_signals(&bus, makeData());
         success *= (missing_signals.verify() > 0);
 
         success *= invalidParameterCase(Params::mva, 0.0);
@@ -186,7 +186,7 @@ namespace GridKit
           }
         }
 
-        PhasorDynamics::Converter::Repca<ScalarT, IdxT> busless(nullptr, makeData());
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> busless(nullptr, makeData());
         success *= (busless.verify() > 0);
 
         success *= unlinkedSignalRejected<Ext::IR>();
@@ -1079,12 +1079,12 @@ namespace GridKit
 #endif
 
     private:
-      using Params      = PhasorDynamics::Converter::RepcaParameters;
-      using Vars        = PhasorDynamics::Converter::RepcaInternalVariables;
-      using Ext         = PhasorDynamics::Converter::RepcaExternalVariables;
-      using Mon         = PhasorDynamics::Converter::RepcaMonitorableVariables;
-      using Data        = PhasorDynamics::Converter::RepcaData<RealT, IdxT>;
-      using RepcaT      = PhasorDynamics::Converter::Repca<ScalarT, IdxT>;
+      using Params      = PhasorDynamics::Controller::RepcaParameters;
+      using Vars        = PhasorDynamics::Controller::RepcaInternalVariables;
+      using Ext         = PhasorDynamics::Controller::RepcaExternalVariables;
+      using Mon         = PhasorDynamics::Controller::RepcaMonitorableVariables;
+      using Data        = PhasorDynamics::Controller::RepcaData<RealT, IdxT>;
+      using RepcaT      = PhasorDynamics::Controller::Repca<ScalarT, IdxT>;
       using JacobianRow = DependencyTracking::Variable::DependencyMap;
 
       static constexpr size_t index(Vars variable)
@@ -1258,8 +1258,8 @@ namespace GridKit
           return input_indices_[index(port)];
         }
 
-        PhasorDynamics::Bus<T, IdxT>              bus;
-        PhasorDynamics::Converter::Repca<T, IdxT> repca;
+        PhasorDynamics::Bus<T, IdxT>               bus;
+        PhasorDynamics::Controller::Repca<T, IdxT> repca;
       };
 
       static constexpr RealT kStateVr      = 0.9;
@@ -1409,7 +1409,7 @@ namespace GridKit
       }
 
       template <typename T>
-      void setAnswerKeyState(PhasorDynamics::Converter::Repca<T, IdxT>& repca) const
+      void setAnswerKeyState(PhasorDynamics::Controller::Repca<T, IdxT>& repca) const
       {
         // Every smooth-transition argument keeps a saturation margin, and
         // every clamp that must pass its input through sits at the midpoint
@@ -1645,7 +1645,7 @@ namespace GridKit
       }
 
       template <typename T>
-      void setState(PhasorDynamics::Converter::Repca<T, IdxT>& repca, Rows rows) const
+      void setState(PhasorDynamics::Controller::Repca<T, IdxT>& repca, Rows rows) const
       {
         auto* y = repca.y().getData();
         for (const auto& [variable, value] : rows)
@@ -1656,7 +1656,7 @@ namespace GridKit
       }
 
       template <typename T>
-      void setDerivative(PhasorDynamics::Converter::Repca<T, IdxT>& repca, Rows rows) const
+      void setDerivative(PhasorDynamics::Controller::Repca<T, IdxT>& repca, Rows rows) const
       {
         auto* yp = repca.yp().getData();
         for (const auto& [variable, value] : rows)

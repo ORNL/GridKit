@@ -1,7 +1,7 @@
 /**
- * @file RepcaDependencyTracking.cpp
+ * @file Repca.cpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief Dependency-tracking instantiations for the REPCA plant-control model.
+ * @brief Non-Enzyme instantiation for the REPCA plant-control model.
  */
 
 #include "RepcaImpl.hpp"
@@ -10,11 +10,10 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Converter
+    namespace Controller
     {
       /**
-       * @brief Report that DependencyTracking exposes structure through the
-       *        residual rather than a separately assembled Jacobian.
+       * @brief Report that a separate Jacobian is unavailable in the plain-real build.
        */
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::evaluateJacobian()
@@ -24,8 +23,8 @@ namespace GridKit
         return 0;
       }
 
-      template class Repca<DependencyTracking::Variable, long int>;
-      template class Repca<DependencyTracking::Variable, size_t>;
-    } // namespace Converter
+      template class Repca<double, long int>;
+      template class Repca<double, size_t>;
+    } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

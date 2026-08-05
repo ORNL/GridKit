@@ -12,7 +12,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Converter
+    namespace Controller
     {
       /// Parameter keys for `Repca`.
       enum class RepcaParameters
@@ -115,6 +115,6 @@ namespace GridKit
         using SignalOutputs        = RepcaSignalOutputs;
         using MonitorableVariables = RepcaMonitorableVariables;
       };
-    } // namespace Converter
+    } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit
