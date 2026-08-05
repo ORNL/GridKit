@@ -27,15 +27,6 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @class GastPti
-       * @brief Gas turbine governor with speed droop, three turbine lags, and
-       *        exhaust-temperature limiting.
-       *
-       * @tparam scalar_type Plain real or differentiable scalar type.
-       * @tparam index_type Integer index type.
-       */
-
-      /**
        * @brief Construct a GASTPTI governor without parameters
        *
        * The model is sized and every parameter keeps its documented default.
@@ -197,9 +188,9 @@ namespace GridKit
                 "system/component power-base conversion ratios must be finite and positive");
         }
 
-        const bool valid_mode = mode_ == ResponseMode::Normal
-                                || mode_ == ResponseMode::DownOnly
-                                || mode_ == ResponseMode::Fixed;
+        const bool valid_mode = mode_ == GastPtiResponseMode::Normal
+                                || mode_ == GastPtiResponseMode::DownOnly
+                                || mode_ == GastPtiResponseMode::Fixed;
         check(valid_mode, "mode must be 0 (Normal), 1 (Down Only), or 2 (Fixed)");
 
         check(signals_.template isAssigned<GastPtiInternalVariables::PMECH>(),
@@ -336,12 +327,12 @@ namespace GridKit
 
         RealT Vmin_response = Vmin_;
         RealT Vmax_response = Vmax_;
-        if (mode_ == ResponseMode::Normal)
+        if (mode_ == GastPtiResponseMode::Normal)
         {
           Vmin_response = std::min(Vmin_, xflow0);
           Vmax_response = std::max(Vmax_, xflow0);
         }
-        else if (mode_ == ResponseMode::DownOnly)
+        else if (mode_ == GastPtiResponseMode::DownOnly)
         {
           Vmin_response = std::min(Vmin_, xflow0);
           Vmax_response = xflow0;
@@ -359,7 +350,7 @@ namespace GridKit
           return 1;
         }
 
-        if (mode_ != ResponseMode::Fixed
+        if (mode_ != GastPtiResponseMode::Fixed
             && (xflow0 < Vmin_ || xflow0 > Vmax_))
         {
           Log::warning() << "GastPti: initial fuel flow is outside [Vmin, Vmax]; "
@@ -709,13 +700,13 @@ namespace GridKit
             switch (*index_value)
             {
             case 0:
-              mode_ = ResponseMode::Normal;
+              mode_ = GastPtiResponseMode::Normal;
               break;
             case 1:
-              mode_ = ResponseMode::DownOnly;
+              mode_ = GastPtiResponseMode::DownOnly;
               break;
             case 2:
-              mode_ = ResponseMode::Fixed;
+              mode_ = GastPtiResponseMode::Fixed;
               break;
             default:
               Log::error() << "GastPti: parameter 'mode' must be 0 (Normal), "
@@ -792,7 +783,7 @@ namespace GridKit
         Vmax_response_     = Vmax_;
 
         s_valve_ = ONE<RealT>;
-        if (mode_ == ResponseMode::Fixed)
+        if (mode_ == GastPtiResponseMode::Fixed)
         {
           s_valve_ = ZERO<RealT>;
         }
@@ -800,6 +791,9 @@ namespace GridKit
 
       /**
        * @brief Invert the smooth ramp on its positive range
+       *
+       * This initialization-only helper is not called by the differentiated
+       * residual path.
        *
        * @param[in] value Positive smooth-ramp output.
        * @return Input whose smooth-ramp output equals `value`.

@@ -323,23 +323,23 @@ namespace GridKit
 
         if (govdata.signal_inputs.contains(GastPtiSignalInputs::speed))
         {
-          IdxT           speed = govdata.signal_inputs.at(GastPtiSignalInputs::speed);
+          const IdxT     speed = govdata.signal_inputs.at(GastPtiSignalInputs::speed);
           constexpr auto OMEGA = GastPtiExternalVariables::OMEGA;
           gov->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
         }
 
-        if (govdata.signal_outputs.contains(GastPtiSignalOutputs::pmech))
-        {
-          IdxT           pmech = govdata.signal_outputs.at(GastPtiSignalOutputs::pmech);
-          constexpr auto PMECH = GastPtiInternalVariables::PMECH;
-          gov->getSignals().template assignSignalNode<PMECH>(getSignal(pmech));
-        }
-
         if (govdata.signal_inputs.contains(GastPtiSignalInputs::pref))
         {
-          IdxT           pref = govdata.signal_inputs.at(GastPtiSignalInputs::pref);
+          const IdxT     pref = govdata.signal_inputs.at(GastPtiSignalInputs::pref);
           constexpr auto PREF = GastPtiExternalVariables::PREF;
           gov->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+        }
+
+        if (govdata.signal_outputs.contains(GastPtiSignalOutputs::pmech))
+        {
+          const IdxT     pmech = govdata.signal_outputs.at(GastPtiSignalOutputs::pmech);
+          constexpr auto PMECH = GastPtiInternalVariables::PMECH;
+          gov->getSignals().template assignSignalNode<PMECH>(getSignal(pmech));
         }
 
         addComponent(gov);

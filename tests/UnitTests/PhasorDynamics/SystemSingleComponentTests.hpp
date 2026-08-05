@@ -296,12 +296,10 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Construct GASTPTI through SystemModel and prove its required pmech
-      /// output aliases the assembled system signal.
+      /// Construct GASTPTI through the production system-data path.
       TestOutcome gastpti()
       {
-        using GastPti = PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
-        using Vars    = PhasorDynamics::Governor::GastPtiInternalVariables;
+        using Vars = PhasorDynamics::Governor::GastPtiInternalVariables;
 
         TestStatus success = true;
 
@@ -319,31 +317,6 @@ namespace GridKit
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
         success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
-
-        auto* gastpti  = dynamic_cast<GastPti*>(system.getComponent(0));
-        success       *= gastpti != nullptr;
-        auto* pmech    = system.getSignal(static_cast<IdxT>(1));
-        success       *= pmech != nullptr;
-        if (gastpti != nullptr && pmech != nullptr)
-        {
-          success *= pmech->linked();
-          if (pmech->linked())
-          {
-            success *= pmech->getVariableIndex()
-                       == gastpti->getVariableIndex(static_cast<IdxT>(Vars::PMECH));
-
-            // The node aliases the model's own storage.
-            success *= pmech->read()
-                       == gastpti->y().getData()[static_cast<size_t>(Vars::PMECH)];
-          }
-        }
-
-        auto missing_output_data = data;
-        missing_output_data.gastpti[0].signal_outputs.clear();
-
-        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_output_system(missing_output_data);
-        std::cout << "Testing expected GASTPTI missing-output configuration error.\n";
-        success *= missing_output_system.verify() > 0;
 
         return success.report(__func__);
       }

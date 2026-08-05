@@ -13,7 +13,6 @@
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
-#include <GridKit/Model/PhasorDynamics/Governor/ResponseMode.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -43,6 +42,21 @@ namespace GridKit
         MAXIMUM ///< Number of GASTPTI external signal variables
       };
 
+      /// GASTPTI response-limit behavior and serialized encoding.
+      enum class GastPtiResponseMode : size_t
+      {
+        Normal   = 0, ///< \f$\mathrm{mode}=0\f$: use the configured response limits
+        DownOnly = 1, ///< \f$\mathrm{mode}=1\f$: set the upper limit to the initial value
+        Fixed    = 2, ///< \f$\mathrm{mode}=2\f$: set both limits to the initial value
+      };
+
+      /**
+       * @brief Gas turbine governor with speed droop, three turbine lags, and
+       *        exhaust-temperature limiting.
+       *
+       * @tparam scalar_type Plain real or differentiable scalar type.
+       * @tparam index_type Integer index type.
+       */
       template <typename scalar_type, typename index_type>
       class GastPti : public Component<scalar_type, index_type>
       {
@@ -117,17 +131,17 @@ namespace GridKit
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
 
-        RealT        R_{static_cast<RealT>(0.05)};
-        RealT        T1_{static_cast<RealT>(0.4)};
-        RealT        T2_{static_cast<RealT>(0.1)};
-        RealT        T3_{static_cast<RealT>(3.0)};
-        RealT        At_{ONE<RealT>};
-        RealT        Kt_{static_cast<RealT>(2.0)};
-        RealT        Vmax_{ONE<RealT>};
-        RealT        Vmin_{ZERO<RealT>};
-        RealT        Dturb_{ZERO<RealT>};
-        RealT        Trate_{static_cast<RealT>(100.0)};
-        ResponseMode mode_{ResponseMode::Normal};
+        RealT               R_{static_cast<RealT>(0.05)};
+        RealT               T1_{static_cast<RealT>(0.4)};
+        RealT               T2_{static_cast<RealT>(0.1)};
+        RealT               T3_{static_cast<RealT>(3.0)};
+        RealT               At_{ONE<RealT>};
+        RealT               Kt_{static_cast<RealT>(2.0)};
+        RealT               Vmax_{ONE<RealT>};
+        RealT               Vmin_{ZERO<RealT>};
+        RealT               Dturb_{ZERO<RealT>};
+        RealT               Trate_{static_cast<RealT>(100.0)};
+        GastPtiResponseMode mode_{GastPtiResponseMode::Normal};
 
         RealT va_component_base_{ZERO<RealT>};
         RealT Vmin_response_{ZERO<RealT>};

@@ -30,8 +30,8 @@ $A_T$             | [p.u.]    | `At`    | Ambient-temperature load limit        
 $K_T$             | [p.u.]    | `Kt`    | Exhaust-temperature feedback gain     | 2.0           |
 $V^{\max}$        | [p.u.]    | `Vmax`  | Upper valve response limit            | 1.0           | Component base
 $V^{\min}$        | [p.u.]    | `Vmin`  | Lower valve response limit            | 0.0           | Component base
-$D^\mathrm{turb}$ | [p.u.]  | `Dturb` | Turbine damping coefficient           | 0.0           | Component-base power per speed deviation
-$T^\mathrm{rate}$ | [MW]   | `Trate` | Turbine rating                        | 100.0         | Same-valued MVA component base; GridKit addition
+$D^\mathrm{turb}$ | [p.u.]    | `Dturb` | Turbine damping coefficient           | 0.0           | Component-base power per speed deviation
+$T^\mathrm{rate}$ | [MW]      | `Trate` | Turbine rating                        | 100.0         | Same-valued MVA component base; GridKit addition
 $\mathrm{mode}$   | [integer] | `mode`  | Governor response-limit mode          | 0             | 0 = Normal, 1 = Down Only, 2 = Fixed
 
 ### Parameter Validation
@@ -46,9 +46,6 @@ $\mathrm{mode}$   | [integer] | `mode`  | Governor response-limit mode          
   \mathrm{mode} &\in\{0,1,2\}
 \end{aligned}
 ```
-
-The system and component power bases and both reciprocal conversion ratios must
-also be finite and positive; port requirements are defined under Model Ports.
 
 ### Model Derived Parameters
 
@@ -76,11 +73,6 @@ Name    | Port   | Init    | Description
 `speed` | Input  | Known   | Machine speed deviation
 `pref`  | Input  | Unknown | Active-power/load reference
 `pmech` | Output | Known   | Mechanical power output
-
-The `pmech` output must be assigned. Inputs are optional, but attached `speed`
-and `pref` ports must be linked. Unattached `speed` is zero; initialization
-publishes the resolved reference through attached `pref` or latches it otherwise.
-Indexed `speed`, `pref`, and `pmech` ports must be distinct.
 
 ## Model Variables
 
@@ -148,10 +140,10 @@ $V_{\mathrm{resp}}^{\max}$, and $s^{\mathrm{valve}}$ are defined under
 
 ```math
 \begin{aligned}
-  0 &= - \omega + R(k_\mathrm{base}P^\mathrm{ref}-V_D) \\
+  0 &= - \omega + R(k_{\mathrm{base}}P^\mathrm{ref}-V_D) \\
   0 &= -V_T + A_T+K_T(A_T-x_T) \\
   0 &= -V + \text{min}(V_D,V_T) \\
-  0 &= -k_\mathrm{base}P_\text{m} + x_F-D^\mathrm{turb}\omega.
+  0 &= -k_{\mathrm{base}}P_{\text{m}} + x_F-D^\mathrm{turb}\omega.
 \end{aligned}
 ```
 
@@ -159,12 +151,6 @@ CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
 and [`min`](../../../../CommonMath.md#min) targets and smooth approximations.
 
 ### External Equations
-
-#### Differential
-
-None.
-
-#### Algebraic
 
 None.
 
@@ -175,7 +161,7 @@ None.
 ```math
 \begin{aligned}
   \omega &\leftarrow \text{machine speed deviation} \\
-  P_\text{m} &\leftarrow \text{machine mechanical power}
+  P_{\text{m}} &\leftarrow \text{machine mechanical power}
 \end{aligned}
 ```
 
@@ -183,23 +169,23 @@ None.
 
 ```math
 \begin{aligned}
-  x_{F}
+  x_F
     &\leftarrow k_{\mathrm{base}}P_{\text{m}}
        +D^\mathrm{turb}\omega \\
-  x_{V},x_{T}
-    &\leftarrow x_{F} \\
-  V_{T}
-    &\leftarrow A_T+K_T\left(A_T-x_{F}\right) \\
-  m_{T}
-    &\leftarrow V_{T}-x_{F} \\
+  x_V,x_T
+    &\leftarrow x_F \\
+  V_T
+    &\leftarrow A_T+K_T\left(A_T-x_F\right) \\
+  m_T
+    &\leftarrow V_T-x_F \\
   \left(V_{\mathrm{resp}}^{\min},V_{\mathrm{resp}}^{\max}\right)
     &\leftarrow
       \begin{cases}
-        \left(\min(V^{\min},x_{F}),\max(V^{\max},x_{F})\right)
+        \left(\min(V^{\min},x_F),\max(V^{\max},x_F)\right)
           & \mathrm{mode}=0 \\
-        \left(\min(V^{\min},x_{F}),x_{F}\right)
+        \left(\min(V^{\min},x_F),x_F\right)
           & \mathrm{mode}=1 \\
-        \left(x_{F},x_{F}\right)
+        \left(x_F,x_F\right)
           & \mathrm{mode}=2
       \end{cases} \\
   s^{\mathrm{valve}}
@@ -212,18 +198,23 @@ None.
     &\leftarrow
       \begin{cases}
         \left(
-          V_{T}-\text{iramp}\!\left(m_{T}\right),
-          x_{F}
+          V_T-\text{iramp}\!\left(m_T\right),
+          x_F
         \right)
           & s^{\mathrm{valve}}=1 \\
         \left(
-          x_{F},
-          \text{min}\!\left(x_{F},V_{T}\right)
+          x_F,
+          \text{min}\!\left(x_F,V_T\right)
         \right)
           & s^{\mathrm{valve}}=0
       \end{cases}
 \end{aligned}
 ```
+
+When $s^{\mathrm{valve}}=1$, initialization requires a finite positive
+$m_T$ so `iramp` is defined. All candidates and response bounds are validated
+before state, derivatives, or signals are changed; failed initialization is
+atomic.
 
 ### Output Initialization
 
@@ -254,15 +245,16 @@ Output   | Units  | Description                        | Note
 - `initializationDomain()` checks accepted and rejected operating points for
   each response mode.
 - `initializationExactness()` checks the smooth-selector inverse.
-- `residualEquations()` checks every residual against a fixed answer key.
+- `residualEquations()` checks every residual and DependencyTracking Jacobian
+  row against fixed answer keys.
 - `governorControl()` checks droop, damping, response limits, and anti-windup.
 - `temperatureLimiting()` checks the low-value selector.
-- `jacobian()` checks fixed DependencyTracking oracles and Enzyme agreement to
-  $10^{-9}$ when enabled.
+- `jacobian()` checks Enzyme agreement with DependencyTracking when enabled.
 
 ## Appendix A: `iramp`
 
-For a positive smooth-ramp output $v>0$,
+For a positive smooth-ramp output $v>0$ and CommonMath smoothing parameter
+$\mu$,
 
 ```math
 \text{iramp}(v) = v+\dfrac{1}{\mu}\log\left(1-e^{-\mu v}\right).
