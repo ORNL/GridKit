@@ -184,7 +184,7 @@ namespace GridKit
 
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing that invalid saturation parameters are rejected. "
-                    << "Logged errors are are expected.\n";
+                    << "Logged errors are expected.\n";
         Log::setVerbosity(Log::Verbosity::WARNINGS);
 
         using Params = PhasorDynamics::Exciter::Ieeet1Parameters;

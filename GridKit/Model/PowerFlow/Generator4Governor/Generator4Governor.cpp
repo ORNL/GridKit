@@ -113,9 +113,6 @@ namespace GridKit
     auto* y  = y_.getData();
     auto* yp = yp_.getData();
 
-    auto* y  = y_.getData();
-    auto* yp = yp_.getData();
-
     // Initialize generator
     y[static_cast<size_t>(offsetGen_ + 0)]  = delta;
     y[static_cast<size_t>(offsetGen_ + 1)]  = omega_s_ + 0.2; // <~ this is hack to perturb omega
@@ -238,8 +235,8 @@ namespace GridKit
     f[static_cast<size_t>(offsetGen_ + 1)] = (2.0 * H_) / omega_s_ * dotOmega() - Lm(y[static_cast<size_t>(offsetGov_ + 0)]) + Eqp() * Iq() + Edp() * Id() + (-Xdp_ + Xqp_) * Id() * Iq() + D_ * (omega() - omega_s_);
     f[static_cast<size_t>(offsetGen_ + 2)] = Tq0p_ * dotEdp() + Edp() - (Xq_ - Xqp_) * Iq();
     f[static_cast<size_t>(offsetGen_ + 3)] = Td0p_ * dotEqp() + Eqp() + (Xd_ - Xdp_) * Id() - Ef0_;
-    f[static_cast<size_t>(offsetGen_ + 4)] = Rs_ * Id() - Xqp_ * Iq() + V() * sin(delta() - theta()) - Edp();
-    f[static_cast<size_t>(offsetGen_ + 5)] = Xdp_ * Id() + Rs_ * Iq() + V() * cos(delta() - theta()) - Eqp();
+    f[static_cast<size_t>(offsetGen_ + 4)] = Rs_ * Id() - Xqp_ * Iq() + V() * std::sin(delta() - theta()) - Edp();
+    f[static_cast<size_t>(offsetGen_ + 5)] = Xdp_ * Id() + Rs_ * Iq() + V() * std::cos(delta() - theta()) - Eqp();
 
     // Bus equations
     P() += Pg();
@@ -336,11 +333,6 @@ namespace GridKit
     // std::cout << "Evaluate adjoint residual for Gen2..." << std::endl;
     ScalarT sinPhi = std::sin(delta() - theta());
     ScalarT cosPhi = std::cos(delta() - theta());
-
-    const auto* y   = y_.getData();
-    const auto* yB  = yB_.getData();
-    const auto* ypB = ypB_.getData();
-    auto*       fB  = fB_.getData();
 
     const auto* y   = y_.getData();
     const auto* yB  = yB_.getData();

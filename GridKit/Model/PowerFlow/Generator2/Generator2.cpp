@@ -105,7 +105,7 @@ namespace GridKit
     const auto* param = param_.getData();
 
     f[0] = -yp[0] + omega_b_ * (y[1] - omega_s_);
-    f[1] = -yp[1] + omega_s_ / (2.0 * H_) * (param[0] - Eqp_ / Xdp_ * V() * sin(y[0] - theta()) - D_ * (y[1] - omega_s_));
+    f[1] = -yp[1] + omega_s_ / (2.0 * H_) * (param[0] - Eqp_ / Xdp_ * V() * std::sin(y[0] - theta()) - D_ * (y[1] - omega_s_));
     f_.setDataUpdated();
     return 0;
   }
@@ -155,7 +155,7 @@ namespace GridKit
     const auto* ypB = ypB_.getData();
     auto*       fB  = fB_.getData();
 
-    fB[0] = -ypB[0] + omega_s_ / (2.0 * H_) * Eqp_ / Xdp_ * V() * cos(y[0] - theta()) * yB[1];
+    fB[0] = -ypB[0] + omega_s_ / (2.0 * H_) * Eqp_ / Xdp_ * V() * std::cos(y[0] - theta()) * yB[1];
     fB[1] = -ypB[1] + omega_s_ / (2.0 * H_) * D_ * yB[1] - omega_b_ * yB[0] + frequencyPenaltyDer(y[1]);
     fB_.setDataUpdated();
     return 0;

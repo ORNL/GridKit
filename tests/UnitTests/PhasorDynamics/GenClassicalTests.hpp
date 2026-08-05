@@ -118,15 +118,17 @@ namespace GridKit
         auto* y  = gen.y().getData();
         auto* yp = gen.yp().getData();
 
-        y[0] = M_PI; // delta
+        static constexpr auto pi = std::numbers::pi_v<RealT>;
+
+        y[0] = pi;   // delta
         y[1] = 1.0;  // omega
         y[2] = 2.0;  // telec
         y[3] = -2.0; // ir
         y[4] = -4.0; // ii
 
         // Set derivative values matching the answer key
-        yp[0] = 2 * M_PI * 60.0; // delta_dot
-        yp[1] = -1.5;            // omega_dot
+        yp[0] = 2 * pi * 60.0; // delta_dot
+        yp[1] = -1.5;          // omega_dot
         yp[2] = 0;
         yp[3] = 0;
         yp[4] = 0;

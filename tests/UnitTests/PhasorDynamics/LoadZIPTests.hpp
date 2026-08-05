@@ -1,8 +1,6 @@
 #pragma once
 
-#include <cmath>
 #include <iostream>
-#include <limits>
 #include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>

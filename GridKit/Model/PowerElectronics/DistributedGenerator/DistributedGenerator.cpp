@@ -145,7 +145,9 @@ namespace GridKit
 
     // Rotor difference angle
     if (!refframe_)
+    {
       f_int_[12] = -yp_int_[12] + omega - *y_ext_[0];
+    }
 
     return 0;
   }
@@ -346,7 +348,9 @@ namespace GridKit
     };
     if (!refframe_)
     {
-      valtemp.push_back((1.0 / Lc_) * (sin(delta) * static_cast<RealT>(*y_ext_[1]) - cos(delta) * static_cast<RealT>(*y_ext_[2])));
+      rtemp.push_back(13);
+      ctemp.push_back(15);
+      valtemp.push_back((1.0 / Lc_) * (std::sin(delta) * static_cast<RealT>(*y_ext_[1]) - std::cos(delta) * static_cast<RealT>(*y_ext_[2])));
     }
     this->setJacValues(rtemp, ctemp, valtemp);
 
@@ -363,7 +367,9 @@ namespace GridKit
     };
     if (!refframe_)
     {
-      valtemp.push_back((1.0 / Lc_) * (cos(delta) * static_cast<RealT>(*y_ext_[1]) + sin(delta) * static_cast<RealT>(*y_ext_[2])));
+      rtemp.push_back(14);
+      ctemp.push_back(15);
+      valtemp.push_back((1.0 / Lc_) * (std::cos(delta) * static_cast<RealT>(*y_ext_[1]) + std::sin(delta) * static_cast<RealT>(*y_ext_[2])));
     }
     this->setJacValues(rtemp, ctemp, valtemp);
 
