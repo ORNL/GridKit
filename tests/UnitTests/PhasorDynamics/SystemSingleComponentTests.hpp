@@ -269,15 +269,15 @@ namespace GridKit
         constexpr IdxT   pext_id     = static_cast<IdxT>(input_count + 2);
 
         constexpr std::array<Inputs, input_count>      input_ports{{
-            Inputs::ibranchr,
-            Inputs::ibranchi,
-            Inputs::pbranch,
-            Inputs::qbranch,
+            Inputs::ir,
+            Inputs::ii,
+            Inputs::p,
+            Inputs::q,
             Inputs::freq,
             Inputs::freqref,
             Inputs::vref,
             Inputs::qref,
-            Inputs::pplantref,
+            Inputs::pref,
         }};
         constexpr std::array<const char*, input_count> input_names{{
             "Branch Current Real",

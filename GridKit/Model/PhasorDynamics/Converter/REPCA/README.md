@@ -163,13 +163,13 @@ $V_\mathrm{r}$                | [p.u.] | Known   | Regulated-bus voltage, real c
 $V_\mathrm{i}$                | [p.u.] | Known   | Regulated-bus voltage, imaginary component | Bus input
 $I_\mathrm{r}$                | [p.u.] | Known   | Branch-current real component     | Signal port `ibranchr`; system base
 $I_\mathrm{i}$                | [p.u.] | Known   | Branch-current imaginary component | Signal port `ibranchi`; system base
-$P^\mathrm{br}$               | [p.u.] | Known   | Branch active power               | Signal port `pbranch`; system base
-$Q^\mathrm{br}$               | [p.u.] | Known   | Branch reactive power             | Signal port `qbranch`; system base
+$P$                           | [p.u.] | Known   | Branch active power               | Signal port `pbranch`; system base
+$Q$                           | [p.u.] | Known   | Branch reactive power             | Signal port `qbranch`; system base
 $f$                           | [p.u.] | Known   | Frequency input                   | Signal port `freq`
 $f^\mathrm{ref}$              | [p.u.] | Unknown | Frequency reference               | Optional signal port `freqref`
 $V^\mathrm{ref}$              | [p.u.] | Unknown | Voltage-control reference         | Optional signal port `vref`
 $Q^\mathrm{ref}$              | [p.u.] | Unknown | Reactive-power reference          | Optional signal port `qref`; system base
-$P_\mathrm{plant}^\mathrm{ref}$ | [p.u.] | Unknown | Plant active-power reference      | Optional signal port `pplantref`; system base
+$P^\mathrm{ref}$ | [p.u.] | Unknown | Plant active-power reference      | Optional signal port `pplantref`; system base
 
 ## Model Equations
 
@@ -180,10 +180,10 @@ $P_\mathrm{plant}^\mathrm{ref}$ | [p.u.] | Unknown | Plant active-power referenc
 ```math
 \begin{aligned}
   0 &= -\dot{V}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (V^\mathrm{ctrl} - V^\mathrm{meas}) \\
-  0 &= -\dot{Q}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (k_\mathrm{base}Q^\mathrm{br} - Q^\mathrm{meas}) \\
+  0 &= -\dot{Q}^\mathrm{meas} + \dfrac{1}{T_\mathrm{fltr}} (k_\mathrm{base}Q - Q^\mathrm{meas}) \\
   0 &= -\dot{x}_Q^\mathrm{PI} + s_\mathrm{frz}\, \text{antiwindup}(Q^\mathrm{PI}, K_\mathrm{i}e_\mathrm{RQ}^\mathrm{lim};\,Q^{\min}, Q^{\max}) \\
   0 &= -\dot{x}_Q^\mathrm{lag} + \dfrac{1}{T_\mathrm{fv}} (Q^\mathrm{PI} - x_Q^\mathrm{lag}) \\
-  0 &= -\dot{P}^\mathrm{meas} + \dfrac{1}{T_\mathrm{p}} (k_\mathrm{base}P^\mathrm{br} - P^\mathrm{meas}) \\
+  0 &= -\dot{P}^\mathrm{meas} + \dfrac{1}{T_\mathrm{p}} (k_\mathrm{base}P - P^\mathrm{meas}) \\
   0 &= -\dot{x}_P^\mathrm{PI} + \text{antiwindup}(P^\mathrm{PI}, K_\mathrm{ig}e_P^\mathrm{lim};\,P^{\min}, P^{\max}) \\
   0 &= -\dot{P}^\mathrm{ref} + \dfrac{1}{T_\mathrm{lag}} (P^\mathrm{PI} - P^\mathrm{ref}).
 \end{aligned}
@@ -198,7 +198,7 @@ target and smooth approximation.
 \begin{aligned}
   0 &= -V^2 + V_\mathrm{r}^2 + V_\mathrm{i}^2 \\
   0 &= -(V^\mathrm{ldc})^2 + (V_\mathrm{r} - R_c I_\mathrm{r} + X_c I_\mathrm{i})^2 + (V_\mathrm{i} - R_c I_\mathrm{i} - X_c I_\mathrm{r})^2 \\
-  0 &= -V^\mathrm{droop} + V + K_c k_\mathrm{base}Q^\mathrm{br} \\
+  0 &= -V^\mathrm{droop} + V + K_c k_\mathrm{base}Q \\
   0 &= -V^\mathrm{ctrl} + s_\mathrm{comp}V^\mathrm{ldc} + s_\mathrm{comp}^\mathrm{off}V^\mathrm{droop} \\
   0 &= -s_\mathrm{frz} + \text{above}(V;\,V^\mathrm{frz}) \\
   0 &= -e_\mathrm{RQ} + s_\mathrm{ref}(V^\mathrm{ref} - V^\mathrm{meas}) + s_\mathrm{ref}^\mathrm{off} (k_\mathrm{base}Q^\mathrm{ref} - Q^\mathrm{meas}) \\
@@ -207,7 +207,7 @@ target and smooth approximation.
   0 &= -Q^\mathrm{PI} + \text{clamp}(K_\mathrm{p}e_\mathrm{RQ}^\mathrm{lim}+x_Q^\mathrm{PI};\,Q^{\min},Q^{\max}) \\
   0 &= -T_\mathrm{fv} (k_\mathrm{base}Q^\mathrm{ext}-x_Q^\mathrm{lag}) + T_\mathrm{ft} (Q^\mathrm{PI}-x_Q^\mathrm{lag}) \\
   0 &= -e_f + \text{deadband2}(f^\mathrm{ref}-f;\,D_\mathrm{bd1}^{f},D_\mathrm{bd2}^{f}) \\
-  0 &= -e_P + k_\mathrm{base}P_\mathrm{plant}^\mathrm{ref} - P^\mathrm{meas} + D_\mathrm{dn}\text{ramp}(e_f) - D_\mathrm{up}\text{ramp}(-e_f) \\
+  0 &= -e_P + k_\mathrm{base}P^\mathrm{ref} - P^\mathrm{meas} + D_\mathrm{dn}\text{ramp}(e_f) - D_\mathrm{up}\text{ramp}(-e_f) \\
   0 &= -e_P^\mathrm{lim} + \text{clamp}(e_P;\,e_P^{\min},e_P^{\max}) \\
   0 &= -P^\mathrm{PI} + \text{clamp}(K_\mathrm{pg}e_P^\mathrm{lim}+x_P^\mathrm{PI};\,P^{\min},P^{\max}) \\
   0 &= -k_\mathrm{base}P^\mathrm{ext} + s_\mathrm{freq}P^\mathrm{ref}.
@@ -231,7 +231,7 @@ REPCA reconstructs a steady operating point; arbitrary-state restart is unsuppor
 \begin{aligned}
   V_\mathrm{r}, V_\mathrm{i} &\leftarrow \text{regulated-bus voltage} \\
   I_\mathrm{r}, I_\mathrm{i} &\leftarrow \text{branch current} \\
-  P^\mathrm{br}, Q^\mathrm{br} &\leftarrow \text{branch power} \\
+  P, Q &\leftarrow \text{branch power} \\
   f &\leftarrow \text{frequency input} \\
   Q^\mathrm{ext} &\leftarrow \text{known reactive-power command on system base} \\
   P^\mathrm{ext} &\leftarrow \text{known active-power command on system base}, \quad s_\mathrm{freq}\ \text{enabled}.
@@ -248,11 +248,11 @@ $z\in[\ell,u]$ within that tolerance, including the limits.
 \begin{aligned}
   V &\leftarrow \sqrt{V_\mathrm{r}^2 + V_\mathrm{i}^2} \\
   V^\mathrm{ldc} &\leftarrow \sqrt{(V_\mathrm{r}-R_c I_\mathrm{r}+X_c I_\mathrm{i})^2 + (V_\mathrm{i}-R_c I_\mathrm{i}-X_c I_\mathrm{r})^2} \\
-  V^\mathrm{droop} &\leftarrow V + K_c k_\mathrm{base}Q^\mathrm{br} \\
+  V^\mathrm{droop} &\leftarrow V + K_c k_\mathrm{base}Q \\
   V^\mathrm{ctrl} &\leftarrow s_\mathrm{comp}V^\mathrm{ldc} + s_\mathrm{comp}^\mathrm{off}V^\mathrm{droop} \\
   V^\mathrm{meas} &\leftarrow V^\mathrm{ctrl} \\
-  Q^\mathrm{meas} &\leftarrow k_\mathrm{base}Q^\mathrm{br} \\
-  P^\mathrm{meas} &\leftarrow k_\mathrm{base}P^\mathrm{br} \\
+  Q^\mathrm{meas} &\leftarrow k_\mathrm{base}Q \\
+  P^\mathrm{meas} &\leftarrow k_\mathrm{base}P \\
   s_\mathrm{frz} &\leftarrow \text{above}(V;\,V^\mathrm{frz}) \\
   e_\mathrm{RQ} &\leftarrow 0 \\
   e_\mathrm{RQ}^\mathrm{db} &\leftarrow \text{deadband2}(e_\mathrm{RQ};\,D_\mathrm{bd1},D_\mathrm{bd2}) \\
@@ -297,8 +297,8 @@ Initialization is atomic; candidates are validated before state or signal writes
 \begin{aligned}
   f^\mathrm{ref} &\leftarrow f \\
   V^\mathrm{ref} &\leftarrow V^\mathrm{meas} \\
-  Q^\mathrm{ref} &\leftarrow Q^\mathrm{br} \\
-  P_\mathrm{plant}^\mathrm{ref} &\leftarrow \dfrac{P^\mathrm{meas}-P^\mathrm{freq}}{k_\mathrm{base}}.
+  Q^\mathrm{ref} &\leftarrow Q \\
+  P^\mathrm{ref} &\leftarrow \dfrac{P^\mathrm{meas}-P^\mathrm{freq}}{k_\mathrm{base}}.
 \end{aligned}
 ```
 

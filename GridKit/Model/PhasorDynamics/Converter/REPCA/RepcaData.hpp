@@ -14,7 +14,7 @@ namespace GridKit
   {
     namespace Converter
     {
-      /// Parameter keys for REPCA; all are optional with documented defaults.
+      /// Parameter keys for `Repca`.
       enum class RepcaParameters
       {
         mva,       ///< \f$S^\mathrm{base}\f$ Component power base [MVA]
@@ -50,29 +50,29 @@ namespace GridKit
         Tlag       ///< \f$T_\mathrm{lag}\f$ Active-power command lag time constant [sec]
       };
 
-      /// Buses for the REPCA plant-control model.
+      /// Buses for `Repca`.
       enum class RepcaBuses : size_t
       {
         bus, ///< \f$V_\mathrm{r},V_\mathrm{i}\f$ Required Known regulated-bus voltage [p.u.]
         SIZE ///< Number of REPCA bus ports
       };
 
-      /// Signal inputs for the REPCA plant-control model.
+      /// Signal inputs for the `Repca`.
       enum class RepcaSignalInputs : size_t
       {
-        ibranchr,  ///< \f$I_\mathrm{r}\f$ Required Known branch-current real input on system base [p.u.]
-        ibranchi,  ///< \f$I_\mathrm{i}\f$ Required Known branch-current imaginary input on system base [p.u.]
-        pbranch,   ///< \f$P^\mathrm{br}\f$ Required Known branch active-power input on system base [p.u.]
-        qbranch,   ///< \f$Q^\mathrm{br}\f$ Required Known branch reactive-power input on system base [p.u.]
-        freq,      ///< \f$f\f$ Required Known frequency input [p.u.]
-        freqref,   ///< \f$f^\mathrm{ref}\f$ Optional Unknown frequency-reference input [p.u.]
-        vref,      ///< \f$V^\mathrm{ref}\f$ Optional Unknown voltage-reference input [p.u.]
-        qref,      ///< \f$Q^\mathrm{ref}\f$ Optional Unknown reactive-power reference on system base [p.u.]
-        pplantref, ///< \f$P_\mathrm{plant}^\mathrm{ref}\f$ Optional Unknown plant active-power reference on system base [p.u.]
-        SIZE       ///< Number of REPCA signal-input ports
+        ir,      ///< \f$I_\mathrm{r}\f$ Required Known branch-current real input on system base [p.u.]
+        ii,      ///< \f$I_\mathrm{i}\f$ Required Known branch-current imaginary input on system base [p.u.]
+        p,       ///< \f$P\f$ Required Known branch active-power input on system base [p.u.]
+        q,       ///< \f$Q\f$ Required Known branch reactive-power input on system base [p.u.]
+        freq,    ///< \f$f\f$ Required Known frequency input [p.u.]
+        freqref, ///< \f$f^\mathrm{ref}\f$ Optional Unknown frequency-reference input [p.u.]
+        vref,    ///< \f$V^\mathrm{ref}\f$ Optional Unknown voltage-reference input [p.u.]
+        qref,    ///< \f$Q^\mathrm{ref}\f$ Optional Unknown reactive-power reference on system base [p.u.]
+        pref,    ///< \f$P^\mathrm{ref}\f$ Optional Unknown plant active-power reference on system base [p.u.]
+        SIZE     ///< Number of REPCA signal-input ports
       };
 
-      /// Signal outputs for the REPCA plant-control model.
+      /// Signal outputs for `Repca`.
       enum class RepcaSignalOutputs : size_t
       {
         qext, ///< \f$Q^\mathrm{ext}\f$ Optional Known reactive-power command output on system base [p.u.]

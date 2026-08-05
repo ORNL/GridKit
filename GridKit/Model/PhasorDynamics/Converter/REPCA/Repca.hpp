@@ -27,7 +27,7 @@ namespace GridKit
 
     namespace Converter
     {
-      /// Internal variables and residual rows of a `Repca`.
+      /// Internal variables of `Repca`.
       enum class RepcaInternalVariables : size_t
       {
         VMEAS,  ///< \f$V^\mathrm{meas}\f$ Differential filtered regulated voltage [p.u.]
@@ -52,22 +52,22 @@ namespace GridKit
         EPLIM,  ///< \f$e_P^\mathrm{lim}\f$ Algebraic limited active-power control error on component base [p.u.]
         PPI,    ///< \f$P^\mathrm{PI}\f$ Algebraic active-power PI output on component base [p.u.]
         PEXT,   ///< \f$P^\mathrm{ext}\f$ Algebraic active-power command on system base [p.u.]
-        MAXIMUM ///< Number of REPCA internal variables and residual rows
+        MAXIMUM ///< Number of internal variables
       };
 
-      /// External signal variables read or initialized by a `Repca`.
+      /// External variables of `Repca`.
       enum class RepcaExternalVariables : size_t
       {
-        IBRANCHR,  ///< \f$I_\mathrm{r}\f$ Required branch-current real component on system base [p.u.]
-        IBRANCHI,  ///< \f$I_\mathrm{i}\f$ Required branch-current imaginary component on system base [p.u.]
-        PBRANCH,   ///< \f$P^\mathrm{br}\f$ Required branch active power on system base [p.u.]
-        QBRANCH,   ///< \f$Q^\mathrm{br}\f$ Required branch reactive power on system base [p.u.]
-        FREQ,      ///< \f$f\f$ Required frequency input [p.u.]
-        FREQREF,   ///< \f$f^\mathrm{ref}\f$ Optional frequency reference [p.u.]
-        VREF,      ///< \f$V^\mathrm{ref}\f$ Optional voltage-control reference [p.u.]
-        QREF,      ///< \f$Q^\mathrm{ref}\f$ Optional reactive-power reference on system base [p.u.]
-        PPLANTREF, ///< \f$P_\mathrm{plant}^\mathrm{ref}\f$ Optional plant active-power reference on system base [p.u.]
-        MAXIMUM    ///< Number of REPCA external signal variables
+        IR,      ///< \f$I_\mathrm{r}\f$ Required branch-current real component on system base [p.u.]
+        II,      ///< \f$I_\mathrm{i}\f$ Required branch-current imaginary component on system base [p.u.]
+        P,       ///< \f$P\f$ Required branch active power on system base [p.u.]
+        Q,       ///< \f$Q\f$ Required branch reactive power on system base [p.u.]
+        FREQ,    ///< \f$f\f$ Required frequency input [p.u.]
+        FREQREF, ///< \f$f^\mathrm{ref}\f$ Optional frequency reference [p.u.]
+        VREF,    ///< \f$V^\mathrm{ref}\f$ Optional voltage-control reference [p.u.]
+        QREF,    ///< \f$Q^\mathrm{ref}\f$ Optional reactive-power reference on system base [p.u.]
+        PREF,    ///< \f$P^\mathrm{ref}\f$ Optional plant active-power reference on system base [p.u.]
+        MAXIMUM  ///< Number of external variables
       };
 
       template <typename scalar_type, typename index_type>
@@ -101,6 +101,10 @@ namespace GridKit
         using MonitorT           = Model::VariableMonitor<Repca, RepcaData>;
         using InternalVariablesT = RepcaInternalVariables;
         using ExternalVariablesT = RepcaExternalVariables;
+
+        // A command reconstructed exactly on a limit leaves the widest
+        // steady residual, 1.6e-13 at the QPI row.
+        static constexpr RealT INITIALIZATION_TOLERANCE = static_cast<RealT>(1.0e-12);
 
         Repca(BusT* bus);
         Repca(BusT* bus, const ModelDataT& data);
@@ -158,8 +162,7 @@ namespace GridKit
         ScalarT& Vr();
         ScalarT& Vi();
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM    = static_cast<RealT>(1.0e-3);
-        static constexpr RealT INITIALIZATION_TOLERANCE = static_cast<RealT>(1.0e-10);
+        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
 
         static constexpr RealT INITIALIZATION_LIMIT_OFFSET = static_cast<RealT>(0.1);
 
@@ -208,7 +211,7 @@ namespace GridKit
         ScalarT freqref_set_{ONE<RealT>};
         ScalarT vref_set_{ONE<RealT>};
         ScalarT qref_set_{ZERO<RealT>};
-        ScalarT pplantref_set_{ZERO<RealT>};
+        ScalarT pref_set_{ZERO<RealT>};
 
         ComponentSignals<ScalarT, IdxT, RepcaInternalVariables, RepcaExternalVariables> signals_;
         std::unique_ptr<MonitorT>                                                       monitor_;

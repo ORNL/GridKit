@@ -150,7 +150,6 @@ namespace GridKit
        * system/component bases and both conversion ratios, the regulated
        * bus, required measurement signals, and attached optional reference
        * signals. Command-output assignment is optional.
-       * Operating-point feasibility is checked by initialize().
        *
        * @return Number of configuration errors; zero when valid.
        */
@@ -216,10 +215,10 @@ namespace GridKit
           }
         };
 
-        check_required_signal.template operator()<RepcaExternalVariables::IBRANCHR>("ibranchr");
-        check_required_signal.template operator()<RepcaExternalVariables::IBRANCHI>("ibranchi");
-        check_required_signal.template operator()<RepcaExternalVariables::PBRANCH>("pbranch");
-        check_required_signal.template operator()<RepcaExternalVariables::QBRANCH>("qbranch");
+        check_required_signal.template operator()<RepcaExternalVariables::IR>("ir");
+        check_required_signal.template operator()<RepcaExternalVariables::II>("ii");
+        check_required_signal.template operator()<RepcaExternalVariables::P>("p");
+        check_required_signal.template operator()<RepcaExternalVariables::Q>("q");
         check_required_signal.template operator()<RepcaExternalVariables::FREQ>("freq");
 
         auto check_optional_signal = [&]<RepcaExternalVariables variable>(const char* name)
@@ -235,7 +234,7 @@ namespace GridKit
         check_optional_signal.template operator()<RepcaExternalVariables::FREQREF>("freqref");
         check_optional_signal.template operator()<RepcaExternalVariables::VREF>("vref");
         check_optional_signal.template operator()<RepcaExternalVariables::QREF>("qref");
-        check_optional_signal.template operator()<RepcaExternalVariables::PPLANTREF>("pplantref");
+        check_optional_signal.template operator()<RepcaExternalVariables::PREF>("pref");
 
         return ret;
       }
@@ -285,23 +284,23 @@ namespace GridKit
 
         const ScalarT vr = Vr();
         const ScalarT vi = Vi();
-        const ScalarT ibranchr =
-            signals_.template readExternalVariable<RepcaExternalVariables::IBRANCHR>();
-        const ScalarT ibranchi =
-            signals_.template readExternalVariable<RepcaExternalVariables::IBRANCHI>();
-        const ScalarT pbranch_system =
-            signals_.template readExternalVariable<RepcaExternalVariables::PBRANCH>();
-        const ScalarT qbranch_system =
-            signals_.template readExternalVariable<RepcaExternalVariables::QBRANCH>();
+        const ScalarT ir =
+            signals_.template readExternalVariable<RepcaExternalVariables::IR>();
+        const ScalarT ii =
+            signals_.template readExternalVariable<RepcaExternalVariables::II>();
+        const ScalarT p_system =
+            signals_.template readExternalVariable<RepcaExternalVariables::P>();
+        const ScalarT q_system =
+            signals_.template readExternalVariable<RepcaExternalVariables::Q>();
         const ScalarT freq = signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
 
         auto is_finite = [](ScalarT value)
         {
           return std::isfinite(static_cast<RealT>(value));
         };
-        if (!is_finite(vr) || !is_finite(vi) || !is_finite(ibranchr)
-            || !is_finite(ibranchi) || !is_finite(pbranch_system)
-            || !is_finite(qbranch_system)
+        if (!is_finite(vr) || !is_finite(vi) || !is_finite(ir)
+            || !is_finite(ii) || !is_finite(p_system)
+            || !is_finite(q_system)
             || !is_finite(freq) || !is_finite(qext0)
             || (Freqflag_ && !is_finite(pext0)))
         {
@@ -309,19 +308,19 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT pbranch = toComponentBase(pbranch_system);
-        const ScalarT qbranch = toComponentBase(qbranch_system);
+        const ScalarT p = toComponentBase(p_system);
+        const ScalarT q = toComponentBase(q_system);
 
-        const ScalarT vldc_r = vr - Rc_ * ibranchr + Xc_ * ibranchi;
-        const ScalarT vldc_i = vi - Rc_ * ibranchi - Xc_ * ibranchr;
+        const ScalarT vldc_r = vr - Rc_ * ir + Xc_ * ii;
+        const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
 
         const ScalarT v0      = std::sqrt(vr * vr + vi * vi);
         const ScalarT vldc0   = std::sqrt(vldc_r * vldc_r + vldc_i * vldc_i);
-        const ScalarT vdroop0 = v0 + Kc_ * qbranch;
+        const ScalarT vdroop0 = v0 + Kc_ * q;
         const ScalarT vctrl0  = vcomp_on_ * vldc0 + vcomp_off_ * vdroop0;
         const ScalarT vmeas0  = vctrl0;
-        const ScalarT qmeas0  = qbranch;
-        const ScalarT pmeas0  = pbranch;
+        const ScalarT qmeas0  = q;
+        const ScalarT pmeas0  = p;
         const ScalarT sfrz0   = Math::above(v0, Vfrz_);
 
         const ScalarT zero    = static_cast<ScalarT>(ZERO<RealT>);
@@ -375,19 +374,19 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT pext_output0      = Freqflag_ ? pext0_system : zero;
-        const ScalarT freqref0          = freq;
-        const ScalarT vref0             = vmeas0;
-        const ScalarT qref0_system      = qbranch_system;
-        const ScalarT pplantref0_system = toSystemBase(pmeas0 - pfreq0);
+        const ScalarT pext_output0 = Freqflag_ ? pext0_system : zero;
+        const ScalarT freqref0     = freq;
+        const ScalarT vref0        = vmeas0;
+        const ScalarT qref0_system = q_system;
+        const ScalarT pref0_system = toSystemBase(pmeas0 - pfreq0);
 
         const bool candidates_are_finite =
             is_finite(qext0_system)
             && (!Freqflag_ || is_finite(pext0_system))
             && is_finite(qext0)
             && (!Freqflag_ || is_finite(pext0))
-            && is_finite(pbranch)
-            && is_finite(qbranch)
+            && is_finite(p)
+            && is_finite(q)
             && is_finite(vldc_r)
             && is_finite(vldc_i)
             && is_finite(v0)
@@ -420,7 +419,7 @@ namespace GridKit
             && is_finite(freqref0)
             && is_finite(vref0)
             && is_finite(qref0_system)
-            && is_finite(pplantref0_system);
+            && is_finite(pref0_system);
         if (!candidates_are_finite)
         {
           Log::error() << "Repca: derived initial values must be finite\n";
@@ -450,10 +449,10 @@ namespace GridKit
         y[index(I::PPI)]    = ppi0;
         y[index(I::PEXT)]   = pext_output0;
 
-        freqref_set_   = freqref0;
-        vref_set_      = vref0;
-        qref_set_      = qref0_system;
-        pplantref_set_ = pplantref0_system;
+        freqref_set_ = freqref0;
+        vref_set_    = vref0;
+        qref_set_    = qref0_system;
+        pref_set_    = pref0_system;
 
         if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
         {
@@ -468,10 +467,10 @@ namespace GridKit
         {
           signals_.template writeExternalVariable<RepcaExternalVariables::QREF>(qref_set_);
         }
-        if (signals_.template isAttached<RepcaExternalVariables::PPLANTREF>())
+        if (signals_.template isAttached<RepcaExternalVariables::PREF>())
         {
-          signals_.template writeExternalVariable<RepcaExternalVariables::PPLANTREF>(
-              pplantref_set_);
+          signals_.template writeExternalVariable<RepcaExternalVariables::PREF>(
+              pref_set_);
         }
 
         y_.setDataUpdated();
@@ -530,28 +529,28 @@ namespace GridKit
       {
         using E = RepcaExternalVariables;
 
-        ws_[index(E::FREQREF)]   = freqref_set_;
-        ws_[index(E::VREF)]      = vref_set_;
-        ws_[index(E::QREF)]      = qref_set_;
-        ws_[index(E::PPLANTREF)] = pplantref_set_;
+        ws_[index(E::FREQREF)] = freqref_set_;
+        ws_[index(E::VREF)]    = vref_set_;
+        ws_[index(E::QREF)]    = qref_set_;
+        ws_[index(E::PREF)]    = pref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        ws_[index(E::IBRANCHR)] =
-            signals_.template readExternalVariable<RepcaExternalVariables::IBRANCHR>();
-        ws_indices_[index(E::IBRANCHR)] =
-            signals_.template readExternalVariableIndex<RepcaExternalVariables::IBRANCHR>();
-        ws_[index(E::IBRANCHI)] =
-            signals_.template readExternalVariable<RepcaExternalVariables::IBRANCHI>();
-        ws_indices_[index(E::IBRANCHI)] =
-            signals_.template readExternalVariableIndex<RepcaExternalVariables::IBRANCHI>();
-        ws_[index(E::PBRANCH)] =
-            signals_.template readExternalVariable<RepcaExternalVariables::PBRANCH>();
-        ws_indices_[index(E::PBRANCH)] =
-            signals_.template readExternalVariableIndex<RepcaExternalVariables::PBRANCH>();
-        ws_[index(E::QBRANCH)] =
-            signals_.template readExternalVariable<RepcaExternalVariables::QBRANCH>();
-        ws_indices_[index(E::QBRANCH)] =
-            signals_.template readExternalVariableIndex<RepcaExternalVariables::QBRANCH>();
+        ws_[index(E::IR)] =
+            signals_.template readExternalVariable<RepcaExternalVariables::IR>();
+        ws_indices_[index(E::IR)] =
+            signals_.template readExternalVariableIndex<RepcaExternalVariables::IR>();
+        ws_[index(E::II)] =
+            signals_.template readExternalVariable<RepcaExternalVariables::II>();
+        ws_indices_[index(E::II)] =
+            signals_.template readExternalVariableIndex<RepcaExternalVariables::II>();
+        ws_[index(E::P)] =
+            signals_.template readExternalVariable<RepcaExternalVariables::P>();
+        ws_indices_[index(E::P)] =
+            signals_.template readExternalVariableIndex<RepcaExternalVariables::P>();
+        ws_[index(E::Q)] =
+            signals_.template readExternalVariable<RepcaExternalVariables::Q>();
+        ws_indices_[index(E::Q)] =
+            signals_.template readExternalVariableIndex<RepcaExternalVariables::Q>();
         ws_[index(E::FREQ)] =
             signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
         ws_indices_[index(E::FREQ)] =
@@ -578,12 +577,12 @@ namespace GridKit
           ws_indices_[index(E::QREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::QREF>();
         }
-        if (signals_.template isAttached<RepcaExternalVariables::PPLANTREF>())
+        if (signals_.template isAttached<RepcaExternalVariables::PREF>())
         {
-          ws_[index(E::PPLANTREF)] =
-              signals_.template readExternalVariable<RepcaExternalVariables::PPLANTREF>();
-          ws_indices_[index(E::PPLANTREF)] =
-              signals_.template readExternalVariableIndex<RepcaExternalVariables::PPLANTREF>();
+          ws_[index(E::PREF)] =
+              signals_.template readExternalVariable<RepcaExternalVariables::PREF>();
+          ws_indices_[index(E::PREF)] =
+              signals_.template readExternalVariableIndex<RepcaExternalVariables::PREF>();
         }
 
         wb_[0] = Vr();
@@ -685,31 +684,31 @@ namespace GridKit
         const ScalarT vr = wb[0];
         const ScalarT vi = wb[1];
 
-        const ScalarT ibranchr  = ws[index(E::IBRANCHR)];
-        const ScalarT ibranchi  = ws[index(E::IBRANCHI)];
-        const ScalarT pbranch   = toComponentBase(ws[index(E::PBRANCH)]);
-        const ScalarT qbranch   = toComponentBase(ws[index(E::QBRANCH)]);
-        const ScalarT freq      = ws[index(E::FREQ)];
-        const ScalarT freqref   = ws[index(E::FREQREF)];
-        const ScalarT vref      = ws[index(E::VREF)];
-        const ScalarT qref      = toComponentBase(ws[index(E::QREF)]);
-        const ScalarT pplantref = toComponentBase(ws[index(E::PPLANTREF)]);
+        const ScalarT ir      = ws[index(E::IR)];
+        const ScalarT ii      = ws[index(E::II)];
+        const ScalarT p       = toComponentBase(ws[index(E::P)]);
+        const ScalarT q       = toComponentBase(ws[index(E::Q)]);
+        const ScalarT freq    = ws[index(E::FREQ)];
+        const ScalarT freqref = ws[index(E::FREQREF)];
+        const ScalarT vref    = ws[index(E::VREF)];
+        const ScalarT qref    = toComponentBase(ws[index(E::QREF)]);
+        const ScalarT pref_in = toComponentBase(ws[index(E::PREF)]);
 
-        const ScalarT vldc_r = vr - Rc_ * ibranchr + Xc_ * ibranchi;
-        const ScalarT vldc_i = vi - Rc_ * ibranchi - Xc_ * ibranchr;
+        const ScalarT vldc_r = vr - Rc_ * ir + Xc_ * ii;
+        const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
         const ScalarT pfreq  = Ddn_ * Math::ramp(ef) - Dup_ * Math::ramp(-ef);
 
         f[index(I::VMEAS)] = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
-        f[index(I::QMEAS)] = -qmeas_dot + (qbranch - qmeas) / Tfltr_;
+        f[index(I::QMEAS)] = -qmeas_dot + (q - qmeas) / Tfltr_;
         f[index(I::XQPI)]  = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
         f[index(I::XQLAG)] = -xqlag_dot + (qpi - xqlag) / Tfv_;
-        f[index(I::PMEAS)] = -pmeas_dot + (pbranch - pmeas) / Tp_;
+        f[index(I::PMEAS)] = -pmeas_dot + (p - pmeas) / Tp_;
         f[index(I::XPPI)]  = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
         f[index(I::PREF)]  = -pref_dot + (ppi - pref) / Tlag_;
 
         f[index(I::V)]      = -v * v + vr * vr + vi * vi;
         f[index(I::VLDC)]   = -vldc * vldc + vldc_r * vldc_r + vldc_i * vldc_i;
-        f[index(I::VDROOP)] = -vdroop + v + Kc_ * qbranch;
+        f[index(I::VDROOP)] = -vdroop + v + Kc_ * q;
         f[index(I::VCTRL)]  = -vctrl + vcomp_on_ * vldc + vcomp_off_ * vdroop;
         f[index(I::SFRZ)]   = -sfrz + Math::above(v, Vfrz_);
         f[index(I::ERQ)]    = -erq + ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
@@ -719,7 +718,7 @@ namespace GridKit
         f[index(I::QEXT)]   = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
 
         f[index(I::EF)]    = -ef + Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
-        f[index(I::EP)]    = -ep + pplantref - pmeas + pfreq;
+        f[index(I::EP)]    = -ep + pref_in - pmeas + pfreq;
         f[index(I::EPLIM)] = -eplim + Math::clamp(ep, femin_, femax_);
         f[index(I::PPI)]   = -ppi + Math::clamp(Kpg_ * eplim + xppi, Pmin_, Pmax_);
         f[index(I::PEXT)]  = -pext + freq_on_ * pref;

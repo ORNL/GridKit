@@ -494,29 +494,29 @@ namespace GridKit
 
         auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
 
-        if (repcadata.signal_inputs.contains(RepcaSignalInputs::ibranchr))
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::ir))
         {
-          const IdxT     ibranchr = repcadata.signal_inputs.at(RepcaSignalInputs::ibranchr);
-          constexpr auto IBRANCHR = RepcaExternalVariables::IBRANCHR;
-          repca->getSignals().template attachSignalNode<IBRANCHR>(getSignal(ibranchr));
+          const IdxT     ir = repcadata.signal_inputs.at(RepcaSignalInputs::ir);
+          constexpr auto IR = RepcaExternalVariables::IR;
+          repca->getSignals().template attachSignalNode<IR>(getSignal(ir));
         }
-        if (repcadata.signal_inputs.contains(RepcaSignalInputs::ibranchi))
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::ii))
         {
-          const IdxT     ibranchi = repcadata.signal_inputs.at(RepcaSignalInputs::ibranchi);
-          constexpr auto IBRANCHI = RepcaExternalVariables::IBRANCHI;
-          repca->getSignals().template attachSignalNode<IBRANCHI>(getSignal(ibranchi));
+          const IdxT     ii = repcadata.signal_inputs.at(RepcaSignalInputs::ii);
+          constexpr auto II = RepcaExternalVariables::II;
+          repca->getSignals().template attachSignalNode<II>(getSignal(ii));
         }
-        if (repcadata.signal_inputs.contains(RepcaSignalInputs::pbranch))
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::p))
         {
-          const IdxT     pbranch = repcadata.signal_inputs.at(RepcaSignalInputs::pbranch);
-          constexpr auto PBRANCH = RepcaExternalVariables::PBRANCH;
-          repca->getSignals().template attachSignalNode<PBRANCH>(getSignal(pbranch));
+          const IdxT     p = repcadata.signal_inputs.at(RepcaSignalInputs::p);
+          constexpr auto P = RepcaExternalVariables::P;
+          repca->getSignals().template attachSignalNode<P>(getSignal(p));
         }
-        if (repcadata.signal_inputs.contains(RepcaSignalInputs::qbranch))
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::q))
         {
-          const IdxT     qbranch = repcadata.signal_inputs.at(RepcaSignalInputs::qbranch);
-          constexpr auto QBRANCH = RepcaExternalVariables::QBRANCH;
-          repca->getSignals().template attachSignalNode<QBRANCH>(getSignal(qbranch));
+          const IdxT     q = repcadata.signal_inputs.at(RepcaSignalInputs::q);
+          constexpr auto Q = RepcaExternalVariables::Q;
+          repca->getSignals().template attachSignalNode<Q>(getSignal(q));
         }
         if (repcadata.signal_inputs.contains(RepcaSignalInputs::freq))
         {
@@ -542,11 +542,11 @@ namespace GridKit
           constexpr auto QREF = RepcaExternalVariables::QREF;
           repca->getSignals().template attachSignalNode<QREF>(getSignal(qref));
         }
-        if (repcadata.signal_inputs.contains(RepcaSignalInputs::pplantref))
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::pref))
         {
-          const IdxT     pplantref = repcadata.signal_inputs.at(RepcaSignalInputs::pplantref);
-          constexpr auto PPLANTREF = RepcaExternalVariables::PPLANTREF;
-          repca->getSignals().template attachSignalNode<PPLANTREF>(getSignal(pplantref));
+          const IdxT     pref = repcadata.signal_inputs.at(RepcaSignalInputs::pref);
+          constexpr auto PREF = RepcaExternalVariables::PREF;
+          repca->getSignals().template attachSignalNode<PREF>(getSignal(pref));
         }
         if (repcadata.signal_outputs.contains(RepcaSignalOutputs::qext))
         {

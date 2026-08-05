@@ -244,7 +244,7 @@ namespace GridKit
                           "Velm": 0.2, "Gmax": 0.98, "Gmin": 0.02, "Tw": 1.2, "At": 1.1, "Dturb": 0.4, "Qnl": 0.08, "Tn": 0.7, "Tnp": 1.4, "db1": 0.01, "db2": 0.02, "Hdam": 1.05,
                           "Gv0": 0.0, "Gv1": 0.2, "Gv2": 0.4, "Gv3": 0.6, "Gv4": 0.8, "Gv5": 1.0,
                           "Pgv0": 0.0, "Pgv1": 0.15, "Pgv2": 0.42, "Pgv3": 0.66, "Pgv4": 0.85, "Pgv5": 1.0}, "mon": ["pmech", "filter", "desiredgate", "gate", "flow", "head"]},
-                   { "class": "Repca", "ports": {"bus":1, "ibranchr":11, "ibranchi":12, "pbranch":13, "qbranch":14, "freq":15, "freqref":16, "vref":17, "qref":18, "pplantref":19, "qext":20, "pext":21}, "id": "PC1", "params": {"mva":50, "VcompFlag":false, "RefFlag":true, "Freqflag":true, "Tfltr":0.2, "Vfrz":0.65, "Rc":0.02, "Xc":0.03, "Kc":0.4, "dbdlow":-0.02, "dbdupper":0.03, "emax":0.8, "emin":-0.7, "Kp":2.0, "Ki":3.0, "Qmax":0.9, "Qmin":-0.8, "Tft":0.2, "Tfv":1.5, "Tp":0.4, "fdbd1":-0.01, "fdbd2":0.015, "Ddn":2.0, "Dup":1.0, "femax":0.6, "femin":-0.5, "Kpg":1.7, "Kig":1.8, "Pmax":1.2, "Pmin":0.1, "Tlag":0.5}, "mon": ["qext", "pext", "vmeas", "qmeas", "pmeas"] },
+                   { "class": "Repca", "ports": {"bus":1, "ir":11, "ii":12, "p":13, "q":14, "freq":15, "freqref":16, "vref":17, "qref":18, "pref":19, "qext":20, "pext":21}, "id": "PC1", "params": {"mva":50, "VcompFlag":false, "RefFlag":true, "Freqflag":true, "Tfltr":0.2, "Vfrz":0.65, "Rc":0.02, "Xc":0.03, "Kc":0.4, "dbdlow":-0.02, "dbdupper":0.03, "emax":0.8, "emin":-0.7, "Kp":2.0, "Ki":3.0, "Qmax":0.9, "Qmin":-0.8, "Tft":0.2, "Tfv":1.5, "Tp":0.4, "fdbd1":-0.01, "fdbd2":0.015, "Ddn":2.0, "Dup":1.0, "femax":0.6, "femin":-0.5, "Kpg":1.7, "Kig":1.8, "Pmax":1.2, "Pmin":0.1, "Tlag":0.5}, "mon": ["qext", "pext", "vmeas", "qmeas", "pmeas"] },
                    { "class": "Ieeet1", "ports": {"bus":1, "speed": 1, "efd":3}, "id": "DV3", "params": {"Tr":0.0, "Ka":50.0, "Ta":0.04, "Ke":-0.06, "Te":0.6, "Kf":0.09, "Tf":1.46, "Vrmin":-1.0, "Vrmax":1.0, "E1":2.8, "E2":3.373, "Se1":0.04, "Se2":0.33, "Ispdlim":0.0}},
                    { "class": "SexsPti", "ports": {"bus":1, "efd":3}, "id": "DV4", "params": {"Ta":0.1, "Tb":0.5, "Te":0.8, "K":10.0, "Efdmax":5.0, "Efdmin":-5.0}},
                    { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
@@ -466,15 +466,15 @@ namespace GridKit
         success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Pmin]) == 0.1;
         success *= std::get<RealT>(result.repca[0].parameters[RepcaData::Parameters::Tlag]) == 0.5;
         success *= result.repca[0].buses[RepcaData::Buses::bus] == 1;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::ibranchr] == 11;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::ibranchi] == 12;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::pbranch] == 13;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::qbranch] == 14;
+        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::ir] == 11;
+        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::ii] == 12;
+        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::p] == 13;
+        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::q] == 14;
         success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::freq] == 15;
         success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::freqref] == 16;
         success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::vref] == 17;
         success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::qref] == 18;
-        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::pplantref] == 19;
+        success *= result.repca[0].signal_inputs[RepcaData::SignalInputs::pref] == 19;
         success *= result.repca[0].signal_outputs[RepcaData::SignalOutputs::qext] == 20;
         success *= result.repca[0].signal_outputs[RepcaData::SignalOutputs::pext] == 21;
         success *= result.repca[0].disambiguation_string == "PC1";

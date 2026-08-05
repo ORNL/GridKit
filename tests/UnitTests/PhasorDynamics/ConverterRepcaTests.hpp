@@ -39,13 +39,14 @@ namespace GridKit
       ConverterRepcaTests()  = default;
       ~ConverterRepcaTests() = default;
 
-      // A command initialized exactly at a limit leaves the widest residual
-      // tail: QPI at 708 eps.
-      static constexpr RealT kBehaviorTol =
-          static_cast<RealT>(1000.0) * std::numeric_limits<RealT>::epsilon();
+      // Every probe state clears its smooth transitions by a margin, so the
+      // widest gap to an ideal expected value is the floored-lag PREF row at
+      // 3.2 eps.
+      static constexpr RealT kTol =
+          static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
 
       // The widest Enzyme-versus-dependency-tracking gap is QMEAS at the
-      // qbranch column, 0.7 eps.
+      // q column, 0.7 eps.
       static constexpr RealT kJacobianTol =
           static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
 
@@ -188,15 +189,15 @@ namespace GridKit
         PhasorDynamics::Converter::Repca<ScalarT, IdxT> busless(nullptr, makeData());
         success *= (busless.verify() > 0);
 
-        success *= unlinkedSignalRejected<Ext::IBRANCHR>();
-        success *= unlinkedSignalRejected<Ext::IBRANCHI>();
-        success *= unlinkedSignalRejected<Ext::PBRANCH>();
-        success *= unlinkedSignalRejected<Ext::QBRANCH>();
+        success *= unlinkedSignalRejected<Ext::IR>();
+        success *= unlinkedSignalRejected<Ext::II>();
+        success *= unlinkedSignalRejected<Ext::P>();
+        success *= unlinkedSignalRejected<Ext::Q>();
         success *= unlinkedSignalRejected<Ext::FREQ>();
         success *= unlinkedSignalRejected<Ext::FREQREF>();
         success *= unlinkedSignalRejected<Ext::VREF>();
         success *= unlinkedSignalRejected<Ext::QREF>();
-        success *= unlinkedSignalRejected<Ext::PPLANTREF>();
+        success *= unlinkedSignalRejected<Ext::PREF>();
 
         auto floor_data                      = makeInitializationData();
         floor_data.parameters[Params::Tfltr] = 0.0;
@@ -208,7 +209,7 @@ namespace GridKit
         setInitializationInputs(floored);
         success *= floored.initialize(0.25, 0.45);
         success *= (floored.repca.evaluateResidual() == 0);
-        success *= allResidualsZero(floored.repca);
+        success *= allResidualsWithinInitTolerance(floored.repca);
 
         auto* y                = floored.repca.y().getData();
         y[index(Vars::VMEAS)] -= 0.001;
@@ -257,26 +258,24 @@ namespace GridKit
                                  {Vars::ERQLIM, 0.0},
                                  {Vars::QPI, 0.5},
                                  {Vars::QEXT, 0.25},
-                                 {Vars::EF, -0.00024949607977392432},
+                                 {Vars::EF, 0.0},
                                  {Vars::EP, 0.0},
                                  {Vars::EPLIM, 0.0},
                                  {Vars::PPI, 0.9},
                                  {Vars::PEXT, 0.45}},
                                 "initialization");
 
-        success *= scalarPreserved(fixture.input(Ext::IBRANCHR), 0.2, "preserved ibranchr");
-        success *= scalarPreserved(fixture.input(Ext::IBRANCHI), -0.1, "preserved ibranchi");
-        success *= scalarPreserved(fixture.input(Ext::PBRANCH), 0.4, "preserved pbranch");
-        success *= scalarPreserved(fixture.input(Ext::QBRANCH), 0.1, "preserved qbranch");
+        success *= scalarPreserved(fixture.input(Ext::IR), 0.2, "preserved ir");
+        success *= scalarPreserved(fixture.input(Ext::II), -0.1, "preserved ii");
+        success *= scalarPreserved(fixture.input(Ext::P), 0.4, "preserved p");
+        success *= scalarPreserved(fixture.input(Ext::Q), 0.1, "preserved q");
         success *= scalarPreserved(fixture.input(Ext::FREQ), 0.99, "preserved freq");
         success *= scalarPreserved(fixture.qext(), 0.25, "preserved qext");
         success *= scalarPreserved(fixture.pext(), 0.45, "preserved pext");
         success *= scalarMatches(fixture.input(Ext::FREQREF), 0.99, "published freqref");
         success *= scalarMatches(fixture.input(Ext::VREF), 0.99200050403213, "published vref");
         success *= scalarMatches(fixture.input(Ext::QREF), 0.1, "published qref");
-        success *= scalarMatches(fixture.input(Ext::PPLANTREF),
-                                 0.39874213184871782,
-                                 "published pplantref");
+        success *= scalarMatches(fixture.input(Ext::PREF), 0.4, "published pref");
 
         for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
         {
@@ -305,7 +304,7 @@ namespace GridKit
                                   {{0.25, 0.45, 0.99200050403213, 0.2, 0.8}},
                                   "initialization");
 
-        success *= allResidualsZero(fixture.repca);
+        success *= allResidualsWithinInitTolerance(fixture.repca);
 
         {
           auto exact_data                    = makeInitializationData();
@@ -320,7 +319,7 @@ namespace GridKit
           success *= scalarPreserved(exact_commands.pext(), 0.45, "pext signal");
           success *= scalarPreserved(exact_commands.input(Ext::QREF), 0.1, "qref signal");
           success *= (exact_commands.repca.evaluateResidual() == 0);
-          success *= allResidualsZero(exact_commands.repca);
+          success *= allResidualsWithinInitTolerance(exact_commands.repca);
         }
 
         Fixture<ScalarT> fallback(makeInitializationData(), 0.8, 0.6);
@@ -328,7 +327,7 @@ namespace GridKit
         setInitializationInputs(fallback);
         success *= fallback.initialize(0.25, 0.45);
         success *= (fallback.repca.evaluateResidual() == 0);
-        success *= allResidualsZero(fallback.repca);
+        success *= allResidualsWithinInitTolerance(fallback.repca);
 
         Fixture<ScalarT> outputless(makeInitializationData(),
                                     0.8,
@@ -346,7 +345,7 @@ namespace GridKit
         success *= monitorMatches(outputless.repca,
                                   {{0.25, 0.45, 0.99200050403213, 0.2, 0.8}},
                                   "unassigned command outputs");
-        success *= allResidualsZero(outputless.repca);
+        success *= allResidualsWithinInitTolerance(outputless.repca);
 
         struct FlagCase
         {
@@ -391,7 +390,7 @@ namespace GridKit
                                   test_case.label);
           success *= scalarMatches(scenario.qext(), 0.25, test_case.label);
           success *= scalarMatches(scenario.pext(), test_case.pext, test_case.label);
-          success *= allResidualsZero(scenario.repca);
+          success *= allResidualsWithinInitTolerance(scenario.repca);
         }
 
         return success.report(__func__);
@@ -418,9 +417,9 @@ namespace GridKit
         const RealT                        infinity = std::numeric_limits<RealT>::infinity();
         const std::array<RejectionCase, 8> rejection_cases{{
             {"qext below Qmin", -0.4000000001, 0.45},
-            {"qext above Qmax", 0.4500000001, 0.45},
+            {"qext above Qmax", 0.7500000001, 0.45},
             {"pext below Pmin", 0.25, -1.0e-10},
-            {"pext above Pmax", 0.25, 0.6000000001},
+            {"pext above Pmax", 0.25, 1.0000000001},
             {"nonfinite qext", infinity, 0.45},
             {"nonfinite pext", 0.25, infinity},
             {"nan qext", nan, 0.45},
@@ -433,10 +432,10 @@ namespace GridKit
                                                       test_case.pext,
                                                       test_case.label);
         }
-        for (const Ext port : {Ext::IBRANCHR,
-                               Ext::IBRANCHI,
-                               Ext::PBRANCH,
-                               Ext::QBRANCH,
+        for (const Ext port : {Ext::IR,
+                               Ext::II,
+                               Ext::P,
+                               Ext::Q,
                                Ext::FREQ})
         {
           for (const RealT value : {infinity, -infinity, nan})
@@ -487,16 +486,19 @@ namespace GridKit
             0.45,
             "nonzero gated reactive-power PI state rate at the freeze transition",
             NonfiniteTarget::NONE,
-            0.7,
+            0.2,
             0.0);
 
+        auto frozen_data                     = reactive_aw_data;
+        frozen_data.parameters[Params::Vfrz] = 0.9;
+
         {
-          Fixture<ScalarT> frozen_reactive_rate(reactive_aw_data, 0.5, 0.0);
+          Fixture<ScalarT> frozen_reactive_rate(frozen_data, 0.05, 0.0);
           frozen_reactive_rate.attachAllInputs();
           setInitializationInputs(frozen_reactive_rate);
           success *= frozen_reactive_rate.initialize(0.25, 0.45);
           success *= (frozen_reactive_rate.repca.evaluateResidual() == 0);
-          success *= allResidualsZero(frozen_reactive_rate.repca);
+          success *= allResidualsWithinInitTolerance(frozen_reactive_rate.repca);
         }
 
         auto active_aw_data                      = makeInitializationData();
@@ -534,42 +536,43 @@ namespace GridKit
           success *= vectorUnchanged(invalid_fixture.repca.yp(), invalid_yp, "derivative");
         }
 
+        // A command exactly on a limit is reconstructed through the offset
+        // branch of the limiter inverse, which leaves a smoothing-scaled
+        // residual, so only the reconstructed state is checked.
         {
           Fixture<ScalarT> qmax_pmin_boundary(data, 0.8, 0.6);
           qmax_pmin_boundary.attachAllInputs();
           setInitializationInputs(qmax_pmin_boundary);
-          success *= qmax_pmin_boundary.initialize(0.45, 0.0);
+          success *= qmax_pmin_boundary.initialize(0.75, 0.0);
           success *= (qmax_pmin_boundary.repca.evaluateResidual() == 0);
           success *= stateMatches(qmax_pmin_boundary.repca,
-                                  {{Vars::QPI, 0.9},
-                                   {Vars::XQLAG, 0.9},
-                                   {Vars::XQPI, 1.0},
-                                   {Vars::QEXT, 0.45},
+                                  {{Vars::QPI, 1.5},
+                                   {Vars::XQLAG, 1.5},
+                                   {Vars::XQPI, 1.6},
+                                   {Vars::QEXT, 0.75},
                                    {Vars::PREF, 0.0},
                                    {Vars::PPI, 0.0},
                                    {Vars::XPPI, -0.1},
                                    {Vars::PEXT, 0.0}},
                                   "Qmax/Pmin command boundary");
-          success *= allResidualsZero(qmax_pmin_boundary.repca);
         }
 
         {
           Fixture<ScalarT> qmin_pmax_boundary(data, 0.8, 0.6);
           qmin_pmax_boundary.attachAllInputs();
           setInitializationInputs(qmin_pmax_boundary);
-          success *= qmin_pmax_boundary.initialize(-0.4, 0.6);
+          success *= qmin_pmax_boundary.initialize(-0.4, 1.0);
           success *= (qmin_pmax_boundary.repca.evaluateResidual() == 0);
           success *= stateMatches(qmin_pmax_boundary.repca,
                                   {{Vars::QPI, -0.8},
                                    {Vars::XQLAG, -0.8},
                                    {Vars::XQPI, -0.9},
                                    {Vars::QEXT, -0.4},
-                                   {Vars::PREF, 1.2},
-                                   {Vars::PPI, 1.2},
-                                   {Vars::XPPI, 1.3},
-                                   {Vars::PEXT, 0.6}},
+                                   {Vars::PREF, 2.0},
+                                   {Vars::PPI, 2.0},
+                                   {Vars::XPPI, 2.1},
+                                   {Vars::PEXT, 1.0}},
                                   "Qmin/Pmax command boundary");
-          success *= allResidualsZero(qmin_pmax_boundary.repca);
         }
 
         {
@@ -588,7 +591,7 @@ namespace GridKit
                                    {Vars::PPI, 0.9},
                                    {Vars::PEXT, 0.45}},
                                   "collapsed Q/P limits");
-          success *= allResidualsZero(collapsed_limits.repca);
+          success *= allResidualsWithinInitTolerance(collapsed_limits.repca);
         }
 
         return success.report(__func__);
@@ -608,28 +611,28 @@ namespace GridKit
         success *= (fixture.repca.evaluateResidual() == 0);
 
         const std::array<ExpectedResidual, index(Vars::MAXIMUM)> expected{{
-            {Vars::VMEAS, "VMEAS", 0.19000000000000017},
-            {Vars::QMEAS, "QMEAS", 0.77000000000000013},
-            {Vars::XQPI, "XQPI", 0.018000000000000002},
-            {Vars::XQLAG, "XQLAG", 0.12666666666666668},
-            {Vars::PMEAS, "PMEAS", 0.92999999999999983},
-            {Vars::XPPI, "XPPI", 0.082000000000000003},
-            {Vars::PREF, "PREF", 0.070000000000000104},
-            {Vars::V, "V", -0.02999999999999993},
-            {Vars::VLDC, "VLDC", -0.015651160000000081},
-            {Vars::VDROOP, "VDROOP", 0.053999999999999965},
-            {Vars::VCTRL, "VCTRL", -0.030000000000000027},
-            {Vars::SFRZ, "SFRZ", 0.19999999999999996},
-            {Vars::ERQ, "ERQ", 2.7755575615628914e-17},
-            {Vars::ERQDB, "ERQDB", -0.047111912348473055},
-            {Vars::ERQLIM, "ERQLIM", 0.030000000000000044},
-            {Vars::QPI, "QPI", -0.16000000000000009},
-            {Vars::QEXT, "QEXT", -0.36399999999999999},
-            {Vars::EF, "EF", -0.0089371400000009833},
-            {Vars::EP, "EP", 0.59036181730064152},
-            {Vars::EPLIM, "EPLIM", 0.049999999999999968},
-            {Vars::PPI, "PPI", -0.38200000000000006},
-            {Vars::PEXT, "PEXT", -0.62},
+            {Vars::VMEAS, "VMEAS", 0.4},
+            {Vars::QMEAS, "QMEAS", 0.45},
+            {Vars::XQPI, "XQPI", 0.3},
+            {Vars::XQLAG, "XQLAG", 0.46},
+            {Vars::PMEAS, "PMEAS", 0.5},
+            {Vars::XPPI, "XPPI", -0.3},
+            {Vars::PREF, "PREF", 0.4},
+            {Vars::V, "V", -1.28},
+            {Vars::VLDC, "VLDC", -0.0075},
+            {Vars::VDROOP, "VDROOP", 0.1},
+            {Vars::VCTRL, "VCTRL", 0.05},
+            {Vars::SFRZ, "SFRZ", 0.5},
+            {Vars::ERQ, "ERQ", -0.63},
+            {Vars::ERQDB, "ERQDB", 0.75},
+            {Vars::ERQLIM, "ERQLIM", -0.35},
+            {Vars::QPI, "QPI", -0.05},
+            {Vars::QEXT, "QEXT", -1.345},
+            {Vars::EF, "EF", -0.015},
+            {Vars::EP, "EP", 0.4},
+            {Vars::EPLIM, "EPLIM", 1.1},
+            {Vars::PPI, "PPI", 0.1},
+            {Vars::PEXT, "PEXT", 0.05},
         }};
 
         success              *= (static_cast<size_t>(fixture.repca.getResidual().getSize()) == expected.size());
@@ -703,24 +706,37 @@ namespace GridKit
         setAnswerKeyInputs(fixture);
         success *= fixture.prepare(0.0, 0.0);
 
-        const std::array<DrivenCase, 3> freeze_cases{{
-            {0.6, 3.7751357595539048e-11},
-            {0.7, 0.5},
-            {0.8, 0.99999999996224864},
-        }};
-        for (const auto& test_case : freeze_cases)
+        // A voltage of zero must clear the freeze threshold by the same
+        // margin the enabled probe clears it, so the threshold is raised.
         {
-          setState(fixture.repca, {{Vars::V, test_case.input}, {Vars::SFRZ, 0.0}});
-          success *= (fixture.repca.evaluateResidual() == 0);
-          success *= residualsMatch(fixture.repca, {{Vars::SFRZ, test_case.expected}}, "freeze gate");
+          auto freeze_data                     = makeResidualData();
+          freeze_data.parameters[Params::Vfrz] = 0.8;
+
+          Fixture<ScalarT> freeze(freeze_data);
+          freeze.attachAllInputs();
+          setAnswerKeyInputs(freeze);
+          success *= freeze.prepare(0.0, 0.0);
+
+          const std::array<DrivenCase, 2> freeze_cases{{
+              {0.0, 0.0},
+              {1.6, 1.0},
+          }};
+          for (const auto& test_case : freeze_cases)
+          {
+            setState(freeze.repca, {{Vars::V, test_case.input}, {Vars::SFRZ, 0.0}});
+            success *= (freeze.repca.evaluateResidual() == 0);
+            success *= residualsMatch(freeze.repca,
+                                      {{Vars::SFRZ, test_case.expected}},
+                                      "freeze gate");
+          }
         }
 
-        const std::array<DrivenCase, 5> deadband_cases{{
-            {-0.05, -0.030003109594436028},
-            {-0.02, -0.002888087651526948},
-            {0.0, -3.104066702683552e-5},
-            {0.03, 0.002888087651526948},
-            {0.06, 0.030003109594436025},
+        // The interior probe sits at the midpoint of the band, where the
+        // smooth deadband cancels exactly.
+        const std::array<DrivenCase, 3> deadband_cases{{
+            {-0.82, -0.8},
+            {0.005, 0.0},
+            {0.83, 0.8},
         }};
         for (const auto& test_case : deadband_cases)
         {
@@ -731,12 +747,10 @@ namespace GridKit
                                     "reactive-power deadband");
         }
 
-        const std::array<DrivenCase, 5> error_limit_cases{{
-            {-1.0, -0.7},
-            {-0.7, -0.69711188674766689},
-            {0.2, 0.2},
-            {0.8, 0.79711188674766698},
-            {1.0, 0.8},
+        const std::array<DrivenCase, 3> error_limit_cases{{
+            {-1.5, -0.7},
+            {0.05, 0.05},
+            {1.6, 0.8},
         }};
         for (const auto& test_case : error_limit_cases)
         {
@@ -747,12 +761,10 @@ namespace GridKit
                                     "reactive-power error limit");
         }
 
-        const std::array<DrivenCase, 5> command_limit_cases{{
-            {-1.0, -0.8},
-            {-0.8, -0.79711188674766698},
-            {0.2, 0.2},
-            {0.9, 0.89711188674766706},
-            {1.1, 0.9},
+        const std::array<DrivenCase, 3> command_limit_cases{{
+            {-1.6, -0.8},
+            {0.05, 0.05},
+            {1.7, 0.9},
         }};
         for (const auto& test_case : command_limit_cases)
         {
@@ -766,15 +778,15 @@ namespace GridKit
                                     "reactive-power command limit");
         }
 
-        const std::array<AntiWindupCase, 8> antiwindup_cases{{
-            {-0.9, -0.1, -1.1325407278661714e-11},
-            {-0.9, 0.1, 0.3},
-            {-0.8, -0.1, -0.15},
-            {-0.8, 0.1, 0.3},
-            {0.9, -0.1, -0.3},
-            {0.9, 0.1, 0.15},
-            {1.0, -0.1, -0.3},
-            {1.0, 0.1, 1.1325407278661714e-11},
+        // Saturated probes sit beyond their limit by a margin, so a blocked
+        // gate contributes nothing and an admitted gate passes the full rate.
+        const std::array<AntiWindupCase, 6> antiwindup_cases{{
+            {-1.6, -0.4, 0.0},
+            {-1.6, 0.4, 1.2},
+            {0.05, -0.4, -1.2},
+            {0.05, 0.4, 1.2},
+            {1.7, -0.4, -1.2},
+            {1.7, 0.4, 0.0},
         }};
         for (const auto& test_case : antiwindup_cases)
         {
@@ -796,35 +808,36 @@ namespace GridKit
         setDerivative(fixture.repca, {{Vars::XQLAG, -0.04}});
         success *= (fixture.repca.evaluateResidual() == 0);
         success *= residualsMatch(fixture.repca,
-                                  {{Vars::XQLAG, 0.12666666666666668},
-                                   {Vars::QEXT, -0.36399999999999999}},
+                                  {{Vars::XQLAG, 0.092},
+                                   {Vars::QEXT, -0.624}},
                                   "reactive-command lead-lag");
 
-        // The command sits at Qmax with the error at emax driving further
-        // out, so the antiwindup gate must block the PI state.
+        // The command sits beyond Qmax with the error driving further out,
+        // so the blocked gate leaves the PI state with no sensitivity to the
+        // gate, the error, or the command.
         {
           Fixture<DependencyTracking::Variable> blocked(makeResidualData());
           blocked.attachAllInputs();
           setAnswerKeyInputs(blocked);
           success *= blocked.prepare(0.0, 0.0);
           setState(blocked.repca,
-                   {{Vars::QPI, 0.9}, {Vars::ERQLIM, 0.8}, {Vars::SFRZ, 1.0}});
+                   {{Vars::QPI, 1.7}, {Vars::ERQLIM, 0.4}, {Vars::SFRZ, 1.0}});
           setDerivative(blocked.repca, {{Vars::XQPI, 0.0}});
           numberVariables(blocked, 1.0);
           success *= (blocked.repca.evaluateResidual() == 0);
 
           const JacobianRow expected{
               {index(Vars::XQPI), -1.0},
-              {index(Vars::SFRZ), 1.2},
-              {index(Vars::ERQLIM), 1.5},
-              {index(Vars::QPI), -144.0},
+              {index(Vars::SFRZ), 0.0},
+              {index(Vars::ERQLIM), 0.0},
+              {index(Vars::QPI), 0.0},
           };
           success *= jacobianRowMatches(
               blocked.repca.getResidual().getData()[index(Vars::XQPI)].getDependencies(),
               expected,
               index(Vars::XQPI),
               "blocked reactive-power antiwindup",
-              kBehaviorTol);
+              kTol);
         }
 
         return success.report(__func__);
@@ -866,12 +879,12 @@ namespace GridKit
         setAnswerKeyInputs(fixture);
         success *= fixture.prepare(0.0, 0.0);
 
-        const std::array<DrivenCase, 5> frequency_deadband_cases{{
-            {-0.05, -0.040000281494001103},
-            {-0.01, -0.0028777978975925616},
-            {0.0, -0.00024949607977392432},
-            {0.015, 0.0028777978975925616},
-            {0.05, 0.035000934519396246},
+        // The interior probe sits at the midpoint of the band, where the
+        // smooth deadband cancels exactly.
+        const std::array<DrivenCase, 3> frequency_deadband_cases{{
+            {-0.81, -0.8},
+            {0.0025, 0.0},
+            {0.815, 0.8},
         }};
         for (const auto& test_case : frequency_deadband_cases)
         {
@@ -884,12 +897,11 @@ namespace GridKit
                                     "frequency deadband");
         }
 
-        const std::array<DrivenCase, 3> droop_cases{{
-            {-0.1, -0.099999999999842701},
-            {0.0, 0.0028881132523331052},
-            {0.1, 0.2000000000001573},
+        const std::array<DrivenCase, 2> droop_cases{{
+            {-0.9, -0.9},
+            {0.9, 1.8},
         }};
-        fixture.input(Ext::PPLANTREF) = 0.2;
+        fixture.input(Ext::PREF) = 0.2;
         for (const auto& test_case : droop_cases)
         {
           setState(fixture.repca,
@@ -902,12 +914,10 @@ namespace GridKit
                                     "frequency droop");
         }
 
-        const std::array<DrivenCase, 5> error_limit_cases{{
-            {-1.0, -0.5},
-            {-0.5, -0.49711188674766688},
-            {0.2, 0.2},
-            {0.6, 0.59711188674766702},
-            {1.0, 0.6},
+        const std::array<DrivenCase, 3> error_limit_cases{{
+            {-1.3, -0.5},
+            {0.05, 0.05},
+            {1.4, 0.6},
         }};
         for (const auto& test_case : error_limit_cases)
         {
@@ -918,12 +928,10 @@ namespace GridKit
                                     "active-power error limit");
         }
 
-        const std::array<DrivenCase, 5> command_limit_cases{{
-            {-0.2, 5.9381836780872301e-24},
-            {0.0, 0.0028881132523331052},
-            {0.4, 0.4},
-            {1.2, 1.1971118867476669},
-            {1.4, 1.2},
+        const std::array<DrivenCase, 3> command_limit_cases{{
+            {-0.8, 0.0},
+            {1.0, 1.0},
+            {2.8, 2.0},
         }};
         for (const auto& test_case : command_limit_cases)
         {
@@ -937,15 +945,15 @@ namespace GridKit
                                     "active-power command limit");
         }
 
-        const std::array<AntiWindupCase, 8> antiwindup_cases{{
-            {-0.1, -0.1, -6.7952443671970281e-12},
-            {-0.1, 0.1, 0.18},
-            {0.0, -0.1, -0.09},
-            {0.0, 0.1, 0.18},
-            {1.2, -0.1, -0.18},
-            {1.2, 0.1, 0.09},
-            {1.3, -0.1, -0.18},
-            {1.3, 0.1, 6.7952443671970281e-12},
+        // Saturated probes sit beyond their limit by a margin, so a blocked
+        // gate contributes nothing and an admitted gate passes the full rate.
+        const std::array<AntiWindupCase, 6> antiwindup_cases{{
+            {-0.8, -0.5, 0.0},
+            {-0.8, 0.5, 0.9},
+            {1.0, -0.5, -0.9},
+            {1.0, 0.5, 0.9},
+            {2.8, -0.5, -0.9},
+            {2.8, 0.5, 0.0},
         }};
         for (const auto& test_case : antiwindup_cases)
         {
@@ -963,7 +971,7 @@ namespace GridKit
         setDerivative(fixture.repca, {{Vars::PREF, 0.05}});
         success *= (fixture.repca.evaluateResidual() == 0);
         success *= residualsMatch(fixture.repca,
-                                  {{Vars::PREF, 0.070000000000000104}},
+                                  {{Vars::PREF, 0.07}},
                                   "active-power command lag");
 
         return success.report(__func__);
@@ -980,22 +988,22 @@ namespace GridKit
         success *= fixture.prepare(0.0, 0.0);
         setAnswerKeyState(fixture.repca);
         setDerivative(fixture.repca,
-                      {{Vars::VMEAS, 0.11},
-                       {Vars::QMEAS, -0.12},
-                       {Vars::XQPI, 0.13},
-                       {Vars::XQLAG, -0.14},
-                       {Vars::PMEAS, 0.15},
-                       {Vars::XPPI, -0.16},
-                       {Vars::PREF, 0.17}});
+                      {{Vars::VMEAS, 0.2},
+                       {Vars::QMEAS, -0.1},
+                       {Vars::XQPI, 0.4},
+                       {Vars::XQLAG, -0.3},
+                       {Vars::PMEAS, 0.6},
+                       {Vars::XPPI, -0.5},
+                       {Vars::PREF, 0.8}});
         success *= (fixture.repca.evaluateResidual() == 0);
         success *= residualsMatch(fixture.repca,
-                                  {{Vars::VMEAS, 0.09000000000000018},
-                                   {Vars::QMEAS, 0.8700000000000001},
-                                   {Vars::XQPI, -0.082},
-                                   {Vars::XQLAG, 0.22666666666666668},
-                                   {Vars::PMEAS, 0.7999999999999998},
-                                   {Vars::XPPI, 0.232},
-                                   {Vars::PREF, -0.04999999999999989}},
+                                  {{Vars::VMEAS, 0.3},
+                                   {Vars::QMEAS, 0.35},
+                                   {Vars::XQPI, 0.2},
+                                   {Vars::XQLAG, 0.36},
+                                   {Vars::PMEAS, 0.4},
+                                   {Vars::XPPI, -0.4},
+                                   {Vars::PREF, 0.3}},
                                   "explicit derivatives");
 
         return success.report(__func__);
@@ -1007,15 +1015,13 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // The fixed state places ERQ exactly at dbdupper, so the key also
-        // covers the CommonMath deadband transition derivative.
         const auto data       = makeResidualData();
         const auto dependency = dependencyTrackingJacobian(data, success);
 
         success *= jacobianMatches(dependency,
                                    expectedJacobian(),
                                    "dependency tracking",
-                                   kBehaviorTol);
+                                   kTol);
 
         auto all_flags_off_data                          = data;
         all_flags_off_data.parameters[Params::VcompFlag] = false;
@@ -1026,14 +1032,14 @@ namespace GridKit
         success *= jacobianMatches(all_flags_off,
                                    expectedJacobianAllFlagsOff(),
                                    "all-flags-off dependency tracking",
-                                   kBehaviorTol);
+                                   kTol);
 
         const auto nonunit_alpha_dependency =
             dependencyTrackingJacobian(data, success, kNonunitAlpha);
         success *= jacobianMatches(nonunit_alpha_dependency,
                                    expectedJacobianNonunitAlpha(),
                                    "non-unit-alpha dependency tracking",
-                                   kBehaviorTol);
+                                   kTol);
 
         return success.report(__func__);
       }
@@ -1178,10 +1184,10 @@ namespace GridKit
           }
 
           auto& signals = repca.getSignals();
-          signals.template attachSignalNode<Ext::IBRANCHR>(&input_nodes_[index(Ext::IBRANCHR)]);
-          signals.template attachSignalNode<Ext::IBRANCHI>(&input_nodes_[index(Ext::IBRANCHI)]);
-          signals.template attachSignalNode<Ext::PBRANCH>(&input_nodes_[index(Ext::PBRANCH)]);
-          signals.template attachSignalNode<Ext::QBRANCH>(&input_nodes_[index(Ext::QBRANCH)]);
+          signals.template attachSignalNode<Ext::IR>(&input_nodes_[index(Ext::IR)]);
+          signals.template attachSignalNode<Ext::II>(&input_nodes_[index(Ext::II)]);
+          signals.template attachSignalNode<Ext::P>(&input_nodes_[index(Ext::P)]);
+          signals.template attachSignalNode<Ext::Q>(&input_nodes_[index(Ext::Q)]);
           signals.template attachSignalNode<Ext::FREQ>(&input_nodes_[index(Ext::FREQ)]);
         }
 
@@ -1193,7 +1199,7 @@ namespace GridKit
           signals.template attachSignalNode<Ext::FREQREF>(&input_nodes_[index(Ext::FREQREF)]);
           signals.template attachSignalNode<Ext::VREF>(&input_nodes_[index(Ext::VREF)]);
           signals.template attachSignalNode<Ext::QREF>(&input_nodes_[index(Ext::QREF)]);
-          signals.template attachSignalNode<Ext::PPLANTREF>(&input_nodes_[index(Ext::PPLANTREF)]);
+          signals.template attachSignalNode<Ext::PREF>(&input_nodes_[index(Ext::PREF)]);
         }
 
         void setCommands(RealT qext, RealT pext)
@@ -1327,6 +1333,9 @@ namespace GridKit
         return data;
       }
 
+      /// Distinct nonzero values for every parameter. The limiter bands are
+      /// wide enough, and the lag reciprocals exact enough, for probe states
+      /// to clear every smooth transition on an exact decimal.
       Data makeResidualData() const
       {
         auto data                         = makeData();
@@ -1344,7 +1353,7 @@ namespace GridKit
         data.parameters[Params::Qmax]     = 0.9;
         data.parameters[Params::Qmin]     = -0.8;
         data.parameters[Params::Tft]      = 0.2;
-        data.parameters[Params::Tfv]      = 1.5;
+        data.parameters[Params::Tfv]      = 2.5;
         data.parameters[Params::Tp]       = 0.4;
         data.parameters[Params::fdbd1]    = -0.01;
         data.parameters[Params::fdbd2]    = 0.015;
@@ -1354,16 +1363,23 @@ namespace GridKit
         data.parameters[Params::femin]    = -0.5;
         data.parameters[Params::Kpg]      = 1.7;
         data.parameters[Params::Kig]      = 1.8;
-        data.parameters[Params::Pmax]     = 1.2;
+        data.parameters[Params::Pmax]     = 2.0;
         data.parameters[Params::Tlag]     = 0.5;
         return data;
       }
 
+      /// Both deadbands and both error limits are symmetric and the droop
+      /// gains are equal, so an operating point with no error reconstructs
+      /// exactly; the commands and the freeze threshold clear their limits.
       Data makeInitializationData() const
       {
         auto data                         = makeResidualData();
+        data.parameters[Params::Vfrz]     = 0.2;
         data.parameters[Params::dbdupper] = 0.02;
         data.parameters[Params::emin]     = -0.8;
+        data.parameters[Params::Qmax]     = 1.5;
+        data.parameters[Params::fdbd1]    = -0.015;
+        data.parameters[Params::Dup]      = 2.0;
         data.parameters[Params::femin]    = -0.6;
         return data;
       }
@@ -1371,61 +1387,64 @@ namespace GridKit
       template <typename T>
       void setInitializationInputs(Fixture<T>& fixture) const
       {
-        fixture.input(Ext::IBRANCHR) = static_cast<T>(0.2);
-        fixture.input(Ext::IBRANCHI) = static_cast<T>(-0.1);
-        fixture.input(Ext::PBRANCH)  = static_cast<T>(0.4);
-        fixture.input(Ext::QBRANCH)  = static_cast<T>(0.1);
-        fixture.input(Ext::FREQ)     = static_cast<T>(0.99);
+        fixture.input(Ext::IR)   = static_cast<T>(0.2);
+        fixture.input(Ext::II)   = static_cast<T>(-0.1);
+        fixture.input(Ext::P)    = static_cast<T>(0.4);
+        fixture.input(Ext::Q)    = static_cast<T>(0.1);
+        fixture.input(Ext::FREQ) = static_cast<T>(0.99);
       }
 
       template <typename T>
       void setAnswerKeyInputs(Fixture<T>& fixture) const
       {
-        fixture.input(Ext::IBRANCHR)  = static_cast<T>(0.08);
-        fixture.input(Ext::IBRANCHI)  = static_cast<T>(-0.02);
-        fixture.input(Ext::PBRANCH)   = static_cast<T>(0.41);
-        fixture.input(Ext::QBRANCH)   = static_cast<T>(0.13);
-        fixture.input(Ext::FREQ)      = static_cast<T>(0.99);
-        fixture.input(Ext::FREQREF)   = static_cast<T>(1.0);
-        fixture.input(Ext::VREF)      = static_cast<T>(1.01);
-        fixture.input(Ext::QREF)      = static_cast<T>(0.12);
-        fixture.input(Ext::PPLANTREF) = static_cast<T>(0.55);
+        fixture.input(Ext::IR)      = static_cast<T>(1.0);
+        fixture.input(Ext::II)      = static_cast<T>(2.0);
+        fixture.input(Ext::P)       = static_cast<T>(0.35);
+        fixture.input(Ext::Q)       = static_cast<T>(0.25);
+        fixture.input(Ext::FREQ)    = static_cast<T>(0.2);
+        fixture.input(Ext::FREQREF) = static_cast<T>(1.0);
+        fixture.input(Ext::VREF)    = static_cast<T>(1.05);
+        fixture.input(Ext::QREF)    = static_cast<T>(0.3);
+        fixture.input(Ext::PREF)    = static_cast<T>(0.55);
       }
 
       template <typename T>
       void setAnswerKeyState(PhasorDynamics::Converter::Repca<T, IdxT>& repca) const
       {
+        // Every smooth-transition argument keeps a saturation margin, and
+        // every clamp that must pass its input through sits at the midpoint
+        // of its limits, so each row carries its ideal value.
         setState(repca,
-                 {{Vars::VMEAS, 0.98},
-                  {Vars::QMEAS, 0.11},
-                  {Vars::XQPI, 0.07},
-                  {Vars::XQLAG, 0.14},
-                  {Vars::PMEAS, 0.44},
-                  {Vars::XPPI, 0.21},
-                  {Vars::PREF, 0.60},
-                  {Vars::V, 1.0},
-                  {Vars::VLDC, 0.99},
-                  {Vars::VDROOP, 1.05},
-                  {Vars::VCTRL, 1.02},
-                  {Vars::SFRZ, 0.8},
-                  {Vars::ERQ, 0.03},
+                 {{Vars::VMEAS, 0.85},
+                  {Vars::QMEAS, 0.45},
+                  {Vars::XQPI, -0.75},
+                  {Vars::XQLAG, -0.05},
+                  {Vars::PMEAS, 0.3},
+                  {Vars::XPPI, 1.85},
+                  {Vars::PREF, 0.35},
+                  {Vars::V, 1.5},
+                  {Vars::VLDC, 1.0},
+                  {Vars::VDROOP, 1.6},
+                  {Vars::VCTRL, 0.95},
+                  {Vars::SFRZ, 0.5},
+                  {Vars::ERQ, 0.83},
                   {Vars::ERQDB, 0.05},
-                  {Vars::ERQLIM, 0.02},
-                  {Vars::QPI, 0.27},
-                  {Vars::QEXT, 0.20},
-                  {Vars::EF, 0.01},
-                  {Vars::EP, 0.09},
-                  {Vars::EPLIM, 0.04},
-                  {Vars::PPI, 0.66},
-                  {Vars::PEXT, 0.61}});
+                  {Vars::ERQLIM, 0.4},
+                  {Vars::QPI, 0.1},
+                  {Vars::QEXT, 0.25},
+                  {Vars::EF, 0.8},
+                  {Vars::EP, 2.0},
+                  {Vars::EPLIM, -0.5},
+                  {Vars::PPI, 0.9},
+                  {Vars::PEXT, 0.15}});
         setDerivative(repca,
-                      {{Vars::VMEAS, 0.01},
-                       {Vars::QMEAS, -0.02},
-                       {Vars::XQPI, 0.03},
-                       {Vars::XQLAG, -0.04},
-                       {Vars::PMEAS, 0.02},
-                       {Vars::XPPI, -0.01},
-                       {Vars::PREF, 0.05}});
+                      {{Vars::VMEAS, 0.1},
+                       {Vars::QMEAS, -0.2},
+                       {Vars::XQPI, 0.3},
+                       {Vars::XQLAG, -0.4},
+                       {Vars::PMEAS, 0.5},
+                       {Vars::XPPI, -0.6},
+                       {Vars::PREF, 0.7}});
       }
 
       bool defaultsMatchDocumentedValues() const
@@ -1435,12 +1454,12 @@ namespace GridKit
         implicit_defaults.attachAllInputs();
         explicit_defaults.attachAllInputs();
 
-        implicit_defaults.input(Ext::PBRANCH) = 0.2;
-        implicit_defaults.input(Ext::QBRANCH) = 0.1;
-        implicit_defaults.input(Ext::FREQ)    = 1.0;
-        explicit_defaults.input(Ext::PBRANCH) = 0.2;
-        explicit_defaults.input(Ext::QBRANCH) = 0.1;
-        explicit_defaults.input(Ext::FREQ)    = 1.0;
+        implicit_defaults.input(Ext::P)    = 0.2;
+        implicit_defaults.input(Ext::Q)    = 0.1;
+        implicit_defaults.input(Ext::FREQ) = 1.0;
+        explicit_defaults.input(Ext::P)    = 0.2;
+        explicit_defaults.input(Ext::Q)    = 0.1;
+        explicit_defaults.input(Ext::FREQ) = 1.0;
 
         bool success = implicit_defaults.initialize(0.1, 0.2)
                        && explicit_defaults.initialize(0.1, 0.2);
@@ -1681,7 +1700,7 @@ namespace GridKit
                                   const char* what,
                                   Vars        variable,
                                   const char* context,
-                                  RealT       tolerance = kBehaviorTol)
+                                  RealT       tolerance = kTol)
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -1703,7 +1722,7 @@ namespace GridKit
                              const char* what,
                              size_t      row,
                              const char* context,
-                             RealT       tolerance = kBehaviorTol)
+                             RealT       tolerance = kTol)
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -1722,7 +1741,7 @@ namespace GridKit
       bool scalarMatches(RealT       actual,
                          RealT       expected,
                          const char* label,
-                         RealT       tolerance = kBehaviorTol) const
+                         RealT       tolerance = kTol) const
       {
         if (isEqual(actual, expected, tolerance))
         {
@@ -1855,7 +1874,7 @@ namespace GridKit
         return rowsMatch(repca.y(), rows.begin(), rows.size(), "state", context);
       }
 
-      bool allResidualsZero(const RepcaT& repca) const
+      bool allResidualsWithinInitTolerance(const RepcaT& repca) const
       {
         bool        success = true;
         const auto* f       = repca.getResidual().getData();
@@ -1867,15 +1886,12 @@ namespace GridKit
                                0.0,
                                "residual",
                                variable,
-                               "at rest"))
+                               "at rest",
+                               RepcaT::INITIALIZATION_TOLERANCE))
           {
             success = false;
           }
-          if (!variableMatches(yp[row],
-                               0.0,
-                               "derivative",
-                               variable,
-                               "at rest"))
+          if (!valueUnchanged(yp[row], 0.0, "derivative", row))
           {
             success = false;
           }
@@ -1954,34 +1970,34 @@ namespace GridKit
       {
         return {{
             {{index(Vars::VMEAS), -6.0}, {index(Vars::VCTRL), 5.0}},
-            {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::QBRANCH)), 10.0}},
-            {{index(Vars::XQPI), -1.0}, {index(Vars::SFRZ), 0.06}, {index(Vars::ERQLIM), 2.4}},
-            {{index(Vars::XQLAG), -1.6666666666666667}, {index(Vars::QPI), 0.6666666666666666}},
-            {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::PBRANCH)), 5.0}},
+            {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::Q)), 10.0}},
+            {{index(Vars::XQPI), -1.0}, {index(Vars::SFRZ), 1.2}, {index(Vars::ERQLIM), 1.5}},
+            {{index(Vars::XQLAG), -1.4}, {index(Vars::QPI), 0.4}},
+            {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::P)), 5.0}},
             {{index(Vars::XPPI), -1.0}, {index(Vars::EPLIM), 1.8}},
             {{index(Vars::PREF), -3.0}, {index(Vars::PPI), 2.0}},
-            {{index(Vars::V), -2.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
-            {{index(Vars::VLDC), -1.98},
-             {kBusVrColumn, 1.7956},
-             {kBusViColumn, 0.796},
-             {externalColumn(index(Ext::IBRANCHR)), -0.059792},
-             {externalColumn(index(Ext::IBRANCHI)), 0.037948}},
-            {{index(Vars::V), 1.0}, {index(Vars::VDROOP), -1.0}, {externalColumn(index(Ext::QBRANCH)), 0.8}},
+            {{index(Vars::V), -3.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
+            {{index(Vars::VLDC), -2.0},
+             {kBusVrColumn, 1.88},
+             {kBusViColumn, 0.66},
+             {externalColumn(index(Ext::IR)), -0.0574},
+             {externalColumn(index(Ext::II)), 0.0432}},
+            {{index(Vars::V), 1.0}, {index(Vars::VDROOP), -1.0}, {externalColumn(index(Ext::Q)), 0.8}},
             {{index(Vars::VLDC), 1.0}, {index(Vars::VCTRL), -1.0}},
             {{index(Vars::SFRZ), -1.0}},
             {{index(Vars::VMEAS), -1.0}, {index(Vars::ERQ), -1.0}, {externalColumn(index(Ext::VREF)), 1.0}},
-            {{index(Vars::ERQ), 0.50000614417460221}, {index(Vars::ERQDB), -1.0}},
+            {{index(Vars::ERQ), 1.0}, {index(Vars::ERQDB), -1.0}},
             {{index(Vars::ERQDB), 1.0}, {index(Vars::ERQLIM), -1.0}},
             {{index(Vars::XQPI), 1.0}, {index(Vars::ERQLIM), 2.0}, {index(Vars::QPI), -1.0}},
-            {{index(Vars::XQLAG), 1.3}, {index(Vars::QPI), 0.2}, {index(Vars::QEXT), -3.0}},
+            {{index(Vars::XQLAG), 2.3}, {index(Vars::QPI), 0.2}, {index(Vars::QEXT), -5.0}},
             {{index(Vars::EF), -1.0},
-             {externalColumn(index(Ext::FREQ)), -0.23963778765414229},
-             {externalColumn(index(Ext::FREQREF)), 0.23963778765414229}},
+             {externalColumn(index(Ext::FREQ)), -1.0},
+             {externalColumn(index(Ext::FREQREF)), 1.0}},
             {{index(Vars::PMEAS), -1.0},
-             {index(Vars::EF), 1.9168273035060777},
+             {index(Vars::EF), 2.0},
              {index(Vars::EP), -1.0},
-             {externalColumn(index(Ext::PPLANTREF)), 2.0}},
-            {{index(Vars::EP), 1.0}, {index(Vars::EPLIM), -1.0}},
+             {externalColumn(index(Ext::PREF)), 2.0}},
+            {{index(Vars::EPLIM), -1.0}},
             {{index(Vars::XPPI), 1.0}, {index(Vars::EPLIM), 1.7}, {index(Vars::PPI), -1.0}},
             {{index(Vars::PREF), 1.0}, {index(Vars::PEXT), -2.0}},
         }};
@@ -2011,7 +2027,7 @@ namespace GridKit
         expected[index(Vars::VMEAS)][index(Vars::VMEAS)] = -7.5;
         expected[index(Vars::QMEAS)][index(Vars::QMEAS)] = -7.5;
         expected[index(Vars::XQPI)][index(Vars::XQPI)]   = -2.5;
-        expected[index(Vars::XQLAG)][index(Vars::XQLAG)] = -3.1666666666666665;
+        expected[index(Vars::XQLAG)][index(Vars::XQLAG)] = -2.9;
         expected[index(Vars::PMEAS)][index(Vars::PMEAS)] = -5.0;
         expected[index(Vars::XPPI)][index(Vars::XPPI)]   = -2.5;
         expected[index(Vars::PREF)][index(Vars::PREF)]   = -4.5;

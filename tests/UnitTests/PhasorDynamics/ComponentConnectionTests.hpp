@@ -149,10 +149,10 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
             static_cast<ScalarT>(1.0),
             static_cast<ScalarT>(0.0));
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ibranchr;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ibranchi;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pbranch;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> qbranch;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ir;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ii;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> p;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> q;
 
         ScalarT freq_value = static_cast<ScalarT>(1.0);
         IdxT    freq_index = INVALID_INDEX<IdxT>;
@@ -184,16 +184,16 @@ namespace GridKit
         PhasorDynamics::Converter::Repca<ScalarT, IdxT> plant(&bus, plant_data);
 
         auto& converter_signals = converter.getSignals();
-        converter_signals.template assignSignalNode<ConverterInternal::IR>(&ibranchr);
-        converter_signals.template assignSignalNode<ConverterInternal::II>(&ibranchi);
-        converter_signals.template assignSignalNode<ConverterInternal::PBR>(&pbranch);
-        converter_signals.template assignSignalNode<ConverterInternal::QBR>(&qbranch);
+        converter_signals.template assignSignalNode<ConverterInternal::IR>(&ir);
+        converter_signals.template assignSignalNode<ConverterInternal::II>(&ii);
+        converter_signals.template assignSignalNode<ConverterInternal::PBR>(&p);
+        converter_signals.template assignSignalNode<ConverterInternal::QBR>(&q);
 
         auto& plant_signals = plant.getSignals();
-        plant_signals.template attachSignalNode<PlantExternal::IBRANCHR>(&ibranchr);
-        plant_signals.template attachSignalNode<PlantExternal::IBRANCHI>(&ibranchi);
-        plant_signals.template attachSignalNode<PlantExternal::PBRANCH>(&pbranch);
-        plant_signals.template attachSignalNode<PlantExternal::QBRANCH>(&qbranch);
+        plant_signals.template attachSignalNode<PlantExternal::IR>(&ir);
+        plant_signals.template attachSignalNode<PlantExternal::II>(&ii);
+        plant_signals.template attachSignalNode<PlantExternal::P>(&p);
+        plant_signals.template attachSignalNode<PlantExternal::Q>(&q);
         plant_signals.template attachSignalNode<PlantExternal::FREQ>(&freq);
 
         system.addBus(&bus);
@@ -201,18 +201,18 @@ namespace GridKit
         system.addComponent(&plant);
 
         success *= system.allocate() == 0;
-        success *= ibranchr.linked();
-        success *= ibranchi.linked();
-        success *= pbranch.linked();
-        success *= qbranch.linked();
+        success *= ir.linked();
+        success *= ii.linked();
+        success *= p.linked();
+        success *= q.linked();
         success *= system.initialize() == 0;
         success *= system.evaluateResidual() == 0;
 
         // At zero power the converter draws no branch current or power.
-        success *= isEqual(ibranchr.read(), static_cast<ScalarT>(0.0), kTol);
-        success *= isEqual(ibranchi.read(), static_cast<ScalarT>(0.0), kTol);
-        success *= isEqual(pbranch.read(), static_cast<ScalarT>(0.0), kTol);
-        success *= isEqual(qbranch.read(), static_cast<ScalarT>(0.0), kTol);
+        success *= isEqual(ir.read(), static_cast<ScalarT>(0.0), kTol);
+        success *= isEqual(ii.read(), static_cast<ScalarT>(0.0), kTol);
+        success *= isEqual(p.read(), static_cast<ScalarT>(0.0), kTol);
+        success *= isEqual(q.read(), static_cast<ScalarT>(0.0), kTol);
 
         const auto* residual = plant.getResidual().getData();
         for (IdxT row = 0; row < plant.size(); ++row)
