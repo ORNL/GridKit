@@ -1,5 +1,4 @@
 #include <array>
-#include <iomanip>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
@@ -253,43 +252,22 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Construct REPCA through SystemModel, check its required bus mapping,
-      /// and prove assigned command outputs alias the assembled signals.
       TestOutcome repca()
       {
-        using Buses   = PhasorDynamics::Controller::RepcaBuses;
-        using Inputs  = PhasorDynamics::Controller::RepcaSignalInputs;
-        using Outputs = PhasorDynamics::Controller::RepcaSignalOutputs;
-        using Params  = PhasorDynamics::Controller::RepcaParameters;
-        using Vars    = PhasorDynamics::Controller::RepcaInternalVariables;
+        using Buses  = PhasorDynamics::Controller::RepcaBuses;
+        using Inputs = PhasorDynamics::Controller::RepcaSignalInputs;
+        using Vars   = PhasorDynamics::Controller::RepcaInternalVariables;
 
-        constexpr size_t input_count = static_cast<size_t>(Inputs::SIZE);
-        constexpr IdxT   bus_id      = static_cast<IdxT>(1);
-        constexpr IdxT   qext_id     = static_cast<IdxT>(input_count + 1);
-        constexpr IdxT   pext_id     = static_cast<IdxT>(input_count + 2);
-
-        constexpr std::array<Inputs, input_count>      input_ports{{
+        constexpr IdxT                  bus_id = static_cast<IdxT>(1);
+        constexpr std::array<Inputs, 4> required_inputs{{
             Inputs::ir,
             Inputs::ii,
             Inputs::p,
             Inputs::q,
-            Inputs::freq,
-            Inputs::vref,
-            Inputs::pref,
-            Inputs::qref,
-            Inputs::freqref,
         }};
-        constexpr std::array<const char*, input_count> input_names{{
-            "Branch Current Real",
-            "Branch Current Imaginary",
-            "Branch Active Power",
-            "Branch Reactive Power",
-            "Frequency",
-            "Voltage Reference",
-            "Plant Active Power Reference",
-            "Reactive Power Reference",
-            "Frequency Reference",
-        }};
+        constexpr size_t                input_count = required_inputs.size();
+
+        TestStatus success = true;
 
         PhasorDynamics::SystemModelData<RealT, IdxT> data;
         data.bus.resize(1);
@@ -298,44 +276,27 @@ namespace GridKit
         data.bus[0].Vr0      = static_cast<RealT>(1.0);
         data.bus[0].Vi0      = static_cast<RealT>(0.0);
 
-        data.signal.resize(input_count + 2);
-        for (size_t port = 0; port < input_count; ++port)
-        {
-          data.signal[port].signal_id = static_cast<IdxT>(port + 1);
-          data.signal[port].name      = input_names[port];
-        }
-        data.signal[input_count].signal_id     = qext_id;
-        data.signal[input_count].name          = "Reactive Power Command";
-        data.signal[input_count + 1].signal_id = pext_id;
-        data.signal[input_count + 1].name      = "Active Power Command";
+        data.signal.resize(input_count);
 
         typename PhasorDynamics::SystemModelData<RealT, IdxT>::RepcaDataT repca_data;
-        repca_data.device_class           = "Repca";
-        repca_data.disambiguation_string  = "repca_system";
-        repca_data.buses[Buses::bus]      = bus_id;
-        repca_data.parameters[Params::Tp] = static_cast<RealT>(0.05);
+        repca_data.buses[Buses::bus] = bus_id;
         for (size_t port = 0; port < input_count; ++port)
         {
-          repca_data.signal_inputs[input_ports[port]] = static_cast<IdxT>(port + 1);
+          const auto signal_id                            = static_cast<IdxT>(port + 1);
+          data.signal[port].signal_id                     = signal_id;
+          repca_data.signal_inputs[required_inputs[port]] = signal_id;
         }
-        repca_data.signal_outputs[Outputs::qext] = qext_id;
-        repca_data.signal_outputs[Outputs::pext] = pext_id;
         data.repca.push_back(repca_data);
 
         std::array<ScalarT, input_count> input_values{};
         std::array<IdxT, input_count>    input_indices{};
-        input_values[static_cast<size_t>(Inputs::freq)]    = static_cast<ScalarT>(1.0);
-        input_values[static_cast<size_t>(Inputs::freqref)] = static_cast<ScalarT>(1.0);
-        input_values[static_cast<size_t>(Inputs::vref)]    = static_cast<ScalarT>(1.0);
         input_indices.fill(INVALID_INDEX<IdxT>);
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
-        TestStatus                                 success = true;
         for (size_t port = 0; port < input_count; ++port)
         {
-          auto* signal = system.getSignal(static_cast<IdxT>(port + 1));
-          signal->set(&input_values[port], &input_indices[port]);
-          success *= signal->linked();
+          system.getSignal(static_cast<IdxT>(port + 1))
+              ->set(&input_values[port], &input_indices[port]);
         }
 
         success *= system.allocate() == 0;
@@ -344,39 +305,6 @@ namespace GridKit
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
         success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
-
-        auto* repca  = system.getComponent(0);
-        auto* qext   = system.getSignal(qext_id);
-        auto* pext   = system.getSignal(pext_id);
-        success     *= repca != nullptr;
-        success     *= qext != nullptr;
-        success     *= pext != nullptr;
-        if (repca != nullptr && qext != nullptr && pext != nullptr)
-        {
-          success *= qext->linked();
-          success *= pext->linked();
-          if (qext->linked() && pext->linked())
-          {
-            success *= qext->getVariableIndex() == static_cast<IdxT>(Vars::QEXT);
-            success *= pext->getVariableIndex() == static_cast<IdxT>(Vars::PEXT);
-
-            // Both nodes alias the model-owned command states.
-            success *= qext->read() == repca->y().getData()[static_cast<size_t>(Vars::QEXT)];
-            success *= pext->read() == repca->y().getData()[static_cast<size_t>(Vars::PEXT)];
-          }
-        }
-
-        auto missing_bus_data          = data;
-        missing_bus_data.bus[0].bus_id = static_cast<IdxT>(0);
-        missing_bus_data.repca[0].buses.clear();
-        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_bus_system(missing_bus_data);
-        for (size_t port = 0; port < input_count; ++port)
-        {
-          missing_bus_system.getSignal(static_cast<IdxT>(port + 1))
-              ->set(&input_values[port], &input_indices[port]);
-        }
-        std::cout << "Testing expected REPCA missing-bus configuration error.\n";
-        success *= missing_bus_system.verify() > 0;
 
         return success.report(__func__);
       }

@@ -110,8 +110,6 @@ namespace GridKit
         using InternalVariablesT = RepcaInternalVariables;
         using ExternalVariablesT = RepcaExternalVariables;
 
-        // A command reconstructed exactly on a limit leaves the widest
-        // steady residual, 1.6e-13 at the QPI row.
         static constexpr RealT INITIALIZATION_TOLERANCE = static_cast<RealT>(1.0e-12);
 
         Repca(BusT* bus);
@@ -143,16 +141,6 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        static constexpr size_t index(RepcaInternalVariables variable)
-        {
-          return static_cast<size_t>(variable);
-        }
-
-        static constexpr size_t index(RepcaExternalVariables variable)
-        {
-          return static_cast<size_t>(variable);
-        }
-
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
@@ -172,21 +160,11 @@ namespace GridKit
         [[gnu::always_inline]] inline ScalarT toComponentBase(ScalarT value) const;
         ScalarT                               toSystemBase(ScalarT value) const;
 
-        /**
-         * @brief Smooth asymmetric frequency-droop response.
-         *
-         * @param[in] error Deadbanded frequency error.
-         * @param[in] gain_down Down-frequency response gain.
-         * @param[in] gain_up Up-frequency response gain.
-         * @return Active-power frequency response.
-         */
+        /// Smooth asymmetric frequency-droop response.
         static __attribute__((always_inline)) inline ScalarT droop(
             const ScalarT error,
             const RealT   gain_down,
-            const RealT   gain_up)
-        {
-          return error * (gain_up + (gain_down - gain_up) * Math::sigmoid(error));
-        }
+            const RealT   gain_up);
 
         ScalarT& Vr();
         ScalarT& Vi();

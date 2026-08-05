@@ -38,7 +38,7 @@ namespace GridKit
       Repca<scalar_type, index_type>::Repca(BusT* bus)
         : bus_(bus)
       {
-        size_ = static_cast<IdxT>(index(RepcaInternalVariables::MAXIMUM));
+        size_ = static_cast<IdxT>(RepcaInternalVariables::MAXIMUM);
         setDerivedParameters();
       }
 
@@ -55,7 +55,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(index(RepcaInternalVariables::MAXIMUM));
+        size_ = static_cast<IdxT>(RepcaInternalVariables::MAXIMUM);
       }
 
       /**
@@ -89,6 +89,9 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::allocate()
       {
+        const auto QEXT = static_cast<size_t>(RepcaInternalVariables::QEXT);
+        const auto PEXT = static_cast<size_t>(RepcaInternalVariables::PEXT);
+
         if (!allocated_)
         {
           this->allocateVectors(size_);
@@ -101,7 +104,7 @@ namespace GridKit
 
         wb_.assign(2, ScalarT{0});
 
-        const auto signal_size = index(RepcaExternalVariables::MAXIMUM);
+        const auto signal_size = static_cast<size_t>(RepcaExternalVariables::MAXIMUM);
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -116,15 +119,15 @@ namespace GridKit
         if (signals_.template isAssigned<RepcaInternalVariables::QEXT>())
         {
           signals_.template getSignalNode<RepcaInternalVariables::QEXT>()->set(
-              &y[index(RepcaInternalVariables::QEXT)],
-              &(this->getVariableIndex(static_cast<IdxT>(index(RepcaInternalVariables::QEXT)))));
+              &y[QEXT],
+              &(this->getVariableIndex(static_cast<IdxT>(QEXT))));
         }
 
         if (signals_.template isAssigned<RepcaInternalVariables::PEXT>())
         {
           signals_.template getSignalNode<RepcaInternalVariables::PEXT>()->set(
-              &y[index(RepcaInternalVariables::PEXT)],
-              &(this->getVariableIndex(static_cast<IdxT>(index(RepcaInternalVariables::PEXT)))));
+              &y[PEXT],
+              &(this->getVariableIndex(static_cast<IdxT>(PEXT))));
         }
 
         allocated_ = true;
@@ -248,6 +251,29 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::initialize()
       {
+        const auto VMEAS  = static_cast<size_t>(RepcaInternalVariables::VMEAS);
+        const auto QMEAS  = static_cast<size_t>(RepcaInternalVariables::QMEAS);
+        const auto XQPI   = static_cast<size_t>(RepcaInternalVariables::XQPI);
+        const auto XQLAG  = static_cast<size_t>(RepcaInternalVariables::XQLAG);
+        const auto PMEAS  = static_cast<size_t>(RepcaInternalVariables::PMEAS);
+        const auto XPPI   = static_cast<size_t>(RepcaInternalVariables::XPPI);
+        const auto PREF   = static_cast<size_t>(RepcaInternalVariables::PREF);
+        const auto V      = static_cast<size_t>(RepcaInternalVariables::V);
+        const auto VLDC   = static_cast<size_t>(RepcaInternalVariables::VLDC);
+        const auto VDROOP = static_cast<size_t>(RepcaInternalVariables::VDROOP);
+        const auto VCTRL  = static_cast<size_t>(RepcaInternalVariables::VCTRL);
+        const auto SFRZ   = static_cast<size_t>(RepcaInternalVariables::SFRZ);
+        const auto ERQ    = static_cast<size_t>(RepcaInternalVariables::ERQ);
+        const auto ERQDB  = static_cast<size_t>(RepcaInternalVariables::ERQDB);
+        const auto ERQLIM = static_cast<size_t>(RepcaInternalVariables::ERQLIM);
+        const auto QPI    = static_cast<size_t>(RepcaInternalVariables::QPI);
+        const auto QEXT   = static_cast<size_t>(RepcaInternalVariables::QEXT);
+        const auto EF     = static_cast<size_t>(RepcaInternalVariables::EF);
+        const auto EP     = static_cast<size_t>(RepcaInternalVariables::EP);
+        const auto EPLIM  = static_cast<size_t>(RepcaInternalVariables::EPLIM);
+        const auto PPI    = static_cast<size_t>(RepcaInternalVariables::PPI);
+        const auto PEXT   = static_cast<size_t>(RepcaInternalVariables::PEXT);
+
         if (!allocated_)
         {
           Log::error() << "Repca: allocate must complete before initialize\n";
@@ -262,8 +288,8 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        const ScalarT qext0_system = y[index(RepcaInternalVariables::QEXT)];
-        const ScalarT pext0_system = y[index(RepcaInternalVariables::PEXT)];
+        const ScalarT qext0_system = y[QEXT];
+        const ScalarT pext0_system = y[PEXT];
         const ScalarT qext0        = toComponentBase(qext0_system);
         const ScalarT pext0        = toComponentBase(pext0_system);
 
@@ -437,28 +463,28 @@ namespace GridKit
           return 1;
         }
 
-        y[index(RepcaInternalVariables::VMEAS)]  = vmeas0;
-        y[index(RepcaInternalVariables::QMEAS)]  = qmeas0;
-        y[index(RepcaInternalVariables::XQPI)]   = xqpi0;
-        y[index(RepcaInternalVariables::XQLAG)]  = xqlag0;
-        y[index(RepcaInternalVariables::PMEAS)]  = pmeas0;
-        y[index(RepcaInternalVariables::XPPI)]   = xppi0;
-        y[index(RepcaInternalVariables::PREF)]   = pref0;
-        y[index(RepcaInternalVariables::V)]      = v0;
-        y[index(RepcaInternalVariables::VLDC)]   = vldc0;
-        y[index(RepcaInternalVariables::VDROOP)] = vdroop0;
-        y[index(RepcaInternalVariables::VCTRL)]  = vctrl0;
-        y[index(RepcaInternalVariables::SFRZ)]   = sfrz0;
-        y[index(RepcaInternalVariables::ERQ)]    = erq0;
-        y[index(RepcaInternalVariables::ERQDB)]  = erqdb0;
-        y[index(RepcaInternalVariables::ERQLIM)] = erqlim0;
-        y[index(RepcaInternalVariables::QPI)]    = qpi0;
-        y[index(RepcaInternalVariables::QEXT)]   = qext0_system;
-        y[index(RepcaInternalVariables::EF)]     = ef0;
-        y[index(RepcaInternalVariables::EP)]     = ep0;
-        y[index(RepcaInternalVariables::EPLIM)]  = eplim0;
-        y[index(RepcaInternalVariables::PPI)]    = ppi0;
-        y[index(RepcaInternalVariables::PEXT)]   = pext_output0;
+        y[VMEAS]  = vmeas0;
+        y[QMEAS]  = qmeas0;
+        y[XQPI]   = xqpi0;
+        y[XQLAG]  = xqlag0;
+        y[PMEAS]  = pmeas0;
+        y[XPPI]   = xppi0;
+        y[PREF]   = pref0;
+        y[V]      = v0;
+        y[VLDC]   = vldc0;
+        y[VDROOP] = vdroop0;
+        y[VCTRL]  = vctrl0;
+        y[SFRZ]   = sfrz0;
+        y[ERQ]    = erq0;
+        y[ERQDB]  = erqdb0;
+        y[ERQLIM] = erqlim0;
+        y[QPI]    = qpi0;
+        y[QEXT]   = qext0_system;
+        y[EF]     = ef0;
+        y[EP]     = ep0;
+        y[EPLIM]  = eplim0;
+        y[PPI]    = ppi0;
+        y[PEXT]   = pext_output0;
 
         freqref_set_ = freqref0;
         vref_set_    = vref0;
@@ -499,14 +525,22 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::tagDifferentiable()
       {
+        const auto VMEAS = static_cast<size_t>(RepcaInternalVariables::VMEAS);
+        const auto QMEAS = static_cast<size_t>(RepcaInternalVariables::QMEAS);
+        const auto XQPI  = static_cast<size_t>(RepcaInternalVariables::XQPI);
+        const auto XQLAG = static_cast<size_t>(RepcaInternalVariables::XQLAG);
+        const auto PMEAS = static_cast<size_t>(RepcaInternalVariables::PMEAS);
+        const auto XPPI  = static_cast<size_t>(RepcaInternalVariables::XPPI);
+        const auto PREF  = static_cast<size_t>(RepcaInternalVariables::PREF);
+
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[index(RepcaInternalVariables::VMEAS)] = true;
-        tag_[index(RepcaInternalVariables::QMEAS)] = true;
-        tag_[index(RepcaInternalVariables::XQPI)]  = true;
-        tag_[index(RepcaInternalVariables::XQLAG)] = true;
-        tag_[index(RepcaInternalVariables::PMEAS)] = true;
-        tag_[index(RepcaInternalVariables::XPPI)]  = true;
-        tag_[index(RepcaInternalVariables::PREF)]  = true;
+        tag_[VMEAS] = true;
+        tag_[QMEAS] = true;
+        tag_[XQPI]  = true;
+        tag_[XQLAG] = true;
+        tag_[PMEAS] = true;
+        tag_[XPPI]  = true;
+        tag_[PREF]  = true;
         return 0;
       }
 
@@ -536,63 +570,73 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::evaluateResidual()
       {
-        ws_[index(RepcaExternalVariables::VREF)]    = vref_set_;
-        ws_[index(RepcaExternalVariables::PREF)]    = pref_set_;
-        ws_[index(RepcaExternalVariables::QREF)]    = qref_set_;
-        ws_[index(RepcaExternalVariables::FREQ)]    = static_cast<ScalarT>(ONE<RealT>);
-        ws_[index(RepcaExternalVariables::FREQREF)] = freqref_set_;
+        const auto IR      = static_cast<size_t>(RepcaExternalVariables::IR);
+        const auto II      = static_cast<size_t>(RepcaExternalVariables::II);
+        const auto P       = static_cast<size_t>(RepcaExternalVariables::P);
+        const auto Q       = static_cast<size_t>(RepcaExternalVariables::Q);
+        const auto FREQ    = static_cast<size_t>(RepcaExternalVariables::FREQ);
+        const auto VREF    = static_cast<size_t>(RepcaExternalVariables::VREF);
+        const auto PREF    = static_cast<size_t>(RepcaExternalVariables::PREF);
+        const auto QREF    = static_cast<size_t>(RepcaExternalVariables::QREF);
+        const auto FREQREF = static_cast<size_t>(RepcaExternalVariables::FREQREF);
+
+        ws_[VREF]    = vref_set_;
+        ws_[PREF]    = pref_set_;
+        ws_[QREF]    = qref_set_;
+        ws_[FREQ]    = static_cast<ScalarT>(ONE<RealT>);
+        ws_[FREQREF] = freqref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        ws_[index(RepcaExternalVariables::IR)] =
+        ws_[IR] =
             signals_.template readExternalVariable<RepcaExternalVariables::IR>();
-        ws_indices_[index(RepcaExternalVariables::IR)] =
+        ws_indices_[IR] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::IR>();
-        ws_[index(RepcaExternalVariables::II)] =
+        ws_[II] =
             signals_.template readExternalVariable<RepcaExternalVariables::II>();
-        ws_indices_[index(RepcaExternalVariables::II)] =
+        ws_indices_[II] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::II>();
-        ws_[index(RepcaExternalVariables::P)] =
+        ws_[P] =
             signals_.template readExternalVariable<RepcaExternalVariables::P>();
-        ws_indices_[index(RepcaExternalVariables::P)] =
+        ws_indices_[P] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::P>();
-        ws_[index(RepcaExternalVariables::Q)] =
+        ws_[Q] =
             signals_.template readExternalVariable<RepcaExternalVariables::Q>();
-        ws_indices_[index(RepcaExternalVariables::Q)] =
+        ws_indices_[Q] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::Q>();
         if (signals_.template isAttached<RepcaExternalVariables::FREQ>())
         {
-          ws_[index(RepcaExternalVariables::FREQ)] =
+          ws_[FREQ] =
               signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
-          ws_indices_[index(RepcaExternalVariables::FREQ)] =
+          ws_indices_[FREQ] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQ>();
         }
 
         if (signals_.template isAttached<RepcaExternalVariables::VREF>())
         {
-          ws_[index(RepcaExternalVariables::VREF)] =
+          ws_[VREF] =
               signals_.template readExternalVariable<RepcaExternalVariables::VREF>();
-          ws_indices_[index(RepcaExternalVariables::VREF)] =
+          ws_indices_[VREF] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::VREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::PREF>())
         {
-          ws_[index(RepcaExternalVariables::PREF)] =
+          ws_[PREF] =
               signals_.template readExternalVariable<RepcaExternalVariables::PREF>();
-          ws_indices_[index(RepcaExternalVariables::PREF)] =
+          ws_indices_[PREF] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::PREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::QREF>())
         {
-          ws_[index(RepcaExternalVariables::QREF)] =
+          ws_[QREF] =
               signals_.template readExternalVariable<RepcaExternalVariables::QREF>();
-          ws_indices_[index(RepcaExternalVariables::QREF)] =
+          ws_indices_[QREF] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::QREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
         {
-          ws_[index(RepcaExternalVariables::FREQREF)] =
+          ws_[FREQREF] =
               signals_.template readExternalVariable<RepcaExternalVariables::FREQREF>();
-          ws_indices_[index(RepcaExternalVariables::FREQREF)] =
+          ws_indices_[FREQREF] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQREF>();
         }
 
@@ -659,78 +703,111 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
-        const ScalarT vmeas  = y[index(RepcaInternalVariables::VMEAS)];
-        const ScalarT qmeas  = y[index(RepcaInternalVariables::QMEAS)];
-        const ScalarT xqpi   = y[index(RepcaInternalVariables::XQPI)];
-        const ScalarT xqlag  = y[index(RepcaInternalVariables::XQLAG)];
-        const ScalarT pmeas  = y[index(RepcaInternalVariables::PMEAS)];
-        const ScalarT xppi   = y[index(RepcaInternalVariables::XPPI)];
-        const ScalarT pref   = y[index(RepcaInternalVariables::PREF)];
-        const ScalarT v      = y[index(RepcaInternalVariables::V)];
-        const ScalarT vldc   = y[index(RepcaInternalVariables::VLDC)];
-        const ScalarT vdroop = y[index(RepcaInternalVariables::VDROOP)];
-        const ScalarT vctrl  = y[index(RepcaInternalVariables::VCTRL)];
-        const ScalarT sfrz   = y[index(RepcaInternalVariables::SFRZ)];
-        const ScalarT erq    = y[index(RepcaInternalVariables::ERQ)];
-        const ScalarT erqdb  = y[index(RepcaInternalVariables::ERQDB)];
-        const ScalarT erqlim = y[index(RepcaInternalVariables::ERQLIM)];
-        const ScalarT qpi    = y[index(RepcaInternalVariables::QPI)];
-        const ScalarT qext   = toComponentBase(y[index(RepcaInternalVariables::QEXT)]);
-        const ScalarT ef     = y[index(RepcaInternalVariables::EF)];
-        const ScalarT ep     = y[index(RepcaInternalVariables::EP)];
-        const ScalarT eplim  = y[index(RepcaInternalVariables::EPLIM)];
-        const ScalarT ppi    = y[index(RepcaInternalVariables::PPI)];
-        const ScalarT pext   = toComponentBase(y[index(RepcaInternalVariables::PEXT)]);
+        const auto VMEAS      = static_cast<size_t>(RepcaInternalVariables::VMEAS);
+        const auto QMEAS      = static_cast<size_t>(RepcaInternalVariables::QMEAS);
+        const auto XQPI       = static_cast<size_t>(RepcaInternalVariables::XQPI);
+        const auto XQLAG      = static_cast<size_t>(RepcaInternalVariables::XQLAG);
+        const auto PMEAS      = static_cast<size_t>(RepcaInternalVariables::PMEAS);
+        const auto XPPI       = static_cast<size_t>(RepcaInternalVariables::XPPI);
+        const auto PREF_STATE = static_cast<size_t>(RepcaInternalVariables::PREF);
+        const auto V          = static_cast<size_t>(RepcaInternalVariables::V);
+        const auto VLDC       = static_cast<size_t>(RepcaInternalVariables::VLDC);
+        const auto VDROOP     = static_cast<size_t>(RepcaInternalVariables::VDROOP);
+        const auto VCTRL      = static_cast<size_t>(RepcaInternalVariables::VCTRL);
+        const auto SFRZ       = static_cast<size_t>(RepcaInternalVariables::SFRZ);
+        const auto ERQ        = static_cast<size_t>(RepcaInternalVariables::ERQ);
+        const auto ERQDB      = static_cast<size_t>(RepcaInternalVariables::ERQDB);
+        const auto ERQLIM     = static_cast<size_t>(RepcaInternalVariables::ERQLIM);
+        const auto QPI        = static_cast<size_t>(RepcaInternalVariables::QPI);
+        const auto QEXT       = static_cast<size_t>(RepcaInternalVariables::QEXT);
+        const auto EF         = static_cast<size_t>(RepcaInternalVariables::EF);
+        const auto EP         = static_cast<size_t>(RepcaInternalVariables::EP);
+        const auto EPLIM      = static_cast<size_t>(RepcaInternalVariables::EPLIM);
+        const auto PPI        = static_cast<size_t>(RepcaInternalVariables::PPI);
+        const auto PEXT       = static_cast<size_t>(RepcaInternalVariables::PEXT);
 
-        const ScalarT vmeas_dot = yp[index(RepcaInternalVariables::VMEAS)];
-        const ScalarT qmeas_dot = yp[index(RepcaInternalVariables::QMEAS)];
-        const ScalarT xqpi_dot  = yp[index(RepcaInternalVariables::XQPI)];
-        const ScalarT xqlag_dot = yp[index(RepcaInternalVariables::XQLAG)];
-        const ScalarT pmeas_dot = yp[index(RepcaInternalVariables::PMEAS)];
-        const ScalarT xppi_dot  = yp[index(RepcaInternalVariables::XPPI)];
-        const ScalarT pref_dot  = yp[index(RepcaInternalVariables::PREF)];
+        const auto IR         = static_cast<size_t>(RepcaExternalVariables::IR);
+        const auto II         = static_cast<size_t>(RepcaExternalVariables::II);
+        const auto P          = static_cast<size_t>(RepcaExternalVariables::P);
+        const auto Q          = static_cast<size_t>(RepcaExternalVariables::Q);
+        const auto FREQ       = static_cast<size_t>(RepcaExternalVariables::FREQ);
+        const auto VREF       = static_cast<size_t>(RepcaExternalVariables::VREF);
+        const auto PREF_INPUT = static_cast<size_t>(RepcaExternalVariables::PREF);
+        const auto QREF       = static_cast<size_t>(RepcaExternalVariables::QREF);
+        const auto FREQREF    = static_cast<size_t>(RepcaExternalVariables::FREQREF);
+
+        const ScalarT vmeas  = y[VMEAS];
+        const ScalarT qmeas  = y[QMEAS];
+        const ScalarT xqpi   = y[XQPI];
+        const ScalarT xqlag  = y[XQLAG];
+        const ScalarT pmeas  = y[PMEAS];
+        const ScalarT xppi   = y[XPPI];
+        const ScalarT pref   = y[PREF_STATE];
+        const ScalarT v      = y[V];
+        const ScalarT vldc   = y[VLDC];
+        const ScalarT vdroop = y[VDROOP];
+        const ScalarT vctrl  = y[VCTRL];
+        const ScalarT sfrz   = y[SFRZ];
+        const ScalarT erq    = y[ERQ];
+        const ScalarT erqdb  = y[ERQDB];
+        const ScalarT erqlim = y[ERQLIM];
+        const ScalarT qpi    = y[QPI];
+        const ScalarT qext   = toComponentBase(y[QEXT]);
+        const ScalarT ef     = y[EF];
+        const ScalarT ep     = y[EP];
+        const ScalarT eplim  = y[EPLIM];
+        const ScalarT ppi    = y[PPI];
+        const ScalarT pext   = toComponentBase(y[PEXT]);
+
+        const ScalarT vmeas_dot = yp[VMEAS];
+        const ScalarT qmeas_dot = yp[QMEAS];
+        const ScalarT xqpi_dot  = yp[XQPI];
+        const ScalarT xqlag_dot = yp[XQLAG];
+        const ScalarT pmeas_dot = yp[PMEAS];
+        const ScalarT xppi_dot  = yp[XPPI];
+        const ScalarT pref_dot  = yp[PREF_STATE];
 
         const ScalarT vr = wb[0];
         const ScalarT vi = wb[1];
 
-        const ScalarT ir      = toComponentBase(ws[index(RepcaExternalVariables::IR)]);
-        const ScalarT ii      = toComponentBase(ws[index(RepcaExternalVariables::II)]);
-        const ScalarT p       = toComponentBase(ws[index(RepcaExternalVariables::P)]);
-        const ScalarT q       = toComponentBase(ws[index(RepcaExternalVariables::Q)]);
-        const ScalarT freq    = ws[index(RepcaExternalVariables::FREQ)];
-        const ScalarT freqref = ws[index(RepcaExternalVariables::FREQREF)];
-        const ScalarT vref    = ws[index(RepcaExternalVariables::VREF)];
-        const ScalarT qref    = toComponentBase(ws[index(RepcaExternalVariables::QREF)]);
-        const ScalarT pref_in = toComponentBase(ws[index(RepcaExternalVariables::PREF)]);
+        const ScalarT ir      = toComponentBase(ws[IR]);
+        const ScalarT ii      = toComponentBase(ws[II]);
+        const ScalarT p       = toComponentBase(ws[P]);
+        const ScalarT q       = toComponentBase(ws[Q]);
+        const ScalarT freq    = ws[FREQ];
+        const ScalarT freqref = ws[FREQREF];
+        const ScalarT vref    = ws[VREF];
+        const ScalarT qref    = toComponentBase(ws[QREF]);
+        const ScalarT pref_in = toComponentBase(ws[PREF_INPUT]);
 
         const ScalarT vldc_r = vr - Rc_ * ir + Xc_ * ii;
         const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
         const ScalarT pfreq  = droop(ef, Ddn_, Dup_);
 
-        f[index(RepcaInternalVariables::VMEAS)] = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
-        f[index(RepcaInternalVariables::QMEAS)] = -qmeas_dot + (q - qmeas) / Tfltr_;
-        f[index(RepcaInternalVariables::XQPI)]  = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
-        f[index(RepcaInternalVariables::XQLAG)] = -xqlag_dot + (qpi - xqlag) / Tfv_;
-        f[index(RepcaInternalVariables::PMEAS)] = -pmeas_dot + (p - pmeas) / Tp_;
-        f[index(RepcaInternalVariables::XPPI)]  = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
-        f[index(RepcaInternalVariables::PREF)]  = -pref_dot + (ppi - pref) / Tlag_;
+        f[VMEAS]      = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
+        f[QMEAS]      = -qmeas_dot + (q - qmeas) / Tfltr_;
+        f[XQPI]       = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
+        f[XQLAG]      = -xqlag_dot + (qpi - xqlag) / Tfv_;
+        f[PMEAS]      = -pmeas_dot + (p - pmeas) / Tp_;
+        f[XPPI]       = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
+        f[PREF_STATE] = -pref_dot + (ppi - pref) / Tlag_;
 
-        f[index(RepcaInternalVariables::V)]      = -v * v + vr * vr + vi * vi;
-        f[index(RepcaInternalVariables::VLDC)]   = -vldc * vldc + vldc_r * vldc_r + vldc_i * vldc_i;
-        f[index(RepcaInternalVariables::VDROOP)] = -vdroop + v + Kc_ * q;
-        f[index(RepcaInternalVariables::VCTRL)]  = -vctrl + vcomp_on_ * vldc + vcomp_off_ * vdroop;
-        f[index(RepcaInternalVariables::SFRZ)]   = -sfrz + Math::above(v, Vfrz_);
-        f[index(RepcaInternalVariables::ERQ)]    = -erq + ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
-        f[index(RepcaInternalVariables::ERQDB)]  = -erqdb + Math::deadband2(erq, dbdlow_, dbdupper_);
-        f[index(RepcaInternalVariables::ERQLIM)] = -erqlim + Math::clamp(erqdb, emin_, emax_);
-        f[index(RepcaInternalVariables::QPI)]    = -qpi + Math::clamp(Kp_ * erqlim + xqpi, Qmin_, Qmax_);
-        f[index(RepcaInternalVariables::QEXT)]   = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
+        f[V]      = -v * v + vr * vr + vi * vi;
+        f[VLDC]   = -vldc * vldc + vldc_r * vldc_r + vldc_i * vldc_i;
+        f[VDROOP] = -vdroop + v + Kc_ * q;
+        f[VCTRL]  = -vctrl + vcomp_on_ * vldc + vcomp_off_ * vdroop;
+        f[SFRZ]   = -sfrz + Math::above(v, Vfrz_);
+        f[ERQ]    = -erq + ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
+        f[ERQDB]  = -erqdb + Math::deadband2(erq, dbdlow_, dbdupper_);
+        f[ERQLIM] = -erqlim + Math::clamp(erqdb, emin_, emax_);
+        f[QPI]    = -qpi + Math::clamp(Kp_ * erqlim + xqpi, Qmin_, Qmax_);
+        f[QEXT]   = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
 
-        f[index(RepcaInternalVariables::EF)]    = -ef + Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
-        f[index(RepcaInternalVariables::EP)]    = -ep + pref_in - pmeas + pfreq;
-        f[index(RepcaInternalVariables::EPLIM)] = -eplim + Math::clamp(ep, femin_, femax_);
-        f[index(RepcaInternalVariables::PPI)]   = -ppi + Math::clamp(Kpg_ * eplim + xppi, Pmin_, Pmax_);
-        f[index(RepcaInternalVariables::PEXT)]  = -pext + freq_on_ * pref;
+        f[EF]    = -ef + Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
+        f[EP]    = -ep + pref_in - pmeas + pfreq;
+        f[EPLIM] = -eplim + Math::clamp(ep, femin_, femax_);
+        f[PPI]   = -ppi + Math::clamp(Kpg_ * eplim + xppi, Pmin_, Pmax_);
+        f[PEXT]  = -pext + freq_on_ * pref;
 
         return 0;
       }
@@ -738,6 +815,24 @@ namespace GridKit
       //
       //  Private methods
       //
+
+      /**
+       * @brief Smooth asymmetric frequency-droop response
+       *
+       * @param[in] error Deadbanded frequency error.
+       * @param[in] gain_down Down-frequency response gain.
+       * @param[in] gain_up Up-frequency response gain.
+       * @return Active-power frequency response.
+       */
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline scalar_type
+      Repca<scalar_type, index_type>::droop(
+          const ScalarT error,
+          const RealT   gain_down,
+          const RealT   gain_up)
+      {
+        return error * (gain_up + (gain_down - gain_up) * Math::sigmoid(error));
+      }
 
       /**
        * @brief Read optional parameters from model data
@@ -853,15 +948,15 @@ namespace GridKit
         using Variable = typename ModelDataT::MonitorableVariables;
 
         monitor_->set(Variable::qext, [this]
-                      { return y_.getData()[index(RepcaInternalVariables::QEXT)]; });
+                      { return y_.getData()[static_cast<size_t>(RepcaInternalVariables::QEXT)]; });
         monitor_->set(Variable::pext, [this]
-                      { return y_.getData()[index(RepcaInternalVariables::PEXT)]; });
+                      { return y_.getData()[static_cast<size_t>(RepcaInternalVariables::PEXT)]; });
         monitor_->set(Variable::vmeas, [this]
-                      { return y_.getData()[index(RepcaInternalVariables::VMEAS)]; });
+                      { return y_.getData()[static_cast<size_t>(RepcaInternalVariables::VMEAS)]; });
         monitor_->set(Variable::qmeas, [this]
-                      { return y_.getData()[index(RepcaInternalVariables::QMEAS)]; });
+                      { return y_.getData()[static_cast<size_t>(RepcaInternalVariables::QMEAS)]; });
         monitor_->set(Variable::pmeas, [this]
-                      { return y_.getData()[index(RepcaInternalVariables::PMEAS)]; });
+                      { return y_.getData()[static_cast<size_t>(RepcaInternalVariables::PMEAS)]; });
       }
 
       /**
@@ -1073,7 +1168,7 @@ namespace GridKit
       typename Repca<scalar_type, index_type>::RealT
       Repca<scalar_type, index_type>::logOneMinusExp(RealT x) const
       {
-        const RealT log_two = std::log(static_cast<RealT>(2.0));
+        static constexpr auto log_two = std::numbers::ln2_v<RealT>;
 
         if (x < log_two)
         {
