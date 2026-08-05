@@ -62,7 +62,7 @@ namespace GridKit
         II,      ///< \f$I_\mathrm{i}\f$ Required branch-current imaginary component on system base [p.u.]
         P,       ///< \f$P\f$ Required branch active power on system base [p.u.]
         Q,       ///< \f$Q\f$ Required branch reactive power on system base [p.u.]
-        FREQ,    ///< \f$f\f$ Required frequency input [p.u.]
+        FREQ,    ///< \f$f\f$ Optional frequency input [p.u.]
         VREF,    ///< \f$V^\mathrm{ref}\f$ Optional voltage-control reference [p.u.]
         PREF,    ///< \f$P^\mathrm{ref}\f$ Optional plant active-power reference on system base [p.u.]
         QREF,    ///< \f$Q^\mathrm{ref}\f$ Optional reactive-power reference on system base [p.u.]

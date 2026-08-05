@@ -138,8 +138,7 @@ namespace GridKit
 
       /// REGCA initializes first and publishes its branch current and power
       /// to the four shared nodes. REPCA then initializes around those
-      /// measurements and must hold a steady state. REGCA has no frequency
-      /// output, so that required input keeps a locally owned node.
+      /// measurements and must hold a steady state without a frequency input.
       TestOutcome regcaRepca()
       {
         using ConverterInternal = PhasorDynamics::Converter::RegcaInternalVariables;
@@ -157,12 +156,6 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> ii;
         PhasorDynamics::SignalNode<ScalarT, IdxT> p;
         PhasorDynamics::SignalNode<ScalarT, IdxT> q;
-
-        ScalarT freq_value = static_cast<ScalarT>(1.0);
-        IdxT    freq_index = INVALID_INDEX<IdxT>;
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> freq;
-        freq.set(&freq_value, &freq_index);
 
         PhasorDynamics::Converter::RegcaData<RealT, IdxT> converter_data;
         converter_data.parameters[ConverterParams::p0]     = static_cast<RealT>(0.0);
@@ -198,7 +191,6 @@ namespace GridKit
         plant_signals.template attachSignalNode<PlantExternal::II>(&ii);
         plant_signals.template attachSignalNode<PlantExternal::P>(&p);
         plant_signals.template attachSignalNode<PlantExternal::Q>(&q);
-        plant_signals.template attachSignalNode<PlantExternal::FREQ>(&freq);
 
         system.addBus(&bus);
         system.addComponent(&converter);

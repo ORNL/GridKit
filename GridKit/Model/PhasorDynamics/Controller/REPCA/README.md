@@ -8,6 +8,10 @@ resources.
 - Fig. 1 hard nonlinearities use the linked CommonMath smooth approximations;
   transition-point values may differ.
 
+> [!NOTE]
+> `freq` is optional because the regulated bus does not yet expose a frequency
+> signal.
+
 > [!WARNING]
 > GridKit does not yet apply the associated generator's Governor Response Limits
 > modes `Down Only` and `Fixed` to REPCA. The model always uses its configured
@@ -101,7 +105,7 @@ Name        | Port   | Init    | Description
 `ii`        | Input  | Known   | Branch-current imaginary component on system base
 `p`         | Input  | Known   | Branch active power on system base
 `q`         | Input  | Known   | Branch reactive power on system base
-`freq`      | Input  | Known   | Frequency input[^frequency-measurement] Not supported yet.
+`freq`      | Input  | Known   | Optional frequency input; defaults to 1.0 p.u.[^frequency-measurement]
 `vref`      | Input  | Unknown | Voltage-control reference
 `pref`      | Input  | Unknown | Plant active-power reference on system base
 `qref`      | Input  | Unknown | Reactive-power reference on system base

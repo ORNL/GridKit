@@ -206,7 +206,6 @@ namespace GridKit
         check_required_signal.template operator()<RepcaExternalVariables::II>("ii");
         check_required_signal.template operator()<RepcaExternalVariables::P>("p");
         check_required_signal.template operator()<RepcaExternalVariables::Q>("q");
-        check_required_signal.template operator()<RepcaExternalVariables::FREQ>("freq");
 
         auto check_optional_signal = [&]<RepcaExternalVariables variable>(const char* name)
         {
@@ -221,6 +220,7 @@ namespace GridKit
         check_optional_signal.template operator()<RepcaExternalVariables::VREF>("vref");
         check_optional_signal.template operator()<RepcaExternalVariables::PREF>("pref");
         check_optional_signal.template operator()<RepcaExternalVariables::QREF>("qref");
+        check_optional_signal.template operator()<RepcaExternalVariables::FREQ>("freq");
         check_optional_signal.template operator()<RepcaExternalVariables::FREQREF>("freqref");
 
         return ret;
@@ -277,7 +277,11 @@ namespace GridKit
             signals_.template readExternalVariable<RepcaExternalVariables::P>();
         const ScalarT q_system =
             signals_.template readExternalVariable<RepcaExternalVariables::Q>();
-        const ScalarT freq = signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
+        ScalarT freq = static_cast<ScalarT>(ONE<RealT>);
+        if (signals_.template isAttached<RepcaExternalVariables::FREQ>())
+        {
+          freq = signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
+        }
 
         auto is_finite = [](ScalarT value)
         {
@@ -513,6 +517,7 @@ namespace GridKit
         ws_[index(RepcaExternalVariables::VREF)]    = vref_set_;
         ws_[index(RepcaExternalVariables::PREF)]    = pref_set_;
         ws_[index(RepcaExternalVariables::QREF)]    = qref_set_;
+        ws_[index(RepcaExternalVariables::FREQ)]    = static_cast<ScalarT>(ONE<RealT>);
         ws_[index(RepcaExternalVariables::FREQREF)] = freqref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
@@ -532,10 +537,13 @@ namespace GridKit
             signals_.template readExternalVariable<RepcaExternalVariables::Q>();
         ws_indices_[index(RepcaExternalVariables::Q)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::Q>();
-        ws_[index(RepcaExternalVariables::FREQ)] =
-            signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
-        ws_indices_[index(RepcaExternalVariables::FREQ)] =
-            signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQ>();
+        if (signals_.template isAttached<RepcaExternalVariables::FREQ>())
+        {
+          ws_[index(RepcaExternalVariables::FREQ)] =
+              signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
+          ws_indices_[index(RepcaExternalVariables::FREQ)] =
+              signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQ>();
+        }
 
         if (signals_.template isAttached<RepcaExternalVariables::VREF>())
         {

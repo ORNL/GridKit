@@ -64,7 +64,7 @@ namespace GridKit
         ii,      ///< \f$I_\mathrm{i}\f$ Required Known branch-current imaginary input on system base [p.u.]
         p,       ///< \f$P\f$ Required Known branch active-power input on system base [p.u.]
         q,       ///< \f$Q\f$ Required Known branch reactive-power input on system base [p.u.]
-        freq,    ///< \f$f\f$ Required Known frequency input [p.u.]
+        freq,    ///< \f$f\f$ Optional Known frequency input [p.u.]
         vref,    ///< \f$V^\mathrm{ref}\f$ Optional Unknown voltage-reference input [p.u.]
         pref,    ///< \f$P^\mathrm{ref}\f$ Optional Unknown plant active-power reference on system base [p.u.]
         qref,    ///< \f$Q^\mathrm{ref}\f$ Optional Unknown reactive-power reference on system base [p.u.]

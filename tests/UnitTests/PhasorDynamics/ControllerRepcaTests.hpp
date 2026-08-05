@@ -323,9 +323,10 @@ namespace GridKit
         }
 
         Fixture<ScalarT> fallback(makeInitializationData(), 0.8, 0.6);
-        fallback.attachRequiredInputs();
+        fallback.attachAllInputs(0.0, false);
         setInitializationInputs(fallback);
         success *= fallback.initialize(0.25, 0.45);
+        success *= scalarMatches(fallback.input(Ext::FREQREF), 1.0, "default frequency");
         success *= (fallback.repca.evaluateResidual() == 0);
         success *= allResidualsWithinInitTolerance(fallback.repca);
 
@@ -1188,14 +1189,18 @@ namespace GridKit
           signals.template attachSignalNode<Ext::II>(&input_nodes_[index(Ext::II)]);
           signals.template attachSignalNode<Ext::P>(&input_nodes_[index(Ext::P)]);
           signals.template attachSignalNode<Ext::Q>(&input_nodes_[index(Ext::Q)]);
-          signals.template attachSignalNode<Ext::FREQ>(&input_nodes_[index(Ext::FREQ)]);
         }
 
-        void attachAllInputs(RealT initial_value = 0.0)
+        void attachAllInputs(RealT initial_value    = 0.0,
+                             bool  attach_frequency = true)
         {
           attachRequiredInputs(initial_value);
 
           auto& signals = repca.getSignals();
+          if (attach_frequency)
+          {
+            signals.template attachSignalNode<Ext::FREQ>(&input_nodes_[index(Ext::FREQ)]);
+          }
           signals.template attachSignalNode<Ext::VREF>(&input_nodes_[index(Ext::VREF)]);
           signals.template attachSignalNode<Ext::PREF>(&input_nodes_[index(Ext::PREF)]);
           signals.template attachSignalNode<Ext::QREF>(&input_nodes_[index(Ext::QREF)]);
