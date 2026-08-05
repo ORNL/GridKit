@@ -21,7 +21,7 @@ namespace GridKit
         PfFlag, ///< \f$s_\mathrm{pf}\f$ Power-factor control selector: true = power-factor control, false = reactive-power control [boolean]
         VFlag,  ///< \f$s_V\f$ Voltage-reference selector under \f$s_Q=1\f$: true = cascaded Q-PI voltage command, false = direct external voltage reference [boolean]
         QFlag,  ///< \f$s_Q\f$ Reactive-path selector: true = Volt/VAr PI control, false = reactive-current lag [boolean]
-        Pqflag, ///< \f$s_{PQ}\f$ Converter current-priority selector: true = P priority, false = Q priority [boolean]
+        Pqflag, ///< \f$s_\mathrm{pq}\f$ Converter current-priority selector: true = P priority, false = Q priority [boolean]
         Trv,    ///< \f$T_\mathrm{rv}\f$ Voltage-measurement filter time constant [sec]
         Tp,     ///< \f$T_\mathrm{p}\f$ Electrical-power measurement filter time constant [sec]
         Vref0,  ///< \f$V^\mathrm{ref}\f$ Reactive-current-injection voltage reference [p.u.]

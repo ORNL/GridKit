@@ -364,21 +364,21 @@ namespace GridKit
         // The algebraic command rows reproduce their limiter outputs through
         // the smooth-clamp inverse. A command no input can produce leaves the
         // inverse nonfinite, which the finiteness test below rejects.
-        const RealT ipraw0   = unclamp(ipcmd0, ZERO<RealT>, ipmax0);
-        const RealT iqraw0   = unclamp(iqcmd0, -iqmax0, iqmax0);
-        const RealT iqctl0   = iqraw0 - iqv0;
-        const RealT pord_raw = vmeas_safe0 * ipraw0;
+        const RealT ipraw0 = unclamp(ipcmd0, ZERO<RealT>, ipmax0);
+        const RealT iqraw0 = unclamp(iqcmd0, -iqmax0, iqmax0);
+        const RealT iqctl0 = iqraw0 - iqv0;
+        const RealT pord0  = vmeas_safe0 * ipraw0;
 
-        if (pord_raw < Pmin_ || pord_raw > Pmax_)
+        // Invert the smooth rate limiter at zero so asymmetric ramp limits
+        // still initialize the active-power order at rest.
+        const RealT fpord0       = unclamp(ZERO<RealT>, dPmin_, dPmax_);
+        const RealT pref0_system = toSystemBase(pord0 + Tpord_ * fpord0);
+
+        if (pord0 < Pmin_ || pord0 > Pmax_)
         {
           Log::error() << "Reecb: recovered active-power order is outside Pmin/Pmax\n";
           return 1;
         }
-
-        // Round-tripping the published reference reproduces the residual's
-        // component-base reference, holding the order rate at exactly zero.
-        const RealT pref0_system = toSystemBase(pord_raw);
-        const RealT pord0        = toComponentBase(pref0_system);
 
         // An integrating path holds its feedback only where the clamp can
         // reproduce it: strictly inside the limits, or collapsed onto it.
@@ -481,7 +481,8 @@ namespace GridKit
 
         if (!std::isfinite(verr0) || !std::isfinite(iqv0) || !std::isfinite(ilmax0)
             || !std::isfinite(iqmax0) || !std::isfinite(ipmax0) || !std::isfinite(ipraw0)
-            || !std::isfinite(iqraw0) || !std::isfinite(pord0) || !std::isfinite(pref0_system)
+            || !std::isfinite(iqraw0) || !std::isfinite(pord0) || !std::isfinite(fpord0)
+            || !std::isfinite(pref0_system)
             || !std::isfinite(qref0) || !std::isfinite(qext0_port) || !std::isfinite(pfaref0)
             || !std::isfinite(eq0) || !std::isfinite(xpiq0) || !std::isfinite(epiv0)
             || !std::isfinite(xpiv0) || !std::isfinite(qv0))

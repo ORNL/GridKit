@@ -860,20 +860,27 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
-      // Start variable monitors
-      initializeMonitor();
-      startMonitor();
-
       // Perform an initial Jacobian evaluation for sparse Jacobians, such that
       // the dynamic solver can querry the NNZ value when it is configured.
       // @todo Replace with a sparsity analysis that sets the NNZ and allocates the Jacobian
       // without needing the Jacobian values.
       if (hasJacobian())
       {
-        initialize();
+        const int status = initialize();
+        if (status != 0)
+        {
+          Log::error() << "System model initialization failed with status "
+                       << status << '\n';
+          throw std::runtime_error("SystemModel allocation failed");
+        }
         evaluateResidual();
         evaluateJacobian();
       }
+
+      // Start variable monitors only after allocation and sparse initialization
+      // complete successfully.
+      initializeMonitor();
+      startMonitor();
 
       allocated_ = true;
       return 0;

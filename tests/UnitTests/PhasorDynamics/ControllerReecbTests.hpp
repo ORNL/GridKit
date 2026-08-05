@@ -482,6 +482,40 @@ namespace GridKit
         success *= stateMatches(at_limit.reecb, {{Vars::PORD, 1.5}}, "order at Pmax");
         success *= allResidualsAtRest(at_limit.reecb);
 
+        struct AsymmetricRampCase
+        {
+          RealT       minimum;
+          RealT       maximum;
+          const char* label;
+        };
+
+        const std::array<AsymmetricRampCase, 2> asymmetric_ramps{{
+            {-0.001, 0.1, "narrow negative ramp limit"},
+            {-0.1, 0.001, "narrow positive ramp limit"},
+        }};
+
+        for (const auto& test_case : asymmetric_ramps)
+        {
+          auto asymmetric_data                      = makeData();
+          asymmetric_data.parameters[Params::dPmin] = test_case.minimum;
+          asymmetric_data.parameters[Params::dPmax] = test_case.maximum;
+
+          Fixture<ScalarT> asymmetric(asymmetric_data);
+          asymmetric.attachAllInputs();
+          success *= asymmetric.initialize(0.0, 0.75);
+          success *= (asymmetric.evaluate() == 0);
+          success *= stateMatches(asymmetric.reecb,
+                                  {{Vars::PORD, 1.5}},
+                                  test_case.label);
+          success *= allResidualsAtRest(asymmetric.reecb, kTolSmooth);
+          if (isEqual(asymmetric.input(Ext::PREF), 0.75, kTolSmooth))
+          {
+            std::cout << test_case.label
+                      << " did not offset the published active-power reference\n";
+            success = false;
+          }
+        }
+
         // The reactive command shares the inverse, at both signs.
         for (const RealT iqcmd : {static_cast<RealT>(0.999999), static_cast<RealT>(-0.999999)})
         {

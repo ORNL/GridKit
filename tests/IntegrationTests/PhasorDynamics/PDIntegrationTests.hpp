@@ -9,6 +9,7 @@
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -721,9 +722,8 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Displaced REECB measurement and REGCA current-lag states integrate
-      /// back to the initialized equilibrium of the closed command and power
-      /// feedback loop.
+      /// A finite active-power-reference pulse moves the coupled REECB and
+      /// REGCA states, after which the closed loop returns to equilibrium.
       TestOutcome regcaReecbRecovery()
       {
         using namespace GridKit::PhasorDynamics::Controller;
@@ -745,7 +745,8 @@ namespace GridKit
         data.signal = {{"Active Current Command", kIpcmdSignalId},
                        {"Reactive Current Command", kIqcmdSignalId},
                        {"Branch Active Power", kPbranchSignalId},
-                       {"Branch Reactive Power", kQbranchSignalId}};
+                       {"Branch Reactive Power", kQbranchSignalId},
+                       {"Active Power Reference", kPrefSignalId}};
 
         auto& converter                                       = data.regca.emplace_back();
         converter.buses[RegcaBuses::bus]                      = kReecbBusId;
@@ -773,6 +774,7 @@ namespace GridKit
         controller.buses[ReecbBuses::bus]                    = kReecbBusId;
         controller.signal_inputs[ReecbSignalInputs::pe]      = kPbranchSignalId;
         controller.signal_inputs[ReecbSignalInputs::qgen]    = kQbranchSignalId;
+        controller.signal_inputs[ReecbSignalInputs::pref]    = kPrefSignalId;
         controller.signal_outputs[ReecbSignalOutputs::ipcmd] = kIpcmdSignalId;
         controller.signal_outputs[ReecbSignalOutputs::iqcmd] = kIqcmdSignalId;
         controller.parameters[ReecbParameters::mva]          = static_cast<RealT>(100.0);
@@ -782,9 +784,12 @@ namespace GridKit
         controller.parameters[ReecbParameters::QFlag]        = true;
         controller.parameters[ReecbParameters::VFlag]        = true;
 
+        auto& reference                                                 = data.constant_source.emplace_back();
+        reference.parameters[ConstantSignalSourceParameters::Sr]        = ZERO<RealT>;
+        reference.signal_outputs[ConstantSignalSourceSignalOutputs::sr] = kPrefSignalId;
+
         SystemModel<RealT, IdxT> system(data);
         success *= system.allocate() == 0;
-        success *= system.initialize() == 0;
 
         auto* regca =
             dynamic_cast<Regca<RealT, IdxT>*>(system.getComponent(kConverterComponentId));
@@ -796,26 +801,58 @@ namespace GridKit
           return success.report(__func__);
         }
 
+        AnalysisManager::Sundials::Ida<RealT, IdxT> ida(&system);
+        success *= ida.configureSimulation() == 0;
+        success *= ida.initializeSimulation(ZERO<RealT>) == 0;
+
+        const auto pord_index = static_cast<size_t>(
+            reecb->getVariableIndex(static_cast<IdxT>(ReecbVar::PORD)));
+        const auto ipcmd_index = static_cast<size_t>(
+            reecb->getVariableIndex(static_cast<IdxT>(ReecbVar::IPCMD)));
+        const auto regca_ip_index = static_cast<size_t>(
+            regca->getVariableIndex(static_cast<IdxT>(RegcaVar::IP)));
+
         const auto*              equilibrium_values = system.y().getData();
         const std::vector<RealT> equilibrium(
             equilibrium_values,
             equilibrium_values + static_cast<size_t>(system.y().getSize()));
 
-        // The displacements stay strictly inside every limiter, deadband, and
-        // voltage band, so the return path is a smooth interior trajectory.
-        auto* y                                                         = system.y().getData();
-        y[reecb->getVariableIndex(static_cast<IdxT>(ReecbVar::VMEAS))] += kRecoveryDelta;
-        y[reecb->getVariableIndex(static_cast<IdxT>(ReecbVar::PMEAS))] -= kRecoveryDelta;
-        y[regca->getVariableIndex(static_cast<IdxT>(RegcaVar::IQ))]    += kRecoveryDelta;
-        y[regca->getVariableIndex(static_cast<IdxT>(RegcaVar::IP))]    -= kRecoveryDelta;
-        system.y().setDataUpdated();
+        auto*       pref_signal = system.getSignal(kPrefSignalId);
+        const RealT pref0       = static_cast<RealT>(pref_signal->read());
 
-        AnalysisManager::Sundials::Ida<RealT, IdxT> ida(&system);
-        success *= ida.configureSimulation() == 0;
+        pref_signal->init(pref0 + kReferencePulse);
         success *= ida.initializeSimulation(ZERO<RealT>) == 0;
-        // The step callback keeps the model state current so the final point
-        // can be compared against the stored equilibrium.
-        success *= ida.runSimulation(kRecoveryHorizon, kRecoveryMonitorStep, [](RealT) {}) == 0;
+        success *= ida.runSimulation(kPulseEnd, kRecoveryMonitorStep) == 0;
+
+        const auto* pulse_values      = system.y().getData();
+        const RealT pord_response     = pulse_values[pord_index] - equilibrium[pord_index];
+        const RealT ipcmd_response    = pulse_values[ipcmd_index] - equilibrium[ipcmd_index];
+        const RealT regca_ip_response = pulse_values[regca_ip_index] - equilibrium[regca_ip_index];
+
+        if (pord_response <= kResponseTolerance)
+        {
+          std::cout << "REECB PORD responded by only " << pord_response
+                    << " during the reference pulse\n";
+          success = false;
+        }
+        if (ipcmd_response <= kResponseTolerance)
+        {
+          std::cout << "REECB IPCMD responded by only " << ipcmd_response
+                    << " during the reference pulse\n";
+          success = false;
+        }
+        if (regca_ip_response <= kResponseTolerance)
+        {
+          std::cout << "REGCA IP responded by only " << regca_ip_response
+                    << " during the reference pulse\n";
+          success = false;
+        }
+
+        pref_signal->init(pref0);
+        success *= ida.initializeSimulation(kPulseEnd) == 0;
+        success *= ida.runSimulation(kPulseEnd + kRecoveryHorizon,
+                                     kRecoveryMonitorStep)
+                   == 0;
 
         const auto* final_values = system.y().getData();
         for (size_t entry = 0; entry < equilibrium.size(); ++entry)
@@ -838,13 +875,13 @@ namespace GridKit
       static constexpr IdxT kIqcmdSignalId         = static_cast<IdxT>(202);
       static constexpr IdxT kPbranchSignalId       = static_cast<IdxT>(203);
       static constexpr IdxT kQbranchSignalId       = static_cast<IdxT>(204);
+      static constexpr IdxT kPrefSignalId          = static_cast<IdxT>(205);
       static constexpr IdxT kConverterComponentId  = static_cast<IdxT>(0);
       static constexpr IdxT kControllerComponentId = static_cast<IdxT>(1);
 
-      // The slowest closed-loop mode pairs the reactive and voltage
-      // integrators near three seconds, so the horizon settles well inside
-      // the tolerance.
-      static constexpr RealT kRecoveryDelta       = static_cast<RealT>(2.0e-3);
+      static constexpr RealT kReferencePulse      = static_cast<RealT>(0.05);
+      static constexpr RealT kPulseEnd            = static_cast<RealT>(0.1);
+      static constexpr RealT kResponseTolerance   = static_cast<RealT>(0.01);
       static constexpr RealT kRecoveryHorizon     = static_cast<RealT>(25.0);
       static constexpr RealT kRecoveryMonitorStep = static_cast<RealT>(1.0 / 60.0);
       static constexpr RealT kRecoveryTolerance   = static_cast<RealT>(1.0e-6);

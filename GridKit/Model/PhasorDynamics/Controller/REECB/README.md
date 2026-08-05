@@ -14,6 +14,15 @@ inverter-coupled resource.
   reference instead of a system-base reactive power.
 - REECB contributes no bus current injection.
 
+> [!WARNING]
+> GridKit does not yet inherit `mva` from the associated REGCA model. Set it
+> explicitly to the REGCA component base; omitting it falls back to the system
+> base and is correct only when those bases match.[^reecb-mva-base]
+
+> [!WARNING]
+> GridKit does not yet apply the associated generator's baseload response
+> setting to REECB. The model always uses its configured `Pmin` and `Pmax`.
+
 ## Block Diagram
 
 ![REECB electrical-control block diagram](../../../../../docs/Figures/PhasorDynamics/REECB/diagram.png)
@@ -29,7 +38,7 @@ $S^\mathrm{base}$                   | [MVA]     | `mva`    | REECB component pow
 $s_\mathrm{pf}$                     | [boolean] | `PfFlag` | Power-factor control selector                           | `false`       | `true` = power-factor control, `false` = reactive-power control
 $s_V$                               | [boolean] | `VFlag`  | Voltage-reference selector under $s_Q=1$                | `false`       | `true` = cascaded Q-PI voltage command, `false` = direct external voltage reference
 $s_Q$                               | [boolean] | `QFlag`  | Reactive-path selector                                  | `false`       | `true` = Volt/VAr PI control, `false` = reactive-current lag
-$s_{PQ}$                            | [boolean] | `Pqflag` | Converter current-priority selector                     | `false`       | `true` = P priority, `false` = Q priority
+$s_\mathrm{pq}$                     | [boolean] | `Pqflag` | Converter current-priority selector                     | `false`       | `true` = P priority, `false` = Q priority
 $T_\mathrm{rv}$                     | [sec]     | `Trv`    | Voltage-measurement filter time constant                | 0.02          | State 1 in Fig. 1
 $T_\mathrm{p}$                      | [sec]     | `Tp`     | Electrical-power measurement filter time constant       | 0.0           | State 2 in Fig. 1
 $V^\mathrm{ref}$                    | [p.u.]    | `Vref0`  | Reactive-current-injection voltage reference            | $V_T$         | Initialized from terminal voltage when omitted
@@ -96,7 +105,7 @@ raised to that floor in place, so every equation below uses the raised value:
   s_Q^\mathrm{PI} &= s_Q s_V \\
   s_V^\mathrm{ref} &= s_Q(1-s_V) \\
   s_Q^\mathrm{ref} &= 1 - s_V^\mathrm{ref} \\
-  s_{PQ}^\mathrm{off} &= 1 - s_{PQ} \\
+  s_\mathrm{pq}^\mathrm{off} &= 1 - s_\mathrm{pq} \\
   k_\mathrm{base} &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}}.
 \end{aligned}
 ```
@@ -179,8 +188,8 @@ For readability, define:
   e_V^\mathrm{PI} &= s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
   f_P^\mathrm{ord} &= \dfrac{1}{T_\mathrm{pord}}(k_\mathrm{base}P^\mathrm{ref}-P^\mathrm{ord}) \\
   r_P^\mathrm{ord} &= \text{clamp}(f_P^\mathrm{ord};\,R_P^{\min},R_P^{\max}) \\
-  I_q^{\max} &= s_{PQ}|I_L^{\max}|+s_{PQ}^\mathrm{off}I^{\max} \\
-  I_p^{\max} &= s_{PQ}I^{\max}+s_{PQ}^\mathrm{off}|I_L^{\max}| \\
+  I_q^{\max} &= s_\mathrm{pq}|I_L^{\max}|+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
+  I_p^{\max} &= s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}|I_L^{\max}| \\
   I_q^\mathrm{base} &= \text{clamp}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}) \\
   I_q^\mathrm{raw} &= s_QI_q^\mathrm{base}+s_Q^\mathrm{off}Q_V+I_q^\mathrm{inj}.
 \end{aligned}
@@ -208,7 +217,7 @@ these equations.
 ```math
 \begin{aligned}
   0 &= -V_T^2+V_\mathrm{r}^2+V_\mathrm{i}^2 \\
-  0 &= -I_L^{\max}|I_L^{\max}|+(I^{\max})^2-s_{PQ}(k_\mathrm{base}I_p^\mathrm{cmd})^2-s_{PQ}^\mathrm{off}(k_\mathrm{base}I_q^\mathrm{cmd})^2 \\
+  0 &= -I_L^{\max}|I_L^{\max}|+(I^{\max})^2-s_\mathrm{pq}(k_\mathrm{base}I_p^\mathrm{cmd})^2-s_\mathrm{pq}^\mathrm{off}(k_\mathrm{base}I_q^\mathrm{cmd})^2 \\
   0 &= -k_\mathrm{base}I_q^\mathrm{cmd}+\text{clamp}(I_q^\mathrm{raw};\,-I_q^{\max},I_q^{\max}) \\
   0 &= -k_\mathrm{base}I_p^\mathrm{cmd}+\text{clamp}\left(\dfrac{P^\mathrm{ord}}{V_\mathrm{safe}^\mathrm{meas}};\,0,I_p^{\max}\right).
 \end{aligned}
@@ -257,9 +266,9 @@ clamp for $\ell<z<u$; [Appendix A](#appendix-a-unclamp) gives its closed form.
   P^\mathrm{meas} &\leftarrow k_\mathrm{base}P_e \\
   e_V^\mathrm{db} &\leftarrow \text{deadband2}(V^\mathrm{ref}-V^\mathrm{meas};\,D_1^\mathrm{db},D_2^\mathrm{db}) \\
   I_q^\mathrm{inj} &\leftarrow \text{clamp}(K_\mathrm{qv}e_V^\mathrm{db};\,I_{q,\mathrm{inj}}^{\min},I_{q,\mathrm{inj}}^{\max}) \\
-  I_L^{\max} &\leftarrow \sqrt{(I^{\max})^2-s_{PQ}I_p^2-s_{PQ}^\mathrm{off}I_q^2} \\
-  I_q^{\max} &\leftarrow s_{PQ}I_L^{\max}+s_{PQ}^\mathrm{off}I^{\max} \\
-  I_p^{\max} &\leftarrow s_{PQ}I^{\max}+s_{PQ}^\mathrm{off}I_L^{\max}.
+  I_L^{\max} &\leftarrow \sqrt{(I^{\max})^2-s_\mathrm{pq}I_p^2-s_\mathrm{pq}^\mathrm{off}I_q^2} \\
+  I_q^{\max} &\leftarrow s_\mathrm{pq}I_L^{\max}+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
+  I_p^{\max} &\leftarrow s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}I_L^{\max}.
 \end{aligned}
 ```
 
@@ -404,3 +413,6 @@ $\log\left(1-e^{-x}\right)$ is evaluated without cancellation by
 whose algebraically equivalent branches agree in value and first derivative
 at $x=\log 2$. As $z\to\ell^{+}$ or $z\to u^{-}$ the inverse diverges, which
 is why initialization requires strictly interior operating points.
+
+[^reecb-mva-base]: The [WECC Central Station Photovoltaic Power Plant Model Validation Guideline](https://www.wecc.org/sites/default/files/documents/program/2024/Central%20Station%20Photovoltaic%20Power%20Plant%20Model%20Validation%20Guideline%20June%2017%202015.pdf)
+    specifies that a nonpositive REEC_B `mvab` inherits the REGC_A base.
