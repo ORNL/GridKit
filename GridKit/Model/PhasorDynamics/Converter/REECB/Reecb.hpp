@@ -7,9 +7,11 @@
 #pragma once
 
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <vector>
 
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REECB/ReecbData.hpp>
@@ -155,11 +157,44 @@ namespace GridKit
         template <typename ValueT>
         ValueT toSystemBase(ValueT value) const;
 
+        /**
+         * @brief Smooth anti-windup derivative within a moving symmetric band.
+         *
+         * Math::antiwindup over [-band, band] with a band edge that is an
+         * algebraic quantity, so differentiation carries the band's own
+         * contributions through the gate.
+         *
+         * @param[in] x Limited PI state.
+         * @param[in] f Pre-limit derivative of x.
+         * @param[in] band Nonnegative symmetric band edge.
+         * @return Anti-windup-limited derivative.
+         *
+         * @todo Fold moving-limit support into Math::antiwindup in CommonMath.
+         */
+        static __attribute__((always_inline)) inline ScalarT awband(
+            const ScalarT x,
+            const ScalarT f,
+            const ScalarT band)
+        {
+          const ScalarT above_min = Math::sigmoid(x + band);
+          const ScalarT below_max = Math::sigmoid(band - x);
+
+          return (above_min * below_max                          //
+                  + (ONE<RealT> - below_max) * Math::sigmoid(-f) //
+                  + (ONE<RealT> - above_min) * Math::sigmoid(f))
+                 * f;
+        }
+
         ScalarT& Vr();
         ScalarT& Vi();
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static constexpr RealT VMEAS_MINIMUM         = static_cast<RealT>(0.01);
+
+        /// Accepted reconstruction error where an initialization reference
+        /// round-trips through a transcendental function.
+        static constexpr RealT INITIALIZATION_TOLERANCE =
+            static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
         BusT* bus_{nullptr};
 

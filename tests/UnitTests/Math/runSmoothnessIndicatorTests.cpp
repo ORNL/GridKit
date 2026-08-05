@@ -16,7 +16,6 @@ int main()
   result += test.minMax();
   result += test.antiWindupIndicator();
   result += test.antiWindup();
-  result += test.dynamicAntiWindupBounds();
 
   return result.summary();
 }

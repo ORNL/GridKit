@@ -4,6 +4,10 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REECB/Reecb.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REECB/ReecbData.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
@@ -716,6 +720,133 @@ namespace GridKit
         auto success = compare(set_data, file_data);
         return success.report(__func__);
       }
+
+      /// Displaced REECB measurement and REGCA current-lag states integrate
+      /// back to the initialized equilibrium of the closed command and power
+      /// feedback loop.
+      TestOutcome regcaReecbRecovery()
+      {
+        using namespace GridKit::PhasorDynamics::Converter;
+        using ReecbVar = ReecbInternalVariables;
+        using RegcaVar = RegcaInternalVariables;
+
+        TestStatus success = true;
+
+        SystemModelDataT data;
+        data.va_base = static_cast<RealT>(100.0e6);
+
+        auto& bus    = data.bus.emplace_back();
+        bus.bus_id   = kReecbBusId;
+        bus.bus_type = BusDataT::BusType::SLACK;
+        bus.Vr0      = ONE<RealT>;
+        bus.Vi0      = ZERO<RealT>;
+
+        data.signal = {{"Active Current Command", kIpcmdSignalId},
+                       {"Reactive Current Command", kIqcmdSignalId},
+                       {"Branch Active Power", kPbranchSignalId},
+                       {"Branch Reactive Power", kQbranchSignalId}};
+
+        auto& converter                                       = data.regca.emplace_back();
+        converter.buses[RegcaBuses::bus]                      = kReecbBusId;
+        converter.signal_inputs[RegcaSignalInputs::ipcmd]     = kIpcmdSignalId;
+        converter.signal_inputs[RegcaSignalInputs::iqcmd]     = kIqcmdSignalId;
+        converter.signal_outputs[RegcaSignalOutputs::pbranch] = kPbranchSignalId;
+        converter.signal_outputs[RegcaSignalOutputs::qbranch] = kQbranchSignalId;
+        converter.parameters[RegcaParameters::p0]             = static_cast<RealT>(0.4);
+        converter.parameters[RegcaParameters::q0]             = static_cast<RealT>(0.05);
+        converter.parameters[RegcaParameters::mva]            = static_cast<RealT>(100.0);
+        converter.parameters[RegcaParameters::Tg]             = static_cast<RealT>(0.02);
+        converter.parameters[RegcaParameters::TM]             = static_cast<RealT>(0.02);
+        converter.parameters[RegcaParameters::Rqmax]          = static_cast<RealT>(999.0);
+        converter.parameters[RegcaParameters::Rqmin]          = static_cast<RealT>(-999.0);
+        converter.parameters[RegcaParameters::Rpmax]          = static_cast<RealT>(999.0);
+        converter.parameters[RegcaParameters::sL]             = true;
+        converter.parameters[RegcaParameters::IL1]            = static_cast<RealT>(1.1);
+        converter.parameters[RegcaParameters::VL0]            = static_cast<RealT>(0.4);
+        converter.parameters[RegcaParameters::VL1]            = static_cast<RealT>(0.9);
+        converter.parameters[RegcaParameters::VA0]            = static_cast<RealT>(0.4);
+        converter.parameters[RegcaParameters::VA1]            = static_cast<RealT>(0.9);
+        converter.parameters[RegcaParameters::Vhvmax]         = static_cast<RealT>(1.2);
+
+        auto& controller                                     = data.reecb.emplace_back();
+        controller.buses[ReecbBuses::bus]                    = kReecbBusId;
+        controller.signal_inputs[ReecbSignalInputs::pe]      = kPbranchSignalId;
+        controller.signal_inputs[ReecbSignalInputs::qgen]    = kQbranchSignalId;
+        controller.signal_outputs[ReecbSignalOutputs::ipcmd] = kIpcmdSignalId;
+        controller.signal_outputs[ReecbSignalOutputs::iqcmd] = kIqcmdSignalId;
+        controller.parameters[ReecbParameters::mva]          = static_cast<RealT>(100.0);
+        controller.parameters[ReecbParameters::Trv]          = static_cast<RealT>(0.02);
+        controller.parameters[ReecbParameters::Tp]           = static_cast<RealT>(0.02);
+        controller.parameters[ReecbParameters::Kvi]          = static_cast<RealT>(5.0);
+        controller.parameters[ReecbParameters::QFlag]        = true;
+        controller.parameters[ReecbParameters::VFlag]        = true;
+
+        SystemModel<RealT, IdxT> system(data);
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+
+        auto* regca =
+            dynamic_cast<Regca<RealT, IdxT>*>(system.getComponent(kConverterComponentId));
+        auto* reecb =
+            dynamic_cast<Reecb<RealT, IdxT>*>(system.getComponent(kControllerComponentId));
+        if (regca == nullptr || reecb == nullptr)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        const auto*              equilibrium_values = system.y().getData();
+        const std::vector<RealT> equilibrium(
+            equilibrium_values,
+            equilibrium_values + static_cast<size_t>(system.y().getSize()));
+
+        // The displacements stay strictly inside every limiter, deadband, and
+        // voltage band, so the return path is a smooth interior trajectory.
+        auto* y                                                         = system.y().getData();
+        y[reecb->getVariableIndex(static_cast<IdxT>(ReecbVar::VMEAS))] += kRecoveryDelta;
+        y[reecb->getVariableIndex(static_cast<IdxT>(ReecbVar::PMEAS))] -= kRecoveryDelta;
+        y[regca->getVariableIndex(static_cast<IdxT>(RegcaVar::IQ))]    += kRecoveryDelta;
+        y[regca->getVariableIndex(static_cast<IdxT>(RegcaVar::IP))]    -= kRecoveryDelta;
+        system.y().setDataUpdated();
+
+        AnalysisManager::Sundials::Ida<RealT, IdxT> ida(&system);
+        success *= ida.configureSimulation() == 0;
+        success *= ida.initializeSimulation(ZERO<RealT>) == 0;
+        // The step callback keeps the model state current so the final point
+        // can be compared against the stored equilibrium.
+        success *= ida.runSimulation(kRecoveryHorizon, kRecoveryMonitorStep, [](RealT) {}) == 0;
+
+        const auto* final_values = system.y().getData();
+        for (size_t entry = 0; entry < equilibrium.size(); ++entry)
+        {
+          const RealT deviation = final_values[entry] - equilibrium[entry];
+          if (!isEqual(deviation, ZERO<RealT>, kRecoveryTolerance))
+          {
+            std::cout << "State " << entry << " remains " << deviation
+                      << " from its equilibrium after recovery\n";
+            success = false;
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+    private:
+      static constexpr IdxT kReecbBusId            = static_cast<IdxT>(23);
+      static constexpr IdxT kIpcmdSignalId         = static_cast<IdxT>(201);
+      static constexpr IdxT kIqcmdSignalId         = static_cast<IdxT>(202);
+      static constexpr IdxT kPbranchSignalId       = static_cast<IdxT>(203);
+      static constexpr IdxT kQbranchSignalId       = static_cast<IdxT>(204);
+      static constexpr IdxT kConverterComponentId  = static_cast<IdxT>(0);
+      static constexpr IdxT kControllerComponentId = static_cast<IdxT>(1);
+
+      // The slowest closed-loop mode pairs the reactive and voltage
+      // integrators near three seconds, so the horizon settles well inside
+      // the tolerance.
+      static constexpr RealT kRecoveryDelta       = static_cast<RealT>(2.0e-3);
+      static constexpr RealT kRecoveryHorizon     = static_cast<RealT>(25.0);
+      static constexpr RealT kRecoveryMonitorStep = static_cast<RealT>(1.0 / 60.0);
+      static constexpr RealT kRecoveryTolerance   = static_cast<RealT>(1.0e-6);
     };
   } // namespace Testing
 } // namespace GridKit

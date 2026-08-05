@@ -13,6 +13,7 @@ int main()
   result += test.regcaRepca();
   result += gastpti.genrouGastPti();
   result += gastpti.gensalGastPti();
+  result += test.regcaReecb();
 
   return result.summary();
 }

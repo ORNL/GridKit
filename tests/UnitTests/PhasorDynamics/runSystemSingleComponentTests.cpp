@@ -19,7 +19,6 @@ int main()
   result += test.repca();
   result += test.gastpti();
   result += test.reecb();
-  result += test.regcaReecb();
   result += test.genrou();
   result += test.genClassical();
   result += test.tgov1();

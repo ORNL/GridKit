@@ -90,13 +90,11 @@ raised to that floor in place, so every equation below uses the raised value:
 
 ```math
 \begin{aligned}
-  T_x
-    &\leftarrow \max\!\left(T_x,\epsilon_T\right),
-       && x\in\{\mathrm{rv},\mathrm{p},\mathrm{iq},\mathrm{pord}\} \\
+  T_x &\leftarrow \text{max}(T_x,\epsilon_T), && x\in\{\mathrm{rv},\mathrm{p},\mathrm{iq},\mathrm{pord}\} \\
   s_\mathrm{pf}^\mathrm{off} &= 1 - s_\mathrm{pf} \\
   s_Q^\mathrm{off} &= 1 - s_Q \\
   s_Q^\mathrm{PI} &= s_Q s_V \\
-  s_V^\mathrm{ref} &= s_Q\left(1-s_V\right) \\
+  s_V^\mathrm{ref} &= s_Q(1-s_V) \\
   s_Q^\mathrm{ref} &= 1 - s_V^\mathrm{ref} \\
   s_{PQ}^\mathrm{off} &= 1 - s_{PQ} \\
   k_\mathrm{base} &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}}.
@@ -144,8 +142,8 @@ Symbol               | Units  | Description                                   | 
 ---------------------|--------|-----------------------------------------------|-----
 $V_T$                | [p.u.] | Terminal voltage magnitude                    |
 $I_L^{\max}$         | [p.u.] | Current available to the low-priority command | Component base
-$I_q^\mathrm{cmd}$  | [p.u.] | Reactive-current command output               | System base
-$I_p^\mathrm{cmd}$  | [p.u.] | Active-current command output                 | System base
+$I_q^\mathrm{cmd}$   | [p.u.] | Reactive-current command output               | System base
+$I_p^\mathrm{cmd}$   | [p.u.] | Active-current command output                 | System base
 
 ### External Variables
 
@@ -171,49 +169,20 @@ For readability, define:
 
 ```math
 \begin{aligned}
-  V_\mathrm{safe}^\mathrm{meas}
-    &= \text{max}\!\left(V^\mathrm{meas},0.01\right) \\
-  s_\mathrm{dip}
-    &= \text{inside}\!\left(V_T;\,V_\mathrm{dip},V_\mathrm{up}\right) \\
-  e_V^\mathrm{db}
-    &= \text{deadband2}\!\left(
-       V^\mathrm{ref}-V^\mathrm{meas};\,D_1^\mathrm{db},D_2^\mathrm{db}
-       \right) \\
-  I_q^\mathrm{inj}
-    &= \text{clamp}\!\left(
-       K_\mathrm{qv}e_V^\mathrm{db};\,
-       I_{q,\mathrm{inj}}^{\min},I_{q,\mathrm{inj}}^{\max}
-       \right) \\
-  Q^\mathrm{ref}
-    &= s_Q^\mathrm{ref}\left(
-       s_\mathrm{pf}P^\mathrm{meas}\tan\!\left(\phi^\mathrm{ref}\right)
-       +s_\mathrm{pf}^\mathrm{off}k_\mathrm{base}Q^\mathrm{ext}
-       \right) \\
-  e_Q
-    &= \text{clamp}\!\left(Q^\mathrm{ref};\,Q^{\min},Q^{\max}\right)
-       -k_\mathrm{base}Q^\mathrm{gen} \\
-  V_Q^\mathrm{PI}
-    &= \text{clamp}\!\left(
-       K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}
-       \right) \\
-  e_V^\mathrm{PI}
-    &= s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}
-       -s_QV^\mathrm{meas} \\
-  f_P^\mathrm{ord}
-    &= \dfrac{1}{T_\mathrm{pord}}
-       \left(k_\mathrm{base}P^\mathrm{ref}-P^\mathrm{ord}\right) \\
-  r_P^\mathrm{ord}
-    &= \text{clamp}\!\left(f_P^\mathrm{ord};\,R_P^{\min},R_P^{\max}\right) \\
-  I_q^{\max}
-    &= s_{PQ}\left|I_L^{\max}\right|+s_{PQ}^\mathrm{off}I^{\max} \\
-  I_p^{\max}
-    &= s_{PQ}I^{\max}+s_{PQ}^\mathrm{off}\left|I_L^{\max}\right| \\
-  I_q^\mathrm{base}
-    &= \text{clamp}\!\left(
-       K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}
-       \right) \\
-  I_q^\mathrm{raw}
-    &= s_QI_q^\mathrm{base}+s_Q^\mathrm{off}Q_V+I_q^\mathrm{inj}.
+  V_\mathrm{safe}^\mathrm{meas} &= \text{max}(V^\mathrm{meas},0.01) \\
+  s_\mathrm{dip} &= \text{inside}(V_T;\,V_\mathrm{dip},V_\mathrm{up}) \\
+  e_V^\mathrm{db} &= \text{deadband2}(V^\mathrm{ref}-V^\mathrm{meas};\,D_1^\mathrm{db},D_2^\mathrm{db}) \\
+  I_q^\mathrm{inj} &= \text{clamp}(K_\mathrm{qv}e_V^\mathrm{db};\,I_{q,\mathrm{inj}}^{\min},I_{q,\mathrm{inj}}^{\max}) \\
+  Q^\mathrm{ref} &= s_Q^\mathrm{ref}(s_\mathrm{pf}P^\mathrm{meas}\tan(\phi^\mathrm{ref})+s_\mathrm{pf}^\mathrm{off}k_\mathrm{base}Q^\mathrm{ext}) \\
+  e_Q &= \text{clamp}(Q^\mathrm{ref};\,Q^{\min},Q^{\max})-k_\mathrm{base}Q^\mathrm{gen} \\
+  V_Q^\mathrm{PI} &= \text{clamp}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}) \\
+  e_V^\mathrm{PI} &= s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
+  f_P^\mathrm{ord} &= \dfrac{1}{T_\mathrm{pord}}(k_\mathrm{base}P^\mathrm{ref}-P^\mathrm{ord}) \\
+  r_P^\mathrm{ord} &= \text{clamp}(f_P^\mathrm{ord};\,R_P^{\min},R_P^{\max}) \\
+  I_q^{\max} &= s_{PQ}|I_L^{\max}|+s_{PQ}^\mathrm{off}I^{\max} \\
+  I_p^{\max} &= s_{PQ}I^{\max}+s_{PQ}^\mathrm{off}|I_L^{\max}| \\
+  I_q^\mathrm{base} &= \text{clamp}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}) \\
+  I_q^\mathrm{raw} &= s_QI_q^\mathrm{base}+s_Q^\mathrm{off}Q_V+I_q^\mathrm{inj}.
 \end{aligned}
 ```
 
@@ -225,40 +194,12 @@ these equations.
 
 ```math
 \begin{aligned}
-  0 &=
-    -\dot{V}^\mathrm{meas}
-    + \dfrac{1}{T_\mathrm{rv}}
-      \left(V_T-V^\mathrm{meas}\right) \\
-  0 &=
-    -\dot{P}^\mathrm{meas}
-    + \dfrac{1}{T_\mathrm{p}}
-      \left(k_\mathrm{base}P_e-P^\mathrm{meas}\right) \\
-  0 &=
-    -\dot{x}_Q^\mathrm{PI}
-    + s_Q^\mathrm{PI}s_\mathrm{dip}\,
-      \text{antiwindup}\!\left(
-        K_\mathrm{qp}e_Q+x_Q^\mathrm{PI},
-        K_\mathrm{qi}e_Q;\,
-        V^{\min},V^{\max}
-      \right) \\
-  0 &=
-    -\dot{x}_V^\mathrm{PI}
-    + s_Qs_\mathrm{dip}\,
-      \text{antiwindup}\!\left(
-        K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI},
-        K_\mathrm{vi}e_V^\mathrm{PI};\,
-        -I_q^{\max},I_q^{\max}
-      \right) \\
-  0 &=
-    -\dot{Q}_V
-    + \dfrac{1}{T_\mathrm{iq}}s_Q^\mathrm{off}s_\mathrm{dip}
-      \left(\dfrac{Q^\mathrm{ref}}{V_\mathrm{safe}^\mathrm{meas}}-Q_V\right) \\
-  0 &=
-    -\dot{P}^\mathrm{ord}
-    + s_\mathrm{dip}\,
-      \text{antiwindup}\!\left(
-        P^\mathrm{ord},r_P^\mathrm{ord};\,P^{\min},P^{\max}
-      \right).
+  0 &= -\dot{V}^\mathrm{meas} + \dfrac{1}{T_\mathrm{rv}}(V_T-V^\mathrm{meas}) \\
+  0 &= -\dot{P}^\mathrm{meas} + \dfrac{1}{T_\mathrm{p}}(k_\mathrm{base}P_e-P^\mathrm{meas}) \\
+  0 &= -\dot{x}_Q^\mathrm{PI} + s_Q^\mathrm{PI}s_\mathrm{dip}\,\text{antiwindup}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI},K_\mathrm{qi}e_Q;\,V^{\min},V^{\max}) \\
+  0 &= -\dot{x}_V^\mathrm{PI} + s_Qs_\mathrm{dip}\,\text{antiwindup}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI},K_\mathrm{vi}e_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}) \\
+  0 &= -\dot{Q}_V + \dfrac{1}{T_\mathrm{iq}}s_Q^\mathrm{off}s_\mathrm{dip}\left(\dfrac{Q^\mathrm{ref}}{V_\mathrm{safe}^\mathrm{meas}}-Q_V\right) \\
+  0 &= -\dot{P}^\mathrm{ord} + s_\mathrm{dip}\,\text{antiwindup}(P^\mathrm{ord},r_P^\mathrm{ord};\,P^{\min},P^{\max}).
 \end{aligned}
 ```
 
@@ -267,15 +208,9 @@ these equations.
 ```math
 \begin{aligned}
   0 &= -V_T^2+V_\mathrm{r}^2+V_\mathrm{i}^2 \\
-  0 &= -I_L^{\max}\left|I_L^{\max}\right|+\left(I^{\max}\right)^2
-       -s_{PQ}\left(k_\mathrm{base}I_p^\mathrm{cmd}\right)^2
-       -s_{PQ}^\mathrm{off}\left(k_\mathrm{base}I_q^\mathrm{cmd}\right)^2 \\
-  0 &= -k_\mathrm{base}I_q^\mathrm{cmd}
-       +\text{clamp}\!\left(I_q^\mathrm{raw};\,-I_q^{\max},I_q^{\max}\right) \\
-  0 &= -k_\mathrm{base}I_p^\mathrm{cmd}
-       +\text{clamp}\!\left(
-         \dfrac{P^\mathrm{ord}}{V_\mathrm{safe}^\mathrm{meas}};\,0,I_p^{\max}
-       \right).
+  0 &= -I_L^{\max}|I_L^{\max}|+(I^{\max})^2-s_{PQ}(k_\mathrm{base}I_p^\mathrm{cmd})^2-s_{PQ}^\mathrm{off}(k_\mathrm{base}I_q^\mathrm{cmd})^2 \\
+  0 &= -k_\mathrm{base}I_q^\mathrm{cmd}+\text{clamp}(I_q^\mathrm{raw};\,-I_q^{\max},I_q^{\max}) \\
+  0 &= -k_\mathrm{base}I_p^\mathrm{cmd}+\text{clamp}\left(\dfrac{P^\mathrm{ord}}{V_\mathrm{safe}^\mathrm{meas}};\,0,I_p^{\max}\right).
 \end{aligned}
 ```
 
@@ -293,14 +228,10 @@ REECB reconstructs a steady operating point. Arbitrary-state restart is unsuppor
 
 ```math
 \begin{aligned}
-  V_\mathrm{r},V_\mathrm{i}
-    &\leftarrow \text{terminal-bus voltage} \\
-  I_q^\mathrm{cmd},I_p^\mathrm{cmd}
-    &\leftarrow \text{owned current-command variables} \\
-  P_e
-    &\leftarrow \text{attached active-power feedback},\quad \text{if attached} \\
-  Q^\mathrm{gen}
-    &\leftarrow \text{attached reactive-power feedback},\quad \text{if attached}.
+  V_\mathrm{r},V_\mathrm{i} &\leftarrow \text{terminal-bus voltage} \\
+  I_q^\mathrm{cmd},I_p^\mathrm{cmd} &\leftarrow \text{owned current-command variables} \\
+  P_e &\leftarrow \text{attached active-power feedback},\quad \text{if attached} \\
+  Q^\mathrm{gen} &\leftarrow \text{attached reactive-power feedback},\quad \text{if attached}.
 \end{aligned}
 ```
 
@@ -317,37 +248,18 @@ clamp for $\ell<z<u$; [Appendix A](#appendix-a-unclamp) gives its closed form.
 
 ```math
 \begin{aligned}
-  V_T
-    &\leftarrow \sqrt{V_\mathrm{r}^2+V_\mathrm{i}^2} \\
-  V^\mathrm{ref}
-    &\leftarrow V_T,\quad \text{if omitted} \\
+  V_T &\leftarrow \sqrt{V_\mathrm{r}^2+V_\mathrm{i}^2} \\
+  V^\mathrm{ref} &\leftarrow V_T,\quad \text{if omitted} \\
   V^\mathrm{meas} &\leftarrow V_T \\
-  V_\mathrm{safe}^\mathrm{meas}
-    &\leftarrow \text{max}\!\left(V^\mathrm{meas},0.01\right) \\
-  P_e
-    &\leftarrow V_\mathrm{safe}^\mathrm{meas}I_p^\mathrm{cmd},
-      \quad \text{if unattached} \\
-  Q^\mathrm{gen}
-    &\leftarrow V_\mathrm{safe}^\mathrm{meas}I_q^\mathrm{cmd},
-      \quad \text{if unattached} \\
+  V_\mathrm{safe}^\mathrm{meas} &\leftarrow \text{max}(V^\mathrm{meas},0.01) \\
+  P_e &\leftarrow V_\mathrm{safe}^\mathrm{meas}I_p^\mathrm{cmd},\quad \text{if unattached} \\
+  Q^\mathrm{gen} &\leftarrow V_\mathrm{safe}^\mathrm{meas}I_q^\mathrm{cmd},\quad \text{if unattached} \\
   P^\mathrm{meas} &\leftarrow k_\mathrm{base}P_e \\
-  e_V^\mathrm{db}
-    &\leftarrow \text{deadband2}\!\left(
-      V^\mathrm{ref}-V^\mathrm{meas};\,D_1^\mathrm{db},D_2^\mathrm{db}
-    \right) \\
-  I_q^\mathrm{inj}
-    &\leftarrow \text{clamp}\!\left(
-      K_\mathrm{qv}e_V^\mathrm{db};\,
-      I_{q,\mathrm{inj}}^{\min},I_{q,\mathrm{inj}}^{\max}
-    \right) \\
-  I_L^{\max}
-    &\leftarrow \sqrt{
-      \left(I^{\max}\right)^2-s_{PQ}I_p^2-s_{PQ}^\mathrm{off}I_q^2
-    } \\
-  I_q^{\max}
-    &\leftarrow s_{PQ}I_L^{\max}+s_{PQ}^\mathrm{off}I^{\max} \\
-  I_p^{\max}
-    &\leftarrow s_{PQ}I^{\max}+s_{PQ}^\mathrm{off}I_L^{\max}.
+  e_V^\mathrm{db} &\leftarrow \text{deadband2}(V^\mathrm{ref}-V^\mathrm{meas};\,D_1^\mathrm{db},D_2^\mathrm{db}) \\
+  I_q^\mathrm{inj} &\leftarrow \text{clamp}(K_\mathrm{qv}e_V^\mathrm{db};\,I_{q,\mathrm{inj}}^{\min},I_{q,\mathrm{inj}}^{\max}) \\
+  I_L^{\max} &\leftarrow \sqrt{(I^{\max})^2-s_{PQ}I_p^2-s_{PQ}^\mathrm{off}I_q^2} \\
+  I_q^{\max} &\leftarrow s_{PQ}I_L^{\max}+s_{PQ}^\mathrm{off}I^{\max} \\
+  I_p^{\max} &\leftarrow s_{PQ}I^{\max}+s_{PQ}^\mathrm{off}I_L^{\max}.
 \end{aligned}
 ```
 
@@ -356,28 +268,14 @@ reference required by the enabled steady-state control path.
 
 ```math
 \begin{aligned}
-  I_q^\mathrm{raw}
-    &\leftarrow \text{unclamp}\!\left(
-      I_q;\,-I_q^{\max},I_q^{\max}
-    \right) \\
-  I_q^\mathrm{ctrl}
-    &\leftarrow I_q^\mathrm{raw}-I_q^\mathrm{inj} \\
-  P^\mathrm{ord}
-    &\leftarrow V_\mathrm{safe}^\mathrm{meas}
-      \text{unclamp}\!\left(
-        I_p;\,0,I_p^{\max}
-      \right) \\
-  f_P^\mathrm{ord}
-    &\leftarrow \text{unclamp}\!\left(0;\,R_P^{\min},R_P^{\max}\right) \\
-  Q^\mathrm{target}
-    &\leftarrow
+  I_q^\mathrm{raw} &\leftarrow \text{unclamp}(I_q;\,-I_q^{\max},I_q^{\max}) \\
+  I_q^\mathrm{ctrl} &\leftarrow I_q^\mathrm{raw}-I_q^\mathrm{inj} \\
+  P^\mathrm{ord} &\leftarrow V_\mathrm{safe}^\mathrm{meas}\text{unclamp}(I_p;\,0,I_p^{\max}) \\
+  f_P^\mathrm{ord} &\leftarrow \text{unclamp}(0;\,R_P^{\min},R_P^{\max}) \\
+  Q^\mathrm{target} &\leftarrow
       \begin{cases}
-        V_\mathrm{safe}^\mathrm{meas}I_q^\mathrm{ctrl}
-          & s_Q=0 \\
-        \text{unclamp}\!\left(
-          k_\mathrm{base}Q^\mathrm{gen};\,Q^{\min},Q^{\max}
-        \right)
-          & s_Q s_V=1\ \land\ Q^{\min}<k_\mathrm{base}Q^\mathrm{gen}<Q^{\max} \\
+        V_\mathrm{safe}^\mathrm{meas}I_q^\mathrm{ctrl} & s_Q=0 \\
+        \text{unclamp}(k_\mathrm{base}Q^\mathrm{gen};\,Q^{\min},Q^{\max}) & s_Q s_V=1\ \land\ Q^{\min}<k_\mathrm{base}Q^\mathrm{gen}<Q^{\max} \\
         0 & \text{otherwise}
       \end{cases}.
 \end{aligned}
@@ -385,27 +283,18 @@ reference required by the enabled steady-state control path.
 
 ```math
 \begin{aligned}
-  \phi^\mathrm{ref}
-    &\leftarrow
+  \phi^\mathrm{ref} &\leftarrow
       \begin{cases}
-        \arctan\!\left(Q^\mathrm{target}/P^\mathrm{meas}\right)
-          & s_\mathrm{pf}=1\ \land\ |P^\mathrm{meas}|>\epsilon_0 \\
+        \arctan(Q^\mathrm{target}/P^\mathrm{meas}) & s_\mathrm{pf}=1\ \land\ |P^\mathrm{meas}|>\epsilon_0 \\
         0 & \text{otherwise}
       \end{cases} \\
-  Q^\mathrm{ext}
-    &\leftarrow
+  Q^\mathrm{ext} &\leftarrow
       \begin{cases}
         V^\mathrm{meas} & s_V^\mathrm{ref}=1 \\
-        P^\mathrm{meas}\tan\!\left(\phi^\mathrm{ref}\right)/k_\mathrm{base}
-          & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
-        Q^\mathrm{target}/k_\mathrm{base}
-          & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=0
+        P^\mathrm{meas}\tan(\phi^\mathrm{ref})/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
+        Q^\mathrm{target}/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=0
       \end{cases} \\
-  Q^\mathrm{ref}
-    &\leftarrow s_Q^\mathrm{ref}\left(
-      s_\mathrm{pf}P^\mathrm{meas}\tan\!\left(\phi^\mathrm{ref}\right)
-      +s_\mathrm{pf}^\mathrm{off}k_\mathrm{base}Q^\mathrm{ext}
-      \right).
+  Q^\mathrm{ref} &\leftarrow s_Q^\mathrm{ref}(s_\mathrm{pf}P^\mathrm{meas}\tan(\phi^\mathrm{ref})+s_\mathrm{pf}^\mathrm{off}k_\mathrm{base}Q^\mathrm{ext}).
 \end{aligned}
 ```
 
@@ -413,46 +302,26 @@ For $s_Q=0$, the selected reactive-reference path must reproduce the recovered
 controller current:
 
 ```math
-\left|
-  \dfrac{Q^\mathrm{ref}}{V_\mathrm{safe}^\mathrm{meas}}
-  -I_q^\mathrm{ctrl}
-\right|
-\le\epsilon_0.
+\left|\dfrac{Q^\mathrm{ref}}{V_\mathrm{safe}^\mathrm{meas}}-I_q^\mathrm{ctrl}\right|\le\epsilon_0.
 ```
 
 ```math
 \begin{aligned}
-  e_Q
-    &\leftarrow \text{clamp}\!\left(Q^\mathrm{ref};\,Q^{\min},Q^{\max}\right)
-      -k_\mathrm{base}Q^\mathrm{gen} \\
-  x_Q^\mathrm{PI}
-    &\leftarrow
+  e_Q &\leftarrow \text{clamp}(Q^\mathrm{ref};\,Q^{\min},Q^{\max})-k_\mathrm{base}Q^\mathrm{gen} \\
+  x_Q^\mathrm{PI} &\leftarrow
       \begin{cases}
-        \text{unclamp}\!\left(
-          V^\mathrm{meas};\,V^{\min},V^{\max}
-        \right)-K_\mathrm{qp}e_Q
-          & s_Q s_V=1\ \land\ V^{\min}<V^\mathrm{meas}<V^{\max} \\
-        -K_\mathrm{qp}e_Q
-          & s_Q s_V=1,\ \text{otherwise} \\
+        \text{unclamp}(V^\mathrm{meas};\,V^{\min},V^{\max})-K_\mathrm{qp}e_Q & s_Q s_V=1\ \land\ V^{\min}<V^\mathrm{meas}<V^{\max} \\
+        -K_\mathrm{qp}e_Q & s_Q s_V=1,\ \text{otherwise} \\
         0 & s_Q s_V=0
       \end{cases} \\
-  V_Q^\mathrm{PI}
-    &\leftarrow \text{clamp}\!\left(
-      K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}
-    \right) \\
-  e_V^\mathrm{PI}
-    &\leftarrow s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}
-      -s_QV^\mathrm{meas} \\
-  x_V^\mathrm{PI}
-    &\leftarrow
+  V_Q^\mathrm{PI} &\leftarrow \text{clamp}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}) \\
+  e_V^\mathrm{PI} &\leftarrow s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
+  x_V^\mathrm{PI} &\leftarrow
       \begin{cases}
-        \text{unclamp}\!\left(
-          I_q^\mathrm{ctrl};\,-I_q^{\max},I_q^{\max}
-        \right)-K_\mathrm{vp}e_V^\mathrm{PI} & s_Q=1 \\
+        \text{unclamp}(I_q^\mathrm{ctrl};\,-I_q^{\max},I_q^{\max})-K_\mathrm{vp}e_V^\mathrm{PI} & s_Q=1 \\
         0 & s_Q=0
       \end{cases} \\
-  Q_V
-    &\leftarrow
+  Q_V &\leftarrow
       \begin{cases}
         0 & s_Q=1 \\
         Q^\mathrm{ref}/V_\mathrm{safe}^\mathrm{meas} & s_Q=0
@@ -468,10 +337,10 @@ Initialization rejects an operating point when any of the following holds:
   $0<I_p<I_p^{\max}$ and $-I_q^{\max}<I_q<I_q^{\max}$;
 - an operand of $\text{unclamp}$ sits on or outside its limits;
 - the recovered order leaves
-  $\left[P^{\min}-\epsilon_0,\,P^{\max}+\epsilon_0\right]$;
+  $[P^{\min}-\epsilon_0,\,P^{\max}+\epsilon_0]$;
 - an enabled integral path is off equilibrium,
-  $\left|s_Q^\mathrm{PI}K_\mathrm{qi}e_Q\right|>\epsilon_0$ or
-  $\left|s_QK_\mathrm{vi}e_V^\mathrm{PI}\right|>\epsilon_0$; or
+  $|s_Q^\mathrm{PI}K_\mathrm{qi}e_Q|>\epsilon_0$ or
+  $|s_QK_\mathrm{vi}e_V^\mathrm{PI}|>\epsilon_0$; or
 - any candidate quantity is nonfinite.
 
 The recovered order is retained unchanged to preserve the initial
@@ -484,26 +353,18 @@ derivatives, latches, parameter storage, and attached signals unchanged.
 
 ```math
 \begin{aligned}
-  \phi^\mathrm{ref}
-    &\leftarrow
+  \phi^\mathrm{ref} &\leftarrow
       \begin{cases}
-        \arctan\!\left(Q^\mathrm{target}/P^\mathrm{meas}\right)
-          & s_\mathrm{pf}=1\ \land\ |P^\mathrm{meas}|>\epsilon_0 \\
+        \arctan(Q^\mathrm{target}/P^\mathrm{meas}) & s_\mathrm{pf}=1\ \land\ |P^\mathrm{meas}|>\epsilon_0 \\
         0 & \text{otherwise}
       \end{cases} \\
-  Q^\mathrm{ext}
-    &\leftarrow
+  Q^\mathrm{ext} &\leftarrow
       \begin{cases}
         V^\mathrm{meas} & s_V^\mathrm{ref}=1 \\
-        P^\mathrm{meas}\tan\!\left(\phi^\mathrm{ref}\right)/k_\mathrm{base}
-          & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
-        Q^\mathrm{target}/k_\mathrm{base}
-          & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=0
+        P^\mathrm{meas}\tan(\phi^\mathrm{ref})/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
+        Q^\mathrm{target}/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=0
       \end{cases} \\
-  P^\mathrm{ref}
-    &\leftarrow
-      \dfrac{P^\mathrm{ord}+T_\mathrm{pord}f_P^\mathrm{ord}}
-            {k_\mathrm{base}}
+  P^\mathrm{ref} &\leftarrow \dfrac{P^\mathrm{ord}+T_\mathrm{pord}f_P^\mathrm{ord}}{k_\mathrm{base}}
 \end{aligned}
 ```
 
@@ -524,23 +385,19 @@ Output  | Units  | Description                     | Note
 For $\ell<z<u$ the smooth clamp
 $\text{clamp}(x;\ell,u)=\ell+\rho(x-\ell)-\rho(x-u)$ of
 [CommonMath](../../../../CommonMath.md#clamp) is strictly increasing in $x$
-and admits a unique inverse. With $a=\mu\left(z-\ell\right)$ and
-$b=\mu\left(u-z\right)$,
+and admits a unique inverse. With $a=\mu(z-\ell)$ and $b=\mu(u-z)$,
 
 ```math
-\text{unclamp}(z;\ell,u)
-  = \ell+\dfrac{1}{\mu}
-    \left[a+\log\!\left(1-e^{-a}\right)-\log\!\left(1-e^{-b}\right)\right].
+\text{unclamp}(z;\ell,u) = \ell+\dfrac{1}{\mu}\left[a+\log\left(1-e^{-a}\right)-\log\left(1-e^{-b}\right)\right].
 ```
 
-$\log\!\left(1-e^{-x}\right)$ is evaluated without cancellation by
+$\log\left(1-e^{-x}\right)$ is evaluated without cancellation by
 
 ```math
-\log\!\left(1-e^{-x}\right)
-  =
+\log\left(1-e^{-x}\right) =
   \begin{cases}
     \log 2-\dfrac{x}{2}+\log\sinh\dfrac{x}{2} & 0<x<\log 2 \\[6pt]
-    \text{log1p}\!\left(-e^{-x}\right)        & x\ge\log 2,
+    \text{log1p}\left(-e^{-x}\right)          & x\ge\log 2,
   \end{cases}
 ```
 

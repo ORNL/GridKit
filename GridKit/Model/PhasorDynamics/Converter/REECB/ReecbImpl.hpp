@@ -262,19 +262,20 @@ namespace GridKit
        * @brief Initialize REECB from the initial current commands and feedback
        *
        * Preserves the system-base command states, consumes attached initialized
-       * active/reactive-power feedback or reconstructs unattached feedback,
-       * resolves a component-base steady state, and publishes the unknown
-       * optional reference signals.
+       * active/reactive-power feedback or reconstructs unattached feedback, and
+       * constructs the remaining states and reference setpoints by forward
+       * evaluation of the residual expressions, so an admissible operating
+       * point starts at a steady state.
        *
        * @pre allocate() has completed.
        * @pre verify() reports a valid parameter and port configuration.
        * @pre The terminal bus and current-command states are initialized.
        *
-       * @post On failure no state, derivative, latch, parameter, or signal
-       *       storage is modified.
+       * @post On failure no state, derivative, parameter, or signal storage is
+       *       modified.
        *
-       * @return 0 on success; nonzero when allocation, configuration, initial-
-       *         value, current-circle, limiter, or steady-state checks fail.
+       * @return 0 on success; nonzero when an allocation, configuration,
+       *         initial-value, current-circle, or limiter-interior check fails.
        */
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::initialize()
@@ -296,8 +297,6 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        // Covers roundoff from inverse clamps and component/system-base round trips.
-        const RealT tol           = static_cast<RealT>(100) * std::numeric_limits<RealT>::epsilon();
         const RealT ipcmd0_system = static_cast<RealT>(y[index(I::IPCMD)]);
         const RealT iqcmd0_system = static_cast<RealT>(y[index(I::IQCMD)]);
         const RealT ipcmd0        = toComponentBase(ipcmd0_system);
@@ -307,9 +306,9 @@ namespace GridKit
         const RealT vt0           = std::sqrt(vr0 * vr0 + vi0 * vi0);
         const RealT vmeas0        = vt0;
         const RealT vmeas_safe0   = Math::max(vmeas0, VMEAS_MINIMUM);
-        const RealT active_order0 = ipcmd0 * vmeas_safe0;
-        RealT       pe0_system    = toSystemBase(active_order0);
-        RealT       qgen0_system  = toSystemBase(iqcmd0 * vmeas_safe0);
+
+        RealT pe0_system   = toSystemBase(ipcmd0 * vmeas_safe0);
+        RealT qgen0_system = toSystemBase(iqcmd0 * vmeas_safe0);
 
         if (signals_.template isAttached<E::PE>())
         {
@@ -322,7 +321,7 @@ namespace GridKit
 
         const RealT pmeas0 = toComponentBase(pe0_system);
         const RealT qgen0  = toComponentBase(qgen0_system);
-        RealT       vref0  = vt0;
+        RealT       vref0  = vmeas0;
         if (Vref0_given_)
         {
           vref0 = Vref0_;
@@ -341,6 +340,7 @@ namespace GridKit
           return 1;
         }
 
+        // Mirrors of the residual limiter chain at the initial point.
         const RealT verr0         = Math::deadband2(vref0 - vmeas0, dbd1_, dbd2_);
         const RealT iqv0          = Math::clamp(kqv_ * verr0, Iql1_, Iqh1_);
         const RealT ilmax_squared = Imax_ * Imax_ - pq_on_ * ipcmd0 * ipcmd0 - pq_off_ * iqcmd0 * iqcmd0;
@@ -361,22 +361,47 @@ namespace GridKit
           return 1;
         }
 
-        const RealT pord0 = vmeas_safe0 * unclamp(ipcmd0, ZERO<RealT>, ipmax0);
-        if (pord0 < Pmin_ - tol || pord0 > Pmax_ + tol)
+        // The algebraic command rows reproduce their limiter outputs through
+        // the smooth-clamp inverse. A command no input can produce leaves the
+        // inverse nonfinite, which the finiteness test below rejects.
+        const RealT ipraw0   = unclamp(ipcmd0, ZERO<RealT>, ipmax0);
+        const RealT iqraw0   = unclamp(iqcmd0, -iqmax0, iqmax0);
+        const RealT iqctl0   = iqraw0 - iqv0;
+        const RealT pord_raw = vmeas_safe0 * ipraw0;
+
+        if (pord_raw < Pmin_ || pord_raw > Pmax_)
         {
           Log::error() << "Reecb: recovered active-power order is outside Pmin/Pmax\n";
           return 1;
         }
 
-        const RealT fpord0 = unclamp(ZERO<RealT>, dPmin_, dPmax_);
-        const RealT pref0  = pord0 + Tpord_ * fpord0;
-        const RealT iqraw0 = unclamp(iqcmd0, -iqmax0, iqmax0);
-        const RealT iqctl0 = iqraw0 - iqv0;
+        // Round-tripping the published reference reproduces the residual's
+        // component-base reference, holding the order rate at exactly zero.
+        const RealT pref0_system = toSystemBase(pord_raw);
+        const RealT pord0        = toComponentBase(pref0_system);
 
-        // Unconstrained reactive targets stay zero; the masked equilibrium
-        // checks below reject any choice the enabled integrators cannot hold.
+        // An integrating path holds its feedback only where the clamp can
+        // reproduce it: strictly inside the limits, or collapsed onto it.
+        auto reproducible = [](RealT value, RealT lower, RealT upper)
+        {
+          return (lower < value && value < upper) || (lower == upper && value == lower);
+        };
+
+        if (q_pi_on_ * Kqi_ != ZERO<RealT> && !reproducible(qgen0, Qmin_, Qmax_))
+        {
+          Log::error() << "Reecb: reactive-power integral path is not at equilibrium\n";
+          return 1;
+        }
+        if (q_pi_on_ * Kvi_ != ZERO<RealT> && !reproducible(vmeas0, Vmin_, Vmax_))
+        {
+          Log::error() << "Reecb: voltage-control integral path is not at equilibrium\n";
+          return 1;
+        }
+
+        // The reactive channel reproduces the power feedback when the reactive
+        // PI is enabled, and the reactive-current command otherwise. Collapsed
+        // limits already pin the clamp output onto the feedback.
         RealT qtarget0 = ZERO<RealT>;
-
         if (!QFlag_)
         {
           qtarget0 = iqctl0 * vmeas_safe0;
@@ -386,24 +411,34 @@ namespace GridKit
           qtarget0 = unclamp(qgen0, Qmin_, Qmax_);
         }
 
-        // The Volt/VAr channel publishes a terminal-voltage reference in
-        // direct-voltage mode and a system-base reactive power otherwise.
         RealT qref0      = ZERO<RealT>;
         RealT qext0_port = ZERO<RealT>;
         RealT pfaref0    = ZERO<RealT>;
 
         if (QFlag_ && !VFlag_)
         {
-          // The V PI holds the raw reference at the measurement exactly; a
-          // zero Kvi keeps the same physical setpoint.
+          // Direct-voltage mode publishes the measurement as its reference.
           qext0_port = vmeas0;
         }
         else if (PfFlag_)
         {
-          if (std::abs(pmeas0) > tol)
+          if (pmeas0 == ZERO<RealT> && qtarget0 != ZERO<RealT>)
+          {
+            Log::error() << "Reecb: power-factor mode cannot reproduce the reactive target at zero active power\n";
+            return 1;
+          }
+          if (pmeas0 != ZERO<RealT>)
           {
             pfaref0 = std::atan(qtarget0 / pmeas0);
-            qref0   = pmeas0 * std::tan(pfaref0);
+          }
+          qref0 = pmeas0 * std::tan(pfaref0);
+
+          // Angle resolution collapses toward the tangent pole, so the
+          // published angle must still carry its own target back.
+          if (std::abs(qref0 - qtarget0) > std::abs(qtarget0) * INITIALIZATION_TOLERANCE)
+          {
+            Log::error() << "Reecb: power-factor angle cannot reproduce the reactive target\n";
+            return 1;
           }
           qext0_port = toSystemBase(qref0);
         }
@@ -413,33 +448,18 @@ namespace GridKit
           qref0      = toComponentBase(qext0_port);
         }
 
-        // The masked product mirrors the residual integrator rate.
         const RealT eq0 = Math::clamp(qref0, Qmin_, Qmax_) - qgen0;
-        if (std::abs(q_pi_on_ * Kqi_ * eq0) > tol)
-        {
-          Log::error() << "Reecb: reactive-power integral path is not at equilibrium\n";
-          return 1;
-        }
 
-        // The Q-PI state reproduces the measured voltage through the inverse
-        // clamp on the V limits
+        // The Q-PI order carries the measurement the voltage channel
+        // subtracts; collapsed limits pin the clamp output there already.
         RealT xpiq0 = ZERO<RealT>;
-        if (QFlag_ && VFlag_)
+        if (QFlag_ && VFlag_ && Vmin_ < vmeas0 && vmeas0 < Vmax_)
         {
-          xpiq0 = -Kqp_ * eq0;
-          if (Vmin_ < vmeas0 && vmeas0 < Vmax_)
-          {
-            xpiq0 += unclamp(vmeas0, Vmin_, Vmax_);
-          }
+          xpiq0 = unclamp(vmeas0, Vmin_, Vmax_) - Kqp_ * eq0;
         }
 
         const RealT vpiq0 = Math::clamp(Kqp_ * eq0 + xpiq0, Vmin_, Vmax_);
         const RealT epiv0 = q_pi_on_ * vpiq0 + v_ref_on_ * qext0_port - q_on_ * vmeas0;
-        if (std::abs(q_on_ * Kvi_ * epiv0) > tol)
-        {
-          Log::error() << "Reecb: voltage-control integral path is not at equilibrium\n";
-          return 1;
-        }
 
         RealT qv0   = ZERO<RealT>;
         RealT xpiv0 = ZERO<RealT>;
@@ -455,22 +475,16 @@ namespace GridKit
         }
         else
         {
+          // The lag state carries the same quotient the QV row forms.
           qv0 = qref0 / vmeas_safe0;
-          if (std::abs(qv0 - iqctl0) > tol)
-          {
-            Log::error() << "Reecb: reactive-reference path cannot reproduce the initial reactive-current command\n";
-            return 1;
-          }
         }
 
-        const RealT pref0_system = toSystemBase(pref0);
         if (!std::isfinite(verr0) || !std::isfinite(iqv0) || !std::isfinite(ilmax0)
-            || !std::isfinite(iqmax0) || !std::isfinite(ipmax0)
-            || !std::isfinite(pord0) || !std::isfinite(fpord0) || !std::isfinite(pref0)
-            || !std::isfinite(iqraw0) || !std::isfinite(iqctl0) || !std::isfinite(qref0)
-            || !std::isfinite(qext0_port) || !std::isfinite(pfaref0) || !std::isfinite(eq0)
-            || !std::isfinite(xpiq0) || !std::isfinite(vpiq0) || !std::isfinite(epiv0)
-            || !std::isfinite(qv0) || !std::isfinite(xpiv0) || !std::isfinite(pref0_system))
+            || !std::isfinite(iqmax0) || !std::isfinite(ipmax0) || !std::isfinite(ipraw0)
+            || !std::isfinite(iqraw0) || !std::isfinite(pord0) || !std::isfinite(pref0_system)
+            || !std::isfinite(qref0) || !std::isfinite(qext0_port) || !std::isfinite(pfaref0)
+            || !std::isfinite(eq0) || !std::isfinite(xpiq0) || !std::isfinite(epiv0)
+            || !std::isfinite(xpiv0) || !std::isfinite(qv0))
         {
           Log::error() << "Reecb: initialization produced a nonfinite value\n";
           return 1;
@@ -691,7 +705,7 @@ namespace GridKit
         f[index(I::VMEAS)] = -vmeas_dot + (vt - vmeas) / Trv_;
         f[index(I::PMEAS)] = -pmeas_dot + (pe - pmeas) / Tp_;
         f[index(I::XPIQ)]  = -xpiq_dot + q_pi_on_ * sdip * Math::antiwindup(Kqp_ * eq + xpiq, Kqi_ * eq, Vmin_, Vmax_);
-        f[index(I::XPIV)]  = -xpiv_dot + q_on_ * sdip * Math::antiwindup(Kvp_ * epiv + xpiv, Kvi_ * epiv, -iqmax, iqmax);
+        f[index(I::XPIV)]  = -xpiv_dot + q_on_ * sdip * awband(Kvp_ * epiv + xpiv, Kvi_ * epiv, iqmax);
         f[index(I::QV)]    = -qv_dot + q_off_ * sdip * (qref / vmeas_safe - qv) / Tiq_;
         f[index(I::PORD)]  = -pord_dot + sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
         f[index(I::VT)]    = -vt * vt + vr * vr + vi * vi;
@@ -996,13 +1010,14 @@ namespace GridKit
       }
 
       /**
-       * @brief Recover the input that produces an interior smooth-clamp output
+       * @brief Recover the input that produces a requested smooth-clamp output
        *
-       * @param[in] output Requested output strictly between the limits.
+       * @param[in] output Requested output.
        * @param[in] lower Lower smooth-clamp limit.
        * @param[in] upper Upper smooth-clamp limit.
-       * @return Exact inverse of `Math::clamp` to floating-point roundoff.
-       * @pre `lower < output < upper`.
+       * @return Inverse of `Math::clamp`, or a nonfinite value when no input
+       *         produces `output`.
+       * @pre `lower <= upper`.
        * @warning This function contains conditional branching and as such can
        * be used in initialization methods but not in residual evaluation.
        */
