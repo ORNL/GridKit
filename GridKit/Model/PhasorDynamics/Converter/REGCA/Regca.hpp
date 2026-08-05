@@ -7,12 +7,9 @@
 #pragma once
 
 #include <cassert>
-#include <cmath>
 #include <cstddef>
 #include <memory>
-#include <vector>
 
-#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>

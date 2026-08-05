@@ -1,10 +1,10 @@
 
-#define _USE_MATH_DEFINES
 #include "Generator4Governor.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <numbers>
 
 #include <GridKit/Model/PowerFlow/Bus/BaseBus.hpp>
 
@@ -37,7 +37,7 @@ namespace GridKit
       deltaPm_(0.5), // 0.5
       deltaPn_(1.0), // 1.0
       omega_s_(1.0),
-      omega_b_(2.0 * 60.0 * M_PI), // [rad/s]
+      omega_b_(2.0 * 60.0 * std::numbers::pi_v<RealT>), // [rad/s]
       omega_up_(omega_s_ + 0.0001),
       omega_lo_(omega_s_ - 0.0001),
       c_(10000.0),
@@ -99,16 +99,16 @@ namespace GridKit
     // std::cout << "Initialize Generator4Governor..." << std::endl;
 
     // Compute generator voltage phase
-    const ScalarT delta = atan((Xq_ * P0_ - Rs_ * Q0_) / (V() * V() + Rs_ * P0_ + Xq_ * Q0_)) + theta();
+    const ScalarT delta = std::atan((Xq_ * P0_ - Rs_ * Q0_) / (V() * V() + Rs_ * P0_ + Xq_ * Q0_)) + theta();
 
     // Compute generator current phase
-    const ScalarT phi = delta - theta() + atan(Q0_ / P0_);
+    const ScalarT phi = delta - theta() + std::atan(Q0_ / P0_);
 
     // Compute generator currents and potentials in d-q frame
-    const ScalarT Id  = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * sin(phi);
-    const ScalarT Iq  = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * cos(phi);
-    const ScalarT Edp = V() * sin(delta - theta()) + Rs_ * Id - Xqp_ * Iq;
-    const ScalarT Eqp = V() * cos(delta - theta()) + Rs_ * Iq + Xdp_ * Id;
+    const ScalarT Id  = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * std::sin(phi);
+    const ScalarT Iq  = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * std::cos(phi);
+    const ScalarT Edp = V() * std::sin(delta - theta()) + Rs_ * Id - Xqp_ * Iq;
+    const ScalarT Eqp = V() * std::cos(delta - theta()) + Rs_ * Iq + Xdp_ * Id;
 
     auto* y  = y_.getData();
     auto* yp = yp_.getData();
@@ -235,8 +235,8 @@ namespace GridKit
     f[static_cast<size_t>(offsetGen_ + 1)] = (2.0 * H_) / omega_s_ * dotOmega() - Lm(y[static_cast<size_t>(offsetGov_ + 0)]) + Eqp() * Iq() + Edp() * Id() + (-Xdp_ + Xqp_) * Id() * Iq() + D_ * (omega() - omega_s_);
     f[static_cast<size_t>(offsetGen_ + 2)] = Tq0p_ * dotEdp() + Edp() - (Xq_ - Xqp_) * Iq();
     f[static_cast<size_t>(offsetGen_ + 3)] = Td0p_ * dotEqp() + Eqp() + (Xd_ - Xdp_) * Id() - Ef0_;
-    f[static_cast<size_t>(offsetGen_ + 4)] = Rs_ * Id() - Xqp_ * Iq() + V() * sin(delta() - theta()) - Edp();
-    f[static_cast<size_t>(offsetGen_ + 5)] = Xdp_ * Id() + Rs_ * Iq() + V() * cos(delta() - theta()) - Eqp();
+    f[static_cast<size_t>(offsetGen_ + 4)] = Rs_ * Id() - Xqp_ * Iq() + V() * std::sin(delta() - theta()) - Edp();
+    f[static_cast<size_t>(offsetGen_ + 5)] = Xdp_ * Id() + Rs_ * Iq() + V() * std::cos(delta() - theta()) - Eqp();
 
     // Bus equations
     P() += Pg();
@@ -331,8 +331,8 @@ namespace GridKit
   int Generator4Governor<ScalarT, IdxT>::evaluateAdjointResidual()
   {
     // std::cout << "Evaluate adjoint residual for Gen2..." << std::endl;
-    ScalarT sinPhi = sin(delta() - theta());
-    ScalarT cosPhi = cos(delta() - theta());
+    ScalarT sinPhi = std::sin(delta() - theta());
+    ScalarT cosPhi = std::cos(delta() - theta());
 
     const auto* y   = y_.getData();
     const auto* yB  = yB_.getData();
@@ -433,7 +433,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator4Governor<ScalarT, IdxT>::frequencyPenalty(ScalarT omega)
   {
-    return c_ * pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
+    return c_ * std::pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
   }
 
   /**
@@ -448,11 +448,11 @@ namespace GridKit
   {
     if (omega > omega_up_)
     {
-      return beta_ * c_ * pow(omega - omega_up_, beta_ - 1.0);
+      return beta_ * c_ * std::pow(omega - omega_up_, beta_ - 1.0);
     }
     else if (omega < omega_lo_)
     {
-      return beta_ * c_ * pow(omega - omega_lo_, beta_ - 1.0);
+      return beta_ * c_ * std::pow(omega - omega_lo_, beta_ - 1.0);
     }
     else
     {

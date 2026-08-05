@@ -1,7 +1,4 @@
-#define _USE_MATH_DEFINES
-#include <cmath>
 #include <iostream>
-#include <limits>
 #include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -174,7 +171,7 @@ namespace GridKit
         auto* y  = gen.y().getData();
         auto* yp = gen.yp().getData();
         y[1]     = 1.0;
-        yp[0]    = TWO<RealT> * M_PI * 50.0;
+        yp[0]    = TWO<RealT> * std::numbers::pi_v<RealT> * 50.0;
 
         gen.y().setDataUpdated();
         gen.yp().setDataUpdated();
@@ -293,7 +290,9 @@ namespace GridKit
         auto* y  = gen.y().getData();
         auto* yp = gen.yp().getData();
 
-        y[0]  = M_PI;  // delta
+        static constexpr auto pi = std::numbers::pi_v<RealT>;
+
+        y[0]  = pi;    // delta
         y[1]  = 1.0;   // omega
         y[2]  = 2.0;   // Eqp
         y[3]  = 0.5;   // psidp
@@ -310,7 +309,7 @@ namespace GridKit
         y[14] = 0.1;   // inr
         y[15] = -0.2;  // ini
 
-        yp[0] = 2 * M_PI * 60.0; // delta_dot
+        yp[0] = 2.0 * pi * 60.0; // delta_dot
         yp[1] = -1.0;            // omega_dot
         yp[2] = 0.3;             // Eqp_dot
         yp[3] = -0.7;            // psidp_dot
