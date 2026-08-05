@@ -482,19 +482,19 @@ namespace GridKit
         success *= stateMatches(at_limit.reecb, {{Vars::PORD, 1.5}}, "order at Pmax");
         success *= allResidualsAtRest(at_limit.reecb);
 
-        struct AsymmetricRampCase
+        struct AsymmetricSlewCase
         {
           RealT       minimum;
           RealT       maximum;
           const char* label;
         };
 
-        const std::array<AsymmetricRampCase, 2> asymmetric_ramps{{
+        const std::array<AsymmetricSlewCase, 2> asymmetric_slews{{
             {-0.001, 0.1, "narrow negative ramp limit"},
             {-0.1, 0.001, "narrow positive ramp limit"},
         }};
 
-        for (const auto& test_case : asymmetric_ramps)
+        for (const auto& test_case : asymmetric_slews)
         {
           auto asymmetric_data                      = makeData();
           asymmetric_data.parameters[Params::dPmin] = test_case.minimum;
@@ -508,12 +508,9 @@ namespace GridKit
                                   {{Vars::PORD, 1.5}},
                                   test_case.label);
           success *= allResidualsAtRest(asymmetric.reecb, kTolSmooth);
-          if (isEqual(asymmetric.input(Ext::PREF), 0.75, kTolSmooth))
-          {
-            std::cout << test_case.label
-                      << " did not offset the published active-power reference\n";
-            success = false;
-          }
+          success *= scalarMatches(asymmetric.input(Ext::PREF),
+                                   0.75,
+                                   test_case.label);
         }
 
         // The reactive command shares the inverse, at both signs.
@@ -948,6 +945,42 @@ namespace GridKit
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::PORD, test_case.expected}},
                                       "active-power ramp limit");
+          }
+        }
+
+        {
+          // Strongly asymmetric limits retain interior rates and bound each
+          // direction independently.
+          struct AsymmetricRateCase
+          {
+            RealT minimum;
+            RealT maximum;
+            RealT input;
+            RealT expected;
+          };
+
+          const std::array<AsymmetricRateCase, 4> rate_cases{{
+              {-0.001, 0.1, -0.002, -0.001},
+              {-0.001, 0.1, 0.05, 0.05},
+              {-0.1, 0.001, -0.05, -0.05},
+              {-0.1, 0.001, 0.002, 0.001},
+          }};
+
+          for (const auto& test_case : rate_cases)
+          {
+            auto data                      = makeResidualData();
+            data.parameters[Params::dPmin] = test_case.minimum;
+            data.parameters[Params::dPmax] = test_case.maximum;
+
+            Fixture<ScalarT> fixture(data);
+            fixture.attachAllInputs();
+            fixture.input(Ext::PREF)  = rampReference(0.5, test_case.input);
+            success                  *= fixture.prepare(0.0, 0.2);
+            setControlState(fixture.reecb);
+            success *= (fixture.evaluate() == 0);
+            success *= residualsMatch(fixture.reecb,
+                                      {{Vars::PORD, test_case.expected}},
+                                      "asymmetric active-power ramp limit");
           }
         }
 
@@ -1563,6 +1596,8 @@ namespace GridKit
         data.parameters[Params::kqv]   = 0.0;
         data.parameters[Params::Qmin]  = -2.0;
         data.parameters[Params::Qmax]  = 2.0;
+        data.parameters[Params::dPmin] = -0.001;
+        data.parameters[Params::dPmax] = 0.1;
         data.parameters[Params::Imax]  = 2.5;
         return data;
       }

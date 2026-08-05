@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <limits>
 #include <memory>
@@ -156,6 +157,27 @@ namespace GridKit
 
         template <typename ValueT>
         ValueT toSystemBase(ValueT value) const;
+
+        /**
+         * @brief Smooth asymmetric slew-rate limiter.
+         *
+         * @param[in] f Unconstrained rate.
+         * @param[in] rate_min Negative rate limit.
+         * @param[in] rate_max Positive rate limit.
+         * @return Limited rate.
+         */
+        static __attribute__((always_inline)) inline ScalarT aslew(
+            const ScalarT f,
+            const RealT   rate_min,
+            const RealT   rate_max)
+        {
+          assert(rate_min < ZERO<RealT> && ZERO<RealT> < rate_max);
+
+          return f
+                 / (ONE<RealT>
+                    + Math::ramp(f / rate_max - ONE<RealT>)
+                    + Math::ramp(f / rate_min - ONE<RealT>));
+        }
 
         /**
          * @brief Smooth anti-windup derivative within a moving symmetric band.

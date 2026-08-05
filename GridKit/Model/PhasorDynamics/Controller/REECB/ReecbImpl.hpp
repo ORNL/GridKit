@@ -369,10 +369,7 @@ namespace GridKit
         const RealT iqctl0 = iqraw0 - iqv0;
         const RealT pord0  = vmeas_safe0 * ipraw0;
 
-        // Invert the smooth rate limiter at zero so asymmetric ramp limits
-        // still initialize the active-power order at rest.
-        const RealT fpord0       = unclamp(ZERO<RealT>, dPmin_, dPmax_);
-        const RealT pref0_system = toSystemBase(pord0 + Tpord_ * fpord0);
+        const RealT pref0_system = toSystemBase(pord0);
 
         if (pord0 < Pmin_ || pord0 > Pmax_)
         {
@@ -481,8 +478,7 @@ namespace GridKit
 
         if (!std::isfinite(verr0) || !std::isfinite(iqv0) || !std::isfinite(ilmax0)
             || !std::isfinite(iqmax0) || !std::isfinite(ipmax0) || !std::isfinite(ipraw0)
-            || !std::isfinite(iqraw0) || !std::isfinite(pord0) || !std::isfinite(fpord0)
-            || !std::isfinite(pref0_system)
+            || !std::isfinite(iqraw0) || !std::isfinite(pord0) || !std::isfinite(pref0_system)
             || !std::isfinite(qref0) || !std::isfinite(qext0_port) || !std::isfinite(pfaref0)
             || !std::isfinite(eq0) || !std::isfinite(xpiq0) || !std::isfinite(epiv0)
             || !std::isfinite(xpiv0) || !std::isfinite(qv0))
@@ -696,7 +692,7 @@ namespace GridKit
         const ScalarT vpiq       = Math::clamp(Kqp_ * eq + xpiq, Vmin_, Vmax_);
         const ScalarT epiv       = q_pi_on_ * vpiq + v_ref_on_ * extref - q_on_ * vmeas;
         const ScalarT fpord      = (pref - pord) / Tpord_;
-        const ScalarT rpord      = Math::clamp(fpord, dPmin_, dPmax_);
+        const ScalarT rpord      = aslew(fpord, dPmin_, dPmax_);
         const ScalarT ilcap      = std::sqrt(ilmax * ilmax);
         const ScalarT iqmax      = pq_on_ * ilcap + pq_off_ * Imax_;
         const ScalarT ipmax      = pq_on_ * Imax_ + pq_off_ * ilcap;

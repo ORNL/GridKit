@@ -187,7 +187,7 @@ For readability, define:
   V_Q^\mathrm{PI} &= \text{clamp}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}) \\
   e_V^\mathrm{PI} &= s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
   f_P^\mathrm{ord} &= \dfrac{1}{T_\mathrm{pord}}(k_\mathrm{base}P^\mathrm{ref}-P^\mathrm{ord}) \\
-  r_P^\mathrm{ord} &= \text{clamp}(f_P^\mathrm{ord};\,R_P^{\min},R_P^{\max}) \\
+  r_P^\mathrm{ord} &= \text{aslew}(f_P^\mathrm{ord};\,R_P^{\min},R_P^{\max}) \\
   I_q^{\max} &= s_\mathrm{pq}|I_L^{\max}|+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
   I_p^{\max} &= s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}|I_L^{\max}| \\
   I_q^\mathrm{base} &= \text{clamp}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}) \\
@@ -197,7 +197,7 @@ For readability, define:
 
 CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup) and
 [smooth limiter](../../../../CommonMath.md#derived-functions) functions used in
-these equations.
+these equations. [Appendix B](#appendix-b-aslew) defines `aslew`.
 
 ### Differential Equations
 
@@ -280,7 +280,6 @@ reference required by the enabled steady-state control path.
   I_q^\mathrm{raw} &\leftarrow \text{unclamp}(I_q;\,-I_q^{\max},I_q^{\max}) \\
   I_q^\mathrm{ctrl} &\leftarrow I_q^\mathrm{raw}-I_q^\mathrm{inj} \\
   P^\mathrm{ord} &\leftarrow V_\mathrm{safe}^\mathrm{meas}\text{unclamp}(I_p;\,0,I_p^{\max}) \\
-  f_P^\mathrm{ord} &\leftarrow \text{unclamp}(0;\,R_P^{\min},R_P^{\max}) \\
   Q^\mathrm{target} &\leftarrow
       \begin{cases}
         V_\mathrm{safe}^\mathrm{meas}I_q^\mathrm{ctrl} & s_Q=0 \\
@@ -373,7 +372,7 @@ derivatives, latches, parameter storage, and attached signals unchanged.
         P^\mathrm{meas}\tan(\phi^\mathrm{ref})/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
         Q^\mathrm{target}/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=0
       \end{cases} \\
-  P^\mathrm{ref} &\leftarrow \dfrac{P^\mathrm{ord}+T_\mathrm{pord}f_P^\mathrm{ord}}{k_\mathrm{base}}
+  P^\mathrm{ref} &\leftarrow \dfrac{P^\mathrm{ord}}{k_\mathrm{base}}
 \end{aligned}
 ```
 
@@ -391,28 +390,30 @@ Output  | Units  | Description                     | Note
 
 ## Appendix A: `unclamp`
 
-For $\ell<z<u$ the smooth clamp
-$\text{clamp}(x;\ell,u)=\ell+\rho(x-\ell)-\rho(x-u)$ of
-[CommonMath](../../../../CommonMath.md#clamp) is strictly increasing in $x$
-and admits a unique inverse. With $a=\mu(z-\ell)$ and $b=\mu(u-z)$,
+For $\ell<z<u$, GridKit's smooth
+[`clamp`](../../../../CommonMath.md#clamp) is strictly increasing and has the
+unique inverse below. With $a=\mu(z-\ell)$ and $b=\mu(u-z)$,
 
 ```math
 \text{unclamp}(z;\ell,u) = \ell+\dfrac{1}{\mu}\left[a+\log\left(1-e^{-a}\right)-\log\left(1-e^{-b}\right)\right].
 ```
 
-$\log\left(1-e^{-x}\right)$ is evaluated without cancellation by
+The logarithms are evaluated in cancellation-safe form. The inverse diverges
+at either limit, so initialization requires strictly interior values.
+
+## Appendix B: `aslew`
+
+For $\ell<0<u$, REECB uses
 
 ```math
-\log\left(1-e^{-x}\right) =
-  \begin{cases}
-    \log 2-\dfrac{x}{2}+\log\sinh\dfrac{x}{2} & 0<x<\log 2 \\[6pt]
-    \text{log1p}\left(-e^{-x}\right)          & x\ge\log 2,
-  \end{cases}
+\text{aslew}(f;\ell,u)
+=\dfrac{f}{1+\rho(f/u-1)+\rho(f/\ell-1)},
 ```
 
-whose algebraically equivalent branches agree in value and first derivative
-at $x=\log 2$. As $z\to\ell^{+}$ or $z\to u^{-}$ the inverse diverges, which
-is why initialization requires strictly interior operating points.
+where $\rho$ is GridKit's smooth
+[`ramp`](../../../../CommonMath.md#primitives). With exact one-sided ramps this
+reduces to $\text{clamp}(f;\ell,u)$; the smooth form preserves
+$\text{aslew}(0;\ell,u)=0$.
 
 [^reecb-mva-base]: The [WECC Central Station Photovoltaic Power Plant Model Validation Guideline](https://www.wecc.org/sites/default/files/documents/program/2024/Central%20Station%20Photovoltaic%20Power%20Plant%20Model%20Validation%20Guideline%20June%2017%202015.pdf)
     specifies that a nonpositive REEC_B `mvab` inherits the REGC_A base.
