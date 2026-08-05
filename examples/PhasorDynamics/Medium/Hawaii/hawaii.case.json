@@ -1,10 +1,12 @@
 {
     "header": {
-        "format_version": 0.1,
-        "format_revision": 1,
+        "format_version": 0.2,
+        "format_revision": 0,
         "case_name": "Hawaii",
         "case_description": "A modified Hawaii 37 Bus Case that only has synchronous machines.",
-        "case_comments": "No Case Comments",
+        "case_comments": "No Case Comments"
+    },
+    "params": {
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
@@ -17,7 +19,7 @@
     "buses": [
         {
             "number": 1,
-            "class": "bus",
+            "class": "Bus",
             "name": "ALOHA138",
             "init": {
                 "Vr": 0.9933554848330083,
@@ -31,7 +33,7 @@
         },
         {
             "number": 2,
-            "class": "bus",
+            "class": "Bus",
             "name": "ALOHA69",
             "init": {
                 "Vr": 0.9888972890393228,
@@ -45,7 +47,7 @@
         },
         {
             "number": 3,
-            "class": "bus",
+            "class": "Bus",
             "name": "FLOWER69",
             "init": {
                 "Vr": 0.9811930004560111,
@@ -59,7 +61,7 @@
         },
         {
             "number": 4,
-            "class": "bus",
+            "class": "Bus",
             "name": "WAVE69",
             "init": {
                 "Vr": 0.973882121818533,
@@ -73,7 +75,7 @@
         },
         {
             "number": 5,
-            "class": "bus",
+            "class": "Bus",
             "name": "HONOLULU138",
             "init": {
                 "Vr": 0.9883394508774866,
@@ -87,7 +89,7 @@
         },
         {
             "number": 6,
-            "class": "bus",
+            "class": "Bus",
             "name": "HONOLULU69",
             "init": {
                 "Vr": 0.9766427916739501,
@@ -101,7 +103,7 @@
         },
         {
             "number": 7,
-            "class": "bus",
+            "class": "Bus",
             "name": "SURF69",
             "init": {
                 "Vr": 0.9757827875915684,
@@ -115,7 +117,7 @@
         },
         {
             "number": 8,
-            "class": "bus",
+            "class": "Bus",
             "name": "KANEOHE69",
             "init": {
                 "Vr": 0.9737759184819345,
@@ -129,7 +131,7 @@
         },
         {
             "number": 9,
-            "class": "bus",
+            "class": "Bus",
             "name": "TURTLE138",
             "init": {
                 "Vr": 0.9857919157353446,
@@ -143,7 +145,7 @@
         },
         {
             "number": 10,
-            "class": "bus",
+            "class": "Bus",
             "name": "TURTLE69",
             "init": {
                 "Vr": 0.9761721215093908,
@@ -157,7 +159,7 @@
         },
         {
             "number": 11,
-            "class": "bus",
+            "class": "Bus",
             "name": "MAHALO69",
             "init": {
                 "Vr": 0.9686003345219932,
@@ -171,7 +173,7 @@
         },
         {
             "number": 12,
-            "class": "bus",
+            "class": "Bus",
             "name": "LYCHEE69",
             "init": {
                 "Vr": 0.9716135420181101,
@@ -185,7 +187,7 @@
         },
         {
             "number": 13,
-            "class": "bus",
+            "class": "Bus",
             "name": "COCONUT69",
             "init": {
                 "Vr": 0.9734195116664179,
@@ -199,7 +201,7 @@
         },
         {
             "number": 14,
-            "class": "bus",
+            "class": "Bus",
             "name": "KAILUA138",
             "init": {
                 "Vr": 0.9822907352895506,
@@ -213,7 +215,7 @@
         },
         {
             "number": 15,
-            "class": "bus",
+            "class": "Bus",
             "name": "KAILUA69",
             "init": {
                 "Vr": 0.9732168267136281,
@@ -227,7 +229,7 @@
         },
         {
             "number": 16,
-            "class": "bus",
+            "class": "Bus",
             "name": "PALM69",
             "init": {
                 "Vr": 0.9759580386148334,
@@ -241,7 +243,7 @@
         },
         {
             "number": 17,
-            "class": "bus",
+            "class": "Bus",
             "name": "WAIMANALO69",
             "init": {
                 "Vr": 0.9682619523875232,
@@ -255,7 +257,7 @@
         },
         {
             "number": 18,
-            "class": "bus",
+            "class": "Bus",
             "name": "VOLCANO69",
             "init": {
                 "Vr": 0.9684321205816101,
@@ -269,7 +271,7 @@
         },
         {
             "number": 19,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEARL CITY69",
             "init": {
                 "Vr": 0.9894399665466365,
@@ -283,7 +285,7 @@
         },
         {
             "number": 20,
-            "class": "bus",
+            "class": "Bus",
             "name": "MILILANI69",
             "init": {
                 "Vr": 0.9890789809125838,
@@ -297,7 +299,7 @@
         },
         {
             "number": 21,
-            "class": "bus",
+            "class": "Bus",
             "name": "AIEA69",
             "init": {
                 "Vr": 0.9758027869300845,
@@ -311,7 +313,7 @@
         },
         {
             "number": 22,
-            "class": "bus",
+            "class": "Bus",
             "name": "WAIPAHU138",
             "init": {
                 "Vr": 0.9962891675055405,
@@ -325,7 +327,7 @@
         },
         {
             "number": 23,
-            "class": "bus",
+            "class": "Bus",
             "name": "WAIPAHU69",
             "init": {
                 "Vr": 0.9993245410953303,
@@ -339,7 +341,7 @@
         },
         {
             "number": 24,
-            "class": "bus",
+            "class": "Bus",
             "name": "KAPOLEI69",
             "init": {
                 "Vr": 0.991323659034225,
@@ -353,7 +355,7 @@
         },
         {
             "number": 25,
-            "class": "bus",
+            "class": "Bus",
             "name": "EWA BEACH138",
             "init": {
                 "Vr": 0.9965716303889519,
@@ -367,7 +369,7 @@
         },
         {
             "number": 26,
-            "class": "bus",
+            "class": "Bus",
             "name": "EWA BEACH69",
             "init": {
                 "Vr": 0.9931443749906678,
@@ -381,7 +383,7 @@
         },
         {
             "number": 27,
-            "class": "bus",
+            "class": "Bus",
             "name": "KAHUKU69",
             "init": {
                 "Vr": 1.0031325897695496,
@@ -395,7 +397,7 @@
         },
         {
             "number": 28,
-            "class": "bus",
+            "class": "Bus",
             "name": "HALEIWA69",
             "init": {
                 "Vr": 0.9999916562514691,
@@ -409,7 +411,7 @@
         },
         {
             "number": 29,
-            "class": "bus",
+            "class": "Bus",
             "name": "LAIE69",
             "init": {
                 "Vr": 0.9953819154880136,
@@ -423,7 +425,7 @@
         },
         {
             "number": 30,
-            "class": "bus",
+            "class": "Bus",
             "name": "WAHIAWA69",
             "init": {
                 "Vr": 0.9957712762493851,
@@ -437,7 +439,7 @@
         },
         {
             "number": 31,
-            "class": "bus",
+            "class": "Bus",
             "name": "WAIALUA69",
             "init": {
                 "Vr": 0.994545466811905,
@@ -451,7 +453,7 @@
         },
         {
             "number": 32,
-            "class": "bus",
+            "class": "Bus",
             "name": "HAUULA69",
             "init": {
                 "Vr": 0.990953188522265,
@@ -465,7 +467,7 @@
         },
         {
             "number": 33,
-            "class": "bus",
+            "class": "Bus",
             "name": "WAIANAE69",
             "init": {
                 "Vr": 0.9942413119251227,
@@ -479,7 +481,7 @@
         },
         {
             "number": 34,
-            "class": "bus",
+            "class": "Bus",
             "name": "SCHOFIELD69",
             "init": {
                 "Vr": 0.9993384407366903,
@@ -493,7 +495,7 @@
         },
         {
             "number": 35,
-            "class": "bus",
+            "class": "Bus",
             "name": "KALAELOA138",
             "init": {
                 "Vr": 0.9999784225857238,
@@ -507,7 +509,7 @@
         },
         {
             "number": 36,
-            "class": "bus",
+            "class": "Bus",
             "name": "COGEN69",
             "init": {
                 "Vr": 0.9946436699675367,
@@ -521,7 +523,7 @@
         },
         {
             "number": 37,
-            "class": "bus",
+            "class": "Bus",
             "name": "KAHE138",
             "init": {
                 "Vr": 0.9999903715081334,
@@ -3927,7 +3929,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 2,
                 "speed": 0,
                 "pmech": 1
             },
@@ -3946,7 +3947,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 2,
                 "speed": 2,
                 "pmech": 3
             },
@@ -3965,7 +3965,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 2,
                 "speed": 4,
                 "pmech": 5
             },
@@ -3984,7 +3983,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 2,
                 "speed": 6,
                 "pmech": 7
             },
@@ -4003,7 +4001,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 23,
                 "speed": 8,
                 "pmech": 9
             },
@@ -4022,7 +4019,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 23,
                 "speed": 10,
                 "pmech": 11
             },
@@ -4041,7 +4037,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 23,
                 "speed": 12,
                 "pmech": 13
             },
@@ -4060,7 +4055,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 23,
                 "speed": 14,
                 "pmech": 15
             },
@@ -4079,7 +4073,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 23,
                 "speed": 16,
                 "pmech": 17
             },
@@ -4098,7 +4091,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 23,
                 "speed": 18,
                 "pmech": 19
             },
@@ -4117,7 +4109,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 23,
                 "speed": 20,
                 "pmech": 21
             },
@@ -4136,7 +4127,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 23,
                 "speed": 22,
                 "pmech": 23
             },
@@ -4155,7 +4145,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 23,
                 "speed": 24,
                 "pmech": 25
             },
@@ -4174,7 +4163,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 23,
                 "speed": 26,
                 "pmech": 27
             },
@@ -4193,7 +4181,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 26,
                 "speed": 28,
                 "pmech": 29
             },
@@ -4212,7 +4199,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 26,
                 "speed": 30,
                 "pmech": 31
             },
@@ -4231,7 +4217,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 27,
                 "speed": 32,
                 "pmech": 33
             },
@@ -4250,7 +4235,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 27,
                 "speed": 34,
                 "pmech": 35
             },
@@ -4269,7 +4253,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 28,
                 "speed": 36,
                 "pmech": 37
             },
@@ -4288,7 +4271,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 28,
                 "speed": 38,
                 "pmech": 39
             },
@@ -4307,7 +4289,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 33,
                 "speed": 40,
                 "pmech": 41
             },
@@ -4326,7 +4307,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 34,
                 "speed": 42,
                 "pmech": 43
             },
@@ -4345,7 +4325,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 34,
                 "speed": 44,
                 "pmech": 45
             },
@@ -4364,7 +4343,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 34,
                 "speed": 46,
                 "pmech": 47
             },
@@ -4383,7 +4361,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 34,
                 "speed": 48,
                 "pmech": 49
             },
@@ -4402,7 +4379,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 34,
                 "speed": 50,
                 "pmech": 51
             },
@@ -4421,7 +4397,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 34,
                 "speed": 52,
                 "pmech": 53
             },
@@ -4440,7 +4415,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 35,
                 "speed": 54,
                 "pmech": 55
             },
@@ -4459,7 +4433,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 35,
                 "speed": 56,
                 "pmech": 57
             },
@@ -4478,7 +4451,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 35,
                 "speed": 58,
                 "pmech": 59
             },
@@ -4497,7 +4469,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 35,
                 "speed": 60,
                 "pmech": 61
             },
@@ -4516,7 +4487,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 35,
                 "speed": 62,
                 "pmech": 63
             },
@@ -4535,7 +4505,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 35,
                 "speed": 64,
                 "pmech": 65
             },
@@ -4554,7 +4523,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 36,
                 "speed": 66,
                 "pmech": 67
             },
@@ -4573,7 +4541,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 36,
                 "speed": 68,
                 "pmech": 69
             },
@@ -4592,7 +4559,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 36,
                 "speed": 70,
                 "pmech": 71
             },
@@ -4611,7 +4577,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 36,
                 "speed": 72,
                 "pmech": 73
             },
@@ -4630,7 +4595,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 37,
                 "speed": 74,
                 "pmech": 75
             },
@@ -4649,7 +4613,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 37,
                 "speed": 76,
                 "pmech": 77
             },

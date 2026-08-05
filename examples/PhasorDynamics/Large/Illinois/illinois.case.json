@@ -1,17 +1,19 @@
 {
     "header": {
-        "format_version": 0.1,
-        "format_revision": 1,
+        "format_version": 0.2,
+        "format_revision": 0,
         "case_name": "ACTIVSg200",
         "case_description": "Based on Illinois grid, the ACTIVSg200 case is a 200 bus power system test case that is entirely synthetic, built from public information and a statistical  analysis of real power systems. It bears no relation to the actual grid in this location, except that generation and load profiles are similar.",
-        "case_comments": "",
+        "case_comments": ""
+    },
+    "params": {
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
     "buses": [
         {
             "number": 1,
-            "class": "bus",
+            "class": "Bus",
             "name": "CREVE COEUR 0",
             "init": {
                 "Vr": 0.23063551423613704,
@@ -25,7 +27,7 @@
         },
         {
             "number": 2,
-            "class": "bus",
+            "class": "Bus",
             "name": "CREVE COEUR 1",
             "init": {
                 "Vr": 0.2302636252686343,
@@ -39,7 +41,7 @@
         },
         {
             "number": 3,
-            "class": "bus",
+            "class": "Bus",
             "name": "ILLIOPOLIS 0",
             "init": {
                 "Vr": 0.21216440498326256,
@@ -53,7 +55,7 @@
         },
         {
             "number": 4,
-            "class": "bus",
+            "class": "Bus",
             "name": "ILLIOPOLIS 1",
             "init": {
                 "Vr": 0.21207510607859667,
@@ -67,7 +69,7 @@
         },
         {
             "number": 5,
-            "class": "bus",
+            "class": "Bus",
             "name": "PAXTON 2 0",
             "init": {
                 "Vr": 0.14476958935953108,
@@ -81,7 +83,7 @@
         },
         {
             "number": 6,
-            "class": "bus",
+            "class": "Bus",
             "name": "PAXTON 2 1",
             "init": {
                 "Vr": 0.14441742001456687,
@@ -95,7 +97,7 @@
         },
         {
             "number": 7,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 9 0",
             "init": {
                 "Vr": 0.20881458732050032,
@@ -109,7 +111,7 @@
         },
         {
             "number": 8,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 9 1",
             "init": {
                 "Vr": 0.20766766396098874,
@@ -123,7 +125,7 @@
         },
         {
             "number": 9,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 8 0",
             "init": {
                 "Vr": 0.22076783108857512,
@@ -137,7 +139,7 @@
         },
         {
             "number": 10,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 8 1",
             "init": {
                 "Vr": 0.21819856801827828,
@@ -151,7 +153,7 @@
         },
         {
             "number": 11,
-            "class": "bus",
+            "class": "Bus",
             "name": "LOVINGTON 0",
             "init": {
                 "Vr": 0.24569956921410488,
@@ -165,7 +167,7 @@
         },
         {
             "number": 12,
-            "class": "bus",
+            "class": "Bus",
             "name": "LOVINGTON 1",
             "init": {
                 "Vr": 0.24568265897146266,
@@ -179,7 +181,7 @@
         },
         {
             "number": 13,
-            "class": "bus",
+            "class": "Bus",
             "name": "LOVINGTON 2",
             "init": {
                 "Vr": 0.24555603745422316,
@@ -193,7 +195,7 @@
         },
         {
             "number": 14,
-            "class": "bus",
+            "class": "Bus",
             "name": "DECATUR 3 0",
             "init": {
                 "Vr": 0.268686535497011,
@@ -207,7 +209,7 @@
         },
         {
             "number": 15,
-            "class": "bus",
+            "class": "Bus",
             "name": "DECATUR 3 1",
             "init": {
                 "Vr": 0.24950583252699574,
@@ -221,7 +223,7 @@
         },
         {
             "number": 16,
-            "class": "bus",
+            "class": "Bus",
             "name": "DECATUR 3 2",
             "init": {
                 "Vr": 0.24724823932654302,
@@ -235,7 +237,7 @@
         },
         {
             "number": 17,
-            "class": "bus",
+            "class": "Bus",
             "name": "MASON CITY 0",
             "init": {
                 "Vr": 0.18281919671698352,
@@ -249,7 +251,7 @@
         },
         {
             "number": 18,
-            "class": "bus",
+            "class": "Bus",
             "name": "MASON CITY 1",
             "init": {
                 "Vr": 0.1827740805473377,
@@ -263,7 +265,7 @@
         },
         {
             "number": 19,
-            "class": "bus",
+            "class": "Bus",
             "name": "MASON CITY 2",
             "init": {
                 "Vr": 0.1827812407889226,
@@ -277,7 +279,7 @@
         },
         {
             "number": 20,
-            "class": "bus",
+            "class": "Bus",
             "name": "MASON CITY 3",
             "init": {
                 "Vr": 0.18275870029970614,
@@ -291,7 +293,7 @@
         },
         {
             "number": 21,
-            "class": "bus",
+            "class": "Bus",
             "name": "MASON CITY 4",
             "init": {
                 "Vr": 0.1825279991493386,
@@ -305,7 +307,7 @@
         },
         {
             "number": 22,
-            "class": "bus",
+            "class": "Bus",
             "name": "BETHANY 0",
             "init": {
                 "Vr": 0.24518586090921626,
@@ -319,7 +321,7 @@
         },
         {
             "number": 23,
-            "class": "bus",
+            "class": "Bus",
             "name": "BETHANY 1",
             "init": {
                 "Vr": 0.24511420048660224,
@@ -333,7 +335,7 @@
         },
         {
             "number": 24,
-            "class": "bus",
+            "class": "Bus",
             "name": "BETHANY 2",
             "init": {
                 "Vr": 0.2450701028295127,
@@ -347,7 +349,7 @@
         },
         {
             "number": 25,
-            "class": "bus",
+            "class": "Bus",
             "name": "RANKIN 0",
             "init": {
                 "Vr": 0.1401953999450343,
@@ -361,7 +363,7 @@
         },
         {
             "number": 26,
-            "class": "bus",
+            "class": "Bus",
             "name": "RANKIN 1",
             "init": {
                 "Vr": 0.14014028887826324,
@@ -375,7 +377,7 @@
         },
         {
             "number": 27,
-            "class": "bus",
+            "class": "Bus",
             "name": "WINDSOR 0",
             "init": {
                 "Vr": 0.2423152557383985,
@@ -389,7 +391,7 @@
         },
         {
             "number": 28,
-            "class": "bus",
+            "class": "Bus",
             "name": "WINDSOR 1",
             "init": {
                 "Vr": 0.24216934731559245,
@@ -403,7 +405,7 @@
         },
         {
             "number": 29,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEKIN 2 0",
             "init": {
                 "Vr": 0.2361176480435794,
@@ -417,7 +419,7 @@
         },
         {
             "number": 30,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEKIN 2 1",
             "init": {
                 "Vr": 0.23332354375115258,
@@ -431,7 +433,7 @@
         },
         {
             "number": 31,
-            "class": "bus",
+            "class": "Bus",
             "name": "HEYWORTH 0",
             "init": {
                 "Vr": 0.14829296517875634,
@@ -445,7 +447,7 @@
         },
         {
             "number": 32,
-            "class": "bus",
+            "class": "Bus",
             "name": "HEYWORTH 1",
             "init": {
                 "Vr": 0.14826554637774972,
@@ -459,7 +461,7 @@
         },
         {
             "number": 33,
-            "class": "bus",
+            "class": "Bus",
             "name": "HEYWORTH 2",
             "init": {
                 "Vr": 0.14796920043196776,
@@ -473,7 +475,7 @@
         },
         {
             "number": 34,
-            "class": "bus",
+            "class": "Bus",
             "name": "DECATUR 2 0",
             "init": {
                 "Vr": 0.22796568856060362,
@@ -487,7 +489,7 @@
         },
         {
             "number": 35,
-            "class": "bus",
+            "class": "Bus",
             "name": "DECATUR 2 1",
             "init": {
                 "Vr": 0.22674893565964294,
@@ -501,7 +503,7 @@
         },
         {
             "number": 36,
-            "class": "bus",
+            "class": "Bus",
             "name": "LINCOLN 0",
             "init": {
                 "Vr": 0.14914967509646085,
@@ -515,7 +517,7 @@
         },
         {
             "number": 37,
-            "class": "bus",
+            "class": "Bus",
             "name": "LINCOLN 1",
             "init": {
                 "Vr": 0.148986962473615,
@@ -529,7 +531,7 @@
         },
         {
             "number": 38,
-            "class": "bus",
+            "class": "Bus",
             "name": "LINCOLN 2",
             "init": {
                 "Vr": 0.14772138204106008,
@@ -543,7 +545,7 @@
         },
         {
             "number": 39,
-            "class": "bus",
+            "class": "Bus",
             "name": "SHERMAN 0",
             "init": {
                 "Vr": 0.18576769410316782,
@@ -557,7 +559,7 @@
         },
         {
             "number": 40,
-            "class": "bus",
+            "class": "Bus",
             "name": "SHERMAN 1",
             "init": {
                 "Vr": 0.1856661423374356,
@@ -571,7 +573,7 @@
         },
         {
             "number": 41,
-            "class": "bus",
+            "class": "Bus",
             "name": "URBANA 2 0",
             "init": {
                 "Vr": 0.11592432562014109,
@@ -585,7 +587,7 @@
         },
         {
             "number": 42,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 8 0",
             "init": {
                 "Vr": 0.22180912327546878,
@@ -599,7 +601,7 @@
         },
         {
             "number": 43,
-            "class": "bus",
+            "class": "Bus",
             "name": "CARLOCK 0",
             "init": {
                 "Vr": 0.17474399566378596,
@@ -613,7 +615,7 @@
         },
         {
             "number": 44,
-            "class": "bus",
+            "class": "Bus",
             "name": "PLEASANT PLAINS 0",
             "init": {
                 "Vr": 0.21869054538242141,
@@ -627,7 +629,7 @@
         },
         {
             "number": 45,
-            "class": "bus",
+            "class": "Bus",
             "name": "LE ROY 0",
             "init": {
                 "Vr": 0.25495154169044293,
@@ -641,7 +643,7 @@
         },
         {
             "number": 46,
-            "class": "bus",
+            "class": "Bus",
             "name": "LE ROY 1",
             "init": {
                 "Vr": 0.24061113098964718,
@@ -655,7 +657,7 @@
         },
         {
             "number": 47,
-            "class": "bus",
+            "class": "Bus",
             "name": "DECATUR 1 0",
             "init": {
                 "Vr": 0.2588544360107327,
@@ -669,7 +671,7 @@
         },
         {
             "number": 48,
-            "class": "bus",
+            "class": "Bus",
             "name": "RANTOUL 2 0",
             "init": {
                 "Vr": 0.14541475027271317,
@@ -683,7 +685,7 @@
         },
         {
             "number": 49,
-            "class": "bus",
+            "class": "Bus",
             "name": "RANTOUL 2 1",
             "init": {
                 "Vr": 0.16975389826059847,
@@ -697,7 +699,7 @@
         },
         {
             "number": 50,
-            "class": "bus",
+            "class": "Bus",
             "name": "RANTOUL 2 2",
             "init": {
                 "Vr": 0.16390564307948935,
@@ -711,7 +713,7 @@
         },
         {
             "number": 51,
-            "class": "bus",
+            "class": "Bus",
             "name": "RANTOUL 2 3",
             "init": {
                 "Vr": 0.17348796529068666,
@@ -725,7 +727,7 @@
         },
         {
             "number": 52,
-            "class": "bus",
+            "class": "Bus",
             "name": "RANTOUL 2 4",
             "init": {
                 "Vr": 0.1627760996650275,
@@ -739,7 +741,7 @@
         },
         {
             "number": 53,
-            "class": "bus",
+            "class": "Bus",
             "name": "RANTOUL 2 5",
             "init": {
                 "Vr": 0.19724461954155262,
@@ -753,7 +755,7 @@
         },
         {
             "number": 54,
-            "class": "bus",
+            "class": "Bus",
             "name": "MACON 0",
             "init": {
                 "Vr": 0.2506584219180536,
@@ -767,7 +769,7 @@
         },
         {
             "number": 55,
-            "class": "bus",
+            "class": "Bus",
             "name": "ELLSWORTH 2 0",
             "init": {
                 "Vr": 0.2395380689436477,
@@ -781,7 +783,7 @@
         },
         {
             "number": 56,
-            "class": "bus",
+            "class": "Bus",
             "name": "ELLSWORTH 2 1",
             "init": {
                 "Vr": 0.23399706489951247,
@@ -795,7 +797,7 @@
         },
         {
             "number": 57,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOUNT PULASKI 0",
             "init": {
                 "Vr": 0.20317195804784327,
@@ -809,7 +811,7 @@
         },
         {
             "number": 58,
-            "class": "bus",
+            "class": "Bus",
             "name": "WAPELLA 0",
             "init": {
                 "Vr": 0.15350247990757754,
@@ -823,7 +825,7 @@
         },
         {
             "number": 59,
-            "class": "bus",
+            "class": "Bus",
             "name": "ROANOKE 0",
             "init": {
                 "Vr": 0.1734932276275927,
@@ -837,7 +839,7 @@
         },
         {
             "number": 60,
-            "class": "bus",
+            "class": "Bus",
             "name": "GREEN VALLEY 0",
             "init": {
                 "Vr": 0.25958077138683394,
@@ -851,7 +853,7 @@
         },
         {
             "number": 61,
-            "class": "bus",
+            "class": "Bus",
             "name": "BLOOMINGTON 3 0",
             "init": {
                 "Vr": 0.23015627881092182,
@@ -865,7 +867,7 @@
         },
         {
             "number": 62,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 7 0",
             "init": {
                 "Vr": 0.20583011672668522,
@@ -879,7 +881,7 @@
         },
         {
             "number": 63,
-            "class": "bus",
+            "class": "Bus",
             "name": "BEMENT 0",
             "init": {
                 "Vr": 0.21652205399668142,
@@ -893,7 +895,7 @@
         },
         {
             "number": 64,
-            "class": "bus",
+            "class": "Bus",
             "name": "PAXTON 1 0",
             "init": {
                 "Vr": 0.14979947138888017,
@@ -907,7 +909,7 @@
         },
         {
             "number": 65,
-            "class": "bus",
+            "class": "Bus",
             "name": "PAXTON 1 1",
             "init": {
                 "Vr": 0.15513932722990803,
@@ -921,7 +923,7 @@
         },
         {
             "number": 66,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOUNT ZION 0",
             "init": {
                 "Vr": 0.26849141044589425,
@@ -935,7 +937,7 @@
         },
         {
             "number": 67,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOUNT ZION 1",
             "init": {
                 "Vr": 0.2753451882938677,
@@ -949,7 +951,7 @@
         },
         {
             "number": 68,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOUNT ZION 2",
             "init": {
                 "Vr": 0.33753938525396715,
@@ -963,7 +965,7 @@
         },
         {
             "number": 69,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOUNT ZION 3",
             "init": {
                 "Vr": 0.2938586744014201,
@@ -977,7 +979,7 @@
         },
         {
             "number": 70,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOUNT ZION 4",
             "init": {
                 "Vr": 0.32076736518770155,
@@ -991,7 +993,7 @@
         },
         {
             "number": 71,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOUNT ZION 5",
             "init": {
                 "Vr": 0.29038341544952173,
@@ -1005,7 +1007,7 @@
         },
         {
             "number": 72,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOUNT ZION 6",
             "init": {
                 "Vr": 0.288578466615434,
@@ -1019,7 +1021,7 @@
         },
         {
             "number": 73,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOUNT ZION 7",
             "init": {
                 "Vr": 0.30713482373553097,
@@ -1033,7 +1035,7 @@
         },
         {
             "number": 74,
-            "class": "bus",
+            "class": "Bus",
             "name": "RANTOUL 1 0",
             "init": {
                 "Vr": 0.13302382862619713,
@@ -1047,7 +1049,7 @@
         },
         {
             "number": 75,
-            "class": "bus",
+            "class": "Bus",
             "name": "BRIMFIELD 0",
             "init": {
                 "Vr": 0.2659005963287278,
@@ -1061,7 +1063,7 @@
         },
         {
             "number": 76,
-            "class": "bus",
+            "class": "Bus",
             "name": "BRIMFIELD 1",
             "init": {
                 "Vr": 0.27826688159769547,
@@ -1075,7 +1077,7 @@
         },
         {
             "number": 77,
-            "class": "bus",
+            "class": "Bus",
             "name": "BRIMFIELD 2",
             "init": {
                 "Vr": 0.2865179157146396,
@@ -1089,7 +1091,7 @@
         },
         {
             "number": 78,
-            "class": "bus",
+            "class": "Bus",
             "name": "BRIMFIELD 3",
             "init": {
                 "Vr": 0.2659005963287278,
@@ -1103,7 +1105,7 @@
         },
         {
             "number": 79,
-            "class": "bus",
+            "class": "Bus",
             "name": "BRIMFIELD 4",
             "init": {
                 "Vr": 0.2659005963287278,
@@ -1117,7 +1119,7 @@
         },
         {
             "number": 80,
-            "class": "bus",
+            "class": "Bus",
             "name": "WELDON 0",
             "init": {
                 "Vr": 0.14104895113031155,
@@ -1131,7 +1133,7 @@
         },
         {
             "number": 81,
-            "class": "bus",
+            "class": "Bus",
             "name": "GIBSON CITY 2 0",
             "init": {
                 "Vr": 0.20954233835008054,
@@ -1145,7 +1147,7 @@
         },
         {
             "number": 82,
-            "class": "bus",
+            "class": "Bus",
             "name": "GIBSON CITY 2 1",
             "init": {
                 "Vr": 0.186540925722252,
@@ -1159,7 +1161,7 @@
         },
         {
             "number": 83,
-            "class": "bus",
+            "class": "Bus",
             "name": "MINIER 0",
             "init": {
                 "Vr": 0.17591993217170224,
@@ -1173,7 +1175,7 @@
         },
         {
             "number": 84,
-            "class": "bus",
+            "class": "Bus",
             "name": "HUDSON 0",
             "init": {
                 "Vr": 0.17127350511742376,
@@ -1187,7 +1189,7 @@
         },
         {
             "number": 85,
-            "class": "bus",
+            "class": "Bus",
             "name": "ATHENS 0",
             "init": {
                 "Vr": 0.18099447293783139,
@@ -1201,7 +1203,7 @@
         },
         {
             "number": 86,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA HEIGHTS 0",
             "init": {
                 "Vr": 0.21459487314027384,
@@ -1215,7 +1217,7 @@
         },
         {
             "number": 87,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 6 0",
             "init": {
                 "Vr": 0.2886967796020357,
@@ -1229,7 +1231,7 @@
         },
         {
             "number": 88,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 6 1",
             "init": {
                 "Vr": 0.255411766461533,
@@ -1243,7 +1245,7 @@
         },
         {
             "number": 89,
-            "class": "bus",
+            "class": "Bus",
             "name": "CLINTON 3 0",
             "init": {
                 "Vr": 0.1695664724937894,
@@ -1257,7 +1259,7 @@
         },
         {
             "number": 90,
-            "class": "bus",
+            "class": "Bus",
             "name": "CLINTON 3 1",
             "init": {
                 "Vr": 0.19415603749973764,
@@ -1271,7 +1273,7 @@
         },
         {
             "number": 91,
-            "class": "bus",
+            "class": "Bus",
             "name": "CLINTON 3 2",
             "init": {
                 "Vr": 0.17842096084050393,
@@ -1285,7 +1287,7 @@
         },
         {
             "number": 92,
-            "class": "bus",
+            "class": "Bus",
             "name": "CLINTON 3 3",
             "init": {
                 "Vr": 0.1695664724937894,
@@ -1299,7 +1301,7 @@
         },
         {
             "number": 93,
-            "class": "bus",
+            "class": "Bus",
             "name": "TUSCOLA 2 0",
             "init": {
                 "Vr": 0.2263867604485204,
@@ -1313,7 +1315,7 @@
         },
         {
             "number": 94,
-            "class": "bus",
+            "class": "Bus",
             "name": "TUSCOLA 2 1",
             "init": {
                 "Vr": 0.2747178750048836,
@@ -1327,7 +1329,7 @@
         },
         {
             "number": 95,
-            "class": "bus",
+            "class": "Bus",
             "name": "KENNEY 0",
             "init": {
                 "Vr": 0.16084127257909717,
@@ -1341,7 +1343,7 @@
         },
         {
             "number": 96,
-            "class": "bus",
+            "class": "Bus",
             "name": "MANSFIELD 0",
             "init": {
                 "Vr": 0.2102283042243888,
@@ -1355,7 +1357,7 @@
         },
         {
             "number": 97,
-            "class": "bus",
+            "class": "Bus",
             "name": "MANITO 0",
             "init": {
                 "Vr": 0.23683870500773374,
@@ -1369,7 +1371,7 @@
         },
         {
             "number": 98,
-            "class": "bus",
+            "class": "Bus",
             "name": "DUNLAP 0",
             "init": {
                 "Vr": 0.2812088829767149,
@@ -1383,7 +1385,7 @@
         },
         {
             "number": 99,
-            "class": "bus",
+            "class": "Bus",
             "name": "DUNLAP 1",
             "init": {
                 "Vr": 0.2544731172485158,
@@ -1397,7 +1399,7 @@
         },
         {
             "number": 100,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHAMPAIGN 3 0",
             "init": {
                 "Vr": 0.12893378640783457,
@@ -1411,7 +1413,7 @@
         },
         {
             "number": 101,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 7 0",
             "init": {
                 "Vr": 0.21611396938472394,
@@ -1425,7 +1427,7 @@
         },
         {
             "number": 102,
-            "class": "bus",
+            "class": "Bus",
             "name": "ELLSWORTH 1 0",
             "init": {
                 "Vr": 0.24346259083341318,
@@ -1439,7 +1441,7 @@
         },
         {
             "number": 103,
-            "class": "bus",
+            "class": "Bus",
             "name": "ELLSWORTH 1 1",
             "init": {
                 "Vr": 0.23321003497097156,
@@ -1453,7 +1455,7 @@
         },
         {
             "number": 104,
-            "class": "bus",
+            "class": "Bus",
             "name": "ELLSWORTH 1 2",
             "init": {
                 "Vr": 0.2611516841480211,
@@ -1467,7 +1469,7 @@
         },
         {
             "number": 105,
-            "class": "bus",
+            "class": "Bus",
             "name": "ELLSWORTH 1 3",
             "init": {
                 "Vr": 0.26526001492303525,
@@ -1481,7 +1483,7 @@
         },
         {
             "number": 106,
-            "class": "bus",
+            "class": "Bus",
             "name": "TOWANDA 0",
             "init": {
                 "Vr": 0.22531257686439501,
@@ -1495,7 +1497,7 @@
         },
         {
             "number": 107,
-            "class": "bus",
+            "class": "Bus",
             "name": "BLOOMINGTON 2 0",
             "init": {
                 "Vr": 0.15162117656120708,
@@ -1509,7 +1511,7 @@
         },
         {
             "number": 108,
-            "class": "bus",
+            "class": "Bus",
             "name": "PRINCEVILLE 0",
             "init": {
                 "Vr": 0.2510447512092732,
@@ -1523,7 +1525,7 @@
         },
         {
             "number": 109,
-            "class": "bus",
+            "class": "Bus",
             "name": "DELAVAN 0",
             "init": {
                 "Vr": 0.19253404028644736,
@@ -1537,7 +1539,7 @@
         },
         {
             "number": 110,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 6 0",
             "init": {
                 "Vr": 0.21711934576059158,
@@ -1551,7 +1553,7 @@
         },
         {
             "number": 111,
-            "class": "bus",
+            "class": "Bus",
             "name": "SAVOY 0",
             "init": {
                 "Vr": 0.11207635800599634,
@@ -1565,7 +1567,7 @@
         },
         {
             "number": 112,
-            "class": "bus",
+            "class": "Bus",
             "name": "NORMAL 2 0",
             "init": {
                 "Vr": 0.2318411409998272,
@@ -1579,7 +1581,7 @@
         },
         {
             "number": 113,
-            "class": "bus",
+            "class": "Bus",
             "name": "NORMAL 2 1",
             "init": {
                 "Vr": 0.17073809310952937,
@@ -1593,7 +1595,7 @@
         },
         {
             "number": 114,
-            "class": "bus",
+            "class": "Bus",
             "name": "NORMAL 2 2",
             "init": {
                 "Vr": 0.2336905032467782,
@@ -1607,7 +1609,7 @@
         },
         {
             "number": 115,
-            "class": "bus",
+            "class": "Bus",
             "name": "NORMAL 2 3",
             "init": {
                 "Vr": 0.26421870332258324,
@@ -1621,7 +1623,7 @@
         },
         {
             "number": 116,
-            "class": "bus",
+            "class": "Bus",
             "name": "EAST PEORIA 0",
             "init": {
                 "Vr": 0.2706990674809,
@@ -1635,7 +1637,7 @@
         },
         {
             "number": 117,
-            "class": "bus",
+            "class": "Bus",
             "name": "EAST PEORIA 1",
             "init": {
                 "Vr": 0.22411504303968308,
@@ -1649,7 +1651,7 @@
         },
         {
             "number": 118,
-            "class": "bus",
+            "class": "Bus",
             "name": "HANNA CITY 0",
             "init": {
                 "Vr": 0.2403867945433958,
@@ -1663,7 +1665,7 @@
         },
         {
             "number": 119,
-            "class": "bus",
+            "class": "Bus",
             "name": "METAMORA 0",
             "init": {
                 "Vr": 0.1831284278058181,
@@ -1677,7 +1679,7 @@
         },
         {
             "number": 120,
-            "class": "bus",
+            "class": "Bus",
             "name": "GREENVIEW 0",
             "init": {
                 "Vr": 0.18092103614580804,
@@ -1691,7 +1693,7 @@
         },
         {
             "number": 121,
-            "class": "bus",
+            "class": "Bus",
             "name": "CLINTON 2 0",
             "init": {
                 "Vr": 0.28038275083851405,
@@ -1705,7 +1707,7 @@
         },
         {
             "number": 122,
-            "class": "bus",
+            "class": "Bus",
             "name": "CLINTON 2 1",
             "init": {
                 "Vr": 0.24102962049019988,
@@ -1719,7 +1721,7 @@
         },
         {
             "number": 123,
-            "class": "bus",
+            "class": "Bus",
             "name": "BARTONVILLE 0",
             "init": {
                 "Vr": 0.31057387107646955,
@@ -1733,7 +1735,7 @@
         },
         {
             "number": 124,
-            "class": "bus",
+            "class": "Bus",
             "name": "BARTONVILLE 1",
             "init": {
                 "Vr": 0.25969233104611555,
@@ -1747,7 +1749,7 @@
         },
         {
             "number": 125,
-            "class": "bus",
+            "class": "Bus",
             "name": "BARTONVILLE 2",
             "init": {
                 "Vr": 0.45770089489049043,
@@ -1761,7 +1763,7 @@
         },
         {
             "number": 126,
-            "class": "bus",
+            "class": "Bus",
             "name": "BARTONVILLE 3",
             "init": {
                 "Vr": 0.40640171813902803,
@@ -1775,7 +1777,7 @@
         },
         {
             "number": 127,
-            "class": "bus",
+            "class": "Bus",
             "name": "BARTONVILLE 4",
             "init": {
                 "Vr": 0.3593500858129866,
@@ -1789,7 +1791,7 @@
         },
         {
             "number": 128,
-            "class": "bus",
+            "class": "Bus",
             "name": "NORMAL 1 0",
             "init": {
                 "Vr": 0.23434254312060618,
@@ -1803,7 +1805,7 @@
         },
         {
             "number": 129,
-            "class": "bus",
+            "class": "Bus",
             "name": "NORMAL 1 1",
             "init": {
                 "Vr": 0.16676340571036466,
@@ -1817,7 +1819,7 @@
         },
         {
             "number": 130,
-            "class": "bus",
+            "class": "Bus",
             "name": "LEXINGTON 0",
             "init": {
                 "Vr": 0.21965340514991777,
@@ -1831,7 +1833,7 @@
         },
         {
             "number": 131,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 5 0",
             "init": {
                 "Vr": 0.22017408405937197,
@@ -1845,7 +1847,7 @@
         },
         {
             "number": 132,
-            "class": "bus",
+            "class": "Bus",
             "name": "MORTON 0",
             "init": {
                 "Vr": 0.18219166114541638,
@@ -1859,7 +1861,7 @@
         },
         {
             "number": 133,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEKIN 1 0",
             "init": {
                 "Vr": 0.3077864810757717,
@@ -1873,7 +1875,7 @@
         },
         {
             "number": 134,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEKIN 1 1",
             "init": {
                 "Vr": 0.28099941216683355,
@@ -1887,7 +1889,7 @@
         },
         {
             "number": 135,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEKIN 1 2",
             "init": {
                 "Vr": 0.37292491293718105,
@@ -1901,7 +1903,7 @@
         },
         {
             "number": 136,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEKIN 1 3",
             "init": {
                 "Vr": 0.36861972257298803,
@@ -1915,7 +1917,7 @@
         },
         {
             "number": 137,
-            "class": "bus",
+            "class": "Bus",
             "name": "NIANTIC 0",
             "init": {
                 "Vr": 0.219064321227321,
@@ -1929,7 +1931,7 @@
         },
         {
             "number": 138,
-            "class": "bus",
+            "class": "Bus",
             "name": "COLFAX 0",
             "init": {
                 "Vr": 0.17689654640918814,
@@ -1943,7 +1945,7 @@
         },
         {
             "number": 139,
-            "class": "bus",
+            "class": "Bus",
             "name": "EL PASO 0",
             "init": {
                 "Vr": 0.16958416000426438,
@@ -1957,7 +1959,7 @@
         },
         {
             "number": 140,
-            "class": "bus",
+            "class": "Bus",
             "name": "TREMONT 0",
             "init": {
                 "Vr": 0.2518504762467575,
@@ -1971,7 +1973,7 @@
         },
         {
             "number": 141,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 4 0",
             "init": {
                 "Vr": 0.21743832115952033,
@@ -1985,7 +1987,7 @@
         },
         {
             "number": 142,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 3 0",
             "init": {
                 "Vr": 0.21760492986180222,
@@ -1999,7 +2001,7 @@
         },
         {
             "number": 143,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHAMPAIGN 2 0",
             "init": {
                 "Vr": 0.15600146327674594,
@@ -2013,7 +2015,7 @@
         },
         {
             "number": 144,
-            "class": "bus",
+            "class": "Bus",
             "name": "EUREKA 0",
             "init": {
                 "Vr": 0.2103264464887105,
@@ -2027,7 +2029,7 @@
         },
         {
             "number": 145,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHATHAM 0",
             "init": {
                 "Vr": 0.23524464064960768,
@@ -2041,7 +2043,7 @@
         },
         {
             "number": 146,
-            "class": "bus",
+            "class": "Bus",
             "name": "HOPEDALE 2 0",
             "init": {
                 "Vr": 0.17211439855301833,
@@ -2055,7 +2057,7 @@
         },
         {
             "number": 147,
-            "class": "bus",
+            "class": "Bus",
             "name": "HOPEDALE 2 1",
             "init": {
                 "Vr": 0.1884177561230628,
@@ -2069,7 +2071,7 @@
         },
         {
             "number": 148,
-            "class": "bus",
+            "class": "Bus",
             "name": "WASHINGTON 0",
             "init": {
                 "Vr": 0.19804700298243869,
@@ -2083,7 +2085,7 @@
         },
         {
             "number": 149,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 5 0",
             "init": {
                 "Vr": 0.30018093984311683,
@@ -2097,7 +2099,7 @@
         },
         {
             "number": 150,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 5 1",
             "init": {
                 "Vr": 0.2693222167379729,
@@ -2111,7 +2113,7 @@
         },
         {
             "number": 151,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 5 2",
             "init": {
                 "Vr": 0.333132848069612,
@@ -2125,7 +2127,7 @@
         },
         {
             "number": 152,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 5 3",
             "init": {
                 "Vr": 0.40181365526426566,
@@ -2139,7 +2141,7 @@
         },
         {
             "number": 153,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 5 4",
             "init": {
                 "Vr": 0.43125165272511196,
@@ -2153,7 +2155,7 @@
         },
         {
             "number": 154,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 5 5",
             "init": {
                 "Vr": 0.3748329798878099,
@@ -2167,7 +2169,7 @@
         },
         {
             "number": 155,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 5 6",
             "init": {
                 "Vr": 0.3726595937551803,
@@ -2181,7 +2183,7 @@
         },
         {
             "number": 156,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 2 0",
             "init": {
                 "Vr": 0.3072525265667353,
@@ -2195,7 +2197,7 @@
         },
         {
             "number": 157,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 2 1",
             "init": {
                 "Vr": 0.28672436838103543,
@@ -2209,7 +2211,7 @@
         },
         {
             "number": 158,
-            "class": "bus",
+            "class": "Bus",
             "name": "MT ZION 0",
             "init": {
                 "Vr": 0.25365447929470386,
@@ -2223,7 +2225,7 @@
         },
         {
             "number": 159,
-            "class": "bus",
+            "class": "Bus",
             "name": "BUFFALO 0",
             "init": {
                 "Vr": 0.197508837989496,
@@ -2237,7 +2239,7 @@
         },
         {
             "number": 160,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 4 0",
             "init": {
                 "Vr": 0.23148213710726082,
@@ -2251,7 +2253,7 @@
         },
         {
             "number": 161,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 4 1",
             "init": {
                 "Vr": 0.26597839912406396,
@@ -2265,7 +2267,7 @@
         },
         {
             "number": 162,
-            "class": "bus",
+            "class": "Bus",
             "name": "CONGERVILLE 0",
             "init": {
                 "Vr": 0.21398811238093915,
@@ -2279,7 +2281,7 @@
         },
         {
             "number": 163,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHAMPAIGN 1 0",
             "init": {
                 "Vr": 0.11588661241689759,
@@ -2293,7 +2295,7 @@
         },
         {
             "number": 164,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHAMPAIGN 1 1",
             "init": {
                 "Vr": 0.11588661241689759,
@@ -2307,7 +2309,7 @@
         },
         {
             "number": 165,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHAMPAIGN 1 2",
             "init": {
                 "Vr": 0.11588661241689759,
@@ -2321,7 +2323,7 @@
         },
         {
             "number": 166,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHAMPAIGN 1 3",
             "init": {
                 "Vr": 0.11588661241689759,
@@ -2335,7 +2337,7 @@
         },
         {
             "number": 167,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHAMPAIGN 1 4",
             "init": {
                 "Vr": 0.12189593200577416,
@@ -2349,7 +2351,7 @@
         },
         {
             "number": 168,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHAMPAIGN 1 5",
             "init": {
                 "Vr": 0.11588661241689759,
@@ -2363,7 +2365,7 @@
         },
         {
             "number": 169,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHAMPAIGN 1 6",
             "init": {
                 "Vr": 0.11588661241689759,
@@ -2377,7 +2379,7 @@
         },
         {
             "number": 170,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHAMPAIGN 1 7",
             "init": {
                 "Vr": 0.1274883215301569,
@@ -2391,7 +2393,7 @@
         },
         {
             "number": 171,
-            "class": "bus",
+            "class": "Bus",
             "name": "FISHER 0",
             "init": {
                 "Vr": 0.15151344980961381,
@@ -2405,7 +2407,7 @@
         },
         {
             "number": 172,
-            "class": "bus",
+            "class": "Bus",
             "name": "HOMER 0",
             "init": {
                 "Vr": 0.12198101464720269,
@@ -2419,7 +2421,7 @@
         },
         {
             "number": 173,
-            "class": "bus",
+            "class": "Bus",
             "name": "TUSCOLA 1 0",
             "init": {
                 "Vr": 0.12129757262339194,
@@ -2433,7 +2435,7 @@
         },
         {
             "number": 174,
-            "class": "bus",
+            "class": "Bus",
             "name": "WHITE HEATH 0",
             "init": {
                 "Vr": 0.14881924421287274,
@@ -2447,7 +2449,7 @@
         },
         {
             "number": 175,
-            "class": "bus",
+            "class": "Bus",
             "name": "TOLONO 0",
             "init": {
                 "Vr": 0.11351336226989216,
@@ -2461,7 +2463,7 @@
         },
         {
             "number": 176,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 3 0",
             "init": {
                 "Vr": 0.24441435860785576,
@@ -2475,7 +2477,7 @@
         },
         {
             "number": 177,
-            "class": "bus",
+            "class": "Bus",
             "name": "MACKINAW 0",
             "init": {
                 "Vr": 0.1534507012704009,
@@ -2489,7 +2491,7 @@
         },
         {
             "number": 178,
-            "class": "bus",
+            "class": "Bus",
             "name": "URBANA 1 0",
             "init": {
                 "Vr": 0.19939306869046278,
@@ -2503,7 +2505,7 @@
         },
         {
             "number": 179,
-            "class": "bus",
+            "class": "Bus",
             "name": "URBANA 1 1",
             "init": {
                 "Vr": 0.14642562680313195,
@@ -2517,7 +2519,7 @@
         },
         {
             "number": 180,
-            "class": "bus",
+            "class": "Bus",
             "name": "SAINT JOSEPH 0",
             "init": {
                 "Vr": 0.12556059952569523,
@@ -2531,7 +2533,7 @@
         },
         {
             "number": 181,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 2 0",
             "init": {
                 "Vr": 0.2332665979694632,
@@ -2545,7 +2547,7 @@
         },
         {
             "number": 182,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 2 1",
             "init": {
                 "Vr": 0.2853613361111407,
@@ -2559,7 +2561,7 @@
         },
         {
             "number": 183,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 2 2",
             "init": {
                 "Vr": 0.26477862772347854,
@@ -2573,7 +2575,7 @@
         },
         {
             "number": 184,
-            "class": "bus",
+            "class": "Bus",
             "name": "MONTICELLO 0",
             "init": {
                 "Vr": 0.1584208171077444,
@@ -2587,7 +2589,7 @@
         },
         {
             "number": 185,
-            "class": "bus",
+            "class": "Bus",
             "name": "AUBURN 0",
             "init": {
                 "Vr": 0.24385726937768853,
@@ -2601,7 +2603,7 @@
         },
         {
             "number": 186,
-            "class": "bus",
+            "class": "Bus",
             "name": "HOPEDALE 1 0",
             "init": {
                 "Vr": 0.20601188297869166,
@@ -2615,7 +2617,7 @@
         },
         {
             "number": 187,
-            "class": "bus",
+            "class": "Bus",
             "name": "CLINTON 1 0",
             "init": {
                 "Vr": 0.29651419015149005,
@@ -2629,7 +2631,7 @@
         },
         {
             "number": 188,
-            "class": "bus",
+            "class": "Bus",
             "name": "CLINTON 1 1",
             "init": {
                 "Vr": 0.22088782481698535,
@@ -2643,7 +2645,7 @@
         },
         {
             "number": 189,
-            "class": "bus",
+            "class": "Bus",
             "name": "CLINTON 1 2",
             "init": {
                 "Vr": 0.338564005669986,
@@ -2657,7 +2659,7 @@
         },
         {
             "number": 190,
-            "class": "bus",
+            "class": "Bus",
             "name": "MAHOMET 0",
             "init": {
                 "Vr": 0.13453543350800665,
@@ -2671,7 +2673,7 @@
         },
         {
             "number": 191,
-            "class": "bus",
+            "class": "Bus",
             "name": "VILLA GROVE 0",
             "init": {
                 "Vr": 0.17322743574658098,
@@ -2685,7 +2687,7 @@
         },
         {
             "number": 192,
-            "class": "bus",
+            "class": "Bus",
             "name": "BLOOMINGTON 1 0",
             "init": {
                 "Vr": 0.1487480063190215,
@@ -2699,7 +2701,7 @@
         },
         {
             "number": 193,
-            "class": "bus",
+            "class": "Bus",
             "name": "PEORIA 1 0",
             "init": {
                 "Vr": 0.22254319700767655,
@@ -2713,7 +2715,7 @@
         },
         {
             "number": 194,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPRINGFIELD 1 0",
             "init": {
                 "Vr": 0.2498529689903615,
@@ -2727,7 +2729,7 @@
         },
         {
             "number": 195,
-            "class": "bus",
+            "class": "Bus",
             "name": "GIBSON CITY 1 0",
             "init": {
                 "Vr": 0.18065978519009476,
@@ -2741,7 +2743,7 @@
         },
         {
             "number": 196,
-            "class": "bus",
+            "class": "Bus",
             "name": "GIBSON CITY 1 1",
             "init": {
                 "Vr": 0.18065978519009476,
@@ -2755,7 +2757,7 @@
         },
         {
             "number": 197,
-            "class": "bus",
+            "class": "Bus",
             "name": "GIBSON CITY 1 2",
             "init": {
                 "Vr": 0.22049327183260617,
@@ -2769,7 +2771,7 @@
         },
         {
             "number": 198,
-            "class": "bus",
+            "class": "Bus",
             "name": "MAPLETON 0",
             "init": {
                 "Vr": 0.2398180827217694,
@@ -2783,7 +2785,7 @@
         },
         {
             "number": 199,
-            "class": "bus",
+            "class": "Bus",
             "name": "GIFFORD 0",
             "init": {
                 "Vr": 0.12981497936692685,
@@ -2797,7 +2799,7 @@
         },
         {
             "number": 200,
-            "class": "bus",
+            "class": "Bus",
             "name": "PETERSBURG 0",
             "init": {
                 "Vr": 0.2216244225682356,

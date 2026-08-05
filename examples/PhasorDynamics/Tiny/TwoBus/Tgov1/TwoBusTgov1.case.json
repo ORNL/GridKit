@@ -1,12 +1,14 @@
 {
     "header": {
-        "format_version": 0,
-        "format_revision": 1,
+        "format_version": 0.2,
+        "format_revision": 0,
         "case_name": "Two-bus test case with governor",
         "case_description": "A two-bus test case for demonstrating the dynamics format",
-        "case_comments": "This case is set up to monitor the voltage at both buses and the machine angle and speed",
+        "case_comments": "This case is set up to monitor the voltage at both buses and the machine angle and speed"
+    },
+    "params": {
         "freq_base": 60.0,
-        "va_base": 100e6
+        "va_base": 100000000.0
     },
     "monitors": [
         {
@@ -17,7 +19,7 @@
     "buses": [
         { 
             "number": 0,
-            "class": "bus",
+            "class": "Bus",
             "name": "Bus 1",
             "init": {
                 "Vr":0.9949877346411762,
@@ -28,7 +30,7 @@
         },
         { 
             "number": 1,
-            "class": "infinite_bus",
+            "class": "BusInfinite",
             "name": "Bus 2",
             "init": {
                 "Vr":1.0,
@@ -77,7 +79,7 @@
         },
         {
             "class": "Tgov1",
-            "ports": {"bus":0, "speed": 0, "pmech":1},
+            "ports": {"speed": 0, "pmech":1},
             "id": "DV2",
             "params": {"Trate": 100.0, "R":0.05, "T1":0.5, "T2":2.5, "T3":7.5, "Pvmin":0.0, "Pvmax":1.0, "Dt":0.0}
         },

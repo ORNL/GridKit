@@ -1,12 +1,14 @@
 {
     "header": {
-        "format_version": 0,
-        "format_revision": 1,
+        "format_version": 0.2,
+        "format_revision": 0,
         "case_name": "GENSAL two-bus validation",
         "case_description": "Two-bus case: GENSAL machine on Bus_1, 100 MW resistive load on Bus_2, lossless tie line X=0.1, bus fault on Bus_2",
-        "case_comments": "Validates GENSAL trajectory against an external (PowerWorld) reference. Monitors machine differential states.",
+        "case_comments": "Validates GENSAL trajectory against an external (PowerWorld) reference. Monitors machine differential states."
+    },
+    "params": {
         "freq_base": 60.0,
-        "va_base": 100e6
+        "va_base": 100000000.0
     },
     "monitors": [
         {
@@ -17,7 +19,7 @@
     "buses": [
         {
             "number": 1,
-            "class": "bus",
+            "class": "Bus",
             "name": "Bus_1",
             "init": {
                 "Vr": 1.0,
@@ -27,7 +29,7 @@
         },
         {
             "number": 2,
-            "class": "bus",
+            "class": "Bus",
             "name": "Bus_2",
             "init": {
                 "Vr": 0.9898978476307575,
@@ -68,7 +70,7 @@
         },
         {
             "class": "Tgov1",
-            "ports": {"bus": 1, "speed": 0, "pmech": 1},
+            "ports": {"speed": 0, "pmech": 1},
             "id": "tgov1_1_1",
             "params": {
                 "Trate": 100.0,
