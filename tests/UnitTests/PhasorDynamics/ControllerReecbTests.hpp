@@ -14,8 +14,8 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REECB/Reecb.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REECB/ReecbData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/Reecb.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -30,15 +30,15 @@ namespace GridKit
     using Log = ::GridKit::Utilities::Logger;
 
     template <typename scalar_type, typename index_type>
-    class ConverterReecbTests
+    class ControllerReecbTests
     {
     public:
       using ScalarT = scalar_type;
       using IdxT    = index_type;
       using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
 
-      ConverterReecbTests()  = default;
-      ~ConverterReecbTests() = default;
+      ControllerReecbTests()  = default;
+      ~ControllerReecbTests() = default;
 
       // The tolerance only absorbs floating-point roundoff.
       static constexpr RealT kTol = std::numeric_limits<RealT>::epsilon();
@@ -58,7 +58,7 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        PhasorDynamics::Converter::Reecb<ScalarT, IdxT> empty(&bus);
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> empty(&bus);
         success *= (empty.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
         success *= (empty.getMonitor() == nullptr);
 
@@ -188,7 +188,7 @@ namespace GridKit
           }
         }
 
-        PhasorDynamics::Converter::Reecb<ScalarT, IdxT> busless(nullptr, makeData());
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> busless(nullptr, makeData());
         busless.setSystemBase(kNominalFrequency, kSystemBaseVa);
         success *= (busless.verify() > 0);
 
@@ -1192,12 +1192,12 @@ namespace GridKit
 #endif
 
     private:
-      using Params      = PhasorDynamics::Converter::ReecbParameters;
-      using Vars        = PhasorDynamics::Converter::ReecbInternalVariables;
-      using Ext         = PhasorDynamics::Converter::ReecbExternalVariables;
-      using Mon         = PhasorDynamics::Converter::ReecbMonitorableVariables;
-      using Data        = PhasorDynamics::Converter::ReecbData<RealT, IdxT>;
-      using ReecbT      = PhasorDynamics::Converter::Reecb<ScalarT, IdxT>;
+      using Params      = PhasorDynamics::Controller::ReecbParameters;
+      using Vars        = PhasorDynamics::Controller::ReecbInternalVariables;
+      using Ext         = PhasorDynamics::Controller::ReecbExternalVariables;
+      using Mon         = PhasorDynamics::Controller::ReecbMonitorableVariables;
+      using Data        = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
+      using ReecbT      = PhasorDynamics::Controller::Reecb<ScalarT, IdxT>;
       using JacobianRow = DependencyTracking::Variable::DependencyMap;
 
       static constexpr size_t index(Vars variable)
@@ -1366,8 +1366,8 @@ namespace GridKit
           return input_indices_[index(port)];
         }
 
-        PhasorDynamics::Bus<T, IdxT>              bus;
-        PhasorDynamics::Converter::Reecb<T, IdxT> reecb;
+        PhasorDynamics::Bus<T, IdxT>               bus;
+        PhasorDynamics::Controller::Reecb<T, IdxT> reecb;
       };
 
       static constexpr RealT kSystemBaseVa     = static_cast<RealT>(100.0e6);
@@ -1554,7 +1554,7 @@ namespace GridKit
       /// circle. Every smooth-transition argument keeps a saturation margin,
       /// so each row carries its ideal value.
       template <typename T>
-      void setAnswerKeyState(PhasorDynamics::Converter::Reecb<T, IdxT>& reecb) const
+      void setAnswerKeyState(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb) const
       {
         setState(reecb,
                  {{Vars::VMEAS, 0.80},
@@ -1579,7 +1579,7 @@ namespace GridKit
       /// A neutral driven state for the control probes: unit voltage, cleared
       /// controller states, and a rested derivative.
       template <typename T>
-      void setControlState(PhasorDynamics::Converter::Reecb<T, IdxT>& reecb) const
+      void setControlState(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb) const
       {
         reecb.yp().setToConst(static_cast<T>(ZERO<RealT>));
         setState(reecb,
@@ -1794,7 +1794,7 @@ namespace GridKit
       }
 
       template <typename T>
-      void setState(PhasorDynamics::Converter::Reecb<T, IdxT>& reecb, Rows rows) const
+      void setState(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb, Rows rows) const
       {
         auto* y = reecb.y().getData();
         for (const auto& [variable, value] : rows)
@@ -1805,7 +1805,7 @@ namespace GridKit
       }
 
       template <typename T>
-      void setDerivative(PhasorDynamics::Converter::Reecb<T, IdxT>& reecb, Rows rows) const
+      void setDerivative(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb, Rows rows) const
       {
         auto* yp = reecb.yp().getData();
         for (const auto& [variable, value] : rows)

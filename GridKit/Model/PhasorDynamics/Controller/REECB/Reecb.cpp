@@ -10,7 +10,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Converter
+    namespace Controller
     {
       /**
        * @brief Report that a separate Jacobian is unavailable in the plain-real build.
@@ -25,6 +25,6 @@ namespace GridKit
 
       template class Reecb<double, long int>;
       template class Reecb<double, size_t>;
-    } // namespace Converter
+    } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

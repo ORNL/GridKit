@@ -7,8 +7,8 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
@@ -41,7 +41,7 @@ namespace GridKit
         using BusData   = BusData<RealT, IdxT>;
         using BusType   = typename BusData::BusType;
         using RegcaData = Converter::RegcaData<RealT, IdxT>;
-        using ReecbData = Converter::ReecbData<RealT, IdxT>;
+        using ReecbData = Controller::ReecbData<RealT, IdxT>;
 
         const char data[] =
             R"({
@@ -568,7 +568,7 @@ namespace GridKit
         success *= result.sexspti[0].signal_outputs[Exciter::SexsPtiSignalOutputs::efd] == 3;
         success *= result.sexspti[0].disambiguation_string == "DV4";
 
-        using ReecbData    = Converter::ReecbData<RealT, IdxT>;
+        using ReecbData    = Controller::ReecbData<RealT, IdxT>;
         using ReecbParams  = ReecbData::Parameters;
         success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::mva]) == 100.0;
         success           *= !std::get<bool>(result.reecb[0].parameters[ReecbParams::PfFlag]);

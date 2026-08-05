@@ -14,7 +14,7 @@
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REECB/ReecbData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -24,7 +24,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     class BusBase;
 
-    namespace Converter
+    namespace Controller
     {
       /// Internal variables and residual rows of a `Reecb`.
       enum class ReecbInternalVariables : size_t
@@ -260,6 +260,6 @@ namespace GridKit
         std::vector<ScalarT> ws_;
         std::vector<IdxT>    ws_indices_;
       };
-    } // namespace Converter
+    } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

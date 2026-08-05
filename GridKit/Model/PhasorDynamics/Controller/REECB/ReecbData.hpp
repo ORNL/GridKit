@@ -12,7 +12,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Converter
+    namespace Controller
     {
       /// Parameters for REECB.
       enum class ReecbParameters
@@ -109,6 +109,6 @@ namespace GridKit
         using SignalOutputs        = ReecbSignalOutputs;
         using MonitorableVariables = ReecbMonitorableVariables;
       };
-    } // namespace Converter
+    } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

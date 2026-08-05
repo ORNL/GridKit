@@ -10,7 +10,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Converter
+    namespace Controller
     {
       /**
        * @brief Report that DependencyTracking exposes structure through the
@@ -26,6 +26,6 @@ namespace GridKit
 
       template class Reecb<DependencyTracking::Variable, long int>;
       template class Reecb<DependencyTracking::Variable, size_t>;
-    } // namespace Converter
+    } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

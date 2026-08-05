@@ -7,7 +7,7 @@ set(_install_headers Reecb.hpp ReecbData.hpp)
 
 if(GRIDKIT_ENABLE_ENZYME)
   gridkit_add_library(
-    phasor_dynamics_converter_reecb
+    phasor_dynamics_controller_reecb
     SOURCES ReecbEnzyme.cpp
     HEADERS ${_install_headers}
     INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
@@ -25,7 +25,7 @@ if(GRIDKIT_ENABLE_ENZYME)
       -fno-math-errno)
 else()
   gridkit_add_library(
-    phasor_dynamics_converter_reecb
+    phasor_dynamics_controller_reecb
     SOURCES Reecb.cpp
     HEADERS ${_install_headers}
     INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
@@ -37,7 +37,7 @@ else()
 endif()
 
 gridkit_add_library(
-  phasor_dynamics_converter_reecb_dependency_tracking
+  phasor_dynamics_controller_reecb_dependency_tracking
   SOURCES ReecbDependencyTracking.cpp
   INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
   LINK_LIBRARIES
@@ -48,7 +48,7 @@ gridkit_add_library(
 
 target_link_libraries(
   phasor_dynamics_components
-  INTERFACE GridKit::phasor_dynamics_converter_reecb)
+  INTERFACE GridKit::phasor_dynamics_controller_reecb)
 target_link_libraries(
   phasor_dynamics_components_dependency_tracking
-  INTERFACE GridKit::phasor_dynamics_converter_reecb_dependency_tracking)
+  INTERFACE GridKit::phasor_dynamics_controller_reecb_dependency_tracking)

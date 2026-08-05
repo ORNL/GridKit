@@ -333,11 +333,11 @@ namespace GridKit
       /// must be published before the system initializes.
       TestOutcome reecb()
       {
-        using Data    = PhasorDynamics::Converter::ReecbData<RealT, IdxT>;
+        using Data    = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
         using Buses   = typename Data::Buses;
         using Outputs = typename Data::SignalOutputs;
         using Params  = typename Data::Parameters;
-        using Vars    = PhasorDynamics::Converter::ReecbInternalVariables;
+        using Vars    = PhasorDynamics::Controller::ReecbInternalVariables;
 
         constexpr IdxT bus_id   = static_cast<IdxT>(1);
         constexpr IdxT iqcmd_id = static_cast<IdxT>(1);

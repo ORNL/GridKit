@@ -4,4 +4,3 @@
 # ]]
 
 add_subdirectory(REGCA)
-add_subdirectory(REECB)

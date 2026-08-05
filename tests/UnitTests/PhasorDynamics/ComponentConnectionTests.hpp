@@ -4,10 +4,10 @@
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/Reecb.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REECB/Reecb.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1a.hpp>
@@ -243,9 +243,9 @@ namespace GridKit
         using ConverterExternal  = PhasorDynamics::Converter::RegcaExternalVariables;
         using ConverterInternal  = PhasorDynamics::Converter::RegcaInternalVariables;
         using ConverterParams    = PhasorDynamics::Converter::RegcaParameters;
-        using ControllerExternal = PhasorDynamics::Converter::ReecbExternalVariables;
-        using ControllerInternal = PhasorDynamics::Converter::ReecbInternalVariables;
-        using ControllerParams   = PhasorDynamics::Converter::ReecbParameters;
+        using ControllerExternal = PhasorDynamics::Controller::ReecbExternalVariables;
+        using ControllerInternal = PhasorDynamics::Controller::ReecbInternalVariables;
+        using ControllerParams   = PhasorDynamics::Controller::ReecbParameters;
 
         TestStatus success = true;
 
@@ -279,7 +279,7 @@ namespace GridKit
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> converter(&bus, converter_data);
 
-        PhasorDynamics::Converter::ReecbData<RealT, IdxT> controller_data;
+        PhasorDynamics::Controller::ReecbData<RealT, IdxT> controller_data;
         controller_data.parameters[ControllerParams::mva]    = static_cast<RealT>(100.0);
         controller_data.parameters[ControllerParams::Tp]     = static_cast<RealT>(0.02);
         controller_data.parameters[ControllerParams::QFlag]  = true;
@@ -289,7 +289,7 @@ namespace GridKit
         controller_data.parameters[ControllerParams::Vmin]   = static_cast<RealT>(0.5);
         controller_data.parameters[ControllerParams::Vmax]   = static_cast<RealT>(1.5);
 
-        PhasorDynamics::Converter::Reecb<ScalarT, IdxT> controller(&bus, controller_data);
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> controller(&bus, controller_data);
 
         controller.getSignals().template assignSignalNode<ControllerInternal::IPCMD>(&ipcmd);
         controller.getSignals().template assignSignalNode<ControllerInternal::IQCMD>(&iqcmd);

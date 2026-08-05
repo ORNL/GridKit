@@ -1,9 +1,9 @@
-#include "ConverterReecbTests.hpp"
+#include "ControllerReecbTests.hpp"
 
 int main()
 {
-  GridKit::Testing::TestingResults                      result;
-  GridKit::Testing::ConverterReecbTests<double, size_t> test;
+  GridKit::Testing::TestingResults                       result;
+  GridKit::Testing::ControllerReecbTests<double, size_t> test;
 
   result += test.validation();
   result += test.initializationAndSignals();

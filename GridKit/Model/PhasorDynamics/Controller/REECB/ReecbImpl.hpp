@@ -13,8 +13,8 @@
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REECB/Reecb.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REECB/ReecbData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/Reecb.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -23,7 +23,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Converter
+    namespace Controller
     {
       /// Logger used for REECB diagnostics.
       using Log = ::GridKit::Utilities::Logger;
@@ -1094,6 +1094,6 @@ namespace GridKit
       {
         return bus_->Vi();
       }
-    } // namespace Converter
+    } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

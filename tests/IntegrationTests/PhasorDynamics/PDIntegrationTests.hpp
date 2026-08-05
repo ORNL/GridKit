@@ -4,8 +4,8 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REECB/Reecb.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REECB/ReecbData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/Reecb.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
@@ -726,6 +726,7 @@ namespace GridKit
       /// feedback loop.
       TestOutcome regcaReecbRecovery()
       {
+        using namespace GridKit::PhasorDynamics::Controller;
         using namespace GridKit::PhasorDynamics::Converter;
         using ReecbVar = ReecbInternalVariables;
         using RegcaVar = RegcaInternalVariables;
