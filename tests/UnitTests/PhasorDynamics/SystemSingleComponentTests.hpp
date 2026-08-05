@@ -274,10 +274,10 @@ namespace GridKit
             Inputs::p,
             Inputs::q,
             Inputs::freq,
-            Inputs::freqref,
             Inputs::vref,
-            Inputs::qref,
             Inputs::pref,
+            Inputs::qref,
+            Inputs::freqref,
         }};
         constexpr std::array<const char*, input_count> input_names{{
             "Branch Current Real",
@@ -285,10 +285,10 @@ namespace GridKit
             "Branch Active Power",
             "Branch Reactive Power",
             "Frequency",
-            "Frequency Reference",
             "Voltage Reference",
-            "Reactive Power Reference",
             "Plant Active Power Reference",
+            "Reactive Power Reference",
+            "Frequency Reference",
         }};
 
         PhasorDynamics::SystemModelData<RealT, IdxT> data;

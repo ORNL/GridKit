@@ -524,17 +524,17 @@ namespace GridKit
           constexpr auto FREQ = RepcaExternalVariables::FREQ;
           repca->getSignals().template attachSignalNode<FREQ>(getSignal(freq));
         }
-        if (repcadata.signal_inputs.contains(RepcaSignalInputs::freqref))
-        {
-          const IdxT     freqref = repcadata.signal_inputs.at(RepcaSignalInputs::freqref);
-          constexpr auto FREQREF = RepcaExternalVariables::FREQREF;
-          repca->getSignals().template attachSignalNode<FREQREF>(getSignal(freqref));
-        }
         if (repcadata.signal_inputs.contains(RepcaSignalInputs::vref))
         {
           const IdxT     vref = repcadata.signal_inputs.at(RepcaSignalInputs::vref);
           constexpr auto VREF = RepcaExternalVariables::VREF;
           repca->getSignals().template attachSignalNode<VREF>(getSignal(vref));
+        }
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::pref))
+        {
+          const IdxT     pref = repcadata.signal_inputs.at(RepcaSignalInputs::pref);
+          constexpr auto PREF = RepcaExternalVariables::PREF;
+          repca->getSignals().template attachSignalNode<PREF>(getSignal(pref));
         }
         if (repcadata.signal_inputs.contains(RepcaSignalInputs::qref))
         {
@@ -542,11 +542,11 @@ namespace GridKit
           constexpr auto QREF = RepcaExternalVariables::QREF;
           repca->getSignals().template attachSignalNode<QREF>(getSignal(qref));
         }
-        if (repcadata.signal_inputs.contains(RepcaSignalInputs::pref))
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::freqref))
         {
-          const IdxT     pref = repcadata.signal_inputs.at(RepcaSignalInputs::pref);
-          constexpr auto PREF = RepcaExternalVariables::PREF;
-          repca->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+          const IdxT     freqref = repcadata.signal_inputs.at(RepcaSignalInputs::freqref);
+          constexpr auto FREQREF = RepcaExternalVariables::FREQREF;
+          repca->getSignals().template attachSignalNode<FREQREF>(getSignal(freqref));
         }
         if (repcadata.signal_outputs.contains(RepcaSignalOutputs::qext))
         {

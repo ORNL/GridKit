@@ -231,10 +231,10 @@ namespace GridKit
           }
         };
 
-        check_optional_signal.template operator()<RepcaExternalVariables::FREQREF>("freqref");
         check_optional_signal.template operator()<RepcaExternalVariables::VREF>("vref");
-        check_optional_signal.template operator()<RepcaExternalVariables::QREF>("qref");
         check_optional_signal.template operator()<RepcaExternalVariables::PREF>("pref");
+        check_optional_signal.template operator()<RepcaExternalVariables::QREF>("qref");
+        check_optional_signal.template operator()<RepcaExternalVariables::FREQREF>("freqref");
 
         return ret;
       }
@@ -454,23 +454,23 @@ namespace GridKit
         qref_set_    = qref0_system;
         pref_set_    = pref0_system;
 
-        if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
-        {
-          signals_.template writeExternalVariable<RepcaExternalVariables::FREQREF>(
-              freqref_set_);
-        }
         if (signals_.template isAttached<RepcaExternalVariables::VREF>())
         {
           signals_.template writeExternalVariable<RepcaExternalVariables::VREF>(vref_set_);
-        }
-        if (signals_.template isAttached<RepcaExternalVariables::QREF>())
-        {
-          signals_.template writeExternalVariable<RepcaExternalVariables::QREF>(qref_set_);
         }
         if (signals_.template isAttached<RepcaExternalVariables::PREF>())
         {
           signals_.template writeExternalVariable<RepcaExternalVariables::PREF>(
               pref_set_);
+        }
+        if (signals_.template isAttached<RepcaExternalVariables::QREF>())
+        {
+          signals_.template writeExternalVariable<RepcaExternalVariables::QREF>(qref_set_);
+        }
+        if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
+        {
+          signals_.template writeExternalVariable<RepcaExternalVariables::FREQREF>(
+              freqref_set_);
         }
 
         y_.setDataUpdated();
@@ -529,10 +529,10 @@ namespace GridKit
       {
         using E = RepcaExternalVariables;
 
-        ws_[index(E::FREQREF)] = freqref_set_;
         ws_[index(E::VREF)]    = vref_set_;
-        ws_[index(E::QREF)]    = qref_set_;
         ws_[index(E::PREF)]    = pref_set_;
+        ws_[index(E::QREF)]    = qref_set_;
+        ws_[index(E::FREQREF)] = freqref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         ws_[index(E::IR)] =
@@ -556,19 +556,19 @@ namespace GridKit
         ws_indices_[index(E::FREQ)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQ>();
 
-        if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
-        {
-          ws_[index(E::FREQREF)] =
-              signals_.template readExternalVariable<RepcaExternalVariables::FREQREF>();
-          ws_indices_[index(E::FREQREF)] =
-              signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQREF>();
-        }
         if (signals_.template isAttached<RepcaExternalVariables::VREF>())
         {
           ws_[index(E::VREF)] =
               signals_.template readExternalVariable<RepcaExternalVariables::VREF>();
           ws_indices_[index(E::VREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::VREF>();
+        }
+        if (signals_.template isAttached<RepcaExternalVariables::PREF>())
+        {
+          ws_[index(E::PREF)] =
+              signals_.template readExternalVariable<RepcaExternalVariables::PREF>();
+          ws_indices_[index(E::PREF)] =
+              signals_.template readExternalVariableIndex<RepcaExternalVariables::PREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::QREF>())
         {
@@ -577,12 +577,12 @@ namespace GridKit
           ws_indices_[index(E::QREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::QREF>();
         }
-        if (signals_.template isAttached<RepcaExternalVariables::PREF>())
+        if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
         {
-          ws_[index(E::PREF)] =
-              signals_.template readExternalVariable<RepcaExternalVariables::PREF>();
-          ws_indices_[index(E::PREF)] =
-              signals_.template readExternalVariableIndex<RepcaExternalVariables::PREF>();
+          ws_[index(E::FREQREF)] =
+              signals_.template readExternalVariable<RepcaExternalVariables::FREQREF>();
+          ws_indices_[index(E::FREQREF)] =
+              signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQREF>();
         }
 
         wb_[0] = Vr();

@@ -194,10 +194,10 @@ namespace GridKit
         success *= unlinkedSignalRejected<Ext::P>();
         success *= unlinkedSignalRejected<Ext::Q>();
         success *= unlinkedSignalRejected<Ext::FREQ>();
-        success *= unlinkedSignalRejected<Ext::FREQREF>();
         success *= unlinkedSignalRejected<Ext::VREF>();
-        success *= unlinkedSignalRejected<Ext::QREF>();
         success *= unlinkedSignalRejected<Ext::PREF>();
+        success *= unlinkedSignalRejected<Ext::QREF>();
+        success *= unlinkedSignalRejected<Ext::FREQREF>();
 
         auto floor_data                      = makeInitializationData();
         floor_data.parameters[Params::Tfltr] = 0.0;
@@ -272,10 +272,10 @@ namespace GridKit
         success *= scalarPreserved(fixture.input(Ext::FREQ), 0.99, "preserved freq");
         success *= scalarPreserved(fixture.qext(), 0.25, "preserved qext");
         success *= scalarPreserved(fixture.pext(), 0.45, "preserved pext");
-        success *= scalarMatches(fixture.input(Ext::FREQREF), 0.99, "published freqref");
         success *= scalarMatches(fixture.input(Ext::VREF), 0.99200050403213, "published vref");
-        success *= scalarMatches(fixture.input(Ext::QREF), 0.1, "published qref");
         success *= scalarMatches(fixture.input(Ext::PREF), 0.4, "published pref");
+        success *= scalarMatches(fixture.input(Ext::QREF), 0.1, "published qref");
+        success *= scalarMatches(fixture.input(Ext::FREQREF), 0.99, "published freqref");
 
         for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
         {
@@ -1196,10 +1196,10 @@ namespace GridKit
           attachRequiredInputs(initial_value);
 
           auto& signals = repca.getSignals();
-          signals.template attachSignalNode<Ext::FREQREF>(&input_nodes_[index(Ext::FREQREF)]);
           signals.template attachSignalNode<Ext::VREF>(&input_nodes_[index(Ext::VREF)]);
-          signals.template attachSignalNode<Ext::QREF>(&input_nodes_[index(Ext::QREF)]);
           signals.template attachSignalNode<Ext::PREF>(&input_nodes_[index(Ext::PREF)]);
+          signals.template attachSignalNode<Ext::QREF>(&input_nodes_[index(Ext::QREF)]);
+          signals.template attachSignalNode<Ext::FREQREF>(&input_nodes_[index(Ext::FREQREF)]);
         }
 
         void setCommands(RealT qext, RealT pext)
@@ -1402,10 +1402,10 @@ namespace GridKit
         fixture.input(Ext::P)       = static_cast<T>(0.35);
         fixture.input(Ext::Q)       = static_cast<T>(0.25);
         fixture.input(Ext::FREQ)    = static_cast<T>(0.2);
-        fixture.input(Ext::FREQREF) = static_cast<T>(1.0);
         fixture.input(Ext::VREF)    = static_cast<T>(1.05);
-        fixture.input(Ext::QREF)    = static_cast<T>(0.3);
         fixture.input(Ext::PREF)    = static_cast<T>(0.55);
+        fixture.input(Ext::QREF)    = static_cast<T>(0.3);
+        fixture.input(Ext::FREQREF) = static_cast<T>(1.0);
       }
 
       template <typename T>

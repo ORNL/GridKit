@@ -95,15 +95,15 @@ power to component base.
 Name        | Port   | Init    | Description
 ------------|--------|---------|------------
 `bus`       | Bus    | Known   | Regulated-bus voltage
-`ibranchr`  | Input  | Known   | Branch-current real component on system base
-`ibranchi`  | Input  | Known   | Branch-current imaginary component on system base
-`pbranch`   | Input  | Known   | Branch active power on system base
-`qbranch`   | Input  | Known   | Branch reactive power on system base
+`ir`        | Input  | Known   | Branch-current real component on system base
+`ii`        | Input  | Known   | Branch-current imaginary component on system base
+`p`         | Input  | Known   | Branch active power on system base
+`q`         | Input  | Known   | Branch reactive power on system base
 `freq`      | Input  | Known   | Frequency input[^frequency-measurement] Not supported yet.
-`freqref`   | Input  | Unknown | Frequency reference
 `vref`      | Input  | Unknown | Voltage-control reference
+`pref`      | Input  | Unknown | Plant active-power reference on system base
 `qref`      | Input  | Unknown | Reactive-power reference on system base
-`pplantref` | Input  | Unknown | Plant active-power reference on system base
+`freqref`   | Input  | Unknown | Frequency reference
 `qext`      | Output | Known   | Reactive-power command on system base
 `pext`      | Output | Known   | Active-power command on system base
 
@@ -161,15 +161,15 @@ Symbol                         | Units  | Init    | Description                 
 -------------------------------|--------|---------|-----------------------------------|------
 $V_\mathrm{r}$                | [p.u.] | Known   | Regulated-bus voltage, real component | Bus input
 $V_\mathrm{i}$                | [p.u.] | Known   | Regulated-bus voltage, imaginary component | Bus input
-$I_\mathrm{r}$                | [p.u.] | Known   | Branch-current real component     | Signal port `ibranchr`; system base
-$I_\mathrm{i}$                | [p.u.] | Known   | Branch-current imaginary component | Signal port `ibranchi`; system base
-$P$                           | [p.u.] | Known   | Branch active power               | Signal port `pbranch`; system base
-$Q$                           | [p.u.] | Known   | Branch reactive power             | Signal port `qbranch`; system base
+$I_\mathrm{r}$                | [p.u.] | Known   | Branch-current real component     | Signal port `ir`; system base
+$I_\mathrm{i}$                | [p.u.] | Known   | Branch-current imaginary component | Signal port `ii`; system base
+$P$                           | [p.u.] | Known   | Branch active power               | Signal port `p`; system base
+$Q$                           | [p.u.] | Known   | Branch reactive power             | Signal port `q`; system base
 $f$                           | [p.u.] | Known   | Frequency input                   | Signal port `freq`
-$f^\mathrm{ref}$              | [p.u.] | Unknown | Frequency reference               | Optional signal port `freqref`
 $V^\mathrm{ref}$              | [p.u.] | Unknown | Voltage-control reference         | Optional signal port `vref`
+$P^\mathrm{ref}$              | [p.u.] | Unknown | Plant active-power reference      | Optional signal port `pref`; system base
 $Q^\mathrm{ref}$              | [p.u.] | Unknown | Reactive-power reference          | Optional signal port `qref`; system base
-$P^\mathrm{ref}$ | [p.u.] | Unknown | Plant active-power reference      | Optional signal port `pplantref`; system base
+$f^\mathrm{ref}$              | [p.u.] | Unknown | Frequency reference               | Optional signal port `freqref`
 
 ## Model Equations
 
@@ -295,10 +295,10 @@ Initialization is atomic; candidates are validated before state or signal writes
 
 ```math
 \begin{aligned}
-  f^\mathrm{ref} &\leftarrow f \\
   V^\mathrm{ref} &\leftarrow V^\mathrm{meas} \\
+  P^\mathrm{ref} &\leftarrow \dfrac{P^\mathrm{meas}-P^\mathrm{freq}}{k_\mathrm{base}} \\
   Q^\mathrm{ref} &\leftarrow Q \\
-  P^\mathrm{ref} &\leftarrow \dfrac{P^\mathrm{meas}-P^\mathrm{freq}}{k_\mathrm{base}}.
+  f^\mathrm{ref} &\leftarrow f.
 \end{aligned}
 ```
 
