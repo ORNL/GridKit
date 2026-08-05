@@ -478,21 +478,26 @@ namespace GridKit
         reactive_aw_data.parameters[Params::dbdupper] = 0.03;
         reactive_aw_data.parameters[Params::emin]     = 0.0;
 
-        for (const auto& voltage : {std::pair<RealT, RealT>{0.8, 0.6},
-                                    std::pair<RealT, RealT>{0.2, 0.0}})
+        for (const bool voltage_reference : {false, true})
         {
-          Fixture<ScalarT> asymmetric_reactive(reactive_aw_data,
-                                               voltage.first,
-                                               voltage.second);
-          asymmetric_reactive.attachAllInputs();
-          setInitializationInputs(asymmetric_reactive);
-          success *= asymmetric_reactive.initialize(0.25, 0.45);
-          success *= (asymmetric_reactive.repca.evaluateResidual() == 0);
-          success *= stateMatches(asymmetric_reactive.repca,
-                                  {{Vars::ERQDB, -0.1},
-                                   {Vars::ERQLIM, 0.0}},
-                                  "asymmetric reactive initialization");
-          success *= allResidualsWithinInitTolerance(asymmetric_reactive.repca);
+          auto data                        = reactive_aw_data;
+          data.parameters[Params::RefFlag] = voltage_reference;
+          for (const auto& voltage : {std::pair<RealT, RealT>{0.8, 0.6},
+                                      std::pair<RealT, RealT>{0.2, 0.0}})
+          {
+            Fixture<ScalarT> asymmetric_reactive(data,
+                                                 voltage.first,
+                                                 voltage.second);
+            asymmetric_reactive.attachAllInputs();
+            setInitializationInputs(asymmetric_reactive);
+            success *= asymmetric_reactive.initialize(0.25, 0.45);
+            success *= (asymmetric_reactive.repca.evaluateResidual() == 0);
+            success *= stateMatches(asymmetric_reactive.repca,
+                                    {{Vars::ERQDB, -0.1},
+                                     {Vars::ERQLIM, 0.0}},
+                                    "asymmetric reactive initialization");
+            success *= allResidualsWithinInitTolerance(asymmetric_reactive.repca);
+          }
         }
 
         auto frozen_data                     = reactive_aw_data;

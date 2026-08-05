@@ -1003,7 +1003,8 @@ namespace GridKit
           return false;
         }
 
-        const RealT midpoint = lower_limit + HALF<RealT> * (upper_limit - lower_limit);
+        const RealT midpoint = HALF<RealT> * lower_limit
+                               + HALF<RealT> * upper_limit;
         if (std::abs(output_value) <= INITIALIZATION_TOLERANCE)
         {
           deadband_input = static_cast<ScalarT>(midpoint);
@@ -1027,7 +1028,10 @@ namespace GridKit
         const RealT upper_output = Math::deadband2(upper_input,
                                                    lower_limit,
                                                    upper_limit);
-        if (lower_output > output_value || output_value > upper_output)
+        if (!std::isfinite(lower_output)
+            || !std::isfinite(upper_output)
+            || lower_output - output_value > INITIALIZATION_TOLERANCE
+            || output_value - upper_output > INITIALIZATION_TOLERANCE)
         {
           return false;
         }

@@ -294,8 +294,8 @@ Initialization rejects an operating point if:
 - $k_\mathrm{base}Q^\mathrm{ext}\notin[Q^{\min},Q^{\max}]$, or
   $s_\mathrm{freq}=1$ and
   $k_\mathrm{base}P^\mathrm{ext}\notin[P^{\min},P^{\max}]$; or
-- the gated reactive-power or active-power PI state rate is nonfinite or
-  exceeds $\epsilon_\mathrm{init}$ in magnitude.
+- the gated reactive-power or active-power PI state rate is nonfinite or does
+  not vanish within the implementation tolerance.
 
 Initialization is atomic; candidates are validated before state or signal writes.
 
