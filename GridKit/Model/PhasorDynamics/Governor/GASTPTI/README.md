@@ -34,12 +34,7 @@ $D^\mathrm{turb}$ | [p.u.]  | `Dturb` | Turbine damping coefficient           | 
 $T^\mathrm{rate}$ | [MW]   | `Trate` | Turbine rating                        | 100.0         | Same-valued MVA component base; GridKit addition
 $\mathrm{mode}$   | [integer] | `mode`  | Governor response-limit mode          | 0             | 0 = Normal, 1 = Down Only, 2 = Fixed
 
-Every parameter is optional and uses the Typical Value when omitted. Real-valued
-parameters accept real or integer JSON values; `mode` accepts only an integer.
-
 ### Parameter Validation
-
-All real parameters must be finite. Invalid parameter sets are rejected by:
 
 ```math
 \begin{aligned}
@@ -125,11 +120,11 @@ $P^\mathrm{ref}$ | [p.u.] | Unknown | Active-power/load reference | Optional `pr
 
 ### Internal Equations
 
+#### Differential
+
 The initialized constants $V_{\mathrm{resp}}^{\min}$,
 $V_{\mathrm{resp}}^{\max}$, and $s^{\mathrm{valve}}$ are defined under
 [Internal Initialization](#internal-initialization).
-
-#### Differential
 
 ```math
 \begin{aligned}
@@ -153,14 +148,10 @@ $V_{\mathrm{resp}}^{\max}$, and $s^{\mathrm{valve}}$ are defined under
 
 ```math
 \begin{aligned}
-  0 &= -\omega
-       + R\left(k_{\mathrm{base}}P^\mathrm{ref}-V_D\right) \\
-  0 &= -V_T
-       + A_T+K_T\left(A_T-x_T\right) \\
-  0 &= -V
-       + \text{min}\!\left(V_D,V_T\right) \\
-  0 &= -k_{\mathrm{base}}P_{\text{m}}
-       + x_F-D^\mathrm{turb}\omega.
+  0 &= - \omega + R(k_\mathrm{base}P^\mathrm{ref}-V_D) \\
+  0 &= -V_T + A_T+K_T(A_T-x_T) \\
+  0 &= -V + \text{min}(V_D,V_T) \\
+  0 &= -k_\mathrm{base}P_\text{m} + x_F-D^\mathrm{turb}\omega.
 \end{aligned}
 ```
 
@@ -183,19 +174,12 @@ None.
 
 ```math
 \begin{aligned}
-  \omega
-    &\leftarrow \text{machine speed deviation} \\
-  P_{\text{m}}
-    &\leftarrow \text{machine mechanical power on system base}
+  \omega &\leftarrow \text{machine speed deviation} \\
+  P_\text{m} &\leftarrow \text{machine mechanical power}
 \end{aligned}
 ```
 
-Both inputs must be finite. Initialization never replaces $P_{\text{m}}$.
-
 ### Internal Initialization
-
-Subscript $0$ denotes an initial value; all internal derivatives are initialized
-to zero. Using the same smooth `min` as the residual:
 
 ```math
 \begin{aligned}
@@ -241,9 +225,6 @@ to zero. Using the same smooth `min` as the residual:
 \end{aligned}
 ```
 
-All initialized values must be finite; an active valve additionally requires
-$m_{T,0}>0$. Rejected initialization is atomic.
-
 ### Output Initialization
 
 ```math
@@ -281,13 +262,11 @@ Output   | Units  | Description                        | Note
 
 ## Appendix A: `iramp`
 
-For a positive smooth-ramp output $v>0$ and smoothing scale $\mu=240$,
+For a positive smooth-ramp output $v>0$,
 
 ```math
-\text{iramp}(v)
-  = v+\dfrac{1}{\mu}\log\!\left(1-e^{-\mu v}\right).
+\text{iramp}(v) = v+\dfrac{1}{\mu}\log\left(1-e^{-\mu v}\right).
 ```
 
 This is the positive-range inverse of GridKit's smooth
-[`ramp`](../../../../CommonMath.md#rho-ramp). The implementation evaluates
-$1-e^{-\mu v}$ as `-expm1(-mu * v)` to avoid cancellation.
+[`ramp`](../../../../CommonMath.md#rho-ramp).
