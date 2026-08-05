@@ -1,17 +1,19 @@
 {
     "header": {
-        "format_version": 0,
-        "format_revision": 1,
+        "format_version": 0.2,
+        "format_revision": 0,
         "case_name": "ThreeBusConstantSource",
         "case_description": "3-bus test case with constant signal sources",
-        "case_comments": "None",
+        "case_comments": "None"
+    },
+    "params": {
         "freq_base": 60.0,
-        "va_base": 100e6
+        "va_base": 100000000.0
     },
     "buses": [
         {
             "number": 1,
-            "class": "infinite_bus",
+            "class": "BusInfinite",
             "name": "1",
             "init": {
                 "Vr": 1.06,
@@ -24,7 +26,7 @@
         },
         {
             "number": 2,
-            "class": "bus",
+            "class": "Bus",
             "name": "2",
             "init": {
                 "Vr": 1.0599558398065716,
@@ -37,7 +39,7 @@
         },
         {
             "number": 3,
-            "class": "bus",
+            "class": "Bus",
             "name": "3",
             "init": {
                 "Vr": 0.9610827543495831,
@@ -153,13 +155,13 @@
             "class": "BusToSignalAdapter",
             "ports": {"bus":1, "ir":1, "ii":2},
             "id": "adapt3",
-            "params": []
+            "params": {}
         },
         {
             "class": "ConstantSignalSource",
             "ports": {"sr":1, "si":2},
             "id": "const_source_1",
-            "params": []
+            "params": {}
         }
     ]
 }

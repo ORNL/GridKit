@@ -1,17 +1,19 @@
 {
     "header": {
-        "format_version": 0.1,
-        "format_revision": 1,
+        "format_version": 0.2,
+        "format_revision": 0,
         "case_name": "WECC",
         "case_description": "",
-        "case_comments": "",
+        "case_comments": ""
+    },
+    "params": {
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
     "buses": [
         {
             "number": 1001,
-            "class": "bus",
+            "class": "Bus",
             "name": "FOURCORN",
             "init": {
                 "Vr": 1.0291466289885092,
@@ -25,7 +27,7 @@
         },
         {
             "number": 1002,
-            "class": "bus",
+            "class": "Bus",
             "name": "FOURCORN",
             "init": {
                 "Vr": 1.0032473274593743,
@@ -39,7 +41,7 @@
         },
         {
             "number": 1003,
-            "class": "bus",
+            "class": "Bus",
             "name": "FOURCORN",
             "init": {
                 "Vr": 0.9731671773810331,
@@ -53,7 +55,7 @@
         },
         {
             "number": 1004,
-            "class": "bus",
+            "class": "Bus",
             "name": "SAN JUAN",
             "init": {
                 "Vr": 0.9750905539848131,
@@ -67,7 +69,7 @@
         },
         {
             "number": 1032,
-            "class": "bus",
+            "class": "Bus",
             "name": "FCNGN4CC",
             "init": {
                 "Vr": 1.0016025293432642,
@@ -81,7 +83,7 @@
         },
         {
             "number": 1034,
-            "class": "bus",
+            "class": "Bus",
             "name": "SJUAN G4",
             "init": {
                 "Vr": 0.9685246905974173,
@@ -95,7 +97,7 @@
         },
         {
             "number": 1101,
-            "class": "bus",
+            "class": "Bus",
             "name": "CORONADO",
             "init": {
                 "Vr": 0.9816588086167465,
@@ -109,7 +111,7 @@
         },
         {
             "number": 1102,
-            "class": "bus",
+            "class": "Bus",
             "name": "CHOLLA",
             "init": {
                 "Vr": 0.9911535229164995,
@@ -123,7 +125,7 @@
         },
         {
             "number": 1131,
-            "class": "bus",
+            "class": "Bus",
             "name": "CORONADO",
             "init": {
                 "Vr": 0.984072847499644,
@@ -137,7 +139,7 @@
         },
         {
             "number": 1201,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOENKOPI",
             "init": {
                 "Vr": 1.0840475191470649,
@@ -151,7 +153,7 @@
         },
         {
             "number": 1202,
-            "class": "bus",
+            "class": "Bus",
             "name": "NAVAJO",
             "init": {
                 "Vr": 1.0775172088362486,
@@ -165,7 +167,7 @@
         },
         {
             "number": 1232,
-            "class": "bus",
+            "class": "Bus",
             "name": "NAVAJO 2",
             "init": {
                 "Vr": 1.078360777641177,
@@ -179,7 +181,7 @@
         },
         {
             "number": 1301,
-            "class": "bus",
+            "class": "Bus",
             "name": "MEAD",
             "init": {
                 "Vr": 1.0294848702778479,
@@ -193,7 +195,7 @@
         },
         {
             "number": 1302,
-            "class": "bus",
+            "class": "Bus",
             "name": "H ALLEN",
             "init": {
                 "Vr": 1.0031102501183398,
@@ -207,7 +209,7 @@
         },
         {
             "number": 1303,
-            "class": "bus",
+            "class": "Bus",
             "name": "H ALLEN",
             "init": {
                 "Vr": 0.9696170242023398,
@@ -221,7 +223,7 @@
         },
         {
             "number": 1331,
-            "class": "bus",
+            "class": "Bus",
             "name": "HOOVER",
             "init": {
                 "Vr": 1.0327382064230135,
@@ -235,7 +237,7 @@
         },
         {
             "number": 1333,
-            "class": "bus",
+            "class": "Bus",
             "name": "H ALLEN",
             "init": {
                 "Vr": 0.9788488012911469,
@@ -249,7 +251,7 @@
         },
         {
             "number": 1401,
-            "class": "bus",
+            "class": "Bus",
             "name": "PALOVRDE",
             "init": {
                 "Vr": 1.0006619844038074,
@@ -263,7 +265,7 @@
         },
         {
             "number": 1402,
-            "class": "bus",
+            "class": "Bus",
             "name": "WESTWING",
             "init": {
                 "Vr": 0.9926913526533575,
@@ -277,7 +279,7 @@
         },
         {
             "number": 1403,
-            "class": "bus",
+            "class": "Bus",
             "name": "PARKER",
             "init": {
                 "Vr": 1.002636418924378,
@@ -291,7 +293,7 @@
         },
         {
             "number": 1431,
-            "class": "bus",
+            "class": "Bus",
             "name": "PALOVRD2",
             "init": {
                 "Vr": 1.0155897351487866,
@@ -305,7 +307,7 @@
         },
         {
             "number": 2000,
-            "class": "bus",
+            "class": "Bus",
             "name": "MEXICO",
             "init": {
                 "Vr": 0.9573563608151822,
@@ -319,7 +321,7 @@
         },
         {
             "number": 2030,
-            "class": "bus",
+            "class": "Bus",
             "name": "MEXICO",
             "init": {
                 "Vr": 0.962127203284071,
@@ -333,7 +335,7 @@
         },
         {
             "number": 2100,
-            "class": "bus",
+            "class": "Bus",
             "name": "IMPERIAL",
             "init": {
                 "Vr": 1.0105814268017232,
@@ -347,7 +349,7 @@
         },
         {
             "number": 2130,
-            "class": "bus",
+            "class": "Bus",
             "name": "IMPERIAL",
             "init": {
                 "Vr": 1.0124715974631084,
@@ -361,7 +363,7 @@
         },
         {
             "number": 2201,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIGUEL",
             "init": {
                 "Vr": 0.8890871589849977,
@@ -375,7 +377,7 @@
         },
         {
             "number": 2202,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIGUEL",
             "init": {
                 "Vr": 0.8769607872022306,
@@ -389,7 +391,7 @@
         },
         {
             "number": 2203,
-            "class": "bus",
+            "class": "Bus",
             "name": "MISSION",
             "init": {
                 "Vr": 0.8878082289029842,
@@ -403,7 +405,7 @@
         },
         {
             "number": 2233,
-            "class": "bus",
+            "class": "Bus",
             "name": "MISSION",
             "init": {
                 "Vr": 0.8917539463136887,
@@ -417,7 +419,7 @@
         },
         {
             "number": 2301,
-            "class": "bus",
+            "class": "Bus",
             "name": "IMPRLVLY",
             "init": {
                 "Vr": 1.0003265347798895,
@@ -431,7 +433,7 @@
         },
         {
             "number": 2302,
-            "class": "bus",
+            "class": "Bus",
             "name": "IMPRLVLY",
             "init": {
                 "Vr": 1.004674006929104,
@@ -445,7 +447,7 @@
         },
         {
             "number": 2332,
-            "class": "bus",
+            "class": "Bus",
             "name": "IMPRLVLY",
             "init": {
                 "Vr": 1.0058740984236978,
@@ -459,7 +461,7 @@
         },
         {
             "number": 2400,
-            "class": "bus",
+            "class": "Bus",
             "name": "DEVERS",
             "init": {
                 "Vr": 0.9686677018365756,
@@ -473,7 +475,7 @@
         },
         {
             "number": 2401,
-            "class": "bus",
+            "class": "Bus",
             "name": "LUGO",
             "init": {
                 "Vr": 1.0201142388690945,
@@ -487,7 +489,7 @@
         },
         {
             "number": 2402,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIRALOMA",
             "init": {
                 "Vr": 0.9811514709203086,
@@ -501,7 +503,7 @@
         },
         {
             "number": 2403,
-            "class": "bus",
+            "class": "Bus",
             "name": "VALLEY",
             "init": {
                 "Vr": 0.9495294494720706,
@@ -515,7 +517,7 @@
         },
         {
             "number": 2404,
-            "class": "bus",
+            "class": "Bus",
             "name": "VINCENT",
             "init": {
                 "Vr": 1.0235317739456062,
@@ -529,7 +531,7 @@
         },
         {
             "number": 2405,
-            "class": "bus",
+            "class": "Bus",
             "name": "SYLMAR S",
             "init": {
                 "Vr": 0.9926730669624063,
@@ -543,7 +545,7 @@
         },
         {
             "number": 2406,
-            "class": "bus",
+            "class": "Bus",
             "name": "EAGLROCK",
             "init": {
                 "Vr": 0.9735157068301625,
@@ -557,7 +559,7 @@
         },
         {
             "number": 2407,
-            "class": "bus",
+            "class": "Bus",
             "name": "LITEHIPE",
             "init": {
                 "Vr": 0.9106775654857185,
@@ -571,7 +573,7 @@
         },
         {
             "number": 2408,
-            "class": "bus",
+            "class": "Bus",
             "name": "MESA CAL",
             "init": {
                 "Vr": 0.9960375520788632,
@@ -585,7 +587,7 @@
         },
         {
             "number": 2409,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIRALOMA",
             "init": {
                 "Vr": 0.9656154166672628,
@@ -599,7 +601,7 @@
         },
         {
             "number": 2410,
-            "class": "bus",
+            "class": "Bus",
             "name": "PARDEE",
             "init": {
                 "Vr": 0.9740857347695497,
@@ -613,7 +615,7 @@
         },
         {
             "number": 2411,
-            "class": "bus",
+            "class": "Bus",
             "name": "VINCENT",
             "init": {
                 "Vr": 1.0000879564679523,
@@ -627,7 +629,7 @@
         },
         {
             "number": 2431,
-            "class": "bus",
+            "class": "Bus",
             "name": "LUGO",
             "init": {
                 "Vr": 1.0201855324720284,
@@ -641,7 +643,7 @@
         },
         {
             "number": 2434,
-            "class": "bus",
+            "class": "Bus",
             "name": "VINCENT",
             "init": {
                 "Vr": 0.9998610711787467,
@@ -655,7 +657,7 @@
         },
         {
             "number": 2438,
-            "class": "bus",
+            "class": "Bus",
             "name": "MESA CAL",
             "init": {
                 "Vr": 1.0005346742025203,
@@ -669,7 +671,7 @@
         },
         {
             "number": 2439,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIRALOMA",
             "init": {
                 "Vr": 0.9657061083281868,
@@ -683,7 +685,7 @@
         },
         {
             "number": 2501,
-            "class": "bus",
+            "class": "Bus",
             "name": "SERRANO",
             "init": {
                 "Vr": 0.9632392366839512,
@@ -697,7 +699,7 @@
         },
         {
             "number": 2502,
-            "class": "bus",
+            "class": "Bus",
             "name": "SERRANO",
             "init": {
                 "Vr": 0.9512104097787043,
@@ -711,7 +713,7 @@
         },
         {
             "number": 2503,
-            "class": "bus",
+            "class": "Bus",
             "name": "S.ONOFRE",
             "init": {
                 "Vr": 0.9246982850202976,
@@ -725,7 +727,7 @@
         },
         {
             "number": 2533,
-            "class": "bus",
+            "class": "Bus",
             "name": "S.ONOFRE",
             "init": {
                 "Vr": 0.9289638822595822,
@@ -739,7 +741,7 @@
         },
         {
             "number": 2600,
-            "class": "bus",
+            "class": "Bus",
             "name": "ADELANTO",
             "init": {
                 "Vr": 1.0416664033141128,
@@ -753,7 +755,7 @@
         },
         {
             "number": 2601,
-            "class": "bus",
+            "class": "Bus",
             "name": "RINALDI",
             "init": {
                 "Vr": 1.0325531966502695,
@@ -767,7 +769,7 @@
         },
         {
             "number": 2602,
-            "class": "bus",
+            "class": "Bus",
             "name": "STA E",
             "init": {
                 "Vr": 1.0086414897598246,
@@ -781,7 +783,7 @@
         },
         {
             "number": 2603,
-            "class": "bus",
+            "class": "Bus",
             "name": "VICTORVL",
             "init": {
                 "Vr": 1.0403867019879436,
@@ -795,7 +797,7 @@
         },
         {
             "number": 2604,
-            "class": "bus",
+            "class": "Bus",
             "name": "INTERMT",
             "init": {
                 "Vr": 1.0281874791724415,
@@ -809,7 +811,7 @@
         },
         {
             "number": 2605,
-            "class": "bus",
+            "class": "Bus",
             "name": "STA B1",
             "init": {
                 "Vr": 1.012781982392856,
@@ -823,7 +825,7 @@
         },
         {
             "number": 2606,
-            "class": "bus",
+            "class": "Bus",
             "name": "STA B2",
             "init": {
                 "Vr": 1.012781982392856,
@@ -837,7 +839,7 @@
         },
         {
             "number": 2607,
-            "class": "bus",
+            "class": "Bus",
             "name": "VICTORVL",
             "init": {
                 "Vr": 1.0341155960129134,
@@ -851,7 +853,7 @@
         },
         {
             "number": 2608,
-            "class": "bus",
+            "class": "Bus",
             "name": "CASTAIC",
             "init": {
                 "Vr": 1.0012144391172937,
@@ -865,7 +867,7 @@
         },
         {
             "number": 2609,
-            "class": "bus",
+            "class": "Bus",
             "name": "GLENDAL",
             "init": {
                 "Vr": 0.9906155869439697,
@@ -879,7 +881,7 @@
         },
         {
             "number": 2610,
-            "class": "bus",
+            "class": "Bus",
             "name": "HAYNES",
             "init": {
                 "Vr": 0.9976616726348186,
@@ -893,7 +895,7 @@
         },
         {
             "number": 2611,
-            "class": "bus",
+            "class": "Bus",
             "name": "OLIVE",
             "init": {
                 "Vr": 1.0006465478842197,
@@ -907,7 +909,7 @@
         },
         {
             "number": 2612,
-            "class": "bus",
+            "class": "Bus",
             "name": "RINALDI",
             "init": {
                 "Vr": 0.9981314814982941,
@@ -921,7 +923,7 @@
         },
         {
             "number": 2613,
-            "class": "bus",
+            "class": "Bus",
             "name": "RIVER",
             "init": {
                 "Vr": 0.9920507009050489,
@@ -935,7 +937,7 @@
         },
         {
             "number": 2614,
-            "class": "bus",
+            "class": "Bus",
             "name": "STA BLD",
             "init": {
                 "Vr": 0.9969952293066526,
@@ -949,7 +951,7 @@
         },
         {
             "number": 2615,
-            "class": "bus",
+            "class": "Bus",
             "name": "STA E",
             "init": {
                 "Vr": 0.992564620778635,
@@ -963,7 +965,7 @@
         },
         {
             "number": 2616,
-            "class": "bus",
+            "class": "Bus",
             "name": "STA F",
             "init": {
                 "Vr": 0.9935243389653521,
@@ -977,7 +979,7 @@
         },
         {
             "number": 2617,
-            "class": "bus",
+            "class": "Bus",
             "name": "STA G",
             "init": {
                 "Vr": 0.9916653652761533,
@@ -991,7 +993,7 @@
         },
         {
             "number": 2618,
-            "class": "bus",
+            "class": "Bus",
             "name": "STA J",
             "init": {
                 "Vr": 0.9925039278007112,
@@ -1005,7 +1007,7 @@
         },
         {
             "number": 2619,
-            "class": "bus",
+            "class": "Bus",
             "name": "SYLMARLA",
             "init": {
                 "Vr": 0.9980314018742489,
@@ -1019,7 +1021,7 @@
         },
         {
             "number": 2620,
-            "class": "bus",
+            "class": "Bus",
             "name": "VALLEY",
             "init": {
                 "Vr": 0.9937414145114053,
@@ -1033,7 +1035,7 @@
         },
         {
             "number": 2621,
-            "class": "bus",
+            "class": "Bus",
             "name": "STA B",
             "init": {
                 "Vr": 1.005399914523277,
@@ -1047,7 +1049,7 @@
         },
         {
             "number": 2630,
-            "class": "bus",
+            "class": "Bus",
             "name": "HAYNES3G",
             "init": {
                 "Vr": 0.9971748859135611,
@@ -1061,7 +1063,7 @@
         },
         {
             "number": 2631,
-            "class": "bus",
+            "class": "Bus",
             "name": "OLIVE",
             "init": {
                 "Vr": 1.0009927061276438,
@@ -1075,7 +1077,7 @@
         },
         {
             "number": 2634,
-            "class": "bus",
+            "class": "Bus",
             "name": "INTERM1G",
             "init": {
                 "Vr": 1.0284840467271332,
@@ -1089,7 +1091,7 @@
         },
         {
             "number": 2637,
-            "class": "bus",
+            "class": "Bus",
             "name": "OWENS G",
             "init": {
                 "Vr": 0.9983990169102167,
@@ -1103,7 +1105,7 @@
         },
         {
             "number": 2638,
-            "class": "bus",
+            "class": "Bus",
             "name": "CASTAI4G",
             "init": {
                 "Vr": 1.0014131240403334,
@@ -1117,7 +1119,7 @@
         },
         {
             "number": 2901,
-            "class": "bus",
+            "class": "Bus",
             "name": "ELDORADO",
             "init": {
                 "Vr": 1.0905332810230042,
@@ -1131,7 +1133,7 @@
         },
         {
             "number": 2902,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOHAVE",
             "init": {
                 "Vr": 1.096090314117727,
@@ -1145,7 +1147,7 @@
         },
         {
             "number": 3101,
-            "class": "bus",
+            "class": "Bus",
             "name": "EMBRCDRD",
             "init": {
                 "Vr": 0.9722787675171465,
@@ -1159,7 +1161,7 @@
         },
         {
             "number": 3102,
-            "class": "bus",
+            "class": "Bus",
             "name": "MARTIN",
             "init": {
                 "Vr": 0.9794141550652612,
@@ -1173,7 +1175,7 @@
         },
         {
             "number": 3103,
-            "class": "bus",
+            "class": "Bus",
             "name": "SANMATEO",
             "init": {
                 "Vr": 0.9896506407883032,
@@ -1187,7 +1189,7 @@
         },
         {
             "number": 3104,
-            "class": "bus",
+            "class": "Bus",
             "name": "MARTIN",
             "init": {
                 "Vr": 0.966012119171973,
@@ -1201,7 +1203,7 @@
         },
         {
             "number": 3105,
-            "class": "bus",
+            "class": "Bus",
             "name": "POTRERO",
             "init": {
                 "Vr": 0.9798837604121561,
@@ -1215,7 +1217,7 @@
         },
         {
             "number": 3133,
-            "class": "bus",
+            "class": "Bus",
             "name": "SANMATEO",
             "init": {
                 "Vr": 0.9896001687756142,
@@ -1229,7 +1231,7 @@
         },
         {
             "number": 3135,
-            "class": "bus",
+            "class": "Bus",
             "name": "POTRERO",
             "init": {
                 "Vr": 0.9805210974851748,
@@ -1243,7 +1245,7 @@
         },
         {
             "number": 3201,
-            "class": "bus",
+            "class": "Bus",
             "name": "C.COSTA",
             "init": {
                 "Vr": 1.0004020002639695,
@@ -1257,7 +1259,7 @@
         },
         {
             "number": 3202,
-            "class": "bus",
+            "class": "Bus",
             "name": "MORAGA",
             "init": {
                 "Vr": 0.9996931986521757,
@@ -1271,7 +1273,7 @@
         },
         {
             "number": 3203,
-            "class": "bus",
+            "class": "Bus",
             "name": "NEWARK",
             "init": {
                 "Vr": 0.997821672298632,
@@ -1285,7 +1287,7 @@
         },
         {
             "number": 3204,
-            "class": "bus",
+            "class": "Bus",
             "name": "PITSBURG",
             "init": {
                 "Vr": 1.0099970428966683,
@@ -1299,7 +1301,7 @@
         },
         {
             "number": 3205,
-            "class": "bus",
+            "class": "Bus",
             "name": "SOBRANTE",
             "init": {
                 "Vr": 0.9998394737339775,
@@ -1313,7 +1315,7 @@
         },
         {
             "number": 3234,
-            "class": "bus",
+            "class": "Bus",
             "name": "PITSBURG",
             "init": {
                 "Vr": 1.0118280166590294,
@@ -1327,7 +1329,7 @@
         },
         {
             "number": 3301,
-            "class": "bus",
+            "class": "Bus",
             "name": "METCALF",
             "init": {
                 "Vr": 1.0078525781046732,
@@ -1341,7 +1343,7 @@
         },
         {
             "number": 3302,
-            "class": "bus",
+            "class": "Bus",
             "name": "JEFFERSN",
             "init": {
                 "Vr": 0.9754762000923262,
@@ -1355,7 +1357,7 @@
         },
         {
             "number": 3303,
-            "class": "bus",
+            "class": "Bus",
             "name": "METCALF",
             "init": {
                 "Vr": 0.9954176615916132,
@@ -1369,7 +1371,7 @@
         },
         {
             "number": 3304,
-            "class": "bus",
+            "class": "Bus",
             "name": "MONTAVIS",
             "init": {
                 "Vr": 0.9823729914843256,
@@ -1383,7 +1385,7 @@
         },
         {
             "number": 3305,
-            "class": "bus",
+            "class": "Bus",
             "name": "RAVENSWD",
             "init": {
                 "Vr": 0.9914663871855712,
@@ -1397,7 +1399,7 @@
         },
         {
             "number": 3333,
-            "class": "bus",
+            "class": "Bus",
             "name": "METCALF",
             "init": {
                 "Vr": 0.9966023945451874,
@@ -1411,7 +1413,7 @@
         },
         {
             "number": 3401,
-            "class": "bus",
+            "class": "Bus",
             "name": "GREGG",
             "init": {
                 "Vr": 0.9385106763063653,
@@ -1425,7 +1427,7 @@
         },
         {
             "number": 3402,
-            "class": "bus",
+            "class": "Bus",
             "name": "HELMS PP",
             "init": {
                 "Vr": 0.940525362113976,
@@ -1439,7 +1441,7 @@
         },
         {
             "number": 3403,
-            "class": "bus",
+            "class": "Bus",
             "name": "MC CALL",
             "init": {
                 "Vr": 0.9996320493015209,
@@ -1453,7 +1455,7 @@
         },
         {
             "number": 3404,
-            "class": "bus",
+            "class": "Bus",
             "name": "PANOCHE",
             "init": {
                 "Vr": 0.977058716366943,
@@ -1467,7 +1469,7 @@
         },
         {
             "number": 3405,
-            "class": "bus",
+            "class": "Bus",
             "name": "WILSON",
             "init": {
                 "Vr": 0.9267027581428218,
@@ -1481,7 +1483,7 @@
         },
         {
             "number": 3432,
-            "class": "bus",
+            "class": "Bus",
             "name": "HELMS PP",
             "init": {
                 "Vr": 0.940525362113976,
@@ -1495,7 +1497,7 @@
         },
         {
             "number": 3433,
-            "class": "bus",
+            "class": "Bus",
             "name": "MC CALL",
             "init": {
                 "Vr": 1.000018305257258,
@@ -1509,7 +1511,7 @@
         },
         {
             "number": 3501,
-            "class": "bus",
+            "class": "Bus",
             "name": "FULTON",
             "init": {
                 "Vr": 0.9996057072629682,
@@ -1523,7 +1525,7 @@
         },
         {
             "number": 3531,
-            "class": "bus",
+            "class": "Bus",
             "name": "FULTON",
             "init": {
                 "Vr": 0.9997975637408305,
@@ -1537,7 +1539,7 @@
         },
         {
             "number": 3601,
-            "class": "bus",
+            "class": "Bus",
             "name": "HUMBOLDT",
             "init": {
                 "Vr": 1.0125718786784759,
@@ -1551,7 +1553,7 @@
         },
         {
             "number": 3631,
-            "class": "bus",
+            "class": "Bus",
             "name": "HUMBOLDT",
             "init": {
                 "Vr": 1.012373248318211,
@@ -1565,7 +1567,7 @@
         },
         {
             "number": 3701,
-            "class": "bus",
+            "class": "Bus",
             "name": "SUMMIT",
             "init": {
                 "Vr": 0.9414776476282241,
@@ -1579,7 +1581,7 @@
         },
         {
             "number": 3731,
-            "class": "bus",
+            "class": "Bus",
             "name": "SUMMIT",
             "init": {
                 "Vr": 0.9413043872984699,
@@ -1593,7 +1595,7 @@
         },
         {
             "number": 3801,
-            "class": "bus",
+            "class": "Bus",
             "name": "DIABLO",
             "init": {
                 "Vr": 1.0489927570535271,
@@ -1607,7 +1609,7 @@
         },
         {
             "number": 3802,
-            "class": "bus",
+            "class": "Bus",
             "name": "GATES",
             "init": {
                 "Vr": 1.0318510687118039,
@@ -1621,7 +1623,7 @@
         },
         {
             "number": 3803,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDWAY",
             "init": {
                 "Vr": 1.0380724489642617,
@@ -1635,7 +1637,7 @@
         },
         {
             "number": 3804,
-            "class": "bus",
+            "class": "Bus",
             "name": "GATES",
             "init": {
                 "Vr": 0.9945631732828706,
@@ -1649,7 +1651,7 @@
         },
         {
             "number": 3805,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDWAY",
             "init": {
                 "Vr": 1.0279899525424085,
@@ -1663,7 +1665,7 @@
         },
         {
             "number": 3806,
-            "class": "bus",
+            "class": "Bus",
             "name": "MORROBAY",
             "init": {
                 "Vr": 1.0170550686812594,
@@ -1677,7 +1679,7 @@
         },
         {
             "number": 3831,
-            "class": "bus",
+            "class": "Bus",
             "name": "DIABLO1",
             "init": {
                 "Vr": 1.0486659020632656,
@@ -1691,7 +1693,7 @@
         },
         {
             "number": 3835,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDWAY",
             "init": {
                 "Vr": 1.0284764086876332,
@@ -1705,7 +1707,7 @@
         },
         {
             "number": 3836,
-            "class": "bus",
+            "class": "Bus",
             "name": "MORROBAY",
             "init": {
                 "Vr": 1.0172172040369767,
@@ -1719,7 +1721,7 @@
         },
         {
             "number": 3891,
-            "class": "bus",
+            "class": "Bus",
             "name": "GATES1",
             "init": {
                 "Vr": 1.0384532135976612,
@@ -1733,7 +1735,7 @@
         },
         {
             "number": 3892,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDWAY1",
             "init": {
                 "Vr": 1.0362785350581156,
@@ -1747,7 +1749,7 @@
         },
         {
             "number": 3893,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDWAY2",
             "init": {
                 "Vr": 1.0063510208297626,
@@ -1761,7 +1763,7 @@
         },
         {
             "number": 3894,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDWAY3",
             "init": {
                 "Vr": 1.0361387813136547,
@@ -1775,7 +1777,7 @@
         },
         {
             "number": 3895,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDWAY4",
             "init": {
                 "Vr": 1.0064556735070977,
@@ -1789,7 +1791,7 @@
         },
         {
             "number": 3896,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDWAY5",
             "init": {
                 "Vr": 1.0367171098759727,
@@ -1803,7 +1805,7 @@
         },
         {
             "number": 3897,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDWAY6",
             "init": {
                 "Vr": 1.008975900594003,
@@ -1817,7 +1819,7 @@
         },
         {
             "number": 3901,
-            "class": "bus",
+            "class": "Bus",
             "name": "LOSBANOS",
             "init": {
                 "Vr": 1.0242087734225898,
@@ -1831,7 +1833,7 @@
         },
         {
             "number": 3902,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOSSLAND",
             "init": {
                 "Vr": 0.9992115471789931,
@@ -1845,7 +1847,7 @@
         },
         {
             "number": 3903,
-            "class": "bus",
+            "class": "Bus",
             "name": "TESLA",
             "init": {
                 "Vr": 1.0302299886192652,
@@ -1859,7 +1861,7 @@
         },
         {
             "number": 3904,
-            "class": "bus",
+            "class": "Bus",
             "name": "VACA-DIX",
             "init": {
                 "Vr": 1.0294245545129779,
@@ -1873,7 +1875,7 @@
         },
         {
             "number": 3905,
-            "class": "bus",
+            "class": "Bus",
             "name": "TABLE MT",
             "init": {
                 "Vr": 1.0430836110243549,
@@ -1887,7 +1889,7 @@
         },
         {
             "number": 3906,
-            "class": "bus",
+            "class": "Bus",
             "name": "ROUND MT",
             "init": {
                 "Vr": 1.064933267977804,
@@ -1901,7 +1903,7 @@
         },
         {
             "number": 3907,
-            "class": "bus",
+            "class": "Bus",
             "name": "BELLOTA",
             "init": {
                 "Vr": 0.941851965966272,
@@ -1915,7 +1917,7 @@
         },
         {
             "number": 3908,
-            "class": "bus",
+            "class": "Bus",
             "name": "BRIGHTON",
             "init": {
                 "Vr": 0.9344874641880455,
@@ -1929,7 +1931,7 @@
         },
         {
             "number": 3909,
-            "class": "bus",
+            "class": "Bus",
             "name": "COLGATE",
             "init": {
                 "Vr": 0.9402903253932633,
@@ -1943,7 +1945,7 @@
         },
         {
             "number": 3910,
-            "class": "bus",
+            "class": "Bus",
             "name": "CORTINA",
             "init": {
                 "Vr": 0.9544597331917197,
@@ -1957,7 +1959,7 @@
         },
         {
             "number": 3911,
-            "class": "bus",
+            "class": "Bus",
             "name": "COTWDPGE",
             "init": {
                 "Vr": 1.0402970108674507,
@@ -1971,7 +1973,7 @@
         },
         {
             "number": 3912,
-            "class": "bus",
+            "class": "Bus",
             "name": "GLENN",
             "init": {
                 "Vr": 1.0082822777162115,
@@ -1985,7 +1987,7 @@
         },
         {
             "number": 3913,
-            "class": "bus",
+            "class": "Bus",
             "name": "GOLDHILL",
             "init": {
                 "Vr": 0.9637646735261063,
@@ -1999,7 +2001,7 @@
         },
         {
             "number": 3914,
-            "class": "bus",
+            "class": "Bus",
             "name": "IGNACIO",
             "init": {
                 "Vr": 0.9906614183700735,
@@ -2013,7 +2015,7 @@
         },
         {
             "number": 3915,
-            "class": "bus",
+            "class": "Bus",
             "name": "LAKEVILE",
             "init": {
                 "Vr": 0.9952684608450031,
@@ -2027,7 +2029,7 @@
         },
         {
             "number": 3916,
-            "class": "bus",
+            "class": "Bus",
             "name": "LOGAN CR",
             "init": {
                 "Vr": 1.0067546253478934,
@@ -2041,7 +2043,7 @@
         },
         {
             "number": 3917,
-            "class": "bus",
+            "class": "Bus",
             "name": "LOSBANOS",
             "init": {
                 "Vr": 0.9994134712276752,
@@ -2055,7 +2057,7 @@
         },
         {
             "number": 3918,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOSSLAND",
             "init": {
                 "Vr": 0.9883262088268351,
@@ -2069,7 +2071,7 @@
         },
         {
             "number": 3919,
-            "class": "bus",
+            "class": "Bus",
             "name": "PALERMO",
             "init": {
                 "Vr": 0.9550547035686098,
@@ -2083,7 +2085,7 @@
         },
         {
             "number": 3920,
-            "class": "bus",
+            "class": "Bus",
             "name": "RIO OSO",
             "init": {
                 "Vr": 0.9503777078193959,
@@ -2097,7 +2099,7 @@
         },
         {
             "number": 3921,
-            "class": "bus",
+            "class": "Bus",
             "name": "ROUND MT",
             "init": {
                 "Vr": 1.0696441340161758,
@@ -2111,7 +2113,7 @@
         },
         {
             "number": 3922,
-            "class": "bus",
+            "class": "Bus",
             "name": "TABLE MT",
             "init": {
                 "Vr": 0.9912487763628958,
@@ -2125,7 +2127,7 @@
         },
         {
             "number": 3923,
-            "class": "bus",
+            "class": "Bus",
             "name": "TESLA",
             "init": {
                 "Vr": 1.0174439240600766,
@@ -2139,7 +2141,7 @@
         },
         {
             "number": 3924,
-            "class": "bus",
+            "class": "Bus",
             "name": "VACA-DIX",
             "init": {
                 "Vr": 1.0049008159106407,
@@ -2153,7 +2155,7 @@
         },
         {
             "number": 3925,
-            "class": "bus",
+            "class": "Bus",
             "name": "COTWDPGE",
             "init": {
                 "Vr": 1.0272660694953977,
@@ -2167,7 +2169,7 @@
         },
         {
             "number": 3926,
-            "class": "bus",
+            "class": "Bus",
             "name": "RIO OSO",
             "init": {
                 "Vr": 0.9401758837714785,
@@ -2181,7 +2183,7 @@
         },
         {
             "number": 3931,
-            "class": "bus",
+            "class": "Bus",
             "name": "ROUND MT",
             "init": {
                 "Vr": 1.0701051072572718,
@@ -2195,7 +2197,7 @@
         },
         {
             "number": 3932,
-            "class": "bus",
+            "class": "Bus",
             "name": "MOSSLAND",
             "init": {
                 "Vr": 0.9982215271217232,
@@ -2209,7 +2211,7 @@
         },
         {
             "number": 3933,
-            "class": "bus",
+            "class": "Bus",
             "name": "TESLA",
             "init": {
                 "Vr": 1.0199999809265137,
@@ -2223,7 +2225,7 @@
         },
         {
             "number": 4001,
-            "class": "bus",
+            "class": "Bus",
             "name": "MALIN",
             "init": {
                 "Vr": 1.0741622851771058,
@@ -2237,7 +2239,7 @@
         },
         {
             "number": 4002,
-            "class": "bus",
+            "class": "Bus",
             "name": "SUMMER L",
             "init": {
                 "Vr": 1.1117677023694128,
@@ -2251,7 +2253,7 @@
         },
         {
             "number": 4003,
-            "class": "bus",
+            "class": "Bus",
             "name": "BURNS",
             "init": {
                 "Vr": 1.125665205763732,
@@ -2265,7 +2267,7 @@
         },
         {
             "number": 4004,
-            "class": "bus",
+            "class": "Bus",
             "name": "GRIZZLY",
             "init": {
                 "Vr": 1.0957812146604506,
@@ -2279,7 +2281,7 @@
         },
         {
             "number": 4005,
-            "class": "bus",
+            "class": "Bus",
             "name": "JOHN DAY",
             "init": {
                 "Vr": 1.0752484647575837,
@@ -2293,7 +2295,7 @@
         },
         {
             "number": 4006,
-            "class": "bus",
+            "class": "Bus",
             "name": "BIG EDDY",
             "init": {
                 "Vr": 1.0627128291750094,
@@ -2307,7 +2309,7 @@
         },
         {
             "number": 4007,
-            "class": "bus",
+            "class": "Bus",
             "name": "CELILOCA",
             "init": {
                 "Vr": 1.0622045208946733,
@@ -2321,7 +2323,7 @@
         },
         {
             "number": 4008,
-            "class": "bus",
+            "class": "Bus",
             "name": "MALIN",
             "init": {
                 "Vr": 1.0692418779487243,
@@ -2335,7 +2337,7 @@
         },
         {
             "number": 4009,
-            "class": "bus",
+            "class": "Bus",
             "name": "BIG EDDY",
             "init": {
                 "Vr": 1.0584367491548898,
@@ -2349,7 +2351,7 @@
         },
         {
             "number": 4010,
-            "class": "bus",
+            "class": "Bus",
             "name": "CELILO",
             "init": {
                 "Vr": 1.0562579539373358,
@@ -2363,7 +2365,7 @@
         },
         {
             "number": 4031,
-            "class": "bus",
+            "class": "Bus",
             "name": "MALIN",
             "init": {
                 "Vr": 1.0717490395344864,
@@ -2377,7 +2379,7 @@
         },
         {
             "number": 4035,
-            "class": "bus",
+            "class": "Bus",
             "name": "JOHN DAY",
             "init": {
                 "Vr": 1.0738706270108667,
@@ -2391,7 +2393,7 @@
         },
         {
             "number": 4039,
-            "class": "bus",
+            "class": "Bus",
             "name": "DALLES21",
             "init": {
                 "Vr": 1.0643068861369407,
@@ -2405,7 +2407,7 @@
         },
         {
             "number": 4090,
-            "class": "bus",
+            "class": "Bus",
             "name": "MALIN1",
             "init": {
                 "Vr": 1.107927005657545,
@@ -2419,7 +2421,7 @@
         },
         {
             "number": 4091,
-            "class": "bus",
+            "class": "Bus",
             "name": "GRIZZLY1",
             "init": {
                 "Vr": 1.1065342937987306,
@@ -2433,7 +2435,7 @@
         },
         {
             "number": 4092,
-            "class": "bus",
+            "class": "Bus",
             "name": "GRIZZLY2",
             "init": {
                 "Vr": 1.088171966574024,
@@ -2447,7 +2449,7 @@
         },
         {
             "number": 4093,
-            "class": "bus",
+            "class": "Bus",
             "name": "GRIZZLY3",
             "init": {
                 "Vr": 1.0863425851844155,
@@ -2461,7 +2463,7 @@
         },
         {
             "number": 4094,
-            "class": "bus",
+            "class": "Bus",
             "name": "GRIZZLY4",
             "init": {
                 "Vr": 1.100345473859454,
@@ -2475,7 +2477,7 @@
         },
         {
             "number": 4095,
-            "class": "bus",
+            "class": "Bus",
             "name": "GRIZZLY5",
             "init": {
                 "Vr": 1.0864876402426793,
@@ -2489,7 +2491,7 @@
         },
         {
             "number": 4096,
-            "class": "bus",
+            "class": "Bus",
             "name": "GRIZZLY6",
             "init": {
                 "Vr": 1.084441010567787,
@@ -2503,7 +2505,7 @@
         },
         {
             "number": 4097,
-            "class": "bus",
+            "class": "Bus",
             "name": "GRIZZLY7",
             "init": {
                 "Vr": 1.100106826657524,
@@ -2517,7 +2519,7 @@
         },
         {
             "number": 4101,
-            "class": "bus",
+            "class": "Bus",
             "name": "COULEE",
             "init": {
                 "Vr": 1.1063961479749795,
@@ -2531,7 +2533,7 @@
         },
         {
             "number": 4102,
-            "class": "bus",
+            "class": "Bus",
             "name": "HANFORD",
             "init": {
                 "Vr": 1.0933785682775603,
@@ -2545,7 +2547,7 @@
         },
         {
             "number": 4103,
-            "class": "bus",
+            "class": "Bus",
             "name": "BELL",
             "init": {
                 "Vr": 1.07849822686903,
@@ -2559,7 +2561,7 @@
         },
         {
             "number": 4104,
-            "class": "bus",
+            "class": "Bus",
             "name": "BELL",
             "init": {
                 "Vr": 1.0171706995360488,
@@ -2573,7 +2575,7 @@
         },
         {
             "number": 4131,
-            "class": "bus",
+            "class": "Bus",
             "name": "COULEE",
             "init": {
                 "Vr": 1.101449246524323,
@@ -2587,7 +2589,7 @@
         },
         {
             "number": 4132,
-            "class": "bus",
+            "class": "Bus",
             "name": "HANFORD",
             "init": {
                 "Vr": 1.0912778951059916,
@@ -2601,7 +2603,7 @@
         },
         {
             "number": 4201,
-            "class": "bus",
+            "class": "Bus",
             "name": "NORTH",
             "init": {
                 "Vr": 1.1172000284886705,
@@ -2615,7 +2617,7 @@
         },
         {
             "number": 4202,
-            "class": "bus",
+            "class": "Bus",
             "name": "WCASCADE",
             "init": {
                 "Vr": 1.0489425214153374,
@@ -2629,7 +2631,7 @@
         },
         {
             "number": 4203,
-            "class": "bus",
+            "class": "Bus",
             "name": "WILLAMET",
             "init": {
                 "Vr": 1.0085432656736182,
@@ -2643,7 +2645,7 @@
         },
         {
             "number": 4204,
-            "class": "bus",
+            "class": "Bus",
             "name": "MERIDIAN",
             "init": {
                 "Vr": 1.0521354682222321,
@@ -2657,7 +2659,7 @@
         },
         {
             "number": 4231,
-            "class": "bus",
+            "class": "Bus",
             "name": "NORTH G3",
             "init": {
                 "Vr": 1.1220740013157733,
@@ -2671,7 +2673,7 @@
         },
         {
             "number": 4232,
-            "class": "bus",
+            "class": "Bus",
             "name": "WCASCADE",
             "init": {
                 "Vr": 1.0494790604244124,
@@ -2685,7 +2687,7 @@
         },
         {
             "number": 5001,
-            "class": "bus",
+            "class": "Bus",
             "name": "CANADA",
             "init": {
                 "Vr": 1.044633378493421,
@@ -2699,7 +2701,7 @@
         },
         {
             "number": 5002,
-            "class": "bus",
+            "class": "Bus",
             "name": "CANALB",
             "init": {
                 "Vr": 1.0471190075320949,
@@ -2713,7 +2715,7 @@
         },
         {
             "number": 5003,
-            "class": "bus",
+            "class": "Bus",
             "name": "CA230TO",
             "init": {
                 "Vr": 1.036090017536494,
@@ -2727,7 +2729,7 @@
         },
         {
             "number": 5004,
-            "class": "bus",
+            "class": "Bus",
             "name": "CA230",
             "init": {
                 "Vr": 1.060371720701631,
@@ -2741,7 +2743,7 @@
         },
         {
             "number": 5031,
-            "class": "bus",
+            "class": "Bus",
             "name": "CANAD G1",
             "init": {
                 "Vr": 1.0519628321419958,
@@ -2755,7 +2757,7 @@
         },
         {
             "number": 5032,
-            "class": "bus",
+            "class": "Bus",
             "name": "CMAIN GM",
             "init": {
                 "Vr": 1.057994203253784,
@@ -2769,7 +2771,7 @@
         },
         {
             "number": 6101,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDPOINT",
             "init": {
                 "Vr": 1.035247306721843,
@@ -2783,7 +2785,7 @@
         },
         {
             "number": 6102,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDPOINT",
             "init": {
                 "Vr": 0.9869794129963294,
@@ -2797,7 +2799,7 @@
         },
         {
             "number": 6103,
-            "class": "bus",
+            "class": "Bus",
             "name": "BORAH",
             "init": {
                 "Vr": 0.9817652896086463,
@@ -2811,7 +2813,7 @@
         },
         {
             "number": 6104,
-            "class": "bus",
+            "class": "Bus",
             "name": "BORAH",
             "init": {
                 "Vr": 1.0113851718658269,
@@ -2825,7 +2827,7 @@
         },
         {
             "number": 6132,
-            "class": "bus",
+            "class": "Bus",
             "name": "MIDPOINT",
             "init": {
                 "Vr": 0.9775365161402827,
@@ -2839,7 +2841,7 @@
         },
         {
             "number": 6201,
-            "class": "bus",
+            "class": "Bus",
             "name": "COLSTRP",
             "init": {
                 "Vr": 1.0513823577640673,
@@ -2853,7 +2855,7 @@
         },
         {
             "number": 6202,
-            "class": "bus",
+            "class": "Bus",
             "name": "GARRISON",
             "init": {
                 "Vr": 1.093658511428057,
@@ -2867,7 +2869,7 @@
         },
         {
             "number": 6203,
-            "class": "bus",
+            "class": "Bus",
             "name": "COLSTRP",
             "init": {
                 "Vr": 0.999764491229505,
@@ -2881,7 +2883,7 @@
         },
         {
             "number": 6204,
-            "class": "bus",
+            "class": "Bus",
             "name": "GARRISON",
             "init": {
                 "Vr": 1.0505201536195254,
@@ -2895,7 +2897,7 @@
         },
         {
             "number": 6205,
-            "class": "bus",
+            "class": "Bus",
             "name": "MONTANA",
             "init": {
                 "Vr": 1.0233013230224504,
@@ -2909,7 +2911,7 @@
         },
         {
             "number": 6231,
-            "class": "bus",
+            "class": "Bus",
             "name": "COLSTRP",
             "init": {
                 "Vr": 1.049979958664284,
@@ -2923,7 +2925,7 @@
         },
         {
             "number": 6235,
-            "class": "bus",
+            "class": "Bus",
             "name": "MONTA G1",
             "init": {
                 "Vr": 1.0224390898248412,
@@ -2937,7 +2939,7 @@
         },
         {
             "number": 6301,
-            "class": "bus",
+            "class": "Bus",
             "name": "BRIDGER",
             "init": {
                 "Vr": 0.9777519359370199,
@@ -2951,7 +2953,7 @@
         },
         {
             "number": 6302,
-            "class": "bus",
+            "class": "Bus",
             "name": "LARAMIE",
             "init": {
                 "Vr": 0.8515618538112251,
@@ -2965,7 +2967,7 @@
         },
         {
             "number": 6303,
-            "class": "bus",
+            "class": "Bus",
             "name": "BRIDGER2",
             "init": {
                 "Vr": 0.8969294909002588,
@@ -2979,7 +2981,7 @@
         },
         {
             "number": 6304,
-            "class": "bus",
+            "class": "Bus",
             "name": "LARAMIE",
             "init": {
                 "Vr": 0.9391038107381421,
@@ -2993,7 +2995,7 @@
         },
         {
             "number": 6305,
-            "class": "bus",
+            "class": "Bus",
             "name": "NAUGHTON",
             "init": {
                 "Vr": 0.9187725144165042,
@@ -3007,7 +3009,7 @@
         },
         {
             "number": 6333,
-            "class": "bus",
+            "class": "Bus",
             "name": "BRIDGER",
             "init": {
                 "Vr": 0.8904576042351704,
@@ -3021,7 +3023,7 @@
         },
         {
             "number": 6335,
-            "class": "bus",
+            "class": "Bus",
             "name": "NAUGHT",
             "init": {
                 "Vr": 0.9151467016312164,
@@ -3035,7 +3037,7 @@
         },
         {
             "number": 6401,
-            "class": "bus",
+            "class": "Bus",
             "name": "TRACYSPP",
             "init": {
                 "Vr": 1.0128316304704426,
@@ -3049,7 +3051,7 @@
         },
         {
             "number": 6402,
-            "class": "bus",
+            "class": "Bus",
             "name": "SUMITSPP",
             "init": {
                 "Vr": 0.966812652449819,
@@ -3063,7 +3065,7 @@
         },
         {
             "number": 6403,
-            "class": "bus",
+            "class": "Bus",
             "name": "VALMY",
             "init": {
                 "Vr": 1.1073533784186766,
@@ -3077,7 +3079,7 @@
         },
         {
             "number": 6404,
-            "class": "bus",
+            "class": "Bus",
             "name": "GONDER",
             "init": {
                 "Vr": 1.0791704423576842,
@@ -3091,7 +3093,7 @@
         },
         {
             "number": 6433,
-            "class": "bus",
+            "class": "Bus",
             "name": "VALMY",
             "init": {
                 "Vr": 1.1080673530152034,
@@ -3105,7 +3107,7 @@
         },
         {
             "number": 6501,
-            "class": "bus",
+            "class": "Bus",
             "name": "BENLOMND",
             "init": {
                 "Vr": 1.0222612175527113,
@@ -3119,7 +3121,7 @@
         },
         {
             "number": 6502,
-            "class": "bus",
+            "class": "Bus",
             "name": "CAMP WIL",
             "init": {
                 "Vr": 1.0200065690105058,
@@ -3133,7 +3135,7 @@
         },
         {
             "number": 6503,
-            "class": "bus",
+            "class": "Bus",
             "name": "EMERY",
             "init": {
                 "Vr": 1.0482894541021806,
@@ -3147,7 +3149,7 @@
         },
         {
             "number": 6504,
-            "class": "bus",
+            "class": "Bus",
             "name": "MONA",
             "init": {
                 "Vr": 1.0225581126043477,
@@ -3161,7 +3163,7 @@
         },
         {
             "number": 6505,
-            "class": "bus",
+            "class": "Bus",
             "name": "PINTO",
             "init": {
                 "Vr": 1.0587525319802276,
@@ -3175,7 +3177,7 @@
         },
         {
             "number": 6506,
-            "class": "bus",
+            "class": "Bus",
             "name": "PINTO PS",
             "init": {
                 "Vr": 1.0471253161861365,
@@ -3189,7 +3191,7 @@
         },
         {
             "number": 6507,
-            "class": "bus",
+            "class": "Bus",
             "name": "SIGURD",
             "init": {
                 "Vr": 1.0513530573285206,
@@ -3203,7 +3205,7 @@
         },
         {
             "number": 6508,
-            "class": "bus",
+            "class": "Bus",
             "name": "SPAN FRK",
             "init": {
                 "Vr": 1.0278770168183777,
@@ -3217,7 +3219,7 @@
         },
         {
             "number": 6509,
-            "class": "bus",
+            "class": "Bus",
             "name": "TERMINAL",
             "init": {
                 "Vr": 1.0207603288880465,
@@ -3231,7 +3233,7 @@
         },
         {
             "number": 6510,
-            "class": "bus",
+            "class": "Bus",
             "name": "BENLOMND",
             "init": {
                 "Vr": 0.9885392998727536,
@@ -3245,7 +3247,7 @@
         },
         {
             "number": 6533,
-            "class": "bus",
+            "class": "Bus",
             "name": "EMERY",
             "init": {
                 "Vr": 1.0468199407967484,
@@ -3259,7 +3261,7 @@
         },
         {
             "number": 7001,
-            "class": "bus",
+            "class": "Bus",
             "name": "COLOEAST",
             "init": {
                 "Vr": 0.8475933578231597,
@@ -3273,7 +3275,7 @@
         },
         {
             "number": 7002,
-            "class": "bus",
+            "class": "Bus",
             "name": "CRAIG",
             "init": {
                 "Vr": 0.8731966002522802,
@@ -3287,7 +3289,7 @@
         },
         {
             "number": 7031,
-            "class": "bus",
+            "class": "Bus",
             "name": "COLOEAST",
             "init": {
                 "Vr": 0.8649863113272928,
@@ -3301,7 +3303,7 @@
         },
         {
             "number": 7032,
-            "class": "bus",
+            "class": "Bus",
             "name": "CRAIG",
             "init": {
                 "Vr": 0.8802883650638654,
@@ -3315,7 +3317,7 @@
         },
         {
             "number": 8001,
-            "class": "bus",
+            "class": "Bus",
             "name": "OLINDA",
             "init": {
                 "Vr": 1.0588410693269101,
@@ -3329,7 +3331,7 @@
         },
         {
             "number": 8002,
-            "class": "bus",
+            "class": "Bus",
             "name": "TRACY",
             "init": {
                 "Vr": 1.0324629905380864,
@@ -3343,7 +3345,7 @@
         },
         {
             "number": 8003,
-            "class": "bus",
+            "class": "Bus",
             "name": "COTWDWAP",
             "init": {
                 "Vr": 1.0729949831527752,
@@ -3357,7 +3359,7 @@
         },
         {
             "number": 8004,
-            "class": "bus",
+            "class": "Bus",
             "name": "RNCHSECO",
             "init": {
                 "Vr": 0.9790789203521542,
@@ -3371,7 +3373,7 @@
         },
         {
             "number": 8005,
-            "class": "bus",
+            "class": "Bus",
             "name": "TRACYPMP",
             "init": {
                 "Vr": 0.9755708179875415,
@@ -3385,7 +3387,7 @@
         },
         {
             "number": 8033,
-            "class": "bus",
+            "class": "Bus",
             "name": "COTWDWAP",
             "init": {
                 "Vr": 1.074508137859625,
@@ -3399,7 +3401,7 @@
         },
         {
             "number": 8034,
-            "class": "bus",
+            "class": "Bus",
             "name": "RNCHSECO",
             "init": {
                 "Vr": 0.9845748440903827,
