@@ -70,6 +70,14 @@ namespace GridKit
         MAXIMUM  ///< Number of external variables
       };
 
+      /**
+       * @class Repca
+       * @brief WECC renewable plant controller with reactive-power and
+       *        active-power control paths.
+       *
+       * @tparam scalar_type Plain real or differentiable scalar type.
+       * @tparam index_type Integer index type.
+       */
       template <typename scalar_type, typename index_type>
       class Repca : public Component<scalar_type, index_type>
       {
@@ -201,7 +209,7 @@ namespace GridKit
         RealT Tlag_{static_cast<RealT>(3.0)};
 
         IdxT  parameter_error_count_{0};
-        RealT va_converter_base_{ZERO<RealT>};
+        RealT va_component_base_{ZERO<RealT>};
         RealT vcomp_on_{ONE<RealT>};
         RealT vcomp_off_{ZERO<RealT>};
         RealT ref_on_{ONE<RealT>};

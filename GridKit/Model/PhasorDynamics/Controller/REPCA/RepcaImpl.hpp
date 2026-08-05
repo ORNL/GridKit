@@ -26,15 +26,6 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @class Repca
-       * @brief WECC renewable plant controller with reactive-power and
-       *        active-power control paths.
-       *
-       * @tparam scalar_type Plain real or differentiable scalar type.
-       * @tparam index_type Integer index type.
-       */
-
-      /**
        * @brief Construct REPCA with its documented parameter defaults
        *
        * The regulated bus is retained, the model is sized, and every
@@ -98,9 +89,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::allocate()
       {
-        using I = RepcaInternalVariables;
-        using E = RepcaExternalVariables;
-
         if (!allocated_)
         {
           this->allocateVectors(size_);
@@ -113,7 +101,7 @@ namespace GridKit
 
         wb_.assign(2, ScalarT{0});
 
-        const auto signal_size = index(E::MAXIMUM);
+        const auto signal_size = index(RepcaExternalVariables::MAXIMUM);
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -128,15 +116,15 @@ namespace GridKit
         if (signals_.template isAssigned<RepcaInternalVariables::QEXT>())
         {
           signals_.template getSignalNode<RepcaInternalVariables::QEXT>()->set(
-              &y[index(I::QEXT)],
-              &(this->getVariableIndex(static_cast<IdxT>(index(I::QEXT)))));
+              &y[index(RepcaInternalVariables::QEXT)],
+              &(this->getVariableIndex(static_cast<IdxT>(index(RepcaInternalVariables::QEXT)))));
         }
 
         if (signals_.template isAssigned<RepcaInternalVariables::PEXT>())
         {
           signals_.template getSignalNode<RepcaInternalVariables::PEXT>()->set(
-              &y[index(I::PEXT)],
-              &(this->getVariableIndex(static_cast<IdxT>(index(I::PEXT)))));
+              &y[index(RepcaInternalVariables::PEXT)],
+              &(this->getVariableIndex(static_cast<IdxT>(index(RepcaInternalVariables::PEXT)))));
         }
 
         allocated_ = true;
@@ -169,24 +157,24 @@ namespace GridKit
 
         check(bus_ != nullptr, "regulated bus is required");
 
-        const bool valid_converter_base = std::isfinite(mva_base_)
+        const bool valid_component_base = std::isfinite(mva_base_)
                                           && mva_base_ > ZERO<RealT>
-                                          && std::isfinite(va_converter_base_)
-                                          && va_converter_base_ > ZERO<RealT>;
+                                          && std::isfinite(va_component_base_)
+                                          && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
                                        && va_system_base_ > ZERO<RealT>;
-        check(valid_converter_base,
-              "mva must define a finite positive converter power base");
+        check(valid_component_base,
+              "mva must define a finite positive component power base");
         check(valid_system_base, "system power base must be finite and positive");
-        if (valid_converter_base && valid_system_base)
+        if (valid_component_base && valid_system_base)
         {
-          const RealT system_to_converter = va_system_base_ / va_converter_base_;
-          const RealT converter_to_system = va_converter_base_ / va_system_base_;
-          check(std::isfinite(system_to_converter)
-                    && system_to_converter > ZERO<RealT>
-                    && std::isfinite(converter_to_system)
-                    && converter_to_system > ZERO<RealT>,
-                "system/converter power-base conversion ratios must be finite and positive");
+          const RealT system_to_component = va_system_base_ / va_component_base_;
+          const RealT component_to_system = va_component_base_ / va_system_base_;
+          check(std::isfinite(system_to_component)
+                    && system_to_component > ZERO<RealT>
+                    && std::isfinite(component_to_system)
+                    && component_to_system > ZERO<RealT>,
+                "system/component power-base conversion ratios must be finite and positive");
         }
 
         check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
@@ -261,8 +249,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::initialize()
       {
-        using I = RepcaInternalVariables;
-
         if (!allocated_)
         {
           Log::error() << "Repca: allocate must complete before initialize\n";
@@ -277,8 +263,8 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        const ScalarT qext0_system = y[index(I::QEXT)];
-        const ScalarT pext0_system = y[index(I::PEXT)];
+        const ScalarT qext0_system = y[index(RepcaInternalVariables::QEXT)];
+        const ScalarT pext0_system = y[index(RepcaInternalVariables::PEXT)];
         const ScalarT qext0        = toComponentBase(qext0_system);
         const ScalarT pext0        = toComponentBase(pext0_system);
 
@@ -426,28 +412,28 @@ namespace GridKit
           return 1;
         }
 
-        y[index(I::VMEAS)]  = vmeas0;
-        y[index(I::QMEAS)]  = qmeas0;
-        y[index(I::XQPI)]   = xqpi0;
-        y[index(I::XQLAG)]  = xqlag0;
-        y[index(I::PMEAS)]  = pmeas0;
-        y[index(I::XPPI)]   = xppi0;
-        y[index(I::PREF)]   = pref0;
-        y[index(I::V)]      = v0;
-        y[index(I::VLDC)]   = vldc0;
-        y[index(I::VDROOP)] = vdroop0;
-        y[index(I::VCTRL)]  = vctrl0;
-        y[index(I::SFRZ)]   = sfrz0;
-        y[index(I::ERQ)]    = erq0;
-        y[index(I::ERQDB)]  = erqdb0;
-        y[index(I::ERQLIM)] = erqlim0;
-        y[index(I::QPI)]    = qpi0;
-        y[index(I::QEXT)]   = qext0_system;
-        y[index(I::EF)]     = ef0;
-        y[index(I::EP)]     = ep0;
-        y[index(I::EPLIM)]  = eplim0;
-        y[index(I::PPI)]    = ppi0;
-        y[index(I::PEXT)]   = pext_output0;
+        y[index(RepcaInternalVariables::VMEAS)]  = vmeas0;
+        y[index(RepcaInternalVariables::QMEAS)]  = qmeas0;
+        y[index(RepcaInternalVariables::XQPI)]   = xqpi0;
+        y[index(RepcaInternalVariables::XQLAG)]  = xqlag0;
+        y[index(RepcaInternalVariables::PMEAS)]  = pmeas0;
+        y[index(RepcaInternalVariables::XPPI)]   = xppi0;
+        y[index(RepcaInternalVariables::PREF)]   = pref0;
+        y[index(RepcaInternalVariables::V)]      = v0;
+        y[index(RepcaInternalVariables::VLDC)]   = vldc0;
+        y[index(RepcaInternalVariables::VDROOP)] = vdroop0;
+        y[index(RepcaInternalVariables::VCTRL)]  = vctrl0;
+        y[index(RepcaInternalVariables::SFRZ)]   = sfrz0;
+        y[index(RepcaInternalVariables::ERQ)]    = erq0;
+        y[index(RepcaInternalVariables::ERQDB)]  = erqdb0;
+        y[index(RepcaInternalVariables::ERQLIM)] = erqlim0;
+        y[index(RepcaInternalVariables::QPI)]    = qpi0;
+        y[index(RepcaInternalVariables::QEXT)]   = qext0_system;
+        y[index(RepcaInternalVariables::EF)]     = ef0;
+        y[index(RepcaInternalVariables::EP)]     = ep0;
+        y[index(RepcaInternalVariables::EPLIM)]  = eplim0;
+        y[index(RepcaInternalVariables::PPI)]    = ppi0;
+        y[index(RepcaInternalVariables::PEXT)]   = pext_output0;
 
         freqref_set_ = freqref0;
         vref_set_    = vref0;
@@ -488,16 +474,14 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::tagDifferentiable()
       {
-        using I = RepcaInternalVariables;
-
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[index(I::VMEAS)] = true;
-        tag_[index(I::QMEAS)] = true;
-        tag_[index(I::XQPI)]  = true;
-        tag_[index(I::XQLAG)] = true;
-        tag_[index(I::PMEAS)] = true;
-        tag_[index(I::XPPI)]  = true;
-        tag_[index(I::PREF)]  = true;
+        tag_[index(RepcaInternalVariables::VMEAS)] = true;
+        tag_[index(RepcaInternalVariables::QMEAS)] = true;
+        tag_[index(RepcaInternalVariables::XQPI)]  = true;
+        tag_[index(RepcaInternalVariables::XQLAG)] = true;
+        tag_[index(RepcaInternalVariables::PMEAS)] = true;
+        tag_[index(RepcaInternalVariables::XPPI)]  = true;
+        tag_[index(RepcaInternalVariables::PREF)]  = true;
         return 0;
       }
 
@@ -527,61 +511,59 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::evaluateResidual()
       {
-        using E = RepcaExternalVariables;
-
-        ws_[index(E::VREF)]    = vref_set_;
-        ws_[index(E::PREF)]    = pref_set_;
-        ws_[index(E::QREF)]    = qref_set_;
-        ws_[index(E::FREQREF)] = freqref_set_;
+        ws_[index(RepcaExternalVariables::VREF)]    = vref_set_;
+        ws_[index(RepcaExternalVariables::PREF)]    = pref_set_;
+        ws_[index(RepcaExternalVariables::QREF)]    = qref_set_;
+        ws_[index(RepcaExternalVariables::FREQREF)] = freqref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        ws_[index(E::IR)] =
+        ws_[index(RepcaExternalVariables::IR)] =
             signals_.template readExternalVariable<RepcaExternalVariables::IR>();
-        ws_indices_[index(E::IR)] =
+        ws_indices_[index(RepcaExternalVariables::IR)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::IR>();
-        ws_[index(E::II)] =
+        ws_[index(RepcaExternalVariables::II)] =
             signals_.template readExternalVariable<RepcaExternalVariables::II>();
-        ws_indices_[index(E::II)] =
+        ws_indices_[index(RepcaExternalVariables::II)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::II>();
-        ws_[index(E::P)] =
+        ws_[index(RepcaExternalVariables::P)] =
             signals_.template readExternalVariable<RepcaExternalVariables::P>();
-        ws_indices_[index(E::P)] =
+        ws_indices_[index(RepcaExternalVariables::P)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::P>();
-        ws_[index(E::Q)] =
+        ws_[index(RepcaExternalVariables::Q)] =
             signals_.template readExternalVariable<RepcaExternalVariables::Q>();
-        ws_indices_[index(E::Q)] =
+        ws_indices_[index(RepcaExternalVariables::Q)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::Q>();
-        ws_[index(E::FREQ)] =
+        ws_[index(RepcaExternalVariables::FREQ)] =
             signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
-        ws_indices_[index(E::FREQ)] =
+        ws_indices_[index(RepcaExternalVariables::FREQ)] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQ>();
 
         if (signals_.template isAttached<RepcaExternalVariables::VREF>())
         {
-          ws_[index(E::VREF)] =
+          ws_[index(RepcaExternalVariables::VREF)] =
               signals_.template readExternalVariable<RepcaExternalVariables::VREF>();
-          ws_indices_[index(E::VREF)] =
+          ws_indices_[index(RepcaExternalVariables::VREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::VREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::PREF>())
         {
-          ws_[index(E::PREF)] =
+          ws_[index(RepcaExternalVariables::PREF)] =
               signals_.template readExternalVariable<RepcaExternalVariables::PREF>();
-          ws_indices_[index(E::PREF)] =
+          ws_indices_[index(RepcaExternalVariables::PREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::PREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::QREF>())
         {
-          ws_[index(E::QREF)] =
+          ws_[index(RepcaExternalVariables::QREF)] =
               signals_.template readExternalVariable<RepcaExternalVariables::QREF>();
-          ws_indices_[index(E::QREF)] =
+          ws_indices_[index(RepcaExternalVariables::QREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::QREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
         {
-          ws_[index(E::FREQREF)] =
+          ws_[index(RepcaExternalVariables::FREQREF)] =
               signals_.template readExternalVariable<RepcaExternalVariables::FREQREF>();
-          ws_indices_[index(E::FREQREF)] =
+          ws_indices_[index(RepcaExternalVariables::FREQREF)] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQREF>();
         }
 
@@ -636,7 +618,8 @@ namespace GridKit
        * @param[in] yp Internal derivatives in the same enum order and bases.
        * @param[in] wb Regulated-bus real and imaginary voltage components.
        * @param[in] ws External signals in `RepcaExternalVariables` order.
-       * @param[out] f Model-owned residuals in `RepcaInternalVariables` order.
+       * @param[out] f Caller-provided residual output buffer in
+       *               `RepcaInternalVariables` order.
        */
       template <typename scalar_type, typename index_type>
       [[gnu::always_inline]] inline int
@@ -647,81 +630,78 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
-        using I = RepcaInternalVariables;
-        using E = RepcaExternalVariables;
+        const ScalarT vmeas  = y[index(RepcaInternalVariables::VMEAS)];
+        const ScalarT qmeas  = y[index(RepcaInternalVariables::QMEAS)];
+        const ScalarT xqpi   = y[index(RepcaInternalVariables::XQPI)];
+        const ScalarT xqlag  = y[index(RepcaInternalVariables::XQLAG)];
+        const ScalarT pmeas  = y[index(RepcaInternalVariables::PMEAS)];
+        const ScalarT xppi   = y[index(RepcaInternalVariables::XPPI)];
+        const ScalarT pref   = y[index(RepcaInternalVariables::PREF)];
+        const ScalarT v      = y[index(RepcaInternalVariables::V)];
+        const ScalarT vldc   = y[index(RepcaInternalVariables::VLDC)];
+        const ScalarT vdroop = y[index(RepcaInternalVariables::VDROOP)];
+        const ScalarT vctrl  = y[index(RepcaInternalVariables::VCTRL)];
+        const ScalarT sfrz   = y[index(RepcaInternalVariables::SFRZ)];
+        const ScalarT erq    = y[index(RepcaInternalVariables::ERQ)];
+        const ScalarT erqdb  = y[index(RepcaInternalVariables::ERQDB)];
+        const ScalarT erqlim = y[index(RepcaInternalVariables::ERQLIM)];
+        const ScalarT qpi    = y[index(RepcaInternalVariables::QPI)];
+        const ScalarT qext   = toComponentBase(y[index(RepcaInternalVariables::QEXT)]);
+        const ScalarT ef     = y[index(RepcaInternalVariables::EF)];
+        const ScalarT ep     = y[index(RepcaInternalVariables::EP)];
+        const ScalarT eplim  = y[index(RepcaInternalVariables::EPLIM)];
+        const ScalarT ppi    = y[index(RepcaInternalVariables::PPI)];
+        const ScalarT pext   = toComponentBase(y[index(RepcaInternalVariables::PEXT)]);
 
-        const ScalarT vmeas  = y[index(I::VMEAS)];
-        const ScalarT qmeas  = y[index(I::QMEAS)];
-        const ScalarT xqpi   = y[index(I::XQPI)];
-        const ScalarT xqlag  = y[index(I::XQLAG)];
-        const ScalarT pmeas  = y[index(I::PMEAS)];
-        const ScalarT xppi   = y[index(I::XPPI)];
-        const ScalarT pref   = y[index(I::PREF)];
-        const ScalarT v      = y[index(I::V)];
-        const ScalarT vldc   = y[index(I::VLDC)];
-        const ScalarT vdroop = y[index(I::VDROOP)];
-        const ScalarT vctrl  = y[index(I::VCTRL)];
-        const ScalarT sfrz   = y[index(I::SFRZ)];
-        const ScalarT erq    = y[index(I::ERQ)];
-        const ScalarT erqdb  = y[index(I::ERQDB)];
-        const ScalarT erqlim = y[index(I::ERQLIM)];
-        const ScalarT qpi    = y[index(I::QPI)];
-        const ScalarT qext   = toComponentBase(y[index(I::QEXT)]);
-        const ScalarT ef     = y[index(I::EF)];
-        const ScalarT ep     = y[index(I::EP)];
-        const ScalarT eplim  = y[index(I::EPLIM)];
-        const ScalarT ppi    = y[index(I::PPI)];
-        const ScalarT pext   = toComponentBase(y[index(I::PEXT)]);
-
-        const ScalarT vmeas_dot = yp[index(I::VMEAS)];
-        const ScalarT qmeas_dot = yp[index(I::QMEAS)];
-        const ScalarT xqpi_dot  = yp[index(I::XQPI)];
-        const ScalarT xqlag_dot = yp[index(I::XQLAG)];
-        const ScalarT pmeas_dot = yp[index(I::PMEAS)];
-        const ScalarT xppi_dot  = yp[index(I::XPPI)];
-        const ScalarT pref_dot  = yp[index(I::PREF)];
+        const ScalarT vmeas_dot = yp[index(RepcaInternalVariables::VMEAS)];
+        const ScalarT qmeas_dot = yp[index(RepcaInternalVariables::QMEAS)];
+        const ScalarT xqpi_dot  = yp[index(RepcaInternalVariables::XQPI)];
+        const ScalarT xqlag_dot = yp[index(RepcaInternalVariables::XQLAG)];
+        const ScalarT pmeas_dot = yp[index(RepcaInternalVariables::PMEAS)];
+        const ScalarT xppi_dot  = yp[index(RepcaInternalVariables::XPPI)];
+        const ScalarT pref_dot  = yp[index(RepcaInternalVariables::PREF)];
 
         const ScalarT vr = wb[0];
         const ScalarT vi = wb[1];
 
-        const ScalarT ir      = ws[index(E::IR)];
-        const ScalarT ii      = ws[index(E::II)];
-        const ScalarT p       = toComponentBase(ws[index(E::P)]);
-        const ScalarT q       = toComponentBase(ws[index(E::Q)]);
-        const ScalarT freq    = ws[index(E::FREQ)];
-        const ScalarT freqref = ws[index(E::FREQREF)];
-        const ScalarT vref    = ws[index(E::VREF)];
-        const ScalarT qref    = toComponentBase(ws[index(E::QREF)]);
-        const ScalarT pref_in = toComponentBase(ws[index(E::PREF)]);
+        const ScalarT ir      = ws[index(RepcaExternalVariables::IR)];
+        const ScalarT ii      = ws[index(RepcaExternalVariables::II)];
+        const ScalarT p       = toComponentBase(ws[index(RepcaExternalVariables::P)]);
+        const ScalarT q       = toComponentBase(ws[index(RepcaExternalVariables::Q)]);
+        const ScalarT freq    = ws[index(RepcaExternalVariables::FREQ)];
+        const ScalarT freqref = ws[index(RepcaExternalVariables::FREQREF)];
+        const ScalarT vref    = ws[index(RepcaExternalVariables::VREF)];
+        const ScalarT qref    = toComponentBase(ws[index(RepcaExternalVariables::QREF)]);
+        const ScalarT pref_in = toComponentBase(ws[index(RepcaExternalVariables::PREF)]);
 
         const ScalarT vldc_r = vr - Rc_ * ir + Xc_ * ii;
         const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
         const ScalarT pfreq  = Ddn_ * Math::ramp(ef) - Dup_ * Math::ramp(-ef);
 
-        f[index(I::VMEAS)] = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
-        f[index(I::QMEAS)] = -qmeas_dot + (q - qmeas) / Tfltr_;
-        f[index(I::XQPI)]  = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
-        f[index(I::XQLAG)] = -xqlag_dot + (qpi - xqlag) / Tfv_;
-        f[index(I::PMEAS)] = -pmeas_dot + (p - pmeas) / Tp_;
-        f[index(I::XPPI)]  = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
-        f[index(I::PREF)]  = -pref_dot + (ppi - pref) / Tlag_;
+        f[index(RepcaInternalVariables::VMEAS)] = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
+        f[index(RepcaInternalVariables::QMEAS)] = -qmeas_dot + (q - qmeas) / Tfltr_;
+        f[index(RepcaInternalVariables::XQPI)]  = -xqpi_dot + sfrz * Math::antiwindup(qpi, Ki_ * erqlim, Qmin_, Qmax_);
+        f[index(RepcaInternalVariables::XQLAG)] = -xqlag_dot + (qpi - xqlag) / Tfv_;
+        f[index(RepcaInternalVariables::PMEAS)] = -pmeas_dot + (p - pmeas) / Tp_;
+        f[index(RepcaInternalVariables::XPPI)]  = -xppi_dot + Math::antiwindup(ppi, Kig_ * eplim, Pmin_, Pmax_);
+        f[index(RepcaInternalVariables::PREF)]  = -pref_dot + (ppi - pref) / Tlag_;
 
-        f[index(I::V)]      = -v * v + vr * vr + vi * vi;
-        f[index(I::VLDC)]   = -vldc * vldc + vldc_r * vldc_r + vldc_i * vldc_i;
-        f[index(I::VDROOP)] = -vdroop + v + Kc_ * q;
-        f[index(I::VCTRL)]  = -vctrl + vcomp_on_ * vldc + vcomp_off_ * vdroop;
-        f[index(I::SFRZ)]   = -sfrz + Math::above(v, Vfrz_);
-        f[index(I::ERQ)]    = -erq + ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
-        f[index(I::ERQDB)]  = -erqdb + Math::deadband2(erq, dbdlow_, dbdupper_);
-        f[index(I::ERQLIM)] = -erqlim + Math::clamp(erqdb, emin_, emax_);
-        f[index(I::QPI)]    = -qpi + Math::clamp(Kp_ * erqlim + xqpi, Qmin_, Qmax_);
-        f[index(I::QEXT)]   = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
+        f[index(RepcaInternalVariables::V)]      = -v * v + vr * vr + vi * vi;
+        f[index(RepcaInternalVariables::VLDC)]   = -vldc * vldc + vldc_r * vldc_r + vldc_i * vldc_i;
+        f[index(RepcaInternalVariables::VDROOP)] = -vdroop + v + Kc_ * q;
+        f[index(RepcaInternalVariables::VCTRL)]  = -vctrl + vcomp_on_ * vldc + vcomp_off_ * vdroop;
+        f[index(RepcaInternalVariables::SFRZ)]   = -sfrz + Math::above(v, Vfrz_);
+        f[index(RepcaInternalVariables::ERQ)]    = -erq + ref_on_ * (vref - vmeas) + ref_off_ * (qref - qmeas);
+        f[index(RepcaInternalVariables::ERQDB)]  = -erqdb + Math::deadband2(erq, dbdlow_, dbdupper_);
+        f[index(RepcaInternalVariables::ERQLIM)] = -erqlim + Math::clamp(erqdb, emin_, emax_);
+        f[index(RepcaInternalVariables::QPI)]    = -qpi + Math::clamp(Kp_ * erqlim + xqpi, Qmin_, Qmax_);
+        f[index(RepcaInternalVariables::QEXT)]   = -Tfv_ * (qext - xqlag) + Tft_ * (qpi - xqlag);
 
-        f[index(I::EF)]    = -ef + Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
-        f[index(I::EP)]    = -ep + pref_in - pmeas + pfreq;
-        f[index(I::EPLIM)] = -eplim + Math::clamp(ep, femin_, femax_);
-        f[index(I::PPI)]   = -ppi + Math::clamp(Kpg_ * eplim + xppi, Pmin_, Pmax_);
-        f[index(I::PEXT)]  = -pext + freq_on_ * pref;
+        f[index(RepcaInternalVariables::EF)]    = -ef + Math::deadband2(freqref - freq, fdbd1_, fdbd2_);
+        f[index(RepcaInternalVariables::EP)]    = -ep + pref_in - pmeas + pfreq;
+        f[index(RepcaInternalVariables::EPLIM)] = -eplim + Math::clamp(ep, femin_, femax_);
+        f[index(RepcaInternalVariables::PPI)]   = -ppi + Math::clamp(Kpg_ * eplim + xppi, Pmin_, Pmax_);
+        f[index(RepcaInternalVariables::PEXT)]  = -pext + freq_on_ * pref;
 
         return 0;
       }
@@ -841,25 +821,24 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Repca<scalar_type, index_type>::initializeMonitor()
       {
-        using I        = RepcaInternalVariables;
         using Variable = typename ModelDataT::MonitorableVariables;
 
         monitor_->set(Variable::qext, [this]
-                      { return y_.getData()[index(I::QEXT)]; });
+                      { return y_.getData()[index(RepcaInternalVariables::QEXT)]; });
         monitor_->set(Variable::pext, [this]
-                      { return y_.getData()[index(I::PEXT)]; });
+                      { return y_.getData()[index(RepcaInternalVariables::PEXT)]; });
         monitor_->set(Variable::vmeas, [this]
-                      { return y_.getData()[index(I::VMEAS)]; });
+                      { return y_.getData()[index(RepcaInternalVariables::VMEAS)]; });
         monitor_->set(Variable::qmeas, [this]
-                      { return y_.getData()[index(I::QMEAS)]; });
+                      { return y_.getData()[index(RepcaInternalVariables::QMEAS)]; });
         monitor_->set(Variable::pmeas, [this]
-                      { return y_.getData()[index(I::PMEAS)]; });
+                      { return y_.getData()[index(RepcaInternalVariables::PMEAS)]; });
       }
 
       /**
        * @brief Resolve parameter-derived constants
        *
-       * Raises the explicit controller lags in place, computes the converter
+       * Raises the explicit controller lags in place, computes the component
        * power base, and resolves selector masks.
        */
       template <typename scalar_type, typename index_type>
@@ -893,7 +872,7 @@ namespace GridKit
         Tp_    = std::max(Tp_, TIME_CONSTANT_MINIMUM);
         Tlag_  = std::max(Tlag_, TIME_CONSTANT_MINIMUM);
 
-        va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
+        va_component_base_ = mva_base_ * static_cast<RealT>(1.0e6);
 
         vcomp_on_  = VcompFlag_ ? ONE<RealT> : ZERO<RealT>;
         vcomp_off_ = ONE<RealT> - vcomp_on_;
@@ -1001,7 +980,7 @@ namespace GridKit
       [[gnu::always_inline]] inline scalar_type
       Repca<scalar_type, index_type>::toComponentBase(scalar_type value) const
       {
-        return value * (va_system_base_ / va_converter_base_);
+        return value * (va_system_base_ / va_component_base_);
       }
 
       /**
@@ -1013,7 +992,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type Repca<scalar_type, index_type>::toSystemBase(scalar_type value) const
       {
-        return value * (va_converter_base_ / va_system_base_);
+        return value * (va_component_base_ / va_system_base_);
       }
 
       /**
