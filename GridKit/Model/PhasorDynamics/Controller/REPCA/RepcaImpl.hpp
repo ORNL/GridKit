@@ -182,7 +182,6 @@ namespace GridKit
         check(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,
               "emin <= 0 <= emax is required");
         check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
-        check(Tfv_ > ZERO<RealT>, "Tfv must be positive");
         check(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
               "fdbd1 <= 0 <= fdbd2 is required");
         check(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
@@ -857,18 +856,20 @@ namespace GridKit
 
         check_non_negative(Tfltr_, "Tfltr");
         check_non_negative(Tft_, "Tft");
+        check_non_negative(Tfv_, "Tfv");
         check_non_negative(Tp_, "Tp");
         check_non_negative(Tlag_, "Tlag");
 
-        if (Tfltr_ < TIME_CONSTANT_MINIMUM || Tp_ < TIME_CONSTANT_MINIMUM
-            || Tlag_ < TIME_CONSTANT_MINIMUM)
+        if (Tfltr_ < TIME_CONSTANT_MINIMUM || Tfv_ < TIME_CONSTANT_MINIMUM
+            || Tp_ < TIME_CONSTANT_MINIMUM || Tlag_ < TIME_CONSTANT_MINIMUM)
         {
-          Log::warning() << "Repca: Tfltr, Tp, and Tlag below "
+          Log::warning() << "Repca: Tfltr, Tfv, Tp, and Tlag below "
                          << TIME_CONSTANT_MINIMUM
                          << " s are raised to that floor to keep the controller lags well posed\n";
         }
 
         Tfltr_ = std::max(Tfltr_, TIME_CONSTANT_MINIMUM);
+        Tfv_   = std::max(Tfv_, TIME_CONSTANT_MINIMUM);
         Tp_    = std::max(Tp_, TIME_CONSTANT_MINIMUM);
         Tlag_  = std::max(Tlag_, TIME_CONSTANT_MINIMUM);
 

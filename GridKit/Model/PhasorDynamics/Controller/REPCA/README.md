@@ -7,8 +7,11 @@ resources.
 
 - Fig. 1 hard nonlinearities use the linked CommonMath smooth approximations;
   transition-point values may differ.
-- The PowerWorld Governor Response Limits `Down Only` and `Fixed` modes are not
-  implemented; $P^{\min}$ and $P^{\max}$ remain static parameters.
+
+> [!WARNING]
+> GridKit does not yet apply the associated generator's Governor Response Limits
+> modes `Down Only` and `Fixed` to REPCA. The model always uses its configured
+> $P^{\min}$ and $P^{\max}$.
 
 ## Block Diagram
 
@@ -60,7 +63,6 @@ All real parameters must be finite. Invalid parameter sets are rejected by:
 ```math
 \begin{aligned}
   S^\mathrm{base} &> 0 \\
-  T_\mathrm{fv} &> 0 \\
   D_\mathrm{bd1} &\le 0 \le D_\mathrm{bd2} \\
   e^{\min} &\le 0 \le e^{\max} \\
   Q^{\min} &\le Q^{\max} \\
@@ -80,7 +82,7 @@ floor with a warning:
 
 ```math
 \begin{aligned}
-  T_x &\leftarrow \max(T_x,\epsilon_T), \quad x\in\{\mathrm{fltr},\mathrm{p},\mathrm{lag}\} \\
+  T_x &\leftarrow \max(T_x,\epsilon_T), \quad x\in\{\mathrm{fltr},\mathrm{fv},\mathrm{p},\mathrm{lag}\} \\
   s_\mathrm{comp}^\mathrm{off} &= 1 - s_\mathrm{comp} \\
   s_\mathrm{ref}^\mathrm{off} &= 1 - s_\mathrm{ref} \\
   k_\mathrm{base} &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}}
@@ -234,7 +236,7 @@ REPCA reconstructs a steady operating point; arbitrary-state restart is unsuppor
   P, Q &\leftarrow \text{branch power} \\
   f &\leftarrow \text{frequency input} \\
   Q^\mathrm{ext} &\leftarrow \text{known reactive-power command on system base} \\
-  P^\mathrm{ext} &\leftarrow \text{known active-power command on system base}, \quad s_\mathrm{freq}\ \text{enabled}.
+  P^\mathrm{ext} &\leftarrow \text{known active-power command on system base}, \quad s_\mathrm{freq}=1
 \end{aligned}
 ```
 
@@ -266,13 +268,13 @@ $z\in[\ell,u]$ within that tolerance, including the limits.
   e_P &\leftarrow 0 \\
   e_P^\mathrm{lim} &\leftarrow \text{clamp}(e_P;\,e_P^{\min},e_P^{\max}) \\
   P^\mathrm{ref} &\leftarrow \begin{cases}
-    k_\mathrm{base}P^\mathrm{ext} & s_\mathrm{freq}\ \text{enabled} \\
-    \text{clamp}(P^\mathrm{meas};\,P^{\min},P^{\max}) & s_\mathrm{freq}\ \text{disabled}
+    k_\mathrm{base}P^\mathrm{ext} & s_\mathrm{freq}=1 \\
+    \text{clamp}(P^\mathrm{meas};\,P^{\min},P^{\max}) & s_\mathrm{freq}=0
   \end{cases} \\
   P^\mathrm{PI} &\leftarrow P^\mathrm{ref} \\
   u_P^\mathrm{PI} &\leftarrow \begin{cases}
-    \text{clamp}^{-1}(P^\mathrm{PI};\,P^{\min},P^{\max}) & s_\mathrm{freq}\ \text{enabled} \\
-    P^\mathrm{meas} & s_\mathrm{freq}\ \text{disabled}
+    \text{clamp}^{-1}(P^\mathrm{PI};\,P^{\min},P^{\max}) & s_\mathrm{freq}=1 \\
+    P^\mathrm{meas} & s_\mathrm{freq}=0
   \end{cases} \\
   x_P^\mathrm{PI} &\leftarrow u_P^\mathrm{PI} - K_\mathrm{pg}e_P^\mathrm{lim} \\
   P^\mathrm{ext} &\leftarrow \dfrac{s_\mathrm{freq}}{k_\mathrm{base}}P^\mathrm{ref} \\
@@ -284,7 +286,7 @@ Initialization rejects an operating point if:
 
 - a required input or derived value is not finite;
 - $k_\mathrm{base}Q^\mathrm{ext}\notin[Q^{\min},Q^{\max}]$, or
-  $s_\mathrm{freq}$ is enabled and
+  $s_\mathrm{freq}=1$ and
   $k_\mathrm{base}P^\mathrm{ext}\notin[P^{\min},P^{\max}]$; or
 - the gated reactive-power or active-power PI state rate is nonfinite or
   exceeds $\epsilon_\mathrm{init}$ in magnitude.

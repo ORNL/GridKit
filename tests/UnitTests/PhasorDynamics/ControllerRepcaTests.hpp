@@ -86,7 +86,6 @@ namespace GridKit
         success *= (missing_signals.verify() > 0);
 
         success *= invalidParameterCase(Params::mva, 0.0);
-        success *= invalidParameterCase(Params::Tfv, 0.0);
         success *= invalidParameterCase(Params::Tfv, -0.1);
         success *= invalidParameterCase(Params::dbdlow, 0.1);
         success *= invalidParameterCase(Params::dbdupper, -0.1);
@@ -201,6 +200,7 @@ namespace GridKit
 
         auto floor_data                      = makeInitializationData();
         floor_data.parameters[Params::Tfltr] = 0.0;
+        floor_data.parameters[Params::Tfv]   = 0.0;
         floor_data.parameters[Params::Tp]    = 0.0;
         floor_data.parameters[Params::Tlag]  = 0.0;
 
@@ -519,7 +519,7 @@ namespace GridKit
         // An invalid configuration is rejected before any state is written.
         {
           auto invalid_data                    = data;
-          invalid_data.parameters[Params::Tfv] = 0.0;
+          invalid_data.parameters[Params::Tfv] = -0.1;
           Fixture<ScalarT> invalid_fixture(invalid_data);
           invalid_fixture.attachAllInputs();
           setInitializationInputs(invalid_fixture);
