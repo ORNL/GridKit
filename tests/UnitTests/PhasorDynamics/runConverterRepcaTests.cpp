@@ -13,7 +13,10 @@ int main()
   result += test.reactiveControl();
   result += test.activePowerControl();
   result += test.derivatives();
+  result += test.dependencyTracking();
+#ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
+#endif
 
   return result.summary();
 }

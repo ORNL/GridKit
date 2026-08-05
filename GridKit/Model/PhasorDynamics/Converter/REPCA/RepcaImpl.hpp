@@ -7,7 +7,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cmath>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -147,10 +146,10 @@ namespace GridKit
       /**
        * @brief Validate the REPCA configuration
        *
-       * Checks parameter-loading errors, finiteness and static parameter
-       * relationships, system/component bases and both conversion ratios,
-       * the regulated bus, required measurement signals, and attached
-       * optional reference signals. Command-output assignment is optional.
+       * Checks parameter-loading errors, static parameter relationships,
+       * system/component bases and both conversion ratios, the regulated
+       * bus, required measurement signals, and attached optional reference
+       * signals. Command-output assignment is optional.
        * Operating-point feasibility is checked by initialize().
        *
        * @return Number of configuration errors; zero when valid.
@@ -160,7 +159,16 @@ namespace GridKit
       {
         int ret = static_cast<int>(parameter_error_count_);
 
-        checkConfiguration(bus_ != nullptr, "regulated bus is required", ret);
+        auto check = [&](bool condition, const char* message)
+        {
+          if (!condition)
+          {
+            Log::error() << "Repca: " << message << '\n';
+            ret += 1;
+          }
+        };
+
+        check(bus_ != nullptr, "regulated bus is required");
 
         const bool valid_converter_base = std::isfinite(mva_base_)
                                           && mva_base_ > ZERO<RealT>
@@ -168,119 +176,31 @@ namespace GridKit
                                           && va_converter_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
                                        && va_system_base_ > ZERO<RealT>;
-        checkConfiguration(valid_converter_base,
-                           "mva must define a finite positive converter power base",
-                           ret);
-        checkConfiguration(valid_system_base,
-                           "system power base must be finite and positive",
-                           ret);
+        check(valid_converter_base,
+              "mva must define a finite positive converter power base");
+        check(valid_system_base, "system power base must be finite and positive");
         if (valid_converter_base && valid_system_base)
         {
           const RealT system_to_converter = va_system_base_ / va_converter_base_;
           const RealT converter_to_system = va_converter_base_ / va_system_base_;
-          checkConfiguration(
-              std::isfinite(system_to_converter)
-                  && system_to_converter > ZERO<RealT>
-                  && std::isfinite(converter_to_system)
-                  && converter_to_system > ZERO<RealT>,
-              "system/converter power-base conversion ratios must be finite and positive",
-              ret);
+          check(std::isfinite(system_to_converter)
+                    && system_to_converter > ZERO<RealT>
+                    && std::isfinite(converter_to_system)
+                    && converter_to_system > ZERO<RealT>,
+                "system/converter power-base conversion ratios must be finite and positive");
         }
 
-        checkConfiguration(std::isfinite(Tfltr_), "Tfltr must be finite", ret);
-        checkConfiguration(std::isfinite(Vfrz_), "Vfrz must be finite", ret);
-        checkConfiguration(std::isfinite(Rc_), "Rc must be finite", ret);
-        checkConfiguration(std::isfinite(Xc_), "Xc must be finite", ret);
-        checkConfiguration(std::isfinite(Kc_), "Kc must be finite", ret);
-
-        const bool finite_reactive_deadband = std::isfinite(dbdlow_)
-                                              && std::isfinite(dbdupper_);
-        checkConfiguration(finite_reactive_deadband,
-                           "dbdlow and dbdupper must be finite",
-                           ret);
-        if (finite_reactive_deadband)
-        {
-          checkConfiguration(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
-                             "dbdlow <= 0 <= dbdupper is required",
-                             ret);
-        }
-
-        const bool finite_reactive_error_limits = std::isfinite(emin_)
-                                                  && std::isfinite(emax_);
-        checkConfiguration(finite_reactive_error_limits,
-                           "emin and emax must be finite",
-                           ret);
-        if (finite_reactive_error_limits)
-        {
-          checkConfiguration(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,
-                             "emin <= 0 <= emax is required",
-                             ret);
-        }
-
-        checkConfiguration(std::isfinite(Kp_), "Kp must be finite", ret);
-        checkConfiguration(std::isfinite(Ki_), "Ki must be finite", ret);
-
-        const bool finite_reactive_limits = std::isfinite(Qmin_)
-                                            && std::isfinite(Qmax_);
-        checkConfiguration(finite_reactive_limits,
-                           "Qmin and Qmax must be finite",
-                           ret);
-        if (finite_reactive_limits)
-        {
-          checkConfiguration(Qmin_ <= Qmax_,
-                             "Qmin must be less than or equal to Qmax",
-                             ret);
-        }
-
-        checkConfiguration(std::isfinite(Tft_), "Tft must be finite", ret);
-        checkConfiguration(std::isfinite(Tfv_) && Tfv_ > ZERO<RealT>,
-                           "Tfv must be finite and positive",
-                           ret);
-        checkConfiguration(std::isfinite(Tp_), "Tp must be finite", ret);
-
-        const bool finite_frequency_deadband = std::isfinite(fdbd1_)
-                                               && std::isfinite(fdbd2_);
-        checkConfiguration(finite_frequency_deadband,
-                           "fdbd1 and fdbd2 must be finite",
-                           ret);
-        if (finite_frequency_deadband)
-        {
-          checkConfiguration(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
-                             "fdbd1 <= 0 <= fdbd2 is required",
-                             ret);
-        }
-
-        checkConfiguration(std::isfinite(Ddn_), "Ddn must be finite", ret);
-        checkConfiguration(std::isfinite(Dup_), "Dup must be finite", ret);
-
-        const bool finite_active_error_limits = std::isfinite(femin_)
-                                                && std::isfinite(femax_);
-        checkConfiguration(finite_active_error_limits,
-                           "femin and femax must be finite",
-                           ret);
-        if (finite_active_error_limits)
-        {
-          checkConfiguration(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
-                             "femin <= 0 <= femax is required",
-                             ret);
-        }
-
-        checkConfiguration(std::isfinite(Kpg_), "Kpg must be finite", ret);
-        checkConfiguration(std::isfinite(Kig_), "Kig must be finite", ret);
-
-        const bool finite_active_limits = std::isfinite(Pmin_)
-                                          && std::isfinite(Pmax_);
-        checkConfiguration(finite_active_limits,
-                           "Pmin and Pmax must be finite",
-                           ret);
-        if (finite_active_limits)
-        {
-          checkConfiguration(Pmin_ <= Pmax_,
-                             "Pmin must be less than or equal to Pmax",
-                             ret);
-        }
-
-        checkConfiguration(std::isfinite(Tlag_), "Tlag must be finite", ret);
+        check(dbdlow_ <= ZERO<RealT> && ZERO<RealT> <= dbdupper_,
+              "dbdlow <= 0 <= dbdupper is required");
+        check(emin_ <= ZERO<RealT> && ZERO<RealT> <= emax_,
+              "emin <= 0 <= emax is required");
+        check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
+        check(Tfv_ > ZERO<RealT>, "Tfv must be positive");
+        check(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
+              "fdbd1 <= 0 <= fdbd2 is required");
+        check(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
+              "femin <= 0 <= femax is required");
+        check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
 
         auto check_required_signal = [&]<RepcaExternalVariables variable>(const char* name)
         {
@@ -812,131 +732,12 @@ namespace GridKit
       //
 
       /**
-       * @brief Record one failed configuration condition
-       *
-       * @param[in] condition Required condition.
-       * @param[in] message Error message when `condition` is false.
-       * @param[in,out] errors Accumulated configuration-error count.
-       */
-      template <typename scalar_type, typename index_type>
-      void Repca<scalar_type, index_type>::checkConfiguration(
-          bool condition, const char* message, int& errors)
-      {
-        if (!condition)
-        {
-          Log::error() << "Repca: " << message << '\n';
-          errors += 1;
-        }
-      }
-
-      /**
-       * @brief Load one optional real-valued parameter
-       *
-       * Real and integer serialized values are accepted. Any other stored
-       * type records a loading error while preserving the existing default.
-       *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored parameter value.
-       * @param[in] name Serialized parameter name for diagnostics.
-       */
-      template <typename scalar_type, typename index_type>
-      void Repca<scalar_type, index_type>::loadRealParameter(
-          const ModelDataT& data,
-          RepcaParameters   parameter,
-          RealT&            target,
-          const char*       name)
-      {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* real_value = std::get_if<RealT>(&value))
-        {
-          target = *real_value;
-        }
-        else if (const auto* index_value = std::get_if<IdxT>(&value))
-        {
-          target = static_cast<RealT>(*index_value);
-        }
-        else
-        {
-          Log::error() << "Repca: parameter '" << name << "' must be numeric\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
-       * @brief Load one optional Boolean parameter
-       *
-       * Any non-Boolean stored type records a loading error while preserving
-       * the existing default.
-       *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored Boolean value.
-       * @param[in] name Serialized parameter name for diagnostics.
-       */
-      template <typename scalar_type, typename index_type>
-      void Repca<scalar_type, index_type>::loadBooleanParameter(
-          const ModelDataT& data,
-          RepcaParameters   parameter,
-          bool&             target,
-          const char*       name)
-      {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* bool_value = std::get_if<bool>(&value))
-        {
-          target = *bool_value;
-        }
-        else
-        {
-          Log::error() << "Repca: parameter '" << name << "' must be boolean\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
-       * @brief Validate and floor one controller lag
-       *
-       * A nonfinite value records a loading error and is replaced by the
-       * floor so later calculations remain well posed. A finite value below
-       * the floor is raised and reported through the return value.
-       *
-       * @param[in,out] value Time constant to validate and floor.
-       * @param[in] name Parameter name for diagnostics.
-       * @return true when a finite value was raised to the floor.
-       */
-      template <typename scalar_type, typename index_type>
-      bool Repca<scalar_type, index_type>::floorTimeConstant(
-          RealT& value, const char* name)
-      {
-        if (!std::isfinite(value))
-        {
-          Log::error() << "Repca: " << name << " must be finite\n";
-          ++parameter_error_count_;
-          value = TIME_CONSTANT_MINIMUM;
-          return false;
-        }
-
-        const bool raised = value < TIME_CONSTANT_MINIMUM;
-        value             = std::max(value, TIME_CONSTANT_MINIMUM);
-        return raised;
-      }
-
-      /**
        * @brief Read optional parameters from model data
        *
-       * Omitted parameters retain their documented defaults. Numeric parameters
-       * accept real and integer values; selectors also accept Boolean values.
-       * Loading errors are counted for verify() rather than thrown.
+       * Omitted parameters retain their documented defaults. Real parameters
+       * accept real and integer values and must be finite; selectors require
+       * Boolean values. Loading errors are counted for verify() rather than
+       * thrown.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -947,37 +748,90 @@ namespace GridKit
 
         parameter_error_count_ = 0;
 
-        loadRealParameter(data, Params::mva, mva_base_, "mva");
-        loadBooleanParameter(data, Params::VcompFlag, VcompFlag_, "VcompFlag");
-        loadBooleanParameter(data, Params::RefFlag, RefFlag_, "RefFlag");
-        loadBooleanParameter(data, Params::Freqflag, Freqflag_, "Freqflag");
-        loadRealParameter(data, Params::Tfltr, Tfltr_, "Tfltr");
-        loadRealParameter(data, Params::Vfrz, Vfrz_, "Vfrz");
-        loadRealParameter(data, Params::Rc, Rc_, "Rc");
-        loadRealParameter(data, Params::Xc, Xc_, "Xc");
-        loadRealParameter(data, Params::Kc, Kc_, "Kc");
-        loadRealParameter(data, Params::dbdlow, dbdlow_, "dbdlow");
-        loadRealParameter(data, Params::dbdupper, dbdupper_, "dbdupper");
-        loadRealParameter(data, Params::emax, emax_, "emax");
-        loadRealParameter(data, Params::emin, emin_, "emin");
-        loadRealParameter(data, Params::Kp, Kp_, "Kp");
-        loadRealParameter(data, Params::Ki, Ki_, "Ki");
-        loadRealParameter(data, Params::Qmax, Qmax_, "Qmax");
-        loadRealParameter(data, Params::Qmin, Qmin_, "Qmin");
-        loadRealParameter(data, Params::Tft, Tft_, "Tft");
-        loadRealParameter(data, Params::Tfv, Tfv_, "Tfv");
-        loadRealParameter(data, Params::Tp, Tp_, "Tp");
-        loadRealParameter(data, Params::fdbd1, fdbd1_, "fdbd1");
-        loadRealParameter(data, Params::fdbd2, fdbd2_, "fdbd2");
-        loadRealParameter(data, Params::Ddn, Ddn_, "Ddn");
-        loadRealParameter(data, Params::Dup, Dup_, "Dup");
-        loadRealParameter(data, Params::femax, femax_, "femax");
-        loadRealParameter(data, Params::femin, femin_, "femin");
-        loadRealParameter(data, Params::Kpg, Kpg_, "Kpg");
-        loadRealParameter(data, Params::Kig, Kig_, "Kig");
-        loadRealParameter(data, Params::Pmax, Pmax_, "Pmax");
-        loadRealParameter(data, Params::Pmin, Pmin_, "Pmin");
-        loadRealParameter(data, Params::Tlag, Tlag_, "Tlag");
+        auto load_real = [&](auto key, RealT& target, const char* name)
+        {
+          if (!data.parameters.contains(key))
+          {
+            return;
+          }
+
+          const auto& value = data.parameters.at(key);
+          RealT       parsed_value{};
+          if (const auto* real_value = std::get_if<RealT>(&value))
+          {
+            parsed_value = *real_value;
+          }
+          else if (const auto* index_value = std::get_if<IdxT>(&value))
+          {
+            parsed_value = static_cast<RealT>(*index_value);
+          }
+          else
+          {
+            Log::error() << "Repca: parameter '" << name << "' must be numeric\n";
+            ++parameter_error_count_;
+            return;
+          }
+
+          if (!std::isfinite(parsed_value))
+          {
+            Log::error() << "Repca: parameter '" << name << "' must be finite\n";
+            ++parameter_error_count_;
+            return;
+          }
+
+          target = parsed_value;
+        };
+
+        auto load_switch = [&](auto key, bool& target, const char* name)
+        {
+          if (!data.parameters.contains(key))
+          {
+            return;
+          }
+
+          const auto& value = data.parameters.at(key);
+          if (const auto* bool_value = std::get_if<bool>(&value))
+          {
+            target = *bool_value;
+          }
+          else
+          {
+            Log::error() << "Repca: parameter '" << name << "' must be boolean\n";
+            ++parameter_error_count_;
+          }
+        };
+
+        load_real(Params::mva, mva_base_, "mva");
+        load_switch(Params::VcompFlag, VcompFlag_, "VcompFlag");
+        load_switch(Params::RefFlag, RefFlag_, "RefFlag");
+        load_switch(Params::Freqflag, Freqflag_, "Freqflag");
+        load_real(Params::Tfltr, Tfltr_, "Tfltr");
+        load_real(Params::Vfrz, Vfrz_, "Vfrz");
+        load_real(Params::Rc, Rc_, "Rc");
+        load_real(Params::Xc, Xc_, "Xc");
+        load_real(Params::Kc, Kc_, "Kc");
+        load_real(Params::dbdlow, dbdlow_, "dbdlow");
+        load_real(Params::dbdupper, dbdupper_, "dbdupper");
+        load_real(Params::emax, emax_, "emax");
+        load_real(Params::emin, emin_, "emin");
+        load_real(Params::Kp, Kp_, "Kp");
+        load_real(Params::Ki, Ki_, "Ki");
+        load_real(Params::Qmax, Qmax_, "Qmax");
+        load_real(Params::Qmin, Qmin_, "Qmin");
+        load_real(Params::Tft, Tft_, "Tft");
+        load_real(Params::Tfv, Tfv_, "Tfv");
+        load_real(Params::Tp, Tp_, "Tp");
+        load_real(Params::fdbd1, fdbd1_, "fdbd1");
+        load_real(Params::fdbd2, fdbd2_, "fdbd2");
+        load_real(Params::Ddn, Ddn_, "Ddn");
+        load_real(Params::Dup, Dup_, "Dup");
+        load_real(Params::femax, femax_, "femax");
+        load_real(Params::femin, femin_, "femin");
+        load_real(Params::Kpg, Kpg_, "Kpg");
+        load_real(Params::Kig, Kig_, "Kig");
+        load_real(Params::Pmax, Pmax_, "Pmax");
+        load_real(Params::Pmin, Pmin_, "Pmin");
+        load_real(Params::Tlag, Tlag_, "Tlag");
 
         setDerivedParameters();
       }
@@ -1007,24 +861,38 @@ namespace GridKit
        * @brief Resolve parameter-derived constants
        *
        * Raises the explicit controller lags in place, computes the converter
-       * power base, and resolves selector masks. Nonfinite lag inputs are
-       * recorded before replacement so verify() retains the error.
+       * power base, and resolves selector masks.
        */
       template <typename scalar_type, typename index_type>
       void Repca<scalar_type, index_type>::setDerivedParameters()
       {
-        bool floor_warning = false;
-
-        floor_warning |= floorTimeConstant(Tfltr_, "Tfltr");
-        floor_warning |= floorTimeConstant(Tp_, "Tp");
-        floor_warning |= floorTimeConstant(Tlag_, "Tlag");
-
-        if (floor_warning)
+        // The lags are raised to the floor below, so negative values must be
+        // rejected here while the value as read is still available.
+        auto check_non_negative = [&](RealT value, const char* name)
         {
-          Log::warning() << "Repca: any of Tfltr, Tp, or Tlag below "
+          if (value < ZERO<RealT>)
+          {
+            Log::error() << "Repca: " << name << " must be non-negative\n";
+            ++parameter_error_count_;
+          }
+        };
+
+        check_non_negative(Tfltr_, "Tfltr");
+        check_non_negative(Tft_, "Tft");
+        check_non_negative(Tp_, "Tp");
+        check_non_negative(Tlag_, "Tlag");
+
+        if (Tfltr_ < TIME_CONSTANT_MINIMUM || Tp_ < TIME_CONSTANT_MINIMUM
+            || Tlag_ < TIME_CONSTANT_MINIMUM)
+        {
+          Log::warning() << "Repca: Tfltr, Tp, and Tlag below "
                          << TIME_CONSTANT_MINIMUM
-                         << " s is raised to that floor to keep the controller lags well posed\n";
+                         << " s are raised to that floor to keep the controller lags well posed\n";
         }
+
+        Tfltr_ = std::max(Tfltr_, TIME_CONSTANT_MINIMUM);
+        Tp_    = std::max(Tp_, TIME_CONSTANT_MINIMUM);
+        Tlag_  = std::max(Tlag_, TIME_CONSTANT_MINIMUM);
 
         va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
 

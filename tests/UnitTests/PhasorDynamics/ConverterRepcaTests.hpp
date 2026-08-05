@@ -39,13 +39,15 @@ namespace GridKit
       ConverterRepcaTests()  = default;
       ~ConverterRepcaTests() = default;
 
-      // Exact-limit initialization leaves residual tails below 2e-13; this
-      // tolerance still resolves the 6.8e-12 boundary response.
-      static constexpr RealT kBehaviorTol = 1.0e-12;
+      // A command initialized exactly at a limit leaves the widest residual
+      // tail: QPI at 708 eps.
+      static constexpr RealT kBehaviorTol =
+          static_cast<RealT>(1000.0) * std::numeric_limits<RealT>::epsilon();
 
-      // Enzyme traverses the smooth expressions through a separate AD path;
-      // its double-precision derivatives agree with the fixed key to O(1e-10).
-      static constexpr RealT kJacobianTol = 1.0e-9;
+      // The widest Enzyme-versus-dependency-tracking gap is QMEAS at the
+      // qbranch column, 0.7 eps.
+      static constexpr RealT kJacobianTol =
+          static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Validate construction, defaults, parameters, signals, and time floors.
       TestOutcome validation()
@@ -60,6 +62,7 @@ namespace GridKit
         PhasorDynamics::Converter::Repca<ScalarT, IdxT> empty(&bus);
         success *= (empty.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
         success *= (empty.getMonitor() == nullptr);
+        success *= (empty.verify() > 0);
 
         Fixture<ScalarT> configured(makeData());
         configured.attachAllInputs();
@@ -96,20 +99,40 @@ namespace GridKit
         success *= invalidParameterCase(Params::Pmin, 2.1);
         success *= invalidParameterCase(Params::mva, true);
 
+        success *= invalidParameterCase(Params::Tfltr, -0.2);
+        success *= invalidParameterCase(Params::Tft, -0.1);
+        success *= invalidParameterCase(Params::Tp, -0.3);
+        success *= invalidParameterCase(Params::Tlag, -0.4);
+
         const RealT nan      = std::numeric_limits<RealT>::quiet_NaN();
         const RealT infinity = std::numeric_limits<RealT>::infinity();
         for (const Params parameter : {Params::mva,
                                        Params::Tfltr,
                                        Params::Vfrz,
                                        Params::Rc,
+                                       Params::Xc,
                                        Params::Kc,
                                        Params::dbdlow,
+                                       Params::dbdupper,
                                        Params::emax,
+                                       Params::emin,
                                        Params::Kp,
+                                       Params::Ki,
                                        Params::Qmax,
+                                       Params::Qmin,
                                        Params::Tft,
+                                       Params::Tfv,
+                                       Params::Tp,
+                                       Params::fdbd1,
+                                       Params::fdbd2,
                                        Params::Ddn,
+                                       Params::Dup,
+                                       Params::femax,
+                                       Params::femin,
+                                       Params::Kpg,
+                                       Params::Kig,
                                        Params::Pmax,
+                                       Params::Pmin,
                                        Params::Tlag})
         {
           success *= invalidParameterCase(parameter, nan);
@@ -176,9 +199,9 @@ namespace GridKit
         success *= unlinkedSignalRejected<Ext::PPLANTREF>();
 
         auto floor_data                      = makeInitializationData();
-        floor_data.parameters[Params::Tfltr] = -0.2;
+        floor_data.parameters[Params::Tfltr] = 0.0;
         floor_data.parameters[Params::Tp]    = 0.0;
-        floor_data.parameters[Params::Tlag]  = -0.4;
+        floor_data.parameters[Params::Tlag]  = 0.0;
 
         Fixture<ScalarT> floored(floor_data);
         floored.attachAllInputs();
@@ -241,17 +264,17 @@ namespace GridKit
                                  {Vars::PEXT, 0.45}},
                                 "initialization");
 
-        success *= scalarMatches(fixture.input(index(Ext::IBRANCHR)), 0.2, "preserved ibranchr");
-        success *= scalarMatches(fixture.input(index(Ext::IBRANCHI)), -0.1, "preserved ibranchi");
-        success *= scalarMatches(fixture.input(index(Ext::PBRANCH)), 0.4, "preserved pbranch");
-        success *= scalarMatches(fixture.input(index(Ext::QBRANCH)), 0.1, "preserved qbranch");
-        success *= scalarMatches(fixture.input(index(Ext::FREQ)), 0.99, "preserved freq");
-        success *= scalarMatches(fixture.qext(), 0.25, "preserved qext");
-        success *= scalarMatches(fixture.pext(), 0.45, "preserved pext");
-        success *= scalarMatches(fixture.input(index(Ext::FREQREF)), 0.99, "published freqref");
-        success *= scalarMatches(fixture.input(index(Ext::VREF)), 0.99200050403213, "published vref");
-        success *= scalarMatches(fixture.input(index(Ext::QREF)), 0.1, "published qref");
-        success *= scalarMatches(fixture.input(index(Ext::PPLANTREF)),
+        success *= scalarPreserved(fixture.input(Ext::IBRANCHR), 0.2, "preserved ibranchr");
+        success *= scalarPreserved(fixture.input(Ext::IBRANCHI), -0.1, "preserved ibranchi");
+        success *= scalarPreserved(fixture.input(Ext::PBRANCH), 0.4, "preserved pbranch");
+        success *= scalarPreserved(fixture.input(Ext::QBRANCH), 0.1, "preserved qbranch");
+        success *= scalarPreserved(fixture.input(Ext::FREQ), 0.99, "preserved freq");
+        success *= scalarPreserved(fixture.qext(), 0.25, "preserved qext");
+        success *= scalarPreserved(fixture.pext(), 0.45, "preserved pext");
+        success *= scalarMatches(fixture.input(Ext::FREQREF), 0.99, "published freqref");
+        success *= scalarMatches(fixture.input(Ext::VREF), 0.99200050403213, "published vref");
+        success *= scalarMatches(fixture.input(Ext::QREF), 0.1, "published qref");
+        success *= scalarMatches(fixture.input(Ext::PPLANTREF),
                                  0.39874213184871782,
                                  "published pplantref");
 
@@ -293,12 +316,9 @@ namespace GridKit
           exact_commands.attachAllInputs();
           setInitializationInputs(exact_commands);
           success *= exact_commands.initialize(0.25, 0.45);
-          success *= valueUnchanged(exact_commands.qext(), 0.25, "qext signal", index(Vars::QEXT));
-          success *= valueUnchanged(exact_commands.pext(), 0.45, "pext signal", index(Vars::PEXT));
-          success *= valueUnchanged(exact_commands.input(index(Ext::QREF)),
-                                    0.1,
-                                    "qref signal",
-                                    index(Ext::QREF));
+          success *= scalarPreserved(exact_commands.qext(), 0.25, "qext signal");
+          success *= scalarPreserved(exact_commands.pext(), 0.45, "pext signal");
+          success *= scalarPreserved(exact_commands.input(Ext::QREF), 0.1, "qref signal");
           success *= (exact_commands.repca.evaluateResidual() == 0);
           success *= allResidualsZero(exact_commands.repca);
         }
@@ -394,14 +414,17 @@ namespace GridKit
           RealT       pext;
         };
 
+        const RealT                        nan      = std::numeric_limits<RealT>::quiet_NaN();
         const RealT                        infinity = std::numeric_limits<RealT>::infinity();
-        const std::array<RejectionCase, 6> rejection_cases{{
+        const std::array<RejectionCase, 8> rejection_cases{{
             {"qext below Qmin", -0.4000000001, 0.45},
             {"qext above Qmax", 0.4500000001, 0.45},
             {"pext below Pmin", 0.25, -1.0e-10},
             {"pext above Pmax", 0.25, 0.6000000001},
             {"nonfinite qext", infinity, 0.45},
             {"nonfinite pext", 0.25, infinity},
+            {"nan qext", nan, 0.45},
+            {"nan pext", 0.25, nan},
         }};
         for (const auto& test_case : rejection_cases)
         {
@@ -410,11 +433,25 @@ namespace GridKit
                                                       test_case.pext,
                                                       test_case.label);
         }
-        success *= initializationRejectedAtomically(data,
-                                                    0.25,
-                                                    0.45,
-                                                    "nonfinite required signal",
-                                                    NonfiniteTarget::FREQUENCY);
+        for (const Ext port : {Ext::IBRANCHR,
+                               Ext::IBRANCHI,
+                               Ext::PBRANCH,
+                               Ext::QBRANCH,
+                               Ext::FREQ})
+        {
+          for (const RealT value : {infinity, -infinity, nan})
+          {
+            success *= initializationRejectedAtomically(data,
+                                                        0.25,
+                                                        0.45,
+                                                        "nonfinite required signal",
+                                                        NonfiniteTarget::INPUT,
+                                                        0.8,
+                                                        0.6,
+                                                        port,
+                                                        value);
+          }
+        }
         success *= initializationRejectedAtomically(data,
                                                     0.25,
                                                     0.45,
@@ -477,6 +514,26 @@ namespace GridKit
                                                     0.45,
                                                     "nonfinite derived initialization candidate");
 
+        // An invalid configuration is rejected before any state is written.
+        {
+          auto invalid_data                    = data;
+          invalid_data.parameters[Params::Tfv] = 0.0;
+          Fixture<ScalarT> invalid_fixture(invalid_data);
+          invalid_fixture.attachAllInputs();
+          setInitializationInputs(invalid_fixture);
+          success *= (invalid_fixture.repca.allocate() == 0);
+          poisonState(invalid_fixture, 0.25, 0.45);
+          const auto invalid_y  = copyVector(invalid_fixture.repca.y());
+          const auto invalid_yp = copyVector(invalid_fixture.repca.yp());
+          if (invalid_fixture.repca.initialize() == 0)
+          {
+            std::cout << "Expected REPCA initialization rejection: invalid configuration\n";
+            success = false;
+          }
+          success *= vectorUnchanged(invalid_fixture.repca.y(), invalid_y, "state");
+          success *= vectorUnchanged(invalid_fixture.repca.yp(), invalid_yp, "derivative");
+        }
+
         {
           Fixture<ScalarT> qmax_pmin_boundary(data, 0.8, 0.6);
           qmax_pmin_boundary.attachAllInputs();
@@ -538,11 +595,12 @@ namespace GridKit
       }
 
       /// Check every residual row against an independent numerical answer key.
+      /// The expected values are literals, not a second implementation of REPCA.
       TestOutcome residualEquations()
       {
         TestStatus success = true;
 
-        Fixture<ScalarT> fixture(makeDynamicData(), kStateVr, kStateVi);
+        Fixture<ScalarT> fixture(makeResidualData(), kStateVr, kStateVi);
         fixture.attachAllInputs();
         setAnswerKeyInputs(fixture);
         success *= fixture.prepare(0.0, 0.0);
@@ -557,20 +615,20 @@ namespace GridKit
             {Vars::PMEAS, "PMEAS", 0.92999999999999983},
             {Vars::XPPI, "XPPI", 0.082000000000000003},
             {Vars::PREF, "PREF", 0.070000000000000104},
-            {Vars::V, "V", -0.029999999999999916},
+            {Vars::V, "V", -0.02999999999999993},
             {Vars::VLDC, "VLDC", -0.015651160000000081},
             {Vars::VDROOP, "VDROOP", 0.053999999999999965},
             {Vars::VCTRL, "VCTRL", -0.030000000000000027},
             {Vars::SFRZ, "SFRZ", 0.19999999999999996},
             {Vars::ERQ, "ERQ", 2.7755575615628914e-17},
-            {Vars::ERQDB, "ERQDB", -0.017111912348473052},
-            {Vars::ERQLIM, "ERQLIM", 1.7347234759768071e-17},
+            {Vars::ERQDB, "ERQDB", -0.047111912348473055},
+            {Vars::ERQLIM, "ERQLIM", 0.030000000000000044},
             {Vars::QPI, "QPI", -0.16000000000000009},
             {Vars::QEXT, "QEXT", -0.36399999999999999},
             {Vars::EF, "EF", -0.0089371400000009833},
-            {Vars::EP, "EP", 0.64036181730064157},
-            {Vars::EPLIM, "EPLIM", 3.4694469519536142e-17},
-            {Vars::PPI, "PPI", -0.38200000000000001},
+            {Vars::EP, "EP", 0.59036181730064152},
+            {Vars::EPLIM, "EPLIM", 0.049999999999999968},
+            {Vars::PPI, "PPI", -0.38200000000000006},
             {Vars::PEXT, "PEXT", -0.62},
         }};
 
@@ -614,15 +672,15 @@ namespace GridKit
         }};
         for (const auto& test_case : flag_cases)
         {
-          auto data                          = makeDynamicData();
+          auto data                          = makeResidualData();
           data.parameters[Params::VcompFlag] = test_case.voltage_compensation;
           data.parameters[Params::RefFlag]   = test_case.voltage_reference;
 
           Fixture<ScalarT> fixture(data);
           fixture.attachAllInputs();
           setAnswerKeyInputs(fixture);
-          fixture.input(index(Ext::VREF)) = 1.05;
-          fixture.input(index(Ext::QREF)) = 0.20;
+          fixture.input(Ext::VREF) = 1.05;
+          fixture.input(Ext::QREF) = 0.20;
 
           success *= fixture.prepare(0.0, 0.0);
           setState(fixture.repca,
@@ -640,7 +698,7 @@ namespace GridKit
                                     test_case.label);
         }
 
-        Fixture<ScalarT> fixture(makeDynamicData());
+        Fixture<ScalarT> fixture(makeResidualData());
         fixture.attachAllInputs();
         setAnswerKeyInputs(fixture);
         success *= fixture.prepare(0.0, 0.0);
@@ -742,6 +800,33 @@ namespace GridKit
                                    {Vars::QEXT, -0.36399999999999999}},
                                   "reactive-command lead-lag");
 
+        // The command sits at Qmax with the error at emax driving further
+        // out, so the antiwindup gate must block the PI state.
+        {
+          Fixture<DependencyTracking::Variable> blocked(makeResidualData());
+          blocked.attachAllInputs();
+          setAnswerKeyInputs(blocked);
+          success *= blocked.prepare(0.0, 0.0);
+          setState(blocked.repca,
+                   {{Vars::QPI, 0.9}, {Vars::ERQLIM, 0.8}, {Vars::SFRZ, 1.0}});
+          setDerivative(blocked.repca, {{Vars::XQPI, 0.0}});
+          numberVariables(blocked, 1.0);
+          success *= (blocked.repca.evaluateResidual() == 0);
+
+          const JacobianRow expected{
+              {index(Vars::XQPI), -1.0},
+              {index(Vars::SFRZ), 1.2},
+              {index(Vars::ERQLIM), 1.5},
+              {index(Vars::QPI), -144.0},
+          };
+          success *= jacobianRowMatches(
+              blocked.repca.getResidual().getData()[index(Vars::XQPI)].getDependencies(),
+              expected,
+              index(Vars::XQPI),
+              "blocked reactive-power antiwindup",
+              kBehaviorTol);
+        }
+
         return success.report(__func__);
       }
 
@@ -763,7 +848,7 @@ namespace GridKit
         }};
         for (const auto& test_case : flag_cases)
         {
-          auto data                         = makeDynamicData();
+          auto data                         = makeResidualData();
           data.parameters[Params::Freqflag] = test_case.frequency_control;
           Fixture<ScalarT> fixture(data);
           fixture.attachAllInputs();
@@ -776,7 +861,7 @@ namespace GridKit
                                     test_case.label);
         }
 
-        Fixture<ScalarT> fixture(makeDynamicData());
+        Fixture<ScalarT> fixture(makeResidualData());
         fixture.attachAllInputs();
         setAnswerKeyInputs(fixture);
         success *= fixture.prepare(0.0, 0.0);
@@ -790,8 +875,8 @@ namespace GridKit
         }};
         for (const auto& test_case : frequency_deadband_cases)
         {
-          fixture.input(index(Ext::FREQ))    = 1.0;
-          fixture.input(index(Ext::FREQREF)) = 1.0 + test_case.input;
+          fixture.input(Ext::FREQ)    = 1.0;
+          fixture.input(Ext::FREQREF) = 1.0 + test_case.input;
           setState(fixture.repca, {{Vars::EF, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
@@ -804,7 +889,7 @@ namespace GridKit
             {0.0, 0.0028881132523331052},
             {0.1, 0.2000000000001573},
         }};
-        fixture.input(index(Ext::PPLANTREF)) = 0.2;
+        fixture.input(Ext::PPLANTREF) = 0.2;
         for (const auto& test_case : droop_cases)
         {
           setState(fixture.repca,
@@ -889,7 +974,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        Fixture<ScalarT> fixture(makeDynamicData(), kStateVr, kStateVi);
+        Fixture<ScalarT> fixture(makeResidualData(), kStateVr, kStateVi);
         fixture.attachAllInputs();
         setAnswerKeyInputs(fixture);
         success *= fixture.prepare(0.0, 0.0);
@@ -916,19 +1001,19 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Check every Jacobian row against an independent numerical answer key.
-      TestOutcome jacobian()
+      /// Check every dependency-tracking Jacobian row against an independent
+      /// numerical answer key, in every selector mode and at a non-unit alpha.
+      TestOutcome dependencyTracking()
       {
         TestStatus success = true;
 
-        const auto data       = makeDynamicData();
         // The fixed state places ERQ exactly at dbdupper, so the key also
         // covers the CommonMath deadband transition derivative.
-        const auto expected   = expectedJacobian();
+        const auto data       = makeResidualData();
         const auto dependency = dependencyTrackingJacobian(data, success);
 
         success *= jacobianMatches(dependency,
-                                   expected,
+                                   expectedJacobian(),
                                    "dependency tracking",
                                    kBehaviorTol);
 
@@ -943,35 +1028,49 @@ namespace GridKit
                                    "all-flags-off dependency tracking",
                                    kBehaviorTol);
 
-        constexpr RealT nonunit_alpha = 2.5;
-        const auto      nonunit_alpha_dependency =
-            dependencyTrackingJacobian(data, success, nonunit_alpha);
+        const auto nonunit_alpha_dependency =
+            dependencyTrackingJacobian(data, success, kNonunitAlpha);
         success *= jacobianMatches(nonunit_alpha_dependency,
                                    expectedJacobianNonunitAlpha(),
                                    "non-unit-alpha dependency tracking",
                                    kBehaviorTol);
 
+        return success.report(__func__);
+      }
+
 #ifdef GRIDKIT_ENABLE_ENZYME
-        const auto enzyme = enzymeJacobian(data, success);
+      /// One rich state, every selector mode, and a non-unit alpha drive both
+      /// sensitivity paths; every Enzyme CSR row must match dependency tracking.
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
 
-        success *= jacobianMatches(enzyme, expected, "Enzyme", kJacobianTol);
+        const auto data = makeResidualData();
 
-        const auto all_flags_off_enzyme  = enzymeJacobian(all_flags_off_data, success);
-        success                         *= jacobianMatches(all_flags_off_enzyme,
-                                   expectedJacobianAllFlagsOff(),
-                                   "all-flags-off Enzyme",
+        success *= jacobianMatches(enzymeJacobian(data, success),
+                                   dependencyTrackingJacobian(data, success),
+                                   "Enzyme versus dependency tracking",
                                    kJacobianTol);
 
-        const auto nonunit_alpha_enzyme =
-            enzymeJacobian(data, success, nonunit_alpha);
-        success *= jacobianMatches(nonunit_alpha_enzyme,
-                                   expectedJacobianNonunitAlpha(),
-                                   "non-unit-alpha Enzyme",
-                                   kJacobianTol);
-#endif
+        auto all_flags_off_data                           = data;
+        all_flags_off_data.parameters[Params::VcompFlag]  = false;
+        all_flags_off_data.parameters[Params::RefFlag]    = false;
+        all_flags_off_data.parameters[Params::Freqflag]   = false;
+        success                                          *= jacobianMatches(
+            enzymeJacobian(all_flags_off_data, success),
+            dependencyTrackingJacobian(all_flags_off_data, success),
+            "all-flags-off Enzyme versus dependency tracking",
+            kJacobianTol);
+
+        success *= jacobianMatches(
+            enzymeJacobian(data, success, kNonunitAlpha),
+            dependencyTrackingJacobian(data, success, kNonunitAlpha),
+            "non-unit-alpha Enzyme versus dependency tracking",
+            kJacobianTol);
 
         return success.report(__func__);
       }
+#endif
 
     private:
       using Params      = PhasorDynamics::Converter::RepcaParameters;
@@ -1030,7 +1129,7 @@ namespace GridKit
       enum class NonfiniteTarget
       {
         NONE,
-        FREQUENCY,
+        INPUT,
         BUS_VOLTAGE
       };
 
@@ -1143,22 +1242,23 @@ namespace GridKit
           return repca.y().getData()[index(Vars::PEXT)];
         }
 
-        T& input(size_t port)
+        T& input(Ext port)
         {
-          return input_values_[port];
+          return input_values_[index(port)];
         }
 
-        IdxT inputIndex(size_t port) const
+        IdxT inputIndex(Ext port) const
         {
-          return input_indices_[port];
+          return input_indices_[index(port)];
         }
 
         PhasorDynamics::Bus<T, IdxT>              bus;
         PhasorDynamics::Converter::Repca<T, IdxT> repca;
       };
 
-      static constexpr RealT kStateVr = 0.9;
-      static constexpr RealT kStateVi = 0.4;
+      static constexpr RealT kStateVr      = 0.9;
+      static constexpr RealT kStateVi      = 0.4;
+      static constexpr RealT kNonunitAlpha = 2.5;
 
       static constexpr size_t kBusVrColumn        = index(Vars::MAXIMUM);
       static constexpr size_t kBusViColumn        = kBusVrColumn + 1;
@@ -1227,7 +1327,7 @@ namespace GridKit
         return data;
       }
 
-      Data makeDynamicData() const
+      Data makeResidualData() const
       {
         auto data                         = makeData();
         data.parameters[Params::mva]      = 50.0;
@@ -1261,7 +1361,7 @@ namespace GridKit
 
       Data makeInitializationData() const
       {
-        auto data                         = makeDynamicData();
+        auto data                         = makeResidualData();
         data.parameters[Params::dbdupper] = 0.02;
         data.parameters[Params::emin]     = -0.8;
         data.parameters[Params::femin]    = -0.6;
@@ -1271,25 +1371,25 @@ namespace GridKit
       template <typename T>
       void setInitializationInputs(Fixture<T>& fixture) const
       {
-        fixture.input(index(Ext::IBRANCHR)) = static_cast<T>(0.2);
-        fixture.input(index(Ext::IBRANCHI)) = static_cast<T>(-0.1);
-        fixture.input(index(Ext::PBRANCH))  = static_cast<T>(0.4);
-        fixture.input(index(Ext::QBRANCH))  = static_cast<T>(0.1);
-        fixture.input(index(Ext::FREQ))     = static_cast<T>(0.99);
+        fixture.input(Ext::IBRANCHR) = static_cast<T>(0.2);
+        fixture.input(Ext::IBRANCHI) = static_cast<T>(-0.1);
+        fixture.input(Ext::PBRANCH)  = static_cast<T>(0.4);
+        fixture.input(Ext::QBRANCH)  = static_cast<T>(0.1);
+        fixture.input(Ext::FREQ)     = static_cast<T>(0.99);
       }
 
       template <typename T>
       void setAnswerKeyInputs(Fixture<T>& fixture) const
       {
-        fixture.input(index(Ext::IBRANCHR))  = static_cast<T>(0.08);
-        fixture.input(index(Ext::IBRANCHI))  = static_cast<T>(-0.02);
-        fixture.input(index(Ext::PBRANCH))   = static_cast<T>(0.41);
-        fixture.input(index(Ext::QBRANCH))   = static_cast<T>(0.13);
-        fixture.input(index(Ext::FREQ))      = static_cast<T>(0.99);
-        fixture.input(index(Ext::FREQREF))   = static_cast<T>(1.0);
-        fixture.input(index(Ext::VREF))      = static_cast<T>(1.01);
-        fixture.input(index(Ext::QREF))      = static_cast<T>(0.12);
-        fixture.input(index(Ext::PPLANTREF)) = static_cast<T>(0.55);
+        fixture.input(Ext::IBRANCHR)  = static_cast<T>(0.08);
+        fixture.input(Ext::IBRANCHI)  = static_cast<T>(-0.02);
+        fixture.input(Ext::PBRANCH)   = static_cast<T>(0.41);
+        fixture.input(Ext::QBRANCH)   = static_cast<T>(0.13);
+        fixture.input(Ext::FREQ)      = static_cast<T>(0.99);
+        fixture.input(Ext::FREQREF)   = static_cast<T>(1.0);
+        fixture.input(Ext::VREF)      = static_cast<T>(1.01);
+        fixture.input(Ext::QREF)      = static_cast<T>(0.12);
+        fixture.input(Ext::PPLANTREF) = static_cast<T>(0.55);
       }
 
       template <typename T>
@@ -1309,12 +1409,12 @@ namespace GridKit
                   {Vars::VCTRL, 1.02},
                   {Vars::SFRZ, 0.8},
                   {Vars::ERQ, 0.03},
-                  {Vars::ERQDB, 0.02},
+                  {Vars::ERQDB, 0.05},
                   {Vars::ERQLIM, 0.02},
                   {Vars::QPI, 0.27},
                   {Vars::QEXT, 0.20},
                   {Vars::EF, 0.01},
-                  {Vars::EP, 0.04},
+                  {Vars::EP, 0.09},
                   {Vars::EPLIM, 0.04},
                   {Vars::PPI, 0.66},
                   {Vars::PEXT, 0.61}});
@@ -1335,12 +1435,12 @@ namespace GridKit
         implicit_defaults.attachAllInputs();
         explicit_defaults.attachAllInputs();
 
-        implicit_defaults.input(index(Ext::PBRANCH)) = 0.2;
-        implicit_defaults.input(index(Ext::QBRANCH)) = 0.1;
-        implicit_defaults.input(index(Ext::FREQ))    = 1.0;
-        explicit_defaults.input(index(Ext::PBRANCH)) = 0.2;
-        explicit_defaults.input(index(Ext::QBRANCH)) = 0.1;
-        explicit_defaults.input(index(Ext::FREQ))    = 1.0;
+        implicit_defaults.input(Ext::PBRANCH) = 0.2;
+        implicit_defaults.input(Ext::QBRANCH) = 0.1;
+        implicit_defaults.input(Ext::FREQ)    = 1.0;
+        explicit_defaults.input(Ext::PBRANCH) = 0.2;
+        explicit_defaults.input(Ext::QBRANCH) = 0.1;
+        explicit_defaults.input(Ext::FREQ)    = 1.0;
 
         bool success = implicit_defaults.initialize(0.1, 0.2)
                        && explicit_defaults.initialize(0.1, 0.2);
@@ -1378,8 +1478,9 @@ namespace GridKit
         }
         for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
         {
-          if (!rowMatches(implicit_defaults.input(port),
-                          explicit_defaults.input(port),
+          const auto variable = static_cast<Ext>(port);
+          if (!rowMatches(implicit_defaults.input(variable),
+                          explicit_defaults.input(variable),
                           "documented-default signal",
                           port,
                           ""))
@@ -1429,13 +1530,31 @@ namespace GridKit
         return fixture.repca.verify() > 0;
       }
 
+      /// Fill state and derivative with a recognizable ramp, restoring the
+      /// aliased commands, so any write by a rejected initialization shows.
+      void poisonState(Fixture<ScalarT>& fixture, RealT qext, RealT pext) const
+      {
+        auto* y  = fixture.repca.y().getData();
+        auto* yp = fixture.repca.yp().getData();
+        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        {
+          y[row]  = 0.125 + 0.01 * static_cast<RealT>(row);
+          yp[row] = -0.25 - 0.01 * static_cast<RealT>(row);
+        }
+        fixture.setCommands(qext, pext);
+        fixture.repca.yp().setDataUpdated();
+      }
+
       bool initializationRejectedAtomically(const Data&     data,
                                             RealT           qext,
                                             RealT           pext,
                                             const char*     label,
-                                            NonfiniteTarget target     = NonfiniteTarget::NONE,
-                                            RealT           initial_vr = 0.8,
-                                            RealT           initial_vi = 0.6) const
+                                            NonfiniteTarget target        = NonfiniteTarget::NONE,
+                                            RealT           initial_vr    = 0.8,
+                                            RealT           initial_vi    = 0.6,
+                                            Ext             poisoned_port = Ext::FREQ,
+                                            RealT           poison_value =
+                                                std::numeric_limits<RealT>::infinity()) const
       {
         Fixture<ScalarT> fixture(data, initial_vr, initial_vi);
         fixture.attachAllInputs(77.0);
@@ -1445,28 +1564,17 @@ namespace GridKit
           return false;
         }
 
-        const RealT infinity = std::numeric_limits<RealT>::infinity();
-        if (target == NonfiniteTarget::FREQUENCY)
+        if (target == NonfiniteTarget::INPUT)
         {
-          fixture.input(index(Ext::FREQ)) = infinity;
+          fixture.input(poisoned_port) = poison_value;
         }
         if (target == NonfiniteTarget::BUS_VOLTAGE)
         {
-          fixture.bus.Vr() = infinity;
+          fixture.bus.Vr() = poison_value;
           fixture.bus.y().setDataUpdated();
         }
 
-        auto* y  = fixture.repca.y().getData();
-        auto* yp = fixture.repca.yp().getData();
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
-        {
-          y[row]  = 0.125 + 0.01 * static_cast<RealT>(row);
-          yp[row] = -0.25 - 0.01 * static_cast<RealT>(row);
-        }
-        // Restore assigned commands after filling model storage with sentinels.
-        fixture.setCommands(qext, pext);
-        fixture.repca.y().setDataUpdated();
-        fixture.repca.yp().setDataUpdated();
+        poisonState(fixture, qext, pext);
 
         const auto                             y_before   = copyVector(fixture.repca.y());
         const auto                             yp_before  = copyVector(fixture.repca.yp());
@@ -1474,7 +1582,7 @@ namespace GridKit
         std::array<RealT, index(Ext::MAXIMUM)> inputs_before{};
         for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
         {
-          inputs_before[port] = fixture.input(port);
+          inputs_before[port] = fixture.input(static_cast<Ext>(port));
         }
 
         bool success = true;
@@ -1484,11 +1592,11 @@ namespace GridKit
           success = false;
         }
 
-        if (!valueUnchanged(fixture.qext(), qext, "qext signal", index(Vars::QEXT)))
+        if (!scalarPreserved(fixture.qext(), qext, "rejected qext preservation"))
         {
           success = false;
         }
-        if (!valueUnchanged(fixture.pext(), pext, "pext signal", index(Vars::PEXT)))
+        if (!scalarPreserved(fixture.pext(), pext, "rejected pext preservation"))
         {
           success = false;
         }
@@ -1506,7 +1614,7 @@ namespace GridKit
         }
         for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
         {
-          if (!valueUnchanged(fixture.input(port),
+          if (!valueUnchanged(fixture.input(static_cast<Ext>(port)),
                               inputs_before[port],
                               "external signal",
                               port))
@@ -1670,12 +1778,34 @@ namespace GridKit
         return success;
       }
 
+      /// A value retains exactly what its owner supplied, including signed
+      /// infinities and NaN.
+      static bool preserved(RealT actual, RealT expected)
+      {
+        if (std::isnan(expected))
+        {
+          return std::isnan(actual);
+        }
+        return actual == expected;
+      }
+
+      bool scalarPreserved(RealT actual, RealT expected, const char* label) const
+      {
+        if (preserved(actual, expected))
+        {
+          return true;
+        }
+        std::cout << label << " changed: " << std::setprecision(std::numeric_limits<RealT>::max_digits10) << actual
+                  << " != " << expected << '\n';
+        return false;
+      }
+
       static bool valueUnchanged(RealT       actual,
                                  RealT       expected,
                                  const char* what,
                                  size_t      index)
       {
-        if (actual == expected)
+        if (preserved(actual, expected))
         {
           return true;
         }
@@ -1898,8 +2028,42 @@ namespace GridKit
         return entry->second;
       }
 
+      bool jacobianRowMatches(const JacobianRow& actual,
+                              const JacobianRow& expected,
+                              size_t             row,
+                              const char*        source,
+                              RealT              tolerance) const
+      {
+        constexpr size_t column_count = externalColumn(index(Ext::MAXIMUM));
+        bool             success      = true;
+        for (size_t column = 0; column < column_count; ++column)
+        {
+          const RealT actual_value   = mapValue(actual, column);
+          const RealT expected_value = mapValue(expected, column);
+          if (!isEqual(actual_value, expected_value, tolerance))
+          {
+            std::cout << "REPCA " << source << " Jacobian row " << row
+                      << " column " << column << " mismatch: "
+                      << std::setprecision(std::numeric_limits<RealT>::max_digits10) << actual_value << " != "
+                      << expected_value << '\n';
+            success = false;
+          }
+        }
+        for (const auto& [column, value] : actual)
+        {
+          if (column >= column_count && !isEqual(value, 0.0, tolerance))
+          {
+            std::cout << "REPCA " << source << " Jacobian row " << row
+                      << " has unexpected column " << column << '\n';
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      template <typename ExpectedT>
       bool jacobianMatches(const std::vector<JacobianRow>& actual,
-                           const JacobianKey&              expected,
+                           const ExpectedT&                expected,
                            const char*                     source,
                            RealT                           tolerance) const
       {
@@ -1909,31 +2073,12 @@ namespace GridKit
           return false;
         }
 
-        constexpr size_t column_count = externalColumn(index(Ext::MAXIMUM));
-        bool             success      = true;
+        bool success = true;
         for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
         {
-          for (size_t column = 0; column < column_count; ++column)
+          if (!jacobianRowMatches(actual[row], expected[row], row, source, tolerance))
           {
-            const RealT actual_value   = mapValue(actual[row], column);
-            const RealT expected_value = mapValue(expected[row], column);
-            if (!isEqual(actual_value, expected_value, tolerance))
-            {
-              std::cout << "REPCA " << source << " Jacobian row " << row
-                        << " column " << column << " mismatch: "
-                        << std::setprecision(std::numeric_limits<RealT>::max_digits10) << actual_value << " != "
-                        << expected_value << '\n';
-              success = false;
-            }
-          }
-          for (const auto& [column, value] : actual[row])
-          {
-            if (column >= column_count && !isEqual(value, 0.0, tolerance))
-            {
-              std::cout << "REPCA " << source << " Jacobian row " << row
-                        << " has unexpected column " << column << '\n';
-              success = false;
-            }
+            success = false;
           }
         }
         return success;
@@ -1958,7 +2103,8 @@ namespace GridKit
         }
         for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
         {
-          fixture.input(port).setVariableNumber(fixture.inputIndex(port));
+          const auto variable = static_cast<Ext>(port);
+          fixture.input(variable).setVariableNumber(fixture.inputIndex(variable));
         }
 
         fixture.repca.y().setDataUpdated();

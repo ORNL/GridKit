@@ -257,7 +257,6 @@ namespace GridKit
       /// and prove assigned command outputs alias the assembled signals.
       TestOutcome repca()
       {
-        using Repca   = PhasorDynamics::Converter::Repca<ScalarT, IdxT>;
         using Buses   = PhasorDynamics::Converter::RepcaBuses;
         using Inputs  = PhasorDynamics::Converter::RepcaSignalInputs;
         using Outputs = PhasorDynamics::Converter::RepcaSignalOutputs;
@@ -346,10 +345,10 @@ namespace GridKit
         success *= system.evaluateJacobian() == 0;
         success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
 
-        auto* repca  = dynamic_cast<Repca*>(system.getComponent(0));
-        success     *= repca != nullptr;
+        auto* repca  = system.getComponent(0);
         auto* qext   = system.getSignal(qext_id);
         auto* pext   = system.getSignal(pext_id);
+        success     *= repca != nullptr;
         success     *= qext != nullptr;
         success     *= pext != nullptr;
         if (repca != nullptr && qext != nullptr && pext != nullptr)
@@ -358,16 +357,12 @@ namespace GridKit
           success *= pext->linked();
           if (qext->linked() && pext->linked())
           {
-            success *= qext->getVariableIndex()
-                       == repca->getVariableIndex(static_cast<IdxT>(Vars::QEXT));
-            success *= pext->getVariableIndex()
-                       == repca->getVariableIndex(static_cast<IdxT>(Vars::PEXT));
-            success *= isEqual(qext->read(),
-                               repca->y().getData()[static_cast<size_t>(Vars::QEXT)],
-                               static_cast<RealT>(1.0e-12));
-            success *= isEqual(pext->read(),
-                               repca->y().getData()[static_cast<size_t>(Vars::PEXT)],
-                               static_cast<RealT>(1.0e-12));
+            success *= qext->getVariableIndex() == static_cast<IdxT>(Vars::QEXT);
+            success *= pext->getVariableIndex() == static_cast<IdxT>(Vars::PEXT);
+
+            // Both nodes alias the model-owned command states.
+            success *= qext->read() == repca->y().getData()[static_cast<size_t>(Vars::QEXT)];
+            success *= pext->read() == repca->y().getData()[static_cast<size_t>(Vars::PEXT)];
           }
         }
 

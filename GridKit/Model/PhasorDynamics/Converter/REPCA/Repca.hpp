@@ -141,19 +141,9 @@ namespace GridKit
           return static_cast<size_t>(variable);
         }
 
-        static void checkConfiguration(bool condition, const char* message, int& errors);
-        void        loadRealParameter(const ModelDataT& data,
-                                      RepcaParameters   parameter,
-                                      RealT&            target,
-                                      const char*       name);
-        void        loadBooleanParameter(const ModelDataT& data,
-                                         RepcaParameters   parameter,
-                                         bool&             target,
-                                         const char*       name);
-        bool        floorTimeConstant(RealT& value, const char* name);
-        void        initializeParameters(const ModelDataT& data);
-        void        initializeMonitor();
-        void        setDerivedParameters();
+        void initializeParameters(const ModelDataT& data);
+        void initializeMonitor();
+        void setDerivedParameters();
 
         bool solveLimiterInput(ScalarT  requested_output,
                                RealT    lower_limit,

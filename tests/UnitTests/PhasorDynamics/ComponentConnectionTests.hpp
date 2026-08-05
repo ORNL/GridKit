@@ -131,6 +131,97 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      /// REGCA initializes first and publishes its branch current and power
+      /// to the four shared nodes. REPCA then initializes around those
+      /// measurements and must hold a steady state. REGCA has no frequency
+      /// output, so that required input keeps a locally owned node.
+      TestOutcome regcaRepca()
+      {
+        using ConverterInternal = PhasorDynamics::Converter::RegcaInternalVariables;
+        using ConverterParams   = PhasorDynamics::Converter::RegcaParameters;
+        using PlantExternal     = PhasorDynamics::Converter::RepcaExternalVariables;
+        using PlantParams       = PhasorDynamics::Converter::RepcaParameters;
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
+            static_cast<ScalarT>(1.0),
+            static_cast<ScalarT>(0.0));
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ibranchr;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ibranchi;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> pbranch;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> qbranch;
+
+        ScalarT freq_value = static_cast<ScalarT>(1.0);
+        IdxT    freq_index = INVALID_INDEX<IdxT>;
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> freq;
+        freq.set(&freq_value, &freq_index);
+
+        PhasorDynamics::Converter::RegcaData<RealT, IdxT> converter_data;
+        converter_data.parameters[ConverterParams::p0]     = static_cast<RealT>(0.0);
+        converter_data.parameters[ConverterParams::q0]     = static_cast<RealT>(0.0);
+        converter_data.parameters[ConverterParams::mva]    = static_cast<RealT>(100.0);
+        converter_data.parameters[ConverterParams::Tg]     = static_cast<RealT>(0.02);
+        converter_data.parameters[ConverterParams::TM]     = static_cast<RealT>(0.02);
+        converter_data.parameters[ConverterParams::Rqmax]  = static_cast<RealT>(999.0);
+        converter_data.parameters[ConverterParams::Rqmin]  = static_cast<RealT>(-999.0);
+        converter_data.parameters[ConverterParams::Rpmax]  = static_cast<RealT>(999.0);
+        converter_data.parameters[ConverterParams::sL]     = true;
+        converter_data.parameters[ConverterParams::IL1]    = static_cast<RealT>(1.1);
+        converter_data.parameters[ConverterParams::VL0]    = static_cast<RealT>(0.4);
+        converter_data.parameters[ConverterParams::VL1]    = static_cast<RealT>(0.9);
+        converter_data.parameters[ConverterParams::VA0]    = static_cast<RealT>(0.4);
+        converter_data.parameters[ConverterParams::VA1]    = static_cast<RealT>(0.9);
+        converter_data.parameters[ConverterParams::Vhvmax] = static_cast<RealT>(1.2);
+
+        PhasorDynamics::Converter::RepcaData<RealT, IdxT> plant_data;
+        plant_data.parameters[PlantParams::Tp] = static_cast<RealT>(0.05);
+
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> converter(&bus, converter_data);
+        PhasorDynamics::Converter::Repca<ScalarT, IdxT> plant(&bus, plant_data);
+
+        auto& converter_signals = converter.getSignals();
+        converter_signals.template assignSignalNode<ConverterInternal::IR>(&ibranchr);
+        converter_signals.template assignSignalNode<ConverterInternal::II>(&ibranchi);
+        converter_signals.template assignSignalNode<ConverterInternal::PBR>(&pbranch);
+        converter_signals.template assignSignalNode<ConverterInternal::QBR>(&qbranch);
+
+        auto& plant_signals = plant.getSignals();
+        plant_signals.template attachSignalNode<PlantExternal::IBRANCHR>(&ibranchr);
+        plant_signals.template attachSignalNode<PlantExternal::IBRANCHI>(&ibranchi);
+        plant_signals.template attachSignalNode<PlantExternal::PBRANCH>(&pbranch);
+        plant_signals.template attachSignalNode<PlantExternal::QBRANCH>(&qbranch);
+        plant_signals.template attachSignalNode<PlantExternal::FREQ>(&freq);
+
+        system.addBus(&bus);
+        system.addComponent(&converter);
+        system.addComponent(&plant);
+
+        success *= system.allocate() == 0;
+        success *= ibranchr.linked();
+        success *= ibranchi.linked();
+        success *= pbranch.linked();
+        success *= qbranch.linked();
+        success *= system.initialize() == 0;
+        success *= system.evaluateResidual() == 0;
+
+        // At zero power the converter draws no branch current or power.
+        success *= isEqual(ibranchr.read(), static_cast<ScalarT>(0.0), kTol);
+        success *= isEqual(ibranchi.read(), static_cast<ScalarT>(0.0), kTol);
+        success *= isEqual(pbranch.read(), static_cast<ScalarT>(0.0), kTol);
+        success *= isEqual(qbranch.read(), static_cast<ScalarT>(0.0), kTol);
+
+        const auto* residual = plant.getResidual().getData();
+        for (IdxT row = 0; row < plant.size(); ++row)
+        {
+          success *= isEqual(residual[row], static_cast<ScalarT>(0.0), kTol);
+        }
+
+        return success.report(__func__);
+      }
     };
 
   } // namespace Testing
