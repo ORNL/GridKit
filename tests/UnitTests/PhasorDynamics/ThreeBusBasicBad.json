@@ -1,17 +1,19 @@
 {
     "header": {
-        "format_version": 0.1,
-        "format_revision": 1,
+        "format_version": 0.2,
+        "format_revision": 0,
         "case_name": "ThreeBusExample",
         "case_description": "None",
-        "case_comments": "None",
+        "case_comments": "None"
+    },
+    "params": {
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
     "buses": [
         {
             "number": 0,
-            "class": "infinite_bus",
+            "class": "BusInfinite",
             "name": "1",
             "init": {
                 "Vr": 1.06,
@@ -25,7 +27,7 @@
         },
         {
             "number": 1,
-            "class": "bus",
+            "class": "Bus",
             "name": "2",
             "init": {
                 "Vr": 1.0599558398065716,
@@ -39,7 +41,7 @@
         },
         {
             "number": 2,
-            "class": "bus",
+            "class": "Bus",
             "name": "3",
             "init": {
                 "Vr": 0.9610827543495831,

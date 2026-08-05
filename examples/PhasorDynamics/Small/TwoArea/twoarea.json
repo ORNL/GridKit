@@ -1,17 +1,19 @@
 {
     "header": {
-        "format_version": 0.1,
-        "format_revision": 1,
+        "format_version": 0.2,
+        "format_revision": 0,
         "case_name": "two_area_case",
         "case_description": "None",
-        "case_comments": "No case Ccmments",
+        "case_comments": "No case Ccmments"
+    },
+    "params": {
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
     "buses": [
         {
             "number": 1,
-            "class": "bus",
+            "class": "Bus",
             "name": "1",
             "init": {
                 "Vr": 0.8417632907983953,
@@ -25,7 +27,7 @@
         },
         {
             "number": 2,
-            "class": "bus",
+            "class": "Bus",
             "name": "2",
             "init": {
                 "Vr": 0.9305542572926901,
@@ -39,7 +41,7 @@
         },
         {
             "number": 3,
-            "class": "bus",
+            "class": "Bus",
             "name": "12",
             "init": {
                 "Vr": 0.9461473466531829,
@@ -53,7 +55,7 @@
         },
         {
             "number": 4,
-            "class": "bus",
+            "class": "Bus",
             "name": "11",
             "init": {
                 "Vr": 0.7311328197493693,
@@ -67,7 +69,7 @@
         },
         {
             "number": 5,
-            "class": "bus",
+            "class": "Bus",
             "name": "101",
             "init": {
                 "Vr": 0.8685212337220097,
@@ -81,7 +83,7 @@
         },
         {
             "number": 6,
-            "class": "bus",
+            "class": "Bus",
             "name": "102",
             "init": {
                 "Vr": 0.919614611832545,
@@ -95,7 +97,7 @@
         },
         {
             "number": 7,
-            "class": "bus",
+            "class": "Bus",
             "name": "3",
             "init": {
                 "Vr": 0.928670340372285,
@@ -109,7 +111,7 @@
         },
         {
             "number": 8,
-            "class": "bus",
+            "class": "Bus",
             "name": "13",
             "init": {
                 "Vr": 0.8761848072516336,
@@ -123,7 +125,7 @@
         },
         {
             "number": 9,
-            "class": "bus",
+            "class": "Bus",
             "name": "112",
             "init": {
                 "Vr": 0.8866370706078832,
@@ -137,7 +139,7 @@
         },
         {
             "number": 10,
-            "class": "bus",
+            "class": "Bus",
             "name": "111",
             "init": {
                 "Vr": 0.7830220631762669,
@@ -576,7 +578,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 1,
                 "speed": 0,
                 "pmech": 1
             },
@@ -595,7 +596,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 2,
                 "speed": 2,
                 "pmech": 3
             },
@@ -614,7 +614,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 3,
                 "speed": 4,
                 "pmech": 5
             },
@@ -633,7 +632,6 @@
         {
             "class": "Tgov1",
             "ports": {
-                "bus": 4,
                 "speed": 6,
                 "pmech": 7
             },

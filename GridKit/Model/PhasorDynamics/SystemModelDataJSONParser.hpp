@@ -51,8 +51,10 @@ namespace GridKit
 
       header.at("case_description").get_to(sm.case_description);
       header.at("case_comments").get_to(sm.case_comments);
-      header.at("freq_base").get_to(sm.freq_base);
-      header.at("va_base").get_to(sm.va_base);
+
+      const auto& params = j.at("params");
+      params.at("freq_base").get_to(sm.freq_base);
+      params.at("va_base").get_to(sm.va_base);
 
       if (j.contains("monitors"))
       {

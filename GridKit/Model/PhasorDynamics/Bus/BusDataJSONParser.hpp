@@ -53,11 +53,11 @@ namespace GridKit
       j.at("number").get_to(bd.bus_id);
 
       auto string_class = j.at("class").get<std::string>();
-      if (string_class == "bus")
+      if (string_class == "Bus")
       {
         bd.bus_type = BusData<RealT, IdxT>::BusType::DEFAULT;
       }
-      else if (string_class == "infinite_bus")
+      else if (string_class == "BusInfinite")
       {
         bd.bus_type = BusData<RealT, IdxT>::BusType::SLACK;
       }
@@ -104,16 +104,6 @@ namespace GridKit
                        << "\" has no value." << error_context.str()
                        << std::endl;
         }
-      }
-
-      if (j.contains("freq_base"))
-      {
-        j.at("freq_base").get_to(bd.freq_base);
-      }
-
-      if (j.contains("va_base"))
-      {
-        j.at("va_base").get_to(bd.va_base);
       }
 
       if (j.contains("mon"))
