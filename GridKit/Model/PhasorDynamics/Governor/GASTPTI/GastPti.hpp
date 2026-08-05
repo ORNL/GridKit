@@ -102,25 +102,14 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        static constexpr size_t index(GastPtiInternalVariables variable)
-        {
-          return static_cast<size_t>(variable);
-        }
-
-        static constexpr size_t index(GastPtiExternalVariables variable)
-        {
-          return static_cast<size_t>(variable);
-        }
-
-        static void checkConfiguration(bool condition, const char* message, int& errors);
-        void        loadRealParameter(const ModelDataT& data,
-                                      GastPtiParameters parameter,
-                                      RealT&            target,
-                                      const char*       name);
-        bool        floorTimeConstant(RealT& value, const char* name);
-        void        initializeParameters(const ModelDataT& data);
-        void        initializeMonitor();
-        void        setDerivedParameters();
+        void loadRealParameter(const ModelDataT& data,
+                               GastPtiParameters parameter,
+                               RealT&            target,
+                               const char*       name);
+        bool floorTimeConstant(RealT& value, const char* name);
+        void initializeParameters(const ModelDataT& data);
+        void initializeMonitor();
+        void setDerivedParameters();
 
         static RealT                              iramp(RealT value);
         [[gnu::always_inline]] inline scalar_type toComponentBase(scalar_type value) const;

@@ -199,23 +199,23 @@ to zero. Using the same smooth `min` as the residual:
 
 ```math
 \begin{aligned}
-  x_{F,0}
+  x_{F}
     &\leftarrow k_{\mathrm{base}}P_{\text{m}}
        +D^\mathrm{turb}\omega \\
-  x_{V,0},x_{T,0}
-    &\leftarrow x_{F,0} \\
-  V_{T,0}
-    &\leftarrow A_T+K_T\left(A_T-x_{F,0}\right) \\
-  m_{T,0}
-    &\leftarrow V_{T,0}-x_{F,0} \\
+  x_{V},x_{T}
+    &\leftarrow x_{F} \\
+  V_{T}
+    &\leftarrow A_T+K_T\left(A_T-x_{F}\right) \\
+  m_{T}
+    &\leftarrow V_{T}-x_{F} \\
   \left(V_{\mathrm{resp}}^{\min},V_{\mathrm{resp}}^{\max}\right)
     &\leftarrow
       \begin{cases}
-        \left(\min(V^{\min},x_{F,0}),\max(V^{\max},x_{F,0})\right)
+        \left(\min(V^{\min},x_{F}),\max(V^{\max},x_{F})\right)
           & \mathrm{mode}=0 \\
-        \left(\min(V^{\min},x_{F,0}),x_{F,0}\right)
+        \left(\min(V^{\min},x_{F}),x_{F}\right)
           & \mathrm{mode}=1 \\
-        \left(x_{F,0},x_{F,0}\right)
+        \left(x_{F},x_{F}\right)
           & \mathrm{mode}=2
       \end{cases} \\
   s^{\mathrm{valve}}
@@ -224,17 +224,17 @@ to zero. Using the same smooth `min` as the residual:
         1 & V_{\mathrm{resp}}^{\min}<V_{\mathrm{resp}}^{\max} \\
         0 & V_{\mathrm{resp}}^{\min}=V_{\mathrm{resp}}^{\max}
       \end{cases} \\
-  \left(V_{D,0},V_0\right)
+  \left(V_{D},V\right)
     &\leftarrow
       \begin{cases}
         \left(
-          V_{T,0}-\text{iramp}\!\left(m_{T,0}\right),
-          x_{F,0}
+          V_{T}-\text{iramp}\!\left(m_{T}\right),
+          x_{F}
         \right)
           & s^{\mathrm{valve}}=1 \\
         \left(
-          x_{F,0},
-          \text{min}\!\left(x_{F,0},V_{T,0}\right)
+          x_{F},
+          \text{min}\!\left(x_{F},V_{T}\right)
         \right)
           & s^{\mathrm{valve}}=0
       \end{cases}

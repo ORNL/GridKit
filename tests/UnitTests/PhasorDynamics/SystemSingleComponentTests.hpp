@@ -331,11 +331,19 @@ namespace GridKit
           {
             success *= pmech->getVariableIndex()
                        == gastpti->getVariableIndex(static_cast<IdxT>(Vars::PMECH));
-            success *= isEqual(pmech->read(),
-                               gastpti->y().getData()[static_cast<size_t>(Vars::PMECH)],
-                               static_cast<RealT>(1.0e-12));
+
+            // The node aliases the model's own storage.
+            success *= pmech->read()
+                       == gastpti->y().getData()[static_cast<size_t>(Vars::PMECH)];
           }
         }
+
+        auto missing_output_data = data;
+        missing_output_data.gastpti[0].signal_outputs.clear();
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_output_system(missing_output_data);
+        std::cout << "Testing expected GASTPTI missing-output configuration error.\n";
+        success *= missing_output_system.verify() > 0;
 
         return success.report(__func__);
       }

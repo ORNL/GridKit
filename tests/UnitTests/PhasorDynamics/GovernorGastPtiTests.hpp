@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <bit>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -39,14 +38,18 @@ namespace GridKit
       GovernorGastPtiTests()  = default;
       ~GovernorGastPtiTests() = default;
 
-      // Behavioral answer keys differ only by accumulated floating-point
-      // roundoff.
+      // Rows that divide by a time constant amplify by 1/T; the worst here is
+      // XVALVE at the floored time constant, 2 eps.
       static constexpr RealT kBehaviorTol =
-          100 * std::numeric_limits<RealT>::epsilon();
+          static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
 
-      // Enzyme and dependency tracking traverse the same smooth expressions
-      // differently; their double-precision derivatives agree to O(1e-10).
-      static constexpr RealT kJacobianTol = 1.0e-9;
+      // Dependency tracking reproduces the literal derivative oracles exactly.
+      static constexpr RealT kDependencyTol = std::numeric_limits<RealT>::epsilon();
+
+      // Enzyme and dependency tracking traverse the same expressions
+      // differently; the worst is XVALVE at a response bound, 0.7 eps.
+      static constexpr RealT kJacobianTol =
+          static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Construction, parameter types and domains, response modes, lifecycle,
       /// and signal linkage.
@@ -62,12 +65,12 @@ namespace GridKit
                          "Logged errors and time-constant warnings are expected.");
 
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> empty;
-        success *= (empty.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
+        success *= (empty.size() == static_cast<IdxT>(index(Internal::MAXIMUM)));
         success *= (empty.getMonitor() == nullptr);
         success *= (empty.verify() > 0); // required pmech assignment is absent
 
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> configured(makeData());
-        success *= (configured.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
+        success *= (configured.size() == static_cast<IdxT>(index(Internal::MAXIMUM)));
         success *= (configured.getMonitor() != nullptr);
         success *= (configured.verify() > 0); // required pmech assignment is absent
 
@@ -77,14 +80,14 @@ namespace GridKit
         typename GastPtiT::VectorT bound_yp;
         typename GastPtiT::VectorT bound_f;
         typename GastPtiT::VectorT bound_abs_tol;
-        const auto                 bound_size = static_cast<IdxT>(index(Vars::MAXIMUM));
+        const auto                 bound_size = static_cast<IdxT>(index(Internal::MAXIMUM));
         bound_y.resize(bound_size);
         bound_yp.resize(bound_size);
         bound_f.resize(bound_size);
         bound_abs_tol.resize(bound_size);
         PhasorDynamics::SignalNode<ScalarT, IdxT> bound_pmech;
         GastPtiT                                  bound(makeData());
-        bound.getSignals().template assignSignalNode<Vars::PMECH>(&bound_pmech);
+        bound.getSignals().template assignSignalNode<Internal::PMECH>(&bound_pmech);
         success *= (bound.bind(bound_y, bound_yp, bound_f, bound_abs_tol, 0) == 0);
         success *= (bound.verify() == 0);
 
@@ -105,22 +108,19 @@ namespace GridKit
         success *= invalidParameterCase(Params::Trate, 0.0);
         success *= invalidParameterCase(Params::Trate, -1.0);
 
-        const std::array<Params, 10> real_parameters{{
-            Params::R,
-            Params::T1,
-            Params::T2,
-            Params::T3,
-            Params::At,
-            Params::Kt,
-            Params::Vmax,
-            Params::Vmin,
-            Params::Dturb,
-            Params::Trate,
-        }};
-        for (const Params parameter : real_parameters)
+        for (const Params parameter : {Params::R,
+                                       Params::T1,
+                                       Params::T2,
+                                       Params::T3,
+                                       Params::At,
+                                       Params::Kt,
+                                       Params::Vmax,
+                                       Params::Vmin,
+                                       Params::Dturb,
+                                       Params::Trate})
         {
-          success *= invalidParameterCase(
-              parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::quiet_NaN());
+          success *= invalidParameterCase(parameter, std::numeric_limits<RealT>::infinity());
         }
 
         // A finite serialized rating that overflows its MW-to-VA conversion is
@@ -131,13 +131,10 @@ namespace GridKit
                                         std::numeric_limits<RealT>::denorm_min());
 
         // The response mode must be an integer inside {0, 1, 2}.
-        auto real_mode                      = makeData();
-        real_mode.parameters[Params::mode]  = 2.0;
-        success                            *= (verifyData(real_mode) > 0);
-
-        auto invalid_mode                      = makeData();
-        invalid_mode.parameters[Params::mode]  = static_cast<IdxT>(3);
-        success                               *= (verifyData(invalid_mode) > 0);
+        success *= invalidParameterCase(Params::mode, static_cast<IdxT>(3));
+        success *= invalidParameterCase(Params::mode, static_cast<RealT>(2.0));
+        success *= invalidParameterCase(Params::mode, true);
+        success *= invalidParameterCase(Params::mode, false);
 
         // Exercise the serialized integers directly. Named-enum casts here
         // would follow an accidental enum reorder and miss a wire-format bug.
@@ -180,12 +177,10 @@ namespace GridKit
         Fixture<ScalarT> integer_fixture(integer_real);
         success *= integer_fixture.initialize(0.4);
         success *= stateMatches(integer_fixture.gastpti,
-                                {{index(Vars::XFLOW), 0.8}},
+                                {{index(Internal::XFLOW), 0.8}},
                                 "integer-valued component base");
 
-        auto bad_numeric_type                    = makeData();
-        bad_numeric_type.parameters[Params::T1]  = true;
-        success                                 *= (verifyData(bad_numeric_type) > 0);
+        success *= invalidParameterCase(Params::T1, true);
 
         for (const RealT system_base : {-100.0e6,
                                         ZERO<RealT>,
@@ -198,8 +193,8 @@ namespace GridKit
           success *= (invalid_base.gastpti.verify() > 0);
         }
 
-        success *= unlinkedSignalRejected<Ext::OMEGA>();
-        success *= unlinkedSignalRejected<Ext::PREF>();
+        success *= unlinkedSignalRejected<External::OMEGA>();
+        success *= unlinkedSignalRejected<External::PREF>();
         success *= aliasedSignalsRejected();
 
         Fixture<ScalarT> unallocated(makeData());
@@ -222,16 +217,16 @@ namespace GridKit
           Fixture<ScalarT> time_fixture(time_data);
           success *= time_fixture.initialize(0.4);
           setState(time_fixture.gastpti,
-                   {{index(Vars::XVALVE), 0.401},
-                    {index(Vars::XFLOW), 0.4},
-                    {index(Vars::XTEMP), 0.399},
-                    {index(Vars::VLV), 0.402}});
+                   {{index(Internal::XVALVE), 0.401},
+                    {index(Internal::XFLOW), 0.4},
+                    {index(Internal::XTEMP), 0.399},
+                    {index(Internal::VLV), 0.402}});
           success *= (time_fixture.evaluate() == 0);
           success *= residualsMatch(
               time_fixture.gastpti,
-              {{index(Vars::XVALVE), test_case.expected_residual},
-               {index(Vars::XFLOW), test_case.expected_residual},
-               {index(Vars::XTEMP), test_case.expected_residual}},
+              {{index(Internal::XVALVE), test_case.expected_residual},
+               {index(Internal::XFLOW), test_case.expected_residual},
+               {index(Internal::XTEMP), test_case.expected_residual}},
               "in-place time-constant floor boundary");
         }
 
@@ -249,24 +244,24 @@ namespace GridKit
 
         Fixture<ScalarT> fixture(data);
         fixture.attachAllInputs();
-        fixture.input(index(Ext::PREF))  = 99.0; // stale value the publication must replace
-        success                         *= fixture.initialize(0.4);
-        success                         *= (fixture.gastpti.tagDifferentiable() == 0);
-        success                         *= (fixture.evaluate() == 0);
+        fixture.input(index(External::PREF))  = 99.0; // stale value the publication must replace
+        success                              *= fixture.initialize(0.4);
+        success                              *= (fixture.gastpti.tagDifferentiable() == 0);
+        success                              *= (fixture.evaluate() == 0);
 
         const auto* y  = fixture.gastpti.y().getData();
-        success       *= scalarMatches(y[index(Vars::XVALVE)], 0.8, "XVALVE on component base");
-        success       *= scalarMatches(y[index(Vars::XFLOW)], 0.8, "XFLOW on component base");
-        success       *= scalarMatches(y[index(Vars::XTEMP)], 0.8, "XTEMP on component base");
-        success       *= scalarMatches(y[index(Vars::VLOAD)], 0.8, "VLOAD behind the LV gate");
-        success       *= scalarMatches(y[index(Vars::VTEMP)], 2.36, "VTEMP at the temperature limit");
-        success       *= scalarMatches(y[index(Vars::VLV)], 0.8, "VLV at the fuel flow");
-        success       *= scalarExactlyMatches(fixture.pmech(), 0.4, "preserved pmech seed");
+        success       *= scalarMatches(y[index(Internal::XVALVE)], 0.8, "XVALVE on component base");
+        success       *= scalarMatches(y[index(Internal::XFLOW)], 0.8, "XFLOW on component base");
+        success       *= scalarMatches(y[index(Internal::XTEMP)], 0.8, "XTEMP on component base");
+        success       *= scalarMatches(y[index(Internal::VLOAD)], 0.8, "VLOAD behind the LV gate");
+        success       *= scalarMatches(y[index(Internal::VTEMP)], 2.36, "VTEMP at the temperature limit");
+        success       *= scalarMatches(y[index(Internal::VLV)], 0.8, "VLV at the fuel flow");
+        success       *= scalarPreserved(fixture.pmech(), 0.4, "preserved pmech seed");
 
-        success *= scalarExactlyMatches(fixture.input(index(Ext::OMEGA)),
-                                        0.0,
-                                        "preserved omega input");
-        success *= scalarMatches(fixture.input(index(Ext::PREF)), 0.4, "published pref");
+        success *= scalarPreserved(fixture.input(index(External::OMEGA)),
+                                   0.0,
+                                   "preserved omega input");
+        success *= scalarMatches(fixture.input(index(External::PREF)), 0.4, "published pref");
 
         RealT                                     time = 0.0;
         Model::VariableMonitorController<ScalarT> monitor(time);
@@ -306,7 +301,7 @@ namespace GridKit
 
         for (size_t i = 0; i < static_cast<size_t>(fixture.gastpti.size()); ++i)
         {
-          const bool expected = i <= index(Vars::XTEMP);
+          const bool expected = i <= index(Internal::XTEMP);
           if (fixture.gastpti.tag()[i] != expected)
           {
             std::cout << "GASTPTI differentiability tag " << i << " mismatch\n";
@@ -317,10 +312,10 @@ namespace GridKit
 
         // A system-base reference step lands on the droop row scaled by the
         // base ratio.
-        fixture.input(index(Ext::PREF))  = 0.5; // the published 0.4 plus a 0.1 step
-        success                         *= (fixture.evaluate() == 0);
-        success                         *= residualsMatch(fixture.gastpti,
-                                                          {{index(Vars::VLOAD), 0.01}},
+        fixture.input(index(External::PREF))  = 0.5; // the published 0.4 plus a 0.1 step
+        success                              *= (fixture.evaluate() == 0);
+        success                              *= residualsMatch(fixture.gastpti,
+                                                               {{index(Internal::VLOAD), 0.01}},
                                   "reference step on the component base");
 
         // Unattached ports fall back to the reference latched by
@@ -346,27 +341,27 @@ namespace GridKit
         {
           Fixture<ScalarT> speed_fixture(data);
           speed_fixture.attachAllInputs();
-          speed_fixture.input(index(Ext::OMEGA))  = test_case.omega;
-          success                                *= speed_fixture.initialize(0.4);
-          success                                *= stateMatches(speed_fixture.gastpti,
-                                                                 {{index(Vars::XVALVE), test_case.xflow},
-                                                                  {index(Vars::XFLOW), test_case.xflow},
-                                                                  {index(Vars::XTEMP), test_case.xflow},
-                                                                  {index(Vars::VLOAD), test_case.xflow},
-                                                                  {index(Vars::VTEMP), test_case.vtemp},
-                                                                  {index(Vars::VLV), test_case.xflow}},
+          speed_fixture.input(index(External::OMEGA))  = test_case.omega;
+          success                                     *= speed_fixture.initialize(0.4);
+          success                                     *= stateMatches(speed_fixture.gastpti,
+                                                                      {{index(Internal::XVALVE), test_case.xflow},
+                                                                       {index(Internal::XFLOW), test_case.xflow},
+                                                                       {index(Internal::XTEMP), test_case.xflow},
+                                                                       {index(Internal::VLOAD), test_case.xflow},
+                                                                       {index(Internal::VTEMP), test_case.vtemp},
+                                                                       {index(Internal::VLV), test_case.xflow}},
                                   "signed nonzero-speed initialization");
-          success                                *= scalarExactlyMatches(speed_fixture.pmech(),
-                                          0.4,
-                                          "signed-speed pmech preservation");
-          success                                *= scalarExactlyMatches(speed_fixture.input(index(Ext::OMEGA)),
-                                          test_case.omega,
-                                          "signed-speed input preservation");
-          success                                *= scalarMatches(speed_fixture.input(index(Ext::PREF)),
+          success                                     *= scalarPreserved(speed_fixture.pmech(),
+                                     0.4,
+                                     "signed-speed pmech preservation");
+          success                                     *= scalarPreserved(speed_fixture.input(index(External::OMEGA)),
+                                     test_case.omega,
+                                     "signed-speed input preservation");
+          success                                     *= scalarMatches(speed_fixture.input(index(External::PREF)),
                                    test_case.pref,
                                    "signed-speed pref publication");
-          success                                *= (speed_fixture.evaluate() == 0);
-          success                                *= allResidualsZero(speed_fixture.gastpti);
+          success                                     *= (speed_fixture.evaluate() == 0);
+          success                                     *= allResidualsZero(speed_fixture.gastpti);
         }
 
         return success.report(__func__);
@@ -472,11 +467,11 @@ namespace GridKit
         over_rated.attachAllInputs();
         success *= over_rated.initialize(0.6); // fuel flow 1.2 above Vmax = 1.1
         success *= stateMatches(over_rated.gastpti,
-                                {{index(Vars::XVALVE), 1.2}, {index(Vars::XFLOW), 1.2}, {index(Vars::VLV), 1.2}},
+                                {{index(Internal::XVALVE), 1.2}, {index(Internal::XFLOW), 1.2}, {index(Internal::VLV), 1.2}},
                                 "over-rated dispatch");
-        success *= scalarExactlyMatches(over_rated.pmech(),
-                                        0.6,
-                                        "preserved over-rated pmech seed");
+        success *= scalarPreserved(over_rated.pmech(),
+                                   0.6,
+                                   "preserved over-rated pmech seed");
         success *= (over_rated.evaluate() == 0);
         success *= allResidualsZero(over_rated.gastpti);
 
@@ -504,7 +499,7 @@ namespace GridKit
           reinitialize.seedPmech(1.0);
           const auto y_before    = copyVector(reinitialize.gastpti.y());
           const auto yp_before   = copyVector(reinitialize.gastpti.yp());
-          const auto pref_before = reinitialize.input(index(Ext::PREF));
+          const auto pref_before = reinitialize.input(index(External::PREF));
           if (reinitialize.gastpti.initialize() == 0)
           {
             std::cout << "Expected failed GASTPTI reinitialization\n";
@@ -512,16 +507,16 @@ namespace GridKit
           }
           success *= vectorUnchanged(reinitialize.gastpti.y(), y_before, "reinitialized state");
           success *= vectorUnchanged(reinitialize.gastpti.yp(), yp_before, "reinitialized derivative");
-          success *= scalarExactlyMatches(reinitialize.input(index(Ext::PREF)),
-                                          pref_before,
-                                          "reinitialized pref");
+          success *= scalarPreserved(reinitialize.input(index(External::PREF)),
+                                     pref_before,
+                                     "reinitialized pref");
 
           reinitialize.seedPmech(initial_pmech);
           const RealT xflow = 2.0 * initial_pmech;
           setState(reinitialize.gastpti,
-                   {{index(Vars::XVALVE), xflow},
-                    {index(Vars::VLV), xflow + 0.25}});
-          setDerivative(reinitialize.gastpti, {{index(Vars::XVALVE), 0.0}});
+                   {{index(Internal::XVALVE), xflow},
+                    {index(Internal::VLV), xflow + 0.25}});
+          setDerivative(reinitialize.gastpti, {{index(Internal::XVALVE), 0.0}});
           success        *= (reinitialize.evaluate() == 0);
           RealT expected  = 0.35714285714285715;
           if (initial_pmech == ZERO<RealT>)
@@ -529,7 +524,7 @@ namespace GridKit
             expected = ZERO<RealT>;
           }
           success *= residualsMatch(reinitialize.gastpti,
-                                    {{index(Vars::XVALVE), expected}},
+                                    {{index(Internal::XVALVE), expected}},
                                     "failed reinitialization preserves response policy");
         }
 
@@ -586,13 +581,13 @@ namespace GridKit
           pinned.attachAllInputs();
           success *= pinned.initialize(0.4);
           success *= stateMatches(pinned.gastpti,
-                                  {{index(Vars::XVALVE), 0.8},
-                                   {index(Vars::XFLOW), 0.8},
-                                   {index(Vars::XTEMP), 0.8},
-                                   {index(Vars::VLOAD), 0.8},
-                                   {index(Vars::VTEMP), test_case.vtemp},
-                                   {index(Vars::VLV), test_case.vlv},
-                                   {index(Vars::PMECH), 0.4}},
+                                  {{index(Internal::XVALVE), 0.8},
+                                   {index(Internal::XFLOW), 0.8},
+                                   {index(Internal::XTEMP), 0.8},
+                                   {index(Internal::VLOAD), 0.8},
+                                   {index(Internal::VTEMP), test_case.vtemp},
+                                   {index(Internal::VLV), test_case.vlv},
+                                   {index(Internal::PMECH), 0.4}},
                                   test_case.label);
           success *= (pinned.evaluate() == 0);
           success *= allResidualsZero(pinned.gastpti);
@@ -613,7 +608,7 @@ namespace GridKit
         zero_seed.attachAllInputs();
         success *= zero_seed.initialize(0.0);
         success *= stateMatches(zero_seed.gastpti,
-                                {{index(Vars::XFLOW), 0.0}, {index(Vars::VTEMP), 2.52}},
+                                {{index(Internal::XFLOW), 0.0}, {index(Internal::VTEMP), 2.52}},
                                 "zero seed");
         success *= (zero_seed.evaluate() == 0);
         success *= allResidualsZero(zero_seed.gastpti);
@@ -624,9 +619,9 @@ namespace GridKit
         negative_seed.attachAllInputs();
         success *= negative_seed.initialize(-0.1);
         success *= stateMatches(negative_seed.gastpti,
-                                {{index(Vars::XFLOW), -0.2},
-                                 {index(Vars::VLOAD), -0.2},
-                                 {index(Vars::PMECH), -0.1}},
+                                {{index(Internal::XFLOW), -0.2},
+                                 {index(Internal::VLOAD), -0.2},
+                                 {index(Internal::PMECH), -0.1}},
                                 "negative finite dispatch");
         success *= (negative_seed.evaluate() == 0);
         success *= allResidualsZero(negative_seed.gastpti);
@@ -648,11 +643,11 @@ namespace GridKit
         fixture.attachAllInputs();
         success *= fixture.initialize(0.4);
         success *= stateMatches(fixture.gastpti,
-                                {{index(Vars::VLOAD), 0.8155903227031184},
-                                 {index(Vars::VTEMP), 0.8001000000000001},
-                                 {index(Vars::VLV), 0.8}},
+                                {{index(Internal::VLOAD), 0.8155903227031184},
+                                 {index(Internal::VTEMP), 0.8001000000000001},
+                                 {index(Internal::VLV), 0.8}},
                                 "near-gate initialization");
-        success *= scalarMatches(fixture.input(index(Ext::PREF)),
+        success *= scalarMatches(fixture.input(index(External::PREF)),
                                  0.4077951613515592,
                                  "near-gate published pref");
         success *= (fixture.evaluate() == 0);
@@ -668,8 +663,8 @@ namespace GridKit
         large_margin.attachAllInputs();
         success *= large_margin.initialize(0.4);
         success *= stateMatches(large_margin.gastpti,
-                                {{index(Vars::VLOAD), 0.8},
-                                 {index(Vars::VLV), 0.8}},
+                                {{index(Internal::VLOAD), 0.8},
+                                 {index(Internal::VLV), 0.8}},
                                 "large finite temperature margin");
         success *= (large_margin.evaluate() == 0);
         success *= allResidualsZero(large_margin.gastpti);
@@ -677,10 +672,13 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Fixed numerical literals provide an independent answer key for all
-      /// seven residual rows.
+      /// A fixed numerical answer key for all seven GASTPTI equations and
+      /// their derivatives. The expected values are literals, not a second
+      /// implementation of GASTPTI.
       TestOutcome residualEquations()
       {
+        using DepMap = DependencyTracking::Variable::DependencyMap;
+
         TestStatus success = true;
 
         Fixture<ScalarT> fixture(makeResidualData());
@@ -693,18 +691,60 @@ namespace GridKit
 
         // Values are pinned after an independent one-time evaluation of the
         // documented equations at setAnswerKeyState()/setAnswerKeyInputs().
-        const std::array<Row, index(Vars::MAXIMUM)> expected{{
-            {index(Vars::XVALVE), 0.24614285714285705},
-            {index(Vars::XFLOW), 0.17755555555555544},
-            {index(Vars::XTEMP), -0.001181818181818159},
-            {index(Vars::VLOAD), -0.0326},
-            {index(Vars::VTEMP), 0.978},
-            {index(Vars::VLV), 0.12},
-            {index(Vars::PMECH), -0.11239999999999999},
+        const std::array<Row, index(Internal::MAXIMUM)> expected{{
+            {index(Internal::XVALVE), 0.24614285714285705},
+            {index(Internal::XFLOW), 0.17755555555555544},
+            {index(Internal::XTEMP), -0.001181818181818159},
+            {index(Internal::VLOAD), -0.0326},
+            {index(Internal::VTEMP), 0.978},
+            {index(Internal::VLV), 0.12},
+            {index(Internal::PMECH), -0.11239999999999999},
         }};
 
         success *= (static_cast<size_t>(fixture.gastpti.getResidual().getSize()) == expected.size());
         success *= residualsMatch(fixture.gastpti, expected);
+
+        const auto                data     = makeResidualData();
+        const auto                interior = dependencyTrackingJacobian(data, success);
+        const std::vector<DepMap> interior_expected{
+            {{index(Internal::XVALVE), -3.8571428571428572},
+             {index(Internal::VLV), 2.8571428571428572}},
+            {{index(Internal::XVALVE), 2.2222222222222223},
+             {index(Internal::XFLOW), -3.2222222222222223}},
+            {{index(Internal::XFLOW), 0.45454545454545453},
+             {index(Internal::XTEMP), -1.4545454545454546}},
+            {{index(Internal::VLOAD), -0.06},
+             {index(Internal::MAXIMUM) + index(External::OMEGA), -1.0},
+             {index(Internal::MAXIMUM) + index(External::PREF), 0.12}},
+            {{index(Internal::XTEMP), -0.4},
+             {index(Internal::VTEMP), -1.0}},
+            {{index(Internal::VLOAD), 1.0},
+             {index(Internal::VLV), -1.0}},
+            {{index(Internal::XFLOW), 1.0},
+             {index(Internal::PMECH), -2.0},
+             {index(Internal::MAXIMUM) + index(External::OMEGA), -0.12}},
+        };
+        success *= jacobianMatches(interior,
+                                   interior_expected,
+                                   "Normal interior answer key");
+
+        // Fixed mode removes only the valve-drive coupling. The downstream
+        // lag rows and all four algebraic rows remain unchanged.
+        auto fixed_data                     = data;
+        fixed_data.parameters[Params::mode] = static_cast<IdxT>(2);
+        const auto                fixed     = dependencyTrackingJacobian(fixed_data, success);
+        const std::vector<DepMap> fixed_expected{
+            {{index(Internal::XVALVE), -1.0}},
+            interior_expected[index(Internal::XFLOW)],
+            interior_expected[index(Internal::XTEMP)],
+            interior_expected[index(Internal::VLOAD)],
+            interior_expected[index(Internal::VTEMP)],
+            interior_expected[index(Internal::VLV)],
+            interior_expected[index(Internal::PMECH)],
+        };
+        success *= jacobianMatches(fixed,
+                                   fixed_expected,
+                                   "Fixed-mode answer key");
 
         return success.report(__func__);
       }
@@ -739,23 +779,23 @@ namespace GridKit
           antiwindup.attachAllInputs();
           success *= antiwindup.initialize(0.4);
           setState(antiwindup.gastpti,
-                   {{index(Vars::XVALVE), test_case.xvalve}, {index(Vars::VLV), test_case.vlv}});
-          setDerivative(antiwindup.gastpti, {{index(Vars::XVALVE), 0.0}});
+                   {{index(Internal::XVALVE), test_case.xvalve}, {index(Internal::VLV), test_case.vlv}});
+          setDerivative(antiwindup.gastpti, {{index(Internal::XVALVE), 0.0}});
           success *= (antiwindup.evaluate() == 0);
           success *= residualsMatch(antiwindup.gastpti,
-                                    {{index(Vars::XVALVE), test_case.expected}},
+                                    {{index(Internal::XVALVE), test_case.expected}},
                                     test_case.label);
         }
 
         // A speed deviation enters the droop and turbine-damping rows.
         Fixture<ScalarT> speed_step(makeResidualData());
         speed_step.attachAllInputs();
-        success                             *= speed_step.initialize(0.4);
-        speed_step.input(index(Ext::OMEGA))  = 0.05;
-        success                             *= (speed_step.evaluate() == 0);
-        success                             *= residualsMatch(speed_step.gastpti,
-                                                              {{index(Vars::VLOAD), -0.05},
-                                                               {index(Vars::PMECH), -0.006}},
+        success                                  *= speed_step.initialize(0.4);
+        speed_step.input(index(External::OMEGA))  = 0.05;
+        success                                  *= (speed_step.evaluate() == 0);
+        success                                  *= residualsMatch(speed_step.gastpti,
+                                                                   {{index(Internal::VLOAD), -0.05},
+                                                                    {index(Internal::PMECH), -0.006}},
                                   "speed deviation in the droop and damping rows");
 
         struct ModeCase
@@ -783,17 +823,17 @@ namespace GridKit
           success *= mode_fixture.initialize(0.4);
 
           setState(mode_fixture.gastpti,
-                   {{index(Vars::XVALVE), 0.8}, {index(Vars::VLV), 1.05}});
-          setDerivative(mode_fixture.gastpti, {{index(Vars::XVALVE), 0.0}});
+                   {{index(Internal::XVALVE), 0.8}, {index(Internal::VLV), 1.05}});
+          setDerivative(mode_fixture.gastpti, {{index(Internal::XVALVE), 0.0}});
           success *= (mode_fixture.evaluate() == 0);
           success *= residualsMatch(mode_fixture.gastpti,
-                                    {{index(Vars::XVALVE), test_case.outward_residual}},
+                                    {{index(Internal::XVALVE), test_case.outward_residual}},
                                     test_case.label);
 
-          setState(mode_fixture.gastpti, {{index(Vars::VLV), 0.55}});
+          setState(mode_fixture.gastpti, {{index(Internal::VLV), 0.55}});
           success *= (mode_fixture.evaluate() == 0);
           success *= residualsMatch(mode_fixture.gastpti,
-                                    {{index(Vars::XVALVE), test_case.restoring_residual}},
+                                    {{index(Internal::XVALVE), test_case.restoring_residual}},
                                     test_case.label);
         }
 
@@ -813,12 +853,12 @@ namespace GridKit
         {
           const RealT xvalve = 0.8 + offset;
           setState(down_only.gastpti,
-                   {{index(Vars::XVALVE), xvalve},
-                    {index(Vars::VLV), xvalve + 0.25}});
-          setDerivative(down_only.gastpti, {{index(Vars::XVALVE), 0.0}});
+                   {{index(Internal::XVALVE), xvalve},
+                    {index(Internal::VLV), xvalve + 0.25}});
+          setDerivative(down_only.gastpti, {{index(Internal::XVALVE), 0.0}});
           success *= (down_only.evaluate() == 0);
           success *= residualsMatch(down_only.gastpti,
-                                    {{index(Vars::XVALVE), expected}},
+                                    {{index(Internal::XVALVE), expected}},
                                     "Down Only upper-response transition");
         }
 
@@ -837,14 +877,28 @@ namespace GridKit
           success              *= normal.initialize(pmech);
           const RealT boundary  = 2.0 * pmech;
           setState(normal.gastpti,
-                   {{index(Vars::XVALVE), boundary},
-                    {index(Vars::VLV), boundary + command}});
-          setDerivative(normal.gastpti, {{index(Vars::XVALVE), 0.0}});
+                   {{index(Internal::XVALVE), boundary},
+                    {index(Internal::VLV), boundary + command}});
+          setDerivative(normal.gastpti, {{index(Internal::XVALVE), 0.0}});
           success *= (normal.evaluate() == 0);
           success *= residualsMatch(normal.gastpti,
-                                    {{index(Vars::XVALVE), expected}},
+                                    {{index(Internal::XVALVE), expected}},
                                     "Normal adjusted response boundary");
         }
+
+        // The one-half response at an active upper bound has a large state
+        // derivative from the smooth gate. Exercise both a Normal interval
+        // expanded by initialization and the Down Only upper boundary.
+        success *= responseBoundaryJacobian(makeResidualData(),
+                                            static_cast<IdxT>(0),
+                                            0.6,
+                                            1.2,
+                                            "Normal adjusted upper bound");
+        success *= responseBoundaryJacobian(makeResidualData(),
+                                            static_cast<IdxT>(1),
+                                            0.4,
+                                            0.8,
+                                            "Down Only upper bound");
 
         // Fixed mode pins the valve while the downstream fuel-flow and
         // exhaust-temperature lags remain live.
@@ -857,25 +911,25 @@ namespace GridKit
         setAnswerKeyState(fixed.gastpti);
         success *= (fixed.evaluate() == 0);
         success *= residualsMatch(fixed.gastpti,
-                                  {{index(Vars::XVALVE), -0.011},
-                                   {index(Vars::XFLOW), 0.17755555555555544},
-                                   {index(Vars::XTEMP), -0.001181818181818159}},
+                                  {{index(Internal::XVALVE), -0.011},
+                                   {index(Internal::XFLOW), 0.17755555555555544},
+                                   {index(Internal::XTEMP), -0.001181818181818159}},
                                   "mode 2 pins only the fuel valve");
 
         // From initialized rest, a speed step still enters both live algebraic
         // interface rows.
         Fixture<ScalarT> fixed_interface(fixed_data);
         fixed_interface.attachAllInputs();
-        success                                  *= fixed_interface.initialize(0.4);
-        fixed_interface.input(index(Ext::OMEGA))  = 0.05;
-        success                                  *= (fixed_interface.evaluate() == 0);
-        success                                  *= residualsMatch(
+        success                                       *= fixed_interface.initialize(0.4);
+        fixed_interface.input(index(External::OMEGA))  = 0.05;
+        success                                       *= (fixed_interface.evaluate() == 0);
+        success                                       *= residualsMatch(
             fixed_interface.gastpti,
-            {{index(Vars::XVALVE), 0.0},
-                                              {index(Vars::XFLOW), 0.0},
-                                              {index(Vars::XTEMP), 0.0},
-                                              {index(Vars::VLOAD), -0.05},
-                                              {index(Vars::PMECH), -0.006}},
+            {{index(Internal::XVALVE), 0.0},
+                                                   {index(Internal::XFLOW), 0.0},
+                                                   {index(Internal::XTEMP), 0.0},
+                                                   {index(Internal::VLOAD), -0.05},
+                                                   {index(Internal::PMECH), -0.006}},
             "Fixed mode preserves its live algebraic interface");
 
         // Down Only pins the valve when initialization is below or exactly at
@@ -886,10 +940,8 @@ namespace GridKit
              std::array<std::pair<RealT, RealT>, 3>{{
                  {0.0, 0.0},
                  {0.025, 0.0},
-                 // The 0.002-wide interval is narrower than the 1/MU smooth
-                 // transition. At its upper boundary the lower gate is still
-                 // 0.61774787476924897, so the combined indicator is
-                 // 1 - 0.5 * lower_gate = 0.69112606261537546.
+                 // This interval is narrower than the 1/MU transition, so
+                 // both gates are partly open at its upper boundary.
                  {0.026, 0.4936614732966968},
              }})
         {
@@ -898,14 +950,14 @@ namespace GridKit
           success              *= narrow_down_only.initialize(pmech);
           const RealT boundary  = 2.0 * pmech;
           setState(narrow_down_only.gastpti,
-                   {{index(Vars::XVALVE), boundary},
-                    {index(Vars::VLV), boundary + 0.25}});
+                   {{index(Internal::XVALVE), boundary},
+                    {index(Internal::VLV), boundary + 0.25}});
           setDerivative(narrow_down_only.gastpti,
-                        {{index(Vars::XVALVE), 0.0}});
+                        {{index(Internal::XVALVE), 0.0}});
           success *= (narrow_down_only.evaluate() == 0);
           success *= residualsMatch(
               narrow_down_only.gastpti,
-              {{index(Vars::XVALVE), expected}},
+              {{index(Internal::XVALVE), expected}},
               "Down Only response interval at the configured lower limit");
         }
 
@@ -917,9 +969,9 @@ namespace GridKit
         setAnswerKeyState(collapsed.gastpti);
         success *= (collapsed.evaluate() == 0);
         success *= residualsMatch(collapsed.gastpti,
-                                  {{index(Vars::XVALVE), -0.011},
-                                   {index(Vars::XFLOW), 0.17755555555555544},
-                                   {index(Vars::XTEMP), -0.001181818181818159}},
+                                  {{index(Internal::XVALVE), -0.011},
+                                   {index(Internal::XFLOW), 0.17755555555555544},
+                                   {index(Internal::XTEMP), -0.001181818181818159}},
                                   "collapsed Down Only pins only the fuel valve");
 
         return success.report(__func__);
@@ -951,12 +1003,12 @@ namespace GridKit
           gate.attachAllInputs();
           success *= gate.initialize(0.4);
           setState(gate.gastpti,
-                   {{index(Vars::VLOAD), test_case.vload},
-                    {index(Vars::VTEMP), test_case.vtemp},
-                    {index(Vars::VLV), 0.0}});
+                   {{index(Internal::VLOAD), test_case.vload},
+                    {index(Internal::VTEMP), test_case.vtemp},
+                    {index(Internal::VLV), 0.0}});
           success *= (gate.evaluate() == 0);
           success *= residualsMatch(gate.gastpti,
-                                    {{index(Vars::VLV), test_case.expected}},
+                                    {{index(Internal::VLV), test_case.expected}},
                                     test_case.label);
         }
 
@@ -965,137 +1017,80 @@ namespace GridKit
         feedback.attachAllInputs();
         success *= feedback.initialize(0.4);
         setState(feedback.gastpti,
-                 {{index(Vars::XTEMP), 0.9}, {index(Vars::VTEMP), 1.1}});
+                 {{index(Internal::XTEMP), 0.9}, {index(Internal::VTEMP), 1.1}});
         success *= (feedback.evaluate() == 0);
         success *= residualsMatch(feedback.gastpti,
-                                  {{index(Vars::VTEMP), 1.06}},
+                                  {{index(Internal::VTEMP), 1.06}},
                                   "temperature feedback");
+
+        // At equality, the smooth low-value selector splits its sensitivity
+        // evenly between the two demand signals.
+        Fixture<DependencyTracking::Variable> selector(makeResidualData());
+        selector.attachAllInputs();
+        success *= selector.initialize(0.4);
+        setState(selector.gastpti,
+                 {{index(Internal::VLOAD), 0.9},
+                  {index(Internal::VTEMP), 0.9},
+                  {index(Internal::VLV), 0.7}});
+        numberVariables(selector);
+        success *= (selector.evaluate() == 0);
+
+        const DependencyMap expected{{index(Internal::VLOAD), 0.5},
+                                     {index(Internal::VTEMP), 0.5},
+                                     {index(Internal::VLV), -1.0}};
+        success *= jacobianRowMatches(
+            selector.gastpti.getResidual().getData()[index(Internal::VLV)].getDependencies(),
+            expected,
+            index(Internal::VLV),
+            "selector equality");
 
         return success.report(__func__);
       }
 
-      /// Fixed derivative oracles cover all rows and response regions, with
-      /// Enzyme agreement checked when available.
+#ifdef GRIDKIT_ENABLE_ENZYME
+      /// One rich state and both external inputs drive both sensitivity
+      /// paths; every Enzyme CSR row must match dependency tracking.
       TestOutcome jacobian()
       {
-        using DepMap = DependencyTracking::Variable::DependencyMap;
-        using DepVar = DependencyTracking::Variable;
-
         TestStatus success = true;
 
         const auto data = makeResidualData();
 
-        const auto                interior = dependencyTrackingJacobian(data, success);
-        const std::vector<DepMap> interior_expected{
-            {{index(Vars::XVALVE), -3.8571428571428572},
-             {index(Vars::VLV), 2.8571428571428572}},
-            {{index(Vars::XVALVE), 2.2222222222222223},
-             {index(Vars::XFLOW), -3.2222222222222223}},
-            {{index(Vars::XFLOW), 0.45454545454545453},
-             {index(Vars::XTEMP), -1.4545454545454546}},
-            {{index(Vars::VLOAD), -0.06},
-             {index(Vars::MAXIMUM) + index(Ext::OMEGA), -1.0},
-             {index(Vars::MAXIMUM) + index(Ext::PREF), 0.12}},
-            {{index(Vars::XTEMP), -0.4},
-             {index(Vars::VTEMP), -1.0}},
-            {{index(Vars::VLOAD), 1.0},
-             {index(Vars::VLV), -1.0}},
-            {{index(Vars::XFLOW), 1.0},
-             {index(Vars::PMECH), -2.0},
-             {index(Vars::MAXIMUM) + index(Ext::OMEGA), -0.12}},
-        };
-        success *= jacobianMatches(interior,
-                                   interior_expected,
-                                   "Normal interior answer key");
+        const auto dependency_jacobian = dependencyTrackingJacobian(data, success);
+        const auto enzyme_jacobian     = enzymeJacobian(data, success);
 
-        // At equality, the smooth low-value selector splits its sensitivity
-        // evenly between the two demand signals.
-        {
-          Fixture<DepVar> selector(data);
-          selector.attachAllInputs();
-          success *= selector.initialize(0.4);
-          setState(selector.gastpti,
-                   {{index(Vars::VLOAD), 0.9},
-                    {index(Vars::VTEMP), 0.9},
-                    {index(Vars::VLV), 0.7}});
-          numberVariables(selector);
-          success *= (selector.evaluate() == 0);
-
-          const DepMap expected{{index(Vars::VLOAD), 0.5},
-                                {index(Vars::VTEMP), 0.5},
-                                {index(Vars::VLV), -1.0}};
-          success *= jacobianRowMatches(
-              selector.gastpti.getResidual().getData()[index(Vars::VLV)].getDependencies(),
-              expected,
-              index(Vars::VLV),
-              "selector equality");
-        }
-
-        // The one-half response at an active upper bound has a large state
-        // derivative from the smooth gate. Exercise both a Normal interval
-        // expanded by initialization and the Down Only upper boundary.
-        success *= responseBoundaryJacobian(data,
-                                            static_cast<IdxT>(0),
-                                            0.6,
-                                            1.2,
-                                            "Normal adjusted upper bound");
-        success *= responseBoundaryJacobian(data,
-                                            static_cast<IdxT>(1),
-                                            0.4,
-                                            0.8,
-                                            "Down Only upper bound");
-
-        // Fixed mode removes only the valve-drive coupling. The downstream
-        // lag rows and all four algebraic rows remain unchanged.
-        auto fixed_data                     = data;
-        fixed_data.parameters[Params::mode] = static_cast<IdxT>(2);
-        const auto                fixed     = dependencyTrackingJacobian(fixed_data, success);
-        const std::vector<DepMap> fixed_expected{
-            {{index(Vars::XVALVE), -1.0}},
-            interior_expected[index(Vars::XFLOW)],
-            interior_expected[index(Vars::XTEMP)],
-            interior_expected[index(Vars::VLOAD)],
-            interior_expected[index(Vars::VTEMP)],
-            interior_expected[index(Vars::VLV)],
-            interior_expected[index(Vars::PMECH)],
-        };
-        success *= jacobianMatches(fixed,
-                                   fixed_expected,
-                                   "Fixed-mode answer key");
-
-#ifdef GRIDKIT_ENABLE_ENZYME
-        const auto enzyme  = enzymeJacobian(data, success);
-        success           *= jacobianMatches(enzyme,
-                                   interior,
-                                   "Enzyme versus dependency tracking");
-#endif
+        success *= jacobianMatches(enzyme_jacobian,
+                                   dependency_jacobian,
+                                   "Enzyme versus dependency tracking",
+                                   kJacobianTol);
 
         return success.report(__func__);
       }
+#endif
 
     private:
-      using Params = PhasorDynamics::Governor::GastPtiParameters;
-      using Vars   = PhasorDynamics::Governor::GastPtiInternalVariables;
-      using Ext    = PhasorDynamics::Governor::GastPtiExternalVariables;
-      using Mon    = PhasorDynamics::Governor::GastPtiMonitorableVariables;
-      using Mode   = PhasorDynamics::Governor::ResponseMode;
-      using Data   = PhasorDynamics::Governor::GastPtiData<RealT, IdxT>;
+      using GastPtiT = PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
+      using Data     = typename GastPtiT::ModelDataT;
+      using Params   = typename Data::Parameters;
+      using Mon      = typename Data::MonitorableVariables;
+      using Internal = typename GastPtiT::InternalVariablesT;
+      using External = typename GastPtiT::ExternalVariablesT;
+      using Mode     = PhasorDynamics::Governor::ResponseMode;
 
-      static constexpr size_t index(Vars variable)
+      static constexpr size_t index(Internal variable)
       {
         return static_cast<size_t>(variable);
       }
 
-      static constexpr size_t index(Ext variable)
+      static constexpr size_t index(External variable)
       {
         return static_cast<size_t>(variable);
       }
 
       /// A vector row paired with a value: either an input to write or an
       /// expected result. Rows are derived from the canonical variable enums.
-      using Row      = std::pair<size_t, RealT>;
-      using Rows     = std::initializer_list<Row>;
-      using GastPtiT = PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
+      using Row  = std::pair<size_t, RealT>;
+      using Rows = std::initializer_list<Row>;
 
       /// Owns the GASTPTI model, the assigned mechanical-power node, and the
       /// attached input nodes. Signal storage is declared before the model so
@@ -1105,9 +1100,9 @@ namespace GridKit
       class Fixture
       {
       private:
-        std::array<T, index(Ext::MAXIMUM)>                                   input_values_{};
-        std::array<IdxT, index(Ext::MAXIMUM)>                                input_indices_{};
-        std::array<PhasorDynamics::SignalNode<T, IdxT>, index(Ext::MAXIMUM)> input_nodes_{};
+        std::array<T, index(External::MAXIMUM)>                                   input_values_{};
+        std::array<IdxT, index(External::MAXIMUM)>                                input_indices_{};
+        std::array<PhasorDynamics::SignalNode<T, IdxT>, index(External::MAXIMUM)> input_nodes_{};
 
         PhasorDynamics::SignalNode<T, IdxT> pmech_node_;
 
@@ -1116,7 +1111,7 @@ namespace GridKit
           : gastpti(data)
         {
           gastpti.setSystemBase(60.0, system_va_base);
-          gastpti.getSignals().template assignSignalNode<Vars::PMECH>(&pmech_node_);
+          gastpti.getSignals().template assignSignalNode<Internal::PMECH>(&pmech_node_);
         }
 
         Fixture(const Fixture&)            = delete;
@@ -1127,7 +1122,7 @@ namespace GridKit
         {
           const IdxT external_index_base = gastpti.size();
 
-          for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+          for (size_t port = 0; port < index(External::MAXIMUM); ++port)
           {
             input_values_[port]  = static_cast<T>(initial_value);
             input_indices_[port] = external_index_base + static_cast<IdxT>(port);
@@ -1135,8 +1130,8 @@ namespace GridKit
           }
 
           auto& signals = gastpti.getSignals();
-          signals.template attachSignalNode<Ext::OMEGA>(&input_nodes_[index(Ext::OMEGA)]);
-          signals.template attachSignalNode<Ext::PREF>(&input_nodes_[index(Ext::PREF)]);
+          signals.template attachSignalNode<External::OMEGA>(&input_nodes_[index(External::OMEGA)]);
+          signals.template attachSignalNode<External::PREF>(&input_nodes_[index(External::PREF)]);
         }
 
         /// Seed the assigned mechanical-power node on the system base.
@@ -1236,6 +1231,7 @@ namespace GridKit
       {
         auto data = makeMinimalData();
 
+        // The documented typical values, so routine fixtures log no warnings.
         data.parameters[Params::R]     = 0.05;
         data.parameters[Params::T1]    = 0.4;
         data.parameters[Params::T2]    = 0.5;
@@ -1254,6 +1250,8 @@ namespace GridKit
       {
         auto data = makeData();
 
+        // Dynamic-response parameters: every gain, lag, and limit is
+        // nontrivial and the power bases differ.
         data.parameters[Params::Trate] = 50.0;
         data.parameters[Params::R]     = 0.06;
         data.parameters[Params::T1]    = 0.35;
@@ -1271,8 +1269,8 @@ namespace GridKit
       template <typename T>
       void setAnswerKeyInputs(Fixture<T>& fixture) const
       {
-        fixture.input(index(Ext::OMEGA)) = static_cast<T>(0.02);
-        fixture.input(index(Ext::PREF))  = static_cast<T>(0.31);
+        fixture.input(index(External::OMEGA)) = static_cast<T>(0.02);
+        fixture.input(index(External::PREF))  = static_cast<T>(0.31);
       }
 
       /// The rich state shared by the residual answer key and the Jacobian
@@ -1281,17 +1279,17 @@ namespace GridKit
       void setAnswerKeyState(PhasorDynamics::Governor::GastPti<T, IdxT>& gastpti) const
       {
         setState(gastpti,
-                 {{index(Vars::XVALVE), 0.62},
-                  {index(Vars::XFLOW), 0.55},
-                  {index(Vars::XTEMP), 0.48},
-                  {index(Vars::VLOAD), 0.83},
-                  {index(Vars::VTEMP), 1.35},
-                  {index(Vars::VLV), 0.71},
-                  {index(Vars::PMECH), 0.33}});
+                 {{index(Internal::XVALVE), 0.62},
+                  {index(Internal::XFLOW), 0.55},
+                  {index(Internal::XTEMP), 0.48},
+                  {index(Internal::VLOAD), 0.83},
+                  {index(Internal::VTEMP), 1.35},
+                  {index(Internal::VLV), 0.71},
+                  {index(Internal::PMECH), 0.33}});
         setDerivative(gastpti,
-                      {{index(Vars::XVALVE), 0.011},
-                       {index(Vars::XFLOW), -0.022},
-                       {index(Vars::XTEMP), 0.033}});
+                      {{index(Internal::XVALVE), 0.011},
+                       {index(Internal::XFLOW), -0.022},
+                       {index(Internal::XTEMP), 0.033}});
       }
 
       /// Omitting every parameter must give exactly the model built from the
@@ -1359,7 +1357,8 @@ namespace GridKit
         return success;
       }
 
-      bool invalidParameterCase(Params parameter, RealT value) const
+      template <typename ValueT>
+      bool invalidParameterCase(Params parameter, ValueT value) const
       {
         auto data                  = makeData();
         data.parameters[parameter] = value;
@@ -1370,17 +1369,17 @@ namespace GridKit
       {
         PhasorDynamics::SignalNode<ScalarT, IdxT>        pmech;
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> model(data);
-        model.getSignals().template assignSignalNode<Vars::PMECH>(&pmech);
+        model.getSignals().template assignSignalNode<Internal::PMECH>(&pmech);
         return model.verify();
       }
 
-      template <Ext variable>
+      template <External variable>
       bool unlinkedSignalRejected() const
       {
         PhasorDynamics::SignalNode<ScalarT, IdxT>        unlinked_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT>        pmech_node;
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> model(makeData());
-        model.getSignals().template assignSignalNode<Vars::PMECH>(&pmech_node);
+        model.getSignals().template assignSignalNode<Internal::PMECH>(&pmech_node);
         model.getSignals().template attachSignalNode<variable>(&unlinked_node);
         return model.verify() > 0;
       }
@@ -1394,8 +1393,8 @@ namespace GridKit
 
         NodeT  pmech_pref;
         ModelT pref_alias(makeData());
-        pref_alias.getSignals().template assignSignalNode<Vars::PMECH>(&pmech_pref);
-        pref_alias.getSignals().template attachSignalNode<Ext::PREF>(&pmech_pref);
+        pref_alias.getSignals().template assignSignalNode<Internal::PMECH>(&pmech_pref);
+        pref_alias.getSignals().template attachSignalNode<External::PREF>(&pmech_pref);
         if (pref_alias.allocate() != 0)
         {
           success = false;
@@ -1407,8 +1406,8 @@ namespace GridKit
 
         NodeT  pmech_speed;
         ModelT speed_alias(makeData());
-        speed_alias.getSignals().template assignSignalNode<Vars::PMECH>(&pmech_speed);
-        speed_alias.getSignals().template attachSignalNode<Ext::OMEGA>(&pmech_speed);
+        speed_alias.getSignals().template assignSignalNode<Internal::PMECH>(&pmech_speed);
+        speed_alias.getSignals().template attachSignalNode<External::OMEGA>(&pmech_speed);
         if (speed_alias.allocate() != 0)
         {
           success = false;
@@ -1425,9 +1424,9 @@ namespace GridKit
         shared_input.set(&shared_value, &shared_index);
 
         ModelT input_alias(makeData());
-        input_alias.getSignals().template assignSignalNode<Vars::PMECH>(&pmech);
-        input_alias.getSignals().template attachSignalNode<Ext::OMEGA>(&shared_input);
-        input_alias.getSignals().template attachSignalNode<Ext::PREF>(&shared_input);
+        input_alias.getSignals().template assignSignalNode<Internal::PMECH>(&pmech);
+        input_alias.getSignals().template attachSignalNode<External::OMEGA>(&shared_input);
+        input_alias.getSignals().template attachSignalNode<External::PREF>(&shared_input);
         if (input_alias.allocate() != 0)
         {
           success = false;
@@ -1458,13 +1457,11 @@ namespace GridKit
         const auto* values  = vector.getData();
         for (size_t i = 0; i < snapshot.size(); ++i)
         {
-          if (!exactlyEqual(static_cast<RealT>(values[i]), snapshot[i]))
+          // A rejected initialization may leave a non-finite seed in place.
+          const RealT value = static_cast<RealT>(values[i]);
+          if (!preserved(value, snapshot[i])
+              && !rowMatches(value, snapshot[i], what, i, "changed"))
           {
-            std::cout << "GASTPTI " << what << " row " << i
-                      << " changed: "
-                      << std::setprecision(std::numeric_limits<RealT>::max_digits10)
-                      << static_cast<RealT>(values[i]) << " != " << snapshot[i]
-                      << '\n';
             success = false;
           }
         }
@@ -1495,8 +1492,8 @@ namespace GridKit
       {
         Fixture<ScalarT> fixture(data);
         fixture.attachAllInputs();
-        fixture.input(index(Ext::OMEGA)) = omega;
-        fixture.input(index(Ext::PREF))  = 77.0; // must stay untouched on rejection
+        fixture.input(index(External::OMEGA)) = omega;
+        fixture.input(index(External::PREF))  = 77.0; // must stay untouched on rejection
         if (!fixture.prepare(pmech))
         {
           return false;
@@ -1513,21 +1510,21 @@ namespace GridKit
           success = false;
         }
 
-        if (!scalarExactlyMatches(fixture.pmech(),
-                                  pmech,
-                                  "rejected pmech seed preservation"))
+        if (!scalarPreserved(fixture.pmech(),
+                             pmech,
+                             "rejected pmech seed preservation"))
         {
           success = false;
         }
-        if (!scalarExactlyMatches(fixture.input(index(Ext::OMEGA)),
-                                  omega,
-                                  "rejected omega preservation"))
+        if (!scalarPreserved(fixture.input(index(External::OMEGA)),
+                             omega,
+                             "rejected omega preservation"))
         {
           success = false;
         }
-        if (!scalarExactlyMatches(fixture.input(index(Ext::PREF)),
-                                  77.0,
-                                  "rejected pref preservation"))
+        if (!scalarPreserved(fixture.input(index(External::PREF)),
+                             77.0,
+                             "rejected pref preservation"))
         {
           success = false;
         }
@@ -1582,8 +1579,7 @@ namespace GridKit
         }
         std::cout << "GASTPTI " << what << " row " << row << ' ' << context
                   << " mismatch: "
-                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
-                  << actual
+                  << std::setprecision(16) << actual
                   << " != " << expected << '\n';
         return false;
       }
@@ -1658,30 +1654,31 @@ namespace GridKit
           return true;
         }
         std::cout << label << " mismatch: "
-                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
-                  << actual
+                  << std::setprecision(16) << actual
                   << " != " << expected << "\n";
         return false;
       }
 
-      static bool exactlyEqual(RealT actual, RealT expected)
+      /// A value retains exactly what its owner supplied, including signed
+      /// infinities and NaN.
+      static bool preserved(RealT actual, RealT expected)
       {
-        return std::bit_cast<std::array<std::byte, sizeof(RealT)>>(actual)
-               == std::bit_cast<std::array<std::byte, sizeof(RealT)>>(expected);
+        if (std::isnan(expected))
+        {
+          return std::isnan(actual);
+        }
+        return actual == expected;
       }
 
-      bool scalarExactlyMatches(ScalarT     actual,
-                                ScalarT     expected,
-                                const char* label) const
+      bool scalarPreserved(ScalarT actual, ScalarT expected, const char* label) const
       {
         const RealT actual_value   = static_cast<RealT>(actual);
         const RealT expected_value = static_cast<RealT>(expected);
-        if (exactlyEqual(actual_value, expected_value))
+        if (preserved(actual_value, expected_value))
         {
           return true;
         }
-        std::cout << label << " changed: "
-                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
+        std::cout << label << " changed: " << std::setprecision(16)
                   << actual_value << " != " << expected_value << '\n';
         return false;
       }
@@ -1721,9 +1718,9 @@ namespace GridKit
 
         bool success = fixture.initialize(pmech);
         setState(fixture.gastpti,
-                 {{index(Vars::XVALVE), boundary},
-                  {index(Vars::VLV), boundary + 0.25}});
-        setDerivative(fixture.gastpti, {{index(Vars::XVALVE), 0.0}});
+                 {{index(Internal::XVALVE), boundary},
+                  {index(Internal::VLV), boundary + 0.25}});
+        setDerivative(fixture.gastpti, {{index(Internal::XVALVE), 0.0}});
         numberVariables(fixture);
         if (fixture.evaluate() != 0)
         {
@@ -1731,13 +1728,13 @@ namespace GridKit
         }
 
         const DependencyMap expected{
-            {index(Vars::XVALVE), -45.285714285714285},
-            {index(Vars::VLV), 1.4285714285714286},
+            {index(Internal::XVALVE), -45.285714285714285},
+            {index(Internal::VLV), 1.4285714285714286},
         };
         if (!jacobianRowMatches(
-                fixture.gastpti.getResidual().getData()[index(Vars::XVALVE)].getDependencies(),
+                fixture.gastpti.getResidual().getData()[index(Internal::XVALVE)].getDependencies(),
                 expected,
-                index(Vars::XVALVE),
+                index(Internal::XVALVE),
                 label))
         {
           success = false;
@@ -1748,14 +1745,15 @@ namespace GridKit
       bool jacobianRowMatches(const DependencyMap& actual,
                               const DependencyMap& expected,
                               size_t               row,
-                              const char*          context) const
+                              const char*          context,
+                              RealT                tolerance = kDependencyTol) const
       {
         bool success = true;
 
         for (const auto& [column, value] : actual)
         {
           static_cast<void>(value);
-          if (!jacobianColumnMatches(actual, expected, row, column, context))
+          if (!jacobianColumnMatches(actual, expected, row, column, context, tolerance))
           {
             success = false;
           }
@@ -1764,7 +1762,7 @@ namespace GridKit
         {
           static_cast<void>(value);
           if (!actual.contains(column)
-              && !jacobianColumnMatches(actual, expected, row, column, context))
+              && !jacobianColumnMatches(actual, expected, row, column, context, tolerance))
           {
             success = false;
           }
@@ -1776,25 +1774,26 @@ namespace GridKit
                                  const DependencyMap& expected,
                                  size_t               row,
                                  size_t               column,
-                                 const char*          context) const
+                                 const char*          context,
+                                 RealT                tolerance) const
       {
         const RealT actual_value   = dependencyValue(actual, column);
         const RealT expected_value = dependencyValue(expected, column);
-        if (isEqual(actual_value, expected_value, kJacobianTol))
+        if (isEqual(actual_value, expected_value, tolerance))
         {
           return true;
         }
 
         std::cout << "GASTPTI Jacobian row " << row << ", column "
                   << column << " " << context << " mismatch: "
-                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
-                  << actual_value << " != " << expected_value << '\n';
+                  << std::setprecision(16) << actual_value << " != " << expected_value << '\n';
         return false;
       }
 
       bool jacobianMatches(const std::vector<DependencyMap>& actual,
                            const std::vector<DependencyMap>& expected,
-                           const char*                       context) const
+                           const char*                       context,
+                           RealT                             tolerance = kDependencyTol) const
       {
         if (actual.size() != expected.size())
         {
@@ -1806,7 +1805,7 @@ namespace GridKit
         bool success = true;
         for (size_t row = 0; row < actual.size(); ++row)
         {
-          if (!jacobianRowMatches(actual[row], expected[row], row, context))
+          if (!jacobianRowMatches(actual[row], expected[row], row, context, tolerance))
           {
             success = false;
           }
@@ -1825,7 +1824,7 @@ namespace GridKit
           y[i].setVariableNumber(i);
           yp[i].setVariableNumber(i);
         }
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (size_t port = 0; port < index(External::MAXIMUM); ++port)
         {
           fixture.input(port).setVariableNumber(fixture.inputIndex(port));
         }
@@ -1874,6 +1873,7 @@ namespace GridKit
         success *= (fixture.gastpti.constructCsr() == 0);
         return MapFromCsr(fixture.gastpti.getCsrJacobian());
       }
+
 #endif
     };
   } // namespace Testing

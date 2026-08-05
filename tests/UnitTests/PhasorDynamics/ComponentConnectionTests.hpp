@@ -10,10 +10,12 @@
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1a.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/Hygov.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
@@ -222,6 +224,93 @@ namespace GridKit
 
         const auto* residual = plant.getResidual().getData();
         for (IdxT row = 0; row < plant.size(); ++row)
+        {
+          success *= isEqual(residual[row], static_cast<ScalarT>(0.0), kTol);
+        }
+
+        return success.report(__func__);
+      }
+
+      /// GENROU initializes first and writes the mechanical power it needs to
+      /// the shared node. GASTPTI then initializes around that value and
+      /// must leave it unchanged at a steady state.
+      TestOutcome genrouGastPti()
+      {
+        using MachineExternal  = PhasorDynamics::GenrouExternalVariables;
+        using GovernorInternal = PhasorDynamics::Governor::GastPtiInternalVariables;
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
+            static_cast<ScalarT>(1.0),
+            static_cast<ScalarT>(0.0));
+        PhasorDynamics::SignalNode<ScalarT, IdxT>        pmech;
+        PhasorDynamics::Genrou<ScalarT, IdxT>            machine(&bus);
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> governor;
+
+        machine.getSignals().template attachSignalNode<MachineExternal::PM>(&pmech);
+        governor.getSignals().template assignSignalNode<GovernorInternal::PMECH>(&pmech);
+
+        system.addBus(&bus);
+        system.addComponent(&machine);
+        system.addComponent(&governor);
+
+        success *= system.allocate() == 0;
+        success *= pmech.linked();
+        success *= system.initialize() == 0;
+        success *= system.evaluateResidual() == 0;
+
+        // At zero machine power the governor holds no fuel flow.
+        success *= isEqual(pmech.read(), static_cast<ScalarT>(0.0), kTol);
+
+        const auto* residual = governor.getResidual().getData();
+        for (IdxT row = 0; row < governor.size(); ++row)
+        {
+          success *= isEqual(residual[row], static_cast<ScalarT>(0.0), kTol);
+        }
+
+        return success.report(__func__);
+      }
+
+      /// The same connection with GENSAL as the machine.
+      TestOutcome gensalGastPti()
+      {
+        using MachineExternal  = PhasorDynamics::GensalExternalVariables;
+        using GovernorInternal = PhasorDynamics::Governor::GastPtiInternalVariables;
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
+            static_cast<ScalarT>(1.0),
+            static_cast<ScalarT>(0.0));
+        PhasorDynamics::SignalNode<ScalarT, IdxT> pmech;
+
+        // GENSAL has no parameterless constructor; its documented defaults
+        // are the zero-power machine this case needs.
+        PhasorDynamics::GensalData<RealT, IdxT> machine_data;
+
+        PhasorDynamics::Gensal<ScalarT, IdxT>            machine(&bus, machine_data);
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> governor;
+
+        machine.getSignals().template attachSignalNode<MachineExternal::PM>(&pmech);
+        governor.getSignals().template assignSignalNode<GovernorInternal::PMECH>(&pmech);
+
+        system.addBus(&bus);
+        system.addComponent(&machine);
+        system.addComponent(&governor);
+
+        success *= system.allocate() == 0;
+        success *= pmech.linked();
+        success *= system.initialize() == 0;
+        success *= system.evaluateResidual() == 0;
+
+        // At zero machine power the governor holds no fuel flow.
+        success *= isEqual(pmech.read(), static_cast<ScalarT>(0.0), kTol);
+
+        const auto* residual = governor.getResidual().getData();
+        for (IdxT row = 0; row < governor.size(); ++row)
         {
           success *= isEqual(residual[row], static_cast<ScalarT>(0.0), kTol);
         }

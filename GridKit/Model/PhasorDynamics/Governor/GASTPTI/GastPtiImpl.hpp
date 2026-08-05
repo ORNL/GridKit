@@ -46,7 +46,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       GastPti<scalar_type, index_type>::GastPti()
       {
-        size_ = static_cast<IdxT>(index(GastPtiInternalVariables::MAXIMUM));
+        size_ = static_cast<IdxT>(GastPtiInternalVariables::MAXIMUM);
         setDerivedParameters();
       }
 
@@ -61,7 +61,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(index(GastPtiInternalVariables::MAXIMUM));
+        size_ = static_cast<IdxT>(GastPtiInternalVariables::MAXIMUM);
       }
 
       /**
@@ -98,8 +98,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int GastPti<scalar_type, index_type>::allocate()
       {
-        using I = GastPtiInternalVariables;
-        using E = GastPtiExternalVariables;
+        const auto PMECH = static_cast<size_t>(GastPtiInternalVariables::PMECH);
 
         if (!allocated_)
         {
@@ -113,7 +112,7 @@ namespace GridKit
 
         wb_.clear();
 
-        auto signal_size = index(E::MAXIMUM);
+        const auto signal_size = static_cast<size_t>(GastPtiExternalVariables::MAXIMUM);
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -123,13 +122,13 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
+        auto* y = y_.getData();
+
         if (signals_.template isAssigned<GastPtiInternalVariables::PMECH>())
         {
-          auto* pmech = signals_.template getSignalNode<GastPtiInternalVariables::PMECH>();
-          auto* y     = y_.getData();
-          pmech->set(
-              &y[index(I::PMECH)],
-              &(this->getVariableIndex(static_cast<IdxT>(index(I::PMECH)))));
+          signals_.template getSignalNode<GastPtiInternalVariables::PMECH>()->set(
+              &y[PMECH],
+              &(this->getVariableIndex(static_cast<IdxT>(PMECH))));
         }
 
         allocated_ = true;
@@ -142,119 +141,107 @@ namespace GridKit
        * Checks parameter-loading and time-floor errors, finiteness and static
        * parameter relationships, the response-mode encoding, system/component
        * bases, the required mechanical-power output assignment, attached
-       * external signals, and distinct indexed ports. Operating-point
-       * feasibility and response limits that depend on the initial fuel flow
-       * are checked by initialize().
+       * external signals, and distinct indexed ports.
        *
        * @return int Number of configuration errors; zero when valid.
        */
       template <typename scalar_type, typename index_type>
       int GastPti<scalar_type, index_type>::verify() const
       {
+        const auto PMECH = static_cast<size_t>(GastPtiInternalVariables::PMECH);
+
         int ret = static_cast<int>(parameter_error_count_);
 
-        checkConfiguration(std::isfinite(R_) && R_ > ZERO<RealT>,
-                           "R must be finite and positive",
-                           ret);
-        checkConfiguration(std::isfinite(At_) && At_ >= ZERO<RealT>,
-                           "At must be finite and non-negative",
-                           ret);
-        checkConfiguration(std::isfinite(Kt_) && Kt_ >= ZERO<RealT>,
-                           "Kt must be finite and non-negative",
-                           ret);
+        auto check = [&](bool condition, const char* message)
+        {
+          if (!condition)
+          {
+            Log::error() << "GastPti: " << message << '\n';
+            ret += 1;
+          }
+        };
+
+        check(std::isfinite(R_) && R_ > ZERO<RealT>, "R must be finite and positive");
+        check(std::isfinite(At_) && At_ >= ZERO<RealT>,
+              "At must be finite and non-negative");
+        check(std::isfinite(Kt_) && Kt_ >= ZERO<RealT>,
+              "Kt must be finite and non-negative");
 
         const bool finite_limits = std::isfinite(Vmin_) && std::isfinite(Vmax_);
-        checkConfiguration(finite_limits, "Vmin and Vmax must be finite", ret);
+        check(finite_limits, "Vmin and Vmax must be finite");
         if (finite_limits)
         {
-          checkConfiguration(Vmin_ <= Vmax_,
-                             "Vmin must be less than or equal to Vmax",
-                             ret);
+          check(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax");
         }
 
-        checkConfiguration(std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
-                           "Dturb must be finite and non-negative",
-                           ret);
+        check(std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
+              "Dturb must be finite and non-negative");
         const bool valid_component_base = std::isfinite(Trate_)
                                           && Trate_ > ZERO<RealT>
                                           && std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base =
             std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>;
-        checkConfiguration(valid_component_base,
-                           "Trate must define a finite positive component power base",
-                           ret);
-        checkConfiguration(valid_system_base,
-                           "system power base must be finite and positive",
-                           ret);
+        check(valid_component_base,
+              "Trate must define a finite positive component power base");
+        check(valid_system_base, "system power base must be finite and positive");
 
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / va_component_base_;
           const RealT component_to_system = va_component_base_ / va_system_base_;
-          checkConfiguration(
-              std::isfinite(system_to_component)
-                  && system_to_component > ZERO<RealT>
-                  && std::isfinite(component_to_system)
-                  && component_to_system > ZERO<RealT>,
-              "system/component power-base conversion ratios must be finite and positive",
-              ret);
+          check(std::isfinite(system_to_component)
+                    && system_to_component > ZERO<RealT>
+                    && std::isfinite(component_to_system)
+                    && component_to_system > ZERO<RealT>,
+                "system/component power-base conversion ratios must be finite and positive");
         }
 
         const bool valid_mode = mode_ == ResponseMode::Normal
                                 || mode_ == ResponseMode::DownOnly
                                 || mode_ == ResponseMode::Fixed;
-        checkConfiguration(valid_mode,
-                           "mode must be 0 (Normal), 1 (Down Only), or 2 (Fixed)",
-                           ret);
+        check(valid_mode, "mode must be 0 (Normal), 1 (Down Only), or 2 (Fixed)");
 
-        checkConfiguration(
-            signals_.template isAssigned<GastPtiInternalVariables::PMECH>(),
-            "pmech output must be assigned",
-            ret);
+        check(signals_.template isAssigned<GastPtiInternalVariables::PMECH>(),
+              "pmech output must be assigned");
 
-        const bool omega_attached =
-            signals_.template isAttached<GastPtiExternalVariables::OMEGA>();
-        const bool pref_attached =
-            signals_.template isAttached<GastPtiExternalVariables::PREF>();
+        // An attached port must resolve to writable signal storage.
+        auto check_attached_signal =
+            [&]<GastPtiExternalVariables variable>(const char* name)
+        {
+          if (signals_.template isAttached<variable>()
+              && !signals_.template isLinked<variable>())
+          {
+            Log::error() << "GastPti: " << name << " signal attached with no linked source\n";
+            ret += 1;
+          }
+        };
+
+        check_attached_signal.template operator()<GastPtiExternalVariables::OMEGA>("speed");
+        check_attached_signal.template operator()<GastPtiExternalVariables::PREF>("pref");
+
         const bool omega_linked =
-            omega_attached
+            signals_.template isAttached<GastPtiExternalVariables::OMEGA>()
             && signals_.template isLinked<GastPtiExternalVariables::OMEGA>();
         const bool pref_linked =
-            pref_attached
+            signals_.template isAttached<GastPtiExternalVariables::PREF>()
             && signals_.template isLinked<GastPtiExternalVariables::PREF>();
-
-        if (omega_attached && !omega_linked)
-        {
-          Log::error() << "GastPti: speed signal attached with no linked source\n";
-          ret += 1;
-        }
-        if (pref_attached && !pref_linked)
-        {
-          Log::error() << "GastPti: pref signal attached with no linked source\n";
-          ret += 1;
-        }
 
         if (variable_indices_.size() == static_cast<size_t>(size_))
         {
-          const IdxT pmech_index =
-              variable_indices_[index(GastPtiInternalVariables::PMECH)];
+          const IdxT pmech_index = variable_indices_[PMECH];
 
           if (omega_linked)
           {
-            checkConfiguration(
-                signals_.template readExternalVariableIndex<GastPtiExternalVariables::OMEGA>()
-                    != pmech_index,
-                "speed and pmech ports must use distinct signals",
-                ret);
+            check(signals_.template readExternalVariableIndex<GastPtiExternalVariables::OMEGA>()
+                      != pmech_index,
+                  "speed and pmech ports must use distinct signals");
           }
           if (pref_linked)
           {
-            checkConfiguration(
-                signals_.template readExternalVariableIndex<GastPtiExternalVariables::PREF>()
-                    != pmech_index,
-                "pref and pmech ports must use distinct signals",
-                ret);
+            check(signals_.template readExternalVariableIndex<GastPtiExternalVariables::PREF>()
+                      != pmech_index,
+                  "pref and pmech ports must use distinct signals");
           }
           if (omega_linked && pref_linked)
           {
@@ -265,9 +252,8 @@ namespace GridKit
             if (omega_index != INVALID_INDEX<IdxT>
                 || pref_index != INVALID_INDEX<IdxT>)
             {
-              checkConfiguration(omega_index != pref_index,
-                                 "speed and pref ports must use distinct signals",
-                                 ret);
+              check(omega_index != pref_index,
+                    "speed and pref ports must use distinct signals");
             }
           }
         }
@@ -299,7 +285,13 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int GastPti<scalar_type, index_type>::initialize()
       {
-        using I = GastPtiInternalVariables;
+        const auto XVALVE = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
+        const auto XFLOW  = static_cast<size_t>(GastPtiInternalVariables::XFLOW);
+        const auto XTEMP  = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
+        const auto VLOAD  = static_cast<size_t>(GastPtiInternalVariables::VLOAD);
+        const auto VTEMP  = static_cast<size_t>(GastPtiInternalVariables::VTEMP);
+        const auto VLV    = static_cast<size_t>(GastPtiInternalVariables::VLV);
+        const auto PMECH  = static_cast<size_t>(GastPtiInternalVariables::PMECH);
 
         if (!allocated_)
         {
@@ -314,7 +306,7 @@ namespace GridKit
         }
 
         auto*       y             = y_.getData();
-        const RealT pmech_system0 = static_cast<RealT>(y[index(I::PMECH)]);
+        const RealT pmech_system0 = static_cast<RealT>(y[PMECH]);
         if (!std::isfinite(pmech_system0))
         {
           Log::error() << "GastPti: initial pmech seed must be finite\n";
@@ -413,14 +405,13 @@ namespace GridKit
         Vmin_response_ = Vmin_response;
         Vmax_response_ = Vmax_response;
         s_valve_       = valve_active ? ONE<RealT> : ZERO<RealT>;
-        ;
 
-        y[index(I::XVALVE)] = static_cast<ScalarT>(xflow0);
-        y[index(I::XFLOW)]  = static_cast<ScalarT>(xflow0);
-        y[index(I::XTEMP)]  = static_cast<ScalarT>(xflow0);
-        y[index(I::VLOAD)]  = static_cast<ScalarT>(vload0);
-        y[index(I::VTEMP)]  = static_cast<ScalarT>(vtemp0);
-        y[index(I::VLV)]    = static_cast<ScalarT>(vlv0);
+        y[XVALVE] = static_cast<ScalarT>(xflow0);
+        y[XFLOW]  = static_cast<ScalarT>(xflow0);
+        y[XTEMP]  = static_cast<ScalarT>(xflow0);
+        y[VLOAD]  = static_cast<ScalarT>(vload0);
+        y[VTEMP]  = static_cast<ScalarT>(vtemp0);
+        y[VLV]    = static_cast<ScalarT>(vlv0);
 
         pref_set_ = static_cast<ScalarT>(pref0);
         if (signals_.template isAttached<GastPtiExternalVariables::PREF>())
@@ -443,12 +434,14 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int GastPti<scalar_type, index_type>::tagDifferentiable()
       {
-        using I = GastPtiInternalVariables;
+        const auto XVALVE = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
+        const auto XFLOW  = static_cast<size_t>(GastPtiInternalVariables::XFLOW);
+        const auto XTEMP  = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
 
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[index(I::XVALVE)] = true;
-        tag_[index(I::XFLOW)]  = true;
-        tag_[index(I::XTEMP)]  = true;
+        tag_[XVALVE] = true;
+        tag_[XFLOW]  = true;
+        tag_[XTEMP]  = true;
         return 0;
       }
 
@@ -480,22 +473,23 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int GastPti<scalar_type, index_type>::evaluateResidual()
       {
-        using E = GastPtiExternalVariables;
+        const auto OMEGA = static_cast<size_t>(GastPtiExternalVariables::OMEGA);
+        const auto PREF  = static_cast<size_t>(GastPtiExternalVariables::PREF);
 
-        ws_[index(E::OMEGA)] = ZERO<RealT>;
-        ws_[index(E::PREF)]  = pref_set_;
+        ws_[OMEGA] = ZERO<RealT>;
+        ws_[PREF]  = pref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (signals_.template isAttached<GastPtiExternalVariables::OMEGA>())
         {
-          ws_[index(E::OMEGA)] = signals_.template readExternalVariable<GastPtiExternalVariables::OMEGA>();
-          ws_indices_[index(E::OMEGA)] =
+          ws_[OMEGA] = signals_.template readExternalVariable<GastPtiExternalVariables::OMEGA>();
+          ws_indices_[OMEGA] =
               signals_.template readExternalVariableIndex<GastPtiExternalVariables::OMEGA>();
         }
         if (signals_.template isAttached<GastPtiExternalVariables::PREF>())
         {
-          ws_[index(E::PREF)] = signals_.template readExternalVariable<GastPtiExternalVariables::PREF>();
-          ws_indices_[index(E::PREF)] =
+          ws_[PREF] = signals_.template readExternalVariable<GastPtiExternalVariables::PREF>();
+          ws_indices_[PREF] =
               signals_.template readExternalVariableIndex<GastPtiExternalVariables::PREF>();
         }
 
@@ -563,36 +557,44 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
-        using I = GastPtiInternalVariables;
-        using E = GastPtiExternalVariables;
+        const auto XVALVE = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
+        const auto XFLOW  = static_cast<size_t>(GastPtiInternalVariables::XFLOW);
+        const auto XTEMP  = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
+        const auto VLOAD  = static_cast<size_t>(GastPtiInternalVariables::VLOAD);
+        const auto VTEMP  = static_cast<size_t>(GastPtiInternalVariables::VTEMP);
+        const auto VLV    = static_cast<size_t>(GastPtiInternalVariables::VLV);
+        const auto PMECH  = static_cast<size_t>(GastPtiInternalVariables::PMECH);
+
+        const auto OMEGA = static_cast<size_t>(GastPtiExternalVariables::OMEGA);
+        const auto PREF  = static_cast<size_t>(GastPtiExternalVariables::PREF);
 
         static_cast<void>(wb);
 
-        const ScalarT xvalve = y[index(I::XVALVE)];
-        const ScalarT xflow  = y[index(I::XFLOW)];
-        const ScalarT xtemp  = y[index(I::XTEMP)];
-        const ScalarT vload  = y[index(I::VLOAD)];
-        const ScalarT vtemp  = y[index(I::VTEMP)];
-        const ScalarT vlv    = y[index(I::VLV)];
-        const ScalarT pmech  = y[index(I::PMECH)];
+        const ScalarT xvalve = y[XVALVE];
+        const ScalarT xflow  = y[XFLOW];
+        const ScalarT xtemp  = y[XTEMP];
+        const ScalarT vload  = y[VLOAD];
+        const ScalarT vtemp  = y[VTEMP];
+        const ScalarT vlv    = y[VLV];
+        const ScalarT pmech  = y[PMECH];
 
-        const ScalarT xvalve_dot = yp[index(I::XVALVE)];
-        const ScalarT xflow_dot  = yp[index(I::XFLOW)];
-        const ScalarT xtemp_dot  = yp[index(I::XTEMP)];
+        const ScalarT xvalve_dot = yp[XVALVE];
+        const ScalarT xflow_dot  = yp[XFLOW];
+        const ScalarT xtemp_dot  = yp[XTEMP];
 
-        const ScalarT omega = ws[index(E::OMEGA)];
-        const ScalarT pref  = toComponentBase(ws[index(E::PREF)]);
+        const ScalarT omega = ws[OMEGA];
+        const ScalarT pref  = toComponentBase(ws[PREF]);
 
         const ScalarT valve_target =
             Math::antiwindup(xvalve, vlv - xvalve, Vmin_response_, Vmax_response_);
 
-        f[index(I::XVALVE)] = -xvalve_dot + s_valve_ * valve_target / T1_;
-        f[index(I::XFLOW)]  = -xflow_dot + (-xflow + xvalve) / T2_;
-        f[index(I::XTEMP)]  = -xtemp_dot + (-xtemp + xflow) / T3_;
-        f[index(I::VLOAD)]  = -omega + R_ * (pref - vload);
-        f[index(I::VTEMP)]  = -vtemp + At_ + Kt_ * (At_ - xtemp);
-        f[index(I::VLV)]    = -vlv + Math::min(vload, vtemp);
-        f[index(I::PMECH)]  = -toComponentBase(pmech) + xflow - Dturb_ * omega;
+        f[XVALVE] = -xvalve_dot + s_valve_ * valve_target / T1_;
+        f[XFLOW]  = -xflow_dot + (-xflow + xvalve) / T2_;
+        f[XTEMP]  = -xtemp_dot + (-xtemp + xflow) / T3_;
+        f[VLOAD]  = -omega + R_ * (pref - vload);
+        f[VTEMP]  = -vtemp + At_ + Kt_ * (At_ - xtemp);
+        f[VLV]    = -vlv + Math::min(vload, vtemp);
+        f[PMECH]  = -toComponentBase(pmech) + xflow - Dturb_ * omega;
 
         return 0;
       }
@@ -600,24 +602,6 @@ namespace GridKit
       //
       //  Private methods
       //
-
-      /**
-       * @brief Record one failed configuration condition
-       *
-       * @param[in] condition Required condition.
-       * @param[in] message Error message when `condition` is false.
-       * @param[in,out] errors Accumulated configuration-error count.
-       */
-      template <typename scalar_type, typename index_type>
-      void GastPti<scalar_type, index_type>::checkConfiguration(
-          bool condition, const char* message, int& errors)
-      {
-        if (!condition)
-        {
-          Log::error() << "GastPti: " << message << '\n';
-          errors += 1;
-        }
-      }
 
       /**
        * @brief Load one optional real-valued parameter
@@ -760,21 +744,20 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void GastPti<scalar_type, index_type>::initializeMonitor()
       {
-        using I        = GastPtiInternalVariables;
         using Variable = typename ModelDataT::MonitorableVariables;
 
         monitor_->set(Variable::pmech, [this]
-                      { return y_.getData()[index(I::PMECH)]; });
+                      { return y_.getData()[static_cast<size_t>(GastPtiInternalVariables::PMECH)]; });
         monitor_->set(Variable::xvalve, [this]
-                      { return y_.getData()[index(I::XVALVE)]; });
+                      { return y_.getData()[static_cast<size_t>(GastPtiInternalVariables::XVALVE)]; });
         monitor_->set(Variable::xflow, [this]
-                      { return y_.getData()[index(I::XFLOW)]; });
+                      { return y_.getData()[static_cast<size_t>(GastPtiInternalVariables::XFLOW)]; });
         monitor_->set(Variable::xtemp, [this]
-                      { return y_.getData()[index(I::XTEMP)]; });
+                      { return y_.getData()[static_cast<size_t>(GastPtiInternalVariables::XTEMP)]; });
         monitor_->set(Variable::vload, [this]
-                      { return y_.getData()[index(I::VLOAD)]; });
+                      { return y_.getData()[static_cast<size_t>(GastPtiInternalVariables::VLOAD)]; });
         monitor_->set(Variable::vtemp, [this]
-                      { return y_.getData()[index(I::VTEMP)]; });
+                      { return y_.getData()[static_cast<size_t>(GastPtiInternalVariables::VTEMP)]; });
       }
 
       /**
