@@ -308,7 +308,7 @@ namespace GridKit
         TestStatus status{true};
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing for exceptions when signals are incorrectly configured. "
-                    << "Logged errors are are expected.\n";
+                    << "Logged errors are expected.\n";
         Log::setVerbosity(Log::Verbosity::WARNINGS);
         status *= throws<std::runtime_error>(
             [&]()
@@ -332,7 +332,7 @@ namespace GridKit
         system.addBus(&bus);
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing for exceptions when when a child cannot bind to system storage. "
-                    << "Logged errors are are expected.\n";
+                    << "Logged errors are expected.\n";
         Log::setVerbosity(Log::Verbosity::WARNINGS);
         status *= throws<std::runtime_error>(
             [&]()

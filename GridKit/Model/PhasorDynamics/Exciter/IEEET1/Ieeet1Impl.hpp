@@ -8,7 +8,6 @@
  */
 
 #include <algorithm>
-#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>

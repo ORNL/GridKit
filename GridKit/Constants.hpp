@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits>
+#include <numbers>
 
 namespace GridKit
 {

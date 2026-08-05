@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>

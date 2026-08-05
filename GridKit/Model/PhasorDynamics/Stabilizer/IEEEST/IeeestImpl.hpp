@@ -6,7 +6,6 @@
  * @brief Definition of the IEEEST Power System Stabilizer.
  */
 
-#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>

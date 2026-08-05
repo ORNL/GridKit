@@ -1,7 +1,5 @@
-#define _USE_MATH_DEFINES /* need this since directly including GenClassical.cpp for MSVC compiler */
 #include <iomanip>
 #include <iostream>
-#include <limits>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>

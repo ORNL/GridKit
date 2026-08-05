@@ -6,7 +6,6 @@
  * @brief Definition of the SEXS-PTI exciter model.
  */
 
-#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>

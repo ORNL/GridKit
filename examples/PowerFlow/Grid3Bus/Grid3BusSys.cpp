@@ -9,12 +9,12 @@
  *
  */
 
-#define _USE_MATH_DEFINES
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <numbers>
 
 #include <GridKit/Model/PowerFlow/Branch/Branch.hpp>
 #include <GridKit/Model/PowerFlow/Bus/BusFactory.hpp>
@@ -111,9 +111,9 @@ int monolithicCase()
   // Compute solution
   kinsol->runSimulation();
   // Print solution
-  double th2 = model->th2() * 180.0 / M_PI;
+  double th2 = model->th2() * 180.0 / std::numbers::pi_v<double>;
   double V2  = model->V2();
-  double th3 = model->th3() * 180.0 / M_PI;
+  double th3 = model->th3() * 180.0 / std::numbers::pi_v<double>;
   std::cout << "Solution:\n";
   std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref << " deg\n";
   std::cout << "  V2     = " << V2 << " p.u., expected = " << V2_ref << " p.u.\n";
@@ -173,9 +173,9 @@ int parserCase()
   // Compute solution
   kinsol->runSimulation();
   // Print solution
-  double th2 = sysmodel->getBus(2)->theta() * 180.0 / M_PI;
+  double th2 = sysmodel->getBus(2)->theta() * 180.0 / std::numbers::pi_v<double>;
   double V2  = sysmodel->getBus(2)->V();
-  double th3 = sysmodel->getBus(3)->theta() * 180.0 / M_PI;
+  double th3 = sysmodel->getBus(3)->theta() * 180.0 / std::numbers::pi_v<double>;
 
   std::cout << "Solution:\n";
   std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref << " deg\n";
@@ -322,9 +322,9 @@ int hardwiredCase()
   // Compute solution
   kinsol->runSimulation();
   // Print solution
-  double th2 = bus2->theta() * 180.0 / M_PI;
+  double th2 = bus2->theta() * 180.0 / std::numbers::pi_v<double>;
   double V2  = bus2->V();
-  double th3 = bus3->theta() * 180.0 / M_PI;
+  double th3 = bus3->theta() * 180.0 / std::numbers::pi_v<double>;
 
   std::cout << "Solution:\n";
   std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref << " deg\n";

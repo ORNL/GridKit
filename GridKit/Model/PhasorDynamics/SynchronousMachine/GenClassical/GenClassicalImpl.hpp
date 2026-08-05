@@ -6,8 +6,9 @@
  *
  *
  */
-#define _USE_MATH_DEFINES
-#include <cmath>
+
+#pragma once
+
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -302,8 +303,10 @@ namespace GridKit
       const ScalarT vr = wb[0];
       const ScalarT vi = wb[1];
 
+      static constexpr auto pi = std::numbers::pi_v<RealT>;
+
       // GenClassical differential equations
-      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * freq_system_base_);
+      f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
 
       // GenClassical algebraic equations

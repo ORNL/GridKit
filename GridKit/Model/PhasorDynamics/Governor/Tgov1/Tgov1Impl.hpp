@@ -8,15 +8,12 @@
  * @brief Definition of a Turbine Governor Model (IEEET1).
  */
 
-#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-
-#define _USE_MATH_DEFINES
 
 namespace GridKit
 {

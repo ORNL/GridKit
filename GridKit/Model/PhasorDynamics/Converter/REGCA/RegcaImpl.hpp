@@ -7,8 +7,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cmath>
-#include <numbers>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>

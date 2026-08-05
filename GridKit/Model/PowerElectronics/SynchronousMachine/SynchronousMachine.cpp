@@ -1,5 +1,4 @@
 
-#define _USE_MATH_DEFINES
 #include "SynchronousMachine.hpp"
 
 #include <cmath>
@@ -94,12 +93,14 @@ namespace GridKit
     ScalarT                  llkq1 = static_cast<ScalarT>(std::get<0>(Llkq_));
     [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
 
+    static constexpr auto pi = std::numbers::pi_v<RealT>;
+
     ScalarT cos1   = std::cos((P_ / 2.0) * y_int_[0]);
     ScalarT sin1   = std::sin((P_ / 2.0) * y_int_[0]);
-    ScalarT cos23m = std::cos((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * M_PI);
-    ScalarT sin23m = std::sin((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * M_PI);
-    ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
-    ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
+    ScalarT cos23m = std::cos((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
+    ScalarT sin23m = std::sin((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
+    ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
+    ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
 
     f_int_[0] = (-2.0 / 3.0) * (*y_ext_[0] * cos1 + *y_ext_[1] * cos23m + *y_ext_[2] * cos23p) + Rs_ * y_int_[1] + (Lls_ + Lmq_) * yp_int_[1] + Lmq_ * yp_int_[4] + Lmq_ * yp_int_[5] + *y_ext_[4] * (P_ / 2.0) * ((Lls_ + Lmd_) * y_int_[2] + Lmd_ * y_int_[6] + Lmd_ * y_int_[7]);
     f_int_[1] = (-2.0 / 3.0) * (*y_ext_[0] * sin1 - *y_ext_[1] * sin23m - *y_ext_[2] * sin23p) + Rs_ * y_int_[2] + (Lls_ + Lmd_) * yp_int_[2] + Lmd_ * yp_int_[6] + Lmd_ * yp_int_[7] - *y_ext_[4] * (P_ / 2.0) * ((Lls_ + Lmq_) * y_int_[1] + Lmq_ * y_int_[4] + Lmq_ * y_int_[5]);
@@ -115,12 +116,14 @@ namespace GridKit
     [[maybe_unused]] ScalarT rkq2  = static_cast<ScalarT>(std::get<1>(Rkq_));
     [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
 
+    static constexpr auto pi = std::numbers::pi_v<RealT>;
+
     ScalarT cos1   = std::cos((P_ / 2.0) * y_int_[0]);
     ScalarT sin1   = std::sin((P_ / 2.0) * y_int_[0]);
-    ScalarT cos23m = std::cos((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * M_PI);
-    ScalarT sin23m = std::sin((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * M_PI);
-    ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
-    ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
+    ScalarT cos23m = std::cos((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
+    ScalarT sin23m = std::sin((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * pi);
+    ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
+    ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * pi);
 
     *f_ext_[0] += y_int_[1] * cos1 + y_int_[2] * sin1 + y_int_[3];
     *f_ext_[1] += y_int_[1] * cos23m + y_int_[2] * sin23m + y_int_[3];
