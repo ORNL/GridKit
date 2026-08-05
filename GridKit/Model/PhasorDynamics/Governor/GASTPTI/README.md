@@ -11,6 +11,10 @@ exhaust-temperature low-value selector.
 - Unlike PowerWorld, GridKit rejects
   rather than swaps reversed $V^{\min}$ and $V^{\max}$ values.
 
+> [!WARNING]
+> GridKit does not yet apply the associated generator's Governor Response Limits
+> modes `Down Only` and `Fixed` to GASTPTI. Normal response is always used.
+
 ## Block Diagram
 
 ![GASTPTI governor block diagram](../../../../../docs/Figures/PhasorDynamics/GASTPTI/diagram.png)
@@ -32,7 +36,6 @@ $V^{\max}$        | [p.u.]    | `Vmax`  | Upper valve response limit            
 $V^{\min}$        | [p.u.]    | `Vmin`  | Lower valve response limit            | 0.0           | Component base
 $D^\mathrm{turb}$ | [p.u.]    | `Dturb` | Turbine damping coefficient           | 0.0           | Component-base power per speed deviation
 $T^\mathrm{rate}$ | [MW]      | `Trate` | Turbine rating                        | 100.0         | Same-valued MVA component base; GridKit addition
-$\mathrm{mode}$   | [integer] | `mode`  | Governor response-limit mode          | 0             | 0 = Normal, 1 = Down Only, 2 = Fixed
 
 ### Parameter Validation
 
@@ -42,8 +45,7 @@ $\mathrm{mode}$   | [integer] | `mode`  | Governor response-limit mode          
   T_1,T_2,T_3 &\ge 0 \\
   A_T,K_T,D^\mathrm{turb} &\ge 0 \\
   T^\mathrm{rate} &> 0 \\
-  V^{\min} &\le V^{\max} \\
-  \mathrm{mode} &\in\{0,1,2\}
+  V^{\min} &\le V^{\max}
 \end{aligned}
 ```
 
@@ -180,14 +182,7 @@ None.
     &\leftarrow V_T-x_F \\
   \left(V_{\mathrm{resp}}^{\min},V_{\mathrm{resp}}^{\max}\right)
     &\leftarrow
-      \begin{cases}
-        \left(\min(V^{\min},x_F),\max(V^{\max},x_F)\right)
-          & \mathrm{mode}=0 \\
-        \left(\min(V^{\min},x_F),x_F\right)
-          & \mathrm{mode}=1 \\
-        \left(x_F,x_F\right)
-          & \mathrm{mode}=2
-      \end{cases} \\
+      \left(\min(V^{\min},x_F),\max(V^{\max},x_F)\right) \\
   s^{\mathrm{valve}}
     &\leftarrow
       \begin{cases}
@@ -238,12 +233,11 @@ Output   | Units  | Description                        | Note
 
 ## Testing
 
-- `validation()` checks defaults, parameter domains, response modes, signal
-  configuration, and time-constant floors.
+- `validation()` checks defaults, parameter domains, signal configuration, and
+  time-constant floors.
 - `initializationAndSignals()` checks base conversion, signal initialization,
   monitor values, and unattached-reference latching.
-- `initializationDomain()` checks accepted and rejected operating points for
-  each response mode.
+- `initializationDomain()` checks accepted and rejected operating points.
 - `initializationExactness()` checks the smooth-selector inverse.
 - `residualEquations()` checks every residual and DependencyTracking Jacobian
   row against fixed answer keys.

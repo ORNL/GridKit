@@ -26,8 +26,7 @@ namespace GridKit
         Vmax,  ///< \f$V^{\max}\f$ Configured upper valve limit on component base [p.u.]
         Vmin,  ///< \f$V^{\min}\f$ Configured lower valve limit on component base [p.u.]
         Dturb, ///< \f$D^\mathrm{turb}\f$ Component-base power per speed deviation [p.u.]
-        Trate, ///< \f$T^\mathrm{rate}\f$ MW rating used as the same-valued MVA component base [MW]
-        mode   ///< \f$\mathrm{mode}\f$ Response-limit selector: 0 Normal, 1 Down Only, 2 Fixed
+        Trate  ///< \f$T^\mathrm{rate}\f$ MW rating used as the same-valued MVA component base [MW]
       };
 
       /// Buses for the GASTPTI governor model.
@@ -66,7 +65,7 @@ namespace GridKit
        * @brief Model data for GASTPTI parameters, signal ports, and monitored variables.
        *
        * @tparam real_type Real parameter value type.
-       * @tparam index_type Integer index and serialized selector type.
+       * @tparam index_type Integer index type.
        *
        * @see GastPti
        */

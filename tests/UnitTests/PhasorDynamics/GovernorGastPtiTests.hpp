@@ -40,15 +40,10 @@ namespace GridKit
       static constexpr RealT kTol =
           static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
 
-      /// Construction, parameter types and domains, response modes, lifecycle,
-      /// and signal linkage.
+      /// Construction, parameter types and domains, lifecycle, and signal linkage.
       TestOutcome validation()
       {
         TestStatus success = true;
-
-        static_assert(static_cast<size_t>(Mode::Normal) == 0);
-        static_assert(static_cast<size_t>(Mode::DownOnly) == 1);
-        static_assert(static_cast<size_t>(Mode::Fixed) == 2);
 
         noteExpectedLogs("Testing GASTPTI defaults and invalid configurations. "
                          "Logged errors and time-constant warnings are expected.");
@@ -122,36 +117,11 @@ namespace GridKit
         success *= invalidParameterCase(Params::Trate,
                                         std::numeric_limits<RealT>::denorm_min());
 
-        // The response mode must be an integer inside {0, 1, 2}.
-        success *= invalidParameterCase(Params::mode, static_cast<IdxT>(3));
-        success *= invalidParameterCase(Params::mode, static_cast<RealT>(2.0));
-        success *= invalidParameterCase(Params::mode, true);
-        success *= invalidParameterCase(Params::mode, false);
-
-        // Exercise the serialized integers directly. Named-enum casts here
-        // would follow an accidental enum reorder and miss a wire-format bug.
-        const std::array<IdxT, 3> serialized_modes{{
-            static_cast<IdxT>(0),
-            static_cast<IdxT>(1),
-            static_cast<IdxT>(2),
-        }};
-        for (const IdxT mode : serialized_modes)
-        {
-          auto mode_data                      = makeData();
-          mode_data.parameters[Params::mode]  = mode;
-          success                            *= (verifyData(mode_data) == 0);
-        }
-
-        // Equal configured limits are valid for every response mode; reversed
-        // limits are not.
-        for (const IdxT mode : serialized_modes)
-        {
-          auto equal                      = makeData();
-          equal.parameters[Params::mode]  = mode;
-          equal.parameters[Params::Vmin]  = 0.5;
-          equal.parameters[Params::Vmax]  = 0.5;
-          success                        *= (verifyData(equal) == 0);
-        }
+        // Equal configured limits are valid; reversed limits are not.
+        auto equal                      = makeData();
+        equal.parameters[Params::Vmin]  = 0.5;
+        equal.parameters[Params::Vmax]  = 0.5;
+        success                        *= (verifyData(equal) == 0);
 
         auto reversed                      = makeData();
         reversed.parameters[Params::Vmin]  = 0.6;
@@ -368,8 +338,8 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Initialization-domain boundaries, response policies, and exact
-      /// failure atomicity.
+      /// Initialization-domain boundaries, effective limits, and exact failure
+      /// atomicity.
       TestOutcome initializationDomain()
       {
         TestStatus success = true;
@@ -461,11 +431,9 @@ namespace GridKit
             "non-finite reference candidate",
             std::numeric_limits<RealT>::max());
 
-        // Serialized mode 0 expands its response bounds to an over-rated
-        // initial flow and remains exactly at rest.
-        auto normal_data                     = makeResidualData();
-        normal_data.parameters[Params::mode] = static_cast<IdxT>(0);
-        Fixture<ScalarT> over_rated(normal_data);
+        // Normal response expands its effective bounds to an over-rated initial
+        // flow and remains exactly at rest.
+        Fixture<ScalarT> over_rated(makeResidualData());
         over_rated.attachAllInputs();
         success *= over_rated.initialize(0.6); // fuel flow 1.2 above Vmax = 1.1
         success *= stateMatches(over_rated.gastpti,
@@ -479,114 +447,65 @@ namespace GridKit
         success *= (over_rated.evaluate() == 0);
         success *= allResidualsZero(over_rated.gastpti);
 
-        // Serialized mode 1 derives finite, ordered response bounds with the
-        // initial flow below, at, and just above the configured lower limit.
-        auto down_only_data                     = makeResidualData();
-        down_only_data.parameters[Params::mode] = static_cast<IdxT>(1);
-        const std::array<RealT, 3> down_only_initial_powers{{0.0, 0.025, 0.026}};
-        for (const RealT pmech : down_only_initial_powers)
+        // A failed reinitialization must preserve the last committed effective
+        // limits as well as state, derivatives, and pref.
+        Fixture<ScalarT> reinitialize(makeResidualData());
+        reinitialize.attachAllInputs();
+        success *= reinitialize.initialize(0.6);
+        reinitialize.seedPmech(1.0);
+        const auto y_before    = copyVector(reinitialize.gastpti.y());
+        const auto yp_before   = copyVector(reinitialize.gastpti.yp());
+        const auto pref_before = reinitialize.input(index(External::PREF));
+        if (reinitialize.gastpti.initialize() == 0)
         {
-          Fixture<ScalarT> down_only(down_only_data);
-          down_only.attachAllInputs();
-          success *= down_only.initialize(pmech);
-          success *= (down_only.evaluate() == 0);
-          success *= allResidualsZero(down_only.gastpti);
+          std::cout << "Expected failed GASTPTI reinitialization\n";
+          success = false;
         }
+        success *= vectorUnchanged(reinitialize.gastpti.y(), y_before, "reinitialized state");
+        success *= vectorUnchanged(reinitialize.gastpti.yp(), yp_before, "reinitialized derivative");
+        success *= scalarPreserved(reinitialize.input(index(External::PREF)),
+                                   pref_before,
+                                   "reinitialized pref");
 
-        // A failed reinitialization must preserve the last committed response
-        // policy as well as state, derivatives, and pref.
-        const std::array<RealT, 2> reinitialization_powers{{0.4, 0.0}};
-        for (const RealT initial_pmech : reinitialization_powers)
+        reinitialize.seedPmech(0.6);
+        setState(reinitialize.gastpti,
+                 {{Internal::XVALVE, 1.2},
+                  {Internal::VLV, 1.45}});
+        setDerivative(reinitialize.gastpti, {{Internal::XVALVE, 0.0}});
+        success *= (reinitialize.evaluate() == 0);
+        success *= residualsMatch(reinitialize.gastpti,
+                                  {{Internal::XVALVE, 0.35714285714285715}},
+                                  "failed reinitialization preserves effective limits");
+
+        struct EqualLimitTemperatureCase
         {
-          Fixture<ScalarT> reinitialize(down_only_data);
-          reinitialize.attachAllInputs();
-          success *= reinitialize.initialize(initial_pmech);
-          // Both response policies reach an invalid temperature margin.
-          reinitialize.seedPmech(1.0);
-          const auto y_before    = copyVector(reinitialize.gastpti.y());
-          const auto yp_before   = copyVector(reinitialize.gastpti.yp());
-          const auto pref_before = reinitialize.input(index(External::PREF));
-          if (reinitialize.gastpti.initialize() == 0)
-          {
-            std::cout << "Expected failed GASTPTI reinitialization\n";
-            success = false;
-          }
-          success *= vectorUnchanged(reinitialize.gastpti.y(), y_before, "reinitialized state");
-          success *= vectorUnchanged(reinitialize.gastpti.yp(), yp_before, "reinitialized derivative");
-          success *= scalarPreserved(reinitialize.input(index(External::PREF)),
-                                     pref_before,
-                                     "reinitialized pref");
-
-          reinitialize.seedPmech(initial_pmech);
-          const RealT xflow = 2.0 * initial_pmech;
-          setState(reinitialize.gastpti,
-                   {{Internal::XVALVE, xflow},
-                    {Internal::VLV, xflow + 0.25}});
-          setDerivative(reinitialize.gastpti, {{Internal::XVALVE, 0.0}});
-          success        *= (reinitialize.evaluate() == 0);
-          RealT expected  = 0.35714285714285715;
-          if (initial_pmech == ZERO<RealT>)
-          {
-            expected = ZERO<RealT>;
-          }
-          success *= residualsMatch(reinitialize.gastpti,
-                                    {{Internal::XVALVE, expected}},
-                                    "failed reinitialization preserves response policy");
-        }
-
-        struct PinnedValveTemperatureCase
-        {
-          IdxT        mode;
           const char* label;
           RealT       at;
-          RealT       vmin;
-          RealT       vmax;
           RealT       vtemp;
           RealT       vlv;
         };
 
-        const std::array<PinnedValveTemperatureCase, 4> pinned_temperature_cases{{
-            {static_cast<IdxT>(2),
-             "Fixed at the temperature limit",
+        const std::array<EqualLimitTemperatureCase, 2> equal_limit_temperature_cases{{
+            {"equal valve limits at the temperature limit",
              0.8,
-             0.3,
-             0.3,
              0.8,
              0.797111886747667},
-            {static_cast<IdxT>(2),
-             "Fixed above the temperature limit",
+            {"equal valve limits above the temperature limit",
              0.0,
-             0.3,
-             0.3,
-             -0.32,
-             -0.32000000000000006},
-            {static_cast<IdxT>(1),
-             "collapsed Down Only at the temperature limit",
-             0.8,
-             0.8,
-             1.1,
-             0.8,
-             0.797111886747667},
-            {static_cast<IdxT>(1),
-             "collapsed Down Only above the temperature limit",
-             0.0,
-             0.8,
-             1.1,
              -0.32,
              -0.32000000000000006},
         }};
-        for (const auto& test_case : pinned_temperature_cases)
+        for (const auto& test_case : equal_limit_temperature_cases)
         {
-          auto pinned_data                     = makeResidualData();
-          pinned_data.parameters[Params::mode] = test_case.mode;
-          pinned_data.parameters[Params::At]   = test_case.at;
-          pinned_data.parameters[Params::Vmin] = test_case.vmin;
-          pinned_data.parameters[Params::Vmax] = test_case.vmax;
+          auto equal_limit_data                     = makeResidualData();
+          equal_limit_data.parameters[Params::At]   = test_case.at;
+          equal_limit_data.parameters[Params::Vmin] = 0.8;
+          equal_limit_data.parameters[Params::Vmax] = 0.8;
 
-          Fixture<ScalarT> pinned(pinned_data);
-          pinned.attachAllInputs();
-          success *= pinned.initialize(0.4);
-          success *= stateMatches(pinned.gastpti,
+          Fixture<ScalarT> equal_limits(equal_limit_data);
+          equal_limits.attachAllInputs();
+          success *= equal_limits.initialize(0.4);
+          success *= stateMatches(equal_limits.gastpti,
                                   {{Internal::XVALVE, 0.8},
                                    {Internal::XFLOW, 0.8},
                                    {Internal::XTEMP, 0.8},
@@ -595,13 +514,13 @@ namespace GridKit
                                    {Internal::VLV, test_case.vlv},
                                    {Internal::PMECH, 0.4}},
                                   test_case.label);
-          success *= (pinned.evaluate() == 0);
-          success *= allResidualsZero(pinned.gastpti);
+          success *= (equal_limits.evaluate() == 0);
+          success *= allResidualsZero(equal_limits.gastpti);
         }
 
         // An unattached reference retains its last successful latch when a
         // later active reinitialization is rejected.
-        Fixture<ScalarT> fallback_reinitialize(down_only_data);
+        Fixture<ScalarT> fallback_reinitialize(makeResidualData());
         success *= fallback_reinitialize.initialize(0.4);
         fallback_reinitialize.seedPmech(1.0);
         success *= (fallback_reinitialize.gastpti.initialize() != 0);
@@ -730,37 +649,37 @@ namespace GridKit
         };
         success *= jacobianMatches(interior,
                                    interior_expected,
-                                   "Normal interior answer key");
+                                   "interior answer key");
 
-        // Fixed mode removes only the valve-drive coupling. The downstream
-        // lag rows and all four algebraic rows remain unchanged.
-        auto fixed_data                                                      = data;
-        fixed_data.parameters[Params::mode]                                  = static_cast<IdxT>(2);
-        const auto                                                     fixed = dependencyTrackingJacobian(fixed_data, success);
-        const std::vector<DependencyTracking::Variable::DependencyMap> fixed_expected{
-            {{index(Internal::XVALVE), -1.0}},
-            interior_expected[index(Internal::XFLOW)],
-            interior_expected[index(Internal::XTEMP)],
-            interior_expected[index(Internal::VLOAD)],
-            interior_expected[index(Internal::VTEMP)],
-            interior_expected[index(Internal::VLV)],
-            interior_expected[index(Internal::PMECH)],
-        };
-        success *= jacobianMatches(fixed,
-                                   fixed_expected,
-                                   "Fixed-mode answer key");
+        // Equal configured limits collapse the effective interval and remove
+        // only the valve-drive coupling.
+        auto equal_limit_data                     = data;
+        equal_limit_data.parameters[Params::Vmin] = 0.8;
+        equal_limit_data.parameters[Params::Vmax] = 0.8;
+        const auto equal_limits                   = dependencyTrackingJacobian(equal_limit_data, success);
+        const std::vector<DependencyTracking::Variable::DependencyMap>
+            equal_limit_expected{
+                {{index(Internal::XVALVE), -1.0}},
+                interior_expected[index(Internal::XFLOW)],
+                interior_expected[index(Internal::XTEMP)],
+                interior_expected[index(Internal::VLOAD)],
+                interior_expected[index(Internal::VTEMP)],
+                interior_expected[index(Internal::VLV)],
+                interior_expected[index(Internal::PMECH)],
+            };
+        success *= jacobianMatches(equal_limits,
+                                   equal_limit_expected,
+                                   "equal configured limits");
 
         return success.report(__func__);
       }
 
-      /// Valve anti-windup, speed/damping signs, adjusted Normal limits, and
-      /// distinct behavior for serialized modes 0 Normal, 1 Down Only, and
-      /// 2 Fixed.
+      /// Valve anti-windup, speed/damping signs, and adjusted Normal limits.
       TestOutcome governorControl()
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing GASTPTI response modes and adjusted limits. "
+        noteExpectedLogs("Testing GASTPTI adjusted response limits. "
                          "Logged response-limit warnings are expected.");
 
         // Both response limits block outward motion and admit restoring motion.
@@ -803,202 +722,41 @@ namespace GridKit
                                                                     {Internal::PMECH, -0.006}},
                                   "speed deviation in the droop and damping rows");
 
-        struct ModeCase
-        {
-          IdxT        serialized_mode;
-          const char* label;
-          RealT       outward_residual;
-          RealT       restoring_residual;
-        };
-
-        // At the initialized flow xV = 0.8, an upward command distinguishes
-        // all three wire values. Down Only is at its derived upper response
-        // limit and therefore has the smooth one-half boundary response.
-        const std::array<ModeCase, 3> modes{{
-            {static_cast<IdxT>(0), "mode 0 Normal", 0.7142857142857143, -0.7142857142857143},
-            {static_cast<IdxT>(1), "mode 1 Down Only", 0.35714285714285715, -0.7142857142857143},
-            {static_cast<IdxT>(2), "mode 2 Fixed", 0.0, 0.0},
-        }};
-        for (const auto& test_case : modes)
-        {
-          auto mode_data                     = makeResidualData();
-          mode_data.parameters[Params::mode] = test_case.serialized_mode;
-          Fixture<ScalarT> mode_fixture(mode_data);
-          mode_fixture.attachAllInputs();
-          success *= mode_fixture.initialize(0.4);
-
-          setState(mode_fixture.gastpti,
-                   {{Internal::XVALVE, 0.8}, {Internal::VLV, 1.05}});
-          setDerivative(mode_fixture.gastpti, {{Internal::XVALVE, 0.0}});
-          success *= (mode_fixture.evaluate() == 0);
-          success *= residualsMatch(mode_fixture.gastpti,
-                                    {{Internal::XVALVE, test_case.outward_residual}},
-                                    test_case.label);
-
-          setState(mode_fixture.gastpti, {{Internal::VLV, 0.55}});
-          success *= (mode_fixture.evaluate() == 0);
-          success *= residualsMatch(mode_fixture.gastpti,
-                                    {{Internal::XVALVE, test_case.restoring_residual}},
-                                    test_case.label);
-        }
-
-        // Pin the smooth Down Only transition just inside, at, and just
-        // outside the initialized upper response limit.
-        auto down_only_data                     = makeResidualData();
-        down_only_data.parameters[Params::mode] = static_cast<IdxT>(1);
-        Fixture<ScalarT> down_only(down_only_data);
-        down_only.attachAllInputs();
-        success                *= down_only.initialize(0.4);
-        const RealT transition  = ONE<RealT> / Math::MU<RealT>;
-
-        struct TransitionCase
-        {
-          RealT offset;
-          RealT expected;
-        };
-
-        const std::array<TransitionCase, 3> transition_cases{{
-            {-transition, 0.5221846990214315},
-            {ZERO<RealT>, 0.35714285714285715},
-            {transition, 0.19210101526428275},
-        }};
-        for (const auto& [offset, expected] : transition_cases)
-        {
-          const RealT xvalve = 0.8 + offset;
-          setState(down_only.gastpti,
-                   {{Internal::XVALVE, xvalve},
-                    {Internal::VLV, xvalve + 0.25}});
-          setDerivative(down_only.gastpti, {{Internal::XVALVE, 0.0}});
-          success *= (down_only.evaluate() == 0);
-          success *= residualsMatch(down_only.gastpti,
-                                    {{Internal::XVALVE, expected}},
-                                    "Down Only upper-response transition");
-        }
-
-        // Normal mode expands both sides of the configured interval to admit
-        // the initialized flow. The derived boundary must be used thereafter.
-        struct NormalBoundaryCase
+        // Normal response expands both sides of the configured interval to
+        // admit the initialized flow. The derived boundary must be used thereafter.
+        struct EffectiveBoundaryCase
         {
           RealT pmech;
           RealT command;
           RealT expected;
         };
 
-        const std::array<NormalBoundaryCase, 2> normal_boundary_cases{{
+        const std::array<EffectiveBoundaryCase, 2> effective_boundary_cases{{
             {0.6, 0.25, 0.35714285714285715},
             {0.0, -0.25, -0.35714285714285715},
         }};
-        for (const auto& [pmech, command, expected] : normal_boundary_cases)
+        for (const auto& [pmech, command, expected] : effective_boundary_cases)
         {
-          auto normal_data                     = makeResidualData();
-          normal_data.parameters[Params::mode] = static_cast<IdxT>(0);
-          Fixture<ScalarT> normal(normal_data);
-          normal.attachAllInputs();
-          success              *= normal.initialize(pmech);
+          Fixture<ScalarT> response(makeResidualData());
+          response.attachAllInputs();
+          success              *= response.initialize(pmech);
           const RealT boundary  = 2.0 * pmech;
-          setState(normal.gastpti,
+          setState(response.gastpti,
                    {{Internal::XVALVE, boundary},
                     {Internal::VLV, boundary + command}});
-          setDerivative(normal.gastpti, {{Internal::XVALVE, 0.0}});
-          success *= (normal.evaluate() == 0);
-          success *= residualsMatch(normal.gastpti,
+          setDerivative(response.gastpti, {{Internal::XVALVE, 0.0}});
+          success *= (response.evaluate() == 0);
+          success *= residualsMatch(response.gastpti,
                                     {{Internal::XVALVE, expected}},
-                                    "Normal adjusted response boundary");
+                                    "adjusted response boundary");
         }
 
         // The one-half response at an active upper bound has a large state
-        // derivative from the smooth gate. Exercise both a Normal interval
-        // expanded by initialization and the Down Only upper boundary.
-        success *= responseBoundaryJacobian(makeResidualData(),
-                                            static_cast<IdxT>(0),
-                                            0.6,
-                                            1.2,
-                                            "Normal adjusted upper bound");
-        success *= responseBoundaryJacobian(makeResidualData(),
-                                            static_cast<IdxT>(1),
-                                            0.4,
-                                            0.8,
-                                            "Down Only upper bound");
-
-        // Fixed mode pins the valve while the downstream fuel-flow and
-        // exhaust-temperature lags remain live.
-        auto fixed_data                     = makeResidualData();
-        fixed_data.parameters[Params::mode] = static_cast<IdxT>(2);
-        Fixture<ScalarT> fixed(fixed_data);
-        fixed.attachAllInputs();
-        success *= fixed.initialize(0.4);
-        setAnswerKeyInputs(fixed);
-        setAnswerKeyState(fixed.gastpti);
-        success *= (fixed.evaluate() == 0);
-        success *= residualsMatch(fixed.gastpti,
-                                  {{Internal::XVALVE, -0.011},
-                                   {Internal::XFLOW, 0.17755555555555544},
-                                   {Internal::XTEMP, -0.001181818181818159}},
-                                  "mode 2 pins only the fuel valve");
-
-        // From initialized rest, a speed step still enters both live algebraic
-        // interface rows.
-        Fixture<ScalarT> fixed_interface(fixed_data);
-        fixed_interface.attachAllInputs();
-        success                                       *= fixed_interface.initialize(0.4);
-        fixed_interface.input(index(External::OMEGA))  = 0.05;
-        success                                       *= (fixed_interface.evaluate() == 0);
-        success                                       *= residualsMatch(
-            fixed_interface.gastpti,
-            {{Internal::XVALVE, 0.0},
-                                                   {Internal::XFLOW, 0.0},
-                                                   {Internal::XTEMP, 0.0},
-                                                   {Internal::VLOAD, -0.05},
-                                                   {Internal::PMECH, -0.006}},
-            "Fixed mode preserves its live algebraic interface");
-
-        // Down Only pins the valve when initialization is below or exactly at
-        // Vmin. A point just above Vmin retains a narrow active interval where
-        // the smooth lower- and upper-limit gates interact at the initialized
-        // upper boundary.
-        struct DownOnlyBoundaryCase
-        {
-          RealT pmech;
-          RealT expected;
-        };
-
-        const std::array<DownOnlyBoundaryCase, 3> down_only_boundary_cases{{
-            {0.0, 0.0},
-            {0.025, 0.0},
-            // This interval is narrower than the 1/MU transition, so both
-            // gates are partly open at its upper boundary.
-            {0.026, 0.4936614732966968},
-        }};
-        for (const auto& [pmech, expected] : down_only_boundary_cases)
-        {
-          Fixture<ScalarT> narrow_down_only(down_only_data);
-          narrow_down_only.attachAllInputs();
-          success              *= narrow_down_only.initialize(pmech);
-          const RealT boundary  = 2.0 * pmech;
-          setState(narrow_down_only.gastpti,
-                   {{Internal::XVALVE, boundary},
-                    {Internal::VLV, boundary + 0.25}});
-          setDerivative(narrow_down_only.gastpti,
-                        {{Internal::XVALVE, 0.0}});
-          success *= (narrow_down_only.evaluate() == 0);
-          success *= residualsMatch(
-              narrow_down_only.gastpti,
-              {{Internal::XVALVE, expected}},
-              "Down Only response interval at the configured lower limit");
-        }
-
-        // A collapsed Down Only interval pins only the valve; downstream lags
-        // retain the same restoring equations as Normal mode.
-        Fixture<ScalarT> collapsed(down_only_data);
-        collapsed.attachAllInputs();
-        success *= collapsed.initialize(0.0);
-        setAnswerKeyState(collapsed.gastpti);
-        success *= (collapsed.evaluate() == 0);
-        success *= residualsMatch(collapsed.gastpti,
-                                  {{Internal::XVALVE, -0.011},
-                                   {Internal::XFLOW, 0.17755555555555544},
-                                   {Internal::XTEMP, -0.001181818181818159}},
-                                  "collapsed Down Only pins only the fuel valve");
+        // derivative from the smooth gate at an initialization-adjusted bound.
+        success *= effectiveLimitBoundaryJacobian(makeResidualData(),
+                                                  0.6,
+                                                  1.2,
+                                                  "adjusted upper bound");
 
         return success.report(__func__);
       }
@@ -1104,7 +862,6 @@ namespace GridKit
       using Mon      = typename Data::MonitorableVariables;
       using Internal = typename GastPtiT::InternalVariablesT;
       using External = typename GastPtiT::ExternalVariablesT;
-      using Mode     = PhasorDynamics::Governor::GastPtiResponseMode;
 
       static constexpr size_t index(Internal variable)
       {
@@ -1253,7 +1010,6 @@ namespace GridKit
         data.parameters[Params::Vmin]  = 0.0;
         data.parameters[Params::Dturb] = 0.0;
         data.parameters[Params::Trate] = 100.0;
-        data.parameters[Params::mode]  = static_cast<IdxT>(Mode::Normal);
         return data;
       }
 
@@ -1272,7 +1028,6 @@ namespace GridKit
         data.parameters[Params::Vmin]  = 0.0;
         data.parameters[Params::Dturb] = 0.1;
         data.parameters[Params::Trate] = 100.0;
-        data.parameters[Params::mode]  = static_cast<IdxT>(Mode::Normal);
         return data;
       }
 
@@ -1747,17 +1502,14 @@ namespace GridKit
         return entry->second;
       }
 
-      bool responseBoundaryJacobian(const Data& data,
-                                    IdxT        serialized_mode,
-                                    RealT       pmech,
-                                    RealT       boundary,
-                                    const char* label) const
+      bool effectiveLimitBoundaryJacobian(const Data& data,
+                                          RealT       pmech,
+                                          RealT       boundary,
+                                          const char* label) const
       {
         using DepVar = DependencyTracking::Variable;
 
-        auto boundary_data                     = data;
-        boundary_data.parameters[Params::mode] = serialized_mode;
-        Fixture<DepVar> fixture(boundary_data);
+        Fixture<DepVar> fixture(data);
         fixture.attachAllInputs();
 
         bool success = fixture.initialize(pmech);

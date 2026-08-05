@@ -130,9 +130,9 @@ namespace GridKit
        * @brief Validate the GASTPTI configuration
        *
        * Checks parameter-loading and time-floor errors, finiteness and static
-       * parameter relationships, the response-mode encoding, system/component
-       * bases, the required mechanical-power output assignment, attached
-       * external signals, and distinct indexed ports.
+       * parameter relationships, system/component bases, the required
+       * mechanical-power output assignment, attached external signals, and
+       * distinct indexed ports.
        *
        * @return int Number of configuration errors; zero when valid.
        */
@@ -187,11 +187,6 @@ namespace GridKit
                     && component_to_system > ZERO<RealT>,
                 "system/component power-base conversion ratios must be finite and positive");
         }
-
-        const bool valid_mode = mode_ == GastPtiResponseMode::Normal
-                                || mode_ == GastPtiResponseMode::DownOnly
-                                || mode_ == GastPtiResponseMode::Fixed;
-        check(valid_mode, "mode must be 0 (Normal), 1 (Down Only), or 2 (Fixed)");
 
         check(signals_.template isAssigned<GastPtiInternalVariables::PMECH>(),
               "pmech output must be assigned");
@@ -259,9 +254,9 @@ namespace GridKit
        * resolves the response limits and valve mask, and seats every
        * algebraic row. For an active response interval, it inverts the smooth
        * low-value selector so its output reproduces the initialized flow; this
-       * requires a positive temperature margin. Fixed mode and any collapsed
-       * response interval hold the valve at its initial position, so their
-       * algebraic selector is seated without that active-flow constraint.
+       * requires a positive temperature margin. A collapsed response interval
+       * holds the valve at its initial position, so its algebraic selector is
+       * seated without that active-flow constraint.
        * Every seed, candidate, response bound, and mask is checked before
        * state, response limits, latches, derivatives, or attached signals are
        * modified.
@@ -325,23 +320,8 @@ namespace GridKit
           return 1;
         }
 
-        RealT Vmin_response = Vmin_;
-        RealT Vmax_response = Vmax_;
-        if (mode_ == GastPtiResponseMode::Normal)
-        {
-          Vmin_response = std::min(Vmin_, xflow0);
-          Vmax_response = std::max(Vmax_, xflow0);
-        }
-        else if (mode_ == GastPtiResponseMode::DownOnly)
-        {
-          Vmin_response = std::min(Vmin_, xflow0);
-          Vmax_response = xflow0;
-        }
-        else
-        {
-          Vmin_response = xflow0;
-          Vmax_response = xflow0;
-        }
+        const RealT Vmin_response = std::min(Vmin_, xflow0);
+        const RealT Vmax_response = std::max(Vmax_, xflow0);
 
         if (!std::isfinite(Vmin_response) || !std::isfinite(Vmax_response)
             || Vmin_response > Vmax_response)
@@ -350,8 +330,7 @@ namespace GridKit
           return 1;
         }
 
-        if (mode_ != GastPtiResponseMode::Fixed
-            && (xflow0 < Vmin_ || xflow0 > Vmax_))
+        if (xflow0 < Vmin_ || xflow0 > Vmax_)
         {
           Log::warning() << "GastPti: initial fuel flow is outside [Vmin, Vmax]; "
                             "response limits are adjusted to include the initialized value\n";
@@ -527,8 +506,8 @@ namespace GridKit
        * Evaluates the three turbine states and the four algebraic rows
        * documented in the model README. The body is kept free of branches
        * and loops so that sparse automatic differentiation resolves a fixed
-       * structure; response-limit modes enter through valve limits and the
-       * valve mask resolved before residual evaluation.
+       * structure; effective valve limits and the valve mask are resolved
+       * before residual evaluation.
        *
        * @param[in] y Internal variables in `GastPtiInternalVariables` order;
        *              each variable uses the base documented by its enum.
@@ -666,11 +645,9 @@ namespace GridKit
        * @brief Read the parameters out of the model data
        *
        * Every parameter is optional and keeps the default documented in the
-       * model README when omitted. A non-numeric value, or a response mode
-       * that is not an integer, is counted and reported by verify() rather
-       * than throwing. Integer JSON values are accepted for real parameters.
-       * The serialized response-mode values are decoded explicitly as
-       * 0 Normal, 1 Down Only, and 2 Fixed.
+       * model README when omitted. A non-numeric value is counted and reported
+       * by verify() rather than throwing. Integer JSON values are accepted for
+       * real parameters.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -691,36 +668,6 @@ namespace GridKit
         loadRealParameter(data, Params::Vmin, Vmin_, "Vmin");
         loadRealParameter(data, Params::Dturb, Dturb_, "Dturb");
         loadRealParameter(data, Params::Trate, Trate_, "Trate");
-
-        if (data.parameters.contains(Params::mode))
-        {
-          const auto& value = data.parameters.at(Params::mode);
-          if (const auto* index_value = std::get_if<IdxT>(&value))
-          {
-            switch (*index_value)
-            {
-            case 0:
-              mode_ = GastPtiResponseMode::Normal;
-              break;
-            case 1:
-              mode_ = GastPtiResponseMode::DownOnly;
-              break;
-            case 2:
-              mode_ = GastPtiResponseMode::Fixed;
-              break;
-            default:
-              Log::error() << "GastPti: parameter 'mode' must be 0 (Normal), "
-                              "1 (Down Only), or 2 (Fixed)\n";
-              ++parameter_error_count_;
-              break;
-            }
-          }
-          else
-          {
-            Log::error() << "GastPti: parameter 'mode' must be an integer\n";
-            ++parameter_error_count_;
-          }
-        }
 
         setDerivedParameters();
       }
@@ -783,10 +730,6 @@ namespace GridKit
         Vmax_response_     = Vmax_;
 
         s_valve_ = ONE<RealT>;
-        if (mode_ == GastPtiResponseMode::Fixed)
-        {
-          s_valve_ = ZERO<RealT>;
-        }
       }
 
       /**
