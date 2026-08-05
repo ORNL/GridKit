@@ -39,9 +39,6 @@ namespace GridKit
       GovernorHygovTests()  = default;
       ~GovernorHygovTests() = default;
 
-      // Initialization is exact and every pinned literal is recorded at full
-      // precision from the implemented smooth arithmetic, so one tight
-      // tolerance serves the whole suite.
       static constexpr RealT kTol =
           static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
@@ -222,18 +219,6 @@ namespace GridKit
         success *= (floors.evaluate() == 0);
         success *= allResidualsZero(floors.hygov);
 
-        // The five governor states carry derivatives; the rest is algebraic.
-        success *= (floors.hygov.tagDifferentiable() == 0);
-        for (size_t i = 0; i < static_cast<size_t>(floors.hygov.size()); ++i)
-        {
-          const bool differential = i <= static_cast<size_t>(Internal::Q);
-          if (floors.hygov.tag()[i] != differential)
-          {
-            std::cout << "HYGOV differentiability tag " << i << " mismatch\n";
-            success = false;
-          }
-        }
-
         return success.report(__func__);
       }
 
@@ -249,6 +234,7 @@ namespace GridKit
         fixture.input(External::PAUX)  = 0.02;
         fixture.input(External::PREF)  = 99.0; // stale value the publication must replace
         success                       *= fixture.initialize(0.4);
+        success                       *= (fixture.hygov.tagDifferentiable() == 0);
         success                       *= (fixture.evaluate() == 0);
 
         const auto* y  = fixture.hygov.y().getData();
@@ -307,6 +293,17 @@ namespace GridKit
           success = false;
         }
 
+        // The five governor states carry derivatives; the rest is algebraic.
+        for (size_t i = 0; i < static_cast<size_t>(fixture.hygov.size()); ++i)
+        {
+          const bool differential = i <= static_cast<size_t>(Internal::Q);
+          if (fixture.hygov.tag()[i] != differential)
+          {
+            std::cout << "HYGOV differentiability tag " << i << " mismatch\n";
+            success = false;
+          }
+        }
+
         success *= allResidualsZero(fixture.hygov);
 
         // A system-base reference step lands on the governor error scaled by
@@ -358,6 +355,7 @@ namespace GridKit
                              {{Params::Gmin, test_case.gmin},
                               {Params::Gmax, test_case.gmax}}),
               test_case.pmech,
+              {{External::OMEGA, 0.0}, {External::PREF, 77.0}, {External::PAUX, 0.02}},
               test_case.label);
         }
 
@@ -365,8 +363,10 @@ namespace GridKit
         // machine would need a multi-root gate search.
         success *= initializationRejectedAtomically(makeResidualData(),
                                                     0.4,
-                                                    "nonzero initial speed deviation",
-                                                    0.03);
+                                                    {{External::OMEGA, 0.03},
+                                                     {External::PREF, 77.0},
+                                                     {External::PAUX, 0.02}},
+                                                    "nonzero initial speed deviation");
 
         // An invalid configuration is rejected before any state is written.
         Fixture<ScalarT> invalid_fixture(makeResidualData(), {{Params::Rtemp, 0.0}});
@@ -432,33 +432,53 @@ namespace GridKit
         success *= initializationRejectedAtomically(
             makeData(),
             p_max + 2.0 * kTol,
+            {{External::OMEGA, 0.0}, {External::PREF, 77.0}, {External::PAUX, 0.02}},
             "twice the tolerance beyond the achievable maximum");
         success *= initializationRejectedAtomically(
             makeData(),
             p_min - 2.0 * kTol,
+            {{External::OMEGA, 0.0}, {External::PREF, 77.0}, {External::PAUX, 0.02}},
             "twice the tolerance below the achievable minimum");
 
         const RealT nan      = std::numeric_limits<RealT>::quiet_NaN();
         const RealT infinity = std::numeric_limits<RealT>::infinity();
 
+        // A non-finite input is rejected atomically, NaN included: the
+        // exact-preservation check states what a tolerance comparison of a
+        // NaN input never could.
         for (const RealT value : std::array<RealT, 3>{{nan, infinity, -infinity}})
         {
+          success *= initializationRejectedAtomically(makeData(),
+                                                      0.4,
+                                                      {{External::OMEGA, value},
+                                                       {External::PREF, 77.0},
+                                                       {External::PAUX, 0.02}},
+                                                      "non-finite speed input");
+          success *= initializationRejectedAtomically(makeData(),
+                                                      0.4,
+                                                      {{External::OMEGA, 0.0},
+                                                       {External::PREF, 77.0},
+                                                       {External::PAUX, value}},
+                                                      "non-finite auxiliary-power input");
+
+          // A non-finite seed lands in the aliased pmech state itself, so the
+          // poisoned-state comparison cannot express its preservation. The
+          // inputs still must survive untouched.
           Fixture<ScalarT> pmech_fixture(makeData());
           pmech_fixture.attachAllInputs();
-          success *= pmech_fixture.prepare(value);
-          success *= (pmech_fixture.hygov.initialize() != 0);
-
-          Fixture<ScalarT> omega_fixture(makeData());
-          omega_fixture.attachAllInputs();
-          success                              *= omega_fixture.prepare(0.4);
-          omega_fixture.input(External::OMEGA)  = value;
-          success                              *= (omega_fixture.hygov.initialize() != 0);
-
-          Fixture<ScalarT> paux_fixture(makeData());
-          paux_fixture.attachAllInputs();
-          success                            *= paux_fixture.prepare(0.4);
-          paux_fixture.input(External::PAUX)  = value;
-          success                            *= (paux_fixture.hygov.initialize() != 0);
+          pmech_fixture.input(External::PREF)  = 77.0;
+          pmech_fixture.input(External::PAUX)  = 0.02;
+          success                             *= pmech_fixture.prepare(value);
+          success                             *= (pmech_fixture.hygov.initialize() != 0);
+          success                             *= scalarPreserved(
+              static_cast<RealT>(pmech_fixture.input(External::PREF)),
+              77.0,
+              "external input",
+              static_cast<size_t>(External::PREF));
+          success *= scalarPreserved(static_cast<RealT>(pmech_fixture.input(External::PAUX)),
+                                     0.02,
+                                     "external input",
+                                     static_cast<size_t>(External::PAUX));
         }
 
         return success.report(__func__);
@@ -515,22 +535,23 @@ namespace GridKit
 
         // Values are pinned after an independent one-time evaluation of the
         // documented equations at setAnswerKeyState()/setAnswerKeyInputs().
-        success *= (static_cast<size_t>(fixture.hygov.getResidual().getSize())
-                    == static_cast<size_t>(Internal::MAXIMUM));
-        success *= residualsMatch(fixture.hygov,
-                                  {{Internal::XN, -0.07785714285714286},
-                                   {Internal::XF, -0.7300000000000001},
-                                   {Internal::C, 0.06},
-                                   {Internal::G, 0.1233333333333334},
-                                   {Internal::Q, 0.011538461538461414},
-                                   {Internal::OMEGADB, 0.0033514666467982894},
-                                   {Internal::EF, 0.5863},
-                                   {Internal::FC, -0.7405000000000002},
-                                   {Internal::RC, 0.029996890386450745},
-                                   {Internal::PGV, -0.04600000003160343},
-                                   {Internal::H, -0.033299999999999885},
-                                   {Internal::PMECH, -0.012679999999999934}},
-                                  "answer key");
+        const std::array<InternalRow, static_cast<size_t>(Internal::MAXIMUM)> expected{{
+            {Internal::XN, -0.07785714285714286},
+            {Internal::XF, -0.7300000000000001},
+            {Internal::C, 0.06},
+            {Internal::G, 0.1233333333333334},
+            {Internal::Q, 0.011538461538461414},
+            {Internal::OMEGADB, 0.0033514666467982894},
+            {Internal::EF, 0.5863},
+            {Internal::FC, -0.7405000000000002},
+            {Internal::RC, 0.029996890386450745},
+            {Internal::PGV, -0.04600000003160343},
+            {Internal::H, -0.033299999999999885},
+            {Internal::PMECH, -0.012679999999999934},
+        }};
+
+        success *= (static_cast<size_t>(fixture.hygov.getResidual().getSize()) == expected.size());
+        success *= residualsMatch(fixture.hygov, expected, "answer key");
 
         return success.report(__func__);
       }
@@ -582,8 +603,8 @@ namespace GridKit
               {},
               {{Internal::RC, 0.15000000000000002}}}});
 
-        // The desired-gate anti-windup at three controller directions: both
-        // saturations block an outward rate and Gmax admits a restoring one.
+        // The desired-gate anti-windup at all four controller directions:
+        // both saturations block an outward rate and admit a restoring one.
         success *= runResidualCases(
             makeResidualData(),
             0.4,
@@ -601,7 +622,37 @@ namespace GridKit
               {},
               {{Internal::C, 1.2}, {Internal::RC, -0.2}},
               {{Internal::C, 0.0}},
-              {{Internal::C, -0.2}}}});
+              {{Internal::C, -0.2}}},
+             {"Gmin admits a restoring desired-gate rate",
+              {},
+              {{Internal::C, -0.2}, {Internal::RC, 0.2}},
+              {{Internal::C, 0.0}},
+              {{Internal::C, 0.2}}}});
+
+        // At a blocked gate limit, pin the assembled alpha = 1 desired-gate
+        // row independently of either Jacobian backend. The row is
+        // -c_dot + antiwindup(c, rc, Gmin, Gmax): the derivative contributes
+        // -1, and the closed gate leaves the rate with no influence, so a
+        // leaking anti-windup would show up as a nonzero RC entry.
+        {
+          using DepVar = DependencyTracking::Variable;
+
+          Fixture<DepVar> blocked(makeResidualData());
+          blocked.attachAllInputs();
+          success *= blocked.initialize(0.4);
+          setState(blocked.hygov, {{Internal::C, 1.2}, {Internal::RC, 0.2}});
+          setDerivative(blocked.hygov, {{Internal::C, 0.0}});
+          numberVariables(blocked);
+          success *= (blocked.evaluate() == 0);
+
+          const auto& dependencies =
+              blocked.hygov.getResidual().getData()[static_cast<size_t>(Internal::C)].getDependencies();
+          const DepVar::DependencyMap expected{{
+              {static_cast<size_t>(Internal::C), -1.0},
+              {static_cast<size_t>(Internal::RC), 0.0},
+          }};
+          success *= isEqual(dependencies, expected, kTol);
+        }
 
         return success.report(__func__);
       }
@@ -928,6 +979,8 @@ namespace GridKit
 
       Data makeData() const
       {
+        // The documented typical values with the floored time constants
+        // raised above the floor, so routine fixtures log no warnings.
         return withParameters(makeMinimalData(),
                               {{Params::Trate, 100.0},
                                {Params::Rperm, 0.05},
@@ -1122,6 +1175,26 @@ namespace GridKit
         return success;
       }
 
+      /// An initialization input retains exactly the value supplied by its
+      /// owner, including signed infinities and NaN.
+      bool scalarPreserved(RealT       actual,
+                           RealT       expected,
+                           const char* what,
+                           size_t      row) const
+      {
+        bool ret = actual == expected;
+        if (std::isnan(expected))
+        {
+          ret = std::isnan(actual);
+        }
+        if (!ret)
+        {
+          std::cout << "HYGOV " << what << " row " << row
+                    << " changed mismatch: " << actual << " != " << expected << "\n";
+        }
+        return ret;
+      }
+
       /// Fill the state and derivative with a recognizable ramp, then restore
       /// the aliased pmech entry, so any write by a rejected initialization
       /// is visible.
@@ -1139,18 +1212,19 @@ namespace GridKit
         fixture.hygov.yp().setDataUpdated();
       }
 
-      /// Initialization must fail and leave the poisoned state, the pmech
-      /// value, and every attached input untouched.
-      bool initializationRejectedAtomically(const Data& data,
-                                            RealT       pmech,
-                                            const char* label,
-                                            RealT       omega = 0.0) const
+      /// Initialization must fail and leave the poisoned state, the seeded
+      /// pmech value, and every supplied input untouched.
+      bool initializationRejectedAtomically(const Data&         data,
+                                            RealT               pmech,
+                                            const ExternalRows& inputs,
+                                            const char*         label) const
       {
         Fixture<ScalarT> fixture(data);
         fixture.attachAllInputs();
-        fixture.input(External::OMEGA) = static_cast<ScalarT>(omega);
-        fixture.input(External::PAUX)  = 0.02;
-        fixture.input(External::PREF)  = 77.0; // must stay untouched on rejection
+        for (const auto& [port, value] : inputs)
+        {
+          fixture.input(port) = static_cast<ScalarT>(value);
+        }
         if (!fixture.prepare(pmech))
         {
           return false;
@@ -1171,17 +1245,15 @@ namespace GridKit
         {
           success = false;
         }
-        if (!scalarMatches(fixture.input(External::OMEGA), omega, "rejected omega preservation"))
+        for (const auto& [port, value] : inputs)
         {
-          success = false;
-        }
-        if (!scalarMatches(fixture.input(External::PREF), 77.0, "rejected pref preservation"))
-        {
-          success = false;
-        }
-        if (!scalarMatches(fixture.input(External::PAUX), 0.02, "rejected paux preservation"))
-        {
-          success = false;
+          if (!scalarPreserved(static_cast<RealT>(fixture.input(port)),
+                               value,
+                               "external input",
+                               static_cast<size_t>(port)))
+          {
+            success = false;
+          }
         }
         if (!vectorUnchanged(fixture.hygov.y(), y_before, "state"))
         {
@@ -1282,11 +1354,11 @@ namespace GridKit
       }
 
       /// Check selected rows of a model vector against expected values.
-      template <typename VectorT>
-      bool rowsMatch(const VectorT&      vector,
-                     const InternalRows& rows,
-                     const char*         what,
-                     const char*         context) const
+      template <typename VectorT, typename RowsT>
+      bool rowsMatch(const VectorT& vector,
+                     const RowsT&   rows,
+                     const char*    what,
+                     const char*    context) const
       {
         bool        success = true;
         const auto* values  = vector.getData();
@@ -1304,6 +1376,14 @@ namespace GridKit
       bool residualsMatch(const HygovT&       hygov,
                           const InternalRows& rows,
                           const char*         context = "") const
+      {
+        return rowsMatch(hygov.getResidual(), rows, "residual", context);
+      }
+
+      template <size_t size>
+      bool residualsMatch(const HygovT&                        hygov,
+                          const std::array<InternalRow, size>& rows,
+                          const char*                          context = "") const
       {
         return rowsMatch(hygov.getResidual(), rows, "residual", context);
       }
@@ -1358,25 +1438,6 @@ namespace GridKit
         Log::setVerbosity(previous_verbosity);
       }
 
-#ifdef GRIDKIT_ENABLE_ENZYME
-      /// The row's dependency map must contain the column entry.
-      template <typename JacobianRowsT>
-      bool jacobianContains(const JacobianRowsT& rows,
-                            Internal             row_variable,
-                            Internal             column_variable,
-                            const char*          what) const
-      {
-        const auto row    = static_cast<size_t>(row_variable);
-        const auto column = static_cast<size_t>(column_variable);
-        if (row < rows.size() && rows[row].count(column) == 1)
-        {
-          return true;
-        }
-        std::cout << "HYGOV " << what << " Jacobian row " << row
-                  << " is missing column " << column << "\n";
-        return false;
-      }
-
       void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const
       {
         auto* y  = fixture.hygov.y().getData();
@@ -1395,6 +1456,25 @@ namespace GridKit
 
         fixture.hygov.y().setDataUpdated();
         fixture.hygov.yp().setDataUpdated();
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      /// The row's dependency map must contain the column entry.
+      template <typename JacobianRowsT>
+      bool jacobianContains(const JacobianRowsT& rows,
+                            Internal             row_variable,
+                            Internal             column_variable,
+                            const char*          what) const
+      {
+        const auto row    = static_cast<size_t>(row_variable);
+        const auto column = static_cast<size_t>(column_variable);
+        if (row < rows.size() && rows[row].count(column) == 1)
+        {
+          return true;
+        }
+        std::cout << "HYGOV " << what << " Jacobian row " << row
+                  << " is missing column " << column << "\n";
+        return false;
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian(

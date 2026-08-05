@@ -174,7 +174,7 @@ namespace GridKit
                 "system/component power-base conversion ratios must be finite and positive");
         }
 
-        check(Rtemp_ < ZERO<RealT> || Rtemp_ > ZERO<RealT>, "Rtemp must be nonzero");
+        check(Rtemp_ > ZERO<RealT>, "Rtemp must be nonzero");
         check(Tn_ >= ZERO<RealT>, "Tn must be non-negative");
         check(Velm_ >= ZERO<RealT>, "Velm must be non-negative");
         check(Gmin_ < Gmax_, "Gmin must be less than Gmax");
@@ -345,10 +345,10 @@ namespace GridKit
         // Synchronous machines provide an exactly zero speed deviation. A
         // moving machine would need a multi-root gate search, which this
         // model does not support. The speed was verified finite above, so
-        // the two-sided sign test is exact.
+        // this is an exact comparison by intent rather than a tolerance test.
         const RealT speed0 = static_cast<RealT>(omega0);
 
-        ret = !(speed0 < ZERO<RealT>) && !(speed0 > ZERO<RealT>);
+        ret = speed0 == ZERO<RealT>;
         if (!ret)
         {
           Log::error() << "Hygov: initialization requires zero speed deviation\n";
@@ -699,12 +699,15 @@ namespace GridKit
         load_real(Params::Pgv4, Pgv_[4], "Pgv4");
         load_real(Params::Pgv5, Pgv_[5], "Pgv5");
 
-        auto deviates_from_zero = [](RealT value)
-        { return value < ZERO<RealT> || value > ZERO<RealT>; };
+        // Model data uses an all-exact-zero curve to mean "no curve supplied",
+        // so this is an exact comparison by intent rather than a tolerance
+        // test. Any nonzero point selects the given curve.
+        auto is_nonzero = [](RealT value)
+        { return value != ZERO<RealT>; };
 
         const bool curve_supplied =
-            std::any_of(Gv_.begin(), Gv_.end(), deviates_from_zero)
-            || std::any_of(Pgv_.begin(), Pgv_.end(), deviates_from_zero);
+            std::any_of(Gv_.begin(), Gv_.end(), is_nonzero)
+            || std::any_of(Pgv_.begin(), Pgv_.end(), is_nonzero);
         if (!curve_supplied)
         {
           Gv_  = {ZERO<RealT>,
