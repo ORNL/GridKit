@@ -134,7 +134,6 @@ namespace GridKit
           const auto& ag = a.gov[i];
           const auto& bg = b.gov[i];
 
-          success *= ag.buses.at(Tgov1Buses::bus) == bg.buses.at(Tgov1Buses::bus);
           success *= ag.signal_inputs.count(SignalIn::speed) == bg.signal_inputs.count(SignalIn::speed);
           if (ag.signal_inputs.count(SignalIn::speed))
           {
@@ -407,7 +406,6 @@ namespace GridKit
         set_data.genrou[0].monitored_variables.insert(GenrouVar::speed);
 
         set_data.gov.resize(1);
-        set_data.gov[0].buses[Tgov1Buses::bus]                    = 0;
         set_data.gov[0].signal_inputs[Tgov1SignalInputs::speed]   = 0;
         set_data.gov[0].signal_outputs[Tgov1SignalOutputs::pmech] = 1;
         set_data.gov[0].parameters[Tgov1Parameters::Trate]        = 100.0;
@@ -514,7 +512,6 @@ namespace GridKit
         set_data.genrou[0].monitored_variables.insert(GenrouVar::speed);
 
         set_data.gov.resize(1);
-        set_data.gov[0].buses[Tgov1Buses::bus]                    = 0;
         set_data.gov[0].signal_inputs[Tgov1SignalInputs::speed]   = 0;
         set_data.gov[0].signal_outputs[Tgov1SignalOutputs::pmech] = 1;
         set_data.gov[0].parameters[Tgov1Parameters::Trate]        = 100.0;
