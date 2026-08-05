@@ -71,40 +71,43 @@ namespace GridKit
         const RealT nan      = std::numeric_limits<RealT>::quiet_NaN();
         const RealT infinity = std::numeric_limits<RealT>::infinity();
 
-        for (const Params parameter : std::array<Params, 30>{{
-                 Params::Trate,
-                 Params::Rperm,
-                 Params::Rtemp,
-                 Params::Tr,
-                 Params::Tf,
-                 Params::Tg,
-                 Params::Velm,
-                 Params::Gmax,
-                 Params::Gmin,
-                 Params::Tw,
-                 Params::At,
-                 Params::Dturb,
-                 Params::Qnl,
-                 Params::Tn,
-                 Params::Tnp,
-                 Params::db1,
-                 Params::db2,
-                 Params::Hdam,
-                 Params::Gv0,
-                 Params::Gv1,
-                 Params::Gv2,
-                 Params::Gv3,
-                 Params::Gv4,
-                 Params::Gv5,
-                 Params::Pgv0,
-                 Params::Pgv1,
-                 Params::Pgv2,
-                 Params::Pgv3,
-                 Params::Pgv4,
-                 Params::Pgv5,
-             }})
+        const std::array<Params, 30> real_parameters{{
+            Params::Trate,
+            Params::Rperm,
+            Params::Rtemp,
+            Params::Tr,
+            Params::Tf,
+            Params::Tg,
+            Params::Velm,
+            Params::Gmax,
+            Params::Gmin,
+            Params::Tw,
+            Params::At,
+            Params::Dturb,
+            Params::Qnl,
+            Params::Tn,
+            Params::Tnp,
+            Params::db1,
+            Params::db2,
+            Params::Hdam,
+            Params::Gv0,
+            Params::Gv1,
+            Params::Gv2,
+            Params::Gv3,
+            Params::Gv4,
+            Params::Gv5,
+            Params::Pgv0,
+            Params::Pgv1,
+            Params::Pgv2,
+            Params::Pgv3,
+            Params::Pgv4,
+            Params::Pgv5,
+        }};
+        const std::array<RealT, 3>   nonfinite_values{{nan, infinity, -infinity}};
+
+        for (const Params parameter : real_parameters)
         {
-          for (const RealT value : std::array<RealT, 3>{{nan, infinity, -infinity}})
+          for (const RealT value : nonfinite_values)
           {
             Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
             success *= (invalid_fixture.hygov.verify() > 0);
@@ -116,29 +119,31 @@ namespace GridKit
         PhasorDynamics::Governor::Hygov<ScalarT, IdxT> unassigned(makeData());
         success *= (unassigned.verify() > 0);
 
-        for (const auto& invalid : std::array<std::pair<Params, RealT>, 19>{{
-                 {Params::Trate, 0.0},
-                 {Params::Trate, -1.0},
-                 {Params::Rtemp, 0.0},
-                 {Params::Tr, -0.1},
-                 {Params::Tf, -0.1},
-                 {Params::Tg, -0.1},
-                 {Params::Tw, -0.1},
-                 {Params::Tn, -0.1},
-                 {Params::Tnp, -0.1},
-                 {Params::Velm, -0.1},
-                 {Params::Gmin, 1.1},
-                 {Params::At, 0.0},
-                 {Params::Dturb, -0.1},
-                 {Params::db1, -0.1},
-                 {Params::Hdam, 0.0},
-                 {Params::Gv2, 0.1},
-                 {Params::Pgv2, 0.1},
-                 {Params::Gmin, -0.05},
-                 {Params::Gmax, 1.05},
-             }})
+        const std::array<std::pair<Params, RealT>, 19> invalid_parameter_values{{
+            {Params::Trate, 0.0},
+            {Params::Trate, -1.0},
+            {Params::Rtemp, 0.0},
+            {Params::Tr, -0.1},
+            {Params::Tf, -0.1},
+            {Params::Tg, -0.1},
+            {Params::Tw, -0.1},
+            {Params::Tn, -0.1},
+            {Params::Tnp, -0.1},
+            {Params::Velm, -0.1},
+            {Params::Gmin, 1.1},
+            {Params::At, 0.0},
+            {Params::Dturb, -0.1},
+            {Params::db1, -0.1},
+            {Params::Hdam, 0.0},
+            {Params::Gv2, 0.1},
+            {Params::Pgv2, 0.1},
+            {Params::Gmin, -0.05},
+            {Params::Gmax, 1.05},
+        }};
+
+        for (const auto& [parameter, value] : invalid_parameter_values)
         {
-          Fixture<ScalarT> invalid_fixture(makeData(), {{invalid.first, invalid.second}});
+          Fixture<ScalarT> invalid_fixture(makeData(), {{parameter, value}});
           success *= (invalid_fixture.hygov.verify() > 0);
         }
 
@@ -190,14 +195,16 @@ namespace GridKit
             {{Params::Trate, std::numeric_limits<RealT>::min()}});
         success *= (overflowing_base_ratio.hygov.verify() > 0);
 
-        for (const RealT system_base : std::array<RealT, 6>{{
-                 0.0,
-                 -1.0,
-                 nan,
-                 infinity,
-                 -infinity,
-                 std::numeric_limits<RealT>::min(),
-             }})
+        const std::array<RealT, 6> invalid_system_bases{{
+            0.0,
+            -1.0,
+            nan,
+            infinity,
+            -infinity,
+            std::numeric_limits<RealT>::min(),
+        }};
+
+        for (const RealT system_base : invalid_system_bases)
         {
           Fixture<ScalarT> invalid_base(makeData(), {}, system_base);
           success *= (invalid_base.hygov.verify() > 0);
@@ -256,10 +263,7 @@ namespace GridKit
         success *= scalarMatches(fixture.input(External::PREF), 0.0025, "published pref");
         success *= scalarMatches(fixture.input(External::PAUX), 0.02, "preserved paux input");
 
-        // The monitor must expose the six documented quantities bound to
-        // the initialized states. The controller is the monitor's only
-        // public read surface; its formats are covered by infrastructure
-        // tests.
+        // Verify the six documented outputs through the public monitor controller.
         RealT                                     time = 0.0;
         Model::VariableMonitorController<ScalarT> monitor(time);
         monitor.addMonitor(fixture.hygov.getMonitor());
@@ -343,12 +347,14 @@ namespace GridKit
           RealT       gmax;
         };
 
-        for (const auto& test_case : std::array<RejectionCase, 4>{{
-                 {"mechanical power above the gate curve", 1.0, 0.05, 0.95},
-                 {"mechanical power below the gate curve", -0.3, 0.05, 0.95},
-                 {"mechanical power above the Gmax limit", 0.4, 0.05, 0.5},
-                 {"mechanical power below the Gmin limit", 0.4, 0.6, 0.95},
-             }})
+        const std::array<RejectionCase, 4> rejection_cases{{
+            {"mechanical power above the gate curve", 1.0, 0.05, 0.95},
+            {"mechanical power below the gate curve", -0.3, 0.05, 0.95},
+            {"mechanical power above the Gmax limit", 0.4, 0.05, 0.5},
+            {"mechanical power below the Gmin limit", 0.4, 0.6, 0.95},
+        }};
+
+        for (const auto& test_case : rejection_cases)
         {
           success *= initializationRejectedAtomically(
               withParameters(makeResidualData(),
@@ -410,14 +416,16 @@ namespace GridKit
           RealT       gate;
         };
 
-        for (const auto& clipped : std::array<BoundaryCase, 2>{{
-                 {"half the tolerance beyond the achievable maximum",
-                  p_max + 0.5 * kTol,
-                  1.0},
-                 {"half the tolerance below the achievable minimum",
-                  p_min - 0.5 * kTol,
-                  0.0},
-             }})
+        const std::array<BoundaryCase, 2> boundary_cases{{
+            {"half the tolerance beyond the achievable maximum",
+             p_max + 0.5 * kTol,
+             1.0},
+            {"half the tolerance below the achievable minimum",
+             p_min - 0.5 * kTol,
+             0.0},
+        }};
+
+        for (const auto& clipped : boundary_cases)
         {
           Fixture<ScalarT> fixture(makeData());
           success *= fixture.initialize(clipped.pmech);
@@ -446,7 +454,9 @@ namespace GridKit
         // A non-finite input is rejected atomically, NaN included: the
         // exact-preservation check states what a tolerance comparison of a
         // NaN input never could.
-        for (const RealT value : std::array<RealT, 3>{{nan, infinity, -infinity}})
+        const std::array<RealT, 3> nonfinite_inputs{{nan, infinity, -infinity}};
+
+        for (const RealT value : nonfinite_inputs)
         {
           success *= initializationRejectedAtomically(makeData(),
                                                       0.4,
@@ -502,13 +512,15 @@ namespace GridKit
           RealT       gate;
         };
 
-        for (const auto& seed : std::array<ExactnessCase, 5>{{
-                 {"gate inside the Gv1 knee", 0.0556, 0.1982318164100278},
-                 {"gate inside the Gv2 knee", 0.2509, 0.4003865335541374},
-                 {"gate mid-segment", 0.4, 0.5719050089028755},
-                 {"gate inside the Gv3 knee", 0.4244, 0.6007061471851347},
-                 {"gate inside the Gv4 knee", 0.5617, 0.8006094230811988},
-             }})
+        const std::array<ExactnessCase, 5> exactness_cases{{
+            {"gate inside the Gv1 knee", 0.0556, 0.1982318164100278},
+            {"gate inside the Gv2 knee", 0.2509, 0.4003865335541374},
+            {"gate mid-segment", 0.4, 0.5719050089028755},
+            {"gate inside the Gv3 knee", 0.4244, 0.6007061471851347},
+            {"gate inside the Gv4 knee", 0.5617, 0.8006094230811988},
+        }};
+
+        for (const auto& seed : exactness_cases)
         {
           Fixture<ScalarT> fixture(makeResidualData());
           success *= fixture.initialize(seed.pmech);
@@ -533,8 +545,6 @@ namespace GridKit
         setAnswerKeyState(fixture.hygov);
         success *= (fixture.evaluate() == 0);
 
-        // Values are pinned after an independent one-time evaluation of the
-        // documented equations at setAnswerKeyState()/setAnswerKeyInputs().
         const std::array<InternalRow, static_cast<size_t>(Internal::MAXIMUM)> expected{{
             {Internal::XN, -0.07785714285714286},
             {Internal::XF, -0.7300000000000001},
@@ -561,83 +571,77 @@ namespace GridKit
       TestOutcome governorControl()
       {
         TestStatus success = true;
+        const auto data    = makeResidualData();
 
-        // The type-1 deadband below, inside, and above the +-0.01 band.
-        success *= runResidualCases(
-            makeResidualData(),
-            0.4,
-            {{"speed deadband below the band",
-              {{External::OMEGA, -0.05}},
-              {{Internal::OMEGADB, 0.0}},
-              {},
-              {{Internal::OMEGADB, -0.049996641662021946}}},
-             {"speed deadband inside the band",
-              {{External::OMEGA, 0.004}},
-              {{Internal::OMEGADB, 0.0}},
-              {},
-              {{Internal::OMEGADB, 0.0009004582873718001}}},
-             {"speed deadband above the band",
-              {{External::OMEGA, 0.05}},
-              {{Internal::OMEGADB, 0.0}},
-              {},
-              {{Internal::OMEGADB, 0.049996641662021946}}}});
+        // Exercise both sides and the interior of the type-1 +/-0.01 deadband.
+        const std::array<ResidualCase, 3> deadband_cases{{
+            {"speed deadband below the band",
+             {{External::OMEGA, -0.05}},
+             {{Internal::OMEGADB, 0.0}},
+             {},
+             {{Internal::OMEGADB, -0.049996641662021946}}},
+            {"speed deadband inside the band",
+             {{External::OMEGA, 0.004}},
+             {{Internal::OMEGADB, 0.0}},
+             {},
+             {{Internal::OMEGADB, 0.0009004582873718001}}},
+            {"speed deadband above the band",
+             {{External::OMEGA, 0.05}},
+             {{Internal::OMEGADB, 0.0}},
+             {},
+             {{Internal::OMEGADB, 0.049996641662021946}}},
+        }};
+        success *= runResidualCases(data, 0.4, deadband_cases);
 
-        // The desired-gate velocity target driven below, inside, and above
-        // the +-Velm rate limit.
-        success *= runResidualCases(
-            makeResidualData(),
-            0.4,
-            {{"gate velocity below the rate limit",
-              {},
-              {{Internal::FC, -0.6}, {Internal::RC, 0.0}},
-              {},
-              {{Internal::RC, -0.15}}},
-             {"gate velocity inside the rate limit",
-              {},
-              {{Internal::FC, 0.05}, {Internal::RC, 0.0}},
-              {},
-              {{Internal::RC, 0.04999999999984272}}},
-             {"gate velocity above the rate limit",
-              {},
-              {{Internal::FC, 0.6}, {Internal::RC, 0.0}},
-              {},
-              {{Internal::RC, 0.15000000000000002}}}});
+        const std::array<ResidualCase, 3> gate_velocity_cases{{
+            {"gate velocity below the rate limit",
+             {},
+             {{Internal::FC, -0.6}, {Internal::RC, 0.0}},
+             {},
+             {{Internal::RC, -0.15}}},
+            {"gate velocity inside the rate limit",
+             {},
+             {{Internal::FC, 0.05}, {Internal::RC, 0.0}},
+             {},
+             {{Internal::RC, 0.04999999999984272}}},
+            {"gate velocity above the rate limit",
+             {},
+             {{Internal::FC, 0.6}, {Internal::RC, 0.0}},
+             {},
+             {{Internal::RC, 0.15000000000000002}}},
+        }};
+        success *= runResidualCases(data, 0.4, gate_velocity_cases);
 
-        // The desired-gate anti-windup at all four controller directions:
-        // both saturations block an outward rate and admit a restoring one.
-        success *= runResidualCases(
-            makeResidualData(),
-            0.4,
-            {{"Gmax blocks an outward desired-gate rate",
-              {},
-              {{Internal::C, 1.2}, {Internal::RC, 0.2}},
-              {{Internal::C, 0.0}},
-              {{Internal::C, 0.0}}},
-             {"Gmin blocks an outward desired-gate rate",
-              {},
-              {{Internal::C, -0.2}, {Internal::RC, -0.2}},
-              {{Internal::C, 0.0}},
-              {{Internal::C, 0.0}}},
-             {"Gmax admits a restoring desired-gate rate",
-              {},
-              {{Internal::C, 1.2}, {Internal::RC, -0.2}},
-              {{Internal::C, 0.0}},
-              {{Internal::C, -0.2}}},
-             {"Gmin admits a restoring desired-gate rate",
-              {},
-              {{Internal::C, -0.2}, {Internal::RC, 0.2}},
-              {{Internal::C, 0.0}},
-              {{Internal::C, 0.2}}}});
+        const std::array<ResidualCase, 4> gate_antiwindup_cases{{
+            {"Gmax blocks an outward desired-gate rate",
+             {},
+             {{Internal::C, 1.2}, {Internal::RC, 0.2}},
+             {{Internal::C, 0.0}},
+             {{Internal::C, 0.0}}},
+            {"Gmin blocks an outward desired-gate rate",
+             {},
+             {{Internal::C, -0.2}, {Internal::RC, -0.2}},
+             {{Internal::C, 0.0}},
+             {{Internal::C, 0.0}}},
+            {"Gmax admits a restoring desired-gate rate",
+             {},
+             {{Internal::C, 1.2}, {Internal::RC, -0.2}},
+             {{Internal::C, 0.0}},
+             {{Internal::C, -0.2}}},
+            {"Gmin admits a restoring desired-gate rate",
+             {},
+             {{Internal::C, -0.2}, {Internal::RC, 0.2}},
+             {{Internal::C, 0.0}},
+             {{Internal::C, 0.2}}},
+        }};
+        success *= runResidualCases(data, 0.4, gate_antiwindup_cases);
 
-        // At a blocked gate limit, pin the assembled alpha = 1 desired-gate
-        // row independently of either Jacobian backend. The row is
-        // -c_dot + antiwindup(c, rc, Gmin, Gmax): the derivative contributes
-        // -1, and the closed gate leaves the rate with no influence, so a
-        // leaking anti-windup would show up as a nonzero RC entry.
+        // At alpha = 1, a blocked desired-gate row has derivative coefficient
+        // -1 and no RC dependence, independently of either Jacobian backend.
         {
           using DepVar = DependencyTracking::Variable;
 
-          Fixture<DepVar> blocked(makeResidualData());
+          Fixture<DepVar> blocked(data);
           blocked.attachAllInputs();
           success *= blocked.initialize(0.4);
           setState(blocked.hygov, {{Internal::C, 1.2}, {Internal::RC, 0.2}});
@@ -657,63 +661,62 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// The nonlinear gate-power curve on every rising segment, the water
-      /// column away from the dam head, turbine damping, and initialization
-      /// through the nonidentity curve, including a value on a flat-segment
-      /// plateau.
+      /// Gate-power, water-column, damping, and curve-inversion behavior,
+      /// including a flat segment.
       TestOutcome turbineDynamics()
       {
         TestStatus success = true;
+        const auto data    = makeResidualData();
 
-        // One gate point inside each of the five curve segments.
-        success *= runResidualCases(
-            makeResidualData(),
-            0.4,
-            {{"gate-power curve segment 1",
-              {},
-              {{Internal::G, 0.1}, {Internal::PGV, 0.0}},
-              {},
-              {{Internal::PGV, 0.07500000000021236}}},
-             {"gate-power curve segment 2",
-              {},
-              {{Internal::G, 0.3}, {Internal::PGV, 0.0}},
-              {},
-              {{Internal::PGV, 0.28500000000007075}}},
-             {"gate-power curve segment 3",
-              {},
-              {{Internal::G, 0.5}, {Internal::PGV, 0.0}},
-              {},
-              {{Internal::PGV, 0.5399999999999371}}},
-             {"gate-power curve segment 4",
-              {},
-              {{Internal::G, 0.7}, {Internal::PGV, 0.0}},
-              {},
-              {{Internal::PGV, 0.7549999999999292}}},
-             {"gate-power curve segment 5",
-              {},
-              {{Internal::G, 0.9}, {Internal::PGV, 0.0}},
-              {},
-              {{Internal::PGV, 0.9249999999998506}}}});
+        const std::array<ResidualCase, 5> gate_power_cases{{
+            {"gate-power curve segment 1",
+             {},
+             {{Internal::G, 0.1}, {Internal::PGV, 0.0}},
+             {},
+             {{Internal::PGV, 0.07500000000021236}}},
+            {"gate-power curve segment 2",
+             {},
+             {{Internal::G, 0.3}, {Internal::PGV, 0.0}},
+             {},
+             {{Internal::PGV, 0.28500000000007075}}},
+            {"gate-power curve segment 3",
+             {},
+             {{Internal::G, 0.5}, {Internal::PGV, 0.0}},
+             {},
+             {{Internal::PGV, 0.5399999999999371}}},
+            {"gate-power curve segment 4",
+             {},
+             {{Internal::G, 0.7}, {Internal::PGV, 0.0}},
+             {},
+             {{Internal::PGV, 0.7549999999999292}}},
+            {"gate-power curve segment 5",
+             {},
+             {{Internal::G, 0.9}, {Internal::PGV, 0.0}},
+             {},
+             {{Internal::PGV, 0.9249999999998506}}},
+        }};
+        success *= runResidualCases(data, 0.4, gate_power_cases);
 
         // A head away from the dam head drives the flow and head rows, and
         // turbine damping scales with speed deviation and gate.
-        success *= runResidualCases(
-            makeResidualData(),
-            0.4,
-            {{"water column",
-              {},
-              {{Internal::Q, 0.61}, {Internal::H, 0.9}, {Internal::PGV, 0.55}},
-              {{Internal::Q, 0.05}},
-              {{Internal::Q, 0.18076923076923068}, {Internal::H, -0.09984999999999994}}},
-             {"turbine damping",
-              {{External::OMEGA, 0.05}},
-              {{Internal::G, 0.6}, {Internal::Q, 0.7}, {Internal::H, 1.1}, {Internal::PMECH, 0.5}},
-              {},
-              {{Internal::PMECH, -0.2677999999999999}}}});
+        const std::array<ResidualCase, 2> turbine_cases{{
+            {"water column",
+             {},
+             {{Internal::Q, 0.61}, {Internal::H, 0.9}, {Internal::PGV, 0.55}},
+             {{Internal::Q, 0.05}},
+             {{Internal::Q, 0.18076923076923068}, {Internal::H, -0.09984999999999994}}},
+            {"turbine damping",
+             {{External::OMEGA, 0.05}},
+             {{Internal::G, 0.6},
+              {Internal::Q, 0.7},
+              {Internal::H, 1.1},
+              {Internal::PMECH, 0.5}},
+             {},
+             {{Internal::PMECH, -0.2677999999999999}}},
+        }};
+        success *= runResidualCases(data, 0.4, turbine_cases);
 
-        // A value inside the third curve segment initializes through the
-        // nonidentity curve inversion.
-        Fixture<ScalarT> curve_fixture(makeResidualData());
+        Fixture<ScalarT> curve_fixture(data);
         curve_fixture.attachAllInputs();
         success *= curve_fixture.initialize(0.33761676);
         success *= stateMatches(
@@ -762,10 +765,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        const auto data = makeResidualData();
+        const auto                 data = makeResidualData();
+        const std::array<RealT, 9> gate_points{{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9}};
 
-        for (const RealT gate : std::array<RealT, 9>{
-                 {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9}})
+        for (const RealT gate : gate_points)
         {
           const auto dependency_jacobian = dependencyTrackingJacobian(data, gate, success);
           const auto enzyme_jacobian     = enzymeJacobian(data, gate, success);
@@ -782,8 +785,7 @@ namespace GridKit
             }
           }
 
-          // The recent HYGOV Jacobian defect was a missing PGV/G entry, so
-          // its presence is asserted structurally in both paths.
+          // Guard the required PGV/G dependency even if both paths agree.
           success *= jacobianContains(
               dependency_jacobian, Internal::PGV, Internal::G, "dependency-tracking");
           success *= jacobianContains(enzyme_jacobian, Internal::PGV, Internal::G, "Enzyme");
@@ -810,7 +812,6 @@ namespace GridKit
       static constexpr std::array<const char*, static_cast<size_t>(Internal::MAXIMUM)> kRowNames{
           {"XN", "XF", "C", "G", "Q", "OMEGADB", "EF", "FC", "RC", "PGV", "H", "PMECH"}};
 
-      /// One perturbed-residual scenario evaluated on a fresh fixture.
       struct ResidualCase
       {
         const char*  label;
@@ -820,7 +821,6 @@ namespace GridKit
         InternalRows expected;
       };
 
-      /// Copy `data` with the listed parameter overrides applied.
       static Data withParameters(Data                                            data,
                                  std::initializer_list<std::pair<Params, RealT>> overrides)
       {
@@ -860,7 +860,6 @@ namespace GridKit
         Fixture(const Fixture&)            = delete;
         Fixture& operator=(const Fixture&) = delete;
 
-        /// Attach fixture-owned storage to every external input.
         void attachAllInputs(RealT initial_value = 0.0)
         {
           const IdxT external_index_base = hygov.size();
@@ -902,7 +901,6 @@ namespace GridKit
           return true;
         }
 
-        /// prepare() plus successful HYGOV initialization.
         bool initialize(RealT pmech)
         {
           if (!prepare(pmech))
@@ -1053,7 +1051,6 @@ namespace GridKit
                                {Params::Pgv4, 0.85}});
       }
 
-      /// The external inputs the residual answer key is evaluated against.
       template <typename T>
       void setAnswerKeyInputs(Fixture<T>& fixture) const
       {
@@ -1170,7 +1167,6 @@ namespace GridKit
                                   values + static_cast<size_t>(vector.getSize()));
       }
 
-      /// Every row of a vector still holds its snapshot value.
       template <typename VectorT>
       bool vectorUnchanged(const VectorT&            vector,
                            const std::vector<RealT>& snapshot,
@@ -1293,7 +1289,6 @@ namespace GridKit
         hygov.y().setDataUpdated();
       }
 
-      /// setState() for the derivative vector.
       template <typename T>
       void setDerivative(PhasorDynamics::Governor::Hygov<T, IdxT>& hygov,
                          const InternalRows&                       rows) const
@@ -1306,11 +1301,11 @@ namespace GridKit
         hygov.yp().setDataUpdated();
       }
 
-      /// Evaluate each scenario on its own initialized fixture, so no
-      /// inputs or state leak between cases.
-      bool runResidualCases(const Data&                      data,
-                            RealT                            pmech,
-                            const std::vector<ResidualCase>& cases) const
+      /// Evaluate each scenario on a fresh fixture to prevent state leakage.
+      template <size_t size>
+      bool runResidualCases(const Data&                           data,
+                            RealT                                 pmech,
+                            const std::array<ResidualCase, size>& cases) const
       {
         bool success = true;
         for (const auto& test_case : cases)
@@ -1320,6 +1315,7 @@ namespace GridKit
           if (!fixture.initialize(pmech))
           {
             success = false;
+            continue;
           }
           for (const auto& [port, value] : test_case.inputs)
           {
@@ -1339,9 +1335,7 @@ namespace GridKit
         return success;
       }
 
-      /// Compare one vector row against its expected value. Every row check
-      /// in this suite reports through here, so failures share one format
-      /// and name their row through `kRowNames`.
+      /// Compare one named row and report mismatches consistently.
       bool rowMatches(RealT       actual,
                       RealT       expected,
                       const char* what,
@@ -1361,12 +1355,12 @@ namespace GridKit
         {
           std::cout << row;
         }
-        std::cout << ' ' << context << " mismatch: " << std::setprecision(16)
+        std::cout << ' ' << context << " mismatch: "
+                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
                   << actual << " != " << expected << '\n';
         return false;
       }
 
-      /// Check selected rows of a model vector against expected values.
       template <typename VectorT, typename RowsT>
       bool rowsMatch(const VectorT& vector,
                      const RowsT&   rows,
@@ -1438,8 +1432,9 @@ namespace GridKit
         {
           return true;
         }
-        std::cout << label << " mismatch: " << std::setprecision(16) << actual
-                  << " != " << expected << "\n";
+        std::cout << label << " mismatch: "
+                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
+                  << actual << " != " << expected << "\n";
         return false;
       }
 
@@ -1472,7 +1467,6 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// The row's dependency map must contain the column entry.
       template <typename JacobianRowsT>
       bool jacobianContains(const JacobianRowsT& rows,
                             Internal             row_variable,
