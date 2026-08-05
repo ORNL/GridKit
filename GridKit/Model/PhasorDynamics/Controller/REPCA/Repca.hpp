@@ -64,7 +64,7 @@ namespace GridKit
         Q,       ///< \f$Q\f$ Required branch reactive power on system base [p.u.]
         FREQ,    ///< \f$f\f$ Optional frequency input [p.u.]
         VREF,    ///< \f$V^\mathrm{ref}\f$ Optional voltage-control reference [p.u.]
-        PREF,    ///< \f$P^\mathrm{ref}\f$ Optional plant active-power reference on system base [p.u.]
+        PREF,    ///< \f$P_\mathrm{plant}^\mathrm{ref}\f$ Optional plant active-power reference on system base [p.u.]
         QREF,    ///< \f$Q^\mathrm{ref}\f$ Optional reactive-power reference on system base [p.u.]
         FREQREF, ///< \f$f^\mathrm{ref}\f$ Optional frequency reference [p.u.]
         MAXIMUM  ///< Number of external variables
@@ -162,10 +162,31 @@ namespace GridKit
                                RealT    upper_limit,
                                ScalarT& limiter_input) const;
 
+        bool solveDeadbandInput(ScalarT  requested_output,
+                                RealT    lower_limit,
+                                RealT    upper_limit,
+                                ScalarT& deadband_input) const;
+
         RealT logOneMinusExp(RealT x) const;
 
         [[gnu::always_inline]] inline ScalarT toComponentBase(ScalarT value) const;
         ScalarT                               toSystemBase(ScalarT value) const;
+
+        /**
+         * @brief Smooth asymmetric frequency-droop response.
+         *
+         * @param[in] error Deadbanded frequency error.
+         * @param[in] gain_down Down-frequency response gain.
+         * @param[in] gain_up Up-frequency response gain.
+         * @return Active-power frequency response.
+         */
+        static __attribute__((always_inline)) inline ScalarT droop(
+            const ScalarT error,
+            const RealT   gain_down,
+            const RealT   gain_up)
+        {
+          return error * (gain_up + (gain_down - gain_up) * Math::sigmoid(error));
+        }
 
         ScalarT& Vr();
         ScalarT& Vi();

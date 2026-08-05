@@ -241,7 +241,7 @@ namespace GridKit
         success *= (fixture.repca.evaluateResidual() == 0);
 
         success *= stateMatches(fixture.repca,
-                                {{Vars::VMEAS, 0.99200050403213},
+                                {{Vars::VMEAS, 0.984002032518226},
                                  {Vars::QMEAS, 0.2},
                                  {Vars::XQPI, 0.5},
                                  {Vars::XQLAG, 0.5},
@@ -249,9 +249,9 @@ namespace GridKit
                                  {Vars::XPPI, 0.9},
                                  {Vars::PREF, 0.9},
                                  {Vars::V, 1.0},
-                                 {Vars::VLDC, 0.99200050403213},
+                                 {Vars::VLDC, 0.984002032518226},
                                  {Vars::VDROOP, 1.08},
-                                 {Vars::VCTRL, 0.99200050403213},
+                                 {Vars::VCTRL, 0.984002032518226},
                                  {Vars::SFRZ, 1.0},
                                  {Vars::ERQ, 0.0},
                                  {Vars::ERQDB, 0.0},
@@ -272,7 +272,7 @@ namespace GridKit
         success *= scalarPreserved(fixture.input(Ext::FREQ), 0.99, "preserved freq");
         success *= scalarPreserved(fixture.qext(), 0.25, "preserved qext");
         success *= scalarPreserved(fixture.pext(), 0.45, "preserved pext");
-        success *= scalarMatches(fixture.input(Ext::VREF), 0.99200050403213, "published vref");
+        success *= scalarMatches(fixture.input(Ext::VREF), 0.984002032518226, "published vref");
         success *= scalarMatches(fixture.input(Ext::PREF), 0.4, "published pref");
         success *= scalarMatches(fixture.input(Ext::QREF), 0.1, "published qref");
         success *= scalarMatches(fixture.input(Ext::FREQREF), 0.99, "published freqref");
@@ -301,7 +301,7 @@ namespace GridKit
         }
 
         success *= monitorMatches(fixture.repca,
-                                  {{0.25, 0.45, 0.99200050403213, 0.2, 0.8}},
+                                  {{0.25, 0.45, 0.984002032518226, 0.2, 0.8}},
                                   "initialization");
 
         success *= allResidualsWithinInitTolerance(fixture.repca);
@@ -344,7 +344,7 @@ namespace GridKit
                                  {Vars::PEXT, 0.45}},
                                 "unassigned command outputs");
         success *= monitorMatches(outputless.repca,
-                                  {{0.25, 0.45, 0.99200050403213, 0.2, 0.8}},
+                                  {{0.25, 0.45, 0.984002032518226, 0.2, 0.8}},
                                   "unassigned command outputs");
         success *= allResidualsWithinInitTolerance(outputless.repca);
 
@@ -364,10 +364,10 @@ namespace GridKit
             {"droop/reactive-reference/enabled-frequency", false, false, true, 1.08, 0.9, 0.45},
             {"droop/voltage-reference/disabled-frequency", false, true, false, 1.08, 0.8, 0.0},
             {"droop/voltage-reference/enabled-frequency", false, true, true, 1.08, 0.9, 0.45},
-            {"line-drop/reactive-reference/disabled-frequency", true, false, false, 0.99200050403213, 0.8, 0.0},
-            {"line-drop/reactive-reference/enabled-frequency", true, false, true, 0.99200050403213, 0.9, 0.45},
-            {"line-drop/voltage-reference/disabled-frequency", true, true, false, 0.99200050403213, 0.8, 0.0},
-            {"line-drop/voltage-reference/enabled-frequency", true, true, true, 0.99200050403213, 0.9, 0.45},
+            {"line-drop/reactive-reference/disabled-frequency", true, false, false, 0.984002032518226, 0.8, 0.0},
+            {"line-drop/reactive-reference/enabled-frequency", true, false, true, 0.984002032518226, 0.9, 0.45},
+            {"line-drop/voltage-reference/disabled-frequency", true, true, false, 0.984002032518226, 0.8, 0.0},
+            {"line-drop/voltage-reference/enabled-frequency", true, true, true, 0.984002032518226, 0.9, 0.45},
         }};
         for (const auto& test_case : flag_cases)
         {
@@ -476,19 +476,24 @@ namespace GridKit
 
         auto reactive_aw_data                         = makeInitializationData();
         reactive_aw_data.parameters[Params::dbdupper] = 0.03;
+        reactive_aw_data.parameters[Params::emin]     = 0.0;
 
-        success *= initializationRejectedAtomically(reactive_aw_data,
-                                                    0.25,
-                                                    0.45,
-                                                    "nonzero reactive-power PI antiwindup rate");
-        success *= initializationRejectedAtomically(
-            reactive_aw_data,
-            0.25,
-            0.45,
-            "nonzero gated reactive-power PI state rate at the freeze transition",
-            NonfiniteTarget::NONE,
-            0.2,
-            0.0);
+        for (const auto& voltage : {std::pair<RealT, RealT>{0.8, 0.6},
+                                    std::pair<RealT, RealT>{0.2, 0.0}})
+        {
+          Fixture<ScalarT> asymmetric_reactive(reactive_aw_data,
+                                               voltage.first,
+                                               voltage.second);
+          asymmetric_reactive.attachAllInputs();
+          setInitializationInputs(asymmetric_reactive);
+          success *= asymmetric_reactive.initialize(0.25, 0.45);
+          success *= (asymmetric_reactive.repca.evaluateResidual() == 0);
+          success *= stateMatches(asymmetric_reactive.repca,
+                                  {{Vars::ERQDB, -0.1},
+                                   {Vars::ERQLIM, 0.0}},
+                                  "asymmetric reactive initialization");
+          success *= allResidualsWithinInitTolerance(asymmetric_reactive.repca);
+        }
 
         auto frozen_data                     = reactive_aw_data;
         frozen_data.parameters[Params::Vfrz] = 0.9;
@@ -502,13 +507,51 @@ namespace GridKit
           success *= allResidualsWithinInitTolerance(frozen_reactive_rate.repca);
         }
 
-        auto active_aw_data                      = makeInitializationData();
-        active_aw_data.parameters[Params::femin] = 0.0;
+        {
+          auto active_aw_data                      = makeInitializationData();
+          active_aw_data.parameters[Params::fdbd2] = 0.025;
+          active_aw_data.parameters[Params::femin] = 0.0;
+          Fixture<ScalarT> asymmetric_active(active_aw_data, 0.8, 0.6);
+          asymmetric_active.attachAllInputs();
+          setInitializationInputs(asymmetric_active);
+          success *= asymmetric_active.initialize(0.25, 0.45);
+          success *= (asymmetric_active.repca.evaluateResidual() == 0);
+          success *= stateMatches(asymmetric_active.repca,
+                                  {{Vars::EF, 0.0},
+                                   {Vars::EP, -0.1},
+                                   {Vars::EPLIM, 0.0}},
+                                  "lower active-error boundary");
+          success *= scalarMatches(asymmetric_active.input(Ext::FREQREF),
+                                   0.995,
+                                   "asymmetric frequency reference");
+          success *= scalarMatches(asymmetric_active.input(Ext::PREF),
+                                   0.35,
+                                   "lower-bound plant reference");
+          success *= allResidualsWithinInitTolerance(asymmetric_active.repca);
+        }
 
-        success *= initializationRejectedAtomically(active_aw_data,
-                                                    0.25,
-                                                    0.45,
-                                                    "nonzero active-power PI antiwindup rate");
+        {
+          auto active_aw_data                      = makeInitializationData();
+          active_aw_data.parameters[Params::fdbd1] = -0.025;
+          active_aw_data.parameters[Params::femax] = 0.0;
+          Fixture<ScalarT> asymmetric_active(active_aw_data, 0.8, 0.6);
+          asymmetric_active.attachAllInputs();
+          setInitializationInputs(asymmetric_active);
+          success *= asymmetric_active.initialize(0.25, 0.45);
+          success *= (asymmetric_active.repca.evaluateResidual() == 0);
+          success *= stateMatches(asymmetric_active.repca,
+                                  {{Vars::EF, 0.0},
+                                   {Vars::EP, 0.1},
+                                   {Vars::EPLIM, 0.0}},
+                                  "upper active-error boundary");
+          success *= scalarMatches(asymmetric_active.input(Ext::FREQREF),
+                                   0.985,
+                                   "asymmetric frequency reference");
+          success *= scalarMatches(asymmetric_active.input(Ext::PREF),
+                                   0.45,
+                                   "upper-bound plant reference");
+          success *= allResidualsWithinInitTolerance(asymmetric_active.repca);
+        }
 
         auto overflow_data                    = makeInitializationData();
         overflow_data.parameters[Params::Rc]  = std::numeric_limits<RealT>::max();
@@ -620,7 +663,7 @@ namespace GridKit
             {Vars::XPPI, "XPPI", -0.3},
             {Vars::PREF, "PREF", 0.4},
             {Vars::V, "V", -1.28},
-            {Vars::VLDC, "VLDC", -0.0075},
+            {Vars::VLDC, "VLDC", 0.028},
             {Vars::VDROOP, "VDROOP", 0.1},
             {Vars::VCTRL, "VCTRL", 0.05},
             {Vars::SFRZ, "SFRZ", 0.5},
@@ -898,8 +941,9 @@ namespace GridKit
                                     "frequency deadband");
         }
 
-        const std::array<DrivenCase, 2> droop_cases{{
+        const std::array<DrivenCase, 3> droop_cases{{
             {-0.9, -0.9},
+            {0.0, 0.0},
             {0.9, 1.8},
         }};
         fixture.input(Ext::PREF) = 0.2;
@@ -1983,10 +2027,10 @@ namespace GridKit
             {{index(Vars::PREF), -3.0}, {index(Vars::PPI), 2.0}},
             {{index(Vars::V), -3.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
             {{index(Vars::VLDC), -2.0},
-             {kBusVrColumn, 1.88},
-             {kBusViColumn, 0.66},
-             {externalColumn(index(Ext::IR)), -0.0574},
-             {externalColumn(index(Ext::II)), 0.0432}},
+             {kBusVrColumn, 1.96},
+             {kBusViColumn, 0.52},
+             {externalColumn(index(Ext::IR)), -0.1096},
+             {externalColumn(index(Ext::II)), 0.0968}},
             {{index(Vars::V), 1.0}, {index(Vars::VDROOP), -1.0}, {externalColumn(index(Ext::Q)), 0.8}},
             {{index(Vars::VLDC), 1.0}, {index(Vars::VCTRL), -1.0}},
             {{index(Vars::SFRZ), -1.0}},

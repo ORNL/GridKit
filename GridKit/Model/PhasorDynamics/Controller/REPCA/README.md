@@ -34,8 +34,8 @@ $s_\mathrm{ref}$                   | [boolean] | `RefFlag`   | Reactive-loop ref
 $s_\mathrm{freq}$                  | [boolean] | `Freqflag`  | Active-power output selector                            | `false`       | `true` = command enabled, `false` = zero output
 $T_\mathrm{fltr}$                  | [sec]     | `Tfltr`     | Voltage and reactive-power filter time constant         | 0.05          |
 $V^\mathrm{frz}$                   | [p.u.]    | `Vfrz`      | Reactive-power PI freeze-voltage threshold              | 0.7           |
-$R_c$                               | [p.u.]    | `Rc`        | Line-drop compensation resistance                       | 0.0           | System base
-$X_c$                               | [p.u.]    | `Xc`        | Line-drop compensation reactance                        | 0.0           | System base
+$R_c$                               | [p.u.]    | `Rc`        | Line-drop compensation resistance                       | 0.0           | Component base
+$X_c$                               | [p.u.]    | `Xc`        | Line-drop compensation reactance                        | 0.0           | Component base
 $K_c$                               | [p.u.]    | `Kc`        | Reactive-current compensation gain                      | 1.0           |
 $D_\mathrm{bd1}$                   | [p.u.]    | `dbdlow`    | Lower reactive-loop deadband threshold                  | 0.0           |
 $D_\mathrm{bd2}$                   | [p.u.]    | `dbdupper`  | Upper reactive-loop deadband threshold                  | 0.0           |
@@ -89,12 +89,14 @@ floor with a warning:
   T_x &\leftarrow \max(T_x,\epsilon_T), \quad x\in\{\mathrm{fltr},\mathrm{fv},\mathrm{p},\mathrm{lag}\} \\
   s_\mathrm{comp}^\mathrm{off} &= 1 - s_\mathrm{comp} \\
   s_\mathrm{ref}^\mathrm{off} &= 1 - s_\mathrm{ref} \\
-  k_\mathrm{base} &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}}
+  k_\mathrm{base} &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}} \\
+  I_\mathrm{r}^\mathrm{comp} &= k_\mathrm{base}I_\mathrm{r}, \quad
+  I_\mathrm{i}^\mathrm{comp} = k_\mathrm{base}I_\mathrm{i}
 \end{aligned}
 ```
 
 $S^\mathrm{sys}$ is the system power base; $k_\mathrm{base}$ converts system-base
-power to component base.
+power and current signals to component base.
 
 ## Model Ports
 
@@ -173,7 +175,7 @@ $P$                           | [p.u.] | Known   | Branch active power          
 $Q$                           | [p.u.] | Known   | Branch reactive power             | Signal port `q`; system base
 $f$                           | [p.u.] | Known   | Frequency input                   | Signal port `freq`
 $V^\mathrm{ref}$              | [p.u.] | Unknown | Voltage-control reference         | Optional signal port `vref`
-$P^\mathrm{ref}$              | [p.u.] | Unknown | Plant active-power reference      | Optional signal port `pref`; system base
+$P_\mathrm{plant}^\mathrm{ref}$ | [p.u.] | Unknown | Plant active-power reference      | Optional signal port `pref`; system base
 $Q^\mathrm{ref}$              | [p.u.] | Unknown | Reactive-power reference          | Optional signal port `qref`; system base
 $f^\mathrm{ref}$              | [p.u.] | Unknown | Frequency reference               | Optional signal port `freqref`
 
@@ -203,7 +205,7 @@ target and smooth approximation.
 ```math
 \begin{aligned}
   0 &= -V^2 + V_\mathrm{r}^2 + V_\mathrm{i}^2 \\
-  0 &= -(V^\mathrm{ldc})^2 + (V_\mathrm{r} - R_c I_\mathrm{r} + X_c I_\mathrm{i})^2 + (V_\mathrm{i} - R_c I_\mathrm{i} - X_c I_\mathrm{r})^2 \\
+  0 &= -(V^\mathrm{ldc})^2 + (V_\mathrm{r} - R_c I_\mathrm{r}^\mathrm{comp} + X_c I_\mathrm{i}^\mathrm{comp})^2 + (V_\mathrm{i} - R_c I_\mathrm{i}^\mathrm{comp} - X_c I_\mathrm{r}^\mathrm{comp})^2 \\
   0 &= -V^\mathrm{droop} + V + K_c k_\mathrm{base}Q \\
   0 &= -V^\mathrm{ctrl} + s_\mathrm{comp}V^\mathrm{ldc} + s_\mathrm{comp}^\mathrm{off}V^\mathrm{droop} \\
   0 &= -s_\mathrm{frz} + \text{above}(V;\,V^\mathrm{frz}) \\
@@ -213,7 +215,7 @@ target and smooth approximation.
   0 &= -Q^\mathrm{PI} + \text{clamp}(K_\mathrm{p}e_\mathrm{RQ}^\mathrm{lim}+x_Q^\mathrm{PI};\,Q^{\min},Q^{\max}) \\
   0 &= -T_\mathrm{fv} (k_\mathrm{base}Q^\mathrm{ext}-x_Q^\mathrm{lag}) + T_\mathrm{ft} (Q^\mathrm{PI}-x_Q^\mathrm{lag}) \\
   0 &= -e_f + \text{deadband2}(f^\mathrm{ref}-f;\,D_\mathrm{bd1}^{f},D_\mathrm{bd2}^{f}) \\
-  0 &= -e_P + k_\mathrm{base}P^\mathrm{ref} - P^\mathrm{meas} + D_\mathrm{dn}\text{ramp}(e_f) - D_\mathrm{up}\text{ramp}(-e_f) \\
+  0 &= -e_P + k_\mathrm{base}P_\mathrm{plant}^\mathrm{ref} - P^\mathrm{meas} + \text{droop}(e_f;D_\mathrm{dn},D_\mathrm{up}) \\
   0 &= -e_P^\mathrm{lim} + \text{clamp}(e_P;\,e_P^{\min},e_P^{\max}) \\
   0 &= -P^\mathrm{PI} + \text{clamp}(K_\mathrm{pg}e_P^\mathrm{lim}+x_P^\mathrm{PI};\,P^{\min},P^{\max}) \\
   0 &= -k_\mathrm{base}P^\mathrm{ext} + s_\mathrm{freq}P^\mathrm{ref}.
@@ -221,7 +223,7 @@ target and smooth approximation.
 ```
 
 CommonMath defines the [derived limiter functions](../../../../CommonMath.md#derived-functions)
-and [ramp primitive](../../../../CommonMath.md#primitives) used above.
+used above; Appendix A defines `droop`.
 
 ### External Equations
 
@@ -246,31 +248,31 @@ REPCA reconstructs a steady operating point; arbitrary-state restart is unsuppor
 
 ### Internal Initialization
 
-For initialization tolerance $\epsilon_\mathrm{init}$ of $10^{-10}$,
-$\text{clamp}^{-1}(z;\ell,u)$ returns a finite input matching
-$z\in[\ell,u]$ within that tolerance, including the limits.
+Initialization-only $\text{clamp}^{-1}$ and $\text{deadband2}^{-1}$ recover
+finite inputs that reproduce the requested smooth-block outputs.
 
 ```math
 \begin{aligned}
   V &\leftarrow \sqrt{V_\mathrm{r}^2 + V_\mathrm{i}^2} \\
-  V^\mathrm{ldc} &\leftarrow \sqrt{(V_\mathrm{r}-R_c I_\mathrm{r}+X_c I_\mathrm{i})^2 + (V_\mathrm{i}-R_c I_\mathrm{i}-X_c I_\mathrm{r})^2} \\
+  V^\mathrm{ldc} &\leftarrow \sqrt{(V_\mathrm{r}-R_c I_\mathrm{r}^\mathrm{comp}+X_c I_\mathrm{i}^\mathrm{comp})^2 + (V_\mathrm{i}-R_c I_\mathrm{i}^\mathrm{comp}-X_c I_\mathrm{r}^\mathrm{comp})^2} \\
   V^\mathrm{droop} &\leftarrow V + K_c k_\mathrm{base}Q \\
   V^\mathrm{ctrl} &\leftarrow s_\mathrm{comp}V^\mathrm{ldc} + s_\mathrm{comp}^\mathrm{off}V^\mathrm{droop} \\
   V^\mathrm{meas} &\leftarrow V^\mathrm{ctrl} \\
   Q^\mathrm{meas} &\leftarrow k_\mathrm{base}Q \\
   P^\mathrm{meas} &\leftarrow k_\mathrm{base}P \\
   s_\mathrm{frz} &\leftarrow \text{above}(V;\,V^\mathrm{frz}) \\
-  e_\mathrm{RQ} &\leftarrow 0 \\
-  e_\mathrm{RQ}^\mathrm{db} &\leftarrow \text{deadband2}(e_\mathrm{RQ};\,D_\mathrm{bd1},D_\mathrm{bd2}) \\
-  e_\mathrm{RQ}^\mathrm{lim} &\leftarrow \text{clamp}(e_\mathrm{RQ}^\mathrm{db};\,e^{\min},e^{\max}) \\
+  e_\mathrm{RQ}^\mathrm{db} &\leftarrow \text{clamp}^{-1}(0;\,e^{\min},e^{\max}) \\
+  e_\mathrm{RQ} &\leftarrow \text{deadband2}^{-1}(e_\mathrm{RQ}^\mathrm{db};\,D_\mathrm{bd1},D_\mathrm{bd2}) \\
+  e_\mathrm{RQ}^\mathrm{lim} &\leftarrow 0 \\
   Q^\mathrm{PI} &\leftarrow k_\mathrm{base}Q^\mathrm{ext} \\
   x_Q^\mathrm{lag} &\leftarrow Q^\mathrm{PI} \\
   u_Q^\mathrm{PI} &\leftarrow \text{clamp}^{-1}(Q^\mathrm{PI};\,Q^{\min},Q^{\max}) \\
   x_Q^\mathrm{PI} &\leftarrow u_Q^\mathrm{PI} - K_\mathrm{p}e_\mathrm{RQ}^\mathrm{lim} \\
-  e_f &\leftarrow \text{deadband2}(0;\,D_\mathrm{bd1}^{f},D_\mathrm{bd2}^{f}) \\
-  P^\mathrm{freq} &\leftarrow D_\mathrm{dn}\text{ramp}(e_f) - D_\mathrm{up}\text{ramp}(-e_f) \\
-  e_P &\leftarrow 0 \\
-  e_P^\mathrm{lim} &\leftarrow \text{clamp}(e_P;\,e_P^{\min},e_P^{\max}) \\
+  \Delta f_0 &\leftarrow \text{deadband2}^{-1}(0;\,D_\mathrm{bd1}^{f},D_\mathrm{bd2}^{f}) \\
+  e_f &\leftarrow 0 \\
+  P^\mathrm{freq} &\leftarrow \text{droop}(e_f;D_\mathrm{dn},D_\mathrm{up}) = 0 \\
+  e_P &\leftarrow \text{clamp}^{-1}(0;\,e_P^{\min},e_P^{\max}) \\
+  e_P^\mathrm{lim} &\leftarrow 0 \\
   P^\mathrm{ref} &\leftarrow \begin{cases}
     k_\mathrm{base}P^\mathrm{ext} & s_\mathrm{freq}=1 \\
     \text{clamp}(P^\mathrm{meas};\,P^{\min},P^{\max}) & s_\mathrm{freq}=0
@@ -301,10 +303,10 @@ Initialization is atomic; candidates are validated before state or signal writes
 
 ```math
 \begin{aligned}
-  V^\mathrm{ref} &\leftarrow V^\mathrm{meas} \\
-  P^\mathrm{ref} &\leftarrow \dfrac{P^\mathrm{meas}-P^\mathrm{freq}}{k_\mathrm{base}} \\
-  Q^\mathrm{ref} &\leftarrow Q \\
-  f^\mathrm{ref} &\leftarrow f.
+  V^\mathrm{ref} &\leftarrow V^\mathrm{meas} + s_\mathrm{ref}e_\mathrm{RQ} \\
+  Q^\mathrm{ref} &\leftarrow Q + \dfrac{s_\mathrm{ref}^\mathrm{off}e_\mathrm{RQ}}{k_\mathrm{base}} \\
+  P_\mathrm{plant}^\mathrm{ref} &\leftarrow P + \dfrac{e_P-P^\mathrm{freq}}{k_\mathrm{base}} \\
+  f^\mathrm{ref} &\leftarrow f + \Delta f_0.
 \end{aligned}
 ```
 
@@ -323,7 +325,7 @@ Output          | Units  | Description                         | Note
 - `validation()` checks defaults, parameter domains, signal contracts, and time floors.
 - `initializationAndSignals()` checks reconstruction, bases, signals, monitors,
   tags, and selectors.
-- `initializationDomain()` checks rejection, exact and collapsed limits,
+- `initializationDomain()` checks rejection, asymmetric and collapsed limits,
   nonfinite values, and atomicity.
 - `residualEquations()` checks every residual against a fixed answer key.
 - `reactiveControl()` checks compensation and reference modes, voltage freeze,
@@ -333,6 +335,17 @@ Output          | Units  | Description                         | Note
 - `derivatives()` checks differential-row derivative signs.
 - `jacobian()` checks fixed numerical and structural oracles, plus Enzyme
   agreement to $10^{-9}$ when enabled.
+
+## Appendix A: `droop`
+
+```math
+\text{droop}(e;D_\mathrm{dn},D_\mathrm{up})
+=e\left[D_\mathrm{up}+(D_\mathrm{dn}-D_\mathrm{up})\sigma(e)\right],
+```
+
+where $\sigma$ is GridKit's smooth
+[`sigmoid`](../../../../CommonMath.md#primitives). The response preserves
+$\text{droop}(0;D_\mathrm{dn},D_\mathrm{up})=0$.
 
 [^frequency-measurement]: Background for phase-derived, filtered frequency
     measurement: [PSCAD Frequency/Phase/Magnitude Meter](https://www.pscad.com/webhelp-pscad-v5.1.0-ol/Master_Library_Models/Meters/Frequency_Phase_Magnitude_Meter.htm) and

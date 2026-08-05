@@ -269,15 +269,17 @@ namespace GridKit
 
         const ScalarT vr = Vr();
         const ScalarT vi = Vi();
-        const ScalarT ir =
+        const ScalarT ir_system =
             signals_.template readExternalVariable<RepcaExternalVariables::IR>();
-        const ScalarT ii =
+        const ScalarT ii_system =
             signals_.template readExternalVariable<RepcaExternalVariables::II>();
         const ScalarT p_system =
             signals_.template readExternalVariable<RepcaExternalVariables::P>();
         const ScalarT q_system =
             signals_.template readExternalVariable<RepcaExternalVariables::Q>();
-        ScalarT freq = static_cast<ScalarT>(ONE<RealT>);
+        const ScalarT ir   = toComponentBase(ir_system);
+        const ScalarT ii   = toComponentBase(ii_system);
+        ScalarT       freq = static_cast<ScalarT>(ONE<RealT>);
         if (signals_.template isAttached<RepcaExternalVariables::FREQ>())
         {
           freq = signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
@@ -287,10 +289,9 @@ namespace GridKit
         {
           return std::isfinite(static_cast<RealT>(value));
         };
-        if (!is_finite(vr) || !is_finite(vi) || !is_finite(ir)
-            || !is_finite(ii) || !is_finite(p_system)
-            || !is_finite(q_system)
-            || !is_finite(freq) || !is_finite(qext0)
+        if (!is_finite(vr) || !is_finite(vi) || !is_finite(ir_system)
+            || !is_finite(ii_system) || !is_finite(p_system)
+            || !is_finite(q_system) || !is_finite(freq) || !is_finite(qext0)
             || (Freqflag_ && !is_finite(pext0)))
         {
           Log::error() << "Repca: initial bus, signal, and command values must be finite\n";
@@ -312,10 +313,16 @@ namespace GridKit
         const ScalarT pmeas0  = p;
         const ScalarT sfrz0   = Math::above(v0, Vfrz_);
 
-        const ScalarT zero    = static_cast<ScalarT>(ZERO<RealT>);
-        const ScalarT erq0    = zero;
-        const ScalarT erqdb0  = Math::deadband2(erq0, dbdlow_, dbdupper_);
-        const ScalarT erqlim0 = Math::clamp(erqdb0, emin_, emax_);
+        const ScalarT zero = static_cast<ScalarT>(ZERO<RealT>);
+        ScalarT       erq0{};
+        ScalarT       erqdb0{};
+        if (!solveLimiterInput(zero, emin_, emax_, erqdb0)
+            || !solveDeadbandInput(erqdb0, dbdlow_, dbdupper_, erq0))
+        {
+          Log::error() << "Repca: reactive error blocks have no finite steady input\n";
+          return 1;
+        }
+        const ScalarT erqlim0 = zero;
         const ScalarT qpi0    = qext0;
         const ScalarT xqlag0  = qpi0;
 
@@ -335,10 +342,17 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT ef0    = Math::deadband2(zero, fdbd1_, fdbd2_);
-        const ScalarT pfreq0 = Ddn_ * Math::ramp(ef0) - Dup_ * Math::ramp(-ef0);
-        const ScalarT ep0    = zero;
-        const ScalarT eplim0 = Math::clamp(ep0, femin_, femax_);
+        ScalarT frequency_error0{};
+        ScalarT ep0{};
+        if (!solveDeadbandInput(zero, fdbd1_, fdbd2_, frequency_error0)
+            || !solveLimiterInput(zero, femin_, femax_, ep0))
+        {
+          Log::error() << "Repca: active error blocks have no finite steady input\n";
+          return 1;
+        }
+        const ScalarT ef0    = zero;
+        const ScalarT pfreq0 = droop(ef0, Ddn_, Dup_);
+        const ScalarT eplim0 = zero;
         const ScalarT pref0  = Freqflag_ ? pext0 : Math::clamp(pmeas0, Pmin_, Pmax_);
         const ScalarT ppi0   = pref0;
         ScalarT       ppi_input0{};
@@ -364,10 +378,18 @@ namespace GridKit
         }
 
         const ScalarT pext_output0 = Freqflag_ ? pext0_system : zero;
-        const ScalarT freqref0     = freq;
-        const ScalarT vref0        = vmeas0;
-        const ScalarT qref0_system = q_system;
-        const ScalarT pref0_system = toSystemBase(pmeas0 - pfreq0);
+        const ScalarT freqref0     = freq + frequency_error0;
+        ScalarT       vref0        = vmeas0;
+        ScalarT       qref0_system = q_system;
+        if (RefFlag_)
+        {
+          vref0 += erq0;
+        }
+        else
+        {
+          qref0_system = toSystemBase(qmeas0 + erq0);
+        }
+        const ScalarT pref0_system = p_system + toSystemBase(ep0 - pfreq0);
 
         const bool candidates_are_finite =
             is_finite(qext0_system)
@@ -671,8 +693,8 @@ namespace GridKit
         const ScalarT vr = wb[0];
         const ScalarT vi = wb[1];
 
-        const ScalarT ir      = ws[index(RepcaExternalVariables::IR)];
-        const ScalarT ii      = ws[index(RepcaExternalVariables::II)];
+        const ScalarT ir      = toComponentBase(ws[index(RepcaExternalVariables::IR)]);
+        const ScalarT ii      = toComponentBase(ws[index(RepcaExternalVariables::II)]);
         const ScalarT p       = toComponentBase(ws[index(RepcaExternalVariables::P)]);
         const ScalarT q       = toComponentBase(ws[index(RepcaExternalVariables::Q)]);
         const ScalarT freq    = ws[index(RepcaExternalVariables::FREQ)];
@@ -683,7 +705,7 @@ namespace GridKit
 
         const ScalarT vldc_r = vr - Rc_ * ir + Xc_ * ii;
         const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
-        const ScalarT pfreq  = Ddn_ * Math::ramp(ef) - Dup_ * Math::ramp(-ef);
+        const ScalarT pfreq  = droop(ef, Ddn_, Dup_);
 
         f[index(RepcaInternalVariables::VMEAS)] = -vmeas_dot + (vctrl - vmeas) / Tfltr_;
         f[index(RepcaInternalVariables::QMEAS)] = -qmeas_dot + (q - qmeas) / Tfltr_;
@@ -956,6 +978,84 @@ namespace GridKit
       }
 
       /**
+       * @brief Recover an input for a requested smooth deadband output
+       *
+       * @param[in] requested_output Requested deadband output.
+       * @param[in] lower_limit Lower deadband threshold.
+       * @param[in] upper_limit Upper deadband threshold.
+       * @param[out] deadband_input Recovered deadband input on success.
+       * @return true when a finite input was recovered.
+       */
+      template <typename scalar_type, typename index_type>
+      bool Repca<scalar_type, index_type>::solveDeadbandInput(
+          ScalarT  requested_output,
+          RealT    lower_limit,
+          RealT    upper_limit,
+          ScalarT& deadband_input) const
+      {
+        const RealT output_value = static_cast<RealT>(requested_output);
+
+        if (!std::isfinite(output_value)
+            || !std::isfinite(lower_limit)
+            || !std::isfinite(upper_limit)
+            || lower_limit > upper_limit)
+        {
+          return false;
+        }
+
+        const RealT midpoint = lower_limit + HALF<RealT> * (upper_limit - lower_limit);
+        if (std::abs(output_value) <= INITIALIZATION_TOLERANCE)
+        {
+          deadband_input = static_cast<ScalarT>(midpoint);
+          return true;
+        }
+
+        RealT lower_input = midpoint;
+        RealT upper_input = midpoint;
+        if (output_value < ZERO<RealT>)
+        {
+          lower_input = lower_limit + output_value;
+        }
+        else
+        {
+          upper_input = upper_limit + output_value;
+        }
+
+        const RealT lower_output = Math::deadband2(lower_input,
+                                                   lower_limit,
+                                                   upper_limit);
+        const RealT upper_output = Math::deadband2(upper_input,
+                                                   lower_limit,
+                                                   upper_limit);
+        if (lower_output > output_value || output_value > upper_output)
+        {
+          return false;
+        }
+
+        for (std::size_t iteration = 0; iteration < 128; ++iteration)
+        {
+          const RealT input = lower_input
+                              + HALF<RealT> * (upper_input - lower_input);
+          if (Math::deadband2(input, lower_limit, upper_limit) < output_value)
+          {
+            lower_input = input;
+          }
+          else
+          {
+            upper_input = input;
+          }
+        }
+
+        const RealT input = lower_input
+                            + HALF<RealT> * (upper_input - lower_input);
+        deadband_input = static_cast<ScalarT>(input);
+        return std::isfinite(input)
+               && std::abs(Math::deadband2(input, lower_limit, upper_limit)
+                           - output_value)
+                      <= INITIALIZATION_TOLERANCE;
+      }
+
+      /**
        * @brief Evaluate log(1 - exp(-x)) accurately for positive x
        *
        * The small-x form avoids cancellation in `1 - exp(-x)`; the large-x
@@ -980,7 +1080,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Convert a system-base power quantity to REPCA component base
+       * @brief Convert a system-base power or current quantity to REPCA component base
        *
        * @param[in] value Quantity on the system base.
        * @return The same quantity on the REPCA component base.
