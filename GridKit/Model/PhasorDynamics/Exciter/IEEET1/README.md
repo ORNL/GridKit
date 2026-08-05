@@ -49,9 +49,8 @@ Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilo
     &=(0,0)
       \quad\text{or}\quad
       \begin{gathered}
-        E_1, E_2, S_1, S_2 > 0 \\
-        E_1 \ne E_2 \\
-        S_1 \ne S_2
+        E_1, E_2 > 0,\quad S_1, S_2 \ge 0 \\
+        (E_2-E_1)(S_2-S_1) > 0
       \end{gathered}
 \end{aligned}
 ```
@@ -69,7 +68,19 @@ expected saturation near the operating region:
 \end{aligned}
 ```
 
-Generally, this system has two solutions. The non-extraneous solution is as follows.
+When one saturation value is zero, the normal curve fit uses the corresponding
+voltage as the quadratic knee:
+
+```math
+\begin{aligned}
+  S_1=0 &: \quad S_A=E_1,\qquad
+    S_B=\dfrac{S_2}{(E_2-E_1)^2} \\
+  S_2=0 &: \quad S_A=E_2,\qquad
+    S_B=\dfrac{S_1}{(E_1-E_2)^2}.
+\end{aligned}
+```
+
+When both saturation values are positive, the non-extraneous solution is:
 
 ```math
 \begin{aligned}

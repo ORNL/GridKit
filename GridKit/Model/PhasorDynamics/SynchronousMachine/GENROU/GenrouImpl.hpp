@@ -397,94 +397,61 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Genrou<scalar_type, index_type>::initialize()
     {
-      // Saturated initialization with ksat iteration.
-      // See README "With Saturation" and plan for derivation.
-
       // Network Frame Terminal Values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
       ScalarT p   = toMachineBase(static_cast<ScalarT>(p0_));
       ScalarT q   = toMachineBase(static_cast<ScalarT>(q0_));
       ScalarT vm2 = vr * vr + vi * vi;
-      ScalarT vm  = std::sqrt(vm2);
       ScalarT ir  = (p * vr + q * vi) / vm2;
       ScalarT ii  = (p * vi - q * vr) / vm2;
 
-      // Initial ksat guess from |V|
-      ScalarT vm_sat = vm - SA_;
-      ScalarT ksat   = (vm_sat > ZERO<RealT>) ? SB_ * vm_sat * vm_sat : ScalarT{ZERO<RealT>};
+      // The subtransient-flux magnitude is invariant under the rotor-frame
+      // rotation, so saturation is available directly from network quantities.
+      const ScalarT Vint_r = vr + Ra_ * ir - Xqpp_ * ii;
+      const ScalarT Vint_i = vi + Ra_ * ii + Xqpp_ * ir;
+      ScalarT       psipp  = std::sqrt(Vint_r * Vint_r + Vint_i * Vint_i);
+      ScalarT       ksat   = SB_ * Math::qramp(psipp - SA_);
 
-      ScalarT delta, id, iq, vd, vq;
-      ScalarT psiqpp, psidpp, psipp;
-      ScalarT Edp, psiqp, psidp, Eqp;
+      const ScalarT ksat_prime = ONE<RealT> + Xqd_ * ksat;
+      const ScalarT xsat_delta = ksat_prime * Xdpp_ + Xq_ - Xqpp_;
 
-      static constexpr int   max_iter  = 10;
-      static constexpr RealT ksat_tol  = 1e-12;
-      ScalarT                ksat_prev = ksat + ONE<RealT>; // force first iteration
+      ScalarT delta = std::atan2((vi + Ra_ * ii) * ksat_prime + xsat_delta * ir,
+                                 (vr + Ra_ * ir) * ksat_prime - xsat_delta * ii);
+      ScalarT id    = ir * std::sin(delta) - ii * std::cos(delta);
+      ScalarT iq    = ir * std::cos(delta) + ii * std::sin(delta);
+      ScalarT vq    = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ + iq * Ra_;
+      ScalarT Edp   = (Xq1_ - Xqd_ * (Xqp_ - Xqpp_) * ksat) * iq / ksat_prime;
+      ScalarT psiqp = Edp + Xq2_ * iq;
+      ScalarT psidp = vq - (Xdpp_ - Xl_) * id;
+      ScalarT Eqp   = psidp + (Xdp_ - Xl_) * id;
 
-      for (int iter = 0; iter < max_iter; ++iter)
-      {
-        // Convergence check (skip first iteration)
-        ScalarT ksat_err = ksat - ksat_prev;
-        if (iter > 0 && ksat_err * ksat_err < ksat_tol * ksat_tol)
-          break;
-        ksat_prev = ksat;
-
-        // Compute all variables consistent with current ksat
-        ScalarT ksat_prime = ONE<RealT> + Xqd_ * ksat;
-        ScalarT Xsat_delta = ksat_prime * Xdpp_ + Xq_ - Xqpp_;
-
-        delta  = std::atan2((vi + Ra_ * ii) * ksat_prime + Xsat_delta * ir,
-                           (vr + Ra_ * ir) * ksat_prime - Xsat_delta * ii);
-        id     = ir * std::sin(delta) - ii * std::cos(delta);
-        iq     = ir * std::cos(delta) + ii * std::sin(delta);
-        vd     = vr * std::sin(delta) - vi * std::cos(delta) + id * Ra_ - iq * Xqpp_;
-        vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ + iq * Ra_;
-        psiqpp = -vd;
-        psidpp = vq;
-        Edp    = (Xq1_ - Xqd_ * (Xqp_ - Xqpp_) * ksat) * iq / (ONE<RealT> + Xqd_ * ksat);
-        psiqp  = Edp + Xq2_ * iq;
-        psidp  = psidpp - (Xdpp_ - Xl_) * id;
-        Eqp    = psidp + (Xdp_ - Xl_) * id;
-
-        // Update ksat from flux-linkage psipp for next iteration
-        ScalarT psiqpp_fl = -psiqp * Xq4_ - Edp * Xq5_;
-        ScalarT psidpp_fl = psidp * Xd4_ + Eqp * Xd5_;
-        psipp             = std::sqrt(psiqpp_fl * psiqpp_fl + psidpp_fl * psidpp_fl);
-        ScalarT psipp_sat = psipp - SA_;
-        ksat              = (psipp_sat > ZERO<RealT>) ? SB_ * psipp_sat * psipp_sat : ScalarT{ZERO<RealT>};
-
-        if (iter == max_iter - 1)
-        {
-          Log::warning() << "Genrou: saturated initialization did not converge"
-                         << " (ksat_err=" << ksat_err << ")\n";
-        }
-      }
-
-      // Assign from converged values using flux-linkage forms
       ScalarT omega(0.0);
       auto*   y  = y_.getData();
       auto*   yp = yp_.getData();
 
-      y[0] = delta;
-      y[1] = omega;
-      y[2] = Eqp;
-      y[3] = psidp;
-      y[4] = psiqp;
-      y[5] = Edp;
-      y[6] = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
-      y[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
-      y[8] = psipp      = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
-      ScalarT psipp_sat = psipp - SA_;
-      y[9] = ksat = (psipp_sat > ZERO<RealT>) ? SB_ * psipp_sat * psipp_sat : ScalarT{ZERO<RealT>};
-      y[10] = vd = -psiqpp * (ONE<RealT> + omega);
-      y[11] = vq = psidpp * (ONE<RealT> + omega);
-      y[12]      = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
-      y[13]      = id;
-      y[14]      = iq;
-      y[15]      = ir;
-      y[16]      = ii;
-      y[17]      = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
+      y[0]           = delta;
+      y[1]           = omega;
+      y[2]           = Eqp;
+      y[3]           = psidp;
+      y[4]           = psiqp;
+      y[5]           = Edp;
+      ScalarT psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
+      ScalarT psidpp = psidp * Xd4_ + Eqp * Xd5_;
+      y[6]           = psiqpp;
+      y[7]           = psidpp;
+      y[8] = psipp = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
+      y[9] = ksat = SB_ * Math::qramp(psipp - SA_);
+      ScalarT vd  = -psiqpp * (ONE<RealT> + omega);
+      vq          = psidpp * (ONE<RealT> + omega);
+      y[10]       = vd;
+      y[11]       = vq;
+      y[12]       = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
+      y[13]       = id;
+      y[14]       = iq;
+      y[15]       = ir;
+      y[16]       = ii;
+      y[17]       = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
               - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
       y[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
               + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
@@ -606,18 +573,17 @@ namespace GridKit
       f[5] = Edp_dot - (ONE<RealT> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
       /* 11 Genrou algebraic equations */
-      f[6]              = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
-      f[7]              = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
-      f[8]              = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
-      ScalarT psipp_sat = psipp - SA_;
-      f[9]              = ksat - SB_ * psipp_sat * psipp_sat * Math::sigmoid(psipp_sat);
-      f[10]             = vd + psiqpp * (ONE<RealT> + omega);
-      f[11]             = vq - psidpp * (ONE<RealT> + omega);
-      f[12]             = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
-      f[13]             = id - (ir * std::sin(delta) - ii * std::cos(delta));
-      f[14]             = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[15]             = ir + G_ * vr - B_ * vi - inr;
-      f[16]             = ii + B_ * vr + G_ * vi - ini;
+      f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
+      f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
+      f[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
+      f[9]  = ksat - SB_ * Math::qramp(psipp - SA_);
+      f[10] = vd + psiqpp * (ONE<RealT> + omega);
+      f[11] = vq - psidpp * (ONE<RealT> + omega);
+      f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
+      f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
+      f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
+      f[15] = ir + G_ * vr - B_ * vi - inr;
+      f[16] = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Genrou current source definitions */
       f[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));

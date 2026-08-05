@@ -138,6 +138,46 @@ namespace GridKit
       }
 
       /**
+       * @brief Checks smooth saturation is initialized from the direct
+       * subtransient-flux magnitude.
+       */
+      TestOutcome saturation_initialization()
+      {
+        TestStatus success = true;
+
+        using Parameter = typename GenrouDataT::Parameters;
+
+        auto data                       = makeGenrouData();
+        data.parameters[Parameter::p0]  = RealT{0.0};
+        data.parameters[Parameter::q0]  = RealT{0.0};
+        data.parameters[Parameter::S10] = RealT{0.0};
+        data.parameters[Parameter::S12] = RealT{0.004};
+
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus(0.99, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, data);
+
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+        gen.allocate();
+        success *= (gen.initialize() == 0);
+        success *= (gen.evaluateResidual() == 0);
+
+        const auto& f = gen.getResidual();
+        for (std::size_t i = 0; i < f.getSize(); ++i)
+        {
+          if (!isEqual(f.getData()[i], 0.0, tol_))
+          {
+            std::cout << "Nonzero saturated GENROU residual at " << i << ": "
+                      << f.getData()[i] << '\n';
+            success = false;
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
        * @brief Checks monitored terminal current and power use system base.
        */
       TestOutcome monitor_system_base()

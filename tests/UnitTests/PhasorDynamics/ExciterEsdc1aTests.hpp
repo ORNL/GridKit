@@ -86,7 +86,7 @@ namespace GridKit
         success *= invalidParameterCase(Params::UEL, static_cast<RealT>(2.0));
         success *= invalidParameterCase(Params::UEL, static_cast<RealT>(2.5));
         success *= invalidParameterCase(Params::UEL, true);
-        success *= invalidParameterCase(Params::Se1, 0.0);
+        success *= invalidParameterCase(Params::Se1, -0.1);
         success *= invalidParameterCase(Params::E2, 2.8);
         success *= invalidParameterCase(Params::Se2, 0.08);
         success *= invalidParameterCase(Params::E1, -1.0);
@@ -314,6 +314,39 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Exact Ke = 0 uses the PSS/E automatic rule, while the existing
+      /// time-constant conditioning and smooth UEL gate remain unchanged.
+      TestOutcome automaticKeInitialization()
+      {
+        TestStatus success = true;
+
+        noteExpectedLogs("Testing automatic ESDC1A Ke with zero Tb. "
+                         "The time-constant warning is expected.");
+
+        auto data                      = makeData();
+        data.parameters[Params::Tb]    = 0.0;
+        data.parameters[Params::Tc]    = 0.0;
+        data.parameters[Params::Ke]    = 0.0;
+        data.parameters[Params::Vrmax] = 10.0;
+        data.parameters[Params::Vrmin] = -10.0;
+
+        // Exercise the automatic rule below and above the saturation knee.
+        for (const RealT efd0 : {RealT{1.2}, RealT{3.2}})
+        {
+          Fixture<ScalarT> fixture(data);
+          success *= fixture.initialize(efd0);
+          success *= (fixture.evaluate() == 0);
+
+          const auto* y  = fixture.esdc1a.y().getData();
+          success       *= scalarMatches(y[static_cast<size_t>(Internal::VR)], 1.0, "automatic-Ke VR");
+          success       *= scalarMatches(y[static_cast<size_t>(Internal::VFE)], 1.0, "automatic-Ke VFE");
+          success       *= scalarMatches(y[static_cast<size_t>(Internal::VHV)], 0.025, "automatic-Ke VHV");
+          success       *= allResidualsZero(fixture.esdc1a);
+        }
+
+        return success.report(__func__);
+      }
+
       /// The inadmissible initialization points: every rejection is atomic,
       /// and the admissible operating points next to them still initialize
       /// to zero residuals.
@@ -323,6 +356,19 @@ namespace GridKit
 
         noteExpectedLogs("Testing inadmissible ESDC1A initialization points. "
                          "Logged errors are expected.");
+
+        auto automatic_ke                       = makeData();
+        automatic_ke.parameters[Params::Ke]     = 0.0;
+        automatic_ke.parameters[Params::Vrmax]  = 10.0;
+        automatic_ke.parameters[Params::Vrmin]  = -10.0;
+        success                                *= initializationRejectedAtomically(
+            automatic_ke,
+            0.0,
+            {{External::OMEGA, 0.0},
+                                            {External::VREF, 77.0},
+                                            {External::VS, 0.0},
+                                            {External::VUEL, -0.5}},
+            "zero field voltage with automatic Ke");
 
         // An enabled speed multiplier must remain finite and strictly
         // positive. Other initialization limits are relaxed so these cases
@@ -713,6 +759,50 @@ namespace GridKit
           success *= (saturation.evaluate() == 0);
           success *= residualsMatch(saturation.esdc1a,
                                     {{Internal::SE, -0.05}},
+                                    test_case.label);
+        }
+
+        struct OneZeroSaturationCase
+        {
+          const char* label;
+          RealT       e1;
+          RealT       se1;
+          RealT       e2;
+          RealT       se2;
+          RealT       knee;
+          RealT       point;
+          RealT       expected;
+        };
+
+        const std::array<OneZeroSaturationCase, 2> one_zero_cases{{
+            {"ascending one-zero saturation", 2.4, 0.0, 3.2, 0.5, 2.4, 3.2, 0.5},
+            {"descending one-zero saturation", 3.2, 0.5, 2.4, 0.0, 2.4, 3.2, 0.5},
+        }};
+
+        for (const auto& test_case : one_zero_cases)
+        {
+          auto data                    = makeResidualData();
+          data.parameters[Params::E1]  = test_case.e1;
+          data.parameters[Params::Se1] = test_case.se1;
+          data.parameters[Params::E2]  = test_case.e2;
+          data.parameters[Params::Se2] = test_case.se2;
+
+          Fixture<ScalarT> saturation(data);
+          saturation.attachAllInputs();
+          success *= saturation.initialize(1.2);
+
+          setState(saturation.esdc1a,
+                   {{Internal::EFDP, test_case.knee}, {Internal::SE, 0.0}});
+          success *= (saturation.evaluate() == 0);
+          success *= residualsMatch(saturation.esdc1a,
+                                    {{Internal::SE, 0.0}},
+                                    test_case.label);
+
+          setState(saturation.esdc1a,
+                   {{Internal::EFDP, test_case.point}, {Internal::SE, 0.0}});
+          success *= (saturation.evaluate() == 0);
+          success *= residualsMatch(saturation.esdc1a,
+                                    {{Internal::SE, test_case.expected}},
                                     test_case.label);
         }
 

@@ -148,10 +148,14 @@ namespace GridKit
         {
           check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
           check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
-          check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
-          check(E1_ != E2_, "E1 and E2 must differ when saturation is enabled");
-          check(Se1_ != Se2_, "Se1 and Se2 must differ when saturation is enabled");
+          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+
+          const bool saturation_points_are_ordered =
+              (E2_ > E1_ && Se2_ > Se1_)
+              || (E2_ < E1_ && Se2_ < Se1_);
+          check(saturation_points_are_ordered,
+                "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
         if (signals_.template isAttached<OMEGA>())
@@ -471,9 +475,29 @@ namespace GridKit
           return;
         }
 
-        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT> || E1_ == E2_
-            || Se1_ <= ZERO<RealT> || Se2_ <= ZERO<RealT> || Se1_ == Se2_)
+        const bool saturation_points_are_ordered =
+            (E2_ > E1_ && Se2_ > Se1_)
+            || (E2_ < E1_ && Se2_ < Se1_);
+        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT>
+            || Se1_ < ZERO<RealT> || Se2_ < ZERO<RealT>
+            || !saturation_points_are_ordered)
         {
+          return;
+        }
+
+        if (Se1_ == ZERO<RealT>)
+        {
+          const RealT dE = E2_ - E1_;
+          SA_            = E1_;
+          SB_            = Se2_ / (dE * dE);
+          return;
+        }
+
+        if (Se2_ == ZERO<RealT>)
+        {
+          const RealT dE = E1_ - E2_;
+          SA_            = E2_;
+          SB_            = Se1_ / (dE * dE);
           return;
         }
 

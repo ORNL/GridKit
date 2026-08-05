@@ -30,7 +30,7 @@ $T_B$                               | [sec]     | `Tb`      | Input lead-lag den
 $T_C$                               | [sec]     | `Tc`      | Input lead-lag numerator time constant          | 0.0
 $V_R^{\max}$                        | [p.u.]    | `Vrmax`   | Maximum voltage-regulator output                | 1.0
 $V_R^{\min}$                        | [p.u.]    | `Vrmin`   | Minimum voltage-regulator output                | -1.0
-$K_E$                               | [p.u.]    | `Ke`      | Exciter constant                                | 0.1
+$K_E$                               | [p.u.]    | `Ke`      | Exciter constant; zero selects automatic initialization | 0.1
 $T_E$                               | [sec]     | `Te`      | Exciter time constant                           | 0.5
 $K_F$                               | [p.u.]    | `Kf`      | Stabilizing feedback gain                       | 0.05
 $T_{F1}$                            | [sec]     | `Tf1`     | Stabilizing feedback time constant              | 0.7
@@ -75,7 +75,8 @@ or define a valid two-point quadratic fit:
 
 ```math
 \begin{aligned}
-  E_1, E_2, S_E(E_1), S_E(E_2) &> 0 \\
+  E_1, E_2 &> 0 \\
+  S_E(E_1), S_E(E_2) &\ge 0 \\
   \left(E_2-E_1\right)
   \left[S_E(E_2)-S_E(E_1)\right] &> 0
 \end{aligned}
@@ -99,8 +100,18 @@ raised to that floor in place, so every equation below uses the raised value:
       \end{cases}
 \end{aligned}
 ```
+When saturation is disabled, $S_A = 0$ and $S_B = 0$. When one of the saturation valeus are zero,
 
-When saturation is disabled, $S_A = 0$ and $S_B = 0$. Otherwise,
+```math
+\begin{aligned}
+  S_E(E_1)=0 &: \quad S_A=E_1,\qquad
+    S_B=\dfrac{S_E(E_2)}{(E_2-E_1)^2} \\
+  S_E(E_2)=0 &: \quad S_A=E_2,\qquad
+    S_B=\dfrac{S_E(E_1)}{(E_1-E_2)^2}.
+\end{aligned}
+```
+
+and when both saturation values are positive,
 
 ```math
 \begin{aligned}
@@ -299,6 +310,12 @@ routed through the gate:
       \dfrac{E_{\mathrm{fd}}}{1 + s_{\mathrm{spd}}\omega} \\
   S_E
     &\leftarrow S_B q\left(E_{\mathrm{fd}}' - S_A\right) \\
+  K_E
+    &\leftarrow
+      \begin{cases}
+        \dfrac{V_R^{\max}}{10E_{\mathrm{fd}}'}-S_E & K_E=0 \\
+        K_E & K_E\ne 0
+      \end{cases} \\
   V_{\mathrm{FE}}
     &\leftarrow \left(K_E + S_E\right)E_{\mathrm{fd}}' \\
   V_R
@@ -327,7 +344,8 @@ routed through the gate:
 Initialization rejects a non-finite or zero bus-voltage magnitude, a
 non-finite field-voltage seed, non-finite Known signal inputs, a nonpositive
 speed multiplier $1 + s_{\mathrm{spd}}\omega$, $E_{\mathrm{fd}}'<0$ while
-$s_{\mathrm{lim}}=1$, $V_R$ outside
+$s_{\mathrm{lim}}=1$, $E_{\mathrm{fd}}'=0$ when automatic $K_E$ is selected,
+$V_R$ outside
 $[V_R^{\min},V_R^{\max}]$, and high-value-gate active starts with
 $s_{\mathrm{UEL}} = 0$ and
 $V_{\mathrm{HV}}\le V_{\mathrm{UEL}}$.

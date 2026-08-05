@@ -74,7 +74,6 @@ namespace GridKit
 
         success *= invalidParameterCase(bus, Params::mva, 0.0);
         success *= invalidParameterCase(bus, Params::Rpmax, 0.0);
-        success *= invalidParameterCase(bus, Params::Rqmin, 0.0);
         success *= invalidParameterCase(bus, Params::IL1, -0.1);
         success *= invalidParameterCase(bus, Params::VL1, 0.3);
         success *= invalidParameterCase(bus, Params::VA1, 0.3);
@@ -533,10 +532,9 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// The recovery-rate limiter branch is chosen by the sign of Q0 at
-      /// initialization, not by the live command: positive Q0 caps rising
-      /// rates at Rqmax, negative Q0 floors falling rates at Rqmin, and zero
-      /// Q0 leaves both directions unrestricted.
+      /// The recovery-rate limiter branch is chosen by Q0 and the configured
+      /// limit sign. Nonpositive Rqmax and nonnegative Rqmin disable their
+      /// respective directions.
       TestOutcome reactiveCurrentControl()
       {
         TestStatus success = true;
@@ -545,26 +543,36 @@ namespace GridKit
         {
           const char* label;
           RealT       q0;
+          RealT       rqmax;
+          RealT       rqmin;
           RealT       command;
           RealT       expected_rate;
         };
 
         // The unlimited rate is (command - Q0) / Tg with Tg = 0.2.
-        const std::array<RecoveryCase, 4> cases{{
-            {"upper recovery limit binds", 0.2, 0.4, 0.5},
-            {"lower recovery limit binds", -0.2, -0.4, -0.6},
-            {"zero Q0 leaves rising rates unrestricted", 0.0, 0.4, 2.0},
-            {"zero Q0 leaves falling rates unrestricted", 0.0, -0.4, -2.0},
+        const std::array<RecoveryCase, 8> cases{{
+            {"one-sided upper recovery limit binds", 0.2, 0.5, 0.0, 0.4, 0.5},
+            {"one-sided lower recovery limit binds", -0.2, 0.0, -0.6, -0.4, -0.6},
+            {"zero limits leave rising rates unrestricted", 0.2, 0.0, 0.0, 0.4, 1.0},
+            {"zero limits leave falling rates unrestricted", -0.2, 0.0, 0.0, -0.4, -1.0},
+            {"negative upper limit is disabled", 0.2, -0.5, -0.6, 0.4, 1.0},
+            {"positive lower limit is disabled", -0.2, 0.5, 0.6, -0.4, -1.0},
+            {"zero Q0 leaves rising rates unrestricted", 0.0, 0.5, -0.6, 0.4, 2.0},
+            {"zero Q0 leaves falling rates unrestricted", 0.0, 0.5, -0.6, -0.4, -2.0},
         }};
 
         for (const auto& test_case : cases)
         {
-          auto data                   = makeDynamicData();
-          data.parameters[Params::q0] = test_case.q0;
+          auto data                      = makeDynamicData();
+          data.parameters[Params::q0]    = test_case.q0;
+          data.parameters[Params::Rqmax] = test_case.rqmax;
+          data.parameters[Params::Rqmin] = test_case.rqmin;
 
           Fixture<ScalarT> fixture(data);
           fixture.attachIqcmd(test_case.q0);
           success *= fixture.initialize();
+          success *= (fixture.evaluate() == 0);
+          success *= allResidualsZero(fixture.regca);
 
           fixture.iqcmd  = test_case.command;
           success       *= (fixture.evaluate() == 0);

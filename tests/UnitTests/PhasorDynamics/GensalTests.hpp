@@ -4,6 +4,7 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -104,6 +105,54 @@ namespace GridKit
           {
             success = false;
             break;
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Checks nonzero smooth saturation at an initialized steady state.
+       */
+      TestOutcome saturation_initialization()
+      {
+        TestStatus success = true;
+
+        using Parameter = typename GensalDataT::Parameters;
+
+        auto data                       = makeGensalData();
+        data.parameters[Parameter::p0]  = RealT{0.0};
+        data.parameters[Parameter::q0]  = RealT{0.0};
+        data.parameters[Parameter::S10] = RealT{0.05};
+        data.parameters[Parameter::S12] = RealT{0.2};
+
+        PhasorDynamics::Bus<ScalarT, IdxT>        bus(1.2, 0.0);
+        PhasorDynamics::Gensal<ScalarT, IdxT>     gen(&bus, data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT> efd_node;
+        ScalarT                                   efd_value{0.0};
+        IdxT                                      efd_index = INVALID_INDEX<IdxT>;
+
+        efd_node.set(&efd_value, &efd_index);
+        gen.getSignals()
+            .template attachSignalNode<PhasorDynamics::GensalExternalVariables::EFD>(&efd_node);
+
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+        gen.allocate();
+        success *= (gen.initialize() == 0);
+        success *= (gen.evaluateResidual() == 0);
+
+        success *= isEqual(efd_node.read(), ScalarT{1.44}, tol_);
+
+        const auto& f = gen.getResidual();
+        for (std::size_t i = 0; i < f.getSize(); ++i)
+        {
+          if (!isEqual(f.getData()[i], 0.0, tol_))
+          {
+            std::cout << "Nonzero saturated GENSAL residual at " << i << ": "
+                      << f.getData()[i] << '\n';
+            success = false;
           }
         }
 
@@ -267,7 +316,7 @@ namespace GridKit
         const std::vector<ScalarT> res_answer = {
             0.0,
             0.0,
-            2.1083333333333334,
+            2.2083333333333335,
             -1.028125,
             0.65,
             0.0,

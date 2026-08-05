@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <iostream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -178,27 +179,82 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome invalidSaturationParameters()
+      TestOutcome saturationParameters()
       {
         TestStatus success = true;
 
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing that invalid saturation parameters are rejected. "
+        Log::misc() << "Testing one-zero saturation fits and invalid saturation parameters. "
                     << "Logged errors are expected.\n";
         Log::setVerbosity(Log::Verbosity::WARNINGS);
 
         using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
 
-        auto data                    = makeTestData();
-        data.parameters[Params::Se1] = 0.0;
+        struct FitCase
+        {
+          const char* label;
+          RealT       e1;
+          RealT       se1;
+          RealT       e2;
+          RealT       se2;
+          RealT       knee;
+          RealT       point;
+          RealT       expected;
+        };
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        const std::array<FitCase, 2> fit_cases{{
+            {"ascending one-zero fit", 2.8, 0.0, 3.373, 0.33, 2.8, 3.373, 0.33},
+            {"descending one-zero fit", 3.373, 0.33, 2.8, 0.0, 2.8, 3.373, 0.33},
+        }};
 
-        bus.allocate();
-        exciter.allocate();
+        for (const auto& test_case : fit_cases)
+        {
+          auto data                    = makeTestData();
+          data.parameters[Params::E1]  = test_case.e1;
+          data.parameters[Params::Se1] = test_case.se1;
+          data.parameters[Params::E2]  = test_case.e2;
+          data.parameters[Params::Se2] = test_case.se2;
 
-        success *= (exciter.verify() != 0);
+          PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
+          PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+
+          bus.allocate();
+          exciter.allocate();
+          success *= (exciter.verify() == 0);
+
+          auto* y = exciter.y().getData();
+          y[2]    = test_case.knee;
+          y[8]    = 0.0;
+          exciter.y().setDataUpdated();
+          exciter.evaluateResidual();
+          success *= isEqual(exciter.getResidual().getData()[8], static_cast<ScalarT>(0.0));
+
+          y[2] = test_case.point;
+          y[8] = 0.0;
+          exciter.y().setDataUpdated();
+          exciter.evaluateResidual();
+          if (!isEqual(exciter.getResidual().getData()[8],
+                       static_cast<ScalarT>(test_case.expected)))
+          {
+            std::cout << test_case.label << " did not reproduce its nonzero point\n";
+            success = false;
+          }
+        }
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(3.0, 4.0);
+
+        auto negative                    = makeTestData();
+        negative.parameters[Params::Se1] = -0.1;
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> negative_exciter(&bus, negative);
+        success *= (negative_exciter.verify() != 0);
+
+        auto crossed                    = makeTestData();
+        crossed.parameters[Params::E1]  = 3.373;
+        crossed.parameters[Params::Se1] = 0.0;
+        crossed.parameters[Params::E2]  = 2.8;
+        crossed.parameters[Params::Se2] = 0.33;
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> crossed_exciter(&bus, crossed);
+        success *= (crossed_exciter.verify() != 0);
 
         return success.report(__func__);
       }
