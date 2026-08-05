@@ -727,14 +727,27 @@ namespace GridKit
         success *= (curve_fixture.evaluate() == 0);
         success *= allResidualsZero(curve_fixture.hygov);
 
-        // A value on a flat-segment power plateau still initializes exactly:
-        // the smoothing tails of the neighboring rising segments keep the
-        // smooth curve strictly increasing across the plateau.
-        Fixture<ScalarT> flat_fixture(makeResidualData(), {{Params::Pgv3, 0.42}});
-        success *= flat_fixture.initialize(0.250857385880864);
-        success *= scalarMatches(flat_fixture.hygov.y().getData()[static_cast<size_t>(Internal::G)],
-                                 0.4990297247065128,
-                                 "flat-segment plateau gate");
+        // A flat source-curve segment must initialize to a gate on that segment.
+        // makeData() uses equal power bases, At = Hdam = 1, and Qnl = 0.1,
+        // so a 0.5 plateau maps to pmech = 0.4 without encoding Math::MU.
+        const RealT      flat_gate_minimum = static_cast<RealT>(0.4);
+        const RealT      flat_gate_maximum = static_cast<RealT>(0.6);
+        const RealT      plateau_power     = static_cast<RealT>(0.5);
+        const RealT      plateau_pmech     = static_cast<RealT>(0.4);
+        Fixture<ScalarT> flat_fixture(makeData(),
+                                      {{Params::Pgv2, plateau_power},
+                                       {Params::Pgv3, plateau_power}});
+        success *= flat_fixture.initialize(plateau_pmech);
+        const RealT flat_gate =
+            flat_fixture.hygov.y().getData()[static_cast<size_t>(Internal::G)];
+        if (flat_gate < flat_gate_minimum || flat_gate > flat_gate_maximum)
+        {
+          std::cout << "flat-segment plateau gate "
+                    << std::setprecision(std::numeric_limits<RealT>::max_digits10)
+                    << flat_gate << " is outside [" << flat_gate_minimum
+                    << ", " << flat_gate_maximum << "]\n";
+          success = false;
+        }
         success *= (flat_fixture.evaluate() == 0);
         success *= allResidualsZero(flat_fixture.hygov);
 
