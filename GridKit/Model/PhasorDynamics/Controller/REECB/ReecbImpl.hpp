@@ -7,6 +7,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <limits>
 #include <numbers>
@@ -40,7 +41,7 @@ namespace GridKit
       Reecb<scalar_type, index_type>::Reecb(BusT* bus)
         : bus_(bus)
       {
-        size_ = static_cast<IdxT>(index(ReecbInternalVariables::MAXIMUM));
+        size_ = static_cast<IdxT>(ReecbInternalVariables::MAXIMUM);
         setDerivedParameters();
       }
 
@@ -57,7 +58,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(index(ReecbInternalVariables::MAXIMUM));
+        size_ = static_cast<IdxT>(ReecbInternalVariables::MAXIMUM);
       }
 
       /**
@@ -91,8 +92,8 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::allocate()
       {
-        using I = ReecbInternalVariables;
-        using E = ReecbExternalVariables;
+        const auto IQCMD = static_cast<size_t>(ReecbInternalVariables::IQCMD);
+        const auto IPCMD = static_cast<size_t>(ReecbInternalVariables::IPCMD);
 
         if (!allocated_)
         {
@@ -106,7 +107,7 @@ namespace GridKit
 
         wb_.assign(2, ScalarT{0});
 
-        const auto signal_size = index(E::MAXIMUM);
+        const auto signal_size = static_cast<size_t>(ReecbExternalVariables::MAXIMUM);
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -118,18 +119,18 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        if (signals_.template isAssigned<I::IQCMD>())
+        if (signals_.template isAssigned<ReecbInternalVariables::IQCMD>())
         {
-          signals_.template getSignalNode<I::IQCMD>()->set(
-              &y[index(I::IQCMD)],
-              &(this->getVariableIndex(static_cast<IdxT>(index(I::IQCMD)))));
+          signals_.template getSignalNode<ReecbInternalVariables::IQCMD>()->set(
+              &y[IQCMD],
+              &(this->getVariableIndex(static_cast<IdxT>(IQCMD))));
         }
 
-        if (signals_.template isAssigned<I::IPCMD>())
+        if (signals_.template isAssigned<ReecbInternalVariables::IPCMD>())
         {
-          signals_.template getSignalNode<I::IPCMD>()->set(
-              &y[index(I::IPCMD)],
-              &(this->getVariableIndex(static_cast<IdxT>(index(I::IPCMD)))));
+          signals_.template getSignalNode<ReecbInternalVariables::IPCMD>()->set(
+              &y[IPCMD],
+              &(this->getVariableIndex(static_cast<IdxT>(IPCMD))));
         }
 
         allocated_ = true;
@@ -280,8 +281,16 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::initialize()
       {
-        using I = ReecbInternalVariables;
-        using E = ReecbExternalVariables;
+        const auto VMEAS = static_cast<size_t>(ReecbInternalVariables::VMEAS);
+        const auto PMEAS = static_cast<size_t>(ReecbInternalVariables::PMEAS);
+        const auto XPIQ  = static_cast<size_t>(ReecbInternalVariables::XPIQ);
+        const auto XPIV  = static_cast<size_t>(ReecbInternalVariables::XPIV);
+        const auto QV    = static_cast<size_t>(ReecbInternalVariables::QV);
+        const auto PORD  = static_cast<size_t>(ReecbInternalVariables::PORD);
+        const auto VT    = static_cast<size_t>(ReecbInternalVariables::VT);
+        const auto ILMAX = static_cast<size_t>(ReecbInternalVariables::ILMAX);
+        const auto IQCMD = static_cast<size_t>(ReecbInternalVariables::IQCMD);
+        const auto IPCMD = static_cast<size_t>(ReecbInternalVariables::IPCMD);
 
         if (!allocated_)
         {
@@ -297,8 +306,8 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        const RealT ipcmd0_system = static_cast<RealT>(y[index(I::IPCMD)]);
-        const RealT iqcmd0_system = static_cast<RealT>(y[index(I::IQCMD)]);
+        const RealT ipcmd0_system = static_cast<RealT>(y[IPCMD]);
+        const RealT iqcmd0_system = static_cast<RealT>(y[IQCMD]);
         const RealT ipcmd0        = toComponentBase(ipcmd0_system);
         const RealT iqcmd0        = toComponentBase(iqcmd0_system);
         const RealT vr0           = static_cast<RealT>(Vr());
@@ -310,13 +319,15 @@ namespace GridKit
         RealT pe0_system   = toSystemBase(ipcmd0 * vmeas_safe0);
         RealT qgen0_system = toSystemBase(iqcmd0 * vmeas_safe0);
 
-        if (signals_.template isAttached<E::PE>())
+        if (signals_.template isAttached<ReecbExternalVariables::PE>())
         {
-          pe0_system = static_cast<RealT>(signals_.template readExternalVariable<E::PE>());
+          pe0_system = static_cast<RealT>(
+              signals_.template readExternalVariable<ReecbExternalVariables::PE>());
         }
-        if (signals_.template isAttached<E::QGEN>())
+        if (signals_.template isAttached<ReecbExternalVariables::QGEN>())
         {
-          qgen0_system = static_cast<RealT>(signals_.template readExternalVariable<E::QGEN>());
+          qgen0_system = static_cast<RealT>(
+              signals_.template readExternalVariable<ReecbExternalVariables::QGEN>());
         }
 
         const RealT pmeas0 = toComponentBase(pe0_system);
@@ -487,14 +498,14 @@ namespace GridKit
           return 1;
         }
 
-        y[index(I::VMEAS)] = vmeas0;
-        y[index(I::PMEAS)] = pmeas0;
-        y[index(I::XPIQ)]  = xpiq0;
-        y[index(I::XPIV)]  = xpiv0;
-        y[index(I::QV)]    = qv0;
-        y[index(I::PORD)]  = pord0;
-        y[index(I::VT)]    = vt0;
-        y[index(I::ILMAX)] = ilmax0;
+        y[VMEAS] = vmeas0;
+        y[PMEAS] = pmeas0;
+        y[XPIQ]  = xpiq0;
+        y[XPIV]  = xpiv0;
+        y[QV]    = qv0;
+        y[PORD]  = pord0;
+        y[VT]    = vt0;
+        y[ILMAX] = ilmax0;
 
         if (!Vref0_given_)
         {
@@ -507,17 +518,17 @@ namespace GridKit
         pfaref_set_ = static_cast<ScalarT>(pfaref0);
         pref_set_   = static_cast<ScalarT>(pref0_system);
 
-        if (signals_.template isAttached<E::QEXT>())
+        if (signals_.template isAttached<ReecbExternalVariables::QEXT>())
         {
-          signals_.template writeExternalVariable<E::QEXT>(qext_set_);
+          signals_.template writeExternalVariable<ReecbExternalVariables::QEXT>(qext_set_);
         }
-        if (signals_.template isAttached<E::PFAREF>())
+        if (signals_.template isAttached<ReecbExternalVariables::PFAREF>())
         {
-          signals_.template writeExternalVariable<E::PFAREF>(pfaref_set_);
+          signals_.template writeExternalVariable<ReecbExternalVariables::PFAREF>(pfaref_set_);
         }
-        if (signals_.template isAttached<E::PREF>())
+        if (signals_.template isAttached<ReecbExternalVariables::PREF>())
         {
-          signals_.template writeExternalVariable<E::PREF>(pref_set_);
+          signals_.template writeExternalVariable<ReecbExternalVariables::PREF>(pref_set_);
         }
 
         y_.setDataUpdated();
@@ -534,15 +545,20 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::tagDifferentiable()
       {
-        using I = ReecbInternalVariables;
+        const auto VMEAS = static_cast<size_t>(ReecbInternalVariables::VMEAS);
+        const auto PMEAS = static_cast<size_t>(ReecbInternalVariables::PMEAS);
+        const auto XPIQ  = static_cast<size_t>(ReecbInternalVariables::XPIQ);
+        const auto XPIV  = static_cast<size_t>(ReecbInternalVariables::XPIV);
+        const auto QV    = static_cast<size_t>(ReecbInternalVariables::QV);
+        const auto PORD  = static_cast<size_t>(ReecbInternalVariables::PORD);
 
         std::fill(tag_.begin(), tag_.end(), false);
-        tag_[index(I::VMEAS)] = true;
-        tag_[index(I::PMEAS)] = true;
-        tag_[index(I::XPIQ)]  = true;
-        tag_[index(I::XPIV)]  = true;
-        tag_[index(I::QV)]    = true;
-        tag_[index(I::PORD)]  = true;
+        tag_[VMEAS] = true;
+        tag_[PMEAS] = true;
+        tag_[XPIQ]  = true;
+        tag_[XPIV]  = true;
+        tag_[QV]    = true;
+        tag_[PORD]  = true;
         return 0;
       }
 
@@ -568,39 +584,49 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::evaluateResidual()
       {
-        using E = ReecbExternalVariables;
+        const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
+        const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
+        const auto QEXT   = static_cast<size_t>(ReecbExternalVariables::QEXT);
+        const auto PFAREF = static_cast<size_t>(ReecbExternalVariables::PFAREF);
+        const auto PREF   = static_cast<size_t>(ReecbExternalVariables::PREF);
 
-        ws_[index(E::PE)]     = pe_set_;
-        ws_[index(E::QGEN)]   = qgen_set_;
-        ws_[index(E::QEXT)]   = qext_set_;
-        ws_[index(E::PFAREF)] = pfaref_set_;
-        ws_[index(E::PREF)]   = pref_set_;
+        ws_[PE]     = pe_set_;
+        ws_[QGEN]   = qgen_set_;
+        ws_[QEXT]   = qext_set_;
+        ws_[PFAREF] = pfaref_set_;
+        ws_[PREF]   = pref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (signals_.template isAttached<E::PE>())
+        if (signals_.template isAttached<ReecbExternalVariables::PE>())
         {
-          ws_[index(E::PE)]         = signals_.template readExternalVariable<E::PE>();
-          ws_indices_[index(E::PE)] = signals_.template readExternalVariableIndex<E::PE>();
+          ws_[PE] = signals_.template readExternalVariable<ReecbExternalVariables::PE>();
+          ws_indices_[PE] =
+              signals_.template readExternalVariableIndex<ReecbExternalVariables::PE>();
         }
-        if (signals_.template isAttached<E::QGEN>())
+        if (signals_.template isAttached<ReecbExternalVariables::QGEN>())
         {
-          ws_[index(E::QGEN)]         = signals_.template readExternalVariable<E::QGEN>();
-          ws_indices_[index(E::QGEN)] = signals_.template readExternalVariableIndex<E::QGEN>();
+          ws_[QGEN] = signals_.template readExternalVariable<ReecbExternalVariables::QGEN>();
+          ws_indices_[QGEN] =
+              signals_.template readExternalVariableIndex<ReecbExternalVariables::QGEN>();
         }
-        if (signals_.template isAttached<E::QEXT>())
+        if (signals_.template isAttached<ReecbExternalVariables::QEXT>())
         {
-          ws_[index(E::QEXT)]         = signals_.template readExternalVariable<E::QEXT>();
-          ws_indices_[index(E::QEXT)] = signals_.template readExternalVariableIndex<E::QEXT>();
+          ws_[QEXT] = signals_.template readExternalVariable<ReecbExternalVariables::QEXT>();
+          ws_indices_[QEXT] =
+              signals_.template readExternalVariableIndex<ReecbExternalVariables::QEXT>();
         }
-        if (signals_.template isAttached<E::PFAREF>())
+        if (signals_.template isAttached<ReecbExternalVariables::PFAREF>())
         {
-          ws_[index(E::PFAREF)]         = signals_.template readExternalVariable<E::PFAREF>();
-          ws_indices_[index(E::PFAREF)] = signals_.template readExternalVariableIndex<E::PFAREF>();
+          ws_[PFAREF] =
+              signals_.template readExternalVariable<ReecbExternalVariables::PFAREF>();
+          ws_indices_[PFAREF] =
+              signals_.template readExternalVariableIndex<ReecbExternalVariables::PFAREF>();
         }
-        if (signals_.template isAttached<E::PREF>())
+        if (signals_.template isAttached<ReecbExternalVariables::PREF>())
         {
-          ws_[index(E::PREF)]         = signals_.template readExternalVariable<E::PREF>();
-          ws_indices_[index(E::PREF)] = signals_.template readExternalVariableIndex<E::PREF>();
+          ws_[PREF] = signals_.template readExternalVariable<ReecbExternalVariables::PREF>();
+          ws_indices_[PREF] =
+              signals_.template readExternalVariableIndex<ReecbExternalVariables::PREF>();
         }
 
         wb_[0] = Vr();
@@ -609,6 +635,22 @@ namespace GridKit
         evaluateInternalResidual(y_.getData(), yp_.getData(), wb_.data(), ws_.data(), f_.getData());
         f_.setDataUpdated();
         return 0;
+      }
+
+      /**
+       * @brief Access the REECB signal interface
+       *
+       * @return Interface used to assign current-command outputs and attach
+       *         optional feedback and reference signals.
+       */
+      template <typename scalar_type, typename index_type>
+      auto Reecb<scalar_type, index_type>::getSignals()
+          -> ComponentSignals<ScalarT,
+                              IdxT,
+                              ReecbInternalVariables,
+                              ReecbExternalVariables>&
+      {
+        return signals_;
       }
 
       /**
@@ -640,7 +682,7 @@ namespace GridKit
        *      rejects the zero-capacity point.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int
+      [[gnu::always_inline]] inline int
       Reecb<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
@@ -648,35 +690,49 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
-        using I = ReecbInternalVariables;
-        using E = ReecbExternalVariables;
+        const auto VMEAS = static_cast<size_t>(ReecbInternalVariables::VMEAS);
+        const auto PMEAS = static_cast<size_t>(ReecbInternalVariables::PMEAS);
+        const auto XPIQ  = static_cast<size_t>(ReecbInternalVariables::XPIQ);
+        const auto XPIV  = static_cast<size_t>(ReecbInternalVariables::XPIV);
+        const auto QV    = static_cast<size_t>(ReecbInternalVariables::QV);
+        const auto PORD  = static_cast<size_t>(ReecbInternalVariables::PORD);
+        const auto VT    = static_cast<size_t>(ReecbInternalVariables::VT);
+        const auto ILMAX = static_cast<size_t>(ReecbInternalVariables::ILMAX);
+        const auto IQCMD = static_cast<size_t>(ReecbInternalVariables::IQCMD);
+        const auto IPCMD = static_cast<size_t>(ReecbInternalVariables::IPCMD);
 
-        const ScalarT vmeas        = y[index(I::VMEAS)];
-        const ScalarT pmeas        = y[index(I::PMEAS)];
-        const ScalarT xpiq         = y[index(I::XPIQ)];
-        const ScalarT xpiv         = y[index(I::XPIV)];
-        const ScalarT qv           = y[index(I::QV)];
-        const ScalarT pord         = y[index(I::PORD)];
-        const ScalarT vt           = y[index(I::VT)];
-        const ScalarT ilmax        = y[index(I::ILMAX)];
-        const ScalarT iqcmd_system = y[index(I::IQCMD)];
-        const ScalarT ipcmd_system = y[index(I::IPCMD)];
+        const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
+        const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
+        const auto QEXT   = static_cast<size_t>(ReecbExternalVariables::QEXT);
+        const auto PFAREF = static_cast<size_t>(ReecbExternalVariables::PFAREF);
+        const auto PREF   = static_cast<size_t>(ReecbExternalVariables::PREF);
 
-        const ScalarT vmeas_dot = yp[index(I::VMEAS)];
-        const ScalarT pmeas_dot = yp[index(I::PMEAS)];
-        const ScalarT xpiq_dot  = yp[index(I::XPIQ)];
-        const ScalarT xpiv_dot  = yp[index(I::XPIV)];
-        const ScalarT qv_dot    = yp[index(I::QV)];
-        const ScalarT pord_dot  = yp[index(I::PORD)];
+        const ScalarT vmeas        = y[VMEAS];
+        const ScalarT pmeas        = y[PMEAS];
+        const ScalarT xpiq         = y[XPIQ];
+        const ScalarT xpiv         = y[XPIV];
+        const ScalarT qv           = y[QV];
+        const ScalarT pord         = y[PORD];
+        const ScalarT vt           = y[VT];
+        const ScalarT ilmax        = y[ILMAX];
+        const ScalarT iqcmd_system = y[IQCMD];
+        const ScalarT ipcmd_system = y[IPCMD];
+
+        const ScalarT vmeas_dot = yp[VMEAS];
+        const ScalarT pmeas_dot = yp[PMEAS];
+        const ScalarT xpiq_dot  = yp[XPIQ];
+        const ScalarT xpiv_dot  = yp[XPIV];
+        const ScalarT qv_dot    = yp[QV];
+        const ScalarT pord_dot  = yp[PORD];
 
         const ScalarT vr = wb[0];
         const ScalarT vi = wb[1];
 
-        const ScalarT pe     = toComponentBase(ws[index(E::PE)]);
-        const ScalarT qgen   = toComponentBase(ws[index(E::QGEN)]);
-        const ScalarT extref = ws[index(E::QEXT)];
-        const ScalarT pfaref = ws[index(E::PFAREF)];
-        const ScalarT pref   = toComponentBase(ws[index(E::PREF)]);
+        const ScalarT pe     = toComponentBase(ws[PE]);
+        const ScalarT qgen   = toComponentBase(ws[QGEN]);
+        const ScalarT extref = ws[QEXT];
+        const ScalarT pfaref = ws[PFAREF];
+        const ScalarT pref   = toComponentBase(ws[PREF]);
         const ScalarT iqcmd  = toComponentBase(iqcmd_system);
         const ScalarT ipcmd  = toComponentBase(ipcmd_system);
 
@@ -699,16 +755,16 @@ namespace GridKit
         const ScalarT iqbase     = Math::clamp(Kvp_ * epiv + xpiv, -iqmax, iqmax);
         const ScalarT iqraw      = q_on_ * iqbase + q_off_ * qv + iqv;
 
-        f[index(I::VMEAS)] = -vmeas_dot + (vt - vmeas) / Trv_;
-        f[index(I::PMEAS)] = -pmeas_dot + (pe - pmeas) / Tp_;
-        f[index(I::XPIQ)]  = -xpiq_dot + q_pi_on_ * sdip * Math::antiwindup(Kqp_ * eq + xpiq, Kqi_ * eq, Vmin_, Vmax_);
-        f[index(I::XPIV)]  = -xpiv_dot + q_on_ * sdip * awband(Kvp_ * epiv + xpiv, Kvi_ * epiv, iqmax);
-        f[index(I::QV)]    = -qv_dot + q_off_ * sdip * (qref / vmeas_safe - qv) / Tiq_;
-        f[index(I::PORD)]  = -pord_dot + sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
-        f[index(I::VT)]    = -vt * vt + vr * vr + vi * vi;
-        f[index(I::ILMAX)] = -ilmax * ilcap + Imax_ * Imax_ - pq_on_ * ipcmd * ipcmd - pq_off_ * iqcmd * iqcmd;
-        f[index(I::IQCMD)] = -iqcmd + Math::clamp(iqraw, -iqmax, iqmax);
-        f[index(I::IPCMD)] = -ipcmd + Math::clamp(pord / vmeas_safe, ZERO<RealT>, ipmax);
+        f[VMEAS] = -vmeas_dot + (vt - vmeas) / Trv_;
+        f[PMEAS] = -pmeas_dot + (pe - pmeas) / Tp_;
+        f[XPIQ]  = -xpiq_dot + q_pi_on_ * sdip * Math::antiwindup(Kqp_ * eq + xpiq, Kqi_ * eq, Vmin_, Vmax_);
+        f[XPIV]  = -xpiv_dot + q_on_ * sdip * awband(Kvp_ * epiv + xpiv, Kvi_ * epiv, iqmax);
+        f[QV]    = -qv_dot + q_off_ * sdip * (qref / vmeas_safe - qv) / Tiq_;
+        f[PORD]  = -pord_dot + sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
+        f[VT]    = -vt * vt + vr * vr + vi * vi;
+        f[ILMAX] = -ilmax * ilcap + Imax_ * Imax_ - pq_on_ * ipcmd * ipcmd - pq_off_ * iqcmd * iqcmd;
+        f[IQCMD] = -iqcmd + Math::clamp(iqraw, -iqmax, iqmax);
+        f[IPCMD] = -ipcmd + Math::clamp(pord / vmeas_safe, ZERO<RealT>, ipmax);
 
         return 0;
       }
@@ -716,6 +772,59 @@ namespace GridKit
       //
       //  Private methods
       //
+
+      /**
+       * @brief Smooth asymmetric slew-rate limiter
+       *
+       * @param[in] f Unconstrained rate.
+       * @param[in] rate_min Negative rate limit.
+       * @param[in] rate_max Positive rate limit.
+       * @return Limited rate.
+       */
+      template <typename scalar_type, typename index_type>
+      [[gnu::always_inline]] inline scalar_type
+      Reecb<scalar_type, index_type>::aslew(
+          const ScalarT f,
+          const RealT   rate_min,
+          const RealT   rate_max)
+      {
+        assert(rate_min < ZERO<RealT> && ZERO<RealT> < rate_max);
+
+        return f
+               / (ONE<RealT>
+                  + Math::ramp(f / rate_max - ONE<RealT>)
+                  + Math::ramp(f / rate_min - ONE<RealT>));
+      }
+
+      /**
+       * @brief Smooth anti-windup derivative within a moving symmetric band
+       *
+       * Math::antiwindup over [-band, band] with a band edge that is an
+       * algebraic quantity, so differentiation carries the band's own
+       * contributions through the gate.
+       *
+       * @param[in] x Limited PI state.
+       * @param[in] f Pre-limit derivative of x.
+       * @param[in] band Nonnegative symmetric band edge.
+       * @return Anti-windup-limited derivative.
+       *
+       * @todo Fold moving-limit support into Math::antiwindup in CommonMath.
+       */
+      template <typename scalar_type, typename index_type>
+      [[gnu::always_inline]] inline scalar_type
+      Reecb<scalar_type, index_type>::awband(
+          const ScalarT x,
+          const ScalarT f,
+          const ScalarT band)
+      {
+        const ScalarT above_min = Math::sigmoid(x + band);
+        const ScalarT below_max = Math::sigmoid(band - x);
+
+        return (above_min * below_max                          //
+                + (ONE<RealT> - below_max) * Math::sigmoid(-f) //
+                + (ONE<RealT> - above_min) * Math::sigmoid(f))
+               * f;
+      }
 
       /**
        * @brief Record one failed configuration condition
@@ -906,17 +1015,16 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Reecb<scalar_type, index_type>::initializeMonitor()
       {
-        using I        = ReecbInternalVariables;
         using Variable = typename ModelDataT::MonitorableVariables;
 
         monitor_->set(Variable::iqcmd, [this]
-                      { return y_.getData()[index(I::IQCMD)]; });
+                      { return y_.getData()[static_cast<size_t>(ReecbInternalVariables::IQCMD)]; });
         monitor_->set(Variable::ipcmd, [this]
-                      { return y_.getData()[index(I::IPCMD)]; });
+                      { return y_.getData()[static_cast<size_t>(ReecbInternalVariables::IPCMD)]; });
         monitor_->set(Variable::vmeas, [this]
-                      { return y_.getData()[index(I::VMEAS)]; });
+                      { return y_.getData()[static_cast<size_t>(ReecbInternalVariables::VMEAS)]; });
         monitor_->set(Variable::pmeas, [this]
-                      { return y_.getData()[index(I::PMEAS)]; });
+                      { return y_.getData()[static_cast<size_t>(ReecbInternalVariables::PMEAS)]; });
       }
 
       /**
@@ -1051,7 +1159,7 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       template <typename ValueT>
-      __attribute__((always_inline)) inline ValueT
+      [[gnu::always_inline]] inline ValueT
       Reecb<scalar_type, index_type>::toComponentBase(ValueT value) const
       {
         return value * (va_system_base_ / componentPowerBase());

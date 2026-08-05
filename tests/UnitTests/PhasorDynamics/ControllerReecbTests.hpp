@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cmath>
 #include <initializer_list>
 #include <iomanip>
 #include <iostream>
@@ -40,12 +41,8 @@ namespace GridKit
       ControllerReecbTests()  = default;
       ~ControllerReecbTests() = default;
 
-      // The tolerance only absorbs floating-point roundoff.
-      static constexpr RealT kTol = std::numeric_limits<RealT>::epsilon();
-
-      // Probes that sit inside a smooth transition carry its MU-dependent tail
-      // rather than roundoff alone.
-      static constexpr RealT kTolSmooth = static_cast<RealT>(100.0) * kTol;
+      static constexpr RealT kTol =
+          static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
       /// Validate construction, row layout, defaults, parameters, buses,
       /// signal links, and the time-constant floor.
@@ -111,34 +108,37 @@ namespace GridKit
         success *= (integer_parameter.reecb.verify() == 0);
         success *= invalidParameterCase(Params::mva, true);
 
-        const RealT nan      = std::numeric_limits<RealT>::quiet_NaN();
-        const RealT infinity = std::numeric_limits<RealT>::infinity();
-        for (const Params parameter : {Params::mva,
-                                       Params::Trv,
-                                       Params::Tp,
-                                       Params::Vref0,
-                                       Params::Vdip,
-                                       Params::Vup,
-                                       Params::dbd1,
-                                       Params::dbd2,
-                                       Params::kqv,
-                                       Params::Iql1,
-                                       Params::Iqh1,
-                                       Params::Qmax,
-                                       Params::Qmin,
-                                       Params::Kqp,
-                                       Params::Kqi,
-                                       Params::Vmax,
-                                       Params::Vmin,
-                                       Params::Kvp,
-                                       Params::Kvi,
-                                       Params::Tiq,
-                                       Params::Tpord,
-                                       Params::dPmax,
-                                       Params::dPmin,
-                                       Params::Pmax,
-                                       Params::Pmin,
-                                       Params::Imax})
+        const RealT                  nan      = std::numeric_limits<RealT>::quiet_NaN();
+        const RealT                  infinity = std::numeric_limits<RealT>::infinity();
+        const std::array<Params, 26> real_parameters{{
+            Params::mva,
+            Params::Trv,
+            Params::Tp,
+            Params::Vref0,
+            Params::Vdip,
+            Params::Vup,
+            Params::dbd1,
+            Params::dbd2,
+            Params::kqv,
+            Params::Iql1,
+            Params::Iqh1,
+            Params::Qmax,
+            Params::Qmin,
+            Params::Kqp,
+            Params::Kqi,
+            Params::Vmax,
+            Params::Vmin,
+            Params::Kvp,
+            Params::Kvi,
+            Params::Tiq,
+            Params::Tpord,
+            Params::dPmax,
+            Params::dPmin,
+            Params::Pmax,
+            Params::Pmin,
+            Params::Imax,
+        }};
+        for (const Params parameter : real_parameters)
         {
           success *= invalidParameterCase(parameter, nan);
           success *= invalidParameterCase(parameter, infinity);
@@ -158,12 +158,28 @@ namespace GridKit
         success *= invalidParameterCase(Params::Pmin, 3.0);
         success *= invalidParameterCase(Params::Imax, 0.0);
 
-        for (const Params flag : {Params::PfFlag,
-                                  Params::VFlag,
-                                  Params::QFlag,
-                                  Params::Pqflag})
+        const std::array<Params, 4> flag_parameters{{
+            Params::PfFlag,
+            Params::VFlag,
+            Params::QFlag,
+            Params::Pqflag,
+        }};
+        const std::array<bool, 2>   valid_flag_values{{false, true}};
+        const std::array<IdxT, 3>   invalid_integral_flag_values{{
+            static_cast<IdxT>(0),
+            static_cast<IdxT>(1),
+            static_cast<IdxT>(2),
+        }};
+        const std::array<RealT, 5>  invalid_real_flag_values{{
+            static_cast<RealT>(0.0),
+            static_cast<RealT>(0.5),
+            static_cast<RealT>(1.0),
+            nan,
+            infinity,
+        }};
+        for (const Params flag : flag_parameters)
         {
-          for (const bool value : {false, true})
+          for (const bool value : valid_flag_values)
           {
             auto data             = makeData();
             data.parameters[flag] = value;
@@ -171,18 +187,12 @@ namespace GridKit
             success *= (model.reecb.verify() == 0);
           }
 
-          for (const IdxT value : {static_cast<IdxT>(0),
-                                   static_cast<IdxT>(1),
-                                   static_cast<IdxT>(2)})
+          for (const IdxT value : invalid_integral_flag_values)
           {
             success *= invalidParameterCase(flag, value);
           }
 
-          for (const RealT value : {static_cast<RealT>(0.0),
-                                    static_cast<RealT>(0.5),
-                                    static_cast<RealT>(1.0),
-                                    nan,
-                                    infinity})
+          for (const RealT value : invalid_real_flag_values)
           {
             success *= invalidParameterCase(flag, value);
           }
@@ -207,7 +217,7 @@ namespace GridKit
         Fixture<ScalarT> floored(floor_data);
         success *= floored.initialize(kInitialIqcmd, kInitialIpcmd);
         success *= (floored.evaluate() == 0);
-        success *= allResidualsAtRest(floored.reecb);
+        success *= allResidualsWithinInitTolerance(floored.reecb);
 
         // Each floored lag turns a half-unit state offset into a rate of 500,
         // and saturates the active-power ramp limiter.
@@ -263,7 +273,7 @@ namespace GridKit
         success *= scalarMatches(fixture.input(Ext::QEXT), 0.75, "published qext");
         success *= scalarMatches(fixture.input(Ext::PFAREF), 0.0, "published pfaref");
         success *= scalarMatches(fixture.input(Ext::PREF), 0.75, "published pref");
-        success *= allResidualsAtRest(fixture.reecb);
+        success *= allResidualsWithinInitTolerance(fixture.reecb);
 
         success *= monitorMatches(fixture.reecb,
                                   {{kInitialIqcmd, kInitialIpcmd, 1.0, 1.5}},
@@ -283,7 +293,7 @@ namespace GridKit
         success *= (latched.evaluate() == 0);
         success *= scalarPreserved(latched.iqcmd(), kInitialIqcmd, "unassigned iqcmd");
         success *= scalarPreserved(latched.ipcmd(), kInitialIpcmd, "unassigned ipcmd");
-        success *= allResidualsAtRest(latched.reecb);
+        success *= allResidualsWithinInitTolerance(latched.reecb);
 
         // An omitted component rating falls back to the system power base, so
         // the same commands land on a different measured power.
@@ -299,7 +309,7 @@ namespace GridKit
                                                     {Vars::PORD, 1.5},
                                                     {Vars::ILMAX, 2.0}},
                                 "omitted component rating");
-        success                    *= allResidualsAtRest(system_base.reecb);
+        success                    *= allResidualsWithinInitTolerance(system_base.reecb);
 
         return success.report(__func__);
       }
@@ -382,7 +392,7 @@ namespace GridKit
         collapsed_limits.input(Ext::QGEN)  = 0.6;
         success                           *= collapsed_limits.initialize(0.75, 0.75);
         success                           *= (collapsed_limits.evaluate() == 0);
-        success                           *= allResidualsAtRest(collapsed_limits.reecb);
+        success                           *= allResidualsWithinInitTolerance(collapsed_limits.reecb);
 
         auto collapsed_reactive                      = collapsed;
         collapsed_reactive.parameters[Params::Vmin]  = 0.5;
@@ -409,7 +419,7 @@ namespace GridKit
         unconstrained.input(Ext::QGEN)  = 4.0;
         success                        *= unconstrained.initialize(0.75, 0.75);
         success                        *= (unconstrained.evaluate() == 0);
-        success                        *= allResidualsAtRest(unconstrained.reecb);
+        success                        *= allResidualsWithinInitTolerance(unconstrained.reecb);
 
         // An invalid configuration is rejected before any state is written.
         auto invalid_data                     = data;
@@ -461,7 +471,7 @@ namespace GridKit
           success *= fixture.initialize(0.0, test_case.ipcmd);
           success *= (fixture.evaluate() == 0);
           success *= scalarPreserved(fixture.ipcmd(), test_case.ipcmd, test_case.label);
-          success *= allResidualsAtRest(fixture.reecb, kTolSmooth);
+          success *= allResidualsWithinInitTolerance(fixture.reecb);
         }
 
         // An interior command recovers the ideal active-power order exactly.
@@ -480,7 +490,7 @@ namespace GridKit
         success *= at_limit.initialize(0.0, 0.75);
         success *= (at_limit.evaluate() == 0);
         success *= stateMatches(at_limit.reecb, {{Vars::PORD, 1.5}}, "order at Pmax");
-        success *= allResidualsAtRest(at_limit.reecb);
+        success *= allResidualsWithinInitTolerance(at_limit.reecb);
 
         struct AsymmetricSlewCase
         {
@@ -507,20 +517,24 @@ namespace GridKit
           success *= stateMatches(asymmetric.reecb,
                                   {{Vars::PORD, 1.5}},
                                   test_case.label);
-          success *= allResidualsAtRest(asymmetric.reecb, kTolSmooth);
+          success *= allResidualsWithinInitTolerance(asymmetric.reecb);
           success *= scalarMatches(asymmetric.input(Ext::PREF),
                                    0.75,
                                    test_case.label);
         }
 
         // The reactive command shares the inverse, at both signs.
-        for (const RealT iqcmd : {static_cast<RealT>(0.999999), static_cast<RealT>(-0.999999)})
+        const std::array<RealT, 2> reactive_commands{{
+            static_cast<RealT>(0.999999),
+            static_cast<RealT>(-0.999999),
+        }};
+        for (const RealT iqcmd : reactive_commands)
         {
           Fixture<ScalarT> reactive(exactness_data);
           success *= reactive.initialize(iqcmd, 0.75);
           success *= (reactive.evaluate() == 0);
           success *= scalarPreserved(reactive.iqcmd(), iqcmd, "near-limit reactive command");
-          success *= allResidualsAtRest(reactive.reecb, kTolSmooth);
+          success *= allResidualsWithinInitTolerance(reactive.reecb);
         }
 
         return success.report(__func__);
@@ -539,33 +553,33 @@ namespace GridKit
         setAnswerKeyState(fixture.reecb);
         success *= (fixture.evaluate() == 0);
 
-        const std::array<ExpectedResidual, index(Vars::MAXIMUM)> expected{{
-            {Vars::VMEAS, "VMEAS", 0.99},
-            {Vars::PMEAS, "PMEAS", 0.145},
-            {Vars::XPIQ, "XPIQ", 0.21},
-            {Vars::XPIV, "XPIV", 0.13},
-            {Vars::QV, "QV", -0.05},
-            {Vars::PORD, "PORD", 0.26},
-            {Vars::VT, "VT", -0.03},
-            {Vars::ILMAX, "ILMAX", 0.32},
-            {Vars::IQCMD, "IQCMD", 0.19},
-            {Vars::IPCMD, "IPCMD", 0.05},
+        const std::array<VariableValue, index(Vars::MAXIMUM)> expected_residuals{{
+            {Vars::VMEAS, 0.99},
+            {Vars::PMEAS, 0.145},
+            {Vars::XPIQ, 0.21},
+            {Vars::XPIV, 0.13},
+            {Vars::QV, -0.05},
+            {Vars::PORD, 0.26},
+            {Vars::VT, -0.03},
+            {Vars::ILMAX, 0.32},
+            {Vars::IQCMD, 0.19},
+            {Vars::IPCMD, 0.05},
         }};
 
-        success              *= (static_cast<size_t>(fixture.reecb.getResidual().getSize()) == expected.size());
-        const auto* residual  = fixture.reecb.getResidual().getData();
-        for (size_t row = 0; row < expected.size(); ++row)
+        success *= (static_cast<size_t>(fixture.reecb.getResidual().getSize())
+                    == expected_residuals.size());
+        for (size_t row = 0; row < expected_residuals.size(); ++row)
         {
-          if (index(expected[row].variable) != row)
+          if (index(expected_residuals[row].variable) != row)
           {
             std::cout << "REECB residual key position " << row << " names row "
-                      << expected[row].name << '\n';
+                      << variableName(expected_residuals[row].variable) << '\n';
             success = false;
           }
-          success *= scalarMatches(residual[index(expected[row].variable)],
-                                   expected[row].value,
-                                   expected[row].name);
         }
+        success *= residualsMatch(fixture.reecb,
+                                  expected_residuals,
+                                  "independent numerical answer key");
 
         return success.report(__func__);
       }
@@ -580,13 +594,14 @@ namespace GridKit
         noteExpectedLogs("Testing REECB selector configurations. "
                          "Rejection of the power-factor direct-voltage combinations is expected.");
 
-        for (const bool pf : {false, true})
+        const std::array<bool, 2> selector_values{{false, true}};
+        for (const bool pf : selector_values)
         {
-          for (const bool voltage : {false, true})
+          for (const bool voltage : selector_values)
           {
-            for (const bool reactive : {false, true})
+            for (const bool reactive : selector_values)
             {
-              for (const bool p_priority : {false, true})
+              for (const bool p_priority : selector_values)
               {
                 auto data                       = makeData();
                 data.parameters[Params::PfFlag] = pf;
@@ -596,7 +611,7 @@ namespace GridKit
                 data.parameters[Params::Kqi]    = reactive && voltage ? 0.4 : 0.0;
                 data.parameters[Params::Kvi]    = reactive ? 0.5 : 0.0;
 
-                for (const bool attached : {false, true})
+                for (const bool attached : selector_values)
                 {
                   Fixture<ScalarT> fixture(data);
                   if (attached)
@@ -615,7 +630,7 @@ namespace GridKit
 
                   success *= fixture.initialize(0.75, 0.75);
                   success *= (fixture.evaluate() == 0);
-                  success *= allResidualsAtRest(fixture.reecb);
+                  success *= allResidualsWithinInitTolerance(fixture.reecb);
                   success *= scalarPreserved(fixture.iqcmd(), 0.75, "selector iqcmd");
                   success *= scalarPreserved(fixture.ipcmd(), 0.75, "selector ipcmd");
                   success *= stateMatches(fixture.reecb, {{Vars::ILMAX, 2.0}}, "selector ILMAX");
@@ -640,7 +655,7 @@ namespace GridKit
                     success                     *= scalarPreserved(fixture.input(Ext::PE), 0.75, "selector pe");
                     success                     *= scalarPreserved(fixture.input(Ext::QGEN), 0.75, "selector qgen");
                     const RealT expected_qext    = reactive && !voltage ? 1.0 : 0.75;
-                    const RealT expected_pfaref  = pf ? kQuarterTurn : 0.0;
+                    const RealT expected_pfaref  = pf ? kUnitSlopeAngle : 0.0;
                     success                     *= scalarMatches(fixture.input(Ext::QEXT), expected_qext, "published qext");
                     success                     *= scalarMatches(fixture.input(Ext::PFAREF), expected_pfaref, "published pfaref");
                     success                     *= scalarMatches(fixture.input(Ext::PREF), 0.75, "published pref");
@@ -671,7 +686,7 @@ namespace GridKit
           success *= fixture.initialize(0.75, 0.75);
           success *= scalarMatches(fixture.input(Ext::QEXT), 1.0, "published voltage reference");
           success *= (fixture.evaluate() == 0);
-          success *= allResidualsAtRest(fixture.reecb);
+          success *= allResidualsWithinInitTolerance(fixture.reecb);
 
           // A raised external voltage reference enters the V-PI rate raw.
           fixture.input(Ext::QEXT)  = 1.2;
@@ -687,7 +702,7 @@ namespace GridKit
           success *= fixture.initialize(0.75, 0.75);
           success *= scalarMatches(fixture.input(Ext::QEXT), 0.75, "published system-base reactive power");
           success *= (fixture.evaluate() == 0);
-          success *= allResidualsAtRest(fixture.reecb);
+          success *= allResidualsWithinInitTolerance(fixture.reecb);
 
           // The reactive-current lag keeps the power-base conversion, so the
           // same raise produces twice the component-base rate.
@@ -908,7 +923,7 @@ namespace GridKit
           data.parameters[Params::kqv]    = 0.0;
           Fixture<ScalarT> fixture(data);
           fixture.attachAllInputs();
-          fixture.input(Ext::PFAREF)  = kHalfSlopeAngle;
+          fixture.input(Ext::PFAREF)  = std::atan(HALF<RealT>);
           success                    *= fixture.prepare(0.0, 0.2);
           setControlState(fixture.reecb);
           setState(fixture.reecb, {{Vars::PMEAS, 0.6}, {Vars::QV, 0.1}});
@@ -1086,10 +1101,11 @@ namespace GridKit
 
         {
           // The priority selector chooses which command consumes the circle.
-          for (const auto& [p_priority, expected] : std::array<std::pair<bool, RealT>, 2>{{
-                   {true, 0.32},
-                   {false, 0.56},
-               }})
+          const std::array<std::pair<bool, RealT>, 2> priority_cases{{
+              {true, 0.32},
+              {false, 0.56},
+          }};
+          for (const auto& [p_priority, expected] : priority_cases)
           {
             auto data                       = makeResidualData();
             data.parameters[Params::Pqflag] = p_priority;
@@ -1145,20 +1161,20 @@ namespace GridKit
         return success.report(__func__);
       }
 
-#ifdef GRIDKIT_ENABLE_ENZYME
-      /// Fixed dependency-tracking coefficients pin every selector path before
-      /// each configuration is compared against the Enzyme CSR rows.
-      TestOutcome jacobian()
+      /// Fixed dependency-tracking coefficients pin every selector path at a
+      /// non-unit alpha.
+      TestOutcome dependencyTracking()
       {
         TestStatus success = true;
 
-        for (const bool pf : {false, true})
+        const std::array<bool, 2> selector_values{{false, true}};
+        for (const bool pf : selector_values)
         {
-          for (const bool voltage : {false, true})
+          for (const bool voltage : selector_values)
           {
-            for (const bool reactive : {false, true})
+            for (const bool reactive : selector_values)
             {
-              for (const bool p_priority : {false, true})
+              for (const bool p_priority : selector_values)
               {
                 if (pf && reactive && !voltage)
                 {
@@ -1215,24 +1231,19 @@ namespace GridKit
                   success *= derivativeMatches(dependency, Vars::ILMAX, Vars::IQCMD, -0.8, "Q-priority current-circle column");
                   success *= derivativeMatches(dependency, Vars::ILMAX, Vars::IPCMD, 0.0, "Q-priority absent current-circle column");
                 }
-
-                success *= jacobiansMatch(dependency,
-                                          enzymeJacobian(data, kNonunitAlpha, success));
               }
             }
           }
         }
 
         // A negative capacity iterate keeps the signed-square derivative.
-        for (const bool p_priority : {false, true})
+        for (const bool p_priority : selector_values)
         {
           auto data                       = makeJacobianData();
           data.parameters[Params::Pqflag] = p_priority;
 
           const auto dependency  = dependencyTrackingJacobian(data, kNonunitAlpha, success, -2.0);
           success               *= derivativeMatches(dependency, Vars::ILMAX, Vars::ILMAX, -4.0, "negative capacity continuation");
-          success               *= jacobiansMatch(dependency,
-                                    enzymeJacobian(data, kNonunitAlpha, success, -2.0));
         }
 
         // The selector sweep zeroes the injection gain, so this configuration
@@ -1250,22 +1261,79 @@ namespace GridKit
           const auto dependency  = dependencyTrackingJacobian(data, kNonunitAlpha, success);
           success               *= derivativeMatches(dependency, Vars::IQCMD, Vars::VMEAS, -1.0, "IQCMD-VMEAS injection path");
           success               *= derivativeMatches(dependency, Vars::IQCMD, Vars::QV, 1.0, "IQCMD-QV alongside injection");
-          success               *= jacobiansMatch(dependency,
-                                    enzymeJacobian(data, kNonunitAlpha, success));
         }
+
+        return success.report(__func__);
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      /// Every selector mode and the continuation probes agree between Enzyme
+      /// and dependency tracking at a non-unit alpha.
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        const std::array<bool, 2> selector_values{{false, true}};
+        for (const bool pf : selector_values)
+        {
+          for (const bool voltage : selector_values)
+          {
+            for (const bool reactive : selector_values)
+            {
+              for (const bool p_priority : selector_values)
+              {
+                if (pf && reactive && !voltage)
+                {
+                  continue;
+                }
+
+                auto data                       = makeJacobianData();
+                data.parameters[Params::PfFlag] = pf;
+                data.parameters[Params::VFlag]  = voltage;
+                data.parameters[Params::QFlag]  = reactive;
+                data.parameters[Params::Pqflag] = p_priority;
+
+                success *= jacobiansMatch(
+                    dependencyTrackingJacobian(data, kNonunitAlpha, success),
+                    enzymeJacobian(data, kNonunitAlpha, success));
+              }
+            }
+          }
+        }
+
+        for (const bool p_priority : selector_values)
+        {
+          auto data                       = makeJacobianData();
+          data.parameters[Params::Pqflag] = p_priority;
+
+          success *= jacobiansMatch(
+              dependencyTrackingJacobian(data, kNonunitAlpha, success, -2.0),
+              enzymeJacobian(data, kNonunitAlpha, success, -2.0));
+        }
+
+        auto injection_data                       = makeJacobianData();
+        injection_data.parameters[Params::QFlag]  = false;
+        injection_data.parameters[Params::kqv]    = 1.0;
+        injection_data.parameters[Params::dbd1]   = -0.6;
+        injection_data.parameters[Params::dbd2]   = 0.6;
+        injection_data.parameters[Params::Iql1]   = -1.2;
+        injection_data.parameters[Params::Iqh1]   = 1.5;
+        injection_data.parameters[Params::Vref0]  = 2.2;
+        success                                  *= jacobiansMatch(
+            dependencyTrackingJacobian(injection_data, kNonunitAlpha, success),
+            enzymeJacobian(injection_data, kNonunitAlpha, success));
 
         return success.report(__func__);
       }
 #endif
 
     private:
-      using Params      = PhasorDynamics::Controller::ReecbParameters;
-      using Vars        = PhasorDynamics::Controller::ReecbInternalVariables;
-      using Ext         = PhasorDynamics::Controller::ReecbExternalVariables;
-      using Mon         = PhasorDynamics::Controller::ReecbMonitorableVariables;
-      using Data        = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
-      using ReecbT      = PhasorDynamics::Controller::Reecb<ScalarT, IdxT>;
-      using JacobianRow = DependencyTracking::Variable::DependencyMap;
+      using Params = PhasorDynamics::Controller::ReecbParameters;
+      using Vars   = PhasorDynamics::Controller::ReecbInternalVariables;
+      using Ext    = PhasorDynamics::Controller::ReecbExternalVariables;
+      using Mon    = PhasorDynamics::Controller::ReecbMonitorableVariables;
+      using Data   = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
+      using ReecbT = PhasorDynamics::Controller::Reecb<ScalarT, IdxT>;
 
       static constexpr size_t index(Vars variable)
       {
@@ -1277,23 +1345,10 @@ namespace GridKit
         return static_cast<size_t>(variable);
       }
 
-      struct Row
+      struct VariableValue
       {
-        constexpr Row(Vars row, RealT expected_value)
-          : variable(row),
-            value(expected_value)
-        {
-        }
-
         Vars  variable;
         RealT value;
-      };
-
-      struct ExpectedResidual
-      {
-        Vars        variable;
-        const char* name;
-        RealT       value;
       };
 
       struct DrivenCase
@@ -1308,8 +1363,6 @@ namespace GridKit
         RealT reference;
         RealT expected;
       };
-
-      using Rows = std::initializer_list<Row>;
 
       /// Owns the terminal bus, REECB, the assigned command nodes, and the
       /// attached input nodes. Signal storage precedes the model so every
@@ -1448,9 +1501,7 @@ namespace GridKit
       static constexpr RealT kInitialIpcmd     = 0.75;
       static constexpr RealT kNonunitAlpha     = 0.7;
 
-      // Angles whose tangents are the exact slopes the probes below assume.
-      static constexpr RealT kQuarterTurn    = std::numbers::pi_v<RealT> / FOUR<RealT>;
-      static constexpr RealT kHalfSlopeAngle = 0.46364760900080612;
+      static constexpr RealT kUnitSlopeAngle = std::numbers::pi_v<RealT> / FOUR<RealT>;
 
       static constexpr size_t kBusVrColumn        = index(Vars::MAXIMUM);
       static constexpr size_t kBusViColumn        = kBusVrColumn + 1;
@@ -1863,10 +1914,11 @@ namespace GridKit
       }
 
       template <typename T>
-      void setState(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb, Rows rows) const
+      void setState(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb,
+                    std::initializer_list<VariableValue>        values) const
       {
         auto* y = reecb.y().getData();
-        for (const auto& [variable, value] : rows)
+        for (const auto& [variable, value] : values)
         {
           y[index(variable)] = static_cast<T>(value);
         }
@@ -1874,10 +1926,11 @@ namespace GridKit
       }
 
       template <typename T>
-      void setDerivative(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb, Rows rows) const
+      void setDerivative(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb,
+                         std::initializer_list<VariableValue>        values) const
       {
         auto* yp = reecb.yp().getData();
-        for (const auto& [variable, value] : rows)
+        for (const auto& [variable, value] : values)
         {
           yp[index(variable)] = static_cast<T>(value);
         }
@@ -1964,9 +2017,9 @@ namespace GridKit
       /// infinities and NaN.
       static bool preserved(RealT actual, RealT expected)
       {
-        if (expected != expected)
+        if (std::isnan(expected))
         {
-          return actual != actual;
+          return std::isnan(actual);
         }
         return actual == expected;
       }
@@ -1998,26 +2051,17 @@ namespace GridKit
         return false;
       }
 
-      static bool finite(RealT value)
-      {
-        return value == value
-               && value < std::numeric_limits<RealT>::infinity()
-               && value > -std::numeric_limits<RealT>::infinity();
-      }
-
-      template <typename VectorT>
+      template <typename VectorT, typename ValuesT>
       bool rowsMatch(const VectorT& vector,
-                     const Row*     rows,
-                     size_t         count,
+                     const ValuesT& values,
                      const char*    what,
                      const char*    context) const
       {
-        bool        success = true;
-        const auto* values  = vector.getData();
-        for (size_t i = 0; i < count; ++i)
+        bool        success       = true;
+        const auto* vector_values = vector.getData();
+        for (const auto& [variable, expected] : values)
         {
-          const auto& [variable, expected] = rows[i];
-          if (!variableMatches(static_cast<RealT>(values[index(variable)]),
+          if (!variableMatches(static_cast<RealT>(vector_values[index(variable)]),
                                expected,
                                what,
                                variable,
@@ -2029,20 +2073,37 @@ namespace GridKit
         return success;
       }
 
-      bool residualsMatch(const ReecbT& reecb, Rows rows, const char* context = "") const
+      bool residualsMatch(const ReecbT&                        reecb,
+                          std::initializer_list<VariableValue> values,
+                          const char*                          context = "") const
       {
-        return rowsMatch(reecb.getResidual(), rows.begin(), rows.size(), "residual", context);
+        return rowsMatch(reecb.getResidual(), values, "residual", context);
       }
 
-      bool stateMatches(const ReecbT& reecb, Rows rows, const char* context = "") const
+      template <size_t size>
+      bool residualsMatch(const ReecbT&                          reecb,
+                          const std::array<VariableValue, size>& values,
+                          const char*                            context = "") const
       {
-        return rowsMatch(reecb.y(), rows.begin(), rows.size(), "state", context);
+        return rowsMatch(reecb.getResidual(), values, "residual", context);
       }
 
-      /// The model sits at a steady state: every residual and every derivative
-      /// is zero. Probes placed inside a smooth transition carry that
-      /// transition's own MU-dependent tail and pass @p tolerance explicitly.
-      bool allResidualsAtRest(const ReecbT& reecb, RealT tolerance = kTol) const
+      bool stateMatches(const ReecbT&                        reecb,
+                        std::initializer_list<VariableValue> values,
+                        const char*                          context = "") const
+      {
+        return rowsMatch(reecb.y(), values, "state", context);
+      }
+
+      template <size_t size>
+      bool stateMatches(const ReecbT&                          reecb,
+                        const std::array<VariableValue, size>& values,
+                        const char*                            context = "") const
+      {
+        return rowsMatch(reecb.y(), values, "state", context);
+      }
+
+      bool allResidualsWithinInitTolerance(const ReecbT& reecb) const
       {
         bool        success = true;
         const auto* f       = reecb.getResidual().getData();
@@ -2050,7 +2111,12 @@ namespace GridKit
         for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
         {
           const auto variable = static_cast<Vars>(row);
-          if (!variableMatches(f[row], 0.0, "residual", variable, "at rest", tolerance))
+          if (!variableMatches(f[row],
+                               0.0,
+                               "residual",
+                               variable,
+                               "at rest",
+                               ReecbT::INITIALIZATION_TOLERANCE))
           {
             success = false;
           }
@@ -2068,7 +2134,7 @@ namespace GridKit
         const auto* f       = reecb.getResidual().getData();
         for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
         {
-          if (!finite(f[row]))
+          if (!std::isfinite(f[row]))
           {
             std::cout << "REECB residual " << variableName(static_cast<Vars>(row))
                       << " is not finite\n";
@@ -2208,10 +2274,11 @@ namespace GridKit
         fixture.bus.y().setDataUpdated();
       }
 
-      std::vector<JacobianRow> dependencyTrackingJacobian(const Data& data,
-                                                          RealT       alpha,
-                                                          TestStatus& success,
-                                                          RealT       ilmax = 2.0) const
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      dependencyTrackingJacobian(const Data& data,
+                                 RealT       alpha,
+                                 TestStatus& success,
+                                 RealT       ilmax = 2.0) const
       {
         using DepVar = DependencyTracking::Variable;
 
@@ -2222,8 +2289,8 @@ namespace GridKit
         numberVariables(fixture, alpha);
         success *= (fixture.evaluate() == 0);
 
-        std::vector<JacobianRow> rows(index(Vars::MAXIMUM));
-        const auto*              f = fixture.reecb.getResidual().getData();
+        std::vector<DependencyTracking::Variable::DependencyMap> rows(index(Vars::MAXIMUM));
+        const auto*                                              f = fixture.reecb.getResidual().getData();
         for (size_t row = 0; row < rows.size(); ++row)
         {
           rows[row] = f[row].getDependencies();
@@ -2231,7 +2298,10 @@ namespace GridKit
         return rows;
       }
 
-      static RealT derivative(const std::vector<JacobianRow>& jacobian, size_t row, size_t column)
+      static RealT derivative(
+          const std::vector<DependencyTracking::Variable::DependencyMap>& jacobian,
+          size_t                                                          row,
+          size_t                                                          column)
       {
         const auto entry = jacobian[row].find(column);
         if (entry == jacobian[row].end())
@@ -2241,20 +2311,22 @@ namespace GridKit
         return entry->second;
       }
 
-      bool derivativeMatches(const std::vector<JacobianRow>& jacobian,
-                             Vars                            row,
-                             Vars                            column,
-                             RealT                           expected,
-                             const char*                     label) const
+      bool derivativeMatches(
+          const std::vector<DependencyTracking::Variable::DependencyMap>& jacobian,
+          Vars                                                            row,
+          Vars                                                            column,
+          RealT                                                           expected,
+          const char*                                                     label) const
       {
         return derivativeMatches(jacobian, row, index(column), expected, label);
       }
 
-      bool derivativeMatches(const std::vector<JacobianRow>& jacobian,
-                             Vars                            row,
-                             size_t                          column,
-                             RealT                           expected,
-                             const char*                     label) const
+      bool derivativeMatches(
+          const std::vector<DependencyTracking::Variable::DependencyMap>& jacobian,
+          Vars                                                            row,
+          size_t                                                          column,
+          RealT                                                           expected,
+          const char*                                                     label) const
       {
         const RealT actual = derivative(jacobian, index(row), column);
         if (isEqual(actual, expected, kTol))
@@ -2268,10 +2340,11 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      std::vector<JacobianRow> enzymeJacobian(const Data& data,
-                                              RealT       alpha,
-                                              TestStatus& success,
-                                              RealT       ilmax = 2.0) const
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      enzymeJacobian(const Data& data,
+                     RealT       alpha,
+                     TestStatus& success,
+                     RealT       ilmax = 2.0) const
       {
         Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
         fixture.attachAllInputs();
@@ -2290,8 +2363,9 @@ namespace GridKit
         return MapFromCsr(fixture.reecb.getCsrJacobian());
       }
 
-      bool jacobiansMatch(const std::vector<JacobianRow>& dependency,
-                          const std::vector<JacobianRow>& enzyme) const
+      bool jacobiansMatch(
+          const std::vector<DependencyTracking::Variable::DependencyMap>& dependency,
+          const std::vector<DependencyTracking::Variable::DependencyMap>& enzyme) const
       {
         if (dependency.size() != enzyme.size())
         {

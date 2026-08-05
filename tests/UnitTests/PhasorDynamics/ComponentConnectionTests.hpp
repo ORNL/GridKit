@@ -306,6 +306,12 @@ namespace GridKit
 
         success *= system.allocate() == 0;
         success *= ipcmd.linked() && iqcmd.linked() && pe.linked() && qgen.linked();
+        success *= ipcmd.getVariableIndex()
+                   == controller.getVariableIndex(
+                       static_cast<IdxT>(ControllerInternal::IPCMD));
+        success *= iqcmd.getVariableIndex()
+                   == controller.getVariableIndex(
+                       static_cast<IdxT>(ControllerInternal::IQCMD));
         success *= system.initialize() == 0;
         success *= system.evaluateResidual() == 0;
 

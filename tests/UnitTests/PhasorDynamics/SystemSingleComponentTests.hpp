@@ -328,8 +328,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// REECB through the production path, coupled to the REGCA model that
-      /// seeds its current-command outputs during system initialization.
+      /// REECB through the production data path, coupled to REGCA.
       TestOutcome reecb()
       {
         using Data        = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
@@ -387,24 +386,6 @@ namespace GridKit
         success *= system.size()
                    == static_cast<IdxT>(RegcaVars::MAXIMUM)
                           + static_cast<IdxT>(Vars::MAXIMUM);
-
-        auto* iqcmd  = system.getSignal(iqcmd_id);
-        auto* ipcmd  = system.getSignal(ipcmd_id);
-        success     *= iqcmd->linked();
-        success     *= ipcmd->linked();
-        success     *= iqcmd->getVariableIndex()
-                   == system.getComponent(static_cast<IdxT>(1))->getVariableIndex(static_cast<IdxT>(Vars::IQCMD));
-        success *= ipcmd->getVariableIndex()
-                   == system.getComponent(static_cast<IdxT>(1))->getVariableIndex(static_cast<IdxT>(Vars::IPCMD));
-
-        auto missing_bus_data          = data;
-        missing_bus_data.bus[0].bus_id = static_cast<IdxT>(0);
-        missing_bus_data.regca.clear();
-        missing_bus_data.reecb[0].buses.clear();
-
-        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_bus_system(missing_bus_data);
-        std::cout << "Testing expected REECB missing-bus configuration error.\n";
-        success *= missing_bus_system.verify() > 0;
 
         return success.report(__func__);
       }

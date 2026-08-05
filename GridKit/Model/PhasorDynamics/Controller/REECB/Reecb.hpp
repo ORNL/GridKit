@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 #include <limits>
 #include <memory>
@@ -92,6 +91,10 @@ namespace GridKit
         using InternalVariablesT = ReecbInternalVariables;
         using ExternalVariablesT = ReecbExternalVariables;
 
+        /// Tolerance for initialization reconstruction and steady-state residuals.
+        static constexpr RealT INITIALIZATION_TOLERANCE =
+            static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+
         Reecb(BusT* bus);
         Reecb(BusT* bus, const ModelDataT& data);
         ~Reecb();
@@ -109,14 +112,11 @@ namespace GridKit
             -> ComponentSignals<ScalarT,
                                 IdxT,
                                 ReecbInternalVariables,
-                                ReecbExternalVariables>&
-        {
-          return signals_;
-        }
+                                ReecbExternalVariables>&;
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
+        [[gnu::always_inline]] inline int evaluateInternalResidual(
             const ScalarT* y,
             const ScalarT* yp,
             const ScalarT* wb,
@@ -124,16 +124,6 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        static constexpr size_t index(ReecbInternalVariables variable)
-        {
-          return static_cast<size_t>(variable);
-        }
-
-        static constexpr size_t index(ReecbExternalVariables variable)
-        {
-          return static_cast<size_t>(variable);
-        }
-
         static void checkConfiguration(bool condition, const char* message, int& errors);
         void        loadRealParameter(const ModelDataT& data,
                                       ReecbParameters   parameter,
@@ -153,70 +143,28 @@ namespace GridKit
         RealT componentPowerBase() const;
 
         template <typename ValueT>
-        __attribute__((always_inline)) inline ValueT toComponentBase(ValueT value) const;
+        [[gnu::always_inline]] inline ValueT toComponentBase(ValueT value) const;
 
         template <typename ValueT>
         ValueT toSystemBase(ValueT value) const;
 
-        /**
-         * @brief Smooth asymmetric slew-rate limiter.
-         *
-         * @param[in] f Unconstrained rate.
-         * @param[in] rate_min Negative rate limit.
-         * @param[in] rate_max Positive rate limit.
-         * @return Limited rate.
-         */
-        static __attribute__((always_inline)) inline ScalarT aslew(
+        /// Smooth asymmetric slew-rate limiter.
+        [[gnu::always_inline]] static inline ScalarT aslew(
             const ScalarT f,
             const RealT   rate_min,
-            const RealT   rate_max)
-        {
-          assert(rate_min < ZERO<RealT> && ZERO<RealT> < rate_max);
+            const RealT   rate_max);
 
-          return f
-                 / (ONE<RealT>
-                    + Math::ramp(f / rate_max - ONE<RealT>)
-                    + Math::ramp(f / rate_min - ONE<RealT>));
-        }
-
-        /**
-         * @brief Smooth anti-windup derivative within a moving symmetric band.
-         *
-         * Math::antiwindup over [-band, band] with a band edge that is an
-         * algebraic quantity, so differentiation carries the band's own
-         * contributions through the gate.
-         *
-         * @param[in] x Limited PI state.
-         * @param[in] f Pre-limit derivative of x.
-         * @param[in] band Nonnegative symmetric band edge.
-         * @return Anti-windup-limited derivative.
-         *
-         * @todo Fold moving-limit support into Math::antiwindup in CommonMath.
-         */
-        static __attribute__((always_inline)) inline ScalarT awband(
+        /// Smooth anti-windup derivative within a moving symmetric band.
+        [[gnu::always_inline]] static inline ScalarT awband(
             const ScalarT x,
             const ScalarT f,
-            const ScalarT band)
-        {
-          const ScalarT above_min = Math::sigmoid(x + band);
-          const ScalarT below_max = Math::sigmoid(band - x);
-
-          return (above_min * below_max                          //
-                  + (ONE<RealT> - below_max) * Math::sigmoid(-f) //
-                  + (ONE<RealT> - above_min) * Math::sigmoid(f))
-                 * f;
-        }
+            const ScalarT band);
 
         ScalarT& Vr();
         ScalarT& Vi();
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static constexpr RealT VMEAS_MINIMUM         = static_cast<RealT>(0.01);
-
-        /// Accepted reconstruction error where an initialization reference
-        /// round-trips through a transcendental function.
-        static constexpr RealT INITIALIZATION_TOLERANCE =
-            static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
         BusT* bus_{nullptr};
 
