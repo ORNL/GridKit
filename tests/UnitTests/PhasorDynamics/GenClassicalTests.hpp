@@ -5,10 +5,9 @@
  * @brief Tests for classical generator model.
  *
  */
-#define _USE_MATH_DEFINES /* need this since directly including GenClassical.cpp for MSVC compiler */
 #include <iomanip>
 #include <iostream>
-#include <limits>
+#include <numbers>
 #include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -119,15 +118,17 @@ namespace GridKit
         auto* y  = gen.y().getData();
         auto* yp = gen.yp().getData();
 
-        y[0] = M_PI; // delta
+        static constexpr auto pi = std::numbers::pi_v<RealT>;
+
+        y[0] = pi;   // delta
         y[1] = 1.0;  // omega
         y[2] = 2.0;  // telec
         y[3] = -2.0; // ir
         y[4] = -4.0; // ii
 
         // Set derivative values matching the answer key
-        yp[0] = 2 * M_PI * 60.0; // delta_dot
-        yp[1] = -1.5;            // omega_dot
+        yp[0] = 2 * pi * 60.0; // delta_dot
+        yp[1] = -1.5;          // omega_dot
         yp[2] = 0;
         yp[3] = 0;
         yp[4] = 0;
@@ -222,11 +223,11 @@ namespace GridKit
 
         // Test answer keys
         const std::vector<ScalarT> var_answer = {
-            3.0 * M_PI / 4.0, // delta
-            0.0,              // omega
-            3.5,              // Te
-            1.0,              // Ir
-            2.0,              // Ii
+            3.0 * std::numbers::pi_v<RealT> / 4.0, // delta
+            0.0,                                   // omega
+            3.5,                                   // Te
+            1.0,                                   // Ir
+            2.0,                                   // Ii
         };
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);

@@ -1,10 +1,10 @@
-#define _USE_MATH_DEFINES
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <numbers>
 
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
@@ -100,8 +100,10 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   // DG Params Vector
   // All DGs have the same set of parameters except for the first two.
+  static constexpr auto pi = std::numbers::pi_v<real_type>;
+
   GridKit::DistributedGeneratorParameters<real_type, index_type> DG_parms1;
-  DG_parms1.wb_  = 2.0 * M_PI * 50.0;
+  DG_parms1.wb_  = 2.0 * pi * 50.0;
   DG_parms1.wc_  = 31.41;
   DG_parms1.mp_  = 9.4e-5;
   DG_parms1.Vn_  = 380.0;
@@ -118,7 +120,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   DG_parms1.Lc_  = 0.35e-3;
 
   GridKit::DistributedGeneratorParameters<real_type, index_type> DG_parms2;
-  DG_parms2.wb_  = 2.0 * M_PI * 50.0;
+  DG_parms2.wb_  = 2.0 * pi * 50.0;
   DG_parms2.wc_  = 31.41;
   DG_parms2.mp_  = 12.5e-5;
   DG_parms2.Vn_  = 380.0;
@@ -142,9 +144,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   // line vector params
   // Every odd line has the same parameters and every even line has the same parameters
   real_type              rline1 = 0.23;
-  real_type              Lline1 = 0.1 / (2.0 * M_PI * 50.0);
+  real_type              Lline1 = 0.1 / (2.0 * pi * 50.0);
   real_type              rline2 = 0.35;
-  real_type              Lline2 = 0.58 / (2.0 * M_PI * 50.0);
+  real_type              Lline2 = 0.58 / (2.0 * pi * 50.0);
   std::vector<real_type> rline_list(2 * Nsize - 1, 0.0);
   std::vector<real_type> Lline_list(2 * Nsize - 1, 0.0);
   for (index_type i = 0; i < rline_list.size(); i++)
@@ -156,9 +158,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   // load parms
   // Only the first load has the same paramaters.
   real_type rload1 = 3.0;
-  real_type Lload1 = 2.0 / (2.0 * M_PI * 50.0);
+  real_type Lload1 = 2.0 / (2.0 * pi * 50.0);
   real_type rload2 = 2.0;
-  real_type Lload2 = 1.0 / (2.0 * M_PI * 50.0);
+  real_type Lload2 = 1.0 / (2.0 * pi * 50.0);
 
   std::vector<real_type> rload_list(Nsize, rload2);
   std::vector<real_type> Lload_list(Nsize, Lload2);
@@ -326,7 +328,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     sum_bottom += (true_vec->at(i) * true_vec->at(i));
   }
 
-  real_type norm2error = (sqrt(sum_top) / sqrt(sum_bottom));
+  real_type norm2error = (std::sqrt(sum_top) / std::sqrt(sum_bottom));
   std::cout << "2-Norm relative error: " << norm2error << std::endl;
   test_pass = norm2error < error_tol;
 

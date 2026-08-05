@@ -1,9 +1,9 @@
 
-#define _USE_MATH_DEFINES
 #include "Generator4.hpp"
 
 #include <cmath>
 #include <iostream>
+#include <numbers>
 
 #include <GridKit/Model/PowerFlow/Bus/BaseBus.hpp>
 
@@ -33,7 +33,7 @@ namespace GridKit
       Ef_(1.45),
       Pm_(1.0),
       omega_s_(1.0),
-      omega_b_(2.0 * 60.0 * M_PI),
+      omega_b_(2.0 * 60.0 * std::numbers::pi_v<RealT>),
       omega_up_(omega_s_ + 0.0001),
       omega_lo_(omega_s_ - 0.0001),
       c_(10000.0),
@@ -95,10 +95,10 @@ namespace GridKit
     const ScalarT phi = theta() - delta - atan(Q0_ / P0_);
 
     // Compute initial gueses for generator currents and potentials in d-q frame
-    const ScalarT Id = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * sin(phi);
-    const ScalarT Iq = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * cos(phi);
-    const ScalarT Ed = V() * sin(theta() - delta) + Rs_ * Id + Xqp_ * Iq;
-    const ScalarT Eq = V() * cos(theta() - delta) + Rs_ * Iq - Xdp_ * Id;
+    const ScalarT Id = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * std::sin(phi);
+    const ScalarT Iq = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * std::cos(phi);
+    const ScalarT Ed = V() * std::sin(theta() - delta) + Rs_ * Id + Xqp_ * Iq;
+    const ScalarT Eq = V() * std::cos(theta() - delta) + Rs_ * Iq - Xdp_ * Id;
 
     auto* y  = y_.getData();
     auto* yp = yp_.getData();
@@ -218,8 +218,8 @@ namespace GridKit
     f[1] = (2.0 * H_) / omega_s_ * dotOmega() - Pm() + Eqp() * Iq() + Edp() * Id() + (-Xdp_ + Xqp_) * Id() * Iq() + D_ * (omega() - omega_s_);
     f[2] = Tq0p_ * dotEdp() + Edp() - (Xq_ - Xqp_) * Iq();
     f[3] = Td0p_ * dotEqp() + Eqp() + (Xd_ - Xdp_) * Id() - Ef();
-    f[4] = Rs_ * Id() - Xqp_ * Iq() + V() * sin(delta() - theta()) - Edp();
-    f[5] = Xdp_ * Id() + Rs_ * Iq() + V() * cos(delta() - theta()) - Eqp();
+    f[4] = Rs_ * Id() - Xqp_ * Iq() + V() * std::sin(delta() - theta()) - Edp();
+    f[5] = Xdp_ * Id() + Rs_ * Iq() + V() * std::cos(delta() - theta()) - Eqp();
 
     // Compute active and reactive load provided by the infinite bus.
     P() += Pg();
@@ -293,8 +293,8 @@ namespace GridKit
   int Generator4<ScalarT, IdxT>::evaluateAdjointResidual()
   {
     // std::cout << "Evaluate adjoint residual for Generator4..." << std::endl;
-    ScalarT sinPhi = sin(delta() - theta());
-    ScalarT cosPhi = cos(delta() - theta());
+    ScalarT sinPhi = std::sin(delta() - theta());
+    ScalarT cosPhi = std::cos(delta() - theta());
 
     const auto* yB  = yB_.getData();
     const auto* ypB = ypB_.getData();
@@ -350,7 +350,7 @@ namespace GridKit
   ScalarT Generator4<ScalarT, IdxT>::Pg()
   {
     const auto* y = y_.getData();
-    return y[5] * V() * cos(theta() - y[0]) + y[4] * V() * sin(theta() - y[0]);
+    return y[5] * V() * std::cos(theta() - y[0]) + y[4] * V() * std::sin(theta() - y[0]);
   }
 
   /**
@@ -362,7 +362,7 @@ namespace GridKit
   ScalarT Generator4<ScalarT, IdxT>::Qg()
   {
     const auto* y = y_.getData();
-    return y[5] * V() * sin(theta() - y[0]) - y[4] * V() * cos(theta() - y[0]);
+    return y[5] * V() * std::sin(theta() - y[0]) - y[4] * V() * std::cos(theta() - y[0]);
   }
 
   /**
@@ -371,7 +371,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator4<ScalarT, IdxT>::frequencyPenalty(ScalarT omega)
   {
-    return c_ * pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
+    return c_ * std::pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
   }
 
   /**
@@ -383,11 +383,11 @@ namespace GridKit
   {
     if (omega > omega_up_)
     {
-      return beta_ * c_ * pow(omega - omega_up_, beta_ - 1.0);
+      return beta_ * c_ * std::pow(omega - omega_up_, beta_ - 1.0);
     }
     else if (omega < omega_lo_)
     {
-      return beta_ * c_ * pow(omega - omega_lo_, beta_ - 1.0);
+      return beta_ * c_ * std::pow(omega - omega_lo_, beta_ - 1.0);
     }
     else
     {

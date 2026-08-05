@@ -1,7 +1,5 @@
 #pragma once
 
-#define _USE_MATH_DEFINES
-#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -597,8 +595,10 @@ namespace GridKit
       ScalarT pmech = toMachineBase(ws[0]);
       ScalarT efd   = ws[1];
 
+      static constexpr auto pi = std::numbers::pi_v<RealT>;
+
       /* 6 Genrou differential equations */
-      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * freq_system_base_);
+      f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
       f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
       f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);

@@ -128,10 +128,10 @@ namespace GridKit
     RealT   g      = R_ / (R_ * R_ + X_ * X_);
     ScalarT dtheta = theta1() - theta2();
 
-    P1() -= (g + 0.5 * G_) * V1() * V1() + V1() * V2() * (-g * cos(dtheta) - b * sin(dtheta));
-    Q1() -= (-b - 0.5 * B_) * V1() * V1() + V1() * V2() * (-g * sin(dtheta) + b * cos(dtheta));
-    P2() -= (g + 0.5 * G_) * V2() * V2() + V1() * V2() * (-g * cos(dtheta) + b * sin(dtheta));
-    Q2() -= (-b - 0.5 * B_) * V2() * V2() + V1() * V2() * (g * sin(dtheta) + b * cos(dtheta));
+    P1() -= (g + 0.5 * G_) * V1() * V1() + V1() * V2() * (-g * std::cos(dtheta) - b * std::sin(dtheta));
+    Q1() -= (-b - 0.5 * B_) * V1() * V1() + V1() * V2() * (-g * std::sin(dtheta) + b * std::cos(dtheta));
+    P2() -= (g + 0.5 * G_) * V2() * V2() + V1() * V2() * (-g * std::cos(dtheta) + b * std::sin(dtheta));
+    Q2() -= (-b - 0.5 * B_) * V2() * V2() + V1() * V2() * (g * std::sin(dtheta) + b * std::cos(dtheta));
 
     if (bus1_->size() > 0)
     {
