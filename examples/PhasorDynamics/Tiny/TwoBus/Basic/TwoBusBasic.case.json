@@ -1,12 +1,14 @@
 {
     "header": {
-        "format_version": 0,
-        "format_revision": 1,
+        "format_version": 0.2,
+        "format_revision": 0,
         "case_name": "Basic 2-bus test case",
         "case_description": "A two-bus test case for demonstrating the dynamics format",
-        "case_comments": "This case is set up to monitor the voltage at both buses and the machine angle and speed",
+        "case_comments": "This case is set up to monitor the voltage at both buses and the machine angle and speed"
+    },
+    "params": {
         "freq_base": 60.0,
-        "va_base": 100e6
+        "va_base": 100000000.0
     },
     "monitors": [
         {
@@ -17,7 +19,7 @@
     "buses": [
         { 
             "number": 0,
-            "class": "bus",
+            "class": "Bus",
             "name": "Bus_1",
             "init": {
                 "Vr":0.9949877346411762,
@@ -28,7 +30,7 @@
         },
         { 
             "number": 1,
-            "class": "infinite_bus",
+            "class": "BusInfinite",
             "name": "Bus_2",
             "init": {
                 "Vr":1.0,

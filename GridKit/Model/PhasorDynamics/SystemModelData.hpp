@@ -63,7 +63,7 @@ namespace GridKit
       ///
       /// If not relevant (i.e. if not working in the context of the case
       /// format), this will not contain a value
-      std::optional<unsigned short> format_version;
+      std::optional<double> format_version;
 
       /// The revision of the grid dynamics case format this system model was
       /// parsed from
