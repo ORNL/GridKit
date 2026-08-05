@@ -1001,7 +1001,7 @@ namespace GridKit
 
       bool scalarMatches(ScalarT actual, ScalarT expected, const char* label) const
       {
-        if (isEqual(actual, expected))
+        if (isEqual(actual, expected, kTol))
         {
           return true;
         }
