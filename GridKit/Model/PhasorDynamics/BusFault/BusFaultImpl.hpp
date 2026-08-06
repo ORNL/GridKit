@@ -209,11 +209,8 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int BusFault<scalar_type, index_type>::evaluateBusResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+    FORCE_INLINE int BusFault<scalar_type, index_type>::evaluateBusResidual(
+        [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* wb, ScalarT* h)
     {
       const ScalarT Ir = y[0];
       const ScalarT Ii = y[1];
