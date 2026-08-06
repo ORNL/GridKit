@@ -152,6 +152,7 @@ are specified:
   [Gensal](SynchronousMachine/GENSAL/README.md) | 5th order salient-pole machine model
   [GenClassical](SynchronousMachine/GenClassical/README.md) | the classical machine model
   [Regca](Converter/REGCA/README.md) | WECC REGCA renewable generator/converter model
+  [Repca](Controller/REPCA/README.md) | the REPCA renewable plant-control model
   [Tgov1](Governor/Tgov1/README.md) | the TGOV1 governor model
   [Hygov](Governor/HYGOV/README.md) | the HYGOV hydro turbine-governor model
   [Ieeet1](Exciter/IEEET1/README.md) | the IEEET1 exciter model

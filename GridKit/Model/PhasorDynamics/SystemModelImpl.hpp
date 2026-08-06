@@ -42,6 +42,7 @@ namespace GridKit
       using namespace Governor;
       using namespace Exciter;
       using namespace Stabilizer;
+      using namespace Controller;
       using namespace Converter;
 
       owns_components_ = true;
@@ -480,6 +481,88 @@ namespace GridKit
         }
 
         addComponent(stabilizer);
+      }
+
+      // Add REPCA plant controllers after the signal producers they read at
+      // initialization
+      for (const auto& repcadata : data.repca)
+      {
+        BusT* bus = nullptr;
+        if (repcadata.buses.contains(RepcaBuses::bus))
+        {
+          bus = getBus(repcadata.buses.at(RepcaBuses::bus));
+        }
+
+        auto* repca = new Repca<ScalarT, IdxT>(bus, repcadata);
+
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::ir))
+        {
+          const IdxT     ir = repcadata.signal_inputs.at(RepcaSignalInputs::ir);
+          constexpr auto IR = RepcaExternalVariables::IR;
+          repca->getSignals().template attachSignalNode<IR>(getSignal(ir));
+        }
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::ii))
+        {
+          const IdxT     ii = repcadata.signal_inputs.at(RepcaSignalInputs::ii);
+          constexpr auto II = RepcaExternalVariables::II;
+          repca->getSignals().template attachSignalNode<II>(getSignal(ii));
+        }
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::p))
+        {
+          const IdxT     p = repcadata.signal_inputs.at(RepcaSignalInputs::p);
+          constexpr auto P = RepcaExternalVariables::P;
+          repca->getSignals().template attachSignalNode<P>(getSignal(p));
+        }
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::q))
+        {
+          const IdxT     q = repcadata.signal_inputs.at(RepcaSignalInputs::q);
+          constexpr auto Q = RepcaExternalVariables::Q;
+          repca->getSignals().template attachSignalNode<Q>(getSignal(q));
+        }
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::freq))
+        {
+          const IdxT     freq = repcadata.signal_inputs.at(RepcaSignalInputs::freq);
+          constexpr auto FREQ = RepcaExternalVariables::FREQ;
+          repca->getSignals().template attachSignalNode<FREQ>(getSignal(freq));
+        }
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::vref))
+        {
+          const IdxT     vref = repcadata.signal_inputs.at(RepcaSignalInputs::vref);
+          constexpr auto VREF = RepcaExternalVariables::VREF;
+          repca->getSignals().template attachSignalNode<VREF>(getSignal(vref));
+        }
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::pref))
+        {
+          const IdxT     pref = repcadata.signal_inputs.at(RepcaSignalInputs::pref);
+          constexpr auto PREF = RepcaExternalVariables::PREF;
+          repca->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+        }
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::qref))
+        {
+          const IdxT     qref = repcadata.signal_inputs.at(RepcaSignalInputs::qref);
+          constexpr auto QREF = RepcaExternalVariables::QREF;
+          repca->getSignals().template attachSignalNode<QREF>(getSignal(qref));
+        }
+        if (repcadata.signal_inputs.contains(RepcaSignalInputs::freqref))
+        {
+          const IdxT     freqref = repcadata.signal_inputs.at(RepcaSignalInputs::freqref);
+          constexpr auto FREQREF = RepcaExternalVariables::FREQREF;
+          repca->getSignals().template attachSignalNode<FREQREF>(getSignal(freqref));
+        }
+        if (repcadata.signal_outputs.contains(RepcaSignalOutputs::qext))
+        {
+          const IdxT     qext = repcadata.signal_outputs.at(RepcaSignalOutputs::qext);
+          constexpr auto QEXT = RepcaInternalVariables::QEXT;
+          repca->getSignals().template assignSignalNode<QEXT>(getSignal(qext));
+        }
+        if (repcadata.signal_outputs.contains(RepcaSignalOutputs::pext))
+        {
+          const IdxT     pext = repcadata.signal_outputs.at(RepcaSignalOutputs::pext);
+          constexpr auto PEXT = RepcaInternalVariables::PEXT;
+          repca->getSignals().template assignSignalNode<PEXT>(getSignal(pext));
+        }
+
+        addComponent(repca);
       }
 
       // Add constant signal sources

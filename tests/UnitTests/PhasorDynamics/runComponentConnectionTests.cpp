@@ -9,6 +9,7 @@ int main()
 
   result += test.genrouEsdc1a();
   result += test.genrouHygov();
+  result += test.regcaRepca();
 
   return result.summary();
 }
