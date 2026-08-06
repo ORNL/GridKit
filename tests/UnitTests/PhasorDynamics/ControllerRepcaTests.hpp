@@ -86,6 +86,8 @@ namespace GridKit
         success *= invalidParameterCase(Params::Qmin, 1.1);
         success *= invalidParameterCase(Params::fdbd1, 0.1);
         success *= invalidParameterCase(Params::fdbd2, -0.1);
+        success *= invalidParameterCase(Params::Ddn, -0.1);
+        success *= invalidParameterCase(Params::Dup, -0.1);
         success *= invalidParameterCase(Params::femin, 0.1);
         success *= invalidParameterCase(Params::femax, -0.1);
         success *= invalidParameterCase(Params::Pmin, 2.1);
@@ -242,6 +244,9 @@ namespace GridKit
       TestOutcome initializationAndSignals()
       {
         TestStatus success = true;
+
+        noteExpectedLogs("Testing REPCA initialization without an attached frequency "
+                         "signal. A warning is expected.");
 
         Fixture<ScalarT> fixture(makeInitializationData(), 0.8, 0.6);
         fixture.attachAllInputs(99.0);
@@ -419,13 +424,13 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Check initialization rejection, atomicity, and exact command boundaries.
+      /// Check initialization domains, adjusted limits, and atomicity.
       TestOutcome initializationDomain()
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing inadmissible REPCA command and controller "
-                         "initialization points. Logged errors are expected.");
+        noteExpectedLogs("Testing REPCA adjusted limits and inadmissible "
+                         "initialization points. Logged warnings and errors are expected.");
 
         const auto data = makeInitializationData();
 
@@ -438,11 +443,7 @@ namespace GridKit
 
         const RealT                        nan      = std::numeric_limits<RealT>::quiet_NaN();
         const RealT                        infinity = std::numeric_limits<RealT>::infinity();
-        const std::array<RejectionCase, 8> rejection_cases{{
-            {"qext below Qmin", -0.4000000001, 0.45},
-            {"qext above Qmax", 0.7500000001, 0.45},
-            {"pext below Pmin", 0.25, -1.0e-10},
-            {"pext above Pmax", 0.25, 1.0000000001},
+        const std::array<RejectionCase, 4> rejection_cases{{
             {"nonfinite qext", infinity, 0.45},
             {"nonfinite pext", 0.25, infinity},
             {"nan qext", nan, 0.45},
@@ -490,15 +491,6 @@ namespace GridKit
         collapsed_data.parameters[Params::Qmax] = 0.5;
         collapsed_data.parameters[Params::Pmin] = 0.9;
         collapsed_data.parameters[Params::Pmax] = 0.9;
-
-        success *= initializationRejectedAtomically(collapsed_data,
-                                                    0.2500000001,
-                                                    0.45,
-                                                    "qext above collapsed Q limit");
-        success *= initializationRejectedAtomically(collapsed_data,
-                                                    0.25,
-                                                    0.4500000001,
-                                                    "pext above collapsed P limit");
 
         auto reactive_aw_data                         = makeInitializationData();
         reactive_aw_data.parameters[Params::dbdupper] = 0.03;
@@ -691,6 +683,92 @@ namespace GridKit
           success *= allResidualsWithinInitTolerance(collapsed_limits.repca);
         }
 
+        struct LimitCase
+        {
+          const char* label;
+          RealT       qext;
+          RealT       pext;
+          Vars        output;
+          RealT       expected;
+        };
+
+        const std::array<LimitCase, 4> limit_cases{{
+            {"adjusted Qmin", -0.5, 0.45, Vars::QPI, -1.0},
+            {"adjusted Qmax", 0.9, 0.45, Vars::QPI, 1.8},
+            {"adjusted Pmin", 0.25, -0.1, Vars::PPI, -0.2},
+            {"adjusted Pmax", 0.25, 1.1, Vars::PPI, 2.2},
+        }};
+
+        for (const auto& test_case : limit_cases)
+        {
+          Fixture<ScalarT> adjusted(data, 0.8, 0.6);
+          adjusted.attachAllInputs();
+          setInitializationInputs(adjusted);
+          success *= adjusted.initialize(test_case.qext, test_case.pext);
+          success *= stateMatches(adjusted.repca,
+                                  {{test_case.output, test_case.expected}},
+                                  test_case.label);
+          success *= (adjusted.repca.evaluateResidual() == 0);
+          success *= allResidualsWithinInitTolerance(adjusted.repca);
+        }
+
+        {
+          auto disabled_data                         = data;
+          disabled_data.parameters[Params::Freqflag] = false;
+          disabled_data.parameters[Params::Pmax]     = 0.5;
+
+          Fixture<ScalarT> disabled_frequency(disabled_data, 0.8, 0.6);
+          disabled_frequency.attachAllInputs();
+          setInitializationInputs(disabled_frequency);
+          success *= disabled_frequency.initialize(0.25, 0.45);
+          success *= stateMatches(disabled_frequency.repca,
+                                  {{Vars::PREF, 0.8},
+                                   {Vars::PPI, 0.8},
+                                   {Vars::PEXT, 0.0}},
+                                  "measured-power limit");
+          success *= (disabled_frequency.repca.evaluateResidual() == 0);
+          success *= allResidualsWithinInitTolerance(disabled_frequency.repca);
+
+          setState(disabled_frequency.repca,
+                   {{Vars::PPI, 0.65}, {Vars::EPLIM, 0.1}});
+          setDerivative(disabled_frequency.repca, {{Vars::XPPI, 0.0}});
+          success *= (disabled_frequency.repca.evaluateResidual() == 0);
+          success *= residualsMatch(disabled_frequency.repca,
+                                    {{Vars::XPPI, 0.18}},
+                                    "measured-power limit");
+        }
+
+        {
+          Fixture<ScalarT> adjusted(data, 0.8, 0.6);
+          adjusted.attachAllInputs();
+          setInitializationInputs(adjusted);
+          success *= adjusted.initialize(1.0, 1.25);
+
+          setState(adjusted.repca,
+                   {{Vars::QPI, 1.75},
+                    {Vars::ERQLIM, 0.1},
+                    {Vars::SFRZ, 1.0},
+                    {Vars::PPI, 2.25},
+                    {Vars::EPLIM, 0.1}});
+          setDerivative(adjusted.repca, {{Vars::XQPI, 0.0}, {Vars::XPPI, 0.0}});
+          success *= (adjusted.repca.evaluateResidual() == 0);
+          success *= residualsMatch(adjusted.repca,
+                                    {{Vars::XQPI, 0.3}, {Vars::XPPI, 0.18}},
+                                    "adjusted antiwindup limits");
+
+          setState(adjusted.repca,
+                   {{Vars::QPI, 0.0},
+                    {Vars::ERQLIM, 0.0},
+                    {Vars::XQPI, 1.75},
+                    {Vars::PPI, 0.0},
+                    {Vars::EPLIM, 0.0},
+                    {Vars::XPPI, 2.25}});
+          success *= (adjusted.repca.evaluateResidual() == 0);
+          success *= residualsMatch(adjusted.repca,
+                                    {{Vars::QPI, 1.75}, {Vars::PPI, 2.25}},
+                                    "adjusted command limits");
+        }
+
         return success.report(__func__);
       }
 
@@ -726,7 +804,7 @@ namespace GridKit
             {Vars::QPI, -0.05},
             {Vars::QEXT, -1.345},
             {Vars::EF, -0.015},
-            {Vars::EP, 0.4},
+            {Vars::EP, -0.4},
             {Vars::EPLIM, 1.1},
             {Vars::PPI, 0.1},
             {Vars::PEXT, 0.05},
@@ -1003,9 +1081,9 @@ namespace GridKit
         }
 
         const std::array<DrivenCase, 3> droop_cases{{
-            {-0.9, -0.9},
+            {-0.9, -1.8},
             {0.0, 0.0},
-            {0.9, 1.8},
+            {0.9, 0.9},
         }};
         fixture.input(Ext::PREF) = 0.2;
         for (const auto& test_case : droop_cases)
@@ -1119,7 +1197,7 @@ namespace GridKit
       }
 
       /// Check every dependency-tracking Jacobian row against an independent
-      /// numerical answer key, in every selector mode and at a non-unit alpha.
+      /// numerical answer key, with both selector settings and a non-unit alpha.
       TestOutcome dependencyTracking()
       {
         TestStatus success = true;
@@ -1154,7 +1232,7 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// One rich state, every selector mode, and a non-unit alpha drive both
+      /// One rich state, both selector settings, and a non-unit alpha drive both
       /// sensitivity paths; every Enzyme CSR row must match dependency tracking.
       TestOutcome jacobian()
       {
@@ -2106,7 +2184,7 @@ namespace GridKit
              {externalColumn(index(Ext::FREQ)), -1.0},
              {externalColumn(index(Ext::FREQREF)), 1.0}},
             {{index(Vars::PMEAS), -1.0},
-             {index(Vars::EF), 2.0},
+             {index(Vars::EF), 1.0},
              {index(Vars::EP), -1.0},
              {externalColumn(index(Ext::PREF)), 2.0}},
             {{index(Vars::EPLIM), -1.0}},

@@ -143,6 +143,7 @@ namespace GridKit
       {
         using ConverterInternal = PhasorDynamics::Converter::RegcaInternalVariables;
         using ConverterParams   = PhasorDynamics::Converter::RegcaParameters;
+        using PlantInternal     = PhasorDynamics::Controller::RepcaInternalVariables;
         using PlantExternal     = PhasorDynamics::Controller::RepcaExternalVariables;
         using PlantParams       = PhasorDynamics::Controller::RepcaParameters;
 
@@ -158,8 +159,8 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> q;
 
         PhasorDynamics::Converter::RegcaData<RealT, IdxT> converter_data;
-        converter_data.parameters[ConverterParams::p0]     = static_cast<RealT>(0.0);
-        converter_data.parameters[ConverterParams::q0]     = static_cast<RealT>(0.0);
+        converter_data.parameters[ConverterParams::p0]     = static_cast<RealT>(0.4);
+        converter_data.parameters[ConverterParams::q0]     = static_cast<RealT>(0.1);
         converter_data.parameters[ConverterParams::mva]    = static_cast<RealT>(100.0);
         converter_data.parameters[ConverterParams::Tg]     = static_cast<RealT>(0.02);
         converter_data.parameters[ConverterParams::TM]     = static_cast<RealT>(0.02);
@@ -175,7 +176,8 @@ namespace GridKit
         converter_data.parameters[ConverterParams::Vhvmax] = static_cast<RealT>(1.2);
 
         PhasorDynamics::Controller::RepcaData<RealT, IdxT> plant_data;
-        plant_data.parameters[PlantParams::Tp] = static_cast<RealT>(0.05);
+        plant_data.parameters[PlantParams::mva] = static_cast<RealT>(50.0);
+        plant_data.parameters[PlantParams::Tp]  = static_cast<RealT>(0.05);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT>  converter(&bus, converter_data);
         PhasorDynamics::Controller::Repca<ScalarT, IdxT> plant(&bus, plant_data);
@@ -204,11 +206,19 @@ namespace GridKit
         success *= system.initialize() == 0;
         success *= system.evaluateResidual() == 0;
 
-        // At zero power the converter draws no branch current or power.
-        success *= isEqual(ir.read(), static_cast<ScalarT>(0.0), kTol);
-        success *= isEqual(ii.read(), static_cast<ScalarT>(0.0), kTol);
-        success *= isEqual(p.read(), static_cast<ScalarT>(0.0), kTol);
-        success *= isEqual(q.read(), static_cast<ScalarT>(0.0), kTol);
+        success *= isEqual(ir.read(), static_cast<ScalarT>(0.4), kTol);
+        success *= isEqual(ii.read(), static_cast<ScalarT>(-0.1), kTol);
+        success *= isEqual(p.read(), static_cast<ScalarT>(0.4), kTol);
+        success *= isEqual(q.read(), static_cast<ScalarT>(0.1), kTol);
+
+        const auto* state = plant.y().getData();
+
+        success *= isEqual(state[static_cast<size_t>(PlantInternal::PMEAS)],
+                           static_cast<ScalarT>(0.8),
+                           kTol);
+        success *= isEqual(state[static_cast<size_t>(PlantInternal::QMEAS)],
+                           static_cast<ScalarT>(0.2),
+                           kTol);
 
         const auto* residual = plant.getResidual().getData();
         for (IdxT row = 0; row < plant.size(); ++row)

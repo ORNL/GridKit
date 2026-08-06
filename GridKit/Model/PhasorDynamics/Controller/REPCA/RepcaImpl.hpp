@@ -187,6 +187,8 @@ namespace GridKit
         check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
         check(fdbd1_ <= ZERO<RealT> && ZERO<RealT> <= fdbd2_,
               "fdbd1 <= 0 <= fdbd2 is required");
+        check(Ddn_ >= ZERO<RealT>, "Ddn must be non-negative");
+        check(Dup_ >= ZERO<RealT>, "Dup must be non-negative");
         check(femin_ <= ZERO<RealT> && ZERO<RealT> <= femax_,
               "femin <= 0 <= femax is required");
         check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
@@ -242,11 +244,11 @@ namespace GridKit
        * @pre `qext` and, when frequency control is enabled, `pext` contain the
        *      initial plant commands.
        *
-       * @post On failure no state, derivative, latch, or signal storage is
-       *       modified.
+       * @post On failure, states, derivatives, limits, latches, and signal
+       *       values are unchanged.
        *
        * @return 0 on success; nonzero when allocation, configuration, initial-
-       *         value, candidate, command-limit, or steady-state checks fail.
+       *         value, candidate, or steady-state checks fail.
        */
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::initialize()
@@ -342,8 +344,8 @@ namespace GridKit
         const ScalarT zero = static_cast<ScalarT>(ZERO<RealT>);
         ScalarT       erq0{};
         ScalarT       erqdb0{};
-        if (!solveLimiterInput(zero, emin_, emax_, erqdb0)
-            || !solveDeadbandInput(erqdb0, dbdlow_, dbdupper_, erq0))
+        if (!invertClamp(zero, emin_, emax_, erqdb0)
+            || !invertDeadband(erqdb0, dbdlow_, dbdupper_, erq0))
         {
           Log::error() << "Repca: reactive error blocks have no finite steady input\n";
           return 1;
@@ -352,14 +354,17 @@ namespace GridKit
         const ScalarT qpi0    = qext0;
         const ScalarT xqlag0  = qpi0;
 
+        const RealT qmin = std::min(Qmin_, static_cast<RealT>(qpi0));
+        const RealT qmax = std::max(Qmax_, static_cast<RealT>(qpi0));
+
         ScalarT qpi_input0{};
-        if (!solveLimiterInput(qpi0, Qmin_, Qmax_, qpi_input0))
+        if (!invertClamp(qpi0, qmin, qmax, qpi_input0))
         {
-          Log::error() << "Repca: initial reactive-power command is outside Qmin/Qmax\n";
+          Log::error() << "Repca: reactive-power PI limiter has no finite steady input\n";
           return 1;
         }
         const ScalarT xqpi0      = qpi_input0 - Kp_ * erqlim0;
-        const ScalarT q_aw_rate0 = Math::antiwindup(qpi0, Ki_ * erqlim0, Qmin_, Qmax_);
+        const ScalarT q_aw_rate0 = Math::antiwindup(qpi0, Ki_ * erqlim0, qmin, qmax);
         const ScalarT xqpi_rate0 = sfrz0 * q_aw_rate0;
         if (!is_finite(q_aw_rate0) || !is_finite(xqpi_rate0)
             || std::abs(static_cast<RealT>(xqpi_rate0)) > INITIALIZATION_TOLERANCE)
@@ -370,8 +375,8 @@ namespace GridKit
 
         ScalarT frequency_error0{};
         ScalarT ep0{};
-        if (!solveDeadbandInput(zero, fdbd1_, fdbd2_, frequency_error0)
-            || !solveLimiterInput(zero, femin_, femax_, ep0))
+        if (!invertDeadband(zero, fdbd1_, fdbd2_, frequency_error0)
+            || !invertClamp(zero, femin_, femax_, ep0))
         {
           Log::error() << "Repca: active error blocks have no finite steady input\n";
           return 1;
@@ -379,23 +384,20 @@ namespace GridKit
         const ScalarT ef0    = zero;
         const ScalarT pfreq0 = droop(ef0, Ddn_, Dup_);
         const ScalarT eplim0 = zero;
-        const ScalarT pref0  = Freqflag_ ? pext0 : Math::clamp(pmeas0, Pmin_, Pmax_);
+        const ScalarT pref0  = Freqflag_ ? pext0 : pmeas0;
         const ScalarT ppi0   = pref0;
-        ScalarT       ppi_input0{};
-        if (Freqflag_)
+
+        const RealT pmin = std::min(Pmin_, static_cast<RealT>(ppi0));
+        const RealT pmax = std::max(Pmax_, static_cast<RealT>(ppi0));
+
+        ScalarT ppi_input0{};
+        if (!invertClamp(ppi0, pmin, pmax, ppi_input0))
         {
-          if (!solveLimiterInput(ppi0, Pmin_, Pmax_, ppi_input0))
-          {
-            Log::error() << "Repca: initial active-power command is outside Pmin/Pmax\n";
-            return 1;
-          }
-        }
-        else
-        {
-          ppi_input0 = pmeas0;
+          Log::error() << "Repca: active-power PI limiter has no finite steady input\n";
+          return 1;
         }
         const ScalarT xppi0      = ppi_input0 - Kpg_ * eplim0;
-        const ScalarT p_aw_rate0 = Math::antiwindup(ppi0, Kig_ * eplim0, Pmin_, Pmax_);
+        const ScalarT p_aw_rate0 = Math::antiwindup(ppi0, Kig_ * eplim0, pmin, pmax);
         if (!is_finite(p_aw_rate0)
             || std::abs(static_cast<RealT>(p_aw_rate0)) > INITIALIZATION_TOLERANCE)
         {
@@ -486,6 +488,13 @@ namespace GridKit
         y[PPI]    = ppi0;
         y[PEXT]   = pext_output0;
 
+        const bool q_adjusted = qmin != Qmin_ || qmax != Qmax_;
+        const bool p_adjusted = pmin != Pmin_ || pmax != Pmax_;
+        Qmin_                 = qmin;
+        Qmax_                 = qmax;
+        Pmin_                 = pmin;
+        Pmax_                 = pmax;
+
         freqref_set_ = freqref0;
         vref_set_    = vref0;
         qref_set_    = qref0_system;
@@ -508,6 +517,24 @@ namespace GridKit
         {
           signals_.template writeExternalVariable<RepcaExternalVariables::FREQREF>(
               freqref_set_);
+        }
+
+        if (q_adjusted)
+        {
+          Log::warning() << "Repca: initial reactive PI output is outside [Qmin, Qmax]; "
+                            "the limits are adjusted to include the initialized value\n";
+        }
+        if (p_adjusted)
+        {
+          Log::warning() << "Repca: initial active PI output is outside [Pmin, Pmax]; "
+                            "the limits are adjusted to include the initialized value\n";
+        }
+        if (Freqflag_
+            && (Ddn_ != ZERO<RealT> || Dup_ != ZERO<RealT>)
+            && !signals_.template isAttached<RepcaExternalVariables::FREQ>())
+        {
+          Log::warning() << "Repca: Freqflag is enabled without a freq signal; "
+                            "frequency remains nominal and cannot track bus-frequency deviations\n";
         }
 
         y_.setDataUpdated();
@@ -820,18 +847,15 @@ namespace GridKit
        * @brief Smooth asymmetric frequency-droop response
        *
        * @param[in] error Deadbanded frequency error.
-       * @param[in] gain_down Down-frequency response gain.
-       * @param[in] gain_up Up-frequency response gain.
+       * @param[in] down Down-regulation (overfrequency) gain.
+       * @param[in] up Up-regulation (underfrequency) gain.
        * @return Active-power frequency response.
        */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline scalar_type
-      Repca<scalar_type, index_type>::droop(
-          const ScalarT error,
-          const RealT   gain_down,
-          const RealT   gain_up)
+      Repca<scalar_type, index_type>::droop(ScalarT error, RealT down, RealT up)
       {
-        return error * (gain_up + (gain_down - gain_up) * Math::sigmoid(error));
+        return error * (down + (up - down) * Math::sigmoid(error));
       }
 
       /**
@@ -1012,51 +1036,48 @@ namespace GridKit
        *
        * This initialization-only helper inverts the CommonMath smooth clamp,
        * including collapsed limits. Exact-bound requests use a 0.1 offset,
-       * leaving less than 2e-13 at CommonMath MU = 240. It must not be called
-       * from residual evaluation.
+       * leaving less than 2e-13 at CommonMath MU = 240.
        *
-       * @param[in] requested_output Requested smooth-clamp output.
-       * @param[in] lower_limit Lower clamp limit.
-       * @param[in] upper_limit Upper clamp limit.
-       * @param[out] limiter_input Recovered clamp input on success.
+       * @param[in] output Requested smooth-clamp output.
+       * @param[in] lower Lower clamp limit.
+       * @param[in] upper Upper clamp limit.
+       * @param[out] input Recovered clamp input on success.
        * @return true when a finite admissible input was recovered.
+       * @warning Contains conditional branching and is for initialization only;
+       *          do not use it during residual evaluation.
        */
       template <typename scalar_type, typename index_type>
-      bool Repca<scalar_type, index_type>::solveLimiterInput(
-          ScalarT  requested_output,
-          RealT    lower_limit,
-          RealT    upper_limit,
-          ScalarT& limiter_input) const
+      bool Repca<scalar_type, index_type>::invertClamp(ScalarT output, RealT lower, RealT upper, ScalarT& input) const
       {
-        const RealT output_value = static_cast<RealT>(requested_output);
+        const RealT value = static_cast<RealT>(output);
 
-        if (!std::isfinite(output_value)
-            || !std::isfinite(lower_limit)
-            || !std::isfinite(upper_limit)
-            || lower_limit > upper_limit
-            || output_value < lower_limit
-            || output_value > upper_limit)
+        if (!std::isfinite(value)
+            || !std::isfinite(lower)
+            || !std::isfinite(upper)
+            || lower > upper
+            || value < lower
+            || value > upper)
         {
           return false;
         }
 
-        const RealT width = upper_limit - lower_limit;
+        const RealT width = upper - lower;
         if (width <= INITIALIZATION_TOLERANCE)
         {
-          limiter_input = static_cast<ScalarT>(lower_limit);
+          input = static_cast<ScalarT>(lower);
           return true;
         }
 
-        const RealT distance_from_lower = output_value - lower_limit;
-        const RealT distance_from_upper = upper_limit - output_value;
+        const RealT distance_from_lower = value - lower;
+        const RealT distance_from_upper = upper - value;
         if (distance_from_lower <= INITIALIZATION_TOLERANCE)
         {
-          limiter_input = static_cast<ScalarT>(lower_limit - INITIALIZATION_LIMIT_OFFSET);
+          input = static_cast<ScalarT>(lower - INITIALIZATION_LIMIT_OFFSET);
           return true;
         }
         if (distance_from_upper <= INITIALIZATION_TOLERANCE)
         {
-          limiter_input = static_cast<ScalarT>(upper_limit + INITIALIZATION_LIMIT_OFFSET);
+          input = static_cast<ScalarT>(upper + INITIALIZATION_LIMIT_OFFSET);
           return true;
         }
 
@@ -1065,92 +1086,81 @@ namespace GridKit
         const RealT scaled_upper_distance = mu * distance_from_upper;
         const RealT log_lower             = logOneMinusExp(scaled_lower_distance);
         const RealT log_upper             = logOneMinusExp(scaled_upper_distance);
-        const RealT correction =
-            (scaled_lower_distance + log_lower - log_upper) / mu;
+        const RealT correction            = (scaled_lower_distance + log_lower - log_upper) / mu;
 
-        limiter_input = static_cast<ScalarT>(lower_limit + correction);
-        return std::isfinite(static_cast<RealT>(limiter_input));
+        input = static_cast<ScalarT>(lower + correction);
+        return std::isfinite(static_cast<RealT>(input));
       }
 
       /**
        * @brief Recover an input for a requested smooth deadband output
        *
-       * @param[in] requested_output Requested deadband output.
-       * @param[in] lower_limit Lower deadband threshold.
-       * @param[in] upper_limit Upper deadband threshold.
-       * @param[out] deadband_input Recovered deadband input on success.
+       * @param[in] output Requested deadband output.
+       * @param[in] lower Lower deadband threshold.
+       * @param[in] upper Upper deadband threshold.
+       * @param[out] input Recovered deadband input on success.
        * @return true when a finite input was recovered.
+       * @warning Contains conditional branching and is for initialization only;
+       *          do not use it during residual evaluation.
        */
       template <typename scalar_type, typename index_type>
-      bool Repca<scalar_type, index_type>::solveDeadbandInput(
-          ScalarT  requested_output,
-          RealT    lower_limit,
-          RealT    upper_limit,
-          ScalarT& deadband_input) const
+      bool Repca<scalar_type, index_type>::invertDeadband(ScalarT output, RealT lower, RealT upper, ScalarT& input) const
       {
-        const RealT output_value = static_cast<RealT>(requested_output);
+        const RealT value = static_cast<RealT>(output);
 
-        if (!std::isfinite(output_value)
-            || !std::isfinite(lower_limit)
-            || !std::isfinite(upper_limit)
-            || lower_limit > upper_limit)
+        if (!std::isfinite(value)
+            || !std::isfinite(lower)
+            || !std::isfinite(upper)
+            || lower > upper)
         {
           return false;
         }
 
-        const RealT midpoint = HALF<RealT> * lower_limit
-                               + HALF<RealT> * upper_limit;
-        if (std::abs(output_value) <= INITIALIZATION_TOLERANCE)
+        const RealT midpoint = HALF<RealT> * lower + HALF<RealT> * upper;
+        if (std::abs(value) <= INITIALIZATION_TOLERANCE)
         {
-          deadband_input = static_cast<ScalarT>(midpoint);
+          input = static_cast<ScalarT>(midpoint);
           return true;
         }
 
         RealT lower_input = midpoint;
         RealT upper_input = midpoint;
-        if (output_value < ZERO<RealT>)
+        if (value < ZERO<RealT>)
         {
-          lower_input = lower_limit + output_value;
+          lower_input = lower + value;
         }
         else
         {
-          upper_input = upper_limit + output_value;
+          upper_input = upper + value;
         }
 
-        const RealT lower_output = Math::deadband2(lower_input,
-                                                   lower_limit,
-                                                   upper_limit);
-        const RealT upper_output = Math::deadband2(upper_input,
-                                                   lower_limit,
-                                                   upper_limit);
+        const RealT lower_output = Math::deadband2(lower_input, lower, upper);
+        const RealT upper_output = Math::deadband2(upper_input, lower, upper);
         if (!std::isfinite(lower_output)
             || !std::isfinite(upper_output)
-            || lower_output - output_value > INITIALIZATION_TOLERANCE
-            || output_value - upper_output > INITIALIZATION_TOLERANCE)
+            || lower_output - value > INITIALIZATION_TOLERANCE
+            || value - upper_output > INITIALIZATION_TOLERANCE)
         {
           return false;
         }
 
         for (std::size_t iteration = 0; iteration < 128; ++iteration)
         {
-          const RealT input = lower_input
-                              + HALF<RealT> * (upper_input - lower_input);
-          if (Math::deadband2(input, lower_limit, upper_limit) < output_value)
+          const RealT mid = lower_input + HALF<RealT> * (upper_input - lower_input);
+          if (Math::deadband2(mid, lower, upper) < value)
           {
-            lower_input = input;
+            lower_input = mid;
           }
           else
           {
-            upper_input = input;
+            upper_input = mid;
           }
         }
 
-        const RealT input = lower_input
-                            + HALF<RealT> * (upper_input - lower_input);
-        deadband_input = static_cast<ScalarT>(input);
-        return std::isfinite(input)
-               && std::abs(Math::deadband2(input, lower_limit, upper_limit)
-                           - output_value)
+        const RealT result = lower_input + HALF<RealT> * (upper_input - lower_input);
+        input              = static_cast<ScalarT>(result);
+        return std::isfinite(result)
+               && std::abs(Math::deadband2(result, lower, upper) - value)
                       <= INITIALIZATION_TOLERANCE;
       }
 
@@ -1166,7 +1176,7 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       typename Repca<scalar_type, index_type>::RealT
-      Repca<scalar_type, index_type>::logOneMinusExp(RealT x) const
+      Repca<scalar_type, index_type>::logOneMinusExp(RealT x)
       {
         static constexpr auto log_two = std::numbers::ln2_v<RealT>;
 

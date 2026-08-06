@@ -10,12 +10,13 @@ resources.
 
 > [!NOTE]
 > `freq` is optional because the regulated bus does not yet expose a frequency
-> signal.
+> signal. With frequency control and nonzero droop enabled, omitting it holds
+> frequency at 1.0 p.u. and logs a warning. `freq` and `freqref` use absolute
+> per-unit frequency.
 
 > [!WARNING]
 > GridKit does not yet apply the associated generator's Governor Response Limits
-> modes `Down Only` and `Fixed` to REPCA. The model always uses its configured
-> $P^{\min}$ and $P^{\max}$.
+> modes `Down Only` and `Fixed` to REPCA.
 
 ## Block Diagram
 
@@ -26,9 +27,11 @@ Figure 1: REPCA plant-control model. Figure courtesy of
 
 ## Model Parameters
 
-Symbol                              | Units     | JSON        | Description                                             | Typical Value | Note
+All parameters are optional; omitted keys use the defaults below.
+
+Symbol                              | Units     | JSON        | Description                                             | Default | Note
 ------------------------------------|-----------|-------------|---------------------------------------------------------|---------------|------
-$S^\mathrm{base}$                  | [MVA]     | `mva`       | REPCA component power base                              | 100.0         | Component base
+$S^\mathrm{base}$                  | [MVA]     | `mva`       | REPCA component power base                              | 100.0         | Set to the associated converter base
 $s_\mathrm{comp}$                  | [boolean] | `VcompFlag` | Voltage-compensation selector                           | `true`        | `true` = line-drop compensation, `false` = reactive droop
 $s_\mathrm{ref}$                   | [boolean] | `RefFlag`   | Reactive-loop reference selector                        | `true`        | `true` = voltage control, `false` = reactive-power control
 $s_\mathrm{freq}$                  | [boolean] | `Freqflag`  | Active-power output selector                            | `false`       | `true` = command enabled, `false` = zero output
@@ -50,8 +53,8 @@ $T_\mathrm{fv}$                    | [sec]     | `Tfv`       | Reactive-command 
 $T_\mathrm{p}$                     | [sec]     | `Tp`        | Active-power measurement filter time constant           | 0.0           |
 $D_\mathrm{bd1}^{f}$               | [p.u.]    | `fdbd1`     | Lower frequency-error deadband threshold                | 0.0           |
 $D_\mathrm{bd2}^{f}$               | [p.u.]    | `fdbd2`     | Upper frequency-error deadband threshold                | 0.0           |
-$D_\mathrm{dn}$                    | [p.u.]    | `Ddn`       | Down-frequency droop response gain                      | 20.0          |
-$D_\mathrm{up}$                    | [p.u.]    | `Dup`       | Up-frequency droop response gain                        | 0.0           |
+$D_\mathrm{dn}$                    | [p.u./p.u.] | `Ddn`     | Down-regulation (overfrequency) gain                    | 20.0          |
+$D_\mathrm{up}$                    | [p.u./p.u.] | `Dup`     | Up-regulation (underfrequency) gain                     | 0.0           |
 $e_P^{\max}$                        | [p.u.]    | `femax`     | Maximum active-power error limit                        | 1.0           |
 $e_P^{\min}$                        | [p.u.]    | `femin`     | Minimum active-power error limit                        | -1.0          |
 $K_\mathrm{pg}$                    | [p.u.]    | `Kpg`       | Active-power controller proportional gain               | 10.0          |
@@ -71,6 +74,7 @@ All real parameters must be finite. Invalid parameter sets are rejected by:
   e^{\min} &\le 0 \le e^{\max} \\
   Q^{\min} &\le Q^{\max} \\
   D_\mathrm{bd1}^{f} &\le 0 \le D_\mathrm{bd2}^{f} \\
+  D_\mathrm{dn},D_\mathrm{up} &\ge 0 \\
   e_P^{\min} &\le 0 \le e_P^{\max} \\
   P^{\min} &\le P^{\max}
 \end{aligned}
@@ -96,7 +100,8 @@ floor with a warning:
 ```
 
 $S^\mathrm{sys}$ is the system power base; $k_\mathrm{base}$ converts system-base
-power and current signals to component base.
+power and current signals to component base. GridKit does not expose `PUflag`;
+these ports are always on system base.
 
 ## Model Ports
 
@@ -107,11 +112,11 @@ Name        | Port   | Init    | Description
 `ii`        | Input  | Known   | Branch-current imaginary component on system base
 `p`         | Input  | Known   | Branch active power on system base
 `q`         | Input  | Known   | Branch reactive power on system base
-`freq`      | Input  | Known   | Optional frequency input; defaults to 1.0 p.u.[^frequency-measurement]
+`freq`      | Input  | Known   | Optional absolute frequency; defaults to 1.0 p.u.[^frequency-measurement]
 `vref`      | Input  | Unknown | Voltage-control reference
 `pref`      | Input  | Unknown | Plant active-power reference on system base
 `qref`      | Input  | Unknown | Reactive-power reference on system base
-`freqref`   | Input  | Unknown | Frequency reference
+`freqref`   | Input  | Unknown | Absolute per-unit frequency reference
 `qext`      | Output | Known   | Reactive-power command on system base
 `pext`      | Output | Known   | Active-power command on system base
 
@@ -265,6 +270,7 @@ finite inputs that reproduce the requested smooth-block outputs.
   e_\mathrm{RQ} &\leftarrow \text{deadband2}^{-1}(e_\mathrm{RQ}^\mathrm{db};\,D_\mathrm{bd1},D_\mathrm{bd2}) \\
   e_\mathrm{RQ}^\mathrm{lim} &\leftarrow 0 \\
   Q^\mathrm{PI} &\leftarrow k_\mathrm{base}Q^\mathrm{ext} \\
+  Q^{\min} &\leftarrow \min(Q^{\min},Q^\mathrm{PI}),\quad Q^{\max}\leftarrow \max(Q^{\max},Q^\mathrm{PI}) \\
   x_Q^\mathrm{lag} &\leftarrow Q^\mathrm{PI} \\
   u_Q^\mathrm{PI} &\leftarrow \text{clamp}^{-1}(Q^\mathrm{PI};\,Q^{\min},Q^{\max}) \\
   x_Q^\mathrm{PI} &\leftarrow u_Q^\mathrm{PI} - K_\mathrm{p}e_\mathrm{RQ}^\mathrm{lim} \\
@@ -275,25 +281,23 @@ finite inputs that reproduce the requested smooth-block outputs.
   e_P^\mathrm{lim} &\leftarrow 0 \\
   P^\mathrm{ref} &\leftarrow \begin{cases}
     k_\mathrm{base}P^\mathrm{ext} & s_\mathrm{freq}=1 \\
-    \text{clamp}(P^\mathrm{meas};\,P^{\min},P^{\max}) & s_\mathrm{freq}=0
-  \end{cases} \\
-  P^\mathrm{PI} &\leftarrow P^\mathrm{ref} \\
-  u_P^\mathrm{PI} &\leftarrow \begin{cases}
-    \text{clamp}^{-1}(P^\mathrm{PI};\,P^{\min},P^{\max}) & s_\mathrm{freq}=1 \\
     P^\mathrm{meas} & s_\mathrm{freq}=0
   \end{cases} \\
+  P^\mathrm{PI} &\leftarrow P^\mathrm{ref} \\
+  P^{\min} &\leftarrow \min(P^{\min},P^\mathrm{PI}),\quad P^{\max}\leftarrow \max(P^{\max},P^\mathrm{PI}) \\
+  u_P^\mathrm{PI} &\leftarrow \text{clamp}^{-1}(P^\mathrm{PI};\,P^{\min},P^{\max}) \\
   x_P^\mathrm{PI} &\leftarrow u_P^\mathrm{PI} - K_\mathrm{pg}e_P^\mathrm{lim} \\
   P^\mathrm{ext} &\leftarrow \dfrac{s_\mathrm{freq}}{k_\mathrm{base}}P^\mathrm{ref} \\
   \dot{V}^\mathrm{meas},\dot{Q}^\mathrm{meas}, \dot{x}_Q^\mathrm{PI},\dot{x}_Q^\mathrm{lag}, \dot{P}^\mathrm{meas},\dot{x}_P^\mathrm{PI},\dot{P}^\mathrm{ref} &\leftarrow 0.
 \end{aligned}
 ```
 
+If an initial PI output falls outside its configured limits, REPCA expands the
+limits to include it and logs a warning.
+
 Initialization rejects an operating point if:
 
 - a required input or derived value is not finite;
-- $k_\mathrm{base}Q^\mathrm{ext}\notin[Q^{\min},Q^{\max}]$, or
-  $s_\mathrm{freq}=1$ and
-  $k_\mathrm{base}P^\mathrm{ext}\notin[P^{\min},P^{\max}]$; or
 - the gated reactive-power or active-power PI state rate is nonfinite or does
   not vanish within the implementation tolerance.
 
@@ -325,14 +329,15 @@ Output          | Units  | Description                         | Note
 - `validation()` checks defaults, parameter domains, signal contracts, and time floors.
 - `initializationAndSignals()` checks reconstruction, bases, signals, monitors,
   tags, and selectors.
-- `initializationDomain()` checks rejection, asymmetric and collapsed limits,
-  nonfinite values, and atomicity.
+- `initializationDomain()` checks adjusted and collapsed limits, nonfinite
+  values, and atomicity.
 - `residualEquations()` checks every residual against a fixed answer key.
 - `reactiveControl()` checks compensation and reference modes, voltage freeze,
   deadbands, smooth limits, anti-windup, and lead-lag behavior.
 - `activePowerControl()` checks frequency selection, deadband, droop, smooth
   limits, anti-windup, and the output lag.
 - `derivatives()` checks differential-row derivative signs.
+- `dependencyTracking()` checks fixed numerical and structural Jacobian oracles.
 - `jacobian()` checks fixed numerical and structural oracles, plus Enzyme
   agreement to $10^{-9}$ when enabled.
 
@@ -340,7 +345,7 @@ Output          | Units  | Description                         | Note
 
 ```math
 \text{droop}(e;D_\mathrm{dn},D_\mathrm{up})
-=e\left[D_\mathrm{up}+(D_\mathrm{dn}-D_\mathrm{up})\sigma(e)\right],
+=e\left[D_\mathrm{dn}+(D_\mathrm{up}-D_\mathrm{dn})\sigma(e)\right],
 ```
 
 where $\sigma$ is GridKit's smooth

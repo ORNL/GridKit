@@ -62,11 +62,11 @@ namespace GridKit
         II,      ///< \f$I_\mathrm{i}\f$ Required branch-current imaginary component on system base [p.u.]
         P,       ///< \f$P\f$ Required branch active power on system base [p.u.]
         Q,       ///< \f$Q\f$ Required branch reactive power on system base [p.u.]
-        FREQ,    ///< \f$f\f$ Optional frequency input [p.u.]
+        FREQ,    ///< \f$f\f$ Optional absolute frequency input [p.u.]
         VREF,    ///< \f$V^\mathrm{ref}\f$ Optional voltage-control reference [p.u.]
         PREF,    ///< \f$P_\mathrm{plant}^\mathrm{ref}\f$ Optional plant active-power reference on system base [p.u.]
         QREF,    ///< \f$Q^\mathrm{ref}\f$ Optional reactive-power reference on system base [p.u.]
-        FREQREF, ///< \f$f^\mathrm{ref}\f$ Optional frequency reference [p.u.]
+        FREQREF, ///< \f$f^\mathrm{ref}\f$ Optional absolute frequency reference [p.u.]
         MAXIMUM  ///< Number of external variables
       };
 
@@ -141,30 +141,21 @@ namespace GridKit
             ScalarT*       f);
 
       private:
+        /// Smooth asymmetric frequency-droop response.
+        static __attribute__((always_inline)) inline ScalarT droop(ScalarT error, RealT down, RealT up);
+
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
 
-        bool solveLimiterInput(ScalarT  requested_output,
-                               RealT    lower_limit,
-                               RealT    upper_limit,
-                               ScalarT& limiter_input) const;
+        bool invertClamp(ScalarT output, RealT lower, RealT upper, ScalarT& input) const;
 
-        bool solveDeadbandInput(ScalarT  requested_output,
-                                RealT    lower_limit,
-                                RealT    upper_limit,
-                                ScalarT& deadband_input) const;
+        bool invertDeadband(ScalarT output, RealT lower, RealT upper, ScalarT& input) const;
 
-        RealT logOneMinusExp(RealT x) const;
+        static RealT logOneMinusExp(RealT x);
 
         [[gnu::always_inline]] inline ScalarT toComponentBase(ScalarT value) const;
         ScalarT                               toSystemBase(ScalarT value) const;
-
-        /// Smooth asymmetric frequency-droop response.
-        static __attribute__((always_inline)) inline ScalarT droop(
-            const ScalarT error,
-            const RealT   gain_down,
-            const RealT   gain_up);
 
         ScalarT& Vr();
         ScalarT& Vi();
