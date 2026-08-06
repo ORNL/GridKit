@@ -2224,6 +2224,8 @@ namespace GridKit
         return expected;
       }
 
+      // A missing Jacobian entry means zero. Treat it the same as an explicit zero
+      // so rows with the same values compare equal.
       static RealT mapValue(const DependencyTracking::Variable::DependencyMap& row,
                             size_t                                             column)
       {

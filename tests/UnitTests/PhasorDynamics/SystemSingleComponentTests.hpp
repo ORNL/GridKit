@@ -1,4 +1,3 @@
-#include <array>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
@@ -258,14 +257,8 @@ namespace GridKit
         using Inputs = PhasorDynamics::Controller::RepcaSignalInputs;
         using Vars   = PhasorDynamics::Controller::RepcaInternalVariables;
 
-        constexpr IdxT                  bus_id = static_cast<IdxT>(1);
-        constexpr std::array<Inputs, 4> required_inputs{{
-            Inputs::ir,
-            Inputs::ii,
-            Inputs::p,
-            Inputs::q,
-        }};
-        constexpr size_t                input_count = required_inputs.size();
+        constexpr IdxT bus_id   = static_cast<IdxT>(1);
+        constexpr IdxT input_id = static_cast<IdxT>(1);
 
         TestStatus success = true;
 
@@ -276,28 +269,22 @@ namespace GridKit
         data.bus[0].Vr0      = static_cast<RealT>(1.0);
         data.bus[0].Vi0      = static_cast<RealT>(0.0);
 
-        data.signal.resize(input_count);
+        data.signal.resize(1);
+        data.signal[0].signal_id = input_id;
 
         typename PhasorDynamics::SystemModelData<RealT, IdxT>::RepcaDataT repca_data;
-        repca_data.buses[Buses::bus] = bus_id;
-        for (size_t port = 0; port < input_count; ++port)
-        {
-          const auto signal_id                            = static_cast<IdxT>(port + 1);
-          data.signal[port].signal_id                     = signal_id;
-          repca_data.signal_inputs[required_inputs[port]] = signal_id;
-        }
+        repca_data.buses[Buses::bus]         = bus_id;
+        repca_data.signal_inputs[Inputs::ir] = input_id;
+        repca_data.signal_inputs[Inputs::ii] = input_id;
+        repca_data.signal_inputs[Inputs::p]  = input_id;
+        repca_data.signal_inputs[Inputs::q]  = input_id;
         data.repca.push_back(repca_data);
 
-        std::array<ScalarT, input_count> input_values{};
-        std::array<IdxT, input_count>    input_indices{};
-        input_indices.fill(INVALID_INDEX<IdxT>);
+        ScalarT input_value{};
+        IdxT    input_index = INVALID_INDEX<IdxT>;
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
-        for (size_t port = 0; port < input_count; ++port)
-        {
-          system.getSignal(static_cast<IdxT>(port + 1))
-              ->set(&input_values[port], &input_indices[port]);
-        }
+        system.getSignal(input_id)->set(&input_value, &input_index);
 
         success *= system.allocate() == 0;
         success *= system.initialize() == 0;
