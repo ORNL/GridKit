@@ -78,9 +78,16 @@ cmake ../GridKit \
 
 ### Running tests
 
+On Linux:
 ```sh
 cd build
 ctest --output-on-failure
+```
+
+On Windows:
+```powershell
+cd build
+ctest -C Debug --output-on-failure
 ```
 
 ### Testing the installation
@@ -102,6 +109,8 @@ are placed under that consumer directory.
 
 This target must be run **after** `cmake --install` because it depends on the
 installed headers, libraries, and CMake config files.
+
+On MSVC, instead use `cmake --build . --target test_install`.
 
 ---
 
