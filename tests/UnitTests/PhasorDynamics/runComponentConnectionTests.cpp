@@ -8,6 +8,7 @@ int main()
   GridKit::Testing::ComponentConnectionTests<double, size_t> test;
 
   result += test.genrouEsdc1a();
+  result += test.genrouHygov();
 
   return result.summary();
 }

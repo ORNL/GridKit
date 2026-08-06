@@ -6,6 +6,8 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1a.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/HYGOV/Hygov.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -74,6 +76,55 @@ namespace GridKit
 
         const auto* residual = exciter.getResidual().getData();
         for (IdxT row = 0; row < exciter.size(); ++row)
+        {
+          success *= isEqual(residual[row], static_cast<ScalarT>(0.0), kTol);
+        }
+
+        return success.report(__func__);
+      }
+
+      /// GENROU initializes first and writes the mechanical power it needs to
+      /// the shared node. HYGOV then initializes around that value and must
+      /// leave it unchanged at a steady state. The speed port is left
+      /// unattached, so HYGOV reads the exactly zero deviation its
+      /// initialization requires.
+      TestOutcome genrouHygov()
+      {
+        using MachineExternal  = PhasorDynamics::GenrouExternalVariables;
+        using GovernorInternal = PhasorDynamics::Governor::HygovInternalVariables;
+        using GovernorParams   = PhasorDynamics::Governor::HygovParameters;
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
+            static_cast<ScalarT>(1.0),
+            static_cast<ScalarT>(0.0));
+        PhasorDynamics::SignalNode<ScalarT, IdxT> pmech;
+        PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus);
+
+        PhasorDynamics::Governor::HygovData<RealT, IdxT> governor_data;
+        governor_data.parameters[GovernorParams::Tnp] = static_cast<RealT>(1.0);
+
+        PhasorDynamics::Governor::Hygov<ScalarT, IdxT> governor(governor_data);
+
+        machine.getSignals().template attachSignalNode<MachineExternal::PM>(&pmech);
+        governor.getSignals().template assignSignalNode<GovernorInternal::PMECH>(&pmech);
+
+        system.addBus(&bus);
+        system.addComponent(&machine);
+        system.addComponent(&governor);
+
+        success *= system.allocate() == 0;
+        success *= pmech.linked();
+        success *= system.initialize() == 0;
+        success *= system.evaluateResidual() == 0;
+
+        // At zero machine power the required mechanical power is zero.
+        success *= isEqual(pmech.read(), static_cast<ScalarT>(0.0), kTol);
+
+        const auto* residual = governor.getResidual().getData();
+        for (IdxT row = 0; row < governor.size(); ++row)
         {
           success *= isEqual(residual[row], static_cast<ScalarT>(0.0), kTol);
         }

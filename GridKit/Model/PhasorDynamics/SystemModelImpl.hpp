@@ -315,6 +315,42 @@ namespace GridKit
         addComponent(gov);
       }
 
+      // Add HYGOV governors
+      for (const auto& hygovdata : data.hygov)
+      {
+        auto* hygov = new Hygov<ScalarT, IdxT>(hygovdata);
+
+        if (hygovdata.signal_inputs.contains(HygovSignalInputs::speed))
+        {
+          IdxT           speed = hygovdata.signal_inputs.at(HygovSignalInputs::speed);
+          constexpr auto OMEGA = HygovExternalVariables::OMEGA;
+          hygov->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
+        }
+
+        if (hygovdata.signal_inputs.contains(HygovSignalInputs::pref))
+        {
+          IdxT           pref = hygovdata.signal_inputs.at(HygovSignalInputs::pref);
+          constexpr auto PREF = HygovExternalVariables::PREF;
+          hygov->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+        }
+
+        if (hygovdata.signal_inputs.contains(HygovSignalInputs::paux))
+        {
+          IdxT           paux = hygovdata.signal_inputs.at(HygovSignalInputs::paux);
+          constexpr auto PAUX = HygovExternalVariables::PAUX;
+          hygov->getSignals().template attachSignalNode<PAUX>(getSignal(paux));
+        }
+
+        if (hygovdata.signal_outputs.contains(HygovSignalOutputs::pmech))
+        {
+          IdxT           pmech = hygovdata.signal_outputs.at(HygovSignalOutputs::pmech);
+          constexpr auto PMECH = HygovInternalVariables::PMECH;
+          hygov->getSignals().template assignSignalNode<PMECH>(getSignal(pmech));
+        }
+
+        addComponent(hygov);
+      }
+
       for (const auto& excitedata : data.exciter)
       {
         IdxT bus_index = 0;
@@ -714,20 +750,22 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
+      int status = 0;
+
       for (const auto& bus : buses_)
       {
-        bus->initialize();
+        status += bus->initialize();
       }
 
       for (const auto& component : components_)
       {
-        component->initialize();
+        status += component->initialize();
       }
 
       y_.setDataUpdated();
       yp_.setDataUpdated();
 
-      return 0;
+      return status;
     }
 
     /**
