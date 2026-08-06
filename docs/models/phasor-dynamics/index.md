@@ -1,10 +1,9 @@
 (models-phasor-dynamics)=
 # Phasor Dynamics
 
-```{include} ../../../GridKit/Model/PhasorDynamics/README.md
-:start-line: 1
-:relative-images:
-```
+Phasor Dynamics models represent network components and controls for
+time-domain dynamic simulation. Browse by family or use the catalog to open a
+specific model directly.
 
 ::::{grid} 1 2 3 3
 :gutter: 3
@@ -56,23 +55,6 @@
 ```{model-catalog}
 ```
 
-## Case Format
-
-::::{grid} 1 2 3 3
-:gutter: 3
-
-:::{grid-item-card} Case Format
-:link: models-phasor-dynamics-case-format
-:link-type: ref
-:::
-
-:::{grid-item-card} JSON Schema
-:link: models-phasor-dynamics-schema
-:link-type: ref
-:::
-
-::::
-
 ```{toctree}
 :maxdepth: 1
 :titlesonly:
@@ -86,6 +68,4 @@ Stabilizers <stabilizers/index>
 Loads <loads/index>
 Converters <converters/index>
 Signals <signals/index>
-Case Format <case-format>
-JSON Schema <schema>
 ```

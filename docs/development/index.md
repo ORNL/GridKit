@@ -18,6 +18,13 @@ Coding conventions, documentation conventions, and review expectations.
 CMake layout, presets, and dependency configuration.
 :::
 
+:::{grid-item-card} Model Authoring
+:link: development-model-authoring
+:link-type: ref
+
+Structure, documentation, and integration steps for Phasor Dynamics models.
+:::
+
 :::{grid-item-card} Documentation Build
 :link: development-documentation
 :link-type: ref
@@ -40,6 +47,7 @@ Release history.
 :hidden:
 
 Contributing <contributing>
+Model Authoring <model-authoring>
 Build System <build-system>
 Documentation Build <documentation>
 Changelog <changelog>

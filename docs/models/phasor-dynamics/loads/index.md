@@ -3,29 +3,14 @@
 
 ```{include} ../../../../GridKit/Model/PhasorDynamics/Load/README.md
 :start-line: 1
-:relative-images:
+:end-before: "## Types"
 ```
 
-::::{grid} 1 2 3 3
-:gutter: 3
-
-:::{grid-item-card} LoadZ
-:link: model-phasor-dynamics-loadz
-:link-type: ref
-:::
-
-:::{grid-item-card} LoadZIP
-:link: model-phasor-dynamics-loadzip
-:link-type: ref
-:::
-
-::::
-
 ```{toctree}
+:class: gk-index
+:glob:
 :maxdepth: 1
 :titlesonly:
-:hidden:
 
-LoadZ <load-z>
-LoadZIP <load-zip>
+*
 ```

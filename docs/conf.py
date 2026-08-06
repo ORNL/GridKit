@@ -48,8 +48,9 @@ html_extra_path = ["../GridKit/Model/case.schema.json"]
 html_static_path = ["_static"]
 html_css_files = ["css/gridkit.css"]
 html_theme_options = {
-    "collapse_navigation": True,
-    "navigation_depth": 2,
+    "collapse_navigation": False,
+    "includehidden": True,
+    "navigation_depth": 4,
     "titles_only": True,
 }
 

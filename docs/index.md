@@ -77,17 +77,16 @@ Installation <installation>
 
 Examples <examples/index>
 Applications <applications/index>
-Troubleshooting <troubleshooting>
 ```
 
 ```{toctree}
 :caption: Reference
-:maxdepth: 2
+:maxdepth: 4
 :titlesonly:
 :hidden:
 
-Cases <cases/index>
 Models <models/index>
+Cases <cases/index>
 API <api/index>
 ```
 
