@@ -634,10 +634,10 @@ namespace GridKit
        * @brief Read the parameters out of the model data
        *
        * No parameter is required; every parameter keeps the default
-       * documented in the model README when omitted. A non-numeric value, a
-       * switch outside \f$\{0,1\}\f$, or a non-integer selector is counted and
-       * reported by verify() rather than throwing. Integer JSON values are
-       * accepted for real parameters.
+       * documented in the model README when omitted. A non-numeric real
+       * parameter or non-integer selector is counted and reported by verify()
+       * rather than throwing. Integer JSON values are accepted for real
+       * parameters.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -773,9 +773,8 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Esdc1a<scalar_type, index_type>::setDerivedParameters()
       {
-        // The lags are raised to the floor in place, so a negative value is
-        // rejected here while the value as read is still available. verify()
-        // reports the count.
+        // Negative transducer, regulator, and exciter lags are rejected before
+        // all explicit denominator time constants are raised to the floor.
         auto check_non_negative = [&](RealT value, const char* name)
         {
           if (value < ZERO<RealT>)
