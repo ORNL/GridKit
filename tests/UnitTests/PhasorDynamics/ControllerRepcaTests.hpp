@@ -1,0 +1,2361 @@
+#pragma once
+
+#include <array>
+#include <initializer_list>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
+
+namespace GridKit
+{
+  namespace Testing
+  {
+    using Log = ::GridKit::Utilities::Logger;
+
+    template <typename scalar_type, typename index_type>
+    class ControllerRepcaTests
+    {
+    public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+
+      ControllerRepcaTests()  = default;
+      ~ControllerRepcaTests() = default;
+
+      static constexpr RealT kTol =
+          static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+
+      /// Validate construction, defaults, parameters, signals, and time floors.
+      TestOutcome validation()
+      {
+        TestStatus success = true;
+
+        noteExpectedLogs("Testing REPCA defaults, parameter floors, and invalid "
+                         "configurations. Logged errors and warnings are expected.");
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> empty(&bus);
+        success *= (empty.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
+        success *= (empty.getMonitor() == nullptr);
+        success *= (empty.verify() > 0);
+
+        Fixture<ScalarT> configured(makeData());
+        configured.attachAllInputs();
+        success *= (configured.repca.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
+        success *= (configured.repca.getMonitor() != nullptr);
+        success *= (configured.repca.verify() == 0);
+
+        Fixture<ScalarT> documented_defaults(makeMinimalData());
+        documented_defaults.attachAllInputs();
+        success *= (documented_defaults.repca.verify() == 0);
+        success *= defaultsMatchDocumentedValues();
+
+        auto integer_numeric                    = makeData();
+        integer_numeric.parameters[Params::mva] = static_cast<IdxT>(100);
+        Fixture<ScalarT> integer_parameter(integer_numeric);
+        integer_parameter.attachAllInputs();
+        success *= (integer_parameter.repca.verify() == 0);
+
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> missing_signals(&bus, makeData());
+        success *= (missing_signals.verify() > 0);
+
+        success *= invalidParameterCase(Params::mva, 0.0);
+        success *= invalidParameterCase(Params::Tfv, -0.1);
+        success *= invalidParameterCase(Params::dbdlow, 0.1);
+        success *= invalidParameterCase(Params::dbdupper, -0.1);
+        success *= invalidParameterCase(Params::emin, 0.1);
+        success *= invalidParameterCase(Params::emax, -0.1);
+        success *= invalidParameterCase(Params::Qmin, 1.1);
+        success *= invalidParameterCase(Params::fdbd1, 0.1);
+        success *= invalidParameterCase(Params::fdbd2, -0.1);
+        success *= invalidParameterCase(Params::Ddn, -0.1);
+        success *= invalidParameterCase(Params::Dup, -0.1);
+        success *= invalidParameterCase(Params::femin, 0.1);
+        success *= invalidParameterCase(Params::femax, -0.1);
+        success *= invalidParameterCase(Params::Pmin, 2.1);
+        success *= invalidParameterCase(Params::mva, true);
+
+        success *= invalidParameterCase(Params::Tfltr, -0.2);
+        success *= invalidParameterCase(Params::Tft, -0.1);
+        success *= invalidParameterCase(Params::Tp, -0.3);
+        success *= invalidParameterCase(Params::Tlag, -0.4);
+
+        const RealT                  nan      = std::numeric_limits<RealT>::quiet_NaN();
+        const RealT                  infinity = std::numeric_limits<RealT>::infinity();
+        const std::array<Params, 28> real_parameters{{
+            Params::mva,
+            Params::Tfltr,
+            Params::Vfrz,
+            Params::Rc,
+            Params::Xc,
+            Params::Kc,
+            Params::dbdlow,
+            Params::dbdupper,
+            Params::emax,
+            Params::emin,
+            Params::Kp,
+            Params::Ki,
+            Params::Qmax,
+            Params::Qmin,
+            Params::Tft,
+            Params::Tfv,
+            Params::Tp,
+            Params::fdbd1,
+            Params::fdbd2,
+            Params::Ddn,
+            Params::Dup,
+            Params::femax,
+            Params::femin,
+            Params::Kpg,
+            Params::Kig,
+            Params::Pmax,
+            Params::Pmin,
+            Params::Tlag,
+        }};
+        for (const Params parameter : real_parameters)
+        {
+          success *= invalidParameterCase(parameter, nan);
+          success *= invalidParameterCase(parameter, infinity);
+          success *= invalidParameterCase(parameter, -infinity);
+        }
+        success *= invalidParameterCase(Params::mva, std::numeric_limits<RealT>::max());
+
+        {
+          Fixture<ScalarT> nonfinite_system_base(makeData(), 1.0, 0.0, infinity);
+          nonfinite_system_base.attachAllInputs();
+          success *= (nonfinite_system_base.repca.verify() > 0);
+        }
+        {
+          auto tiny_base_data                    = makeData();
+          tiny_base_data.parameters[Params::mva] = std::numeric_limits<RealT>::min();
+          Fixture<ScalarT> overflowing_base_ratio(tiny_base_data,
+                                                  1.0,
+                                                  0.0,
+                                                  std::numeric_limits<RealT>::max());
+          overflowing_base_ratio.attachAllInputs();
+          success *= (overflowing_base_ratio.repca.verify() > 0);
+        }
+
+        const std::array<Params, 3> flag_parameters{{
+            Params::VcompFlag,
+            Params::RefFlag,
+            Params::Freqflag,
+        }};
+        const std::array<bool, 2>   valid_flag_values{{false, true}};
+        const std::array<IdxT, 3>   invalid_integral_flag_values{{
+            static_cast<IdxT>(0),
+            static_cast<IdxT>(1),
+            static_cast<IdxT>(2),
+        }};
+        const std::array<RealT, 5>  invalid_real_flag_values{{
+            static_cast<RealT>(0.0),
+            static_cast<RealT>(0.5),
+            static_cast<RealT>(1.0),
+            nan,
+            infinity,
+        }};
+        for (const Params flag : flag_parameters)
+        {
+          for (const bool value : valid_flag_values)
+          {
+            auto data             = makeData();
+            data.parameters[flag] = value;
+            Fixture<ScalarT> model(data);
+            model.attachAllInputs();
+            success *= (model.repca.verify() == 0);
+          }
+
+          for (const IdxT value : invalid_integral_flag_values)
+          {
+            success *= invalidParameterCase(flag, value);
+          }
+
+          for (const RealT value : invalid_real_flag_values)
+          {
+            success *= invalidParameterCase(flag, value);
+          }
+        }
+
+        PhasorDynamics::Controller::Repca<ScalarT, IdxT> busless(nullptr, makeData());
+        success *= (busless.verify() > 0);
+
+        success *= unlinkedSignalRejected<Ext::IR>();
+        success *= unlinkedSignalRejected<Ext::II>();
+        success *= unlinkedSignalRejected<Ext::P>();
+        success *= unlinkedSignalRejected<Ext::Q>();
+        success *= unlinkedSignalRejected<Ext::FREQ>();
+        success *= unlinkedSignalRejected<Ext::VREF>();
+        success *= unlinkedSignalRejected<Ext::PREF>();
+        success *= unlinkedSignalRejected<Ext::QREF>();
+        success *= unlinkedSignalRejected<Ext::FREQREF>();
+
+        auto floor_data                      = makeInitializationData();
+        floor_data.parameters[Params::Tfltr] = 0.0;
+        floor_data.parameters[Params::Tfv]   = 0.0;
+        floor_data.parameters[Params::Tp]    = 0.0;
+        floor_data.parameters[Params::Tlag]  = 0.0;
+
+        Fixture<ScalarT> floored(floor_data);
+        floored.attachAllInputs();
+        setInitializationInputs(floored);
+        success *= floored.initialize(0.25, 0.45);
+        success *= (floored.repca.evaluateResidual() == 0);
+        success *= allResidualsWithinInitTolerance(floored.repca);
+
+        auto* y                = floored.repca.y().getData();
+        y[index(Vars::VMEAS)] -= 0.001;
+        y[index(Vars::QMEAS)] -= 0.002;
+        y[index(Vars::PMEAS)] -= 0.003;
+        y[index(Vars::PREF)]  -= 0.004;
+        floored.repca.y().setDataUpdated();
+        success *= (floored.repca.evaluateResidual() == 0);
+        const std::array<VariableValue, 4> floored_residuals{{
+            {Vars::VMEAS, 1.0},
+            {Vars::QMEAS, 2.0},
+            {Vars::PMEAS, 3.0},
+            {Vars::PREF, 4.0},
+        }};
+        success *= residualsMatch(floored.repca,
+                                  floored_residuals,
+                                  "floored time constants");
+
+        return success.report(__func__);
+      }
+
+      /// Check initialization state, signal publication, monitors, and flag modes.
+      TestOutcome initializationAndSignals()
+      {
+        TestStatus success = true;
+
+        noteExpectedLogs("Testing REPCA initialization without an attached frequency "
+                         "signal. A warning is expected.");
+
+        Fixture<ScalarT> fixture(makeInitializationData(), 0.8, 0.6);
+        fixture.attachAllInputs(99.0);
+        setInitializationInputs(fixture);
+        success *= fixture.initialize(0.25, 0.45);
+        success *= (fixture.repca.tagDifferentiable() == 0);
+        success *= (fixture.repca.evaluateResidual() == 0);
+
+        const std::array<VariableValue, index(Vars::MAXIMUM)> initial_state{{
+            {Vars::VMEAS, 0.984002032518226},
+            {Vars::QMEAS, 0.2},
+            {Vars::XQPI, 0.5},
+            {Vars::XQLAG, 0.5},
+            {Vars::PMEAS, 0.8},
+            {Vars::XPPI, 0.9},
+            {Vars::PREF, 0.9},
+            {Vars::V, 1.0},
+            {Vars::VLDC, 0.984002032518226},
+            {Vars::VDROOP, 1.08},
+            {Vars::VCTRL, 0.984002032518226},
+            {Vars::SFRZ, 1.0},
+            {Vars::ERQ, 0.0},
+            {Vars::ERQDB, 0.0},
+            {Vars::ERQLIM, 0.0},
+            {Vars::QPI, 0.5},
+            {Vars::QEXT, 0.25},
+            {Vars::EF, 0.0},
+            {Vars::EP, 0.0},
+            {Vars::EPLIM, 0.0},
+            {Vars::PPI, 0.9},
+            {Vars::PEXT, 0.45},
+        }};
+        success *= stateMatches(fixture.repca, initial_state, "initialization");
+
+        success *= scalarPreserved(fixture.input(Ext::IR), 0.2, "preserved ir");
+        success *= scalarPreserved(fixture.input(Ext::II), -0.1, "preserved ii");
+        success *= scalarPreserved(fixture.input(Ext::P), 0.4, "preserved p");
+        success *= scalarPreserved(fixture.input(Ext::Q), 0.1, "preserved q");
+        success *= scalarPreserved(fixture.input(Ext::FREQ), 0.99, "preserved freq");
+        success *= scalarPreserved(fixture.qext(), 0.25, "preserved qext");
+        success *= scalarPreserved(fixture.pext(), 0.45, "preserved pext");
+        success *= scalarMatches(fixture.input(Ext::VREF), 0.984002032518226, "published vref");
+        success *= scalarMatches(fixture.input(Ext::PREF), 0.4, "published pref");
+        success *= scalarMatches(fixture.input(Ext::QREF), 0.1, "published qref");
+        success *= scalarMatches(fixture.input(Ext::FREQREF), 0.99, "published freqref");
+
+        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        {
+          const bool expected = row <= index(Vars::PREF);
+          if (fixture.repca.tag()[row] != expected)
+          {
+            std::cout << "REPCA differentiability tag " << row << " mismatch\n";
+            success = false;
+          }
+        }
+
+        constexpr RealT absolute_tolerance = 2.5e-7;
+
+        success *= (fixture.repca.setAbsoluteTolerance(absolute_tolerance) == 0);
+
+        const auto* tolerances = fixture.repca.absoluteTolerance().getData();
+        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        {
+          success *= valueUnchanged(tolerances[row],
+                                    absolute_tolerance,
+                                    "absolute tolerance",
+                                    row);
+        }
+
+        const std::array<RealT, 5> initial_monitors{{
+            0.25,
+            0.45,
+            0.984002032518226,
+            0.2,
+            0.8,
+        }};
+        success *= monitorMatches(fixture.repca, initial_monitors, "initialization");
+
+        success *= allResidualsWithinInitTolerance(fixture.repca);
+
+        {
+          auto exact_data                    = makeInitializationData();
+          exact_data.parameters[Params::mva] = 73.0;
+
+          // This non-binary base ratio exposes any component-base round trip.
+          Fixture<ScalarT> exact_commands(exact_data, 0.8, 0.6);
+          exact_commands.attachAllInputs();
+          setInitializationInputs(exact_commands);
+          success *= exact_commands.initialize(0.25, 0.45);
+          success *= scalarPreserved(exact_commands.qext(), 0.25, "qext signal");
+          success *= scalarPreserved(exact_commands.pext(), 0.45, "pext signal");
+          success *= scalarPreserved(exact_commands.input(Ext::QREF), 0.1, "qref signal");
+          success *= (exact_commands.repca.evaluateResidual() == 0);
+          success *= allResidualsWithinInitTolerance(exact_commands.repca);
+        }
+
+        Fixture<ScalarT> fallback(makeInitializationData(), 0.8, 0.6);
+        fallback.attachAllInputs(0.0, false);
+        setInitializationInputs(fallback);
+        success *= fallback.initialize(0.25, 0.45);
+        success *= scalarMatches(fallback.input(Ext::FREQREF), 1.0, "default frequency");
+        success *= (fallback.repca.evaluateResidual() == 0);
+        success *= allResidualsWithinInitTolerance(fallback.repca);
+
+        Fixture<ScalarT> outputless(makeInitializationData(),
+                                    0.8,
+                                    0.6,
+                                    100.0e6,
+                                    false);
+        outputless.attachAllInputs();
+        setInitializationInputs(outputless);
+        success *= outputless.initialize(0.25, 0.45);
+        success *= (outputless.repca.evaluateResidual() == 0);
+        const std::array<VariableValue, 2> outputless_state{{
+            {Vars::QEXT, 0.25},
+            {Vars::PEXT, 0.45},
+        }};
+        success *= stateMatches(outputless.repca,
+                                outputless_state,
+                                "unassigned command outputs");
+        success *= monitorMatches(outputless.repca,
+                                  initial_monitors,
+                                  "unassigned command outputs");
+        success *= allResidualsWithinInitTolerance(outputless.repca);
+
+        struct FlagCase
+        {
+          const char* label;
+          bool        voltage_compensation;
+          bool        voltage_reference;
+          bool        frequency_control;
+          RealT       voltage;
+          RealT       pref;
+          RealT       pext;
+        };
+
+        const std::array<FlagCase, 8> flag_cases{{
+            {"droop/reactive-reference/disabled-frequency", false, false, false, 1.08, 0.8, 0.0},
+            {"droop/reactive-reference/enabled-frequency", false, false, true, 1.08, 0.9, 0.45},
+            {"droop/voltage-reference/disabled-frequency", false, true, false, 1.08, 0.8, 0.0},
+            {"droop/voltage-reference/enabled-frequency", false, true, true, 1.08, 0.9, 0.45},
+            {"line-drop/reactive-reference/disabled-frequency", true, false, false, 0.984002032518226, 0.8, 0.0},
+            {"line-drop/reactive-reference/enabled-frequency", true, false, true, 0.984002032518226, 0.9, 0.45},
+            {"line-drop/voltage-reference/disabled-frequency", true, true, false, 0.984002032518226, 0.8, 0.0},
+            {"line-drop/voltage-reference/enabled-frequency", true, true, true, 0.984002032518226, 0.9, 0.45},
+        }};
+        for (const auto& test_case : flag_cases)
+        {
+          auto data                          = makeInitializationData();
+          data.parameters[Params::VcompFlag] = test_case.voltage_compensation;
+          data.parameters[Params::RefFlag]   = test_case.voltage_reference;
+          data.parameters[Params::Freqflag]  = test_case.frequency_control;
+
+          Fixture<ScalarT> scenario(data, 0.8, 0.6);
+          scenario.attachAllInputs(99.0);
+          setInitializationInputs(scenario);
+          success *= scenario.initialize(0.25, 0.45);
+          success *= (scenario.repca.evaluateResidual() == 0);
+
+          const std::array<VariableValue, 5> expected_state{{
+              {Vars::VMEAS, test_case.voltage},
+              {Vars::VCTRL, test_case.voltage},
+              {Vars::PREF, test_case.pref},
+              {Vars::PPI, test_case.pref},
+              {Vars::PEXT, test_case.pext},
+          }};
+          success *= stateMatches(scenario.repca,
+                                  expected_state,
+                                  test_case.label);
+          success *= scalarMatches(scenario.qext(), 0.25, test_case.label);
+          success *= scalarMatches(scenario.pext(), test_case.pext, test_case.label);
+          success *= allResidualsWithinInitTolerance(scenario.repca);
+        }
+
+        return success.report(__func__);
+      }
+
+      /// Check initialization domains, adjusted limits, and atomicity.
+      TestOutcome initializationDomain()
+      {
+        TestStatus success = true;
+
+        noteExpectedLogs("Testing REPCA adjusted limits and inadmissible "
+                         "initialization points. Logged warnings and errors are expected.");
+
+        const auto data = makeInitializationData();
+
+        struct RejectionCase
+        {
+          const char* label;
+          RealT       qext;
+          RealT       pext;
+        };
+
+        const RealT                        nan      = std::numeric_limits<RealT>::quiet_NaN();
+        const RealT                        infinity = std::numeric_limits<RealT>::infinity();
+        const std::array<RejectionCase, 4> rejection_cases{{
+            {"nonfinite qext", infinity, 0.45},
+            {"nonfinite pext", 0.25, infinity},
+            {"nan qext", nan, 0.45},
+            {"nan pext", 0.25, nan},
+        }};
+        for (const auto& test_case : rejection_cases)
+        {
+          success *= initializationRejectedAtomically(data,
+                                                      test_case.qext,
+                                                      test_case.pext,
+                                                      test_case.label);
+        }
+        const std::array<Ext, 5>   required_ports{{
+            Ext::IR,
+            Ext::II,
+            Ext::P,
+            Ext::Q,
+            Ext::FREQ,
+        }};
+        const std::array<RealT, 3> nonfinite_values{{infinity, -infinity, nan}};
+        for (const Ext port : required_ports)
+        {
+          for (const RealT value : nonfinite_values)
+          {
+            success *= initializationRejectedAtomically(data,
+                                                        0.25,
+                                                        0.45,
+                                                        "nonfinite required signal",
+                                                        NonfiniteTarget::INPUT,
+                                                        0.8,
+                                                        0.6,
+                                                        port,
+                                                        value);
+          }
+        }
+        success *= initializationRejectedAtomically(data,
+                                                    0.25,
+                                                    0.45,
+                                                    "nonfinite bus voltage",
+                                                    NonfiniteTarget::BUS_VOLTAGE);
+
+        auto collapsed_data = data;
+
+        collapsed_data.parameters[Params::Qmin] = 0.5;
+        collapsed_data.parameters[Params::Qmax] = 0.5;
+        collapsed_data.parameters[Params::Pmin] = 0.9;
+        collapsed_data.parameters[Params::Pmax] = 0.9;
+
+        auto reactive_aw_data                         = makeInitializationData();
+        reactive_aw_data.parameters[Params::dbdupper] = 0.03;
+        reactive_aw_data.parameters[Params::emin]     = 0.0;
+
+        const std::array<bool, 2>                    voltage_reference_values{{false, true}};
+        const std::array<std::pair<RealT, RealT>, 2> voltage_cases{{
+            {0.8, 0.6},
+            {0.2, 0.0},
+        }};
+        const std::array<VariableValue, 2>           asymmetric_reactive_state{{
+            {Vars::ERQDB, -0.1},
+            {Vars::ERQLIM, 0.0},
+        }};
+        for (const bool voltage_reference : voltage_reference_values)
+        {
+          auto data                        = reactive_aw_data;
+          data.parameters[Params::RefFlag] = voltage_reference;
+          for (const auto& voltage : voltage_cases)
+          {
+            Fixture<ScalarT> asymmetric_reactive(data,
+                                                 voltage.first,
+                                                 voltage.second);
+            asymmetric_reactive.attachAllInputs();
+            setInitializationInputs(asymmetric_reactive);
+            success *= asymmetric_reactive.initialize(0.25, 0.45);
+            success *= (asymmetric_reactive.repca.evaluateResidual() == 0);
+            success *= stateMatches(asymmetric_reactive.repca,
+                                    asymmetric_reactive_state,
+                                    "asymmetric reactive initialization");
+            success *= allResidualsWithinInitTolerance(asymmetric_reactive.repca);
+          }
+        }
+
+        auto frozen_data                     = reactive_aw_data;
+        frozen_data.parameters[Params::Vfrz] = 0.9;
+
+        {
+          Fixture<ScalarT> frozen_reactive_rate(frozen_data, 0.05, 0.0);
+          frozen_reactive_rate.attachAllInputs();
+          setInitializationInputs(frozen_reactive_rate);
+          success *= frozen_reactive_rate.initialize(0.25, 0.45);
+          success *= (frozen_reactive_rate.repca.evaluateResidual() == 0);
+          success *= allResidualsWithinInitTolerance(frozen_reactive_rate.repca);
+        }
+
+        {
+          auto active_aw_data                      = makeInitializationData();
+          active_aw_data.parameters[Params::fdbd2] = 0.025;
+          active_aw_data.parameters[Params::femin] = 0.0;
+          Fixture<ScalarT> asymmetric_active(active_aw_data, 0.8, 0.6);
+          asymmetric_active.attachAllInputs();
+          setInitializationInputs(asymmetric_active);
+          success *= asymmetric_active.initialize(0.25, 0.45);
+          success *= (asymmetric_active.repca.evaluateResidual() == 0);
+          const std::array<VariableValue, 3> lower_active_state{{
+              {Vars::EF, 0.0},
+              {Vars::EP, -0.1},
+              {Vars::EPLIM, 0.0},
+          }};
+          success *= stateMatches(asymmetric_active.repca,
+                                  lower_active_state,
+                                  "lower active-error boundary");
+          success *= scalarMatches(asymmetric_active.input(Ext::FREQREF),
+                                   0.995,
+                                   "asymmetric frequency reference");
+          success *= scalarMatches(asymmetric_active.input(Ext::PREF),
+                                   0.35,
+                                   "lower-bound plant reference");
+          success *= allResidualsWithinInitTolerance(asymmetric_active.repca);
+        }
+
+        {
+          auto active_aw_data                      = makeInitializationData();
+          active_aw_data.parameters[Params::fdbd1] = -0.025;
+          active_aw_data.parameters[Params::femax] = 0.0;
+          Fixture<ScalarT> asymmetric_active(active_aw_data, 0.8, 0.6);
+          asymmetric_active.attachAllInputs();
+          setInitializationInputs(asymmetric_active);
+          success *= asymmetric_active.initialize(0.25, 0.45);
+          success *= (asymmetric_active.repca.evaluateResidual() == 0);
+          const std::array<VariableValue, 3> upper_active_state{{
+              {Vars::EF, 0.0},
+              {Vars::EP, 0.1},
+              {Vars::EPLIM, 0.0},
+          }};
+          success *= stateMatches(asymmetric_active.repca,
+                                  upper_active_state,
+                                  "upper active-error boundary");
+          success *= scalarMatches(asymmetric_active.input(Ext::FREQREF),
+                                   0.985,
+                                   "asymmetric frequency reference");
+          success *= scalarMatches(asymmetric_active.input(Ext::PREF),
+                                   0.45,
+                                   "upper-bound plant reference");
+          success *= allResidualsWithinInitTolerance(asymmetric_active.repca);
+        }
+
+        auto overflow_data                    = makeInitializationData();
+        overflow_data.parameters[Params::Rc]  = std::numeric_limits<RealT>::max();
+        success                              *= initializationRejectedAtomically(overflow_data,
+                                                    0.25,
+                                                    0.45,
+                                                    "nonfinite derived initialization candidate");
+
+        // An invalid configuration is rejected before any state is written.
+        {
+          auto invalid_data                    = data;
+          invalid_data.parameters[Params::Tfv] = -0.1;
+          Fixture<ScalarT> invalid_fixture(invalid_data);
+          invalid_fixture.attachAllInputs();
+          setInitializationInputs(invalid_fixture);
+          success *= (invalid_fixture.repca.allocate() == 0);
+          poisonState(invalid_fixture, 0.25, 0.45);
+          const auto invalid_y  = copyVector(invalid_fixture.repca.y());
+          const auto invalid_yp = copyVector(invalid_fixture.repca.yp());
+          if (invalid_fixture.repca.initialize() == 0)
+          {
+            std::cout << "Expected REPCA initialization rejection: invalid configuration\n";
+            success = false;
+          }
+          success *= vectorUnchanged(invalid_fixture.repca.y(), invalid_y, "state");
+          success *= vectorUnchanged(invalid_fixture.repca.yp(), invalid_yp, "derivative");
+        }
+
+        // A command exactly on a limit is reconstructed through the offset
+        // branch of the limiter inverse, which leaves a smoothing-scaled
+        // residual, so only the reconstructed state is checked.
+        {
+          Fixture<ScalarT> qmax_pmin_boundary(data, 0.8, 0.6);
+          qmax_pmin_boundary.attachAllInputs();
+          setInitializationInputs(qmax_pmin_boundary);
+          success *= qmax_pmin_boundary.initialize(0.75, 0.0);
+          success *= (qmax_pmin_boundary.repca.evaluateResidual() == 0);
+          const std::array<VariableValue, 8> qmax_pmin_state{{
+              {Vars::QPI, 1.5},
+              {Vars::XQLAG, 1.5},
+              {Vars::XQPI, 1.6},
+              {Vars::QEXT, 0.75},
+              {Vars::PREF, 0.0},
+              {Vars::PPI, 0.0},
+              {Vars::XPPI, -0.1},
+              {Vars::PEXT, 0.0},
+          }};
+          success *= stateMatches(qmax_pmin_boundary.repca,
+                                  qmax_pmin_state,
+                                  "Qmax/Pmin command boundary");
+        }
+
+        {
+          Fixture<ScalarT> qmin_pmax_boundary(data, 0.8, 0.6);
+          qmin_pmax_boundary.attachAllInputs();
+          setInitializationInputs(qmin_pmax_boundary);
+          success *= qmin_pmax_boundary.initialize(-0.4, 1.0);
+          success *= (qmin_pmax_boundary.repca.evaluateResidual() == 0);
+          const std::array<VariableValue, 8> qmin_pmax_state{{
+              {Vars::QPI, -0.8},
+              {Vars::XQLAG, -0.8},
+              {Vars::XQPI, -0.9},
+              {Vars::QEXT, -0.4},
+              {Vars::PREF, 2.0},
+              {Vars::PPI, 2.0},
+              {Vars::XPPI, 2.1},
+              {Vars::PEXT, 1.0},
+          }};
+          success *= stateMatches(qmin_pmax_boundary.repca,
+                                  qmin_pmax_state,
+                                  "Qmin/Pmax command boundary");
+        }
+
+        {
+          Fixture<ScalarT> collapsed_limits(collapsed_data, 0.8, 0.6);
+          collapsed_limits.attachAllInputs();
+          setInitializationInputs(collapsed_limits);
+          success *= collapsed_limits.initialize(0.25, 0.45);
+          success *= (collapsed_limits.repca.evaluateResidual() == 0);
+          const std::array<VariableValue, 8> collapsed_state{{
+              {Vars::XQPI, 0.5},
+              {Vars::XQLAG, 0.5},
+              {Vars::QPI, 0.5},
+              {Vars::QEXT, 0.25},
+              {Vars::XPPI, 0.9},
+              {Vars::PREF, 0.9},
+              {Vars::PPI, 0.9},
+              {Vars::PEXT, 0.45},
+          }};
+          success *= stateMatches(collapsed_limits.repca,
+                                  collapsed_state,
+                                  "collapsed Q/P limits");
+          success *= allResidualsWithinInitTolerance(collapsed_limits.repca);
+        }
+
+        struct LimitCase
+        {
+          const char* label;
+          RealT       qext;
+          RealT       pext;
+          Vars        output;
+          RealT       expected;
+        };
+
+        const std::array<LimitCase, 4> limit_cases{{
+            {"adjusted Qmin", -0.5, 0.45, Vars::QPI, -1.0},
+            {"adjusted Qmax", 0.9, 0.45, Vars::QPI, 1.8},
+            {"adjusted Pmin", 0.25, -0.1, Vars::PPI, -0.2},
+            {"adjusted Pmax", 0.25, 1.1, Vars::PPI, 2.2},
+        }};
+
+        for (const auto& test_case : limit_cases)
+        {
+          Fixture<ScalarT> adjusted(data, 0.8, 0.6);
+          adjusted.attachAllInputs();
+          setInitializationInputs(adjusted);
+          success *= adjusted.initialize(test_case.qext, test_case.pext);
+          success *= stateMatches(adjusted.repca,
+                                  {{test_case.output, test_case.expected}},
+                                  test_case.label);
+          success *= (adjusted.repca.evaluateResidual() == 0);
+          success *= allResidualsWithinInitTolerance(adjusted.repca);
+        }
+
+        {
+          auto disabled_data                         = data;
+          disabled_data.parameters[Params::Freqflag] = false;
+          disabled_data.parameters[Params::Pmax]     = 0.5;
+
+          Fixture<ScalarT> disabled_frequency(disabled_data, 0.8, 0.6);
+          disabled_frequency.attachAllInputs();
+          setInitializationInputs(disabled_frequency);
+          success *= disabled_frequency.initialize(0.25, 0.45);
+          success *= stateMatches(disabled_frequency.repca,
+                                  {{Vars::PREF, 0.8},
+                                   {Vars::PPI, 0.8},
+                                   {Vars::PEXT, 0.0}},
+                                  "measured-power limit");
+          success *= (disabled_frequency.repca.evaluateResidual() == 0);
+          success *= allResidualsWithinInitTolerance(disabled_frequency.repca);
+
+          setState(disabled_frequency.repca,
+                   {{Vars::PPI, 0.65}, {Vars::EPLIM, 0.1}});
+          setDerivative(disabled_frequency.repca, {{Vars::XPPI, 0.0}});
+          success *= (disabled_frequency.repca.evaluateResidual() == 0);
+          success *= residualsMatch(disabled_frequency.repca,
+                                    {{Vars::XPPI, 0.18}},
+                                    "measured-power limit");
+        }
+
+        {
+          Fixture<ScalarT> adjusted(data, 0.8, 0.6);
+          adjusted.attachAllInputs();
+          setInitializationInputs(adjusted);
+          success *= adjusted.initialize(1.0, 1.25);
+
+          setState(adjusted.repca,
+                   {{Vars::QPI, 1.75},
+                    {Vars::ERQLIM, 0.1},
+                    {Vars::SFRZ, 1.0},
+                    {Vars::PPI, 2.25},
+                    {Vars::EPLIM, 0.1}});
+          setDerivative(adjusted.repca, {{Vars::XQPI, 0.0}, {Vars::XPPI, 0.0}});
+          success *= (adjusted.repca.evaluateResidual() == 0);
+          success *= residualsMatch(adjusted.repca,
+                                    {{Vars::XQPI, 0.3}, {Vars::XPPI, 0.18}},
+                                    "adjusted antiwindup limits");
+
+          setState(adjusted.repca,
+                   {{Vars::QPI, 0.0},
+                    {Vars::ERQLIM, 0.0},
+                    {Vars::XQPI, 1.75},
+                    {Vars::PPI, 0.0},
+                    {Vars::EPLIM, 0.0},
+                    {Vars::XPPI, 2.25}});
+          success *= (adjusted.repca.evaluateResidual() == 0);
+          success *= residualsMatch(adjusted.repca,
+                                    {{Vars::QPI, 1.75}, {Vars::PPI, 2.25}},
+                                    "adjusted command limits");
+        }
+
+        return success.report(__func__);
+      }
+
+      /// Check every residual row against an independent numerical answer key.
+      /// The expected values are literals, not a second implementation of REPCA.
+      TestOutcome residualEquations()
+      {
+        TestStatus success = true;
+
+        Fixture<ScalarT> fixture(makeResidualData(), kStateVr, kStateVi);
+        fixture.attachAllInputs();
+        setAnswerKeyInputs(fixture);
+        success *= fixture.prepare(0.0, 0.0);
+        setAnswerKeyState(fixture.repca);
+        success *= (fixture.repca.evaluateResidual() == 0);
+
+        const std::array<VariableValue, index(Vars::MAXIMUM)> expected_residuals{{
+            {Vars::VMEAS, 0.4},
+            {Vars::QMEAS, 0.45},
+            {Vars::XQPI, 0.3},
+            {Vars::XQLAG, 0.46},
+            {Vars::PMEAS, 0.5},
+            {Vars::XPPI, -0.3},
+            {Vars::PREF, 0.4},
+            {Vars::V, -1.28},
+            {Vars::VLDC, 0.028},
+            {Vars::VDROOP, 0.1},
+            {Vars::VCTRL, 0.05},
+            {Vars::SFRZ, 0.5},
+            {Vars::ERQ, -0.63},
+            {Vars::ERQDB, 0.75},
+            {Vars::ERQLIM, -0.35},
+            {Vars::QPI, -0.05},
+            {Vars::QEXT, -1.345},
+            {Vars::EF, -0.015},
+            {Vars::EP, -0.4},
+            {Vars::EPLIM, 1.1},
+            {Vars::PPI, 0.1},
+            {Vars::PEXT, 0.05},
+        }};
+
+        success              *= (static_cast<size_t>(fixture.repca.getResidual().getSize())
+                    == expected_residuals.size());
+        const auto* residual  = fixture.repca.getResidual().getData();
+        for (size_t row = 0; row < expected_residuals.size(); ++row)
+        {
+          const auto variable = expected_residuals[row].variable;
+          if (index(variable) != row)
+          {
+            std::cout << "REPCA residual key position " << row << " names row "
+                      << variableName(variable) << '\n';
+            success = false;
+          }
+          success *= scalarMatches(residual[index(variable)],
+                                   expected_residuals[row].value,
+                                   variableName(variable));
+        }
+
+        return success.report(__func__);
+      }
+
+      /// Check reactive modes, smooth limits, antiwindup, and lead-lag behavior.
+      TestOutcome reactiveControl()
+      {
+        TestStatus success = true;
+
+        struct FlagCase
+        {
+          const char* label;
+          bool        voltage_compensation;
+          bool        voltage_reference;
+          RealT       vctrl;
+          RealT       erq;
+        };
+
+        const std::array<FlagCase, 4> flag_cases{{
+            {"droop/reactive-reference", false, false, 0.08, 0.30},
+            {"droop/voltage-reference", false, true, 0.08, 0.10},
+            {"line-drop/reactive-reference", true, false, -0.08, 0.30},
+            {"line-drop/voltage-reference", true, true, -0.08, 0.10},
+        }};
+        for (const auto& test_case : flag_cases)
+        {
+          auto data                          = makeResidualData();
+          data.parameters[Params::VcompFlag] = test_case.voltage_compensation;
+          data.parameters[Params::RefFlag]   = test_case.voltage_reference;
+
+          Fixture<ScalarT> fixture(data);
+          fixture.attachAllInputs();
+          setAnswerKeyInputs(fixture);
+          fixture.input(Ext::VREF) = 1.05;
+          fixture.input(Ext::QREF) = 0.20;
+
+          success *= fixture.prepare(0.0, 0.0);
+          setState(fixture.repca,
+                   {{Vars::VMEAS, 0.95},
+                    {Vars::QMEAS, 0.10},
+                    {Vars::VLDC, 0.92},
+                    {Vars::VDROOP, 1.08},
+                    {Vars::VCTRL, 1.0},
+                    {Vars::ERQ, 0.0}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+
+          const std::array<VariableValue, 2> expected_residuals{{
+              {Vars::VCTRL, test_case.vctrl},
+              {Vars::ERQ, test_case.erq},
+          }};
+          success *= residualsMatch(fixture.repca,
+                                    expected_residuals,
+                                    test_case.label);
+        }
+
+        Fixture<ScalarT> fixture(makeResidualData());
+        fixture.attachAllInputs();
+        setAnswerKeyInputs(fixture);
+        success *= fixture.prepare(0.0, 0.0);
+
+        // A voltage of zero must clear the freeze threshold by the same
+        // margin the enabled probe clears it, so the threshold is raised.
+        {
+          auto freeze_data                     = makeResidualData();
+          freeze_data.parameters[Params::Vfrz] = 0.8;
+
+          Fixture<ScalarT> freeze(freeze_data);
+          freeze.attachAllInputs();
+          setAnswerKeyInputs(freeze);
+          success *= freeze.prepare(0.0, 0.0);
+
+          const std::array<DrivenCase, 2> freeze_cases{{
+              {0.0, 0.0},
+              {1.6, 1.0},
+          }};
+          for (const auto& test_case : freeze_cases)
+          {
+            setState(freeze.repca, {{Vars::V, test_case.input}, {Vars::SFRZ, 0.0}});
+            success *= (freeze.repca.evaluateResidual() == 0);
+            success *= residualsMatch(freeze.repca,
+                                      {{Vars::SFRZ, test_case.expected}},
+                                      "freeze gate");
+          }
+        }
+
+        // The interior probe sits at the midpoint of the band, where the
+        // smooth deadband cancels exactly.
+        const std::array<DrivenCase, 3> deadband_cases{{
+            {-0.82, -0.8},
+            {0.005, 0.0},
+            {0.83, 0.8},
+        }};
+        for (const auto& test_case : deadband_cases)
+        {
+          setState(fixture.repca, {{Vars::ERQ, test_case.input}, {Vars::ERQDB, 0.0}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+          success *= residualsMatch(fixture.repca,
+                                    {{Vars::ERQDB, test_case.expected}},
+                                    "reactive-power deadband");
+        }
+
+        const std::array<DrivenCase, 3> error_limit_cases{{
+            {-1.5, -0.7},
+            {0.05, 0.05},
+            {1.6, 0.8},
+        }};
+        for (const auto& test_case : error_limit_cases)
+        {
+          setState(fixture.repca, {{Vars::ERQDB, test_case.input}, {Vars::ERQLIM, 0.0}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+          success *= residualsMatch(fixture.repca,
+                                    {{Vars::ERQLIM, test_case.expected}},
+                                    "reactive-power error limit");
+        }
+
+        const std::array<DrivenCase, 3> command_limit_cases{{
+            {-1.6, -0.8},
+            {0.05, 0.05},
+            {1.7, 0.9},
+        }};
+        for (const auto& test_case : command_limit_cases)
+        {
+          setState(fixture.repca,
+                   {{Vars::XQPI, test_case.input},
+                    {Vars::ERQLIM, 0.0},
+                    {Vars::QPI, 0.0}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+          success *= residualsMatch(fixture.repca,
+                                    {{Vars::QPI, test_case.expected}},
+                                    "reactive-power command limit");
+        }
+
+        // Saturated probes sit beyond their limit by a margin, so a blocked
+        // gate contributes nothing and an admitted gate passes the full rate.
+        const std::array<AntiWindupCase, 6> antiwindup_cases{{
+            {-1.6, -0.4, 0.0},
+            {-1.6, 0.4, 1.2},
+            {0.05, -0.4, -1.2},
+            {0.05, 0.4, 1.2},
+            {1.7, -0.4, -1.2},
+            {1.7, 0.4, 0.0},
+        }};
+        for (const auto& test_case : antiwindup_cases)
+        {
+          setState(fixture.repca,
+                   {{Vars::QPI, test_case.output},
+                    {Vars::ERQLIM, test_case.error},
+                    {Vars::SFRZ, 1.0}});
+          setDerivative(fixture.repca, {{Vars::XQPI, 0.0}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+          success *= residualsMatch(fixture.repca,
+                                    {{Vars::XQPI, test_case.expected}},
+                                    "reactive-power antiwindup");
+        }
+
+        setState(fixture.repca,
+                 {{Vars::XQLAG, 0.14},
+                  {Vars::QPI, 0.27},
+                  {Vars::QEXT, 0.20}});
+        setDerivative(fixture.repca, {{Vars::XQLAG, -0.04}});
+        success *= (fixture.repca.evaluateResidual() == 0);
+        const std::array<VariableValue, 2> lead_lag_residuals{{
+            {Vars::XQLAG, 0.092},
+            {Vars::QEXT, -0.624},
+        }};
+        success *= residualsMatch(fixture.repca,
+                                  lead_lag_residuals,
+                                  "reactive-command lead-lag");
+
+        // The command sits beyond Qmax with the error driving further out,
+        // so the blocked gate leaves the PI state with no sensitivity to the
+        // gate, the error, or the command.
+        {
+          Fixture<DependencyTracking::Variable> blocked(makeResidualData());
+          blocked.attachAllInputs();
+          setAnswerKeyInputs(blocked);
+          success *= blocked.prepare(0.0, 0.0);
+          setState(blocked.repca,
+                   {{Vars::QPI, 1.7}, {Vars::ERQLIM, 0.4}, {Vars::SFRZ, 1.0}});
+          setDerivative(blocked.repca, {{Vars::XQPI, 0.0}});
+          numberVariables(blocked, 1.0);
+          success *= (blocked.repca.evaluateResidual() == 0);
+
+          const DependencyTracking::Variable::DependencyMap expected{
+              {index(Vars::XQPI), -1.0},
+              {index(Vars::SFRZ), 0.0},
+              {index(Vars::ERQLIM), 0.0},
+              {index(Vars::QPI), 0.0},
+          };
+          success *= jacobianRowMatches(
+              blocked.repca.getResidual().getData()[index(Vars::XQPI)].getDependencies(),
+              expected,
+              index(Vars::XQPI),
+              "blocked reactive-power antiwindup",
+              kTol);
+        }
+
+        return success.report(__func__);
+      }
+
+      /// Check active-power modes, smooth limits, antiwindup, and command lag.
+      TestOutcome activePowerControl()
+      {
+        TestStatus success = true;
+
+        struct FlagCase
+        {
+          const char* label;
+          bool        frequency_control;
+          RealT       pext;
+        };
+
+        const std::array<FlagCase, 2> flag_cases{{
+            {"disabled frequency control", false, -0.6},
+            {"enabled frequency control", true, 0.2},
+        }};
+        for (const auto& test_case : flag_cases)
+        {
+          auto data                         = makeResidualData();
+          data.parameters[Params::Freqflag] = test_case.frequency_control;
+          Fixture<ScalarT> fixture(data);
+          fixture.attachAllInputs();
+          setAnswerKeyInputs(fixture);
+          success *= fixture.prepare(0.0, 0.0);
+          setState(fixture.repca, {{Vars::PREF, 0.8}, {Vars::PEXT, 0.3}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+          success *= residualsMatch(fixture.repca,
+                                    {{Vars::PEXT, test_case.pext}},
+                                    test_case.label);
+        }
+
+        Fixture<ScalarT> fixture(makeResidualData());
+        fixture.attachAllInputs();
+        setAnswerKeyInputs(fixture);
+        success *= fixture.prepare(0.0, 0.0);
+
+        // The interior probe sits at the midpoint of the band, where the
+        // smooth deadband cancels exactly.
+        const std::array<DrivenCase, 3> frequency_deadband_cases{{
+            {-0.81, -0.8},
+            {0.0025, 0.0},
+            {0.815, 0.8},
+        }};
+        for (const auto& test_case : frequency_deadband_cases)
+        {
+          fixture.input(Ext::FREQ)    = 1.0;
+          fixture.input(Ext::FREQREF) = 1.0 + test_case.input;
+          setState(fixture.repca, {{Vars::EF, 0.0}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+          success *= residualsMatch(fixture.repca,
+                                    {{Vars::EF, test_case.expected}},
+                                    "frequency deadband");
+        }
+
+        const std::array<DrivenCase, 3> droop_cases{{
+            {-0.9, -1.8},
+            {0.0, 0.0},
+            {0.9, 0.9},
+        }};
+        fixture.input(Ext::PREF) = 0.2;
+        for (const auto& test_case : droop_cases)
+        {
+          setState(fixture.repca,
+                   {{Vars::EF, test_case.input},
+                    {Vars::EP, 0.0},
+                    {Vars::PMEAS, 0.4}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+          success *= residualsMatch(fixture.repca,
+                                    {{Vars::EP, test_case.expected}},
+                                    "frequency droop");
+        }
+
+        const std::array<DrivenCase, 3> error_limit_cases{{
+            {-1.3, -0.5},
+            {0.05, 0.05},
+            {1.4, 0.6},
+        }};
+        for (const auto& test_case : error_limit_cases)
+        {
+          setState(fixture.repca, {{Vars::EP, test_case.input}, {Vars::EPLIM, 0.0}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+          success *= residualsMatch(fixture.repca,
+                                    {{Vars::EPLIM, test_case.expected}},
+                                    "active-power error limit");
+        }
+
+        const std::array<DrivenCase, 3> command_limit_cases{{
+            {-0.8, 0.0},
+            {1.0, 1.0},
+            {2.8, 2.0},
+        }};
+        for (const auto& test_case : command_limit_cases)
+        {
+          setState(fixture.repca,
+                   {{Vars::XPPI, test_case.input},
+                    {Vars::EPLIM, 0.0},
+                    {Vars::PPI, 0.0}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+          success *= residualsMatch(fixture.repca,
+                                    {{Vars::PPI, test_case.expected}},
+                                    "active-power command limit");
+        }
+
+        // Saturated probes sit beyond their limit by a margin, so a blocked
+        // gate contributes nothing and an admitted gate passes the full rate.
+        const std::array<AntiWindupCase, 6> antiwindup_cases{{
+            {-0.8, -0.5, 0.0},
+            {-0.8, 0.5, 0.9},
+            {1.0, -0.5, -0.9},
+            {1.0, 0.5, 0.9},
+            {2.8, -0.5, -0.9},
+            {2.8, 0.5, 0.0},
+        }};
+        for (const auto& test_case : antiwindup_cases)
+        {
+          setState(fixture.repca,
+                   {{Vars::PPI, test_case.output},
+                    {Vars::EPLIM, test_case.error}});
+          setDerivative(fixture.repca, {{Vars::XPPI, 0.0}});
+          success *= (fixture.repca.evaluateResidual() == 0);
+          success *= residualsMatch(fixture.repca,
+                                    {{Vars::XPPI, test_case.expected}},
+                                    "active-power antiwindup");
+        }
+
+        setState(fixture.repca, {{Vars::PPI, 0.66}, {Vars::PREF, 0.60}});
+        setDerivative(fixture.repca, {{Vars::PREF, 0.05}});
+        success *= (fixture.repca.evaluateResidual() == 0);
+        success *= residualsMatch(fixture.repca,
+                                  {{Vars::PREF, 0.07}},
+                                  "active-power command lag");
+
+        return success.report(__func__);
+      }
+
+      /// Check every differential residual with nonzero explicit derivatives.
+      TestOutcome derivatives()
+      {
+        TestStatus success = true;
+
+        Fixture<ScalarT> fixture(makeResidualData(), kStateVr, kStateVi);
+        fixture.attachAllInputs();
+        setAnswerKeyInputs(fixture);
+        success *= fixture.prepare(0.0, 0.0);
+        setAnswerKeyState(fixture.repca);
+        setDerivative(fixture.repca,
+                      {{Vars::VMEAS, 0.2},
+                       {Vars::QMEAS, -0.1},
+                       {Vars::XQPI, 0.4},
+                       {Vars::XQLAG, -0.3},
+                       {Vars::PMEAS, 0.6},
+                       {Vars::XPPI, -0.5},
+                       {Vars::PREF, 0.8}});
+        success *= (fixture.repca.evaluateResidual() == 0);
+        const std::array<VariableValue, 7> expected_residuals{{
+            {Vars::VMEAS, 0.3},
+            {Vars::QMEAS, 0.35},
+            {Vars::XQPI, 0.2},
+            {Vars::XQLAG, 0.36},
+            {Vars::PMEAS, 0.4},
+            {Vars::XPPI, -0.4},
+            {Vars::PREF, 0.3},
+        }};
+        success *= residualsMatch(fixture.repca,
+                                  expected_residuals,
+                                  "explicit derivatives");
+
+        return success.report(__func__);
+      }
+
+      /// Check every dependency-tracking Jacobian row against an independent
+      /// numerical and structural answer key, with both selector settings and
+      /// a non-unit alpha.
+      TestOutcome dependencyTracking()
+      {
+        TestStatus success = true;
+
+        const auto data       = makeResidualData();
+        const auto dependency = dependencyTrackingJacobian(data, success);
+
+        success *= jacobianMatches(dependency,
+                                   expectedJacobian(),
+                                   "dependency tracking",
+                                   kTol);
+
+        auto all_flags_off_data                          = data;
+        all_flags_off_data.parameters[Params::VcompFlag] = false;
+        all_flags_off_data.parameters[Params::RefFlag]   = false;
+        all_flags_off_data.parameters[Params::Freqflag]  = false;
+        const auto all_flags_off =
+            dependencyTrackingJacobian(all_flags_off_data, success);
+        success *= jacobianMatches(all_flags_off,
+                                   expectedJacobianAllFlagsOff(),
+                                   "all-flags-off dependency tracking",
+                                   kTol);
+
+        const auto nonunit_alpha_dependency =
+            dependencyTrackingJacobian(data, success, kNonunitAlpha);
+        success *= jacobianMatches(nonunit_alpha_dependency,
+                                   expectedJacobianNonunitAlpha(),
+                                   "non-unit-alpha dependency tracking",
+                                   kTol);
+
+        return success.report(__func__);
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      /// One rich state, both selector settings, and a non-unit alpha drive both
+      /// sensitivity paths; every Enzyme CSR row must match dependency tracking.
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        const auto data = makeResidualData();
+
+        success *= jacobianMatches(enzymeJacobian(data, success),
+                                   dependencyTrackingJacobian(data, success),
+                                   "Enzyme versus dependency tracking",
+                                   kTol);
+
+        auto all_flags_off_data                           = data;
+        all_flags_off_data.parameters[Params::VcompFlag]  = false;
+        all_flags_off_data.parameters[Params::RefFlag]    = false;
+        all_flags_off_data.parameters[Params::Freqflag]   = false;
+        success                                          *= jacobianMatches(
+            enzymeJacobian(all_flags_off_data, success),
+            dependencyTrackingJacobian(all_flags_off_data, success),
+            "all-flags-off Enzyme versus dependency tracking",
+            kTol);
+
+        success *= jacobianMatches(
+            enzymeJacobian(data, success, kNonunitAlpha),
+            dependencyTrackingJacobian(data, success, kNonunitAlpha),
+            "non-unit-alpha Enzyme versus dependency tracking",
+            kTol);
+
+        return success.report(__func__);
+      }
+#endif
+
+    private:
+      using Params = PhasorDynamics::Controller::RepcaParameters;
+      using Vars   = PhasorDynamics::Controller::RepcaInternalVariables;
+      using Ext    = PhasorDynamics::Controller::RepcaExternalVariables;
+      using Mon    = PhasorDynamics::Controller::RepcaMonitorableVariables;
+      using Data   = PhasorDynamics::Controller::RepcaData<RealT, IdxT>;
+      using RepcaT = PhasorDynamics::Controller::Repca<ScalarT, IdxT>;
+
+      static constexpr size_t index(Vars variable)
+      {
+        return static_cast<size_t>(variable);
+      }
+
+      static constexpr size_t index(Ext variable)
+      {
+        return static_cast<size_t>(variable);
+      }
+
+      struct VariableValue
+      {
+        Vars  variable;
+        RealT value;
+      };
+
+      struct DrivenCase
+      {
+        RealT input;
+        RealT expected;
+      };
+
+      struct AntiWindupCase
+      {
+        RealT output;
+        RealT error;
+        RealT expected;
+      };
+
+      enum class NonfiniteTarget
+      {
+        NONE,
+        INPUT,
+        BUS_VOLTAGE
+      };
+
+      /// Owns the regulated bus, REPCA, assigned command nodes, and attached
+      /// input nodes. Signal storage precedes the model so every referenced node
+      /// outlives REPCA; copying would invalidate the model and node pointers.
+      template <typename T>
+      class Fixture
+      {
+      private:
+        std::array<T, index(Ext::MAXIMUM)>                                   input_values_{};
+        std::array<IdxT, index(Ext::MAXIMUM)>                                input_indices_{};
+        std::array<PhasorDynamics::SignalNode<T, IdxT>, index(Ext::MAXIMUM)> input_nodes_{};
+
+        PhasorDynamics::SignalNode<T, IdxT> qext_node_;
+        PhasorDynamics::SignalNode<T, IdxT> pext_node_;
+
+      public:
+        explicit Fixture(const Data& data,
+                         RealT       vr                     = 1.0,
+                         RealT       vi                     = 0.0,
+                         RealT       system_va_base         = 100.0e6,
+                         bool        assign_command_outputs = true)
+          : bus(static_cast<T>(vr), static_cast<T>(vi)),
+            repca(&bus, data)
+        {
+          repca.setSystemBase(60.0, system_va_base);
+          if (assign_command_outputs)
+          {
+            repca.getSignals().template assignSignalNode<Vars::QEXT>(&qext_node_);
+            repca.getSignals().template assignSignalNode<Vars::PEXT>(&pext_node_);
+          }
+        }
+
+        Fixture(const Fixture&)            = delete;
+        Fixture& operator=(const Fixture&) = delete;
+
+        void attachRequiredInputs(RealT initial_value = 0.0)
+        {
+          const IdxT external_index_base = repca.size() + bus.size();
+          for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+          {
+            input_values_[port]  = static_cast<T>(initial_value);
+            input_indices_[port] = external_index_base + static_cast<IdxT>(port);
+            input_nodes_[port].set(&input_values_[port], &input_indices_[port]);
+          }
+
+          auto& signals = repca.getSignals();
+          signals.template attachSignalNode<Ext::IR>(&input_nodes_[index(Ext::IR)]);
+          signals.template attachSignalNode<Ext::II>(&input_nodes_[index(Ext::II)]);
+          signals.template attachSignalNode<Ext::P>(&input_nodes_[index(Ext::P)]);
+          signals.template attachSignalNode<Ext::Q>(&input_nodes_[index(Ext::Q)]);
+        }
+
+        void attachAllInputs(RealT initial_value    = 0.0,
+                             bool  attach_frequency = true)
+        {
+          attachRequiredInputs(initial_value);
+
+          auto& signals = repca.getSignals();
+          if (attach_frequency)
+          {
+            signals.template attachSignalNode<Ext::FREQ>(&input_nodes_[index(Ext::FREQ)]);
+          }
+          signals.template attachSignalNode<Ext::VREF>(&input_nodes_[index(Ext::VREF)]);
+          signals.template attachSignalNode<Ext::PREF>(&input_nodes_[index(Ext::PREF)]);
+          signals.template attachSignalNode<Ext::QREF>(&input_nodes_[index(Ext::QREF)]);
+          signals.template attachSignalNode<Ext::FREQREF>(&input_nodes_[index(Ext::FREQREF)]);
+        }
+
+        void setCommands(RealT qext, RealT pext)
+        {
+          auto* y              = repca.y().getData();
+          y[index(Vars::QEXT)] = static_cast<T>(qext);
+          y[index(Vars::PEXT)] = static_cast<T>(pext);
+          repca.y().setDataUpdated();
+        }
+
+        /// Arrange the allocation, verification, bus, and command prerequisites.
+        bool prepare(RealT qext, RealT pext)
+        {
+          const bool success = (bus.allocate() == 0) && (repca.allocate() == 0)
+                               && (repca.verify() == 0) && (bus.initialize() == 0);
+          if (!success)
+          {
+            std::cout << "REPCA fixture preparation failed\n";
+            return false;
+          }
+          setCommands(qext, pext);
+          return true;
+        }
+
+        bool initialize(RealT qext, RealT pext)
+        {
+          if (!prepare(qext, pext))
+          {
+            return false;
+          }
+          if (repca.initialize() != 0)
+          {
+            std::cout << "REPCA initialization failed\n";
+            return false;
+          }
+          return true;
+        }
+
+        T qext() const
+        {
+          return repca.y().getData()[index(Vars::QEXT)];
+        }
+
+        T pext() const
+        {
+          return repca.y().getData()[index(Vars::PEXT)];
+        }
+
+        T& input(Ext port)
+        {
+          return input_values_[index(port)];
+        }
+
+        IdxT inputIndex(Ext port) const
+        {
+          return input_indices_[index(port)];
+        }
+
+        PhasorDynamics::Bus<T, IdxT>               bus;
+        PhasorDynamics::Controller::Repca<T, IdxT> repca;
+      };
+
+      static constexpr RealT kStateVr      = 0.9;
+      static constexpr RealT kStateVi      = 0.4;
+      static constexpr RealT kNonunitAlpha = 2.5;
+
+      static constexpr size_t kBusVrColumn        = index(Vars::MAXIMUM);
+      static constexpr size_t kBusViColumn        = kBusVrColumn + 1;
+      static constexpr size_t kExternalColumnBase = kBusViColumn + 1;
+
+      static constexpr size_t externalColumn(size_t port)
+      {
+        return kExternalColumnBase + port;
+      }
+
+      Data makeMinimalData() const
+      {
+        Data data;
+        data.device_class          = "Repca";
+        data.disambiguation_string = "repca_test";
+        data.monitored_variables.insert(Mon::qext);
+        data.monitored_variables.insert(Mon::pext);
+        data.monitored_variables.insert(Mon::vmeas);
+        data.monitored_variables.insert(Mon::qmeas);
+        data.monitored_variables.insert(Mon::pmeas);
+        return data;
+      }
+
+      Data makeExplicitDefaultData() const
+      {
+        auto data                          = makeMinimalData();
+        data.parameters[Params::mva]       = 100.0;
+        data.parameters[Params::VcompFlag] = true;
+        data.parameters[Params::RefFlag]   = true;
+        data.parameters[Params::Freqflag]  = false;
+        data.parameters[Params::Tfltr]     = 0.05;
+        data.parameters[Params::Vfrz]      = 0.7;
+        data.parameters[Params::Rc]        = 0.0;
+        data.parameters[Params::Xc]        = 0.0;
+        data.parameters[Params::Kc]        = 1.0;
+        data.parameters[Params::dbdlow]    = 0.0;
+        data.parameters[Params::dbdupper]  = 0.0;
+        data.parameters[Params::emax]      = 1.0;
+        data.parameters[Params::emin]      = -1.0;
+        data.parameters[Params::Kp]        = 10.0;
+        data.parameters[Params::Ki]        = 10.0;
+        data.parameters[Params::Qmax]      = 1.0;
+        data.parameters[Params::Qmin]      = -1.0;
+        data.parameters[Params::Tft]       = 0.0;
+        data.parameters[Params::Tfv]       = 3.0;
+        data.parameters[Params::Tp]        = 0.0;
+        data.parameters[Params::fdbd1]     = 0.0;
+        data.parameters[Params::fdbd2]     = 0.0;
+        data.parameters[Params::Ddn]       = 20.0;
+        data.parameters[Params::Dup]       = 0.0;
+        data.parameters[Params::femax]     = 1.0;
+        data.parameters[Params::femin]     = -1.0;
+        data.parameters[Params::Kpg]       = 10.0;
+        data.parameters[Params::Kig]       = 10.0;
+        data.parameters[Params::Pmax]      = 2.0;
+        data.parameters[Params::Pmin]      = 0.0;
+        data.parameters[Params::Tlag]      = 3.0;
+        return data;
+      }
+
+      Data makeData() const
+      {
+        auto data                         = makeExplicitDefaultData();
+        data.parameters[Params::Freqflag] = true;
+        data.parameters[Params::Tp]       = 0.05;
+        return data;
+      }
+
+      /// Distinct nonzero values for every parameter. The limiter bands are
+      /// wide enough, and the lag reciprocals exact enough, for probe states
+      /// to clear every smooth transition on an exact decimal.
+      Data makeResidualData() const
+      {
+        auto data                         = makeData();
+        data.parameters[Params::mva]      = 50.0;
+        data.parameters[Params::Tfltr]    = 0.2;
+        data.parameters[Params::Rc]       = 0.02;
+        data.parameters[Params::Xc]       = 0.03;
+        data.parameters[Params::Kc]       = 0.4;
+        data.parameters[Params::dbdlow]   = -0.02;
+        data.parameters[Params::dbdupper] = 0.03;
+        data.parameters[Params::emax]     = 0.8;
+        data.parameters[Params::emin]     = -0.7;
+        data.parameters[Params::Kp]       = 2.0;
+        data.parameters[Params::Ki]       = 3.0;
+        data.parameters[Params::Qmax]     = 0.9;
+        data.parameters[Params::Qmin]     = -0.8;
+        data.parameters[Params::Tft]      = 0.2;
+        data.parameters[Params::Tfv]      = 2.5;
+        data.parameters[Params::Tp]       = 0.4;
+        data.parameters[Params::fdbd1]    = -0.01;
+        data.parameters[Params::fdbd2]    = 0.015;
+        data.parameters[Params::Ddn]      = 2.0;
+        data.parameters[Params::Dup]      = 1.0;
+        data.parameters[Params::femax]    = 0.6;
+        data.parameters[Params::femin]    = -0.5;
+        data.parameters[Params::Kpg]      = 1.7;
+        data.parameters[Params::Kig]      = 1.8;
+        data.parameters[Params::Pmax]     = 2.0;
+        data.parameters[Params::Tlag]     = 0.5;
+        return data;
+      }
+
+      /// Both deadbands and both error limits are symmetric and the droop
+      /// gains are equal, so an operating point with no error reconstructs
+      /// exactly; the commands and the freeze threshold clear their limits.
+      Data makeInitializationData() const
+      {
+        auto data                         = makeResidualData();
+        data.parameters[Params::Vfrz]     = 0.2;
+        data.parameters[Params::dbdupper] = 0.02;
+        data.parameters[Params::emin]     = -0.8;
+        data.parameters[Params::Qmax]     = 1.5;
+        data.parameters[Params::fdbd1]    = -0.015;
+        data.parameters[Params::Dup]      = 2.0;
+        data.parameters[Params::femin]    = -0.6;
+        return data;
+      }
+
+      template <typename T>
+      void setInitializationInputs(Fixture<T>& fixture) const
+      {
+        fixture.input(Ext::IR)   = static_cast<T>(0.2);
+        fixture.input(Ext::II)   = static_cast<T>(-0.1);
+        fixture.input(Ext::P)    = static_cast<T>(0.4);
+        fixture.input(Ext::Q)    = static_cast<T>(0.1);
+        fixture.input(Ext::FREQ) = static_cast<T>(0.99);
+      }
+
+      template <typename T>
+      void setAnswerKeyInputs(Fixture<T>& fixture) const
+      {
+        fixture.input(Ext::IR)      = static_cast<T>(1.0);
+        fixture.input(Ext::II)      = static_cast<T>(2.0);
+        fixture.input(Ext::P)       = static_cast<T>(0.35);
+        fixture.input(Ext::Q)       = static_cast<T>(0.25);
+        fixture.input(Ext::FREQ)    = static_cast<T>(0.2);
+        fixture.input(Ext::VREF)    = static_cast<T>(1.05);
+        fixture.input(Ext::PREF)    = static_cast<T>(0.55);
+        fixture.input(Ext::QREF)    = static_cast<T>(0.3);
+        fixture.input(Ext::FREQREF) = static_cast<T>(1.0);
+      }
+
+      template <typename T>
+      void setAnswerKeyState(PhasorDynamics::Controller::Repca<T, IdxT>& repca) const
+      {
+        // Every smooth-transition argument keeps a saturation margin, and
+        // every clamp that must pass its input through sits at the midpoint
+        // of its limits, so each row carries its ideal value.
+        setState(repca,
+                 {{Vars::VMEAS, 0.85},
+                  {Vars::QMEAS, 0.45},
+                  {Vars::XQPI, -0.75},
+                  {Vars::XQLAG, -0.05},
+                  {Vars::PMEAS, 0.3},
+                  {Vars::XPPI, 1.85},
+                  {Vars::PREF, 0.35},
+                  {Vars::V, 1.5},
+                  {Vars::VLDC, 1.0},
+                  {Vars::VDROOP, 1.6},
+                  {Vars::VCTRL, 0.95},
+                  {Vars::SFRZ, 0.5},
+                  {Vars::ERQ, 0.83},
+                  {Vars::ERQDB, 0.05},
+                  {Vars::ERQLIM, 0.4},
+                  {Vars::QPI, 0.1},
+                  {Vars::QEXT, 0.25},
+                  {Vars::EF, 0.8},
+                  {Vars::EP, 2.0},
+                  {Vars::EPLIM, -0.5},
+                  {Vars::PPI, 0.9},
+                  {Vars::PEXT, 0.15}});
+        setDerivative(repca,
+                      {{Vars::VMEAS, 0.1},
+                       {Vars::QMEAS, -0.2},
+                       {Vars::XQPI, 0.3},
+                       {Vars::XQLAG, -0.4},
+                       {Vars::PMEAS, 0.5},
+                       {Vars::XPPI, -0.6},
+                       {Vars::PREF, 0.7}});
+      }
+
+      bool defaultsMatchDocumentedValues() const
+      {
+        Fixture<ScalarT> implicit_defaults(makeMinimalData(), 0.9, 0.4);
+        Fixture<ScalarT> explicit_defaults(makeExplicitDefaultData(), 0.9, 0.4);
+        implicit_defaults.attachAllInputs();
+        explicit_defaults.attachAllInputs();
+
+        implicit_defaults.input(Ext::P)    = 0.2;
+        implicit_defaults.input(Ext::Q)    = 0.1;
+        implicit_defaults.input(Ext::FREQ) = 1.0;
+        explicit_defaults.input(Ext::P)    = 0.2;
+        explicit_defaults.input(Ext::Q)    = 0.1;
+        explicit_defaults.input(Ext::FREQ) = 1.0;
+
+        bool success = implicit_defaults.initialize(0.1, 0.2)
+                       && explicit_defaults.initialize(0.1, 0.2);
+        if (!success)
+        {
+          std::cout << "REPCA documented-default comparison failed to initialize\n";
+          return false;
+        }
+
+        if (implicit_defaults.repca.evaluateResidual() != 0)
+        {
+          success = false;
+        }
+        if (explicit_defaults.repca.evaluateResidual() != 0)
+        {
+          success = false;
+        }
+        if (!vectorsMatch(implicit_defaults.repca.y(),
+                          explicit_defaults.repca.y(),
+                          "documented-default state"))
+        {
+          success = false;
+        }
+        if (!vectorsMatch(implicit_defaults.repca.yp(),
+                          explicit_defaults.repca.yp(),
+                          "documented-default derivative"))
+        {
+          success = false;
+        }
+        if (!vectorsMatch(implicit_defaults.repca.getResidual(),
+                          explicit_defaults.repca.getResidual(),
+                          "documented-default residual"))
+        {
+          success = false;
+        }
+        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        {
+          const auto variable = static_cast<Ext>(port);
+          if (!rowMatches(implicit_defaults.input(variable),
+                          explicit_defaults.input(variable),
+                          "documented-default signal",
+                          port,
+                          ""))
+          {
+            success = false;
+          }
+        }
+
+        setAnswerKeyInputs(implicit_defaults);
+        setAnswerKeyInputs(explicit_defaults);
+        setAnswerKeyState(implicit_defaults.repca);
+        setAnswerKeyState(explicit_defaults.repca);
+        if (implicit_defaults.repca.evaluateResidual() != 0)
+        {
+          success = false;
+        }
+        if (explicit_defaults.repca.evaluateResidual() != 0)
+        {
+          success = false;
+        }
+        if (!vectorsMatch(implicit_defaults.repca.getResidual(),
+                          explicit_defaults.repca.getResidual(),
+                          "documented-default dynamic residual"))
+        {
+          success = false;
+        }
+        return success;
+      }
+
+      template <typename ValueT>
+      bool invalidParameterCase(Params parameter, ValueT value) const
+      {
+        auto data                  = makeData();
+        data.parameters[parameter] = value;
+        Fixture<ScalarT> fixture(data);
+        fixture.attachAllInputs();
+        return fixture.repca.verify() > 0;
+      }
+
+      template <Ext variable>
+      bool unlinkedSignalRejected() const
+      {
+        Fixture<ScalarT> fixture(makeData());
+        fixture.attachAllInputs();
+        PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
+        fixture.repca.getSignals().template attachSignalNode<variable>(&unlinked_node);
+        return fixture.repca.verify() > 0;
+      }
+
+      /// Fill state and derivative with a recognizable ramp, restoring the
+      /// aliased commands, so any write by a rejected initialization shows.
+      void poisonState(Fixture<ScalarT>& fixture, RealT qext, RealT pext) const
+      {
+        auto* y  = fixture.repca.y().getData();
+        auto* yp = fixture.repca.yp().getData();
+        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        {
+          y[row]  = 0.125 + 0.01 * static_cast<RealT>(row);
+          yp[row] = -0.25 - 0.01 * static_cast<RealT>(row);
+        }
+        fixture.setCommands(qext, pext);
+        fixture.repca.yp().setDataUpdated();
+      }
+
+      bool initializationRejectedAtomically(const Data&     data,
+                                            RealT           qext,
+                                            RealT           pext,
+                                            const char*     label,
+                                            NonfiniteTarget target        = NonfiniteTarget::NONE,
+                                            RealT           initial_vr    = 0.8,
+                                            RealT           initial_vi    = 0.6,
+                                            Ext             poisoned_port = Ext::FREQ,
+                                            RealT           poison_value =
+                                                std::numeric_limits<RealT>::infinity()) const
+      {
+        Fixture<ScalarT> fixture(data, initial_vr, initial_vi);
+        fixture.attachAllInputs(77.0);
+        setInitializationInputs(fixture);
+        if (!fixture.prepare(qext, pext))
+        {
+          return false;
+        }
+
+        if (target == NonfiniteTarget::INPUT)
+        {
+          fixture.input(poisoned_port) = poison_value;
+        }
+        if (target == NonfiniteTarget::BUS_VOLTAGE)
+        {
+          fixture.bus.Vr() = poison_value;
+          fixture.bus.y().setDataUpdated();
+        }
+
+        poisonState(fixture, qext, pext);
+
+        const auto                             y_before   = copyVector(fixture.repca.y());
+        const auto                             yp_before  = copyVector(fixture.repca.yp());
+        const auto                             bus_before = copyVector(fixture.bus.y());
+        std::array<RealT, index(Ext::MAXIMUM)> inputs_before{};
+        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        {
+          inputs_before[port] = fixture.input(static_cast<Ext>(port));
+        }
+
+        bool success = true;
+        if (fixture.repca.initialize() == 0)
+        {
+          std::cout << "Expected REPCA initialization rejection: " << label << '\n';
+          success = false;
+        }
+
+        if (!scalarPreserved(fixture.qext(), qext, "rejected qext preservation"))
+        {
+          success = false;
+        }
+        if (!scalarPreserved(fixture.pext(), pext, "rejected pext preservation"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.repca.y(), y_before, "state"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.repca.yp(), yp_before, "derivative"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(fixture.bus.y(), bus_before, "bus state"))
+        {
+          success = false;
+        }
+        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        {
+          if (!valueUnchanged(fixture.input(static_cast<Ext>(port)),
+                              inputs_before[port],
+                              "external signal",
+                              port))
+          {
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      template <typename T>
+      void setState(PhasorDynamics::Controller::Repca<T, IdxT>& repca,
+                    std::initializer_list<VariableValue>        values) const
+      {
+        auto* y = repca.y().getData();
+        for (const auto& [variable, value] : values)
+        {
+          y[index(variable)] = static_cast<T>(value);
+        }
+        repca.y().setDataUpdated();
+      }
+
+      template <typename T>
+      void setDerivative(PhasorDynamics::Controller::Repca<T, IdxT>& repca,
+                         std::initializer_list<VariableValue>        values) const
+      {
+        auto* yp = repca.yp().getData();
+        for (const auto& [variable, value] : values)
+        {
+          yp[index(variable)] = static_cast<T>(value);
+        }
+        repca.yp().setDataUpdated();
+      }
+
+      static const char* variableName(Vars variable)
+      {
+        static constexpr std::array<const char*, index(Vars::MAXIMUM)> names{{
+            "VMEAS",
+            "QMEAS",
+            "XQPI",
+            "XQLAG",
+            "PMEAS",
+            "XPPI",
+            "PREF",
+            "V",
+            "VLDC",
+            "VDROOP",
+            "VCTRL",
+            "SFRZ",
+            "ERQ",
+            "ERQDB",
+            "ERQLIM",
+            "QPI",
+            "QEXT",
+            "EF",
+            "EP",
+            "EPLIM",
+            "PPI",
+            "PEXT",
+        }};
+        return names[index(variable)];
+      }
+
+      static bool variableMatches(RealT       actual,
+                                  RealT       expected,
+                                  const char* what,
+                                  Vars        variable,
+                                  const char* context,
+                                  RealT       tolerance = kTol)
+      {
+        if (isEqual(actual, expected, tolerance))
+        {
+          return true;
+        }
+        std::cout << "REPCA " << what << ' ' << variableName(variable);
+        if (context[0] != '\0')
+        {
+          std::cout << ' ' << context;
+        }
+        std::cout << " mismatch: "
+                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
+                  << actual << " != " << expected << '\n';
+        return false;
+      }
+
+      static bool rowMatches(RealT       actual,
+                             RealT       expected,
+                             const char* what,
+                             size_t      row,
+                             const char* context,
+                             RealT       tolerance = kTol)
+      {
+        if (isEqual(actual, expected, tolerance))
+        {
+          return true;
+        }
+        std::cout << "REPCA " << what << " row " << row;
+        if (context[0] != '\0')
+        {
+          std::cout << ' ' << context;
+        }
+        std::cout << " mismatch: " << std::setprecision(std::numeric_limits<RealT>::max_digits10) << actual
+                  << " != " << expected << '\n';
+        return false;
+      }
+
+      bool scalarMatches(RealT       actual,
+                         RealT       expected,
+                         const char* label,
+                         RealT       tolerance = kTol) const
+      {
+        if (isEqual(actual, expected, tolerance))
+        {
+          return true;
+        }
+        std::cout << label << " mismatch: " << std::setprecision(std::numeric_limits<RealT>::max_digits10) << actual
+                  << " != " << expected << '\n';
+        return false;
+      }
+
+      bool monitorMatches(const RepcaT&               repca,
+                          const std::array<RealT, 5>& expected,
+                          const char*                 context) const
+      {
+        RealT                                     time = 0.0;
+        Model::VariableMonitorController<ScalarT> monitor(time);
+        monitor.addMonitor(repca.getMonitor());
+        std::stringstream output;
+        monitor.addSink({Model::VariableMonitorFormat::CSV}, output);
+        monitor.start();
+        monitor.print();
+        monitor.stop();
+
+        std::string header;
+        std::string values_line;
+        std::getline(output, header);
+        std::getline(output, values_line);
+
+        bool success =
+            header == "t,Repca_repca_test_qext,Repca_repca_test_pext,"
+                      "Repca_repca_test_vmeas,Repca_repca_test_qmeas,"
+                      "Repca_repca_test_pmeas";
+
+        const auto values = Tokenizer<RealT>(values_line, ',')();
+        if (values.size() != expected.size() + 1)
+        {
+          std::cout << "REPCA monitor emitted " << values.size()
+                    << " values instead of " << expected.size() + 1 << '\n';
+          return false;
+        }
+
+        for (size_t i = 0; i < expected.size(); ++i)
+        {
+          if (!rowMatches(values[i + 1],
+                          expected[i],
+                          "monitor",
+                          i,
+                          context))
+          {
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      /// A value retains exactly what its owner supplied, including signed
+      /// infinities and NaN.
+      static bool preserved(RealT actual, RealT expected)
+      {
+        if (std::isnan(expected))
+        {
+          return std::isnan(actual);
+        }
+        return actual == expected;
+      }
+
+      bool scalarPreserved(RealT actual, RealT expected, const char* label) const
+      {
+        if (preserved(actual, expected))
+        {
+          return true;
+        }
+        std::cout << label << " changed: " << std::setprecision(std::numeric_limits<RealT>::max_digits10) << actual
+                  << " != " << expected << '\n';
+        return false;
+      }
+
+      static bool valueUnchanged(RealT       actual,
+                                 RealT       expected,
+                                 const char* what,
+                                 size_t      index)
+      {
+        if (preserved(actual, expected))
+        {
+          return true;
+        }
+        std::cout << "REPCA " << what << ' ' << index
+                  << " changed: " << std::setprecision(std::numeric_limits<RealT>::max_digits10) << actual
+                  << " != " << expected << '\n';
+        return false;
+      }
+
+      template <typename VectorT, typename ValuesT>
+      bool rowsMatch(const VectorT& vector,
+                     const ValuesT& values,
+                     const char*    what,
+                     const char*    context) const
+      {
+        bool        success       = true;
+        const auto* vector_values = vector.getData();
+        for (const auto& [variable, expected] : values)
+        {
+          const size_t row = index(variable);
+
+          if (!variableMatches(static_cast<RealT>(vector_values[row]),
+                               expected,
+                               what,
+                               variable,
+                               context))
+          {
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      bool residualsMatch(const RepcaT&                        repca,
+                          std::initializer_list<VariableValue> values,
+                          const char*                          context = "") const
+      {
+        return rowsMatch(repca.getResidual(), values, "residual", context);
+      }
+
+      template <size_t size>
+      bool residualsMatch(const RepcaT&                          repca,
+                          const std::array<VariableValue, size>& values,
+                          const char*                            context = "") const
+      {
+        return rowsMatch(repca.getResidual(), values, "residual", context);
+      }
+
+      bool stateMatches(const RepcaT&                        repca,
+                        std::initializer_list<VariableValue> values,
+                        const char*                          context = "") const
+      {
+        return rowsMatch(repca.y(), values, "state", context);
+      }
+
+      template <size_t size>
+      bool stateMatches(const RepcaT&                          repca,
+                        const std::array<VariableValue, size>& values,
+                        const char*                            context = "") const
+      {
+        return rowsMatch(repca.y(), values, "state", context);
+      }
+
+      bool allResidualsWithinInitTolerance(const RepcaT& repca) const
+      {
+        bool        success = true;
+        const auto* f       = repca.getResidual().getData();
+        const auto* yp      = repca.yp().getData();
+        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        {
+          const auto variable = static_cast<Vars>(row);
+          if (!variableMatches(f[row],
+                               0.0,
+                               "residual",
+                               variable,
+                               "at rest",
+                               RepcaT::INITIALIZATION_TOLERANCE))
+          {
+            success = false;
+          }
+          if (!valueUnchanged(yp[row], 0.0, "derivative", row))
+          {
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      template <typename VectorT>
+      std::vector<RealT> copyVector(const VectorT& vector) const
+      {
+        const auto*        values = vector.getData();
+        std::vector<RealT> snapshot(static_cast<size_t>(vector.getSize()));
+        for (size_t row = 0; row < snapshot.size(); ++row)
+        {
+          snapshot[row] = static_cast<RealT>(values[row]);
+        }
+        return snapshot;
+      }
+
+      template <typename VectorT>
+      bool vectorUnchanged(const VectorT&            vector,
+                           const std::vector<RealT>& snapshot,
+                           const char*               what) const
+      {
+        bool        success = true;
+        const auto* values  = vector.getData();
+        for (size_t row = 0; row < snapshot.size(); ++row)
+        {
+          if (!valueUnchanged(static_cast<RealT>(values[row]),
+                              snapshot[row],
+                              what,
+                              row))
+          {
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      template <typename LeftVectorT, typename RightVectorT>
+      bool vectorsMatch(const LeftVectorT&  left,
+                        const RightVectorT& right,
+                        const char*         what) const
+      {
+        if (left.getSize() != right.getSize())
+        {
+          std::cout << "REPCA " << what << " size mismatch\n";
+          return false;
+        }
+        bool        success      = true;
+        const auto* left_values  = left.getData();
+        const auto* right_values = right.getData();
+        for (size_t row = 0; row < static_cast<size_t>(left.getSize()); ++row)
+        {
+          if (!rowMatches(static_cast<RealT>(left_values[row]),
+                          static_cast<RealT>(right_values[row]),
+                          what,
+                          row,
+                          ""))
+          {
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      void noteExpectedLogs(const char* message) const
+      {
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << message << '\n';
+        Log::setVerbosity(previous_verbosity);
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> expectedJacobian() const
+      {
+        return {
+            {{index(Vars::VMEAS), -6.0}, {index(Vars::VCTRL), 5.0}},
+            {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::Q)), 10.0}},
+            {{index(Vars::XQPI), -1.0},
+             {index(Vars::SFRZ), 1.2},
+             {index(Vars::ERQLIM), 1.5},
+             {index(Vars::QPI), 0.0}},
+            {{index(Vars::XQLAG), -1.4}, {index(Vars::QPI), 0.4}},
+            {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::P)), 5.0}},
+            {{index(Vars::XPPI), -1.0},
+             {index(Vars::EPLIM), 1.8},
+             {index(Vars::PPI), 0.0}},
+            {{index(Vars::PREF), -3.0}, {index(Vars::PPI), 2.0}},
+            {{index(Vars::V), -3.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
+            {{index(Vars::VLDC), -2.0},
+             {kBusVrColumn, 1.96},
+             {kBusViColumn, 0.52},
+             {externalColumn(index(Ext::IR)), -0.1096},
+             {externalColumn(index(Ext::II)), 0.0968}},
+            {{index(Vars::V), 1.0}, {index(Vars::VDROOP), -1.0}, {externalColumn(index(Ext::Q)), 0.8}},
+            {{index(Vars::VLDC), 1.0},
+             {index(Vars::VDROOP), 0.0},
+             {index(Vars::VCTRL), -1.0}},
+            {{index(Vars::V), 0.0}, {index(Vars::SFRZ), -1.0}},
+            {{index(Vars::VMEAS), -1.0},
+             {index(Vars::QMEAS), 0.0},
+             {index(Vars::ERQ), -1.0},
+             {externalColumn(index(Ext::VREF)), 1.0},
+             {externalColumn(index(Ext::QREF)), 0.0}},
+            {{index(Vars::ERQ), 1.0}, {index(Vars::ERQDB), -1.0}},
+            {{index(Vars::ERQDB), 1.0}, {index(Vars::ERQLIM), -1.0}},
+            {{index(Vars::XQPI), 1.0}, {index(Vars::ERQLIM), 2.0}, {index(Vars::QPI), -1.0}},
+            {{index(Vars::XQLAG), 2.3}, {index(Vars::QPI), 0.2}, {index(Vars::QEXT), -5.0}},
+            {{index(Vars::EF), -1.0},
+             {externalColumn(index(Ext::FREQ)), -1.0},
+             {externalColumn(index(Ext::FREQREF)), 1.0}},
+            {{index(Vars::PMEAS), -1.0},
+             {index(Vars::EF), 1.0},
+             {index(Vars::EP), -1.0},
+             {externalColumn(index(Ext::PREF)), 2.0}},
+            {{index(Vars::EP), 0.0}, {index(Vars::EPLIM), -1.0}},
+            {{index(Vars::XPPI), 1.0}, {index(Vars::EPLIM), 1.7}, {index(Vars::PPI), -1.0}},
+            {{index(Vars::PREF), 1.0}, {index(Vars::PEXT), -2.0}},
+        };
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> expectedJacobianAllFlagsOff() const
+      {
+        auto expected                = expectedJacobian();
+        expected[index(Vars::VCTRL)] = {
+            {index(Vars::VLDC), 0.0},
+            {index(Vars::VDROOP), 1.0},
+            {index(Vars::VCTRL), -1.0},
+        };
+        expected[index(Vars::ERQ)] = {
+            {index(Vars::VMEAS), 0.0},
+            {index(Vars::QMEAS), -1.0},
+            {index(Vars::ERQ), -1.0},
+            {externalColumn(index(Ext::VREF)), 0.0},
+            {externalColumn(index(Ext::QREF)), 2.0},
+        };
+        expected[index(Vars::PEXT)] = {
+            {index(Vars::PREF), 0.0},
+            {index(Vars::PEXT), -2.0},
+        };
+        return expected;
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> expectedJacobianNonunitAlpha() const
+      {
+        auto expected                                    = expectedJacobian();
+        expected[index(Vars::VMEAS)][index(Vars::VMEAS)] = -7.5;
+        expected[index(Vars::QMEAS)][index(Vars::QMEAS)] = -7.5;
+        expected[index(Vars::XQPI)][index(Vars::XQPI)]   = -2.5;
+        expected[index(Vars::XQLAG)][index(Vars::XQLAG)] = -2.9;
+        expected[index(Vars::PMEAS)][index(Vars::PMEAS)] = -5.0;
+        expected[index(Vars::XPPI)][index(Vars::XPPI)]   = -2.5;
+        expected[index(Vars::PREF)][index(Vars::PREF)]   = -4.5;
+        return expected;
+      }
+
+      bool jacobianRowMatches(
+          const DependencyTracking::Variable::DependencyMap& actual,
+          const DependencyTracking::Variable::DependencyMap& expected,
+          size_t                                             row,
+          const char*                                        source,
+          RealT                                              tolerance) const
+      {
+        if (isEqual(actual, expected, tolerance))
+        {
+          return true;
+        }
+
+        std::cout << "REPCA " << source << " Jacobian row " << row
+                  << " mismatch\n";
+        return false;
+      }
+
+      bool jacobianMatches(
+          const std::vector<DependencyTracking::Variable::DependencyMap>& actual,
+          const std::vector<DependencyTracking::Variable::DependencyMap>& expected,
+          const char*                                                     source,
+          RealT                                                           tolerance) const
+      {
+        if (actual.size() != expected.size())
+        {
+          std::cout << "REPCA " << source << " Jacobian row-count mismatch\n";
+          return false;
+        }
+
+        bool success = true;
+        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        {
+          if (!jacobianRowMatches(actual[row], expected[row], row, source, tolerance))
+          {
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      void numberVariables(Fixture<DependencyTracking::Variable>& fixture,
+                           RealT                                  alpha) const
+      {
+        auto* y     = fixture.repca.y().getData();
+        auto* yp    = fixture.repca.yp().getData();
+        auto* bus_y = fixture.bus.y().getData();
+
+        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        {
+          y[row].setVariableNumber(row);
+          yp[row].setVariableNumber(row);
+          yp[row].scaleDependencies(alpha);
+        }
+        for (size_t row = 0; row < static_cast<size_t>(fixture.bus.size()); ++row)
+        {
+          bus_y[row].setVariableNumber(kBusVrColumn + row);
+        }
+        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        {
+          const auto variable = static_cast<Ext>(port);
+          fixture.input(variable).setVariableNumber(fixture.inputIndex(variable));
+        }
+
+        fixture.repca.y().setDataUpdated();
+        fixture.repca.yp().setDataUpdated();
+        fixture.bus.y().setDataUpdated();
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian(
+          const Data& data,
+          TestStatus& success,
+          RealT       alpha = 1.0) const
+      {
+        using DepVar = DependencyTracking::Variable;
+
+        Fixture<DepVar> fixture(data, kStateVr, kStateVi);
+        fixture.attachAllInputs();
+        setAnswerKeyInputs(fixture);
+        success *= fixture.prepare(0.0, 0.0);
+        setAnswerKeyState(fixture.repca);
+        numberVariables(fixture, alpha);
+        success *= (fixture.repca.evaluateResidual() == 0);
+
+        std::vector<DependencyTracking::Variable::DependencyMap> rows(index(Vars::MAXIMUM));
+        const auto*                                              f = fixture.repca.getResidual().getData();
+        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        {
+          rows[row] = f[row].getDependencies();
+        }
+        return rows;
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
+          const Data& data,
+          TestStatus& success,
+          RealT       alpha = 1.0) const
+      {
+        Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
+        fixture.attachAllInputs();
+        setAnswerKeyInputs(fixture);
+        success *= fixture.prepare(0.0, 0.0);
+
+        for (IdxT row = 0; row < fixture.bus.size(); ++row)
+        {
+          fixture.bus.setVariableIndex(row, fixture.repca.size() + row);
+        }
+
+        setAnswerKeyState(fixture.repca);
+        fixture.repca.updateTime(0.0, alpha);
+        success *= (fixture.repca.evaluateResidual() == 0);
+        success *= (fixture.repca.evaluateJacobian() == 0);
+        success *= (fixture.repca.constructCsr() == 0);
+        return MapFromCsr(fixture.repca.getCsrJacobian());
+      }
+#endif
+    };
+  } // namespace Testing
+} // namespace GridKit

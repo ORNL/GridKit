@@ -1,4 +1,3 @@
-#include <iomanip>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
@@ -248,6 +247,51 @@ namespace GridKit
         success *= system.evaluateJacobian() == 0;
         success *= system.size()
                    == static_cast<IdxT>(PhasorDynamics::Converter::RegcaInternalVariables::MAXIMUM);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome repca()
+      {
+        using Buses  = PhasorDynamics::Controller::RepcaBuses;
+        using Inputs = PhasorDynamics::Controller::RepcaSignalInputs;
+        using Vars   = PhasorDynamics::Controller::RepcaInternalVariables;
+
+        constexpr IdxT bus_id   = static_cast<IdxT>(1);
+        constexpr IdxT input_id = static_cast<IdxT>(1);
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.bus.resize(1);
+        data.bus[0].bus_id   = bus_id;
+        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = static_cast<RealT>(1.0);
+        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+
+        data.signal.resize(1);
+        data.signal[0].signal_id = input_id;
+
+        typename PhasorDynamics::SystemModelData<RealT, IdxT>::RepcaDataT repca_data;
+        repca_data.buses[Buses::bus]         = bus_id;
+        repca_data.signal_inputs[Inputs::ir] = input_id;
+        repca_data.signal_inputs[Inputs::ii] = input_id;
+        repca_data.signal_inputs[Inputs::p]  = input_id;
+        repca_data.signal_inputs[Inputs::q]  = input_id;
+        data.repca.push_back(repca_data);
+
+        ScalarT input_value{};
+        IdxT    input_index = INVALID_INDEX<IdxT>;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+        system.getSignal(input_id)->set(&input_value, &input_index);
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
 
         return success.report(__func__);
       }

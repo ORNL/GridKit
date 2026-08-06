@@ -10,6 +10,7 @@ Branch <Branch/README>
 Bus <Bus/README>
 BusFault <BusFault/README>
 BusToSignalAdapter <BusToSignalAdapter/README>
+Controller <Controller/README>
 Converter <Converter/README>
 Exciter <Exciter/README>
 Governor <Governor/README>
