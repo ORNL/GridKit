@@ -23,10 +23,25 @@
 
 #include "jac_test_helper.hpp"
 
+/**
+ * Partitioned Residual Evaluation
+ *
+ * Partition the microgrid into subsystems and evaluate each subsystem
+ * independently using the appropriate internal and external state values.
+ *
+ * The subsystem residuals are gathered into a global residual vector and
+ * compared with the monolithic residual to verify that the partitioned
+ * evaluation reproduces the full-system result.
+ */
+
+using Component = GridKit::CircuitComponent<double, size_t>;
+using Node      = GridKit::PowerElectronics::NodeBase<double, size_t>;
+
+std::vector<size_t> getComponentConnections(const std::vector<Component*>& components);
+std::vector<size_t> getNodeConnections(const std::vector<Node*>& nodes);
+
 int main()
 {
-  /// @todo Needs to be modified. Some components are small relative to others thus
-  /// there error is high (or could be matlab vector issue)
 
   bool use_jac = true;
 
@@ -172,21 +187,36 @@ int main()
   Subsystem* partition1 = new Subsystem();
   Subsystem* partition2 = new Subsystem();
 
-  GridKit::MicrogridLine<double, size_t>          l2copy(*l2);
-  GridKit::BusPartitionInterface<double, size_t>* busInterface1 = new GridKit::BusPartitionInterface<double, size_t>(bus2, l2copy, 14);
+  GridKit::MicrogridLine<double, size_t>*         l2copy        = new GridKit::MicrogridLine<double, size_t>(*l2);
+  GridKit::BusPartitionInterface<double, size_t>* busInterface1 = new GridKit::BusPartitionInterface<double, size_t>(&bus2, l2copy, 14);
 
-  // busInterface1->allocate();
+  std::vector<Component*> partition1_components = {dg1, dg2, l1, load1, busInterface1, bus_para_1, bus_para_2};
+  std::vector<Component*> partition2_components = {dg3, dg4, l2, l3, load2, bus_para_4, bus_para_3};
+  std::vector<Node*>      partition1_nodes      = {&dg_signal, &bus1, &bus2};
+  std::vector<Node*>      partition2_nodes      = {&bus3, &bus4};
+
+  std::vector<size_t> component_global_indices_1 = getComponentConnections(partition1_components);
+  std::vector<size_t> component_global_indices_2 = getComponentConnections(partition2_components);
+  std::vector<size_t> node_global_indices_1      = getNodeConnections(partition1_nodes);
+  std::vector<size_t> node_global_indices_2      = getNodeConnections(partition2_nodes);
+
+  // ---------------------------------------------------------------------------
+  // Populate partition 1
+  // --------------------------------------------------------------------------
   partition1->addNode(&dg_signal);
   partition1->addComponent(dg1);
   partition1->addComponent(dg2);
   partition1->addComponent(l1);
   partition1->addComponent(load1);
-  partition1->addComponent(busInterface1);
+  partition1->addInterface(busInterface1);
   partition1->addComponent(bus_para_1);
   partition1->addComponent(bus_para_2);
   partition1->addNode(&bus1);
   partition1->addNode(&bus2);
 
+  // ---------------------------------------------------------------------------
+  // Populate partition 2
+  // ---------------------------------------------------------------------------
   partition2->addComponent(dg3);
   partition2->addComponent(dg4);
   partition2->addComponent(l2);
@@ -196,6 +226,10 @@ int main()
   partition2->addComponent(bus_para_3);
   partition2->addNode(&bus3);
   partition2->addNode(&bus4);
+
+  // ---------------------------------------------------------------------------
+  // Initialize the full-system state and evaluate residuals and system Jacobian
+  // ---------------------------------------------------------------------------
 
   std::vector<double> y;
   std::vector<double> yp;
@@ -228,15 +262,15 @@ int main()
 
   std::vector<GridKit::SubsystemModel<double, size_t>*> partitions = {partition1, partition2};
 
+  // ---------------------------------------------------------------------------
+  // Allocate and evaluate the subsystem partitions
+  // ---------------------------------------------------------------------------
+
   // Distribute externals to partition 1
   for (auto* partition : partitions)
   {
     partition->allocate();
     partition->initialize();
-
-    // test hold and release methods
-    // partition->release();
-    // partition->hold();
 
     partition->updateTime(2, 5);
 
@@ -275,6 +309,9 @@ int main()
     partition->evaluateJacobian();
   }
 
+  // ---------------------------------------------------------------------------
+  // Verify the subsystem Jacobians
+  // ---------------------------------------------------------------------------
   auto partition1_jac = partition1->getCsrJacobian();
   auto partition2_jac = partition2->getCsrJacobian();
 
@@ -289,6 +326,9 @@ int main()
     return 1;
   }
 
+  // ---------------------------------------------------------------------------
+  // Gather and verify the subsystem residuals
+  // ---------------------------------------------------------------------------
   std::vector<double> f(sysmodel->size(), 0.0);
   std::vector<double> error(sysmodel->size(), 1.0);
 
@@ -323,10 +363,63 @@ int main()
     return 1;
   }
 
+  // ---------------------------------------------------------------------------
+  // Verify subsystem release() from SubsystemModel
+  // ---------------------------------------------------------------------------
+  partitions[0]->release();
+  partitions[1]->release();
+
+  if (getComponentConnections(partition1_components) != component_global_indices_1
+      || getNodeConnections(partition1_nodes) != node_global_indices_1)
+  {
+    std::cout << "ERROR: Subsystem release did not restore "
+                 "the original global connection indices!\n";
+    return 1;
+  }
+
+  if (getComponentConnections(partition2_components) != component_global_indices_2
+      || getNodeConnections(partition2_nodes) != node_global_indices_2)
+  {
+    std::cout << "ERROR: Subsystem release did not restore "
+                 "the original global connection indices!\n";
+    return 1;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Clean up
+  // ---------------------------------------------------------------------------
   delete sysmodel;
   delete partition1;
   delete partition2;
-  delete busInterface1;
 
   return 0;
+}
+
+std::vector<size_t> getComponentConnections(const std::vector<Component*>& components)
+{
+  std::vector<size_t> connections;
+
+  for (const auto* component : components)
+  {
+    for (size_t i = 0; i < component->size(); ++i)
+    {
+      connections.push_back(component->getNodeConnection(i));
+    }
+  }
+
+  return connections;
+}
+
+std::vector<size_t> getNodeConnections(const std::vector<Node*>& nodes)
+{
+  std::vector<size_t> connections;
+
+  for (auto* node : nodes)
+
+    for (size_t i = 0; i < node->size(); ++i)
+    {
+      connections.push_back(node->getNodeConnection(i).idx_);
+    }
+
+  return connections;
 }

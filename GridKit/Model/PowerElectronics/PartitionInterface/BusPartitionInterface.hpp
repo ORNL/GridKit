@@ -49,8 +49,11 @@ namespace GridKit
     using PartitionInterface<ScalarT, IdxT>::bus_port_i_;
     using PartitionInterface<ScalarT, IdxT>::bus_port_j_;
 
+    using PartitionInterface<ScalarT, IdxT>::bus_port_out_i_;
+    using PartitionInterface<ScalarT, IdxT>::bus_port_out_j_;
+
   public:
-    BusPartitionInterface(node_type& bus, component_type& component, IdxT id);
+    BusPartitionInterface(node_type* bus, component_type* component, IdxT id);
     virtual ~BusPartitionInterface();
 
     int allocate();
@@ -66,18 +69,26 @@ namespace GridKit
     int evaluateAdjointResidual();
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
-    int updateComponentPointers(ScalarT* residual);
 
   private:
-    component_type& component_;
-    node_type&      bus_;
+    int updateComponentPointers(ScalarT* residual);
 
+    // Component and bus associated with the partition interface.
+    component_type* component_;
+    node_type*      bus_;
+
+    // Storage for the wrapped component's internal variables.
     std::unique_ptr<ScalarT[]> y_ptr;
     std::unique_ptr<ScalarT[]> yp_ptr;
     std::unique_ptr<ScalarT[]> f_ptr;
 
+    // Dummy storage used when the component residual is not needed.
     ScalarT dummy_residual_{};
 
+    // Maps interface Jacobian entries to the wrapped component Jacobian.
     std::vector<IdxT> jac_map_;
+
+    // Identifies which wrapped component variables are external.
+    std::vector<bool> is_external_;
   };
 } // namespace GridKit

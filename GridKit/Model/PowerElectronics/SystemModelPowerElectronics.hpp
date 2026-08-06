@@ -28,6 +28,7 @@ namespace GridKit
     using Base::allocated_;
     using Base::allocateVectors;
     using Base::alpha_;
+    using Base::connection_nodes_;
     using Base::f_ext_;
     using Base::f_int_;
     using Base::n_extern_;
@@ -272,7 +273,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int initialize()
+    int initialize() final
     {
       // Initialize components
       for (const auto& component : components_)
@@ -283,7 +284,7 @@ namespace GridKit
       return Base::initialize();
     }
 
-    int tagDifferentiable()
+    int tagDifferentiable() override
     {
       return 0;
     }

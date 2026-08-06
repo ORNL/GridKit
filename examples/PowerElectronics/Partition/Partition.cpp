@@ -1,8 +1,8 @@
 // #include <cstddef>
 
 #include <cstddef>
+#include <set>
 
-#include "GridKit/ScalarTraits.hpp"
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstdio>
@@ -63,12 +63,12 @@ int main(int /* argc */, char const** /* argv */)
   comp3->setInternalConnectionNodes(3, 6);
   comp3->setInternalConnectionNodes(4, 7);
 
-  GridKit::HiresComponent3<double, size_t>        comp3copy(*comp3);
-  GridKit::BusPartitionInterface<double, size_t>* busInterface = new GridKit::BusPartitionInterface<double, size_t>(bus, comp3copy, 4);
+  GridKit::HiresComponent3<double, size_t>*       comp3copy    = new GridKit::HiresComponent3<double, size_t>(*comp3);
+  GridKit::BusPartitionInterface<double, size_t>* busInterface = new GridKit::BusPartitionInterface<double, size_t>(&bus, comp3copy, 4);
 
   partition1->addComponent(comp1);
   partition1->addComponent(bus1);
-  partition1->addComponent(busInterface);
+  partition1->addInterface(busInterface);
   partition1->addNode(&bus);
 
   partition2->addComponent(comp3);
@@ -155,7 +155,6 @@ int main(int /* argc */, char const** /* argv */)
 
   delete comp1;
   delete bus1;
-  delete busInterface;
   delete comp3;
 
   delete partition1;

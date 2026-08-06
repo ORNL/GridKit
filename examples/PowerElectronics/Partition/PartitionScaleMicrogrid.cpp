@@ -23,26 +23,6 @@
 
 #include "jac_test_helper.hpp"
 
-/******************************************************************************
- * Partitioned Residual Evaluation
- *
- * Construct subsystem models by partitioning the original microgrid into
- * independent groups of components. Each subsystem is allocated and receives
- * the appropriate subset of the global state vectors (y and yp), consisting
- * of:
- *
- *   - External variables (coupling variables from neighboring partitions)
- *   - Internal variables (states owned by the partition)
- *
- * After distributing the state information, each partition independently
- * evaluates its residual. The local residuals are then scattered back into
- * the global residual vector to reconstruct the monolithic residual.
- *
- * Finally, the reconstructed residual is compared against the reference
- * monolithic evaluation to verify the correctness of the partitioning
- * implementation.
- ******************************************************************************/
-
 using index_type = size_t;
 using real_type  = double;
 
@@ -80,7 +60,7 @@ int main()
 
   std::cout << std::string(93, '-') << "\n";
 
-  for (index_type p : {2, 3, 4, 5})
+  for (index_type p : {1, 2, 3, 4, 5})
   {
     assert(p <= 2 * N_size);
 
@@ -206,21 +186,19 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
     Lload_list[0] = Lload1;
   }
 
-  using SignalNode         = GridKit::PowerElectronics::SignalNode<real_type, index_type>;
-  using Bus                = GridKit::PowerElectronics::MicrogridBus<real_type, index_type>;
-  using BusDQ              = MicrogridBusDQ<real_type, index_type>;
-  using Generator          = DistributedGenerator<real_type, index_type>;
-  using Line               = MicrogridLine<real_type, index_type>;
-  using Load               = MicrogridLoad<real_type, index_type>;
-  using PartitionInterface = BusPartitionInterface<real_type, index_type>;
+  using SignalNode = GridKit::PowerElectronics::SignalNode<real_type, index_type>;
+  using Bus        = GridKit::PowerElectronics::MicrogridBus<real_type, index_type>;
+  using BusDQ      = MicrogridBusDQ<real_type, index_type>;
+  using Generator  = DistributedGenerator<real_type, index_type>;
+  using Line       = MicrogridLine<real_type, index_type>;
+  using Load       = MicrogridLoad<real_type, index_type>;
 
-  std::vector<Bus>                 buses(num_ibrs);
-  std::vector<BusDQ*>              busesDQ(num_ibrs, nullptr);
-  std::vector<Generator*>          generators(num_ibrs, nullptr);
-  std::vector<Line*>               lines(num_ibrs, nullptr);
-  std::vector<Load*>               loads(num_ibrs, nullptr);
-  std::vector<PartitionInterface*> partitionInterface;
-  std::vector<Line*>               linesCopies;
+  std::vector<Bus>        buses(num_ibrs);
+  std::vector<BusDQ*>     busesDQ(num_ibrs, nullptr);
+  std::vector<Generator*> generators(num_ibrs, nullptr);
+  std::vector<Line*>      lines(num_ibrs, nullptr);
+  std::vector<Load*>      loads(num_ibrs, nullptr);
+  std::vector<Line*>      linesCopies;
 
   SignalNode dg_signal;
   // sys_model_control->addNode(&dg_signal);
@@ -396,11 +374,8 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
     if (index < num_ibrs)
     {
       auto* linecopy     = new GridKit::MicrogridLine<real_type, index_type>(*lines[index]);
-      auto* busInterface = new GridKit::BusPartitionInterface<real_type, index_type>(buses[index - 1], *linecopy, model_id++);
-      partitionInterface.push_back(busInterface);
-      linesCopies.push_back(linecopy);
-
-      partition->addComponent(busInterface);
+      auto* busInterface = new GridKit::BusPartitionInterface<real_type, index_type>(&buses[index - 1], linecopy, model_id++);
+      partition->addInterface(busInterface);
     }
 
     subsystems[j] = partition;
@@ -516,17 +491,9 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
     result.success = false;
   }
 
-  for (auto* linescpy : linesCopies)
-  {
-    delete linescpy;
-  }
   for (auto* partition : subsystems)
   {
     delete partition;
-  }
-  for (auto* part_interface : partitionInterface)
-  {
-    delete part_interface;
   }
   delete sys_model_control;
 
