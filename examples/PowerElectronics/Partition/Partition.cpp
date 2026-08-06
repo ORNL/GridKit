@@ -1,7 +1,6 @@
 // #include <cstddef>
 
 #include <cstddef>
-#include <set>
 
 #define _USE_MATH_DEFINES
 #include <cmath>

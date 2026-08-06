@@ -4,7 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
-#include <iomanip>
+#include <format>
 #include <iostream>
 #include <string>
 
@@ -48,7 +48,8 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions);
  */
 int main()
 {
-  index_type N_size = 5;
+  index_type              N_size              = 5; // Number of IBRs/2
+  std::vector<index_type> num_partitions_list = {1, 2, 3, 4, 5};
 
   std::cout << std::format("{:<16}{:>16}{:>18}{:>12}{:>14}{:>16}\n",
                            "num_partitions",
@@ -60,7 +61,7 @@ int main()
 
   std::cout << std::string(93, '-') << "\n";
 
-  for (index_type p : {1, 2, 3, 4, 5})
+  for (index_type p : num_partitions_list)
   {
     assert(p <= 2 * N_size);
 
