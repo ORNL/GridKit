@@ -1197,7 +1197,8 @@ namespace GridKit
       }
 
       /// Check every dependency-tracking Jacobian row against an independent
-      /// numerical answer key, with both selector settings and a non-unit alpha.
+      /// numerical and structural answer key, with both selector settings and
+      /// a non-unit alpha.
       TestOutcome dependencyTracking()
       {
         TestStatus success = true;
@@ -2161,10 +2162,15 @@ namespace GridKit
         return {
             {{index(Vars::VMEAS), -6.0}, {index(Vars::VCTRL), 5.0}},
             {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::Q)), 10.0}},
-            {{index(Vars::XQPI), -1.0}, {index(Vars::SFRZ), 1.2}, {index(Vars::ERQLIM), 1.5}},
+            {{index(Vars::XQPI), -1.0},
+             {index(Vars::SFRZ), 1.2},
+             {index(Vars::ERQLIM), 1.5},
+             {index(Vars::QPI), 0.0}},
             {{index(Vars::XQLAG), -1.4}, {index(Vars::QPI), 0.4}},
             {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::P)), 5.0}},
-            {{index(Vars::XPPI), -1.0}, {index(Vars::EPLIM), 1.8}},
+            {{index(Vars::XPPI), -1.0},
+             {index(Vars::EPLIM), 1.8},
+             {index(Vars::PPI), 0.0}},
             {{index(Vars::PREF), -3.0}, {index(Vars::PPI), 2.0}},
             {{index(Vars::V), -3.0}, {kBusVrColumn, 1.8}, {kBusViColumn, 0.8}},
             {{index(Vars::VLDC), -2.0},
@@ -2173,9 +2179,15 @@ namespace GridKit
              {externalColumn(index(Ext::IR)), -0.1096},
              {externalColumn(index(Ext::II)), 0.0968}},
             {{index(Vars::V), 1.0}, {index(Vars::VDROOP), -1.0}, {externalColumn(index(Ext::Q)), 0.8}},
-            {{index(Vars::VLDC), 1.0}, {index(Vars::VCTRL), -1.0}},
-            {{index(Vars::SFRZ), -1.0}},
-            {{index(Vars::VMEAS), -1.0}, {index(Vars::ERQ), -1.0}, {externalColumn(index(Ext::VREF)), 1.0}},
+            {{index(Vars::VLDC), 1.0},
+             {index(Vars::VDROOP), 0.0},
+             {index(Vars::VCTRL), -1.0}},
+            {{index(Vars::V), 0.0}, {index(Vars::SFRZ), -1.0}},
+            {{index(Vars::VMEAS), -1.0},
+             {index(Vars::QMEAS), 0.0},
+             {index(Vars::ERQ), -1.0},
+             {externalColumn(index(Ext::VREF)), 1.0},
+             {externalColumn(index(Ext::QREF)), 0.0}},
             {{index(Vars::ERQ), 1.0}, {index(Vars::ERQDB), -1.0}},
             {{index(Vars::ERQDB), 1.0}, {index(Vars::ERQLIM), -1.0}},
             {{index(Vars::XQPI), 1.0}, {index(Vars::ERQLIM), 2.0}, {index(Vars::QPI), -1.0}},
@@ -2187,7 +2199,7 @@ namespace GridKit
              {index(Vars::EF), 1.0},
              {index(Vars::EP), -1.0},
              {externalColumn(index(Ext::PREF)), 2.0}},
-            {{index(Vars::EPLIM), -1.0}},
+            {{index(Vars::EP), 0.0}, {index(Vars::EPLIM), -1.0}},
             {{index(Vars::XPPI), 1.0}, {index(Vars::EPLIM), 1.7}, {index(Vars::PPI), -1.0}},
             {{index(Vars::PREF), 1.0}, {index(Vars::PEXT), -2.0}},
         };
@@ -2197,15 +2209,19 @@ namespace GridKit
       {
         auto expected                = expectedJacobian();
         expected[index(Vars::VCTRL)] = {
+            {index(Vars::VLDC), 0.0},
             {index(Vars::VDROOP), 1.0},
             {index(Vars::VCTRL), -1.0},
         };
         expected[index(Vars::ERQ)] = {
+            {index(Vars::VMEAS), 0.0},
             {index(Vars::QMEAS), -1.0},
             {index(Vars::ERQ), -1.0},
+            {externalColumn(index(Ext::VREF)), 0.0},
             {externalColumn(index(Ext::QREF)), 2.0},
         };
         expected[index(Vars::PEXT)] = {
+            {index(Vars::PREF), 0.0},
             {index(Vars::PEXT), -2.0},
         };
         return expected;
@@ -2224,19 +2240,6 @@ namespace GridKit
         return expected;
       }
 
-      // A missing Jacobian entry means zero. Treat it the same as an explicit zero
-      // so rows with the same values compare equal.
-      static RealT mapValue(const DependencyTracking::Variable::DependencyMap& row,
-                            size_t                                             column)
-      {
-        const auto entry = row.find(column);
-        if (entry == row.end())
-        {
-          return 0.0;
-        }
-        return entry->second;
-      }
-
       bool jacobianRowMatches(
           const DependencyTracking::Variable::DependencyMap& actual,
           const DependencyTracking::Variable::DependencyMap& expected,
@@ -2244,31 +2247,14 @@ namespace GridKit
           const char*                                        source,
           RealT                                              tolerance) const
       {
-        constexpr size_t column_count = externalColumn(index(Ext::MAXIMUM));
-        bool             success      = true;
-        for (size_t column = 0; column < column_count; ++column)
+        if (isEqual(actual, expected, tolerance))
         {
-          const RealT actual_value   = mapValue(actual, column);
-          const RealT expected_value = mapValue(expected, column);
-          if (!isEqual(actual_value, expected_value, tolerance))
-          {
-            std::cout << "REPCA " << source << " Jacobian row " << row
-                      << " column " << column << " mismatch: "
-                      << std::setprecision(std::numeric_limits<RealT>::max_digits10) << actual_value << " != "
-                      << expected_value << '\n';
-            success = false;
-          }
+          return true;
         }
-        for (const auto& [column, value] : actual)
-        {
-          if (column >= column_count && !isEqual(value, 0.0, tolerance))
-          {
-            std::cout << "REPCA " << source << " Jacobian row " << row
-                      << " has unexpected column " << column << '\n';
-            success = false;
-          }
-        }
-        return success;
+
+        std::cout << "REPCA " << source << " Jacobian row " << row
+                  << " mismatch\n";
+        return false;
       }
 
       bool jacobianMatches(
