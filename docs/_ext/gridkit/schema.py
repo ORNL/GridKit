@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from .doxygen import JSON_NAMES, Item, Model
+from .doxygen import Item, Model
 
 
 def _annotations(item: Item) -> dict[str, str]:
@@ -60,39 +60,30 @@ def _monitors(model: Model) -> dict[str, Any]:
     return schema
 
 
-def _device(model: Model) -> dict[str, Any]:
-    schema = _closed(
-        {
-            "class": {"const": model.json_name},
-            "ports": _ports(model),
-            "id": {"type": "string", "minLength": 1},
-            "params": _parameters(model),
-            "mon": _monitors(model),
-            "extension": {"type": "object"},
-        }
-    )
-    schema.update(title=model.name, required=["class", "ports", "id", "params"])
-    return schema
-
-
-def _bus(model: Model) -> dict[str, Any]:
-    schema = _closed(
-        {
+def _model(model: Model) -> dict[str, Any]:
+    if model.kind == "bus":
+        properties = {
             "number": {"$ref": "#/$defs/nonnegative_id"},
-            "class": {"const": model.json_name},
+            "class": {"const": model.name},
             "name": {"type": "string"},
             "init": {"$ref": "#/$defs/bus_init"},
-            "params": _parameters(model),
-            "mon": _monitors(model),
-            "freq_base": {"type": "number", "exclusiveMinimum": 0},
-            "va_base": {"type": "number", "exclusiveMinimum": 0},
-            "extension": {"type": "object"},
         }
+        required = ["number", "class", "name", "params"]
+    else:
+        properties = {
+            "class": {"const": model.name},
+            "ports": _ports(model),
+            "id": {"type": "string", "minLength": 1},
+        }
+        required = ["class", "ports", "id", "params"]
+
+    properties.update(
+        params=_parameters(model),
+        mon=_monitors(model),
+        extension={"type": "object"},
     )
-    schema.update(
-        title=model.name,
-        required=["number", "class", "name", "params"],
-    )
+    schema = _closed(properties)
+    schema.update(title=model.name, required=required)
     return schema
 
 
@@ -107,10 +98,6 @@ def build_schema(models: dict[str, Model], base: Path) -> dict[str, Any]:
     buses = [model for model in models.values() if model.kind == "bus"]
     devices = [model for model in models.values() if model.kind == "device"]
 
-    unnamed = {model.name for model in buses} - JSON_NAMES.keys()
-    if unnamed:
-        raise ValueError(f"missing JSON names for bus models: {sorted(unnamed)}")
-
     schema = json.loads(base.read_text(encoding="utf-8"))
     if canonical := os.environ.get("READTHEDOCS_CANONICAL_URL"):
         schema["$id"] = canonical.rstrip("/") + "/case.schema.json"
@@ -121,13 +108,12 @@ def build_schema(models: dict[str, Model], base: Path) -> dict[str, Any]:
     definitions = schema["$defs"]
     definitions["bus"] = _dispatch("Bus models", buses)
     definitions["device"] = _dispatch("Device models", devices)
-    definitions.update((model.name, _bus(model)) for model in buses)
-    definitions.update((model.name, _device(model)) for model in devices)
+    definitions.update((model.name, _model(model)) for model in models.values())
     return schema
 
 
 def write_schema(models: dict[str, Model], base: Path, output: Path) -> None:
-    output.write_text(
-        json.dumps(build_schema(models, base), indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+    rendered = json.dumps(build_schema(models, base), indent=2, ensure_ascii=False) + "\n"
+    if output.is_file() and output.read_text(encoding="utf-8") == rendered:
+        return
+    output.write_text(rendered, encoding="utf-8")

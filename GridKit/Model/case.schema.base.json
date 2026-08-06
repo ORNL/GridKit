@@ -17,8 +17,13 @@
     },
     "header": {
       "title": "Case header",
-      "description": "Format identification, case metadata, and system-wide base quantities.",
+      "description": "Format identification and case metadata.",
       "$ref": "#/$defs/header"
+    },
+    "params": {
+      "title": "System parameters",
+      "description": "System-wide base quantities.",
+      "$ref": "#/$defs/system_params"
     },
     "monitors": {
       "title": "Monitor sinks",
@@ -57,6 +62,7 @@
   },
   "required": [
     "header",
+    "params",
     "buses",
     "devices"
   ],
@@ -73,25 +79,25 @@
     },
     "header": {
       "title": "Header",
-      "description": "Identifies the case-format version and provides descriptive metadata and system-wide base quantities.",
+      "description": "Identifies the case-format version and provides descriptive metadata.",
       "type": "object",
       "properties": {
         "format_version": {
           "title": "Format version",
-          "description": "Integer major version of the GridKit case format.",
-          "type": "integer",
-          "minimum": 0,
+          "description": "GridKit case-format version.",
+          "type": "number",
+          "const": 0.2,
           "examples": [
-            0
+            0.2
           ]
         },
         "format_revision": {
           "title": "Format revision",
           "description": "Integer revision within the selected GridKit case-format version.",
           "type": "integer",
-          "minimum": 0,
+          "const": 0,
           "examples": [
-            1
+            0
           ]
         },
         "case_name": {
@@ -129,7 +135,22 @@
           "title": "Case comments",
           "description": "Additional notes, provenance, assumptions, or usage guidance for the case.",
           "type": "string"
-        },
+        }
+      },
+      "required": [
+        "format_version",
+        "format_revision",
+        "case_name",
+        "case_description",
+        "case_comments"
+      ],
+      "additionalProperties": false
+    },
+    "system_params": {
+      "title": "System parameters",
+      "description": "System-wide base quantities.",
+      "type": "object",
+      "properties": {
         "freq_base": {
           "title": "System frequency base",
           "description": "System-wide nominal frequency in hertz.",
@@ -152,11 +173,6 @@
         }
       },
       "required": [
-        "format_version",
-        "format_revision",
-        "case_name",
-        "case_description",
-        "case_comments",
         "freq_base",
         "va_base"
       ],

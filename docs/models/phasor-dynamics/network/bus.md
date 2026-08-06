@@ -1,4 +1,4 @@
-(model-phasor-dynamics-infinitebus)=
+(model-phasor-dynamics-businfinite)=
 (model-phasor-dynamics-bus)=
 # Bus
 

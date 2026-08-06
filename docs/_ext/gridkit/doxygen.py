@@ -1,10 +1,8 @@
 """GridKit model definitions, read from Doxygen XML.
 
 A model declares its parameters, ports, and monitorable variables as documented
-enums, reached through its `ModelDataT` alias. The value applied when a case
-omits a parameter is the initializer on the matching `<parameter>_` member.
-Reading both from here keeps the JSON schema and the documentation tables from
-diverging.
+enums, reached through its `ModelDataT` alias. Reading them here keeps the JSON
+schema and the documentation tables from diverging.
 """
 
 from __future__ import annotations
@@ -29,9 +27,6 @@ ALIASES = {
     "MonitorableVariables": "monitors",
 }
 
-# Bus models are named differently in case files than they are in C++.
-JSON_NAMES = {"Bus": "bus", "BusInfinite": "infinite_bus"}
-
 _UNIT = re.compile(r"^\[([^]]*)\]\s*")
 _ALNUM = re.compile(r"[^a-z0-9]")
 
@@ -55,7 +50,6 @@ class Item:
 class Model:
     name: str
     kind: Literal["bus", "device"]
-    directory: Path
     family: str = ""
     parameters: tuple[Item, ...] = ()
     buses: tuple[Item, ...] = ()
@@ -64,13 +58,8 @@ class Model:
     monitors: tuple[Item, ...] = ()
 
     @property
-    def json_name(self) -> str:
-        """The value of `class` in a case file."""
-        return JSON_NAMES.get(self.name, self.name)
-
-    @property
     def slug(self) -> str:
-        return _ALNUM.sub("", self.json_name.lower())
+        return _ALNUM.sub("", self.name.lower())
 
     @property
     def label(self) -> str:
@@ -209,15 +198,15 @@ def _defaults(compound: ET.Element) -> dict[str, str]:
     return values
 
 
-def _placement(compound: ET.Element) -> tuple[Path, str]:
+def _family(compound: ET.Element) -> str:
     location = compound.find("location")
     directory = Path(location.get("file", "")).parent if location is not None else Path()
     try:
         parts = directory.relative_to(SOURCE_ROOT).parts
     except ValueError:
-        return directory, ""
+        return ""
     # A model nested one level deeper than the domain root belongs to a family.
-    return directory, parts[0] if len(parts) > 1 else ""
+    return parts[0] if len(parts) > 1 else ""
 
 
 def read_models(directory: Path) -> dict[str, Model]:
@@ -242,12 +231,10 @@ def read_models(directory: Path) -> dict[str, Model]:
             field: _items(index, data, alias, defaults if field == "parameters" else {})
             for alias, field in ALIASES.items()
         }
-        location, family = _placement(compound)
         models[name] = Model(
             name=name,
             kind="bus" if _inherits(index, refid, BUS_BASE) else "device",
-            directory=location,
-            family=family,
+            family=_family(compound),
             **sections,
         )
 

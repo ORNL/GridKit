@@ -14,6 +14,11 @@
 :link-type: ref
 :::
 
+:::{grid-item-card} ESDC1A
+:link: model-phasor-dynamics-esdc1a
+:link-type: ref
+:::
+
 :::{grid-item-card} SEXS-PTI
 :link: model-phasor-dynamics-sexspti
 :link-type: ref
@@ -67,6 +72,7 @@
 :hidden:
 
 IEEET1 <ieeet1>
+ESDC1A <esdc1a>
 SEXS-PTI <sexs-pti>
 ESAC6A <esac6a>
 ESDC2A <esdc2a>

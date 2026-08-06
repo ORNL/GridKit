@@ -46,10 +46,10 @@ def _ref(label: str) -> str:
 def _class_ref(model: Model) -> str:
     """A link labeled with the class string used in a case file.
 
-    Model pages are not one per model. Bus and infinite_bus share a page, so a
+    Model pages are not one per model. Bus and BusInfinite share a page, so a
     link that borrows the page title cannot distinguish them.
     """
-    return f"[`{model.json_name}`](#{model.label})"
+    return f"[`{model.name}`](#{model.label})"
 
 
 def _example_refs(repository: Repository, case: Case) -> str:
@@ -125,9 +125,8 @@ class ModelParameters(GridKitDirective):
 
     def run(self) -> list[nodes.Node]:
         model = self.model(self.arguments[0])
-        ranges = self.repository.ranges(model)
         return self.table(
-            ("Parameter", "Symbol", "Units", "Description", "Default", "Range in cases"),
+            ("Parameter", "Symbol", "Units", "Description", "Default"),
             (
                 (
                     f"`{item.name}`",
@@ -135,7 +134,6 @@ class ModelParameters(GridKitDirective):
                     item.unit,
                     item.description,
                     item.default,
-                    ranges.get(item.name, ""),
                 )
                 for item in model.parameters
             ),
@@ -196,7 +194,7 @@ class ModelCases(GridKitDirective):
             (
                 (
                     _ref(case.label),
-                    case.counts[model.json_name],
+                    case.counts[model.name],
                     _example_refs(found, case),
                 )
                 for case in found.uses(model)
@@ -242,7 +240,7 @@ class CaseModels(GridKitDirective):
         case = self.case(self.arguments[0])
         rows = []
         for name, count in case.counts.most_common():
-            model = found.by_json_name.get(name)
+            model = found.models.get(name)
             rows.append(
                 (
                     _class_ref(model) if model else f"`{name}`",

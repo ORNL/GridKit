@@ -44,26 +44,6 @@ def kebab(name: str) -> str:
 
 
 @dataclass(frozen=True, slots=True)
-class Range:
-    """The interval a parameter spans across the case corpus."""
-
-    low: float
-    high: float
-    count: int
-
-    def __or__(self, other: Range) -> Range:
-        return Range(
-            min(self.low, other.low),
-            max(self.high, other.high),
-            self.count + other.count,
-        )
-
-    def __str__(self) -> str:
-        span = f"{self.low:g}" if self.low == self.high else f"{self.low:g} to {self.high:g}"
-        return f"{span} (n={self.count})"
-
-
-@dataclass(frozen=True, slots=True)
 class Case:
     """A case file, its summary attributes, and its contents."""
 
@@ -75,7 +55,6 @@ class Case:
     buses: int
     devices: int
     counts: Counter[str]
-    ranges: dict[str, dict[str, Range]]
     page: Path | None
 
     @property
@@ -91,11 +70,8 @@ class Case:
 class Example:
     """A registered test and the study it executes."""
 
-    directory: Path
     domain: str
     slug: str
-    title: str
-    tests: tuple[str, ...]
     case: Path | None
     duration: float | None
     events: int
@@ -119,18 +95,9 @@ def _read_case(root: Path, path: Path, pages: Path) -> Case:
     data = json.loads(path.read_text(encoding="utf-8"))
     header = data.get("header", {})
     counts: Counter[str] = Counter()
-    ranges: dict[str, dict[str, Range]] = defaultdict(dict)
 
     for entry in (*data.get("buses", ()), *data.get("devices", ())):
-        name = entry["class"]
-        counts[name] += 1
-        for parameter, value in entry.get("params", {}).items():
-            # A parameter may also be `true`, meaning the model derives it.
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                continue
-            span = Range(value, value, 1)
-            current = ranges[name].get(parameter)
-            ranges[name][parameter] = span if current is None else current | span
+        counts[entry["class"]] += 1
 
     relative = path.relative_to(root / EXAMPLES)
     domain = kebab(relative.parts[0])
@@ -145,7 +112,6 @@ def _read_case(root: Path, path: Path, pages: Path) -> Case:
         buses=len(data.get("buses", ())),
         devices=len(data.get("devices", ())),
         counts=counts,
-        ranges=dict(ranges),
         page=page if page.is_file() else None,
     )
 
@@ -154,9 +120,8 @@ def _read_examples(root: Path, cases: dict[str, Case]) -> Iterator[Example]:
     for cmake in sorted(root.glob(EXAMPLE_FILES)):
         directory = cmake.parent
         build = cmake.read_text(encoding="utf-8")
-        tests = tuple(_TEST.findall(build))
         # A directory that only gathers subdirectories is not an example.
-        if not tests:
+        if not _TEST.search(build):
             continue
 
         solvers = sorted(directory.glob("*.solver.json"))
@@ -174,11 +139,8 @@ def _read_examples(root: Path, cases: dict[str, Case]) -> Iterator[Example]:
         relative = directory.relative_to(root / EXAMPLES)
         name = [part for part in relative.parts[1:] if part not in SIZE_TIERS]
         yield Example(
-            directory=directory,
             domain=kebab(relative.parts[0]),
             slug="-".join(kebab(part) for part in name),
-            title=" ".join(name),
-            tests=tests,
             case=case.path if case else None,
             duration=study.get("tmax"),
             events=len(study.get("events", ())),
@@ -188,12 +150,24 @@ def _read_examples(root: Path, cases: dict[str, Case]) -> Iterator[Example]:
 class Repository:
     def __init__(self, root: Path, xml: Path, pages: Path):
         self.root = root
-        self.models = read_models(xml)
-        self.cases = tuple(
-            _read_case(root, path, pages) for path in sorted(root.glob(CASE_FILES))
+        self.xml = xml
+        self.pages = pages
+
+    @cached_property
+    def models(self) -> dict[str, Model]:
+        return read_models(self.xml)
+
+    @cached_property
+    def cases(self) -> tuple[Case, ...]:
+        return tuple(
+            _read_case(self.root, path, self.pages)
+            for path in sorted(self.root.glob(CASE_FILES))
         )
+
+    @cached_property
+    def examples(self) -> tuple[Example, ...]:
         by_name = {case.path.name: case for case in self.cases}
-        self.examples = tuple(_read_examples(root, by_name))
+        return tuple(_read_examples(self.root, by_name))
 
     @cached_property
     def sources(self) -> tuple[Path, ...]:
@@ -207,10 +181,6 @@ class Repository:
             *sorted(self.root.glob(EXAMPLE_FILES)),
             *sorted(self.root.glob(SOLVER_FILES)),
         )
-
-    @cached_property
-    def by_json_name(self) -> dict[str, Model]:
-        return {model.json_name: model for model in self.models.values()}
 
     @cached_property
     def documented(self) -> tuple[Case, ...]:
@@ -232,16 +202,6 @@ class Repository:
             name: tuple(sorted(found, key=lambda case: -case.counts[name]))
             for name, found in uses.items()
         }
-
-    @cached_property
-    def _ranges(self) -> dict[str, dict[str, Range]]:
-        merged: dict[str, dict[str, Range]] = defaultdict(dict)
-        for case in self.documented:
-            for name, parameters in case.ranges.items():
-                for parameter, span in parameters.items():
-                    current = merged[name].get(parameter)
-                    merged[name][parameter] = span if current is None else current | span
-        return merged
 
     def model(self, name: str) -> Model:
         try:
@@ -265,13 +225,10 @@ class Repository:
         here by the same rule the catalog and gallery use: a case counts once
         it has a page.
         """
-        return self._uses.get(model.json_name, ())
+        return self._uses.get(model.name, ())
 
     def instances(self, model: Model) -> int:
-        return sum(case.counts[model.json_name] for case in self.uses(model))
-
-    def ranges(self, model: Model) -> dict[str, Range]:
-        return self._ranges.get(model.json_name, {})
+        return sum(case.counts[model.name] for case in self.uses(model))
 
     def examples_of(self, case: Case) -> tuple[Example, ...]:
         return tuple(example for example in self.examples if example.case == case.path)
