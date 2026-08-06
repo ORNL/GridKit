@@ -115,7 +115,7 @@ namespace GridKit
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
+        FORCE_INLINE int evaluateInternalResidual(
             const ScalarT* y,
             const ScalarT* yp,
             const ScalarT* wb,
@@ -129,7 +129,7 @@ namespace GridKit
 
         /// Evaluate the nonlinear gate-to-power curve as a fixed sum of
         /// smooth linear segments.
-        __attribute__((always_inline)) inline ScalarT gatePower(ScalarT gate) const;
+        FORCE_INLINE ScalarT gatePower(ScalarT gate) const;
 
         /// Steady component-base mechanical power at a gate and dam head.
         RealT initialMechanicalPower(RealT gate, RealT Hdam) const;

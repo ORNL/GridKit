@@ -211,7 +211,7 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int SexsPti<scalar_type, index_type>::evaluateInternalResidual(
+      FORCE_INLINE int SexsPti<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
           const ScalarT* wb,

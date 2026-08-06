@@ -510,7 +510,7 @@ namespace GridKit
        * @return Zero on success.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int
+      FORCE_INLINE int
       Esdc1a<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
@@ -597,7 +597,7 @@ namespace GridKit
        * @return Anti-windup-limited derivative.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline scalar_type
+      FORCE_INLINE scalar_type
       Esdc1a<scalar_type, index_type>::awmin(
           const ScalarT x,
           const ScalarT f,
