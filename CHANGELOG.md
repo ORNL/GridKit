@@ -62,7 +62,7 @@
 - Added cmake-format hooks, including in pre-commit.
 - Added off-nominal tap ratio and phase shift support to the PhasorDynamics `Branch` model.
 - Added portable Vector class to GridKit.
-- Added Windows compatibility.
+- Added Windows compatibility for MinGW G++, Clang, and MSVC.
 
 ## v0.1
 
