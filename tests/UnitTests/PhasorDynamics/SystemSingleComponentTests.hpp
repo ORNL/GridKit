@@ -418,7 +418,10 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> tgov1;
+        tgov1.getSignals()
+            .template assignSignalNode<PhasorDynamics::Governor::Tgov1InternalVariables::PM>(&pmech);
         system->addComponent(&tgov1);
 
         success *= system->allocate() == 0;

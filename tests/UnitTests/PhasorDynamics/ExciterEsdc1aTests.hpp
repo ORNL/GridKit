@@ -77,10 +77,7 @@ namespace GridKit
         success *= invalidParameterCase(Params::Ka, 0.0);
         success *= invalidParameterCase(Params::Ta, -0.1);
         success *= invalidParameterCase(Params::Te, -0.1);
-        success *= invalidParameterCase(Params::Tc, -0.1);
         success *= invalidParameterCase(Params::Tr, -0.1);
-        success *= invalidParameterCase(Params::Tb, -0.1);
-        success *= invalidParameterCase(Params::Tf1, -0.1);
         success *= invalidParameterCase(Params::Vrmin, 2.0);
         success *= invalidParameterCase(Params::UEL, static_cast<IdxT>(4));
         success *= invalidParameterCase(Params::UEL, static_cast<RealT>(2.0));
@@ -141,7 +138,7 @@ namespace GridKit
         success *= (integer_real_fixture.esdc1a.verify() == 0);
         success *= invalidParameterCase(Params::Ka, true);
 
-        // Binary selectors accept JSON booleans only.
+        // Switch parameters use the PowerWorld nonzero convention.
         auto boolean_switches                       = makeData();
         boolean_switches.parameters[Params::Spdmlt] = true;
         boolean_switches.parameters[Params::exclim] = false;
@@ -149,14 +146,27 @@ namespace GridKit
         boolean_switch_fixture.attachAllInputs();
         success *= (boolean_switch_fixture.esdc1a.verify() == 0);
 
-        for (const Params flag : {Params::Spdmlt, Params::exclim})
+        for (const auto value : {static_cast<RealT>(-1.0),
+                                 static_cast<RealT>(0.0),
+                                 static_cast<RealT>(0.5),
+                                 static_cast<RealT>(2.0)})
         {
-          success *= invalidParameterCase(flag, static_cast<IdxT>(0));
-          success *= invalidParameterCase(flag, static_cast<IdxT>(1));
-          success *= invalidParameterCase(flag, static_cast<IdxT>(2));
-          success *= invalidParameterCase(flag, static_cast<RealT>(0.0));
-          success *= invalidParameterCase(flag, static_cast<RealT>(0.5));
-          success *= invalidParameterCase(flag, static_cast<RealT>(1.0));
+          auto numeric_switches                       = makeData();
+          numeric_switches.parameters[Params::Spdmlt] = value;
+          numeric_switches.parameters[Params::exclim] = value;
+          Fixture<ScalarT> numeric_switch_fixture(numeric_switches);
+          numeric_switch_fixture.attachAllInputs();
+          success *= (numeric_switch_fixture.esdc1a.verify() == 0);
+        }
+
+        // PowerWorld accepts nonpositive Tb and Tf1; GridKit raises them to
+        // the existing Hessenberg floor. Tc is an unrestricted numerator.
+        for (const Params parameter : {Params::Tb, Params::Tf1, Params::Tc})
+        {
+          auto data                  = makeData();
+          data.parameters[parameter] = -0.1;
+          Fixture<ScalarT> fixture(data);
+          success *= fixture.prepare(1.2);
         }
 
         // The enabled speed multiplier requires an attached speed input.

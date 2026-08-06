@@ -38,9 +38,9 @@ $T_\mathrm{g}$                   | [sec]    | `Tg`     | Converter current-contr
 $T_M$                            | [sec]    | `TM`     | Terminal voltage sensor time constant                 | 0.02          | Block name: `Tfltr`
 $R_q^{\max}$                     | [p.u./s] | `Rqmax`  | Reactive-current recovery positive rate limit         | 999.0         | Block name: `Iqrmax`; disabled when $R_q^{\max}\le 0$
 $R_q^{\min}$                     | [p.u./s] | `Rqmin`  | Reactive-current recovery negative rate limit         | -999.0        | Block name: `Iqrmin`; disabled when $R_q^{\min}\ge 0$
-$R_p^{\max}$                     | [p.u./s] | `Rpmax`  | Active-current magnitude recovery rate limit          | 999.0         | Block name: `rrpwr`
+$R_p^{\max}$                     | [p.u./s] | `Rpmax`  | Active-current magnitude recovery rate limit          | 999.0         | Block name: `rrpwr`; must be nonnegative
 $s_L$                            | [binary] | `sL`     | LVPL switch                                           | 1             | Block name: `LPVLSW`
-$I_{L1}$                         | [p.u.]   | `IL1`    | LVPL upper-current ceiling                            | 1.1           | Block name: `LVPL1`
+$I_{L1}$                         | [p.u.]   | `IL1`    | LVPL upper-current ceiling                            | 1.1           | Block name: `LVPL1`; a negative value disables LVPL and is set to zero
 $V_{L0}$                         | [p.u.]   | `VL0`    | LVPL zero-crossing voltage                            | 0.4           | Block name: `zerox`
 $V_{L1}$                         | [p.u.]   | `VL1`    | LVPL upper breakpoint voltage                         | 0.9           | Block name: `brkpt`
 $V_{A0}$                         | [p.u.]   | `VA0`    | LVACM lower breakpoint voltage                        | 0.4           | Block name: `LVPnt0`
@@ -65,11 +65,9 @@ every other condition is a configuration error.
   S^\mathrm{base}
     &> 0 \\
   R_p^{\max}
-    &> 0 \\
+    &\ge 0 \\
   s_L
     &\in \{0,1\} \\
-  I_{L1}
-    &\ge 0 \\
   0
     &\le V_{L0} < V_{L1} \\
   0
@@ -81,6 +79,8 @@ every other condition is a configuration error.
 
 ```math
 \begin{aligned}
+  I_{L1}<0
+    &\Longrightarrow I_{L1}\leftarrow0,\quad s_L\leftarrow0 \\
   s_L^\mathrm{off}
     &= 1 - s_L \\
   k_\mathrm{base}
@@ -244,10 +244,10 @@ CommonMath defines the [primitives](../../../../CommonMath.md#primitives) and
 
 ### Internal Initialization
 
-REGCA requires $V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}$. The lower bound
-excludes initialization below the nominal upper LVACM breakpoint. The strict
-upper bound is required because the smooth HVRCM constraint has no finite root
-at or above the voltage limit.
+REGCA requires $V_{A0} < V_{T,0} < V_\mathrm{hv}^{\max}$. If
+$V_{T,0}<V_{A1}$, initialization first applies
+$V_{A1}\leftarrow V_{T,0}$. The strict upper bound is required because the
+smooth HVRCM constraint has no finite root at or above the voltage limit.
 
 With LVPL enabled, REGCA additionally requires $I_{p,0} \le I_{L,0}$.
 Initialization rejects an operating point above the active-current integrator

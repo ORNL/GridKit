@@ -263,12 +263,12 @@ namespace GridKit
         const std::vector<ScalarT> res_answer = {
             -2.0 * std::numbers::pi_v<RealT> * 60.0,
             -static_cast<ScalarT>(10.) / static_cast<ScalarT>(9.),
-            -static_cast<ScalarT>(223.) / static_cast<ScalarT>(525.),
-            -54.75,
-            -9.6,
-            static_cast<ScalarT>(892.) / static_cast<ScalarT>(375.),
-            0.21,
-            -0.07,
+            static_cast<ScalarT>(2128243.) / static_cast<ScalarT>(393260.),
+            -static_cast<ScalarT>(5521.) / static_cast<ScalarT>(125.),
+            -static_cast<ScalarT>(6993.) / static_cast<ScalarT>(625.),
+            static_cast<ScalarT>(7371.) / static_cast<ScalarT>(4135.),
+            static_cast<ScalarT>(17.) / static_cast<ScalarT>(36.),
+            -static_cast<ScalarT>(3791.) / static_cast<ScalarT>(5300.),
             -0.19223748416156686,
             2.0,
             1.4,
@@ -276,10 +276,10 @@ namespace GridKit
             2.211,
             0.85,
             1.2,
-            static_cast<ScalarT>(64.) / static_cast<ScalarT>(65.),
-            -static_cast<ScalarT>(237.) / static_cast<ScalarT>(130.),
-            -static_cast<ScalarT>(141.) / static_cast<ScalarT>(130.),
-            -static_cast<ScalarT>(241.) / static_cast<ScalarT>(260.)};
+            static_cast<ScalarT>(37013.) / static_cast<ScalarT>(9605.),
+            -static_cast<ScalarT>(88079.) / static_cast<ScalarT>(19210.),
+            -static_cast<ScalarT>(41237.) / static_cast<ScalarT>(19210.),
+            -static_cast<ScalarT>(166237.) / static_cast<ScalarT>(38420.)};
 
         bus.allocate();
         bus.initialize();

@@ -34,17 +34,17 @@ $K_E$                               | [p.u.]    | `Ke`      | Exciter constant; 
 $T_E$                               | [sec]     | `Te`      | Exciter time constant                           | 0.5
 $K_F$                               | [p.u.]    | `Kf`      | Stabilizing feedback gain                       | 0.05
 $T_{F1}$                            | [sec]     | `Tf1`     | Stabilizing feedback time constant              | 0.7
-$s_{\mathrm{spd}}$                  | [boolean] | `Spdmlt`  | Field-voltage speed-multiplier flag             | `false`
+$s_{\mathrm{spd}}$                  | [switch]  | `Spdmlt`  | Field-voltage speed-multiplier flag; any nonzero value enables it | `false`
 $E_1$                               | [p.u.]    | `E1`      | First saturation voltage point                  | 2.8
 $S_E(E_1)$                          | [p.u.]    | `Se1`     | Saturation coefficient at $E_1$                 | 0.08
 $E_2$                               | [p.u.]    | `E2`      | Second saturation voltage point                 | 3.7
 $S_E(E_2)$                          | [p.u.]    | `Se2`     | Saturation coefficient at $E_2$                 | 0.33
 $I_{\mathrm{UEL}}$                  | [integer] | `UEL`     | Under-excitation limiter input-routing selector | 0
-$s_{\mathrm{lim}}$                  | [boolean] | `exclim`  | Exciter field-voltage-state lower-limit flag     | `true`
+$s_{\mathrm{lim}}$                  | [switch]  | `exclim`  | Exciter field-voltage-state lower-limit flag; any nonzero value enables it | `true`
 
-Every parameter is optional.
-All real-valued parameters must be finite. `Spdmlt` and `exclim` must be
-JSON booleans, and `UEL` must be a JSON integer.
+Every parameter is optional. All real-valued parameters must be finite;
+`Spdmlt` and `exclim` accept Boolean or numeric switch values, and `UEL` must
+be a JSON integer.
 
 ### Parameter Validation
 
@@ -54,16 +54,17 @@ Invalid ESDC1A parameter sets are rejected by the following checks:
 \begin{aligned}
   K_A
     &> 0 \\
-  T_R, T_A, T_B, T_C, T_E, T_{F1}
+  T_R, T_A, T_E
     &\ge 0 \\
   V_R^{\min}
     &\le V_R^{\max} \\
-  s_{\mathrm{spd}}, s_{\mathrm{lim}}
-    &\in \{0,1\} \\
   I_{\mathrm{UEL}}
     &\in \{0,1,2,3\}
 \end{aligned}
 ```
+
+Finite $T_B$ and $T_{F1}$ values are accepted and floored in place; $T_C$ is
+used as supplied.
 
 The saturation points are either disabled together,
 
@@ -100,7 +101,7 @@ raised to that floor in place, so every equation below uses the raised value:
       \end{cases}
 \end{aligned}
 ```
-When saturation is disabled, $S_A = 0$ and $S_B = 0$. When one of the saturation valeus are zero,
+When saturation is disabled, $S_A = 0$ and $S_B = 0$. When one saturation value is zero,
 
 ```math
 \begin{aligned}

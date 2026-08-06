@@ -7,6 +7,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
@@ -25,7 +26,24 @@ namespace GridKit
     private:
       using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
       using real_type               = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using Tgov1DataT              = PhasorDynamics::Governor::Tgov1Data<RealT, IdxT>;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+
+      static Tgov1DataT makeTgov1Data()
+      {
+        using Parameter = typename Tgov1DataT::Parameters;
+
+        Tgov1DataT data;
+        data.parameters[Parameter::Trate] = RealT{100.0};
+        data.parameters[Parameter::R]     = RealT{0.05};
+        data.parameters[Parameter::Pvmin] = RealT{0.0};
+        data.parameters[Parameter::Pvmax] = RealT{1.0};
+        data.parameters[Parameter::T1]    = RealT{0.5};
+        data.parameters[Parameter::T2]    = RealT{2.5};
+        data.parameters[Parameter::T3]    = RealT{7.5};
+        data.parameters[Parameter::Dt]    = RealT{0.0};
+        return data;
+      }
 
     public:
       GovernorTgov1Tests()  = default;
@@ -101,9 +119,9 @@ namespace GridKit
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
 
         // Test answer keys
-        const std::vector<ScalarT> res_answer = {0.0,
+        const std::vector<ScalarT> res_answer = {1.0,
                                                  -1.0,
-                                                 -0.2};
+                                                 static_cast<ScalarT>(1.0) / static_cast<ScalarT>(3.0)};
 
         bus.allocate();
         gen.allocate();
@@ -226,6 +244,109 @@ namespace GridKit
           if (!isEqual(f_data[i], 0.0, tol))
             success = false;
         }
+
+        return success.report(__func__);
+      }
+
+      TestOutcome initializationAndSignals()
+      {
+        TestStatus success = true;
+
+        using Internal  = PhasorDynamics::Governor::Tgov1InternalVariables;
+        using External  = PhasorDynamics::Governor::Tgov1ExternalVariables;
+        using Parameter = typename Tgov1DataT::Parameters;
+
+        auto data                         = makeTgov1Data();
+        data.parameters[Parameter::Trate] = RealT{50.0};
+        data.parameters[Parameter::Dt]    = RealT{0.1};
+
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      omega_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      pref_node;
+        ScalarT                                        pmech{0.0};
+        ScalarT                                        omega{0.02};
+        ScalarT                                        pref{99.0};
+        IdxT                                           pmech_index = INVALID_INDEX<IdxT>;
+        IdxT                                           omega_index = INVALID_INDEX<IdxT>;
+        IdxT                                           pref_index  = INVALID_INDEX<IdxT>;
+
+        pmech_node.set(&pmech, &pmech_index);
+        omega_node.set(&omega, &omega_index);
+        pref_node.set(&pref, &pref_index);
+        gov.getSignals().template assignSignalNode<Internal::PM>(&pmech_node);
+        gov.getSignals().template attachSignalNode<External::DELTAOMEGA>(&omega_node);
+        gov.getSignals().template attachSignalNode<External::PREF>(&pref_node);
+
+        gov.setSystemBase(60.0, 100.0e6);
+        success *= gov.allocate() == 0;
+        pmech_node.init(0.4);
+        success *= gov.initialize() == 0;
+        success *= gov.tagDifferentiable() == 0;
+        success *= gov.evaluateResidual() == 0;
+
+        const auto* y  = gov.y().getData();
+        success       *= isEqual(y[static_cast<size_t>(Internal::PTX)], static_cast<ScalarT>(0.802), tol_);
+        success       *= isEqual(y[static_cast<size_t>(Internal::PV)], static_cast<ScalarT>(0.802), tol_);
+        success       *= isEqual(y[static_cast<size_t>(Internal::PM)], static_cast<ScalarT>(0.4), tol_);
+        success       *= isEqual(pref_node.read(), static_cast<ScalarT>(0.0601), tol_);
+
+        const auto* f = gov.getResidual().getData();
+        for (IdxT i = 0; i < gov.getResidual().getSize(); ++i)
+        {
+          success *= isEqual(f[i], static_cast<ScalarT>(0.0), tol_);
+        }
+
+        return success.report(__func__);
+      }
+
+      TestOutcome zeroTimeConstantsAndLimits()
+      {
+        TestStatus success = true;
+
+        using Internal  = PhasorDynamics::Governor::Tgov1InternalVariables;
+        using Parameter = typename Tgov1DataT::Parameters;
+
+        auto run_case = [&](RealT t1,
+                            RealT t3,
+                            RealT pvmin,
+                            RealT pvmax,
+                            RealT pmech,
+                            bool  ptx_differential,
+                            bool  pv_differential)
+        {
+          auto data                         = makeTgov1Data();
+          data.parameters[Parameter::T1]    = t1;
+          data.parameters[Parameter::T3]    = t3;
+          data.parameters[Parameter::Pvmin] = pvmin;
+          data.parameters[Parameter::Pvmax] = pvmax;
+
+          PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(data);
+          PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech_node;
+          gov.getSignals().template assignSignalNode<Internal::PM>(&pmech_node);
+
+          bool passed = gov.allocate() == 0;
+          pmech_node.init(pmech);
+          passed &= gov.initialize() == 0;
+          passed &= gov.tagDifferentiable() == 0;
+          passed &= gov.tag()[static_cast<size_t>(Internal::PTX)] == ptx_differential;
+          passed &= gov.tag()[static_cast<size_t>(Internal::PV)] == pv_differential;
+          passed &= gov.evaluateResidual() == 0;
+
+          const auto* f = gov.getResidual().getData();
+          for (IdxT i = 0; i < gov.getResidual().getSize(); ++i)
+          {
+            passed &= std::isfinite(f[i]);
+            passed &= isEqual(f[i], static_cast<ScalarT>(0.0), tol_);
+          }
+          return passed;
+        };
+
+        success *= run_case(0.0, 7.5, 0.0, 1.0, 0.5, true, false);
+        success *= run_case(0.5, 0.0, 0.0, 1.0, 0.5, false, true);
+        success *= run_case(0.0, 0.0, 0.0, 1.0, 0.5, false, false);
+        success *= run_case(0.5, 7.5, 1.0, 0.0, 0.5, true, true);
+        success *= run_case(0.5, 7.5, 0.0, 1.0, 2.0, true, true);
 
         return success.report(__func__);
       }

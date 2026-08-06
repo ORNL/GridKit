@@ -19,7 +19,7 @@ Symbol      | Units  | Description                          | Typical Value | No
 $T_R$       | [sec]  | Time constant for voltage sensing    | 0       |
 $K_A$       | [p.u.] | Coefficient for voltage regulation   | 50      |
 $T_A$       | [sec]  | Time constant for voltage regulation | 0.04    |
-$K_E$       | [p.u.] | Coefficient for excitation system    | -0.06   |
+$K_E$       | [p.u.] | Coefficient for excitation system; zero selects automatic initialization | -0.06   |
 $T_E$       | [sec]  | Time constant for excitation system  | 0.6     |
 $K_F$       | [p.u.] | Coefficient for feedback             | 0.09    |
 $T_F$       | [sec]  | Time constant for feedback           | 1.46    |
@@ -29,7 +29,7 @@ $E_1$       | [p.u.] | Saturation Parameter                 | 2.8     |
 $E_2$       | [p.u.] | Saturation Parameter                 | 3.73    |
 $S_1$       | [p.u.] | Saturation Parameter                 | 0.04    |
 $S_2$       | [p.u.] | Saturation Parameter                 | 0.33    |
-$I_{\mathrm{spdlim}}$ | [binary] | Speed limit flag indicator       | 0       |
+$I_{\mathrm{spdlim}}$ | [switch] | Speed-multiplier flag; any nonzero value enables it | 0       |
 
 ### Parameter Validation
 
@@ -43,8 +43,6 @@ Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilo
     &> 0 \\
   V_R^{\min}
     &\le V_R^{\max} \\
-  I_{\mathrm{spdlim}}
-    &\in \{0,1\} \\
   \left(S_1, S_2\right)
     &=(0,0)
       \quad\text{or}\quad
@@ -198,16 +196,21 @@ with the current input values.
 
 ```math
 \begin{aligned}
-   E_{C,0}  &:= \sqrt{V_r^2 + V_i^2} \\
-   E_{fd}'  &= \dfrac{E_{fd,0}}{1 + I_{\mathrm{spdlim}}\,\omega} \\
-   k_\text{sat}  &= S_B\, q(E_{fd}' - S_A) \\
-   V_E      &= k_\text{sat}\, E_{fd}' \\
-   V_R      &= K_E\, E_{fd}' + V_E \\
-   V_{tr}   &= \dfrac{V_R}{K_A} \\
-   V_{fx}   &= \dfrac{K_F}{T_F}\, E_{fd}' \\
-   V_{ts}   &= E_{C,0} \\
-   V_f      &= 0 \\
-   V_\text{ref}  &= E_{C,0} + V_{tr} - V_{UEL} - V_{OEL} - V_S
+   E_{C,0}  &\leftarrow \sqrt{V_r^2 + V_i^2} \\
+   E_{fd}'  &\leftarrow \dfrac{E_{fd,0}}{1 + I_{\mathrm{spdlim}}\,\omega} \\
+   k_\text{sat}  &\leftarrow S_B\, q(E_{fd}' - S_A) \\
+   K_E &\leftarrow
+      \begin{cases}
+        \dfrac{V_R^{\max}}{10E_{fd}'}-k_\text{sat} & K_E=0 \\
+        K_E & K_E\ne 0
+      \end{cases} \\
+   V_E      &\leftarrow k_\text{sat}\, E_{fd}' \\
+   V_R      &\leftarrow K_E\, E_{fd}' + V_E \\
+   V_{tr}   &\leftarrow \dfrac{V_R}{K_A} \\
+   V_{fx}   &\leftarrow \dfrac{K_F}{T_F}\, E_{fd}' \\
+   V_{ts}   &\leftarrow E_{C,0} \\
+   V_f      &\leftarrow 0 \\
+   V_\text{ref}  &\leftarrow E_{C,0} + V_{tr} - V_{UEL} - V_{OEL} - V_S
 \end{aligned}
 ```
 

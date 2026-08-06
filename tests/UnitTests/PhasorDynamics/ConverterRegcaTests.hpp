@@ -73,10 +73,18 @@ namespace GridKit
         success *= (bad_switch_model.verify() > 0);
 
         success *= invalidParameterCase(bus, Params::mva, 0.0);
-        success *= invalidParameterCase(bus, Params::Rpmax, 0.0);
-        success *= invalidParameterCase(bus, Params::IL1, -0.1);
         success *= invalidParameterCase(bus, Params::VL1, 0.3);
         success *= invalidParameterCase(bus, Params::VA1, 0.3);
+
+        auto zero_rpmax                      = makeData();
+        zero_rpmax.parameters[Params::Rpmax] = 0.0;
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> zero_rpmax_model(&bus, zero_rpmax);
+        success *= (zero_rpmax_model.verify() == 0);
+
+        auto disabled_lvpl                    = makeData();
+        disabled_lvpl.parameters[Params::IL1] = -0.1;
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> disabled_lvpl_model(&bus, disabled_lvpl);
+        success *= (disabled_lvpl_model.verify() == 0);
 
         // Vhvmax must lie strictly above VA1: rejected at VA1 and just below.
         success *= invalidParameterCase(bus, Params::Vhvmax, kVa1);
@@ -205,10 +213,9 @@ namespace GridKit
 
         // P0 and IL1 default to the makeData() values; each row breaks
         // exactly one initialize() guard.
-        const std::array<RejectionCase, 4> rejected{{
+        const std::array<RejectionCase, 3> rejected{{
             {"terminal voltage at Vhvmax", kHvrcmVoltageLimit, 0.0, 1.1},
             {"terminal voltage above Vhvmax", kHvrcmVoltageLimit + 0.1, 0.0, 1.1},
-            {"terminal voltage just below VA1", kJustBelowVa1, 0.0, 1.1},
             {"zero terminal voltage", 0.0, 0.0, 1.1},
         }};
 
@@ -225,6 +232,21 @@ namespace GridKit
             std::cout << "Expected rejection: " << test_case.label << "\n";
             success = false;
           }
+        }
+
+        {
+          auto data                   = makeData();
+          data.parameters[Params::p0] = 0.2;
+          data.parameters[Params::q0] = 0.1;
+
+          Fixture<ScalarT> fixture(data, kJustBelowVa1);
+          success *= fixture.initialize();
+          success *= (fixture.evaluate() == 0);
+          success *= allResidualsZero(fixture.regca);
+
+          const auto* y  = fixture.regca.y().getData();
+          success       *= scalarMatches(y[index(Vars::PBR)], 0.2, "PBR below original VA1");
+          success       *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR below original VA1");
         }
 
         // A finite ceiling binds only inside the LVPL ramp: with VL1 raised

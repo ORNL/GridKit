@@ -1,11 +1,11 @@
 #pragma once
 
 /**
- * @file Tgov1Impl.cpp
+ * @file Tgov1Impl.hpp
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
- * @brief Definition of a Turbine Governor Model (IEEET1).
+ * @brief Definition of the TGOV1 turbine-governor model.
  */
 
 #include <algorithm>

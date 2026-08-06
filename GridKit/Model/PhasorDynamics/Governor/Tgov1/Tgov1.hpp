@@ -3,7 +3,7 @@
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
- * @brief Declaration of a Turbine Governor Model (IEEET1).
+ * @brief Declaration of the TGOV1 turbine-governor model.
  *
  */
 
@@ -41,17 +41,17 @@ namespace GridKit
       /// Internal variables of a `Tgov1`
       enum class Tgov1InternalVariables : size_t
       {
-        PTX, ///< \f$P_{tx}\f$
-        PV,  ///< \f$P_v\f$
-        PM,  ///< \f$P_m\f$
+        PTX, ///< \f$P_t\f$ Turbine-block output
+        PV,  ///< \f$P_v\f$ Valve position
+        PM,  ///< \f$P_m\f$ Mechanical-power output
         MAXIMUM,
       };
 
       /// External variables of a `Tgov1`
       enum class Tgov1ExternalVariables : size_t
       {
-        DELTAOMEGA, ///< \f$\Delta_\omega\f$
-        PREF,       ///< \f$P_{ref}\f$
+        DELTAOMEGA, ///< \f$\Delta\omega\f$ Machine speed deviation
+        PREF,       ///< \f$P_\mathrm{ref}\f$ Governor reference
         MAXIMUM,
       };
 
