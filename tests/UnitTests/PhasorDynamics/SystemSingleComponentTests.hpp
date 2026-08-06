@@ -321,6 +321,58 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// HYGOV through the production path: model data to system
+      /// construction to signal wiring. The declared pmech signal starts at
+      /// zero mechanical power, an admissible operating point.
+      TestOutcome hygov()
+      {
+        using Data    = PhasorDynamics::Governor::HygovData<RealT, IdxT>;
+        using Outputs = typename Data::SignalOutputs;
+        using Params  = typename Data::Parameters;
+        using Vars    = PhasorDynamics::Governor::HygovInternalVariables;
+
+        constexpr IdxT pmech_id = static_cast<IdxT>(2);
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.freq_base = 60.0;
+        data.va_base   = 100.0e6;
+        data.signal.resize(1);
+        data.signal[0].signal_id = pmech_id;
+        data.signal[0].name      = "Mechanical Power";
+
+        Data hygov_data;
+        hygov_data.device_class                   = "Hygov";
+        hygov_data.disambiguation_string          = "hygov_system";
+        hygov_data.parameters[Params::Trate]      = static_cast<RealT>(100.0);
+        hygov_data.parameters[Params::Tnp]        = static_cast<RealT>(1.0);
+        hygov_data.signal_outputs[Outputs::pmech] = pmech_id;
+        data.hygov.push_back(hygov_data);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+
+        auto* pmech  = system.getSignal(pmech_id);
+        success     *= pmech->linked();
+        success     *= pmech->getVariableIndex() == static_cast<IdxT>(Vars::PMECH);
+
+        auto missing_output_data = data;
+        missing_output_data.hygov[0].signal_outputs.clear();
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> missing_output_system(missing_output_data);
+        std::cout << "Testing expected HYGOV missing-output configuration error.\n";
+        success *= missing_output_system.verify() > 0;
+
+        return success.report(__func__);
+      }
+
     private:
       auto makeRegcaData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
       {

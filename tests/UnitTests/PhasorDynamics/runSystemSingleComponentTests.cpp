@@ -19,6 +19,7 @@ int main()
   result += test.genrou();
   result += test.genClassical();
   result += test.tgov1();
+  result += test.hygov();
 
   // @todo The following components are not tested here because they require non-trivial constructors
   // PhasorDynamics::Exciter::SexsPti

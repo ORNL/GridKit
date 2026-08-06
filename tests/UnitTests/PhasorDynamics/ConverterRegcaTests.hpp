@@ -719,7 +719,9 @@ namespace GridKit
 
             for (size_t i = 0; i < nrows; ++i)
             {
-              if (!isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]))
+              if (!isEqual(dependency_tracking_jacobian[i],
+                           enzyme_jacobian[i],
+                           kTol))
               {
                 std::cout << "Jacobian row " << i
                           << " mismatch between dependency tracking and Enzyme"
@@ -999,7 +1001,7 @@ namespace GridKit
 
       bool scalarMatches(ScalarT actual, ScalarT expected, const char* label) const
       {
-        if (isEqual(actual, expected))
+        if (isEqual(actual, expected, kTol))
         {
           return true;
         }
