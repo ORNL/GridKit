@@ -112,7 +112,7 @@ namespace GridKit
         }
 
       public:
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
+        FORCE_INLINE int evaluateInternalResidual(
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:

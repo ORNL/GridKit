@@ -185,7 +185,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::addAdmittanceContribution(
+    FORCE_INLINE void Branch<scalar_type, index_type>::addAdmittanceContribution(
         const RealT   G,
         const RealT   B,
         const ScalarT Vr,
@@ -198,7 +198,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
+    FORCE_INLINE void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
         const RealT    G,
         const RealT    B,
         const ScalarT* wb,
@@ -234,7 +234,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual11(
+    FORCE_INLINE int Branch<scalar_type, index_type>::evaluateBusResidual11(
         [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
@@ -250,7 +250,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual12(
+    FORCE_INLINE int Branch<scalar_type, index_type>::evaluateBusResidual12(
         [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
@@ -266,7 +266,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual21(
+    FORCE_INLINE int Branch<scalar_type, index_type>::evaluateBusResidual21(
         [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
@@ -282,7 +282,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual22(
+    FORCE_INLINE int Branch<scalar_type, index_type>::evaluateBusResidual22(
         [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
