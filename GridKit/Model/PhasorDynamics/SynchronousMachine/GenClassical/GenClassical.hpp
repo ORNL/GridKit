@@ -169,6 +169,7 @@ namespace GridKit
       /* Derivied parameters */
       RealT G_;
       RealT B_;
+      RealT H_inv_;
       RealT va_machine_base_;
 
       /* Setpoints for control variables (determined at initialization) */

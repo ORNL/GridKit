@@ -162,7 +162,6 @@ namespace GridKit
         }
 
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
-        check(Tc_ >= ZERO<RealT>, "Tc must be non-negative");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
         check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
               "UEL must be 0, 1, 2, or 3");
@@ -684,23 +683,16 @@ namespace GridKit
           target = parsed_value;
         };
 
-        auto load_switch = [&](auto key, bool& target, const char* name)
+        auto load_switch = [&](auto key, bool& target)
         {
           if (!data.parameters.contains(key))
           {
             return;
           }
 
-          const auto& value = data.parameters.at(key);
-          if (const auto* bool_value = std::get_if<bool>(&value))
-          {
-            target = *bool_value;
-          }
-          else
-          {
-            Log::error() << "Esdc1a: parameter '" << name << "' must be boolean\n";
-            ++parameter_error_count_;
-          }
+          target = std::visit([](auto value)
+                              { return value != 0; },
+                              data.parameters.at(key));
         };
 
         auto load_selector = [&](auto key, IdxT& target, const char* name)
@@ -733,13 +725,13 @@ namespace GridKit
         load_real(Params::Te, Te_, "Te");
         load_real(Params::Kf, Kf_, "Kf");
         load_real(Params::Tf1, Tf1_, "Tf1");
-        load_switch(Params::Spdmlt, Spdmlt_, "Spdmlt");
+        load_switch(Params::Spdmlt, Spdmlt_);
         load_real(Params::E1, E1_, "E1");
         load_real(Params::Se1, Se1_, "Se1");
         load_real(Params::E2, E2_, "E2");
         load_real(Params::Se2, Se2_, "Se2");
         load_selector(Params::UEL, UEL_, "UEL");
-        load_switch(Params::exclim, exclim_, "exclim");
+        load_switch(Params::exclim, exclim_);
         setDerivedParameters();
       }
 
@@ -795,9 +787,7 @@ namespace GridKit
 
         check_non_negative(Tr_, "Tr");
         check_non_negative(Ta_, "Ta");
-        check_non_negative(Tb_, "Tb");
         check_non_negative(Te_, "Te");
-        check_non_negative(Tf1_, "Tf1");
 
         if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
             || Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM

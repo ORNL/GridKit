@@ -45,7 +45,8 @@ namespace GridKit
        */
       enum class Tgov1SignalInputs : size_t
       {
-        speed,
+        speed, ///< Optional machine speed-deviation signal ID
+        pref,  ///< Optional governor-reference signal ID
         SIZE,
       };
 

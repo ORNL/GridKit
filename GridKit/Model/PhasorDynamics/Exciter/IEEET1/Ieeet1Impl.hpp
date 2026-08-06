@@ -8,6 +8,7 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -138,9 +139,6 @@ namespace GridKit
 
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
-        check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
-              "Ispdlim must be 0 or 1");
-
         const bool saturation_disabled =
             Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
@@ -231,13 +229,34 @@ namespace GridKit
         ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
         ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
         ScalarT ve   = ksat * efdp;
-        ScalarT vr   = Ke_ * efdp + ve;
-        ScalarT vtr  = vr / Ka_;
+
+        RealT ke0 = Ke_;
+        if (ke0 == ZERO<RealT>)
+        {
+          const RealT efdp_real0 = static_cast<RealT>(efdp);
+          if (!std::isfinite(efdp_real0) || efdp_real0 == ZERO<RealT>)
+          {
+            Log::error() << "Ieeet1: automatic Ke requires a finite, nonzero initial Efd'\n";
+            return 1;
+          }
+
+          ke0 = Vrmax_ / (static_cast<RealT>(10.0) * efdp_real0)
+                - static_cast<RealT>(ksat);
+          if (!std::isfinite(ke0))
+          {
+            Log::error() << "Ieeet1: automatic Ke must be finite\n";
+            return 1;
+          }
+        }
+
+        ScalarT vr  = ke0 * efdp + ve;
+        ScalarT vtr = vr / Ka_;
         ScalarT vf{0};
         ScalarT vfx = (Kf_ / Tf_) * efdp;
 
         vref_ = Ec + vtr + vf - vUEL_ - vOEL_ - vs;
 
+        Ke_  = ke0;
         y[0] = Ec;   // y0 - vts  - Sensed term volt
         y[1] = vr;   // y1 - vr   - Voltage reg
         y[2] = efdp; // y2 - efdp - Efd pre mult
@@ -456,7 +475,9 @@ namespace GridKit
         }
         if (data.parameters.contains(Parameter::Ispdlim))
         {
-          Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
+          Ispdlim_ = std::visit([](auto value)
+                                { return value != 0 ? ONE<RealT> : ZERO<RealT>; },
+                                data.parameters.at(Parameter::Ispdlim));
         }
 
         Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);

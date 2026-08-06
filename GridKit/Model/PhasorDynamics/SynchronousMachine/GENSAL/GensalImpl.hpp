@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -518,6 +519,21 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Gensal<scalar_type, index_type>::setDerivedParams()
     {
+      H_ = std::max(H_, static_cast<RealT>(0.1));
+      if (Xdp_ > Xd_)
+      {
+        Xdp_ = static_cast<RealT>(0.8) * Xd_;
+      }
+      if (Xdpp_ > Xdp_)
+      {
+        Xdpp_ = static_cast<RealT>(0.8) * Xdp_;
+      }
+      Xdpp_ = std::max(Xdpp_, static_cast<RealT>(0.05));
+      if (Xl_ > Xdpp_)
+      {
+        Xl_ = static_cast<RealT>(0.8) * Xdpp_;
+      }
+
       SA_ = 0;
       SB_ = 0;
       if (S12_ != 0)

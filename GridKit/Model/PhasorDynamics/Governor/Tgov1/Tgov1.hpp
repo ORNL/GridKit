@@ -117,20 +117,20 @@ namespace GridKit
 
       private:
         // Input parameters
-        RealT Trate_{0};
-        RealT R_{0};
-        RealT Pvmin_{0};
-        RealT Pvmax_{0};
-        RealT T1_{0};
-        RealT T2_{0};
-        RealT T3_{0};
-        RealT Dt_{0};
+        RealT Trate_{static_cast<RealT>(100.0)};
+        RealT R_{static_cast<RealT>(0.05)};
+        RealT Pvmin_{ZERO<RealT>};
+        RealT Pvmax_{ONE<RealT>};
+        RealT T1_{static_cast<RealT>(0.5)};
+        RealT T2_{static_cast<RealT>(2.5)};
+        RealT T3_{static_cast<RealT>(7.5)};
+        RealT Dt_{ZERO<RealT>};
 
         // Derived parameters
         RealT va_component_base_{0};
 
         // Input States (which can be parameters)
-        ScalarT pref_{0};
+        ScalarT pref_set_{0};
 
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;

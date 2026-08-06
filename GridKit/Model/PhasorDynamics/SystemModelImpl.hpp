@@ -364,6 +364,13 @@ namespace GridKit
           gov->getSignals().template attachSignalNode<DELTAOMEGA>(getSignal(speed));
         }
 
+        if (govdata.signal_inputs.contains(Tgov1SignalInputs::pref))
+        {
+          IdxT           pref = govdata.signal_inputs.at(Tgov1SignalInputs::pref);
+          constexpr auto PREF = Tgov1ExternalVariables::PREF;
+          gov->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+        }
+
         if (govdata.signal_outputs.contains(Tgov1SignalOutputs::pmech))
         {
           IdxT           pmech = govdata.signal_outputs.at(Tgov1SignalOutputs::pmech);

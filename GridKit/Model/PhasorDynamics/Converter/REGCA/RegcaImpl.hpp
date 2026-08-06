@@ -78,8 +78,16 @@ namespace GridKit
                          << "and voltage-sensor lags well posed\n";
         }
 
-        Tg_          = std::max(Tg_, TIME_CONSTANT_MINIMUM);
-        TM_          = std::max(TM_, TIME_CONSTANT_MINIMUM);
+        Tg_ = std::max(Tg_, TIME_CONSTANT_MINIMUM);
+        TM_ = std::max(TM_, TIME_CONSTANT_MINIMUM);
+
+        if (IL1_ < ZERO<RealT>)
+        {
+          Log::warning() << "Regca: negative IL1 disables LVPL and is set to zero\n";
+          IL1_ = ZERO<RealT>;
+          sL_  = false;
+        }
+
         use_lvpl_    = ZERO<RealT>;
         bypass_lvpl_ = ONE<RealT>;
         if (sL_)
@@ -437,8 +445,7 @@ namespace GridKit
         }
 
         check(mva_base_ > ZERO<RealT>, "mva must be positive");
-        check(Rpmax_ > ZERO<RealT>, "Rpmax must be positive");
-        check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
+        check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
         check(KL_ > ZERO<RealT>, "LVPL release slope must be positive");
         check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
         check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
@@ -504,10 +511,10 @@ namespace GridKit
           Log::error() << "Regca: terminal voltage magnitude must be positive at initialization\n";
           return 1;
         }
-        if (vt < VA1_)
+        if (vt <= VA0_)
         {
           Log::error()
-              << "Regca: terminal voltage magnitude must be at least VA1 at initialization\n";
+              << "Regca: terminal voltage magnitude must be above VA0 at initialization\n";
           return 1;
         }
         if (vt >= Vhvmax_)
@@ -515,6 +522,12 @@ namespace GridKit
           Log::error()
               << "Regca: terminal voltage magnitude must be below Vhvmax at initialization\n";
           return 1;
+        }
+
+        if (vt < VA1_)
+        {
+          Log::warning() << "Regca: VA1 is lowered to the initial terminal voltage\n";
+          VA1_ = static_cast<RealT>(vt);
         }
 
         // P0 is a system-base power-flow injection. Resolve the component-base
