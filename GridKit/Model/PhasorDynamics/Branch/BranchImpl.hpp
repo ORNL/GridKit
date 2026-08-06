@@ -237,7 +237,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual21(
+    FORCE_INLINE int Branch<scalar_type, index_type>::evaluateBusResidual21(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
@@ -253,7 +253,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual22(
+    FORCE_INLINE int Branch<scalar_type, index_type>::evaluateBusResidual22(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,

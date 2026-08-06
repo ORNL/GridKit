@@ -22,7 +22,7 @@ using namespace GridKit::Enzyme::Sparse;
 
 /// Vector-valued function to differentiate
 template <typename ScalarT>
-__attribute__((always_inline)) static void f(size_t N, ScalarT* input, ScalarT* output)
+FORCE_INLINE static void f(size_t N, ScalarT* input, ScalarT* output)
 {
   for (size_t idx = 0; idx < N; ++idx)
   {

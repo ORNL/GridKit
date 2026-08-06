@@ -145,7 +145,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Load<scalar_type, index_type>::evaluateBusResidual(
+    FORCE_INLINE int Load<scalar_type, index_type>::evaluateBusResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         [[maybe_unused]] ScalarT* wb,
@@ -164,7 +164,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Load<scalar_type, index_type>::evaluateInternalResidual(
+    FORCE_INLINE int Load<scalar_type, index_type>::evaluateInternalResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
