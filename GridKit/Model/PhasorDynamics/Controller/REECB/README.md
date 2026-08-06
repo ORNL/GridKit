@@ -13,15 +13,13 @@ inverter-coupled resource.
 - In direct-voltage mode ($s_Q=1$, $s_V=0$) `qext` carries a terminal-voltage
   reference instead of a system-base reactive power.
 - REECB contributes no bus current injection.
+- GridKit does not apply generator-level Governor Response Limits to `Pmin` or
+  `Pmax`.
 
 > [!WARNING]
 > GridKit does not yet inherit `mva` from the associated REGCA model. Set it
 > explicitly to the REGCA component base; omitting it falls back to the system
 > base and is correct only when those bases match.[^reecb-mva-base]
-
-> [!WARNING]
-> GridKit does not yet apply the associated generator's baseload response
-> setting to REECB. The model always uses its configured `Pmin` and `Pmax`.
 
 ## Block Diagram
 
@@ -79,18 +77,17 @@ Invalid REECB parameter sets are rejected by the following checks:
   T_\mathrm{rv},T_\mathrm{p},T_\mathrm{iq},T_\mathrm{pord} &\ge 0 \\
   V_\mathrm{dip} &< V_\mathrm{up} \\
   D_1^\mathrm{db} &\le 0 \le D_2^\mathrm{db} \\
+  K_\mathrm{qv},K_\mathrm{qp},K_\mathrm{qi},K_\mathrm{vp},K_\mathrm{vi} &\ge 0 \\
   I_{q,\mathrm{inj}}^{\min} &\le I_{q,\mathrm{inj}}^{\max} \\
   Q^{\min} &\le Q^{\max} \\
   V^{\min} &\le V^{\max} \\
   R_P^{\min} &< 0 < R_P^{\max} \\
   P^{\min} &\le P^{\max} \\
-  I^{\max} &> 0 \\
-  s_\mathrm{pf}\,s_Q\,(1-s_V) &= 0.
+  I^{\max} &> 0.
 \end{aligned}
 ```
 
-The last condition rejects power-factor control combined with the
-direct-voltage reference, which has no meaningful reactive target.
+Enabling both `PfFlag` and `QFlag` logs an atypical-configuration warning.
 
 ### Model Derived Parameters
 
@@ -150,7 +147,7 @@ $P^\mathrm{ord}$        | [p.u.] | Filtered active-power order         | State 6
 Symbol               | Units  | Description                                   | Note
 ---------------------|--------|-----------------------------------------------|-----
 $V_T$                | [p.u.] | Terminal voltage magnitude                    |
-$I_L^{\max}$         | [p.u.] | Current available to the low-priority command | Component base
+$I_L^{\max}$         | [p.u.] | Current-circle continuation state             | Component base
 $I_q^\mathrm{cmd}$   | [p.u.] | Reactive-current command output               | System base
 $I_p^\mathrm{cmd}$   | [p.u.] | Active-current command output                 | System base
 
@@ -188,8 +185,9 @@ For readability, define:
   e_V^\mathrm{PI} &= s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
   f_P^\mathrm{ord} &= \dfrac{1}{T_\mathrm{pord}}(k_\mathrm{base}P^\mathrm{ref}-P^\mathrm{ord}) \\
   r_P^\mathrm{ord} &= \text{aslew}(f_P^\mathrm{ord};\,R_P^{\min},R_P^{\max}) \\
-  I_q^{\max} &= s_\mathrm{pq}|I_L^{\max}|+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
-  I_p^{\max} &= s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}|I_L^{\max}| \\
+  N_L &= \sqrt{(I_L^{\max})^2+\epsilon_0},\qquad I_L^\mathrm{cap}=\dfrac{(I_L^{\max})^2}{N_L} \\
+  I_q^{\max} &= s_\mathrm{pq}I_L^\mathrm{cap}+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
+  I_p^{\max} &= s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}I_L^\mathrm{cap} \\
   I_q^\mathrm{base} &= \text{clamp}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}) \\
   I_q^\mathrm{raw} &= s_QI_q^\mathrm{base}+s_Q^\mathrm{off}Q_V+I_q^\mathrm{inj}.
 \end{aligned}
@@ -217,17 +215,14 @@ these equations. [Appendix B](#appendix-b-aslew) defines `aslew`.
 ```math
 \begin{aligned}
   0 &= -V_T^2+V_\mathrm{r}^2+V_\mathrm{i}^2 \\
-  0 &= -I_L^{\max}|I_L^{\max}|+(I^{\max})^2-s_\mathrm{pq}(k_\mathrm{base}I_p^\mathrm{cmd})^2-s_\mathrm{pq}^\mathrm{off}(k_\mathrm{base}I_q^\mathrm{cmd})^2 \\
+  0 &= -I_L^{\max}N_L+(I^{\max})^2-s_\mathrm{pq}(k_\mathrm{base}I_p^\mathrm{cmd})^2-s_\mathrm{pq}^\mathrm{off}(k_\mathrm{base}I_q^\mathrm{cmd})^2 \\
   0 &= -k_\mathrm{base}I_q^\mathrm{cmd}+\text{clamp}(I_q^\mathrm{raw};\,-I_q^{\max},I_q^{\max}) \\
   0 &= -k_\mathrm{base}I_p^\mathrm{cmd}+\text{clamp}\left(\dfrac{P^\mathrm{ord}}{V_\mathrm{safe}^\mathrm{meas}};\,0,I_p^{\max}\right).
 \end{aligned}
 ```
 
-The signed-square continuation selects the unique positive physical root. Its
-magnitude keeps both limiter ranges ordered for negative nonlinear
-iterates; positive-root residual values and Jacobians are unchanged.
-Initialization excludes the zero-capacity point, where the magnitude derivative
-is undefined.
+Here $\epsilon_0=100\epsilon_\mathrm{machine}$ regularizes the `ILMAX` row at
+zero remaining capacity.
 
 ## Initialization
 
@@ -247,13 +242,9 @@ REECB reconstructs a steady operating point. Arbitrary-state restart is unsuppor
 ### Internal Initialization
 
 Initialization resolves the steady-state quantities in dependency order; all
-internal derivatives start at zero. Let
-$\epsilon_0=100\,\epsilon_\mathrm{machine}$ cover roundoff from smooth-clamp
-inversions and base round trips, and let
-$I_p=k_\mathrm{base}I_p^\mathrm{cmd}$ and
-$I_q=k_\mathrm{base}I_q^\mathrm{cmd}$ be the component-base initial commands.
-$\text{unclamp}(z;\ell,u)$ is the initialization-only inverse of the smooth
-clamp for $\ell<z<u$; [Appendix A](#appendix-a-unclamp) gives its closed form.
+internal derivatives start at zero. Let $I_p=k_\mathrm{base}I_p^\mathrm{cmd}$
+and $I_q=k_\mathrm{base}I_q^\mathrm{cmd}$ be the component-base commands.
+[Appendix A](#appendix-a-iclamp) defines the initialization-only `iclamp`.
 
 ```math
 \begin{aligned}
@@ -266,24 +257,25 @@ clamp for $\ell<z<u$; [Appendix A](#appendix-a-unclamp) gives its closed form.
   P^\mathrm{meas} &\leftarrow k_\mathrm{base}P_e \\
   e_V^\mathrm{db} &\leftarrow \text{deadband2}(V^\mathrm{ref}-V^\mathrm{meas};\,D_1^\mathrm{db},D_2^\mathrm{db}) \\
   I_q^\mathrm{inj} &\leftarrow \text{clamp}(K_\mathrm{qv}e_V^\mathrm{db};\,I_{q,\mathrm{inj}}^{\min},I_{q,\mathrm{inj}}^{\max}) \\
-  I_L^{\max} &\leftarrow \sqrt{(I^{\max})^2-s_\mathrm{pq}I_p^2-s_\mathrm{pq}^\mathrm{off}I_q^2} \\
-  I_q^{\max} &\leftarrow s_\mathrm{pq}I_L^{\max}+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
-  I_p^{\max} &\leftarrow s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}I_L^{\max}.
+  I_L^{\max}N_L &\leftarrow (I^{\max})^2-s_\mathrm{pq}I_p^2-s_\mathrm{pq}^\mathrm{off}I_q^2,\qquad I_L^{\max}\ge0 \\
+  I_q^{\max} &\leftarrow s_\mathrm{pq}I_L^\mathrm{cap}+s_\mathrm{pq}^\mathrm{off}I^{\max},\qquad I_p^{\max}\leftarrow s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}I_L^\mathrm{cap}.
 \end{aligned}
 ```
 
-$Q^\mathrm{target}$ is the initialization-only component-base reactive-power
-reference required by the enabled steady-state control path.
+Initialization raises $I^\max$ when needed to reproduce the supplied current
+commands; incompatible reactive-current injection is rejected. Q, V, and P
+limits are expanded as needed to include their initialized values, and each
+adjustment logs a warning.
 
 ```math
 \begin{aligned}
-  I_q^\mathrm{raw} &\leftarrow \text{unclamp}(I_q;\,-I_q^{\max},I_q^{\max}) \\
+  I_q^\mathrm{raw} &\leftarrow \text{iclamp}(I_q;\,-I_q^{\max},I_q^{\max}) \\
   I_q^\mathrm{ctrl} &\leftarrow I_q^\mathrm{raw}-I_q^\mathrm{inj} \\
-  P^\mathrm{ord} &\leftarrow V_\mathrm{safe}^\mathrm{meas}\text{unclamp}(I_p;\,0,I_p^{\max}) \\
+  P^\mathrm{ord} &\leftarrow V_\mathrm{safe}^\mathrm{meas}\text{iclamp}(I_p;\,0,I_p^{\max}) \\
   Q^\mathrm{target} &\leftarrow
       \begin{cases}
         V_\mathrm{safe}^\mathrm{meas}I_q^\mathrm{ctrl} & s_Q=0 \\
-        \text{unclamp}(k_\mathrm{base}Q^\mathrm{gen};\,Q^{\min},Q^{\max}) & s_Q s_V=1\ \land\ Q^{\min}<k_\mathrm{base}Q^\mathrm{gen}<Q^{\max} \\
+        \text{iclamp}(k_\mathrm{base}Q^\mathrm{gen};\,Q^{\min},Q^{\max}) & s_Qs_V=1 \\
         0 & \text{otherwise}
       \end{cases}.
 \end{aligned}
@@ -293,24 +285,17 @@ reference required by the enabled steady-state control path.
 \begin{aligned}
   \phi^\mathrm{ref} &\leftarrow
       \begin{cases}
-        \arctan(Q^\mathrm{target}/P^\mathrm{meas}) & s_\mathrm{pf}=1\ \land\ |P^\mathrm{meas}|>\epsilon_0 \\
+        \arctan(Q^\mathrm{target}/P^\mathrm{meas}) & s_\mathrm{pf}=1\ \land\ P^\mathrm{meas}\ne0 \\
         0 & \text{otherwise}
       \end{cases} \\
   Q^\mathrm{ext} &\leftarrow
       \begin{cases}
         V^\mathrm{meas} & s_V^\mathrm{ref}=1 \\
-        P^\mathrm{meas}\tan(\phi^\mathrm{ref})/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
+        0 & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
         Q^\mathrm{target}/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=0
       \end{cases} \\
   Q^\mathrm{ref} &\leftarrow s_Q^\mathrm{ref}(s_\mathrm{pf}P^\mathrm{meas}\tan(\phi^\mathrm{ref})+s_\mathrm{pf}^\mathrm{off}k_\mathrm{base}Q^\mathrm{ext}).
 \end{aligned}
-```
-
-For $s_Q=0$, the selected reactive-reference path must reproduce the recovered
-controller current:
-
-```math
-\left|\dfrac{Q^\mathrm{ref}}{V_\mathrm{safe}^\mathrm{meas}}-I_q^\mathrm{ctrl}\right|\le\epsilon_0.
 ```
 
 ```math
@@ -318,15 +303,15 @@ controller current:
   e_Q &\leftarrow \text{clamp}(Q^\mathrm{ref};\,Q^{\min},Q^{\max})-k_\mathrm{base}Q^\mathrm{gen} \\
   x_Q^\mathrm{PI} &\leftarrow
       \begin{cases}
-        \text{unclamp}(V^\mathrm{meas};\,V^{\min},V^{\max})-K_\mathrm{qp}e_Q & s_Q s_V=1\ \land\ V^{\min}<V^\mathrm{meas}<V^{\max} \\
-        -K_\mathrm{qp}e_Q & s_Q s_V=1,\ \text{otherwise} \\
-        0 & s_Q s_V=0
+        \text{iclamp}(V^\mathrm{meas};\,V^{\min},V^{\max})-K_\mathrm{qp}e_Q & s_Qs_V=1 \\
+        0 & s_Qs_V=0
       \end{cases} \\
   V_Q^\mathrm{PI} &\leftarrow \text{clamp}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}) \\
   e_V^\mathrm{PI} &\leftarrow s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
   x_V^\mathrm{PI} &\leftarrow
       \begin{cases}
-        \text{unclamp}(I_q^\mathrm{ctrl};\,-I_q^{\max},I_q^{\max})-K_\mathrm{vp}e_V^\mathrm{PI} & s_Q=1 \\
+        -K_\mathrm{vp}e_V^\mathrm{PI} & s_Q=1\ \land\ I_q^{\max}\le\epsilon_0 \\
+        \text{iclamp}(I_q^\mathrm{ctrl};\,-I_q^{\max},I_q^{\max})-K_\mathrm{vp}e_V^\mathrm{PI} & s_Q=1\ \land\ I_q^{\max}>\epsilon_0 \\
         0 & s_Q=0
       \end{cases} \\
   Q_V &\leftarrow
@@ -337,25 +322,8 @@ controller current:
 \end{aligned}
 ```
 
-Initialization rejects an operating point when any of the following holds:
-
-- the terminal-voltage magnitude or the current-limit radicand is not
-  positive;
-- a current command leaves its strict interior,
-  $0<I_p<I_p^{\max}$ and $-I_q^{\max}<I_q<I_q^{\max}$;
-- an operand of $\text{unclamp}$ sits on or outside its limits;
-- the recovered order leaves
-  $[P^{\min}-\epsilon_0,\,P^{\max}+\epsilon_0]$;
-- an enabled integral path is off equilibrium,
-  $|s_Q^\mathrm{PI}K_\mathrm{qi}e_Q|>\epsilon_0$ or
-  $|s_QK_\mathrm{vi}e_V^\mathrm{PI}|>\epsilon_0$; or
-- any candidate quantity is nonfinite.
-
-The recovered order is retained unchanged to preserve the initial
-active-current command, and collapsed Q or V bounds bypass the inverse while
-still requiring the corresponding integral equilibrium. Every check resolves
-before any storage is written, so a rejected initialization leaves state,
-derivatives, latches, parameter storage, and attached signals unchanged.
+Invalid or non-equilibrium operating points are rejected before any state,
+limit, latch, or signal is changed.
 
 ### Output Initialization
 
@@ -363,13 +331,13 @@ derivatives, latches, parameter storage, and attached signals unchanged.
 \begin{aligned}
   \phi^\mathrm{ref} &\leftarrow
       \begin{cases}
-        \arctan(Q^\mathrm{target}/P^\mathrm{meas}) & s_\mathrm{pf}=1\ \land\ |P^\mathrm{meas}|>\epsilon_0 \\
+        \arctan(Q^\mathrm{target}/P^\mathrm{meas}) & s_\mathrm{pf}=1\ \land\ P^\mathrm{meas}\ne0 \\
         0 & \text{otherwise}
       \end{cases} \\
   Q^\mathrm{ext} &\leftarrow
       \begin{cases}
         V^\mathrm{meas} & s_V^\mathrm{ref}=1 \\
-        P^\mathrm{meas}\tan(\phi^\mathrm{ref})/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
+        0 & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
         Q^\mathrm{target}/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=0
       \end{cases} \\
   P^\mathrm{ref} &\leftarrow \dfrac{P^\mathrm{ord}}{k_\mathrm{base}}
@@ -388,18 +356,34 @@ Output  | Units  | Description                     | Note
 `vmeas` | [p.u.] | Filtered terminal voltage       | $V^\mathrm{meas}$
 `pmeas` | [p.u.] | Filtered electrical power       | $P^\mathrm{meas}$ (component base)
 
-## Appendix A: `unclamp`
+## Testing
+
+- `validation()` checks configuration and defaults.
+- `initializationAndSignals()` checks initialization, signals, monitors, and power bases.
+- `initializationDomain()` checks rejected inputs and limit expansion.
+- `initializationExactness()` checks endpoint and current-circle initialization.
+- `residualEquations()` checks the fixed residual answer key.
+- `selectorConfigurations()` checks selectors and optional ports.
+- `voltVarReferenceBase()` checks `qext` units.
+- `reactiveControl()` checks the reactive-control paths.
+- `activeCurrentControl()` checks active-current control and current priority.
+- `dependencyTracking()` checks sparse dependencies.
+- `jacobian()` compares the Enzyme and dependency-tracking Jacobians.
+- `regcaReecb()`, `reecb()`, and `initializationFailure()` check system wiring.
+
+## Appendix A: `iclamp`
 
 For $\ell<z<u$, GridKit's smooth
 [`clamp`](../../../../CommonMath.md#clamp) is strictly increasing and has the
 unique inverse below. With $a=\mu(z-\ell)$ and $b=\mu(u-z)$,
 
 ```math
-\text{unclamp}(z;\ell,u) = \ell+\dfrac{1}{\mu}\left[a+\log\left(1-e^{-a}\right)-\log\left(1-e^{-b}\right)\right].
+\text{iclamp}(z;\ell,u) = \ell+\dfrac{1}{\mu}\left[a+\log\left(1-e^{-a}\right)-\log\left(1-e^{-b}\right)\right].
 ```
 
-The logarithms are evaluated in cancellation-safe form. The inverse diverges
-at either limit, so initialization requires strictly interior values.
+At a bound, `iclamp` uses
+$\delta_0=-\log(\text{expm1}(\mu\epsilon_0/2))/\mu$ to keep the clamp error
+within $\epsilon_0$; collapsed bounds return the bound.
 
 ## Appendix B: `aslew`
 

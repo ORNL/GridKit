@@ -361,6 +361,7 @@ namespace GridKit
         data.signal[1].name      = "Active Current Command";
 
         auto regca_data                              = makeRegcaData();
+        regca_data.parameters[RegcaParams::mva]      = static_cast<RealT>(50.0);
         regca_data.parameters[RegcaParams::p0]       = static_cast<RealT>(0.25);
         regca_data.parameters[RegcaParams::q0]       = static_cast<RealT>(0.05);
         regca_data.signal_inputs[RegcaInputs::ipcmd] = ipcmd_id;

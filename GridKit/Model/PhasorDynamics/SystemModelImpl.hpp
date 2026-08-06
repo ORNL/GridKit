@@ -744,8 +744,8 @@ namespace GridKit
      *
      * @note System model composition is flat; nested systems are not supported.
      *
-     * @throws std::runtime_error if storage allocation, child binding, or
-     * model verification fails.
+     * @throws std::runtime_error if storage allocation, child binding, model
+     * verification, or sparse initialization fails.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()

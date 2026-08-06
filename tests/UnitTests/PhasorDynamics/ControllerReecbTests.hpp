@@ -1,12 +1,10 @@
 #pragma once
 
 #include <array>
-#include <cmath>
 #include <initializer_list>
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <numbers>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -158,6 +156,18 @@ namespace GridKit
         success *= invalidParameterCase(Params::Pmin, 3.0);
         success *= invalidParameterCase(Params::Imax, 0.0);
 
+        const std::array<Params, 5> nonnegative_gains{{
+            Params::kqv,
+            Params::Kqp,
+            Params::Kqi,
+            Params::Kvp,
+            Params::Kvi,
+        }};
+        for (const Params gain : nonnegative_gains)
+        {
+          success *= invalidParameterCase(gain, -0.1);
+        }
+
         const std::array<Params, 4> flag_parameters{{
             Params::PfFlag,
             Params::VFlag,
@@ -299,7 +309,7 @@ namespace GridKit
         // the same commands land on a different measured power.
         auto system_base_data = makeData();
         system_base_data.parameters.erase(Params::mva);
-        Fixture<ScalarT> system_base(system_base_data, 1.0, 0.0, kSystemBaseVa);
+        Fixture<ScalarT> system_base(system_base_data, 1.0, 0.0, static_cast<RealT>(50.0e6));
         system_base.attachAllInputs();
         system_base.input(Ext::PE)  = 0.75;
         success                    *= system_base.initialize(kInitialIqcmd, 1.5);
@@ -314,72 +324,122 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Check initialization rejection, atomicity, and the admissible points
-      /// next to each rejected one.
+      /// Check adjusted limits, initialization rejection, and atomicity.
       TestOutcome initializationDomain()
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing inadmissible REECB initialization points. "
-                         "Logged errors are expected.");
+        noteExpectedLogs("Testing adjusted REECB limits and inadmissible initialization points. "
+                         "Logged warnings and errors are expected.");
 
         const auto data = makeData();
 
-        // The active-current command must stay strictly inside its limiter,
-        // and the current circle must leave low-priority capacity.
-        success *= initializationRejectedAtomically(data, 0.75, 0.0, "zero active-current command");
-        success *= initializationRejectedAtomically(data, 0.75, 1.25, "active-current command at its limit");
-        success *= initializationRejectedAtomically(data, 0.75, 1.5, "active-current command beyond the current circle");
+        success *= initializationRejectedAtomically(data, 0.75, -0.1, "negative active-current command");
+        success *= initializationRejectedAtomically(data, 0.75, std::numeric_limits<RealT>::infinity(), "nonfinite active-current command");
+        success *= initializationRejectedAtomically(
+            data, std::numeric_limits<RealT>::infinity(), 0.75, "nonfinite reactive-current command");
 
-        // The reactive-current command endpoints are the low-priority limit.
-        success *= initializationRejectedAtomically(data, 1.0, 0.75, "reactive-current command at its limit");
-        success *= initializationRejectedAtomically(data, -1.0, 0.75, "negative reactive-current command at its limit");
+        auto pord_above                     = data;
+        pord_above.parameters[Params::Pmax] = 1.0;
+        Fixture<ScalarT> adjusted_pmax(pord_above);
+        success *= adjusted_pmax.initialize(0.75, 0.75);
+        success *= (adjusted_pmax.evaluate() == 0);
+        success *= stateMatches(adjusted_pmax.reecb, {{Vars::PORD, 1.5}}, "adjusted Pmax");
+        success *= allResidualsWithinInitTolerance(adjusted_pmax.reecb);
+        setState(adjusted_pmax.reecb, {{Vars::PORD, 1.25}});
+        success *= (adjusted_pmax.evaluate() == 0);
+        success *= residualsMatch(adjusted_pmax.reecb, {{Vars::PORD, 1.0}}, "adjusted Pmax");
 
-        auto q_priority                        = data;
-        q_priority.parameters[Params::Pqflag]  = false;
-        success                               *= initializationRejectedAtomically(q_priority, 0.75, 1.0, "Q-priority active-current command at its limit");
+        auto pord_below                     = data;
+        pord_below.parameters[Params::Pmin] = 2.0;
+        Fixture<ScalarT> adjusted_pmin(pord_below);
+        success *= adjusted_pmin.initialize(0.75, 0.75);
+        success *= (adjusted_pmin.evaluate() == 0);
+        success *= stateMatches(adjusted_pmin.reecb, {{Vars::PORD, 1.5}}, "adjusted Pmin");
+        success *= allResidualsWithinInitTolerance(adjusted_pmin.reecb);
+        setState(adjusted_pmin.reecb, {{Vars::PORD, 1.75}});
+        success *= (adjusted_pmin.evaluate() == 0);
+        success *= residualsMatch(adjusted_pmin.reecb, {{Vars::PORD, -1.0}}, "adjusted Pmin");
 
-        auto pord_above                      = data;
-        pord_above.parameters[Params::Pmax]  = 1.0;
-        success                             *= initializationRejectedAtomically(pord_above, 0.75, 0.75, "recovered active-power order above Pmax");
+        auto expanded_current                     = data;
+        expanded_current.parameters[Params::Imax] = 1.0;
+        Fixture<ScalarT> adjusted_imax(expanded_current);
+        success *= adjusted_imax.initialize(0.75, 0.75);
+        success *= (adjusted_imax.evaluate() == 0);
+        success *= stateMatches(adjusted_imax.reecb, {{Vars::ILMAX, 1.5}}, "adjusted Imax");
+        success *= allResidualsWithinInitTolerance(adjusted_imax.reecb);
 
-        auto pord_below                      = data;
-        pord_below.parameters[Params::Pmin]  = 2.0;
-        success                             *= initializationRejectedAtomically(pord_below, 0.75, 0.75, "recovered active-power order below Pmin");
+        auto reactive_pi                      = data;
+        reactive_pi.parameters[Params::QFlag] = true;
+        reactive_pi.parameters[Params::VFlag] = true;
+        reactive_pi.parameters[Params::Kqi]   = 5.0;
+        const std::array<RealT, 2> q_limits{{-1.25, 1.25}};
+        for (const RealT qgen : q_limits)
+        {
+          Fixture<ScalarT> adjusted_q(reactive_pi);
+          adjusted_q.attachAllInputs();
+          adjusted_q.input(Ext::PE)    = 0.75;
+          adjusted_q.input(Ext::QGEN)  = qgen;
+          success                     *= adjusted_q.initialize(0.75, 0.75);
+          success                     *= (adjusted_q.evaluate() == 0);
+          success                     *= allResidualsWithinInitTolerance(adjusted_q.reecb);
+        }
 
-        // The reactive-power integrator cannot hold a command outside the
-        // reactive-power limits.
-        auto reactive_pi                       = data;
-        reactive_pi.parameters[Params::QFlag]  = true;
-        reactive_pi.parameters[Params::VFlag]  = true;
-        reactive_pi.parameters[Params::Kqi]    = 0.4;
-        success                               *= initializationRejectedAtomically(reactive_pi, 0.75, 0.75, "reactive feedback at Qmax", 0.75, 1.0);
-        success                               *= initializationRejectedAtomically(reactive_pi, 0.75, 0.75, "reactive feedback at Qmin", 0.75, -1.0);
+        auto voltage_pi                    = reactive_pi;
+        voltage_pi.parameters[Params::Kqi] = 0.0;
+        voltage_pi.parameters[Params::Kvi] = 5.0;
 
-        // The voltage-control integrator cannot hold a measured voltage the
-        // saturated Q-PI output does not reproduce.
-        auto voltage_pi                     = reactive_pi;
-        voltage_pi.parameters[Params::Kqi]  = 0.0;
-        voltage_pi.parameters[Params::Kvi]  = 0.5;
-        success                            *= initializationRejectedAtomically(voltage_pi, 0.75, 0.75, "measured voltage above Vmax", 0.96, 0.8, 1.6);
+        struct VoltageLimitCase
+        {
+          RealT voltage;
+          RealT pe;
+          RealT qgen;
+        };
 
-        // On a voltage limit the smooth Q-PI output only approaches the
-        // measurement, so an integrating voltage path has no equilibrium
-        // there. Collapsed limits pin it exactly and are admitted below.
-        success *= initializationRejectedAtomically(voltage_pi, 0.75, 0.75, "measured voltage at Vmin", 0.3, 0.3, 0.5);
+        const std::array<VoltageLimitCase, 2> voltage_limits{{
+            {0.3, 0.3, 0.3},
+            {1.6, 0.96, 0.8},
+        }};
+        for (const auto& test_case : voltage_limits)
+        {
+          Fixture<ScalarT> adjusted_v(voltage_pi, test_case.voltage);
+          adjusted_v.attachAllInputs();
+          adjusted_v.input(Ext::PE)    = test_case.pe;
+          adjusted_v.input(Ext::QGEN)  = test_case.qgen;
+          success                     *= adjusted_v.initialize(0.75, 0.75);
+          success                     *= (adjusted_v.evaluate() == 0);
+          success                     *= allResidualsWithinInitTolerance(adjusted_v.reecb);
+        }
 
-        // Power-factor control needs a representable angle, so a vanishing or
-        // near-vanishing active power is rejected.
-        auto power_factor                        = data;
-        power_factor.parameters[Params::PfFlag]  = true;
-        success                                 *= initializationRejectedAtomically(power_factor, 0.75, 0.75, "power-factor target at zero active power", 0.0, 0.75);
-        success                                 *= initializationRejectedAtomically(power_factor, 0.75, 0.75, "unrepresentable power-factor reference", 1.0e-8, 0.75);
+        // Power-factor control needs a representable angle.
+        auto power_factor                       = data;
+        power_factor.parameters[Params::PfFlag] = true;
+
+        auto late_data                     = power_factor;
+        late_data.parameters[Params::Pmax] = 1.0;
+        Fixture<ScalarT> late(late_data);
+        late.attachAllInputs();
+        late.input(Ext::PE)  = 0.0;
+        success             *= late.prepare(0.75, 0.75);
+        if (late.reecb.initialize() == 0)
+        {
+          std::cout << "Expected REECB initialization rejection after Pmax adjustment\n";
+          success = false;
+        }
+        late.input(Ext::PREF) = 0.75;
+        setState(late.reecb, {{Vars::PORD, 1.25}, {Vars::VT, 1.0}});
+        setDerivative(late.reecb, {{Vars::PORD, 0.0}});
+        success *= (late.evaluate() == 0);
+        success *= residualsMatch(late.reecb, {{Vars::PORD, 0.0}}, "rejected Pmax adjustment");
+        success *= initializationRejectedAtomically(
+            power_factor, 0.75, 0.75, "unrepresentable power-factor reference", 1.0e-8, 0.75);
 
         success *= initializationRejectedAtomically(data, 0.75, 0.75, "zero terminal voltage", 0.75, 0.75, 0.0);
-        success *= initializationRejectedAtomically(data, 0.75, 0.75, "nonfinite active-power feedback", std::numeric_limits<RealT>::infinity(), 0.75);
+        success *= initializationRejectedAtomically(
+            data, 0.75, 0.75, "nonfinite active-power feedback", std::numeric_limits<RealT>::infinity(), 0.75);
 
-        // Collapsed reactive and voltage limits admit only the equilibrium
-        // they pin, and reject every other operating point.
+        // Collapsed limits remain pinned at their initial output or expand to
+        // include it.
         auto collapsed                     = reactive_pi;
         collapsed.parameters[Params::Kvi]  = 0.5;
         collapsed.parameters[Params::Qmin] = 1.2;
@@ -394,19 +454,31 @@ namespace GridKit
         success                           *= (collapsed_limits.evaluate() == 0);
         success                           *= allResidualsWithinInitTolerance(collapsed_limits.reecb);
 
-        auto collapsed_reactive                      = collapsed;
-        collapsed_reactive.parameters[Params::Vmin]  = 0.5;
-        collapsed_reactive.parameters[Params::Vmax]  = 1.5;
-        collapsed_reactive.parameters[Params::Kvi]   = 0.0;
-        success                                     *= initializationRejectedAtomically(collapsed_reactive, 0.75, 0.75, "collapsed reactive limit away from equilibrium", 0.75, 0.3);
+        auto collapsed_reactive                     = collapsed;
+        collapsed_reactive.parameters[Params::Vmin] = 0.5;
+        collapsed_reactive.parameters[Params::Vmax] = 1.5;
+        collapsed_reactive.parameters[Params::Kvi]  = 0.0;
+        Fixture<ScalarT> expanded_reactive(collapsed_reactive);
+        expanded_reactive.attachAllInputs();
+        expanded_reactive.input(Ext::PE)    = 0.75;
+        expanded_reactive.input(Ext::QGEN)  = 0.3;
+        success                            *= expanded_reactive.initialize(0.75, 0.75);
+        success                            *= (expanded_reactive.evaluate() == 0);
+        success                            *= allResidualsWithinInitTolerance(expanded_reactive.reecb);
 
-        auto collapsed_voltage                      = collapsed;
-        collapsed_voltage.parameters[Params::Qmin]  = -2.0;
-        collapsed_voltage.parameters[Params::Qmax]  = 2.0;
-        collapsed_voltage.parameters[Params::Kqi]   = 0.0;
-        collapsed_voltage.parameters[Params::Vmin]  = 1.4;
-        collapsed_voltage.parameters[Params::Vmax]  = 1.4;
-        success                                    *= initializationRejectedAtomically(collapsed_voltage, 0.75, 0.75, "collapsed voltage limit away from equilibrium", 0.75, 0.75);
+        auto collapsed_voltage                     = collapsed;
+        collapsed_voltage.parameters[Params::Qmin] = -2.0;
+        collapsed_voltage.parameters[Params::Qmax] = 2.0;
+        collapsed_voltage.parameters[Params::Kqi]  = 0.0;
+        collapsed_voltage.parameters[Params::Vmin] = 1.4;
+        collapsed_voltage.parameters[Params::Vmax] = 1.4;
+        Fixture<ScalarT> expanded_voltage(collapsed_voltage);
+        expanded_voltage.attachAllInputs();
+        expanded_voltage.input(Ext::PE)    = 0.75;
+        expanded_voltage.input(Ext::QGEN)  = 0.75;
+        success                           *= expanded_voltage.initialize(0.75, 0.75);
+        success                           *= (expanded_voltage.evaluate() == 0);
+        success                           *= allResidualsWithinInitTolerance(expanded_voltage.reecb);
 
         // Zero integral gains leave both controllers unconstrained, so any
         // reactive feedback initializes.
@@ -441,8 +513,8 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// The private smooth-limiter inverse reproduces every requested command,
-      /// including commands pressed against a limit.
+      /// The smooth-limiter inverse reproduces interior and boundary commands,
+      /// including points that expand the current circle.
       TestOutcome initializationExactness()
       {
         TestStatus success = true;
@@ -537,6 +609,94 @@ namespace GridKit
           success *= allResidualsWithinInitTolerance(reactive.reecb);
         }
 
+        struct BoundaryCase
+        {
+          bool        p_priority;
+          RealT       iqcmd;
+          RealT       ipcmd;
+          RealT       ilmax;
+          const char* label;
+        };
+
+        const std::array<BoundaryCase, 7> boundary_cases{{
+            {true, 0.75, 0.0, 2.5, "zero active-current command"},
+            {true, 0.0, 1.25, 0.0, "zero reactive-current capacity"},
+            {true, 1.0, 0.75, 2.0, "upper reactive-current command"},
+            {true, -1.0, 0.75, 2.0, "lower reactive-current command"},
+            {false, 0.75, 1.0, 2.0, "upper active-current command"},
+            {false, 1.25, 0.0, 0.0, "zero active-current capacity"},
+            {true, 0.75, 1.5, 1.5, "expanded current circle"},
+        }};
+        for (const auto& test_case : boundary_cases)
+        {
+          auto boundary_data                       = exactness_data;
+          boundary_data.parameters[Params::Pqflag] = test_case.p_priority;
+          Fixture<ScalarT> boundary(boundary_data);
+          success *= boundary.initialize(test_case.iqcmd, test_case.ipcmd);
+          success *= (boundary.evaluate() == 0);
+          success *= scalarPreserved(boundary.iqcmd(), test_case.iqcmd, test_case.label);
+          success *= scalarPreserved(boundary.ipcmd(), test_case.ipcmd, test_case.label);
+          success *= stateMatches(boundary.reecb, {{Vars::ILMAX, test_case.ilmax}}, test_case.label);
+          success *= allResidualsWithinInitTolerance(boundary.reecb);
+        }
+
+        auto separated_data                     = exactness_data;
+        separated_data.parameters[Params::Imax] = 1.0;
+        Fixture<ScalarT> separated(separated_data);
+        success *= separated.initialize(5.0e-13, 0.5);
+        success *= (separated.evaluate() == 0);
+        success *= scalarPreserved(separated.iqcmd(), 5.0e-13, "scale-separated current command");
+        success *= allResidualsWithinInitTolerance(separated.reecb);
+
+        auto capacity_data                       = exactness_data;
+        capacity_data.parameters[Params::mva]    = 100.0;
+        capacity_data.parameters[Params::Pqflag] = true;
+        capacity_data.parameters[Params::Imax]   = 0.1;
+        Fixture<ScalarT> capacity(capacity_data);
+        success           *= capacity.initialize(1.7, 0.3);
+        success           *= (capacity.evaluate() == 0);
+        success           *= scalarPreserved(capacity.iqcmd(), 1.7, "strict low-priority command");
+        success           *= scalarPreserved(capacity.ipcmd(), 0.3, "strict high-priority command");
+        const RealT ilmax  = static_cast<RealT>(capacity.reecb.y().getData()[index(Vars::ILMAX)]);
+        const RealT ilcap  = ilmax * ilmax / std::sqrt(ilmax * ilmax + ReecbT::INITIALIZATION_TOLERANCE);
+        if (ilcap < 1.7)
+        {
+          std::cout << "REECB low-priority capacity does not include its initial command\n";
+          success = false;
+        }
+        success *= allResidualsWithinInitTolerance(capacity.reecb);
+
+        auto nested_data                       = exactness_data;
+        nested_data.parameters[Params::mva]    = 100.0;
+        nested_data.parameters[Params::Pqflag] = true;
+        nested_data.parameters[Params::QFlag]  = true;
+        nested_data.parameters[Params::VFlag]  = false;
+        nested_data.parameters[Params::Imax]   = 1.0;
+        Fixture<ScalarT> nested(nested_data);
+        nested.attachAllInputs();
+        nested.input(Ext::PE)    = 0.6;
+        nested.input(Ext::QGEN)  = 0.8;
+        success                 *= nested.initialize(0.8, 0.6);
+        success                 *= (nested.evaluate() == 0);
+        success                 *= scalarPreserved(nested.iqcmd(), 0.8, "nested-clamp reactive command");
+        success                 *= scalarPreserved(nested.ipcmd(), 0.6, "nested-clamp active command");
+        success                 *= allResidualsWithinInitTolerance(nested.reecb);
+
+        auto exhausted_data                      = exactness_data;
+        exhausted_data.parameters[Params::QFlag] = true;
+        exhausted_data.parameters[Params::kqv]   = 1.0;
+        exhausted_data.parameters[Params::Iql1]  = -0.4;
+        exhausted_data.parameters[Params::Iqh1]  = 1.2;
+        exhausted_data.parameters[Params::Vref0] = 2.2;
+        Fixture<ScalarT> exhausted(exhausted_data);
+        exhausted.attachAllInputs();
+        exhausted.input(Ext::PE)  = 1.25;
+        success                  *= exhausted.initialize(0.0, 1.25);
+        success                  *= (exhausted.evaluate() == 0);
+        success                  *= scalarPreserved(exhausted.iqcmd(), 0.0, "exhausted reactive-current capacity");
+        success                  *= stateMatches(exhausted.reecb, {{Vars::ILMAX, 0.0}}, "injection does not expand current circle");
+        success                  *= allResidualsWithinInitTolerance(exhausted.reecb);
+
         return success.report(__func__);
       }
 
@@ -584,15 +744,14 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Every valid selector combination initializes attached and unattached
-      /// signals to a zero-residual state; power-factor control with the
-      /// direct-voltage reference is rejected.
+      /// Every selector combination initializes attached and unattached signals
+      /// to a zero-residual state.
       TestOutcome selectorConfigurations()
       {
         TestStatus success = true;
 
         noteExpectedLogs("Testing REECB selector configurations. "
-                         "Rejection of the power-factor direct-voltage combinations is expected.");
+                         "Atypical PfFlag/QFlag warnings are expected.");
 
         const std::array<bool, 2> selector_values{{false, true}};
         for (const bool pf : selector_values)
@@ -621,13 +780,6 @@ namespace GridKit
                     fixture.input(Ext::QGEN) = 0.75;
                   }
 
-                  if (pf && reactive && !voltage)
-                  {
-                    success *= (fixture.reecb.verify() > 0);
-                    success *= !fixture.initialize(0.75, 0.75);
-                    continue;
-                  }
-
                   success *= fixture.initialize(0.75, 0.75);
                   success *= (fixture.evaluate() == 0);
                   success *= allResidualsWithinInitTolerance(fixture.reecb);
@@ -654,8 +806,8 @@ namespace GridKit
                   {
                     success                     *= scalarPreserved(fixture.input(Ext::PE), 0.75, "selector pe");
                     success                     *= scalarPreserved(fixture.input(Ext::QGEN), 0.75, "selector qgen");
-                    const RealT expected_qext    = reactive && !voltage ? 1.0 : 0.75;
-                    const RealT expected_pfaref  = pf ? kUnitSlopeAngle : 0.0;
+                    const RealT expected_qext    = reactive && !voltage ? 1.0 : (pf ? 0.0 : 0.75);
+                    const RealT expected_pfaref  = pf && (!reactive || voltage) ? kUnitSlopeAngle : 0.0;
                     success                     *= scalarMatches(fixture.input(Ext::QEXT), expected_qext, "published qext");
                     success                     *= scalarMatches(fixture.input(Ext::PFAREF), expected_pfaref, "published pfaref");
                     success                     *= scalarMatches(fixture.input(Ext::PREF), 0.75, "published pref");
@@ -1176,11 +1328,6 @@ namespace GridKit
             {
               for (const bool p_priority : selector_values)
               {
-                if (pf && reactive && !voltage)
-                {
-                  continue;
-                }
-
                 auto data                       = makeJacobianData();
                 data.parameters[Params::PfFlag] = pf;
                 data.parameters[Params::VFlag]  = voltage;
@@ -1208,7 +1355,8 @@ namespace GridKit
                 success *= derivativeMatches(dependency, Vars::IPCMD, Vars::VMEAS, -0.5, "IPCMD-VMEAS");
                 success *= derivativeMatches(dependency, Vars::IQCMD, Vars::XPIV, reactive ? 1.0 : 0.0, "IQCMD-XPIV selector path");
                 success *= derivativeMatches(dependency, Vars::IQCMD, Vars::QV, reactive ? 0.0 : 1.0, "IQCMD-QV selector path");
-                success *= derivativeMatches(dependency, Vars::XPIQ, kQgenColumn, reactive && voltage ? -0.8 : 0.0, "XPIQ-QGEN selector path");
+                success *= derivativeMatches(
+                    dependency, Vars::XPIQ, kQgenColumn, reactive && voltage ? -0.8 : 0.0, "XPIQ-QGEN selector path");
 
                 // The direct-voltage coefficient carries no power-base factor,
                 // while the cascaded path converts the reference to component base.
@@ -1246,6 +1394,9 @@ namespace GridKit
           success               *= derivativeMatches(dependency, Vars::ILMAX, Vars::ILMAX, -4.0, "negative capacity continuation");
         }
 
+        const auto zero_capacity  = dependencyTrackingJacobian(makeJacobianData(), kNonunitAlpha, success, 0.0);
+        success                  *= derivativeMatches(zero_capacity, Vars::ILMAX, Vars::ILMAX, -std::sqrt(ReecbT::INITIALIZATION_TOLERANCE), "zero capacity continuation");
+
         // The selector sweep zeroes the injection gain, so this configuration
         // exercises the injection derivative on its own.
         {
@@ -1273,7 +1424,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        const std::array<bool, 2> selector_values{{false, true}};
+        const std::array<bool, 2>  selector_values{{false, true}};
+        const std::array<RealT, 2> continuation_states{{-2.0, 0.0}};
+        const std::array<RealT, 2> slew_bases{{25.0, 100.0}};
+        const std::array<RealT, 2> moving_band_bases{{25.0, 200.0}};
         for (const bool pf : selector_values)
         {
           for (const bool voltage : selector_values)
@@ -1282,11 +1436,6 @@ namespace GridKit
             {
               for (const bool p_priority : selector_values)
               {
-                if (pf && reactive && !voltage)
-                {
-                  continue;
-                }
-
                 auto data                       = makeJacobianData();
                 data.parameters[Params::PfFlag] = pf;
                 data.parameters[Params::VFlag]  = voltage;
@@ -1306,9 +1455,33 @@ namespace GridKit
           auto data                       = makeJacobianData();
           data.parameters[Params::Pqflag] = p_priority;
 
-          success *= jacobiansMatch(
-              dependencyTrackingJacobian(data, kNonunitAlpha, success, -2.0),
-              enzymeJacobian(data, kNonunitAlpha, success, -2.0));
+          for (const RealT ilmax : continuation_states)
+          {
+            success *= jacobiansMatch(
+                dependencyTrackingJacobian(data, kNonunitAlpha, success, ilmax),
+                enzymeJacobian(data, kNonunitAlpha, success, ilmax));
+          }
+        }
+
+        // Base conversion drives the active-order rate through both asymmetric
+        // slew limits.
+        for (const RealT mva : slew_bases)
+        {
+          auto data                     = makeJacobianData();
+          data.parameters[Params::mva]  = mva;
+          success                      *= jacobiansMatch(
+              dependencyTrackingJacobian(data, kNonunitAlpha, success),
+              enzymeJacobian(data, kNonunitAlpha, success));
+        }
+
+        // These points place the voltage PI state below and above its moving band.
+        for (const RealT mva : moving_band_bases)
+        {
+          auto data                     = makeJacobianData();
+          data.parameters[Params::mva]  = mva;
+          success                      *= jacobiansMatch(
+              dependencyTrackingJacobian(data, kNonunitAlpha, success, 0.5),
+              enzymeJacobian(data, kNonunitAlpha, success, 0.5));
         }
 
         auto injection_data                       = makeJacobianData();
@@ -1494,14 +1667,13 @@ namespace GridKit
       static constexpr RealT kNominalFrequency = static_cast<RealT>(60.0);
       static constexpr RealT kStateVr          = 0.9;
       static constexpr RealT kStateVi          = 0.4;
-      // The commands, the current circle, and the terminal voltage are all
-      // exactly representable, so every smooth limiter the initial point
-      // clears reproduces it bitwise and the model rests at an exact zero.
+      // The commands, current circle, and voltage give a well-conditioned
+      // interior initialization point.
       static constexpr RealT kInitialIqcmd     = 0.75;
       static constexpr RealT kInitialIpcmd     = 0.75;
       static constexpr RealT kNonunitAlpha     = 0.7;
 
-      static constexpr RealT kUnitSlopeAngle = std::numbers::pi_v<RealT> / FOUR<RealT>;
+      inline static const RealT kUnitSlopeAngle = std::atan(ONE<RealT>);
 
       static constexpr size_t kBusVrColumn        = index(Vars::MAXIMUM);
       static constexpr size_t kBusViColumn        = kBusVrColumn + 1;

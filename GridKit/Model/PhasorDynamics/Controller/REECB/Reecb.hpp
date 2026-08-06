@@ -36,7 +36,7 @@ namespace GridKit
         QV,     ///< \f$Q_V\f$ Differential reactive-current command lag state on component base [p.u.]
         PORD,   ///< \f$P^\mathrm{ord}\f$ Differential filtered active-power order on component base [p.u.]
         VT,     ///< \f$V_T\f$ Algebraic terminal-voltage magnitude [p.u.]
-        ILMAX,  ///< \f$I_L^\max\f$ Algebraic current limit available to the low-priority command on component base [p.u.]
+        ILMAX,  ///< \f$I_L^\max\f$ Algebraic current-circle continuation state on component base [p.u.]
         IQCMD,  ///< \f$I_q^\mathrm{cmd}\f$ Algebraic reactive-current command output on system base [p.u.]
         IPCMD,  ///< \f$I_p^\mathrm{cmd}\f$ Algebraic active-current command output on system base [p.u.]
         MAXIMUM ///< Number of REECB internal variables and residual rows
@@ -91,7 +91,7 @@ namespace GridKit
         using InternalVariablesT = ReecbInternalVariables;
         using ExternalVariablesT = ReecbExternalVariables;
 
-        /// Tolerance for initialization reconstruction and steady-state residuals.
+        /// Current-circle regularization and initialization reconstruction tolerance.
         static constexpr RealT INITIALIZATION_TOLERANCE =
             static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
@@ -124,6 +124,12 @@ namespace GridKit
             ScalarT*       f);
 
       private:
+        /// Smooth asymmetric slew-rate limiter.
+        [[gnu::always_inline]] static inline ScalarT aslew(ScalarT rate, RealT lower, RealT upper);
+
+        /// Smooth anti-windup derivative within a moving symmetric band.
+        [[gnu::always_inline]] static inline ScalarT awband(ScalarT state, ScalarT rate, ScalarT band);
+
         static void checkConfiguration(bool condition, const char* message, int& errors);
         void        loadRealParameter(const ModelDataT& data,
                                       ReecbParameters   parameter,
@@ -138,27 +144,15 @@ namespace GridKit
         void        initializeMonitor();
         void        setDerivedParameters();
 
-        RealT logOneMinusExp(RealT x) const;
-        RealT unclamp(RealT output, RealT lower, RealT upper) const;
-        RealT componentPowerBase() const;
+        static RealT logOneMinusExp(RealT x);
+        bool         iclamp(RealT output, RealT lower, RealT upper, RealT& input) const;
+        RealT        componentPowerBase() const;
 
         template <typename ValueT>
         [[gnu::always_inline]] inline ValueT toComponentBase(ValueT value) const;
 
         template <typename ValueT>
         ValueT toSystemBase(ValueT value) const;
-
-        /// Smooth asymmetric slew-rate limiter.
-        [[gnu::always_inline]] static inline ScalarT aslew(
-            const ScalarT f,
-            const RealT   rate_min,
-            const RealT   rate_max);
-
-        /// Smooth anti-windup derivative within a moving symmetric band.
-        [[gnu::always_inline]] static inline ScalarT awband(
-            const ScalarT x,
-            const ScalarT f,
-            const ScalarT band);
 
         ScalarT& Vr();
         ScalarT& Vi();
