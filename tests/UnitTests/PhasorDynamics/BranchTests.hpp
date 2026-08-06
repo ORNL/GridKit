@@ -92,13 +92,15 @@ namespace GridKit
 
       TestOutcome offNominalResidual()
       {
-        // Verifies tap and phase-shift current residual contributions.
+        // Verifies tap, phase-shift, line-shunt, and bus-1 magnetizing-shunt contributions.
         TestStatus success = true;
 
         RealT R{2.0};
         RealT X{4.0};
-        RealT G{0.2};
-        RealT B{1.2};
+        RealT G{0.4};
+        RealT B{0.8};
+        RealT Gmag{0.2};
+        RealT Bmag{1.2};
         RealT tap{1.25};
         RealT phase{0.3};
 
@@ -107,10 +109,10 @@ namespace GridKit
         ScalarT Vr2{30.0};
         ScalarT Vi2{40.0};
 
-        const ScalarT Ir1{12.719793434963478};
-        const ScalarT Ii1{-4.047960563981182};
-        const ScalarT Ir2{13.821345956502421};
-        const ScalarT Ii2{-21.182080826645354};
+        const ScalarT Ir1{33.679793434963472};
+        const ScalarT Ii1{-22.927960563981181};
+        const ScalarT Ir2{2.821345956502423};
+        const ScalarT Ii2{-19.182080826645358};
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(Vr1, Vi1);
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
@@ -121,7 +123,20 @@ namespace GridKit
         bus2.initialize();
         bus2.evaluateResidual();
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B, tap, phase);
+        using Data      = typename PhasorDynamics::Branch<ScalarT, IdxT>::ModelDataT;
+        using Parameter = typename Data::Parameters;
+
+        Data data;
+        data.parameters[Parameter::R]     = R;
+        data.parameters[Parameter::X]     = X;
+        data.parameters[Parameter::G]     = G;
+        data.parameters[Parameter::B]     = B;
+        data.parameters[Parameter::Gmag]  = Gmag;
+        data.parameters[Parameter::Bmag]  = Bmag;
+        data.parameters[Parameter::tap]   = tap;
+        data.parameters[Parameter::phase] = phase;
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, data);
         branch.allocate();
         branch.evaluateResidual();
 
@@ -390,12 +405,12 @@ namespace GridKit
         const std::complex<RealT> ybr{g, b};
         const std::complex<RealT> ysh{G, B};
         const std::complex<RealT> rotation{std::cos(phase), std::sin(phase)};
-        const std::complex<RealT> ydiag = -(ybr + RealT{0.5} * ysh);
+        const std::complex<RealT> ydiag = -ybr;
 
-        const std::complex<RealT> y11 = ydiag * inv_tap * inv_tap;
+        const std::complex<RealT> y11 = ydiag * inv_tap * inv_tap - RealT{0.5} * ysh;
         const std::complex<RealT> y12 = ybr * rotation * inv_tap;
         const std::complex<RealT> y21 = ybr * std::conj(rotation) * inv_tap;
-        const std::complex<RealT> y22 = ydiag;
+        const std::complex<RealT> y22 = ydiag - RealT{0.5} * ysh;
 
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(4);
         dependencies[0] = {{0, y11.real()}, {1, -y11.imag()}, {2, y12.real()}, {3, -y12.imag()}};

@@ -15,47 +15,49 @@ namespace GridKit
     /// Initial parameters for a branch
     enum class BranchParameters
     {
-      R,     ///< Line series resistance
-      X,     ///< Line series reactance
-      G,     ///< Total shunt conductance
-      B,     ///< Total shunt susceptance
-      tap,   ///< Off-nominal tap magnitude on bus1 side
-      phase, ///< Phase shift angle in radians
+      R,     ///< \f$R\f$ Branch series resistance [p.u.]
+      X,     ///< \f$X\f$ Branch series reactance [p.u.]
+      G,     ///< \f$G\f$ Total line shunt conductance, split equally between the two terminals [p.u.]
+      B,     ///< \f$B\f$ Total line shunt susceptance, split equally between the two terminals [p.u.]
+      Gmag,  ///< \f$G_{\mathrm{mag}}\f$ Magnetizing shunt conductance at bus 1, the tapped side [p.u.]
+      Bmag,  ///< \f$B_{\mathrm{mag}}\f$ Magnetizing shunt susceptance at bus 1, the tapped side [p.u.]
+      tap,   ///< \f$\tau\f$ Off-nominal tap magnitude on the bus-1 side [p.u.]
+      phase, ///< \f$\theta\f$ Off-nominal phase-shift angle [rad]
     };
 
     /// Buses for a branch
     enum class BranchBuses : size_t
     {
-      bus1, ///< Unique ID of bus 1
-      bus2, ///< Unique ID of bus 2
-      SIZE
+      bus1, ///< \f$V_{\mathrm{r}1},V_{\mathrm{i}1}\f$ Required Known bus-1 terminal voltage, the tapped side [p.u.]
+      bus2, ///< \f$V_{\mathrm{r}2},V_{\mathrm{i}2}\f$ Required Known bus-2 terminal voltage [p.u.]
+      SIZE  ///< Number of branch bus ports
     };
 
     /// Signal inputs supported for a branch
     enum class BranchSignalInputs : size_t
     {
-      SIZE
+      SIZE ///< Number of branch input-signal ports
     };
 
     /// Signal outputs supported for a branch
     enum class BranchSignalOutputs : size_t
     {
-      SIZE
+      SIZE ///< Number of branch output-signal ports
     };
 
     /// Variables able to be monitored for a branch
     enum class BranchMonitorableVariables
     {
-      ir1,
-      ii1,
-      im1,
-      p1,
-      q1,
-      ir2,
-      ii2,
-      im2,
-      p2,
-      q2
+      ir1, ///< \f$I_{\mathrm{r}1}\f$ Bus-1 terminal-current real component [p.u.]
+      ii1, ///< \f$I_{\mathrm{i}1}\f$ Bus-1 terminal-current imaginary component [p.u.]
+      im1, ///< \f$I_{\mathrm{m}1}\f$ Bus-1 terminal-current magnitude [p.u.]
+      p1,  ///< \f$P_1\f$ Bus-1 terminal active power [p.u.]
+      q1,  ///< \f$Q_1\f$ Bus-1 terminal reactive power [p.u.]
+      ir2, ///< \f$I_{\mathrm{r}2}\f$ Bus-2 terminal-current real component [p.u.]
+      ii2, ///< \f$I_{\mathrm{i}2}\f$ Bus-2 terminal-current imaginary component [p.u.]
+      im2, ///< \f$I_{\mathrm{m}2}\f$ Bus-2 terminal-current magnitude [p.u.]
+      p2,  ///< \f$P_2\f$ Bus-2 terminal active power [p.u.]
+      q2   ///< \f$Q_2\f$ Bus-2 terminal reactive power [p.u.]
     };
 
     /**

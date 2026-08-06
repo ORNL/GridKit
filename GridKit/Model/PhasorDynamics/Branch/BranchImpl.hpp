@@ -51,8 +51,8 @@ namespace GridKit
      * @param bus2 - pointer to bus-2
      * @param R - line series resistance
      * @param X - line series reactance
-     * @param G - total shunt conductance
-     * @param B - total shunt susceptance
+     * @param G - total line shunt conductance
+     * @param B - total line shunt susceptance
      * @param tap - off-nominal tap magnitude on bus1 side
      * @param phase - phase shift angle in radians
      */
@@ -174,6 +174,8 @@ namespace GridKit
       check(std::isfinite(X_), "X must be finite");
       check(std::isfinite(G_), "G must be finite");
       check(std::isfinite(B_), "B must be finite");
+      check(std::isfinite(Gmag_), "Gmag must be finite");
+      check(std::isfinite(Bmag_), "Bmag must be finite");
       check(std::isfinite(tap_), "tap must be finite");
       check(std::isfinite(phase_), "phase must be finite");
       check(R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero");
@@ -353,6 +355,8 @@ namespace GridKit
       readRealParameter(data, Parameter::X, X_);
       readRealParameter(data, Parameter::G, G_);
       readRealParameter(data, Parameter::B, B_);
+      readRealParameter(data, Parameter::Gmag, Gmag_);
+      readRealParameter(data, Parameter::Bmag, Bmag_);
       readRealParameter(data, Parameter::tap, tap_);
       readRealParameter(data, Parameter::phase, phase_);
 
@@ -496,11 +500,11 @@ namespace GridKit
       const RealT cos_ph  = std::cos(phase_);
       const RealT sin_ph  = std::sin(phase_);
 
-      const RealT g_diag = -(g_br + RealT{0.5} * G_);
-      const RealT b_diag = -(b_br + RealT{0.5} * B_);
+      const RealT g_diag = -g_br;
+      const RealT b_diag = -b_br;
 
-      g11_ = g_diag * inv_tap * inv_tap;
-      b11_ = b_diag * inv_tap * inv_tap;
+      g11_ = g_diag * inv_tap * inv_tap - RealT{0.5} * G_ - Gmag_;
+      b11_ = b_diag * inv_tap * inv_tap - RealT{0.5} * B_ - Bmag_;
 
       g12_ = (g_br * cos_ph - b_br * sin_ph) * inv_tap;
       b12_ = (b_br * cos_ph + g_br * sin_ph) * inv_tap;
@@ -508,8 +512,8 @@ namespace GridKit
       g21_ = (g_br * cos_ph + b_br * sin_ph) * inv_tap;
       b21_ = (b_br * cos_ph - g_br * sin_ph) * inv_tap;
 
-      g22_ = g_diag;
-      b22_ = b_diag;
+      g22_ = g_diag - RealT{0.5} * G_;
+      b22_ = b_diag - RealT{0.5} * B_;
     }
 
   } // namespace PhasorDynamics

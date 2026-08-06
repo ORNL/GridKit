@@ -204,6 +204,8 @@ namespace GridKit
       RealT X_{0.0};
       RealT G_{0.0};
       RealT B_{0.0};
+      RealT Gmag_{0.0};
+      RealT Bmag_{0.0};
       RealT tap_{1.0};
       RealT phase_{0.0};
       IdxT  bus1_id_{0};

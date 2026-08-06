@@ -7,30 +7,24 @@ contributions are oriented entering the adjacent buses.
 Notes:
 - Setting $\tau = 1$ and $\theta = 0$ gives the ordinary symmetric
   transmission-line $\pi$ model.
-- $G$ and $B$ are total branch shunt values split equally between terminals.
+- The total line shunt $G + jB$ is split equally between the two terminals,
+  while the magnetizing shunt $G_\text{mag} + jB_\text{mag}$ is connected at
+  bus 1; both shunts are added outside the $\mathbf{M}$ transformation.
 - The branch has no solver-owned variables; it contributes current residuals
   directly to the connected buses.
 
-## Circuit Diagram
-
-An ideal complex tap is placed on the bus-1 side of the branch equivalent. The
-ordinary transmission-line $\pi$ model is recovered with $\tau = 1$ and
-$\theta = 0$.
-
-![](../../../../docs/Figures/transformer-branch.png)
-
-Figure 1: Branch equivalent circuit
-
 ## Model Parameters
 
-Symbol      | Units   | Description                                      | Typical Value | Note
-------------|---------|--------------------------------------------------|---------------|------
-$R$         | [p.u.]  | Branch series resistance                         |               |
-$X$         | [p.u.]  | Branch series reactance                          |               |
-$G$         | [p.u.]  | Total branch shunt conductance                   | 0             |
-$B$         | [p.u.]  | Total branch shunt susceptance                   | 0             |
-$\tau$      | [p.u.]  | Off-nominal tap magnitude on bus-1 side          | 1             | Parameter name: `tap`
-$\theta$    | [rad]   | Phase-shift angle                                | 0             | Parameter name: `phase`
+Symbol               | Units  | JSON    | Description                             | Typical Value | Note
+---------------------|--------|---------|-----------------------------------------|---------------|------
+$R$                  | [p.u.] | `R`     | Branch series resistance                |               |
+$X$                  | [p.u.] | `X`     | Branch series reactance                 |               |
+$G$                  | [p.u.] | `G`     | Total line shunt conductance            | 0.0           |
+$B$                  | [p.u.] | `B`     | Total line shunt susceptance            | 0.0           |
+$G_\text{mag}$       | [p.u.] | `Gmag`  | Magnetizing shunt conductance at bus 1  | 0.0           |
+$B_\text{mag}$       | [p.u.] | `Bmag`  | Magnetizing shunt susceptance at bus 1  | 0.0           |
+$\tau$               | [p.u.] | `tap`   | Off-nominal tap magnitude on bus-1 side | 1.0           |
+$\theta$             | [rad]  | `phase` | Phase-shift angle                       | 0.0           |
 
 ### Parameter Validation
 
@@ -38,7 +32,8 @@ Invalid Branch parameter sets are rejected by the following checks:
 
 ```math
 \begin{aligned}
-  &R, X, G, B, \tau, \theta \in \mathbb{R}\ \text{and finite} \\
+  &R, X, G, B, G_\text{mag}, B_\text{mag}, \tau, \theta
+    \in \mathbb{R}\ \text{and finite} \\
   &R^2 + X^2 > 0 \\
   &\tau > 0
 \end{aligned}
@@ -46,17 +41,17 @@ Invalid Branch parameter sets are rejected by the following checks:
 
 ### Model Derived Parameters
 
-The series and shunt admittances are:
+The series, magnetizing shunt, and line shunt admittances are:
 
 ```math
 \begin{aligned}
-  Y_{\mathrm{br}} &= \dfrac{1}{R + jX} \\
-  Y_{\mathrm{sh}} &= G + jB
+  Y_{\mathrm{br}}  &= \dfrac{1}{R + jX} \\
+  Y_{\mathrm{mag}} &= G_\text{mag} + jB_\text{mag} \\
+  Y_{\mathrm{sh}}  &= G + jB
 \end{aligned}
 ```
 
-The nominal $\pi$-branch admittance matrix is the sum of the series and shunt
-admittance contributions:
+The series, magnetizing shunt, and line shunt admittance matrices are:
 
 ```math
 \begin{aligned}
@@ -67,7 +62,16 @@ admittance contributions:
       Y_{\mathrm{br}}
       & -Y_{\mathrm{br}}
     \end{bmatrix}
-    +
+    \\
+  \mathbf{Y}_\text{mag}
+    &=
+    \begin{bmatrix}
+      -Y_{\mathrm{mag}} & 0 \\
+      0 & 0
+    \end{bmatrix}
+    \\
+  \mathbf{Y}_\text{sh}
+    &=
     \dfrac{1}{2}
     \begin{bmatrix}
       -Y_{\mathrm{sh}} & 0 \\
@@ -85,8 +89,23 @@ The off-nominal transformer transformation uses bus 1 as the tap side:
     \begin{bmatrix}
       \tau^{-1} & 0 \\
       0 & e^{j\theta}
-    \end{bmatrix} \\
-  \mathbf{Y} &= \mathbf{M}^{\dagger}\mathbf{Y}_0\mathbf{M}
+    \end{bmatrix}
+\end{aligned}
+```
+
+The magnetizing and line shunts are added outside the transformation:
+
+```math
+\begin{aligned}
+  \mathbf{Y}
+    &=
+    \mathbf{M}^{\dagger}
+    \mathbf{Y}_0
+    \mathbf{M}
+    +
+    \mathbf{Y}_\text{mag}
+    +
+    \mathbf{Y}_\text{sh}
 \end{aligned}
 ```
 
