@@ -24,27 +24,28 @@ Figure 1: GASTPTI governor model. Figure courtesy of the
 
 ## Model Parameters
 
-Symbol            | Units     | JSON    | Description                           | Typical Value | Note
-------------------|-----------|---------|---------------------------------------|---------------|-----
-$R$               | [p.u.]    | `R`     | Permanent speed droop                 | 0.05          | Speed deviation per component-base power deviation
-$T_1$             | [sec]     | `T1`    | Fuel-valve time constant              | 0.4           |
-$T_2$             | [sec]     | `T2`    | Fuel-flow time constant               | 0.1           |
-$T_3$             | [sec]     | `T3`    | Exhaust-temperature time constant     | 3.0           |
-$A_T$             | [p.u.]    | `At`    | Ambient-temperature load limit        | 1.0           | Component base
-$K_T$             | [p.u.]    | `Kt`    | Exhaust-temperature feedback gain     | 2.0           |
-$V^{\max}$        | [p.u.]    | `Vmax`  | Upper valve response limit            | 1.0           | Component base
-$V^{\min}$        | [p.u.]    | `Vmin`  | Lower valve response limit            | 0.0           | Component base
-$D^\mathrm{turb}$ | [p.u.]    | `Dturb` | Turbine damping coefficient           | 0.0           | Component-base power per speed deviation
-$T^\mathrm{rate}$ | [MW]      | `Trate` | Turbine rating                        | 100.0         | Same-valued MVA component base; GridKit addition
+Symbol            | Units     | JSON    | Description                           | Default     | Note
+------------------|-----------|---------|---------------------------------------|-------------|-----
+$R$               | [p.u.]    | `R`     | Permanent speed droop                 | 0.05        | Speed deviation per component-base power deviation
+$T_1$             | [sec]     | `T1`    | Fuel-valve time constant              | 0.4         |
+$T_2$             | [sec]     | `T2`    | Fuel-flow time constant               | 0.1         |
+$T_3$             | [sec]     | `T3`    | Exhaust-temperature time constant     | 3.0         |
+$A_T$             | [p.u.]    | `At`    | Ambient-temperature load limit        | 1.0         | Component base
+$K_T$             | [p.u.]    | `Kt`    | Exhaust-temperature feedback gain     | 2.0         |
+$V^{\max}$        | [p.u.]    | `Vmax`  | Upper valve response limit            | 1.0         | Component base
+$V^{\min}$        | [p.u.]    | `Vmin`  | Lower valve response limit            | 0.0         | Component base
+$D^\mathrm{turb}$ | [p.u.]    | `Dturb` | Turbine damping coefficient           | 0.0         | Component-base power per speed deviation
+$T^\mathrm{rate}$ | [MW]      | `Trate` | Turbine rating                        | System base | Same-valued MVA component base when provided; GridKit addition
 
 ### Parameter Validation
+
 
 ```math
 \begin{aligned}
   R &> 0 \\
   T_1,T_2,T_3 &\ge 0 \\
   A_T,K_T,D^\mathrm{turb} &\ge 0 \\
-  T^\mathrm{rate} &> 0 \\
+  T^\mathrm{rate} &> 0 \quad \text{when provided} \\
   V^{\min} &\le V^{\max}
 \end{aligned}
 ```
@@ -59,7 +60,11 @@ $\epsilon_T$ are raised to that floor in place:
   T_x &\leftarrow \max\!\left(T_x,\epsilon_T\right),
     && x\in\{1,2,3\} \\
   S^{\mathrm{base}}
-    &\leftarrow 10^6 T^\mathrm{rate} \\
+    &\leftarrow
+      \begin{cases}
+        10^6 T^\mathrm{rate} & T^\mathrm{rate}\text{ provided} \\
+        S^{\mathrm{sys}} & T^\mathrm{rate}\text{ omitted}
+      \end{cases} \\
   k_{\mathrm{base}}
     &= \dfrac{S^{\mathrm{sys}}}{S^{\mathrm{base}}}
 \end{aligned}
@@ -72,9 +77,9 @@ base. $S^{\mathrm{sys}}$ and $S^{\mathrm{base}}$ are stored in VA.
 
 Name    | Port   | Init    | Description
 --------|--------|---------|------------
-`speed` | Input  | Known   | Machine speed deviation
-`pref`  | Input  | Unknown | Active-power/load reference
-`pmech` | Output | Known   | Mechanical power output
+`speed` | Input  | Known   | Optional machine speed deviation; defaults to zero
+`pref`  | Input  | Unknown | Optional active-power/load reference; latches its initialized value when unattached
+`pmech` | Output | Known   | Required mechanical power output
 
 ## Model Variables
 
@@ -220,6 +225,10 @@ P^\mathrm{ref}
   \left(V_{D,0}+\dfrac{\omega}{R}\right).
 ```
 
+Initialization preserves the machine-seeded system-base $P_{\mathrm{m}}$. An
+attached `pref` signal receives the initialized reference; an unattached port
+latches that value for subsequent residual evaluations.
+
 ## Monitorable Outputs
 
 Output   | Units  | Description                        | Note
@@ -239,11 +248,13 @@ Output   | Units  | Description                        | Note
   monitor values, and unattached-reference latching.
 - `initializationDomain()` checks accepted and rejected operating points.
 - `initializationExactness()` checks the smooth-selector inverse.
-- `residualEquations()` checks every residual and DependencyTracking Jacobian
-  row against fixed answer keys.
+- `residualEquations()` checks every residual against a fixed numerical answer key.
 - `governorControl()` checks droop, damping, response limits, and anti-windup.
 - `temperatureLimiting()` checks the low-value selector.
-- `jacobian()` checks Enzyme agreement with DependencyTracking when enabled.
+- `dependencyTracking()` checks every Jacobian row against fixed numerical and
+  structural answer keys in both valve configurations.
+- `jacobian()` checks Enzyme agreement with DependencyTracking and raw COO
+  pattern stability across runtime branches when enabled.
 
 ## Appendix A: `iramp`
 

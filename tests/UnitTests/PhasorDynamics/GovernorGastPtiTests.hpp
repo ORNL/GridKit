@@ -37,6 +37,8 @@ namespace GridKit
       GovernorGastPtiTests()  = default;
       ~GovernorGastPtiTests() = default;
 
+      // Smooth gates, base conversion, and time-constant scaling accumulate a
+      // few floating-point operations beyond one machine epsilon.
       static constexpr RealT kTol =
           static_cast<RealT>(10.0) * std::numeric_limits<RealT>::epsilon();
 
@@ -79,6 +81,7 @@ namespace GridKit
         success *= (minimal.verify() > 0); // required pmech assignment is absent
         success *= (verifyData(makeData()) == 0);
         success *= defaultsMatchDocumentedValues();
+        success *= omittedRatingUsesSystemBase();
 
         success *= invalidParameterCase(Params::R, 0.0);
         success *= invalidParameterCase(Params::R, -0.1);
@@ -493,7 +496,7 @@ namespace GridKit
             {"equal valve limits above the temperature limit",
              0.0,
              -0.32,
-             -0.32000000000000006},
+             -0.32},
         }};
         for (const auto& test_case : equal_limit_temperature_cases)
         {
@@ -569,7 +572,7 @@ namespace GridKit
         success *= fixture.initialize(0.4);
         success *= stateMatches(fixture.gastpti,
                                 {{Internal::VLOAD, 0.8155903227031184},
-                                 {Internal::VTEMP, 0.8001000000000001},
+                                 {Internal::VTEMP, 0.8001},
                                  {Internal::VLV, 0.8}},
                                 "near-gate initialization");
         success *= scalarMatches(fixture.input(index(External::PREF)),
@@ -597,9 +600,8 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// A fixed numerical answer key for all seven GASTPTI equations and
-      /// their derivatives. The expected values are literals, not a second
-      /// implementation of GASTPTI.
+      /// A fixed numerical answer key for all seven GASTPTI equations. The
+      /// expected values are literals, not a second implementation of GASTPTI.
       TestOutcome residualEquations()
       {
         TestStatus success = true;
@@ -621,55 +623,11 @@ namespace GridKit
             {Internal::VLOAD, -0.0326},
             {Internal::VTEMP, 0.978},
             {Internal::VLV, 0.12},
-            {Internal::PMECH, -0.11239999999999999},
+            {Internal::PMECH, -0.1124},
         }};
 
         success *= (static_cast<size_t>(fixture.gastpti.getResidual().getSize()) == expected.size());
         success *= residualsMatch(fixture.gastpti, expected);
-
-        const auto                                                     data     = makeResidualData();
-        const auto                                                     interior = dependencyTrackingJacobian(data, success);
-        const std::vector<DependencyTracking::Variable::DependencyMap> interior_expected{
-            {{index(Internal::XVALVE), -3.8571428571428572},
-             {index(Internal::VLV), 2.8571428571428572}},
-            {{index(Internal::XVALVE), 2.2222222222222223},
-             {index(Internal::XFLOW), -3.2222222222222223}},
-            {{index(Internal::XFLOW), 0.45454545454545453},
-             {index(Internal::XTEMP), -1.4545454545454546}},
-            {{index(Internal::VLOAD), -0.06},
-             {index(Internal::MAXIMUM) + index(External::OMEGA), -1.0},
-             {index(Internal::MAXIMUM) + index(External::PREF), 0.12}},
-            {{index(Internal::XTEMP), -0.4},
-             {index(Internal::VTEMP), -1.0}},
-            {{index(Internal::VLOAD), 1.0},
-             {index(Internal::VLV), -1.0}},
-            {{index(Internal::XFLOW), 1.0},
-             {index(Internal::PMECH), -2.0},
-             {index(Internal::MAXIMUM) + index(External::OMEGA), -0.12}},
-        };
-        success *= jacobianMatches(interior,
-                                   interior_expected,
-                                   "interior answer key");
-
-        // Equal configured limits collapse the effective interval and remove
-        // only the valve-drive coupling.
-        auto equal_limit_data                     = data;
-        equal_limit_data.parameters[Params::Vmin] = 0.8;
-        equal_limit_data.parameters[Params::Vmax] = 0.8;
-        const auto equal_limits                   = dependencyTrackingJacobian(equal_limit_data, success);
-        const std::vector<DependencyTracking::Variable::DependencyMap>
-            equal_limit_expected{
-                {{index(Internal::XVALVE), -1.0}},
-                interior_expected[index(Internal::XFLOW)],
-                interior_expected[index(Internal::XTEMP)],
-                interior_expected[index(Internal::VLOAD)],
-                interior_expected[index(Internal::VTEMP)],
-                interior_expected[index(Internal::VLV)],
-                interior_expected[index(Internal::PMECH)],
-            };
-        success *= jacobianMatches(equal_limits,
-                                   equal_limit_expected,
-                                   "equal configured limits");
 
         return success.report(__func__);
       }
@@ -779,7 +737,7 @@ namespace GridKit
 
         const std::array<GateCase, 3> gate_cases{{
             {"the load demand wins the LV gate", 0.3, 1.5, 0.3},
-            {"the temperature demand wins the LV gate", 1.5, 0.3, 0.30000000000000004},
+            {"the temperature demand wins the LV gate", 1.5, 0.3, 0.3},
             {"equal demands split the smooth LV gate", 0.9, 0.9, 0.897111886747667},
         }};
         for (const auto& test_case : gate_cases)
@@ -834,11 +792,70 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Check every DependencyTracking row against independent numerical and
+      /// structural answer keys in active and collapsed valve configurations.
+      TestOutcome dependencyTracking()
+      {
+        TestStatus success = true;
+
+        const auto                                                     data     = makeResidualData();
+        const auto                                                     interior = dependencyTrackingJacobian(data, success);
+        const std::vector<DependencyTracking::Variable::DependencyMap> interior_expected{
+            {{index(Internal::XVALVE), -3.8571428571428572},
+             {index(Internal::VLV), 2.8571428571428572}},
+            {{index(Internal::XVALVE), 2.2222222222222223},
+             {index(Internal::XFLOW), -3.2222222222222223}},
+            {{index(Internal::XFLOW), 0.45454545454545453},
+             {index(Internal::XTEMP), -1.4545454545454546}},
+            {{index(Internal::VLOAD), -0.06},
+             {index(Internal::MAXIMUM) + index(External::OMEGA), -1.0},
+             {index(Internal::MAXIMUM) + index(External::PREF), 0.12}},
+            {{index(Internal::XTEMP), -0.4},
+             {index(Internal::VTEMP), -1.0}},
+            {{index(Internal::VLOAD), 1.0},
+             {index(Internal::VTEMP), 0.0},
+             {index(Internal::VLV), -1.0}},
+            {{index(Internal::XFLOW), 1.0},
+             {index(Internal::PMECH), -2.0},
+             {index(Internal::MAXIMUM) + index(External::OMEGA), -0.12}},
+        };
+        success *= jacobianMatches(interior,
+                                   interior_expected,
+                                   "interior answer key");
+
+        // Equal configured limits collapse the effective interval and retain
+        // the explicitly stored zero valve-drive dependency.
+        auto equal_limit_data                     = data;
+        equal_limit_data.parameters[Params::Vmin] = 0.8;
+        equal_limit_data.parameters[Params::Vmax] = 0.8;
+        const auto equal_limits                   = dependencyTrackingJacobian(equal_limit_data, success);
+        const std::vector<DependencyTracking::Variable::DependencyMap>
+            equal_limit_expected{
+                {{index(Internal::XVALVE), -1.0},
+                 {index(Internal::VLV), 0.0}},
+                interior_expected[index(Internal::XFLOW)],
+                interior_expected[index(Internal::XTEMP)],
+                interior_expected[index(Internal::VLOAD)],
+                interior_expected[index(Internal::VTEMP)],
+                interior_expected[index(Internal::VLV)],
+                interior_expected[index(Internal::PMECH)],
+            };
+        success *= jacobianMatches(equal_limits,
+                                   equal_limit_expected,
+                                   "equal configured limits");
+
+        return success.report(__func__);
+      }
+
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// One rich state and both external inputs drive both sensitivity
-      /// paths; every Enzyme CSR row must match dependency tracking.
+      /// Enzyme rows must match dependency tracking in active and collapsed
+      /// configurations, and the raw COO pattern must remain fixed as smooth
+      /// gates and initialization masks change on the same model instance.
       TestOutcome jacobian()
       {
+        noteExpectedLogs("Testing GASTPTI collapsed-to-active Jacobian structure. "
+                         "A logged response-limit warning is expected.");
+
         TestStatus success = true;
 
         const auto data = makeResidualData();
@@ -850,6 +867,20 @@ namespace GridKit
                                    dependency_jacobian,
                                    "Enzyme versus dependency tracking",
                                    kTol);
+
+        auto collapsed_data                     = data;
+        collapsed_data.parameters[Params::Vmin] = 0.8;
+        collapsed_data.parameters[Params::Vmax] = 0.8;
+        const auto collapsed_dependency =
+            dependencyTrackingJacobian(collapsed_data, success);
+        const auto collapsed_enzyme  = enzymeJacobian(collapsed_data, success);
+        success                     *= jacobianMatches(collapsed_enzyme,
+                                   collapsed_dependency,
+                                   "collapsed Enzyme versus dependency tracking",
+                                   kTol);
+
+        success *= selectorAndAntiwindupCooPatternIsStable(data);
+        success *= reinitializedCooPatternIsStable(data);
 
         return success.report(__func__);
       }
@@ -1136,6 +1167,54 @@ namespace GridKit
         if (!vectorUnchanged(implicit_defaults.gastpti.getResidual(),
                              copyVector(explicit_defaults.gastpti.getResidual()),
                              "documented-default dynamic residual"))
+        {
+          success = false;
+        }
+        return success;
+      }
+
+      /// An omitted rating follows a non-100-MVA system base exactly.
+      bool omittedRatingUsesSystemBase() const
+      {
+        constexpr RealT system_va_base = static_cast<RealT>(75.0e6);
+
+        auto omitted_data = makeExplicitDefaultData();
+        omitted_data.parameters.erase(Params::Trate);
+        auto explicit_data                      = omitted_data;
+        explicit_data.parameters[Params::Trate] = static_cast<RealT>(75.0);
+
+        Fixture<ScalarT> omitted(omitted_data, system_va_base);
+        Fixture<ScalarT> explicit_system_base(explicit_data, system_va_base);
+        omitted.attachAllInputs();
+        explicit_system_base.attachAllInputs();
+
+        bool success = omitted.initialize(0.3)
+                       && explicit_system_base.initialize(0.3);
+        if (!success)
+        {
+          std::cout << "GASTPTI omitted-rating comparison failed to initialize\n";
+          return false;
+        }
+
+        if (omitted.evaluate() != 0 || explicit_system_base.evaluate() != 0)
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(omitted.gastpti.y(),
+                             copyVector(explicit_system_base.gastpti.y()),
+                             "omitted-rating state"))
+        {
+          success = false;
+        }
+        if (!vectorUnchanged(omitted.gastpti.getResidual(),
+                             copyVector(explicit_system_base.gastpti.getResidual()),
+                             "omitted-rating residual"))
+        {
+          success = false;
+        }
+        if (!scalarMatches(omitted.input(index(External::PREF)),
+                           explicit_system_base.input(index(External::PREF)),
+                           "omitted-rating published pref"))
         {
           success = false;
         }
@@ -1490,18 +1569,6 @@ namespace GridKit
         Log::setVerbosity(previous_verbosity);
       }
 
-      static RealT dependencyValue(
-          const DependencyTracking::Variable::DependencyMap& row,
-          size_t                                             column)
-      {
-        const auto entry = row.find(column);
-        if (entry == row.end())
-        {
-          return ZERO<RealT>;
-        }
-        return entry->second;
-      }
-
       bool effectiveLimitBoundaryJacobian(const Data& data,
                                           RealT       pmech,
                                           RealT       boundary,
@@ -1545,47 +1612,13 @@ namespace GridKit
           const char*                                        context,
           RealT                                              tolerance = kTol) const
       {
-        bool success = true;
-
-        for (const auto& [column, value] : actual)
-        {
-          static_cast<void>(value);
-          if (!jacobianColumnMatches(actual, expected, row, column, context, tolerance))
-          {
-            success = false;
-          }
-        }
-        for (const auto& [column, value] : expected)
-        {
-          static_cast<void>(value);
-          if (!actual.contains(column)
-              && !jacobianColumnMatches(actual, expected, row, column, context, tolerance))
-          {
-            success = false;
-          }
-        }
-        return success;
-      }
-
-      bool jacobianColumnMatches(
-          const DependencyTracking::Variable::DependencyMap& actual,
-          const DependencyTracking::Variable::DependencyMap& expected,
-          size_t                                             row,
-          size_t                                             column,
-          const char*                                        context,
-          RealT                                              tolerance) const
-      {
-        const RealT actual_value   = dependencyValue(actual, column);
-        const RealT expected_value = dependencyValue(expected, column);
-        if (isEqual(actual_value, expected_value, tolerance))
+        if (isEqual(actual, expected, tolerance))
         {
           return true;
         }
 
-        std::cout << "GASTPTI Jacobian row " << row << ", column "
-                  << column << " " << context << " mismatch: "
-                  << std::setprecision(std::numeric_limits<RealT>::max_digits10)
-                  << actual_value << " != " << expected_value << '\n';
+        std::cout << "GASTPTI Jacobian row " << row << ' ' << context
+                  << " mismatch\n";
         return false;
       }
 
@@ -1658,6 +1691,142 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
+      using RawCooPattern = std::vector<std::array<IdxT, 2>>;
+
+      RawCooPattern captureRawCooPattern(Fixture<ScalarT>& fixture,
+                                         const char*       context) const
+      {
+        if (fixture.evaluate() != 0)
+        {
+          std::cout << "GASTPTI residual evaluation failed for " << context << '\n';
+          return {};
+        }
+        if (fixture.gastpti.evaluateJacobian() != 0)
+        {
+          std::cout << "GASTPTI Jacobian evaluation failed for " << context << '\n';
+          return {};
+        }
+
+        auto* jacobian = fixture.gastpti.getCooJacobian();
+        if (jacobian == nullptr)
+        {
+          std::cout << "GASTPTI raw COO is absent for " << context << '\n';
+          return {};
+        }
+
+        constexpr IdxT expected_raw_nnz = 20;
+        const IdxT     model_nnz        = fixture.gastpti.nnz();
+        const IdxT     coo_nnz          = jacobian->getNnz();
+        if (model_nnz != coo_nnz || coo_nnz != expected_raw_nnz)
+        {
+          std::cout << "GASTPTI raw COO count mismatch for " << context << ": "
+                    << model_nnz << " model, " << coo_nnz << " cached, "
+                    << expected_raw_nnz << " expected\n";
+          return {};
+        }
+
+        RawCooPattern pattern;
+        pattern.reserve(static_cast<size_t>(coo_nnz));
+        const auto* rows    = jacobian->getRowData();
+        const auto* columns = jacobian->getColData();
+        for (IdxT entry = 0; entry < coo_nnz; ++entry)
+        {
+          pattern.push_back({rows[entry], columns[entry]});
+        }
+        return pattern;
+      }
+
+      bool selectorAndAntiwindupCooPatternIsStable(const Data& data) const
+      {
+        Fixture<ScalarT> fixture(data);
+        fixture.attachAllInputs();
+        if (!fixture.initialize(0.4))
+        {
+          return false;
+        }
+        setAnswerKeyInputs(fixture);
+        setAnswerKeyState(fixture.gastpti);
+        fixture.gastpti.updateTime(0.0, 1.0);
+
+        setState(fixture.gastpti,
+                 {{Internal::VLOAD, 0.9}, {Internal::VTEMP, 0.9}});
+        const auto expected = captureRawCooPattern(fixture, "equal selector inputs");
+        if (expected.empty())
+        {
+          return false;
+        }
+
+        struct PatternCase
+        {
+          const char* label;
+          Internal    first_variable;
+          RealT       first_value;
+          Internal    second_variable;
+          RealT       second_value;
+        };
+
+        const std::array<PatternCase, 4> cases{{
+            {"load-limited selector", Internal::VLOAD, 0.3, Internal::VTEMP, 1.5},
+            {"temperature-limited selector", Internal::VLOAD, 1.5, Internal::VTEMP, 0.3},
+            {"blocked upper valve response", Internal::XVALVE, 1.6, Internal::VLV, 1.85},
+            {"restoring upper valve response", Internal::XVALVE, 1.6, Internal::VLV, 1.35},
+        }};
+
+        bool success = true;
+        for (const auto& test_case : cases)
+        {
+          setState(fixture.gastpti,
+                   {{test_case.first_variable, test_case.first_value},
+                    {test_case.second_variable, test_case.second_value}});
+          const auto actual = captureRawCooPattern(fixture, test_case.label);
+          if (actual != expected)
+          {
+            std::cout << "GASTPTI raw COO pattern mismatch for "
+                      << test_case.label << '\n';
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      bool reinitializedCooPatternIsStable(const Data& source_data) const
+      {
+        auto data                     = source_data;
+        data.parameters[Params::Vmin] = 0.8;
+        data.parameters[Params::Vmax] = 0.8;
+
+        Fixture<ScalarT> fixture(data);
+        fixture.attachAllInputs();
+        if (!fixture.initialize(0.4))
+        {
+          return false;
+        }
+        fixture.gastpti.updateTime(0.0, 1.0);
+
+        const auto expected = captureRawCooPattern(fixture, "collapsed valve interval");
+        if (expected.empty())
+        {
+          return false;
+        }
+
+        fixture.seedPmech(0.6);
+        if (fixture.gastpti.initialize() != 0)
+        {
+          std::cout << "GASTPTI active-interval reinitialization failed\n";
+          return false;
+        }
+
+        const auto actual = captureRawCooPattern(
+            fixture,
+            "active valve interval after reinitialization");
+        if (actual != expected)
+        {
+          std::cout << "GASTPTI raw COO pattern changed across reinitialization\n";
+          return false;
+        }
+        return true;
+      }
+
       std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
           const Data& data,
           TestStatus& success) const

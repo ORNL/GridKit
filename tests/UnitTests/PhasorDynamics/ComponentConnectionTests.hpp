@@ -24,10 +24,11 @@ namespace GridKit
 {
   namespace Testing
   {
-    /// Connection tests for pairs of components that share a signal node.
-    /// Each case checks that the node links both components and that they
-    /// agree on its value after initialization. Solver-driven cases live
-    /// in @ref PDIntegrationTests.
+    /// Connection tests for components that share signal nodes.
+    /// GASTPTI cases check production topology and global indices; focused
+    /// initialization checks remain here for legacy pairs. Behavior that
+    /// depends on ordering, multiple components, or a solver belongs in
+    /// @ref PDIntegrationTests.
     template <typename scalar_type, typename index_type>
     class ComponentConnectionTests
     {
@@ -39,9 +40,8 @@ namespace GridKit
       ComponentConnectionTests()  = default;
       ~ComponentConnectionTests() = default;
 
+      // The tolerance only absorbs floating-point roundoff.
       static constexpr RealT kTol = std::numeric_limits<RealT>::epsilon();
-      static constexpr RealT kGastPtiTol =
-          static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
 
       /// GENROU initializes first and writes the field voltage it needs to
       /// the shared node. ESDC1A then initializes around that value and
@@ -263,6 +263,7 @@ namespace GridKit
       static constexpr IdxT kBusId               = static_cast<IdxT>(17);
       static constexpr IdxT kSpeedSignalId       = static_cast<IdxT>(101);
       static constexpr IdxT kPmechSignalId       = static_cast<IdxT>(102);
+      static constexpr IdxT kPrefSignalId        = static_cast<IdxT>(103);
       static constexpr IdxT kMachineComponentId  = static_cast<IdxT>(0);
       static constexpr IdxT kGovernorComponentId = static_cast<IdxT>(1);
 
@@ -286,14 +287,16 @@ namespace GridKit
         auto* governor = dynamic_cast<GastPtiT*>(system.getComponent(kGovernorComponentId));
         auto* speed    = system.getSignal(kSpeedSignalId);
         auto* pmech    = system.getSignal(kPmechSignalId);
+        auto* pref     = system.getSignal(kPrefSignalId);
 
-        if (machine == nullptr || governor == nullptr || speed == nullptr || pmech == nullptr)
+        if (machine == nullptr || governor == nullptr || speed == nullptr
+            || pmech == nullptr || pref == nullptr)
         {
           success = false;
           return success.report(test_name);
         }
 
-        const bool signals_linked  = speed->linked() && pmech->linked();
+        const bool signals_linked  = speed->linked() && pmech->linked() && pref->linked();
         success                   *= signals_linked;
         if (!signals_linked)
         {
@@ -307,6 +310,7 @@ namespace GridKit
             machine_signals.template isAssigned<speed_variable>()
             && machine_signals.template isAttached<pmech_variable>()
             && governor_signals.template isAttached<GastPtiExternalVariables::OMEGA>()
+            && governor_signals.template isAttached<GastPtiExternalVariables::PREF>()
             && governor_signals.template isAssigned<GastPtiInternalVariables::PMECH>();
         success *= ports_connected;
         if (!ports_connected)
@@ -316,6 +320,7 @@ namespace GridKit
 
         const IdxT speed_index = speed->getVariableIndex();
         const IdxT pmech_index = pmech->getVariableIndex();
+        const IdxT pref_index  = pref->getVariableIndex();
 
         success *= speed_index != pmech_index;
         success *= speed_index
@@ -328,14 +333,9 @@ namespace GridKit
         success *= pmech_index
                    == governor->getVariableIndex(
                        static_cast<IdxT>(GastPtiInternalVariables::PMECH));
-
-        success *= system.initialize() == 0;
-        success *= isEqual(pmech->read(),
-                           static_cast<ScalarT>(kInitialActivePower),
-                           kGastPtiTol);
-        success *= system.evaluateResidual() == 0;
-        success *= allNearZero(system.yp());
-        success *= allNearZero(system.getResidual());
+        success *= pref_index
+                   == governor_signals.template readExternalVariableIndex<
+                       GastPtiExternalVariables::PREF>();
 
         return success.report(test_name);
       }
@@ -355,12 +355,18 @@ namespace GridKit
         bus.Vi0      = ZERO<RealT>;
 
         data.signal = {{"Machine Speed Deviation", kSpeedSignalId},
-                       {"Mechanical Power", kPmechSignalId}};
+                       {"Mechanical Power", kPmechSignalId},
+                       {"Active Power Reference", kPrefSignalId}};
 
         auto& governor                                       = data.gastpti.emplace_back();
         governor.signal_inputs[GastPtiSignalInputs::speed]   = kSpeedSignalId;
+        governor.signal_inputs[GastPtiSignalInputs::pref]    = kPrefSignalId;
         governor.signal_outputs[GastPtiSignalOutputs::pmech] = kPmechSignalId;
         governor.parameters[GastPtiParameters::Trate]        = kTurbineRatingMw;
+
+        auto& source                                                 = data.constant_source.emplace_back();
+        source.signal_outputs[ConstantSignalSourceSignalOutputs::sr] = kPrefSignalId;
+        source.parameters[ConstantSignalSourceParameters::Sr]        = ZERO<RealT>;
 
         return data;
       }
@@ -413,20 +419,6 @@ namespace GridKit
         machine.parameters[GensalParameters::mva]          = kMachineBaseMva;
 
         return data;
-      }
-
-      template <typename VectorT>
-      static bool allNearZero(const VectorT& vector)
-      {
-        const auto* values = vector.getData();
-        for (IdxT entry = 0; entry < vector.getSize(); ++entry)
-        {
-          if (!isEqual(values[entry], ZERO<RealT>, kGastPtiTol))
-          {
-            return false;
-          }
-        }
-        return true;
       }
     };
 

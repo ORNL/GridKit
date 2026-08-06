@@ -167,20 +167,23 @@ namespace GridKit
 
         check(std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
               "Dturb must be finite and non-negative");
-        const bool valid_component_base = std::isfinite(Trate_)
-                                          && Trate_ > ZERO<RealT>
-                                          && std::isfinite(va_component_base_)
-                                          && va_component_base_ > ZERO<RealT>;
+        const RealT component_power_base = componentPowerBase();
+        const bool  valid_component_base = std::isfinite(component_power_base)
+                                          && component_power_base > ZERO<RealT>;
         const bool valid_system_base =
             std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>;
-        check(valid_component_base,
-              "Trate must define a finite positive component power base");
+        if (trate_provided_)
+        {
+          check(std::isfinite(Trate_) && Trate_ > ZERO<RealT>
+                    && valid_component_base,
+                "Trate must define a finite positive component power base");
+        }
         check(valid_system_base, "system power base must be finite and positive");
 
         if (valid_component_base && valid_system_base)
         {
-          const RealT system_to_component = va_system_base_ / va_component_base_;
-          const RealT component_to_system = va_component_base_ / va_system_base_;
+          const RealT system_to_component = va_system_base_ / component_power_base;
+          const RealT component_to_system = component_power_base / va_system_base_;
           check(std::isfinite(system_to_component)
                     && system_to_component > ZERO<RealT>
                     && std::isfinite(component_to_system)
@@ -291,9 +294,9 @@ namespace GridKit
           return 1;
         }
 
-        auto*       y             = y_.getData();
-        const RealT pmech_system0 = static_cast<RealT>(y[PMECH]);
-        if (!std::isfinite(pmech_system0))
+        auto*         y             = y_.getData();
+        const ScalarT pmech_system0 = y[PMECH];
+        if (!std::isfinite(static_cast<RealT>(pmech_system0)))
         {
           Log::error() << "GastPti: initial pmech seed must be finite\n";
           return 1;
@@ -311,10 +314,12 @@ namespace GridKit
           return 1;
         }
 
-        const RealT pmech0 = pmech_system0 * (va_system_base_ / va_component_base_);
-        const RealT xflow0 = pmech0 + Dturb_ * omega0;
-        const RealT vtemp0 = At_ + Kt_ * (At_ - xflow0);
-        if (!std::isfinite(pmech0) || !std::isfinite(xflow0) || !std::isfinite(vtemp0))
+        const ScalarT pmech0       = toComponentBase(pmech_system0);
+        const RealT   pmech0_value = static_cast<RealT>(pmech0);
+        const RealT   xflow0       = pmech0_value + Dturb_ * omega0;
+        const RealT   vtemp0       = At_ + Kt_ * (At_ - xflow0);
+        if (!std::isfinite(pmech0_value) || !std::isfinite(xflow0)
+            || !std::isfinite(vtemp0))
         {
           Log::error() << "GastPti: initial power, fuel-flow, and temperature candidates must be finite\n";
           return 1;
@@ -374,7 +379,11 @@ namespace GridKit
 
         Vmin_response_ = Vmin_response;
         Vmax_response_ = Vmax_response;
-        s_valve_       = valve_active ? ONE<RealT> : ZERO<RealT>;
+        s_valve_       = ZERO<RealT>;
+        if (valve_active)
+        {
+          s_valve_ = ONE<RealT>;
+        }
 
         y[XVALVE] = static_cast<ScalarT>(xflow0);
         y[XFLOW]  = static_cast<ScalarT>(xflow0);
@@ -657,6 +666,7 @@ namespace GridKit
         using Params = typename ModelDataT::Parameters;
 
         parameter_error_count_ = 0;
+        trate_provided_        = data.parameters.contains(Params::Trate);
 
         loadRealParameter(data, Params::R, R_, "R");
         loadRealParameter(data, Params::T1, T1_, "T1");
@@ -703,8 +713,9 @@ namespace GridKit
        *
        * Validates and raises each turbine lag in place so every explicit
        * differential row retains a nonzero denominator, sizes the component
-       * power base from the turbine rating, and resets the parameter-only
-       * response defaults. initialize() transactionally finalizes the
+       * power base from a supplied turbine rating, and resets the parameter-only
+       * response defaults. An omitted rating is resolved from the current system
+       * base by componentPowerBase(). initialize() transactionally finalizes the
        * operating-point-dependent response bounds and valve mask.
        * Recording invalid lag inputs before the in-place floor preserves the
        * loading error for verify().
@@ -725,9 +736,13 @@ namespace GridKit
                          << " s are raised to that floor to keep the turbine lags well posed\n";
         }
 
-        va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
-        Vmin_response_     = Vmin_;
-        Vmax_response_     = Vmax_;
+        va_component_base_ = ZERO<RealT>;
+        if (trate_provided_)
+        {
+          va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
+        }
+        Vmin_response_ = Vmin_;
+        Vmax_response_ = Vmax_;
 
         s_valve_ = ONE<RealT>;
       }
@@ -753,6 +768,23 @@ namespace GridKit
       }
 
       /**
+       * @brief Resolve the GASTPTI component power base
+       *
+       * @return The supplied turbine rating in VA, or the system power base
+       *         when `Trate` was omitted.
+       */
+      template <typename scalar_type, typename index_type>
+      [[gnu::always_inline]] inline auto
+      GastPti<scalar_type, index_type>::componentPowerBase() const -> RealT
+      {
+        if (trate_provided_)
+        {
+          return va_component_base_;
+        }
+        return va_system_base_;
+      }
+
+      /**
        * @brief Convert a system-base power to GASTPTI component base
        *
        * @param[in] value Quantity on the system base.
@@ -762,7 +794,7 @@ namespace GridKit
       [[gnu::always_inline]] inline scalar_type
       GastPti<scalar_type, index_type>::toComponentBase(scalar_type value) const
       {
-        return value * (va_system_base_ / va_component_base_);
+        return value * (va_system_base_ / componentPowerBase());
       }
 
       /**
@@ -774,7 +806,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       auto GastPti<scalar_type, index_type>::toSystemBase(RealT value) const -> RealT
       {
-        return value * (va_component_base_ / va_system_base_);
+        return value * (componentPowerBase() / va_system_base_);
       }
 
     } // namespace Governor

@@ -13,6 +13,7 @@ int main()
   result += test.residualEquations();
   result += test.governorControl();
   result += test.temperatureLimiting();
+  result += test.dependencyTracking();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif

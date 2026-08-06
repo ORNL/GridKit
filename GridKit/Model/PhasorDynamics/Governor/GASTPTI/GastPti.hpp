@@ -118,6 +118,7 @@ namespace GridKit
         void setDerivedParameters();
 
         static RealT                              iramp(RealT value);
+        [[gnu::always_inline]] inline RealT       componentPowerBase() const;
         [[gnu::always_inline]] inline scalar_type toComponentBase(scalar_type value) const;
         RealT                                     toSystemBase(RealT value) const;
 
@@ -132,7 +133,7 @@ namespace GridKit
         RealT Vmax_{ONE<RealT>};
         RealT Vmin_{ZERO<RealT>};
         RealT Dturb_{ZERO<RealT>};
-        RealT Trate_{static_cast<RealT>(100.0)};
+        RealT Trate_{ZERO<RealT>};
 
         RealT va_component_base_{ZERO<RealT>};
         RealT Vmin_response_{ZERO<RealT>};
@@ -140,6 +141,7 @@ namespace GridKit
         RealT s_valve_{ONE<RealT>};
 
         IdxT parameter_error_count_{0};
+        bool trate_provided_{false};
 
         ScalarT pref_set_{0};
 

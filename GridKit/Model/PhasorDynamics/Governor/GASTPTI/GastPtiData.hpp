@@ -26,7 +26,7 @@ namespace GridKit
         Vmax,  ///< \f$V^{\max}\f$ Configured upper valve limit on component base [p.u.]
         Vmin,  ///< \f$V^{\min}\f$ Configured lower valve limit on component base [p.u.]
         Dturb, ///< \f$D^\mathrm{turb}\f$ Component-base power per speed deviation [p.u.]
-        Trate  ///< \f$T^\mathrm{rate}\f$ MW rating used as the same-valued MVA component base [MW]
+        Trate  ///< \f$T^\mathrm{rate}\f$ Optional MW rating defining the component base; system base if omitted [MW]
       };
 
       /// Buses for the GASTPTI governor model.
