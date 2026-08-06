@@ -6,7 +6,8 @@ a nonlinear single-penstock turbine.
 ## Notes
 
 - HYGOVD `dbL`/`dbH`, `db2` backlash, and Kaplan blade-servo fields are not
-  modeled. The `db2` JSON field is accepted only for source-format compatibility.
+  modeled. The `db2` JSON field is accepted for source-format compatibility.
+  A nonzero value logs a warning and is ignored.
 
 ## Block Diagram
 
@@ -26,8 +27,8 @@ $T_r$                   | [sec]    | `Tr`          | Temporary-droop reset time 
 $T_f$                   | [sec]    | `Tf`          | Governor error filter time constant      | 0.05          |
 $T_g$                   | [sec]    | `Tg`          | Gate servo time constant                 | 0.5           |
 $V_{\mathrm{elm}}$      | [p.u./s] | `Velm`        | Maximum desired-gate velocity magnitude  | 0.2           |
-$G^{\max}$              | [p.u.]   | `Gmax`        | Maximum desired-gate position            | 1.0           |
-$G^{\min}$              | [p.u.]   | `Gmin`        | Minimum desired-gate position            | 0.0           |
+$G^{\max}$              | [p.u.]   | `Gmax`        | Configured upper gate response limit     | 1.0           |
+$G^{\min}$              | [p.u.]   | `Gmin`        | Configured lower gate response limit     | 0.0           |
 $T_w$                   | [sec]    | `Tw`          | Water inertia time constant              | 1.0           |
 $A_t$                   | [p.u.]   | `At`          | Turbine gain                             | 1.2           |
 $D_{\mathrm{turb}}$     | [p.u.]   | `Dturb`       | Turbine damping coefficient              | 0.5           |
@@ -35,7 +36,7 @@ $q_{\mathrm{NL}}$       | [p.u.]   | `Qnl`         | No-load flow at nominal hea
 $T_n$                   | [sec]    | `Tn`          | Speed lead-lag numerator time constant   | 0.0           |
 $T_{\mathrm{np}}$       | [sec]    | `Tnp`         | Speed lead-lag denominator time constant | 0.0           |
 $D_{\omega}$            | [p.u.]   | `db1`         | Type 1 speed deadband threshold          | 0.0           |
-$D_2$                   | [p.u.]   | `db2`         | Mechanical backlash deadband             | 0.0           |
+$D_2$                   | [p.u.]   | `db2`         | Unsupported mechanical backlash deadband | 0.0           | Nonzero values warn and are ignored
 $H_{\mathrm{dam}}$      | [p.u.]   | `Hdam`        | Configured dam head                      | 1.0           | Lower bound on effective head
 $G_V^{(k)}$             | [p.u.]   | `Gv0`-`Gv5`   | Gate point $k$ of the gain curve         | 0.0           | $k=0,\ldots,5$
 $P_{\mathrm{GV}}^{(k)}$ | [p.u.]   | `Pgv0`-`Pgv5` | Power point $k$ of the gain curve        | 0.0           | $k=0,\ldots,5$
@@ -78,7 +79,7 @@ HYGOV parameter sets are rejected by the following checks:
     \quad k\in\{0,\ldots,4\} \\
   G_V^{(0)} \le G^{\min}
     &< G^{\max} \le G_V^{(5)} \\
-  P_{\mathrm{m}}(G^{\max}) - P_{\mathrm{m}}(G^{\min})
+  P_{\mathrm{m}}(G_V^{(5)}) - P_{\mathrm{m}}(G_V^{(0)})
     &> \epsilon_{\mathrm{init}}
 \end{aligned}
 ```
@@ -177,8 +178,9 @@ $P^\mathrm{aux}$  | [p.u.] | Known   | Auxiliary power input       | Optional si
 
 ### Differential Equations
 
-The effective dam head $H_{\mathrm{dam}}^{\mathrm{eff}}$ is resolved during
-initialization.
+The effective desired-gate response limits
+$G_{\mathrm{resp}}^{\min}$ and $G_{\mathrm{resp}}^{\max}$ and the effective
+dam head $H_{\mathrm{dam}}^{\mathrm{eff}}$ are resolved during initialization.
 
 ```math
 \begin{aligned}
@@ -193,7 +195,8 @@ initialization.
   0 &=
     -\dot{c}
     + \text{antiwindup}
-      \left(c, r_c;\, G^{\min}, G^{\max}\right) \\
+      \left(c, r_c;\, G_{\mathrm{resp}}^{\min},
+        G_{\mathrm{resp}}^{\max}\right) \\
   0 &=
     -\dot{g}
     + \dfrac{1}{T_g}
@@ -269,23 +272,31 @@ Initialization requires an exactly zero speed deviation, $\omega = 0$.
 Restart initialization of a moving machine is not supported. All internal
 derivatives are set to zero.
 
-Initialization solves the gate at the configured dam head unless the required
-mechanical power exceeds the value at $G^{\max}$. In that case it pins the gate
-at $G^{\max}$ and raises an effective dam head
-$H_{\mathrm{dam}}^{\mathrm{eff}} \ge H_{\mathrm{dam}}$ to reproduce the
-operating point. Both searches use the same smooth $N_{\mathrm{GV}}$ curve as
-the residual. No upper limit is applied to this adjustment. The raised head
-remains the water-column setpoint during simulation, and the gate has no
-initial upward margin.
+Initialization first solves the gate at the configured dam head over the full
+$[G_V^{(0)},G_V^{(5)}]$ gate curve. If that gate lies outside the configured
+$[G^{\min},G^{\max}]$ interval, the corresponding response limit is expanded
+to include it. The configured parameters are unchanged.
+
+If the required mechanical power exceeds the value at $G_V^{(5)}$, the gate is
+pinned there and an effective dam head
+$H_{\mathrm{dam}}^{\mathrm{eff}} \ge H_{\mathrm{dam}}$ is raised to reproduce
+the operating point. Both searches use the same smooth $N_{\mathrm{GV}}$ curve
+as the residual. No upper limit is applied to the head adjustment. The
+effective values remain the response limits and water-column setpoint during
+simulation.
 
 ```math
 \begin{aligned}
   H
     &\leftarrow H_{\mathrm{dam}}^{\mathrm{eff}} \\
   g
-    &\leftarrow \text{gate in } [G^{\min}, G^{\max}] \text{ satisfying} \\
+    &\leftarrow \text{gate in } [G_V^{(0)},G_V^{(5)}] \text{ satisfying} \\
   &\qquad k_{\mathrm{base}}P_{\mathrm{m}}
     = A_t H\left(\sqrt{H}\,N_{\mathrm{GV}}(g) - q_{\mathrm{NL}}\right) \\
+  G_{\mathrm{resp}}^{\min}
+    &\leftarrow \min\!\left(G^{\min},g\right) \\
+  G_{\mathrm{resp}}^{\max}
+    &\leftarrow \max\!\left(G^{\max},g\right) \\
   P_{\mathrm{GV}}
     &\leftarrow N_{\mathrm{GV}}(g) \\
   q
@@ -308,13 +319,14 @@ initial upward margin.
 ```
 
 A value within $\epsilon_{\mathrm{init}} = 100\,\epsilon_{\mathrm{mach}}$
-below the $G^{\min}$ endpoint initializes at $G^{\min}$ with a mechanical-power
-residual up to $\epsilon_{\mathrm{init}}$. A lower value, or a high-side value
-without a finite effective dam head, is rejected. All other accepted values
-initialize with every residual at machine rounding.
+below the $G_V^{(0)}$ endpoint initializes at $G_V^{(0)}$ with a
+mechanical-power residual up to $\epsilon_{\mathrm{init}}$. A lower value, or
+a high-side value without a finite effective dam head, is rejected. All other
+accepted values initialize with every residual at machine rounding.
 
-Every check resolves before state, the effective dam head, or signals are
-written, so a rejected initialization leaves them unchanged.
+Every check resolves before state, the effective response limits, the effective
+dam head, or signals are written, so a rejected initialization leaves them
+unchanged.
 
 ### Output Initialization
 
@@ -350,8 +362,8 @@ Output         | Units  | Description                  | Note
   signal configuration, and minimum time-constant handling.
 - `initializationAndSignals()` checks initialization, base conversion,
   signal publication, monitor output, and unattached-reference latching.
-- `initializationDomain()` checks effective-head initialization, rejection
-  atomicity, and initialization boundaries.
+- `initializationDomain()` checks effective-limit and effective-head
+  initialization, rejection atomicity, and initialization boundaries.
 - `initializationExactness()` checks that initialized steady residuals rest
   at machine rounding across the gate curve.
 - `residualEquations()` checks every model residual against a fixed

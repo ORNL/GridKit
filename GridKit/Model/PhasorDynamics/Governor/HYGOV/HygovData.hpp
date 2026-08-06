@@ -24,8 +24,8 @@ namespace GridKit
         Tf,    ///< \f$T_f\f$ Governor error filter time constant
         Tg,    ///< \f$T_g\f$ Gate servo time constant
         Velm,  ///< \f$V_{\mathrm{elm}}\f$ Maximum desired-gate velocity magnitude
-        Gmax,  ///< \f$G^{\max}\f$ Maximum desired-gate position
-        Gmin,  ///< \f$G^{\min}\f$ Minimum desired-gate position
+        Gmax,  ///< \f$G^{\max}\f$ Configured upper gate response limit
+        Gmin,  ///< \f$G^{\min}\f$ Configured lower gate response limit
         Tw,    ///< \f$T_w\f$ Water inertia time constant
         At,    ///< \f$A_t\f$ Turbine gain
         Dturb, ///< \f$D_{\mathrm{turb}}\f$ Turbine damping coefficient
@@ -33,7 +33,7 @@ namespace GridKit
         Tn,    ///< \f$T_n\f$ Speed lead-lag numerator time constant
         Tnp,   ///< \f$T_{\mathrm{np}}\f$ Speed lead-lag denominator time constant
         db1,   ///< \f$D_{\omega}\f$ Type 1 speed deadband threshold
-        db2,   ///< \f$D_2\f$ Mechanical backlash deadband
+        db2,   ///< \f$D_2\f$ Unsupported mechanical backlash. Nonzero values warn and are ignored
         Hdam,  ///< \f$H_{\mathrm{dam}}\f$ Head available at dam
         Gv0,   ///< \f$G_V^{(0)}\f$ Gate point 0
         Gv1,   ///< \f$G_V^{(1)}\f$ Gate point 1

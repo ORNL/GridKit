@@ -212,8 +212,8 @@ namespace GridKit
         {
           // A rise no wider than the tolerance that pins a seed to a range
           // edge leaves the gate undetermined by the mechanical power.
-          const RealT minimum_power      = initialMechanicalPower(Gmin_, Hdam_);
-          const RealT maximum_power      = initialMechanicalPower(Gmax_, Hdam_);
+          const RealT minimum_power      = initialMechanicalPower(Gv_[0], Hdam_);
+          const RealT maximum_power      = initialMechanicalPower(Gv_[5], Hdam_);
           const RealT power_range        = maximum_power - minimum_power;
           const bool  finite_power_range = std::isfinite(minimum_power)
                                           && std::isfinite(maximum_power)
@@ -223,7 +223,7 @@ namespace GridKit
           if (finite_power_range)
           {
             check(power_range > INITIALIZATION_TOLERANCE,
-                  "mechanical power must rise across [Gmin, Gmax]");
+                  "mechanical power must rise across [Gv0, Gv5]");
           }
         }
 
@@ -265,7 +265,8 @@ namespace GridKit
        *       rounding; a value clipped to the achievable-power range edge
        *       leaves a mechanical-power residual up to the initialization
        *       tolerance.
-       * @post On failure state, effective Hdam, and signal storage are unchanged.
+       * @post On failure state, effective response limits, effective Hdam,
+       *       and signal storage are unchanged.
        *
        * @return int 0 on success; nonzero when the configuration or initial
        *             values are invalid, the initial speed deviation is
@@ -356,9 +357,9 @@ namespace GridKit
         }
 
         const RealT pmech0_value  = static_cast<RealT>(pmech0);
-        const RealT maximum_power = initialMechanicalPower(Gmax_, Hdam_);
+        const RealT maximum_power = initialMechanicalPower(Gv_[5], Hdam_);
         RealT       Hdam0         = Hdam_;
-        RealT       gate0         = Gmax_;
+        RealT       gate0         = Gv_[5];
 
         if (pmech0_value > maximum_power)
         {
@@ -374,10 +375,13 @@ namespace GridKit
           gate0 = solveInitialGate(pmech0_value);
           if (!std::isfinite(gate0))
           {
-            Log::error() << "Hygov: initial mechanical power is below the Gmin endpoint\n";
+            Log::error() << "Hygov: initial mechanical power is below the first Gv endpoint\n";
             return 1;
           }
         }
+
+        const RealT Gmin_response = std::min(Gmin_, gate0);
+        const RealT Gmax_response = std::max(Gmax_, gate0);
 
         const ScalarT h0       = static_cast<ScalarT>(Hdam0);
         const ScalarT pgv0     = gatePower(static_cast<ScalarT>(gate0));
@@ -412,9 +416,11 @@ namespace GridKit
         y[PGV]     = pgv0;
         y[H]       = h0;
 
-        Hdam_eff_ = Hdam0;
-        pref_set_ = pref0;
-        paux_set_ = paux0_system;
+        Gmin_response_ = Gmin_response;
+        Gmax_response_ = Gmax_response;
+        Hdam_eff_      = Hdam0;
+        pref_set_      = pref0;
+        paux_set_      = paux0_system;
 
         if (signals_.template isAttached<HygovExternalVariables::PREF>())
         {
@@ -424,6 +430,11 @@ namespace GridKit
         if (Hdam_eff_ > Hdam_)
         {
           Log::warning() << "Hygov: effective Hdam raised to match initial mechanical power\n";
+        }
+        if (gate0 < Gmin_ || gate0 > Gmax_)
+        {
+          Log::warning() << "Hygov: initial gate is outside [Gmin, Gmax]; "
+                            "response limits are adjusted to include the initialized value\n";
         }
 
         y_.setDataUpdated();
@@ -607,7 +618,7 @@ namespace GridKit
 
         f[XN]      = -xn_dot + (omegadb - xn) / Tnp_;
         f[XF]      = -xf_dot + (ef - xf) / Tf_;
-        f[C]       = -c_dot + Math::antiwindup(c, rc, Gmin_, Gmax_);
+        f[C]       = -c_dot + Math::antiwindup(c, rc, Gmin_response_, Gmax_response_);
         f[G]       = -g_dot + (c - g) / Tg_;
         f[Q]       = -q_dot + (Hdam_eff_ - head) / Tw_;
         f[OMEGADB] = -omegadb + Math::deadband1(omega, -db1_, db1_);
@@ -705,7 +716,11 @@ namespace GridKit
         load_real(Params::Tn, Tn_, "Tn");
         load_real(Params::Tnp, Tnp_, "Tnp");
         load_real(Params::db1, db1_, "db1");
-        load_real(Params::db2, db2_, "db2");
+        if (load_real(Params::db2, db2_, "db2") && db2_ != ZERO<RealT>)
+        {
+          Log::warning() << "Hygov: nonzero db2 requests mechanical backlash, "
+                            "but backlash is not implemented and db2 is ignored\n";
+        }
         load_real(Params::Hdam, Hdam_, "Hdam");
         load_real(Params::Gv0, Gv_[0], "Gv0");
         load_real(Params::Gv1, Gv_[1], "Gv1");
@@ -753,7 +768,8 @@ namespace GridKit
        * @brief Resolve the parameter-derived constants
        *
        * Resolves the default gate curve, floors each governor time constant,
-       * derives the speed lead-lag gain, and initializes the effective head.
+       * derives the speed lead-lag gain, and initializes the effective
+       * response limits and head.
        */
       template <typename scalar_type, typename index_type>
       void Hygov<scalar_type, index_type>::setDerivedParameters()
@@ -814,8 +830,10 @@ namespace GridKit
         Tw_  = std::max(Tw_, TIME_CONSTANT_MINIMUM);
         Tnp_ = std::max(Tnp_, TIME_CONSTANT_MINIMUM);
 
-        leadlag_gain_ = Tn_ / Tnp_;
-        Hdam_eff_     = Hdam_;
+        leadlag_gain_  = Tn_ / Tnp_;
+        Gmin_response_ = Gmin_;
+        Gmax_response_ = Gmax_;
+        Hdam_eff_      = Hdam_;
       }
 
       /**
@@ -934,15 +952,16 @@ namespace GridKit
        * @brief Solve the steady gate position for a given mechanical power
        *
        * Initialization requires a zero speed deviation and verify() requires
-       * the steady power to rise across [Gmin, Gmax], so the endpoint
-       * residuals decide feasibility and bisection converges to a root of
-       * the nondecreasing steady-power curve at the configured dam head.
+       * the steady power to rise across [Gv0, Gv5], so the full gate-curve
+       * endpoint residuals decide feasibility and bisection converges to a
+       * root of the nondecreasing steady-power curve at the configured dam
+       * head.
        *
        * @pre verify() reports no errors.
        *
        * @param[in] pmech Mechanical power on the component base.
        * @return The gate position, or a quiet NaN when no gate inside
-       *         [Gmin, Gmax] reproduces the value within the initialization
+       *         [Gv0, Gv5] reproduces the value within the initialization
        *         tolerance.
        *
        * @warning This function contains conditional branching and may be used
@@ -955,13 +974,13 @@ namespace GridKit
         const auto residual = [this, pmech](RealT gate)
         { return initialMechanicalPower(gate, Hdam_) - pmech; };
 
-        RealT a  = Gmin_;
-        RealT b  = Gmax_;
+        RealT a  = Gv_[0];
+        RealT b  = Gv_[5];
         RealT fa = residual(a);
         RealT fb = residual(b);
 
-        // A value just outside the achievable range pins to the gate limit
-        // when it is within the initialization tolerance of the range edge.
+        // A value just below the achievable range pins to the first gate
+        // point when it is within the initialization tolerance of the edge.
         if (fa > ZERO<RealT>)
         {
           if (fa <= INITIALIZATION_TOLERANCE)
@@ -982,11 +1001,11 @@ namespace GridKit
        * @brief Solve the effective dam head for a high initial power
        *
        * Starting from the configured dam head, brackets a higher value whose
-       * steady mechanical power at Gmax reaches the initial value, then
+       * steady mechanical power at Gv5 reaches the initial value, then
        * bisects to machine rounding.
        *
        * @pre verify() reports no errors.
-       * @pre The initial mechanical power exceeds the configured Gmax endpoint.
+       * @pre The initial mechanical power exceeds the last gate-curve endpoint.
        *
        * @param[in] pmech Mechanical power on the component base.
        * @return Effective dam head, or a quiet NaN when no finite value is found.
@@ -1000,7 +1019,7 @@ namespace GridKit
       {
         const RealT nan      = std::numeric_limits<RealT>::quiet_NaN();
         const auto  residual = [this, pmech](RealT Hdam)
-        { return initialMechanicalPower(Gmax_, Hdam) - pmech; };
+        { return initialMechanicalPower(Gv_[5], Hdam) - pmech; };
 
         RealT a  = Hdam_;
         RealT b  = Hdam_;

@@ -60,7 +60,8 @@ namespace GridKit
         success *= (configured.hygov.verify() == 0);
 
         noteExpectedLogs("Testing HYGOV defaults and invalid configurations. "
-                         "Logged errors and time-constant warnings are expected.");
+                         "Logged errors, time-constant warnings, and an unsupported "
+                         "backlash warning are expected.");
 
         Fixture<ScalarT> minimal(makeMinimalData());
         success *= (minimal.hygov.verify() == 0);
@@ -156,20 +157,21 @@ namespace GridKit
                                      {Params::Pgv5, 0.0}});
         success *= (flat_curve.hygov.verify() > 0);
 
-        // A curve that rises only outside the permitted gate range cannot
-        // provide a usable steady-power range for initialization.
-        Fixture<ScalarT> flat_active_range(makeData(),
-                                           {{Params::Gmin, 0.0},
-                                            {Params::Gmax, 0.2},
-                                            {Params::Pgv0, 0.5},
-                                            {Params::Pgv1, 0.5},
-                                            {Params::Pgv2, 0.5},
-                                            {Params::Pgv3, 0.5},
-                                            {Params::Pgv4, 0.5},
-                                            {Params::Pgv5, 1.0}});
-        success *= (flat_active_range.hygov.verify() > 0);
+        // A curve that rises only outside the configured response limits is
+        // valid because initialization may expand those limits.
+        Fixture<ScalarT> flat_configured_range(
+            makeData(),
+            {{Params::Gmin, 0.0},
+             {Params::Gmax, 0.2},
+             {Params::Pgv0, 0.5},
+             {Params::Pgv1, 0.5},
+             {Params::Pgv2, 0.5},
+             {Params::Pgv3, 0.5},
+             {Params::Pgv4, 0.5},
+             {Params::Pgv5, 1.0}});
+        success *= (flat_configured_range.hygov.verify() == 0);
 
-        // db2 is accepted for source-format compatibility and never used.
+        // A requested backlash is accepted, warns, and remains inactive.
         Fixture<ScalarT> backlash(makeData(), {{Params::db2, 0.5}});
         success *= (backlash.hygov.verify() == 0);
 
@@ -329,38 +331,21 @@ namespace GridKit
       }
 
       /// Mechanical-power, gate-limit, speed-deviation, and finite-input
-      /// initialization domains. High mechanical power raises the effective
-      /// dam head; every rejected initialization is atomic.
+      /// initialization domains. Response limits and high-power dam head
+      /// are adjusted when needed; every rejected initialization is atomic.
       TestOutcome initializationDomain()
       {
         TestStatus success = true;
 
         noteExpectedLogs("Testing HYGOV initialization boundaries. "
-                         "Logged errors and dam-head warnings are expected.");
+                         "Logged errors, response-limit warnings, and dam-head warnings "
+                         "are expected.");
 
-        struct RejectionCase
-        {
-          const char* label;
-          RealT       pmech;
-          RealT       gmin;
-          RealT       gmax;
-        };
-
-        const std::array<RejectionCase, 2> rejection_cases{{
-            {"mechanical power below the gate curve", -0.3, 0.05, 0.95},
-            {"mechanical power below the Gmin limit", 0.4, 0.6, 0.95},
-        }};
-
-        for (const auto& test_case : rejection_cases)
-        {
-          success *= initializationRejectedAtomically(
-              withParameters(makeResidualData(),
-                             {{Params::Gmin, test_case.gmin},
-                              {Params::Gmax, test_case.gmax}}),
-              test_case.pmech,
-              {{External::OMEGA, 0.0}, {External::PREF, 77.0}, {External::PAUX, 0.02}},
-              test_case.label);
-        }
+        success *= initializationRejectedAtomically(
+            makeResidualData(),
+            -0.3,
+            {{External::OMEGA, 0.0}, {External::PREF, 77.0}, {External::PAUX, 0.02}},
+            "mechanical power below the gate curve");
 
         const auto no_finite_head = withParameters(
             makeData(),
@@ -379,7 +364,10 @@ namespace GridKit
         // 4.5 MW on the system base is 2.5 pu on a 1.8 MW turbine base.
         Fixture<ScalarT> effective_fixture(
             makeData(),
-            {{Params::Trate, 1.8}, {Params::At, 1.25}, {Params::Qnl, 0.07}});
+            {{Params::Trate, 1.8},
+             {Params::At, 1.25},
+             {Params::Qnl, 0.07},
+             {Params::Gmax, 0.5}});
         effective_fixture.attachAllInputs();
         success *= effective_fixture.initialize(0.045);
         success *= stateMatches(
@@ -397,20 +385,61 @@ namespace GridKit
         success *= (effective_fixture.evaluate() == 0);
         success *= allResidualsZero(effective_fixture.hygov);
 
-        Fixture<ScalarT> limited_fixture(makeResidualData(), {{Params::Gmax, 0.5}});
-        success *= limited_fixture.initialize(0.4);
-        success *= stateMatches(
-            limited_fixture.hygov,
-            {{Internal::C, 0.5},
-             {Internal::G, 0.5},
-             {Internal::Q, 0.6242359695868803},
-             {Internal::PGV, 0.5399999999999371},
-             {Internal::H, 1.3363187439168838}},
-            "effective head at Gmax");
-        success *= (limited_fixture.evaluate() == 0);
-        success *= allResidualsZero(limited_fixture.hygov);
+        struct ResponseLimitCase
+        {
+          const char* label;
+          Params      limit_parameter;
+          RealT       limit;
+          RealT       rate;
+        };
 
-        // A failed retry preserves the effective head from the prior success.
+        const std::array<ResponseLimitCase, 2> response_limit_cases{{
+            {"expanded upper response limit", Params::Gmax, 0.5, 0.1},
+            {"expanded lower response limit", Params::Gmin, 0.7, -0.1},
+        }};
+
+        for (const auto& test_case : response_limit_cases)
+        {
+          Fixture<ScalarT> fixture(makeResidualData(),
+                                   {{test_case.limit_parameter, test_case.limit}});
+          success          *= fixture.initialize(0.4);
+          const RealT gate  = static_cast<RealT>(
+              fixture.hygov.y().getData()[static_cast<size_t>(Internal::C)]);
+          const bool gate_is_outside = test_case.rate > 0.0
+                                           ? gate > test_case.limit
+                                           : gate < test_case.limit;
+          if (!gate_is_outside)
+          {
+            std::cout << test_case.label << " did not initialize outside the configured limit\n";
+            success = false;
+          }
+          success *= stateMatches(fixture.hygov,
+                                  {{Internal::G, gate}, {Internal::H, 1.2}},
+                                  test_case.label);
+          success *= (fixture.evaluate() == 0);
+          success *= allResidualsZero(fixture.hygov);
+
+          // The effective response bound admits an outward rate between the
+          // configured limit and initialized gate.
+          setState(fixture.hygov,
+                   {{Internal::C, 0.5 * (test_case.limit + gate)},
+                    {Internal::RC, test_case.rate}});
+          setDerivative(fixture.hygov, {{Internal::C, 0.0}});
+          success                   *= (fixture.evaluate() == 0);
+          const RealT response_rate  = static_cast<RealT>(
+              fixture.hygov.getResidual().getData()[static_cast<size_t>(Internal::C)]);
+          const bool rate_is_admitted = test_case.rate > 0.0
+                                            ? response_rate > 0.9 * test_case.rate
+                                            : response_rate < 0.9 * test_case.rate;
+          if (!rate_is_admitted)
+          {
+            std::cout << test_case.label << " did not admit the outward desired-gate rate\n";
+            success = false;
+          }
+        }
+
+        // A failed retry preserves the effective head and response bounds from
+        // the prior success.
         const auto effective_y                    = copyVector(effective_fixture.hygov.y());
         const auto effective_yp                   = copyVector(effective_fixture.hygov.yp());
         effective_fixture.input(External::OMEGA)  = 0.03;
@@ -424,7 +453,20 @@ namespace GridKit
         success                                  *= (effective_fixture.evaluate() == 0);
         success                                  *= allResidualsZero(effective_fixture.hygov);
 
-        // A later feasible initialization starts again from configured Hdam.
+        setState(effective_fixture.hygov,
+                 {{Internal::C, 0.75}, {Internal::RC, 0.2}});
+        setDerivative(effective_fixture.hygov, {{Internal::C, 0.0}});
+        success                    *= (effective_fixture.evaluate() == 0);
+        const RealT preserved_rate  = static_cast<RealT>(
+            effective_fixture.hygov.getResidual().getData()[static_cast<size_t>(Internal::C)]);
+        if (!(preserved_rate > 0.19))
+        {
+          std::cout << "failed initialization did not preserve effective Gmax\n";
+          success = false;
+        }
+
+        // A later feasible initialization starts again from configured limits
+        // and Hdam.
         effective_fixture.setPmech(0.009);
         success *= (effective_fixture.hygov.initialize() == 0);
         success *= stateMatches(effective_fixture.hygov,
@@ -432,6 +474,15 @@ namespace GridKit
                                 "configured dam head after reinitialization");
         success *= (effective_fixture.evaluate() == 0);
         success *= allResidualsZero(effective_fixture.hygov);
+
+        setState(effective_fixture.hygov,
+                 {{Internal::C, 0.75}, {Internal::RC, 0.2}});
+        setDerivative(effective_fixture.hygov, {{Internal::C, 0.0}});
+        success *= (effective_fixture.evaluate() == 0);
+        success *= scalarMatches(
+            static_cast<RealT>(effective_fixture.hygov.getResidual().getData()[static_cast<size_t>(Internal::C)]),
+            0.0,
+            "configured Gmax after reinitialization");
 
         // Initialization supports only a zero speed deviation; a moving
         // machine would need a multi-root gate search.

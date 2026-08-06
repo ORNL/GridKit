@@ -145,7 +145,7 @@ namespace GridKit
         /// Solve the gate at the configured dam head.
         RealT solveInitialGate(RealT pmech) const;
 
-        /// Solve the dam head that reproduces mechanical power at Gmax.
+        /// Solve the dam head that reproduces mechanical power at Gv5.
         RealT solveInitialDamHead(RealT pmech) const;
 
         ScalarT toComponentBase(ScalarT value) const;
@@ -182,6 +182,8 @@ namespace GridKit
 
         IdxT parameter_error_count_{0};
 
+        RealT   Gmin_response_{Gmin_};
+        RealT   Gmax_response_{Gmax_};
         RealT   Hdam_eff_{Hdam_};
         ScalarT pref_set_{0};
         ScalarT paux_set_{0};
