@@ -127,7 +127,11 @@ if("${isSystemDir}" STREQUAL "-1")
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif("${isSystemDir}" STREQUAL "-1")
 
+if(WIN32)
+  option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+else()
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+endif()
 
 if(GRIDKIT_ENABLE_IPOPT)
   include(FindIpopt)
