@@ -10,11 +10,3 @@
 #define GRIDKIT_VERSION_MAJOR "@GridKit_VERSION_MAJOR@"
 #define GRIDKIT_VERSION_MINOR "@GridKit_VERSION_MINOR@"
 #define GRIDKIT_VERSION_PATCH "@GridKit_VERSION_PATCH@"
-
-#if defined(__MINGW32__) || defined(__clang__) || defined(__GNUC__)
-    #define FORCE_INLINE [[gnu::always_inline]] inline
-#elif defined(_MSC_VER)
-    #define FORCE_INLINE [[msvc::forceinline]] inline
-#else
-    #define FORCE_INLINE __attribute__((always_inline)) inline
-#endif
