@@ -17,15 +17,12 @@
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
-    using Log = ::GridKit::Utilities::Logger;
-
     template <typename scalar_type, typename index_type>
     class GovernorGastPtiTests
     {
@@ -46,9 +43,6 @@ namespace GridKit
       TestOutcome validation()
       {
         TestStatus success = true;
-
-        noteExpectedLogs("Testing GASTPTI defaults and invalid configurations. "
-                         "Logged errors and time-constant warnings are expected.");
 
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> empty;
         success *= (empty.size() == static_cast<IdxT>(index(Internal::MAXIMUM)));
@@ -347,10 +341,6 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing inadmissible GASTPTI temperature-gate and "
-                         "configuration initialization points. Logged errors "
-                         "and response-limit warnings are expected.");
-
         struct RejectionCase
         {
           const char* label;
@@ -637,9 +627,6 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing GASTPTI adjusted response limits. "
-                         "Logged response-limit warnings are expected.");
-
         // Both response limits block outward motion and admit restoring motion.
         struct AntiWindupCase
         {
@@ -853,9 +840,6 @@ namespace GridKit
       /// gates and initialization masks change on the same model instance.
       TestOutcome jacobian()
       {
-        noteExpectedLogs("Testing GASTPTI collapsed-to-active Jacobian structure. "
-                         "A logged response-limit warning is expected.");
-
         TestStatus success = true;
 
         const auto data = makeResidualData();
@@ -1173,7 +1157,7 @@ namespace GridKit
         return success;
       }
 
-      /// An omitted rating follows a non-100-MVA system base exactly.
+      /// An omitted rating follows a system-base change made after allocation.
       bool omittedRatingUsesSystemBase() const
       {
         constexpr RealT system_va_base = static_cast<RealT>(75.0e6);
@@ -1183,13 +1167,15 @@ namespace GridKit
         auto explicit_data                      = omitted_data;
         explicit_data.parameters[Params::Trate] = static_cast<RealT>(75.0);
 
-        Fixture<ScalarT> omitted(omitted_data, system_va_base);
+        Fixture<ScalarT> omitted(omitted_data);
         Fixture<ScalarT> explicit_system_base(explicit_data, system_va_base);
         omitted.attachAllInputs();
         explicit_system_base.attachAllInputs();
 
-        bool success = omitted.initialize(0.3)
-                       && explicit_system_base.initialize(0.3);
+        bool success = omitted.prepare(0.3);
+        omitted.gastpti.setSystemBase(60.0, system_va_base);
+        success = success && omitted.gastpti.initialize() == 0
+                  && explicit_system_base.initialize(0.3);
         if (!success)
         {
           std::cout << "GASTPTI omitted-rating comparison failed to initialize\n";
@@ -1559,14 +1545,6 @@ namespace GridKit
                   << std::setprecision(std::numeric_limits<RealT>::max_digits10)
                   << actual_value << " != " << expected_value << '\n';
         return false;
-      }
-
-      void noteExpectedLogs(const char* message) const
-      {
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << message << "\n";
-        Log::setVerbosity(previous_verbosity);
       }
 
       bool effectiveLimitBoundaryJacobian(const Data& data,

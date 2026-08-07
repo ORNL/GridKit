@@ -24,11 +24,10 @@ namespace GridKit
 {
   namespace Testing
   {
-    /// Connection tests for components that share signal nodes.
-    /// GASTPTI cases check production topology and global indices; focused
-    /// initialization checks remain here for legacy pairs. Behavior that
-    /// depends on ordering, multiple components, or a solver belongs in
-    /// @ref PDIntegrationTests.
+    /// Connection tests for pairs of components that share a signal node.
+    /// Each case checks that the node links both components and that they
+    /// agree on its value after initialization. Solver-driven cases live
+    /// in @ref PDIntegrationTests.
     template <typename scalar_type, typename index_type>
     class ComponentConnectionTests
     {
@@ -232,6 +231,19 @@ namespace GridKit
 
         return success.report(__func__);
       }
+    };
+
+    /// Production SystemModel wiring tests for GASTPTI and synchronous machines.
+    template <typename scalar_type, typename index_type>
+    class GastPtiConnectionTests
+    {
+    public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+
+      GastPtiConnectionTests()  = default;
+      ~GastPtiConnectionTests() = default;
 
       /// Check production GASTPTI signal wiring to GENROU.
       TestOutcome genrouGastPti()

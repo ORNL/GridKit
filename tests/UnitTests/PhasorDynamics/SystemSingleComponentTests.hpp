@@ -299,7 +299,8 @@ namespace GridKit
       /// Construct GASTPTI through the production system-data path.
       TestOutcome gastpti()
       {
-        using Vars = PhasorDynamics::Governor::GastPtiInternalVariables;
+        using Outputs = PhasorDynamics::Governor::GastPtiSignalOutputs;
+        using Vars    = PhasorDynamics::Governor::GastPtiInternalVariables;
 
         TestStatus success = true;
 
@@ -307,7 +308,11 @@ namespace GridKit
         data.signal.resize(1);
         data.signal[0].signal_id = static_cast<IdxT>(1);
         data.signal[0].name      = "Mechanical Power";
-        data.gastpti.push_back(makeGastPtiData());
+
+        auto& gastpti                          = data.gastpti.emplace_back();
+        gastpti.device_class                   = "GastPti";
+        gastpti.disambiguation_string          = "gastpti_test";
+        gastpti.signal_outputs[Outputs::pmech] = static_cast<IdxT>(1);
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
 
@@ -467,18 +472,6 @@ namespace GridKit
         data.parameters[Params::VA0]    = static_cast<RealT>(0.4);
         data.parameters[Params::VA1]    = static_cast<RealT>(0.9);
         data.parameters[Params::Vhvmax] = static_cast<RealT>(1.2);
-        return data;
-      }
-
-      auto makeGastPtiData()
-          -> PhasorDynamics::Governor::GastPtiData<RealT, IdxT>
-      {
-        using Outputs = PhasorDynamics::Governor::GastPtiSignalOutputs;
-
-        PhasorDynamics::Governor::GastPtiData<RealT, IdxT> data;
-        data.device_class                   = "GastPti";
-        data.disambiguation_string          = "gastpti_test";
-        data.signal_outputs[Outputs::pmech] = static_cast<IdxT>(1);
         return data;
       }
     };

@@ -167,7 +167,7 @@ namespace GridKit
 
         check(std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
               "Dturb must be finite and non-negative");
-        const RealT component_power_base = componentPowerBase();
+        const RealT component_power_base = trate_provided_ ? va_component_base_ : va_system_base_;
         const bool  valid_component_base = std::isfinite(component_power_base)
                                           && component_power_base > ZERO<RealT>;
         const bool valid_system_base =
@@ -292,6 +292,11 @@ namespace GridKit
         {
           Log::error() << "GastPti: cannot initialize with invalid configuration\n";
           return 1;
+        }
+
+        if (!trate_provided_)
+        {
+          va_component_base_ = va_system_base_;
         }
 
         auto*         y             = y_.getData();
@@ -427,9 +432,8 @@ namespace GridKit
       /**
        * @brief Compute the absolute tolerance for each variable in the model
        *
-       * All GASTPTI variables are per-unit fuel demands, flows, and powers of
-       * the same order, so they share the relative tolerance as their
-       * absolute floor.
+       * All GASTPTI variables are per-unit quantities of the same order, so
+       * their absolute and relative tolerances use the same value.
        *
        * @param[in] rel_tol Solver relative tolerance.
        */
@@ -715,7 +719,7 @@ namespace GridKit
        * differential row retains a nonzero denominator, sizes the component
        * power base from a supplied turbine rating, and resets the parameter-only
        * response defaults. An omitted rating is resolved from the current system
-       * base by componentPowerBase(). initialize() transactionally finalizes the
+       * base during initialize(). That method transactionally finalizes the
        * operating-point-dependent response bounds and valve mask.
        * Recording invalid lag inputs before the in-place floor preserves the
        * loading error for verify().
@@ -768,23 +772,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Resolve the GASTPTI component power base
-       *
-       * @return The supplied turbine rating in VA, or the system power base
-       *         when `Trate` was omitted.
-       */
-      template <typename scalar_type, typename index_type>
-      [[gnu::always_inline]] inline auto
-      GastPti<scalar_type, index_type>::componentPowerBase() const -> RealT
-      {
-        if (trate_provided_)
-        {
-          return va_component_base_;
-        }
-        return va_system_base_;
-      }
-
-      /**
        * @brief Convert a system-base power to GASTPTI component base
        *
        * @param[in] value Quantity on the system base.
@@ -794,7 +781,7 @@ namespace GridKit
       [[gnu::always_inline]] inline scalar_type
       GastPti<scalar_type, index_type>::toComponentBase(scalar_type value) const
       {
-        return value * (va_system_base_ / componentPowerBase());
+        return value * (va_system_base_ / va_component_base_);
       }
 
       /**
@@ -806,7 +793,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       auto GastPti<scalar_type, index_type>::toSystemBase(RealT value) const -> RealT
       {
-        return value * (componentPowerBase() / va_system_base_);
+        return value * (va_component_base_ / va_system_base_);
       }
 
     } // namespace Governor

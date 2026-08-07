@@ -187,28 +187,34 @@ None.
     &\leftarrow V_T-x_F \\
   \left(V_{\mathrm{resp}}^{\min},V_{\mathrm{resp}}^{\max}\right)
     &\leftarrow
-      \left(\min(V^{\min},x_F),\max(V^{\max},x_F)\right) \\
-  s^{\mathrm{valve}}
-    &\leftarrow
-      \begin{cases}
-        1 & V_{\mathrm{resp}}^{\min}<V_{\mathrm{resp}}^{\max} \\
-        0 & V_{\mathrm{resp}}^{\min}=V_{\mathrm{resp}}^{\max}
-      \end{cases} \\
-  \left(V_{D},V\right)
-    &\leftarrow
-      \begin{cases}
-        \left(
-          V_T-\text{iramp}\!\left(m_T\right),
-          x_F
-        \right)
-          & s^{\mathrm{valve}}=1 \\
-        \left(
-          x_F,
-          \text{min}\!\left(x_F,V_T\right)
-        \right)
-          & s^{\mathrm{valve}}=0
-      \end{cases}
+      \left(\min(V^{\min},x_F),\max(V^{\max},x_F)\right)
 \end{aligned}
+```
+
+```math
+s^{\mathrm{valve}}
+  \leftarrow
+  \begin{cases}
+    1 & V_{\mathrm{resp}}^{\min}<V_{\mathrm{resp}}^{\max} \\
+    0 & V_{\mathrm{resp}}^{\min}=V_{\mathrm{resp}}^{\max}
+  \end{cases}
+```
+
+```math
+\left(V_{D},V\right)
+  \leftarrow
+  \begin{cases}
+    \left(
+      V_T-\text{iramp}\!\left(m_T\right),
+      x_F
+    \right)
+      & s^{\mathrm{valve}}=1 \\
+    \left(
+      x_F,
+      \text{min}\!\left(x_F,V_T\right)
+    \right)
+      & s^{\mathrm{valve}}=0
+  \end{cases}
 ```
 
 When $s^{\mathrm{valve}}=1$, initialization requires a finite positive

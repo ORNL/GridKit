@@ -112,10 +112,13 @@ namespace GridKit
       return 0;
     }
 
+    /**
+     * @brief Construct the empty Jacobian for this stateless source.
+     */
     template <typename scalar_type, typename index_type>
     int ConstantSignalSource<scalar_type, index_type>::evaluateJacobian()
     {
-      return 0;
+      return this->constructCoo();
     }
 
   } // namespace PhasorDynamics

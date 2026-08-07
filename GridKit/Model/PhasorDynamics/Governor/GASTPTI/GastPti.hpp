@@ -118,7 +118,6 @@ namespace GridKit
         void setDerivedParameters();
 
         static RealT                              iramp(RealT value);
-        [[gnu::always_inline]] inline RealT       componentPowerBase() const;
         [[gnu::always_inline]] inline scalar_type toComponentBase(scalar_type value) const;
         RealT                                     toSystemBase(RealT value) const;
 
