@@ -265,16 +265,17 @@ namespace GridKit
         success                  *= fixture.initialize(kInitialIqcmd, kInitialIpcmd);
         success                  *= (fixture.evaluate() == 0);
 
-        success *= stateMatches(fixture.reecb,
-                                {{Vars::VMEAS, 1.0},
-                                 {Vars::PMEAS, 1.5},
-                                 {Vars::XPIQ, 0.0},
-                                 {Vars::XPIV, 0.0},
-                                 {Vars::QV, 1.5},
-                                 {Vars::PORD, 1.5},
-                                 {Vars::VT, 1.0},
-                                 {Vars::ILMAX, 2.0}},
-                                "initialization");
+        const std::array<VariableValue, 8> initial_state{{
+            {Vars::VMEAS, 1.0},
+            {Vars::PMEAS, 1.5},
+            {Vars::XPIQ, 0.0},
+            {Vars::XPIV, 0.0},
+            {Vars::QV, 1.5},
+            {Vars::PORD, 1.5},
+            {Vars::VT, 1.0},
+            {Vars::ILMAX, 2.0},
+        }};
+        success *= stateMatches(fixture.reecb, initial_state, "initialization");
 
         success *= scalarPreserved(fixture.iqcmd(), kInitialIqcmd, "preserved iqcmd");
         success *= scalarPreserved(fixture.ipcmd(), kInitialIpcmd, "preserved ipcmd");
@@ -1313,8 +1314,8 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Fixed dependency-tracking coefficients pin every selector path at a
-      /// non-unit alpha.
+      /// Fixed coefficients and the complete structure pin every selector
+      /// path at a non-unit alpha.
       TestOutcome dependencyTracking()
       {
         TestStatus success = true;
@@ -1336,6 +1337,7 @@ namespace GridKit
 
                 const auto dependency = dependencyTrackingJacobian(data, kNonunitAlpha, success);
 
+                success *= jacobianStructureMatches(dependency, "dependency tracking");
                 success *= derivativeMatches(dependency, Vars::VMEAS, Vars::VMEAS, -5.7, "VMEAS diagonal");
                 success *= derivativeMatches(dependency, Vars::VMEAS, Vars::VT, 5.0, "VMEAS-VT");
                 success *= derivativeMatches(dependency, Vars::PMEAS, Vars::PMEAS, -3.2, "PMEAS diagonal");
@@ -1372,12 +1374,12 @@ namespace GridKit
                 if (p_priority)
                 {
                   success *= derivativeMatches(dependency, Vars::ILMAX, Vars::IPCMD, -1.6, "P-priority current-circle column");
-                  success *= derivativeMatches(dependency, Vars::ILMAX, Vars::IQCMD, 0.0, "P-priority absent current-circle column");
+                  success *= derivativeMatches(dependency, Vars::ILMAX, Vars::IQCMD, 0.0, "P-priority inactive current-circle column");
                 }
                 else
                 {
                   success *= derivativeMatches(dependency, Vars::ILMAX, Vars::IQCMD, -0.8, "Q-priority current-circle column");
-                  success *= derivativeMatches(dependency, Vars::ILMAX, Vars::IPCMD, 0.0, "Q-priority absent current-circle column");
+                  success *= derivativeMatches(dependency, Vars::ILMAX, Vars::IPCMD, 0.0, "Q-priority inactive current-circle column");
                 }
               }
             }
@@ -1391,10 +1393,12 @@ namespace GridKit
           data.parameters[Params::Pqflag] = p_priority;
 
           const auto dependency  = dependencyTrackingJacobian(data, kNonunitAlpha, success, -2.0);
+          success               *= jacobianStructureMatches(dependency, "dependency tracking");
           success               *= derivativeMatches(dependency, Vars::ILMAX, Vars::ILMAX, -4.0, "negative capacity continuation");
         }
 
         const auto zero_capacity  = dependencyTrackingJacobian(makeJacobianData(), kNonunitAlpha, success, 0.0);
+        success                  *= jacobianStructureMatches(zero_capacity, "dependency tracking");
         success                  *= derivativeMatches(zero_capacity, Vars::ILMAX, Vars::ILMAX, -std::sqrt(ReecbT::INITIALIZATION_TOLERANCE), "zero capacity continuation");
 
         // The selector sweep zeroes the injection gain, so this configuration
@@ -1410,6 +1414,7 @@ namespace GridKit
           data.parameters[Params::Vref0] = 2.2;
 
           const auto dependency  = dependencyTrackingJacobian(data, kNonunitAlpha, success);
+          success               *= jacobianStructureMatches(dependency, "dependency tracking");
           success               *= derivativeMatches(dependency, Vars::IQCMD, Vars::VMEAS, -1.0, "IQCMD-VMEAS injection path");
           success               *= derivativeMatches(dependency, Vars::IQCMD, Vars::QV, 1.0, "IQCMD-QV alongside injection");
         }
@@ -1418,8 +1423,8 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// Every selector mode and the continuation probes agree between Enzyme
-      /// and dependency tracking at a non-unit alpha.
+      /// Every selector mode and continuation probe has the expected structure
+      /// and agrees between Enzyme and dependency tracking.
       TestOutcome jacobian()
       {
         TestStatus success = true;
@@ -1683,7 +1688,53 @@ namespace GridKit
       static constexpr size_t kQextColumn         = kExternalColumnBase + index(Ext::QEXT);
       static constexpr size_t kPfarefColumn       = kExternalColumnBase + index(Ext::PFAREF);
       static constexpr size_t kPrefColumn         = kExternalColumnBase + index(Ext::PREF);
-      static constexpr size_t kColumnCount        = kExternalColumnBase + index(Ext::MAXIMUM);
+
+      static std::array<std::vector<size_t>, index(Vars::MAXIMUM)>
+      expectedJacobianStructure()
+      {
+        return {{
+            {index(Vars::VMEAS), index(Vars::VT)},
+            {index(Vars::PMEAS), kPeColumn},
+            {index(Vars::XPIQ),
+             index(Vars::VT),
+             index(Vars::PMEAS),
+             kQgenColumn,
+             kQextColumn,
+             kPfarefColumn},
+            {index(Vars::XPIV),
+             index(Vars::VT),
+             index(Vars::ILMAX),
+             index(Vars::VMEAS),
+             index(Vars::PMEAS),
+             index(Vars::XPIQ),
+             kQgenColumn,
+             kQextColumn,
+             kPfarefColumn},
+            {index(Vars::QV),
+             index(Vars::VT),
+             index(Vars::VMEAS),
+             index(Vars::PMEAS),
+             kQextColumn,
+             kPfarefColumn},
+            {index(Vars::PORD), index(Vars::VT), kPrefColumn},
+            {index(Vars::VT), kBusVrColumn, kBusViColumn},
+            {index(Vars::ILMAX), index(Vars::IQCMD), index(Vars::IPCMD)},
+            {index(Vars::IQCMD),
+             index(Vars::VMEAS),
+             index(Vars::PMEAS),
+             index(Vars::XPIQ),
+             index(Vars::XPIV),
+             index(Vars::QV),
+             index(Vars::ILMAX),
+             kQgenColumn,
+             kQextColumn,
+             kPfarefColumn},
+            {index(Vars::IPCMD),
+             index(Vars::PORD),
+             index(Vars::VMEAS),
+             index(Vars::ILMAX)},
+        }};
+      }
 
       Data makeMinimalData() const
       {
@@ -2470,19 +2521,6 @@ namespace GridKit
         return rows;
       }
 
-      static RealT derivative(
-          const std::vector<DependencyTracking::Variable::DependencyMap>& jacobian,
-          size_t                                                          row,
-          size_t                                                          column)
-      {
-        const auto entry = jacobian[row].find(column);
-        if (entry == jacobian[row].end())
-        {
-          return 0.0;
-        }
-        return entry->second;
-      }
-
       bool derivativeMatches(
           const std::vector<DependencyTracking::Variable::DependencyMap>& jacobian,
           Vars                                                            row,
@@ -2500,7 +2538,16 @@ namespace GridKit
           RealT                                                           expected,
           const char*                                                     label) const
       {
-        const RealT actual = derivative(jacobian, index(row), column);
+        const auto& dependencies = jacobian[index(row)];
+        const auto  entry        = dependencies.find(column);
+        if (entry == dependencies.end())
+        {
+          std::cout << "REECB Jacobian " << label
+                    << " missing column " << column << '\n';
+          return false;
+        }
+
+        const RealT actual = entry->second;
         if (isEqual(actual, expected, kTol))
         {
           return true;
@@ -2509,6 +2556,42 @@ namespace GridKit
                   << std::setprecision(std::numeric_limits<RealT>::max_digits10)
                   << actual << " != " << expected << '\n';
         return false;
+      }
+
+      bool jacobianStructureMatches(
+          const std::vector<DependencyTracking::Variable::DependencyMap>& jacobian,
+          const char*                                                     source) const
+      {
+        const auto expected = expectedJacobianStructure();
+        if (jacobian.size() != expected.size())
+        {
+          std::cout << "REECB " << source
+                    << " Jacobian row-count mismatch\n";
+          return false;
+        }
+
+        bool success = true;
+        for (size_t row = 0; row < expected.size(); ++row)
+        {
+          if (jacobian[row].size() != expected[row].size())
+          {
+            std::cout << "REECB " << source << " Jacobian row " << row
+                      << " column-count mismatch: " << jacobian[row].size()
+                      << " != " << expected[row].size() << '\n';
+            success = false;
+          }
+
+          for (const size_t column : expected[row])
+          {
+            if (!jacobian[row].contains(column))
+            {
+              std::cout << "REECB " << source << " Jacobian row " << row
+                        << " missing column " << column << '\n';
+              success = false;
+            }
+          }
+        }
+        return success;
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
@@ -2539,27 +2622,29 @@ namespace GridKit
           const std::vector<DependencyTracking::Variable::DependencyMap>& dependency,
           const std::vector<DependencyTracking::Variable::DependencyMap>& enzyme) const
       {
+        bool success = true;
+        if (!jacobianStructureMatches(dependency, "dependency tracking"))
+        {
+          success = false;
+        }
+        if (!jacobianStructureMatches(enzyme, "Enzyme"))
+        {
+          success = false;
+        }
+
         if (dependency.size() != enzyme.size())
         {
           std::cout << "REECB Jacobian row-count mismatch\n";
           return false;
         }
 
-        bool success = true;
         for (size_t row = 0; row < dependency.size(); ++row)
         {
-          for (size_t column = 0; column < kColumnCount; ++column)
+          if (!isEqual(dependency[row], enzyme[row], kTol))
           {
-            const RealT expected = derivative(dependency, row, column);
-            const RealT actual   = derivative(enzyme, row, column);
-            if (!isEqual(actual, expected, kTol))
-            {
-              std::cout << "REECB Jacobian (" << row << ", " << column
-                        << ") backend mismatch: "
-                        << std::setprecision(std::numeric_limits<RealT>::max_digits10)
-                        << actual << " != " << expected << '\n';
-              success = false;
-            }
+            std::cout << "REECB Jacobian row " << row
+                      << " mismatch between dependency tracking and Enzyme\n";
+            success = false;
           }
         }
         return success;

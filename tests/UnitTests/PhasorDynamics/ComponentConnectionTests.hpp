@@ -141,7 +141,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-+      /// REGCA initializes first and publishes its branch current and power
+      /// REGCA initializes first and publishes its branch current and power
       /// to the four shared nodes. REPCA then initializes around those
       /// measurements and must hold a steady state without a frequency input.
       TestOutcome regcaRepca()

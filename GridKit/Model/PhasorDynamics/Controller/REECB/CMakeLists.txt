@@ -23,6 +23,11 @@ if(GRIDKIT_ENABLE_ENZYME)
       -mllvm
       -enzyme-auto-sparsity=1
       -fno-math-errno)
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19)
+    # Work around EnzymeAD/Enzyme#3101.
+    target_compile_options(phasor_dynamics_controller_reecb PRIVATE -fno-builtin-tan)
+  endif()
 else()
   gridkit_add_library(
     phasor_dynamics_controller_reecb

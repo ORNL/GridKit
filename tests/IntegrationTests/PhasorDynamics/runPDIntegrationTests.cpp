@@ -12,7 +12,7 @@ int main()
   result += test.twoBusTgov1();
   result += test.threeBusBasic();
   result += test.threeBusClassical();
-  result += test.regcaReecbRecovery();
+  result += test.renewableControlChainRecovery();
 
   return result.summary();
 }

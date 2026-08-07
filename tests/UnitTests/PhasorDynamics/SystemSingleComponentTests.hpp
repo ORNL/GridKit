@@ -1,6 +1,5 @@
 #include <iomanip>
 #include <iostream>
-#include <stdexcept>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -328,53 +327,26 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// REECB through the production data path, coupled to REGCA.
+      /// REECB through the production data path.
       TestOutcome reecb()
       {
-        using Data        = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
-        using Buses       = typename Data::Buses;
-        using Outputs     = typename Data::SignalOutputs;
-        using Params      = typename Data::Parameters;
-        using Vars        = PhasorDynamics::Controller::ReecbInternalVariables;
-        using RegcaInputs = PhasorDynamics::Converter::RegcaSignalInputs;
-        using RegcaParams = PhasorDynamics::Converter::RegcaParameters;
-        using RegcaVars   = PhasorDynamics::Converter::RegcaInternalVariables;
+        using Data  = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
+        using Buses = typename Data::Buses;
+        using Vars  = PhasorDynamics::Controller::ReecbInternalVariables;
 
-        constexpr IdxT bus_id   = static_cast<IdxT>(1);
-        constexpr IdxT iqcmd_id = static_cast<IdxT>(1);
-        constexpr IdxT ipcmd_id = static_cast<IdxT>(2);
+        constexpr IdxT bus_id = static_cast<IdxT>(1);
 
         TestStatus success = true;
 
         PhasorDynamics::SystemModelData<RealT, IdxT> data;
-        data.va_base = static_cast<RealT>(100.0e6);
         data.bus.resize(1);
         data.bus[0].bus_id   = bus_id;
         data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
         data.bus[0].Vr0      = static_cast<RealT>(1.0);
         data.bus[0].Vi0      = static_cast<RealT>(0.0);
 
-        data.signal.resize(2);
-        data.signal[0].signal_id = iqcmd_id;
-        data.signal[0].name      = "Reactive Current Command";
-        data.signal[1].signal_id = ipcmd_id;
-        data.signal[1].name      = "Active Current Command";
-
-        auto regca_data                              = makeRegcaData();
-        regca_data.parameters[RegcaParams::mva]      = static_cast<RealT>(50.0);
-        regca_data.parameters[RegcaParams::p0]       = static_cast<RealT>(0.25);
-        regca_data.parameters[RegcaParams::q0]       = static_cast<RealT>(0.05);
-        regca_data.signal_inputs[RegcaInputs::ipcmd] = ipcmd_id;
-        regca_data.signal_inputs[RegcaInputs::iqcmd] = iqcmd_id;
-        data.regca.push_back(regca_data);
-
         Data reecb_data;
-        reecb_data.device_class                   = "Reecb";
-        reecb_data.disambiguation_string          = "reecb_system";
-        reecb_data.buses[Buses::bus]              = bus_id;
-        reecb_data.parameters[Params::mva]        = static_cast<RealT>(50.0);
-        reecb_data.signal_outputs[Outputs::iqcmd] = iqcmd_id;
-        reecb_data.signal_outputs[Outputs::ipcmd] = ipcmd_id;
+        reecb_data.buses[Buses::bus] = bus_id;
         data.reecb.push_back(reecb_data);
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
@@ -384,41 +356,7 @@ namespace GridKit
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size()
-                   == static_cast<IdxT>(RegcaVars::MAXIMUM)
-                          + static_cast<IdxT>(Vars::MAXIMUM);
-
-        return success.report(__func__);
-      }
-
-      /// System initialization reports a statically valid component whose
-      /// operating point cannot be initialized.
-      TestOutcome initializationFailure()
-      {
-        TestStatus success = true;
-
-        PhasorDynamics::SystemModelData<RealT, IdxT> data;
-        data.bus.resize(1);
-        data.bus[0].bus_id   = static_cast<IdxT>(1);
-        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = static_cast<RealT>(0.8);
-        data.bus[0].Vi0      = ZERO<RealT>;
-        data.regca.push_back(makeRegcaData());
-
-        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
-
-        std::cout << "Testing expected component initialization failure.\n";
-        success *= system.verify() == 0;
-        if (system.hasJacobian())
-        {
-          success *= throws<std::runtime_error>([&]()
-                                                { system.allocate(); });
-        }
-        else
-        {
-          success *= system.allocate() == 0;
-          success *= system.initialize() != 0;
-        }
+        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
 
         return success.report(__func__);
       }

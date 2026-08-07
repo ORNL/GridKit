@@ -17,6 +17,7 @@ int main()
 #endif
 
   result += test.allocationError();
+  result += test.componentInitializationError();
   result += test.signalError();
 
   return result.summary();

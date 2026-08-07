@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cassert>
 #include <limits>
+#include <numbers>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -354,7 +355,7 @@ namespace GridKit
         RealT       iqneed0 = iqabs0;
         if (QFlag_ && iqabs0 > ZERO<RealT>)
         {
-          iqneed0 += std::log(TWO<RealT>) / Math::MU<RealT> + INITIALIZATION_TOLERANCE;
+          iqneed0 += std::numbers::ln2_v<RealT> / Math::MU<RealT> + INITIALIZATION_TOLERANCE;
         }
 
         const RealT d     = std::sqrt(INITIALIZATION_TOLERANCE);
@@ -1193,7 +1194,7 @@ namespace GridKit
       typename Reecb<scalar_type, index_type>::RealT
       Reecb<scalar_type, index_type>::logOneMinusExp(RealT x)
       {
-        static const RealT log_two = std::log(TWO<RealT>);
+        static constexpr auto log_two = std::numbers::ln2_v<RealT>;
 
         if (x < log_two)
         {

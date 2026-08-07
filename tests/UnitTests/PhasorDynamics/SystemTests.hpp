@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -13,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
@@ -34,7 +36,68 @@ namespace GridKit
     class SystemTests
     {
     private:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using ComponentT = PhasorDynamics::Component<ScalarT, IdxT>;
+      using RealT      = typename ComponentT::RealT;
+
+      class InitializationFailureComponent final : public ComponentT
+      {
+      public:
+        InitializationFailureComponent()
+        {
+          this->size_ = static_cast<IdxT>(1);
+        }
+
+        int setGridKitComponentID(IdxT component_id) override final
+        {
+          this->gridkit_component_id_ = component_id;
+          return 0;
+        }
+
+        int allocate() override final
+        {
+          if (!this->allocated_)
+          {
+            this->allocateVectors(this->size_);
+          }
+
+          const auto size = static_cast<std::size_t>(this->size_);
+          this->tag_.assign(size, false);
+          this->variable_indices_.resize(size);
+          this->residual_indices_.resize(size);
+          this->allocated_ = true;
+          return 0;
+        }
+
+        int verify() const override final
+        {
+          return 0;
+        }
+
+        int initialize() override final
+        {
+          return 1;
+        }
+
+        int tagDifferentiable() override final
+        {
+          return 0;
+        }
+
+        int setAbsoluteTolerance(RealT) override final
+        {
+          return 0;
+        }
+
+        int evaluateResidual() override final
+        {
+          return 0;
+        }
+
+        int evaluateJacobian() override final
+        {
+          return this->constructCoo();
+        }
+      };
 
     public:
       SystemTests()  = default;
@@ -339,6 +402,32 @@ namespace GridKit
             { system.allocate(); });
 
         return status.report(__func__);
+      }
+
+      /// SystemModel propagates a statically valid component's initialization error.
+      TestOutcome componentInitializationError()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        InitializationFailureComponent             component;
+        system.addComponent(&component);
+
+        success *= system.verify() == 0;
+
+        std::cout << "Testing expected component initialization failure.\n";
+        if (system.hasJacobian())
+        {
+          success *= throws<std::runtime_error>([&]()
+                                                { system.allocate(); });
+        }
+        else
+        {
+          success *= system.allocate() == 0;
+          success *= system.initialize() != 0;
+        }
+
+        return success.report(__func__);
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
