@@ -153,6 +153,7 @@ are specified:
   [GenClassical](SynchronousMachine/GenClassical/README.md) | the classical machine model
   [Regca](Converter/REGCA/README.md) | WECC REGCA renewable generator/converter model
   [Repca](Controller/REPCA/README.md) | the REPCA renewable plant-control model
+  [GastPti](Governor/GASTPTI/README.md) | the GASTPTI gas turbine-governor model
   [Tgov1](Governor/Tgov1/README.md) | the TGOV1 governor model
   [Hygov](Governor/HYGOV/README.md) | the HYGOV hydro turbine-governor model
   [Ieeet1](Exciter/IEEET1/README.md) | the IEEET1 exciter model

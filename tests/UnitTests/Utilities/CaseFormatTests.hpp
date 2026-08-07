@@ -10,6 +10,7 @@
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
@@ -190,11 +191,12 @@ namespace GridKit
       TestOutcome signalParse()
       {
         using namespace GridKit::PhasorDynamics;
-        using BusData    = BusData<RealT, IdxT>;
-        using BusType    = typename BusData::BusType;
-        using Esdc1aData = Exciter::Esdc1aData<RealT, IdxT>;
-        using HygovData  = Governor::HygovData<RealT, IdxT>;
-        using RepcaData  = Controller::RepcaData<RealT, IdxT>;
+        using BusData     = BusData<RealT, IdxT>;
+        using BusType     = typename BusData::BusType;
+        using Esdc1aData  = Exciter::Esdc1aData<RealT, IdxT>;
+        using GastPtiData = Governor::GastPtiData<RealT, IdxT>;
+        using HygovData   = Governor::HygovData<RealT, IdxT>;
+        using RepcaData   = Controller::RepcaData<RealT, IdxT>;
 
         const char data[] =
             R"({
@@ -223,6 +225,7 @@ namespace GridKit
                    { "signal_id": 7, "name": "Hydro Mechanical Power"},
                    { "signal_id": 8, "name": "Governor Load Reference"},
                    { "signal_id": 9, "name": "Governor Auxiliary Power"},
+                   { "signal_id": 10, "name": "Load Reference"},
                    { "signal_id": 11, "name": "Branch Current Real"},
                    { "signal_id": 12, "name": "Branch Current Imaginary"},
                    { "signal_id": 13, "name": "Branch Active Power"},
@@ -247,6 +250,7 @@ namespace GridKit
                    { "class": "Repca", "ports": {"bus":1, "ir":11, "ii":12, "p":13, "q":14, "freq":15, "vref":16, "pref":17, "qref":18, "freqref":19, "qext":20, "pext":21}, "id": "PC1", "params": {"mva":50, "VcompFlag":false, "RefFlag":true, "Freqflag":true, "Tfltr":0.2, "Vfrz":0.65, "Rc":0.02, "Xc":0.03, "Kc":0.4, "dbdlow":-0.02, "dbdupper":0.03, "emax":0.8, "emin":-0.7, "Kp":2.0, "Ki":3.0, "Qmax":0.9, "Qmin":-0.8, "Tft":0.2, "Tfv":1.5, "Tp":0.4, "fdbd1":-0.01, "fdbd2":0.015, "Ddn":2.0, "Dup":1.0, "femax":0.6, "femin":-0.5, "Kpg":1.7, "Kig":1.8, "Pmax":1.2, "Pmin":0.1, "Tlag":0.5}, "mon": ["qext", "pext", "vmeas", "qmeas", "pmeas"] },
                    { "class": "Ieeet1", "ports": {"bus":1, "speed": 1, "efd":3}, "id": "DV3", "params": {"Tr":0.0, "Ka":50.0, "Ta":0.04, "Ke":-0.06, "Te":0.6, "Kf":0.09, "Tf":1.46, "Vrmin":-1.0, "Vrmax":1.0, "E1":2.8, "E2":3.373, "Se1":0.04, "Se2":0.33, "Ispdlim":0.0}},
                    { "class": "SexsPti", "ports": {"bus":1, "efd":3}, "id": "DV4", "params": {"Ta":0.1, "Tb":0.5, "Te":0.8, "K":10.0, "Efdmax":5.0, "Efdmin":-5.0}},
+                   { "class": "GastPti", "ports": {"speed":1, "pmech":2, "pref":10}, "id": "DV7", "params": {"R":0.045, "T1":0.42, "T2":0.12, "T3":3.2, "At":0.95, "Kt":2.2, "Vmax":1.05, "Vmin":0.15, "Dturb":0.02, "Trate":120.0}, "mon": ["pmech", "xvalve", "xflow", "xtemp", "vload", "vtemp"] },
                    { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
                ]
             })";
@@ -269,12 +273,13 @@ namespace GridKit
         success *= result.genrou.size() == 1;
         success *= result.gov.size() == 1;
         success *= result.esdc1a.size() == 1;
+        success *= result.gastpti.size() == 1;
         success *= result.hygov.size() == 1;
         success *= result.repca.size() == 1;
         success *= result.loadz.size() == 0;
         success *= result.exciter.size() == 1;
         success *= result.sexspti.size() == 1;
-        success *= result.signal.size() == 20;
+        success *= result.signal.size() == 21;
 
         success *= result.bus[0].bus_id == 1;
         success *= result.bus[0].bus_type == BusType::DEFAULT;
@@ -310,6 +315,8 @@ namespace GridKit
         success *= result.signal[7].name == "Governor Load Reference";
         success *= result.signal[8].signal_id == 9;
         success *= result.signal[8].name == "Governor Auxiliary Power";
+        success *= result.signal[9].signal_id == 10;
+        success *= result.signal[9].name == "Load Reference";
 
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::R]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
@@ -390,6 +397,27 @@ namespace GridKit
         success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::vf);
         success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::se);
         success *= result.esdc1a[0].monitored_variables.contains(Esdc1aData::MonitorableVariables::vfe);
+
+        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::R]) == 0.045;
+        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::T1]) == 0.42;
+        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::T2]) == 0.12;
+        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::T3]) == 3.2;
+        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::At]) == 0.95;
+        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::Kt]) == 2.2;
+        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::Vmax]) == 1.05;
+        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::Vmin]) == 0.15;
+        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::Dturb]) == 0.02;
+        success *= std::get<RealT>(result.gastpti[0].parameters[GastPtiData::Parameters::Trate]) == 120.0;
+        success *= result.gastpti[0].signal_inputs[GastPtiData::SignalInputs::speed] == 1;
+        success *= result.gastpti[0].signal_inputs[GastPtiData::SignalInputs::pref] == 10;
+        success *= result.gastpti[0].signal_outputs[GastPtiData::SignalOutputs::pmech] == 2;
+        success *= result.gastpti[0].disambiguation_string == "DV7";
+        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::pmech);
+        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::xvalve);
+        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::xflow);
+        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::xtemp);
+        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::vload);
+        success *= result.gastpti[0].monitored_variables.contains(GastPtiData::MonitorableVariables::vtemp);
 
         success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Trate]) == 80.0;
         success *= std::get<RealT>(result.hygov[0].parameters[HygovData::Parameters::Rperm]) == 0.05;

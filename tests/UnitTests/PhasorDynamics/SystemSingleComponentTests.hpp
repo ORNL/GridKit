@@ -296,6 +296,36 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /// Construct GASTPTI through the production system-data path.
+      TestOutcome gastpti()
+      {
+        using Outputs = PhasorDynamics::Governor::GastPtiSignalOutputs;
+        using Vars    = PhasorDynamics::Governor::GastPtiInternalVariables;
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.signal.resize(1);
+        data.signal[0].signal_id = static_cast<IdxT>(1);
+        data.signal[0].name      = "Mechanical Power";
+
+        auto& gastpti                          = data.gastpti.emplace_back();
+        gastpti.device_class                   = "GastPti";
+        gastpti.disambiguation_string          = "gastpti_test";
+        gastpti.signal_outputs[Outputs::pmech] = static_cast<IdxT>(1);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+
+        return success.report(__func__);
+      }
+
       TestOutcome genrou()
       {
         TestStatus success = true;
