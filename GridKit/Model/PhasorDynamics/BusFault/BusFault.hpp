@@ -5,7 +5,7 @@
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
-#include <GridKit/definitions.hpp>
+#include <GridKit/Definitions.hpp>
 
 // Forward declaration of BusData structure
 namespace GridKit
