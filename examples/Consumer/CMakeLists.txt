@@ -41,9 +41,13 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/GridKitConsumer/CMakeLists.txt
 # Add target to build and test the example project after install
 if(WIN32)
   add_custom_target(
-    test_install COMMAND powershell -NoProfile -ExecutionPolicy Bypass -File "${_abs_consumer_path}/test.ps1" "${CMAKE_INSTALL_PREFIX}" "${CMAKE_CXX_COMPILER}" USES_TERMINAL
-  )
+    test_install
+    COMMAND
+      powershell -NoProfile -ExecutionPolicy Bypass -File "${_abs_consumer_path}/test.ps1"
+      "${CMAKE_INSTALL_PREFIX}" "${CMAKE_CXX_COMPILER}"
+    USES_TERMINAL)
 else()
   add_custom_target(
-    test_install COMMAND ${_abs_consumer_path}/test.sh ${CMAKE_INSTALL_PREFIX} ${CMAKE_CXX_COMPILER})
+    test_install
+    COMMAND ${_abs_consumer_path}/test.sh ${CMAKE_INSTALL_PREFIX} ${CMAKE_CXX_COMPILER})
 endif()
