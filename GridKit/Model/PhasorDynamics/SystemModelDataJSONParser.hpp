@@ -153,6 +153,12 @@ namespace GridKit
           raw_component.get_to(gov);
           sm.gov.push_back(gov);
         }
+        else if (kind == "GastPti")
+        {
+          typename SystemModelData<RealT, IdxT>::GastPtiDataT gastpti;
+          raw_component.get_to(gastpti);
+          sm.gastpti.push_back(gastpti);
+        }
         else if (kind == "Hygov")
         {
           typename SystemModelData<RealT, IdxT>::HygovDataT hygov;

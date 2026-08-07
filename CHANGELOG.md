@@ -67,6 +67,7 @@
 - Added support for running IDA with fixed time steps
 - Added `ConstantSignalSource` component as first use case for `BusToSignalAdapter`.
 - Added IDA option to suppress algebraic variables in local error tests.
+- Added `GASTPTI` governor model implementation for PhasorDynamics.
 - Removed `COO_Matrix` class.
 - Added portable `Vector` class and policy-based memory utilities.
 - Add new `LinearSolver` interface for linear solvers.

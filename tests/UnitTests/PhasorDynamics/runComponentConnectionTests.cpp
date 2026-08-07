@@ -6,10 +6,13 @@ int main()
 {
   GridKit::Testing::TestingResults                           result;
   GridKit::Testing::ComponentConnectionTests<double, size_t> test;
+  GridKit::Testing::GastPtiConnectionTests<double, size_t>   gastpti;
 
   result += test.genrouEsdc1a();
   result += test.genrouHygov();
   result += test.regcaRepca();
+  result += gastpti.genrouGastPti();
+  result += gastpti.gensalGastPti();
 
   return result.summary();
 }

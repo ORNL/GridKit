@@ -316,6 +316,35 @@ namespace GridKit
         addComponent(gov);
       }
 
+      // Add GASTPTI governors
+      for (const auto& gastptidata : data.gastpti)
+      {
+        auto* gastpti = new GastPti<ScalarT, IdxT>(gastptidata);
+
+        if (gastptidata.signal_inputs.contains(GastPtiSignalInputs::speed))
+        {
+          const IdxT     speed = gastptidata.signal_inputs.at(GastPtiSignalInputs::speed);
+          constexpr auto OMEGA = GastPtiExternalVariables::OMEGA;
+          gastpti->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
+        }
+
+        if (gastptidata.signal_inputs.contains(GastPtiSignalInputs::pref))
+        {
+          const IdxT     pref = gastptidata.signal_inputs.at(GastPtiSignalInputs::pref);
+          constexpr auto PREF = GastPtiExternalVariables::PREF;
+          gastpti->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+        }
+
+        if (gastptidata.signal_outputs.contains(GastPtiSignalOutputs::pmech))
+        {
+          const IdxT     pmech = gastptidata.signal_outputs.at(GastPtiSignalOutputs::pmech);
+          constexpr auto PMECH = GastPtiInternalVariables::PMECH;
+          gastpti->getSignals().template assignSignalNode<PMECH>(getSignal(pmech));
+        }
+
+        addComponent(gastpti);
+      }
+
       // Add HYGOV governors
       for (const auto& hygovdata : data.hygov)
       {
