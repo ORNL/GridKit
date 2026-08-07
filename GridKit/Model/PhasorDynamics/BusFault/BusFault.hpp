@@ -1,6 +1,7 @@
 /* Bus Fault Component - Adam Birchfield */
 #pragma once
 
+#include <GridKit/definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
