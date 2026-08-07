@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include <GridKit/Constants.hpp>
+#include <GridKit/Definitions.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
