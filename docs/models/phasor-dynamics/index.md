@@ -43,6 +43,11 @@ specific model directly.
 :link-type: ref
 :::
 
+:::{grid-item-card} Controllers
+:link: models-phasor-dynamics-controllers
+:link-type: ref
+:::
+
 :::{grid-item-card} Signals
 :link: models-phasor-dynamics-signals
 :link-type: ref
@@ -67,5 +72,6 @@ Governors <governors/index>
 Stabilizers <stabilizers/index>
 Loads <loads/index>
 Converters <converters/index>
+Controllers <controllers/index>
 Signals <signals/index>
 ```
