@@ -22,7 +22,8 @@ if(GRIDKIT_ENABLE_ENZYME)
       PRIVATE
       -mllvm
       -enzyme-auto-sparsity=1
-      -fno-math-errno)
+      -fno-math-errno
+      -fno-builtin-tan) 
 
 else()
   gridkit_add_library(
