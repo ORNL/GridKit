@@ -8,11 +8,11 @@
  */
 #pragma once
 
-#include <GridKit/definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/definitions.hpp>
 
 // Forward declarations.
 namespace GridKit

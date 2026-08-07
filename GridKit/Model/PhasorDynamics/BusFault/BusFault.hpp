@@ -1,11 +1,11 @@
 /* Bus Fault Component - Adam Birchfield */
 #pragma once
 
-#include <GridKit/definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/definitions.hpp>
 
 // Forward declaration of BusData structure
 namespace GridKit
