@@ -195,7 +195,7 @@ None.
 s^{\mathrm{valve}}
   \leftarrow
   \begin{cases}
-    1 & V_{\mathrm{resp}}^{\min}<V_{\mathrm{resp}}^{\max} \\
+    1 & V_{\mathrm{resp}}^{\min}\lt V_{\mathrm{resp}}^{\max} \\
     0 & V_{\mathrm{resp}}^{\min}=V_{\mathrm{resp}}^{\max}
   \end{cases}
 ```
