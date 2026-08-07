@@ -830,8 +830,16 @@ namespace GridKit
                 data.parameters[Params::VFlag]  = voltage;
                 data.parameters[Params::QFlag]  = reactive;
                 data.parameters[Params::Pqflag] = p_priority;
-                data.parameters[Params::Kqi]    = reactive && voltage ? 0.4 : 0.0;
-                data.parameters[Params::Kvi]    = reactive ? 0.5 : 0.0;
+                data.parameters[Params::Kqi]    = 0.0;
+                data.parameters[Params::Kvi]    = 0.0;
+                if (reactive)
+                {
+                  data.parameters[Params::Kvi] = 0.5;
+                }
+                if (reactive && voltage)
+                {
+                  data.parameters[Params::Kqi] = 0.4;
+                }
 
                 for (const bool attached : selector_values)
                 {
@@ -867,13 +875,28 @@ namespace GridKit
 
                   if (attached)
                   {
-                    success                     *= scalarPreserved(fixture.input(Ext::PE), 0.75, "selector pe");
-                    success                     *= scalarPreserved(fixture.input(Ext::QGEN), 0.75, "selector qgen");
-                    const RealT expected_qext    = reactive && !voltage ? 1.0 : (pf ? 0.0 : 0.75);
-                    const RealT expected_pfaref  = pf && (!reactive || voltage) ? kUnitSlopeAngle : 0.0;
-                    success                     *= scalarMatches(fixture.input(Ext::QEXT), expected_qext, "published qext");
-                    success                     *= scalarMatches(fixture.input(Ext::PFAREF), expected_pfaref, "published pfaref");
-                    success                     *= scalarMatches(fixture.input(Ext::PREF), 0.75, "published pref");
+                    success *= scalarPreserved(fixture.input(Ext::PE), 0.75, "selector pe");
+                    success *= scalarPreserved(fixture.input(Ext::QGEN), 0.75, "selector qgen");
+
+                    RealT expected_qext = 0.75;
+                    if (reactive && !voltage)
+                    {
+                      expected_qext = 1.0;
+                    }
+                    else if (pf)
+                    {
+                      expected_qext = 0.0;
+                    }
+
+                    RealT expected_pfaref = 0.0;
+                    if (pf && (!reactive || voltage))
+                    {
+                      expected_pfaref = kUnitSlopeAngle;
+                    }
+
+                    success *= scalarMatches(fixture.input(Ext::QEXT), expected_qext, "published qext");
+                    success *= scalarMatches(fixture.input(Ext::PFAREF), expected_pfaref, "published pfaref");
+                    success *= scalarMatches(fixture.input(Ext::PREF), 0.75, "published pref");
                   }
                 }
               }
@@ -1370,7 +1393,11 @@ namespace GridKit
             fixture.input(Ext::PREF)  = rampReference(test_case.state, test_case.reference);
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
-            const RealT limited_rate = test_case.reference < ZERO<RealT> ? -0.5 : 0.6;
+            RealT limited_rate = 0.6;
+            if (test_case.reference < ZERO<RealT>)
+            {
+              limited_rate = -0.5;
+            }
             setState(fixture.reecb,
                      {{Vars::PORD, test_case.state}, {Vars::RPORD, limited_rate}});
             success *= (fixture.evaluate() == 0);
@@ -1453,11 +1480,15 @@ namespace GridKit
             setAnswerKeyInputs(fixture);
             success *= fixture.prepare(0.25, 0.35);
             setAnswerKeyState(fixture.reecb);
-            success *= (fixture.evaluate() == 0);
+            success           *= (fixture.evaluate() == 0);
+            const char* label  = "Q-priority current circle";
+            if (p_priority)
+            {
+              label = "P-priority current circle";
+            }
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::ILMAX, expected}},
-                                      p_priority ? "P-priority current circle"
-                                                 : "Q-priority current circle");
+                                      label);
           }
         }
 
@@ -1526,8 +1557,11 @@ namespace GridKit
                                       {{Vars::ILMAX, test_case.expected}},
                                       "signed capacity continuation");
 
-            const RealT expected_capacity =
-                test_case.input == ZERO<RealT> ? 0.0 : 0.5;
+            RealT expected_capacity = 0.0;
+            if (test_case.input != ZERO<RealT>)
+            {
+              expected_capacity = 0.5;
+            }
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::ILCAP, expected_capacity}},
                                       "signed off-axis capacity");

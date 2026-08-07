@@ -222,11 +222,8 @@ $P^\mathrm{ref}$       | [p.u.] | Unknown | External active-power reference     
 
 Here
 $I^\mathrm{high}=s_\mathrm{pq}k_\mathrm{base}I_p^\mathrm{cmd}
-+s_\mathrm{pq}^\mathrm{off}k_\mathrm{base}I_q^\mathrm{cmd}$ is the selected
-priority-axis current. GridKit forms that selection before the factored current-circle
-expression so the inactive command cannot introduce an overflow through a
-zero selector. The constant $\epsilon_0=100\epsilon_\mathrm{machine}$
-regularizes the `ILMAX` row at zero remaining capacity.
++s_\mathrm{pq}^\mathrm{off}k_\mathrm{base}I_q^\mathrm{cmd}$ and
+$\epsilon_0=100\epsilon_\mathrm{machine}$.
 
 CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup) and
 [smooth limiter](../../../../CommonMath.md#derived-functions) functions used in
@@ -273,41 +270,25 @@ and $I_q=k_\mathrm{base}I_q^\mathrm{cmd}$ be the component-base commands.
 \end{aligned}
 ```
 
-For current-limit initialization, let $I_q^\mathrm{need}$ be the magnitude
-required to invert the smooth reactive-current clamp, including its recovery
-margin when Volt/VAr control is active. The selected priority-axis command and
-required off-axis capacity are
+Let $I_q^\mathrm{need}$ be the smooth-clamp input magnitude required to
+reproduce $I_q$, including the Volt/VAr recovery margin. Initialization raises
+$I^\max$, if needed, to the smallest finite limit satisfying
 
 ```math
 \begin{aligned}
   h &= s_\mathrm{pq}I_p+s_\mathrm{pq}^\mathrm{off}|I_q| \\
-  \ell &= s_\mathrm{pq}I_q^\mathrm{need}+s_\mathrm{pq}^\mathrm{off}I_p.
-\end{aligned}
-```
-
-Starting at
-$I_0=\text{max}(I^\max,h,\ell,I_q^\mathrm{need})$, initialization finds the
-smallest representable $I\ge I_0$ for which a nonnegative continuation $x$
-satisfies
-
-```math
-\begin{aligned}
+  \ell &= s_\mathrm{pq}I_q^\mathrm{need}+s_\mathrm{pq}^\mathrm{off}I_p \\
+  I &\ge \text{max}(I^\max,h,\ell,I_q^\mathrm{need}) \\
   x\sqrt{x^2+\epsilon_0} &= (I-h)(I+h) \\
   \dfrac{x^2}{\sqrt{x^2+\epsilon_0}} &\ge \ell.
 \end{aligned}
 ```
 
-An analytic inverse supplies the first upper candidate. Overflow-safe bracket
-expansion and midpoint bisection then locate the first feasible floating-point
-limit; the final limit, continuation, and off-axis capacity are validated
-together. Initialization assigns $I^\max\leftarrow I$,
-$I_L^\max\leftarrow x$, and
-$I_L^\mathrm{cap}\leftarrow x^2/\sqrt{x^2+\epsilon_0}$. It then evaluates
-$I_q^\max$ and $I_p^\max$ from their algebraic equations. Incompatible current
-commands or reactive-current injection are rejected.
-
-Q, V, and P limits are expanded as needed to include their initialized values,
-and each adjustment logs a warning.
+The solution initializes $I^\max\leftarrow I$, $I_L^\max\leftarrow x$, and
+$I_L^\mathrm{cap}\leftarrow x^2/\sqrt{x^2+\epsilon_0}$. The operating point is
+rejected if no finite solution exists or the reactive-current injection is
+incompatible. Q, V, and P limits are expanded as needed; each adjustment logs
+a warning.
 
 ```math
 \begin{aligned}
@@ -323,25 +304,12 @@ and each adjustment logs a warning.
 \end{aligned}
 ```
 
-```math
-\begin{aligned}
-  \phi^\mathrm{ref} &\leftarrow
-      \begin{cases}
-        \arctan(Q^\mathrm{target}/P^\mathrm{meas}) & s_\mathrm{pf}=1\ \land\ P^\mathrm{meas}\ne0 \\
-        0 & \text{otherwise}
-      \end{cases} \\
-  Q^\mathrm{ext} &\leftarrow
-      \begin{cases}
-        V^\mathrm{meas} & s_V^\mathrm{ref}=1 \\
-        0 & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=1 \\
-        Q^\mathrm{target}/k_\mathrm{base} & s_V^\mathrm{ref}=0\ \land\ s_\mathrm{pf}=0
-      \end{cases} \\
-  Q^\mathrm{ref} &\leftarrow s_Q^\mathrm{ref}(s_\mathrm{pf}P^\mathrm{meas}\tan(\phi^\mathrm{ref})+s_\mathrm{pf}^\mathrm{off}k_\mathrm{base}Q^\mathrm{ext}).
-\end{aligned}
-```
+The references resolved under [Output Initialization](#output-initialization)
+give
 
 ```math
 \begin{aligned}
+  Q^\mathrm{ref} &\leftarrow s_Q^\mathrm{ref}(s_\mathrm{pf}P^\mathrm{meas}\tan(\phi^\mathrm{ref})+s_\mathrm{pf}^\mathrm{off}k_\mathrm{base}Q^\mathrm{ext}) \\
   e_Q &\leftarrow \text{clamp}(Q^\mathrm{ref};\,Q^{\min},Q^{\max})-k_\mathrm{base}Q^\mathrm{gen} \\
   x_Q^\mathrm{PI} &\leftarrow
       \begin{cases}

@@ -322,13 +322,10 @@ namespace GridKit
       }
 
       /**
-       * @brief Construct a complete steady initial point without mutating the model
+       * @brief Construct and validate a steady initial point
        *
-       * All state, limit, reference, and signal candidates are validated before
-       * commitInitialPoint() publishes them.
-       *
-       * @param[out] point Validated initial point.
-       * @return true when a finite steady point was constructed.
+       * @param[out] point Initial point.
+       * @return true on success.
        */
       template <typename scalar_type, typename index_type>
       bool Reecb<scalar_type, index_type>::buildInitialPoint(InitialPoint& point)
@@ -425,11 +422,16 @@ namespace GridKit
           iqneed0 += std::numbers::ln2_v<RealT> / Math::MU<RealT> + INITIALIZATION_TOLERANCE;
         }
 
-        const RealT high0         = Pqflag_ ? ipcmd0 : iqabs0;
-        const RealT low0          = Pqflag_ ? iqneed0 : ipcmd0;
+        RealT high0 = iqabs0;
+        RealT low0  = ipcmd0;
+        if (Pqflag_)
+        {
+          high0 = ipcmd0;
+          low0  = iqneed0;
+        }
         // Q priority uses Imax directly for reactive current, so include the
         // smooth-clamp recovery margin carried by iqneed0.
-        const auto  current_limit = solveInitialLimit(
+        const auto current_limit = solveInitialLimit(
             std::max({Imax_, high0, low0, iqneed0}), high0, low0);
         if (!current_limit)
         {
@@ -440,8 +442,13 @@ namespace GridKit
         const RealT ilmax0 = current_limit->continuation;
         const RealT ilcap0 = current_limit->off_axis_capacity;
 
-        const RealT iqmax0 = Pqflag_ ? ilcap0 : imax;
-        const RealT ipmax0 = Pqflag_ ? imax : ilcap0;
+        RealT iqmax0 = imax;
+        RealT ipmax0 = ilcap0;
+        if (Pqflag_)
+        {
+          iqmax0 = ilcap0;
+          ipmax0 = imax;
+        }
 
         RealT ipraw0 = ZERO<RealT>;
         RealT iqraw0 = ZERO<RealT>;
@@ -544,12 +551,21 @@ namespace GridKit
         }
 
         const RealT vpiq0 = Math::clamp(Kqp_ * eq0 + xpiq0, vmin, vmax);
-        const RealT epiv0 = QFlag_ ? (VFlag_ ? vpiq0 : qext0_port) - vmeas0 : ZERO<RealT>;
+        RealT       epiv0 = ZERO<RealT>;
         RealT       qv0   = ZERO<RealT>;
         RealT       xpiv0 = ZERO<RealT>;
 
         if (QFlag_)
         {
+          if (VFlag_)
+          {
+            epiv0 = vpiq0 - vmeas0;
+          }
+          else
+          {
+            epiv0 = qext0_port - vmeas0;
+          }
+
           if (iqmax0 <= INITIALIZATION_TOLERANCE)
           {
             xpiv0 = -Kvp_ * epiv0;
@@ -570,19 +586,30 @@ namespace GridKit
           qv0 = qref0 / vmeas_safe0;
         }
 
-        const RealT   sdip0  = Math::inside(vt0, Vdip_, Vup_);
-        const RealT   qrate0 = QFlag_ && VFlag_
-                                   ? sdip0 * Math::antiwindup(Kqp_ * eq0 + xpiq0, Kqi_ * eq0, vmin, vmax)
-                                   : ZERO<RealT>;
+        const RealT sdip0  = Math::inside(vt0, Vdip_, Vup_);
+        RealT       qrate0 = ZERO<RealT>;
+        if (QFlag_ && VFlag_)
+        {
+          qrate0 = sdip0 * Math::antiwindup(Kqp_ * eq0 + xpiq0, Kqi_ * eq0, vmin, vmax);
+        }
+
         const ScalarT vstate0{Kvp_ * epiv0 + xpiv0};
         const ScalarT vderiv0{Kvi_ * epiv0};
-        const RealT   vrate0      = QFlag_
-                                        ? sdip0 * static_cast<RealT>(awband(vstate0, vderiv0, ScalarT{iqmax0}))
-                                        : ZERO<RealT>;
-        const RealT   iqbase0     = Math::clamp(Kvp_ * epiv0 + xpiv0, -iqmax0, iqmax0);
-        const RealT   iqraw_check = (QFlag_ ? iqbase0 : qv0) + iqv0;
-        const RealT   iqcmd_check = Math::clamp(iqraw_check, -iqmax0, iqmax0);
-        const RealT   ipcmd_check = Math::clamp(pord0 / vmeas_safe0, ZERO<RealT>, ipmax0);
+        RealT         vrate0 = ZERO<RealT>;
+        if (QFlag_)
+        {
+          vrate0 = sdip0 * static_cast<RealT>(awband(vstate0, vderiv0, ScalarT{iqmax0}));
+        }
+
+        const RealT iqbase0     = Math::clamp(Kvp_ * epiv0 + xpiv0, -iqmax0, iqmax0);
+        RealT       iqraw_check = qv0 + iqv0;
+        if (QFlag_)
+        {
+          iqraw_check = iqbase0 + iqv0;
+        }
+
+        const RealT iqcmd_check = Math::clamp(iqraw_check, -iqmax0, iqmax0);
+        const RealT ipcmd_check = Math::clamp(pord0 / vmeas_safe0, ZERO<RealT>, ipmax0);
 
         if (!std::isfinite(imax) || !std::isfinite(ilmax0) || !std::isfinite(ilcap0)
             || !std::isfinite(iqmax0) || !std::isfinite(ipmax0)
@@ -648,9 +675,9 @@ namespace GridKit
       }
 
       /**
-       * @brief Commit a validated initial point and publish unknown references
+       * @brief Commit a validated initial point
        *
-       * @param[in] point Complete candidate produced by buildInitialPoint().
+       * @param[in] point Initial point.
        */
       template <typename scalar_type, typename index_type>
       void Reecb<scalar_type, index_type>::commitInitialPoint(const InitialPoint& point)
@@ -675,7 +702,7 @@ namespace GridKit
         Imax_ = point.imax;
 
         auto* y = y_.getData();
-        // IQCMD and IPCMD are owned initial inputs and are not in this array.
+        // Preserve the owned IQCMD and IPCMD inputs.
         for (size_t entry = 0; entry < point.variables.size(); ++entry)
         {
           y[entry] = static_cast<ScalarT>(point.variables[entry]);
@@ -857,10 +884,8 @@ namespace GridKit
       /**
        * @brief Evaluate the REECB internal residual
        *
-       * The branch-free equation body preserves a fixed dependency structure;
-       * parameter-selected paths enter through selector masks resolved by
-       * setDerivedParameters(). Explicit algebraic rows expose each downstream
-       * block output and the regularized current-circle continuation.
+       * Evaluates the residual rows in enum order. Selector masks keep the
+       * differentiated path branch-free.
        *
        * @param[in] y Internal variables.
        * @param[in] yp Internal variable derivatives.
@@ -954,6 +979,7 @@ namespace GridKit
         const ScalarT v_pi_state  = Kvp_ * epiv + xpiv;
         const ScalarT fpord       = (pref - pord) / Tpord_;
         const ScalarT ilnorm      = std::sqrt(ilmax * ilmax + INITIALIZATION_TOLERANCE);
+        // Select before the factored square to avoid 0 * inf on the inactive path.
         const ScalarT high        = pq_on_ * ipcmd + pq_off_ * iqcmd;
         const ScalarT q_pi_rate   = q_pi_on_ * sdip * Math::antiwindup(q_pi_state, Kqi_ * eq, Vmin_, Vmax_);
         const ScalarT v_pi_rate   = q_on_ * sdip * awband(v_pi_state, Kvi_ * epiv, iqmax);
@@ -1132,24 +1158,6 @@ namespace GridKit
 
       /**
        * @brief Solve the smallest initial total-current limit
-       *
-       * The regularized current-circle row provides slightly less off-axis
-       * capacity than the ideal circle at a fixed total-current limit. This
-       * routine therefore raises the configured limit only when needed to
-       * reproduce the initial commands. An analytic inverse supplies the first
-       * upper candidate; overflow-safe expansion and bisection then find the
-       * first representable feasible limit.
-       *
-       * For candidate total limit @f$I@f$, priority-axis command @f$h@f$, and
-       * required off-axis capacity @f$\ell@f$, the nonnegative continuation
-       * @f$x@f$ solves
-       * @f[
-       *   x\sqrt{x^2+\epsilon_0}=(I-h)(I+h),
-       * @f]
-       * and feasibility requires
-       * @f[
-       *   x^2/\sqrt{x^2+\epsilon_0}\ge \ell.
-       * @f]
        *
        * @param[in] lower Lower bound for the component-base total-current limit.
        * @param[in] high Priority-axis current command on the component base.
