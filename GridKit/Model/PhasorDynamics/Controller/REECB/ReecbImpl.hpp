@@ -7,6 +7,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <limits>
 #include <numbers>
@@ -28,6 +29,21 @@ namespace GridKit
     {
       /// Logger used for REECB diagnostics.
       using Log = ::GridKit::Utilities::Logger;
+
+      template <typename scalar_type, typename index_type>
+      struct Reecb<scalar_type, index_type>::InitialPoint
+      {
+        std::array<RealT, static_cast<size_t>(ReecbInternalVariables::IQCMD)>   variables{};
+        std::array<RealT, static_cast<size_t>(ReecbExternalVariables::MAXIMUM)> signals{};
+        RealT                                                                   qmin{};
+        RealT                                                                   qmax{};
+        RealT                                                                   vmin{};
+        RealT                                                                   vmax{};
+        RealT                                                                   pmin{};
+        RealT                                                                   pmax{};
+        RealT                                                                   imax{};
+        RealT                                                                   vref{};
+      };
 
       /**
        * @brief Construct REECB with its documented parameter defaults
@@ -277,22 +293,12 @@ namespace GridKit
        * @post On failure no state, derivative, parameter, or signal storage is
        *       modified.
        *
-       * @return 0 on success; nonzero when allocation, configuration, initial-value, limiter inversion, or steady-state checks fail.
+       * @return 0 on success; nonzero when allocation, configuration,
+       *         initial-value, limiter inversion, or steady-state checks fail.
        */
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::initialize()
       {
-        const auto VMEAS = static_cast<size_t>(ReecbInternalVariables::VMEAS);
-        const auto PMEAS = static_cast<size_t>(ReecbInternalVariables::PMEAS);
-        const auto XPIQ  = static_cast<size_t>(ReecbInternalVariables::XPIQ);
-        const auto XPIV  = static_cast<size_t>(ReecbInternalVariables::XPIV);
-        const auto QV    = static_cast<size_t>(ReecbInternalVariables::QV);
-        const auto PORD  = static_cast<size_t>(ReecbInternalVariables::PORD);
-        const auto VT    = static_cast<size_t>(ReecbInternalVariables::VT);
-        const auto ILMAX = static_cast<size_t>(ReecbInternalVariables::ILMAX);
-        const auto IQCMD = static_cast<size_t>(ReecbInternalVariables::IQCMD);
-        const auto IPCMD = static_cast<size_t>(ReecbInternalVariables::IPCMD);
-
         if (!allocated_)
         {
           Log::error() << "Reecb: allocate must complete before initialize\n";
@@ -305,7 +311,59 @@ namespace GridKit
           return 1;
         }
 
-        auto* y = y_.getData();
+        InitialPoint point;
+        if (!buildInitialPoint(point))
+        {
+          return 1;
+        }
+
+        commitInitialPoint(point);
+        return 0;
+      }
+
+      /**
+       * @brief Construct a complete steady initial point without mutating the model
+       *
+       * All state, limit, reference, and signal candidates are validated before
+       * commitInitialPoint() publishes them.
+       *
+       * @param[out] point Validated initial point.
+       * @return true when a finite steady point was constructed.
+       */
+      template <typename scalar_type, typename index_type>
+      bool Reecb<scalar_type, index_type>::buildInitialPoint(InitialPoint& point)
+      {
+        const auto VMEAS  = static_cast<size_t>(ReecbInternalVariables::VMEAS);
+        const auto PMEAS  = static_cast<size_t>(ReecbInternalVariables::PMEAS);
+        const auto XPIQ   = static_cast<size_t>(ReecbInternalVariables::XPIQ);
+        const auto XPIV   = static_cast<size_t>(ReecbInternalVariables::XPIV);
+        const auto QV     = static_cast<size_t>(ReecbInternalVariables::QV);
+        const auto PORD   = static_cast<size_t>(ReecbInternalVariables::PORD);
+        const auto VT     = static_cast<size_t>(ReecbInternalVariables::VT);
+        const auto VSAFE  = static_cast<size_t>(ReecbInternalVariables::VSAFE);
+        const auto SDIP   = static_cast<size_t>(ReecbInternalVariables::SDIP);
+        const auto IQV    = static_cast<size_t>(ReecbInternalVariables::IQV);
+        const auto QREF   = static_cast<size_t>(ReecbInternalVariables::QREF);
+        const auto EQ     = static_cast<size_t>(ReecbInternalVariables::EQ);
+        const auto VPIQ   = static_cast<size_t>(ReecbInternalVariables::VPIQ);
+        const auto EPIV   = static_cast<size_t>(ReecbInternalVariables::EPIV);
+        const auto RPORD  = static_cast<size_t>(ReecbInternalVariables::RPORD);
+        const auto ILMAX  = static_cast<size_t>(ReecbInternalVariables::ILMAX);
+        const auto ILCAP  = static_cast<size_t>(ReecbInternalVariables::ILCAP);
+        const auto IQMAX  = static_cast<size_t>(ReecbInternalVariables::IQMAX);
+        const auto IPMAX  = static_cast<size_t>(ReecbInternalVariables::IPMAX);
+        const auto IQBASE = static_cast<size_t>(ReecbInternalVariables::IQBASE);
+        const auto IQRAW  = static_cast<size_t>(ReecbInternalVariables::IQRAW);
+        const auto IQCMD  = static_cast<size_t>(ReecbInternalVariables::IQCMD);
+        const auto IPCMD  = static_cast<size_t>(ReecbInternalVariables::IPCMD);
+
+        const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
+        const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
+        const auto QEXT   = static_cast<size_t>(ReecbExternalVariables::QEXT);
+        const auto PFAREF = static_cast<size_t>(ReecbExternalVariables::PFAREF);
+        const auto PREF   = static_cast<size_t>(ReecbExternalVariables::PREF);
+
+        const auto* y = y_.getData();
 
         const RealT ipcmd0_system = static_cast<RealT>(y[IPCMD]);
         const RealT iqcmd0_system = static_cast<RealT>(y[IQCMD]);
@@ -344,18 +402,18 @@ namespace GridKit
             || !std::isfinite(qgen0) || !std::isfinite(vref0))
         {
           Log::error() << "Reecb: initial bus, command, and feedback values must be finite\n";
-          return 1;
+          return false;
         }
         if (vt0 <= ZERO<RealT>)
         {
           Log::error() << "Reecb: initial terminal-voltage magnitude must be positive\n";
-          return 1;
+          return false;
         }
 
         if (ipcmd0 < ZERO<RealT>)
         {
           Log::error() << "Reecb: initial active-current command must be non-negative\n";
-          return 1;
+          return false;
         }
 
         const RealT verr0   = Math::deadband2(vref0 - vmeas0, dbd1_, dbd2_);
@@ -367,23 +425,23 @@ namespace GridKit
           iqneed0 += std::numbers::ln2_v<RealT> / Math::MU<RealT> + INITIALIZATION_TOLERANCE;
         }
 
-        const RealT high0 = pq_on_ * ipcmd0 + pq_off_ * iqabs0;
-        const RealT low0  = pq_on_ * iqneed0 + pq_off_ * ipcmd0;
+        const RealT high0         = Pqflag_ ? ipcmd0 : iqabs0;
+        const RealT low0          = Pqflag_ ? iqneed0 : ipcmd0;
         // Q priority uses Imax directly for reactive current, so include the
         // smooth-clamp recovery margin carried by iqneed0.
-        const RealT imax  = solveInitialLimit(
+        const auto  current_limit = solveInitialLimit(
             std::max({Imax_, high0, low0, iqneed0}), high0, low0);
-        const RealT ilmax0 = circleState(imax, high0);
-        const RealT ilcap0 = capacity(ilmax0);
-        if (!std::isfinite(imax) || !std::isfinite(ilmax0)
-            || !std::isfinite(ilcap0) || ilcap0 < low0)
+        if (!current_limit)
         {
           Log::error() << "Reecb: adjusted Imax cannot include the initial current commands\n";
-          return 1;
+          return false;
         }
+        const RealT imax   = current_limit->total_limit;
+        const RealT ilmax0 = current_limit->continuation;
+        const RealT ilcap0 = current_limit->off_axis_capacity;
 
-        const RealT iqmax0 = pq_on_ * ilcap0 + pq_off_ * imax;
-        const RealT ipmax0 = pq_on_ * imax + pq_off_ * ilcap0;
+        const RealT iqmax0 = Pqflag_ ? ilcap0 : imax;
+        const RealT ipmax0 = Pqflag_ ? imax : ilcap0;
 
         RealT ipraw0 = ZERO<RealT>;
         RealT iqraw0 = ZERO<RealT>;
@@ -391,7 +449,7 @@ namespace GridKit
             || !iclamp(iqcmd0, -iqmax0, iqmax0, iqraw0))
         {
           Log::error() << "Reecb: initial current commands cannot be reproduced by their limiters\n";
-          return 1;
+          return false;
         }
 
         const RealT iqctl0 = iqraw0 - iqv0;
@@ -400,7 +458,7 @@ namespace GridKit
         RealT       qmax   = Qmax_;
         RealT       vmin   = Vmin_;
         RealT       vmax   = Vmax_;
-        if (q_pi_on_ != ZERO<RealT>)
+        if (QFlag_ && VFlag_)
         {
           qmin = std::min(Qmin_, qgen0);
           qmax = std::max(Qmax_, qgen0);
@@ -437,14 +495,14 @@ namespace GridKit
         else if (VFlag_ && !iclamp(qgen0, qmin, qmax, qtarget0))
         {
           Log::error() << "Reecb: reactive-power limiter has no finite steady input\n";
-          return 1;
+          return false;
         }
 
         RealT qref0      = ZERO<RealT>;
         RealT qext0_port = ZERO<RealT>;
         RealT pfaref0    = ZERO<RealT>;
 
-        if (v_ref_on_ != ZERO<RealT>)
+        if (QFlag_ && !VFlag_)
         {
           qext0_port = vmeas0;
         }
@@ -453,7 +511,7 @@ namespace GridKit
           if (pmeas0 == ZERO<RealT> && qtarget0 != ZERO<RealT>)
           {
             Log::error() << "Reecb: power-factor mode cannot reproduce the reactive target at zero active power\n";
-            return 1;
+            return false;
           }
           if (pmeas0 != ZERO<RealT>)
           {
@@ -463,7 +521,7 @@ namespace GridKit
           if (std::abs(qref0 - qtarget0) > std::abs(qtarget0) * INITIALIZATION_TOLERANCE)
           {
             Log::error() << "Reecb: power-factor angle cannot reproduce the reactive target\n";
-            return 1;
+            return false;
           }
         }
         else
@@ -474,19 +532,19 @@ namespace GridKit
 
         const RealT eq0   = Math::clamp(qref0, qmin, qmax) - qgen0;
         RealT       xpiq0 = ZERO<RealT>;
-        if (q_pi_on_ != ZERO<RealT>)
+        if (QFlag_ && VFlag_)
         {
           RealT vpiq_input0 = ZERO<RealT>;
           if (!iclamp(vmeas0, vmin, vmax, vpiq_input0))
           {
             Log::error() << "Reecb: voltage limiter has no finite steady input\n";
-            return 1;
+            return false;
           }
           xpiq0 = vpiq_input0 - Kqp_ * eq0;
         }
 
         const RealT vpiq0 = Math::clamp(Kqp_ * eq0 + xpiq0, vmin, vmax);
-        const RealT epiv0 = q_pi_on_ * vpiq0 + v_ref_on_ * qext0_port - q_on_ * vmeas0;
+        const RealT epiv0 = QFlag_ ? (VFlag_ ? vpiq0 : qext0_port) - vmeas0 : ZERO<RealT>;
         RealT       qv0   = ZERO<RealT>;
         RealT       xpiv0 = ZERO<RealT>;
 
@@ -502,7 +560,7 @@ namespace GridKit
             if (!iclamp(iqctl0, -iqmax0, iqmax0, iqctl_input0))
             {
               Log::error() << "Reecb: voltage-controller current cannot be reproduced by its limiter\n";
-              return 1;
+              return false;
             }
             xpiv0 = iqctl_input0 - Kvp_ * epiv0;
           }
@@ -513,12 +571,17 @@ namespace GridKit
         }
 
         const RealT   sdip0  = Math::inside(vt0, Vdip_, Vup_);
-        const RealT   qrate0 = q_pi_on_ * sdip0 * Math::antiwindup(Kqp_ * eq0 + xpiq0, Kqi_ * eq0, vmin, vmax);
+        const RealT   qrate0 = QFlag_ && VFlag_
+                                   ? sdip0 * Math::antiwindup(Kqp_ * eq0 + xpiq0, Kqi_ * eq0, vmin, vmax)
+                                   : ZERO<RealT>;
         const ScalarT vstate0{Kvp_ * epiv0 + xpiv0};
         const ScalarT vderiv0{Kvi_ * epiv0};
-        const RealT   vrate0      = q_on_ * sdip0 * static_cast<RealT>(awband(vstate0, vderiv0, ScalarT{iqmax0}));
+        const RealT   vrate0      = QFlag_
+                                        ? sdip0 * static_cast<RealT>(awband(vstate0, vderiv0, ScalarT{iqmax0}))
+                                        : ZERO<RealT>;
         const RealT   iqbase0     = Math::clamp(Kvp_ * epiv0 + xpiv0, -iqmax0, iqmax0);
-        const RealT   iqcmd_check = Math::clamp(q_on_ * iqbase0 + q_off_ * qv0 + iqv0, -iqmax0, iqmax0);
+        const RealT   iqraw_check = (QFlag_ ? iqbase0 : qv0) + iqv0;
+        const RealT   iqcmd_check = Math::clamp(iqraw_check, -iqmax0, iqmax0);
         const RealT   ipcmd_check = Math::clamp(pord0 / vmeas_safe0, ZERO<RealT>, ipmax0);
 
         if (!std::isfinite(imax) || !std::isfinite(ilmax0) || !std::isfinite(ilcap0)
@@ -528,55 +591,106 @@ namespace GridKit
             || !std::isfinite(qext0_port) || !std::isfinite(pfaref0) || !std::isfinite(eq0)
             || !std::isfinite(xpiq0) || !std::isfinite(epiv0) || !std::isfinite(xpiv0)
             || !std::isfinite(qv0) || !std::isfinite(qrate0) || !std::isfinite(vrate0)
+            || !std::isfinite(iqbase0) || !std::isfinite(iqraw_check)
             || !std::isfinite(iqcmd_check) || !std::isfinite(ipcmd_check))
         {
           Log::error() << "Reecb: initialization produced a nonfinite value\n";
-          return 1;
+          return false;
         }
         if (std::abs(qrate0) > INITIALIZATION_TOLERANCE || std::abs(vrate0) > INITIALIZATION_TOLERANCE)
         {
           Log::error() << "Reecb: controller state rate is nonzero at initialization\n";
-          return 1;
+          return false;
         }
         if (std::abs(iqcmd_check - iqcmd0) > INITIALIZATION_TOLERANCE
             || std::abs(ipcmd_check - ipcmd0) > INITIALIZATION_TOLERANCE)
         {
           Log::error() << "Reecb: current-command limiter reconstruction is inexact\n";
-          return 1;
+          return false;
         }
 
-        const bool q_adjusted    = qmin != Qmin_ || qmax != Qmax_;
-        const bool v_adjusted    = vmin != Vmin_ || vmax != Vmax_;
-        const bool p_adjusted    = pmin != Pmin_ || pmax != Pmax_;
-        const bool imax_adjusted = imax != Imax_;
+        point.variables[VMEAS]  = vmeas0;
+        point.variables[PMEAS]  = pmeas0;
+        point.variables[XPIQ]   = xpiq0;
+        point.variables[XPIV]   = xpiv0;
+        point.variables[QV]     = qv0;
+        point.variables[PORD]   = pord0;
+        point.variables[VT]     = vt0;
+        point.variables[VSAFE]  = vmeas_safe0;
+        point.variables[SDIP]   = sdip0;
+        point.variables[IQV]    = iqv0;
+        point.variables[QREF]   = qref0;
+        point.variables[EQ]     = eq0;
+        point.variables[VPIQ]   = vpiq0;
+        point.variables[EPIV]   = epiv0;
+        point.variables[RPORD]  = ZERO<RealT>;
+        point.variables[ILMAX]  = ilmax0;
+        point.variables[ILCAP]  = ilcap0;
+        point.variables[IQMAX]  = iqmax0;
+        point.variables[IPMAX]  = ipmax0;
+        point.variables[IQBASE] = iqbase0;
+        point.variables[IQRAW]  = iqraw_check;
+        point.signals[PE]       = pe0_system;
+        point.signals[QGEN]     = qgen0_system;
+        point.signals[QEXT]     = qext0_port;
+        point.signals[PFAREF]   = pfaref0;
+        point.signals[PREF]     = pref0_system;
 
-        Qmin_ = qmin;
-        Qmax_ = qmax;
-        Vmin_ = vmin;
-        Vmax_ = vmax;
-        Pmin_ = pmin;
-        Pmax_ = pmax;
-        Imax_ = imax;
+        point.qmin = qmin;
+        point.qmax = qmax;
+        point.vmin = vmin;
+        point.vmax = vmax;
+        point.pmin = pmin;
+        point.pmax = pmax;
+        point.imax = imax;
+        point.vref = vref0;
+        return true;
+      }
 
-        y[VMEAS] = vmeas0;
-        y[PMEAS] = pmeas0;
-        y[XPIQ]  = xpiq0;
-        y[XPIV]  = xpiv0;
-        y[QV]    = qv0;
-        y[PORD]  = pord0;
-        y[VT]    = vt0;
-        y[ILMAX] = ilmax0;
+      /**
+       * @brief Commit a validated initial point and publish unknown references
+       *
+       * @param[in] point Complete candidate produced by buildInitialPoint().
+       */
+      template <typename scalar_type, typename index_type>
+      void Reecb<scalar_type, index_type>::commitInitialPoint(const InitialPoint& point)
+      {
+        const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
+        const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
+        const auto QEXT   = static_cast<size_t>(ReecbExternalVariables::QEXT);
+        const auto PFAREF = static_cast<size_t>(ReecbExternalVariables::PFAREF);
+        const auto PREF   = static_cast<size_t>(ReecbExternalVariables::PREF);
+
+        const bool q_adjusted    = point.qmin != Qmin_ || point.qmax != Qmax_;
+        const bool v_adjusted    = point.vmin != Vmin_ || point.vmax != Vmax_;
+        const bool p_adjusted    = point.pmin != Pmin_ || point.pmax != Pmax_;
+        const bool imax_adjusted = point.imax != Imax_;
+
+        Qmin_ = point.qmin;
+        Qmax_ = point.qmax;
+        Vmin_ = point.vmin;
+        Vmax_ = point.vmax;
+        Pmin_ = point.pmin;
+        Pmax_ = point.pmax;
+        Imax_ = point.imax;
+
+        auto* y = y_.getData();
+        // IQCMD and IPCMD are owned initial inputs and are not in this array.
+        for (size_t entry = 0; entry < point.variables.size(); ++entry)
+        {
+          y[entry] = static_cast<ScalarT>(point.variables[entry]);
+        }
 
         if (!Vref0_given_)
         {
-          Vref0_ = vref0;
+          Vref0_ = point.vref;
         }
 
-        pe_set_     = static_cast<ScalarT>(pe0_system);
-        qgen_set_   = static_cast<ScalarT>(qgen0_system);
-        qext_set_   = static_cast<ScalarT>(qext0_port);
-        pfaref_set_ = static_cast<ScalarT>(pfaref0);
-        pref_set_   = static_cast<ScalarT>(pref0_system);
+        pe_set_     = static_cast<ScalarT>(point.signals[PE]);
+        qgen_set_   = static_cast<ScalarT>(point.signals[QGEN]);
+        qext_set_   = static_cast<ScalarT>(point.signals[QEXT]);
+        pfaref_set_ = static_cast<ScalarT>(point.signals[PFAREF]);
+        pref_set_   = static_cast<ScalarT>(point.signals[PREF]);
 
         if (signals_.template isAttached<ReecbExternalVariables::QEXT>())
         {
@@ -610,7 +724,6 @@ namespace GridKit
 
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
-        return 0;
       }
 
       /**
@@ -746,8 +859,8 @@ namespace GridKit
        *
        * The branch-free equation body preserves a fixed dependency structure;
        * parameter-selected paths enter through selector masks resolved by
-       * setDerivedParameters(). The `ILMAX` row uses a smooth signed-square
-       * continuation, while a smooth magnitude supplies the limiter bounds.
+       * setDerivedParameters(). Explicit algebraic rows expose each downstream
+       * block output and the regularized current-circle continuation.
        *
        * @param[in] y Internal variables.
        * @param[in] yp Internal variable derivatives.
@@ -764,16 +877,29 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
-        const auto VMEAS = static_cast<size_t>(ReecbInternalVariables::VMEAS);
-        const auto PMEAS = static_cast<size_t>(ReecbInternalVariables::PMEAS);
-        const auto XPIQ  = static_cast<size_t>(ReecbInternalVariables::XPIQ);
-        const auto XPIV  = static_cast<size_t>(ReecbInternalVariables::XPIV);
-        const auto QV    = static_cast<size_t>(ReecbInternalVariables::QV);
-        const auto PORD  = static_cast<size_t>(ReecbInternalVariables::PORD);
-        const auto VT    = static_cast<size_t>(ReecbInternalVariables::VT);
-        const auto ILMAX = static_cast<size_t>(ReecbInternalVariables::ILMAX);
-        const auto IQCMD = static_cast<size_t>(ReecbInternalVariables::IQCMD);
-        const auto IPCMD = static_cast<size_t>(ReecbInternalVariables::IPCMD);
+        const auto VMEAS  = static_cast<size_t>(ReecbInternalVariables::VMEAS);
+        const auto PMEAS  = static_cast<size_t>(ReecbInternalVariables::PMEAS);
+        const auto XPIQ   = static_cast<size_t>(ReecbInternalVariables::XPIQ);
+        const auto XPIV   = static_cast<size_t>(ReecbInternalVariables::XPIV);
+        const auto QV     = static_cast<size_t>(ReecbInternalVariables::QV);
+        const auto PORD   = static_cast<size_t>(ReecbInternalVariables::PORD);
+        const auto VT     = static_cast<size_t>(ReecbInternalVariables::VT);
+        const auto VSAFE  = static_cast<size_t>(ReecbInternalVariables::VSAFE);
+        const auto SDIP   = static_cast<size_t>(ReecbInternalVariables::SDIP);
+        const auto IQV    = static_cast<size_t>(ReecbInternalVariables::IQV);
+        const auto QREF   = static_cast<size_t>(ReecbInternalVariables::QREF);
+        const auto EQ     = static_cast<size_t>(ReecbInternalVariables::EQ);
+        const auto VPIQ   = static_cast<size_t>(ReecbInternalVariables::VPIQ);
+        const auto EPIV   = static_cast<size_t>(ReecbInternalVariables::EPIV);
+        const auto RPORD  = static_cast<size_t>(ReecbInternalVariables::RPORD);
+        const auto ILMAX  = static_cast<size_t>(ReecbInternalVariables::ILMAX);
+        const auto ILCAP  = static_cast<size_t>(ReecbInternalVariables::ILCAP);
+        const auto IQMAX  = static_cast<size_t>(ReecbInternalVariables::IQMAX);
+        const auto IPMAX  = static_cast<size_t>(ReecbInternalVariables::IPMAX);
+        const auto IQBASE = static_cast<size_t>(ReecbInternalVariables::IQBASE);
+        const auto IQRAW  = static_cast<size_t>(ReecbInternalVariables::IQRAW);
+        const auto IQCMD  = static_cast<size_t>(ReecbInternalVariables::IQCMD);
+        const auto IPCMD  = static_cast<size_t>(ReecbInternalVariables::IPCMD);
 
         const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
         const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
@@ -788,7 +914,20 @@ namespace GridKit
         const ScalarT qv           = y[QV];
         const ScalarT pord         = y[PORD];
         const ScalarT vt           = y[VT];
+        const ScalarT vsafe        = y[VSAFE];
+        const ScalarT sdip         = y[SDIP];
+        const ScalarT iqv          = y[IQV];
+        const ScalarT qref         = y[QREF];
+        const ScalarT eq           = y[EQ];
+        const ScalarT vpiq         = y[VPIQ];
+        const ScalarT epiv         = y[EPIV];
+        const ScalarT rpord        = y[RPORD];
         const ScalarT ilmax        = y[ILMAX];
+        const ScalarT ilcap        = y[ILCAP];
+        const ScalarT iqmax        = y[IQMAX];
+        const ScalarT ipmax        = y[IPMAX];
+        const ScalarT iqbase       = y[IQBASE];
+        const ScalarT iqraw        = y[IQRAW];
         const ScalarT iqcmd_system = y[IQCMD];
         const ScalarT ipcmd_system = y[IPCMD];
 
@@ -810,37 +949,45 @@ namespace GridKit
         const ScalarT iqcmd  = toComponentBase(iqcmd_system);
         const ScalarT ipcmd  = toComponentBase(ipcmd_system);
 
-        const ScalarT vmeas_safe = Math::max(vmeas, VMEAS_MINIMUM);
-        const ScalarT sdip       = Math::inside(vt, Vdip_, Vup_);
-        const ScalarT verr       = Math::deadband2(Vref0_ - vmeas, dbd1_, dbd2_);
-        const ScalarT iqv        = Math::clamp(kqv_ * verr, Iql1_, Iqh1_);
+        const ScalarT verr        = Math::deadband2(Vref0_ - vmeas, dbd1_, dbd2_);
+        const ScalarT q_pi_state  = Kqp_ * eq + xpiq;
+        const ScalarT v_pi_state  = Kvp_ * epiv + xpiv;
+        const ScalarT fpord       = (pref - pord) / Tpord_;
+        const ScalarT ilnorm      = std::sqrt(ilmax * ilmax + INITIALIZATION_TOLERANCE);
+        const ScalarT high        = pq_on_ * ipcmd + pq_off_ * iqcmd;
+        const ScalarT q_pi_rate   = q_pi_on_ * sdip * Math::antiwindup(q_pi_state, Kqi_ * eq, Vmin_, Vmax_);
+        const ScalarT v_pi_rate   = q_on_ * sdip * awband(v_pi_state, Kvi_ * epiv, iqmax);
+        const ScalarT qv_rate     = q_off_ * sdip * (qref / vsafe - qv) / Tiq_;
+        const ScalarT pord_rate   = sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
+        const ScalarT iqv_target  = Math::clamp(kqv_ * verr, Iql1_, Iqh1_);
         // The Volt/VAr channel is a system-base reactive power unless
         // direct-voltage mode selects it as a terminal-voltage reference,
         // which takes no power-base conversion.
-        const ScalarT qref       = q_ref_on_ * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * toComponentBase(extref));
-        const ScalarT eq         = Math::clamp(qref, Qmin_, Qmax_) - qgen;
-        const ScalarT vpiq       = Math::clamp(Kqp_ * eq + xpiq, Vmin_, Vmax_);
-        const ScalarT epiv       = q_pi_on_ * vpiq + v_ref_on_ * extref - q_on_ * vmeas;
-        const ScalarT fpord      = (pref - pord) / Tpord_;
-        const ScalarT rpord      = aslew(fpord, dPmin_, dPmax_);
-        const ScalarT ilnorm     = std::sqrt(ilmax * ilmax + INITIALIZATION_TOLERANCE);
-        const ScalarT ilcap      = (ilmax / ilnorm) * ilmax;
-        const ScalarT high       = pq_on_ * ipcmd + pq_off_ * iqcmd;
-        const ScalarT iqmax      = pq_on_ * ilcap + pq_off_ * Imax_;
-        const ScalarT ipmax      = pq_on_ * Imax_ + pq_off_ * ilcap;
-        const ScalarT iqbase     = Math::clamp(Kvp_ * epiv + xpiv, -iqmax, iqmax);
-        const ScalarT iqraw      = q_on_ * iqbase + q_off_ * qv + iqv;
+        const ScalarT qref_target = q_ref_on_ * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * toComponentBase(extref));
 
-        f[VMEAS] = -vmeas_dot + (vt - vmeas) / Trv_;
-        f[PMEAS] = -pmeas_dot + (pe - pmeas) / Tp_;
-        f[XPIQ]  = -xpiq_dot + q_pi_on_ * sdip * Math::antiwindup(Kqp_ * eq + xpiq, Kqi_ * eq, Vmin_, Vmax_);
-        f[XPIV]  = -xpiv_dot + q_on_ * sdip * awband(Kvp_ * epiv + xpiv, Kvi_ * epiv, iqmax);
-        f[QV]    = -qv_dot + q_off_ * sdip * (qref / vmeas_safe - qv) / Tiq_;
-        f[PORD]  = -pord_dot + sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
-        f[VT]    = -vt * vt + vr * vr + vi * vi;
-        f[ILMAX] = -ilmax * ilnorm + (Imax_ - high) * (Imax_ + high);
-        f[IQCMD] = -iqcmd + Math::clamp(iqraw, -iqmax, iqmax);
-        f[IPCMD] = -ipcmd + Math::clamp(pord / vmeas_safe, ZERO<RealT>, ipmax);
+        f[VMEAS]  = -vmeas_dot + (vt - vmeas) / Trv_;
+        f[PMEAS]  = -pmeas_dot + (pe - pmeas) / Tp_;
+        f[XPIQ]   = -xpiq_dot + q_pi_rate;
+        f[XPIV]   = -xpiv_dot + v_pi_rate;
+        f[QV]     = -qv_dot + qv_rate;
+        f[PORD]   = -pord_dot + pord_rate;
+        f[VT]     = -vt * vt + vr * vr + vi * vi;
+        f[VSAFE]  = -vsafe + Math::max(vmeas, VMEAS_MINIMUM);
+        f[SDIP]   = -sdip + Math::inside(vt, Vdip_, Vup_);
+        f[IQV]    = -iqv + iqv_target;
+        f[QREF]   = -qref + qref_target;
+        f[EQ]     = -eq + Math::clamp(qref, Qmin_, Qmax_) - qgen;
+        f[VPIQ]   = -vpiq + Math::clamp(q_pi_state, Vmin_, Vmax_);
+        f[EPIV]   = -epiv + q_pi_on_ * vpiq + v_ref_on_ * extref - q_on_ * vmeas;
+        f[RPORD]  = -rpord + aslew(fpord, dPmin_, dPmax_);
+        f[ILMAX]  = -ilmax * ilnorm + (Imax_ - high) * (Imax_ + high);
+        f[ILCAP]  = -ilcap + (ilmax / ilnorm) * ilmax;
+        f[IQMAX]  = -iqmax + pq_on_ * ilcap + pq_off_ * Imax_;
+        f[IPMAX]  = -ipmax + pq_on_ * Imax_ + pq_off_ * ilcap;
+        f[IQBASE] = -iqbase + Math::clamp(v_pi_state, -iqmax, iqmax);
+        f[IQRAW]  = -iqraw + q_on_ * iqbase + q_off_ * qv + iqv;
+        f[IQCMD]  = -iqcmd + Math::clamp(iqraw, -iqmax, iqmax);
+        f[IPCMD]  = -ipcmd + Math::clamp(pord / vsafe, ZERO<RealT>, ipmax);
 
         return 0;
       }
@@ -944,10 +1091,10 @@ namespace GridKit
        * @brief Bisect an initial-limit interval to machine rounding
        *
        * The upper endpoint is returned because initialization needs the first
-       * not-below point; the caller separately validates that point as finite
-       * and feasible. A finite floating-point interval contains finitely many
-       * representable values, so the loop terminates when no interior midpoint
-       * remains.
+       * not-below point; solveInitialLimit() separately validates that point as
+       * finite and feasible. A finite floating-point interval contains finitely
+       * many representable values, so the loop terminates when no interior
+       * midpoint remains.
        *
        * @tparam FuncT Monotone predicate type.
        * @param[in] a Lower endpoint, where `below` is true.
@@ -986,32 +1133,48 @@ namespace GridKit
       /**
        * @brief Solve the smallest initial total-current limit
        *
+       * The regularized current-circle row provides slightly less off-axis
+       * capacity than the ideal circle at a fixed total-current limit. This
+       * routine therefore raises the configured limit only when needed to
+       * reproduce the initial commands. An analytic inverse supplies the first
+       * upper candidate; overflow-safe expansion and bisection then find the
+       * first representable feasible limit.
+       *
+       * For candidate total limit @f$I@f$, priority-axis command @f$h@f$, and
+       * required off-axis capacity @f$\ell@f$, the nonnegative continuation
+       * @f$x@f$ solves
+       * @f[
+       *   x\sqrt{x^2+\epsilon_0}=(I-h)(I+h),
+       * @f]
+       * and feasibility requires
+       * @f[
+       *   x^2/\sqrt{x^2+\epsilon_0}\ge \ell.
+       * @f]
+       *
        * @param[in] lower Lower bound for the component-base total-current limit.
        * @param[in] high Priority-axis current command on the component base.
        * @param[in] low Required off-axis capacity on the component base.
-       * @return Smallest representable feasible component-base limit at or above
-       *         `lower`, or a quiet NaN when no finite limit is found.
+       * @return The mutually consistent total limit, continuation state, and
+       *         off-axis capacity, or `std::nullopt` when no finite feasible
+       *         limit is found.
        * @pre The arguments are finite and nonnegative, with `lower >= high` and
        *      `lower >= low`.
        * @warning This function contains conditional branching and may be used
        *          during initialization, but not during residual evaluation.
        */
       template <typename scalar_type, typename index_type>
-      typename Reecb<scalar_type, index_type>::RealT
-      Reecb<scalar_type, index_type>::solveInitialLimit(
-          RealT lower, RealT high, RealT low)
+      auto Reecb<scalar_type, index_type>::solveInitialLimit(
+          RealT lower, RealT high, RealT low) -> std::optional<InitialCurrentLimit>
       {
-        const RealT nan = std::numeric_limits<RealT>::quiet_NaN();
-
         const RealT ilmax = circleState(lower, high);
         const RealT ilcap = capacity(ilmax);
         if (!std::isfinite(ilcap))
         {
-          return nan;
+          return std::nullopt;
         }
         if (!(ilcap < low))
         {
-          return lower;
+          return InitialCurrentLimit{lower, ilmax, ilcap};
         }
 
         const auto below = [high, low](RealT limit)
@@ -1043,7 +1206,7 @@ namespace GridKit
         }
         if (!(a < b))
         {
-          return nan;
+          return std::nullopt;
         }
 
         while (below(b))
@@ -1051,7 +1214,7 @@ namespace GridKit
           a = b;
           if (b >= maximum)
           {
-            return nan;
+            return std::nullopt;
           }
           if (b > maximum / TWO<RealT>)
           {
@@ -1069,9 +1232,9 @@ namespace GridKit
         if (!std::isfinite(result) || !std::isfinite(final_state)
             || !std::isfinite(final_cap) || final_cap < low)
         {
-          return nan;
+          return std::nullopt;
         }
-        return result;
+        return InitialCurrentLimit{result, final_state, final_cap};
       }
 
       /**

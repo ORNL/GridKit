@@ -6,20 +6,17 @@ inverter-coupled resource.
 
 ## Notes
 
-- Current commands and power signals are on system base.
-- Internal control states and the reactive-power, active-power, and current
-  limits are on REECB component base.
-- REECB uses `mva` as its component power base.
 - In direct-voltage mode ($s_Q=1$, $s_V=0$) `qext` carries a terminal-voltage
   reference instead of a system-base reactive power.
-- REECB contributes no bus current injection.
-- GridKit does not apply generator-level Governor Response Limits to `Pmin` or
-  `Pmax`.
 
 > [!WARNING]
 > GridKit does not yet inherit `mva` from the associated REGCA model. Set it
 > explicitly to the REGCA component base; omitting it falls back to the system
 > base and is correct only when those bases match.[^reecb-mva-base]
+
+> [!WARNING]
+> GridKit does not yet apply the associated generator's Governor Response Limits
+> modes `Down Only` and `Fixed` to REECB.
 
 ## Block Diagram
 
@@ -30,9 +27,9 @@ Figure 1: REECB electrical-control model. Figure courtesy of the
 
 ## Model Parameters
 
-Symbol                              | Units     | JSON     | Description                                             | Typical Value | Note
+Symbol                              | Units     | JSON     | Description                                             | Default       | Note
 ------------------------------------|-----------|----------|---------------------------------------------------------|---------------|-----
-$S^\mathrm{base}$                   | [MVA]     | `mva`    | REECB component power base                              | 100.0         | System power base when omitted
+$S^\mathrm{base}$                   | [MVA]     | `mva`    | REECB component power base                              | System base   | Explicit values must be positive
 $s_\mathrm{pf}$                     | [boolean] | `PfFlag` | Power-factor control selector                           | `false`       | `true` = power-factor control, `false` = reactive-power control
 $s_V$                               | [boolean] | `VFlag`  | Voltage-reference selector under $s_Q=1$                | `false`       | `true` = cascaded Q-PI voltage command, `false` = direct external voltage reference
 $s_Q$                               | [boolean] | `QFlag`  | Reactive-path selector                                  | `false`       | `true` = Volt/VAr PI control, `false` = reactive-current lag
@@ -63,8 +60,8 @@ $P^{\max}$                          | [p.u.]    | `Pmax`   | Maximum active-powe
 $P^{\min}$                          | [p.u.]    | `Pmin`   | Minimum active-power order                              | 0.0           |
 $I^{\max}$                          | [p.u.]    | `Imax`   | Maximum converter current                               | 1.3           |
 
-All parameters are optional. An omitted parameter starts from its Typical
-Value; the time-constant floor below is then applied. Real-valued parameters
+All parameters are optional. An omitted parameter starts from its listed
+default; the time-constant floor below is then applied. Real-valued parameters
 accept real or integer JSON values; selectors require Boolean JSON values.
 
 ### Parameter Validation
@@ -144,12 +141,25 @@ $P^\mathrm{ord}$        | [p.u.] | Filtered active-power order         | State 6
 
 #### Algebraic
 
-Symbol               | Units  | Description                                   | Note
----------------------|--------|-----------------------------------------------|-----
-$V_T$                | [p.u.] | Terminal voltage magnitude                    |
-$I_L^{\max}$         | [p.u.] | Current-circle continuation state             | Component base
-$I_q^\mathrm{cmd}$   | [p.u.] | Reactive-current command output               | System base
-$I_p^\mathrm{cmd}$   | [p.u.] | Active-current command output                 | System base
+Symbol                       | Units    | Description                                   | Note
+-----------------------------|----------|-----------------------------------------------|-----
+$V_T$                        | [p.u.]   | Terminal voltage magnitude                    |
+$V_\mathrm{safe}^\mathrm{meas}$ | [p.u.]   | Safe measured voltage                         |
+$s_\mathrm{dip}$            | [-]      | Voltage-band gate                             |
+$I_q^\mathrm{inj}$          | [p.u.]   | Reactive-current injection                    | Component base
+$Q^\mathrm{ref}$            | [p.u.]   | Reactive-power reference                      | Component base
+$e_Q$                        | [p.u.]   | Reactive-power error                          | Component base
+$V_Q^\mathrm{PI}$           | [p.u.]   | Reactive-power PI output                      |
+$e_V^\mathrm{PI}$           | [p.u.]   | Voltage-control error                         |
+$r_P^\mathrm{ord}$          | [p.u./s] | Limited active-power order rate               | Component base
+$I_L^{\max}$                | [p.u.]   | Current-circle continuation state             | Component base
+$I_L^\mathrm{cap}$          | [p.u.]   | Off-axis current capacity                     | Component base
+$I_q^{\max}$                | [p.u.]   | Reactive-current limit                        | Component base
+$I_p^{\max}$                | [p.u.]   | Active-current limit                          | Component base
+$I_q^\mathrm{base}$         | [p.u.]   | Voltage-controller current                    | Component base
+$I_q^\mathrm{raw}$          | [p.u.]   | Pre-limit reactive-current command            | Component base
+$I_q^\mathrm{cmd}$          | [p.u.]   | Reactive-current command output               | System base
+$I_p^\mathrm{cmd}$          | [p.u.]   | Active-current command output                 | System base
 
 ### External Variables
 
@@ -171,33 +181,9 @@ $P^\mathrm{ref}$       | [p.u.] | Unknown | External active-power reference     
 
 ## Model Equations
 
-For readability, define:
+### Internal Equations
 
-```math
-\begin{aligned}
-  V_\mathrm{safe}^\mathrm{meas} &= \text{max}(V^\mathrm{meas},0.01) \\
-  s_\mathrm{dip} &= \text{inside}(V_T;\,V_\mathrm{dip},V_\mathrm{up}) \\
-  e_V^\mathrm{db} &= \text{deadband2}(V^\mathrm{ref}-V^\mathrm{meas};\,D_1^\mathrm{db},D_2^\mathrm{db}) \\
-  I_q^\mathrm{inj} &= \text{clamp}(K_\mathrm{qv}e_V^\mathrm{db};\,I_{q,\mathrm{inj}}^{\min},I_{q,\mathrm{inj}}^{\max}) \\
-  Q^\mathrm{ref} &= s_Q^\mathrm{ref}(s_\mathrm{pf}P^\mathrm{meas}\tan(\phi^\mathrm{ref})+s_\mathrm{pf}^\mathrm{off}k_\mathrm{base}Q^\mathrm{ext}) \\
-  e_Q &= \text{clamp}(Q^\mathrm{ref};\,Q^{\min},Q^{\max})-k_\mathrm{base}Q^\mathrm{gen} \\
-  V_Q^\mathrm{PI} &= \text{clamp}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}) \\
-  e_V^\mathrm{PI} &= s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
-  f_P^\mathrm{ord} &= \dfrac{1}{T_\mathrm{pord}}(k_\mathrm{base}P^\mathrm{ref}-P^\mathrm{ord}) \\
-  r_P^\mathrm{ord} &= \text{aslew}(f_P^\mathrm{ord};\,R_P^{\min},R_P^{\max}) \\
-  N_L &= \sqrt{(I_L^{\max})^2+\epsilon_0},\qquad I_L^\mathrm{cap}=\dfrac{(I_L^{\max})^2}{N_L} \\
-  I_q^{\max} &= s_\mathrm{pq}I_L^\mathrm{cap}+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
-  I_p^{\max} &= s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}I_L^\mathrm{cap} \\
-  I_q^\mathrm{base} &= \text{clamp}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}) \\
-  I_q^\mathrm{raw} &= s_QI_q^\mathrm{base}+s_Q^\mathrm{off}Q_V+I_q^\mathrm{inj}.
-\end{aligned}
-```
-
-CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup) and
-[smooth limiter](../../../../CommonMath.md#derived-functions) functions used in
-these equations. [Appendix B](#appendix-b-aslew) defines `aslew`.
-
-### Differential Equations
+#### Differential
 
 ```math
 \begin{aligned}
@@ -210,19 +196,45 @@ these equations. [Appendix B](#appendix-b-aslew) defines `aslew`.
 \end{aligned}
 ```
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
   0 &= -V_T^2+V_\mathrm{r}^2+V_\mathrm{i}^2 \\
-  0 &= -I_L^{\max}N_L+(I^{\max})^2-s_\mathrm{pq}(k_\mathrm{base}I_p^\mathrm{cmd})^2-s_\mathrm{pq}^\mathrm{off}(k_\mathrm{base}I_q^\mathrm{cmd})^2 \\
+  0 &= -V_\mathrm{safe}^\mathrm{meas}+\text{max}(V^\mathrm{meas},0.01) \\
+  0 &= -s_\mathrm{dip}+\text{inside}(V_T;\,V_\mathrm{dip},V_\mathrm{up}) \\
+  0 &= -I_q^\mathrm{inj}+\text{clamp}\!\left(K_\mathrm{qv}\text{deadband2}(V^\mathrm{ref}-V^\mathrm{meas};\,D_1^\mathrm{db},D_2^\mathrm{db});\,I_{q,\mathrm{inj}}^{\min},I_{q,\mathrm{inj}}^{\max}\right) \\
+  0 &= -Q^\mathrm{ref}+s_Q^\mathrm{ref}\left(s_\mathrm{pf}P^\mathrm{meas}\tan(\phi^\mathrm{ref})+s_\mathrm{pf}^\mathrm{off}k_\mathrm{base}Q^\mathrm{ext}\right) \\
+  0 &= -e_Q+\text{clamp}(Q^\mathrm{ref};\,Q^{\min},Q^{\max})-k_\mathrm{base}Q^\mathrm{gen} \\
+  0 &= -V_Q^\mathrm{PI}+\text{clamp}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}) \\
+  0 &= -e_V^\mathrm{PI}+s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
+  0 &= -r_P^\mathrm{ord}+\text{aslew}\!\left(\dfrac{k_\mathrm{base}P^\mathrm{ref}-P^\mathrm{ord}}{T_\mathrm{pord}};\,R_P^{\min},R_P^{\max}\right) \\
+  0 &= -I_L^{\max}\sqrt{(I_L^{\max})^2+\epsilon_0}+(I^{\max}-I^\mathrm{high})(I^{\max}+I^\mathrm{high}) \\
+  0 &= -I_L^\mathrm{cap}+\dfrac{(I_L^{\max})^2}{\sqrt{(I_L^{\max})^2+\epsilon_0}} \\
+  0 &= -I_q^{\max}+s_\mathrm{pq}I_L^\mathrm{cap}+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
+  0 &= -I_p^{\max}+s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}I_L^\mathrm{cap} \\
+  0 &= -I_q^\mathrm{base}+\text{clamp}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}) \\
+  0 &= -I_q^\mathrm{raw}+s_QI_q^\mathrm{base}+s_Q^\mathrm{off}Q_V+I_q^\mathrm{inj} \\
   0 &= -k_\mathrm{base}I_q^\mathrm{cmd}+\text{clamp}(I_q^\mathrm{raw};\,-I_q^{\max},I_q^{\max}) \\
   0 &= -k_\mathrm{base}I_p^\mathrm{cmd}+\text{clamp}\left(\dfrac{P^\mathrm{ord}}{V_\mathrm{safe}^\mathrm{meas}};\,0,I_p^{\max}\right).
 \end{aligned}
 ```
 
-Here $\epsilon_0=100\epsilon_\mathrm{machine}$ regularizes the `ILMAX` row at
-zero remaining capacity.
+Here
+$I^\mathrm{high}=s_\mathrm{pq}k_\mathrm{base}I_p^\mathrm{cmd}
++s_\mathrm{pq}^\mathrm{off}k_\mathrm{base}I_q^\mathrm{cmd}$ is the selected
+priority-axis current. GridKit forms that selection before the factored current-circle
+expression so the inactive command cannot introduce an overflow through a
+zero selector. The constant $\epsilon_0=100\epsilon_\mathrm{machine}$
+regularizes the `ILMAX` row at zero remaining capacity.
+
+CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup) and
+[smooth limiter](../../../../CommonMath.md#derived-functions) functions used in
+these equations. [Appendix B](#appendix-b-aslew) defines `aslew`.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -252,20 +264,50 @@ and $I_q=k_\mathrm{base}I_q^\mathrm{cmd}$ be the component-base commands.
   V^\mathrm{ref} &\leftarrow V_T,\quad \text{if omitted} \\
   V^\mathrm{meas} &\leftarrow V_T \\
   V_\mathrm{safe}^\mathrm{meas} &\leftarrow \text{max}(V^\mathrm{meas},0.01) \\
+  s_\mathrm{dip} &\leftarrow \text{inside}(V_T;\,V_\mathrm{dip},V_\mathrm{up}) \\
   P_e &\leftarrow V_\mathrm{safe}^\mathrm{meas}I_p^\mathrm{cmd},\quad \text{if unattached} \\
   Q^\mathrm{gen} &\leftarrow V_\mathrm{safe}^\mathrm{meas}I_q^\mathrm{cmd},\quad \text{if unattached} \\
   P^\mathrm{meas} &\leftarrow k_\mathrm{base}P_e \\
   e_V^\mathrm{db} &\leftarrow \text{deadband2}(V^\mathrm{ref}-V^\mathrm{meas};\,D_1^\mathrm{db},D_2^\mathrm{db}) \\
-  I_q^\mathrm{inj} &\leftarrow \text{clamp}(K_\mathrm{qv}e_V^\mathrm{db};\,I_{q,\mathrm{inj}}^{\min},I_{q,\mathrm{inj}}^{\max}) \\
-  I_L^{\max}N_L &\leftarrow (I^{\max})^2-s_\mathrm{pq}I_p^2-s_\mathrm{pq}^\mathrm{off}I_q^2,\qquad I_L^{\max}\ge0 \\
-  I_q^{\max} &\leftarrow s_\mathrm{pq}I_L^\mathrm{cap}+s_\mathrm{pq}^\mathrm{off}I^{\max},\qquad I_p^{\max}\leftarrow s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}I_L^\mathrm{cap}.
+  I_q^\mathrm{inj} &\leftarrow \text{clamp}(K_\mathrm{qv}e_V^\mathrm{db};\,I_{q,\mathrm{inj}}^{\min},I_{q,\mathrm{inj}}^{\max}).
 \end{aligned}
 ```
 
-Initialization raises $I^\max$ when needed to reproduce the supplied current
-commands; incompatible reactive-current injection is rejected. Q, V, and P
-limits are expanded as needed to include their initialized values, and each
-adjustment logs a warning.
+For current-limit initialization, let $I_q^\mathrm{need}$ be the magnitude
+required to invert the smooth reactive-current clamp, including its recovery
+margin when Volt/VAr control is active. The selected priority-axis command and
+required off-axis capacity are
+
+```math
+\begin{aligned}
+  h &= s_\mathrm{pq}I_p+s_\mathrm{pq}^\mathrm{off}|I_q| \\
+  \ell &= s_\mathrm{pq}I_q^\mathrm{need}+s_\mathrm{pq}^\mathrm{off}I_p.
+\end{aligned}
+```
+
+Starting at
+$I_0=\text{max}(I^\max,h,\ell,I_q^\mathrm{need})$, initialization finds the
+smallest representable $I\ge I_0$ for which a nonnegative continuation $x$
+satisfies
+
+```math
+\begin{aligned}
+  x\sqrt{x^2+\epsilon_0} &= (I-h)(I+h) \\
+  \dfrac{x^2}{\sqrt{x^2+\epsilon_0}} &\ge \ell.
+\end{aligned}
+```
+
+An analytic inverse supplies the first upper candidate. Overflow-safe bracket
+expansion and midpoint bisection then locate the first feasible floating-point
+limit; the final limit, continuation, and off-axis capacity are validated
+together. Initialization assigns $I^\max\leftarrow I$,
+$I_L^\max\leftarrow x$, and
+$I_L^\mathrm{cap}\leftarrow x^2/\sqrt{x^2+\epsilon_0}$. It then evaluates
+$I_q^\max$ and $I_p^\max$ from their algebraic equations. Incompatible current
+commands or reactive-current injection are rejected.
+
+Q, V, and P limits are expanded as needed to include their initialized values,
+and each adjustment logs a warning.
 
 ```math
 \begin{aligned}
@@ -318,7 +360,10 @@ adjustment logs a warning.
       \begin{cases}
         0 & s_Q=1 \\
         Q^\mathrm{ref}/V_\mathrm{safe}^\mathrm{meas} & s_Q=0
-      \end{cases}.
+      \end{cases} \\
+  I_q^\mathrm{base} &\leftarrow \text{clamp}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI};\,-I_q^\max,I_q^\max) \\
+  I_q^\mathrm{raw} &\leftarrow s_QI_q^\mathrm{base}+s_Q^\mathrm{off}Q_V+I_q^\mathrm{inj} \\
+  r_P^\mathrm{ord} &\leftarrow 0.
 \end{aligned}
 ```
 
@@ -367,9 +412,8 @@ Output  | Units  | Description                     | Note
 - `voltVarReferenceBase()` checks `qext` units.
 - `reactiveControl()` checks the reactive-control paths.
 - `activeCurrentControl()` checks active-current control and current priority.
-- `dependencyTracking()` checks sparse dependencies.
 - `jacobian()` compares the Enzyme and dependency-tracking Jacobians.
-- `regcaReecb()` checks REGCA-REECB signal wiring.
+- `regcaReecbRepca()` checks the public-signal REGCA-REECB-REPCA control loop.
 - `reecb()` checks construction through the production system-data path.
 
 ## Appendix A: `iclamp`

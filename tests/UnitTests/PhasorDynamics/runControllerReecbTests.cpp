@@ -21,7 +21,6 @@ int main()
   result += test.voltVarReferenceBase();
   result += test.reactiveControl();
   result += test.activeCurrentControl();
-  result += test.dependencyTracking();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif

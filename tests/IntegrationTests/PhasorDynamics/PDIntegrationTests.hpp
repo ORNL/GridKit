@@ -4,13 +4,11 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
-#include <GridKit/Model/PhasorDynamics/Controller/REECB/Reecb.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
-#include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
-#include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
@@ -724,43 +722,57 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// A finite plant-reference pulse moves the coupled REPCA, REECB, and
-      /// REGCA states, after which the closed loop returns to equilibrium.
+      /// A finite plant-reference pulse propagates through the public REPCA,
+      /// REECB, and REGCA signals before the closed loop returns to equilibrium.
       TestOutcome regcaReecbRepca()
       {
         using namespace GridKit::PhasorDynamics::Controller;
         using namespace GridKit::PhasorDynamics::Converter;
-        using ReecbVar = ReecbInternalVariables;
-        using RepcaVar = RepcaInternalVariables;
-        using RegcaVar = RegcaInternalVariables;
 
-        constexpr IdxT  RENEWABLE_BUS_ID       = static_cast<IdxT>(23);
-        constexpr IdxT  IPCMD_SIGNAL_ID        = static_cast<IdxT>(201);
-        constexpr IdxT  IQCMD_SIGNAL_ID        = static_cast<IdxT>(202);
-        constexpr IdxT  IBRANCHR_SIGNAL_ID     = static_cast<IdxT>(203);
-        constexpr IdxT  IBRANCHI_SIGNAL_ID     = static_cast<IdxT>(204);
-        constexpr IdxT  PBRANCH_SIGNAL_ID      = static_cast<IdxT>(205);
-        constexpr IdxT  QBRANCH_SIGNAL_ID      = static_cast<IdxT>(206);
-        constexpr IdxT  QEXT_SIGNAL_ID         = static_cast<IdxT>(207);
-        constexpr IdxT  PEXT_SIGNAL_ID         = static_cast<IdxT>(208);
-        constexpr IdxT  PLANT_PREF_SIGNAL_ID   = static_cast<IdxT>(209);
-        constexpr IdxT  REGCA_COMPONENT_ID     = static_cast<IdxT>(0);
-        constexpr IdxT  REECB_COMPONENT_ID     = static_cast<IdxT>(1);
-        constexpr IdxT  REPCA_COMPONENT_ID     = static_cast<IdxT>(2);
-        constexpr RealT COMPONENT_MVA          = static_cast<RealT>(50.0);
+        // Signal IDs are local graph keys. Their enum values only provide a
+        // compact set of unique identifiers; the numbers carry no model meaning.
+        enum class LoopSignal : size_t
+        {
+          IPCMD,
+          IQCMD,
+          IBRANCHR,
+          IBRANCHI,
+          PBRANCH,
+          QBRANCH,
+          QEXT,
+          PEXT,
+          PLANT_PREF,
+        };
+        const auto signalId = [](LoopSignal signal)
+        {
+          return static_cast<IdxT>(signal);
+        };
+
+        constexpr IdxT  RENEWABLE_BUS_ID       = static_cast<IdxT>(0);
+        constexpr RealT SYSTEM_MVA             = static_cast<RealT>(100.0);
+        // The 2:1 base ratio exercises each controller power-base conversion.
+        constexpr RealT COMPONENT_MVA          = SYSTEM_MVA / static_cast<RealT>(2.0);
+        // A nonzero interior operating point stays clear of controller limits.
         constexpr RealT INITIAL_ACTIVE_POWER   = static_cast<RealT>(0.4);
         constexpr RealT INITIAL_REACTIVE_POWER = static_cast<RealT>(0.05);
+        constexpr RealT FAST_TIME_CONSTANT     = static_cast<RealT>(0.02);
+        constexpr RealT PLANT_TIME_CONSTANT    = static_cast<RealT>(0.5);
         constexpr RealT REFERENCE_PULSE        = static_cast<RealT>(0.05);
-        constexpr RealT PULSE_END              = static_cast<RealT>(0.1);
-        constexpr RealT RESPONSE_TOLERANCE     = static_cast<RealT>(0.01);
-        constexpr RealT RECOVERY_HORIZON       = static_cast<RealT>(25.0);
-        constexpr RealT RECOVERY_MONITOR_STEP  = static_cast<RealT>(1.0 / 60.0);
+        // Five fast time constants let the perturbation propagate through the
+        // converter and electrical controller. One fifth of the pulse proves a
+        // material response without pinning an exact transient trajectory.
+        constexpr RealT PULSE_DURATION         = static_cast<RealT>(5.0) * FAST_TIME_CONSTANT;
+        constexpr RealT MINIMUM_RESPONSE       = REFERENCE_PULSE / static_cast<RealT>(5.0);
+        // Preserve the conservative fifty-plant-time-constant recovery window.
+        constexpr RealT RECOVERY_HORIZON       = static_cast<RealT>(50.0) * PLANT_TIME_CONSTANT;
+        // This is an output cadence; IDA still selects its internal steps.
+        constexpr RealT OUTPUT_INTERVAL        = ONE<RealT> / static_cast<RealT>(60.0);
         constexpr RealT RECOVERY_TOLERANCE     = static_cast<RealT>(1.0e-6);
 
         TestStatus success = true;
 
         SystemModelDataT data;
-        data.va_base = static_cast<RealT>(100.0e6);
+        data.va_base = SYSTEM_MVA * static_cast<RealT>(1.0e6);
 
         auto& bus    = data.bus.emplace_back();
         bus.bus_id   = RENEWABLE_BUS_ID;
@@ -768,29 +780,29 @@ namespace GridKit
         bus.Vr0      = ONE<RealT>;
         bus.Vi0      = ZERO<RealT>;
 
-        data.signal = {{"Active Current Command", IPCMD_SIGNAL_ID},
-                       {"Reactive Current Command", IQCMD_SIGNAL_ID},
-                       {"Branch Current Real", IBRANCHR_SIGNAL_ID},
-                       {"Branch Current Imaginary", IBRANCHI_SIGNAL_ID},
-                       {"Branch Active Power", PBRANCH_SIGNAL_ID},
-                       {"Branch Reactive Power", QBRANCH_SIGNAL_ID},
-                       {"Reactive Power Command", QEXT_SIGNAL_ID},
-                       {"Active Power Command", PEXT_SIGNAL_ID},
-                       {"Plant Active Power Reference", PLANT_PREF_SIGNAL_ID}};
+        data.signal = {{"Active Current Command", signalId(LoopSignal::IPCMD)},
+                       {"Reactive Current Command", signalId(LoopSignal::IQCMD)},
+                       {"Branch Current Real", signalId(LoopSignal::IBRANCHR)},
+                       {"Branch Current Imaginary", signalId(LoopSignal::IBRANCHI)},
+                       {"Branch Active Power", signalId(LoopSignal::PBRANCH)},
+                       {"Branch Reactive Power", signalId(LoopSignal::QBRANCH)},
+                       {"Reactive Power Command", signalId(LoopSignal::QEXT)},
+                       {"Active Power Command", signalId(LoopSignal::PEXT)},
+                       {"Plant Active Power Reference", signalId(LoopSignal::PLANT_PREF)}};
 
         auto& converter                                        = data.regca.emplace_back();
         converter.buses[RegcaBuses::bus]                       = RENEWABLE_BUS_ID;
-        converter.signal_inputs[RegcaSignalInputs::ipcmd]      = IPCMD_SIGNAL_ID;
-        converter.signal_inputs[RegcaSignalInputs::iqcmd]      = IQCMD_SIGNAL_ID;
-        converter.signal_outputs[RegcaSignalOutputs::ibranchr] = IBRANCHR_SIGNAL_ID;
-        converter.signal_outputs[RegcaSignalOutputs::ibranchi] = IBRANCHI_SIGNAL_ID;
-        converter.signal_outputs[RegcaSignalOutputs::pbranch]  = PBRANCH_SIGNAL_ID;
-        converter.signal_outputs[RegcaSignalOutputs::qbranch]  = QBRANCH_SIGNAL_ID;
+        converter.signal_inputs[RegcaSignalInputs::ipcmd]      = signalId(LoopSignal::IPCMD);
+        converter.signal_inputs[RegcaSignalInputs::iqcmd]      = signalId(LoopSignal::IQCMD);
+        converter.signal_outputs[RegcaSignalOutputs::ibranchr] = signalId(LoopSignal::IBRANCHR);
+        converter.signal_outputs[RegcaSignalOutputs::ibranchi] = signalId(LoopSignal::IBRANCHI);
+        converter.signal_outputs[RegcaSignalOutputs::pbranch]  = signalId(LoopSignal::PBRANCH);
+        converter.signal_outputs[RegcaSignalOutputs::qbranch]  = signalId(LoopSignal::QBRANCH);
         converter.parameters[RegcaParameters::p0]              = INITIAL_ACTIVE_POWER;
         converter.parameters[RegcaParameters::q0]              = INITIAL_REACTIVE_POWER;
         converter.parameters[RegcaParameters::mva]             = COMPONENT_MVA;
-        converter.parameters[RegcaParameters::Tg]              = static_cast<RealT>(0.02);
-        converter.parameters[RegcaParameters::TM]              = static_cast<RealT>(0.02);
+        converter.parameters[RegcaParameters::Tg]              = FAST_TIME_CONSTANT;
+        converter.parameters[RegcaParameters::TM]              = FAST_TIME_CONSTANT;
         converter.parameters[RegcaParameters::Rqmax]           = static_cast<RealT>(999.0);
         converter.parameters[RegcaParameters::Rqmin]           = static_cast<RealT>(-999.0);
         converter.parameters[RegcaParameters::Rpmax]           = static_cast<RealT>(999.0);
@@ -804,50 +816,52 @@ namespace GridKit
 
         auto& controller                                     = data.reecb.emplace_back();
         controller.buses[ReecbBuses::bus]                    = RENEWABLE_BUS_ID;
-        controller.signal_inputs[ReecbSignalInputs::pe]      = PBRANCH_SIGNAL_ID;
-        controller.signal_inputs[ReecbSignalInputs::qgen]    = QBRANCH_SIGNAL_ID;
-        controller.signal_inputs[ReecbSignalInputs::qext]    = QEXT_SIGNAL_ID;
-        controller.signal_inputs[ReecbSignalInputs::pref]    = PEXT_SIGNAL_ID;
-        controller.signal_outputs[ReecbSignalOutputs::ipcmd] = IPCMD_SIGNAL_ID;
-        controller.signal_outputs[ReecbSignalOutputs::iqcmd] = IQCMD_SIGNAL_ID;
+        controller.signal_inputs[ReecbSignalInputs::pe]      = signalId(LoopSignal::PBRANCH);
+        controller.signal_inputs[ReecbSignalInputs::qgen]    = signalId(LoopSignal::QBRANCH);
+        controller.signal_inputs[ReecbSignalInputs::qext]    = signalId(LoopSignal::QEXT);
+        controller.signal_inputs[ReecbSignalInputs::pref]    = signalId(LoopSignal::PEXT);
+        controller.signal_outputs[ReecbSignalOutputs::ipcmd] = signalId(LoopSignal::IPCMD);
+        controller.signal_outputs[ReecbSignalOutputs::iqcmd] = signalId(LoopSignal::IQCMD);
         controller.parameters[ReecbParameters::mva]          = COMPONENT_MVA;
-        controller.parameters[ReecbParameters::Trv]          = static_cast<RealT>(0.02);
-        controller.parameters[ReecbParameters::Tp]           = static_cast<RealT>(0.02);
+        controller.parameters[ReecbParameters::Trv]          = FAST_TIME_CONSTANT;
+        controller.parameters[ReecbParameters::Tp]           = FAST_TIME_CONSTANT;
         controller.parameters[ReecbParameters::Kvi]          = static_cast<RealT>(5.0);
         controller.parameters[ReecbParameters::QFlag]        = true;
         controller.parameters[ReecbParameters::VFlag]        = true;
 
         auto& plant                                    = data.repca.emplace_back();
         plant.buses[RepcaBuses::bus]                   = RENEWABLE_BUS_ID;
-        plant.signal_inputs[RepcaSignalInputs::ir]     = IBRANCHR_SIGNAL_ID;
-        plant.signal_inputs[RepcaSignalInputs::ii]     = IBRANCHI_SIGNAL_ID;
-        plant.signal_inputs[RepcaSignalInputs::p]      = PBRANCH_SIGNAL_ID;
-        plant.signal_inputs[RepcaSignalInputs::q]      = QBRANCH_SIGNAL_ID;
-        plant.signal_inputs[RepcaSignalInputs::pref]   = PLANT_PREF_SIGNAL_ID;
-        plant.signal_outputs[RepcaSignalOutputs::qext] = QEXT_SIGNAL_ID;
-        plant.signal_outputs[RepcaSignalOutputs::pext] = PEXT_SIGNAL_ID;
+        plant.signal_inputs[RepcaSignalInputs::ir]     = signalId(LoopSignal::IBRANCHR);
+        plant.signal_inputs[RepcaSignalInputs::ii]     = signalId(LoopSignal::IBRANCHI);
+        plant.signal_inputs[RepcaSignalInputs::p]      = signalId(LoopSignal::PBRANCH);
+        plant.signal_inputs[RepcaSignalInputs::q]      = signalId(LoopSignal::QBRANCH);
+        plant.signal_inputs[RepcaSignalInputs::pref]   = signalId(LoopSignal::PLANT_PREF);
+        plant.signal_outputs[RepcaSignalOutputs::qext] = signalId(LoopSignal::QEXT);
+        plant.signal_outputs[RepcaSignalOutputs::pext] = signalId(LoopSignal::PEXT);
         plant.parameters[RepcaParameters::mva]         = COMPONENT_MVA;
         plant.parameters[RepcaParameters::Freqflag]    = true;
         plant.parameters[RepcaParameters::Ddn]         = ZERO<RealT>;
         plant.parameters[RepcaParameters::Dup]         = ZERO<RealT>;
-        plant.parameters[RepcaParameters::Tp]          = static_cast<RealT>(0.02);
-        plant.parameters[RepcaParameters::Tlag]        = static_cast<RealT>(0.5);
+        plant.parameters[RepcaParameters::Tp]          = FAST_TIME_CONSTANT;
+        plant.parameters[RepcaParameters::Tlag]        = PLANT_TIME_CONSTANT;
 
-        auto& reference                                                 = data.constant_source.emplace_back();
-        reference.parameters[ConstantSignalSourceParameters::Sr]        = INITIAL_ACTIVE_POWER;
-        reference.signal_outputs[ConstantSignalSourceSignalOutputs::sr] = PLANT_PREF_SIGNAL_ID;
+        auto& reference                                          = data.constant_source.emplace_back();
+        reference.parameters[ConstantSignalSourceParameters::Sr] = INITIAL_ACTIVE_POWER;
+        reference.signal_outputs[ConstantSignalSourceSignalOutputs::sr] =
+            signalId(LoopSignal::PLANT_PREF);
 
         SystemModel<RealT, IdxT> system(data);
         success *= system.allocate() == 0;
 
-        auto* regca =
-            dynamic_cast<Regca<RealT, IdxT>*>(system.getComponent(REGCA_COMPONENT_ID));
-        auto* reecb =
-            dynamic_cast<Reecb<RealT, IdxT>*>(system.getComponent(REECB_COMPONENT_ID));
-        auto* repca =
-            dynamic_cast<Repca<RealT, IdxT>*>(system.getComponent(REPCA_COMPONENT_ID));
-        if (regca == nullptr || reecb == nullptr || repca == nullptr)
+        auto* pref_signal    = system.getSignal(signalId(LoopSignal::PLANT_PREF));
+        auto* pext_signal    = system.getSignal(signalId(LoopSignal::PEXT));
+        auto* qext_signal    = system.getSignal(signalId(LoopSignal::QEXT));
+        auto* ipcmd_signal   = system.getSignal(signalId(LoopSignal::IPCMD));
+        auto* pbranch_signal = system.getSignal(signalId(LoopSignal::PBRANCH));
+        if (pref_signal == nullptr || pext_signal == nullptr || qext_signal == nullptr
+            || ipcmd_signal == nullptr || pbranch_signal == nullptr)
         {
+          std::cout << "Renewable-control loop is missing a required signal\n";
           success = false;
           return success.report(__func__);
         }
@@ -856,73 +870,55 @@ namespace GridKit
         success *= ida.configureSimulation() == 0;
         success *= ida.initializeSimulation(ZERO<RealT>) == 0;
 
-        const auto pord_index = static_cast<size_t>(
-            reecb->getVariableIndex(static_cast<IdxT>(ReecbVar::PORD)));
-        const auto ipcmd_index = static_cast<size_t>(
-            reecb->getVariableIndex(static_cast<IdxT>(ReecbVar::IPCMD)));
-        const auto regca_ip_index = static_cast<size_t>(
-            regca->getVariableIndex(static_cast<IdxT>(RegcaVar::IP)));
-        const auto pext_index = static_cast<size_t>(
-            repca->getVariableIndex(static_cast<IdxT>(RepcaVar::PEXT)));
-
         const auto*              equilibrium_values = system.y().getData();
         const std::vector<RealT> equilibrium(
             equilibrium_values,
             equilibrium_values + static_cast<size_t>(system.y().getSize()));
 
-        success *= isEqual(static_cast<RealT>(system.getSignal(PLANT_PREF_SIGNAL_ID)->read()),
+        success *= isEqual(static_cast<RealT>(pref_signal->read()),
                            INITIAL_ACTIVE_POWER,
                            RECOVERY_TOLERANCE);
-        success *= isEqual(static_cast<RealT>(system.getSignal(PEXT_SIGNAL_ID)->read()),
+        success *= isEqual(static_cast<RealT>(pext_signal->read()),
                            INITIAL_ACTIVE_POWER,
                            RECOVERY_TOLERANCE);
-        success *= isEqual(static_cast<RealT>(system.getSignal(QEXT_SIGNAL_ID)->read()),
+        success *= isEqual(static_cast<RealT>(qext_signal->read()),
                            INITIAL_REACTIVE_POWER,
                            RECOVERY_TOLERANCE);
 
-        auto*       pref_signal = system.getSignal(PLANT_PREF_SIGNAL_ID);
-        const RealT pref0       = static_cast<RealT>(pref_signal->read());
+        const RealT pref0    = static_cast<RealT>(pref_signal->read());
+        const RealT pext0    = static_cast<RealT>(pext_signal->read());
+        const RealT ipcmd0   = static_cast<RealT>(ipcmd_signal->read());
+        const RealT pbranch0 = static_cast<RealT>(pbranch_signal->read());
 
         pref_signal->init(pref0 + REFERENCE_PULSE);
         success *= ida.initializeSimulation(ZERO<RealT>) == 0;
-        success *= ida.runSimulation(PULSE_END, RECOVERY_MONITOR_STEP) == 0;
+        success *= ida.runSimulation(PULSE_DURATION, OUTPUT_INTERVAL) == 0;
 
-        const auto* pulse_values      = system.y().getData();
-        const RealT pord_response     = pulse_values[pord_index] - equilibrium[pord_index];
-        const RealT ipcmd_response    = pulse_values[ipcmd_index] - equilibrium[ipcmd_index];
-        const RealT regca_ip_response = pulse_values[regca_ip_index] - equilibrium[regca_ip_index];
-        const RealT pext_response     = pulse_values[pext_index] - equilibrium[pext_index];
+        struct SignalResponse
+        {
+          const char* label;
+          RealT       value;
+        };
 
-        if (pext_response <= RESPONSE_TOLERANCE)
+        const std::array<SignalResponse, 3> responses{{
+            {"REPCA PEXT", static_cast<RealT>(pext_signal->read()) - pext0},
+            {"REECB IPCMD", static_cast<RealT>(ipcmd_signal->read()) - ipcmd0},
+            {"REGCA PBRANCH", static_cast<RealT>(pbranch_signal->read()) - pbranch0},
+        }};
+        for (const auto& response : responses)
         {
-          std::cout << "REPCA PEXT responded by only " << pext_response
-                    << " during the reference pulse\n";
-          success = false;
-        }
-
-        if (pord_response <= RESPONSE_TOLERANCE)
-        {
-          std::cout << "REECB PORD responded by only " << pord_response
-                    << " during the reference pulse\n";
-          success = false;
-        }
-        if (ipcmd_response <= RESPONSE_TOLERANCE)
-        {
-          std::cout << "REECB IPCMD responded by only " << ipcmd_response
-                    << " during the reference pulse\n";
-          success = false;
-        }
-        if (regca_ip_response <= RESPONSE_TOLERANCE)
-        {
-          std::cout << "REGCA IP responded by only " << regca_ip_response
-                    << " during the reference pulse\n";
-          success = false;
+          if (response.value <= MINIMUM_RESPONSE)
+          {
+            std::cout << response.label << " responded by only " << response.value
+                      << " during the reference pulse\n";
+            success = false;
+          }
         }
 
         pref_signal->init(pref0);
-        success *= ida.initializeSimulation(PULSE_END) == 0;
-        success *= ida.runSimulation(PULSE_END + RECOVERY_HORIZON,
-                                     RECOVERY_MONITOR_STEP)
+        success *= ida.initializeSimulation(PULSE_DURATION) == 0;
+        success *= ida.runSimulation(PULSE_DURATION + RECOVERY_HORIZON,
+                                     OUTPUT_INTERVAL)
                    == 0;
 
         const auto* final_values = system.y().getData();

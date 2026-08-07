@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <GridKit/CommonMath.hpp>
@@ -36,7 +37,20 @@ namespace GridKit
         QV,     ///< \f$Q_V\f$ Differential reactive-current command lag state on component base [p.u.]
         PORD,   ///< \f$P^\mathrm{ord}\f$ Differential filtered active-power order on component base [p.u.]
         VT,     ///< \f$V_T\f$ Algebraic terminal-voltage magnitude [p.u.]
+        VSAFE,  ///< \f$V_\mathrm{safe}^\mathrm{meas}\f$ Algebraic safe measured voltage [p.u.]
+        SDIP,   ///< \f$s_\mathrm{dip}\f$ Algebraic voltage-band gate [-]
+        IQV,    ///< \f$I_q^\mathrm{inj}\f$ Algebraic reactive-current injection on component base [p.u.]
+        QREF,   ///< \f$Q^\mathrm{ref}\f$ Algebraic reactive-power reference on component base [p.u.]
+        EQ,     ///< \f$e_Q\f$ Algebraic reactive-power error on component base [p.u.]
+        VPIQ,   ///< \f$V_Q^\mathrm{PI}\f$ Algebraic reactive-power PI output [p.u.]
+        EPIV,   ///< \f$e_V^\mathrm{PI}\f$ Algebraic voltage-control error [p.u.]
+        RPORD,  ///< \f$r_P^\mathrm{ord}\f$ Algebraic limited active-power order rate [p.u./s]
         ILMAX,  ///< \f$I_L^\max\f$ Algebraic current-circle continuation state on component base [p.u.]
+        ILCAP,  ///< \f$I_L^\mathrm{cap}\f$ Algebraic off-axis current capacity on component base [p.u.]
+        IQMAX,  ///< \f$I_q^\max\f$ Algebraic reactive-current limit on component base [p.u.]
+        IPMAX,  ///< \f$I_p^\max\f$ Algebraic active-current limit on component base [p.u.]
+        IQBASE, ///< \f$I_q^\mathrm{base}\f$ Algebraic voltage-controller current on component base [p.u.]
+        IQRAW,  ///< \f$I_q^\mathrm{raw}\f$ Algebraic pre-limit reactive-current command on component base [p.u.]
         IQCMD,  ///< \f$I_q^\mathrm{cmd}\f$ Algebraic reactive-current command output on system base [p.u.]
         IPCMD,  ///< \f$I_p^\mathrm{cmd}\f$ Algebraic active-current command output on system base [p.u.]
         MAXIMUM ///< Number of REECB internal variables and residual rows
@@ -124,6 +138,15 @@ namespace GridKit
             ScalarT*       f);
 
       private:
+        struct InitialPoint;
+
+        struct InitialCurrentLimit
+        {
+          RealT total_limit;
+          RealT continuation;
+          RealT off_axis_capacity;
+        };
+
         /// Smooth asymmetric slew-rate limiter.
         [[gnu::always_inline]] static inline ScalarT aslew(ScalarT rate, RealT lower, RealT upper);
 
@@ -141,7 +164,10 @@ namespace GridKit
         static RealT bisect(RealT a, RealT b, FuncT below);
 
         /// Solve the smallest feasible initial limit at or above `lower`.
-        static RealT solveInitialLimit(RealT lower, RealT high, RealT low);
+        static std::optional<InitialCurrentLimit> solveInitialLimit(RealT lower, RealT high, RealT low);
+
+        bool buildInitialPoint(InitialPoint& point);
+        void commitInitialPoint(const InitialPoint& point);
 
         void loadRealParameter(const ModelDataT& data,
                                ReecbParameters   parameter,
