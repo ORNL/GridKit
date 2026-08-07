@@ -1,5 +1,9 @@
 # Release Changelog
 
+## v0.3
+
+- Added Windows compatibility (G++, Clang, MSVC).
+
 ## v0.2
 
 - Added 3, 10, 37, and 39 bus test cases.
@@ -77,7 +81,6 @@
 - Added `REGCA` converter model implementation for PhasorDynamics.
 - Remove unnecessary data copying while evaluating `PowerElectronics` models, speeding up large simulations by up to 3x
 - Added `HYGOV` governor model implementation for PhasorDynamics.
-- Added Windows compatibility (G++, Clang, MSVC)
 
 ## v0.1
 
