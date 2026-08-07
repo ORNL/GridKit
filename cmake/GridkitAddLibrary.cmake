@@ -74,6 +74,15 @@ macro(gridkit_add_library target)
     target_include_directories(${target} ${gridkit_add_library_INCLUDE_DIRECTORIES})
   endif()
 
+  # add FORCE_INLINE macro
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_definitions(${target} INTERFACE FORCE_INLINE=[[gnu::always_inline]]\ inline)
+  elseif(MSVC)
+    target_compile_definitions(${target} INTERFACE FORCE_INLINE=[[msvc::forceinline]]\ inline)
+  else()
+    target_compile_definitions(${target} INTERFACE FORCE_INLINE=inline)
+  endif()
+
   # add compile options
   target_compile_features(${target} INTERFACE cxx_std_20)
   target_compile_options(${target} INTERFACE ${GRIDKIT_COMPILE_OPTIONS})

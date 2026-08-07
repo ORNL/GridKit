@@ -118,7 +118,7 @@ namespace GridKit
         return 2.0 * x;
       }
 
-      __attribute__((always_inline)) static void vectorFunction(IdxT N, ScalarT* x, ScalarT* y)
+      FORCE_INLINE static void vectorFunction(IdxT N, ScalarT* x, ScalarT* y)
       {
         for (IdxT idx = 0; idx < N; ++idx)
         {

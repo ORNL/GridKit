@@ -3,7 +3,7 @@ set(_rel_consumer_path ${GRIDKIT_EXAMPLES_INSTALL_ROOT}/GridKitConsumer)
 set(_abs_consumer_path ${CMAKE_INSTALL_PREFIX}/${_rel_consumer_path})
 
 # Install script as example of how to build and test consumer project
-install(PROGRAMS test.sh DESTINATION ${_rel_consumer_path})
+install(PROGRAMS test.sh test.ps1 DESTINATION ${_rel_consumer_path})
 
 # Install consumer code and set link libraries
 set(_examples_dir ${CMAKE_SOURCE_DIR}/examples)
@@ -39,8 +39,15 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/GridKitConsumer/CMakeLists.txt
         DESTINATION ${_rel_consumer_path})
 
 # Add target to build and test the example project after install
-add_custom_target(
-  test_install
-  COMMAND
-    ${_abs_consumer_path}/test.sh ${CMAKE_INSTALL_PREFIX} ${CMAKE_CXX_COMPILER}
-    "${CMAKE_CXX_FLAGS}")
+if(WIN32)
+  add_custom_target(
+    test_install
+    COMMAND
+      powershell -NoProfile -ExecutionPolicy Bypass -File "${_abs_consumer_path}/test.ps1"
+      "${CMAKE_INSTALL_PREFIX}" "${CMAKE_CXX_COMPILER}"
+    USES_TERMINAL)
+else()
+  add_custom_target(
+    test_install
+    COMMAND ${_abs_consumer_path}/test.sh ${CMAKE_INSTALL_PREFIX} ${CMAKE_CXX_COMPILER})
+endif()

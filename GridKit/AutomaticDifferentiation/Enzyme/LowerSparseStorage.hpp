@@ -206,7 +206,7 @@ namespace GridKit
        * @param[in,out] nnz - number of nonzeros
        */
       template <typename ScalarT, typename IdxT>
-      __attribute__((always_inline)) static void sparse_store(
+      FORCE_INLINE static void sparse_store(
           ScalarT     val,
           IdxT        row,
           IdxT        col,
@@ -251,7 +251,7 @@ namespace GridKit
        * @tparam IdxT - matrix index data type
        */
       template <typename ScalarT, typename IdxT>
-      __attribute__((always_inline)) static ScalarT sparse_load(IdxT, IdxT, IdxT*, IdxT*, ScalarT*)
+      FORCE_INLINE static ScalarT sparse_load(IdxT, IdxT, IdxT*, IdxT*, ScalarT*)
       {
         return 0.0;
       }
@@ -263,7 +263,7 @@ namespace GridKit
        * @tparam IdxT - matrix index data type
        */
       template <typename ScalarT, typename IdxT>
-      __attribute__((always_inline)) static void ident_store(ScalarT, IdxT, IdxT)
+      FORCE_INLINE static void ident_store(ScalarT, IdxT, IdxT)
       {
         assert(0 && "should never store");
       }
@@ -275,7 +275,7 @@ namespace GridKit
        * @tparam IdxT - matrix index data type
        */
       template <typename ScalarT, typename IdxT>
-      __attribute__((always_inline)) static ScalarT ident_load(IdxT row, IdxT col)
+      FORCE_INLINE static ScalarT ident_load(IdxT row, IdxT col)
       {
         row /= sizeof(ScalarT);
         return (ScalarT) (row == col);

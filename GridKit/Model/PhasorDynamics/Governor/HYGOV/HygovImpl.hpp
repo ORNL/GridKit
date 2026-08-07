@@ -566,7 +566,7 @@ namespace GridKit
        * @return int 0 on success.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int
+      FORCE_INLINE int
       Hygov<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT*                  y,
           const ScalarT*                  yp,
@@ -847,7 +847,7 @@ namespace GridKit
        * @return Turbine power at nominal head.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline scalar_type
+      FORCE_INLINE scalar_type
       Hygov<scalar_type, index_type>::gatePower(scalar_type gate) const
       {
         ScalarT retval = Pgv_[0]

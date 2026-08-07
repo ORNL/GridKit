@@ -1,6 +1,7 @@
 /* Bus Fault Component - Adam Birchfield */
 #pragma once
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
@@ -116,9 +117,9 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateBusResidual(
+      FORCE_INLINE int evaluateBusResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateInternalResidual(
+      FORCE_INLINE int evaluateInternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:

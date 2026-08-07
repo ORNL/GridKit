@@ -121,10 +121,10 @@ namespace GridKit
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        __attribute__((always_inline)) inline int evaluateInternalResidual(
+        FORCE_INLINE int evaluateInternalResidual(
             const ScalarT* y, const ScalarT* yp, const ScalarT* wb, const ScalarT* ws, ScalarT* f);
 
-        __attribute__((always_inline)) inline int evaluateBusResidual(
+        FORCE_INLINE int evaluateBusResidual(
             const ScalarT* y, const ScalarT* yp, const ScalarT* wb, ScalarT* h);
 
       private:
@@ -149,7 +149,7 @@ namespace GridKit
          *
          * @todo Move this reusable limiter to CommonMath.
          */
-        static __attribute__((always_inline)) inline ScalarT rrpwr(
+        FORCE_INLINE static ScalarT rrpwr(
             const ScalarT x,
             const ScalarT f,
             const RealT   rate)
@@ -181,7 +181,7 @@ namespace GridKit
          *
          * @todo Move this one-sided anti-windup helper to CommonMath.
          */
-        static __attribute__((always_inline)) inline ScalarT awmax(
+        FORCE_INLINE static ScalarT awmax(
             const ScalarT x,
             const ScalarT f,
             const ScalarT xmax,
