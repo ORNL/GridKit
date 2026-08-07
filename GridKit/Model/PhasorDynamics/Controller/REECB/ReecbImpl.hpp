@@ -10,6 +10,7 @@
 #include <cassert>
 #include <limits>
 #include <numbers>
+#include <numeric>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -151,90 +152,98 @@ namespace GridKit
       {
         int ret = static_cast<int>(parameter_error_count_);
 
-        checkConfiguration(bus_ != nullptr, "terminal bus is required", ret);
+        auto check = [&](bool condition, const char* message)
+        {
+          if (!condition)
+          {
+            Log::error() << "Reecb: " << message << '\n';
+            ret += 1;
+          }
+        };
+
+        check(bus_ != nullptr, "terminal bus is required");
 
         const RealT component_power_base = componentPowerBase();
         const bool  valid_component_base = std::isfinite(component_power_base) && component_power_base > ZERO<RealT>;
         const bool  valid_system_base    = std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>;
-        checkConfiguration(valid_component_base, "component power base must be finite and positive", ret);
-        checkConfiguration(valid_system_base, "system power base must be finite and positive", ret);
+        check(valid_component_base, "component power base must be finite and positive");
+        check(valid_system_base, "system power base must be finite and positive");
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / component_power_base;
           const RealT component_to_system = component_power_base / va_system_base_;
-          checkConfiguration(
+          check(
               std::isfinite(system_to_component)
                   && system_to_component > ZERO<RealT>
                   && std::isfinite(component_to_system)
                   && component_to_system > ZERO<RealT>,
-              "system/component power-base conversion ratios must be finite and positive",
-              ret);
+              "system/component power-base conversion ratios must be finite and positive");
         }
 
-        checkConfiguration(std::isfinite(Trv_), "Trv must be finite", ret);
-        checkConfiguration(std::isfinite(Tp_), "Tp must be finite", ret);
-        checkConfiguration(std::isfinite(Vref0_), "Vref0 must be finite", ret);
+        check(std::isfinite(Trv_), "Trv must be finite");
+        check(std::isfinite(Tp_), "Tp must be finite");
+        check(std::isfinite(Vref0_), "Vref0 must be finite");
 
         const bool finite_voltage_thresholds = std::isfinite(Vdip_) && std::isfinite(Vup_);
-        checkConfiguration(finite_voltage_thresholds, "Vdip and Vup must be finite", ret);
+        check(finite_voltage_thresholds, "Vdip and Vup must be finite");
         if (finite_voltage_thresholds)
         {
-          checkConfiguration(Vdip_ < Vup_, "Vdip must be less than Vup", ret);
+          check(Vdip_ < Vup_, "Vdip must be less than Vup");
         }
 
         const bool finite_voltage_deadband = std::isfinite(dbd1_) && std::isfinite(dbd2_);
-        checkConfiguration(finite_voltage_deadband, "dbd1 and dbd2 must be finite", ret);
+        check(finite_voltage_deadband, "dbd1 and dbd2 must be finite");
         if (finite_voltage_deadband)
         {
-          checkConfiguration(dbd1_ <= ZERO<RealT> && ZERO<RealT> <= dbd2_, "dbd1 <= 0 <= dbd2 is required", ret);
+          check(dbd1_ <= ZERO<RealT> && ZERO<RealT> <= dbd2_, "dbd1 <= 0 <= dbd2 is required");
         }
 
-        checkConfiguration(std::isfinite(kqv_) && kqv_ >= ZERO<RealT>, "kqv must be finite and non-negative", ret);
+        check(std::isfinite(kqv_) && kqv_ >= ZERO<RealT>, "kqv must be finite and non-negative");
 
         const bool finite_injection_limits = std::isfinite(Iql1_) && std::isfinite(Iqh1_);
-        checkConfiguration(finite_injection_limits, "Iql1 and Iqh1 must be finite", ret);
+        check(finite_injection_limits, "Iql1 and Iqh1 must be finite");
         if (finite_injection_limits)
         {
-          checkConfiguration(Iql1_ <= Iqh1_, "Iql1 must be less than or equal to Iqh1", ret);
+          check(Iql1_ <= Iqh1_, "Iql1 must be less than or equal to Iqh1");
         }
 
         const bool finite_reactive_limits = std::isfinite(Qmin_) && std::isfinite(Qmax_);
-        checkConfiguration(finite_reactive_limits, "Qmin and Qmax must be finite", ret);
+        check(finite_reactive_limits, "Qmin and Qmax must be finite");
         if (finite_reactive_limits)
         {
-          checkConfiguration(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax", ret);
+          check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
         }
 
-        checkConfiguration(std::isfinite(Kqp_) && Kqp_ >= ZERO<RealT>, "Kqp must be finite and non-negative", ret);
-        checkConfiguration(std::isfinite(Kqi_) && Kqi_ >= ZERO<RealT>, "Kqi must be finite and non-negative", ret);
+        check(std::isfinite(Kqp_) && Kqp_ >= ZERO<RealT>, "Kqp must be finite and non-negative");
+        check(std::isfinite(Kqi_) && Kqi_ >= ZERO<RealT>, "Kqi must be finite and non-negative");
 
         const bool finite_voltage_limits = std::isfinite(Vmin_) && std::isfinite(Vmax_);
-        checkConfiguration(finite_voltage_limits, "Vmin and Vmax must be finite", ret);
+        check(finite_voltage_limits, "Vmin and Vmax must be finite");
         if (finite_voltage_limits)
         {
-          checkConfiguration(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax", ret);
+          check(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax");
         }
 
-        checkConfiguration(std::isfinite(Kvp_) && Kvp_ >= ZERO<RealT>, "Kvp must be finite and non-negative", ret);
-        checkConfiguration(std::isfinite(Kvi_) && Kvi_ >= ZERO<RealT>, "Kvi must be finite and non-negative", ret);
-        checkConfiguration(std::isfinite(Tiq_), "Tiq must be finite", ret);
-        checkConfiguration(std::isfinite(Tpord_), "Tpord must be finite", ret);
+        check(std::isfinite(Kvp_) && Kvp_ >= ZERO<RealT>, "Kvp must be finite and non-negative");
+        check(std::isfinite(Kvi_) && Kvi_ >= ZERO<RealT>, "Kvi must be finite and non-negative");
+        check(std::isfinite(Tiq_), "Tiq must be finite");
+        check(std::isfinite(Tpord_), "Tpord must be finite");
 
         const bool finite_ramp_limits = std::isfinite(dPmin_) && std::isfinite(dPmax_);
-        checkConfiguration(finite_ramp_limits, "dPmin and dPmax must be finite", ret);
+        check(finite_ramp_limits, "dPmin and dPmax must be finite");
         if (finite_ramp_limits)
         {
-          checkConfiguration(dPmin_ < ZERO<RealT> && ZERO<RealT> < dPmax_, "dPmin < 0 < dPmax is required", ret);
+          check(dPmin_ < ZERO<RealT> && ZERO<RealT> < dPmax_, "dPmin < 0 < dPmax is required");
         }
 
         const bool finite_active_limits = std::isfinite(Pmin_) && std::isfinite(Pmax_);
-        checkConfiguration(finite_active_limits, "Pmin and Pmax must be finite", ret);
+        check(finite_active_limits, "Pmin and Pmax must be finite");
         if (finite_active_limits)
         {
-          checkConfiguration(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax", ret);
+          check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
         }
 
-        checkConfiguration(std::isfinite(Imax_) && Imax_ > ZERO<RealT>, "Imax must be finite and positive", ret);
+        check(std::isfinite(Imax_) && Imax_ > ZERO<RealT>, "Imax must be finite and positive");
 
         auto check_optional_signal = [&]<ReecbExternalVariables variable>(const char* name)
         {
@@ -358,51 +367,16 @@ namespace GridKit
           iqneed0 += std::numbers::ln2_v<RealT> / Math::MU<RealT> + INITIALIZATION_TOLERANCE;
         }
 
-        const RealT d     = std::sqrt(INITIALIZATION_TOLERANCE);
         const RealT high0 = pq_on_ * ipcmd0 + pq_off_ * iqabs0;
         const RealT low0  = pq_on_ * iqneed0 + pq_off_ * ipcmd0;
-        RealT       imax  = std::max(Imax_, high0);
-        if (pq_off_ != ZERO<RealT>)
-        {
-          imax = std::max(imax, iqneed0);
-        }
-        if (low0 > ZERO<RealT>)
-        {
-          const RealT ilreq    = std::sqrt(low0) * std::sqrt(HALF<RealT> * (low0 + std::hypot(low0, TWO<RealT> * d)));
-          const RealT required = std::hypot(high0, std::sqrt(ilreq) * std::sqrt(std::hypot(ilreq, d)));
-          if (required >= imax)
-          {
-            imax = std::nextafter(required, std::numeric_limits<RealT>::infinity());
-          }
-        }
-
-        RealT ilrhs0  = ZERO<RealT>;
-        RealT ilmax0  = ZERO<RealT>;
-        RealT ilnorm0 = ZERO<RealT>;
-        RealT ilcap0  = ZERO<RealT>;
-        for (int correction = 0; correction <= std::numeric_limits<RealT>::digits && std::isfinite(imax); ++correction)
-        {
-          ilrhs0 = (imax - high0) * (imax + high0);
-          ilmax0 = ZERO<RealT>;
-          if (ilrhs0 > ZERO<RealT>)
-          {
-            const RealT ratio = INITIALIZATION_TOLERANCE / ilrhs0;
-            ilmax0            = std::sqrt(ilrhs0) * std::sqrt(TWO<RealT> / (std::hypot(ratio, TWO<RealT>) + ratio));
-          }
-          ilnorm0 = std::sqrt(ilmax0 * ilmax0 + INITIALIZATION_TOLERANCE);
-          ilcap0  = (ilmax0 / ilnorm0) * ilmax0;
-          if (!(ilcap0 < low0))
-          {
-            break;
-          }
-          const RealT next = std::nextafter(imax, std::numeric_limits<RealT>::infinity());
-          if (next == imax)
-          {
-            break;
-          }
-          imax = next;
-        }
-        if (ilcap0 < low0)
+        // Q priority uses Imax directly for reactive current, so include the
+        // smooth-clamp recovery margin carried by iqneed0.
+        const RealT imax  = solveInitialLimit(
+            std::max({Imax_, high0, low0, iqneed0}), high0, low0);
+        const RealT ilmax0 = circleState(imax, high0);
+        const RealT ilcap0 = capacity(ilmax0);
+        if (!std::isfinite(imax) || !std::isfinite(ilmax0)
+            || !std::isfinite(ilcap0) || ilcap0 < low0)
         {
           Log::error() << "Reecb: adjusted Imax cannot include the initial current commands\n";
           return 1;
@@ -420,28 +394,36 @@ namespace GridKit
           return 1;
         }
 
-        const RealT iqctl0   = iqraw0 - iqv0;
-        const RealT pord0    = vmeas_safe0 * ipraw0;
-        RealT       qmin     = q_pi_on_ != ZERO<RealT> ? std::min(Qmin_, qgen0) : Qmin_;
-        RealT       qmax     = q_pi_on_ != ZERO<RealT> ? std::max(Qmax_, qgen0) : Qmax_;
-        RealT       vmin     = q_pi_on_ != ZERO<RealT> ? std::min(Vmin_, vmeas0) : Vmin_;
-        RealT       vmax     = q_pi_on_ != ZERO<RealT> ? std::max(Vmax_, vmeas0) : Vmax_;
-        const RealT infinity = std::numeric_limits<RealT>::infinity();
-        if (q_pi_on_ != ZERO<RealT> && qmin == qgen0 && qmin < qmax)
+        const RealT iqctl0 = iqraw0 - iqv0;
+        const RealT pord0  = vmeas_safe0 * ipraw0;
+        RealT       qmin   = Qmin_;
+        RealT       qmax   = Qmax_;
+        RealT       vmin   = Vmin_;
+        RealT       vmax   = Vmax_;
+        if (q_pi_on_ != ZERO<RealT>)
         {
-          qmin = std::nextafter(qmin, -infinity);
-        }
-        if (q_pi_on_ != ZERO<RealT> && qmax == qgen0 && qmin < qmax)
-        {
-          qmax = std::nextafter(qmax, infinity);
-        }
-        if (q_pi_on_ != ZERO<RealT> && vmin == vmeas0 && vmin < vmax)
-        {
-          vmin = std::nextafter(vmin, -infinity);
-        }
-        if (q_pi_on_ != ZERO<RealT> && vmax == vmeas0 && vmin < vmax)
-        {
-          vmax = std::nextafter(vmax, infinity);
+          qmin = std::min(Qmin_, qgen0);
+          qmax = std::max(Qmax_, qgen0);
+          vmin = std::min(Vmin_, vmeas0);
+          vmax = std::max(Vmax_, vmeas0);
+
+          const RealT infinity = std::numeric_limits<RealT>::infinity();
+          if (qmin == qgen0 && qmin < qmax)
+          {
+            qmin = std::nextafter(qmin, -infinity);
+          }
+          if (qmax == qgen0 && qmin < qmax)
+          {
+            qmax = std::nextafter(qmax, infinity);
+          }
+          if (vmin == vmeas0 && vmin < vmax)
+          {
+            vmin = std::nextafter(vmin, -infinity);
+          }
+          if (vmax == vmeas0 && vmin < vmax)
+          {
+            vmax = std::nextafter(vmax, infinity);
+          }
         }
         const RealT pmin         = std::min(Pmin_, pord0);
         const RealT pmax         = std::max(Pmax_, pord0);
@@ -539,8 +521,8 @@ namespace GridKit
         const RealT   iqcmd_check = Math::clamp(q_on_ * iqbase0 + q_off_ * qv0 + iqv0, -iqmax0, iqmax0);
         const RealT   ipcmd_check = Math::clamp(pord0 / vmeas_safe0, ZERO<RealT>, ipmax0);
 
-        if (!std::isfinite(imax) || !std::isfinite(ilrhs0) || ilrhs0 < ZERO<RealT> || !std::isfinite(ilmax0)
-            || !std::isfinite(ilcap0) || !std::isfinite(iqmax0) || !std::isfinite(ipmax0)
+        if (!std::isfinite(imax) || !std::isfinite(ilmax0) || !std::isfinite(ilcap0)
+            || !std::isfinite(iqmax0) || !std::isfinite(ipmax0)
             || !std::isfinite(ipraw0) || !std::isfinite(iqraw0) || !std::isfinite(pord0)
             || !std::isfinite(pref0_system) || !std::isfinite(qtarget0) || !std::isfinite(qref0)
             || !std::isfinite(qext0_port) || !std::isfinite(pfaref0) || !std::isfinite(eq0)
@@ -843,6 +825,7 @@ namespace GridKit
         const ScalarT rpord      = aslew(fpord, dPmin_, dPmax_);
         const ScalarT ilnorm     = std::sqrt(ilmax * ilmax + INITIALIZATION_TOLERANCE);
         const ScalarT ilcap      = (ilmax / ilnorm) * ilmax;
+        const ScalarT high       = pq_on_ * ipcmd + pq_off_ * iqcmd;
         const ScalarT iqmax      = pq_on_ * ilcap + pq_off_ * Imax_;
         const ScalarT ipmax      = pq_on_ * Imax_ + pq_off_ * ilcap;
         const ScalarT iqbase     = Math::clamp(Kvp_ * epiv + xpiv, -iqmax, iqmax);
@@ -855,8 +838,7 @@ namespace GridKit
         f[QV]    = -qv_dot + q_off_ * sdip * (qref / vmeas_safe - qv) / Tiq_;
         f[PORD]  = -pord_dot + sdip * Math::antiwindup(pord, rpord, Pmin_, Pmax_);
         f[VT]    = -vt * vt + vr * vr + vi * vi;
-        f[ILMAX] = -ilmax * ilnorm + pq_on_ * (Imax_ - ipcmd) * (Imax_ + ipcmd)
-                   + pq_off_ * (Imax_ - iqcmd) * (Imax_ + iqcmd);
+        f[ILMAX] = -ilmax * ilnorm + (Imax_ - high) * (Imax_ + high);
         f[IQCMD] = -iqcmd + Math::clamp(iqraw, -iqmax, iqmax);
         f[IPCMD] = -ipcmd + Math::clamp(pord / vmeas_safe, ZERO<RealT>, ipmax);
 
@@ -910,21 +892,186 @@ namespace GridKit
       }
 
       /**
-       * @brief Record one failed configuration condition
+       * @brief Compute the initial current-circle continuation state
        *
-       * @param[in] condition Required condition.
-       * @param[in] message Error message when `condition` is false.
-       * @param[in,out] errors Accumulated configuration-error count.
+       * Solves the implemented `ILMAX` row for its nonnegative continuation
+       * state at a total-current limit and priority-axis current.
+       *
+       * @param[in] imax Total-current limit on the component base.
+       * @param[in] high Priority-axis current command on the component base.
+       * @return Initial `ILMAX` state on the component base, or a quiet NaN
+       *         when the circle geometry is invalid or unrepresentable.
+       * @pre `imax` and `high` are finite and @f$0 \le high \le imax@f$.
        */
       template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::checkConfiguration(
-          bool condition, const char* message, int& errors)
+      typename Reecb<scalar_type, index_type>::RealT
+      Reecb<scalar_type, index_type>::circleState(RealT imax, RealT high)
       {
-        if (!condition)
+        const RealT rhs = (imax - high) * (imax + high);
+        if (!std::isfinite(rhs) || rhs < ZERO<RealT>)
         {
-          Log::error() << "Reecb: " << message << '\n';
-          errors += 1;
+          return std::numeric_limits<RealT>::quiet_NaN();
         }
+        if (rhs == ZERO<RealT>)
+        {
+          return ZERO<RealT>;
+        }
+
+        const RealT ratio = INITIALIZATION_TOLERANCE / rhs;
+        return std::sqrt(rhs)
+               * std::sqrt(TWO<RealT>
+                           / (std::hypot(ratio, TWO<RealT>) + ratio));
+      }
+
+      /**
+       * @brief Compute off-axis capacity from a continuation state
+       *
+       * This expression must match the `ilcap` calculation during residual
+       * evaluation so initialization lands on the implemented model.
+       *
+       * @param[in] ilmax Current-circle continuation state on the component base.
+       * @return Available off-axis current on the component base.
+       */
+      template <typename scalar_type, typename index_type>
+      typename Reecb<scalar_type, index_type>::RealT
+      Reecb<scalar_type, index_type>::capacity(RealT ilmax)
+      {
+        const RealT ilnorm = std::sqrt(ilmax * ilmax + INITIALIZATION_TOLERANCE);
+        return (ilmax / ilnorm) * ilmax;
+      }
+
+      /**
+       * @brief Bisect an initial-limit interval to machine rounding
+       *
+       * The upper endpoint is returned because initialization needs the first
+       * not-below point; the caller separately validates that point as finite
+       * and feasible. A finite floating-point interval contains finitely many
+       * representable values, so the loop terminates when no interior midpoint
+       * remains.
+       *
+       * @tparam FuncT Monotone predicate type.
+       * @param[in] a Lower endpoint, where `below` is true.
+       * @param[in] b Upper endpoint, where `below` is false.
+       * @param[in] below Predicate returning true only when finite reconstructed
+       *                  capacity lies below the requirement.
+       * @return The first representable upper-side endpoint.
+       * @pre `a` and `b` are finite, `a < b`, and `below` is monotone.
+       */
+      template <typename scalar_type, typename index_type>
+      template <typename FuncT>
+      typename Reecb<scalar_type, index_type>::RealT
+      Reecb<scalar_type, index_type>::bisect(RealT a, RealT b, FuncT below)
+      {
+        while (true)
+        {
+          const RealT mid = std::midpoint(a, b);
+          if (mid <= a || b <= mid)
+          {
+            break;
+          }
+
+          if (below(mid))
+          {
+            a = mid;
+          }
+          else
+          {
+            b = mid;
+          }
+        }
+
+        return b;
+      }
+
+      /**
+       * @brief Solve the smallest initial total-current limit
+       *
+       * @param[in] lower Lower bound for the component-base total-current limit.
+       * @param[in] high Priority-axis current command on the component base.
+       * @param[in] low Required off-axis capacity on the component base.
+       * @return Smallest representable feasible component-base limit at or above
+       *         `lower`, or a quiet NaN when no finite limit is found.
+       * @pre The arguments are finite and nonnegative, with `lower >= high` and
+       *      `lower >= low`.
+       * @warning This function contains conditional branching and may be used
+       *          during initialization, but not during residual evaluation.
+       */
+      template <typename scalar_type, typename index_type>
+      typename Reecb<scalar_type, index_type>::RealT
+      Reecb<scalar_type, index_type>::solveInitialLimit(
+          RealT lower, RealT high, RealT low)
+      {
+        const RealT nan = std::numeric_limits<RealT>::quiet_NaN();
+
+        const RealT ilmax = circleState(lower, high);
+        const RealT ilcap = capacity(ilmax);
+        if (!std::isfinite(ilcap))
+        {
+          return nan;
+        }
+        if (!(ilcap < low))
+        {
+          return lower;
+        }
+
+        const auto below = [high, low](RealT limit)
+        {
+          const RealT state = circleState(limit, high);
+          const RealT cap   = capacity(state);
+          return std::isfinite(cap) && cap < low;
+        };
+
+        // Invert ilcap = ilmax^2 / sqrt(ilmax^2 + tolerance), then recover
+        // imax from imax^2 = high^2 + ilmax * sqrt(ilmax^2 + tolerance).
+        const RealT delta = std::sqrt(INITIALIZATION_TOLERANCE);
+        const RealT ilreq = std::sqrt(low)
+                            * std::sqrt(HALF<RealT>
+                                        * (low + std::hypot(low, TWO<RealT> * delta)));
+        const RealT seed = std::hypot(
+            high, std::sqrt(ilreq) * std::sqrt(std::hypot(ilreq, delta)));
+
+        const RealT maximum = std::numeric_limits<RealT>::max();
+        RealT       a       = lower;
+        RealT       b       = seed;
+        if (!std::isfinite(b))
+        {
+          b = maximum;
+        }
+        else
+        {
+          b = std::max(b, std::nextafter(a, maximum));
+        }
+        if (!(a < b))
+        {
+          return nan;
+        }
+
+        while (below(b))
+        {
+          a = b;
+          if (b >= maximum)
+          {
+            return nan;
+          }
+          if (b > maximum / TWO<RealT>)
+          {
+            b = maximum;
+          }
+          else
+          {
+            b *= TWO<RealT>;
+          }
+        }
+
+        const RealT result      = bisect(a, b, below);
+        const RealT final_state = circleState(result, high);
+        const RealT final_cap   = capacity(final_state);
+        if (!std::isfinite(result) || !std::isfinite(final_state)
+            || !std::isfinite(final_cap) || final_cap < low)
+        {
+          return nan;
+        }
+        return result;
       }
 
       /**

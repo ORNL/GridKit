@@ -649,23 +649,34 @@ namespace GridKit
         success *= scalarPreserved(separated.iqcmd(), 5.0e-13, "scale-separated current command");
         success *= allResidualsWithinInitTolerance(separated.reecb);
 
+        // A low configured Imax requires representable bisection to preserve
+        // a strict low-priority command.
         auto capacity_data                       = exactness_data;
         capacity_data.parameters[Params::mva]    = 100.0;
         capacity_data.parameters[Params::Pqflag] = true;
         capacity_data.parameters[Params::Imax]   = 0.1;
-        Fixture<ScalarT> capacity(capacity_data);
-        success           *= capacity.initialize(1.7, 0.3);
-        success           *= (capacity.evaluate() == 0);
-        success           *= scalarPreserved(capacity.iqcmd(), 1.7, "strict low-priority command");
-        success           *= scalarPreserved(capacity.ipcmd(), 0.3, "strict high-priority command");
-        const RealT ilmax  = static_cast<RealT>(capacity.reecb.y().getData()[index(Vars::ILMAX)]);
-        const RealT ilcap  = ilmax * ilmax / std::sqrt(ilmax * ilmax + ReecbT::INITIALIZATION_TOLERANCE);
-        if (ilcap < 1.7)
+
+        const std::array<std::pair<RealT, RealT>, 2> capacity_cases{{
+            {1.7, 0.3},
+            {1.5, 0.5},
+        }};
+        for (const auto& [iqcmd, ipcmd] : capacity_cases)
         {
-          std::cout << "REECB low-priority capacity does not include its initial command\n";
-          success = false;
+          Fixture<ScalarT> capacity_fixture(capacity_data);
+          success           *= capacity_fixture.initialize(iqcmd, ipcmd);
+          success           *= (capacity_fixture.evaluate() == 0);
+          success           *= scalarPreserved(capacity_fixture.iqcmd(), iqcmd, "low-priority command");
+          success           *= scalarPreserved(capacity_fixture.ipcmd(), ipcmd, "high-priority command");
+          const RealT ilmax  = static_cast<RealT>(capacity_fixture.reecb.y().getData()[index(Vars::ILMAX)]);
+          const RealT ilcap  = ilmax * ilmax
+                              / std::sqrt(ilmax * ilmax + ReecbT::INITIALIZATION_TOLERANCE);
+          if (ilcap < iqcmd)
+          {
+            std::cout << "REECB low-priority capacity does not include its initial command\n";
+            success = false;
+          }
+          success *= allResidualsWithinInitTolerance(capacity_fixture.reecb);
         }
-        success *= allResidualsWithinInitTolerance(capacity.reecb);
 
         auto nested_data                       = exactness_data;
         nested_data.parameters[Params::mva]    = 100.0;
@@ -1272,6 +1283,41 @@ namespace GridKit
                                       {{Vars::ILMAX, expected}},
                                       p_priority ? "P-priority current circle"
                                                  : "Q-priority current circle");
+          }
+        }
+
+        {
+          // Selecting the priority command before forming the circle keeps an
+          // overflowing inactive-command factor from producing NaN.
+          const RealT               maximum = std::numeric_limits<RealT>::max();
+          const RealT               limit   = maximum / 1024.0;
+          const std::array<bool, 2> priorities{{false, true}};
+          for (const bool p_priority : priorities)
+          {
+            auto data                       = makeData();
+            data.parameters[Params::mva]    = 100.0;
+            data.parameters[Params::Imax]   = limit;
+            data.parameters[Params::Pqflag] = p_priority;
+
+            Fixture<ScalarT> fixture(data);
+            success *= fixture.prepare(0.0, 0.0);
+            setControlState(fixture.reecb);
+            RealT iqcmd = limit;
+            RealT ipcmd = maximum;
+            if (p_priority)
+            {
+              iqcmd = maximum;
+              ipcmd = limit;
+            }
+            setState(fixture.reecb,
+                     {{Vars::ILMAX, 0.0},
+                      {Vars::IQCMD, iqcmd},
+                      {Vars::IPCMD, ipcmd}});
+            success *= (fixture.evaluate() == 0);
+            success *= residualsMatch(fixture.reecb,
+                                      {{Vars::ILMAX, 0.0}},
+                                      "finite selected current circle");
+            success *= allResidualsFinite(fixture.reecb);
           }
         }
 

@@ -745,7 +745,7 @@ namespace GridKit
      * @note System model composition is flat; nested systems are not supported.
      *
      * @throws std::runtime_error if storage allocation, child binding, model
-     * verification, or sparse initialization fails.
+     * verification, or initialization for sparse Jacobian discovery fails.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()
@@ -860,10 +860,11 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
-      // Perform an initial Jacobian evaluation for sparse Jacobians, such that
-      // the dynamic solver can querry the NNZ value when it is configured.
-      // @todo Replace with a sparsity analysis that sets the NNZ and allocates the Jacobian
-      // without needing the Jacobian values.
+      // Sparse-pattern discovery requires an initialized operating point. A failed
+      // initialization aborts allocation before residual/Jacobian evaluation or
+      // monitor startup.
+      // @todo Replace with a sparsity analysis that sets the NNZ and allocates
+      // the Jacobian without needing the Jacobian values.
       if (hasJacobian())
       {
         const int status = initialize();
@@ -877,8 +878,6 @@ namespace GridKit
         evaluateJacobian();
       }
 
-      // Start variable monitors only after allocation and sparse initialization
-      // complete successfully.
       initializeMonitor();
       startMonitor();
 

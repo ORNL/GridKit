@@ -130,19 +130,31 @@ namespace GridKit
         /// Smooth anti-windup derivative within a moving symmetric band.
         [[gnu::always_inline]] static inline ScalarT awband(ScalarT state, ScalarT rate, ScalarT band);
 
-        static void checkConfiguration(bool condition, const char* message, int& errors);
-        void        loadRealParameter(const ModelDataT& data,
-                                      ReecbParameters   parameter,
-                                      RealT&            target,
-                                      const char*       name);
-        void        loadBooleanParameter(const ModelDataT& data,
-                                         ReecbParameters   parameter,
-                                         bool&             target,
-                                         const char*       name);
-        bool        floorTimeConstant(RealT& value, const char* name);
-        void        initializeParameters(const ModelDataT& data);
-        void        initializeMonitor();
-        void        setDerivedParameters();
+        /// Current-circle continuation state for an initial component-base limit.
+        static RealT circleState(RealT imax, RealT high);
+
+        /// Off-axis component-base capacity provided by a continuation state.
+        static RealT capacity(RealT ilmax);
+
+        /// Bisect an initial-limit bracket to its first upper-side point.
+        template <typename FuncT>
+        static RealT bisect(RealT a, RealT b, FuncT below);
+
+        /// Solve the smallest feasible initial limit at or above `lower`.
+        static RealT solveInitialLimit(RealT lower, RealT high, RealT low);
+
+        void loadRealParameter(const ModelDataT& data,
+                               ReecbParameters   parameter,
+                               RealT&            target,
+                               const char*       name);
+        void loadBooleanParameter(const ModelDataT& data,
+                                  ReecbParameters   parameter,
+                                  bool&             target,
+                                  const char*       name);
+        bool floorTimeConstant(RealT& value, const char* name);
+        void initializeParameters(const ModelDataT& data);
+        void initializeMonitor();
+        void setDerivedParameters();
 
         static RealT logOneMinusExp(RealT x);
         bool         iclamp(RealT output, RealT lower, RealT upper, RealT& input) const;
