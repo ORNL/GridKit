@@ -415,7 +415,9 @@ namespace GridKit
 
         success *= system.verify() == 0;
 
-        std::cout << "Testing expected component initialization failure.\n";
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
+
         if (system.hasJacobian())
         {
           success *= throws<std::runtime_error>([&]()
@@ -427,6 +429,7 @@ namespace GridKit
           success *= system.initialize() != 0;
         }
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 

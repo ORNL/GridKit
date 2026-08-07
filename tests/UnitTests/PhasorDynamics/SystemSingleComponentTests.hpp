@@ -330,9 +330,10 @@ namespace GridKit
       /// REECB through the production data path.
       TestOutcome reecb()
       {
-        using Data  = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
-        using Buses = typename Data::Buses;
-        using Vars  = PhasorDynamics::Controller::ReecbInternalVariables;
+        using Data   = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
+        using Buses  = typename Data::Buses;
+        using Params = typename Data::Parameters;
+        using Vars   = PhasorDynamics::Controller::ReecbInternalVariables;
 
         constexpr IdxT bus_id = static_cast<IdxT>(1);
 
@@ -346,7 +347,9 @@ namespace GridKit
         data.bus[0].Vi0      = static_cast<RealT>(0.0);
 
         Data reecb_data;
-        reecb_data.buses[Buses::bus] = bus_id;
+        reecb_data.buses[Buses::bus]        = bus_id;
+        reecb_data.parameters[Params::Tp]   = static_cast<RealT>(0.02);
+        reecb_data.parameters[Params::Pmin] = static_cast<RealT>(-1.0);
         data.reecb.push_back(reecb_data);
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);

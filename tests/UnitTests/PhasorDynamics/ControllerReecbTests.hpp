@@ -19,15 +19,12 @@
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
-    using Log = ::GridKit::Utilities::Logger;
-
     template <typename scalar_type, typename index_type>
     class ControllerReecbTests
     {
@@ -47,9 +44,6 @@ namespace GridKit
       TestOutcome validation()
       {
         TestStatus success = true;
-
-        noteExpectedLogs("Testing REECB defaults, parameter floors, and invalid "
-                         "configurations. Logged errors and warnings are expected.");
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
@@ -329,9 +323,6 @@ namespace GridKit
       TestOutcome initializationDomain()
       {
         TestStatus success = true;
-
-        noteExpectedLogs("Testing adjusted REECB limits and inadmissible initialization points. "
-                         "Logged warnings and errors are expected.");
 
         const auto data = makeData();
 
@@ -761,9 +752,6 @@ namespace GridKit
       TestOutcome selectorConfigurations()
       {
         TestStatus success = true;
-
-        noteExpectedLogs("Testing REECB selector configurations. "
-                         "Atypical PfFlag/QFlag warnings are expected.");
 
         const std::array<bool, 2> selector_values{{false, true}};
         for (const bool pf : selector_values)
@@ -2506,14 +2494,6 @@ namespace GridKit
           }
         }
         return success;
-      }
-
-      void noteExpectedLogs(const char* message) const
-      {
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << message << '\n';
-        Log::setVerbosity(previous_verbosity);
       }
 
       void numberVariables(Fixture<DependencyTracking::Variable>& fixture, RealT alpha) const

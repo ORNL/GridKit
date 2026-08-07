@@ -369,7 +369,8 @@ Output  | Units  | Description                     | Note
 - `activeCurrentControl()` checks active-current control and current priority.
 - `dependencyTracking()` checks sparse dependencies.
 - `jacobian()` compares the Enzyme and dependency-tracking Jacobians.
-- `regcaReecb()`, `reecb()`, and `initializationFailure()` check system wiring.
+- `regcaReecb()` checks REGCA-REECB signal wiring.
+- `reecb()` checks construction through the production system-data path.
 
 ## Appendix A: `iclamp`
 

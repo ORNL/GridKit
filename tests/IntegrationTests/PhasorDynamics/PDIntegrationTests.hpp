@@ -726,7 +726,7 @@ namespace GridKit
 
       /// A finite plant-reference pulse moves the coupled REPCA, REECB, and
       /// REGCA states, after which the closed loop returns to equilibrium.
-      TestOutcome renewableControlChainRecovery()
+      TestOutcome regcaReecbRepca()
       {
         using namespace GridKit::PhasorDynamics::Controller;
         using namespace GridKit::PhasorDynamics::Converter;
