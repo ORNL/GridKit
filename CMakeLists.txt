@@ -22,14 +22,6 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wconversion -Wpedantic")
 endif()
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_definitions(FORCE_INLINE=[[gnu::always_inline]]\ inline)
-elseif(MSVC)
-  add_compile_definitions(FORCE_INLINE=[[msvc::forceinline]]\ inline)
-else()
-  add_compile_definitions(FORCE_INLINE=inline)
-endif()
-
 set(GRIDKIT_THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/third-party)
 
 # Ipopt support is disabled by default
