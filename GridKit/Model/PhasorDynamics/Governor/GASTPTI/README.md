@@ -228,7 +228,7 @@ atomic.
 P^\mathrm{ref}
   \leftarrow
   \dfrac{1}{k_{\mathrm{base}}}
-  \left(V_{D,0}+\dfrac{\omega}{R}\right).
+  \left(V_D+\dfrac{\omega}{R}\right).
 ```
 
 Initialization preserves the machine-seeded system-base $P_{\mathrm{m}}$. An

@@ -286,6 +286,13 @@ namespace GridKit
                                                                {{Internal::VLOAD, 0.01}},
                                   "reference step on the component base");
 
+        // GridKit deliberately leaves references above At uncapped.
+        fixture.input(index(External::PREF))  = 1.1; // 2.2 on component base; At = 2.0
+        success                              *= (fixture.evaluate() == 0);
+        success                              *= residualsMatch(fixture.gastpti,
+                                                               {{Internal::VLOAD, 0.07}},
+                                  "uncapped reference above At");
+
         // Unattached ports fall back to the reference latched by
         // initialize(), so the same steady state holds without a controller.
         Fixture<ScalarT> fallback(data);
