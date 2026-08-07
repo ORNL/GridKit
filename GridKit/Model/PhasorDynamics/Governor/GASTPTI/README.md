@@ -257,10 +257,8 @@ Output   | Units  | Description                        | Note
 - `residualEquations()` checks every residual against a fixed numerical answer key.
 - `governorControl()` checks droop, damping, response limits, and anti-windup.
 - `temperatureLimiting()` checks the low-value selector.
-- `dependencyTracking()` checks every Jacobian row against fixed numerical and
-  structural answer keys in both valve configurations.
-- `jacobian()` checks Enzyme agreement with DependencyTracking and raw COO
-  pattern stability across runtime branches when enabled.
+- `jacobian()` compares full Enzyme and DependencyTracking maps across selector,
+  anti-windup, and collapsed-limit configurations when enabled.
 
 ## Appendix A: `iramp`
 

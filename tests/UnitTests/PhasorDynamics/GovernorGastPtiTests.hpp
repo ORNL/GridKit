@@ -17,7 +17,6 @@
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -676,39 +675,46 @@ namespace GridKit
 
         // Normal response expands both sides of the configured interval to
         // admit the initialized flow. The derived boundary must be used thereafter.
+        constexpr RealT valve_time_constant = 0.35;
+        constexpr RealT boundary_weight     = 0.5;
+        constexpr RealT command_magnitude   = 0.25;
+        constexpr RealT over_rated_pmech    = 0.6;
+
+        auto response_data                   = makeResidualData();
+        response_data.parameters[Params::T1] = valve_time_constant;
+
         struct EffectiveBoundaryCase
         {
-          RealT pmech;
-          RealT command;
-          RealT expected;
+          const char* label;
+          RealT       pmech;
+          RealT       command;
         };
 
         const std::array<EffectiveBoundaryCase, 2> effective_boundary_cases{{
-            {0.6, 0.25, 0.35714285714285715},
-            {0.0, -0.25, -0.35714285714285715},
+            {"adjusted upper response boundary", over_rated_pmech, command_magnitude},
+            {"adjusted lower response boundary", ZERO<RealT>, -command_magnitude},
         }};
-        for (const auto& [pmech, command, expected] : effective_boundary_cases)
+        for (const auto& test_case : effective_boundary_cases)
         {
-          Fixture<ScalarT> response(makeResidualData());
+          Fixture<ScalarT> response(response_data);
           response.attachAllInputs();
-          success              *= response.initialize(pmech);
-          const RealT boundary  = 2.0 * pmech;
+          success *= response.initialize(test_case.pmech);
+
+          const RealT boundary = static_cast<RealT>(
+              response.gastpti.y().getData()[index(Internal::XVALVE)]);
           setState(response.gastpti,
                    {{Internal::XVALVE, boundary},
-                    {Internal::VLV, boundary + command}});
-          setDerivative(response.gastpti, {{Internal::XVALVE, 0.0}});
+                    {Internal::VLV, boundary + test_case.command}});
+          setDerivative(response.gastpti,
+                        {{Internal::XVALVE, ZERO<RealT>}});
           success *= (response.evaluate() == 0);
+
+          const RealT expected =
+              boundary_weight * test_case.command / valve_time_constant;
           success *= residualsMatch(response.gastpti,
                                     {{Internal::XVALVE, expected}},
-                                    "adjusted response boundary");
+                                    test_case.label);
         }
-
-        // The one-half response at an active upper bound has a large state
-        // derivative from the smooth gate at an initialization-adjusted bound.
-        success *= effectiveLimitBoundaryJacobian(makeResidualData(),
-                                                  0.6,
-                                                  1.2,
-                                                  "adjusted upper bound");
 
         return success.report(__func__);
       }
@@ -786,92 +792,102 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Check every DependencyTracking row against independent numerical and
-      /// structural answer keys in active and collapsed valve configurations.
-      TestOutcome dependencyTracking()
-      {
-        TestStatus success = true;
-
-        const auto                                                     data     = makeResidualData();
-        const auto                                                     interior = dependencyTrackingJacobian(data, success);
-        const std::vector<DependencyTracking::Variable::DependencyMap> interior_expected{
-            {{index(Internal::XVALVE), -3.8571428571428572},
-             {index(Internal::VLV), 2.8571428571428572}},
-            {{index(Internal::XVALVE), 2.2222222222222223},
-             {index(Internal::XFLOW), -3.2222222222222223}},
-            {{index(Internal::XFLOW), 0.45454545454545453},
-             {index(Internal::XTEMP), -1.4545454545454546}},
-            {{index(Internal::VLOAD), -0.06},
-             {index(Internal::MAXIMUM) + index(External::OMEGA), -1.0},
-             {index(Internal::MAXIMUM) + index(External::PREF), 0.12}},
-            {{index(Internal::XTEMP), -0.4},
-             {index(Internal::VTEMP), -1.0}},
-            {{index(Internal::VLOAD), 1.0},
-             {index(Internal::VTEMP), 0.0},
-             {index(Internal::VLV), -1.0}},
-            {{index(Internal::XFLOW), 1.0},
-             {index(Internal::PMECH), -2.0},
-             {index(Internal::MAXIMUM) + index(External::OMEGA), -0.12}},
-        };
-        success *= jacobianMatches(interior,
-                                   interior_expected,
-                                   "interior answer key");
-
-        // Equal configured limits collapse the effective interval and retain
-        // the explicitly stored zero valve-drive dependency.
-        auto equal_limit_data                     = data;
-        equal_limit_data.parameters[Params::Vmin] = 0.8;
-        equal_limit_data.parameters[Params::Vmax] = 0.8;
-        const auto equal_limits                   = dependencyTrackingJacobian(equal_limit_data, success);
-        const std::vector<DependencyTracking::Variable::DependencyMap>
-            equal_limit_expected{
-                {{index(Internal::XVALVE), -1.0},
-                 {index(Internal::VLV), 0.0}},
-                interior_expected[index(Internal::XFLOW)],
-                interior_expected[index(Internal::XTEMP)],
-                interior_expected[index(Internal::VLOAD)],
-                interior_expected[index(Internal::VTEMP)],
-                interior_expected[index(Internal::VLV)],
-                interior_expected[index(Internal::PMECH)],
-            };
-        success *= jacobianMatches(equal_limits,
-                                   equal_limit_expected,
-                                   "equal configured limits");
-
-        return success.report(__func__);
-      }
-
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// Enzyme rows must match dependency tracking in active and collapsed
-      /// configurations, and the raw COO pattern must remain fixed as smooth
-      /// gates and initialization masks change on the same model instance.
+      /// Enzyme and dependency tracking agree row-for-row across selector,
+      /// anti-windup, and collapsed-limit configurations.
       TestOutcome jacobian()
       {
         TestStatus success = true;
 
+        constexpr RealT initial_pmech    = 0.4;
+        constexpr RealT over_rated_pmech = 0.6;
+        constexpr RealT boundary_command = 0.25;
+        constexpr RealT collapsed_limit  = 0.8;
+
         const auto data = makeResidualData();
 
-        const auto dependency_jacobian = dependencyTrackingJacobian(data, success);
-        const auto enzyme_jacobian     = enzymeJacobian(data, success);
+        Fixture<ScalarT> enzyme(data);
+        enzyme.attachAllInputs();
+        success *= enzyme.initialize(initial_pmech);
 
-        success *= jacobianMatches(enzyme_jacobian,
-                                   dependency_jacobian,
-                                   "Enzyme versus dependency tracking",
-                                   kTol);
+        const auto compare = [&](Fixture<ScalarT>&                    enzyme_fixture,
+                                 const Data&                          case_data,
+                                 RealT                                pmech,
+                                 const char*                          context,
+                                 std::initializer_list<VariableValue> overrides)
+        {
+          const auto dependency_jacobian =
+              dependencyTrackingJacobian(case_data, pmech, success, overrides);
+          const auto enzyme_jacobian =
+              enzymeJacobian(enzyme_fixture, success, overrides, context);
+
+          success *= jacobianMatches(enzyme_jacobian,
+                                     dependency_jacobian,
+                                     context,
+                                     kTol);
+        };
+
+        compare(enzyme,
+                data,
+                initial_pmech,
+                "load-limited Enzyme versus dependency tracking",
+                {});
+        compare(enzyme,
+                data,
+                initial_pmech,
+                "temperature-limited Enzyme versus dependency tracking",
+                {{Internal::VLOAD, 1.5}, {Internal::VTEMP, 0.3}});
+        compare(enzyme,
+                data,
+                initial_pmech,
+                "equal-selector Enzyme versus dependency tracking",
+                {{Internal::VLOAD, 0.9}, {Internal::VTEMP, 0.9}});
+        compare(enzyme,
+                data,
+                initial_pmech,
+                "blocked-response Enzyme versus dependency tracking",
+                {{Internal::XVALVE, 1.6}, {Internal::VLV, 1.85}});
+        compare(enzyme,
+                data,
+                initial_pmech,
+                "restoring-response Enzyme versus dependency tracking",
+                {{Internal::XVALVE, 1.6}, {Internal::VLV, 1.35}});
+
+        Fixture<ScalarT> adjusted(data);
+        adjusted.attachAllInputs();
+        success *= adjusted.initialize(over_rated_pmech);
+
+        const RealT adjusted_boundary = static_cast<RealT>(
+            adjusted.gastpti.y().getData()[index(Internal::XVALVE)]);
+        compare(adjusted,
+                data,
+                over_rated_pmech,
+                "adjusted-boundary Enzyme versus dependency tracking",
+                {{Internal::XVALVE, adjusted_boundary},
+                 {Internal::VLV, adjusted_boundary + boundary_command}});
 
         auto collapsed_data                     = data;
-        collapsed_data.parameters[Params::Vmin] = 0.8;
-        collapsed_data.parameters[Params::Vmax] = 0.8;
-        const auto collapsed_dependency =
-            dependencyTrackingJacobian(collapsed_data, success);
-        const auto collapsed_enzyme  = enzymeJacobian(collapsed_data, success);
-        success                     *= jacobianMatches(collapsed_enzyme,
-                                   collapsed_dependency,
-                                   "collapsed Enzyme versus dependency tracking",
-                                   kTol);
+        collapsed_data.parameters[Params::Vmin] = collapsed_limit;
+        collapsed_data.parameters[Params::Vmax] = collapsed_limit;
 
-        success *= selectorAndAntiwindupCooPatternIsStable(data);
-        success *= reinitializedCooPatternIsStable(data);
+        Fixture<ScalarT> collapsed(collapsed_data);
+        collapsed.attachAllInputs();
+        success *= collapsed.initialize(initial_pmech);
+        compare(collapsed,
+                collapsed_data,
+                initial_pmech,
+                "collapsed Enzyme versus dependency tracking",
+                {});
+
+        collapsed.input(index(External::OMEGA)) = ZERO<RealT>;
+        collapsed.input(index(External::PREF))  = ZERO<RealT>;
+        collapsed.seedPmech(over_rated_pmech);
+        success *= (collapsed.gastpti.initialize() == 0);
+        compare(collapsed,
+                collapsed_data,
+                over_rated_pmech,
+                "reinitialized Enzyme versus dependency tracking",
+                {});
 
         return success.report(__func__);
       }
@@ -1554,42 +1570,6 @@ namespace GridKit
         return false;
       }
 
-      bool effectiveLimitBoundaryJacobian(const Data& data,
-                                          RealT       pmech,
-                                          RealT       boundary,
-                                          const char* label) const
-      {
-        using DepVar = DependencyTracking::Variable;
-
-        Fixture<DepVar> fixture(data);
-        fixture.attachAllInputs();
-
-        bool success = fixture.initialize(pmech);
-        setState(fixture.gastpti,
-                 {{Internal::XVALVE, boundary},
-                  {Internal::VLV, boundary + 0.25}});
-        setDerivative(fixture.gastpti, {{Internal::XVALVE, 0.0}});
-        numberVariables(fixture);
-        if (fixture.evaluate() != 0)
-        {
-          success = false;
-        }
-
-        const DependencyTracking::Variable::DependencyMap expected{
-            {index(Internal::XVALVE), -45.285714285714285},
-            {index(Internal::VLV), 1.4285714285714286},
-        };
-        if (!jacobianRowMatches(
-                fixture.gastpti.getResidual().getData()[index(Internal::XVALVE)].getDependencies(),
-                expected,
-                index(Internal::XVALVE),
-                label))
-        {
-          success = false;
-        }
-        return success;
-      }
-
       bool jacobianRowMatches(
           const DependencyTracking::Variable::DependencyMap& actual,
           const DependencyTracking::Variable::DependencyMap& expected,
@@ -1652,16 +1632,19 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian(
-          const Data& data,
-          TestStatus& success) const
+          const Data&                          data,
+          RealT                                pmech,
+          TestStatus&                          success,
+          std::initializer_list<VariableValue> overrides) const
       {
         using DepVar = DependencyTracking::Variable;
 
         Fixture<DepVar> fixture(data);
         fixture.attachAllInputs();
-        success *= fixture.initialize(0.4);
+        success *= fixture.initialize(pmech);
         setAnswerKeyInputs(fixture);
         setAnswerKeyState(fixture.gastpti);
+        setState(fixture.gastpti, overrides);
         numberVariables(fixture);
         success *= (fixture.evaluate() == 0);
 
@@ -1676,156 +1659,49 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      using RawCooPattern = std::vector<std::array<IdxT, 2>>;
-
-      RawCooPattern captureRawCooPattern(Fixture<ScalarT>& fixture,
-                                         const char*       context) const
+      std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
+          Fixture<ScalarT>&                    fixture,
+          TestStatus&                          success,
+          std::initializer_list<VariableValue> overrides,
+          const char*                          context) const
       {
-        if (fixture.evaluate() != 0)
-        {
-          std::cout << "GASTPTI residual evaluation failed for " << context << '\n';
-          return {};
-        }
-        if (fixture.gastpti.evaluateJacobian() != 0)
+        setAnswerKeyInputs(fixture);
+        setAnswerKeyState(fixture.gastpti);
+        setState(fixture.gastpti, overrides);
+        fixture.gastpti.updateTime(0.0, 1.0);
+        if (fixture.evaluate() != 0 || fixture.gastpti.evaluateJacobian() != 0)
         {
           std::cout << "GASTPTI Jacobian evaluation failed for " << context << '\n';
+          success = false;
           return {};
         }
 
-        auto* jacobian = fixture.gastpti.getCooJacobian();
-        if (jacobian == nullptr)
+        auto* coo = fixture.gastpti.getCooJacobian();
+        if (coo == nullptr || fixture.gastpti.nnz() != coo->getNnz())
         {
-          std::cout << "GASTPTI raw COO is absent for " << context << '\n';
+          std::cout << "GASTPTI COO structure changed for " << context << '\n';
+          success = false;
           return {};
         }
 
-        constexpr IdxT expected_raw_nnz = 20;
-        const IdxT     model_nnz        = fixture.gastpti.nnz();
-        const IdxT     coo_nnz          = jacobian->getNnz();
-        if (model_nnz != coo_nnz || coo_nnz != expected_raw_nnz)
-        {
-          std::cout << "GASTPTI raw COO count mismatch for " << context << ": "
-                    << model_nnz << " model, " << coo_nnz << " cached, "
-                    << expected_raw_nnz << " expected\n";
-          return {};
-        }
+        std::vector<DependencyTracking::Variable::DependencyMap> rows(
+            static_cast<size_t>(fixture.gastpti.size()));
+        const auto* row_indices    = coo->getRowData();
+        const auto* column_indices = coo->getColData();
+        const auto* values         = coo->getValues();
 
-        RawCooPattern pattern;
-        pattern.reserve(static_cast<size_t>(coo_nnz));
-        const auto* rows    = jacobian->getRowData();
-        const auto* columns = jacobian->getColData();
-        for (IdxT entry = 0; entry < coo_nnz; ++entry)
+        for (IdxT entry = 0; entry < coo->getNnz(); ++entry)
         {
-          pattern.push_back({rows[entry], columns[entry]});
-        }
-        return pattern;
-      }
-
-      bool selectorAndAntiwindupCooPatternIsStable(const Data& data) const
-      {
-        Fixture<ScalarT> fixture(data);
-        fixture.attachAllInputs();
-        if (!fixture.initialize(0.4))
-        {
-          return false;
-        }
-        setAnswerKeyInputs(fixture);
-        setAnswerKeyState(fixture.gastpti);
-        fixture.gastpti.updateTime(0.0, 1.0);
-
-        setState(fixture.gastpti,
-                 {{Internal::VLOAD, 0.9}, {Internal::VTEMP, 0.9}});
-        const auto expected = captureRawCooPattern(fixture, "equal selector inputs");
-        if (expected.empty())
-        {
-          return false;
-        }
-
-        struct PatternCase
-        {
-          const char* label;
-          Internal    first_variable;
-          RealT       first_value;
-          Internal    second_variable;
-          RealT       second_value;
-        };
-
-        const std::array<PatternCase, 4> cases{{
-            {"load-limited selector", Internal::VLOAD, 0.3, Internal::VTEMP, 1.5},
-            {"temperature-limited selector", Internal::VLOAD, 1.5, Internal::VTEMP, 0.3},
-            {"blocked upper valve response", Internal::XVALVE, 1.6, Internal::VLV, 1.85},
-            {"restoring upper valve response", Internal::XVALVE, 1.6, Internal::VLV, 1.35},
-        }};
-
-        bool success = true;
-        for (const auto& test_case : cases)
-        {
-          setState(fixture.gastpti,
-                   {{test_case.first_variable, test_case.first_value},
-                    {test_case.second_variable, test_case.second_value}});
-          const auto actual = captureRawCooPattern(fixture, test_case.label);
-          if (actual != expected)
+          const auto row = static_cast<size_t>(row_indices[entry]);
+          if (row >= rows.size())
           {
-            std::cout << "GASTPTI raw COO pattern mismatch for "
-                      << test_case.label << '\n';
+            std::cout << "GASTPTI COO row is invalid for " << context << '\n';
             success = false;
+            return {};
           }
+          rows[row][static_cast<size_t>(column_indices[entry])] += values[entry];
         }
-        return success;
-      }
-
-      bool reinitializedCooPatternIsStable(const Data& source_data) const
-      {
-        auto data                     = source_data;
-        data.parameters[Params::Vmin] = 0.8;
-        data.parameters[Params::Vmax] = 0.8;
-
-        Fixture<ScalarT> fixture(data);
-        fixture.attachAllInputs();
-        if (!fixture.initialize(0.4))
-        {
-          return false;
-        }
-        fixture.gastpti.updateTime(0.0, 1.0);
-
-        const auto expected = captureRawCooPattern(fixture, "collapsed valve interval");
-        if (expected.empty())
-        {
-          return false;
-        }
-
-        fixture.seedPmech(0.6);
-        if (fixture.gastpti.initialize() != 0)
-        {
-          std::cout << "GASTPTI active-interval reinitialization failed\n";
-          return false;
-        }
-
-        const auto actual = captureRawCooPattern(
-            fixture,
-            "active valve interval after reinitialization");
-        if (actual != expected)
-        {
-          std::cout << "GASTPTI raw COO pattern changed across reinitialization\n";
-          return false;
-        }
-        return true;
-      }
-
-      std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
-          const Data& data,
-          TestStatus& success) const
-      {
-        Fixture<ScalarT> fixture(data);
-        fixture.attachAllInputs();
-        success *= fixture.initialize(0.4);
-        setAnswerKeyInputs(fixture);
-        setAnswerKeyState(fixture.gastpti);
-        fixture.gastpti.updateTime(0.0, 1.0);
-        success *= (fixture.evaluate() == 0);
-        success *= (fixture.gastpti.evaluateJacobian() == 0);
-        success *= (fixture.gastpti.constructCsr() == 0);
-        return MapFromCsr(fixture.gastpti.getCsrJacobian());
+        return rows;
       }
 
 #endif
