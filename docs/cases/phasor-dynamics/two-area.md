@@ -1,0 +1,15 @@
+(case-phasor-dynamics-two-area)=
+
+```{include} ../../../examples/PhasorDynamics/Small/TwoArea/README.md
+:relative-images:
+```
+
+## Model Inventory
+
+```{case-models} examples/PhasorDynamics/Small/TwoArea/twoarea.case.json
+```
+
+## Examples
+
+```{case-examples} examples/PhasorDynamics/Small/TwoArea/twoarea.case.json
+```

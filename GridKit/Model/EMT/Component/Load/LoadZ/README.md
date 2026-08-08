@@ -5,7 +5,7 @@ from the load into the EMT bus.
 
 ## Block Diagram
 
-![LoadZ model block diagram](../../../../../../docs/Figures/EMT/LoadZ/diagram.png)
+![LoadZ model block diagram](diagram.png)
 
 Figure 1: LoadZ model
 

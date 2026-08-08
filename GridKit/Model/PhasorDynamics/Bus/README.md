@@ -15,7 +15,7 @@ integrator requests residual evaluation.
 Current entering the bus has positive sign, and current exiting the bus has
 negative sign.
 
-![](../../../../docs/Figures/bus_variables.jpg)
+![](diagram.jpg)
 
 Figure 1: Bus-variable diagram. This should be updated to represent current
 balance instead of power balance.

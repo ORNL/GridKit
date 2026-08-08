@@ -17,7 +17,7 @@ Notes:
 
 Standard model of the EXPIC1 Exciter.
 
-![](../../../../../docs/Figures/PhasorDynamics/EXPIC1_diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter EXPIC1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

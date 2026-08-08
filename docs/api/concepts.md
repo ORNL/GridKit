@@ -1,3 +1,4 @@
+(api-concepts)=
 # C++ Concepts
 
 Exhale does not yet generate pages for C++ concepts, so the public concepts

@@ -4,7 +4,7 @@
 
 Simplified excitation system model.
 
-![](../../../../../docs/Figures/SEXS_PTI_DIAGRAM.png)
+![](diagram.png)
 
 Figure 1: Exciter SEXS-PTI model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

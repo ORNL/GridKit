@@ -20,7 +20,7 @@ inverter-coupled resource.[^wecc-reecb-specification]
 
 ## Block Diagram
 
-![REECB electrical-control block diagram](../../../../../docs/Figures/PhasorDynamics/REECB/diagram.png)
+![REECB electrical-control block diagram](diagram.png)
 
 Figure 1: REECB electrical-control model. Figure courtesy of the
 [PowerWorld REEC_B model reference](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20REEC_B.htm).

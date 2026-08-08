@@ -11,7 +11,7 @@ Notes:
 
 Standard REECA block diagram.
 
-![](../../../../../docs/Figures/PhasorDynamics_REECA_Diagram.png)
+![](diagram.png)
 
 Figure 1: REECA block diagram. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

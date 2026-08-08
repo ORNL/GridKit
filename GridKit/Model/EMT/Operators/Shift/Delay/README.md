@@ -13,7 +13,7 @@ is the $M=1$ case.
 
 ## Block Diagram
 
-![Delay operator block diagram](../../../../../../docs/Figures/EMT/Delay/diagram.png)
+![Delay operator block diagram](diagram.png)
 
 Figure 1: Delay model
 
@@ -121,7 +121,7 @@ where $\mathbf{u}_j$ and $\mathbf{u}'_j$ are the input value and derivative at
 $t_j$. The first knot holds the initialized values. Channels share knot times
 and read the record at $t-\tau_m$ independently.
 
-![Delay history record and per-channel taps](../../../../../../docs/Figures/EMT/DelayHistory/diagram.png)
+![Delay history record and per-channel taps](history.png)
 
 Figure 2: Delay history record and channel taps
 

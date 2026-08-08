@@ -19,7 +19,7 @@ Notes:
 
 Standard model of the GGOV1 Governor.
 
-![](../../../../../docs/Figures/PhasorDynamics/GGOV1_diagram.png)
+![](diagram.png)
 
 Figure 1: Governor GGOV1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

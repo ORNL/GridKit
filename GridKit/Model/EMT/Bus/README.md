@@ -6,7 +6,7 @@ the assembled DAE. $\mathcal{E}$ denotes the set of connected devices.
 
 ## Block Diagram
 
-![Bus model block diagram](../../../../docs/Figures/EMT/Bus/diagram.png)
+![Bus model block diagram](diagram.png)
 
 Figure 1: Bus model
 
