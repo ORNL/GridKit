@@ -1,0 +1,15 @@
+{
+    "system_model_file": "../../../cases/PhasorDynamics/ACTIVSg200/ACTIVSg200.case.json",
+    "dt_monitor": 0.0,
+    "tmax": 10.0,
+    "rel_tol": 1.0e-5,
+    "abs_tol": 1.0e-7,
+    "dt_fixed": 0.0,
+    "max_steps": 1000000,
+    "consistent_ic_type": "ya_ydp",
+    "klu_ordering": "amd",
+    "events": [
+        { "time": 1.0, "type": "fault_on", "element_id": 0 },
+        { "time": 1.1, "type": "fault_off", "element_id": 0 }
+    ]
+}
