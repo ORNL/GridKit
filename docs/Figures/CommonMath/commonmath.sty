@@ -1,0 +1,57 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{commonmath}
+
+\RequirePackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{groupplots}
+
+\definecolor{mu1}{HTML}{C6DBEF}
+\definecolor{mu2}{HTML}{9ECAE1}
+\definecolor{mu3}{HTML}{6BAED6}
+\definecolor{mu4}{HTML}{4292C6}
+\definecolor{mu5}{HTML}{2171B5}
+\definecolor{mu6}{HTML}{08519C}
+\definecolor{mu7}{HTML}{08306B}
+
+\tikzset{
+  declare function={
+    sigmaS(\x,\m) = ifthenelse(\x>=0, 1/(1+exp(-\m*\x)), exp(\m*\x)/(1+exp(\m*\x)));
+    rhoS(\x,\m)   = (\x+abs(\x))/2 + ln(1+exp(-\m*abs(\x)))/\m;
+    qS(\x,\m)     = \x*\x*sigmaS(\x,\m);
+  },
+}
+
+\pgfplotsset{
+  cmbase/.style={
+    axis lines=middle,
+    axis on top=true,
+    axis line style={black!75, line width=0.5pt, -},
+    tick style={black!75, line width=0.4pt},
+    xticklabel style={font=\scriptsize, yshift=-1pt},
+    yticklabel style={font=\scriptsize, xshift=-1pt},
+    xlabel={$x$},
+    xlabel style={font=\small, at={(ticklabel* cs:1)}, anchor=west, xshift=4pt},
+    ylabel style={font=\small, at={(rel axis cs:0.5,1.02)}, anchor=south},
+    title style={font=\small},
+    every axis plot/.append style={line width=1.0pt},
+    no markers,
+    samples=301,
+    clip=true,
+  },
+  cmclosed/.style={
+    only marks, mark=*, mark size=1.6pt, black,
+    mark options={solid, fill=black},
+  },
+  cmopen/.style={
+    only marks, mark=o, mark size=1.6pt, black,
+    mark options={solid, fill=white},
+  },
+}
+
+
+\newcommand{\exactpanel}[1][Discrete]{\nextgroupplot[title={#1}, cycle list={{black}}]}
+\newcommand{\smoothpanel}[1][Smooth]{\nextgroupplot[title={#1}]}
+\newcommand{\cmclosedpoints}[1]{\addplot[cmclosed] coordinates {#1};}
+\newcommand{\cmopenpoints}[1]{\addplot[cmopen] coordinates {#1};}
+
+\endinput

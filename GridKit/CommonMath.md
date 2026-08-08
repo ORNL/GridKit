@@ -1,77 +1,129 @@
 # CommonMath
 
-Smooth, autodiff-friendly replacements for piecewise functions used across GridKit component models. See `CommonMath.hpp` for implementation details.
+Smooth, autodiff-friendly approximations of piecewise functions used across
+GridKit component models. In model equations, these functions act as smooth
+activation functions for saturation, limits, deadbands, and antiwindup behavior. See
+`CommonMath.hpp` for implementation details.
+
+- [Primitives](#primitives)
+- [Derived Functions](#derived-functions)
 
 ## Primitives
 
-The scale $\mu=4\cdot f_{\text{sync}}=240$ is chosen so $\sigma$ behaves like a step on inputs while keeping derivatives finite. As $\mu \to \infty$, these functions approach their exact targets.
+| Symbol | Name | API | Description |
+|--------|------|-----|-------------|
+| $\sigma$ | Logistic Function | `sigmoid` | Smooth approximation to the Heaviside step function |
+| $\rho$ | Ramp | `ramp` | Smooth approximation to the ramp function |
+| $q$ | Quadratic Ramp | `qramp` | Smooth approximation to the quadratic ramp function |
 
-| Name | Description | Usage |
-|------|-------------|-------|
-| `sigmoid` | Step function | `GENSAL`, `GENROU`, `REECA` |
-| `ramp` | Smooth one-sided ramp | `REGCA`, `REECA`, `REPCA` |
-| `qramp` | Exact one-sided quadratic ramp | `IEEET1` |
 
-### $\sigma$ - `sigmoid`
+The default scale $\mu$ of these functions is chosen such that $\sigma'(0)=f_{\text{sync}}$, where $f_{\text{sync}}$ is the fundamental frequency of the `PhasorDynamics` model. As $\mu\to\infty$, $\rho$ and $q$ converge to $\text{ReLU}$ and $\text{ReQU}$ everywhere, while $\sigma$ converges to $H$ for $x\ne0$.
 
-The sigmoid is also known as the logistic function. The equivalent `tanh` form is used for numerical stability because the exponential form can divide by a very large value.
+### Logistic Function
+
+The Heaviside function $H$ is a unit step, defined as:
 
 ```math
 \begin{aligned}
-  \sigma(x)
+  H(x)
     &=
       \begin{cases}
         0 & x\le 0 \\[0pt]
         1 & x\gt 0
-      \end{cases} \\[0pt]
-    &\approx \dfrac{1}{2}\left(1+\tanh\left(\dfrac{\mu x}{2}\right)\right)
+      \end{cases}
+\end{aligned}
+```
+
+We use the logistic function as a smooth approximation to the Heaviside function. This approximation is evaluated using the equivalent hyperbolic-tangent form below to avoid overflow when evaluating the exponential form directly.
+
+```math
+\begin{aligned}
+  \sigma(x) = \dfrac{1}{2}\left(1+\tanh\left(\dfrac{\mu x}{2}\right)\right) &\approx H(x)  
 \end{aligned}
 ```
 
 ![](../docs/Figures/CommonMath/sigmoid.svg)
 
-### $\rho$ - `ramp`
+### Ramp
 
-`ramp` is the softplus approximation to the one-sided ramp. We do not use $x\sigma(x)$ directly because it introduces a negative tail for $x \lt 0$, while softplus stays nonnegative and approaches $\max(x, 0)$ as the smoothing becomes sharp.
+The rectified linear unit $\text{ReLU}$ is a one-sided ramp:
+
+```math
+\begin{aligned}
+  \text{ReLU}(x)
+    &=
+      \begin{cases}
+        0 & x\le 0 \\[0pt]
+        x & x\gt 0
+      \end{cases}
+\end{aligned}
+```
+
+We implement the Ramp function as the $\text{softplus}(x)$, non-negative approximation of $\text{ReLU}(x)$. We do not use $x\,\sigma(x)$ because it introduces a negative tail for $x \lt 0$, while $\text{softplus}(x)$ stays nonnegative.
 
 ```math
 \begin{aligned}
   \rho(x)
-    &= x\,\sigma(x) \\[0pt]
-    &\approx \dfrac{x+\lvert x\rvert}{2}+\dfrac{\ln\!\left(1+e^{-\mu\lvert x\rvert}\right)}{\mu}
+  = \dfrac{1}{\mu}\ln(1+e^{\mu x}) \approx \text{ReLU}(x)
 \end{aligned}
 ```
 
 ![](../docs/Figures/CommonMath/ramp.svg)
 
-### $q$ - `qramp`
-
-*Note*: the implementation of the quadratic ramp `q(x)` could be optimized with Enzyme features down the road so that we don't need the smooth approximation.
+Although $\rho(x)$ is real-analytic, the implemented form is an overflow-safe representation of the function:
 
 ```math
-q(x)=x^2\,\sigma(x)
+\begin{aligned}
+  \rho(x) =
+  \dfrac{x+\lvert x\rvert}{2}
+  + \dfrac{1}{\mu}\ln\left(1+e^{-\mu\lvert x\rvert}\right)
+\end{aligned}
+```
+The kinks of the two terms cancel exactly.
+
+### Quadratic Ramp
+
+The rectified quadratic unit $\text{ReQU}$ is a one-sided quadratic ramp:
+
+```math
+\begin{aligned}
+  \text{ReQU}(x)
+    &=
+      \begin{cases}
+        0 & x\le 0 \\[0pt]
+        x^2 & x\gt 0
+      \end{cases}
+\end{aligned}
+```
+
+We implement an approximation to $\text{ReQU}$ using the logistic function.
+
+```math
+\begin{aligned}
+  q(x) = x^2\,\sigma(x) \approx \text{ReQU}(x) 
+\end{aligned}
 ```
 
 ![](../docs/Figures/CommonMath/qramp.svg)
 
 ## Derived Functions
 
-| Name | Description | Usage |
-|------|-------------|-------|
-| `max` | Smooth binary maximum | `REGCA`, `REECA`, `REECB` |
-| `min` | Smooth binary minimum | `REGCA`, `REECA` |
-| `clamp` | Bounded saturation | `IEEEST`, `REGCA`, `REECA`, `REECB`, `REPCA` |
-| `deadband1` | Type 1 no-offset signed two-sided deadband | - |
-| `deadband2` | Type 2 offset signed two-sided deadband | `REECA`, `REECB`, `REPCA` |
-| `slew` | Symmetric slew-rate limiter | - |
-| `linseg` | Saturated linear segment contribution | `REGCA`, `REECA` |
-| `above` | Above-lower-limit indicator | `REPCA` |
-| `below` | Below-upper-limit indicator | - |
-| `inside` | Interior pulse indicator | `REECB` |
-| `outside` | Outside-band indicator | `REECA` |
-| `antiwindup` | Anti-windup limited derivative | `IEEET1`, `SEXS-PTI`, `TGOV1`, `REECA`, `REECB`, `REPCA` |
+| Name | API | Description | Usage |
+|------|-----|-------------|-------|
+| Maximum | `max` | Smooth binary maximum | `REGCA`, `REECA`, `REECB` |
+| Minimum | `min` | Smooth binary minimum | `REGCA`, `REECA` |
+| Clamp | `clamp` | Bounded saturation | `IEEEST`, `REGCA`, `REECA`, `REECB`, `REPCA` |
+| Type 1 Deadband | `deadband1` | No-offset signed two-sided deadband | - |
+| Type 2 Deadband | `deadband2` | Offset signed two-sided deadband | `REECA`, `REECB`, `REPCA` |
+| Slew | `slew` | Symmetric slew-rate limiter | - |
+| Linear Segment | `linseg` | Saturated linear segment contribution | `REGCA`, `REECA` |
+| Above | `above` | Above-lower-limit indicator | `REPCA` |
+| Below | `below` | Below-upper-limit indicator | - |
+| Inside | `inside` | Interior pulse indicator | `REECB` |
+| Outside | `outside` | Outside-band indicator | `REECA` |
+| Antiwindup | `antiwindup` | Anti-windup limited derivative | `IEEET1`, `SEXS-PTI`, `TGOV1`, `REECA`, `REECB`, `REPCA` |
 
-### `max`
+### Maximum
 
 ```math
 \begin{aligned}
@@ -87,7 +139,7 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/max.svg)
 
-### `min`
+### Minimum
 
 ```math
 \begin{aligned}
@@ -103,7 +155,9 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/min.svg)
 
-### `clamp`
+### Clamp
+
+The limits satisfy $\ell\le u$.
 
 ```math
 \begin{aligned}
@@ -120,7 +174,9 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/clamp.svg)
 
-### `deadband1`
+### Type 1 Deadband
+
+The limits satisfy $\ell\le u$.
 
 ```math
 \begin{aligned}
@@ -137,7 +193,9 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/deadband1.svg)
 
-### `deadband2`
+### Type 2 Deadband
+
+The limits satisfy $\ell\le u$.
 
 ```math
 \begin{aligned}
@@ -154,7 +212,9 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/deadband2.svg)
 
-### `slew`
+### Slew
+
+The rate limit satisfies $r\ge0$.
 
 ```math
 \begin{aligned}
@@ -171,7 +231,9 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/slew.svg)
 
-### `linseg`
+### Linear Segment
+
+The breakpoints satisfy $a<b$.
 
 ```math
 \begin{aligned}
@@ -188,7 +250,7 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/linseg.svg)
 
-### `above`
+### Above
 
 ```math
 \begin{aligned}
@@ -204,7 +266,7 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/above.svg)
 
-### `below`
+### Below
 
 ```math
 \begin{aligned}
@@ -220,15 +282,17 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/below.svg)
 
-### `inside`
+### Inside
+
+The limits satisfy $\ell\le u$.
 
 ```math
 \begin{aligned}
   \text{inside}(x;\ell,u)
     &=
       \begin{cases}
-        1 & \ell\lt x\lt u \\[0pt]
-        0 & \text{else}
+        1 & \ell\le x\le u \\[0pt]
+        0 & \text{otherwise}
       \end{cases} \\[0pt]
     &\approx \sigma(x-\ell)+\sigma(u-x)-1
 \end{aligned}
@@ -236,7 +300,9 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/inside.svg)
 
-### `outside`
+### Outside
+
+The limits satisfy $\ell\le u$.
 
 ```math
 \begin{aligned}
@@ -244,7 +310,7 @@ q(x)=x^2\,\sigma(x)
     &=
       \begin{cases}
         1 & x\lt \ell\ \lor\ x\gt u \\[0pt]
-        0 & \text{else}
+        0 & \text{otherwise}
       \end{cases} \\[0pt]
     &\approx \sigma(\ell-x)+\sigma(x-u)
 \end{aligned}
@@ -252,9 +318,9 @@ q(x)=x^2\,\sigma(x)
 
 ![](../docs/Figures/CommonMath/outside.svg)
 
-### `antiwindup`
+### Antiwindup
 
-<a id="anti-windup-indicator"></a>
+The limits satisfy $\ell\le u$.
 
 ```math
 \begin{aligned}

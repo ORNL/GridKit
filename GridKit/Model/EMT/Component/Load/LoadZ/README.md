@@ -33,9 +33,8 @@ $\mathbf{z}$ | Impedance | [VectorFit](../../../Operators/Rational/VectorFit/REA
 
 ### Submodel Validation
 
-The current is differential for a nonsingular linear coefficient and algebraic
-when the coefficient is zero. Partially singular coefficients are not
-supported.
+The current is differential when $\mathbf{E}^{\mathbf{z}}$ is nonsingular and
+algebraic when $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$.
 
 ```math
 \mathbf{E}^{\mathbf{z}}=\mathbf{0}
