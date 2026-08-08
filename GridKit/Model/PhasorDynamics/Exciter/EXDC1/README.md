@@ -4,7 +4,7 @@
 > This documentation is not in the standard format and EXDC1 is not scheduled to be developed as of 06/26/2025.
 
 
-![](../../../../../docs/Figures/EXDC1.JPG)
+![](diagram.jpg)
 
 Figure 1: Exciter EXDC1 model. Figure courtesy of [PoweWorld](https://www.powerworld.com/WebHelp/).
 

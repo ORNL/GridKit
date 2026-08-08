@@ -1,6 +1,0 @@
-# TGOV1
-
-```{include} ../../../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md
-:start-line: 1
-:relative-images:
-```

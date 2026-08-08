@@ -16,7 +16,7 @@ Notes:
 
 Standard model of the ESAC6A Exciter.
 
-![](../../../../../docs/Figures/PhasorDynamics/ESAC6A_diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter ESAC6A model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

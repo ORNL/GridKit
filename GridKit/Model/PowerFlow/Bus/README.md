@@ -27,7 +27,7 @@ There exist two:
 - *Generator convention*: current **leaves** positive terminal of the circuit element, and if P(Q) is positive that means power is **delivered**, or if negative then it is **absorbed**.
 
 
-![](../../../../docs/Figures/bus_variables.jpg)
+![](diagram.jpg)
 
 Figure 1: Sign convention for the power flow at the bus $`i`$
 

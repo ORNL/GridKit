@@ -2,7 +2,7 @@
 
 ## Convention
 
-![](../../../../docs/Figures/SM1.JPG)
+![](diagram.jpg)
 
 Figure 1: Synchronous Machine. Figure courtesy of
 [PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf/)

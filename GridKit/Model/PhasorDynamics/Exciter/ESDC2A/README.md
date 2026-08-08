@@ -17,7 +17,7 @@ Notes:
 
 Standard model of the ESDC2A Exciter.
 
-![](../../../../../docs/Figures/PhasorDynamics/ESDC2A_diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter ESDC2A model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

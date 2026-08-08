@@ -5,7 +5,7 @@ to the EMT bus through terminal admittance.
 
 ## Block Diagram
 
-![VoltageSource model block diagram](../../../../../../docs/Figures/EMT/VoltageSource/diagram.png)
+![VoltageSource model block diagram](diagram.png)
 
 Figure 1: VoltageSource model
 

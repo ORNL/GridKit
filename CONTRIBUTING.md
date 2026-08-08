@@ -156,6 +156,86 @@ is clearer than
 ```
 when read in plain text and in formatted documentation.
 
+## Documenting Cases
+
+Each case keeps a README next to its data. The README is the canonical
+description of the case and must stay readable on GitHub, so it contains no
+Sphinx syntax. The documentation site brings the README in through a small
+wrapper page under `docs/cases/`.
+
+A wrapper page starts with a stable label and includes the README:
+
+````markdown
+(case-phasor-dynamics-two-area)=
+
+```{include} ../../../examples/PhasorDynamics/Small/TwoArea/README.md
+:relative-images:
+```
+````
+
+Model pages follow the same convention. The label comes from the class string
+used in case JSON, lowercased with punctuation removed. For example, the class
+`Tgov1` is labeled `(model-phasor-dynamics-tgov1)=` and any documentation page
+can link to it:
+
+```markdown
+The case relies on [TGOV1](#model-phasor-dynamics-tgov1) governors.
+```
+
+Do not write model count tables by hand. The wrapper page generates a linked
+table directly from the case JSON:
+
+````markdown
+## Model Inventory
+
+```{case-models} examples/PhasorDynamics/Small/TwoArea/twoarea.case.json
+```
+````
+
+If a case uses a class with no matching model label, the build reports a
+cross reference warning. This makes the generated table a consistency check
+between the case data and the model documentation.
+
+The documentation build discovers cases and examples rather than being told
+about them, so the following names are required:
+
+* Case data is `*.case.json` and its solver configuration is `*.solver.json`.
+* A one-line diagram is named `oneline`, with whatever extension it was
+  exported as. Both `oneline.png` and `oneline.jpg` are valid.
+* A directory is an example when its `CMakeLists.txt` calls `add_test`.
+* A case appears in the catalog and the gallery once it has a page. Two Area
+  sits in `examples/PhasorDynamics/Small/TwoArea`, so its page is
+  `docs/cases/phasor-dynamics/two-area.md`.
+
+A one-line diagram is the first thing a reader sees, in the case README and on
+the gallery card. It should be:
+
+* High resolution, at least 600 dpi
+* Free of overlapping labels
+* Drawn with common electrical symbols for transformers, generators, loads,
+  and other components
+* Restrained in its color palette
+
+Model pages work the same way. Each directive takes the class string used in a
+case file:
+
+````markdown
+## Ports
+
+```{model-ports} Genrou
+```
+
+## Cases
+
+```{model-cases} Genrou
+```
+````
+
+`model-parameters` and `model-monitors` cover material the model READMEs still
+maintain by hand. Add them to a page once the section they replace has been
+deleted. `model-catalog`, `case-catalog`, and `case-gallery` take no argument
+and cover everything the build discovered.
+
 ## Code Style
 
 ### Existing non-compliant code
@@ -578,25 +658,3 @@ in GridKit. Any developer who wishes to use this setup can follow
 [this tutorial](https://code.visualstudio.com/docs/devcontainers/tutorial) and 
 simply use the option "Reopen Folder in Container" rather than 
 "New Dev Container...", which will automatically build the included container.
-
-## Electric Grid Test Cases
-
-When adding a new test case to to the repository using the GridKit input file 
-format, you should follow the following guidelines to remain consistent with 
-existing GridKit cases. For each test case, the associated README.md should 
-contain the following:
-- A high resolution oneline diagram ($\geq$ 600 dpi)
-- No overlapping labels
-- Use common electrical symbols for components (transformers, generators, loads, etc.)
-- Use a calm color pallet
-
-Within the README file for the test case, specify characteristics such as:
-- Which component models are used
-- Quantity of each component model used
-- Types of events well-suited for the case
-- Any other relevant case characteristics 
-
-Additionally, specify existing multiple resolutions of the case, i.e., if 
-there is a high-fidelity EMT network model along with a phasor-domain network 
-model that is well known and available, we should indicate that both these 
-model resolutions are available within GridKit. 

@@ -13,7 +13,7 @@ Notes:
 - Only d-axis affected by saturation
 
 ## Block Diagram
-![](../../../../../docs/Figures/GENSAL.JPG)
+![](diagram.jpg)
 
 Figure 2: GENSAL. Figure courtesy of
 [PowerWorld](https://www.powerworld.com/WebHelp/)

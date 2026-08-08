@@ -1,0 +1,48 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../../../diagram-style.tex}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram]
+
+% Three-block current propagation: fitted input map -> modal delays -> fitted output map
+\node[block, minimum width=2.1cm] (D2) {$\exp(-s\tau_2)$};
+\node[block, minimum width=2.1cm, above=0.6cm of D2] (D1) {$\exp(-s\tau_1)$};
+\node[block, minimum width=2.1cm, below=1.3cm of D2] (DN) {$\exp(-s\tau_M)$};
+\node at ($(D2)!0.5!(DN)$) {$\vdots$};
+
+\node[block, minimum width=2.6cm, left=1.5cm of D2]
+    (Gin) {$\mathbf{G}^{\mathrm{in}}(s)$};
+\node[block, minimum width=2.7cm, right=1.5cm of D2]
+    (Gout) {$\mathbf{G}^{\mathrm{out}}(s)$};
+
+% Fan-out from a single internal point
+\coordinate (split) at ($(Gin.east)!0.5!(D2.west)$);
+\draw[line] (Gin.east) -- (split);
+\draw[->, line] (split) -- (D2.west);
+\foreach \b in {D1, DN}
+    \draw[->, line] (split) |- (\b.west);
+
+% Fan-in to the fitted output map
+\coordinate (join) at ($(D2.east)!0.5!(Gout.west)$);
+\draw[line] (D2.east) -- (join);
+\foreach \b in {D1, DN}
+    \draw[line] (\b.east) -| (join);
+\draw[->, line] (join) -- (Gout.west);
+
+% Output node (owned by this model) with port arrow out
+\node[signal, label={[sig]above:$\mathbf{y}$}, right=0.55cm of Gout] (yout) {};
+\draw[line] (Gout.east) -- (yout);
+\draw[->, line] (yout) -- ++(1.55, 0);
+
+% Input node (owned externally) with port arrow into this model
+\node[signal, label={[sig]above:$\mathbf{u}$}] (uin)
+    at ($(Gin.west)+(-1.5, 0)$) {};
+\draw[->, line] ($(uin)+(-0.8, 0)$) -- (Gin.west);
+
+% Model enclosure: fixed padding around model-owned blocks and output variable
+\begin{scope}[on background layer]
+    \node[operator enclosure, fit=(Gin)(D1)(D2)(DN)(Gout)(yout)] {};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

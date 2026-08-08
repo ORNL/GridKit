@@ -11,7 +11,7 @@ a nonlinear single-penstock turbine.
 
 ## Block Diagram
 
-![HYGOV governor block diagram](../../../../../docs/Figures/PhasorDynamics/HYGOV/diagram.png)
+![HYGOV governor block diagram](diagram.png)
 
 Figure 1: HYGOV governor model. Figure courtesy of the
 [PowerWorld HYGOV model reference](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Governor%20HYGOV%20and%20HYGOVD.htm).
@@ -401,9 +401,9 @@ which can be written in terms of our smooth functions as
 \end{aligned}
 ```
 
-CommonMath defines the [`ramp`](GridKit/CommonMath.md#-ramp),
-[`above`](GridKit/CommonMath.md#above), and
-[`below`](GridKit/CommonMath.md#below) targets and smooth approximations. This is deferred until we permit non Hessenberg forms. Once permitted we should define:
+[CommonMath](../../../../CommonMath.md) defines the `ramp`, `above`, and `below`
+targets and smooth approximations. This is deferred until we permit non
+Hessenberg forms. Once permitted we should define:
 
 ```math
 \begin{aligned}

@@ -8,7 +8,7 @@ transients arise from the connected EMT network.
 
 ## Block Diagram
 
-![Switch model block diagram](../../../../../docs/Figures/EMT/Switch/diagram.png)
+![Switch model block diagram](diagram.png)
 
 Figure 1: Switch model
 

@@ -7,7 +7,7 @@ Standard model of the IEEET1 Exciter.
 Notes:
 - The voltage-sensing input currently uses the positive bus-voltage magnitude $\sqrt{V_r^2 + V_i^2}$; a separate compensation-impedance path is not modeled here.
 
-![](../../../../../docs/Figures/PhasorDynamics_IEEET1_Diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter IEEET1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

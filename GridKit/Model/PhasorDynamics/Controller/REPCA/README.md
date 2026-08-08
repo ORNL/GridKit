@@ -20,7 +20,7 @@ resources.
 
 ## Block Diagram
 
-![REPCA plant-control block diagram](../../../../../docs/Figures/PhasorDynamics/REPCA/diagram.png)
+![REPCA plant-control block diagram](diagram.png)
 
 Figure 1: REPCA plant-control model. Figure courtesy of
 [PowerWorld REPC_A model reference](https://www.powerworld.com/WebHelp/Content/TransientModels_PDF/Generator/Others/Plant%20Controller%20REPC_A.pdf).

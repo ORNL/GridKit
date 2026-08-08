@@ -6,7 +6,7 @@ delay per mode, and a fitted output factor while preserving the input units.
 
 ## Block Diagram
 
-![Propagation operator block diagram](../../../../../../docs/Figures/EMT/Propagation/diagram.png)
+![Propagation operator block diagram](diagram.png)
 
 Figure 1: Propagation model
 
