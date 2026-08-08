@@ -60,7 +60,7 @@ namespace GridKit
       {
         const auto row_mapped = row_indices[static_cast<size_t>(row)];
         const auto col_mapped = col_indices[static_cast<size_t>(col)];
-        if (col_mapped != INVALID_INDEX<size_t>)
+        if (row_mapped != INVALID_INDEX<size_t> && col_mapped != INVALID_INDEX<size_t>)
         {
           rows[static_cast<size_t>(nnz)] = row_mapped;
           cols[static_cast<size_t>(nnz)] = col_mapped;
@@ -99,7 +99,7 @@ namespace GridKit
       {
         const auto row_mapped = row_indices[static_cast<size_t>(row)];
         const auto col_mapped = col_indices[static_cast<size_t>(col)];
-        if (col_mapped != INVALID_INDEX<long int>)
+        if (row_mapped != INVALID_INDEX<long int> && col_mapped != INVALID_INDEX<long int>)
         {
           rows[static_cast<size_t>(nnz)] = row_mapped;
           cols[static_cast<size_t>(nnz)] = col_mapped;
@@ -138,7 +138,7 @@ namespace GridKit
       {
         const auto row_mapped = row_indices[static_cast<size_t>(row)];
         const auto col_mapped = col_indices[static_cast<size_t>(col)];
-        if (col_mapped != INVALID_INDEX<size_t>)
+        if (row_mapped != INVALID_INDEX<size_t> && col_mapped != INVALID_INDEX<size_t>)
         {
           rows[static_cast<size_t>(nnz)] = row_mapped;
           cols[static_cast<size_t>(nnz)] = col_mapped;
@@ -177,7 +177,7 @@ namespace GridKit
       {
         const auto row_mapped = row_indices[static_cast<size_t>(row)];
         const auto col_mapped = col_indices[static_cast<size_t>(col)];
-        if (col_mapped != INVALID_INDEX<long int>)
+        if (row_mapped != INVALID_INDEX<long int> && col_mapped != INVALID_INDEX<long int>)
         {
           rows[static_cast<size_t>(nnz)] = row_mapped;
           cols[static_cast<size_t>(nnz)] = col_mapped;
