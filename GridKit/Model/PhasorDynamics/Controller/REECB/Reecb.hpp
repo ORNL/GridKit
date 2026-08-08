@@ -54,9 +54,11 @@ namespace GridKit
         IPCMD,  ///< \f$I_p^\mathrm{cmd}\f$ Algebraic active-current command output on system base [p.u.]
       };
 
-      /// External signal variables read or initialized by a `Reecb`.
+      /// External variables read by a `Reecb`.
       enum class ReecbExternalVariables : size_t
       {
+        VR,     ///< \f$V_\mathrm{r}\f$ Terminal-bus real voltage [p.u.]
+        VI,     ///< \f$V_\mathrm{i}\f$ Terminal-bus imaginary voltage [p.u.]
         PE,     ///< \f$P_e\f$ Optional Known active-power feedback input on system base [p.u.]
         QGEN,   ///< \f$Q^\mathrm{gen}\f$ Optional Known reactive-power feedback input on system base [p.u.]
         QEXT,   ///< \f$Q^\mathrm{ext}\f$ Optional Unknown Volt/VAr reference input: system-base reactive power [p.u.], or the terminal-voltage reference [p.u.] when \f$s_Q=1\f$ and \f$s_V=0\f$
@@ -89,10 +91,9 @@ namespace GridKit
         using Component<scalar_type, index_type>::va_component_base_;
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::ws_;
-        using Component<scalar_type, index_type>::ws_indices_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::y_;
+        using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::yp_;
 
       public:
@@ -121,6 +122,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
+        int evaluateInternalResidual() override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
@@ -134,8 +136,7 @@ namespace GridKit
         [[gnu::always_inline]] inline int evaluateInternalResidual(
             const ScalarT* y,
             const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
+            const ScalarT* y_ext,
             ScalarT*       f);
 
       private:
@@ -143,6 +144,8 @@ namespace GridKit
         /// initialization tolerance [p.u. current squared].
         static constexpr RealT CURRENT_CIRCLE_KNEE =
             INITIALIZATION_TOLERANCE / Math::MU<RealT>;
+
+        void gatherExternalVariables();
 
         struct InitialPoint;
 

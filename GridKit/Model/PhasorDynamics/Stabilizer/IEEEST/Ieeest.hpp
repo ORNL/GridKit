@@ -54,10 +54,8 @@ namespace GridKit
         using Component<scalar_type, index_type>::time_;
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::ws_;
-        using Component<scalar_type, index_type>::ws_indices_;
-        using Component<scalar_type, index_type>::h_;
+        using Component<scalar_type, index_type>::y_ext_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -84,6 +82,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
+        int evaluateInternalResidual() override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
@@ -95,7 +94,6 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*,
             const ScalarT*,
             const ScalarT*,
             const ScalarT*,
@@ -149,6 +147,7 @@ namespace GridKit
 
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
+        void gatherExternalVariables();
       };
 
     } // namespace Stabilizer

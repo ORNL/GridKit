@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -100,19 +101,31 @@ namespace GridKit
         // Jacobian via Enzyme
         auto enzyme_jacobian = EnzymeJacobian(R, X, status);
 
-        if (!status)
+        success *= dependency_tracking_jacobian.size() == enzyme_jacobian.size();
+
+        const auto remove_zeros = [](auto& jacobian)
         {
-          // HACK: Enzyme retains the fixed DfDwb/DhDy structure and masks its
-          // inactive values to exact zero, while DependencyTracking omits them.
-          for (auto& row : enzyme_jacobian)
+          for (auto& row : jacobian)
           {
-            std::erase_if(row, [](const auto& entry)
-                          { return entry.second == 0.0; });
+            for (auto entry = row.begin(); entry != row.end();)
+            {
+              if (entry->second == 0.0)
+              {
+                entry = row.erase(entry);
+              }
+              else
+              {
+                ++entry;
+              }
+            }
           }
-        }
+        };
+        remove_zeros(dependency_tracking_jacobian);
+        remove_zeros(enzyme_jacobian);
 
         /// Compare DependencyTracking dependencies to Enzyme's
-        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        const size_t rows = std::min(dependency_tracking_jacobian.size(), enzyme_jacobian.size());
+        for (size_t i = 0; i < rows; ++i)
         {
           success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]));
         }
@@ -157,8 +170,9 @@ namespace GridKit
         std::vector<DependencyTracking::Variable> residual_y(
             residual_y_view.getData(),
             residual_y_view.getData() + residual_y_view.getSize());
-        auto&                                     bus_residual_y_view = bus.getResidual();
-        std::vector<DependencyTracking::Variable> bus_residual_y(
+        auto& bus_residual_y_view = bus.getResidual();
+        residual_y.insert(
+            residual_y.end(),
             bus_residual_y_view.getData(),
             bus_residual_y_view.getData() + bus_residual_y_view.getSize());
 
@@ -180,6 +194,11 @@ namespace GridKit
         std::vector<DependencyTracking::Variable> residual_yp(
             residual_yp_view.getData(),
             residual_yp_view.getData() + residual_yp_view.getSize());
+        auto& bus_residual_yp_view = bus.getResidual();
+        residual_yp.insert(
+            residual_yp.end(),
+            bus_residual_yp_view.getData(),
+            bus_residual_yp_view.getData() + bus_residual_yp_view.getSize());
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)
@@ -193,8 +212,7 @@ namespace GridKit
         }
 
         // Extract the dependencies and add d/dy' to d/dy
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(
-            residual_y.size() + bus_residual_y.size());
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
         for (IdxT i = 0; i < residual_y.size(); ++i)
         {
           DependencyTracking::Variable::DependencyMap dependency_y  = (residual_y[i]).getDependencies();
@@ -227,11 +245,6 @@ namespace GridKit
               dependencies[i].insert(std::make_pair(index_yp, value_yp));
             }
           }
-        }
-
-        for (size_t i = 0; i < bus_residual_y.size(); ++i)
-        {
-          dependencies[residual_y.size() + i] = bus_residual_y[i].getDependencies();
         }
 
         return dependencies;

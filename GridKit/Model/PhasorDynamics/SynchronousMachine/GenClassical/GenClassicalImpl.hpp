@@ -142,15 +142,11 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Resize bus data
-      wb_.resize(2);
-      h_.resize(2);
-
-      // Resize signal variable data
-      ws_.resize(2);
-      ws_indices_.resize(2);
-      ws_indices_[0] = INVALID_INDEX<IdxT>;
-      ws_indices_[1] = INVALID_INDEX<IdxT>;
+      // Resize coupling data
+      this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<GenClassicalExternalVariables>()));
+      f_ext_.resize(2);
+      f_ext_.setToZero();
+      residual_indices_ext_.assign(2, INVALID_INDEX<IdxT>);
 
       // Set output signals
       if (auto speed_port = ports_.out.template port<GenClassicalSignalOutputs::speed>())
@@ -283,8 +279,7 @@ namespace GridKit
     __attribute__((always_inline)) inline int GenClassical<scalar_type, index_type>::evaluateInternalResidual(
         const ScalarT* y,
         const ScalarT* yp,
-        const ScalarT* wb,
-        const ScalarT* ws,
+        const ScalarT* y_ext,
         ScalarT*       f)
     {
       // Set variable aliases for better readability.
@@ -299,12 +294,12 @@ namespace GridKit
       const ScalarT omega_dot = yp[1];
 
       // Set coupling variable aliases
-      const ScalarT vr = wb[0];
-      const ScalarT vi = wb[1];
+      const ScalarT vr = y_ext[0];
+      const ScalarT vi = y_ext[1];
 
       // Set signal variable aliases
-      const ScalarT pmech = this->toComponentBase(ws[0]);
-      const ScalarT efd   = ws[1];
+      const ScalarT pmech = this->toComponentBase(y_ext[2]);
+      const ScalarT efd   = y_ext[3];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
@@ -321,68 +316,114 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus residual
+     * @brief External residual
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int GenClassical<scalar_type, index_type>::evaluateBusResidual(
+    __attribute__((always_inline)) inline int GenClassical<scalar_type, index_type>::evaluateExternalResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+        [[maybe_unused]] const ScalarT* y_ext,
+        ScalarT*                        f_ext)
     {
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];
-      h[0]             = this->toSystemBase(ir);
-      h[1]             = this->toSystemBase(ii);
+      f_ext[0]         = this->toSystemBase(ir);
+      f_ext[1]         = this->toSystemBase(ii);
 
       return 0;
     }
 
     /**
-     * \brief Residual for the generator model.
+     * @brief Gather external variables and index maps.
      *
      */
     template <typename scalar_type, typename index_type>
-    int GenClassical<scalar_type, index_type>::evaluateResidual()
+    void GenClassical<scalar_type, index_type>::gatherExternalVariables()
     {
-      auto* ws = ws_.getData();
+      auto* y_ext = y_ext_.getData();
 
-      ws[0] = pmech_set_;
-      if (auto pmech_port = ports_.in.template port<GenClassicalSignalInputs::pmech>())
+      // Bus voltages
+      y_ext[0] = Vr();
+      y_ext[1] = Vi();
+      if (bus_->size() > 0)
       {
-        ws[0]          = pmech_port.readSignal();
-        ws_indices_[0] = pmech_port.signalVariableIndex();
+        variable_indices_ext_[0] = bus_->getVariableIndex(0);
+        variable_indices_ext_[1] = bus_->getVariableIndex(1);
+        residual_indices_ext_[0] = bus_->getResidualIndex(0);
+        residual_indices_ext_[1] = bus_->getResidualIndex(1);
       }
 
-      ws[1] = efd_set_;
-      if (auto efd_port = ports_.in.template port<GenClassicalSignalInputs::efd>())
+      // Mechanical Power
+      y_ext[2] = pmech_set_;
+      if (ports_.in.template port<GenClassicalSignalInputs::pmech>().connected())
       {
-        ws[1]          = efd_port.readSignal();
-        ws_indices_[1] = efd_port.signalVariableIndex();
+        y_ext[2]                = ports_.in.template port<GenClassicalSignalInputs::pmech>().readSignal();
+        variable_indices_ext_[2] = ports_.in.template port<GenClassicalSignalInputs::pmech>().signalVariableIndex();
       }
 
-      auto* wb = wb_.getData();
-      wb[0]    = Vr();
-      wb[1]    = Vi();
+      // Exciter Efield
+      y_ext[3] = efd_set_;
+      if (ports_.in.template port<GenClassicalSignalInputs::efd>().connected())
+      {
+        y_ext[3]                = ports_.in.template port<GenClassicalSignalInputs::efd>().readSignal();
+        variable_indices_ext_[3] = ports_.in.template port<GenClassicalSignalInputs::efd>().signalVariableIndex();
+      }
+    }
+
+    /**
+     * \brief Internal residual for the generator model.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::evaluateInternalResidual()
+    {
+      gatherExternalVariables();
 
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
-      auto*       h  = h_.getData();
-      evaluateInternalResidual(y, yp, wb, ws, f);
-      evaluateBusResidual(y, yp, wb, h);
+      evaluateInternalResidual(y, yp, y_ext_.getData(), f);
+      f_.setDataUpdated();
 
-      Ir() += h[0];
-      Ii() += h[1];
+      return 0;
+    }
+
+    /**
+     * \brief External residual contributions to the bus.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      auto* y_ext = y_ext_.getData();
+      auto* f_ext = f_ext_.getData();
+
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      evaluateExternalResidual(y, yp, y_ext, f_ext);
+
+      // GenClassical contribution to bus algebraic equations
+      Ir() += f_ext[0];
+      Ii() += f_ext[1];
 
       if (bus_->size() > 0)
       {
         bus_->getResidual().setDataUpdated();
       }
-      f_.setDataUpdated();
 
       return 0;
+    }
+
+    /**
+     * \brief Residual evaluation and contribution to the connected bus
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::evaluateResidual()
+    {
+      evaluateInternalResidual();
+      return evaluateExternalResidual();
     }
 
     template <typename scalar_type, typename index_type>

@@ -75,12 +75,11 @@ namespace GridKit
       /**
        * @brief Allocate the model vectors and wire the mechanical-power output
        *
-       * Sizes the state, residual, and signal-interface buffers, seeds the
+       * Sizes the state, residual, and external-variable buffers, seeds the
        * identity index maps, and points the assigned `pmech` node at the
        * internal state it publishes. That node aliases GASTPTI storage from
        * here on, which is how initialize() reads the seed the machine wrote.
        * Repeated allocation by this model reuses its existing link.
-       * GASTPTI attaches to no bus, so the bus-interface buffer stays empty.
        *
        */
       template <typename scalar_type, typename index_type>
@@ -98,10 +97,7 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        const auto signal_size = Utilities::enum_size<GastPtiExternalVariables>();
-        ws_.resize(static_cast<IdxT>(signal_size));
-        ws_.setToZero();
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        this->allocateExternalVectors(static_cast<IdxT>(Utilities::enum_size<GastPtiExternalVariables>()));
 
         for (IdxT j = 0; j < size_; ++j)
         {
@@ -436,45 +432,71 @@ namespace GridKit
       }
 
       /**
-       * @brief Evaluate the seven GASTPTI-owned residual rows
+       * @brief Gather external signal values and global indices.
        *
-       * Refreshes the signal interface buffers and evaluates the internal
-       * residual. GASTPTI attaches to no bus, so there is no bus interface to
-       * refresh. An unattached reference port falls back to the value latched
-       * by initialize(); an unattached speed port reads zero deviation.
-       *
+       * An unattached reference port falls back to the value latched by
+       * initialize(); an unattached speed port reads zero deviation.
        */
       template <typename scalar_type, typename index_type>
-      int GastPti<scalar_type, index_type>::evaluateResidual()
+      void GastPti<scalar_type, index_type>::gatherExternalVariables()
       {
+        auto* y_ext = y_ext_.getData();
+
         const auto OMEGA = static_cast<size_t>(GastPtiExternalVariables::OMEGA);
         const auto PREF  = static_cast<size_t>(GastPtiExternalVariables::PREF);
 
-        auto* ws = ws_.getData();
-
-        ws[OMEGA] = ZERO<RealT>;
-        ws[PREF]  = pref_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        y_ext[OMEGA] = ZERO<RealT>;
+        y_ext[PREF]  = pref_set_;
+        std::fill(variable_indices_ext_.begin(),
+                  variable_indices_ext_.end(),
+                  INVALID_INDEX<IdxT>);
 
         if (auto omega_port = ports_.in.template port<GastPtiSignalInputs::speed>())
         {
-          ws[OMEGA]          = omega_port.readSignal();
-          ws_indices_[OMEGA] = omega_port.signalVariableIndex();
+          y_ext[OMEGA] =
+              ports_.in.template port<GastPtiSignalInputs::speed>().readSignal();
+          variable_indices_ext_[OMEGA] =
+              ports_.in.template port<GastPtiSignalInputs::speed>().signalVariableIndex();
         }
         if (auto pref_port = ports_.in.template port<GastPtiSignalInputs::pref>())
         {
-          ws[PREF]          = pref_port.readSignal();
-          ws_indices_[PREF] = pref_port.signalVariableIndex();
+          y_ext[PREF] =
+              ports_.in.template port<GastPtiSignalInputs::pref>().readSignal();
+          variable_indices_ext_[PREF] =
+              ports_.in.template port<GastPtiSignalInputs::pref>().signalVariableIndex();
         }
+      }
+
+      /**
+       * @brief Evaluate the seven GASTPTI-owned residual rows.
+       */
+      template <typename scalar_type, typename index_type>
+      int GastPti<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
 
-        evaluateInternalResidual(y, yp, nullptr, ws, f);
+        evaluateInternalResidual(y, yp, y_ext_.getData(), f);
         f_.setDataUpdated();
         return 0;
       }
+
+      /**
+       * @brief Evaluate internal equations and external contributions.
+       *
+       * GASTPTI contributes no external residual, so the base implementation
+       * returns zero after the internal equations are evaluated.
+       */
+      template <typename scalar_type, typename index_type>
+      int GastPti<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
+      }
+
 
       /**
        * @brief Access the monitor
@@ -500,10 +522,9 @@ namespace GridKit
        * @param[in] y Internal variables in `GastPtiInternalVariables` order;
        *              each variable uses the base documented by its enum.
        * @param[in] yp Internal derivatives in the same enum order and bases.
-       * @param[in] wb Bus voltage components; unused, GASTPTI attaches to no bus.
-       * @param[in] ws External signals in `GastPtiExternalVariables` order:
-       *               per-unit speed deviation followed by system-base
-       *               active-power reference.
+       * @param[in] y_ext External signals in `GastPtiExternalVariables` order:
+       *                  per-unit speed deviation followed by system-base
+       *                  active-power reference.
        * @param[out] f Model-owned residuals in `GastPtiInternalVariables` order.
        */
       template <typename scalar_type, typename index_type>
@@ -511,8 +532,7 @@ namespace GridKit
       GastPti<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
         const auto XVALVE = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
@@ -526,8 +546,6 @@ namespace GridKit
         const auto OMEGA = static_cast<size_t>(GastPtiExternalVariables::OMEGA);
         const auto PREF  = static_cast<size_t>(GastPtiExternalVariables::PREF);
 
-        static_cast<void>(wb);
-
         const ScalarT xvalve = y[XVALVE];
         const ScalarT xflow  = y[XFLOW];
         const ScalarT xtemp  = y[XTEMP];
@@ -540,8 +558,8 @@ namespace GridKit
         const ScalarT xflow_dot  = yp[XFLOW];
         const ScalarT xtemp_dot  = yp[XTEMP];
 
-        const ScalarT omega = ws[OMEGA];
-        const ScalarT pref  = this->toComponentBase(ws[PREF]);
+        const ScalarT omega = y_ext[OMEGA];
+        const ScalarT pref  = this->toComponentBase(y_ext[PREF]);
 
         const ScalarT valve_target =
             Math::antiwindup(xvalve, vlv - xvalve, Vmin_response_, Vmax_response_);

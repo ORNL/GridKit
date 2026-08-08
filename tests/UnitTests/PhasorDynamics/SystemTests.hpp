@@ -219,6 +219,13 @@ namespace GridKit
         success *= isEqual(bus2.Ir(), Ir2);
         success *= isEqual(bus2.Ii(), Ii2);
 
+        system.evaluateResidual();
+
+        success *= isEqual(bus1.Ir(), Ir1);
+        success *= isEqual(bus1.Ii(), Ii1);
+        success *= isEqual(bus2.Ir(), Ir2);
+        success *= isEqual(bus2.Ii(), Ii2);
+
         return success.report(__func__);
       }
 
