@@ -13,6 +13,7 @@ int main()
   result += test.genClassicalEsdc1a();
   result += test.genClassicalHygov();
   result += test.regcaRepca();
+  result += test.ieeestIeeet1();
   result += gastpti.genrouGastPti();
   result += gastpti.gensalGastPti();
   result += gastpti.genClassicalGastPti();
