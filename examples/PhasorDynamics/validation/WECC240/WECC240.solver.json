@@ -1,0 +1,13 @@
+{
+    "system_model_file": "../../../../cases/PhasorDynamics/WECC240/WECC240.case.json",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 1.0, "type": "fault_on", "element_id": 0 },
+        { "time": 1.15, "type": "fault_off", "element_id": 0 }
+    ],
+    "reference_file": "reference/WECC240.omega.ref.csv",
+    "error_type": "relative",
+    "error_tolerance": 1e-2,
+    "abs_err_threshold": 1e-6
+}
