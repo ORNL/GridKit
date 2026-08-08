@@ -12,7 +12,7 @@ and stabilizing feedback.
 
 ## Block Diagram
 
-![EXDC1 exciter block diagram](../../../../../docs/Figures/EXDC1.JPG)
+![EXDC1 exciter block diagram](diagram.jpg)
 
 Figure 1: EXDC1 exciter model. Figure courtesy of the
 [PowerWorld EXDC1 model reference](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20EXDC1.htm).

@@ -10,7 +10,7 @@ Fifth-order salient-pole synchronous machine. See the [shared conventions](../RE
 - Only d-axis affected by saturation
 
 ## Block Diagram
-![](../../../../../docs/Figures/GENSAL.JPG)
+![](diagram.jpg)
 
 Figure 2: GENSAL. Figure courtesy of
 [PowerWorld](https://www.powerworld.com/WebHelp/)

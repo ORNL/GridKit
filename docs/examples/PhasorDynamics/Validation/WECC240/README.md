@@ -1,3 +1,5 @@
+(example-phasor-dynamics-validation-wecc240)=
+
 # WECC240 Validation
 
 ```{include} ../../../../../examples/PhasorDynamics/Validation/WECC240/README.md

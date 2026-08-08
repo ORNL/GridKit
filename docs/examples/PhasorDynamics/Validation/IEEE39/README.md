@@ -1,3 +1,5 @@
+(example-phasor-dynamics-validation-ieee39)=
+
 # IEEE39 Validation
 
 ```{include} ../../../../../examples/PhasorDynamics/Validation/IEEE39/README.md

@@ -1,3 +1,5 @@
+(example-phasor-dynamics-validation-hawaii)=
+
 # Hawaii Validation
 
 ```{include} ../../../../../examples/PhasorDynamics/Validation/Hawaii/README.md
