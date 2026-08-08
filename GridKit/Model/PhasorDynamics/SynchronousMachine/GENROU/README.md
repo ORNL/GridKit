@@ -9,7 +9,7 @@ Sixth-order round-rotor synchronous machine. See the [shared conventions](../REA
 - Same relative amount of saturation occurs on both $d$ and $q$ axis
 
 ## Block Diagram
-![](../../../../../docs/Figures/GENROU.JPG)
+![](diagram.jpg)
 
 Figure 2: GENROU. Figure courtesy of
 [PowerWorld](https://www.powerworld.com/WebHelp/)

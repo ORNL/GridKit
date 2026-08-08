@@ -11,7 +11,7 @@ negative sign.
 
 ## Block Diagram
 
-![](../../../../docs/Figures/bus_variables.jpg)
+![](diagram.jpg)
 
 Figure 1: Bus-variable diagram. This should be updated to represent current
 balance instead of power balance.

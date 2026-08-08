@@ -5,7 +5,7 @@ resources.
 
 ## Block Diagram
 
-![](../../../../../docs/Figures/PhasorDynamics_REGCB_Diagram.png)
+![](diagram.png)
 
 Figure 1: Generator/Converter REGCB model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

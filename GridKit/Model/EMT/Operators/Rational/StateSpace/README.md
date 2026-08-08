@@ -26,7 +26,7 @@ the pole-index set
 
 ## Block Diagram
 
-![StateSpace rational-operator block diagram](../../../../../../docs/Figures/EMT/StateSpace/diagram.png)
+![StateSpace rational-operator block diagram](diagram.png)
 
 Figure 1: StateSpace model
 

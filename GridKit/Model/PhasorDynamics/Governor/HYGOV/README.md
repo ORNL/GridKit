@@ -13,7 +13,7 @@ None.
 
 ## Block Diagram
 
-![HYGOV governor block diagram](../../../../../docs/Figures/PhasorDynamics/HYGOV/diagram.png)
+![HYGOV governor block diagram](diagram.png)
 
 Figure 1: HYGOV governor model. Figure courtesy of the
 [PowerWorld HYGOV model reference](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Governor%20HYGOV%20and%20HYGOVD.htm).

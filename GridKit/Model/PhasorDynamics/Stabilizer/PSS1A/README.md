@@ -4,7 +4,7 @@ Specification draft; not implemented. The equations and initialization remain un
 
 ## Block Diagram
 
-![](../../../../../docs/Figures/PSS1A.JPG)
+![](diagram.jpg)
 
 Figure 1: Power system stabilizer PSS1A model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

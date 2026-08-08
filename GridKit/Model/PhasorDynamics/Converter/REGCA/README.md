@@ -9,7 +9,7 @@ None.
 
 ## Block Diagram
 
-![REGCA generator/converter block diagram](../../../../../docs/Figures/PhasorDynamics_REGCA_Diagram.png)
+![REGCA generator/converter block diagram](diagram.png)
 
 Figure 1: REGCA generator/converter model. Figure courtesy of the
 [PowerWorld REGC_A model reference](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Machine%20Model%20REGC_A.htm).

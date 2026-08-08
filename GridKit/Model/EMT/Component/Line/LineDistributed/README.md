@@ -4,7 +4,7 @@
 
 ## Block Diagram
 
-![LineDistributed model block diagram](../../../../../../docs/Figures/EMT/LineDistributed/diagram.png)
+![LineDistributed model block diagram](diagram.png)
 
 Figure 1: LineDistributed model
 

@@ -2,57 +2,27 @@
 
 ## One-Line Diagram
 
-![](wecc.jpg)
+![](oneline.jpg)
 
-Figure 1: Oneline of the WECC case of [National Laboratory of the Rockies](https://www.nlr.gov/grid/test-case-repository)
+Figure 1: One-line diagram of the WECC case. Source: [National Laboratory of
+the Rockies](https://www.nlr.gov/grid/test-case-repository).
 
 ## Case Description
 
-This case is adapted from the [National Laboratory of the Rockies](https://www.nlr.gov/grid/test-case-repository) WECC Model.
-
-It is configured with GridKit-compatible dynamic models.
-
-Model | Count
----|---
-[Bus](../../../../GridKit/Model/PhasorDynamics/Bus/README.md) | 243
-[Branch](../../../../GridKit/Model/PhasorDynamics/Branch/README.md) | 447
-[GENROU](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/README.md) | 140
-[TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md) | 103
-[SEXS-PTI](../../../../GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/README.md) | 103
-[IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 10
-[LoadZIP](../../../../GridKit/Model/PhasorDynamics/Load/LoadZIP/README.md) | 146
-[SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 319
-
-## Data Notes
-
-None.
-
-
-## Events
-
-The following event types are provided for this case.
-
-- Bus fault
-
+This case is adapted from the [National Laboratory of the
+Rockies](https://www.nlr.gov/grid/test-case-repository) WECC model and uses
+GridKit-compatible dynamic models.
 
 ## Outstanding
 
-### Dynamics
+The following source models are not represented directly in this case:
 
-Only one exciter model is outstanding:
-- REECB1
-- GAST_PTI
-- REGCA
-- REPCA1
+- [REECB1](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20REEC_B.htm)
+- [GAST_PTI](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Governor%20GAST_PTI%20and%20GASTD.htm)
+- [REGCA](../../../../GridKit/Model/PhasorDynamics/Converter/REGCA/README.md)
+- [REPCA1](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Plant%20Controller%20REPC_A.htm)
 
-The following examples needs to be constructed with this case.
-- Line Outage
-- Generator Outage
-- Forced Oscillations
+Other outstanding modeling:
 
-### Statics
-
-GridKit models Switched Shunts and Transformers with constant impedance, but this erases information and our ability to statically re-initialze the model if initalizing at a different operating point.
-
-- Switched Shunts
-- Transformers (LTC and Tap Ratios $\neq 1$)
+- Switched shunts
+- LTC transformers and non-unit tap ratios
