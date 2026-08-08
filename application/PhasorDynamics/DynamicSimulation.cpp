@@ -43,6 +43,11 @@ int main(int argc, const char* argv[])
   auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
   ida.initializeSimulation(0.0);
+
+  // Update system time and record initial state
+  sys.updateTime(0.0, 0.0);
+  sys.printMonitoredVariables();
+
   for (const auto& event : study.events)
   {
     // Run to event time
@@ -61,6 +66,10 @@ int main(int argc, const char* argv[])
 
     // Re-initialize simulation at event time
     ida.initializeSimulation(event.time);
+
+    // Record post-event state
+    sys.updateTime(event.time, 0.0);
+    sys.printMonitoredVariables();
   }
 
   // Run to final time

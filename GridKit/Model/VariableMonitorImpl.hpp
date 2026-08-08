@@ -68,6 +68,12 @@ namespace GridKit
         : label_(label)
       {
         std::ranges::copy(variables, std::back_inserter(variables_));
+        // Column names are fixed once the label and variables are known, so
+        // build them here rather than per row when sinks filter on them.
+        for (auto v : variables_)
+        {
+          columns_.push_back(label_ + "_" + std::string(enum_name(v)));
+        }
       }
 
       /**
@@ -156,23 +162,51 @@ namespace GridKit
 
       ///@}
 
+      /**
+       * @brief Does this sink accept the column at the given index?
+       */
+      bool selected(std::size_t i, const SinkFilterPtr& filter) const
+      {
+        return (!filter) || (*filter)(columns_[i]);
+      }
+
+      /**
+       * @brief Does this sink accept any column of this monitor?
+       */
+      bool anySelected(const SinkFilterPtr& filter) const
+      {
+        if (!filter)
+        {
+          return true;
+        }
+        return std::ranges::any_of(columns_,
+                                   [&filter](const std::string& column)
+                                   { return (*filter)(column); });
+      }
+
       void appendHeader(std::string& out, Csv csv) const override
       {
-        for (auto v : variables_)
+        for (std::size_t i = 0; i < variables_.size(); ++i)
         {
+          if (!selected(i, csv.filter))
+          {
+            continue;
+          }
           out += csv.delim;
-          out += label_;
-          out += '_';
-          out.append(enum_name(v));
+          out += columns_[i];
         }
       }
 
       void append(std::string& out, Csv csv) const override
       {
-        for (auto v : variables_)
+        for (std::size_t i = 0; i < variables_.size(); ++i)
         {
+          if (!selected(i, csv.filter))
+          {
+            continue;
+          }
           out += csv.delim;
-          out += f_[static_cast<size_t>(enum_integer(v))]();
+          out += f_[static_cast<size_t>(enum_integer(variables_[i]))]();
         }
       }
 
@@ -188,18 +222,21 @@ namespace GridKit
         out += ",\n";
       }
 
-      void append(std::string& out, Json) const override
+      void append(std::string& out, Json json) const override
       {
-        if (empty())
+        if (empty() || !anySelected(json.filter))
         {
           return;
         }
 
         out += indent_ + "\"" + label_ + "\": {\n";
         indent_.append(2, ' ');
-        for (auto v : variables_)
+        for (std::size_t i = 0; i < variables_.size(); ++i)
         {
-          appendVariable(out, v, Json());
+          if (selected(i, json.filter))
+          {
+            appendVariable(out, variables_[i], Json());
+          }
         }
         // Remove comma after last entry
         out.erase(out.size() - 2);
@@ -220,18 +257,21 @@ namespace GridKit
         out += '\n';
       }
 
-      void append(std::string& out, Yaml) const override
+      void append(std::string& out, Yaml yaml) const override
       {
-        if (empty())
+        if (empty() || !anySelected(yaml.filter))
         {
           return;
         }
 
         out += indent_ + label_ + ":\n";
         indent_.append(2, ' ');
-        for (auto v : variables_)
+        for (std::size_t i = 0; i < variables_.size(); ++i)
         {
-          appendVariable(out, v, Yaml());
+          if (selected(i, yaml.filter))
+          {
+            appendVariable(out, variables_[i], Yaml());
+          }
         }
         indent_.erase(indent_.size() - 2);
       }
@@ -244,6 +284,8 @@ namespace GridKit
       std::array<ValueFormatter, enum_size_> f_;
       /// Set of selected enum values
       std::vector<VariableEnum>              variables_;
+      /// Full column name per selected enum value, used for sink filtering
+      std::vector<std::string>               columns_;
       /// Indent string used for formatting
       mutable std::string                    indent_{"    "};
       /// Monitor disambiguation label

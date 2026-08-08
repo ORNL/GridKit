@@ -1,0 +1,20 @@
+{
+    "system_model_file": "../../../cases/PhasorDynamics/wecc10k.case.json",
+    "dt_monitor": 0.05,
+    "tmax": 10.0,
+    "max_steps": 2000,
+    "events": [
+        { "time": 1.0, "type": "fault_on", "element_id": 0 },
+        { "time": 1.15, "type": "fault_off", "element_id": 0 }
+    ],
+    "monitors": [
+        {
+            "file_name": "wecc10k.omega.csv",
+            "include": "Genrou_*_omega"
+        },
+        {
+            "file_name": "wecc10k.p.csv",
+            "include": "Genrou_*_p"
+        }
+    ]
+}

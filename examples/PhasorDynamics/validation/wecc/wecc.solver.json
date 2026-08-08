@@ -1,0 +1,43 @@
+{
+    "system_model_file": "../../../../cases/PhasorDynamics/wecc.case.json",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 1.0, "type": "fault_on", "element_id": 0 },
+        { "time": 1.15, "type": "fault_off", "element_id": 0 }
+    ],
+    "monitors": [
+        {
+            "file_name": "wecc.omega.csv",
+            "include": "Genrou_*_omega",
+            "reference_file": "wecc.omega.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        },
+        {
+            "file_name": "wecc.vmag.csv",
+            "include": "Bus_*_Vm",
+            "reference_file": "wecc.vmag.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        },
+        {
+            "file_name": "wecc.p.csv",
+            "include": "Genrou_*_p",
+            "reference_file": "wecc.p.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        },
+        {
+            "file_name": "wecc.q.csv",
+            "include": "Genrou_*_q",
+            "reference_file": "wecc.q.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        }
+    ]
+}

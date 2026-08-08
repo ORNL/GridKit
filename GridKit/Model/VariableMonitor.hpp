@@ -9,9 +9,11 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <type_traits>
 #include <variant>
@@ -64,6 +66,79 @@ namespace GridKit
     };
 
     /**
+     * @brief Selects which monitored columns a sink receives
+     *
+     * Patterns are matched against the full column name, so a component with
+     * several monitored variables can be split across sinks.
+     */
+    class SinkFilter
+    {
+    public:
+      SinkFilter() = default;
+
+      explicit SinkFilter(std::vector<std::string> patterns)
+        : patterns_(std::move(patterns))
+      {
+      }
+
+      /// A filter with no patterns selects everything
+      bool operator()(std::string_view column) const
+      {
+        if (patterns_.empty())
+        {
+          return true;
+        }
+        return std::ranges::any_of(patterns_,
+                                   [column](const std::string& pattern)
+                                   { return match(pattern, column); });
+      }
+
+    private:
+      /**
+       * @brief Glob match supporting `*` (any run) and `?` (any one character)
+       *
+       * Backtracks to the last `*` on mismatch, so no recursion is needed.
+       */
+      static bool match(std::string_view pattern, std::string_view text)
+      {
+        std::size_t p = 0, t = 0, star = std::string_view::npos, mark = 0;
+        while (t < text.size())
+        {
+          if (p < pattern.size()
+              && (pattern[p] == '?' || pattern[p] == text[t]))
+          {
+            ++p;
+            ++t;
+          }
+          else if (p < pattern.size() && pattern[p] == '*')
+          {
+            star = p++;
+            mark = t;
+          }
+          else if (star != std::string_view::npos)
+          {
+            p = star + 1;
+            t = ++mark;
+          }
+          else
+          {
+            return false;
+          }
+        }
+        while (p < pattern.size() && pattern[p] == '*')
+        {
+          ++p;
+        }
+        return p == pattern.size();
+      }
+
+      std::vector<std::string> patterns_;
+    };
+
+    /// Shared so that format tags stay cheap to copy
+    using SinkFilterPtr = std::shared_ptr<const SinkFilter>;
+
+    /**
      * @brief Abstract class for managing output of monitored variables
      *
      * This class is used for both the high-level control monitor and the
@@ -79,19 +154,25 @@ namespace GridKit
       struct Csv
       {
         /// Delimiter for CSV line output
-        std::string delim{","};
+        std::string   delim{","};
+        /// Columns this sink accepts (null selects everything)
+        SinkFilterPtr filter{};
       };
 
       /// Type used for dispatch
       struct Json
       {
         /// Implementation detail used to prevent a comma before the first block
-        mutable bool after_first{false};
+        mutable bool  after_first{false};
+        /// Columns this sink accepts (null selects everything)
+        SinkFilterPtr filter{};
       };
 
       /// Type used for dispatch
       struct Yaml
       {
+        /// Columns this sink accepts (null selects everything)
+        SinkFilterPtr filter{};
       };
 
       /// Short alias for local use
@@ -103,11 +184,13 @@ namespace GridKit
       struct SinkSpec
       {
         /// Output format
-        Format      format;
+        Format                   format;
         /// Output file name (empty for stdout)
-        std::string file_name{};
+        std::string              file_name{};
         /// Delimiter (used only with CSV format currently)
-        std::string delim{","};
+        std::string              delim{","};
+        /// Column name globs; empty selects every monitored column
+        std::vector<std::string> include{};
       };
 
       virtual ~VariableMonitorBase()

@@ -1,0 +1,43 @@
+{
+    "system_model_file": "../../../../cases/PhasorDynamics/socar.case.json",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 1.0, "type": "fault_on", "element_id": 0 },
+        { "time": 1.15, "type": "fault_off", "element_id": 0 }
+    ],
+    "monitors": [
+        {
+            "file_name": "socar.omega.csv",
+            "include": "Genrou_*_omega",
+            "reference_file": "socar.omega.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        },
+        {
+            "file_name": "socar.vmag.csv",
+            "include": "Bus_*_Vm",
+            "reference_file": "socar.vmag.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        },
+        {
+            "file_name": "socar.p.csv",
+            "include": "Genrou_*_p",
+            "reference_file": "socar.p.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        },
+        {
+            "file_name": "socar.q.csv",
+            "include": "Genrou_*_q",
+            "reference_file": "socar.q.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        }
+    ]
+}

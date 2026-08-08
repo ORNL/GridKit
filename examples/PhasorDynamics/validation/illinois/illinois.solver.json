@@ -1,0 +1,43 @@
+{
+    "system_model_file": "../../../../cases/PhasorDynamics/illinois.case.json",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "events": [
+        { "time": 1.0, "type": "fault_on", "element_id": 0 },
+        { "time": 1.15, "type": "fault_off", "element_id": 0 }
+    ],
+    "monitors": [
+        {
+            "file_name": "illinois.omega.csv",
+            "include": "Genrou_*_omega",
+            "reference_file": "illinois.omega.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        },
+        {
+            "file_name": "illinois.vmag.csv",
+            "include": "Bus_*_Vm",
+            "reference_file": "illinois.vmag.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        },
+        {
+            "file_name": "illinois.p.csv",
+            "include": "Genrou_*_p",
+            "reference_file": "illinois.p.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        },
+        {
+            "file_name": "illinois.q.csv",
+            "include": "Genrou_*_q",
+            "reference_file": "illinois.q.ref.csv",
+            "error_type": "relative",
+            "error_tolerance": 1e-2,
+            "abs_err_threshold": 1e-6
+        }
+    ]
+}

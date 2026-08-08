@@ -279,12 +279,18 @@ namespace GridKit
         auto after_first = false;
         for (auto* mon : monitors_)
         {
+          // Forward the sink's own tag so its filter is honored; a monitor with
+          // nothing selected writes nothing and must not draw a separator
+          std::string monitor_out;
+          mon->append(monitor_out, json);
+          if (monitor_out.empty())
+          {
+            continue;
+          }
           if (after_first)
           {
             os << ",\n";
           }
-          std::string monitor_out;
-          mon->append(monitor_out, Json());
           os << monitor_out;
           after_first = true;
         }
@@ -427,16 +433,20 @@ namespace GridKit
       template <typename T>
       static SinkVariant make_sink(SinkSpec spec, T&& arg)
       {
+        auto filter = spec.include.empty()
+                          ? SinkFilterPtr{}
+                          : std::make_shared<const SinkFilter>(spec.include);
+
         switch (spec.format)
         {
         case Format::CSV:
-          return Sink(std::forward<T>(arg), Csv{spec.delim});
+          return Sink(std::forward<T>(arg), Csv{spec.delim, filter});
           break;
         case Format::JSON:
-          return Sink(std::forward<T>(arg), Json{});
+          return Sink(std::forward<T>(arg), Json{false, filter});
           break;
         case Format::YAML:
-          return Sink(std::forward<T>(arg), Yaml{});
+          return Sink(std::forward<T>(arg), Yaml{filter});
           break;
         }
         throw std::runtime_error("Invalid monitor output format");

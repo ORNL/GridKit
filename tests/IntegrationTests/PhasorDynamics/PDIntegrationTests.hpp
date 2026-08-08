@@ -246,17 +246,23 @@ namespace GridKit
         ida.configureSimulation();
 
         // Run for 1s
-        ida.initializeSimulation(0.0, false);
+        ida.initializeSimulation(0.0, true);
+        sys.updateTime(0.0, 0.0);
+        sys.printMonitoredVariables();
         ida.runSimulation(1.0, dt);
 
         // Introduce fault and run for the next 0.1s
         fault->setStatus(true);
         ida.initializeSimulation(1.0);
+        sys.updateTime(1.0, 0.0);
+        sys.printMonitoredVariables();
         ida.runSimulation(1.1, dt);
 
         // Clear the fault and run until t = 10s.
         fault->setStatus(false);
         ida.initializeSimulation(1.1);
+        sys.updateTime(1.1, 0.0);
+        sys.printMonitoredVariables();
         ida.runSimulation(10.0, dt);
 
         sys.stopMonitor();

@@ -12,6 +12,7 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -45,6 +46,35 @@ namespace GridKit
     };
 
     /**
+     * @brief One monitor output file, what it contains, and what validates it
+     *
+     * Pairing the sink with its reference keeps a study's outputs and its
+     * checks in one place; a spec with no reference file is written but not
+     * validated.
+     */
+    struct MonitorSpec
+    {
+      /// Path to output file
+      fs::path                                output_file;
+      /// Output format
+      ::GridKit::Model::VariableMonitorFormat format{
+          ::GridKit::Model::VariableMonitorFormat::CSV};
+      /// Delimiter (CSV only)
+      std::string              delim{","};
+      /// Column name globs; empty selects every monitored column
+      std::vector<std::string> include;
+      /// Path to reference file for validation, or empty for none
+      fs::path                 reference_file;
+      /// Error tolerance (between output file and reference file)
+      std::vector<double>      error_tol;
+      /// Type of total error (relative or absolute)
+      Testing::ErrorType       error_type{Testing::ErrorType::RELATIVE};
+      /// Smallest value at which to scale for relative error
+      double                   abs_err_threshold{
+          Testing::DEFAULT_ABS_ERROR_THRESHOLD};
+    };
+
+    /**
      * @brief Data defined in JSON file for parameterized study
      */
     struct StudyData
@@ -75,6 +105,8 @@ namespace GridKit
       Testing::ErrorType       error_type;
       /// Smallest value at which to scale for relative error
       double                   abs_err_threshold;
+      /// Monitor output files declared by the study
+      std::vector<MonitorSpec> monitors;
       /// Instance of model data
       SystemModelData<>        model_data;
     };
@@ -85,6 +117,54 @@ namespace GridKit
     inline constexpr double DEFAULT_SOLVER_REL_TOL   = 1.0e-7;
     inline constexpr double DEFAULT_SOLVER_ABS_TOL   = 1.0e-9;
     inline constexpr double DEFAULT_VERIFICATION_TOL = 1.0e-4;
+
+    /**
+     * @brief Read the error settings shared by a study and its monitors
+     */
+    inline void parseErrorSettings(const json&          j,
+                                   std::vector<double>& error_tol,
+                                   Testing::ErrorType&  error_type,
+                                   double&              abs_err_threshold)
+    {
+      using ErrorType = Testing::ErrorType;
+
+      if (j.contains("error_tolerance"))
+      {
+        const auto& tolj = j.at("error_tolerance");
+        if (tolj.is_array())
+        {
+          tolj.get_to(error_tol);
+        }
+        else
+        {
+          tolj.get_to(error_tol.emplace_back());
+        }
+      }
+      else
+      {
+        error_tol.push_back(DEFAULT_VERIFICATION_TOL);
+      }
+
+      if (j.contains("error_type"))
+      {
+        auto type_str  = j.at("error_type").get<std::string>();
+        auto type_wrap = magic_enum::enum_cast<ErrorType>(
+            type_str, magic_enum::case_insensitive);
+        if (!type_wrap.has_value())
+        {
+          Log::error() << "Invalid error type \"" << type_str << "\"; "
+                       << "must be either \"relative\" or \"absolute\"";
+        }
+        error_type = type_wrap.value();
+      }
+      else
+      {
+        error_type = ErrorType::RELATIVE;
+      }
+
+      abs_err_threshold =
+          j.value("abs_err_threshold", Testing::DEFAULT_ABS_ERROR_THRESHOLD);
+    }
 
     /**
      * @brief JSON parser implemntation for `StudyData`
@@ -127,41 +207,38 @@ namespace GridKit
         j.at("reference_file").get_to(c.reference_file);
       }
 
-      if (j.contains("error_tolerance"))
-      {
-        auto& tolj = j.at("error_tolerance");
-        if (tolj.is_array())
-        {
-          tolj.get_to(c.error_tol);
-        }
-        else
-        {
-          tolj.get_to(c.error_tol.emplace_back());
-        }
-      }
-      else
-      {
-        c.error_tol.push_back(DEFAULT_VERIFICATION_TOL);
-      }
+      parseErrorSettings(j, c.error_tol, c.error_type, c.abs_err_threshold);
 
-      using ErrorType = Testing::ErrorType;
-      if (j.contains("error_type"))
+      if (j.contains("monitors"))
       {
-        auto type_str  = j.at("error_type").get<std::string>();
-        auto type_wrap = enum_cast<ErrorType>(type_str, case_insensitive);
-        if (!type_wrap.has_value())
+        for (const auto& raw_mon : j.at("monitors"))
         {
-          Log::error() << "Invalid error type \"" << type_str << "\"; "
-                       << "must be either \"relative\" or \"absolute\"";
-        }
-        c.error_type = type_wrap.value();
-      }
-      else
-      {
-        c.error_type = ErrorType::RELATIVE;
-      }
+          auto& mon = c.monitors.emplace_back();
+          raw_mon.at("file_name").get_to(mon.output_file);
+          mon.delim   = raw_mon.value("delim", std::string{","});
+          mon.include = parseIncludeList(raw_mon);
 
-      c.abs_err_threshold = j.value("abs_err_threshold", Testing::DEFAULT_ABS_ERROR_THRESHOLD);
+          if (raw_mon.contains("format"))
+          {
+            auto fmt_str = raw_mon.at("format").get<std::string>();
+            auto fmt     = enum_cast<::GridKit::Model::VariableMonitorFormat>(
+                fmt_str, case_insensitive);
+            if (!fmt.has_value())
+            {
+              Log::error() << "Invalid monitor format \"" << fmt_str << "\"."
+                           << std::endl;
+            }
+            mon.format = fmt.value();
+          }
+
+          if (raw_mon.contains("reference_file"))
+          {
+            raw_mon.at("reference_file").get_to(mon.reference_file);
+          }
+
+          parseErrorSettings(raw_mon, mon.error_tol, mon.error_type, mon.abs_err_threshold);
+        }
+      }
     }
 
     /**
@@ -204,6 +281,20 @@ namespace GridKit
 
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
       data.model_data = parseSystemModelData(data.system_model_file);
+
+      // Monitors declared by the study become sinks on the model. Reference
+      // paths are study-relative like `reference_file`; output paths are not,
+      // so they land in the working directory as they always have.
+      for (auto& mon : data.monitors)
+      {
+        if (!mon.reference_file.empty() && !mon.reference_file.is_absolute())
+        {
+          mon.reference_file = loc / mon.reference_file;
+        }
+        data.model_data.monitor_sink.emplace_back(
+            mon.format, mon.output_file.string(), mon.delim, mon.include);
+      }
+
       std::string model_output_file;
       // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)
@@ -274,39 +365,62 @@ namespace GridKit
       auto func   = std::string{"monitor file vs reference file"};
       auto status = Testing::TestStatus{func.c_str()};
 
-      const auto& out_file = study_data.output_file;
-      const auto& ref_file = study_data.reference_file;
-      if (!out_file.empty() && !ref_file.empty())
+      auto compare = [&status, print_results](const fs::path&            out_file,
+                                              const fs::path&            ref_file,
+                                              Testing::ErrorType         error_type,
+                                              double                     abs_err_threshold,
+                                              const std::vector<double>& error_tol)
       {
+        if (out_file.empty() || ref_file.empty())
+        {
+          return;
+        }
+
         auto errorSet = Testing::compareCSV(out_file,
                                             ref_file,
-                                            study_data.error_type,
-                                            study_data.abs_err_threshold);
+                                            error_type,
+                                            abs_err_threshold);
 
         // Print the errors
         if (print_results)
         {
+          std::cout << out_file.string() << " vs " << ref_file.string() << '\n';
           errorSet->display();
         }
 
         // Check against specified tolerance
-        if (study_data.error_tol.size() > 1)
+        if (error_tol.size() > 1)
         {
-          status *= study_data.error_tol.size() == errorSet->var_errors.size();
-          for (std::size_t i = 0; i < study_data.error_tol.size(); ++i)
+          status *= error_tol.size() == errorSet->var_errors.size();
+          for (std::size_t i = 0; i < error_tol.size(); ++i)
           {
-            status *= errorSet->var_errors[i].max_value < study_data.error_tol[i];
+            status *= errorSet->var_errors[i].max_value < error_tol[i];
           }
         }
         else
         {
-          status *= errorSet->total_error.max_value < study_data.error_tol[0];
+          status *= errorSet->total_error.max_value < error_tol[0];
         }
+      };
 
-        if (print_results)
-        {
-          status.report();
-        }
+      compare(study_data.output_file,
+              study_data.reference_file,
+              study_data.error_type,
+              study_data.abs_err_threshold,
+              study_data.error_tol);
+
+      for (const auto& mon : study_data.monitors)
+      {
+        compare(mon.output_file,
+                mon.reference_file,
+                mon.error_type,
+                mon.abs_err_threshold,
+                mon.error_tol);
+      }
+
+      if (print_results)
+      {
+        status.report();
       }
       return status;
     }

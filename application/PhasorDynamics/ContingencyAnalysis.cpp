@@ -45,7 +45,11 @@ TestStatus runStudy(StudyData study_data)
   // Initilize simultation for first run
   real_type dt_monitor = study_data.dt_monitor;
   real_type final_time = study_data.tmax;
-  ida.initializeSimulation(0.0, false);
+  ida.initializeSimulation(0.0, true);
+
+  // Update system time and record initial state
+  sys.updateTime(0.0, 0.0);
+  sys.printMonitoredVariables();
 
   for (const auto& event : study_data.events)
   {
@@ -65,6 +69,10 @@ TestStatus runStudy(StudyData study_data)
 
     // Re-initialize simulation at event time
     ida.initializeSimulation(event.time, true);
+
+    // Update system time and record initial state
+    sys.updateTime(event.time, 0.0);
+    sys.printMonitoredVariables();
   }
 
   // Run to final time

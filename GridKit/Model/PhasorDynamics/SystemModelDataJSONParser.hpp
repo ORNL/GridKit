@@ -19,6 +19,26 @@ namespace GridKit
     using Log           = ::GridKit::Utilities::Logger;
     using MonitorFormat = ::GridKit::Model::VariableMonitorFormat;
 
+    /// Read a sink's `include` globs, accepting either a bare string or a list
+    inline std::vector<std::string> parseIncludeList(const json& j)
+    {
+      std::vector<std::string> include;
+      if (!j.contains("include"))
+      {
+        return include;
+      }
+      const auto& raw = j.at("include");
+      if (raw.is_string())
+      {
+        include.push_back(raw.get<std::string>());
+      }
+      else
+      {
+        raw.get_to(include);
+      }
+      return include;
+    }
+
     /// JSON parser function implementation for the `SystemModelData` type
     ///
     /// See the `README.md` in `GridKit/Model/PhasorDynamics` for more information
@@ -64,9 +84,10 @@ namespace GridKit
           auto fmt_str   = raw_mon.at("format").get<std::string>();
           auto format    = enum_parse(MonitorFormat{}, fmt_str);
           auto delim     = raw_mon.value("delim", std::string(","));
+          auto include   = parseIncludeList(raw_mon);
           if (format.has_value())
           {
-            sm.monitor_sink.emplace_back(format.value(), file_name, delim);
+            sm.monitor_sink.emplace_back(format.value(), file_name, delim, include);
           }
           else
           {
