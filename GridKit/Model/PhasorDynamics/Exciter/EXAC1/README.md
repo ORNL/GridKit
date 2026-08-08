@@ -15,7 +15,7 @@ multiplier.
 
 ## Block Diagram
 
-![](../../../../../docs/Figures/PhasorDynamics/EXAC1_diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter EXAC1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

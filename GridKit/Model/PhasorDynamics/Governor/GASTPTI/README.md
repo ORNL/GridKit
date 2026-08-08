@@ -17,7 +17,7 @@ exhaust-temperature low-value selector.
 
 ## Block Diagram
 
-![GASTPTI governor block diagram](../../../../../docs/Figures/PhasorDynamics/GASTPTI/diagram.png)
+![GASTPTI governor block diagram](diagram.png)
 
 Figure 1: GASTPTI governor model. Figure courtesy of the
 [PowerWorld GAST_PTI model reference](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Governor%20GAST_PTI%20and%20GASTD.htm).

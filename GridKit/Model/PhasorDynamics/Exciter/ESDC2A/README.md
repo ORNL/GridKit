@@ -20,7 +20,7 @@ voltage regulator, exciter feedback, saturation, and optional speed multiplier.
 
 ## Block Diagram
 
-![](../../../../../docs/Figures/PhasorDynamics/ESDC2A_diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter ESDC2A model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

@@ -35,7 +35,7 @@ derivative to the bus current-balance.
 
 EMT models are initialized using real-valued, instantaneous phase-coordinate
 quantities in $\mathbb{R}^N$. RMS or phasor calculations, when used by an
-upstream initialization workflow, are outside the EMT model specification.
+upstream initialization procedure, are outside the EMT model specification.
 
 Initial differential states, algebraic variables, derivatives, and discrete
 inputs must be consistent with the assembled EMT equations at $t_0$. Models

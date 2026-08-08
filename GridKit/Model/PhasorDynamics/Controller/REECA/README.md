@@ -16,7 +16,7 @@ REECA is a WECC renewable energy electrical control model for inverter-coupled r
 
 ## Block Diagram
 
-![](../../../../../docs/Figures/PhasorDynamics_REECA_Diagram.png)
+![](diagram.png)
 
 Figure 1: REECA block diagram. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

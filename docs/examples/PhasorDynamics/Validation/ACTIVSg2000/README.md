@@ -1,3 +1,5 @@
+(example-phasor-dynamics-validation-activsg2000)=
+
 # ACTIVSg2000 Validation
 
 ```{include} ../../../../../examples/PhasorDynamics/Validation/ACTIVSg2000/README.md
