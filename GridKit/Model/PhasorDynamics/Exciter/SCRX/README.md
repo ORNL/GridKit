@@ -17,7 +17,7 @@ either terminal voltage or a constant source.
 
 ## Block Diagram
 
-![](../../../../../docs/Figures/PhasorDynamics/SCRX_diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter SCRX model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

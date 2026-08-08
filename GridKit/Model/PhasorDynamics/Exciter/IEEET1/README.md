@@ -11,7 +11,7 @@ IEEE Type 1 excitation-system model.
 
 ## Block Diagram
 
-![](../../../../../docs/Figures/PhasorDynamics_IEEET1_Diagram.png)
+![](diagram.png)
 
 Figure 1: Exciter IEEET1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 

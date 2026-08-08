@@ -14,7 +14,7 @@ saturation, under-excitation limiter routing, and an optional speed multiplier.
 
 ## Block Diagram
 
-![ESDC1A exciter block diagram](../../../../../docs/Figures/PhasorDynamics/ESDC1A/diagram.png)
+![ESDC1A exciter block diagram](diagram.png)
 
 Figure 1: ESDC1A exciter model. Figure courtesy of the
 [PowerWorld ESDC1A model reference](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20ESDC1A.htm).

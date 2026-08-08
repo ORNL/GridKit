@@ -21,7 +21,7 @@ of the input and output factors,
 
 ## Block Diagram
 
-![Propagation operator block diagram](../../../../../../docs/Figures/EMT/Propagation/diagram.png)
+![Propagation operator block diagram](diagram.png)
 
 Figure 1: Propagation model
 

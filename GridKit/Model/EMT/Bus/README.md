@@ -8,7 +8,7 @@ a voltage derivative; see [assembly](../README.md#assembly).
 
 ## Block Diagram
 
-![Bus model block diagram](../../../../docs/Figures/EMT/Bus/diagram.png)
+![Bus model block diagram](diagram.png)
 
 Figure 1: Bus model
 

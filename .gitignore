@@ -11,3 +11,5 @@ docs/api/reference/
 docs/xml/
 __pycache__
 .direnv/
+.venv/
+GridKit/Model/case.schema.json

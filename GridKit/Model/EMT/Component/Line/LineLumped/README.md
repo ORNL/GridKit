@@ -6,7 +6,7 @@ terminal 2.
 
 ## Block Diagram
 
-![LineLumped model block diagram](../../../../../../docs/Figures/EMT/LineLumped/diagram.png)
+![LineLumped model block diagram](diagram.png)
 
 Figure 1: LineLumped model
 
