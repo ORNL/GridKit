@@ -16,6 +16,14 @@ Use identical, explicit solver settings for each comparison. Record the
 three runs. ACTIVSg200, ACTIVSg500, and WECC240 provide correctness coverage;
 ACTIVSg10k provides the large scaling point.
 
-Generate temporary solver variants, standard output, timing records, monitor
-CSV files, and summary tables under `build/` or `/tmp`. Do not copy case or
-solver JSON files into this directory.
+The [`2026-08-26-current-cases`](2026-08-26-current-cases) study contains small
+solver definitions that reference the canonical cases directly. It uses a
+10-second horizon, a 100 ms fault, relative tolerance `1e-5`, absolute
+tolerance `1e-7`, AMD ordering, and no periodic monitor output. Run it with:
+
+```bash
+ruby benchmark/case-sweep/2026-08-26-current-cases/run_bench.rb
+```
+
+Do not copy case JSON files into this directory. Generated monitor CSV files,
+standard output, and plots remain untracked.

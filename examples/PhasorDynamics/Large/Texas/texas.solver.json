@@ -1,7 +1,8 @@
 {
     "system_model_file": "texas.case.json",
-    "dt_monitor": 0.004166666666666667,
+    "dt_monitor": 0.0,
     "tmax": 20.0,
+    "max_steps": 1000000,
     "events": [
         { "time": 10.0, "type": "fault_on", "element_id": 0 },
         { "time": 10.15, "type": "fault_off", "element_id": 0 }

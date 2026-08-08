@@ -18318,2759 +18318,2335 @@
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_2",
       "ports": {
         "bus": 2
       },
       "params": {
-        "Pnom": 0.3019886910915375,
-        "Qnom": 0.0805305540561676,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.2328102319587337,
+        "X": 0.8620852595409654
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_4",
       "ports": {
         "bus": 4
       },
       "params": {
-        "Pnom": 0.9361984133720398,
-        "Qnom": 0.24965138733386993,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.0353015306665045,
+        "X": 0.2760787240696376
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_6",
       "ports": {
         "bus": 6
       },
       "params": {
-        "Pnom": 0.021833039820194244,
-        "Qnom": 0.005822143983095884,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 45.63763012421605,
+        "X": 12.170034764682438
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_11",
       "ports": {
         "bus": 11
       },
       "params": {
-        "Pnom": 0.017163045704364777,
-        "Qnom": 0.004576808772981167,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 58.21398659136496,
+        "X": 15.523718175137736
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_13",
       "ports": {
         "bus": 13
       },
       "params": {
-        "Pnom": 0.21032503247261047,
-        "Qnom": 0.056086838245391846,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.807102848620825,
+        "X": 1.2818978165838113
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_20",
       "ports": {
         "bus": 20
       },
       "params": {
-        "Pnom": 0.03153489530086517,
-        "Qnom": 0.008409286849200726,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 31.819942890565663,
+        "X": 8.485299371982082
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_22",
       "ports": {
         "bus": 22
       },
       "params": {
-        "Pnom": 1.0491636991500854,
-        "Qnom": 0.27977630496025085,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.9320905323659217,
+        "X": 0.24855686986217954
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_25",
       "ports": {
         "bus": 25
       },
       "params": {
-        "Pnom": 0.013028211891651154,
-        "Qnom": 0.0034741959534585476,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 76.74385704690742,
+        "X": 20.46506457083544
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_26",
       "ports": {
         "bus": 26
       },
       "params": {
-        "Pnom": 0.12362244725227356,
-        "Qnom": 0.03296608105301857,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 8.08521292986337,
+        "X": 2.156063002319247
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_27",
       "ports": {
         "bus": 27
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.5734990239143372,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -1.9999999665008785
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_28",
       "ports": {
         "bus": 28
       },
       "params": {
-        "Pnom": 0.3591245710849762,
-        "Qnom": 0.09576640278100967,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.9785710203790443,
+        "X": 0.7942843654158303
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_30",
       "ports": {
         "bus": 30
       },
       "params": {
-        "Pnom": 0.7053670287132263,
-        "Qnom": 0.18809807300567627,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.379911445586555,
+        "X": 0.36797677417217955
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_31",
       "ports": {
         "bus": 31
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -1.1209121942520142,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -0.9999999897964844
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_32",
       "ports": {
         "bus": 32
       },
       "params": {
-        "Pnom": 0.06779796630144119,
-        "Qnom": 0.018079446628689766,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 15.432614807556337,
+        "X": 4.115361433022972
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_34",
       "ports": {
         "bus": 34
       },
       "params": {
-        "Pnom": 0.17356577515602112,
-        "Qnom": 0.046284373849630356,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.670486943500084,
+        "X": 1.5121353121978145
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_36",
       "ports": {
         "bus": 36
       },
       "params": {
-        "Pnom": 0.30097776651382446,
-        "Qnom": 0.08026041090488434,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.3581990625327056,
+        "X": 0.8955161033361323
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_38",
       "ports": {
         "bus": 38
       },
       "params": {
-        "Pnom": 0.0008765793754719198,
-        "Qnom": 0.00023375531600322574,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1115.0493465456202,
+        "X": 297.34753024577793
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_41",
       "ports": {
         "bus": 41
       },
       "params": {
-        "Pnom": 0.33092737197875977,
-        "Qnom": 0.08824741840362549,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.0332298727928926,
+        "X": 0.8088623920656237
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_43",
       "ports": {
         "bus": 43
       },
       "params": {
-        "Pnom": 0.030972475185990334,
-        "Qnom": 0.00825934112071991,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 32.89354502910775,
+        "X": 8.771627305655223
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_45",
       "ports": {
         "bus": 45
       },
       "params": {
-        "Pnom": 0.014330092817544937,
-        "Qnom": 0.0038213401567190886,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 68.78553834148155,
+        "X": 18.342724168821995
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_47",
       "ports": {
         "bus": 47
       },
       "params": {
-        "Pnom": 0.24772469699382782,
-        "Qnom": 0.06605985015630722,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.9469446575719593,
+        "X": 1.0525174753203446
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_51",
       "ports": {
         "bus": 51
       },
       "params": {
-        "Pnom": 0.0024578082375228405,
-        "Qnom": 0.0006554159335792065,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 419.1473252673747,
+        "X": 111.77268889546178
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_52",
       "ports": {
         "bus": 52
       },
       "params": {
-        "Pnom": 0.16238214075565338,
-        "Qnom": 0.04330170527100563,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 6.3414207412812535,
+        "X": 1.6910377622844759
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_54",
       "ports": {
         "bus": 54
       },
       "params": {
-        "Pnom": 0.24560202658176422,
-        "Qnom": 0.0654936209321022,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.9950422646123442,
+        "X": 1.0653404913950955
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_56",
       "ports": {
         "bus": 56
       },
       "params": {
-        "Pnom": 0.015642469748854637,
-        "Qnom": 0.0041713169775903225,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 65.25130184387523,
+        "X": 17.4003125824269
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_59",
       "ports": {
         "bus": 59
       },
       "params": {
-        "Pnom": 0.7976793050765991,
-        "Qnom": 0.21271584928035736,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.2768555267658392,
+        "X": 0.34049699679526196
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_61",
       "ports": {
         "bus": 61
       },
       "params": {
-        "Pnom": 0.0011641460005193949,
-        "Qnom": 0.0003104408970102668,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 860.6173330643846,
+        "X": 229.49940706740415
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_64",
       "ports": {
         "bus": 64
       },
       "params": {
-        "Pnom": 0.24536725878715515,
-        "Qnom": 0.06543152779340744,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.980611453134872,
+        "X": 1.0615005857667639
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_67",
       "ports": {
         "bus": 67
       },
       "params": {
-        "Pnom": 0.03172222897410393,
-        "Qnom": 0.008459284901618958,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 32.221009166909276,
+        "X": 8.592293327907958
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_69",
       "ports": {
         "bus": 69
       },
       "params": {
-        "Pnom": 0.0967959463596344,
-        "Qnom": 0.02581223100423813,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 10.716064110812688,
+        "X": 2.8576147316833516
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_75",
       "ports": {
         "bus": 75
       },
       "params": {
-        "Pnom": 0.03740207850933075,
-        "Qnom": 0.009973905980587006,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 27.542399692890484,
+        "X": 7.344653451494869
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_77",
       "ports": {
         "bus": 77
       },
       "params": {
-        "Pnom": 0.04723353683948517,
-        "Qnom": 0.012595568783581257,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 20.6395068985382,
+        "X": 5.503850573019493
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_79",
       "ports": {
         "bus": 79
       },
       "params": {
-        "Pnom": 0.0025176131166517735,
-        "Qnom": 0.0006713654729537666,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 400.655672079387,
+        "X": 106.8418268867766
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_84",
       "ports": {
         "bus": 84
       },
       "params": {
-        "Pnom": 0.42634710669517517,
-        "Qnom": 0.1136924996972084,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.3024866434125824,
+        "X": 0.6139961029363162
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_86",
       "ports": {
         "bus": 86
       },
       "params": {
-        "Pnom": 0.12214010208845139,
-        "Qnom": 0.03257088363170624,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 8.408651682846347,
+        "X": 2.2423201780460515
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_88",
       "ports": {
         "bus": 88
       },
       "params": {
-        "Pnom": 0.035695310682058334,
-        "Qnom": 0.009518744423985481,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 27.26199304263996,
+        "X": 7.269860922986546
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_90",
       "ports": {
         "bus": 90
       },
       "params": {
-        "Pnom": 0.04163549095392227,
-        "Qnom": 0.011102808639407158,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 23.758869476995333,
+        "X": 6.335704833735855
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_92",
       "ports": {
         "bus": 92
       },
       "params": {
-        "Pnom": 0.42969927191734314,
-        "Qnom": 0.11458688974380493,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.3209814228401027,
+        "X": 0.6189306330673913
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_94",
       "ports": {
         "bus": 94
       },
       "params": {
-        "Pnom": 0.036788180470466614,
-        "Qnom": 0.009810196235775948,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 26.676638403279227,
+        "X": 7.113780956280239
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_96",
       "ports": {
         "bus": 96
       },
       "params": {
-        "Pnom": 0.224663645029068,
-        "Qnom": 0.05991009995341301,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.444751003745619,
+        "X": 1.1852628709374835
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_98",
       "ports": {
         "bus": 98
       },
       "params": {
-        "Pnom": 0.2451009303331375,
-        "Qnom": 0.06536023318767548,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.272342119173076,
+        "X": 1.1392909720380877
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_100",
       "ports": {
         "bus": 100
       },
       "params": {
-        "Pnom": 0.07715952396392822,
-        "Qnom": 0.020575715228915215,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 13.08137271176442,
+        "X": 3.4883392988064275
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_101",
       "ports": {
         "bus": 101
       },
       "params": {
-        "Pnom": 0.005084617529064417,
-        "Qnom": 0.0013558936771005392,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 198.55356256315017,
+        "X": 52.94744757226575
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_103",
       "ports": {
         "bus": 103
       },
       "params": {
-        "Pnom": 0.2693996727466583,
-        "Qnom": 0.07184005528688431,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.779613608646235,
+        "X": 1.007898962310725
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_105",
       "ports": {
         "bus": 105
       },
       "params": {
-        "Pnom": 0.5577558875083923,
-        "Qnom": 0.148734912276268,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.8282395608985567,
+        "X": 0.4875305788792019
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_107",
       "ports": {
         "bus": 107
       },
       "params": {
-        "Pnom": 0.11112191528081894,
-        "Qnom": 0.029632555320858955,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 9.095728965786048,
+        "X": 2.4255313731864603
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_109",
       "ports": {
         "bus": 109
       },
       "params": {
-        "Pnom": 0.2715381383895874,
-        "Qnom": 0.07241016626358032,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.680131445914194,
+        "X": 0.9813683317227
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_110",
       "ports": {
         "bus": 110
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.5439317226409912,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -2.000000078822292
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_111",
       "ports": {
         "bus": 111
       },
       "params": {
-        "Pnom": 0.35545942187309265,
-        "Qnom": 0.09478949010372162,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.8544245567694198,
+        "X": 0.761182378708517
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_113",
       "ports": {
         "bus": 113
       },
       "params": {
-        "Pnom": 0.31930649280548096,
-        "Qnom": 0.08514811843633652,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.1066490767596067,
+        "X": 0.828437033033366
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_115",
       "ports": {
         "bus": 115
       },
       "params": {
-        "Pnom": 0.035138193517923355,
-        "Qnom": 0.009370171464979649,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 28.94945894971933,
+        "X": 7.719844619755259
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_116",
       "ports": {
         "bus": 116
       },
       "params": {
-        "Pnom": 0.021516185253858566,
-        "Qnom": 0.005737663712352514,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 47.27912201074366,
+        "X": 12.60779731687256
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_118",
       "ports": {
         "bus": 118
       },
       "params": {
-        "Pnom": 0.0613204687833786,
-        "Qnom": 0.016351984813809395,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 16.515467486806052,
+        "X": 4.404086904345674
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_120",
       "ports": {
         "bus": 120
       },
       "params": {
-        "Pnom": 0.17913348972797394,
-        "Qnom": 0.047769173979759216,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.6648836570857375,
+        "X": 1.5106433386708293
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_122",
       "ports": {
         "bus": 122
       },
       "params": {
-        "Pnom": 0.37651732563972473,
-        "Qnom": 0.10040484368801117,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.595117309746117,
+        "X": 0.6920328231759333
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_129",
       "ports": {
         "bus": 129
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.6580686569213867,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -1.6666666001154675
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_130",
       "ports": {
         "bus": 130
       },
       "params": {
-        "Pnom": 0.5843314528465271,
-        "Qnom": 0.15582175552845,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.74945836449315,
+        "X": 0.46652233462923337
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_132",
       "ports": {
         "bus": 132
       },
       "params": {
-        "Pnom": 0.14382325112819672,
-        "Qnom": 0.03835306316614151,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 6.968934695173885,
+        "X": 1.8583920921553871
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_134",
       "ports": {
         "bus": 134
       },
       "params": {
-        "Pnom": 0.28179317712783813,
-        "Qnom": 0.0751451700925827,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.547764630482228,
+        "X": 0.9460746329038742
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_136",
       "ports": {
         "bus": 136
       },
       "params": {
-        "Pnom": 0.1887878030538559,
-        "Qnom": 0.0503438338637352,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.218898378052394,
+        "X": 1.3917178368850163
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_138",
       "ports": {
         "bus": 138
       },
       "params": {
-        "Pnom": 0.5464466214179993,
-        "Qnom": 0.14571833610534668,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.8400490026033607,
+        "X": 0.49067716498252767
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_140",
       "ports": {
         "bus": 140
       },
       "params": {
-        "Pnom": 0.0014551859349012375,
-        "Qnom": 0.0003880509757436812,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 686.9094454718833,
+        "X": 183.17650972966985
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_141",
       "ports": {
         "bus": 141
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.5235876441001892,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -2.0000000489935537
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_142",
       "ports": {
         "bus": 142
       },
       "params": {
-        "Pnom": 1.0963630676269531,
-        "Qnom": 0.29236313700675964,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.8887279222317113,
+        "X": 0.23699383074947983
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_148",
       "ports": {
         "bus": 148
       },
       "params": {
-        "Pnom": 0.40513643622398376,
-        "Qnom": 0.10803668946027756,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.4214439441794915,
+        "X": 0.6457202168263102
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_150",
       "ports": {
         "bus": 150
       },
       "params": {
-        "Pnom": 0.010435236617922783,
-        "Qnom": 0.0027827355079352856,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 97.58879757341336,
+        "X": 26.023733062059033
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_153",
       "ports": {
         "bus": 153
       },
       "params": {
-        "Pnom": 0.5315880179405212,
-        "Qnom": 0.14175663888454437,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.8708724584526815,
+        "X": 0.4988987383865194
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_155",
       "ports": {
         "bus": 155
       },
       "params": {
-        "Pnom": 0.38144779205322266,
-        "Qnom": 0.10171959549188614,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.5995298749949103,
+        "X": 0.6932092224999986
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_157",
       "ports": {
         "bus": 157
       },
       "params": {
-        "Pnom": 0.5968458652496338,
-        "Qnom": 0.1591590791940689,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.6227665556451905,
+        "X": 0.43273824245292075
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_159",
       "ports": {
         "bus": 159
       },
       "params": {
-        "Pnom": 0.16122961044311523,
-        "Qnom": 0.04299427196383476,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 6.059728747772391,
+        "X": 1.6159167357209183
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_161",
       "ports": {
         "bus": 161
       },
       "params": {
-        "Pnom": 0.18019063770771027,
-        "Qnom": 0.04805058240890503,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.595681095568863,
+        "X": 1.4921737279865264
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_164",
       "ports": {
         "bus": 164
       },
       "params": {
-        "Pnom": 0.692520260810852,
-        "Qnom": 0.18467208743095398,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.4350013528595345,
+        "X": 0.38266706448202226
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_171",
       "ports": {
         "bus": 171
       },
       "params": {
-        "Pnom": 0.08177312463521957,
-        "Qnom": 0.021806158125400543,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 12.21258437971736,
+        "X": 3.256687906838456
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_173",
       "ports": {
         "bus": 173
       },
       "params": {
-        "Pnom": 0.021766116842627525,
-        "Qnom": 0.005804303102195263,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 46.10059200094207,
+        "X": 12.29350237797422
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_174",
       "ports": {
         "bus": 174
       },
       "params": {
-        "Pnom": 0.050718192011117935,
-        "Qnom": 0.013524896465241909,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 19.783033812589096,
+        "X": 5.275493338267949
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_177",
       "ports": {
         "bus": 177
       },
       "params": {
-        "Pnom": 0.05966842919588089,
-        "Qnom": 0.015911638736724854,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 16.512137509993824,
+        "X": 4.403252614001823
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_178",
       "ports": {
         "bus": 178
       },
       "params": {
-        "Pnom": 0.046295784413814545,
-        "Qnom": 0.012345528230071068,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 21.28255424907069,
+        "X": 5.67534123498983
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_180",
       "ports": {
         "bus": 180
       },
       "params": {
-        "Pnom": 0.09973885118961334,
-        "Qnom": 0.026597073301672935,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 9.731351414211447,
+        "X": 2.5950315629369727
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_181",
       "ports": {
         "bus": 181
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.6824735403060913,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -1.6666665356698507
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_182",
       "ports": {
         "bus": 182
       },
       "params": {
-        "Pnom": 0.5459081530570984,
-        "Qnom": 0.1455751657485962,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.9422379172791413,
+        "X": 0.5179288954520274
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_184",
       "ports": {
         "bus": 184
       },
       "params": {
-        "Pnom": 0.20505975186824799,
-        "Qnom": 0.054682306945323944,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.807943645533066,
+        "X": 1.282111422673425
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_186",
       "ports": {
         "bus": 186
       },
       "params": {
-        "Pnom": 0.2996562719345093,
-        "Qnom": 0.07990842312574387,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.3580330622417347,
+        "X": 0.8954764239558294
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_188",
       "ports": {
         "bus": 188
       },
       "params": {
-        "Pnom": 0.07795802503824234,
-        "Qnom": 0.020788824185729027,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 12.675922884463391,
+        "X": 3.380248949453247
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_190",
       "ports": {
         "bus": 190
       },
       "params": {
-        "Pnom": 0.09768743813037872,
-        "Qnom": 0.0260500255972147,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 10.617257982785153,
+        "X": 2.831273370631826
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_192",
       "ports": {
         "bus": 192
       },
       "params": {
-        "Pnom": 0.11414192616939545,
-        "Qnom": 0.030437948182225227,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 8.903716244582666,
+        "X": 2.374332226351631
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_194",
       "ports": {
         "bus": 194
       },
       "params": {
-        "Pnom": 0.19922727346420288,
-        "Qnom": 0.05312748998403549,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.003061831575424,
+        "X": 1.3341552726428922
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_199",
       "ports": {
         "bus": 199
       },
       "params": {
-        "Pnom": 0.6095687747001648,
-        "Qnom": 0.16255104541778564,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.623107361789392,
+        "X": 0.43282695806383203
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_201",
       "ports": {
         "bus": 201
       },
       "params": {
-        "Pnom": 0.06271781772375107,
-        "Qnom": 0.01672479696571827,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 15.769931343575065,
+        "X": 4.2053264838761875
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_203",
       "ports": {
         "bus": 203
       },
       "params": {
-        "Pnom": 0.03255539387464523,
-        "Qnom": 0.008681424893438816,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 30.61679143550793,
+        "X": 8.164465045297794
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_204",
       "ports": {
         "bus": 204
       },
       "params": {
-        "Pnom": 0.31705692410469055,
-        "Qnom": 0.08454905450344086,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.141062199212676,
+        "X": 0.8376219501588278
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_206",
       "ports": {
         "bus": 206
       },
       "params": {
-        "Pnom": 0.020891308784484863,
-        "Qnom": 0.005571020767092705,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 49.01291715522035,
+        "X": 13.070123185882524
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_207",
       "ports": {
         "bus": 207
       },
       "params": {
-        "Pnom": 0.156716987490654,
-        "Qnom": 0.041791144758462906,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 6.530990792556295,
+        "X": 1.7415953815739693
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_208",
       "ports": {
         "bus": 208
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.9108291268348694,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -1.2499999634168018
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_209",
       "ports": {
         "bus": 209
       },
       "params": {
-        "Pnom": 0.46328428387641907,
-        "Qnom": 0.12354318797588348,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.291618006882858,
+        "X": 0.61110165841233
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_211",
       "ports": {
         "bus": 211
       },
       "params": {
-        "Pnom": 0.19561165571212769,
-        "Qnom": 0.052163124084472656,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.052350758867983,
+        "X": 1.3472939462306828
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_213",
       "ports": {
         "bus": 213
       },
       "params": {
-        "Pnom": 0.676810085773468,
-        "Qnom": 0.1804824322462082,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.486321697862,
+        "X": 0.39635188772915825
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_215",
       "ports": {
         "bus": 215
       },
       "params": {
-        "Pnom": 0.5865219235420227,
-        "Qnom": 0.15640462934970856,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.6964360540488388,
+        "X": 0.4523794279447434
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_217",
       "ports": {
         "bus": 217
       },
       "params": {
-        "Pnom": 0.31186285614967346,
-        "Qnom": 0.08316338807344437,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.2258937313701734,
+        "X": 0.8602379121958481
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_219",
       "ports": {
         "bus": 219
       },
       "params": {
-        "Pnom": 0.002311997814103961,
-        "Qnom": 0.000616536708548665,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 443.8964552868085,
+        "X": 118.37314802350517
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_227",
       "ports": {
         "bus": 227
       },
       "params": {
-        "Pnom": 0.0358414463698864,
-        "Qnom": 0.009557695128023624,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 27.89230810064885,
+        "X": 7.437930224459029
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_229",
       "ports": {
         "bus": 229
       },
       "params": {
-        "Pnom": 0.35742324590682983,
-        "Qnom": 0.09531298279762268,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.817218291728671,
+        "X": 0.7512591350778504
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_234",
       "ports": {
         "bus": 234
       },
       "params": {
-        "Pnom": 0.4230864346027374,
-        "Qnom": 0.1128230020403862,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.3279553224306295,
+        "X": 0.6207878263436515
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_237",
       "ports": {
         "bus": 237
       },
       "params": {
-        "Pnom": 0.018829254433512688,
-        "Qnom": 0.005021147429943085,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 53.57556071336083,
+        "X": 14.286852935868804
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_239",
       "ports": {
         "bus": 239
       },
       "params": {
-        "Pnom": 0.22331146895885468,
-        "Qnom": 0.059549879282712936,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.416606991684803,
+        "X": 1.1777649147186233
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_241",
       "ports": {
         "bus": 241
       },
       "params": {
-        "Pnom": 0.13705341517925262,
-        "Qnom": 0.036547623574733734,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 7.473040319116413,
+        "X": 1.9928132705387727
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_242",
       "ports": {
         "bus": 242
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.752712070941925,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -1.4285714988652607
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_243",
       "ports": {
         "bus": 243
       },
       "params": {
-        "Pnom": 0.5254073143005371,
-        "Qnom": 0.14010904729366302,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.9077514588504585,
+        "X": 0.5087352842212998
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_245",
       "ports": {
         "bus": 245
       },
       "params": {
-        "Pnom": 0.08217015862464905,
-        "Qnom": 0.02191196009516716,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 12.286108113210108,
+        "X": 3.276283205577409
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_252",
       "ports": {
         "bus": 252
       },
       "params": {
-        "Pnom": 0.6717252731323242,
-        "Qnom": 0.17912670969963074,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.4705222262510855,
+        "X": 0.39213919509121015
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_259",
       "ports": {
         "bus": 259
       },
       "params": {
-        "Pnom": 0.04618402197957039,
-        "Qnom": 0.012315846979618073,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 21.88903188179657,
+        "X": 5.837126253478707
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_261",
       "ports": {
         "bus": 261
       },
       "params": {
-        "Pnom": 0.12346277385950089,
-        "Qnom": 0.03292348235845566,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 8.190738327361224,
+        "X": 2.184201928999929
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_266",
       "ports": {
         "bus": 266
       },
       "params": {
-        "Pnom": 0.43591299653053284,
-        "Qnom": 0.11624360829591751,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.254222196240045,
+        "X": 0.60112665618433
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_268",
       "ports": {
         "bus": 268
       },
       "params": {
-        "Pnom": 0.8133464455604553,
-        "Qnom": 0.2168923318386078,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.2504905878305184,
+        "X": 0.3334640742788281
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_270",
       "ports": {
         "bus": 270
       },
       "params": {
-        "Pnom": 0.04721897467970848,
-        "Qnom": 0.012591770850121975,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 20.770377861956916,
+        "X": 5.538786902558439
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_273",
       "ports": {
         "bus": 273
       },
       "params": {
-        "Pnom": 0.06590216606855392,
-        "Qnom": 0.017573965713381767,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 15.398206439842603,
+        "X": 4.106201179182367
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_277",
       "ports": {
         "bus": 277
       },
       "params": {
-        "Pnom": 0.002857533283531666,
-        "Qnom": 0.0007620110409334302,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 343.53085574392315,
+        "X": 91.60848851238867
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_278",
       "ports": {
         "bus": 278
       },
       "params": {
-        "Pnom": 0.04070398956537247,
-        "Qnom": 0.010854477062821388,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 24.114099945524348,
+        "X": 6.430473954620606
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_280",
       "ports": {
         "bus": 280
       },
       "params": {
-        "Pnom": 0.0959005132317543,
-        "Qnom": 0.02557346411049366,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 10.420657904432053,
+        "X": 2.778841446684615
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_282",
       "ports": {
         "bus": 282
       },
       "params": {
-        "Pnom": 0.7751296162605286,
-        "Qnom": 0.20670099556446075,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.311260096527753,
+        "X": 0.3496689607911184
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_284",
       "ports": {
         "bus": 284
       },
       "params": {
-        "Pnom": 0.22667989134788513,
-        "Qnom": 0.06044820696115494,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.409216682583371,
+        "X": 1.1757957045970822
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_286",
       "ports": {
         "bus": 286
       },
       "params": {
-        "Pnom": 0.05463452264666557,
-        "Qnom": 0.014569149352610111,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 19.04511965900763,
+        "X": 5.078678815313995
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_288",
       "ports": {
         "bus": 288
       },
       "params": {
-        "Pnom": 0.40998411178588867,
-        "Qnom": 0.10932894796133041,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.398853864988824,
+        "X": 0.639693495022961
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_290",
       "ports": {
         "bus": 290
       },
       "params": {
-        "Pnom": 0.02438315749168396,
-        "Qnom": 0.006502204574644566,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 41.39978396848881,
+        "X": 11.039992043729928
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_292",
       "ports": {
         "bus": 292
       },
       "params": {
-        "Pnom": 0.0537429042160511,
-        "Qnom": 0.014331473037600517,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 18.125711112901485,
+        "X": 4.833533726751971
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_294",
       "ports": {
         "bus": 294
       },
       "params": {
-        "Pnom": 0.17777419090270996,
-        "Qnom": 0.04740656912326813,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.707708488750842,
+        "X": 1.5220593924992871
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_296",
       "ports": {
         "bus": 296
       },
       "params": {
-        "Pnom": 0.04444320872426033,
-        "Qnom": 0.011851503513753414,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 23.059374454196536,
+        "X": 6.149156760134769
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_299",
       "ports": {
         "bus": 299
       },
       "params": {
-        "Pnom": 0.10114499181509018,
-        "Qnom": 0.0269719697535038,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 10.067786131377362,
+        "X": 2.6847401749430166
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_300",
       "ports": {
         "bus": 300
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.4219093322753906,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -2.499999908258296
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_303",
       "ports": {
         "bus": 303
       },
       "params": {
-        "Pnom": 0.5895331501960754,
-        "Qnom": 0.15720856189727783,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.6671795219772736,
+        "X": 0.4445804192477844
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_307",
       "ports": {
         "bus": 307
       },
       "params": {
-        "Pnom": 0.4303966462612152,
-        "Qnom": 0.1147724837064743,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.3513640946762444,
+        "X": 0.6270306694732655
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_309",
       "ports": {
         "bus": 309
       },
       "params": {
-        "Pnom": 0.06269490718841553,
-        "Qnom": 0.016718629747629166,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 16.268054809957714,
+        "X": 4.338144791640682
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_310",
       "ports": {
         "bus": 310
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.5559473633766174,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -1.9999999239561295
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_311",
       "ports": {
         "bus": 311
       },
       "params": {
-        "Pnom": 0.2896265387535095,
-        "Qnom": 0.07723356783390045,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.581247117899422,
+        "X": 0.9549970572470334
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_313",
       "ports": {
         "bus": 313
       },
       "params": {
-        "Pnom": 0.08635647594928741,
-        "Qnom": 0.02302839234471321,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 11.78820728196332,
+        "X": 3.1435217723482927
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_315",
       "ports": {
         "bus": 315
       },
       "params": {
-        "Pnom": 0.00243102153763175,
-        "Qnom": 0.000648270477540791,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 424.9784240506112,
+        "X": 113.32724191831296
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_317",
       "ports": {
         "bus": 317
       },
       "params": {
-        "Pnom": 0.025502413511276245,
-        "Qnom": 0.006800645962357521,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 39.37739514492513,
+        "X": 10.500642348304952
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_321",
       "ports": {
         "bus": 321
       },
       "params": {
-        "Pnom": 1.0613292455673218,
-        "Qnom": 0.28302180767059326,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.9220488294668544,
+        "X": 0.24588027472734955
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_323",
       "ports": {
         "bus": 323
       },
       "params": {
-        "Pnom": 0.25622060894966125,
-        "Qnom": 0.06832540035247803,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.0088875177577155,
+        "X": 1.0690351792609378
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_325",
       "ports": {
         "bus": 325
       },
       "params": {
-        "Pnom": 0.5855736136436462,
-        "Qnom": 0.1561531275510788,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.7438938122050998,
+        "X": 0.4650388380691592
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_327",
       "ports": {
         "bus": 327
       },
       "params": {
-        "Pnom": 0.8542144894599915,
-        "Qnom": 0.22779177129268646,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.1404234162983131,
+        "X": 0.3041145675092376
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_329",
       "ports": {
         "bus": 329
       },
       "params": {
-        "Pnom": 0.17193172872066498,
-        "Qnom": 0.045848481357097626,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.86775798476515,
+        "X": 1.564736157626562
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_331",
       "ports": {
         "bus": 331
       },
       "params": {
-        "Pnom": 0.32627055048942566,
-        "Qnom": 0.08700543642044067,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.0580950255948496,
+        "X": 0.8154915971359844
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_334",
       "ports": {
         "bus": 334
       },
       "params": {
-        "Pnom": 0.0028590159490704536,
-        "Qnom": 0.0007624049903824925,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 351.07591092487604,
+        "X": 93.62033345047598
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_335",
       "ports": {
         "bus": 335
       },
       "params": {
-        "Pnom": 0.004759323783218861,
-        "Qnom": 0.0012691485462710261,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 210.8968350611746,
+        "X": 56.238958268568304
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_337",
       "ports": {
         "bus": 337
       },
       "params": {
-        "Pnom": 0.038549166172742844,
-        "Qnom": 0.010279839858412743,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 25.518346799580716,
+        "X": 6.804933662523997
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_339",
       "ports": {
         "bus": 339
       },
       "params": {
-        "Pnom": 0.5103529691696167,
-        "Qnom": 0.13609451055526733,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.922525503886564,
+        "X": 0.5126749196877943
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_341",
       "ports": {
         "bus": 341
       },
       "params": {
-        "Pnom": 0.13709241151809692,
-        "Qnom": 0.03655792027711868,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 7.24748578067595,
+        "X": 1.9326599076166036
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_343",
       "ports": {
         "bus": 343
       },
       "params": {
-        "Pnom": 0.017433686181902885,
-        "Qnom": 0.004648993257433176,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 56.920298635978554,
+        "X": 15.178779852332047
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_344",
       "ports": {
         "bus": 344
       },
       "params": {
-        "Pnom": 0.01687134988605976,
-        "Qnom": 0.004499051254242659,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 58.81745483387552,
+        "X": 15.68474044630878
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_346",
       "ports": {
         "bus": 346
       },
       "params": {
-        "Pnom": 0.3357301652431488,
-        "Qnom": 0.0895279198884964,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.8825915095262316,
+        "X": 0.7686900030243583
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_348",
       "ports": {
         "bus": 348
       },
       "params": {
-        "Pnom": 0.4889944791793823,
-        "Qnom": 0.13039851188659668,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.048352166350076,
+        "X": 0.5462271777791441
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_355",
       "ports": {
         "bus": 355
       },
       "params": {
-        "Pnom": 0.1408664435148239,
-        "Qnom": 0.03756432980298996,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 7.02154141363483,
+        "X": 1.8724082954459957
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_357",
       "ports": {
         "bus": 357
       },
       "params": {
-        "Pnom": 0.3154469132423401,
-        "Qnom": 0.08411882072687149,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.36027491539959,
+        "X": 0.8960695170421522
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_359",
       "ports": {
         "bus": 359
       },
       "params": {
-        "Pnom": 0.10126954317092896,
-        "Qnom": 0.027005167677998543,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 10.26374248578096,
+        "X": 2.7369935535749472
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_364",
       "ports": {
         "bus": 364
       },
       "params": {
-        "Pnom": 0.17369824647903442,
-        "Qnom": 0.046319566667079926,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.732478286941667,
+        "X": 1.5286620076019706
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_366",
       "ports": {
         "bus": 366
       },
       "params": {
-        "Pnom": 0.3985750675201416,
-        "Qnom": 0.1062866821885109,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.442089220506942,
+        "X": 0.6512237769184922
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_368",
       "ports": {
         "bus": 368
       },
       "params": {
-        "Pnom": 0.0756869986653328,
-        "Qnom": 0.02018321491777897,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 13.297515938206244,
+        "X": 3.5460069336365168
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_370",
       "ports": {
         "bus": 370
       },
       "params": {
-        "Pnom": 0.23526917397975922,
-        "Qnom": 0.06273798644542694,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.270027630135234,
+        "X": 1.138665686836093
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_373",
       "ports": {
         "bus": 373
       },
       "params": {
-        "Pnom": 0.20345690846443176,
-        "Qnom": 0.05425519123673439,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.891033186470651,
+        "X": 1.3042758925218325
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_375",
       "ports": {
         "bus": 375
       },
       "params": {
-        "Pnom": 0.17473357915878296,
-        "Qnom": 0.04659559577703476,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.556704660578413,
+        "X": 1.481787103905165
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_377",
       "ports": {
         "bus": 377
       },
       "params": {
-        "Pnom": 0.5158072710037231,
-        "Qnom": 0.13754765689373016,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.9246442427896235,
+        "X": 0.5132349248093662
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_379",
       "ports": {
         "bus": 379
       },
       "params": {
-        "Pnom": 0.08841212838888168,
-        "Qnom": 0.023576645180583,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 11.164538173306088,
+        "X": 2.9772199800385484
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_381",
       "ports": {
         "bus": 381
       },
       "params": {
-        "Pnom": 0.05781377851963043,
-        "Qnom": 0.015416992828249931,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 17.288150508008084,
+        "X": 4.610169050015757
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_383",
       "ports": {
         "bus": 383
       },
       "params": {
-        "Pnom": 0.17089027166366577,
-        "Qnom": 0.04557078331708908,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 6.2240458087023525,
+        "X": 1.6597471590556139
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_385",
       "ports": {
         "bus": 385
       },
       "params": {
-        "Pnom": 0.2072690725326538,
-        "Qnom": 0.05527166277170181,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.889914695502008,
+        "X": 1.3039751311165644
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_397",
       "ports": {
         "bus": 397
       },
       "params": {
-        "Pnom": 0.26401305198669434,
-        "Qnom": 0.07040353864431381,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.8219247068808895,
+        "X": 1.0191807631166179
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_398",
       "ports": {
         "bus": 398
       },
       "params": {
-        "Pnom": 0.11079524457454681,
-        "Qnom": 0.029545312747359276,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 9.110605739823246,
+        "X": 2.429487808205105
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_400",
       "ports": {
         "bus": 400
       },
       "params": {
-        "Pnom": 0.15986165404319763,
-        "Qnom": 0.04262973740696907,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 6.338842472931376,
+        "X": 1.6903565254753816
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_402",
       "ports": {
         "bus": 402
       },
       "params": {
-        "Pnom": 0.6003374457359314,
-        "Qnom": 0.16009019315242767,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.63166184415103,
+        "X": 0.43511038940669994
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_404",
       "ports": {
         "bus": 404
       },
       "params": {
-        "Pnom": 0.13726212084293365,
-        "Qnom": 0.036603085696697235,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 7.276554522153195,
+        "X": 1.9404067714780233
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_406",
       "ports": {
         "bus": 406
       },
       "params": {
-        "Pnom": 0.03567464277148247,
-        "Qnom": 0.009513294324278831,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 27.466100921717086,
+        "X": 7.324336887754704
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_416",
       "ports": {
         "bus": 416
       },
       "params": {
-        "Pnom": 0.042778220027685165,
-        "Qnom": 0.011407623998820782,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 22.874524620914833,
+        "X": 6.09992598706275
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_418",
       "ports": {
         "bus": 418
       },
       "params": {
-        "Pnom": 0.36005088686943054,
-        "Qnom": 0.09601348638534546,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.7809390315619797,
+        "X": 0.7415830972308646
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_420",
       "ports": {
         "bus": 420
       },
       "params": {
-        "Pnom": 0.03628377616405487,
-        "Qnom": 0.009675688110291958,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 28.21794046572273,
+        "X": 7.524795374843026
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_422",
       "ports": {
         "bus": 422
       },
       "params": {
-        "Pnom": 0.34699127078056335,
-        "Qnom": 0.09253071993589401,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.8171133524136955,
+        "X": 0.7512279085680691
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_424",
       "ports": {
         "bus": 424
       },
       "params": {
-        "Pnom": 1.0674980878829956,
-        "Qnom": 0.28466540575027466,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.9031375917774744,
+        "X": 0.24083605575492098
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_426",
       "ports": {
         "bus": 426
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.545049250125885,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -1.999999958210593
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_427",
       "ports": {
         "bus": 427
       },
       "params": {
-        "Pnom": 0.1002076044678688,
-        "Qnom": 0.0267220139503479,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 10.153413519479193,
+        "X": 2.7075755293419035
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_445",
       "ports": {
         "bus": 445
       },
       "params": {
-        "Pnom": 0.0,
-        "Qnom": -0.43366333842277527,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.0,
+        "X": -2.499999896671913
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_446",
       "ports": {
         "bus": 446
       },
       "params": {
-        "Pnom": 0.501934289932251,
-        "Qnom": 0.1338481456041336,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.013503981183998,
+        "X": 0.5369303900006412
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_448",
       "ports": {
         "bus": 448
       },
       "params": {
-        "Pnom": 0.328461617231369,
-        "Qnom": 0.08759001642465591,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.079265591345787,
+        "X": 0.8211398518806808
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_450",
       "ports": {
         "bus": 450
       },
       "params": {
-        "Pnom": 0.006402841303497553,
-        "Qnom": 0.001707419753074646,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 155.60451721379846,
+        "X": 41.49442626562591
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_451",
       "ports": {
         "bus": 451
       },
       "params": {
-        "Pnom": 0.012617363594472408,
-        "Qnom": 0.0033646333031356335,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 78.96221464267956,
+        "X": 21.056609416605554
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_452",
       "ports": {
         "bus": 452
       },
       "params": {
-        "Pnom": 0.07585462182760239,
-        "Qnom": 0.02022792585194111,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 12.839519386366767,
+        "X": 3.423876355382214
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_459",
       "ports": {
         "bus": 459
       },
       "params": {
-        "Pnom": 0.5060324668884277,
-        "Qnom": 0.13494205474853516,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.9383355331061123,
+        "X": 0.5168897190288516
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_460",
       "ports": {
         "bus": 460
       },
       "params": {
-        "Pnom": 0.1503298282623291,
-        "Qnom": 0.04008786752820015,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 6.604820578779568,
+        "X": 1.7612816795586976
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_461",
       "ports": {
         "bus": 461
       },
       "params": {
-        "Pnom": 0.5191318392753601,
-        "Qnom": 0.13843519985675812,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.9322314091146966,
+        "X": 0.5152618680905369
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_465",
       "ports": {
         "bus": 465
       },
       "params": {
-        "Pnom": 0.07145845144987106,
-        "Qnom": 0.019055524840950966,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 14.174926423732282,
+        "X": 3.77996803884798
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_466",
       "ports": {
         "bus": 466
       },
       "params": {
-        "Pnom": 0.2473127245903015,
-        "Qnom": 0.06595008075237274,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.046598499036678,
+        "X": 1.0790932744200772
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_467",
       "ports": {
         "bus": 467
       },
       "params": {
-        "Pnom": 0.005332611966878176,
-        "Qnom": 0.0014220320153981447,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 188.94306653833328,
+        "X": 50.38489418953629
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_468",
       "ports": {
         "bus": 468
       },
       "params": {
-        "Pnom": 0.02485891617834568,
-        "Qnom": 0.006629083771258593,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 40.38536912080903,
+        "X": 10.769495866768688
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_469",
       "ports": {
         "bus": 469
       },
       "params": {
-        "Pnom": 0.7274709343910217,
-        "Qnom": 0.19399218261241913,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.356934306060522,
+        "X": 0.3618490241327747
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_470",
       "ports": {
         "bus": 470
       },
       "params": {
-        "Pnom": 0.2812207043170929,
-        "Qnom": 0.07499197125434875,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.5803647962185132,
+        "X": 0.9547611884769088
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_472",
       "ports": {
         "bus": 472
       },
       "params": {
-        "Pnom": 0.2836920917034149,
-        "Qnom": 0.07565154880285263,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 3.5485401992645405,
+        "X": 0.9462814435595855
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_473",
       "ports": {
         "bus": 473
       },
       "params": {
-        "Pnom": 0.006601310800760984,
-        "Qnom": 0.0017603577580302954,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 152.19444798695392,
+        "X": 40.58537543969112
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_474",
       "ports": {
         "bus": 474
       },
       "params": {
-        "Pnom": 0.9464552737772465,
-        "Qnom": -0.6259580869227648,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 0.8070395804539383,
+        "X": -0.5337525880497056
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_475",
       "ports": {
         "bus": 475
       },
       "params": {
-        "Pnom": 0.0011430156882852316,
-        "Qnom": 0.0003048046201001853,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 858.8037442282252,
+        "X": 229.01465980122106
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_476",
       "ports": {
         "bus": 476
       },
       "params": {
-        "Pnom": 0.42232248187065125,
-        "Qnom": 0.11261965334415436,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.320711422147076,
+        "X": 0.6188581643022066
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_477",
       "ports": {
         "bus": 477
       },
       "params": {
-        "Pnom": 0.17878255993127823,
-        "Qnom": 0.047675345093011856,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.700024837343495,
+        "X": 1.5200064886840607
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_478",
       "ports": {
         "bus": 478
       },
       "params": {
-        "Pnom": 0.062216988764703274,
-        "Qnom": 0.016591225983574986,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 16.04103481111093,
+        "X": 4.277616754614142
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_485",
       "ports": {
         "bus": 485
       },
       "params": {
-        "Pnom": 0.19670501351356506,
-        "Qnom": 0.05245447903871536,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 4.9776034345800895,
+        "X": 1.3273560767896404
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_486",
       "ports": {
         "bus": 486
       },
       "params": {
-        "Pnom": 0.4835606813430786,
-        "Qnom": 0.12894925475120544,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.0255129042136133,
+        "X": 0.5401356842368791
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_487",
       "ports": {
         "bus": 487
       },
       "params": {
-        "Pnom": 0.0770949050784111,
-        "Qnom": 0.020558582618832588,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 13.634886102841653,
+        "X": 3.635959239570279
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_488",
       "ports": {
         "bus": 488
       },
       "params": {
-        "Pnom": 0.5540773868560791,
-        "Qnom": 0.1477537602186203,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.7594681836429664,
+        "X": 0.4691908500243498
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_489",
       "ports": {
         "bus": 489
       },
       "params": {
-        "Pnom": 0.02555710426531732,
-        "Qnom": 0.006815200671553612,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 39.8534071428392,
+        "X": 10.627532927983886
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_490",
       "ports": {
         "bus": 490
       },
       "params": {
-        "Pnom": 0.19698846340179443,
-        "Qnom": 0.05253054201602936,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 5.122330568471864,
+        "X": 1.365962232002728
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_491",
       "ports": {
         "bus": 491
       },
       "params": {
-        "Pnom": 0.8433568477630615,
-        "Qnom": -0.3016486167907715,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.1070555310734072,
+        "X": -0.39596734234698017
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_492",
       "ports": {
         "bus": 492
       },
       "params": {
-        "Pnom": 0.4045952260494232,
-        "Qnom": 0.1078915148973465,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.409761517601808,
+        "X": 0.6425998230726243
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_493",
       "ports": {
         "bus": 493
       },
       "params": {
-        "Pnom": 0.02750023826956749,
-        "Qnom": 0.007333377376198769,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 36.45307300881313,
+        "X": 9.720793626416697
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_495",
       "ports": {
         "bus": 495
       },
       "params": {
-        "Pnom": 0.4289895296096802,
-        "Qnom": 0.114397332072258,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 2.3179534320701007,
+        "X": 0.6181215861790812
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_499",
       "ports": {
         "bus": 499
       },
       "params": {
-        "Pnom": 0.8630824089050293,
-        "Qnom": 0.23015573620796204,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 1.1266459176951442,
+        "X": 0.30043946899786006
       }
     },
     {
-      "class": "LoadZIP",
+      "class": "LoadZ",
       "id": "load_500",
       "ports": {
         "bus": 500
       },
       "params": {
-        "Pnom": 0.162672758102417,
-        "Qnom": 0.04337952798232436,
-        "alphaI": 0.0,
-        "alphaP": 0.0
+        "R": 6.26236202783,
+        "X": 1.6699680511389863
       }
     },
     {
