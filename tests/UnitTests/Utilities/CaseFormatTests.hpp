@@ -7,6 +7,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
@@ -40,6 +41,7 @@ namespace GridKit
         using BusData   = BusData<RealT, IdxT>;
         using BusType   = typename BusData::BusType;
         using RegcaData = Converter::RegcaData<RealT, IdxT>;
+        using ReecbData = Controller::ReecbData<RealT, IdxT>;
 
         const char data[] =
             R"({
@@ -74,8 +76,9 @@ namespace GridKit
                           "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Gensal", "ports": {"bus":1}, "id": "2", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
                           "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
-                   { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} },
-                   { "class": "Regca", "ports": {"bus":1}, "id": "CV1", "params": {"p0":0.0, "q0":0.0, "mva":100, "Tg":0.02, "TM":0.02, "Rqmax":999.0, "Rqmin":-999.0, "Rpmax":999.0, "sL":true, "IL1":1.1, "VL0":0.4, "VL1":0.9, "VA0":0.4, "VA1":0.9, "Vhvmax":1.2}, "mon": ["ir", "ii", "p", "q"] }
+                   { "class": "Regca", "ports": {"bus":1}, "id": "CV1", "params": {"p0":0.0, "q0":0.0, "mva":100, "Tg":0.02, "TM":0.02, "Rqmax":999.0, "Rqmin":-999.0, "Rpmax":999.0, "sL":true, "IL1":1.1, "VL0":0.4, "VL1":0.9, "VA0":0.4, "VA1":0.9, "Vhvmax":1.2}, "mon": ["ir", "ii", "p", "q"] },
+                   { "class": "Reecb", "ports": {"bus":1}, "id": "REE1", "params": {"mva":50.0, "Pqflag":true}, "mon": ["iqcmd", "ipcmd", "vmeas", "pmeas"] },
+                   { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
                ]
             })";
 
@@ -102,6 +105,7 @@ namespace GridKit
         success *= result.genrou.size() == 1;
         success *= result.gensal.size() == 1;
         success *= result.regca.size() == 1;
+        success *= result.reecb.size() == 1;
         success *= result.loadz.size() == 0;
 
         success *= result.bus[0].bus_id == 1;
@@ -177,6 +181,18 @@ namespace GridKit
         success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::ii);
         success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::p);
         success *= result.regca[0].monitored_variables.contains(RegcaData::MonitorableVariables::q);
+        success *= std::get<RealT>(result.reecb[0].parameters[ReecbData::Parameters::mva]) == 50.0;
+        success *= std::get<bool>(result.reecb[0].parameters[ReecbData::Parameters::Pqflag]);
+        success *= result.reecb[0].buses[ReecbData::Buses::bus] == 1;
+        success *= result.reecb[0].disambiguation_string == "REE1";
+        success *= result.reecb[0].monitored_variables.contains(
+            ReecbData::MonitorableVariables::iqcmd);
+        success *= result.reecb[0].monitored_variables.contains(
+            ReecbData::MonitorableVariables::ipcmd);
+        success *= result.reecb[0].monitored_variables.contains(
+            ReecbData::MonitorableVariables::vmeas);
+        success *= result.reecb[0].monitored_variables.contains(
+            ReecbData::MonitorableVariables::pmeas);
 
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;
@@ -236,7 +252,14 @@ namespace GridKit
                    { "signal_id": 18, "name": "Reactive Power Reference"},
                    { "signal_id": 19, "name": "Frequency Reference"},
                    { "signal_id": 20, "name": "Reactive Power Command"},
-                   { "signal_id": 21, "name": "Active Power Command"}
+                   { "signal_id": 21, "name": "Active Power Command"},
+                   { "signal_id": 22, "name": "Electrical Power"},
+                   { "signal_id": 23, "name": "Reactive Power"},
+                   { "signal_id": 24, "name": "Reactive Reference"},
+                   { "signal_id": 25, "name": "Power Factor Reference"},
+                   { "signal_id": 26, "name": "Active Power Reference"},
+                   { "signal_id": 27, "name": "Reactive Current Command"},
+                   { "signal_id": 28, "name": "Active Current Command"}
                ],
                "devices": [
                    { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "tap":1.05, "phase":0.1} },
@@ -251,6 +274,7 @@ namespace GridKit
                    { "class": "Ieeet1", "ports": {"bus":1, "speed": 1, "efd":3}, "id": "DV3", "params": {"Tr":0.0, "Ka":50.0, "Ta":0.04, "Ke":-0.06, "Te":0.6, "Kf":0.09, "Tf":1.46, "Vrmin":-1.0, "Vrmax":1.0, "E1":2.8, "E2":3.373, "Se1":0.04, "Se2":0.33, "Ispdlim":0.0}},
                    { "class": "SexsPti", "ports": {"bus":1, "efd":3}, "id": "DV4", "params": {"Ta":0.1, "Tb":0.5, "Te":0.8, "K":10.0, "Efdmax":5.0, "Efdmin":-5.0}},
                    { "class": "GastPti", "ports": {"speed":1, "pmech":2, "pref":10}, "id": "DV7", "params": {"R":0.045, "T1":0.42, "T2":0.12, "T3":3.2, "At":0.95, "Kt":2.2, "Vmax":1.05, "Vmin":0.15, "Dturb":0.02, "Trate":120.0}, "mon": ["pmech", "xvalve", "xflow", "xtemp", "vload", "vtemp"] },
+                   { "class": "Reecb", "ports": {"bus":1, "pe":22, "qgen":23, "qext":24, "pfaref":25, "pref":26, "iqcmd":27, "ipcmd":28}, "id": "EC1", "params": {"mva":100.0, "PfFlag":false, "VFlag":true, "QFlag":true, "Pqflag":true, "Trv":0.02, "Tp":0.05, "Vref0":1.0, "Vdip":0.85, "Vup":1.15, "dbd1":-0.01, "dbd2":0.01, "kqv":5.0, "Iql1":-1.1, "Iqh1":1.1, "Qmax":0.436, "Qmin":-0.436, "Kqp":0.1, "Kqi":0.2, "Vmax":1.1, "Vmin":0.9, "Kvp":18.0, "Kvi":5.0, "Tiq":0.02, "Tpord":0.02, "dPmax":99.0, "dPmin":-99.0, "Pmax":1.0, "Pmin":0.0, "Imax":1.3}, "mon": ["iqcmd", "ipcmd", "vmeas", "pmeas"]},
                    { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
                ]
             })";
@@ -279,7 +303,8 @@ namespace GridKit
         success *= result.loadz.size() == 0;
         success *= result.exciter.size() == 1;
         success *= result.sexspti.size() == 1;
-        success *= result.signal.size() == 21;
+        success *= result.reecb.size() == 1;
+        success *= result.signal.size() == 28;
 
         success *= result.bus[0].bus_id == 1;
         success *= result.bus[0].bus_type == BusType::DEFAULT;
@@ -317,6 +342,8 @@ namespace GridKit
         success *= result.signal[8].name == "Governor Auxiliary Power";
         success *= result.signal[9].signal_id == 10;
         success *= result.signal[9].name == "Load Reference";
+        success *= result.signal[27].signal_id == 28;
+        success *= result.signal[27].name == "Active Current Command";
 
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::R]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
@@ -540,6 +567,56 @@ namespace GridKit
         success *= result.sexspti[0].buses[Exciter::SexsPtiBuses::bus] == 1;
         success *= result.sexspti[0].signal_outputs[Exciter::SexsPtiSignalOutputs::efd] == 3;
         success *= result.sexspti[0].disambiguation_string == "DV4";
+
+        using ReecbData    = Controller::ReecbData<RealT, IdxT>;
+        using ReecbParams  = ReecbData::Parameters;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::mva]) == 100.0;
+        success           *= !std::get<bool>(result.reecb[0].parameters[ReecbParams::PfFlag]);
+        success           *= std::get<bool>(result.reecb[0].parameters[ReecbParams::VFlag]);
+        success           *= std::get<bool>(result.reecb[0].parameters[ReecbParams::QFlag]);
+        success           *= std::get<bool>(result.reecb[0].parameters[ReecbParams::Pqflag]);
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Trv]) == 0.02;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Tp]) == 0.05;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vref0]) == 1.0;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vdip]) == 0.85;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vup]) == 1.15;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::dbd1]) == -0.01;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::dbd2]) == 0.01;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::kqv]) == 5.0;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Iql1]) == -1.1;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Iqh1]) == 1.1;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Qmax]) == 0.436;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Qmin]) == -0.436;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kqp]) == 0.1;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kqi]) == 0.2;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vmax]) == 1.1;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Vmin]) == 0.9;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kvp]) == 18.0;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Kvi]) == 5.0;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Tiq]) == 0.02;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Tpord]) == 0.02;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::dPmax]) == 99.0;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::dPmin]) == -99.0;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Pmax]) == 1.0;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Pmin]) == 0.0;
+        success           *= std::get<RealT>(result.reecb[0].parameters[ReecbParams::Imax]) == 1.3;
+        success           *= result.reecb[0].buses[ReecbData::Buses::bus] == 1;
+        success           *= result.reecb[0].signal_inputs[ReecbData::SignalInputs::pe] == 22;
+        success           *= result.reecb[0].signal_inputs[ReecbData::SignalInputs::qgen] == 23;
+        success           *= result.reecb[0].signal_inputs[ReecbData::SignalInputs::qext] == 24;
+        success           *= result.reecb[0].signal_inputs[ReecbData::SignalInputs::pfaref] == 25;
+        success           *= result.reecb[0].signal_inputs[ReecbData::SignalInputs::pref] == 26;
+        success           *= result.reecb[0].signal_outputs[ReecbData::SignalOutputs::iqcmd] == 27;
+        success           *= result.reecb[0].signal_outputs[ReecbData::SignalOutputs::ipcmd] == 28;
+        success           *= result.reecb[0].disambiguation_string == "EC1";
+        success           *= result.reecb[0].monitored_variables.contains(
+            ReecbData::MonitorableVariables::iqcmd);
+        success *= result.reecb[0].monitored_variables.contains(
+            ReecbData::MonitorableVariables::ipcmd);
+        success *= result.reecb[0].monitored_variables.contains(
+            ReecbData::MonitorableVariables::vmeas);
+        success *= result.reecb[0].monitored_variables.contains(
+            ReecbData::MonitorableVariables::pmeas);
 
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;

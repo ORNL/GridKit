@@ -5,6 +5,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/BusToSignalAdapter/BusToSignalAdapter.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/Reecb.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1a.hpp>

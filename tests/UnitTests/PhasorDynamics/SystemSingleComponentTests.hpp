@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
@@ -313,6 +314,43 @@ namespace GridKit
         gastpti.device_class                   = "GastPti";
         gastpti.disambiguation_string          = "gastpti_test";
         gastpti.signal_outputs[Outputs::pmech] = static_cast<IdxT>(1);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+
+        return success.report(__func__);
+      }
+
+      /// REECB through the production data path.
+      TestOutcome reecb()
+      {
+        using Data   = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
+        using Buses  = typename Data::Buses;
+        using Params = typename Data::Parameters;
+        using Vars   = PhasorDynamics::Controller::ReecbInternalVariables;
+
+        constexpr IdxT bus_id = static_cast<IdxT>(1);
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.bus.resize(1);
+        data.bus[0].bus_id   = bus_id;
+        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = static_cast<RealT>(1.0);
+        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+
+        Data reecb_data;
+        reecb_data.buses[Buses::bus]        = bus_id;
+        reecb_data.parameters[Params::Tp]   = static_cast<RealT>(0.02);
+        reecb_data.parameters[Params::Pmin] = static_cast<RealT>(-1.0);
+        data.reecb.push_back(reecb_data);
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
 
