@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -100,19 +101,31 @@ namespace GridKit
         // Jacobian via Enzyme
         auto enzyme_jacobian = EnzymeJacobian(R, X, status);
 
-        if (!status)
+        success *= dependency_tracking_jacobian.size() == enzyme_jacobian.size();
+
+        const auto remove_zeros = [](auto& jacobian)
         {
-          // HACK: Enzyme retains the fixed DfDwb/DhDy structure and masks its
-          // inactive values to exact zero, while DependencyTracking omits them.
-          for (auto& row : enzyme_jacobian)
+          for (auto& row : jacobian)
           {
-            std::erase_if(row, [](const auto& entry)
-                          { return entry.second == 0.0; });
+            for (auto entry = row.begin(); entry != row.end();)
+            {
+              if (entry->second == 0.0)
+              {
+                entry = row.erase(entry);
+              }
+              else
+              {
+                ++entry;
+              }
+            }
           }
-        }
+        };
+        remove_zeros(dependency_tracking_jacobian);
+        remove_zeros(enzyme_jacobian);
 
         /// Compare DependencyTracking dependencies to Enzyme's
-        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        const size_t rows = std::min(dependency_tracking_jacobian.size(), enzyme_jacobian.size());
+        for (size_t i = 0; i < rows; ++i)
         {
           success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]));
         }
@@ -152,7 +165,19 @@ namespace GridKit
         std::cout << "Sparse Csr Matrix: BusFault DependencyTracking Jacobian\n";
         model_jacobian->print();
 
-        return GridKit::Testing::MapFromCsr(model_jacobian);
+        auto dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
+        const auto& bus_residual = bus.getResidual();
+        const auto internal_rows = dependencies.size();
+        dependencies.resize(internal_rows + bus_residual.getSize());
+        for (IdxT row = 0; row < bus_residual.getSize(); ++row)
+        {
+          // Merge even y and odd yp indices at alpha = 1, including bus rows.
+          for (const auto& [column, value] : bus_residual.getData()[row].getDependencies())
+          {
+            dependencies[internal_rows + row][column / 2] += value;
+          }
+        }
+        return dependencies;
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
