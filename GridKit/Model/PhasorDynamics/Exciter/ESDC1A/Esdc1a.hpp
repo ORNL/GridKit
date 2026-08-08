@@ -43,14 +43,16 @@ namespace GridKit
         MAXIMUM, ///< Number of ESDC1A internal variables
       };
 
-      /// External signal variables read or initialized by an `Esdc1a`.
+      /// External variables read by an `Esdc1a`.
       enum class Esdc1aExternalVariables : size_t
       {
+        VR,      ///< \f$V_\mathrm{r}\f$ Terminal-bus real voltage [p.u.]
+        VI,      ///< \f$V_\mathrm{i}\f$ Terminal-bus imaginary voltage [p.u.]
         OMEGA,   ///< \f$\omega\f$ Known machine speed deviation [p.u.]
         VREF,    ///< \f$V_{\mathrm{ref}}\f$ Unknown voltage-control reference [p.u.]
         VS,      ///< \f$V_S\f$ Known stabilizer input signal [p.u.]
         VUEL,    ///< \f$V_{\mathrm{UEL}}\f$ Known under-excitation limiter input [p.u.]
-        MAXIMUM, ///< Number of ESDC1A external signal variables
+        MAXIMUM, ///< Number of ESDC1A external variables
       };
 
       /**
@@ -75,10 +77,9 @@ namespace GridKit
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
         using Component<scalar_type, index_type>::variable_indices_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::ws_;
-        using Component<scalar_type, index_type>::ws_indices_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::y_;
+        using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::yp_;
 
       public:
@@ -102,6 +103,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
+        int evaluateInternalResidual() override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
@@ -119,14 +121,14 @@ namespace GridKit
         __attribute__((always_inline)) inline int evaluateInternalResidual(
             const ScalarT* y,
             const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
+            const ScalarT* y_ext,
             ScalarT*       f);
 
       private:
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
+        void gatherExternalVariables();
 
         static __attribute__((always_inline)) inline ScalarT awmin(
             ScalarT x,

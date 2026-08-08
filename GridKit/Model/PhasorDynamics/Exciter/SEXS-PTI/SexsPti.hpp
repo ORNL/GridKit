@@ -47,6 +47,8 @@ namespace GridKit
       /// External variables of a `SexsPti`.
       enum class SexsPtiExternalVariables : size_t
       {
+        VREAL, ///< Real bus voltage
+        VIMAG, ///< Imaginary bus voltage
         VREF, ///< Voltage reference
         VS,   ///< Stabilizer output signal
         VUEL, ///< Under-excitation limiter signal
@@ -67,9 +69,8 @@ namespace GridKit
         using Component<scalar_type, index_type>::time_;
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::ws_;
-        using Component<scalar_type, index_type>::ws_indices_;
+        using Component<scalar_type, index_type>::y_ext_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -96,6 +97,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
+        int evaluateInternalResidual() override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
@@ -111,7 +113,7 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+            const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
         BusT* bus_{nullptr};
@@ -140,6 +142,7 @@ namespace GridKit
 
         void initModelParams(const ModelDataT& data);
         void initializeMonitor();
+        void gatherExternalVariables();
       };
 
     } // namespace Exciter

@@ -30,6 +30,16 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// External variables of a `Branch`
+    enum class BranchExternalVariables : size_t
+    {
+      VR1, ///< \f$V_{r1}\f$
+      VI1, ///< \f$V_{i1}\f$
+      VR2, ///< \f$V_{r2}\f$
+      VI2, ///< \f$V_{i2}\f$
+      MAXIMUM,
+    };
+
     /**
      * @brief Implementation of a line or off-nominal transformer branch between two buses.
      *
@@ -49,8 +59,10 @@ namespace GridKit
       using Component<scalar_type, index_type>::yp_;
       using Component<scalar_type, index_type>::tag_;
       using Component<scalar_type, index_type>::f_;
-      using Component<scalar_type, index_type>::wb_;
-      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::y_ext_;
+      using Component<scalar_type, index_type>::variable_indices_ext_;
+      using Component<scalar_type, index_type>::residual_indices_ext_;
+      using Component<scalar_type, index_type>::f_ext_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -83,7 +95,9 @@ namespace GridKit
       virtual int initialize() override final;
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT rel_tol) override final;
+      virtual int evaluateInternalResidual() override final;
       virtual int evaluateResidual() override final;
+      virtual int evaluateExternalResidual() override final;
       virtual int evaluateJacobian() override final;
       virtual int verify() const override final;
 
@@ -128,6 +142,7 @@ namespace GridKit
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
+      void gatherExternalVariables();
       void setDerivedParams();
       void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
       void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
@@ -141,11 +156,6 @@ namespace GridKit
                                                                                   const ScalarT Vi,
                                                                                   ScalarT&      Ir,
                                                                                   ScalarT&      Ii);
-
-      static __attribute__((always_inline)) inline void evaluateAdmittanceBlock(const RealT    G,
-                                                                                const RealT    B,
-                                                                                const ScalarT* wb,
-                                                                                ScalarT*       h);
 
       ScalarT& Vr1()
       {
@@ -188,13 +198,7 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateBusResidual11(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual12(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual21(
-          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual22(
+      __attribute__((always_inline)) inline int evaluateExternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:

@@ -122,13 +122,7 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.resize(2);
-        wb_.setToZero();
-
-        const auto signal_size = static_cast<size_t>(ReecbExternalVariables::MAXIMUM);
-        ws_.resize(static_cast<IdxT>(signal_size));
-        ws_.setToZero();
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        this->allocateExternalVectors(static_cast<IdxT>(ReecbExternalVariables::MAXIMUM));
 
         for (IdxT j = 0; j < size_; ++j)
         {
@@ -795,69 +789,101 @@ namespace GridKit
       }
 
       /**
-       * @brief Evaluate the model residuals
+       * @brief Gather external variables and index maps.
        *
-       * Starts from latched values, refreshes attached signals and their indices,
-       * refreshes terminal-bus voltage, and evaluates the internal residual.
-       * REECB contributes no bus residual.
+       * Unattached signal inputs retain the values latched by initialize().
        */
       template <typename scalar_type, typename index_type>
-      int Reecb<scalar_type, index_type>::evaluateResidual()
+      void Reecb<scalar_type, index_type>::gatherExternalVariables()
       {
+        auto* y_ext = y_ext_.getData();
+
+        const auto VR_EXT = static_cast<size_t>(ReecbExternalVariables::VR);
+        const auto VI_EXT = static_cast<size_t>(ReecbExternalVariables::VI);
         const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
         const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
         const auto QEXT   = static_cast<size_t>(ReecbExternalVariables::QEXT);
         const auto PFAREF = static_cast<size_t>(ReecbExternalVariables::PFAREF);
         const auto PREF   = static_cast<size_t>(ReecbExternalVariables::PREF);
 
-        auto* ws = ws_.getData();
+        y_ext[VR_EXT]                = Vr();
+        y_ext[VI_EXT]                = Vi();
+        variable_indices_ext_[VR_EXT] = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VI_EXT] = INVALID_INDEX<IdxT>;
+        if (bus_->size() > 0)
+        {
+          variable_indices_ext_[VR_EXT] = bus_->getVariableIndex(0);
+          variable_indices_ext_[VI_EXT] = bus_->getVariableIndex(1);
+        }
 
-        ws[PE]     = pe_set_;
-        ws[QGEN]   = qgen_set_;
-        ws[QEXT]   = qext_set_;
-        ws[PFAREF] = pfaref_set_;
-        ws[PREF]   = pref_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        y_ext[PE]                    = pe_set_;
+        y_ext[QGEN]                  = qgen_set_;
+        y_ext[QEXT]                  = qext_set_;
+        y_ext[PFAREF]                = pfaref_set_;
+        y_ext[PREF]                  = pref_set_;
+        variable_indices_ext_[PE]     = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[QGEN]   = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[QEXT]   = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[PFAREF] = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[PREF]   = INVALID_INDEX<IdxT>;
 
         if (signals_.template isAttached<ReecbExternalVariables::PE>())
         {
-          ws[PE] = signals_.template readExternalVariable<ReecbExternalVariables::PE>();
-          ws_indices_[PE] =
+          y_ext[PE] = signals_.template readExternalVariable<ReecbExternalVariables::PE>();
+          variable_indices_ext_[PE] =
               signals_.template readExternalVariableIndex<ReecbExternalVariables::PE>();
         }
         if (signals_.template isAttached<ReecbExternalVariables::QGEN>())
         {
-          ws[QGEN] = signals_.template readExternalVariable<ReecbExternalVariables::QGEN>();
-          ws_indices_[QGEN] =
+          y_ext[QGEN] = signals_.template readExternalVariable<ReecbExternalVariables::QGEN>();
+          variable_indices_ext_[QGEN] =
               signals_.template readExternalVariableIndex<ReecbExternalVariables::QGEN>();
         }
         if (signals_.template isAttached<ReecbExternalVariables::QEXT>())
         {
-          ws[QEXT] = signals_.template readExternalVariable<ReecbExternalVariables::QEXT>();
-          ws_indices_[QEXT] =
+          y_ext[QEXT] = signals_.template readExternalVariable<ReecbExternalVariables::QEXT>();
+          variable_indices_ext_[QEXT] =
               signals_.template readExternalVariableIndex<ReecbExternalVariables::QEXT>();
         }
         if (signals_.template isAttached<ReecbExternalVariables::PFAREF>())
         {
-          ws[PFAREF] =
+          y_ext[PFAREF] =
               signals_.template readExternalVariable<ReecbExternalVariables::PFAREF>();
-          ws_indices_[PFAREF] =
+          variable_indices_ext_[PFAREF] =
               signals_.template readExternalVariableIndex<ReecbExternalVariables::PFAREF>();
         }
         if (signals_.template isAttached<ReecbExternalVariables::PREF>())
         {
-          ws[PREF] = signals_.template readExternalVariable<ReecbExternalVariables::PREF>();
-          ws_indices_[PREF] =
+          y_ext[PREF] = signals_.template readExternalVariable<ReecbExternalVariables::PREF>();
+          variable_indices_ext_[PREF] =
               signals_.template readExternalVariableIndex<ReecbExternalVariables::PREF>();
         }
+      }
 
-        auto* wb = wb_.getData();
-        wb[0]    = Vr();
-        wb[1]    = Vi();
+      /**
+       * @brief Evaluate the internal REECB residual equations.
+       */
+      template <typename scalar_type, typename index_type>
+      int Reecb<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
-        evaluateInternalResidual(y_.getData(), yp_.getData(), wb, ws, f_.getData());
+        evaluateInternalResidual(y_.getData(), yp_.getData(), y_ext_.getData(), f_.getData());
         f_.setDataUpdated();
         return 0;
+      }
+
+      /**
+       * @brief Evaluate internal equations and external contributions.
+       *
+       * REECB contributes no external residual, so the base implementation
+       * returns zero after the internal equations are evaluated.
+       */
+      template <typename scalar_type, typename index_type>
+      int Reecb<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
 
       /**
@@ -895,8 +921,7 @@ namespace GridKit
        *
        * @param[in] y Internal variables.
        * @param[in] yp Internal variable derivatives.
-       * @param[in] wb Terminal-bus voltage components.
-       * @param[in] ws External signal values in their documented port units and bases.
+       * @param[in] y_ext External variable values.
        * @param[out] f Internal residuals.
        */
       template <typename scalar_type, typename index_type>
@@ -904,8 +929,7 @@ namespace GridKit
       Reecb<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
         const auto VMEAS  = static_cast<size_t>(ReecbInternalVariables::VMEAS);
@@ -932,6 +956,8 @@ namespace GridKit
         const auto IQCMD  = static_cast<size_t>(ReecbInternalVariables::IQCMD);
         const auto IPCMD  = static_cast<size_t>(ReecbInternalVariables::IPCMD);
 
+        const auto VR_EXT = static_cast<size_t>(ReecbExternalVariables::VR);
+        const auto VI_EXT = static_cast<size_t>(ReecbExternalVariables::VI);
         const auto PE     = static_cast<size_t>(ReecbExternalVariables::PE);
         const auto QGEN   = static_cast<size_t>(ReecbExternalVariables::QGEN);
         const auto QEXT   = static_cast<size_t>(ReecbExternalVariables::QEXT);
@@ -969,14 +995,14 @@ namespace GridKit
         const ScalarT qv_dot    = yp[QV];
         const ScalarT pord_dot  = yp[PORD];
 
-        const ScalarT vr = wb[0];
-        const ScalarT vi = wb[1];
+        const ScalarT vr = y_ext[VR_EXT];
+        const ScalarT vi = y_ext[VI_EXT];
 
-        const ScalarT pe     = toComponentBase(ws[PE]);
-        const ScalarT qgen   = toComponentBase(ws[QGEN]);
-        const ScalarT extref = ws[QEXT];
-        const ScalarT pfaref = ws[PFAREF];
-        const ScalarT pref   = toComponentBase(ws[PREF]);
+        const ScalarT pe     = toComponentBase(y_ext[PE]);
+        const ScalarT qgen   = toComponentBase(y_ext[QGEN]);
+        const ScalarT extref = y_ext[QEXT];
+        const ScalarT pfaref = y_ext[PFAREF];
+        const ScalarT pref   = toComponentBase(y_ext[PREF]);
         const ScalarT iqcmd  = toComponentBase(iqcmd_system);
         const ScalarT ipcmd  = toComponentBase(ipcmd_system);
 

@@ -207,11 +207,8 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        // Resize signal variable data
-        const auto signal_size = static_cast<size_t>(Tgov1ExternalVariables::MAXIMUM);
-        ws_.resize(static_cast<IdxT>(signal_size));
-        ws_.setToZero();
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        // Resize coupling data
+        this->allocateExternalVectors(static_cast<IdxT>(Tgov1ExternalVariables::MAXIMUM));
 
         // Set output signals
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
@@ -367,11 +364,10 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int Tgov1<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT*                  y,
-          const ScalarT*                  yp,
-          [[maybe_unused]] const ScalarT* wb,
-          const ScalarT*                  ws,
-          ScalarT*                        f)
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* y_ext,
+          ScalarT*       f)
       {
         const auto PTX = static_cast<size_t>(Tgov1InternalVariables::PTX);
         const auto PV  = static_cast<size_t>(Tgov1InternalVariables::PV);
@@ -387,8 +383,8 @@ namespace GridKit
         const ScalarT pturb_dot = yp[PTX];
         const ScalarT pv_dot    = yp[PV];
 
-        const ScalarT omega = ws[DELTAOMEGA];
-        const ScalarT pref  = ws[PREF];
+        const ScalarT omega = y_ext[DELTAOMEGA];
+        const ScalarT pref  = y_ext[PREF];
 
         f[PTX] = -pturb_dot - (pturb - pv - T2_ * pv_dot) / T3_;
         f[PV]  = -pv_dot + Math::antiwindup(pv, -pv + (pref - omega) / R_, Pvmin_, Pvmax_) / T1_;
@@ -401,40 +397,59 @@ namespace GridKit
        * @brief Residuals of system equations
        *
        */
+      /**
+       * @brief Gather external variables and index maps.
+       *
+       */
       template <typename scalar_type, typename index_type>
-      int Tgov1<scalar_type, index_type>::evaluateResidual()
+      void Tgov1<scalar_type, index_type>::gatherExternalVariables()
       {
+        auto* y_ext = y_ext_.getData();
+
         const auto DELTAOMEGA = static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
         const auto PREF       = static_cast<size_t>(Tgov1ExternalVariables::PREF);
 
-        auto* ws = ws_.getData();
-
-        ws[DELTAOMEGA] = ScalarT{ZERO<RealT>};
-        ws[PREF]       = pref_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        y_ext[DELTAOMEGA] = ScalarT{ZERO<RealT>};
+        y_ext[PREF]       = pref_set_;
+        std::fill(variable_indices_ext_.begin(),
+                  variable_indices_ext_.end(),
+                  INVALID_INDEX<IdxT>);
 
         if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
         {
-          ws[DELTAOMEGA] = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
-          ws_indices_[DELTAOMEGA] =
+          y_ext[DELTAOMEGA] = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+          variable_indices_ext_[DELTAOMEGA] =
               signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
         }
 
         if (signals_.template isAttached<Tgov1ExternalVariables::PREF>())
         {
-          ws[PREF] = signals_.template readExternalVariable<Tgov1ExternalVariables::PREF>();
-          ws_indices_[PREF] =
+          y_ext[PREF] = signals_.template readExternalVariable<Tgov1ExternalVariables::PREF>();
+          variable_indices_ext_[PREF] =
               signals_.template readExternalVariableIndex<Tgov1ExternalVariables::PREF>();
         }
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Tgov1<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, nullptr, ws, f);
+        evaluateInternalResidual(y, yp, y_ext_.getData(), f);
 
         f_.setDataUpdated();
 
         return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Tgov1<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
     } // namespace Governor
   } // namespace PhasorDynamics

@@ -374,15 +374,11 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.resize(2);
-        wb_.setToZero();
-        h_.resize(2);
-        h_.setToZero();
-
-        auto signal_size = static_cast<size_t>(RegcaExternalVariables::MAXIMUM);
-        ws_.resize(static_cast<IdxT>(signal_size));
-        ws_.setToZero();
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        // Resize coupling data
+        this->allocateExternalVectors(static_cast<IdxT>(RegcaExternalVariables::MAXIMUM));
+        f_ext_.resize(2);
+        f_ext_.setToZero();
+        residual_indices_ext_.assign(2, INVALID_INDEX<IdxT>);
 
         for (IdxT j = 0; j < size_; ++j)
         {
@@ -623,8 +619,8 @@ namespace GridKit
        *
        * @param[in] y Internal variables.
        * @param[in] yp Internal variable derivatives.
-       * @param[in] wb Terminal-bus voltage components.
-       * @param[in] ws Current-command signal values on the system base.
+       * @param[in] y_ext External variables: terminal-bus voltage components
+       *             followed by the current-command signals on the system base.
        * @param[out] f Internal residuals.
        */
       template <typename scalar_type, typename index_type>
@@ -632,8 +628,7 @@ namespace GridKit
       Regca<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
         const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
@@ -647,6 +642,8 @@ namespace GridKit
         const auto PBR     = static_cast<size_t>(RegcaInternalVariables::PBR);
         const auto QBR     = static_cast<size_t>(RegcaInternalVariables::QBR);
 
+        const auto VR    = static_cast<size_t>(RegcaExternalVariables::VR);
+        const auto VI    = static_cast<size_t>(RegcaExternalVariables::VI);
         const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
         const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
 
@@ -665,11 +662,11 @@ namespace GridKit
         const ScalarT iq_dot = yp[IQ];
         const ScalarT ip_dot = yp[IP];
 
-        const ScalarT vr = wb[0];
-        const ScalarT vi = wb[1];
+        const ScalarT vr = y_ext[VR];
+        const ScalarT vi = y_ext[VI];
 
-        const ScalarT ipcmd = toComponentBase(ws[IPCMD]);
-        const ScalarT iqcmd = toComponentBase(ws[IQCMD]);
+        const ScalarT ipcmd = toComponentBase(y_ext[IPCMD]);
+        const ScalarT iqcmd = toComponentBase(y_ext[IQCMD]);
 
         // Form the unconstrained current derivatives, then apply the REGCA
         // recovery rate limits in p.u./s.
@@ -714,77 +711,123 @@ namespace GridKit
        *
        * @param[in] y Internal variables.
        * @param[in] yp Internal variable derivatives, unused.
-       * @param[in] wb Terminal-bus voltage components, unused.
-       * @param[out] h Current injected into the terminal bus.
+       * @param[in] y_ext External variables, unused.
+       * @param[out] f_ext Current injected into the terminal bus.
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::evaluateBusResidual(
+      __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::evaluateExternalResidual(
           const ScalarT*                  y,
           [[maybe_unused]] const ScalarT* yp,
-          [[maybe_unused]] const ScalarT* wb,
-          ScalarT*                        h)
+          [[maybe_unused]] const ScalarT* y_ext,
+          ScalarT*                        f_ext)
       {
         const auto IR = static_cast<size_t>(RegcaInternalVariables::IR);
         const auto II = static_cast<size_t>(RegcaInternalVariables::II);
 
-        h[0] = y[IR];
-        h[1] = y[II];
+        f_ext[0] = y[IR];
+        f_ext[1] = y[II];
+        return 0;
+      }
+
+      /**
+       * @brief Gather external variables and index maps.
+       */
+      template <typename scalar_type, typename index_type>
+      void Regca<scalar_type, index_type>::gatherExternalVariables()
+      {
+        auto* y_ext = y_ext_.getData();
+
+        const auto VR    = static_cast<size_t>(RegcaExternalVariables::VR);
+        const auto VI    = static_cast<size_t>(RegcaExternalVariables::VI);
+        const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
+        const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
+
+        // Terminal-bus voltage
+        y_ext[VR] = Vr();
+        y_ext[VI] = Vi();
+        if (bus_->size() > 0)
+        {
+          variable_indices_ext_[VR] = bus_->getVariableIndex(0);
+          variable_indices_ext_[VI] = bus_->getVariableIndex(1);
+          residual_indices_ext_[0]  = bus_->getResidualIndex(0);
+          residual_indices_ext_[1]  = bus_->getResidualIndex(1);
+        }
+
+        // Active-current command
+        y_ext[IPCMD] = ipcmd_set_;
+        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        {
+          y_ext[IPCMD] =
+              signals_.template readExternalVariable<RegcaExternalVariables::IPCMD>();
+          variable_indices_ext_[IPCMD] =
+              signals_.template readExternalVariableIndex<RegcaExternalVariables::IPCMD>();
+        }
+
+        // Reactive-current command
+        y_ext[IQCMD] = iqcmd_set_;
+        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        {
+          y_ext[IQCMD] =
+              signals_.template readExternalVariable<RegcaExternalVariables::IQCMD>();
+          variable_indices_ext_[IQCMD] =
+              signals_.template readExternalVariableIndex<RegcaExternalVariables::IQCMD>();
+        }
+      }
+
+      /**
+       * @brief Internal residual for the converter model.
+       */
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
+
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
+
+        evaluateInternalResidual(y, yp, y_ext_.getData(), f);
+        f_.setDataUpdated();
+
+        return 0;
+      }
+
+      /**
+       * @brief External residual contributions to the bus.
+       *
+       * @pre The terminal-bus residual has been zeroed for this evaluation.
+       */
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::evaluateExternalResidual()
+      {
+        auto* y_ext = y_ext_.getData();
+        auto* f_ext = f_ext_.getData();
+
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+
+        evaluateExternalResidual(y, yp, y_ext, f_ext);
+
+        // Regca contribution to bus algebraic equations
+        Ir() += f_ext[0];
+        Ii() += f_ext[1];
+
+        if (bus_->size() > 0)
+        {
+          bus_->getResidual().setDataUpdated();
+        }
+
         return 0;
       }
 
       /**
        * @brief Evaluate model residuals and accumulate the branch current.
-       *
-       * Refreshes the bus and signal interface buffers, evaluates the internal
-       * and bus residuals, and accumulates the converter current into the terminal
-       * bus. Unattached command ports use the setpoints latched by initialize().
-       *
-       * @pre The terminal-bus residual has been zeroed for this evaluation.
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::evaluateResidual()
       {
-        const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
-        const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
-
-        auto* ws = ws_.getData();
-
-        ws[IPCMD] = ipcmd_set_;
-        ws[IQCMD] = iqcmd_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
-
-        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
-        {
-          ws[IPCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IPCMD>();
-          ws_indices_[IPCMD] =
-              signals_.template readExternalVariableIndex<RegcaExternalVariables::IPCMD>();
-        }
-
-        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
-        {
-          ws[IQCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IQCMD>();
-          ws_indices_[IQCMD] =
-              signals_.template readExternalVariableIndex<RegcaExternalVariables::IQCMD>();
-        }
-
-        auto* wb = wb_.getData();
-        wb[0]    = Vr();
-        wb[1]    = Vi();
-
-        const auto* y  = y_.getData();
-        const auto* yp = yp_.getData();
-        auto*       f  = f_.getData();
-        auto*       h  = h_.getData();
-
-        evaluateInternalResidual(y, yp, wb, ws, f);
-        evaluateBusResidual(y, yp, wb, h);
-        f_.setDataUpdated();
-
-        Ir() += h[0];
-        Ii() += h[1];
-        bus_->getResidual().setDataUpdated();
-
-        return 0;
+        evaluateInternalResidual();
+        return evaluateExternalResidual();
       }
     } // namespace Converter
   } // namespace PhasorDynamics
