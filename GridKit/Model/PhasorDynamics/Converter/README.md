@@ -2,8 +2,9 @@
 
 ## Introduction
 
-Converter models represent inverter-coupled resources in the phasor dynamics model. They provide the network interface between renewable-energy control
-models and the bus equations, typically through commanded active and reactive current components.
+Converter models represent inverter-coupled resources in the phasor dynamics
+model and provide the network interface between renewable-energy controller
+models and the bus equations.
 
 ## Types
 

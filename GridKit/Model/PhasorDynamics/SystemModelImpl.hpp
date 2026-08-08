@@ -294,6 +294,64 @@ namespace GridKit
         addComponent(gen);
       }
 
+      // Add REECB after its current-command and feedback producers because
+      // components initialize in insertion order.
+      for (const auto& reecbdata : data.reecb)
+      {
+        BusT* bus = nullptr;
+        if (reecbdata.buses.contains(ReecbBuses::bus))
+        {
+          bus = getBus(reecbdata.buses.at(ReecbBuses::bus));
+        }
+
+        auto* reecb = new Reecb<ScalarT, IdxT>(bus, reecbdata);
+
+        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pe))
+        {
+          const IdxT     pe = reecbdata.signal_inputs.at(ReecbSignalInputs::pe);
+          constexpr auto PE = ReecbExternalVariables::PE;
+          reecb->getSignals().template attachSignalNode<PE>(getSignal(pe));
+        }
+        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::qgen))
+        {
+          const IdxT     qgen = reecbdata.signal_inputs.at(ReecbSignalInputs::qgen);
+          constexpr auto QGEN = ReecbExternalVariables::QGEN;
+          reecb->getSignals().template attachSignalNode<QGEN>(getSignal(qgen));
+        }
+        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::qext))
+        {
+          const IdxT     qext = reecbdata.signal_inputs.at(ReecbSignalInputs::qext);
+          constexpr auto QEXT = ReecbExternalVariables::QEXT;
+          reecb->getSignals().template attachSignalNode<QEXT>(getSignal(qext));
+        }
+        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pfaref))
+        {
+          const IdxT     pfaref = reecbdata.signal_inputs.at(ReecbSignalInputs::pfaref);
+          constexpr auto PFAREF = ReecbExternalVariables::PFAREF;
+          reecb->getSignals().template attachSignalNode<PFAREF>(getSignal(pfaref));
+        }
+        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pref))
+        {
+          const IdxT     pref = reecbdata.signal_inputs.at(ReecbSignalInputs::pref);
+          constexpr auto PREF = ReecbExternalVariables::PREF;
+          reecb->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+        }
+        if (reecbdata.signal_outputs.contains(ReecbSignalOutputs::iqcmd))
+        {
+          const IdxT     iqcmd = reecbdata.signal_outputs.at(ReecbSignalOutputs::iqcmd);
+          constexpr auto IQCMD = ReecbInternalVariables::IQCMD;
+          reecb->getSignals().template assignSignalNode<IQCMD>(getSignal(iqcmd));
+        }
+        if (reecbdata.signal_outputs.contains(ReecbSignalOutputs::ipcmd))
+        {
+          const IdxT     ipcmd = reecbdata.signal_outputs.at(ReecbSignalOutputs::ipcmd);
+          constexpr auto IPCMD = ReecbInternalVariables::IPCMD;
+          reecb->getSignals().template assignSignalNode<IPCMD>(getSignal(ipcmd));
+        }
+
+        addComponent(reecb);
+      }
+
       // Add Tgov1 governors
       for (const auto& govdata : data.gov)
       {
@@ -686,8 +744,8 @@ namespace GridKit
      *
      * @note System model composition is flat; nested systems are not supported.
      *
-     * @throws std::runtime_error if storage allocation, child binding, or
-     * model verification fails.
+     * @throws std::runtime_error if storage allocation, child binding, model
+     * verification, or initialization for sparse Jacobian discovery fails.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()
@@ -802,20 +860,26 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
-      // Start variable monitors
-      initializeMonitor();
-      startMonitor();
-
-      // Perform an initial Jacobian evaluation for sparse Jacobians, such that
-      // the dynamic solver can querry the NNZ value when it is configured.
-      // @todo Replace with a sparsity analysis that sets the NNZ and allocates the Jacobian
-      // without needing the Jacobian values.
+      // Sparse-pattern discovery requires an initialized operating point. A failed
+      // initialization aborts allocation before residual/Jacobian evaluation or
+      // monitor startup.
+      // @todo Replace with a sparsity analysis that sets the NNZ and allocates
+      // the Jacobian without needing the Jacobian values.
       if (hasJacobian())
       {
-        initialize();
+        const int status = initialize();
+        if (status != 0)
+        {
+          Log::error() << "System model initialization failed with status "
+                       << status << '\n';
+          throw std::runtime_error("SystemModel allocation failed");
+        }
         evaluateResidual();
         evaluateJacobian();
       }
+
+      initializeMonitor();
+      startMonitor();
 
       allocated_ = true;
       return 0;

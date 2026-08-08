@@ -4,6 +4,8 @@
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/Reecb.hpp>
+#include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/Repca.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
@@ -225,6 +227,102 @@ namespace GridKit
 
         const auto* residual = plant.getResidual().getData();
         for (IdxT row = 0; row < plant.size(); ++row)
+        {
+          success *= isEqual(residual[row], static_cast<ScalarT>(0.0), kTol);
+        }
+
+        return success.report(__func__);
+      }
+
+      /// REGCA initializes first and publishes the current commands it
+      /// resolves to the shared nodes, alongside its branch powers. REECB
+      /// then initializes around all four published values and must leave
+      /// them unchanged at a steady state.
+      TestOutcome regcaReecb()
+      {
+        using ConverterExternal  = PhasorDynamics::Converter::RegcaExternalVariables;
+        using ConverterInternal  = PhasorDynamics::Converter::RegcaInternalVariables;
+        using ConverterParams    = PhasorDynamics::Converter::RegcaParameters;
+        using ControllerExternal = PhasorDynamics::Controller::ReecbExternalVariables;
+        using ControllerInternal = PhasorDynamics::Controller::ReecbInternalVariables;
+        using ControllerParams   = PhasorDynamics::Controller::ReecbParameters;
+
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(
+            static_cast<ScalarT>(1.0),
+            static_cast<ScalarT>(0.0));
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> pe;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> qgen;
+
+        // The operating point is exactly representable, so the pair rests at
+        // an exact steady state.
+        PhasorDynamics::Converter::RegcaData<RealT, IdxT> converter_data;
+        converter_data.parameters[ConverterParams::p0]     = static_cast<RealT>(0.375);
+        converter_data.parameters[ConverterParams::q0]     = static_cast<RealT>(0.0625);
+        converter_data.parameters[ConverterParams::mva]    = static_cast<RealT>(100.0);
+        converter_data.parameters[ConverterParams::Tg]     = static_cast<RealT>(0.02);
+        converter_data.parameters[ConverterParams::TM]     = static_cast<RealT>(0.02);
+        converter_data.parameters[ConverterParams::Rqmax]  = static_cast<RealT>(999.0);
+        converter_data.parameters[ConverterParams::Rqmin]  = static_cast<RealT>(-999.0);
+        converter_data.parameters[ConverterParams::Rpmax]  = static_cast<RealT>(999.0);
+        converter_data.parameters[ConverterParams::sL]     = true;
+        converter_data.parameters[ConverterParams::IL1]    = static_cast<RealT>(1.1);
+        converter_data.parameters[ConverterParams::VL0]    = static_cast<RealT>(0.25);
+        converter_data.parameters[ConverterParams::VL1]    = static_cast<RealT>(0.75);
+        converter_data.parameters[ConverterParams::VA0]    = static_cast<RealT>(0.25);
+        converter_data.parameters[ConverterParams::VA1]    = static_cast<RealT>(0.75);
+        converter_data.parameters[ConverterParams::Vhvmax] = static_cast<RealT>(1.5);
+
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> converter(&bus, converter_data);
+
+        PhasorDynamics::Controller::ReecbData<RealT, IdxT> controller_data;
+        controller_data.parameters[ControllerParams::mva]    = static_cast<RealT>(100.0);
+        controller_data.parameters[ControllerParams::Tp]     = static_cast<RealT>(0.02);
+        controller_data.parameters[ControllerParams::QFlag]  = true;
+        controller_data.parameters[ControllerParams::VFlag]  = true;
+        controller_data.parameters[ControllerParams::Pqflag] = true;
+        controller_data.parameters[ControllerParams::Imax]   = static_cast<RealT>(0.625);
+        controller_data.parameters[ControllerParams::Vmin]   = static_cast<RealT>(0.5);
+        controller_data.parameters[ControllerParams::Vmax]   = static_cast<RealT>(1.5);
+
+        PhasorDynamics::Controller::Reecb<ScalarT, IdxT> controller(&bus, controller_data);
+
+        controller.getSignals().template assignSignalNode<ControllerInternal::IPCMD>(&ipcmd);
+        controller.getSignals().template assignSignalNode<ControllerInternal::IQCMD>(&iqcmd);
+        converter.getSignals().template attachSignalNode<ConverterExternal::IPCMD>(&ipcmd);
+        converter.getSignals().template attachSignalNode<ConverterExternal::IQCMD>(&iqcmd);
+        converter.getSignals().template assignSignalNode<ConverterInternal::PBR>(&pe);
+        converter.getSignals().template assignSignalNode<ConverterInternal::QBR>(&qgen);
+        controller.getSignals().template attachSignalNode<ControllerExternal::PE>(&pe);
+        controller.getSignals().template attachSignalNode<ControllerExternal::QGEN>(&qgen);
+
+        system.addBus(&bus);
+        system.addComponent(&converter);
+        system.addComponent(&controller);
+
+        success *= system.allocate() == 0;
+        success *= ipcmd.linked() && iqcmd.linked() && pe.linked() && qgen.linked();
+        success *= ipcmd.getVariableIndex()
+                   == controller.getVariableIndex(
+                       static_cast<IdxT>(ControllerInternal::IPCMD));
+        success *= iqcmd.getVariableIndex()
+                   == controller.getVariableIndex(
+                       static_cast<IdxT>(ControllerInternal::IQCMD));
+        success *= system.initialize() == 0;
+        success *= system.evaluateResidual() == 0;
+
+        // At unit terminal voltage the shared nodes carry the scheduled powers.
+        success *= isEqual(ipcmd.read(), static_cast<ScalarT>(0.375), kTol);
+        success *= isEqual(iqcmd.read(), static_cast<ScalarT>(0.0625), kTol);
+        success *= isEqual(pe.read(), static_cast<ScalarT>(0.375), kTol);
+        success *= isEqual(qgen.read(), static_cast<ScalarT>(0.0625), kTol);
+
+        const auto* residual = controller.getResidual().getData();
+        for (IdxT row = 0; row < controller.size(); ++row)
         {
           success *= isEqual(residual[row], static_cast<ScalarT>(0.0), kTol);
         }
