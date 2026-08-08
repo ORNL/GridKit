@@ -20,8 +20,9 @@ if(GRIDKIT_ENABLE_ENZYME)
       ClangEnzymeFlags
     COMPILE_OPTIONS
       PRIVATE
-      -mllvm
-      -enzyme-auto-sparsity=1
+      "SHELL:-mllvm -enzyme-auto-sparsity=1"
+      # Preserve runtime-order stores for Enzyme sparsification.
+      "SHELL:-mllvm -simplifycfg-sink-common=false"
       -fno-math-errno)
 else()
   gridkit_add_library(
