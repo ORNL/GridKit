@@ -9,6 +9,13 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// External variables of a `LoadZIP`
+    enum class LoadZIPExternalVariables : size_t
+    {
+      VR, ///< \f$V_r\f$
+      VI, ///< \f$V_i\f$
+    };
+
     /*!
      * @brief Implementation of a ZIP load.
      *
@@ -25,8 +32,10 @@ namespace GridKit
       using Component<scalar_type, index_type>::yp_;
       using Component<scalar_type, index_type>::abs_tol_;
       using Component<scalar_type, index_type>::tag_;
-      using Component<scalar_type, index_type>::wb_;
-      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::y_ext_;
+      using Component<scalar_type, index_type>::variable_indices_ext_;
+      using Component<scalar_type, index_type>::residual_indices_ext_;
+      using Component<scalar_type, index_type>::f_ext_;
       using Component<scalar_type, index_type>::f_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
@@ -53,7 +62,9 @@ namespace GridKit
       int initialize() override final;
       int tagDifferentiable() override final;
       int setAbsoluteTolerance(RealT rel_tol) override final;
+      int evaluateInternalResidual() override final;
       int evaluateResidual() override final;
+      int evaluateExternalResidual() override final;
       int evaluateJacobian() override final;
 
       int verify() const override final
@@ -89,6 +100,7 @@ namespace GridKit
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
+      void gatherExternalVariables();
       void setDerivedParams();
 
       ScalarT& Vr()
@@ -114,7 +126,7 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     public:
-      __attribute__((always_inline)) inline int evaluateBusResidual(
+      __attribute__((always_inline)) inline int evaluateExternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
       __attribute__((always_inline)) inline int evaluateInternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
