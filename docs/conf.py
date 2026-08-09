@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 
 from exhale import utils as exhale_utils
 
@@ -6,8 +7,9 @@ project = "GridKit"
 author = "GridKit Developers"
 
 docs_dir = Path(__file__).parent.resolve()
+sys.path.insert(0, str(docs_dir / "_ext"))
 
-extensions = ["breathe", "exhale", "myst_parser", "sphinx_design"]
+extensions = ["breathe", "exhale", "myst_parser", "sphinx_design", "gridkit_links"]
 
 breathe_projects = {"GridKit": str(docs_dir / "xml")}
 breathe_default_project = "GridKit"
@@ -21,7 +23,7 @@ def public_member_specs(kind):
 
 
 exhale_args = {
-    "containmentFolder": "./api/reference",
+    "containmentFolder": "./reference/api/generated",
     "rootFileName": "EXCLUDE",
     "doxygenStripFromPath": str(docs_dir.parent),
     "customSpecificationsMapping": exhale_utils.makeCustomSpecificationsMapping(
@@ -39,7 +41,7 @@ html_css_files = ["css/gridkit.css"]
 html_theme_options = {
     "collapse_navigation": False,
     "includehidden": True,
-    "navigation_depth": 6,
+    "navigation_depth": 4,
     "titles_only": True,
 }
 
