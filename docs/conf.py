@@ -21,7 +21,7 @@ def public_member_specs(kind):
 
 
 exhale_args = {
-    "containmentFolder": "./api/reference",
+    "containmentFolder": "./reference/api/generated",
     "rootFileName": "EXCLUDE",
     "doxygenStripFromPath": str(docs_dir.parent),
     "customSpecificationsMapping": exhale_utils.makeCustomSpecificationsMapping(
@@ -35,8 +35,9 @@ primary_domain = "cpp"
 
 html_theme = "sphinx_rtd_theme"
 html_theme_options = {
-    "collapse_navigation": True,
-    "navigation_depth": 6,
+    "collapse_navigation": False,
+    "includehidden": True,
+    "navigation_depth": 4,
     "titles_only": True,
 }
 
