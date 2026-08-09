@@ -1,5 +1,8 @@
 # General Synchronous Machine Model
 
+> [!WARNING]
+> Generator voltage-compensation parameters $R_\mathrm{Comp}$ and $X_\mathrm{Comp}$ are not currently modeled.
+
 ## Convention
 
 ![](../../../../docs/Figures/SM1.JPG)

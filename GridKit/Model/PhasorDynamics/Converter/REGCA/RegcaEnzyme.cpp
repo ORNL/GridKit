@@ -16,8 +16,6 @@ namespace GridKit
     {
       /**
        * @brief Assemble the sparse component Jacobian with Enzyme.
-       *
-       * @pre evaluateResidual() has run at the current state.
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::evaluateJacobian()
@@ -25,14 +23,16 @@ namespace GridKit
         Log::misc() << "Evaluate Jacobian for Regca..." << std::endl;
         Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
+        gatherExternalVariables();
+
         if (J_rows_buffer_ == nullptr)
         {
           // Reserve space for the dense blocks. Enzyme keeps only structural
           // nonzeros for each differentiated block.
           auto size        = static_cast<size_t>(size_);
-          auto bus_size    = static_cast<size_t>(bus_->size());
-          auto signal_size = static_cast<size_t>(ws_.size());
-          auto buffer_size = 2 * size * size + 2 * size * bus_size + size * signal_size;
+          auto y_ext_size  = y_ext_.size();
+          auto f_ext_size  = f_ext_.size();
+          auto buffer_size = 2 * size * size + size * y_ext_size + size * f_ext_size;
           J_rows_buffer_   = new IdxT[buffer_size];
           J_cols_buffer_   = new IdxT[buffer_size];
           J_vals_buffer_   = new RealT[buffer_size];
@@ -44,79 +44,61 @@ namespace GridKit
         nnz_ = 0;
 
         GridKit::Enzyme::Sparse::DfDy<RegcaT,
-                                      Fn::InternalResidualWithSignal>::eval(this,
-                                                                            static_cast<size_t>(f_.getSize()),
-                                                                            static_cast<size_t>(y_.getSize()),
-                                                                            (this->getResidualIndices()).data(),
-                                                                            (this->getVariableIndices()).data(),
-                                                                            y_.getData(),
-                                                                            yp_.getData(),
-                                                                            wb_.data(),
-                                                                            ws_.data(),
-                                                                            J_rows_buffer_,
-                                                                            J_cols_buffer_,
-                                                                            J_vals_buffer_,
-                                                                            nnz_);
+                                      Fn::InternalResidual>::eval(this,
+                                                                  static_cast<size_t>(f_.getSize()),
+                                                                  static_cast<size_t>(y_.getSize()),
+                                                                  (this->getResidualIndices()).data(),
+                                                                  (this->getVariableIndices()).data(),
+                                                                  y_.getData(),
+                                                                  yp_.getData(),
+                                                                  y_ext_.data(),
+                                                                  J_rows_buffer_,
+                                                                  J_cols_buffer_,
+                                                                  J_vals_buffer_,
+                                                                  nnz_);
 
         GridKit::Enzyme::Sparse::DfDyp<RegcaT,
-                                       Fn::InternalResidualWithSignal>::eval(this,
-                                                                             static_cast<size_t>(f_.getSize()),
-                                                                             static_cast<size_t>(y_.getSize()),
-                                                                             (this->getResidualIndices()).data(),
-                                                                             (this->getVariableIndices()).data(),
-                                                                             y_.getData(),
-                                                                             yp_.getData(),
-                                                                             wb_.data(),
-                                                                             ws_.data(),
-                                                                             alpha_,
-                                                                             J_rows_buffer_,
-                                                                             J_cols_buffer_,
-                                                                             J_vals_buffer_,
-                                                                             nnz_);
+                                       Fn::InternalResidual>::eval(this,
+                                                                   static_cast<size_t>(f_.getSize()),
+                                                                   static_cast<size_t>(y_.getSize()),
+                                                                   (this->getResidualIndices()).data(),
+                                                                   (this->getVariableIndices()).data(),
+                                                                   y_.getData(),
+                                                                   yp_.getData(),
+                                                                   y_ext_.data(),
+                                                                   alpha_,
+                                                                   J_rows_buffer_,
+                                                                   J_cols_buffer_,
+                                                                   J_vals_buffer_,
+                                                                   nnz_);
 
-        GridKit::Enzyme::Sparse::DfDwb<RegcaT,
-                                       Fn::InternalResidualWithSignal>::eval(this,
-                                                                             static_cast<size_t>(f_.getSize()),
-                                                                             static_cast<size_t>(bus_->size()),
-                                                                             (this->getResidualIndices()).data(),
-                                                                             (bus_->getVariableIndices()).data(),
-                                                                             y_.getData(),
-                                                                             yp_.getData(),
-                                                                             wb_.data(),
-                                                                             ws_.data(),
-                                                                             J_rows_buffer_,
-                                                                             J_cols_buffer_,
-                                                                             J_vals_buffer_,
-                                                                             nnz_);
+        GridKit::Enzyme::Sparse::DfDyExt<RegcaT,
+                                         Fn::InternalResidual>::eval(this,
+                                                                     static_cast<size_t>(f_.getSize()),
+                                                                     y_ext_.size(),
+                                                                     (this->getResidualIndices()).data(),
+                                                                     variable_indices_ext_.data(),
+                                                                     y_.getData(),
+                                                                     yp_.getData(),
+                                                                     y_ext_.data(),
+                                                                     J_rows_buffer_,
+                                                                     J_cols_buffer_,
+                                                                     J_vals_buffer_,
+                                                                     nnz_);
 
-        GridKit::Enzyme::Sparse::DfDws<RegcaT,
-                                       Fn::InternalResidualWithSignal>::eval(this,
-                                                                             static_cast<size_t>(f_.getSize()),
-                                                                             ws_.size(),
-                                                                             (this->getResidualIndices()).data(),
-                                                                             ws_indices_.data(),
-                                                                             y_.getData(),
-                                                                             yp_.getData(),
-                                                                             wb_.data(),
-                                                                             ws_.data(),
-                                                                             J_rows_buffer_,
-                                                                             J_cols_buffer_,
-                                                                             J_vals_buffer_,
-                                                                             nnz_);
-
-        GridKit::Enzyme::Sparse::DhDy<RegcaT,
-                                      Fn::BusResidual>::eval(this,
-                                                             static_cast<size_t>(bus_->size()),
-                                                             static_cast<size_t>(y_.getSize()),
-                                                             (bus_->getResidualIndices()).data(),
-                                                             (this->getVariableIndices()).data(),
-                                                             y_.getData(),
-                                                             yp_.getData(),
-                                                             wb_.data(),
-                                                             J_rows_buffer_,
-                                                             J_cols_buffer_,
-                                                             J_vals_buffer_,
-                                                             nnz_);
+        GridKit::Enzyme::Sparse::DfDy<RegcaT,
+                                      Fn::ExternalResidual>::eval(this,
+                                                                  f_ext_.size(),
+                                                                  static_cast<size_t>(y_.getSize()),
+                                                                  residual_indices_ext_.data(),
+                                                                  (this->getVariableIndices()).data(),
+                                                                  y_.getData(),
+                                                                  yp_.getData(),
+                                                                  y_ext_.data(),
+                                                                  J_rows_buffer_,
+                                                                  J_cols_buffer_,
+                                                                  J_vals_buffer_,
+                                                                  nnz_);
         this->constructCoo();
 
         return 0;

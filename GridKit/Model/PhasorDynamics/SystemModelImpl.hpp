@@ -1,9 +1,15 @@
 #include <cassert>
 #include <iostream>
+#include <map>
+#include <optional>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeJunction.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
@@ -15,6 +21,36 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    namespace detail
+    {
+      template <typename SignalT>
+      void orderSignalJunction(SignalT*                           signal,
+                               std::map<SignalT*, unsigned char>& state,
+                               std::vector<SignalT*>&             ordered)
+      {
+        auto& current = state[signal];
+        if (current == 1)
+        {
+          throw std::runtime_error("Signal-node junction cycle detected");
+        }
+        if (current == 2)
+        {
+          return;
+        }
+
+        current = 1;
+        for (const auto& input : signal->junctionInputs())
+        {
+          if (input.signal->isJunction())
+          {
+            orderSignalJunction(input.signal, state, ordered);
+          }
+        }
+        current = 2;
+        ordered.push_back(signal);
+      }
+    } // namespace detail
+
     /**
      * @brief Constructor for the system model
      */
@@ -294,6 +330,24 @@ namespace GridKit
         addComponent(gen);
       }
 
+      // Add prescribed forcing sources after machines and before signal
+      // junctions and control devices. This keeps reverse initialization of
+      // machine control signals deterministic.
+      for (const auto& sourcedata : data.forced_oscillation)
+      {
+        auto* source = new ForcedOscillation<ScalarT, IdxT>(sourcedata);
+
+        if (sourcedata.signal_outputs.contains(ForcedOscillationSignalOutputs::output))
+        {
+          const IdxT output =
+              sourcedata.signal_outputs.at(ForcedOscillationSignalOutputs::output);
+          constexpr auto OUTPUT = ForcedOscillationInternalVariables::OUTPUT;
+          source->getSignals().template assignSignalNode<OUTPUT>(getSignal(output));
+        }
+
+        addComponent(source);
+      }
+
       // Add REECB after its current-command and feedback producers because
       // components initialize in insertion order.
       for (const auto& reecbdata : data.reecb)
@@ -362,6 +416,13 @@ namespace GridKit
           IdxT           speed      = govdata.signal_inputs.at(Tgov1SignalInputs::speed);
           constexpr auto DELTAOMEGA = Tgov1ExternalVariables::DELTAOMEGA;
           gov->getSignals().template attachSignalNode<DELTAOMEGA>(getSignal(speed));
+        }
+
+        if (govdata.signal_inputs.contains(Tgov1SignalInputs::pref))
+        {
+          IdxT           pref = govdata.signal_inputs.at(Tgov1SignalInputs::pref);
+          constexpr auto PREF = Tgov1ExternalVariables::PREF;
+          gov->getSignals().template attachSignalNode<PREF>(getSignal(pref));
         }
 
         if (govdata.signal_outputs.contains(Tgov1SignalOutputs::pmech))
@@ -437,6 +498,29 @@ namespace GridKit
         }
 
         addComponent(hygov);
+      }
+
+      // Add IEEEST stabilizers before exciters that read their output during
+      // initialization.
+      for (const auto& stabdata : data.stabilizer)
+      {
+        auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
+
+        if (stabdata.signal_inputs.contains(IeeestSignalInputs::input))
+        {
+          IdxT           input = stabdata.signal_inputs.at(IeeestSignalInputs::input);
+          constexpr auto U     = IeeestExternalVariables::U;
+          stabilizer->getSignals().template attachSignalNode<U>(getSignal(input));
+        }
+
+        if (stabdata.signal_outputs.contains(IeeestSignalOutputs::output))
+        {
+          IdxT           output = stabdata.signal_outputs.at(IeeestSignalOutputs::output);
+          constexpr auto VSS    = IeeestInternalVariables::VSS;
+          stabilizer->getSignals().template assignSignalNode<VSS>(getSignal(output));
+        }
+
+        addComponent(stabilizer);
       }
 
       for (const auto& excitedata : data.exciter)
@@ -548,28 +632,6 @@ namespace GridKit
         addComponent(exciter);
       }
 
-      // Add IEEEST stabilizers
-      for (const auto& stabdata : data.stabilizer)
-      {
-        auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
-
-        if (stabdata.signal_inputs.contains(IeeestSignalInputs::input))
-        {
-          IdxT           input = stabdata.signal_inputs.at(IeeestSignalInputs::input);
-          constexpr auto U     = IeeestExternalVariables::U;
-          stabilizer->getSignals().template attachSignalNode<U>(getSignal(input));
-        }
-
-        if (stabdata.signal_outputs.contains(IeeestSignalOutputs::output))
-        {
-          IdxT           output = stabdata.signal_outputs.at(IeeestSignalOutputs::output);
-          constexpr auto VSS    = IeeestInternalVariables::VSS;
-          stabilizer->getSignals().template assignSignalNode<VSS>(getSignal(output));
-        }
-
-        addComponent(stabilizer);
-      }
-
       // Add REPCA plant controllers after the signal producers they read at
       // initialization
       for (const auto& repcadata : data.repca)
@@ -672,6 +734,70 @@ namespace GridKit
         }
 
         addComponent(source);
+      }
+
+      // Junctions are ordinary algebraic signal nodes internally. Construct
+      // them after all producers, then initialize/evaluate them in dependency
+      // order so nested junctions remain deterministic.
+      using JunctionT = SignalNodeJunction<ScalarT, IdxT>;
+      std::map<SignalT*, JunctionT*> junctions;
+      std::vector<SignalT*>          junction_outputs;
+
+      for (const auto& signaldata : data.signal)
+      {
+        if (!signaldata.junction.has_value())
+        {
+          continue;
+        }
+
+        const auto&                                  junctiondata = *signaldata.junction;
+        std::vector<typename SignalT::JunctionInput> inputs;
+        inputs.reserve(junctiondata.inputs.size());
+
+        std::optional<IdxT> initialization_input_index;
+        for (std::size_t i = 0; i < junctiondata.inputs.size(); ++i)
+        {
+          const auto& inputdata = junctiondata.inputs[i];
+          auto*       input     = getSignal(inputdata.signal_id);
+          inputs.push_back({input, inputdata.gain});
+
+          if (inputdata.signal_id == junctiondata.initialization_input)
+          {
+            if (initialization_input_index.has_value())
+            {
+              throw std::runtime_error(
+                  "Signal-node junction initialization input is duplicated");
+            }
+            initialization_input_index = static_cast<IdxT>(i);
+          }
+        }
+
+        if (!initialization_input_index.has_value())
+        {
+          throw std::runtime_error(
+              "Signal-node junction initialization input is not in its input list");
+        }
+
+        auto* output = getSignal(signaldata.signal_id);
+        junction_outputs.push_back(output);
+        junctions.emplace(
+            output,
+            new JunctionT(output,
+                          junctiondata.bias,
+                          *initialization_input_index,
+                          std::move(inputs)));
+      }
+
+      std::map<SignalT*, unsigned char> junction_state;
+      std::vector<SignalT*>             ordered_junctions;
+      ordered_junctions.reserve(junctions.size());
+      for (auto* output : junction_outputs)
+      {
+        detail::orderSignalJunction(output, junction_state, ordered_junctions);
+      }
+      for (auto* output : ordered_junctions)
+      {
+        addComponent(junctions.at(output));
       }
 
       // Add faults
@@ -1054,20 +1180,14 @@ namespace GridKit
     }
 
     /**
-     * @brief Compute system residual vector
+     * @brief Compute the residuals each bus and component owns.
      *
      * Buses and components read and write their bound system-vector slices
-     * directly.
-     *
-     * @warning Residuals must be computed for buses, before component
-     * residuals are computed. Buses own residuals for currents
-     * Ir and Ii, but the contributions to these residuals come
-     * from components. Buses assign their residual values, while components
-     * add to those values by in-place adition. This is why (for now) bus
-     * residuals need to be computed first.
+     * directly. Buses assign their residual values first, so that external
+     * residuals can accumulate into them.
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateResidual()
+    int SystemModel<scalar_type, index_type>::evaluateInternalResidual()
     {
       for (const auto& bus : buses_)
       {
@@ -1076,8 +1196,38 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        component->evaluateResidual();
+        component->evaluateInternalResidual();
       }
+
+      return 0;
+    }
+
+    /**
+     * @brief Accumulate component contributions to residuals owned elsewhere,
+     * e.g. bus current balances.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      for (const auto& component : components_)
+      {
+        component->evaluateExternalResidual();
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Compute system residual vector
+     *
+     * Internal residuals assign every owned entry of the residual vector,
+     * then external residuals accumulate the remaining contributions.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::evaluateResidual()
+    {
+      evaluateInternalResidual();
+      evaluateExternalResidual();
 
       f_.setDataUpdated();
 

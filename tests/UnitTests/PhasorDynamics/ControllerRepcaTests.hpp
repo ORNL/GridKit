@@ -1284,6 +1284,17 @@ namespace GridKit
         return static_cast<size_t>(variable);
       }
 
+      static constexpr std::array<Ext, 9> kSignalInputs{
+          Ext::IR,
+          Ext::II,
+          Ext::P,
+          Ext::Q,
+          Ext::FREQ,
+          Ext::VREF,
+          Ext::PREF,
+          Ext::QREF,
+          Ext::FREQREF};
+
       struct VariableValue
       {
         Vars  variable;
@@ -1347,8 +1358,9 @@ namespace GridKit
         void attachRequiredInputs(RealT initial_value = 0.0)
         {
           const IdxT external_index_base = repca.size() + bus.size();
-          for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+          for (const Ext variable : kSignalInputs)
           {
+            const auto port      = index(variable);
             input_values_[port]  = static_cast<T>(initial_value);
             input_indices_[port] = external_index_base + static_cast<IdxT>(port);
             input_nodes_[port].set(&input_values_[port], &input_indices_[port]);
@@ -1670,9 +1682,9 @@ namespace GridKit
         {
           success = false;
         }
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (const Ext variable : kSignalInputs)
         {
-          const auto variable = static_cast<Ext>(port);
+          const auto port = index(variable);
           if (!rowMatches(implicit_defaults.input(variable),
                           explicit_defaults.input(variable),
                           "documented-default signal",
@@ -1774,9 +1786,9 @@ namespace GridKit
         const auto                             yp_before  = copyVector(fixture.repca.yp());
         const auto                             bus_before = copyVector(fixture.bus.y());
         std::array<RealT, index(Ext::MAXIMUM)> inputs_before{};
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (const Ext variable : kSignalInputs)
         {
-          inputs_before[port] = fixture.input(static_cast<Ext>(port));
+          inputs_before[index(variable)] = fixture.input(variable);
         }
 
         bool success = true;
@@ -1806,9 +1818,10 @@ namespace GridKit
         {
           success = false;
         }
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (const Ext variable : kSignalInputs)
         {
-          if (!valueUnchanged(fixture.input(static_cast<Ext>(port)),
+          const auto port = index(variable);
+          if (!valueUnchanged(fixture.input(variable),
                               inputs_before[port],
                               "external signal",
                               port))
@@ -2297,9 +2310,8 @@ namespace GridKit
         {
           bus_y[row].setVariableNumber(kBusVrColumn + row);
         }
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (const Ext variable : kSignalInputs)
         {
-          const auto variable = static_cast<Ext>(port);
           fixture.input(variable).setVariableNumber(fixture.inputIndex(variable));
         }
 

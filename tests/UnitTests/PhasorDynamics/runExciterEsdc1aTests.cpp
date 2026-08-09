@@ -8,6 +8,7 @@ int main()
 
   result += test.validation();
   result += test.initializationAndSignals();
+  result += test.automaticKeInitialization();
   result += test.initializationDomain();
   result += test.residualEquations();
   result += test.voltageRegulation();

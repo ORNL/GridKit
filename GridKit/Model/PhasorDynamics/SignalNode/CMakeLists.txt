@@ -6,11 +6,14 @@
 
 gridkit_add_library(
   phasor_dynamics_signal
-  SOURCES SignalNode.cpp
-  HEADERS SignalNode.hpp SignalNodeData.hpp)
+  SOURCES SignalNode.cpp SignalNodeJunction.cpp
+  HEADERS SignalNode.hpp SignalNodeData.hpp SignalNodeJunction.hpp
+  LINK_LIBRARIES GridKit::phasor_dynamics_core)
 
-gridkit_add_library(phasor_dynamics_signal_dependency_tracking
-                    SOURCES SignalNodeDependencyTracking.cpp)
+gridkit_add_library(
+  phasor_dynamics_signal_dependency_tracking
+  SOURCES SignalNodeDependencyTracking.cpp SignalNodeJunctionDependencyTracking.cpp
+  LINK_LIBRARIES GridKit::phasor_dynamics_core)
 
 # Link to interface target for all components
 target_link_libraries(

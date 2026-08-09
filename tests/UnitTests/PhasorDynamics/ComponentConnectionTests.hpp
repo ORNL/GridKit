@@ -12,10 +12,13 @@
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1a.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/Hygov.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -329,6 +332,68 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      /// IEEEST reinitializes before IEEET1 so the exciter does not latch a
+      /// stale stabilizer output.
+      TestOutcome ieeestIeeet1()
+      {
+        using namespace PhasorDynamics;
+        using namespace PhasorDynamics::Exciter;
+        using namespace PhasorDynamics::Stabilizer;
+
+        TestStatus success = true;
+
+        constexpr IdxT               bus_id   = static_cast<IdxT>(1);
+        constexpr IdxT               input_id = static_cast<IdxT>(20);
+        constexpr IdxT               vs_id    = static_cast<IdxT>(21);
+        SystemModelData<RealT, IdxT> data;
+
+        auto& bus    = data.bus.emplace_back();
+        bus.bus_id   = bus_id;
+        bus.bus_type = BusData<RealT, IdxT>::BusType::SLACK;
+        bus.Vr0      = ONE<RealT>;
+        bus.Vi0      = ZERO<RealT>;
+
+        data.signal = {{"IEEEST input", input_id, {}}, {"IEEEST output", vs_id, {}}};
+
+        auto& source                                                 = data.constant_source.emplace_back();
+        source.signal_outputs[ConstantSignalSourceSignalOutputs::sr] = input_id;
+        source.parameters[ConstantSignalSourceParameters::Sr]        = ZERO<RealT>;
+
+        auto& stabilizer                                       = data.stabilizer.emplace_back();
+        stabilizer.signal_inputs[IeeestSignalInputs::input]    = input_id;
+        stabilizer.signal_outputs[IeeestSignalOutputs::output] = vs_id;
+
+        auto& exciter                                 = data.exciter.emplace_back();
+        exciter.buses[Ieeet1Buses::bus]               = bus_id;
+        exciter.signal_inputs[Ieeet1SignalInputs::vs] = vs_id;
+        exciter.parameters[Ieeet1Parameters::Tr]      = static_cast<RealT>(0.02);
+
+        SystemModel<ScalarT, IdxT> system(data);
+        success *= system.allocate() == 0;
+
+        auto* vs = system.getSignal(vs_id);
+        if (vs == nullptr || !vs->linked())
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        // Reinitialization must not let the exciter latch this stale value.
+        vs->init(static_cast<ScalarT>(0.05));
+        success *= system.initialize() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= isEqual(vs->read(), ZERO<ScalarT>, kTol);
+
+        const auto& residual      = system.getResidual();
+        const auto* residual_data = residual.getData();
+        for (IdxT row = 0; row < residual.getSize(); ++row)
+        {
+          success *= isEqual(residual_data[row], ZERO<ScalarT>, kTol);
+        }
+
+        return success.report(__func__);
+      }
     };
 
     /// Production SystemModel wiring tests for GASTPTI and synchronous machines.
@@ -464,9 +529,9 @@ namespace GridKit
         bus.Vr0      = ONE<RealT>;
         bus.Vi0      = ZERO<RealT>;
 
-        data.signal = {{"Machine Speed Deviation", kSpeedSignalId},
-                       {"Mechanical Power", kPmechSignalId},
-                       {"Active Power Reference", kPrefSignalId}};
+        data.signal = {{"Machine Speed Deviation", kSpeedSignalId, {}},
+                       {"Mechanical Power", kPmechSignalId, {}},
+                       {"Active Power Reference", kPrefSignalId, {}}};
 
         auto& governor                                       = data.gastpti.emplace_back();
         governor.signal_inputs[GastPtiSignalInputs::speed]   = kSpeedSignalId;

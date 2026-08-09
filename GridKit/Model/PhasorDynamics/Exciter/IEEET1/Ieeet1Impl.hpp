@@ -8,6 +8,7 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -94,16 +95,8 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        // Resize bus data
-        wb_.resize(2);
-
-        // Resize signal variable data
-        ws_.resize(2);
-        ws_indices_.resize(2);
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
-        ws_[1]         = 0.0;
-        ws_indices_[1] = INVALID_INDEX<IdxT>;
+        // Resize coupling data
+        this->allocateExternalVectors(static_cast<IdxT>(Ieeet1ExternalVariables::MAXIMUM));
 
         // Set output signals
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
@@ -138,9 +131,6 @@ namespace GridKit
 
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
-        check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
-              "Ispdlim must be 0 or 1");
-
         const bool saturation_disabled =
             Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
@@ -148,10 +138,14 @@ namespace GridKit
         {
           check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
           check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
-          check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
-          check(E1_ != E2_, "E1 and E2 must differ when saturation is enabled");
-          check(Se1_ != Se2_, "Se1 and Se2 must differ when saturation is enabled");
+          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+
+          const bool saturation_points_are_ordered =
+              (E2_ > E1_ && Se2_ > Se1_)
+              || (E2_ < E1_ && Se2_ < Se1_);
+          check(saturation_points_are_ordered,
+                "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
         if (signals_.template isAttached<OMEGA>())
@@ -227,13 +221,34 @@ namespace GridKit
         ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
         ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
         ScalarT ve   = ksat * efdp;
-        ScalarT vr   = Ke_ * efdp + ve;
-        ScalarT vtr  = vr / Ka_;
+
+        RealT ke0 = Ke_;
+        if (ke0 == ZERO<RealT>)
+        {
+          const RealT efdp_real0 = static_cast<RealT>(efdp);
+          if (!std::isfinite(efdp_real0) || efdp_real0 == ZERO<RealT>)
+          {
+            Log::error() << "Ieeet1: automatic Ke requires a finite, nonzero initial Efd'\n";
+            return 1;
+          }
+
+          ke0 = Vrmax_ / (static_cast<RealT>(10.0) * efdp_real0)
+                - static_cast<RealT>(ksat);
+          if (!std::isfinite(ke0))
+          {
+            Log::error() << "Ieeet1: automatic Ke must be finite\n";
+            return 1;
+          }
+        }
+
+        ScalarT vr  = ke0 * efdp + ve;
+        ScalarT vtr = vr / Ka_;
         ScalarT vf{0};
         ScalarT vfx = (Kf_ / Tf_) * efdp;
 
         vref_ = Ec + vtr + vf - vUEL_ - vOEL_ - vs;
 
+        Ke_  = ke0;
         y[0] = Ec;   // y0 - vts  - Sensed term volt
         y[1] = vr;   // y1 - vr   - Voltage reg
         y[2] = efdp; // y2 - efdp - Efd pre mult
@@ -303,13 +318,12 @@ namespace GridKit
       __attribute__((always_inline)) inline int Ieeet1<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
         // Read bus voltage components
-        ScalarT vreal = wb[0];
-        ScalarT vimag = wb[1];
+        ScalarT vreal = y_ext[1];
+        ScalarT vimag = y_ext[2];
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
         // Read Internal Variables
@@ -330,8 +344,8 @@ namespace GridKit
         ScalarT vfx_dot  = yp[3];
 
         // Set signal variable aliases
-        ScalarT omega     = ws[0];
-        ScalarT vs_signal = ws[1];
+        ScalarT omega     = y_ext[0];
+        ScalarT vs_signal = y_ext[3];
 
         // The 'pre-limit' derivative of Vr.
         ScalarT func = (-vr + Ka_ * vtr) / Ta_;
@@ -353,41 +367,63 @@ namespace GridKit
       }
 
       /**
-       * @brief Residual evaluation
+       * @brief Gather external variables and index maps.
        *
        */
       template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::evaluateResidual()
+      void Ieeet1<scalar_type, index_type>::gatherExternalVariables()
       {
         // Set input variables.
         if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
         {
-          ws_[0]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::OMEGA>();
-        }
-
-        // VS signal (stabilizer output, optional)
-        ws_[1]         = 0.0;
-        ws_indices_[1] = INVALID_INDEX<IdxT>;
-        if (signals_.template isAttached<Ieeet1ExternalVariables::VS>())
-        {
-          ws_[1]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
-          ws_indices_[1] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VS>();
+          y_ext_[0]                = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
+          variable_indices_ext_[0] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::OMEGA>();
         }
 
         // Bus voltages
-        wb_[0] = bus_->Vr();
-        wb_[1] = bus_->Vi();
+        y_ext_[1] = bus_->Vr();
+        y_ext_[2] = bus_->Vi();
+        if (bus_->size() > 0)
+        {
+          variable_indices_ext_[1] = bus_->getVariableIndex(0);
+          variable_indices_ext_[2] = bus_->getVariableIndex(1);
+        }
+
+        // VS signal (stabilizer output, optional)
+        y_ext_[3]                = 0.0;
+        variable_indices_ext_[3] = INVALID_INDEX<IdxT>;
+        if (signals_.template isAttached<Ieeet1ExternalVariables::VS>())
+        {
+          y_ext_[3]                = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
+          variable_indices_ext_[3] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VS>();
+        }
+      }
+
+      /**
+       * @brief Residual evaluation
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         // Residual evaluation
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, y_ext_.data(), f);
 
         f_.setDataUpdated();
 
         return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
 
       /**
@@ -452,7 +488,9 @@ namespace GridKit
         }
         if (data.parameters.contains(Parameter::Ispdlim))
         {
-          Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
+          Ispdlim_ = std::visit([](auto value)
+                                { return value != 0 ? ONE<RealT> : ZERO<RealT>; },
+                                data.parameters.at(Parameter::Ispdlim));
         }
 
         Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);
@@ -471,9 +509,29 @@ namespace GridKit
           return;
         }
 
-        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT> || E1_ == E2_
-            || Se1_ <= ZERO<RealT> || Se2_ <= ZERO<RealT> || Se1_ == Se2_)
+        const bool saturation_points_are_ordered =
+            (E2_ > E1_ && Se2_ > Se1_)
+            || (E2_ < E1_ && Se2_ < Se1_);
+        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT>
+            || Se1_ < ZERO<RealT> || Se2_ < ZERO<RealT>
+            || !saturation_points_are_ordered)
         {
+          return;
+        }
+
+        if (Se1_ == ZERO<RealT>)
+        {
+          const RealT dE = E2_ - E1_;
+          SA_            = E1_;
+          SB_            = Se2_ / (dE * dE);
+          return;
+        }
+
+        if (Se2_ == ZERO<RealT>)
+        {
+          const RealT dE = E1_ - E2_;
+          SA_            = E2_;
+          SB_            = Se1_ / (dE * dE);
           return;
         }
 

@@ -73,11 +73,10 @@ namespace GridKit
       /**
        * @brief Allocate the model vectors and wire the mechanical-power output
        *
-       * Sizes the state, residual, and signal-interface buffers, initializes
+       * Sizes the state, residual, and external-variable buffers, initializes
        * the identity index maps, and points the assigned `pmech` node at the
        * internal state it publishes. That node aliases HYGOV storage from
        * here on, which is how initialize() reads the machine value.
-       * HYGOV attaches to no bus, so the bus-interface buffer stays empty.
        * Repeated calls reuse the allocated vectors.
        *
        * @return int 0 on success.
@@ -97,11 +96,7 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.clear();
-
-        const auto signal_size = static_cast<size_t>(HygovExternalVariables::MAXIMUM);
-        ws_.assign(signal_size, ScalarT{0});
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        this->allocateExternalVectors(static_cast<IdxT>(HygovExternalVariables::MAXIMUM));
 
         for (IdxT j = 0; j < size_; ++j)
         {
@@ -487,54 +482,73 @@ namespace GridKit
       }
 
       /**
-       * @brief Residuals of system equations
+       * @brief Gather external signal values and global indices.
        *
-       * Refreshes the signal interface buffers and evaluates the internal
-       * residual. HYGOV attaches to no bus, so there is no bus interface to
-       * refresh. An unattached reference or auxiliary port falls back to the
-       * value latched by initialize(); an unattached speed port reads zero
-       * deviation.
-       *
-       * @return int 0 on success.
+       * An unattached reference or auxiliary port falls back to the value
+       * latched by initialize(); an unattached speed port reads zero deviation.
        */
       template <typename scalar_type, typename index_type>
-      int Hygov<scalar_type, index_type>::evaluateResidual()
+      void Hygov<scalar_type, index_type>::gatherExternalVariables()
       {
         const auto OMEGA = static_cast<size_t>(HygovExternalVariables::OMEGA);
         const auto PREF  = static_cast<size_t>(HygovExternalVariables::PREF);
         const auto PAUX  = static_cast<size_t>(HygovExternalVariables::PAUX);
 
-        ws_[OMEGA] = ZERO<RealT>;
-        ws_[PREF]  = pref_set_;
-        ws_[PAUX]  = paux_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        y_ext_[OMEGA] = ZERO<RealT>;
+        y_ext_[PREF]  = pref_set_;
+        y_ext_[PAUX]  = paux_set_;
+        std::fill(variable_indices_ext_.begin(),
+                  variable_indices_ext_.end(),
+                  INVALID_INDEX<IdxT>);
 
         if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
         {
-          ws_[OMEGA] = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
-          ws_indices_[OMEGA] =
+          y_ext_[OMEGA] = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
+          variable_indices_ext_[OMEGA] =
               signals_.template readExternalVariableIndex<HygovExternalVariables::OMEGA>();
         }
         if (signals_.template isAttached<HygovExternalVariables::PREF>())
         {
-          ws_[PREF] = signals_.template readExternalVariable<HygovExternalVariables::PREF>();
-          ws_indices_[PREF] =
+          y_ext_[PREF] = signals_.template readExternalVariable<HygovExternalVariables::PREF>();
+          variable_indices_ext_[PREF] =
               signals_.template readExternalVariableIndex<HygovExternalVariables::PREF>();
         }
         if (signals_.template isAttached<HygovExternalVariables::PAUX>())
         {
-          ws_[PAUX] = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
-          ws_indices_[PAUX] =
+          y_ext_[PAUX] = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
+          variable_indices_ext_[PAUX] =
               signals_.template readExternalVariableIndex<HygovExternalVariables::PAUX>();
         }
+      }
+
+      /**
+       * @brief Evaluate the HYGOV-owned residual rows.
+       */
+      template <typename scalar_type, typename index_type>
+      int Hygov<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
 
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, y_ext_.data(), f);
         f_.setDataUpdated();
         return 0;
+      }
+
+      /**
+       * @brief Evaluate internal equations and external contributions.
+       *
+       * HYGOV contributes no external residual, so the base implementation
+       * returns zero after the internal equations are evaluated.
+       */
+      template <typename scalar_type, typename index_type>
+      int Hygov<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
 
       /**
@@ -560,19 +574,17 @@ namespace GridKit
        *
        * @param[in] y Internal variables.
        * @param[in] yp Internal variable derivatives.
-       * @param[in] wb Bus voltage components; unused, HYGOV attaches to no bus.
-       * @param[in] ws External signal values on system base.
+       * @param[in] y_ext External signal values on system base.
        * @param[out] f Internal residuals.
        * @return int 0 on success.
        */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int
       Hygov<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT*                  y,
-          const ScalarT*                  yp,
-          [[maybe_unused]] const ScalarT* wb,
-          const ScalarT*                  ws,
-          ScalarT*                        f)
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* y_ext,
+          ScalarT*       f)
       {
         const auto XN      = static_cast<size_t>(HygovInternalVariables::XN);
         const auto XF      = static_cast<size_t>(HygovInternalVariables::XF);
@@ -610,9 +622,9 @@ namespace GridKit
         const ScalarT g_dot  = yp[G];
         const ScalarT q_dot  = yp[Q];
 
-        const ScalarT omega = ws[OMEGA];
-        const ScalarT pref  = ws[PREF];
-        const ScalarT paux  = ws[PAUX];
+        const ScalarT omega = y_ext[OMEGA];
+        const ScalarT pref  = y_ext[PREF];
+        const ScalarT paux  = y_ext[PAUX];
 
         const ScalarT yomega = xn + leadlag_gain_ * (omegadb - xn);
 

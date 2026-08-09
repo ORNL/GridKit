@@ -29,6 +29,13 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// External variables of a `GenClassical`
+    enum class GenClassicalExternalVariables : size_t
+    {
+      VR, ///< \f$V_r\f$
+      VI, ///< \f$V_i\f$
+      MAXIMUM,
+    };
 
     template <typename scalar_type, typename index_type>
     class GenClassical : public Component<scalar_type, index_type>
@@ -43,8 +50,10 @@ namespace GridKit
       using Component<scalar_type, index_type>::time_;
       using Component<scalar_type, index_type>::y_;
       using Component<scalar_type, index_type>::yp_;
-      using Component<scalar_type, index_type>::wb_;
-      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::y_ext_;
+      using Component<scalar_type, index_type>::variable_indices_ext_;
+      using Component<scalar_type, index_type>::residual_indices_ext_;
+      using Component<scalar_type, index_type>::f_ext_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -78,7 +87,9 @@ namespace GridKit
       int initialize() override final;
       int tagDifferentiable() override final;
       int setAbsoluteTolerance(RealT) override;
+      int evaluateInternalResidual() override final;
       int evaluateResidual() override final;
+      int evaluateExternalResidual() override final;
 
       int verify() const override final
       {
@@ -102,6 +113,7 @@ namespace GridKit
 
     private:
       void initializeMonitor();
+      void gatherExternalVariables();
       void setDerivedParams();
 
       /**
@@ -147,7 +159,7 @@ namespace GridKit
     public:
       __attribute__((always_inline)) inline int evaluateInternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual(
+      __attribute__((always_inline)) inline int evaluateExternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
@@ -169,6 +181,7 @@ namespace GridKit
       /* Derivied parameters */
       RealT G_;
       RealT B_;
+      RealT H_inv_;
       RealT va_machine_base_;
 
       /* Setpoints for control variables (determined at initialization) */

@@ -116,9 +116,61 @@ a signal and has the following fields:
   -------------------|------------------------------------------------------
   `signal_id`        | Unique non-negative integer identifying the signal
   `name`             | String containing the name or description of the signal. This may be empty or non-unique
+  `junction`         | Optional object defining a weighted algebraic signal junction
 
-All interactions with signals are handled by `devices`, which reference signals via `signal_id`
+Devices and signal junctions reference signals through `signal_id`.
 
+#### Signal junctions
+
+A signal with a `junction` object is the output $y$ of the algebraic equation
+
+```math
+y = b + \sum_i g_i u_i,
+```
+
+where each $u_i$ is another signal. The `junction` object has the following
+fields:
+
+  Name                   | Description
+  -----------------------|------------------------------------------------------
+  `bias`                 | Optional floating-point offset $b$ in output-signal units (default: 0.0)
+  `initialization_input` | Signal ID of the input selected for backward initialization
+  `inputs`               | Nonempty array of weighted input objects
+
+Each entry in `inputs` has these fields:
+
+  Name        | Description
+  ------------|-------------------------------------------------------
+  `signal_id` | Signal ID of input $u_i$
+  `gain`      | Optional floating-point multiplier $g_i$ (default: 1.0)
+
+`initialization_input` must identify exactly one entry in `inputs`, and that
+entry's gain must be nonzero. Input IDs must be unique, cannot directly refer
+to the junction output, and cannot form an indirect cycle through other
+junctions. The bias and every gain must be finite. A junction output cannot
+also be assigned by a device signal-output port. During initialization, a
+requested output $y_0$ is propagated to the selected input $u_k$ according to
+
+```math
+u_k = \frac{y_0 - b - \sum_{i\ne k} g_i u_i}{g_k}.
+```
+
+For example:
+
+```json
+{
+  "signal_id": 3,
+  "name": "Mechanical power plus forcing",
+  "junction": {
+    "bias": 0.0,
+    "initialization_input": 1,
+    "inputs": [
+      {"signal_id": 1},
+      {"signal_id": 2, "gain": 1.0}
+    ]
+  }
+}
+```
 
 ### Devices
 
@@ -162,6 +214,7 @@ are specified:
   [SexsPti](Exciter/SEXS-PTI/README.md) | the SEXS-PTI simplified exciter model
   [Ieeest](Stabilizer/IEEEST/README.md) | the IEEEST stabilizer model
   [ConstantSignalSource](SignalSource/README.md) | Constant complex signal source
+  [ForcedOscillation](SignalSource/README.md) | Stateless forced-oscillation signal source
 
 ## Example File for a 2-Bus System
 

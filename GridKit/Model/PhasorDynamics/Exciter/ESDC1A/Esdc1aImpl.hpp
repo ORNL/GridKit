@@ -106,11 +106,7 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.assign(2, ScalarT{0});
-
-        const auto signal_size = static_cast<size_t>(Esdc1aExternalVariables::MAXIMUM);
-        ws_.assign(signal_size, ScalarT{0});
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        this->allocateExternalVectors(static_cast<IdxT>(Esdc1aExternalVariables::MAXIMUM));
 
         for (IdxT j = 0; j < size_; ++j)
         {
@@ -162,7 +158,6 @@ namespace GridKit
         }
 
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
-        check(Tc_ >= ZERO<RealT>, "Tc must be non-negative");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
         check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
               "UEL must be 0, 1, 2, or 3");
@@ -176,8 +171,8 @@ namespace GridKit
         {
           check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
           check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
-          check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
+          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
 
           const bool saturation_points_are_ordered =
               (E2_ > E1_ && Se2_ > Se1_)
@@ -314,8 +309,30 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT se0  = SB_ * Math::qramp(efdp0 - SA_);
-        const ScalarT vfe0 = (Ke_ + se0) * efdp0;
+        const ScalarT se0 = SB_ * Math::qramp(efdp0 - SA_);
+
+        RealT ke0 = Ke_;
+        if (ke0 == ZERO<RealT>)
+        {
+          const RealT efdp_real0 = static_cast<RealT>(efdp0);
+          ret                    = efdp_real0 != ZERO<RealT>;
+          if (!ret)
+          {
+            Log::error() << "Esdc1a: automatic Ke requires a nonzero initial Efd'\n";
+            return 1;
+          }
+
+          ke0 = Vrmax_ / (static_cast<RealT>(10.0) * efdp_real0)
+                - static_cast<RealT>(se0);
+          ret = std::isfinite(ke0);
+          if (!ret)
+          {
+            Log::error() << "Esdc1a: automatic Ke must be finite\n";
+            return 1;
+          }
+        }
+
+        const ScalarT vfe0 = (ke0 + se0) * efdp0;
         const ScalarT vr0  = vfe0;
         const ScalarT vhv0 = vr0 / Ka_;
 
@@ -349,6 +366,7 @@ namespace GridKit
         const ScalarT xll0  = ev0;
         const ScalarT vref0 = ev0 + vc0 + vf0 - vs0 - uel_on_ * vuel0;
 
+        Ke_     = ke0;
         y[EFDP] = efdp0;
         y[VC]   = vc0;
         y[VR]   = vr0;
@@ -420,64 +438,96 @@ namespace GridKit
       }
 
       /**
-       * @brief Residuals of system equations
+       * @brief Gather external variables and index maps.
        *
-       * Refreshes the bus and signal interface buffers and evaluates the
-       * internal residual. ESDC1A injects no current, so there is no bus
-       * residual. An unattached input port falls back to the value latched
-       * by initialize().
-       *
-       * @return Zero on success.
+       * Unattached signal inputs retain the values latched by initialize().
        */
       template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::evaluateResidual()
+      void Esdc1a<scalar_type, index_type>::gatherExternalVariables()
       {
-        const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
-        const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
-        const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
-        const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
+        const auto VR_EXT = static_cast<size_t>(Esdc1aExternalVariables::VR);
+        const auto VI_EXT = static_cast<size_t>(Esdc1aExternalVariables::VI);
+        const auto OMEGA  = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
+        const auto VREF   = static_cast<size_t>(Esdc1aExternalVariables::VREF);
+        const auto VS     = static_cast<size_t>(Esdc1aExternalVariables::VS);
+        const auto VUEL   = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
 
-        ws_[OMEGA] = omega_set_;
-        ws_[VREF]  = vref_set_;
-        ws_[VS]    = vs_set_;
-        ws_[VUEL]  = vuel_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        y_ext_[VR_EXT]                = Vr();
+        y_ext_[VI_EXT]                = Vi();
+        variable_indices_ext_[VR_EXT] = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VI_EXT] = INVALID_INDEX<IdxT>;
+        if (bus_->size() > 0)
+        {
+          variable_indices_ext_[VR_EXT] = bus_->getVariableIndex(0);
+          variable_indices_ext_[VI_EXT] = bus_->getVariableIndex(1);
+        }
+
+        y_ext_[OMEGA]                = omega_set_;
+        y_ext_[VREF]                 = vref_set_;
+        y_ext_[VS]                   = vs_set_;
+        y_ext_[VUEL]                 = vuel_set_;
+        variable_indices_ext_[OMEGA] = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VREF]  = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VS]    = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VUEL]  = INVALID_INDEX<IdxT>;
 
         if (signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
         {
-          ws_[OMEGA] = signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
-          ws_indices_[OMEGA] =
+          y_ext_[OMEGA] =
+              signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
+          variable_indices_ext_[OMEGA] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::OMEGA>();
         }
         if (signals_.template isAttached<Esdc1aExternalVariables::VREF>())
         {
-          ws_[VREF] = signals_.template readExternalVariable<Esdc1aExternalVariables::VREF>();
-          ws_indices_[VREF] =
+          y_ext_[VREF] =
+              signals_.template readExternalVariable<Esdc1aExternalVariables::VREF>();
+          variable_indices_ext_[VREF] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VREF>();
         }
         if (signals_.template isAttached<Esdc1aExternalVariables::VS>())
         {
-          ws_[VS] = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
-          ws_indices_[VS] =
+          y_ext_[VS] = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
+          variable_indices_ext_[VS] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VS>();
         }
         if (signals_.template isAttached<Esdc1aExternalVariables::VUEL>())
         {
-          ws_[VUEL] = signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
-          ws_indices_[VUEL] =
+          y_ext_[VUEL] =
+              signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
+          variable_indices_ext_[VUEL] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VUEL>();
         }
+      }
 
-        wb_[0] = Vr();
-        wb_[1] = Vi();
+      /**
+       * @brief Evaluate the internal ESDC1A residual equations.
+       */
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
 
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, y_ext_.data(), f);
         f_.setDataUpdated();
         return 0;
+      }
+
+      /**
+       * @brief Evaluate internal equations and external contributions.
+       *
+       * ESDC1A contributes no external residual, so the base implementation
+       * returns zero after the internal equations are evaluated.
+       */
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
 
       /**
@@ -503,9 +553,8 @@ namespace GridKit
        *
        * @param[in] y Internal variables in Esdc1aInternalVariables order.
        * @param[in] yp Internal derivatives in the same enum order.
-       * @param[in] wb Terminal-bus \f$(V_{\mathrm{r}},V_{\mathrm{i}})\f$
-       *               voltage components.
-       * @param[in] ws Signal values in Esdc1aExternalVariables order.
+       * @param[in] y_ext Terminal-bus voltage components and signal values in
+       *                  Esdc1aExternalVariables order.
        * @param[out] f Residuals in Esdc1aInternalVariables order.
        * @return Zero on success.
        */
@@ -514,8 +563,7 @@ namespace GridKit
       Esdc1a<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
         const auto EFDP = static_cast<size_t>(Esdc1aInternalVariables::EFDP);
@@ -530,10 +578,12 @@ namespace GridKit
         const auto VFE  = static_cast<size_t>(Esdc1aInternalVariables::VFE);
         const auto EFD  = static_cast<size_t>(Esdc1aInternalVariables::EFD);
 
-        const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
-        const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
-        const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
-        const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
+        const auto VR_EXT = static_cast<size_t>(Esdc1aExternalVariables::VR);
+        const auto VI_EXT = static_cast<size_t>(Esdc1aExternalVariables::VI);
+        const auto OMEGA  = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
+        const auto VREF   = static_cast<size_t>(Esdc1aExternalVariables::VREF);
+        const auto VS     = static_cast<size_t>(Esdc1aExternalVariables::VS);
+        const auto VUEL   = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
 
         const ScalarT efdp = y[EFDP];
         const ScalarT vc   = y[VC];
@@ -553,12 +603,13 @@ namespace GridKit
         const ScalarT vf_dot   = yp[VF];
         const ScalarT xll_dot  = yp[XLL];
 
-        const ScalarT omega = ws[OMEGA];
-        const ScalarT vref  = ws[VREF];
-        const ScalarT vs    = ws[VS];
-        const ScalarT vuel  = ws[VUEL];
+        const ScalarT omega = y_ext[OMEGA];
+        const ScalarT vref  = y_ext[VREF];
+        const ScalarT vs    = y_ext[VS];
+        const ScalarT vuel  = y_ext[VUEL];
 
-        const ScalarT ec                = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
+        const ScalarT ec = std::sqrt(
+            y_ext[VR_EXT] * y_ext[VR_EXT] + y_ext[VI_EXT] * y_ext[VI_EXT]);
         const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
         const ScalarT vfe_target        = (Ke_ + se) * efdp;
         const ScalarT efdp_rate         = (vr - vfe) / Te_;
@@ -612,10 +663,10 @@ namespace GridKit
        * @brief Read the parameters out of the model data
        *
        * No parameter is required; every parameter keeps the default
-       * documented in the model README when omitted. A non-numeric value, a
-       * switch outside \f$\{0,1\}\f$, or a non-integer selector is counted and
-       * reported by verify() rather than throwing. Integer JSON values are
-       * accepted for real parameters.
+       * documented in the model README when omitted. A non-numeric real
+       * parameter or non-integer selector is counted and reported by verify()
+       * rather than throwing. Integer JSON values are accepted for real
+       * parameters.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -661,23 +712,16 @@ namespace GridKit
           target = parsed_value;
         };
 
-        auto load_switch = [&](auto key, bool& target, const char* name)
+        auto load_switch = [&](auto key, bool& target)
         {
           if (!data.parameters.contains(key))
           {
             return;
           }
 
-          const auto& value = data.parameters.at(key);
-          if (const auto* bool_value = std::get_if<bool>(&value))
-          {
-            target = *bool_value;
-          }
-          else
-          {
-            Log::error() << "Esdc1a: parameter '" << name << "' must be boolean\n";
-            ++parameter_error_count_;
-          }
+          target = std::visit([](auto value)
+                              { return value != 0; },
+                              data.parameters.at(key));
         };
 
         auto load_selector = [&](auto key, IdxT& target, const char* name)
@@ -710,13 +754,13 @@ namespace GridKit
         load_real(Params::Te, Te_, "Te");
         load_real(Params::Kf, Kf_, "Kf");
         load_real(Params::Tf1, Tf1_, "Tf1");
-        load_switch(Params::Spdmlt, Spdmlt_, "Spdmlt");
+        load_switch(Params::Spdmlt, Spdmlt_);
         load_real(Params::E1, E1_, "E1");
         load_real(Params::Se1, Se1_, "Se1");
         load_real(Params::E2, E2_, "E2");
         load_real(Params::Se2, Se2_, "Se2");
         load_selector(Params::UEL, UEL_, "UEL");
-        load_switch(Params::exclim, exclim_, "exclim");
+        load_switch(Params::exclim, exclim_);
         setDerivedParameters();
       }
 
@@ -758,9 +802,8 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Esdc1a<scalar_type, index_type>::setDerivedParameters()
       {
-        // The lags are raised to the floor in place, so a negative value is
-        // rejected here while the value as read is still available. verify()
-        // reports the count.
+        // Negative transducer, regulator, and exciter lags are rejected before
+        // all explicit denominator time constants are raised to the floor.
         auto check_non_negative = [&](RealT value, const char* name)
         {
           if (value < ZERO<RealT>)
@@ -772,9 +815,7 @@ namespace GridKit
 
         check_non_negative(Tr_, "Tr");
         check_non_negative(Ta_, "Ta");
-        check_non_negative(Tb_, "Tb");
         check_non_negative(Te_, "Te");
-        check_non_negative(Tf1_, "Tf1");
 
         if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
             || Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM
@@ -819,12 +860,28 @@ namespace GridKit
             || (E2_ < E1_ && Se2_ < Se1_);
         const bool saturation_consistent =
             E1_ > ZERO<RealT> && E2_ > ZERO<RealT>
-            && Se1_ > ZERO<RealT> && Se2_ > ZERO<RealT>
+            && Se1_ >= ZERO<RealT> && Se2_ >= ZERO<RealT>
             && saturation_points_are_ordered;
         if (saturation_disabled || !saturation_consistent)
         {
           SA_ = ZERO<RealT>;
           SB_ = ZERO<RealT>;
+          return;
+        }
+
+        if (Se1_ == ZERO<RealT>)
+        {
+          const RealT dE = E2_ - E1_;
+          SA_            = E1_;
+          SB_            = Se2_ / (dE * dE);
+          return;
+        }
+
+        if (Se2_ == ZERO<RealT>)
+        {
+          const RealT dE = E1_ - E2_;
+          SA_            = E2_;
+          SB_            = Se1_ / (dE * dE);
           return;
         }
 
@@ -840,30 +897,17 @@ namespace GridKit
        * *input*, so the residual reproduces the requested output through the
        * same smooth ramp it evaluates.
        *
-       * For large positive values, the ramp is effectively equal to the input, so the
-       * inverse is effectively the output. In that regime this function returns `ramp_output` directly.
-       * This branching is numerically more robust.
-       *
        * @param[in] ramp_output Strictly positive requested ramp output.
        * @return The input the smooth ramp maps to the requested output.
        *
        * @pre @p ramp_output is finite and strictly positive.
-       * @warning This function contains conditional branching and may be used
-       *          during initialization, but not during residual or Jacobian
-       *          evaluation.
        */
       template <typename scalar_type, typename index_type>
       typename Esdc1a<scalar_type, index_type>::RealT
       Esdc1a<scalar_type, index_type>::inverseRamp(RealT ramp_output) const
       {
-        static constexpr RealT SOFTPLUS_WIDTH = static_cast<RealT>(50.0);
-
-        const RealT scaled_output = Math::MU<RealT> * ramp_output;
-        if (scaled_output > SOFTPLUS_WIDTH)
-        {
-          return ramp_output;
-        }
-        return std::log(std::expm1(scaled_output)) / Math::MU<RealT>;
+        const RealT mu = Math::MU<RealT>;
+        return ramp_output + std::log(-std::expm1(-mu * ramp_output)) / mu;
       }
 
       /**

@@ -1,14 +1,15 @@
 #pragma once
 
 /**
- * @file Tgov1Impl.cpp
+ * @file Tgov1Impl.hpp
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
- * @brief Definition of a Turbine Governor Model (IEEET1).
+ * @brief Definition of the TGOV1 turbine-governor model.
  */
 
-#include <iostream>
+#include <algorithm>
+#include <cmath>
 
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
@@ -130,6 +131,10 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Tgov1<scalar_type, index_type>::setDerivedParams()
       {
+        if (Pvmax_ < Pvmin_)
+        {
+          std::swap(Pvmin_, Pvmax_);
+        }
         va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
       }
 
@@ -182,17 +187,16 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        // Resize signal variable data
-        ws_.resize(1);
-        ws_indices_.resize(1);
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
+        // Resize coupling data
+        this->allocateExternalVectors(static_cast<IdxT>(Tgov1ExternalVariables::MAXIMUM));
 
         // Set output signals
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
-          auto* y = y_.getData();
-          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y[2], &(this->getVariableIndex(2)));
+          auto*      y  = y_.getData();
+          const auto PM = static_cast<IdxT>(Tgov1InternalVariables::PM);
+          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(
+              &y[static_cast<size_t>(PM)], &(this->getVariableIndex(PM)));
         }
 
         allocated_ = true;
@@ -206,14 +210,45 @@ namespace GridKit
       int Tgov1<scalar_type, index_type>::verify() const
       {
         static constexpr auto DELTAOMEGA = Tgov1ExternalVariables::DELTAOMEGA;
+        static constexpr auto PREF       = Tgov1ExternalVariables::PREF;
 
         int ret = 0;
+
+        auto check = [&](bool condition, const char* message)
+        {
+          if (!condition)
+          {
+            Log::error() << "Tgov1: " << message << '\n';
+            ret += 1;
+          }
+        };
+
+        check(std::isfinite(Trate_) && Trate_ > ZERO<RealT>,
+              "Trate must be finite and positive");
+        check(std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>,
+              "system power base must be finite and positive");
+        check(std::isfinite(R_) && R_ != ZERO<RealT>, "R must be finite and nonzero");
+        check(std::isfinite(Pvmin_) && std::isfinite(Pvmax_)
+                  && std::isfinite(T1_) && std::isfinite(T2_)
+                  && std::isfinite(T3_) && std::isfinite(Dt_),
+              "parameters must be finite");
+        check(signals_.template isAssigned<Tgov1InternalVariables::PM>(),
+              "pmech output signal must be assigned");
 
         if (signals_.template isAttached<DELTAOMEGA>())
         {
           if (!signals_.template isLinked<DELTAOMEGA>())
           {
             Log::error() << "Tgov1: deltaomega signal attached with no linked generator\n";
+            ret += 1;
+          }
+        }
+
+        if (signals_.template isAttached<PREF>())
+        {
+          if (!signals_.template isLinked<PREF>())
+          {
+            Log::error() << "Tgov1: pref signal attached with no linked source\n";
             ret += 1;
           }
         }
@@ -228,32 +263,53 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::initialize()
       {
-        ScalarT p0{0};
-
-        // Initial mechanical = initial electric torque
-        auto* y  = y_.getData();
-        auto* yp = yp_.getData();
-        if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
+        if (verify() != 0)
         {
-          // System base -> governor base for governor initialization.
-          p0 = toComponentBase(y[2]); ///<- generator needs to be initialized first
+          Log::error() << "Tgov1: cannot initialize with invalid configuration\n";
+          return 1;
         }
 
-        // Input Variables (Parameter for now)
-        pref_ = R_ * p0;
+        const auto PTX = static_cast<size_t>(Tgov1InternalVariables::PTX);
+        const auto PV  = static_cast<size_t>(Tgov1InternalVariables::PV);
+        const auto PM  = static_cast<size_t>(Tgov1InternalVariables::PM);
 
-        // Internal States
-        y[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
-        y[1] = p0;               // y1 - Pv  (Valve Position)
-        y[2] = toSystemBase(p0); // y2 - Pm  (Mech Power, System Base)
+        auto* y = y_.getData();
 
-        // D.V. Derivative
-        yp[0] = 0.0; // Ptx
-        yp[1] = 0.0; // Pv
-        yp[2] = 0.0; // Pm
+        ScalarT omega0{ZERO<RealT>};
+        if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
+        {
+          omega0 = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+        }
+
+        const ScalarT pmech0 = y[PM];
+        const ScalarT pm0    = toComponentBase(pmech0);
+        const ScalarT pv0    = pm0 + Dt_ * omega0;
+        const ScalarT pturb0 = pv0;
+        const ScalarT pref0  = omega0 + R_ * pv0;
+
+        if (!std::isfinite(static_cast<RealT>(pmech0))
+            || !std::isfinite(static_cast<RealT>(omega0))
+            || !std::isfinite(static_cast<RealT>(pv0))
+            || !std::isfinite(static_cast<RealT>(pref0)))
+        {
+          Log::error() << "Tgov1: initial signals and states must be finite\n";
+          return 1;
+        }
+
+        Pvmin_ = std::min(Pvmin_, static_cast<RealT>(pv0));
+        Pvmax_ = std::max(Pvmax_, static_cast<RealT>(pv0));
+
+        y[PTX] = pturb0;
+        y[PV]  = pv0;
+
+        pref_set_ = pref0;
+        if (signals_.template isAttached<Tgov1ExternalVariables::PREF>())
+        {
+          signals_.template writeExternalVariable<Tgov1ExternalVariables::PREF>(pref_set_);
+        }
 
         y_.setDataUpdated();
-        yp_.setDataUpdated();
+        yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
 
         return 0;
       }
@@ -264,9 +320,9 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::tagDifferentiable()
       {
-        tag_[0] = true;  // Pv
-        tag_[1] = true;  // Ptx
-        tag_[2] = false; // Pmech
+        tag_[static_cast<size_t>(Tgov1InternalVariables::PTX)] = T3_ != ZERO<RealT>;
+        tag_[static_cast<size_t>(Tgov1InternalVariables::PV)]  = T1_ != ZERO<RealT>;
+        tag_[static_cast<size_t>(Tgov1InternalVariables::PM)]  = false;
 
         return 0;
       }
@@ -296,60 +352,87 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int Tgov1<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT*                  y,
-          const ScalarT*                  yp,
-          [[maybe_unused]] const ScalarT* wb,
-          const ScalarT*                  ws,
-          ScalarT*                        f)
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* y_ext,
+          ScalarT*       f)
       {
-        // Read Internal Variables
-        ScalarT ptx   = y[0]; // y0 - Ptx
-        ScalarT pv    = y[1]; // y1 - Pv
-        ScalarT pmech = y[2]; // y2 - Pmech
+        const auto PTX = static_cast<size_t>(Tgov1InternalVariables::PTX);
+        const auto PV  = static_cast<size_t>(Tgov1InternalVariables::PV);
+        const auto PM  = static_cast<size_t>(Tgov1InternalVariables::PM);
 
-        // Read Internal Derivatives
-        ScalarT ptx_dot = yp[0];
-        ScalarT pv_dot  = yp[1];
+        const auto DELTAOMEGA = static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
+        const auto PREF       = static_cast<size_t>(Tgov1ExternalVariables::PREF);
 
-        // Set signal variable aliases
-        ScalarT omega = ws[0];
+        const ScalarT pturb = y[PTX];
+        const ScalarT pv    = y[PV];
+        const ScalarT pmech = y[PM];
 
-        // The 'pre-limit' target of Pv
-        ScalarT func = -pv + (pref_ - omega) / R_;
+        const ScalarT pturb_dot = yp[PTX];
+        const ScalarT pv_dot    = yp[PV];
 
-        // Internal Differential Equations
-        f[0] = -T3_ * ptx_dot - ptx + (T3_ - T2_) * pv;
-        f[1] = -T1_ * pv_dot + Math::antiwindup(pv, func, Pvmin_, Pvmax_);
+        const ScalarT omega = y_ext[DELTAOMEGA];
+        const ScalarT pref  = y_ext[PREF];
 
-        // Internal Algebraic Equations
-        // Convert pmech to component base from its system base value
-        f[2] = -toComponentBase(pmech) + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
+        const ScalarT valve_rate = -pv + (pref - omega) / R_;
+
+        f[PTX] = -T3_ * pturb_dot - pturb + pv + T2_ * pv_dot;
+        f[PV]  = -T1_ * pv_dot
+                + Math::antiwindup(pv, valve_rate, Pvmin_, Pvmax_);
+        f[PM] = -toComponentBase(pmech) + pturb - Dt_ * omega;
 
         return 0;
       }
 
       /**
-       * @brief Residuals of system equations
+       * @brief Gather external variables and index maps.
        *
        */
       template <typename scalar_type, typename index_type>
-      int Tgov1<scalar_type, index_type>::evaluateResidual()
+      void Tgov1<scalar_type, index_type>::gatherExternalVariables()
       {
-        // Input Variables
+        const auto DELTAOMEGA = static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
+        const auto PREF       = static_cast<size_t>(Tgov1ExternalVariables::PREF);
+
+        y_ext_[DELTAOMEGA] = ScalarT{ZERO<RealT>};
+        y_ext_[PREF]       = pref_set_;
+        std::fill(variable_indices_ext_.begin(), variable_indices_ext_.end(), INVALID_INDEX<IdxT>);
+
         if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
         {
-          ws_[0]         = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
+          y_ext_[DELTAOMEGA] = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+          variable_indices_ext_[DELTAOMEGA] =
+              signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
         }
+
+        if (signals_.template isAttached<Tgov1ExternalVariables::PREF>())
+        {
+          y_ext_[PREF] = signals_.template readExternalVariable<Tgov1ExternalVariables::PREF>();
+          variable_indices_ext_[PREF] =
+              signals_.template readExternalVariableIndex<Tgov1ExternalVariables::PREF>();
+        }
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Tgov1<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, y_ext_.data(), f);
 
         f_.setDataUpdated();
 
         return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Tgov1<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
     } // namespace Governor
   } // namespace PhasorDynamics

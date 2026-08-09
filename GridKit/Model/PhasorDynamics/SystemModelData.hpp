@@ -23,6 +23,7 @@
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalSource/ForcedOscillationData.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
@@ -63,6 +64,7 @@ namespace GridKit
       using LoadZDataT              = LoadZData<RealT, IdxT>;
       using LoadZIPDataT            = LoadZIPData<RealT, IdxT>;
       using ConstantSourceT         = ConstantSignalSourceData<RealT, IdxT>;
+      using ForcedOscillationDataT  = ForcedOscillationData<RealT, IdxT>;
       using SignalDataT             = SignalNodeData<RealT, IdxT>;
       using MonitorSinkSpec         = Model::VariableMonitorBase::SinkSpec;
 
@@ -103,27 +105,28 @@ namespace GridKit
       /// - Convert string to enum
       /// - Associate component type to its corresponding enum
       /// - Consolidate components to allow writing to them using the enum as the argument
-      std::vector<BusDataT>                bus;             ///< Buses within the model
-      std::vector<BusToSignalAdapterDataT> adapter;         ///< bus-to-signal adapters within the model
-      std::vector<BranchDataT>             branch;          ///< Branches within the model
-      std::vector<BusFaultDataT>           bus_fault;       ///< Bus faults within the model
-      std::vector<RegcaDataT>              regca;           ///< REGCA converter instances within the model
-      std::vector<ReecbDataT>              reecb;           ///< REECB electrical controllers within the model
-      std::vector<RepcaDataT>              repca;           ///< REPCA plant controllers within the model
-      std::vector<GenrouDataT>             genrou;          ///< GENROU instances within the model
-      std::vector<GensalDataT>             gensal;          ///< GENSAL instances within the model
-      std::vector<GenClassicalDataT>       genclassical;    ///< Classical generator instances within the model
-      std::vector<LoadZDataT>              loadz;           ///< LoadZ instances within the model
-      std::vector<LoadZIPDataT>            loadzip;         ///< LoadZIP instances within the model
-      std::vector<Tgov1DataT>              gov;             ///< Governors within the model
-      std::vector<Esdc1aDataT>             esdc1a;          ///< ESDC1A exciters within the model
-      std::vector<GastPtiDataT>            gastpti;         ///< GASTPTI governors within the model
-      std::vector<HygovDataT>              hygov;           ///< HYGOV governors within the model
-      std::vector<Ieeet1DataT>             exciter;         ///< Exciters within the model
-      std::vector<SexsPtiDataT>            sexspti;         ///< SEXS-PTI exciters within the model
-      std::vector<IeeestDataT>             stabilizer;      ///< Stabilizers within the model
-      std::vector<ConstantSourceT>         constant_source; ///< Constant signal sources within the model
-      std::vector<SignalDataT>             signal;          ///< Signal nodes
+      std::vector<BusDataT>                bus;                ///< Buses within the model
+      std::vector<BusToSignalAdapterDataT> adapter;            ///< bus-to-signal adapters within the model
+      std::vector<BranchDataT>             branch;             ///< Branches within the model
+      std::vector<BusFaultDataT>           bus_fault;          ///< Bus faults within the model
+      std::vector<RegcaDataT>              regca;              ///< REGCA converter instances within the model
+      std::vector<ReecbDataT>              reecb;              ///< REECB electrical controllers within the model
+      std::vector<RepcaDataT>              repca;              ///< REPCA plant controllers within the model
+      std::vector<GenrouDataT>             genrou;             ///< GENROU instances within the model
+      std::vector<GensalDataT>             gensal;             ///< GENSAL instances within the model
+      std::vector<GenClassicalDataT>       genclassical;       ///< Classical generator instances within the model
+      std::vector<LoadZDataT>              loadz;              ///< LoadZ instances within the model
+      std::vector<LoadZIPDataT>            loadzip;            ///< LoadZIP instances within the model
+      std::vector<Tgov1DataT>              gov;                ///< Governors within the model
+      std::vector<Esdc1aDataT>             esdc1a;             ///< ESDC1A exciters within the model
+      std::vector<GastPtiDataT>            gastpti;            ///< GASTPTI governors within the model
+      std::vector<HygovDataT>              hygov;              ///< HYGOV governors within the model
+      std::vector<Ieeet1DataT>             exciter;            ///< Exciters within the model
+      std::vector<SexsPtiDataT>            sexspti;            ///< SEXS-PTI exciters within the model
+      std::vector<IeeestDataT>             stabilizer;         ///< Stabilizers within the model
+      std::vector<ConstantSourceT>         constant_source;    ///< Constant signal sources within the model
+      std::vector<ForcedOscillationDataT>  forced_oscillation; ///< Forced-oscillation signal sources
+      std::vector<SignalDataT>             signal;             ///< Signal nodes
 
       /// Monitor sink specs
       std::vector<MonitorSinkSpec> monitor_sink;

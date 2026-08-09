@@ -127,8 +127,9 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
-      wb_.resize(2);
-      h_.resize(2);
+      this->allocateExternalVectors(static_cast<IdxT>(BranchExternalVariables::MAXIMUM));
+      f_ext_.resize(4);
+      residual_indices_ext_.assign(4, INVALID_INDEX<IdxT>);
 
       allocated_ = true;
       return 0;
@@ -197,20 +198,6 @@ namespace GridKit
       Ii += B * Vr + G * Vi;
     }
 
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
-        const RealT    G,
-        const RealT    B,
-        const ScalarT* wb,
-        ScalarT*       h)
-    {
-      const ScalarT Vr = wb[0];
-      const ScalarT Vi = wb[1];
-
-      h[0] = G * Vr - B * Vi;
-      h[1] = B * Vr + G * Vi;
-    }
-
     /**
      * @brief Compute the absolute tolerance for each variable in the model
      *
@@ -230,88 +217,83 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus 1 residual contribution from bus 1 variables
+     * @brief External residual contributions to both terminal buses.
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual11(
+    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateExternalResidual(
         [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        h)
+        const ScalarT*                  y_ext,
+        ScalarT*                        f_ext)
     {
-      evaluateAdmittanceBlock(g11_, b11_, wb, h);
+      const ScalarT Vr1 = y_ext[0];
+      const ScalarT Vi1 = y_ext[1];
+      const ScalarT Vr2 = y_ext[2];
+      const ScalarT Vi2 = y_ext[3];
+
+      f_ext[0] = (g11_ * Vr1 - b11_ * Vi1) + (g12_ * Vr2 - b12_ * Vi2);
+      f_ext[1] = (b11_ * Vr1 + g11_ * Vi1) + (b12_ * Vr2 + g12_ * Vi2);
+      f_ext[2] = (g21_ * Vr1 - b21_ * Vi1) + (g22_ * Vr2 - b22_ * Vi2);
+      f_ext[3] = (b21_ * Vr1 + g21_ * Vi1) + (b22_ * Vr2 + g22_ * Vi2);
 
       return 0;
     }
 
     /**
-     * @brief Bus 1 residual contribution from bus 2 variables
+     * @brief The branch owns no internal residual equations.
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual12(
-        [[maybe_unused]] const ScalarT* y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        h)
+    int Branch<scalar_type, index_type>::evaluateInternalResidual()
     {
-      evaluateAdmittanceBlock(g12_, b12_, wb, h);
-
       return 0;
     }
 
     /**
-     * @brief Bus 2 residual contribution from bus 1 variables
+     * @brief Gather external variables and index maps.
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual21(
-        [[maybe_unused]] const ScalarT* y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        h)
+    void Branch<scalar_type, index_type>::gatherExternalVariables()
     {
-      evaluateAdmittanceBlock(g21_, b21_, wb, h);
-
-      return 0;
+      y_ext_[0] = Vr1();
+      y_ext_[1] = Vi1();
+      y_ext_[2] = Vr2();
+      y_ext_[3] = Vi2();
+      if (bus1_->size() > 0)
+      {
+        variable_indices_ext_[0] = bus1_->getVariableIndex(0);
+        variable_indices_ext_[1] = bus1_->getVariableIndex(1);
+        residual_indices_ext_[0] = bus1_->getResidualIndex(0);
+        residual_indices_ext_[1] = bus1_->getResidualIndex(1);
+      }
+      if (bus2_->size() > 0)
+      {
+        variable_indices_ext_[2] = bus2_->getVariableIndex(0);
+        variable_indices_ext_[3] = bus2_->getVariableIndex(1);
+        residual_indices_ext_[2] = bus2_->getResidualIndex(0);
+        residual_indices_ext_[3] = bus2_->getResidualIndex(1);
+      }
     }
 
     /**
-     * @brief Bus 2 residual contribution from bus 2 variables
+     * @brief External residual contributions to the two terminal buses.
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual22(
-        [[maybe_unused]] const ScalarT* y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        h)
+    int Branch<scalar_type, index_type>::evaluateExternalResidual()
     {
-      evaluateAdmittanceBlock(g22_, b22_, wb, h);
+      gatherExternalVariables();
 
-      return 0;
-    }
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      evaluateExternalResidual(y, yp, y_ext_.data(), f_ext_.data());
 
-    /**
-     * @brief Residual contribution of the branch is computed and pushed to the terminal buses.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::evaluateResidual()
-    {
-      ScalarT ir1{0.0};
-      ScalarT ii1{0.0};
-      ScalarT ir2{0.0};
-      ScalarT ii2{0.0};
-
-      terminalCurrent1(ir1, ii1);
-      terminalCurrent2(ir2, ii2);
-
-      Ir1() += ir1;
-      Ii1() += ii1;
-      Ir2() += ir2;
-      Ii2() += ii2;
+      Ir1() += f_ext_[0];
+      Ii1() += f_ext_[1];
+      Ir2() += f_ext_[2];
+      Ii2() += f_ext_[3];
 
       if (bus1_->size() > 0)
       {
@@ -323,6 +305,17 @@ namespace GridKit
       }
 
       return 0;
+    }
+
+    /**
+     * @brief Residual contribution of the branch is computed and pushed to the terminal buses.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::evaluateResidual()
+    {
+      evaluateInternalResidual();
+      return evaluateExternalResidual();
     }
 
     template <typename scalar_type, typename index_type>

@@ -1,0 +1,21 @@
+{
+    "system_model_file": "../../../../cases/PhasorDynamics/WECC240/WECC240.case.json",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 30.0,
+    "events": [],
+    "forced_oscillations": [
+        {
+            "id": "fo_1032_C_pmech",
+            "target": "Genrou:1032_C_genrou.pmech",
+            "mode": "add",
+            "params": {
+                "A": 0.1,
+                "f": 0.7,
+                "Ton": 10.0,
+                "Toff": -1.0,
+                "Tr": 1.0
+            },
+            "mon": ["output", "envelope", "active"]
+        }
+    ]
+}

@@ -26,6 +26,14 @@ target_link_libraries(
   GridKit::phasor_dynamics_bustosignaladapter_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_forced_oscillation runForcedOscillationTests.cpp)
+target_link_libraries(
+  test_phasor_forced_oscillation
+  GridKit::definitions
+  GridKit::phasor_dynamics_signalsource
+  GridKit::phasor_dynamics_signalsource_dependency_tracking
+  GridKit::testing)
+
 add_executable(test_phasor_branch runBranchTests.cpp)
 target_link_libraries(
   test_phasor_branch
@@ -203,9 +211,17 @@ target_link_libraries(
   GridKit::phasor_dynamics_systemmodel
   GridKit::testing)
 
+add_executable(test_phasor_signal_node_junction runSignalNodeJunctionTests.cpp)
+target_link_libraries(
+  test_phasor_signal_node_junction
+  GridKit::definitions
+  GridKit::phasor_dynamics_signal
+  GridKit::testing)
+
 add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
 add_test(NAME PhasorDynamicsBusFaultTest COMMAND test_phasor_bus_fault)
 add_test(NAME PhasorDynamicsBusToSignalAdapterTest COMMAND test_phasor_bustosignaladapter)
+add_test(NAME PhasorDynamicsForcedOscillationTest COMMAND test_phasor_forced_oscillation)
 add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governor_tgov1)
@@ -228,11 +244,13 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
 add_test(NAME PhasorDynamicsComponentConnectionTest COMMAND test_phasor_component_connection)
+add_test(NAME PhasorDynamicsSignalNodeJunctionTest COMMAND test_phasor_signal_node_junction)
 
 install(
   TARGETS test_phasor_bus
           test_phasor_bus_fault
           test_phasor_bustosignaladapter
+          test_phasor_forced_oscillation
           test_phasor_branch
           test_phasor_loadz
           test_phasor_loadzip
@@ -252,4 +270,5 @@ install(
           test_phasor_system
           test_phasor_system_single_component
           test_phasor_component_connection
+          test_phasor_signal_node_junction
   RUNTIME DESTINATION bin)

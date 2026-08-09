@@ -8,7 +8,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <vector>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
@@ -58,6 +57,8 @@ namespace GridKit
       /// External variables of `Repca`.
       enum class RepcaExternalVariables : size_t
       {
+        VR,      ///< \f$V_\mathrm{r}\f$ Regulated-bus real voltage component [p.u.]
+        VI,      ///< \f$V_\mathrm{i}\f$ Regulated-bus imaginary voltage component [p.u.]
         IR,      ///< \f$I_\mathrm{r}\f$ Required branch-current real component on system base [p.u.]
         II,      ///< \f$I_\mathrm{i}\f$ Required branch-current imaginary component on system base [p.u.]
         P,       ///< \f$P\f$ Required branch active power on system base [p.u.]
@@ -95,8 +96,9 @@ namespace GridKit
         using Component<scalar_type, index_type>::tag_;
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
-        using Component<scalar_type, index_type>::wb_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::y_;
+        using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::yp_;
 
       public:
@@ -122,6 +124,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
+        int evaluateInternalResidual() override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
@@ -136,8 +139,7 @@ namespace GridKit
         [[gnu::always_inline]] inline int evaluateInternalResidual(
             const ScalarT* y,
             const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
+            const ScalarT* y_ext,
             ScalarT*       f);
 
       private:
@@ -146,6 +148,7 @@ namespace GridKit
 
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
+        void gatherExternalVariables();
         void setDerivedParameters();
 
         bool invertClamp(ScalarT output, RealT lower, RealT upper, ScalarT& input) const;
@@ -213,9 +216,6 @@ namespace GridKit
 
         ComponentSignals<ScalarT, IdxT, RepcaInternalVariables, RepcaExternalVariables> signals_;
         std::unique_ptr<MonitorT>                                                       monitor_;
-
-        std::vector<ScalarT> ws_;
-        std::vector<IdxT>    ws_indices_;
       };
     } // namespace Controller
   } // namespace PhasorDynamics

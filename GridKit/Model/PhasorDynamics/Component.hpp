@@ -4,6 +4,7 @@
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -62,6 +63,17 @@ namespace GridKit
       }
 
       virtual int verify() const = 0;
+
+      // @todo This is much clearer if we write it this way
+      virtual int evaluateInternalResidual()
+      {
+        return this->evaluateResidual();
+      }
+
+      virtual int evaluateExternalResidual()
+      {
+        return 0;
+      }
 
       IdxT size() override final
       {
@@ -299,6 +311,16 @@ namespace GridKit
         abs_tol_.resize(n);
       }
 
+      /**
+       * @brief Allocate this component's external variable vectors.
+       */
+      void allocateExternalVectors(IdxT n)
+      {
+        y_ext_.assign(static_cast<size_t>(n), ScalarT{});
+        yp_ext_.assign(static_cast<size_t>(n), ScalarT{});
+        variable_indices_ext_.assign(static_cast<size_t>(n), INVALID_INDEX<IdxT>);
+      }
+
       int constructCoo()
       {
         if (coo_jac_ == nullptr)
@@ -327,15 +349,20 @@ namespace GridKit
       IdxT              nnz_{0};
       /// Global (system-level) variable indices
       std::vector<IdxT> variable_indices_;
+      std::vector<IdxT> variable_indices_ext_;
       /// Global (system-level) residual indices
       std::vector<IdxT> residual_indices_;
+      std::vector<IdxT> residual_indices_ext_;
 
-      VectorT           y_;
-      VectorT           yp_;
-      std::vector<bool> tag_;
-      VectorT           abs_tol_;
-      VectorT           f_;
-      bool              allocated_{false};
+      VectorT              y_;
+      std::vector<ScalarT> y_ext_;
+      VectorT              yp_;
+      std::vector<ScalarT> yp_ext_;
+      std::vector<bool>    tag_;
+      VectorT              abs_tol_;
+      VectorT              f_;
+      std::vector<ScalarT> f_ext_;
+      bool                 allocated_{false};
 
       std::vector<ScalarT> g_;
 
@@ -360,9 +387,6 @@ namespace GridKit
       std::vector<ScalarT> param_lo_{};
 
       IdxT gridkit_component_id_{0};
-
-      std::vector<ScalarT> wb_;
-      std::vector<ScalarT> h_;
 
       RealT time_;
       RealT alpha_;

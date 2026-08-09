@@ -3,7 +3,7 @@
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
- * @brief Declaration of a Turbine Governor Model (IEEET1).
+ * @brief Declaration of the TGOV1 turbine-governor model.
  *
  */
 
@@ -41,17 +41,17 @@ namespace GridKit
       /// Internal variables of a `Tgov1`
       enum class Tgov1InternalVariables : size_t
       {
-        PTX, ///< \f$P_{tx}\f$
-        PV,  ///< \f$P_v\f$
-        PM,  ///< \f$P_m\f$
+        PTX, ///< \f$P_t\f$ Turbine-block output
+        PV,  ///< \f$P_v\f$ Valve position
+        PM,  ///< \f$P_m\f$ Mechanical-power output
         MAXIMUM,
       };
 
       /// External variables of a `Tgov1`
       enum class Tgov1ExternalVariables : size_t
       {
-        DELTAOMEGA, ///< \f$\Delta_\omega\f$
-        PREF,       ///< \f$P_{ref}\f$
+        DELTAOMEGA, ///< \f$\Delta\omega\f$ Machine speed deviation
+        PREF,       ///< \f$P_\mathrm{ref}\f$ Governor reference
         MAXIMUM,
       };
 
@@ -68,8 +68,8 @@ namespace GridKit
         using Component<scalar_type, index_type>::time_;
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::h_;
+        using Component<scalar_type, index_type>::y_ext_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -96,6 +96,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT) override final;
+        int evaluateInternalResidual() override final;
         int evaluateResidual() override final;
 
         // Still to be implemented
@@ -113,37 +114,34 @@ namespace GridKit
 
       public:
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+            const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
         // Input parameters
-        RealT Trate_{0};
-        RealT R_{0};
-        RealT Pvmin_{0};
-        RealT Pvmax_{0};
-        RealT T1_{0};
-        RealT T2_{0};
-        RealT T3_{0};
-        RealT Dt_{0};
+        RealT Trate_{static_cast<RealT>(100.0)};
+        RealT R_{static_cast<RealT>(0.05)};
+        RealT Pvmin_{ZERO<RealT>};
+        RealT Pvmax_{ONE<RealT>};
+        RealT T1_{static_cast<RealT>(0.5)};
+        RealT T2_{static_cast<RealT>(2.5)};
+        RealT T3_{static_cast<RealT>(7.5)};
+        RealT Dt_{ZERO<RealT>};
 
         // Derived parameters
         RealT va_component_base_{0};
 
         // Input States (which can be parameters)
-        ScalarT pref_{0};
+        ScalarT pref_set_{0};
 
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;
 
         // Parameter initialization function
         void    initializeParameters(const ModelDataT& data);
+        void    gatherExternalVariables();
         void    setDerivedParams();
         ScalarT toComponentBase(ScalarT value) const;
         ScalarT toSystemBase(ScalarT value) const;
-
-        /* Local copies of signal variables */
-        std::vector<ScalarT> ws_;
-        std::vector<IdxT>    ws_indices_;
       };
 
     } // namespace Governor

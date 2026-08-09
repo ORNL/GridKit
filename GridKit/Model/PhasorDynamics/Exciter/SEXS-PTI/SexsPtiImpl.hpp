@@ -74,12 +74,7 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        wb_.resize(2);
-
-        ws_.resize(1);
-        ws_indices_.resize(1);
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
+        this->allocateExternalVectors(static_cast<IdxT>(SexsPtiExternalVariables::MAXIMUM));
 
         if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
         {
@@ -214,8 +209,7 @@ namespace GridKit
       __attribute__((always_inline)) inline int SexsPti<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
         ScalarT vr      = y[0];
@@ -224,8 +218,8 @@ namespace GridKit
         ScalarT vr_dot  = yp[0];
         ScalarT efd_dot = yp[1];
 
-        ScalarT Ec = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
-        ScalarT vs = ws[0];
+        ScalarT Ec = std::sqrt(y_ext[0] * y_ext[0] + y_ext[1] * y_ext[1]);
+        ScalarT vs = y_ext[2];
 
         ScalarT func = (-efd + (K_ / Tb_) * (-vr + Ta_ * vtr)) / Te_;
 
@@ -236,28 +230,50 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Gather external variables and index maps.
+       *
+       */
       template <typename scalar_type, typename index_type>
-      int SexsPti<scalar_type, index_type>::evaluateResidual()
+      void SexsPti<scalar_type, index_type>::gatherExternalVariables()
       {
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
-        if (signals_.template isAttached<SexsPtiExternalVariables::VS>())
+        y_ext_[0] = bus_->Vr();
+        y_ext_[1] = bus_->Vi();
+        if (bus_->size() > 0)
         {
-          ws_[0]         = signals_.template readExternalVariable<SexsPtiExternalVariables::VS>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<SexsPtiExternalVariables::VS>();
+          variable_indices_ext_[0] = bus_->getVariableIndex(0);
+          variable_indices_ext_[1] = bus_->getVariableIndex(1);
         }
 
-        wb_[0] = bus_->Vr();
-        wb_[1] = bus_->Vi();
+        y_ext_[2]                = 0.0;
+        variable_indices_ext_[2] = INVALID_INDEX<IdxT>;
+        if (signals_.template isAttached<SexsPtiExternalVariables::VS>())
+        {
+          y_ext_[2]                = signals_.template readExternalVariable<SexsPtiExternalVariables::VS>();
+          variable_indices_ext_[2] = signals_.template readExternalVariableIndex<SexsPtiExternalVariables::VS>();
+        }
+      }
+
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, y_ext_.data(), f);
 
         f_.setDataUpdated();
 
         return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
 
       template <typename scalar_type, typename index_type>

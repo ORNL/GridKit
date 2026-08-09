@@ -1,7 +1,9 @@
 #pragma once
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
@@ -99,8 +101,31 @@ namespace GridKit
         // Jacobian via Enzyme
         auto enzyme_jacobian = EnzymeJacobian(R, X, status);
 
+        success *= dependency_tracking_jacobian.size() == enzyme_jacobian.size();
+
+        const auto remove_zeros = [](auto& jacobian)
+        {
+          for (auto& row : jacobian)
+          {
+            for (auto entry = row.begin(); entry != row.end();)
+            {
+              if (entry->second == 0.0)
+              {
+                entry = row.erase(entry);
+              }
+              else
+              {
+                ++entry;
+              }
+            }
+          }
+        };
+        remove_zeros(dependency_tracking_jacobian);
+        remove_zeros(enzyme_jacobian);
+
         /// Compare DependencyTracking dependencies to Enzyme's
-        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        const size_t rows = std::min(dependency_tracking_jacobian.size(), enzyme_jacobian.size());
+        for (size_t i = 0; i < rows; ++i)
         {
           success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]));
         }
@@ -145,6 +170,11 @@ namespace GridKit
         std::vector<DependencyTracking::Variable> residual_y(
             residual_y_view.getData(),
             residual_y_view.getData() + residual_y_view.getSize());
+        auto& bus_residual_y_view = bus.getResidual();
+        residual_y.insert(
+            residual_y.end(),
+            bus_residual_y_view.getData(),
+            bus_residual_y_view.getData() + bus_residual_y_view.getSize());
 
         // Get d/dy'
         bus.initialize();
@@ -164,6 +194,11 @@ namespace GridKit
         std::vector<DependencyTracking::Variable> residual_yp(
             residual_yp_view.getData(),
             residual_yp_view.getData() + residual_yp_view.getSize());
+        auto& bus_residual_yp_view = bus.getResidual();
+        residual_yp.insert(
+            residual_yp.end(),
+            bus_residual_yp_view.getData(),
+            bus_residual_yp_view.getData() + bus_residual_yp_view.getSize());
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

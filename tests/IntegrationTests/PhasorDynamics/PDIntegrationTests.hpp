@@ -786,15 +786,15 @@ namespace GridKit
         bus.Vr0      = ONE<RealT>;
         bus.Vi0      = ZERO<RealT>;
 
-        data.signal = {{"Active Current Command", signalId(LoopSignal::IPCMD)},
-                       {"Reactive Current Command", signalId(LoopSignal::IQCMD)},
-                       {"Branch Current Real", signalId(LoopSignal::IBRANCHR)},
-                       {"Branch Current Imaginary", signalId(LoopSignal::IBRANCHI)},
-                       {"Branch Active Power", signalId(LoopSignal::PBRANCH)},
-                       {"Branch Reactive Power", signalId(LoopSignal::QBRANCH)},
-                       {"Reactive Power Command", signalId(LoopSignal::QEXT)},
-                       {"Active Power Command", signalId(LoopSignal::PEXT)},
-                       {"Plant Active Power Reference", signalId(LoopSignal::PLANT_PREF)}};
+        data.signal = {{"Active Current Command", signalId(LoopSignal::IPCMD), {}},
+                       {"Reactive Current Command", signalId(LoopSignal::IQCMD), {}},
+                       {"Branch Current Real", signalId(LoopSignal::IBRANCHR), {}},
+                       {"Branch Current Imaginary", signalId(LoopSignal::IBRANCHI), {}},
+                       {"Branch Active Power", signalId(LoopSignal::PBRANCH), {}},
+                       {"Branch Reactive Power", signalId(LoopSignal::QBRANCH), {}},
+                       {"Reactive Power Command", signalId(LoopSignal::QEXT), {}},
+                       {"Active Power Command", signalId(LoopSignal::PEXT), {}},
+                       {"Plant Active Power Reference", signalId(LoopSignal::PLANT_PREF), {}}};
 
         auto& converter                                        = data.regca.emplace_back();
         converter.buses[RegcaBuses::bus]                       = RENEWABLE_BUS_ID;
