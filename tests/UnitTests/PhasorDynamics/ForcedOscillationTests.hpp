@@ -60,7 +60,7 @@ namespace GridKit
         success *= (configured.source.evaluateJacobian() == 0);
         success *= (configured.source.nnz() == static_cast<IdxT>(0));
 
-        const std::array<Params, 9> real_parameters{{
+        const std::array<Params, 10> numeric_parameters{{
             Params::A,
             Params::f,
             Params::Kf,
@@ -70,8 +70,9 @@ namespace GridKit
             Params::Tr,
             Params::Tf,
             Params::Kd,
+            Params::waveform,
         }};
-        for (const Params parameter : real_parameters)
+        for (const Params parameter : numeric_parameters)
         {
           success *= rejects(parameter, std::numeric_limits<RealT>::quiet_NaN());
           success *= rejects(parameter, std::numeric_limits<RealT>::infinity());
@@ -107,6 +108,87 @@ namespace GridKit
         auto boolean_amplitude                   = makeData();
         boolean_amplitude.parameters[Params::A]  = true;
         success                                 *= (verifyData(boolean_amplitude) > 0);
+
+        auto valid_waveform                          = makeData();
+        valid_waveform.parameters[Params::waveform]  = static_cast<RealT>(3.0);
+        success                                     *= (verifyData(valid_waveform) == 0);
+
+        auto integer_waveform                          = makeData();
+        integer_waveform.parameters[Params::waveform]  = static_cast<IdxT>(1);
+        success                                       *= (verifyData(integer_waveform) == 0);
+
+        const std::array<RealT, 3> invalid_waveforms{{
+            static_cast<RealT>(-1.0),
+            static_cast<RealT>(0.5),
+            static_cast<RealT>(4.0),
+        }};
+        for (const RealT selector : invalid_waveforms)
+        {
+          auto invalid                          = makeData();
+          invalid.parameters[Params::waveform]  = selector;
+          success                              *= (verifyData(invalid) > 0);
+        }
+
+        auto boolean_waveform                          = makeData();
+        boolean_waveform.parameters[Params::waveform]  = true;
+        success                                       *= (verifyData(boolean_waveform) > 0);
+
+        return success.report(__func__);
+      }
+
+      /// Smooth carriers follow the documented phase convention and unit normalization.
+      TestOutcome carrierWaveforms()
+      {
+        TestStatus success = true;
+
+        const RealT square_sharpness   = static_cast<RealT>(3.0);
+        const RealT triangle_smoothing = static_cast<RealT>(0.98);
+        const RealT sawtooth_smoothing = static_cast<RealT>(0.9);
+        const RealT sqrt_half          = std::sqrt(static_cast<RealT>(0.5));
+        const RealT sawtooth_peak =
+            std::acos(-sawtooth_smoothing)
+            / (static_cast<RealT>(2.0) * pi());
+
+        const std::array<CarrierCase, 11> cases{{
+            {Waveform::SINE, 0.25, 1.0},
+            {Waveform::SQUARE, 0.0, 0.0},
+            {Waveform::SQUARE,
+             0.125,
+             std::tanh(square_sharpness * sqrt_half)
+                 / std::tanh(square_sharpness)},
+            {Waveform::SQUARE, 0.75, -1.0},
+            {Waveform::TRIANGLE,
+             0.125,
+             std::asin(triangle_smoothing * sqrt_half)
+                 / std::asin(triangle_smoothing)},
+            {Waveform::TRIANGLE, 0.25, 1.0},
+            {Waveform::TRIANGLE, 0.75, -1.0},
+            {Waveform::SAWTOOTH, 0.0, 0.0},
+            {Waveform::SAWTOOTH,
+             0.25,
+             std::atan(sawtooth_smoothing) / std::asin(sawtooth_smoothing)},
+            {Waveform::SAWTOOTH, sawtooth_peak, 1.0},
+            {Waveform::SAWTOOTH,
+             static_cast<RealT>(1.0) - sawtooth_peak,
+             -1.0},
+        }};
+
+        for (const auto& test_case : cases)
+        {
+          auto data                         = makeData();
+          data.parameters[Params::A]        = static_cast<RealT>(1.0);
+          data.parameters[Params::f]        = static_cast<RealT>(1.0);
+          data.parameters[Params::waveform] = static_cast<RealT>(test_case.waveform);
+
+          Fixture fixture(data);
+          success *= fixture.initialize();
+          fixture.source.updateTime(
+              static_cast<RealT>(test_case.time), static_cast<RealT>(0.0));
+          success *= isEqual(
+              fixture.output.read(),
+              static_cast<ScalarT>(test_case.expected),
+              kTol);
+        }
 
         return success.report(__func__);
       }
@@ -255,6 +337,7 @@ namespace GridKit
 
     private:
       using Params   = PhasorDynamics::ForcedOscillationParameters;
+      using Waveform = PhasorDynamics::ForcedOscillationWaveform;
       using Internal = PhasorDynamics::ForcedOscillationInternalVariables;
       using Monitor  = PhasorDynamics::ForcedOscillationMonitorableVariables;
       using SignalT  = PhasorDynamics::SignalNode<ScalarT, IdxT>;
@@ -284,6 +367,13 @@ namespace GridKit
         RealT output;
         RealT envelope;
         RealT active;
+      };
+
+      struct CarrierCase
+      {
+        Waveform waveform;
+        RealT    time;
+        RealT    expected;
       };
 
       static RealT pi()

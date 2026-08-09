@@ -280,6 +280,41 @@ namespace GridKit
       loadRealParameter(data, Parameters::Tr, Tr_, "Tr");
       loadRealParameter(data, Parameters::Tf, Tf_, "Tf");
       loadRealParameter(data, Parameters::Kd, Kd_, "Kd");
+
+      if (data.parameters.contains(Parameters::waveform))
+      {
+        const auto& value = data.parameters.at(Parameters::waveform);
+        RealT       selector{};
+        if (const auto* real_value = std::get_if<RealT>(&value))
+        {
+          selector = *real_value;
+        }
+        else if (const auto* index_value = std::get_if<IdxT>(&value))
+        {
+          selector = static_cast<RealT>(*index_value);
+        }
+        else
+        {
+          Log::error() << "ForcedOscillation: parameter 'waveform' must be numeric\n";
+          ++parameter_error_count_;
+          return;
+        }
+
+        const RealT minimum = static_cast<RealT>(ForcedOscillationWaveform::SINE);
+        const RealT maximum = static_cast<RealT>(ForcedOscillationWaveform::SAWTOOTH);
+        if (!std::isfinite(selector)
+            || selector < minimum
+            || selector > maximum
+            || std::floor(selector) != selector)
+        {
+          Log::error()
+              << "ForcedOscillation: parameter 'waveform' must be an integer from 0 to 3\n";
+          ++parameter_error_count_;
+          return;
+        }
+
+        waveform_ = static_cast<ForcedOscillationWaveform>(static_cast<int>(selector));
+      }
     }
 
     /**
@@ -296,6 +331,47 @@ namespace GridKit
                     { return envelope_; });
       monitor_->set(Variable::active, [this]
                     { return active_; });
+    }
+
+    /**
+     * @brief Evaluate the unit-amplitude carrier at a continuous phase.
+     *
+     * All carriers cross zero with positive slope at phase zero. The
+     * non-sinusoidal carriers use fixed analytic smoothing and are normalized
+     * to attain unit positive and negative peaks.
+     *
+     * @param[in] phase Continuous carrier phase [rad].
+     * @return Unit-amplitude carrier value.
+     */
+    template <typename scalar_type, typename index_type>
+    auto ForcedOscillation<scalar_type, index_type>::evaluateCarrier(RealT phase) const
+        -> RealT
+    {
+      static constexpr RealT SQUARE_SHARPNESS   = static_cast<RealT>(3.0);
+      static constexpr RealT TRIANGLE_SMOOTHING = static_cast<RealT>(0.98);
+      static constexpr RealT SAWTOOTH_SMOOTHING = static_cast<RealT>(0.9);
+
+      const RealT sine = std::sin(phase);
+
+      switch (waveform_)
+      {
+      case ForcedOscillationWaveform::SINE:
+        return sine;
+      case ForcedOscillationWaveform::SQUARE:
+        return std::tanh(SQUARE_SHARPNESS * sine)
+               / std::tanh(SQUARE_SHARPNESS);
+      case ForcedOscillationWaveform::TRIANGLE:
+        return std::asin(TRIANGLE_SMOOTHING * sine)
+               / std::asin(TRIANGLE_SMOOTHING);
+      case ForcedOscillationWaveform::SAWTOOTH:
+        return std::atan2(
+                   SAWTOOTH_SMOOTHING * sine,
+                   static_cast<RealT>(1.0)
+                       + SAWTOOTH_SMOOTHING * std::cos(phase))
+               / std::asin(SAWTOOTH_SMOOTHING);
+      }
+
+      return static_cast<RealT>(0.0);
     }
 
     /**
@@ -341,7 +417,7 @@ namespace GridKit
 
       envelope_ = envelope;
       active_   = active ? static_cast<RealT>(1.0) : static_cast<RealT>(0.0);
-      output_   = A_ * envelope * decay * std::sin(phase);
+      output_   = A_ * envelope * decay * evaluateCarrier(phase);
     }
   } // namespace PhasorDynamics
 } // namespace GridKit

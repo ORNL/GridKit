@@ -81,10 +81,12 @@ output and amplitude $A$.
 | $T_r$ | s | `Tr` | Raised-cosine rise time | 0.0 |
 | $T_f$ | s | `Tf` | Raised-cosine fall time | 0.0 |
 | $K_d$ | 1/s | `Kd` | Exponential decay rate | 0.0 |
+| $W$ | integer | `waveform` | Carrier selector: 0 sine, 1 square, 2 triangle, or 3 sawtooth | 0 |
 
 All supplied values must be finite. $A$, $f$, $K_f$, $T_r$, $T_f$, and $K_d$
 must be non-negative. A non-negative $T_{\mathrm{off}}$ must satisfy
-$T_{\mathrm{off}} \ge T_{\mathrm{on}}$.
+$T_{\mathrm{off}} \ge T_{\mathrm{on}}$. The waveform selector must be an
+exact integer from 0 through 3.
 
 ### Monitorable Outputs
 

@@ -15,9 +15,10 @@ The `sr` and `si` output ports publish $S_r$ and $S_i$, respectively.
 
 ## Forced-oscillation signal source (`ForcedOscillation`)
 
-`ForcedOscillation` publishes a stateless, time-dependent sinusoid with an
-optional linear frequency ramp, raised-cosine activation window, and
-exponential decay.
+`ForcedOscillation` publishes a stateless, time-dependent periodic waveform
+with an optional linear frequency ramp, raised-cosine activation window, and
+exponential decay. A sine and smooth square, triangle, and sawtooth
+approximations share the same phase and envelope model.
 
 ### Notes
 
@@ -46,8 +47,10 @@ time ──> [ ForcedOscillation ] ──> output
 | $T_r$ | s | `Tr` | Raised-cosine rise time | 0.0 | Optional |
 | $T_f$ | s | `Tf` | Raised-cosine fall time | 0.0 | Optional; used only for nonnegative $T_{\mathrm{off}}$ |
 | $K_d$ | 1/s | `Kd` | Exponential decay rate | 0.0 | Optional |
+| $W$ | integer | `waveform` | Carrier-waveform selector | 0 | Optional; 0 = sine, 1 = square, 2 = triangle, 3 = sawtooth |
 
-Integer and real serialized values are accepted for every parameter.
+Integer and real serialized values are accepted for every parameter. The
+`waveform` value must represent an exact integer.
 
 #### Parameter Validation
 
@@ -58,6 +61,7 @@ are enforced:
 \begin{aligned}
   A &\ge 0, & f &\ge 0, & K_f &\ge 0, \\
   T_r &\ge 0, & T_f &\ge 0, & K_d &\ge 0, \\
+  W &\in \{0,1,2,3\}, \\
   T_{\mathrm{off}} &< 0
     \quad\text{or}\quad T_{\mathrm{off}} \ge T_{\mathrm{on}}.
 \end{aligned}
@@ -138,12 +142,39 @@ e(t) &= a(t)r(t)d(t).
 \end{aligned}
 ```
 
-The phase and published waveform are
+The non-sinusoidal carriers use fixed smoothing constants
+
+```math
+\kappa=3, \qquad \rho_{\triangle}=0.98, \qquad \rho_{\mathrm{saw}}=0.9.
+```
+
+The carrier selected by $W$ is
+
+```math
+q_W(\theta)=
+\begin{cases}
+\sin(\theta), & W=0, \\
+\dfrac{\tanh(\kappa\sin(\theta))}{\tanh(\kappa)}, & W=1, \\
+\dfrac{\arcsin(\rho_{\triangle}\sin(\theta))}
+      {\arcsin(\rho_{\triangle})}, & W=2, \\
+\dfrac{\operatorname{atan2}(\rho_{\mathrm{saw}}\sin(\theta),
+                             1+\rho_{\mathrm{saw}}\cos(\theta))}
+      {\arcsin(\rho_{\mathrm{saw}})}, & W=3.
+\end{cases}
+```
+
+Because $0<\rho_{\triangle},\rho_{\mathrm{saw}}<1$, all four carriers are
+smooth and periodic. Each crosses zero with positive slope at phase zero and
+is normalized so that $|q_W|\le1$ with both unit extrema attained. Thus $A$ is
+the peak carrier amplitude before the envelope and decay are applied. The
+square and triangle extrema occur at $\theta=\pi/2$ and $3\pi/2$; the sawtooth
+extrema occur where $\cos(\theta)=-\rho_{\mathrm{saw}}$. The phase and
+published waveform are
 
 ```math
 \begin{aligned}
 \theta(t) &= \Phi + 2\pi\left(f\tau(t)+\frac{1}{2}K_f\tau(t)^2\right), \\
-s_{\mathrm{FO}}(t) &= A e(t)\exp\!\left(-K_d\tau(t)\right)\sin\!\left(\theta(t)\right).
+  s_{\mathrm{FO}}(t) &= A e(t)\exp\!\left(-K_d\tau(t)\right)q_W\!\left(\theta(t)\right).
 \end{aligned}
 ```
 
@@ -192,4 +223,10 @@ $s_{\mathrm{FO}}(t)$.
 
 ### Testing
 
-None.
+- `validation()` checks parameter types and domains, including waveform-selector
+  values.
+- `waveform()` checks stationary and chirped, decaying output.
+- `carrierWaveforms()` checks the phase convention and amplitude of all four
+  carriers.
+- `activationWindowAndMonitors()` checks the rise/fall envelope and monitor values.
+- `dependencyTracking()` checks the exogenous output and empty DAE structure.

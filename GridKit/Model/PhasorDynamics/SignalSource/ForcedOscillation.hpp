@@ -32,7 +32,7 @@ namespace GridKit
     };
 
     /**
-     * @brief Stateless source for a windowed, chirped, and exponentially decaying sinusoid.
+     * @brief Stateless source for a windowed, chirped, and decaying periodic waveform.
      *
      * The source publishes a value owned outside the system DAE. Its signal-node
      * index is always `INVALID_INDEX`, and `updateTime()` refreshes the published
@@ -81,23 +81,25 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
-      void loadRealParameter(const ModelDataT&           data,
-                             ForcedOscillationParameters parameter,
-                             RealT&                      target,
-                             const char*                 name);
-      void initializeParameters(const ModelDataT& data);
-      void initializeMonitor();
-      void refreshOutput(RealT time);
+      void  loadRealParameter(const ModelDataT&           data,
+                              ForcedOscillationParameters parameter,
+                              RealT&                      target,
+                              const char*                 name);
+      void  initializeParameters(const ModelDataT& data);
+      void  initializeMonitor();
+      RealT evaluateCarrier(RealT phase) const;
+      void  refreshOutput(RealT time);
 
-      RealT A_{static_cast<RealT>(0.0)};
-      RealT f_{static_cast<RealT>(0.0)};
-      RealT Kf_{static_cast<RealT>(0.0)};
-      RealT Phi_{static_cast<RealT>(0.0)};
-      RealT Ton_{static_cast<RealT>(0.0)};
-      RealT Toff_{static_cast<RealT>(-1.0)};
-      RealT Tr_{static_cast<RealT>(0.0)};
-      RealT Tf_{static_cast<RealT>(0.0)};
-      RealT Kd_{static_cast<RealT>(0.0)};
+      RealT                     A_{static_cast<RealT>(0.0)};
+      RealT                     f_{static_cast<RealT>(0.0)};
+      RealT                     Kf_{static_cast<RealT>(0.0)};
+      RealT                     Phi_{static_cast<RealT>(0.0)};
+      RealT                     Ton_{static_cast<RealT>(0.0)};
+      RealT                     Toff_{static_cast<RealT>(-1.0)};
+      RealT                     Tr_{static_cast<RealT>(0.0)};
+      RealT                     Tf_{static_cast<RealT>(0.0)};
+      RealT                     Kd_{static_cast<RealT>(0.0)};
+      ForcedOscillationWaveform waveform_{ForcedOscillationWaveform::SINE};
 
       IdxT parameter_error_count_{0};
 

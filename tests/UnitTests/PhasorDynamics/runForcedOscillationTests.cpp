@@ -20,6 +20,7 @@ int main()
   result += test.validation();
   result += test.initialization();
   result += test.waveform();
+  result += test.carrierWaveforms();
   result += test.activationWindowAndMonitors();
   result += test.dependencyTracking();
 

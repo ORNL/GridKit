@@ -14,18 +14,28 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Carrier-waveform selector values for `ForcedOscillation`.
+    enum class ForcedOscillationWaveform : int
+    {
+      SINE     = 0, ///< Sinusoid
+      SQUARE   = 1, ///< Smooth symmetric square-wave approximation
+      TRIANGLE = 2, ///< Smooth symmetric triangle-wave approximation
+      SAWTOOTH = 3  ///< Smooth rising-sawtooth approximation
+    };
+
     /// Parameter keys for `ForcedOscillation`; all are optional with documented defaults.
     enum class ForcedOscillationParameters
     {
-      A,    ///< \f$A\f$ Oscillation amplitude in output-signal units
-      f,    ///< \f$f\f$ Initial oscillation frequency [Hz]
-      Kf,   ///< \f$K_f\f$ Linear frequency ramp [Hz/s]
-      Phi,  ///< \f$\Phi\f$ Phase offset [rad]
-      Ton,  ///< \f$T_{\mathrm{on}}\f$ Activation time [s]
-      Toff, ///< \f$T_{\mathrm{off}}\f$ Deactivation time [s]
-      Tr,   ///< \f$T_r\f$ Raised-cosine rise time [s]
-      Tf,   ///< \f$T_f\f$ Raised-cosine fall time [s]
-      Kd    ///< \f$K_d\f$ Exponential decay rate [1/s]
+      A,       ///< \f$A\f$ Oscillation amplitude in output-signal units
+      f,       ///< \f$f\f$ Initial oscillation frequency [Hz]
+      Kf,      ///< \f$K_f\f$ Linear frequency ramp [Hz/s]
+      Phi,     ///< \f$\Phi\f$ Phase offset [rad]
+      Ton,     ///< \f$T_{\mathrm{on}}\f$ Activation time [s]
+      Toff,    ///< \f$T_{\mathrm{off}}\f$ Deactivation time [s]
+      Tr,      ///< \f$T_r\f$ Raised-cosine rise time [s]
+      Tf,      ///< \f$T_f\f$ Raised-cosine fall time [s]
+      Kd,      ///< \f$K_d\f$ Exponential decay rate [1/s]
+      waveform ///< Carrier selector: 0 sine, 1 square, 2 triangle, 3 sawtooth
     };
 
     /// Bus ports for `ForcedOscillation`.
