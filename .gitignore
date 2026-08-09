@@ -7,7 +7,7 @@ build/
 *.swp
 doxygen-docs/
 docs/_build/
-docs/api/reference/
+docs/reference/api/generated/
 docs/xml/
 __pycache__
 .direnv/
