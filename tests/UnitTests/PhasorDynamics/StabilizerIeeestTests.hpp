@@ -424,12 +424,21 @@ namespace GridKit
           const auto rows  = std::min(dependency_jacobian.size(), enzyme_jacobian.size());
           for (size_t row = 0; row < rows; ++row)
           {
-            if (!isEqual(dependency_jacobian[row], enzyme_jacobian[row], kTol))
+            const auto& dependency_map = dependency_jacobian[row].getDependencies();
+            if (!isEqual(dependency_map, enzyme_jacobian[row], kTol))
             {
               std::cout << "IEEEST Jacobian row " << row << " for order " << order
-                        << " differs between dependency tracking and Enzyme\n";
-              printDependencyMap(dependency_jacobian[row], "dependency tracking");
-              printDependencyMap(enzyme_jacobian[row], "Enzyme");
+                        << " differs between dependency tracking and Enzyme\n"
+                        << "  dependency tracking: "
+                        << std::setprecision(std::numeric_limits<RealT>::max_digits10);
+              dependency_jacobian[row].print(std::cout);
+
+              std::cout << "\n  Enzyme:";
+              for (const auto& [column, value] : enzyme_jacobian[row])
+              {
+                std::cout << " (" << column << ", " << value << ')';
+              }
+              std::cout << '\n';
               success = false;
             }
           }
@@ -437,7 +446,8 @@ namespace GridKit
           for (size_t row = order; row < 4; ++row)
           {
             const DependencyMap expected{{row, static_cast<RealT>(-1.0)}};
-            if (!isEqual(dependency_jacobian[row], expected, kTol)
+            const auto&         dependency_map = dependency_jacobian[row].getDependencies();
+            if (!isEqual(dependency_map, expected, kTol)
                 || !isEqual(enzyme_jacobian[row], expected, kTol))
             {
               std::cout << "IEEEST inactive notch row " << row << " for order "
@@ -844,20 +854,9 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      void printDependencyMap(const DependencyMap& row, const char* label) const
-      {
-        std::cout << "  " << label << ':';
-        for (const auto& [column, value] : row)
-        {
-          std::cout << " (" << column << ", "
-                    << std::setprecision(std::numeric_limits<RealT>::max_digits10)
-                    << value << ')';
-        }
-        std::cout << '\n';
-      }
-
-      std::vector<DependencyMap> dependencyTrackingJacobian(const Data& data,
-                                                            TestStatus& success) const
+      std::vector<DependencyTracking::Variable> dependencyTrackingJacobian(
+          const Data& data,
+          TestStatus& success) const
       {
         using DepVar = DependencyTracking::Variable;
 
@@ -876,12 +875,8 @@ namespace GridKit
         fixture.model.y().setDataUpdated();
         success *= (fixture.evaluate() == 0);
 
-        std::vector<DependencyMap> rows(static_cast<size_t>(fixture.model.size()));
-        const auto*                f = fixture.model.getResidual().getData();
-        for (size_t row = 0; row < rows.size(); ++row)
-        {
-          rows[row] = f[row].getDependencies();
-        }
+        const auto*         f = fixture.model.getResidual().getData();
+        std::vector<DepVar> rows(f, f + static_cast<size_t>(fixture.model.size()));
 
         // Dependency tracking cannot safely alias y and yp to the same
         // variable number in one pass. Evaluate df/dyp separately and add it
@@ -898,10 +893,10 @@ namespace GridKit
         f = fixture.model.getResidual().getData();
         for (size_t row = 0; row < rows.size(); ++row)
         {
-          for (const auto& [column, value] : f[row].getDependencies())
-          {
-            rows[row][column] += value;
-          }
+          // Add df/dyp dependencies without adding a second residual value.
+          DepVar yp_row = f[row];
+          yp_row.setValue(0.0);
+          rows[row] += yp_row;
         }
         return rows;
       }
