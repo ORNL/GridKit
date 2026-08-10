@@ -33,6 +33,9 @@ Each event group describes a system event that occurs at a given time point
 
 ## Forced Oscillations
 
+For copy-ready study files and common waveform recipes, see the
+[forced-oscillation study guide](FO.md).
+
 Each `forced_oscillations` entry adds a `ForcedOscillation` signal source and
 an algebraic signal-node junction before `SystemModel` is constructed. The
 source waveform $s_{\mathrm{FO}}$ is added to the target's existing input $u$,
