@@ -108,20 +108,20 @@ We implement an approximation to $\text{ReQU}$ using the logistic function.
 
 ## Derived Functions
 
-| Name | API | Description | Usage |
-|------|-----|-------------|-------|
-| Maximum | `max` | Smooth binary maximum | `REGCA`, `REECA`, `REECB` |
-| Minimum | `min` | Smooth binary minimum | `REGCA`, `REECA` |
-| Clamp | `clamp` | Bounded saturation | `IEEEST`, `REGCA`, `REECA`, `REECB`, `REPCA` |
-| Type 1 Deadband | `deadband1` | No-offset signed two-sided deadband | - |
-| Type 2 Deadband | `deadband2` | Offset signed two-sided deadband | `REECA`, `REECB`, `REPCA` |
-| Slew | `slew` | Symmetric slew-rate limiter | - |
-| Linear Segment | `linseg` | Saturated linear segment contribution | `REGCA`, `REECA` |
-| Above | `above` | Above-lower-limit indicator | `REPCA` |
-| Below | `below` | Below-upper-limit indicator | - |
-| Inside | `inside` | Interior pulse indicator | `REECB` |
-| Outside | `outside` | Outside-band indicator | `REECA` |
-| Antiwindup | `antiwindup` | Anti-windup limited derivative | `IEEET1`, `SEXS-PTI`, `TGOV1`, `REECA`, `REECB`, `REPCA` |
+| Name | API | Description |
+|------|-----|-------------|
+| Maximum | `max` | Smooth binary maximum |
+| Minimum | `min` | Smooth binary minimum |
+| Clamp | `clamp` | Bounded saturation |
+| Type I Deadband | `deadband1` | No-offset signed two-sided deadband |
+| Type II Deadband | `deadband2` | Offset signed two-sided deadband |
+| Slew | `slew` | Symmetric slew-rate limiter |
+| Linear Segment | `linseg` | Saturated linear segment contribution |
+| Above | `above` | Above-lower-limit indicator |
+| Below | `below` | Below-upper-limit indicator |
+| Inside | `inside` | Interior pulse indicator |
+| Outside | `outside` | Outside-band indicator |
+| Antiwindup | `antiwindup` | Anti-windup limited derivative |
 
 ### Maximum
 
@@ -174,7 +174,7 @@ The limits satisfy $\ell\le u$.
 
 ![](../docs/Figures/CommonMath/clamp.svg)
 
-### Type 1 Deadband
+### Type I Deadband
 
 The limits satisfy $\ell\le u$.
 
@@ -193,7 +193,7 @@ The limits satisfy $\ell\le u$.
 
 ![](../docs/Figures/CommonMath/deadband1.svg)
 
-### Type 2 Deadband
+### Type II Deadband
 
 The limits satisfy $\ell\le u$.
 

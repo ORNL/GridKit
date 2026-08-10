@@ -5,12 +5,11 @@
 \begin{tikzpicture}
 \begin{groupplot}[
     cmbase,
-    group style={group size=2 by 1, horizontal sep=1cm},
     x=0.95cm, y=0.95cm,
     xmin=-2.2, xmax=2.4, ymin=-2.5, ymax=2.6,
     xtick={-1,1},  xticklabels={,$u$},
     ytick={-1,1},        yticklabels={$\ell$,$u$},
-    domain=-2.05:2.4, samples=301,
+    domain=-2.05:2.4,
 ]
 \exactpanel
   \addplot[domain=-2.05:-1] {x};
@@ -20,14 +19,7 @@
   \cmopenpoints{(-1,-1) (1,1)}
   \node[font=\scriptsize, anchor=south, yshift=1.5pt] at (axis cs:-1,0) {$\ell$};
 
-\smoothpanel
-  \addplot[mu1] {x*(sigmaS(-1-x,2)  + sigmaS(x-1,2))};
-  \addplot[mu2] {x*(sigmaS(-1-x,3)  + sigmaS(x-1,3))};
-  \addplot[mu3] {x*(sigmaS(-1-x,5)  + sigmaS(x-1,5))};
-  \addplot[mu4] {x*(sigmaS(-1-x,8)  + sigmaS(x-1,8))};
-  \addplot[mu5] {x*(sigmaS(-1-x,12) + sigmaS(x-1,12))};
-  \addplot[mu6] {x*(sigmaS(-1-x,18) + sigmaS(x-1,18))};
-  \addplot[mu7] {x*(sigmaS(-1-x,30) + sigmaS(x-1,30))};
+\smoothpanel{x*(sigmaS(-1-x,\cmu) + sigmaS(x-1,\cmu))}
   \node[font=\scriptsize, anchor=south, yshift=1.5pt] at (axis cs:-1,0) {$\ell$};
 \end{groupplot}
 \end{tikzpicture}

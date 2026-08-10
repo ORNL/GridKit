@@ -3,28 +3,25 @@
 
 \RequirePackage{pgfplots}
 \pgfplotsset{compat=1.18}
-\usepgfplotslibrary{groupplots}
+\usepgfplotslibrary{groupplots,colorbrewer}
 
-\definecolor{mu1}{HTML}{C6DBEF}
-\definecolor{mu2}{HTML}{9ECAE1}
-\definecolor{mu3}{HTML}{6BAED6}
-\definecolor{mu4}{HTML}{4292C6}
-\definecolor{mu5}{HTML}{2171B5}
-\definecolor{mu6}{HTML}{08519C}
-\definecolor{mu7}{HTML}{08306B}
-
-\tikzset{
-  declare function={
-    sigmaS(\x,\m) = ifthenelse(\x>=0, 1/(1+exp(-\m*\x)), exp(\m*\x)/(1+exp(\m*\x)));
-    rhoS(\x,\m)   = (\x+abs(\x))/2 + ln(1+exp(-\m*abs(\x)))/\m;
-    qS(\x,\m)     = \x*\x*sigmaS(\x,\m);
-  },
-}
+\tikzset{declare function={
+  sigmaS(\x,\m) = ifthenelse(\x>=0,
+    1/(1+exp(-\m*\x)), exp(\m*\x)/(1+exp(\m*\x)));
+  rhoS(\x,\m) = (\x+abs(\x))/2 + ln(1+exp(-\m*abs(\x)))/\m;
+  qS(\x,\m) = \x*\x*sigmaS(\x,\m);
+}}
 
 \pgfplotsset{
+  group style={group size=2 by 1, horizontal sep=1cm},
+  colormap={cmblues}{
+    color=(Blues-D); color=(Blues-F); color=(Blues-G);
+    color=(Blues-H); color=(Blues-J); color=(Blues-K);
+    color=(Blues-M)
+  },
   cmbase/.style={
     axis lines=middle,
-    axis on top=true,
+    axis on top=false,
     axis line style={black!75, line width=0.5pt, -},
     tick style={black!75, line width=0.4pt},
     xticklabel style={font=\scriptsize, yshift=-1pt},
@@ -33,24 +30,57 @@
     xlabel style={font=\small, at={(ticklabel* cs:1)}, anchor=west, xshift=4pt},
     ylabel style={font=\small, at={(rel axis cs:0.5,1.02)}, anchor=south},
     title style={font=\small},
-    every axis plot/.append style={line width=1.0pt},
+    every axis plot/.append style={line width=1pt},
     no markers,
     samples=301,
     clip=true,
   },
-  cmclosed/.style={
-    only marks, mark=*, mark size=1.6pt, black,
-    mark options={solid, fill=black},
+  cmsmooth/.style={
+    colormap name=cmblues,
+    cycle list name=cmsweep,
+    point meta min=0,
+    point meta max=2,
+    colorbar sampled={surf, mark=none, shader=flat, samples=512},
+    colorbar/width=0.13cm,
+    colorbar style={
+      % Clear the parent plot's x/y units so the bar keeps its own scale.
+      x=,
+      y=,
+      scale only axis,
+      axis lines=box,
+      axis line style={black!75, line width=0.3pt, -},
+      tick style={black!75, line width=0.3pt},
+      ytick pos=right,
+      ytick={0,1,2},
+      yticklabels={$10^0$,$10^1$,$10^2$},
+      yticklabel style={font=\scriptsize},
+      title={$\mu$},
+      title style={font=\small},
+    },
+    every axis plot/.append style={line width=0.8pt},
+    samples=501,
   },
-  cmopen/.style={
-    only marks, mark=o, mark size=1.6pt, black,
-    mark options={solid, fill=white},
-  },
+  cmclosed/.style={only marks, mark=*, mark size=1.6pt, black,
+    mark options={solid, fill=black}},
+  cmopen/.style={only marks, mark=o, mark size=1.6pt, black,
+    mark options={solid, fill=white}},
 }
 
+% Forty logarithmic intervals produce 41 traces from \mu=1 to \mu=100.
+\newcommand{\cmMuIntervals}{40}
+\pgfmathtruncatemacro{\cmMuCount}{\cmMuIntervals+1}
+\pgfplotscreateplotcyclelist{cmsweep}{%
+  [samples of colormap={\cmMuCount\space of cmblues}]}
 
-\newcommand{\exactpanel}[1][Discrete]{\nextgroupplot[title={#1}, cycle list={{black}}]}
-\newcommand{\smoothpanel}[1][Smooth]{\nextgroupplot[title={#1}]}
+\newcommand{\exactpanel}[1][Discrete]{%
+  \nextgroupplot[title={#1}, cycle list={{black}}]}
+\newcommand{\smoothpanel}[2][Smooth]{%
+  \nextgroupplot[title={#1}, cmsmooth]%
+  \pgfplotsinvokeforeach{0,...,\cmMuIntervals}{%
+    \pgfmathsetmacro{\cmu}{pow(100,##1/\cmMuIntervals)}%
+    \addplot {#2};%
+  }%
+}
 \newcommand{\cmclosedpoints}[1]{\addplot[cmclosed] coordinates {#1};}
 \newcommand{\cmopenpoints}[1]{\addplot[cmopen] coordinates {#1};}
 
