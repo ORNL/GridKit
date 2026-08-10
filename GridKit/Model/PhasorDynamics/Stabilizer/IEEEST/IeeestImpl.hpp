@@ -118,11 +118,15 @@ namespace GridKit
                   && std::isfinite(a3_) && std::isfinite(a4_),
               "expanded denominator coefficients must be finite");
 
-        const IdxT numerator_order = A6_ != ZERO<RealT>
-                                         ? static_cast<IdxT>(2)
-                                     : A5_ != ZERO<RealT>
-                                         ? static_cast<IdxT>(1)
-                                         : static_cast<IdxT>(0);
+        IdxT numerator_order = static_cast<IdxT>(0);
+        if (A6_ != ZERO<RealT>)
+        {
+          numerator_order = static_cast<IdxT>(2);
+        }
+        else if (A5_ != ZERO<RealT>)
+        {
+          numerator_order = static_cast<IdxT>(1);
+        }
         check(numerator_order <= order_,
               "numerator order must not exceed denominator order");
         check(Lsmin_ < Lsmax_, "Lsmin must be less than Lsmax");
