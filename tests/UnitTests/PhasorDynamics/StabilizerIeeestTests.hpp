@@ -308,6 +308,10 @@ namespace GridKit
                                    kClampTol);
         }
 
+        noteExpectedLogs(
+            "Testing IEEEST rejected initialization paths. "
+            "The logged errors below are expected.");
+
         // A nonfinite input rejects initialization without changing state.
         for (const RealT input : {std::numeric_limits<RealT>::quiet_NaN(),
                                   std::numeric_limits<RealT>::infinity(),
