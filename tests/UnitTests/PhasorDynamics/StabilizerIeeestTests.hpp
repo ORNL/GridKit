@@ -725,7 +725,11 @@ namespace GridKit
         const auto* f       = fixture.model.getResidual().getData();
         for (size_t row = 0; row < expected.size(); ++row)
         {
-          const RealT tolerance = row == static_cast<size_t>(Internal::VSS) ? kClampTol : kTol;
+          RealT tolerance = kTol;
+          if (row == static_cast<size_t>(Internal::VSS))
+          {
+            tolerance = kClampTol;
+          }
           if (!rowMatches(static_cast<RealT>(f[row]), expected[row], "residual", row, label, tolerance))
           {
             success = false;
