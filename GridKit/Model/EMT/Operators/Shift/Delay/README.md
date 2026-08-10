@@ -41,6 +41,15 @@ M &\in \mathbb{Z}_{>0} \\
 \tau_{\max} = \max(\boldsymbol{\tau})
 ```
 
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^M$
+$\mathbf{y}$ | `out` | Output | $[u]$ | Delayed output port | $\mathbf{y} \in \mathbb{R}^M$
+
+The output provides both value and time derivative.
+
 ## Submodels
 
 None.
@@ -75,37 +84,27 @@ Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^M$
 
-## Model Ports
-
-Symbol | Port | Type | Units | Description | Note
------- | ---- | ---- | ----- | ----------- | ----
-$\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^M$
-$\mathbf{y}$ | `out` | Output | $[u]$ | Delayed output port | $\mathbf{y} \in \mathbb{R}^M$
-
-The output provides both value and time derivative.
-
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 None.
 
-### Algebraic Equations
+#### Algebraic
 
 None.
 
-### Wiring
+### External Equations
+
+Each channel satisfies $y_m(t)=u_m(t-\tau_m)$.
 
 ```math
-\mathbf{y}
-  \leftarrow \mathbf{u}(t-\boldsymbol{\tau}),
-\qquad
-\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}
-  \leftarrow \dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}(t-\boldsymbol{\tau})
+\mathbf{y} \leftarrow \mathbf{u}(t-\boldsymbol{\tau})
 ```
 
-Each channel satisfies $y_m(t)=u_m(t-\tau_m)$. Arguments at or before zero use
-the prehistory defined under Initialization.
+
 
 ## History Realization
 

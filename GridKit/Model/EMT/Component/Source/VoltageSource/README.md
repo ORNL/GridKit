@@ -37,6 +37,13 @@ Define the phase-index set
 \mathcal{N} = \{1,\ldots,N\}.
 ```
 
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{v}$ | `v` | Input | [V] | Bus voltage at source port | $\mathbf{v} \in \mathbb{R}^N$
+$\mathbf{i}$ | `i` | Output | [A] | Current injection at source port | $\mathbf{i} \in \mathbb{R}^N$
+
 ## Submodels
 
 Symbol | Description | Type | Order | JSON | Inputs | Outputs
@@ -73,27 +80,22 @@ $\mathbf{v}$ | [V] | Bus voltage vector owned by EMT bus | $\mathbf{v} \in \math
 
 None.
 
-## Model Ports
-
-Symbol | Port | Type | Units | Description | Note
------- | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}$ | `v` | Input | [V] | Bus voltage at source port | $\mathbf{v} \in \mathbb{R}^N$
-$\mathbf{i}$ | `i` | Output | [A] | Current injection at source port | $\mathbf{i} \in \mathbb{R}^N$
-
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 None.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 0 = e_n - \sqrt{2}E_n\cos(\omega t + \phi_n),
 \quad n \in \mathcal{N}
 ```
 
-### Wiring
+### External Equations
 
 ```math
 \mathbf{i} \leftarrow \mathbf{y}[\mathbf{e} - \mathbf{v}]
