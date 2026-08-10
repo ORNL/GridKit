@@ -206,7 +206,7 @@ $n$. The state layout does not change with $n$.
   0 &= -v_6 + x_6 + \dfrac{T_3}{T_4}(v_5-x_6) \\
   0 &= -v_7 + K_s\dfrac{T_5}{T_6}(v_6-x_7) \\
   0 &= -V_{\mathrm{ss}}
-    + \operatorname{clamp}(v_7,L_s^{\min},L_s^{\max}).
+    + \text{clamp}(v_7,L_s^{\min},L_s^{\max}).
 \end{aligned}
 ```
 
@@ -234,7 +234,7 @@ u \leftarrow \text{stabilizer input signal}.
   v_4,x_5,v_5,x_6,v_6,x_7 &\leftarrow u \\
   v_7 &\leftarrow 0 \\
   V_{\mathrm{ss}} &\leftarrow
-    \operatorname{clamp}(v_7,L_s^{\min},L_s^{\max}) \\
+    \text{clamp}(v_7,L_s^{\min},L_s^{\max}) \\
   \dot{x}_i &\leftarrow 0,
     \qquad i\in\{1,\ldots,7\}.
 \end{aligned}
