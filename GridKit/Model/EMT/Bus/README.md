@@ -26,6 +26,13 @@ N \in \mathbb{Z}_{>0}
 
 None.
 
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{i}_e$ | `i` | Input | [A] | Current from connected device $e$ | One port per $e \in \mathcal{E}$, $\mathbf{i}_e \in \mathbb{R}^N$
+$\mathbf{v}$ | `v` | Output | [V] | Bus voltage supplied to connected devices | $\mathbf{v} \in \mathbb{R}^N$
+
 ## Submodels
 
 None.
@@ -58,22 +65,21 @@ None.
 
 None.
 
-## Model Ports
-
-Symbol | Port | Type | Units | Description | Note
------- | ---- | ---- | ----- | ----------- | ----
-$\mathbf{i}_e$ | `i` | Input | [A] | Current from connected device $e$ | One port per $e \in \mathcal{E}$, $\mathbf{i}_e \in \mathbb{R}^N$
-$\mathbf{v}$ | `v` | Output | [V] | Bus voltage supplied to connected devices | $\mathbf{v} \in \mathbb{R}^N$
-
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 0 = \sum_{e \in \mathcal{E}} \mathbf{i}_e
 ```
 
-### Algebraic Equations
+#### Algebraic
+
+None.
+
+### External Equations
 
 None.
 

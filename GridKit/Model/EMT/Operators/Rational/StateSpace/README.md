@@ -102,6 +102,13 @@ p_{q+1} &= p_q^{\ast},
 \end{aligned}
 ```
 
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
+$\mathbf{y}$ | `out` | Output | $[y]$ | Output vector port | $\mathbf{y} \in \mathbb{R}^N$
+
 ## Submodels
 
 None.
@@ -125,9 +132,7 @@ The documented real realization has order $Q$.
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{y}$ | $[y]$ | Output vector | $\mathbf{y} \in \mathbb{R}^N$
+None.
 
 ### External Variables
 
@@ -143,16 +148,11 @@ Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{u}$ | $[u]$ | Input vector | Algebraic-input configuration, $\mathbf{u} \in \mathbb{R}^K$
 
-## Model Ports
-
-Symbol | Port | Type | Units | Description | Note
------- | ---- | ---- | ----- | ----------- | ----
-$\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
-$\mathbf{y}$ | `out` | Output | $[y]$ | Output vector port | $\mathbf{y} \in \mathbb{R}^N$
-
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -169,27 +169,25 @@ $\mathbf{y}$ | `out` | Output | $[y]$ | Output vector port | $\mathbf{y} \in \ma
 \end{aligned}
 ```
 
-### Algebraic Equations
+#### Algebraic
+
+None.
+
+### External Equations
 
 ```math
-\begin{aligned}
-0 &= -\mathbf{y}
-     + \mathbf{D}\mathbf{u}
-     + \mathbf{E}\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-     + \sum_{q \in \mathcal{Q}_\mathrm{r}}
-       \mathbf{C}_{:,q}w_q
-     + 2\sum_{q \in \mathcal{Q}_\mathrm{c}}
-       ((\mathbf{C}_{\mathrm{r}})_{:,q}w_q
-       -(\mathbf{C}_{\mathrm{i}})_{:,q}v_q)
-\end{aligned}
+\mathbf{y} \leftarrow
+  \mathbf{D}\mathbf{u}
+  + \mathbf{E}\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
+  + \sum_{q \in \mathcal{Q}_\mathrm{r}}
+    \mathbf{C}_{:,q}w_q
+  + 2\sum_{q \in \mathcal{Q}_\mathrm{c}}
+    ((\mathbf{C}_{\mathrm{r}})_{:,q}w_q
+    -(\mathbf{C}_{\mathrm{i}})_{:,q}v_q)
 ```
 
 For algebraic input, $\mathbf{E}=\mathbf{0}$ and the input-derivative term
 vanishes.
-
-### Wiring
-
-None.
 
 ## Initialization
 

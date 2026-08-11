@@ -36,6 +36,13 @@ M &= K \\
 The modal delays are produced by the offline propagation fitting and enter
 through the delay bank's `delays` coefficient set.
 
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
+$\mathbf{y}$ | `out` | Output | $[u]$ | Output vector port | $\mathbf{y} \in \mathbb{R}^K$
+
 ## Submodels
 
 Symbol | Description | Type | Order | JSON | Inputs | Outputs
@@ -54,7 +61,7 @@ The offline fitting targets and propagation factorization are
 \mathbf{H}^\mathrm{mps}(s)
   &= \mathrm{diag}(h_1^\mathrm{mps}(s),\ldots,h_M^\mathrm{mps}(s)) \\
 \mathbf{D}_{\boldsymbol{\tau}}(s)
-  &= \mathrm{diag}(e^{-s\tau_1},\ldots,e^{-s\tau_M}) \\
+  &= \mathrm{diag}(\exp(-s\tau_1),\ldots,\exp(-s\tau_M)) \\
 \mathbf{H}(s)
   &= \mathbf{T}_i(s)\mathbf{D}_{\boldsymbol{\tau}}(s)
      \mathbf{H}^\mathrm{mps}(s)\mathbf{T}_i^{-1}(s) \\
@@ -76,6 +83,15 @@ from the modal delay bank.
 
 ```math
 \mathbf{E}^\mathrm{in}=\mathbf{E}^\mathrm{out}=\mathbf{0}
+```
+
+### Submodel Wiring
+
+```math
+\begin{aligned}
+\mathbf{w} &\leftarrow \mathbf{g}_\mathrm{in}[\mathbf{u}] \\
+\mathbf{z} &\leftarrow \mathbf{d}[\mathbf{w}]
+\end{aligned}
 ```
 
 ## Model Variables
@@ -102,31 +118,22 @@ Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^K$
 
-## Model Ports
-
-Symbol | Port | Type | Units | Description | Note
------- | ---- | ---- | ----- | ----------- | ----
-$\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
-$\mathbf{y}$ | `out` | Output | $[u]$ | Output vector port | $\mathbf{y} \in \mathbb{R}^K$
-
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 None.
 
-### Algebraic Equations
+#### Algebraic
 
 None.
 
-### Wiring
+### External Equations
 
 ```math
-\begin{aligned}
-\mathbf{w} &\leftarrow \mathbf{g}_\mathrm{in}[\mathbf{u}] \\
-\mathbf{z} &\leftarrow \mathbf{d}[\mathbf{w}] \\
-\mathbf{y} &\leftarrow \mathbf{g}_\mathrm{out}[\mathbf{z}]
-\end{aligned}
+\mathbf{y} \leftarrow \mathbf{g}_\mathrm{out}[\mathbf{z}]
 ```
 
 ## Initialization

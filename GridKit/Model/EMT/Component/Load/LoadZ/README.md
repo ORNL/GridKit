@@ -25,6 +25,13 @@ N \in \mathbb{Z}_{>0}
 
 None.
 
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{v}$ | `v` | Input | [V] | Bus voltage at load port | $\mathbf{v} \in \mathbb{R}^N$
+$\mathbf{i}$ | `i` | Output | [A] | Current injection at load port | $\mathbf{i} \in \mathbb{R}^N$
+
 ## Submodels
 
 Symbol | Description | Type | Order | JSON | Inputs | Outputs
@@ -33,9 +40,8 @@ $\mathbf{z}$ | Impedance | [VectorFit](../../../Operators/Rational/VectorFit/REA
 
 ### Submodel Validation
 
-The current is differential for a nonsingular linear coefficient and algebraic
-when the coefficient is zero. Partially singular coefficients are not
-supported.
+The current is differential when $\mathbf{E}^{\mathbf{z}}$ is nonsingular and
+algebraic when $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$.
 
 ```math
 \mathbf{E}^{\mathbf{z}}=\mathbf{0}
@@ -71,16 +77,11 @@ $\mathbf{v}$ | [V] | Bus voltage vector owned by EMT bus | $\mathbf{v} \in \math
 
 None.
 
-## Model Ports
-
-Symbol | Port | Type | Units | Description | Note
------- | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}$ | `v` | Input | [V] | Bus voltage at load port | $\mathbf{v} \in \mathbb{R}^N$
-$\mathbf{i}$ | `i` | Output | [A] | Current injection at load port | $\mathbf{i} \in \mathbb{R}^N$
-
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 For $\mathrm{rank}(\mathbf{E}^{\mathbf{z}})=N$,
 
@@ -88,13 +89,15 @@ For $\mathrm{rank}(\mathbf{E}^{\mathbf{z}})=N$,
 0 = \mathbf{z}[\mathbf{i}] + \mathbf{v}
 ```
 
-### Algebraic Equations
+#### Algebraic
 
 For $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$, the same residual is algebraic.
 
-### Wiring
+### External Equations
 
-None.
+```math
+\mathbf{f} \leftarrow \mathbf{i}
+```
 
 ## Initialization
 
