@@ -9,6 +9,7 @@ int main()
   result += test.constructor();
   result += test.hard_coded_residual();
   result += test.residual();
+  result += test.saturation_initialization();
   result += test.residual_nonzero_ra();
   result += test.frequency_base();
   result += test.monitor_system_base();

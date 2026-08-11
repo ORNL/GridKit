@@ -136,7 +136,7 @@ Note that for implementation purposes, some of these equations may be simplified
   0 &= -V_{d} -\psi''_{q}(1+\omega)\\
   0 &= -V_{q}  +\psi''_{d}(1+\omega)\\
   0 &= -T_{elec} +(\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
-  0 &= -k_{sat} + S_B(\psi''-S_A)^2\sigma(\psi''-S_A) \\
+  0 &= -k_{sat} + S_B q(\psi''-S_A) \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
   0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta) \\
   0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
@@ -144,54 +144,39 @@ Note that for implementation purposes, some of these equations may be simplified
 \end{aligned}
 ```
 
+CommonMath defines the primitive
+[quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+
 ## Initialization
 
-### Without Saturation
-Presume there is no saturation to simplify the solution procedure for the initial 
-conditions.
-
-Using the power-flow solution, we have explicit solutions for the following 
-variables. The internal variables $I_d$, $I_q$, $V_d$, and $V_q$ are calculated
-from the network interface equations. The remaining are algebraically solved 
-from the steady-state initial conditions.
-``` math
-\begin{aligned}
-\omega &= 0 \\
-\delta &= \text{arg} \left[V_r + jV_i + (R_a + jX_q) (I_r + jI_i)\right] \\
-  \psi^{''}_{d} &= V_q \\
-  \psi^{''}_{q} &= -V_d \\
-  \psi^{''} &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
-  k_{sat}     &=
-    \begin{cases}
-      S_B(\psi^{''}-S_A)^2, & \psi^{''} > S_A\\
-      0, & \psi^{''} \le S_A
-    \end{cases}\\
-  T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
-  P_{m}    &= T_{elec} \\
-  \psi_d'  &= \psi_d'' - (X_d'' - X_\ell)I_d \\
-  \psi_q'  &= (X_q'' - X_\ell)I_q - \psi_q'' \\
-  E^{'}_d     &=\psi^{'}_q - X_{q2}I_q \\
-  E^{'}_q     &=\psi^{'}_d + X_{d2}I_d \\
-  E_{fd}      &= E'_{q}+X_{d1}I_{d}+\psi^{''}_{d}k_{sat} \\
-\end{aligned}
-```
-
-### With Saturation
-It is important to point out that finding the initial value of $\delta$ for
-the model without saturation, the direct method can be used. In case saturation
-is considered, some "clever" math is needed. Key insight for determining initial
-$\delta$ is that the magnitude of the saturation, which depends upon the magnitude
-of $\psi''$, which is independent of $\delta$.
+The power-flow solution gives $V_r$, $V_i$, $I_r$, and $I_i$. At synchronous
+speed, the total subtransient-flux magnitude is available directly in the
+network frame and is independent of rotor angle:
 
 ``` math
 \begin{aligned}
-  \delta=\tan^{-1}
-  \left[
-    \dfrac{(V_{i}+R_{a}I_{i})k_{sat}+(k_{sat}X''_{d}+X_{q}-X''_{q})I_{r}}
-          {(V_{r}+R_{a}I_{r})k_{sat}-(k_{sat}X''_{d}+X_{q}-X''_{q})I_{i}}
-  \right]
+  \psi''
+    &\leftarrow \sqrt{
+      \left(V_r + R_a I_r - X_q'' I_i\right)^2
+      +\left(V_i + R_a I_i + X_q'' I_r\right)^2
+    } \\
+  k_{sat}
+    &\leftarrow S_B q(\psi''-S_A) \\
+  k'_{sat}
+    &\leftarrow 1 + X_{qd}k_{sat} \\
+  X_{sat,\delta}
+    &\leftarrow k'_{sat}X_d'' + X_q-X_q'' \\
+  \delta
+    &\leftarrow \operatorname{atan2}\left(
+      (V_i+R_aI_i)k'_{sat}+X_{sat,\delta}I_r,
+      (V_r+R_aI_r)k'_{sat}-X_{sat,\delta}I_i
+    \right)
 \end{aligned}
 ```
+
+With $\delta$ known, the rotor-frame currents, voltages, flux states, field
+voltage, and mechanical power follow directly from the steady-state model
+equations above. No saturation iteration is required.
 
 ## Model Outputs
 

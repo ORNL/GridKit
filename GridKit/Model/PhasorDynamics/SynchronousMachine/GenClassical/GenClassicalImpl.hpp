@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -307,7 +308,7 @@ namespace GridKit
 
       // GenClassical differential equations
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
-      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
+      f[1] = omega_dot - H_inv_ * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
 
       // GenClassical algebraic equations
       f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));
@@ -368,6 +369,18 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::setDerivedParams()
     {
+      if (H_ == ZERO<RealT> && D_ == ZERO<RealT>)
+      {
+        H_inv_ = ZERO<RealT>;
+      }
+      else
+      {
+        H_     = std::max(H_, static_cast<RealT>(0.1));
+        H_inv_ = ONE<RealT> / (TWO<RealT> * H_);
+      }
+
+      Xdp_ = std::clamp(Xdp_, static_cast<RealT>(1.0e-5), static_cast<RealT>(999.0));
+
       G_               = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
       B_               = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
       va_machine_base_ = mva_base_ * static_cast<RealT>(1.0e6);

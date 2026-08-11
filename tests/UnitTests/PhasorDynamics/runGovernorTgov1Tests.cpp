@@ -10,6 +10,8 @@ int main()
   result += test.accessors();
   result += test.residual();
   result += test.zeroInitialResidual();
+  result += test.initializationAndSignals();
+  result += test.zeroTimeConstantsAndLimits();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif

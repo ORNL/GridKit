@@ -65,7 +65,8 @@ namespace GridKit
        *
        * The time constants are raised to the well-posedness floor. Complementary
        * LVPL masks keep the residual branchless, while the sign of the initial
-       * reactive-power injection selects the applicable recovery-rate limit.
+       * reactive-power injection and the corresponding limit sign select the
+       * applicable recovery-rate limit.
        */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::setDerivedParameters()
@@ -77,8 +78,16 @@ namespace GridKit
                          << "and voltage-sensor lags well posed\n";
         }
 
-        Tg_          = std::max(Tg_, TIME_CONSTANT_MINIMUM);
-        TM_          = std::max(TM_, TIME_CONSTANT_MINIMUM);
+        Tg_ = std::max(Tg_, TIME_CONSTANT_MINIMUM);
+        TM_ = std::max(TM_, TIME_CONSTANT_MINIMUM);
+
+        if (IL1_ < ZERO<RealT>)
+        {
+          Log::warning() << "Regca: negative IL1 disables LVPL and is set to zero\n";
+          IL1_ = ZERO<RealT>;
+          sL_  = false;
+        }
+
         use_lvpl_    = ZERO<RealT>;
         bypass_lvpl_ = ONE<RealT>;
         if (sL_)
@@ -89,11 +98,11 @@ namespace GridKit
 
         use_rqmax_ = ZERO<RealT>;
         use_rqmin_ = ZERO<RealT>;
-        if (q0_ > ZERO<RealT>)
+        if (q0_ > ZERO<RealT> && Rqmax_ > ZERO<RealT>)
         {
           use_rqmax_ = ONE<RealT>;
         }
-        else if (q0_ < ZERO<RealT>)
+        else if (q0_ < ZERO<RealT> && Rqmin_ < ZERO<RealT>)
         {
           use_rqmin_ = ONE<RealT>;
         }
@@ -436,9 +445,7 @@ namespace GridKit
         }
 
         check(mva_base_ > ZERO<RealT>, "mva must be positive");
-        check(Rpmax_ > ZERO<RealT>, "Rpmax must be positive");
-        check(Rqmin_ < ZERO<RealT> && ZERO<RealT> < Rqmax_, "Rqmin < 0 < Rqmax is required");
-        check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
+        check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
         check(KL_ > ZERO<RealT>, "LVPL release slope must be positive");
         check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
         check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
@@ -474,7 +481,7 @@ namespace GridKit
        *
        * @pre allocate() has completed, verify() reports no errors, and the
        *      terminal bus has been initialized.
-       * @pre \f$V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}\f$, and with LVPL
+       * @pre \f$V_{A0} < V_{T,0} < V_\mathrm{hv}^{\max}\f$, and with LVPL
        *      enabled \f$I_{p,0} \le I_{L,0}\f$.
        * @post All internal derivatives are zero. Unattached command ports retain
        *       the resolved setpoints as constant commands.
@@ -504,10 +511,10 @@ namespace GridKit
           Log::error() << "Regca: terminal voltage magnitude must be positive at initialization\n";
           return 1;
         }
-        if (vt < VA1_)
+        if (vt <= VA0_)
         {
           Log::error()
-              << "Regca: terminal voltage magnitude must be at least VA1 at initialization\n";
+              << "Regca: terminal voltage magnitude must be above VA0 at initialization\n";
           return 1;
         }
         if (vt >= Vhvmax_)
@@ -515,6 +522,12 @@ namespace GridKit
           Log::error()
               << "Regca: terminal voltage magnitude must be below Vhvmax at initialization\n";
           return 1;
+        }
+
+        if (vt < VA1_)
+        {
+          Log::warning() << "Regca: VA1 is lowered to the initial terminal voltage\n";
+          VA1_ = static_cast<RealT>(vt);
         }
 
         // P0 is a system-base power-flow injection. Resolve the component-base
@@ -659,7 +672,7 @@ namespace GridKit
         const ScalarT fq = (iqcmd - iq) / Tg_;
         const ScalarT fp = (ipcmd - ip) / Tg_;
 
-        // At Q0 = 0 both corrections vanish, leaving fq unrestricted.
+        // A disabled limit or Q0 = 0 leaves the corresponding correction off.
         const ScalarT iq_rate = fq + use_rqmax_ * (Math::min(fq, Rqmax_) - fq)
                                 + use_rqmin_ * (Math::max(fq, Rqmin_) - fq);
         const ScalarT fp_limited = rrpwr(ip, fp, Rpmax_);

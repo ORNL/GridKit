@@ -74,7 +74,7 @@ $\psi''_q$   | [p.u.] | Total q-axis subtransient flux    |
 Symbol      | Units  | Description                       | Note
 ------------|--------|-----------------------------------| ------
 $\psi''_d$ | [p.u.] | Total d-axis subtransient flux    |
-$k_{sat}$  | [p.u.] | Additive saturation signal        |
+$k_{sat}$  | [p.u.] | Saturation factor                 |
 $V_d$      | [p.u.] | Machine internal voltage, d-axis  |
 $V_q$      | [p.u.] | Machine internal voltage, q-axis  |
 $T_e$      | [p.u.] | Electrical torque                 |
@@ -108,7 +108,7 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
     \left(
       E_{fd}-E'_q-X_{d1}
       (I_d+X_{d3}(E'_q-\psi'_d-X_{d2}I_d))
-      -k_{sat}
+      -E'_q k_{sat}
     \right)\\
   \dot{\psi}'_d    &= \dfrac{1}{T''_{d0}}(E'_q-\psi'_d-X_{d2}I_d)\\
   \dot{\psi}''_q   &= \dfrac{1}{T''_{q0}}(-\psi''_q-X_{q2}I_q)
@@ -119,7 +119,7 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
 ``` math
 \begin{aligned}
   0 &= -\psi''_d + E'_qX_{d5}+\psi'_dX_{d4}\\
-  0 &= -k_{sat} + S_B(E'_q-S_A)^2\sigma(E'_q-S_A)\\
+  0 &= -k_{sat} + S_B q(E'_q-S_A)\\
   0 &= -V_d -\psi''_q(1+\omega)\\
   0 &= -V_q +\psi''_d(1+\omega)\\
   0 &= -T_e +(\psi''_d-I_dX_d'')I_q-(\psi''_q-I_qX_d'')I_d\\
@@ -130,6 +130,9 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
 \end{aligned}
 ```
 
+CommonMath defines the primitive
+[quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+
 ## Initialization
 
 Using the power-flow solution, initial currents are calculated from active and
@@ -138,20 +141,36 @@ steady-state GENSAL equations.
 
 ``` math
 \begin{aligned}
-  \omega &= 0 \\
-  \delta &= \text{arg}\left[V_r+jV_i+(R_a+jX_q)(I_r+jI_i)\right]\\
-  I_d &= I_r\sin(\delta)-I_i\cos(\delta)\\
-  I_q &= I_r\cos(\delta)+I_i\sin(\delta)\\
-  \psi''_q &= -X_{q2}I_q\\
-  V_d &= -\psi''_q\\
-  V_q &= V_r\cos(\delta)+V_i\sin(\delta)+X_d''I_d+R_aI_q\\
-  \psi''_d &= V_q\\
-  \psi'_d &= \psi''_d-(X_d''-X_\ell)I_d\\
-  E'_q &= \psi'_d+X_{d2}I_d\\
-  k_{sat} &= S_B(E'_q-S_A)^2\sigma(E'_q-S_A)\\
-  T_e &= (\psi''_d-I_dX_d'')I_q-(\psi''_q-I_qX_d'')I_d\\
-  P_m &= T_e\\
-  E_{fd} &= E'_q+X_{d1}(I_d+X_{d3}(E'_q-\psi'_d-X_{d2}I_d))+k_{sat}
+  \omega
+    &\leftarrow 0 \\
+  \delta
+    &\leftarrow \text{arg}\left[V_r+jV_i+(R_a+jX_q)(I_r+jI_i)\right] \\
+  I_d
+    &\leftarrow I_r\sin(\delta)-I_i\cos(\delta) \\
+  I_q
+    &\leftarrow I_r\cos(\delta)+I_i\sin(\delta) \\
+  \psi''_q
+    &\leftarrow -X_{q2}I_q \\
+  V_d
+    &\leftarrow -\psi''_q \\
+  V_q
+    &\leftarrow V_r\cos(\delta)+V_i\sin(\delta)+X_d''I_d+R_aI_q \\
+  \psi''_d
+    &\leftarrow V_q \\
+  \psi'_d
+    &\leftarrow \psi''_d-(X_d''-X_\ell)I_d \\
+  E'_q
+    &\leftarrow \psi'_d+X_{d2}I_d \\
+  k_{sat}
+    &\leftarrow S_B q(E'_q-S_A) \\
+  T_e
+    &\leftarrow (\psi''_d-I_dX_d'')I_q-(\psi''_q-I_qX_d'')I_d \\
+  P_m
+    &\leftarrow T_e \\
+  E_{fd}
+    &\leftarrow E'_q
+      +X_{d1}(I_d+X_{d3}(E'_q-\psi'_d-X_{d2}I_d))
+      +E'_q k_{sat}
 \end{aligned}
 ```
 

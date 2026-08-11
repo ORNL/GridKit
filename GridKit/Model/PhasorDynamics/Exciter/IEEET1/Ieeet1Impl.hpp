@@ -8,6 +8,7 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -138,9 +139,6 @@ namespace GridKit
 
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
-        check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
-              "Ispdlim must be 0 or 1");
-
         const bool saturation_disabled =
             Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
@@ -148,10 +146,14 @@ namespace GridKit
         {
           check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
           check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
-          check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
-          check(E1_ != E2_, "E1 and E2 must differ when saturation is enabled");
-          check(Se1_ != Se2_, "Se1 and Se2 must differ when saturation is enabled");
+          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+
+          const bool saturation_points_are_ordered =
+              (E2_ > E1_ && Se2_ > Se1_)
+              || (E2_ < E1_ && Se2_ < Se1_);
+          check(saturation_points_are_ordered,
+                "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
         if (signals_.template isAttached<OMEGA>())
@@ -227,13 +229,34 @@ namespace GridKit
         ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
         ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
         ScalarT ve   = ksat * efdp;
-        ScalarT vr   = Ke_ * efdp + ve;
-        ScalarT vtr  = vr / Ka_;
+
+        RealT ke0 = Ke_;
+        if (ke0 == ZERO<RealT>)
+        {
+          const RealT efdp_real0 = static_cast<RealT>(efdp);
+          if (!std::isfinite(efdp_real0) || efdp_real0 == ZERO<RealT>)
+          {
+            Log::error() << "Ieeet1: automatic Ke requires a finite, nonzero initial Efd'\n";
+            return 1;
+          }
+
+          ke0 = Vrmax_ / (static_cast<RealT>(10.0) * efdp_real0)
+                - static_cast<RealT>(ksat);
+          if (!std::isfinite(ke0))
+          {
+            Log::error() << "Ieeet1: automatic Ke must be finite\n";
+            return 1;
+          }
+        }
+
+        ScalarT vr  = ke0 * efdp + ve;
+        ScalarT vtr = vr / Ka_;
         ScalarT vf{0};
         ScalarT vfx = (Kf_ / Tf_) * efdp;
 
         vref_ = Ec + vtr + vf - vUEL_ - vOEL_ - vs;
 
+        Ke_  = ke0;
         y[0] = Ec;   // y0 - vts  - Sensed term volt
         y[1] = vr;   // y1 - vr   - Voltage reg
         y[2] = efdp; // y2 - efdp - Efd pre mult
@@ -452,7 +475,9 @@ namespace GridKit
         }
         if (data.parameters.contains(Parameter::Ispdlim))
         {
-          Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
+          Ispdlim_ = std::visit([](auto value)
+                                { return value != 0 ? ONE<RealT> : ZERO<RealT>; },
+                                data.parameters.at(Parameter::Ispdlim));
         }
 
         Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);
@@ -471,9 +496,29 @@ namespace GridKit
           return;
         }
 
-        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT> || E1_ == E2_
-            || Se1_ <= ZERO<RealT> || Se2_ <= ZERO<RealT> || Se1_ == Se2_)
+        const bool saturation_points_are_ordered =
+            (E2_ > E1_ && Se2_ > Se1_)
+            || (E2_ < E1_ && Se2_ < Se1_);
+        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT>
+            || Se1_ < ZERO<RealT> || Se2_ < ZERO<RealT>
+            || !saturation_points_are_ordered)
         {
+          return;
+        }
+
+        if (Se1_ == ZERO<RealT>)
+        {
+          const RealT dE = E2_ - E1_;
+          SA_            = E1_;
+          SB_            = Se2_ / (dE * dE);
+          return;
+        }
+
+        if (Se2_ == ZERO<RealT>)
+        {
+          const RealT dE = E1_ - E2_;
+          SA_            = E2_;
+          SB_            = Se1_ / (dE * dE);
           return;
         }
 

@@ -22,14 +22,14 @@ namespace GridKit
        */
       enum class Tgov1Parameters
       {
-        Trate, ///< Turbine-rating power base
-        R,     ///< Droop Constant
-        T1,    ///< Valve Time Delay
-        T2,    ///< Turbine Numerator Time Constant
-        T3,    ///< Turbine Delay
-        Pvmax, ///< Max Valve Power
-        Pvmin, ///< Min Valve Power
-        Dt     ///< Damping Coefficient
+        Trate, ///< \f$T_\mathrm{rate}\f$ Turbine-rating power base
+        R,     ///< \f$R\f$ Permanent droop
+        T1,    ///< \f$T_1\f$ Steam-bowl time constant
+        T2,    ///< \f$T_2\f$ Turbine numerator time constant
+        T3,    ///< \f$T_3\f$ Reheater time constant
+        Pvmax, ///< \f$P_v^\mathrm{max}\f$ Maximum valve position
+        Pvmin, ///< \f$P_v^\mathrm{min}\f$ Minimum valve position
+        Dt     ///< \f$D_t\f$ Turbine damping coefficient
       };
 
       /**
@@ -45,7 +45,8 @@ namespace GridKit
        */
       enum class Tgov1SignalInputs : size_t
       {
-        speed,
+        speed, ///< \f$\Delta\omega\f$ Optional machine speed-deviation signal ID
+        pref,  ///< \f$P_\mathrm{ref}\f$ Optional governor-reference signal ID
         SIZE,
       };
 
@@ -54,7 +55,7 @@ namespace GridKit
        */
       enum class Tgov1SignalOutputs : size_t
       {
-        pmech,
+        pmech, ///< \f$P_m\f$ Required mechanical-power output signal ID
         SIZE,
       };
 

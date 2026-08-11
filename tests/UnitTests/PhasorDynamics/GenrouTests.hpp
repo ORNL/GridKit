@@ -138,6 +138,46 @@ namespace GridKit
       }
 
       /**
+       * @brief Checks smooth saturation is initialized from the direct
+       * subtransient-flux magnitude.
+       */
+      TestOutcome saturation_initialization()
+      {
+        TestStatus success = true;
+
+        using Parameter = typename GenrouDataT::Parameters;
+
+        auto data                       = makeGenrouData();
+        data.parameters[Parameter::p0]  = RealT{0.0};
+        data.parameters[Parameter::q0]  = RealT{0.0};
+        data.parameters[Parameter::S10] = RealT{0.0};
+        data.parameters[Parameter::S12] = RealT{0.004};
+
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus(0.99, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, data);
+
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+        gen.allocate();
+        success *= (gen.initialize() == 0);
+        success *= (gen.evaluateResidual() == 0);
+
+        const auto& f = gen.getResidual();
+        for (std::size_t i = 0; i < f.getSize(); ++i)
+        {
+          if (!isEqual(f.getData()[i], 0.0, tol_))
+          {
+            std::cout << "Nonzero saturated GENROU residual at " << i << ": "
+                      << f.getData()[i] << '\n';
+            success = false;
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
        * @brief Checks monitored terminal current and power use system base.
        */
       TestOutcome monitor_system_base()
@@ -223,12 +263,12 @@ namespace GridKit
         const std::vector<ScalarT> res_answer = {
             -2.0 * std::numbers::pi_v<RealT> * 60.0,
             -static_cast<ScalarT>(10.) / static_cast<ScalarT>(9.),
-            -static_cast<ScalarT>(223.) / static_cast<ScalarT>(525.),
-            -54.75,
-            -9.6,
-            static_cast<ScalarT>(892.) / static_cast<ScalarT>(375.),
-            0.21,
-            -0.07,
+            static_cast<ScalarT>(2128243.) / static_cast<ScalarT>(393260.),
+            -static_cast<ScalarT>(5521.) / static_cast<ScalarT>(125.),
+            -static_cast<ScalarT>(6993.) / static_cast<ScalarT>(625.),
+            static_cast<ScalarT>(7371.) / static_cast<ScalarT>(4135.),
+            static_cast<ScalarT>(17.) / static_cast<ScalarT>(36.),
+            -static_cast<ScalarT>(3791.) / static_cast<ScalarT>(5300.),
             -0.19223748416156686,
             2.0,
             1.4,
@@ -236,10 +276,10 @@ namespace GridKit
             2.211,
             0.85,
             1.2,
-            static_cast<ScalarT>(64.) / static_cast<ScalarT>(65.),
-            -static_cast<ScalarT>(237.) / static_cast<ScalarT>(130.),
-            -static_cast<ScalarT>(141.) / static_cast<ScalarT>(130.),
-            -static_cast<ScalarT>(241.) / static_cast<ScalarT>(260.)};
+            static_cast<ScalarT>(37013.) / static_cast<ScalarT>(9605.),
+            -static_cast<ScalarT>(88079.) / static_cast<ScalarT>(19210.),
+            -static_cast<ScalarT>(41237.) / static_cast<ScalarT>(19210.),
+            -static_cast<ScalarT>(166237.) / static_cast<ScalarT>(38420.)};
 
         bus.allocate();
         bus.initialize();

@@ -9,7 +9,8 @@ int main()
   result += test.constructor();
   result += test.zeroInitialResidual();
   result += test.zeroTimeConstantsAndDisabledSaturation();
-  result += test.invalidSaturationParameters();
+  result += test.automaticKeAndSpeedSelector();
+  result += test.saturationParameters();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif
