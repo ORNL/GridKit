@@ -79,7 +79,29 @@ Although $\rho(x)$ is real-analytic, the implemented form is an overflow-safe re
   + \dfrac{1}{\mu}\ln\left(1+\exp(-\mu\lvert x\rvert)\right)
 \end{aligned}
 ```
-The kinks of the two terms cancel exactly.
+
+Evaluating the absolute value by sign gives the piecewise form:
+
+```math
+\rho(x)=
+\begin{cases}
+  \dfrac{1}{\mu}\ln(1+\exp(\mu x)) & x\le 0, \\[0pt]
+  x+\dfrac{1}{\mu}\ln(1+\exp(-\mu x)) & x\gt 0.
+\end{cases}
+```
+
+For the positive branch, rewrite the original definition as
+
+```math
+\begin{aligned}
+\dfrac{1}{\mu}\ln\left(1+\exp(\mu x)\right)
+&=\dfrac{1}{\mu}\ln\left(
+  \exp(\mu x)\left(1+\exp(-\mu x)\right)\right) \\
+&=x+\dfrac{1}{\mu}\ln\left(1+\exp(-\mu x)\right).
+\end{aligned}
+```
+
+Hence, the implemented form is equivalent to the softplus definition and avoids overflow by evaluating the exponential only at nonpositive arguments.
 
 ### Quadratic Ramp
 
