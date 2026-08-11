@@ -317,7 +317,8 @@ namespace AnalysisManager
      *
      * - Sets the simulation time to `t0` and copies the initial condition from \ref model_.
      * - Analyzes \ref model_ Jacobian sparsity and runs the preconditioner
-     * - Generates the mass matrix from \ref GridKit::Model::Evaluator::tag(). If the tag is not properly set, then initialization will fail.
+     * - Generates the mass matrix from \ref GridKit::Model::Evaluator::tag() as described in the class description.
+     *   If the tag is not properly set, then initialization will fail.
      * - Resets \ref stats_.
      *
      * @note This method can fail.
@@ -617,6 +618,10 @@ namespace AnalysisManager
      * - \ref jacobian_analyzed_ keeps track of whether the Jacobian has been factored in a previous call to `timeStep()`. If so, then it can be re-factored
      * in a faster way. The first factor must be done on actual data, so it cannot be performed pre-simulation.
      *
+     * @remark <b>On evaluating the Jacobian:</b> GridKit, like IDA, expects to evaluate the Jacobian \f(D = \frac{\partial F}{\partial y} + \alpha \frac{\partial F}{\partial \dot{y}}\f). As seen above,
+     * we need to evaluate \f(J - \frac{1}{h\gamma} M\f), where \f(J = \frac{\partial F}{\partial y}\f). Since, in the implicit form, \f(F = f(t, y) - M\dot{y}\f), then
+     * \f(M = - \frac{\partial F}{\partial \dot{y}}\f). So evaluating \f(D\f) with \f(\alpha = \frac{1}{h\gamma}\f) will get us what we want.
+     *
      * @pre Must call \ref initializeSimulation() beforehand.
      *
      * @note This method can fail.
@@ -656,8 +661,7 @@ namespace AnalysisManager
         BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().getData(), memspace_, memspace_));
         y0_copied = true;
 
-        // GridKit, like IDA, expects to evaluate the Jacobian J = df/dy + alpha * df/dy',
-        // so we need a negative here since df/dy' = M.
+        // See remark on evaluating Jacobian for why this constant is correct.
         model_->updateTime(t0, ONE / (dt * tab_.gamma_));
         BUBBLE_FAIL(model_->evaluateJacobian());
         BUBBLE_FAIL(lin_solver_.setupSolver(workspace_.jacobian_analyzed_));

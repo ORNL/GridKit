@@ -27,6 +27,17 @@ namespace AnalysisManager
      *        boast a large amount of customization to simulating a given model.
      *
      *        For the list of available Rosenbrock methods, see `Rosenbrock::Tableau`.
+     *
+     *        The Rosenbrock integrator is built to integrate DAEs in semi-explicit form with
+     *        (optional) mass matrix \f(M\f) given by
+     *        \f[M\dot{y} = f(t, y),\f]
+     *        where \f(M\f) is constant and can be singular (\f(M\f) is non-singular only for ODEs).
+     *        GridKit models equations in this semi-explicit form, but evaluates the implicit equation
+     *        \f[F(t, y, \dot{y}) = f(t, y) - M\dot{y}\f]
+     *        whenever \ref GridKit::Model::Evaluator::evaluateResidual() is called. Also, all models currently use
+     *        a diagonal mass matrix with values of only 1 or 0, as indicated by \ref GridKit::Model::Evaluator::tag().
+     *        We can use this by evaluating \f(F(t, y, 0) = f(t,y)\f) and constructing the mass matrix
+     *        based on the tag.
      */
     template <class ScalarT, typename IdxT>
     class Rosenbrock
