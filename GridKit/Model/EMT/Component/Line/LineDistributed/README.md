@@ -49,6 +49,15 @@ P_{\phi,nk} =
 \quad n \in \mathcal{N},\quad k \in \mathcal{K}
 ```
 
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{v}_1$ | `v1` | Input | [V] | Terminal 1 bus voltage | $\mathbf{v}_1 \in \mathbb{R}^N$
+$\mathbf{v}_2$ | `v2` | Input | [V] | Terminal 2 bus voltage | $\mathbf{v}_2 \in \mathbb{R}^N$
+$\mathbf{i}_1$ | `i1` | Output | [A] | Current injection at terminal 1 | $\mathbf{i}_1 \in \mathbb{R}^N$
+$\mathbf{i}_2$ | `i2` | Output | [A] | Current injection at terminal 2 | $\mathbf{i}_2 \in \mathbb{R}^N$
+
 ## Submodels
 
 Symbol | Description | Type | Order | JSON | Inputs | Outputs
@@ -74,6 +83,21 @@ directional propagation instances maintain independent states and histories.
 
 The characteristic-admittance fits must be stable, proper, and positive real.
 Together with the propagation fits, they must produce a passive line model.
+
+### Submodel Wiring
+
+```math
+\begin{aligned}
+\mathbf{i}_1^\mathrm{c} &\leftarrow
+  \mathbf{y}_1^\mathrm{c}[\mathbf{P}_\phi^\mathsf T\mathbf{v}_1] \\
+\mathbf{i}_2^\mathrm{c} &\leftarrow
+  \mathbf{y}_2^\mathrm{c}[\mathbf{P}_\phi^\mathsf T\mathbf{v}_2] \\
+\mathbf{i}_1^\mathrm{inc} &\leftarrow
+  \mathbf{h}_{21}[\mathbf{i}_2^\mathrm{ref}] \\
+\mathbf{i}_2^\mathrm{inc} &\leftarrow
+  \mathbf{h}_{12}[\mathbf{i}_1^\mathrm{ref}]
+\end{aligned}
+```
 
 ## Model Variables
 
@@ -103,24 +127,17 @@ $\mathbf{v}_2$ | [V] | Terminal 2 voltage owned by EMT bus | $\mathbf{v}_2 \in \
 
 None.
 
-## Model Ports
-
-Symbol | Port | Type | Units | Description | Note
------- | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}_1$ | `v1` | Input | [V] | Terminal 1 bus voltage | $\mathbf{v}_1 \in \mathbb{R}^N$
-$\mathbf{v}_2$ | `v2` | Input | [V] | Terminal 2 bus voltage | $\mathbf{v}_2 \in \mathbb{R}^N$
-$\mathbf{i}_1$ | `i1` | Output | [A] | Current injection at terminal 1 | $\mathbf{i}_1 \in \mathbb{R}^N$
-$\mathbf{i}_2$ | `i2` | Output | [A] | Current injection at terminal 2 | $\mathbf{i}_2 \in \mathbb{R}^N$
-
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 None.
 
-### Algebraic Equations
+#### Algebraic
 
-The residuals use the wiring signals defined below.
+The residuals use the signals defined under Submodel Wiring.
 
 ```math
 \begin{aligned}
@@ -133,18 +150,10 @@ The residuals use the wiring signals defined below.
 \end{aligned}
 ```
 
-### Wiring
+### External Equations
 
 ```math
 \begin{aligned}
-\mathbf{i}_1^\mathrm{c} &\leftarrow
-  \mathbf{y}_1^\mathrm{c}[\mathbf{P}_\phi^\mathsf T\mathbf{v}_1] \\
-\mathbf{i}_2^\mathrm{c} &\leftarrow
-  \mathbf{y}_2^\mathrm{c}[\mathbf{P}_\phi^\mathsf T\mathbf{v}_2] \\
-\mathbf{i}_1^\mathrm{inc} &\leftarrow
-  \mathbf{h}_{21}[\mathbf{i}_2^\mathrm{ref}] \\
-\mathbf{i}_2^\mathrm{inc} &\leftarrow
-  \mathbf{h}_{12}[\mathbf{i}_1^\mathrm{ref}] \\
 \mathbf{i}_1 &\leftarrow
   \mathbf{P}_\phi(\mathbf{i}_1^\mathrm{inc}-\mathbf{i}_1^\mathrm{c}) \\
 \mathbf{i}_2 &\leftarrow
@@ -172,8 +181,6 @@ Monitor | Units | Description | Note
 The initial three-phase formulation takes $N=K=3$ and
 $\mathbf{P}_\phi=\mathbf{I}_3$.
 
-### Algebraic Equations
-
 ```math
 \begin{aligned}
 0 &= -\mathbf{i}_1^\mathrm{ref}
@@ -185,7 +192,18 @@ $\mathbf{P}_\phi=\mathbf{I}_3$.
 \end{aligned}
 ```
 
-### Wiring
+the external equations reduce to
+
+```math
+\begin{aligned}
+\mathbf{i}_1
+  &\leftarrow \mathbf{i}_1^\mathrm{inc}-\mathbf{i}_1^\mathrm{c} \\
+\mathbf{i}_2
+  &\leftarrow \mathbf{i}_2^\mathrm{inc}-\mathbf{i}_2^\mathrm{c}
+\end{aligned}
+```
+
+and the submodel wiring reduces to
 
 ```math
 \begin{aligned}
@@ -196,10 +214,6 @@ $\mathbf{P}_\phi=\mathbf{I}_3$.
 \mathbf{i}_1^\mathrm{inc}
   &\leftarrow \mathbf{h}_{21}[\mathbf{i}_2^\mathrm{ref}] \\
 \mathbf{i}_2^\mathrm{inc}
-  &\leftarrow \mathbf{h}_{12}[\mathbf{i}_1^\mathrm{ref}] \\
-\mathbf{i}_1
-  &\leftarrow \mathbf{i}_1^\mathrm{inc}-\mathbf{i}_1^\mathrm{c} \\
-\mathbf{i}_2
-  &\leftarrow \mathbf{i}_2^\mathrm{inc}-\mathbf{i}_2^\mathrm{c}
+  &\leftarrow \mathbf{h}_{12}[\mathbf{i}_1^\mathrm{ref}]
 \end{aligned}
 ```

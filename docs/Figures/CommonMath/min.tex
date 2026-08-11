@@ -1,0 +1,20 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{commonmath}
+
+\begin{document}
+\begin{tikzpicture}
+\begin{groupplot}[
+    cmbase,
+    x=0.95cm, y=0.95cm,
+    xmin=-2.2, xmax=2.4, ymin=-2.5, ymax=1.4,
+    xtick={1},  xticklabels={$y$},
+    ytick={1},    yticklabels={$y$},
+    domain=-2.05:2.4,
+]
+\exactpanel
+  \addplot {min(x,1)};
+
+\smoothpanel{x - rhoS(x-1,\cmu)}
+\end{groupplot}
+\end{tikzpicture}
+\end{document}
