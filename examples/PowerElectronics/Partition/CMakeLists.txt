@@ -1,9 +1,9 @@
 find_package(OpenMP)
 
-add_executable(partition Partition.cpp)
+add_executable(partitionHires PartitionHires.cpp)
 
 target_link_libraries(
-  partition
+  partitionHires
   PRIVATE GridKit::solvers_dyn GridKit::power_elec_partition_interfaces)
 
 add_executable(partitionMicrogrid PartitionMicrogrid.cpp)
@@ -19,7 +19,7 @@ target_link_libraries(
 
 add_test(NAME PartitionMicrogrid COMMAND partitionMicrogrid)
 
-install(TARGETS partition partitionMicrogrid RUNTIME DESTINATION bin)
+install(TARGETS partitionHires partitionMicrogrid RUNTIME DESTINATION bin)
 
 if(OpenMP_CXX_FOUND)
   add_executable(PartitionScaleMicrogrid PartitionScaleMicrogrid.cpp)

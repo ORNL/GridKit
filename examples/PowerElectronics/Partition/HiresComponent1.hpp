@@ -8,7 +8,7 @@
 namespace GridKit
 {
   /*!
-   * @brief Declaration of a Hires Component 1 class.
+   * @brief Hires Component 1 class.
    *
    */
   template <class ScalarT, typename IdxT>
@@ -57,7 +57,7 @@ namespace GridKit
     {
     }
 
-    int allocate()
+    int allocate() final
     {
       CircuitComponent<ScalarT, IdxT>::allocate();
 
@@ -67,17 +67,17 @@ namespace GridKit
       return 0;
     }
 
-    int initialize()
+    int initialize() final
     {
       return 0;
     }
 
-    int tagDifferentiable()
+    int tagDifferentiable() final
     {
       return 0;
     }
 
-    int evaluateInternalResidual()
+    int evaluateInternalResidual() final
     {
       // Internals
       f_int_[0] = -yp_int_[0] - 1.71 * y_int_[0] + 0.43 * y_int_[1] + 8.32 * y_int_[2] + 0.0007;
@@ -96,7 +96,7 @@ namespace GridKit
       return 0;
     }
 
-    int evaluateJacobian()
+    int evaluateJacobian() final
     {
 
       this->zeroJacMatrix();
@@ -118,22 +118,22 @@ namespace GridKit
       return 0;
     }
 
-    int evaluateIntegrand()
+    int evaluateIntegrand() final
     {
       return 0;
     }
 
-    int initializeAdjoint()
+    int initializeAdjoint() final
     {
       return 0;
     }
 
-    int evaluateAdjointResidual()
+    int evaluateAdjointResidual() final
     {
       return 0;
     }
 
-    int evaluateAdjointIntegrand()
+    int evaluateAdjointIntegrand() final
     {
       return 0;
     }
@@ -150,7 +150,7 @@ namespace GridKit
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */
-    int setAbsoluteTolerance(RealT rel_tol)
+    int setAbsoluteTolerance(RealT rel_tol) final
     {
       abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;

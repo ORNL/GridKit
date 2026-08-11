@@ -6,7 +6,7 @@
 namespace GridKit
 {
   /*!
-   * @brief Declaration of a Hires Component 3 class.
+   * @brief Hires Component 3 class.
    *
    */
   template <class ScalarT, typename IdxT>
@@ -89,8 +89,8 @@ namespace GridKit
     int evaluateExternalResidual()
     {
       // Externals
-      *f_ext_[0] = -0.02 * *y_ext_[0];
-      *f_ext_[1] = -0.045 * *y_ext_[1] + 0.43 * y_int_[0] + 0.43 * y_int_[1];
+      *f_ext_[0] += -0.02 * *y_ext_[0];
+      *f_ext_[1] += -0.045 * *y_ext_[1] + 0.43 * y_int_[0] + 0.43 * y_int_[1];
 
       return 0;
     }
