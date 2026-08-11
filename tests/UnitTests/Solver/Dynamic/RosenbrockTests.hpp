@@ -142,13 +142,14 @@ namespace GridKit
 
       int evaluateResidual() override
       {
-        const auto* y = y_.getData();
-        auto*       f = f_.getData();
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
 
         ScalarT y02 = y[0] * y[0];
         ScalarT y12 = y[1] * y[1];
 
-        f[0] = y02 / (y[1] * std::sqrt(std::pow(y[0] / y[1], 2) - 1));
+        f[0] = -yp[0] + y02 / (y[1] * std::sqrt(std::pow(y[0] / y[1], 2) - 1));
         f[1] = y12 + 1 / (1 + y02) - (y02 / y12 - y02);
 
         f_.setDataUpdated();
@@ -174,7 +175,7 @@ namespace GridKit
         ScalarT tmp  = std::pow(y12 / y22 - 1, 1.5);
         ScalarT tmp2 = std::pow(y12 + 1, 2);
 
-        vals[0] = static_cast<RealT>(alpha_ + -(-y13 + 2 * y1 * y22) / (y23 * tmp));
+        vals[0] = static_cast<RealT>(-alpha_ + -(-y13 + 2 * y1 * y22) / (y23 * tmp));
         vals[1] = static_cast<RealT>(y12 / (y22 * tmp));
         vals[2] = static_cast<RealT>(-2 * y1 * (1 / y22 - 1) - (2 * y1) / tmp2);
         vals[3] = static_cast<RealT>((2 * (y12 + y24)) / y23);

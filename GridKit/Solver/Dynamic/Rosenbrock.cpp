@@ -641,6 +641,7 @@ namespace AnalysisManager
     int Rosenbrock<ScalarT, IdxT>::timeStep(RealT t0, RealT dt)
     {
       constexpr RealT ZERO      = GridKit::ZERO<RealT>;
+      constexpr RealT ONE       = GridKit::ONE<RealT>;
       constexpr RealT MINUS_ONE = GridKit::MINUS_ONE<RealT>;
 
       // A flag to keep track of if y0 (stored in y_cur_) has been copied in to the model already, to avoid double-copying
@@ -657,7 +658,7 @@ namespace AnalysisManager
 
         // GridKit, like IDA, expects to evaluate the Jacobian J = df/dy + alpha * df/dy',
         // so we need a negative here since df/dy' = M.
-        model_->updateTime(t0, MINUS_ONE / (dt * tab_.gamma_));
+        model_->updateTime(t0, ONE / (dt * tab_.gamma_));
         BUBBLE_FAIL(model_->evaluateJacobian());
         BUBBLE_FAIL(lin_solver_.setupSolver(workspace_.jacobian_analyzed_));
         workspace_.jacobian_analyzed_ = true;
