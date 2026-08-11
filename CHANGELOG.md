@@ -80,6 +80,7 @@
 - Added `HYGOV` governor model implementation for PhasorDynamics.
 - Added `REPCA` controller model implementation for PhasorDynamics.
 - Added `REECB` electrical-control model implementation for PhasorDynamics.
+- Added subsystem partitioning support for `PowerElectronics` models, including partition interfaces, and independent residual and Jacobian evaluation.
 
 ## v0.1
 

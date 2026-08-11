@@ -136,6 +136,23 @@ namespace GridKit
         };
       }
 
+      /**
+       * @brief Update the connection index for a variable.
+       *
+       * Changes only the connection index without modifying the variable's
+       * internal/external classification or its associated data pointers.
+       *
+       * @param local_index Index of the local variable.
+       * @param connection_index New connection index for the variable.
+       *
+       * @return int 0 if successful.
+       */
+      int setConnectionNodes(size_t local_index, IdxT connection_index)
+      {
+        connection_nodes_[local_index] = connection_index;
+        return 0;
+      }
+
       int allocate() override
       {
         size_t size = static_cast<size_t>(n_intern_ + n_extern_);
