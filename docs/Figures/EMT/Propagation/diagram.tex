@@ -5,9 +5,9 @@
 \begin{tikzpicture}[emt diagram]
 
 % Three-block current propagation: fitted input map -> modal delays -> fitted output map
-\node[block, minimum width=2.1cm] (D2) {$e^{-s\tau_2}$};
-\node[block, minimum width=2.1cm, above=0.6cm of D2] (D1) {$e^{-s\tau_1}$};
-\node[block, minimum width=2.1cm, below=1.3cm of D2] (DN) {$e^{-s\tau_M}$};
+\node[block, minimum width=2.1cm] (D2) {$\exp(-s\tau_2)$};
+\node[block, minimum width=2.1cm, above=0.6cm of D2] (D1) {$\exp(-s\tau_1)$};
+\node[block, minimum width=2.1cm, below=1.3cm of D2] (DN) {$\exp(-s\tau_M)$};
 \node at ($(D2)!0.5!(DN)$) {$\vdots$};
 
 \node[block, minimum width=2.6cm, left=1.5cm of D2]

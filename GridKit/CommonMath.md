@@ -64,7 +64,7 @@ We implement the Ramp function as the $\text{softplus}(x)$, non-negative approxi
 ```math
 \begin{aligned}
   \rho(x)
-  = \dfrac{1}{\mu}\ln(1+e^{\mu x}) \approx \text{ReLU}(x)
+  = \dfrac{1}{\mu}\ln(1+\exp(\mu x)) \approx \text{ReLU}(x)
 \end{aligned}
 ```
 
@@ -76,7 +76,7 @@ Although $\rho(x)$ is real-analytic, the implemented form is an overflow-safe re
 \begin{aligned}
   \rho(x) =
   \dfrac{x+\lvert x\rvert}{2}
-  + \dfrac{1}{\mu}\ln\left(1+e^{-\mu\lvert x\rvert}\right)
+  + \dfrac{1}{\mu}\ln\left(1+\exp(-\mu\lvert x\rvert)\right)
 \end{aligned}
 ```
 The kinks of the two terms cancel exactly.

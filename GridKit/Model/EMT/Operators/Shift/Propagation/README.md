@@ -61,7 +61,7 @@ The offline fitting targets and propagation factorization are
 \mathbf{H}^\mathrm{mps}(s)
   &= \mathrm{diag}(h_1^\mathrm{mps}(s),\ldots,h_M^\mathrm{mps}(s)) \\
 \mathbf{D}_{\boldsymbol{\tau}}(s)
-  &= \mathrm{diag}(e^{-s\tau_1},\ldots,e^{-s\tau_M}) \\
+  &= \mathrm{diag}(\exp(-s\tau_1),\ldots,\exp(-s\tau_M)) \\
 \mathbf{H}(s)
   &= \mathbf{T}_i(s)\mathbf{D}_{\boldsymbol{\tau}}(s)
      \mathbf{H}^\mathrm{mps}(s)\mathbf{T}_i^{-1}(s) \\

@@ -4,7 +4,7 @@
 
 ```math
 \mathbf{D}_{\boldsymbol{\tau}}(s)
-  = \mathrm{diag}\left(e^{-s\tau_1},\ldots,e^{-s\tau_M}\right).
+  = \mathrm{diag}\left(\exp(-s\tau_1),\ldots,\exp(-s\tau_M)\right).
 ```
 
 At runtime, accepted-step input samples are reconstructed with cubic Hermite
