@@ -446,6 +446,29 @@ namespace GridKit
         addComponent(hygov);
       }
 
+      // Add IEEEST stabilizers before exciters that read their output during
+      // initialization.
+      for (const auto& stabdata : data.stabilizer)
+      {
+        auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
+
+        if (stabdata.signal_inputs.contains(IeeestSignalInputs::input))
+        {
+          IdxT           input = stabdata.signal_inputs.at(IeeestSignalInputs::input);
+          constexpr auto U     = IeeestExternalVariables::U;
+          stabilizer->getSignals().template attachSignalNode<U>(getSignal(input));
+        }
+
+        if (stabdata.signal_outputs.contains(IeeestSignalOutputs::output))
+        {
+          IdxT           output = stabdata.signal_outputs.at(IeeestSignalOutputs::output);
+          constexpr auto VSS    = IeeestInternalVariables::VSS;
+          stabilizer->getSignals().template assignSignalNode<VSS>(getSignal(output));
+        }
+
+        addComponent(stabilizer);
+      }
+
       for (const auto& excitedata : data.exciter)
       {
         IdxT bus_index = 0;
@@ -553,28 +576,6 @@ namespace GridKit
         }
 
         addComponent(exciter);
-      }
-
-      // Add IEEEST stabilizers
-      for (const auto& stabdata : data.stabilizer)
-      {
-        auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
-
-        if (stabdata.signal_inputs.contains(IeeestSignalInputs::input))
-        {
-          IdxT           input = stabdata.signal_inputs.at(IeeestSignalInputs::input);
-          constexpr auto U     = IeeestExternalVariables::U;
-          stabilizer->getSignals().template attachSignalNode<U>(getSignal(input));
-        }
-
-        if (stabdata.signal_outputs.contains(IeeestSignalOutputs::output))
-        {
-          IdxT           output = stabdata.signal_outputs.at(IeeestSignalOutputs::output);
-          constexpr auto VSS    = IeeestInternalVariables::VSS;
-          stabilizer->getSignals().template assignSignalNode<VSS>(getSignal(output));
-        }
-
-        addComponent(stabilizer);
       }
 
       // Add REPCA plant controllers after the signal producers they read at
