@@ -445,8 +445,8 @@ namespace GridKit
      *
      * Most components do not need state and residual storages. The most notable exception
      * is currently the system, so a separate flag is provided for the system.
-     * Systems still can't directly access `y_`, `yp_`, and `f_`, so they need
-     * their corresponding `y_int_`, `yp_int_`, and `f_int_` set, since there isn't
+     * Systems still can't directly access \ref y_, \ref yp_, and \ref f_, so they need
+     * their corresponding \ref y_int_, \ref yp_int_, and \ref f_int_ set, since there isn't
      * another system above them to set it.
      *
      * @todo This is a weird exception specifically for systems - and in a hierarchical setting
@@ -478,7 +478,7 @@ namespace GridKit
     /**
      * @brief A set of variable indices which correspond to the external variables. Variables indices not in this set are internal.
      *
-     * @invariant Must have a size of n_extern_. Each element must be in the range [0, `size_` - 1]. Not currently verified anywhere.
+     * @invariant Must have a size of \ref n_extern_. Each element must be in the range [0, \ref size_ - 1]. Not currently verified anywhere.
      */
     std::set<IdxT>          extern_indices_;
     /**
@@ -490,7 +490,7 @@ namespace GridKit
     std::unique_ptr<IdxT[]> connection_nodes_;
 
   protected:
-    /// The number of variables in this component. Should be equal to `n_extern_` plus `n_intern_`. \see size()
+    /// The number of variables in this component. Should be equal to \ref n_extern_ plus \ref n_intern_. \see size()
     IdxT size_{0};
     /// The number of nonzero elements in this component's Jacobian. \see nnz()
     IdxT nnz_{0};
@@ -514,7 +514,7 @@ namespace GridKit
 
     /**
      * An array of (input) pointers to state values for external variables.
-     * \note The size of this array is equal to `size_`, allowing you to index it with the index
+     * \note The size of this array is equal to \ref size_, allowing you to index it with the index
      * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
      * and dereferencing the pointer in an internal variable index is undefined behavior.
      * \see setExternalConnectionNodes()
@@ -522,7 +522,7 @@ namespace GridKit
     std::unique_ptr<const ScalarT*[]> y_ext_;
     /**
      * An array of (input) pointers to derivative values for external variables.
-     * \note The size of this array is equal to `size_`, allowing you to index it with the index
+     * \note The size of this array is equal to \ref size_, allowing you to index it with the index
      * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
      * and dereferencing the pointer in an internal variable index is undefined behavior.
      * \see setExternalConnectionNodes()
@@ -530,7 +530,7 @@ namespace GridKit
     std::unique_ptr<const ScalarT*[]> yp_ext_;
     /**
      * An array of (output) pointers to residuals for external variables.
-     * \note The size of this array is equal to `size_`, allowing you to index it with the index
+     * \note The size of this array is equal to \ref size_, allowing you to index it with the index
      * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
      * and dereferencing the pointer in an internal variable index is undefined behavior.
      * \see setExternalConnectionNodes()
