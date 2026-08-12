@@ -113,7 +113,7 @@ def pm_summary(case_label: str, df: pd.DataFrame, rc: int, stderr: str) -> None:
             print(f"  {tag}={m.group(1)}")
     # Ipopt iteration count from print_level=3 output redirected to stderr
     iters_m = re.search(r"Number of Iterations\.+:\s*(\d+)", stderr)
-    nlp_m = re.search(r"Final NLP error:\s*(\S+)", stderr)
+    nlp_m = re.search(r"Overall NLP error\.+:\s*(\S+)", stderr)
     if iters_m:
         iters_str = iters_m.group(1)
         nlp_str = nlp_m.group(1) if nlp_m else "n/a"

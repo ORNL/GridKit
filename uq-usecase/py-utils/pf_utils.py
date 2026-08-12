@@ -361,3 +361,79 @@ def make_gen_off_m(
         f"  ({off_count} gen(s) offline: {label}  |  MW dropped: {mw_dropped:.1f})"
     )
     return frozenset(off_buses)
+
+
+def make_load_scale_m(src: Path, dst: Path, scale: float) -> float:
+    """Scale all bus Pd and Qd uniformly by `scale`.
+
+    Unlike make_perturbed_load_m (random per-bus noise), this applies the same
+    scalar to every bus, keeping the load distribution shape unchanged.
+    Useful for PV-curve tracing and convergence-limit studies.
+
+    Returns the total Pd after scaling (MW).
+    """
+    content = src.read_text()
+    rows = _parse_block(content, "bus")
+    new_lines = []
+    total_pd = 0.0
+    for row in rows:
+        cols = row.split()
+        pd_new = float(cols[2]) * scale
+        qd_new = float(cols[3]) * scale
+        total_pd += pd_new
+        cols[2] = f"{pd_new:.6f}"
+        cols[3] = f"{qd_new:.6f}"
+        new_lines.append("\t" + "\t".join(cols) + ";")
+    content = _replace_block(content, "bus", "\n".join(new_lines) + "\n")
+    dst.write_text(content)
+    print(f"Written: {dst.name}  (scale={scale}x, total Pd={total_pd:.1f} MW)")
+    return total_pd
+
+
+def make_gen_off_largest_m(
+    src: Path, dst: Path, n_largest: int
+) -> tuple[frozenset, float]:
+    """Take the n_largest non-slack online generators offline, sorted by Pg descending.
+
+    Zeros GEN_STATUS, Pg, and Qg (same convention as make_gen_off_m).
+    Slack bus generators are excluded from selection.
+
+    Returns (frozenset of offline bus numbers, total MW dropped).
+    """
+    content = src.read_text()
+    gen_rows = _parse_block(content, "gen")
+    bus_rows = _parse_block(content, "bus")
+    slack_buses = {int(r.split()[0]) for r in bus_rows if r.split()[1] == "3"}
+
+    candidates = [
+        (int(r.split()[0]), float(r.split()[1]))
+        for r in gen_rows
+        if int(r.split()[7]) == 1
+        and float(r.split()[1]) > 0
+        and int(r.split()[0]) not in slack_buses
+    ]
+    if n_largest > len(candidates):
+        raise ValueError(
+            f"n_largest={n_largest} exceeds available online non-slack gens"
+            f" ({len(candidates)})"
+        )
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    off_buses = frozenset(bus for bus, _ in candidates[:n_largest])
+    mw_dropped = sum(pg for _, pg in candidates[:n_largest])
+
+    new_gen_lines = []
+    for row in gen_rows:
+        cols = row.split()
+        if int(cols[0]) in off_buses:
+            cols[7] = "0"
+            cols[1] = "0.000000"
+            cols[2] = "0.000000"
+        new_gen_lines.append("\t" + "\t".join(cols) + ";")
+    content = _replace_block(content, "gen", "\n".join(new_gen_lines) + "\n")
+    dst.write_text(content)
+    print(
+        f"Written: {dst.name}"
+        f"  ({n_largest} largest gens offline: buses {sorted(off_buses)}"
+        f"  |  MW dropped: {mw_dropped:.1f})"
+    )
+    return frozenset(off_buses), mw_dropped
