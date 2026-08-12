@@ -17,11 +17,11 @@ if [[ "${1}" == "--force" ]]; then
 fi
 
 # ── Fetch latest refs without changing working tree ───────────────────────────
-echo "=== Checking for new commits on upstream/develop ==="
+echo "=== Checking for new commits on origin/develop ==="
 cd "$GRIDKIT_DIR"
-git fetch upstream develop 2>&1
+git fetch origin develop 2>&1
 
-REMOTE_COMMIT=$(git rev-parse upstream/develop)
+REMOTE_COMMIT=$(git rev-parse origin/develop)
 LAST_BUILT=$(cat "$STAMP_FILE" 2>/dev/null || echo "none")
 
 echo "  Remote:     $REMOTE_COMMIT"
@@ -39,7 +39,7 @@ echo "New commits detected (or --force). Merging develop and rebuilding..."
 echo ""
 
 # ── Merge develop into personal branch (safe: uq-usecase/ not on develop) ─────
-git merge upstream/develop
+git merge origin/develop
 
 # ── Rebuild GridKit ───────────────────────────────────────────────────────────
 echo ""
@@ -57,12 +57,12 @@ echo "=== [3/3] Running tests ==="
 ctest --test-dir "$GRIDKIT_DIR/build" --output-on-failure
 
 # ── Record the commit we just built ──────────────────────────────────────────
-# Record the upstream/develop commit we just built against
+# Record the origin/develop commit we just built against
 echo "$REMOTE_COMMIT" > "$STAMP_FILE"
 
 echo ""
 echo "=== Done ==="
-echo "  GridKit built:  upstream/develop @ $REMOTE_COMMIT"
+echo "  GridKit built:  origin/develop @ $REMOTE_COMMIT"
 echo "  MkDocs built:   $GRIDKIT_DIR/uq-usecase/mkdocs-site/"
 echo "  Copilot prompt: $GRIDKIT_DIR/uq-usecase/context/gridkit_docs.prompt.md"
 echo "  Tests ran:      all passed (stamp updated)"

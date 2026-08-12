@@ -12,6 +12,7 @@ All summary numbers below are computed by parsing the tables in this file.
 | Quantity | Value |
 | :--- | :--- |
 | **Buses** | 200 total: 151 PQ (type 1), 48 PV (type 2), 1 slack (type 3) |
+| **Generator buses** | All 49 gen buses are PV (type 2), except bus 189 (nuclear, 384.4 MW) which is the slack (type 3). No generator sits at a PQ bus. |
 | **Load buses** (PD > 0) | 108 buses |
 | **Total PD** | 1475.69 MW |
 | **Total QD** | 420.55 MVAr |

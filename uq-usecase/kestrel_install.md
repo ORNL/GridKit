@@ -104,7 +104,7 @@ salloc --time=1:00:00 --account=scidac --nodes=1 --partition=debug
 ```
 
 ```bash
-# Rebuild GridKit + docs if there are new commits on upstream develop, and run tests:
+# Rebuild GridKit + docs if there are new commits on origin/develop, and run tests:
 cd ~/gridkit/uq-usecase/scripts/
 bash rebuild_if_updated.sh 2>&1 | tee logs/rebuild.log
 
@@ -112,30 +112,6 @@ bash rebuild_if_updated.sh 2>&1 | tee logs/rebuild.log
 rsync -avz --delete kestrel:~/gridkit/uq-usecase/mkdocs-site/ ~/projects/scidac/gridkit/gridkit-mkdocs/ \
   && open ~/projects/scidac/gridkit/gridkit-mkdocs/index.html
 ```
-
-### Mixed HPC + local workflow (notes on local, code on HPC)
-
-`wip.sh` does not pull before pushing. If `.md` notes were committed and pushed from a
-local clone since the last HPC WIP push, a plain `git push` will be rejected
-(non-fast-forward). Always pull on HPC first:
-
-```bash
-# Start of each HPC work session (before rebuild or wip):
-git pull --rebase origin isatkaus/uq-usecase
-```
-
-Safe full sequence when combining a rebuild with a WIP push:
-
-```bash
-git pull --rebase origin isatkaus/uq-usecase   # sync local notes commits first
-bash rebuild_if_updated.sh 2>&1 | tee logs/rebuild.log   # merges upstream/develop + builds
-# ... do notebook/code work ...
-bash uq-usecase/scripts/wip.sh "WIP: ..."      # commits + pushes everything
-```
-
-**Rule:** only edit `uq-usecase/*.md` notes (e.g. `gt_ideas.md`, `plan.md`) from the
-local clone, never from HPC. This keeps the two machines working on non-overlapping
-files and makes `git pull --rebase` always a clean fast-forward with no conflicts.
 
 To force a rebuild even without new commits:
 ```bash
@@ -151,36 +127,65 @@ After each mkdocs build (including via `rebuild_if_updated.sh`), a Copilot conte
 auto-generated at `uq-usecase/context/gridkit_docs.prompt.md`. It lists all GridKit `.md` files
 and can be attached in a chat session to give the agent full documentation context.
 
-## Saving Work-in-Progress to Fork
+## Saving Work-in-Progress
 
-Stage and push all changes under `uq-usecase/` to `origin/isatkaus/uq-usecase`:
+Stage and push all changes under `uq-usecase/` to `origin/isatkaus/uq-usecase`
+(i.e. directly to `ORNL/GridKit`, branch `isatkaus/uq-usecase`):
 ```bash
 bash ~/gridkit/uq-usecase/scripts/wip.sh "your commit message"
 # default message is "wip" if omitted
 bash ~/gridkit/uq-usecase/scripts/wip.sh
 ```
 
-Only files under `uq-usecase/` and `.gitignore` are staged — upstream GridKit files are never touched.
+Only files under `uq-usecase/` and `.gitignore` are staged — GridKit core files on `develop` are never touched.
 
-## Selective PRs to Upstream (ORNL/GridKit)
+## Feature Branches and PRs to develop
 
-The goal is to contribute specific files from `isatkaus/uq-usecase` upstream without including
-personal workflow files (scripts, figs, personal paths, etc.).
+The goal is to contribute specific files from `isatkaus/uq-usecase` to `develop` without
+including personal workflow files (scripts, figs, personal paths, etc.).
 
-**Key rule:** never open a PR from `isatkaus/uq-usecase` directly — it contains personal scripts
-and notebooks that should not go upstream. Always create a clean branch first.
+**Key rule:** never open a PR from `isatkaus/uq-usecase` directly — it contains personal
+scripts and notebooks that should not go into `develop`. Always create a clean branch first.
+
+**Branch layout:**
+```
+isatkaus/uq-usecase  ──●──●──●──●──●   (your WIP, pushed to ORNL/GridKit)
+                      /         ↑
+develop  ────●────●──     periodic merge via rebuild_if_updated.sh
+
+pr/my-feature  (clean cherry-pick, opened as PR into develop)
+```
+
+### PR conventions (from PR #516)
+
+These apply to any new PR targeting `develop`. Not needed for WIP on `isatkaus/uq-usecase`.
+
+| Concern | Convention |
+|---|---|
+| **File locations** | `application/notebooks/<feature>/` per feature; shared helpers in `application/notebooks/gridkit_common/` |
+| **UQ modules** | `application/notebooks/uq_sampling/sampling.py`, `runs.py`, `dispatch.py` |
+| **Install** | `pyproject.toml` — no `sys.path.insert` in notebooks |
+| **Paths** | Env vars only: `GRIDKIT_CASE_DATA_DIR`, `GRIDKIT_REPO`, `GRIDKIT_FIGS_DIR` — no hardcoded paths |
+| **Tests** | `tests/UnitTests/Python/` pytest suite |
+| **CMake** | Gate behind `GridKit_ENABLE_NOTEBOOKS`; use `notebooks_pyenv` venv CMake target |
 
 ### Example: m_viz PR (July 2026)
+
+> **Note:** this PR as originally submitted (#490) did not follow GridKit's directory
+> conventions and lacked CMake wiring and unit tests. The PI reorganized it into
+> [ORNL/GridKit #516](https://github.com/ORNL/GridKit/pull/516), which supersedes #490:
+> same notebook and visualization functionality, but restructured to match existing
+> GridKit conventions and with CMake gating and unit tests added. Use #516 as the
+> reference for what a compliant PR looks like.
 
 Files contributed: `uq-usecase/notebooks/m_viz.ipynb`, `uq-usecase/notebooks/setup_env.md`,
 `uq-usecase/py-utils/m_viz_utils.py`, `uq-usecase/py-utils/gridkit_utils.py`
 
-**Step 1: Fetch upstream and create a clean branch from upstream/develop**
+**Step 1: Create a clean branch from origin/develop**
 ```bash
 cd ~/gridkit
-git fetch upstream
-git checkout -b pr/m-viz upstream/develop
-# branch 'pr/m-viz' set up to track 'upstream/develop'
+git fetch origin
+git checkout -b pr/m-viz origin/develop
 ```
 
 **Step 2: Copy only the specific files you want to contribute**
@@ -198,7 +203,7 @@ git status
 # Expected: 4 files under "Changes to be committed", nothing else
 ```
 
-**Step 3: Commit and push to your fork**
+**Step 3: Commit and push directly to ORNL/GridKit**
 ```bash
 git commit -m "m_viz: geo visualization for all 4 cases, fuel colors, line loading, setup_env.md"
 git push origin pr/m-viz
@@ -206,15 +211,13 @@ git push origin pr/m-viz
 
 **Step 4: Open the PR on GitHub**
 
-Go to: `https://github.com/isatkaus/GridKit/pull/new/pr/m-viz`
+Go to: `https://github.com/ORNL/GridKit/pull/new/pr/m-viz`
 
-- Base repository: `ORNL/GridKit`, base branch: `develop`
-- Head repository: `isatkaus/GridKit`, compare: `pr/m-viz`
+- Base: `ORNL/GridKit develop`
+- Compare: `ORNL/GridKit pr/m-viz`
 - Check "Able to merge" is green before proceeding
 - Fill in title and description using the PR template
-- Note: as a non-member of ORNL/GridKit, the Reviewers sidebar will not appear before
-  submitting. Click "Create pull request", then post a comment tagging reviewers:
-  `@lukelowry @nkoukpaizan @pelesh please review when you get a chance.`
+- Tag reviewers: `@lukelowry @nkoukpaizan @pelesh please review when you get a chance.`
 
 **Step 5: Switch back to your working branch**
 ```bash
