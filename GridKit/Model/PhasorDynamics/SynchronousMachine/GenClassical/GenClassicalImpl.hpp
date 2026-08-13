@@ -16,11 +16,14 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     /**
      * @brief Constructor for a classical generator model
      */
@@ -375,10 +378,22 @@ namespace GridKit
       }
       else
       {
+        if (H_ < static_cast<RealT>(0.1))
+        {
+          Log::warning() << "GenClassical: H below 0.1 is raised to that floor\n";
+        }
         H_     = std::max(H_, static_cast<RealT>(0.1));
         H_inv_ = ONE<RealT> / (TWO<RealT> * H_);
       }
 
+      if (Xdp_ < static_cast<RealT>(1.0e-5))
+      {
+        Log::warning() << "GenClassical: Xdp below 1e-5 is raised to that floor\n";
+      }
+      else if (Xdp_ > static_cast<RealT>(999.0))
+      {
+        Log::warning() << "GenClassical: Xdp above 999 is lowered to that ceiling\n";
+      }
       Xdp_ = std::clamp(Xdp_, static_cast<RealT>(1.0e-5), static_cast<RealT>(999.0));
 
       G_               = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);

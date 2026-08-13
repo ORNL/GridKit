@@ -315,8 +315,9 @@ namespace GridKit
 
         const ScalarT se0 = SB_ * Math::qramp(efdp0 - SA_);
 
-        RealT ke0 = Ke_;
-        if (ke0 == ZERO<RealT>)
+        const bool automatic_ke = Ke_ == ZERO<RealT>;
+        RealT      ke0          = Ke_;
+        if (automatic_ke)
         {
           const RealT efdp_real0 = static_cast<RealT>(efdp0);
           ret                    = efdp_real0 != ZERO<RealT>;
@@ -369,6 +370,11 @@ namespace GridKit
         const ScalarT ev0   = vll0;
         const ScalarT xll0  = ev0;
         const ScalarT vref0 = ev0 + vc0 + vf0 - vs0 - uel_on_ * vuel0;
+
+        if (automatic_ke)
+        {
+          Log::warning() << "Esdc1a: Ke is zero and is set so initial VR equals Vrmax/10\n";
+        }
 
         Ke_     = ke0;
         y[EFDP] = efdp0;

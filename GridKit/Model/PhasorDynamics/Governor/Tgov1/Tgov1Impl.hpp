@@ -133,6 +133,7 @@ namespace GridKit
       {
         if (Pvmax_ < Pvmin_)
         {
+          Log::warning() << "Tgov1: Pvmax is below Pvmin and the limits are swapped\n";
           std::swap(Pvmin_, Pvmax_);
         }
         va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
@@ -298,6 +299,12 @@ namespace GridKit
           return 1;
         }
 
+        if (static_cast<RealT>(pv0) < Pvmin_
+            || static_cast<RealT>(pv0) > Pvmax_)
+        {
+          Log::warning() << "Tgov1: initial valve position is outside [Pvmin, Pvmax] "
+                            "and the limits are widened\n";
+        }
         Pvmin_ = std::min(Pvmin_, static_cast<RealT>(pv0));
         Pvmax_ = std::max(Pvmax_, static_cast<RealT>(pv0));
 

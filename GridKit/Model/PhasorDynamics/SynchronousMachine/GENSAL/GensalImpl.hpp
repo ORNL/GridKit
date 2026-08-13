@@ -519,18 +519,29 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Gensal<scalar_type, index_type>::setDerivedParams()
     {
+      if (H_ < static_cast<RealT>(0.1))
+      {
+        Log::warning() << "Gensal: H below 0.1 is raised to that floor\n";
+      }
       H_ = std::max(H_, static_cast<RealT>(0.1));
       if (Xdp_ > Xd_)
       {
+        Log::warning() << "Gensal: Xdp above Xd is set to 0.8 Xd\n";
         Xdp_ = static_cast<RealT>(0.8) * Xd_;
       }
       if (Xdpp_ > Xdp_)
       {
+        Log::warning() << "Gensal: Xdpp above Xdp is set to 0.8 Xdp\n";
         Xdpp_ = static_cast<RealT>(0.8) * Xdp_;
+      }
+      if (Xdpp_ < static_cast<RealT>(0.05))
+      {
+        Log::warning() << "Gensal: Xdpp below 0.05 is raised to that floor\n";
       }
       Xdpp_ = std::max(Xdpp_, static_cast<RealT>(0.05));
       if (Xl_ > Xdpp_)
       {
+        Log::warning() << "Gensal: Xl above Xdpp is set to 0.8 Xdpp\n";
         Xl_ = static_cast<RealT>(0.8) * Xdpp_;
       }
 

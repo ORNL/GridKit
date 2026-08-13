@@ -664,24 +664,40 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Genrou<scalar_type, index_type>::setDerivedParams()
     {
+      if (H_ < static_cast<RealT>(0.1))
+      {
+        Log::warning() << "Genrou: H below 0.1 is raised to that floor\n";
+      }
       H_ = std::max(H_, static_cast<RealT>(0.1));
       if (Xdp_ > Xd_)
       {
+        Log::warning() << "Genrou: Xdp above Xd is set to 0.8 Xd\n";
         Xdp_ = static_cast<RealT>(0.8) * Xd_;
       }
       if (Xqp_ > Xq_)
       {
+        Log::warning() << "Genrou: Xqp above Xq is set to Xq\n";
         Xqp_ = Xq_;
       }
       const RealT transient_min = std::min(Xdp_, Xqp_);
       if (Xdpp_ > transient_min)
       {
+        Log::warning() << "Genrou: Xdpp above min(Xdp, Xqp) is set to 0.8 min(Xdp, Xqp)\n";
         Xdpp_ = static_cast<RealT>(0.8) * transient_min;
+      }
+      if (Xdpp_ < static_cast<RealT>(0.05))
+      {
+        Log::warning() << "Genrou: Xdpp below 0.05 is raised to that floor\n";
       }
       Xdpp_ = std::max(Xdpp_, static_cast<RealT>(0.05));
       if (Xl_ > Xdpp_)
       {
+        Log::warning() << "Genrou: Xl above Xdpp is set to 0.8 Xdpp\n";
         Xl_ = static_cast<RealT>(0.8) * Xdpp_;
+      }
+      if (Xqpp_ != Xdpp_)
+      {
+        Log::warning() << "Genrou: Xqpp is set equal to Xdpp\n";
       }
       Xqpp_ = Xdpp_;
 

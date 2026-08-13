@@ -247,6 +247,7 @@ namespace GridKit
             Log::error() << "Ieeet1: automatic Ke must be finite\n";
             return 1;
           }
+          Log::warning() << "Ieeet1: Ke is zero and is set so initial VR equals Vrmax/10\n";
         }
 
         ScalarT vr  = ke0 * efdp + ve;
@@ -478,6 +479,14 @@ namespace GridKit
           Ispdlim_ = std::visit([](auto value)
                                 { return value != 0 ? ONE<RealT> : ZERO<RealT>; },
                                 data.parameters.at(Parameter::Ispdlim));
+        }
+
+        if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
+            || Te_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM)
+        {
+          Log::warning() << "Ieeet1: Tr, Ta, Te, and Tf below "
+                         << TIME_CONSTANT_MINIMUM
+                         << " s are raised to that floor\n";
         }
 
         Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);
