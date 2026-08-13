@@ -25,7 +25,7 @@ namespace GridKit
     {
     public:
       using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-      static constexpr ScalarT tol_ = 100 * std::numeric_limits<ScalarT>::epsilon();
+      static constexpr ScalarT tol_ = std::numeric_limits<ScalarT>::epsilon();
 
       ExciterIeeet1Tests()  = default;
       ~ExciterIeeet1Tests() = default;
@@ -86,8 +86,9 @@ namespace GridKit
 
         auto data                    = makeTestData();
         data.parameters[Params::Tr]  = 0.0;
+        data.parameters[Params::Ka]  = 64.0;
         data.parameters[Params::Ta]  = 0.0;
-        data.parameters[Params::Ke]  = 0.1;
+        data.parameters[Params::Ke]  = 0.125;
         data.parameters[Params::Te]  = 0.0;
         data.parameters[Params::Kf]  = 0.0;
         data.parameters[Params::Tf]  = 0.0;
@@ -110,7 +111,7 @@ namespace GridKit
         exciter.allocate();
 
         bus.initialize();
-        efd_node.init(1.2);
+        efd_node.init(1.0);
         success *= (exciter.initialize() == 0);
         exciter.tagDifferentiable();
 
@@ -123,10 +124,10 @@ namespace GridKit
         auto*       yp = exciter.yp().getData();
         const auto* f  = exciter.getResidual().getData();
 
-        success *= isEqual(y[2], static_cast<ScalarT>(1.2), tol_);
-        success *= isEqual(y[1], static_cast<ScalarT>(0.12), tol_);
+        success *= isEqual(y[2], static_cast<ScalarT>(1.0), tol_);
+        success *= isEqual(y[1], static_cast<ScalarT>(0.125), tol_);
         success *= isEqual(y[6], static_cast<ScalarT>(0.0), tol_);
-        success *= isEqual(y[7], static_cast<ScalarT>(1.2), tol_);
+        success *= isEqual(y[7], static_cast<ScalarT>(1.0), tol_);
         success *= isEqual(y[8], static_cast<ScalarT>(0.0), tol_);
 
         for (IdxT i = 0; i < exciter.y().getSize(); ++i)
@@ -145,7 +146,7 @@ namespace GridKit
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
         success *= isEqual(f[8], static_cast<ScalarT>(0.0), tol_);
-        y[2]     = 1.2;
+        y[2]     = 1.0;
 
         yp[0] = 123.0;
         exciter.y().setDataUpdated();
@@ -161,16 +162,16 @@ namespace GridKit
         success *= isEqual(f[0], static_cast<ScalarT>(1.0e3), tol_);
 
         y[0] = 5.0;
-        y[4] = 0.02;
+        y[4] = 0.03125;
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[1], static_cast<ScalarT>(880.0), tol_);
+        success *= isEqual(f[1], static_cast<ScalarT>(1875.0), tol_);
 
         y[4] = 0.0;
         y[1] = 1.0;
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[2], static_cast<ScalarT>(880.0), tol_);
+        success *= isEqual(f[2], static_cast<ScalarT>(875.0), tol_);
 
         y[1] = 0.0;
         y[5] = 1.0;
@@ -192,6 +193,8 @@ namespace GridKit
           auto data                        = makeTestData();
           data.parameters[Params::Ke]      = 0.0;
           data.parameters[Params::Ispdlim] = selector;
+          data.parameters[Params::Vrmin]   = 1.0;
+          data.parameters[Params::Vrmax]   = -1.0;
 
           PhasorDynamics::Bus<ScalarT, IdxT>             bus(1.0, 0.0);
           PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);

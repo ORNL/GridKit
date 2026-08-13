@@ -38,8 +38,26 @@ $S_{10}$   | [p.u.]  | Saturation factor at 1.0 pu flux | 0 |
 $S_{12}$   | [p.u.]  | Saturation factor at 1.2 pu flux | 0 |
 $S_\mathrm{mach}$ | [MVA] | Machine power base        | 100 |
 
+### Parameter Validation
+
+GridKit applies the following corrections in order:
+
+```math
+\begin{aligned}
+H < 0.1 &\Longrightarrow H \leftarrow 0.1 \\
+X'_d > X_d &\Longrightarrow X'_d \leftarrow 0.8 X_d \\
+X'_q > X_q &\Longrightarrow X'_q \leftarrow X_q \\
+X''_d > \min(X'_d,X'_q) &\Longrightarrow X''_d \leftarrow 0.8\min(X'_d,X'_q) \\
+X''_d < 0.05 &\Longrightarrow X''_d \leftarrow 0.05 \\
+X_l > X''_d &\Longrightarrow X_l \leftarrow 0.8 X''_d \\
+X''_q \ne X''_d &\Longrightarrow X''_q \leftarrow X''_d
+\end{aligned}
+```
+
+Each changed value produces a logger warning.
+
 ### Model Derived Parameters
-``` math
+```math
 \begin{aligned}
   G      &=  \dfrac{R_a}{R_a^2+(X_q'')^2} &
   B      &= -\dfrac{X_q''}{R_a^2+(X_q'')^2}\\
@@ -103,9 +121,16 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system | Owned by 
 
 ## Model Equations
 
+```math
+\begin{aligned}
+  Vint_r &= V_d\sin(\delta)+V_q\cos(\delta) \\
+  Vint_i &= -V_d\cos(\delta)+V_q\sin(\delta)
+\end{aligned}
+```
+
 ### Differential Equations
 
-``` math
+```math
 \begin{aligned}
   \dot\delta      &= \omega \cdot 2\pi f_\mathrm{base} \\
   \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{m}-D\omega}{1+\omega}
@@ -128,7 +153,7 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system | Owned by 
 
 ### Algebraic Equations
 Note that for implementation purposes, some of these equations may be simplified into functions and the internal variables eliminated. Nevertheless, for modeling clarity and conformance to typical practice, the full equations are given here.
-``` math
+```math
 \begin{aligned}
   0 &= -\psi''_{q} -E'_{d}X_{q5} - \psi'_{q}X_{q4} \\
   0 &= -\psi''_{d} +E'_{q}X_{d5} + \psi'_{d}X_{d4}\\
@@ -138,9 +163,16 @@ Note that for implementation purposes, some of these equations may be simplified
   0 &= -T_{elec} +(\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
   0 &= -k_{sat} + S_B q(\psi''-S_A) \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
-  0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta) \\
-  0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
-  0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (V_d \cos(\delta) + V_q \sin(\delta) - V_i)
+  0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta)
+\end{aligned}
+```
+
+### Network Equations
+
+```math
+\begin{aligned}
+  0 &= -I_r + G(Vint_r-V_r) - B(Vint_i-V_i) \\
+  0 &= -I_i + B(Vint_r-V_r) + G(Vint_i-V_i)
 \end{aligned}
 ```
 
@@ -153,7 +185,7 @@ The power-flow solution gives $V_r$, $V_i$, $I_r$, and $I_i$. At synchronous
 speed, the total subtransient-flux magnitude is available directly in the
 network frame and is independent of rotor angle:
 
-``` math
+```math
 \begin{aligned}
   \psi''
     &\leftarrow \sqrt{

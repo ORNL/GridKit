@@ -260,6 +260,15 @@ namespace GridKit
         ScalarT vf{0};
         ScalarT vfx = (Kf_ / Tf_) * efdp;
 
+        const RealT vr_value = static_cast<RealT>(vr);
+        if (vr_value < Vrmin_ || vr_value > Vrmax_)
+        {
+          Log::warning() << "Ieeet1: initial VR is outside [Vrmin, Vrmax] "
+                            "and the limits are widened\n";
+        }
+        Vrmin_ = std::min(Vrmin_, vr_value);
+        Vrmax_ = std::max(Vrmax_, vr_value);
+
         vref_ = Ec + vtr + vf - vUEL_ - vOEL_ - vs;
 
         Ke_  = ke0;
@@ -363,19 +372,19 @@ namespace GridKit
         ScalarT vs_signal = ws[1];
 
         // The 'pre-limit' derivative of Vr.
-        ScalarT func = (-vr + Ka_ * vtr) / Ta_;
+        ScalarT func = (vtr - vr / Ka_) * Ka_ / Ta_;
 
         // Internal Differential Equations
         f[0] = -vts_dot + (Ec - vts) / Tr_;
         f[1] = -vr_dot + Math::antiwindup(vr, func, Vrmin_, Vrmax_);
-        f[2] = -efdp_dot + (vr - ve - Ke_ * efdp) / Te_;
+        f[2] = -efdp_dot + (vr - (ve + Ke_ * efdp)) / Te_;
         f[3] = -vfx_dot + vf / Tf_;
 
         // Internal Algebraic Equations
         f[4] = -vts + vref_ + vUEL_ + vOEL_ + vs_signal - vtr - vf;
         f[5] = -Tf_ * (vf + vfx) + Kf_ * efdp;
         f[6] = -ve + ksat * efdp;
-        f[7] = -efd + efdp + omega * efdp * Ispdlim_;
+        f[7] = -efd + efdp * (ONE<RealT> + omega * Ispdlim_);
         f[8] = -ksat + SB_ * Math::qramp(efdp - SA_);
 
         return 0;
@@ -481,9 +490,16 @@ namespace GridKit
         }
         if (data.parameters.contains(Parameter::Ispdlim))
         {
+          // Any nonzero Ispdlim value enables the speed multiplier
           Ispdlim_ = std::visit([](auto value)
                                 { return value != 0 ? ONE<RealT> : ZERO<RealT>; },
                                 data.parameters.at(Parameter::Ispdlim));
+        }
+
+        if (Vrmax_ < Vrmin_)
+        {
+          Log::warning() << "Ieeet1: Vrmax is below Vrmin and the limits are swapped\n";
+          std::swap(Vrmin_, Vrmax_);
         }
 
         if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
@@ -520,6 +536,7 @@ namespace GridKit
           return;
         }
 
+        // A zero-valued point is the quadratic knee for the one-zero fit
         if (Se1_ == ZERO<RealT>)
         {
           const RealT dE = E2_ - E1_;
@@ -538,7 +555,7 @@ namespace GridKit
 
         const RealT C = std::sqrt(Se2_ / Se1_);
 
-        // Solution 1 (Aligned with PW)
+        // Solve the two-point quadratic with the non-extraneous root
         SA_ = (C * E1_ - E2_) / (C - ONE<RealT>);
         SB_ = Se1_ / ((E1_ - SA_) * (E1_ - SA_));
       }

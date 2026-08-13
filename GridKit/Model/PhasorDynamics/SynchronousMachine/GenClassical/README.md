@@ -17,12 +17,34 @@ $R_a$       | [p.u.]  | winding resistance              |
 $X_{dp}$    | [p.u.]  | machine reactance parameter     |
 $S_\mathrm{mach}$ | [MVA] | machine power base        |
 
+### Parameter Validation
+
+GridKit applies the following corrections in order:
+
+```math
+\begin{aligned}
+(H,D) \ne (0,0),\ H < 0.1 &\Longrightarrow H \leftarrow 0.1 \\
+X_{dp} < 10^{-5} &\Longrightarrow X_{dp} \leftarrow 10^{-5} \\
+X_{dp} > 999 &\Longrightarrow X_{dp} \leftarrow 999
+\end{aligned}
+```
+
+Each changed value produces a logger warning.
+
 ### Model Derived Parameters
 
 - $G = \dfrac{R_a}{R_a^2 + X_{dp}^2} ~~~$ equivalent stator winding conductance
 - $B = \dfrac{-X_{dp}}{R_a^2 + X_{dp}^2} ~~~$ equivalent stator winding susceptance
 - $f_\mathrm{base} = f_\mathrm{sys} ~~~$ frequency base taken from the system at initialization
 - $S_\mathrm{mach,VA} = 10^6 S_\mathrm{mach} ~~~$ derived machine base used for machine-base/system-base conversions
+
+```math
+H_\mathrm{inv} =
+\begin{cases}
+0, & H=0 \text{ and } D=0 \\
+\dfrac{1}{2H}, & \text{otherwise}
+\end{cases}
+```
 
 <br>
 
@@ -79,7 +101,7 @@ $E_p$  | [p.u.]  | field winding voltage         | owned by exciter, constant if
 ```math 
 \begin{aligned}
 \dot{\delta} &= \omega \cdot 2\pi f_\mathrm{base} \\
-\dot{\omega} &= \frac{1}{2H}\left( \frac{P_{m} - D\omega}{1+\omega}   - T_{e}\right)
+\dot{\omega} &= H_\mathrm{inv}\left( \frac{P_{m} - D\omega}{1+\omega} - T_{e}\right)
 \end{aligned}
 ```
 

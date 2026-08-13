@@ -33,7 +33,7 @@ $I_{\mathrm{spdlim}}$ | [switch] | Speed-multiplier flag; any nonzero value enab
 
 ### Parameter Validation
 
-Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilon_T=10^{-3}$.
+IEEET1 parameters are conditioned and validated as follows. Let $\epsilon_T=10^{-3}$.
 
 ```math
 \begin{aligned}
@@ -41,8 +41,6 @@ Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilo
     \quad T \in \{T_R, T_A, T_E, T_F\} \\
   K_A
     &> 0 \\
-  V_R^{\min}
-    &\le V_R^{\max} \\
   \left(S_1, S_2\right)
     &=(0,0)
       \quad\text{or}\quad
@@ -52,6 +50,8 @@ Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilo
       \end{gathered}
 \end{aligned}
 ```
+
+Time-constant floors and reversed regulator limits are logged.
 
 ### Model Derived Parameters
 
@@ -66,8 +66,8 @@ expected saturation near the operating region:
 \end{aligned}
 ```
 
-When one saturation value is zero, the normal curve fit uses the corresponding
-voltage as the quadratic knee:
+When exactly one saturation value is zero, the normal curve fit uses the
+corresponding voltage as the quadratic knee:
 
 ```math
 \begin{aligned}
@@ -214,7 +214,9 @@ with the current input values.
 \end{aligned}
 ```
 
-All internal derivatives initialize to zero.
+If initialized $V_R$ lies outside its limits, the violated limit is widened and
+logged. Automatic $K_E$ is also logged. All internal derivatives initialize to
+zero.
 
 ## Monitorable Variables
 

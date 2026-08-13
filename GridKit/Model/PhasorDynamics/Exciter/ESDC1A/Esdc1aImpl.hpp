@@ -341,12 +341,8 @@ namespace GridKit
         const ScalarT vr0  = vfe0;
         const ScalarT vhv0 = vr0 / Ka_;
 
-        ret = vr0 >= Vrmin_ && vr0 <= Vrmax_;
-        if (!ret)
-        {
-          Log::error() << "Esdc1a: initialized VR is outside limits\n";
-          return 1;
-        }
+        const RealT vr0_value       = static_cast<RealT>(vr0);
+        const bool  widen_vr_limits = vr0_value < Vrmin_ || vr0_value > Vrmax_;
 
         // An inactive high-value gate is seeded with the gate input, so the
         // residual reproduces VHV through the same smooth maximum. UEL modes
@@ -369,14 +365,25 @@ namespace GridKit
         const ScalarT vf0   = ScalarT{ZERO<RealT>};
         const ScalarT ev0   = vll0;
         const ScalarT xll0  = ev0;
-        const ScalarT vref0 = ev0 + vc0 + vf0 - vs0 - uel_on_ * vuel0;
+        ScalarT       vref0 = ev0 + vc0 + vf0 - vs0 - uel_on_ * vuel0;
+        const ScalarT ev_residual0 =
+            -ev0 + (vref0 + vs0 + uel_on_ * vuel0 - vc0 - vf0);
+        vref0 -= ev_residual0;
 
         if (automatic_ke)
         {
           Log::warning() << "Esdc1a: Ke is zero and is set so initial VR equals Vrmax/10\n";
         }
+        if (widen_vr_limits)
+        {
+          Log::warning() << "Esdc1a: initial VR is outside [Vrmin, Vrmax] "
+                            "and the limits are widened\n";
+        }
 
-        Ke_     = ke0;
+        Ke_    = ke0;
+        Vrmin_ = std::min(Vrmin_, vr0_value);
+        Vrmax_ = std::max(Vrmax_, vr0_value);
+
         y[EFDP] = efdp0;
         y[VC]   = vc0;
         y[VR]   = vr0;
@@ -793,6 +800,12 @@ namespace GridKit
         check_non_negative(Tr_, "Tr");
         check_non_negative(Ta_, "Ta");
         check_non_negative(Te_, "Te");
+
+        if (Vrmax_ < Vrmin_)
+        {
+          Log::warning() << "Esdc1a: Vrmax is below Vrmin and the limits are swapped\n";
+          std::swap(Vrmin_, Vrmax_);
+        }
 
         if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
             || Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM

@@ -71,6 +71,8 @@ namespace GridKit
             new PhasorDynamics::Genrou<ScalarT, IdxT>(bus);
 
         success *= (machine != nullptr);
+        success *= (machine->size()
+                    == static_cast<IdxT>(PhasorDynamics::GenrouInternalVariables::MAXIMUM));
 
         if (machine)
         {
@@ -276,10 +278,8 @@ namespace GridKit
             2.211,
             0.85,
             1.2,
-            static_cast<ScalarT>(37013.) / static_cast<ScalarT>(9605.),
-            -static_cast<ScalarT>(88079.) / static_cast<ScalarT>(19210.),
-            -static_cast<ScalarT>(41237.) / static_cast<ScalarT>(19210.),
-            -static_cast<ScalarT>(166237.) / static_cast<ScalarT>(38420.)};
+            static_cast<ScalarT>(32789.) / static_cast<ScalarT>(19210.),
+            -static_cast<ScalarT>(68479.) / static_cast<ScalarT>(7684.)};
 
         bus.allocate();
         bus.initialize();
@@ -313,8 +313,6 @@ namespace GridKit
         y[14] = .3;  // iq
         y[15] = .9;  // ir
         y[16] = .25; // ii
-        y[17] = .3;  // inr
-        y[18] = .15; // ini
 
         // Set derivative values matching the answer key
         yp[0] = 2.0 * pi * 60.0; // delta_dot

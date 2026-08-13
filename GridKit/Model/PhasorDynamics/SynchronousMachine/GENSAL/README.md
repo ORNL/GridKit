@@ -39,6 +39,22 @@ $S_{10}$    | [p.u.]  | Saturation factor at 1.0 pu flux           | 0 |
 $S_{12}$    | [p.u.]  | Saturation factor at 1.2 pu flux           | 0 |
 $S_\mathrm{mach}$ | [MVA] | Machine power base                  | 100 |
 
+### Parameter Validation
+
+GridKit applies the following corrections in order:
+
+```math
+\begin{aligned}
+H < 0.1 &\Longrightarrow H \leftarrow 0.1 \\
+X'_d > X_d &\Longrightarrow X'_d \leftarrow 0.8 X_d \\
+X''_d > X'_d &\Longrightarrow X''_d \leftarrow 0.8 X'_d \\
+X''_d < 0.05 &\Longrightarrow X''_d \leftarrow 0.05 \\
+X_l > X''_d &\Longrightarrow X_l \leftarrow 0.8 X''_d
+\end{aligned}
+```
+
+Each changed value produces a logger warning.
+
 ### Model Derived Parameters
 ``` math
 \begin{aligned}

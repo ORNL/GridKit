@@ -21,6 +21,10 @@ $P_v^{\max}$ | [p.u.] | Maximum valve position           | 1    |
 $P_v^{\min}$ | [p.u.] | Minimum valve position           | 0    |
 $D_t$       | [p.u.] | Turbine damping coefficient       | 0    |
 
+### Parameter Validation
+
+Reversed valve limits are swapped and logged.
+
 Set $T_{\mathrm{rate}}$ equal to the connected machine MVA base. A zero
 component power base is not supported.
 
@@ -117,5 +121,5 @@ state in dependency order:
 \end{aligned}
 ```
 
-Reversed valve limits are swapped. If $P_{v,0}$ lies outside the resulting
-interval, the violated limit is widened to include it.
+If $P_{v,0}$ lies outside the valve limits, the violated limit is widened to
+include it and logged.

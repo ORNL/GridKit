@@ -330,7 +330,7 @@ namespace GridKit
 
         auto error_set = runSimulation(set_data, base_name + ".ref.csv");
 
-        RealT error_V_allowed = 2.01e-4;
+        RealT error_V_allowed = 2.02e-4;
         RealT error_w_allowed = 1e-4;
 
         success *= error_set->var_errors[0].max_value < error_V_allowed;

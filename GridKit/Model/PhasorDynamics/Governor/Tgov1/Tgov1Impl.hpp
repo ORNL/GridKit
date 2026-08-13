@@ -299,14 +299,14 @@ namespace GridKit
           return 1;
         }
 
-        if (static_cast<RealT>(pv0) < Pvmin_
-            || static_cast<RealT>(pv0) > Pvmax_)
+        const RealT pv0_value = static_cast<RealT>(pv0);
+        if (pv0_value < Pvmin_ || pv0_value > Pvmax_)
         {
           Log::warning() << "Tgov1: initial valve position is outside [Pvmin, Pvmax] "
                             "and the limits are widened\n";
         }
-        Pvmin_ = std::min(Pvmin_, static_cast<RealT>(pv0));
-        Pvmax_ = std::max(Pvmax_, static_cast<RealT>(pv0));
+        Pvmin_ = std::min(Pvmin_, pv0_value);
+        Pvmax_ = std::max(Pvmax_, pv0_value);
 
         y[PTX] = pturb0;
         y[PV]  = pv0;

@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <algorithm>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -374,6 +373,7 @@ namespace GridKit
     {
       if (H_ == ZERO<RealT> && D_ == ZERO<RealT>)
       {
+        // H = 0 and D = 0 selects the infinite-bus convention
         H_inv_ = ZERO<RealT>;
       }
       else
@@ -381,20 +381,21 @@ namespace GridKit
         if (H_ < static_cast<RealT>(0.1))
         {
           Log::warning() << "GenClassical: H below 0.1 is raised to that floor\n";
+          H_ = static_cast<RealT>(0.1);
         }
-        H_     = std::max(H_, static_cast<RealT>(0.1));
         H_inv_ = ONE<RealT> / (TWO<RealT> * H_);
       }
 
       if (Xdp_ < static_cast<RealT>(1.0e-5))
       {
         Log::warning() << "GenClassical: Xdp below 1e-5 is raised to that floor\n";
+        Xdp_ = static_cast<RealT>(1.0e-5);
       }
       else if (Xdp_ > static_cast<RealT>(999.0))
       {
         Log::warning() << "GenClassical: Xdp above 999 is lowered to that ceiling\n";
+        Xdp_ = static_cast<RealT>(999.0);
       }
-      Xdp_ = std::clamp(Xdp_, static_cast<RealT>(1.0e-5), static_cast<RealT>(999.0));
 
       G_               = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
       B_               = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);

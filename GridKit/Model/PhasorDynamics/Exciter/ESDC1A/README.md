@@ -56,12 +56,12 @@ Invalid ESDC1A parameter sets are rejected by the following checks:
     &> 0 \\
   T_R, T_A, T_E
     &\ge 0 \\
-  V_R^{\min}
-    &\le V_R^{\max} \\
   I_{\mathrm{UEL}}
     &\in \{0,1,2,3\}
 \end{aligned}
 ```
+
+Reversed regulator limits are swapped and logged.
 
 Finite $T_B$ and $T_{F1}$ values are accepted and floored in place; $T_C$ is
 used as supplied.
@@ -346,10 +346,11 @@ Initialization rejects a non-finite or zero bus-voltage magnitude, a
 non-finite field-voltage seed, non-finite Known signal inputs, a nonpositive
 speed multiplier $1 + s_{\mathrm{spd}}\omega$, $E_{\mathrm{fd}}'<0$ while
 $s_{\mathrm{lim}}=1$, $E_{\mathrm{fd}}'=0$ when automatic $K_E$ is selected,
-$V_R$ outside
-$[V_R^{\min},V_R^{\max}]$, and high-value-gate active starts with
-$s_{\mathrm{UEL}} = 0$ and
+and high-value-gate active starts with $s_{\mathrm{UEL}} = 0$ and
 $V_{\mathrm{HV}}\le V_{\mathrm{UEL}}$.
+
+If initialized $V_R$ lies outside its limits, the violated limit is widened and
+logged. Automatic $K_E$ is also logged.
 
 Every check resolves before any storage is written, so a rejected
 initialization leaves state, the `efd` seed, and external signals unchanged.

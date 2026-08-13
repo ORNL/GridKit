@@ -38,10 +38,7 @@ namespace GridKit
       ExciterEsdc1aTests()  = default;
       ~ExciterEsdc1aTests() = default;
 
-      // Rows that divide by a time constant amplify by 1/T; the
-      // worst here is VR, which recovers Ka*(Vr/Ka) through 1/Ta at 31 eps.
-      static constexpr RealT kTol =
-          static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+      static constexpr RealT kTol = std::numeric_limits<RealT>::epsilon();
 
       /// Construction and every verify() error class, including parameter
       /// types, parameter relationships, bus ownership, and signal linkage.
@@ -74,11 +71,15 @@ namespace GridKit
         PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> unassigned(&bus, makeData());
         success *= (unassigned.verify() > 0);
 
-        success *= invalidParameterCase(Params::Ka, 0.0);
-        success *= invalidParameterCase(Params::Ta, -0.1);
-        success *= invalidParameterCase(Params::Te, -0.1);
-        success *= invalidParameterCase(Params::Tr, -0.1);
-        success *= invalidParameterCase(Params::Vrmin, 2.0);
+        success                                   *= invalidParameterCase(Params::Ka, 0.0);
+        success                                   *= invalidParameterCase(Params::Ta, -0.1);
+        success                                   *= invalidParameterCase(Params::Te, -0.1);
+        success                                   *= invalidParameterCase(Params::Tr, -0.1);
+        auto reversed_limits                       = makeData();
+        reversed_limits.parameters[Params::Vrmin]  = 1.0;
+        reversed_limits.parameters[Params::Vrmax]  = -1.0;
+        Fixture<ScalarT> reversed_limit_fixture(reversed_limits);
+        success *= (reversed_limit_fixture.esdc1a.verify() == 0);
         success *= invalidParameterCase(Params::UEL, static_cast<IdxT>(4));
         success *= invalidParameterCase(Params::UEL, static_cast<RealT>(2.0));
         success *= invalidParameterCase(Params::UEL, static_cast<RealT>(2.5));
@@ -190,13 +191,15 @@ namespace GridKit
         // initialization.
         auto zero_time                    = makeData();
         zero_time.parameters[Params::Tr]  = 0.0;
+        zero_time.parameters[Params::Ka]  = 32.0;
         zero_time.parameters[Params::Ta]  = 0.0;
         zero_time.parameters[Params::Tb]  = 0.0;
         zero_time.parameters[Params::Te]  = 0.0;
         zero_time.parameters[Params::Tf1] = 0.0;
+        zero_time.parameters[Params::Ke]  = 0.125;
 
         Fixture<ScalarT> floored(zero_time);
-        success *= floored.initialize(1.2);
+        success *= floored.initialize(1.0);
         success *= (floored.evaluate() == 0);
         success *= allResidualsZero(floored.esdc1a);
 
@@ -337,6 +340,7 @@ namespace GridKit
         data.parameters[Params::Tb]    = 0.0;
         data.parameters[Params::Tc]    = 0.0;
         data.parameters[Params::Ke]    = 0.0;
+        data.parameters[Params::Ka]    = 32.0;
         data.parameters[Params::Vrmax] = 10.0;
         data.parameters[Params::Vrmin] = -10.0;
 
@@ -350,7 +354,7 @@ namespace GridKit
           const auto* y  = fixture.esdc1a.y().getData();
           success       *= scalarMatches(y[static_cast<size_t>(Internal::VR)], 1.0, "automatic-Ke VR");
           success       *= scalarMatches(y[static_cast<size_t>(Internal::VFE)], 1.0, "automatic-Ke VFE");
-          success       *= scalarMatches(y[static_cast<size_t>(Internal::VHV)], 0.025, "automatic-Ke VHV");
+          success       *= scalarMatches(y[static_cast<size_t>(Internal::VHV)], 0.03125, "automatic-Ke VHV");
           success       *= allResidualsZero(fixture.esdc1a);
         }
 
@@ -413,17 +417,17 @@ namespace GridKit
                                                      {External::VUEL, -0.5}},
                                                     "field-voltage state below zero limit");
 
-        // The seeded field voltage maps to a regulator output above Vrmax.
-        auto limit_data                       = makeData();
-        limit_data.parameters[Params::Vrmax]  = 0.05;
-        limit_data.parameters[Params::Vrmin]  = -0.05;
-        success                              *= initializationRejectedAtomically(limit_data,
-                                                    1.2,
-                                                                                 {{External::OMEGA, 0.0},
-                                                                                  {External::VREF, 77.0},
-                                                                                  {External::VS, 77.0},
-                                                                                  {External::VUEL, -77.0}},
-                                                    "regulator output outside limits");
+        // The seeded field voltage maps to a regulator output above Vrmax,
+        // which widens the limit and preserves a zero-residual initialization.
+        auto limit_data                      = makeData();
+        limit_data.parameters[Params::Vrmax] = 0.05;
+        limit_data.parameters[Params::Vrmin] = -0.05;
+        Fixture<ScalarT> limit_fixture(limit_data);
+        limit_fixture.attachAllInputs();
+        limit_fixture.input(External::VUEL)  = -0.5;
+        success                             *= limit_fixture.initialize(1.2);
+        success                             *= (limit_fixture.evaluate() == 0);
+        success                             *= allResidualsZero(limit_fixture.esdc1a);
 
         // A UEL input above the gate operating point holds the high-value
         // gate active, which the smooth gate cannot represent at rest.
@@ -593,15 +597,20 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        Fixture<ScalarT> fixture(makeData());
+        auto regulation_data                   = makeData();
+        regulation_data.parameters[Params::Tr] = 0.03125;
+        regulation_data.parameters[Params::Ta] = 0.125;
+        Fixture<ScalarT> fixture(regulation_data);
         fixture.attachAllInputs();
         success *= fixture.initialize(1.2);
 
         // Transducer: the sensed voltage relaxes toward the bus magnitude.
-        setState(fixture.esdc1a, {{Internal::VC, 1.1}});
-        setDerivative(fixture.esdc1a, {{Internal::VC, 0.2}});
+        setState(fixture.esdc1a, {{Internal::VC, 1.125}});
+        setDerivative(fixture.esdc1a, {{Internal::VC, 0.25}});
         success *= (fixture.evaluate() == 0);
-        success *= residualsMatch(fixture.esdc1a, {{Internal::VC, -5.2}}, "voltage transducer");
+        success *= residualsMatch(fixture.esdc1a,
+                                  {{Internal::VC, -4.25}},
+                                  "voltage transducer");
 
         // The field-voltage state and the stabilizing feedback share the
         // (VR - VFE) drive.
@@ -669,9 +678,9 @@ namespace GridKit
 
         const std::array<AntiWindupCase, 4> antiwindup_cases{{
             {"Vrmax blocks an outward regulator rate", 1.5, 0.05, 0.0},
-            {"Vrmax admits a restoring regulator rate", 1.5, 0.025, -5.0},
+            {"Vrmax admits a restoring regulator rate", 1.5, 0.025, -4.0},
             {"Vrmin blocks an outward regulator rate", -1.5, -0.05, 0.0},
-            {"Vrmin admits a restoring regulator rate", -1.5, -0.025, 5.0},
+            {"Vrmin admits a restoring regulator rate", -1.5, -0.025, 4.0},
         }};
 
         for (const auto& test_case : antiwindup_cases)

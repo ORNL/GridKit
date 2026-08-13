@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -522,8 +521,8 @@ namespace GridKit
       if (H_ < static_cast<RealT>(0.1))
       {
         Log::warning() << "Gensal: H below 0.1 is raised to that floor\n";
+        H_ = static_cast<RealT>(0.1);
       }
-      H_ = std::max(H_, static_cast<RealT>(0.1));
       if (Xdp_ > Xd_)
       {
         Log::warning() << "Gensal: Xdp above Xd is set to 0.8 Xd\n";
@@ -537,8 +536,8 @@ namespace GridKit
       if (Xdpp_ < static_cast<RealT>(0.05))
       {
         Log::warning() << "Gensal: Xdpp below 0.05 is raised to that floor\n";
+        Xdpp_ = static_cast<RealT>(0.05);
       }
-      Xdpp_ = std::max(Xdpp_, static_cast<RealT>(0.05));
       if (Xl_ > Xdpp_)
       {
         Log::warning() << "Gensal: Xl above Xdpp is set to 0.8 Xdpp\n";
