@@ -128,14 +128,14 @@ namespace GridKit
      */
     int allocate() override
     {
-      jacobian_coo_rows_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
-      jacobian_coo_cols_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
-      jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
+      jacobian_coo_rows_   = std::make_unique<IdxT[]>(nnz_);
+      jacobian_coo_cols_   = std::make_unique<IdxT[]>(nnz_);
+      jacobian_coo_values_ = std::make_unique<RealT[]>(nnz_);
 
-      y_ext_            = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
-      yp_ext_           = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
-      f_ext_            = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
-      connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
+      y_ext_            = std::make_unique<const ScalarT*[]>(size_);
+      yp_ext_           = std::make_unique<const ScalarT*[]>(size_);
+      f_ext_            = std::make_unique<ScalarT*[]>(size_);
+      connection_nodes_ = std::make_unique<IdxT[]>(size_);
 
       if (!allocated_)
       {
@@ -250,7 +250,7 @@ namespace GridKit
     {
       assert(rows.size() == cols.size());
       assert(rows.size() == vals.size());
-      assert(current_jac_size_ + rows.size() <= static_cast<size_t>(nnz_));
+      assert(current_jac_size_ + rows.size() <= nnz_);
 
       for (size_t i = 0; i < rows.size(); i++)
       {
@@ -265,22 +265,22 @@ namespace GridKit
   public:
     IdxT size() final
     {
-      return size_;
+      return static_cast<IdxT>(size_);
     }
 
     IdxT size() const
     {
-      return size_;
+      return static_cast<IdxT>(size_);
     }
 
     IdxT nnz() final
     {
-      return nnz_;
+      return static_cast<IdxT>(nnz_);
     }
 
     IdxT nnz() const
     {
-      return nnz_;
+      return static_cast<IdxT>(nnz_);
     }
 
     IdxT sizeQuadrature() final
@@ -491,11 +491,11 @@ namespace GridKit
 
   protected:
     /// The number of variables in this component. Should be equal to \ref n_extern_ plus \ref n_intern_. \see size()
-    IdxT size_{0};
+    IdxT   size_{0};
     /// The number of nonzero elements in this component's Jacobian. \see nnz()
-    IdxT nnz_{0};
-    IdxT size_quad_{0};
-    IdxT size_opt_{0};
+    size_t nnz_{0};
+    IdxT   size_quad_{0};
+    IdxT   size_opt_{0};
 
     // COO Jacobian buffers
     std::unique_ptr<IdxT[]>  jacobian_coo_rows_;

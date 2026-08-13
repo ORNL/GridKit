@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <format>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
@@ -11,6 +12,8 @@
 #include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
 #include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 #include <GridKit/ScalarTraits.hpp>
+
+#include "GridKit/Utilities/Logger/Logger.hpp"
 
 namespace GridKit
 {
@@ -147,8 +150,6 @@ namespace GridKit
         // Component and node offsets can change when topology is modified.
         abs_tol_.setToZero(memory::HOST);
       }
-
-      tag_.resize(size_);
 
       { // Start node internal indexing after all component internals for proper KLU ordering
         size_t node_internal_idx = component_internal_size;
@@ -294,6 +295,38 @@ namespace GridKit
 
     int tagDifferentiable() final
     {
+      for (size_t i = 0; i < components_.size(); i++)
+      {
+        component_type* component = components_[i];
+
+        if (int err = component->tagDifferentiable())
+        {
+          return err;
+        }
+
+        if (component->tag().size() != component->size())
+        {
+          GridKit::Utilities::Logger::error() << std::format("Component {} has an ill-configured tag(). Expected tags for {} variables, got {} instead.\n", i, component->size(), component->tag().size());
+          return 1;
+        }
+      }
+
+      tag_.resize(size_, false);
+
+      size_t idx = 0;
+      for (component_type* comp : components_)
+      {
+        const auto& external_indices = comp->getExternIndices();
+        for (IdxT i = 0; i < comp->size(); i++)
+        {
+          if (!external_indices.contains(i))
+          {
+            tag_[idx] = comp->tag()[i];
+            idx++;
+          }
+        }
+      }
+
       return 0;
     }
 

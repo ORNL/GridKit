@@ -62,6 +62,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLine<ScalarT, IdxT>::tagDifferentiable()
   {
+    // All variables are differentials
+    tag_.resize(size_, true);
     return 0;
   }
 

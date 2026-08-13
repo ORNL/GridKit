@@ -223,6 +223,29 @@ int main(int /* argc */, char const** /* argv */)
     sysmodel->getCsrJacobian()->print();
   }
 
+  sysmodel->tagDifferentiable();
+
+  bool all_internal_diff = true;
+  bool all_external_alg  = true;
+
+  const size_t num_node_vars = 4 * 2 + 1;
+
+  for (size_t i = 0; i < sysmodel->size() - num_node_vars; i++)
+  {
+    all_internal_diff = all_internal_diff && sysmodel->tag()[i];
+    if (!sysmodel->tag()[i])
+    {
+      std::cout << "Broken on " << i << '\n';
+    }
+  }
+
+  for (size_t i = sysmodel->size() - num_node_vars; i < sysmodel->size(); i++)
+  {
+    all_external_alg = all_external_alg && !sysmodel->tag()[i];
+  }
+
+  std::cout << "Verify all internal variables are differential: " << all_internal_diff << ", and all external variabels are algebraic: " << all_external_alg << '\n';
+
   // Create numerical integrator and configure it for the generator model
   auto* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
 

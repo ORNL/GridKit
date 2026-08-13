@@ -77,6 +77,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridBusDQ<ScalarT, IdxT>::evaluateInternalResidual()
   {
+    // No internal variables - tag doesn't matter.
+    tag_.resize(size_, false);
     return 0;
   }
 

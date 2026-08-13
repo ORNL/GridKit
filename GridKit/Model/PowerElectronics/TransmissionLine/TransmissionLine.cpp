@@ -60,6 +60,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int TransmissionLine<ScalarT, IdxT>::tagDifferentiable()
   {
+    // All variables are algebraics
+    tag_.resize(size_, false);
     return 0;
   }
 
