@@ -2,8 +2,8 @@
     "header": {
         "format_version": 0.2,
         "format_revision": 0,
-        "case_name": "ThreeBusConstantSource",
-        "case_description": "3-bus test case with constant signal sources",
+        "case_name": "ThreeBusCoSimClient",
+        "case_description": "3-bus test case sending voltage and receiving current",
         "case_comments": "None"
     },
     "params": {
@@ -58,8 +58,10 @@
         }
     ],
     "signals": [
-        { "signal_id": 1, "name": "ir1"},
-        { "signal_id": 2, "name": "ir2"}
+        { "signal_id": 1, "name": "vr"},
+        { "signal_id": 2, "name": "vi"},
+        { "signal_id": 3, "name": "ir"},
+        { "signal_id": 4, "name": "ii"}
     ],
     "devices": [
         {
@@ -159,14 +161,8 @@
         },
         {
             "class": "BusToSignalAdapter",
-            "ports": {"bus":1, "ir":1, "ii":2},
+            "ports": {"bus":1, "vr":1, "vi":2, "ir":3, "ii":4},
             "id": "adapt3",
-            "params": {}
-        },
-        {
-            "class": "ConstantSignalSource",
-            "ports": {"sr":1, "si":2},
-            "id": "const_source_1",
             "params": {}
         }
     ]
