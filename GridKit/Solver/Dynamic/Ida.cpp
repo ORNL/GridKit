@@ -253,6 +253,12 @@ namespace AnalysisManager
         copyVec(yp_, model_->yp());
       }
 
+      if (model_->monitoring())
+      {
+        updateModelState(t0);
+        model_->printMonitoredVariables();
+      }
+
       return retval;
     }
 

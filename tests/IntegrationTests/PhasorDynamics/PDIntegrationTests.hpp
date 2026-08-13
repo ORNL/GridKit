@@ -246,7 +246,7 @@ namespace GridKit
         ida.configureSimulation();
 
         // Run for 1s
-        ida.initializeSimulation(0.0, false);
+        ida.initializeSimulation(0.0, true);
         ida.runSimulation(1.0, dt);
 
         // Introduce fault and run for the next 0.1s
