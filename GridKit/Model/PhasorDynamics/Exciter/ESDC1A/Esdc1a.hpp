@@ -38,7 +38,7 @@ namespace GridKit
         EV,      ///< \f$e_V\f$ Algebraic voltage-error summing output [p.u.]
         VLL,     ///< \f$V_{\mathrm{LL}}\f$ Algebraic input lead-lag output [p.u.]
         VHV,     ///< \f$V_{\mathrm{HV}}\f$ Algebraic high-value gate output [p.u.]
-        SE,      ///< \f$S_E\f$ Algebraic exciter saturation coefficient [p.u.]
+        SE,      ///< \f$E_{\mathrm{fd}}'S_E(E_{\mathrm{fd}}')\f$ Scaled-quadratic saturation contribution [p.u.]
         VFE,     ///< \f$V_{\mathrm{FE}}\f$ Algebraic exciter feedback drive [p.u.]
         EFD,     ///< \f$E_{\mathrm{fd}}\f$ Algebraic field-voltage output [p.u.]
         MAXIMUM, ///< Number of ESDC1A internal variables

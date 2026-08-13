@@ -38,21 +38,21 @@ namespace GridKit
     {
       DELTA,  ///< \f$\delta\f$
       OMEGA,  ///< \f$\omega\f$
+      EPQ,    ///< \f$E'_q\f$
       PSIPD,  ///< \f$\psi'_d\f$
       PSIPQ,  ///< \f$\psi'_q\f$
       EPD,    ///< \f$E'_d\f$
-      EPQ,    ///< \f$E'_q\f$
+      PSIPPQ, ///< \f$\psi''_q\f$
+      PSIPPD, ///< \f$\psi''_d\f$
+      PSIPP,  ///< \f$\psi''\f$
+      KSAT,   ///< \f$k_{sat}\f$
       VD,     ///< \f$V_d\f$
       VQ,     ///< \f$V_q\f$
+      TE,     ///< \f$T_e\f$
       ID,     ///< \f$I_d\f$
       IQ,     ///< \f$I_q\f$
       IR,     ///< \f$I_r\f$
       II,     ///< \f$I_i\f$
-      PSIPPQ, ///< \f$\psi''_q\f$
-      PSIPPD, ///< \f$\psi''_d\f$
-      PSIPP,  ///< \f$\psi''\f$
-      TE,     ///< \f$T_e\f$
-      KSAT,   ///< \f$k_{sat}\f$
       MAXIMUM,
     };
 

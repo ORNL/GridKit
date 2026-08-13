@@ -36,9 +36,9 @@ $Q_0$                            | [p.u.]   | `q0`     | Initial reactive power 
 $S^\mathrm{base}$                | [MVA]    | `mva`    | REGCA component power base                            | 100.0         |
 $T_\mathrm{g}$                   | [sec]    | `Tg`     | Converter current-control lag time constant           | 0.02          | Block name: `Tg`
 $T_M$                            | [sec]    | `TM`     | Terminal voltage sensor time constant                 | 0.02          | Block name: `Tfltr`
-$R_q^{\max}$                     | [p.u./s] | `Rqmax`  | Reactive-current recovery positive rate limit         | 999.0         | Block name: `Iqrmax`
-$R_q^{\min}$                     | [p.u./s] | `Rqmin`  | Reactive-current recovery negative rate limit         | -999.0        | Block name: `Iqrmin`
-$R_p^{\max}$                     | [p.u./s] | `Rpmax`  | Active-current magnitude recovery rate limit          | 999.0         | Block name: `rrpwr`
+$R_q^{\max}$                     | [p.u./s] | `Rqmax`  | Reactive-current recovery positive rate limit         | 999.0         | Block name: `Iqrmax`; disabled when $R_q^{\max}\le 0$
+$R_q^{\min}$                     | [p.u./s] | `Rqmin`  | Reactive-current recovery negative rate limit         | -999.0        | Block name: `Iqrmin`; disabled when $R_q^{\min}\ge 0$
+$R_p^{\max}$                     | [p.u./s] | `Rpmax`  | Active-current magnitude recovery rate limit          | 999.0         | Block name: `rrpwr`; must be nonnegative
 $s_L$                            | [binary] | `sL`     | LVPL switch                                           | 1             | Block name: `LPVLSW`
 $I_{L1}$                         | [p.u.]   | `IL1`    | LVPL upper-current ceiling                            | 1.1           | Block name: `LVPL1`
 $V_{L0}$                         | [p.u.]   | `VL0`    | LVPL zero-crossing voltage                            | 0.4           | Block name: `zerox`
@@ -65,13 +65,11 @@ every other condition is a configuration error.
   S^\mathrm{base}
     &> 0 \\
   R_p^{\max}
-    &> 0 \\
-  R_q^{\min}
-    &< 0 < R_q^{\max} \\
-  s_L
-    &\in \{0,1\} \\
+    &\ge 0 \\
   I_{L1}
     &\ge 0 \\
+  s_L
+    &\in \{0,1\} \\
   0
     &\le V_{L0} < V_{L1} \\
   0
@@ -171,16 +169,19 @@ f_\mathrm{p}^{\lim}
 
 ### Differential Equations
 
-The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
+The $I_q$ limiter branch is selected by the initial reactive power $Q_0$ and
+the sign that enables the corresponding limit.
 
 ```math
 \begin{aligned}
   0 &= -\dot V_M + \dfrac{1}{T_M} (V_T - V_M) \\
   0 &= -\dot I_q +
     \begin{cases}
-      \text{min}(f_\mathrm{q}, R_q^{\max}) & Q_0 > 0 \\
-      f_\mathrm{q}                         & Q_0 = 0 \\
-      \text{max}(f_\mathrm{q}, R_q^{\min}) & Q_0 < 0
+      \text{min}(f_\mathrm{q}, R_q^{\max})
+        & Q_0 > 0 \land R_q^{\max} > 0 \\
+      \text{max}(f_\mathrm{q}, R_q^{\min})
+        & Q_0 < 0 \land R_q^{\min} < 0 \\
+      f_\mathrm{q} & \text{otherwise}
     \end{cases} \\
   0 &= -\dot I_p +
     \begin{cases}

@@ -162,7 +162,6 @@ namespace GridKit
         }
 
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
-        check(Tc_ >= ZERO<RealT>, "Tc must be non-negative");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
         check(UEL_ >= static_cast<IdxT>(0) && UEL_ <= static_cast<IdxT>(3),
               "UEL must be 0, 1, 2, or 3");
@@ -176,14 +175,11 @@ namespace GridKit
         {
           check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
           check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
-          check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
+          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
 
-          const bool saturation_points_are_ordered =
-              (E2_ > E1_ && Se2_ > Se1_)
-              || (E2_ < E1_ && Se2_ < Se1_);
-          check(saturation_points_are_ordered,
-                "E1/E2 and Se1/Se2 must be ordered consistently");
+          const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+          check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
         if (!signals_.template isAssigned<Esdc1aInternalVariables::EFD>())
@@ -314,8 +310,15 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT se0  = SB_ * Math::qramp(efdp0 - SA_);
-        const ScalarT vfe0 = (Ke_ + se0) * efdp0;
+        const ScalarT se0 = SB_ * Math::qramp(efdp0 - SA_);
+
+        RealT ke0 = Ke_;
+        if (ke0 == ZERO<RealT>)
+        {
+          ke0 = (Vrmax_ / 10.0 - static_cast<RealT>(se0)) / static_cast<RealT>(efdp0);
+        }
+
+        const ScalarT vfe0 = ke0 * efdp0 + se0;
         const ScalarT vr0  = vfe0;
         const ScalarT vhv0 = vr0 / Ka_;
 
@@ -344,15 +347,16 @@ namespace GridKit
           vll0 = vuel0 + inverseRamp(gate_margin0);
         }
 
-        const ScalarT vf0   = ScalarT{ZERO<RealT>};
         const ScalarT ev0   = vll0;
         const ScalarT xll0  = ev0;
-        const ScalarT vref0 = ev0 + vc0 + vf0 - vs0 - uel_on_ * vuel0;
+        const ScalarT vref0 = ev0 + vc0 - vs0 - uel_on_ * vuel0;
+
+        Ke_ = ke0;
 
         y[EFDP] = efdp0;
         y[VC]   = vc0;
         y[VR]   = vr0;
-        y[VF]   = vf0;
+        y[VF]   = ZERO<RealT>;
         y[XLL]  = xll0;
         y[EV]   = ev0;
         y[VLL]  = vll0;
@@ -560,7 +564,7 @@ namespace GridKit
 
         const ScalarT ec                = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
         const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
-        const ScalarT vfe_target        = (Ke_ + se) * efdp;
+        const ScalarT vfe_target        = Ke_ * efdp + se;
         const ScalarT efdp_rate         = (vr - vfe) / Te_;
         const ScalarT limited_efdp_rate = awmin(efdp, efdp_rate, ZERO<RealT>);
 
@@ -749,7 +753,7 @@ namespace GridKit
        * @brief Resolve the parameter-derived constants and selector masks
        *
        * Raises the transducer, regulator, lead-lag, exciter, and feedback
-       * lags to the well-posedness floor, fits the quadratic saturation
+       * lags to the well-posedness floor, fits the scaled-quadratic saturation
        * curve, and turns the three selectors into multiplicative masks. The
        * masks let the residual select signal routing without
        * parameter-dependent control flow, which keeps its structure fixed for
@@ -814,13 +818,11 @@ namespace GridKit
         // The disabled test matches the verify() predicate exactly.
         const bool saturation_disabled =
             Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
-        const bool saturation_points_are_ordered =
-            (E2_ > E1_ && Se2_ > Se1_)
-            || (E2_ < E1_ && Se2_ < Se1_);
+        const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
         const bool saturation_consistent =
             E1_ > ZERO<RealT> && E2_ > ZERO<RealT>
-            && Se1_ > ZERO<RealT> && Se2_ > ZERO<RealT>
-            && saturation_points_are_ordered;
+            && Se1_ >= ZERO<RealT> && Se2_ >= ZERO<RealT>
+            && sat_ordered;
         if (saturation_disabled || !saturation_consistent)
         {
           SA_ = ZERO<RealT>;
@@ -828,9 +830,25 @@ namespace GridKit
           return;
         }
 
-        const RealT C = std::sqrt(Se2_ / Se1_);
+        if (Se1_ == ZERO<RealT>)
+        {
+          const RealT dE = E2_ - E1_;
+          SA_            = E1_;
+          SB_            = Se2_ * E2_ / (dE * dE);
+          return;
+        }
+
+        if (Se2_ == ZERO<RealT>)
+        {
+          const RealT dE = E1_ - E2_;
+          SA_            = E2_;
+          SB_            = Se1_ * E1_ / (dE * dE);
+          return;
+        }
+
+        const RealT C = std::sqrt(Se2_ * E2_ / (Se1_ * E1_));
         SA_           = (C * E1_ - E2_) / (C - ONE<RealT>);
-        SB_           = Se1_ / ((E1_ - SA_) * (E1_ - SA_));
+        SB_           = Se1_ * E1_ / ((E1_ - SA_) * (E1_ - SA_));
       }
 
       /**
@@ -840,30 +858,17 @@ namespace GridKit
        * *input*, so the residual reproduces the requested output through the
        * same smooth ramp it evaluates.
        *
-       * For large positive values, the ramp is effectively equal to the input, so the
-       * inverse is effectively the output. In that regime this function returns `ramp_output` directly.
-       * This branching is numerically more robust.
-       *
        * @param[in] ramp_output Strictly positive requested ramp output.
        * @return The input the smooth ramp maps to the requested output.
        *
        * @pre @p ramp_output is finite and strictly positive.
-       * @warning This function contains conditional branching and may be used
-       *          during initialization, but not during residual or Jacobian
-       *          evaluation.
        */
       template <typename scalar_type, typename index_type>
       typename Esdc1a<scalar_type, index_type>::RealT
       Esdc1a<scalar_type, index_type>::inverseRamp(RealT ramp_output) const
       {
-        static constexpr RealT SOFTPLUS_WIDTH = static_cast<RealT>(50.0);
-
-        const RealT scaled_output = Math::MU<RealT> * ramp_output;
-        if (scaled_output > SOFTPLUS_WIDTH)
-        {
-          return ramp_output;
-        }
-        return std::log(std::expm1(scaled_output)) / Math::MU<RealT>;
+        const RealT mu = Math::MU<RealT>;
+        return ramp_output + std::log(-std::expm1(-mu * ramp_output)) / mu;
       }
 
       /**

@@ -89,11 +89,11 @@ namespace GridKit
 
         use_rqmax_ = ZERO<RealT>;
         use_rqmin_ = ZERO<RealT>;
-        if (q0_ > ZERO<RealT>)
+        if (q0_ > ZERO<RealT> && Rqmax_ > ZERO<RealT>)
         {
           use_rqmax_ = ONE<RealT>;
         }
-        else if (q0_ < ZERO<RealT>)
+        else if (q0_ < ZERO<RealT> && Rqmin_ < ZERO<RealT>)
         {
           use_rqmin_ = ONE<RealT>;
         }
@@ -436,8 +436,7 @@ namespace GridKit
         }
 
         check(mva_base_ > ZERO<RealT>, "mva must be positive");
-        check(Rpmax_ > ZERO<RealT>, "Rpmax must be positive");
-        check(Rqmin_ < ZERO<RealT> && ZERO<RealT> < Rqmax_, "Rqmin < 0 < Rqmax is required");
+        check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
         check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
         check(KL_ > ZERO<RealT>, "LVPL release slope must be positive");
         check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");

@@ -49,9 +49,8 @@ Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilo
     &=(0,0)
       \quad\text{or}\quad
       \begin{gathered}
-        E_1, E_2, S_1, S_2 > 0 \\
-        E_1 \ne E_2 \\
-        S_1 \ne S_2
+        E_1, E_2 > 0,\quad S_1, S_2 \ge 0 \\
+        (E_2-E_1)(S_2-S_1) > 0
       \end{gathered}
 \end{aligned}
 ```
@@ -59,24 +58,36 @@ Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilo
 ### Model Derived Parameters
 
 When saturation is disabled, $S_A=0$ and $S_B=0$. Otherwise,
-the parameters are chosen so that the following quadratic model represents the
-expected saturation near the operating region:
+the parameters are chosen for the scaled-quadratic saturation model:
 
 ```math
 \begin{aligned}
-  S_1 &= S_B(E_1-S_A)^2 \\
-  S_2 &= S_B(E_2-S_A)^2 \\
+  E S(E) &= S_B q(E-S_A) \\
+  E_1S_1 &= S_B(E_1-S_A)^2 \\
+  E_2S_2 &= S_B(E_2-S_A)^2 \\
 \end{aligned}
 ```
 
-Generally, this system has two solutions. The non-extraneous solution is as follows.
+When exactly one saturation value is zero, the normal curve fit uses the
+corresponding voltage as the quadratic knee:
+
+```math
+\begin{aligned}
+  S_1=0 &: \quad S_A=E_1,\qquad
+    S_B=\dfrac{E_2S_2}{(E_2-E_1)^2} \\
+  S_2=0 &: \quad S_A=E_2,\qquad
+    S_B=\dfrac{E_1S_1}{(E_1-E_2)^2}.
+\end{aligned}
+```
+
+When both saturation values are positive, the non-extraneous solution is:
 
 ```math
 \begin{aligned}
   C &=  \sqrt{
    \dfrac
-   {S_2}
-   {S_1}
+   {E_2S_2}
+   {E_1S_1}
   }
   \\
   S_A &=
@@ -86,7 +97,7 @@ Generally, this system has two solutions. The non-extraneous solution is as foll
   \\
   S_B &=
    \dfrac
-   {S_1}
+   {E_1S_1}
    {(E_1-S_A)^2}
 \end{aligned}
 ```
@@ -114,7 +125,7 @@ $V_{tr}$        | [p.u.] | Terminal Voltage Error            |
 $V_f$           | [p.u.] | Feedback Voltage                  |
 $V_E$           | [p.u.] | Excitation control voltage        |
 $E_{fd}$        | [p.u.] | Field winding voltage             |
-$k_\text{sat}$  | [p.u.] | Saturation variable               |
+$k_\text{sat}$  | [p.u.] | Scaled-quadratic saturation contribution | $E_{fd}'S(E_{fd}')$
 
 ### External Variables
 
@@ -164,7 +175,7 @@ The algebraic equations of the exciter.
 \begin{aligned}
    0 &= -V_{ts} + V_\text{ref} + V_{UEL} + V_{OEL} + V_S - V_{tr} - V_f \\
    0 &= -T_F(V_f + V_{fx}) + K_F E_{fd}' \\
-   0 &= -V_E + k_\text{sat} E_{fd}' \\
+   0 &= -V_E + k_\text{sat} \\
    0 &= -E_{fd} + (1 + \omega I_{\mathrm{spdlim}})E_{fd}' \\
    0 &= -k_\text{sat} + S_B\, q(E_{fd}' - S_A)
 \end{aligned}
@@ -190,7 +201,12 @@ with the current input values.
    E_{C,0}  &:= \sqrt{V_r^2 + V_i^2} \\
    E_{fd}'  &= \dfrac{E_{fd,0}}{1 + I_{\mathrm{spdlim}}\,\omega} \\
    k_\text{sat}  &= S_B\, q(E_{fd}' - S_A) \\
-   V_E      &= k_\text{sat}\, E_{fd}' \\
+   K_E &\leftarrow
+      \begin{cases}
+        \dfrac{V_R^{\max}/10-k_\text{sat}}{E_{fd}'} & K_E=0 \\
+        K_E & K_E\ne 0
+      \end{cases} \\
+   V_E      &= k_\text{sat} \\
    V_R      &= K_E\, E_{fd}' + V_E \\
    V_{tr}   &= \dfrac{V_R}{K_A} \\
    V_{fx}   &= \dfrac{K_F}{T_F}\, E_{fd}' \\
@@ -207,4 +223,4 @@ All internal derivatives initialize to zero.
 Variable | Units  | Description                       | Note
 ---------|--------|-----------------------------------|------
 `efd`    | [p.u.] | Field winding voltage             |
-`ksat`   | [p.u.] | Magnetic saturation coefficient   | $S_B\,q(E_{fd}'-S_A)$
+`ksat`   | [p.u.] | Scaled-quadratic saturation contribution | $S_B\,q(E_{fd}'-S_A)$

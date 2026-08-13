@@ -8,6 +8,7 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -148,10 +149,11 @@ namespace GridKit
         {
           check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
           check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
-          check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
-          check(E1_ != E2_, "E1 and E2 must differ when saturation is enabled");
-          check(Se1_ != Se2_, "Se1 and Se2 must differ when saturation is enabled");
+          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+
+          const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+          check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
         if (signals_.template isAttached<OMEGA>())
@@ -191,6 +193,11 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::initialize()
       {
+        if (verify() != 0)
+        {
+          Log::error() << "Ieeet1: cannot initialize with invalid configuration\n";
+          return 1;
+        }
 
         // External Variables
         ScalarT efd0{0};
@@ -226,9 +233,14 @@ namespace GridKit
 
         ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
         ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
-        ScalarT ve   = ksat * efdp;
-        ScalarT vr   = Ke_ * efdp + ve;
-        ScalarT vtr  = vr / Ka_;
+        if (Ke_ == ZERO<RealT>)
+        {
+          Ke_ = (Vrmax_ / 10.0 - static_cast<RealT>(ksat)) / static_cast<RealT>(efdp);
+        }
+
+        ScalarT ve  = ksat;
+        ScalarT vr  = Ke_ * efdp + ve;
+        ScalarT vtr = vr / Ka_;
         ScalarT vf{0};
         ScalarT vfx = (Kf_ / Tf_) * efdp;
 
@@ -345,7 +357,7 @@ namespace GridKit
         // Internal Algebraic Equations
         f[4] = -vts + vref_ + vUEL_ + vOEL_ + vs_signal - vtr - vf;
         f[5] = -Tf_ * (vf + vfx) + Kf_ * efdp;
-        f[6] = -ve + ksat * efdp;
+        f[6] = -ve + ksat;
         f[7] = -efd + efdp + omega * efdp * Ispdlim_;
         f[8] = -ksat + SB_ * Math::qramp(efdp - SA_);
 
@@ -471,17 +483,35 @@ namespace GridKit
           return;
         }
 
-        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT> || E1_ == E2_
-            || Se1_ <= ZERO<RealT> || Se2_ <= ZERO<RealT> || Se1_ == Se2_)
+        const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT>
+            || Se1_ < ZERO<RealT> || Se2_ < ZERO<RealT>
+            || !sat_ordered)
         {
           return;
         }
 
-        const RealT C = std::sqrt(Se2_ / Se1_);
+        if (Se1_ == ZERO<RealT>)
+        {
+          const RealT dE = E2_ - E1_;
+          SA_            = E1_;
+          SB_            = Se2_ * E2_ / (dE * dE);
+          return;
+        }
+
+        if (Se2_ == ZERO<RealT>)
+        {
+          const RealT dE = E1_ - E2_;
+          SA_            = E2_;
+          SB_            = Se1_ * E1_ / (dE * dE);
+          return;
+        }
+
+        const RealT C = std::sqrt(Se2_ * E2_ / (Se1_ * E1_));
 
         // Solution 1 (Aligned with PW)
         SA_ = (C * E1_ - E2_) / (C - ONE<RealT>);
-        SB_ = Se1_ / ((E1_ - SA_) * (E1_ - SA_));
+        SB_ = Se1_ * E1_ / ((E1_ - SA_) * (E1_ - SA_));
       }
 
       template <typename scalar_type, typename index_type>

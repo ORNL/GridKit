@@ -50,7 +50,7 @@ namespace GridKit
         VF,   ///< Feedback voltage
         VE,   ///< Exciter control voltage
         EFD,  ///< Efd
-        KSAT, ///< Saturation
+        KSAT, ///< \f$E_{\mathrm{fd}}'S(E_{\mathrm{fd}}')\f$ Scaled-quadratic saturation contribution
         MAXIMUM,
       };
 

@@ -286,17 +286,16 @@ namespace GridKit
       ScalarT delta = std::atan2(Ei, Er);
       ScalarT omega(0.0);
 
-      ScalarT id      = ir * std::sin(delta) - ii * std::cos(delta);
-      ScalarT iq      = ir * std::cos(delta) + ii * std::sin(delta);
-      ScalarT psiqpp  = -Xq2_ * iq;
-      ScalarT vd      = -psiqpp * (ONE<RealT> + omega);
-      ScalarT vq      = vr * std::cos(delta) + vi * std::sin(delta) + id * Xdpp_ + iq * Ra_;
-      ScalarT psidpp  = vq / (ONE<RealT> + omega);
-      ScalarT psidp   = psidpp - (Xdpp_ - Xl_) * id;
-      ScalarT Eqp     = psidp + Xd2_ * id;
-      ScalarT Eqp_sat = Eqp - SA_;
-      ScalarT ksat    = SB_ * Eqp_sat * Eqp_sat * Math::sigmoid(Eqp_sat);
-      ScalarT Te      = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
+      ScalarT id     = ir * std::sin(delta) - ii * std::cos(delta);
+      ScalarT iq     = ir * std::cos(delta) + ii * std::sin(delta);
+      ScalarT psiqpp = -Xq2_ * iq;
+      ScalarT vd     = -psiqpp * (ONE<RealT> + omega);
+      ScalarT vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xdpp_ + iq * Ra_;
+      ScalarT psidpp = vq / (ONE<RealT> + omega);
+      ScalarT psidp  = psidpp - (Xdpp_ - Xl_) * id;
+      ScalarT Eqp    = psidp + Xd2_ * id;
+      ScalarT ksat   = SB_ * Math::qramp(Eqp - SA_);
+      ScalarT Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
 
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
@@ -327,7 +326,7 @@ namespace GridKit
         signals_.template writeExternalVariable<GensalExternalVariables::PM>(pmech_set_);
       }
 
-      efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + ksat;
+      efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + Eqp * ksat;
       if (signals_.template isAttached<GensalExternalVariables::EFD>())
       {
         signals_.template writeExternalVariable<GensalExternalVariables::EFD>(efd_set_);
@@ -426,21 +425,20 @@ namespace GridKit
       /* 5 Gensal differential equations */
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
-      f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + ksat));
+      f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + Eqp * ksat));
       f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
       f[4] = psiqpp_dot - (ONE<RealT> / Tqopp_) * (-psiqpp - Xq2_ * iq);
 
       /* 9 Gensal algebraic equations */
-      f[5]            = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
-      ScalarT Eqp_sat = Eqp - SA_;
-      f[6]            = ksat - SB_ * Eqp_sat * Eqp_sat * Math::sigmoid(Eqp_sat);
-      f[7]            = vd + psiqpp * (ONE<RealT> + omega);
-      f[8]            = vq - psidpp * (ONE<RealT> + omega);
-      f[9]            = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
-      f[10]           = id - (ir * std::sin(delta) - ii * std::cos(delta));
-      f[11]           = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[12]           = ir + G_ * vr - B_ * vi - inr;
-      f[13]           = ii + B_ * vr + G_ * vi - ini;
+      f[5]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
+      f[6]  = ksat - SB_ * Math::qramp(Eqp - SA_);
+      f[7]  = vd + psiqpp * (ONE<RealT> + omega);
+      f[8]  = vq - psidpp * (ONE<RealT> + omega);
+      f[9]  = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
+      f[10] = id - (ir * std::sin(delta) - ii * std::cos(delta));
+      f[11] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
+      f[12] = ir + G_ * vr - B_ * vi - inr;
+      f[13] = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Gensal current source definitions */
       f[14] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));

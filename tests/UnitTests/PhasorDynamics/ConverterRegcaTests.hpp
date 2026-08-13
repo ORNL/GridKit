@@ -73,8 +73,6 @@ namespace GridKit
         success *= (bad_switch_model.verify() > 0);
 
         success *= invalidParameterCase(bus, Params::mva, 0.0);
-        success *= invalidParameterCase(bus, Params::Rpmax, 0.0);
-        success *= invalidParameterCase(bus, Params::Rqmin, 0.0);
         success *= invalidParameterCase(bus, Params::IL1, -0.1);
         success *= invalidParameterCase(bus, Params::VL1, 0.3);
         success *= invalidParameterCase(bus, Params::VA1, 0.3);
