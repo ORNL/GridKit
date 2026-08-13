@@ -319,7 +319,16 @@ namespace GridKit
         auto negative                    = makeTestData();
         negative.parameters[Params::Se1] = -0.1;
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> negative_exciter(&bus, negative);
-        success *= (negative_exciter.verify() != 0);
+        bus.allocate();
+        negative_exciter.allocate();
+        auto* negative_y   = negative_exciter.y().getData();
+        auto* negative_yp  = negative_exciter.yp().getData();
+        negative_y[0]      = static_cast<ScalarT>(17.0);
+        negative_yp[0]     = static_cast<ScalarT>(19.0);
+        success           *= (negative_exciter.verify() != 0);
+        success           *= (negative_exciter.initialize() != 0);
+        success           *= (negative_y[0] == static_cast<ScalarT>(17.0));
+        success           *= (negative_yp[0] == static_cast<ScalarT>(19.0));
 
         auto crossed                    = makeTestData();
         crossed.parameters[Params::E1]  = 3.373;

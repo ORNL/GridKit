@@ -193,6 +193,11 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::initialize()
       {
+        if (verify() != 0)
+        {
+          Log::error() << "Ieeet1: cannot initialize with invalid configuration\n";
+          return 1;
+        }
 
         // External Variables
         ScalarT efd0{0};
