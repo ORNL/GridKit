@@ -2,20 +2,14 @@
     "header": {
         "format_version": 0.2,
         "format_revision": 0,
-        "case_name": "ThreeBusConstantSource",
-        "case_description": "3-bus test case with constant signal sources",
+        "case_name": "ThreeBusCoSimServer",
+        "case_description": "3-bus test case receiving voltage and sending current",
         "case_comments": "None"
     },
     "params": {
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
-    "monitors": [
-        {
-            "file_name": "mon.csv",
-            "format":"csv"
-        }
-    ],
     "buses": [
         {
             "number": 1,
@@ -167,7 +161,7 @@
             "class": "ConstantSignalSource",
             "ports": {"sr":1, "si":2},
             "id": "const_source_1",
-            "params": {}
+            "params": {"Sr":0.0, "Si":0.0}
         }
     ]
 }
