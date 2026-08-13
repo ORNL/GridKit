@@ -82,6 +82,7 @@
 - Added `REECB` electrical-control model implementation for PhasorDynamics.
 - Added cases and validation for ACTIVSg10k, ACTIVSg200, ACTIVSg500, and WECC240.
 - Added IDA option to choose the consistent initial condition calculation type.
+- Implemented `tagDifferentiable()` for `PowerElectronics` models.
 
 ## v0.1
 
