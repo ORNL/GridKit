@@ -17,28 +17,27 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
   {
-    using Base           = CircuitComponent<ScalarT, IdxT>;
-    using RealT          = Base::RealT;
-    using CsrMatrixT     = Base::CsrMatrixT;
+    using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
-    using Base::abs_tol_;
-    using Base::allocated_;
-    using Base::allocateVectors;
-    using Base::alpha_;
-    using Base::f_ext_;
-    using Base::f_int_;
-    using Base::n_extern_;
-    using Base::n_intern_;
-    using Base::nnz_;
-    using Base::size_;
-    using Base::tag_;
-    using Base::time_;
-    using Base::y_ext_;
-    using Base::y_int_;
-    using Base::yp_ext_;
-    using Base::yp_int_;
+    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
+    using CircuitComponent<ScalarT, IdxT>::allocated_;
+    using CircuitComponent<ScalarT, IdxT>::allocateVectors;
+    using CircuitComponent<ScalarT, IdxT>::alpha_;
+    using CircuitComponent<ScalarT, IdxT>::f_ext_;
+    using CircuitComponent<ScalarT, IdxT>::f_int_;
+    using CircuitComponent<ScalarT, IdxT>::n_extern_;
+    using CircuitComponent<ScalarT, IdxT>::n_intern_;
+    using CircuitComponent<ScalarT, IdxT>::nnz_;
+    using CircuitComponent<ScalarT, IdxT>::size_;
+    using CircuitComponent<ScalarT, IdxT>::tag_;
+    using CircuitComponent<ScalarT, IdxT>::time_;
+    using CircuitComponent<ScalarT, IdxT>::y_ext_;
+    using CircuitComponent<ScalarT, IdxT>::y_int_;
+    using CircuitComponent<ScalarT, IdxT>::yp_ext_;
+    using CircuitComponent<ScalarT, IdxT>::yp_int_;
 
   public:
     /**
@@ -290,7 +289,7 @@ namespace GridKit
         component->initialize();
       }
 
-      return Base::initialize();
+      return CircuitComponent<ScalarT, IdxT>::initialize();
     }
 
     int tagDifferentiable() final
