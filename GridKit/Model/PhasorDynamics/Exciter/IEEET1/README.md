@@ -102,6 +102,17 @@ When both saturation values are positive, the non-extraneous solution is:
 \end{aligned}
 ```
 
+During initialization, the effective
+exciter constant is derived from the initial operating point:
+
+```math
+K_E^{\mathrm{eff}} =
+  \begin{cases}
+    \dfrac{V_R^{\max}/10-k_\text{sat}}{E_{fd}'} & K_E=0 \\
+    K_E & K_E\ne 0.
+  \end{cases}
+```
+
 ## Model Variables
 
 ### Internal Variables
@@ -201,11 +212,6 @@ with the current input values.
    E_{C,0}  &:= \sqrt{V_r^2 + V_i^2} \\
    E_{fd}'  &= \dfrac{E_{fd,0}}{1 + I_{\mathrm{spdlim}}\,\omega} \\
    k_\text{sat}  &= S_B\, q(E_{fd}' - S_A) \\
-   K_E^{\mathrm{eff}} &\leftarrow
-      \begin{cases}
-        \dfrac{V_R^{\max}/10-k_\text{sat}}{E_{fd}'} & K_E=0 \\
-        K_E & K_E\ne 0
-      \end{cases} \\
    V_E      &= k_\text{sat} \\
    V_R      &= K_E^{\mathrm{eff}} E_{fd}' + V_E \\
    V_{tr}   &= \dfrac{V_R}{K_A} \\

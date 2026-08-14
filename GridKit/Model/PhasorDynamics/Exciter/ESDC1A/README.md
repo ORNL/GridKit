@@ -127,6 +127,17 @@ and when both saturation values are positive,
 \end{aligned}
 ```
 
+During initialization, the effective
+exciter constant is derived from the initial operating point:
+
+```math
+K_E^{\mathrm{eff}} =
+  \begin{cases}
+    \dfrac{V_R^{\max}/10-s_e}{E_{\mathrm{fd}}'} & K_E=0 \\
+    K_E & K_E\ne 0.
+  \end{cases}
+```
+
 ## Model Ports
 
 Name    | Port   | Init    | Description
@@ -317,12 +328,6 @@ routed through the gate:
       \dfrac{E_{\mathrm{fd}}}{1 + s_{\mathrm{spd}}\omega} \\
   s_e
     &\leftarrow S_B q\left(E_{\mathrm{fd}}' - S_A\right) \\
-  K_E^{\mathrm{eff}}
-    &\leftarrow
-      \begin{cases}
-        \dfrac{V_R^{\max}/10-s_e}{E_{\mathrm{fd}}'} & K_E=0 \\
-        K_E & K_E\ne 0
-      \end{cases} \\
   V_{\mathrm{FE}}
     &\leftarrow K_E^{\mathrm{eff}} E_{\mathrm{fd}}' + s_e \\
   V_R
