@@ -77,6 +77,13 @@ Draft pull requests are not meant for casual collaboration.
 You can simply point other developers to your feature branch if you need to 
 discuss your proposed changes without running CI or requesting a formal review.
 
+Draft pull requests should be in situations where developer wants to confirm their
+approach is acceptable before making a large scale change. For example, if a 
+developer wants to make a change that affects all component models, the developer
+is advised to make such change to only one model (or small subset of models) and
+make it available for review in a draft pull request. Once the development direction is
+approved, the developer can proceed and make the wholesale change.
+
 ### Deleting your feature branch
 
 Once your branch has been merged or is otherwise no longer needed, delete it 
