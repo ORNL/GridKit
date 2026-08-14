@@ -55,6 +55,9 @@ finite (typically less than 5) number of pull requests open at once.
 Check with the maintainers if you are waiting for an older pull request to 
 be reviewed and merged.
 
+It is the responsibility of the developer to ensure their pull request is reviewed in 
+timely fashion. For pull requests affecting large number of files, please 
+coordinate with reviewers (offline) to make sure they will be available to review. 
 To rebase your feature branch, first ensure the target branch is up-to-date.
 Then use
 ```
