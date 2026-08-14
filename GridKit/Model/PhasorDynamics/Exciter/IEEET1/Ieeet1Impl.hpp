@@ -233,13 +233,14 @@ namespace GridKit
 
         ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
         ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
+        Ke_eff_      = Ke_;
         if (Ke_ == ZERO<RealT>)
         {
-          Ke_ = (Vrmax_ / 10.0 - static_cast<RealT>(ksat)) / static_cast<RealT>(efdp);
+          Ke_eff_ = (Vrmax_ / 10.0 - static_cast<RealT>(ksat)) / static_cast<RealT>(efdp);
         }
 
         ScalarT ve  = ksat;
-        ScalarT vr  = Ke_ * efdp + ve;
+        ScalarT vr  = Ke_eff_ * efdp + ve;
         ScalarT vtr = vr / Ka_;
         ScalarT vf{0};
         ScalarT vfx = (Kf_ / Tf_) * efdp;
@@ -351,7 +352,7 @@ namespace GridKit
         // Internal Differential Equations
         f[0] = -vts_dot + (Ec - vts) / Tr_;
         f[1] = -vr_dot + Math::antiwindup(vr, func, Vrmin_, Vrmax_);
-        f[2] = -efdp_dot + (vr - ve - Ke_ * efdp) / Te_;
+        f[2] = -efdp_dot + (vr - ve - Ke_eff_ * efdp) / Te_;
         f[3] = -vfx_dot + vf / Tf_;
 
         // Internal Algebraic Equations
@@ -466,6 +467,8 @@ namespace GridKit
         {
           Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
         }
+
+        Ke_eff_ = Ke_;
 
         Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);
         Ta_ = std::max(Ta_, TIME_CONSTANT_MINIMUM);

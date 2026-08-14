@@ -161,7 +161,7 @@ The IEEET1 differential equations, as derived from the model diagram, are:
    0 &= -\dot V_R
       + \text{antiwindup}
         \left(V_R, f_R; V_R^{\min}, V_R^{\max}\right) \\
-   0 &= -\dot E_{fd}' + \dfrac{1}{T_E}\left(V_R - V_E - K_E E_{fd}'\right) \\
+   0 &= -\dot E_{fd}' + \dfrac{1}{T_E}\left(V_R - V_E - K_E^{\mathrm{eff}} E_{fd}'\right) \\
    0 &= -\dot V_{fx} + \dfrac{1}{T_F}\left(V_f\right)
 \end{aligned}
 ```
@@ -201,13 +201,13 @@ with the current input values.
    E_{C,0}  &:= \sqrt{V_r^2 + V_i^2} \\
    E_{fd}'  &= \dfrac{E_{fd,0}}{1 + I_{\mathrm{spdlim}}\,\omega} \\
    k_\text{sat}  &= S_B\, q(E_{fd}' - S_A) \\
-   K_E &\leftarrow
+   K_E^{\mathrm{eff}} &\leftarrow
       \begin{cases}
         \dfrac{V_R^{\max}/10-k_\text{sat}}{E_{fd}'} & K_E=0 \\
         K_E & K_E\ne 0
       \end{cases} \\
    V_E      &= k_\text{sat} \\
-   V_R      &= K_E\, E_{fd}' + V_E \\
+   V_R      &= K_E^{\mathrm{eff}} E_{fd}' + V_E \\
    V_{tr}   &= \dfrac{V_R}{K_A} \\
    V_{fx}   &= \dfrac{K_F}{T_F}\, E_{fd}' \\
    V_{ts}   &= E_{C,0} \\

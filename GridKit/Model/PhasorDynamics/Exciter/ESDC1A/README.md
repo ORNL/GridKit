@@ -166,7 +166,7 @@ Symbol                              | Units  | Description                      
 $e_V$                               | [p.u.] | Voltage-error summing output      |
 $V_{\mathrm{LL}}$                   | [p.u.] | Input lead-lag output             |
 $V_{\mathrm{HV}}$                   | [p.u.] | High-value gate output            |
-$E_{\mathrm{fd}}'S_E(E_{\mathrm{fd}}')$ | [p.u.] | Scaled-quadratic saturation contribution |
+$s_e$                               | [p.u.] | Scaled-quadratic saturation contribution | $E_{\mathrm{fd}}'S_E(E_{\mathrm{fd}}')$
 $V_{\mathrm{FE}}$                   | [p.u.] | Exciter feedback drive            |
 $E_{\mathrm{fd}}$                   | [p.u.] | Field-voltage output              | Published through `efd`
 
@@ -263,12 +263,12 @@ of [Appendix A](#appendix-a-awmin).
           & s_{\mathrm{UEL}} = 1
       \end{cases} \\
   0 &=
-    -E_{\mathrm{fd}}'S_E(E_{\mathrm{fd}}')
+    -s_e
     + S_B q\left(E_{\mathrm{fd}}' - S_A\right) \\
   0 &=
     -V_{\mathrm{FE}}
-    + K_E E_{\mathrm{fd}}'
-    + E_{\mathrm{fd}}'S_E(E_{\mathrm{fd}}') \\
+    + K_E^{\mathrm{eff}} E_{\mathrm{fd}}'
+    + s_e \\
   0 &=
     -E_{\mathrm{fd}}
     + \left(1 + s_{\mathrm{spd}}\omega\right)E_{\mathrm{fd}}'
@@ -315,17 +315,16 @@ routed through the gate:
   E_{\mathrm{fd}}'
     &\leftarrow
       \dfrac{E_{\mathrm{fd}}}{1 + s_{\mathrm{spd}}\omega} \\
-  E_{\mathrm{fd}}'S_E(E_{\mathrm{fd}}')
+  s_e
     &\leftarrow S_B q\left(E_{\mathrm{fd}}' - S_A\right) \\
-  K_E
+  K_E^{\mathrm{eff}}
     &\leftarrow
       \begin{cases}
-        \dfrac{V_R^{\max}/10-E_{\mathrm{fd}}'S_E(E_{\mathrm{fd}}')}{E_{\mathrm{fd}}'} & K_E=0 \\
+        \dfrac{V_R^{\max}/10-s_e}{E_{\mathrm{fd}}'} & K_E=0 \\
         K_E & K_E\ne 0
       \end{cases} \\
   V_{\mathrm{FE}}
-    &\leftarrow K_E E_{\mathrm{fd}}'
-      + E_{\mathrm{fd}}'S_E(E_{\mathrm{fd}}') \\
+    &\leftarrow K_E^{\mathrm{eff}} E_{\mathrm{fd}}' + s_e \\
   V_R
     &\leftarrow V_{\mathrm{FE}} \\
   V_{\mathrm{HV}}
@@ -386,7 +385,7 @@ Output          | Units  | Description                         | Note
 `vc`            | [p.u.] | Filtered terminal-voltage magnitude | $V_C$
 `vr`            | [p.u.] | Voltage-regulator output            | $V_R$
 `vf`            | [p.u.] | Stabilizing feedback state          | $V_F$
-`se`            | [p.u.] | Scaled-quadratic saturation contribution | $E_{\mathrm{fd}}'S_E(E_{\mathrm{fd}}')$
+`se`            | [p.u.] | Scaled-quadratic saturation contribution | $s_e$
 `vfe`           | [p.u.] | Exciter feedback drive              | $V_{\mathrm{FE}}$
 
 ## Testing

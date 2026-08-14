@@ -146,6 +146,8 @@ namespace GridKit
         RealT Ispdlim_{0.0}; ///< Speed limit flag indicator
 
         // Model Derived parameters
+        RealT Ke_eff_{Ke_};
+
         // Saturation coefficients derived from E1, E2, Se1, and Se2.
         RealT SA_{0};
         RealT SB_{0};

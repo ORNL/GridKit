@@ -351,7 +351,7 @@ namespace GridKit
         const ScalarT xll0  = ev0;
         const ScalarT vref0 = ev0 + vc0 - vs0 - uel_on_ * vuel0;
 
-        Ke_ = ke0;
+        Ke_eff_ = ke0;
 
         y[EFDP] = efdp0;
         y[VC]   = vc0;
@@ -564,7 +564,7 @@ namespace GridKit
 
         const ScalarT ec                = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
         const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
-        const ScalarT vfe_target        = Ke_ * efdp + se;
+        const ScalarT vfe_target        = Ke_eff_ * efdp + se;
         const ScalarT efdp_rate         = (vr - vfe) / Te_;
         const ScalarT limited_efdp_rate = awmin(efdp, efdp_rate, ZERO<RealT>);
 
@@ -762,6 +762,8 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Esdc1a<scalar_type, index_type>::setDerivedParameters()
       {
+        Ke_eff_ = Ke_;
+
         // The lags are raised to the floor in place, so a negative value is
         // rejected here while the value as read is still available. verify()
         // reports the count.

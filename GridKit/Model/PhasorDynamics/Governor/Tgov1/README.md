@@ -102,7 +102,7 @@ The TGOV1 differential equations, as derived from the model diagram, are
 \end{aligned}
 ```
 
-CommonMath defines the [anti-windup](../../../../CommonMath.md#antiwindup)
+CommonMath defines the [Antiwindup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
 ### Algebraic Equations
