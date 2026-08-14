@@ -17,7 +17,6 @@ Here `origin` is the name of the remote upstream repository in your local
 repository. If you set custom name for your remote, replace `origin` with
 that name.
 
-
 ### Feature branches
 
 For each new feature feature create a new branch from `develop`. Name your
@@ -30,18 +29,31 @@ git checkout -b shaked/sparse_matrix_transpose_dev
 In some instances you also might want to branch off a feature branch, for
 example to fix a bug or suggest significant changes.
 
+Before engaging in extensive development, check the existing issues and pull 
+requests for known issues and fixes. Also consider creating an issue to get 
+feedback on your plans.
 
 ### Merging your feature branch
 
 Feature branches should be merged back to the branch from where they were
 branched off (typically `develop`). All merging should be done through
-GutHub pull request. Before creating a pull request make sure:
+GitHub pull request.
+
+Once your branch is ready, create pull request using the template provided
+in the GridKit™ repository. Make sure that:
 - All tests pass.
 - Code compiles cleanly with flags `-Wall -Wpedantic -Wconversion -Wextra`.
 - The new code follows GridKit™ style guidelines.
 - There are unit tests for the new code.
 - The new code is documented.
 - The feature branch is rebased with respect to the target branch.
+- The [CHANGELOG.md](/CHANGELOG.md) has been updated to reflect the changes.
+
+Ensure that the proposed changes have a clear scope, and create separate pull 
+requests for unrelated changes. We recommend for each developer to have a 
+finite (typically less than 5) number of pull requests open at once. 
+Check with the maintainers if you are waiting for an older pull request to 
+be reviewed and merged.
 
 To rebase your feature branch, first ensure the target branch is up-to-date.
 Then use
@@ -52,10 +64,24 @@ git rebase -i <target branch>
 to rebase your branch to the target branch. Follow the instructions on the
 screen. You may need to resolve rebase conflicts.
 
-Once your branch is ready, create pull request using the template provided
-in the GridKit™ repository. There has to be at least one approval before
-the pull request can be merged.
+There has to be at least one approval before the pull request can be merged.
 
+### Using draft pull requests
+Use draft pull requests to test your proposed changes in continuous integration 
+(CI) and/or to get early feedback on proposed changes. 
+Some reviewers will not look at the code until a pull request is marked as 
+ready for review, so make sure to communicate the intended purpose of your draft
+pull request.
+
+Draft pull requests are not meant for casual collaboration. 
+You can simply point other developers to your feature branch if you need to 
+discuss your proposed changes without running CI or requesting a formal review.
+
+### Deleting your feature branch
+
+Once your branch has been merged or is otherwise no longer needed, delete it 
+from the GridKit™ GitHub repository. We recommend cleaning up soon after 
+the merge and periodically going through your existing branches to cleanup.
 
 ## Documenting Code
 
@@ -102,7 +128,6 @@ precisely. Specifications are primarily for human consumption.
 * `@param`, `@pre`, and `@post` sections should be repeated as many time as
 required.
 
-
 ### Doxygen and Markdown
 
 Doxygen supports Markdown markup and it should be used to make documentation
@@ -115,7 +140,6 @@ is clearer than
  * @return The size of a
 ```
 when read in plain text and in formatted documentation.
-
 
 ## Code Style
 
@@ -131,14 +155,15 @@ for warnings and recoverable error, and negative value for irrecoverable
 errors.
 
 ### Output
-If an output is needed (for example, a warning needs to be displayed), use
-`std::cout` and not `printf` as shown below. There should be a space before
-and after each `<<`. If the line needs to be broken, the `<<` operators should
-be aligned:
-
+If an output is needed (for example, a warning needs to be displayed), use 
+the logger. Use `"\n"` rather than `"std::endl"`, unless flushing really is needed.
+There should be a space before and after each `<<`.
+If the line needs to be broken, the `<<` operators should be aligned:
 ```c++
-std::cout << "index out of bounds. Row " << i << " starts at: " << start
-          << " and ends at " << end << std::endl;
+GridKit::Utilities::Logger::warning() << "Index out of bounds."
+                                      << " Row " << i
+                                      << " starts at: " << start 
+                                      << " and ends at " << end << "\n";
 ```
 
 ### File names
@@ -199,7 +224,7 @@ ModelData data;
 data.id = 1;
 data.value = 2.0;
 ```
-Member variables of struct `data` are accessed diorectly outside the struct
+Member variables of struct `data` are accessed directly outside the struct
 and do not need to be denoted with trailing underscores `_`.
 
 ### Function names
@@ -295,7 +320,7 @@ Always define `enum`s inside `GridKit` namespace. The `enum` name should
 be upper camel case, same as class names. The `enum` element names should
 match symbol for physics quantity they represent or they should be uppercase
 (same as names for constants) if they do not represent a physics quantity.
-For example, enum element for real component of voltage $V_r$ should be `Vr`.
+For example, `enum` element for real component of voltage $V_r$ should be `Vr`.
 A name for `enum` element for a "fast mode", for example, should be something
 like `FAST_MODE`, capitalized with underscores separating words (but no
 underscore at the end!).
@@ -308,7 +333,8 @@ underscore at the end!).
 
 ### Pointers and references
 
-The pointer `*` or reference `&` belong to the type and there should be no space between them and the type name.
+The pointer `*` or reference `&` belong to the type and there should be no 
+space between them and the type name.
 ```c++
 double* x;     // Yes
 int& n;        // Yes
@@ -504,8 +530,6 @@ MyClass(n, m)
 }
 ```
 
-
-
 ### Using namespaces
 All classes should be in namespace `GridKit`. If needed, define additional
 namespaces inside `GridKit`.
@@ -533,12 +557,19 @@ class Matrix   // No, class is outside GridKit namespace
 ```
 
 ## Development Container
-A development container is available for all developers using VS Code to develop. This will automatically install all pre-requisite software you need to develop in GridKit. Any developer who wishes to use this setup can follow [this tutorial](https://code.visualstudio.com/docs/devcontainers/tutorial) and simply use the option "Reopen Folder in Container" rather than "New Dev Container...", which will automatically build the included container.
-
+A development container is available for all developers using VS Code to develop. 
+This will automatically install all pre-requisite software you need to develop 
+in GridKit. Any developer who wishes to use this setup can follow 
+[this tutorial](https://code.visualstudio.com/docs/devcontainers/tutorial) and 
+simply use the option "Reopen Folder in Container" rather than 
+"New Dev Container...", which will automatically build the included container.
 
 ## Electric Grid Test Cases
 
-When adding a new test case to to the repository using the GridKit input file format, you should follow the following guidelines to remain constistant with existing GridKit cases. For each test case, the associated README.md should contain the following:
+When adding a new test case to to the repository using the GridKit input file 
+format, you should follow the following guidelines to remain consistent with 
+existing GridKit cases. For each test case, the associated README.md should 
+contain the following:
 - A high resolution oneline diagram ($\geq$ 600 dpi)
 - No overlapping labels
 - Use common electrical symbols for components (transformers, generators, loads, etc.)
@@ -550,4 +581,7 @@ Within the README file for the test case, specify characteristics such as:
 - Types of events well-suited for the case
 - Any other relevant case characteristics 
 
-Additionally, specify existing multiple resolutions of the case, i.e., if there is a high-fidelity EMT network model along with a phasor-domain network model that is well known and available, we should indicate that both these model resolutions are available within GridKit. 
+Additionally, specify existing multiple resolutions of the case, i.e., if 
+there is a high-fidelity EMT network model along with a phasor-domain network 
+model that is well known and available, we should indicate that both these 
+model resolutions are available within GridKit. 
