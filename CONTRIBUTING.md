@@ -49,6 +49,10 @@ in the GridKit™ repository. Make sure that:
 - The feature branch is rebased with respect to the target branch.
 - The [CHANGELOG.md](/CHANGELOG.md) has been updated to reflect the changes.
 
+We use run continuous integration (CI) on pull requests. If you don't need CI 
+when pushing your changes to a pull request (e.g., changes only affecting 
+comments), we recommend adding `[skip ci]` in the commit message.
+
 Ensure that the proposed changes have a clear scope, and create separate pull 
 requests for unrelated changes. We recommend for each developer to have a 
 finite (typically less than 5) number of pull requests open at once. 
@@ -58,6 +62,7 @@ be reviewed and merged.
 It is the responsibility of the developer to ensure their pull request is reviewed in 
 timely fashion. For pull requests affecting large number of files, please 
 coordinate with reviewers (offline) to make sure they will be available to review. 
+
 To rebase your feature branch, first ensure the target branch is up-to-date.
 Then use
 ```
@@ -70,8 +75,8 @@ screen. You may need to resolve rebase conflicts.
 There has to be at least one approval before the pull request can be merged.
 
 ### Using draft pull requests
-Use draft pull requests to test your proposed changes in continuous integration 
-(CI) and/or to get early feedback on proposed changes. 
+Use draft pull requests to test your proposed changes in CI and/or to get 
+early feedback on proposed changes. 
 Some reviewers will not look at the code until a pull request is marked as 
 ready for review, so make sure to communicate the intended purpose of your draft
 pull request.
@@ -80,7 +85,7 @@ Draft pull requests are not meant for casual collaboration.
 You can simply point other developers to your feature branch if you need to 
 discuss your proposed changes without running CI or requesting a formal review.
 
-Draft pull requests should be in situations where developer wants to confirm their
+Draft pull requests should be in situations where developers want to confirm their
 approach is acceptable before making a large scale change. For example, if a 
 developer wants to make a change that affects all component models, the developer
 is advised to make such change to only one model (or small subset of models) and
