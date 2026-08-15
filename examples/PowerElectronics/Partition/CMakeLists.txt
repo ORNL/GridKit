@@ -1,15 +1,13 @@
 find_package(OpenMP)
 
-add_executable(partitionHires PartitionHires.cpp)
+add_executable(PartitionMicrogrid PartitionMicrogrid.cpp)
+target_include_directories(
+  PartitionMicrogrid
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
 
 target_link_libraries(
-  partitionHires
-  PRIVATE GridKit::solvers_dyn GridKit::power_elec_partition_interfaces)
-
-add_executable(partitionMicrogrid PartitionMicrogrid.cpp)
-
-target_link_libraries(
-  partitionMicrogrid
+  PartitionMicrogrid
   PRIVATE GridKit::power_elec_disgen
           GridKit::power_elec_microline
           GridKit::power_elec_microload
@@ -17,24 +15,29 @@ target_link_libraries(
           GridKit::power_elec_microbusdq
           GridKit::power_elec_partition_interfaces)
 
-add_test(NAME PartitionMicrogrid COMMAND partitionMicrogrid)
-
-install(TARGETS partitionHires partitionMicrogrid RUNTIME DESTINATION bin)
-
-if(OpenMP_CXX_FOUND)
-  add_executable(PartitionScaleMicrogrid PartitionScaleMicrogrid.cpp)
-
-  target_link_libraries(
+add_executable(PartitionScaleMicrogrid PartitionScaleMicrogrid.cpp)
+target_include_directories(
+  PartitionScaleMicrogrid
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+ 
+target_link_libraries(
     PartitionScaleMicrogrid
     PRIVATE GridKit::power_elec_disgen
             GridKit::power_elec_microline
             GridKit::power_elec_microload
             GridKit::solvers_dyn
             GridKit::power_elec_microbusdq
-            GridKit::power_elec_partition_interfaces
-            OpenMP::OpenMP_CXX)
+            GridKit::power_elec_partition_interfaces)
 
-  add_test(NAME PartitionScaleMicrogrid COMMAND PartitionScaleMicrogrid)
-
-  install(TARGETS PartitionScaleMicrogrid RUNTIME DESTINATION bin)
+if(OpenMP_CXX_FOUND)
+  target_link_libraries(
+    PartitionScaleMicrogrid
+    PRIVATE OpenMP::OpenMP_CXX)
 endif()
+
+add_test(NAME PartitionMicrogrid COMMAND PartitionMicrogrid)
+add_test(NAME PartitionScaleMicrogrid COMMAND PartitionScaleMicrogrid)
+
+install(TARGETS PartitionMicrogrid RUNTIME DESTINATION bin)
+install(TARGETS PartitionScaleMicrogrid RUNTIME DESTINATION bin)

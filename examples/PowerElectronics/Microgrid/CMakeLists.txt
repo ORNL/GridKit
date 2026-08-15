@@ -1,4 +1,10 @@
 add_executable(microgrid Microgrid.cpp)
+
+target_include_directories(
+  microgrid
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
 target_link_libraries(
   microgrid
   GridKit::power_elec_disgen
