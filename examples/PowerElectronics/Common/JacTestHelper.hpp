@@ -2,12 +2,16 @@
 
 #include <cmath>
 #include <iostream>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
+
+#include "GridKit/Testing/Testing.hpp"
 
 namespace GridKit
 {
@@ -26,6 +30,11 @@ namespace GridKit
      * exists in the subsystem Jacobian, and
      * - matching entries agree within the specified tolerance.
      *
+     * @note When the components in a subsystem are evaluated in a different order
+     *       than in the monolithic reference system, a larger tolerance may be
+     *       required to account for floating-point roundoff introduced by the
+     *       different summation order.
+     *
      * @param full_jac Full-system Jacobian.
      * @param sub_jac Subsystem Jacobian.
      * @param subsystem Subsystem associated with sub_jac.
@@ -40,7 +49,7 @@ namespace GridKit
         GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& full_jac,
         GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& sub_jac,
         GridKit::SubsystemModel<RealT, IdxT>&           subsystem,
-        RealT                                           tolerance = static_cast<RealT>(1e-12))
+        std::optional<RealT>                            tolerance = std::nullopt)
     {
       constexpr auto host      = memory::HOST;
       // Full-system CSR data.
@@ -151,15 +160,20 @@ namespace GridKit
         const IdxT full_begin = full_rows[global_row];
         const IdxT full_end   = full_rows[global_row + 1];
 
-        // Store the subsystem row using global column indices. The subsystem
-        // CSR row is sorted by local column index, but this ordering may change
-        // after converting the columns back to global indices.
+        /*
+         * Store the current subsystem row using global column indices.
+         *
+         * The subsystem Jacobian uses local column indices, while the full-system
+         * Jacobian uses global column indices. Convert each local column to its
+         * corresponding global column so the two rows can be compared directly.
+         */
         std::unordered_map<IdxT, RealT> sub_row_entries;
 
         for (IdxT sub_index = sub_begin; sub_index < sub_end; ++sub_index)
         {
           const IdxT local_column = sub_cols[sub_index];
 
+          // Fail if the subsystem column index is outside the valid local range.
           if (local_column >= num_sub_cols)
           {
             std::cout << "Invalid subsystem column index "
@@ -173,7 +187,7 @@ namespace GridKit
 
           const IdxT global_column = local_to_global[local_column];
 
-          // A CSR row should contain only one entry for each column.
+          // Fail if the subsystem row contains more than one entry for the same column.
           if (sub_row_entries.find(global_column) != sub_row_entries.end())
           {
             std::cout << "Duplicate subsystem entry at ("
@@ -188,13 +202,11 @@ namespace GridKit
         }
 
         // Compare full-system entries whose columns belong to the subsystem.
-        for (IdxT full_index = full_begin;
-             full_index < full_end;
-             ++full_index)
+        for (IdxT full_index = full_begin; full_index < full_end; ++full_index)
         {
           const IdxT global_column = full_cols[full_index];
 
-          // Ignore entries whose column belongs outside the subsystem.
+          // No need to check if column belongs outside the subsystem.
           if (global_to_local.find(global_column) == global_to_local.end())
           {
             continue;
@@ -202,8 +214,7 @@ namespace GridKit
 
           auto sub_entry = sub_row_entries.find(global_column);
 
-          // The full Jacobian contains an entry that is missing from the
-          // subsystem Jacobian.
+          // Then it must exist in the subsystem Jacobian; fail otherwise.
           if (sub_entry == sub_row_entries.end())
           {
             std::cout << "Entry exists only in full Jacobian at ("
@@ -218,8 +229,23 @@ namespace GridKit
           const RealT sub_value  = sub_entry->second;
           const RealT difference = std::abs(full_value - sub_value);
 
-          // Compare the values of matching Jacobian entries.
-          if (difference > tolerance)
+          // Different component evaluation orders can change the order of floating-point
+          // summation and introduce small roundoff differences. Use an appropriate
+          // tolerance when comparing against the monolithic reference.
+          // if tolerance is not supplied we simply use default machine precision provided
+          // by GridKit's Test::isEqual
+          auto isEqual = [&tolerance](RealT value, RealT reference)
+          {
+            if (tolerance)
+            {
+              return GridKit::Testing::isEqual(value, reference, *tolerance);
+            }
+
+            return GridKit::Testing::isEqual(value, reference);
+          };
+
+          // Then the values must agree, fail otherwise
+          if (!isEqual(sub_value, full_value))
           {
             std::cout << "Jacobian value mismatch at ("
                       << global_row << ", "
@@ -231,12 +257,12 @@ namespace GridKit
             matches = false;
           }
 
-          // Remove the matched entry. Any entries left after checking the
-          // full-system row exist only in the subsystem Jacobian.
+          // Remove the matched entry
           sub_row_entries.erase(sub_entry);
         }
 
-        // Report entries that exist only in the subsystem Jacobian.
+        // Any entries remaining must be missing from the
+        // full-system Jacobian, so this subsystem row contains incorrect entries, fail!
         for (const auto& entry : sub_row_entries)
         {
           const IdxT global_column = entry.first;

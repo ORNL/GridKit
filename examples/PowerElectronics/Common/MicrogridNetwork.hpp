@@ -1,0 +1,309 @@
+// MicrogridNetwork.hpp
+
+#pragma once
+
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <vector>
+
+#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
+#include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
+#include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
+#include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
+#include <GridKit/Model/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
+#include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
+#include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+
+namespace GridKit
+{
+
+  using index_type = size_t;
+  using real_type  = double;
+
+  using SignalNode  = GridKit::PowerElectronics::SignalNode<real_type, index_type>;
+  using Bus         = GridKit::PowerElectronics::MicrogridBus<real_type, index_type>;
+  using BusDQ       = GridKit::MicrogridBusDQ<real_type, index_type>;
+  using DGGenerator = GridKit::DistributedGenerator<real_type, index_type>;
+  using Line        = GridKit::MicrogridLine<real_type, index_type>;
+  using Load        = GridKit::MicrogridLoad<real_type, index_type>;
+  using GenParams   = GridKit::DistributedGeneratorParameters<real_type, index_type>;
+
+  /*
+   * Contains components and nodes that make up the scaled microgrid network.
+   *
+   * The network contains 2 * N_size IBRs and stores the physical components
+   * that make up the scale microgrid.
+   */
+  struct ScaleMicrogridNetwork
+  {
+    size_t                    model_id_next;
+    size_t                    N_size;
+    SignalNode                dg_signal;
+    std::vector<Bus>          buses;
+    std::vector<BusDQ*>       busesDQ;
+    std::vector<DGGenerator*> generators;
+    std::vector<Line*>        lines;
+    std::vector<Load*>        loads;
+    std::vector<GenParams>    DGParam_list;
+
+    ScaleMicrogridNetwork(size_t n_size)
+      : model_id_next(0),
+        N_size(n_size),
+        buses(2 * n_size),
+        busesDQ(2 * n_size, nullptr),
+        generators(2 * n_size, nullptr),
+        lines(2 * n_size, nullptr),
+        loads(2 * n_size, nullptr),
+        DGParam_list(2 * n_size)
+    {
+    }
+  };
+
+  /**
+   * @brief Construct all components of a scaled microgrid network.
+   *
+   * Builds a microgrid containing @c 2*N_size generators and buses connected
+   * in a chain by transmission lines. Loads are connected to every other bus,
+   * and a virtual DQ bus is associated with each physical bus.
+   *
+   * The first two generators use the reference generator parameter set, while
+   * all remaining generators use the second parameter set. Line parameters
+   * alternate along the network, and the first load uses a different parameter
+   * set from the remaining loads.
+   *
+   * The created components are stored in @p network and assigned unique model
+   * identifiers using @c network.model_id_next.
+   *
+   * @param[in,out] network Network in which the microgrid components are
+   *                        constructed and stored.
+   *
+   * @pre @c network.N_size is greater than zero.
+   * @pre The component storage in @p network has been sized consistently with
+   *      @c network.N_size.
+   *
+   * @post @p network contains @c 2*N_size generators and virtual DQ buses.
+   * @post @p network contains @c 2*N_size-1 transmission lines connecting
+   *       consecutive buses.
+   * @post @p network contains @c N_size loads connected to every other bus.
+   * @post @c network.DGParam_list contains the parameters associated with each
+   *       generator.
+   * @post @c network.model_id_next is advanced for every component created.
+   *
+   * @note Components are dynamically allocated and their pointers are stored
+   *       in the corresponding network component vectors.
+   */
+  inline void buildScaleMicrogridNetwork(ScaleMicrogridNetwork& network)
+  {
+    size_t N_size = network.N_size;
+
+    assert(N_size > 0);
+    // Every Bus has the same virtual resistance. This is due to numerical stability as mentioned in the paper.
+    real_type RN = 1.0e4;
+
+    // DG Params Vector
+    // All DGs have the same set of parameters except for the first two.
+    GenParams DG_parms1;
+    DG_parms1.wb_  = 2.0 * M_PI * 50.0;
+    DG_parms1.wc_  = 31.41;
+    DG_parms1.mp_  = 9.4e-5;
+    DG_parms1.Vn_  = 380.0;
+    DG_parms1.nq_  = 1.3e-3;
+    DG_parms1.F_   = 0.75;
+    DG_parms1.Kiv_ = 420.0;
+    DG_parms1.Kpv_ = 0.1;
+    DG_parms1.Kic_ = 2.0e4;
+    DG_parms1.Kpc_ = 15.0;
+    DG_parms1.Cf_  = 5.0e-5;
+    DG_parms1.rLf_ = 0.1;
+    DG_parms1.Lf_  = 1.35e-3;
+    DG_parms1.rLc_ = 0.03;
+    DG_parms1.Lc_  = 0.35e-3;
+
+    GenParams DG_parms2;
+    DG_parms2.wb_  = 2.0 * M_PI * 50.0;
+    DG_parms2.wc_  = 31.41;
+    DG_parms2.mp_  = 12.5e-5;
+    DG_parms2.Vn_  = 380.0;
+    DG_parms2.nq_  = 1.5e-3;
+    DG_parms2.F_   = 0.75;
+    DG_parms2.Kiv_ = 390.0;
+    DG_parms2.Kpv_ = 0.05;
+    DG_parms2.Kic_ = 16.0e3;
+    DG_parms2.Kpc_ = 10.5;
+    DG_parms2.Cf_  = 50.0e-6;
+    DG_parms2.rLf_ = 0.1;
+    DG_parms2.Lf_  = 1.35e-3;
+    DG_parms2.rLc_ = 0.03;
+    DG_parms2.Lc_  = 0.35e-3;
+
+    network.DGParam_list.assign(2 * N_size, DG_parms2);
+
+    // First two generators use parameters 1
+    if (network.DGParam_list.size() >= 1)
+    {
+      network.DGParam_list[0] = DG_parms1;
+    }
+    if (network.DGParam_list.size() >= 2)
+    {
+      network.DGParam_list[1] = DG_parms1;
+    }
+
+    // line vector params
+    // Every odd line has the same parameters and every even line has the same parameters
+    real_type              rline1 = 0.23;
+    real_type              Lline1 = 0.1 / (2.0 * M_PI * 50.0);
+    real_type              rline2 = 0.35;
+    real_type              Lline2 = 0.58 / (2.0 * M_PI * 50.0);
+    std::vector<real_type> rline_list(2 * N_size - 1, 0.0);
+    std::vector<real_type> Lline_list(2 * N_size - 1, 0.0);
+    for (index_type i = 0; i < rline_list.size(); i++)
+    {
+      rline_list[i] = (i % 2) ? rline2 : rline1;
+      Lline_list[i] = (i % 2) ? Lline2 : Lline1;
+    }
+
+    // load parms
+    // Only the first load has the same paramaters.
+    real_type rload1 = 3.0;
+    real_type Lload1 = 2.0 / (2.0 * M_PI * 50.0);
+    real_type rload2 = 2.0;
+    real_type Lload2 = 1.0 / (2.0 * M_PI * 50.0);
+
+    std::vector<real_type> rload_list(N_size, rload2);
+    std::vector<real_type> Lload_list(N_size, Lload2);
+    if (rload_list.size() >= 1)
+    {
+      rload_list[0] = rload1;
+      Lload_list[0] = Lload1;
+    }
+
+    // Create the reference generator
+    auto* dg_ref = new DGGenerator(network.model_id_next++,
+                                   network.DGParam_list[0],
+                                   true,
+                                   &network.dg_signal,
+                                   &network.buses[0]);
+
+    network.generators[0] = dg_ref;
+
+    // Create the remaining generators.
+    for (index_type i = 1; i < 2 * N_size; i++)
+    {
+      auto* dg = new DGGenerator(network.model_id_next++,
+                                 network.DGParam_list[i],
+                                 false,
+                                 &network.dg_signal,
+                                 &network.buses[i]);
+
+      network.generators[i] = dg;
+    }
+
+    //  // Create transmission lines between consecutive buses.
+    for (index_type i = 0; i < 2 * N_size - 1; i++)
+    {
+      auto* line_model = new Line(network.model_id_next++,
+                                  rline_list[i],
+                                  Lline_list[i],
+                                  &network.dg_signal,
+                                  &network.buses[i],
+                                  &network.buses[i + 1]);
+
+      network.lines[i + 1] = line_model;
+    }
+
+    // Create loads on every other bus.
+    for (index_type i = 0; i < N_size; i++)
+    {
+      auto* load_model = new Load(network.model_id_next++,
+                                  rload_list[i],
+                                  Lload_list[i],
+                                  &network.dg_signal,
+                                  &network.buses[2 * i]);
+
+      network.loads[2 * i] = load_model;
+    }
+
+    // Create and Add all the microgrid Virtual DQ Buses
+    for (index_type i = 0; i < 2 * N_size; i++)
+    {
+      auto* virDQbus_model = new BusDQ(network.model_id_next++,
+                                       RN,
+                                       &network.buses[i]);
+
+      network.busesDQ[i] = virDQbus_model;
+    }
+  }
+
+  /**
+   * @brief Assemble a scaled microgrid network into a power electronics model.
+   *
+   * Adds the signal node, physical buses, generators, transmission lines,
+   * loads, and virtual DQ buses stored in @p network to @p sys_model.
+   *
+   * This function does not construct or allocate any network components. The
+   * physical network must already have been created by
+   * buildScaleMicrogridNetwork().
+   *
+   * @param[in] network Constructed scaled microgrid network whose components
+   *                    are added to the system model.
+   * @param[in,out] sys_model Power electronics model to which the network
+   *                          components and nodes are added.
+   *
+   * @pre @c network.N_size is greater than zero.
+   * @pre @p network has been constructed by buildScaleMicrogridNetwork().
+   * @pre All component and node pointers referenced by @p network are valid.
+   *
+   * @post The signal node and all physical buses in @p network have been added
+   *       to @p sys_model.
+   * @post All generators, transmission lines, loads, and virtual DQ buses in
+   *       @p network have been added to @p sys_model.
+   *
+   * @note This function only assembles the network into the system model. It
+   *       does not call PowerElectronicsModel::allocate().
+   */
+  inline void assembleSystem(ScaleMicrogridNetwork& network, GridKit::PowerElectronicsModel<real_type, index_type>& sys_model)
+  {
+    size_t N_size = network.N_size;
+
+    // Ensure minimum size requirement
+    assert(N_size > 0);
+
+    // Add all bus nodes
+    sys_model.addNode(&network.dg_signal);
+
+    for (size_t i = 0; i < 2 * N_size; i++)
+    {
+      sys_model.addNode(&network.buses[i]);
+    }
+
+    // Add all generators
+    for (index_type i = 0; i < 2 * N_size; i++)
+    {
+      sys_model.addComponent(network.generators[i]);
+    }
+
+    // Load all the Line components
+    for (index_type i = 1; i < 2 * N_size; i++)
+    {
+      sys_model.addComponent(network.lines[i]);
+    }
+
+    //  Load all the Load components
+    for (index_type i = 0; i < 2 * N_size; i++)
+    {
+      if (network.loads[i] != nullptr)
+      {
+        sys_model.addComponent(network.loads[i]);
+      }
+    }
+
+    // Add all the microgrid Virtual DQ Buses
+    for (index_type i = 0; i < 2 * N_size; i++)
+    {
+      sys_model.addComponent(network.busesDQ[i]);
+    }
+  }
+} // namespace GridKit
