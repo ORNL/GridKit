@@ -3,13 +3,11 @@ add_executable(scalemicrogridarbitrary ScaleMicrogridArbitrary.cpp)
 
 target_include_directories(
   scalemicrogrid
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..
-)
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 target_include_directories(
   scalemicrogridarbitrary
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..
-)
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 target_link_libraries(
   scalemicrogrid
