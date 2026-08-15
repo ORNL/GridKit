@@ -149,6 +149,16 @@ namespace GridKit
       copyVector(param_lo_, other.param_lo_);
     }
 
+    virtual CircuitComponent<ScalarT, IdxT>* clone() const
+    {
+      return nullptr;
+    }
+
+    virtual bool isCloneable() const
+    {
+      return false;
+    }
+
     /**
      * @note Cannot be marked final, since it is overriden to recurse in the system model.
      */
@@ -275,11 +285,7 @@ namespace GridKit
       yp_ext_ = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
       f_ext_  = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
 
-      // Make the existing allocation code idempotent:
-      if (!connection_nodes_)
-      {
-        connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
-      }
+      connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
       if (!allocated_)
       {

@@ -409,6 +409,16 @@ namespace GridKit
         return gB_;
       }
 
+      /**
+       * @brief Check whether the Node has already been allocated.
+       *
+       * @return true if allocate() has previously completed, false otherwise.
+       */
+      bool isAllocated() const
+      {
+        return allocated_;
+      }
+
     private:
       void allocateVectors(IdxT n)
       {

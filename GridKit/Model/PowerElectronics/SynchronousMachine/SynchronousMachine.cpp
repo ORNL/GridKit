@@ -81,6 +81,25 @@ namespace GridKit
   }
 
   /**
+   * @brief Compute the absolute tolerance for each variable in the model
+   *
+   * @param rel_tol The relative tolerance which can be used to pick the
+   *        absolute tolerance.
+   * @tparam ScalarT Scalar data type
+   * @tparam IdxT Index data type
+   * @return int 0 if successful, non-zero otherwise.
+   *
+   * This represents a "noise" level close to zero for which pure relative
+   * error cannot be used.
+   */
+  template <class ScalarT, typename IdxT>
+  int SynchronousMachine<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+  {
+    abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+    return 0;
+  }
+
+  /**
    * @brief Compute the resisdual of the component.
    *
    * @todo not finished
@@ -161,6 +180,18 @@ namespace GridKit
   int SynchronousMachine<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
     return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  bool SynchronousMachine<ScalarT, IdxT>::isCloneable() const
+  {
+    return true;
+  }
+
+  template <class ScalarT, typename IdxT>
+  CircuitComponent<ScalarT, IdxT>* SynchronousMachine<ScalarT, IdxT>::clone() const
+  {
+    return new SynchronousMachine<ScalarT, IdxT>(*this);
   }
 
   // Available template instantiations

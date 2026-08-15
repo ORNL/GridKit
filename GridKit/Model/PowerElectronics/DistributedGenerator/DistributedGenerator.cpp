@@ -421,6 +421,18 @@ namespace GridKit
     return 0;
   }
 
+  template <class ScalarT, typename IdxT>
+  bool DistributedGenerator<ScalarT, IdxT>::isCloneable() const
+  {
+    return true;
+  }
+
+  template <class ScalarT, typename IdxT>
+  CircuitComponent<ScalarT, IdxT>* DistributedGenerator<ScalarT, IdxT>::clone() const
+  {
+    return new DistributedGenerator<ScalarT, IdxT>(*this);
+  }
+
   // Available template instantiations
   template class DistributedGenerator<double, long int>;
   template class DistributedGenerator<double, size_t>;
