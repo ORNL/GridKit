@@ -15,12 +15,35 @@
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
+#include <GridKit/Model/PowerElectronics/PartitionInterface/PartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
 {
 
+  /**
+   * @brief Represents a subset of a PowerElectronicsModel that can be evaluated
+   *        independently.
+   *
+   * A SubsystemModel contains a collection of existing GridKit components and
+   * nodes taken from a larger system. Variables owned by those components and
+   * nodes become internal variables of the subsystem. Variables needed by those
+   * components but owned outside the subsystem become external coupling
+   * variables.
+   *
+   * Components normally store connection indices in the global system indexing.
+   * During subsystem allocation, these indices are temporarily replaced with a
+   * contiguous local subsystem indexing so that the subsystem can be evaluated
+   * like an independent PowerElectronicsModel.
+   *
+   * External coupling values must be supplied before residual or Jacobian
+   * evaluation, either directly through the external-data vectors or through a
+   * forcing function.
+   *
+   * @tparam ScalarT Scalar type used by the model.
+   * @tparam IdxT Index type used for variable and connection indices.
+   */
   template <class ScalarT, typename IdxT>
   class SubsystemModel : public PowerElectronicsModel<ScalarT, IdxT>
   {
@@ -34,6 +57,7 @@ namespace GridKit
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
+    using interface_type = PartitionInterface<ScalarT, IdxT>;
 
     using SystemModel::abs_tol_;
     using SystemModel::allocated_;
@@ -93,14 +117,29 @@ namespace GridKit
       nodes_.clear();
     }
 
+    /**
+     * @brief Allocate the subsystem for independent evaluation.
+     *
+     * Converts the selected components and nodes from global system indexing to
+     * local subsystem indexing, allocates storage for the subsystem's internal
+     * variables, and creates storage for coupling variables that lie outside the
+     * subsystem.
+     *
+     * Component pointers are then redirected to either the subsystem's internal
+     * vectors or its external coupling-data vectors. Finally, the subsystem
+     * Jacobian structure is assembled using only entries whose row and column
+     * belong to internal subsystem variables.
+     *
+     * @pre Components and nodes added to the subsystem must already be allocated
+     *      by the parent system.
+     *
+     * @post Component and node connection indices use local subsystem indexing,
+     *       and the subsystem is ready for residual and Jacobian evaluation.
+     *
+     * @return 0 on success, otherwise an error code returned during allocation.
+     */
     int allocate() override
     {
-
-      for (auto* comp : interfaces_)
-      {
-        comp->allocate();
-      }
-
       if (int err = hold())
       {
         return err;
@@ -176,7 +215,9 @@ namespace GridKit
           {
             const IdxT connection_index = comp->getNodeConnection(local_index);
 
-            // External to the component but internal to the subsystem.
+            // A variable can be external from the component's point of view while still
+            // being owned by this subsystem. In that case, connect the component directly
+            // to the corresponding entry in the subsystem's internal vectors.
             if (connection_index < n_intern_)
             {
               ExternalConnection<ScalarT, IdxT> connection{
@@ -190,7 +231,8 @@ namespace GridKit
               continue;
             }
 
-            // External to both the component and subsystem.
+            // Otherwise the variable is owned outside this subsystem. Connect the
+            // component to the subsystem's external coupling-data storage instead.
             const IdxT external_offset = connection_index - static_cast<IdxT>(n_intern_);
 
             ExternalConnection<ScalarT, IdxT> connection{
@@ -217,6 +259,9 @@ namespace GridKit
         component->evaluateJacobian();
       }
 
+      // Check whether a Jacobian entry belongs to the subsystem Jacobian.
+      // Only entries whose row and column are both internal subsystem
+      // variables are retained.
       auto isValidEntry = [this](IdxT row, IdxT col)
       {
         if (row == neg1_ || col == neg1_)
@@ -316,11 +361,18 @@ namespace GridKit
     }
 
     /**
-     * @brief Distribute y and y' to each component based of node connection graph
+     * @brief Update the subsystem external state and derivative data.
      *
-     * @post Each component has y and y' set
+     * If a forcing function is provided, evaluate it at the current subsystem
+     * time and copy the returned coupling values into the external state vectors.
      *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+     * @post y_ext_data_ and yp_ext_data_ contain the external coupling values
+     *       returned by the forcing function, if one is set.
+     *
+     * @throws std::runtime_error If the forcing function returns vectors whose
+     *         sizes do not match the subsystem external-data vectors.
+     *
+     * @return 0 on success.
      */
     int distributeExternalVectors()
     {
@@ -387,6 +439,12 @@ namespace GridKit
      */
     void addComponent(component_type* component)
     {
+      if (!component->isAllocated())
+      {
+        throw std::logic_error(
+            "SubsystemModel::addComponent: cannot add an unallocated component.");
+      }
+
       if (connections_are_local_)
       {
         throw std::logic_error(
@@ -408,6 +466,12 @@ namespace GridKit
      */
     void addNode(node_type* node)
     {
+      if (!node->isAllocated())
+      {
+        throw std::logic_error(
+            "SubsystemModel::addNode: cannot add an unallocated node.");
+      }
+
       if (connections_are_local_)
       {
         throw std::logic_error(
@@ -426,22 +490,27 @@ namespace GridKit
      *
      * @param component Pointer to the interface component to add.
      */
-    void addInterface(component_type* component)
+    void addInterface(interface_type* component)
     {
       addComponent(component);
       interfaces_.push_back(component);
     }
 
     /**
-     * @brief Acquire the subsystem's global-to-local index mappings.
+     * @brief Prepare the subsystem topology for local evaluation.
      *
-     * Builds the internal/external index maps via buildIndexMappings(),
-     * then converts component/node connections from global to local
-     * indices via mapGlobalToLocal().
+     * Components and nodes initially contain the same global connection indices
+     * assigned by the parent system. This method determines which of those
+     * variables belong to the subsystem and which are external coupling variables,
+     * assigns each a local subsystem index, and replaces the stored global
+     * connection indices with those local indices.
      *
-     * Call this after modifying subsystem topology (adding or removing
-     * components/nodes), to (re)establish local
-     * indexing. Pairs with release(), which undoes this.
+     * This local indexing is used while the subsystem is allocated and evaluated.
+     * release() restores the original global indices.
+     *
+     * @pre Component and node connections use global system indices.
+     *
+     * @post Component and node connections use local subsystem indices.
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
@@ -458,17 +527,17 @@ namespace GridKit
     }
 
     /**
-     * @brief Release the subsystem's global-to-local index mappings.
+     * @brief Restore the subsystem topology to global system indexing.
      *
-     * If components/nodes currently hold local indices, they are first
-     * converted back to their original global indices via
-     * mapLocalToGlobal(). The internal/external index maps built by
-     * buildIndexMappings() are then cleared, and the model is marked as
-     * not allocated.
+     * Reverses hold() by replacing local subsystem connection indices with the
+     * original global system indices. The local internal/external mappings are
+     * then cleared so that components or nodes can safely be added or removed.
      *
+     * @pre Component and node connections may use local subsystem indices.
      *
-     * Call this before modifying subsystem topology (adding or removing
-     * components/nodes), so stale local indices aren't left dangling.
+     * @post Component and node connections use their original global indices,
+     *       the subsystem mappings are cleared, and the subsystem is marked
+     *       unallocated.
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
@@ -507,7 +576,7 @@ namespace GridKit
       return f_ext_data_;
     }
 
-    void setTimeFunction(TimeFunction function)
+    void setForcingFunction(TimeFunction function)
     {
       forcing_function_ = std::move(function);
     }
@@ -524,16 +593,20 @@ namespace GridKit
 
   private:
     /**
-     * @brief Replace local subsystem connection indices with their original global indices
-     * for every component and node.
+     * @brief Restore local subsystem connection indices to global system indices.
      *
-     * Inverse of mapGlobalToLocal(). Internal connections (index < internal
-     * size) are mapped back through this subsystem's own node-connection
-     * table; external connections are mapped back through
-     * @c external_data_indices_. Entries equal to @c neg1_ represent no
-     * connection and are left unchanged.
+     * Reverses mapGlobalToLocal(). Internal subsystem indices are translated
+     * through the subsystem connection-node table, while external subsystem
+     * indices are translated through external_data_indices_.
      *
-     * @return Always returns 0.
+     * The component/node connectivity is unchanged; only the index representation
+     * is restored.
+     *
+     * @pre Component and node connections use local subsystem indices.
+     *
+     * @post Component and node connections use their original global indices.
+     *
+     * @return 0 on success.
      */
     int mapLocalToGlobal()
     {
@@ -585,20 +658,21 @@ namespace GridKit
     }
 
     /**
-     * @brief Replace global connection indices with local subsystem indices for every component
-     * and node.
+     * @brief Replace global connection indices with subsystem-local indices.
      *
-     * After the internal and external maps have been constructed, each component
-     * and node still stores the original global connection indices. This function
-     * traverses every connection and replaces each global index with its
-     * corresponding local subsystem index.
+     * Uses the mappings created by buildIndexMappings() to rewrite the connection
+     * indices stored by every component and node. Variables owned by the subsystem
+     * use internal_map_; variables owned outside the subsystem use external_map_.
      *
-     * Internal connections are mapped using @c internal_map_, while connections
-     * that reference variables outside the subsystem are mapped using
-     * @c external_map_. Entries equal to @c neg1_ represent no connection and
-     * are left unchanged.
+     * This changes only the indexing used to identify connections; it does not
+     * change the physical component/node connectivity.
      *
-     * @return Always returns 0.
+     * @pre internal_map_ and external_map_ have been constructed from global
+     *      connection indices.
+     *
+     * @post All valid component and node connections use local subsystem indices.
+     *
+     * @return 0 on success.
      */
     int mapGlobalToLocal()
     {
@@ -650,16 +724,24 @@ namespace GridKit
     }
 
     /**
-     * @brief Construct the mappings from global variable indices to local
-     * subsystem indices.
+     * @brief Build the global-to-local variable mappings for the subsystem.
      *
-     * The subsystem stores its variables in a contiguous local ordering. This
-     * function assigns each global variable index a corresponding local index and
-     * separates them into internal and external variables.
+     * Examines the connection indices of all components and nodes in the
+     * subsystem and divides the referenced variables into two groups:
      *
-     * Internal variables are those owned by this subsystem, while external
-     * variables are owned by neighboring subsystems but are required for residual
-     * and Jacobian evaluation.
+     * - Internal variables are owned by a component or node in this subsystem.
+     * - External variables are required by a subsystem component but are owned
+     *   outside the subsystem.
+     *
+     * Internal variables receive local indices first. External coupling variables
+     * are then assigned indices immediately after the internal range. This gives
+     * every variable referenced by the subsystem a unique local index while
+     * preserving its original global index in the corresponding map.
+     *
+     * @pre Component and node connections use global system indices.
+     *
+     * @post internal_map_ and external_map_ contain the global-to-local mappings
+     *       needed to convert the subsystem topology to local indexing.
      */
     void buildIndexMappings()
     {
@@ -673,7 +755,7 @@ namespace GridKit
       external_map_.clear();
 
       size_t component_internal_idx = 0;
-      // First pass: Map global component indices to local subsystem indices.
+      // Pass 1: Add variables owned internally by subsystem components.
       for (component_type* comp : components_)
       {
         const auto& extern_indices = comp->getExternIndices();
@@ -689,6 +771,7 @@ namespace GridKit
         }
       }
 
+      // Pass 2: Add variables owned by subsystem nodes.
       for (node_type* node : nodes_)
       {
 
@@ -703,6 +786,7 @@ namespace GridKit
         }
       }
 
+      // Pass 3: Add component dependencies that are owned outside the subsystem.
       for (component_type* comp : components_)
       {
         auto extern_indices = comp->getExternIndices();
@@ -722,10 +806,16 @@ namespace GridKit
       }
     }
 
+    // Global system index -> local subsystem index for subsystem internal variables
     std::unordered_map<IdxT, IdxT> internal_map_;
-    std::unordered_map<IdxT, IdxT> external_map_;
-    std::vector<IdxT>              external_data_indices_;
 
+    // Global system index -> local subsystem index for subsystem external variables
+    std::unordered_map<IdxT, IdxT> external_map_;
+
+    // Global system index corresponding to each entry in the subsystem external state vectors
+    std::vector<IdxT> external_data_indices_;
+
+    // subsystem external State, derivative, and residual vectors.
     std::vector<ScalarT> y_ext_data_;
     std::vector<ScalarT> yp_ext_data_;
     std::vector<ScalarT> f_ext_data_;
