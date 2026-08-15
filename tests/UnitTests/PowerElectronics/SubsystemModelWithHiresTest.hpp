@@ -149,6 +149,11 @@ namespace GridKit
       return 0;
     }
 
+    CircuitComponent<ScalarT, IdxT>* clone() const
+    {
+      return new HiresComponent1<ScalarT, IdxT>(*this);
+    }
+
   private:
     NodeT* node_ref_;
   };
@@ -269,6 +274,11 @@ namespace GridKit
     {
       abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
+    }
+
+    CircuitComponent<ScalarT, IdxT>* clone() const
+    {
+      return new HiresBus<ScalarT, IdxT>(*this);
     }
 
   private:
@@ -420,6 +430,11 @@ namespace GridKit
     {
       abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
+    }
+
+    CircuitComponent<ScalarT, IdxT>* clone() const
+    {
+      return new HiresComponent3<ScalarT, IdxT>(*this);
     }
 
   private:
