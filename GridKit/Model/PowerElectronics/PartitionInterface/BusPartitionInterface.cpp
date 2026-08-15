@@ -11,31 +11,21 @@ namespace GridKit
 {
 
   /**
-   * @brief Construct a bus partition interface for a circuit component.
+   * @brief Construct a partition interface between a bus and a circuit component.
    *
-   * During partitioning, the interface receives a bus and a component that
-   * participate in the partition boundary. The interface is added directly
-   * to the partition containing the bus and uses the component model to
-   * compute the residual and Jacobian contributions to that bus.
+   * The interface wraps a copy of a component located across a partition
+   * boundary and evaluates the contributions that the component makes to the
+   * connected bus. All interface variables are treated as external variables
+   * and have the same size as the wrapped component.
    *
-   * The component passed to this constructor must be a copy of the original
-   * component, not the original component itself. This allows the interface
-   * to modify and evaluate the copied component without affecting the component
-   * stored in the neighboring partition.
    *
-   * For example:
-   * @code
-   * CompType* comp_copy = new CompType(*comp);
-   * auto* interface = new BusPartitionInterface(bus, comp_copy, id);
-   * @endcode
-   *
-   * @param bus Bus belonging to the partition where the interface is added.
-   * @param component Copy of the circuit component across the partition boundary.
-   * @param id Unique interface identifier.
+   * @param bus Bus associated with the partition interface.
+   * @param component Copy of the component across the partition boundary.
+   * @param id Unique identifier for the interface.
    */
   template <class ScalarT, typename IdxT>
   BusPartitionInterface<ScalarT, IdxT>::BusPartitionInterface(node_type* bus, component_type* component, IdxT id)
-    : component_(component),
+    : component_(component->clone()),
       bus_(bus)
   {
     size_     = component_->size();
@@ -49,82 +39,28 @@ namespace GridKit
       extern_indices_.insert(i);
     }
 
-    // The subsystem needs access to the interface connection indices before
-    // the interface is fully allocated.
-    connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
+    // Map each global bus connection index to its position in the bus.
+    std::unordered_map<IdxT, size_t> bus_connections;
 
-    // Global indices of the two variables associated with the bus.
-    const IdxT bus_i = bus_->getNodeConnection(0).idx_;
-    const IdxT bus_j = bus_->getNodeConnection(1).idx_;
-
-    is_external_.resize(static_cast<size_t>(size_), false);
-
-    bool port_i_set = false;
-    bool port_j_set = false;
-
-    const auto& external_indices = component_->getExternIndices();
-    IdxT        external_index   = 0;
-
-    // Copy the wrapped component topology and identify the two bus ports and
-    // their corresponding output ports in the wrapped component.
-    for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(bus_->size()); ++i)
     {
-      const IdxT connection_index = component_->getNodeConnection(i);
-
-      this->setConnectionNodes(i, connection_index);
-
-      // Skip indices that are not external to the wrapped component.
-      if (!external_indices.contains(static_cast<IdxT>(i)))
-      {
-        continue;
-      }
-
-      // Identify the bus ports and their positions in the component's external output.
-      if (connection_index == bus_i)
-      {
-        bus_port_i_     = i;
-        bus_port_out_i_ = static_cast<size_t>(external_index);
-        port_i_set      = true;
-      }
-      else if (connection_index == bus_j)
-      {
-        bus_port_j_     = i;
-        bus_port_out_j_ = static_cast<size_t>(external_index);
-        port_j_set      = true;
-      }
-
-      ++external_index;
-      is_external_[static_cast<size_t>(i)] = true;
+      bus_connections[bus_->getNodeConnection(i).idx_] = i;
     }
 
-    // Report an error if either bus connection is missing from the component.
-    if (!port_i_set || !port_j_set)
-    {
-      std::cerr << "ERROR: Invalid partition interface detected. "
-                << "Bus(ID=" << bus_->busID()
-                << "), Component(ID=" << component_->getIDcomponent()
-                << "). Please verify connection-node mappings and "
-                   "internal/external index assignments."
-                << std::endl;
-    }
-
-    // Record the Jacobian entries whose residual row belongs to either bus
-    // variable. jac_map_ stores their positions in the wrapped component's
-    // COO Jacobian so that the same entries can be extracted during each Jacobian evaluation.
-
-    const IdxT* cooRow = component_->jacobianCooRows();
+    // The interface Jacobian contains only rows corresponding to variables
+    // owned by the bus.
+    const IdxT* coo_rows = component_->jacobianCooRows();
 
     nnz_ = 0;
+
     for (IdxT k = 0; k < component_->nnz(); ++k)
     {
-      const IdxT row_node = component_->getNodeConnection(static_cast<size_t>(cooRow[k]));
+      const IdxT row_node = component_->getNodeConnection(static_cast<size_t>(coo_rows[k]));
 
-      const bool row_is_bus = (row_node == bus_i || row_node == bus_j);
-
-      if (row_is_bus)
+      if (bus_connections.contains(row_node))
       {
         ++nnz_;
-        jac_map_.push_back(k);
+        jac_map_.push_back(k); // Keep track of the entries so they can be easily extracted
       }
     }
   }
@@ -135,8 +71,16 @@ namespace GridKit
     delete component_;
   }
 
-  /*!
-   * @brief allocate method
+  /**
+   * @brief Allocate storage and initialize the interface mappings.
+   *
+   * Identifies the external variables of the wrapped component that are
+   * connected to the bus and builds the mappings used to transfer residual
+   * contributions between the component and the interface. Private storage is
+   * also allocated for the internal variables of the wrapped component.
+   *
+   * @return 0 on success and a nonzero value if the component does not contain
+   *         all variables required by the bus interface.
    */
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::allocate()
@@ -144,15 +88,79 @@ namespace GridKit
 
     CircuitComponent<ScalarT, IdxT>::allocate();
 
-    const auto n = component_->getInternalSize();
+    // Build a lookup of the global indices belonging to the bus.
+    std::unordered_map<IdxT, size_t> bus_connections;
 
-    y_ptr  = std::make_unique<ScalarT[]>(n);
-    yp_ptr = std::make_unique<ScalarT[]>(n);
-    f_ptr  = std::make_unique<ScalarT[]>(n);
+    for (size_t i = 0; i < static_cast<size_t>(bus_->size()); ++i)
+    {
+      bus_connections[bus_->getNodeConnection(i).idx_] = i;
+    }
 
-    component_->setInternalPointer(y_ptr.get());
-    component_->setInternalDerivativePointer(yp_ptr.get());
-    component_->setInternalResidualPointer(f_ptr.get());
+    const auto& external_indices = component_->getExternIndices();
+
+    is_external_.assign(static_cast<size_t>(size_), false);
+
+    bus_input_ports_.clear();
+    bus_output_ports_.clear();
+
+    size_t external_index = 0;
+
+    // Identify which component variables are external and which of those external
+    // variables are connected to the bus. bus_input_ports_ stores the corresponding
+    // variable position in this interface, while bus_output_ports_ stores its position
+    // in the wrapped component's external residual vector.
+    for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
+    {
+      const IdxT connection_index = component_->getNodeConnection(i);
+
+      this->setConnectionNodes(i, connection_index);
+
+      if (!external_indices.contains(static_cast<IdxT>(i)))
+      {
+        continue;
+      }
+
+      is_external_[i] = true;
+
+      if (bus_connections.contains(connection_index))
+      {
+        bus_input_ports_.push_back(i);
+        bus_output_ports_.push_back(external_index);
+      }
+
+      ++external_index;
+    }
+
+    // A valid bus interface must contain every variable belonging to the bus.
+    // If fewer bus variables are found, the wrapped component does not provide
+    // the complete coupling required by this interface.
+    const size_t bus_size = static_cast<size_t>(bus_->size());
+
+    if (bus_input_ports_.size() != bus_size)
+    {
+      std::cerr << "ERROR: Invalid partition interface detected. "
+                << "Bus(ID=" << bus_->busID()
+                << "), Component(ID=" << component_->getIDcomponent()
+                << "). Expected " << bus_size
+                << " bus connections, but found "
+                << bus_input_ports_.size() << "."
+                << std::endl;
+
+      return 1;
+    }
+
+    // The wrapped component is evaluated independently by the interface.
+    // Allocate storage for its internal variables and residuals and redirect
+    // its internal pointers to this private storage.
+    const size_t internal_size = static_cast<size_t>(component_->getInternalSize());
+
+    y_ptr_  = std::make_unique<ScalarT[]>(internal_size);
+    yp_ptr_ = std::make_unique<ScalarT[]>(internal_size);
+    f_ptr_  = std::make_unique<ScalarT[]>(internal_size);
+
+    component_->setInternalPointer(y_ptr_.get());
+    component_->setInternalDerivativePointer(yp_ptr_.get());
+    component_->setInternalResidualPointer(f_ptr_.get());
 
     return 0;
   }
@@ -165,7 +173,9 @@ namespace GridKit
   }
 
   /**
-   * Initialization of the grid model
+   * @brief Initialize the partition interface.
+   *
+   * @return 0 on success.
    */
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::initialize()
@@ -173,8 +183,8 @@ namespace GridKit
     return 0;
   }
 
-  /*
-   * \brief Identify differential variables
+  /**
+   * @brief Identify differential variables
    */
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::tagDifferentiable()
@@ -191,30 +201,49 @@ namespace GridKit
     return 0;
   }
 
+  /**
+   * @brief Evaluate the wrapped component's contributions to the bus residual.
+   *
+   * The wrapped component is evaluated using state information supplied through
+   * the interface. Residual contributions associated with bus variables are
+   * extracted from the component's external residual and accumulated into the
+   * corresponding interface residual entries.
+   *
+   * @return 0 on success, or the error code returned by the wrapped component.
+   */
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::evaluateExternalResidual()
   {
+
+    // Evaluate all external residual contributions produced by the wrapped
+    // component.
     std::vector<ScalarT> component_ext_residual(static_cast<size_t>(component_->getExternSize()));
 
     updateComponentPointers(component_ext_residual.data());
 
-    if (int err_code = component_->evaluateResidual())
+    if (int err_code = component_->evaluateExternalResidual())
     {
       return err_code;
     }
 
-    *f_ext_[bus_port_i_] += component_ext_residual[bus_port_out_i_];
-    *f_ext_[bus_port_j_] += component_ext_residual[bus_port_out_j_];
+    // Only contributions associated with the bus are accumulated
+    // into the interface residual below.
+    for (size_t i = 0; i < bus_input_ports_.size(); ++i)
+    {
+      *f_ext_[bus_input_ports_[i]] += component_ext_residual[bus_output_ports_[i]];
+    }
 
     return 0;
   }
 
   /**
-   * @brief Generate Jacobian for
+   * @brief Evaluate the Jacobian contributions associated with the bus.
    *
-   * @tparam ScalarT
-   * @tparam IdxT
-   * @return int
+   * Evaluates the Jacobian of the wrapped component and extracts the entries
+   * whose residual rows correspond to variables belonging to the connected bus.
+   * The selected entries are then used to assemble the interface Jacobian.
+   *
+   * @return 0 on success.
    */
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::evaluateJacobian()
@@ -222,8 +251,9 @@ namespace GridKit
 
     this->zeroJacMatrix();
 
-    // The Jacobian only requires the component state pointers. Residual
-    // contributions are redirected to dummy storage.
+    // The Jacobian only requires the component state pointers.
+    //  Residual output is not needed, so external residual pointers
+    // are redirected to dummy storage.
     updateComponentPointers(nullptr);
 
     component_->evaluateJacobian();
@@ -232,22 +262,50 @@ namespace GridKit
     const IdxT*  cooCols = component_->jacobianCooCols();
     const RealT* cooVals = component_->jacobianCooValues();
 
-    std::vector<IdxT>  r = {};
-    std::vector<IdxT>  c = {};
-    std::vector<RealT> v = {};
+    std::vector<IdxT>  rows;
+    std::vector<IdxT>  cols;
+    std::vector<RealT> vals;
 
-    for (const auto& index : jac_map_)
+    rows.reserve(jac_map_.size());
+    cols.reserve(jac_map_.size());
+    vals.reserve(jac_map_.size());
+
+    // Extract only the Jacobian entries whose residual rows belong to the bus.
+    for (const IdxT index : jac_map_)
     {
-      r.push_back(cooRows[index]);
-      c.push_back(cooCols[index]);
-      v.push_back(cooVals[index]);
+      rows.push_back(cooRows[index]);
+      cols.push_back(cooCols[index]);
+      vals.push_back(cooVals[index]);
     }
 
-    this->setJacValues(r, c, v);
+    this->setJacValues(rows, cols, vals);
 
     return 0;
   }
 
+  /**
+   * @brief Update the wrapped component with state and output residual pointers.
+   *
+   * Reconstructs the state required to evaluate the wrapped component using
+   * data supplied through the interface. External component variables are
+   * connected directly to the interface data, while internal component
+   * variables are copied into the interface's private storage, which the wrapped
+   * component already keeps track of for its internal state.
+   *
+   * If residual storage is provided, external residual contributions are
+   * written to that storage. Otherwise, they are redirected to dummy storage.
+   *
+   * @pre The interface must be allocated and its external state pointers must
+   *      reference valid state and derivative data.
+   *
+   * @post The wrapped component is configured with the state, derivative, and
+   *       residual pointers required for evaluation.
+   *
+   * @param residual Storage for the component's external residual contributions,
+   *                 or nullptr when residual output is not required.
+   *
+   * @return 0 on success.
+   */
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::updateComponentPointers(ScalarT* residual)
   {
@@ -256,6 +314,9 @@ namespace GridKit
 
     const auto& external_indices = component_->getExternIndices();
 
+    // Reconstruct the state expected by the wrapped component from the
+    // interface's external data. Route the residual to dummy variable if
+    // output data is not needed such as when evaluating Jacobians.
     for (size_t i = 0; i < static_cast<size_t>(component_->size()); ++i)
     {
       if (is_external_[i])
@@ -272,8 +333,8 @@ namespace GridKit
       }
       else
       {
-        y_ptr[internal_index]  = *y_ext_[i];
-        yp_ptr[internal_index] = *yp_ext_[i];
+        y_ptr_[internal_index]  = *y_ext_[i];
+        yp_ptr_[internal_index] = *yp_ext_[i];
 
         ++internal_index;
       }

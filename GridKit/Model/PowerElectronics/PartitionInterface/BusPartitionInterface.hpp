@@ -4,8 +4,7 @@
 
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/NodeBase.hpp>
-
-#include "GridKit/Model/PowerElectronics/PartitionInterface/PartitionInterface.hpp"
+#include <GridKit/Model/PowerElectronics/PartitionInterface/PartitionInterface.hpp>
 
 namespace GridKit
 {
@@ -46,12 +45,6 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
     using CircuitComponent<ScalarT, IdxT>::connection_nodes_;
 
-    using PartitionInterface<ScalarT, IdxT>::bus_port_i_;
-    using PartitionInterface<ScalarT, IdxT>::bus_port_j_;
-
-    using PartitionInterface<ScalarT, IdxT>::bus_port_out_i_;
-    using PartitionInterface<ScalarT, IdxT>::bus_port_out_j_;
-
   public:
     BusPartitionInterface(node_type* bus, component_type* component, IdxT id);
     virtual ~BusPartitionInterface();
@@ -78,9 +71,12 @@ namespace GridKit
     node_type*      bus_;
 
     // Storage for the wrapped component's internal variables.
-    std::unique_ptr<ScalarT[]> y_ptr;
-    std::unique_ptr<ScalarT[]> yp_ptr;
-    std::unique_ptr<ScalarT[]> f_ptr;
+    std::unique_ptr<ScalarT[]> y_ptr_;
+    std::unique_ptr<ScalarT[]> yp_ptr_;
+    std::unique_ptr<ScalarT[]> f_ptr_;
+
+    std::vector<size_t> bus_input_ports_;
+    std::vector<size_t> bus_output_ports_;
 
     // Dummy storage used when the component residual is not needed.
     ScalarT dummy_residual_{};

@@ -19,12 +19,6 @@ namespace GridKit
     PartitionInterface() = default;
 
     ~PartitionInterface() = default;
-
-  protected:
-    size_t bus_port_i_;
-    size_t bus_port_j_;
-    size_t bus_port_out_i_;
-    size_t bus_port_out_j_;
   };
 
 } // namespace GridKit
