@@ -239,7 +239,7 @@ ModelData data;
 data.id = 1;
 data.value = 2.0;
 ```
-Member variables of struct `data` are accessed directly outside the struct
+Member variables of struct `data` are accessed directly outside the struct.
 and do not need to be denoted with trailing underscores `_`.
 
 ### Function names
