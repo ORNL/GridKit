@@ -32,28 +32,28 @@ namespace GridKit
   {
     namespace Stabilizer
     {
-      /// Internal variables of a `Ieeest`
+      /// Internal variables of `Ieeest`
       enum class IeeestInternalVariables : size_t
       {
-        X1,  ///< Notch filter state 1
-        X2,  ///< Notch filter state 2
-        X3,  ///< Notch filter state 3
-        X4,  ///< Notch filter state 4
-        X5,  ///< Lead-lag 1 state
-        X6,  ///< Lead-lag 2 state
-        X7,  ///< Washout state
-        V4,  ///< Notch filter output
-        V5,  ///< Lead-lag 1 output
-        V6,  ///< Lead-lag 2 output
-        V7,  ///< Unlimited stabilizer signal
-        VSS, ///< Limited stabilizer signal (model output)
+        X1,  ///< \f$x_1\f$ Notch-filter signal state
+        X2,  ///< \f$x_2\f$ First derivative of the filtered signal
+        X3,  ///< \f$x_3\f$ Second derivative of the filtered signal
+        X4,  ///< \f$x_4\f$ Third derivative of the filtered signal
+        X5,  ///< \f$x_5\f$ Lead-lag 1 state
+        X6,  ///< \f$x_6\f$ Lead-lag 2 state
+        X7,  ///< \f$x_7\f$ Washout state
+        V4,  ///< \f$v_4\f$ Notch-filter output
+        V5,  ///< \f$v_5\f$ Lead-lag 1 output
+        V6,  ///< \f$v_6\f$ Lead-lag 2 output
+        V7,  ///< \f$v_7\f$ Unlimited stabilizer signal
+        VSS, ///< \f$V_{\mathrm{ss}}\f$ Limited stabilizer signal and model output
         MAXIMUM,
       };
 
-      /// External variables of a `Ieeest`
+      /// External variables of an `Ieeest`.
       enum class IeeestExternalVariables : size_t
       {
-        U, ///< Stabilizer input signal
+        U, ///< \f$u\f$ Stabilizer input signal
         MAXIMUM,
       };
 
