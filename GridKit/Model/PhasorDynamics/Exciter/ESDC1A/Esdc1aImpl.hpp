@@ -222,7 +222,7 @@ namespace GridKit
        * preserving the seeded `efd`, latches attached Known inputs, and
        * publishes the reference to an attached `vref` signal.
        *
-       * @warning IEEE Std 421.4-2014 states: “In some programs, if
+       * @warning IEEE Std 421.5-2016 states: “In some programs, if
        *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
        *          calculated by the program to represent a self-excited shunt
        *          field and a trimmed rheostat as its initial condition.” GridKit
