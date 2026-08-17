@@ -222,6 +222,16 @@ namespace GridKit
        * preserving the seeded `efd`, latches attached Known inputs, and
        * publishes the reference to an attached `vref` signal.
        *
+       * @warning IEEE Std 421.5-2016 states: “In some programs, if
+       *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
+       *          calculated by the program to represent a self-excited shunt
+       *          field and a trimmed rheostat as its initial condition.” GridKit
+       *          preserves the configured \f$K_{E}\f$ and resolves
+       *          \f$K_{E}^{\mathrm{eff}}\f$ using the PSS/E-compatible
+       *          \f$V_R = V_R^{\max}/10 = 0.1 V_R^{\max}\f$ rule. The divisor
+       *          10 is unitless and represents 10% of the maximum regulator
+       *          output.
+       *
        * @return Zero on success; nonzero when the configuration or operating point is rejected.
        */
       template <typename scalar_type, typename index_type>
@@ -312,14 +322,17 @@ namespace GridKit
 
         const ScalarT se0 = SB_ * Math::qramp(efdp0 - SA_);
 
-        RealT ke_eff0 = Ke_eff_;
         if (Ke_ == ZERO<RealT>)
         {
-          ke_eff0 = (Vrmax_ / 10.0 - static_cast<RealT>(se0))
+          Ke_eff_ = (Vrmax_ / 10.0 - static_cast<RealT>(se0))
                     / static_cast<RealT>(efdp0);
         }
+        else
+        {
+          Ke_eff_ = Ke_;
+        }
 
-        const ScalarT vfe0 = ke_eff0 * efdp0 + se0;
+        const ScalarT vfe0 = Ke_eff_ * efdp0 + se0;
         const ScalarT vr0  = vfe0;
         const ScalarT vhv0 = vr0 / Ka_;
 
@@ -351,8 +364,6 @@ namespace GridKit
         const ScalarT ev0   = vll0;
         const ScalarT xll0  = ev0;
         const ScalarT vref0 = ev0 + vc0 - vs0 - uel_on_ * vuel0;
-
-        Ke_eff_ = ke_eff0;
 
         y[EFDP] = efdp0;
         y[VC]   = vc0;
@@ -759,22 +770,10 @@ namespace GridKit
        * masks let the residual select signal routing without
        * parameter-dependent control flow, which keeps its structure fixed for
        * sparse automatic differentiation.
-       *
-       * @warning IEEE Std 421.5-2016 states: “In some programs, if
-       *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
-       *          calculated by the program to represent a self-excited shunt
-       *          field and a trimmed rheostat as its initial condition.” GridKit
-       *          preserves the configured \f$K_{E}\f$ and resolves
-       *          \f$K_{E}^{\mathrm{eff}}\f$ using the PSS/E-compatible
-       *          \f$V_R = V_R^{\max}/10 = 0.1 V_R^{\max}\f$ rule. The divisor
-       *          10 is unitless and represents 10% of the maximum regulator
-       *          output.
        */
       template <typename scalar_type, typename index_type>
       void Esdc1a<scalar_type, index_type>::setDerivedParameters()
       {
-        Ke_eff_ = Ke_;
-
         // The lags are raised to the floor in place, so a negative value is
         // rejected here while the value as read is still available. verify()
         // reports the count.
