@@ -190,15 +190,6 @@ namespace GridKit
        *
        * Enabled saturation is included via ksat computed from efdp and SA, SB.
        *
-       * @warning IEEE Std 421.5-2016 states: “In some programs, if
-       *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
-       *          calculated by the program to represent a self-excited shunt
-       *          field and a trimmed rheostat as its initial condition.” GridKit
-       *          preserves the configured \f$K_{E}\f$ and resolves
-       *          \f$K_{E}^{\mathrm{eff}}\f$ using the PSS/E-compatible
-       *          \f$V_R = V_R^{\max}/10 = 0.1 V_R^{\max}\f$ rule. The divisor
-       *          10 is unitless and represents 10% of the maximum regulator
-       *          output.
        */
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::initialize()
@@ -243,7 +234,6 @@ namespace GridKit
 
         ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
         ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
-        Ke_eff_      = Ke_;
         if (Ke_ == ZERO<RealT>)
         {
           Ke_eff_ = (Vrmax_ / 10.0 - static_cast<RealT>(ksat)) / static_cast<RealT>(efdp);
@@ -478,6 +468,25 @@ namespace GridKit
           Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
         }
 
+        setDerivedParameters();
+      }
+
+      /**
+       * @brief Resolve the parameter-derived constants
+       *
+       * @warning IEEE Std 421.5-2016 states: “In some programs, if
+       *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
+       *          calculated by the program to represent a self-excited shunt
+       *          field and a trimmed rheostat as its initial condition.” GridKit
+       *          preserves the configured \f$K_{E}\f$ and resolves
+       *          \f$K_{E}^{\mathrm{eff}}\f$ using the PSS/E-compatible
+       *          \f$V_R = V_R^{\max}/10 = 0.1 V_R^{\max}\f$ rule. The divisor
+       *          10 is unitless and represents 10% of the maximum regulator
+       *          output.
+       */
+      template <typename scalar_type, typename index_type>
+      void Ieeet1<scalar_type, index_type>::setDerivedParameters()
+      {
         Ke_eff_ = Ke_;
 
         Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);

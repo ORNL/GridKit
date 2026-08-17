@@ -166,6 +166,7 @@ namespace GridKit
 
         // Parameter initialization function
         void initModelParams(const ModelDataT& data);
+        void setDerivedParameters();
 
         /// Associate variable getter functions with enum values
         void initializeMonitor();

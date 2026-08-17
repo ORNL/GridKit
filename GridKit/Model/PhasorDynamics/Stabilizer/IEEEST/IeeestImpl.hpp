@@ -219,6 +219,15 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::initialize()
       {
+        if (verify() != 0)
+        {
+          Log::error() << "Ieeest: cannot initialize with invalid configuration\n";
+          return 1;
+        }
+
+        const ScalarT u =
+            signals_.template readExternalVariable<IeeestExternalVariables::U>();
+
         auto* y  = y_.getData();
         auto* yp = yp_.getData();
 
@@ -227,6 +236,22 @@ namespace GridKit
           y[static_cast<size_t>(i)]  = 0.0;
           yp[static_cast<size_t>(i)] = 0.0;
         }
+
+        ws_[0] = u;
+        ws_indices_[0] =
+            signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
+
+        y[0] = use_notch_ * u;
+        y[4] = u;
+        y[5] = u;
+        y[6] = u;
+        y[7] = u;
+        y[8] = u;
+        y[9] = u;
+
+        // Preserve the current T6 = 0 bypass behavior.
+        y[10] = bypass_T6_block_ * Ks_ * u;
+        y[11] = Math::clamp(y[10], Lsmin_, Lsmax_);
 
         y_.setDataUpdated();
         yp_.setDataUpdated();
@@ -303,16 +328,18 @@ namespace GridKit
 
         ScalarT u = ws[0];
 
+        const ScalarT x2_rhs = (use_4th_order_ + use_3rd_order_) * x3
+                               + use_2nd_order_ * (-a0_ * x1 - a1_ * x2 + u) * safe_inv_a2_;
+
         f[0] = -x1_dot + use_notch_ * x2;
-        f[1] = -x2_dot + (use_4th_order_ + use_3rd_order_) * x3
-               + use_2nd_order_ * (-a0_ * x1 - a1_ * x2 + u) * safe_inv_a2_;
+        f[1] = -x2_dot + x2_rhs;
         f[2] = -x3_dot + use_4th_order_ * x4
                + use_3rd_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 + u) * safe_inv_a3_;
         f[3]  = -x4_dot + use_4th_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 - a3_ * x4 + u) * safe_inv_a4_;
         f[4]  = -T2_ * x5_dot - x5 + v4;
         f[5]  = -T4_ * x6_dot - x6 + v5;
         f[6]  = -T6_ * x7_dot - x7 + v6;
-        f[7]  = -v4 + bypass_notch_ * u + use_notch_ * (x1 + A5_ * x2 + (use_4th_order_ + use_3rd_order_) * A6_ * x3);
+        f[7]  = -v4 + bypass_notch_ * u + use_notch_ * (x1 + A5_ * x2 + A6_ * x2_rhs);
         f[8]  = use_T2_block_ * (-T2_ * (v5 - x5) + T1_ * (v4 - x5)) + bypass_T2_block_ * (v4 - v5);
         f[9]  = use_T4_block_ * (-T4_ * (v6 - x6) + T3_ * (v5 - x6)) + bypass_T4_block_ * (v5 - v6);
         f[10] = use_T6_block_ * (-T6_ * v7 + Ks_ * T5_ * (v6 - x7)) + bypass_T6_block_ * (Ks_ * v6 - v7);
