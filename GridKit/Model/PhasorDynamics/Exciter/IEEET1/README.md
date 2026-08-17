@@ -19,7 +19,7 @@ Symbol      | Units  | Description                          | Typical Value | No
 $T_R$       | [sec]  | Time constant for voltage sensing    | 0       |
 $K_A$       | [p.u.] | Coefficient for voltage regulation   | 50      |
 $T_A$       | [sec]  | Time constant for voltage regulation | 0.04    |
-$K_E$       | [p.u.] | Coefficient for excitation system    | -0.06   |
+$K_E$       | [p.u.] | Exciter field resistance line slope margin | -0.06   |
 $T_E$       | [sec]  | Time constant for excitation system  | 0.6     |
 $K_F$       | [p.u.] | Coefficient for feedback             | 0.09    |
 $T_F$       | [sec]  | Time constant for feedback           | 1.46    |
@@ -102,16 +102,31 @@ When both saturation values are positive, the non-extraneous solution is:
 \end{aligned}
 ```
 
-During initialization, the effective
-exciter constant is derived from the initial operating point:
+$K_E$ is the configured exciter field resistance line slope margin. A nonzero configured value is used directly. A configured $K_E=0$ selects the
+[PSS/E-compatible model](https://www.powerworld.com/WebHelp/Content/MainDocumentation_HTML/Transient_Stability_Dialog_Options_Power_System_Model.htm).
+At initialization, requiring $\dot E_{fd}'=0$ and
+$V_R=V_R^{\max}/10$ gives
 
 ```math
-K_E^{\mathrm{eff}} =
-  \begin{cases}
-    \dfrac{V_R^{\max}/10-k_\text{sat}}{E_{fd}'} & K_E=0 \\
-    K_E & K_E\ne 0.
-  \end{cases}
+\begin{aligned}
+0
+  &= V_R
+     -k_\text{sat}
+     -K_E^{\mathrm{eff}}E_{fd}', \\
+K_E^{\mathrm{eff}}
+  &=
+    \begin{cases}
+      \dfrac{1}{E_{fd}'}
+      \left(\dfrac{V_R^{\max}}{10}-k_\text{sat}\right)
+        & K_E=0, \\
+      K_E
+        & K_E\ne 0.
+    \end{cases}
+\end{aligned}
 ```
+
+Thus $K_E^{\mathrm{eff}}$ is the resolved value of the same exciter
+coefficient, not an additional model input.
 
 ## Model Variables
 
@@ -200,7 +215,7 @@ Here $q$ is GridKit's [Quadratic Ramp](../../../../CommonMath.md#primitives).
 The implementation first applies $T \leftarrow \max(T, 10^{-3})$ for
 $T \in \{T_R, T_A, T_E, T_F\}$. This should be replaced with a structural template change in the future.
 The machine initializes $E_{fd}$ first. IEEET1
-reads that value as $E_{fd,0}$, along with any attached $\omega$ and $V_S$, and
+reads that value, along with any attached $\omega$ and $V_S$, and
 solves the steady-state algebraic chain so all residuals vanish with
 $\dot y = 0$. The sensed terminal voltage initializes from the positive
 bus-voltage magnitude. Saturation is included when enabled, and the speed-limit
@@ -209,16 +224,16 @@ with the current input values.
 
 ```math
 \begin{aligned}
-   E_{C,0}  &:= \sqrt{V_r^2 + V_i^2} \\
-   E_{fd}'  &= \dfrac{E_{fd,0}}{1 + I_{\mathrm{spdlim}}\,\omega} \\
+   E_C      &:= \sqrt{V_r^2 + V_i^2} \\
+   E_{fd}'  &= \dfrac{E_{fd}}{1 + I_{\mathrm{spdlim}}\,\omega} \\
    k_\text{sat}  &= S_B\, q(E_{fd}' - S_A) \\
    V_E      &= k_\text{sat} \\
    V_R      &= K_E^{\mathrm{eff}} E_{fd}' + V_E \\
    V_{tr}   &= \dfrac{V_R}{K_A} \\
    V_{fx}   &= \dfrac{K_F}{T_F}\, E_{fd}' \\
-   V_{ts}   &= E_{C,0} \\
+   V_{ts}   &= E_C \\
    V_f      &= 0 \\
-   V_\text{ref}  &= E_{C,0} + V_{tr} - V_{UEL} - V_{OEL} - V_S
+   V_\text{ref}  &= E_C + V_{tr} - V_{UEL} - V_{OEL} - V_S
 \end{aligned}
 ```
 

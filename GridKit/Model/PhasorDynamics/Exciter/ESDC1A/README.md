@@ -30,7 +30,7 @@ $T_B$                               | [sec]     | `Tb`      | Input lead-lag den
 $T_C$                               | [sec]     | `Tc`      | Input lead-lag numerator time constant          | 0.0
 $V_R^{\max}$                        | [p.u.]    | `Vrmax`   | Maximum voltage-regulator output                | 1.0
 $V_R^{\min}$                        | [p.u.]    | `Vrmin`   | Minimum voltage-regulator output                | -1.0
-$K_E$                               | [p.u.]    | `Ke`      | Exciter constant                                | 0.1
+$K_E$                               | [p.u.]    | `Ke`      | Exciter field resistance line slope margin      | 0.1
 $T_E$                               | [sec]     | `Te`      | Exciter time constant                           | 0.5
 $K_F$                               | [p.u.]    | `Kf`      | Stabilizing feedback gain                       | 0.05
 $T_{F1}$                            | [sec]     | `Tf1`     | Stabilizing feedback time constant              | 0.7
@@ -127,16 +127,31 @@ and when both saturation values are positive,
 \end{aligned}
 ```
 
-During initialization, the effective
-exciter constant is derived from the initial operating point:
+$K_E$ is the configured exciter field resistance line slope margin. A nonzero configured value is used directly. A configured $K_E=0$ selects the
+[PSS/E-compatible model](https://www.powerworld.com/WebHelp/Content/MainDocumentation_HTML/Transient_Stability_Dialog_Options_Power_System_Model.htm).
+At initialization, requiring $\dot E_{\mathrm{fd}}'=0$ and
+$V_R=V_R^{\max}/10$ gives
 
 ```math
-K_E^{\mathrm{eff}} =
-  \begin{cases}
-    \dfrac{V_R^{\max}/10-s_e}{E_{\mathrm{fd}}'} & K_E=0 \\
-    K_E & K_E\ne 0.
-  \end{cases}
+\begin{aligned}
+0
+  &= V_R
+     -K_E^{\mathrm{eff}}E_{\mathrm{fd}}'
+     -s_e, \\
+K_E^{\mathrm{eff}}
+  &=
+    \begin{cases}
+      \dfrac{1}{E_{\mathrm{fd}}'}
+      \left(\dfrac{V_R^{\max}}{10}-s_e\right)
+        & K_E=0, \\
+      K_E
+        & K_E\ne 0.
+    \end{cases}
+\end{aligned}
 ```
+
+Thus $K_E^{\mathrm{eff}}$ is the resolved value of the same exciter
+coefficient, not an additional model input.
 
 ## Model Ports
 
