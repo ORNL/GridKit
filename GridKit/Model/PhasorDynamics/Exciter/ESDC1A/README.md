@@ -30,7 +30,7 @@ $T_B$                               | [sec]     | `Tb`      | Input lead-lag den
 $T_C$                               | [sec]     | `Tc`      | Input lead-lag numerator time constant          | 0.0
 $V_R^{\max}$                        | [p.u.]    | `Vrmax`   | Maximum voltage-regulator output                | 1.0
 $V_R^{\min}$                        | [p.u.]    | `Vrmin`   | Minimum voltage-regulator output                | -1.0
-$K_E$                               | [p.u.]    | `Ke`      | Exciter field resistance line slope margin      | 0.1
+$K_E$                               | [p.u.]    | `Ke`      | Exciter field resistance line slope margin; 0 requests automatic calculation, not a zero coefficient | 0.1
 $T_E$                               | [sec]     | `Te`      | Exciter time constant                           | 0.5
 $K_F$                               | [p.u.]    | `Kf`      | Stabilizing feedback gain                       | 0.05
 $T_{F1}$                            | [sec]     | `Tf1`     | Stabilizing feedback time constant              | 0.7
@@ -127,10 +127,16 @@ and when both saturation values are positive,
 \end{aligned}
 ```
 
-$K_E$ is the configured exciter field resistance line slope margin. A nonzero configured value is used directly. A configured $K_E=0$ selects the
-[PSS/E-compatible model](https://www.powerworld.com/WebHelp/Content/MainDocumentation_HTML/Transient_Stability_Dialog_Options_Power_System_Model.htm).
-At initialization, requiring $\dot E_{\mathrm{fd}}'=0$ and
-$V_R=V_R^{\max}/10$ gives
+$K_E$ is the configured exciter field resistance line slope margin. A nonzero configured value is used directly. The
+[IEEE Std 421.4-2014](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6803835) states:
+
+> In some programs, if $K_E$ is entered as zero, $K_E$ is automatically calculated by the program to represent a self-excited shunt field and a trimmed rheostat as its initial condition.
+
+GridKit implements the
+[PSS/E-compatible automatic-parameter rule](https://www.powerworld.com/WebHelp/Content/MainDocumentation_HTML/Transient_Stability_Dialog_Options_Power_System_Model.htm).
+The divisor $10$ in $V_R=V_R^{\max}/10=0.1V_R^{\max}$ is unitless and
+sets $V_R$ to 10% of the maximum regulator output, retaining the per-unit
+units of $V_R^{\max}$:
 
 ```math
 \begin{aligned}

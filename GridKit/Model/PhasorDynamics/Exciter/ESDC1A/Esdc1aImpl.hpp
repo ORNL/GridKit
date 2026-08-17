@@ -222,6 +222,16 @@ namespace GridKit
        * preserving the seeded `efd`, latches attached Known inputs, and
        * publishes the reference to an attached `vref` signal.
        *
+       * @warning IEEE Std 421.4-2014 states: “In some programs, if
+       *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
+       *          calculated by the program to represent a self-excited shunt
+       *          field and a trimmed rheostat as its initial condition.” GridKit
+       *          preserves the configured \f$K_{E}\f$ and resolves
+       *          \f$K_{E}^{\mathrm{eff}}\f$ using the PSS/E-compatible
+       *          \f$V_R = V_R^{\max}/10 = 0.1 V_R^{\max}\f$ rule. The divisor
+       *          10 is unitless and represents 10% of the maximum regulator
+       *          output.
+       *
        * @return Zero on success; nonzero when the configuration or operating point is rejected.
        */
       template <typename scalar_type, typename index_type>

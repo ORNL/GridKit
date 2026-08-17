@@ -19,7 +19,7 @@ Symbol      | Units  | Description                          | Typical Value | No
 $T_R$       | [sec]  | Time constant for voltage sensing    | 0       |
 $K_A$       | [p.u.] | Coefficient for voltage regulation   | 50      |
 $T_A$       | [sec]  | Time constant for voltage regulation | 0.04    |
-$K_E$       | [p.u.] | Exciter field resistance line slope margin | -0.06   |
+$K_E$       | [p.u.] | Exciter field resistance line slope margin; 0 requests automatic calculation, not a zero coefficient | -0.06   |
 $T_E$       | [sec]  | Time constant for excitation system  | 0.6     |
 $K_F$       | [p.u.] | Coefficient for feedback             | 0.09    |
 $T_F$       | [sec]  | Time constant for feedback           | 1.46    |
@@ -102,10 +102,16 @@ When both saturation values are positive, the non-extraneous solution is:
 \end{aligned}
 ```
 
-$K_E$ is the configured exciter field resistance line slope margin. A nonzero configured value is used directly. A configured $K_E=0$ selects the
-[PSS/E-compatible model](https://www.powerworld.com/WebHelp/Content/MainDocumentation_HTML/Transient_Stability_Dialog_Options_Power_System_Model.htm).
-At initialization, requiring $\dot E_{fd}'=0$ and
-$V_R=V_R^{\max}/10$ gives
+$K_E$ is the configured exciter field resistance line slope margin. A nonzero configured value is used directly. The
+[IEEE Std 421.4-2014](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6803835) states:
+
+> In some programs, if $K_E$ is entered as zero, $K_E$ is automatically calculated by the program to represent a self-excited shunt field and a trimmed rheostat as its initial condition.
+
+GridKit implements the
+[PSS/E-compatible automatic-parameter rule](https://www.powerworld.com/WebHelp/Content/MainDocumentation_HTML/Transient_Stability_Dialog_Options_Power_System_Model.htm).
+The divisor $10$ in $V_R=V_R^{\max}/10=0.1V_R^{\max}$ is unitless and
+sets $V_R$ to 10% of the maximum regulator output, retaining the per-unit
+units of $V_R^{\max}$:
 
 ```math
 \begin{aligned}
