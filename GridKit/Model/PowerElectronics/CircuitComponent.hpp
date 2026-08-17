@@ -75,9 +75,9 @@ namespace GridKit
       {
         connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
-        for (IdxT i = 0; i < size_; ++i)
+        for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
         {
-          connection_nodes_[static_cast<size_t>(i)] = other.connection_nodes_[static_cast<size_t>(i)];
+          connection_nodes_[i] = other.connection_nodes_[i];
         }
       }
 
@@ -88,9 +88,9 @@ namespace GridKit
       {
         jacobian_coo_rows_ = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
 
-        for (IdxT i = 0; i < nnz_; ++i)
+        for (size_t i = 0; i < static_cast<size_t>(nnz_); ++i)
         {
-          jacobian_coo_rows_[static_cast<size_t>(i)] = other.jacobian_coo_rows_[static_cast<size_t>(i)];
+          jacobian_coo_rows_[i] = other.jacobian_coo_rows_[i];
         }
       }
 
@@ -101,9 +101,9 @@ namespace GridKit
       {
         jacobian_coo_cols_ = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
 
-        for (IdxT i = 0; i < nnz_; ++i)
+        for (size_t i = 0; i < static_cast<size_t>(nnz_); ++i)
         {
-          jacobian_coo_cols_[static_cast<size_t>(i)] = other.jacobian_coo_cols_[static_cast<size_t>(i)];
+          jacobian_coo_cols_[i] = other.jacobian_coo_cols_[i];
         }
       }
 
@@ -114,9 +114,9 @@ namespace GridKit
       {
         jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
 
-        for (IdxT i = 0; i < nnz_; ++i)
+        for (size_t i = 0; i < static_cast<size_t>(nnz_); ++i)
         {
-          jacobian_coo_values_[static_cast<size_t>(i)] = other.jacobian_coo_values_[static_cast<size_t>(i)];
+          jacobian_coo_values_[i] = other.jacobian_coo_values_[i];
         }
       }
 
@@ -126,7 +126,7 @@ namespace GridKit
         yp_ext_ = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
         f_ext_  = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
 
-        for (IdxT i = 0; i < size_; ++i)
+        for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
         {
           y_ext_[i]  = nullptr;
           yp_ext_[i] = nullptr;
@@ -220,17 +220,17 @@ namespace GridKit
     int setExternalConnectionNodes(size_t local_index, ExternalConnection<ScalarT, IdxT> connection)
     {
       assert(extern_indices_.contains(local_index));
-      y_ext_[local_index]            = connection.y_;
-      yp_ext_[local_index]           = connection.yp_;
-      f_ext_[local_index]            = connection.f_;
-      connection_nodes_[local_index] = connection.idx_;
+      y_ext_[local_index]  = connection.y_;
+      yp_ext_[local_index] = connection.yp_;
+      f_ext_[local_index]  = connection.f_;
+      setConnectionNodes(local_index, connection.idx_);
       return 0;
     }
 
     /**
      * @brief Update the connection index for a variable.
      *
-     * Changes only the connection index without modifying the variable's
+     * Sets only the connection index without modifying the variable's
      * internal/external classification or its associated data pointers.
      *
      * @param local_index Index of the local variable.
@@ -373,51 +373,6 @@ namespace GridKit
     void setInternalResidualPointer(ScalarT* internal_res)
     {
       f_int_ = internal_res;
-    }
-
-    /**
-     * @brief Clear all internal and external data pointers.
-     *
-     * This disconnects the component from the data storage currently associated
-     * with its internal and external variables. The external pointer arrays
-     * themselves remain allocated so that the component can be connected to
-     * new data later.
-     *
-     * @return int 0 if successful.
-     */
-    int clearPointers()
-    {
-      // Clear internal data pointers.
-      y_int_  = nullptr;
-      yp_int_ = nullptr;
-      f_int_  = nullptr;
-
-      // Clear external data pointers, but keep the pointer arrays allocated.
-      if (y_ext_)
-      {
-        for (IdxT i = 0; i < size_; ++i)
-        {
-          y_ext_[i] = nullptr;
-        }
-      }
-
-      if (yp_ext_)
-      {
-        for (IdxT i = 0; i < size_; ++i)
-        {
-          yp_ext_[i] = nullptr;
-        }
-      }
-
-      if (f_ext_)
-      {
-        for (IdxT i = 0; i < size_; ++i)
-        {
-          f_ext_[i] = nullptr;
-        }
-      }
-
-      return 0;
     }
 
   protected:

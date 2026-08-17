@@ -117,7 +117,7 @@ int main()
   const auto original_node_connections      = getNodeConnections(nodes);
 
   // --------------------------------------------------------------------------------
-  // Create 2 Partitions and Partition interfaces
+  // Create 2 Partitions and  a Partition interfaces to split to network
   // --------------------------------------------------------------------------------
 
   auto* bus_interface = new GridKit::BusPartitionInterface<double, size_t>(
@@ -125,7 +125,10 @@ int main()
       network.lines[2],
       14);
 
-  bus_interface->allocate();
+  if (int err = bus_interface->allocate())
+  {
+    return err;
+  }
 
   auto* partition1 = new Subsystem();
   auto* partition2 = new Subsystem();

@@ -403,7 +403,7 @@ int main(int argc, char const* argv[])
   {
     assert(p <= 2 * N_size);
 
-    // Takes in the network and partition it into p partitions, and performs parallel function eval
+    // Takes in the network, partition it into p partitions, and perform parallel function eval
     RunResult r = evaluatePartitioning(network, system, reference, p);
 
     if (!r.success)

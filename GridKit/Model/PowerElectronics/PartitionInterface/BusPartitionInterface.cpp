@@ -6,6 +6,7 @@
 #include <cstddef>
 
 #include <GridKit/Model/PowerElectronics/ExternalConnection.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
@@ -138,13 +139,13 @@ namespace GridKit
 
     if (bus_input_ports_.size() != bus_size)
     {
-      std::cerr << "ERROR: Invalid partition interface detected. "
-                << "Bus(ID=" << bus_->busID()
-                << "), Component(ID=" << component_->getIDcomponent()
-                << "). Expected " << bus_size
-                << " bus connections, but found "
-                << bus_input_ports_.size() << "."
-                << std::endl;
+      GridKit::Utilities::Logger::error() << "ERROR: Invalid partition interface detected. "
+                                          << "Bus(ID=" << bus_->busID()
+                                          << "), Component(ID=" << component_->getIDcomponent()
+                                          << "). Expected " << bus_size
+                                          << " bus connections, but found "
+                                          << bus_input_ports_.size() << "."
+                                          << std::endl;
 
       return 1;
     }
@@ -154,13 +155,15 @@ namespace GridKit
     // its internal pointers to this private storage.
     const size_t internal_size = static_cast<size_t>(component_->getInternalSize());
 
-    y_ptr_  = std::make_unique<ScalarT[]>(internal_size);
-    yp_ptr_ = std::make_unique<ScalarT[]>(internal_size);
-    f_ptr_  = std::make_unique<ScalarT[]>(internal_size);
+    component_y_int_  = std::make_unique<ScalarT[]>(internal_size);
+    component_yp_int_ = std::make_unique<ScalarT[]>(internal_size);
+    component_f_int_  = std::make_unique<ScalarT[]>(internal_size);
 
-    component_->setInternalPointer(y_ptr_.get());
-    component_->setInternalDerivativePointer(yp_ptr_.get());
-    component_->setInternalResidualPointer(f_ptr_.get());
+    component_->setInternalPointer(component_y_int_.get());
+    component_->setInternalDerivativePointer(component_yp_int_.get());
+    component_->setInternalResidualPointer(component_f_int_.get());
+
+    component_f_ext_ = std::make_unique<ScalarT[]>(component_->getExternSize());
 
     return 0;
   }
@@ -214,12 +217,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::evaluateExternalResidual()
   {
+    std::fill_n(component_f_ext_.get(), component_->getExternSize(), ScalarT{});
 
-    // Evaluate all external residual contributions produced by the wrapped
-    // component.
-    std::vector<ScalarT> component_ext_residual(static_cast<size_t>(component_->getExternSize()));
-
-    updateComponentPointers(component_ext_residual.data());
+    updateComponentPointers();
 
     if (int err_code = component_->evaluateExternalResidual())
     {
@@ -230,7 +230,7 @@ namespace GridKit
     // into the interface residual below.
     for (size_t i = 0; i < bus_input_ports_.size(); ++i)
     {
-      *f_ext_[bus_input_ports_[i]] += component_ext_residual[bus_output_ports_[i]];
+      *f_ext_[bus_input_ports_[i]] += component_f_ext_[bus_output_ports_[i]];
     }
 
     return 0;
@@ -251,10 +251,7 @@ namespace GridKit
 
     this->zeroJacMatrix();
 
-    // The Jacobian only requires the component state pointers.
-    //  Residual output is not needed, so external residual pointers
-    // are redirected to dummy storage.
-    updateComponentPointers(nullptr);
+    updateComponentPointers();
 
     component_->evaluateJacobian();
 
@@ -292,9 +289,6 @@ namespace GridKit
    * variables are copied into the interface's private storage, which the wrapped
    * component already keeps track of for its internal state.
    *
-   * If residual storage is provided, external residual contributions are
-   * written to that storage. Otherwise, they are redirected to dummy storage.
-   *
    * @pre The interface must be allocated and its external state pointers must
    *      reference valid state and derivative data.
    *
@@ -307,16 +301,13 @@ namespace GridKit
    * @return 0 on success.
    */
   template <class ScalarT, typename IdxT>
-  int BusPartitionInterface<ScalarT, IdxT>::updateComponentPointers(ScalarT* residual)
+  int BusPartitionInterface<ScalarT, IdxT>::updateComponentPointers()
   {
     size_t internal_index = 0;
     size_t external_index = 0;
 
-    const auto& external_indices = component_->getExternIndices();
-
     // Reconstruct the state expected by the wrapped component from the
-    // interface's external data. Route the residual to dummy variable if
-    // output data is not needed such as when evaluating Jacobians.
+    // interface's external data. Route the external residual to component_f_ext_.
     for (size_t i = 0; i < static_cast<size_t>(component_->size()); ++i)
     {
       if (is_external_[i])
@@ -324,18 +315,16 @@ namespace GridKit
         ExternalConnection<ScalarT, IdxT> connection{
             .y_   = y_ext_[i],
             .yp_  = yp_ext_[i],
-            .f_   = residual ? &residual[external_index] : &dummy_residual_,
+            .f_   = &component_f_ext_[external_index],
             .idx_ = component_->getNodeConnection(i)};
 
         component_->setExternalConnectionNodes(i, connection);
-
         ++external_index;
       }
       else
       {
-        y_ptr_[internal_index]  = *y_ext_[i];
-        yp_ptr_[internal_index] = *yp_ext_[i];
-
+        component_y_int_[internal_index]  = *y_ext_[i];
+        component_yp_int_[internal_index] = *yp_ext_[i];
         ++internal_index;
       }
     }

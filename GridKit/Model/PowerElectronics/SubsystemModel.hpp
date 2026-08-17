@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include <cassert>
@@ -7,7 +5,6 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
-#include <tuple>
 #include <unordered_map>
 #include <vector>
 
@@ -48,7 +45,12 @@ namespace GridKit
   class SubsystemModel : public PowerElectronicsModel<ScalarT, IdxT>
   {
   public:
-    using ForcingData  = std::tuple<std::vector<ScalarT>, std::vector<ScalarT>>;
+    struct ForcingData
+    {
+      std::vector<ScalarT> y;
+      std::vector<ScalarT> yp;
+    };
+
     using TimeFunction = std::function<ForcingData(ScalarT)>;
 
   protected:
@@ -140,9 +142,14 @@ namespace GridKit
      */
     int allocate() override
     {
-      if (int err = hold())
+      if (int err_code = buildIndexMappings())
       {
-        return err;
+        return err_code;
+      }
+
+      if (int err_code = mapGlobalToLocal())
+      {
+        return err_code;
       }
 
       n_intern_ = internal_map_.size();
@@ -379,17 +386,17 @@ namespace GridKit
 
       if (forcing_function_)
       {
-        const auto [y_forcing, yp_forcing] = (*forcing_function_)(time_);
+        const auto forcing = (*forcing_function_)(time_);
 
-        if (y_forcing.size() != y_ext_data_.size() || yp_forcing.size() != yp_ext_data_.size())
+        if (forcing.y.size() != y_ext_data_.size() || forcing.yp.size() != yp_ext_data_.size())
         {
           throw std::runtime_error(
               "SubsystemModel::distributeExternalVectors: forcing function "
               "returned vectors with incorrect sizes.");
         }
 
-        std::copy(y_forcing.begin(), y_forcing.end(), y_ext_data_.begin());
-        std::copy(yp_forcing.begin(), yp_forcing.end(), yp_ext_data_.begin());
+        std::copy(forcing.y.begin(), forcing.y.end(), y_ext_data_.begin());
+        std::copy(forcing.yp.begin(), forcing.yp.end(), yp_ext_data_.begin());
       }
 
       return 0;
@@ -497,40 +504,10 @@ namespace GridKit
     }
 
     /**
-     * @brief Prepare the subsystem topology for local evaluation.
-     *
-     * Components and nodes initially contain the same global connection indices
-     * assigned by the parent system. This method determines which of those
-     * variables belong to the subsystem and which are external coupling variables,
-     * assigns each a local subsystem index, and replaces the stored global
-     * connection indices with those local indices.
-     *
-     * This local indexing is used while the subsystem is allocated and evaluated.
-     * release() restores the original global indices.
-     *
-     * @pre Component and node connections use global system indices.
-     *
-     * @post Component and node connections use local subsystem indices.
-     *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
-     */
-    int hold()
-    {
-      buildIndexMappings();
-
-      if (int err_code = mapGlobalToLocal())
-      {
-        return err_code;
-      }
-
-      return 0;
-    }
-
-    /**
      * @brief Restore the subsystem topology to global system indexing.
      *
-     * Reverses hold() by replacing local subsystem connection indices with the
-     * original global system indices. The local internal/external mappings are
+     * Reverses local subsystem connection indices with the original
+     * global system indices. The local internal/external mappings are
      * then cleared so that components or nodes can safely be added or removed.
      *
      * @pre Component and node connections may use local subsystem indices.
@@ -595,7 +572,7 @@ namespace GridKit
     /**
      * @brief Restore local subsystem connection indices to global system indices.
      *
-     * Reverses mapGlobalToLocal(). Internal subsystem indices are translated
+     * Reverses \ref mapGlobalToLocal(). Internal subsystem indices are translated
      * through the subsystem connection-node table, while external subsystem
      * indices are translated through external_data_indices_.
      *
@@ -660,14 +637,14 @@ namespace GridKit
     /**
      * @brief Replace global connection indices with subsystem-local indices.
      *
-     * Uses the mappings created by buildIndexMappings() to rewrite the connection
+     * Uses the mappings created by \ref buildIndexMappings() to rewrite the connection
      * indices stored by every component and node. Variables owned by the subsystem
-     * use internal_map_; variables owned outside the subsystem use external_map_.
+     * use `internal_map_`; variables owned outside the subsystem use `external_map_`.
      *
      * This changes only the indexing used to identify connections; it does not
      * change the physical component/node connectivity.
      *
-     * @pre internal_map_ and external_map_ have been constructed from global
+     * @pre `internal_map_` and `external_map_` have been constructed from global
      *      connection indices.
      *
      * @post All valid component and node connections use local subsystem indices.
@@ -742,13 +719,15 @@ namespace GridKit
      *
      * @post internal_map_ and external_map_ contain the global-to-local mappings
      *       needed to convert the subsystem topology to local indexing.
+     *
+     * @return 0 on success.
      */
-    void buildIndexMappings()
+    int buildIndexMappings()
     {
 
       if (connections_are_local_)
       {
-        return;
+        return 0;
       }
 
       internal_map_.clear();
@@ -787,6 +766,7 @@ namespace GridKit
       }
 
       // Pass 3: Add component dependencies that are owned outside the subsystem.
+      size_t component_external_idx = component_internal_idx;
       for (component_type* comp : components_)
       {
         auto extern_indices = comp->getExternIndices();
@@ -796,36 +776,67 @@ namespace GridKit
           {
             continue;
           }
+
           const IdxT index = comp->getNodeConnection(j);
 
-          if (internal_map_.count(index) < 1 && external_map_.count(index) < 1 && index != neg1_)
+          if (index != neg1_ && !internal_map_.contains(index) && !external_map_.contains(index))
           {
-            external_map_[index] = component_internal_idx++;
+            external_map_[index] = component_external_idx++;
           }
         }
       }
+
+      return 0;
     }
 
-    // Global system index -> local subsystem index for subsystem internal variables
+    /**
+     *@brief Maps global system indices to local subsystem indices for internal variables.
+     */
     std::unordered_map<IdxT, IdxT> internal_map_;
 
-    // Global system index -> local subsystem index for subsystem external variables
+    /**
+     * @brief Maps global system indices to local subsystem indices for external variables.
+     */
     std::unordered_map<IdxT, IdxT> external_map_;
 
-    // Global system index corresponding to each entry in the subsystem external state vectors
+    /**
+     * @brief Global system index corresponding to each entry in the external subsystem vectors.
+     */
     std::vector<IdxT> external_data_indices_;
 
-    // subsystem external State, derivative, and residual vectors.
+    /**
+     * @brief subsystem external State, derivative, and residual vectors.
+     */
     std::vector<ScalarT> y_ext_data_;
+
+    /**
+     * @brief subsystem external derivative
+     */
     std::vector<ScalarT> yp_ext_data_;
+
+    /**
+     * @brief subsystem external derivative
+     */
     std::vector<ScalarT> f_ext_data_;
 
+    /**
+     * @brief Optional forcing function used to provide external subsystem data.
+     *
+     * It is continuous function that can be sampled at different times
+     */
     std::optional<TimeFunction> forcing_function_;
 
-    // Partition interfaces are owned by SubsystemModel.
-    // components_ contains non-owning pointers, including these interfaces.
-    std::vector<component_type*> interfaces_;
+    /**
+     * @brief Partition interfaces owned by the subsystem.
+     *
+     * These interfaces expose the contributions of components participating
+     * in the partition split.
+     */
+    std::vector<interface_type*> interfaces_;
 
+    /**
+     * @brief Keeps track of whether the components are in local state or global state
+     */
     bool connections_are_local_{false};
 
   }; // class SubsystemModel

@@ -10,8 +10,7 @@
 #include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
-
-#include "GridKit/Testing/Testing.hpp"
+#include <GridKit/Testing/Testing.hpp>
 
 namespace GridKit
 {
@@ -257,7 +256,7 @@ namespace GridKit
             matches = false;
           }
 
-          // Remove the matched entry
+          // Remove matched entry
           sub_row_entries.erase(sub_entry);
         }
 

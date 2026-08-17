@@ -522,7 +522,18 @@ namespace GridKit
 
         system_->allocate();
 
-        distributeVariables(y_, yp_);
+        auto* system_y  = system_->y().getData();
+        auto* system_yp = system_->yp().getData();
+
+        for (size_t i = 0; i < system_->size(); ++i)
+        {
+          system_y[i]  = y_[i];
+          system_yp[i] = yp_[i];
+        }
+
+        system_->y().setDataUpdated();
+        system_->yp().setDataUpdated();
+
         system_->updateTime(1.0, 2.0);
         system_->evaluateResidual();
 
@@ -549,6 +560,9 @@ namespace GridKit
         partition1_->allocate();
         partition2_->allocate();
         partitions_ = {partition1_, partition2_};
+
+        // Distribute variables to all partitions
+        distributeVariables(y_, yp_);
       }
 
       ~SubsystemModelWithHiresTests()
@@ -560,27 +574,29 @@ namespace GridKit
 
       void distributeVariables(const std::vector<ScalarT>& y, const std::vector<ScalarT>& yp)
       {
-        auto* system_y  = system_->y().getData();
-        auto* system_yp = system_->yp().getData();
-
-        for (size_t i = 0; i < system_->size(); ++i)
-        {
-          system_y[i]  = y[i];
-          system_yp[i] = yp[i];
-        }
-
-        system_->y().setDataUpdated();
-        system_->yp().setDataUpdated();
-
         for (auto* partition : partitions_)
         {
-          for (size_t i = 0; i < partition->getExternSize(); ++i)
-          {
-            const auto global_index = partition->getExternalDataIndices()[i];
 
-            partition->getExternalDataY()[i]  = y[global_index];
-            partition->getExternalDataYP()[i] = yp[global_index];
-          }
+          // Test the forcing function mechanism.
+          auto forcing_function = [partition, &y, &yp]([[maybe_unused]] ScalarT t)
+          {
+            typename Subsystem::ForcingData forcing_data;
+
+            forcing_data.y.resize(partition->getExternSize());
+            forcing_data.yp.resize(partition->getExternSize());
+
+            for (size_t i = 0; i < partition->getExternSize(); ++i)
+            {
+              const auto global_index = partition->getExternalDataIndices()[i];
+
+              forcing_data.y[i]  = y[global_index];
+              forcing_data.yp[i] = yp[global_index];
+            }
+
+            return forcing_data;
+          };
+
+          partition->setForcingFunction(std::move(forcing_function));
 
           auto* partition_y  = partition->y().getData();
           auto* partition_yp = partition->yp().getData();
@@ -605,9 +621,6 @@ namespace GridKit
       TestOutcome residual()
       {
         TestStatus success = true;
-
-        // Distribute variables to all partitions
-        distributeVariables(y_, yp_);
 
         std::vector<ScalarT> partition_residual(system_->size(), 0.0);
 
@@ -653,8 +666,6 @@ namespace GridKit
 
         RealT alpha = 2.0;
 
-        distributeVariables(y_, yp_);
-
         /*
          * GridKit stores the HIRES variables in component assembly order:
          *
@@ -668,8 +679,8 @@ namespace GridKit
         const std::array<IdxT, 8> hires_to_sysmodel = {
             0, 1, 2, 6, 7, 3, 4, 5};
 
-        const RealT y6 = y_[hires_to_sysmodel[5]];
-        const RealT y8 = y_[hires_to_sysmodel[7]];
+        const RealT y5 = y_[hires_to_sysmodel[5]];
+        const RealT y7 = y_[hires_to_sysmodel[7]];
 
         std::array<std::array<RealT, 8>, 8> reference_jac =
             {{{-alpha - 1.71, 0.43, 8.32, 0.0, 0.0, 0.0, 0.0, 0.0},
@@ -677,9 +688,9 @@ namespace GridKit
               {0.0, 0.0, -alpha - 10.03, 0.43, 0.035, 0.0, 0.0, 0.0},
               {0.0, 8.32, 1.71, -alpha - 1.12, 0.0, 0.0, 0.0, 0.0},
               {0.0, 0.0, 0.0, 0.0, -alpha - 1.745, 0.43, 0.43, 0.0},
-              {0.0, 0.0, 0.0, 0.69, 1.71, -alpha - 280.0 * y8 - 0.43, 0.69, -280.0 * y6},
-              {0.0, 0.0, 0.0, 0.0, 0.0, 280.0 * y8, -alpha - 1.81, 280.0 * y6},
-              {0.0, 0.0, 0.0, 0.0, 0.0, -280.0 * y8, 1.81, -alpha - 280.0 * y6}}};
+              {0.0, 0.0, 0.0, 0.69, 1.71, -alpha - 280.0 * y7 - 0.43, 0.69, -280.0 * y5},
+              {0.0, 0.0, 0.0, 0.0, 0.0, 280.0 * y7, -alpha - 1.81, 280.0 * y5},
+              {0.0, 0.0, 0.0, 0.0, 0.0, -280.0 * y7, 1.81, -alpha - 280.0 * y5}}};
 
         for (auto* partition : partitions_)
         {
@@ -725,22 +736,37 @@ namespace GridKit
       }
 
     private:
+      /// @brief Bus used to define the connection between the HIRES components.
       Bus bus_;
 
+      /// @brief Complete monolithic HIRES system.
       System* system_;
 
+      /// @brief First subsystem of the partitioned HIRES system.
       Subsystem* partition1_;
+
+      /// @brief Second subsystem of the partitioned HIRES system.
       Subsystem* partition2_;
 
+      /// @brief First component of the HIRES system.
       HiresComponent1<ScalarT, IdxT>* comp1_;
-      HiresBus<ScalarT, IdxT>*        bus1_;
+
+      /// @brief Bus component connecting the two parts of the HIRES system.
+      HiresBus<ScalarT, IdxT>* bus1_;
+
+      /// @brief Third component of the HIRES system.
       HiresComponent3<ScalarT, IdxT>* comp3_;
 
+      /// @brief Partition interface representing the bus connection across the subsystem boundary.
       BusPartitionInterface<ScalarT, IdxT>* bus_interface_;
 
+      /// @brief Collection of subsystems comprising the partitioned HIRES system.
       std::vector<Subsystem*> partitions_;
 
+      /// @brief State vector used to initialize and evaluate the HIRES system.
       std::vector<ScalarT> y_;
+
+      /// @brief State derivative vector used to initialize and evaluate the HIRES system.
       std::vector<ScalarT> yp_;
     };
 
