@@ -42,7 +42,6 @@ namespace AnalysisManager
 
     enum class IdaConsistentICType
     {
-      AUTO,
       Y,
       YA_YDP
     };
@@ -222,7 +221,7 @@ namespace AnalysisManager
       RealT abs_tol_override_{};
       IdxT  max_steps_{};
       bool  suppress_alg_{false};
-      IdaConsistentICType consistent_ic_type_{IdaConsistentICType::AUTO};
+      IdaConsistentICType consistent_ic_type_{IdaConsistentICType::YA_YDP};
 
       RealT backward_time_step_{};
       RealT backward_rel_tol_{DEFAULT_REL_TOL};

@@ -312,8 +312,6 @@ namespace AnalysisManager
         return IDA_Y_INIT;
       case IdaConsistentICType::YA_YDP:
         return IDA_YA_YDP_INIT;
-      case IdaConsistentICType::AUTO:
-        return tag_ ? IDA_YA_YDP_INIT : IDA_Y_INIT;
       default:
         GridKit::Utilities::Logger::error()
             << "Invalid IDA consistent initial condition type "
@@ -1216,8 +1214,7 @@ namespace AnalysisManager
     /**
      * @brief Set the IDA consistent-initial-condition calculation type
      *
-     * @param consistent_ic_type IDA consistent initial condition type. AUTO
-     *        preserves the existing behavior.
+     * @param consistent_ic_type IDA consistent initial condition type.
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Index data type
      */

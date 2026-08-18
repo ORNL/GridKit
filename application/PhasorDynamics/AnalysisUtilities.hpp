@@ -103,7 +103,7 @@ namespace GridKit
       c.abs_tol   = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
       c.dt_fixed  = j.value("dt_fixed", 0.0);
       c.max_steps = j.value("max_steps", std::size_t{0});
-      c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::AUTO;
+      c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
       if (j.contains("consistent_ic_type"))
       {
         const auto consistent_ic_type_str = j.at("consistent_ic_type").get<std::string>();
