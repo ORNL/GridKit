@@ -13,7 +13,7 @@ int main()
   result += test.dtMonitorSuppressesEpsilonFinalStep();
   result += test.fixedStep();
   result += test.suppressAlgebraicErrors();
-  result += test.initType();
+  result += test.consistentICType();
 
   return result.summary();
 }

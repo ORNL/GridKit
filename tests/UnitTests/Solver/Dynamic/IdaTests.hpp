@@ -371,7 +371,7 @@ namespace GridKit
     };
 
     template <class ScalarT, typename IdxT>
-    class ConsistentInitTypeEvaluator : public NullEvaluator<ScalarT, IdxT>
+    class ConsistentICTypeEvaluator : public NullEvaluator<ScalarT, IdxT>
     {
     protected:
       using NullEvaluator<ScalarT, IdxT>::allocated_;
@@ -382,9 +382,9 @@ namespace GridKit
       using NullEvaluator<ScalarT, IdxT>::f_;
 
     public:
-      ConsistentInitTypeEvaluator() = default;
+      ConsistentICTypeEvaluator() = default;
 
-      explicit ConsistentInitTypeEvaluator(bool consistent_derivative)
+      explicit ConsistentICTypeEvaluator(bool consistent_derivative)
         : consistent_derivative_(consistent_derivative)
       {
       }
@@ -572,15 +572,15 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome initType()
+      TestOutcome consistentICType()
       {
         TestStatus success = true;
 
         {
-          Model::ConsistentInitTypeEvaluator<ScalarT, IdxT> model;
+          Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model;
 
           Ida<ScalarT, IdxT> ida(&model);
-          ida.setInitType(AnalysisManager::Sundials::IdaInitType::YA_YDP);
+          ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::YA_YDP);
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 
@@ -592,7 +592,7 @@ namespace GridKit
           Model::NullEvaluator<ScalarT, IdxT> model;
 
           Ida<ScalarT, IdxT> ida(&model);
-          ida.setInitType(AnalysisManager::Sundials::IdaInitType::Y);
+          ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::Y);
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 

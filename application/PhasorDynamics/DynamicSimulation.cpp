@@ -32,7 +32,7 @@ int main(int argc, const char* argv[])
   ida.setTolerance(study.rel_tol, study.abs_tol);
   ida.setFixedStep(study.dt_fixed);
   ida.setMaxSteps(study.max_steps);
-  ida.setInitType(study.init_type);
+  ida.setConsistentICType(study.consistent_ic_type);
   ida.configureSimulation();
 
   // Start timer

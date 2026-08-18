@@ -238,8 +238,8 @@ namespace AnalysisManager
       // Find a consistent set of initial conditions for DAE
       if (findConsistent)
       {
-        const int initType = getIDAInitType();
-        retval = IDACalcIC(solver_, initType, t0 + 0.1);
+        const int consistentICType = getIDAConsistentICType();
+        retval = IDACalcIC(solver_, consistentICType, t0 + 0.1);
         checkOutput(retval, "IDACalcIC");
 
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
@@ -304,20 +304,20 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::getIDAInitType() const
+    int Ida<ScalarT, IdxT>::getIDAConsistentICType() const
     {
-      switch (init_type_)
+      switch (consistent_ic_type_)
       {
-      case IdaInitType::Y:
+      case IdaConsistentICType::Y:
         return IDA_Y_INIT;
-      case IdaInitType::YA_YDP:
+      case IdaConsistentICType::YA_YDP:
         return IDA_YA_YDP_INIT;
-      case IdaInitType::AUTO:
+      case IdaConsistentICType::AUTO:
         return tag_ ? IDA_YA_YDP_INIT : IDA_Y_INIT;
       default:
         GridKit::Utilities::Logger::error()
-            << "Invalid IDA init type "
-            << static_cast<int>(init_type_)
+            << "Invalid IDA consistent initial condition type "
+            << static_cast<int>(consistent_ic_type_)
             << ".\n";
         throw SundialsException();
       }
@@ -1216,14 +1216,15 @@ namespace AnalysisManager
     /**
      * @brief Set the IDA consistent-initial-condition calculation type
      *
-     * @param init_type IDA init type. AUTO preserves the existing behavior.
+     * @param consistent_ic_type IDA consistent initial condition type. AUTO
+     *        preserves the existing behavior.
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setInitType(IdaInitType init_type)
+    void Ida<ScalarT, IdxT>::setConsistentICType(IdaConsistentICType consistent_ic_type)
     {
-      init_type_ = init_type;
+      consistent_ic_type_ = consistent_ic_type;
     }
 
     /**

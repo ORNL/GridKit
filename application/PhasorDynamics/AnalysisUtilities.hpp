@@ -65,7 +65,7 @@ namespace GridKit
       /// maximum number of solver time steps, or 0 for the IDA default
       std::size_t              max_steps;
       /// IDA consistent initial condition calculation type
-      AnalysisManager::Sundials::IdaInitType init_type;
+      AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
       /// set of system events
       std::vector<SystemEvent> events;
       /// path to output file
@@ -103,21 +103,22 @@ namespace GridKit
       c.abs_tol   = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
       c.dt_fixed  = j.value("dt_fixed", 0.0);
       c.max_steps = j.value("max_steps", std::size_t{0});
-      c.init_type = AnalysisManager::Sundials::IdaInitType::AUTO;
-      if (j.contains("init_type"))
+      c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::AUTO;
+      if (j.contains("consistent_ic_type"))
       {
-        const auto init_type_str = j.at("init_type").get<std::string>();
-        if (init_type_str == "y")
+        const auto consistent_ic_type_str = j.at("consistent_ic_type").get<std::string>();
+        if (consistent_ic_type_str == "y")
         {
-          c.init_type = AnalysisManager::Sundials::IdaInitType::Y;
+          c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::Y;
         }
-        else if (init_type_str == "ya_ydp")
+        else if (consistent_ic_type_str == "ya_ydp")
         {
-          c.init_type = AnalysisManager::Sundials::IdaInitType::YA_YDP;
+          c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
         }
         else
         {
-          Log::error() << "Invalid IDA init type \"" << init_type_str << "\"; "
+          Log::error() << "Invalid IDA consistent initial condition type \""
+                       << consistent_ic_type_str << "\"; "
                        << "must be either \"y\" or \"ya_ydp\"";
         }
       }
