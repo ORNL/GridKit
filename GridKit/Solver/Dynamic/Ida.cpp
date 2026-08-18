@@ -238,11 +238,7 @@ namespace AnalysisManager
       // Find a consistent set of initial conditions for DAE
       if (findConsistent)
       {
-        int initType = IDA_Y_INIT;
-
-        if (tag_)
-          initType = IDA_YA_YDP_INIT;
-
+        const int initType = getIDAInitType();
         retval = IDACalcIC(solver_, initType, t0 + 0.1);
         checkOutput(retval, "IDACalcIC");
 
@@ -305,6 +301,26 @@ namespace AnalysisManager
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
       model_->updateTime(t, 0.0);
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::getIDAInitType() const
+    {
+      switch (init_type_)
+      {
+      case IdaInitType::Y:
+        return IDA_Y_INIT;
+      case IdaInitType::YA_YDP:
+        return IDA_YA_YDP_INIT;
+      case IdaInitType::AUTO:
+        return tag_ ? IDA_YA_YDP_INIT : IDA_Y_INIT;
+      default:
+        GridKit::Utilities::Logger::error()
+            << "Invalid IDA init type "
+            << static_cast<int>(init_type_)
+            << ".\n";
+        throw SundialsException();
+      }
     }
 
     /**
@@ -1195,6 +1211,19 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setBackwardSuppressAlgebraicErrors(bool suppress)
     {
       backward_suppress_alg_ = suppress;
+    }
+
+    /**
+     * @brief Set the IDA consistent-initial-condition calculation type
+     *
+     * @param init_type IDA init type. AUTO preserves the existing behavior.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setInitType(IdaInitType init_type)
+    {
+      init_type_ = init_type;
     }
 
     /**

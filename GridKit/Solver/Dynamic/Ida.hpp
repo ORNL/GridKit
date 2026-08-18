@@ -40,6 +40,13 @@ namespace AnalysisManager
       std::string report() const;
     };
 
+    enum class IdaInitType
+    {
+      AUTO,
+      Y,
+      YA_YDP
+    };
+
     template <class ScalarT, typename IdxT>
     class Ida : public DynamicSolver<ScalarT, IdxT>
     {
@@ -133,6 +140,7 @@ namespace AnalysisManager
                                           ScalarT abs_tol_override = 0);
       void setSuppressAlgebraicErrors(bool suppress);
       void setBackwardSuppressAlgebraicErrors(bool suppress);
+      void setInitType(IdaInitType init_type);
       void setMaxSteps(IdxT maxSteps) override;
       void setBackwardMaxSteps(IdxT maxSteps);
 
@@ -180,6 +188,7 @@ namespace AnalysisManager
 
       int   getMonitorStepCount(RealT tf, RealT dt_monitor) const;
       RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const;
+      int   getIDAInitType() const;
       void  updateModelState(RealT t);
 
     private:
@@ -213,6 +222,7 @@ namespace AnalysisManager
       RealT abs_tol_override_{};
       IdxT  max_steps_{};
       bool  suppress_alg_{false};
+      IdaInitType init_type_{IdaInitType::AUTO};
 
       RealT backward_time_step_{};
       RealT backward_rel_tol_{DEFAULT_REL_TOL};

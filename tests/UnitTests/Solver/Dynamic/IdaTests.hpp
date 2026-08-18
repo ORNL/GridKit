@@ -369,6 +369,74 @@ namespace GridKit
     private:
       RealT t_{};
     };
+
+    template <class ScalarT, typename IdxT>
+    class ConsistentInitTypeEvaluator : public NullEvaluator<ScalarT, IdxT>
+    {
+    protected:
+      using NullEvaluator<ScalarT, IdxT>::allocated_;
+      using NullEvaluator<ScalarT, IdxT>::y_;
+      using NullEvaluator<ScalarT, IdxT>::yp_;
+      using NullEvaluator<ScalarT, IdxT>::abs_tol_;
+      using NullEvaluator<ScalarT, IdxT>::tag_;
+      using NullEvaluator<ScalarT, IdxT>::f_;
+
+    public:
+      ConsistentInitTypeEvaluator() = default;
+
+      explicit ConsistentInitTypeEvaluator(bool consistent_derivative)
+        : consistent_derivative_(consistent_derivative)
+      {
+      }
+
+      int initialize() override
+      {
+        if (!allocated_)
+        {
+          this->allocate();
+        }
+
+        auto* y       = y_.getData();
+        auto* yp      = yp_.getData();
+        auto* abs_tol = abs_tol_.getData();
+        auto* f       = f_.getData();
+
+        y[0]       = 0.0;
+        y[1]       = 10.0;
+        yp[0]      = consistent_derivative_ ? 1.0 : 0.0;
+        yp[1]      = 0.0;
+        tag_       = {true, false};
+        abs_tol[0] = 0.0;
+        abs_tol[1] = 0.0;
+        f[0]       = 0.0;
+        f[1]       = 0.0;
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+        abs_tol_.setDataUpdated();
+        f_.setDataUpdated();
+        return 0;
+      }
+
+      IdxT size() override
+      {
+        return 2;
+      }
+
+      int evaluateResidual() override
+      {
+        auto*       f  = f_.getData();
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+
+        f[0] = yp[0] - 1.0;
+        f[1] = y[1] - y[0];
+        f_.setDataUpdated();
+        return 0;
+      }
+
+    private:
+      bool consistent_derivative_{false};
+    };
   } // namespace Model
 
   namespace Testing
@@ -500,6 +568,36 @@ namespace GridKit
         const auto suppressed_steps   = countSteps(true);
 
         success *= (suppressed_steps < unsuppressed_steps);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome initType()
+      {
+        TestStatus success = true;
+
+        {
+          Model::ConsistentInitTypeEvaluator<ScalarT, IdxT> model;
+
+          Ida<ScalarT, IdxT> ida(&model);
+          ida.setInitType(AnalysisManager::Sundials::IdaInitType::YA_YDP);
+          ida.configureSimulation();
+          ida.initializeSimulation(0.0);
+
+          success *= (std::abs(model.yp().getData()[0] - 1.0) < 1.0e-10);
+          success *= (std::abs(model.y().getData()[1]) < 1.0e-10);
+        }
+
+        {
+          Model::NullEvaluator<ScalarT, IdxT> model;
+
+          Ida<ScalarT, IdxT> ida(&model);
+          ida.setInitType(AnalysisManager::Sundials::IdaInitType::Y);
+          ida.configureSimulation();
+          ida.initializeSimulation(0.0);
+
+          success *= (std::abs(model.y().getData()[0]) < 1.0e-10);
+        }
 
         return success.report(__func__);
       }
