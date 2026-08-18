@@ -80,6 +80,7 @@
 - Added `HYGOV` governor model implementation for PhasorDynamics.
 - Added `REPCA` controller model implementation for PhasorDynamics.
 - Added `REECB` electrical-control model implementation for PhasorDynamics.
+- Added IDA option to choose the consistent initial condition calculation type.
 
 ## v0.1
 
