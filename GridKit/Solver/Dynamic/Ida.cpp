@@ -239,7 +239,7 @@ namespace AnalysisManager
       if (findConsistent)
       {
         const int consistentICType = getIDAConsistentICType();
-        retval = IDACalcIC(solver_, consistentICType, t0 + 0.1);
+        retval                     = IDACalcIC(solver_, consistentICType, t0 + 0.1);
         checkOutput(retval, "IDACalcIC");
 
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
