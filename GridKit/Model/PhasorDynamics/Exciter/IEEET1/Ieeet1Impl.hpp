@@ -247,6 +247,7 @@ namespace GridKit
         {
           Ke_eff_ = (Vrmax_ / 10.0 - static_cast<RealT>(ksat))
                     / static_cast<RealT>(efdp);
+          Log::warning() << "Ieeet1: Ke is zero so effective Ke is derived during initialization\n";
         }
         else
         {
@@ -491,6 +492,14 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Ieeet1<scalar_type, index_type>::setDerivedParameters()
       {
+        if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
+            || Te_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM)
+        {
+          Log::warning() << "Ieeet1: Tr, Ta, Te, and Tf below "
+                         << TIME_CONSTANT_MINIMUM
+                         << " s are raised to that floor\n";
+        }
+
         Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);
         Ta_ = std::max(Ta_, TIME_CONSTANT_MINIMUM);
         Te_ = std::max(Te_, TIME_CONSTANT_MINIMUM);

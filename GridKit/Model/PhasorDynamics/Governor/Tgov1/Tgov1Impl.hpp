@@ -131,6 +131,12 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Tgov1<scalar_type, index_type>::setDerivedParams()
       {
+        if (T1_ < TIME_CONSTANT_MINIMUM || T3_ < TIME_CONSTANT_MINIMUM)
+        {
+          Log::warning() << "Tgov1: T1 and T3 below " << TIME_CONSTANT_MINIMUM
+                         << " s are raised to that floor\n";
+        }
+
         T1_ = std::max(T1_, TIME_CONSTANT_MINIMUM);
         T3_ = std::max(T3_, TIME_CONSTANT_MINIMUM);
 
@@ -287,7 +293,8 @@ namespace GridKit
         const RealT limit_tolerance = static_cast<RealT>(4.0) * std::numeric_limits<RealT>::epsilon();
         if (pv0_value < Pvmin_ - limit_tolerance || pv0_value > Pvmax_ + limit_tolerance)
         {
-          Log::error() << "Tgov1: initial valve position is outside limits\n";
+          Log::warning() << "Tgov1: initial valve position is outside [Pvmin, Pvmax]. "
+                            "Check initial dispatch and valve limits\n";
           return 1;
         }
 
