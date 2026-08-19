@@ -402,7 +402,7 @@ namespace GridKit
         auto* f       = f_.getData();
 
         y[0]       = 0.0;
-        y[1]       = 10.0; 
+        y[1]       = 10.0;
         yp[0]      = steady_state_ ? 0.0 : 2.0; // Purposefully inconsistent guess for non-steady-state case.
         yp[1]      = 0.0;
         tag_       = {true, false};
@@ -578,7 +578,7 @@ namespace GridKit
 
         using RealT = typename ScalarTraits<ScalarT>::RealT;
 
-        // If the tolerances are too tight, a finite difference approximation to the Jacobian 
+        // If the tolerances are too tight, a finite difference approximation to the Jacobian
         // cannot be generated, and initialization will fail with bad initial guesses.
         static constexpr auto tol = 100.0 * std::numeric_limits<RealT>::epsilon();
 
