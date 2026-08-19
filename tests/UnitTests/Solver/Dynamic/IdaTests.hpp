@@ -585,6 +585,8 @@ namespace GridKit
           ida.initializeSimulation(0.0);
 
           success *= isEqual(model.yp().getData()[0], 1.0);
+          success *= isEqual(model.yp().getData()[1], 0.0);
+          success *= isEqual(model.y().getData()[0], 0.0);
           success *= isEqual(model.y().getData()[1], 0.0);
         }
 
