@@ -384,8 +384,8 @@ namespace GridKit
     public:
       ConsistentICTypeEvaluator() = default;
 
-      explicit ConsistentICTypeEvaluator(bool consistent_derivative)
-        : consistent_derivative_(consistent_derivative)
+      explicit ConsistentICTypeEvaluator(bool steady_state)
+        : steady_state_(steady_state)
       {
       }
 
@@ -403,7 +403,7 @@ namespace GridKit
 
         y[0]       = 0.0;
         y[1]       = 10.0;
-        yp[0]      = consistent_derivative_ ? 1.0 : 0.0;
+        yp[0]      = steady_state_ ? 0.0 : 2.0; // Purposefully inconsistent guess for non-steady-state case.
         yp[1]      = 0.0;
         tag_       = {true, false};
         abs_tol[0] = 0.0;
@@ -428,14 +428,14 @@ namespace GridKit
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
 
-        f[0] = yp[0] - 1.0;
+        f[0] = yp[0] + y[0] + y[1] - 1.0;
         f[1] = y[1] - y[0];
         f_.setDataUpdated();
         return 0;
       }
 
     private:
-      bool consistent_derivative_{false};
+      bool steady_state_{false};
     };
   } // namespace Model
 
@@ -576,16 +576,42 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        using RealT = typename ScalarTraits<ScalarT>::RealT;
+
+        // If the tolerances are too tight, a finite difference approximation to the Jacobian
+        // cannot be generated, and initialization will fail with bad initial guesses.
+        static constexpr auto tol = 100.0 * std::numeric_limits<RealT>::epsilon();
+
+        // IdaConsistentICType::YA_YDP with non-steady-state initial guess for the derivatives
         {
-          Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model;
+          Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model(false);
 
           Ida<ScalarT, IdxT> ida(&model);
           ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::YA_YDP);
+          ida.setTolerance(tol);
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 
-          success *= (std::abs(model.yp().getData()[0] - 1.0) < 1.0e-10);
-          success *= (std::abs(model.y().getData()[1]) < 1.0e-10);
+          success *= isEqual(model.yp().getData()[0], 1.0, tol);
+          success *= isEqual(model.yp().getData()[1], 0.0, tol);
+          success *= isEqual(model.y().getData()[0], 0.0, tol);
+          success *= isEqual(model.y().getData()[1], 0.0, tol);
+        }
+
+        // IdaConsistentICType::Y with steady-state initial guess for the derivatives
+        {
+          Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model(true);
+
+          Ida<ScalarT, IdxT> ida(&model);
+          ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::Y);
+          ida.setTolerance(tol);
+          ida.configureSimulation();
+          ida.initializeSimulation(0.0);
+
+          success *= isEqual(model.yp().getData()[0], 0.0, tol);
+          success *= isEqual(model.yp().getData()[1], 0.0, tol);
+          success *= isEqual(model.y().getData()[0], 0.5, tol);
+          success *= isEqual(model.y().getData()[1], 0.5, tol);
         }
 
         {
@@ -596,7 +622,7 @@ namespace GridKit
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 
-          success *= (std::abs(model.y().getData()[0]) < 1.0e-10);
+          success *= isEqual(model.y().getData()[0], 0.0);
         }
 
         return success.report(__func__);
