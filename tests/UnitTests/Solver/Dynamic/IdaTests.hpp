@@ -577,6 +577,7 @@ namespace GridKit
         TestStatus success = true;
 
         using RealT = typename ScalarTraits<ScalarT>::RealT;
+        static constexpr auto tol = std::numeric_limits<RealT>::epsilon();
 
         // IdaConsistentICType::YA_YDP with non-steady-state initial guess for the derivatives
         {
@@ -584,14 +585,14 @@ namespace GridKit
 
           Ida<ScalarT, IdxT> ida(&model);
           ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::YA_YDP);
-          ida.setTolerance(std::numeric_limits<RealT>::epsilon());
+          ida.setTolerance(tol);
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 
-          success *= isEqual(model.yp().getData()[0], 1.0);
-          success *= isEqual(model.yp().getData()[1], 0.0);
-          success *= isEqual(model.y().getData()[0], 0.0);
-          success *= isEqual(model.y().getData()[1], 0.0);
+          success *= isEqual(model.yp().getData()[0], 1.0, tol);
+          success *= isEqual(model.yp().getData()[1], 0.0, tol);
+          success *= isEqual(model.y().getData()[0], 0.0, tol);
+          success *= isEqual(model.y().getData()[1], 0.0, tol);
         }
 
         // IdaConsistentICType::Y with steady-state initial guess for the derivatives
@@ -600,14 +601,14 @@ namespace GridKit
 
           Ida<ScalarT, IdxT> ida(&model);
           ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::Y);
-          ida.setTolerance(std::numeric_limits<RealT>::epsilon());
+          ida.setTolerance(tol);
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 
-          success *= isEqual(model.yp().getData()[0], 0.0);
-          success *= isEqual(model.yp().getData()[1], 0.0);
-          success *= isEqual(model.y().getData()[0], 0.5);
-          success *= isEqual(model.y().getData()[1], 0.5);
+          success *= isEqual(model.yp().getData()[0], 0.0, tol);
+          success *= isEqual(model.yp().getData()[1], 0.0, tol);
+          success *= isEqual(model.y().getData()[0], 0.5, tol);
+          success *= isEqual(model.y().getData()[1], 0.5, tol);
         }
 
         {
