@@ -584,8 +584,8 @@ namespace GridKit
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 
-          success *= (std::abs(model.yp().getData()[0] - 1.0) < 1.0e-10);
-          success *= (std::abs(model.y().getData()[1]) < 1.0e-10);
+          success *= isEqual(model.yp().getData()[0], 1.0);
+          success *= isEqual(model.y().getData()[1], 0.0);
         }
 
         {
@@ -596,7 +596,7 @@ namespace GridKit
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 
-          success *= (std::abs(model.y().getData()[0]) < 1.0e-10);
+          success *= isEqual(model.y().getData()[0], 0.0);
         }
 
         return success.report(__func__);
