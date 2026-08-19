@@ -577,7 +577,21 @@ namespace GridKit
         TestStatus success = true;
 
         {
-          Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model;
+          Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model(false);
+
+          Ida<ScalarT, IdxT> ida(&model);
+          ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::YA_YDP);
+          ida.configureSimulation();
+          ida.initializeSimulation(0.0);
+
+          success *= isEqual(model.yp().getData()[0], 1.0);
+          success *= isEqual(model.yp().getData()[1], 0.0);
+          success *= isEqual(model.y().getData()[0], 0.0);
+          success *= isEqual(model.y().getData()[1], 0.0);
+        }
+
+        {
+          Model::ConsistentICTypeEvaluator<ScalarT, IdxT> model(true);
 
           Ida<ScalarT, IdxT> ida(&model);
           ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::YA_YDP);
