@@ -402,7 +402,7 @@ namespace GridKit
         auto* f       = f_.getData();
 
         y[0]       = 0.0;
-        y[1]       = 1.0; // Carefully chosen non-zero guess. Initialization will fail with bad initial guesses.
+        y[1]       = 1.0;                       // Carefully chosen non-zero guess. Initialization will fail with bad initial guesses.
         yp[0]      = steady_state_ ? 0.0 : 2.0; // Purposefully inconsistent guess for non-steady-state case.
         yp[1]      = 0.0;
         tag_       = {true, false};
