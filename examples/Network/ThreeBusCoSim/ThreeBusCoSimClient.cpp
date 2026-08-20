@@ -95,9 +95,10 @@ using IdxT    = std::size_t;
 int main()
 {
   // Instantiate system
-  auto                       data = parseSystemModelData("ThreeBusCoSimClient.case.json");
-  auto                       sys  = SystemModel<ScalarT, IdxT>(data);
-  CoSimClient<ScalarT, IdxT> client(
+  auto filepath = std::filesystem::path("ThreeBusCoSimClient.case.json");
+  auto data     = parseSystemModelData(filepath);
+  auto sys      = SystemModel<ScalarT, IdxT>(data);
+  auto client   = CoSimClient<ScalarT, IdxT>(
       sys.getSignal(1), sys.getSignal(2), sys.getSignal(3), sys.getSignal(4));
   sys.allocate();
   client.exchange();

@@ -71,8 +71,9 @@ private:
 int main()
 {
   // Instantiate system
-  auto data = parseSystemModelData("ThreeBusCoSimServer.case.json");
-  auto sys  = SystemModel<ScalarT, IdxT>(data);
+  auto filepath = std::filesystem::path("ThreeBusCoSimServer.case.json");
+  auto data     = parseSystemModelData(filepath);
+  auto sys      = SystemModel<ScalarT, IdxT>(data);
   sys.allocate();
 
   // Set up cosim
