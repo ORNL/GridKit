@@ -30,7 +30,7 @@ $T_B$                               | [sec]     | `Tb`      | Input lead-lag den
 $T_C$                               | [sec]     | `Tc`      | Input lead-lag numerator time constant          | 0.0
 $V_R^{\max}$                        | [p.u.]    | `Vrmax`   | Maximum voltage-regulator output                | 1.0
 $V_R^{\min}$                        | [p.u.]    | `Vrmin`   | Minimum voltage-regulator output                | -1.0
-$K_E$                               | [p.u.]    | `Ke`      | Exciter constant                                | 0.1
+$K_E$                               | [p.u.]    | `Ke`      | Exciter field resistance line slope margin; 0 requests automatic calculation, not a zero coefficient | 0.1
 $T_E$                               | [sec]     | `Te`      | Exciter time constant                           | 0.5
 $K_F$                               | [p.u.]    | `Kf`      | Stabilizing feedback gain                       | 0.05
 $T_{F1}$                            | [sec]     | `Tf1`     | Stabilizing feedback time constant              | 0.7
@@ -54,7 +54,7 @@ Invalid ESDC1A parameter sets are rejected by the following checks:
 \begin{aligned}
   K_A
     &> 0 \\
-  T_R, T_A, T_B, T_C, T_E, T_{F1}
+  T_R, T_A, T_B, T_E, T_{F1}
     &\ge 0 \\
   V_R^{\min}
     &\le V_R^{\max} \\
@@ -71,11 +71,12 @@ The saturation points are either disabled together,
 S_E(E_1) = S_E(E_2) = 0,
 ```
 
-or define a valid two-point quadratic fit:
+or define a valid two-point scaled-quadratic fit:
 
 ```math
 \begin{aligned}
-  E_1, E_2, S_E(E_1), S_E(E_2) &> 0 \\
+  E_1, E_2 &> 0 \\
+  S_E(E_1), S_E(E_2) &\ge 0 \\
   \left(E_2-E_1\right)
   \left[S_E(E_2)-S_E(E_1)\right] &> 0
 \end{aligned}
@@ -99,16 +100,65 @@ raised to that floor in place, so every equation below uses the raised value:
       \end{cases}
 \end{aligned}
 ```
-
 When saturation is disabled, $S_A = 0$ and $S_B = 0$. Otherwise,
 
 ```math
+E S_E(E) = S_B q(E-S_A).
+```
+
+When one saturation value is zero,
+
+```math
 \begin{aligned}
-  C &= \sqrt{\dfrac{S_E(E_2)}{S_E(E_1)}} \\
-  S_A &= \dfrac{C E_1 - E_2}{C - 1} \\
-  S_B &= \dfrac{S_E(E_1)}{(E_1 - S_A)^2}
+  S_E(E_1)=0 &: \quad S_A=E_1,\qquad
+    S_B=\dfrac{E_2S_E(E_2)}{(E_2-E_1)^2} \\
+  S_E(E_2)=0 &: \quad S_A=E_2,\qquad
+    S_B=\dfrac{E_1S_E(E_1)}{(E_1-E_2)^2}.
 \end{aligned}
 ```
+
+and when both saturation values are positive,
+
+```math
+\begin{aligned}
+  C &= \sqrt{\dfrac{E_2S_E(E_2)}{E_1S_E(E_1)}} \\
+  S_A &= \dfrac{C E_1 - E_2}{C - 1} \\
+  S_B &= \dfrac{E_1S_E(E_1)}{(E_1 - S_A)^2}
+\end{aligned}
+```
+
+$K_E$ is the configured exciter field resistance line slope margin. A nonzero configured value is used directly. The
+[IEEE Std 421.5-2016](https://standards.ieee.org/ieee/421.5/5356/) states:
+
+> In some programs, if $K_E$ is entered as zero, $K_E$ is automatically calculated by the program to represent a self-excited shunt field and a trimmed rheostat as its initial condition.
+
+GridKit implements the
+[PSS/E-compatible automatic-parameter rule](https://www.powerworld.com/WebHelp/Content/MainDocumentation_HTML/Transient_Stability_Dialog_Options_Power_System_Model.htm), as specified in the
+[PSS/E 33.4 Program Application Guide, Vol. II](https://pdfcoffee.com/pagv2-pdf-free.html).
+The divisor $10$ in $V_R=V_R^{\max}/10=0.1V_R^{\max}$ is unitless and
+sets $V_R$ to 10% of the maximum regulator output, retaining the per-unit
+units of $V_R^{\max}$:
+
+```math
+\begin{aligned}
+0
+  &= V_R
+     -K_E^{\mathrm{eff}}E_{\mathrm{fd}}'
+     -s_e, \\
+K_E^{\mathrm{eff}}
+  &=
+    \begin{cases}
+      \dfrac{1}{E_{\mathrm{fd}}'}
+      \left(\dfrac{V_R^{\max}}{10}-s_e\right)
+        & K_E=0, \\
+      K_E
+        & K_E\ne 0.
+    \end{cases}
+\end{aligned}
+```
+
+Thus $K_E^{\mathrm{eff}}$ is the resolved value of the same exciter
+coefficient, not an additional model input.
 
 ## Model Ports
 
@@ -149,7 +199,7 @@ Symbol                              | Units  | Description                      
 $e_V$                               | [p.u.] | Voltage-error summing output      |
 $V_{\mathrm{LL}}$                   | [p.u.] | Input lead-lag output             |
 $V_{\mathrm{HV}}$                   | [p.u.] | High-value gate output            |
-$S_E$                               | [p.u.] | Exciter saturation coefficient    | Evaluated at $E_{\mathrm{fd}}'$
+$s_e$                               | [p.u.] | Scaled-quadratic saturation contribution | $E_{\mathrm{fd}}'S_E(E_{\mathrm{fd}}')$
 $V_{\mathrm{FE}}$                   | [p.u.] | Exciter feedback drive            |
 $E_{\mathrm{fd}}$                   | [p.u.] | Field-voltage output              | Published through `efd`
 
@@ -246,11 +296,12 @@ of [Appendix A](#appendix-a-awmin).
           & s_{\mathrm{UEL}} = 1
       \end{cases} \\
   0 &=
-    -S_E
+    -s_e
     + S_B q\left(E_{\mathrm{fd}}' - S_A\right) \\
   0 &=
     -V_{\mathrm{FE}}
-    + \left(K_E + S_E\right)E_{\mathrm{fd}}' \\
+    + K_E^{\mathrm{eff}} E_{\mathrm{fd}}'
+    + s_e \\
   0 &=
     -E_{\mathrm{fd}}
     + \left(1 + s_{\mathrm{spd}}\omega\right)E_{\mathrm{fd}}'
@@ -297,10 +348,10 @@ routed through the gate:
   E_{\mathrm{fd}}'
     &\leftarrow
       \dfrac{E_{\mathrm{fd}}}{1 + s_{\mathrm{spd}}\omega} \\
-  S_E
+  s_e
     &\leftarrow S_B q\left(E_{\mathrm{fd}}' - S_A\right) \\
   V_{\mathrm{FE}}
-    &\leftarrow \left(K_E + S_E\right)E_{\mathrm{fd}}' \\
+    &\leftarrow K_E^{\mathrm{eff}} E_{\mathrm{fd}}' + s_e \\
   V_R
     &\leftarrow V_{\mathrm{FE}} \\
   V_{\mathrm{HV}}
@@ -327,9 +378,9 @@ routed through the gate:
 Initialization rejects a non-finite or zero bus-voltage magnitude, a
 non-finite field-voltage seed, non-finite Known signal inputs, a nonpositive
 speed multiplier $1 + s_{\mathrm{spd}}\omega$, $E_{\mathrm{fd}}'<0$ while
-$s_{\mathrm{lim}}=1$, $V_R$ outside
-$[V_R^{\min},V_R^{\max}]$, and high-value-gate active starts with
-$s_{\mathrm{UEL}} = 0$ and
+$s_{\mathrm{lim}}=1$, initial $V_R$ outside $[V_R^{\min},V_R^{\max}]$,
+and high-value-gate active
+starts with $s_{\mathrm{UEL}} = 0$ and
 $V_{\mathrm{HV}}\le V_{\mathrm{UEL}}$.
 
 Every check resolves before any storage is written, so a rejected
@@ -361,7 +412,7 @@ Output          | Units  | Description                         | Note
 `vc`            | [p.u.] | Filtered terminal-voltage magnitude | $V_C$
 `vr`            | [p.u.] | Voltage-regulator output            | $V_R$
 `vf`            | [p.u.] | Stabilizing feedback state          | $V_F$
-`se`            | [p.u.] | Exciter saturation coefficient      | $S_E$
+`se`            | [p.u.] | Scaled-quadratic saturation contribution | $s_e$
 `vfe`           | [p.u.] | Exciter feedback drive              | $V_{\mathrm{FE}}$
 
 ## Testing

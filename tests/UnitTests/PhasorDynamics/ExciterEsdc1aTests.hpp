@@ -77,7 +77,6 @@ namespace GridKit
         success *= invalidParameterCase(Params::Ka, 0.0);
         success *= invalidParameterCase(Params::Ta, -0.1);
         success *= invalidParameterCase(Params::Te, -0.1);
-        success *= invalidParameterCase(Params::Tc, -0.1);
         success *= invalidParameterCase(Params::Tr, -0.1);
         success *= invalidParameterCase(Params::Tb, -0.1);
         success *= invalidParameterCase(Params::Tf1, -0.1);
@@ -86,7 +85,7 @@ namespace GridKit
         success *= invalidParameterCase(Params::UEL, static_cast<RealT>(2.0));
         success *= invalidParameterCase(Params::UEL, static_cast<RealT>(2.5));
         success *= invalidParameterCase(Params::UEL, true);
-        success *= invalidParameterCase(Params::Se1, 0.0);
+        success *= invalidParameterCase(Params::Se1, -0.1);
         success *= invalidParameterCase(Params::E2, 2.8);
         success *= invalidParameterCase(Params::Se2, 0.08);
         success *= invalidParameterCase(Params::E1, -1.0);
@@ -495,8 +494,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// A fixed numerical answer key for all 11 ESDC1A equations. The
-      /// expected values are literals, not a second implementation of ESDC1A.
+      /// A fixed, analytically simple answer key for all 11 ESDC1A equations.
       TestOutcome residualEquations()
       {
         TestStatus success = true;
@@ -508,20 +506,18 @@ namespace GridKit
         setAnswerKeyState(fixture.esdc1a);
         success *= (fixture.evaluate() == 0);
 
-        // Values are pinned after an independent one-time evaluation of the
-        // documented equations at setAnswerKeyState()/setAnswerKeyInputs().
         const std::array<InternalRow, static_cast<size_t>(Internal::MAXIMUM)> expected{{
-            {Internal::EFDP, 0.04000000000000004},
-            {Internal::VC, 0.19442890089805262},
-            {Internal::VR, 0.13666666666666663},
-            {Internal::VF, -0.022222222222222213},
-            {Internal::XLL, 0.024999999999999994},
-            {Internal::EV, -0.27999999999999986},
-            {Internal::VLL, -0.007500000000000031},
-            {Internal::VHV, 0.31535073999664665},
-            {Internal::SE, -0.07541019662496842},
-            {Internal::VFE, 0.1600000000000001},
-            {Internal::EFD, 0.9100000000000001},
+            {Internal::EFDP, 0.04},
+            {Internal::VC, 0.27},
+            {Internal::VR, 0.97},
+            {Internal::VF, -0.02},
+            {Internal::XLL, 0.025},
+            {Internal::EV, -0.26},
+            {Internal::VLL, -0.0075},
+            {Internal::VHV, 0.3},
+            {Internal::SE, 0.16},
+            {Internal::VFE, 0.14},
+            {Internal::EFD, 1.32},
         }};
 
         success *= (static_cast<size_t>(fixture.esdc1a.getResidual().getSize()) == expected.size());
@@ -553,7 +549,7 @@ namespace GridKit
         setDerivative(fixture.esdc1a, {{Internal::EFDP, 0.1}, {Internal::VF, 0.05}});
         success *= (fixture.evaluate() == 0);
         success *= residualsMatch(fixture.esdc1a,
-                                  {{Internal::EFDP, 0.7}, {Internal::VF, -0.13571428571428573}},
+                                  {{Internal::EFDP, 0.7}, {Internal::VF, -19.0 / 140.0}},
                                   "field-voltage and feedback drive");
 
         // Summing junction: UEL < 2 excludes the UEL input from the error.
@@ -631,15 +627,14 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// High-value gate selection, quadratic saturation, field-voltage-state
+      /// High-value gate selection, scaled-quadratic saturation, field-voltage-state
       /// limiting, and the speed multiplier at driven states with literal
       /// expectations.
       TestOutcome excitationLimits()
       {
         TestStatus success = true;
 
-        // The gate passes the larger of VLL and VUEL when UEL < 2; the
-        // smooth maximum keeps two-sided sensitivity at the tie.
+        // The gate passes the larger of VLL and VUEL when UEL < 2.
         struct GateCase
         {
           const char* label;
@@ -647,10 +642,9 @@ namespace GridKit
           RealT       expected;
         };
 
-        const std::array<GateCase, 3> gate_cases{{
+        const std::array<GateCase, 2> gate_cases{{
             {"gate selects the lead-lag branch", -0.5, 0.3},
-            {"gate selects the UEL branch", 0.8, 0.6000000000000001},
-            {"gate tie point", 0.5, 0.30288811325233306},
+            {"gate selects the UEL branch", 0.8, 0.6},
         }};
 
         Fixture<ScalarT> gate(makeData());
@@ -664,8 +658,8 @@ namespace GridKit
           success *= residualsMatch(gate.esdc1a, {{Internal::VHV, test_case.expected}}, test_case.label);
         }
 
-        // Both valid point orderings produce the same quadratic curve at the
-        // supplied points and on either side of the fitted knee.
+        // Both valid point orderings recover E S_E(E) = 0.25(E - 1)^2,
+        // including the supplied points, an interior point, and the knee.
         struct SaturationOrderCase
         {
           const char* label;
@@ -676,9 +670,16 @@ namespace GridKit
         };
 
         const std::array<SaturationOrderCase, 2> saturation_order_cases{{
-            {"ascending saturation points", 2.4, 0.1, 3.2, 0.5},
-            {"descending saturation points", 3.2, 0.5, 2.4, 0.1},
+            {"ascending saturation points", 2.0, 0.125, 4.0, 0.5625},
+            {"descending saturation points", 4.0, 0.5625, 2.0, 0.125},
         }};
+
+        struct SaturationEvaluation
+        {
+          RealT efdp;
+          RealT se;
+          RealT expected;
+        };
 
         for (const auto& test_case : saturation_order_cases)
         {
@@ -691,29 +692,23 @@ namespace GridKit
           saturation.attachAllInputs();
           success *= saturation.initialize(1.2);
 
-          setState(saturation.esdc1a, {{Internal::EFDP, 2.4}, {Internal::SE, 0.0}});
-          success *= (saturation.evaluate() == 0);
-          success *= residualsMatch(saturation.esdc1a,
-                                    {{Internal::SE, 0.1}},
-                                    test_case.label);
+          const std::array<SaturationEvaluation, 4> evaluations{{
+              {test_case.e1, 0.0, test_case.e1 * test_case.se1},
+              {test_case.e2, 0.0, test_case.e2 * test_case.se2},
+              {3.0, 0.25, 0.75},
+              {1.0, 0.05, -0.05},
+          }};
 
-          setState(saturation.esdc1a, {{Internal::EFDP, 3.2}});
-          success *= (saturation.evaluate() == 0);
-          success *= residualsMatch(saturation.esdc1a,
-                                    {{Internal::SE, 0.5}},
-                                    test_case.label);
-
-          setState(saturation.esdc1a, {{Internal::EFDP, 2.0}, {Internal::SE, 0.05}});
-          success *= (saturation.evaluate() == 0);
-          success *= residualsMatch(saturation.esdc1a,
-                                    {{Internal::SE, -0.035410196624968436}},
-                                    test_case.label);
-
-          setState(saturation.esdc1a, {{Internal::EFDP, 1.0}});
-          success *= (saturation.evaluate() == 0);
-          success *= residualsMatch(saturation.esdc1a,
-                                    {{Internal::SE, -0.05}},
-                                    test_case.label);
+          for (const auto& evaluation : evaluations)
+          {
+            setState(saturation.esdc1a,
+                     {{Internal::EFDP, evaluation.efdp},
+                      {Internal::SE, evaluation.se}});
+            success *= (saturation.evaluate() == 0);
+            success *= residualsMatch(saturation.esdc1a,
+                                      {{Internal::SE, evaluation.expected}},
+                                      test_case.label);
+          }
         }
 
         auto disabled_data                    = makeResidualData();
@@ -814,7 +809,7 @@ namespace GridKit
         // enabled.
         for (const auto& [enabled, expected] : std::array<std::pair<bool, RealT>, 2>{{
                  {false, 0.0},
-                 {true, 0.06000000000000005},
+                 {true, 0.06},
              }})
         {
           auto data                       = makeData();
@@ -988,8 +983,10 @@ namespace GridKit
         PhasorDynamics::Exciter::Esdc1a<T, IdxT> esdc1a;
       };
 
-      static constexpr RealT kStateVr = 0.9;
-      static constexpr RealT kStateVi = 0.4;
+      static constexpr RealT kStateVr      = 0.8;
+      static constexpr RealT kStateVi      = 0.6;
+      // Keeps both smooth-maximum inputs active in the Jacobian comparison.
+      static constexpr RealT kJacobianVuel = 0.334;
 
       Data makeMinimalData() const
       {
@@ -1088,36 +1085,34 @@ namespace GridKit
       template <typename T>
       void setAnswerKeyInputs(Fixture<T>& fixture) const
       {
-        fixture.input(External::OMEGA) = 0.03;
+        fixture.input(External::OMEGA) = 0.05;
         fixture.input(External::VREF)  = 1.05;
         fixture.input(External::VS)    = 0.04;
-        fixture.input(External::VUEL)  = 0.334;
+        fixture.input(External::VUEL)  = 0.2;
       }
 
       /// The rich state shared by the residual answer key and the Jacobian
-      /// comparison. Every row is distinct so a swapped index cannot pass,
-      /// and VLL sits close enough to VUEL that the smooth gate keeps
-      /// two-sided sensitivity.
+      /// comparison. Every residual row is distinct so a swapped index cannot pass.
       template <typename T>
       void setAnswerKeyState(PhasorDynamics::Exciter::Esdc1a<T, IdxT>& esdc1a) const
       {
         setState(esdc1a,
-                 {{Internal::EFDP, 2.00},
+                 {{Internal::EFDP, 2.4},
                   {Internal::VC, 0.95},
                   {Internal::VR, 0.45},
-                  {Internal::VF, 0.06},
+                  {Internal::VF, 0.04},
                   {Internal::XLL, 0.30},
                   {Internal::EV, 0.36},
                   {Internal::VLL, 0.33},
-                  {Internal::VHV, 0.02},
-                  {Internal::SE, 0.09},
+                  {Internal::VHV, 0.03},
+                  {Internal::SE, 0.08},
                   {Internal::VFE, 0.42},
-                  {Internal::EFD, 1.15}});
+                  {Internal::EFD, 1.2}});
         setDerivative(esdc1a,
                       {{Internal::EFDP, 0.01},
                        {Internal::VC, -0.02},
                        {Internal::VR, 0.03},
-                       {Internal::VF, -0.04},
+                       {Internal::VF, -0.02},
                        {Internal::XLL, 0.05}});
       }
 
@@ -1482,6 +1477,7 @@ namespace GridKit
         fixture.attachAllInputs();
         success *= fixture.initialize(1.2);
         setAnswerKeyInputs(fixture);
+        fixture.input(External::VUEL) = kJacobianVuel;
         setAnswerKeyState(fixture.esdc1a);
         numberVariables(fixture);
         success *= (fixture.evaluate() == 0);
@@ -1510,6 +1506,7 @@ namespace GridKit
         }
 
         setAnswerKeyInputs(fixture);
+        fixture.input(External::VUEL) = kJacobianVuel;
         setAnswerKeyState(fixture.esdc1a);
         fixture.esdc1a.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);

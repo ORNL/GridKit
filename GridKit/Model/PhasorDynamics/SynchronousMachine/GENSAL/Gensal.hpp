@@ -32,32 +32,32 @@ namespace GridKit
     /// Internal variables of a `Gensal`
     enum class GensalInternalVariables : size_t
     {
-      DELTA,  ///< rotor angle
-      OMEGA,  ///< speed deviation
-      EPQ,    ///< q-axis transient voltage
-      PSIPD,  ///< d-axis transient flux
-      PSIPPQ, ///< q-axis subtransient flux
-      PSIPPD, ///< d-axis subtransient flux
-      KSAT,   ///< saturation signal
-      VD,     ///< d-axis terminal voltage
-      VQ,     ///< q-axis terminal voltage
-      TE,     ///< electrical torque
-      ID,     ///< d-axis current
-      IQ,     ///< q-axis current
-      IR,     ///< network real current
-      II,     ///< network imaginary current
-      INR,    ///< Norton source real current
-      INI,    ///< Norton source imaginary current
+      DELTA,  ///< \f$\delta\f$ rotor angle
+      OMEGA,  ///< \f$\omega\f$ speed deviation
+      EPQ,    ///< \f$E'_q\f$ q-axis transient voltage
+      PSIPD,  ///< \f$\psi'_d\f$ d-axis transient flux
+      PSIPPQ, ///< \f$\psi''_q\f$ q-axis subtransient flux
+      PSIPPD, ///< \f$\psi''_d\f$ d-axis subtransient flux
+      KSAT,   ///< \f$k_{sat}\f$ saturation factor
+      VD,     ///< \f$V_d\f$ d-axis terminal voltage
+      VQ,     ///< \f$V_q\f$ q-axis terminal voltage
+      TE,     ///< \f$T_e\f$ electrical torque
+      ID,     ///< \f$I_d\f$ d-axis current
+      IQ,     ///< \f$I_q\f$ q-axis current
+      IR,     ///< \f$I_r\f$ network real current
+      II,     ///< \f$I_i\f$ network imaginary current
+      INR,    ///< \f$I_{\mathrm{N},r}\f$ Norton source real current
+      INI,    ///< \f$I_{\mathrm{N},i}\f$ Norton source imaginary current
       MAXIMUM,
     };
 
     /// External variables of a `Gensal`
     enum class GensalExternalVariables : size_t
     {
-      VR,  ///< network real voltage
-      VI,  ///< network imaginary voltage
-      PM,  ///< mechanical power
-      EFD, ///< field voltage
+      VR,  ///< \f$V_r\f$ network real voltage
+      VI,  ///< \f$V_i\f$ network imaginary voltage
+      PM,  ///< \f$P_m\f$ mechanical power
+      EFD, ///< \f$E_{fd}\f$ field voltage
       MAXIMUM,
     };
 

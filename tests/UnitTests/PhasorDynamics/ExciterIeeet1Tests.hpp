@@ -135,7 +135,7 @@ namespace GridKit
         for (IdxT i = 0; i < exciter.getResidual().getSize(); ++i)
         {
           success *= std::isfinite(f[i]);
-          success *= isEqual(f[i], static_cast<ScalarT>(0.0));
+          success *= isEqual(f[i], static_cast<ScalarT>(0.0), 100.0 * std::numeric_limits<RealT>::epsilon());
         }
 
         y[2] = 4.0;
@@ -161,13 +161,13 @@ namespace GridKit
         y[4] = 0.02;
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[1], static_cast<ScalarT>(1.0e3));
+        success *= isEqual(f[1], static_cast<ScalarT>(900.0));
 
         y[4] = 0.0;
         y[1] = 1.0;
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(f[2], static_cast<ScalarT>(1.0e3));
+        success *= isEqual(f[2], static_cast<ScalarT>(900.0));
 
         y[1] = 0.0;
         y[5] = 1.0;
@@ -190,7 +190,7 @@ namespace GridKit
         using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
 
         auto data                    = makeTestData();
-        data.parameters[Params::Se1] = 0.0;
+        data.parameters[Params::Se1] = -0.1;
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);

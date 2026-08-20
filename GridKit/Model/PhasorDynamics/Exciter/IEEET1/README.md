@@ -19,7 +19,7 @@ Symbol      | Units  | Description                          | Typical Value | No
 $T_R$       | [sec]  | Time constant for voltage sensing    | 0       |
 $K_A$       | [p.u.] | Coefficient for voltage regulation   | 50      |
 $T_A$       | [sec]  | Time constant for voltage regulation | 0.04    |
-$K_E$       | [p.u.] | Coefficient for excitation system    | -0.06   |
+$K_E$       | [p.u.] | Exciter field resistance line slope margin; 0 requests automatic calculation, not a zero coefficient | -0.06   |
 $T_E$       | [sec]  | Time constant for excitation system  | 0.6     |
 $K_F$       | [p.u.] | Coefficient for feedback             | 0.09    |
 $T_F$       | [sec]  | Time constant for feedback           | 1.46    |
@@ -49,9 +49,8 @@ Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilo
     &=(0,0)
       \quad\text{or}\quad
       \begin{gathered}
-        E_1, E_2, S_1, S_2 > 0 \\
-        E_1 \ne E_2 \\
-        S_1 \ne S_2
+        E_1, E_2 > 0,\quad S_1, S_2 \ge 0 \\
+        (E_2-E_1)(S_2-S_1) > 0
       \end{gathered}
 \end{aligned}
 ```
@@ -59,24 +58,36 @@ Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilo
 ### Model Derived Parameters
 
 When saturation is disabled, $S_A=0$ and $S_B=0$. Otherwise,
-the parameters are chosen so that the following quadratic model represents the
-expected saturation near the operating region:
+the parameters are chosen for the scaled-quadratic saturation model:
 
 ```math
 \begin{aligned}
-  S_1 &= S_B(E_1-S_A)^2 \\
-  S_2 &= S_B(E_2-S_A)^2 \\
+  E S(E) &= S_B q(E-S_A) \\
+  E_1S_1 &= S_B(E_1-S_A)^2 \\
+  E_2S_2 &= S_B(E_2-S_A)^2 \\
 \end{aligned}
 ```
 
-Generally, this system has two solutions. The non-extraneous solution is as follows.
+When exactly one saturation value is zero, the normal curve fit uses the
+corresponding voltage as the quadratic knee:
+
+```math
+\begin{aligned}
+  S_1=0 &: \quad S_A=E_1,\qquad
+    S_B=\dfrac{E_2S_2}{(E_2-E_1)^2} \\
+  S_2=0 &: \quad S_A=E_2,\qquad
+    S_B=\dfrac{E_1S_1}{(E_1-E_2)^2}.
+\end{aligned}
+```
+
+When both saturation values are positive, the non-extraneous solution is:
 
 ```math
 \begin{aligned}
   C &=  \sqrt{
    \dfrac
-   {S_2}
-   {S_1}
+   {E_2S_2}
+   {E_1S_1}
   }
   \\
   S_A &=
@@ -86,10 +97,43 @@ Generally, this system has two solutions. The non-extraneous solution is as foll
   \\
   S_B &=
    \dfrac
-   {S_1}
+   {E_1S_1}
    {(E_1-S_A)^2}
 \end{aligned}
 ```
+
+$K_E$ is the configured exciter field resistance line slope margin. A nonzero configured value is used directly. The
+[IEEE Std 421.5-2016](https://standards.ieee.org/ieee/421.5/5356/) states:
+
+> In some programs, if $K_E$ is entered as zero, $K_E$ is automatically calculated by the program to represent a self-excited shunt field and a trimmed rheostat as its initial condition.
+
+GridKit implements the
+[PSS/E-compatible automatic-parameter rule](https://www.powerworld.com/WebHelp/Content/MainDocumentation_HTML/Transient_Stability_Dialog_Options_Power_System_Model.htm), as specified in the
+[PSS/E 33.4 Program Application Guide, Vol. II](https://pdfcoffee.com/pagv2-pdf-free.html).
+The divisor $10$ in $V_R=V_R^{\max}/10=0.1V_R^{\max}$ is unitless and
+sets $V_R$ to 10% of the maximum regulator output, retaining the per-unit
+units of $V_R^{\max}$:
+
+```math
+\begin{aligned}
+0
+  &= V_R
+     -k_\text{sat}
+     -K_E^{\mathrm{eff}}E_{fd}', \\
+K_E^{\mathrm{eff}}
+  &=
+    \begin{cases}
+      \dfrac{1}{E_{fd}'}
+      \left(\dfrac{V_R^{\max}}{10}-k_\text{sat}\right)
+        & K_E=0, \\
+      K_E
+        & K_E\ne 0.
+    \end{cases}
+\end{aligned}
+```
+
+Thus $K_E^{\mathrm{eff}}$ is the resolved value of the same exciter
+coefficient, not an additional model input.
 
 ## Model Variables
 
@@ -114,7 +158,7 @@ $V_{tr}$        | [p.u.] | Terminal Voltage Error            |
 $V_f$           | [p.u.] | Feedback Voltage                  |
 $V_E$           | [p.u.] | Excitation control voltage        |
 $E_{fd}$        | [p.u.] | Field winding voltage             |
-$k_\text{sat}$  | [p.u.] | Saturation variable               |
+$k_\text{sat}$  | [p.u.] | Scaled-quadratic saturation contribution | $E_{fd}'S(E_{fd}')$
 
 ### External Variables
 
@@ -150,7 +194,7 @@ The IEEET1 differential equations, as derived from the model diagram, are:
    0 &= -\dot V_R
       + \text{antiwindup}
         \left(V_R, f_R; V_R^{\min}, V_R^{\max}\right) \\
-   0 &= -\dot E_{fd}' + \dfrac{1}{T_E}\left(V_R - V_E - K_E E_{fd}'\right) \\
+   0 &= -\dot E_{fd}' + \dfrac{1}{T_E}\left(V_R - V_E - K_E^{\mathrm{eff}} E_{fd}'\right) \\
    0 &= -\dot V_{fx} + \dfrac{1}{T_F}\left(V_f\right)
 \end{aligned}
 ```
@@ -164,7 +208,7 @@ The algebraic equations of the exciter.
 \begin{aligned}
    0 &= -V_{ts} + V_\text{ref} + V_{UEL} + V_{OEL} + V_S - V_{tr} - V_f \\
    0 &= -T_F(V_f + V_{fx}) + K_F E_{fd}' \\
-   0 &= -V_E + k_\text{sat} E_{fd}' \\
+   0 &= -V_E + k_\text{sat} \\
    0 &= -E_{fd} + (1 + \omega I_{\mathrm{spdlim}})E_{fd}' \\
    0 &= -k_\text{sat} + S_B\, q(E_{fd}' - S_A)
 \end{aligned}
@@ -178,7 +222,7 @@ Here $q$ is GridKit's [Quadratic Ramp](../../../../CommonMath.md#primitives).
 The implementation first applies $T \leftarrow \max(T, 10^{-3})$ for
 $T \in \{T_R, T_A, T_E, T_F\}$. This should be replaced with a structural template change in the future.
 The machine initializes $E_{fd}$ first. IEEET1
-reads that value as $E_{fd,0}$, along with any attached $\omega$ and $V_S$, and
+reads that value, along with any attached $\omega$ and $V_S$, and
 solves the steady-state algebraic chain so all residuals vanish with
 $\dot y = 0$. The sensed terminal voltage initializes from the positive
 bus-voltage magnitude. Saturation is included when enabled, and the speed-limit
@@ -187,16 +231,16 @@ with the current input values.
 
 ```math
 \begin{aligned}
-   E_{C,0}  &:= \sqrt{V_r^2 + V_i^2} \\
-   E_{fd}'  &= \dfrac{E_{fd,0}}{1 + I_{\mathrm{spdlim}}\,\omega} \\
+   E_C      &:= \sqrt{V_r^2 + V_i^2} \\
+   E_{fd}'  &= \dfrac{E_{fd}}{1 + I_{\mathrm{spdlim}}\,\omega} \\
    k_\text{sat}  &= S_B\, q(E_{fd}' - S_A) \\
-   V_E      &= k_\text{sat}\, E_{fd}' \\
-   V_R      &= K_E\, E_{fd}' + V_E \\
+   V_E      &= k_\text{sat} \\
+   V_R      &= K_E^{\mathrm{eff}} E_{fd}' + V_E \\
    V_{tr}   &= \dfrac{V_R}{K_A} \\
    V_{fx}   &= \dfrac{K_F}{T_F}\, E_{fd}' \\
-   V_{ts}   &= E_{C,0} \\
+   V_{ts}   &= E_C \\
    V_f      &= 0 \\
-   V_\text{ref}  &= E_{C,0} + V_{tr} - V_{UEL} - V_{OEL} - V_S
+   V_\text{ref}  &= E_C + V_{tr} - V_{UEL} - V_{OEL} - V_S
 \end{aligned}
 ```
 
@@ -207,4 +251,4 @@ All internal derivatives initialize to zero.
 Variable | Units  | Description                       | Note
 ---------|--------|-----------------------------------|------
 `efd`    | [p.u.] | Field winding voltage             |
-`ksat`   | [p.u.] | Magnetic saturation coefficient   | $S_B\,q(E_{fd}'-S_A)$
+`ksat`   | [p.u.] | Scaled-quadratic saturation contribution | $S_B\,q(E_{fd}'-S_A)$

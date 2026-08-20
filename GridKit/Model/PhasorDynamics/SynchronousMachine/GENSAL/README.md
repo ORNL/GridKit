@@ -74,7 +74,7 @@ $\psi''_q$   | [p.u.] | Total q-axis subtransient flux    |
 Symbol      | Units  | Description                       | Note
 ------------|--------|-----------------------------------| ------
 $\psi''_d$ | [p.u.] | Total d-axis subtransient flux    |
-$k_{sat}$  | [p.u.] | Additive saturation signal        |
+$k_{sat}$  | [p.u.] | Saturation factor                 |
 $V_d$      | [p.u.] | Machine internal voltage, d-axis  |
 $V_q$      | [p.u.] | Machine internal voltage, q-axis  |
 $T_e$      | [p.u.] | Electrical torque                 |
@@ -108,7 +108,7 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
     \left(
       E_{fd}-E'_q-X_{d1}
       (I_d+X_{d3}(E'_q-\psi'_d-X_{d2}I_d))
-      -k_{sat}
+      -E'_q k_{sat}
     \right)\\
   \dot{\psi}'_d    &= \dfrac{1}{T''_{d0}}(E'_q-\psi'_d-X_{d2}I_d)\\
   \dot{\psi}''_q   &= \dfrac{1}{T''_{q0}}(-\psi''_q-X_{q2}I_q)
@@ -119,7 +119,7 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
 ``` math
 \begin{aligned}
   0 &= -\psi''_d + E'_qX_{d5}+\psi'_dX_{d4}\\
-  0 &= -k_{sat} + S_B(E'_q-S_A)^2\sigma(E'_q-S_A)\\
+  0 &= -k_{sat} + S_B q(E'_q-S_A)\\
   0 &= -V_d -\psi''_q(1+\omega)\\
   0 &= -V_q +\psi''_d(1+\omega)\\
   0 &= -T_e +(\psi''_d-I_dX_d'')I_q-(\psi''_q-I_qX_d'')I_d\\
@@ -129,6 +129,9 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
   0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (-V_d \cos(\delta) + V_q \sin(\delta) - V_i)
 \end{aligned}
 ```
+
+CommonMath defines the primitive
+[quadratic ramp](../../../../CommonMath.md#primitives) $q$.
 
 ## Initialization
 
@@ -148,10 +151,10 @@ steady-state GENSAL equations.
   \psi''_d &= V_q\\
   \psi'_d &= \psi''_d-(X_d''-X_\ell)I_d\\
   E'_q &= \psi'_d+X_{d2}I_d\\
-  k_{sat} &= S_B(E'_q-S_A)^2\sigma(E'_q-S_A)\\
+  k_{sat} &= S_B q(E'_q-S_A)\\
   T_e &= (\psi''_d-I_dX_d'')I_q-(\psi''_q-I_qX_d'')I_d\\
   P_m &= T_e\\
-  E_{fd} &= E'_q+X_{d1}(I_d+X_{d3}(E'_q-\psi'_d-X_{d2}I_d))+k_{sat}
+  E_{fd} &= E'_q+X_{d1}(I_d+X_{d3}(E'_q-\psi'_d-X_{d2}I_d))+E'_q k_{sat}
 \end{aligned}
 ```
 

@@ -8,6 +8,7 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -148,10 +149,11 @@ namespace GridKit
         {
           check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
           check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
-          check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
-          check(E1_ != E2_, "E1 and E2 must differ when saturation is enabled");
-          check(Se1_ != Se2_, "Se1 and Se2 must differ when saturation is enabled");
+          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+
+          const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+          check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
         if (signals_.template isAttached<OMEGA>())
@@ -187,10 +189,25 @@ namespace GridKit
        *   - Attached external signals (omega, V_S)
        *
        * Enabled saturation is included via ksat computed from efdp and SA, SB.
+       *
+       * @warning IEEE Std 421.5-2016 states: “In some programs, if
+       *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
+       *          calculated by the program to represent a self-excited shunt
+       *          field and a trimmed rheostat as its initial condition.” GridKit
+       *          preserves the configured \f$K_{E}\f$ and resolves
+       *          \f$K_{E}^{\mathrm{eff}}\f$ using the PSS/E-compatible
+       *          \f$V_R = V_R^{\max}/10 = 0.1 V_R^{\max}\f$ rule. The divisor
+       *          10 is unitless and represents 10% of the maximum regulator
+       *          output.
        */
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::initialize()
       {
+        if (verify() != 0)
+        {
+          Log::error() << "Ieeet1: cannot initialize with invalid configuration\n";
+          return 1;
+        }
 
         // External Variables
         ScalarT efd0{0};
@@ -226,9 +243,25 @@ namespace GridKit
 
         ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
         ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
-        ScalarT ve   = ksat * efdp;
-        ScalarT vr   = Ke_ * efdp + ve;
-        ScalarT vtr  = vr / Ka_;
+        if (Ke_ == ZERO<RealT>)
+        {
+          Ke_eff_ = (Vrmax_ / 10.0 - static_cast<RealT>(ksat))
+                    / static_cast<RealT>(efdp);
+          if (!std::isfinite(Ke_eff_))
+          {
+            Log::error() << "Ieeet1: derived effective Ke must be finite\n";
+            return 1;
+          }
+          Log::misc() << "Ieeet1: Ke is zero so effective Ke is derived during initialization\n";
+        }
+        else
+        {
+          Ke_eff_ = Ke_;
+        }
+
+        ScalarT ve  = ksat;
+        ScalarT vr  = Ke_eff_ * efdp + ve;
+        ScalarT vtr = vr / Ka_;
         ScalarT vf{0};
         ScalarT vfx = (Kf_ / Tf_) * efdp;
 
@@ -339,13 +372,13 @@ namespace GridKit
         // Internal Differential Equations
         f[0] = -vts_dot + (Ec - vts) / Tr_;
         f[1] = -vr_dot + Math::antiwindup(vr, func, Vrmin_, Vrmax_);
-        f[2] = -efdp_dot + (vr - ve - Ke_ * efdp) / Te_;
+        f[2] = -efdp_dot + (vr - ve - Ke_eff_ * efdp) / Te_;
         f[3] = -vfx_dot + vf / Tf_;
 
         // Internal Algebraic Equations
         f[4] = -vts + vref_ + vUEL_ + vOEL_ + vs_signal - vtr - vf;
         f[5] = -Tf_ * (vf + vfx) + Kf_ * efdp;
-        f[6] = -ve + ksat * efdp;
+        f[6] = -ve + ksat;
         f[7] = -efd + efdp + omega * efdp * Ispdlim_;
         f[8] = -ksat + SB_ * Math::qramp(efdp - SA_);
 
@@ -455,6 +488,23 @@ namespace GridKit
           Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
         }
 
+        setDerivedParameters();
+      }
+
+      /**
+       * @brief Resolve the parameter-derived constants
+       */
+      template <typename scalar_type, typename index_type>
+      void Ieeet1<scalar_type, index_type>::setDerivedParameters()
+      {
+        if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
+            || Te_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM)
+        {
+          Log::warning() << "Ieeet1: Tr, Ta, Te, and Tf below "
+                         << TIME_CONSTANT_MINIMUM
+                         << " s are raised to that floor\n";
+        }
+
         Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);
         Ta_ = std::max(Ta_, TIME_CONSTANT_MINIMUM);
         Te_ = std::max(Te_, TIME_CONSTANT_MINIMUM);
@@ -471,17 +521,35 @@ namespace GridKit
           return;
         }
 
-        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT> || E1_ == E2_
-            || Se1_ <= ZERO<RealT> || Se2_ <= ZERO<RealT> || Se1_ == Se2_)
+        const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
+        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT>
+            || Se1_ < ZERO<RealT> || Se2_ < ZERO<RealT>
+            || !sat_ordered)
         {
           return;
         }
 
-        const RealT C = std::sqrt(Se2_ / Se1_);
+        if (Se1_ == ZERO<RealT>)
+        {
+          const RealT dE = E2_ - E1_;
+          SA_            = E1_;
+          SB_            = Se2_ * E2_ / (dE * dE);
+          return;
+        }
+
+        if (Se2_ == ZERO<RealT>)
+        {
+          const RealT dE = E1_ - E2_;
+          SA_            = E2_;
+          SB_            = Se1_ * E1_ / (dE * dE);
+          return;
+        }
+
+        const RealT C = std::sqrt(Se2_ * E2_ / (Se1_ * E1_));
 
         // Solution 1 (Aligned with PW)
         SA_ = (C * E1_ - E2_) / (C - ONE<RealT>);
-        SB_ = Se1_ / ((E1_ - SA_) * (E1_ - SA_));
+        SB_ = Se1_ * E1_ / ((E1_ - SA_) * (E1_ - SA_));
       }
 
       template <typename scalar_type, typename index_type>

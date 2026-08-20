@@ -1,7 +1,7 @@
 /**
  * @file IeeestEnzyme.cpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief Enzyme-based sparse Jacobian for IEEEST Stabilizer.
+ * @brief Enzyme sparse Jacobian for the IEEEST stabilizer model.
  */
 
 #include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>

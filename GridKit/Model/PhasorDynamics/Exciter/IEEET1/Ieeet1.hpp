@@ -50,7 +50,7 @@ namespace GridKit
         VF,   ///< Feedback voltage
         VE,   ///< Exciter control voltage
         EFD,  ///< Efd
-        KSAT, ///< Saturation
+        KSAT, ///< \f$E_{\mathrm{fd}}'S(E_{\mathrm{fd}}')\f$ Scaled-quadratic saturation contribution
         MAXIMUM,
       };
 
@@ -146,6 +146,8 @@ namespace GridKit
         RealT Ispdlim_{0.0}; ///< Speed limit flag indicator
 
         // Model Derived parameters
+        RealT Ke_eff_{Ke_};
+
         // Saturation coefficients derived from E1, E2, Se1, and Se2.
         RealT SA_{0};
         RealT SB_{0};
@@ -164,6 +166,7 @@ namespace GridKit
 
         // Parameter initialization function
         void initModelParams(const ModelDataT& data);
+        void setDerivedParameters();
 
         /// Associate variable getter functions with enum values
         void initializeMonitor();

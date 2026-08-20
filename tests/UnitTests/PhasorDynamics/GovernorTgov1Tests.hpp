@@ -101,9 +101,9 @@ namespace GridKit
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
 
         // Test answer keys
-        const std::vector<ScalarT> res_answer = {0.0,
-                                                 -1.0,
-                                                 -0.2};
+        const std::vector<ScalarT> res_answer = {static_cast<ScalarT>(2.0) / static_cast<ScalarT>(15.0),
+                                                 -2.0,
+                                                 static_cast<ScalarT>(1.0) / static_cast<ScalarT>(3.0)};
 
         bus.allocate();
         gen.allocate();

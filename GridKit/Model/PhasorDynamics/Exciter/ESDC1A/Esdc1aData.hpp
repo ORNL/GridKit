@@ -69,7 +69,7 @@ namespace GridKit
         vc,  ///< \f$V_C\f$ Filtered terminal-voltage magnitude [p.u.]
         vr,  ///< \f$V_R\f$ Voltage-regulator output [p.u.]
         vf,  ///< \f$V_F\f$ Stabilizing feedback state [p.u.]
-        se,  ///< \f$S_E\f$ Exciter saturation coefficient [p.u.]
+        se,  ///< \f$s_e\f$ Scaled-quadratic saturation contribution [p.u.]
         vfe  ///< \f$V_{\mathrm{FE}}\f$ Exciter feedback drive [p.u.]
       };
 
