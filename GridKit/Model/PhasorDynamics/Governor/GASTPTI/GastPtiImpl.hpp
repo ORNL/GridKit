@@ -15,6 +15,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -37,7 +38,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       GastPti<scalar_type, index_type>::GastPti()
       {
-        size_ = static_cast<IdxT>(GastPtiInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<GastPtiInternalVariables>());
         setDerivedParameters();
       }
 
@@ -52,7 +53,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(GastPtiInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<GastPtiInternalVariables>());
       }
 
       /**
@@ -103,7 +104,7 @@ namespace GridKit
 
         wb_.clear();
 
-        const auto signal_size = static_cast<size_t>(GastPtiExternalVariables::MAXIMUM);
+        const auto signal_size = Utilities::enum_size<GastPtiExternalVariables>();
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -115,11 +116,10 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        if (signals_.template isAssigned<GastPtiInternalVariables::PMECH>())
+        if (auto pmech_port = ports_.out.template port<GastPtiSignalOutputs::pmech>())
         {
-          signals_.template getSignalNode<GastPtiInternalVariables::PMECH>()->set(
-              &y[PMECH],
-              &(this->getVariableIndex(static_cast<IdxT>(PMECH))));
+          pmech_port.link(&y[PMECH],
+                          &(this->getVariableIndex(static_cast<IdxT>(PMECH))));
         }
 
         allocated_ = true;
@@ -169,8 +169,8 @@ namespace GridKit
               "Dturb must be finite and non-negative");
         const RealT component_power_base = trate_provided_ ? va_component_base_ : va_system_base_;
         const bool  valid_component_base = std::isfinite(component_power_base)
-                                          && component_power_base > ZERO<RealT>;
-        const bool valid_system_base =
+                                           && component_power_base > ZERO<RealT>;
+        const bool  valid_system_base =
             std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>;
         if (trate_provided_)
         {
@@ -191,30 +191,36 @@ namespace GridKit
                 "system/component power-base conversion ratios must be finite and positive");
         }
 
-        check(signals_.template isAssigned<GastPtiInternalVariables::PMECH>(),
+        check(ports_.out.template port<GastPtiSignalOutputs::pmech>().connected(),
               "pmech output must be assigned");
 
         // An attached port must resolve to writable signal storage.
         auto check_attached_signal =
-            [&]<GastPtiExternalVariables variable>(const char* name)
+            [&]<GastPtiSignalInputs variable>(const char* name) -> bool
         {
-          if (signals_.template isAttached<variable>()
-              && !signals_.template isLinked<variable>())
+          auto port = ports_.in.template port<variable>();
+
+          if (port.connected())
           {
-            Log::error() << "GastPti: " << name << " signal attached with no linked source\n";
-            ret += 1;
+            if (!port.linked())
+            {
+              Log::error() << "GastPti: " << name << " port attached with no linked source\n";
+              ret += 1;
+            }
+            else
+            {
+              return true;
+            }
           }
+          return false;
         };
 
-        check_attached_signal.template operator()<GastPtiExternalVariables::OMEGA>("speed");
-        check_attached_signal.template operator()<GastPtiExternalVariables::PREF>("pref");
-
-        const bool omega_linked =
-            signals_.template isAttached<GastPtiExternalVariables::OMEGA>()
-            && signals_.template isLinked<GastPtiExternalVariables::OMEGA>();
-        const bool pref_linked =
-            signals_.template isAttached<GastPtiExternalVariables::PREF>()
-            && signals_.template isLinked<GastPtiExternalVariables::PREF>();
+        const auto omega_linked =
+            check_attached_signal
+                .template operator()<GastPtiSignalInputs::speed>("speed");
+        const auto        pref_linked =
+            check_attached_signal
+                .template operator()<GastPtiSignalInputs::pref>("pref");
 
         if (variable_indices_.size() == static_cast<size_t>(size_))
         {
@@ -222,22 +228,23 @@ namespace GridKit
 
           if (omega_linked)
           {
-            check(signals_.template readExternalVariableIndex<GastPtiExternalVariables::OMEGA>()
-                      != pmech_index,
+            auto omega = ports_.in.template port<GastPtiSignalInputs::speed>();
+            check(omega.signalVariableIndex() != pmech_index,
                   "speed and pmech ports must use distinct signals");
           }
           if (pref_linked)
           {
-            check(signals_.template readExternalVariableIndex<GastPtiExternalVariables::PREF>()
-                      != pmech_index,
+            auto pref = ports_.in.template port<GastPtiSignalInputs::pref>();
+            check(pref.signalVariableIndex() != pmech_index,
                   "pref and pmech ports must use distinct signals");
           }
           if (omega_linked && pref_linked)
           {
-            const IdxT omega_index =
-                signals_.template readExternalVariableIndex<GastPtiExternalVariables::OMEGA>();
-            const IdxT pref_index =
-                signals_.template readExternalVariableIndex<GastPtiExternalVariables::PREF>();
+            auto omega       = ports_.in.template port<GastPtiSignalInputs::speed>();
+            auto omega_index = omega.signalVariableIndex();
+            auto pref        = ports_.in.template port<GastPtiSignalInputs::pref>();
+            auto pref_index  = pref.signalVariableIndex();
+
             if (omega_index != INVALID_INDEX<IdxT>
                 || pref_index != INVALID_INDEX<IdxT>)
             {
@@ -308,10 +315,10 @@ namespace GridKit
         }
 
         RealT omega0 = ZERO<RealT>;
-        if (signals_.template isAttached<GastPtiExternalVariables::OMEGA>())
+        if (ports_.in.template port<GastPtiSignalInputs::speed>())
         {
           omega0 = static_cast<RealT>(
-              signals_.template readExternalVariable<GastPtiExternalVariables::OMEGA>());
+              ports_.in.template port<GastPtiSignalInputs::speed>().readSignal());
         }
         if (!std::isfinite(omega0))
         {
@@ -398,9 +405,9 @@ namespace GridKit
         y[VLV]    = static_cast<ScalarT>(vlv0);
 
         pref_set_ = static_cast<ScalarT>(pref0);
-        if (signals_.template isAttached<GastPtiExternalVariables::PREF>())
+        if (ports_.in.template port<GastPtiSignalInputs::pref>())
         {
-          signals_.template writeExternalVariable<GastPtiExternalVariables::PREF>(pref_set_);
+          ports_.in.template port<GastPtiSignalInputs::pref>().writeValue(pref_set_);
         }
 
         y_.setDataUpdated();
@@ -463,17 +470,17 @@ namespace GridKit
         ws_[PREF]  = pref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (signals_.template isAttached<GastPtiExternalVariables::OMEGA>())
+        if (ports_.in.template port<GastPtiSignalInputs::speed>())
         {
-          ws_[OMEGA] = signals_.template readExternalVariable<GastPtiExternalVariables::OMEGA>();
+          ws_[OMEGA] = ports_.in.template port<GastPtiSignalInputs::speed>().readSignal();
           ws_indices_[OMEGA] =
-              signals_.template readExternalVariableIndex<GastPtiExternalVariables::OMEGA>();
+              ports_.in.template port<GastPtiSignalInputs::speed>().signalVariableIndex();
         }
-        if (signals_.template isAttached<GastPtiExternalVariables::PREF>())
+        if (ports_.in.template port<GastPtiSignalInputs::pref>())
         {
-          ws_[PREF] = signals_.template readExternalVariable<GastPtiExternalVariables::PREF>();
+          ws_[PREF] = ports_.in.template port<GastPtiSignalInputs::pref>().readSignal();
           ws_indices_[PREF] =
-              signals_.template readExternalVariableIndex<GastPtiExternalVariables::PREF>();
+              ports_.in.template port<GastPtiSignalInputs::pref>().signalVariableIndex();
         }
 
         const auto* y  = y_.getData();
@@ -483,22 +490,6 @@ namespace GridKit
         evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
         f_.setDataUpdated();
         return 0;
-      }
-
-      /**
-       * @brief Access the GASTPTI signal interface.
-       *
-       * @return Interface used to assign the mechanical-power output and attach
-       *         optional speed and reference inputs.
-       */
-      template <typename scalar_type, typename index_type>
-      auto GastPti<scalar_type, index_type>::getSignals()
-          -> ComponentSignals<ScalarT,
-                              IdxT,
-                              GastPtiInternalVariables,
-                              GastPtiExternalVariables>&
-      {
-        return signals_;
       }
 
       /**

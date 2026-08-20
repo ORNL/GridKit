@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -38,7 +39,7 @@ namespace GridKit
       Repca<scalar_type, index_type>::Repca(BusT* bus)
         : bus_(bus)
       {
-        size_ = static_cast<IdxT>(RepcaInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<RepcaInternalVariables>());
         setDerivedParameters();
       }
 
@@ -55,7 +56,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(RepcaInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<RepcaInternalVariables>());
       }
 
       /**
@@ -104,7 +105,7 @@ namespace GridKit
 
         wb_.assign(2, ScalarT{0});
 
-        const auto signal_size = static_cast<size_t>(RepcaExternalVariables::MAXIMUM);
+        const auto signal_size = Utilities::enum_size<RepcaExternalVariables>();
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -116,18 +117,14 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        if (signals_.template isAssigned<RepcaInternalVariables::QEXT>())
+        if (auto port = ports_.out.template port<RepcaSignalOutputs::qext>())
         {
-          signals_.template getSignalNode<RepcaInternalVariables::QEXT>()->set(
-              &y[QEXT],
-              &(this->getVariableIndex(static_cast<IdxT>(QEXT))));
+          port.link(&y[QEXT], &(this->getVariableIndex(static_cast<IdxT>(QEXT))));
         }
 
-        if (signals_.template isAssigned<RepcaInternalVariables::PEXT>())
+        if (auto port = ports_.out.template port<RepcaSignalOutputs::pext>())
         {
-          signals_.template getSignalNode<RepcaInternalVariables::PEXT>()->set(
-              &y[PEXT],
-              &(this->getVariableIndex(static_cast<IdxT>(PEXT))));
+          port.link(&y[PEXT], &(this->getVariableIndex(static_cast<IdxT>(PEXT))));
         }
 
         allocated_ = true;
@@ -164,8 +161,8 @@ namespace GridKit
                                           && mva_base_ > ZERO<RealT>
                                           && std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
-        const bool valid_system_base = std::isfinite(va_system_base_)
-                                       && va_system_base_ > ZERO<RealT>;
+        const bool valid_system_base    = std::isfinite(va_system_base_)
+                                          && va_system_base_ > ZERO<RealT>;
         check(valid_component_base,
               "mva must define a finite positive component power base");
         check(valid_system_base, "system power base must be finite and positive");
@@ -193,40 +190,40 @@ namespace GridKit
               "femin <= 0 <= femax is required");
         check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
 
-        auto check_required_signal = [&]<RepcaExternalVariables variable>(const char* name)
+        auto check_required_signal = [&]<RepcaSignalInputs variable>(const char* name)
         {
-          if (!signals_.template isAttached<variable>())
+          if (!ports_.in.template port<variable>().connected())
           {
             Log::error() << "Repca: " << name << " signal is required\n";
             ret += 1;
           }
-          else if (!signals_.template isLinked<variable>())
+          else if (!ports_.in.template port<variable>().linked())
           {
             Log::error() << "Repca: " << name << " signal attached with no linked source\n";
             ret += 1;
           }
         };
 
-        check_required_signal.template operator()<RepcaExternalVariables::IR>("ir");
-        check_required_signal.template operator()<RepcaExternalVariables::II>("ii");
-        check_required_signal.template operator()<RepcaExternalVariables::P>("p");
-        check_required_signal.template operator()<RepcaExternalVariables::Q>("q");
+        check_required_signal.template operator()<RepcaSignalInputs::ir>("ir");
+        check_required_signal.template operator()<RepcaSignalInputs::ii>("ii");
+        check_required_signal.template operator()<RepcaSignalInputs::p>("p");
+        check_required_signal.template operator()<RepcaSignalInputs::q>("q");
 
-        auto check_optional_signal = [&]<RepcaExternalVariables variable>(const char* name)
+        auto check_optional_signal = [&]<RepcaSignalInputs variable>(const char* name)
         {
-          if (signals_.template isAttached<variable>()
-              && !signals_.template isLinked<variable>())
+          if (ports_.in.template port<variable>().connected()
+              && !ports_.in.template port<variable>().linked())
           {
             Log::error() << "Repca: " << name << " signal attached with no linked source\n";
             ret += 1;
           }
         };
 
-        check_optional_signal.template operator()<RepcaExternalVariables::VREF>("vref");
-        check_optional_signal.template operator()<RepcaExternalVariables::PREF>("pref");
-        check_optional_signal.template operator()<RepcaExternalVariables::QREF>("qref");
-        check_optional_signal.template operator()<RepcaExternalVariables::FREQ>("freq");
-        check_optional_signal.template operator()<RepcaExternalVariables::FREQREF>("freqref");
+        check_optional_signal.template operator()<RepcaSignalInputs::vref>("vref");
+        check_optional_signal.template operator()<RepcaSignalInputs::pref>("pref");
+        check_optional_signal.template operator()<RepcaSignalInputs::qref>("qref");
+        check_optional_signal.template operator()<RepcaSignalInputs::freq>("freq");
+        check_optional_signal.template operator()<RepcaSignalInputs::freqref>("freqref");
 
         return ret;
       }
@@ -298,19 +295,19 @@ namespace GridKit
         const ScalarT vr = Vr();
         const ScalarT vi = Vi();
         const ScalarT ir_system =
-            signals_.template readExternalVariable<RepcaExternalVariables::IR>();
+            ports_.in.template port<RepcaSignalInputs::ir>().readSignal();
         const ScalarT ii_system =
-            signals_.template readExternalVariable<RepcaExternalVariables::II>();
+            ports_.in.template port<RepcaSignalInputs::ii>().readSignal();
         const ScalarT p_system =
-            signals_.template readExternalVariable<RepcaExternalVariables::P>();
+            ports_.in.template port<RepcaSignalInputs::p>().readSignal();
         const ScalarT q_system =
-            signals_.template readExternalVariable<RepcaExternalVariables::Q>();
+            ports_.in.template port<RepcaSignalInputs::q>().readSignal();
         const ScalarT ir   = toComponentBase(ir_system);
         const ScalarT ii   = toComponentBase(ii_system);
         ScalarT       freq = static_cast<ScalarT>(ONE<RealT>);
-        if (signals_.template isAttached<RepcaExternalVariables::FREQ>())
+        if (ports_.in.template port<RepcaSignalInputs::freq>())
         {
-          freq = signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
+          freq = ports_.in.template port<RepcaSignalInputs::freq>().readSignal();
         }
 
         auto is_finite = [](ScalarT value)
@@ -500,23 +497,21 @@ namespace GridKit
         qref_set_    = qref0_system;
         pref_set_    = pref0_system;
 
-        if (signals_.template isAttached<RepcaExternalVariables::VREF>())
+        if (ports_.in.template port<RepcaSignalInputs::vref>())
         {
-          signals_.template writeExternalVariable<RepcaExternalVariables::VREF>(vref_set_);
+          ports_.in.template port<RepcaSignalInputs::vref>().writeValue(vref_set_);
         }
-        if (signals_.template isAttached<RepcaExternalVariables::PREF>())
+        if (ports_.in.template port<RepcaSignalInputs::pref>())
         {
-          signals_.template writeExternalVariable<RepcaExternalVariables::PREF>(
-              pref_set_);
+          ports_.in.template port<RepcaSignalInputs::pref>().writeValue(pref_set_);
         }
-        if (signals_.template isAttached<RepcaExternalVariables::QREF>())
+        if (ports_.in.template port<RepcaSignalInputs::qref>())
         {
-          signals_.template writeExternalVariable<RepcaExternalVariables::QREF>(qref_set_);
+          ports_.in.template port<RepcaSignalInputs::qref>().writeValue(qref_set_);
         }
-        if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
+        if (ports_.in.template port<RepcaSignalInputs::freqref>())
         {
-          signals_.template writeExternalVariable<RepcaExternalVariables::FREQREF>(
-              freqref_set_);
+          ports_.in.template port<RepcaSignalInputs::freqref>().writeValue(freqref_set_);
         }
 
         if (q_adjusted)
@@ -531,7 +526,7 @@ namespace GridKit
         }
         if (Freqflag_
             && (Ddn_ != ZERO<RealT> || Dup_ != ZERO<RealT>)
-            && !signals_.template isAttached<RepcaExternalVariables::FREQ>())
+            && !ports_.in.template port<RepcaSignalInputs::freq>())
         {
           Log::warning() << "Repca: Freqflag is enabled without a freq signal; "
                             "frequency remains nominal and cannot track bus-frequency deviations\n";
@@ -614,57 +609,39 @@ namespace GridKit
         ws_[FREQREF] = freqref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        ws_[IR] =
-            signals_.template readExternalVariable<RepcaExternalVariables::IR>();
-        ws_indices_[IR] =
-            signals_.template readExternalVariableIndex<RepcaExternalVariables::IR>();
-        ws_[II] =
-            signals_.template readExternalVariable<RepcaExternalVariables::II>();
-        ws_indices_[II] =
-            signals_.template readExternalVariableIndex<RepcaExternalVariables::II>();
-        ws_[P] =
-            signals_.template readExternalVariable<RepcaExternalVariables::P>();
-        ws_indices_[P] =
-            signals_.template readExternalVariableIndex<RepcaExternalVariables::P>();
-        ws_[Q] =
-            signals_.template readExternalVariable<RepcaExternalVariables::Q>();
-        ws_indices_[Q] =
-            signals_.template readExternalVariableIndex<RepcaExternalVariables::Q>();
-        if (signals_.template isAttached<RepcaExternalVariables::FREQ>())
+        ws_[IR]         = ports_.in.template port<RepcaSignalInputs::ir>().readSignal();
+        ws_indices_[IR] = ports_.in.template port<RepcaSignalInputs::ir>().signalVariableIndex();
+        ws_[II]         = ports_.in.template port<RepcaSignalInputs::ii>().readSignal();
+        ws_indices_[II] = ports_.in.template port<RepcaSignalInputs::ii>().signalVariableIndex();
+        ws_[P]          = ports_.in.template port<RepcaSignalInputs::p>().readSignal();
+        ws_indices_[P]  = ports_.in.template port<RepcaSignalInputs::p>().signalVariableIndex();
+        ws_[Q]          = ports_.in.template port<RepcaSignalInputs::q>().readSignal();
+        ws_indices_[Q]  = ports_.in.template port<RepcaSignalInputs::q>().signalVariableIndex();
+        if (ports_.in.template port<RepcaSignalInputs::freq>())
         {
-          ws_[FREQ] =
-              signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
-          ws_indices_[FREQ] =
-              signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQ>();
+          ws_[FREQ]         = ports_.in.template port<RepcaSignalInputs::freq>().readSignal();
+          ws_indices_[FREQ] = ports_.in.template port<RepcaSignalInputs::freq>().signalVariableIndex();
         }
 
-        if (signals_.template isAttached<RepcaExternalVariables::VREF>())
+        if (ports_.in.template port<RepcaSignalInputs::vref>())
         {
-          ws_[VREF] =
-              signals_.template readExternalVariable<RepcaExternalVariables::VREF>();
-          ws_indices_[VREF] =
-              signals_.template readExternalVariableIndex<RepcaExternalVariables::VREF>();
+          ws_[VREF]         = ports_.in.template port<RepcaSignalInputs::vref>().readSignal();
+          ws_indices_[VREF] = ports_.in.template port<RepcaSignalInputs::vref>().signalVariableIndex();
         }
-        if (signals_.template isAttached<RepcaExternalVariables::PREF>())
+        if (ports_.in.template port<RepcaSignalInputs::pref>())
         {
-          ws_[PREF] =
-              signals_.template readExternalVariable<RepcaExternalVariables::PREF>();
-          ws_indices_[PREF] =
-              signals_.template readExternalVariableIndex<RepcaExternalVariables::PREF>();
+          ws_[PREF]         = ports_.in.template port<RepcaSignalInputs::pref>().readSignal();
+          ws_indices_[PREF] = ports_.in.template port<RepcaSignalInputs::pref>().signalVariableIndex();
         }
-        if (signals_.template isAttached<RepcaExternalVariables::QREF>())
+        if (ports_.in.template port<RepcaSignalInputs::qref>())
         {
-          ws_[QREF] =
-              signals_.template readExternalVariable<RepcaExternalVariables::QREF>();
-          ws_indices_[QREF] =
-              signals_.template readExternalVariableIndex<RepcaExternalVariables::QREF>();
+          ws_[QREF]         = ports_.in.template port<RepcaSignalInputs::qref>().readSignal();
+          ws_indices_[QREF] = ports_.in.template port<RepcaSignalInputs::qref>().signalVariableIndex();
         }
-        if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
+        if (ports_.in.template port<RepcaSignalInputs::freqref>())
         {
-          ws_[FREQREF] =
-              signals_.template readExternalVariable<RepcaExternalVariables::FREQREF>();
-          ws_indices_[FREQREF] =
-              signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQREF>();
+          ws_[FREQREF]         = ports_.in.template port<RepcaSignalInputs::freqref>().readSignal();
+          ws_indices_[FREQREF] = ports_.in.template port<RepcaSignalInputs::freqref>().signalVariableIndex();
         }
 
         wb_[0] = Vr();
@@ -677,22 +654,6 @@ namespace GridKit
         evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
         f_.setDataUpdated();
         return 0;
-      }
-
-      /**
-       * @brief Access the REPCA signal interface
-       *
-       * @return Interface used to assign optional plant-command outputs and
-       *         attach required measurements and optional references.
-       */
-      template <typename scalar_type, typename index_type>
-      auto Repca<scalar_type, index_type>::getSignals()
-          -> ComponentSignals<ScalarT,
-                              IdxT,
-                              RepcaInternalVariables,
-                              RepcaExternalVariables>&
-      {
-        return signals_;
       }
 
       /**

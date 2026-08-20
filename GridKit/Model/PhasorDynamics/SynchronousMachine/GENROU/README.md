@@ -147,12 +147,12 @@ Note that for implementation purposes, some of these equations may be simplified
 ## Initialization
 
 ### Without Saturation
-Presume there is no saturation to simplify the solution procedure for the initial 
+Presume there is no saturation to simplify the solution procedure for the initial
 conditions.
 
-Using the power-flow solution, we have explicit solutions for the following 
+Using the power-flow solution, we have explicit solutions for the following
 variables. The internal variables $I_d$, $I_q$, $V_d$, and $V_q$ are calculated
-from the network interface equations. The remaining are algebraically solved 
+from the network interface equations. The remaining are algebraically solved
 from the steady-state initial conditions.
 ``` math
 \begin{aligned}

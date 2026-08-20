@@ -49,6 +49,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int VoltageSource<ScalarT, IdxT>::tagDifferentiable()
   {
+    std::fill(tag_.begin(), tag_.end(), false);
     return 0;
   }
 

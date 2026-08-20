@@ -16,6 +16,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -35,7 +36,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       Hygov<scalar_type, index_type>::Hygov()
       {
-        size_ = static_cast<IdxT>(HygovInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<HygovInternalVariables>());
       }
 
       /**
@@ -49,7 +50,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(HygovInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<HygovInternalVariables>());
       }
 
       template <typename scalar_type, typename index_type>
@@ -99,7 +100,7 @@ namespace GridKit
 
         wb_.clear();
 
-        const auto signal_size = static_cast<size_t>(HygovExternalVariables::MAXIMUM);
+        const auto signal_size = Utilities::enum_size<HygovExternalVariables>();
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -109,12 +110,10 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        if (signals_.template isAssigned<HygovInternalVariables::PMECH>())
+        if (auto port = ports_.out.template port<HygovSignalOutputs::pmech>())
         {
           auto* y = y_.getData();
-          signals_.template getSignalNode<HygovInternalVariables::PMECH>()->set(
-              &y[PMECH],
-              &(this->getVariableIndex(static_cast<IdxT>(PMECH))));
+          port.link(&y[PMECH], &(this->getVariableIndex(static_cast<IdxT>(PMECH))));
         }
 
         allocated_ = true;
@@ -156,8 +155,8 @@ namespace GridKit
 
         const bool valid_component_base = std::isfinite(component_power_base)
                                           && component_power_base > ZERO<RealT>;
-        const bool valid_system_base = std::isfinite(va_system_base_)
-                                       && va_system_base_ > ZERO<RealT>;
+        const bool valid_system_base    = std::isfinite(va_system_base_)
+                                          && va_system_base_ > ZERO<RealT>;
         check(valid_component_base,
               "component power base must be finite and positive");
         check(valid_system_base,
@@ -167,9 +166,9 @@ namespace GridKit
           const RealT system_to_component = va_system_base_ / component_power_base;
           const RealT component_to_system = component_power_base / va_system_base_;
           const bool  valid_base_ratios   = std::isfinite(system_to_component)
-                                         && system_to_component > ZERO<RealT>
-                                         && std::isfinite(component_to_system)
-                                         && component_to_system > ZERO<RealT>;
+                                            && system_to_component > ZERO<RealT>
+                                            && std::isfinite(component_to_system)
+                                            && component_to_system > ZERO<RealT>;
           check(valid_base_ratios,
                 "system/component power-base conversion ratios must be finite and positive");
         }
@@ -216,8 +215,8 @@ namespace GridKit
           const RealT maximum_power      = initialMechanicalPower(Gv_[5], Hdam_);
           const RealT power_range        = maximum_power - minimum_power;
           const bool  finite_power_range = std::isfinite(minimum_power)
-                                          && std::isfinite(maximum_power)
-                                          && std::isfinite(power_range);
+                                           && std::isfinite(maximum_power)
+                                           && std::isfinite(power_range);
           check(finite_power_range,
                 "mechanical-power range must be finite");
           if (finite_power_range)
@@ -227,25 +226,25 @@ namespace GridKit
           }
         }
 
-        check(signals_.template isAssigned<HygovInternalVariables::PMECH>(),
+        check(ports_.out.template port<HygovSignalOutputs::pmech>().connected(),
               "pmech output signal must be assigned");
 
         // An attached port must resolve to readable signal storage. The
         // enumerator is a template argument, so each port names itself once.
         auto check_attached_signal =
-            [&]<HygovExternalVariables variable>(const char* name)
+            [&]<HygovSignalInputs variable>(const char* name)
         {
-          if (signals_.template isAttached<variable>()
-              && !signals_.template isLinked<variable>())
+          if (ports_.in.template port<variable>().connected()
+              && !ports_.in.template port<variable>().linked())
           {
             Log::error() << "Hygov: " << name << " signal attached with no linked source\n";
             ret += 1;
           }
         };
 
-        check_attached_signal.template operator()<HygovExternalVariables::OMEGA>("speed");
-        check_attached_signal.template operator()<HygovExternalVariables::PREF>("pref");
-        check_attached_signal.template operator()<HygovExternalVariables::PAUX>("paux");
+        check_attached_signal.template operator()<HygovSignalInputs::speed>("speed");
+        check_attached_signal.template operator()<HygovSignalInputs::pref>("pref");
+        check_attached_signal.template operator()<HygovSignalInputs::paux>("paux");
 
         return ret;
       }
@@ -309,15 +308,15 @@ namespace GridKit
         const ScalarT pmech0_system = y[PMECH];
 
         ScalarT omega0{ZERO<RealT>};
-        if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
+        if (ports_.in.template port<HygovSignalInputs::speed>())
         {
-          omega0 = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
+          omega0 = ports_.in.template port<HygovSignalInputs::speed>().readSignal();
         }
 
         ScalarT paux0_system{ZERO<RealT>};
-        if (signals_.template isAttached<HygovExternalVariables::PAUX>())
+        if (ports_.in.template port<HygovSignalInputs::paux>())
         {
-          paux0_system = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
+          paux0_system = ports_.in.template port<HygovSignalInputs::paux>().readSignal();
         }
 
         auto is_finite = [](ScalarT value)
@@ -336,7 +335,7 @@ namespace GridKit
         const ScalarT pmech0 = toComponentBase(pmech0_system);
         const ScalarT paux0  = toComponentBase(paux0_system);
         ret                  = is_finite(pmech0)
-              && is_finite(paux0);
+                               && is_finite(paux0);
         if (!ret)
         {
           Log::error() << "Hygov: initial power-base conversions must be finite\n";
@@ -422,9 +421,9 @@ namespace GridKit
         pref_set_      = pref0;
         paux_set_      = paux0_system;
 
-        if (signals_.template isAttached<HygovExternalVariables::PREF>())
+        if (ports_.in.template port<HygovSignalInputs::pref>())
         {
-          signals_.template writeExternalVariable<HygovExternalVariables::PREF>(pref_set_);
+          ports_.in.template port<HygovSignalInputs::pref>().writeValue(pref_set_);
         }
 
         if (Hdam_eff_ > Hdam_)
@@ -509,23 +508,20 @@ namespace GridKit
         ws_[PAUX]  = paux_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
+        if (ports_.in.template port<HygovSignalInputs::speed>())
         {
-          ws_[OMEGA] = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
-          ws_indices_[OMEGA] =
-              signals_.template readExternalVariableIndex<HygovExternalVariables::OMEGA>();
+          ws_[OMEGA]         = ports_.in.template port<HygovSignalInputs::speed>().readSignal();
+          ws_indices_[OMEGA] = ports_.in.template port<HygovSignalInputs::speed>().signalVariableIndex();
         }
-        if (signals_.template isAttached<HygovExternalVariables::PREF>())
+        if (ports_.in.template port<HygovSignalInputs::pref>())
         {
-          ws_[PREF] = signals_.template readExternalVariable<HygovExternalVariables::PREF>();
-          ws_indices_[PREF] =
-              signals_.template readExternalVariableIndex<HygovExternalVariables::PREF>();
+          ws_[PREF]         = ports_.in.template port<HygovSignalInputs::pref>().readSignal();
+          ws_indices_[PREF] = ports_.in.template port<HygovSignalInputs::pref>().signalVariableIndex();
         }
-        if (signals_.template isAttached<HygovExternalVariables::PAUX>())
+        if (ports_.in.template port<HygovSignalInputs::paux>())
         {
-          ws_[PAUX] = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
-          ws_indices_[PAUX] =
-              signals_.template readExternalVariableIndex<HygovExternalVariables::PAUX>();
+          ws_[PAUX]         = ports_.in.template port<HygovSignalInputs::paux>().readSignal();
+          ws_indices_[PAUX] = ports_.in.template port<HygovSignalInputs::paux>().signalVariableIndex();
         }
 
         const auto* y  = y_.getData();

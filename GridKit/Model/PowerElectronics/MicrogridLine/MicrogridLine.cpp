@@ -62,6 +62,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLine<ScalarT, IdxT>::tagDifferentiable()
   {
+    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 

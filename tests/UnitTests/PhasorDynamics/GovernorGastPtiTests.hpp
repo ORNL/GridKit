@@ -45,12 +45,12 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> empty;
-        success *= (empty.size() == static_cast<IdxT>(index(Internal::MAXIMUM)));
+        success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
         success *= (empty.getMonitor() == nullptr);
         success *= (empty.verify() > 0); // required pmech assignment is absent
 
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> configured(makeData());
-        success *= (configured.size() == static_cast<IdxT>(index(Internal::MAXIMUM)));
+        success *= (configured.size() == static_cast<IdxT>(Utilities::enum_size<Internal>()));
         success *= (configured.getMonitor() != nullptr);
         success *= (configured.verify() > 0); // required pmech assignment is absent
 
@@ -60,14 +60,14 @@ namespace GridKit
         typename GastPtiT::VectorT bound_yp;
         typename GastPtiT::VectorT bound_f;
         typename GastPtiT::VectorT bound_abs_tol;
-        const auto                 bound_size = static_cast<IdxT>(index(Internal::MAXIMUM));
+        const auto                 bound_size = static_cast<IdxT>(Utilities::enum_size<Internal>());
         bound_y.resize(bound_size);
         bound_yp.resize(bound_size);
         bound_f.resize(bound_size);
         bound_abs_tol.resize(bound_size);
         PhasorDynamics::SignalNode<ScalarT, IdxT> bound_pmech;
         GastPtiT                                  bound(makeData());
-        bound.getSignals().template assignSignalNode<Internal::PMECH>(&bound_pmech);
+        bound.getPorts().out.template port<SignalOutputs::pmech>().connect(&bound_pmech);
         success *= (bound.bind(bound_y, bound_yp, bound_f, bound_abs_tol, 0) == 0);
         success *= (bound.verify() == 0);
 
@@ -156,8 +156,8 @@ namespace GridKit
           success *= (invalid_base.gastpti.verify() > 0);
         }
 
-        success *= unlinkedSignalRejected<External::OMEGA>();
-        success *= unlinkedSignalRejected<External::PREF>();
+        success *= unlinkedSignalRejected<External::speed>();
+        success *= unlinkedSignalRejected<External::pref>();
         success *= aliasedSignalsRejected();
 
         Fixture<ScalarT> unallocated(makeData());
@@ -212,7 +212,7 @@ namespace GridKit
 
         Fixture<ScalarT> fixture(data);
         fixture.attachAllInputs();
-        fixture.input(index(External::PREF))  = 99.0; // stale value the publication must replace
+        fixture.input(index(External::pref))  = 99.0; // stale value the publication must replace
         success                              *= fixture.initialize(0.4);
         success                              *= (fixture.gastpti.tagDifferentiable() == 0);
         success                              *= (fixture.evaluate() == 0);
@@ -226,10 +226,10 @@ namespace GridKit
         success       *= scalarMatches(y[index(Internal::VLV)], 0.8, "VLV at the fuel flow");
         success       *= scalarPreserved(fixture.pmech(), 0.4, "preserved pmech seed");
 
-        success *= scalarPreserved(fixture.input(index(External::OMEGA)),
+        success *= scalarPreserved(fixture.input(index(External::speed)),
                                    0.0,
                                    "preserved omega input");
-        success *= scalarMatches(fixture.input(index(External::PREF)), 0.4, "published pref");
+        success *= scalarMatches(fixture.input(index(External::pref)), 0.4, "published pref");
 
         RealT                                     time = 0.0;
         Model::VariableMonitorController<ScalarT> monitor(time);
@@ -280,18 +280,18 @@ namespace GridKit
 
         // A system-base reference step lands on the droop row scaled by the
         // base ratio.
-        fixture.input(index(External::PREF))  = 0.5; // the published 0.4 plus a 0.1 step
+        fixture.input(index(External::pref))  = 0.5; // the published 0.4 plus a 0.1 step
         success                              *= (fixture.evaluate() == 0);
         success                              *= residualsMatch(fixture.gastpti,
                                                                {{Internal::VLOAD, 0.01}},
-                                  "reference step on the component base");
+                                                               "reference step on the component base");
 
         // GridKit deliberately leaves references above At uncapped.
-        fixture.input(index(External::PREF))  = 1.1; // 2.2 on component base; At = 2.0
+        fixture.input(index(External::pref))  = 1.1; // 2.2 on component base; At = 2.0
         success                              *= (fixture.evaluate() == 0);
         success                              *= residualsMatch(fixture.gastpti,
                                                                {{Internal::VLOAD, 0.07}},
-                                  "uncapped reference above At");
+                                                               "uncapped reference above At");
 
         // Unattached ports fall back to the reference latched by
         // initialize(), so the same steady state holds without a controller.
@@ -318,7 +318,7 @@ namespace GridKit
 
           Fixture<ScalarT> speed_fixture(data);
           speed_fixture.attachAllInputs();
-          speed_fixture.input(index(External::OMEGA))  = omega;
+          speed_fixture.input(index(External::speed))  = omega;
           success                                     *= speed_fixture.initialize(initial_pmech);
           success                                     *= stateMatches(speed_fixture.gastpti,
                                                                       {{Internal::XVALVE, xflow},
@@ -326,19 +326,19 @@ namespace GridKit
                                                                        {Internal::XTEMP, xflow},
                                                                        {Internal::VTEMP, vtemp},
                                                                        {Internal::VLV, xflow}},
-                                  "signed nonzero-speed initialization");
+                                                                      "signed nonzero-speed initialization");
           success                                     *= scalarPreserved(speed_fixture.pmech(),
-                                     initial_pmech,
-                                     "signed-speed pmech preservation");
-          success                                     *= scalarPreserved(speed_fixture.input(index(External::OMEGA)),
-                                     omega,
-                                     "signed-speed input preservation");
+                                                                         initial_pmech,
+                                                                         "signed-speed pmech preservation");
+          success                                     *= scalarPreserved(speed_fixture.input(index(External::speed)),
+                                                                         omega,
+                                                                         "signed-speed input preservation");
           const auto* speed_y                          = speed_fixture.gastpti.y().getData();
           const RealT vload                            = static_cast<RealT>(speed_y[index(Internal::VLOAD)]);
           const RealT pref                             = component_to_system * (vload + omega / droop);
-          success                                     *= scalarMatches(speed_fixture.input(index(External::PREF)),
-                                   pref,
-                                   "signed-speed pref publication");
+          success                                     *= scalarMatches(speed_fixture.input(index(External::pref)),
+                                                                       pref,
+                                                                       "signed-speed pref publication");
           success                                     *= (speed_fixture.evaluate() == 0);
           success                                     *= allResidualsZero(speed_fixture.gastpti);
         }
@@ -466,7 +466,7 @@ namespace GridKit
         reinitialize.seedPmech(1.0);
         const auto y_before    = copyVector(reinitialize.gastpti.y());
         const auto yp_before   = copyVector(reinitialize.gastpti.yp());
-        const auto pref_before = reinitialize.input(index(External::PREF));
+        const auto pref_before = reinitialize.input(index(External::pref));
         if (reinitialize.gastpti.initialize() == 0)
         {
           std::cout << "Expected failed GASTPTI reinitialization\n";
@@ -474,7 +474,7 @@ namespace GridKit
         }
         success *= vectorUnchanged(reinitialize.gastpti.y(), y_before, "reinitialized state");
         success *= vectorUnchanged(reinitialize.gastpti.yp(), yp_before, "reinitialized derivative");
-        success *= scalarPreserved(reinitialize.input(index(External::PREF)),
+        success *= scalarPreserved(reinitialize.input(index(External::pref)),
                                    pref_before,
                                    "reinitialized pref");
 
@@ -631,7 +631,7 @@ namespace GridKit
         success *= (fixture.evaluate() == 0);
 
         // The state is chosen so every documented equation has a readable answer.
-        const std::array<VariableValue, index(Internal::MAXIMUM)> expected{{
+        const std::array<VariableValue, Utilities::enum_size<Internal>()> expected{{
             {Internal::XVALVE, 0.19},
             {Internal::XFLOW, 0.22},
             {Internal::XTEMP, 0.07},
@@ -685,12 +685,12 @@ namespace GridKit
         Fixture<ScalarT> speed_step(makeResidualData());
         speed_step.attachAllInputs();
         success                                  *= speed_step.initialize(0.4);
-        speed_step.input(index(External::OMEGA))  = 0.05;
+        speed_step.input(index(External::speed))  = 0.05;
         success                                  *= (speed_step.evaluate() == 0);
         success                                  *= residualsMatch(speed_step.gastpti,
                                                                    {{Internal::VLOAD, -0.05},
                                                                     {Internal::PMECH, -0.006}},
-                                  "speed deviation in the droop and damping rows");
+                                                                   "speed deviation in the droop and damping rows");
 
         // Normal response expands both sides of the configured interval to
         // admit the initialized flow. The derived boundary must be used thereafter.
@@ -899,8 +899,8 @@ namespace GridKit
                 "collapsed Enzyme versus dependency tracking",
                 {});
 
-        collapsed.input(index(External::OMEGA)) = ZERO<RealT>;
-        collapsed.input(index(External::PREF))  = ZERO<RealT>;
+        collapsed.input(index(External::speed)) = ZERO<RealT>;
+        collapsed.input(index(External::pref))  = ZERO<RealT>;
         collapsed.seedPmech(over_rated_pmech);
         success *= (collapsed.gastpti.initialize() == 0);
         compare(collapsed,
@@ -914,12 +914,14 @@ namespace GridKit
 #endif
 
     private:
-      using GastPtiT = PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
-      using Data     = typename GastPtiT::ModelDataT;
-      using Params   = typename Data::Parameters;
-      using Mon      = typename Data::MonitorableVariables;
-      using Internal = typename GastPtiT::InternalVariablesT;
-      using External = typename GastPtiT::ExternalVariablesT;
+      using GastPtiT      = PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
+      using Data          = typename GastPtiT::ModelDataT;
+      using Params        = typename Data::Parameters;
+      using Mon           = typename Data::MonitorableVariables;
+      using Internal      = typename GastPtiT::InternalVariablesT;
+      using External      = typename Data::SignalInputs;
+      using SignalInputs  = typename Data::SignalInputs;
+      using SignalOutputs = typename Data::SignalOutputs;
 
       static constexpr size_t index(Internal variable)
       {
@@ -945,9 +947,9 @@ namespace GridKit
       class Fixture
       {
       private:
-        std::array<T, index(External::MAXIMUM)>                                   input_values_{};
-        std::array<IdxT, index(External::MAXIMUM)>                                input_indices_{};
-        std::array<PhasorDynamics::SignalNode<T, IdxT>, index(External::MAXIMUM)> input_nodes_{};
+        std::array<T, Utilities::enum_size<External>()>                                   input_values_{};
+        std::array<IdxT, Utilities::enum_size<External>()>                                input_indices_{};
+        std::array<PhasorDynamics::SignalNode<T, IdxT>, Utilities::enum_size<External>()> input_nodes_{};
 
         PhasorDynamics::SignalNode<T, IdxT> pmech_node_;
 
@@ -956,7 +958,7 @@ namespace GridKit
           : gastpti(data)
         {
           gastpti.setSystemBase(60.0, system_va_base);
-          gastpti.getSignals().template assignSignalNode<Internal::PMECH>(&pmech_node_);
+          gastpti.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech_node_);
         }
 
         Fixture(const Fixture&)            = delete;
@@ -967,16 +969,18 @@ namespace GridKit
         {
           const IdxT external_index_base = gastpti.size();
 
-          for (size_t port = 0; port < index(External::MAXIMUM); ++port)
+          for (auto variant : Utilities::enum_values<External>())
           {
+            const auto port      = static_cast<size_t>(variant);
             input_values_[port]  = static_cast<T>(initial_value);
             input_indices_[port] = external_index_base + static_cast<IdxT>(port);
-            input_nodes_[port].set(&input_values_[port], &input_indices_[port]);
+            input_nodes_[port].link(&input_values_[port], &input_indices_[port]);
           }
 
-          auto& signals = gastpti.getSignals();
-          signals.template attachSignalNode<External::OMEGA>(&input_nodes_[index(External::OMEGA)]);
-          signals.template attachSignalNode<External::PREF>(&input_nodes_[index(External::PREF)]);
+          gastpti.getPorts().in.template port<SignalInputs::speed>().connect(
+              &input_nodes_[index(External::speed)]);
+          gastpti.getPorts().in.template port<SignalInputs::pref>().connect(
+              &input_nodes_[index(External::pref)]);
         }
 
         /// Seed the assigned mechanical-power node on the system base.
@@ -1112,8 +1116,8 @@ namespace GridKit
       template <typename T>
       void setAnswerKeyInputs(Fixture<T>& fixture) const
       {
-        fixture.input(index(External::OMEGA)) = static_cast<T>(0.02);
-        fixture.input(index(External::PREF))  = static_cast<T>(0.31);
+        fixture.input(index(External::speed)) = static_cast<T>(0.02);
+        fixture.input(index(External::pref))  = static_cast<T>(0.31);
       }
 
       /// The rich state shared by the residual answer key and the Jacobian
@@ -1241,8 +1245,8 @@ namespace GridKit
         {
           success = false;
         }
-        if (!scalarMatches(omitted.input(index(External::PREF)),
-                           explicit_system_base.input(index(External::PREF)),
+        if (!scalarMatches(omitted.input(index(External::pref)),
+                           explicit_system_base.input(index(External::pref)),
                            "omitted-rating published pref"))
         {
           success = false;
@@ -1262,7 +1266,7 @@ namespace GridKit
       {
         PhasorDynamics::SignalNode<ScalarT, IdxT>        pmech;
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> model(data);
-        model.getSignals().template assignSignalNode<Internal::PMECH>(&pmech);
+        model.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech);
         return model.verify();
       }
 
@@ -1272,8 +1276,8 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT>        unlinked_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT>        pmech_node;
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> model(makeData());
-        model.getSignals().template assignSignalNode<Internal::PMECH>(&pmech_node);
-        model.getSignals().template attachSignalNode<variable>(&unlinked_node);
+        model.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech_node);
+        model.getPorts().in.template port<variable>().connect(&unlinked_node);
         return model.verify() > 0;
       }
 
@@ -1286,8 +1290,8 @@ namespace GridKit
 
         NodeT  pmech_pref;
         ModelT pref_alias(makeData());
-        pref_alias.getSignals().template assignSignalNode<Internal::PMECH>(&pmech_pref);
-        pref_alias.getSignals().template attachSignalNode<External::PREF>(&pmech_pref);
+        pref_alias.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech_pref);
+        pref_alias.getPorts().in.template port<SignalInputs::pref>().connect(&pmech_pref);
         if (pref_alias.allocate() != 0)
         {
           success = false;
@@ -1299,8 +1303,8 @@ namespace GridKit
 
         NodeT  pmech_speed;
         ModelT speed_alias(makeData());
-        speed_alias.getSignals().template assignSignalNode<Internal::PMECH>(&pmech_speed);
-        speed_alias.getSignals().template attachSignalNode<External::OMEGA>(&pmech_speed);
+        speed_alias.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech_speed);
+        speed_alias.getPorts().in.template port<SignalInputs::speed>().connect(&pmech_speed);
         if (speed_alias.allocate() != 0)
         {
           success = false;
@@ -1314,12 +1318,12 @@ namespace GridKit
         IdxT    shared_index{static_cast<IdxT>(99)};
         NodeT   shared_input;
         NodeT   pmech;
-        shared_input.set(&shared_value, &shared_index);
+        shared_input.link(&shared_value, &shared_index);
 
         ModelT input_alias(makeData());
-        input_alias.getSignals().template assignSignalNode<Internal::PMECH>(&pmech);
-        input_alias.getSignals().template attachSignalNode<External::OMEGA>(&shared_input);
-        input_alias.getSignals().template attachSignalNode<External::PREF>(&shared_input);
+        input_alias.getPorts().out.template port<SignalOutputs::pmech>().connect(&pmech);
+        input_alias.getPorts().in.template port<SignalInputs::speed>().connect(&shared_input);
+        input_alias.getPorts().in.template port<SignalInputs::pref>().connect(&shared_input);
         if (input_alias.allocate() != 0)
         {
           success = false;
@@ -1385,8 +1389,8 @@ namespace GridKit
       {
         Fixture<ScalarT> fixture(data);
         fixture.attachAllInputs();
-        fixture.input(index(External::OMEGA)) = omega;
-        fixture.input(index(External::PREF))  = 77.0; // must stay untouched on rejection
+        fixture.input(index(External::speed)) = omega;
+        fixture.input(index(External::pref))  = 77.0; // must stay untouched on rejection
         if (!fixture.prepare(pmech))
         {
           return false;
@@ -1409,13 +1413,13 @@ namespace GridKit
         {
           success = false;
         }
-        if (!scalarPreserved(fixture.input(index(External::OMEGA)),
+        if (!scalarPreserved(fixture.input(index(External::speed)),
                              omega,
                              "rejected omega preservation"))
         {
           success = false;
         }
-        if (!scalarPreserved(fixture.input(index(External::PREF)),
+        if (!scalarPreserved(fixture.input(index(External::pref)),
                              77.0,
                              "rejected pref preservation"))
         {
@@ -1642,8 +1646,9 @@ namespace GridKit
           y[i].setVariableNumber(i);
           yp[i].setVariableNumber(i);
         }
-        for (size_t port = 0; port < index(External::MAXIMUM); ++port)
+        for (auto variant : Utilities::enum_values<External>())
         {
+          const auto port = static_cast<size_t>(variant);
           fixture.input(port).setVariableNumber(fixture.inputIndex(port));
         }
 

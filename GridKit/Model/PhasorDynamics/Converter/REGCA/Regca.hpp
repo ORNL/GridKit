@@ -11,8 +11,9 @@
 #include <memory>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -46,7 +47,6 @@ namespace GridKit
         IL,      ///< \f$I_L\f$ LVPL upper-limit current curve on component base
         PBR,     ///< \f$P^\mathrm{br}\f$ Branch active power on system base
         QBR,     ///< \f$Q^\mathrm{br}\f$ Branch reactive power on system base
-        MAXIMUM,
       };
 
       /// External variables of a `Regca`
@@ -54,7 +54,6 @@ namespace GridKit
       {
         IPCMD, ///< \f$I_p^\mathrm{cmd}\f$ Active-current command on system base
         IQCMD, ///< \f$I_q^\mathrm{cmd}\f$ Reactive-current command on system base
-        MAXIMUM,
       };
 
       /**
@@ -92,6 +91,8 @@ namespace GridKit
         using BusT               = BusBase<ScalarT, IdxT>;
         using SignalT            = SignalNode<ScalarT, IdxT>;
         using ModelDataT         = RegcaData<RealT, IdxT>;
+        using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
+        using SignalPortsT       = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT           = Model::VariableMonitor<Regca, RegcaData>;
         using InternalVariablesT = RegcaInternalVariables;
         using ExternalVariablesT = RegcaExternalVariables;
@@ -110,13 +111,9 @@ namespace GridKit
         int  evaluateResidual() override final;
         int  evaluateJacobian() override final;
 
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                RegcaInternalVariables,
-                                RegcaExternalVariables>&
+        SignalPortsT& getPorts()
         {
-          return signals_;
+          return ports_;
         }
 
         const Model::VariableMonitorBase* getMonitor() const override;
@@ -237,8 +234,8 @@ namespace GridKit
         ScalarT ipcmd_set_{0};
         ScalarT iqcmd_set_{0};
 
-        ComponentSignals<ScalarT, IdxT, RegcaInternalVariables, RegcaExternalVariables> signals_;
-        std::unique_ptr<MonitorT>                                                       monitor_;
+        SignalPortsT              ports_;
+        std::unique_ptr<MonitorT> monitor_;
 
         // Local copies of signal variables
         std::vector<ScalarT> ws_;

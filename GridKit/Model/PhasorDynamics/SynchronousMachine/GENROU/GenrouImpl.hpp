@@ -4,6 +4,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -105,7 +106,8 @@ namespace GridKit
      * @brief Constructor for a GENROU generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus, const ModelDataT& data)
+    Genrou<scalar_type, index_type>::Genrou(BusT*             bus,
+                                            const ModelDataT& data)
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
@@ -120,12 +122,12 @@ namespace GridKit
      * @brief Constructor for a GENROU generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalT* omega, SignalT* pmech, const ModelDataT& data)
+    Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalNodeT* omega, SignalNodeT* pmech, const ModelDataT& data)
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
-      signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
+      ports_.in.template port<GenrouSignalInputs::pmech>().connect(pmech);
+      ports_.out.template port<GenrouSignalOutputs::speed>().connect(omega);
       initializeParameters(data);
       initializeMonitor();
 
@@ -137,13 +139,13 @@ namespace GridKit
      * @brief Constructor for a GENROU generator model with saturation
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalT* omega, SignalT* pmech, SignalT* efd, const ModelDataT& data)
+    Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalNodeT* omega, SignalNodeT* pmech, SignalNodeT* efd, const ModelDataT& data)
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
-      signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
-      signals_.template attachSignalNode<GenrouExternalVariables::EFD>(efd);
+      ports_.in.template port<GenrouSignalInputs::pmech>().connect(pmech);
+      ports_.in.template port<GenrouSignalInputs::efd>().connect(efd);
+      ports_.out.template port<GenrouSignalOutputs::speed>().connect(omega);
       initializeParameters(data);
       initializeMonitor();
 
@@ -348,10 +350,9 @@ namespace GridKit
       ws_indices_[1] = INVALID_INDEX<IdxT>;
 
       // Set output signals
-      if (signals_.template isAssigned<GenrouInternalVariables::OMEGA>())
+      if (auto speed_port = ports_.out.template port<GenrouSignalOutputs::speed>())
       {
-        auto* y = y_.getData();
-        signals_.template getSignalNode<GenrouInternalVariables::OMEGA>()->set(&y[1], &(this->getVariableIndex(1)));
+        speed_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
       }
 
       allocated_ = true;
@@ -364,27 +365,20 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Genrou<scalar_type, index_type>::verify() const
     {
-      static constexpr auto PM  = GenrouExternalVariables::PM;
-      static constexpr auto EFD = GenrouExternalVariables::EFD;
-
       int ret = 0;
 
-      if (signals_.template isAttached<PM>())
+      auto pmech_port = ports_.in.template port<GenrouSignalInputs::pmech>();
+      if (pmech_port.connected() && !pmech_port.linked())
       {
-        if (!signals_.template isLinked<PM>())
-        {
-          Log::error() << "Genrou: pmech signal attached with no linked governor\n";
-          ret += 1;
-        }
+        Log::error() << "Genrou: pmech signal attached with no linked governor\n";
+        ret += 1;
       }
 
-      if (signals_.template isAttached<EFD>())
+      auto efd_port = ports_.in.template port<GenrouSignalInputs::efd>();
+      if (efd_port.connected() && !efd_port.linked())
       {
-        if (!signals_.template isLinked<EFD>())
-        {
-          Log::error() << "Genrou: efd signal attached with no linked exciter\n";
-          ret += 1;
-        }
+        Log::error() << "Genrou: efd signal attached with no linked exciter\n";
+        ret += 1;
       }
 
       return ret;
@@ -435,7 +429,7 @@ namespace GridKit
         ScalarT Xsat_delta = ksat_prime * Xdpp_ + Xq_ - Xqpp_;
 
         delta  = std::atan2((vi + Ra_ * ii) * ksat_prime + Xsat_delta * ir,
-                           (vr + Ra_ * ir) * ksat_prime - Xsat_delta * ii);
+                            (vr + Ra_ * ir) * ksat_prime - Xsat_delta * ii);
         id     = ir * std::sin(delta) - ii * std::cos(delta);
         iq     = ir * std::cos(delta) + ii * std::sin(delta);
         vd     = vr * std::sin(delta) - vi * std::cos(delta) + id * Ra_ - iq * Xqpp_;
@@ -485,22 +479,25 @@ namespace GridKit
       y[15]      = ir;
       y[16]      = ii;
       y[17]      = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
-              - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
-      y[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
-              + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
+                   - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
+      y[18]      = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
+                   + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
 
-      ScalarT Te = y[12];
+      // TODO: Writing to an input signal seems very wrong. Check to see if this
+      //       could be handled differently
+
       // Convert Te to system base for governor PM signal.
+      ScalarT Te = y[12];
       pmech_set_ = toSystemBase(Te);
-      if (signals_.template isAttached<GenrouExternalVariables::PM>())
+      if (auto pmech_port = ports_.in.template port<GenrouSignalInputs::pmech>())
       {
-        signals_.template writeExternalVariable<GenrouExternalVariables::PM>(pmech_set_);
+        pmech_port.writeValue(pmech_set_);
       }
 
       efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
-      if (signals_.template isAttached<GenrouExternalVariables::EFD>())
+      if (auto efd_port = ports_.in.template port<GenrouSignalInputs::efd>())
       {
-        signals_.template writeExternalVariable<GenrouExternalVariables::EFD>(efd_set_);
+        efd_port.writeValue(efd_set_);
       }
 
       for (IdxT i = 0; i < size_; ++i)
@@ -656,18 +653,18 @@ namespace GridKit
     {
       // Mechanical Power
       ws_[0] = pmech_set_;
-      if (signals_.template isAttached<GenrouExternalVariables::PM>())
+      if (auto pmech_port = ports_.in.template port<GenrouSignalInputs::pmech>())
       {
-        ws_[0]         = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
-        ws_indices_[0] = signals_.template readExternalVariableIndex<GenrouExternalVariables::PM>();
+        ws_[0]         = pmech_port.readSignal();
+        ws_indices_[0] = pmech_port.signalVariableIndex();
       }
 
       // Exciter Efield
       ws_[1] = efd_set_;
-      if (signals_.template isAttached<GenrouExternalVariables::EFD>())
+      if (auto efd_port = ports_.in.template port<GenrouSignalInputs::efd>())
       {
-        ws_[1]         = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
-        ws_indices_[1] = signals_.template readExternalVariableIndex<GenrouExternalVariables::EFD>();
+        ws_[1]         = efd_port.readSignal();
+        ws_indices_[1] = efd_port.signalVariableIndex();
       }
 
       // Bus voltages

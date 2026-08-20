@@ -8,6 +8,7 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -50,7 +51,7 @@ namespace GridKit
 
       for (auto& raw_parameter : j.at("params").items())
       {
-        auto key = magic_enum::enum_cast<Parameters>(raw_parameter.key());
+        auto key = Utilities::enum_cast<Parameters>(raw_parameter.key());
         if (key.has_value())
         {
           // NOTE: this is necessary because it doesn't seem like nlohmann/json
@@ -91,22 +92,29 @@ namespace GridKit
       // this PR. The JSON schema should be split once the ingress changes are merged
       for (auto& raw_port : j.at("ports").items())
       {
-        auto bus = magic_enum::enum_cast<Buses>(raw_port.key());
-        if (bus.has_value() && bus.value() != Buses::SIZE)
+        auto bus = Utilities::enum_cast<Buses>(raw_port.key());
+        if (bus.has_value()
+            && static_cast<size_t>(bus.value())
+                   < Utilities::enum_size<Buses>())
         {
           raw_port.value().get_to(c.buses[bus.value()]);
           continue;
         }
 
-        auto signal_input = magic_enum::enum_cast<SignalInputs>(raw_port.key());
-        if (signal_input.has_value() && signal_input.value() != SignalInputs::SIZE)
+        auto signal_input = Utilities::enum_cast<SignalInputs>(raw_port.key());
+        if (signal_input.has_value()
+            && static_cast<size_t>(signal_input.value())
+                   < Utilities::enum_size<SignalInputs>())
         {
           raw_port.value().get_to(c.signal_inputs[signal_input.value()]);
           continue;
         }
 
-        auto signal_output = magic_enum::enum_cast<SignalOutputs>(raw_port.key());
-        if (signal_output.has_value() && signal_output.value() != SignalOutputs::SIZE)
+        auto signal_output =
+            Utilities::enum_cast<SignalOutputs>(raw_port.key());
+        if (signal_output.has_value()
+            && static_cast<size_t>(signal_output.value())
+                   < Utilities::enum_size<SignalOutputs>())
         {
           raw_port.value().get_to(c.signal_outputs[signal_output.value()]);
           continue;
@@ -123,7 +131,7 @@ namespace GridKit
         for (auto& raw_monitored_variable : j.at("mon"))
         {
           auto var_name  = raw_monitored_variable.get<std::string>();
-          auto monitored = magic_enum::enum_cast<MonitorableVariables>(var_name);
+          auto monitored = Utilities::enum_cast<MonitorableVariables>(var_name);
           if (monitored.has_value())
           {
             c.monitored_variables.insert(monitored.value());

@@ -15,7 +15,7 @@ namespace GridKit
     namespace Governor
     {
       /// Parameter keys for the HYGOV governor model.
-      enum class HygovParameters
+      enum class HygovParameters : size_t
       {
         Trate, ///< \f$T^\mathrm{rate}\f$ Turbine-rating power base
         Rperm, ///< \f$R_{\mathrm{perm}}\f$ Permanent droop
@@ -46,13 +46,12 @@ namespace GridKit
         Pgv2,  ///< \f$P_{\mathrm{GV}}^{(2)}\f$ Power point 2
         Pgv3,  ///< \f$P_{\mathrm{GV}}^{(3)}\f$ Power point 3
         Pgv4,  ///< \f$P_{\mathrm{GV}}^{(4)}\f$ Power point 4
-        Pgv5   ///< \f$P_{\mathrm{GV}}^{(5)}\f$ Power point 5
+        Pgv5,  ///< \f$P_{\mathrm{GV}}^{(5)}\f$ Power point 5
       };
 
       /// Buses for the HYGOV governor model.
       enum class HygovBuses : size_t
       {
-        SIZE
       };
 
       /// Signal inputs for the HYGOV governor model.
@@ -61,25 +60,23 @@ namespace GridKit
         speed, ///< Optional machine speed-deviation signal ID
         pref,  ///< Optional active-power/load reference signal ID
         paux,  ///< Optional auxiliary power input signal ID
-        SIZE
       };
 
       /// Signal outputs for the HYGOV governor model.
       enum class HygovSignalOutputs : size_t
       {
         pmech, ///< Required mechanical-power output signal ID
-        SIZE
       };
 
       /// Variables available through the monitor interface.
-      enum class HygovMonitorableVariables
+      enum class HygovMonitorableVariables : size_t
       {
         pmech,       ///< Mechanical power output on system base
         filter,      ///< Governor error filter output on component base
         desiredgate, ///< Desired-gate position on component base
         gate,        ///< Gate position on component base
         flow,        ///< Turbine flow on component base
-        head         ///< Turbine head on component base
+        head,        ///< Turbine head on component base
       };
 
       /**

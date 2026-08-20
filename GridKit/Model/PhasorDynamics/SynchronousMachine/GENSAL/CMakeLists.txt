@@ -5,7 +5,6 @@ if(GRIDKIT_ENABLE_ENZYME)
     phasor_dynamics_gensal
     SOURCES GensalEnzyme.cpp
     HEADERS ${_install_headers}
-    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
       PUBLIC
       GridKit::phasor_dynamics_core
@@ -24,7 +23,6 @@ else()
     phasor_dynamics_gensal
     SOURCES Gensal.cpp
     HEADERS ${_install_headers}
-    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
       PUBLIC
       GridKit::phasor_dynamics_core
@@ -35,7 +33,6 @@ endif()
 gridkit_add_library(
   phasor_dynamics_gensal_dependency_tracking
   SOURCES GensalDependencyTracking.cpp
-  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
   LINK_LIBRARIES
     PUBLIC
     GridKit::phasor_dynamics_core

@@ -238,12 +238,8 @@ namespace AnalysisManager
       // Find a consistent set of initial conditions for DAE
       if (findConsistent)
       {
-        int initType = IDA_Y_INIT;
-
-        if (tag_)
-          initType = IDA_YA_YDP_INIT;
-
-        retval = IDACalcIC(solver_, initType, t0 + 0.1);
+        const int consistentICType = getIDAConsistentICType();
+        retval                     = IDACalcIC(solver_, consistentICType, t0 + 0.1);
         checkOutput(retval, "IDACalcIC");
 
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
@@ -305,6 +301,22 @@ namespace AnalysisManager
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
       model_->updateTime(t, 0.0);
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::getIDAConsistentICType() const
+    {
+      switch (consistent_ic_type_)
+      {
+      case IdaConsistentICType::Y:
+        return IDA_Y_INIT;
+      case IdaConsistentICType::YA_YDP:
+        return IDA_YA_YDP_INIT;
+      default:
+        Log::error() << "Invalid IDA consistent initial condition type "
+                     << static_cast<int>(consistent_ic_type_) << ".\n";
+        throw SundialsException();
+      }
     }
 
     /**
@@ -988,8 +1000,8 @@ namespace AnalysisManager
       int               stat_width  = 12;
       std::stringstream out;
 
-      out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width) << num_residual_evals_ << '\n'
-          << std::setw(label_width) << "Residual evals" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
+      out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width) << num_steps_ << '\n'
+          << std::setw(label_width) << "Residual evals" << " : " << std::setw(stat_width) << num_residual_evals_ << '\n'
           << std::setw(label_width) << "Linear decompositions" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
           << std::setw(label_width) << "Error test failures" << " : " << std::setw(stat_width) << num_error_test_fails_ << '\n'
           << std::setw(label_width) << "Nonlinear iterations" << " : " << std::setw(stat_width) << num_nonlinear_iters_ << '\n'
@@ -1195,6 +1207,15 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setBackwardSuppressAlgebraicErrors(bool suppress)
     {
       backward_suppress_alg_ = suppress;
+    }
+
+    /**
+     * @brief Set the IDA consistent-initial-condition calculation type.
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setConsistentICType(IdaConsistentICType consistent_ic_type)
+    {
+      consistent_ic_type_ = consistent_ic_type;
     }
 
     /**

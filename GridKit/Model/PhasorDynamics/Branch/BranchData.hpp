@@ -13,7 +13,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /// Initial parameters for a branch
-    enum class BranchParameters
+    enum class BranchParameters : size_t
     {
       R,     ///< \f$R\f$ Branch series resistance [p.u.]
       X,     ///< \f$X\f$ Branch series reactance [p.u.]
@@ -30,23 +30,20 @@ namespace GridKit
     {
       bus1, ///< \f$V_{\mathrm{r}1},V_{\mathrm{i}1}\f$ Required Known bus-1 terminal voltage, the tapped side [p.u.]
       bus2, ///< \f$V_{\mathrm{r}2},V_{\mathrm{i}2}\f$ Required Known bus-2 terminal voltage [p.u.]
-      SIZE  ///< Number of branch bus ports
     };
 
     /// Signal inputs supported for a branch
     enum class BranchSignalInputs : size_t
     {
-      SIZE ///< Number of branch input-signal ports
     };
 
     /// Signal outputs supported for a branch
     enum class BranchSignalOutputs : size_t
     {
-      SIZE ///< Number of branch output-signal ports
     };
 
     /// Variables able to be monitored for a branch
-    enum class BranchMonitorableVariables
+    enum class BranchMonitorableVariables : size_t
     {
       ir1, ///< \f$I_{\mathrm{r}1}\f$ Bus-1 terminal-current real component [p.u.]
       ii1, ///< \f$I_{\mathrm{i}1}\f$ Bus-1 terminal-current imaginary component [p.u.]
@@ -57,7 +54,7 @@ namespace GridKit
       ii2, ///< \f$I_{\mathrm{i}2}\f$ Bus-2 terminal-current imaginary component [p.u.]
       im2, ///< \f$I_{\mathrm{m}2}\f$ Bus-2 terminal-current magnitude [p.u.]
       p2,  ///< \f$P_2\f$ Bus-2 terminal active power [p.u.]
-      q2   ///< \f$Q_2\f$ Bus-2 terminal reactive power [p.u.]
+      q2,  ///< \f$Q_2\f$ Bus-2 terminal reactive power [p.u.]
     };
 
     /**
@@ -69,21 +66,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct BranchData : public ComponentData<real_type,
-                                             index_type,
-                                             BranchParameters,
-                                             BranchBuses,
-                                             BranchSignalInputs,
-                                             BranchSignalOutputs,
-                                             BranchMonitorableVariables>
-    {
-      BranchData() = default;
-
-      using Parameters           = BranchParameters;
-      using Buses                = BranchBuses;
-      using SignalInputs         = BranchSignalInputs;
-      using SignalOutputs        = BranchSignalOutputs;
-      using MonitorableVariables = BranchMonitorableVariables;
-    };
+    using BranchData =
+        ComponentData<real_type,
+                      index_type,
+                      BranchParameters,
+                      BranchBuses,
+                      BranchSignalInputs,
+                      BranchSignalOutputs,
+                      BranchMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -7,8 +7,7 @@ target_link_libraries(
          GridKit::testing)
 target_include_directories(
   DynamicSimulation
-  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
-          ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
 add_executable(ContingencyAnalysis ContingencyAnalysis.cpp)
 target_link_libraries(
@@ -19,8 +18,7 @@ target_link_libraries(
          GridKit::testing)
 target_include_directories(
   ContingencyAnalysis
-  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
-          ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
 if(GRIDKIT_ENABLE_OPENMP)
   target_link_libraries(ContingencyAnalysis PUBLIC OpenMP::OpenMP_CXX)

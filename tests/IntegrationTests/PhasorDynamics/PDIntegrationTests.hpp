@@ -853,11 +853,11 @@ namespace GridKit
         SystemModel<RealT, IdxT> system(data);
         success *= system.allocate() == 0;
 
-        auto* pref_signal    = system.getSignal(signalId(LoopSignal::PLANT_PREF));
-        auto* pext_signal    = system.getSignal(signalId(LoopSignal::PEXT));
-        auto* qext_signal    = system.getSignal(signalId(LoopSignal::QEXT));
-        auto* ipcmd_signal   = system.getSignal(signalId(LoopSignal::IPCMD));
-        auto* pbranch_signal = system.getSignal(signalId(LoopSignal::PBRANCH));
+        auto* pref_signal    = system.getSignalNode(signalId(LoopSignal::PLANT_PREF));
+        auto* pext_signal    = system.getSignalNode(signalId(LoopSignal::PEXT));
+        auto* qext_signal    = system.getSignalNode(signalId(LoopSignal::QEXT));
+        auto* ipcmd_signal   = system.getSignalNode(signalId(LoopSignal::IPCMD));
+        auto* pbranch_signal = system.getSignalNode(signalId(LoopSignal::PBRANCH));
         if (pref_signal == nullptr || pext_signal == nullptr || qext_signal == nullptr
             || ipcmd_signal == nullptr || pbranch_signal == nullptr)
         {

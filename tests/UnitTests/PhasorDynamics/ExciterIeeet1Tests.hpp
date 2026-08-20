@@ -100,9 +100,8 @@ namespace GridKit
         ScalarT                                        efd_value{0.0};
         IdxT                                           efd_index = INVALID_INDEX<IdxT>;
 
-        efd_node.set(&efd_value, &efd_index);
-        exciter.getSignals()
-            .template assignSignalNode<PhasorDynamics::Exciter::Ieeet1InternalVariables::EFD>(&efd_node);
+        efd_node.link(&efd_value, &efd_index);
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
 
         bus.allocate();
         exciter.allocate();

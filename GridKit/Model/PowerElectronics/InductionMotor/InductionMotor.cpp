@@ -60,6 +60,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int InductionMotor<ScalarT, IdxT>::tagDifferentiable()
   {
+    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 

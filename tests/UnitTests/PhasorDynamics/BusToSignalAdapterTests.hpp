@@ -67,20 +67,18 @@ namespace GridKit
 
         IdxT ir_index{INVALID_INDEX<IdxT>};
         IdxT ii_index{INVALID_INDEX<IdxT>};
-        ir_sig.set(&Ir, &ir_index);
-        ii_sig.set(&Ii, &ii_index);
+        ir_sig.link(&Ir, &ir_index);
+        ii_sig.link(&Ii, &ii_index);
 
         using namespace GridKit::PhasorDynamics;
-        constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
-        constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
-        constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-        constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
+        using SignalIn  = BusToSignalAdapterSignalInputs;
+        using SignalOut = BusToSignalAdapterSignalOutputs;
 
         auto adapter = AdapterT(&bus);
-        adapter.getSignals().template assignSignalNode<VREAL>(&vr_sig);
-        adapter.getSignals().template assignSignalNode<VIMAG>(&vi_sig);
-        adapter.getSignals().template attachSignalNode<IREAL>(&ir_sig);
-        adapter.getSignals().template attachSignalNode<IIMAG>(&ii_sig);
+        adapter.getPorts().out.template port<SignalOut::vr>().connect(&vr_sig);
+        adapter.getPorts().out.template port<SignalOut::vi>().connect(&vi_sig);
+        adapter.getPorts().in.template port<SignalIn::ir>().connect(&ir_sig);
+        adapter.getPorts().in.template port<SignalIn::ii>().connect(&ii_sig);
         adapter.allocate();
         success *= (adapter.verify() == 0);
         success *= (vr_sig.read() == Vr);

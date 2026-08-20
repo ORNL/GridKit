@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -33,7 +34,7 @@ namespace GridKit
       Regca<scalar_type, index_type>::Regca(BusT* bus)
         : bus_(bus)
       {
-        size_ = static_cast<IdxT>(RegcaInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<RegcaInternalVariables>());
       }
 
       /**
@@ -52,7 +53,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(RegcaInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<RegcaInternalVariables>());
       }
 
       template <typename scalar_type, typename index_type>
@@ -362,7 +363,7 @@ namespace GridKit
         wb_.assign(2, ScalarT{0});
         h_.assign(2, ScalarT{0});
 
-        auto signal_size = static_cast<size_t>(RegcaExternalVariables::MAXIMUM);
+        auto signal_size = Utilities::enum_size<RegcaExternalVariables>();
         ws_.assign(signal_size, ScalarT{0});
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
@@ -374,32 +375,28 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        if (signals_.template isAssigned<RegcaInternalVariables::IR>())
+        if (auto port = ports_.out.template port<RegcaSignalOutputs::ibranchr>())
         {
-          signals_.template getSignalNode<RegcaInternalVariables::IR>()->set(
-              &y[static_cast<size_t>(RegcaInternalVariables::IR)],
-              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::IR))));
+          port.link(&y[static_cast<size_t>(RegcaInternalVariables::IR)],
+                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::IR))));
         }
 
-        if (signals_.template isAssigned<RegcaInternalVariables::II>())
+        if (auto port = ports_.out.template port<RegcaSignalOutputs::ibranchi>())
         {
-          signals_.template getSignalNode<RegcaInternalVariables::II>()->set(
-              &y[static_cast<size_t>(RegcaInternalVariables::II)],
-              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::II))));
+          port.link(&y[static_cast<size_t>(RegcaInternalVariables::II)],
+                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::II))));
         }
 
-        if (signals_.template isAssigned<RegcaInternalVariables::PBR>())
+        if (auto port = ports_.out.template port<RegcaSignalOutputs::pbranch>())
         {
-          signals_.template getSignalNode<RegcaInternalVariables::PBR>()->set(
-              &y[static_cast<size_t>(RegcaInternalVariables::PBR)],
-              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::PBR))));
+          port.link(&y[static_cast<size_t>(RegcaInternalVariables::PBR)],
+                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::PBR))));
         }
 
-        if (signals_.template isAssigned<RegcaInternalVariables::QBR>())
+        if (auto port = ports_.out.template port<RegcaSignalOutputs::qbranch>())
         {
-          signals_.template getSignalNode<RegcaInternalVariables::QBR>()->set(
-              &y[static_cast<size_t>(RegcaInternalVariables::QBR)],
-              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::QBR))));
+          port.link(&y[static_cast<size_t>(RegcaInternalVariables::QBR)],
+                    &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::QBR))));
         }
 
         allocated_ = true;
@@ -444,18 +441,18 @@ namespace GridKit
         check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
               "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
 
-        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        if (ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
-          if (!signals_.template isLinked<RegcaExternalVariables::IPCMD>())
+          if (!ports_.in.template port<RegcaSignalInputs::ipcmd>().linked())
           {
             Log::error() << "Regca: ipcmd signal attached with no linked source\n";
             ret += 1;
           }
         }
 
-        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        if (ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
-          if (!signals_.template isLinked<RegcaExternalVariables::IQCMD>())
+          if (!ports_.in.template port<RegcaSignalInputs::iqcmd>().linked())
           {
             Log::error() << "Regca: iqcmd signal attached with no linked source\n";
             ret += 1;
@@ -522,7 +519,7 @@ namespace GridKit
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT ip0   = toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
         const ScalarT il0   = Math::linseg(vt, VL0_, VL1_, IL1_)
-                            + KL_ * Math::ramp(vt - VL1_);
+                              + KL_ * Math::ramp(vt - VL1_);
 
         if (sL_ && ip0 > il0)
         {
@@ -558,13 +555,13 @@ namespace GridKit
         // Publish the resolved system-base commands for downstream controller
         // initialization. Unattached ports retain these values as constant
         // commands.
-        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        if (ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
-          signals_.template writeExternalVariable<RegcaExternalVariables::IPCMD>(ipcmd_set_);
+          ports_.in.template port<RegcaSignalInputs::ipcmd>().writeValue(ipcmd_set_);
         }
-        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        if (ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
-          signals_.template writeExternalVariable<RegcaExternalVariables::IQCMD>(iqcmd_set_);
+          ports_.in.template port<RegcaSignalInputs::iqcmd>().writeValue(iqcmd_set_);
         }
 
         y_.setDataUpdated();
@@ -660,8 +657,8 @@ namespace GridKit
         const ScalarT fp = (ipcmd - ip) / Tg_;
 
         // At Q0 = 0 both corrections vanish, leaving fq unrestricted.
-        const ScalarT iq_rate = fq + use_rqmax_ * (Math::min(fq, Rqmax_) - fq)
-                                + use_rqmin_ * (Math::max(fq, Rqmin_) - fq);
+        const ScalarT iq_rate    = fq + use_rqmax_ * (Math::min(fq, Rqmax_) - fq)
+                                   + use_rqmin_ * (Math::max(fq, Rqmin_) - fq);
         const ScalarT fp_limited = rrpwr(ip, fp, Rpmax_);
 
         // The LVPL ceiling IL = linseg(VM) moves with the sensed voltage; its
@@ -671,21 +668,21 @@ namespace GridKit
         const ScalarT il_rate = (IL1_ / (VL1_ - VL0_) * Math::inside(vm, VL0_, VL1_)
                                  + KL_ * Math::sigmoid(vm - VL1_))
                                 * vm_rate;
-        const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        const ScalarT qnet  = iq - iqextra;
+        const ScalarT lvacm   = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        const ScalarT qnet    = iq - iqextra;
 
-        f[VM] = -vm_dot + vm_rate;
-        f[IQ] = -iq_dot + iq_rate;
-        f[IP] = -ip_dot + bypass_lvpl_ * fp_limited
-                + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
+        f[VM]      = -vm_dot + vm_rate;
+        f[IQ]      = -iq_dot + iq_rate;
+        f[IP]      = -ip_dot + bypass_lvpl_ * fp_limited
+                     + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
         f[VT]      = -vt * vt + vr * vr + vi * vi;
         f[IR]      = -toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
         f[II]      = -toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
         f[IQEXTRA] = -iqextra + Math::ramp(iqextra - (Vhvmax_ - vt));
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_)
-                + KL_ * Math::ramp(vm - VL1_);
-        f[PBR] = -pbr + vr * ir + vi * ii;
-        f[QBR] = -qbr + vi * ir - vr * ii;
+                     + KL_ * Math::ramp(vm - VL1_);
+        f[PBR]     = -pbr + vr * ir + vi * ii;
+        f[QBR]     = -qbr + vi * ir - vr * ii;
 
         return 0;
       }
@@ -734,18 +731,16 @@ namespace GridKit
         ws_[IQCMD] = iqcmd_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        if (ports_.in.template port<RegcaSignalInputs::ipcmd>())
         {
-          ws_[IPCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IPCMD>();
-          ws_indices_[IPCMD] =
-              signals_.template readExternalVariableIndex<RegcaExternalVariables::IPCMD>();
+          ws_[IPCMD]         = ports_.in.template port<RegcaSignalInputs::ipcmd>().readSignal();
+          ws_indices_[IPCMD] = ports_.in.template port<RegcaSignalInputs::ipcmd>().signalVariableIndex();
         }
 
-        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        if (ports_.in.template port<RegcaSignalInputs::iqcmd>())
         {
-          ws_[IQCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IQCMD>();
-          ws_indices_[IQCMD] =
-              signals_.template readExternalVariableIndex<RegcaExternalVariables::IQCMD>();
+          ws_[IQCMD]         = ports_.in.template port<RegcaSignalInputs::iqcmd>().readSignal();
+          ws_indices_[IQCMD] = ports_.in.template port<RegcaSignalInputs::iqcmd>().signalVariableIndex();
         }
 
         wb_[0] = Vr();

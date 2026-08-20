@@ -19,9 +19,9 @@ $T_2$       | [sec]  | Turbine Numerator Time Constant   | 2.5  |
 $T_3$       | [sec]  | Turbine Delay                     | 7.5  |
 $P_v^{\max}$ | [p.u.] | Max Valve Position                | 1    |
 $P_v^{\min}$ | [p.u.] | Min Valve Position                | 0    |
-$D_t$       | [p.u.] | Turbine Damping Coefficient       | 0    | 
+$D_t$       | [p.u.] | Turbine Damping Coefficient       | 0    |
 
-## Model Variables 
+## Model Variables
 
 ### Internal Variables
 

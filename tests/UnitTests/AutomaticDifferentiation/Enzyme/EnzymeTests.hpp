@@ -147,8 +147,8 @@ namespace GridKit
         for (size_t i = 0; i < N; i++)
         {
           ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, size_t>,
-                                                       (void*) ident_store<ScalarT, size_t>,
-                                                       i);
+                                                         (void*) ident_store<ScalarT, size_t>,
+                                                         i);
           ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, size_t>,
                                                          (void*) sparse_store<ScalarT, size_t>,
                                                          i,

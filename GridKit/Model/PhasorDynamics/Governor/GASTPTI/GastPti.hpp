@@ -11,8 +11,9 @@
 #include <vector>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -31,15 +32,13 @@ namespace GridKit
         VTEMP,  ///< \f$V_T\f$ Algebraic temperature-limit demand on component base [p.u.]
         VLV,    ///< \f$V\f$ Algebraic smooth low-value selector output on component base [p.u.]
         PMECH,  ///< \f$P_{\text{m}}\f$ Algebraic mechanical-power output on system base [p.u.]
-        MAXIMUM ///< Number of GASTPTI internal variables and residual rows
       };
 
       /// External signal variables read or initialized by a `GastPti`.
       enum class GastPtiExternalVariables : size_t
       {
-        OMEGA,  ///< \f$\omega\f$ Machine speed deviation [p.u.]
-        PREF,   ///< \f$P^\mathrm{ref}\f$ Active-power/load reference on system base [p.u.]
-        MAXIMUM ///< Number of GASTPTI external signal variables
+        OMEGA, ///< \f$\omega\f$ Machine speed deviation [p.u.]
+        PREF,  ///< \f$P^\mathrm{ref}\f$ Active-power/load reference on system base [p.u.]
       };
 
       /**
@@ -78,6 +77,8 @@ namespace GridKit
         using MonitorT           = Model::VariableMonitor<GastPti, GastPtiData>;
         using InternalVariablesT = GastPtiInternalVariables;
         using ExternalVariablesT = GastPtiExternalVariables;
+        using SignalPortsT       = SignalPorts<ScalarT, ModelDataT>;
+        using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
 
         GastPti();
         explicit GastPti(const ModelDataT& data);
@@ -92,11 +93,10 @@ namespace GridKit
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                GastPtiInternalVariables,
-                                GastPtiExternalVariables>&;
+        SignalPortsT& getPorts()
+        {
+          return ports_;
+        }
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
@@ -144,8 +144,8 @@ namespace GridKit
 
         ScalarT pref_set_{0};
 
-        ComponentSignals<ScalarT, IdxT, GastPtiInternalVariables, GastPtiExternalVariables> signals_;
-        std::unique_ptr<MonitorT>                                                           monitor_;
+        std::unique_ptr<MonitorT> monitor_;
+        SignalPortsT              ports_;
 
         std::vector<ScalarT> ws_;
         std::vector<IdxT>    ws_indices_;

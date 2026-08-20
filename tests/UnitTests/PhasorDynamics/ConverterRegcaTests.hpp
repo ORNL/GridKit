@@ -47,11 +47,11 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> minimal(&bus);
-        success *= (minimal.size() == static_cast<IdxT>(Vars::MAXIMUM));
+        success *= (minimal.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (minimal.getMonitor() == nullptr);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> configured(&bus, makeData());
-        success *= (configured.size() == static_cast<IdxT>(Vars::MAXIMUM));
+        success *= (configured.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (configured.getMonitor() != nullptr);
         success *= (configured.verify() == 0);
 
@@ -90,7 +90,7 @@ namespace GridKit
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>       unlinked_node;
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> unlinked(&bus, makeData());
-        unlinked.getSignals().template attachSignalNode<Ext::IPCMD>(&unlinked_node);
+        unlinked.getPorts().in.template port<Data::SignalInputs::ipcmd>().connect(&unlinked_node);
         success *= (unlinked.verify() > 0);
 
         // Zero time constants are raised to the well-posedness floor with a
@@ -128,7 +128,7 @@ namespace GridKit
 
         // Outputs alias y directly, so one published port pins the wiring.
         PhasorDynamics::SignalNode<ScalarT, IdxT> pbranch_node;
-        fixture.regca.getSignals().template assignSignalNode<Vars::PBR>(&pbranch_node);
+        fixture.regca.getPorts().out.template port<Data::SignalOutputs::pbranch>().connect(&pbranch_node);
 
         success *= fixture.initialize();
         success *= (fixture.evaluate() == 0);
@@ -167,8 +167,8 @@ namespace GridKit
 
         auto* latched_y  = latched.regca.y().getData();
         success         *= scalarMatches(latched_y[index(Vars::IP)],
-                                 0.60000000000018872,
-                                 "initialized IP");
+                                         0.60000000000018872,
+                                         "initialized IP");
         success         *= scalarMatches(latched_y[index(Vars::IQ)], 0.2, "initialized IQ");
 
         latched_y[index(Vars::IP)] = 0.5;
@@ -180,8 +180,8 @@ namespace GridKit
         // Tg = 0.2; both rates sit inside every limiter.
         const auto* f  = latched.regca.getResidual().getData();
         success       *= scalarMatches(f[index(Vars::IP)],
-                                 0.50000000000094358,
-                                 "latched active-current rate");
+                                       0.50000000000094358,
+                                       "latched active-current rate");
         success       *= scalarMatches(f[index(Vars::IQ)], 0.3, "latched reactive-current rate");
 
         return success.report(__func__);
@@ -276,8 +276,8 @@ namespace GridKit
 
           const auto* y  = fixture.regca.y().getData();
           success       *= scalarMatches(y[index(Vars::IP)],
-                                   0.60000000000018872,
-                                   "IP below the LVPL ceiling");
+                                         0.60000000000018872,
+                                         "IP below the LVPL ceiling");
           success       *= scalarMatches(y[index(Vars::PBR)], 0.6, "PBR below the LVPL ceiling");
         }
 
@@ -312,8 +312,8 @@ namespace GridKit
 
           const auto* y  = fixture.regca.y().getData();
           success       *= scalarMatches(y[index(Vars::IP)],
-                                   1.3000000000004091,
-                                   "IP beyond IL1 with the ceiling released");
+                                         1.3000000000004091,
+                                         "IP beyond IL1 with the ceiling released");
           success       *= scalarMatches(y[index(Vars::PBR)], 1.3, "PBR beyond IL1 with the ceiling released");
         }
 
@@ -332,8 +332,8 @@ namespace GridKit
 
           const auto* y  = fixture.regca.y().getData();
           success       *= scalarMatches(y[index(Vars::IP)],
-                                   0.60000000000018872,
-                                   "IP with LVPL bypassed");
+                                         0.60000000000018872,
+                                         "IP with LVPL bypassed");
         }
 
         return success.report(__func__);
@@ -437,8 +437,8 @@ namespace GridKit
 
             const auto* f  = fixture.regca.getResidual().getData();
             success       *= scalarMatches(f[index(Vars::IP)],
-                                     test_case.expected_rate,
-                                     test_case.label);
+                                           test_case.expected_rate,
+                                           test_case.label);
           }
         }
 
@@ -480,8 +480,8 @@ namespace GridKit
 
           const auto* f  = fixture.regca.getResidual().getData();
           success       *= scalarMatches(f[index(Vars::IP)],
-                                   test_case.expected_rate,
-                                   test_case.label);
+                                         test_case.expected_rate,
+                                         test_case.label);
         }
 
         // The moving-ceiling rule: with VM inside the active LVPL segment and
@@ -505,8 +505,8 @@ namespace GridKit
 
           const auto* f  = fixture.regca.getResidual().getData();
           success       *= scalarMatches(f[index(Vars::IP)],
-                                   -1.925,
-                                   "falling ceiling drags Ip");
+                                         -1.925,
+                                         "falling ceiling drags Ip");
         }
 
         // Above the upper breakpoint the ceiling releases: outward motion
@@ -526,8 +526,8 @@ namespace GridKit
 
           const auto* f  = fixture.regca.getResidual().getData();
           success       *= scalarMatches(f[index(Vars::IP)],
-                                   0.7,
-                                   "released ceiling above the breakpoint");
+                                         0.7,
+                                         "released ceiling above the breakpoint");
         }
 
         return success.report(__func__);
@@ -649,8 +649,8 @@ namespace GridKit
 
             const auto* f  = fixture.regca.getResidual().getData();
             success       *= scalarMatches(f[index(Vars::IQEXTRA)],
-                                     test_case.expected_residual,
-                                     "HVRCM residual");
+                                           test_case.expected_residual,
+                                           "HVRCM residual");
           }
         }
 
@@ -715,7 +715,7 @@ namespace GridKit
 
             success          *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
             const auto nrows  = std::min(dependency_tracking_jacobian.size(),
-                                        enzyme_jacobian.size());
+                                         enzyme_jacobian.size());
 
             for (size_t i = 0; i < nrows; ++i)
             {
@@ -739,8 +739,8 @@ namespace GridKit
     private:
       using Params = PhasorDynamics::Converter::RegcaParameters;
       using Vars   = PhasorDynamics::Converter::RegcaInternalVariables;
-      using Ext    = PhasorDynamics::Converter::RegcaExternalVariables;
       using Data   = PhasorDynamics::Converter::RegcaData<RealT, IdxT>;
+      using Ext    = typename Data::SignalInputs;
 
       /// Owns a terminal bus, the model under test, and its two command
       /// signals. Copying would dangle the bus pointer regca holds, so the
@@ -762,15 +762,15 @@ namespace GridKit
         void attachIpcmd(RealT value)
         {
           ipcmd = value;
-          ipcmd_node.set(&ipcmd, &ipcmd_index);
-          regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
+          ipcmd_node.link(&ipcmd, &ipcmd_index);
+          regca.getPorts().in.template port<Data::SignalInputs::ipcmd>().connect(&ipcmd_node);
         }
 
         void attachIqcmd(RealT value)
         {
           iqcmd = value;
-          iqcmd_node.set(&iqcmd, &iqcmd_index);
-          regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
+          iqcmd_node.link(&iqcmd, &iqcmd_index);
+          regca.getPorts().in.template port<Data::SignalInputs::iqcmd>().connect(&iqcmd_node);
         }
 
         /// Everything initialize() requires: allocation, verification, and

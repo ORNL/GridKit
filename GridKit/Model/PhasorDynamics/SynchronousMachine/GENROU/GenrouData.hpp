@@ -13,7 +13,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /// Initial parameters for a Genrou generator model
-    enum class GenrouParameters
+    enum class GenrouParameters : size_t
     {
       p0,    ///< Initial active power
       q0,    ///< Initial reactive power
@@ -40,26 +40,27 @@ namespace GridKit
     enum class GenrouBuses : size_t
     {
       bus, ///< Unique ID of the connecting bus
-      SIZE
     };
 
     /// Signal inputs for a Genrou generator model
+    ///
+    /// @todo Genrou (and likely other components) would need to name multiple
+    /// signal inlets and outlets. For now we have only speed out and
+    /// mechanical power in.
     enum class GenrouSignalInputs : size_t
     {
       pmech, ///< Unique ID of the signal providing mechanical power
       efd,   ///< Unique ID of the signal providing exciter field signal
-      SIZE
     };
 
     /// Signal outputs for a Genrou generator model
     enum class GenrouSignalOutputs : size_t
     {
       speed, ///< Unique ID of the signal receiving speed deviation
-      SIZE
     };
 
     /// Variables able to be monitored for a Genrou generator model
-    enum class GenrouMonitorableVariables
+    enum class GenrouMonitorableVariables : size_t
     {
       ir,
       ii,
@@ -67,7 +68,7 @@ namespace GridKit
       q,
       delta,
       omega,
-      speed
+      speed,
     };
 
     /**
@@ -79,21 +80,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct GenrouData : public ComponentData<real_type,
-                                             index_type,
-                                             GenrouParameters,
-                                             GenrouBuses,
-                                             GenrouSignalInputs,
-                                             GenrouSignalOutputs,
-                                             GenrouMonitorableVariables>
-    {
-      GenrouData() = default;
-
-      using Parameters           = GenrouParameters;
-      using Buses                = GenrouBuses;
-      using SignalInputs         = GenrouSignalInputs;
-      using SignalOutputs        = GenrouSignalOutputs;
-      using MonitorableVariables = GenrouMonitorableVariables;
-    };
+    using GenrouData =
+        ComponentData<real_type,
+                      index_type,
+                      GenrouParameters,
+                      GenrouBuses,
+                      GenrouSignalInputs,
+                      GenrouSignalOutputs,
+                      GenrouMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

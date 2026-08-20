@@ -1,4 +1,6 @@
 
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSource.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -66,16 +68,15 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int ConstantSignalSource<scalar_type, index_type>::allocate()
     {
-      static constexpr auto SREAL = ConstantSignalSourceInternalVariables::SREAL;
-      static constexpr auto SIMAG = ConstantSignalSourceInternalVariables::SIMAG;
+      using SignalOut = ConstantSignalSourceSignalOutputs;
 
-      if (signals_.template isAssigned<SREAL>())
+      if (auto sr_port = ports_.out.template port<SignalOut::sr>())
       {
-        signals_.template getSignalNode<SREAL>()->set(&s_real_, &sr_index_);
+        sr_port.link(&s_real_, &sr_index_);
       }
-      if (signals_.template isAssigned<SIMAG>())
+      if (auto si_port = ports_.out.template port<SignalOut::si>())
       {
-        signals_.template getSignalNode<SIMAG>()->set(&s_imag_, &si_index_);
+        si_port.link(&s_imag_, &si_index_);
       }
 
       allocated_ = true;

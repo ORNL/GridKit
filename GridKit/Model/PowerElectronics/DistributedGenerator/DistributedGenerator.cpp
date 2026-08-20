@@ -74,6 +74,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int DistributedGenerator<ScalarT, IdxT>::tagDifferentiable()
   {
+    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 

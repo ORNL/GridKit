@@ -105,8 +105,8 @@ namespace GridKit
 
         const ScalarT x  = scalar(-0.4);
         success         *= (std::abs(Math::deadband2(x, lower, upper)
-                             - (x - Math::clamp(x, lower, upper)))
-                    < scalar(kRoundoffTolerance));
+                                     - (x - Math::clamp(x, lower, upper)))
+                            < scalar(kRoundoffTolerance));
 
         const ScalarT far_above_input    = scalar(4.0);
         const ScalarT far_below_input    = scalar(-4.0);
@@ -122,9 +122,9 @@ namespace GridKit
         const ScalarT above_point  = scalar(0.75);
         const ScalarT below_point  = scalar(-0.25);
         success                   *= (std::abs(Math::deadband2(above_point, point, point) - (above_point - point))
-                    < scalar(kRoundoffTolerance));
+                                      < scalar(kRoundoffTolerance));
         success                   *= (std::abs(Math::deadband2(below_point, point, point) - (below_point - point))
-                    < scalar(kRoundoffTolerance));
+                                      < scalar(kRoundoffTolerance));
 
         return success.report(__func__);
       }
@@ -153,9 +153,9 @@ namespace GridKit
 
         const ScalarT x  = scalar(1.5);
         success         *= (std::abs(Math::inside(x, limit_min, limit_max)
-                             + Math::outside(x, limit_min, limit_max)
-                             - scalar(1.0))
-                    < scalar(kRoundoffTolerance));
+                                     + Math::outside(x, limit_min, limit_max)
+                                     - scalar(1.0))
+                            < scalar(kRoundoffTolerance));
 
         return success.report(__func__);
       }
@@ -270,7 +270,7 @@ namespace GridKit
         const ScalarT x  = scalar(0.4);
         const ScalarT y  = scalar(-0.7);
         success         *= (std::abs(Math::min(x, y) + Math::max(x, y) - (x + y))
-                    < scalar(kRoundoffTolerance));
+                            < scalar(kRoundoffTolerance));
 
         const ScalarT point = scalar(0.25);
         const ScalarT bias  = std::log(scalar(2.0)) / scalar(Math::MU<RealT>);

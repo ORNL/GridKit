@@ -8,22 +8,10 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
-
-// Forward declarations.
-namespace GridKit
-{
-  namespace PhasorDynamics
-  {
-    template <typename scalar_type, typename index_type>
-    class BusBase;
-
-    template <typename real_type, typename index_type>
-    struct GensalData;
-  } // namespace PhasorDynamics
-} // namespace GridKit
 
 namespace GridKit
 {
@@ -48,7 +36,6 @@ namespace GridKit
       II,     ///< network imaginary current
       INR,    ///< Norton source real current
       INI,    ///< Norton source imaginary current
-      MAXIMUM,
     };
 
     /// External variables of a `Gensal`
@@ -58,7 +45,6 @@ namespace GridKit
       VI,  ///< network imaginary voltage
       PM,  ///< mechanical power
       EFD, ///< field voltage
-      MAXIMUM,
     };
 
     template <typename scalar_type, typename index_type>
@@ -86,12 +72,15 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = GensalData<RealT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<Gensal, GensalData>;
+      using ScalarT        = scalar_type;
+      using IdxT           = index_type;
+      using RealT          = typename Component<ScalarT, IdxT>::RealT;
+      using BusT           = BusBase<ScalarT, IdxT>;
+      using ModelDataT     = GensalData<RealT, IdxT>;
+      using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
+      using SignalNodeT    = SignalNodeSetT::SignalNodeT;
+      using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
+      using MonitorT       = Model::VariableMonitor<Gensal, GensalData>;
 
       Gensal(BusT* bus, const ModelDataT& data);
       ~Gensal();
@@ -107,14 +96,9 @@ namespace GridKit
       // Still to be implemented
       int evaluateJacobian() override final;
 
-      /// Get the `ComponentSignals` from this `Gensal`
-      auto getSignals()
-          -> ComponentSignals<ScalarT,
-                              IdxT,
-                              GensalInternalVariables,
-                              GensalExternalVariables>&
+      SignalPortsT& getPorts()
       {
-        return signals_;
+        return ports_;
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;
@@ -175,8 +159,8 @@ namespace GridKit
       /* Identification */
       BusT* bus_;
 
-      /// Component signal extension
-      ComponentSignals<ScalarT, IdxT, GensalInternalVariables, GensalExternalVariables> signals_;
+      /* Component ports */
+      SignalPortsT ports_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};

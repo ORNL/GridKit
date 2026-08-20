@@ -17,7 +17,7 @@ namespace GridKit
       /**
        * @brief Parameter keys for IEEEST Stabilizer model.
        */
-      enum class IeeestParameters
+      enum class IeeestParameters : size_t
       {
         A1,     ///< Notch filter denominator coefficient
         A2,     ///< Notch filter denominator coefficient
@@ -44,7 +44,6 @@ namespace GridKit
        */
       enum class IeeestBuses : size_t
       {
-        SIZE
       };
 
       /**
@@ -53,7 +52,6 @@ namespace GridKit
       enum class IeeestSignalInputs : size_t
       {
         input, ///< Unique ID of the stabilizer input signal
-        SIZE
       };
 
       /**
@@ -62,13 +60,12 @@ namespace GridKit
       enum class IeeestSignalOutputs : size_t
       {
         output, ///< Unique ID of the stabilizer output signal
-        SIZE
       };
 
       /**
        * @brief Monitorable variables for IEEEST Stabilizer model.
        */
-      enum class IeeestMonitorableVariables
+      enum class IeeestMonitorableVariables : size_t
       {
         vss, ///< Stabilizer output (limited signal)
       };
@@ -80,22 +77,14 @@ namespace GridKit
        * @tparam index_type Integer parameter data type
        */
       template <typename real_type, typename index_type>
-      struct IeeestData : public ComponentData<real_type,
-                                               index_type,
-                                               IeeestParameters,
-                                               IeeestBuses,
-                                               IeeestSignalInputs,
-                                               IeeestSignalOutputs,
-                                               IeeestMonitorableVariables>
-      {
-        IeeestData() = default;
-
-        using Parameters           = IeeestParameters;
-        using Buses                = IeeestBuses;
-        using SignalInputs         = IeeestSignalInputs;
-        using SignalOutputs        = IeeestSignalOutputs;
-        using MonitorableVariables = IeeestMonitorableVariables;
-      };
+      using IeeestData =
+          ComponentData<real_type,
+                        index_type,
+                        IeeestParameters,
+                        IeeestBuses,
+                        IeeestSignalInputs,
+                        IeeestSignalOutputs,
+                        IeeestMonitorableVariables>;
 
     } // namespace Stabilizer
   } // namespace PhasorDynamics

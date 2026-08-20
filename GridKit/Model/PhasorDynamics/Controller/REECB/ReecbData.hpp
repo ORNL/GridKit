@@ -15,7 +15,7 @@ namespace GridKit
     namespace Controller
     {
       /// Parameters for REECB.
-      enum class ReecbParameters
+      enum class ReecbParameters : size_t
       {
         mva,    ///< \f$S^\mathrm{base}\f$ Component power base [MVA]
         PfFlag, ///< \f$s_\mathrm{pf}\f$ Power-factor control selector: true = power-factor control, false = reactive-power control [boolean]
@@ -46,14 +46,13 @@ namespace GridKit
         dPmin,  ///< \f$R_P^\min\f$ Negative active-power ramp-rate limit on component base [p.u./s]
         Pmax,   ///< \f$P^\max\f$ Maximum active-power order limit on component base [p.u.]
         Pmin,   ///< \f$P^\min\f$ Minimum active-power order limit on component base [p.u.]
-        Imax    ///< \f$I^\max\f$ Maximum converter current on component base [p.u.]
+        Imax,   ///< \f$I^\max\f$ Maximum converter current on component base [p.u.]
       };
 
       /// Buses for the REECB electrical-control model.
       enum class ReecbBuses : size_t
       {
         bus, ///< \f$V_\mathrm{r},V_\mathrm{i}\f$ Required Known terminal-bus voltage [p.u.]
-        SIZE ///< Number of REECB bus ports
       };
 
       /// Signal inputs for the REECB electrical-control model.
@@ -64,7 +63,6 @@ namespace GridKit
         qext,   ///< \f$Q^\mathrm{ext}\f$ Optional Unknown Volt/VAr reference input: system-base reactive power [p.u.], or the terminal-voltage reference [p.u.] when \f$s_Q=1\f$ and \f$s_V=0\f$
         pfaref, ///< \f$\phi^\mathrm{ref}\f$ Optional Unknown power-factor angle-reference input [rad]
         pref,   ///< \f$P^\mathrm{ref}\f$ Optional Unknown active-power reference input on system base [p.u.]
-        SIZE    ///< Number of REECB signal-input ports
       };
 
       /// Signal outputs for the REECB electrical-control model.
@@ -72,16 +70,15 @@ namespace GridKit
       {
         iqcmd, ///< \f$I_q^\mathrm{cmd}\f$ Optional Known reactive-current command output on system base [p.u.]
         ipcmd, ///< \f$I_p^\mathrm{cmd}\f$ Optional Known active-current command output on system base [p.u.]
-        SIZE   ///< Number of REECB signal-output ports
       };
 
       /// Variables available through the monitor interface.
-      enum class ReecbMonitorableVariables
+      enum class ReecbMonitorableVariables : size_t
       {
         iqcmd, ///< \f$I_q^\mathrm{cmd}\f$ Reactive-current command output on system base [p.u.]
         ipcmd, ///< \f$I_p^\mathrm{cmd}\f$ Active-current command output on system base [p.u.]
         vmeas, ///< \f$V^\mathrm{meas}\f$ Filtered terminal voltage [p.u.]
-        pmeas  ///< \f$P^\mathrm{meas}\f$ Filtered electrical power on component base [p.u.]
+        pmeas, ///< \f$P^\mathrm{meas}\f$ Filtered electrical power on component base [p.u.]
       };
 
       /**

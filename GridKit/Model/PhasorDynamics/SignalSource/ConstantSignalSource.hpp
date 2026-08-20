@@ -1,28 +1,21 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    // Forward declaration
-    template <typename real_type, typename index_type>
-    struct ConstantSignalSourceData;
-
     /// Internal variables for ConstantSignalSource
     enum class ConstantSignalSourceInternalVariables : size_t
     {
-      SREAL,
-      SIMAG,
-      MAXIMUM,
     };
 
     /// No external variables for ConstantSignalSource
     enum class ConstantSignalSourceExternalVariables : size_t
     {
-      MAXIMUM,
     };
 
     /**
@@ -39,10 +32,12 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using ModelDataT = ConstantSignalSourceData<RealT, IdxT>;
+      using ScalarT        = scalar_type;
+      using IdxT           = index_type;
+      using RealT          = typename Component<ScalarT, IdxT>::RealT;
+      using ModelDataT     = ConstantSignalSourceData<RealT, IdxT>;
+      using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
+      using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
 
       ConstantSignalSource();
       ConstantSignalSource(const ModelDataT& data);
@@ -57,14 +52,9 @@ namespace GridKit
       int evaluateResidual() override final;
       int evaluateJacobian() override final;
 
-      /// Get the `ComponentSignals` from this component
-      auto getSignals()
-          -> ComponentSignals<ScalarT,
-                              IdxT,
-                              ConstantSignalSourceInternalVariables,
-                              ConstantSignalSourceExternalVariables>&
+      SignalPortsT& getPorts()
       {
-        return signals_;
+        return ports_;
       }
 
     private:
@@ -77,8 +67,8 @@ namespace GridKit
       IdxT sr_index_{INVALID_INDEX<IdxT>};
       IdxT si_index_{INVALID_INDEX<IdxT>};
 
-      /// Component signals
-      ComponentSignals<ScalarT, IdxT, ConstantSignalSourceInternalVariables, ConstantSignalSourceExternalVariables> signals_;
+      /// Component ports
+      SignalPortsT ports_;
 
       // Parameter initialization function
       void initializeParameters(const ModelDataT& data);

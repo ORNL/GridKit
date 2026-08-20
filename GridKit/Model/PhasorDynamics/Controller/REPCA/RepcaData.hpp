@@ -15,7 +15,7 @@ namespace GridKit
     namespace Controller
     {
       /// Parameter keys for `Repca`.
-      enum class RepcaParameters
+      enum class RepcaParameters : size_t
       {
         mva,       ///< \f$S^\mathrm{base}\f$ Component power base [MVA]
         VcompFlag, ///< \f$s_\mathrm{comp}\f$ Voltage-compensation selector [boolean]
@@ -47,14 +47,13 @@ namespace GridKit
         Kig,       ///< \f$K_\mathrm{ig}\f$ Active-power integral gain [p.u./s]
         Pmax,      ///< \f$P^{\max}\f$ Maximum active-power command on component base [p.u.]
         Pmin,      ///< \f$P^{\min}\f$ Minimum active-power command on component base [p.u.]
-        Tlag       ///< \f$T_\mathrm{lag}\f$ Active-power command lag time constant [sec]
+        Tlag,      ///< \f$T_\mathrm{lag}\f$ Active-power command lag time constant [sec]
       };
 
       /// Buses for `Repca`.
       enum class RepcaBuses : size_t
       {
         bus, ///< \f$V_\mathrm{r},V_\mathrm{i}\f$ Required Known regulated-bus voltage [p.u.]
-        SIZE ///< Number of REPCA bus ports
       };
 
       /// Signal inputs for the `Repca`.
@@ -69,7 +68,6 @@ namespace GridKit
         pref,    ///< \f$P_\mathrm{plant}^\mathrm{ref}\f$ Optional Unknown plant active-power reference on system base [p.u.]
         qref,    ///< \f$Q^\mathrm{ref}\f$ Optional Unknown reactive-power reference on system base [p.u.]
         freqref, ///< \f$f^\mathrm{ref}\f$ Optional Unknown frequency-reference input [p.u.]
-        SIZE     ///< Number of REPCA signal-input ports
       };
 
       /// Signal outputs for `Repca`.
@@ -77,17 +75,16 @@ namespace GridKit
       {
         qext, ///< \f$Q^\mathrm{ext}\f$ Optional Known reactive-power command output on system base [p.u.]
         pext, ///< \f$P^\mathrm{ext}\f$ Optional Known active-power command output on system base [p.u.]
-        SIZE  ///< Number of REPCA signal-output ports
       };
 
       /// Variables available through the monitor interface.
-      enum class RepcaMonitorableVariables
+      enum class RepcaMonitorableVariables : size_t
       {
         qext,  ///< \f$Q^\mathrm{ext}\f$ Reactive-power command output on system base [p.u.]
         pext,  ///< \f$P^\mathrm{ext}\f$ Active-power command output on system base [p.u.]
         vmeas, ///< \f$V^\mathrm{meas}\f$ Filtered regulated voltage [p.u.]
         qmeas, ///< \f$Q^\mathrm{meas}\f$ Filtered reactive-power signal on component base [p.u.]
-        pmeas  ///< \f$P^\mathrm{meas}\f$ Filtered active-power signal on component base [p.u.]
+        pmeas, ///< \f$P^\mathrm{meas}\f$ Filtered active-power signal on component base [p.u.]
       };
 
       /**

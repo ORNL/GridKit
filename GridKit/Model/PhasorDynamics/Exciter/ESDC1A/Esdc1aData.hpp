@@ -16,7 +16,7 @@ namespace GridKit
     {
       /// Parameter keys for the ESDC1A exciter model. Every parameter is
       /// optional and retains its documented default when omitted.
-      enum class Esdc1aParameters
+      enum class Esdc1aParameters : size_t
       {
         Tr,     ///< \f$T_R\f$ Voltage transducer time constant [sec]
         Ka,     ///< \f$K_A\f$ Voltage-regulator gain [p.u.]
@@ -35,14 +35,13 @@ namespace GridKit
         E2,     ///< \f$E_2\f$ Second saturation voltage point [p.u.]
         Se2,    ///< \f$S_E(E_2)\f$ Saturation coefficient at \f$E_2\f$ [p.u.]
         UEL,    ///< \f$I_{\mathrm{UEL}}\f$ UEL input-routing selector [integer]
-        exclim  ///< \f$s_{\mathrm{lim}}\f$ Exciter field-voltage-state lower-limit flag [boolean]
+        exclim, ///< \f$s_{\mathrm{lim}}\f$ Exciter field-voltage-state lower-limit flag [boolean]
       };
 
       /// Buses for the ESDC1A exciter model.
       enum class Esdc1aBuses : size_t
       {
         bus, ///< \f$V_{\mathrm{r}},V_{\mathrm{i}}\f$ Required Known terminal-bus voltage [p.u.]
-        SIZE ///< Number of ESDC1A bus ports
       };
 
       /// Signal inputs for the ESDC1A exciter model.
@@ -52,25 +51,23 @@ namespace GridKit
         vref,  ///< \f$V_{\mathrm{ref}}\f$ Optional Unknown voltage-reference input [p.u.]
         vs,    ///< \f$V_S\f$ Optional Known stabilizer input [p.u.]
         vuel,  ///< \f$V_{\mathrm{UEL}}\f$ Optional Known UEL input [p.u.]
-        SIZE   ///< Number of ESDC1A input-signal ports
       };
 
       /// Signal outputs for the ESDC1A exciter model.
       enum class Esdc1aSignalOutputs : size_t
       {
         efd, ///< \f$E_{\mathrm{fd}}\f$ Required Known field-voltage output [p.u.]
-        SIZE ///< Number of ESDC1A output-signal ports
       };
 
       /// Variables available through the monitor interface.
-      enum class Esdc1aMonitorableVariables
+      enum class Esdc1aMonitorableVariables : size_t
       {
         efd, ///< \f$E_{\mathrm{fd}}\f$ Field-voltage output [p.u.]
         vc,  ///< \f$V_C\f$ Filtered terminal-voltage magnitude [p.u.]
         vr,  ///< \f$V_R\f$ Voltage-regulator output [p.u.]
         vf,  ///< \f$V_F\f$ Stabilizing feedback state [p.u.]
         se,  ///< \f$S_E\f$ Exciter saturation coefficient [p.u.]
-        vfe  ///< \f$V_{\mathrm{FE}}\f$ Exciter feedback drive [p.u.]
+        vfe, ///< \f$V_{\mathrm{FE}}\f$ Exciter feedback drive [p.u.]
       };
 
       /**

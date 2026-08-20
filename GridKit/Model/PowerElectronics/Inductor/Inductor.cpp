@@ -48,6 +48,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Inductor<ScalarT, IdxT>::tagDifferentiable()
   {
+    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 

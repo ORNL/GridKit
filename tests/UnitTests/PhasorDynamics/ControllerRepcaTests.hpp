@@ -53,13 +53,13 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
         PhasorDynamics::Controller::Repca<ScalarT, IdxT> empty(&bus);
-        success *= (empty.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
+        success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (empty.getMonitor() == nullptr);
         success *= (empty.verify() > 0);
 
         Fixture<ScalarT> configured(makeData());
         configured.attachAllInputs();
-        success *= (configured.repca.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
+        success *= (configured.repca.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (configured.repca.getMonitor() != nullptr);
         success *= (configured.repca.verify() == 0);
 
@@ -197,15 +197,15 @@ namespace GridKit
         PhasorDynamics::Controller::Repca<ScalarT, IdxT> busless(nullptr, makeData());
         success *= (busless.verify() > 0);
 
-        success *= unlinkedSignalRejected<Ext::IR>();
-        success *= unlinkedSignalRejected<Ext::II>();
-        success *= unlinkedSignalRejected<Ext::P>();
-        success *= unlinkedSignalRejected<Ext::Q>();
-        success *= unlinkedSignalRejected<Ext::FREQ>();
-        success *= unlinkedSignalRejected<Ext::VREF>();
-        success *= unlinkedSignalRejected<Ext::PREF>();
-        success *= unlinkedSignalRejected<Ext::QREF>();
-        success *= unlinkedSignalRejected<Ext::FREQREF>();
+        success *= unlinkedSignalRejected<Ext::ir>();
+        success *= unlinkedSignalRejected<Ext::ii>();
+        success *= unlinkedSignalRejected<Ext::p>();
+        success *= unlinkedSignalRejected<Ext::q>();
+        success *= unlinkedSignalRejected<Ext::freq>();
+        success *= unlinkedSignalRejected<Ext::vref>();
+        success *= unlinkedSignalRejected<Ext::pref>();
+        success *= unlinkedSignalRejected<Ext::qref>();
+        success *= unlinkedSignalRejected<Ext::freqref>();
 
         auto floor_data                      = makeInitializationData();
         floor_data.parameters[Params::Tfltr] = 0.0;
@@ -255,7 +255,7 @@ namespace GridKit
         success *= (fixture.repca.tagDifferentiable() == 0);
         success *= (fixture.repca.evaluateResidual() == 0);
 
-        const std::array<VariableValue, index(Vars::MAXIMUM)> initial_state{{
+        const std::array<VariableValue, Utilities::enum_size<Vars>()> initial_state{{
             {Vars::VMEAS, 0.984002032518226},
             {Vars::QMEAS, 0.2},
             {Vars::XQPI, 0.5},
@@ -281,19 +281,19 @@ namespace GridKit
         }};
         success *= stateMatches(fixture.repca, initial_state, "initialization");
 
-        success *= scalarPreserved(fixture.input(Ext::IR), 0.2, "preserved ir");
-        success *= scalarPreserved(fixture.input(Ext::II), -0.1, "preserved ii");
-        success *= scalarPreserved(fixture.input(Ext::P), 0.4, "preserved p");
-        success *= scalarPreserved(fixture.input(Ext::Q), 0.1, "preserved q");
-        success *= scalarPreserved(fixture.input(Ext::FREQ), 0.99, "preserved freq");
+        success *= scalarPreserved(fixture.input(Ext::ir), 0.2, "preserved ir");
+        success *= scalarPreserved(fixture.input(Ext::ii), -0.1, "preserved ii");
+        success *= scalarPreserved(fixture.input(Ext::p), 0.4, "preserved p");
+        success *= scalarPreserved(fixture.input(Ext::q), 0.1, "preserved q");
+        success *= scalarPreserved(fixture.input(Ext::freq), 0.99, "preserved freq");
         success *= scalarPreserved(fixture.qext(), 0.25, "preserved qext");
         success *= scalarPreserved(fixture.pext(), 0.45, "preserved pext");
-        success *= scalarMatches(fixture.input(Ext::VREF), 0.984002032518226, "published vref");
-        success *= scalarMatches(fixture.input(Ext::PREF), 0.4, "published pref");
-        success *= scalarMatches(fixture.input(Ext::QREF), 0.1, "published qref");
-        success *= scalarMatches(fixture.input(Ext::FREQREF), 0.99, "published freqref");
+        success *= scalarMatches(fixture.input(Ext::vref), 0.984002032518226, "published vref");
+        success *= scalarMatches(fixture.input(Ext::pref), 0.4, "published pref");
+        success *= scalarMatches(fixture.input(Ext::qref), 0.1, "published qref");
+        success *= scalarMatches(fixture.input(Ext::freqref), 0.99, "published freqref");
 
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           const bool expected = row <= index(Vars::PREF);
           if (fixture.repca.tag()[row] != expected)
@@ -308,7 +308,7 @@ namespace GridKit
         success *= (fixture.repca.setAbsoluteTolerance(absolute_tolerance) == 0);
 
         const auto* tolerances = fixture.repca.absoluteTolerance().getData();
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           success *= valueUnchanged(tolerances[row],
                                     absolute_tolerance,
@@ -338,7 +338,7 @@ namespace GridKit
           success *= exact_commands.initialize(0.25, 0.45);
           success *= scalarPreserved(exact_commands.qext(), 0.25, "qext signal");
           success *= scalarPreserved(exact_commands.pext(), 0.45, "pext signal");
-          success *= scalarPreserved(exact_commands.input(Ext::QREF), 0.1, "qref signal");
+          success *= scalarPreserved(exact_commands.input(Ext::qref), 0.1, "qref signal");
           success *= (exact_commands.repca.evaluateResidual() == 0);
           success *= allResidualsWithinInitTolerance(exact_commands.repca);
         }
@@ -347,7 +347,7 @@ namespace GridKit
         fallback.attachAllInputs(0.0, false);
         setInitializationInputs(fallback);
         success *= fallback.initialize(0.25, 0.45);
-        success *= scalarMatches(fallback.input(Ext::FREQREF), 1.0, "default frequency");
+        success *= scalarMatches(fallback.input(Ext::freqref), 1.0, "default frequency");
         success *= (fallback.repca.evaluateResidual() == 0);
         success *= allResidualsWithinInitTolerance(fallback.repca);
 
@@ -457,11 +457,11 @@ namespace GridKit
                                                       test_case.label);
         }
         const std::array<Ext, 5>   required_ports{{
-            Ext::IR,
-            Ext::II,
-            Ext::P,
-            Ext::Q,
-            Ext::FREQ,
+            Ext::ir,
+            Ext::ii,
+            Ext::p,
+            Ext::q,
+            Ext::freq,
         }};
         const std::array<RealT, 3> nonfinite_values{{infinity, -infinity, nan}};
         for (const Ext port : required_ports)
@@ -554,10 +554,10 @@ namespace GridKit
           success *= stateMatches(asymmetric_active.repca,
                                   lower_active_state,
                                   "lower active-error boundary");
-          success *= scalarMatches(asymmetric_active.input(Ext::FREQREF),
+          success *= scalarMatches(asymmetric_active.input(Ext::freqref),
                                    0.995,
                                    "asymmetric frequency reference");
-          success *= scalarMatches(asymmetric_active.input(Ext::PREF),
+          success *= scalarMatches(asymmetric_active.input(Ext::pref),
                                    0.35,
                                    "lower-bound plant reference");
           success *= allResidualsWithinInitTolerance(asymmetric_active.repca);
@@ -580,10 +580,10 @@ namespace GridKit
           success *= stateMatches(asymmetric_active.repca,
                                   upper_active_state,
                                   "upper active-error boundary");
-          success *= scalarMatches(asymmetric_active.input(Ext::FREQREF),
+          success *= scalarMatches(asymmetric_active.input(Ext::freqref),
                                    0.985,
                                    "asymmetric frequency reference");
-          success *= scalarMatches(asymmetric_active.input(Ext::PREF),
+          success *= scalarMatches(asymmetric_active.input(Ext::pref),
                                    0.45,
                                    "upper-bound plant reference");
           success *= allResidualsWithinInitTolerance(asymmetric_active.repca);
@@ -592,9 +592,9 @@ namespace GridKit
         auto overflow_data                    = makeInitializationData();
         overflow_data.parameters[Params::Rc]  = std::numeric_limits<RealT>::max();
         success                              *= initializationRejectedAtomically(overflow_data,
-                                                    0.25,
-                                                    0.45,
-                                                    "nonfinite derived initialization candidate");
+                                                                                 0.25,
+                                                                                 0.45,
+                                                                                 "nonfinite derived initialization candidate");
 
         // An invalid configuration is rejected before any state is written.
         {
@@ -785,7 +785,7 @@ namespace GridKit
         setAnswerKeyState(fixture.repca);
         success *= (fixture.repca.evaluateResidual() == 0);
 
-        const std::array<VariableValue, index(Vars::MAXIMUM)> expected_residuals{{
+        const std::array<VariableValue, Utilities::enum_size<Vars>()> expected_residuals{{
             {Vars::VMEAS, 0.4},
             {Vars::QMEAS, 0.45},
             {Vars::XQPI, 0.3},
@@ -811,7 +811,7 @@ namespace GridKit
         }};
 
         success              *= (static_cast<size_t>(fixture.repca.getResidual().getSize())
-                    == expected_residuals.size());
+                                 == expected_residuals.size());
         const auto* residual  = fixture.repca.getResidual().getData();
         for (size_t row = 0; row < expected_residuals.size(); ++row)
         {
@@ -859,8 +859,8 @@ namespace GridKit
           Fixture<ScalarT> fixture(data);
           fixture.attachAllInputs();
           setAnswerKeyInputs(fixture);
-          fixture.input(Ext::VREF) = 1.05;
-          fixture.input(Ext::QREF) = 0.20;
+          fixture.input(Ext::vref) = 1.05;
+          fixture.input(Ext::qref) = 0.20;
 
           success *= fixture.prepare(0.0, 0.0);
           setState(fixture.repca,
@@ -1071,8 +1071,8 @@ namespace GridKit
         }};
         for (const auto& test_case : frequency_deadband_cases)
         {
-          fixture.input(Ext::FREQ)    = 1.0;
-          fixture.input(Ext::FREQREF) = 1.0 + test_case.input;
+          fixture.input(Ext::freq)    = 1.0;
+          fixture.input(Ext::freqref) = 1.0 + test_case.input;
           setState(fixture.repca, {{Vars::EF, 0.0}});
           success *= (fixture.repca.evaluateResidual() == 0);
           success *= residualsMatch(fixture.repca,
@@ -1085,7 +1085,7 @@ namespace GridKit
             {0.0, 0.0},
             {0.9, 0.9},
         }};
-        fixture.input(Ext::PREF) = 0.2;
+        fixture.input(Ext::pref) = 0.2;
         for (const auto& test_case : droop_cases)
         {
           setState(fixture.repca,
@@ -1269,9 +1269,9 @@ namespace GridKit
     private:
       using Params = PhasorDynamics::Controller::RepcaParameters;
       using Vars   = PhasorDynamics::Controller::RepcaInternalVariables;
-      using Ext    = PhasorDynamics::Controller::RepcaExternalVariables;
       using Mon    = PhasorDynamics::Controller::RepcaMonitorableVariables;
       using Data   = PhasorDynamics::Controller::RepcaData<RealT, IdxT>;
+      using Ext    = typename Data::SignalInputs;
       using RepcaT = PhasorDynamics::Controller::Repca<ScalarT, IdxT>;
 
       static constexpr size_t index(Vars variable)
@@ -1317,9 +1317,9 @@ namespace GridKit
       class Fixture
       {
       private:
-        std::array<T, index(Ext::MAXIMUM)>                                   input_values_{};
-        std::array<IdxT, index(Ext::MAXIMUM)>                                input_indices_{};
-        std::array<PhasorDynamics::SignalNode<T, IdxT>, index(Ext::MAXIMUM)> input_nodes_{};
+        std::array<T, Utilities::enum_size<Ext>()>                                   input_values_{};
+        std::array<IdxT, Utilities::enum_size<Ext>()>                                input_indices_{};
+        std::array<PhasorDynamics::SignalNode<T, IdxT>, Utilities::enum_size<Ext>()> input_nodes_{};
 
         PhasorDynamics::SignalNode<T, IdxT> qext_node_;
         PhasorDynamics::SignalNode<T, IdxT> pext_node_;
@@ -1336,8 +1336,8 @@ namespace GridKit
           repca.setSystemBase(60.0, system_va_base);
           if (assign_command_outputs)
           {
-            repca.getSignals().template assignSignalNode<Vars::QEXT>(&qext_node_);
-            repca.getSignals().template assignSignalNode<Vars::PEXT>(&pext_node_);
+            repca.getPorts().out.template port<Data::SignalOutputs::qext>().connect(&qext_node_);
+            repca.getPorts().out.template port<Data::SignalOutputs::pext>().connect(&pext_node_);
           }
         }
 
@@ -1347,18 +1347,18 @@ namespace GridKit
         void attachRequiredInputs(RealT initial_value = 0.0)
         {
           const IdxT external_index_base = repca.size() + bus.size();
-          for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+          for (auto variant : Utilities::enum_values<Ext>())
           {
+            const auto port      = static_cast<size_t>(variant);
             input_values_[port]  = static_cast<T>(initial_value);
             input_indices_[port] = external_index_base + static_cast<IdxT>(port);
-            input_nodes_[port].set(&input_values_[port], &input_indices_[port]);
+            input_nodes_[port].link(&input_values_[port], &input_indices_[port]);
           }
 
-          auto& signals = repca.getSignals();
-          signals.template attachSignalNode<Ext::IR>(&input_nodes_[index(Ext::IR)]);
-          signals.template attachSignalNode<Ext::II>(&input_nodes_[index(Ext::II)]);
-          signals.template attachSignalNode<Ext::P>(&input_nodes_[index(Ext::P)]);
-          signals.template attachSignalNode<Ext::Q>(&input_nodes_[index(Ext::Q)]);
+          repca.getPorts().in.template port<Data::SignalInputs::ir>().connect(&input_nodes_[index(Ext::ir)]);
+          repca.getPorts().in.template port<Data::SignalInputs::ii>().connect(&input_nodes_[index(Ext::ii)]);
+          repca.getPorts().in.template port<Data::SignalInputs::p>().connect(&input_nodes_[index(Ext::p)]);
+          repca.getPorts().in.template port<Data::SignalInputs::q>().connect(&input_nodes_[index(Ext::q)]);
         }
 
         void attachAllInputs(RealT initial_value    = 0.0,
@@ -1366,15 +1366,14 @@ namespace GridKit
         {
           attachRequiredInputs(initial_value);
 
-          auto& signals = repca.getSignals();
           if (attach_frequency)
           {
-            signals.template attachSignalNode<Ext::FREQ>(&input_nodes_[index(Ext::FREQ)]);
+            repca.getPorts().in.template port<Data::SignalInputs::freq>().connect(&input_nodes_[index(Ext::freq)]);
           }
-          signals.template attachSignalNode<Ext::VREF>(&input_nodes_[index(Ext::VREF)]);
-          signals.template attachSignalNode<Ext::PREF>(&input_nodes_[index(Ext::PREF)]);
-          signals.template attachSignalNode<Ext::QREF>(&input_nodes_[index(Ext::QREF)]);
-          signals.template attachSignalNode<Ext::FREQREF>(&input_nodes_[index(Ext::FREQREF)]);
+          repca.getPorts().in.template port<Data::SignalInputs::vref>().connect(&input_nodes_[index(Ext::vref)]);
+          repca.getPorts().in.template port<Data::SignalInputs::pref>().connect(&input_nodes_[index(Ext::pref)]);
+          repca.getPorts().in.template port<Data::SignalInputs::qref>().connect(&input_nodes_[index(Ext::qref)]);
+          repca.getPorts().in.template port<Data::SignalInputs::freqref>().connect(&input_nodes_[index(Ext::freqref)]);
         }
 
         void setCommands(RealT qext, RealT pext)
@@ -1441,7 +1440,7 @@ namespace GridKit
       static constexpr RealT kStateVi      = 0.4;
       static constexpr RealT kNonunitAlpha = 2.5;
 
-      static constexpr size_t kBusVrColumn        = index(Vars::MAXIMUM);
+      static constexpr size_t kBusVrColumn        = Utilities::enum_size<Vars>();
       static constexpr size_t kBusViColumn        = kBusVrColumn + 1;
       static constexpr size_t kExternalColumnBase = kBusViColumn + 1;
 
@@ -1562,25 +1561,25 @@ namespace GridKit
       template <typename T>
       void setInitializationInputs(Fixture<T>& fixture) const
       {
-        fixture.input(Ext::IR)   = static_cast<T>(0.2);
-        fixture.input(Ext::II)   = static_cast<T>(-0.1);
-        fixture.input(Ext::P)    = static_cast<T>(0.4);
-        fixture.input(Ext::Q)    = static_cast<T>(0.1);
-        fixture.input(Ext::FREQ) = static_cast<T>(0.99);
+        fixture.input(Ext::ir)   = static_cast<T>(0.2);
+        fixture.input(Ext::ii)   = static_cast<T>(-0.1);
+        fixture.input(Ext::p)    = static_cast<T>(0.4);
+        fixture.input(Ext::q)    = static_cast<T>(0.1);
+        fixture.input(Ext::freq) = static_cast<T>(0.99);
       }
 
       template <typename T>
       void setAnswerKeyInputs(Fixture<T>& fixture) const
       {
-        fixture.input(Ext::IR)      = static_cast<T>(1.0);
-        fixture.input(Ext::II)      = static_cast<T>(2.0);
-        fixture.input(Ext::P)       = static_cast<T>(0.35);
-        fixture.input(Ext::Q)       = static_cast<T>(0.25);
-        fixture.input(Ext::FREQ)    = static_cast<T>(0.2);
-        fixture.input(Ext::VREF)    = static_cast<T>(1.05);
-        fixture.input(Ext::PREF)    = static_cast<T>(0.55);
-        fixture.input(Ext::QREF)    = static_cast<T>(0.3);
-        fixture.input(Ext::FREQREF) = static_cast<T>(1.0);
+        fixture.input(Ext::ir)      = static_cast<T>(1.0);
+        fixture.input(Ext::ii)      = static_cast<T>(2.0);
+        fixture.input(Ext::p)       = static_cast<T>(0.35);
+        fixture.input(Ext::q)       = static_cast<T>(0.25);
+        fixture.input(Ext::freq)    = static_cast<T>(0.2);
+        fixture.input(Ext::vref)    = static_cast<T>(1.05);
+        fixture.input(Ext::pref)    = static_cast<T>(0.55);
+        fixture.input(Ext::qref)    = static_cast<T>(0.3);
+        fixture.input(Ext::freqref) = static_cast<T>(1.0);
       }
 
       template <typename T>
@@ -1629,12 +1628,12 @@ namespace GridKit
         implicit_defaults.attachAllInputs();
         explicit_defaults.attachAllInputs();
 
-        implicit_defaults.input(Ext::P)    = 0.2;
-        implicit_defaults.input(Ext::Q)    = 0.1;
-        implicit_defaults.input(Ext::FREQ) = 1.0;
-        explicit_defaults.input(Ext::P)    = 0.2;
-        explicit_defaults.input(Ext::Q)    = 0.1;
-        explicit_defaults.input(Ext::FREQ) = 1.0;
+        implicit_defaults.input(Ext::p)    = 0.2;
+        implicit_defaults.input(Ext::q)    = 0.1;
+        implicit_defaults.input(Ext::freq) = 1.0;
+        explicit_defaults.input(Ext::p)    = 0.2;
+        explicit_defaults.input(Ext::q)    = 0.1;
+        explicit_defaults.input(Ext::freq) = 1.0;
 
         bool success = implicit_defaults.initialize(0.1, 0.2)
                        && explicit_defaults.initialize(0.1, 0.2);
@@ -1670,8 +1669,9 @@ namespace GridKit
         {
           success = false;
         }
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (auto variant : Utilities::enum_values<Ext>())
         {
+          const auto port     = static_cast<size_t>(variant);
           const auto variable = static_cast<Ext>(port);
           if (!rowMatches(implicit_defaults.input(variable),
                           explicit_defaults.input(variable),
@@ -1720,7 +1720,7 @@ namespace GridKit
         Fixture<ScalarT> fixture(makeData());
         fixture.attachAllInputs();
         PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
-        fixture.repca.getSignals().template attachSignalNode<variable>(&unlinked_node);
+        fixture.repca.getPorts().in.template port<variable>().connect(&unlinked_node);
         return fixture.repca.verify() > 0;
       }
 
@@ -1730,7 +1730,7 @@ namespace GridKit
       {
         auto* y  = fixture.repca.y().getData();
         auto* yp = fixture.repca.yp().getData();
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           y[row]  = 0.125 + 0.01 * static_cast<RealT>(row);
           yp[row] = -0.25 - 0.01 * static_cast<RealT>(row);
@@ -1746,7 +1746,7 @@ namespace GridKit
                                             NonfiniteTarget target        = NonfiniteTarget::NONE,
                                             RealT           initial_vr    = 0.8,
                                             RealT           initial_vi    = 0.6,
-                                            Ext             poisoned_port = Ext::FREQ,
+                                            Ext             poisoned_port = Ext::freq,
                                             RealT           poison_value =
                                                 std::numeric_limits<RealT>::infinity()) const
       {
@@ -1770,12 +1770,13 @@ namespace GridKit
 
         poisonState(fixture, qext, pext);
 
-        const auto                             y_before   = copyVector(fixture.repca.y());
-        const auto                             yp_before  = copyVector(fixture.repca.yp());
-        const auto                             bus_before = copyVector(fixture.bus.y());
-        std::array<RealT, index(Ext::MAXIMUM)> inputs_before{};
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        const auto                                     y_before   = copyVector(fixture.repca.y());
+        const auto                                     yp_before  = copyVector(fixture.repca.yp());
+        const auto                                     bus_before = copyVector(fixture.bus.y());
+        std::array<RealT, Utilities::enum_size<Ext>()> inputs_before{};
+        for (auto variant : Utilities::enum_values<Ext>())
         {
+          const auto port     = static_cast<size_t>(variant);
           inputs_before[port] = fixture.input(static_cast<Ext>(port));
         }
 
@@ -1806,8 +1807,9 @@ namespace GridKit
         {
           success = false;
         }
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (auto variant : Utilities::enum_values<Ext>())
         {
+          const auto port = static_cast<size_t>(variant);
           if (!valueUnchanged(fixture.input(static_cast<Ext>(port)),
                               inputs_before[port],
                               "external signal",
@@ -1845,7 +1847,7 @@ namespace GridKit
 
       static const char* variableName(Vars variable)
       {
-        static constexpr std::array<const char*, index(Vars::MAXIMUM)> names{{
+        static constexpr std::array<const char*, Utilities::enum_size<Vars>()> names{{
             "VMEAS",
             "QMEAS",
             "XQPI",
@@ -2070,7 +2072,7 @@ namespace GridKit
         bool        success = true;
         const auto* f       = repca.getResidual().getData();
         const auto* yp      = repca.yp().getData();
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           const auto variable = static_cast<Vars>(row);
           if (!variableMatches(f[row],
@@ -2161,13 +2163,13 @@ namespace GridKit
       {
         return {
             {{index(Vars::VMEAS), -6.0}, {index(Vars::VCTRL), 5.0}},
-            {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::Q)), 10.0}},
+            {{index(Vars::QMEAS), -6.0}, {externalColumn(index(Ext::q)), 10.0}},
             {{index(Vars::XQPI), -1.0},
              {index(Vars::SFRZ), 1.2},
              {index(Vars::ERQLIM), 1.5},
              {index(Vars::QPI), 0.0}},
             {{index(Vars::XQLAG), -1.4}, {index(Vars::QPI), 0.4}},
-            {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::P)), 5.0}},
+            {{index(Vars::PMEAS), -3.5}, {externalColumn(index(Ext::p)), 5.0}},
             {{index(Vars::XPPI), -1.0},
              {index(Vars::EPLIM), 1.8},
              {index(Vars::PPI), 0.0}},
@@ -2176,9 +2178,9 @@ namespace GridKit
             {{index(Vars::VLDC), -2.0},
              {kBusVrColumn, 1.96},
              {kBusViColumn, 0.52},
-             {externalColumn(index(Ext::IR)), -0.1096},
-             {externalColumn(index(Ext::II)), 0.0968}},
-            {{index(Vars::V), 1.0}, {index(Vars::VDROOP), -1.0}, {externalColumn(index(Ext::Q)), 0.8}},
+             {externalColumn(index(Ext::ir)), -0.1096},
+             {externalColumn(index(Ext::ii)), 0.0968}},
+            {{index(Vars::V), 1.0}, {index(Vars::VDROOP), -1.0}, {externalColumn(index(Ext::q)), 0.8}},
             {{index(Vars::VLDC), 1.0},
              {index(Vars::VDROOP), 0.0},
              {index(Vars::VCTRL), -1.0}},
@@ -2186,19 +2188,19 @@ namespace GridKit
             {{index(Vars::VMEAS), -1.0},
              {index(Vars::QMEAS), 0.0},
              {index(Vars::ERQ), -1.0},
-             {externalColumn(index(Ext::VREF)), 1.0},
-             {externalColumn(index(Ext::QREF)), 0.0}},
+             {externalColumn(index(Ext::vref)), 1.0},
+             {externalColumn(index(Ext::qref)), 0.0}},
             {{index(Vars::ERQ), 1.0}, {index(Vars::ERQDB), -1.0}},
             {{index(Vars::ERQDB), 1.0}, {index(Vars::ERQLIM), -1.0}},
             {{index(Vars::XQPI), 1.0}, {index(Vars::ERQLIM), 2.0}, {index(Vars::QPI), -1.0}},
             {{index(Vars::XQLAG), 2.3}, {index(Vars::QPI), 0.2}, {index(Vars::QEXT), -5.0}},
             {{index(Vars::EF), -1.0},
-             {externalColumn(index(Ext::FREQ)), -1.0},
-             {externalColumn(index(Ext::FREQREF)), 1.0}},
+             {externalColumn(index(Ext::freq)), -1.0},
+             {externalColumn(index(Ext::freqref)), 1.0}},
             {{index(Vars::PMEAS), -1.0},
              {index(Vars::EF), 1.0},
              {index(Vars::EP), -1.0},
-             {externalColumn(index(Ext::PREF)), 2.0}},
+             {externalColumn(index(Ext::pref)), 2.0}},
             {{index(Vars::EP), 0.0}, {index(Vars::EPLIM), -1.0}},
             {{index(Vars::XPPI), 1.0}, {index(Vars::EPLIM), 1.7}, {index(Vars::PPI), -1.0}},
             {{index(Vars::PREF), 1.0}, {index(Vars::PEXT), -2.0}},
@@ -2217,8 +2219,8 @@ namespace GridKit
             {index(Vars::VMEAS), 0.0},
             {index(Vars::QMEAS), -1.0},
             {index(Vars::ERQ), -1.0},
-            {externalColumn(index(Ext::VREF)), 0.0},
-            {externalColumn(index(Ext::QREF)), 2.0},
+            {externalColumn(index(Ext::vref)), 0.0},
+            {externalColumn(index(Ext::qref)), 2.0},
         };
         expected[index(Vars::PEXT)] = {
             {index(Vars::PREF), 0.0},
@@ -2270,7 +2272,7 @@ namespace GridKit
         }
 
         bool success = true;
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           if (!jacobianRowMatches(actual[row], expected[row], row, source, tolerance))
           {
@@ -2287,7 +2289,7 @@ namespace GridKit
         auto* yp    = fixture.repca.yp().getData();
         auto* bus_y = fixture.bus.y().getData();
 
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           y[row].setVariableNumber(row);
           yp[row].setVariableNumber(row);
@@ -2297,9 +2299,8 @@ namespace GridKit
         {
           bus_y[row].setVariableNumber(kBusVrColumn + row);
         }
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (auto variable : Utilities::enum_values<Ext>())
         {
-          const auto variable = static_cast<Ext>(port);
           fixture.input(variable).setVariableNumber(fixture.inputIndex(variable));
         }
 
@@ -2323,9 +2324,9 @@ namespace GridKit
         numberVariables(fixture, alpha);
         success *= (fixture.repca.evaluateResidual() == 0);
 
-        std::vector<DependencyTracking::Variable::DependencyMap> rows(index(Vars::MAXIMUM));
+        std::vector<DependencyTracking::Variable::DependencyMap> rows(Utilities::enum_size<Vars>());
         const auto*                                              f = fixture.repca.getResidual().getData();
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           rows[row] = f[row].getDependencies();
         }

@@ -65,8 +65,8 @@ namespace GridKit
             {
               // Sparse storage. @see LowerSparseStorage.hpp
               ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
-                                                           (void*) ident_store<ScalarT, IdxT>,
-                                                           var_i);
+                                                             (void*) ident_store<ScalarT, IdxT>,
+                                                             var_i);
               ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
                                                              (void*) sparse_store<ScalarT, IdxT>,
                                                              var_i,

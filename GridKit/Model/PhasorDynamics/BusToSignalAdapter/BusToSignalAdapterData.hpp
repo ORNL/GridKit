@@ -18,9 +18,8 @@ namespace GridKit
      *
      * These enum values serve as keys for the parameters map in ComponentData.
      */
-    enum class BusToSignalAdapterParameters
+    enum class BusToSignalAdapterParameters : size_t
     {
-      NONE,
     };
 
     /**
@@ -29,7 +28,6 @@ namespace GridKit
     enum class BusToSignalAdapterBuses : size_t
     {
       bus,
-      SIZE
     };
 
     /**
@@ -39,7 +37,6 @@ namespace GridKit
     {
       ir,
       ii,
-      SIZE
     };
 
     /**
@@ -49,15 +46,13 @@ namespace GridKit
     {
       vr,
       vi,
-      SIZE
     };
 
     /**
      * @brief Placeholder enum for BusToSignalAdapter monitorable variables
      */
-    enum class BusToSignalAdapterMonitorableVariables
+    enum class BusToSignalAdapterMonitorableVariables : size_t
     {
-      NONE,
     };
 
     /**
@@ -67,23 +62,14 @@ namespace GridKit
      * @tparam IdxT  Index type (e.g., size_t)
      */
     template <typename real_type, typename index_type>
-    struct BusToSignalAdapterData
-      : public ComponentData<real_type,
-                             index_type,
-                             BusToSignalAdapterParameters,
-                             BusToSignalAdapterBuses,
-                             BusToSignalAdapterSignalInputs,
-                             BusToSignalAdapterSignalOutputs,
-                             BusToSignalAdapterMonitorableVariables>
-    {
-      BusToSignalAdapterData() = default;
-
-      using Parameters           = BusToSignalAdapterParameters;
-      using Buses                = BusToSignalAdapterBuses;
-      using SignalInputs         = BusToSignalAdapterSignalInputs;
-      using SignalOutputs        = BusToSignalAdapterSignalOutputs;
-      using MonitorableVariables = BusToSignalAdapterMonitorableVariables;
-    };
+    using BusToSignalAdapterData =
+        ComponentData<real_type,
+                      index_type,
+                      BusToSignalAdapterParameters,
+                      BusToSignalAdapterBuses,
+                      BusToSignalAdapterSignalInputs,
+                      BusToSignalAdapterSignalOutputs,
+                      BusToSignalAdapterMonitorableVariables>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

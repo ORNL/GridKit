@@ -294,6 +294,30 @@ namespace GridKit
 
     int tagDifferentiable() final
     {
+      for (component_type* component : components_)
+      {
+        if (int err = component->tagDifferentiable())
+        {
+          return err;
+        }
+      }
+
+      // Node variables are algebraic.
+      std::fill(tag_.begin(), tag_.end(), false);
+
+      size_t idx = 0;
+      for (component_type* component : components_)
+      {
+        const auto& external_indices = component->getExternIndices();
+        for (IdxT i = 0; i < component->size(); ++i)
+        {
+          if (!external_indices.contains(i))
+          {
+            tag_[idx++] = component->tag()[i];
+          }
+        }
+      }
+
       return 0;
     }
 

@@ -49,6 +49,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Capacitor<ScalarT, IdxT>::tagDifferentiable()
   {
+    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 

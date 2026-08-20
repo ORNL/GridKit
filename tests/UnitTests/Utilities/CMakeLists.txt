@@ -4,8 +4,7 @@ target_link_libraries(
   PRIVATE GridKit::phasor_dynamics_systemmodel GridKit::testing)
 target_include_directories(
   test_case_format
-  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/single_include
-          ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/single_include)
 
 add_executable(test_logger runLoggerTests.cpp)
 target_link_libraries(

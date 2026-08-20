@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -71,7 +72,7 @@ namespace GridKit
       using Parameters = typename BusData<RealT, IdxT>::Parameters;
       for (auto& raw_parameter : j.at("params").items())
       {
-        auto key = magic_enum::enum_cast<Parameters>(raw_parameter.key());
+        auto key = Utilities::enum_cast<Parameters>(raw_parameter.key());
         if (key.has_value())
         {
           // NOTE: this is necessary because it doesn't seem like nlohmann/json
@@ -108,13 +109,11 @@ namespace GridKit
 
       if (j.contains("mon"))
       {
-        using magic_enum::case_insensitive;
-        using magic_enum::enum_cast;
         using MonitorableVariables = typename BusData<RealT, IdxT>::MonitorableVariables;
         for (auto& raw_monitored_variable : j.at("mon"))
         {
           auto var_name  = raw_monitored_variable.get<std::string>();
-          auto monitored = enum_cast<MonitorableVariables>(var_name, case_insensitive);
+          auto monitored = Utilities::enum_cast<MonitorableVariables>(var_name, magic_enum::case_insensitive);
           if (monitored.has_value())
           {
             bd.monitored_variables.insert(monitored.value());

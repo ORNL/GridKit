@@ -77,6 +77,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int SynchronousMachine<ScalarT, IdxT>::tagDifferentiable()
   {
+    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 

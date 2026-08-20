@@ -16,7 +16,7 @@ namespace GridKit
     {
       /// Parameter keys for the REGCA converter model. All keys are
       /// required except the optional PowerWorld compatibility fields.
-      enum class RegcaParameters
+      enum class RegcaParameters : size_t
       {
         p0,     ///< Initial active power injection on system base
         q0,     ///< Initial reactive power injection on system base
@@ -36,14 +36,13 @@ namespace GridKit
 
         Qmin, ///< Optional PowerWorld compatibility field, accepted and unused
         Khv,  ///< Optional PowerWorld compatibility field, accepted and unused
-        Xe    ///< Optional PowerWorld compatibility field, accepted and unused
+        Xe,   ///< Optional PowerWorld compatibility field, accepted and unused
       };
 
       /// Buses for the REGCA converter model.
       enum class RegcaBuses : size_t
       {
         bus, ///< Terminal bus ID
-        SIZE
       };
 
       /// Signal inputs for the REGCA converter model.
@@ -51,7 +50,6 @@ namespace GridKit
       {
         ipcmd, ///< Optional active-current command signal ID
         iqcmd, ///< Optional reactive-current command signal ID
-        SIZE
       };
 
       /// Signal outputs for the REGCA converter model.
@@ -61,16 +59,15 @@ namespace GridKit
         ibranchi, ///< Optional branch-current imaginary-component output signal ID
         pbranch,  ///< Optional branch active-power output signal ID
         qbranch,  ///< Optional branch reactive-power output signal ID
-        SIZE
       };
 
       /// Variables available through the monitor interface.
-      enum class RegcaMonitorableVariables
+      enum class RegcaMonitorableVariables : size_t
       {
         ir, ///< Branch-current real component on system base
         ii, ///< Branch-current imaginary component on system base
         p,  ///< Branch active power on system base
-        q   ///< Branch reactive power on system base
+        q,  ///< Branch reactive power on system base
       };
 
       /**

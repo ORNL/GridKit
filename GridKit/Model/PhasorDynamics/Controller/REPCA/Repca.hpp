@@ -11,8 +11,9 @@
 #include <vector>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -52,7 +53,6 @@ namespace GridKit
         EPLIM,  ///< \f$e_P^\mathrm{lim}\f$ Algebraic limited active-power control error on component base [p.u.]
         PPI,    ///< \f$P^\mathrm{PI}\f$ Algebraic active-power PI output on component base [p.u.]
         PEXT,   ///< \f$P^\mathrm{ext}\f$ Algebraic active-power command on system base [p.u.]
-        MAXIMUM ///< Number of internal variables
       };
 
       /// External variables of `Repca`.
@@ -67,7 +67,6 @@ namespace GridKit
         PREF,    ///< \f$P_\mathrm{plant}^\mathrm{ref}\f$ Optional plant active-power reference on system base [p.u.]
         QREF,    ///< \f$Q^\mathrm{ref}\f$ Optional reactive-power reference on system base [p.u.]
         FREQREF, ///< \f$f^\mathrm{ref}\f$ Optional absolute frequency reference [p.u.]
-        MAXIMUM  ///< Number of external variables
       };
 
       /**
@@ -106,6 +105,8 @@ namespace GridKit
         using BusT               = BusBase<ScalarT, IdxT>;
         using SignalT            = SignalNode<ScalarT, IdxT>;
         using ModelDataT         = RepcaData<RealT, IdxT>;
+        using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
+        using SignalPortsT       = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT           = Model::VariableMonitor<Repca, RepcaData>;
         using InternalVariablesT = RepcaInternalVariables;
         using ExternalVariablesT = RepcaExternalVariables;
@@ -125,11 +126,10 @@ namespace GridKit
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                RepcaInternalVariables,
-                                RepcaExternalVariables>&;
+        SignalPortsT& getPorts()
+        {
+          return ports_;
+        }
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
@@ -211,8 +211,8 @@ namespace GridKit
         ScalarT qref_set_{ZERO<RealT>};
         ScalarT pref_set_{ZERO<RealT>};
 
-        ComponentSignals<ScalarT, IdxT, RepcaInternalVariables, RepcaExternalVariables> signals_;
-        std::unique_ptr<MonitorT>                                                       monitor_;
+        SignalPortsT              ports_;
+        std::unique_ptr<MonitorT> monitor_;
 
         std::vector<ScalarT> ws_;
         std::vector<IdxT>    ws_indices_;
