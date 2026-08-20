@@ -15,17 +15,41 @@ using namespace GridKit;
 using namespace GridKit::PhasorDynamics;
 using namespace AnalysisManager::Sundials;
 
+/**
+ * @brief A simple implementation of the "client" side of a co-simulation pair
+ *
+ * This is a "client" in the sense that it initiates the simulation and triggers
+ * its end.
+ *
+ * @tparam scalar_type scalar parameter type
+ * @tparam index_type  integer parameter type
+ */
 template <typename scalar_type, typename index_type>
 class CoSimClient
 {
 public:
+  /// Type representing a scalar value
   using ScalarT      = scalar_type;
+  /// Type representing an index
   using IdxT         = index_type;
+  /// Alias for SystemModel
   using SystemModelT = SystemModel<ScalarT, IdxT>;
+  /// Alias for SignalNode
   using SignalT      = typename SystemModelT::SignalT;
 
   CoSimClient() = delete;
 
+  /**
+   * @brief Construct with set of signal nodes to connect
+   *
+   * This links the current signal nodes with variables received from server and
+   * connects to the expected tcp port from which to receive.
+   *
+   * @param vr node from which to read real component of voltage to send
+   * @param vi node from which to read imaginary component of voltage to send
+   * @param ir node for communicating received real component of current
+   * @param ii node for communicating received imaginary component of current
+   */
   CoSimClient(SignalT* vr, SignalT* vi, SignalT* ir, SignalT* ii)
     : vr_signal_(vr),
       vi_signal_(vi),
@@ -39,6 +63,9 @@ public:
     socket_.connect("tcp://0.0.0.0:5556");
   }
 
+  /**
+   * @brief Signal the end of the simulation to the server and destruct object
+   */
   ~CoSimClient()
   {
     std::ostringstream oss;
@@ -53,6 +80,10 @@ public:
     }
   }
 
+  /**
+   * @brief Send voltage to and receive current from server-side instance for a
+   * single time step.
+   */
   void exchange()
   {
     // 1. Send data
@@ -76,15 +107,25 @@ public:
   }
 
 private:
+  /// node from which to read real component of voltage to send
   SignalT*       vr_signal_;
+  /// node from which to read imaginary component of voltage to send
   SignalT*       vi_signal_;
+  /// node for communicating received real component of current
   SignalT*       ir_signal_;
+  /// node for communicating received imaginary component of current
   SignalT*       ii_signal_;
+  /// variable for receiving current
   ScalarT        ir_{};
+  /// variable for receiving current
   ScalarT        ii_{};
+  /// dummy index for current signal
   IdxT           ir_idx_{GridKit::INVALID_INDEX<IdxT>};
+  /// dummy index for current signal
   IdxT           ii_idx_{GridKit::INVALID_INDEX<IdxT>};
+  /// ZMQ context
   zmq::context_t ctx_;
+  /// ZMQ socket
   zmq::socket_t  socket_;
 };
 
@@ -109,7 +150,7 @@ int main()
   ida.configureSimulation();
 
   // TODO: Take one step at a time and exchange data between.
-  //       Just use step_callback
+  //       Use step_callback for now.
   auto step_cb = [&client](auto)
   {
     client.exchange();

@@ -15,17 +15,39 @@ using IdxT    = std::size_t;
 using namespace GridKit;
 using namespace GridKit::PhasorDynamics;
 
+/**
+ * @brief A simple implementation of the "server" side of a co-simulation pair
+ *
+ * This is a "server" in the sense that it waits for a request from the "client"
+ * to initiate each step in the simulation and to trigger when to stop the
+ * simulation.
+ *
+ * @tparam scalar_type scalar parameter type
+ * @tparam index_type  integer parameter type
+ */
 template <typename scalar_type, typename index_type>
 class CoSimServer
 {
 public:
+  /// Type representing a scalar value
   using ScalarT      = scalar_type;
+  /// Type representing an index
   using IdxT         = index_type;
-  using SystemModelT = GridKit::PhasorDynamics::SystemModel<ScalarT, IdxT>;
+  /// Alias for SystemModel
+  using SystemModelT = SystemModel<ScalarT, IdxT>;
+  /// Alias for SignalNode
   using SignalT      = typename SystemModelT::SignalT;
 
   CoSimServer() = delete;
 
+  /**
+   * @brief Construct with set of signal nodes to connect
+   *
+   * This also binds the tcp port to which the client is expected to connect
+   *
+   * @param ir node from which to read real component of current to send
+   * @param ii node from which to read imaginary component of current to send
+   */
   CoSimServer(SignalT* ir, SignalT* ii)
     : ir_signal_(ir),
       ii_signal_(ii),
@@ -35,6 +57,18 @@ public:
     socket_.bind("tcp://0.0.0.0:5556");
   }
 
+  /**
+   * @brief Start the server
+   *
+   * The server will stay in this function until the end of the simulation is
+   * triggered by the client.
+   *
+   * Each time a voltage message is received, a
+   * step is taken and the resulting currents are sent as a response.
+   *
+   * @note For this initial implementation, no solver step is taken. Constant
+   * current values are sent in response.
+   */
   void start()
   {
     CoSim::StatusT status;
@@ -62,9 +96,13 @@ public:
   }
 
 private:
+  /// node from which to read real component of current to send
   SignalT*       ir_signal_;
+  /// node from which to read imaginary component of current to send
   SignalT*       ii_signal_;
+  /// ZMQ context
   zmq::context_t ctx_;
+  /// ZMQ socket
   zmq::socket_t  socket_;
 };
 
