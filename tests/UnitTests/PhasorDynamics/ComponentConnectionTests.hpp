@@ -50,9 +50,7 @@ namespace GridKit
       /// must leave it unchanged at a steady state.
       TestOutcome genrouEsdc1a()
       {
-        using MachineExternal = PhasorDynamics::GenrouExternalVariables;
-        using ExciterInternal = PhasorDynamics::Exciter::Esdc1aInternalVariables;
-        using ExciterParams   = PhasorDynamics::Exciter::Esdc1aParameters;
+        using ExciterParams = PhasorDynamics::Exciter::Esdc1aParameters;
 
         TestStatus success = true;
 
@@ -69,8 +67,8 @@ namespace GridKit
 
         PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> exciter(&bus, exciter_data);
 
-        machine.getSignals().template attachSignalNode<MachineExternal::EFD>(&efd);
-        exciter.getSignals().template assignSignalNode<ExciterInternal::EFD>(&efd);
+        machine.getPorts().in.template port<PhasorDynamics::GenrouSignalInputs::efd>().connect(&efd);
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&efd);
 
         system.addBus(&bus);
         system.addComponent(&machine);
@@ -100,9 +98,7 @@ namespace GridKit
       /// initialization requires.
       TestOutcome genrouHygov()
       {
-        using MachineExternal  = PhasorDynamics::GenrouExternalVariables;
-        using GovernorInternal = PhasorDynamics::Governor::HygovInternalVariables;
-        using GovernorParams   = PhasorDynamics::Governor::HygovParameters;
+        using GovernorParams = PhasorDynamics::Governor::HygovParameters;
 
         TestStatus success = true;
 
@@ -119,8 +115,8 @@ namespace GridKit
 
         PhasorDynamics::Governor::Hygov<ScalarT, IdxT> governor(governor_data);
 
-        machine.getSignals().template attachSignalNode<MachineExternal::PM>(&pmech);
-        governor.getSignals().template assignSignalNode<GovernorInternal::PMECH>(&pmech);
+        machine.getPorts().in.template port<PhasorDynamics::GenrouSignalInputs::pmech>().connect(&pmech);
+        governor.getPorts().out.template port<PhasorDynamics::Governor::HygovSignalOutputs::pmech>().connect(&pmech);
 
         system.addBus(&bus);
         system.addComponent(&machine);
@@ -148,9 +144,7 @@ namespace GridKit
       /// must leave it unchanged at a steady state.
       TestOutcome genClassicalEsdc1a()
       {
-        using MachineExternal = PhasorDynamics::GenClassicalExternalVariables;
-        using ExciterInternal = PhasorDynamics::Exciter::Esdc1aInternalVariables;
-        using ExciterParams   = PhasorDynamics::Exciter::Esdc1aParameters;
+        using ExciterParams = PhasorDynamics::Exciter::Esdc1aParameters;
 
         TestStatus success = true;
 
@@ -169,8 +163,8 @@ namespace GridKit
 
         PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT> exciter(&bus, exciter_data);
 
-        machine.getSignals().template attachSignalNode<MachineExternal::EFD>(&efd);
-        exciter.getSignals().template assignSignalNode<ExciterInternal::EFD>(&efd);
+        machine.getPorts().in.template port<PhasorDynamics::GenClassicalSignalInputs::efd>().connect(&efd);
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Esdc1aSignalOutputs::efd>().connect(&efd);
 
         system.addBus(&bus);
         system.addComponent(&machine);
@@ -198,9 +192,7 @@ namespace GridKit
       /// and must leave it unchanged at a steady state.
       TestOutcome genClassicalHygov()
       {
-        using MachineExternal  = PhasorDynamics::GenClassicalExternalVariables;
-        using GovernorInternal = PhasorDynamics::Governor::HygovInternalVariables;
-        using GovernorParams   = PhasorDynamics::Governor::HygovParameters;
+        using GovernorParams = PhasorDynamics::Governor::HygovParameters;
 
         TestStatus success = true;
 
@@ -219,8 +211,8 @@ namespace GridKit
 
         PhasorDynamics::Governor::Hygov<ScalarT, IdxT> governor(governor_data);
 
-        machine.getSignals().template attachSignalNode<MachineExternal::PM>(&pmech);
-        governor.getSignals().template assignSignalNode<GovernorInternal::PMECH>(&pmech);
+        machine.getPorts().in.template port<PhasorDynamics::GenClassicalSignalInputs::pmech>().connect(&pmech);
+        governor.getPorts().out.template port<PhasorDynamics::Governor::HygovSignalOutputs::pmech>().connect(&pmech);
 
         system.addBus(&bus);
         system.addComponent(&machine);
@@ -248,11 +240,9 @@ namespace GridKit
       /// measurements and must hold a steady state without a frequency input.
       TestOutcome regcaRepca()
       {
-        using ConverterInternal = PhasorDynamics::Converter::RegcaInternalVariables;
-        using ConverterParams   = PhasorDynamics::Converter::RegcaParameters;
-        using PlantInternal     = PhasorDynamics::Controller::RepcaInternalVariables;
-        using PlantExternal     = PhasorDynamics::Controller::RepcaExternalVariables;
-        using PlantParams       = PhasorDynamics::Controller::RepcaParameters;
+        using ConverterParams = PhasorDynamics::Converter::RegcaParameters;
+        using PlantInternal   = PhasorDynamics::Controller::RepcaInternalVariables;
+        using PlantParams     = PhasorDynamics::Controller::RepcaParameters;
 
         TestStatus success = true;
 
@@ -289,17 +279,14 @@ namespace GridKit
         PhasorDynamics::Converter::Regca<ScalarT, IdxT>  converter(&bus, converter_data);
         PhasorDynamics::Controller::Repca<ScalarT, IdxT> plant(&bus, plant_data);
 
-        auto& converter_signals = converter.getSignals();
-        converter_signals.template assignSignalNode<ConverterInternal::IR>(&ir);
-        converter_signals.template assignSignalNode<ConverterInternal::II>(&ii);
-        converter_signals.template assignSignalNode<ConverterInternal::PBR>(&p);
-        converter_signals.template assignSignalNode<ConverterInternal::QBR>(&q);
-
-        auto& plant_signals = plant.getSignals();
-        plant_signals.template attachSignalNode<PlantExternal::IR>(&ir);
-        plant_signals.template attachSignalNode<PlantExternal::II>(&ii);
-        plant_signals.template attachSignalNode<PlantExternal::P>(&p);
-        plant_signals.template attachSignalNode<PlantExternal::Q>(&q);
+        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::ibranchr>().connect(&ir);
+        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::ibranchi>().connect(&ii);
+        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::pbranch>().connect(&p);
+        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::qbranch>().connect(&q);
+        plant.getPorts().in.template port<PhasorDynamics::Controller::RepcaSignalInputs::ir>().connect(&ir);
+        plant.getPorts().in.template port<PhasorDynamics::Controller::RepcaSignalInputs::ii>().connect(&ii);
+        plant.getPorts().in.template port<PhasorDynamics::Controller::RepcaSignalInputs::p>().connect(&p);
+        plant.getPorts().in.template port<PhasorDynamics::Controller::RepcaSignalInputs::q>().connect(&q);
 
         system.addBus(&bus);
         system.addComponent(&converter);
@@ -342,12 +329,8 @@ namespace GridKit
       /// them unchanged at a steady state.
       TestOutcome regcaReecb()
       {
-        using ConverterExternal  = PhasorDynamics::Converter::RegcaExternalVariables;
-        using ConverterInternal  = PhasorDynamics::Converter::RegcaInternalVariables;
-        using ConverterParams    = PhasorDynamics::Converter::RegcaParameters;
-        using ControllerExternal = PhasorDynamics::Controller::ReecbExternalVariables;
-        using ControllerInternal = PhasorDynamics::Controller::ReecbInternalVariables;
-        using ControllerParams   = PhasorDynamics::Controller::ReecbParameters;
+        using ConverterParams  = PhasorDynamics::Converter::RegcaParameters;
+        using ControllerParams = PhasorDynamics::Controller::ReecbParameters;
 
         TestStatus success = true;
 
@@ -393,14 +376,14 @@ namespace GridKit
 
         PhasorDynamics::Controller::Reecb<ScalarT, IdxT> controller(&bus, controller_data);
 
-        controller.getSignals().template assignSignalNode<ControllerInternal::IPCMD>(&ipcmd);
-        controller.getSignals().template assignSignalNode<ControllerInternal::IQCMD>(&iqcmd);
-        converter.getSignals().template attachSignalNode<ConverterExternal::IPCMD>(&ipcmd);
-        converter.getSignals().template attachSignalNode<ConverterExternal::IQCMD>(&iqcmd);
-        converter.getSignals().template assignSignalNode<ConverterInternal::PBR>(&pe);
-        converter.getSignals().template assignSignalNode<ConverterInternal::QBR>(&qgen);
-        controller.getSignals().template attachSignalNode<ControllerExternal::PE>(&pe);
-        controller.getSignals().template attachSignalNode<ControllerExternal::QGEN>(&qgen);
+        controller.getPorts().out.template port<PhasorDynamics::Controller::ReecbSignalOutputs::ipcmd>().connect(&ipcmd);
+        controller.getPorts().out.template port<PhasorDynamics::Controller::ReecbSignalOutputs::iqcmd>().connect(&iqcmd);
+        converter.getPorts().in.template port<PhasorDynamics::Converter::RegcaSignalInputs::ipcmd>().connect(&ipcmd);
+        converter.getPorts().in.template port<PhasorDynamics::Converter::RegcaSignalInputs::iqcmd>().connect(&iqcmd);
+        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::pbranch>().connect(&pe);
+        converter.getPorts().out.template port<PhasorDynamics::Converter::RegcaSignalOutputs::qbranch>().connect(&qgen);
+        controller.getPorts().in.template port<PhasorDynamics::Controller::ReecbSignalInputs::pe>().connect(&pe);
+        controller.getPorts().in.template port<PhasorDynamics::Controller::ReecbSignalInputs::qgen>().connect(&qgen);
 
         system.addBus(&bus);
         system.addComponent(&converter);
@@ -410,10 +393,10 @@ namespace GridKit
         success *= ipcmd.linked() && iqcmd.linked() && pe.linked() && qgen.linked();
         success *= ipcmd.getVariableIndex()
                    == controller.getVariableIndex(
-                       static_cast<IdxT>(ControllerInternal::IPCMD));
+                       static_cast<IdxT>(PhasorDynamics::Controller::ReecbInternalVariables::IPCMD));
         success *= iqcmd.getVariableIndex()
                    == controller.getVariableIndex(
-                       static_cast<IdxT>(ControllerInternal::IQCMD));
+                       static_cast<IdxT>(PhasorDynamics::Controller::ReecbInternalVariables::IQCMD));
         success *= system.initialize() == 0;
         success *= system.evaluateResidual() == 0;
 
@@ -452,8 +435,9 @@ namespace GridKit
 
         return checkConnection<Genrou<ScalarT, IdxT>,
                                GenrouInternalVariables::OMEGA,
-                               GenrouExternalVariables::PM>(makeGenrouGastPtiCase(),
-                                                            __func__);
+                               GenrouSignalOutputs::speed,
+                               GenrouSignalInputs::pmech>(makeGenrouGastPtiCase(),
+                                                          __func__);
       }
 
       /// Check production GASTPTI signal wiring to GENSAL.
@@ -463,8 +447,9 @@ namespace GridKit
 
         return checkConnection<Gensal<ScalarT, IdxT>,
                                GensalInternalVariables::OMEGA,
-                               GensalExternalVariables::PM>(makeGensalGastPtiCase(),
-                                                            __func__);
+                               GensalSignalOutputs::speed,
+                               GensalSignalInputs::pmech>(makeGensalGastPtiCase(),
+                                                          __func__);
       }
 
       /// Check production GASTPTI signal wiring to GenClassical.
@@ -474,8 +459,9 @@ namespace GridKit
 
         return checkConnection<GenClassical<ScalarT, IdxT>,
                                GenClassicalInternalVariables::OMEGA,
-                               GenClassicalExternalVariables::PM>(makeGenClassicalGastPtiCase(),
-                                                                  __func__);
+                               GenClassicalSignalOutputs::speed,
+                               GenClassicalSignalInputs::pmech>(makeGenClassicalGastPtiCase(),
+                                                                __func__);
       }
 
     private:
@@ -496,7 +482,10 @@ namespace GridKit
       static constexpr RealT kInitialActivePower   = static_cast<RealT>(0.4);
       static constexpr RealT kInitialReactivePower = static_cast<RealT>(0.05);
 
-      template <typename MachineT, auto speed_variable, auto pmech_variable>
+      template <typename MachineT,
+                auto speed_state_variable,
+                auto speed_port_variable,
+                auto pmech_port_variable>
       TestOutcome checkConnection(const SystemDataT& data, const char* test_name)
       {
         using namespace PhasorDynamics::Governor;
@@ -508,9 +497,9 @@ namespace GridKit
 
         auto* machine  = dynamic_cast<MachineT*>(system.getComponent(kMachineComponentId));
         auto* governor = dynamic_cast<GastPtiT*>(system.getComponent(kGovernorComponentId));
-        auto* speed    = system.getSignal(kSpeedSignalId);
-        auto* pmech    = system.getSignal(kPmechSignalId);
-        auto* pref     = system.getSignal(kPrefSignalId);
+        auto* speed    = system.getSignalNode(kSpeedSignalId);
+        auto* pmech    = system.getSignalNode(kPmechSignalId);
+        auto* pref     = system.getSignalNode(kPrefSignalId);
 
         if (machine == nullptr || governor == nullptr || speed == nullptr
             || pmech == nullptr || pref == nullptr)
@@ -526,15 +515,15 @@ namespace GridKit
           return success.report(test_name);
         }
 
-        auto& machine_signals  = machine->getSignals();
-        auto& governor_signals = governor->getSignals();
+        auto& machine_ports  = machine->getPorts();
+        auto& governor_ports = governor->getPorts();
 
         const bool ports_connected =
-            machine_signals.template isAssigned<speed_variable>()
-            && machine_signals.template isAttached<pmech_variable>()
-            && governor_signals.template isAttached<GastPtiExternalVariables::OMEGA>()
-            && governor_signals.template isAttached<GastPtiExternalVariables::PREF>()
-            && governor_signals.template isAssigned<GastPtiInternalVariables::PMECH>();
+            machine_ports.out.template port<speed_port_variable>().connected()
+            && machine_ports.in.template port<pmech_port_variable>().connected()
+            && governor_ports.in.template port<GastPtiSignalInputs::speed>().connected()
+            && governor_ports.in.template port<GastPtiSignalInputs::pref>().connected()
+            && governor_ports.out.template port<GastPtiSignalOutputs::pmech>().connected();
         success *= ports_connected;
         if (!ports_connected)
         {
@@ -547,18 +536,19 @@ namespace GridKit
 
         success *= speed_index != pmech_index;
         success *= speed_index
-                   == machine->getVariableIndex(static_cast<IdxT>(speed_variable));
+                   == machine->getVariableIndex(static_cast<IdxT>(speed_state_variable));
         success *= speed_index
-                   == governor_signals.template readExternalVariableIndex<
-                       GastPtiExternalVariables::OMEGA>();
+                   == governor_ports.in.template port<GastPtiSignalInputs::speed>()
+                          .signalVariableIndex();
         success *= pmech_index
-                   == machine_signals.template readExternalVariableIndex<pmech_variable>();
+                   == machine_ports.in.template port<pmech_port_variable>()
+                          .signalVariableIndex();
         success *= pmech_index
                    == governor->getVariableIndex(
                        static_cast<IdxT>(GastPtiInternalVariables::PMECH));
         success *= pref_index
-                   == governor_signals.template readExternalVariableIndex<
-                       GastPtiExternalVariables::PREF>();
+                   == governor_ports.in.template port<GastPtiSignalInputs::pref>()
+                          .signalVariableIndex();
 
         return success.report(test_name);
       }

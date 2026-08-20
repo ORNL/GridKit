@@ -15,6 +15,8 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -42,8 +44,7 @@ namespace GridKit
        * @param data  Data object to store parameters
        */
       template <typename scalar_type, typename index_type>
-      Ieeet1<scalar_type, index_type>::Ieeet1(BusT*             bus,
-                                              const ModelDataT& data)
+      Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus, const ModelDataT& data)
         : bus_(bus),
           monitor_(std::make_unique<MonitorT>(data))
       {
@@ -56,6 +57,13 @@ namespace GridKit
         size_ = 9;
       }
 
+      /**
+       * @brief  Constructor for IEEET1 Exciter
+       *
+       * @param bus          Signal used for terminal reference vmag
+       * @param data         Data object to store parameters
+       * @param signal_nodes SignalNodeSet instance for accessing signal nodes
+       */
       template <typename scalar_type, typename index_type>
       Ieeet1<scalar_type, index_type>::~Ieeet1()
       {
@@ -100,16 +108,15 @@ namespace GridKit
         wb_.resize(2);
 
         // Resize signal variable data
-        const auto signal_size = static_cast<size_t>(Ieeet1ExternalVariables::MAXIMUM);
+        const auto signal_size = Utilities::enum_size<Ieeet1ExternalVariables>();
         ws_.resize(static_cast<IdxT>(signal_size));
         ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         // Set output signals
-        if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
+        if (auto efd_port = ports_.out.template port<Ieeet1SignalOutputs::efd>())
         {
-          auto* y = y_.getData();
-          signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y[7], &(this->getVariableIndex(7)));
+          efd_port.link(&y_.getData()[7], &(this->getVariableIndex(7)));
         }
 
         allocated_ = true;
@@ -153,21 +160,21 @@ namespace GridKit
         }
 
         auto check_attached_signal =
-            [&]<Ieeet1ExternalVariables variable>(const char* name)
+            [&]<Ieeet1SignalInputs input>(const char* name)
         {
-          if (signals_.template isAttached<variable>()
-              && !signals_.template isLinked<variable>())
+          auto port = ports_.in.template port<input>();
+          if (port.connected() && !port.linked())
           {
             Log::error() << "Ieeet1: " << name << " signal attached with no linked source\n";
             ret += 1;
           }
         };
 
-        check_attached_signal.template operator()<Ieeet1ExternalVariables::OMEGA>("speed");
-        check_attached_signal.template operator()<Ieeet1ExternalVariables::VREF>("vref");
-        check_attached_signal.template operator()<Ieeet1ExternalVariables::VS>("vs");
-        check_attached_signal.template operator()<Ieeet1ExternalVariables::VUEL>("vuel");
-        check_attached_signal.template operator()<Ieeet1ExternalVariables::VOEL>("voel");
+        check_attached_signal.template operator()<Ieeet1SignalInputs::speed>("speed");
+        check_attached_signal.template operator()<Ieeet1SignalInputs::vref>("vref");
+        check_attached_signal.template operator()<Ieeet1SignalInputs::vs>("vs");
+        check_attached_signal.template operator()<Ieeet1SignalInputs::vuel>("vuel");
+        check_attached_signal.template operator()<Ieeet1SignalInputs::voel>("voel");
 
         return ret;
       }
@@ -216,34 +223,34 @@ namespace GridKit
         // TODO: Build protections in system initialization call to
         // ensure Efd is initialized externally before the exciter initializes
         // other variables.
-        if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
+        if (ports_.out.template port<Ieeet1SignalOutputs::efd>())
         {
           efd0 = y[7]; ///<- generator needs to be initialized first
         }
 
         // Setpoint members provide the defaults for unattached signals.
-        auto read_signal = [&]<Ieeet1ExternalVariables variable>(const ScalarT& default_value) -> ScalarT
+        auto read_signal = [&]<Ieeet1SignalInputs input>(const ScalarT& default_value) -> ScalarT
         {
-          if (signals_.template isAttached<variable>())
+          if (auto port = ports_.in.template port<input>())
           {
-            return signals_.template readExternalVariable<variable>();
+            return port.readSignal();
           }
           return default_value;
         };
 
-        const ScalarT omega = read_signal.template operator()<Ieeet1ExternalVariables::OMEGA>(omega_set_);
-        const ScalarT vs    = read_signal.template operator()<Ieeet1ExternalVariables::VS>(vs_set_);
-        const ScalarT vuel  = read_signal.template operator()<Ieeet1ExternalVariables::VUEL>(vuel_set_);
-        const ScalarT voel  = read_signal.template operator()<Ieeet1ExternalVariables::VOEL>(voel_set_);
+        const ScalarT omega = read_signal.template operator()<Ieeet1SignalInputs::speed>(omega_set_);
+        const ScalarT vs    = read_signal.template operator()<Ieeet1SignalInputs::vs>(vs_set_);
+        const ScalarT vuel  = read_signal.template operator()<Ieeet1SignalInputs::vuel>(vuel_set_);
+        const ScalarT voel  = read_signal.template operator()<Ieeet1SignalInputs::voel>(voel_set_);
 
         uel_on_ = ZERO<RealT>;
-        if (signals_.template isAttached<Ieeet1ExternalVariables::VUEL>())
+        if (ports_.in.template port<Ieeet1SignalInputs::vuel>())
         {
           uel_on_ = ONE<RealT>;
         }
 
         oel_on_ = ZERO<RealT>;
-        if (signals_.template isAttached<Ieeet1ExternalVariables::VOEL>())
+        if (ports_.in.template port<Ieeet1SignalInputs::voel>())
         {
           oel_on_ = ONE<RealT>;
         }
@@ -300,9 +307,9 @@ namespace GridKit
         vuel_set_  = vuel;
         voel_set_  = voel;
 
-        if (signals_.template isAttached<Ieeet1ExternalVariables::VREF>())
+        if (auto vref_port = ports_.in.template port<Ieeet1SignalInputs::vref>())
         {
-          signals_.template writeExternalVariable<Ieeet1ExternalVariables::VREF>(vref_set_);
+          vref_port.writeValue(vref_set_);
         }
 
         y_.setDataUpdated();
@@ -427,23 +434,29 @@ namespace GridKit
         auto* ws = ws_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
-        auto read_signal = [&]<Ieeet1ExternalVariables variable>(const ScalarT& latched)
+        auto read_signal = [&]<Ieeet1SignalInputs      input,
+                               Ieeet1ExternalVariables variable>(const ScalarT& latched)
         {
           const auto index   = static_cast<size_t>(variable);
           ws[index]          = latched;
           ws_indices_[index] = INVALID_INDEX<IdxT>;
-          if (signals_.template isAttached<variable>())
+          if (auto port = ports_.in.template port<input>())
           {
-            ws[index]          = signals_.template readExternalVariable<variable>();
-            ws_indices_[index] = signals_.template readExternalVariableIndex<variable>();
+            ws[index]          = port.readSignal();
+            ws_indices_[index] = port.signalVariableIndex();
           }
         };
 
-        read_signal.template operator()<Ieeet1ExternalVariables::OMEGA>(omega_set_);
-        read_signal.template operator()<Ieeet1ExternalVariables::VREF>(vref_set_);
-        read_signal.template operator()<Ieeet1ExternalVariables::VS>(vs_set_);
-        read_signal.template operator()<Ieeet1ExternalVariables::VUEL>(vuel_set_);
-        read_signal.template operator()<Ieeet1ExternalVariables::VOEL>(voel_set_);
+        read_signal.template operator()<Ieeet1SignalInputs::speed,
+                                        Ieeet1ExternalVariables::OMEGA>(omega_set_);
+        read_signal.template operator()<Ieeet1SignalInputs::vref,
+                                        Ieeet1ExternalVariables::VREF>(vref_set_);
+        read_signal.template operator()<Ieeet1SignalInputs::vs,
+                                        Ieeet1ExternalVariables::VS>(vs_set_);
+        read_signal.template operator()<Ieeet1SignalInputs::vuel,
+                                        Ieeet1ExternalVariables::VUEL>(vuel_set_);
+        read_signal.template operator()<Ieeet1SignalInputs::voel,
+                                        Ieeet1ExternalVariables::VOEL>(voel_set_);
 
         // Bus voltages
         auto* wb = wb_.getData();

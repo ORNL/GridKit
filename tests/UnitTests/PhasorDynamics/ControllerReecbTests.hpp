@@ -58,10 +58,10 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
         PhasorDynamics::Controller::Reecb<ScalarT, IdxT> empty(&bus);
-        success *= (empty.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
+        success *= (empty.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (empty.getMonitor() == nullptr);
 
-        const std::array<Vars, index(Vars::MAXIMUM)> row_order{{
+        const std::array<Vars, Utilities::enum_size<Vars>()> row_order{{
             Vars::VMEAS,
             Vars::PMEAS,
             Vars::XPIQ,
@@ -91,16 +91,16 @@ namespace GridKit
         }
 
         Fixture<ScalarT> configured(makeData());
-        success *= (configured.reecb.size() == static_cast<IdxT>(index(Vars::MAXIMUM)));
+        success *= (configured.reecb.size() == static_cast<IdxT>(Utilities::enum_size<Vars>()));
         success *= (configured.reecb.getMonitor() != nullptr);
         success *= (configured.reecb.verify() == 0);
         success *= (configured.reecb.initialize() != 0);
         success *= (configured.reecb.allocate() == 0);
         success *= (configured.reecb.tagDifferentiable() == 0);
         success *= (static_cast<size_t>(configured.reecb.getResidual().getSize())
-                    == index(Vars::MAXIMUM));
+                    == Utilities::enum_size<Vars>());
 
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           const bool expected = row <= index(Vars::PORD);
           if (configured.reecb.tag()[row] != expected)
@@ -233,11 +233,11 @@ namespace GridKit
         busless.setSystemBase(kNominalFrequency, kSystemBaseVa);
         success *= (busless.verify() > 0);
 
-        success *= unlinkedSignalRejected<Ext::PE>();
-        success *= unlinkedSignalRejected<Ext::QGEN>();
-        success *= unlinkedSignalRejected<Ext::QEXT>();
-        success *= unlinkedSignalRejected<Ext::PFAREF>();
-        success *= unlinkedSignalRejected<Ext::PREF>();
+        success *= unlinkedSignalRejected<Ext::pe>();
+        success *= unlinkedSignalRejected<Ext::qgen>();
+        success *= unlinkedSignalRejected<Ext::qext>();
+        success *= unlinkedSignalRejected<Ext::pfaref>();
+        success *= unlinkedSignalRejected<Ext::pref>();
 
         auto floor_data                      = makeData();
         floor_data.parameters[Params::Trv]   = 0.0;
@@ -289,8 +289,8 @@ namespace GridKit
 
         Fixture<ScalarT> fixture(makeData(), 0.8, 0.6);
         fixture.attachAllInputs(99.0);
-        fixture.input(Ext::PE)    = kInitialIpcmd;
-        fixture.input(Ext::QGEN)  = kInitialIqcmd;
+        fixture.input(Ext::pe)    = kInitialIpcmd;
+        fixture.input(Ext::qgen)  = kInitialIqcmd;
         success                  *= fixture.initialize(kInitialIqcmd, kInitialIpcmd);
         success                  *= (fixture.evaluate() == 0);
 
@@ -328,11 +328,11 @@ namespace GridKit
 
         success *= scalarPreserved(fixture.iqcmd(), kInitialIqcmd, "preserved iqcmd");
         success *= scalarPreserved(fixture.ipcmd(), kInitialIpcmd, "preserved ipcmd");
-        success *= scalarPreserved(fixture.input(Ext::PE), kInitialIpcmd, "preserved pe");
-        success *= scalarPreserved(fixture.input(Ext::QGEN), kInitialIqcmd, "preserved qgen");
-        success *= scalarMatches(fixture.input(Ext::QEXT), 0.75, "published qext");
-        success *= scalarMatches(fixture.input(Ext::PFAREF), 0.0, "published pfaref");
-        success *= scalarMatches(fixture.input(Ext::PREF), 0.75, "published pref");
+        success *= scalarPreserved(fixture.input(Ext::pe), kInitialIpcmd, "preserved pe");
+        success *= scalarPreserved(fixture.input(Ext::qgen), kInitialIqcmd, "preserved qgen");
+        success *= scalarMatches(fixture.input(Ext::qext), 0.75, "published qext");
+        success *= scalarMatches(fixture.input(Ext::pfaref), 0.0, "published pfaref");
+        success *= scalarMatches(fixture.input(Ext::pref), 0.75, "published pref");
         success *= allResidualsWithinInitTolerance(fixture.reecb);
 
         success *= monitorMatches(fixture.reecb,
@@ -342,7 +342,7 @@ namespace GridKit
         constexpr RealT absolute_tolerance  = 2.5e-7;
         success                            *= (fixture.reecb.setAbsoluteTolerance(absolute_tolerance) == 0);
         const auto* tolerances              = fixture.reecb.absoluteTolerance().getData();
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           success *= valueUnchanged(tolerances[row], absolute_tolerance, "absolute tolerance", row);
         }
@@ -429,8 +429,8 @@ namespace GridKit
         {
           Fixture<ScalarT> adjusted_q(reactive_pi);
           adjusted_q.attachAllInputs();
-          adjusted_q.input(Ext::PE)    = 0.75;
-          adjusted_q.input(Ext::QGEN)  = qgen;
+          adjusted_q.input(Ext::pe)    = 0.75;
+          adjusted_q.input(Ext::qgen)  = qgen;
           success                     *= adjusted_q.initialize(0.75, 0.75);
           success                     *= (adjusted_q.evaluate() == 0);
           success                     *= allResidualsWithinInitTolerance(adjusted_q.reecb);
@@ -455,8 +455,8 @@ namespace GridKit
         {
           Fixture<ScalarT> adjusted_v(voltage_pi, test_case.voltage);
           adjusted_v.attachAllInputs();
-          adjusted_v.input(Ext::PE)    = test_case.pe;
-          adjusted_v.input(Ext::QGEN)  = test_case.qgen;
+          adjusted_v.input(Ext::pe)    = test_case.pe;
+          adjusted_v.input(Ext::qgen)  = test_case.qgen;
           success                     *= adjusted_v.initialize(0.75, 0.75);
           success                     *= (adjusted_v.evaluate() == 0);
           success                     *= allResidualsWithinInitTolerance(adjusted_v.reecb);
@@ -470,14 +470,14 @@ namespace GridKit
         late_data.parameters[Params::Pmax] = 1.0;
         Fixture<ScalarT> late(late_data);
         late.attachAllInputs();
-        late.input(Ext::PE)  = 0.0;
+        late.input(Ext::pe)  = 0.0;
         success             *= late.prepare(0.75, 0.75);
         if (late.reecb.initialize() == 0)
         {
           std::cout << "Expected REECB initialization rejection after Pmax adjustment\n";
           success = false;
         }
-        late.input(Ext::PREF) = 0.75;
+        late.input(Ext::pref) = 0.75;
         setState(late.reecb, {{Vars::PORD, 1.25}, {Vars::VT, 1.0}});
         setDerivative(late.reecb, {{Vars::PORD, 0.0}});
         success *= (late.evaluate() == 0);
@@ -499,8 +499,8 @@ namespace GridKit
         collapsed.parameters[Params::Vmax] = 1.0;
         Fixture<ScalarT> collapsed_limits(collapsed);
         collapsed_limits.attachAllInputs();
-        collapsed_limits.input(Ext::PE)    = 0.6;
-        collapsed_limits.input(Ext::QGEN)  = 0.6;
+        collapsed_limits.input(Ext::pe)    = 0.6;
+        collapsed_limits.input(Ext::qgen)  = 0.6;
         success                           *= collapsed_limits.initialize(0.75, 0.75);
         success                           *= (collapsed_limits.evaluate() == 0);
         success                           *= allResidualsWithinInitTolerance(collapsed_limits.reecb);
@@ -511,8 +511,8 @@ namespace GridKit
         collapsed_reactive.parameters[Params::Kvi]  = 0.0;
         Fixture<ScalarT> expanded_reactive(collapsed_reactive);
         expanded_reactive.attachAllInputs();
-        expanded_reactive.input(Ext::PE)    = 0.75;
-        expanded_reactive.input(Ext::QGEN)  = 0.3;
+        expanded_reactive.input(Ext::pe)    = 0.75;
+        expanded_reactive.input(Ext::qgen)  = 0.3;
         success                            *= expanded_reactive.initialize(0.75, 0.75);
         success                            *= (expanded_reactive.evaluate() == 0);
         success                            *= allResidualsWithinInitTolerance(expanded_reactive.reecb);
@@ -525,8 +525,8 @@ namespace GridKit
         collapsed_voltage.parameters[Params::Vmax] = 1.4;
         Fixture<ScalarT> expanded_voltage(collapsed_voltage);
         expanded_voltage.attachAllInputs();
-        expanded_voltage.input(Ext::PE)    = 0.75;
-        expanded_voltage.input(Ext::QGEN)  = 0.75;
+        expanded_voltage.input(Ext::pe)    = 0.75;
+        expanded_voltage.input(Ext::qgen)  = 0.75;
         success                           *= expanded_voltage.initialize(0.75, 0.75);
         success                           *= (expanded_voltage.evaluate() == 0);
         success                           *= allResidualsWithinInitTolerance(expanded_voltage.reecb);
@@ -538,8 +538,8 @@ namespace GridKit
         zero_gains.parameters[Params::Kvi] = 0.0;
         Fixture<ScalarT> unconstrained(zero_gains);
         unconstrained.attachAllInputs();
-        unconstrained.input(Ext::PE)    = 0.75;
-        unconstrained.input(Ext::QGEN)  = 4.0;
+        unconstrained.input(Ext::pe)    = 0.75;
+        unconstrained.input(Ext::qgen)  = 4.0;
         success                        *= unconstrained.initialize(0.75, 0.75);
         success                        *= (unconstrained.evaluate() == 0);
         success                        *= allResidualsWithinInitTolerance(unconstrained.reecb);
@@ -647,7 +647,7 @@ namespace GridKit
                                   {{Vars::PORD, 1.5}},
                                   test_case.label);
           success *= allResidualsWithinInitTolerance(asymmetric.reecb);
-          success *= scalarMatches(asymmetric.input(Ext::PREF),
+          success *= scalarMatches(asymmetric.input(Ext::pref),
                                    0.75,
                                    test_case.label);
         }
@@ -746,8 +746,8 @@ namespace GridKit
         nested_data.parameters[Params::Imax]   = 1.0;
         Fixture<ScalarT> nested(nested_data);
         nested.attachAllInputs();
-        nested.input(Ext::PE)    = 0.6;
-        nested.input(Ext::QGEN)  = 0.8;
+        nested.input(Ext::pe)    = 0.6;
+        nested.input(Ext::qgen)  = 0.8;
         success                 *= nested.initialize(0.8, 0.6);
         success                 *= (nested.evaluate() == 0);
         success                 *= scalarPreserved(nested.iqcmd(), 0.8, "nested-clamp reactive command");
@@ -762,7 +762,7 @@ namespace GridKit
         exhausted_data.parameters[Params::Vref0] = 2.2;
         Fixture<ScalarT> exhausted(exhausted_data);
         exhausted.attachAllInputs();
-        exhausted.input(Ext::PE)  = 1.25;
+        exhausted.input(Ext::pe)  = 1.25;
         success                  *= exhausted.initialize(0.0, 1.25);
         success                  *= (exhausted.evaluate() == 0);
         success                  *= scalarPreserved(exhausted.iqcmd(), 0.0, "exhausted reactive-current capacity");
@@ -789,8 +789,8 @@ namespace GridKit
         setResidualState(fixture.reecb);
         success *= (fixture.evaluate() == 0);
 
-        const RealT                                           ideal_circle_leg = circleLeg(1.76);
-        const std::array<VariableValue, index(Vars::MAXIMUM)> expected_residuals{{
+        const RealT                                                   ideal_circle_leg = circleLeg(1.76);
+        const std::array<VariableValue, Utilities::enum_size<Vars>()> expected_residuals{{
             {Vars::VMEAS, 0.99},
             {Vars::PMEAS, 0.145},
             {Vars::XPIQ, 0.21},
@@ -888,8 +888,8 @@ namespace GridKit
                   if (attached)
                   {
                     fixture.attachAllInputs(7.0);
-                    fixture.input(Ext::PE)   = 0.75;
-                    fixture.input(Ext::QGEN) = 0.75;
+                    fixture.input(Ext::pe)   = 0.75;
+                    fixture.input(Ext::qgen) = 0.75;
                   }
 
                   success *= fixture.initialize(0.75, 0.75);
@@ -919,8 +919,8 @@ namespace GridKit
 
                   if (attached)
                   {
-                    success *= scalarPreserved(fixture.input(Ext::PE), 0.75, "selector pe");
-                    success *= scalarPreserved(fixture.input(Ext::QGEN), 0.75, "selector qgen");
+                    success *= scalarPreserved(fixture.input(Ext::pe), 0.75, "selector pe");
+                    success *= scalarPreserved(fixture.input(Ext::qgen), 0.75, "selector qgen");
 
                     RealT expected_qext = 0.75;
                     if (reactive && !voltage)
@@ -938,9 +938,9 @@ namespace GridKit
                       expected_pfaref = kUnitSlopeAngle;
                     }
 
-                    success *= scalarMatches(fixture.input(Ext::QEXT), expected_qext, "published qext");
-                    success *= scalarMatches(fixture.input(Ext::PFAREF), expected_pfaref, "published pfaref");
-                    success *= scalarMatches(fixture.input(Ext::PREF), 0.75, "published pref");
+                    success *= scalarMatches(fixture.input(Ext::qext), expected_qext, "published qext");
+                    success *= scalarMatches(fixture.input(Ext::pfaref), expected_pfaref, "published pfaref");
+                    success *= scalarMatches(fixture.input(Ext::pref), 0.75, "published pref");
                   }
                 }
               }
@@ -967,13 +967,13 @@ namespace GridKit
           Fixture<ScalarT> fixture(data);
           fixture.attachAllInputs();
           success *= fixture.initialize(0.75, 0.75);
-          success *= scalarMatches(fixture.input(Ext::QEXT), 1.0, "published voltage reference");
+          success *= scalarMatches(fixture.input(Ext::qext), 1.0, "published voltage reference");
           success *= (fixture.evaluate() == 0);
           success *= allResidualsWithinInitTolerance(fixture.reecb);
 
           // A raised external voltage reference first enters the algebraic
           // voltage error without power-base conversion.
-          fixture.input(Ext::QEXT)  = 1.2;
+          fixture.input(Ext::qext)  = 1.2;
           success                  *= (fixture.evaluate() == 0);
           success                  *= residualsMatch(fixture.reecb,
                                                      {{Vars::EPIV, 0.2}},
@@ -990,13 +990,13 @@ namespace GridKit
           Fixture<ScalarT> fixture(makeData());
           fixture.attachAllInputs();
           success *= fixture.initialize(0.75, 0.75);
-          success *= scalarMatches(fixture.input(Ext::QEXT), 0.75, "published system-base reactive power");
+          success *= scalarMatches(fixture.input(Ext::qext), 0.75, "published system-base reactive power");
           success *= (fixture.evaluate() == 0);
           success *= allResidualsWithinInitTolerance(fixture.reecb);
 
           // The reactive reference keeps the power-base conversion before the
           // converted value drives the current-command lag.
-          fixture.input(Ext::QEXT)  = 0.85;
+          fixture.input(Ext::qext)  = 0.85;
           success                  *= (fixture.evaluate() == 0);
           success                  *= residualsMatch(fixture.reecb,
                                                      {{Vars::QREF, 0.2}},
@@ -1025,7 +1025,7 @@ namespace GridKit
           data.parameters[Params::kqv]   = 0.0;
           Fixture<ScalarT> fixture(data);
           fixture.attachAllInputs();
-          fixture.input(Ext::QEXT)  = 0.4;
+          fixture.input(Ext::qext)  = 0.4;
           success                  *= fixture.prepare(0.0, 0.2);
           setControlState(fixture.reecb);
           setState(fixture.reecb, {{Vars::QV, 0.1}});
@@ -1057,8 +1057,8 @@ namespace GridKit
           data.parameters[Params::kqv]   = 0.0;
           Fixture<ScalarT> fixture(data);
           fixture.attachAllInputs();
-          fixture.input(Ext::QEXT)  = 0.1;
-          fixture.input(Ext::QGEN)  = -0.05;
+          fixture.input(Ext::qext)  = 0.1;
+          fixture.input(Ext::qgen)  = -0.05;
           success                  *= fixture.prepare(0.0, 0.2);
           setControlState(fixture.reecb);
           setState(fixture.reecb, {{Vars::XPIQ, 0.82}});
@@ -1098,7 +1098,7 @@ namespace GridKit
           data.parameters[Params::kqv]   = 0.0;
           Fixture<ScalarT> fixture(data);
           fixture.attachAllInputs();
-          fixture.input(Ext::QEXT)  = 1.05;
+          fixture.input(Ext::qext)  = 1.05;
           success                  *= fixture.prepare(0.0, 0.2);
           setControlState(fixture.reecb);
           success *= (fixture.evaluate() == 0);
@@ -1147,7 +1147,7 @@ namespace GridKit
           {
             Fixture<ScalarT> fixture(data);
             fixture.attachAllInputs();
-            fixture.input(Ext::QEXT)  = test_case.input;
+            fixture.input(Ext::qext)  = test_case.input;
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             setState(fixture.reecb,
@@ -1187,7 +1187,7 @@ namespace GridKit
           {
             Fixture<ScalarT> fixture(data);
             fixture.attachAllInputs();
-            fixture.input(Ext::QEXT)  = test_case.reference;
+            fixture.input(Ext::qext)  = test_case.reference;
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             setState(fixture.reecb,
@@ -1222,7 +1222,7 @@ namespace GridKit
           {
             Fixture<ScalarT> fixture(data);
             fixture.attachAllInputs();
-            fixture.input(Ext::QEXT)  = test_case.reference;
+            fixture.input(Ext::qext)  = test_case.reference;
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             setState(fixture.reecb,
@@ -1296,7 +1296,7 @@ namespace GridKit
           data.parameters[Params::kqv]    = 0.0;
           Fixture<ScalarT> fixture(data);
           fixture.attachAllInputs();
-          fixture.input(Ext::PFAREF)  = std::atan(HALF<RealT>);
+          fixture.input(Ext::pfaref)  = std::atan(HALF<RealT>);
           success                    *= fixture.prepare(0.0, 0.2);
           setControlState(fixture.reecb);
           setState(fixture.reecb, {{Vars::PMEAS, 0.6}, {Vars::QV, 0.1}});
@@ -1332,7 +1332,7 @@ namespace GridKit
           {
             Fixture<ScalarT> fixture(makeResidualData());
             fixture.attachAllInputs();
-            fixture.input(Ext::PREF)  = rampReference(0.5, test_case.input);
+            fixture.input(Ext::pref)  = rampReference(0.5, test_case.input);
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             success *= (fixture.evaluate() == 0);
@@ -1374,7 +1374,7 @@ namespace GridKit
 
             Fixture<ScalarT> fixture(data);
             fixture.attachAllInputs();
-            fixture.input(Ext::PREF)  = rampReference(0.5, test_case.input);
+            fixture.input(Ext::pref)  = rampReference(0.5, test_case.input);
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             success *= (fixture.evaluate() == 0);
@@ -1401,7 +1401,7 @@ namespace GridKit
           {
             Fixture<ScalarT> fixture(makeResidualData());
             fixture.attachAllInputs();
-            fixture.input(Ext::PREF)  = rampReference(0.5, 0.2);
+            fixture.input(Ext::pref)  = rampReference(0.5, 0.2);
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             setState(fixture.reecb, {{Vars::VT, test_case.input}});
@@ -1433,7 +1433,7 @@ namespace GridKit
           {
             Fixture<ScalarT> fixture(makeResidualData());
             fixture.attachAllInputs();
-            fixture.input(Ext::PREF)  = rampReference(test_case.state, test_case.reference);
+            fixture.input(Ext::pref)  = rampReference(test_case.state, test_case.reference);
             success                  *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             RealT limited_rate = 0.6;
@@ -1784,9 +1784,9 @@ namespace GridKit
     private:
       using Params = PhasorDynamics::Controller::ReecbParameters;
       using Vars   = PhasorDynamics::Controller::ReecbInternalVariables;
-      using Ext    = PhasorDynamics::Controller::ReecbExternalVariables;
       using Mon    = PhasorDynamics::Controller::ReecbMonitorableVariables;
       using Data   = PhasorDynamics::Controller::ReecbData<RealT, IdxT>;
+      using Ext    = typename Data::SignalInputs;
       using ReecbT = PhasorDynamics::Controller::Reecb<ScalarT, IdxT>;
 
       static constexpr size_t index(Vars variable)
@@ -1826,9 +1826,9 @@ namespace GridKit
       class Fixture
       {
       private:
-        std::array<T, index(Ext::MAXIMUM)>                                   input_values_{};
-        std::array<IdxT, index(Ext::MAXIMUM)>                                input_indices_{};
-        std::array<PhasorDynamics::SignalNode<T, IdxT>, index(Ext::MAXIMUM)> input_nodes_{};
+        std::array<T, Utilities::enum_size<Ext>()>                                   input_values_{};
+        std::array<IdxT, Utilities::enum_size<Ext>()>                                input_indices_{};
+        std::array<PhasorDynamics::SignalNode<T, IdxT>, Utilities::enum_size<Ext>()> input_nodes_{};
 
         PhasorDynamics::SignalNode<T, IdxT> iqcmd_node_;
         PhasorDynamics::SignalNode<T, IdxT> ipcmd_node_;
@@ -1847,8 +1847,8 @@ namespace GridKit
           reecb.setSystemBase(kNominalFrequency, system_va_base);
           if (commands_assigned_)
           {
-            reecb.getSignals().template assignSignalNode<Vars::IQCMD>(&iqcmd_node_);
-            reecb.getSignals().template assignSignalNode<Vars::IPCMD>(&ipcmd_node_);
+            reecb.getPorts().out.template port<Data::SignalOutputs::iqcmd>().connect(&iqcmd_node_);
+            reecb.getPorts().out.template port<Data::SignalOutputs::ipcmd>().connect(&ipcmd_node_);
           }
         }
 
@@ -1858,19 +1858,19 @@ namespace GridKit
         void attachAllInputs(RealT initial_value = 0.0)
         {
           const IdxT external_index_base = reecb.size() + bus.size();
-          for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+          for (auto variant : Utilities::enum_values<Ext>())
           {
+            const auto port      = static_cast<size_t>(variant);
             input_values_[port]  = static_cast<T>(initial_value);
             input_indices_[port] = external_index_base + static_cast<IdxT>(port);
-            input_nodes_[port].set(&input_values_[port], &input_indices_[port]);
+            input_nodes_[port].link(&input_values_[port], &input_indices_[port]);
           }
 
-          auto& signals = reecb.getSignals();
-          signals.template attachSignalNode<Ext::PE>(&input_nodes_[index(Ext::PE)]);
-          signals.template attachSignalNode<Ext::QGEN>(&input_nodes_[index(Ext::QGEN)]);
-          signals.template attachSignalNode<Ext::QEXT>(&input_nodes_[index(Ext::QEXT)]);
-          signals.template attachSignalNode<Ext::PFAREF>(&input_nodes_[index(Ext::PFAREF)]);
-          signals.template attachSignalNode<Ext::PREF>(&input_nodes_[index(Ext::PREF)]);
+          reecb.getPorts().in.template port<Ext::pe>().connect(&input_nodes_[index(Ext::pe)]);
+          reecb.getPorts().in.template port<Ext::qgen>().connect(&input_nodes_[index(Ext::qgen)]);
+          reecb.getPorts().in.template port<Ext::qext>().connect(&input_nodes_[index(Ext::qext)]);
+          reecb.getPorts().in.template port<Ext::pfaref>().connect(&input_nodes_[index(Ext::pfaref)]);
+          reecb.getPorts().in.template port<Ext::pref>().connect(&input_nodes_[index(Ext::pref)]);
         }
 
         void setCommands(RealT iqcmd, RealT ipcmd)
@@ -1966,7 +1966,7 @@ namespace GridKit
       static constexpr RealT kCircleTol =
           std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
 
-      static constexpr size_t kBusVrColumn = index(Vars::MAXIMUM);
+      static constexpr size_t kBusVrColumn = Utilities::enum_size<Vars>();
 
       Data makeMinimalData() const
       {
@@ -2119,11 +2119,11 @@ namespace GridKit
       template <typename T>
       void setResidualInputs(Fixture<T>& fixture) const
       {
-        fixture.input(Ext::PE)     = static_cast<T>(0.3);
-        fixture.input(Ext::QGEN)   = static_cast<T>(-0.1);
-        fixture.input(Ext::QEXT)   = static_cast<T>(0.2);
-        fixture.input(Ext::PFAREF) = static_cast<T>(0.15);
-        fixture.input(Ext::PREF)   = static_cast<T>(0.325);
+        fixture.input(Ext::pe)     = static_cast<T>(0.3);
+        fixture.input(Ext::qgen)   = static_cast<T>(-0.1);
+        fixture.input(Ext::qext)   = static_cast<T>(0.2);
+        fixture.input(Ext::pfaref) = static_cast<T>(0.15);
+        fixture.input(Ext::pref)   = static_cast<T>(0.325);
       }
 
       /// State shared by the residual and priority-circle checks. Each smooth
@@ -2203,11 +2203,11 @@ namespace GridKit
                             RealT       epiv  = static_cast<RealT>(0.2),
                             RealT       ipcmd = static_cast<RealT>(0.2)) const
       {
-        fixture.input(Ext::PE)     = static_cast<T>(0.25);
-        fixture.input(Ext::QGEN)   = static_cast<T>(0.5);
-        fixture.input(Ext::QEXT)   = static_cast<T>(0.0);
-        fixture.input(Ext::PFAREF) = static_cast<T>(0.0);
-        fixture.input(Ext::PREF)   = static_cast<T>(0.25);
+        fixture.input(Ext::pe)     = static_cast<T>(0.25);
+        fixture.input(Ext::qgen)   = static_cast<T>(0.5);
+        fixture.input(Ext::qext)   = static_cast<T>(0.0);
+        fixture.input(Ext::pfaref) = static_cast<T>(0.0);
+        fixture.input(Ext::pref)   = static_cast<T>(0.25);
 
         fixture.reecb.yp().setToConst(static_cast<T>(ZERO<RealT>));
         setState(fixture.reecb,
@@ -2275,9 +2275,9 @@ namespace GridKit
         {
           success = false;
         }
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (auto variable : Utilities::enum_values<Ext>())
         {
-          const auto variable = static_cast<Ext>(port);
+          const auto port = static_cast<size_t>(variable);
           if (!rowMatches(implicit_defaults.input(variable),
                           explicit_defaults.input(variable),
                           "documented-default signal",
@@ -2319,7 +2319,7 @@ namespace GridKit
       {
         PhasorDynamics::SignalNode<ScalarT, IdxT> unlinked_node;
         Fixture<ScalarT>                          fixture(makeData());
-        fixture.reecb.getSignals().template attachSignalNode<variable>(&unlinked_node);
+        fixture.reecb.getPorts().in.template port<variable>().connect(&unlinked_node);
         return fixture.reecb.verify() > 0;
       }
 
@@ -2329,7 +2329,7 @@ namespace GridKit
       {
         auto* y  = fixture.reecb.y().getData();
         auto* yp = fixture.reecb.yp().getData();
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           y[row]  = 0.125 + 0.01 * static_cast<RealT>(row);
           yp[row] = -0.25 - 0.01 * static_cast<RealT>(row);
@@ -2349,8 +2349,8 @@ namespace GridKit
       {
         Fixture<ScalarT> fixture(data, voltage);
         fixture.attachAllInputs(77.0);
-        fixture.input(Ext::PE)   = pe;
-        fixture.input(Ext::QGEN) = qgen;
+        fixture.input(Ext::pe)   = pe;
+        fixture.input(Ext::qgen) = qgen;
         if (!fixture.prepare(iqcmd, ipcmd))
         {
           return false;
@@ -2358,13 +2358,14 @@ namespace GridKit
 
         poisonState(fixture, iqcmd, ipcmd);
 
-        const auto                             y_before   = copyVector(fixture.reecb.y());
-        const auto                             yp_before  = copyVector(fixture.reecb.yp());
-        const auto                             bus_before = copyVector(fixture.bus.y());
-        std::array<RealT, index(Ext::MAXIMUM)> inputs_before{};
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        const auto                                     y_before   = copyVector(fixture.reecb.y());
+        const auto                                     yp_before  = copyVector(fixture.reecb.yp());
+        const auto                                     bus_before = copyVector(fixture.bus.y());
+        std::array<RealT, Utilities::enum_size<Ext>()> inputs_before{};
+        for (auto variable : Utilities::enum_values<Ext>())
         {
-          inputs_before[port] = fixture.input(static_cast<Ext>(port));
+          const auto port     = static_cast<size_t>(variable);
+          inputs_before[port] = fixture.input(variable);
         }
 
         bool success = true;
@@ -2394,9 +2395,10 @@ namespace GridKit
         {
           success = false;
         }
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (auto variable : Utilities::enum_values<Ext>())
         {
-          if (!valueUnchanged(fixture.input(static_cast<Ext>(port)),
+          const auto port = static_cast<size_t>(variable);
+          if (!valueUnchanged(fixture.input(variable),
                               inputs_before[port],
                               "external signal",
                               port))
@@ -2433,7 +2435,7 @@ namespace GridKit
 
       static const char* variableName(Vars variable)
       {
-        static constexpr std::array<const char*, index(Vars::MAXIMUM)> names{{
+        static constexpr std::array<const char*, Utilities::enum_size<Vars>()> names{{
             "VMEAS",
             "PMEAS",
             "XPIQ",
@@ -2620,7 +2622,7 @@ namespace GridKit
         bool        success = true;
         const auto* f       = reecb.getResidual().getData();
         const auto* yp      = reecb.yp().getData();
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           const auto variable = static_cast<Vars>(row);
           if (!variableMatches(f[row],
@@ -2644,7 +2646,7 @@ namespace GridKit
       {
         bool        success = true;
         const auto* f       = reecb.getResidual().getData();
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           if (!std::isfinite(f[row]))
           {
@@ -2757,7 +2759,7 @@ namespace GridKit
         auto* yp    = fixture.reecb.yp().getData();
         auto* bus_y = fixture.bus.y().getData();
 
-        for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
+        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
           y[row].setVariableNumber(row);
           yp[row].setVariableNumber(row);
@@ -2767,9 +2769,8 @@ namespace GridKit
         {
           bus_y[row].setVariableNumber(kBusVrColumn + row);
         }
-        for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
+        for (auto variable : Utilities::enum_values<Ext>())
         {
-          const auto variable = static_cast<Ext>(port);
           fixture.input(variable).setVariableNumber(fixture.inputIndex(variable));
         }
 
@@ -2795,7 +2796,7 @@ namespace GridKit
         numberVariables(fixture, alpha);
         success *= (fixture.evaluate() == 0);
 
-        std::vector<DependencyTracking::Variable::DependencyMap> rows(index(Vars::MAXIMUM));
+        std::vector<DependencyTracking::Variable::DependencyMap> rows(Utilities::enum_size<Vars>());
         const auto*                                              f = fixture.reecb.getResidual().getData();
         for (size_t row = 0; row < rows.size(); ++row)
         {

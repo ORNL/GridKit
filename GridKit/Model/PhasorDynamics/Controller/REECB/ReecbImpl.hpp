@@ -19,6 +19,7 @@
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -33,16 +34,20 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       struct Reecb<scalar_type, index_type>::InitialPoint
       {
-        std::array<RealT, static_cast<size_t>(ReecbInternalVariables::IQCMD)>   variables{};
-        std::array<RealT, static_cast<size_t>(ReecbExternalVariables::MAXIMUM)> signals{};
-        RealT                                                                   qmin{};
-        RealT                                                                   qmax{};
-        RealT                                                                   vmin{};
-        RealT                                                                   vmax{};
-        RealT                                                                   pmin{};
-        RealT                                                                   pmax{};
-        RealT                                                                   imax{};
-        RealT                                                                   vref{};
+        // TODO: this should be fixed. sizing this array based on ordering of
+        //       variables seems fragile
+        std::array<RealT, static_cast<size_t>(ReecbInternalVariables::IQCMD)>
+            variables{};
+        std::array<RealT, Utilities::enum_size<ReecbExternalVariables>()>
+              signals{};
+        RealT qmin{};
+        RealT qmax{};
+        RealT vmin{};
+        RealT vmax{};
+        RealT pmin{};
+        RealT pmax{};
+        RealT imax{};
+        RealT vref{};
       };
 
       /**
@@ -54,7 +59,7 @@ namespace GridKit
       Reecb<scalar_type, index_type>::Reecb(BusT* bus)
         : bus_(bus)
       {
-        size_ = static_cast<IdxT>(ReecbInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<ReecbInternalVariables>());
         setDerivedParameters();
       }
 
@@ -71,7 +76,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(ReecbInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<ReecbInternalVariables>());
       }
 
       /**
@@ -121,7 +126,7 @@ namespace GridKit
         wb_.resize(2);
         wb_.setToZero();
 
-        const auto signal_size = static_cast<size_t>(ReecbExternalVariables::MAXIMUM);
+        const auto signal_size = Utilities::enum_size<ReecbExternalVariables>();
         ws_.resize(static_cast<IdxT>(signal_size));
         ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
@@ -134,18 +139,14 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        if (signals_.template isAssigned<ReecbInternalVariables::IQCMD>())
+        if (auto port = ports_.out.template port<ReecbSignalOutputs::iqcmd>())
         {
-          signals_.template getSignalNode<ReecbInternalVariables::IQCMD>()->set(
-              &y[IQCMD],
-              &(this->getVariableIndex(static_cast<IdxT>(IQCMD))));
+          port.link(&y[IQCMD], &(this->getVariableIndex(static_cast<IdxT>(IQCMD))));
         }
 
-        if (signals_.template isAssigned<ReecbInternalVariables::IPCMD>())
+        if (auto port = ports_.out.template port<ReecbSignalOutputs::ipcmd>())
         {
-          signals_.template getSignalNode<ReecbInternalVariables::IPCMD>()->set(
-              &y[IPCMD],
-              &(this->getVariableIndex(static_cast<IdxT>(IPCMD))));
+          port.link(&y[IPCMD], &(this->getVariableIndex(static_cast<IdxT>(IPCMD))));
         }
 
         allocated_ = true;
@@ -260,20 +261,21 @@ namespace GridKit
 
         check(std::isfinite(Imax_) && Imax_ > ZERO<RealT>, "Imax must be finite and positive");
 
-        auto check_optional_signal = [&]<ReecbExternalVariables variable>(const char* name)
+        auto check_optional_signal = [&]<ReecbSignalInputs variable>(const char* name)
         {
-          if (signals_.template isAttached<variable>() && !signals_.template isLinked<variable>())
+          if (ports_.in.template port<variable>().connected()
+              && !ports_.in.template port<variable>().linked())
           {
             Log::error() << "Reecb: " << name << " signal attached with no linked source\n";
             ret += 1;
           }
         };
 
-        check_optional_signal.template operator()<ReecbExternalVariables::PE>("pe");
-        check_optional_signal.template operator()<ReecbExternalVariables::QGEN>("qgen");
-        check_optional_signal.template operator()<ReecbExternalVariables::QEXT>("qext");
-        check_optional_signal.template operator()<ReecbExternalVariables::PFAREF>("pfaref");
-        check_optional_signal.template operator()<ReecbExternalVariables::PREF>("pref");
+        check_optional_signal.template operator()<ReecbSignalInputs::pe>("pe");
+        check_optional_signal.template operator()<ReecbSignalInputs::qgen>("qgen");
+        check_optional_signal.template operator()<ReecbSignalInputs::qext>("qext");
+        check_optional_signal.template operator()<ReecbSignalInputs::pfaref>("pfaref");
+        check_optional_signal.template operator()<ReecbSignalInputs::pref>("pref");
 
         return ret;
       }
@@ -373,15 +375,13 @@ namespace GridKit
         RealT pe0_system   = this->toSystemBase(ipcmd0 * vmeas_safe0);
         RealT qgen0_system = this->toSystemBase(iqcmd0 * vmeas_safe0);
 
-        if (signals_.template isAttached<ReecbExternalVariables::PE>())
+        if (auto pe_port = ports_.in.template port<ReecbSignalInputs::pe>())
         {
-          pe0_system = static_cast<RealT>(
-              signals_.template readExternalVariable<ReecbExternalVariables::PE>());
+          pe0_system = static_cast<RealT>(pe_port.readSignal());
         }
-        if (signals_.template isAttached<ReecbExternalVariables::QGEN>())
+        if (auto qgen_port = ports_.in.template port<ReecbSignalInputs::qgen>())
         {
-          qgen0_system = static_cast<RealT>(
-              signals_.template readExternalVariable<ReecbExternalVariables::QGEN>());
+          qgen0_system = static_cast<RealT>(qgen_port.readSignal());
         }
 
         const RealT pmeas0 = this->toComponentBase(pe0_system);
@@ -715,17 +715,17 @@ namespace GridKit
         pfaref_set_ = static_cast<ScalarT>(point.signals[PFAREF]);
         pref_set_   = static_cast<ScalarT>(point.signals[PREF]);
 
-        if (signals_.template isAttached<ReecbExternalVariables::QEXT>())
+        if (ports_.in.template port<ReecbSignalInputs::qext>())
         {
-          signals_.template writeExternalVariable<ReecbExternalVariables::QEXT>(qext_set_);
+          ports_.in.template port<ReecbSignalInputs::qext>().writeValue(qext_set_);
         }
-        if (signals_.template isAttached<ReecbExternalVariables::PFAREF>())
+        if (ports_.in.template port<ReecbSignalInputs::pfaref>())
         {
-          signals_.template writeExternalVariable<ReecbExternalVariables::PFAREF>(pfaref_set_);
+          ports_.in.template port<ReecbSignalInputs::pfaref>().writeValue(pfaref_set_);
         }
-        if (signals_.template isAttached<ReecbExternalVariables::PREF>())
+        if (ports_.in.template port<ReecbSignalInputs::pref>())
         {
-          signals_.template writeExternalVariable<ReecbExternalVariables::PREF>(pref_set_);
+          ports_.in.template port<ReecbSignalInputs::pref>().writeValue(pref_set_);
         }
 
         if (q_adjusted)
@@ -812,36 +812,30 @@ namespace GridKit
         ws[PREF]   = pref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (signals_.template isAttached<ReecbExternalVariables::PE>())
+        if (auto pe_port = ports_.in.template port<ReecbSignalInputs::pe>())
         {
-          ws[PE] = signals_.template readExternalVariable<ReecbExternalVariables::PE>();
-          ws_indices_[PE] =
-              signals_.template readExternalVariableIndex<ReecbExternalVariables::PE>();
+          ws[PE]          = pe_port.readSignal();
+          ws_indices_[PE] = pe_port.signalVariableIndex();
         }
-        if (signals_.template isAttached<ReecbExternalVariables::QGEN>())
+        if (auto qgen_port = ports_.in.template port<ReecbSignalInputs::qgen>())
         {
-          ws[QGEN] = signals_.template readExternalVariable<ReecbExternalVariables::QGEN>();
-          ws_indices_[QGEN] =
-              signals_.template readExternalVariableIndex<ReecbExternalVariables::QGEN>();
+          ws[QGEN]          = qgen_port.readSignal();
+          ws_indices_[QGEN] = qgen_port.signalVariableIndex();
         }
-        if (signals_.template isAttached<ReecbExternalVariables::QEXT>())
+        if (auto qext_port = ports_.in.template port<ReecbSignalInputs::qext>())
         {
-          ws[QEXT] = signals_.template readExternalVariable<ReecbExternalVariables::QEXT>();
-          ws_indices_[QEXT] =
-              signals_.template readExternalVariableIndex<ReecbExternalVariables::QEXT>();
+          ws[QEXT]          = qext_port.readSignal();
+          ws_indices_[QEXT] = qext_port.signalVariableIndex();
         }
-        if (signals_.template isAttached<ReecbExternalVariables::PFAREF>())
+        if (auto pfaref_port = ports_.in.template port<ReecbSignalInputs::pfaref>())
         {
-          ws[PFAREF] =
-              signals_.template readExternalVariable<ReecbExternalVariables::PFAREF>();
-          ws_indices_[PFAREF] =
-              signals_.template readExternalVariableIndex<ReecbExternalVariables::PFAREF>();
+          ws[PFAREF]          = pfaref_port.readSignal();
+          ws_indices_[PFAREF] = pfaref_port.signalVariableIndex();
         }
-        if (signals_.template isAttached<ReecbExternalVariables::PREF>())
+        if (auto pref_port = ports_.in.template port<ReecbSignalInputs::pref>())
         {
-          ws[PREF] = signals_.template readExternalVariable<ReecbExternalVariables::PREF>();
-          ws_indices_[PREF] =
-              signals_.template readExternalVariableIndex<ReecbExternalVariables::PREF>();
+          ws[PREF]          = pref_port.readSignal();
+          ws_indices_[PREF] = pref_port.signalVariableIndex();
         }
 
         auto* wb = wb_.getData();
@@ -851,22 +845,6 @@ namespace GridKit
         evaluateInternalResidual(y_.getData(), yp_.getData(), wb, ws, f_.getData());
         f_.setDataUpdated();
         return 0;
-      }
-
-      /**
-       * @brief Access the REECB signal interface
-       *
-       * @return Interface used to assign current-command outputs and attach
-       *         optional feedback and reference signals.
-       */
-      template <typename scalar_type, typename index_type>
-      auto Reecb<scalar_type, index_type>::getSignals()
-          -> ComponentSignals<ScalarT,
-                              IdxT,
-                              ReecbInternalVariables,
-                              ReecbExternalVariables>&
-      {
-        return signals_;
       }
 
       /**

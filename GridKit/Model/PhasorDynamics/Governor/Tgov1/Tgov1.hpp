@@ -10,27 +10,11 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-
-// Forward declarations
-namespace GridKit
-{
-  namespace PhasorDynamics
-  {
-    namespace Governor
-    {
-      template <typename real_type, typename index_type>
-      struct Tgov1Data;
-    } // namespace Governor
-
-    template <typename scalar_type, typename index_type>
-    class Genrou;
-
-    template <typename scalar_type, typename index_type>
-    class SignalNode;
-
-  } // namespace PhasorDynamics
-} // namespace GridKit
+#include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 
 namespace GridKit
 {
@@ -44,7 +28,6 @@ namespace GridKit
         PTX, ///< \f$P_t\f$ Turbine-block output
         PV,  ///< \f$P_v\f$ Valve position
         PM,  ///< \f$P_m\f$ Mechanical-power output
-        MAXIMUM,
       };
 
       /// External variables of a `Tgov1`
@@ -52,7 +35,6 @@ namespace GridKit
       {
         DELTAOMEGA, ///< \f$\omega\f$ Machine speed deviation
         PREF,       ///< \f$P_\mathrm{ref}\f$ Governor reference
-        MAXIMUM,
       };
 
       template <typename scalar_type, typename index_type>
@@ -81,14 +63,16 @@ namespace GridKit
         using Component<scalar_type, index_type>::allocated_;
 
       public:
-        using ScalarT    = scalar_type;
-        using IdxT       = index_type;
-        using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using ModelDataT = Tgov1Data<RealT, IdxT>;
-        using SignalT    = SignalNode<ScalarT, IdxT>;
+        using ScalarT        = scalar_type;
+        using IdxT           = index_type;
+        using RealT          = typename Component<ScalarT, IdxT>::RealT;
+        using ModelDataT     = Tgov1Data<RealT, IdxT>;
+        using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
+        using SignalNodeT    = SignalNodeSetT::SignalNodeT;
+        using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
 
         Tgov1();
-        Tgov1(SignalT*, SignalT*);
+        Tgov1(SignalNodeT*, SignalNodeT*);
         Tgov1(const ModelDataT&);
         ~Tgov1() = default;
 
@@ -103,14 +87,9 @@ namespace GridKit
         // Still to be implemented
         int evaluateJacobian() override final;
 
-        /// Get the `ComponentSignals` from this `Tgov1`
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                Tgov1InternalVariables,
-                                Tgov1ExternalVariables>&
+        SignalPortsT& getPorts()
         {
-          return signals_;
+          return ports_;
         }
 
       public:
@@ -131,8 +110,8 @@ namespace GridKit
         // Input States (which can be parameters)
         ScalarT pref_set_{0};
 
-        /// Component signal extension
-        ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;
+        // Component ports
+        SignalPortsT ports_;
 
         // Parameter initialization function
         void initializeParameters(const ModelDataT& data);

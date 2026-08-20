@@ -2,19 +2,9 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
-
-// Forward declaration of BusData structure
-namespace GridKit
-{
-  namespace PhasorDynamics
-  {
-    template <typename real_type, typename index_type>
-    struct BusFaultData;
-  }
-} // namespace GridKit
 
 namespace GridKit
 {

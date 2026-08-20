@@ -58,15 +58,17 @@ namespace GridKit
         IdxT                                      vss_index = INVALID_INDEX<IdxT>;
 
         // Link signal nodes to backing storage
-        u_node.set(&u_value, &u_index);
-        vss_node.set(&vss_value, &vss_index);
+        u_node.link(&u_value, &u_index);
+        vss_node.link(&vss_value, &vss_index);
 
-        auto                                              data = makeTestData();
-        PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> stab(data);
+        using namespace GridKit::PhasorDynamics::Stabilizer;
+
+        auto data = makeTestData();
+        auto stab = Ieeest<ScalarT, IdxT>(data);
 
         // Wire: stabilizer reads u_node as input, writes vss_node as output
-        stab.getSignals().template attachSignalNode<PhasorDynamics::Stabilizer::IeeestExternalVariables::U>(&u_node);
-        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VSS>(&vss_node);
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
+        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
 
         stab.allocate();
         success *= (stab.verify() == 0);
@@ -110,14 +112,16 @@ namespace GridKit
         ScalarT                                   vss_value{0.0};
         IdxT                                      vss_index = INVALID_INDEX<IdxT>;
 
-        u_node.set(&u_value, &u_index);
-        vss_node.set(&vss_value, &vss_index);
+        u_node.link(&u_value, &u_index);
+        vss_node.link(&vss_value, &vss_index);
 
-        auto                                              data = makeTestData();
-        PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> stab(data);
+        using namespace GridKit::PhasorDynamics::Stabilizer;
 
-        stab.getSignals().template attachSignalNode<PhasorDynamics::Stabilizer::IeeestExternalVariables::U>(&u_node);
-        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VSS>(&vss_node);
+        auto data = makeTestData();
+        auto stab = Ieeest<ScalarT, IdxT>(data);
+
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
+        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
 
         stab.allocate();
         stab.initialize();
@@ -203,12 +207,14 @@ namespace GridKit
         DepVar                                   vss_value{0.0};
         IdxT                                     vss_index = INVALID_INDEX<IdxT>;
 
-        u_node.set(&u_value, &u_index);
-        vss_node.set(&vss_value, &vss_index);
+        u_node.link(&u_value, &u_index);
+        vss_node.link(&vss_value, &vss_index);
 
-        PhasorDynamics::Stabilizer::Ieeest<DepVar, IdxT> stab(ieeestdata);
-        stab.getSignals().template attachSignalNode<PhasorDynamics::Stabilizer::IeeestExternalVariables::U>(&u_node);
-        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VSS>(&vss_node);
+        using namespace GridKit::PhasorDynamics::Stabilizer;
+
+        auto stab = Ieeest<DepVar, IdxT>(ieeestdata);
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
+        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
 
         stab.allocate();
         stab.initialize();
@@ -298,12 +304,14 @@ namespace GridKit
         ScalarT                                   vss_value{0.0};
         IdxT                                      vss_index = INVALID_INDEX<IdxT>;
 
-        u_node.set(&u_value, &u_index);
-        vss_node.set(&vss_value, &vss_index);
+        u_node.link(&u_value, &u_index);
+        vss_node.link(&vss_value, &vss_index);
 
-        PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> stab(ieeestdata);
-        stab.getSignals().template attachSignalNode<PhasorDynamics::Stabilizer::IeeestExternalVariables::U>(&u_node);
-        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VSS>(&vss_node);
+        using namespace GridKit::PhasorDynamics::Stabilizer;
+
+        auto stab = Ieeest<ScalarT, IdxT>(ieeestdata);
+        stab.getPorts().in.template port<IeeestSignalInputs::input>().connect(&u_node);
+        stab.getPorts().out.template port<IeeestSignalOutputs::output>().connect(&vss_node);
 
         stab.allocate();
         stab.initialize();

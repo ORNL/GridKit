@@ -103,9 +103,8 @@ namespace GridKit
         ScalarT                                        efd_value{0.0};
         IdxT                                           efd_index = INVALID_INDEX<IdxT>;
 
-        efd_node.set(&efd_value, &efd_index);
-        exciter.getSignals()
-            .template assignSignalNode<PhasorDynamics::Exciter::Ieeet1InternalVariables::EFD>(&efd_node);
+        efd_node.link(&efd_value, &efd_index);
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
 
         bus.allocate();
         exciter.allocate();
@@ -228,18 +227,14 @@ namespace GridKit
         IdxT                                           vuel_index = 12;
         IdxT                                           voel_index = 13;
 
-        efd_node.set(&efd_value, &efd_index);
-        vref_node.set(&vref_value, &vref_index);
-        vuel_node.set(&vuel_value, &vuel_index);
-        voel_node.set(&voel_value, &voel_index);
-        exciter.getSignals()
-            .template assignSignalNode<PhasorDynamics::Exciter::Ieeet1InternalVariables::EFD>(&efd_node);
-        exciter.getSignals()
-            .template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VREF>(&vref_node);
-        exciter.getSignals()
-            .template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VUEL>(&vuel_node);
-        exciter.getSignals()
-            .template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VOEL>(&voel_node);
+        efd_node.link(&efd_value, &efd_index);
+        vref_node.link(&vref_value, &vref_index);
+        vuel_node.link(&vuel_value, &vuel_index);
+        voel_node.link(&voel_value, &voel_index);
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::Ieeet1SignalOutputs::efd>().connect(&efd_node);
+        exciter.getPorts().in.template port<PhasorDynamics::Exciter::Ieeet1SignalInputs::vref>().connect(&vref_node);
+        exciter.getPorts().in.template port<PhasorDynamics::Exciter::Ieeet1SignalInputs::vuel>().connect(&vuel_node);
+        exciter.getPorts().in.template port<PhasorDynamics::Exciter::Ieeet1SignalInputs::voel>().connect(&voel_node);
 
         bus.allocate();
         exciter.allocate();

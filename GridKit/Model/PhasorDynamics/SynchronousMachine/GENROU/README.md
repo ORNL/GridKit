@@ -43,7 +43,7 @@ $S_\mathrm{mach}$ | [MVA] | Machine power base        | 100 |
 \begin{aligned}
   G      &=  \dfrac{R_a}{R_a^2+(X_q'')^2} &
   B      &= -\dfrac{X_q''}{R_a^2+(X_q'')^2}\\
-  S_A    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
+  S_A    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} &
   S_B    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
   X_{d1} &= X_d-X_d'                 & X_{q1} &= X_q-X_q' \\
   X_{d2} &= X_d'-X_\ell              & X_{q2} &= X_q'-X_\ell\\
@@ -68,18 +68,18 @@ Symbol    | Units  | Description                       | Note
 ----------|--------|-----------------------------------|-------
 $\delta$  | [rad]  | Machine internal rotor angle      |
 $\omega$  | [p.u.] | Machine Speed Deviation           | Optionally read by governor or stabilizer component
-$\psi'_d$ | [p.u.] | Direct axis subtransient flux     | 
-$\psi'_q$ | [p.u.] | Quadrature axis subtransient flux | 
-$E'_d$    | [p.u.] | Direct axis transient flux        | 
-$E'_q$    | [p.u.] | Quadrature axis subtransient flux | 
+$\psi'_d$ | [p.u.] | Direct axis subtransient flux     |
+$\psi'_q$ | [p.u.] | Quadrature axis subtransient flux |
+$E'_d$    | [p.u.] | Direct axis transient flux        |
+$E'_q$    | [p.u.] | Quadrature axis subtransient flux |
 
 #### Algebraic
 Symbol      | Units  | Description                       | Note
 ------------|--------|---------------------------------  | ------
-$V_d$       | [p.u.] | Machine internal voltage, d-axis  | 
-$V_q$       | [p.u.] | Machine internal voltage, q-axis  | 
-$I_d$       | [p.u.] | Terminal current, d-axis          | 
-$I_q$       | [p.u.] | Terminal current, q-axis          | 
+$V_d$       | [p.u.] | Machine internal voltage, d-axis  |
+$V_q$       | [p.u.] | Machine internal voltage, q-axis  |
+$I_d$       | [p.u.] | Terminal current, d-axis          |
+$I_q$       | [p.u.] | Terminal current, q-axis          |
 $I_r$       | [p.u.] | Terminal current, real component on network reference frame      | Read by bus and optionally by controllers
 $I_i$       | [p.u.] | Terminal current, imaginary component on network reference frame | Read by bus and optionally by controllers
 $\psi''_q$  | [p.u.] | Total q-axis subtransient flux    |

@@ -9,22 +9,9 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
-
-// Forward declarations.
-namespace GridKit
-{
-  namespace PhasorDynamics
-  {
-    template <typename scalar_type, typename index_type>
-    class BusBase;
-
-    template <typename real_type, typename index_type>
-    struct BranchData;
-  } // namespace PhasorDynamics
-} // namespace GridKit
 
 namespace GridKit
 {

@@ -169,9 +169,9 @@ namespace GridKit
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+        success *= system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
 
-        auto* efd  = system.getSignal(efd_id);
+        auto* efd  = system.getSignalNode(efd_id);
         success   *= efd->linked();
         success   *= efd->getVariableIndex() == static_cast<IdxT>(Vars::EFD);
 
@@ -258,7 +258,7 @@ namespace GridKit
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
         success *= system.size()
-                   == static_cast<IdxT>(PhasorDynamics::Converter::RegcaInternalVariables::MAXIMUM);
+                   == static_cast<IdxT>(Utilities::enum_size<PhasorDynamics::Converter::RegcaInternalVariables>());
 
         return success.report(__func__);
       }
@@ -298,14 +298,14 @@ namespace GridKit
         IdxT    input_index = INVALID_INDEX<IdxT>;
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
-        system.getSignal(input_id)->set(&input_value, &input_index);
+        system.getSignalNode(input_id)->link(&input_value, &input_index);
 
         success *= system.allocate() == 0;
         success *= system.initialize() == 0;
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+        success *= system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
 
         return success.report(__func__);
       }
@@ -337,7 +337,7 @@ namespace GridKit
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+        success *= system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
 
         return success.report(__func__);
       }
@@ -375,7 +375,7 @@ namespace GridKit
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+        success *= system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
 
         return success.report(__func__);
       }
@@ -437,8 +437,7 @@ namespace GridKit
 
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> tgov1;
-        tgov1.getSignals()
-            .template assignSignalNode<PhasorDynamics::Governor::Tgov1InternalVariables::PM>(&pmech);
+        tgov1.getPorts().out.template port<PhasorDynamics::Governor::Tgov1SignalOutputs::pmech>().connect(&pmech);
         system->addComponent(&tgov1);
 
         success *= system->allocate() == 0;
@@ -489,9 +488,9 @@ namespace GridKit
         success *= system.tagDifferentiable() == 0;
         success *= system.evaluateResidual() == 0;
         success *= system.evaluateJacobian() == 0;
-        success *= system.size() == static_cast<IdxT>(Vars::MAXIMUM);
+        success *= system.size() == static_cast<IdxT>(Utilities::enum_size<Vars>());
 
-        auto* pmech  = system.getSignal(pmech_id);
+        auto* pmech  = system.getSignalNode(pmech_id);
         success     *= pmech->linked();
         success     *= pmech->getVariableIndex() == static_cast<IdxT>(Vars::PMECH);
 

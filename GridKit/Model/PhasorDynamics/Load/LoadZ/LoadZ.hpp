@@ -1,22 +1,9 @@
 #pragma once
 
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
-
-// Forward declarations.
-namespace GridKit
-{
-  namespace PhasorDynamics
-  {
-    template <typename scalar_type, typename index_type>
-    class BusBase;
-
-    template <typename real_type, typename index_type>
-    struct LoadZData;
-  } // namespace PhasorDynamics
-} // namespace GridKit
 
 namespace GridKit
 {

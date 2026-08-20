@@ -16,6 +16,7 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -40,7 +41,7 @@ namespace GridKit
       Esdc1a<scalar_type, index_type>::Esdc1a(BusT* bus)
         : bus_(bus)
       {
-        size_ = static_cast<IdxT>(Esdc1aInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<Esdc1aInternalVariables>());
         setDerivedParameters();
       }
 
@@ -57,7 +58,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = static_cast<IdxT>(Esdc1aInternalVariables::MAXIMUM);
+        size_ = static_cast<IdxT>(Utilities::enum_size<Esdc1aInternalVariables>());
       }
 
       /**
@@ -110,7 +111,7 @@ namespace GridKit
         wb_.resize(2);
         wb_.setToZero();
 
-        const auto signal_size = static_cast<size_t>(Esdc1aExternalVariables::MAXIMUM);
+        const auto signal_size = Utilities::enum_size<Esdc1aExternalVariables>();
         ws_.resize(static_cast<IdxT>(signal_size));
         ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
@@ -123,11 +124,9 @@ namespace GridKit
 
         auto* y = y_.getData();
 
-        if (signals_.template isAssigned<Esdc1aInternalVariables::EFD>())
+        if (auto port = ports_.out.template port<Esdc1aSignalOutputs::efd>())
         {
-          signals_.template getSignalNode<Esdc1aInternalVariables::EFD>()->set(
-              &y[EFD],
-              &(this->getVariableIndex(static_cast<IdxT>(EFD))));
+          port.link(&y[EFD], &(this->getVariableIndex(static_cast<IdxT>(EFD))));
         }
 
         allocated_ = true;
@@ -185,13 +184,13 @@ namespace GridKit
           check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
-        if (!signals_.template isAssigned<Esdc1aInternalVariables::EFD>())
+        if (!ports_.out.template port<Esdc1aSignalOutputs::efd>().connected())
         {
           Log::error() << "Esdc1a: required efd output signal is not assigned\n";
           ret += 1;
         }
 
-        if (Spdmlt_ && !signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
+        if (Spdmlt_ && !ports_.in.template port<Esdc1aSignalInputs::speed>().connected())
         {
           Log::error() << "Esdc1a: speed signal is required when Spdmlt is enabled\n";
           ret += 1;
@@ -200,20 +199,20 @@ namespace GridKit
         // An attached port must resolve to writable signal storage. The
         // enumerator is a template argument, so each port names itself once.
         auto check_attached_signal =
-            [&]<Esdc1aExternalVariables variable>(const char* name)
+            [&]<Esdc1aSignalInputs variable>(const char* name)
         {
-          if (signals_.template isAttached<variable>()
-              && !signals_.template isLinked<variable>())
+          if (ports_.in.template port<variable>().connected()
+              && !ports_.in.template port<variable>().linked())
           {
             Log::error() << "Esdc1a: " << name << " signal attached with no linked source\n";
             ret += 1;
           }
         };
 
-        check_attached_signal.template operator()<Esdc1aExternalVariables::OMEGA>("speed");
-        check_attached_signal.template operator()<Esdc1aExternalVariables::VREF>("vref");
-        check_attached_signal.template operator()<Esdc1aExternalVariables::VS>("vs");
-        check_attached_signal.template operator()<Esdc1aExternalVariables::VUEL>("vuel");
+        check_attached_signal.template operator()<Esdc1aSignalInputs::speed>("speed");
+        check_attached_signal.template operator()<Esdc1aSignalInputs::vref>("vref");
+        check_attached_signal.template operator()<Esdc1aSignalInputs::vs>("vs");
+        check_attached_signal.template operator()<Esdc1aSignalInputs::vuel>("vuel");
 
         return ret;
       }
@@ -266,21 +265,21 @@ namespace GridKit
         const ScalarT efd0 = y[EFD];
 
         ScalarT omega0{ZERO<RealT>};
-        if (signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
+        if (auto omega_port = ports_.in.template port<Esdc1aSignalInputs::speed>())
         {
-          omega0 = signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
+          omega0 = omega_port.readSignal();
         }
 
         ScalarT vs0{ZERO<RealT>};
-        if (signals_.template isAttached<Esdc1aExternalVariables::VS>())
+        if (auto vs_port = ports_.in.template port<Esdc1aSignalInputs::vs>())
         {
-          vs0 = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
+          vs0 = vs_port.readSignal();
         }
 
         ScalarT vuel0{ZERO<RealT>};
-        if (signals_.template isAttached<Esdc1aExternalVariables::VUEL>())
+        if (auto vuel_port = ports_.in.template port<Esdc1aSignalInputs::vuel>())
         {
-          vuel0 = signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
+          vuel0 = vuel_port.readSignal();
         }
 
         const ScalarT vc0 = std::sqrt(Vr() * Vr() + Vi() * Vi());
@@ -385,9 +384,9 @@ namespace GridKit
         vs_set_    = vs0;
         vuel_set_  = vuel0;
 
-        if (signals_.template isAttached<Esdc1aExternalVariables::VREF>())
+        if (auto vref_port = ports_.in.template port<Esdc1aSignalInputs::vref>())
         {
-          signals_.template writeExternalVariable<Esdc1aExternalVariables::VREF>(vref_set_);
+          vref_port.writeValue(vref_set_);
         }
 
         y_.setDataUpdated();
@@ -464,29 +463,25 @@ namespace GridKit
         ws[VUEL]  = vuel_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        if (signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
+        if (auto omega_port = ports_.in.template port<Esdc1aSignalInputs::speed>())
         {
-          ws[OMEGA] = signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
-          ws_indices_[OMEGA] =
-              signals_.template readExternalVariableIndex<Esdc1aExternalVariables::OMEGA>();
+          ws[OMEGA]          = omega_port.readSignal();
+          ws_indices_[OMEGA] = omega_port.signalVariableIndex();
         }
-        if (signals_.template isAttached<Esdc1aExternalVariables::VREF>())
+        if (auto vref_port = ports_.in.template port<Esdc1aSignalInputs::vref>())
         {
-          ws[VREF] = signals_.template readExternalVariable<Esdc1aExternalVariables::VREF>();
-          ws_indices_[VREF] =
-              signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VREF>();
+          ws[VREF]          = vref_port.readSignal();
+          ws_indices_[VREF] = vref_port.signalVariableIndex();
         }
-        if (signals_.template isAttached<Esdc1aExternalVariables::VS>())
+        if (auto vs_port = ports_.in.template port<Esdc1aSignalInputs::vs>())
         {
-          ws[VS] = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
-          ws_indices_[VS] =
-              signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VS>();
+          ws[VS]          = vs_port.readSignal();
+          ws_indices_[VS] = vs_port.signalVariableIndex();
         }
-        if (signals_.template isAttached<Esdc1aExternalVariables::VUEL>())
+        if (auto vuel_port = ports_.in.template port<Esdc1aSignalInputs::vuel>())
         {
-          ws[VUEL] = signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
-          ws_indices_[VUEL] =
-              signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VUEL>();
+          ws[VUEL]          = vuel_port.readSignal();
+          ws_indices_[VUEL] = vuel_port.signalVariableIndex();
         }
 
         auto* wb = wb_.getData();

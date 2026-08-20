@@ -298,8 +298,8 @@ namespace GridKit
         TestStatus success = true;
 
         using Parameter = typename GenClassicalDataT::Parameters;
-        using Internal  = PhasorDynamics::GenClassicalInternalVariables;
-        using External  = PhasorDynamics::GenClassicalExternalVariables;
+        using Inputs    = PhasorDynamics::GenClassicalSignalInputs;
+        using Outputs   = PhasorDynamics::GenClassicalSignalOutputs;
 
         auto data                       = makeGenClassicalData();
         data.parameters[Parameter::mva] = RealT{50.0};
@@ -313,12 +313,12 @@ namespace GridKit
         ScalarT pmech_value{0.0};
         ScalarT efd_value{0.0};
         IdxT    index{0};
-        pmech.set(&pmech_value, &index);
-        efd.set(&efd_value, &index);
+        pmech.link(&pmech_value, &index);
+        efd.link(&efd_value, &index);
 
-        gen.getSignals().template assignSignalNode<Internal::OMEGA>(&speed);
-        gen.getSignals().template attachSignalNode<External::PM>(&pmech);
-        gen.getSignals().template attachSignalNode<External::EFD>(&efd);
+        gen.getPorts().out.template port<Outputs::speed>().connect(&speed);
+        gen.getPorts().in.template port<Inputs::pmech>().connect(&pmech);
+        gen.getPorts().in.template port<Inputs::efd>().connect(&efd);
 
         bus.allocate();
         bus.initialize();
@@ -355,7 +355,7 @@ namespace GridKit
         TestStatus success = true;
 
         using Parameter = typename GenClassicalDataT::Parameters;
-        using External  = PhasorDynamics::GenClassicalExternalVariables;
+        using Inputs    = PhasorDynamics::GenClassicalSignalInputs;
 
         auto data                       = makeGenClassicalData();
         data.parameters[Parameter::p0]  = RealT{1.0};
@@ -373,11 +373,11 @@ namespace GridKit
         ScalarT pmech_value{1.0};
         ScalarT efd_value{2.0};
         IdxT    index{0};
-        pmech.set(&pmech_value, &index);
-        efd.set(&efd_value, &index);
+        pmech.link(&pmech_value, &index);
+        efd.link(&efd_value, &index);
 
-        gen.getSignals().template attachSignalNode<External::PM>(&pmech);
-        gen.getSignals().template attachSignalNode<External::EFD>(&efd);
+        gen.getPorts().in.template port<Inputs::pmech>().connect(&pmech);
+        gen.getPorts().in.template port<Inputs::efd>().connect(&efd);
 
         const std::vector<ScalarT> res_answer = {
             0.0,

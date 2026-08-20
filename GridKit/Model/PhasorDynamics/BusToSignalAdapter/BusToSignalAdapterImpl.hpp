@@ -9,7 +9,9 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/BusToSignalAdapter/BusToSignalAdapter.hpp>
 #include <GridKit/Model/PhasorDynamics/BusToSignalAdapter/BusToSignalAdapterData.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -26,6 +28,14 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     BusToSignalAdapter<scalar_type, index_type>::BusToSignalAdapter(BusT* bus)
+      : bus_(bus)
+    {
+      size_ = 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    BusToSignalAdapter<scalar_type, index_type>::BusToSignalAdapter(
+        BusT* bus, const ModelDataT&)
       : bus_(bus)
     {
       size_ = 0;
@@ -52,6 +62,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusToSignalAdapter<scalar_type, index_type>::allocate()
     {
+      using SignalOut = BusToSignalAdapterSignalOutputs;
+
       if (!allocated_)
       {
         this->allocateVectors(size_);
@@ -61,19 +73,16 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
-      static constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
-      static constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
-
       // vr_index_ and vi_index_ are both set to INVALID_INDEX. This component
       // simply passes voltage from bus to output signal, so indices are
       // ignored.
-      if (signals_.template isAssigned<VREAL>())
+      if (auto vr_port = ports_.out.template port<SignalOut::vr>())
       {
-        signals_.template getSignalNode<VREAL>()->set(&bus_->Vr(), &vr_index_);
+        vr_port.link(&bus_->Vr(), &vr_index_);
       }
-      if (signals_.template isAssigned<VIMAG>())
+      if (auto vi_port = ports_.out.template port<SignalOut::vi>())
       {
-        signals_.template getSignalNode<VIMAG>()->set(&bus_->Vi(), &vi_index_);
+        vi_port.link(&bus_->Vi(), &vi_index_);
       }
 
       allocated_ = true;
@@ -86,27 +95,22 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusToSignalAdapter<scalar_type, index_type>::verify() const
     {
-      static constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-      static constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
+      using SignalIn = BusToSignalAdapterSignalInputs;
 
       int ret = 0;
 
-      if (signals_.template isAttached<IREAL>())
+      auto ir_port = ports_.in.template port<SignalIn::ir>();
+      if (ir_port.connected() && !ir_port.linked())
       {
-        if (!signals_.template isLinked<IREAL>())
-        {
-          Log::error() << "BusToSignalAdapter: Ir signal attached with no linked source\n";
-          ret += 1;
-        }
+        Log::error() << "BusToSignalAdapter: Ir signal attached with no linked source\n";
+        ret += 1;
       }
 
-      if (signals_.template isAttached<IIMAG>())
+      auto ii_port = ports_.in.template port<SignalIn::ii>();
+      if (ii_port.connected() && !ii_port.linked())
       {
-        if (!signals_.template isLinked<IIMAG>())
-        {
-          Log::error() << "BusToSignalAdapter: Ii signal attached with no linked source\n";
-          ret += 1;
-        }
+        Log::error() << "BusToSignalAdapter: Ii signal attached with no linked source\n";
+        ret += 1;
       }
 
       return ret;
@@ -154,20 +158,19 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusToSignalAdapter<scalar_type, index_type>::evaluateResidual()
     {
-      static constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-      static constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
+      using SignalIn = BusToSignalAdapterSignalInputs;
 
-      if (signals_.template isAttached<IREAL>())
+      if (auto ir_port = ports_.in.template port<SignalIn::ir>())
       {
-        bus_->Ir() += signals_.template readExternalVariable<IREAL>();
+        bus_->Ir() += ir_port.readSignal();
         if (bus_->size() > 0)
         {
           bus_->getResidual().setDataUpdated();
         }
       }
-      if (signals_.template isAttached<IIMAG>())
+      if (auto ii_port = ports_.in.template port<SignalIn::ii>())
       {
-        bus_->Ii() += signals_.template readExternalVariable<IIMAG>();
+        bus_->Ii() += ii_port.readSignal();
         if (bus_->size() > 0)
         {
           bus_->getResidual().setDataUpdated();

@@ -9,29 +9,12 @@
 
 #pragma once
 
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
-
-// Forward declarations
-namespace GridKit
-{
-  namespace PhasorDynamics
-  {
-    namespace Exciter
-    {
-      template <typename real_type, typename index_type>
-      struct Ieeet1Data;
-    } // namespace Exciter
-
-    template <typename scalar_type, typename index_type>
-    class BusBase;
-
-    template <typename scalar_type, typename index_type>
-    class SignalNode;
-
-  } // namespace PhasorDynamics
-} // namespace GridKit
 
 namespace GridKit
 {
@@ -51,7 +34,6 @@ namespace GridKit
         VE,   ///< Exciter control voltage
         EFD,  ///< Efd
         KSAT, ///< \f$E_{\mathrm{fd}}'S(E_{\mathrm{fd}}')\f$ Scaled-quadratic saturation contribution
-        MAXIMUM,
       };
 
       /// External variables of a `Ieeet1`
@@ -64,7 +46,6 @@ namespace GridKit
         VS,    ///< Stabilizer output signal
         VUEL,  ///< Under-excitation limiter signal
         VOEL,  ///< Over-excitation limiter signal
-        MAXIMUM,
       };
 
       template <typename scalar_type, typename index_type>
@@ -91,17 +72,17 @@ namespace GridKit
         using Component<scalar_type, index_type>::allocated_;
 
       public:
-        using ScalarT    = scalar_type;
-        using IdxT       = index_type;
-        using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using BusT       = BusBase<ScalarT, IdxT>;
-        using ModelDataT = Ieeet1Data<RealT, IdxT>;
-        using SignalT    = SignalNode<ScalarT, IdxT>;
-        using MonitorT   = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
+        using ScalarT        = scalar_type;
+        using IdxT           = index_type;
+        using RealT          = typename Component<ScalarT, IdxT>::RealT;
+        using BusT           = BusBase<ScalarT, IdxT>;
+        using ModelDataT     = Ieeet1Data<RealT, IdxT>;
+        using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
+        using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
+        using MonitorT       = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
 
         Ieeet1(BusT* bus);
-        Ieeet1(BusT*             bus,
-               const ModelDataT& data);
+        Ieeet1(BusT* bus, const ModelDataT& data);
         ~Ieeet1();
 
         int setGridKitComponentID(IdxT) override final;
@@ -113,14 +94,9 @@ namespace GridKit
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
-        /// Get the `ComponentSignals` from this `Ieeet1`
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                Ieeet1InternalVariables,
-                                Ieeet1ExternalVariables>&
+        SignalPortsT& getPorts()
         {
-          return signals_;
+          return ports_;
         }
 
         const Model::VariableMonitorBase* getMonitor() const override;
@@ -168,8 +144,8 @@ namespace GridKit
         ScalarT vuel_set_{0};
         ScalarT voel_set_{0};
 
-        /// Component signal extension
-        ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
+        /// Component ports
+        SignalPortsT ports_;
 
         /// Variable monitor
         std::unique_ptr<MonitorT> monitor_;

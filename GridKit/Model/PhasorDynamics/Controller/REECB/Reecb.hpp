@@ -13,8 +13,9 @@
 
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -51,7 +52,6 @@ namespace GridKit
         IQRAW,  ///< \f$I_q^\mathrm{raw}\f$ Algebraic pre-limit reactive-current command on component base [p.u.]
         IQCMD,  ///< \f$I_q^\mathrm{cmd}\f$ Algebraic reactive-current command output on system base [p.u.]
         IPCMD,  ///< \f$I_p^\mathrm{cmd}\f$ Algebraic active-current command output on system base [p.u.]
-        MAXIMUM ///< Number of REECB internal variables and residual rows
       };
 
       /// External signal variables read or initialized by a `Reecb`.
@@ -62,7 +62,6 @@ namespace GridKit
         QEXT,   ///< \f$Q^\mathrm{ext}\f$ Optional Unknown Volt/VAr reference input: system-base reactive power [p.u.], or the terminal-voltage reference [p.u.] when \f$s_Q=1\f$ and \f$s_V=0\f$
         PFAREF, ///< \f$\phi^\mathrm{ref}\f$ Optional Unknown power-factor angle-reference input [rad]
         PREF,   ///< \f$P^\mathrm{ref}\f$ Optional Unknown active-power reference input on system base [p.u.]
-        MAXIMUM ///< Number of REECB external signal variables
       };
 
       /**
@@ -102,6 +101,8 @@ namespace GridKit
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
         using BusT               = BusBase<ScalarT, IdxT>;
         using ModelDataT         = ReecbData<RealT, IdxT>;
+        using SignalNodeSetT     = SignalNodeSet<ScalarT, IdxT>;
+        using SignalPortsT       = SignalPorts<ScalarT, ModelDataT>;
         using MonitorT           = Model::VariableMonitor<Reecb, ReecbData>;
         using InternalVariablesT = ReecbInternalVariables;
         using ExternalVariablesT = ReecbExternalVariables;
@@ -123,11 +124,10 @@ namespace GridKit
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                ReecbInternalVariables,
-                                ReecbExternalVariables>&;
+        SignalPortsT& getPorts()
+        {
+          return ports_;
+        }
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
@@ -253,8 +253,8 @@ namespace GridKit
         ScalarT pfaref_set_{0};
         ScalarT pref_set_{0};
 
-        ComponentSignals<ScalarT, IdxT, ReecbInternalVariables, ReecbExternalVariables> signals_;
-        std::unique_ptr<MonitorT>                                                       monitor_;
+        SignalPortsT              ports_;
+        std::unique_ptr<MonitorT> monitor_;
       };
     } // namespace Controller
   } // namespace PhasorDynamics

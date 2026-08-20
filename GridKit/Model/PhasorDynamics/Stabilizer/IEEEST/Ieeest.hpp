@@ -7,24 +7,10 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
-
-namespace GridKit
-{
-  namespace PhasorDynamics
-  {
-    namespace Stabilizer
-    {
-      template <typename real_type, typename index_type>
-      struct IeeestData;
-    } // namespace Stabilizer
-
-    template <typename scalar_type, typename index_type>
-    class SignalNode;
-
-  } // namespace PhasorDynamics
-} // namespace GridKit
 
 namespace GridKit
 {
@@ -47,14 +33,12 @@ namespace GridKit
         V6,  ///< \f$v_6\f$ Lead-lag 2 output
         V7,  ///< \f$v_7\f$ Unlimited stabilizer signal
         VSS, ///< \f$V_{\mathrm{ss}}\f$ Limited stabilizer signal and model output
-        MAXIMUM,
       };
 
       /// External variables of an `Ieeest`.
       enum class IeeestExternalVariables : size_t
       {
         U, ///< \f$u\f$ Stabilizer input signal
-        MAXIMUM,
       };
 
       template <typename scalar_type, typename index_type>
@@ -82,12 +66,13 @@ namespace GridKit
         using Component<scalar_type, index_type>::allocated_;
 
       public:
-        using ScalarT    = scalar_type;
-        using IdxT       = index_type;
-        using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using ModelDataT = IeeestData<RealT, IdxT>;
-        using SignalT    = SignalNode<ScalarT, IdxT>;
-        using MonitorT   = Model::VariableMonitor<Ieeest, IeeestData>;
+        using ScalarT        = scalar_type;
+        using IdxT           = index_type;
+        using RealT          = typename Component<ScalarT, IdxT>::RealT;
+        using ModelDataT     = IeeestData<RealT, IdxT>;
+        using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
+        using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
+        using MonitorT       = Model::VariableMonitor<Ieeest, IeeestData>;
 
         Ieeest();
         Ieeest(const ModelDataT& data);
@@ -102,14 +87,9 @@ namespace GridKit
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
-        /// Get the `ComponentSignals` from this `Ieeest`
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                IeeestInternalVariables,
-                                IeeestExternalVariables>&
+        SignalPortsT& getPorts()
         {
-          return signals_;
+          return ports_;
         }
 
         const Model::VariableMonitorBase* getMonitor() const override;
@@ -163,7 +143,7 @@ namespace GridKit
         RealT use_T6_block_{1};
         RealT bypass_T6_block_{0};
 
-        ComponentSignals<ScalarT, IdxT, IeeestInternalVariables, IeeestExternalVariables> signals_;
+        SignalPortsT ports_;
 
         std::unique_ptr<MonitorT> monitor_;
 

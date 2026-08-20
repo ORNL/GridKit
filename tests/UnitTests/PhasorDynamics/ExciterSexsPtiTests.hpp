@@ -62,11 +62,13 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> efd_node;
         ScalarT                                   efd_value{0.0};
         IdxT                                      efd_index = INVALID_INDEX<IdxT>;
-        efd_node.set(&efd_value, &efd_index);
+        efd_node.link(&efd_value, &efd_index);
 
-        auto                                            data = makeTestData();
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
-        exciter.getSignals().template assignSignalNode<PhasorDynamics::Exciter::SexsPtiInternalVariables::EFD>(&efd_node);
+        using namespace GridKit::PhasorDynamics::Exciter;
+
+        auto data    = makeTestData();
+        auto exciter = SexsPti<ScalarT, IdxT>(&bus, data);
+        exciter.getPorts().out.template port<SexsPtiSignalOutputs::efd>().connect(&efd_node);
 
         exciter.allocate();
         efd_node.init(1.2);
@@ -110,13 +112,15 @@ namespace GridKit
         ScalarT                                   vs_value{0.25};
         IdxT                                      efd_index = INVALID_INDEX<IdxT>;
         IdxT                                      vs_index  = 4;
-        efd_node.set(&efd_value, &efd_index);
-        vs_node.set(&vs_value, &vs_index);
+        efd_node.link(&efd_value, &efd_index);
+        vs_node.link(&vs_value, &vs_index);
 
-        auto                                            data = makeTestData();
-        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
-        exciter.getSignals().template assignSignalNode<PhasorDynamics::Exciter::SexsPtiInternalVariables::EFD>(&efd_node);
-        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::SexsPtiExternalVariables::VS>(&vs_node);
+        using namespace GridKit::PhasorDynamics::Exciter;
+
+        auto data    = makeTestData();
+        auto exciter = SexsPti<ScalarT, IdxT>(&bus, data);
+        exciter.getPorts().out.template port<SexsPtiSignalOutputs::efd>().connect(&efd_node);
+        exciter.getPorts().in.template port<SexsPtiSignalInputs::vs>().connect(&vs_node);
 
         exciter.allocate();
         efd_node.init(1.2);
@@ -155,17 +159,17 @@ namespace GridKit
         IdxT                                      vref_index = 5;
         IdxT                                      vuel_index = 6;
         IdxT                                      voel_index = 7;
-        efd_node.set(&efd_value, &efd_index);
-        vref_node.set(&vref_value, &vref_index);
-        vuel_node.set(&vuel_value, &vuel_index);
-        voel_node.set(&voel_value, &voel_index);
+        efd_node.link(&efd_value, &efd_index);
+        vref_node.link(&vref_value, &vref_index);
+        vuel_node.link(&vuel_value, &vuel_index);
+        voel_node.link(&voel_value, &voel_index);
 
         auto                                            data = makeTestData();
         PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
-        exciter.getSignals().template assignSignalNode<PhasorDynamics::Exciter::SexsPtiInternalVariables::EFD>(&efd_node);
-        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::SexsPtiExternalVariables::VREF>(&vref_node);
-        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::SexsPtiExternalVariables::VUEL>(&vuel_node);
-        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::SexsPtiExternalVariables::VOEL>(&voel_node);
+        exciter.getPorts().out.template port<PhasorDynamics::Exciter::SexsPtiSignalOutputs::efd>().connect(&efd_node);
+        exciter.getPorts().in.template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::vref>().connect(&vref_node);
+        exciter.getPorts().in.template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::vuel>().connect(&vuel_node);
+        exciter.getPorts().in.template port<PhasorDynamics::Exciter::SexsPtiSignalInputs::voel>().connect(&voel_node);
 
         exciter.allocate();
         efd_node.init(1.2);

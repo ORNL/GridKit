@@ -11,7 +11,6 @@ if(GRIDKIT_ENABLE_ENZYME)
     phasor_dynamics_exciter_ieeet1
     SOURCES Ieeet1Enzyme.cpp
     HEADERS ${_install_headers}
-    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
       PUBLIC
       GridKit::phasor_dynamics_core
@@ -29,14 +28,12 @@ else()
     phasor_dynamics_exciter_ieeet1
     SOURCES Ieeet1.cpp
     HEADERS ${_install_headers}
-    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES GridKit::phasor_dynamics_core GridKit::phasor_dynamics_signal)
 endif()
 
 gridkit_add_library(
   phasor_dynamics_exciter_ieeet1_dependency_tracking
   SOURCES Ieeet1DependencyTracking.cpp
-  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
   LINK_LIBRARIES GridKit::phasor_dynamics_core GridKit::phasor_dynamics_signal_dependency_tracking)
 
 # Link to interface target for all components
