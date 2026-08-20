@@ -247,7 +247,12 @@ namespace GridKit
         {
           Ke_eff_ = (Vrmax_ / 10.0 - static_cast<RealT>(ksat))
                     / static_cast<RealT>(efdp);
-          Log::warning() << "Ieeet1: Ke is zero so effective Ke is derived during initialization\n";
+          if (!std::isfinite(Ke_eff_))
+          {
+            Log::error() << "Ieeet1: derived effective Ke must be finite\n";
+            return 1;
+          }
+          Log::misc() << "Ieeet1: Ke is zero so effective Ke is derived during initialization\n";
         }
         else
         {

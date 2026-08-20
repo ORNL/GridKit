@@ -293,8 +293,8 @@ namespace GridKit
         const RealT limit_tolerance = static_cast<RealT>(4.0) * std::numeric_limits<RealT>::epsilon();
         if (pv0_value < Pvmin_ - limit_tolerance || pv0_value > Pvmax_ + limit_tolerance)
         {
-          Log::warning() << "Tgov1: initial valve position is outside [Pvmin, Pvmax]. "
-                            "Check initial dispatch and valve limits\n";
+          Log::error() << "Tgov1: initial valve position is outside [Pvmin, Pvmax]. "
+                          "Check initial dispatch and valve limits\n";
           return 1;
         }
 
