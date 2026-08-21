@@ -238,12 +238,8 @@ namespace AnalysisManager
       // Find a consistent set of initial conditions for DAE
       if (findConsistent)
       {
-        int initType = IDA_Y_INIT;
-
-        if (tag_)
-          initType = IDA_YA_YDP_INIT;
-
-        retval = IDACalcIC(solver_, initType, t0 + 0.1);
+        const int consistentICType = getIDAConsistentICType();
+        retval                     = IDACalcIC(solver_, consistentICType, t0 + 0.1);
         checkOutput(retval, "IDACalcIC");
 
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
@@ -305,6 +301,24 @@ namespace AnalysisManager
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
       model_->updateTime(t, 0.0);
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::getIDAConsistentICType() const
+    {
+      switch (consistent_ic_type_)
+      {
+      case IdaConsistentICType::Y:
+        return IDA_Y_INIT;
+      case IdaConsistentICType::YA_YDP:
+        return IDA_YA_YDP_INIT;
+      default:
+        GridKit::Utilities::Logger::error()
+            << "Invalid IDA consistent initial condition type "
+            << static_cast<int>(consistent_ic_type_)
+            << ".\n";
+        throw SundialsException();
+      }
     }
 
     /**
@@ -1195,6 +1209,19 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setBackwardSuppressAlgebraicErrors(bool suppress)
     {
       backward_suppress_alg_ = suppress;
+    }
+
+    /**
+     * @brief Set the IDA consistent-initial-condition calculation type
+     *
+     * @param consistent_ic_type IDA consistent initial condition type.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setConsistentICType(IdaConsistentICType consistent_ic_type)
+    {
+      consistent_ic_type_ = consistent_ic_type;
     }
 
     /**
