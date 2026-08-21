@@ -49,6 +49,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Resistor<ScalarT, IdxT>::tagDifferentiable()
   {
+    // No internal variables, so these valeus do not matter
+    tag_.resize(size_, true);
     return 0;
   }
 
