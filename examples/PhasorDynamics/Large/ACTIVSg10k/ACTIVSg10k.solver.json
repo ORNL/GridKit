@@ -1,0 +1,6 @@
+{
+    "system_model_file": "ACTIVSg10k.case.json",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 20.0,
+    "events": []
+}
