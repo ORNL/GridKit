@@ -6,7 +6,8 @@ Texas A&M University [Grid Repository](https://electricgrids.engr.tamu.edu/elect
 
 ![](ACTIVSg2000.png)
 
-Figure 1: Oneline of the ACTIVSg500 Case
+Figure 1: Oneline of the ACTIVSg2000 Case
+
 
 ## Development
 

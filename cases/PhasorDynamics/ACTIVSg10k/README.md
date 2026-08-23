@@ -1,6 +1,6 @@
 #  Western Electricity Coordinating Council  (ACTIVSg10k)
 
-Texas A&M University [Grid Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/activsg200/)
+Texas A&M University [Grid Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/activsg10k/)
 
 # One-Line Diagram
 
