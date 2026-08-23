@@ -12,4 +12,4 @@ Figure 1: Oneline of the ACTIVSg200 Case
 
 The compelete dynamics of this case are modeled in GridKit.
 
-[Validation results](../../../examples/PhasorDynamics/validation/ACTIVSg200/README.md)
+[Validation results](../../../examples/PhasorDynamics/Validation/ACTIVSg200/README.md)

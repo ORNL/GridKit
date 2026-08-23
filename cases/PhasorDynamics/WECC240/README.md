@@ -9,4 +9,4 @@ Figure 1: Oneline of the WECC case of [National Laboratory of the Rockies](https
 
 The compelete dynamics of this case are modeled in GridKit.
 
-[Validation results](../../../examples/PhasorDynamics/validation/WECC240/README.md)
+[Validation results](../../../examples/PhasorDynamics/Validation/WECC240/README.md)
