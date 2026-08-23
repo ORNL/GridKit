@@ -30,19 +30,24 @@ endmacro()
 # build tree and the install tree following the same directory structure as the
 # source tree under `examples`.
 #
-# <filename> must exist in the CMAKE_CURRENT_SOURCE_DIR where this macro is
-# called.
+# <filename> may be an absolute path or a path relative to
+# CMAKE_CURRENT_SOURCE_DIR.
 #
 macro(gridkit_example_add_file _filename)
   get_filename_component(__fname ${_filename} NAME)
-  set(_source_filepath ${CMAKE_CURRENT_SOURCE_DIR}/${__fname})
+  get_filename_component(
+    _source_filepath
+    ${_filename}
+    ABSOLUTE
+    BASE_DIR
+    ${CMAKE_CURRENT_SOURCE_DIR})
   if(NOT EXISTS ${_source_filepath})
     message(FATAL_ERROR "File does not exist: ${_source_filepath}")
   endif()
   set(_binary_filepath ${CMAKE_CURRENT_BINARY_DIR}/${__fname})
   configure_file(${_source_filepath} ${_binary_filepath} COPYONLY)
   gridkit_example_current_install_path(_ex_install_path)
-  install(FILES ${_filename} DESTINATION ${_ex_install_path})
+  install(FILES ${_source_filepath} DESTINATION ${_ex_install_path})
 endmacro()
 
 add_subdirectory(PowerFlow)
