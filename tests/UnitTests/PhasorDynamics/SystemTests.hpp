@@ -99,6 +99,27 @@ namespace GridKit
         }
       };
 
+      class ExternalResidualBranch final : public PhasorDynamics::Branch<ScalarT, IdxT>
+      {
+      public:
+        using BranchT = PhasorDynamics::Branch<ScalarT, IdxT>;
+        using BranchT::BranchT;
+
+        int evaluateExternalResidual() override final
+        {
+          ++external_residual_evaluations_;
+          return 0;
+        }
+
+        std::size_t externalResidualEvaluations() const
+        {
+          return external_residual_evaluations_;
+        }
+
+      private:
+        std::size_t external_residual_evaluations_{0};
+      };
+
     public:
       SystemTests()  = default;
       ~SystemTests() = default;
@@ -207,12 +228,24 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
         system.addBus(&bus2);
 
-        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        ExternalResidualBranch branch(&bus1, &bus2, R, X, G, B);
         system.addComponent(&branch);
 
-        system.allocate();
-        system.initialize();
-        system.evaluateResidual();
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+
+        const auto external_residual_evaluations = branch.externalResidualEvaluations();
+
+        success *= system.evaluateResidual() == 0;
+        success *= branch.externalResidualEvaluations() == external_residual_evaluations + 1;
+
+        success *= isEqual(bus1.Ir(), Ir1);
+        success *= isEqual(bus1.Ii(), Ii1);
+        success *= isEqual(bus2.Ir(), Ir2);
+        success *= isEqual(bus2.Ii(), Ii2);
+
+        success *= system.evaluateResidual() == 0;
+        success *= branch.externalResidualEvaluations() == external_residual_evaluations + 2;
 
         success *= isEqual(bus1.Ir(), Ir1);
         success *= isEqual(bus1.Ii(), Ii1);
