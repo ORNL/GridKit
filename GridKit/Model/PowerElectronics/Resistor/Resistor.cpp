@@ -43,14 +43,10 @@ namespace GridKit
     return 0;
   }
 
-  /*
-   * \brief Identify differential variables
-   */
+  /// There are no internal variables in this component, so \ref tag_ can be set arbitrarily.
   template <class ScalarT, typename IdxT>
   int Resistor<ScalarT, IdxT>::tagDifferentiable()
   {
-    // No internal variables, so these valeus do not matter
-    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 
