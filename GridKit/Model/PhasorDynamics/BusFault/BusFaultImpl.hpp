@@ -234,7 +234,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int BusFault<scalar_type, index_type>::evaluateInternalResidual(
+    __attribute__((always_inline)) int BusFault<scalar_type, index_type>::evaluateInternalResidualKernel(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
@@ -268,7 +268,7 @@ namespace GridKit
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
         auto*       h  = h_.getData();
-        evaluateInternalResidual(y, yp, wb, f);
+        evaluateInternalResidualKernel(y, yp, wb, f);
         evaluateBusResidual(y, yp, wb, h);
         Ir() += h[0];
         Ii() += h[1];
@@ -284,7 +284,7 @@ namespace GridKit
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb, f);
+        evaluateInternalResidualKernel(y, yp, wb, f);
       }
 
       f_.setDataUpdated();
