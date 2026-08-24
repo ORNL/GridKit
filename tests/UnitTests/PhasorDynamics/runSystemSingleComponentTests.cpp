@@ -1,7 +1,11 @@
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
 #include "SystemSingleComponentTests.hpp"
 
 int main()
 {
+  GridKit::Utilities::Logger::setVerbosity(GridKit::Utilities::Logger::Verbosity::NONE);
+
   using namespace GridKit;
   using namespace GridKit::Testing;
 
