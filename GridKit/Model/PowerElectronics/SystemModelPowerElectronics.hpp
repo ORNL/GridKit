@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <format>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
@@ -12,8 +11,6 @@
 #include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
 #include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 #include <GridKit/ScalarTraits.hpp>
-
-#include "GridKit/Utilities/Logger/Logger.hpp"
 
 namespace GridKit
 {
