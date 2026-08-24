@@ -295,35 +295,50 @@ namespace GridKit
       return CircuitComponent<ScalarT, IdxT>::initialize();
     }
 
+    /**
+     * @brief Tags all system variables as differentiable, based on what the
+     * components that own those variables tag them as.
+     *
+     * Starts by asking all components to tag their differentiables. This implementation
+     * assumes all node variables are algebraic, and will not ask nodes to tag their differentiables.
+     * Sets all variables to algebraic (`false`) to start, then loops over all component internal variables.
+     * Re-creates the same internal variable to system variables mapping as in \ref allocate() - all
+     * internal variables from the same component are stored contiguously in a block, and blocks are
+     * stored contiguously in the same order as \ref components_, with node variables at the end.
+     * Each internal variable's tag in the system is set to its tag in the component.
+     */
     int tagDifferentiable() final
     {
+      // Ask all component to tag their differentiables
       for (size_t i = 0; i < components_.size(); i++)
       {
         component_type* component = components_[i];
 
+        // Bubble up errors if necessary
         if (int err = component->tagDifferentiable())
         {
           return err;
         }
-
-        if (component->tag().size() != component->size())
-        {
-          GridKit::Utilities::Logger::error() << std::format("Component {} has an ill-configured tag(). Expected tags for {} variables, got {} instead.\n", i, component->size(), component->tag().size());
-          return 1;
-        }
       }
 
+      // Fill tags with a default value (false) for node variables. Assumed to be algebraic here.
       std::fill(tag_.begin(), tag_.end(), false);
 
+      // Copy tags for internal variables from their components - going in the order as described above
       size_t idx = 0;
       for (component_type* comp : components_)
       {
         const auto& external_indices = comp->getExternIndices();
+
+        // Loop over all component variables - including externals
         for (IdxT i = 0; i < comp->size(); i++)
         {
+          // Discard externals
           if (!external_indices.contains(i))
           {
             tag_[idx] = comp->tag()[i];
+
+            // Ensures internal variables are contiguous, and in the same order as the component
             idx++;
           }
         }
