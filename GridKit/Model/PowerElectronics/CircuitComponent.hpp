@@ -137,6 +137,8 @@ namespace GridKit
       f_ext_            = std::make_unique<ScalarT*[]>(size_);
       connection_nodes_ = std::make_unique<IdxT[]>(size_);
 
+      tag_.resize(size_);
+
       if (!allocated_)
       {
         allocateVectors(size_);

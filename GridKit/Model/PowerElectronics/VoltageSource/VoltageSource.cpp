@@ -50,7 +50,7 @@ namespace GridKit
   int VoltageSource<ScalarT, IdxT>::tagDifferentiable()
   {
     // All variables are algebraics
-    tag_.resize(size_, false);
+    std::fill(tag_.begin(), tag_.end(), false);
     return 0;
   }
 

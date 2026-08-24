@@ -151,6 +151,8 @@ namespace GridKit
         abs_tol_.setToZero(memory::HOST);
       }
 
+      tag_.resize(size_);
+
       { // Start node internal indexing after all component internals for proper KLU ordering
         size_t node_internal_idx = component_internal_size;
         for (node_type* node : nodes_)
@@ -311,7 +313,7 @@ namespace GridKit
         }
       }
 
-      tag_.resize(size_, false);
+      std::fill(tag_.begin(), tag_.end(), false);
 
       size_t idx = 0;
       for (component_type* comp : components_)

@@ -50,7 +50,7 @@ namespace GridKit
   int Resistor<ScalarT, IdxT>::tagDifferentiable()
   {
     // No internal variables, so these valeus do not matter
-    tag_.resize(size_, true);
+    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 

@@ -47,9 +47,7 @@ namespace GridKit
     return 0;
   }
 
-  /*
-   * \brief Identify differential variables
-   */
+  /// There are no internal variables in this component, so \ref tag_ can be set arbitrarily.
   template <class ScalarT, typename IdxT>
   int MicrogridBusDQ<ScalarT, IdxT>::tagDifferentiable()
   {
@@ -77,8 +75,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridBusDQ<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    // No internal variables - tag doesn't matter.
-    tag_.resize(size_, false);
     return 0;
   }
 

@@ -50,7 +50,7 @@ namespace GridKit
   int Capacitor<ScalarT, IdxT>::tagDifferentiable()
   {
     // All variables are differentials
-    tag_.resize(size_, true);
+    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 
