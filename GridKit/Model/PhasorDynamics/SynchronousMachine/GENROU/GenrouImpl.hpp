@@ -514,7 +514,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateInternalResidual(
+    __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateInternalResidualKernel(
         const ScalarT* y,
         const ScalarT* yp,
         const ScalarT* wb,
@@ -638,7 +638,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
       auto*       h  = h_.getData();
-      evaluateInternalResidual(y, yp, wb, ws, f);
+      evaluateInternalResidualKernel(y, yp, wb, ws, f);
       evaluateBusResidual(y, yp, wb, h);
 
       // Genrou contribution to bus algebraic equations
