@@ -228,23 +228,27 @@ int main(int /* argc */, char const** /* argv */)
   bool all_internal_diff = true;
   bool all_external_alg  = true;
 
-  const size_t num_node_vars = 4 * 2 + 1;
+  const size_t num_node_vars = bus1.size() + bus2.size() + bus3.size() + bus4.size() + dg_signal.size();
 
   for (size_t i = 0; i < sysmodel->size() - num_node_vars; i++)
   {
     all_internal_diff = all_internal_diff && sysmodel->tag()[i];
     if (!sysmodel->tag()[i])
     {
-      std::cout << "Broken on " << i << '\n';
+      std::cout << "Unexepected algebraic-tagged internal variable found in index " << i << '\n';
     }
   }
 
   for (size_t i = sysmodel->size() - num_node_vars; i < sysmodel->size(); i++)
   {
     all_external_alg = all_external_alg && !sysmodel->tag()[i];
+    if (sysmodel->tag()[i])
+    {
+      std::cout << "Unexepected differential-tagged external variable found in index " << i << '\n';
+    }
   }
 
-  std::cout << "Verify all internal variables are differential: " << all_internal_diff << ", and all external variabels are algebraic: " << all_external_alg << '\n';
+  std::cout << "Verify all internal variables are differential: " << all_internal_diff << ", and all external variables are algebraic: " << all_external_alg << '\n';
 
   // Create numerical integrator and configure it for the generator model
   auto* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
