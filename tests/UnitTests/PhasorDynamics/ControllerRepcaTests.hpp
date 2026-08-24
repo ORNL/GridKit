@@ -47,8 +47,9 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing REPCA defaults, parameter floors, and invalid "
-                         "configurations. Logged errors and warnings are expected.");
+        const auto previous_verbosity = Log::verbosity();
+        // Use EVERYTHING to inspect diagnostics from the invalid cases below.
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
@@ -237,6 +238,7 @@ namespace GridKit
                                   floored_residuals,
                                   "floored time constants");
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -244,9 +246,6 @@ namespace GridKit
       TestOutcome initializationAndSignals()
       {
         TestStatus success = true;
-
-        noteExpectedLogs("Testing REPCA initialization without an attached frequency "
-                         "signal. A warning is expected.");
 
         Fixture<ScalarT> fixture(makeInitializationData(), 0.8, 0.6);
         fixture.attachAllInputs(99.0);
@@ -346,7 +345,10 @@ namespace GridKit
         Fixture<ScalarT> fallback(makeInitializationData(), 0.8, 0.6);
         fallback.attachAllInputs(0.0, false);
         setInitializationInputs(fallback);
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
         success *= fallback.initialize(0.25, 0.45);
+        Log::setVerbosity(previous_verbosity);
         success *= scalarMatches(fallback.input(Ext::FREQREF), 1.0, "default frequency");
         success *= (fallback.repca.evaluateResidual() == 0);
         success *= allResidualsWithinInitTolerance(fallback.repca);
@@ -429,8 +431,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing REPCA adjusted limits and inadmissible "
-                         "initialization points. Logged warnings and errors are expected.");
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         const auto data = makeInitializationData();
 
@@ -769,6 +771,7 @@ namespace GridKit
                                     "adjusted command limits");
         }
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -2147,14 +2150,6 @@ namespace GridKit
           }
         }
         return success;
-      }
-
-      void noteExpectedLogs(const char* message) const
-      {
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << message << '\n';
-        Log::setVerbosity(previous_verbosity);
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> expectedJacobian() const

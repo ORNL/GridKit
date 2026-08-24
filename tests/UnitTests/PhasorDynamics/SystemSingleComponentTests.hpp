@@ -1,16 +1,18 @@
 #include <iomanip>
-#include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     /// Smoke test for components (single component connected to an infinite bus)
     /// through the system model with the minimal constructors
     template <class ScalarT, typename IdxT>
@@ -103,7 +105,10 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus);
+        Log::setVerbosity(previous_verbosity);
         system->addComponent(&exciter);
 
         success *= system->allocate() == 0;
@@ -173,8 +178,10 @@ namespace GridKit
         missing_bus_data.esdc1a[0].buses.clear();
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> missing_bus_system(missing_bus_data);
-        std::cout << "Testing expected ESDC1A missing-bus configuration error.\n";
+        const auto                                 previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
         success *= missing_bus_system.verify() > 0;
+        Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
       }
@@ -256,6 +263,7 @@ namespace GridKit
       {
         using Buses  = PhasorDynamics::Controller::RepcaBuses;
         using Inputs = PhasorDynamics::Controller::RepcaSignalInputs;
+        using Params = PhasorDynamics::Controller::RepcaParameters;
         using Vars   = PhasorDynamics::Controller::RepcaInternalVariables;
 
         constexpr IdxT bus_id   = static_cast<IdxT>(1);
@@ -279,6 +287,7 @@ namespace GridKit
         repca_data.signal_inputs[Inputs::ii] = input_id;
         repca_data.signal_inputs[Inputs::p]  = input_id;
         repca_data.signal_inputs[Inputs::q]  = input_id;
+        repca_data.parameters[Params::Tp]    = static_cast<RealT>(0.02);
         data.repca.push_back(repca_data);
 
         ScalarT input_value{};
@@ -482,8 +491,10 @@ namespace GridKit
         missing_output_data.hygov[0].signal_outputs.clear();
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> missing_output_system(missing_output_data);
-        std::cout << "Testing expected HYGOV missing-output configuration error.\n";
+        const auto                                 previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
         success *= missing_output_system.verify() > 0;
+        Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
       }

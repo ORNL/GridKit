@@ -208,10 +208,8 @@ namespace GridKit
 
         TestStatus success = true;
 
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing that invalid parameters are rejected. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
@@ -225,6 +223,7 @@ namespace GridKit
         PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> invalid_model(&bus, invalid);
         success *= (invalid_model.verify() > 0);
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -260,14 +259,13 @@ namespace GridKit
         success *= (system.evaluateResidual() == 0);
         success *= (system.size() == 5);
 
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing that model with missing EFD data is rejected. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
         auto missing_efd = data;
         missing_efd.sexspti[0].signal_outputs.erase(SignalOutput::efd);
         SystemModel<ScalarT, IdxT> missing_efd_system(missing_efd);
+        const auto                 previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
         success *= (missing_efd_system.verify() > 0);
+        Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
       }

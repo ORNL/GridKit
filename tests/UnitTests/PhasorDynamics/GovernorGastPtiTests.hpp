@@ -18,11 +18,14 @@
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <typename scalar_type, typename index_type>
     class GovernorGastPtiTests
     {
@@ -43,6 +46,9 @@ namespace GridKit
       TestOutcome validation()
       {
         TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> empty;
         success *= (empty.size() == static_cast<IdxT>(index(Internal::MAXIMUM)));
@@ -198,6 +204,7 @@ namespace GridKit
               "in-place time-constant floor boundary");
         }
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -351,6 +358,9 @@ namespace GridKit
       TestOutcome initializationDomain()
       {
         TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         struct RejectionCase
         {
@@ -557,6 +567,7 @@ namespace GridKit
         success *= (negative_seed.evaluate() == 0);
         success *= allResidualsZero(negative_seed.gastpti);
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -713,6 +724,8 @@ namespace GridKit
             {"adjusted upper response boundary", over_rated_pmech, command_magnitude},
             {"adjusted lower response boundary", ZERO<RealT>, -command_magnitude},
         }};
+        const auto                                 previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
         for (const auto& test_case : effective_boundary_cases)
         {
           Fixture<ScalarT> response(response_data);
@@ -734,6 +747,7 @@ namespace GridKit
                                     {{Internal::XVALVE, expected}},
                                     test_case.label);
         }
+        Log::setVerbosity(previous_verbosity);
 
         return success.report(__func__);
       }
@@ -873,6 +887,8 @@ namespace GridKit
                 "restoring-response Enzyme versus dependency tracking",
                 {{Internal::XVALVE, 1.6}, {Internal::VLV, 1.35}});
 
+        const auto adjusted_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
         Fixture<ScalarT> adjusted(data);
         adjusted.attachAllInputs();
         success *= adjusted.initialize(over_rated_pmech);
@@ -885,11 +901,14 @@ namespace GridKit
                 "adjusted-boundary Enzyme versus dependency tracking",
                 {{Internal::XVALVE, adjusted_boundary},
                  {Internal::VLV, adjusted_boundary + boundary_command}});
+        Log::setVerbosity(adjusted_verbosity);
 
         auto collapsed_data                     = data;
         collapsed_data.parameters[Params::Vmin] = collapsed_limit;
         collapsed_data.parameters[Params::Vmax] = collapsed_limit;
 
+        const auto collapsed_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
         Fixture<ScalarT> collapsed(collapsed_data);
         collapsed.attachAllInputs();
         success *= collapsed.initialize(initial_pmech);
@@ -908,6 +927,7 @@ namespace GridKit
                 over_rated_pmech,
                 "reinitialized Enzyme versus dependency tracking",
                 {});
+        Log::setVerbosity(collapsed_verbosity);
 
         return success.report(__func__);
       }

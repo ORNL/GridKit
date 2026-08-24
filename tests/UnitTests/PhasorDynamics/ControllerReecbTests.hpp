@@ -19,12 +19,15 @@
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <typename scalar_type, typename index_type>
     class ControllerReecbTests
     {
@@ -44,6 +47,9 @@ namespace GridKit
       TestOutcome validation()
       {
         TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
@@ -263,6 +269,7 @@ namespace GridKit
                                   {{Vars::PORD, 1.0}, {Vars::RPORD, 0.0}},
                                   "floored active-power order rate");
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -373,6 +380,9 @@ namespace GridKit
       TestOutcome initializationDomain()
       {
         TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         const auto data = makeData();
 
@@ -552,6 +562,7 @@ namespace GridKit
         success *= vectorUnchanged(invalid_fixture.reecb.y(), invalid_y, "state");
         success *= vectorUnchanged(invalid_fixture.reecb.yp(), invalid_yp, "derivative");
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -560,6 +571,9 @@ namespace GridKit
       TestOutcome initializationExactness()
       {
         TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         struct ExactnessCase
         {
@@ -750,6 +764,7 @@ namespace GridKit
         success                  *= stateMatches(exhausted.reecb, {{Vars::ILMAX, 0.0}}, "injection does not expand current circle");
         success                  *= allResidualsWithinInitTolerance(exhausted.reecb);
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -815,6 +830,9 @@ namespace GridKit
       TestOutcome selectorConfigurations()
       {
         TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         const std::array<bool, 2> selector_values{{false, true}};
         for (const bool pf : selector_values)
@@ -904,6 +922,7 @@ namespace GridKit
           }
         }
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -1616,10 +1635,16 @@ namespace GridKit
           data.parameters[Params::QFlag]  = mode.q_flag;
           data.parameters[Params::Pqflag] = mode.p_priority;
 
+          const auto previous_verbosity = Log::verbosity();
+          if (mode.pf_flag && mode.q_flag)
+          {
+            Log::setVerbosity(Log::Verbosity::NONE);
+          }
           success *= jacobiansMatch(
               dependencyTrackingJacobian(data, kNonunitAlpha, success),
               enzymeJacobian(data, kNonunitAlpha, success),
               mode.label);
+          Log::setVerbosity(previous_verbosity);
         }
 
         struct CurrentCircleProbe

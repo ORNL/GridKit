@@ -369,13 +369,12 @@ namespace GridKit
         auto sys        = SystemModel<double, size_t>(data);
 
         TestStatus status{true};
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing for exceptions when signals are incorrectly configured. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
         status *= throws<std::runtime_error>(
             [&]()
             { sys.allocate(); });
+        Log::setVerbosity(previous_verbosity);
 
         return status.report(__func__);
       }
@@ -393,13 +392,12 @@ namespace GridKit
 
         status *= bus.allocate() == 0;
         system.addBus(&bus);
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing for exceptions when when a child cannot bind to system storage. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
         status *= throws<std::runtime_error>(
             [&]()
             { system.allocate(); });
+        Log::setVerbosity(previous_verbosity);
 
         return status.report(__func__);
       }
