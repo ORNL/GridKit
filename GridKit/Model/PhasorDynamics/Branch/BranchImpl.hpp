@@ -184,20 +184,6 @@ namespace GridKit
       return ret;
     }
 
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
-        const RealT    G,
-        const RealT    B,
-        const ScalarT* wb,
-        ScalarT*       h)
-    {
-      const ScalarT Vr = wb[0];
-      const ScalarT Vi = wb[1];
-
-      h[0] = G * Vr - B * Vi;
-      h[1] = B * Vr + G * Vi;
-    }
-
     /**
      * @brief Compute the absolute tolerance for each variable in the model
      *
@@ -214,6 +200,24 @@ namespace GridKit
     int Branch<scalar_type, index_type>::setAbsoluteTolerance(RealT)
     {
       return 0;
+    }
+
+    /**
+     * @brief Reusable admittance block calculation
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
+        const RealT    G,
+        const RealT    B,
+        const ScalarT* wb,
+        ScalarT*       h)
+    {
+      const ScalarT Vr = wb[0];
+      const ScalarT Vi = wb[1];
+
+      h[0] = G * Vr - B * Vi;
+      h[1] = B * Vr + G * Vi;
     }
 
     /**
