@@ -62,7 +62,6 @@ namespace GridKit
       IdxT getNumVectors() const;
 
       int setDataUpdated(memory::MemorySpace memspace = memory::HOST);
-      int setDataUpdated(IdxT j, memory::MemorySpace memspace = memory::HOST);
       int setData(ScalarT* data, memory::MemorySpace memspace = memory::HOST);
       int setData(ScalarT* data, IdxT size, memory::MemorySpace memspace = memory::HOST);
       int allocate(memory::MemorySpace memspace = memory::HOST);
@@ -71,7 +70,6 @@ namespace GridKit
       int setToConst(ScalarT C, memory::MemorySpace memspace = memory::HOST);
       int setToConst(IdxT i, ScalarT C, memory::MemorySpace memspace = memory::HOST);
       int syncData(memory::MemorySpace memspaceOut = memory::HOST);
-      int syncData(IdxT j, memory::MemorySpace memspaceOut = memory::HOST);
       int resize(IdxT new_n_current);
       int copyToExternal(ScalarT*            dest,
                          IdxT                i,
@@ -90,8 +88,8 @@ namespace GridKit
       IdxT     n_size_{0};            ///< actual size of the vector
       ScalarT* d_data_{nullptr};      ///< DEVICE data array
       ScalarT* h_data_{nullptr};      ///< HOST data array
-      bool*    gpu_updated_{nullptr}; ///< DEVICE data flags (updated or not)
-      bool*    cpu_updated_{nullptr}; ///< HOST data flags (updated or not)
+      bool     gpu_updated_{false};   ///< DEVICE data flags (updated or not)
+      bool     cpu_updated_{false};   ///< HOST data flags (updated or not)
 
       bool owns_gpu_data_{true}; ///< data owneship flag for DEVICE data
       bool owns_cpu_data_{true}; ///< data ownership flag for HOST data

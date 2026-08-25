@@ -22,11 +22,9 @@ namespace GridKit
       : n_capacity_(n),
         k_(1),
         n_size_(n),
-        gpu_updated_(new bool[1]),
-        cpu_updated_(new bool[1])
+        gpu_updated_(false),
+        cpu_updated_(false)
     {
-      gpu_updated_[0] = false;
-      cpu_updated_[0] = false;
     }
 
     /**
@@ -40,11 +38,9 @@ namespace GridKit
       : n_capacity_(n),
         k_(k),
         n_size_(n),
-        gpu_updated_(new bool[static_cast<std::size_t>(k)]),
-        cpu_updated_(new bool[static_cast<std::size_t>(k)])
+        gpu_updated_(false),
+        cpu_updated_(false)
     {
-      setHostUpdated(false);
-      setDeviceUpdated(false);
     }
 
     /**
@@ -58,8 +54,6 @@ namespace GridKit
         mem_.deleteOnHost(h_data_);
       if (owns_gpu_data_ && d_data_)
         mem_.deleteOnDevice(d_data_);
-      delete[] gpu_updated_;
-      delete[] cpu_updated_;
     }
 
     /**
@@ -232,8 +226,6 @@ namespace GridKit
     template <typename ScalarT, typename IdxT>
     int Vector<ScalarT, IdxT>::setDataUpdated(memory::MemorySpace memspace)
     {
-      assert(cpu_updated_ && gpu_updated_ && "Update flags not allocated");
-
       using namespace memory;
       switch (memspace)
       {
@@ -244,47 +236,6 @@ namespace GridKit
       case DEVICE:
         setHostUpdated(false);
         setDeviceUpdated(true);
-        break;
-      }
-      return 0;
-    }
-
-    /**
-     * @brief Set the flag to indicate that the data (HOST or DEVICE) for
-     * vector `j` in the multivector has been updated.
-     *
-     * Use this function if you update vector elements by accessing the raw data
-     * pointer.
-     *
-     * @param[in] memspace - Memory space (HOST or DEVICE)
-     *
-     * @warning This is an expert level method. Use only if you know what
-     * you are doing.
-     */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setDataUpdated(IdxT j, memory::MemorySpace memspace)
-    {
-      assert(cpu_updated_ && gpu_updated_ && "Update flags not allocated");
-
-      using namespace memory;
-
-      if (k_ <= j)
-      {
-        out::error() << "Vector::setDataUpdated - vector index " << j
-                     << " out of range, multivector has only " << k_
-                     << " vectors\n";
-        return 1;
-      }
-
-      switch (memspace)
-      {
-      case HOST:
-        cpu_updated_[j] = true;
-        gpu_updated_[j] = false;
-        break;
-      case DEVICE:
-        gpu_updated_[j] = true;
-        cpu_updated_[j] = false;
         break;
       }
       return 0;
@@ -411,14 +362,14 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        if (cpu_updated_[0] == false)
+        if (cpu_updated_ == false)
         {
           out::error() << "Vector::getData - host data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return h_data_;
       case DEVICE:
-        if (gpu_updated_[0] == false)
+        if (gpu_updated_ == false)
         {
           out::error() << "Vector::getData - device data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
@@ -446,14 +397,14 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        if (cpu_updated_[0] == false)
+        if (cpu_updated_ == false)
         {
           out::error() << "Vector::getData - host data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return h_data_;
       case DEVICE:
-        if (gpu_updated_[0] == false)
+        if (gpu_updated_ == false)
         {
           out::error() << "Vector::getData - device data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
@@ -493,16 +444,16 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        if (cpu_updated_[j] == false)
+        if (cpu_updated_ == false)
         {
-          out::error() << "Vector::getData - host data for vector " << j << " is stale. Perhaps you need to call syncData?\n";
+          out::error() << "Vector::getData - host data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return &h_data_[j * n_size_];
       case DEVICE:
-        if (gpu_updated_[j] == false)
+        if (gpu_updated_ == false)
         {
-          out::error() << "Vector::getData - device data for vector " << j << " is stale. Perhaps you need to call syncData?\n";
+          out::error() << "Vector::getData - device data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return &d_data_[j * n_size_];
@@ -536,16 +487,16 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        if (cpu_updated_[j] == false)
+        if (cpu_updated_ == false)
         {
-          out::error() << "Vector::getData - host data for vector " << j << " is stale. Perhaps you need to call syncData?\n";
+          out::error() << "Vector::getData - host data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return &h_data_[j * n_size_];
       case DEVICE:
-        if (gpu_updated_[j] == false)
+        if (gpu_updated_ == false)
         {
-          out::error() << "Vector::getData - device data for vector " << j << " is stale. Perhaps you need to call syncData?\n";
+          out::error() << "Vector::getData - device data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return &d_data_[j * n_size_];
@@ -574,35 +525,15 @@ namespace GridKit
     {
       using namespace memory;
 
-      bool all_cpu_updated = cpu_updated_[0];
-      bool all_gpu_updated = gpu_updated_[0];
-
-      // Verify that all vectors in multivector have the same update status.
-      for (IdxT i = 1; i < k_; ++i)
-      {
-        if (gpu_updated_[i] != all_gpu_updated)
-        {
-          out::error() << "Vector::syncData - inconsistent update state across device columns.\n"
-                       << "Use syncData(j, memspace) for individual vectors\n";
-          return 1;
-        }
-        if (cpu_updated_[i] != all_cpu_updated)
-        {
-          out::error() << "Vector::syncData - inconsistent update state across host columns.\n"
-                       << "Use syncData(j, memspace) for individual vectors\n";
-          return 1;
-        }
-      }
-
       switch (memspaceDst)
       {
       case DEVICE: // cpu -> gpu
-        if (gpu_updated_[0])
+        if (gpu_updated_)
         {
           out::error() << "Vector::syncData - device already up to date\n";
           return 1;
         }
-        if (!cpu_updated_[0])
+        if (!cpu_updated_)
         {
           out::error() << "Vector::syncData - host data is stale, cannot sync to device\n";
           return 1;
@@ -616,12 +547,12 @@ namespace GridKit
         setDeviceUpdated(true);
         break;
       case HOST: // gpu -> cpu
-        if (cpu_updated_[0])
+        if (cpu_updated_)
         {
           out::error() << "Vector::syncData - host already up to date\n";
           return 1;
         }
-        if (!gpu_updated_[0])
+        if (!gpu_updated_)
         {
           out::error() << "Vector::syncData - device data is stale, cannot sync to host\n";
           return 1;
@@ -633,80 +564,6 @@ namespace GridKit
         }
         mem_.copyArrayDeviceToHost(h_data_, d_data_, n_size_ * k_);
         setHostUpdated(true);
-        break;
-      default:
-        return 1;
-      }
-      return 0;
-    }
-
-    /**
-     * @brief Sync out of date memory space with the updated one.
-     *
-     * syncData is the only function that can set data on both HOST and DEVICE
-     * to the same values.
-     *
-     * @param[in] memspaceDst  - Memory space to sync
-     *
-     * @return 0 if successful, 1 otherwise.
-     *
-     * @warning This function can be called only when all vectors in a
-     * multivector have the same update status. Otherwise, you need to sync
-     * vectors in a multivector individually.
-     *
-     */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::syncData(IdxT j, memory::MemorySpace memspaceDst)
-    {
-      using namespace memory;
-
-      if (k_ <= j)
-      {
-        out::error() << "Vector::syncData - vector index " << j
-                     << " out of range, multivector has only " << k_
-                     << " vectors\n";
-        return 1;
-      }
-
-      switch (memspaceDst)
-      {
-      case DEVICE: // cpu->gpu
-        if (gpu_updated_[j])
-        {
-          out::error() << "Vector::syncData - device already up to date\n";
-          return 1;
-        }
-        if (!cpu_updated_[j])
-        {
-          out::error() << "Vector::syncData - host data is stale, cannot sync to device\n";
-          return 1;
-        }
-        if (d_data_ == nullptr)
-        {
-          out::error() << "Vector::syncData - device data not allocated\n";
-          return 1;
-        }
-        mem_.copyArrayHostToDevice(&d_data_[j * n_size_], &h_data_[j * n_size_], n_size_);
-        gpu_updated_[j] = true;
-        break;
-      case HOST: // gpu -> cpu
-        if (cpu_updated_[j])
-        {
-          out::error() << "Vector::syncData - host already up to date\n";
-          return 1;
-        }
-        if (!gpu_updated_[j])
-        {
-          out::error() << "Vector::syncData - device data is stale, cannot sync to host\n";
-          return 1;
-        }
-        if (h_data_ == nullptr)
-        {
-          out::error() << "Vector::syncData - host data not allocated\n";
-          return 1;
-        }
-        mem_.copyArrayDeviceToHost(&h_data_[j * n_size_], &d_data_[j * n_size_], n_size_);
-        cpu_updated_[j] = true;
         break;
       default:
         return 1;
@@ -836,8 +693,8 @@ namespace GridKit
           return 1;
         }
         mem_.setZeroArrayOnHost(&h_data_[j * n_size_], n_size_);
-        cpu_updated_[j] = true;
-        gpu_updated_[j] = false;
+        cpu_updated_ = true;
+        gpu_updated_ = false;
         break;
       case DEVICE:
         if (d_data_ == nullptr)
@@ -847,8 +704,8 @@ namespace GridKit
         }
         // TODO: We should not need to access raw data in this class
         mem_.setZeroArrayOnDevice(&d_data_[j * n_size_], n_size_);
-        cpu_updated_[j] = false;
-        gpu_updated_[j] = true;
+        cpu_updated_ = false;
+        gpu_updated_ = true;
         break;
       }
       return 0;
@@ -924,8 +781,8 @@ namespace GridKit
           return 1;
         }
         mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], C, n_size_);
-        cpu_updated_[j] = true;
-        gpu_updated_[j] = false;
+        cpu_updated_ = true;
+        gpu_updated_ = false;
         break;
       case DEVICE:
         if (d_data_ == nullptr)
@@ -934,8 +791,8 @@ namespace GridKit
           return 1;
         }
         mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], C, n_size_);
-        cpu_updated_[j] = false;
-        gpu_updated_[j] = true;
+        cpu_updated_ = false;
+        gpu_updated_ = true;
         break;
       }
       return 0;
@@ -1100,22 +957,25 @@ namespace GridKit
     {
       using namespace memory;
       ScalarT* data = this->getData(memspaceSrc);
+
       // Check that the source data is not null and up to date
       if (data == nullptr)
       {
         out::error() << "Vector::copyToExternal - source data is null or stale\n";
         return 1;
       }
+
       // Check that the destination memory space is allocated
       if (dest == nullptr)
       {
         out::error() << "Vector::copyToExternal - destination pointer is null\n";
         return 1;
       }
+
       switch (memspaceSrc)
       {
       case HOST:
-        if (!cpu_updated_[0])
+        if (!cpu_updated_)
         {
           out::error() << "Vector::copyToExternal - source data is stale\n";
           return 1;
@@ -1131,7 +991,7 @@ namespace GridKit
         }
         break;
       case DEVICE:
-        if (!gpu_updated_[0])
+        if (!gpu_updated_)
         {
           out::error() << "Vector::copyToExternal - source data is stale\n";
           return 1;
@@ -1157,13 +1017,13 @@ namespace GridKit
     template <typename ScalarT, typename IdxT>
     void Vector<ScalarT, IdxT>::setHostUpdated(bool is_updated)
     {
-      std::fill(cpu_updated_, cpu_updated_ + k_, is_updated);
+      cpu_updated_ = is_updated;
     }
 
     template <typename ScalarT, typename IdxT>
     void Vector<ScalarT, IdxT>::setDeviceUpdated(bool is_updated)
     {
-      std::fill(gpu_updated_, gpu_updated_ + k_, is_updated);
+      gpu_updated_ = is_updated;
     }
 
     template class Vector<double, long int>;
