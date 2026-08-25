@@ -106,6 +106,8 @@ namespace GridKit
         system->addBus(&bus);
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress the expected time-constant-floor warning from the default parameters.
+        // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus);
         Log::setVerbosity(previous_verbosity);
@@ -179,6 +181,8 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> missing_bus_system(missing_bus_data);
         const auto                                 previous_verbosity = Log::verbosity();
+        // Suppress the expected missing-bus configuration error below.
+        // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
         success *= missing_bus_system.verify() > 0;
         Log::setVerbosity(previous_verbosity);
@@ -492,6 +496,8 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> missing_output_system(missing_output_data);
         const auto                                 previous_verbosity = Log::verbosity();
+        // Suppress the expected missing-output configuration error below.
+        // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
         success *= missing_output_system.verify() > 0;
         Log::setVerbosity(previous_verbosity);

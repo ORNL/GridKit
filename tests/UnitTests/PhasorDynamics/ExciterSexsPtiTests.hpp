@@ -209,6 +209,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid parameter cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
@@ -263,6 +265,8 @@ namespace GridKit
         missing_efd.sexspti[0].signal_outputs.erase(SignalOutput::efd);
         SystemModel<ScalarT, IdxT> missing_efd_system(missing_efd);
         const auto                 previous_verbosity = Log::verbosity();
+        // Suppress the expected missing-EFD configuration error below.
+        // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
         success *= (missing_efd_system.verify() > 0);
         Log::setVerbosity(previous_verbosity);

@@ -48,8 +48,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
-        // Changing the verbosity to NONE to suppress expected errors and warning for the following tests.
-        // Use EVERYTHING to inspect diagnostics from the invalid cases below.
+        // Suppress expected errors and warnings from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
@@ -347,6 +347,8 @@ namespace GridKit
         fallback.attachAllInputs(0.0, false);
         setInitializationInputs(fallback);
         const auto previous_verbosity = Log::verbosity();
+        // Suppress the expected missing-frequency warning for this fallback case.
+        // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
         success *= fallback.initialize(0.25, 0.45);
         Log::setVerbosity(previous_verbosity);
@@ -433,6 +435,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and limit-adjustment warnings from the cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         const auto data = makeInitializationData();

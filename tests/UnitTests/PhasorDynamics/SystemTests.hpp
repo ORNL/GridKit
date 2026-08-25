@@ -370,6 +370,8 @@ namespace GridKit
 
         TestStatus status{true};
         const auto previous_verbosity = Log::verbosity();
+        // Suppress the expected signal-configuration error below.
+        // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
         status *= throws<std::runtime_error>(
             [&]()
@@ -393,6 +395,8 @@ namespace GridKit
         status *= bus.allocate() == 0;
         system.addBus(&bus);
         const auto previous_verbosity = Log::verbosity();
+        // Suppress the expected child-allocation error below.
+        // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
         status *= throws<std::runtime_error>(
             [&]()

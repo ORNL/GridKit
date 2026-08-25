@@ -60,6 +60,8 @@ namespace GridKit
         success *= (configured.hygov.verify() == 0);
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and warnings from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         Fixture<ScalarT> minimal(makeMinimalData());
@@ -338,6 +340,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and limit-adjustment warnings from the cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         success *= initializationRejectedAtomically(

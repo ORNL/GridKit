@@ -310,6 +310,8 @@ namespace GridKit
         success *= (valid_branch.verify() == 0);
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid branch configurations below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(&bus1, &bus2, 0.0, 0.0, 0.0, 0.0);

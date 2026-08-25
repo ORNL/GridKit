@@ -48,6 +48,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and warnings from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Governor::GastPti<ScalarT, IdxT> empty;
@@ -360,6 +362,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and response-limit warnings from the cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         struct RejectionCase
@@ -725,6 +729,8 @@ namespace GridKit
             {"adjusted lower response boundary", ZERO<RealT>, -command_magnitude},
         }};
         const auto                                 previous_verbosity = Log::verbosity();
+        // Suppress expected response-limit adjustment warnings from these cases.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
         for (const auto& test_case : effective_boundary_cases)
         {
@@ -888,6 +894,8 @@ namespace GridKit
                 {{Internal::XVALVE, 1.6}, {Internal::VLV, 1.35}});
 
         const auto adjusted_verbosity = Log::verbosity();
+        // Suppress the expected response-limit adjustment warning for this case.
+        // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
         Fixture<ScalarT> adjusted(data);
         adjusted.attachAllInputs();
@@ -908,6 +916,8 @@ namespace GridKit
         collapsed_data.parameters[Params::Vmax] = collapsed_limit;
 
         const auto collapsed_verbosity = Log::verbosity();
+        // Suppress the expected response-limit adjustment warning for this case.
+        // Use EVERYTHING to inspect the diagnostic.
         Log::setVerbosity(Log::Verbosity::NONE);
         Fixture<ScalarT> collapsed(collapsed_data);
         collapsed.attachAllInputs();

@@ -183,6 +183,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid saturation cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         using Params = PhasorDynamics::Exciter::Ieeet1Parameters;

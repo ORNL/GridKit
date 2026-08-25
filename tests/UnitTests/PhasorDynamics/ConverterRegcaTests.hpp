@@ -56,6 +56,8 @@ namespace GridKit
         success *= (configured.verify() == 0);
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and warnings from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
         success *= (minimal.verify() > 0);
 
@@ -193,6 +195,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the inadmissible initialization cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         struct RejectionCase

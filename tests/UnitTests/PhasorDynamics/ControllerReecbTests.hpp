@@ -49,6 +49,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and warnings from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
@@ -382,6 +384,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and limit-adjustment warnings from the cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         const auto data = makeData();
@@ -573,6 +577,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected limit-adjustment warnings from the boundary cases below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         struct ExactnessCase
@@ -832,6 +838,8 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Suppress expected atypical-control warnings from selector combinations below.
+        // Use EVERYTHING to inspect those diagnostics.
         Log::setVerbosity(Log::Verbosity::NONE);
 
         const std::array<bool, 2> selector_values{{false, true}};
@@ -1638,6 +1646,8 @@ namespace GridKit
           const auto previous_verbosity = Log::verbosity();
           if (mode.pf_flag && mode.q_flag)
           {
+            // Suppress the expected atypical-control warning for this mode.
+            // Use EVERYTHING to inspect the diagnostic.
             Log::setVerbosity(Log::Verbosity::NONE);
           }
           success *= jacobiansMatch(
