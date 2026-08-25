@@ -140,7 +140,7 @@ namespace GridKit
         ScalarT& Vi();
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void logTimeConstantWarning();
+        static void            logTimeConstantWarning();
 
         BusT* bus_{nullptr};
 

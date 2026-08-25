@@ -142,7 +142,7 @@ namespace GridKit
         ScalarT toSystemBase(ScalarT value) const;
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void logTimeConstantWarning();
+        static void            logTimeConstantWarning();
 
         /* Local copies of signal variables */
         std::vector<ScalarT> ws_;

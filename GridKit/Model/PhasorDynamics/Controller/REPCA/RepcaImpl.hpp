@@ -988,7 +988,7 @@ namespace GridKit
        * @brief Static method to log time constant warnings
        *
        * @note Used in combination with static std:once_flag and std:call_once,
-       *       to reduce the number of times the warning is printed. 
+       *       to reduce the number of times the warning is printed.
        */
       template <typename scalar_type, typename index_type>
       void Repca<scalar_type, index_type>::logTimeConstantWarning()
