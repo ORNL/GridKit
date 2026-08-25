@@ -1,14 +1,7 @@
-#include <GridKit/Utilities/Logger/Logger.hpp>
-
 #include "ControllerReecbTests.hpp"
 
 int main()
 {
-  using Log = GridKit::Utilities::Logger;
-
-  const auto previous_verbosity = Log::verbosity();
-  Log::setVerbosity(Log::Verbosity::NONE);
-
   GridKit::Testing::TestingResults                       result;
   GridKit::Testing::ControllerReecbTests<double, size_t> test;
 
@@ -25,6 +18,5 @@ int main()
   result += test.jacobian();
 #endif
 
-  Log::setVerbosity(previous_verbosity);
   return result.summary();
 }

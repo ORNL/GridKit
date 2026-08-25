@@ -49,8 +49,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing ESDC1A defaults and invalid configurations. "
-                         "Logged errors and time-constant warnings are expected.");
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and warnings from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
@@ -189,6 +191,7 @@ namespace GridKit
         success *= (floored.evaluate() == 0);
         success *= allResidualsZero(floored.esdc1a);
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -320,8 +323,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing inadmissible ESDC1A initialization points. "
-                         "Logged errors are expected.");
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the inadmissible initialization cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         // An enabled speed multiplier must remain finite and strictly
         // positive. Other initialization limits are relaxed so these cases
@@ -491,6 +496,7 @@ namespace GridKit
         success                        *= (junction.evaluate() == 0);
         success                        *= allResidualsZero(junction.esdc1a);
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -1430,14 +1436,6 @@ namespace GridKit
         std::cout << label << " mismatch: " << std::setprecision(16) << actual
                   << " != " << expected << "\n";
         return false;
-      }
-
-      void noteExpectedLogs(const char* message) const
-      {
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << message << "\n";
-        Log::setVerbosity(previous_verbosity);
       }
 
       void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const

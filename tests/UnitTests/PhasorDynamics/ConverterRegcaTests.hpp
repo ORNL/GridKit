@@ -55,8 +55,10 @@ namespace GridKit
         success *= (configured.getMonitor() != nullptr);
         success *= (configured.verify() == 0);
 
-        noteExpectedLogs("Testing invalid REGCA configurations. "
-                         "Logged errors and time-constant warnings are expected.");
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and warnings from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
         success *= (minimal.verify() > 0);
 
         for (const Params parameter : {Params::Tg, Params::p0, Params::q0})
@@ -102,6 +104,7 @@ namespace GridKit
         success *= (fixture.evaluate() == 0);
         success *= allResidualsZero(fixture.regca);
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -191,8 +194,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing inadmissible REGCA initialization points. "
-                         "Logged errors are expected.");
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the inadmissible initialization cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         struct RejectionCase
         {
@@ -334,6 +339,7 @@ namespace GridKit
                                    "IP with LVPL bypassed");
         }
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -1008,17 +1014,6 @@ namespace GridKit
                   << std::setprecision(std::numeric_limits<RealT>::max_digits10)
                   << actual << " != " << expected << "\n";
         return false;
-      }
-
-      /// Raises verbosity just long enough to flag intentionally provoked
-      /// logs, so expected errors in the output are not mistaken for
-      /// failures.
-      void noteExpectedLogs(const char* message) const
-      {
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << message << "\n";
-        Log::setVerbosity(previous_verbosity);
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME

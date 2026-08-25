@@ -1,5 +1,3 @@
-#include <GridKit/Utilities/Logger/Logger.hpp>
-
 #include "GovernorGastPtiTests.hpp"
 
 int main()
@@ -7,9 +5,6 @@ int main()
   GridKit::Testing::TestingResults result;
 
   GridKit::Testing::GovernorGastPtiTests<double, size_t> test;
-  using Log                     = GridKit::Utilities::Logger;
-  const auto previous_verbosity = Log::verbosity();
-  Log::setVerbosity(Log::Verbosity::NONE);
 
   result += test.validation();
   result += test.initializationAndSignals();
@@ -22,6 +17,5 @@ int main()
   result += test.jacobian();
 #endif
 
-  Log::setVerbosity(previous_verbosity);
   return result.summary();
 }

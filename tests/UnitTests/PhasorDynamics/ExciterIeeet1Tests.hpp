@@ -182,10 +182,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing that invalid saturation parameters are rejected. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid saturation cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
 
@@ -200,6 +200,7 @@ namespace GridKit
 
         success *= (exciter.verify() != 0);
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 

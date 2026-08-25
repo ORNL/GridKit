@@ -59,9 +59,10 @@ namespace GridKit
         success *= (configured.hygov.getMonitor() != nullptr);
         success *= (configured.hygov.verify() == 0);
 
-        noteExpectedLogs("Testing HYGOV defaults and invalid configurations. "
-                         "Logged errors, time-constant warnings, and an unsupported "
-                         "backlash warning are expected.");
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and warnings from the invalid cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         Fixture<ScalarT> minimal(makeMinimalData());
         success *= (minimal.hygov.verify() == 0);
@@ -228,6 +229,7 @@ namespace GridKit
         success *= (floors.evaluate() == 0);
         success *= allResidualsZero(floors.hygov);
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -337,9 +339,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        noteExpectedLogs("Testing HYGOV initialization boundaries. "
-                         "Logged errors, response-limit warnings, and dam-head warnings "
-                         "are expected.");
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors and limit-adjustment warnings from the cases below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         success *= initializationRejectedAtomically(
             makeResidualData(),
@@ -600,6 +603,7 @@ namespace GridKit
                                      static_cast<size_t>(External::PAUX));
         }
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
@@ -1545,14 +1549,6 @@ namespace GridKit
                   << std::setprecision(std::numeric_limits<RealT>::max_digits10)
                   << actual << " != " << expected << "\n";
         return false;
-      }
-
-      void noteExpectedLogs(const char* message) const
-      {
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << message << "\n";
-        Log::setVerbosity(previous_verbosity);
       }
 
       void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const

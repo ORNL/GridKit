@@ -303,16 +303,16 @@ namespace GridKit
         // Verifies invalid branch parameters are rejected.
         TestStatus success = true;
 
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing that invalid branch parameters are rejected. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
-
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(1.0, 0.0);
 
         PhasorDynamics::Branch<ScalarT, IdxT> valid_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0);
         success *= (valid_branch.verify() == 0);
+
+        const auto previous_verbosity = Log::verbosity();
+        // Suppress expected errors from the invalid branch configurations below.
+        // Use EVERYTHING to inspect those diagnostics.
+        Log::setVerbosity(Log::Verbosity::NONE);
 
         PhasorDynamics::Branch<ScalarT, IdxT> zero_impedance_branch(&bus1, &bus2, 0.0, 0.0, 0.0, 0.0);
         success *= (zero_impedance_branch.verify() != 0);
@@ -327,6 +327,7 @@ namespace GridKit
         PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, nan, 0.1, 0.0, 0.0);
         success *= (nonfinite_branch.verify() != 0);
 
+        Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
