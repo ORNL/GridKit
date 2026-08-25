@@ -287,18 +287,39 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::evaluateResidual()
     {
-      ScalarT ir1{0.0};
-      ScalarT ii1{0.0};
-      ScalarT ir2{0.0};
-      ScalarT ii2{0.0};
+      ScalarT Ir1_{0.0};
+      ScalarT Ii1_{0.0};
+      ScalarT Ir2_{0.0};
+      ScalarT Ii2_{0.0};
 
-      terminalCurrent1(ir1, ii1);
-      terminalCurrent2(ir2, ii2);
+      wb_[0] = Vr1();
+      wb_[1] = Vi1();
+      evaluateAdmittanceBlock(g11_, b11_, wb_.data(), h_.data());
+      Ir1_ += h_[0];
+      Ii1_ += h_[1];
 
-      Ir1() += ir1;
-      Ii1() += ii1;
-      Ir2() += ir2;
-      Ii2() += ii2;
+      wb_[0] = Vr2();
+      wb_[1] = Vi2();
+      evaluateAdmittanceBlock(g12_, b12_, wb_.data(), h_.data());
+      Ir1_ += h_[0];
+      Ii1_ += h_[1];
+
+      wb_[0] = Vr1();
+      wb_[1] = Vi1();
+      evaluateAdmittanceBlock(g21_, b21_, wb_.data(), h_.data());
+      Ir2_ += h_[0];
+      Ii2_ += h_[1];
+
+      wb_[0] = Vr2();
+      wb_[1] = Vi2();
+      evaluateAdmittanceBlock(g22_, b22_, wb_.data(), h_.data());
+      Ir2_ += h_[0];
+      Ii2_ += h_[1];
+
+      Ir1() += Ir1_;
+      Ii1() += Ii1_;
+      Ir2() += Ir2_;
+      Ii2() += Ii2_;
 
       if (bus1_->size() > 0)
       {
@@ -310,44 +331,6 @@ namespace GridKit
       }
 
       return 0;
-    }
-
-    template <typename scalar_type, typename index_type>
-    void Branch<scalar_type, index_type>::terminalCurrent1(ScalarT& Ir, ScalarT& Ii)
-    {
-      Ir = ScalarT{0.0};
-      Ii = ScalarT{0.0};
-
-      wb_[0] = Vr1();
-      wb_[1] = Vi1();
-      evaluateAdmittanceBlock(g11_, b11_, wb_.data(), h_.data());
-      Ir += h_[0];
-      Ii += h_[1];
-
-      wb_[0] = Vr2();
-      wb_[1] = Vi2();
-      evaluateAdmittanceBlock(g12_, b12_, wb_.data(), h_.data());
-      Ir += h_[0];
-      Ii += h_[1];
-    }
-
-    template <typename scalar_type, typename index_type>
-    void Branch<scalar_type, index_type>::terminalCurrent2(ScalarT& Ir, ScalarT& Ii)
-    {
-      Ir = ScalarT{0.0};
-      Ii = ScalarT{0.0};
-
-      wb_[0] = Vr1();
-      wb_[1] = Vi1();
-      evaluateAdmittanceBlock(g21_, b21_, wb_.data(), h_.data());
-      Ir += h_[0];
-      Ii += h_[1];
-
-      wb_[0] = Vr2();
-      wb_[1] = Vi2();
-      evaluateAdmittanceBlock(g22_, b22_, wb_.data(), h_.data());
-      Ir += h_[0];
-      Ii += h_[1];
     }
 
     template <typename scalar_type, typename index_type>
@@ -416,65 +399,25 @@ namespace GridKit
     {
       using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::ir1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return Ir; });
+                    { return Ir1_; });
       monitor_->set(Variable::ii1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return Ii; });
+                    { return Ii1_; });
       monitor_->set(Variable::im1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return std::sqrt(Ir * Ir + Ii * Ii); });
+                    { return std::sqrt(Ir1_ * Ir1_ + Ii1_ * Ii1_); });
       monitor_->set(Variable::p1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return Vr1() * Ir + Vi1() * Ii; });
+                    { return Vr1() * Ir1_ + Vi1() * Ii1_; });
       monitor_->set(Variable::q1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return Vi1() * Ir - Vr1() * Ii; });
+                    { return Vi1() * Ir1_ - Vr1() * Ii1_; });
       monitor_->set(Variable::ir2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return Ir; });
+                    { return Ir2_; });
       monitor_->set(Variable::ii2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return Ii; });
+                    { return Ii2_; });
       monitor_->set(Variable::im2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return std::sqrt(Ir * Ir + Ii * Ii); });
+                    { return std::sqrt(Ir2_ * Ir2_ + Ii2_ * Ii2_); });
       monitor_->set(Variable::p2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return Vr2() * Ir + Vi2() * Ii; });
+                    { return Vr2() * Ir2_ + Vi2() * Ii2_; });
       monitor_->set(Variable::q2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return Vi2() * Ir - Vr2() * Ii; });
+                    { return Vi2() * Ir2_ - Vr2() * Ii2_; });
     }
 
     /**

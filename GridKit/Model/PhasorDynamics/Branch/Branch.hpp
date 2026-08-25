@@ -129,8 +129,6 @@ namespace GridKit
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
       void setDerivedParams();
-      void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
-      void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
       bool readRealParameter(const ModelDataT&               data,
                              typename ModelDataT::Parameters parameter,
                              RealT&                          target);
@@ -214,6 +212,12 @@ namespace GridKit
       RealT b22_{0.0};
 
       int parameter_error_count_{0};
+
+      // Saved current injections
+      ScalarT Ir1_;
+      ScalarT Ii1_;
+      ScalarT Ir2_;
+      ScalarT Ii2_;
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
