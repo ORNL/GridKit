@@ -185,19 +185,6 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::addAdmittanceContribution(
-        const RealT   G,
-        const RealT   B,
-        const ScalarT Vr,
-        const ScalarT Vi,
-        ScalarT&      Ir,
-        ScalarT&      Ii)
-    {
-      Ir += G * Vr - B * Vi;
-      Ii += B * Vr + G * Vi;
-    }
-
-    template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
         const RealT    G,
         const RealT    B,
@@ -331,8 +318,17 @@ namespace GridKit
       Ir = ScalarT{0.0};
       Ii = ScalarT{0.0};
 
-      addAdmittanceContribution(g11_, b11_, Vr1(), Vi1(), Ir, Ii);
-      addAdmittanceContribution(g12_, b12_, Vr2(), Vi2(), Ir, Ii);
+      wb_[0] = Vr1();
+      wb_[1] = Vi1();
+      evaluateAdmittanceBlock(g11_, b11_, wb_.data(), h_.data());
+      Ir += h_[0];
+      Ii += h_[1];
+
+      wb_[0] = Vr2();
+      wb_[1] = Vi2();
+      evaluateAdmittanceBlock(g12_, b12_, wb_.data(), h_.data());
+      Ir += h_[0];
+      Ii += h_[1];
     }
 
     template <typename scalar_type, typename index_type>
@@ -341,8 +337,17 @@ namespace GridKit
       Ir = ScalarT{0.0};
       Ii = ScalarT{0.0};
 
-      addAdmittanceContribution(g21_, b21_, Vr1(), Vi1(), Ir, Ii);
-      addAdmittanceContribution(g22_, b22_, Vr2(), Vi2(), Ir, Ii);
+      wb_[0] = Vr1();
+      wb_[1] = Vi1();
+      evaluateAdmittanceBlock(g21_, b21_, wb_.data(), h_.data());
+      Ir += h_[0];
+      Ii += h_[1];
+
+      wb_[0] = Vr2();
+      wb_[1] = Vi2();
+      evaluateAdmittanceBlock(g22_, b22_, wb_.data(), h_.data());
+      Ir += h_[0];
+      Ii += h_[1];
     }
 
     template <typename scalar_type, typename index_type>

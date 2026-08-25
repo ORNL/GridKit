@@ -135,13 +135,6 @@ namespace GridKit
                              typename ModelDataT::Parameters parameter,
                              RealT&                          target);
 
-      static __attribute__((always_inline)) inline void addAdmittanceContribution(const RealT   G,
-                                                                                  const RealT   B,
-                                                                                  const ScalarT Vr,
-                                                                                  const ScalarT Vi,
-                                                                                  ScalarT&      Ir,
-                                                                                  ScalarT&      Ii);
-
       static __attribute__((always_inline)) inline void evaluateAdmittanceBlock(const RealT    G,
                                                                                 const RealT    B,
                                                                                 const ScalarT* wb,
