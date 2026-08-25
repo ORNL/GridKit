@@ -10,6 +10,7 @@
 #include <array>
 #include <cassert>
 #include <limits>
+#include <mutex>
 #include <numbers>
 #include <numeric>
 #include <variant>
@@ -1428,6 +1429,14 @@ namespace GridKit
                       { return y_.getData()[static_cast<size_t>(ReecbInternalVariables::PMEAS)]; });
       }
 
+      template <typename scalar_type, typename index_type>
+      void Reecb<scalar_type, index_type>::logTimeConstantWarning()
+      {
+        Log::warning() << "Reecb: any of Trv, Tp, Tiq, or Tpord below "
+                       << TIME_CONSTANT_MINIMUM
+                       << " s is raised to that floor to keep the controller lags well posed\n";
+      }
+
       /**
        * @brief Resolve parameter-derived constants and selector masks
        *
@@ -1447,9 +1456,9 @@ namespace GridKit
 
         if (floor_warning)
         {
-          Log::warning() << "Reecb: any of Trv, Tp, Tiq, or Tpord below "
-                         << TIME_CONSTANT_MINIMUM
-                         << " s is raised to that floor to keep the controller lags well posed\n";
+          static std::once_flag time_constant_warning_flag_;
+          std::call_once(time_constant_warning_flag_,
+                         &logTimeConstantWarning);
         }
 
         va_component_base_ = mva_base_ * static_cast<RealT>(1.0e6);

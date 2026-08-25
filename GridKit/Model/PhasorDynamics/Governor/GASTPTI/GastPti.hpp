@@ -122,6 +122,7 @@ namespace GridKit
         RealT                                     toSystemBase(RealT value) const;
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
+        static void logTimeConstantWarning();
 
         RealT R_{static_cast<RealT>(0.05)};
         RealT T1_{static_cast<RealT>(0.4)};

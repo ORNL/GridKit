@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <mutex>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
@@ -712,6 +713,14 @@ namespace GridKit
                       { return y_.getData()[static_cast<size_t>(GastPtiInternalVariables::VTEMP)]; });
       }
 
+      template <typename scalar_type, typename index_type>
+      void GastPti<scalar_type, index_type>::logTimeConstantWarning()
+      {
+        Log::warning() << "GastPti: T1, T2, and T3 below "
+                       << TIME_CONSTANT_MINIMUM
+                       << " s are raised to that floor to keep the turbine lags well posed\n";
+      }
+
       /**
        * @brief Resolve the parameter-derived constants
        *
@@ -735,9 +744,9 @@ namespace GridKit
 
         if (floor_warning)
         {
-          Log::warning() << "GastPti: T1, T2, and T3 below "
-                         << TIME_CONSTANT_MINIMUM
-                         << " s are raised to that floor to keep the turbine lags well posed\n";
+          static std::once_flag time_constant_warning_flag_;
+          std::call_once(time_constant_warning_flag_,
+                         &logTimeConstantWarning);
         }
 
         va_component_base_ = ZERO<RealT>;

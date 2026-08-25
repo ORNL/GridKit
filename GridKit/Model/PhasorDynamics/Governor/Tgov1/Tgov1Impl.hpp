@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <mutex>
 
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
@@ -129,12 +130,20 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
+      void Tgov1<scalar_type, index_type>::logTimeConstantWarning()
+      {
+        Log::warning() << "Tgov1: T1 and T3 below " << TIME_CONSTANT_MINIMUM
+                       << " s are raised to that floor\n";
+      }
+
+      template <typename scalar_type, typename index_type>
       void Tgov1<scalar_type, index_type>::setDerivedParams()
       {
         if (T1_ < TIME_CONSTANT_MINIMUM || T3_ < TIME_CONSTANT_MINIMUM)
         {
-          Log::warning() << "Tgov1: T1 and T3 below " << TIME_CONSTANT_MINIMUM
-                         << " s are raised to that floor\n";
+          static std::once_flag time_constant_warning_flag_;
+          std::call_once(time_constant_warning_flag_,
+                         &logTimeConstantWarning);
         }
 
         T1_ = std::max(T1_, TIME_CONSTANT_MINIMUM);

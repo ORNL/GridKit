@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <mutex>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
@@ -491,6 +492,14 @@ namespace GridKit
         setDerivedParameters();
       }
 
+      template <typename scalar_type, typename index_type>
+      void Ieeet1<scalar_type, index_type>::logTimeConstantWarning()
+      {
+        Log::warning() << "Ieeet1: Tr, Ta, Te, and Tf below "
+                       << TIME_CONSTANT_MINIMUM
+                       << " s are raised to that floor\n";
+      }
+
       /**
        * @brief Resolve the parameter-derived constants
        */
@@ -500,9 +509,9 @@ namespace GridKit
         if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
             || Te_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM)
         {
-          Log::warning() << "Ieeet1: Tr, Ta, Te, and Tf below "
-                         << TIME_CONSTANT_MINIMUM
-                         << " s are raised to that floor\n";
+          static std::once_flag time_constant_warning_flag_;
+          std::call_once(time_constant_warning_flag_,
+                         &logTimeConstantWarning);
         }
 
         Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);

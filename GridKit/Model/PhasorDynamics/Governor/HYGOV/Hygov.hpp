@@ -152,6 +152,7 @@ namespace GridKit
         ScalarT toSystemBase(ScalarT value) const;
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
+        static void logTimeConstantWarning();
 
         /// Accepted seed distance beyond the achievable-power range edge.
         static constexpr RealT INITIALIZATION_TOLERANCE =
