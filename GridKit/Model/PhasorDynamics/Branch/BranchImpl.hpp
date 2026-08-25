@@ -297,21 +297,15 @@ namespace GridKit
       evaluateAdmittanceBlock(g11_, b11_, wb_.data(), h_.data());
       Ir1_ += h_[0];
       Ii1_ += h_[1];
-
-      wb_[0] = Vr2();
-      wb_[1] = Vi2();
-      evaluateAdmittanceBlock(g12_, b12_, wb_.data(), h_.data());
-      Ir1_ += h_[0];
-      Ii1_ += h_[1];
-
-      wb_[0] = Vr1();
-      wb_[1] = Vi1();
       evaluateAdmittanceBlock(g21_, b21_, wb_.data(), h_.data());
       Ir2_ += h_[0];
       Ii2_ += h_[1];
 
       wb_[0] = Vr2();
       wb_[1] = Vi2();
+      evaluateAdmittanceBlock(g12_, b12_, wb_.data(), h_.data());
+      Ir1_ += h_[0];
+      Ii1_ += h_[1];
       evaluateAdmittanceBlock(g22_, b22_, wb_.data(), h_.data());
       Ir2_ += h_[0];
       Ii2_ += h_[1];
