@@ -48,6 +48,7 @@ namespace GridKit
         TestStatus success = true;
 
         const auto previous_verbosity = Log::verbosity();
+        // Changing the verbosity to NONE to suppress expected errors and warning for the following tests.
         // Use EVERYTHING to inspect diagnostics from the invalid cases below.
         Log::setVerbosity(Log::Verbosity::NONE);
 
