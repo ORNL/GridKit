@@ -287,6 +287,9 @@ namespace GridKit
         test_branch.setTap(tap);
         test_branch.setPhase(phase);
 
+        ref_branch.allocate();
+        test_branch.allocate();
+
         ref_branch.evaluateResidual();
         test_branch.evaluateResidual();
 
@@ -377,6 +380,9 @@ namespace GridKit
 
         PhasorDynamics::Branch<ScalarT, IdxT> data_branch(&data_bus1, &data_bus2, data);
         PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, 1.0, 0.0);
+
+        data_branch.allocate();
+        ref_branch.allocate();
 
         data_branch.evaluateResidual();
         ref_branch.evaluateResidual();
