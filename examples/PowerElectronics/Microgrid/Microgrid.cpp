@@ -1,20 +1,12 @@
 #include <cmath>
-#include <filesystem>
-#include <fstream>
-#include <iomanip>
+#include <cstddef>
 #include <iostream>
-#include <memory>
-#include <numbers>
 
-#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
-#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
-#include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
-#include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
-#include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
-#include <GridKit/Model/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
+
+#include "Common/MicrogridNetwork.hpp"
 
 int main(int /* argc */, char const** /* argv */)
 {
@@ -28,139 +20,16 @@ int main(int /* argc */, char const** /* argv */)
   // Create model
   auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(use_jac);
 
-  // Modeled after the problem in the paper
-  double RN = 1.0e4;
+  // Build the four-generator microgrid network.
+  size_t                         N_size = 2;
+  GridKit::ScaleMicrogridNetwork network(N_size);
 
-  // DG Params
-  static constexpr auto pi = std::numbers::pi_v<double>;
+  GridKit::buildScaleMicrogridNetwork(network);
+  GridKit::assembleSystem(network, *sysmodel);
 
-  GridKit::DistributedGeneratorParameters<double, size_t> parms1;
-  parms1.wb_  = 2.0 * pi * 50.0;
-  parms1.wc_  = 31.41;
-  parms1.mp_  = 9.4e-5;
-  parms1.Vn_  = 380.0;
-  parms1.nq_  = 1.3e-3;
-  parms1.F_   = 0.75;
-  parms1.Kiv_ = 420.0;
-  parms1.Kpv_ = 0.1;
-  parms1.Kic_ = 2.0e4;
-  parms1.Kpc_ = 15.0;
-  parms1.Cf_  = 5.0e-5;
-  parms1.rLf_ = 0.1;
-  parms1.Lf_  = 1.35e-3;
-  parms1.rLc_ = 0.03;
-  parms1.Lc_  = 0.35e-3;
-
-  GridKit::DistributedGeneratorParameters<double, size_t> parms2;
-  // Parameters from MATLAB Microgrid code for first DG
-  parms2.wb_  = 2.0 * pi * 50.0;
-  parms2.wc_  = 31.41;
-  parms2.mp_  = 12.5e-5;
-  parms2.Vn_  = 380.0;
-  parms2.nq_  = 1.5e-3;
-  parms2.F_   = 0.75;
-  parms2.Kiv_ = 390.0;
-  parms2.Kpv_ = 0.05;
-  parms2.Kic_ = 16.0e3;
-  parms2.Kpc_ = 10.5;
-  parms2.Cf_  = 50.0e-6;
-  parms2.rLf_ = 0.1;
-  parms2.Lf_  = 1.35e-3;
-  parms2.rLc_ = 0.03;
-  parms2.Lc_  = 0.35e-3;
-
-  // Line params
-  double rline1 = 0.23;
-  double Lline1 = 0.1 / (2.0 * pi * 50.0);
-
-  double rline2 = 0.35;
-  double Lline2 = 0.58 / (2.0 * pi * 50.0);
-
-  double rline3 = 0.23;
-  double Lline3 = 0.1 / (2.0 * pi * 50.0);
-
-  // load parms
-  double rload1 = 3.0;
-  double Lload1 = 2.0 / (2.0 * pi * 50.0);
-
-  double rload2 = 2.0;
-  double Lload2 = 1.0 / (2.0 * pi * 50.0);
-
-  using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
-  SignalNode dg_signal;
-
-  sysmodel->addNode(&dg_signal);
-
-  using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
-  Bus bus1;
-  Bus bus2;
-  Bus bus3;
-  Bus bus4;
-
-  sysmodel->addNode(&bus1);
-  sysmodel->addNode(&bus2);
-  sysmodel->addNode(&bus3);
-  sysmodel->addNode(&bus4);
-
-  // dg 1
-  GridKit::DistributedGenerator<double, size_t>* dg1 = new GridKit::DistributedGenerator<double, size_t>(
-      0, parms1, true, &dg_signal, &bus1);
-  sysmodel->addComponent(dg1);
-
-  // dg 2
-  GridKit::DistributedGenerator<double, size_t>* dg2 = new GridKit::DistributedGenerator<double, size_t>(
-      1, parms1, false, &dg_signal, &bus2);
-  sysmodel->addComponent(dg2);
-
-  // dg 3
-  GridKit::DistributedGenerator<double, size_t>* dg3 = new GridKit::DistributedGenerator<double, size_t>(
-      2, parms2, false, &dg_signal, &bus3);
-  sysmodel->addComponent(dg3);
-
-  // dg 4
-  GridKit::DistributedGenerator<double, size_t>* dg4 = new GridKit::DistributedGenerator<double, size_t>(
-      3, parms2, false, &dg_signal, &bus4);
-  sysmodel->addComponent(dg4);
-
-  // Lines
-
-  // line 1
-  GridKit::MicrogridLine<double, size_t>* l1 = new GridKit::MicrogridLine<double, size_t>(
-      4, rline1, Lline1, &dg_signal, &bus1, &bus2);
-  sysmodel->addComponent(l1);
-
-  // line 2
-  GridKit::MicrogridLine<double, size_t>* l2 = new GridKit::MicrogridLine<double, size_t>(
-      5, rline2, Lline2, &dg_signal, &bus2, &bus3);
-  sysmodel->addComponent(l2);
-
-  // line 3
-  GridKit::MicrogridLine<double, size_t>* l3 = new GridKit::MicrogridLine<double, size_t>(
-      6, rline3, Lline3, &dg_signal, &bus3, &bus4);
-  sysmodel->addComponent(l3);
-
-  //  loads
-
-  // load 1
-  GridKit::MicrogridLoad<double, size_t>* load1 = new GridKit::MicrogridLoad<double, size_t>(7, rload1, Lload1, &dg_signal, &bus1);
-  sysmodel->addComponent(load1);
-
-  // load 2
-  GridKit::MicrogridLoad<double, size_t>* load2 = new GridKit::MicrogridLoad<double, size_t>(8, rload2, Lload2, &dg_signal, &bus3);
-  sysmodel->addComponent(load2);
-
-  // Virtual PQ Buses
-  GridKit::MicrogridBusDQ<double, size_t>* bus_para_1 = new GridKit::MicrogridBusDQ<double, size_t>(9, RN, &bus1);
-  sysmodel->addComponent(bus_para_1);
-
-  GridKit::MicrogridBusDQ<double, size_t>* bus_para_2 = new GridKit::MicrogridBusDQ<double, size_t>(10, RN, &bus2);
-  sysmodel->addComponent(bus_para_2);
-
-  GridKit::MicrogridBusDQ<double, size_t>* bus_para_3 = new GridKit::MicrogridBusDQ<double, size_t>(11, RN, &bus3);
-  sysmodel->addComponent(bus_para_3);
-
-  GridKit::MicrogridBusDQ<double, size_t>* bus_para_4 = new GridKit::MicrogridBusDQ<double, size_t>(12, RN, &bus4);
-  sysmodel->addComponent(bus_para_4);
+  // Generator parameters used to construct the initial conditions.
+  const auto& parms1 = network.DGParam_list[0];
+  const auto& parms2 = network.DGParam_list[2];
 
   sysmodel->allocate();
 
@@ -192,7 +61,7 @@ int main(int /* argc */, char const** /* argv */)
   }
 
   // since the intial P_com = 0
-  y[dg_signal.getNodeConnection(0).idx_] = parms1.wb_;
+  y[network.dg_signal.getNodeConnection(0).idx_] = parms1.wb_;
 
   sysmodel->y().setDataUpdated();
   sysmodel->yp().setDataUpdated();
