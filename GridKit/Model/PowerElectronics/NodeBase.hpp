@@ -145,7 +145,7 @@ namespace GridKit
           allocateVectors(static_cast<IdxT>(size));
         }
 
-        tag_.resize(size);
+        tag_.resize(size, false);
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 

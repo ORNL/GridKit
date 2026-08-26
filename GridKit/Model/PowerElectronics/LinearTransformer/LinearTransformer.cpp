@@ -62,6 +62,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int LinearTransformer<ScalarT, IdxT>::tagDifferentiable()
   {
+    // All variables are differentials
+    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 

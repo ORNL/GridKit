@@ -3,7 +3,6 @@
 #include "DistributedGenerator.hpp"
 
 #include <cmath>
-#include <iostream>
 #include <vector>
 
 namespace GridKit
@@ -74,6 +73,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int DistributedGenerator<ScalarT, IdxT>::tagDifferentiable()
   {
+    // All variables are differentials
+    std::fill(tag_.begin(), tag_.end(), true);
     return 0;
   }
 
