@@ -12,7 +12,7 @@
     },
     "monitors": [
         {
-            "file_name": "mon.csv",
+            "file_name": "client_mon.csv",
             "format":"csv"
         }
     ],
@@ -161,7 +161,7 @@
         },
         {
             "class": "BusToSignalAdapter",
-            "ports": {"bus":1, "vr":1, "vi":2, "ir":3, "ii":4},
+            "ports": {"bus":1, "vr_out":1, "vi_out":2, "ir_in":3, "ii_in":4},
             "id": "adapt3",
             "params": {}
         }

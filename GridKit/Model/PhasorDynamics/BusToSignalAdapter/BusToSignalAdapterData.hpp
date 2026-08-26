@@ -35,8 +35,10 @@ namespace GridKit
      */
     enum class BusToSignalAdapterSignalInputs : size_t
     {
-      ir,
-      ii,
+      vr_in,
+      vi_in,
+      ir_in,
+      ii_in
     };
 
     /**
@@ -44,8 +46,10 @@ namespace GridKit
      */
     enum class BusToSignalAdapterSignalOutputs : size_t
     {
-      vr,
-      vi,
+      vr_out,
+      vi_out,
+      ir_out,
+      ii_out
     };
 
     /**

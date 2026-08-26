@@ -69,6 +69,8 @@ namespace GridKit
       // Placeholders for variable indices (see note in allocate() method)
       IdxT vr_index_{INVALID_INDEX<IdxT>};
       IdxT vi_index_{INVALID_INDEX<IdxT>};
+      IdxT ir_index_{INVALID_INDEX<IdxT>};
+      IdxT ii_index_{INVALID_INDEX<IdxT>};
 
       // Bus pointer
       BusT* bus_;

@@ -75,10 +75,10 @@ namespace GridKit
         using SignalOut = BusToSignalAdapterSignalOutputs;
 
         auto adapter = AdapterT(&bus);
-        adapter.getPorts().out.template port<SignalOut::vr>().connect(&vr_sig);
-        adapter.getPorts().out.template port<SignalOut::vi>().connect(&vi_sig);
-        adapter.getPorts().in.template port<SignalIn::ir>().connect(&ir_sig);
-        adapter.getPorts().in.template port<SignalIn::ii>().connect(&ii_sig);
+        adapter.getPorts().out.template port<SignalOut::vr_out>().connect(&vr_sig);
+        adapter.getPorts().out.template port<SignalOut::vi_out>().connect(&vi_sig);
+        adapter.getPorts().in.template port<SignalIn::ir_in>().connect(&ir_sig);
+        adapter.getPorts().in.template port<SignalIn::ii_in>().connect(&ii_sig);
         adapter.allocate();
         success *= (adapter.verify() == 0);
         success *= (vr_sig.read() == Vr);

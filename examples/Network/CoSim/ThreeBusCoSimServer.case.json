@@ -10,6 +10,12 @@
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
+    "monitors": [
+        {
+            "file_name": "server_mon.csv",
+            "format":"csv"
+        }
+    ],
     "buses": [
         {
             "number": 1,
@@ -52,8 +58,10 @@
         }
     ],
     "signals": [
-        { "signal_id": 1, "name": "ir1"},
-        { "signal_id": 2, "name": "ir2"}
+        { "signal_id": 1, "name": "vr"},
+        { "signal_id": 2, "name": "vi"},
+        { "signal_id": 3, "name": "ir"},
+        { "signal_id": 4, "name": "ii"}
     ],
     "devices": [
         {
@@ -153,15 +161,9 @@
         },
         {
             "class": "BusToSignalAdapter",
-            "ports": {"bus":1, "ir":1, "ii":2},
+            "ports": {"bus":1, "vr_in":1, "vi_in":2, "ir_out":3, "ii_out":4},
             "id": "adapt3",
             "params": {}
-        },
-        {
-            "class": "ConstantSignalSource",
-            "ports": {"sr":1, "si":2},
-            "id": "const_source_1",
-            "params": {"Sr":0.0, "Si":0.0}
         }
     ]
 }
