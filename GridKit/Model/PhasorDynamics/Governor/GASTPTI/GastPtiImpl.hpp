@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <mutex>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
@@ -713,6 +714,20 @@ namespace GridKit
       }
 
       /**
+       * @brief Static method to log time constant warnings
+       *
+       * @note Used in combination with static std:once_flag and std:call_once,
+       *       to reduce the number of times the warning is printed.
+       */
+      template <typename scalar_type, typename index_type>
+      void GastPti<scalar_type, index_type>::logTimeConstantWarning()
+      {
+        Log::warning() << "GastPti: T1, T2, and T3 below "
+                       << TIME_CONSTANT_MINIMUM
+                       << " s are raised to that floor to keep the turbine lags well posed\n";
+      }
+
+      /**
        * @brief Resolve the parameter-derived constants
        *
        * Validates and raises each turbine lag in place so every explicit
@@ -735,9 +750,9 @@ namespace GridKit
 
         if (floor_warning)
         {
-          Log::warning() << "GastPti: T1, T2, and T3 below "
-                         << TIME_CONSTANT_MINIMUM
-                         << " s are raised to that floor to keep the turbine lags well posed\n";
+          static std::once_flag time_constant_warning_flag_;
+          std::call_once(time_constant_warning_flag_,
+                         &logTimeConstantWarning);
         }
 
         va_component_base_ = ZERO<RealT>;

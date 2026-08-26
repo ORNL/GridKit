@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <mutex>
 #include <numeric>
 #include <variant>
 
@@ -765,6 +766,20 @@ namespace GridKit
       }
 
       /**
+       * @brief Static method to log time constant warnings
+       *
+       * @note Used in combination with static std:once_flag and std:call_once,
+       *       to reduce the number of times the warning is printed.
+       */
+      template <typename scalar_type, typename index_type>
+      void Hygov<scalar_type, index_type>::logTimeConstantWarning()
+      {
+        Log::warning() << "Hygov: Tr, Tf, Tg, Tw, and Tnp below "
+                       << TIME_CONSTANT_MINIMUM
+                       << " s are raised to preserve Hessenberg form\n";
+      }
+
+      /**
        * @brief Resolve the parameter-derived constants
        *
        * Resolves the default gate curve, floors each governor time constant,
@@ -816,9 +831,9 @@ namespace GridKit
             || Tg_ < TIME_CONSTANT_MINIMUM || Tw_ < TIME_CONSTANT_MINIMUM
             || Tnp_ < TIME_CONSTANT_MINIMUM)
         {
-          Log::warning() << "Hygov: Tr, Tf, Tg, Tw, and Tnp below "
-                         << TIME_CONSTANT_MINIMUM
-                         << " s are raised to preserve Hessenberg form\n";
+          static std::once_flag time_constant_warning_flag_;
+          std::call_once(time_constant_warning_flag_,
+                         &logTimeConstantWarning);
         }
 
         // HYGOV residuals solve explicitly for the state derivatives to preserve

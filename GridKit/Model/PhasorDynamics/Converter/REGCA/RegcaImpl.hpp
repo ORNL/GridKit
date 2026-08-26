@@ -7,6 +7,7 @@
 #pragma once
 
 #include <algorithm>
+#include <mutex>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -61,6 +62,20 @@ namespace GridKit
       }
 
       /**
+       * @brief Static method to log time constant warnings
+       *
+       * @note Used in combination with static std:once_flag and std:call_once,
+       *       to reduce the number of times the warning is printed.
+       */
+      template <typename scalar_type, typename index_type>
+      void Regca<scalar_type, index_type>::logTimeConstantWarning()
+      {
+        Log::warning() << "Regca: Tg and TM below " << TIME_CONSTANT_MINIMUM
+                       << " s are raised to that floor to keep the current-control "
+                       << "and voltage-sensor lags well posed\n";
+      }
+
+      /**
        * @brief Resolve parameter-derived constants and limiter selections.
        *
        * The time constants are raised to the well-posedness floor. Complementary
@@ -72,9 +87,9 @@ namespace GridKit
       {
         if (Tg_ < TIME_CONSTANT_MINIMUM || TM_ < TIME_CONSTANT_MINIMUM)
         {
-          Log::warning() << "Regca: Tg and TM below " << TIME_CONSTANT_MINIMUM
-                         << " s are raised to that floor to keep the current-control "
-                         << "and voltage-sensor lags well posed\n";
+          static std::once_flag time_constant_warning_flag_;
+          std::call_once(time_constant_warning_flag_,
+                         &logTimeConstantWarning);
         }
 
         Tg_          = std::max(Tg_, TIME_CONSTANT_MINIMUM);

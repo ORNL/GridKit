@@ -125,6 +125,7 @@ namespace GridKit
 
       private:
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
+        static void            logTimeConstantWarning();
 
         // Signal pointers
         BusT* bus_;

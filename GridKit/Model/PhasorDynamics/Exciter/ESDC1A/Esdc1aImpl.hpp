@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <mutex>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -762,6 +763,20 @@ namespace GridKit
       }
 
       /**
+       * @brief Static method to log time constant warnings
+       *
+       * @note Used in combination with static std:once_flag and std:call_once,
+       *       to reduce the number of times the warning is printed.
+       */
+      template <typename scalar_type, typename index_type>
+      void Esdc1a<scalar_type, index_type>::logTimeConstantWarning()
+      {
+        Log::warning() << "Esdc1a: Tr, Ta, Tb, Te, and Tf1 below "
+                       << TIME_CONSTANT_MINIMUM
+                       << " s are raised to that floor to keep the exciter lags well posed\n";
+      }
+
+      /**
        * @brief Resolve the parameter-derived constants and selector masks
        *
        * Raises the transducer, regulator, lead-lag, exciter, and feedback
@@ -796,9 +811,9 @@ namespace GridKit
             || Tb_ < TIME_CONSTANT_MINIMUM || Te_ < TIME_CONSTANT_MINIMUM
             || Tf1_ < TIME_CONSTANT_MINIMUM)
         {
-          Log::warning() << "Esdc1a: Tr, Ta, Tb, Te, and Tf1 below "
-                         << TIME_CONSTANT_MINIMUM
-                         << " s are raised to that floor to keep the exciter lags well posed\n";
+          static std::once_flag time_constant_warning_flag_;
+          std::call_once(time_constant_warning_flag_,
+                         &logTimeConstantWarning);
         }
 
         Tr_  = std::max(Tr_, TIME_CONSTANT_MINIMUM);
