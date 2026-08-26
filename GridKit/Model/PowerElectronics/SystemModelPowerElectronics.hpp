@@ -41,17 +41,6 @@ namespace GridKit
 
   public:
     /**
-     * @brief Default constructor for the system model
-     *
-     * @post System model parameters set as default
-     */
-    PowerElectronicsModel()
-    {
-      // By default don't use the jacobian
-      use_jac_ = false;
-    }
-
-    /**
      * @brief Constructor for the system model
      *
      * @param[in] use_jac Boolean to choose if to use jacobian
@@ -116,7 +105,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int allocate() final
+    int allocate() override
     {
       size_t component_internal_size = 0;
       for (component_type* comp : components_)
@@ -281,7 +270,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int initialize() final
+    int initialize()
     {
       // Initialize components
       for (const auto& component : components_)
@@ -304,7 +293,7 @@ namespace GridKit
      * stored contiguously in the same order as \ref components_, with node variables at the end.
      * Each internal variable's tag in the system is set to its tag in the component.
      */
-    int tagDifferentiable() final
+    int tagDifferentiable()
     {
       // Ask all component to tag their differentiables
       for (size_t i = 0; i < components_.size(); i++)
@@ -367,7 +356,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int evaluateInternalResidual() final
+    int evaluateInternalResidual() override
     {
       for (IdxT i = 0; i < size_; i++)
       {
@@ -408,7 +397,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int evaluateJacobian() final
+    int evaluateJacobian() override
     {
       // Zero out values
       RealT* vals = csr_jac_->getValues();
@@ -430,11 +419,18 @@ namespace GridKit
 
         for (IdxT i = 0; i < nnz; ++i)
         {
-          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+          const IdxT row = component->getNodeConnection(r[i]);
+          const IdxT col = component->getNodeConnection(c[i]);
+
+          const bool is_internal_entry = row != neg1_ && col != neg1_ && row < n_intern_ && col < n_intern_;
+
+          if (!is_internal_entry)
           {
-            vals[map_to_csr_[counter]] += v[i];
-            ++counter;
+            continue;
           }
+
+          vals[map_to_csr_[counter]] += v[i];
+          ++counter;
         }
       }
 
@@ -514,7 +510,7 @@ namespace GridKit
       allocated_ = false;
     }
 
-  private:
+  protected:
     static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
 
     std::vector<component_type*> components_;
