@@ -22,6 +22,7 @@ namespace GridKit
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
+  protected:
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
     using CircuitComponent<ScalarT, IdxT>::allocated_;
     using CircuitComponent<ScalarT, IdxT>::allocateVectors;
@@ -270,7 +271,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int initialize()
+    int initialize() override
     {
       // Initialize components
       for (const auto& component : components_)
@@ -293,7 +294,7 @@ namespace GridKit
      * stored contiguously in the same order as \ref components_, with node variables at the end.
      * Each internal variable's tag in the system is set to its tag in the component.
      */
-    int tagDifferentiable()
+    int tagDifferentiable() override
     {
       // Ask all component to tag their differentiables
       for (size_t i = 0; i < components_.size(); i++)
