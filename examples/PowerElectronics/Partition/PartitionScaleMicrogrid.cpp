@@ -8,22 +8,15 @@
 #include <iostream>
 #include <string>
 
-#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
-#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
-#include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
-#include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
-#include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
-#include <GridKit/Model/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
 #include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
-#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-#include "Common/JacTestHelper.hpp"
-#include "Common/MicrogridNetwork.hpp"
-#include "Common/PartitionUtilities.hpp"
+#include "PowerElectronicsExamplesHelper/JacTestHelper.hpp"
+#include "PowerElectronicsExamplesHelper/MicrogridNetwork.hpp"
+#include "PowerElectronicsExamplesHelper/PartitionUtilities.hpp"
 
 using index_type = size_t;
 using real_type  = double;
