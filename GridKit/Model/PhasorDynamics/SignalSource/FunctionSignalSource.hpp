@@ -1,0 +1,90 @@
+#pragma once
+
+#include <functional>
+
+#include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalPorts.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalSource/FunctionSignalSourceData.hpp>
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    /// Internal variables for FunctionSignalSource
+    enum class FunctionSignalSourceInternalVariables : size_t
+    {
+    };
+
+    /// No external variables for FunctionSignalSource
+    enum class FunctionSignalSourceExternalVariables : size_t
+    {
+    };
+
+    /**
+     * @brief Function signal source component
+     *
+     * This class emits a constant complex value on two output signals (real and
+     * imaginary).
+     */
+    template <typename scalar_type, typename index_type>
+    class FunctionSignalSource : public Component<scalar_type, index_type>
+    {
+      using Component<scalar_type, index_type>::gridkit_component_id_;
+      using Component<scalar_type, index_type>::size_;
+      using Component<scalar_type, index_type>::allocated_;
+
+    public:
+      using ScalarT        = scalar_type;
+      using IdxT           = index_type;
+      using RealT          = typename Component<ScalarT, IdxT>::RealT;
+      using FuncT          = std::function<ScalarT(RealT)>;
+      using ModelDataT     = FunctionSignalSourceData<RealT, IdxT>;
+      using SignalNodeSetT = SignalNodeSet<ScalarT, IdxT>;
+      using SignalPortsT   = SignalPorts<ScalarT, ModelDataT>;
+
+      FunctionSignalSource();
+      FunctionSignalSource(const ModelDataT& data);
+      ~FunctionSignalSource();
+
+      int setGridKitComponentID(IdxT) override final;
+      int allocate() override final;
+      int verify() const override final;
+      int initialize() override final;
+      int tagDifferentiable() override final;
+      int setAbsoluteTolerance(RealT) override final;
+      int evaluateResidual() override final;
+      int evaluateJacobian() override final;
+
+      void updateTime(RealT t, RealT a) override;
+
+      SignalPortsT& getPorts()
+      {
+        return ports_;
+      }
+
+    private:
+      const FuncT f_default_ = [](auto)
+      { return static_cast<ScalarT>(0.0); };
+
+      FuncT parseFunction(const std::string& expr);
+
+      FuncT f_real_{f_default_};
+      FuncT f_imag_{f_default_};
+
+      /// Real part of source value
+      ScalarT s_real_{0.0};
+      /// Imaginary part of source value
+      ScalarT s_imag_{0.0};
+
+      // Placeholders for variable indices
+      IdxT sr_index_{INVALID_INDEX<IdxT>};
+      IdxT si_index_{INVALID_INDEX<IdxT>};
+
+      /// Component ports
+      SignalPortsT ports_;
+
+      // Parameter initialization function
+      void initializeParameters(const ModelDataT& data);
+    };
+  } // namespace PhasorDynamics
+} // namespace GridKit

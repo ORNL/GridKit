@@ -298,6 +298,14 @@ namespace GridKit
         addComponent(source);
       }
 
+      // Add constant signal sources
+      for (const auto& srcdata : data.function_source)
+      {
+        auto* source = new FunctionSignalSource<ScalarT, IdxT>(srcdata);
+        source->getPorts().connect(srcdata, signal_nodes_);
+        addComponent(source);
+      }
+
       // Add faults
       for (const auto& faultdata : data.bus_fault)
       {

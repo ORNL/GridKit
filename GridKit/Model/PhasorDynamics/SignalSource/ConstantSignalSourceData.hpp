@@ -9,7 +9,7 @@ namespace GridKit
     enum class ConstantSignalSourceParameters : size_t
     {
       Sr,
-      Si,
+      Si
     };
 
     enum class ConstantSignalSourceBuses : size_t
@@ -23,7 +23,7 @@ namespace GridKit
     enum class ConstantSignalSourceSignalOutputs : size_t
     {
       sr,
-      si,
+      si
     };
 
     enum class ConstantSignalSourceMonitorableVariables : size_t
