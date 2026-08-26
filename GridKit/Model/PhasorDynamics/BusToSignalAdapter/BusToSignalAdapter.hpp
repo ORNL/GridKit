@@ -42,12 +42,16 @@ namespace GridKit
     {
       VREAL,
       VIMAG,
+      IREAL,
+      IIMAG,
       MAXIMUM,
     };
 
     /// External variables of a `BusToSignalAdapter`
     enum class BusToSignalAdapterExternalVariables : size_t
     {
+      VREAL,
+      VIMAG,
       IREAL,
       IIMAG,
       MAXIMUM,
@@ -96,10 +100,10 @@ namespace GridKit
       // Placeholders for variable indices (see note in allocate() method)
       IdxT vr_index_{INVALID_INDEX<IdxT>};
       IdxT vi_index_{INVALID_INDEX<IdxT>};
+      IdxT ir_index_{INVALID_INDEX<IdxT>};
+      IdxT ii_index_{INVALID_INDEX<IdxT>};
 
-      // Signal pointers
-      SignalT* ir_signal_;
-      SignalT* ii_signal_;
+      // Pointer to bus
       BusT*    bus_;
 
       /// Component signal extension

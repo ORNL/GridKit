@@ -55,42 +55,42 @@ namespace GridKit
         return BusTypeT::SLACK;
       }
 
-      virtual ScalarT& Vr() override final
+      ScalarT& Vr() override
       {
         return Vr_;
       }
 
-      virtual const ScalarT& Vr() const override final
+      const ScalarT& Vr() const override
       {
         return Vr_;
       }
 
-      virtual ScalarT& Vi() override final
+      ScalarT& Vi() override
       {
         return Vi_;
       }
 
-      virtual const ScalarT& Vi() const override final
+      const ScalarT& Vi() const override
       {
         return Vi_;
       }
 
-      virtual ScalarT& Ir() override final
+      ScalarT& Ir() override
       {
         return Ir_;
       }
 
-      virtual const ScalarT& Ir() const override final
+      const ScalarT& Ir() const override
       {
         return Ir_;
       }
 
-      virtual ScalarT& Ii() override final
+      ScalarT& Ii() override
       {
         return Ii_;
       }
 
-      virtual const ScalarT& Ii() const override final
+      const ScalarT& Ii() const override
       {
         return Ii_;
       }

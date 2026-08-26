@@ -76,32 +76,62 @@ namespace GridKit
 
         auto* adapter = new BusToSignalAdapter<ScalarT, IdxT>(getBus(bus_index));
 
-        if (adapterdata.signal_outputs.contains(BusToSignalAdapterSignalOutputs::vr))
+        constexpr auto VR_OUT = BusToSignalAdapterInternalVariables::VREAL;
+        constexpr auto VI_OUT = BusToSignalAdapterInternalVariables::VIMAG;
+        constexpr auto IR_OUT = BusToSignalAdapterInternalVariables::IREAL;
+        constexpr auto II_OUT = BusToSignalAdapterInternalVariables::IIMAG;
+
+        constexpr auto VR_IN = BusToSignalAdapterExternalVariables::VREAL;
+        constexpr auto VI_IN = BusToSignalAdapterExternalVariables::VIMAG;
+        constexpr auto IR_IN = BusToSignalAdapterExternalVariables::IREAL;
+        constexpr auto II_IN = BusToSignalAdapterExternalVariables::IIMAG;
+
+        if (adapterdata.signal_outputs.contains(BusToSignalAdapterSignalOutputs::vr_out))
         {
-          IdxT           vr    = adapterdata.signal_outputs.at(BusToSignalAdapterSignalOutputs::vr);
-          constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
-          adapter->getSignals().template assignSignalNode<VREAL>(getSignal(vr));
+          IdxT vr = adapterdata.signal_outputs.at(BusToSignalAdapterSignalOutputs::vr_out);
+          adapter->getSignals().template assignSignalNode<VR_OUT>(getSignal(vr));
         }
 
-        if (adapterdata.signal_outputs.contains(BusToSignalAdapterSignalOutputs::vi))
+        if (adapterdata.signal_outputs.contains(BusToSignalAdapterSignalOutputs::vi_out))
         {
-          IdxT           vi    = adapterdata.signal_outputs.at(BusToSignalAdapterSignalOutputs::vi);
-          constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
-          adapter->getSignals().template assignSignalNode<VIMAG>(getSignal(vi));
+          IdxT vi = adapterdata.signal_outputs.at(BusToSignalAdapterSignalOutputs::vi_out);
+          adapter->getSignals().template assignSignalNode<VI_OUT>(getSignal(vi));
         }
 
-        if (adapterdata.signal_inputs.contains(BusToSignalAdapterSignalInputs::ir))
+        if (adapterdata.signal_outputs.contains(BusToSignalAdapterSignalOutputs::ir_out))
         {
-          IdxT           ir    = adapterdata.signal_inputs.at(BusToSignalAdapterSignalInputs::ir);
-          constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-          adapter->getSignals().template attachSignalNode<IREAL>(getSignal(ir));
+          IdxT ir = adapterdata.signal_outputs.at(BusToSignalAdapterSignalOutputs::ir_out);
+          adapter->getSignals().template assignSignalNode<IR_OUT>(getSignal(ir));
         }
 
-        if (adapterdata.signal_inputs.contains(BusToSignalAdapterSignalInputs::ii))
+        if (adapterdata.signal_outputs.contains(BusToSignalAdapterSignalOutputs::ii_out))
         {
-          IdxT           ii    = adapterdata.signal_inputs.at(BusToSignalAdapterSignalInputs::ii);
-          constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
-          adapter->getSignals().template attachSignalNode<IIMAG>(getSignal(ii));
+          IdxT ii = adapterdata.signal_outputs.at(BusToSignalAdapterSignalOutputs::ii_out);
+          adapter->getSignals().template assignSignalNode<II_OUT>(getSignal(ii));
+        }
+
+        if (adapterdata.signal_inputs.contains(BusToSignalAdapterSignalInputs::vr_in))
+        {
+          IdxT vr = adapterdata.signal_inputs.at(BusToSignalAdapterSignalInputs::vr_in);
+          adapter->getSignals().template attachSignalNode<VR_IN>(getSignal(vr));
+        }
+
+        if (adapterdata.signal_inputs.contains(BusToSignalAdapterSignalInputs::vi_in))
+        {
+          IdxT vi = adapterdata.signal_inputs.at(BusToSignalAdapterSignalInputs::vi_in);
+          adapter->getSignals().template attachSignalNode<VI_IN>(getSignal(vi));
+        }
+
+        if (adapterdata.signal_inputs.contains(BusToSignalAdapterSignalInputs::ir_in))
+        {
+          IdxT ir = adapterdata.signal_inputs.at(BusToSignalAdapterSignalInputs::ir_in);
+          adapter->getSignals().template attachSignalNode<IR_IN>(getSignal(ir));
+        }
+
+        if (adapterdata.signal_inputs.contains(BusToSignalAdapterSignalInputs::ii_in))
+        {
+          IdxT ii = adapterdata.signal_inputs.at(BusToSignalAdapterSignalInputs::ii_in);
+          adapter->getSignals().template attachSignalNode<II_IN>(getSignal(ii));
         }
 
         addComponent(adapter);

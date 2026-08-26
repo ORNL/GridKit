@@ -1,0 +1,105 @@
+{
+    "header": {
+        "format_version": 0.2,
+        "format_revision": 0,
+        "case_name": "CoSimClient",
+        "case_description": "Simple case sending voltage and receiving current",
+        "case_comments": "None"
+    },
+    "params": {
+        "freq_base": 60.0,
+        "va_base": 100000000.0
+    },
+    "monitors": [
+        {
+            "file_name": "client_mon.csv",
+            "format":"csv"
+        }
+    ],
+    "buses": [
+        {
+            "number": 1,
+            "class": "Bus",
+            "name": "1",
+            "init": {
+                "Vr": 1.06,
+                "Vi": 0.0
+            },
+            "params": {"kv": 138.0},
+            "mon": [
+                "Vm"
+            ]
+        },
+        {
+            "number": 2,
+            "class": "Bus",
+            "name": "2",
+            "init": {
+                "Vr": 1.0599558398065716,
+                "Vi": -0.009675621941024773
+            },
+            "params": {"kv": 138.0},
+            "mon": [
+                "Vm"
+            ]
+        }
+    ],
+    "signals": [
+        { "signal_id": 1, "name": "vr"},
+        { "signal_id": 2, "name": "vi"},
+        { "signal_id": 3, "name": "ir"},
+        { "signal_id": 4, "name": "ii"}
+    ],
+    "devices": [
+        {
+            "class": "Branch",
+            "ports": {
+                "bus1": 1,
+                "bus2": 2
+            },
+            "id": "BR_0_1",
+            "params": {
+                "R": 0.05,
+                "X": 0.21,
+                "G": 0.0,
+                "B": 0.1
+            }
+        },
+        {
+            "class": "Genrou",
+            "ports": {
+                "bus": 1
+            },
+            "id": "genrou_1_1",
+            "params": {
+                "p0": 0.5,
+                "q0": -0.07588,
+                "H": 2.7,
+                "D": 0.0,
+                "Ra": 0.0,
+                "Tdop": 7.0,
+                "Tdopp": 0.04,
+                "Tqopp": 0.05,
+                "Tqop": 0.75,
+                "Xd": 1.9,
+                "Xdp": 0.17,
+                "Xdpp": 0.15,
+                "Xq": 0.4,
+                "Xqp": 0.35,
+                "Xqpp": 0.15,
+                "Xl": 0.14999,
+                "S10": 0.0,
+                "S12": 0.0
+            },
+            "mon": [
+                "speed"
+            ]
+        },
+        {
+            "class": "BusToSignalAdapter",
+            "ports": {"bus":2, "vr_out":1, "vi_out":2, "ir_in":3, "ii_in":4},
+            "id": "adapt3",
+            "params": {}
+        }
+    ]
+}
