@@ -132,10 +132,10 @@ namespace GridKit
       jacobian_coo_cols_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
       jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
 
-      y_ext_            = std::make_unique<const ScalarT*[]>(static_cast<IdxT>(size_));
-      yp_ext_           = std::make_unique<const ScalarT*[]>(static_cast<IdxT>(size_));
-      f_ext_            = std::make_unique<ScalarT*[]>(static_cast<IdxT>(size_));
-      connection_nodes_ = std::make_unique<IdxT[]>(static_cast<IdxT>(size_));
+      y_ext_            = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+      yp_ext_           = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+      f_ext_            = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
+      connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
       tag_.resize(static_cast<IdxT>(size_));
 
