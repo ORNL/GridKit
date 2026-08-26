@@ -75,18 +75,21 @@ namespace GridKit
                          NodeT*                                      node_bus);
     virtual ~DistributedGenerator();
 
-    int initialize();
-    int allocate() final;
-    int tagDifferentiable();
-    int setAbsoluteTolerance(RealT);
-    int evaluateInternalResidual() final;
-    int evaluateExternalResidual() final;
-    int evaluateJacobian();
-    int evaluateIntegrand();
-    int initializeAdjoint();
-    int evaluateAdjointResidual();
+    int  initialize();
+    int  allocate() final;
+    int  tagDifferentiable();
+    int  setAbsoluteTolerance(RealT);
+    int  evaluateInternalResidual() final;
+    int  evaluateExternalResidual() final;
+    int  evaluateJacobian();
+    int  evaluateIntegrand();
+    int  initializeAdjoint();
+    int  evaluateAdjointResidual();
     // int evaluateAdjointJacobian();
-    int evaluateAdjointIntegrand();
+    int  evaluateAdjointIntegrand();
+    bool isCloneable() const;
+
+    CircuitComponent<ScalarT, IdxT>* clone() const;
 
   private:
     RealT wb_;
