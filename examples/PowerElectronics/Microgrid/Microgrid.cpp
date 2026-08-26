@@ -6,7 +6,7 @@
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 
-#include "Common/MicrogridNetwork.hpp"
+#include "PowerElectronicsExamplesHelper/MicrogridNetwork.hpp"
 
 int main(int /* argc */, char const** /* argv */)
 {

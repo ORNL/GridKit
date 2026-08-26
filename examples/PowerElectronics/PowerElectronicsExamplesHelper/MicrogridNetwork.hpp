@@ -13,8 +13,6 @@
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
-#include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
-#include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 
 namespace GridKit

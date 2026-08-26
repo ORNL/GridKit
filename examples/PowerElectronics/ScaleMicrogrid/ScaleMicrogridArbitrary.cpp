@@ -1,12 +1,11 @@
 #include <cmath>
 #include <iostream>
 
-#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-#include "Common/MicrogridNetwork.hpp"
+#include "PowerElectronicsExamplesHelper/MicrogridNetwork.hpp"
 
 using index_type = size_t;
 using real_type  = double;
