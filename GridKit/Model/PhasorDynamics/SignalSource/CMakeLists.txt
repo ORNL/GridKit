@@ -2,13 +2,13 @@ set(_install_headers ConstantSignalSource.hpp ConstantSignalSourceData.hpp)
 
 gridkit_add_library(
   phasor_dynamics_signalsource
-  SOURCES ConstantSignalSource.cpp
+  SOURCES ConstantSignalSource.cpp FunctionSignalSource.cpp
   HEADERS ${_install_headers}
   LINK_LIBRARIES GridKit::phasor_dynamics_core GridKit::phasor_dynamics_signal)
 
 gridkit_add_library(
   phasor_dynamics_signalsource_dependency_tracking
-  SOURCES ConstantSignalSourceDependencyTracking.cpp
+  SOURCES ConstantSignalSourceDependencyTracking.cpp FunctionSignalSourceDependencyTracking.cpp
   LINK_LIBRARIES GridKit::phasor_dynamics_core GridKit::phasor_dynamics_signal_dependency_tracking)
 
 # Link to interface target for all components

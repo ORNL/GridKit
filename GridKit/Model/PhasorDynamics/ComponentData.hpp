@@ -56,7 +56,7 @@ namespace GridKit
       std::string device_class;
 
       /// Mapping of parameters to parameter values
-      std::map<Parameters, std::variant<bool, RealT, IdxT>> parameters;
+      std::map<Parameters, std::variant<std::string, bool, RealT, IdxT>> parameters;
 
       /// Mapping of terminal attachments to bus identifiers
       std::map<Buses, IdxT> buses;

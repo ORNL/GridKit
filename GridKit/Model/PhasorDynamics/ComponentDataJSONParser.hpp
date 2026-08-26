@@ -56,7 +56,12 @@ namespace GridKit
         {
           // NOTE: this is necessary because it doesn't seem like nlohmann/json
           //       handles std::variant out of the box
-          if (raw_parameter.value().is_boolean())
+          if (raw_parameter.value().is_string())
+          {
+            auto str = raw_parameter.value().template get<std::string>();
+            c.parameters[key.value()] = raw_parameter.value().template get<std::string>();
+          }
+          else if (raw_parameter.value().is_boolean())
           {
             c.parameters[key.value()] = raw_parameter.value().template get<bool>();
           }

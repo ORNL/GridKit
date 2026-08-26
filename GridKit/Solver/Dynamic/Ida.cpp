@@ -259,24 +259,24 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Compute the number of monitor targets needed to reach `tf`.
+     * @brief Compute the number of steps needed to reach `tf`.
      *
-     * When `dt_monitor` is nonpositive, only the final time is targeted. When
+     * When `dt` is nonpositive, only the final time is targeted. When
      * the final interval is epsilon-sized, it is folded into the previous
      * monitor step.
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::getMonitorStepCount(RealT tf, RealT dt_monitor) const
+    int Ida<ScalarT, IdxT>::getStepCount(RealT tf, RealT dt) const
     {
-      if (dt_monitor <= 0.0)
+      if (dt <= 0.0)
       {
         return 1;
       }
 
-      const RealT n_est   = (tf - t_init_) / dt_monitor;
+      const RealT n_est   = (tf - t_init_) / dt;
       const RealT epsilon = std::numeric_limits<RealT>::epsilon()
                             * std::max({std::abs(t_init_), std::abs(tf), RealT(1.0)})
-                            / dt_monitor;
+                            / dt;
       return static_cast<int>(std::ceil(n_est - epsilon));
     }
 
@@ -328,37 +328,46 @@ namespace AnalysisManager
      * time. The final time is always solved and monitored.
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<std::function<void(RealT)>> step_callback)
+    int Ida<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<StepCallback> step_callback)
     {
       int retval = 0;
-      int nsteps = getMonitorStepCount(tf, dt_monitor);
+      int nsteps = getStepCount(tf, dt_monitor);
 
       for (int i = 1; i <= nsteps; i++)
       {
-        const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
-        RealT       tret;
-        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
-        checkOutput(retval, "IDASolve");
-
-        if (step_callback.has_value() || model_->monitoring())
-        {
-          // The callback may try to observe upated values in the model, so we
-          // should update them here (At this point, the model's values are one
-          // internal integrator step out of date)
-          updateModelState(tret);
-
-          if (model_->monitoring())
-          {
-            model_->printMonitoredVariables();
-          }
-          if (step_callback.has_value())
-          {
-            (*step_callback)(tret);
-          }
-        }
+        retval = runSimulationStep(tf, dt_monitor, i, nsteps, step_callback);
       }
 
       updateModelState(tf);
+
+      return retval;
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::runSimulationStep(
+        RealT tf, RealT dt_monitor, int step, int nsteps, const std::optional<StepCallback> callback)
+    {
+      const RealT tout = getMonitorTime(tf, dt_monitor, step, nsteps);
+      RealT       tret;
+      auto        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
+      checkOutput(retval, "IDASolve");
+
+      if (callback.has_value() || model_->monitoring())
+      {
+        // The callback may try to observe upated values in the model, so we
+        // should update them here (At this point, the model's values are one
+        // internal integrator step out of date)
+        updateModelState(tret);
+
+        if (model_->monitoring())
+        {
+          model_->printMonitoredVariables();
+        }
+        if (callback.has_value())
+        {
+          (*callback)(tret);
+        }
+      }
 
       return retval;
     }
@@ -443,7 +452,7 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::runSimulationQuadrature(RealT tf, RealT dt_monitor)
     {
       int retval = 0;
-      int nsteps = getMonitorStepCount(tf, dt_monitor);
+      int nsteps = getStepCount(tf, dt_monitor);
 
       for (int i = 1; i <= nsteps; i++)
       {
@@ -630,7 +639,7 @@ namespace AnalysisManager
     {
       int retval = 0;
       int ncheck;
-      int nsteps = getMonitorStepCount(tf, dt_monitor);
+      int nsteps = getStepCount(tf, dt_monitor);
 
       for (int i = 1; i <= nsteps; i++)
       {

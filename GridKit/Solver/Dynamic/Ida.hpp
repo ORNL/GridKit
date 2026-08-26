@@ -51,9 +51,10 @@ namespace AnalysisManager
     {
       using DynamicSolver<ScalarT, IdxT>::model_;
 
-      using EvaluatorT = GridKit::Model::Evaluator<ScalarT, IdxT>;
-      using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      using VectorT    = typename EvaluatorT::VectorT;
+      using EvaluatorT   = GridKit::Model::Evaluator<ScalarT, IdxT>;
+      using RealT        = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using VectorT      = typename EvaluatorT::VectorT;
+      using StepCallback = std::function<void(RealT)>;
 
     public:
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
@@ -68,7 +69,14 @@ namespace AnalysisManager
       int getDefaultInitialCondition();
       int initializeSimulation(RealT t0, bool findConsistent = true);
 
-      int runSimulation(RealT tf, RealT dt_monitor = 0, std::optional<std::function<void(RealT)>> step_callback = {});
+      int getStepCount(RealT tf, RealT dt) const;
+
+      int runSimulation(RealT tf, RealT dt_monitor = 0, std::optional<StepCallback> step_callback = {});
+      int runSimulationStep(RealT                       tf,
+                            RealT                       dt_monitor,
+                            int                         step,
+                            int                         nsteps,
+                            std::optional<StepCallback> callback = {});
       int deleteSimulation();
 
       int configureQuadrature();
@@ -185,7 +193,6 @@ namespace AnalysisManager
                                   N_Vector rhsQB,
                                   void*    user_data);
 
-      int   getMonitorStepCount(RealT tf, RealT dt_monitor) const;
       RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const;
       int   getIDAConsistentICType() const;
       void  updateModelState(RealT t);

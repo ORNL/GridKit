@@ -23,6 +23,7 @@
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalSource/FunctionSignalSourceData.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
@@ -63,6 +64,7 @@ namespace GridKit
       using LoadZDataT              = LoadZData<RealT, IdxT>;
       using LoadZIPDataT            = LoadZIPData<RealT, IdxT>;
       using ConstantSourceT         = ConstantSignalSourceData<RealT, IdxT>;
+      using FunctionSourceT         = FunctionSignalSourceData<RealT, IdxT>;
       using SignalDataT             = SignalNodeData<RealT, IdxT>;
       using MonitorSinkSpec         = Model::VariableMonitorBase::SinkSpec;
 
@@ -123,6 +125,7 @@ namespace GridKit
       std::vector<SexsPtiDataT>            sexspti;         ///< SEXS-PTI exciters within the model
       std::vector<IeeestDataT>             stabilizer;      ///< Stabilizers within the model
       std::vector<ConstantSourceT>         constant_source; ///< Constant signal sources within the model
+      std::vector<FunctionSourceT>         function_source; ///< Function signal sources within the model
       std::vector<SignalDataT>             signal;          ///< Signal nodes
 
       /// Monitor sink specs

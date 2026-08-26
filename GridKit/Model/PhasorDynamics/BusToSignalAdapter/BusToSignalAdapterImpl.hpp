@@ -73,16 +73,24 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
-      // vr_index_ and vi_index_ are both set to INVALID_INDEX. This component
-      // simply passes voltage from bus to output signal, so indices are
+      // *_index_ variables are set to INVALID_INDEX. This component
+      // simply passes values from bus to output signal, so indices are
       // ignored.
-      if (auto vr_port = ports_.out.template port<SignalOut::vr>())
+      if (auto vr_port_out = ports_.out[SignalOut::vr_out])
       {
-        vr_port.link(&bus_->Vr(), &vr_index_);
+        vr_port_out.link(&bus_->Vr(), &vr_index_);
       }
-      if (auto vi_port = ports_.out.template port<SignalOut::vi>())
+      if (auto vi_port_out = ports_.out[SignalOut::vi_out])
       {
-        vi_port.link(&bus_->Vi(), &vi_index_);
+        vi_port_out.link(&bus_->Vi(), &vi_index_);
+      }
+      if (auto ir_port_out = ports_.out[SignalOut::ir_out])
+      {
+        ir_port_out.link(&bus_->Ir(), &ir_index_);
+      }
+      if (auto ii_port_out = ports_.out[SignalOut::ii_out])
+      {
+        ii_port_out.link(&bus_->Ii(), &ii_index_);
       }
 
       allocated_ = true;
@@ -96,21 +104,68 @@ namespace GridKit
     int BusToSignalAdapter<scalar_type, index_type>::verify() const
     {
       using SignalIn = BusToSignalAdapterSignalInputs;
+      using SignalOut = BusToSignalAdapterSignalOutputs;
 
       int ret = 0;
 
-      auto ir_port = ports_.in.template port<SignalIn::ir>();
-      if (ir_port.connected() && !ir_port.linked())
+      auto vr_port_in = ports_.in[SignalIn::vr_in];
+      if (vr_port_in.connected())
       {
-        Log::error() << "BusToSignalAdapter: Ir signal attached with no linked source\n";
-        ret += 1;
+        if (!vr_port_in.linked())
+        {
+          Log::error() << "BusToSignalAdapter: Vr signal attached with no linked source\n";
+          ret += 1;
+        }
+        if (ports_.out[SignalOut::vr_out].connected())
+        {
+          Log::error() << "BusToSignalAdapter: Vr signal set as input AND output\n";
+          ret += 1;
+        }
       }
 
-      auto ii_port = ports_.in.template port<SignalIn::ii>();
-      if (ii_port.connected() && !ii_port.linked())
+      auto vi_port_in = ports_.in[SignalIn::vi_in];
+      if (vi_port_in.connected())
       {
-        Log::error() << "BusToSignalAdapter: Ii signal attached with no linked source\n";
-        ret += 1;
+        if (!vi_port_in.linked())
+        {
+          Log::error() << "BusToSignalAdapter: Vi signal attached with no linked source\n";
+          ret += 1;
+        }
+        if (ports_.out[SignalOut::vi_out].connected())
+        {
+          Log::error() << "BusToSignalAdapter: Vi signal set as input AND output\n";
+          ret += 1;
+        }
+      }
+
+      auto ir_port_in = ports_.in[SignalIn::ir_in];
+      if (ir_port_in.connected())
+      {
+        if (!ir_port_in.linked())
+        {
+          Log::error() << "BusToSignalAdapter: Ir signal attached with no linked source\n";
+          ret += 1;
+        }
+        if (ports_.out[SignalOut::ir_out].connected())
+        {
+          Log::error() << "BusToSignalAdapter: Ir signal set as input AND output\n";
+          ret += 1;
+        }
+      }
+
+      auto ii_port_in = ports_.in[SignalIn::ii_in];
+      if (ii_port_in.connected())
+      {
+        if (!ii_port_in.linked())
+        {
+          Log::error() << "BusToSignalAdapter: Ii signal attached with no linked source\n";
+          ret += 1;
+        }
+        if (ports_.out[SignalOut::ii_out].connected())
+        {
+          Log::error() << "BusToSignalAdapter: Ii signal set as input AND output\n";
+          ret += 1;
+        }
       }
 
       return ret;
@@ -160,17 +215,38 @@ namespace GridKit
     {
       using SignalIn = BusToSignalAdapterSignalInputs;
 
-      if (auto ir_port = ports_.in.template port<SignalIn::ir>())
+      if (auto vr_port_in = ports_.in[SignalIn::vr_in])
       {
-        bus_->Ir() += ir_port.readSignal();
+        auto ws0   = vr_port_in.readSignal();
+        bus_->Vr() = ws0;
+        // bus_->Ir() += bus_->Vr() - ws0;
+        // if (bus_->size() > 0)
+        // {
+        //   bus_->getResidual().setDataUpdated();
+        // }
+      }
+      if (auto vi_port_in = ports_.in[SignalIn::vi_in])
+      {
+        auto ws1   = vi_port_in.readSignal();
+        bus_->Vi() = ws1;
+        // bus_->Ii() += bus_->Vi() - ws1;
+        // if (bus_->size() > 0)
+        // {
+        //   bus_->getResidual().setDataUpdated();
+        // }
+      }
+
+      if (auto ir_port_in = ports_.in[SignalIn::ir_in])
+      {
+        bus_->Ir() += ir_port_in.readSignal();
         if (bus_->size() > 0)
         {
           bus_->getResidual().setDataUpdated();
         }
       }
-      if (auto ii_port = ports_.in.template port<SignalIn::ii>())
+      if (auto ii_port_in = ports_.in[SignalIn::ii_in])
       {
-        bus_->Ii() += ii_port.readSignal();
+        bus_->Ii() += ii_port_in.readSignal();
         if (bus_->size() > 0)
         {
           bus_->getResidual().setDataUpdated();
