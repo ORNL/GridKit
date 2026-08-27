@@ -164,7 +164,7 @@ $\omega$                         | [p.u.]   | Machine speed deviation           
         V^{\min},
         V^{\max}
       \right) \\
-  0 &= -T_\mathrm{act}\dot x_\mathrm{act} + r_\mathrm{act} \\
+  0 &= -\dot x_\mathrm{act} + r_\mathrm{act} \\
   0 &= -T_B\dot x_\mathrm{turb} - x_\mathrm{turb} + x_\mathrm{act} \\
   0 &= -T_\mathrm{fload}\dot x_\mathrm{load} - x_\mathrm{load} + f_\mathrm{srt} \\
   0 &= -\dot x_\mathrm{ldint} + K_\mathrm{iload}\left(L_\mathrm{dref}-x_\mathrm{load}\right) \\
@@ -213,7 +213,7 @@ target and smooth approximation.
 ```
 
 CommonMath defines helper targets and smooth approximations for
-[clamp and min](../../../../CommonMath.md#derived-functions).
+[clamp](../../../../CommonMath.md#clamp) and [min](../../../../CommonMath.md#minimum).
 When $T_B=T_C=0$, the turbine lead-lag block is bypassed before the turbine
 gain and no-load fuel-flow calculation.
 If `Kpgov = 0`, the source diagram routes the integral path in parallel with

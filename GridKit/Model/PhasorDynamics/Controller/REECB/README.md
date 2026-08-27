@@ -222,9 +222,11 @@ $I^\mathrm{high}=s_\mathrm{pq}k_\mathrm{base}I_p^\mathrm{cmd}
 $\epsilon_0=100\epsilon_\mathrm{machine}$.
 [Appendix C](#appendix-c-sqrtramp) defines `sqrtramp`.
 
-CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup) and
-[smooth limiter](../../../../CommonMath.md#derived-functions) functions used in
-these equations. [Appendix B](#appendix-b-aslew) defines `aslew`.
+CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup),
+[`max`](../../../../CommonMath.md#maximum), [`inside`](../../../../CommonMath.md#inside),
+[`above`](../../../../CommonMath.md#above), [`deadband2`](../../../../CommonMath.md#type-ii-deadband),
+and [`clamp`](../../../../CommonMath.md#clamp) functions used in these equations.
+[Appendix B](#appendix-b-aslew) defines `aslew`.
 
 ### External Equations
 
@@ -405,7 +407,7 @@ For $\ell<0<u$, REECB uses
 ```
 
 where $\rho$ is GridKit's smooth
-[`ramp`](../../../../CommonMath.md#primitives). With exact one-sided ramps this
+[`ramp`](../../../../CommonMath.md#ramp). With exact one-sided ramps this
 reduces to $\text{clamp}(f;\ell,u)$; the smooth form preserves
 $\text{aslew}(0;\ell,u)=0$.
 

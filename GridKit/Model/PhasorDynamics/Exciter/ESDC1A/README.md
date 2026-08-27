@@ -309,8 +309,8 @@ of [Appendix A](#appendix-a-awmin).
 ```
 
 CommonMath defines helper targets and smooth approximations for
-[max](../../../../CommonMath.md#derived-functions), the [ramp](../../../../CommonMath.md#primitives)
-$\rho$, and the [quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+[max](../../../../CommonMath.md#maximum), the [ramp](../../../../CommonMath.md#ramp)
+$\rho$, and the [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
 
 ## Initialization
 
@@ -338,7 +338,7 @@ Initialization never replaces the seeded value held in $E_{\mathrm{fd}}$.
 All internal derivatives are set to zero. The steady-state residuals are then
 resolved in dependency order. The smooth high-value gate requires its input to
 be recovered through the inverse CommonMath
-[ramp](../../../../CommonMath.md#primitives) $\rho^{-1}$ when the UEL input is
+[ramp](../../../../CommonMath.md#ramp) $\rho^{-1}$ when the UEL input is
 routed through the gate:
 
 ```math
@@ -460,6 +460,6 @@ The model evaluates this rule with the following smooth approximation:
   \right]f.
 ```
 
-CommonMath defines the [`above`](../../../../CommonMath.md#derived-functions)
-and [`sigmoid`](../../../../CommonMath.md#primitives) targets and smooth
+CommonMath defines the [`above`](../../../../CommonMath.md#above)
+and [`sigmoid`](../../../../CommonMath.md#logistic-function) targets and smooth
 approximations.

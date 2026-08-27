@@ -179,7 +179,8 @@ target and smooth approximation.
 \end{aligned}
 ```
 
-CommonMath defines helper targets for [min and clamp](../../../../CommonMath.md#derived-functions).
+CommonMath defines helper targets for [min](../../../../CommonMath.md#minimum)
+and [clamp](../../../../CommonMath.md#clamp).
 The rectifier loading function $f(I_N)$ is the source curve shown in Fig. 1.
 
 ## Initialization

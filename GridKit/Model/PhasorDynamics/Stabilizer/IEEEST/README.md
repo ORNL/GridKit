@@ -105,7 +105,7 @@ $u$    | [p.u.] | Stabilizer input signal
 ```
 
 The output limiter uses GridKit's smooth
-[Clamp](../../../../CommonMath.md#derived-functions).
+[Clamp](../../../../CommonMath.md#clamp).
 
 ## Initialization
 
