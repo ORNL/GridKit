@@ -46,7 +46,7 @@ We recommend developers follow these steps when adding new component models:
     - You may want to start with a "dummy" implementation first to make sure
       the build and installation works correctly before proceeding to the
       implementation. 
-4. Create unit tests in `tests/UnitTesting/PhasorDynamics` directory. The
+4. Create unit tests in `tests/UnitTests/PhasorDynamics` directory. The
    implementation consists of `MyModelTests.hpp` with implementation of
    individual unit tests, the test driver in `runMyModelTests.cpp`, and
    `CMakeLists.txt` with build and installation configuration of tests. Unit
@@ -64,14 +64,14 @@ We recommend developers follow these steps when adding new component models:
 5. Once model is tested, add it to the system composer. This requires following steps:
     1. Add header file `MyModel.hpp` to `ComponentLibrary.hpp`, so that
        `MyModel` declaration is visible to the `SystemModel` class.
-    2. Modify `SystemModelJsonParser.hpp` so that `MyModel` is recognized by the
+    2. Modify `SystemModelDataJSONParser.hpp` so that `MyModel` is recognized by the
        parser.
     3. Modify `SystemModelData.hpp` so that `MyModelData` is visible to the system
        model.
     4. Modify `SystemModel.hpp` so that `MyModel` components can be connected by the
        system composer.
     5. Recommended: If applicable, add a smoke test to
-       `tests/UnitTesting/PhasorDynamics/SystemSingleComponentTests.hpp` for the
+       `tests/UnitTests/PhasorDynamics/SystemSingleComponentTests.hpp` for the
        basic construction of `MyModel` through `SystemModel`.
 6. Recommended: Create an example in `examples/PhasorDynamics` using the new component.
 

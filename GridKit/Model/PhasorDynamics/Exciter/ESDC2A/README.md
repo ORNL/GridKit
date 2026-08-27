@@ -186,8 +186,8 @@ target and smooth approximation.
 ```
 
 CommonMath defines the helper targets and smooth approximations for
-[max](../../../../CommonMath.md#derived-functions) and the primitives
-[ramp and quadratic ramp](../../../../CommonMath.md#primitives) $\rho$ and $q$.
+[max](../../../../CommonMath.md#maximum) and the primitives
+[ramp](../../../../CommonMath.md#ramp) and [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $\rho$ and $q$.
 When $T_B=T_C=0$, the lead-lag block is bypassed so $V_{\mathrm{ll}}=e_V$.
 
 ## Initialization

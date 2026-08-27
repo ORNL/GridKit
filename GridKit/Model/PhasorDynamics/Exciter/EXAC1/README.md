@@ -169,7 +169,7 @@ target and smooth approximation.
 \end{aligned}
 ```
 
-CommonMath defines the primitive [quadratic ramp](../../../../CommonMath.md#primitives)
+CommonMath defines the primitive [quadratic ramp](../../../../CommonMath.md#quadratic-ramp)
 $q$. The rectifier loading function $f(I_N)$ is the source curve shown in
 Fig. 1. When $T_B=T_C=0$, the lead-lag block is bypassed so
 $V_{\mathrm{ll}}=e_V$.

@@ -227,8 +227,9 @@ target and smooth approximation.
 \end{aligned}
 ```
 
-CommonMath defines the [derived limiter functions](../../../../CommonMath.md#derived-functions)
-used above; Appendix A defines `droop`.
+CommonMath defines the [`above`](../../../../CommonMath.md#above),
+[`deadband2`](../../../../CommonMath.md#type-ii-deadband), and
+[`clamp`](../../../../CommonMath.md#clamp) functions used above; Appendix A defines `droop`.
 
 ### External Equations
 
@@ -349,7 +350,7 @@ Output          | Units  | Description                         | Note
 ```
 
 where $\sigma$ is GridKit's smooth
-[`sigmoid`](../../../../CommonMath.md#primitives). The response preserves
+[`sigmoid`](../../../../CommonMath.md#logistic-function). The response preserves
 $\text{droop}(0;D_\mathrm{dn},D_\mathrm{up})=0$.
 
 [^frequency-measurement]: Background for phase-derived, filtered frequency
