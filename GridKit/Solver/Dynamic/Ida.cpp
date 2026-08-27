@@ -2,6 +2,7 @@
 #include "Ida.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -19,6 +20,75 @@ namespace AnalysisManager
 
   namespace Sundials
   {
+    namespace
+    {
+      using ProfileClock = std::chrono::steady_clock;
+
+      struct ProfileData
+      {
+        double   initialize_simulation_seconds = 0.0;
+        double   consistent_ic_seconds         = 0.0;
+        double   ida_solve_seconds             = 0.0;
+        double   residual_seconds              = 0.0;
+        double   residual_input_seconds        = 0.0;
+        double   residual_model_seconds        = 0.0;
+        double   residual_output_seconds       = 0.0;
+        double   jacobian_seconds              = 0.0;
+        double   jacobian_input_seconds        = 0.0;
+        double   jacobian_model_seconds        = 0.0;
+        double   jacobian_zero_seconds         = 0.0;
+        double   jacobian_structure_seconds    = 0.0;
+        double   jacobian_values_seconds       = 0.0;
+        double   linear_setup_seconds          = 0.0;
+        double   linear_solve_seconds          = 0.0;
+        double   state_update_seconds          = 0.0;
+        double   monitor_print_seconds         = 0.0;
+        long int initialize_simulation_calls   = 0;
+        long int consistent_ic_calls           = 0;
+        long int ida_solve_calls               = 0;
+        long int residual_calls                = 0;
+        long int jacobian_calls                = 0;
+        long int linear_setup_calls            = 0;
+        long int linear_solve_calls            = 0;
+        long int state_update_calls            = 0;
+        long int monitor_print_calls           = 0;
+      };
+
+      ProfileData profile;
+
+      double elapsedSeconds(ProfileClock::time_point start)
+      {
+        return std::chrono::duration<double>(ProfileClock::now() - start).count();
+      }
+
+#ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
+      int profileKluSetup(SUNLinearSolver solver, SUNMatrix matrix)
+      {
+        const auto start              = ProfileClock::now();
+        const int  status             = SUNLinSolSetup_KLU(solver, matrix);
+        profile.linear_setup_seconds += elapsedSeconds(start);
+        ++profile.linear_setup_calls;
+        return status;
+      }
+
+      int profileKluSolve(SUNLinearSolver solver,
+                          SUNMatrix       matrix,
+                          N_Vector        solution,
+                          N_Vector        right_hand_side,
+                          sunrealtype     tolerance)
+      {
+        const auto start              = ProfileClock::now();
+        const int  status             = SUNLinSolSolve_KLU(solver,
+                                              matrix,
+                                              solution,
+                                              right_hand_side,
+                                              tolerance);
+        profile.linear_solve_seconds += elapsedSeconds(start);
+        ++profile.linear_solve_calls;
+        return status;
+      }
+#endif
+    } // namespace
 
     template <class ScalarT, typename IdxT>
     Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
@@ -166,6 +236,9 @@ namespace AnalysisManager
       linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
       checkAllocation((void*) linearSolver_, "SUNLinSol_KLU");
 
+      linearSolver_->ops->setup = profileKluSetup;
+      linearSolver_->ops->solve = profileKluSolve;
+
       retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
       checkOutput(retval, "IDASetLinearSolver");
 
@@ -227,7 +300,8 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeSimulation(RealT t0, bool findConsistent)
     {
-      int retval = 0;
+      const auto initialize_start = ProfileClock::now();
+      int        retval           = 0;
 
       t_init_ = t0;
 
@@ -238,8 +312,11 @@ namespace AnalysisManager
       // Find a consistent set of initial conditions for DAE
       if (findConsistent)
       {
-        const int consistentICType = getIDAConsistentICType();
-        retval                     = IDACalcIC(solver_, consistentICType, t0 + 0.1);
+        const int  consistentICType    = getIDAConsistentICType();
+        const auto consistent_start    = ProfileClock::now();
+        retval                         = IDACalcIC(solver_, consistentICType, t0 + 0.1);
+        profile.consistent_ic_seconds += elapsedSeconds(consistent_start);
+        ++profile.consistent_ic_calls;
         checkOutput(retval, "IDACalcIC");
 
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
@@ -251,9 +328,19 @@ namespace AnalysisManager
 
       if (model_->monitoring())
       {
+        const auto update_start = ProfileClock::now();
         updateModelState(t0);
+        profile.state_update_seconds += elapsedSeconds(update_start);
+        ++profile.state_update_calls;
+
+        const auto monitor_start = ProfileClock::now();
         model_->printMonitoredVariables();
+        profile.monitor_print_seconds += elapsedSeconds(monitor_start);
+        ++profile.monitor_print_calls;
       }
+
+      profile.initialize_simulation_seconds += elapsedSeconds(initialize_start);
+      ++profile.initialize_simulation_calls;
 
       return retval;
     }
@@ -337,7 +424,10 @@ namespace AnalysisManager
       {
         const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
         RealT       tret;
-        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
+        const auto  solve_start    = ProfileClock::now();
+        retval                     = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
+        profile.ida_solve_seconds += elapsedSeconds(solve_start);
+        ++profile.ida_solve_calls;
         checkOutput(retval, "IDASolve");
 
         if (step_callback.has_value() || model_->monitoring())
@@ -345,11 +435,17 @@ namespace AnalysisManager
           // The callback may try to observe upated values in the model, so we
           // should update them here (At this point, the model's values are one
           // internal integrator step out of date)
+          const auto update_start = ProfileClock::now();
           updateModelState(tret);
+          profile.state_update_seconds += elapsedSeconds(update_start);
+          ++profile.state_update_calls;
 
           if (model_->monitoring())
           {
+            const auto monitor_start = ProfileClock::now();
             model_->printMonitoredVariables();
+            profile.monitor_print_seconds += elapsedSeconds(monitor_start);
+            ++profile.monitor_print_calls;
           }
           if (step_callback.has_value())
           {
@@ -358,7 +454,10 @@ namespace AnalysisManager
         }
       }
 
+      const auto update_start = ProfileClock::now();
       updateModelState(tf);
+      profile.state_update_seconds += elapsedSeconds(update_start);
+      ++profile.state_update_calls;
 
       return retval;
     }
@@ -730,12 +829,24 @@ namespace AnalysisManager
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
+      const auto residual_start = ProfileClock::now();
+
+      const auto input_start = ProfileClock::now();
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
       model->updateTime(tres, 0.0);
+      profile.residual_input_seconds += elapsedSeconds(input_start);
 
+      const auto model_start = ProfileClock::now();
       model->evaluateResidual();
+      profile.residual_model_seconds += elapsedSeconds(model_start);
+
+      const auto output_start = ProfileClock::now();
       copyVec(model->getResidual(), rr);
+      profile.residual_output_seconds += elapsedSeconds(output_start);
+
+      profile.residual_seconds += elapsedSeconds(residual_start);
+      ++profile.residual_calls;
 
       return 0;
     }
@@ -753,16 +864,24 @@ namespace AnalysisManager
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
+      const auto jacobian_start = ProfileClock::now();
+
+      const auto input_start = ProfileClock::now();
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
       model->updateTime(t, cj);
+      profile.jacobian_input_seconds += elapsedSeconds(input_start);
 
+      const auto model_start = ProfileClock::now();
       model->evaluateJacobian();
+      profile.jacobian_model_seconds += elapsedSeconds(model_start);
 
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
       CsrMatrixT* Jac  = model->getCsrJacobian();
 
+      const auto zero_start = ProfileClock::now();
       SUNMatZero(J);
+      profile.jacobian_zero_seconds += elapsedSeconds(zero_start);
 
       sunindextype* sun_row_ptrs = SUNSparseMatrix_IndexPointers(J);
       sunindextype* sun_cols     = SUNSparseMatrix_IndexValues(J);
@@ -777,9 +896,17 @@ namespace AnalysisManager
       RealT* vals     = Jac->getValues();
 
       // Copy data from model jac to sundials
+      const auto structure_start = ProfileClock::now();
       std::copy(row_ptrs, row_ptrs + n + 1, sun_row_ptrs);
       std::copy(cols, cols + nnz, sun_cols);
+      profile.jacobian_structure_seconds += elapsedSeconds(structure_start);
+
+      const auto values_start = ProfileClock::now();
       std::copy(vals, vals + nnz, sun_vals);
+      profile.jacobian_values_seconds += elapsedSeconds(values_start);
+
+      profile.jacobian_seconds += elapsedSeconds(jacobian_start);
+      ++profile.jacobian_calls;
 
       return 0;
     }
@@ -975,6 +1102,52 @@ namespace AnalysisManager
       checkOutput(retval, "IDAPrintAllStats");
     }
 
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::resetPerformanceStats()
+    {
+      profile = ProfileData{};
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::printPerformanceStats() const
+    {
+      const auto flags     = std::cout.flags();
+      const auto precision = std::cout.precision();
+
+      std::cout << std::fixed << std::setprecision(9)
+                << "\nGRIDKIT_PROFILE_BEGIN\n"
+                << "initialize_simulation_calls=" << profile.initialize_simulation_calls << '\n'
+                << "initialize_simulation_seconds=" << profile.initialize_simulation_seconds << '\n'
+                << "consistent_ic_calls=" << profile.consistent_ic_calls << '\n'
+                << "consistent_ic_seconds=" << profile.consistent_ic_seconds << '\n'
+                << "ida_solve_calls=" << profile.ida_solve_calls << '\n'
+                << "ida_solve_seconds=" << profile.ida_solve_seconds << '\n'
+                << "residual_calls=" << profile.residual_calls << '\n'
+                << "residual_seconds=" << profile.residual_seconds << '\n'
+                << "residual_input_seconds=" << profile.residual_input_seconds << '\n'
+                << "residual_model_seconds=" << profile.residual_model_seconds << '\n'
+                << "residual_output_seconds=" << profile.residual_output_seconds << '\n'
+                << "jacobian_calls=" << profile.jacobian_calls << '\n'
+                << "jacobian_seconds=" << profile.jacobian_seconds << '\n'
+                << "jacobian_input_seconds=" << profile.jacobian_input_seconds << '\n'
+                << "jacobian_model_seconds=" << profile.jacobian_model_seconds << '\n'
+                << "jacobian_zero_seconds=" << profile.jacobian_zero_seconds << '\n'
+                << "jacobian_structure_seconds=" << profile.jacobian_structure_seconds << '\n'
+                << "jacobian_values_seconds=" << profile.jacobian_values_seconds << '\n'
+                << "linear_setup_calls=" << profile.linear_setup_calls << '\n'
+                << "linear_setup_seconds=" << profile.linear_setup_seconds << '\n'
+                << "linear_solve_calls=" << profile.linear_solve_calls << '\n'
+                << "linear_solve_seconds=" << profile.linear_solve_seconds << '\n'
+                << "state_update_calls=" << profile.state_update_calls << '\n'
+                << "state_update_seconds=" << profile.state_update_seconds << '\n'
+                << "monitor_print_calls=" << profile.monitor_print_calls << '\n'
+                << "monitor_print_seconds=" << profile.monitor_print_seconds << '\n'
+                << "GRIDKIT_PROFILE_END\n";
+
+      std::cout.flags(flags);
+      std::cout.precision(precision);
+    }
+
     /**
      * @brief Accumulate another stats object into this one, allowing for stats to be kept
      *        across multiple simulations with IDA
@@ -983,6 +1156,7 @@ namespace AnalysisManager
     {
       num_steps_                       += other.num_steps_;
       num_residual_evals_              += other.num_residual_evals_;
+      num_jacobian_evals_              += other.num_jacobian_evals_;
       num_linear_decompositions_       += other.num_linear_decompositions_;
       num_error_test_fails_            += other.num_error_test_fails_;
       num_nonlinear_iters_             += other.num_nonlinear_iters_;
@@ -1002,9 +1176,10 @@ namespace AnalysisManager
       int               stat_width  = 12;
       std::stringstream out;
 
-      out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width) << num_residual_evals_ << '\n'
+      out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width) << num_steps_ << '\n'
           << std::setw(label_width) << "Residual evals" << " : " << std::setw(stat_width) << num_residual_evals_ << '\n'
-          << std::setw(label_width) << "Linear decompositions" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
+          << std::setw(label_width) << "Jacobian evals" << " : " << std::setw(stat_width) << num_jacobian_evals_ << '\n'
+          << std::setw(label_width) << "Linear solver setups" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
           << std::setw(label_width) << "Error test failures" << " : " << std::setw(stat_width) << num_error_test_fails_ << '\n'
           << std::setw(label_width) << "Nonlinear iterations" << " : " << std::setw(stat_width) << num_nonlinear_iters_ << '\n'
           << std::setw(label_width) << "Nonlinear convergence failures" << " : " << std::setw(stat_width) << num_nonlinear_convergence_fails_;
@@ -1038,6 +1213,9 @@ namespace AnalysisManager
                                          &dummy2,
                                          &dummy2);
       checkOutput(retval, "IDAGetIntegratorStats");
+
+      retval = IDAGetNumJacEvals(solver_, &stats.num_jacobian_evals_);
+      checkOutput(retval, "IDAGetNumJacEvals");
 
       retval = IDAGetNonlinSolvStats(solver_, &stats.num_nonlinear_iters_, &stats.num_nonlinear_convergence_fails_);
       checkOutput(retval, "IDAGetNonlinSolvStats");
