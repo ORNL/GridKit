@@ -325,9 +325,10 @@ namespace GridKit
           checkAlias(system.absoluteTolerance(), model.absoluteTolerance(), offset);
         };
 
-        const IdxT bus2_offset  = bus1.size();
-        const IdxT fault_offset = bus1.size() + bus2.size();
-        const auto bus2_first   = static_cast<std::size_t>(bus2_offset);
+        const IdxT bus2_offset   = bus1.size();
+        const IdxT branch_offset = bus1.size() + bus2.size();
+        const IdxT fault_offset  = branch_offset + branch.size();
+        const auto bus2_first    = static_cast<std::size_t>(bus2_offset);
 
         auto rebind = [&](auto& model, IdxT offset)
         {
@@ -340,9 +341,11 @@ namespace GridKit
 
         // Rebinding the same slices is a no-op.
         success *= rebind(bus2, bus2_offset) == 0;
+        success *= rebind(branch, branch_offset) == 0;
         success *= rebind(fault, fault_offset) == 0;
 
         checkModel(bus2, bus2_offset);
+        checkModel(branch, branch_offset);
         checkModel(fault, fault_offset);
 
         // Tags remain model-owned and are collected separately.
@@ -541,7 +544,25 @@ namespace GridKit
         std::cout << "Sparse Csr Matrix: System Jacobian\n";
         system_jacobian->print();
 
-        return GridKit::Testing::MapFromCsr(system_jacobian);
+        auto dependencies = GridKit::Testing::MapFromCsr(system_jacobian);
+        // The Bus reserves its diagonal sparsity block even when another
+        // component supplies all current derivatives. Dependency tracking
+        // omits these exact structural zeros, so compare nonzero derivatives.
+        for (auto& row : dependencies)
+        {
+          for (auto entry = row.begin(); entry != row.end();)
+          {
+            if (entry->second == RealT{0.0})
+            {
+              entry = row.erase(entry);
+            }
+            else
+            {
+              ++entry;
+            }
+          }
+        }
+        return dependencies;
       }
 #endif
     };

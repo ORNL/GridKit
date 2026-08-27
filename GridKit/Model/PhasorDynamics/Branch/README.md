@@ -10,8 +10,8 @@ Notes:
 - The total line shunt $G + jB$ is split equally between the two terminals,
   while the magnetizing shunt $G_\text{mag} + jB_\text{mag}$ is connected at
   bus 1; both shunts are added outside the $\mathbf{M}$ transformation.
-- The branch has no solver-owned variables; it contributes current residuals
-  directly to the connected buses.
+- The branch owns four algebraic terminal-current variables and adds their
+  values to the connected buses' current-balance residuals.
 
 ## Model Parameters
 
@@ -121,7 +121,12 @@ None.
 
 #### Algebraic
 
-None.
+Symbol      | Units  | Description                                  | Note
+------------|--------|----------------------------------------------|------
+$I_{r1}$    | [p.u.] | Terminal current, real component, bus 1      | Oriented entering bus 1
+$I_{i1}$    | [p.u.] | Terminal current, imaginary component, bus 1 | Oriented entering bus 1
+$I_{r2}$    | [p.u.] | Terminal current, real component, bus 2      | Oriented entering bus 2
+$I_{i2}$    | [p.u.] | Terminal current, imaginary component, bus 2 | Oriented entering bus 2
 
 ### External Variables
 
@@ -166,11 +171,12 @@ positive sign because branch current is oriented entering the bus.
 
 ## Initialization
 
-The Branch model has no internal state to initialize. During construction or
-parameter updates, the component computes $\mathbf{Y}$ from the current
-parameter values. Initial terminal current and power monitor values are
-evaluated from the connected bus voltages. Parameter verification rejects the
-invalid cases listed above.
+During construction or parameter updates, the component computes $\mathbf{Y}$
+from the current parameter values. At initialization, the four algebraic
+terminal-current variables are computed from the initialized connected-bus
+voltages, and all variable derivatives are set to zero. Current and power
+monitor values use the solver-owned terminal-current variables. Parameter
+verification rejects the invalid cases listed above.
 
 ## Model Outputs
 

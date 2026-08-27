@@ -24,8 +24,8 @@ namespace GridKit
      * @brief Constructor for a line or off-nominal transformer branch
      *
      * Model size:
-     * - Number of equations = 0
-     * - Number of internal variables = 0
+     * - Number of equations = 4
+     * - Number of internal variables = 4
      */
     template <typename scalar_type, typename index_type>
     Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2)
@@ -40,7 +40,7 @@ namespace GridKit
         bus1_id_(0),
         bus2_id_(0)
     {
-      size_ = 0;
+      size_ = static_cast<IdxT>(BranchInternalVariables::MAXIMUM);
       setDerivedParams();
     }
 
@@ -76,7 +76,7 @@ namespace GridKit
         bus1_id_(0),
         bus2_id_(0)
     {
-      size_ = 0;
+      size_ = static_cast<IdxT>(BranchInternalVariables::MAXIMUM);
       setDerivedParams();
     }
 
@@ -89,7 +89,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 0;
+      size_ = static_cast<IdxT>(BranchInternalVariables::MAXIMUM);
       setDerivedParams();
     }
 
@@ -124,11 +124,20 @@ namespace GridKit
       }
       auto size = static_cast<std::size_t>(size_);
 
+      tag_.assign(size, false);
+
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
-      wb_.resize(2);
-      h_.resize(2);
+      // Default variable and residual index mapping to local index
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
+      }
+
+      wb_.resize(4);
+      wb_.setToZero();
 
       allocated_ = true;
       return 0;
@@ -141,6 +150,16 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::initialize()
     {
+      auto* y = y_.getData();
+
+      terminalCurrent1(y[static_cast<size_t>(BranchInternalVariables::IR1)],
+                       y[static_cast<size_t>(BranchInternalVariables::II1)]);
+      terminalCurrent2(y[static_cast<size_t>(BranchInternalVariables::IR2)],
+                       y[static_cast<size_t>(BranchInternalVariables::II2)]);
+
+      y_.setDataUpdated();
+      yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
+
       return 0;
     }
 
@@ -150,6 +169,10 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::tagDifferentiable()
     {
+      for (IdxT i = 0; i < size_; ++i)
+      {
+        tag_[static_cast<size_t>(i)] = false;
+      }
       return 0;
     }
 
@@ -224,13 +247,43 @@ namespace GridKit
      * error cannot be used.
      */
     template <typename scalar_type, typename index_type>
-    int Branch<scalar_type, index_type>::setAbsoluteTolerance(RealT)
+    int Branch<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 
     /**
-     * @brief Bus 1 residual contribution from bus 1 variables
+     * @brief Internal terminal-current residual
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateInternalResidual(
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        const ScalarT*                  wb,
+        ScalarT*                        f)
+    {
+      const auto ir1 = static_cast<size_t>(BranchInternalVariables::IR1);
+      const auto ii1 = static_cast<size_t>(BranchInternalVariables::II1);
+      const auto ir2 = static_cast<size_t>(BranchInternalVariables::IR2);
+      const auto ii2 = static_cast<size_t>(BranchInternalVariables::II2);
+
+      f[ir1] = -y[ir1];
+      f[ii1] = -y[ii1];
+      f[ir2] = -y[ir2];
+      f[ii2] = -y[ii2];
+
+      addAdmittanceContribution(g11_, b11_, wb[0], wb[1], f[ir1], f[ii1]);
+      addAdmittanceContribution(g12_, b12_, wb[2], wb[3], f[ir1], f[ii1]);
+      addAdmittanceContribution(g21_, b21_, wb[0], wb[1], f[ir2], f[ii2]);
+      addAdmittanceContribution(g22_, b22_, wb[2], wb[3], f[ir2], f[ii2]);
+
+      return 0;
+    }
+
+    /**
+     * @brief Terminal-1 current-equation contribution from bus-1 voltage variables
      *
      */
     template <typename scalar_type, typename index_type>
@@ -246,7 +299,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus 1 residual contribution from bus 2 variables
+     * @brief Terminal-1 current-equation contribution from bus-2 voltage variables
      *
      */
     template <typename scalar_type, typename index_type>
@@ -262,7 +315,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus 2 residual contribution from bus 1 variables
+     * @brief Terminal-2 current-equation contribution from bus-1 voltage variables
      *
      */
     template <typename scalar_type, typename index_type>
@@ -278,7 +331,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus 2 residual contribution from bus 2 variables
+     * @brief Terminal-2 current-equation contribution from bus-2 voltage variables
      *
      */
     template <typename scalar_type, typename index_type>
@@ -294,24 +347,33 @@ namespace GridKit
     }
 
     /**
-     * @brief Residual contribution of the branch is computed and pushed to the terminal buses.
+     * @brief Compute the branch equations and push terminal currents to the buses.
      *
      */
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::evaluateResidual()
     {
-      ScalarT ir1{0.0};
-      ScalarT ii1{0.0};
-      ScalarT ir2{0.0};
-      ScalarT ii2{0.0};
+      const auto ir1 = static_cast<size_t>(BranchInternalVariables::IR1);
+      const auto ii1 = static_cast<size_t>(BranchInternalVariables::II1);
+      const auto ir2 = static_cast<size_t>(BranchInternalVariables::IR2);
+      const auto ii2 = static_cast<size_t>(BranchInternalVariables::II2);
 
-      terminalCurrent1(ir1, ii1);
-      terminalCurrent2(ir2, ii2);
+      auto* wb = wb_.getData();
+      wb[0]    = Vr1();
+      wb[1]    = Vi1();
+      wb[2]    = Vr2();
+      wb[3]    = Vi2();
 
-      Ir1() += ir1;
-      Ii1() += ii1;
-      Ir2() += ir2;
-      Ii2() += ii2;
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      auto*       f  = f_.getData();
+      evaluateInternalResidual(y, yp, wb, f);
+      f_.setDataUpdated();
+
+      Ir1() += y[ir1];
+      Ii1() += y[ii1];
+      Ir2() += y[ir2];
+      Ii2() += y[ii2];
 
       if (bus1_->size() > 0)
       {
@@ -411,64 +473,48 @@ namespace GridKit
     {
       using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::ir1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return Ir; });
+                    { return y_.getData()[static_cast<size_t>(BranchInternalVariables::IR1)]; });
       monitor_->set(Variable::ii1, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
-                      return Ii; });
+                    { return y_.getData()[static_cast<size_t>(BranchInternalVariables::II1)]; });
       monitor_->set(Variable::im1, [this]
                     {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
+                      const auto* y = y_.getData();
+                      const auto  Ir = y[static_cast<size_t>(BranchInternalVariables::IR1)];
+                      const auto  Ii = y[static_cast<size_t>(BranchInternalVariables::II1)];
                       return std::sqrt(Ir * Ir + Ii * Ii); });
       monitor_->set(Variable::p1, [this]
                     {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
+                      const auto* y = y_.getData();
+                      const auto  Ir = y[static_cast<size_t>(BranchInternalVariables::IR1)];
+                      const auto  Ii = y[static_cast<size_t>(BranchInternalVariables::II1)];
                       return Vr1() * Ir + Vi1() * Ii; });
       monitor_->set(Variable::q1, [this]
                     {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent1(Ir, Ii);
+                      const auto* y = y_.getData();
+                      const auto  Ir = y[static_cast<size_t>(BranchInternalVariables::IR1)];
+                      const auto  Ii = y[static_cast<size_t>(BranchInternalVariables::II1)];
                       return Vi1() * Ir - Vr1() * Ii; });
       monitor_->set(Variable::ir2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return Ir; });
+                    { return y_.getData()[static_cast<size_t>(BranchInternalVariables::IR2)]; });
       monitor_->set(Variable::ii2, [this]
-                    {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
-                      return Ii; });
+                    { return y_.getData()[static_cast<size_t>(BranchInternalVariables::II2)]; });
       monitor_->set(Variable::im2, [this]
                     {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
+                      const auto* y = y_.getData();
+                      const auto  Ir = y[static_cast<size_t>(BranchInternalVariables::IR2)];
+                      const auto  Ii = y[static_cast<size_t>(BranchInternalVariables::II2)];
                       return std::sqrt(Ir * Ir + Ii * Ii); });
       monitor_->set(Variable::p2, [this]
                     {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
+                      const auto* y = y_.getData();
+                      const auto  Ir = y[static_cast<size_t>(BranchInternalVariables::IR2)];
+                      const auto  Ii = y[static_cast<size_t>(BranchInternalVariables::II2)];
                       return Vr2() * Ir + Vi2() * Ii; });
       monitor_->set(Variable::q2, [this]
                     {
-                      ScalarT Ir;
-                      ScalarT Ii;
-                      terminalCurrent2(Ir, Ii);
+                      const auto* y = y_.getData();
+                      const auto  Ir = y[static_cast<size_t>(BranchInternalVariables::IR2)];
+                      const auto  Ii = y[static_cast<size_t>(BranchInternalVariables::II2)];
                       return Vi2() * Ir - Vr2() * Ii; });
     }
 
