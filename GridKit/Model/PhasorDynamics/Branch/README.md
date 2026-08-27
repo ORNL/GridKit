@@ -28,7 +28,7 @@ $\theta$             | [rad]  | `phase` | Phase-shift angle                     
 
 ### Parameter Validation
 
-Invalid Branch parameter sets are rejected by the following checks:
+A valid Branch parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}
@@ -169,8 +169,8 @@ positive sign because branch current is oriented entering the bus.
 The Branch model has no internal state to initialize. During construction or
 parameter updates, the component computes $\mathbf{Y}$ from the current
 parameter values. Initial terminal current and power monitor values are
-evaluated from the connected bus voltages. Parameter verification rejects the
-invalid cases listed above.
+evaluated from the connected bus voltages. Parameter verification enforces the
+conditions in [Parameter Validation](#parameter-validation).
 
 ## Model Outputs
 
