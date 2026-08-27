@@ -116,7 +116,7 @@ raised to that floor in place, so every equation below uses the raised value:
 
 Multiplying by $k_\mathrm{base}$ converts system base to component base.
 
-CommonMath defines the [`linseg`](../../../../CommonMath.md#linseg) helper
+CommonMath defines the [`linseg`](../../../../CommonMath.md#linear-segment) helper
 used by $N_{\mathrm{GV}}$.
 
 ## Model Ports
@@ -247,7 +247,8 @@ target and smooth approximation.
 ```
 
 CommonMath defines helper targets and smooth approximations for
-[deadband1 and clamp](../../../../CommonMath.md#derived-functions).
+[deadband1](../../../../CommonMath.md#type-i-deadband) and
+[clamp](../../../../CommonMath.md#clamp).
 
 ## Initialization
 

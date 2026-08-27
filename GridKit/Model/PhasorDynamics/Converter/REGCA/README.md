@@ -217,8 +217,10 @@ the sign that enables the corresponding limit.
 \end{aligned}
 ```
 
-CommonMath defines the [primitives](../../../../CommonMath.md#primitives) and
-[derived functions](../../../../CommonMath.md#derived-functions) used above.
+CommonMath defines the [`ramp`](../../../../CommonMath.md#ramp),
+[`max`](../../../../CommonMath.md#maximum), [`min`](../../../../CommonMath.md#minimum),
+[`clamp`](../../../../CommonMath.md#clamp), and
+[`linseg`](../../../../CommonMath.md#linear-segment) functions used above.
 
 ## Network Interface
 

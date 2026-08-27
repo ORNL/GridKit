@@ -44,8 +44,9 @@ $S_\mathrm{mach}$ | [MVA] | Machine power base                  | 100 |
 \begin{aligned}
   G      &=  \dfrac{R_a}{R_a^2+(X_d'')^2} &
   B      &= -\dfrac{X_d''}{R_a^2+(X_d'')^2}\\
-  S_A    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} &
-  S_B    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
+  S_A    &= \min\left(\dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1},
+                       \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1}\right) &
+  S_B    &= \dfrac{S_{12}}{(S_A-1.2)^2} \\
   X_{d1} &= X_d-X_d'                 & X_{q2} &= X_q-X_d'' \\
   X_{d2} &= X_d'-X_\ell              & X_{d3} &= (X_d'-X_d'')/X_{d2}^2 \\
   X_{d4} &= (X_d'-X_d'')/X_{d2}      & X_{d5} &= (X_d''-X_\ell)/X_{d2} \\
@@ -53,6 +54,8 @@ $S_\mathrm{mach}$ | [MVA] | Machine power base                  | 100 |
   S_\mathrm{mach,VA} &= 10^6 S_\mathrm{mach}
 \end{aligned}
 ```
+
+When $S_{12}=0$, $S_A=S_B=0$.
 
 System bases are taken from the system at initialization.
 
@@ -131,7 +134,7 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
 ```
 
 CommonMath defines the primitive
-[quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+[quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
 
 ## Initialization
 

@@ -7,7 +7,7 @@ delay per mode, and a fitted output factor while preserving the input units.
 ```math
 \begin{aligned}
 \mathbf{H}(s)
-  &= \sum_{m=0}^M \mathbf{H}^\mathrm{mps}_\text{m}(s) e^{-s\tau_m}
+  &= \sum_{m=1}^M \mathbf{H}^\mathrm{mps}_m(s) e^{-s\tau_m}
 \end{aligned}
 ```
 

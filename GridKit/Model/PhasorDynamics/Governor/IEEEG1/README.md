@@ -102,7 +102,7 @@ The governor component base and nonlinear governor-output curve are:
 \end{aligned}
 ```
 
-CommonMath defines the [linear segment](../../../../CommonMath.md#derived-functions)
+CommonMath defines the [linear segment](../../../../CommonMath.md#linear-segment)
 helper used by $N_{\mathrm{GV}}$.
 
 ## Model Variables
@@ -191,7 +191,10 @@ target and smooth approximation.
 ```
 
 CommonMath defines helper targets and smooth approximations for
-[deadband1, deadband2, clamp, and linseg](../../../../CommonMath.md#derived-functions).
+[deadband1](../../../../CommonMath.md#type-i-deadband),
+[deadband2](../../../../CommonMath.md#type-ii-deadband),
+[clamp](../../../../CommonMath.md#clamp), and
+[linseg](../../../../CommonMath.md#linear-segment).
 When $T_1=T_2=0$, the governor lead-lag block is bypassed so
 $y_{\omega}=K\omega_{\mathrm{db}}$.
 

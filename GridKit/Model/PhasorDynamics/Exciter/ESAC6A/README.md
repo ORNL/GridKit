@@ -172,8 +172,8 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 \end{aligned}
 ```
 
-CommonMath defines helper targets for [clamp](../../../../CommonMath.md#derived-functions)
-and the primitive [quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+CommonMath defines helper targets for [clamp](../../../../CommonMath.md#clamp)
+and the primitive [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
 The rectifier loading function $f(I_N)$ is the source curve shown in Fig. 1.
 When $T_B=T_C=0$, the second lead-lag block is bypassed. When $T_H=T_J=0$, the
 feedback-limiter lead-lag block is bypassed before the 0-to-$V_H^{\max}$ clamp.

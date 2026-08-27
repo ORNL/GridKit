@@ -6,7 +6,7 @@
 
 ![](../../../../../docs/Figures/EXDC1.JPG)
 
-Figure 1: Exciter EXDC1 model. Figure courtesy of [PoweWorld](https://www.powerworld.com/WebHelp/).
+Figure 1: Exciter EXDC1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/).
 
 ## Nomenclature
 

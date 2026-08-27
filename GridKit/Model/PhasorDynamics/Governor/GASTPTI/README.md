@@ -155,7 +155,7 @@ $V_{\mathrm{resp}}^{\max}$, and $s^{\mathrm{valve}}$ are defined under
 ```
 
 CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
-and [`min`](../../../../CommonMath.md#min) targets and smooth approximations.
+and [`min`](../../../../CommonMath.md#minimum) targets and smooth approximations.
 
 ### External Equations
 
@@ -270,4 +270,4 @@ $\mu$,
 ```
 
 This is the positive-range inverse of GridKit's smooth
-[`ramp`](../../../../CommonMath.md#rho-ramp).
+[`ramp`](../../../../CommonMath.md#ramp).

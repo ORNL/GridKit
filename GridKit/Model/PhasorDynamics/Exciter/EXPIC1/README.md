@@ -195,8 +195,8 @@ target and smooth approximation.
 \end{aligned}
 ```
 
-CommonMath defines helper targets for [clamp](../../../../CommonMath.md#derived-functions)
-and the primitive [quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+CommonMath defines helper targets for [clamp](../../../../CommonMath.md#clamp)
+and the primitive [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
 The rectifier loading function $f(I_N)$ is the source curve shown in Fig. 1.
 The $V_{\mathrm{src}}$ residual uses the nonnegative branch of the squared
 source-magnitude equation.

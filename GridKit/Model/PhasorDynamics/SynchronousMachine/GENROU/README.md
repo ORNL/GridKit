@@ -43,8 +43,9 @@ $S_\mathrm{mach}$ | [MVA] | Machine power base        | 100 |
 \begin{aligned}
   G      &=  \dfrac{R_a}{R_a^2+(X_q'')^2} &
   B      &= -\dfrac{X_q''}{R_a^2+(X_q'')^2}\\
-  S_A    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
-  S_B    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
+  S_A    &= \min\left(\dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1},
+                       \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1}\right) &
+  S_B    &= \dfrac{S_{12}}{(S_A-1.2)^2} \\
   X_{d1} &= X_d-X_d'                 & X_{q1} &= X_q-X_q' \\
   X_{d2} &= X_d'-X_\ell              & X_{q2} &= X_q'-X_\ell\\
   X_{d3} &= (X_d'-X_d'')/X_{d2}^2    & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
@@ -55,6 +56,8 @@ $S_\mathrm{mach}$ | [MVA] | Machine power base        | 100 |
   S_\mathrm{mach,VA} &= 10^6 S_\mathrm{mach}
 \end{aligned}
 ```
+
+When $S_{12}=0$, $S_A=S_B=0$.
 
 System bases are taken from the system at initialization.
 
@@ -139,13 +142,13 @@ Note that for implementation purposes, some of these equations may be simplified
   0 &= -k_{sat} + S_B q(\psi''-S_A) \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
   0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta) \\
-  0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
-  0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (V_d \cos(\delta) + V_q \sin(\delta) - V_i)
+  0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (-V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
+  0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (-V_d \cos(\delta) + V_q \sin(\delta) - V_i)
 \end{aligned}
 ```
 
 CommonMath defines the primitive
-[quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+[quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
 
 ## Initialization
 

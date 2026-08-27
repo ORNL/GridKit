@@ -170,8 +170,9 @@ target and smooth approximation.
 \end{aligned}
 ```
 
-CommonMath defines helper targets for [min and clamp](../../../../CommonMath.md#derived-functions)
-and the primitive [quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+CommonMath defines helper targets for [min](../../../../CommonMath.md#minimum)
+and [clamp](../../../../CommonMath.md#clamp), and the primitive
+[quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
 The rectifier loading function $f(I_N)$ is the source curve shown in Fig. 1.
 When $T_B=T_C=0$, the lead-lag block is bypassed so $V_{\mathrm{ll}}=e_V$.
 

@@ -112,7 +112,7 @@ The off-mode flag complements are:
 \end{aligned}
 ```
 
-The VDL functions use GridKit's smooth [Linear Segment](../../../../CommonMath.md#derived-functions) helper and provide flat extrapolation outside the first and fourth voltage points:
+The VDL functions use GridKit's smooth [Linear Segment](../../../../CommonMath.md#linear-segment) helper and provide flat extrapolation outside the first and fourth voltage points:
 
 ```math
 \begin{aligned}
@@ -288,7 +288,10 @@ The algebraic targets use CommonMath helper notation where applicable:
 
 The $V_T$, $I_{\mathrm{q}}^{\mathrm{circ}}$, and $I_{\mathrm{p}}^{\mathrm{circ}}$ variables use nonnegative branches of squared algebraic residuals. This preserves the $s_{PQ}=0$ Q-priority and $s_{PQ}=1$ P-priority current-circle behavior without explicit square roots; a consistent solution should satisfy the nonnegative branch and nonnegative radicands.
 
-CommonMath defines the helper targets and smooth approximations for [min, max, clamp, deadband2, and outside](../../../../CommonMath.md#derived-functions).
+CommonMath defines the helper targets and smooth approximations for
+[min](../../../../CommonMath.md#minimum), [max](../../../../CommonMath.md#maximum),
+[clamp](../../../../CommonMath.md#clamp), [deadband2](../../../../CommonMath.md#type-ii-deadband),
+and [outside](../../../../CommonMath.md#outside).
 
 ## Initialization
 
