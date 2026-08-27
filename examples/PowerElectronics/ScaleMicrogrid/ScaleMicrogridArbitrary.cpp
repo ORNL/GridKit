@@ -72,9 +72,7 @@ int printMicrogridSystems(index_type N_size)
   }
 
   // Build and assemble the scaled microgrid network.
-  ScaleMicrogridNetwork network(N_size);
-
-  buildScaleMicrogridNetwork(network);
+  ScaleMicrogridNetwork<double, size_t> network(N_size);
   assembleSystem(network, sys_model);
 
   // allocate all the initial conditions

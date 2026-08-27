@@ -21,11 +21,9 @@ int main(int /* argc */, char const** /* argv */)
   auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(use_jac);
 
   // Build the four-generator microgrid network.
-  size_t                         N_size = 2;
-  GridKit::ScaleMicrogridNetwork network(N_size);
-
-  GridKit::buildScaleMicrogridNetwork(network);
-  GridKit::assembleSystem(network, *sysmodel);
+  size_t                                N_size = 2;
+  ScaleMicrogridNetwork<double, size_t> network(N_size);
+  assembleSystem(network, *sysmodel);
 
   // Generator parameters used to construct the initial conditions.
   const auto& parms1 = network.DGParam_list[0];

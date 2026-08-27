@@ -87,9 +87,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   }
 
   // Build and assemble the scaled microgrid network.
-  ScaleMicrogridNetwork network(Nsize);
-
-  buildScaleMicrogridNetwork(network);
+  ScaleMicrogridNetwork<double, size_t> network(Nsize);
   assembleSystem(network, *sys_model);
 
   // allocate all the intial conditions
