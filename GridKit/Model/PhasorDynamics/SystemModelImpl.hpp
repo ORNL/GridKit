@@ -1,4 +1,6 @@
 #include <cassert>
+#include <chrono>
+#include <iomanip>
 #include <iostream>
 
 #include <GridKit/Definitions.hpp>
@@ -740,6 +742,23 @@ namespace GridKit
       {
         monitor_->addSink(sink);
       }
+
+      // Component ranges follow the construction order above. Keeping these
+      // boundaries explicit avoids attributing controllers constructed later
+      // in the sequence to an earlier model family.
+      IdxT profile_end           = 0;
+      profile_component_ends_[0] = profile_end += static_cast<IdxT>(data.adapter.size());
+      profile_component_ends_[1] = profile_end += static_cast<IdxT>(data.regca.size());
+      profile_component_ends_[2] = profile_end += static_cast<IdxT>(data.branch.size());
+      profile_component_ends_[3] = profile_end += static_cast<IdxT>(data.loadz.size() + data.loadzip.size());
+      profile_component_ends_[4] = profile_end += static_cast<IdxT>(data.genrou.size() + data.gensal.size() + data.genclassical.size());
+      profile_component_ends_[5] = profile_end += static_cast<IdxT>(data.reecb.size());
+      profile_component_ends_[6] = profile_end += static_cast<IdxT>(data.gov.size() + data.gastpti.size() + data.hygov.size());
+      profile_component_ends_[7] = profile_end += static_cast<IdxT>(data.stabilizer.size());
+      profile_component_ends_[8] = profile_end += static_cast<IdxT>(data.exciter.size() + data.esdc1a.size() + data.sexspti.size());
+      profile_component_ends_[9] = profile_end += static_cast<IdxT>(data.repca.size());
+      profile_component_ends_[10] = profile_end += static_cast<IdxT>(data.constant_source.size());
+      profile_component_ends_[11] = profile_end += static_cast<IdxT>(data.bus_fault.size());
     }
 
     /**
@@ -1119,17 +1138,46 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateResidual()
     {
+      using ProfileClock = std::chrono::steady_clock;
+
+      const auto residual_start = ProfileClock::now();
+      const auto bus_start      = ProfileClock::now();
       for (const auto& bus : buses_)
       {
         bus->evaluateResidual();
       }
+      profile_bus_residual_seconds_ += std::chrono::duration<double>(ProfileClock::now() - bus_start).count();
 
-      for (const auto& component : components_)
+      IdxT profile_begin = 0;
+      for (std::size_t group = 0; group < profile_group_count_; ++group)
       {
-        component->evaluateResidual();
+        const IdxT profile_end = profile_component_ends_[group];
+        if (profile_begin < profile_end)
+        {
+          const auto group_start = ProfileClock::now();
+          for (IdxT i = profile_begin; i < profile_end; ++i)
+          {
+            components_[static_cast<std::size_t>(i)]->evaluateResidual();
+          }
+          profile_residual_seconds_[group] += std::chrono::duration<double>(ProfileClock::now() - group_start).count();
+        }
+        profile_begin = profile_end;
+      }
+
+      const IdxT component_count = static_cast<IdxT>(components_.size());
+      if (profile_begin < component_count)
+      {
+        const auto other_start = ProfileClock::now();
+        for (IdxT i = profile_begin; i < component_count; ++i)
+        {
+          components_[static_cast<std::size_t>(i)]->evaluateResidual();
+        }
+        profile_other_residual_seconds_ += std::chrono::duration<double>(ProfileClock::now() - other_start).count();
       }
 
       f_.setDataUpdated();
+      profile_system_residual_seconds_ += std::chrono::duration<double>(ProfileClock::now() - residual_start).count();
+      ++profile_residual_calls_;
 
       return 0;
     }
@@ -1147,16 +1195,44 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()
     {
+      using ProfileClock = std::chrono::steady_clock;
+
+      const auto jacobian_start = ProfileClock::now();
+
       // Initialize bus Jacobians
+      const auto bus_start = ProfileClock::now();
       for (const auto& bus : buses_)
       {
         bus->evaluateJacobian();
       }
+      profile_bus_jacobian_seconds_ += std::chrono::duration<double>(ProfileClock::now() - bus_start).count();
 
       // Evaluate component Jacobians, including contribution to the bus Jacobians
-      for (const auto& component : components_)
+      IdxT profile_begin = 0;
+      for (std::size_t group = 0; group < profile_group_count_; ++group)
       {
-        component->evaluateJacobian();
+        const IdxT profile_end = profile_component_ends_[group];
+        if (profile_begin < profile_end)
+        {
+          const auto group_start = ProfileClock::now();
+          for (IdxT i = profile_begin; i < profile_end; ++i)
+          {
+            components_[static_cast<std::size_t>(i)]->evaluateJacobian();
+          }
+          profile_jacobian_seconds_[group] += std::chrono::duration<double>(ProfileClock::now() - group_start).count();
+        }
+        profile_begin = profile_end;
+      }
+
+      const IdxT component_count = static_cast<IdxT>(components_.size());
+      if (profile_begin < component_count)
+      {
+        const auto other_start = ProfileClock::now();
+        for (IdxT i = profile_begin; i < component_count; ++i)
+        {
+          components_[static_cast<std::size_t>(i)]->evaluateJacobian();
+        }
+        profile_other_jacobian_seconds_ += std::chrono::duration<double>(ProfileClock::now() - other_start).count();
       }
 
       // Build or update system CSR Jacobian
@@ -1276,14 +1352,17 @@ namespace GridKit
       else
       {
         // Zero out values
-        RealT* vals = csr_jac_->getValues();
+        const auto zero_start = ProfileClock::now();
+        RealT*     vals       = csr_jac_->getValues();
         for (IdxT i = 0; i < csr_jac_->getNnz(); ++i)
         {
           vals[i] = 0.0;
         }
+        profile_jacobian_zero_seconds_ += std::chrono::duration<double>(ProfileClock::now() - zero_start).count();
 
         // Update CSR values from component and bus Jacobians
-        IdxT counter = 0;
+        const auto component_scatter_start = ProfileClock::now();
+        IdxT       counter                 = 0;
         for (const auto& component : components_)
         {
           auto component_jacobian = component->getCooJacobian();
@@ -1298,7 +1377,9 @@ namespace GridKit
             }
           }
         }
+        profile_component_scatter_seconds_ += std::chrono::duration<double>(ProfileClock::now() - component_scatter_start).count();
 
+        const auto bus_scatter_start = ProfileClock::now();
         for (const auto& bus : buses_)
         {
           auto bus_jacobian = bus->getCooJacobian();
@@ -1313,12 +1394,81 @@ namespace GridKit
             }
           }
         }
+        profile_bus_scatter_seconds_ += std::chrono::duration<double>(ProfileClock::now() - bus_scatter_start).count();
       }
 
       // std::cout << "System Jacobian\n";
       // csr_jac_->print(std::cout);
 
+      profile_system_jacobian_seconds_ += std::chrono::duration<double>(ProfileClock::now() - jacobian_start).count();
+      ++profile_jacobian_calls_;
+
       return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::resetPerformanceStats()
+    {
+      profile_residual_seconds_.fill(0.0);
+      profile_jacobian_seconds_.fill(0.0);
+      profile_system_residual_seconds_   = 0.0;
+      profile_bus_residual_seconds_      = 0.0;
+      profile_other_residual_seconds_    = 0.0;
+      profile_system_jacobian_seconds_   = 0.0;
+      profile_bus_jacobian_seconds_      = 0.0;
+      profile_other_jacobian_seconds_    = 0.0;
+      profile_jacobian_zero_seconds_     = 0.0;
+      profile_component_scatter_seconds_ = 0.0;
+      profile_bus_scatter_seconds_       = 0.0;
+      profile_residual_calls_            = 0;
+      profile_jacobian_calls_            = 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::printPerformanceStats() const
+    {
+      static constexpr std::array<const char*, profile_group_count_> labels = {
+          "adapter",
+          "regca",
+          "branch",
+          "load",
+          "generator",
+          "reecb",
+          "governor",
+          "stabilizer",
+          "exciter",
+          "repca",
+          "source",
+          "fault"};
+
+      const auto flags     = std::cout.flags();
+      const auto precision = std::cout.precision();
+
+      std::cout << std::fixed << std::setprecision(9)
+                << "\nSYSTEM_PROFILE_BEGIN\n"
+                << "system_residual_calls=" << profile_residual_calls_ << '\n'
+                << "system_residual_seconds=" << profile_system_residual_seconds_ << '\n'
+                << "bus_residual_seconds=" << profile_bus_residual_seconds_ << '\n';
+      for (std::size_t group = 0; group < profile_group_count_; ++group)
+      {
+        std::cout << labels[group] << "_residual_seconds=" << profile_residual_seconds_[group] << '\n';
+      }
+      std::cout << "other_residual_seconds=" << profile_other_residual_seconds_ << '\n'
+                << "system_jacobian_calls=" << profile_jacobian_calls_ << '\n'
+                << "system_jacobian_seconds=" << profile_system_jacobian_seconds_ << '\n'
+                << "bus_jacobian_seconds=" << profile_bus_jacobian_seconds_ << '\n';
+      for (std::size_t group = 0; group < profile_group_count_; ++group)
+      {
+        std::cout << labels[group] << "_jacobian_seconds=" << profile_jacobian_seconds_[group] << '\n';
+      }
+      std::cout << "other_jacobian_seconds=" << profile_other_jacobian_seconds_ << '\n'
+                << "system_jacobian_zero_seconds=" << profile_jacobian_zero_seconds_ << '\n'
+                << "system_component_scatter_seconds=" << profile_component_scatter_seconds_ << '\n'
+                << "system_bus_scatter_seconds=" << profile_bus_scatter_seconds_ << '\n'
+                << "SYSTEM_PROFILE_END\n";
+
+      std::cout.flags(flags);
+      std::cout.precision(precision);
     }
 
     /**
