@@ -30,6 +30,16 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Internal variables of a `Branch`
+    enum class BranchInternalVariables : size_t
+    {
+      IR1, ///< \f$I_{r1}\f$
+      II1, ///< \f$I_{i1}\f$
+      IR2, ///< \f$I_{r2}\f$
+      II2, ///< \f$I_{i2}\f$
+      MAXIMUM,
+    };
+
     /**
      * @brief Implementation of a line or off-nominal transformer branch between two buses.
      *
@@ -47,10 +57,10 @@ namespace GridKit
       using Component<scalar_type, index_type>::alpha_;
       using Component<scalar_type, index_type>::y_;
       using Component<scalar_type, index_type>::yp_;
+      using Component<scalar_type, index_type>::abs_tol_;
       using Component<scalar_type, index_type>::tag_;
       using Component<scalar_type, index_type>::f_;
       using Component<scalar_type, index_type>::wb_;
-      using Component<scalar_type, index_type>::h_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -59,12 +69,13 @@ namespace GridKit
       using Component<scalar_type, index_type>::allocated_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = BranchData<RealT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<Branch, BranchData>;
+      using ScalarT            = scalar_type;
+      using IdxT               = index_type;
+      using RealT              = typename Component<ScalarT, IdxT>::RealT;
+      using BusT               = BusBase<ScalarT, IdxT>;
+      using ModelDataT         = BranchData<RealT, IdxT>;
+      using MonitorT           = Model::VariableMonitor<Branch, BranchData>;
+      using InternalVariablesT = BranchInternalVariables;
 
       Branch(BusT* bus1, BusT* bus2);
       Branch(BusT* bus1,
@@ -188,6 +199,8 @@ namespace GridKit
       }
 
     public:
+      __attribute__((always_inline)) inline int evaluateInternalResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
       __attribute__((always_inline)) inline int evaluateBusResidual11(
           const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
       __attribute__((always_inline)) inline int evaluateBusResidual12(
