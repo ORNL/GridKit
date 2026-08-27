@@ -42,8 +42,31 @@ namespace GridKit
         success *= system->initialize() == 0;
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
-        success *= system->size() == 0;
+        success *= system->size()
+                   == static_cast<IdxT>(PhasorDynamics::BranchInternalVariables::MAXIMUM);
         success *= system->size() == branch.size();
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        auto* jacobian  = system->getCsrJacobian();
+        success        *= jacobian != nullptr;
+        if (jacobian != nullptr)
+        {
+          success *= jacobian->getNnz()
+                     == static_cast<IdxT>(PhasorDynamics::BranchInternalVariables::MAXIMUM);
+
+          const auto* rows   = jacobian->getRowData();
+          const auto* cols   = jacobian->getColData();
+          const auto* values = jacobian->getValues();
+          const auto  size   = static_cast<IdxT>(PhasorDynamics::BranchInternalVariables::MAXIMUM);
+          for (IdxT i = 0; i < size; ++i)
+          {
+            success *= rows[i] == i;
+            success *= cols[i] == i;
+            success *= isEqual(values[i], static_cast<RealT>(-1.0));
+          }
+          success *= rows[size] == size;
+        }
+#endif
 
         delete system;
         system = nullptr;
