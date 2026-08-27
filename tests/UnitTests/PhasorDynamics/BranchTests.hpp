@@ -38,6 +38,8 @@ namespace GridKit
             new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2);
 
         success *= (branch != nullptr);
+        success *= branch->size()
+                   == static_cast<IdxT>(PhasorDynamics::BranchInternalVariables::MAXIMUM);
 
         if (branch)
         {
@@ -80,12 +82,54 @@ namespace GridKit
 
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
         branch.allocate();
+        branch.initialize();
+        branch.tagDifferentiable();
+        branch.setAbsoluteTolerance(static_cast<RealT>(1e-6));
         branch.evaluateResidual();
 
+        const auto* y          = branch.y().getData();
+        const auto* yp         = branch.yp().getData();
+        const auto* f          = branch.getResidual().getData();
+        const auto* tolerances = branch.absoluteTolerance().getData();
+        const auto  size       = static_cast<std::size_t>(branch.size());
+
+        success *= isEqual(y[0], Ir1);
+        success *= isEqual(y[1], Ii1);
+        success *= isEqual(y[2], Ir2);
+        success *= isEqual(y[3], Ii2);
         success *= isEqual(bus1.Ir(), Ir1);
         success *= isEqual(bus1.Ii(), Ii1);
         success *= isEqual(bus2.Ir(), Ir2);
         success *= isEqual(bus2.Ii(), Ii2);
+        for (std::size_t i = 0; i < size; ++i)
+        {
+          success *= isEqual(yp[i], ScalarT{0.0});
+          success *= isEqual(f[i], ScalarT{0.0}, static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon());
+          success *= !branch.tag()[i];
+          success *= isEqual(tolerances[i], static_cast<ScalarT>(1e-6));
+        }
+
+        // The buses consume the current variables while the Branch equations
+        // continue to enforce I = YV.
+        constexpr ScalarT current_perturbation[] = {1.0, 2.0, 3.0, 4.0};
+        auto*             mutable_y              = branch.y().getData();
+        for (std::size_t i = 0; i < size; ++i)
+        {
+          mutable_y[i] += current_perturbation[i];
+        }
+        branch.y().setDataUpdated();
+        bus1.evaluateResidual();
+        bus2.evaluateResidual();
+        branch.evaluateResidual();
+
+        success *= isEqual(bus1.Ir(), Ir1 + current_perturbation[0]);
+        success *= isEqual(bus1.Ii(), Ii1 + current_perturbation[1]);
+        success *= isEqual(bus2.Ir(), Ir2 + current_perturbation[2]);
+        success *= isEqual(bus2.Ii(), Ii2 + current_perturbation[3]);
+        for (std::size_t i = 0; i < size; ++i)
+        {
+          success *= isEqual(f[i], -current_perturbation[i], static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon());
+        }
 
         return success.report(__func__);
       }
@@ -138,6 +182,7 @@ namespace GridKit
 
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, data);
         branch.allocate();
+        branch.initialize();
         branch.evaluateResidual();
 
         success *= isEqual(bus1.Ir(), Ir1);
@@ -178,10 +223,25 @@ namespace GridKit
 
         PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, R, X, G, B);
         branch.allocate();
+        branch.initialize();
+        for (size_t i = 0; i < static_cast<size_t>(branch.size()); ++i)
+        {
+          branch.y().getData()[i].setVariableNumber(i + 4);
+        }
+        branch.y().setDataUpdated();
         branch.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                    ///< the dependencies
 
-        std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
+        const auto*                               branch_residual = branch.getResidual().getData();
+        std::vector<DependencyTracking::Variable> residuals{
+            branch_residual[0],
+            branch_residual[1],
+            branch_residual[2],
+            branch_residual[3],
+            bus1.Ir(),
+            bus1.Ii(),
+            bus2.Ir(),
+            bus2.Ii()};
         std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B);
 
         /// Compare dependencies computed automatically to the ones computed analytically
@@ -228,9 +288,20 @@ namespace GridKit
                                                                           tap,
                                                                           phase);
         branch.allocate();
+        branch.initialize();
+        for (size_t i = 0; i < static_cast<size_t>(branch.size()); ++i)
+        {
+          branch.y().getData()[i].setVariableNumber(i + 4);
+        }
+        branch.y().setDataUpdated();
         branch.evaluateResidual();
 
-        std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
+        const auto*                               branch_residual = branch.getResidual().getData();
+        std::vector<DependencyTracking::Variable> residuals{
+            branch_residual[0],
+            branch_residual[1],
+            branch_residual[2],
+            branch_residual[3]};
         std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B, tap, phase);
 
         for (size_t i = 0; i < residuals.size(); ++i)
@@ -269,6 +340,7 @@ namespace GridKit
         ref_bus2.initialize();
         ref_bus2.evaluateResidual();
         PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, tap, phase);
+        ref_branch.allocate();
 
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus1(Vr1, Vi1);
         PhasorDynamics::Bus<ScalarT, IdxT> test_bus2(Vr2, Vi2);
@@ -279,6 +351,7 @@ namespace GridKit
         test_bus2.initialize();
         test_bus2.evaluateResidual();
         PhasorDynamics::Branch<ScalarT, IdxT> test_branch(&test_bus1, &test_bus2, 1.0, 1.0, 0.0, 0.0);
+        test_branch.allocate();
 
         test_branch.setR(R);
         test_branch.setX(X);
@@ -287,6 +360,8 @@ namespace GridKit
         test_branch.setTap(tap);
         test_branch.setPhase(phase);
 
+        ref_branch.initialize();
+        test_branch.initialize();
         ref_branch.evaluateResidual();
         test_branch.evaluateResidual();
 
@@ -379,6 +454,10 @@ namespace GridKit
         PhasorDynamics::Branch<ScalarT, IdxT> data_branch(&data_bus1, &data_bus2, data);
         PhasorDynamics::Branch<ScalarT, IdxT> ref_branch(&ref_bus1, &ref_bus2, R, X, G, B, 1.0, 0.0);
 
+        data_branch.allocate();
+        ref_branch.allocate();
+        data_branch.initialize();
+        ref_branch.initialize();
         data_branch.evaluateResidual();
         ref_branch.evaluateResidual();
 
@@ -413,11 +492,15 @@ namespace GridKit
         const std::complex<RealT> y21 = ybr * std::conj(rotation) * inv_tap;
         const std::complex<RealT> y22 = ydiag - RealT{0.5} * ysh;
 
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(4);
-        dependencies[0] = {{0, y11.real()}, {1, -y11.imag()}, {2, y12.real()}, {3, -y12.imag()}};
-        dependencies[1] = {{0, y11.imag()}, {1, y11.real()}, {2, y12.imag()}, {3, y12.real()}};
-        dependencies[2] = {{0, y21.real()}, {1, -y21.imag()}, {2, y22.real()}, {3, -y22.imag()}};
-        dependencies[3] = {{0, y21.imag()}, {1, y21.real()}, {2, y22.imag()}, {3, y22.real()}};
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(8);
+        dependencies[0] = {{0, y11.real()}, {1, -y11.imag()}, {2, y12.real()}, {3, -y12.imag()}, {4, -1.0}};
+        dependencies[1] = {{0, y11.imag()}, {1, y11.real()}, {2, y12.imag()}, {3, y12.real()}, {5, -1.0}};
+        dependencies[2] = {{0, y21.real()}, {1, -y21.imag()}, {2, y22.real()}, {3, -y22.imag()}, {6, -1.0}};
+        dependencies[3] = {{0, y21.imag()}, {1, y21.real()}, {2, y22.imag()}, {3, y22.real()}, {7, -1.0}};
+        dependencies[4] = {{4, 1.0}};
+        dependencies[5] = {{5, 1.0}};
+        dependencies[6] = {{6, 1.0}};
+        dependencies[7] = {{7, 1.0}};
 
         return dependencies;
       }
