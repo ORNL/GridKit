@@ -70,6 +70,7 @@ All real parameters must be finite. Invalid parameter sets are rejected by:
 ```math
 \begin{aligned}
   S^\mathrm{base} &> 0 \\
+  T_\mathrm{fltr}, T_\mathrm{ft}, T_\mathrm{fv}, T_\mathrm{p}, T_\mathrm{lag} &\ge 0 \\
   D_\mathrm{bd1} &\le 0 \le D_\mathrm{bd2} \\
   e^{\min} &\le 0 \le e^{\max} \\
   Q^{\min} &\le Q^{\max} \\

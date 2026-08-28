@@ -58,8 +58,6 @@ Invalid ESDC1A parameter sets are rejected by the following checks:
     &\ge 0 \\
   V_R^{\min}
     &\le V_R^{\max} \\
-  s_{\mathrm{spd}}, s_{\mathrm{lim}}
-    &\in \{0,1\} \\
   I_{\mathrm{UEL}}
     &\in \{0,1,2,3\}
 \end{aligned}

@@ -4,11 +4,11 @@ Represents an impedance fault at a bus. This device can exist in two states, on 
 
 ## Model Parameters
 
-Symbol   | Units      | Description                     | Note
----------|------------|---------------------------------|-------
-$R$      | [p.u.]     | Fault resistance                | 
-$X$      | [p.u.]     | Fault reactance                 | 
-$U$      | [unitless] | Binary status, $U \in \{0, 1\}$ | Set by user to put fault on or off.
+Symbol   | Units     | JSON     | Description                     | Note
+---------|-----------|----------|---------------------------------|-------
+$R$      | [p.u.]    | `R`      | Fault resistance                | 
+$X$      | [p.u.]    | `X`      | Fault reactance                 | 
+$U$      | [boolean] | `state0` | Initial fault status            | JSON boolean; `true` puts the fault on. Changed at run time through `setStatus()`.
 
 ### Model Derived Parameters
 ``` math
@@ -23,7 +23,7 @@ $U$      | [unitless] | Binary status, $U \in \{0, 1\}$ | Set by user to put fau
 Name             | Port  | Init  | Description
 -----------------|-------|-------|------------
 `bus`            | Bus   | Known | Required bus where the fault is applied
-`control_signal` | Input | N/A   | Fault-state control
+`control_signal` | Input | N/A   | Accepted by the parser but not read by the model; fault status is set through `state0` and `setStatus()`
 
 ## Model Variables
 
