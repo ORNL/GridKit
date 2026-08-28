@@ -56,7 +56,7 @@ HYGOV parameter sets are rejected by the following checks:
   T_r, T_f, T_g, T_w, T_{\mathrm{np}}
     &\ge 0 \\
   R_{\mathrm{temp}}
-    &\ne 0 \\
+    &> 0 \\
   T_n
     &\ge 0 \\
   V_{\mathrm{elm}}
@@ -98,7 +98,7 @@ raised to that floor in place, so every equation below uses the raised value:
     &\leftarrow \max\!\left(T_x,\epsilon_T\right),
        \quad x\in\{r,f,g,w,\mathrm{np}\} \\
   k_{\mathrm{base}}
-    &= \dfrac{S^\mathrm{sys}}{T^\mathrm{rate}} \\
+    &= \dfrac{S^\mathrm{sys}}{10^6\,T^\mathrm{rate}} \\
   k_n
     &= \dfrac{T_n}{T_{\mathrm{np}}} \\
   N_{\mathrm{GV}}(x)
@@ -114,7 +114,8 @@ raised to that floor in place, so every equation below uses the raised value:
 \end{aligned}
 ```
 
-Multiplying by $k_\mathrm{base}$ converts system base to component base.
+Multiplying by $k_\mathrm{base}$ converts system base to component base;
+$S^\mathrm{sys}$ is the system power base in VA.
 
 CommonMath defines the [`linseg`](../../../../CommonMath.md#linear-segment) helper
 used by $N_{\mathrm{GV}}$.
@@ -408,9 +409,9 @@ which can be written in terms of our smooth functions as
 \end{aligned}
 ```
 
-CommonMath defines the [`ramp`](GridKit/CommonMath.md#-ramp),
-[`above`](GridKit/CommonMath.md#above), and
-[`below`](GridKit/CommonMath.md#below) targets and smooth approximations. This is deferred until we permit non Hessenberg forms. Once permitted we should define:
+CommonMath defines the [`ramp`](../../../../CommonMath.md#ramp),
+[`above`](../../../../CommonMath.md#above), and
+[`below`](../../../../CommonMath.md#below) targets and smooth approximations. This is deferred until we permit non Hessenberg forms. Once permitted we should define:
 
 ```math
 \begin{aligned}

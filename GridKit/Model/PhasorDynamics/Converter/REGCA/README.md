@@ -68,6 +68,8 @@ every other condition is a configuration error.
     &\ge 0 \\
   I_{L1}
     &\ge 0 \\
+  K_L
+    &> 0 \\
   s_L
     &\in \{0,1\} \\
   0

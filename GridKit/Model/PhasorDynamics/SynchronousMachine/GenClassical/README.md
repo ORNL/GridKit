@@ -29,8 +29,8 @@ $S_\mathrm{mach}$ | [MVA] | machine power base        |
 Name              | Port  | Init  | Description
 ------------------|-------|-------|------------
 `bus`             | Bus   | Known | Terminal bus voltage and current-balance residuals
-`exciter_signal`  | Input | N/A   | Exciter signal
-`governor_signal` | Input | N/A   | Governor signal
+`exciter_signal`  | Input | N/A   | Accepted by the parser but not wired; $E_p$ is a fixed setpoint
+`governor_signal` | Input | N/A   | Accepted by the parser but not wired; $P_m$ is a fixed setpoint
 
 <br>
 
@@ -74,8 +74,10 @@ Symbol | Units   | Description                   | Note
 -------|---------|-------------------------------|----------------------
 $V_r$  | [p.u.]  | machine bus real voltage      | owned by a bus object
 $V_i$  | [p.u.]  | machine bus imaginary voltage | owned by a bus object
-$P_m$  | [p.u.]  | mechanical power input           | Stored setpoint
-$E_p$  | [p.u.]  | internal transient-emf magnitude | Stored setpoint
+
+The mechanical power $P_m$ and internal transient-emf magnitude $E_p$ are
+fixed setpoints computed during initialization; they are neither solver
+variables nor connected signals.
 
 <br>
 
