@@ -83,6 +83,7 @@
 - Added cases and validation for ACTIVSg10k, ACTIVSg200, ACTIVSg500, and WECC240.
 - Added IDA option to choose the consistent initial condition calculation type.
 - Implemented `tagDifferentiable()` for `PowerElectronics` models.
+- Fixed the `TenGenGenrou` example to output the correct omega values.
 
 ## v0.1
 
