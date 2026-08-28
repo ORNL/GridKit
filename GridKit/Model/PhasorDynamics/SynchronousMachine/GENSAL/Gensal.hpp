@@ -46,8 +46,6 @@ namespace GridKit
       IQ,     ///< \f$I_q\f$ q-axis current
       IR,     ///< \f$I_r\f$ network real current
       II,     ///< \f$I_i\f$ network imaginary current
-      INR,    ///< \f$I_{\mathrm{N},r}\f$ Norton source real current
-      INI,    ///< \f$I_{\mathrm{N},i}\f$ Norton source imaginary current
       MAXIMUM,
     };
 

@@ -25,7 +25,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 16;
+      size_ = 14;
       setDerivedParams();
     }
 
@@ -314,10 +314,6 @@ namespace GridKit
       y[11] = iq;
       y[12] = ir;
       y[13] = ii;
-      y[14] = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
-              - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
-      y[15] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
-              + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
 
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
@@ -402,8 +398,6 @@ namespace GridKit
       ScalarT iq     = y[11];
       ScalarT ir     = y[12];
       ScalarT ii     = y[13];
-      ScalarT inr    = y[14];
-      ScalarT ini    = y[15];
 
       /* Read derivatives */
       ScalarT delta_dot  = yp[0];
@@ -437,12 +431,8 @@ namespace GridKit
       f[9]  = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
       f[10] = id - (ir * std::sin(delta) - ii * std::cos(delta));
       f[11] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[12] = ir + G_ * vr - B_ * vi - inr;
-      f[13] = ii + B_ * vr + G_ * vi - ini;
-
-      /* 2 Gensal current source definitions */
-      f[14] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
-      f[15] = ini - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
+      f[12] = ir - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
+      f[13] = ii - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
 
       return 0;
     }
