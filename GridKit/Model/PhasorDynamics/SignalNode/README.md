@@ -38,9 +38,7 @@ None.
 
 #### Algebraic
 
-Symbol | Units       | Description         | Note
--------|-------------|---------------------|-----
-$s$    | unspecified | Linked signal value | Owned by the producing component
+None.
 
 ## Model Equations
 

@@ -1,17 +1,22 @@
-# Constant signal source
+# ConstantSignalSource
 
-This component emits a constant complex value on two output ports (real and
-imaginary).
+Zero-state component that publishes constant real and imaginary scalar values
+on two output signals.
 
 ## Model Parameters
 
-The complex-value parameter is intentionally ambiguous, because it may be
-applied in different contexts (for different input variables).
+Symbol | Units       | JSON | Description                     | Default
+-------|-------------|------|---------------------------------|--------
+$S_r$  | unspecified | `Sr` | Constant real output value      | 0.0
+$S_i$  | unspecified | `Si` | Constant imaginary output value | 0.0
 
-Symbol      | Units   | Description                     | Note
-------------|---------|---------------------------------| ------
-$Sr$  | unspecified | Real component  |
-$Si$  | unspecified | Imaginary component  | 
+### Parameter Validation
+
+None.
+
+### Model Derived Parameters
+
+None.
 
 ## Model Ports
 

@@ -26,10 +26,7 @@ None.
 
 #### Algebraic
 
-Symbol | Units  | Description                    | Note
--------|--------|--------------------------------|-----
-$V_r$  | [p.u.] | Bus-voltage real component     | Bus-owned value published through `vr`
-$V_i$  | [p.u.] | Bus-voltage imaginary component | Bus-owned value published through `vi`
+None.
 
 ### External Variables
 
@@ -39,9 +36,11 @@ None.
 
 #### Algebraic
 
-Symbol | Units  | Description                           | Note
--------|--------|---------------------------------------|-----
-$I_r$  | [p.u.] | Real current contribution to the bus  | Read from the optional `ir` input
+Symbol | Units  | Description                              | Note
+-------|--------|------------------------------------------|-----
+$V_r$  | [p.u.] | Bus-voltage real component               | Bus-owned value published through `vr`
+$V_i$  | [p.u.] | Bus-voltage imaginary component          | Bus-owned value published through `vi`
+$I_r$  | [p.u.] | Real current contribution to the bus      | Read from the optional `ir` input
 $I_i$  | [p.u.] | Imaginary current contribution to the bus | Read from the optional `ii` input
 
 ## Model Equations
