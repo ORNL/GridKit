@@ -71,6 +71,22 @@ The potential-source coefficient is resolved into real scalar components:
 Here $\theta_P$ is converted from degrees before evaluating the trigonometric
 functions.
 
+## Model Ports
+
+Name    | Port   | Init | Description
+--------|--------|------|------------
+`vcomp` | Input  | TBD  | Compensated voltage input $V_{\mathrm{comp}}$
+`vref`  | Input  | TBD  | Voltage-control reference $V_{\mathrm{ref}}$
+`vuel`  | Input  | TBD  | Under-excitation limiter input $V_{\mathrm{uel}}$
+`vs`    | Input  | TBD  | Stabilizer input signal $V_S$
+`voel`  | Input  | TBD  | Over-excitation limiter input $V_{\mathrm{oel}}$
+`vr`    | Input  | TBD  | Terminal-voltage real component $V_{\mathrm{r}}$
+`vi`    | Input  | TBD  | Terminal-voltage imaginary component $V_{\mathrm{i}}$
+`ir`    | Input  | TBD  | Terminal-current real component $I_{\mathrm{r}}$
+`ii`    | Input  | TBD  | Terminal-current imaginary component $I_{\mathrm{i}}$
+`ifd`   | Input  | TBD  | Machine field current $I_{\mathrm{fd}}$
+`efd`   | Output | TBD  | Field-voltage output $E_{\mathrm{fd}}$
+
 ## Model Variables
 
 ### Internal Variables
@@ -124,7 +140,9 @@ $I_{\mathrm{fd}}$                   | [p.u.] | Machine field current            
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -152,7 +170,7 @@ $I_{\mathrm{fd}}$                   | [p.u.] | Machine field current            
 CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -182,6 +200,10 @@ target and smooth approximation.
 CommonMath defines helper targets for [min](../../../../CommonMath.md#minimum)
 and [clamp](../../../../CommonMath.md#clamp).
 The rectifier loading function $f(I_N)$ is the source curve shown in Fig. 1.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -225,9 +247,9 @@ $V_R$, $V_M$, $V_G$, and $V_B$ limits, and the low-value gate selecting $V_M$.
 Starts with active low-value gate limiting or saturated PI states are outside
 these closed-form equations.
 
-## Model Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
 `vm`            | [p.u.] | Inner regulator output              | $V_M$

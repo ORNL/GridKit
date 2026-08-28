@@ -104,6 +104,17 @@ saturation factors are zero, use $S_A=0$ and $S_B=0$. Otherwise:
 \end{aligned}
 ```
 
+## Model Ports
+
+Name    | Port   | Init | Description
+--------|--------|------|------------
+`ec`    | Input  | TBD  | Compensated terminal voltage magnitude $E_C$
+`vref`  | Input  | TBD  | Voltage-control reference $V_{\mathrm{ref}}$
+`vs`    | Input  | TBD  | Stabilizer input signal $V_S$
+`vuel`  | Input  | TBD  | Under-excitation limiter input $V_{\mathrm{uel}}$
+`speed` | Input  | TBD  | Machine speed deviation $\omega$
+`efd`   | Output | TBD  | Field-voltage output $E_{\mathrm{fd}}$
+
 ## Model Variables
 
 ### Internal Variables
@@ -147,7 +158,9 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -168,7 +181,7 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -189,6 +202,10 @@ CommonMath defines the helper targets and smooth approximations for
 [max](../../../../CommonMath.md#maximum) and the primitives
 [ramp](../../../../CommonMath.md#ramp) and [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $\rho$ and $q$.
 When $T_B=T_C=0$, the lead-lag block is bypassed so $V_{\mathrm{ll}}=e_V$.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -218,9 +235,9 @@ $V_R^{\min} \le V_{R,0} \le V_R^{\max}$, and, when $s_{\mathrm{uel}}=0$,
 $V_{\mathrm{hv},0} \ge V_{\mathrm{uel},0}$. Saturated voltage-regulator starts
 and active high-value-gate starts are outside these closed-form equations.
 
-## Model Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
 `vc`            | [p.u.] | Sensed compensated voltage          | $V_C$

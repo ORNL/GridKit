@@ -31,7 +31,13 @@ Figure 1: Power system stabilizer PSS1A model. Figure courtesy of [PowerWorld](h
 - $V_{cl}$ - stabilizer input cutoff threshold, pu (0)
 
 
+## Model Ports
 
+Name     | Port   | Init | Description
+---------|--------|------|------------
+`input`  | Input  | TBD  | Stabilizer input $u$ selected by $I_{cs}$
+`vct`    | Input  | TBD  | Cutout signal $V_{ct}$
+`output` | Output | TBD  | Limited stabilizer output $V_{llout}$
 
 ## Model Variables
 
@@ -68,7 +74,11 @@ $u$ | [p.u.] | Stabilizer input signal |
 $V_{ct}$ | [p.u.] | Cutout signal (compared to $V_{cl},V_{cu}$) | from the block diagram
 
 
-### Differential Equations
+## Model Equations
+
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -81,7 +91,7 @@ $V_{ct}$ | [p.u.] | Cutout signal (compared to $V_{cl},V_{cu}$) | from the block
 \end{aligned}
 ```
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -95,3 +105,15 @@ V_{llout} &= \begin{cases}
 \end{cases}
 \end{aligned}
 ```
+
+### External Equations
+
+None.
+
+## Initialization
+
+TBD.
+
+## Monitors
+
+TBD.

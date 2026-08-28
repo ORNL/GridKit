@@ -88,6 +88,22 @@ components:
 \end{aligned}
 ```
 
+## Model Ports
+
+Name    | Port   | Init | Description
+--------|--------|------|------------
+`ec`    | Input  | TBD  | Compensated terminal voltage magnitude $E_C$
+`vref`  | Input  | TBD  | Voltage-control reference $V_{\mathrm{ref}}$
+`vuel`  | Input  | TBD  | Under-excitation limiter input $V_{\mathrm{uel}}$
+`vs`    | Input  | TBD  | Stabilizer input signal $V_S$
+`voel`  | Input  | TBD  | Over-excitation limiter input $V_{\mathrm{oel}}$
+`vr`    | Input  | TBD  | Terminal-voltage real component $V_{\mathrm{r}}$
+`vi`    | Input  | TBD  | Terminal-voltage imaginary component $V_{\mathrm{i}}$
+`ir`    | Input  | TBD  | Terminal-current real component $I_{\mathrm{r}}$
+`ii`    | Input  | TBD  | Terminal-current imaginary component $I_{\mathrm{i}}$
+`ifd`   | Input  | TBD  | Machine field current $I_{\mathrm{fd}}$
+`efd`   | Output | TBD  | Field-voltage output $E_{\mathrm{fd}}$
+
 ## Model Variables
 
 ### Internal Variables
@@ -141,7 +157,9 @@ $I_{\mathrm{fd}}$                   | [p.u.] | Machine field current            
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -165,7 +183,7 @@ $I_{\mathrm{fd}}$                   | [p.u.] | Machine field current            
 CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -200,6 +218,10 @@ and the primitive [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$
 The rectifier loading function $f(I_N)$ is the source curve shown in Fig. 1.
 The $V_{\mathrm{src}}$ residual uses the nonnegative branch of the squared
 source-magnitude equation.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -253,9 +275,9 @@ If $T_E=0$, the final exciter residual is algebraic and requires
 $E_{\mathrm{fd},0}=E_{0,0}$. Starts that bind the PI regulator, cascaded
 regulator, or exciter limits are outside these closed-form equations.
 
-## Model Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
 `et`            | [p.u.] | Sensed terminal voltage             | $E_T$

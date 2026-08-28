@@ -13,8 +13,55 @@ Symbol      | Units   | Description                     | Note
 $Sr$  | unspecified | Real component  |
 $Si$  | unspecified | Imaginary component  | 
 
-## Output ports
-- `sr` ($S_r$)
-- `si` ($S_i$)
+## Model Ports
 
-Constant parameters are made available to signal nodes.
+Name | Port   | Init  | Description
+-----|--------|-------|------------
+`sr` | Output | Known | Constant real component $S_r$
+`si` | Output | Known | Constant imaginary component $S_i$
+
+## Model Variables
+
+### Internal Variables
+
+#### Differential
+
+None.
+
+#### Algebraic
+
+None.
+
+### External Variables
+
+#### Differential
+
+None.
+
+#### Algebraic
+
+None.
+
+## Model Equations
+
+### Internal Equations
+
+#### Differential
+
+None.
+
+#### Algebraic
+
+None.
+
+### External Equations
+
+None.
+
+## Initialization
+
+None.
+
+## Monitors
+
+None.

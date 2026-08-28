@@ -111,6 +111,13 @@ The magnetizing and line shunts are added outside the transformation:
 
 For the equations below, write each entry as $Y_{mn}=G_{mn}+jB_{mn}$.
 
+## Model Ports
+
+Name   | Port | Init  | Description
+-------|------|-------|------------
+`bus1` | Bus  | Known | Required bus-1 terminal; the tapped side
+`bus2` | Bus  | Known | Required bus-2 terminal
+
 ## Model Variables
 
 ### Internal Variables
@@ -140,11 +147,17 @@ $V_{i2}$    | [p.u.]  | Terminal voltage, imaginary component, bus 2 | Owned by 
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 None.
 
-### Algebraic Equations
+#### Algebraic
+
+None.
+
+### External Equations
 
 The branch current relation is $0 = -\mathbf{I} + \mathbf{Y}\mathbf{V}$.
 
@@ -172,10 +185,10 @@ parameter values. Initial terminal current and power monitor values are
 evaluated from the connected bus voltages. Parameter verification enforces the
 conditions in [Parameter Validation](#parameter-validation).
 
-## Model Outputs
+## Monitors
 
-Output | Units  | Description                                  | Note
--------|--------|----------------------------------------------|------
+Monitor | Units  | Description                                  | Note
+--------|--------|----------------------------------------------|------
 `ir1`  | [p.u.] | Terminal current, real component, bus 1      | Oriented entering bus 1
 `ii1`  | [p.u.] | Terminal current, imaginary component, bus 1 | Oriented entering bus 1
 `im1`  | [p.u.] | Terminal current magnitude, bus 1            |

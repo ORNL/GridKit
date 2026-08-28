@@ -61,6 +61,18 @@ The source multiplier is:
 When $T_B=0$, the lead-lag block is treated as a bypass with
 $V_{\mathrm{ll}}=e_V$.
 
+## Model Ports
+
+Name   | Port   | Init | Description
+-------|--------|------|------------
+`ec`   | Input  | TBD  | Compensated terminal voltage magnitude $E_C$
+`et`   | Input  | TBD  | Terminal-voltage source multiplier $E_T$
+`vref` | Input  | TBD  | Voltage-control reference $V_{\mathrm{ref}}$
+`vuel` | Input  | TBD  | Under-excitation limiter input $V_{\mathrm{uel}}$
+`vs`   | Input  | TBD  | Stabilizer input signal $V_S$
+`voel` | Input  | TBD  | Over-excitation limiter input $V_{\mathrm{oel}}$
+`efd`  | Output | TBD  | Field-voltage output $E_{\mathrm{fd}}$
+
 ## Model Variables
 
 ### Internal Variables
@@ -100,7 +112,9 @@ $V_{\mathrm{oel}}$                  | [p.u.] | Over-excitation limiter input    
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -119,7 +133,7 @@ $V_{\mathrm{oel}}$                  | [p.u.] | Over-excitation limiter input    
 CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -131,6 +145,10 @@ target and smooth approximation.
 ```
 
 When $T_B=0$, SCRX bypasses the lead-lag block so $V_{\mathrm{ll}}=e_V$.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -154,9 +172,9 @@ This closed-form start requires $M_{\mathrm{src},0}\ne 0$, $K\ne 0$, and
 $E_{\mathrm{fd}}^{\min}\le E_{\mathrm{fd},0}'\le E_{\mathrm{fd}}^{\max}$.
 Starts that bind the exciter limit are outside these closed-form equations.
 
-## Model Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
 `efd_pre`       | [p.u.] | Limited exciter output before source multiplier | $E_{\mathrm{fd}}'$
