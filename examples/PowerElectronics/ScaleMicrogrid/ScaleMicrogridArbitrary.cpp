@@ -5,7 +5,7 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-#include "PowerElectronicsExamplesHelper/MicrogridNetwork.hpp"
+#include <examples/PowerElectronics/PowerElectronicsExamplesHelper/MicrogridNetwork.hpp>
 
 using index_type = size_t;
 using real_type  = double;
