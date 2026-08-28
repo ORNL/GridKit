@@ -181,8 +181,8 @@ positive sign because branch current is oriented entering the bus.
 
 The Branch model has no internal state to initialize. During construction or
 parameter updates, the component computes $\mathbf{Y}$ from the current
-parameter values. Initial terminal current and power monitor values are
-evaluated from the connected bus voltages. Parameter verification enforces the
+parameter values. Terminal current and power monitor values are evaluated
+from the connected bus voltages when read. Parameter verification enforces the
 conditions in [Parameter Validation](#parameter-validation).
 
 ## Monitors
