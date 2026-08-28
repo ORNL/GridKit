@@ -1,3 +1,8 @@
+/**
+ * @file BusPartitionInterface.hpp
+ * @author Abdourahman Barry (abdourahman@vt.edu)
+ *
+ */
 #pragma once
 
 #include <cassert>
@@ -38,6 +43,8 @@ namespace GridKit
    * evaluation, either directly through the external-data vectors or through a
    * forcing function.
    *
+   * @todo Find a better name for this class and its base class.
+   *
    * @tparam ScalarT Scalar type used by the model.
    * @tparam IdxT Index type used for variable and connection indices.
    */
@@ -55,6 +62,7 @@ namespace GridKit
 
   protected:
     using SystemModel    = PowerElectronicsModel<ScalarT, IdxT>;
+    using VectorT        = typename SystemModel::VectorT;
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
@@ -204,6 +212,10 @@ namespace GridKit
       }
 
       {
+        ScalarT* y_ext_data_ptr  = y_ext_data_.getData();
+        ScalarT* yp_ext_data_ptr = yp_ext_data_.getData();
+        ScalarT* f_ext_data_ptr  = f_ext_data_.getData();
+
         // The offset for each component's internal variables in the system vector.
         // They start at 0, and are stacked on top of each other.
         size_t component_internal_idx = 0;
@@ -243,9 +255,9 @@ namespace GridKit
             const IdxT external_offset = connection_index - static_cast<IdxT>(n_intern_);
 
             ExternalConnection<ScalarT, IdxT> connection{
-                .y_   = &y_ext_data_[external_offset],
-                .yp_  = &yp_ext_data_[external_offset],
-                .f_   = &f_ext_data_[external_offset],
+                .y_   = y_ext_data_ptr + external_offset,
+                .yp_  = yp_ext_data_ptr + external_offset,
+                .f_   = f_ext_data_ptr + external_offset,
                 .idx_ = connection_index};
 
             comp->setExternalConnectionNodes(local_index, connection);
@@ -388,15 +400,15 @@ namespace GridKit
       {
         const auto forcing = (*forcing_function_)(time_);
 
-        if (forcing.y.size() != y_ext_data_.size() || forcing.yp.size() != yp_ext_data_.size())
+        if (forcing.y.size() != y_ext_data_.getSize() || forcing.yp.size() != yp_ext_data_.getSize())
         {
           throw std::runtime_error(
               "SubsystemModel::distributeExternalVectors: forcing function "
               "returned vectors with incorrect sizes.");
         }
 
-        std::copy(forcing.y.begin(), forcing.y.end(), y_ext_data_.begin());
-        std::copy(forcing.yp.begin(), forcing.yp.end(), yp_ext_data_.begin());
+        std::copy(forcing.y.begin(), forcing.y.end(), y_ext_data_.getData());
+        std::copy(forcing.yp.begin(), forcing.yp.end(), yp_ext_data_.getData());
       }
 
       return 0;
@@ -538,17 +550,17 @@ namespace GridKit
       return external_data_indices_;
     }
 
-    std::vector<ScalarT>& getExternalDataY()
+    VectorT& getExternalDataY()
     {
       return y_ext_data_;
     }
 
-    std::vector<ScalarT>& getExternalDataYP()
+    VectorT& getExternalDataYP()
     {
       return yp_ext_data_;
     }
 
-    std::vector<ScalarT>& getExternalDataF()
+    VectorT& getExternalDataF()
     {
       return f_ext_data_;
     }
@@ -805,19 +817,19 @@ namespace GridKit
     std::vector<IdxT> external_data_indices_;
 
     /**
-     * @brief subsystem external State, derivative, and residual vectors.
+     * @brief subsystem external state data.
      */
-    std::vector<ScalarT> y_ext_data_;
+    VectorT y_ext_data_;
 
     /**
-     * @brief subsystem external derivative
+     * @brief subsystem external state derivative
      */
-    std::vector<ScalarT> yp_ext_data_;
+    VectorT yp_ext_data_;
 
     /**
-     * @brief subsystem external derivative
+     * @brief subsystem external residual data
      */
-    std::vector<ScalarT> f_ext_data_;
+    VectorT f_ext_data_;
 
     /**
      * @brief Optional forcing function used to provide external subsystem data.
