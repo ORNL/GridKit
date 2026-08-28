@@ -95,7 +95,7 @@ int main(int /* argc */, char const** /* argv */)
   bool all_internal_diff = true;
   bool all_external_alg  = true;
 
-  const size_t num_node_vars = bus1.size() + bus2.size() + bus3.size() + bus4.size() + dg_signal.size();
+  const size_t num_node_vars = network.buses[0].size() + network.buses[1].size() + network.buses[2].size() + network.buses[3].size() + network.dg_signal.size();
 
   for (size_t i = 0; i < sysmodel->size() - num_node_vars; i++)
   {

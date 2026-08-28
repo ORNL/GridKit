@@ -49,7 +49,7 @@ struct ScaleMicrogridNetwork
       buses(2 * n_size),
       busesDQ(2 * n_size, nullptr),
       generators(2 * n_size, nullptr),
-      lines(2 * n_size, nullptr),
+      lines(2 * n_size - 1, nullptr),
       loads(2 * n_size, nullptr),
       DGParam_list(2 * n_size)
   {
@@ -57,7 +57,7 @@ struct ScaleMicrogridNetwork
   }
 
   /**
-   * @brief Construct all components of a scaled microgrid network.
+   * @brief Construct all components of the scaled microgrid network.
    *
    * Builds a microgrid containing @c 2*N_size generators and buses connected
    * in a chain by transmission lines. Loads are connected to every other bus,
@@ -68,26 +68,20 @@ struct ScaleMicrogridNetwork
    * alternate along the network, and the first load uses a different parameter
    * set from the remaining loads.
    *
-   * The created components are stored in @p network and assigned unique model
-   * identifiers using @c network.model_id_next.
+   * The created components are stored in this network and assigned unique model
+   * identifiers using @c model_id_next.
    *
-   * @param[in,out] network Network in which the microgrid components are
-   *                        constructed and stored.
+   * @pre @c N_size is greater than zero.
    *
-   * @pre @c network.N_size is greater than zero.
-   * @pre The component storage in @p network has been sized consistently with
-   *      @c network.N_size.
-   *
-   * @post @p network contains @c 2*N_size generators and virtual DQ buses.
-   * @post @p network contains @c 2*N_size-1 transmission lines connecting
+   * @post The network contains @c 2*N_size generators and virtual DQ buses.
+   * @post The network contains @c 2*N_size-1 transmission lines connecting
    *       consecutive buses.
-   * @post @p network contains @c N_size loads connected to every other bus.
-   * @post @c network.DGParam_list contains the parameters associated with each
-   *       generator.
-   * @post @c network.model_id_next is advanced for every component created.
+   * @post The network contains @c N_size loads connected to every other bus.
+   * @post @c DGParam_list contains the parameters associated with each generator.
+   * @post @c model_id_next is advanced for every component created.
    *
    * @note Components are dynamically allocated and their pointers are stored
-   *       in the corresponding network component vectors.
+   *       in the corresponding component vectors.
    */
   void buildScaleMicrogridNetwork()
   {
@@ -194,7 +188,7 @@ struct ScaleMicrogridNetwork
       generators[i] = dg;
     }
 
-    //  // Create transmission lines between consecutive buses.
+    // Create transmission lines between consecutive buses.
     for (IdxT i = 0; i < 2 * N_size - 1; i++)
     {
       auto* line_model = new Line(model_id_next++,
@@ -204,7 +198,7 @@ struct ScaleMicrogridNetwork
                                   &buses[i],
                                   &buses[i + 1]);
 
-      lines[i + 1] = line_model;
+      lines[i] = line_model;
     }
 
     // Create loads on every other bus.
@@ -237,9 +231,7 @@ struct ScaleMicrogridNetwork
  * Adds the signal node, physical buses, generators, transmission lines,
  * loads, and virtual DQ buses stored in @p network to @p sys_model.
  *
- * This function does not construct or allocate any network components. The
- * physical network must already have been created by
- * buildScaleMicrogridNetwork().
+ * This function does not construct or allocate any network components.
  *
  * @param[in] network Constructed scaled microgrid network whose components
  *                    are added to the system model.
@@ -247,7 +239,6 @@ struct ScaleMicrogridNetwork
  *                          components and nodes are added.
  *
  * @pre @c network.N_size is greater than zero.
- * @pre @p network has been constructed by buildScaleMicrogridNetwork().
  * @pre All component and node pointers referenced by @p network are valid.
  *
  * @post The signal node and all physical buses in @p network have been added
@@ -281,7 +272,7 @@ void assembleSystem(ScaleMicrogridNetwork<ScalarT, IdxT>& network, GridKit::Powe
   }
 
   // Load all the Line components
-  for (IdxT i = 1; i < 2 * N_size; i++)
+  for (IdxT i = 0; i < 2 * N_size - 1; i++)
   {
     sys_model.addComponent(network.lines[i]);
   }
