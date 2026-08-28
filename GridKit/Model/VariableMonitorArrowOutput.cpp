@@ -1,4 +1,3 @@
-#include <csignal>
 #include <cstdint>
 #include <fstream>
 #include <stdexcept>
@@ -71,11 +70,18 @@ namespace GridKit
 
         arrow::Status Close() override
         {
-          if (!closed_)
+          if (closed_)
           {
-            os_->flush();
-            closed_ = true;
+            return arrow::Status::OK();
           }
+
+          auto status = Flush();
+          if (!status.ok())
+          {
+            return status;
+          }
+
+          closed_ = true;
           return arrow::Status::OK();
         }
 
@@ -109,11 +115,6 @@ namespace GridKit
         : file_(file_name, std::ios::binary | std::ios::trunc),
           stream_format_(stream_format)
       {
-#ifdef SIGPIPE
-        // A FIFO reader that disconnects mid-run must surface as an I/O
-        // error on the next write, not terminate the process
-        std::signal(SIGPIPE, SIG_IGN);
-#endif
         if (!file_.is_open())
         {
           throw std::runtime_error("Failed to open Arrow monitor output file: " + file_name);
