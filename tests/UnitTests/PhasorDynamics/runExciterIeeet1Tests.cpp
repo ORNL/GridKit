@@ -10,6 +10,7 @@ int main()
   result += test.zeroInitialResidual();
   result += test.zeroTimeConstantsAndDisabledSaturation();
   result += test.invalidSaturationParameters();
+  result += test.vrefAndUelPorts();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif

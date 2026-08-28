@@ -45,7 +45,10 @@ namespace GridKit
       enum class Ieeet1SignalInputs : size_t
       {
         speed, ///< Unique ID of the generator speed signal
+        vref,  ///< Unique ID of the voltage reference signal (optional)
         vs,    ///< Unique ID of the stabilizer output signal (optional)
+        vuel,  ///< Unique ID of the under-excitation limiter signal (optional)
+        voel,  ///< Unique ID of the over-excitation limiter signal (optional)
         SIZE
       };
 

@@ -124,8 +124,57 @@ namespace GridKit
         exciter.initialize();
         exciter.evaluateResidual();
 
+        // vref absorbs the attached vs at initialization; later changes pass through
         const auto* f  = exciter.getResidual().getData();
-        success       *= isEqual(f[2], vs_value, kTol);
+        success       *= isEqual(f[2], static_cast<ScalarT>(0.0), kTol);
+
+        vs_value = 0.35;
+        exciter.evaluateResidual();
+        success *= isEqual(f[2], static_cast<ScalarT>(0.1), kTol);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome vrefAndUelPorts()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(3.0, 4.0);
+        bus.allocate();
+        bus.initialize();
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> efd_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vref_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vuel_node;
+        ScalarT                                   efd_value{0.0};
+        ScalarT                                   vref_value{0.0};
+        ScalarT                                   vuel_value{-0.4};
+        IdxT                                      efd_index  = INVALID_INDEX<IdxT>;
+        IdxT                                      vref_index = 5;
+        IdxT                                      vuel_index = 6;
+        efd_node.set(&efd_value, &efd_index);
+        vref_node.set(&vref_value, &vref_index);
+        vuel_node.set(&vuel_value, &vuel_index);
+
+        auto                                            data = makeTestData();
+        PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
+        exciter.getSignals().template assignSignalNode<PhasorDynamics::Exciter::SexsPtiInternalVariables::EFD>(&efd_node);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::SexsPtiExternalVariables::VREF>(&vref_node);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::SexsPtiExternalVariables::VUEL>(&vuel_node);
+
+        exciter.allocate();
+        efd_node.init(1.2);
+        success *= (exciter.initialize() == 0);
+        exciter.evaluateResidual();
+
+        // vref = Ec + vtr - vuel = 5 + 0.12 + 0.4; the masked vuel then enters with unit gain
+        const auto* f  = exciter.getResidual().getData();
+        success       *= isEqual(vref_node.read(), static_cast<ScalarT>(5.52), kTol);
+        success       *= isEqual(f[2], static_cast<ScalarT>(0.0), kTol);
+
+        vuel_value = -0.3;
+        exciter.evaluateResidual();
+        success *= isEqual(f[2], static_cast<ScalarT>(0.1), kTol);
 
         return success.report(__func__);
       }
