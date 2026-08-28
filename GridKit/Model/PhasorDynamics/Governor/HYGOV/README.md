@@ -176,7 +176,9 @@ $P^\mathrm{aux}$  | [p.u.] | Known   | Auxiliary power input       | Optional si
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 The effective desired-gate response limits
 $G_{\mathrm{resp}}^{\min}$ and $G_{\mathrm{resp}}^{\max}$ and the effective
@@ -211,7 +213,7 @@ dam head $H_{\mathrm{dam}}^{\mathrm{eff}}$ are resolved during initialization.
 CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -249,6 +251,10 @@ target and smooth approximation.
 CommonMath defines helper targets and smooth approximations for
 [deadband1](../../../../CommonMath.md#type-i-deadband) and
 [clamp](../../../../CommonMath.md#clamp).
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -346,9 +352,9 @@ unchanged.
 \end{aligned}
 ```
 
-## Monitorable Outputs
+## Monitors
 
-Output         | Units  | Description                  | Note
+Monitor        | Units  | Description                  | Note
 ---------------|--------|------------------------------|------
 `pmech`        | [p.u.] | Mechanical-power output      | $P_{\mathrm{m}}$ (system base)
 `filter`       | [p.u.] | Governor error filter output | $x_f$ (component base)

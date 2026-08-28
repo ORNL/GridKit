@@ -89,7 +89,9 @@ For readability, define:
 g_v=-P_v+\dfrac{P_\mathrm{ref}-\omega}{R}.
 ```
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 The TGOV1 differential equations, as derived from the model diagram, are
 
@@ -105,7 +107,7 @@ The TGOV1 differential equations, as derived from the model diagram, are
 CommonMath defines the [Antiwindup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 The mechanical-power output is given by
 
@@ -113,6 +115,10 @@ The mechanical-power output is given by
 0=-\dfrac{S_\mathrm{sys}}{T_\mathrm{rate}}P_m
   +P_t-D_t\omega.
 ```
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -135,3 +141,7 @@ state in dependency order:
 ```
 
 Initialization rejects $P_{v,0}$ outside the configured valve limits.
+
+## Monitors
+
+None.
