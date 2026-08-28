@@ -193,6 +193,10 @@ namespace GridKit
           out_.reset();
         }
         file_.close();
+        if (file_.fail())
+        {
+          throw std::runtime_error("Failed to close Arrow monitor output file");
+        }
       }
 
     private:
