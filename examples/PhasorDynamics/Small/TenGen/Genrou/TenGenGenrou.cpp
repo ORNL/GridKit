@@ -135,9 +135,8 @@ int main()
     for (size_t i = 0; i < 9; ++i)
     {
       // 18 is offset for variables of 9 buses.
-      // Each generator has 21 equations.
       // We are outputting second equation of each generator.
-      out << yval[18 + 21 * i + 1] << ",";
+      out << yval[18 + gen2.size() * i + 1] << ",";
     }
     out << "\n";
   };
