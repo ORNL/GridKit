@@ -187,7 +187,7 @@ steady-state GENSAL equations.
   E'_q &= \psi'_d+X_{d2}I_d\\
   k_{sat} &= S_B q(E'_q-S_A)\\
   T_e &= (\psi''_d-I_dX_d'')I_q-(\psi''_q-I_qX_d'')I_d\\
-  P_m &= T_e\\
+  P_m &= \dfrac{S_\mathrm{mach,VA}}{S_\mathrm{sys,VA}} T_e\\
   E_{fd} &= E'_q+X_{d1}(I_d+X_{d3}(E'_q-\psi'_d-X_{d2}I_d))+E'_q k_{sat}
 \end{aligned}
 ```

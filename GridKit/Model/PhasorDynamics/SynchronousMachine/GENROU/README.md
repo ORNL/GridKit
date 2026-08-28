@@ -80,25 +80,25 @@ Symbol    | Units  | Description                       | Note
 ----------|--------|-----------------------------------|-------
 $\delta$  | [rad]  | Machine internal rotor angle      |
 $\omega$  | [p.u.] | Machine Speed Deviation           | Optionally read by governor or stabilizer component
+$E'_q$    | [p.u.] | Quadrature axis transient flux    |
 $\psi'_d$ | [p.u.] | Direct axis subtransient flux     | 
 $\psi'_q$ | [p.u.] | Quadrature axis subtransient flux | 
 $E'_d$    | [p.u.] | Direct axis transient flux        | 
-$E'_q$    | [p.u.] | Quadrature axis subtransient flux | 
 
 #### Algebraic
 Symbol      | Units  | Description                       | Note
 ------------|--------|---------------------------------  | ------
-$V_d$       | [p.u.] | Machine internal voltage, d-axis  | 
-$V_q$       | [p.u.] | Machine internal voltage, q-axis  | 
-$I_d$       | [p.u.] | Terminal current, d-axis          | 
-$I_q$       | [p.u.] | Terminal current, q-axis          | 
-$I_r$       | [p.u.] | Terminal current, real component on network reference frame      | Machine base; converted to system base for the bus and monitors
-$I_i$       | [p.u.] | Terminal current, imaginary component on network reference frame | Machine base; converted to system base for the bus and monitors
 $\psi''_q$  | [p.u.] | Total q-axis subtransient flux    |
 $\psi''_d$  | [p.u.] | Total d-axis subtransient flux    |
 $\psi''$    | [p.u.] | Machine total subtransient flux   |
-$T_{e}$     | [p.u.] | Electrical torque                 |
 $k_{sat}$   | [p.u.] | Saturation coefficient            |
+$V_d$       | [p.u.] | Machine internal voltage, d-axis  |
+$V_q$       | [p.u.] | Machine internal voltage, q-axis  |
+$T_e$       | [p.u.] | Electrical torque                 |
+$I_d$       | [p.u.] | Terminal current, d-axis          |
+$I_q$       | [p.u.] | Terminal current, q-axis          |
+$I_r$       | [p.u.] | Terminal current, real component on network reference frame      | Machine base; converted to system base for the bus and monitors
+$I_i$       | [p.u.] | Terminal current, imaginary component on network reference frame | Machine base; converted to system base for the bus and monitors
 
 ### External Variables
 
@@ -124,6 +124,12 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system | Machine-b
   \dot\delta      &= \omega \cdot 2\pi f_\mathrm{base} \\
   \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{m}-D\omega}{1+\omega}
                    - T_{elec}\right)\\
+  \dot{E}'_{q} &= \dfrac{1}{T'_{d0}}
+    \left(
+      E_{fd}-E'_{q}-X_{d1}
+      (I_{d}+X_{d3}(E'_{q}-\psi'_{d}-X_{d2}I_{d}))
+      -\psi''_{d}k_{sat}
+    \right)\\
   \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
   \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
   \dot{E}'_{d}    &= \dfrac{1}{T'_{q0}}
@@ -131,27 +137,20 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system | Machine-b
       (I_{q}-X_{q3}(E'_{d}-\psi'_{q}+X_{q2}I_{q}))
       + X_{qd}\psi''_{q}k_{sat}
     \right) \\
-  \dot{E}'_{q} &= \dfrac{1}{T'_{d0}}
-    \left(
-      E_{fd}-E'_{q}-X_{d1}
-      (I_{d}+X_{d3}(E'_{q}-\psi'_{d}-X_{d2}I_{d}))
-      -\psi''_{d}k_{sat}
-    \right)\\
 \end{aligned}
 ```
 
 #### Algebraic
 
-Note that for implementation purposes, some of these equations may be simplified into functions and the internal variables eliminated. Nevertheless, for modeling clarity and conformance to typical practice, the full equations are given here.
 ``` math
 \begin{aligned}
   0 &= -\psi''_{q} -E'_{d}X_{q5} - \psi'_{q}X_{q4} \\
   0 &= -\psi''_{d} +E'_{q}X_{d5} + \psi'_{d}X_{d4}\\
   0 &= -\psi'' +\sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
+  0 &= -k_{sat} + S_B q(\psi''-S_A) \\
   0 &= -V_{d} -\psi''_{q}(1+\omega)\\
   0 &= -V_{q}  +\psi''_{d}(1+\omega)\\
   0 &= -T_{elec} +(\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
-  0 &= -k_{sat} + S_B q(\psi''-S_A) \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
   0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta) \\
   0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (-V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
