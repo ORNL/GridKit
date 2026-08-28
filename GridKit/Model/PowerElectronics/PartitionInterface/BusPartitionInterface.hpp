@@ -1,4 +1,8 @@
-
+/**
+ * @file BusPartitionInterface.hpp
+ * @author Abdourahman Barry (abdourahman@vt.edu)
+ *
+ */
 
 #pragma once
 
