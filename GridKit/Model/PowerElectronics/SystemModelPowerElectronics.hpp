@@ -14,6 +14,10 @@
 
 namespace GridKit
 {
+  /**
+   * @todo Move all PowerElectronics models into the PowerElectronics namespace
+   *       for consistency.
+   */
   template <class ScalarT, typename IdxT>
   class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
   {
@@ -425,13 +429,11 @@ namespace GridKit
 
           const bool is_internal_entry = row != neg1_ && col != neg1_ && row < n_intern_ && col < n_intern_;
 
-          if (!is_internal_entry)
+          if (is_internal_entry)
           {
-            continue;
+            vals[map_to_csr_[counter]] += v[i];
+            ++counter;
           }
-
-          vals[map_to_csr_[counter]] += v[i];
-          ++counter;
         }
       }
 
