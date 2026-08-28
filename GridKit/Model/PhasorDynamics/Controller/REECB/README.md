@@ -362,9 +362,9 @@ limit, latch, or signal is changed.
 REECB writes the resolved references to attached signal inputs; unattached
 ports retain them as constant inputs.
 
-## Monitorable Outputs
+## Monitors
 
-Output  | Units  | Description                     | Note
+Monitor | Units  | Description                     | Note
 --------|--------|---------------------------------|-----
 `iqcmd` | [p.u.] | Reactive-current command output | $I_q^\mathrm{cmd}$ (system base)
 `ipcmd` | [p.u.] | Active-current command output   | $I_p^\mathrm{cmd}$ (system base)

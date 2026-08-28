@@ -222,13 +222,15 @@ $V_{\mathrm{UEL}}$                  | [p.u.] | Known   | Under-excitation limite
 
 ## Model Equations
 
+### Internal Equations
+
+#### Differential
+
 Define the pre-limit exciter field-voltage rate:
 
 ```math
 f_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
 ```
-
-### Differential Equations
 
 ```math
 \begin{aligned}
@@ -271,7 +273,7 @@ f_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
 The field-voltage-state limiter uses the fixed-lower-bound anti-windup rule
 of [Appendix A](#appendix-a-awmin).
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -311,6 +313,10 @@ of [Appendix A](#appendix-a-awmin).
 CommonMath defines helper targets and smooth approximations for
 [max](../../../../CommonMath.md#maximum), the [ramp](../../../../CommonMath.md#ramp)
 $\rho$, and the [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -404,9 +410,9 @@ ESDC1A writes the resolved voltage-control reference to an attached `vref`
 signal input. If no controller is connected, that value is used as a constant
 reference input.
 
-## Monitorable Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
 `vc`            | [p.u.] | Filtered terminal-voltage magnitude | $V_C$

@@ -235,9 +235,9 @@ Initialization preserves the machine-seeded system-base $P_{\mathrm{m}}$. An
 attached `pref` signal receives the initialized reference; an unattached port
 latches that value for subsequent residual evaluations.
 
-## Monitorable Outputs
+## Monitors
 
-Output   | Units  | Description                        | Note
+Monitor  | Units  | Description                        | Note
 ---------|--------|------------------------------------|-----
 `pmech`  | [p.u.] | Mechanical-power output            | $P_{\text{m}}$; system base
 `xvalve` | [p.u.] | Fuel-valve state                   | $x_V$; component base

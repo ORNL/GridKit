@@ -59,6 +59,15 @@ When $S_{12}=0$, $S_A=S_B=0$.
 
 System bases are taken from the system at initialization.
 
+## Model Ports
+
+Name    | Port   | Init    | Description
+--------|--------|---------|------------
+`bus`   | Bus    | Known   | Terminal bus voltage and current-balance residuals
+`pmech` | Input  | Unknown | System-base mechanical-power input; converted to machine base internally and held constant when unconnected
+`efd`   | Input  | Unknown | Machine-base field-voltage input; held constant when unconnected
+`speed` | Output | Known   | Machine speed-deviation output
+
 ## Model Variables
 
 ### Internal Variables
@@ -83,8 +92,8 @@ $V_q$      | [p.u.] | Machine internal voltage, q-axis  |
 $T_e$      | [p.u.] | Electrical torque                 |
 $I_d$      | [p.u.] | Terminal current, d-axis          |
 $I_q$      | [p.u.] | Terminal current, q-axis          |
-$I_r$      | [p.u.] | Terminal current, real component on network reference frame | Read by bus and optionally by controllers
-$I_i$      | [p.u.] | Terminal current, imaginary component on network reference frame | Read by bus and optionally by controllers
+$I_r$      | [p.u.] | Terminal current, real component on network reference frame | Machine base; converted to system base for the bus and monitors
+$I_i$      | [p.u.] | Terminal current, imaginary component on network reference frame | Machine base; converted to system base for the bus and monitors
 
 ### External Variables
 
@@ -96,12 +105,15 @@ Symbol   | Units  | Description                                             | No
 ---------|--------|---------------------------------------------------------| ------
 $V_r$    | [p.u.] | Terminal voltage, real component on network reference frame      | owned by bus object
 $V_i$    | [p.u.] | Terminal voltage, imaginary component on network reference frame | owned by bus object
-$P_m$    | [p.u.] | Mechanical power from the prime mover                   | Owned by governor, constant if no governor is connected to the machine
-$E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Owned by exciter, constant if no exciter is connected to the machine
+$P_m$    | [p.u.] | Mechanical power from the prime mover                   | System-base signal; converted to machine base internally and held constant if unconnected
+$E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Machine-base signal; held constant if unconnected
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
+
 ``` math
 \begin{aligned}
   \dot\delta       &= \omega \cdot 2\pi f_\mathrm{base} \\
@@ -118,7 +130,8 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
 \end{aligned}
 ```
 
-### Algebraic Equations
+#### Algebraic
+
 ``` math
 \begin{aligned}
   0 &= -\psi''_d + E'_qX_{d5}+\psi'_dX_{d4}\\
@@ -135,6 +148,24 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
 
 CommonMath defines the primitive
 [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
+
+### External Equations
+
+The machine-base terminal currents are converted to system base and added to
+the connected bus residuals. Here $I_r^{\mathrm{mach}}\equiv I_r$ and
+$I_i^{\mathrm{mach}}\equiv I_i$ denote the internal machine-base currents, and
+$S_\mathrm{sys,VA}$ is the system power base in volt-amperes:
+
+```math
+\begin{aligned}
+I_r^{\mathrm{bus}}
+  &\leftarrow I_r^{\mathrm{bus}}
+  + \dfrac{S_\mathrm{mach,VA}}{S_\mathrm{sys,VA}} I_r^{\mathrm{mach}} \\
+I_i^{\mathrm{bus}}
+  &\leftarrow I_i^{\mathrm{bus}}
+  + \dfrac{S_\mathrm{mach,VA}}{S_\mathrm{sys,VA}} I_i^{\mathrm{mach}}.
+\end{aligned}
+```
 
 ## Initialization
 
@@ -161,23 +192,23 @@ steady-state GENSAL equations.
 \end{aligned}
 ```
 
-## Model Outputs
+## Monitors
 
-Symbol     | Units  | Description                       | Note
------------|--------|-----------------------------------|------
-$I_r$      | [p.u.] | Terminal current, real component on network reference frame | Oriented leaving the machine, system base
-$I_i$      | [p.u.] | Terminal current, imaginary component on network reference frame | Oriented leaving the machine, system base
-$P$        | [p.u.] | Active power, $V_rI_r+V_iI_i$     | Oriented leaving the machine, system base
-$Q$        | [p.u.] | Reactive power, $V_iI_r-V_rI_i$   | Oriented leaving the machine, system base
-$\delta$   | [rad]  | Machine internal rotor angle      |
-$\omega$   | [p.u.] | Machine speed deviation           | $\omega=0$ at synchronous speed
-$\text{speed}$ | [p.u.] | Per-unit machine speed            | $1+\omega$
-$E'_q$     | [p.u.] | Quadrature axis transient flux    | Machine base
-$\psi'_d$  | [p.u.] | Direct axis transient flux        | Machine base
-$\psi''_q$ | [p.u.] | Total q-axis subtransient flux    | Machine base
-$\psi''_d$ | [p.u.] | Total d-axis subtransient flux    | Machine base
-$V_d$      | [p.u.] | Machine internal voltage, d-axis  | Machine base
-$V_q$      | [p.u.] | Machine internal voltage, q-axis  | Machine base
-$T_e$      | [p.u.] | Electrical torque                 | Machine base
-$I_d$      | [p.u.] | Terminal current, d-axis          | Machine base
-$I_q$      | [p.u.] | Terminal current, q-axis          | Machine base
+Monitor | Units | Description                                                        | Note
+--------|-------|--------------------------------------------------------------------|------
+`ir`     | [p.u.] | Terminal current, real component $I_r$ in the network frame         | Oriented leaving the machine; system base
+`ii`     | [p.u.] | Terminal current, imaginary component $I_i$ in the network frame    | Oriented leaving the machine; system base
+`p`      | [p.u.] | Active power $P=V_rI_r+V_iI_i$                                     | Oriented leaving the machine; system base
+`q`      | [p.u.] | Reactive power $Q=V_iI_r-V_rI_i$                                   | Oriented leaving the machine; system base
+`delta`  | [rad]  | Machine internal rotor angle $\delta$                               |
+`omega`  | [p.u.] | Machine speed deviation $\omega$                                   | $\omega=0$ at synchronous speed
+`speed`  | [p.u.] | Per-unit machine speed                                              | $1+\omega$
+`Eqp`    | [p.u.] | Quadrature-axis transient flux $E'_q$                               | Machine base
+`psidp`  | [p.u.] | Direct-axis transient flux $\psi'_d$                               | Machine base
+`psiqpp` | [p.u.] | Total q-axis subtransient flux $\psi''_q$                           | Machine base
+`psidpp` | [p.u.] | Total d-axis subtransient flux $\psi''_d$                           | Machine base
+`vd`     | [p.u.] | Machine internal voltage, d-axis $V_d$                              | Machine base
+`vq`     | [p.u.] | Machine internal voltage, q-axis $V_q$                              | Machine base
+`te`     | [p.u.] | Electrical torque $T_e$                                             | Machine base
+`id`     | [p.u.] | Terminal current, d-axis $I_d$                                      | Machine base
+`iq`     | [p.u.] | Terminal current, q-axis $I_q$                                      | Machine base

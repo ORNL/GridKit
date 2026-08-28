@@ -315,9 +315,9 @@ Initialization is atomic; candidates are validated before state or signal writes
 \end{aligned}
 ```
 
-## Monitorable Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `qext`          | [p.u.] | Reactive-power command output       | $Q^\mathrm{ext}$; system base
 `pext`          | [p.u.] | Active-power command output         | $P^\mathrm{ext}$; system base

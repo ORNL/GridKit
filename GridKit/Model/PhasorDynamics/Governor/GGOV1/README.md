@@ -94,6 +94,18 @@ The component base and flag complements are:
 \end{aligned}
 ```
 
+## Model Ports
+
+Name       | Port   | Init | Description
+-----------|--------|------|------------
+`pref`     | Input  | TBD  | Governor reference
+`paux`     | Input  | TBD  | Auxiliary power input
+`pmwset`   | Input  | TBD  | Supervisory MW setpoint
+`pelec`    | Input  | TBD  | Electrical active power
+`ldref`    | Input  | TBD  | Load reference
+`speed`    | Input  | TBD  | Machine speed deviation
+`pmech`    | Output | TBD  | Mechanical-power output
+
 ## Model Variables
 
 ### Internal Variables
@@ -150,7 +162,9 @@ $\omega$                         | [p.u.]   | Machine speed deviation           
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -177,7 +191,7 @@ $\omega$                         | [p.u.]   | Machine speed deviation           
 CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -220,6 +234,10 @@ If `Kpgov = 0`, the source diagram routes the integral path in parallel with
 the derivative control; document that effective structure before changing the
 equations. If `Kpload = 0`, the source diagram feeds `Kiload/s` from the
 `Kpload` input and avoids the `fsrn` feedback path.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -276,9 +294,9 @@ and $K_\mathrm{turb}\ne 0$. Starts where governor response settings fix
 $V^{\min}$ or $V^{\max}$ to the initial condition must document those effective
 limits before applying the residuals.
 
-## Model Outputs
+## Monitors
 
-Output           | Units    | Description                           | Note
+Monitor          | Units    | Description                           | Note
 ---------------- | -------- | ------------------------------------- | -----------------------
 `pmech`          | [p.u.]   | Mechanical-power output               | $P_m$
 `pelec_meas`     | [p.u.]   | Measured electrical power             | State 1
