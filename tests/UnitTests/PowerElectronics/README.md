@@ -37,13 +37,13 @@ f_4
 &\longrightarrow
 \left(\frac{dy_4}{dt}+y_4\right)
 +\left(0.1y_4-8.32y_2-1.71y_3\right)
-+0.02y_4,
-\\[6pt]
++\left[0.02y_4\right],
+\\ \\
 f_5
 &= \frac{dy_5}{dt}+1.745y_5-0.43y_6-0.43y_7 \qquad
 &\longrightarrow
 \left(\frac{dy_5}{dt}+y_5\right)
-+0.7y_5
++\left(0.7y_5\right)
 +\left[0.045y_5-0.43y_6-0.43y_7\right].
 \end{aligned}
 $$
