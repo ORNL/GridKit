@@ -35,14 +35,8 @@ TestStatus runStudy(StudyData study_data)
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
-  ida.setTolerance(study_data.rel_tol, study_data.abs_tol);
-  ida.setFixedStep(study_data.dt_fixed);
-  ida.setMaxSteps(study_data.max_steps);
+  ida.setOptions(study_data.ida);
   ida.setConsistentICType(study_data.consistent_ic_type);
-  if (study_data.klu_ordering.has_value())
-  {
-    ida.setKluOrdering(*study_data.klu_ordering);
-  }
   ida.configureSimulation();
 
   using EventType = SystemEvent::Type;
