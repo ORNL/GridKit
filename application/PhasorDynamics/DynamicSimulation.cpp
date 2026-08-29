@@ -64,16 +64,10 @@ int runApplication(int argc, const char* argv[])
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
-  ida.setTolerance(study.rel_tol, study.abs_tol);
-  ida.setFixedStep(study.dt_fixed);
-  ida.setMaxSteps(study.max_steps);
-  ida.setMaxOrder(study.max_order);
+  ida.setOptions(study.ida);
   ida.setConsistentICType(study.consistent_ic_type);
-  if (study.klu_ordering.has_value())
-  {
-    ida.setKluOrdering(*study.klu_ordering);
-  }
   ida.configureSimulation();
+  ida.enableStepTrace(!study.step_trace_file.empty());
 
   // Start timer
   real_type start = static_cast<real_type>(clock());
@@ -84,10 +78,12 @@ int runApplication(int argc, const char* argv[])
   auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
   IdaStats  stats;
+  int       segment = 0;
   ida.initializeSimulation(0.0);
   for (const auto& event : study.events)
   {
     // Run to event time
+    ida.setTraceSegment(segment++);
     ida.runSimulation(event.time, dt_monitor);
     stats += ida.getStats();
 
@@ -107,6 +103,7 @@ int runApplication(int argc, const char* argv[])
   }
 
   // Run to final time
+  ida.setTraceSegment(segment);
   ida.runSimulation(final_time, dt_monitor);
   stats += ida.getStats();
 
@@ -114,6 +111,11 @@ int runApplication(int argc, const char* argv[])
 
   // Stop the variable monitor
   sys.stopMonitor();
+
+  if (!study.step_trace_file.empty())
+  {
+    writeStepTrace(study.step_trace_file, ida.getStepTrace());
+  }
 
   // Generate aggregate errors comparing variable output to reference solution
   TestStatus status = checkErrors(study);
