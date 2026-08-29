@@ -12,6 +12,7 @@
   `dt_fixed`           | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
+  `fault_bus`          | Bus id used to relocate the system model's first bus fault (optional)
   `klu_ordering`       | KLU fill-reducing ordering; one of { "amd", "colamd", "natural" } (default: "amd")
   `events`             | An array of event groups (see [Events](#events) below)
   `output_file`        | Path to output (CSV) file (optional)
@@ -34,3 +35,7 @@ Each event group describes a system event that occurs at a given time point
   `time`             | A floating point value for time event occurs
   `type`             | Event type (one of { "fault_on", "fault_off" })
   `element_id`       | An integer value referencing the element associated with the event (e.g., bus fault id)
+
+When `fault_bus` is specified, the first bus fault (`element_id: 0`) is moved to
+that bus before the system is constructed. Other event element ids retain their
+existing meaning.

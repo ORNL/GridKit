@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
 
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -22,6 +23,30 @@ int main(int argc, const char* argv[])
   // Study file
   checkCommandLine(argc, "DynamicSimulation");
   auto study = parseStudyData(argv[1]);
+
+  if (study.fault_bus)
+  {
+    if (study.model_data.bus_fault.empty())
+    {
+      throw std::invalid_argument("fault_bus requires a BusFault in the system model");
+    }
+
+    bool bus_found = false;
+    for (const auto& bus : study.model_data.bus)
+    {
+      if (bus.bus_id == *study.fault_bus)
+      {
+        bus_found = true;
+        break;
+      }
+    }
+    if (!bus_found)
+    {
+      throw std::invalid_argument("fault_bus does not identify a bus in the system model");
+    }
+
+    study.model_data.bus_fault.front().buses[BusFaultBuses::bus] = *study.fault_bus;
+  }
 
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);

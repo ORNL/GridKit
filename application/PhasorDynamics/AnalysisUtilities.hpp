@@ -52,38 +52,40 @@ namespace GridKit
     struct StudyData
     {
       /// path to system model JSON file
-      fs::path                                       system_model_file;
+      fs::path                                              system_model_file;
       /// monitor output time step size, or 0 for no intermediate monitoring
-      double                                         dt_monitor;
+      double                                                dt_monitor;
       /// max time
-      double                                         tmax;
+      double                                                tmax;
       /// relative tolerance for the solver
-      double                                         rel_tol;
+      double                                                rel_tol;
       /// absolute tolerance for the solver
-      double                                         abs_tol;
+      double                                                abs_tol;
       /// fixed solver time step size, or 0 for adaptive stepping
-      double                                         dt_fixed;
+      double                                                dt_fixed;
       /// maximum number of solver time steps, or 0 for the IDA default
-      std::size_t                                    max_steps;
+      std::size_t                                           max_steps;
       /// IDA consistent initial condition calculation type
-      AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
+      AnalysisManager::Sundials::IdaConsistentICType        consistent_ic_type;
+      /// bus where the study's first bus fault is applied
+      std::optional<std::size_t>                            fault_bus;
       /// optional KLU fill-reducing ordering
       std::optional<AnalysisManager::Sundials::KluOrdering> klu_ordering{
           AnalysisManager::Sundials::KluOrdering::AMD};
       /// set of system events
-      std::vector<SystemEvent>                       events;
+      std::vector<SystemEvent> events;
       /// path to output file
-      fs::path                                       output_file;
+      fs::path                 output_file;
       /// path to reference file for validation
-      fs::path                                       reference_file;
+      fs::path                 reference_file;
       /// Error tolerance (between output file and reference file)
-      std::vector<double>                            error_tol;
+      std::vector<double>      error_tol;
       /// Type of total error (relative or absolute)
-      Testing::ErrorType                             error_type;
+      Testing::ErrorType       error_type;
       /// Smallest value at which to scale for relative error
-      double                                         abs_err_threshold;
+      double                   abs_err_threshold;
       /// Instance of model data
-      SystemModelData<>                              model_data;
+      SystemModelData<>        model_data;
     };
 
     using json = ::nlohmann::json;
@@ -108,6 +110,10 @@ namespace GridKit
       c.dt_fixed           = j.value("dt_fixed", 0.0);
       c.max_steps          = j.value("max_steps", std::size_t{0});
       c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
+      if (j.contains("fault_bus"))
+      {
+        c.fault_bus = j.at("fault_bus").get<std::size_t>();
+      }
       if (j.contains("consistent_ic_type"))
       {
         const auto consistent_ic_type_str = j.at("consistent_ic_type").get<std::string>();
