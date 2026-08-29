@@ -3,6 +3,7 @@
     "dt_monitor": 0.0,
     "tmax": 20.0,
     "max_steps": 1000000,
+    "fault_bus": 1027,
     "events": [
         { "time": 10.0, "type": "fault_on", "element_id": 0 },
         { "time": 10.15, "type": "fault_off", "element_id": 0 }
