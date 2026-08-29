@@ -526,7 +526,7 @@ namespace GridKit
               }
               else
               {
-                row_map[jac_col] += alpha_ * static_cast<RealT>(dep.second);
+                row_map[jac_col] += this->alpha() * static_cast<RealT>(dep.second);
               }
             }
 
@@ -565,7 +565,7 @@ namespace GridKit
               }
               else
               {
-                row_map[jac_col] += alpha_ * static_cast<RealT>(dep.second);
+                row_map[jac_col] += this->alpha() * static_cast<RealT>(dep.second);
               }
             }
 

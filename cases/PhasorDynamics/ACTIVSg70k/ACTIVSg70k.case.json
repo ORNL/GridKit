@@ -4059636,18 +4059636,6 @@
         "Vcu": 0.0,
         "Tdelay": 0.0
       }
-    },
-    {
-      "class": "BusFault",
-      "id": "fault_0",
-      "ports": {
-        "bus": 320
-      },
-      "params": {
-        "state0": false,
-        "R": 0.0,
-        "X": 0.01
-      }
     }
   ]
 }

@@ -62,6 +62,11 @@ namespace GridKit
         snapshotConstantJacobian();
       }
 
+      for (const auto& bus : buses_)
+      {
+        bus->evaluateJacobian();
+      }
+
       for (const auto& component : evaluated_components_)
       {
         component->evaluateJacobian();

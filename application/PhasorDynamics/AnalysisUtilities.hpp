@@ -73,7 +73,7 @@ namespace GridKit
       AnalysisManager::Sundials::IdaOptions<double>  ida;
       /// IDA consistent initial condition calculation type
       AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
-      /// bus where the study's first bus fault is applied
+      /// Optional bus override for the study's fault events
       std::optional<std::size_t>                     fault_bus;
       /// set of system events
       std::vector<SystemEvent>                       events;

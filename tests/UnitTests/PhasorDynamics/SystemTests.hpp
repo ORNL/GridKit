@@ -17,6 +17,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -385,13 +386,13 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> infinite_bus;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(3.0, 4.0);
         PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2);
-        PhasorDynamics::BusFault<ScalarT, IdxT>    fault(&bus2);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> generator(&bus2, {});
 
         system.addBus(&bus1);
         system.addBus(&infinite_bus);
         system.addBus(&bus2);
         system.addComponent(&branch);
-        system.addComponent(&fault);
+        system.addComponent(&generator);
 
         if (system.allocate() != 0
             || system.setAbsoluteTolerance(1e-4) != 0)
@@ -431,7 +432,7 @@ namespace GridKit
         };
 
         const IdxT bus2_offset  = bus1.size();
-        const IdxT fault_offset = bus1.size() + bus2.size();
+        const IdxT generator_offset = bus1.size() + bus2.size();
         const auto bus2_first   = static_cast<std::size_t>(bus2_offset);
 
         auto rebind = [&](auto& model, IdxT offset)
@@ -455,10 +456,10 @@ namespace GridKit
         success *= &bus2.Ir() == system.getResidual().getData() + bus2_offset;
 
         // Rebinding the remaining model to the same slice is a no-op.
-        success *= rebind(fault, fault_offset) == 0;
+        success *= rebind(generator, generator_offset) == 0;
 
         checkModel(bus2, bus2_offset);
-        checkModel(fault, fault_offset);
+        checkModel(generator, generator_offset);
 
         // Tags remain model-owned and are collected separately.
         system.tag()[bus2_first]  = true;

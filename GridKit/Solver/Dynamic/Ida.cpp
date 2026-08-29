@@ -538,7 +538,7 @@ namespace AnalysisManager
         const std::optional<std::function<void(RealT)>>& step_callback)
     {
       int   retval = 0;
-      int   nsteps = getMonitorStepCount(tf, dt_monitor);
+      int   nsteps = getStepCount(tf, dt_monitor);
       RealT tret   = t_init_;
 
       for (int i = 1; i <= nsteps; ++i)
