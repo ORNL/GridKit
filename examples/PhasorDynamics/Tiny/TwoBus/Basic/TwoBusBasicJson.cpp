@@ -78,32 +78,30 @@ int main(int argc, const char* argv[])
   // Get access to the fault
   auto* fault = sys.getBusFault(0);
 
-  // Set time step to 1/4 of a 60Hz cycle
-  real_type dt = 1.0 / 4.0 / 60.0;
+  // Monitor every quarter cycle at 60 Hz
+  real_type dt_monitor = 1.0 / 4.0 / 60.0;
 
   // Set up simulation
   Ida<scalar_type, size_t> ida(&sys);
+  ida.setMaxSteps(10000);
   ida.configureSimulation();
 
-  // Run simulation - making sure to pass the callback to record output
+  // Run simulation
   real_type start = static_cast<real_type>(clock());
 
   // Run for 1s
   ida.initializeSimulation(0.0, false);
-  int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
-  ida.runSimulation(1.0, nout);
+  ida.runSimulation(1.0, dt_monitor);
 
   // Introduce fault and run for the next 0.1s
   fault->setStatus(true);
   ida.initializeSimulation(1.0);
-  nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
-  ida.runSimulation(1.1, nout);
+  ida.runSimulation(1.1, dt_monitor);
 
   // Clear the fault and run until t = 10s.
   fault->setStatus(false);
   ida.initializeSimulation(1.1);
-  nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
-  ida.runSimulation(10.0, nout);
+  ida.runSimulation(10.0, dt_monitor);
   real_type stop = static_cast<real_type>(clock());
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";

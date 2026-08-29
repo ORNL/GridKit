@@ -243,6 +243,8 @@ namespace GridKit
 
         // Set up simulation
         AnalysisManager::Sundials::Ida<RealT, size_t> ida(&sys);
+        ida.setTolerance(static_cast<RealT>(1.0e-7),
+                         static_cast<RealT>(1.0e-9));
         ida.configureSimulation();
 
         // Run for 1s
