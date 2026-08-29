@@ -212,7 +212,7 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
         for (size_t i = 0; i < ref.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(residual_data[i].getDependencies(), ref[i]));
+          success *= (GridKit::Testing::isEqual(model_dependencies[i], ref[i]));
         }
 
         return success.report(__func__);

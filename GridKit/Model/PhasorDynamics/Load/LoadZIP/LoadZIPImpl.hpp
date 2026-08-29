@@ -167,8 +167,16 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::evaluateResidual()
     {
-      const ScalarT Vr    = this->Vr();
-      const ScalarT Vi    = this->Vi();
+      const ScalarT Vr = this->Vr();
+      const ScalarT Vi = this->Vi();
+
+      if (alphaI_ == ZERO<RealT> && alphaP_ == ZERO<RealT>)
+      {
+        Ir() -= G_ * Vr + B_ * Vi;
+        Ii() -= G_ * Vi - B_ * Vr;
+        return 0;
+      }
+
       const RealT   Vnom2 = Vnom_ * Vnom_;
       const ScalarT V2    = Vr * Vr + Vi * Vi;
       const ScalarT V     = std::sqrt(V2);
