@@ -19,3 +19,7 @@ examples/PhasorDynamics/**/*_ipcmd.png
 examples/PhasorDynamics/**/*_iqcmd.png
 examples/PhasorDynamics/**/*_lvpl_diagnostic.png
 examples/PhasorDynamics/**/*_comparison.png
+
+# Generated PhasorDynamics monitor and IDA trace output
+examples/PhasorDynamics/**/*.monitor.csv
+examples/PhasorDynamics/**/*.step_trace.csv
