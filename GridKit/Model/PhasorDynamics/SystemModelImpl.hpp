@@ -800,15 +800,23 @@ namespace GridKit
     {
       using ProfileClock = std::chrono::steady_clock;
 
-      // Ordering invariant: the network product overwrites the current balance
-      // of every bus it owns a row for, which is what establishes the zero the
-      // components accumulate onto. Buses outside the network clear their own
-      // terminals. Do not reorder either against the component sweep.
+      // Assemble network and bus fault currents before component contributions.
       const auto network_start = ProfileClock::now();
       network_.multiply(network_y_data_, network_f_data_);
-      for (const auto& bus : unmapped_buses_)
+      for (const auto& bus : buses_)
       {
-        bus->evaluateResidual();
+        if (bus->size() == 0)
+        {
+          bus->evaluateResidual();
+        }
+        else
+        {
+          const ScalarT ir = bus->Ir();
+          const ScalarT ii = bus->Ii();
+          bus->evaluateResidual();
+          bus->Ir() += ir;
+          bus->Ii() += ii;
+        }
       }
       profile_network_residual_seconds_ += std::chrono::duration<double>(ProfileClock::now() - network_start).count();
 
@@ -997,12 +1005,10 @@ namespace GridKit
     /**
      * @brief Fold the invariant Jacobian contributions out of the per-call sweep.
      *
-     * Two kinds of block never change once the pattern is built. A stamped
-     * component contributes its constant admittance, by the same contract that
-     * keeps it out of the residual sweep. A bus block is four structural zeros
-     * reserving its own diagonal, so it carries pattern and never a value.
-     * Both are summed into `constant_values_` here, once, and what remains is a
-     * flat map the sweep accumulates through with no per-block indirection.
+     * A stamped component contributes its constant admittance, by the same
+     * contract that keeps it out of the residual sweep. These contributions
+     * are summed into `constant_values_` here, once. Bus fault blocks and other
+     * varying contributions remain in the flat map accumulated on each call.
      *
      * @pre buildJacobianStructure() has run, so map_to_csr_ is final.
      * @post constant_values_, block_to_csr_, and block_source_ describe an
@@ -1044,14 +1050,19 @@ namespace GridKit
         }
       }
 
-      // Bus blocks are structural zeros, so they need no term in the baseline.
+      // Bus fault contributions can change after the structure is built.
       for (const auto& bus : buses_)
       {
         auto bus_jacobian = bus->getCooJacobian();
 
         if (bus_jacobian != nullptr)
         {
-          counter += bus_jacobian->getNnz();
+          const RealT* values = bus_jacobian->getValues();
+          for (IdxT i = 0; i < bus_jacobian->getNnz(); ++i, ++counter)
+          {
+            block_to_csr_.push_back(map_to_csr_[counter]);
+            block_source_.push_back(values + i);
+          }
         }
       }
     }
@@ -1067,7 +1078,6 @@ namespace GridKit
      * The first call is different only in that it has no pattern yet: it sweeps
      * everything, builds the structure, and takes the constant snapshot.
      */
-
 
     /**
      * @brief Add bus

@@ -3,6 +3,7 @@
 #include <cassert>
 #include <memory>
 #include <set>
+#include <stdexcept>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -10,6 +11,7 @@
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalIn.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -229,7 +231,8 @@ namespace GridKit
 
       /**
        * @pre Terminal storage has been established by Bus::allocate(),
-       * BusBase::bind(), or the BusInfinite constructor.
+       * BusBase::bind(), or the BusInfinite constructor. Signal-driven voltage
+       * inputs are checked for a linked source on every read.
        *
        * @note Vr(), Vi(), Ir(), and Ii() access cached HOST storage directly
        * and therefore bypass Vector freshness checks. PhasorDynamics residual
@@ -239,24 +242,56 @@ namespace GridKit
        */
       ScalarT& Vr()
       {
+        if (Vr_input_ != nullptr)
+        {
+          if (!Vr_input_->linked())
+          {
+            throw std::runtime_error("BusSignalVoltageIn: voltage inlet has no linked signal");
+          }
+          return const_cast<ScalarT&>(Vr_input_->readSignal());
+        }
         assert(Vr_ptr_ != nullptr);
         return *Vr_ptr_;
       }
 
       const ScalarT& Vr() const
       {
+        if (Vr_input_ != nullptr)
+        {
+          if (!Vr_input_->linked())
+          {
+            throw std::runtime_error("BusSignalVoltageIn: voltage inlet has no linked signal");
+          }
+          return Vr_input_->readSignal();
+        }
         assert(Vr_ptr_ != nullptr);
         return *Vr_ptr_;
       }
 
       ScalarT& Vi()
       {
+        if (Vi_input_ != nullptr)
+        {
+          if (!Vi_input_->linked())
+          {
+            throw std::runtime_error("BusSignalVoltageIn: voltage inlet has no linked signal");
+          }
+          return const_cast<ScalarT&>(Vi_input_->readSignal());
+        }
         assert(Vi_ptr_ != nullptr);
         return *Vi_ptr_;
       }
 
       const ScalarT& Vi() const
       {
+        if (Vi_input_ != nullptr)
+        {
+          if (!Vi_input_->linked())
+          {
+            throw std::runtime_error("BusSignalVoltageIn: voltage inlet has no linked signal");
+          }
+          return Vi_input_->readSignal();
+        }
         assert(Vi_ptr_ != nullptr);
         return *Vi_ptr_;
       }
@@ -339,6 +374,10 @@ namespace GridKit
       VectorT           abs_tol_;
       VectorT           f_;
       bool              allocated_{false};
+
+      // Signal-driven buses read the inlet each time, including after relinking.
+      const SignalIn<ScalarT, IdxT>* Vr_input_{nullptr};
+      const SignalIn<ScalarT, IdxT>* Vi_input_{nullptr};
 
       ScalarT* Vr_ptr_{nullptr};
       ScalarT* Vi_ptr_{nullptr};

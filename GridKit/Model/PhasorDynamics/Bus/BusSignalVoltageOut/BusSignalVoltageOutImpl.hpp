@@ -82,6 +82,34 @@ namespace GridKit
       }
     }
 
+    /**
+     * @brief Refresh terminal storage and any existing voltage outlet links.
+     */
+    template <typename scalar_type, typename index_type>
+    int BusSignalVoltageOut<scalar_type, index_type>::refreshTerminals()
+    {
+      auto* const y_data = y_.getData(memory::HOST);
+      auto* const f_data = f_.getData(memory::HOST);
+      if (y_data == nullptr || f_data == nullptr)
+      {
+        return 1;
+      }
+      this->setTerminals(y_data, y_data + 1, f_data, f_data + 1);
+      if (variable_indices_.size() == 2)
+      {
+        // Publish bus voltage on the signal outlets
+        if (auto vr_port = ports_.out.template port<BusSignalOutputs::vr>())
+        {
+          vr_port.link(&y_.getData()[0], &(this->getVariableIndex(0)));
+        }
+        if (auto vi_port = ports_.out.template port<BusSignalOutputs::vi>())
+        {
+          vi_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
+        }
+      }
+      return 0;
+    }
+
     /*!
      * @brief Allocate bus storage and index maps, and link output signals.
      *
@@ -110,14 +138,10 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Publish bus voltage on the signal outlets
-      if (auto vr_port = ports_.out.template port<BusSignalOutputs::vr>())
+      if (refreshTerminals() != 0)
       {
-        vr_port.link(&y_.getData()[0], &(this->getVariableIndex(0)));
-      }
-      if (auto vi_port = ports_.out.template port<BusSignalOutputs::vi>())
-      {
-        vi_port.link(&y_.getData()[1], &(this->getVariableIndex(1)));
+        Log::error() << "BusSignalVoltageOut::allocate - terminal storage is unavailable\n";
+        return 1;
       }
 
       allocated_ = true;
