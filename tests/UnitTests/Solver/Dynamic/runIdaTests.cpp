@@ -12,6 +12,8 @@ int main()
   result += test.dtMonitorZero();
   result += test.dtMonitorSuppressesEpsilonFinalStep();
   result += test.fixedStep();
+  result += test.invalidOptions();
+  result += test.stepTracePreservesOutputTimes();
   result += test.kluOrderingRequiresSparseJacobian();
   result += test.suppressAlgebraicErrors();
   result += test.consistentICType();

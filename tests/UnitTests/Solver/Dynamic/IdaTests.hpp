@@ -546,6 +546,85 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome invalidOptions()
+      {
+        TestStatus success = true;
+
+        const auto rejects = [](const auto& configure)
+        {
+          Model::NullEvaluator<ScalarT, IdxT>  model;
+          Ida<ScalarT, IdxT>                   ida(&model);
+          typename Ida<ScalarT, IdxT>::Options options;
+          configure(options);
+
+          try
+          {
+            ida.setOptions(options);
+          }
+          catch (const std::invalid_argument&)
+          {
+            return true;
+          }
+          return false;
+        };
+
+        success *= rejects([](auto& options)
+                           {
+                             options.fixed_step = 0.01;
+                             options.max_step   = 0.02; });
+        success *= rejects([](auto& options)
+                           { options.rel_tol = 0.0; });
+        success *= rejects([](auto& options)
+                           { options.max_order = 6; });
+        success *= rejects([](auto& options)
+                           { options.delta_cj_lsetup = 1.0; });
+
+        return success.report(__func__);
+      }
+
+      TestOutcome stepTracePreservesOutputTimes()
+      {
+        TestStatus success = true;
+
+        Model::NullEvaluator<ScalarT, IdxT> model;
+        Ida<ScalarT, IdxT>                  ida(&model);
+        ida.configureSimulation();
+        ida.enableStepTrace();
+        ida.setTraceSegment(7);
+
+        std::vector<double> output_times;
+        const auto          output_cb = [&](double t)
+        { output_times.push_back(t); };
+
+        ida.initializeSimulation(0.0, false);
+        ida.runSimulation(1.0, 0.25, output_cb);
+
+        success *= (output_times.size() == 4);
+        for (std::size_t i = 0; i < output_times.size(); ++i)
+        {
+          success *= isEqual(output_times[i], 0.25 * static_cast<double>(i + 1));
+        }
+
+        const auto& trace  = ida.getStepTrace();
+        success           *= !trace.empty();
+        for (std::size_t i = 0; i < trace.size(); ++i)
+        {
+          success *= (trace[i].segment == 7);
+          success *= (trace[i].h > 0.0);
+          success *= (trace[i].num_steps > 0);
+          if (i > 0)
+          {
+            success *= (trace[i - 1].t <= trace[i].t);
+          }
+        }
+        success *= (trace.back().t >= 1.0);
+
+        ida.clearStepTrace();
+        success *= ida.getStepTrace().empty();
+
+        return success.report(__func__);
+      }
+
       TestOutcome kluOrderingRequiresSparseJacobian()
       {
         TestStatus success = true;
