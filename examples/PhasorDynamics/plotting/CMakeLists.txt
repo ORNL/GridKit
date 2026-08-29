@@ -1,0 +1,4 @@
+gridkit_example_add_file(plot_common.py)
+gridkit_example_add_file(plot_bus_frequency.py)
+gridkit_example_add_file(plot_adaptive_step.py)
+gridkit_example_add_file(README.md)
