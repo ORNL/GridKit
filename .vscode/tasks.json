@@ -1,0 +1,72 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Containers: Build gridkit-dev:latest",
+			"type": "process",
+			"command": "/usr/bin/podman",
+			"args": [
+				"build",
+				"--tag",
+				"gridkit-dev:latest",
+				".devcontainer"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			}
+		},
+		{
+			"label": "Containers: Build gridkit:latest",
+			"type": "process",
+			"command": "/usr/bin/podman",
+			"args": [
+				"build",
+				"--build-arg",
+				"BUILDER_IMAGE=gridkit-dev:latest",
+				"--file",
+				"docker/Dockerfile",
+				"--tag",
+				"gridkit:latest",
+				"."
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			}
+		},
+		{
+			"label": "Containers: Publish gridkit:latest to GHCR",
+			"type": "process",
+			"command": "/usr/bin/podman",
+			"args": [
+				"push",
+				"gridkit:latest",
+				"docker://ghcr.io/ornl/gridkit:latest"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			}
+		}
+	]
+}

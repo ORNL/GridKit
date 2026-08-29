@@ -1,0 +1,37 @@
+{
+	"actionButtons": {
+		"defaultColor": "none",
+		"reloadButton": null,
+		"loadNpmCommands": false,
+		"commands": [
+			{
+				"name": "$(tools) gridkit-dev",
+				"tooltip": "Build gridkit-dev:latest",
+				"useVsCodeApi": true,
+				"command": "workbench.action.tasks.runTask",
+				"args": [
+					"Containers: Build gridkit-dev:latest"
+				]
+			},
+			{
+				"name": "$(package) gridkit",
+				"tooltip": "Build gridkit:latest",
+				"useVsCodeApi": true,
+				"command": "workbench.action.tasks.runTask",
+				"args": [
+					"Containers: Build gridkit:latest"
+				]
+			},
+			{
+				"name": "$(cloud-upload) publish",
+				"tooltip": "Push gridkit:latest to ghcr.io/ornl/gridkit:latest",
+				"color": "orange",
+				"useVsCodeApi": true,
+				"command": "workbench.action.tasks.runTask",
+				"args": [
+					"Containers: Publish gridkit:latest to GHCR"
+				]
+			}
+		]
+	}
+}

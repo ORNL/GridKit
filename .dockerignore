@@ -1,0 +1,10 @@
+.git
+.github
+.agents
+.codex
+.devcontainer
+.vscode
+build
+build-*
+buildsystem
+docker
