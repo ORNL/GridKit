@@ -23,13 +23,13 @@
 				]
 			},
 			{
-				"name": "$(cloud-upload) publish",
-				"tooltip": "Push gridkit:latest to ghcr.io/ornl/gridkit:latest",
+				"name": "$(cloud-upload) publish: lukelowry",
+				"tooltip": "Confirm and push gridkit:latest to ghcr.io/lukelowry/gridkit:latest",
 				"color": "orange",
 				"useVsCodeApi": true,
 				"command": "workbench.action.tasks.runTask",
 				"args": [
-					"Containers: Publish gridkit:latest to GHCR"
+					"Containers: Publish gridkit:latest to personal GHCR"
 				]
 			}
 		]

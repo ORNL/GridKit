@@ -29,12 +29,14 @@ Then build the application image:
 
 Install the recommended **VSCode Action Buttons** extension and reload VS Code.
 Three status-bar buttons build `gridkit-dev:latest`, build `gridkit:latest`,
-or push `gridkit:latest` to `ghcr.io/ornl/gridkit:latest`. Run **Refresh
-Action Buttons** from the Command Palette after changing their configuration.
+or confirm and push `gridkit:latest` to `ghcr.io/lukelowry/gridkit:latest`.
+Run **Refresh Action Buttons** from the Command Palette after changing their
+configuration.
 
 These tasks run on the machine hosting the VS Code workspace and require
 `/usr/bin/podman`. Run them from a local or Remote-SSH window, not from inside
-the development container. Authenticate before publishing:
+the development container. The publish action asks you to type `PUBLISH`
+before pushing. Authenticate before publishing:
 
 ```bash
 /usr/bin/podman login ghcr.io

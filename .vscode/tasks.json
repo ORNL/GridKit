@@ -50,13 +50,12 @@
 			}
 		},
 		{
-			"label": "Containers: Publish gridkit:latest to GHCR",
+			"label": "Containers: Publish gridkit:latest to personal GHCR",
 			"type": "process",
-			"command": "/usr/bin/podman",
+			"command": "/usr/bin/bash",
 			"args": [
-				"push",
-				"gridkit:latest",
-				"docker://ghcr.io/ornl/gridkit:latest"
+				"-c",
+				"read -r -p 'Publish gridkit:latest to ghcr.io/lukelowry/gridkit:latest? Type PUBLISH to continue: ' answer\nif [[ \"$answer\" != \"PUBLISH\" ]]; then\n  echo 'Publish cancelled.'\n  exit 0\nfi\nexec /usr/bin/podman push gridkit:latest docker://ghcr.io/lukelowry/gridkit:latest"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -65,7 +64,8 @@
 			"presentation": {
 				"reveal": "always",
 				"panel": "dedicated",
-				"clear": true
+				"clear": true,
+				"focus": true
 			}
 		}
 	]
