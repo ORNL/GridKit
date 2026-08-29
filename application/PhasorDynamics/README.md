@@ -13,6 +13,7 @@
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `max_order`          | Maximum IDA integration method order from 1 to 5 (default: 5; fixed stepping is capped at 2)
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
+  `fault_bus`          | Bus id used to relocate the system model's first bus fault (optional)
   `klu_ordering`       | KLU fill-reducing ordering; one of { "amd", "colamd", "natural" } (default: "amd")
   `events`             | An array of event groups (see [Events](#events) below)
   `output_file`        | Path to output (CSV) file (optional)
@@ -37,3 +38,5 @@ Each event group describes a system event that occurs at a given time point
   `bus`              | Number of the faulted bus (omitted for `ContingencyAnalysis`, which faults every bus in turn using the same `R` and `X`)
   `R`                | Fault resistance in per unit (required for "fault_on")
   `X`                | Fault reactance in per unit (required for "fault_on")
+
+When `fault_bus` is specified, it overrides the bus of each fault event.
