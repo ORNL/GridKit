@@ -1,3 +1,4 @@
 add_subdirectory(DynamicSimulation)
 add_subdirectory(ContingencyAnalysis)
 add_subdirectory(Validation)
+add_subdirectory(plotting)
