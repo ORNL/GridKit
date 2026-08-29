@@ -243,6 +243,8 @@ namespace GridKit
 
         // Set up simulation
         AnalysisManager::Sundials::Ida<RealT, size_t> ida(&sys);
+        ida.setTolerance(static_cast<RealT>(1.0e-7),
+                         static_cast<RealT>(1.0e-9));
         ida.configureSimulation();
 
         // Run for 1s
@@ -330,7 +332,7 @@ namespace GridKit
 
         auto error_set = runSimulation(set_data, base_name + ".ref.csv");
 
-        RealT error_V_allowed = 2.1e-4;
+        RealT error_V_allowed = 2.01e-4;
         RealT error_w_allowed = 1e-4;
 
         success *= error_set->var_errors[0].max_value < error_V_allowed;
