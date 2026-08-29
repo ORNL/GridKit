@@ -1,0 +1,17 @@
+{
+  "system_model_file": "ACTIVSg10k.case.json",
+  "output_file": "ACTIVSg10k.monitor.csv",
+  "step_trace_file": "ACTIVSg10k.step_trace.csv",
+  "dt_monitor": 0.01,
+  "tmax": 10.0,
+  "fault_bus": 30399,
+  "events": [
+    { "time": 1.0, "type": "fault_on", "element_id": 0 },
+    { "time": 1.1, "type": "fault_off", "element_id": 0 }
+  ],
+  "ida": {
+    "max_num_steps": 1000000,
+    "line_search_off_ic": true,
+    "klu_ordering": "amd"
+  }
+}
