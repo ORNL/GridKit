@@ -40,6 +40,12 @@ namespace GridKit
 
         if (load)
         {
+          success *= (load->size() == 0);
+          success *= (load->allocate() == 0);
+          success *= (load->y().getSize() == 0);
+          success *= (load->yp().getSize() == 0);
+          success *= (load->getResidual().getSize() == 0);
+          success *= (load->absoluteTolerance().getSize() == 0);
           delete load;
         }
 
@@ -63,15 +69,14 @@ namespace GridKit
         bus.allocate();
         load.allocate();
 
-        bus.initialize();
-        load.initialize();
+        success *= bus.initialize() == 0;
+        success *= load.initialize() == 0;
 
-        const auto* y   = load.y().getData();
-        const auto* yp  = load.yp().getData();
-        success        *= isEqual(y[0], static_cast<ScalarT>(-3.2), tol_);
-        success        *= isEqual(y[1], static_cast<ScalarT>(-2.6), tol_);
-        success        *= isEqual(yp[0], static_cast<ScalarT>(0.0), tol_);
-        success        *= isEqual(yp[1], static_cast<ScalarT>(0.0), tol_);
+        success *= (load.size() == 0);
+        success *= (load.y().getSize() == 0);
+        success *= (load.yp().getSize() == 0);
+        success *= (load.getResidual().getSize() == 0);
+        success *= (load.absoluteTolerance().getSize() == 0);
 
         return success.report(__func__);
       }
@@ -94,11 +99,12 @@ namespace GridKit
         bus.initialize();
         success *= load.initialize() == 0;
 
-        const auto* y  = load.y().getData();
-        ScalarT     p  = bus.Vr() * y[0] + bus.Vi() * y[1];
-        ScalarT     q  = bus.Vi() * y[0] - bus.Vr() * y[1];
-        success       *= isEqual(p, static_cast<ScalarT>(-Pnom), tol_);
-        success       *= isEqual(q, static_cast<ScalarT>(-Qnom), tol_);
+        bus.evaluateResidual();
+        load.evaluateResidual();
+        ScalarT p  = bus.Vr() * bus.Ir() + bus.Vi() * bus.Ii();
+        ScalarT q  = bus.Vi() * bus.Ir() - bus.Vr() * bus.Ii();
+        success   *= isEqual(p, static_cast<ScalarT>(-Pnom), tol_);
+        success   *= isEqual(q, static_cast<ScalarT>(-Qnom), tol_);
 
         // Reinitializing at a different voltage anchors the same dispatch
         // there.
@@ -107,8 +113,10 @@ namespace GridKit
         bus.y().setDataUpdated();
         success *= load.initialize() == 0;
 
-        p        = bus.Vr() * y[0] + bus.Vi() * y[1];
-        q        = bus.Vi() * y[0] - bus.Vr() * y[1];
+        bus.evaluateResidual();
+        load.evaluateResidual();
+        p        = bus.Vr() * bus.Ir() + bus.Vi() * bus.Ii();
+        q        = bus.Vi() * bus.Ir() - bus.Vr() * bus.Ii();
         success *= isEqual(p, static_cast<ScalarT>(-Pnom), tol_);
         success *= isEqual(q, static_cast<ScalarT>(-Qnom), tol_);
 
@@ -141,11 +149,8 @@ namespace GridKit
         bus.evaluateResidual();
         load.evaluateResidual();
 
-        const auto* f  = load.getResidual().getData();
-        success       *= isEqual(f[0], static_cast<ScalarT>(128.0 / 75.0), tol_);
-        success       *= isEqual(f[1], static_cast<ScalarT>(104.0 / 75.0), tol_);
-        success       *= isEqual(bus.Ir(), static_cast<ScalarT>(-3.2), tol_);
-        success       *= isEqual(bus.Ii(), static_cast<ScalarT>(-2.6), tol_);
+        success *= isEqual(bus.Ir(), static_cast<ScalarT>(-368.0 / 75.0), tol_);
+        success *= isEqual(bus.Ii(), static_cast<ScalarT>(-299.0 / 75.0), tol_);
 
         return success.report(__func__);
       }
@@ -164,6 +169,9 @@ namespace GridKit
         bus.initialize();
         load.initialize();
 
+        bus.Vr() = 0.9;
+        bus.Vi() = 1.2;
+
         RealT                                     time = 0.0;
         Model::VariableMonitorController<ScalarT> controller(time);
         PhasorDynamics::Component<ScalarT, IdxT>& component = load;
@@ -176,11 +184,13 @@ namespace GridKit
         auto values = Tokenizer<RealT>(os.str(), ',')();
         if (values.size() == 6)
         {
-          success *= isEqual(values[1], -3.2, tol_);
-          success *= isEqual(values[2], -2.6, tol_);
-          success *= isEqual(values[3], std::sqrt(17.0), tol_);
-          success *= isEqual(values[4], -2.0, tol_);
-          success *= isEqual(values[5], -0.5, tol_);
+          const RealT ir  = -368.0 / 75.0;
+          const RealT ii  = -299.0 / 75.0;
+          success        *= isEqual(values[1], ir, tol_);
+          success        *= isEqual(values[2], ii, tol_);
+          success        *= isEqual(values[3], std::sqrt(ir * ir + ii * ii), tol_);
+          success        *= isEqual(values[4], -9.2, tol_);
+          success        *= isEqual(values[5], -2.3, tol_);
         }
         else
         {
@@ -200,12 +210,16 @@ namespace GridKit
         const RealT alphaI{4.0};
         const RealT alphaP{2.0};
 
-        auto dependency_tracking_jacobian = DependencyTrackingJacobian(Pnom, Qnom, alphaI, alphaP);
-        auto enzyme_jacobian              = EnzymeJacobian(Pnom, Qnom, alphaI, alphaP);
+        auto                                                           dependency_tracking_jacobian = DependencyTrackingJacobian(Pnom, Qnom, alphaI, alphaP);
+        auto                                                           enzyme_jacobian              = EnzymeJacobian(Pnom, Qnom, alphaI, alphaP);
+        const std::vector<DependencyTracking::Variable::DependencyMap> expected                     = {
+            {{0, 22.72}, {1, 38.96}},
+            {{0, 26.96}, {1, 25.28}}};
 
-        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        for (size_t i = 0; i < expected.size(); ++i)
         {
-          success *= GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]);
+          success *= GridKit::Testing::isEqual(dependency_tracking_jacobian[i], expected[i], tol_);
+          success *= GridKit::Testing::isEqual(enzyme_jacobian[i], expected[i], tol_);
         }
 
         return success.report(__func__);
@@ -237,12 +251,17 @@ namespace GridKit
 
         bus.evaluateResidual();
         load.evaluateResidual(); //< Tracks dependencies
-        load.evaluateJacobian(); //< Converts dependencies to CSR
-        auto* model_jacobian = load.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: LoadZIP DependencyTracking Jacobian\n";
-        model_jacobian->print();
-
-        return GridKit::Testing::MapFromCsr(model_jacobian);
+        const auto& residual = bus.getResidual();
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.getSize());
+        for (IdxT row = 0; row < residual.getSize(); ++row)
+        {
+          // Bus initialization uses even indices for voltage dependencies.
+          for (const auto& [column, value] : residual.getData()[row].getDependencies())
+          {
+            dependencies[row][column / 2] += value;
+          }
+        }
+        return dependencies;
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
@@ -267,6 +286,12 @@ namespace GridKit
         load.initialize();
 
         load.updateTime(0.0, 1.0);
+
+        for (size_t i = 0; i < bus.size(); ++i)
+        {
+          bus.setVariableIndex(i, i);
+          bus.setResidualIndex(i, i);
+        }
 
         bus.evaluateResidual();
         load.evaluateResidual();
