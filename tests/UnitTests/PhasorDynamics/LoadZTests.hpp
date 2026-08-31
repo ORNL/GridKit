@@ -41,12 +41,12 @@ namespace GridKit
 
         if (load)
         {
-          success *= (load->size() == 0);
+          success *= (load->size() == 2);
           success *= (load->allocate() == 0);
-          success *= (load->y().getSize() == 0);
-          success *= (load->yp().getSize() == 0);
-          success *= (load->getResidual().getSize() == 0);
-          success *= (load->absoluteTolerance().getSize() == 0);
+          success *= (load->y().getSize() == 2);
+          success *= (load->yp().getSize() == 2);
+          success *= (load->getResidual().getSize() == 2);
+          success *= (load->absoluteTolerance().getSize() == 2);
           delete load;
         }
 
@@ -116,25 +116,33 @@ namespace GridKit
         bus.initialize();
         load.initialize();
 
+
         bus.evaluateResidual();
-        load.evaluateResidual(); //< Tracks dependencies
-        const auto& residual = bus.getResidual();
-        std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies(residual.getSize());
-        for (IdxT row = 0; row < residual.getSize(); ++row)
+        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
+                                 ///< the dependencies
+
+        auto&                                                    load_residuals = load.getResidual();
+        auto&                                                    bus_residuals  = bus.getResidual();
+        std::vector<DependencyTracking::Variable::DependencyMap> ref            = analyticalJacobian();
+
+        for (auto& row : ref)
         {
-          for (const auto& [column, value] : residual.getData()[row].getDependencies())
+          DependencyTracking::Variable::DependencyMap numbered;
+          for (const auto& [column, value] : row)
           {
-            success *= (column % 2 == 0); // Static loads depend only on bus voltage.
-            model_dependencies[row][column / 2] += value;
+            numbered[2 * column] = value;
           }
+          row = std::move(numbered);
         }
 
-        // Compare model Jacobian wih dependencies computed analytically
-        auto ref                = analyticalJacobian(R, X);
-        success *= (model_dependencies.size() == ref.size());
-        for (size_t i = 0; i < std::min(model_dependencies.size(), ref.size()); ++i)
+        /// Compare dependencies computed automatically to the ones computed analytically
+        for (size_t i = 0; i < load_residuals.getSize(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(model_dependencies[i], ref[i]));
+          success *= GridKit::Testing::isEqual(load_residuals.getData()[i].getDependencies(), ref[i], tol_);
+        }
+        for (size_t i = 0; i < bus_residuals.getSize(); ++i)
+        {
+          success *= GridKit::Testing::isEqual(bus_residuals.getData()[i].getDependencies(), ref[i + load.size()], tol_);
         }
 
         return success.report(__func__);
@@ -169,8 +177,8 @@ namespace GridKit
         auto values = Tokenizer<RealT>(os.str(), ',')();
         if (values.size() == 3)
         {
-          success *= isEqual(values[1], static_cast<RealT>(-10.0), tol_);
-          success *= isEqual(values[2], static_cast<RealT>(-20.0), tol_);
+          success *= isEqual(values[1], static_cast<RealT>(-30.0), tol_);
+          success *= isEqual(values[2], static_cast<RealT>(-40.0), tol_);
         }
         else
         {
@@ -199,8 +207,8 @@ namespace GridKit
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i);
-          bus.setResidualIndex(i, i);
+          bus.setVariableIndex(i, i + load.size());
+          bus.setResidualIndex(i, i + load.size());
         }
 
         bus.initialize();
@@ -216,8 +224,8 @@ namespace GridKit
         std::cout << "Sparse Csr Matrix: Load Enzyme Jacobian\n";
         model_jacobian->print();
 
-        // Compare model Jacobian wih dependencies computed analytically
-        std::vector<DependencyTracking::Variable::DependencyMap> ref                = analyticalJacobian(R, X);
+        /// Compare model Jacobian wih dependencies computed analytically
+        std::vector<DependencyTracking::Variable::DependencyMap> ref                = analyticalJacobian();
         std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
         for (size_t i = 0; i < ref.size(); ++i)
         {
@@ -249,15 +257,13 @@ namespace GridKit
         return data;
       }
 
-      std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,
-                                                                                  const RealT X)
+      std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian()
       {
-        const RealT b = -X / (R * R + X * X);
-        const RealT g = R / (R * R + X * X);
-
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(2);
-        dependencies[0] = {{0, -g}, {1, b}};
-        dependencies[1] = {{0, -b}, {1, -g}};
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(4);
+        dependencies[0] = {{0, 1.0}, {2, 0.1}, {3, 0.2}};
+        dependencies[1] = {{1, 1.0}, {2, -0.2}, {3, 0.1}};
+        dependencies[2] = {{0, 1.0}};
+        dependencies[3] = {{1, 1.0}};
 
         return dependencies;
       }

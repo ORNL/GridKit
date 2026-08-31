@@ -1,4 +1,6 @@
 
+#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
+
 #include "LoadZIPImpl.hpp"
 
 namespace GridKit
@@ -18,48 +20,60 @@ namespace GridKit
 
       if (J_rows_buffer_ == nullptr)
       {
-        const auto bus_size = static_cast<size_t>(bus_->size());
-        J_rows_buffer_      = new IdxT[bus_size * bus_size];
-        J_cols_buffer_      = new IdxT[bus_size * bus_size];
-        J_vals_buffer_      = new RealT[bus_size * bus_size];
+        // Reserve space for the dense blocks.
+        // The size of the buffer is the sum of maximum capacities of the blocks.
+        // Enzyme will compute the appropriate nnz from sparsification.
+        auto size        = static_cast<size_t>(size_);
+        auto bus_size    = static_cast<size_t>(bus_->size());
+        auto buffer_size = size * size + 2 * size * bus_size;
+        J_rows_buffer_   = new IdxT[buffer_size];
+        J_cols_buffer_   = new IdxT[buffer_size];
+        J_vals_buffer_   = new RealT[buffer_size];
       }
 
       nnz_ = 0;
 
-      if (bus_->size() > IdxT{0})
-      {
-        const RealT Vr    = this->Vr();
-        const RealT Vi    = this->Vi();
-        const RealT Vnom2 = Vnom_ * Vnom_;
-        const RealT V2    = Vr * Vr + Vi * Vi;
-        const RealT V     = std::sqrt(V2);
-        const RealT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
+      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
+                                    GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual>::eval(this,
+                                                                                                      static_cast<size_t>(f_.getSize()),
+                                                                                                      static_cast<size_t>(y_.getSize()),
+                                                                                                      (this->getResidualIndices()).data(),
+                                                                                                      (this->getVariableIndices()).data(),
+                                                                                                      y_.getData(),
+                                                                                                      yp_.getData(),
+                                                                                                      wb_.getData(),
+                                                                                                      J_rows_buffer_,
+                                                                                                      J_cols_buffer_,
+                                                                                                      J_vals_buffer_,
+                                                                                                      nnz_);
 
-        const RealT dz_dV2 = -RealT{0.5} * alphaI_ * Vnom_ / (V2 * V)
-                             - alphaP_ * Vnom2 / (V2 * V2);
-        const RealT dz_dVr = RealT{2.0} * Vr * dz_dV2;
-        const RealT dz_dVi = RealT{2.0} * Vi * dz_dV2;
+      GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
+                                     GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual>::eval(this,
+                                                                                                       static_cast<size_t>(f_.getSize()),
+                                                                                                       static_cast<size_t>(bus_->size()),
+                                                                                                       (this->getResidualIndices()).data(),
+                                                                                                       (bus_->getVariableIndices()).data(),
+                                                                                                       y_.getData(),
+                                                                                                       yp_.getData(),
+                                                                                                       bus_->y().getData(),
+                                                                                                       J_rows_buffer_,
+                                                                                                       J_cols_buffer_,
+                                                                                                       J_vals_buffer_,
+                                                                                                       nnz_);
 
-        const RealT real_current = G_ * Vr + B_ * Vi;
-        const RealT imag_current = G_ * Vi - B_ * Vr;
-
-        J_rows_buffer_[0] = bus_->getResidualIndex(0);
-        J_rows_buffer_[1] = bus_->getResidualIndex(0);
-        J_rows_buffer_[2] = bus_->getResidualIndex(1);
-        J_rows_buffer_[3] = bus_->getResidualIndex(1);
-
-        J_cols_buffer_[0] = bus_->getVariableIndex(0);
-        J_cols_buffer_[1] = bus_->getVariableIndex(1);
-        J_cols_buffer_[2] = bus_->getVariableIndex(0);
-        J_cols_buffer_[3] = bus_->getVariableIndex(1);
-
-        J_vals_buffer_[0] = -(G_ * zip + real_current * dz_dVr);
-        J_vals_buffer_[1] = -(B_ * zip + real_current * dz_dVi);
-        J_vals_buffer_[2] = B_ * zip - imag_current * dz_dVr;
-        J_vals_buffer_[3] = -(G_ * zip + imag_current * dz_dVi);
-
-        nnz_ = 4;
-      }
+      GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
+                                    GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
+                                                                                                 static_cast<size_t>(bus_->size()),
+                                                                                                 static_cast<size_t>(y_.getSize()),
+                                                                                                 (bus_->getResidualIndices()).data(),
+                                                                                                 (this->getVariableIndices()).data(),
+                                                                                                 y_.getData(),
+                                                                                                 yp_.getData(),
+                                                                                                 wb_.getData(),
+                                                                                                 J_rows_buffer_,
+                                                                                                 J_cols_buffer_,
+                                                                                                 J_vals_buffer_,
+                                                                                                 nnz_);
 
       this->constructCoo();
 

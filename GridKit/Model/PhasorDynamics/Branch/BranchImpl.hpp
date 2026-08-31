@@ -15,6 +15,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -40,7 +41,7 @@ namespace GridKit
         bus1_id_(0),
         bus2_id_(0)
     {
-      size_ = static_cast<IdxT>(BranchInternalVariables::MAXIMUM);
+      size_ = static_cast<IdxT>(Utilities::enum_size<BranchInternalVariables>());
       setDerivedParams();
     }
 
@@ -76,7 +77,7 @@ namespace GridKit
         bus1_id_(0),
         bus2_id_(0)
     {
-      size_ = static_cast<IdxT>(BranchInternalVariables::MAXIMUM);
+      size_ = static_cast<IdxT>(Utilities::enum_size<BranchInternalVariables>());
       setDerivedParams();
     }
 
@@ -89,7 +90,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = static_cast<IdxT>(BranchInternalVariables::MAXIMUM);
+      size_ = static_cast<IdxT>(Utilities::enum_size<BranchInternalVariables>());
       setDerivedParams();
     }
 
@@ -159,6 +160,11 @@ namespace GridKit
 
       y_.setDataUpdated();
       yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
+
+      if constexpr (std::is_same_v<ScalarT, DependencyTracking::Variable>)
+      {
+        this->initializeDependencyTrackingVariableNumbers();
+      }
 
       return 0;
     }
