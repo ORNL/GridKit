@@ -424,12 +424,12 @@ namespace GridKit
         // Attached signals are read live; unattached ones keep the latched value.
         auto read_signal = [&]<Ieeet1ExternalVariables variable>(const ScalarT& latched)
         {
-          const auto index   = static_cast<size_t>(variable);
-          y_ext[index]                = latched;
+          const auto index             = static_cast<size_t>(variable);
+          y_ext[index]                 = latched;
           variable_indices_ext_[index] = INVALID_INDEX<IdxT>;
           if (signals_.template isAttached<variable>())
           {
-            y_ext[index]                = signals_.template readExternalVariable<variable>();
+            y_ext[index]                 = signals_.template readExternalVariable<variable>();
             variable_indices_ext_[index] = signals_.template readExternalVariableIndex<variable>();
           }
         };
