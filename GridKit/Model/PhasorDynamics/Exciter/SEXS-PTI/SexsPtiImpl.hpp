@@ -76,10 +76,9 @@ namespace GridKit
 
         wb_.resize(2);
 
-        ws_.resize(1);
-        ws_indices_.resize(1);
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
+        const auto signal_size = static_cast<size_t>(SexsPtiExternalVariables::MAXIMUM);
+        ws_.assign(signal_size, ScalarT{0});
+        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
         {
@@ -134,14 +133,21 @@ namespace GridKit
           ret += 1;
         }
 
-        if (signals_.template isAttached<SexsPtiExternalVariables::VS>())
+        auto check_attached_signal =
+            [&]<SexsPtiExternalVariables variable>(const char* name)
         {
-          if (!signals_.template isLinked<SexsPtiExternalVariables::VS>())
+          if (signals_.template isAttached<variable>()
+              && !signals_.template isLinked<variable>())
           {
-            Log::error() << "SexsPti: VS signal attached with no linked source\n";
+            Log::error() << "SexsPti: " << name << " signal attached with no linked source\n";
             ret += 1;
           }
-        }
+        };
+
+        check_attached_signal.template operator()<SexsPtiExternalVariables::VREF>("vref");
+        check_attached_signal.template operator()<SexsPtiExternalVariables::VS>("vs");
+        check_attached_signal.template operator()<SexsPtiExternalVariables::VUEL>("vuel");
+        check_attached_signal.template operator()<SexsPtiExternalVariables::VOEL>("voel");
 
         return ret;
       }
@@ -158,13 +164,38 @@ namespace GridKit
           efd0 = y[1];
         }
 
+        // Setpoint members provide the defaults for unattached signals.
+        auto read_signal = [&]<SexsPtiExternalVariables variable>(const ScalarT& default_value) -> ScalarT
+        {
+          if (signals_.template isAttached<variable>())
+          {
+            return signals_.template readExternalVariable<variable>();
+          }
+          return default_value;
+        };
+
+        const ScalarT vs   = read_signal.template operator()<SexsPtiExternalVariables::VS>(vs_set_);
+        const ScalarT vuel = read_signal.template operator()<SexsPtiExternalVariables::VUEL>(vuel_set_);
+        const ScalarT voel = read_signal.template operator()<SexsPtiExternalVariables::VOEL>(voel_set_);
+
+        uel_on_ = ZERO<RealT>;
+        if (signals_.template isAttached<SexsPtiExternalVariables::VUEL>())
+        {
+          uel_on_ = ONE<RealT>;
+        }
+
+        oel_on_ = ZERO<RealT>;
+        if (signals_.template isAttached<SexsPtiExternalVariables::VOEL>())
+        {
+          oel_on_ = ONE<RealT>;
+        }
+
         ScalarT vreal = bus_->Vr();
         ScalarT vimag = bus_->Vi();
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
         ScalarT vtr   = efd0 / K_;
         ScalarT vr    = (Ta_ - Tb_) * vtr;
-
-        vref_ = Ec + vtr;
+        ScalarT vref  = Ec + vtr - vs - uel_on_ * vuel - oel_on_ * voel;
 
         y[0] = vr;
         y[1] = efd0;
@@ -173,6 +204,16 @@ namespace GridKit
         for (IdxT i = 0; i < size_; ++i)
         {
           yp[static_cast<size_t>(i)] = 0.0;
+        }
+
+        vref_set_ = vref;
+        vs_set_   = vs;
+        vuel_set_ = vuel;
+        voel_set_ = voel;
+
+        if (signals_.template isAttached<SexsPtiExternalVariables::VREF>())
+        {
+          signals_.template writeExternalVariable<SexsPtiExternalVariables::VREF>(vref_set_);
         }
 
         y_.setDataUpdated();
@@ -218,20 +259,28 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
+        const auto VREF = static_cast<size_t>(SexsPtiExternalVariables::VREF);
+        const auto VS   = static_cast<size_t>(SexsPtiExternalVariables::VS);
+        const auto VUEL = static_cast<size_t>(SexsPtiExternalVariables::VUEL);
+        const auto VOEL = static_cast<size_t>(SexsPtiExternalVariables::VOEL);
+
         ScalarT vr      = y[0];
         ScalarT efd     = y[1];
         ScalarT vtr     = y[2];
         ScalarT vr_dot  = yp[0];
         ScalarT efd_dot = yp[1];
 
-        ScalarT Ec = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
-        ScalarT vs = ws[0];
+        ScalarT Ec   = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
+        ScalarT vref = ws[VREF];
+        ScalarT vs   = ws[VS];
+        ScalarT vuel = ws[VUEL];
+        ScalarT voel = ws[VOEL];
 
         ScalarT func = (-efd + (K_ / Tb_) * (-vr + Ta_ * vtr)) / Te_;
 
         f[0] = -vr_dot + (-vr + Ta_ * vtr) / Tb_ - vtr;
         f[1] = -efd_dot + Math::antiwindup(efd, func, Efdmin_, Efdmax_);
-        f[2] = -vtr - Ec + vref_ + vs + vOEL_ + vUEL_;
+        f[2] = -vtr - Ec + vref + vs + uel_on_ * vuel + oel_on_ * voel;
 
         return 0;
       }
@@ -239,13 +288,23 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::evaluateResidual()
       {
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
-        if (signals_.template isAttached<SexsPtiExternalVariables::VS>())
+        // Attached signals are read live; unattached ones keep the latched value.
+        auto read_signal = [&]<SexsPtiExternalVariables variable>(const ScalarT& latched)
         {
-          ws_[0]         = signals_.template readExternalVariable<SexsPtiExternalVariables::VS>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<SexsPtiExternalVariables::VS>();
-        }
+          const auto index   = static_cast<size_t>(variable);
+          ws_[index]         = latched;
+          ws_indices_[index] = INVALID_INDEX<IdxT>;
+          if (signals_.template isAttached<variable>())
+          {
+            ws_[index]         = signals_.template readExternalVariable<variable>();
+            ws_indices_[index] = signals_.template readExternalVariableIndex<variable>();
+          }
+        };
+
+        read_signal.template operator()<SexsPtiExternalVariables::VREF>(vref_set_);
+        read_signal.template operator()<SexsPtiExternalVariables::VS>(vs_set_);
+        read_signal.template operator()<SexsPtiExternalVariables::VUEL>(vuel_set_);
+        read_signal.template operator()<SexsPtiExternalVariables::VOEL>(voel_set_);
 
         wb_[0] = bus_->Vr();
         wb_[1] = bus_->Vi();

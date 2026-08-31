@@ -100,12 +100,9 @@ namespace GridKit
         wb_.resize(2);
 
         // Resize signal variable data
-        ws_.resize(2);
-        ws_indices_.resize(2);
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
-        ws_[1]         = 0.0;
-        ws_indices_[1] = INVALID_INDEX<IdxT>;
+        const auto signal_size = static_cast<size_t>(Ieeet1ExternalVariables::MAXIMUM);
+        ws_.assign(signal_size, ScalarT{0});
+        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         // Set output signals
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
@@ -124,9 +121,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::verify() const
       {
-        static constexpr auto OMEGA = Ieeet1ExternalVariables::OMEGA;
-        static constexpr auto VS    = Ieeet1ExternalVariables::VS;
-
         int ret = 0;
 
         auto check = [&](bool condition, const char* message)
@@ -157,23 +151,22 @@ namespace GridKit
           check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
-        if (signals_.template isAttached<OMEGA>())
+        auto check_attached_signal =
+            [&]<Ieeet1ExternalVariables variable>(const char* name)
         {
-          if (!signals_.template isLinked<OMEGA>())
+          if (signals_.template isAttached<variable>()
+              && !signals_.template isLinked<variable>())
           {
-            Log::error() << "Ieeet1: omega signal attached with no linked generator\n";
+            Log::error() << "Ieeet1: " << name << " signal attached with no linked source\n";
             ret += 1;
           }
-        }
+        };
 
-        if (signals_.template isAttached<VS>())
-        {
-          if (!signals_.template isLinked<VS>())
-          {
-            Log::error() << "Ieeet1: VS signal attached with no linked source\n";
-            ret += 1;
-          }
-        }
+        check_attached_signal.template operator()<Ieeet1ExternalVariables::OMEGA>("speed");
+        check_attached_signal.template operator()<Ieeet1ExternalVariables::VREF>("vref");
+        check_attached_signal.template operator()<Ieeet1ExternalVariables::VS>("vs");
+        check_attached_signal.template operator()<Ieeet1ExternalVariables::VUEL>("vuel");
+        check_attached_signal.template operator()<Ieeet1ExternalVariables::VOEL>("voel");
 
         return ret;
       }
@@ -187,9 +180,10 @@ namespace GridKit
        * Inputs:
        *   - EFD assigned by the generator.
        *   - Bus voltage, used to form the sensed terminal voltage magnitude.
-       *   - Attached external signals (omega, V_S)
+       *   - Attached external signals (omega, V_S, V_UEL, V_OEL)
        *
        * Enabled saturation is included via ksat computed from efdp and SA, SB.
+       * The resolved V_ref is written to an attached vref signal.
        *
        * @warning IEEE Std 421.5-2016 states: “In some programs, if
        *          \f$K_{E}\f$ is entered as zero, \f$K_{E}\f$ is automatically
@@ -226,15 +220,31 @@ namespace GridKit
           efd0 = y[7]; ///<- generator needs to be initialized first
         }
 
-        ScalarT omega{0};
-        ScalarT vs{0};
-        if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
+        // Setpoint members provide the defaults for unattached signals.
+        auto read_signal = [&]<Ieeet1ExternalVariables variable>(const ScalarT& default_value) -> ScalarT
         {
-          omega = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
+          if (signals_.template isAttached<variable>())
+          {
+            return signals_.template readExternalVariable<variable>();
+          }
+          return default_value;
+        };
+
+        const ScalarT omega = read_signal.template operator()<Ieeet1ExternalVariables::OMEGA>(omega_set_);
+        const ScalarT vs    = read_signal.template operator()<Ieeet1ExternalVariables::VS>(vs_set_);
+        const ScalarT vuel  = read_signal.template operator()<Ieeet1ExternalVariables::VUEL>(vuel_set_);
+        const ScalarT voel  = read_signal.template operator()<Ieeet1ExternalVariables::VOEL>(voel_set_);
+
+        uel_on_ = ZERO<RealT>;
+        if (signals_.template isAttached<Ieeet1ExternalVariables::VUEL>())
+        {
+          uel_on_ = ONE<RealT>;
         }
-        if (signals_.template isAttached<Ieeet1ExternalVariables::VS>())
+
+        oel_on_ = ZERO<RealT>;
+        if (signals_.template isAttached<Ieeet1ExternalVariables::VOEL>())
         {
-          vs = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
+          oel_on_ = ONE<RealT>;
         }
 
         // Terminal Voltage
@@ -266,7 +276,7 @@ namespace GridKit
         ScalarT vf{0};
         ScalarT vfx = (Kf_ / Tf_) * efdp;
 
-        vref_ = Ec + vtr + vf - vUEL_ - vOEL_ - vs;
+        const ScalarT vref = Ec + vtr + vf - vs - uel_on_ * vuel - oel_on_ * voel;
 
         y[0] = Ec;   // y0 - vts  - Sensed term volt
         y[1] = vr;   // y1 - vr   - Voltage reg
@@ -281,6 +291,17 @@ namespace GridKit
         for (IdxT i = 0; i < yp_.getSize(); ++i)
         {
           yp[i] = 0.0;
+        }
+
+        omega_set_ = omega;
+        vref_set_  = vref;
+        vs_set_    = vs;
+        vuel_set_  = vuel;
+        voel_set_  = voel;
+
+        if (signals_.template isAttached<Ieeet1ExternalVariables::VREF>())
+        {
+          signals_.template writeExternalVariable<Ieeet1ExternalVariables::VREF>(vref_set_);
         }
 
         y_.setDataUpdated();
@@ -341,6 +362,12 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
+        const auto OMEGA = static_cast<size_t>(Ieeet1ExternalVariables::OMEGA);
+        const auto VREF  = static_cast<size_t>(Ieeet1ExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(Ieeet1ExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(Ieeet1ExternalVariables::VUEL);
+        const auto VOEL  = static_cast<size_t>(Ieeet1ExternalVariables::VOEL);
+
         // Read bus voltage components
         ScalarT vreal = wb[0];
         ScalarT vimag = wb[1];
@@ -364,8 +391,11 @@ namespace GridKit
         ScalarT vfx_dot  = yp[3];
 
         // Set signal variable aliases
-        ScalarT omega     = ws[0];
-        ScalarT vs_signal = ws[1];
+        ScalarT omega = ws[OMEGA];
+        ScalarT vref  = ws[VREF];
+        ScalarT vs    = ws[VS];
+        ScalarT vuel  = ws[VUEL];
+        ScalarT voel  = ws[VOEL];
 
         // The 'pre-limit' derivative of Vr.
         ScalarT func = (-vr + Ka_ * vtr) / Ta_;
@@ -377,7 +407,7 @@ namespace GridKit
         f[3] = -vfx_dot + vf / Tf_;
 
         // Internal Algebraic Equations
-        f[4] = -vts + vref_ + vUEL_ + vOEL_ + vs_signal - vtr - vf;
+        f[4] = -vts + vref + vs + uel_on_ * vuel + oel_on_ * voel - vtr - vf;
         f[5] = -Tf_ * (vf + vfx) + Kf_ * efdp;
         f[6] = -ve + ksat;
         f[7] = -efd + efdp + omega * efdp * Ispdlim_;
@@ -393,21 +423,24 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::evaluateResidual()
       {
-        // Set input variables.
-        if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
+        // Attached signals are read live; unattached ones keep the latched value.
+        auto read_signal = [&]<Ieeet1ExternalVariables variable>(const ScalarT& latched)
         {
-          ws_[0]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::OMEGA>();
-        }
+          const auto index   = static_cast<size_t>(variable);
+          ws_[index]         = latched;
+          ws_indices_[index] = INVALID_INDEX<IdxT>;
+          if (signals_.template isAttached<variable>())
+          {
+            ws_[index]         = signals_.template readExternalVariable<variable>();
+            ws_indices_[index] = signals_.template readExternalVariableIndex<variable>();
+          }
+        };
 
-        // VS signal (stabilizer output, optional)
-        ws_[1]         = 0.0;
-        ws_indices_[1] = INVALID_INDEX<IdxT>;
-        if (signals_.template isAttached<Ieeet1ExternalVariables::VS>())
-        {
-          ws_[1]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
-          ws_indices_[1] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VS>();
-        }
+        read_signal.template operator()<Ieeet1ExternalVariables::OMEGA>(omega_set_);
+        read_signal.template operator()<Ieeet1ExternalVariables::VREF>(vref_set_);
+        read_signal.template operator()<Ieeet1ExternalVariables::VS>(vs_set_);
+        read_signal.template operator()<Ieeet1ExternalVariables::VUEL>(vuel_set_);
+        read_signal.template operator()<Ieeet1ExternalVariables::VOEL>(voel_set_);
 
         // Bus voltages
         wb_[0] = bus_->Vr();

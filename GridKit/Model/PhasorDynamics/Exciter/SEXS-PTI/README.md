@@ -23,6 +23,35 @@ PowerWorld/PSS/E SEXS_PTI data often gives $T_A/T_B$ as a ratio. GridKit stores
 $T_A$ and $T_B$ separately, so convert ratio-format data with
 $T_A = (T_A/T_B)T_B$ before passing parameters to the model.
 
+All six parameters are required; there are no defaults.
+
+### Parameter Validation
+
+Invalid SEXS-PTI parameter sets are rejected by the following checks:
+
+```math
+\begin{aligned}
+  T_A &\ge 0 \\
+  T_B, T_E, K &> 0 \\
+  E_{fd}^{\min} &< E_{fd}^{\max}
+\end{aligned}
+```
+
+### Model Derived Parameters
+
+None.
+
+## Model Ports
+
+Name   | Port   | Init    | Description
+-------|--------|---------|------------
+`bus`  | Bus    | Known   | Terminal bus voltage
+`vref` | Input  | Unknown | Voltage-control reference
+`vs`   | Input  | Known   | Stabilizer input signal
+`vuel` | Input  | Known   | Under-excitation limiter input
+`voel` | Input  | Known   | Over-excitation limiter input
+`efd`  | Output | Known   | Required field-voltage output seeded by the machine
+
 ## Model Variables
 
 ### Internal Variables
@@ -50,15 +79,24 @@ None.
 
 Symbol          | Units  | Description                                  | Note
 ----------------|--------|----------------------------------------------|-----
-$E_C$           | [p.u.] | Compensated machine terminal voltage magnitude | Computed from bus voltage
-$V_{ref}$       | [p.u.] | Reference voltage                            | Set during initialization
-$V_S$           | [p.u.] | Stabilizer output                            | Optional, defaults to zero
-$V_{OEL}$       | [p.u.] | Over-excitation limiter signal               | Constant zero until modeled
-$V_{UEL}$       | [p.u.] | Under-excitation limiter signal              | Constant zero until modeled
+$V_r$           | [p.u.] | Terminal voltage, real component             | Bus input
+$V_i$           | [p.u.] | Terminal voltage, imaginary component        | Bus input
+$V_{ref}$       | [p.u.] | Reference voltage                            | Signal port `vref`
+$V_S$           | [p.u.] | Stabilizer output                            | Signal port `vs`
+$V_{OEL}$       | [p.u.] | Over-excitation limiter signal               | Signal port `voel`
+$V_{UEL}$       | [p.u.] | Under-excitation limiter signal              | Signal port `vuel`
 
 ## Model Equations
 
-### Differential Equations
+Define the compensated terminal voltage magnitude for readability:
+
+```math
+E_C = \sqrt{V_r^2+V_i^2}.
+```
+
+### Internal Equations
+
+#### Differential
 
 The SEXS-PTI differential equations, as derived from the model diagram. Define the pre-limit derivative of $E_{fd}$
 
@@ -84,7 +122,7 @@ so that $\dot E_{fd}$ can be written in piecewise form compactly.
 
 In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#antiwindup) for its definition, behavior, and design rationale.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -92,18 +130,27 @@ In simulation the piecewise form above is replaced with a smooth approximation w
 \end{aligned}
 ```
 
+### External Equations
+
+None.
+
 ## Initialization
 
 The generator initializes the EFD signal first. SEXS-PTI then reads that value
-as $E_{fd,0}$ and assumes steady state with $V_S=V_{OEL}=V_{UEL}=0$:
+and any attached $V_S$, $V_{OEL}$, and $V_{UEL}$ signals and assumes steady state:
 
 ```math
 \begin{aligned}
-E_C &= \sqrt{V_r^2+V_i^2} \\
 V_{tr,0} &= \dfrac{E_{fd,0}}{K} \\
 V_{R,0} &= (T_A - T_B)V_{tr,0} \\
-V_{ref} &= E_C + V_{tr,0}
+V_{ref} &= E_C + V_{tr,0} - V_S - V_{OEL} - V_{UEL}
 \end{aligned}
 ```
 
 All derivatives initialize to zero.
+
+## Monitors
+
+Monitor | Units  | Description          | Note
+--------|--------|----------------------|------
+`efd`   | [p.u.] | Field-voltage output | $E_{fd}$

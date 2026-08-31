@@ -486,6 +486,13 @@ namespace GridKit
           exciter->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
         }
 
+        if (excitedata.signal_inputs.contains(Ieeet1SignalInputs::vref))
+        {
+          IdxT           vref = excitedata.signal_inputs.at(Ieeet1SignalInputs::vref);
+          constexpr auto VREF = Ieeet1ExternalVariables::VREF;
+          exciter->getSignals().template attachSignalNode<VREF>(getSignal(vref));
+        }
+
         if (excitedata.signal_outputs.contains(Ieeet1SignalOutputs::efd))
         {
           IdxT           efd = excitedata.signal_outputs.at(Ieeet1SignalOutputs::efd);
@@ -498,6 +505,20 @@ namespace GridKit
           IdxT           vs = excitedata.signal_inputs.at(Ieeet1SignalInputs::vs);
           constexpr auto VS = Ieeet1ExternalVariables::VS;
           exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
+        }
+
+        if (excitedata.signal_inputs.contains(Ieeet1SignalInputs::vuel))
+        {
+          IdxT           vuel = excitedata.signal_inputs.at(Ieeet1SignalInputs::vuel);
+          constexpr auto VUEL = Ieeet1ExternalVariables::VUEL;
+          exciter->getSignals().template attachSignalNode<VUEL>(getSignal(vuel));
+        }
+
+        if (excitedata.signal_inputs.contains(Ieeet1SignalInputs::voel))
+        {
+          IdxT           voel = excitedata.signal_inputs.at(Ieeet1SignalInputs::voel);
+          constexpr auto VOEL = Ieeet1ExternalVariables::VOEL;
+          exciter->getSignals().template attachSignalNode<VOEL>(getSignal(voel));
         }
 
         addComponent(exciter);
@@ -561,6 +582,13 @@ namespace GridKit
 
         auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
 
+        if (excitedata.signal_inputs.contains(SexsPtiSignalInputs::vref))
+        {
+          IdxT           vref = excitedata.signal_inputs.at(SexsPtiSignalInputs::vref);
+          constexpr auto VREF = SexsPtiExternalVariables::VREF;
+          exciter->getSignals().template attachSignalNode<VREF>(getSignal(vref));
+        }
+
         if (excitedata.signal_outputs.contains(SexsPtiSignalOutputs::efd))
         {
           IdxT           efd = excitedata.signal_outputs.at(SexsPtiSignalOutputs::efd);
@@ -573,6 +601,20 @@ namespace GridKit
           IdxT           vs = excitedata.signal_inputs.at(SexsPtiSignalInputs::vs);
           constexpr auto VS = SexsPtiExternalVariables::VS;
           exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
+        }
+
+        if (excitedata.signal_inputs.contains(SexsPtiSignalInputs::vuel))
+        {
+          IdxT           vuel = excitedata.signal_inputs.at(SexsPtiSignalInputs::vuel);
+          constexpr auto VUEL = SexsPtiExternalVariables::VUEL;
+          exciter->getSignals().template attachSignalNode<VUEL>(getSignal(vuel));
+        }
+
+        if (excitedata.signal_inputs.contains(SexsPtiSignalInputs::voel))
+        {
+          IdxT           voel = excitedata.signal_inputs.at(SexsPtiSignalInputs::voel);
+          constexpr auto VOEL = SexsPtiExternalVariables::VOEL;
+          exciter->getSignals().template attachSignalNode<VOEL>(getSignal(voel));
         }
 
         addComponent(exciter);

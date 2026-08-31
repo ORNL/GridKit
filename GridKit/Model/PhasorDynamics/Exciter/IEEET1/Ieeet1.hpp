@@ -60,7 +60,10 @@ namespace GridKit
         OMEGA, ///< Generator speed deviation
         VREAL, ///< Real bus voltage
         VIMAG, ///< Imaginary bus voltage
+        VREF,  ///< Voltage reference
         VS,    ///< Stabilizer output signal
+        VUEL,  ///< Under-excitation limiter signal
+        VOEL,  ///< Over-excitation limiter signal
         MAXIMUM,
       };
 
@@ -153,11 +156,15 @@ namespace GridKit
         RealT SA_{0};
         RealT SB_{0};
 
-        // External Variables that don't have models yet.
-        // They are constants until then.
-        ScalarT vref_{0}; // (Setpoint voltage, can be different from terminal voltage)
-        ScalarT vUEL_{0};
-        ScalarT vOEL_{0};
+        // Runtime connection masks keep the summing junction Enzyme sparse-solvable
+        RealT uel_on_{0};
+        RealT oel_on_{0};
+
+        ScalarT omega_set_{0};
+        ScalarT vref_set_{0};
+        ScalarT vs_set_{0};
+        ScalarT vuel_set_{0};
+        ScalarT voel_set_{0};
 
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;

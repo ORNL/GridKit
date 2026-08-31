@@ -35,7 +35,10 @@ namespace GridKit
       /// Signal inputs for the SEXS-PTI exciter model.
       enum class SexsPtiSignalInputs : size_t
       {
-        vs, ///< Unique ID of the optional stabilizer output signal
+        vref, ///< Unique ID of the optional voltage reference signal
+        vs,   ///< Unique ID of the optional stabilizer output signal
+        vuel, ///< Unique ID of the optional under-excitation limiter signal
+        voel, ///< Unique ID of the optional over-excitation limiter signal
         SIZE
       };
 

@@ -34,6 +34,8 @@ $I_{\mathrm{spdlim}}$ | [binary] | Speed limit flag indicator       | 0       |
 ### Parameter Validation
 
 Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilon_T=10^{-3}$.
+Time constants below $\epsilon_T$ are raised to $\epsilon_T$ and logged as a warning;
+every other condition is a configuration error.
 
 ```math
 \begin{aligned}
@@ -135,6 +137,18 @@ K_E^{\mathrm{eff}}
 Thus $K_E^{\mathrm{eff}}$ is the resolved value of the same exciter
 coefficient, not an additional model input.
 
+## Model Ports
+
+Name    | Port   | Init    | Description
+--------|--------|---------|------------
+`bus`   | Bus    | Known   | Terminal bus voltage
+`speed` | Input  | Known   | Machine speed deviation
+`vref`  | Input  | Unknown | Voltage-control reference
+`vs`    | Input  | Known   | Stabilizer input signal
+`vuel`  | Input  | Known   | Under-excitation limiter input
+`voel`  | Input  | Known   | Over-excitation limiter input
+`efd`   | Output | Known   | Field-voltage output seeded by the machine
+
 ## Model Variables
 
 ### Internal Variables
@@ -145,7 +159,7 @@ Symbol    | Units  | Description                        | Note
 ----------|--------|------------------------------------|-------
 $V_{ts}$  | [p.u.] | Sensed terminal voltage            |
 $V_R$     | [p.u.] | Voltage regulator                  |
-$E_{fd}'$ | [p.u.] | Field-current pre-speed multiplier |
+$E_{fd}'$ | [p.u.] | Field voltage before the speed multiplier |
 $V_{fx}$  | [p.u.] | Exciter feedback internal state    |
 
 
@@ -162,20 +176,28 @@ $k_\text{sat}$  | [p.u.] | Scaled-quadratic saturation contribution | $E_{fd}'S(
 
 ### External Variables
 
+#### Differential
+
+None.
+
+#### Algebraic
+
 Symbol          | Units  | Description                       | Note
 ----------------|--------|-----------------------------------|-------
 $V_r$           | [p.u.] | Real bus voltage component                     |
 $V_i$           | [p.u.] | Imaginary bus voltage component                |
-$V_\text{ref}$  | [p.u.] | Reference terminal voltage                     |
-$V_{UEL}$       | [p.u.] | Input from under excitation limiter            | Constant zero until modeled
-$V_{OEL}$       | [p.u.] | Input from over excitation limiter             | Constant zero until modeled
-$V_S$           | [p.u.] | Input from stabilizer controller               | Optional, defaults to zero
-$\omega$        | [p.u.] | Machine speed deviation                        | Optional, defaults to zero
+$V_\text{ref}$  | [p.u.] | Reference terminal voltage                     | Signal port `vref`
+$V_{UEL}$       | [p.u.] | Input from under excitation limiter            | Signal port `vuel`
+$V_{OEL}$       | [p.u.] | Input from over excitation limiter             | Signal port `voel`
+$V_S$           | [p.u.] | Input from stabilizer controller               | Signal port `vs`
+$\omega$        | [p.u.] | Machine speed deviation                        | Signal port `speed`
 
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 For readability, define the pre-limit derivative of $V_R$ and voltage-sensing input:
 
@@ -201,7 +223,7 @@ The IEEET1 differential equations, as derived from the model diagram, are:
 
 CommonMath defines the smooth [Anti-Windup](../../../../CommonMath.md#antiwindup) target and approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 The algebraic equations of the exciter.
 ```math
@@ -214,19 +236,20 @@ The algebraic equations of the exciter.
 \end{aligned}
 ```
 
-Here $q$ is GridKit's [Quadratic Ramp](../../../../CommonMath.md#primitives).
+Here $q$ is GridKit's [Quadratic Ramp](../../../../CommonMath.md#quadratic-ramp).
 
+### External Equations
+
+None.
 
 ## Initialization
 
-The implementation first applies $T \leftarrow \max(T, 10^{-3})$ for
-$T \in \{T_R, T_A, T_E, T_F\}$. This should be replaced with a structural template change in the future.
 The machine initializes $E_{fd}$ first. IEEET1
-reads that value, along with any attached $\omega$ and $V_S$, and
+reads that value, along with any attached $\omega$, $V_S$, $V_{UEL}$, and $V_{OEL}$, and
 solves the steady-state algebraic chain so all residuals vanish with
 $\dot y = 0$. The sensed terminal voltage initializes from the positive
 bus-voltage magnitude. Saturation is included when enabled, and the speed-limit
-flag is included directly; $V_\text{ref}$ is set to close the $V_{tr}$ equation
+flag is included directly. $V_\text{ref}$ is set to close the $V_{tr}$ equation
 with the current input values.
 
 ```math
@@ -246,9 +269,9 @@ with the current input values.
 
 All internal derivatives initialize to zero.
 
-## Monitorable Variables
+## Monitors
 
-Variable | Units  | Description                       | Note
+Monitor  | Units  | Description                       | Note
 ---------|--------|-----------------------------------|------
 `efd`    | [p.u.] | Field winding voltage             |
 `ksat`   | [p.u.] | Scaled-quadratic saturation contribution | $S_B\,q(E_{fd}'-S_A)$

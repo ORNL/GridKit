@@ -28,6 +28,9 @@ namespace GridKit
       ExciterIeeet1Tests()  = default;
       ~ExciterIeeet1Tests() = default;
 
+      static constexpr RealT kTol =
+          static_cast<RealT>(4.0) * std::numeric_limits<RealT>::epsilon();
+
       TestOutcome constructor()
       {
         TestStatus success = true;
@@ -201,6 +204,69 @@ namespace GridKit
         success *= (exciter.verify() != 0);
 
         Log::setVerbosity(previous_verbosity);
+        return success.report(__func__);
+      }
+
+      TestOutcome vrefAndLimiterPorts()
+      {
+        TestStatus success = true;
+
+        auto data = makeTestData();
+
+        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      vref_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      vuel_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      voel_node;
+        ScalarT                                        efd_value{0.0};
+        ScalarT                                        vref_value{0.0};
+        ScalarT                                        vuel_value{-0.4};
+        ScalarT                                        voel_value{0.2};
+        IdxT                                           efd_index  = INVALID_INDEX<IdxT>;
+        IdxT                                           vref_index = 11;
+        IdxT                                           vuel_index = 12;
+        IdxT                                           voel_index = 13;
+
+        efd_node.set(&efd_value, &efd_index);
+        vref_node.set(&vref_value, &vref_index);
+        vuel_node.set(&vuel_value, &vuel_index);
+        voel_node.set(&voel_value, &voel_index);
+        exciter.getSignals()
+            .template assignSignalNode<PhasorDynamics::Exciter::Ieeet1InternalVariables::EFD>(&efd_node);
+        exciter.getSignals()
+            .template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VREF>(&vref_node);
+        exciter.getSignals()
+            .template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VUEL>(&vuel_node);
+        exciter.getSignals()
+            .template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::VOEL>(&voel_node);
+
+        bus.allocate();
+        exciter.allocate();
+
+        bus.initialize();
+        efd_node.init(1.2);
+        success *= (exciter.initialize() == 0);
+        exciter.evaluateResidual();
+
+        const auto* y = exciter.y().getData();
+        const auto* f = exciter.getResidual().getData();
+
+        // vref absorbs both limiter inputs; later changes enter with unit gain.
+        success *= isEqual(vref_node.read(),
+                           y[0] + y[4] + y[5] - vuel_value - voel_value,
+                           kTol);
+        success *= isEqual(f[4], static_cast<ScalarT>(0.0), kTol);
+
+        vuel_value = -0.3;
+        exciter.evaluateResidual();
+        success *= isEqual(f[4], static_cast<ScalarT>(0.1), kTol);
+
+        vuel_value = -0.4;
+        voel_value = 0.3;
+        exciter.evaluateResidual();
+        success *= isEqual(f[4], static_cast<ScalarT>(0.1), kTol);
+
         return success.report(__func__);
       }
 

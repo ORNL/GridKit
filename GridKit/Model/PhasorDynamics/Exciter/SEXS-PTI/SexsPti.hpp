@@ -47,7 +47,10 @@ namespace GridKit
       /// External variables of a `SexsPti`.
       enum class SexsPtiExternalVariables : size_t
       {
-        VS, ///< Stabilizer output signal
+        VREF, ///< Voltage reference
+        VS,   ///< Stabilizer output signal
+        VUEL, ///< Under-excitation limiter signal
+        VOEL, ///< Over-excitation limiter signal
         MAXIMUM,
       };
 
@@ -120,9 +123,14 @@ namespace GridKit
 
         int missing_param_count_{0};
 
-        ScalarT vref_{0};
-        ScalarT vOEL_{0};
-        ScalarT vUEL_{0};
+        // Runtime connection masks keep the summing junction Enzyme sparse-solvable
+        RealT uel_on_{0};
+        RealT oel_on_{0};
+
+        ScalarT vref_set_{0};
+        ScalarT vs_set_{0};
+        ScalarT vuel_set_{0};
+        ScalarT voel_set_{0};
 
         ComponentSignals<ScalarT, IdxT, SexsPtiInternalVariables, SexsPtiExternalVariables> signals_;
 
