@@ -1,0 +1,792 @@
+<?xml version="1.0" standalone="no"?>
+<svg version="1.1" width="4048" height="966" viewBox="0 0 4048 966" xmlns="http://www.w3.org/2000/svg">
+<title>WECC240</title>
+<defs>
+<linearGradient id="comparison-background" y1="0" y2="1" x1="0" x2="0">
+<stop stop-color="#eeeeee" offset="5%"/>
+<stop stop-color="#eeeeb0" offset="95%"/>
+</linearGradient>
+</defs>
+<style>
+.comparison-panel text { font-family: Verdana; font-size: 18px; fill: rgb(0,0,0); }
+.comparison-panel .panel-title { text-anchor: middle; font-size: 23px; }
+.comparison-panel .frames &gt; *:hover { stroke: black; stroke-width: 0.5; }
+</style>
+<rect width="100%" height="100%" fill="white"/>
+<text x="2024" y="30" text-anchor="middle" font-family="Verdana" font-size="24">WECC240</text>
+<text x="2024" y="54" text-anchor="middle" font-family="Verdana" font-size="16">Direct top / Internal bottom - shared sample scale</text>
+<g>
+<title>Direct</title>
+<svg class="comparison-panel" x="24" y="70" width="4000" height="412" viewBox="0 0 4000 412">
+
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<rect x="0.0" y="0" width="4000.0" height="412" fill="url(#comparison-background)"  />
+<text class="panel-title" x="2000.00" y="36" >Direct</text>
+<g class="frames">
+<g >
+<title>N_VScale_Serial (1 samples, 1.35%)</title><rect x="709.2" y="247" width="53.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="712.19" y="261.5" >N_V..</text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 1.35%)</title><rect x="1892.4" y="79" width="53.8" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="1895.43" y="93.5" >__e..</text>
+</g>
+<g >
+<title>__tanh (1 samples, 1.35%)</title><rect x="1623.5" y="103" width="53.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="1626.51" y="117.5" >__t..</text>
+</g>
+<g >
+<title>Vaxpy_Serial (2 samples, 2.70%)</title><rect x="117.6" y="295" width="107.5" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="120.57" y="309.5" >Vaxpy_Se..</text>
+</g>
+<g >
+<title>Reecb::DfDws (1 samples, 1.35%)</title><rect x="547.8" y="151" width="53.8" height="23.0" fill="rgb(230,187,28)" rx="2" ry="2" />
+<text  x="550.84" y="165.5" >Ree..</text>
+</g>
+<g >
+<title>Hygov (1 samples, 1.35%)</title><rect x="1623.5" y="223" width="53.8" height="23.0" fill="rgb(235,191,33)" rx="2" ry="2" />
+<text  x="1626.51" y="237.5" >Hygov</text>
+</g>
+<g >
+<title>klu_tsolve (5 samples, 6.76%)</title><rect x="763.0" y="199" width="268.9" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="765.97" y="213.5" >klu_tsolve</text>
+</g>
+<g >
+<title>Branch::DhDwb (1 samples, 1.35%)</title><rect x="332.7" y="151" width="53.8" height="23.0" fill="rgb(225,158,22)" rx="2" ry="2" />
+<text  x="335.70" y="165.5" >Bra..</text>
+</g>
+<g >
+<title>Vaxpy_Serial (1 samples, 1.35%)</title><rect x="278.9" y="295" width="53.8" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="281.92" y="309.5" >Vax..</text>
+</g>
+<g >
+<title>evaluateResidual (17 samples, 22.97%)</title><rect x="1031.9" y="247" width="914.3" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="1034.89" y="261.5" >evaluateResidual</text>
+</g>
+<g >
+<title>Branch::Vi2 (1 samples, 1.35%)</title><rect x="1139.5" y="175" width="53.7" height="23.0" fill="rgb(247,158,46)" rx="2" ry="2" />
+<text  x="1142.46" y="189.5" >Bra..</text>
+</g>
+<g >
+<title>ostream::flush (1 samples, 1.35%)</title><rect x="440.3" y="103" width="53.8" height="23.0" fill="rgb(236,171,34)" rx="2" ry="2" />
+<text  x="443.27" y="117.5" >ost..</text>
+</g>
+<g >
+<title>DfDws (1 samples, 1.35%)</title><rect x="547.8" y="175" width="53.8" height="23.0" fill="rgb(230,125,28)" rx="2" ry="2" />
+<text  x="550.84" y="189.5" >DfDws</text>
+</g>
+<g >
+<title>N_VLinearCombination (2 samples, 2.70%)</title><rect x="10.0" y="319" width="107.6" height="23.0" fill="rgb(247,124,46)" rx="2" ry="2" />
+<text  x="13.00" y="333.5" >N_VLinea..</text>
+</g>
+<g >
+<title>evaluateInternalResidual (1 samples, 1.35%)</title><rect x="1892.4" y="199" width="53.8" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="1895.43" y="213.5" >eva..</text>
+</g>
+<g >
+<title>ComponentSignals::readExternalVariable (1 samples, 1.35%)</title><rect x="1731.1" y="199" width="53.8" height="23.0" fill="rgb(241,165,40)" rx="2" ry="2" />
+<text  x="1734.08" y="213.5" >Com..</text>
+</g>
+<g >
+<title>SignalNode::getVariableIndex (1 samples, 1.35%)</title><rect x="1784.9" y="175" width="53.7" height="23.0" fill="rgb(250,153,49)" rx="2" ry="2" />
+<text  x="1787.86" y="189.5" >Sig..</text>
+</g>
+<g >
+<title>Regca (1 samples, 1.35%)</title><rect x="1731.1" y="223" width="53.8" height="23.0" fill="rgb(237,181,36)" rx="2" ry="2" />
+<text  x="1734.08" y="237.5" >Regca</text>
+</g>
+<g >
+<title>Branch::addAdmittanceContribution (2 samples, 2.70%)</title><rect x="1300.8" y="175" width="107.6" height="23.0" fill="rgb(247,158,46)" rx="2" ry="2" />
+<text  x="1303.81" y="189.5" >Branch::..</text>
+</g>
+<g >
+<title>indicator (1 samples, 1.35%)</title><rect x="1569.7" y="151" width="53.8" height="23.0" fill="rgb(241,177,39)" rx="2" ry="2" />
+<text  x="1572.73" y="165.5" >ind..</text>
+</g>
+<g >
+<title>antiwindup (1 samples, 1.35%)</title><rect x="1892.4" y="175" width="53.8" height="23.0" fill="rgb(241,148,39)" rx="2" ry="2" />
+<text  x="1895.43" y="189.5" >ant..</text>
+</g>
+<g >
+<title>Branch::evaluateBusResidual11 (1 samples, 1.35%)</title><rect x="332.7" y="103" width="53.8" height="23.0" fill="rgb(233,158,31)" rx="2" ry="2" />
+<text  x="335.70" y="117.5" >Bra..</text>
+</g>
+<g >
+<title>updateTime (2 samples, 2.70%)</title><rect x="1946.2" y="247" width="107.6" height="23.0" fill="rgb(236,150,34)" rx="2" ry="2" />
+<text  x="1949.22" y="261.5" >updateTime</text>
+</g>
+<g >
+<title>getData (1 samples, 1.35%)</title><rect x="1193.2" y="151" width="53.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="1196.24" y="165.5" >get..</text>
+</g>
+<g >
+<title>Controller::Reecb::evaluateInternalResidual (1 samples, 1.35%)</title><rect x="547.8" y="103" width="53.8" height="23.0" fill="rgb(224,162,21)" rx="2" ry="2" />
+<text  x="550.84" y="117.5" >Con..</text>
+</g>
+<g >
+<title>Residual (19 samples, 25.68%)</title><rect x="1031.9" y="271" width="1021.9" height="23.0" fill="rgb(224,181,21)" rx="2" ry="2" />
+<text  x="1034.89" y="285.5" >Residual</text>
+</g>
+<g >
+<title>evaluateJacobian (5 samples, 6.76%)</title><rect x="332.7" y="223" width="268.9" height="23.0" fill="rgb(238,178,37)" rx="2" ry="2" />
+<text  x="335.70" y="237.5" >evaluateJacobian</text>
+</g>
+<g >
+<title>__tanh (1 samples, 1.35%)</title><rect x="1892.4" y="103" width="53.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="1895.43" y="117.5" >__t..</text>
+</g>
+<g >
+<title>evaluateInternalResidual (1 samples, 1.35%)</title><rect x="1623.5" y="199" width="53.8" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="1626.51" y="213.5" >eva..</text>
+</g>
+<g >
+<title>DhDwb (1 samples, 1.35%)</title><rect x="332.7" y="175" width="53.8" height="23.0" fill="rgb(225,114,22)" rx="2" ry="2" />
+<text  x="335.70" y="189.5" >DhDwb</text>
+</g>
+<g >
+<title>__tanh (1 samples, 1.35%)</title><rect x="1569.7" y="103" width="53.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="1572.73" y="117.5" >__t..</text>
+</g>
+<g >
+<title>Branch::Vr1 (1 samples, 1.35%)</title><rect x="1193.2" y="175" width="53.8" height="23.0" fill="rgb(233,158,31)" rx="2" ry="2" />
+<text  x="1196.24" y="189.5" >Bra..</text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 1.35%)</title><rect x="1623.5" y="79" width="53.8" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="1626.51" y="93.5" >__e..</text>
+</g>
+<g >
+<title>IDAStep (38 samples, 51.35%)</title><rect x="10.0" y="343" width="2043.8" height="23.0" fill="rgb(243,179,42)" rx="2" ry="2" />
+<text  x="13.00" y="357.5" >IDAStep</text>
+</g>
+<g >
+<title>N_VLinearSumVectorArray (2 samples, 2.70%)</title><rect x="117.6" y="319" width="107.5" height="23.0" fill="rgb(239,124,37)" rx="2" ry="2" />
+<text  x="120.57" y="333.5" >N_VLinea..</text>
+</g>
+<g >
+<title>idaLsSetup (6 samples, 8.11%)</title><rect x="332.7" y="271" width="322.7" height="23.0" fill="rgb(238,181,36)" rx="2" ry="2" />
+<text  x="335.70" y="285.5" >idaLsSetup</text>
+</g>
+<g >
+<title>__tanh (1 samples, 1.35%)</title><rect x="1677.3" y="175" width="53.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="1680.30" y="189.5" >__t..</text>
+</g>
+<g >
+<title>indicator (1 samples, 1.35%)</title><rect x="1623.5" y="151" width="53.8" height="23.0" fill="rgb(241,177,39)" rx="2" ry="2" />
+<text  x="1626.51" y="165.5" >ind..</text>
+</g>
+<g >
+<title>Reecb::ModelWrapper (1 samples, 1.35%)</title><rect x="547.8" y="127" width="53.8" height="23.0" fill="rgb(243,187,41)" rx="2" ry="2" />
+<text  x="550.84" y="141.5" >Ree..</text>
+</g>
+<g >
+<title>Bus (3 samples, 4.05%)</title><rect x="1408.4" y="223" width="161.3" height="23.0" fill="rgb(234,124,32)" rx="2" ry="2" />
+<text  x="1411.38" y="237.5" >Bus</text>
+</g>
+<g >
+<title>Branch::Vr2 (1 samples, 1.35%)</title><rect x="1247.0" y="175" width="53.8" height="23.0" fill="rgb(249,158,48)" rx="2" ry="2" />
+<text  x="1250.03" y="189.5" >Bra..</text>
+</g>
+<g >
+<title>antiwindup (1 samples, 1.35%)</title><rect x="1623.5" y="175" width="53.8" height="23.0" fill="rgb(241,148,39)" rx="2" ry="2" />
+<text  x="1626.51" y="189.5" >ant..</text>
+</g>
+<g >
+<title>idaLsSolve (7 samples, 9.46%)</title><rect x="655.4" y="271" width="376.5" height="23.0" fill="rgb(244,181,43)" rx="2" ry="2" />
+<text  x="658.41" y="285.5" >idaLsSolve</text>
+</g>
+<g >
+<title>N_VWrmsNorm_Serial (1 samples, 1.35%)</title><rect x="225.1" y="319" width="53.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="228.14" y="333.5" >N_V..</text>
+</g>
+<g >
+<title>Reecb (1 samples, 1.35%)</title><rect x="1677.3" y="223" width="53.8" height="23.0" fill="rgb(237,187,35)" rx="2" ry="2" />
+<text  x="1680.30" y="237.5" >Reecb</text>
+</g>
+<g >
+<title>klu_refactor (1 samples, 1.35%)</title><rect x="601.6" y="199" width="53.8" height="23.0" fill="rgb(241,99,39)" rx="2" ry="2" />
+<text  x="604.62" y="213.5" >klu..</text>
+</g>
+<g >
+<title>SignalNode::read (1 samples, 1.35%)</title><rect x="1731.1" y="175" width="53.8" height="23.0" fill="rgb(241,153,40)" rx="2" ry="2" />
+<text  x="1734.08" y="189.5" >Sig..</text>
+</g>
+<g >
+<title>GastPti (1 samples, 1.35%)</title><rect x="1569.7" y="223" width="53.8" height="23.0" fill="rgb(234,154,32)" rx="2" ry="2" />
+<text  x="1572.73" y="237.5" >Gas..</text>
+</g>
+<g >
+<title>CsrMatrix::getNnz (1 samples, 1.35%)</title><rect x="494.1" y="199" width="53.7" height="23.0" fill="rgb(247,129,46)" rx="2" ry="2" />
+<text  x="497.05" y="213.5" >Csr..</text>
+</g>
+<g >
+<title>getData (1 samples, 1.35%)</title><rect x="1247.0" y="151" width="53.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="1250.03" y="165.5" >get..</text>
+</g>
+<g >
+<title>Branch::evaluateAdmittanceBlock (1 samples, 1.35%)</title><rect x="332.7" y="79" width="53.8" height="23.0" fill="rgb(240,158,39)" rx="2" ry="2" />
+<text  x="335.70" y="93.5" >Bra..</text>
+</g>
+<g >
+<title>idaNlsLSolve (7 samples, 9.46%)</title><rect x="655.4" y="295" width="376.5" height="23.0" fill="rgb(244,181,43)" rx="2" ry="2" />
+<text  x="658.41" y="309.5" >idaNlsLSolve</text>
+</g>
+<g >
+<title>getData (1 samples, 1.35%)</title><rect x="386.5" y="175" width="53.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="389.49" y="189.5" >get..</text>
+</g>
+<g >
+<title>terminalCurrent1 (7 samples, 9.46%)</title><rect x="1031.9" y="199" width="376.5" height="23.0" fill="rgb(231,152,28)" rx="2" ry="2" />
+<text  x="1034.89" y="213.5" >terminalCurrent1</text>
+</g>
+<g >
+<title>Vaxpy_Serial (2 samples, 2.70%)</title><rect x="10.0" y="295" width="107.6" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="13.00" y="309.5" >Vaxpy_Se..</text>
+</g>
+<g >
+<title>endl (1 samples, 1.35%)</title><rect x="440.3" y="151" width="53.8" height="23.0" fill="rgb(238,209,36)" rx="2" ry="2" />
+<text  x="443.27" y="165.5" >endl</text>
+</g>
+<g >
+<title>__tan_fma (1 samples, 1.35%)</title><rect x="547.8" y="79" width="53.8" height="23.0" fill="rgb(227,128,24)" rx="2" ry="2" />
+<text  x="550.84" y="93.5" >__t..</text>
+</g>
+<g >
+<title>indicator (1 samples, 1.35%)</title><rect x="1892.4" y="151" width="53.8" height="23.0" fill="rgb(241,177,39)" rx="2" ry="2" />
+<text  x="1895.43" y="165.5" >ind..</text>
+</g>
+<g >
+<title>idaNlsLSetup (6 samples, 8.11%)</title><rect x="332.7" y="295" width="322.7" height="23.0" fill="rgb(238,181,36)" rx="2" ry="2" />
+<text  x="335.70" y="309.5" >idaNlsLSetup</text>
+</g>
+<g >
+<title>Bus::Vi (1 samples, 1.35%)</title><rect x="1139.5" y="151" width="53.7" height="23.0" fill="rgb(229,124,26)" rx="2" ry="2" />
+<text  x="1142.46" y="165.5" >Bus..</text>
+</g>
+<g >
+<title>Jac (5 samples, 6.76%)</title><rect x="332.7" y="247" width="268.9" height="23.0" fill="rgb(228,142,25)" rx="2" ry="2" />
+<text  x="335.70" y="261.5" >Jac</text>
+</g>
+<g >
+<title>Repca (2 samples, 2.70%)</title><rect x="1784.9" y="223" width="107.5" height="23.0" fill="rgb(240,191,38)" rx="2" ry="2" />
+<text  x="1787.86" y="237.5" >Repca</text>
+</g>
+<g >
+<title>evaluateInternalResidual (1 samples, 1.35%)</title><rect x="1569.7" y="199" width="53.8" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="1572.73" y="213.5" >eva..</text>
+</g>
+<g >
+<title>getData (3 samples, 4.05%)</title><rect x="1408.4" y="199" width="161.3" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="1411.38" y="213.5" >getData</text>
+</g>
+<g >
+<title>sigmoid (1 samples, 1.35%)</title><rect x="1892.4" y="127" width="53.8" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="1895.43" y="141.5" >sig..</text>
+</g>
+<g >
+<title>idaNlsResidual (19 samples, 25.68%)</title><rect x="1031.9" y="295" width="1021.9" height="23.0" fill="rgb(224,181,21)" rx="2" ry="2" />
+<text  x="1034.89" y="309.5" >idaNlsResidual</text>
+</g>
+<g >
+<title>ostream::operator&lt;&lt; (1 samples, 1.35%)</title><rect x="440.3" y="175" width="53.8" height="23.0" fill="rgb(245,171,44)" rx="2" ry="2" />
+<text  x="443.27" y="189.5" >ost..</text>
+</g>
+<g >
+<title>N_VWSqrSumLocal_Serial (1 samples, 1.35%)</title><rect x="225.1" y="295" width="53.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="228.14" y="309.5" >N_V..</text>
+</g>
+<g >
+<title>evaluateInternalResidual (1 samples, 1.35%)</title><rect x="1677.3" y="199" width="53.8" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="1680.30" y="213.5" >eva..</text>
+</g>
+<g >
+<title>Branch::ModelWrapper (1 samples, 1.35%)</title><rect x="332.7" y="127" width="53.8" height="23.0" fill="rgb(243,158,41)" rx="2" ry="2" />
+<text  x="335.70" y="141.5" >Bra..</text>
+</g>
+<g >
+<title>antiwindup (1 samples, 1.35%)</title><rect x="1569.7" y="175" width="53.8" height="23.0" fill="rgb(241,148,39)" rx="2" ry="2" />
+<text  x="1572.73" y="189.5" >ant..</text>
+</g>
+<g >
+<title>profileKluSolve (5 samples, 6.76%)</title><rect x="763.0" y="247" width="268.9" height="23.0" fill="rgb(244,184,43)" rx="2" ry="2" />
+<text  x="765.97" y="261.5" >profileKluSolve</text>
+</g>
+<g >
+<title>SexsPti (1 samples, 1.35%)</title><rect x="1892.4" y="223" width="53.8" height="23.0" fill="rgb(234,195,32)" rx="2" ry="2" />
+<text  x="1895.43" y="237.5" >Sex..</text>
+</g>
+<g >
+<title>SUNLinSolSetup_KLU (1 samples, 1.35%)</title><rect x="601.6" y="223" width="53.8" height="23.0" fill="rgb(233,146,31)" rx="2" ry="2" />
+<text  x="604.62" y="237.5" >SUN..</text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 1.35%)</title><rect x="1569.7" y="79" width="53.8" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="1572.73" y="93.5" >__e..</text>
+</g>
+<g >
+<title>Branch (3 samples, 4.05%)</title><rect x="332.7" y="199" width="161.4" height="23.0" fill="rgb(246,158,45)" rx="2" ry="2" />
+<text  x="335.70" y="213.5" >Branch</text>
+</g>
+<g >
+<title>sigmoid (1 samples, 1.35%)</title><rect x="1569.7" y="127" width="53.8" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="1572.73" y="141.5" >sig..</text>
+</g>
+<g >
+<title>libc_feholdsetround_sse_ctx (1 samples, 1.35%)</title><rect x="547.8" y="55" width="53.8" height="23.0" fill="rgb(246,129,45)" rx="2" ry="2" />
+<text  x="550.84" y="69.5" >lib..</text>
+</g>
+<g >
+<title>flush (1 samples, 1.35%)</title><rect x="440.3" y="127" width="53.8" height="23.0" fill="rgb(236,139,34)" rx="2" ry="2" />
+<text  x="443.27" y="141.5" >flush</text>
+</g>
+<g >
+<title>profileKluSetup (1 samples, 1.35%)</title><rect x="601.6" y="247" width="53.8" height="23.0" fill="rgb(238,184,36)" rx="2" ry="2" />
+<text  x="604.62" y="261.5" >pro..</text>
+</g>
+<g >
+<title>SUNLinSolSolve_KLU (5 samples, 6.76%)</title><rect x="763.0" y="223" width="268.9" height="23.0" fill="rgb(233,146,31)" rx="2" ry="2" />
+<text  x="765.97" y="237.5" >SUNLinSolSolve_KLU</text>
+</g>
+<g >
+<title>klu_ltsolve (2 samples, 2.70%)</title><rect x="924.3" y="175" width="107.6" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="927.32" y="189.5" >klu_ltso..</text>
+</g>
+<g >
+<title>Branch (7 samples, 9.46%)</title><rect x="1031.9" y="223" width="376.5" height="23.0" fill="rgb(246,158,45)" rx="2" ry="2" />
+<text  x="1034.89" y="237.5" >Branch</text>
+</g>
+<g >
+<title>sigmoid (1 samples, 1.35%)</title><rect x="1623.5" y="127" width="53.8" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="1626.51" y="141.5" >sig..</text>
+</g>
+<g >
+<title>SUNNonlinSolSolve_Newton (33 samples, 44.59%)</title><rect x="278.9" y="319" width="1774.9" height="23.0" fill="rgb(248,146,47)" rx="2" ry="2" />
+<text  x="281.92" y="333.5" >SUNNonlinSolSolve_Newton</text>
+</g>
+<g >
+<title>getData (1 samples, 1.35%)</title><rect x="1838.6" y="199" width="53.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="1841.65" y="213.5" >get..</text>
+</g>
+<g >
+<title>Reecb (1 samples, 1.35%)</title><rect x="547.8" y="199" width="53.8" height="23.0" fill="rgb(237,187,35)" rx="2" ry="2" />
+<text  x="550.84" y="213.5" >Reecb</text>
+</g>
+<g >
+<title>ComponentSignals::readExternalVariableIndex (1 samples, 1.35%)</title><rect x="1784.9" y="199" width="53.7" height="23.0" fill="rgb(250,165,49)" rx="2" ry="2" />
+<text  x="1787.86" y="213.5" >Com..</text>
+</g>
+</g>
+
+</svg>
+</g>
+<g>
+<title>Internal</title>
+<svg class="comparison-panel" x="24" y="530" width="4000" height="412" viewBox="0 0 4000 412">
+
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<rect x="0.0" y="0" width="4000.0" height="412" fill="url(#comparison-background)"  />
+<text class="panel-title" x="2000.00" y="36" >Internal</text>
+<g class="frames">
+<g >
+<title>getData (1 samples, 1.35%)</title><rect x="3452.2" y="199" width="53.7" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3455.16" y="213.5" >get..</text>
+</g>
+<g >
+<title>Bus::Vi (1 samples, 1.35%)</title><rect x="2860.5" y="175" width="53.8" height="23.0" fill="rgb(229,124,26)" rx="2" ry="2" />
+<text  x="2863.54" y="189.5" >Bus..</text>
+</g>
+<g >
+<title>Vaxpy_Serial (1 samples, 1.35%)</title><rect x="10.0" y="295" width="53.8" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="13.00" y="309.5" >Vax..</text>
+</g>
+<g >
+<title>klu_refactor (14 samples, 18.92%)</title><rect x="1085.7" y="199" width="752.9" height="23.0" fill="rgb(241,99,39)" rx="2" ry="2" />
+<text  x="1088.68" y="213.5" >klu_refactor</text>
+</g>
+<g >
+<title>klu_utsolve (6 samples, 8.11%)</title><rect x="2430.3" y="175" width="322.7" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="2433.27" y="189.5" >klu_utsolve</text>
+</g>
+<g >
+<title>endl (1 samples, 1.35%)</title><rect x="709.2" y="151" width="53.8" height="23.0" fill="rgb(238,209,36)" rx="2" ry="2" />
+<text  x="712.19" y="165.5" >endl</text>
+</g>
+<g >
+<title>N_VLinearSum_Serial (1 samples, 1.35%)</title><rect x="171.4" y="319" width="53.7" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="174.35" y="333.5" >N_V..</text>
+</g>
+<g >
+<title>__GI___exp (1 samples, 1.35%)</title><rect x="3237.0" y="127" width="53.8" height="23.0" fill="rgb(237,119,35)" rx="2" ry="2" />
+<text  x="3240.03" y="141.5" >__G..</text>
+</g>
+<g >
+<title>ramp (1 samples, 1.35%)</title><rect x="3398.4" y="151" width="53.8" height="23.0" fill="rgb(239,149,38)" rx="2" ry="2" />
+<text  x="3401.38" y="165.5" >ramp</text>
+</g>
+<g >
+<title>evaluateInternalResidual (2 samples, 2.70%)</title><rect x="3344.6" y="199" width="107.6" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="3347.59" y="213.5" >evaluate..</text>
+</g>
+<g >
+<title>inside (1 samples, 1.35%)</title><rect x="3344.6" y="175" width="53.8" height="23.0" fill="rgb(245,167,44)" rx="2" ry="2" />
+<text  x="3347.59" y="189.5" >ins..</text>
+</g>
+<g >
+<title>Reecb (3 samples, 4.05%)</title><rect x="3129.5" y="223" width="161.3" height="23.0" fill="rgb(237,187,35)" rx="2" ry="2" />
+<text  x="3132.46" y="237.5" >Reecb</text>
+</g>
+<g >
+<title>Vr2 (1 samples, 1.35%)</title><rect x="2914.3" y="199" width="53.8" height="23.0" fill="rgb(249,155,48)" rx="2" ry="2" />
+<text  x="2917.32" y="213.5" >Vr2</text>
+</g>
+<g >
+<title>Regca (4 samples, 5.41%)</title><rect x="3290.8" y="223" width="215.1" height="23.0" fill="rgb(237,181,36)" rx="2" ry="2" />
+<text  x="3293.81" y="237.5" >Regca</text>
+</g>
+<g >
+<title>profileKluSolve (17 samples, 22.97%)</title><rect x="1838.6" y="247" width="914.4" height="23.0" fill="rgb(244,184,43)" rx="2" ry="2" />
+<text  x="1841.65" y="261.5" >profileKluSolve</text>
+</g>
+<g >
+<title>idaLsSetup (24 samples, 32.43%)</title><rect x="547.8" y="271" width="1290.8" height="23.0" fill="rgb(238,181,36)" rx="2" ry="2" />
+<text  x="550.84" y="285.5" >idaLsSetup</text>
+</g>
+<g >
+<title>Vi1 (1 samples, 1.35%)</title><rect x="2860.5" y="199" width="53.8" height="23.0" fill="rgb(231,148,28)" rx="2" ry="2" />
+<text  x="2863.54" y="213.5" >Vi1</text>
+</g>
+<g >
+<title>operator&lt;&lt; (1 samples, 1.35%)</title><rect x="655.4" y="175" width="53.8" height="23.0" fill="rgb(245,195,44)" rx="2" ry="2" />
+<text  x="658.41" y="189.5" >ope..</text>
+</g>
+<g >
+<title>idaNlsConvTest (2 samples, 2.70%)</title><rect x="440.3" y="295" width="107.5" height="23.0" fill="rgb(235,181,33)" rx="2" ry="2" />
+<text  x="443.27" y="309.5" >idaNlsCo..</text>
+</g>
+<g >
+<title>Genrou::ModelWrapper (1 samples, 1.35%)</title><rect x="816.8" y="127" width="53.7" height="23.0" fill="rgb(243,205,41)" rx="2" ry="2" />
+<text  x="819.76" y="141.5" >Gen..</text>
+</g>
+<g >
+<title>sigmoid (1 samples, 1.35%)</title><rect x="3344.6" y="127" width="53.8" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="3347.59" y="141.5" >sig..</text>
+</g>
+<g >
+<title>evaluateJacobian (7 samples, 9.46%)</title><rect x="655.4" y="223" width="376.5" height="23.0" fill="rgb(238,178,37)" rx="2" ry="2" />
+<text  x="658.41" y="237.5" >evaluateJacobian</text>
+</g>
+<g >
+<title>IDAStep (74 samples, 100.00%)</title><rect x="10.0" y="343" width="3980.0" height="23.0" fill="rgb(243,179,42)" rx="2" ry="2" />
+<text  x="13.00" y="357.5" >IDAStep</text>
+</g>
+<g >
+<title>getData (1 samples, 1.35%)</title><rect x="3129.5" y="175" width="53.7" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3132.46" y="189.5" >get..</text>
+</g>
+<g >
+<title>Genrou::evaluateInternalResidual (1 samples, 1.35%)</title><rect x="816.8" y="103" width="53.7" height="23.0" fill="rgb(224,205,21)" rx="2" ry="2" />
+<text  x="819.76" y="117.5" >Gen..</text>
+</g>
+<g >
+<title>Branch (5 samples, 6.76%)</title><rect x="2806.8" y="223" width="268.9" height="23.0" fill="rgb(246,158,45)" rx="2" ry="2" />
+<text  x="2809.76" y="237.5" >Branch</text>
+</g>
+<g >
+<title>getData (1 samples, 1.35%)</title><rect x="2806.8" y="175" width="53.7" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="2809.76" y="189.5" >get..</text>
+</g>
+<g >
+<title>Bus (1 samples, 1.35%)</title><rect x="709.2" y="199" width="53.8" height="23.0" fill="rgb(234,124,32)" rx="2" ry="2" />
+<text  x="712.19" y="213.5" >Bus</text>
+</g>
+<g >
+<title>__tanh (1 samples, 1.35%)</title><rect x="3344.6" y="103" width="53.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="3347.59" y="117.5" >__t..</text>
+</g>
+<g >
+<title>Residual (23 samples, 31.08%)</title><rect x="2753.0" y="271" width="1237.0" height="23.0" fill="rgb(224,181,21)" rx="2" ry="2" />
+<text  x="2755.97" y="285.5" >Residual</text>
+</g>
+<g >
+<title>N_VLinearSumVectorArray (2 samples, 2.70%)</title><rect x="63.8" y="319" width="107.6" height="23.0" fill="rgb(239,124,37)" rx="2" ry="2" />
+<text  x="66.78" y="333.5" >N_VLinea..</text>
+</g>
+<g >
+<title>Vr (1 samples, 1.35%)</title><rect x="3129.5" y="199" width="53.7" height="23.0" fill="rgb(235,149,33)" rx="2" ry="2" />
+<text  x="3132.46" y="213.5" >Vr</text>
+</g>
+<g >
+<title>fill (1 samples, 1.35%)</title><rect x="3505.9" y="151" width="53.8" height="23.0" fill="rgb(224,183,21)" rx="2" ry="2" />
+<text  x="3508.95" y="165.5" >fill</text>
+</g>
+<g >
+<title>max (1 samples, 1.35%)</title><rect x="3237.0" y="175" width="53.8" height="23.0" fill="rgb(244,112,43)" rx="2" ry="2" />
+<text  x="3240.03" y="189.5" >max</text>
+</g>
+<g >
+<title>klu_tsolve (16 samples, 21.62%)</title><rect x="1892.4" y="199" width="860.6" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="1895.43" y="213.5" >klu_tsolve</text>
+</g>
+<g >
+<title>N_VWrmsNorm_Serial (3 samples, 4.05%)</title><rect x="278.9" y="319" width="161.4" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="281.92" y="333.5" >N_VWrmsNorm_S..</text>
+</g>
+<g >
+<title>Genrou (3 samples, 4.05%)</title><rect x="816.8" y="199" width="161.3" height="23.0" fill="rgb(237,205,35)" rx="2" ry="2" />
+<text  x="819.76" y="213.5" >Genrou</text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator::__normal_iterator (1 samples, 1.35%)</title><rect x="3075.7" y="175" width="53.8" height="23.0" fill="rgb(241,132,39)" rx="2" ry="2" />
+<text  x="3078.68" y="189.5" >__g..</text>
+</g>
+<g >
+<title>__memcpy_avx_unaligned_erms (1 samples, 1.35%)</title><rect x="2753.0" y="247" width="53.8" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="2755.97" y="261.5" >__m..</text>
+</g>
+<g >
+<title>N_VWSqrSumLocal_Serial (3 samples, 4.05%)</title><rect x="278.9" y="295" width="161.4" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="281.92" y="309.5" >N_VWSqrSumLoc..</text>
+</g>
+<g >
+<title>getData (1 samples, 1.35%)</title><rect x="2914.3" y="175" width="53.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="2917.32" y="189.5" >get..</text>
+</g>
+<g >
+<title>__tanh (1 samples, 1.35%)</title><rect x="978.1" y="79" width="53.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="981.11" y="93.5" >__t..</text>
+</g>
+<g >
+<title>Genrou::DfDyp (1 samples, 1.35%)</title><rect x="870.5" y="151" width="53.8" height="23.0" fill="rgb(245,205,45)" rx="2" ry="2" />
+<text  x="873.54" y="165.5" >Gen..</text>
+</g>
+<g >
+<title>vector::end (1 samples, 1.35%)</title><rect x="3075.7" y="199" width="53.8" height="23.0" fill="rgb(251,146,51)" rx="2" ry="2" />
+<text  x="3078.68" y="213.5" >vec..</text>
+</g>
+<g >
+<title>__memset_avx2_unaligned_erms (1 samples, 1.35%)</title><rect x="924.3" y="151" width="53.8" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="927.32" y="165.5" >__m..</text>
+</g>
+<g >
+<title>linseg (1 samples, 1.35%)</title><rect x="3398.4" y="175" width="53.8" height="23.0" fill="rgb(242,129,41)" rx="2" ry="2" />
+<text  x="3401.38" y="189.5" >lin..</text>
+</g>
+<g >
+<title>setDeviceUpdated (1 samples, 1.35%)</title><rect x="3505.9" y="175" width="53.8" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3508.95" y="189.5" >set..</text>
+</g>
+<g >
+<title>SUNLinSolSetup_KLU (15 samples, 20.27%)</title><rect x="1031.9" y="223" width="806.7" height="23.0" fill="rgb(233,146,31)" rx="2" ry="2" />
+<text  x="1034.89" y="237.5" >SUNLinSolSetup_KLU</text>
+</g>
+<g >
+<title>below (1 samples, 1.35%)</title><rect x="3344.6" y="151" width="53.8" height="23.0" fill="rgb(238,155,36)" rx="2" ry="2" />
+<text  x="3347.59" y="165.5" >below</text>
+</g>
+<g >
+<title>ramp (1 samples, 1.35%)</title><rect x="3183.2" y="151" width="53.8" height="23.0" fill="rgb(239,149,38)" rx="2" ry="2" />
+<text  x="3186.24" y="165.5" >ramp</text>
+</g>
+<g >
+<title>SexsPti::DfDy (1 samples, 1.35%)</title><rect x="978.1" y="151" width="53.8" height="23.0" fill="rgb(246,195,46)" rx="2" ry="2" />
+<text  x="981.11" y="165.5" >Sex..</text>
+</g>
+<g >
+<title>Vaxpy_Serial (2 samples, 2.70%)</title><rect x="63.8" y="295" width="107.6" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="66.78" y="309.5" >Vaxpy_Se..</text>
+</g>
+<g >
+<title>klu_rcond (1 samples, 1.35%)</title><rect x="1031.9" y="199" width="53.8" height="23.0" fill="rgb(252,99,52)" rx="2" ry="2" />
+<text  x="1034.89" y="213.5" >klu..</text>
+</g>
+<g >
+<title>CooMatrix::getValues (1 samples, 1.35%)</title><rect x="763.0" y="199" width="53.8" height="23.0" fill="rgb(237,159,36)" rx="2" ry="2" />
+<text  x="765.97" y="213.5" >Coo..</text>
+</g>
+<g >
+<title>clamp (1 samples, 1.35%)</title><rect x="3183.2" y="175" width="53.8" height="23.0" fill="rgb(239,109,38)" rx="2" ry="2" />
+<text  x="3186.24" y="189.5" >clamp</text>
+</g>
+<g >
+<title>Exciter::SexsPti::evaluateInternalResidual (1 samples, 1.35%)</title><rect x="978.1" y="103" width="53.8" height="23.0" fill="rgb(224,97,21)" rx="2" ry="2" />
+<text  x="981.11" y="117.5" >Exc..</text>
+</g>
+<g >
+<title>Ir2 (1 samples, 1.35%)</title><rect x="2806.8" y="199" width="53.7" height="23.0" fill="rgb(249,179,49)" rx="2" ry="2" />
+<text  x="2809.76" y="213.5" >Ir2</text>
+</g>
+<g >
+<title>klu_ltsolve (6 samples, 8.11%)</title><rect x="2107.6" y="175" width="322.7" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="2110.57" y="189.5" >klu_ltsolve</text>
+</g>
+<g >
+<title>SUNNonlinSolSolve_Newton (66 samples, 89.19%)</title><rect x="440.3" y="319" width="3549.7" height="23.0" fill="rgb(248,146,47)" rx="2" ry="2" />
+<text  x="443.27" y="333.5" >SUNNonlinSolSolve_Newton</text>
+</g>
+<g >
+<title>ramp (1 samples, 1.35%)</title><rect x="3237.0" y="151" width="53.8" height="23.0" fill="rgb(239,149,38)" rx="2" ry="2" />
+<text  x="3240.03" y="165.5" >ramp</text>
+</g>
+<g >
+<title>evaluateInternalResidual (2 samples, 2.70%)</title><rect x="3183.2" y="199" width="107.6" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="3186.24" y="213.5" >evaluate..</text>
+</g>
+<g >
+<title>SexsPti::ModelWrapper (1 samples, 1.35%)</title><rect x="978.1" y="127" width="53.8" height="23.0" fill="rgb(243,195,41)" rx="2" ry="2" />
+<text  x="981.11" y="141.5" >Sex..</text>
+</g>
+<g >
+<title>Branch (1 samples, 1.35%)</title><rect x="655.4" y="199" width="53.8" height="23.0" fill="rgb(246,158,45)" rx="2" ry="2" />
+<text  x="658.41" y="213.5" >Bra..</text>
+</g>
+<g >
+<title>ostream::put (1 samples, 1.35%)</title><rect x="709.2" y="127" width="53.8" height="23.0" fill="rgb(234,171,31)" rx="2" ry="2" />
+<text  x="712.19" y="141.5" >ost..</text>
+</g>
+<g >
+<title>DfDy (1 samples, 1.35%)</title><rect x="978.1" y="175" width="53.8" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="981.11" y="189.5" >DfDy</text>
+</g>
+<g >
+<title>profileKluSetup (15 samples, 20.27%)</title><rect x="1031.9" y="247" width="806.7" height="23.0" fill="rgb(238,184,36)" rx="2" ry="2" />
+<text  x="1034.89" y="261.5" >profileKluSetup</text>
+</g>
+<g >
+<title>N_VScale_Serial (1 samples, 1.35%)</title><rect x="1838.6" y="199" width="53.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="1841.65" y="213.5" >N_V..</text>
+</g>
+<g >
+<title>idaLsSolve (17 samples, 22.97%)</title><rect x="1838.6" y="271" width="914.4" height="23.0" fill="rgb(244,181,43)" rx="2" ry="2" />
+<text  x="1841.65" y="285.5" >idaLsSolve</text>
+</g>
+<g >
+<title>__ieee754_exp_fma (1 samples, 1.35%)</title><rect x="3237.0" y="103" width="53.8" height="23.0" fill="rgb(227,125,24)" rx="2" ry="2" />
+<text  x="3240.03" y="117.5" >__i..</text>
+</g>
+<g >
+<title>SUNLinSolSolve_KLU (17 samples, 22.97%)</title><rect x="1838.6" y="223" width="914.4" height="23.0" fill="rgb(233,146,31)" rx="2" ry="2" />
+<text  x="1841.65" y="237.5" >SUNLinSolSolve_KLU</text>
+</g>
+<g >
+<title>updateTime (8 samples, 10.81%)</title><rect x="3559.7" y="247" width="430.3" height="23.0" fill="rgb(236,150,34)" rx="2" ry="2" />
+<text  x="3562.73" y="261.5" >updateTime</text>
+</g>
+<g >
+<title>Jac (9 samples, 12.16%)</title><rect x="547.8" y="247" width="484.1" height="23.0" fill="rgb(228,142,25)" rx="2" ry="2" />
+<text  x="550.84" y="261.5" >Jac</text>
+</g>
+<g >
+<title>__ostream_insert (1 samples, 1.35%)</title><rect x="655.4" y="151" width="53.8" height="23.0" fill="rgb(236,144,34)" rx="2" ry="2" />
+<text  x="658.41" y="165.5" >__o..</text>
+</g>
+<g >
+<title>SUNMatZero_Sparse (1 samples, 1.35%)</title><rect x="547.8" y="223" width="53.8" height="23.0" fill="rgb(243,146,42)" rx="2" ry="2" />
+<text  x="550.84" y="237.5" >SUN..</text>
+</g>
+<g >
+<title>idaNlsLSolve (17 samples, 22.97%)</title><rect x="1838.6" y="295" width="914.4" height="23.0" fill="rgb(244,181,43)" rx="2" ry="2" />
+<text  x="1841.65" y="309.5" >idaNlsLSolve</text>
+</g>
+<g >
+<title>N_VScale_Serial (1 samples, 1.35%)</title><rect x="225.1" y="319" width="53.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="228.14" y="333.5" >N_V..</text>
+</g>
+<g >
+<title>idaNlsResidual (23 samples, 31.08%)</title><rect x="2753.0" y="295" width="1237.0" height="23.0" fill="rgb(224,181,21)" rx="2" ry="2" />
+<text  x="2755.97" y="309.5" >idaNlsResidual</text>
+</g>
+<g >
+<title>setDataUpdated (1 samples, 1.35%)</title><rect x="3505.9" y="199" width="53.8" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3508.95" y="213.5" >set..</text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 1.35%)</title><rect x="3344.6" y="79" width="53.8" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="3347.59" y="93.5" >__e..</text>
+</g>
+<g >
+<title>__sincos_fma (1 samples, 1.35%)</title><rect x="816.8" y="79" width="53.7" height="23.0" fill="rgb(227,132,24)" rx="2" ry="2" />
+<text  x="819.76" y="93.5" >__s..</text>
+</g>
+<g >
+<title>Repca (1 samples, 1.35%)</title><rect x="3505.9" y="223" width="53.8" height="23.0" fill="rgb(240,191,38)" rx="2" ry="2" />
+<text  x="3508.95" y="237.5" >Repca</text>
+</g>
+<g >
+<title>Hygov (1 samples, 1.35%)</title><rect x="3075.7" y="223" width="53.8" height="23.0" fill="rgb(235,191,33)" rx="2" ry="2" />
+<text  x="3078.68" y="237.5" >Hygov</text>
+</g>
+<g >
+<title>DfDy (1 samples, 1.35%)</title><rect x="816.8" y="175" width="53.7" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="819.76" y="189.5" >DfDy</text>
+</g>
+<g >
+<title>__fill_a1 (1 samples, 1.35%)</title><rect x="3505.9" y="103" width="53.8" height="23.0" fill="rgb(221,135,18)" rx="2" ry="2" />
+<text  x="3508.95" y="117.5" >__f..</text>
+</g>
+<g >
+<title>Genrou::DfDy (1 samples, 1.35%)</title><rect x="816.8" y="151" width="53.7" height="23.0" fill="rgb(246,205,46)" rx="2" ry="2" />
+<text  x="819.76" y="165.5" >Gen..</text>
+</g>
+<g >
+<title>ostream::operator&lt;&lt; (1 samples, 1.35%)</title><rect x="709.2" y="175" width="53.8" height="23.0" fill="rgb(245,171,44)" rx="2" ry="2" />
+<text  x="712.19" y="189.5" >ost..</text>
+</g>
+<g >
+<title>__memcpy_avx_unaligned_erms (1 samples, 1.35%)</title><rect x="601.6" y="223" width="53.8" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="604.62" y="237.5" >__m..</text>
+</g>
+<g >
+<title>DfDyp (2 samples, 2.70%)</title><rect x="870.5" y="175" width="107.6" height="23.0" fill="rgb(245,125,45)" rx="2" ry="2" />
+<text  x="873.54" y="189.5" >DfDyp</text>
+</g>
+<g >
+<title>idaNlsLSetup (24 samples, 32.43%)</title><rect x="547.8" y="295" width="1290.8" height="23.0" fill="rgb(238,181,36)" rx="2" ry="2" />
+<text  x="550.84" y="309.5" >idaNlsLSetup</text>
+</g>
+<g >
+<title>ranges::__fill_fn::operator (1 samples, 1.35%)</title><rect x="870.5" y="103" width="53.8" height="23.0" fill="rgb(241,146,39)" rx="2" ry="2" />
+<text  x="873.54" y="117.5" >ran..</text>
+</g>
+<g >
+<title>N_VLinearCombination (1 samples, 1.35%)</title><rect x="10.0" y="319" width="53.8" height="23.0" fill="rgb(247,124,46)" rx="2" ry="2" />
+<text  x="13.00" y="333.5" >N_V..</text>
+</g>
+<g >
+<title>evaluateResidual (14 samples, 18.92%)</title><rect x="2806.8" y="247" width="752.9" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="2809.76" y="261.5" >evaluateResidual</text>
+</g>
+<g >
+<title>__fill_a (1 samples, 1.35%)</title><rect x="3505.9" y="127" width="53.8" height="23.0" fill="rgb(235,135,33)" rx="2" ry="2" />
+<text  x="3508.95" y="141.5" >__f..</text>
+</g>
+<g >
+<title>do_sin (1 samples, 1.35%)</title><rect x="816.8" y="55" width="53.7" height="23.0" fill="rgb(243,189,42)" rx="2" ry="2" />
+<text  x="819.76" y="69.5" >do_..</text>
+</g>
+<g >
+<title>getData (1 samples, 1.35%)</title><rect x="3021.9" y="199" width="53.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3024.89" y="213.5" >get..</text>
+</g>
+<g >
+<title>__conditional::type (1 samples, 1.35%)</title><rect x="870.5" y="127" width="53.8" height="23.0" fill="rgb(250,144,49)" rx="2" ry="2" />
+<text  x="873.54" y="141.5" >__c..</text>
+</g>
+<g >
+<title>ranges::__fill_n_fn::operator (1 samples, 1.35%)</title><rect x="870.5" y="79" width="53.8" height="23.0" fill="rgb(241,146,39)" rx="2" ry="2" />
+<text  x="873.54" y="93.5" >ran..</text>
+</g>
+<g >
+<title>evaluateInternalResidual (1 samples, 1.35%)</title><rect x="2968.1" y="199" width="53.8" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="2971.11" y="213.5" >eva..</text>
+</g>
+<g >
+<title>SexsPti (1 samples, 1.35%)</title><rect x="978.1" y="199" width="53.8" height="23.0" fill="rgb(234,195,32)" rx="2" ry="2" />
+<text  x="981.11" y="213.5" >Sex..</text>
+</g>
+</g>
+
+</svg>
+</g>
+</svg>
