@@ -220,19 +220,20 @@ namespace GridKit
           efd0 = y[7]; ///<- generator needs to be initialized first
         }
 
-        auto read_attached = [&]<Ieeet1ExternalVariables variable>() -> ScalarT
+        // Setpoint members provide the defaults for unattached signals.
+        auto read_signal = [&]<Ieeet1ExternalVariables variable>(const ScalarT& default_value) -> ScalarT
         {
           if (signals_.template isAttached<variable>())
           {
             return signals_.template readExternalVariable<variable>();
           }
-          return ScalarT{0};
+          return default_value;
         };
 
-        const ScalarT omega = read_attached.template operator()<Ieeet1ExternalVariables::OMEGA>();
-        const ScalarT vs    = read_attached.template operator()<Ieeet1ExternalVariables::VS>();
-        const ScalarT vuel  = read_attached.template operator()<Ieeet1ExternalVariables::VUEL>();
-        const ScalarT voel  = read_attached.template operator()<Ieeet1ExternalVariables::VOEL>();
+        const ScalarT omega = read_signal.template operator()<Ieeet1ExternalVariables::OMEGA>(omega_set_);
+        const ScalarT vs    = read_signal.template operator()<Ieeet1ExternalVariables::VS>(vs_set_);
+        const ScalarT vuel  = read_signal.template operator()<Ieeet1ExternalVariables::VUEL>(vuel_set_);
+        const ScalarT voel  = read_signal.template operator()<Ieeet1ExternalVariables::VOEL>(voel_set_);
 
         uel_on_ = ZERO<RealT>;
         if (signals_.template isAttached<Ieeet1ExternalVariables::VUEL>())

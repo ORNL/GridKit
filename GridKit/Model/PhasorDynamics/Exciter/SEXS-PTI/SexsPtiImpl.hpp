@@ -164,18 +164,19 @@ namespace GridKit
           efd0 = y[1];
         }
 
-        auto read_attached = [&]<SexsPtiExternalVariables variable>() -> ScalarT
+        // Setpoint members provide the defaults for unattached signals.
+        auto read_signal = [&]<SexsPtiExternalVariables variable>(const ScalarT& default_value) -> ScalarT
         {
           if (signals_.template isAttached<variable>())
           {
             return signals_.template readExternalVariable<variable>();
           }
-          return ScalarT{0};
+          return default_value;
         };
 
-        const ScalarT vs   = read_attached.template operator()<SexsPtiExternalVariables::VS>();
-        const ScalarT vuel = read_attached.template operator()<SexsPtiExternalVariables::VUEL>();
-        const ScalarT voel = read_attached.template operator()<SexsPtiExternalVariables::VOEL>();
+        const ScalarT vs   = read_signal.template operator()<SexsPtiExternalVariables::VS>(vs_set_);
+        const ScalarT vuel = read_signal.template operator()<SexsPtiExternalVariables::VUEL>(vuel_set_);
+        const ScalarT voel = read_signal.template operator()<SexsPtiExternalVariables::VOEL>(voel_set_);
 
         uel_on_ = ZERO<RealT>;
         if (signals_.template isAttached<SexsPtiExternalVariables::VUEL>())
