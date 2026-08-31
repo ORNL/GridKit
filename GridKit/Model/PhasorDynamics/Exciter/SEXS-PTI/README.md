@@ -43,11 +43,14 @@ None.
 
 ## Model Ports
 
-Name  | Port   | Init  | Description
-------|--------|-------|------------
-`bus` | Bus    | Known | Terminal bus voltage
-`vs`  | Input  | Known | Optional stabilizer input signal; defaults to zero
-`efd` | Output | Known | Required field-voltage output seeded by the machine
+Name   | Port   | Init    | Description
+-------|--------|---------|------------
+`bus`  | Bus    | Known   | Terminal bus voltage
+`vref` | Input  | Unknown | Voltage-control reference
+`vs`   | Input  | Known   | Stabilizer input signal
+`vuel` | Input  | Known   | Under-excitation limiter input
+`voel` | Input  | Known   | Over-excitation limiter input
+`efd`  | Output | Known   | Required field-voltage output seeded by the machine
 
 ## Model Variables
 
@@ -78,10 +81,10 @@ Symbol          | Units  | Description                                  | Note
 ----------------|--------|----------------------------------------------|-----
 $V_r$           | [p.u.] | Terminal voltage, real component             | Bus input
 $V_i$           | [p.u.] | Terminal voltage, imaginary component        | Bus input
-$V_{ref}$       | [p.u.] | Reference voltage                            | Set during initialization
-$V_S$           | [p.u.] | Stabilizer output                            | Optional, defaults to zero
-$V_{OEL}$       | [p.u.] | Over-excitation limiter signal               | Constant zero until modeled
-$V_{UEL}$       | [p.u.] | Under-excitation limiter signal              | Constant zero until modeled
+$V_{ref}$       | [p.u.] | Reference voltage                            | Signal port `vref`
+$V_S$           | [p.u.] | Stabilizer output                            | Signal port `vs`
+$V_{OEL}$       | [p.u.] | Over-excitation limiter signal               | Signal port `voel`
+$V_{UEL}$       | [p.u.] | Under-excitation limiter signal              | Signal port `vuel`
 
 ## Model Equations
 
@@ -134,13 +137,13 @@ None.
 ## Initialization
 
 The generator initializes the EFD signal first. SEXS-PTI then reads that value
-as $E_{fd,0}$ and assumes steady state with $V_S=V_{OEL}=V_{UEL}=0$:
+and any attached $V_S$, $V_{OEL}$, and $V_{UEL}$ signals and assumes steady state:
 
 ```math
 \begin{aligned}
 V_{tr,0} &= \dfrac{E_{fd,0}}{K} \\
 V_{R,0} &= (T_A - T_B)V_{tr,0} \\
-V_{ref} &= E_C + V_{tr,0}
+V_{ref} &= E_C + V_{tr,0} - V_S - V_{OEL} - V_{UEL}
 \end{aligned}
 ```
 

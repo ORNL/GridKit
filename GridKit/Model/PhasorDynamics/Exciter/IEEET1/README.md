@@ -139,12 +139,15 @@ coefficient, not an additional model input.
 
 ## Model Ports
 
-Name    | Port   | Init  | Description
---------|--------|-------|------------
-`bus`   | Bus    | Known | Terminal bus voltage
-`speed` | Input  | Known | Optional machine speed deviation; defaults to zero
-`vs`    | Input  | Known | Optional stabilizer input signal; defaults to zero
-`efd`   | Output | Known | Field-voltage output seeded by the machine
+Name    | Port   | Init    | Description
+--------|--------|---------|------------
+`bus`   | Bus    | Known   | Terminal bus voltage
+`speed` | Input  | Known   | Machine speed deviation
+`vref`  | Input  | Unknown | Voltage-control reference
+`vs`    | Input  | Known   | Stabilizer input signal
+`vuel`  | Input  | Known   | Under-excitation limiter input
+`voel`  | Input  | Known   | Over-excitation limiter input
+`efd`   | Output | Known   | Field-voltage output seeded by the machine
 
 ## Model Variables
 
@@ -183,11 +186,11 @@ Symbol          | Units  | Description                       | Note
 ----------------|--------|-----------------------------------|-------
 $V_r$           | [p.u.] | Real bus voltage component                     |
 $V_i$           | [p.u.] | Imaginary bus voltage component                |
-$V_\text{ref}$  | [p.u.] | Reference terminal voltage                     | Set during initialization; constant thereafter
-$V_{UEL}$       | [p.u.] | Input from under excitation limiter            | Constant zero until modeled
-$V_{OEL}$       | [p.u.] | Input from over excitation limiter             | Constant zero until modeled
-$V_S$           | [p.u.] | Input from stabilizer controller               | Optional, defaults to zero
-$\omega$        | [p.u.] | Machine speed deviation                        | Optional, defaults to zero
+$V_\text{ref}$  | [p.u.] | Reference terminal voltage                     | Signal port `vref`
+$V_{UEL}$       | [p.u.] | Input from under excitation limiter            | Signal port `vuel`
+$V_{OEL}$       | [p.u.] | Input from over excitation limiter             | Signal port `voel`
+$V_S$           | [p.u.] | Input from stabilizer controller               | Signal port `vs`
+$\omega$        | [p.u.] | Machine speed deviation                        | Signal port `speed`
 
 
 ## Model Equations
@@ -242,11 +245,11 @@ None.
 ## Initialization
 
 The machine initializes $E_{fd}$ first. IEEET1
-reads that value, along with any attached $\omega$ and $V_S$, and
+reads that value, along with any attached $\omega$, $V_S$, $V_{UEL}$, and $V_{OEL}$, and
 solves the steady-state algebraic chain so all residuals vanish with
 $\dot y = 0$. The sensed terminal voltage initializes from the positive
 bus-voltage magnitude. Saturation is included when enabled, and the speed-limit
-flag is included directly; $V_\text{ref}$ is set to close the $V_{tr}$ equation
+flag is included directly. $V_\text{ref}$ is set to close the $V_{tr}$ equation
 with the current input values.
 
 ```math
