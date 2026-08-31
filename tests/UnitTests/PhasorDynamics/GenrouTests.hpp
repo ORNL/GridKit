@@ -236,8 +236,10 @@ namespace GridKit
             2.211,
             0.85,
             1.2,
-            -static_cast<ScalarT>(13.) / static_cast<ScalarT>(130.),
-            -static_cast<ScalarT>(143.) / static_cast<ScalarT>(52.)};
+            static_cast<ScalarT>(64.) / static_cast<ScalarT>(65.),
+            -static_cast<ScalarT>(237.) / static_cast<ScalarT>(130.),
+            -static_cast<ScalarT>(141.) / static_cast<ScalarT>(130.),
+            -static_cast<ScalarT>(241.) / static_cast<ScalarT>(260.)};
 
         bus.allocate();
         bus.initialize();
@@ -271,6 +273,8 @@ namespace GridKit
         y[14] = .3;  // iq
         y[15] = .9;  // ir
         y[16] = .25; // ii
+        y[17] = .3;  // inr
+        y[18] = .15; // ini
 
         // Set derivative values matching the answer key
         yp[0] = 2.0 * pi * 60.0; // delta_dot

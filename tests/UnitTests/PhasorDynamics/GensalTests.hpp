@@ -277,8 +277,10 @@ namespace GridKit
             1.8125,
             0.5,
             0.25,
-            2.95,
-            -1.25};
+            2.65,
+            -0.05,
+            0.3,
+            -1.2};
 
         bus.allocate();
         bus.initialize();
@@ -304,6 +306,8 @@ namespace GridKit
         y[11] = -0.5;  // iq
         y[12] = 0.75;  // ir
         y[13] = -0.25; // ii
+        y[14] = 0.1;   // inr
+        y[15] = -0.2;  // ini
 
         yp[0] = 2.0 * pi * 60.0; // delta_dot
         yp[1] = -1.0;            // omega_dot
