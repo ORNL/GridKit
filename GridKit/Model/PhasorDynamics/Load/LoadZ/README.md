@@ -1,7 +1,8 @@
 # LoadZ
 
-Static constant-impedance load model. `LoadZ` owns terminal current states and
-adds their current contribution to the connected bus residual.
+Static constant-impedance load model. `LoadZ` has no solver-owned variables; it
+computes terminal current contributions from the connected bus voltage and adds
+them directly to the bus current-balance residuals.
 
 ## Model Parameters
 
@@ -39,10 +40,7 @@ None.
 
 #### Algebraic
 
-Symbol | Units  | Description                           | Note
--------|--------|---------------------------------------|------
-$I_r$  | [p.u.] | Terminal current, real component      | Added to connected bus residual
-$I_i$  | [p.u.] | Terminal current, imaginary component | Added to connected bus residual
+None.
 
 ### External Variables
 
@@ -67,34 +65,26 @@ None.
 
 #### Algebraic
 
+None.
+
+### Bus Current-Balance Contributions
+
+Let $I_r^{\mathrm{LoadZ}}$ and $I_i^{\mathrm{LoadZ}}$ denote the model
+contributions to the real and imaginary current-balance residuals of the
+connected bus. Positive current is oriented entering the bus.
+
 ```math
 \begin{aligned}
-0 &= I_r + G V_r - B V_i \\
-0 &= I_i + B V_r + G V_i
+I_r^{\mathrm{LoadZ}} &= -(G V_r - B V_i) \\
+I_i^{\mathrm{LoadZ}} &= -(B V_r + G V_i)
 \end{aligned}
 ```
 
-### External Equations
-
-```math
-\begin{aligned}
-I_r^{\mathrm{bus}} &\leftarrow I_r^{\mathrm{bus}} + I_r \\
-I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i
-\end{aligned}
-```
+These contributions are accumulated directly into the bus-owned residuals.
 
 ## Initialization
 
-The initial bus voltage determines the terminal currents:
-
-```math
-\begin{aligned}
-I_r &\leftarrow -G V_r + B V_i \\
-I_i &\leftarrow -B V_r - G V_i
-\end{aligned}
-```
-
-The derivative vector entries initialize to zero.
+None.
 
 ## Monitors
 

@@ -1,8 +1,9 @@
 # LoadZIP
 
 Static ZIP load model with constant impedance, constant current, and constant
-power fractions. `LoadZIP` owns terminal current states and adds their current
-contribution to the connected bus residual.
+power fractions. `LoadZIP` has no solver-owned variables; it computes terminal
+current contributions from the connected bus voltage and adds them directly to
+the bus current-balance residuals.
 
 ## Model Parameters
 
@@ -45,10 +46,7 @@ None.
 
 #### Algebraic
 
-Symbol | Units  | Description                              | Note
--------|--------|------------------------------------------|------
-$I_r$  | [p.u.] | Terminal current, real component         | Added to connected bus residual
-$I_i$  | [p.u.] | Terminal current, imaginary component    | Added to connected bus residual
+None.
 
 ### External Variables
 
@@ -75,15 +73,25 @@ None.
 
 #### Algebraic
 
+None.
+
+### Bus Current-Balance Contributions
+
+Let $I_r^{\mathrm{LoadZIP}}$ and $I_i^{\mathrm{LoadZIP}}$ denote the model
+contributions to the real and imaginary current-balance residuals of the
+connected bus. Positive current is oriented entering the bus.
+
 ```math
 \begin{aligned}
-0 &= I_r + (G V_r - B V_i)
+I_r^{\mathrm{LoadZIP}}
+  &= -(G V_r + B V_i)
 \left[
 \alpha_Z
 + \alpha_I \dfrac{V_\mathrm{nom}}{V}
 + \alpha_P \dfrac{V_\mathrm{nom}^2}{V^2}
 \right] \\
-0 &= I_i + (G V_i + B V_r)
+I_i^{\mathrm{LoadZIP}}
+  &= -(G V_i - B V_r)
 \left[
 \alpha_Z
 + \alpha_I \dfrac{V_\mathrm{nom}}{V}
@@ -92,25 +100,17 @@ None.
 \end{aligned}
 ```
 
-### External Equations
-
-```math
-\begin{aligned}
-I_r^{\mathrm{bus}} &\leftarrow I_r^{\mathrm{bus}} + I_r \\
-I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i
-\end{aligned}
-```
+These contributions are accumulated directly into the bus-owned residuals.
 
 ## Initialization
 
 ```math
-\begin{aligned}
-    I_r &\leftarrow -G V_r + B V_i \\
-    I_i &\leftarrow -G V_i - B V_r
-\end{aligned}
+V_\mathrm{nom} \leftarrow \sqrt{V_r^2 + V_i^2}
 ```
 
-The derivative vector entries initialize to zero.
+The nominal-voltage anchor and derived admittance parameters are recomputed
+from the initialized bus voltage. Initialization fails if the voltage magnitude
+is not positive and finite. The model has no internal state to initialize.
 
 ## Monitors
 
