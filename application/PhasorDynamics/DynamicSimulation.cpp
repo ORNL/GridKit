@@ -54,6 +54,12 @@ int main(int argc, const char* argv[])
   std::cout << "\nGRIDKIT_SYSTEM_BEGIN\n"
             << "buses=" << study.model_data.bus.size() << '\n'
             << "branches=" << study.model_data.branch.size() << '\n'
+            << "regca=" << study.model_data.regca.size() << '\n'
+            << "loadz=" << study.model_data.loadz.size() << '\n'
+            << "loadzip=" << study.model_data.loadzip.size() << '\n'
+            << "genrou=" << study.model_data.genrou.size() << '\n'
+            << "gensal=" << study.model_data.gensal.size() << '\n'
+            << "genclassical=" << study.model_data.genclassical.size() << '\n'
             << "states=" << sys.size() << '\n'
             << "differential_variables=" << differential_variables << '\n'
             << "algebraic_variables=" << sys.size() - differential_variables << '\n'

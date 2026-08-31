@@ -124,7 +124,7 @@ namespace GridKit
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
 
-      static constexpr std::size_t             profile_group_count_ = 12;
+      static constexpr std::size_t             profile_group_count_ = 15;
       std::array<IdxT, profile_group_count_>   profile_component_ends_{};
       std::array<double, profile_group_count_> profile_residual_seconds_{};
       std::array<double, profile_group_count_> profile_jacobian_seconds_{};
