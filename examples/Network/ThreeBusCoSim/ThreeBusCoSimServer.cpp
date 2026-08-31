@@ -5,6 +5,7 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 #include "CoSim.hpp"
 #include <zmq.hpp>
@@ -14,6 +15,8 @@ using IdxT    = std::size_t;
 
 using namespace GridKit;
 using namespace GridKit::PhasorDynamics;
+
+using Log = GridKit::Utilities::Logger;
 
 /**
  * @brief A simple implementation of the "server" side of a co-simulation pair
@@ -63,14 +66,19 @@ public:
    * The server will stay in this function until the end of the simulation is
    * triggered by the client.
    *
-   * Each time a voltage message is received, a
-   * step is taken and the resulting currents are sent as a response.
+   * Each time a voltage message is received, a step is taken and the resulting
+   * currents are sent as a response.
+   *
+   * Messages received from the client begin with a status token. Stepping will
+   * continue as long as the status received is CoSim::STEP. When CoSim::END is
+   * received the simulation will wrap up.
    *
    * @note For this initial implementation, no solver step is taken. Constant
    * current values are sent in response.
    */
   void start()
   {
+    Log::summary() << "SERVER: Start simulation loop\n";
     CoSim::StatusT status;
     ScalarT        d1, d2;
     do
@@ -81,18 +89,20 @@ public:
       if (recv_result)
       {
         std::istringstream(msg.to_string()) >> status >> d1 >> d2;
-        // std::cout << "[SERVER] Received: " << msg.to_string_view() << std::endl;
+        Log::misc() << "SERVER: Received \"" << msg.to_string_view() << "\"\n";
       }
 
       // 2. Respond with new data
       std::ostringstream oss;
       oss << std::scientific << std::setprecision(16);
       oss << ir_signal_->read() << " " << ii_signal_->read();
-      // std::cout << "[SERVER] Sending: " << oss.str() << std::endl;
+      Log::misc() << "SERVER: Sending \"" << oss.str() << "\"\n";
 
       zmq::message_t reply{oss.str().data(), oss.str().size()};
       socket_.send(reply, zmq::send_flags::none);
     } while (status == CoSim::STEP);
+
+    Log::summary() << "SERVER: Simulation stopped\n";
   }
 
 private:
@@ -108,6 +118,8 @@ private:
 
 int main()
 {
+  Log::setVerbosity(Log::Verbosity::SUMMARY);
+
   // Instantiate system
   auto filepath = std::filesystem::path("ThreeBusCoSimServer.case.json");
   auto data     = parseSystemModelData(filepath);
