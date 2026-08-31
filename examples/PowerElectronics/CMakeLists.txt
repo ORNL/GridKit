@@ -3,7 +3,7 @@
 #    - Slaven Peles <peless@ornl.gov>
 #]]
 
-add_subdirectory(PowerElectronicsExamplesHelper)
+add_subdirectory(ExamplesHelper)
 add_subdirectory(DistributedGeneratorTest)
 
 if(TARGET SUNDIALS::idas)

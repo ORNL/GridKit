@@ -5,7 +5,8 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-#include <examples/PowerElectronics/PowerElectronicsExamplesHelper/MicrogridNetwork.hpp>
+#include <examples/PowerElectronics/ExamplesHelper/MicrogridNetwork.hpp>
+#include <examples/PowerElectronics/ExamplesHelper/SystemAssembler.hpp>
 
 using index_type = size_t;
 using real_type  = double;
@@ -21,6 +22,8 @@ int printMicrogridSystems(index_type N_size);
  * @param[in] argc should be 1 if no N given, 2 if N given
  * @param[in] argv can contain the N value (argv[1])
  * @return int
+ *
+ * @note This is a smoke test, not necessarily testing correctness.
  */
 int main(int argc, char const* argv[])
 {
