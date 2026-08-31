@@ -9,7 +9,7 @@ int main()
   result += test.constructor();
   result += test.zeroInitialResidual();
   result += test.vsSignal();
-  result += test.vrefAndUelPorts();
+  result += test.vrefAndLimiterPorts();
   result += test.antiWindupLimiter();
   result += test.parameterValidation();
   result += test.systemAssembly();
