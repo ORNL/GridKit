@@ -15,15 +15,15 @@ namespace GridKit
     /**
      * @brief Constructor for a constant-impedance load
      *
-     * System sizes:
-     * - Number of equations = 2
-     * - Number of independent variables = 2
+     * Model size:
+     * - Number of equations = 0
+     * - Number of internal variables = 0
      */
     template <typename scalar_type, typename index_type>
     LoadZ<scalar_type, index_type>::LoadZ(BusT* bus)
       : bus_(bus)
     {
-      size_ = 2;
+      size_ = 0;
       setDerivedParams();
     }
 
@@ -35,7 +35,7 @@ namespace GridKit
         R_(R),
         X_(X)
     {
-      size_ = 2;
+      size_ = 0;
       setDerivedParams();
     }
 
@@ -56,7 +56,7 @@ namespace GridKit
         X_ = std::get<RealT>(data.parameters.at(Parameter::X));
       }
 
-      size_ = 2;
+      size_ = 0;
       setDerivedParams();
       initializeMonitor();
     }
@@ -89,21 +89,8 @@ namespace GridKit
 
       auto size = static_cast<size_t>(size_); // avoid compiler warnings
 
-      tag_.resize(size);
-
       variable_indices_.resize(size);
       residual_indices_.resize(size);
-
-      // Default variable and residual index mapping to local index
-      for (IdxT j = 0; j < size_; ++j)
-      {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
-      }
-
-      // Resize coupling data
-      wb_.resize(2);
-      h_.resize(2);
 
       allocated_ = true;
       return 0;
@@ -116,22 +103,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::initialize()
     {
-      ScalarT vr = Vr();
-      ScalarT vi = Vi();
-      ScalarT ir = -(g_ * vr - b_ * vi);
-      ScalarT ii = -(b_ * vr + g_ * vi);
-
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
-
-      y[0]  = ir;
-      y[1]  = ii;
-      yp[0] = 0.0;
-      yp[1] = 0.0;
-
-      y_.setDataUpdated();
-      yp_.setDataUpdated();
-
       return 0;
     }
 
@@ -141,9 +112,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::tagDifferentiable()
     {
-      tag_[0] = false;
-      tag_[1] = false;
-
       return 0;
     }
 
@@ -160,49 +128,8 @@ namespace GridKit
      * error cannot be used.
      */
     template <typename scalar_type, typename index_type>
-    int LoadZ<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+    int LoadZ<scalar_type, index_type>::setAbsoluteTolerance(RealT)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
-      return 0;
-    }
-
-    /**
-     * @brief Bus residual
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateBusResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
-    {
-      const ScalarT Ir = y[0];
-      const ScalarT Ii = y[1];
-      h[0]             = Ir;
-      h[1]             = Ii;
-
-      return 0;
-    }
-
-    /**
-     * @brief Internal residual
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateInternalResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        f)
-    {
-      const ScalarT Vr = wb[0];
-      const ScalarT Vi = wb[1];
-      const ScalarT Ir = y[0];
-      const ScalarT Ii = y[1];
-      f[0]             = Ir + g_ * Vr - b_ * Vi;
-      f[1]             = Ii + b_ * Vr + g_ * Vi;
-
       return 0;
     }
 
@@ -213,23 +140,15 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::evaluateResidual()
     {
-      auto* wb = wb_.getData();
-      wb[0]    = Vr();
-      wb[1]    = Vi();
+      const ScalarT Vr = this->Vr();
+      const ScalarT Vi = this->Vi();
 
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      auto*       f  = f_.getData();
-      auto*       h  = h_.getData();
-      evaluateInternalResidual(y, yp, wb, f);
-      evaluateBusResidual(y, yp, wb, h);
-      Ir() += h[0];
-      Ii() += h[1];
+      Ir() -= g_ * Vr - b_ * Vi;
+      Ii() -= b_ * Vr + g_ * Vi;
       if (bus_->size() > 0)
       {
         bus_->getResidual().setDataUpdated();
       }
-      f_.setDataUpdated();
 
       return 0;
     }
@@ -257,9 +176,15 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
 
       monitor_->set(Variable::p, [this]
-                    { return Vr() * y_.getData()[0] + Vi() * y_.getData()[1]; });
+                    {
+                      const ScalarT Vr = this->Vr();
+                      const ScalarT Vi = this->Vi();
+                      return -g_ * (Vr * Vr + Vi * Vi); });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * y_.getData()[0] - Vr() * y_.getData()[1]; });
+                    {
+                      const ScalarT Vr = this->Vr();
+                      const ScalarT Vi = this->Vi();
+                      return b_ * (Vr * Vr + Vi * Vi); });
     }
 
   } // namespace PhasorDynamics

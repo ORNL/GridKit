@@ -41,6 +41,12 @@ namespace GridKit
 
         if (load)
         {
+          success *= (load->size() == 0);
+          success *= (load->allocate() == 0);
+          success *= (load->y().getSize() == 0);
+          success *= (load->yp().getSize() == 0);
+          success *= (load->getResidual().getSize() == 0);
+          success *= (load->absoluteTolerance().getSize() == 0);
           delete load;
         }
 
@@ -104,16 +110,10 @@ namespace GridKit
         bus.initialize();
         load.initialize();
 
-        auto* load_y = load.y().getData();
-        for (size_t i = 0; i < load.size(); ++i)
-        {
-          load_y[i].setVariableNumber(i); ///< load independent variables
-        }
-        load.y().setDataUpdated();
         auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus_y[i].setVariableNumber(i + load.size()); // Bus independent variables
+          bus_y[i].setVariableNumber(i);
         }
         bus.y().setDataUpdated();
 
@@ -121,7 +121,7 @@ namespace GridKit
         load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                  ///< the dependencies
 
-        auto&                                                    residuals     = load.getResidual();
+        auto&                                                    residuals     = bus.getResidual();
         const auto*                                              residual_data = residuals.getData();
         std::vector<DependencyTracking::Variable::DependencyMap> ref           = analyticalJacobian(R, X);
 
@@ -150,6 +150,9 @@ namespace GridKit
         bus.initialize();
         load.initialize();
 
+        bus.Vr() = 6.0;
+        bus.Vi() = 8.0;
+
         RealT                                     time = 0.0;
         Model::VariableMonitorController<ScalarT> controller(time);
         PhasorDynamics::Component<ScalarT, IdxT>& component = load;
@@ -162,8 +165,8 @@ namespace GridKit
         auto values = Tokenizer<RealT>(os.str(), ',')();
         if (values.size() == 3)
         {
-          success *= isEqual(values[1], static_cast<RealT>(-50.0), tol_);
-          success *= isEqual(values[2], static_cast<RealT>(-100.0), tol_);
+          success *= isEqual(values[1], static_cast<RealT>(-10.0), tol_);
+          success *= isEqual(values[2], static_cast<RealT>(-20.0), tol_);
         }
         else
         {
@@ -195,8 +198,8 @@ namespace GridKit
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+          bus.setVariableIndex(i, i);
+          bus.setResidualIndex(i, i);
         }
 
         bus.evaluateJacobian();
@@ -246,8 +249,8 @@ namespace GridKit
         const RealT g = R / (R * R + X * X);
 
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(2);
-        dependencies[0] = {{0, 1.0}, {2, g}, {3, -b}};
-        dependencies[1] = {{1, 1.0}, {2, b}, {3, g}};
+        dependencies[0] = {{0, -g}, {1, b}};
+        dependencies[1] = {{0, -b}, {1, -g}};
 
         return dependencies;
       }

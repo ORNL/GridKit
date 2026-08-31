@@ -206,6 +206,8 @@ namespace GridKit
         success *= system->initialize() == 0;
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
+        success *= load.size() == 0;
+        success *= system->size() == 0;
         success *= system->size() == load.size();
 
         delete system;
@@ -230,6 +232,8 @@ namespace GridKit
         success *= system->initialize() == 0;
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
+        success *= load.size() == 0;
+        success *= system->size() == 0;
         success *= system->size() == load.size();
 
         delete system;
