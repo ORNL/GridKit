@@ -48,7 +48,7 @@ namespace GridKit
         S12_(0.),
         mva_base_(100.)
     {
-      size_ = 17;
+      size_ = 19;
       setDerivedParams();
     }
 
@@ -97,7 +97,7 @@ namespace GridKit
         S12_(S12),
         mva_base_(100.)
     {
-      size_ = 17;
+      size_ = 19;
       setDerivedParams();
     }
 
@@ -112,7 +112,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 17;
+      size_ = 19;
       setDerivedParams();
     }
 
@@ -129,7 +129,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 17;
+      size_ = 19;
       setDerivedParams();
     }
 
@@ -147,7 +147,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 17;
+      size_ = 19;
       setDerivedParams();
     }
 
@@ -451,6 +451,10 @@ namespace GridKit
       y[14]       = iq;
       y[15]       = ir;
       y[16]       = ii;
+      y[17]       = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
+              - B_ * (-vd * std::cos(delta) + vq * std::sin(delta));
+      y[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
+              + G_ * (-vd * std::cos(delta) + vq * std::sin(delta));
 
       ScalarT Te = y[12];
       // Convert Te to system base for governor PM signal.
@@ -539,6 +543,8 @@ namespace GridKit
       ScalarT iq     = y[14];
       ScalarT ir     = y[15];
       ScalarT ii     = y[16];
+      ScalarT inr    = y[17];
+      ScalarT ini    = y[18];
 
       /* Read derivatives */
       ScalarT delta_dot = yp[0];
@@ -566,7 +572,7 @@ namespace GridKit
       f[4] = psiqp_dot - (ONE<RealT> / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
       f[5] = Edp_dot - (ONE<RealT> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
-      /* 11 Genrou algebraic equations */
+      /* 13 Genrou algebraic equations */
       f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
       f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
       f[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
@@ -576,8 +582,12 @@ namespace GridKit
       f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
       f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
       f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[15] = ir - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
-      f[16] = ii - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
+      f[15] = ir + G_ * vr - B_ * vi - inr;
+      f[16] = ii + B_ * vr + G_ * vi - ini;
+
+      /* 2 Genrou current source definitions */
+      f[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
+      f[18] = ini - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
 
       return 0;
     }
