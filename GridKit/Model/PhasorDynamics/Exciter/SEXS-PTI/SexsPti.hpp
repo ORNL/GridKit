@@ -31,10 +31,10 @@ namespace GridKit
       {
         VREAL, ///< Real bus voltage
         VIMAG, ///< Imaginary bus voltage
-        VREF, ///< Voltage reference
-        VS,   ///< Stabilizer output signal
-        VUEL, ///< Under-excitation limiter signal
-        VOEL, ///< Over-excitation limiter signal
+        VREF,  ///< Voltage reference
+        VS,    ///< Stabilizer output signal
+        VUEL,  ///< Under-excitation limiter signal
+        VOEL,  ///< Over-excitation limiter signal
       };
 
       template <typename scalar_type, typename index_type>
