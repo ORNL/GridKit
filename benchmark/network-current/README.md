@@ -107,12 +107,23 @@ and three interleaved captures per formulation/case with:
 perf record -F 99 -e cpu-clock:u --call-graph dwarf,16384
 ```
 
-Each capture is folded with `stackcollapse-perf.pl --all`. The three captures
-for a cell are summed before rendering a stable `--hash` FlameGraph. For each
-case, `difffolded.pl -n` also produces a normalized differential whose widths
-show the internal-current-variable formulation. The driver rejects empty
-samples, unresolved GridKit/IDA/KLU profiles, noninteractive SVGs, and an
-above-5-percent share of samples containing any unknown frame by default.
+Each capture is folded with `stackcollapse-perf.pl --all`, using explicit
+`perf script` fields that count samples rather than event periods. The three
+captures for a cell are summed, trimmed to start at `IDAStep`, and given compact
+C++ frame names without GridKit, IDA, AD, LA, utility, Component, Math,
+standard-library, SystemModel, or Vector prefixes before rendering a stable
+`--hash` FlameGraph.
+Children also omit a class qualifier already supplied by their parent frame.
+Consecutive frames with the same compact name are shown only once.
+Direct model children under `SystemModel::evaluateResidual` and
+`SystemModel::evaluateJacobian` use only the model name. The metadata records
+the retained solver-sample share. The self-contained `10k.svg`, `2k.svg`, and
+`wecc.svg` each place Direct on top and Internal below. Each pair uses a shared
+horizontal sample scale and larger vector panels for readable comparison. The
+synthetic FlameGraph root is removed so `IDAStep` is the visible base. The
+driver rejects empty samples, unresolved GridKit/IDA/KLU profiles,
+noninteractive SVGs, and an above-5-percent share of samples containing any
+unknown frame by default.
 
 All `perf.data`, unfolded and folded stacks, logs, metadata, and SVGs remain
 under `build/benchmark/network-current/`, which is ignored by Git. Do not
