@@ -750,15 +750,18 @@ namespace GridKit
       profile_component_ends_[0] = profile_end += static_cast<IdxT>(data.adapter.size());
       profile_component_ends_[1] = profile_end += static_cast<IdxT>(data.regca.size());
       profile_component_ends_[2] = profile_end += static_cast<IdxT>(data.branch.size());
-      profile_component_ends_[3] = profile_end += static_cast<IdxT>(data.loadz.size() + data.loadzip.size());
-      profile_component_ends_[4] = profile_end += static_cast<IdxT>(data.genrou.size() + data.gensal.size() + data.genclassical.size());
-      profile_component_ends_[5] = profile_end += static_cast<IdxT>(data.reecb.size());
-      profile_component_ends_[6] = profile_end += static_cast<IdxT>(data.gov.size() + data.gastpti.size() + data.hygov.size());
-      profile_component_ends_[7] = profile_end += static_cast<IdxT>(data.stabilizer.size());
-      profile_component_ends_[8] = profile_end += static_cast<IdxT>(data.exciter.size() + data.esdc1a.size() + data.sexspti.size());
-      profile_component_ends_[9] = profile_end += static_cast<IdxT>(data.repca.size());
-      profile_component_ends_[10] = profile_end += static_cast<IdxT>(data.constant_source.size());
-      profile_component_ends_[11] = profile_end += static_cast<IdxT>(data.bus_fault.size());
+      profile_component_ends_[3] = profile_end += static_cast<IdxT>(data.loadz.size());
+      profile_component_ends_[4] = profile_end += static_cast<IdxT>(data.loadzip.size());
+      profile_component_ends_[5] = profile_end += static_cast<IdxT>(data.genrou.size());
+      profile_component_ends_[6] = profile_end += static_cast<IdxT>(data.gensal.size());
+      profile_component_ends_[7] = profile_end += static_cast<IdxT>(data.genclassical.size());
+      profile_component_ends_[8] = profile_end += static_cast<IdxT>(data.reecb.size());
+      profile_component_ends_[9] = profile_end += static_cast<IdxT>(data.gov.size() + data.gastpti.size() + data.hygov.size());
+      profile_component_ends_[10] = profile_end += static_cast<IdxT>(data.stabilizer.size());
+      profile_component_ends_[11] = profile_end += static_cast<IdxT>(data.exciter.size() + data.esdc1a.size() + data.sexspti.size());
+      profile_component_ends_[12] = profile_end += static_cast<IdxT>(data.repca.size());
+      profile_component_ends_[13] = profile_end += static_cast<IdxT>(data.constant_source.size());
+      profile_component_ends_[14] = profile_end += static_cast<IdxT>(data.bus_fault.size());
     }
 
     /**
@@ -1431,8 +1434,11 @@ namespace GridKit
           "adapter",
           "regca",
           "branch",
-          "load",
-          "generator",
+          "loadz",
+          "loadzip",
+          "genrou",
+          "gensal",
+          "genclassical",
           "reecb",
           "governor",
           "stabilizer",
