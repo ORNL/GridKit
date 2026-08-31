@@ -43,7 +43,7 @@ namespace GridKit
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
         success *= system->size()
-                   == static_cast<IdxT>(PhasorDynamics::BranchInternalVariables::MAXIMUM);
+                   == static_cast<IdxT>(Utilities::enum_size<PhasorDynamics::BranchInternalVariables>());
         success *= system->size() == branch.size();
 
 #ifdef GRIDKIT_ENABLE_ENZYME
@@ -52,12 +52,12 @@ namespace GridKit
         if (jacobian != nullptr)
         {
           success *= jacobian->getNnz()
-                     == static_cast<IdxT>(PhasorDynamics::BranchInternalVariables::MAXIMUM);
+                     == static_cast<IdxT>(Utilities::enum_size<PhasorDynamics::BranchInternalVariables>());
 
           const auto* rows   = jacobian->getRowData();
           const auto* cols   = jacobian->getColData();
           const auto* values = jacobian->getValues();
-          const auto  size   = static_cast<IdxT>(PhasorDynamics::BranchInternalVariables::MAXIMUM);
+          const auto  size   = static_cast<IdxT>(Utilities::enum_size<PhasorDynamics::BranchInternalVariables>());
           for (IdxT i = 0; i < size; ++i)
           {
             success *= rows[i] == i;
@@ -229,8 +229,8 @@ namespace GridKit
         success *= system->initialize() == 0;
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
-        success *= load.size() == 0;
-        success *= system->size() == 0;
+        success *= load.size() == 2;
+        success *= system->size() == 2;
         success *= system->size() == load.size();
 
         delete system;
@@ -255,8 +255,8 @@ namespace GridKit
         success *= system->initialize() == 0;
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
-        success *= load.size() == 0;
-        success *= system->size() == 0;
+        success *= load.size() == 2;
+        success *= system->size() == 2;
         success *= system->size() == load.size();
 
         delete system;

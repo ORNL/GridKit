@@ -102,6 +102,8 @@ $I_d$              | [p.u.] | Terminal current, d-axis                          
 $I_q$              | [p.u.] | Terminal current, q-axis                                         |
 $I_r$              | [p.u.] | Terminal current, real component on network reference frame      | Machine base
 $I_i$              | [p.u.] | Terminal current, imaginary component on network reference frame | Machine base
+$I_{\mathrm{N},r}$ | [p.u.] | Norton source current, real component on network reference frame | Internal to the network-current decomposition
+$I_{\mathrm{N},i}$ | [p.u.] | Norton source current, imaginary component on network reference frame | Internal to the network-current decomposition
 
 ### External Variables
 
@@ -158,8 +160,10 @@ Smooth functions: [$q$](../../../../CommonMath.md#quadratic-ramp).
   0 &= -T_\mathrm{e} +(\psi''_{d} - I_dX''_d)I_q-(\psi''_{q} - I_qX''_d)I_d \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
   0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta) \\
-  0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (-V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
-  0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (-V_d \cos(\delta) + V_q \sin(\delta) - V_i)
+  0 &= -I_r - GV_r + BV_i + I_{\mathrm{N},r} \\
+  0 &= -I_i - BV_r - GV_i + I_{\mathrm{N},i} \\
+  0 &= -I_{\mathrm{N},r} + G (V_d \sin(\delta) + V_q \cos(\delta)) - B (-V_d \cos(\delta) + V_q \sin(\delta)) \\
+  0 &= -I_{\mathrm{N},i} + B (V_d \sin(\delta) + V_q \cos(\delta)) + G (-V_d \cos(\delta) + V_q \sin(\delta))
 \end{aligned}
 ```
 
@@ -207,7 +211,19 @@ network frame and is independent of rotor angle:
 
 With $\delta$ known, the rotor-frame currents, voltages, flux states, field
 voltage, and mechanical power follow directly from the steady-state model
-equations above.
+equations above. The Norton-source current variables are then initialized from
+the transformed internal voltage:
+
+``` math
+\begin{aligned}
+  I_{\mathrm{N},r}
+    &\leftarrow G(V_d\sin(\delta)+V_q\cos(\delta))
+      -B(-V_d\cos(\delta)+V_q\sin(\delta)) \\
+  I_{\mathrm{N},i}
+    &\leftarrow B(V_d\sin(\delta)+V_q\cos(\delta))
+      +G(-V_d\cos(\delta)+V_q\sin(\delta))
+\end{aligned}
+```
 
 ## Monitors
 

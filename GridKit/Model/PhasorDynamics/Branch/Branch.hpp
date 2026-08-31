@@ -24,7 +24,6 @@ namespace GridKit
       II1, ///< \f$I_{i1}\f$
       IR2, ///< \f$I_{r2}\f$
       II2, ///< \f$I_{i2}\f$
-      MAXIMUM,
     };
 
     /**
