@@ -7,6 +7,6 @@ raw output, timing records, profiles, and plots belong under `build/` or
 
 Current benchmark families:
 
-- [`branch-model/`](branch-model/): compares the PhasorDynamics Branch model
-  with direct bus-current coupling against four solver-owned terminal-current
-  algebraic variables.
+- [`network-current/`](network-current/): compares direct PhasorDynamics
+  network-current injection against solver-owned current variables and provides
+  paired timing and FlameGraph drivers.
