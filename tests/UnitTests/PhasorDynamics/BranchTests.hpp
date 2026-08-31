@@ -8,6 +8,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -39,7 +40,7 @@ namespace GridKit
 
         success *= (branch != nullptr);
         success *= branch->size()
-                   == static_cast<IdxT>(PhasorDynamics::BranchInternalVariables::MAXIMUM);
+                   == static_cast<IdxT>(Utilities::enum_size<PhasorDynamics::BranchInternalVariables>());
 
         if (branch)
         {
