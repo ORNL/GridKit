@@ -82,6 +82,8 @@ $I_d$      | [p.u.] | Terminal current, d-axis          |
 $I_q$      | [p.u.] | Terminal current, q-axis          |
 $I_r$      | [p.u.] | Terminal current, real component on network reference frame | Read by bus and optionally by controllers
 $I_i$      | [p.u.] | Terminal current, imaginary component on network reference frame | Read by bus and optionally by controllers
+$I_{\mathrm{N},r}$ | [p.u.] | Norton source current, real component on network reference frame | Internal to the network-current decomposition
+$I_{\mathrm{N},i}$ | [p.u.] | Norton source current, imaginary component on network reference frame | Internal to the network-current decomposition
 
 ### External Variables
 
@@ -125,8 +127,10 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
   0 &= -T_e +(\psi''_d-I_dX_d'')I_q-(\psi''_q-I_qX_d'')I_d\\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
   0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta) \\
-  0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (-V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
-  0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (-V_d \cos(\delta) + V_q \sin(\delta) - V_i)
+  0 &= -I_r - GV_r + BV_i + I_{\mathrm{N},r} \\
+  0 &= -I_i - BV_r - GV_i + I_{\mathrm{N},i} \\
+  0 &= -I_{\mathrm{N},r} + G (V_d \sin(\delta) + V_q \cos(\delta)) - B (-V_d \cos(\delta) + V_q \sin(\delta)) \\
+  0 &= -I_{\mathrm{N},i} + B (V_d \sin(\delta) + V_q \cos(\delta)) + G (-V_d \cos(\delta) + V_q \sin(\delta))
 \end{aligned}
 ```
 
@@ -153,6 +157,8 @@ steady-state GENSAL equations.
   E'_q &= \psi'_d+X_{d2}I_d\\
   k_{sat} &= S_B q(E'_q-S_A)\\
   T_e &= (\psi''_d-I_dX_d'')I_q-(\psi''_q-I_qX_d'')I_d\\
+  I_{\mathrm{N},r} &= G(V_d\sin(\delta)+V_q\cos(\delta))-B(-V_d\cos(\delta)+V_q\sin(\delta))\\
+  I_{\mathrm{N},i} &= B(V_d\sin(\delta)+V_q\cos(\delta))+G(-V_d\cos(\delta)+V_q\sin(\delta))\\
   P_m &= T_e\\
   E_{fd} &= E'_q+X_{d1}(I_d+X_{d3}(E'_q-\psi'_d-X_{d2}I_d))+E'_q k_{sat}
 \end{aligned}

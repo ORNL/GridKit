@@ -53,6 +53,8 @@ namespace GridKit
       IQ,     ///< \f$I_q\f$
       IR,     ///< \f$I_r\f$
       II,     ///< \f$I_i\f$
+      INR,    ///< \f$I_{\mathrm{N},r}\f$
+      INI,    ///< \f$I_{\mathrm{N},i}\f$
       MAXIMUM,
     };
 
