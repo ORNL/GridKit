@@ -294,12 +294,12 @@ namespace GridKit
         auto read_signal = [&]<SexsPtiSignalInputs      input,
                                SexsPtiExternalVariables variable>(const ScalarT& latched)
         {
-          const auto index   = static_cast<size_t>(variable);
-          y_ext[index]          = latched;
+          const auto index             = static_cast<size_t>(variable);
+          y_ext[index]                 = latched;
           variable_indices_ext_[index] = INVALID_INDEX<IdxT>;
           if (auto port = ports_.in.template port<input>())
           {
-            y_ext[index]          = port.readSignal();
+            y_ext[index]                 = port.readSignal();
             variable_indices_ext_[index] = port.signalVariableIndex();
           }
         };
