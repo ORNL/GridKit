@@ -7,10 +7,36 @@ require "open3"
 require "optparse"
 require "rbconfig"
 require "time"
+require "tmpdir"
 
 FLAMEGRAPH_COMMIT = "41fee1f99f9276008b7cd112fca19dc3ea84ac32"
 BASELINE_LABEL = "direct_injection"
 VARIANT_LABEL = "internal_current_variables"
+PERF_SCRIPT_FIELDS = "comm,pid,tid,time,event,ip,sym,dso"
+COMPARISON_PANEL_WIDTH = 4000
+COMPARISON_FRAME_HEIGHT = 24
+COMPARISON_FONT_SIZE = 18
+COMPARISON_ROW_GAP = 48
+COMPARISON_MARGIN = 24
+COMPARISON_HEADER_HEIGHT = 70
+STACK_ROOT_FRAME = "IDAStep"
+CASE_SLUGS = {
+  "ACTIVSg10k" => "10k",
+  "ACTIVSg2000" => "2k",
+  "WECC240" => "wecc"
+}.freeze
+FORMULATION_SLUGS = {
+  BASELINE_LABEL => "direct",
+  VARIANT_LABEL => "internal"
+}.freeze
+FORMULATION_TITLES = {
+  BASELINE_LABEL => "Direct",
+  VARIANT_LABEL => "Internal"
+}.freeze
+SYSTEM_MODEL_CHILD_METHODS = {
+  "evaluateResidual" => "evaluateResidual",
+  "evaluateJacobian" => "evaluateJacobian"
+}.freeze
 
 def find_executable(name)
   ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).each do |directory|
@@ -135,8 +161,7 @@ end
 
 flamegraph_tools = {
   "stackcollapse" => File.join(options[:flamegraph_dir], "stackcollapse-perf.pl"),
-  "render" => File.join(options[:flamegraph_dir], "flamegraph.pl"),
-  "diff" => File.join(options[:flamegraph_dir], "difffolded.pl")
+  "render" => File.join(options[:flamegraph_dir], "flamegraph.pl")
 }
 flamegraph_tools.each_value do |path|
   raise "FlameGraph tool is not executable: #{path}" unless File.executable?(path)
@@ -254,7 +279,7 @@ options[:captures].times do |round|
     elapsed_seconds = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
     raise "perf produced an empty data file for #{name}" unless File.file?(data_path) && !File.zero?(data_path)
 
-    run_to_files!([perf, "script", "-i", data_path], unfolded_path, script_stderr_path, "perf script failed (#{name})")
+    run_to_files!([perf, "script", "-F", PERF_SCRIPT_FIELDS, "-i", data_path], unfolded_path, script_stderr_path, "perf script failed (#{name})")
     raise "perf script produced no stack samples for #{name}" unless File.file?(unfolded_path) && !File.zero?(unfolded_path)
 
     run_to_files!([flamegraph_tools.fetch("stackcollapse"), "--all", unfolded_path], folded_path, collapse_stderr_path, "stack collapse failed (#{name})")
@@ -275,21 +300,132 @@ options[:captures].times do |round|
   end
 end
 
+def strip_template_arguments(frame)
+  output = +""
+  depth = 0
+  frame.each_char do |character|
+    case character
+    when "<"
+      if depth.zero? && output.match?(/operator<*\z/)
+        output << character
+      else
+        depth += 1
+      end
+    when ">"
+      if depth.positive?
+        depth -= 1
+      else
+        output << character
+      end
+    else
+      output << character if depth.zero?
+    end
+  end
+  output
+end
+
+def compact_frame(frame)
+  enzyme_model = frame.match(
+    /\AGridKit::Enzyme::Sparse::(DfDwb|DfDws|DfDy|DfDyp|DhDwb|ModelWrapper)<GridKit::PhasorDynamics::((?:[A-Za-z_]\w*::)*)([A-Za-z_]\w*)</
+  )
+  return "#{enzyme_model[3]}::#{enzyme_model[1]}" if enzyme_model
+
+  name = strip_template_arguments(frame)
+  {
+    "AnalysisManager::Sundials::(anonymous namespace)::" => "",
+    "AnalysisManager::Sundials::Ida::" => "",
+    "GridKit::LinearAlgebra::" => "",
+    "GridKit::Enzyme::Sparse::" => "",
+    "GridKit::Utilities::" => "",
+    "GridKit::PhasorDynamics::" => "",
+    "GridKit::" => "",
+    "std::__cxx11::" => "std::",
+    "std::chrono::_V2::" => "std::chrono::"
+  }.each { |from, to| name.gsub!(from, to) }
+  name.gsub!(/nlohmann::json_abi_v[^:]+::/, "json::")
+  name.strip!
+  name.sub!(/\A.*\s+(?=(?:[A-Za-z_~][\w~]*::)+[^\s]+\z)/, "")
+  name.sub!(/\A(?:void|bool|double|float|int|long|unsigned long)\s+/, "")
+  name.sub!(/\A(?:Component(?:::|\.)|Math::|std(?:::|_)|SystemModel::|Vector::)/, "")
+  name.sub!(/\.(?:isra|constprop|part)\.\d+\z/, "")
+  name.sub!(/@(?:plt|GLIBC[^ ]*)\z/, "")
+  name.strip!
+  name.empty? || name == "decltype" ? "[compiler-generated]" : name
+end
+
+def compact_system_model_child(parent, child)
+  method = SYSTEM_MODEL_CHILD_METHODS[parent]
+  return child unless method
+
+  model = child.match(/\A(?:[A-Za-z_]\w*::)*([A-Za-z_]\w*)::#{Regexp.escape(method)}\z/)
+  model ? model[1] : child
+end
+
+def compact_contextual_child(parent, child)
+  child = compact_system_model_child(parent, child)
+  return child unless parent.match?(/\A[A-Za-z_]\w*\z/)
+
+  redundant = child.match(/\A(?:[A-Za-z_]\w*::)*#{Regexp.escape(parent)}::(.+)\z/)
+  redundant ? redundant[1] : child
+end
+
+def compact_solver_stack(stack)
+  compact = stack.split(";").map { |frame| compact_frame(frame) }
+  root = compact.index(STACK_ROOT_FRAME)
+  return unless root
+
+  compact = compact[root..]
+  compact.each_index do |index|
+    next if index.zero?
+
+    compact[index] = compact_contextual_child(compact[index - 1], compact[index])
+  end
+  compact = compact.each_with_object([]) do |frame, frames|
+    frames << frame unless frames.last == frame
+  end
+  compact.join(";")
+end
+
 def aggregate_folded(inputs, output)
   counts = Hash.new(0.0)
+  input_samples = 0.0
+  retained_samples = 0.0
   inputs.each do |path|
     File.foreach(path) do |line|
       match = line.match(/\A(.*)\s+(\d+(?:\.\d+)?)\s*\z/)
       raise "malformed folded stack in #{path}: #{line.inspect}" unless match
-      counts[match[1]] += match[2].to_f
+
+      count = match[2].to_f
+      input_samples += count
+      stack = compact_solver_stack(match[1])
+      next unless stack
+
+      retained_samples += count
+      counts[stack] += count
     end
   end
+  raise "no samples rooted at #{STACK_ROOT_FRAME} in #{inputs.join(", ")}" if retained_samples.zero?
+
   File.open(output, "w") do |file|
     counts.sort.each do |stack, count|
       formatted = count == count.to_i ? count.to_i : count
       file.puts "#{stack} #{formatted}"
     end
   end
+  {
+    "input_samples" => input_samples,
+    "retained_samples" => retained_samples,
+    "dropped_samples" => input_samples - retained_samples,
+    "retained_sample_percent" => retained_samples / input_samples * 100.0
+  }
+end
+
+def case_slug(case_name)
+  CASE_SLUGS.fetch(case_name, case_name.downcase)
+end
+
+def formulation_slug(label)
+  FORMULATION_SLUGS.fetch(label)
 end
 
 def validate_svg!(path)
@@ -298,6 +434,117 @@ def validate_svg!(path)
   required = ["<svg", "<script", "id=\"frames\""]
   missing = required.reject { |marker| svg.include?(marker) }
   raise "FlameGraph SVG is not interactive (missing #{missing.join(", ")}): #{path}" unless missing.empty?
+end
+
+def svg_dimensions(path)
+  svg_tag = File.read(path)[/<svg\b[^>]*>/]
+  raise "missing root SVG element: #{path}" unless svg_tag
+
+  width = svg_tag[/\bwidth="(\d+)"/, 1]
+  height = svg_tag[/\bheight="(\d+)"/, 1]
+  raise "missing integer SVG dimensions: #{path}" unless width && height
+
+  [Integer(width), Integer(height)]
+end
+
+def sample_argument(samples)
+  samples == samples.to_i ? samples.to_i.to_s : samples.to_s
+end
+
+def static_panel_content(path)
+  svg = File.read(path)
+  body = svg[/<svg\b[^>]*>(.*)<\/svg>\s*\z/m, 1]
+  raise "could not extract SVG body: #{path}" unless body
+
+  body.sub!(/<defs>.*?<\/defs>\s*/m, "")
+  body.sub!(/<style\b[^>]*>.*?<\/style>\s*/m, "")
+  body.sub!(/<script\b[^>]*>.*?<\/script>\s*/m, "")
+  synthetic_root = /<g\b[^>]*>\s*<title>all \([^<]*\)<\/title>.*?<\/g>\s*/m
+  synthetic_roots = body.scan(synthetic_root).length
+  raise "expected one synthetic FlameGraph root in #{path}, found #{synthetic_roots}" unless synthetic_roots == 1
+  body.sub!(synthetic_root, "")
+  %w[details unzoom search ignorecase matched].each do |id|
+    body.gsub!(/<text\s+id="#{id}"[^>]*>.*?<\/text>\s*/m, "")
+  end
+  body.gsub!('id="title"', 'class="panel-title"')
+  body.gsub!('id="frames"', 'class="frames"')
+  body.gsub!('url(#background)', 'url(#comparison-background)')
+  background = body.match(/<rect x="0(?:\.0)?" y="0" width="[\d.]+" height="([\d.]+)" fill="url\(#comparison-background\)"/)
+  raise "missing comparison panel background: #{path}" unless background
+
+  old_height = Float(background[1])
+  new_height = old_height - COMPARISON_FRAME_HEIGHT
+  body.sub!(background[0], background[0].sub(%Q{height="#{background[1]}"}, %Q{height="#{sample_argument(new_height)}"}))
+  if body.match?(/<(?:script\b|[^>]+\son[a-z]+\s*=)/i) || body.match?(/\bid="/)
+    raise "comparison panel still contains executable content or an ID: #{path}"
+  end
+  body
+end
+
+def write_case_comparison_svg!(path, panels, case_name)
+  rows = [BASELINE_LABEL, VARIANT_LABEL]
+  raise "expected two comparison panels for #{case_name}, found #{panels.length}" unless panels.length == 2
+
+  row_heights = rows.to_h do |label|
+    [label, panels.select { |panel| panel.fetch("label") == label }.map { |panel| panel.fetch("height") }.max]
+  end
+  panel_width = panels.map { |panel| panel.fetch("width") }.max
+  canvas_width = 2 * COMPARISON_MARGIN + panel_width
+  row_y = {
+    BASELINE_LABEL => COMPARISON_HEADER_HEIGHT,
+    VARIANT_LABEL => COMPARISON_HEADER_HEIGHT + row_heights.fetch(BASELINE_LABEL) + COMPARISON_ROW_GAP
+  }
+  canvas_height = row_y.fetch(VARIANT_LABEL) + row_heights.fetch(VARIANT_LABEL) + COMPARISON_MARGIN
+
+  output = +<<~SVG
+    <?xml version="1.0" standalone="no"?>
+    <svg version="1.1" width="#{canvas_width}" height="#{canvas_height}" viewBox="0 0 #{canvas_width} #{canvas_height}" xmlns="http://www.w3.org/2000/svg">
+    <title>#{case_name}</title>
+    <defs>
+    <linearGradient id="comparison-background" y1="0" y2="1" x1="0" x2="0">
+    <stop stop-color="#eeeeee" offset="5%"/>
+    <stop stop-color="#eeeeb0" offset="95%"/>
+    </linearGradient>
+    </defs>
+    <style>
+    .comparison-panel text { font-family: Verdana; font-size: #{COMPARISON_FONT_SIZE}px; fill: rgb(0,0,0); }
+    .comparison-panel .panel-title { text-anchor: middle; font-size: #{COMPARISON_FONT_SIZE + 5}px; }
+    .comparison-panel .frames &gt; *:hover { stroke: black; stroke-width: 0.5; }
+    </style>
+    <rect width="100%" height="100%" fill="white"/>
+    <text x="#{canvas_width / 2}" y="30" text-anchor="middle" font-family="Verdana" font-size="24">#{case_name}</text>
+    <text x="#{canvas_width / 2}" y="54" text-anchor="middle" font-family="Verdana" font-size="16">Direct top / Internal bottom - shared sample scale</text>
+  SVG
+
+  rows.each do |label|
+    panel = panels.find { |record| record.fetch("label") == label }
+    raise "missing comparison panel for #{label}/#{case_name}" unless panel
+
+    y = row_y.fetch(label)
+    content = static_panel_content(panel.fetch("svg"))
+    output << <<~SVG
+      <g>
+      <title>#{FORMULATION_TITLES.fetch(label)}</title>
+      <svg class="comparison-panel" x="#{COMPARISON_MARGIN}" y="#{y}" width="#{panel.fetch("width")}" height="#{panel.fetch("height")}" viewBox="0 0 #{panel.fetch("width")} #{panel.fetch("height")}">
+      #{content}
+      </svg>
+      </g>
+    SVG
+  end
+  output << "</svg>\n"
+  File.write(path, output)
+end
+
+def validate_comparison_svg!(path, expected_panels)
+  raise "comparison SVG is empty: #{path}" unless File.file?(path) && !File.zero?(path)
+
+  svg = File.read(path)
+  raise "comparison SVG has the wrong number of panels: #{path}" unless svg.scan(/<svg class="comparison-panel"/).length == expected_panels
+  raise "comparison SVG contains executable content: #{path}" if svg.match?(/<(?:script\b|[^>]+\son[a-z]+\s*=)/i)
+  raise "comparison SVG contains a removed base row: #{path}" if svg.match?(/<title>(?:all|runSimulation|IDASolve) \(/)
+  unless svg.scan(/<title>IDAStep \(/).length == expected_panels
+    raise "comparison SVG does not have IDAStep as the base of every panel: #{path}"
+  end
 end
 
 aggregate_records = []
@@ -309,12 +556,21 @@ selected_cases.each do |case_name|
     end
 
     aggregate_path = File.join(folded_dir, "#{label}-#{case_name}.folded.txt")
-    aggregate_folded(captures.map { |record| record.fetch("folded") }, aggregate_path)
+    retention = aggregate_folded(captures.map { |record| record.fetch("folded") }, aggregate_path)
     stats = folded_stats(aggregate_path)
     raise "aggregate folded stack contains no samples for #{label}/#{case_name}" if stats.fetch("stacks").zero? || stats.fetch("samples").zero?
+    unless stats.fetch("samples") == retention.fetch("retained_samples")
+      raise "aggregate sample mismatch for #{label}/#{case_name}: #{stats.fetch("samples")}, expected #{retention.fetch("retained_samples")}"
+    end
+    File.foreach(aggregate_path) do |line|
+      stack = line.sub(/\s+\d+(?:\.\d+)?\s*\z/, "")
+      unless stack == STACK_ROOT_FRAME || stack.start_with?("#{STACK_ROOT_FRAME};")
+        raise "aggregate stack is not rooted at #{STACK_ROOT_FRAME} for #{label}/#{case_name}: #{stack}"
+      end
+    end
 
     frame_patterns = {
-      "GridKit" => /(?:GridKit|DynamicSimulation|SystemModel)/,
+      "GridKit" => /SystemModel/,
       "IDA" => /(?:\bIDA[A-Za-z0-9_]*\b|\bida[A-Za-z0-9_]*\b)/,
       "KLU" => /(?:\bKLU[A-Za-z0-9_]*\b|\bklu[A-Za-z0-9_]*\b)/
     }
@@ -332,43 +588,81 @@ selected_cases.each do |case_name|
       )
     end
 
-    svg_path = File.join(svg_dir, "#{label}-#{case_name}.svg")
-    render_stderr_path = File.join(raw_dir, "#{label}-#{case_name}.flamegraph.stderr.txt")
-    title = "#{case_name}: #{label.tr("_", " ")}"
-    run_to_files!([flamegraph_tools.fetch("render"), "--hash", "--title", title, aggregate_path], svg_path, render_stderr_path, "FlameGraph render failed (#{label}/#{case_name})")
-    validate_svg!(svg_path)
-
     aggregate_records << {
       "label" => label,
       "case" => case_name,
       "folded" => aggregate_path,
-      "svg" => svg_path,
       "stacks" => stats.fetch("stacks"),
       "samples" => stats.fetch("samples"),
-      "unknown_stack_percent" => stats.fetch("unknown_stack_percent")
+      "unknown_stack_percent" => stats.fetch("unknown_stack_percent"),
+      **retention
     }
   end
 end
 
-differential_records = selected_cases.map do |case_name|
-  baseline = aggregate_records.find { |record| record.fetch("case") == case_name && record.fetch("label") == BASELINE_LABEL }
-  variant = aggregate_records.find { |record| record.fetch("case") == case_name && record.fetch("label") == VARIANT_LABEL }
-  diff_path = File.join(folded_dir, "#{VARIANT_LABEL}-vs-#{BASELINE_LABEL}-#{case_name}.folded.txt")
-  diff_stderr_path = File.join(raw_dir, "#{VARIANT_LABEL}-vs-#{BASELINE_LABEL}-#{case_name}.difffolded.stderr.txt")
-  run_to_files!(
-    [flamegraph_tools.fetch("diff"), "-n", baseline.fetch("folded"), variant.fetch("folded")],
-    diff_path,
-    diff_stderr_path,
-    "normalized folded diff failed (#{case_name})"
-  )
-  raise "normalized folded diff is empty for #{case_name}" unless File.file?(diff_path) && !File.zero?(diff_path)
+comparison_records = []
+Dir.mktmpdir("comparison-panels-", output_dir) do |comparison_panel_dir|
+  selected_cases.each do |case_name|
+    pair = aggregate_records.select { |record| record.fetch("case") == case_name }
+    raise "expected two aggregate profiles for #{case_name}, found #{pair.length}" unless pair.length == 2
 
-  svg_path = File.join(svg_dir, "#{VARIANT_LABEL}-vs-#{BASELINE_LABEL}-#{case_name}.svg")
-  render_stderr_path = File.join(raw_dir, "#{VARIANT_LABEL}-vs-#{BASELINE_LABEL}-#{case_name}.flamegraph.stderr.txt")
-  title = "#{case_name}: internal current variables vs direct injection"
-  run_to_files!([flamegraph_tools.fetch("render"), "--title", title, diff_path], svg_path, render_stderr_path, "differential FlameGraph render failed (#{case_name})")
-  validate_svg!(svg_path)
-  {"case" => case_name, "folded" => diff_path, "svg" => svg_path, "widths" => VARIANT_LABEL, "normalized" => true}
+    shared_total = pair.map { |record| record.fetch("samples") }.max
+    panels = [BASELINE_LABEL, VARIANT_LABEL].map do |label|
+      aggregate = pair.find { |record| record.fetch("label") == label }
+      raise "missing aggregate profile for #{label}/#{case_name}" unless aggregate
+
+      panel_name = "#{case_slug(case_name)}-#{formulation_slug(label)}"
+      panel_path = File.join(comparison_panel_dir, "#{panel_name}.svg")
+      render_stderr_path = File.join(raw_dir, "#{panel_name}.comparison.stderr.txt")
+      title = FORMULATION_TITLES.fetch(label)
+      render_command = [
+        flamegraph_tools.fetch("render"),
+        "--width", COMPARISON_PANEL_WIDTH.to_s,
+        "--height", COMPARISON_FRAME_HEIGHT.to_s,
+        "--fontsize", COMPARISON_FONT_SIZE.to_s,
+        "--total", sample_argument(shared_total),
+        "--hash",
+        "--title", title,
+        aggregate.fetch("folded")
+      ]
+      run_to_files!(render_command, panel_path, render_stderr_path, "comparison FlameGraph render failed (#{label}/#{case_name})")
+      validate_svg!(panel_path)
+      width, source_height = svg_dimensions(panel_path)
+      height = source_height - COMPARISON_FRAME_HEIGHT
+      {
+        "label" => label,
+        "case" => case_name,
+        "svg" => panel_path,
+        "width" => width,
+        "height" => height,
+        "samples" => aggregate.fetch("samples"),
+        "shared_total" => shared_total
+      }
+    end
+
+    comparison_path = File.join(svg_dir, "#{case_slug(case_name)}.svg")
+    write_case_comparison_svg!(comparison_path, panels, case_name)
+    validate_comparison_svg!(comparison_path, panels.length)
+    comparison_records << {
+      "case" => case_name,
+      "svg" => comparison_path,
+      "rows" => [BASELINE_LABEL, VARIANT_LABEL],
+      "scale" => "shared retained samples within the case",
+      "panel_width" => COMPARISON_PANEL_WIDTH,
+      "frame_height" => COMPARISON_FRAME_HEIGHT,
+      "font_size" => COMPARISON_FONT_SIZE,
+      "self_contained" => true,
+      "interactive" => false,
+      "synthetic_root_removed" => true,
+      "panels" => panels.map { |panel| panel.reject { |key, _value| key == "svg" } }
+    }
+  end
+end
+
+expected_svg_names = selected_cases.map { |case_name| "#{case_slug(case_name)}.svg" }.sort
+actual_svg_names = Dir.glob(File.join(svg_dir, "*.svg")).map { |path| File.basename(path) }.sort
+unless actual_svg_names == expected_svg_names
+  raise "unexpected case-comparison SVG set: #{actual_svg_names.join(", ")}; expected #{expected_svg_names.join(", ")}"
 end
 
 profile_metadata = {
@@ -383,6 +677,9 @@ profile_metadata = {
   "perf_event" => "cpu-clock:u",
   "perf_frequency_hz" => 99,
   "perf_call_graph" => "dwarf,16384",
+  "perf_script_fields" => PERF_SCRIPT_FIELDS,
+  "stack_root" => STACK_ROOT_FRAME,
+  "frame_names" => "compact_contextual_parent_names",
   "flamegraph_dir" => options[:flamegraph_dir],
   "flamegraph_commit" => git_head,
   "max_unknown_percent" => options[:max_unknown_percent],
@@ -391,8 +688,8 @@ profile_metadata = {
   "solver_sha256s" => selected_cases.to_h { |case_name| [case_name, solver_sha256s.fetch(case_name)] },
   "capture_records" => capture_records,
   "aggregate_records" => aggregate_records,
-  "differential_records" => differential_records
+  "comparison_records" => comparison_records
 }
 File.write(File.join(output_dir, "profiles.json"), JSON.pretty_generate(profile_metadata))
 
-puts "wrote #{capture_records.length} captures and #{differential_records.length} differential FlameGraphs to #{output_dir}"
+puts "wrote #{capture_records.length} captures and #{comparison_records.length} case-comparison FlameGraphs to #{output_dir}"

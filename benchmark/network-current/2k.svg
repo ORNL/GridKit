@@ -1,0 +1,2072 @@
+<?xml version="1.0" standalone="no"?>
+<svg version="1.1" width="4048" height="1062" viewBox="0 0 4048 1062" xmlns="http://www.w3.org/2000/svg">
+<title>ACTIVSg2000</title>
+<defs>
+<linearGradient id="comparison-background" y1="0" y2="1" x1="0" x2="0">
+<stop stop-color="#eeeeee" offset="5%"/>
+<stop stop-color="#eeeeb0" offset="95%"/>
+</linearGradient>
+</defs>
+<style>
+.comparison-panel text { font-family: Verdana; font-size: 18px; fill: rgb(0,0,0); }
+.comparison-panel .panel-title { text-anchor: middle; font-size: 23px; }
+.comparison-panel .frames &gt; *:hover { stroke: black; stroke-width: 0.5; }
+</style>
+<rect width="100%" height="100%" fill="white"/>
+<text x="2024" y="30" text-anchor="middle" font-family="Verdana" font-size="24">ACTIVSg2000</text>
+<text x="2024" y="54" text-anchor="middle" font-family="Verdana" font-size="16">Direct top / Internal bottom - shared sample scale</text>
+<g>
+<title>Direct</title>
+<svg class="comparison-panel" x="24" y="70" width="4000" height="508" viewBox="0 0 4000 508">
+
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<rect x="0.0" y="0" width="4000.0" height="508" fill="url(#comparison-background)"  />
+<text class="panel-title" x="2000.00" y="36" >Direct</text>
+<g class="frames">
+<g >
+<title>evaluateResidual (222 samples, 9.97%)</title><rect x="583.7" y="343" width="396.7" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="586.68" y="357.5" >evaluateResidual</text>
+</g>
+<g >
+<title>Jac (85 samples, 3.82%)</title><rect x="102.9" y="343" width="151.9" height="23.0" fill="rgb(228,142,25)" rx="2" ry="2" />
+<text  x="105.93" y="357.5" >Jac</text>
+</g>
+<g >
+<title>__fill_a1 (1 samples, 0.04%)</title><rect x="875.0" y="199" width="1.8" height="23.0" fill="rgb(221,135,18)" rx="2" ry="2" />
+<text  x="877.98" y="213.5" ></text>
+</g>
+<g >
+<title>Genrou (14 samples, 0.63%)</title><rect x="876.8" y="319" width="25.0" height="23.0" fill="rgb(237,205,35)" rx="2" ry="2" />
+<text  x="879.77" y="333.5" ></text>
+</g>
+<g >
+<title>Tgov1 (13 samples, 0.58%)</title><rect x="957.2" y="319" width="23.2" height="23.0" fill="rgb(228,168,25)" rx="2" ry="2" />
+<text  x="960.19" y="333.5" ></text>
+</g>
+<g >
+<title>indicator (1 samples, 0.04%)</title><rect x="249.5" y="151" width="1.8" height="23.0" fill="rgb(241,177,39)" rx="2" ry="2" />
+<text  x="252.48" y="165.5" ></text>
+</g>
+<g >
+<title>Bus::Vi (1 samples, 0.04%)</title><rect x="676.6" y="247" width="1.8" height="23.0" fill="rgb(229,124,26)" rx="2" ry="2" />
+<text  x="679.61" y="261.5" ></text>
+</g>
+<g >
+<title>below (1 samples, 0.04%)</title><rect x="249.5" y="127" width="1.8" height="23.0" fill="rgb(238,155,36)" rx="2" ry="2" />
+<text  x="252.48" y="141.5" ></text>
+</g>
+<g >
+<title>getData (3 samples, 0.13%)</title><rect x="190.5" y="271" width="5.4" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="193.50" y="285.5" ></text>
+</g>
+<g >
+<title>antiwindup (1 samples, 0.04%)</title><rect x="249.5" y="175" width="1.8" height="23.0" fill="rgb(241,148,39)" rx="2" ry="2" />
+<text  x="252.48" y="189.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (9 samples, 0.40%)</title><rect x="646.2" y="295" width="16.1" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="649.23" y="309.5" ></text>
+</g>
+<g >
+<title>ComponentSignals::readExternalVariable (1 samples, 0.04%)</title><rect x="905.4" y="295" width="1.8" height="23.0" fill="rgb(241,165,40)" rx="2" ry="2" />
+<text  x="908.37" y="309.5" ></text>
+</g>
+<g >
+<title>evaluateInternalResidual (2 samples, 0.09%)</title><rect x="889.3" y="295" width="3.6" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="892.28" y="309.5" ></text>
+</g>
+<g >
+<title>LoadZ (6 samples, 0.27%)</title><rect x="238.8" y="295" width="10.7" height="23.0" fill="rgb(253,173,53)" rx="2" ry="2" />
+<text  x="241.76" y="309.5" ></text>
+</g>
+<g >
+<title>__fill_a1 (1 samples, 0.04%)</title><rect x="969.7" y="247" width="1.8" height="23.0" fill="rgb(221,135,18)" rx="2" ry="2" />
+<text  x="972.70" y="261.5" ></text>
+</g>
+<g >
+<title>SignalNode::getVariableIndex (1 samples, 0.04%)</title><rect x="907.2" y="271" width="1.7" height="23.0" fill="rgb(250,153,49)" rx="2" ry="2" />
+<text  x="910.15" y="285.5" ></text>
+</g>
+<g >
+<title>Bus (6 samples, 0.27%)</title><rect x="178.0" y="295" width="10.7" height="23.0" fill="rgb(234,124,32)" rx="2" ry="2" />
+<text  x="180.99" y="309.5" ></text>
+</g>
+<g >
+<title>__ieee754_exp_fma (2 samples, 0.09%)</title><rect x="226.2" y="127" width="3.6" height="23.0" fill="rgb(227,125,24)" rx="2" ry="2" />
+<text  x="229.25" y="141.5" ></text>
+</g>
+<g >
+<title>CooMatrix::getValues (4 samples, 0.18%)</title><rect x="203.0" y="295" width="7.2" height="23.0" fill="rgb(237,159,36)" rx="2" ry="2" />
+<text  x="206.01" y="309.5" ></text>
+</g>
+<g >
+<title>setHostUpdated (2 samples, 0.09%)</title><rect x="953.6" y="271" width="3.6" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="956.62" y="285.5" ></text>
+</g>
+<g >
+<title>fill (1 samples, 0.04%)</title><rect x="969.7" y="295" width="1.8" height="23.0" fill="rgb(224,183,21)" rx="2" ry="2" />
+<text  x="972.70" y="309.5" ></text>
+</g>
+<g >
+<title>__ostream_insert (2 samples, 0.09%)</title><rect x="183.4" y="223" width="3.5" height="23.0" fill="rgb(236,144,34)" rx="2" ry="2" />
+<text  x="186.35" y="237.5" ></text>
+</g>
+<g >
+<title>_Vector_base::_Vector_base (1 samples, 0.04%)</title><rect x="220.9" y="223" width="1.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="223.88" y="237.5" ></text>
+</g>
+<g >
+<title>__copy_move_a1 (1 samples, 0.04%)</title><rect x="104.7" y="271" width="1.8" height="23.0" fill="rgb(221,144,18)" rx="2" ry="2" />
+<text  x="107.72" y="285.5" ></text>
+</g>
+<g >
+<title>allocator::allocate (1 samples, 0.04%)</title><rect x="220.9" y="127" width="1.8" height="23.0" fill="rgb(245,128,45)" rx="2" ry="2" />
+<text  x="223.88" y="141.5" ></text>
+</g>
+<g >
+<title>sparse_store (3 samples, 0.13%)</title><rect x="213.7" y="175" width="5.4" height="23.0" fill="rgb(246,176,45)" rx="2" ry="2" />
+<text  x="216.74" y="189.5" ></text>
+</g>
+<g >
+<title>N_VWrmsNorm_Serial (3 samples, 0.13%)</title><rect x="95.8" y="367" width="5.3" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="98.78" y="381.5" ></text>
+</g>
+<g >
+<title>Branch::evaluateAdmittanceBlock (1 samples, 0.04%)</title><rect x="145.8" y="175" width="1.8" height="23.0" fill="rgb(240,158,39)" rx="2" ry="2" />
+<text  x="148.82" y="189.5" ></text>
+</g>
+<g >
+<title>operator&lt;&lt; (1 samples, 0.04%)</title><rect x="170.8" y="271" width="1.8" height="23.0" fill="rgb(245,195,44)" rx="2" ry="2" />
+<text  x="173.84" y="285.5" ></text>
+</g>
+<g >
+<title>getData (6 samples, 0.27%)</title><rect x="635.5" y="271" width="10.7" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="638.51" y="285.5" ></text>
+</g>
+<g >
+<title>getData (6 samples, 0.27%)</title><rect x="912.5" y="295" width="10.7" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="915.51" y="309.5" ></text>
+</g>
+<g >
+<title>Branch::ModelWrapper (5 samples, 0.22%)</title><rect x="138.7" y="223" width="8.9" height="23.0" fill="rgb(243,158,41)" rx="2" ry="2" />
+<text  x="141.68" y="237.5" ></text>
+</g>
+<g >
+<title>N_VLinearCombination (12 samples, 0.54%)</title><rect x="11.8" y="415" width="21.4" height="23.0" fill="rgb(247,124,46)" rx="2" ry="2" />
+<text  x="14.79" y="429.5" ></text>
+</g>
+<g >
+<title>setHostUpdated (4 samples, 0.18%)</title><rect x="655.2" y="271" width="7.1" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="658.16" y="285.5" ></text>
+</g>
+<g >
+<title>memset (1 samples, 0.04%)</title><rect x="653.4" y="271" width="1.8" height="23.0" fill="rgb(237,144,35)" rx="2" ry="2" />
+<text  x="656.38" y="285.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (3 samples, 0.13%)</title><rect x="565.8" y="367" width="5.4" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="568.81" y="381.5" ></text>
+</g>
+<g >
+<title>Genrou::evaluateInternalResidual (5 samples, 0.22%)</title><rect x="210.2" y="199" width="8.9" height="23.0" fill="rgb(224,205,21)" rx="2" ry="2" />
+<text  x="213.16" y="213.5" ></text>
+</g>
+<g >
+<title>_Vector_base::_M_create_storage (1 samples, 0.04%)</title><rect x="220.9" y="199" width="1.8" height="23.0" fill="rgb(248,128,47)" rx="2" ry="2" />
+<text  x="223.88" y="213.5" ></text>
+</g>
+<g >
+<title>sigmoid (3 samples, 0.13%)</title><rect x="964.3" y="199" width="5.4" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="967.34" y="213.5" ></text>
+</g>
+<g >
+<title>Branch::Vi1 (1 samples, 0.04%)</title><rect x="676.6" y="271" width="1.8" height="23.0" fill="rgb(231,158,28)" rx="2" ry="2" />
+<text  x="679.61" y="285.5" ></text>
+</g>
+<g >
+<title>Vaxpy_Serial (6 samples, 0.27%)</title><rect x="22.5" y="391" width="10.7" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="25.51" y="405.5" ></text>
+</g>
+<g >
+<title>terminalCurrent2 (4 samples, 0.18%)</title><rect x="755.2" y="295" width="7.2" height="23.0" fill="rgb(247,152,46)" rx="2" ry="2" />
+<text  x="758.24" y="309.5" ></text>
+</g>
+<g >
+<title>Ii1 (1 samples, 0.04%)</title><rect x="619.4" y="295" width="1.8" height="23.0" fill="rgb(232,172,29)" rx="2" ry="2" />
+<text  x="622.42" y="309.5" ></text>
+</g>
+<g >
+<title>DfDy (7 samples, 0.31%)</title><rect x="210.2" y="271" width="12.5" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="213.16" y="285.5" ></text>
+</g>
+<g >
+<title>Ir1 (4 samples, 0.18%)</title><rect x="624.8" y="295" width="7.1" height="23.0" fill="rgb(234,182,32)" rx="2" ry="2" />
+<text  x="627.78" y="309.5" ></text>
+</g>
+<g >
+<title>Logger::misc (2 samples, 0.09%)</title><rect x="183.4" y="271" width="3.5" height="23.0" fill="rgb(227,154,24)" rx="2" ry="2" />
+<text  x="186.35" y="285.5" ></text>
+</g>
+<g >
+<title>memset (1 samples, 0.04%)</title><rect x="978.6" y="271" width="1.8" height="23.0" fill="rgb(237,144,35)" rx="2" ry="2" />
+<text  x="981.64" y="285.5" ></text>
+</g>
+<g >
+<title>klu_scale (3 samples, 0.13%)</title><rect x="321.0" y="271" width="5.3" height="23.0" fill="rgb(242,99,41)" rx="2" ry="2" />
+<text  x="323.97" y="285.5" ></text>
+</g>
+<g >
+<title>Governor::Tgov1::evaluateInternalResidual (1 samples, 0.04%)</title><rect x="249.5" y="199" width="1.8" height="23.0" fill="rgb(224,184,21)" rx="2" ry="2" />
+<text  x="252.48" y="213.5" ></text>
+</g>
+<g >
+<title>BusFault (7 samples, 0.31%)</title><rect x="188.7" y="295" width="12.5" height="23.0" fill="rgb(228,124,25)" rx="2" ry="2" />
+<text  x="191.72" y="309.5" ></text>
+</g>
+<g >
+<title>IDAStep (570 samples, 25.59%)</title><rect x="10.0" y="439" width="1018.7" height="23.0" fill="rgb(243,179,42)" rx="2" ry="2" />
+<text  x="13.00" y="453.5" >IDAStep</text>
+</g>
+<g >
+<title>Genrou::ModelWrapper (5 samples, 0.22%)</title><rect x="210.2" y="223" width="8.9" height="23.0" fill="rgb(243,205,41)" rx="2" ry="2" />
+<text  x="213.16" y="237.5" ></text>
+</g>
+<g >
+<title>getData (1 samples, 0.04%)</title><rect x="760.6" y="247" width="1.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="763.61" y="261.5" ></text>
+</g>
+<g >
+<title>Branch::addAdmittanceContribution (3 samples, 0.13%)</title><rect x="749.9" y="271" width="5.3" height="23.0" fill="rgb(247,158,46)" rx="2" ry="2" />
+<text  x="752.88" y="285.5" ></text>
+</g>
+<g >
+<title>getData (13 samples, 0.58%)</title><rect x="762.4" y="295" width="23.2" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="765.39" y="309.5" ></text>
+</g>
+<g >
+<title>Bus::Ii (1 samples, 0.04%)</title><rect x="619.4" y="271" width="1.8" height="23.0" fill="rgb(231,124,29)" rx="2" ry="2" />
+<text  x="622.42" y="285.5" ></text>
+</g>
+<g >
+<title>__copy_move_a2 (1 samples, 0.04%)</title><rect x="104.7" y="247" width="1.8" height="23.0" fill="rgb(237,144,35)" rx="2" ry="2" />
+<text  x="107.72" y="261.5" ></text>
+</g>
+<g >
+<title>Tgov1::ModelWrapper (1 samples, 0.04%)</title><rect x="249.5" y="223" width="1.8" height="23.0" fill="rgb(243,168,41)" rx="2" ry="2" />
+<text  x="252.48" y="237.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (2 samples, 0.09%)</title><rect x="953.6" y="295" width="3.6" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="956.62" y="309.5" ></text>
+</g>
+<g >
+<title>__memcpy_avx_unaligned_erms (3 samples, 0.13%)</title><rect x="573.0" y="343" width="5.3" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="575.95" y="357.5" ></text>
+</g>
+<g >
+<title>N_VConst_Serial (1 samples, 0.04%)</title><rect x="326.3" y="343" width="1.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="329.33" y="357.5" ></text>
+</g>
+<g >
+<title>__tanh (1 samples, 0.04%)</title><rect x="249.5" y="79" width="1.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="252.48" y="93.5" ></text>
+</g>
+<g >
+<title>Branch::evaluateBusResidual21 (1 samples, 0.04%)</title><rect x="144.0" y="199" width="1.8" height="23.0" fill="rgb(232,158,30)" rx="2" ry="2" />
+<text  x="147.04" y="213.5" ></text>
+</g>
+<g >
+<title>vector::vector (1 samples, 0.04%)</title><rect x="220.9" y="247" width="1.8" height="23.0" fill="rgb(241,146,39)" rx="2" ry="2" />
+<text  x="223.88" y="261.5" ></text>
+</g>
+<g >
+<title>profileKluSetup (38 samples, 1.71%)</title><rect x="258.4" y="343" width="67.9" height="23.0" fill="rgb(238,184,36)" rx="2" ry="2" />
+<text  x="261.41" y="357.5" >prof..</text>
+</g>
+<g >
+<title>getData (35 samples, 1.57%)</title><rect x="810.6" y="295" width="62.6" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="813.65" y="309.5" >get..</text>
+</g>
+<g >
+<title>Exciter::Ieeet1::evaluateInternalResidual (4 samples, 0.18%)</title><rect x="226.2" y="199" width="7.2" height="23.0" fill="rgb(224,97,21)" rx="2" ry="2" />
+<text  x="229.25" y="213.5" ></text>
+</g>
+<g >
+<title>Branch::evaluateBusResidual22 (1 samples, 0.04%)</title><rect x="145.8" y="199" width="1.8" height="23.0" fill="rgb(248,158,47)" rx="2" ry="2" />
+<text  x="148.82" y="213.5" ></text>
+</g>
+<g >
+<title>updateTime (25 samples, 1.12%)</title><rect x="980.4" y="343" width="44.7" height="23.0" fill="rgb(236,150,34)" rx="2" ry="2" />
+<text  x="983.43" y="357.5" >up..</text>
+</g>
+<g >
+<title>Branch (25 samples, 1.12%)</title><rect x="133.3" y="295" width="44.7" height="23.0" fill="rgb(246,158,45)" rx="2" ry="2" />
+<text  x="136.31" y="309.5" >Br..</text>
+</g>
+<g >
+<title>fill (1 samples, 0.04%)</title><rect x="875.0" y="247" width="1.8" height="23.0" fill="rgb(224,183,21)" rx="2" ry="2" />
+<text  x="877.98" y="261.5" ></text>
+</g>
+<g >
+<title>Residual (254 samples, 11.41%)</title><rect x="571.2" y="367" width="453.9" height="23.0" fill="rgb(224,181,21)" rx="2" ry="2" />
+<text  x="574.17" y="381.5" >Residual</text>
+</g>
+<g >
+<title>SignalNode::read (1 samples, 0.04%)</title><rect x="905.4" y="271" width="1.8" height="23.0" fill="rgb(241,153,40)" rx="2" ry="2" />
+<text  x="908.37" y="285.5" ></text>
+</g>
+<g >
+<title>ostream::flush (1 samples, 0.04%)</title><rect x="172.6" y="199" width="1.8" height="23.0" fill="rgb(236,171,34)" rx="2" ry="2" />
+<text  x="175.63" y="213.5" ></text>
+</g>
+<g >
+<title>ostream::sentry::sentry (2 samples, 0.09%)</title><rect x="183.4" y="199" width="3.5" height="23.0" fill="rgb(243,171,42)" rx="2" ry="2" />
+<text  x="186.35" y="213.5" ></text>
+</g>
+<g >
+<title>__memcpy_avx_unaligned_erms (3 samples, 0.13%)</title><rect x="578.3" y="319" width="5.4" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="581.32" y="333.5" ></text>
+</g>
+<g >
+<title>operator&lt;&lt; (1 samples, 0.04%)</title><rect x="237.0" y="271" width="1.8" height="23.0" fill="rgb(245,195,44)" rx="2" ry="2" />
+<text  x="239.97" y="285.5" ></text>
+</g>
+<g >
+<title>N_VWSqrSumLocal_Serial (3 samples, 0.13%)</title><rect x="95.8" y="343" width="5.3" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="98.78" y="357.5" ></text>
+</g>
+<g >
+<title>BusFault::DfDy (1 samples, 0.04%)</title><rect x="188.7" y="247" width="1.8" height="23.0" fill="rgb(246,124,46)" rx="2" ry="2" />
+<text  x="191.72" y="261.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (2 samples, 0.09%)</title><rect x="229.8" y="151" width="3.6" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="232.82" y="165.5" ></text>
+</g>
+<g >
+<title>indicator (3 samples, 0.13%)</title><rect x="964.3" y="247" width="5.4" height="23.0" fill="rgb(241,177,39)" rx="2" ry="2" />
+<text  x="967.34" y="261.5" ></text>
+</g>
+<g >
+<title>sigmoid (1 samples, 0.04%)</title><rect x="891.1" y="247" width="1.8" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="894.07" y="261.5" ></text>
+</g>
+<g >
+<title>_Vector_base::_M_allocate (1 samples, 0.04%)</title><rect x="220.9" y="175" width="1.8" height="23.0" fill="rgb(245,128,45)" rx="2" ry="2" />
+<text  x="223.88" y="189.5" ></text>
+</g>
+<g >
+<title>Bus (17 samples, 0.76%)</title><rect x="762.4" y="319" width="30.4" height="23.0" fill="rgb(234,124,32)" rx="2" ry="2" />
+<text  x="765.39" y="333.5" ></text>
+</g>
+<g >
+<title>BusBase::getResidual (1 samples, 0.04%)</title><rect x="617.6" y="295" width="1.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="620.63" y="309.5" ></text>
+</g>
+<g >
+<title>memset (1 samples, 0.04%)</title><rect x="660.5" y="247" width="1.8" height="23.0" fill="rgb(237,144,35)" rx="2" ry="2" />
+<text  x="663.53" y="261.5" ></text>
+</g>
+<g >
+<title>indicator (1 samples, 0.04%)</title><rect x="910.7" y="247" width="1.8" height="23.0" fill="rgb(241,177,39)" rx="2" ry="2" />
+<text  x="913.73" y="261.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (1 samples, 0.04%)</title><rect x="76.1" y="415" width="1.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="79.12" y="429.5" ></text>
+</g>
+<g >
+<title>LoadZ (19 samples, 0.85%)</title><rect x="923.2" y="319" width="34.0" height="23.0" fill="rgb(253,173,53)" rx="2" ry="2" />
+<text  x="926.24" y="333.5" >L..</text>
+</g>
+<g >
+<title>BusBase::size (3 samples, 0.13%)</title><rect x="133.3" y="271" width="5.4" height="23.0" fill="rgb(245,124,44)" rx="2" ry="2" />
+<text  x="136.31" y="285.5" ></text>
+</g>
+<g >
+<title>idaNlsLSetup (125 samples, 5.61%)</title><rect x="102.9" y="391" width="223.4" height="23.0" fill="rgb(238,181,36)" rx="2" ry="2" />
+<text  x="105.93" y="405.5" >idaNlsLSetup</text>
+</g>
+<g >
+<title>__tanh (1 samples, 0.04%)</title><rect x="891.1" y="223" width="1.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="894.07" y="237.5" ></text>
+</g>
+<g >
+<title>Branch::evaluateAdmittanceBlock (3 samples, 0.13%)</title><rect x="138.7" y="175" width="5.3" height="23.0" fill="rgb(240,158,39)" rx="2" ry="2" />
+<text  x="141.68" y="189.5" ></text>
+</g>
+<g >
+<title>__ostream_insert (1 samples, 0.04%)</title><rect x="237.0" y="247" width="1.8" height="23.0" fill="rgb(236,144,34)" rx="2" ry="2" />
+<text  x="239.97" y="261.5" ></text>
+</g>
+<g >
+<title>ranges::__fill_fn::operator (1 samples, 0.04%)</title><rect x="219.1" y="199" width="1.8" height="23.0" fill="rgb(241,146,39)" rx="2" ry="2" />
+<text  x="222.10" y="213.5" ></text>
+</g>
+<g >
+<title>klu_refactor (36 samples, 1.62%)</title><rect x="262.0" y="295" width="64.3" height="23.0" fill="rgb(241,99,39)" rx="2" ry="2" />
+<text  x="264.99" y="309.5" >klu_..</text>
+</g>
+<g >
+<title>profileKluSolve (122 samples, 5.48%)</title><rect x="331.7" y="343" width="218.0" height="23.0" fill="rgb(244,184,43)" rx="2" ry="2" />
+<text  x="334.69" y="357.5" >profileKluSolve</text>
+</g>
+<g >
+<title>ostream::operator&lt;&lt; (1 samples, 0.04%)</title><rect x="199.4" y="271" width="1.8" height="23.0" fill="rgb(245,171,44)" rx="2" ry="2" />
+<text  x="202.44" y="285.5" ></text>
+</g>
+<g >
+<title>Ieeet1::DfDy (4 samples, 0.18%)</title><rect x="226.2" y="247" width="7.2" height="23.0" fill="rgb(246,179,46)" rx="2" ry="2" />
+<text  x="229.25" y="261.5" ></text>
+</g>
+<g >
+<title>sparse_store (2 samples, 0.09%)</title><rect x="229.8" y="175" width="3.6" height="23.0" fill="rgb(246,176,45)" rx="2" ry="2" />
+<text  x="232.82" y="189.5" ></text>
+</g>
+<g >
+<title>Ieeet1 (12 samples, 0.54%)</title><rect x="901.8" y="319" width="21.4" height="23.0" fill="rgb(229,179,26)" rx="2" ry="2" />
+<text  x="904.79" y="333.5" ></text>
+</g>
+<g >
+<title>operator new (1 samples, 0.04%)</title><rect x="220.9" y="79" width="1.8" height="23.0" fill="rgb(235,195,33)" rx="2" ry="2" />
+<text  x="223.88" y="93.5" ></text>
+</g>
+<g >
+<title>__new_allocator::allocate (1 samples, 0.04%)</title><rect x="220.9" y="103" width="1.8" height="23.0" fill="rgb(245,148,45)" rx="2" ry="2" />
+<text  x="223.88" y="117.5" ></text>
+</g>
+<g >
+<title>getData (3 samples, 0.13%)</title><rect x="926.8" y="271" width="5.4" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="929.81" y="285.5" ></text>
+</g>
+<g >
+<title>getData (4 samples, 0.18%)</title><rect x="971.5" y="295" width="7.1" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="974.49" y="309.5" ></text>
+</g>
+<g >
+<title>CooMatrix::getNnz (1 samples, 0.04%)</title><rect x="201.2" y="295" width="1.8" height="23.0" fill="rgb(247,159,46)" rx="2" ry="2" />
+<text  x="204.23" y="309.5" ></text>
+</g>
+<g >
+<title>evaluateInternalResidual (3 samples, 0.13%)</title><rect x="964.3" y="295" width="5.4" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="967.34" y="309.5" ></text>
+</g>
+<g >
+<title>sigmoid (1 samples, 0.04%)</title><rect x="249.5" y="103" width="1.8" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="252.48" y="117.5" ></text>
+</g>
+<g >
+<title>Bus::Ii (2 samples, 0.09%)</title><rect x="621.2" y="271" width="3.6" height="23.0" fill="rgb(231,124,29)" rx="2" ry="2" />
+<text  x="624.21" y="285.5" ></text>
+</g>
+<g >
+<title>__ieee754_cosh (2 samples, 0.09%)</title><rect x="226.2" y="151" width="3.6" height="23.0" fill="rgb(240,125,38)" rx="2" ry="2" />
+<text  x="229.25" y="165.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (1 samples, 0.04%)</title><rect x="978.6" y="295" width="1.8" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="981.64" y="309.5" ></text>
+</g>
+<g >
+<title>ComponentSignals::readExternalVariable (2 samples, 0.09%)</title><rect x="960.8" y="295" width="3.5" height="23.0" fill="rgb(241,165,40)" rx="2" ry="2" />
+<text  x="963.77" y="309.5" ></text>
+</g>
+<g >
+<title>Vaxpy_Serial (2 samples, 0.09%)</title><rect x="1025.1" y="415" width="3.6" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="1028.11" y="429.5" ></text>
+</g>
+<g >
+<title>endl (1 samples, 0.04%)</title><rect x="199.4" y="247" width="1.8" height="23.0" fill="rgb(238,209,36)" rx="2" ry="2" />
+<text  x="202.44" y="261.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (3 samples, 0.13%)</title><rect x="213.7" y="151" width="5.4" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="216.74" y="165.5" ></text>
+</g>
+<g >
+<title>getData (1 samples, 0.04%)</title><rect x="758.8" y="223" width="1.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="761.82" y="237.5" ></text>
+</g>
+<g >
+<title>N_VLinearSum_Serial (12 samples, 0.54%)</title><rect x="52.9" y="415" width="21.4" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="55.89" y="429.5" ></text>
+</g>
+<g >
+<title>getData (23 samples, 1.03%)</title><rect x="689.1" y="247" width="41.1" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="692.12" y="261.5" >g..</text>
+</g>
+<g >
+<title>copyVec (3 samples, 0.13%)</title><rect x="578.3" y="343" width="5.4" height="23.0" fill="rgb(235,140,33)" rx="2" ry="2" />
+<text  x="581.32" y="357.5" ></text>
+</g>
+<g >
+<title>evaluateInternalResidual (2 samples, 0.09%)</title><rect x="908.9" y="295" width="3.6" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="911.94" y="309.5" ></text>
+</g>
+<g >
+<title>__memset_avx2_unaligned_erms (3 samples, 0.13%)</title><rect x="655.2" y="247" width="5.3" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="658.16" y="261.5" ></text>
+</g>
+<g >
+<title>ostream::operator&lt;&lt; (3 samples, 0.13%)</title><rect x="172.6" y="271" width="5.4" height="23.0" fill="rgb(245,171,44)" rx="2" ry="2" />
+<text  x="175.63" y="285.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (3 samples, 0.13%)</title><rect x="138.7" y="151" width="5.3" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="141.68" y="165.5" ></text>
+</g>
+<g >
+<title>getData (8 samples, 0.36%)</title><rect x="939.3" y="271" width="14.3" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="942.32" y="285.5" ></text>
+</g>
+<g >
+<title>Ir (4 samples, 0.18%)</title><rect x="925.0" y="295" width="7.2" height="23.0" fill="rgb(237,177,35)" rx="2" ry="2" />
+<text  x="928.02" y="309.5" ></text>
+</g>
+<g >
+<title>__tanh (3 samples, 0.13%)</title><rect x="964.3" y="175" width="5.4" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="967.34" y="189.5" ></text>
+</g>
+<g >
+<title>Tgov1 (1 samples, 0.04%)</title><rect x="249.5" y="295" width="1.8" height="23.0" fill="rgb(228,168,25)" rx="2" ry="2" />
+<text  x="252.48" y="309.5" ></text>
+</g>
+<g >
+<title>__conditional::type (1 samples, 0.04%)</title><rect x="219.1" y="223" width="1.8" height="23.0" fill="rgb(250,144,49)" rx="2" ry="2" />
+<text  x="222.10" y="237.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (2 samples, 0.09%)</title><rect x="328.1" y="343" width="3.6" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="331.11" y="357.5" ></text>
+</g>
+<g >
+<title>idaLsSolve (125 samples, 5.61%)</title><rect x="326.3" y="367" width="223.4" height="23.0" fill="rgb(244,181,43)" rx="2" ry="2" />
+<text  x="329.33" y="381.5" >idaLsSolve</text>
+</g>
+<g >
+<title>Branch::evaluateBusResidual11 (3 samples, 0.13%)</title><rect x="138.7" y="199" width="5.3" height="23.0" fill="rgb(233,158,31)" rx="2" ry="2" />
+<text  x="141.68" y="213.5" ></text>
+</g>
+<g >
+<title>ranges::__fill_n_fn::operator (1 samples, 0.04%)</title><rect x="219.1" y="175" width="1.8" height="23.0" fill="rgb(241,146,39)" rx="2" ry="2" />
+<text  x="222.10" y="189.5" ></text>
+</g>
+<g >
+<title>__cosh (2 samples, 0.09%)</title><rect x="226.2" y="175" width="3.6" height="23.0" fill="rgb(240,144,38)" rx="2" ry="2" />
+<text  x="229.25" y="189.5" ></text>
+</g>
+<g >
+<title>ostream::sentry::sentry (1 samples, 0.04%)</title><rect x="237.0" y="223" width="1.8" height="23.0" fill="rgb(243,171,42)" rx="2" ry="2" />
+<text  x="239.97" y="237.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (1 samples, 0.04%)</title><rect x="74.3" y="391" width="1.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="77.34" y="405.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (2 samples, 0.09%)</title><rect x="898.2" y="295" width="3.6" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="901.22" y="309.5" ></text>
+</g>
+<g >
+<title>DfDy (1 samples, 0.04%)</title><rect x="249.5" y="271" width="1.8" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="252.48" y="285.5" ></text>
+</g>
+<g >
+<title>idaNlsConvTest (4 samples, 0.18%)</title><rect x="95.8" y="391" width="7.1" height="23.0" fill="rgb(235,181,33)" rx="2" ry="2" />
+<text  x="98.78" y="405.5" ></text>
+</g>
+<g >
+<title>N_VLinearSum_Serial (9 samples, 0.40%)</title><rect x="549.7" y="367" width="16.1" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="552.72" y="381.5" ></text>
+</g>
+<g >
+<title>Branch::evaluateAdmittanceBlock (1 samples, 0.04%)</title><rect x="144.0" y="175" width="1.8" height="23.0" fill="rgb(240,158,39)" rx="2" ry="2" />
+<text  x="147.04" y="189.5" ></text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 0.04%)</title><rect x="249.5" y="55" width="1.8" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="252.48" y="69.5" ></text>
+</g>
+<g >
+<title>qramp (1 samples, 0.04%)</title><rect x="891.1" y="271" width="1.8" height="23.0" fill="rgb(239,182,38)" rx="2" ry="2" />
+<text  x="894.07" y="285.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (6 samples, 0.27%)</title><rect x="11.8" y="391" width="10.7" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="14.79" y="405.5" ></text>
+</g>
+<g >
+<title>getData (12 samples, 0.54%)</title><rect x="147.6" y="271" width="21.5" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="150.61" y="285.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (1 samples, 0.04%)</title><rect x="233.4" y="247" width="1.8" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="236.39" y="261.5" ></text>
+</g>
+<g >
+<title>Branch::Vr1 (29 samples, 1.30%)</title><rect x="678.4" y="271" width="51.8" height="23.0" fill="rgb(233,158,31)" rx="2" ry="2" />
+<text  x="681.40" y="285.5" >Br..</text>
+</g>
+<g >
+<title>__fill_a (1 samples, 0.04%)</title><rect x="875.0" y="223" width="1.8" height="23.0" fill="rgb(235,135,33)" rx="2" ry="2" />
+<text  x="877.98" y="237.5" ></text>
+</g>
+<g >
+<title>klu_tsolve (122 samples, 5.48%)</title><rect x="331.7" y="295" width="218.0" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="334.69" y="309.5" >klu_tsolve</text>
+</g>
+<g >
+<title>Tgov1::DfDy (1 samples, 0.04%)</title><rect x="249.5" y="247" width="1.8" height="23.0" fill="rgb(246,168,46)" rx="2" ry="2" />
+<text  x="252.48" y="261.5" ></text>
+</g>
+<g >
+<title>__tanh (1 samples, 0.04%)</title><rect x="910.7" y="199" width="1.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="913.73" y="213.5" ></text>
+</g>
+<g >
+<title>Branch (84 samples, 3.77%)</title><rect x="612.3" y="319" width="150.1" height="23.0" fill="rgb(246,158,45)" rx="2" ry="2" />
+<text  x="615.27" y="333.5" >Branch</text>
+</g>
+<g >
+<title>memset (1 samples, 0.04%)</title><rect x="955.4" y="247" width="1.8" height="23.0" fill="rgb(237,144,35)" rx="2" ry="2" />
+<text  x="958.41" y="261.5" ></text>
+</g>
+<g >
+<title>BusFault (47 samples, 2.11%)</title><rect x="792.8" y="319" width="84.0" height="23.0" fill="rgb(228,124,25)" rx="2" ry="2" />
+<text  x="795.78" y="333.5" >BusFa..</text>
+</g>
+<g >
+<title>Ieeet1 (8 samples, 0.36%)</title><rect x="224.5" y="295" width="14.3" height="23.0" fill="rgb(229,179,26)" rx="2" ry="2" />
+<text  x="227.46" y="309.5" ></text>
+</g>
+<g >
+<title>antiwindup (3 samples, 0.13%)</title><rect x="964.3" y="271" width="5.4" height="23.0" fill="rgb(241,148,39)" rx="2" ry="2" />
+<text  x="967.34" y="285.5" ></text>
+</g>
+<g >
+<title>Ir (3 samples, 0.13%)</title><rect x="882.1" y="295" width="5.4" height="23.0" fill="rgb(237,177,35)" rx="2" ry="2" />
+<text  x="885.13" y="309.5" ></text>
+</g>
+<g >
+<title>setHostUpdated (1 samples, 0.04%)</title><rect x="900.0" y="271" width="1.8" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="903.00" y="285.5" ></text>
+</g>
+<g >
+<title>SUNMatZero_Sparse (1 samples, 0.04%)</title><rect x="102.9" y="319" width="1.8" height="23.0" fill="rgb(243,146,42)" rx="2" ry="2" />
+<text  x="105.93" y="333.5" ></text>
+</g>
+<g >
+<title>DfDy (1 samples, 0.04%)</title><rect x="188.7" y="271" width="1.8" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="191.72" y="285.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (1 samples, 0.04%)</title><rect x="88.6" y="391" width="1.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="91.63" y="405.5" ></text>
+</g>
+<g >
+<title>idaNlsLSolve (125 samples, 5.61%)</title><rect x="326.3" y="391" width="223.4" height="23.0" fill="rgb(244,181,43)" rx="2" ry="2" />
+<text  x="329.33" y="405.5" >idaNlsLSolve</text>
+</g>
+<g >
+<title>Branch::Vr2 (11 samples, 0.49%)</title><rect x="730.2" y="271" width="19.7" height="23.0" fill="rgb(249,158,48)" rx="2" ry="2" />
+<text  x="733.22" y="285.5" ></text>
+</g>
+<g >
+<title>setDeviceUpdated (1 samples, 0.04%)</title><rect x="875.0" y="271" width="1.8" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="877.98" y="285.5" ></text>
+</g>
+<g >
+<title>getData (1 samples, 0.04%)</title><rect x="676.6" y="223" width="1.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="679.61" y="237.5" ></text>
+</g>
+<g >
+<title>SUNLinSolSetup_KLU (38 samples, 1.71%)</title><rect x="258.4" y="319" width="67.9" height="23.0" fill="rgb(233,146,31)" rx="2" ry="2" />
+<text  x="261.41" y="333.5" >SUNL..</text>
+</g>
+<g >
+<title>klu_ltsolve (42 samples, 1.89%)</title><rect x="354.9" y="271" width="75.1" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="357.92" y="285.5" >klu_l..</text>
+</g>
+<g >
+<title>copy (1 samples, 0.04%)</title><rect x="104.7" y="319" width="1.8" height="23.0" fill="rgb(248,140,48)" rx="2" ry="2" />
+<text  x="107.72" y="333.5" ></text>
+</g>
+<g >
+<title>endl (3 samples, 0.13%)</title><rect x="172.6" y="247" width="5.4" height="23.0" fill="rgb(238,209,36)" rx="2" ry="2" />
+<text  x="175.63" y="261.5" ></text>
+</g>
+<g >
+<title>getSize (1 samples, 0.04%)</title><rect x="169.1" y="271" width="1.7" height="23.0" fill="rgb(245,170,44)" rx="2" ry="2" />
+<text  x="172.06" y="285.5" ></text>
+</g>
+<g >
+<title>__copy_move::__copy_m (1 samples, 0.04%)</title><rect x="104.7" y="223" width="1.8" height="23.0" fill="rgb(230,144,28)" rx="2" ry="2" />
+<text  x="107.72" y="237.5" ></text>
+</g>
+<g >
+<title>DfDy (6 samples, 0.27%)</title><rect x="224.5" y="271" width="10.7" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="227.46" y="285.5" ></text>
+</g>
+<g >
+<title>SUNNonlinSolSolve_Newton (525 samples, 23.57%)</title><rect x="86.8" y="415" width="938.3" height="23.0" fill="rgb(248,146,47)" rx="2" ry="2" />
+<text  x="89.85" y="429.5" >SUNNonlinSolSolve_Newton</text>
+</g>
+<g >
+<title>basic_ios::clear (1 samples, 0.04%)</title><rect x="176.2" y="199" width="1.8" height="23.0" fill="rgb(234,98,32)" rx="2" ry="2" />
+<text  x="179.21" y="213.5" ></text>
+</g>
+<g >
+<title>BusFault::updateTime (1 samples, 0.04%)</title><rect x="1023.3" y="319" width="1.8" height="23.0" fill="rgb(236,124,34)" rx="2" ry="2" />
+<text  x="1026.32" y="333.5" ></text>
+</g>
+<g >
+<title>flush (1 samples, 0.04%)</title><rect x="172.6" y="223" width="1.8" height="23.0" fill="rgb(236,139,34)" rx="2" ry="2" />
+<text  x="175.63" y="237.5" ></text>
+</g>
+<g >
+<title>__ostream_insert (1 samples, 0.04%)</title><rect x="186.9" y="247" width="1.8" height="23.0" fill="rgb(236,144,34)" rx="2" ry="2" />
+<text  x="189.93" y="261.5" ></text>
+</g>
+<g >
+<title>Ieeet1::ModelWrapper (4 samples, 0.18%)</title><rect x="226.2" y="223" width="7.2" height="23.0" fill="rgb(243,179,41)" rx="2" ry="2" />
+<text  x="229.25" y="237.5" ></text>
+</g>
+<g >
+<title>Branch::Vi2 (3 samples, 0.13%)</title><rect x="755.2" y="271" width="5.4" height="23.0" fill="rgb(247,158,46)" rx="2" ry="2" />
+<text  x="758.24" y="285.5" ></text>
+</g>
+<g >
+<title>Ir2 (8 samples, 0.36%)</title><rect x="631.9" y="295" width="14.3" height="23.0" fill="rgb(249,179,49)" rx="2" ry="2" />
+<text  x="634.93" y="309.5" ></text>
+</g>
+<g >
+<title>idaNlsResidual (266 samples, 11.94%)</title><rect x="549.7" y="391" width="475.4" height="23.0" fill="rgb(224,181,21)" rx="2" ry="2" />
+<text  x="552.72" y="405.5" >idaNlsResidual</text>
+</g>
+<g >
+<title>Vr (12 samples, 0.54%)</title><rect x="932.2" y="295" width="21.4" height="23.0" fill="rgb(235,149,33)" rx="2" ry="2" />
+<text  x="935.17" y="309.5" ></text>
+</g>
+<g >
+<title>BusFault::ModelWrapper (1 samples, 0.04%)</title><rect x="188.7" y="223" width="1.8" height="23.0" fill="rgb(243,124,41)" rx="2" ry="2" />
+<text  x="191.72" y="237.5" ></text>
+</g>
+<g >
+<title>DhDwb (5 samples, 0.22%)</title><rect x="138.7" y="271" width="8.9" height="23.0" fill="rgb(225,114,22)" rx="2" ry="2" />
+<text  x="141.68" y="285.5" ></text>
+</g>
+<g >
+<title>Bus::Vi (1 samples, 0.04%)</title><rect x="758.8" y="247" width="1.8" height="23.0" fill="rgb(229,124,26)" rx="2" ry="2" />
+<text  x="761.82" y="261.5" ></text>
+</g>
+<g >
+<title>operator&lt;&lt; (2 samples, 0.09%)</title><rect x="183.4" y="247" width="3.5" height="23.0" fill="rgb(245,195,44)" rx="2" ry="2" />
+<text  x="186.35" y="261.5" ></text>
+</g>
+<g >
+<title>terminalCurrent1 (52 samples, 2.33%)</title><rect x="662.3" y="295" width="92.9" height="23.0" fill="rgb(231,152,28)" rx="2" ry="2" />
+<text  x="665.31" y="309.5" >termin..</text>
+</g>
+<g >
+<title>getData (3 samples, 0.13%)</title><rect x="882.1" y="271" width="5.4" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="885.13" y="285.5" ></text>
+</g>
+<g >
+<title>N_VWSqrSumLocal_Serial (5 samples, 0.22%)</title><rect x="77.9" y="391" width="8.9" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="80.91" y="405.5" ></text>
+</g>
+<g >
+<title>SignalNode::read (2 samples, 0.09%)</title><rect x="960.8" y="271" width="3.5" height="23.0" fill="rgb(241,153,40)" rx="2" ry="2" />
+<text  x="963.77" y="285.5" ></text>
+</g>
+<g >
+<title>getData (3 samples, 0.13%)</title><rect x="892.9" y="295" width="5.3" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="895.86" y="309.5" ></text>
+</g>
+<g >
+<title>getSize (1 samples, 0.04%)</title><rect x="235.2" y="271" width="1.8" height="23.0" fill="rgb(245,170,44)" rx="2" ry="2" />
+<text  x="238.18" y="285.5" ></text>
+</g>
+<g >
+<title>__memset_avx2_unaligned_erms (1 samples, 0.04%)</title><rect x="969.7" y="223" width="1.8" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="972.70" y="237.5" ></text>
+</g>
+<g >
+<title>getData (2 samples, 0.09%)</title><rect x="621.2" y="247" width="3.6" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="624.21" y="261.5" ></text>
+</g>
+<g >
+<title>__fill_a (1 samples, 0.04%)</title><rect x="969.7" y="271" width="1.8" height="23.0" fill="rgb(235,135,33)" rx="2" ry="2" />
+<text  x="972.70" y="285.5" ></text>
+</g>
+<g >
+<title>Branch::DhDwb (5 samples, 0.22%)</title><rect x="138.7" y="247" width="8.9" height="23.0" fill="rgb(225,158,22)" rx="2" ry="2" />
+<text  x="141.68" y="261.5" ></text>
+</g>
+<g >
+<title>N_VWrmsNorm_Serial (5 samples, 0.22%)</title><rect x="77.9" y="415" width="8.9" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="80.91" y="429.5" ></text>
+</g>
+<g >
+<title>ComponentSignals::readExternalVariable (2 samples, 0.09%)</title><rect x="878.6" y="295" width="3.5" height="23.0" fill="rgb(241,165,40)" rx="2" ry="2" />
+<text  x="881.56" y="309.5" ></text>
+</g>
+<g >
+<title>evaluateInternalResidual (1 samples, 0.04%)</title><rect x="808.9" y="295" width="1.7" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="811.86" y="309.5" ></text>
+</g>
+<g >
+<title>klu_utsolve (67 samples, 3.01%)</title><rect x="430.0" y="271" width="119.7" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="432.98" y="285.5" >klu_utsolve</text>
+</g>
+<g >
+<title>inner_store_double_size_t (1 samples, 0.04%)</title><rect x="144.0" y="151" width="1.8" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="147.04" y="165.5" ></text>
+</g>
+<g >
+<title>allocator_traits::allocate (1 samples, 0.04%)</title><rect x="220.9" y="151" width="1.8" height="23.0" fill="rgb(245,128,45)" rx="2" ry="2" />
+<text  x="223.88" y="165.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (4 samples, 0.18%)</title><rect x="785.6" y="295" width="7.2" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="788.63" y="309.5" ></text>
+</g>
+<g >
+<title>Branch::Vr2 (1 samples, 0.04%)</title><rect x="760.6" y="271" width="1.8" height="23.0" fill="rgb(249,158,48)" rx="2" ry="2" />
+<text  x="763.61" y="285.5" ></text>
+</g>
+<g >
+<title>idaLsSetup (125 samples, 5.61%)</title><rect x="102.9" y="367" width="223.4" height="23.0" fill="rgb(238,181,36)" rx="2" ry="2" />
+<text  x="105.93" y="381.5" >idaLsSetup</text>
+</g>
+<g >
+<title>setDataUpdated (2 samples, 0.09%)</title><rect x="873.2" y="295" width="3.6" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="876.20" y="309.5" ></text>
+</g>
+<g >
+<title>__copy_move_a (1 samples, 0.04%)</title><rect x="104.7" y="295" width="1.8" height="23.0" fill="rgb(231,144,29)" rx="2" ry="2" />
+<text  x="107.72" y="309.5" ></text>
+</g>
+<g >
+<title>ostream::put (2 samples, 0.09%)</title><rect x="174.4" y="223" width="3.6" height="23.0" fill="rgb(234,171,31)" rx="2" ry="2" />
+<text  x="177.42" y="237.5" ></text>
+</g>
+<g >
+<title>SUNNonlinSolGetCurIter (1 samples, 0.04%)</title><rect x="101.1" y="367" width="1.8" height="23.0" fill="rgb(240,146,38)" rx="2" ry="2" />
+<text  x="104.15" y="381.5" ></text>
+</g>
+<g >
+<title>Vaxpy_Serial (3 samples, 0.13%)</title><rect x="90.4" y="391" width="5.4" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="93.42" y="405.5" ></text>
+</g>
+<g >
+<title>Bus::Ir (2 samples, 0.09%)</title><rect x="631.9" y="271" width="3.6" height="23.0" fill="rgb(233,124,31)" rx="2" ry="2" />
+<text  x="634.93" y="285.5" ></text>
+</g>
+<g >
+<title>Ii2 (2 samples, 0.09%)</title><rect x="621.2" y="295" width="3.6" height="23.0" fill="rgb(247,169,46)" rx="2" ry="2" />
+<text  x="624.21" y="309.5" ></text>
+</g>
+<g >
+<title>getData (4 samples, 0.18%)</title><rect x="624.8" y="271" width="7.1" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="627.78" y="285.5" ></text>
+</g>
+<g >
+<title>SignalNode::read (2 samples, 0.09%)</title><rect x="878.6" y="271" width="3.5" height="23.0" fill="rgb(241,153,40)" rx="2" ry="2" />
+<text  x="881.56" y="285.5" ></text>
+</g>
+<g >
+<title>SUNMatZero_Sparse (2 samples, 0.09%)</title><rect x="254.8" y="343" width="3.6" height="23.0" fill="rgb(243,146,42)" rx="2" ry="2" />
+<text  x="257.84" y="357.5" ></text>
+</g>
+<g >
+<title>N_VScaleVectorArray (1 samples, 0.04%)</title><rect x="74.3" y="415" width="1.8" height="23.0" fill="rgb(239,124,37)" rx="2" ry="2" />
+<text  x="77.34" y="429.5" ></text>
+</g>
+<g >
+<title>N_VLinearSumVectorArray (11 samples, 0.49%)</title><rect x="33.2" y="415" width="19.7" height="23.0" fill="rgb(239,124,37)" rx="2" ry="2" />
+<text  x="36.23" y="429.5" ></text>
+</g>
+<g >
+<title>antiwindup (1 samples, 0.04%)</title><rect x="910.7" y="271" width="1.8" height="23.0" fill="rgb(241,148,39)" rx="2" ry="2" />
+<text  x="913.73" y="285.5" ></text>
+</g>
+<g >
+<title>BusFault::evaluateInternalResidual (1 samples, 0.04%)</title><rect x="188.7" y="199" width="1.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="191.72" y="213.5" ></text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 0.04%)</title><rect x="891.1" y="199" width="1.8" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="894.07" y="213.5" ></text>
+</g>
+<g >
+<title>__memset_avx2_unaligned_erms (2 samples, 0.09%)</title><rect x="649.8" y="271" width="3.6" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="652.80" y="285.5" ></text>
+</g>
+<g >
+<title>__expm1_fma (2 samples, 0.09%)</title><rect x="966.1" y="151" width="3.6" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="969.13" y="165.5" ></text>
+</g>
+<g >
+<title>basic_ios::clear (1 samples, 0.04%)</title><rect x="199.4" y="199" width="1.8" height="23.0" fill="rgb(234,98,32)" rx="2" ry="2" />
+<text  x="202.44" y="213.5" ></text>
+</g>
+<g >
+<title>below (3 samples, 0.13%)</title><rect x="964.3" y="223" width="5.4" height="23.0" fill="rgb(238,155,36)" rx="2" ry="2" />
+<text  x="967.34" y="237.5" ></text>
+</g>
+<g >
+<title>memset (1 samples, 0.04%)</title><rect x="219.1" y="151" width="1.8" height="23.0" fill="rgb(237,144,35)" rx="2" ry="2" />
+<text  x="222.10" y="165.5" ></text>
+</g>
+<g >
+<title>operator&lt;&lt; (1 samples, 0.04%)</title><rect x="186.9" y="271" width="1.8" height="23.0" fill="rgb(245,195,44)" rx="2" ry="2" />
+<text  x="189.93" y="285.5" ></text>
+</g>
+<g >
+<title>SUNLinSolSolve_KLU (122 samples, 5.48%)</title><rect x="331.7" y="319" width="218.0" height="23.0" fill="rgb(233,146,31)" rx="2" ry="2" />
+<text  x="334.69" y="333.5" >SUNLinSolSolve_KLU</text>
+</g>
+<g >
+<title>ComponentSignals::readExternalVariableIndex (1 samples, 0.04%)</title><rect x="907.2" y="295" width="1.7" height="23.0" fill="rgb(250,165,49)" rx="2" ry="2" />
+<text  x="910.15" y="309.5" ></text>
+</g>
+<g >
+<title>sigmoid (1 samples, 0.04%)</title><rect x="910.7" y="223" width="1.8" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="913.73" y="237.5" ></text>
+</g>
+<g >
+<title>getSize (1 samples, 0.04%)</title><rect x="222.7" y="271" width="1.8" height="23.0" fill="rgb(245,170,44)" rx="2" ry="2" />
+<text  x="225.67" y="285.5" ></text>
+</g>
+<g >
+<title>klu_rcond (2 samples, 0.09%)</title><rect x="258.4" y="295" width="3.6" height="23.0" fill="rgb(252,99,52)" rx="2" ry="2" />
+<text  x="261.41" y="309.5" ></text>
+</g>
+<g >
+<title>Vaxpy_Serial (11 samples, 0.49%)</title><rect x="33.2" y="391" width="19.7" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="36.23" y="405.5" ></text>
+</g>
+<g >
+<title>Genrou (8 samples, 0.36%)</title><rect x="210.2" y="295" width="14.3" height="23.0" fill="rgb(237,205,35)" rx="2" ry="2" />
+<text  x="213.16" y="309.5" ></text>
+</g>
+<g >
+<title>Bus::Ir (1 samples, 0.04%)</title><rect x="925.0" y="271" width="1.8" height="23.0" fill="rgb(233,124,31)" rx="2" ry="2" />
+<text  x="928.02" y="285.5" ></text>
+</g>
+<g >
+<title>getData (10 samples, 0.45%)</title><rect x="732.0" y="247" width="17.9" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="735.01" y="261.5" ></text>
+</g>
+<g >
+<title>setHostUpdated (4 samples, 0.18%)</title><rect x="785.6" y="271" width="7.2" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="788.63" y="285.5" ></text>
+</g>
+<g >
+<title>ostream::put (1 samples, 0.04%)</title><rect x="199.4" y="223" width="1.8" height="23.0" fill="rgb(234,171,31)" rx="2" ry="2" />
+<text  x="202.44" y="237.5" ></text>
+</g>
+<g >
+<title>evaluateJacobian (81 samples, 3.64%)</title><rect x="106.5" y="319" width="144.8" height="23.0" fill="rgb(238,178,37)" rx="2" ry="2" />
+<text  x="109.51" y="333.5" >evaluateJac..</text>
+</g>
+<g >
+<title>getSize (2 samples, 0.09%)</title><rect x="195.9" y="271" width="3.5" height="23.0" fill="rgb(245,170,44)" rx="2" ry="2" />
+<text  x="198.86" y="285.5" ></text>
+</g>
+<g >
+<title>updateTime (2 samples, 0.09%)</title><rect x="251.3" y="319" width="3.5" height="23.0" fill="rgb(236,150,34)" rx="2" ry="2" />
+<text  x="254.27" y="333.5" ></text>
+</g>
+<g >
+<title>Genrou::DfDy (6 samples, 0.27%)</title><rect x="210.2" y="247" width="10.7" height="23.0" fill="rgb(246,205,46)" rx="2" ry="2" />
+<text  x="213.16" y="261.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (1 samples, 0.04%)</title><rect x="188.7" y="175" width="1.8" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="191.72" y="189.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (1 samples, 0.04%)</title><rect x="145.8" y="151" width="1.8" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="148.82" y="165.5" ></text>
+</g>
+<g >
+<title>Vr (1 samples, 0.04%)</title><rect x="887.5" y="295" width="1.8" height="23.0" fill="rgb(235,149,33)" rx="2" ry="2" />
+<text  x="890.49" y="309.5" ></text>
+</g>
+</g>
+
+</svg>
+</g>
+<g>
+<title>Internal</title>
+<svg class="comparison-panel" x="24" y="626" width="4000" height="412" viewBox="0 0 4000 412">
+
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<rect x="0.0" y="0" width="4000.0" height="412" fill="url(#comparison-background)"  />
+<text class="panel-title" x="2000.00" y="36" >Internal</text>
+<g class="frames">
+<g >
+<title>N_VWSqrSumLocal_Serial (20 samples, 0.90%)</title><rect x="192.3" y="295" width="35.7" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="195.29" y="309.5" >N..</text>
+</g>
+<g >
+<title>getData (37 samples, 1.66%)</title><rect x="3089.3" y="175" width="66.1" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3092.27" y="189.5" >getD..</text>
+</g>
+<g >
+<title>log_inline (1 samples, 0.04%)</title><rect x="274.5" y="223" width="1.8" height="23.0" fill="rgb(246,138,46)" rx="2" ry="2" />
+<text  x="277.50" y="237.5" ></text>
+</g>
+<g >
+<title>Branch::ModelWrapper (3 samples, 0.13%)</title><rect x="353.1" y="127" width="5.4" height="23.0" fill="rgb(243,158,41)" rx="2" ry="2" />
+<text  x="356.13" y="141.5" ></text>
+</g>
+<g >
+<title>SUNLinSolSolve_KLU (756 samples, 33.95%)</title><rect x="1529.1" y="223" width="1351.1" height="23.0" fill="rgb(233,146,31)" rx="2" ry="2" />
+<text  x="1532.08" y="237.5" >SUNLinSolSolve_KLU</text>
+</g>
+<g >
+<title>evaluateJacobian (81 samples, 3.64%)</title><rect x="310.2" y="223" width="144.8" height="23.0" fill="rgb(238,178,37)" rx="2" ry="2" />
+<text  x="313.24" y="237.5" >evaluateJac..</text>
+</g>
+<g >
+<title>getData (6 samples, 0.27%)</title><rect x="3848.8" y="199" width="10.7" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3851.81" y="213.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (3 samples, 0.13%)</title><rect x="417.5" y="55" width="5.3" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="420.47" y="69.5" ></text>
+</g>
+<g >
+<title>DfDy (1 samples, 0.04%)</title><rect x="453.2" y="175" width="1.8" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="456.22" y="189.5" ></text>
+</g>
+<g >
+<title>getSize (1 samples, 0.04%)</title><rect x="387.1" y="175" width="1.8" height="23.0" fill="rgb(245,170,44)" rx="2" ry="2" />
+<text  x="390.09" y="189.5" ></text>
+</g>
+<g >
+<title>Bus::Vi (1 samples, 0.04%)</title><rect x="3711.2" y="175" width="1.8" height="23.0" fill="rgb(229,124,26)" rx="2" ry="2" />
+<text  x="3714.20" y="189.5" ></text>
+</g>
+<g >
+<title>ComponentSignals::readExternalVariableIndex (3 samples, 0.13%)</title><rect x="3609.3" y="199" width="5.4" height="23.0" fill="rgb(250,165,49)" rx="2" ry="2" />
+<text  x="3612.34" y="213.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (2 samples, 0.09%)</title><rect x="3584.3" y="199" width="3.6" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3587.32" y="213.5" ></text>
+</g>
+<g >
+<title>evaluateResidual (490 samples, 22.00%)</title><rect x="2987.4" y="247" width="875.7" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="2990.40" y="261.5" >evaluateResidual</text>
+</g>
+<g >
+<title>getSize (2 samples, 0.09%)</title><rect x="446.1" y="175" width="3.5" height="23.0" fill="rgb(245,170,44)" rx="2" ry="2" />
+<text  x="449.07" y="189.5" ></text>
+</g>
+<g >
+<title>N_VConst_Serial (6 samples, 0.27%)</title><rect x="1502.3" y="247" width="10.7" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="1505.28" y="261.5" ></text>
+</g>
+<g >
+<title>Logger::misc (2 samples, 0.09%)</title><rect x="358.5" y="175" width="3.6" height="23.0" fill="rgb(227,154,24)" rx="2" ry="2" />
+<text  x="361.50" y="189.5" ></text>
+</g>
+<g >
+<title>getData (14 samples, 0.63%)</title><rect x="362.1" y="175" width="25.0" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="365.07" y="189.5" ></text>
+</g>
+<g >
+<title>DfDy (1 samples, 0.04%)</title><rect x="435.3" y="175" width="1.8" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="438.34" y="189.5" ></text>
+</g>
+<g >
+<title>qramp (1 samples, 0.04%)</title><rect x="3632.6" y="175" width="1.8" height="23.0" fill="rgb(239,182,38)" rx="2" ry="2" />
+<text  x="3635.57" y="189.5" ></text>
+</g>
+<g >
+<title>basic_ios::widen (1 samples, 0.04%)</title><rect x="392.5" y="127" width="1.7" height="23.0" fill="rgb(250,98,49)" rx="2" ry="2" />
+<text  x="395.45" y="141.5" ></text>
+</g>
+<g >
+<title>N_VWrmsNorm_Serial (14 samples, 0.63%)</title><rect x="249.5" y="271" width="25.0" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="252.48" y="285.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (1 samples, 0.04%)</title><rect x="3863.1" y="247" width="1.8" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3866.11" y="261.5" ></text>
+</g>
+<g >
+<title>klu_ltsolve (333 samples, 14.95%)</title><rect x="1575.6" y="175" width="595.1" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="1578.55" y="189.5" >klu_ltsolve</text>
+</g>
+<g >
+<title>ostream::operator&lt;&lt; (1 samples, 0.04%)</title><rect x="388.9" y="175" width="1.8" height="23.0" fill="rgb(245,171,44)" rx="2" ry="2" />
+<text  x="391.88" y="189.5" ></text>
+</g>
+<g >
+<title>Branch::DfDwb (3 samples, 0.13%)</title><rect x="353.1" y="151" width="5.4" height="23.0" fill="rgb(225,158,22)" rx="2" ry="2" />
+<text  x="356.13" y="165.5" ></text>
+</g>
+<g >
+<title>getData (23 samples, 1.03%)</title><rect x="3720.1" y="175" width="41.1" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3723.14" y="189.5" >g..</text>
+</g>
+<g >
+<title>sparse_store (3 samples, 0.13%)</title><rect x="417.5" y="79" width="5.3" height="23.0" fill="rgb(246,176,45)" rx="2" ry="2" />
+<text  x="420.47" y="93.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (8 samples, 0.36%)</title><rect x="1514.8" y="247" width="14.3" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="1517.79" y="261.5" ></text>
+</g>
+<g >
+<title>evaluateInternalResidual (5 samples, 0.22%)</title><rect x="3625.4" y="199" width="9.0" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="3628.42" y="213.5" ></text>
+</g>
+<g >
+<title>Governor::Tgov1::evaluateInternalResidual (1 samples, 0.04%)</title><rect x="451.4" y="103" width="1.8" height="23.0" fill="rgb(224,184,21)" rx="2" ry="2" />
+<text  x="454.43" y="117.5" ></text>
+</g>
+<g >
+<title>Vaxpy_Serial (10 samples, 0.45%)</title><rect x="229.8" y="295" width="17.9" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="232.82" y="309.5" ></text>
+</g>
+<g >
+<title>idaLsSolve (772 samples, 34.67%)</title><rect x="1502.3" y="271" width="1379.7" height="23.0" fill="rgb(244,181,43)" rx="2" ry="2" />
+<text  x="1505.28" y="285.5" >idaLsSolve</text>
+</g>
+<g >
+<title>elapsedSeconds (1 samples, 0.04%)</title><rect x="2880.2" y="223" width="1.8" height="23.0" fill="rgb(243,173,42)" rx="2" ry="2" />
+<text  x="2883.18" y="237.5" ></text>
+</g>
+<g >
+<title>__fill_a (2 samples, 0.09%)</title><rect x="3409.2" y="127" width="3.5" height="23.0" fill="rgb(235,135,33)" rx="2" ry="2" />
+<text  x="3412.17" y="141.5" ></text>
+</g>
+<g >
+<title>BusFault::updateTime (1 samples, 0.04%)</title><rect x="460.4" y="199" width="1.8" height="23.0" fill="rgb(236,124,34)" rx="2" ry="2" />
+<text  x="463.36" y="213.5" ></text>
+</g>
+<g >
+<title>ostream::put (1 samples, 0.04%)</title><rect x="388.9" y="127" width="1.8" height="23.0" fill="rgb(234,171,31)" rx="2" ry="2" />
+<text  x="391.88" y="141.5" ></text>
+</g>
+<g >
+<title>antiwindup (1 samples, 0.04%)</title><rect x="3675.5" y="175" width="1.7" height="23.0" fill="rgb(241,148,39)" rx="2" ry="2" />
+<text  x="3678.46" y="189.5" ></text>
+</g>
+<g >
+<title>Ieeet1::DfDy (3 samples, 0.13%)</title><rect x="426.4" y="151" width="5.4" height="23.0" fill="rgb(246,179,46)" rx="2" ry="2" />
+<text  x="429.41" y="165.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (1 samples, 0.04%)</title><rect x="399.6" y="79" width="1.8" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="402.60" y="93.5" ></text>
+</g>
+<g >
+<title>BusBase::getResidual (1 samples, 0.04%)</title><rect x="3042.8" y="199" width="1.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="3045.81" y="213.5" ></text>
+</g>
+<g >
+<title>__tanh (1 samples, 0.04%)</title><rect x="430.0" y="79" width="1.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="432.98" y="93.5" ></text>
+</g>
+<g >
+<title>Vr2 (44 samples, 1.98%)</title><rect x="3155.4" y="199" width="78.6" height="23.0" fill="rgb(249,155,48)" rx="2" ry="2" />
+<text  x="3158.40" y="213.5" >Vr2</text>
+</g>
+<g >
+<title>Genrou::DfDy (5 samples, 0.22%)</title><rect x="415.7" y="151" width="8.9" height="23.0" fill="rgb(246,205,46)" rx="2" ry="2" />
+<text  x="418.68" y="165.5" ></text>
+</g>
+<g >
+<title>setHostUpdated (2 samples, 0.09%)</title><rect x="3655.8" y="175" width="3.6" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3658.80" y="189.5" ></text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 0.04%)</title><rect x="3845.2" y="79" width="1.8" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="3848.24" y="93.5" ></text>
+</g>
+<g >
+<title>Genrou (6 samples, 0.27%)</title><rect x="415.7" y="199" width="10.7" height="23.0" fill="rgb(237,205,35)" rx="2" ry="2" />
+<text  x="418.68" y="213.5" ></text>
+</g>
+<g >
+<title>chrono::steady_clock::now (1 samples, 0.04%)</title><rect x="2957.0" y="247" width="1.8" height="23.0" fill="rgb(236,113,35)" rx="2" ry="2" />
+<text  x="2960.02" y="261.5" ></text>
+</g>
+<g >
+<title>Ii1 (2 samples, 0.09%)</title><rect x="3044.6" y="199" width="3.6" height="23.0" fill="rgb(232,172,29)" rx="2" ry="2" />
+<text  x="3047.59" y="213.5" ></text>
+</g>
+<g >
+<title>__memcpy_avx_unaligned_erms (16 samples, 0.72%)</title><rect x="2958.8" y="223" width="28.6" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="2961.81" y="237.5" ></text>
+</g>
+<g >
+<title>SignalNode::getVariableIndex (3 samples, 0.13%)</title><rect x="3609.3" y="175" width="5.4" height="23.0" fill="rgb(250,153,49)" rx="2" ry="2" />
+<text  x="3612.34" y="189.5" ></text>
+</g>
+<g >
+<title>getData (5 samples, 0.22%)</title><rect x="3057.1" y="175" width="8.9" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3060.10" y="189.5" ></text>
+</g>
+<g >
+<title>klu_rcond (2 samples, 0.09%)</title><rect x="485.4" y="199" width="3.6" height="23.0" fill="rgb(252,99,52)" rx="2" ry="2" />
+<text  x="488.38" y="213.5" ></text>
+</g>
+<g >
+<title>Exciter::Ieeet1::evaluateInternalResidual (3 samples, 0.13%)</title><rect x="426.4" y="103" width="5.4" height="23.0" fill="rgb(224,97,21)" rx="2" ry="2" />
+<text  x="429.41" y="117.5" ></text>
+</g>
+<g >
+<title>sigmoid (1 samples, 0.04%)</title><rect x="3675.5" y="127" width="1.7" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="3678.46" y="141.5" ></text>
+</g>
+<g >
+<title>vector::operator[] (1 samples, 0.04%)</title><rect x="3587.9" y="199" width="1.8" height="23.0" fill="rgb(242,146,41)" rx="2" ry="2" />
+<text  x="3590.89" y="213.5" ></text>
+</g>
+<g >
+<title>klu_refactor (566 samples, 25.42%)</title><rect x="489.0" y="199" width="1011.5" height="23.0" fill="rgb(241,99,39)" rx="2" ry="2" />
+<text  x="491.96" y="213.5" >klu_refactor</text>
+</g>
+<g >
+<title>N_VScale_Serial (2 samples, 0.09%)</title><rect x="11.8" y="271" width="3.6" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="14.79" y="285.5" ></text>
+</g>
+<g >
+<title>getData (2 samples, 0.09%)</title><rect x="3614.7" y="175" width="3.6" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3617.70" y="189.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (2 samples, 0.09%)</title><rect x="3859.5" y="223" width="3.6" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3862.54" y="237.5" ></text>
+</g>
+<g >
+<title>Branch::evaluateBusResidual22 (1 samples, 0.04%)</title><rect x="356.7" y="103" width="1.8" height="23.0" fill="rgb(248,158,47)" rx="2" ry="2" />
+<text  x="359.71" y="117.5" ></text>
+</g>
+<g >
+<title>klu_tsolve (2 samples, 0.09%)</title><rect x="481.8" y="175" width="3.6" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="484.81" y="189.5" ></text>
+</g>
+<g >
+<title>klu_lsolve (1 samples, 0.04%)</title><rect x="478.2" y="151" width="1.8" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="481.24" y="165.5" ></text>
+</g>
+<g >
+<title>Vaxpy_Serial (5 samples, 0.22%)</title><rect x="3979.3" y="319" width="8.9" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="3982.28" y="333.5" ></text>
+</g>
+<g >
+<title>Vaxpy_Serial (17 samples, 0.76%)</title><rect x="26.1" y="295" width="30.4" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="29.08" y="309.5" ></text>
+</g>
+<g >
+<title>setHostUpdated (3 samples, 0.13%)</title><rect x="3818.4" y="175" width="5.4" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3821.43" y="189.5" ></text>
+</g>
+<g >
+<title>Vaxpy_Serial (32 samples, 1.44%)</title><rect x="56.5" y="295" width="57.2" height="23.0" fill="rgb(224,136,21)" rx="2" ry="2" />
+<text  x="59.47" y="309.5" >Vax..</text>
+</g>
+<g >
+<title>Bus (3 samples, 0.13%)</title><rect x="390.7" y="199" width="5.3" height="23.0" fill="rgb(234,124,32)" rx="2" ry="2" />
+<text  x="393.66" y="213.5" ></text>
+</g>
+<g >
+<title>Bus::Vr (1 samples, 0.04%)</title><rect x="3173.3" y="175" width="1.8" height="23.0" fill="rgb(231,124,28)" rx="2" ry="2" />
+<text  x="3176.27" y="189.5" ></text>
+</g>
+<g >
+<title>__GI___clock_gettime (1 samples, 0.04%)</title><rect x="2957.0" y="223" width="1.8" height="23.0" fill="rgb(236,119,34)" rx="2" ry="2" />
+<text  x="2960.02" y="237.5" ></text>
+</g>
+<g >
+<title>SUNNonlinSolGetNumIters_Newton (1 samples, 0.04%)</title><rect x="228.0" y="319" width="1.8" height="23.0" fill="rgb(248,146,47)" rx="2" ry="2" />
+<text  x="231.03" y="333.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (1 samples, 0.04%)</title><rect x="3475.3" y="199" width="1.8" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3478.30" y="213.5" ></text>
+</g>
+<g >
+<title>__memset_avx2_unaligned_erms (1 samples, 0.04%)</title><rect x="3423.5" y="151" width="1.8" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="3426.47" y="165.5" ></text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 0.04%)</title><rect x="430.0" y="55" width="1.8" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="432.98" y="69.5" ></text>
+</g>
+<g >
+<title>idaLsSetup (685 samples, 30.76%)</title><rect x="276.3" y="271" width="1224.2" height="23.0" fill="rgb(238,181,36)" rx="2" ry="2" />
+<text  x="279.29" y="285.5" >idaLsSetup</text>
+</g>
+<g >
+<title>Bus::Vi (2 samples, 0.09%)</title><rect x="3066.0" y="175" width="3.6" height="23.0" fill="rgb(229,124,26)" rx="2" ry="2" />
+<text  x="3069.04" y="189.5" ></text>
+</g>
+<g >
+<title>copy (3 samples, 0.13%)</title><rect x="301.3" y="223" width="5.4" height="23.0" fill="rgb(248,140,48)" rx="2" ry="2" />
+<text  x="304.31" y="237.5" ></text>
+</g>
+<g >
+<title>updateTime (64 samples, 2.87%)</title><rect x="3864.9" y="247" width="114.4" height="23.0" fill="rgb(236,150,34)" rx="2" ry="2" />
+<text  x="3867.90" y="261.5" >updateTime</text>
+</g>
+<g >
+<title>optional::operator bool (1 samples, 0.04%)</title><rect x="3600.4" y="175" width="1.8" height="23.0" fill="rgb(237,186,36)" rx="2" ry="2" />
+<text  x="3603.40" y="189.5" ></text>
+</g>
+<g >
+<title>DfDy (1 samples, 0.04%)</title><rect x="399.6" y="175" width="1.8" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="402.60" y="189.5" ></text>
+</g>
+<g >
+<title>operator&lt;&lt; (2 samples, 0.09%)</title><rect x="358.5" y="151" width="3.6" height="23.0" fill="rgb(245,195,44)" rx="2" ry="2" />
+<text  x="361.50" y="165.5" ></text>
+</g>
+<g >
+<title>operator&lt;&lt; (1 samples, 0.04%)</title><rect x="390.7" y="175" width="1.8" height="23.0" fill="rgb(245,195,44)" rx="2" ry="2" />
+<text  x="393.66" y="189.5" ></text>
+</g>
+<g >
+<title>klu_scale (2 samples, 0.09%)</title><rect x="1496.9" y="175" width="3.6" height="23.0" fill="rgb(242,99,41)" rx="2" ry="2" />
+<text  x="1499.92" y="189.5" ></text>
+</g>
+<g >
+<title>N_VScaleVectorArray (2 samples, 0.09%)</title><rect x="11.8" y="295" width="3.6" height="23.0" fill="rgb(239,124,37)" rx="2" ry="2" />
+<text  x="14.79" y="309.5" ></text>
+</g>
+<g >
+<title>endl (1 samples, 0.04%)</title><rect x="388.9" y="151" width="1.8" height="23.0" fill="rgb(238,209,36)" rx="2" ry="2" />
+<text  x="391.88" y="165.5" ></text>
+</g>
+<g >
+<title>indicator (1 samples, 0.04%)</title><rect x="3675.5" y="151" width="1.7" height="23.0" fill="rgb(241,177,39)" rx="2" ry="2" />
+<text  x="3678.46" y="165.5" ></text>
+</g>
+<g >
+<title>ostream::sentry::sentry (1 samples, 0.04%)</title><rect x="449.6" y="127" width="1.8" height="23.0" fill="rgb(243,171,42)" rx="2" ry="2" />
+<text  x="452.64" y="141.5" ></text>
+</g>
+<g >
+<title>ComponentSignals::readExternalVariable (1 samples, 0.04%)</title><rect x="3839.9" y="199" width="1.8" height="23.0" fill="rgb(241,165,40)" rx="2" ry="2" />
+<text  x="3842.88" y="213.5" ></text>
+</g>
+<g >
+<title>__pow (1 samples, 0.04%)</title><rect x="3988.2" y="319" width="1.8" height="23.0" fill="rgb(235,141,33)" rx="2" ry="2" />
+<text  x="3991.21" y="333.5" ></text>
+</g>
+<g >
+<title>SUNLinSolSetup_KLU (572 samples, 25.68%)</title><rect x="478.2" y="223" width="1022.3" height="23.0" fill="rgb(233,146,31)" rx="2" ry="2" />
+<text  x="481.24" y="237.5" >SUNLinSolSetup_KLU</text>
+</g>
+<g >
+<title>evaluateInternalResidual (3 samples, 0.13%)</title><rect x="3234.0" y="199" width="5.4" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="3237.03" y="213.5" ></text>
+</g>
+<g >
+<title>getData (24 samples, 1.08%)</title><rect x="3432.4" y="199" width="42.9" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3435.41" y="213.5" >ge..</text>
+</g>
+<g >
+<title>BusFault::ModelWrapper (1 samples, 0.04%)</title><rect x="399.6" y="127" width="1.8" height="23.0" fill="rgb(243,124,41)" rx="2" ry="2" />
+<text  x="402.60" y="141.5" ></text>
+</g>
+<g >
+<title>Ieeet1::ModelWrapper (3 samples, 0.13%)</title><rect x="426.4" y="127" width="5.4" height="23.0" fill="rgb(243,179,41)" rx="2" ry="2" />
+<text  x="429.41" y="141.5" ></text>
+</g>
+<g >
+<title>Tgov1::ModelWrapper (1 samples, 0.04%)</title><rect x="453.2" y="127" width="1.8" height="23.0" fill="rgb(243,168,41)" rx="2" ry="2" />
+<text  x="456.22" y="141.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (1 samples, 0.04%)</title><rect x="453.2" y="55" width="1.8" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="456.22" y="69.5" ></text>
+</g>
+<g >
+<title>SignalNode::read (4 samples, 0.18%)</title><rect x="3602.2" y="175" width="7.1" height="23.0" fill="rgb(241,153,40)" rx="2" ry="2" />
+<text  x="3605.19" y="189.5" ></text>
+</g>
+<g >
+<title>Vi2 (2 samples, 0.09%)</title><rect x="3066.0" y="199" width="3.6" height="23.0" fill="rgb(247,145,46)" rx="2" ry="2" />
+<text  x="3069.04" y="213.5" ></text>
+</g>
+<g >
+<title>Tgov1::DfDws (1 samples, 0.04%)</title><rect x="451.4" y="151" width="1.8" height="23.0" fill="rgb(230,168,28)" rx="2" ry="2" />
+<text  x="454.43" y="165.5" ></text>
+</g>
+<g >
+<title>klu_utsolve (397 samples, 17.83%)</title><rect x="2170.7" y="175" width="709.5" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="2173.67" y="189.5" >klu_utsolve</text>
+</g>
+<g >
+<title>Ieeet1 (24 samples, 1.08%)</title><rect x="3661.2" y="223" width="42.9" height="23.0" fill="rgb(229,179,26)" rx="2" ry="2" />
+<text  x="3664.16" y="237.5" >Ie..</text>
+</g>
+<g >
+<title>Vi (1 samples, 0.04%)</title><rect x="3711.2" y="199" width="1.8" height="23.0" fill="rgb(233,137,30)" rx="2" ry="2" />
+<text  x="3714.20" y="213.5" ></text>
+</g>
+<g >
+<title>getData (33 samples, 1.48%)</title><rect x="3175.1" y="175" width="58.9" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3178.06" y="189.5" >get..</text>
+</g>
+<g >
+<title>Genrou::evaluateInternalResidual (4 samples, 0.18%)</title><rect x="415.7" y="103" width="7.1" height="23.0" fill="rgb(224,205,21)" rx="2" ry="2" />
+<text  x="418.68" y="117.5" ></text>
+</g>
+<g >
+<title>N_VWrmsNorm_Serial (20 samples, 0.90%)</title><rect x="192.3" y="319" width="35.7" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="195.29" y="333.5" >N..</text>
+</g>
+<g >
+<title>N_VLinearCombination (23 samples, 1.03%)</title><rect x="15.4" y="319" width="41.1" height="23.0" fill="rgb(247,124,46)" rx="2" ry="2" />
+<text  x="18.36" y="333.5" >N..</text>
+</g>
+<g >
+<title>setDataUpdated (1 samples, 0.04%)</title><rect x="3702.3" y="199" width="1.8" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3705.27" y="213.5" ></text>
+</g>
+<g >
+<title>basic_ios::clear (1 samples, 0.04%)</title><rect x="358.5" y="103" width="1.8" height="23.0" fill="rgb(234,98,32)" rx="2" ry="2" />
+<text  x="361.50" y="117.5" ></text>
+</g>
+<g >
+<title>Ir1 (5 samples, 0.22%)</title><rect x="3048.2" y="199" width="8.9" height="23.0" fill="rgb(234,182,32)" rx="2" ry="2" />
+<text  x="3051.17" y="213.5" ></text>
+</g>
+<g >
+<title>klu_condest (4 samples, 0.18%)</title><rect x="478.2" y="199" width="7.2" height="23.0" fill="rgb(235,99,33)" rx="2" ry="2" />
+<text  x="481.24" y="213.5" ></text>
+</g>
+<g >
+<title>__tanh (1 samples, 0.04%)</title><rect x="3632.6" y="127" width="1.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="3635.57" y="141.5" ></text>
+</g>
+<g >
+<title>below (2 samples, 0.09%)</title><rect x="3841.7" y="127" width="3.5" height="23.0" fill="rgb(238,155,36)" rx="2" ry="2" />
+<text  x="3844.67" y="141.5" ></text>
+</g>
+<g >
+<title>ostream::operator&lt;&lt; (2 samples, 0.09%)</title><rect x="392.5" y="175" width="3.5" height="23.0" fill="rgb(245,171,44)" rx="2" ry="2" />
+<text  x="395.45" y="189.5" ></text>
+</g>
+<g >
+<title>getData (3 samples, 0.13%)</title><rect x="3620.1" y="175" width="5.3" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3623.06" y="189.5" ></text>
+</g>
+<g >
+<title>DfDy (5 samples, 0.22%)</title><rect x="415.7" y="175" width="8.9" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="418.68" y="189.5" ></text>
+</g>
+<g >
+<title>ranges::__fill_n_fn::operator (1 samples, 0.04%)</title><rect x="422.8" y="79" width="1.8" height="23.0" fill="rgb(241,146,39)" rx="2" ry="2" />
+<text  x="425.83" y="93.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (10 samples, 0.45%)</title><rect x="3409.2" y="199" width="17.8" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3412.17" y="213.5" ></text>
+</g>
+<g >
+<title>getData (2 samples, 0.09%)</title><rect x="431.8" y="175" width="3.5" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="434.77" y="189.5" ></text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 0.04%)</title><rect x="3843.5" y="55" width="1.7" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="3846.45" y="69.5" ></text>
+</g>
+<g >
+<title>ostream::sentry::sentry (1 samples, 0.04%)</title><rect x="390.7" y="127" width="1.8" height="23.0" fill="rgb(243,171,42)" rx="2" ry="2" />
+<text  x="393.66" y="141.5" ></text>
+</g>
+<g >
+<title>indicator (4 samples, 0.18%)</title><rect x="3841.7" y="151" width="7.1" height="23.0" fill="rgb(241,177,39)" rx="2" ry="2" />
+<text  x="3844.67" y="165.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (8 samples, 0.36%)</title><rect x="178.0" y="319" width="14.3" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="180.99" y="333.5" ></text>
+</g>
+<g >
+<title>__copy_move_a1 (3 samples, 0.13%)</title><rect x="301.3" y="175" width="5.4" height="23.0" fill="rgb(221,144,18)" rx="2" ry="2" />
+<text  x="304.31" y="189.5" ></text>
+</g>
+<g >
+<title>antiwindup (4 samples, 0.18%)</title><rect x="3841.7" y="175" width="7.1" height="23.0" fill="rgb(241,148,39)" rx="2" ry="2" />
+<text  x="3844.67" y="189.5" ></text>
+</g>
+<g >
+<title>Genrou (40 samples, 1.80%)</title><rect x="3589.7" y="223" width="71.5" height="23.0" fill="rgb(237,205,35)" rx="2" ry="2" />
+<text  x="3592.68" y="237.5" >Genrou</text>
+</g>
+<g >
+<title>N_VScaleVectorArray (5 samples, 0.22%)</title><rect x="169.1" y="319" width="8.9" height="23.0" fill="rgb(239,124,37)" rx="2" ry="2" />
+<text  x="172.06" y="333.5" ></text>
+</g>
+<g >
+<title>__pow (1 samples, 0.04%)</title><rect x="274.5" y="271" width="1.8" height="23.0" fill="rgb(235,141,33)" rx="2" ry="2" />
+<text  x="277.50" y="285.5" ></text>
+</g>
+<g >
+<title>IDARestore (2 samples, 0.09%)</title><rect x="11.8" y="319" width="3.6" height="23.0" fill="rgb(246,179,45)" rx="2" ry="2" />
+<text  x="14.79" y="333.5" ></text>
+</g>
+<g >
+<title>__tanh (2 samples, 0.09%)</title><rect x="3841.7" y="79" width="3.5" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="3844.67" y="93.5" ></text>
+</g>
+<g >
+<title>SignalNode::read (1 samples, 0.04%)</title><rect x="3668.3" y="175" width="1.8" height="23.0" fill="rgb(241,153,40)" rx="2" ry="2" />
+<text  x="3671.31" y="189.5" ></text>
+</g>
+<g >
+<title>setDeviceUpdated (2 samples, 0.09%)</title><rect x="3409.2" y="175" width="3.5" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3412.17" y="189.5" ></text>
+</g>
+<g >
+<title>ostream::flush (1 samples, 0.04%)</title><rect x="394.2" y="103" width="1.8" height="23.0" fill="rgb(236,171,34)" rx="2" ry="2" />
+<text  x="397.24" y="117.5" ></text>
+</g>
+<g >
+<title>qramp (1 samples, 0.04%)</title><rect x="3677.2" y="175" width="1.8" height="23.0" fill="rgb(239,182,38)" rx="2" ry="2" />
+<text  x="3680.25" y="189.5" ></text>
+</g>
+<g >
+<title>Branch::evaluateAdmittanceBlock (2 samples, 0.09%)</title><rect x="353.1" y="79" width="3.6" height="23.0" fill="rgb(240,158,39)" rx="2" ry="2" />
+<text  x="356.13" y="93.5" ></text>
+</g>
+<g >
+<title>BusFault (63 samples, 2.83%)</title><rect x="3477.1" y="223" width="112.6" height="23.0" fill="rgb(228,124,25)" rx="2" ry="2" />
+<text  x="3480.09" y="237.5" >BusFault</text>
+</g>
+<g >
+<title>Genrou::ModelWrapper (4 samples, 0.18%)</title><rect x="415.7" y="127" width="7.1" height="23.0" fill="rgb(243,205,41)" rx="2" ry="2" />
+<text  x="418.68" y="141.5" ></text>
+</g>
+<g >
+<title>Branch (221 samples, 9.92%)</title><rect x="3035.7" y="223" width="394.9" height="23.0" fill="rgb(246,158,45)" rx="2" ry="2" />
+<text  x="3038.66" y="237.5" >Branch</text>
+</g>
+<g >
+<title>Ir2 (5 samples, 0.22%)</title><rect x="3057.1" y="199" width="8.9" height="23.0" fill="rgb(249,179,49)" rx="2" ry="2" />
+<text  x="3060.10" y="213.5" ></text>
+</g>
+<g >
+<title>__tanh (2 samples, 0.09%)</title><rect x="3845.2" y="103" width="3.6" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="3848.24" y="117.5" ></text>
+</g>
+<g >
+<title>__ieee754_pow_fma (1 samples, 0.04%)</title><rect x="274.5" y="247" width="1.8" height="23.0" fill="rgb(227,125,24)" rx="2" ry="2" />
+<text  x="277.50" y="261.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (4 samples, 0.18%)</title><rect x="3816.6" y="199" width="7.2" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3819.65" y="213.5" ></text>
+</g>
+<g >
+<title>__tanh (1 samples, 0.04%)</title><rect x="3675.5" y="103" width="1.7" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="3678.46" y="117.5" ></text>
+</g>
+<g >
+<title>memset (1 samples, 0.04%)</title><rect x="3475.3" y="175" width="1.8" height="23.0" fill="rgb(237,144,35)" rx="2" ry="2" />
+<text  x="3478.30" y="189.5" ></text>
+</g>
+<g >
+<title>getData (1 samples, 0.04%)</title><rect x="3711.2" y="151" width="1.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3714.20" y="165.5" ></text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 0.04%)</title><rect x="3677.2" y="127" width="1.8" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="3680.25" y="141.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (1 samples, 0.04%)</title><rect x="354.9" y="55" width="1.8" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="357.92" y="69.5" ></text>
+</g>
+<g >
+<title>Vr1 (48 samples, 2.16%)</title><rect x="3069.6" y="199" width="85.8" height="23.0" fill="rgb(233,158,31)" rx="2" ry="2" />
+<text  x="3072.61" y="213.5" >Vr1</text>
+</g>
+<g >
+<title>N_VScale (1 samples, 0.04%)</title><rect x="1513.0" y="247" width="1.8" height="23.0" fill="rgb(242,124,41)" rx="2" ry="2" />
+<text  x="1516.00" y="261.5" ></text>
+</g>
+<g >
+<title>N_VLinearSum_Serial (31 samples, 1.39%)</title><rect x="113.7" y="319" width="55.4" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="116.66" y="333.5" >N_V..</text>
+</g>
+<g >
+<title>__copy_move_a (3 samples, 0.13%)</title><rect x="301.3" y="199" width="5.4" height="23.0" fill="rgb(231,144,29)" rx="2" ry="2" />
+<text  x="304.31" y="213.5" ></text>
+</g>
+<g >
+<title>BusFault::evaluateInternalResidual (1 samples, 0.04%)</title><rect x="399.6" y="103" width="1.8" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="402.60" y="117.5" ></text>
+</g>
+<g >
+<title>Vr (4 samples, 0.18%)</title><rect x="3618.3" y="199" width="7.1" height="23.0" fill="rgb(235,149,33)" rx="2" ry="2" />
+<text  x="3621.27" y="213.5" ></text>
+</g>
+<g >
+<title>getData (31 samples, 1.39%)</title><rect x="3761.2" y="199" width="55.4" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3764.24" y="213.5" >get..</text>
+</g>
+<g >
+<title>getData (2 samples, 0.09%)</title><rect x="3044.6" y="151" width="3.6" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3047.59" y="165.5" ></text>
+</g>
+<g >
+<title>endl (2 samples, 0.09%)</title><rect x="392.5" y="151" width="3.5" height="23.0" fill="rgb(238,209,36)" rx="2" ry="2" />
+<text  x="395.45" y="165.5" ></text>
+</g>
+<g >
+<title>DfDy (3 samples, 0.13%)</title><rect x="426.4" y="175" width="5.4" height="23.0" fill="rgb(246,125,46)" rx="2" ry="2" />
+<text  x="429.41" y="189.5" ></text>
+</g>
+<g >
+<title>sigmoid (2 samples, 0.09%)</title><rect x="3841.7" y="103" width="3.5" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="3844.67" y="117.5" ></text>
+</g>
+<g >
+<title>Tgov1 (2 samples, 0.09%)</title><rect x="451.4" y="199" width="3.6" height="23.0" fill="rgb(228,168,25)" rx="2" ry="2" />
+<text  x="454.43" y="213.5" ></text>
+</g>
+<g >
+<title>evaluateInternalResidual (2 samples, 0.09%)</title><rect x="3502.1" y="199" width="3.6" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="3505.11" y="213.5" ></text>
+</g>
+<g >
+<title>DfDws (1 samples, 0.04%)</title><rect x="451.4" y="175" width="1.8" height="23.0" fill="rgb(230,125,28)" rx="2" ry="2" />
+<text  x="454.43" y="189.5" ></text>
+</g>
+<g >
+<title>ComponentSignals::readExternalVariable (4 samples, 0.18%)</title><rect x="3602.2" y="199" width="7.1" height="23.0" fill="rgb(241,165,40)" rx="2" ry="2" />
+<text  x="3605.19" y="213.5" ></text>
+</g>
+<g >
+<title>Ir (2 samples, 0.09%)</title><rect x="3614.7" y="199" width="3.6" height="23.0" fill="rgb(237,177,35)" rx="2" ry="2" />
+<text  x="3617.70" y="213.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (4 samples, 0.18%)</title><rect x="170.8" y="295" width="7.2" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="173.84" y="309.5" ></text>
+</g>
+<g >
+<title>CooMatrix::getValues (2 samples, 0.09%)</title><rect x="412.1" y="199" width="3.6" height="23.0" fill="rgb(237,159,36)" rx="2" ry="2" />
+<text  x="415.11" y="213.5" ></text>
+</g>
+<g >
+<title>sigmoid (1 samples, 0.04%)</title><rect x="3632.6" y="151" width="1.8" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="3635.57" y="165.5" ></text>
+</g>
+<g >
+<title>__sincos_fma (1 samples, 0.04%)</title><rect x="3630.8" y="175" width="1.8" height="23.0" fill="rgb(227,132,24)" rx="2" ry="2" />
+<text  x="3633.78" y="189.5" ></text>
+</g>
+<g >
+<title>Bus::Ir (1 samples, 0.04%)</title><rect x="3048.2" y="175" width="1.8" height="23.0" fill="rgb(233,124,31)" rx="2" ry="2" />
+<text  x="3051.17" y="189.5" ></text>
+</g>
+<g >
+<title>_Optional_base_impl::_M_is_engaged (1 samples, 0.04%)</title><rect x="3600.4" y="151" width="1.8" height="23.0" fill="rgb(247,167,47)" rx="2" ry="2" />
+<text  x="3603.40" y="165.5" ></text>
+</g>
+<g >
+<title>setHostUpdated (8 samples, 0.36%)</title><rect x="3412.7" y="175" width="14.3" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3415.75" y="189.5" ></text>
+</g>
+<g >
+<title>klu_tsolve (752 samples, 33.77%)</title><rect x="1536.2" y="199" width="1344.0" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="1539.23" y="213.5" >klu_tsolve</text>
+</g>
+<g >
+<title>Branch (27 samples, 1.21%)</title><rect x="342.4" y="199" width="48.3" height="23.0" fill="rgb(246,158,45)" rx="2" ry="2" />
+<text  x="345.41" y="213.5" >Br..</text>
+</g>
+<g >
+<title>SUNMatZero_Sparse (8 samples, 0.36%)</title><rect x="278.1" y="223" width="14.3" height="23.0" fill="rgb(243,146,42)" rx="2" ry="2" />
+<text  x="281.07" y="237.5" ></text>
+</g>
+<g >
+<title>updateTime (4 samples, 0.18%)</title><rect x="455.0" y="223" width="7.2" height="23.0" fill="rgb(236,150,34)" rx="2" ry="2" />
+<text  x="458.00" y="237.5" ></text>
+</g>
+<g >
+<title>__memset_avx2_unaligned_erms (2 samples, 0.09%)</title><rect x="1493.3" y="175" width="3.6" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="1496.34" y="189.5" ></text>
+</g>
+<g >
+<title>ComponentSignals::readExternalVariable (1 samples, 0.04%)</title><rect x="3668.3" y="199" width="1.8" height="23.0" fill="rgb(241,165,40)" rx="2" ry="2" />
+<text  x="3671.31" y="213.5" ></text>
+</g>
+<g >
+<title>operator&lt;&lt; (1 samples, 0.04%)</title><rect x="449.6" y="175" width="1.8" height="23.0" fill="rgb(245,195,44)" rx="2" ry="2" />
+<text  x="452.64" y="189.5" ></text>
+</g>
+<g >
+<title>getData (5 samples, 0.22%)</title><rect x="437.1" y="175" width="9.0" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="440.13" y="189.5" ></text>
+</g>
+<g >
+<title>do_sin (1 samples, 0.04%)</title><rect x="3630.8" y="151" width="1.8" height="23.0" fill="rgb(243,189,42)" rx="2" ry="2" />
+<text  x="3633.78" y="165.5" ></text>
+</g>
+<g >
+<title>idaNlsLSolve (773 samples, 34.71%)</title><rect x="1500.5" y="295" width="1381.5" height="23.0" fill="rgb(244,181,43)" rx="2" ry="2" />
+<text  x="1503.49" y="309.5" >idaNlsLSolve</text>
+</g>
+<g >
+<title>ctype::widen (1 samples, 0.04%)</title><rect x="392.5" y="103" width="1.7" height="23.0" fill="rgb(250,124,49)" rx="2" ry="2" />
+<text  x="395.45" y="117.5" ></text>
+</g>
+<g >
+<title>Branch::evaluateBusResidual11 (2 samples, 0.09%)</title><rect x="353.1" y="103" width="3.6" height="23.0" fill="rgb(233,158,31)" rx="2" ry="2" />
+<text  x="356.13" y="117.5" ></text>
+</g>
+<g >
+<title>evaluateInternalResidual (5 samples, 0.22%)</title><rect x="3670.1" y="199" width="8.9" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="3673.10" y="213.5" ></text>
+</g>
+<g >
+<title>LoadZ::evaluateInternalResidual (1 samples, 0.04%)</title><rect x="435.3" y="103" width="1.8" height="23.0" fill="rgb(224,173,21)" rx="2" ry="2" />
+<text  x="438.34" y="117.5" ></text>
+</g>
+<g >
+<title>LoadZ::ModelWrapper (1 samples, 0.04%)</title><rect x="435.3" y="127" width="1.8" height="23.0" fill="rgb(243,173,41)" rx="2" ry="2" />
+<text  x="438.34" y="141.5" ></text>
+</g>
+<g >
+<title>IDAStep (2,227 samples, 100.00%)</title><rect x="10.0" y="343" width="3980.0" height="23.0" fill="rgb(243,179,42)" rx="2" ry="2" />
+<text  x="13.00" y="357.5" >IDAStep</text>
+</g>
+<g >
+<title>Ir (3 samples, 0.13%)</title><rect x="3705.8" y="199" width="5.4" height="23.0" fill="rgb(237,177,35)" rx="2" ry="2" />
+<text  x="3708.84" y="213.5" ></text>
+</g>
+<g >
+<title>setHostUpdated (1 samples, 0.04%)</title><rect x="3702.3" y="175" width="1.8" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3705.27" y="189.5" ></text>
+</g>
+<g >
+<title>Vr (27 samples, 1.21%)</title><rect x="3713.0" y="199" width="48.2" height="23.0" fill="rgb(235,149,33)" rx="2" ry="2" />
+<text  x="3715.99" y="213.5" >Vr</text>
+</g>
+<g >
+<title>getData (2 samples, 0.09%)</title><rect x="3066.0" y="151" width="3.6" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3069.04" y="165.5" ></text>
+</g>
+<g >
+<title>Tgov1::ModelWrapper (1 samples, 0.04%)</title><rect x="451.4" y="127" width="1.8" height="23.0" fill="rgb(243,168,41)" rx="2" ry="2" />
+<text  x="454.43" y="141.5" ></text>
+</g>
+<g >
+<title>klu_solve (2 samples, 0.09%)</title><rect x="478.2" y="175" width="3.6" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="481.24" y="189.5" ></text>
+</g>
+<g >
+<title>__ieee754_pow_fma (1 samples, 0.04%)</title><rect x="3988.2" y="295" width="1.8" height="23.0" fill="rgb(227,125,24)" rx="2" ry="2" />
+<text  x="3991.21" y="309.5" ></text>
+</g>
+<g >
+<title>__memcpy_avx_unaligned_erms (6 samples, 0.27%)</title><rect x="2946.3" y="247" width="10.7" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="2949.30" y="261.5" ></text>
+</g>
+<g >
+<title>vector::operator[] (1 samples, 0.04%)</title><rect x="3659.4" y="199" width="1.8" height="23.0" fill="rgb(242,146,41)" rx="2" ry="2" />
+<text  x="3662.38" y="213.5" ></text>
+</g>
+<g >
+<title>profileKluSolve (757 samples, 33.99%)</title><rect x="1529.1" y="247" width="1352.9" height="23.0" fill="rgb(244,184,43)" rx="2" ry="2" />
+<text  x="1532.08" y="261.5" >profileKluSolve</text>
+</g>
+<g >
+<title>flush (1 samples, 0.04%)</title><rect x="394.2" y="127" width="1.8" height="23.0" fill="rgb(236,139,34)" rx="2" ry="2" />
+<text  x="397.24" y="141.5" ></text>
+</g>
+<g >
+<title>Tgov1::DfDy (1 samples, 0.04%)</title><rect x="453.2" y="151" width="1.8" height="23.0" fill="rgb(246,168,46)" rx="2" ry="2" />
+<text  x="456.22" y="165.5" ></text>
+</g>
+<g >
+<title>SUNNonlinSolSolve_Newton (2,098 samples, 94.21%)</title><rect x="229.8" y="319" width="3749.5" height="23.0" fill="rgb(248,146,47)" rx="2" ry="2" />
+<text  x="232.82" y="333.5" >SUNNonlinSolSolve_Newton</text>
+</g>
+<g >
+<title>__copy_move_a2 (3 samples, 0.13%)</title><rect x="301.3" y="151" width="5.4" height="23.0" fill="rgb(237,144,35)" rx="2" ry="2" />
+<text  x="304.31" y="165.5" ></text>
+</g>
+<g >
+<title>N_VLinearSumVectorArray (32 samples, 1.44%)</title><rect x="56.5" y="319" width="57.2" height="23.0" fill="rgb(239,124,37)" rx="2" ry="2" />
+<text  x="59.47" y="333.5" >N_V..</text>
+</g>
+<g >
+<title>fill (2 samples, 0.09%)</title><rect x="3409.2" y="151" width="3.5" height="23.0" fill="rgb(224,183,21)" rx="2" ry="2" />
+<text  x="3412.17" y="165.5" ></text>
+</g>
+<g >
+<title>klu_utsolve (2 samples, 0.09%)</title><rect x="481.8" y="151" width="3.6" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="484.81" y="165.5" ></text>
+</g>
+<g >
+<title>sparse_store (1 samples, 0.04%)</title><rect x="453.2" y="79" width="1.8" height="23.0" fill="rgb(246,176,45)" rx="2" ry="2" />
+<text  x="456.22" y="93.5" ></text>
+</g>
+<g >
+<title>N_VWSqrSumLocal_Serial (14 samples, 0.63%)</title><rect x="249.5" y="247" width="25.0" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="252.48" y="261.5" ></text>
+</g>
+<g >
+<title>LoadZ (67 samples, 3.01%)</title><rect x="3704.1" y="223" width="119.7" height="23.0" fill="rgb(253,173,53)" rx="2" ry="2" />
+<text  x="3707.05" y="237.5" >LoadZ</text>
+</g>
+<g >
+<title>getData (4 samples, 0.18%)</title><rect x="401.4" y="175" width="7.1" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="404.39" y="189.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (4 samples, 0.18%)</title><rect x="1529.1" y="199" width="7.1" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="1532.08" y="213.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (6 samples, 0.27%)</title><rect x="15.4" y="295" width="10.7" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="18.36" y="309.5" ></text>
+</g>
+<g >
+<title>__ostream_insert (1 samples, 0.04%)</title><rect x="449.6" y="151" width="1.8" height="23.0" fill="rgb(236,144,34)" rx="2" ry="2" />
+<text  x="452.64" y="165.5" ></text>
+</g>
+<g >
+<title>profileKluSetup (572 samples, 25.68%)</title><rect x="478.2" y="247" width="1022.3" height="23.0" fill="rgb(238,184,36)" rx="2" ry="2" />
+<text  x="481.24" y="261.5" >profileKluSetup</text>
+</g>
+<g >
+<title>CooMatrix::getNnz (2 samples, 0.09%)</title><rect x="408.5" y="199" width="3.6" height="23.0" fill="rgb(247,159,46)" rx="2" ry="2" />
+<text  x="411.54" y="213.5" ></text>
+</g>
+<g >
+<title>__memcpy_avx_unaligned_erms (5 samples, 0.22%)</title><rect x="292.4" y="223" width="8.9" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="295.37" y="237.5" ></text>
+</g>
+<g >
+<title>__expm1_ifunc (1 samples, 0.04%)</title><rect x="3847.0" y="79" width="1.8" height="23.0" fill="rgb(233,138,30)" rx="2" ry="2" />
+<text  x="3850.03" y="93.5" ></text>
+</g>
+<g >
+<title>__fill_a1 (2 samples, 0.09%)</title><rect x="3409.2" y="103" width="3.5" height="23.0" fill="rgb(221,135,18)" rx="2" ry="2" />
+<text  x="3412.17" y="117.5" ></text>
+</g>
+<g >
+<title>setHostUpdated (2 samples, 0.09%)</title><rect x="3584.3" y="175" width="3.6" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3587.32" y="189.5" ></text>
+</g>
+<g >
+<title>evaluateInternalResidual (4 samples, 0.18%)</title><rect x="3841.7" y="199" width="7.1" height="23.0" fill="rgb(224,178,21)" rx="2" ry="2" />
+<text  x="3844.67" y="213.5" ></text>
+</g>
+<g >
+<title>LoadZ::DfDy (1 samples, 0.04%)</title><rect x="435.3" y="151" width="1.8" height="23.0" fill="rgb(246,173,46)" rx="2" ry="2" />
+<text  x="438.34" y="165.5" ></text>
+</g>
+<g >
+<title>N_VScale_Serial (13 samples, 0.58%)</title><rect x="2921.3" y="271" width="23.2" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="2924.28" y="285.5" ></text>
+</g>
+<g >
+<title>getData (95 samples, 4.27%)</title><rect x="3239.4" y="199" width="169.8" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3242.39" y="213.5" >getData</text>
+</g>
+<g >
+<title>vector::data (1 samples, 0.04%)</title><rect x="424.6" y="175" width="1.8" height="23.0" fill="rgb(235,146,33)" rx="2" ry="2" />
+<text  x="427.62" y="189.5" ></text>
+</g>
+<g >
+<title>N_VLinearSum_Serial (21 samples, 0.94%)</title><rect x="2883.7" y="271" width="37.6" height="23.0" fill="rgb(224,124,21)" rx="2" ry="2" />
+<text  x="2886.75" y="285.5" >N..</text>
+</g>
+<g >
+<title>__expm1_fma (1 samples, 0.04%)</title><rect x="3632.6" y="103" width="1.8" height="23.0" fill="rgb(227,138,24)" rx="2" ry="2" />
+<text  x="3635.57" y="117.5" ></text>
+</g>
+<g >
+<title>inner_store_double_size_t (1 samples, 0.04%)</title><rect x="356.7" y="55" width="1.8" height="23.0" fill="rgb(233,183,31)" rx="2" ry="2" />
+<text  x="359.71" y="69.5" ></text>
+</g>
+<g >
+<title>ComponentSignals::isAttached (1 samples, 0.04%)</title><rect x="3600.4" y="199" width="1.8" height="23.0" fill="rgb(247,165,46)" rx="2" ry="2" />
+<text  x="3603.40" y="213.5" ></text>
+</g>
+<g >
+<title>Bus::Ii (2 samples, 0.09%)</title><rect x="3044.6" y="175" width="3.6" height="23.0" fill="rgb(231,124,29)" rx="2" ry="2" />
+<text  x="3047.59" y="189.5" ></text>
+</g>
+<g >
+<title>__memset_avx2_unaligned_erms (1 samples, 0.04%)</title><rect x="3863.1" y="223" width="1.8" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="3866.11" y="237.5" ></text>
+</g>
+<g >
+<title>__ostream_insert (1 samples, 0.04%)</title><rect x="390.7" y="151" width="1.8" height="23.0" fill="rgb(236,144,34)" rx="2" ry="2" />
+<text  x="393.66" y="165.5" ></text>
+</g>
+<g >
+<title>Governor::Tgov1::evaluateInternalResidual (1 samples, 0.04%)</title><rect x="453.2" y="103" width="1.8" height="23.0" fill="rgb(224,184,21)" rx="2" ry="2" />
+<text  x="456.22" y="117.5" ></text>
+</g>
+<g >
+<title>setDataUpdated (3 samples, 0.13%)</title><rect x="3654.0" y="199" width="5.4" height="23.0" fill="rgb(247,154,46)" rx="2" ry="2" />
+<text  x="3657.01" y="213.5" ></text>
+</g>
+<g >
+<title>SUNMatZero_Sparse (9 samples, 0.40%)</title><rect x="462.2" y="247" width="16.0" height="23.0" fill="rgb(243,146,42)" rx="2" ry="2" />
+<text  x="465.15" y="261.5" ></text>
+</g>
+<g >
+<title>chrono::steady_clock::now (1 samples, 0.04%)</title><rect x="2880.2" y="199" width="1.8" height="23.0" fill="rgb(236,113,35)" rx="2" ry="2" />
+<text  x="2883.18" y="213.5" ></text>
+</g>
+<g >
+<title>sigmoid (2 samples, 0.09%)</title><rect x="3845.2" y="127" width="3.6" height="23.0" fill="rgb(246,137,45)" rx="2" ry="2" />
+<text  x="3848.24" y="141.5" ></text>
+</g>
+<g >
+<title>copyVec (2 samples, 0.09%)</title><rect x="306.7" y="223" width="3.5" height="23.0" fill="rgb(235,140,33)" rx="2" ry="2" />
+<text  x="309.67" y="237.5" ></text>
+</g>
+<g >
+<title>getData (4 samples, 0.18%)</title><rect x="3050.0" y="175" width="7.1" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3052.96" y="189.5" ></text>
+</g>
+<g >
+<title>Bus (26 samples, 1.17%)</title><rect x="3430.6" y="223" width="46.5" height="23.0" fill="rgb(234,124,32)" rx="2" ry="2" />
+<text  x="3433.62" y="237.5" >Bus</text>
+</g>
+<g >
+<title>__tanh (1 samples, 0.04%)</title><rect x="3677.2" y="151" width="1.8" height="23.0" fill="rgb(247,128,46)" rx="2" ry="2" />
+<text  x="3680.25" y="165.5" ></text>
+</g>
+<g >
+<title>idaNlsResidual (614 samples, 27.57%)</title><rect x="2882.0" y="295" width="1097.3" height="23.0" fill="rgb(224,181,21)" rx="2" ry="2" />
+<text  x="2884.96" y="309.5" >idaNlsResidual</text>
+</g>
+<g >
+<title>idaNlsConvTest (16 samples, 0.72%)</title><rect x="247.7" y="295" width="28.6" height="23.0" fill="rgb(235,181,33)" rx="2" ry="2" />
+<text  x="250.69" y="309.5" ></text>
+</g>
+<g >
+<title>getData (44 samples, 1.98%)</title><rect x="3505.7" y="199" width="78.6" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3508.68" y="213.5" >getData</text>
+</g>
+<g >
+<title>__copy_move::__copy_m (3 samples, 0.13%)</title><rect x="301.3" y="127" width="5.4" height="23.0" fill="rgb(230,144,28)" rx="2" ry="2" />
+<text  x="304.31" y="141.5" ></text>
+</g>
+<g >
+<title>SignalNode::read (1 samples, 0.04%)</title><rect x="3839.9" y="175" width="1.8" height="23.0" fill="rgb(241,153,40)" rx="2" ry="2" />
+<text  x="3842.88" y="189.5" ></text>
+</g>
+<g >
+<title>memset (1 samples, 0.04%)</title><rect x="3425.3" y="151" width="1.7" height="23.0" fill="rgb(237,144,35)" rx="2" ry="2" />
+<text  x="3428.26" y="165.5" ></text>
+</g>
+<g >
+<title>LoadZ (9 samples, 0.40%)</title><rect x="435.3" y="199" width="16.1" height="23.0" fill="rgb(253,173,53)" rx="2" ry="2" />
+<text  x="438.34" y="213.5" ></text>
+</g>
+<g >
+<title>ranges::__fill_fn::operator (1 samples, 0.04%)</title><rect x="422.8" y="103" width="1.8" height="23.0" fill="rgb(241,146,39)" rx="2" ry="2" />
+<text  x="425.83" y="117.5" ></text>
+</g>
+<g >
+<title>copyVec (16 samples, 0.72%)</title><rect x="2958.8" y="247" width="28.6" height="23.0" fill="rgb(235,140,33)" rx="2" ry="2" />
+<text  x="2961.81" y="261.5" ></text>
+</g>
+<g >
+<title>ostream::sentry::sentry (1 samples, 0.04%)</title><rect x="360.3" y="103" width="1.8" height="23.0" fill="rgb(243,171,42)" rx="2" ry="2" />
+<text  x="363.28" y="117.5" ></text>
+</g>
+<g >
+<title>Branch::evaluateAdmittanceBlock (1 samples, 0.04%)</title><rect x="356.7" y="79" width="1.8" height="23.0" fill="rgb(240,158,39)" rx="2" ry="2" />
+<text  x="359.71" y="93.5" ></text>
+</g>
+<g >
+<title>Jac (104 samples, 4.67%)</title><rect x="276.3" y="247" width="185.9" height="23.0" fill="rgb(228,142,25)" rx="2" ry="2" />
+<text  x="279.29" y="261.5" >Jac</text>
+</g>
+<g >
+<title>BusFault::DfDy (1 samples, 0.04%)</title><rect x="399.6" y="151" width="1.8" height="23.0" fill="rgb(246,124,46)" rx="2" ry="2" />
+<text  x="402.60" y="165.5" ></text>
+</g>
+<g >
+<title>Tgov1 (20 samples, 0.90%)</title><rect x="3823.8" y="223" width="35.7" height="23.0" fill="rgb(228,168,25)" rx="2" ry="2" />
+<text  x="3826.79" y="237.5" >T..</text>
+</g>
+<g >
+<title>BusFault (7 samples, 0.31%)</title><rect x="396.0" y="199" width="12.5" height="23.0" fill="rgb(228,124,25)" rx="2" ry="2" />
+<text  x="399.03" y="213.5" ></text>
+</g>
+<g >
+<title>getData (3 samples, 0.13%)</title><rect x="3705.8" y="175" width="5.4" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3708.84" y="189.5" ></text>
+</g>
+<g >
+<title>__memset_avx2_unaligned_erms (1 samples, 0.04%)</title><rect x="422.8" y="55" width="1.8" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="425.83" y="69.5" ></text>
+</g>
+<g >
+<title>Residual (579 samples, 26.00%)</title><rect x="2944.5" y="271" width="1034.8" height="23.0" fill="rgb(224,181,21)" rx="2" ry="2" />
+<text  x="2947.51" y="285.5" >Residual</text>
+</g>
+<g >
+<title>Ieeet1 (5 samples, 0.22%)</title><rect x="426.4" y="199" width="8.9" height="23.0" fill="rgb(229,179,26)" rx="2" ry="2" />
+<text  x="429.41" y="213.5" ></text>
+</g>
+<g >
+<title>idaNlsLSetup (685 samples, 30.76%)</title><rect x="276.3" y="295" width="1224.2" height="23.0" fill="rgb(238,181,36)" rx="2" ry="2" />
+<text  x="279.29" y="309.5" >idaNlsLSetup</text>
+</g>
+<g >
+<title>__memcpy_avx_unaligned_erms (2 samples, 0.09%)</title><rect x="306.7" y="199" width="3.5" height="23.0" fill="rgb(231,151,28)" rx="2" ry="2" />
+<text  x="309.67" y="213.5" ></text>
+</g>
+<g >
+<title>getData (13 samples, 0.58%)</title><rect x="3679.0" y="199" width="23.3" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3682.03" y="213.5" ></text>
+</g>
+<g >
+<title>vector::operator[] (2 samples, 0.09%)</title><rect x="3427.0" y="199" width="3.6" height="23.0" fill="rgb(242,146,41)" rx="2" ry="2" />
+<text  x="3430.05" y="213.5" ></text>
+</g>
+<g >
+<title>getData (11 samples, 0.49%)</title><rect x="3634.4" y="199" width="19.6" height="23.0" fill="rgb(235,170,33)" rx="2" ry="2" />
+<text  x="3637.36" y="213.5" ></text>
+</g>
+<g >
+<title>__ostream_insert (2 samples, 0.09%)</title><rect x="358.5" y="127" width="3.6" height="23.0" fill="rgb(236,144,34)" rx="2" ry="2" />
+<text  x="361.50" y="141.5" ></text>
+</g>
+<g >
+<title>klu_usolve (1 samples, 0.04%)</title><rect x="480.0" y="151" width="1.8" height="23.0" fill="rgb(244,99,43)" rx="2" ry="2" />
+<text  x="483.02" y="165.5" ></text>
+</g>
+<g >
+<title>__conditional::type (1 samples, 0.04%)</title><rect x="422.8" y="127" width="1.8" height="23.0" fill="rgb(250,144,49)" rx="2" ry="2" />
+<text  x="425.83" y="141.5" ></text>
+</g>
+<g >
+<title>DfDwb (3 samples, 0.13%)</title><rect x="353.1" y="175" width="5.4" height="23.0" fill="rgb(225,125,22)" rx="2" ry="2" />
+<text  x="356.13" y="189.5" ></text>
+</g>
+</g>
+
+</svg>
+</g>
+</svg>
