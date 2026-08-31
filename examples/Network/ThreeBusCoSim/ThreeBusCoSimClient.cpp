@@ -7,6 +7,7 @@
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 #include "CoSim.hpp"
 #include <zmq.hpp>
@@ -14,6 +15,8 @@
 using namespace GridKit;
 using namespace GridKit::PhasorDynamics;
 using namespace AnalysisManager::Sundials;
+
+using Log = GridKit::Utilities::Logger;
 
 /**
  * @brief A simple implementation of the "client" side of a co-simulation pair
@@ -61,6 +64,7 @@ public:
     ir_signal_->set(&ir_, &ir_idx_);
     ii_signal_->set(&ii_, &ii_idx_);
     socket_.connect("tcp://0.0.0.0:5556");
+    Log::summary() << "CLIENT: Established connection with server\n";
   }
 
   /**
@@ -78,6 +82,7 @@ public:
     if (recv_result)
     {
     }
+    Log::summary() << "CLIENT: Ending simulation\n";
   }
 
   /**
@@ -90,7 +95,7 @@ public:
     std::ostringstream oss;
     oss << std::scientific << std::setprecision(16);
     oss << CoSim::STEP << " " << vr_signal_->read() << " " << vi_signal_->read();
-    // std::cout << "[CLIENT] Sending: " << oss.str() << std::endl;
+    Log::misc() << "CLIENT: Sending \"" << oss.str() << "\"\n";
 
     zmq::message_t s_msg{oss.str().data(), oss.str().size()};
     socket_.send(s_msg, zmq::send_flags::none);
@@ -101,7 +106,7 @@ public:
     if (recv_result)
     {
       std::istringstream iss(r_msg.to_string());
-      // std::cout << "[CLIENT] Received: " << iss.str() << std::endl;
+      Log::misc() << "CLIENT: Received \"" << iss.str() << "\"\n";
       iss >> ir_ >> ii_;
     }
   }
@@ -135,6 +140,8 @@ using IdxT    = std::size_t;
 
 int main()
 {
+  Log::setVerbosity(Log::Verbosity::SUMMARY);
+
   // Instantiate system
   auto filepath = std::filesystem::path("ThreeBusCoSimClient.case.json");
   auto data     = parseSystemModelData(filepath);
