@@ -763,8 +763,7 @@ namespace AnalysisManager
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
       CsrMatrixT* Jac  = model->getCsrJacobian();
 
-      SUNMatZero(J);
-
+      // The copies below overwrite every row pointer, column, and value.
       sunindextype* sun_row_ptrs = SUNSparseMatrix_IndexPointers(J);
       sunindextype* sun_cols     = SUNSparseMatrix_IndexValues(J);
       RealT*        sun_vals     = SUNSparseMatrix_Data(J);

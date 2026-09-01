@@ -46,6 +46,7 @@ namespace GridKit
       int setAbsoluteTolerance(RealT rel_tol) override final;
       int evaluateResidual() override final;
       int evaluateJacobian() override final;
+      IdxT admittanceStamps(typename Component<ScalarT, IdxT>::StampT* out) override final;
 
       int verify() const override final
       {
@@ -115,6 +116,7 @@ namespace GridKit
       RealT G_{0};
       RealT B_{0};
       RealT alphaZ_{1.0};
+      bool  initialized_{false};
 
       std::unique_ptr<MonitorT> monitor_;
     };

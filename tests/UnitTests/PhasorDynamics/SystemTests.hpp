@@ -18,6 +18,8 @@
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
+#include <GridKit/Model/PhasorDynamics/NetworkAdmittance.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -333,6 +335,191 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome networkAdmittanceMergesDuplicateStamps()
+      {
+        using namespace PhasorDynamics;
+
+        TestStatus success = true;
+        using StampT       = AdmittanceStamp<RealT, IdxT>;
+
+        NetworkAdmittance<ScalarT, IdxT> network;
+        std::vector<StampT> stamps{
+            {IdxT{0}, IdxT{0}, RealT{1.0}, RealT{2.0}},
+            {IdxT{0}, IdxT{0}, RealT{3.0}, RealT{4.0}},
+            {IdxT{0}, IdxT{2}, RealT{-1.0}, RealT{0.5}},
+            {IdxT{2}, IdxT{0}, RealT{2.0}, RealT{-1.0}}};
+
+        network.assemble(stamps, {IdxT{0}, IdxT{2}, IdxT{4}});
+        success *= network.rowCount() == IdxT{3};
+        success *= network.nnz() == IdxT{3};
+
+        const std::array<ScalarT, 6> y{
+            ScalarT{1.0},
+            ScalarT{2.0},
+            ScalarT{3.0},
+            ScalarT{4.0},
+            ScalarT{5.0},
+            ScalarT{6.0}};
+        std::array<ScalarT, 6> f{
+            ScalarT{9.0},
+            ScalarT{9.0},
+            ScalarT{9.0},
+            ScalarT{9.0},
+            ScalarT{9.0},
+            ScalarT{9.0}};
+
+        network.multiply(y.data(), f.data());
+        const std::array<ScalarT, 6> expected{
+            ScalarT{-13.0},
+            ScalarT{11.5},
+            ScalarT{4.0},
+            ScalarT{3.0},
+            ScalarT{0.0},
+            ScalarT{0.0}};
+        for (std::size_t i = 0; i < expected.size(); ++i)
+        {
+          success *= isEqual(f[i], expected[i]);
+        }
+
+        NetworkAdmittance<ScalarT, IdxT> invalid_network;
+        std::vector<StampT> bad_stamps{
+            {IdxT{1}, IdxT{0}, RealT{1.0}, RealT{0.0}}};
+        success *= throws<std::invalid_argument>(
+            [&]()
+            { invalid_network.assemble(bad_stamps, {IdxT{0}}); });
+
+        return success.report(__func__);
+      }
+
+      TestOutcome networkAdmittanceTracksParameterChanges()
+      {
+        using namespace PhasorDynamics;
+
+        TestStatus success = true;
+
+        SystemModel<ScalarT, IdxT> system;
+        Bus<ScalarT, IdxT>         bus(ScalarT{1.0}, ScalarT{0.0});
+        LoadZ<ScalarT, IdxT>       load_z(&bus, RealT{1.0}, RealT{0.0});
+        LoadZIP<ScalarT, IdxT>     load_zip(
+            &bus, RealT{2.0}, RealT{1.0}, RealT{0.0}, RealT{0.0});
+
+        bus.setBusID(IdxT{0});
+        system.addBus(&bus);
+        system.addComponent(&load_z);
+        system.addComponent(&load_zip);
+        if (system.allocate() != 0 || system.initialize() != 0)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        auto expectBusResidual = [&](ScalarT expected_ir, ScalarT expected_ii)
+        {
+          success *= system.evaluateResidual() == 0;
+          success *= isEqual(bus.Ir(), expected_ir);
+          success *= isEqual(bus.Ii(), expected_ii);
+        };
+
+        // LoadZ and pure-Z LoadZIP stamp the same entry and are merged.
+        expectBusResidual(ScalarT{-3.0}, ScalarT{1.0});
+
+        // Rebuilds overwrite stale HOST residual output instead of reading it.
+        system.getResidual().setDataUpdated(memory::DEVICE);
+        load_z.setR(RealT{2.0});
+        load_zip.setPnom(RealT{4.0});
+        expectBusResidual(ScalarT{-4.5}, ScalarT{1.0});
+
+        // A mixed ZIP leaves the matrix and returns to the component sweep.
+        load_zip.setAlphaI(RealT{0.25});
+        expectBusResidual(ScalarT{-4.5}, ScalarT{1.0});
+
+        bus.Vr() = ScalarT{2.0};
+        bus.Vi() = ScalarT{0.0};
+        system.y().setDataUpdated(memory::HOST);
+        expectBusResidual(ScalarT{-8.0}, ScalarT{1.75});
+
+        // Returning to pure-Z stamps the load again with current parameters.
+        load_zip.setAlphaI(RealT{0.0});
+        expectBusResidual(ScalarT{-9.0}, ScalarT{2.0});
+
+        // Reinitialization also reassembles without reading stale residuals.
+        system.getResidual().setDataUpdated(memory::DEVICE);
+        success *= system.initialize() == 0;
+        expectBusResidual(ScalarT{-4.5}, ScalarT{1.0});
+
+        SystemModel<ScalarT, IdxT> branch_system;
+        Bus<ScalarT, IdxT>         bus1(ScalarT{1.0}, ScalarT{0.0});
+        Bus<ScalarT, IdxT>         bus2(ScalarT{0.0}, ScalarT{0.0});
+        Branch<ScalarT, IdxT>      branch(
+            &bus1, &bus2, RealT{1.0}, RealT{0.0}, RealT{0.0}, RealT{0.0});
+
+        bus1.setBusID(IdxT{1});
+        bus2.setBusID(IdxT{2});
+        branch_system.addBus(&bus1);
+        branch_system.addBus(&bus2);
+        branch_system.addComponent(&branch);
+        success *= branch_system.allocate() == 0;
+        success *= branch_system.initialize() == 0;
+        success *= branch_system.evaluateResidual() == 0;
+        success *= isEqual(bus1.Ir(), ScalarT{-1.0});
+        success *= isEqual(bus2.Ir(), ScalarT{1.0});
+
+        branch.setR(RealT{2.0});
+        success *= branch_system.evaluateResidual() == 0;
+        success *= isEqual(bus1.Ir(), ScalarT{-0.5});
+        success *= isEqual(bus2.Ir(), ScalarT{0.5});
+
+        return success.report(__func__);
+      }
+
+      TestOutcome networkAdmittancePreservesFaultEvents()
+      {
+        using namespace PhasorDynamics;
+
+        TestStatus success = true;
+
+        SystemModel<ScalarT, IdxT> system;
+        Bus<ScalarT, IdxT>         bus(ScalarT{1.0}, ScalarT{0.0});
+        LoadZ<ScalarT, IdxT>       load(&bus, RealT{1.0}, RealT{0.0});
+        BusFault<ScalarT, IdxT>    fault(&bus, RealT{1.0}, RealT{0.0}, 0);
+
+        bus.setBusID(IdxT{0});
+        system.addBus(&bus);
+        system.addComponent(&load);
+        system.addFault(&fault);
+        if (system.allocate() != 0 || system.initialize() != 0)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        success *= system.evaluateResidual() == 0;
+        success *= isEqual(bus.Ir(), ScalarT{-1.0});
+        success *= isEqual(bus.Ii(), ScalarT{0.0});
+
+        auto* fault_state = fault.y().getData(memory::HOST);
+        if (fault_state == nullptr)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+        fault_state[0] = ScalarT{-1.0};
+        fault_state[1] = ScalarT{0.0};
+        fault.y().setDataUpdated(memory::HOST);
+
+        fault.setStatus(true);
+        success *= system.evaluateResidual() == 0;
+        success *= isEqual(bus.Ir(), ScalarT{-2.0});
+        success *= isEqual(bus.Ii(), ScalarT{0.0});
+
+        fault.setStatus(false);
+        success *= system.evaluateResidual() == 0;
+        success *= isEqual(bus.Ir(), ScalarT{-1.0});
+        success *= isEqual(bus.Ii(), ScalarT{0.0});
+
+        return success.report(__func__);
+      }
+
       TestOutcome reallocateAfterTopologyChange()
       {
         TestStatus success = true;
@@ -596,6 +783,140 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome jacobianAssemblyTracksCachedContributions()
+      {
+        using namespace PhasorDynamics;
+
+        TestStatus success = true;
+
+        SystemModel<ScalarT, IdxT> system;
+        Bus<ScalarT, IdxT>         bus(ScalarT{1.0}, ScalarT{0.0});
+        LoadZ<ScalarT, IdxT>       load(&bus, RealT{1.0}, RealT{0.0});
+        LoadZIP<ScalarT, IdxT>     zip_load(
+            &bus, RealT{2.0}, RealT{1.0}, RealT{0.0}, RealT{0.0});
+        BusFault<ScalarT, IdxT>    fault(&bus, RealT{1.0}, RealT{0.0}, 0);
+
+        bus.setBusID(IdxT{0});
+        system.addBus(&bus);
+        system.addComponent(&load);
+        system.addComponent(&zip_load);
+        system.addFault(&fault);
+        if (system.allocate() != 0 || system.initialize() != 0)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        auto valueAt = [&](IdxT row, IdxT col, RealT& value)
+        {
+          auto* jacobian = system.getCsrJacobian();
+          if (jacobian == nullptr || row >= jacobian->getNumRows())
+          {
+            return false;
+          }
+
+          const auto* row_ptrs = jacobian->getRowData();
+          const auto* columns  = jacobian->getColData();
+          const auto* values   = jacobian->getValues();
+          for (IdxT i = row_ptrs[row]; i < row_ptrs[row + 1]; ++i)
+          {
+            if (columns[i] == col)
+            {
+              value = values[i];
+              return true;
+            }
+          }
+          return false;
+        };
+
+        auto expectValue = [&](IdxT row, IdxT col, RealT expected)
+        {
+          RealT value{0};
+          const bool found = valueAt(row, col, value);
+          success         *= found;
+          if (found)
+          {
+            success *= isEqual(value, expected);
+          }
+        };
+
+        const IdxT bus_ir         = bus.getResidualIndex(0);
+        const IdxT bus_vr         = bus.getVariableIndex(0);
+        const IdxT fault_current_r = fault.getVariableIndex(0);
+
+        // The initial load is invariant while the inactive fault contribution
+        // remains a structural zero in the varying map.
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-3.0});
+        expectValue(bus_ir, fault_current_r, RealT{0.0});
+
+        auto* first_jacobian = system.getCsrJacobian();
+        if (first_jacobian == nullptr)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+        std::vector<RealT> first_values(
+            first_jacobian->getValues(),
+            first_jacobian->getValues() + first_jacobian->getNnz());
+
+        success *= system.evaluateJacobian() == 0;
+        auto* repeated_jacobian = system.getCsrJacobian();
+        success *= repeated_jacobian->getNnz()
+                   == static_cast<IdxT>(first_values.size());
+        for (IdxT i = 0; i < repeated_jacobian->getNnz(); ++i)
+        {
+          success *= isEqual(repeated_jacobian->getValues()[i], first_values[i]);
+        }
+
+        // Dynamic blocks are still evaluated on every call.
+        fault.setStatus(true);
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-3.0});
+        expectValue(bus_ir, fault_current_r, RealT{1.0});
+
+        // An admittance mutation rebuilds the network and resnapshots the
+        // constant Jacobian without losing the current dynamic contribution.
+        load.setR(RealT{2.0});
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-2.5});
+        expectValue(bus_ir, fault_current_r, RealT{1.0});
+
+        fault.setStatus(false);
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-2.5});
+        expectValue(bus_ir, fault_current_r, RealT{0.0});
+
+        // A pure-Z ZIP moving into the dynamic sweep is immediately reflected
+        // in the baseline/source map, then follows voltage changes per call.
+        zip_load.setAlphaP(RealT{0.25});
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-1.5});
+
+        bus.Vr() = ScalarT{2.0};
+        system.y().setDataUpdated(memory::HOST);
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-1.875});
+
+        // Returning to pure Z moves the ZIP contribution back into the
+        // invariant snapshot.
+        zip_load.setAlphaP(RealT{0.0});
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-2.5});
+
+        // Reallocation clears all structure, pointer, and baseline caches even
+        // when a new zero-state stamp does not change the system dimension.
+        LoadZ<ScalarT, IdxT> extra_load(&bus, RealT{2.0}, RealT{0.0});
+        system.addComponent(&extra_load);
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.evaluateJacobian() == 0;
+        expectValue(bus_ir, bus_vr, RealT{-3.0});
+        expectValue(bus_ir, fault_current_r, RealT{0.0});
+
+        return success.report(__func__);
+      }
+
       TestOutcome jacobian()
       {
         TestStatus success = true;

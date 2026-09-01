@@ -1,9 +1,12 @@
 #pragma once
 
+#include <cstdint>
 #include <map>
 #include <memory>
+#include <vector>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/NetworkAdmittance.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 
 namespace GridKit
@@ -104,9 +107,33 @@ namespace GridKit
       BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id);
 
     private:
+      void assembleNetworkAdmittance();
+      bool ensureAdmittanceCurrent();
+      void buildJacobianStructure();
+      void snapshotConstantJacobian();
+
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;
+
+      NetworkAdmittance<ScalarT, IdxT> network_;
+      std::vector<ComponentT*>         evaluated_components_;
+      std::vector<BusT*>               unmapped_buses_;
+      ScalarT*                         network_y_data_{nullptr};
+      ScalarT*                         network_f_data_{nullptr};
+      std::uint64_t                    assembled_admittance_epoch_{0};
+      bool                             network_admittance_ready_{false};
+      bool                             initialization_succeeded_{false};
+
+      /// Fully assembled values contributed by invariant stamped components.
+      std::vector<RealT> constant_jacobian_values_;
+      /// Destination CSR slot for each value contributed by a varying block.
+      std::vector<IdxT> varying_jacobian_to_csr_;
+      /// Stable COO value source corresponding to varying_jacobian_to_csr_.
+      std::vector<const RealT*> varying_jacobian_sources_;
+      /// Admittance epoch represented by constant_jacobian_values_.
+      std::uint64_t jacobian_snapshot_epoch_{0};
+      bool          jacobian_snapshot_ready_{false};
 
       std::map<IdxT, IdxT> gridkit_bus_indices_;   ///< Map between gridkit_bus_id and bus_id
       std::map<IdxT, IdxT> gridkit_fault_indices_; ///< Map between fault_id and component_id
