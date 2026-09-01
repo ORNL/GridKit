@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <iterator>
+#include <limits>
 #include <sstream>
 #include <string>
 
@@ -216,6 +217,100 @@ namespace GridKit
 
         delete[] initial_storage;
         delete[] replacement_storage;
+        return status.report(__func__);
+      }
+
+      /**
+       * @brief Test slice alias storage, shared freshness, ownership, and errors.
+       */
+      TestOutcome aliasOf(IdxT N)
+      {
+        TestStatus status = true;
+
+        Vector<ScalarT, IdxT> parent(N);
+        status *= parent.allocate(memory::HOST) == 0;
+        status *= parent.setToConst(ScalarT{1.0}, memory::HOST) == 0;
+        auto* const parent_data = parent.getData(memory::HOST);
+        status *= parent_data != nullptr;
+
+        const IdxT offset = 2;
+        const IdxT size   = N - 3;
+        {
+          Vector<ScalarT, IdxT> view;
+          status *= view.aliasOf(parent, offset, size, memory::HOST) == 0;
+          status *= view.getSize() == size;
+          status *= view.getCapacity() == size;
+
+          auto* const view_data = view.getData(memory::HOST);
+          status *= view_data == parent_data + offset;
+          if (view_data != nullptr)
+          {
+            view_data[0] = ScalarT{7.0};
+            status      *= view.setDataUpdated(memory::HOST) == 0;
+            status      *= parent.getData(memory::HOST)[offset] == ScalarT{7.0};
+          }
+
+          // Freshness changes propagate from the view to the parent.
+          status *= view.setDataUpdated(memory::DEVICE) == 0;
+          const auto previous_verbosity = Log::verbosity();
+          Log::setVerbosity(Log::Verbosity::NONE);
+          status *= view.getData(memory::HOST) == nullptr;
+          status *= parent.getData(memory::HOST) == nullptr;
+          Log::setVerbosity(previous_verbosity);
+
+          // They also propagate from the parent back to the view.
+          status *= parent.setDataUpdated(memory::HOST) == 0;
+          status *= view.getData(memory::HOST) == parent_data + offset;
+        }
+
+        // Destroying a view must not destroy the parent's update flags.
+        status *= parent.setDataUpdated(memory::DEVICE) == 0;
+        status *= parent.setDataUpdated(memory::HOST) == 0;
+        status *= parent.getData(memory::HOST) == parent_data;
+
+        // Re-aliasing must not transfer ownership of either parent's flags.
+        Vector<ScalarT, IdxT> second_parent(N);
+        status *= second_parent.allocate(memory::HOST) == 0;
+        status *= second_parent.setToConst(ScalarT{2.0}, memory::HOST) == 0;
+        {
+          Vector<ScalarT, IdxT> view;
+          status *= view.aliasOf(parent, offset, size, memory::HOST) == 0;
+          status *= view.aliasOf(second_parent, offset, size, memory::HOST) == 0;
+        }
+        status *= parent.setDataUpdated(memory::HOST) == 0;
+        status *= second_parent.setDataUpdated(memory::HOST) == 0;
+        status *= parent.getData(memory::HOST) != nullptr;
+        status *= second_parent.getData(memory::HOST) != nullptr;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::NONE);
+
+        // Self aliases, invalid bounds, missing storage, and multivectors are
+        // rejected without adopting another vector's flags.
+        status *= parent.aliasOf(parent, 0, N, memory::HOST) != 0;
+
+        Vector<ScalarT, IdxT> invalid_view;
+        status *= invalid_view.aliasOf(parent, N, 1, memory::HOST) != 0;
+        status *= invalid_view.aliasOf(parent,
+                                       std::numeric_limits<IdxT>::max(),
+                                       1,
+                                       memory::HOST)
+                  != 0;
+
+        Vector<ScalarT, IdxT> unallocated_parent(N);
+        status *= invalid_view.aliasOf(unallocated_parent, 0, N, memory::HOST) != 0;
+
+        Vector<ScalarT, IdxT> multivector_parent(N, 2);
+        status *= multivector_parent.allocate(memory::HOST) == 0;
+        status *= invalid_view.aliasOf(multivector_parent, 0, N, memory::HOST) != 0;
+        Vector<ScalarT, IdxT> multivector_view(0, 2);
+        status *= multivector_view.aliasOf(multivector_parent, 0, N, memory::HOST) != 0;
+
+        Vector<ScalarT, IdxT> owning_view(N);
+        status *= owning_view.allocate(memory::HOST) == 0;
+        status *= owning_view.aliasOf(parent, 0, N, memory::HOST) != 0;
+
+        Log::setVerbosity(previous_verbosity);
         return status.report(__func__);
       }
 

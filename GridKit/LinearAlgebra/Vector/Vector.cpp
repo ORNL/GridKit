@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstring>
+#include <type_traits>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
@@ -58,8 +59,11 @@ namespace GridKit
         mem_.deleteOnHost(h_data_);
       if (owns_gpu_data_ && d_data_)
         mem_.deleteOnDevice(d_data_);
-      delete[] gpu_updated_;
-      delete[] cpu_updated_;
+      if (owns_update_flags_)
+      {
+        delete[] gpu_updated_;
+        delete[] cpu_updated_;
+      }
     }
 
     /**
@@ -214,6 +218,99 @@ namespace GridKit
 
       n_capacity_ = size;
       n_size_     = size;
+      return 0;
+    }
+
+    /**
+     * @brief Bind this vector as a view into a slice of another vector.
+     *
+     * The view shares the parent's storage and update flags. Because both
+     * vectors describe the same data, changing the freshness through either
+     * vector immediately changes the freshness reported by the other.
+     *
+     * @param[in] parent   Vector owning the storage.
+     * @param[in] offset   First element of the slice within @p parent.
+     * @param[in] size     Number of elements in the slice.
+     * @param[in] memspace Memory space containing the aliased storage.
+     *
+     * @pre @p parent has data in @p memspace and contains the requested slice.
+     * @pre @p parent outlives this view and does not reallocate its storage.
+     * @pre Both objects are single-column vectors; strided multivector slices
+     * cannot be represented by Vector's contiguous storage view.
+     *
+     * @return 0 if successful, 1 otherwise.
+     */
+    template <typename ScalarT, typename IdxT>
+    int Vector<ScalarT, IdxT>::aliasOf(Vector<ScalarT, IdxT>& parent,
+                                       IdxT                   offset,
+                                       IdxT                   size,
+                                       memory::MemorySpace    memspace)
+    {
+      if (&parent == this)
+      {
+        out::error() << "Vector::aliasOf - a vector cannot alias itself\n";
+        return 1;
+      }
+
+      if constexpr (std::is_signed_v<IdxT>)
+      {
+        if (offset < IdxT{} || size < IdxT{})
+        {
+          out::error() << "Vector::aliasOf - offset and size must be nonnegative\n";
+          return 1;
+        }
+      }
+
+      // Subtraction after checking offset avoids overflow in offset + size.
+      if (offset > parent.n_size_ || size > parent.n_size_ - offset)
+      {
+        out::error() << "Vector::aliasOf - requested slice is out of range for a parent of "
+                     << parent.n_size_ << " elements\n";
+        return 1;
+      }
+
+      if (k_ != IdxT{1} || parent.k_ != IdxT{1})
+      {
+        out::error() << "Vector::aliasOf - slices are supported only for "
+                     << "single-column vectors\n";
+        return 1;
+      }
+
+      ScalarT* base = nullptr;
+      switch (memspace)
+      {
+      case memory::HOST:
+        base = parent.h_data_;
+        break;
+      case memory::DEVICE:
+        base = parent.d_data_;
+        break;
+      default:
+        out::error() << "Vector::aliasOf - invalid memory space\n";
+        return 1;
+      }
+
+      if (base == nullptr)
+      {
+        out::error() << "Vector::aliasOf - parent has no data in the requested memory space\n";
+        return 1;
+      }
+
+      const int status = setData(base + offset, size, memspace);
+      if (status != 0)
+        return status;
+
+      // setData updates this vector's original flags. Adopt the parent's flags
+      // afterward so the view inherits the parent's actual freshness state.
+      if (owns_update_flags_)
+      {
+        delete[] gpu_updated_;
+        delete[] cpu_updated_;
+      }
+      gpu_updated_       = parent.gpu_updated_;
+      cpu_updated_       = parent.cpu_updated_;
+      owns_update_flags_ = false;
+
       return 0;
     }
 
