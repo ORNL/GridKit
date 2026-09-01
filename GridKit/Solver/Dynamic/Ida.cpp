@@ -166,6 +166,10 @@ namespace AnalysisManager
       linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
       checkAllocation((void*) linearSolver_, "SUNLinSol_KLU");
 
+      static constexpr int KLU_AMD_ORDERING = 0;
+      retval = SUNLinSol_KLUSetOrdering(linearSolver_, KLU_AMD_ORDERING);
+      checkOutput(retval, "SUNLinSol_KLUSetOrdering");
+
       retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
       checkOutput(retval, "IDASetLinearSolver");
 
