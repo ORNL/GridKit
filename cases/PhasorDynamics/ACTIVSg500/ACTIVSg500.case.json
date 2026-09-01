@@ -10,12 +10,6 @@
     "freq_base": 60.0,
     "va_base": 100000000.0
   },
-  "monitors": [
-    {
-      "file_name": "ACTIVSg500.omega.csv",
-      "format": "csv"
-    }
-  ],
   "buses": [
     {
       "number": 1,

@@ -2,11 +2,14 @@
 
 ## One-Line Diagram
 
-![](WECC240.jpg)
+![WECC240 one-line diagram](WECC240.jpg)
 
-Figure 1: Oneline of the WECC case of [National Laboratory of the Rockies](https://www.nlr.gov/grid/test-case-repository)
+Figure 1: One-line diagram of the WECC240 case.[^1]
+
 ## Development
 
-The compelete dynamics of this case are modeled in GridKit.
+The complete dynamics of this case are modeled in GridKit.
 
-[Validation results](../../../examples/PhasorDynamics/Validation/WECC240/README.md)
+This case was validated against PowerWorld. The comparison results are provided [here](../../../examples/PhasorDynamics/Validation/WECC240/README.md).
+
+[^1]: [National Laboratory of the Rockies Test Case Repository](https://www.nlr.gov/grid/test-case-repository).
