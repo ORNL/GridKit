@@ -1,7 +1,10 @@
 *.kdev4
 .directory
 *.orig
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
 *.DS_Store
 build/
 *.swp
