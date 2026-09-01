@@ -1,12 +1,18 @@
 {
+	"name": "GridKit",
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"ms-vscode.cpptools"
-			]
+				"llvm-vs-code-extensions.vscode-clangd",
+				"ms-vscode.cmake-tools",
+				"vadimcn.vscode-lldb"
+			],
+			"settings": {
+				"cmake.useCMakePresets": "always"
+			}
 		}
 	}
 }
