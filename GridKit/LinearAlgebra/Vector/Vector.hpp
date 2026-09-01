@@ -330,6 +330,10 @@ namespace GridKit
 
       int setData(ScalarT* data, memory::MemorySpace memspace = memory::HOST);
       int setData(ScalarT* data, IdxT size, memory::MemorySpace memspace = memory::HOST);
+      int aliasOf(Vector&             parent,
+                  IdxT                offset,
+                  IdxT                size,
+                  memory::MemorySpace memspace = memory::HOST);
       int allocate(memory::MemorySpace memspace = memory::HOST);
       int setToZero(memory::MemorySpace memspace = memory::HOST);
       int setToZero(IdxT i, memory::MemorySpace memspace = memory::HOST);
@@ -350,7 +354,7 @@ namespace GridKit
       [[gnu::always_inline]]
       void setHostUpdated(bool is_updated)
       {
-        if (k_ <= 1) [[likely]]
+        if (k_ <= 1 && owns_update_flags_) [[likely]]
         {
           cpu_updated_single_ = is_updated;
           return;
@@ -362,7 +366,7 @@ namespace GridKit
       [[gnu::always_inline]]
       void setHostUpdated(IdxT j, bool is_updated)
       {
-        if (k_ <= 1)
+        if (k_ <= 1 && owns_update_flags_)
         {
           assert(j == 0);
           cpu_updated_single_ = is_updated;
@@ -375,7 +379,7 @@ namespace GridKit
       [[gnu::always_inline]]
       void setDeviceUpdated(bool is_updated)
       {
-        if (k_ <= 1) [[likely]]
+        if (k_ <= 1 && owns_update_flags_) [[likely]]
         {
           gpu_updated_single_ = is_updated;
           return;
@@ -387,7 +391,7 @@ namespace GridKit
       [[gnu::always_inline]]
       void setDeviceUpdated(IdxT j, bool is_updated)
       {
-        if (k_ <= 1)
+        if (k_ <= 1 && owns_update_flags_)
         {
           assert(j == 0);
           gpu_updated_single_ = is_updated;
@@ -400,7 +404,7 @@ namespace GridKit
       [[gnu::always_inline]]
       bool getHostUpdated(IdxT j) const
       {
-        if (k_ <= 1) [[likely]]
+        if (k_ <= 1 && owns_update_flags_) [[likely]]
         {
           assert(j == 0);
           return cpu_updated_single_;
@@ -412,7 +416,7 @@ namespace GridKit
       [[gnu::always_inline]]
       bool getDeviceUpdated(IdxT j) const
       {
-        if (k_ <= 1) [[likely]]
+        if (k_ <= 1 && owns_update_flags_) [[likely]]
         {
           assert(j == 0);
           return gpu_updated_single_;
@@ -447,8 +451,9 @@ namespace GridKit
         bool cpu_updated_single_;
       };
 
-      bool owns_gpu_data_{true}; ///< data ownership flag for DEVICE data
-      bool owns_cpu_data_{true}; ///< data ownership flag for HOST data
+      bool owns_gpu_data_{true};     ///< data ownership flag for DEVICE data
+      bool owns_cpu_data_{true};     ///< data ownership flag for HOST data
+      bool owns_update_flags_{true}; ///< false when the update flags belong to an aliased parent
 
       MemoryManager mem_; ///< Device memory manager object
     };
