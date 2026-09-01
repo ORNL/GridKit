@@ -37,7 +37,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data)
-      : monitor_(std::make_unique<MonitorT>(time_))
+      : monitor_(std::make_unique<MonitorT>(this->time()))
     {
       using namespace Governor;
       using namespace Exciter;
@@ -443,7 +443,12 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        const int bind_status = component->bind(y_, yp_, f_, abs_tol_, offset);
+        const int bind_status = component->bind(y_,
+                                                yp_,
+                                                f_,
+                                                abs_tol_,
+                                                offset,
+                                                this->evaluationContext());
         if (bind_status != 0)
         {
           Log::error() << "Failed to bind component vectors to system storage\n";
@@ -707,21 +712,6 @@ namespace GridKit
       f_.setDataUpdated();
 
       return 0;
-    }
-
-    /**
-     * @brief Update time
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::updateTime(RealT t, RealT a)
-    {
-      time_  = t;
-      alpha_ = a;
-      for (const auto& component : components_)
-      {
-        component->updateTime(t, a);
-      }
     }
 
     /**
