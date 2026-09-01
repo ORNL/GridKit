@@ -647,7 +647,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     bool SystemModel<scalar_type, index_type>::monitoring() const
     {
-      return !monitor_->empty();
+      return !monitor_->empty() && monitor_->hasSinks();
     }
 
     template <typename scalar_type, typename index_type>

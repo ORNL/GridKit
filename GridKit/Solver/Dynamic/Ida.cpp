@@ -328,14 +328,19 @@ namespace AnalysisManager
     /**
      * @brief Run the IDA solver and optionally produce monitor output every `dt_monitor`.
      *
-     * When `dt_monitor` is zero, the simulation runs directly to the final
-     * time. The final time is always solved and monitored.
+     * `dt_monitor` always defines intermediate solver targets, including when
+     * no output is active. Per-target model copies and output are skipped unless
+     * sink-backed monitoring or a step callback is active. When `dt_monitor` is
+     * zero, the configured maximum-step limit must be sufficient for a direct
+     * solve to the final time.
      */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<std::function<void(RealT)>> step_callback)
     {
-      int retval = 0;
-      int nsteps = getMonitorStepCount(tf, dt_monitor);
+      int        retval          = 0;
+      const bool monitoring      = model_->monitoring();
+      const bool output_required = monitoring || step_callback.has_value();
+      const int  nsteps          = getMonitorStepCount(tf, dt_monitor);
 
       for (int i = 1; i <= nsteps; i++)
       {
@@ -344,14 +349,14 @@ namespace AnalysisManager
         retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
 
-        if (step_callback.has_value() || model_->monitoring())
+        if (output_required)
         {
           // The callback may try to observe upated values in the model, so we
           // should update them here (At this point, the model's values are one
           // internal integrator step out of date)
           updateModelState(tret);
 
-          if (model_->monitoring())
+          if (monitoring)
           {
             model_->printMonitoredVariables();
           }
