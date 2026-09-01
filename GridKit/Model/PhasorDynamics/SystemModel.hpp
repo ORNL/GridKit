@@ -26,6 +26,9 @@ namespace GridKit
     class BusFault;
 
     template <typename scalar_type, typename index_type>
+    class FunctionSignalSource;
+
+    template <typename scalar_type, typename index_type>
     class SignalNode;
 
     /**
@@ -44,8 +47,6 @@ namespace GridKit
       using Component<scalar_type, index_type>::gridkit_component_id_;
       using Component<scalar_type, index_type>::size_;
       using Component<scalar_type, index_type>::nnz_;
-      using Component<scalar_type, index_type>::time_;
-      using Component<scalar_type, index_type>::alpha_;
       using Component<scalar_type, index_type>::y_;
       using Component<scalar_type, index_type>::yp_;
       using Component<scalar_type, index_type>::tag_;
@@ -93,7 +94,6 @@ namespace GridKit
       int setAbsoluteTolerance(RealT rel_tol) override;
       int evaluateResidual() override;
       int evaluateJacobian() override;
-
       void updateTime(RealT t, RealT a) override;
 
       void addBus(BusT* bus);
@@ -111,6 +111,8 @@ namespace GridKit
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;
+      /// Non-owning sources whose outputs must be refreshed when time changes.
+      std::vector<FunctionSignalSource<ScalarT, IdxT>*> function_sources_;
 
       std::map<IdxT, IdxT> gridkit_bus_indices_;   ///< Map between gridkit_bus_id and bus_id
       std::map<IdxT, IdxT> gridkit_fault_indices_; ///< Map between fault_id and component_id

@@ -39,7 +39,7 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::SystemModel(const SystemModelData<RealT, IdxT>& data)
-      : monitor_(std::make_unique<MonitorT>(time_))
+      : monitor_(std::make_unique<MonitorT>(this->time()))
     {
       using namespace Governor;
       using namespace Exciter;
@@ -439,7 +439,12 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        const int bind_status = component->bind(y_, yp_, f_, abs_tol_, offset);
+        const int bind_status = component->bind(y_,
+                                                yp_,
+                                                f_,
+                                                abs_tol_,
+                                                offset,
+                                                this->evaluationContext());
         if (bind_status != 0)
         {
           Log::error() << "Failed to bind component vectors to system storage\n";
@@ -706,21 +711,6 @@ namespace GridKit
     }
 
     /**
-     * @brief Update time
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::updateTime(RealT t, RealT a)
-    {
-      time_  = t;
-      alpha_ = a;
-      for (const auto& component : components_)
-      {
-        component->updateTime(t, a);
-      }
-    }
-
-    /**
      * @brief Add bus
      *
      * Add bus at the end of the bus array and map bus ID with GridKit's ID for the bus
@@ -733,6 +723,19 @@ namespace GridKit
       gridkit_bus_indices_[bus->busID()] = gridkit_bus_id;
       buses_.push_back(bus);
       allocated_ = false;
+    }
+
+    /**
+     * @brief Update shared time and refresh time-dependent source outputs.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::updateTime(RealT t, RealT a)
+    {
+      ComponentT::updateTime(t, a);
+      for (auto* source : function_sources_)
+      {
+        source->updateTime(t, a);
+      }
     }
 
     /**
@@ -752,6 +755,10 @@ namespace GridKit
       component->setSystemBase(this->freq_system_base_,
                                this->va_system_base_);
       components_.push_back(component);
+      if (auto* source = dynamic_cast<FunctionSignalSource<ScalarT, IdxT>*>(component))
+      {
+        function_sources_.push_back(source);
+      }
       allocated_ = false;
     }
 
