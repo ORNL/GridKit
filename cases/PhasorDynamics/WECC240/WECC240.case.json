@@ -10,12 +10,6 @@
     "freq_base": 60.0,
     "va_base": 100000000.0
   },
-  "monitors": [
-    {
-      "file_name": "WECC240.omega.csv",
-      "format": "csv"
-    }
-  ],
   "buses": [
     {
       "number": 1001,
@@ -27588,7 +27582,7 @@
       "ports": {
         "bus": 4005
       },
-      "id": "fault_3",
+      "id": "fault_1",
       "params": {
         "state0": false,
         "R": 0.0,
