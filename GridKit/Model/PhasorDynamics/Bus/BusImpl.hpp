@@ -98,6 +98,24 @@ namespace GridKit
       }
     }
 
+    /**
+     * @brief Refresh cached pointers to bus terminal storage.
+     */
+    template <typename scalar_type, typename index_type>
+    int Bus<scalar_type, index_type>::refreshTerminals()
+    {
+      auto* const y_data = y_.getData(memory::HOST);
+      auto* const f_data = f_.getData(memory::HOST);
+
+      if (y_data == nullptr || f_data == nullptr)
+      {
+        return 1;
+      }
+
+      this->setTerminals(y_data, y_data + 1, f_data, f_data + 1);
+      return 0;
+    }
+
     /*!
      * @brief Allocate bus storage and index maps.
      */
@@ -107,6 +125,12 @@ namespace GridKit
       if (!allocated_)
       {
         this->allocateVectors(size_);
+
+        if (refreshTerminals() != 0)
+        {
+          Log::error() << "Bus::allocate - terminal storage is unavailable\n";
+          return 1;
+        }
       }
       size_t size = static_cast<size_t>(size_);
 
@@ -228,10 +252,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::evaluateResidual()
     {
-      auto* f = f_.getData();
-
-      f[0] = -(fault_g_ * Vr() - fault_b_ * Vi());
-      f[1] = -(fault_b_ * Vr() + fault_g_ * Vi());
+      Ir() = -(fault_g_ * Vr() - fault_b_ * Vi());
+      Ii() = -(fault_b_ * Vr() + fault_g_ * Vi());
       f_.setDataUpdated();
       return 0;
     }

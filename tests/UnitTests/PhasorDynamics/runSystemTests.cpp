@@ -10,6 +10,7 @@ int main()
 
   result += test.constructor();
   result += test.composer();
+  result += test.residualAssemblyIsIdempotent();
   result += test.reallocateAfterTopologyChange();
   result += test.modelVectorsAliasSystemStorage();
 #ifdef GRIDKIT_ENABLE_ENZYME

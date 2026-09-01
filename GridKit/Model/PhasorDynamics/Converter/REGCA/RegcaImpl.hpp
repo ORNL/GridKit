@@ -715,7 +715,6 @@ namespace GridKit
 
         Ir() += h[0];
         Ii() += h[1];
-        bus_->getResidual().setDataUpdated();
 
         return 0;
       }
