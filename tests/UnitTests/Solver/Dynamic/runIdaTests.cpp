@@ -10,6 +10,7 @@ int main()
 
   result += test.callback();
   result += test.dtMonitorZero();
+  result += test.monitorActivityIsCached();
   result += test.dtMonitorSuppressesEpsilonFinalStep();
   result += test.fixedStep();
   result += test.suppressAlgebraicErrors();
