@@ -40,6 +40,7 @@ namespace GridKit
 
         if (load)
         {
+          success *= (load->size() == 0);
           delete load;
         }
 
@@ -66,12 +67,10 @@ namespace GridKit
         bus.initialize();
         load.initialize();
 
-        const auto* y   = load.y().getData();
-        const auto* yp  = load.yp().getData();
-        success        *= isEqual(y[0], static_cast<ScalarT>(-3.2), tol_);
-        success        *= isEqual(y[1], static_cast<ScalarT>(-2.6), tol_);
-        success        *= isEqual(yp[0], static_cast<ScalarT>(0.0), tol_);
-        success        *= isEqual(yp[1], static_cast<ScalarT>(0.0), tol_);
+        success *= (load.size() == 0);
+        success *= (load.y().getSize() == 0);
+        success *= (load.yp().getSize() == 0);
+        success *= (load.getResidual().getSize() == 0);
 
         return success.report(__func__);
       }
@@ -94,11 +93,12 @@ namespace GridKit
         bus.initialize();
         success *= load.initialize() == 0;
 
-        const auto* y  = load.y().getData();
-        ScalarT     p  = bus.Vr() * y[0] + bus.Vi() * y[1];
-        ScalarT     q  = bus.Vi() * y[0] - bus.Vr() * y[1];
-        success       *= isEqual(p, static_cast<ScalarT>(-Pnom), tol_);
-        success       *= isEqual(q, static_cast<ScalarT>(-Qnom), tol_);
+        bus.evaluateResidual();
+        load.evaluateResidual();
+        ScalarT p  = bus.Vr() * bus.Ir() + bus.Vi() * bus.Ii();
+        ScalarT q  = bus.Vi() * bus.Ir() - bus.Vr() * bus.Ii();
+        success   *= isEqual(p, static_cast<ScalarT>(-Pnom), tol_);
+        success   *= isEqual(q, static_cast<ScalarT>(-Qnom), tol_);
 
         // Reinitializing at a different voltage anchors the same dispatch
         // there.
@@ -107,8 +107,10 @@ namespace GridKit
         bus.y().setDataUpdated();
         success *= load.initialize() == 0;
 
-        p        = bus.Vr() * y[0] + bus.Vi() * y[1];
-        q        = bus.Vi() * y[0] - bus.Vr() * y[1];
+        bus.evaluateResidual();
+        load.evaluateResidual();
+        p        = bus.Vr() * bus.Ir() + bus.Vi() * bus.Ii();
+        q        = bus.Vi() * bus.Ir() - bus.Vr() * bus.Ii();
         success *= isEqual(p, static_cast<ScalarT>(-Pnom), tol_);
         success *= isEqual(q, static_cast<ScalarT>(-Qnom), tol_);
 
@@ -141,11 +143,34 @@ namespace GridKit
         bus.evaluateResidual();
         load.evaluateResidual();
 
-        const auto* f  = load.getResidual().getData();
-        success       *= isEqual(f[0], static_cast<ScalarT>(128.0 / 75.0), tol_);
-        success       *= isEqual(f[1], static_cast<ScalarT>(104.0 / 75.0), tol_);
-        success       *= isEqual(bus.Ir(), static_cast<ScalarT>(-3.2), tol_);
-        success       *= isEqual(bus.Ii(), static_cast<ScalarT>(-2.6), tol_);
+        success *= isEqual(bus.Ir(), static_cast<ScalarT>(-368.0 / 75.0), tol_);
+        success *= isEqual(bus.Ii(), static_cast<ScalarT>(-299.0 / 75.0), tol_);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome pureZResidual()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.0, 0.0);
+
+        bus.allocate();
+        load.allocate();
+
+        bus.initialize();
+        load.initialize();
+
+        bus.Vr() = 0.9;
+        bus.Vi() = 1.2;
+        bus.y().setDataUpdated();
+
+        bus.evaluateResidual();
+        load.evaluateResidual();
+
+        success *= isEqual(bus.Ir(), static_cast<ScalarT>(-9.6), tol_);
+        success *= isEqual(bus.Ii(), static_cast<ScalarT>(-7.8), tol_);
 
         return success.report(__func__);
       }
@@ -203,9 +228,16 @@ namespace GridKit
         auto dependency_tracking_jacobian = DependencyTrackingJacobian(Pnom, Qnom, alphaI, alphaP);
         auto enzyme_jacobian              = EnzymeJacobian(Pnom, Qnom, alphaI, alphaP);
 
+        auto pure_z_dependency_tracking_jacobian =
+            DependencyTrackingJacobian(Pnom, Qnom, ZERO<RealT>, ZERO<RealT>);
+        auto pure_z_enzyme_jacobian =
+            EnzymeJacobian(Pnom, Qnom, ZERO<RealT>, ZERO<RealT>);
+
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
           success *= GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]);
+          success *= GridKit::Testing::isEqual(
+              pure_z_dependency_tracking_jacobian[i], pure_z_enzyme_jacobian[i]);
         }
 
         return success.report(__func__);
@@ -230,19 +262,31 @@ namespace GridKit
           bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
         }
 
-        bus.initialize();
+        bus.initialize(); //< Numbers the bus variables (even for y, odd for yp)
         load.initialize();
 
         load.updateTime(0.0, 1.0);
 
         bus.evaluateResidual();
-        load.evaluateResidual(); //< Tracks dependencies
-        load.evaluateJacobian(); //< Converts dependencies to CSR
-        auto* model_jacobian = load.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: LoadZIP DependencyTracking Jacobian\n";
-        model_jacobian->print();
+        load.evaluateResidual(); //< Tracks dependencies on the bus residual
 
-        return GridKit::Testing::MapFromCsr(model_jacobian);
+        // The load has no unknowns of its own, so its Jacobian is the bus
+        // current injection's dependence on the bus voltage. Fold the even/odd
+        // (y/yp) variable numbers back to variable indices, as
+        // constructCsrFromDependencies() does, so rows compare to the CSR.
+        // With alpha set to one above, y and yp entries fold alike.
+        const auto& residual = bus.getResidual();
+
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.getSize());
+        for (IdxT i = 0; i < residual.getSize(); ++i)
+        {
+          for (const auto& [number, value] : residual.getData()[i].getDependencies())
+          {
+            dependencies[i][number / 2] += value;
+          }
+        }
+
+        return dependencies;
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
