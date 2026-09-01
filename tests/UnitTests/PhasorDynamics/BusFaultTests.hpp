@@ -2,6 +2,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
@@ -99,6 +100,17 @@ namespace GridKit
         // Jacobian via Enzyme
         auto enzyme_jacobian = EnzymeJacobian(R, X, status);
 
+        if (!status)
+        {
+          // HACK: Enzyme retains the fixed DfDwb/DhDy structure and masks its
+          // inactive values to exact zero, while DependencyTracking omits them.
+          for (auto& row : enzyme_jacobian)
+          {
+            std::erase_if(row, [](const auto& entry)
+                          { return entry.second == 0.0; });
+          }
+        }
+
         /// Compare DependencyTracking dependencies to Enzyme's
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
@@ -145,6 +157,10 @@ namespace GridKit
         std::vector<DependencyTracking::Variable> residual_y(
             residual_y_view.getData(),
             residual_y_view.getData() + residual_y_view.getSize());
+        auto&                                     bus_residual_y_view = bus.getResidual();
+        std::vector<DependencyTracking::Variable> bus_residual_y(
+            bus_residual_y_view.getData(),
+            bus_residual_y_view.getData() + bus_residual_y_view.getSize());
 
         // Get d/dy'
         bus.initialize();
@@ -177,7 +193,8 @@ namespace GridKit
         }
 
         // Extract the dependencies and add d/dy' to d/dy
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(
+            residual_y.size() + bus_residual_y.size());
         for (IdxT i = 0; i < residual_y.size(); ++i)
         {
           DependencyTracking::Variable::DependencyMap dependency_y  = (residual_y[i]).getDependencies();
@@ -210,6 +227,11 @@ namespace GridKit
               dependencies[i].insert(std::make_pair(index_yp, value_yp));
             }
           }
+        }
+
+        for (size_t i = 0; i < bus_residual_y.size(); ++i)
+        {
+          dependencies[residual_y.size() + i] = bus_residual_y[i].getDependencies();
         }
 
         return dependencies;

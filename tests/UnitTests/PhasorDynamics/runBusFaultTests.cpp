@@ -10,8 +10,10 @@ int main()
 
   result += test.constructor();
   result += test.zeroInitialResidual(true);
+  result += test.zeroInitialResidual(false);
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian(true);
+  result += test.jacobian(false);
 #endif
 
   return result.summary();
