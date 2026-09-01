@@ -369,6 +369,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()
     {
+      network_admittance_ready_ = false;
+      initialization_succeeded_ = false;
+
       size_ = 0;
 
       for (const auto& bus : buses_)
@@ -384,12 +387,20 @@ namespace GridKit
       // Allocate global vectors
       if (!allocated_)
       {
+        network_y_data_ = nullptr;
+        network_f_data_ = nullptr;
+
         // Topology changes invalidate the Jacobian sparsity pattern and COO-to-CSR map.
         delete csr_jac_;
         csr_jac_ = nullptr;
 
         delete[] map_to_csr_;
         map_to_csr_ = nullptr;
+
+        constant_jacobian_values_.clear();
+        varying_jacobian_to_csr_.clear();
+        varying_jacobian_sources_.clear();
+        jacobian_snapshot_ready_ = false;
 
         nnz_ = 0;
         this->allocateVectors(size_);
@@ -402,6 +413,19 @@ namespace GridKit
       {
         Log::error() << "SystemModel vector sizes do not match the system size\n";
         throw std::runtime_error("SystemModel allocation failed");
+      }
+
+      // Residuals are output storage; allocation invalidates their contents.
+      f_.setDataUpdated(memory::HOST);
+
+      if (size_ != 0 && (network_y_data_ == nullptr || network_f_data_ == nullptr))
+      {
+        network_y_data_ = y_.getData(memory::HOST);
+        network_f_data_ = f_.getData(memory::HOST);
+        if (network_y_data_ == nullptr || network_f_data_ == nullptr)
+        {
+          throw std::runtime_error("SystemModel allocation requires HOST vectors");
+        }
       }
 
       tag_.resize(size_);
@@ -550,6 +574,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
+      initialization_succeeded_ = false;
+      network_admittance_ready_ = false;
+
       int status = 0;
 
       for (const auto& bus : buses_)
@@ -569,6 +596,12 @@ namespace GridKit
       if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
       {
         this->initializeDependencyTrackingVariableNumbers();
+      }
+
+      if (status == 0)
+      {
+        assembleNetworkAdmittance();
+        initialization_succeeded_ = true;
       }
 
       return status;
@@ -684,6 +717,101 @@ namespace GridKit
     }
 
     /**
+     * @brief Collect constant network stamps and cache the residual sweep.
+     *
+     * Components that provide stamps are represented entirely by the sparse
+     * network multiply. Components that do not, and buses without a system
+     * residual row, remain in the ordinary virtual evaluation sweep.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::assembleNetworkAdmittance()
+    {
+      network_admittance_ready_ = false;
+
+      if (size_ != 0 && (network_y_data_ == nullptr || network_f_data_ == nullptr))
+      {
+        throw std::runtime_error("SystemModel network assembly requires cached HOST vectors");
+      }
+
+      std::vector<IdxT> row_offsets;
+      row_offsets.reserve(buses_.size());
+      unmapped_buses_.clear();
+      unmapped_buses_.reserve(buses_.size());
+
+      for (auto* bus : buses_)
+      {
+        if (bus->size() == 0)
+        {
+          unmapped_buses_.push_back(bus);
+        }
+        else
+        {
+          row_offsets.push_back(bus->getResidualIndices()[0]);
+        }
+      }
+
+      std::vector<IdxT> stamp_counts;
+      stamp_counts.reserve(components_.size());
+      std::size_t stamp_count = 0;
+
+      evaluated_components_.clear();
+      evaluated_components_.reserve(components_.size());
+      for (auto* component : components_)
+      {
+        const IdxT count = component->admittanceStamps(nullptr);
+        stamp_counts.push_back(count);
+        if (count == 0)
+        {
+          evaluated_components_.push_back(component);
+        }
+        else
+        {
+          stamp_count += static_cast<std::size_t>(count);
+        }
+      }
+
+      std::vector<typename ComponentT::StampT> stamps(stamp_count);
+      std::size_t                              offset = 0;
+      for (std::size_t i = 0; i < components_.size(); ++i)
+      {
+        const auto count = static_cast<std::size_t>(stamp_counts[i]);
+        if (count != 0)
+        {
+          const IdxT written = components_[i]->admittanceStamps(stamps.data() + offset);
+          if (written != stamp_counts[i])
+          {
+            throw std::runtime_error("Component admittance stamp count changed during assembly");
+          }
+          offset += count;
+        }
+      }
+
+      network_.assemble(stamps, std::move(row_offsets));
+      assembled_admittance_epoch_ = this->admittanceEpoch();
+      network_admittance_ready_    = true;
+    }
+
+    /**
+     * @brief Reassemble the network after an admittance parameter changes.
+     */
+    template <typename scalar_type, typename index_type>
+    bool SystemModel<scalar_type, index_type>::ensureAdmittanceCurrent()
+    {
+      if (!initialization_succeeded_)
+      {
+        return false;
+      }
+
+      if (!network_admittance_ready_
+          || assembled_admittance_epoch_ != this->admittanceEpoch())
+      {
+        assembleNetworkAdmittance();
+      }
+
+      return true;
+    }
+
+    /**
      * @brief Compute system residual vector
      *
      * Buses and components read and write their bound system-vector slices
@@ -699,17 +827,34 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateResidual()
     {
-      for (const auto& bus : buses_)
+      if (ensureAdmittanceCurrent())
       {
-        bus->evaluateResidual();
+        network_.multiply(network_y_data_, network_f_data_);
+
+        for (auto* bus : unmapped_buses_)
+        {
+          bus->evaluateResidual();
+        }
+
+        for (auto* component : evaluated_components_)
+        {
+          component->evaluateResidual();
+        }
+      }
+      else
+      {
+        for (auto* bus : buses_)
+        {
+          bus->evaluateResidual();
+        }
+
+        for (auto* component : components_)
+        {
+          component->evaluateResidual();
+        }
       }
 
-      for (const auto& component : components_)
-      {
-        component->evaluateResidual();
-      }
-
-      f_.setDataUpdated();
+      f_.setDataUpdated(memory::HOST);
 
       return 0;
     }
@@ -726,7 +871,9 @@ namespace GridKit
       IdxT gridkit_bus_id                = static_cast<IdxT>(buses_.size());
       gridkit_bus_indices_[bus->busID()] = gridkit_bus_id;
       buses_.push_back(bus);
-      allocated_ = false;
+      allocated_                = false;
+      network_admittance_ready_ = false;
+      initialization_succeeded_ = false;
     }
 
     /**
@@ -746,7 +893,9 @@ namespace GridKit
       component->setSystemBase(this->freq_system_base_,
                                this->va_system_base_);
       components_.push_back(component);
-      allocated_ = false;
+      allocated_                = false;
+      network_admittance_ready_ = false;
+      initialization_succeeded_ = false;
     }
 
     /**

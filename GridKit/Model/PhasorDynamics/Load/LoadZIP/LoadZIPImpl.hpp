@@ -116,6 +116,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::initialize()
     {
+      initialized_ = false;
+      this->markAdmittanceChanged();
+
       const ScalarT vr = Vr();
       const ScalarT vi = Vi();
 
@@ -129,6 +132,7 @@ namespace GridKit
         return 1;
       }
       Vnom_ = vm0;
+      initialized_ = true;
       setDerivedParams();
       return 0;
     }
@@ -188,10 +192,31 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Derived parameters
-     *
-     */
+    /** @brief Report a pure constant-impedance ZIP load as a network stamp. */
+    template <typename scalar_type, typename index_type>
+    index_type LoadZIP<scalar_type, index_type>::admittanceStamps(
+        typename Component<ScalarT, IdxT>::StampT* out)
+    {
+      if (!initialized_
+          || alphaI_ != ZERO<RealT>
+          || alphaP_ != ZERO<RealT>
+          || bus_->size() == 0)
+      {
+        return 0;
+      }
+
+      if (out != nullptr)
+      {
+        out[0] = {bus_->getResidualIndices()[0],
+                  bus_->getVariableIndices()[0],
+                  -G_,
+                  B_};
+      }
+
+      return 1;
+    }
+
+    /** @brief Update parameters derived from the nominal ZIP data. */
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::setDerivedParams()
     {
