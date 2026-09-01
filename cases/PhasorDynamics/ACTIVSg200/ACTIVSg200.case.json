@@ -10,12 +10,6 @@
     "freq_base": 60.0,
     "va_base": 100000000.0
   },
-  "monitors": [
-    {
-      "file_name": "ACTIVSg200.omega.csv",
-      "format": "csv"
-    }
-  ],
   "buses": [
     {
       "number": 1,
@@ -11842,7 +11836,7 @@
       "ports": {
         "bus": 149
       },
-      "id": "fault_2",
+      "id": "fault_1",
       "params": {
         "state0": false,
         "R": 0.0,
