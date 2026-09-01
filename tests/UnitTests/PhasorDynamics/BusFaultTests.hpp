@@ -2,12 +2,14 @@
 
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
@@ -108,7 +110,77 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /**
+       * A test case to verify a cleared fault drops out of the bus equations.
+       *
+       * After the fault clears it no longer injects current, so the Jacobian
+       * of the bus equations must not depend on the fault variables. A stale
+       * coupling left behind stalls the integrator at fault clearing.
+       */
+      TestOutcome jacobianAfterClearing()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT>      bus(1.0, 0.0);
+        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, 0.0, 0.01, 0);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        system.addBus(&bus);
+        system.addFault(&fault);
+        system.allocate();
+        system.initialize();
+
+        // Integrator callbacks before the fault
+        system.updateTime(0.0, 0.0);
+        system.evaluateResidual();
+        system.evaluateJacobian();
+
+        fault.setStatus(true);
+
+        // Integrator callbacks while the fault is on
+        system.updateTime(1.0, 0.0);
+        system.evaluateResidual();
+        system.evaluateJacobian();
+
+        fault.setStatus(false);
+
+        // Integrator callbacks after clearing
+        system.updateTime(2.0, 0.0);
+        system.evaluateResidual();
+        system.evaluateJacobian();
+
+        std::vector<DependencyTracking::Variable::DependencyMap> jacobian =
+            GridKit::Testing::MapFromCsr(system.getCsrJacobian());
+
+        // After clearing, the bus current balance should not depend on the
+        // fault current
+        success *= jacobianEntryIsZero(jacobian, 0, 2); // d(bus Ir eq)/d(fault Ir)
+        success *= jacobianEntryIsZero(jacobian, 0, 3); // d(bus Ir eq)/d(fault Ii)
+        success *= jacobianEntryIsZero(jacobian, 1, 2); // d(bus Ii eq)/d(fault Ir)
+        success *= jacobianEntryIsZero(jacobian, 1, 3); // d(bus Ii eq)/d(fault Ii)
+
+        return success.report(__func__);
+      }
+
     private:
+      /**
+       * Checks the Jacobian value at a row and column is zero, treating an
+       * absent entry as zero
+       */
+      bool jacobianEntryIsZero(const std::vector<DependencyTracking::Variable::DependencyMap>& jacobian,
+                               size_t                                                          row,
+                               size_t                                                          column) const
+      {
+        const auto entry = jacobian[row].find(column);
+        if (entry == jacobian[row].end() || isEqual(entry->second, 0.0))
+        {
+          return true;
+        }
+        std::cout << "Jacobian entry (" << row << ", " << column
+                  << ") = " << entry->second << " != 0\n";
+        return false;
+      }
+
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
           const RealT R, const RealT X, const bool status)
       {

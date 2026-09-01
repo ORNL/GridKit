@@ -12,6 +12,7 @@ int main()
   result += test.zeroInitialResidual(true);
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian(true);
+  result += test.jacobianAfterClearing();
 #endif
 
   return result.summary();
