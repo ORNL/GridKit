@@ -11,10 +11,14 @@ int main()
   result += test.constructor();
   result += test.composer();
   result += test.residualAssemblyIsIdempotent();
+  result += test.networkAdmittanceMergesDuplicateStamps();
+  result += test.networkAdmittanceTracksParameterChanges();
+  result += test.networkAdmittancePreservesFaultEvents();
   result += test.reallocateAfterTopologyChange();
   result += test.modelVectorsAliasSystemStorage();
   result += test.componentsShareEvaluationContext();
 #ifdef GRIDKIT_ENABLE_ENZYME
+  result += test.jacobianAssemblyTracksCachedContributions();
   result += test.jacobian();
 #endif
 
