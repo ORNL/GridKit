@@ -101,6 +101,30 @@ namespace GridKit
         }
       };
 
+      class EvaluationContextProbe final : public PhasorDynamics::LoadZ<ScalarT, IdxT>
+      {
+        using BaseT = PhasorDynamics::LoadZ<ScalarT, IdxT>;
+
+      public:
+        using BaseT::BaseT;
+
+        const RealT& evaluationTime() const
+        {
+          return this->time();
+        }
+
+        const RealT& evaluationAlpha() const
+        {
+          return this->alpha();
+        }
+
+        std::uint64_t evaluationAdmittanceEpoch() const
+        {
+          return this->admittanceEpoch();
+        }
+      };
+
+
     public:
       SystemTests()  = default;
       ~SystemTests() = default;
@@ -453,6 +477,45 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      TestOutcome componentsShareEvaluationContext()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus(1.0, 0.0);
+        EvaluationContextProbe                     load1(&bus, 1.0, 1.0);
+        EvaluationContextProbe                     load2(&bus, 1.0, 1.0);
+
+        load1.updateTime(0.25, 0.5);
+        success *= isEqual(load1.evaluationTime(), RealT{0.25});
+        success *= isEqual(load1.evaluationAlpha(), RealT{0.5});
+
+        system.addBus(&bus);
+        system.addComponent(&load1);
+        system.addComponent(&load2);
+        success *= system.allocate() == 0;
+
+        system.updateTime(1.25, 2.5);
+        success *= isEqual(load1.evaluationTime(), RealT{1.25});
+        success *= isEqual(load1.evaluationAlpha(), RealT{2.5});
+        success *= isEqual(load2.evaluationTime(), RealT{1.25});
+        success *= isEqual(load2.evaluationAlpha(), RealT{2.5});
+
+        const auto epoch = load2.evaluationAdmittanceEpoch();
+        load1.setR(2.0);
+        success *= load1.evaluationAdmittanceEpoch() == epoch + 1;
+        success *= load2.evaluationAdmittanceEpoch() == epoch + 1;
+
+        system.updateTime(3.0, 4.0);
+        success *= isEqual(load1.evaluationTime(), RealT{3.0});
+        success *= isEqual(load1.evaluationAlpha(), RealT{4.0});
+        success *= isEqual(load2.evaluationTime(), RealT{3.0});
+        success *= isEqual(load2.evaluationAlpha(), RealT{4.0});
+
+        return success.report(__func__);
+      }
+
 
       /**
        * @brief Test for exception when signals are incorrectly configured
