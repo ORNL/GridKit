@@ -1,7 +1,6 @@
 #pragma once
 
-#include <iostream>
-
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
@@ -11,45 +10,26 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /*!
+    /**
      * @brief Constructor for a bus fault
      *
-     * Model sizes:
+     * Model size:
      * - Number of equations = 0
-     * - Number of independent variables = 0
+     * - Number of internal variables = 0
      */
     template <typename scalar_type, typename index_type>
     BusFault<scalar_type, index_type>::BusFault(BusT* bus)
-      : bus_(bus), R_(0), X_(0.01), status_(0), bus_id_(0)
+      : bus_(bus), R_(0), X_(0.01), bus_id_(0)
     {
-      (void) bus_id_;
-      size_ = 2;
+      size_ = 0;
       setDerivedParams();
     }
 
     /**
-     * @brief Construct a new BusFault
+     * @brief Construct a new BusFault from model data
      *
-     * @param bus1 - pointer to bus-1
-     * @param bus2 - pointer to bus-2
-     * @param R - line series resistance
-     * @param X - line series reactance
-     * @param G - line shunt conductance
-     * @param B - line shunt charging
-     */
-    template <typename scalar_type, typename index_type>
-    BusFault<scalar_type, index_type>::BusFault(BusT* bus, RealT R, RealT X, int status)
-      : bus_(bus), R_(R), X_(X), status_(status), bus_id_(0)
-    {
-      size_ = 2;
-      setDerivedParams();
-    }
-
-    /**
-     * @brief Construct a new BusFault
-     *
-     * @param bus1 - pointer to bus-1
-     * @param bus2 - pointer to bus-2
+     * @param bus - pointer to the faulted bus
+     * @param data - bus fault model data
      */
     template <typename scalar_type, typename index_type>
     BusFault<scalar_type, index_type>::BusFault(BusT* bus, const ModelDataT& data)
@@ -69,25 +49,14 @@ namespace GridKit
         X_ = std::get<RealT>(data.parameters.at(Parameter::X));
       }
 
-      if (data.parameters.contains(Parameter::state0))
-      {
-        status_ = std::get<bool>(data.parameters.at(Parameter::state0));
-      }
-
       if (data.buses.contains(Buses::bus))
       {
         bus_id_ = data.buses.at(Buses::bus);
       }
 
-      using Variable = typename ModelDataT::MonitorableVariables;
-      monitor_->set(Variable::state, [this]
-                    { return status_; });
-      monitor_->set(Variable::ir, [this]
-                    { return y_.getData()[0]; });
-      monitor_->set(Variable::ii, [this]
-                    { return y_.getData()[1]; });
+      initializeMonitor();
 
-      size_ = 2;
+      size_ = 0;
       setDerivedParams();
     }
 
@@ -116,10 +85,7 @@ namespace GridKit
       {
         this->allocateVectors(size_);
       }
-      // std::cout << "Allocate BusFault..." << std::endl;
       auto size = static_cast<std::size_t>(size_);
-
-      tag_.resize(size);
 
       variable_indices_.resize(size);
       residual_indices_.resize(size);
@@ -128,47 +94,22 @@ namespace GridKit
       wb_.resize(2);
       h_.resize(2);
 
-      // Default variable and residual index mapping to local index
-      for (IdxT j = 0; j < size_; ++j)
-      {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
-      }
-
       allocated_ = true;
       return 0;
     }
 
     /**
-     * Initialization of the branch model
+     * Initialization of the bus fault model
      *
      */
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::initialize()
     {
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
-
-      if (status_)
+      status_ = ZERO<RealT>;
+      if (signals_.template isAttached<BusFaultExternalVariables::STATUS>())
       {
-        ScalarT vr = Vr();
-        ScalarT vi = Vi();
-        ScalarT ir = -(vr * G_ - vi * B_);
-        ScalarT ii = -(vr * B_ + vi * G_);
-        y[0]       = ir;
-        y[1]       = ii;
+        status_ = signals_.template readExternalVariable<BusFaultExternalVariables::STATUS>();
       }
-      else
-      {
-        y[0] = 0.0;
-        y[1] = 0.0;
-      }
-
-      yp[0] = 0.0;
-      yp[1] = 0.0;
-
-      y_.setDataUpdated();
-      yp_.setDataUpdated();
 
       return 0;
     }
@@ -179,9 +120,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::tagDifferentiable()
     {
-      tag_[0] = false;
-      tag_[1] = false;
-
       return 0;
     }
 
@@ -197,99 +135,97 @@ namespace GridKit
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */
-    template <class scalar_type, typename index_type>
-    int BusFault<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+    template <typename scalar_type, typename index_type>
+    int BusFault<scalar_type, index_type>::setAbsoluteTolerance(RealT)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 
     /**
-     * @brief Bus residual
+     * @brief Bus residual contribution from bus variables
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int BusFault<scalar_type, index_type>::evaluateBusResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
-    {
-      const ScalarT Ir = y[0];
-      const ScalarT Ii = y[1];
-      h[0]             = Ir;
-      h[1]             = Ii;
-
-      return 0;
-    }
-
-    /**
-     * @brief Internal residual
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int BusFault<scalar_type, index_type>::evaluateInternalResidual(
-        const ScalarT*                  y,
+    __attribute__((always_inline)) inline int BusFault<scalar_type, index_type>::evaluateBusResidual(
+        [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  wb,
-        ScalarT*                        f)
+        ScalarT*                        h)
     {
       const ScalarT Vr = wb[0];
       const ScalarT Vi = wb[1];
-      const ScalarT Ir = y[0];
-      const ScalarT Ii = y[1];
-      f[0]             = Ir + Vr * G_ - Vi * B_;
-      f[1]             = Ii + Vr * B_ + Vi * G_;
+
+      h[0] = g_ * Vr - b_ * Vi;
+      h[1] = b_ * Vr + g_ * Vi;
 
       return 0;
     }
 
     /**
-     * \brief Residual contribution of the branch is pushed to the
-     * two terminal buses.
+     * @brief Residual contribution of the fault is computed and pushed to the faulted bus.
      *
      */
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::evaluateResidual()
     {
-      auto* wb = wb_.getData();
-
-      if (status_)
+      status_ = ZERO<RealT>;
+      if (signals_.template isAttached<BusFaultExternalVariables::STATUS>())
       {
-        wb[0]          = Vr();
-        wb[1]          = Vi();
-        const auto* y  = y_.getData();
-        const auto* yp = yp_.getData();
-        auto*       f  = f_.getData();
-        auto*       h  = h_.getData();
-        evaluateInternalResidual(y, yp, wb, f);
-        evaluateBusResidual(y, yp, wb, h);
-        Ir() += h[0];
-        Ii() += h[1];
-        if (bus_->size() > 0)
-        {
-          bus_->getResidual().setDataUpdated();
-        }
-      }
-      else
-      {
-        wb[0]          = 0.0;
-        wb[1]          = 0.0;
-        const auto* y  = y_.getData();
-        const auto* yp = yp_.getData();
-        auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb, f);
+        status_ = signals_.template readExternalVariable<BusFaultExternalVariables::STATUS>();
       }
 
-      f_.setDataUpdated();
+      ScalarT ir{0.0};
+      ScalarT ii{0.0};
+
+      faultCurrent(ir, ii);
+
+      Ir() += ir;
+      Ii() += ii;
+
+      if (bus_->size() > 0)
+      {
+        bus_->getResidual().setDataUpdated();
+      }
 
       return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    void BusFault<scalar_type, index_type>::faultCurrent(ScalarT& Ir, ScalarT& Ii)
+    {
+      const ScalarT wb[2]{Vr(), Vi()};
+      ScalarT       h[2];
+      evaluateBusResidual(nullptr, nullptr, wb, h);
+
+      Ir = status_ * h[0];
+      Ii = status_ * h[1];
     }
 
     template <typename scalar_type, typename index_type>
     const Model::VariableMonitorBase* BusFault<scalar_type, index_type>::getMonitor() const
     {
       return monitor_.get();
+    }
+
+    template <typename scalar_type, typename index_type>
+    void BusFault<scalar_type, index_type>::initializeMonitor()
+    {
+      using Variable = typename ModelDataT::MonitorableVariables;
+
+      monitor_->set(Variable::status, [this]
+                    { return status_; });
+      monitor_->set(Variable::ir, [this]
+                    {
+                      ScalarT ir{0.0};
+                      ScalarT ii{0.0};
+                      faultCurrent(ir, ii);
+                      return ir; });
+      monitor_->set(Variable::ii, [this]
+                    {
+                      ScalarT ir{0.0};
+                      ScalarT ii{0.0};
+                      faultCurrent(ir, ii);
+                      return ii; });
     }
 
     /**
@@ -299,8 +235,18 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void BusFault<scalar_type, index_type>::setDerivedParams()
     {
-      B_ = -X_ / (X_ * X_ + R_ * R_);
-      G_ = R_ / (X_ * X_ + R_ * R_);
+      g_ = ZERO<RealT>;
+      b_ = ZERO<RealT>;
+
+      const RealT denom = R_ * R_ + X_ * X_;
+      if (denom == ZERO<RealT>)
+      {
+        return;
+      }
+
+      g_ = -R_ / denom;
+      b_ = X_ / denom;
     }
+
   } // namespace PhasorDynamics
 } // namespace GridKit
