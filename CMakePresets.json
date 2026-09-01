@@ -1,0 +1,61 @@
+{
+	"version": 6,
+	"cmakeMinimumRequired": {
+		"major": 3,
+		"minor": 25,
+		"patch": 0
+	},
+	"configurePresets": [
+		{
+			"name": "dev",
+			"displayName": "GridKit development container",
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/build",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "RelWithDebInfo",
+				"CMAKE_EXPORT_COMPILE_COMMANDS": true,
+				"CMAKE_INSTALL_PREFIX": "${sourceDir}/build/install",
+				"BUILD_SHARED_LIBS": true,
+				"GridKit_ENABLE_SUNDIALS": true,
+				"GridKit_ENABLE_IPOPT": true,
+				"GridKit_ENABLE_ENZYME": true
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "dev",
+			"configurePreset": "dev",
+			"jobs": 4
+		}
+	],
+	"testPresets": [
+		{
+			"name": "dev",
+			"configurePreset": "dev",
+			"output": {
+				"outputOnFailure": true
+			}
+		}
+	],
+	"workflowPresets": [
+		{
+			"name": "dev",
+			"displayName": "Configure, build, and test GridKit",
+			"steps": [
+				{
+					"type": "configure",
+					"name": "dev"
+				},
+				{
+					"type": "build",
+					"name": "dev"
+				},
+				{
+					"type": "test",
+					"name": "dev"
+				}
+			]
+		}
+	]
+}
