@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -74,6 +76,8 @@ namespace GridKit
 
         if (machine)
         {
+          // Six differential states; algebraic quantities are evaluated inline.
+          success *= (machine->size() == IdxT{6});
           delete machine;
         }
         delete bus;
@@ -94,26 +98,28 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        // GenRou generator parameters
+        RealT p0{1};
+        RealT q0{.05013};
+        RealT H{3};
+        RealT D{0};
+        RealT Ra{0};
+        RealT Tdop{7};
+        RealT Tdopp{.04};
+        RealT Tqopp{.05};
+        RealT Tqop{.75};
+        RealT Xd{2.1};
+        RealT Xdp{.2};
+        RealT Xdpp{.18};
+        RealT Xq{.5};
+        RealT Xqp{.5};
+        RealT Xqpp{.18};
+        RealT Xl{.15};
+        RealT S10{0};
+        RealT S12{0};
+
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
-                                                  1,
-                                                  0.05013,
-                                                  3,
-                                                  0,
-                                                  0,
-                                                  7,
-                                                  0.04,
-                                                  0.05,
-                                                  0.75,
-                                                  2.1,
-                                                  0.2,
-                                                  0.18,
-                                                  0.5,
-                                                  0.5,
-                                                  0.18,
-                                                  0.15,
-                                                  0,
-                                                  0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12);
 
         bus.allocate();
         bus.initialize();
@@ -123,8 +129,13 @@ namespace GridKit
         gen.initialize();
         gen.evaluateResidual();
 
-        // Require results to be within machine precision
-        auto tol = 10 * std::numeric_limits<RealT>::epsilon();
+        // Require results to be within machine precision, scaled by the
+        // stiffest gain in the equations. The machine carries only its
+        // differential states, so the transient flux rows divide a state that
+        // is consistent to the last bit by an open-circuit time constant. That
+        // leaves a residual of order eps/T rather than a flat zero.
+        auto tol = 10 * std::numeric_limits<RealT>::epsilon()
+                   / std::min(Tdopp, Tqopp);
 
         const auto& f      = gen.getResidual();
         const auto* f_data = f.getData();
@@ -220,24 +231,34 @@ namespace GridKit
 
         // Answer key is available only in double precision.
         // Therefore, only double precision tests are done at this time.
+        //
+        // The machine carries only its six differential states; the algebraic
+        // quantities the equations need are evaluated from them.
+        const ScalarT expected_psiqpp = -static_cast<ScalarT>(1.) / static_cast<ScalarT>(100.);
+        const ScalarT expected_psidpp = static_cast<ScalarT>(1.) / static_cast<ScalarT>(10.);
+        const ScalarT expected_psipp  = std::sqrt(expected_psidpp * expected_psidpp
+                                                 + expected_psiqpp * expected_psiqpp);
+
+        const ScalarT s112 = std::sqrt(static_cast<ScalarT>(S10 / S12));
+        const ScalarT sa_first = (static_cast<ScalarT>(1.2) * s112 + static_cast<ScalarT>(1.))
+                                 / (s112 + static_cast<ScalarT>(1.));
+        const ScalarT sa_second = (static_cast<ScalarT>(1.2) * s112 - static_cast<ScalarT>(1.))
+                                  / (s112 - static_cast<ScalarT>(1.));
+        const ScalarT expected_sa = std::min(sa_first, sa_second);
+        const ScalarT expected_sb = static_cast<ScalarT>(S12)
+                                    / ((expected_sa - static_cast<ScalarT>(1.2))
+                                       * (expected_sa - static_cast<ScalarT>(1.2)));
+        const ScalarT expected_ksat = expected_sb * Math::qramp(expected_psipp - expected_sa);
+
         const std::vector<ScalarT> res_answer = {
             -2.0 * std::numbers::pi_v<RealT> * 60.0,
-            -static_cast<ScalarT>(10.) / static_cast<ScalarT>(9.),
-            -static_cast<ScalarT>(223.) / static_cast<ScalarT>(525.),
-            -54.75,
-            -9.6,
-            static_cast<ScalarT>(892.) / static_cast<ScalarT>(375.),
-            0.21,
-            -0.07,
-            -0.19223748416156686,
-            2.0,
-            1.4,
-            0.31,
-            2.211,
-            0.85,
-            1.2,
-            -static_cast<ScalarT>(13.) / static_cast<ScalarT>(130.),
-            -static_cast<ScalarT>(143.) / static_cast<ScalarT>(52.)};
+            -static_cast<ScalarT>(670591.) / static_cast<ScalarT>(468000.),
+            -static_cast<ScalarT>(13.) / static_cast<ScalarT>(30.)
+                + expected_ksat / static_cast<ScalarT>(70.),
+            -static_cast<ScalarT>(6795.) / static_cast<ScalarT>(104.),
+            -static_cast<ScalarT>(587.) / static_cast<ScalarT>(65.),
+            static_cast<ScalarT>(284.) / static_cast<ScalarT>(125.)
+                - expected_ksat / static_cast<ScalarT>(375.)};
 
         bus.allocate();
         bus.initialize();
@@ -254,23 +275,12 @@ namespace GridKit
 
         static constexpr auto pi = std::numbers::pi_v<RealT>;
 
-        y[0]  = pi;  // delta
-        y[1]  = 2.0; // omega
-        y[2]  = 2.0; // Eqp
-        y[3]  = .1;  // psidp
-        y[4]  = .01; // psiqp
-        y[5]  = .6;  // Edp
-        y[6]  = .2;  // psiqp
-        y[7]  = .03; // psidpp
-        y[8]  = .01; // psipp
-        y[9]  = 2.0; // ksat
-        y[10] = .8;  // vd
-        y[11] = .4;  // vq
-        y[12] = 2.0; // telec
-        y[13] = 1.1; // id
-        y[14] = .3;  // iq
-        y[15] = .9;  // ir
-        y[16] = .25; // ii
+        y[0] = pi;   // delta
+        y[1] = 2.0;  // omega
+        y[2] = 2.0;  // Eqp
+        y[3] = .1;   // psidp
+        y[4] = .01;  // psiqp
+        y[5] = .6;   // Edp
 
         // Set derivative values matching the answer key
         yp[0] = 2.0 * pi * 60.0; // delta_dot
@@ -324,8 +334,14 @@ namespace GridKit
         // Jacobian via Enzyme
         std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian();
 
-        /// Compare DependencyTracking dependencies to Enzyme's
-        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        // Compare all six internal rows and both bus-current rows.
+        const size_t expected_row_count = 6 + 2;
+        success *= dependency_tracking_jacobian.size() == expected_row_count;
+        success *= enzyme_jacobian.size() == expected_row_count;
+        success *= dependency_tracking_jacobian.size() == enzyme_jacobian.size();
+        const size_t row_count = std::min(dependency_tracking_jacobian.size(),
+                                          enzyme_jacobian.size());
+        for (size_t i = 0; i < row_count; ++i)
         {
           success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
         }
@@ -344,7 +360,7 @@ namespace GridKit
                                                                        0.05013,
                                                                        3,
                                                                        0,
-                                                                       0,
+                                                                       0.01,
                                                                        7,
                                                                        0.04,
                                                                        0.05,
@@ -356,8 +372,8 @@ namespace GridKit
                                                                        0.5,
                                                                        0.18,
                                                                        0.15,
-                                                                       0,
-                                                                       0);
+                                                                       0.1,
+                                                                       0.3);
 
         bus.allocate();
         gen.allocate();
@@ -368,7 +384,7 @@ namespace GridKit
           bus.setResidualIndex(i, i + gen.size()); // Reset bus residual indices
         }
 
-        bus.initialize();
+        bus.initialize(); //< Numbers the variables (even for y, odd for yp)
         gen.initialize();
 
         gen.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
@@ -382,7 +398,24 @@ namespace GridKit
         std::cout << "Sparse Csr Matrix: Genrou DependencyTracking Jacobian\n";
         model_jacobian->print();
 
-        return GridKit::Testing::MapFromCsr(model_jacobian);
+        // The generator's CSR covers its six internal rows. Append the two
+        // bus-current rows from the bus residual dependencies, folding the
+        // even/odd (y/yp) variable numbers back to variable indices as
+        // constructCsrFromDependencies() does. With alpha set to one above,
+        // y and yp entries fold alike.
+        auto        dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
+        const auto& bus_residual = bus.getResidual();
+        for (IdxT i = 0; i < bus_residual.getSize(); ++i)
+        {
+          DependencyTracking::Variable::DependencyMap row;
+          for (const auto& [number, value] : bus_residual.getData()[i].getDependencies())
+          {
+            row[number / 2] += value;
+          }
+          dependencies.push_back(std::move(row));
+        }
+
+        return dependencies;
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian()
@@ -395,7 +428,7 @@ namespace GridKit
                                                   0.05013,
                                                   3,
                                                   0,
-                                                  0,
+                                                  0.01,
                                                   7,
                                                   0.04,
                                                   0.05,
@@ -407,8 +440,8 @@ namespace GridKit
                                                   0.5,
                                                   0.18,
                                                   0.15,
-                                                  0,
-                                                  0);
+                                                  0.1,
+                                                  0.3);
 
         bus.allocate();
         gen.allocate();
