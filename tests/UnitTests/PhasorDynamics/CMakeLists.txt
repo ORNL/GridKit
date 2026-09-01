@@ -15,7 +15,6 @@ target_link_libraries(
   GridKit::phasor_dynamics_bus_fault_dependency_tracking
   GridKit::phasor_dynamics_bus
   GridKit::phasor_dynamics_bus_dependency_tracking
-  GridKit::phasor_dynamics_systemmodel
   GridKit::testing)
 
 add_executable(test_phasor_bustosignaladapter runBusToSignalAdapterTests.cpp)
