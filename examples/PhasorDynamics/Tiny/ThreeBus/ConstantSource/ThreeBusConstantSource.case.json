@@ -123,8 +123,7 @@
             "id": "bus_fault_2",
             "params": {
                 "R": 0.0,
-                "X": 1e-5,
-                "state0": false
+                "X": 1e-5
             }
         },
         {

@@ -307,6 +307,7 @@ namespace GridKit
           bus_index = faultdata.buses.at(BusFaultBuses::bus);
         }
         auto* fault = new BusFault<ScalarT, IdxT>(getBus(bus_index), faultdata);
+        fault->getPorts().connect(faultdata, signal_nodes_);
         addFault(fault);
       }
 

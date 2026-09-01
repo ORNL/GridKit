@@ -9,11 +9,14 @@ int main()
   GridKit::Testing::BusFaultTests<double, size_t> test;
 
   result += test.constructor();
-  result += test.zeroInitialResidual(true);
-  result += test.zeroInitialResidual(false);
-#ifdef GRIDKIT_ENABLE_ENZYME
+  result += test.residual(true);
+  result += test.residual(false);
   result += test.jacobian(true);
   result += test.jacobian(false);
+#ifdef GRIDKIT_ENABLE_ENZYME
+  result += test.enzymeJacobian(true);
+  result += test.enzymeJacobian(false);
+  result += test.jacobianAcrossStatusChanges();
 #endif
 
   return result.summary();
