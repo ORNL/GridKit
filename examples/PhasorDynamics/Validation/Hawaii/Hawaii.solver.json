@@ -1,0 +1,16 @@
+{
+    "system_model_file": "Hawaii.case.json",
+    "output_file": "Hawaii.omega.csv",
+    "dt_monitor": 0.004166666666666667,
+    "tmax": 10.0,
+    "abs_tol": 1e-5,
+    "max_steps": 10000,
+    "events": [
+        { "time": 1.0, "type": "fault_on", "element_id": 0 },
+        { "time": 1.15, "type": "fault_off", "element_id": 0 }
+    ],
+    "reference_file": "reference/Hawaii.omega.ref.csv",
+    "error_type": "relative",
+    "error_tolerance": 5e-2,
+    "abs_err_threshold": 1e-6
+}
