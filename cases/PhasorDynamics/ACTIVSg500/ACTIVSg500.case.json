@@ -25154,7 +25154,6 @@
       },
       "id": "fault_1",
       "params": {
-        "state0": false,
         "R": 0.0,
         "X": 0.01
       }

@@ -78,7 +78,7 @@ namespace GridKit
                           "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Regca", "ports": {"bus":1}, "id": "CV1", "params": {"p0":0.0, "q0":0.0, "mva":100, "Tg":0.02, "TM":0.02, "Rqmax":999.0, "Rqmin":-999.0, "Rpmax":999.0, "sL":true, "IL1":1.1, "VL0":0.4, "VL1":0.9, "VA0":0.4, "VA1":0.9, "Vhvmax":1.2}, "mon": ["ir", "ii", "p", "q"] },
                    { "class": "Reecb", "ports": {"bus":1}, "id": "REE1", "params": {"mva":50.0, "Pqflag":true}, "mon": ["iqcmd", "ipcmd", "vmeas", "pmeas"] },
-                   { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
+                   { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"R":0.0, "X":1e-3} }
                ]
             })";
 
@@ -196,7 +196,6 @@ namespace GridKit
 
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;
-        success *= !std::get<bool>(result.bus_fault[0].parameters[BusFaultParameters::state0]);
         success *= result.bus_fault[0].buses[BusFaultBuses::bus] == 1;
         success *= result.bus_fault[0].disambiguation_string == "1";
         success *= result.bus_fault[0].monitored_variables.empty();
@@ -275,7 +274,7 @@ namespace GridKit
                    { "class": "SexsPti", "ports": {"bus":1, "efd":3}, "id": "DV4", "params": {"Ta":0.1, "Tb":0.5, "Te":0.8, "K":10.0, "Efdmax":5.0, "Efdmin":-5.0}},
                    { "class": "GastPti", "ports": {"speed":1, "pmech":2, "pref":10}, "id": "DV7", "params": {"R":0.045, "T1":0.42, "T2":0.12, "T3":3.2, "At":0.95, "Kt":2.2, "Vmax":1.05, "Vmin":0.15, "Dturb":0.02, "Trate":120.0}, "mon": ["pmech", "xvalve", "xflow", "xtemp", "vload", "vtemp"] },
                    { "class": "Reecb", "ports": {"bus":1, "pe":22, "qgen":23, "qext":24, "pfaref":25, "pref":26, "iqcmd":27, "ipcmd":28}, "id": "EC1", "params": {"mva":100.0, "PfFlag":false, "VFlag":true, "QFlag":true, "Pqflag":true, "Trv":0.02, "Tp":0.05, "Vref0":1.0, "Vdip":0.85, "Vup":1.15, "dbd1":-0.01, "dbd2":0.01, "kqv":5.0, "Iql1":-1.1, "Iqh1":1.1, "Qmax":0.436, "Qmin":-0.436, "Kqp":0.1, "Kqi":0.2, "Vmax":1.1, "Vmin":0.9, "Kvp":18.0, "Kvi":5.0, "Tiq":0.02, "Tpord":0.02, "dPmax":99.0, "dPmin":-99.0, "Pmax":1.0, "Pmin":0.0, "Imax":1.3}, "mon": ["iqcmd", "ipcmd", "vmeas", "pmeas"]},
-                   { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
+                   { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"R":0.0, "X":1e-3} }
                ]
             })";
 
@@ -621,7 +620,6 @@ namespace GridKit
 
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;
-        success *= !std::get<bool>(result.bus_fault[0].parameters[BusFaultParameters::state0]);
         success *= result.bus_fault[0].buses[BusFaultBuses::bus] == 1;
         success *= result.bus_fault[0].disambiguation_string == "1";
         success *= result.bus_fault[0].monitored_variables.empty();

@@ -1,14 +1,15 @@
 #pragma once
 
-#include <iomanip>
 #include <iostream>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
@@ -22,7 +23,8 @@ namespace GridKit
     class BusFaultTests
     {
     private:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using RealT    = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using SignalIn = PhasorDynamics::BusFaultSignalInputs;
 
     public:
       BusFaultTests()  = default;
@@ -49,35 +51,105 @@ namespace GridKit
       }
 
       /**
-       * Verifies the residual evaluates to zero for the initial conditions
+       * Verifies the fault current injected into the bus residual
        */
-      TestOutcome zeroInitialResidual(bool status = false)
+      TestOutcome residual(bool status)
       {
         TestStatus success = true;
 
-        ScalarT Vr1{1.0}; ///< Bus real voltage
-        ScalarT Vi1{1.0}; ///< Bus imaginary voltage
+        const RealT R{0.1};
+        const RealT X{1e-3};
 
-        PhasorDynamics::Bus<ScalarT, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, 0.0, 1e-3, status);
+        const ScalarT Vr{1.0}; ///< Bus real voltage
+        const ScalarT Vi{0.5}; ///< Bus imaginary voltage
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr, Vi);
         bus.allocate();
         bus.initialize();
-        fault.allocate();
-        fault.initialize();
-        fault.evaluateResidual();
-        auto&       res      = fault.getResidual();
-        const auto* res_data = res.getData();
-        const auto* yp       = fault.yp().getData();
+        bus.evaluateResidual();
 
-        for (size_t i = 0; i < res.getSize(); ++i)
+        PhasorDynamics::BusFaultData<RealT, IdxT> fault_data;
+        fault_data.parameters[PhasorDynamics::BusFaultParameters::R] = R;
+        fault_data.parameters[PhasorDynamics::BusFaultParameters::X] = X;
+        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, fault_data);
+
+        ScalarT status_value{0.0};
+        if (status)
         {
-          if (!isEqual(res_data[i], 0.0))
+          status_value = 1.0;
+        }
+        IdxT                                      status_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> status_node;
+        status_node.link(&status_value, &status_index);
+        fault.getPorts().in.template port<SignalIn::status>().connect(&status_node);
+
+        fault.allocate();
+        fault.evaluateResidual();
+
+        const auto [g, b] = faultAdmittance(R, X, status);
+
+        const ScalarT Ir_expected{g * Vr - b * Vi};
+        const ScalarT Ii_expected{b * Vr + g * Vi};
+
+        success *= isEqual(bus.Ir(), Ir_expected);
+        success *= isEqual(bus.Ii(), Ii_expected);
+
+        return success.report(__func__);
+      }
+
+      /**
+       * A test case to verify Jacobian values via dependency tracking
+       */
+      TestOutcome jacobian(bool status)
+      {
+        TestStatus success = true;
+
+        const RealT R{0.1};
+        const RealT X{1e-3};
+
+        DependencyTracking::Variable Vr{1.0}; ///< Bus real voltage
+        DependencyTracking::Variable Vi{0.5}; ///< Bus imaginary voltage
+
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus(Vr, Vi);
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+
+        PhasorDynamics::BusFaultData<RealT, IdxT> fault_data;
+        fault_data.parameters[PhasorDynamics::BusFaultParameters::R] = R;
+        fault_data.parameters[PhasorDynamics::BusFaultParameters::X] = X;
+        PhasorDynamics::BusFault<DependencyTracking::Variable, IdxT> fault(&bus, fault_data);
+
+        DependencyTracking::Variable status_value{0.0};
+        if (status)
+        {
+          status_value = DependencyTracking::Variable{1.0};
+        }
+        IdxT                                                           status_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> status_node;
+        status_node.link(&status_value, &status_index);
+        fault.getPorts().in.template port<SignalIn::status>().connect(&status_node);
+
+        fault.allocate();
+        fault.evaluateResidual(); ///< Computes the residual and the Jacobian values
+                                  ///< by tracking the dependencies
+
+        std::vector<DependencyTracking::Variable>                residuals{bus.Ir(), bus.Ii()};
+        std::vector<DependencyTracking::Variable::DependencyMap> ref =
+            analyticalJacobian(R, X, status);
+
+        /// Compare dependencies computed automatically to the ones computed
+        /// analytically
+        for (size_t i = 0; i < residuals.size(); ++i)
+        {
+          const DependencyTracking::Variable::DependencyMap& dependencies =
+              residuals[i].getDependencies();
+          DependencyTracking::Variable::DependencyMap expected;
+          for (const auto& [column, value] : ref[i])
           {
-            std::cout << "Incorrect result: "
-                      << yp[i] << " != 0\n";
-            success = false;
-            break;
+            expected[2 * column] = value;
           }
+          success *= (GridKit::Testing::isEqual(dependencies, expected));
         }
 
         return success.report(__func__);
@@ -85,112 +157,172 @@ namespace GridKit
 
 #ifdef GRIDKIT_ENABLE_ENZYME
       /**
-       * A test case to verify Jacobian values
+       * A test case to verify Enzyme Jacobian values against the analytical
+       * Jacobian
        */
-      TestOutcome jacobian(bool status = false)
+      TestOutcome enzymeJacobian(bool status)
       {
         TestStatus success = true;
 
-        RealT R = 0.0;
-        RealT X = 1e-3;
+        const RealT R{0.1};
+        const RealT X{1e-3};
 
-        // Jacobian via DependencyTracking
-        auto dependency_tracking_jacobian = DependencyTrackingJacobian(R, X, status);
+        const ScalarT Vr{1.0}; ///< Bus real voltage
+        const ScalarT Vi{0.5}; ///< Bus imaginary voltage
 
-        // Jacobian via Enzyme
-        auto enzyme_jacobian = EnzymeJacobian(R, X, status);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr, Vi);
 
-        if (!status)
+        PhasorDynamics::BusFaultData<RealT, IdxT> fault_data;
+        fault_data.parameters[PhasorDynamics::BusFaultParameters::R] = R;
+        fault_data.parameters[PhasorDynamics::BusFaultParameters::X] = X;
+        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, fault_data);
+
+        ScalarT status_value{0.0};
+        if (status)
         {
-          // HACK: Enzyme retains the fixed DfDwb/DhDy structure and masks its
-          // inactive values to exact zero, while DependencyTracking omits them.
-          for (auto& row : enzyme_jacobian)
-          {
-            std::erase_if(row, [](const auto& entry)
-                          { return entry.second == 0.0; });
-          }
+          status_value = 1.0;
         }
+        IdxT                                      status_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> status_node;
+        status_node.link(&status_value, &status_index);
+        fault.getPorts().in.template port<SignalIn::status>().connect(&status_node);
 
-        /// Compare DependencyTracking dependencies to Enzyme's
-        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        system.addBus(&bus);
+        system.addFault(&fault);
+        system.allocate();
+        system.initialize();
+        system.evaluateResidual();
+        system.evaluateJacobian();
+
+        const auto enzyme_jacobian =
+            GridKit::Testing::MapFromCsr(system.getCsrJacobian());
+        std::vector<DependencyTracking::Variable::DependencyMap> ref =
+            analyticalJacobian(R, X, status);
+
+        /// Compare Enzyme dependencies to the ones computed analytically
+        for (size_t i = 0; i < ref.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]));
+          success *= (GridKit::Testing::isEqual(enzyme_jacobian[i], ref[i]));
         }
 
         return success.report(__func__);
       }
 
-    private:
-      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
-          const RealT R, const RealT X, const bool status)
+      /**
+       * Verify the fixed Jacobian pattern and status-scaled values across a
+       * complete fault event.
+       */
+      TestOutcome jacobianAcrossStatusChanges()
       {
-        DependencyTracking::Variable Vr1{1.0}; ///< Bus-1 real voltage
-        DependencyTracking::Variable Vi1{1.0}; ///< Bus-1 imaginary voltage
+        TestStatus success = true;
 
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<DependencyTracking::Variable, IdxT> fault(&bus, R, X, status);
+        const RealT R{0.0};
+        const RealT X{0.01};
 
-        bus.allocate();
-        fault.allocate();
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
-        for (size_t i = 0; i < bus.size(); ++i)
+        PhasorDynamics::BusFaultData<RealT, IdxT> fault_data;
+        fault_data.parameters[PhasorDynamics::BusFaultParameters::R] = R;
+        fault_data.parameters[PhasorDynamics::BusFaultParameters::X] = X;
+        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, fault_data);
+
+        ScalarT                                   status_value{0.0};
+        IdxT                                      status_index{INVALID_INDEX<IdxT>};
+        PhasorDynamics::SignalNode<ScalarT, IdxT> status_node;
+        status_node.link(&status_value, &status_index);
+        fault.getPorts().in.template port<SignalIn::status>().connect(&status_node);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        system.addBus(&bus);
+        system.addFault(&fault);
+        system.allocate();
+        system.initialize();
+
+        auto checkJacobian = [&](const bool status)
         {
-          bus.setVariableIndex(i, i + fault.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + fault.size()); // Reset bus residual indices
-        }
+          system.evaluateResidual();
+          system.evaluateJacobian();
 
-        bus.initialize();
-        fault.initialize();
+          const auto jacobian = GridKit::Testing::MapFromCsr(system.getCsrJacobian());
+          const auto [g, b]   = faultAdmittance(R, X, status);
 
-        fault.updateTime(0.0, 1.0);
+          success *= jacobianEntryEquals(jacobian, 0, 0, g);
+          success *= jacobianEntryEquals(jacobian, 0, 1, -b);
+          success *= jacobianEntryEquals(jacobian, 1, 0, b);
+          success *= jacobianEntryEquals(jacobian, 1, 1, g);
+        };
 
-        bus.evaluateResidual();
-        fault.evaluateResidual();
+        checkJacobian(false);
 
-        fault.evaluateJacobian();
-        auto* model_jacobian = fault.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: BusFault DependencyTracking Jacobian\n";
-        model_jacobian->print();
+        status_node.init(1.0);
+        checkJacobian(true);
 
-        return GridKit::Testing::MapFromCsr(model_jacobian);
-      }
+        status_node.init(0.0);
+        checkJacobian(false);
 
-      std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          const RealT R, const RealT X, const bool status)
-      {
-        ScalarT Vr1{1.0}; ///< Bus-1 real voltage
-        ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
-
-        PhasorDynamics::Bus<ScalarT, IdxT>      bus(Vr1, Vi1);
-        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, R, X, status);
-
-        bus.allocate();
-        fault.allocate();
-
-        for (size_t i = 0; i < bus.size(); ++i)
-        {
-          bus.setVariableIndex(i, i + fault.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + fault.size()); // Reset bus residual indices
-        }
-
-        bus.initialize();
-        fault.initialize();
-
-        fault.updateTime(0.0, 1.0);
-
-        bus.evaluateResidual();
-        fault.evaluateResidual();
-
-        bus.evaluateJacobian();
-        fault.evaluateJacobian();
-        fault.constructCsr();
-        auto* model_jacobian = fault.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: BusFault Enzyme Jacobian\n";
-        model_jacobian->print();
-
-        return GridKit::Testing::MapFromCsr(model_jacobian);
+        return success.report(__func__);
       }
 #endif
+
+    private:
+      /**
+       * Checks that a Jacobian entry exists and has the expected value.
+       */
+      bool jacobianEntryEquals(const std::vector<DependencyTracking::Variable::DependencyMap>& jacobian,
+                               const size_t                                                    row,
+                               const size_t                                                    column,
+                               const RealT                                                     expected) const
+      {
+        if (row >= jacobian.size())
+        {
+          std::cout << "Jacobian row " << row << " is missing\n";
+          return false;
+        }
+
+        const auto entry = jacobian[row].find(column);
+        if (entry == jacobian[row].end())
+        {
+          std::cout << "Jacobian entry (" << row << ", " << column << ") is missing\n";
+          return false;
+        }
+
+        if (!isEqual(entry->second, expected))
+        {
+          std::cout << "Jacobian entry (" << row << ", " << column
+                    << ") = " << entry->second << " != " << expected << "\n";
+          return false;
+        }
+
+        return true;
+      }
+
+      std::pair<RealT, RealT> faultAdmittance(const RealT R, const RealT X, const bool status)
+      {
+        RealT g{0.0};
+        RealT b{0.0};
+
+        if (status)
+        {
+          const RealT denom = R * R + X * X;
+          g                 = -R / denom;
+          b                 = X / denom;
+        }
+
+        return {g, b};
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap>
+      analyticalJacobian(const RealT R, const RealT X, const bool status)
+      {
+        const auto [g, b] = faultAdmittance(R, X, status);
+
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(2);
+        dependencies[0] = {{0, g}, {1, -b}};
+        dependencies[1] = {{0, b}, {1, g}};
+
+        return dependencies;
+      }
 
     }; // class BusFaultTests
 

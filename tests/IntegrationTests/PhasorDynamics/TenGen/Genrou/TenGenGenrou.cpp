@@ -15,6 +15,7 @@
 #include <fstream>
 #include <vector>
 
+#include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -66,7 +67,17 @@ int main()
   Genrou<scalar_type, index_type> gen9(&bus9, 0.5, -0.09662372, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
   Genrou<scalar_type, index_type> gen10(&bus10, 0.5, -0.09932297, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
 
-  BusFault<scalar_type, index_type> fault(&bus10, 0, 1e-5, 0);
+  BusFaultData<real_type, index_type> fault_data;
+  fault_data.parameters[BusFaultParameters::R] = 0.0;
+  fault_data.parameters[BusFaultParameters::X] = 1e-5;
+  BusFault<scalar_type, index_type> fault(&bus10, fault_data);
+
+  /* Status signal driving the fault */
+  scalar_type                         status_value{0.0};
+  index_type                          status_index{GridKit::INVALID_INDEX<index_type>};
+  SignalNode<scalar_type, index_type> status_node;
+  status_node.link(&status_value, &status_index);
+  fault.getPorts().in.port<BusFaultSignalInputs::status>().connect(&status_node);
 
   /* Connect everything together */
   SystemModel<scalar_type, index_type> sys;
@@ -166,7 +177,7 @@ int main()
   }
 
   // Introduce fault to ground and run for 0.1s
-  fault.setStatus(1);
+  status_node.init(1.0);
   ida.initializeSimulation(1.0);
   ida.runSimulation(1.1, dt, output_cb);
 
@@ -178,7 +189,7 @@ int main()
   success                     *= isEqual(gen10.y().getData()[omega_index], omega_ref, 5e-5);
 
   // Clear fault and run until t = 10s.
-  fault.setStatus(0);
+  status_node.init(0.0);
   ida.initializeSimulation(1.1);
   ida.runSimulation(10.0, dt, output_cb);
   real_type stop = static_cast<real_type>(clock());

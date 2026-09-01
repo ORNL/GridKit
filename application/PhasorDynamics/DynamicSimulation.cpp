@@ -1,8 +1,10 @@
 #include <exception>
 #include <filesystem>
 #include <fstream>
+#include <vector>
 
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -27,6 +29,17 @@ int runApplication(int argc, const char* argv[])
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);
   sys.allocate();
+
+  // Status signals driving the faults
+  const auto                                       n_faults = study.model_data.bus_fault.size();
+  std::vector<scalar_type>                         status_values(n_faults, 0.0);
+  std::vector<index_type>                          status_indices(n_faults, GridKit::INVALID_INDEX<index_type>);
+  std::vector<SignalNode<scalar_type, index_type>> status_nodes(n_faults);
+  for (std::size_t i = 0; i < n_faults; ++i)
+  {
+    status_nodes[i].link(&status_values[i], &status_indices[i]);
+    sys.getBusFault(i)->getPorts().in.port<BusFaultSignalInputs::status>().connect(&status_nodes[i]);
+  }
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
@@ -55,10 +68,10 @@ int runApplication(int argc, const char* argv[])
     switch (event.type)
     {
     case EventType::FAULT_ON:
-      sys.getBusFault(event.element_id)->setStatus(true);
+      status_nodes[event.element_id].init(1.0);
       break;
     case EventType::FAULT_OFF:
-      sys.getBusFault(event.element_id)->setStatus(false);
+      status_nodes[event.element_id].init(0.0);
       break;
     }
 

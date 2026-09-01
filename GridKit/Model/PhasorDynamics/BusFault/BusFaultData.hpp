@@ -15,9 +15,8 @@ namespace GridKit
     /// Initial parameters for a bus fault
     enum class BusFaultParameters : size_t
     {
-      state0, ///< Whether or not the fault has happened
-      R,      ///< Short to ground resistance
-      X,      ///< Short to ground reactance
+      R, ///< \f$R\f$ Short to ground resistance
+      X, ///< \f$X\f$ Short to ground reactance
     };
 
     /// Buses supported for a bus fault
@@ -29,7 +28,7 @@ namespace GridKit
     /// Signal inputs supported for a bus fault
     enum class BusFaultSignalInputs : size_t
     {
-      control_signal, ///< Unique ID of the bus providing a control signal
+      status, ///< Unique ID of the fault status signal
     };
 
     /// Signal outputs supported for a bus fault
@@ -40,7 +39,7 @@ namespace GridKit
     /// Variables able to be monitored for a bus fault
     enum class BusFaultMonitorableVariables : size_t
     {
-      state,
+      status,
       ir,
       ii,
     };
