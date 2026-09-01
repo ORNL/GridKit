@@ -105,6 +105,14 @@ namespace GridKit
       }
 
       /**
+       * @brief Whether at least one destination is configured for monitor output.
+       */
+      bool hasSinks() const
+      {
+        return !sinks_.empty();
+      }
+
+      /**
        * @brief Print header if we're monitoring
        */
       void start()
