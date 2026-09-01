@@ -243,6 +243,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZ<scalar_type, index_type>::setDerivedParams()
     {
+      this->markAdmittanceChanged();
+
       b_ = -X_ / (R_ * R_ + X_ * X_);
       g_ = R_ / (R_ * R_ + X_ * X_);
     }
