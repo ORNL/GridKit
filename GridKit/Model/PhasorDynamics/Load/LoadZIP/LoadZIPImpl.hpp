@@ -270,6 +270,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::setDerivedParams()
     {
+      this->markAdmittanceChanged();
+
       const RealT Vnom2 = Vnom_ * Vnom_;
 
       G_      = Pnom_ / Vnom2;

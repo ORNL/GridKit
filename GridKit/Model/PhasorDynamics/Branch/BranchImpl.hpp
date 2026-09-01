@@ -470,6 +470,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::setDerivedParams()
     {
+      this->markAdmittanceChanged();
+
       g11_ = RealT{0.0};
       b11_ = RealT{0.0};
       g12_ = RealT{0.0};

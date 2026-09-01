@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -27,6 +28,13 @@ namespace GridKit
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
       using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+
+      struct EvaluationContext
+      {
+        RealT time{0.0};
+        RealT alpha{0.0};
+        std::uint64_t admittance_epoch{0};
+      };
 
       Component() = default;
 
@@ -179,6 +187,28 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Bind this component's vectors and evaluation context to system storage.
+       *
+       * @pre evaluation_context remains valid while this component is bound.
+       */
+      int bind(VectorT&           y,
+               VectorT&           yp,
+               VectorT&           f,
+               VectorT&           abs_tol,
+               IdxT               offset,
+               EvaluationContext& evaluation_context)
+      {
+        const int status = bind(y, yp, f, abs_tol, offset);
+        if (status != 0)
+        {
+          return status;
+        }
+
+        evaluation_context_ = &evaluation_context;
+        return 0;
+      }
+
       int setVariableIndex(IdxT local_index, IdxT global_index)
       {
         variable_indices_[static_cast<size_t>(local_index)] = global_index;
@@ -227,10 +257,10 @@ namespace GridKit
         return true;
       }
 
-      void updateTime(RealT t, RealT a) override
+      void updateTime(RealT t, RealT a) override final
       {
-        time_  = t;
-        alpha_ = a;
+        evaluation_context_->time  = t;
+        evaluation_context_->alpha = a;
       }
 
       /**
@@ -286,6 +316,31 @@ namespace GridKit
       value_type toSystemBase(value_type value) const
       {
         return value * (va_component_base_ / va_system_base_);
+      }
+
+      const RealT& time() const noexcept
+      {
+        return evaluation_context_->time;
+      }
+
+      const RealT& alpha() const noexcept
+      {
+        return evaluation_context_->alpha;
+      }
+
+      EvaluationContext& evaluationContext() noexcept
+      {
+        return *evaluation_context_;
+      }
+
+      std::uint64_t admittanceEpoch() const noexcept
+      {
+        return evaluation_context_->admittance_epoch;
+      }
+
+      void markAdmittanceChanged() noexcept
+      {
+        ++evaluation_context_->admittance_epoch;
       }
 
       /**
@@ -440,7 +495,7 @@ namespace GridKit
               }
               else
               {
-                row_map[jac_col] += alpha_ * static_cast<RealT>(dep.second);
+                row_map[jac_col] += alpha() * static_cast<RealT>(dep.second);
               }
             }
 
@@ -479,7 +534,7 @@ namespace GridKit
               }
               else
               {
-                row_map[jac_col] += alpha_ * static_cast<RealT>(dep.second);
+                row_map[jac_col] += alpha() * static_cast<RealT>(dep.second);
               }
             }
 
@@ -571,8 +626,8 @@ namespace GridKit
       /// Global indices of attached external signals
       std::vector<IdxT> ws_indices_;
 
-      RealT time_;
-      RealT alpha_;
+      EvaluationContext  local_evaluation_context_{};
+      EvaluationContext* evaluation_context_{&local_evaluation_context_};
 
       RealT freq_system_base_{60.0};
       RealT va_system_base_{100.0e6};
