@@ -37,6 +37,11 @@ namespace GridKit
       using ModelDataT = BusData<RealT, IdxT>;
       using BusTypeT   = typename BusData<RealT, IdxT>::BusType;
 
+      using BusBase<scalar_type, index_type>::Vr;
+      using BusBase<scalar_type, index_type>::Vi;
+      using BusBase<scalar_type, index_type>::Ir;
+      using BusBase<scalar_type, index_type>::Ii;
+
       BusInfinite();
       BusInfinite(ScalarT Vr, ScalarT Vi);
       BusInfinite(const ModelDataT& data);
@@ -55,45 +60,8 @@ namespace GridKit
         return BusTypeT::SLACK;
       }
 
-      ScalarT& Vr() override
-      {
-        return Vr_;
-      }
-
-      const ScalarT& Vr() const override
-      {
-        return Vr_;
-      }
-
-      ScalarT& Vi() override
-      {
-        return Vi_;
-      }
-
-      const ScalarT& Vi() const override
-      {
-        return Vi_;
-      }
-
-      ScalarT& Ir() override
-      {
-        return Ir_;
-      }
-
-      const ScalarT& Ir() const override
-      {
-        return Ir_;
-      }
-
-      ScalarT& Ii() override
-      {
-        return Ii_;
-      }
-
-      const ScalarT& Ii() const override
-      {
-        return Ii_;
-      }
+    protected:
+      int refreshTerminals() override final;
 
     private:
       ScalarT Vr_{0.0};
