@@ -205,6 +205,50 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome monitoringRequiresVariablesAndSink()
+      {
+        TestStatus success = true;
+
+        using SystemDataT = PhasorDynamics::SystemModelData<RealT, IdxT>;
+        using BusDataT    = PhasorDynamics::BusData<RealT, IdxT>;
+        using BusType     = typename BusDataT::BusType;
+        using Variable    = typename BusDataT::MonitorableVariables;
+
+        const auto makeData = [](bool select_variable, bool add_sink)
+        {
+          SystemDataT data;
+          data.bus.resize(1);
+          data.bus[0].bus_id   = 0;
+          data.bus[0].bus_type = BusType::SLACK;
+          if (select_variable)
+          {
+            data.bus[0].monitored_variables.insert(Variable::Vr);
+          }
+          if (add_sink)
+          {
+            data.monitor_sink.push_back({Model::VariableMonitorFormat::CSV});
+          }
+          return data;
+        };
+
+        auto selected_without_sink = makeData(true, false);
+        PhasorDynamics::SystemModel<ScalarT, IdxT> no_sink(selected_without_sink);
+        no_sink.initializeMonitor();
+        success *= !no_sink.monitoring();
+
+        auto sink_without_selection = makeData(false, true);
+        PhasorDynamics::SystemModel<ScalarT, IdxT> no_selection(sink_without_selection);
+        no_selection.initializeMonitor();
+        success *= !no_selection.monitoring();
+
+        auto selected_with_sink = makeData(true, true);
+        PhasorDynamics::SystemModel<ScalarT, IdxT> active(selected_with_sink);
+        active.initializeMonitor();
+        success *= active.monitoring();
+
+        return success.report(__func__);
+      }
+
       TestOutcome composer()
       {
         TestStatus success = true;

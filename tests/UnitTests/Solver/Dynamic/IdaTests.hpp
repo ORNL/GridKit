@@ -301,6 +301,48 @@ namespace GridKit
     };
 
     template <class ScalarT, typename IdxT>
+    class MonitoringProbeEvaluator : public NullEvaluator<ScalarT, IdxT>
+    {
+    public:
+      explicit MonitoringProbeEvaluator(bool monitoring)
+        : monitoring_(monitoring)
+      {
+      }
+
+      bool monitoring() const override
+      {
+        ++monitoring_calls_;
+        return monitoring_;
+      }
+
+      void printMonitoredVariables() const override
+      {
+        ++print_calls_;
+      }
+
+      void resetMonitorCounts()
+      {
+        monitoring_calls_ = 0;
+        print_calls_      = 0;
+      }
+
+      std::size_t monitoringCalls() const
+      {
+        return monitoring_calls_;
+      }
+
+      std::size_t printCalls() const
+      {
+        return print_calls_;
+      }
+
+    private:
+      bool                monitoring_{};
+      mutable std::size_t monitoring_calls_{};
+      mutable std::size_t print_calls_{};
+    };
+
+    template <class ScalarT, typename IdxT>
     class AlgebraicErrorControlEvaluator : public NullEvaluator<ScalarT, IdxT>
     {
     protected:
@@ -491,6 +533,34 @@ namespace GridKit
 
         success *= (observed_steps == 1);
         success *= (observed_t == 1.0);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome monitorActivityIsCached()
+      {
+        TestStatus success = true;
+
+        const auto run = [](bool monitoring)
+        {
+          Model::MonitoringProbeEvaluator<ScalarT, IdxT> model(monitoring);
+          Ida<ScalarT, IdxT>                              ida(&model);
+          ida.configureSimulation();
+          ida.initializeSimulation(0.0, false);
+
+          model.resetMonitorCounts();
+          ida.runSimulation(1.0, 0.25);
+
+          return std::pair(model.monitoringCalls(), model.printCalls());
+        };
+
+        const auto [inactive_checks, inactive_prints] = run(false);
+        success *= (inactive_checks == 1);
+        success *= (inactive_prints == 0);
+
+        const auto [active_checks, active_prints] = run(true);
+        success *= (active_checks == 1);
+        success *= (active_prints == 4);
 
         return success.report(__func__);
       }
