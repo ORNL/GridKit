@@ -75,8 +75,14 @@ int main(int argc, const char* argv[])
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
 
-  // Get access to the fault
+  // Get access to the fault and drive it through its status signal
   auto* fault = sys.getBusFault(0);
+
+  scalar_type                         status_value{0.0};
+  index_type                          status_index{GridKit::INVALID_INDEX<index_type>};
+  SignalNode<scalar_type, index_type> status_node;
+  status_node.set(&status_value, &status_index);
+  fault->getSignals().attachSignalNode<BusFaultExternalVariables::STATUS>(&status_node);
 
   // Monitor every quarter cycle at 60 Hz
   real_type dt_monitor = 1.0 / 4.0 / 60.0;
@@ -94,12 +100,12 @@ int main(int argc, const char* argv[])
   ida.runSimulation(1.0, dt_monitor);
 
   // Introduce fault and run for the next 0.1s
-  fault->setStatus(true);
+  status_node.init(1.0);
   ida.initializeSimulation(1.0);
   ida.runSimulation(1.1, dt_monitor);
 
   // Clear the fault and run until t = 10s.
-  fault->setStatus(false);
+  status_node.init(0.0);
   ida.initializeSimulation(1.1);
   ida.runSimulation(10.0, dt_monitor);
   real_type stop = static_cast<real_type>(clock());

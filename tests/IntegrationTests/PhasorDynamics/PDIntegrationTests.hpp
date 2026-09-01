@@ -220,7 +220,6 @@ namespace GridKit
           success *= af.buses.at(BusFaultBuses::bus) == bf.buses.at(BusFaultBuses::bus);
           success *= af.parameters.at(Param::R) == bf.parameters.at(Param::R);
           success *= af.parameters.at(Param::X) == bf.parameters.at(Param::X);
-          success *= af.parameters.at(Param::state0) == bf.parameters.at(Param::state0);
         }
 
         return success;
@@ -235,8 +234,14 @@ namespace GridKit
         SystemModel<RealT, IdxT> sys(system_data);
         sys.allocate();
 
-        // Get access to the fault
+        // Get access to the fault and drive it through its status signal
         auto* fault = sys.getBusFault(0);
+
+        RealT                   status_value{0.0};
+        IdxT                    status_index{INVALID_INDEX<IdxT>};
+        SignalNode<RealT, IdxT> status_node;
+        status_node.set(&status_value, &status_index);
+        fault->getSignals().template attachSignalNode<BusFaultExternalVariables::STATUS>(&status_node);
 
         // Set time step to 1/4 of a 60Hz cycle
         real_type dt = 1.0 / 4.0 / 60.0;
@@ -252,12 +257,12 @@ namespace GridKit
         ida.runSimulation(1.0, dt);
 
         // Introduce fault and run for the next 0.1s
-        fault->setStatus(true);
+        status_node.init(1.0);
         ida.initializeSimulation(1.0);
         ida.runSimulation(1.1, dt);
 
         // Clear the fault and run until t = 10s.
-        fault->setStatus(false);
+        status_node.init(0.0);
         ida.initializeSimulation(1.1);
         ida.runSimulation(10.0, dt);
 
@@ -319,10 +324,9 @@ namespace GridKit
         set_data.genrou[0].monitored_variables.insert(GenrouVar::speed);
 
         set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+        set_data.bus_fault[0].buses[BusFaultBuses::bus]         = 0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::R] = 0.0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::X] = 1e-3;
 
         std::string      base_name = "TwoBus/Basic/TwoBusBasic";
         std::string      in_file   = base_name + ".case.json";
@@ -381,10 +385,9 @@ namespace GridKit
         set_data.branch[0].parameters[BranchParameters::B] = 0.0;
 
         set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+        set_data.bus_fault[0].buses[BusFaultBuses::bus]         = 0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::R] = 0.0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::X] = 1e-3;
 
         set_data.genrou.resize(1);
         set_data.genrou[0].buses[GenrouBuses::bus]                    = 0;
@@ -488,10 +491,9 @@ namespace GridKit
         set_data.branch[0].parameters[BranchParameters::B] = 0.0;
 
         set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+        set_data.bus_fault[0].buses[BusFaultBuses::bus]         = 0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::R] = 0.0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::X] = 1e-3;
 
         set_data.genrou.resize(1);
         set_data.genrou[0].buses[GenrouBuses::bus]                    = 0;
@@ -631,10 +633,9 @@ namespace GridKit
         set_data.loadz[0].parameters[LoadZParameters::X] = 0.20330047265361242;
 
         set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 2;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-5;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+        set_data.bus_fault[0].buses[BusFaultBuses::bus]         = 2;
+        set_data.bus_fault[0].parameters[BusFaultParameters::R] = 0.0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::X] = 1e-5;
 
         std::string      in_file   = "ThreeBus/Basic/ThreeBusBasic.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);
@@ -712,10 +713,9 @@ namespace GridKit
         set_data.loadz[0].parameters[LoadZParameters::X] = 0.20330047265361242;
 
         set_data.bus_fault.resize(1);
-        set_data.bus_fault[0].buses[BusFaultBuses::bus]              = 2;
-        set_data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-        set_data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-5;
-        set_data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+        set_data.bus_fault[0].buses[BusFaultBuses::bus]         = 2;
+        set_data.bus_fault[0].parameters[BusFaultParameters::R] = 0.0;
+        set_data.bus_fault[0].parameters[BusFaultParameters::X] = 1e-5;
 
         std::string      in_file   = "ThreeBus/Classical/ThreeBusClassical.case.json";
         SystemModelDataT file_data = parseSystemModelData(in_file);

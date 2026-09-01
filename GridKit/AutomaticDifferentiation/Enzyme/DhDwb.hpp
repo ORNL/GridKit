@@ -42,6 +42,7 @@ namespace GridKit
          * @param[out] cols - Column indices
          * @param[out] vals - Values
          * @param[out] nnz - Number of nonzeros
+         * @param[in] value_scaling - Scaling applied to stored Jacobian values
          */
         static void eval(ModelT*        model,
                          const size_t   n_res,
@@ -54,7 +55,8 @@ namespace GridKit
                          IdxT*          rows,
                          IdxT*          cols,
                          RealT*         vals,
-                         IdxT&          nnz)
+                         IdxT&          nnz,
+                         const RealT    value_scaling = 1.0)
         {
           if (n_res > 0 && n_var > 0)
           {
@@ -68,7 +70,7 @@ namespace GridKit
               ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
                                                              (void*) sparse_store<ScalarT, IdxT>,
                                                              var_i,
-                                                             1.0, // value scaling
+                                                             value_scaling,
                                                              res_indices,
                                                              var_indices,
                                                              rows,

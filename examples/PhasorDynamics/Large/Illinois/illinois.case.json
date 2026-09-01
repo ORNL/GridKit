@@ -11638,7 +11638,6 @@
             },
             "id": "fault_1",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11650,7 +11649,6 @@
             },
             "id": "fault_2",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11662,7 +11660,6 @@
             },
             "id": "fault_3",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11674,7 +11671,6 @@
             },
             "id": "fault_4",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11686,7 +11682,6 @@
             },
             "id": "fault_5",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11698,7 +11693,6 @@
             },
             "id": "fault_6",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11710,7 +11704,6 @@
             },
             "id": "fault_7",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11722,7 +11715,6 @@
             },
             "id": "fault_8",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11734,7 +11726,6 @@
             },
             "id": "fault_9",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11746,7 +11737,6 @@
             },
             "id": "fault_10",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11758,7 +11748,6 @@
             },
             "id": "fault_11",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11770,7 +11759,6 @@
             },
             "id": "fault_12",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11782,7 +11770,6 @@
             },
             "id": "fault_13",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11794,7 +11781,6 @@
             },
             "id": "fault_14",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11806,7 +11792,6 @@
             },
             "id": "fault_15",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11818,7 +11803,6 @@
             },
             "id": "fault_16",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11830,7 +11814,6 @@
             },
             "id": "fault_17",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11842,7 +11825,6 @@
             },
             "id": "fault_18",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11854,7 +11836,6 @@
             },
             "id": "fault_19",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11866,7 +11847,6 @@
             },
             "id": "fault_20",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11878,7 +11858,6 @@
             },
             "id": "fault_21",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11890,7 +11869,6 @@
             },
             "id": "fault_22",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11902,7 +11880,6 @@
             },
             "id": "fault_23",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11914,7 +11891,6 @@
             },
             "id": "fault_24",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11926,7 +11902,6 @@
             },
             "id": "fault_25",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11938,7 +11913,6 @@
             },
             "id": "fault_26",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11950,7 +11924,6 @@
             },
             "id": "fault_27",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11962,7 +11935,6 @@
             },
             "id": "fault_28",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11974,7 +11946,6 @@
             },
             "id": "fault_29",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11986,7 +11957,6 @@
             },
             "id": "fault_30",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -11998,7 +11968,6 @@
             },
             "id": "fault_31",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12010,7 +11979,6 @@
             },
             "id": "fault_32",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12022,7 +11990,6 @@
             },
             "id": "fault_33",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12034,7 +12001,6 @@
             },
             "id": "fault_34",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12046,7 +12012,6 @@
             },
             "id": "fault_35",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12058,7 +12023,6 @@
             },
             "id": "fault_36",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12070,7 +12034,6 @@
             },
             "id": "fault_37",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12082,7 +12045,6 @@
             },
             "id": "fault_38",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12094,7 +12056,6 @@
             },
             "id": "fault_39",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12106,7 +12067,6 @@
             },
             "id": "fault_40",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12118,7 +12078,6 @@
             },
             "id": "fault_41",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12130,7 +12089,6 @@
             },
             "id": "fault_42",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12142,7 +12100,6 @@
             },
             "id": "fault_43",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12154,7 +12111,6 @@
             },
             "id": "fault_44",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12166,7 +12122,6 @@
             },
             "id": "fault_45",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12178,7 +12133,6 @@
             },
             "id": "fault_46",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12190,7 +12144,6 @@
             },
             "id": "fault_47",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12202,7 +12155,6 @@
             },
             "id": "fault_48",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12214,7 +12166,6 @@
             },
             "id": "fault_49",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12226,7 +12177,6 @@
             },
             "id": "fault_50",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12238,7 +12188,6 @@
             },
             "id": "fault_51",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12250,7 +12199,6 @@
             },
             "id": "fault_52",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12262,7 +12210,6 @@
             },
             "id": "fault_53",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12274,7 +12221,6 @@
             },
             "id": "fault_54",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12286,7 +12232,6 @@
             },
             "id": "fault_55",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12298,7 +12243,6 @@
             },
             "id": "fault_56",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12310,7 +12254,6 @@
             },
             "id": "fault_57",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12322,7 +12265,6 @@
             },
             "id": "fault_58",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12334,7 +12276,6 @@
             },
             "id": "fault_59",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12346,7 +12287,6 @@
             },
             "id": "fault_60",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12358,7 +12298,6 @@
             },
             "id": "fault_61",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12370,7 +12309,6 @@
             },
             "id": "fault_62",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12382,7 +12320,6 @@
             },
             "id": "fault_63",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12394,7 +12331,6 @@
             },
             "id": "fault_64",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12406,7 +12342,6 @@
             },
             "id": "fault_65",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12418,7 +12353,6 @@
             },
             "id": "fault_66",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12430,7 +12364,6 @@
             },
             "id": "fault_67",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12442,7 +12375,6 @@
             },
             "id": "fault_68",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12454,7 +12386,6 @@
             },
             "id": "fault_69",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12466,7 +12397,6 @@
             },
             "id": "fault_70",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12478,7 +12408,6 @@
             },
             "id": "fault_71",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12490,7 +12419,6 @@
             },
             "id": "fault_72",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12502,7 +12430,6 @@
             },
             "id": "fault_73",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12514,7 +12441,6 @@
             },
             "id": "fault_74",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12526,7 +12452,6 @@
             },
             "id": "fault_75",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12538,7 +12463,6 @@
             },
             "id": "fault_76",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12550,7 +12474,6 @@
             },
             "id": "fault_77",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12562,7 +12485,6 @@
             },
             "id": "fault_78",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12574,7 +12496,6 @@
             },
             "id": "fault_79",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12586,7 +12507,6 @@
             },
             "id": "fault_80",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12598,7 +12518,6 @@
             },
             "id": "fault_81",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12610,7 +12529,6 @@
             },
             "id": "fault_82",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12622,7 +12540,6 @@
             },
             "id": "fault_83",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12634,7 +12551,6 @@
             },
             "id": "fault_84",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12646,7 +12562,6 @@
             },
             "id": "fault_85",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12658,7 +12573,6 @@
             },
             "id": "fault_86",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12670,7 +12584,6 @@
             },
             "id": "fault_87",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12682,7 +12595,6 @@
             },
             "id": "fault_88",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12694,7 +12606,6 @@
             },
             "id": "fault_89",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12706,7 +12617,6 @@
             },
             "id": "fault_90",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12718,7 +12628,6 @@
             },
             "id": "fault_91",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12730,7 +12639,6 @@
             },
             "id": "fault_92",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12742,7 +12650,6 @@
             },
             "id": "fault_93",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12754,7 +12661,6 @@
             },
             "id": "fault_94",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12766,7 +12672,6 @@
             },
             "id": "fault_95",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12778,7 +12683,6 @@
             },
             "id": "fault_96",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12790,7 +12694,6 @@
             },
             "id": "fault_97",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12802,7 +12705,6 @@
             },
             "id": "fault_98",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12814,7 +12716,6 @@
             },
             "id": "fault_99",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12826,7 +12727,6 @@
             },
             "id": "fault_100",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12838,7 +12738,6 @@
             },
             "id": "fault_101",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12850,7 +12749,6 @@
             },
             "id": "fault_102",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12862,7 +12760,6 @@
             },
             "id": "fault_103",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12874,7 +12771,6 @@
             },
             "id": "fault_104",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12886,7 +12782,6 @@
             },
             "id": "fault_105",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12898,7 +12793,6 @@
             },
             "id": "fault_106",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12910,7 +12804,6 @@
             },
             "id": "fault_107",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12922,7 +12815,6 @@
             },
             "id": "fault_108",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12934,7 +12826,6 @@
             },
             "id": "fault_109",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12946,7 +12837,6 @@
             },
             "id": "fault_110",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12958,7 +12848,6 @@
             },
             "id": "fault_111",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12970,7 +12859,6 @@
             },
             "id": "fault_112",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12982,7 +12870,6 @@
             },
             "id": "fault_113",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -12994,7 +12881,6 @@
             },
             "id": "fault_114",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13006,7 +12892,6 @@
             },
             "id": "fault_115",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13018,7 +12903,6 @@
             },
             "id": "fault_116",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13030,7 +12914,6 @@
             },
             "id": "fault_117",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13042,7 +12925,6 @@
             },
             "id": "fault_118",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13054,7 +12936,6 @@
             },
             "id": "fault_119",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13066,7 +12947,6 @@
             },
             "id": "fault_120",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13078,7 +12958,6 @@
             },
             "id": "fault_121",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13090,7 +12969,6 @@
             },
             "id": "fault_122",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13102,7 +12980,6 @@
             },
             "id": "fault_123",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13114,7 +12991,6 @@
             },
             "id": "fault_124",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13126,7 +13002,6 @@
             },
             "id": "fault_125",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13138,7 +13013,6 @@
             },
             "id": "fault_126",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13150,7 +13024,6 @@
             },
             "id": "fault_127",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13162,7 +13035,6 @@
             },
             "id": "fault_128",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13174,7 +13046,6 @@
             },
             "id": "fault_129",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13186,7 +13057,6 @@
             },
             "id": "fault_130",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13198,7 +13068,6 @@
             },
             "id": "fault_131",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13210,7 +13079,6 @@
             },
             "id": "fault_132",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13222,7 +13090,6 @@
             },
             "id": "fault_133",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13234,7 +13101,6 @@
             },
             "id": "fault_134",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13246,7 +13112,6 @@
             },
             "id": "fault_135",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13258,7 +13123,6 @@
             },
             "id": "fault_136",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13270,7 +13134,6 @@
             },
             "id": "fault_137",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13282,7 +13145,6 @@
             },
             "id": "fault_138",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13294,7 +13156,6 @@
             },
             "id": "fault_139",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13306,7 +13167,6 @@
             },
             "id": "fault_140",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13318,7 +13178,6 @@
             },
             "id": "fault_141",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13330,7 +13189,6 @@
             },
             "id": "fault_142",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13342,7 +13200,6 @@
             },
             "id": "fault_143",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13354,7 +13211,6 @@
             },
             "id": "fault_144",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13366,7 +13222,6 @@
             },
             "id": "fault_145",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13378,7 +13233,6 @@
             },
             "id": "fault_146",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13390,7 +13244,6 @@
             },
             "id": "fault_147",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13402,7 +13255,6 @@
             },
             "id": "fault_148",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13414,7 +13266,6 @@
             },
             "id": "fault_149",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13426,7 +13277,6 @@
             },
             "id": "fault_150",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13438,7 +13288,6 @@
             },
             "id": "fault_151",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13450,7 +13299,6 @@
             },
             "id": "fault_152",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13462,7 +13310,6 @@
             },
             "id": "fault_153",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13474,7 +13321,6 @@
             },
             "id": "fault_154",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13486,7 +13332,6 @@
             },
             "id": "fault_155",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13498,7 +13343,6 @@
             },
             "id": "fault_156",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13510,7 +13354,6 @@
             },
             "id": "fault_157",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13522,7 +13365,6 @@
             },
             "id": "fault_158",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13534,7 +13376,6 @@
             },
             "id": "fault_159",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13546,7 +13387,6 @@
             },
             "id": "fault_160",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13558,7 +13398,6 @@
             },
             "id": "fault_161",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13570,7 +13409,6 @@
             },
             "id": "fault_162",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13582,7 +13420,6 @@
             },
             "id": "fault_163",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13594,7 +13431,6 @@
             },
             "id": "fault_164",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13606,7 +13442,6 @@
             },
             "id": "fault_165",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13618,7 +13453,6 @@
             },
             "id": "fault_166",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13630,7 +13464,6 @@
             },
             "id": "fault_167",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13642,7 +13475,6 @@
             },
             "id": "fault_168",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13654,7 +13486,6 @@
             },
             "id": "fault_169",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13666,7 +13497,6 @@
             },
             "id": "fault_170",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13678,7 +13508,6 @@
             },
             "id": "fault_171",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13690,7 +13519,6 @@
             },
             "id": "fault_172",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13702,7 +13530,6 @@
             },
             "id": "fault_173",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13714,7 +13541,6 @@
             },
             "id": "fault_174",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13726,7 +13552,6 @@
             },
             "id": "fault_175",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13738,7 +13563,6 @@
             },
             "id": "fault_176",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13750,7 +13574,6 @@
             },
             "id": "fault_177",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13762,7 +13585,6 @@
             },
             "id": "fault_178",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13774,7 +13596,6 @@
             },
             "id": "fault_179",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13786,7 +13607,6 @@
             },
             "id": "fault_180",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13798,7 +13618,6 @@
             },
             "id": "fault_181",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13810,7 +13629,6 @@
             },
             "id": "fault_182",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13822,7 +13640,6 @@
             },
             "id": "fault_183",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13834,7 +13651,6 @@
             },
             "id": "fault_184",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13846,7 +13662,6 @@
             },
             "id": "fault_185",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13858,7 +13673,6 @@
             },
             "id": "fault_186",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13870,7 +13684,6 @@
             },
             "id": "fault_187",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13882,7 +13695,6 @@
             },
             "id": "fault_188",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13894,7 +13706,6 @@
             },
             "id": "fault_189",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13906,7 +13717,6 @@
             },
             "id": "fault_190",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13918,7 +13728,6 @@
             },
             "id": "fault_191",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13930,7 +13739,6 @@
             },
             "id": "fault_192",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13942,7 +13750,6 @@
             },
             "id": "fault_193",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13954,7 +13761,6 @@
             },
             "id": "fault_194",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13966,7 +13772,6 @@
             },
             "id": "fault_195",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13978,7 +13783,6 @@
             },
             "id": "fault_196",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -13990,7 +13794,6 @@
             },
             "id": "fault_197",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -14002,7 +13805,6 @@
             },
             "id": "fault_198",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -14014,7 +13816,6 @@
             },
             "id": "fault_199",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }
@@ -14026,7 +13827,6 @@
             },
             "id": "fault_200",
             "params": {
-                "state0": false,
                 "R": 0.0,
                 "X": 0.001
             }

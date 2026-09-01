@@ -11,6 +11,8 @@ if(GRIDKIT_ENABLE_ENZYME)
       ClangEnzymeFlags
       PUBLIC
       GridKit::phasor_dynamics_core
+      PUBLIC
+      GridKit::phasor_dynamics_signal
     COMPILE_OPTIONS
       PRIVATE
       -mllvm
@@ -22,14 +24,22 @@ else()
     SOURCES BusFault.cpp
     HEADERS ${_install_headers}
     INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
-    LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core)
+    LINK_LIBRARIES
+      PUBLIC
+      GridKit::phasor_dynamics_core
+      PUBLIC
+      GridKit::phasor_dynamics_signal)
 endif()
 
 gridkit_add_library(
   phasor_dynamics_bus_fault_dependency_tracking
   SOURCES BusFaultDependencyTracking.cpp
   INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
-  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core)
+  LINK_LIBRARIES
+    PUBLIC
+    GridKit::phasor_dynamics_core
+    PUBLIC
+    GridKit::phasor_dynamics_signal_dependency_tracking)
 
 # Link to interface target for all components
 target_link_libraries(
