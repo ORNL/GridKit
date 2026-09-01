@@ -31,6 +31,7 @@ namespace GridKit
     BusInfinite<scalar_type, index_type>::BusInfinite()
     {
       size_ = 0;
+      refreshTerminals();
     }
 
     /*!
@@ -47,6 +48,7 @@ namespace GridKit
       : Vr_(Vr), Vi_(Vi)
     {
       size_ = 0;
+      refreshTerminals();
     }
 
     /**
@@ -63,8 +65,9 @@ namespace GridKit
       : Vr_(data.Vr0),
         Vi_(data.Vi0)
     {
-      bus_id_        = data.bus_id;
-      size_          = 0;
+      bus_id_ = data.bus_id;
+      size_   = 0;
+      refreshTerminals();
       monitor_       = std::make_unique<MonitorT>("Bus_" + data.name, data.monitored_variables);
       using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::Vr, [this]
@@ -85,6 +88,16 @@ namespace GridKit
         delete coo_jac_;
         coo_jac_ = nullptr;
       }
+    }
+
+    /**
+     * @brief Refresh cached pointers to infinite-bus terminal storage.
+     */
+    template <typename scalar_type, typename index_type>
+    int BusInfinite<scalar_type, index_type>::refreshTerminals()
+    {
+      this->setTerminals(&Vr_, &Vi_, &Ir_, &Ii_);
+      return 0;
     }
 
     /**
