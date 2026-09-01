@@ -41,6 +41,11 @@ namespace GridKit
       using ModelDataT = BusData<RealT, IdxT>;
       using BusTypeT   = typename BusData<RealT, IdxT>::BusType;
 
+      using BusBase<scalar_type, index_type>::Vr;
+      using BusBase<scalar_type, index_type>::Vi;
+      using BusBase<scalar_type, index_type>::Ir;
+      using BusBase<scalar_type, index_type>::Ii;
+
       Bus();
       Bus(ScalarT Vr, ScalarT Vi);
       Bus(const ModelDataT& data);
@@ -60,47 +65,9 @@ namespace GridKit
         return BusTypeT::DEFAULT;
       }
 
-      ScalarT& Vr() override
-      {
-        return y_.getData()[0];
-      }
-
-      const ScalarT& Vr() const override
-      {
-        return y_.getData()[0];
-      }
-
-      ScalarT& Vi() override
-      {
-        return y_.getData()[1];
-      }
-
-      const ScalarT& Vi() const override
-      {
-        return y_.getData()[1];
-      }
-
-      ScalarT& Ir() override
-      {
-        return f_.getData()[0];
-      }
-
-      const ScalarT& Ir() const override
-      {
-        return f_.getData()[0];
-      }
-
-      ScalarT& Ii() override
-      {
-        return f_.getData()[1];
-      }
-
-      const ScalarT& Ii() const override
-      {
-        return f_.getData()[1];
-      }
-
     protected:
+      int refreshTerminals() override final;
+
       int constructCoo()
       {
         if (coo_jac_ == nullptr)
