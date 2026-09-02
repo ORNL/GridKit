@@ -55,6 +55,7 @@ add_subdirectory(PowerElectronics)
 add_subdirectory(Experimental)
 
 if(TARGET SUNDIALS::idas)
+  add_subdirectory(EMT)
   add_subdirectory(PhasorDynamics)
   add_subdirectory(Network)
 endif()
