@@ -12,7 +12,9 @@
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -46,78 +48,31 @@ namespace GridKit
       void Ieeest<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Parameter = typename ModelDataT::Parameters;
-        if (data.parameters.contains(Parameter::A1))
-        {
-          A1_ = std::get<RealT>(data.parameters.at(Parameter::A1));
-        }
-        if (data.parameters.contains(Parameter::A2))
-        {
-          A2_ = std::get<RealT>(data.parameters.at(Parameter::A2));
-        }
-        if (data.parameters.contains(Parameter::A3))
-        {
-          A3_ = std::get<RealT>(data.parameters.at(Parameter::A3));
-        }
-        if (data.parameters.contains(Parameter::A4))
-        {
-          A4_ = std::get<RealT>(data.parameters.at(Parameter::A4));
-        }
-        if (data.parameters.contains(Parameter::A5))
-        {
-          A5_ = std::get<RealT>(data.parameters.at(Parameter::A5));
-        }
-        if (data.parameters.contains(Parameter::A6))
-        {
-          A6_ = std::get<RealT>(data.parameters.at(Parameter::A6));
-        }
-        if (data.parameters.contains(Parameter::T1))
-        {
-          T1_ = std::get<RealT>(data.parameters.at(Parameter::T1));
-        }
-        if (data.parameters.contains(Parameter::T2))
-        {
-          T2_ = std::get<RealT>(data.parameters.at(Parameter::T2));
-        }
-        if (data.parameters.contains(Parameter::T3))
-        {
-          T3_ = std::get<RealT>(data.parameters.at(Parameter::T3));
-        }
-        if (data.parameters.contains(Parameter::T4))
-        {
-          T4_ = std::get<RealT>(data.parameters.at(Parameter::T4));
-        }
-        if (data.parameters.contains(Parameter::T5))
-        {
-          T5_ = std::get<RealT>(data.parameters.at(Parameter::T5));
-        }
-        if (data.parameters.contains(Parameter::T6))
-        {
-          T6_ = std::get<RealT>(data.parameters.at(Parameter::T6));
-        }
-        if (data.parameters.contains(Parameter::Ks))
-        {
-          Ks_ = std::get<RealT>(data.parameters.at(Parameter::Ks));
-        }
-        if (data.parameters.contains(Parameter::Lsmin))
-        {
-          Lsmin_ = std::get<RealT>(data.parameters.at(Parameter::Lsmin));
-        }
-        if (data.parameters.contains(Parameter::Lsmax))
-        {
-          Lsmax_ = std::get<RealT>(data.parameters.at(Parameter::Lsmax));
-        }
-        if (data.parameters.contains(Parameter::Vcl))
-        {
-          Vcl_ = std::get<RealT>(data.parameters.at(Parameter::Vcl));
-        }
-        if (data.parameters.contains(Parameter::Vcu))
-        {
-          Vcu_ = std::get<RealT>(data.parameters.at(Parameter::Vcu));
-        }
-        if (data.parameters.contains(Parameter::Tdelay))
-        {
-          Tdelay_ = std::get<RealT>(data.parameters.at(Parameter::Tdelay));
-        }
+
+        parameter_error_count_ = 0;
+
+        Utilities::ConfigurationChecks checks("Ieeest");
+        Utilities::ParameterReader     reader(data, checks);
+        reader.loadReal(Parameter::A1, A1_);
+        reader.loadReal(Parameter::A2, A2_);
+        reader.loadReal(Parameter::A3, A3_);
+        reader.loadReal(Parameter::A4, A4_);
+        reader.loadReal(Parameter::A5, A5_);
+        reader.loadReal(Parameter::A6, A6_);
+        reader.loadReal(Parameter::T1, T1_);
+        reader.loadReal(Parameter::T2, T2_);
+        reader.loadReal(Parameter::T3, T3_);
+        reader.loadReal(Parameter::T4, T4_);
+        reader.loadReal(Parameter::T5, T5_);
+        reader.loadReal(Parameter::T6, T6_);
+        reader.loadReal(Parameter::Ks, Ks_);
+        reader.loadReal(Parameter::Lsmin, Lsmin_);
+        reader.loadReal(Parameter::Lsmax, Lsmax_);
+        reader.loadReal(Parameter::Vcl, Vcl_);
+        reader.loadReal(Parameter::Vcu, Vcu_);
+        reader.loadReal(Parameter::Tdelay, Tdelay_);
+
+        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         a0_ = 1;
         a1_ = A1_ + A3_;
@@ -191,7 +146,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::verify() const
       {
-        int ret = 0;
+        int ret = static_cast<int>(parameter_error_count_);
 
         if (signals_.template isAttached<IeeestExternalVariables::U>())
         {

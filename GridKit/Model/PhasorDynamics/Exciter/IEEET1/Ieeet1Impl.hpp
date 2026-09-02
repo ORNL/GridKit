@@ -18,6 +18,7 @@
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -150,7 +151,7 @@ namespace GridKit
         signals_.template checkOptional<Ieeet1ExternalVariables::VUEL>(checks, "vuel");
         signals_.template checkOptional<Ieeet1ExternalVariables::VOEL>(checks, "voel");
 
-        return checks.errorCount();
+        return static_cast<int>(parameter_error_count_) + checks.errorCount();
       }
 
       /**
@@ -430,62 +431,27 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::Tr))
-        {
-          Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
-        }
-        if (data.parameters.contains(Parameter::Ka))
-        {
-          Ka_ = std::get<RealT>(data.parameters.at(Parameter::Ka));
-        }
-        if (data.parameters.contains(Parameter::Ta))
-        {
-          Ta_ = std::get<RealT>(data.parameters.at(Parameter::Ta));
-        }
-        if (data.parameters.contains(Parameter::Ke))
-        {
-          Ke_ = std::get<RealT>(data.parameters.at(Parameter::Ke));
-        }
-        if (data.parameters.contains(Parameter::Te))
-        {
-          Te_ = std::get<RealT>(data.parameters.at(Parameter::Te));
-        }
-        if (data.parameters.contains(Parameter::Kf))
-        {
-          Kf_ = std::get<RealT>(data.parameters.at(Parameter::Kf));
-        }
-        if (data.parameters.contains(Parameter::Tf))
-        {
-          Tf_ = std::get<RealT>(data.parameters.at(Parameter::Tf));
-        }
-        if (data.parameters.contains(Parameter::Vrmin))
-        {
-          Vrmin_ = std::get<RealT>(data.parameters.at(Parameter::Vrmin));
-        }
-        if (data.parameters.contains(Parameter::Vrmax))
-        {
-          Vrmax_ = std::get<RealT>(data.parameters.at(Parameter::Vrmax));
-        }
-        if (data.parameters.contains(Parameter::E1))
-        {
-          E1_ = std::get<RealT>(data.parameters.at(Parameter::E1));
-        }
-        if (data.parameters.contains(Parameter::E2))
-        {
-          E2_ = std::get<RealT>(data.parameters.at(Parameter::E2));
-        }
-        if (data.parameters.contains(Parameter::Se1))
-        {
-          Se1_ = std::get<RealT>(data.parameters.at(Parameter::Se1));
-        }
-        if (data.parameters.contains(Parameter::Se2))
-        {
-          Se2_ = std::get<RealT>(data.parameters.at(Parameter::Se2));
-        }
-        if (data.parameters.contains(Parameter::Ispdlim))
-        {
-          Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
-        }
+        parameter_error_count_ = 0;
+
+        Utilities::ConfigurationChecks checks("Ieeet1");
+        Utilities::ParameterReader     reader(data, checks);
+
+        reader.loadReal(Parameter::Tr, Tr_);
+        reader.loadReal(Parameter::Ka, Ka_);
+        reader.loadReal(Parameter::Ta, Ta_);
+        reader.loadReal(Parameter::Ke, Ke_);
+        reader.loadReal(Parameter::Te, Te_);
+        reader.loadReal(Parameter::Kf, Kf_);
+        reader.loadReal(Parameter::Tf, Tf_);
+        reader.loadReal(Parameter::Vrmin, Vrmin_);
+        reader.loadReal(Parameter::Vrmax, Vrmax_);
+        reader.loadReal(Parameter::E1, E1_);
+        reader.loadReal(Parameter::E2, E2_);
+        reader.loadReal(Parameter::Se1, Se1_);
+        reader.loadReal(Parameter::Se2, Se2_);
+        reader.loadReal(Parameter::Ispdlim, Ispdlim_);
+
+        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }

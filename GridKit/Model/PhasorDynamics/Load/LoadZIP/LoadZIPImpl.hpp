@@ -4,6 +4,8 @@
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -56,25 +58,17 @@ namespace GridKit
     void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::Pnom))
-      {
-        Pnom_ = std::get<RealT>(data.parameters.at(Parameter::Pnom));
-      }
 
-      if (data.parameters.contains(Parameter::Qnom))
-      {
-        Qnom_ = std::get<RealT>(data.parameters.at(Parameter::Qnom));
-      }
+      parameter_error_count_ = 0;
 
-      if (data.parameters.contains(Parameter::alphaI))
-      {
-        alphaI_ = std::get<RealT>(data.parameters.at(Parameter::alphaI));
-      }
+      Utilities::ConfigurationChecks checks("LoadZIP");
+      Utilities::ParameterReader     reader(data, checks);
+      reader.loadReal(Parameter::Pnom, Pnom_);
+      reader.loadReal(Parameter::Qnom, Qnom_);
+      reader.loadReal(Parameter::alphaI, alphaI_);
+      reader.loadReal(Parameter::alphaP, alphaP_);
 
-      if (data.parameters.contains(Parameter::alphaP))
-      {
-        alphaP_ = std::get<RealT>(data.parameters.at(Parameter::alphaP));
-      }
+      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
       setDerivedParams();
     }

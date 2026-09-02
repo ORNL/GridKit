@@ -7,6 +7,8 @@
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -46,15 +48,13 @@ namespace GridKit
         monitor_(std::make_unique<MonitorT>(data))
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::R))
-      {
-        R_ = std::get<RealT>(data.parameters.at(Parameter::R));
-      }
 
-      if (data.parameters.contains(Parameter::X))
-      {
-        X_ = std::get<RealT>(data.parameters.at(Parameter::X));
-      }
+      Utilities::ConfigurationChecks checks("LoadZ");
+      Utilities::ParameterReader     reader(data, checks);
+      reader.loadReal(Parameter::R, R_);
+      reader.loadReal(Parameter::X, X_);
+
+      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
       size_ = 2;
       setDerivedParams();

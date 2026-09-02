@@ -1,7 +1,9 @@
 
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSource.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -40,14 +42,26 @@ namespace GridKit
     void ConstantSignalSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameters = ModelDataT::Parameters;
-      if (data.parameters.contains(Parameters::Sr))
+
+      parameter_error_count_ = 0;
+
+      Utilities::ConfigurationChecks checks("ConstantSignalSource");
+      Utilities::ParameterReader     reader(data, checks);
+
+      // The signal values are differentiable scalars, so each is loaded
+      // through a real intermediate.
+      RealT s_real{};
+      if (reader.loadReal(Parameters::Sr, s_real))
       {
-        s_real_ = std::get<RealT>(data.parameters.at(Parameters::Sr));
+        s_real_ = s_real;
       }
-      if (data.parameters.contains(Parameters::Si))
+      RealT s_imag{};
+      if (reader.loadReal(Parameters::Si, s_imag))
       {
-        s_imag_ = std::get<RealT>(data.parameters.at(Parameters::Si));
+        s_imag_ = s_imag;
       }
+
+      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
     }
 
     /**
@@ -85,7 +99,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int ConstantSignalSource<scalar_type, index_type>::verify() const
     {
-      return 0;
+      return static_cast<int>(parameter_error_count_);
     }
 
     template <typename scalar_type, typename index_type>

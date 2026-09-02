@@ -22,6 +22,7 @@
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -1235,80 +1236,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Load one real-valued parameter
-       *
-       * Real and integer serialized values are accepted. Any other stored type
-       * records a loading error while preserving the existing value.
-       *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored parameter value.
-       * @param[in] name Serialized parameter name for diagnostics.
-       */
-      template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::loadRealParameter(
-          const ModelDataT& data,
-          ReecbParameters   parameter,
-          RealT&            target,
-          const char*       name)
-      {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* real_value = std::get_if<RealT>(&value))
-        {
-          target = *real_value;
-        }
-        else if (const auto* index_value = std::get_if<IdxT>(&value))
-        {
-          target = static_cast<RealT>(*index_value);
-        }
-        else
-        {
-          Log::error() << "Reecb: parameter '" << name << "' must be numeric\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
-       * @brief Load one optional Boolean parameter
-       *
-       * Any non-Boolean stored type records a loading error while preserving
-       * the existing default.
-       *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored Boolean value.
-       * @param[in] name Serialized parameter name for diagnostics.
-       */
-      template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::loadBooleanParameter(
-          const ModelDataT& data,
-          ReecbParameters   parameter,
-          bool&             target,
-          const char*       name)
-      {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* bool_value = std::get_if<bool>(&value))
-        {
-          target = *bool_value;
-        }
-        else
-        {
-          Log::error() << "Reecb: parameter '" << name << "' must be boolean\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
        * @brief Validate and floor one explicit controller lag
        *
        * Nonfinite and negative values record errors before replacement so
@@ -1359,42 +1286,43 @@ namespace GridKit
 
         parameter_error_count_ = 0;
         mva_given_             = data.parameters.contains(Params::mva);
-        Vref0_given_           = false;
+        Vref0_given_           = data.parameters.contains(Params::Vref0);
 
-        loadRealParameter(data, Params::mva, mva_base_, "mva");
-        loadBooleanParameter(data, Params::PfFlag, PfFlag_, "PfFlag");
-        loadBooleanParameter(data, Params::VFlag, VFlag_, "VFlag");
-        loadBooleanParameter(data, Params::QFlag, QFlag_, "QFlag");
-        loadBooleanParameter(data, Params::Pqflag, Pqflag_, "Pqflag");
-        loadRealParameter(data, Params::Trv, Trv_, "Trv");
-        loadRealParameter(data, Params::Tp, Tp_, "Tp");
-        if (data.parameters.contains(Params::Vref0))
-        {
-          loadRealParameter(data, Params::Vref0, Vref0_, "Vref0");
-          Vref0_given_ = true;
-        }
-        loadRealParameter(data, Params::Vdip, Vdip_, "Vdip");
-        loadRealParameter(data, Params::Vup, Vup_, "Vup");
-        loadRealParameter(data, Params::dbd1, dbd1_, "dbd1");
-        loadRealParameter(data, Params::dbd2, dbd2_, "dbd2");
-        loadRealParameter(data, Params::kqv, kqv_, "kqv");
-        loadRealParameter(data, Params::Iql1, Iql1_, "Iql1");
-        loadRealParameter(data, Params::Iqh1, Iqh1_, "Iqh1");
-        loadRealParameter(data, Params::Qmax, Qmax_, "Qmax");
-        loadRealParameter(data, Params::Qmin, Qmin_, "Qmin");
-        loadRealParameter(data, Params::Kqp, Kqp_, "Kqp");
-        loadRealParameter(data, Params::Kqi, Kqi_, "Kqi");
-        loadRealParameter(data, Params::Vmax, Vmax_, "Vmax");
-        loadRealParameter(data, Params::Vmin, Vmin_, "Vmin");
-        loadRealParameter(data, Params::Kvp, Kvp_, "Kvp");
-        loadRealParameter(data, Params::Kvi, Kvi_, "Kvi");
-        loadRealParameter(data, Params::Tiq, Tiq_, "Tiq");
-        loadRealParameter(data, Params::Tpord, Tpord_, "Tpord");
-        loadRealParameter(data, Params::dPmax, dPmax_, "dPmax");
-        loadRealParameter(data, Params::dPmin, dPmin_, "dPmin");
-        loadRealParameter(data, Params::Pmax, Pmax_, "Pmax");
-        loadRealParameter(data, Params::Pmin, Pmin_, "Pmin");
-        loadRealParameter(data, Params::Imax, Imax_, "Imax");
+        Utilities::ConfigurationChecks checks("Reecb");
+        Utilities::ParameterReader     reader(data, checks);
+
+        reader.loadReal(Params::mva, mva_base_);
+        reader.loadSwitch(Params::PfFlag, PfFlag_);
+        reader.loadSwitch(Params::VFlag, VFlag_);
+        reader.loadSwitch(Params::QFlag, QFlag_);
+        reader.loadSwitch(Params::Pqflag, Pqflag_);
+        reader.loadReal(Params::Trv, Trv_);
+        reader.loadReal(Params::Tp, Tp_);
+        reader.loadReal(Params::Vref0, Vref0_);
+        reader.loadReal(Params::Vdip, Vdip_);
+        reader.loadReal(Params::Vup, Vup_);
+        reader.loadReal(Params::dbd1, dbd1_);
+        reader.loadReal(Params::dbd2, dbd2_);
+        reader.loadReal(Params::kqv, kqv_);
+        reader.loadReal(Params::Iql1, Iql1_);
+        reader.loadReal(Params::Iqh1, Iqh1_);
+        reader.loadReal(Params::Qmax, Qmax_);
+        reader.loadReal(Params::Qmin, Qmin_);
+        reader.loadReal(Params::Kqp, Kqp_);
+        reader.loadReal(Params::Kqi, Kqi_);
+        reader.loadReal(Params::Vmax, Vmax_);
+        reader.loadReal(Params::Vmin, Vmin_);
+        reader.loadReal(Params::Kvp, Kvp_);
+        reader.loadReal(Params::Kvi, Kvi_);
+        reader.loadReal(Params::Tiq, Tiq_);
+        reader.loadReal(Params::Tpord, Tpord_);
+        reader.loadReal(Params::dPmax, dPmax_);
+        reader.loadReal(Params::dPmin, dPmin_);
+        reader.loadReal(Params::Pmax, Pmax_);
+        reader.loadReal(Params::Pmin, Pmin_);
+        reader.loadReal(Params::Imax, Imax_);
+
+        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }

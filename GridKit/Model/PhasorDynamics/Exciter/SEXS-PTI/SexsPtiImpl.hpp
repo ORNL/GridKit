@@ -15,6 +15,7 @@
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -271,27 +272,17 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        missing_param_count_ = 0;
+        Utilities::ConfigurationChecks checks("SexsPti");
+        Utilities::ParameterReader     reader(data, checks);
 
-        auto load = [&](auto param, RealT& member, const char* name)
-        {
-          if (data.parameters.contains(param))
-          {
-            member = std::get<RealT>(data.parameters.at(param));
-          }
-          else
-          {
-            Log::error() << "SexsPti: missing required parameter '" << name << "'\n";
-            ++missing_param_count_;
-          }
-        };
+        reader.requireReal(Params::Ta, Ta_);
+        reader.requireReal(Params::Tb, Tb_);
+        reader.requireReal(Params::Te, Te_);
+        reader.requireReal(Params::K, K_);
+        reader.requireReal(Params::Efdmax, Efdmax_);
+        reader.requireReal(Params::Efdmin, Efdmin_);
 
-        load(Params::Ta, Ta_, "Ta");
-        load(Params::Tb, Tb_, "Tb");
-        load(Params::Te, Te_, "Te");
-        load(Params::K, K_, "K");
-        load(Params::Efdmax, Efdmax_, "Efdmax");
-        load(Params::Efdmin, Efdmin_, "Efdmin");
+        missing_param_count_ = checks.errorCount();
       }
 
       template <typename scalar_type, typename index_type>
