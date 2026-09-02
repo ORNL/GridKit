@@ -30,7 +30,7 @@ namespace GridKit
         // Enyme will compute the appropriate nnz from sparsification.
         auto size        = static_cast<size_t>(size_);
         auto bus_size    = static_cast<size_t>(bus_->size());
-        auto signal_size = static_cast<size_t>(ws_.size());
+        auto signal_size = static_cast<size_t>(ws_.getSize());
         auto buffer_size = 2 * size * size + size * signal_size + 2 * size * bus_size;
         J_rows_buffer_   = new IdxT[buffer_size];
         J_cols_buffer_   = new IdxT[buffer_size];
@@ -47,8 +47,8 @@ namespace GridKit
                                                                                                                 (this->getVariableIndices()).data(),
                                                                                                                 y_.getData(),
                                                                                                                 yp_.getData(),
-                                                                                                                wb_.data(),
-                                                                                                                ws_.data(),
+                                                                                                                wb_.getData(),
+                                                                                                                ws_.getData(),
                                                                                                                 J_rows_buffer_,
                                                                                                                 J_cols_buffer_,
                                                                                                                 J_vals_buffer_,
@@ -62,8 +62,8 @@ namespace GridKit
                                                                                                                  (this->getVariableIndices()).data(),
                                                                                                                  y_.getData(),
                                                                                                                  yp_.getData(),
-                                                                                                                 wb_.data(),
-                                                                                                                 ws_.data(),
+                                                                                                                 wb_.getData(),
+                                                                                                                 ws_.getData(),
                                                                                                                  alpha_,
                                                                                                                  J_rows_buffer_,
                                                                                                                  J_cols_buffer_,
@@ -78,8 +78,8 @@ namespace GridKit
                                                                                                                  (bus_->getVariableIndices()).data(),
                                                                                                                  y_.getData(),
                                                                                                                  yp_.getData(),
-                                                                                                                 wb_.data(),
-                                                                                                                 ws_.data(),
+                                                                                                                 wb_.getData(),
+                                                                                                                 ws_.getData(),
                                                                                                                  J_rows_buffer_,
                                                                                                                  J_cols_buffer_,
                                                                                                                  J_vals_buffer_,
@@ -88,13 +88,13 @@ namespace GridKit
       GridKit::Enzyme::Sparse::DfDws<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
                                                                                                                  static_cast<size_t>(f_.getSize()),
-                                                                                                                 ws_.size(),
+                                                                                                                 static_cast<size_t>(ws_.getSize()),
                                                                                                                  (this->getResidualIndices()).data(),
                                                                                                                  ws_indices_.data(),
                                                                                                                  y_.getData(),
                                                                                                                  yp_.getData(),
-                                                                                                                 wb_.data(),
-                                                                                                                 ws_.data(),
+                                                                                                                 wb_.getData(),
+                                                                                                                 ws_.getData(),
                                                                                                                  J_rows_buffer_,
                                                                                                                  J_cols_buffer_,
                                                                                                                  J_vals_buffer_,
@@ -108,7 +108,7 @@ namespace GridKit
                                                                                                  (this->getVariableIndices()).data(),
                                                                                                  y_.getData(),
                                                                                                  yp_.getData(),
-                                                                                                 wb_.data(),
+                                                                                                 wb_.getData(),
                                                                                                  J_rows_buffer_,
                                                                                                  J_cols_buffer_,
                                                                                                  J_vals_buffer_,

@@ -81,6 +81,8 @@ namespace GridKit
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
         using Component<scalar_type, index_type>::wb_;
+        using Component<scalar_type, index_type>::ws_;
+        using Component<scalar_type, index_type>::ws_indices_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -178,10 +180,6 @@ namespace GridKit
 
         /// Associate variable getter functions with enum values
         void initializeMonitor();
-
-        /* Local copies of signal variables */
-        std::vector<ScalarT> ws_;
-        std::vector<IdxT>    ws_indices_;
       };
 
     } // namespace Exciter

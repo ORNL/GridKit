@@ -252,17 +252,20 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::evaluateResidual()
     {
+      auto* wb = wb_.getData();
+
       if (status_)
       {
-        wb_[0]         = Vr();
-        wb_[1]         = Vi();
+        wb[0]          = Vr();
+        wb[1]          = Vi();
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), f);
-        evaluateBusResidual(y, yp, wb_.data(), h_.data());
-        Ir() += h_[0];
-        Ii() += h_[1];
+        auto*       h  = h_.getData();
+        evaluateInternalResidual(y, yp, wb, f);
+        evaluateBusResidual(y, yp, wb, h);
+        Ir() += h[0];
+        Ii() += h[1];
         if (bus_->size() > 0)
         {
           bus_->getResidual().setDataUpdated();
@@ -270,12 +273,12 @@ namespace GridKit
       }
       else
       {
-        wb_[0]         = 0.0;
-        wb_[1]         = 0.0;
+        wb[0]          = 0.0;
+        wb[1]          = 0.0;
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), f);
+        evaluateInternalResidual(y, yp, wb, f);
       }
 
       f_.setDataUpdated();

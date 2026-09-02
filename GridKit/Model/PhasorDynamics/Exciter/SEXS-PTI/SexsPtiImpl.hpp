@@ -77,7 +77,8 @@ namespace GridKit
         wb_.resize(2);
 
         const auto signal_size = static_cast<size_t>(SexsPtiExternalVariables::MAXIMUM);
-        ws_.assign(signal_size, ScalarT{0});
+        ws_.resize(static_cast<IdxT>(signal_size));
+        ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
@@ -288,15 +289,17 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::evaluateResidual()
       {
+        auto* ws = ws_.getData();
+
         // Attached signals are read live; unattached ones keep the latched value.
         auto read_signal = [&]<SexsPtiExternalVariables variable>(const ScalarT& latched)
         {
           const auto index   = static_cast<size_t>(variable);
-          ws_[index]         = latched;
+          ws[index]          = latched;
           ws_indices_[index] = INVALID_INDEX<IdxT>;
           if (signals_.template isAttached<variable>())
           {
-            ws_[index]         = signals_.template readExternalVariable<variable>();
+            ws[index]          = signals_.template readExternalVariable<variable>();
             ws_indices_[index] = signals_.template readExternalVariableIndex<variable>();
           }
         };
@@ -306,13 +309,14 @@ namespace GridKit
         read_signal.template operator()<SexsPtiExternalVariables::VUEL>(vuel_set_);
         read_signal.template operator()<SexsPtiExternalVariables::VOEL>(voel_set_);
 
-        wb_[0] = bus_->Vr();
-        wb_[1] = bus_->Vi();
+        auto* wb = wb_.getData();
+        wb[0]    = bus_->Vr();
+        wb[1]    = bus_->Vi();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, wb, ws, f);
 
         f_.setDataUpdated();
 

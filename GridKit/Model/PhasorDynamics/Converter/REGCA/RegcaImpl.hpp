@@ -374,11 +374,14 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.assign(2, ScalarT{0});
-        h_.assign(2, ScalarT{0});
+        wb_.resize(2);
+        wb_.setToZero();
+        h_.resize(2);
+        h_.setToZero();
 
         auto signal_size = static_cast<size_t>(RegcaExternalVariables::MAXIMUM);
-        ws_.assign(signal_size, ScalarT{0});
+        ws_.resize(static_cast<IdxT>(signal_size));
+        ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         for (IdxT j = 0; j < size_; ++j)
@@ -744,37 +747,41 @@ namespace GridKit
         const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
         const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
 
-        ws_[IPCMD] = ipcmd_set_;
-        ws_[IQCMD] = iqcmd_set_;
+        auto* ws = ws_.getData();
+
+        ws[IPCMD] = ipcmd_set_;
+        ws[IQCMD] = iqcmd_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
         {
-          ws_[IPCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IPCMD>();
+          ws[IPCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IPCMD>();
           ws_indices_[IPCMD] =
               signals_.template readExternalVariableIndex<RegcaExternalVariables::IPCMD>();
         }
 
         if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
         {
-          ws_[IQCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IQCMD>();
+          ws[IQCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IQCMD>();
           ws_indices_[IQCMD] =
               signals_.template readExternalVariableIndex<RegcaExternalVariables::IQCMD>();
         }
 
-        wb_[0] = Vr();
-        wb_[1] = Vi();
+        auto* wb = wb_.getData();
+        wb[0]    = Vr();
+        wb[1]    = Vi();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
+        auto*       h  = h_.getData();
 
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
-        evaluateBusResidual(y, yp, wb_.data(), h_.data());
+        evaluateInternalResidual(y, yp, wb, ws, f);
+        evaluateBusResidual(y, yp, wb, h);
         f_.setDataUpdated();
 
-        Ir() += h_[0];
-        Ii() += h_[1];
+        Ir() += h[0];
+        Ii() += h[1];
         bus_->getResidual().setDataUpdated();
 
         return 0;

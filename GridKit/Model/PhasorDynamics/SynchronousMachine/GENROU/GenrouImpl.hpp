@@ -610,36 +610,40 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Genrou<scalar_type, index_type>::evaluateResidual()
     {
+      auto* ws = ws_.getData();
+
       // Mechanical Power
-      ws_[0] = pmech_set_;
+      ws[0] = pmech_set_;
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
-        ws_[0]         = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
+        ws[0]          = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
         ws_indices_[0] = signals_.template readExternalVariableIndex<GenrouExternalVariables::PM>();
       }
 
       // Exciter Efield
-      ws_[1] = efd_set_;
+      ws[1] = efd_set_;
       if (signals_.template isAttached<GenrouExternalVariables::EFD>())
       {
-        ws_[1]         = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
+        ws[1]          = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
         ws_indices_[1] = signals_.template readExternalVariableIndex<GenrouExternalVariables::EFD>();
       }
 
       // Bus voltages
-      wb_[0] = Vr();
-      wb_[1] = Vi();
+      auto* wb = wb_.getData();
+      wb[0]    = Vr();
+      wb[1]    = Vi();
 
       // Residual evaluation
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
-      evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
-      evaluateBusResidual(y, yp, wb_.data(), h_.data());
+      auto*       h  = h_.getData();
+      evaluateInternalResidual(y, yp, wb, ws, f);
+      evaluateBusResidual(y, yp, wb, h);
 
       // Genrou contribution to bus algebraic equations
-      Ir() += h_[0];
-      Ii() += h_[1];
+      Ir() += h[0];
+      Ii() += h[1];
 
       if (bus_->size() > 0)
       {

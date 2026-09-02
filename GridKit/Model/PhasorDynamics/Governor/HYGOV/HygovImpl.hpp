@@ -98,10 +98,9 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.clear();
-
         const auto signal_size = static_cast<size_t>(HygovExternalVariables::MAXIMUM);
-        ws_.assign(signal_size, ScalarT{0});
+        ws_.resize(static_cast<IdxT>(signal_size));
+        ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         for (IdxT j = 0; j < size_; ++j)
@@ -505,26 +504,28 @@ namespace GridKit
         const auto PREF  = static_cast<size_t>(HygovExternalVariables::PREF);
         const auto PAUX  = static_cast<size_t>(HygovExternalVariables::PAUX);
 
-        ws_[OMEGA] = ZERO<RealT>;
-        ws_[PREF]  = pref_set_;
-        ws_[PAUX]  = paux_set_;
+        auto* ws = ws_.getData();
+
+        ws[OMEGA] = ZERO<RealT>;
+        ws[PREF]  = pref_set_;
+        ws[PAUX]  = paux_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (signals_.template isAttached<HygovExternalVariables::OMEGA>())
         {
-          ws_[OMEGA] = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
+          ws[OMEGA] = signals_.template readExternalVariable<HygovExternalVariables::OMEGA>();
           ws_indices_[OMEGA] =
               signals_.template readExternalVariableIndex<HygovExternalVariables::OMEGA>();
         }
         if (signals_.template isAttached<HygovExternalVariables::PREF>())
         {
-          ws_[PREF] = signals_.template readExternalVariable<HygovExternalVariables::PREF>();
+          ws[PREF] = signals_.template readExternalVariable<HygovExternalVariables::PREF>();
           ws_indices_[PREF] =
               signals_.template readExternalVariableIndex<HygovExternalVariables::PREF>();
         }
         if (signals_.template isAttached<HygovExternalVariables::PAUX>())
         {
-          ws_[PAUX] = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
+          ws[PAUX] = signals_.template readExternalVariable<HygovExternalVariables::PAUX>();
           ws_indices_[PAUX] =
               signals_.template readExternalVariableIndex<HygovExternalVariables::PAUX>();
         }
@@ -533,7 +534,7 @@ namespace GridKit
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
 
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, nullptr, ws, f);
         f_.setDataUpdated();
         return 0;
       }

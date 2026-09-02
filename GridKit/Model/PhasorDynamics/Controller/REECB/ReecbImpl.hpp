@@ -122,10 +122,12 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.assign(2, ScalarT{0});
+        wb_.resize(2);
+        wb_.setToZero();
 
         const auto signal_size = static_cast<size_t>(ReecbExternalVariables::MAXIMUM);
-        ws_.assign(signal_size, ScalarT{0});
+        ws_.resize(static_cast<IdxT>(signal_size));
+        ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         for (IdxT j = 0; j < size_; ++j)
@@ -808,49 +810,52 @@ namespace GridKit
         const auto PFAREF = static_cast<size_t>(ReecbExternalVariables::PFAREF);
         const auto PREF   = static_cast<size_t>(ReecbExternalVariables::PREF);
 
-        ws_[PE]     = pe_set_;
-        ws_[QGEN]   = qgen_set_;
-        ws_[QEXT]   = qext_set_;
-        ws_[PFAREF] = pfaref_set_;
-        ws_[PREF]   = pref_set_;
+        auto* ws = ws_.getData();
+
+        ws[PE]     = pe_set_;
+        ws[QGEN]   = qgen_set_;
+        ws[QEXT]   = qext_set_;
+        ws[PFAREF] = pfaref_set_;
+        ws[PREF]   = pref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (signals_.template isAttached<ReecbExternalVariables::PE>())
         {
-          ws_[PE] = signals_.template readExternalVariable<ReecbExternalVariables::PE>();
+          ws[PE] = signals_.template readExternalVariable<ReecbExternalVariables::PE>();
           ws_indices_[PE] =
               signals_.template readExternalVariableIndex<ReecbExternalVariables::PE>();
         }
         if (signals_.template isAttached<ReecbExternalVariables::QGEN>())
         {
-          ws_[QGEN] = signals_.template readExternalVariable<ReecbExternalVariables::QGEN>();
+          ws[QGEN] = signals_.template readExternalVariable<ReecbExternalVariables::QGEN>();
           ws_indices_[QGEN] =
               signals_.template readExternalVariableIndex<ReecbExternalVariables::QGEN>();
         }
         if (signals_.template isAttached<ReecbExternalVariables::QEXT>())
         {
-          ws_[QEXT] = signals_.template readExternalVariable<ReecbExternalVariables::QEXT>();
+          ws[QEXT] = signals_.template readExternalVariable<ReecbExternalVariables::QEXT>();
           ws_indices_[QEXT] =
               signals_.template readExternalVariableIndex<ReecbExternalVariables::QEXT>();
         }
         if (signals_.template isAttached<ReecbExternalVariables::PFAREF>())
         {
-          ws_[PFAREF] =
+          ws[PFAREF] =
               signals_.template readExternalVariable<ReecbExternalVariables::PFAREF>();
           ws_indices_[PFAREF] =
               signals_.template readExternalVariableIndex<ReecbExternalVariables::PFAREF>();
         }
         if (signals_.template isAttached<ReecbExternalVariables::PREF>())
         {
-          ws_[PREF] = signals_.template readExternalVariable<ReecbExternalVariables::PREF>();
+          ws[PREF] = signals_.template readExternalVariable<ReecbExternalVariables::PREF>();
           ws_indices_[PREF] =
               signals_.template readExternalVariableIndex<ReecbExternalVariables::PREF>();
         }
 
-        wb_[0] = Vr();
-        wb_[1] = Vi();
+        auto* wb = wb_.getData();
+        wb[0]    = Vr();
+        wb[1]    = Vi();
 
-        evaluateInternalResidual(y_.getData(), yp_.getData(), wb_.data(), ws_.data(), f_.getData());
+        evaluateInternalResidual(y_.getData(), yp_.getData(), wb, ws, f_.getData());
         f_.setDataUpdated();
         return 0;
       }

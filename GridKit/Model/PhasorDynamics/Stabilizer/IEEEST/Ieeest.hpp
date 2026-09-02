@@ -71,6 +71,8 @@ namespace GridKit
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
         using Component<scalar_type, index_type>::wb_;
+        using Component<scalar_type, index_type>::ws_;
+        using Component<scalar_type, index_type>::ws_indices_;
         using Component<scalar_type, index_type>::h_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
@@ -167,9 +169,6 @@ namespace GridKit
 
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
-
-        std::vector<ScalarT> ws_;
-        std::vector<IdxT>    ws_indices_;
       };
 
     } // namespace Stabilizer
