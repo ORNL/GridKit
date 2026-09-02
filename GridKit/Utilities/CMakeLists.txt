@@ -15,10 +15,12 @@ add_subdirectory(CliArgs)
 install(TARGETS Utilities EXPORT gridkit-targets)
 install(
   FILES Colors.hpp
+        ConfigurationChecks.hpp
         Enum.hpp
         Errors.hpp
         FileIO.hpp
         MapFromCsr.hpp
+        ParameterReader.hpp
         Stream.hpp
         String.hpp
   DESTINATION include/GridKit/Utilities)
