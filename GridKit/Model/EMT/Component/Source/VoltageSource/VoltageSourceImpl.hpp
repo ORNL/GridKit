@@ -32,6 +32,27 @@ namespace GridKit
     {
       initializeParameters(data);
       size_ = 6;
+      if (data.Y.has_value())
+      {
+        own_size_ = 6;
+        yfit_.emplace(*data.Y, ONE<RealT>);
+        this->registerSubmodel(&*yfit_);
+        size_   = own_size_ + yfit_->size();
+        rl_on_  = ZERO<RealT>;
+        fit_on_ = ONE<RealT>;
+
+        fit_ey_nonzero_ = false;
+        for (size_t n = 0; n < 3; ++n)
+        {
+          for (size_t k = 0; k < 3; ++k)
+          {
+            if (data.Y->E[n][k] != 0.0)
+            {
+              fit_ey_nonzero_ = true;
+            }
+          }
+        }
+      }
       initializeMonitor();
     }
 
@@ -101,6 +122,18 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
+      // Bind the branch voltage port and wire the rational admittance before
+      // its allocation, so index assignment can route into it
+      this->bindPort(u_port_, 3);
+      if (yfit_.has_value())
+      {
+        yfit_->attachInput(&u_port_);
+        yfit_->attachOutput(signals_.template getAttachedSignalNode<VoltageSourceExternalVariables::VA>(),
+                            signals_.template getAttachedSignalNode<VoltageSourceExternalVariables::VB>(),
+                            signals_.template getAttachedSignalNode<VoltageSourceExternalVariables::VC>());
+        this->allocateSubmodels();
+      }
+
       // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
       {
@@ -143,6 +176,37 @@ namespace GridKit
         ++error_count;
       }
 
+      if (yfit_.has_value())
+      {
+        error_count += yfit_->verify();
+
+        bool matrices_nonzero = false;
+        for (size_t n = 0; n < 3; ++n)
+        {
+          for (size_t k = 0; k < 3; ++k)
+          {
+            if (Rs_[n][k] != 0.0 || Ls_[n][k] != 0.0)
+            {
+              matrices_nonzero = true;
+            }
+          }
+        }
+        if (matrices_nonzero)
+        {
+          Log::error() << "VoltageSource: the rational admittance excludes "
+                          "the series matrices\n";
+          ++error_count;
+        }
+
+        if (fit_ey_nonzero_)
+        {
+          Log::error() << "VoltageSource: the rational admittance linear "
+                          "coefficient must be zero, because the branch "
+                          "voltage is algebraic\n";
+          ++error_count;
+        }
+      }
+
       return error_count;
     }
 
@@ -172,6 +236,11 @@ namespace GridKit
       yp[4] = 0.0;
       yp[5] = 0.0;
 
+      if (yfit_.has_value())
+      {
+        this->initializeSubmodels();
+      }
+
       y_.setDataUpdated();
       yp_.setDataUpdated();
 
@@ -187,9 +256,22 @@ namespace GridKit
       tag_[0] = false;
       tag_[1] = false;
       tag_[2] = false;
-      tag_[3] = true;
-      tag_[4] = true;
-      tag_[5] = true;
+
+      // The branch rows carry the differential series current, or the
+      // algebraic branch voltage when the rational admittance is present
+      bool differential = true;
+      if (yfit_.has_value())
+      {
+        differential = false;
+      }
+      tag_[3] = differential;
+      tag_[4] = differential;
+      tag_[5] = differential;
+
+      if (yfit_.has_value())
+      {
+        this->tagDifferentiableSubmodels();
+      }
 
       return 0;
     }
@@ -250,16 +332,21 @@ namespace GridKit
       f[1] = eb - sqrt2 * E_[1] * std::cos(omega_ * time_ + phi_[1]);
       f[2] = ec - sqrt2 * E_[2] * std::cos(omega_ * time_ + phi_[2]);
 
-      /* 3 series branch differential equations */
-      f[3] = Rs_[0][0] * ia + Rs_[0][1] * ib + Rs_[0][2] * ic
-             + Ls_[0][0] * ia_dot + Ls_[0][1] * ib_dot + Ls_[0][2] * ic_dot
-             + va - ea;
-      f[4] = Rs_[1][0] * ia + Rs_[1][1] * ib + Rs_[1][2] * ic
-             + Ls_[1][0] * ia_dot + Ls_[1][1] * ib_dot + Ls_[1][2] * ic_dot
-             + vb - eb;
-      f[5] = Rs_[2][0] * ia + Rs_[2][1] * ib + Rs_[2][2] * ic
-             + Ls_[2][0] * ia_dot + Ls_[2][1] * ib_dot + Ls_[2][2] * ic_dot
-             + vc - ec;
+      /* 3 series branch equations, series-matrix or rational-admittance
+         form; the fit form defines the algebraic branch voltage u read by
+         the rational admittance */
+      f[3] = rl_on_
+                 * (Rs_[0][0] * ia + Rs_[0][1] * ib + Rs_[0][2] * ic
+                    + Ls_[0][0] * ia_dot + Ls_[0][1] * ib_dot + Ls_[0][2] * ic_dot)
+             + fit_on_ * ia + va - ea;
+      f[4] = rl_on_
+                 * (Rs_[1][0] * ia + Rs_[1][1] * ib + Rs_[1][2] * ic
+                    + Ls_[1][0] * ia_dot + Ls_[1][1] * ib_dot + Ls_[1][2] * ic_dot)
+             + fit_on_ * ib + vb - eb;
+      f[5] = rl_on_
+                 * (Rs_[2][0] * ia + Rs_[2][1] * ib + Rs_[2][2] * ic
+                    + Ls_[2][0] * ia_dot + Ls_[2][1] * ib_dot + Ls_[2][2] * ic_dot)
+             + fit_on_ * ic + vc - ec;
 
       return 0;
     }
@@ -280,9 +367,9 @@ namespace GridKit
       const ScalarT ib = y[4];
       const ScalarT ic = y[5];
 
-      f_ext[0] = ia;
-      f_ext[1] = ib;
-      f_ext[2] = ic;
+      f_ext[0] = rl_on_ * ia;
+      f_ext[1] = rl_on_ * ib;
+      f_ext[2] = rl_on_ * ic;
 
       return 0;
     }
@@ -296,6 +383,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
       evaluateInternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f);
+      this->evaluateSubmodelInternalResiduals();
       f_.setDataUpdated();
 
       return 0;
@@ -312,6 +400,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
       this->scatterExternalResidual();
+      this->evaluateSubmodelExternalResiduals();
 
       return 0;
     }
