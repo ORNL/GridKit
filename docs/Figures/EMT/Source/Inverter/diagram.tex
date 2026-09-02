@@ -27,14 +27,20 @@
 \draw[line] (S-.C) -- (0, 0);
 \draw[line] (S-.E) -- (0, -3.7);
 \node[sig, anchor=east] at ($(S+.G)+(-0.15,0)$) {$\mathbf{s}$};
+\node[sig, anchor=east] at ($(S-.G)+(-0.15,0)$) {$1-\mathbf{s}$};
 
 % ================= Phase terminal =================
 \node[signal, label={[sig]left:$\mathbf{v}_{\mathrm{o}}$}] (phase) at (0, 0) {};
-\draw[->, line] (phase) -- (3.35, 0);
-\node[sig, anchor=west] at (3.60, 0) {$\mathbf{i}$};
+
+% ================= Terminal admittance branch =================
+\node[block, minimum width=2.1cm, minimum height=0.9cm]
+    (Y) at (2.30, 0) {$\mathbf{Y}(s)$};
+\draw[line] (phase) -- (Y.west);
+\draw[->, line] (Y.east) -- (5.05, 0);
+\node[sig, anchor=west] at (5.30, 0) {$\mathbf{i}$};
 
 % ================= Model enclosure =================
-\draw[enclosure] (-2.55, -4.45) rectangle (2.15, 4.45);
+\draw[enclosure] (-2.55, -4.45) rectangle (4.05, 4.45);
 
 \end{tikzpicture}
 \end{document}
