@@ -6,7 +6,10 @@
  */
 #pragma once
 
+#include <optional>
+
 #include <GridKit/Model/EMT/ComponentData.hpp>
+#include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFitData.hpp>
 
 namespace GridKit
 {
@@ -71,6 +74,10 @@ namespace GridKit
       using SignalInputs         = LoadZSignalInputs;
       using SignalOutputs        = LoadZSignalOutputs;
       using MonitorableVariables = LoadZMonitorableVariables;
+
+      /// Rational impedance submodel, replacing the resistance and
+      /// inductance matrices when present
+      std::optional<VectorFitData<real_type, index_type>> Z;
     };
   } // namespace EMT
 } // namespace GridKit
