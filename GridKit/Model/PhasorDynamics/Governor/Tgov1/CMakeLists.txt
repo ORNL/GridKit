@@ -11,6 +11,7 @@ if(GRIDKIT_ENABLE_ENZYME)
     phasor_dynamics_governor_tgov1
     SOURCES Tgov1Enzyme.cpp
     HEADERS ${_install_headers}
+    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
       PUBLIC
       GridKit::phasor_dynamics_core
@@ -28,12 +29,14 @@ else()
     phasor_dynamics_governor_tgov1
     SOURCES Tgov1.cpp
     HEADERS ${_install_headers}
+    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES GridKit::phasor_dynamics_core GridKit::phasor_dynamics_signal)
 endif()
 
 gridkit_add_library(
   phasor_dynamics_governor_tgov1_dependency_tracking
   SOURCES Tgov1DependencyTracking.cpp
+  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
   LINK_LIBRARIES
     PUBLIC
     GridKit::phasor_dynamics_core

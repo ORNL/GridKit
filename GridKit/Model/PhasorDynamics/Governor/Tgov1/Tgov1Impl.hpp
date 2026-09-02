@@ -18,6 +18,7 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -92,45 +93,21 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::Trate))
-        {
-          Trate_ = std::get<RealT>(data.parameters.at(Parameter::Trate));
-        }
+        parameter_error_count_ = 0;
 
-        if (data.parameters.contains(Parameter::R))
-        {
-          R_ = std::get<RealT>(data.parameters.at(Parameter::R));
-        }
+        Utilities::ConfigurationChecks checks("Tgov1");
+        Utilities::ParameterReader     reader(data, checks);
 
-        if (data.parameters.contains(Parameter::Pvmin))
-        {
-          Pvmin_ = std::get<RealT>(data.parameters.at(Parameter::Pvmin));
-        }
+        reader.loadReal(Parameter::Trate, Trate_);
+        reader.loadReal(Parameter::R, R_);
+        reader.loadReal(Parameter::Pvmin, Pvmin_);
+        reader.loadReal(Parameter::Pvmax, Pvmax_);
+        reader.loadReal(Parameter::T1, T1_);
+        reader.loadReal(Parameter::T2, T2_);
+        reader.loadReal(Parameter::T3, T3_);
+        reader.loadReal(Parameter::Dt, Dt_);
 
-        if (data.parameters.contains(Parameter::Pvmax))
-        {
-          Pvmax_ = std::get<RealT>(data.parameters.at(Parameter::Pvmax));
-        }
-
-        if (data.parameters.contains(Parameter::T1))
-        {
-          T1_ = std::get<RealT>(data.parameters.at(Parameter::T1));
-        }
-
-        if (data.parameters.contains(Parameter::T2))
-        {
-          T2_ = std::get<RealT>(data.parameters.at(Parameter::T2));
-        }
-
-        if (data.parameters.contains(Parameter::T3))
-        {
-          T3_ = std::get<RealT>(data.parameters.at(Parameter::T3));
-        }
-
-        if (data.parameters.contains(Parameter::Dt))
-        {
-          Dt_ = std::get<RealT>(data.parameters.at(Parameter::Dt));
-        }
+        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
       }
 
       /**
@@ -235,7 +212,7 @@ namespace GridKit
         ports_.in.template port<Tgov1SignalInputs::speed>().checkOptional(checks, "speed");
         ports_.in.template port<Tgov1SignalInputs::pref>().checkOptional(checks, "pref");
 
-        return checks.errorCount();
+        return static_cast<int>(parameter_error_count_) + checks.errorCount();
       }
 
       /**

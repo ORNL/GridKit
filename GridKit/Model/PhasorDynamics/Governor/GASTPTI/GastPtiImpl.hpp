@@ -19,6 +19,7 @@
 #include <GridKit/Utilities/Enum.hpp>
 #include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -536,45 +537,6 @@ namespace GridKit
       //
 
       /**
-       * @brief Load one optional real-valued parameter
-       *
-       * Real and integer serialized values are accepted. Any other stored
-       * type records a loading error while preserving the existing default.
-       *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored parameter value.
-       * @param[in] name Serialized parameter name for diagnostics.
-       */
-      template <typename scalar_type, typename index_type>
-      void GastPti<scalar_type, index_type>::loadRealParameter(
-          const ModelDataT& data,
-          GastPtiParameters parameter,
-          RealT&            target,
-          const char*       name)
-      {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* real_value = std::get_if<RealT>(&value))
-        {
-          target = *real_value;
-        }
-        else if (const auto* index_value = std::get_if<IdxT>(&value))
-        {
-          target = static_cast<RealT>(*index_value);
-        }
-        else
-        {
-          Log::error() << "GastPti: parameter '" << name << "' must be numeric\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
        * @brief Validate and floor one turbine time constant
        *
        * Invalid or nonfinite values record a parameter error and are replaced
@@ -618,26 +580,25 @@ namespace GridKit
 
         parameter_error_count_ = 0;
 
-        loadRealParameter(data, Params::R, R_, "R");
-        loadRealParameter(data, Params::T1, T1_, "T1");
-        loadRealParameter(data, Params::T2, T2_, "T2");
-        loadRealParameter(data, Params::T3, T3_, "T3");
-        loadRealParameter(data, Params::At, At_, "At");
-        loadRealParameter(data, Params::Kt, Kt_, "Kt");
-        loadRealParameter(data, Params::Vmax, Vmax_, "Vmax");
-        loadRealParameter(data, Params::Vmin, Vmin_, "Vmin");
-        loadRealParameter(data, Params::Dturb, Dturb_, "Dturb");
-        if (data.parameters.contains(Params::Trate))
+        Utilities::ConfigurationChecks checks("GastPti");
+        Utilities::ParameterReader     reader(data, checks);
+
+        reader.loadReal(Params::R, R_);
+        reader.loadReal(Params::T1, T1_);
+        reader.loadReal(Params::T2, T2_);
+        reader.loadReal(Params::T3, T3_);
+        reader.loadReal(Params::At, At_);
+        reader.loadReal(Params::Kt, Kt_);
+        reader.loadReal(Params::Vmax, Vmax_);
+        reader.loadReal(Params::Vmin, Vmin_);
+        reader.loadReal(Params::Dturb, Dturb_);
+        RealT trate{};
+        if (reader.requireReal(Params::Trate, trate))
         {
-          RealT trate{};
-          loadRealParameter(data, Params::Trate, trate, "Trate");
           this->setComponentBase(trate * static_cast<RealT>(1.0e6));
         }
-        else
-        {
-          Log::error() << "GastPti: missing required parameter 'Trate'\n";
-          ++parameter_error_count_;
-        }
+
+        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }
