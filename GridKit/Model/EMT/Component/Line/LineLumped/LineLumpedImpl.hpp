@@ -32,6 +32,26 @@ namespace GridKit
       initializeParameters(data);
       size_ = 9;
       setDerivedParams();
+      if (data.Zp.has_value() && data.Yp.has_value())
+      {
+        own_size_ = 9;
+        z_.emplace(*data.Zp, dx_);
+        this->registerSubmodel(&*z_);
+        y1_.emplace(*data.Yp, dx_);
+        this->registerSubmodel(&*y1_);
+        y2_.emplace(*data.Yp, dx_);
+        this->registerSubmodel(&*y2_);
+        size_  = own_size_ + z_->size() + y1_->size() + y2_->size();
+        rl_on_ = ZERO<RealT>;
+
+        // The series linear coefficient must be nonsingular so the series
+        // current stays differential
+        const auto& E   = data.Zp->E;
+        const RealT det = E[0][0] * (E[1][1] * E[2][2] - E[1][2] * E[2][1])
+                          - E[0][1] * (E[1][0] * E[2][2] - E[1][2] * E[2][0])
+                          + E[0][2] * (E[1][0] * E[2][1] - E[1][1] * E[2][0]);
+        fit_ez_singular_ = det == 0.0;
+      }
       initializeMonitor();
     }
 
@@ -149,6 +169,27 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
+      // Bind the series current and shunt-row ports and wire the rational
+      // submodels before their allocation, so index assignment can route
+      // into them
+      this->bindPort(i12_port_, 0);
+      this->bindPort(sh1_rows_port_, 3);
+      this->bindPort(sh2_rows_port_, 6);
+      if (z_.has_value())
+      {
+        z_->attachInput(&i12_port_);
+        z_->attachOutput(&i12_port_);
+        y1_->attachInput(signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V1A>(),
+                         signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V1B>(),
+                         signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V1C>());
+        y1_->attachOutput(&sh1_rows_port_);
+        y2_->attachInput(signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V2A>(),
+                         signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V2B>(),
+                         signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V2C>());
+        y2_->attachOutput(&sh2_rows_port_);
+        this->allocateSubmodels();
+      }
+
       // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
       {
@@ -215,6 +256,38 @@ namespace GridKit
         ++error_count;
       }
 
+      if (z_.has_value())
+      {
+        error_count += z_->verify();
+        error_count += y1_->verify();
+        error_count += y2_->verify();
+
+        bool matrices_nonzero = hasShuntCapacitance();
+        for (size_t n = 0; n < 3; ++n)
+        {
+          for (size_t k = 0; k < 3; ++k)
+          {
+            if (Rp_[n][k] != 0.0 || Lp_[n][k] != 0.0 || Gp_[n][k] != 0.0)
+            {
+              matrices_nonzero = true;
+            }
+          }
+        }
+        if (matrices_nonzero)
+        {
+          Log::error() << "LineLumped: the rational submodels exclude the "
+                          "per-unit-length matrices\n";
+          ++error_count;
+        }
+
+        if (fit_ez_singular_)
+        {
+          Log::error() << "LineLumped: the series linear coefficient must be "
+                          "nonsingular\n";
+          ++error_count;
+        }
+      }
+
       return error_count;
     }
 
@@ -228,10 +301,15 @@ namespace GridKit
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      for (IdxT j = 0; j < size_; ++j)
+      for (IdxT j = 0; j < this->ownSize(); ++j)
       {
         y[j]  = 0.0;
         yp[j] = 0.0;
+      }
+
+      if (z_.has_value())
+      {
+        this->initializeSubmodels();
       }
 
       y_.setDataUpdated();
@@ -255,6 +333,11 @@ namespace GridKit
       tag_[6] = false;
       tag_[7] = false;
       tag_[8] = false;
+
+      if (z_.has_value())
+      {
+        this->tagDifferentiableSubmodels();
+      }
 
       return 0;
     }
@@ -321,37 +404,47 @@ namespace GridKit
       const ScalarT v2b_dot = yp_ext[4];
       const ScalarT v2c_dot = yp_ext[5];
 
-      /* 3 series branch differential equations */
-      f[0] = R_[0][0] * i12a + R_[0][1] * i12b + R_[0][2] * i12c
-             + L_[0][0] * i12a_dot + L_[0][1] * i12b_dot + L_[0][2] * i12c_dot
+      /* 3 series branch equations; the rational series terms accumulate
+         through the submodel when the matrix mask is off */
+      f[0] = rl_on_
+                 * (R_[0][0] * i12a + R_[0][1] * i12b + R_[0][2] * i12c
+                    + L_[0][0] * i12a_dot + L_[0][1] * i12b_dot + L_[0][2] * i12c_dot)
              + v2a - v1a;
-      f[1] = R_[1][0] * i12a + R_[1][1] * i12b + R_[1][2] * i12c
-             + L_[1][0] * i12a_dot + L_[1][1] * i12b_dot + L_[1][2] * i12c_dot
+      f[1] = rl_on_
+                 * (R_[1][0] * i12a + R_[1][1] * i12b + R_[1][2] * i12c
+                    + L_[1][0] * i12a_dot + L_[1][1] * i12b_dot + L_[1][2] * i12c_dot)
              + v2b - v1b;
-      f[2] = R_[2][0] * i12a + R_[2][1] * i12b + R_[2][2] * i12c
-             + L_[2][0] * i12a_dot + L_[2][1] * i12b_dot + L_[2][2] * i12c_dot
+      f[2] = rl_on_
+                 * (R_[2][0] * i12a + R_[2][1] * i12b + R_[2][2] * i12c
+                    + L_[2][0] * i12a_dot + L_[2][1] * i12b_dot + L_[2][2] * i12c_dot)
              + v2c - v1c;
 
       /* 3 terminal 1 shunt algebraic equations */
-      f[3] = G_[0][0] * v1a + G_[0][1] * v1b + G_[0][2] * v1c
-             + C_[0][0] * v1a_dot + C_[0][1] * v1b_dot + C_[0][2] * v1c_dot
+      f[3] = rl_on_
+                 * (G_[0][0] * v1a + G_[0][1] * v1b + G_[0][2] * v1c
+                    + C_[0][0] * v1a_dot + C_[0][1] * v1b_dot + C_[0][2] * v1c_dot)
              + TWO<RealT> * ish1a;
-      f[4] = G_[1][0] * v1a + G_[1][1] * v1b + G_[1][2] * v1c
-             + C_[1][0] * v1a_dot + C_[1][1] * v1b_dot + C_[1][2] * v1c_dot
+      f[4] = rl_on_
+                 * (G_[1][0] * v1a + G_[1][1] * v1b + G_[1][2] * v1c
+                    + C_[1][0] * v1a_dot + C_[1][1] * v1b_dot + C_[1][2] * v1c_dot)
              + TWO<RealT> * ish1b;
-      f[5] = G_[2][0] * v1a + G_[2][1] * v1b + G_[2][2] * v1c
-             + C_[2][0] * v1a_dot + C_[2][1] * v1b_dot + C_[2][2] * v1c_dot
+      f[5] = rl_on_
+                 * (G_[2][0] * v1a + G_[2][1] * v1b + G_[2][2] * v1c
+                    + C_[2][0] * v1a_dot + C_[2][1] * v1b_dot + C_[2][2] * v1c_dot)
              + TWO<RealT> * ish1c;
 
       /* 3 terminal 2 shunt algebraic equations */
-      f[6] = G_[0][0] * v2a + G_[0][1] * v2b + G_[0][2] * v2c
-             + C_[0][0] * v2a_dot + C_[0][1] * v2b_dot + C_[0][2] * v2c_dot
+      f[6] = rl_on_
+                 * (G_[0][0] * v2a + G_[0][1] * v2b + G_[0][2] * v2c
+                    + C_[0][0] * v2a_dot + C_[0][1] * v2b_dot + C_[0][2] * v2c_dot)
              + TWO<RealT> * ish2a;
-      f[7] = G_[1][0] * v2a + G_[1][1] * v2b + G_[1][2] * v2c
-             + C_[1][0] * v2a_dot + C_[1][1] * v2b_dot + C_[1][2] * v2c_dot
+      f[7] = rl_on_
+                 * (G_[1][0] * v2a + G_[1][1] * v2b + G_[1][2] * v2c
+                    + C_[1][0] * v2a_dot + C_[1][1] * v2b_dot + C_[1][2] * v2c_dot)
              + TWO<RealT> * ish2b;
-      f[8] = G_[2][0] * v2a + G_[2][1] * v2b + G_[2][2] * v2c
-             + C_[2][0] * v2a_dot + C_[2][1] * v2b_dot + C_[2][2] * v2c_dot
+      f[8] = rl_on_
+                 * (G_[2][0] * v2a + G_[2][1] * v2b + G_[2][2] * v2c
+                    + C_[2][0] * v2a_dot + C_[2][1] * v2b_dot + C_[2][2] * v2c_dot)
              + TWO<RealT> * ish2c;
 
       return 0;
@@ -398,6 +491,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
       evaluateInternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f);
+      this->evaluateSubmodelInternalResiduals();
       f_.setDataUpdated();
 
       return 0;
@@ -414,6 +508,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
       this->scatterExternalResidual();
+      this->evaluateSubmodelExternalResiduals();
 
       return 0;
     }

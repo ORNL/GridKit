@@ -499,6 +499,9 @@ namespace GridKit
        * @brief Register a submodel owning the next rows of this component.
        *
        * The caller adds the submodel's size into size_ before allocation.
+       *
+       * @pre own_size_ is already set, because the submodel's local row
+       * offset is recorded here.
        */
       int registerSubmodel(Component* submodel)
       {

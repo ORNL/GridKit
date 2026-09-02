@@ -33,6 +33,7 @@ target_link_libraries(
 add_subdirectory(Bus)
 add_subdirectory(Component)
 add_subdirectory(Governor)
+add_subdirectory(Operators)
 add_subdirectory(SignalNode)
 
 add_library(GridKit::emt_components ALIAS emt_components)
