@@ -7,14 +7,12 @@
  *
  */
 
-#include <variant>
-
-#include <magic_enum/magic_enum.hpp>
-
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -156,32 +154,23 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::verify() const
     {
-      int ret = parameter_error_count_;
+      Utilities::ConfigurationChecks checks("Branch");
 
-      auto check = [&](bool condition, const char* message)
-      {
-        if (!condition)
-        {
-          Log::error() << "Branch: " << message << '\n';
-          ret += 1;
-        }
-      };
+      checks.check(bus1_ != nullptr, "bus1 pointer is null");
+      checks.check(bus2_ != nullptr, "bus2 pointer is null");
 
-      check(bus1_ != nullptr, "bus1 pointer is null");
-      check(bus2_ != nullptr, "bus2 pointer is null");
+      checks.check(std::isfinite(R_), "R must be finite");
+      checks.check(std::isfinite(X_), "X must be finite");
+      checks.check(std::isfinite(G_), "G must be finite");
+      checks.check(std::isfinite(B_), "B must be finite");
+      checks.check(std::isfinite(Gmag_), "Gmag must be finite");
+      checks.check(std::isfinite(Bmag_), "Bmag must be finite");
+      checks.check(std::isfinite(tap_), "tap must be finite");
+      checks.check(std::isfinite(phase_), "phase must be finite");
+      checks.check(R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero");
+      checks.check(tap_ > RealT{0.0}, "tap must be positive");
 
-      check(std::isfinite(R_), "R must be finite");
-      check(std::isfinite(X_), "X must be finite");
-      check(std::isfinite(G_), "G must be finite");
-      check(std::isfinite(B_), "B must be finite");
-      check(std::isfinite(Gmag_), "Gmag must be finite");
-      check(std::isfinite(Bmag_), "Bmag must be finite");
-      check(std::isfinite(tap_), "tap must be finite");
-      check(std::isfinite(phase_), "phase must be finite");
-      check(R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero");
-      check(tap_ > RealT{0.0}, "tap must be positive");
-
-      return ret;
+      return parameter_error_count_ + checks.errorCount();
     }
 
     template <typename scalar_type, typename index_type>
@@ -351,14 +340,19 @@ namespace GridKit
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
 
-      readRealParameter(data, Parameter::R, R_);
-      readRealParameter(data, Parameter::X, X_);
-      readRealParameter(data, Parameter::G, G_);
-      readRealParameter(data, Parameter::B, B_);
-      readRealParameter(data, Parameter::Gmag, Gmag_);
-      readRealParameter(data, Parameter::Bmag, Bmag_);
-      readRealParameter(data, Parameter::tap, tap_);
-      readRealParameter(data, Parameter::phase, phase_);
+      Utilities::ConfigurationChecks checks("Branch");
+      Utilities::ParameterReader     reader(data, checks);
+
+      reader.loadReal(Parameter::R, R_);
+      reader.loadReal(Parameter::X, X_);
+      reader.loadReal(Parameter::G, G_);
+      reader.loadReal(Parameter::B, B_);
+      reader.loadReal(Parameter::Gmag, Gmag_);
+      reader.loadReal(Parameter::Bmag, Bmag_);
+      reader.loadReal(Parameter::tap, tap_);
+      reader.loadReal(Parameter::phase, phase_);
+
+      parameter_error_count_ = checks.errorCount();
 
       if (data.buses.contains(Buses::bus1))
       {
@@ -369,35 +363,6 @@ namespace GridKit
       {
         bus2_id_ = data.buses.at(Buses::bus2);
       }
-    }
-
-    template <typename scalar_type, typename index_type>
-    bool Branch<scalar_type, index_type>::readRealParameter(const ModelDataT&               data,
-                                                            typename ModelDataT::Parameters parameter,
-                                                            RealT&                          target)
-    {
-      if (!data.parameters.contains(parameter))
-      {
-        return false;
-      }
-
-      const auto& value = data.parameters.at(parameter);
-      if (const auto* real_value = std::get_if<RealT>(&value))
-      {
-        target = *real_value;
-        return true;
-      }
-
-      if (const auto* integer_value = std::get_if<IdxT>(&value))
-      {
-        target = static_cast<RealT>(*integer_value);
-        return true;
-      }
-
-      Log::error() << "Branch: parameter " << magic_enum::enum_name(parameter)
-                   << " must be numeric\n";
-      parameter_error_count_ += 1;
-      return false;
     }
 
     template <typename scalar_type, typename index_type>

@@ -16,6 +16,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -221,39 +222,20 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::verify() const
       {
-        int ret = 0;
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Tgov1: " << message << '\n';
-            ret += 1;
-          }
-        };
+        Utilities::ConfigurationChecks checks("Tgov1");
 
-        check(Trate_ > ZERO<RealT>, "Trate must be positive");
-        check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
-        check(R_ != ZERO<RealT>, "R must be nonzero");
-        check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
-        check(ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
-              "pmech output signal must be assigned");
+        checks.check(Trate_ > ZERO<RealT>, "Trate must be positive");
+        checks.check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
+        checks.check(R_ != ZERO<RealT>, "R must be nonzero");
+        checks.check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
+        checks.check(ports_.out.template port<Tgov1SignalOutputs::pmech>().connected(),
+                     "pmech output signal must be assigned");
 
-        auto speed_port = ports_.in.template port<Tgov1SignalInputs::speed>();
-        if (speed_port.connected() && !speed_port.linked())
-        {
-          Log::error() << "Tgov1: speed signal attached with no linked generator\n";
-          ret += 1;
-        }
+        ports_.in.template port<Tgov1SignalInputs::speed>().checkOptional(checks, "speed");
+        ports_.in.template port<Tgov1SignalInputs::pref>().checkOptional(checks, "pref");
 
-        auto pref_port = ports_.in.template port<Tgov1SignalInputs::pref>();
-        if (pref_port.connected() && !pref_port.linked())
-        {
-          Log::error() << "Tgov1: pref signal attached with no linked source\n";
-          ret += 1;
-        }
-
-        return ret;
+        return checks.errorCount();
       }
 
       /**
