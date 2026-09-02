@@ -1,0 +1,71 @@
+{
+    "header": {
+        "case_name": "EMT three-bus overhead line energization",
+        "case_description": "A 345 kV source energizes a resistive load through 100 km of overhead line",
+        "case_comments": "Line parameters are the reduced 3x3 matrices of the 345kv-horizontal geometry at 60 Hz, computed with the GridWorkbench overhead line parameter functions"
+    },
+    "monitors": [
+        {
+            "file_name": "mon.csv",
+            "format": "csv"
+        }
+    ],
+    "buses": [
+        {
+            "number": 1,
+            "class": "Bus",
+            "name": "Bus_1",
+            "mon": ["va", "vb", "vc"]
+        },
+        {
+            "number": 2,
+            "class": "Bus",
+            "name": "Bus_2",
+            "mon": ["va", "vb", "vc"]
+        }
+    ],
+    "devices": [
+        {
+            "class": "VoltageSource",
+            "id": "source_1",
+            "params": {
+                "E": [199185.84259053923, 199185.84259053923, 199185.84259053923],
+                "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
+                "omega": 376.99111843077515,
+                "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+                "Ls": [[0.05, 0.0, 0.0], [0.0, 0.05, 0.0], [0.0, 0.0, 0.05]]
+            },
+            "ports": {"bus": 1}
+        },
+        {
+            "class": "LineLumped",
+            "id": "line_1_2",
+            "params": {
+                "N": 3,
+                "K": 3,
+                "conductors": [1, 2, 3],
+                "dx": 100000.0,
+                "Rp": [[1.395696823706e-04, 1.147888566206e-04, 1.119296971976e-04],
+                       [1.147888566206e-04, 1.445937853239e-04, 1.147888566206e-04],
+                       [1.119296971976e-04, 1.147888566206e-04, 1.395696823706e-04]],
+                "Lp": [[1.750922239503e-06, 8.275775319582e-07, 6.938904276089e-07],
+                       [8.275775319582e-07, 1.741292124489e-06, 8.275775319582e-07],
+                       [6.938904276089e-07, 8.275775319582e-07, 1.750922239503e-06]],
+                "Gp": [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+                "Cp": [[1.022089167046e-11, -2.069513635803e-12, -7.161062912086e-13],
+                       [-2.069513635803e-12, 1.073143952637e-11, -2.069513635803e-12],
+                       [-7.161062912086e-13, -2.069513635803e-12, 1.022089167046e-11]]
+            },
+            "ports": {"bus1": 1, "bus2": 2},
+            "mon": ["i12a", "i12b", "i12c"]
+        },
+        {
+            "class": "LoadZ",
+            "id": "load_2",
+            "params": {
+                "R": [[500.0, 0.0, 0.0], [0.0, 500.0, 0.0], [0.0, 0.0, 500.0]]
+            },
+            "ports": {"bus": 2}
+        }
+    ]
+}
