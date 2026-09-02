@@ -11,13 +11,14 @@
 #include <limits>
 #include <mutex>
 #include <numeric>
-#include <variant>
 
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/Hygov.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/HYGOV/HygovData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -135,16 +136,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Hygov<scalar_type, index_type>::verify() const
       {
-        int ret = static_cast<int>(parameter_error_count_);
-
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Hygov: " << message << '\n';
-            ret += 1;
-          }
-        };
+        Utilities::ConfigurationChecks checks("Hygov");
 
         RealT      component_power_base = va_component_base_;
         const bool component_base_is_omitted =
@@ -158,10 +150,10 @@ namespace GridKit
                                           && component_power_base > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
                                        && va_system_base_ > ZERO<RealT>;
-        check(valid_component_base,
-              "component power base must be finite and positive");
-        check(valid_system_base,
-              "system power base must be finite and positive");
+        checks.check(valid_component_base,
+                     "component power base must be finite and positive");
+        checks.check(valid_system_base,
+                     "system power base must be finite and positive");
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / component_power_base;
@@ -170,18 +162,18 @@ namespace GridKit
                                          && system_to_component > ZERO<RealT>
                                          && std::isfinite(component_to_system)
                                          && component_to_system > ZERO<RealT>;
-          check(valid_base_ratios,
-                "system/component power-base conversion ratios must be finite and positive");
+          checks.check(valid_base_ratios,
+                       "system/component power-base conversion ratios must be finite and positive");
         }
 
-        check(Rtemp_ > ZERO<RealT>, "Rtemp must be nonzero");
-        check(Tn_ >= ZERO<RealT>, "Tn must be non-negative");
-        check(Velm_ >= ZERO<RealT>, "Velm must be non-negative");
-        check(Gmin_ < Gmax_, "Gmin must be less than Gmax");
-        check(At_ > ZERO<RealT>, "At must be positive");
-        check(Dturb_ >= ZERO<RealT>, "Dturb must be non-negative");
-        check(db1_ >= ZERO<RealT>, "db1 must be non-negative");
-        check(Hdam_ > ZERO<RealT>, "Hdam must be positive");
+        checks.check(Rtemp_ > ZERO<RealT>, "Rtemp must be nonzero");
+        checks.check(Tn_ >= ZERO<RealT>, "Tn must be non-negative");
+        checks.check(Velm_ >= ZERO<RealT>, "Velm must be non-negative");
+        checks.check(Gmin_ < Gmax_, "Gmin must be less than Gmax");
+        checks.check(At_ > ZERO<RealT>, "At must be positive");
+        checks.check(Dturb_ >= ZERO<RealT>, "Dturb must be non-negative");
+        checks.check(db1_ >= ZERO<RealT>, "db1 must be non-negative");
+        checks.check(Hdam_ > ZERO<RealT>, "Hdam must be positive");
 
         bool curve_shape_is_valid = true;
         for (size_t i = 1; i < Gv_.size(); ++i)
@@ -189,8 +181,8 @@ namespace GridKit
           const bool gate_points_increase  = Gv_[i - 1] < Gv_[i];
           const bool power_points_increase = Pgv_[i - 1] <= Pgv_[i];
 
-          check(gate_points_increase, "Gv points must be strictly increasing");
-          check(power_points_increase, "Pgv points must be non-decreasing");
+          checks.check(gate_points_increase, "Gv points must be strictly increasing");
+          checks.check(power_points_increase, "Pgv points must be non-decreasing");
 
           if (!gate_points_increase || !power_points_increase)
           {
@@ -199,8 +191,8 @@ namespace GridKit
         }
         const bool minimum_gate_is_valid = Gv_[0] <= Gmin_;
         const bool maximum_gate_is_valid = Gmax_ <= Gv_[5];
-        check(minimum_gate_is_valid, "Gmin must be at or above the first Gv point");
-        check(maximum_gate_is_valid, "Gmax must be at or below the last Gv point");
+        checks.check(minimum_gate_is_valid, "Gmin must be at or above the first Gv point");
+        checks.check(maximum_gate_is_valid, "Gmax must be at or below the last Gv point");
 
         const bool can_check_power_range = curve_shape_is_valid
                                            && Gmin_ < Gmax_
@@ -218,36 +210,23 @@ namespace GridKit
           const bool  finite_power_range = std::isfinite(minimum_power)
                                           && std::isfinite(maximum_power)
                                           && std::isfinite(power_range);
-          check(finite_power_range,
-                "mechanical-power range must be finite");
+          checks.check(finite_power_range,
+                       "mechanical-power range must be finite");
           if (finite_power_range)
           {
-            check(power_range > INITIALIZATION_TOLERANCE,
-                  "mechanical power must rise across [Gv0, Gv5]");
+            checks.check(power_range > INITIALIZATION_TOLERANCE,
+                         "mechanical power must rise across [Gv0, Gv5]");
           }
         }
 
-        check(signals_.template isAssigned<HygovInternalVariables::PMECH>(),
-              "pmech output signal must be assigned");
+        checks.check(signals_.template isAssigned<HygovInternalVariables::PMECH>(),
+                     "pmech output signal must be assigned");
 
-        // An attached port must resolve to readable signal storage. The
-        // enumerator is a template argument, so each port names itself once.
-        auto check_attached_signal =
-            [&]<HygovExternalVariables variable>(const char* name)
-        {
-          if (signals_.template isAttached<variable>()
-              && !signals_.template isLinked<variable>())
-          {
-            Log::error() << "Hygov: " << name << " signal attached with no linked source\n";
-            ret += 1;
-          }
-        };
+        signals_.template checkOptional<HygovExternalVariables::OMEGA>(checks, "speed");
+        signals_.template checkOptional<HygovExternalVariables::PREF>(checks, "pref");
+        signals_.template checkOptional<HygovExternalVariables::PAUX>(checks, "paux");
 
-        check_attached_signal.template operator()<HygovExternalVariables::OMEGA>("speed");
-        check_attached_signal.template operator()<HygovExternalVariables::PREF>("pref");
-        check_attached_signal.template operator()<HygovExternalVariables::PAUX>("paux");
-
-        return ret;
+        return static_cast<int>(parameter_error_count_) + checks.errorCount();
       }
 
       /**
@@ -656,86 +635,50 @@ namespace GridKit
 
         parameter_error_count_ = 0;
 
-        auto load_real = [&](auto key, RealT& target, const char* name) -> bool
+        Utilities::ConfigurationChecks checks("Hygov");
+        Utilities::ParameterReader     reader(data, checks);
+
+        if (reader.loadReal(Params::Trate, va_component_base_))
         {
-          if (!data.parameters.contains(key))
-          {
-            return false;
-          }
-
-          const auto& value = data.parameters.at(key);
-          RealT       parsed_value{};
-          if (const auto* real_value = std::get_if<RealT>(&value))
-          {
-            parsed_value = *real_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value))
-          {
-            parsed_value = static_cast<RealT>(*index_value);
-          }
-          else
-          {
-            Log::error() << "Hygov: parameter '" << name << "' must be numeric\n";
-            ++parameter_error_count_;
-            return false;
-          }
-
-          const bool ret = std::isfinite(parsed_value);
-          if (!ret)
-          {
-            Log::error() << "Hygov: parameter '" << name << "' must be finite\n";
-            ++parameter_error_count_;
-            return false;
-          }
-
-          target = parsed_value;
-          return true;
-        };
-
-        bool ret = load_real(Params::Trate, va_component_base_, "Trate");
-        if (ret)
-        {
-          ret = va_component_base_ > ZERO<RealT>;
-          if (!ret)
-          {
-            Log::error() << "Hygov: Trate must be positive when provided\n";
-            ++parameter_error_count_;
-          }
+          checks.check(va_component_base_ > ZERO<RealT>,
+                       "Trate must be positive when provided");
           va_component_base_ *= static_cast<RealT>(1.0e6);
         }
-        load_real(Params::Rperm, Rperm_, "Rperm");
-        load_real(Params::Rtemp, Rtemp_, "Rtemp");
-        load_real(Params::Tr, Tr_, "Tr");
-        load_real(Params::Tf, Tf_, "Tf");
-        load_real(Params::Tg, Tg_, "Tg");
-        load_real(Params::Velm, Velm_, "Velm");
-        load_real(Params::Gmax, Gmax_, "Gmax");
-        load_real(Params::Gmin, Gmin_, "Gmin");
-        load_real(Params::Tw, Tw_, "Tw");
-        load_real(Params::At, At_, "At");
-        load_real(Params::Dturb, Dturb_, "Dturb");
-        load_real(Params::Qnl, Qnl_, "Qnl");
-        load_real(Params::Tn, Tn_, "Tn");
-        load_real(Params::Tnp, Tnp_, "Tnp");
-        load_real(Params::db1, db1_, "db1");
-        if (load_real(Params::db2, db2_, "db2") && db2_ != ZERO<RealT>)
+        reader.loadReal(Params::Rperm, Rperm_);
+        reader.loadReal(Params::Rtemp, Rtemp_);
+        reader.loadReal(Params::Tr, Tr_);
+        reader.loadReal(Params::Tf, Tf_);
+        reader.loadReal(Params::Tg, Tg_);
+        reader.loadReal(Params::Velm, Velm_);
+        reader.loadReal(Params::Gmax, Gmax_);
+        reader.loadReal(Params::Gmin, Gmin_);
+        reader.loadReal(Params::Tw, Tw_);
+        reader.loadReal(Params::At, At_);
+        reader.loadReal(Params::Dturb, Dturb_);
+        reader.loadReal(Params::Qnl, Qnl_);
+        reader.loadReal(Params::Tn, Tn_);
+        reader.loadReal(Params::Tnp, Tnp_);
+        reader.loadReal(Params::db1, db1_);
+        if (reader.loadReal(Params::db2, db2_) && db2_ != ZERO<RealT>)
         {
           Log::warning() << "Hygov: nonzero db2 requests mechanical backlash, "
                             "but backlash is not implemented and db2 is ignored\n";
         }
-        load_real(Params::Hdam, Hdam_, "Hdam");
-        load_real(Params::Gv0, Gv_[0], "Gv0");
-        load_real(Params::Gv1, Gv_[1], "Gv1");
-        load_real(Params::Gv2, Gv_[2], "Gv2");
-        load_real(Params::Gv3, Gv_[3], "Gv3");
-        load_real(Params::Gv4, Gv_[4], "Gv4");
-        load_real(Params::Gv5, Gv_[5], "Gv5");
-        load_real(Params::Pgv0, Pgv_[0], "Pgv0");
-        load_real(Params::Pgv1, Pgv_[1], "Pgv1");
-        load_real(Params::Pgv2, Pgv_[2], "Pgv2");
-        load_real(Params::Pgv3, Pgv_[3], "Pgv3");
-        load_real(Params::Pgv4, Pgv_[4], "Pgv4");
-        load_real(Params::Pgv5, Pgv_[5], "Pgv5");
+        reader.loadReal(Params::Hdam, Hdam_);
+        reader.loadReal(Params::Gv0, Gv_[0]);
+        reader.loadReal(Params::Gv1, Gv_[1]);
+        reader.loadReal(Params::Gv2, Gv_[2]);
+        reader.loadReal(Params::Gv3, Gv_[3]);
+        reader.loadReal(Params::Gv4, Gv_[4]);
+        reader.loadReal(Params::Gv5, Gv_[5]);
+        reader.loadReal(Params::Pgv0, Pgv_[0]);
+        reader.loadReal(Params::Pgv1, Pgv_[1]);
+        reader.loadReal(Params::Pgv2, Pgv_[2]);
+        reader.loadReal(Params::Pgv3, Pgv_[3]);
+        reader.loadReal(Params::Pgv4, Pgv_[4]);
+        reader.loadReal(Params::Pgv5, Pgv_[5]);
+
+        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }
@@ -813,20 +756,13 @@ namespace GridKit
         // The lags are raised to the floor in place, so a negative value is
         // rejected here while the value as read is still available. verify()
         // reports the count.
-        auto check_non_negative = [&](RealT value, const char* name)
-        {
-          if (value < ZERO<RealT>)
-          {
-            Log::error() << "Hygov: " << name << " must be non-negative\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        check_non_negative(Tr_, "Tr");
-        check_non_negative(Tf_, "Tf");
-        check_non_negative(Tg_, "Tg");
-        check_non_negative(Tw_, "Tw");
-        check_non_negative(Tnp_, "Tnp");
+        Utilities::ConfigurationChecks checks("Hygov");
+        checks.check(Tr_ >= ZERO<RealT>, "Tr must be non-negative");
+        checks.check(Tf_ >= ZERO<RealT>, "Tf must be non-negative");
+        checks.check(Tg_ >= ZERO<RealT>, "Tg must be non-negative");
+        checks.check(Tw_ >= ZERO<RealT>, "Tw must be non-negative");
+        checks.check(Tnp_ >= ZERO<RealT>, "Tnp must be non-negative");
+        parameter_error_count_ += static_cast<IdxT>(checks.errorCount());
 
         if (Tr_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM
             || Tg_ < TIME_CONSTANT_MINIMUM || Tw_ < TIME_CONSTANT_MINIMUM

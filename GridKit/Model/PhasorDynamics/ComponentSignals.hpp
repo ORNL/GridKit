@@ -5,7 +5,9 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 
 namespace GridKit
 {
@@ -201,6 +203,84 @@ namespace GridKit
 
         static_assert(variable < InternalVariables::MAXIMUM);
         internal_variable_signals_[static_cast<size_t>(variable)] = node;
+      }
+
+      /// Reads the specified external variable when attached; the fallback
+      /// value otherwise
+      ///
+      /// @tparam variable The external variable to read from
+      /// @param[in] fallback The value returned when no signal is attached
+      template <ExternalVariables variable>
+      auto readOrDefault(ScalarT fallback) const -> ScalarT
+      {
+        static_assert(variable < ExternalVariables::MAXIMUM);
+        if (isAttached<variable>())
+        {
+          return readExternalVariable<variable>();
+        }
+        return fallback;
+      }
+
+      /// Refreshes one slot of the signal value and index workspaces: the
+      /// live value and global index when attached, the fallback value and
+      /// an invalid index otherwise
+      ///
+      /// @tparam variable The external variable to refresh
+      /// @param[in] fallback The value stored when no signal is attached
+      /// @param[out] ws Signal value workspace
+      /// @param[out] ws_indices Signal global index workspace
+      template <ExternalVariables variable>
+      auto refreshWorkspace(ScalarT fallback, ScalarT* ws, IdxT* ws_indices) const
+      {
+        static_assert(variable < ExternalVariables::MAXIMUM);
+        const auto index  = static_cast<size_t>(variable);
+        ws[index]         = fallback;
+        ws_indices[index] = INVALID_INDEX<IdxT>;
+        if (isAttached<variable>())
+        {
+          ws[index]         = readExternalVariable<variable>();
+          ws_indices[index] = readExternalVariableIndex<variable>();
+        }
+      }
+
+      /// Verifies a port that must be attached and resolve to linked storage
+      ///
+      /// @tparam variable The external variable to verify
+      /// @param[in,out] checks Error accumulator for the owning component
+      /// @param[in] name Port name used in error messages
+      template <ExternalVariables variable>
+      auto checkRequired(Utilities::ConfigurationChecks& checks, const char* name) const
+      {
+        static_assert(variable < ExternalVariables::MAXIMUM);
+        if (!isAttached<variable>())
+        {
+          checks.fail() << name << " signal is required\n";
+          return;
+        }
+        if (!isLinked<variable>())
+        {
+          checks.fail() << name << " signal attached with no linked source\n";
+        }
+      }
+
+      /// Verifies a port that may be absent but must resolve to linked
+      /// storage when attached
+      ///
+      /// @tparam variable The external variable to verify
+      /// @param[in,out] checks Error accumulator for the owning component
+      /// @param[in] name Port name used in error messages
+      template <ExternalVariables variable>
+      auto checkOptional(Utilities::ConfigurationChecks& checks, const char* name) const
+      {
+        static_assert(variable < ExternalVariables::MAXIMUM);
+        if (!isAttached<variable>())
+        {
+          return;
+        }
+        if (!isLinked<variable>())
+        {
+          checks.fail() << name << " signal attached with no linked source\n";
+        }
       }
 
     private:

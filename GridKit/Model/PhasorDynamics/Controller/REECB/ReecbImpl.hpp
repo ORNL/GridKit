@@ -20,6 +20,7 @@
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -169,29 +170,20 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::verify() const
       {
-        int ret = static_cast<int>(parameter_error_count_);
+        Utilities::ConfigurationChecks checks("Reecb");
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Reecb: " << message << '\n';
-            ret += 1;
-          }
-        };
-
-        check(bus_ != nullptr, "terminal bus is required");
+        checks.check(bus_ != nullptr, "terminal bus is required");
 
         const RealT component_power_base = componentPowerBase();
         const bool  valid_component_base = std::isfinite(component_power_base) && component_power_base > ZERO<RealT>;
         const bool  valid_system_base    = std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>;
-        check(valid_component_base, "component power base must be finite and positive");
-        check(valid_system_base, "system power base must be finite and positive");
+        checks.check(valid_component_base, "component power base must be finite and positive");
+        checks.check(valid_system_base, "system power base must be finite and positive");
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / component_power_base;
           const RealT component_to_system = component_power_base / va_system_base_;
-          check(
+          checks.check(
               std::isfinite(system_to_component)
                   && system_to_component > ZERO<RealT>
                   && std::isfinite(component_to_system)
@@ -199,87 +191,78 @@ namespace GridKit
               "system/component power-base conversion ratios must be finite and positive");
         }
 
-        check(std::isfinite(Trv_), "Trv must be finite");
-        check(std::isfinite(Tp_), "Tp must be finite");
-        check(std::isfinite(Vref0_), "Vref0 must be finite");
+        checks.check(std::isfinite(Trv_), "Trv must be finite");
+        checks.check(std::isfinite(Tp_), "Tp must be finite");
+        checks.check(std::isfinite(Vref0_), "Vref0 must be finite");
 
         const bool finite_voltage_thresholds = std::isfinite(Vdip_) && std::isfinite(Vup_);
-        check(finite_voltage_thresholds, "Vdip and Vup must be finite");
+        checks.check(finite_voltage_thresholds, "Vdip and Vup must be finite");
         if (finite_voltage_thresholds)
         {
-          check(Vdip_ < Vup_, "Vdip must be less than Vup");
+          checks.check(Vdip_ < Vup_, "Vdip must be less than Vup");
         }
 
         const bool finite_voltage_deadband = std::isfinite(dbd1_) && std::isfinite(dbd2_);
-        check(finite_voltage_deadband, "dbd1 and dbd2 must be finite");
+        checks.check(finite_voltage_deadband, "dbd1 and dbd2 must be finite");
         if (finite_voltage_deadband)
         {
-          check(dbd1_ <= ZERO<RealT> && ZERO<RealT> <= dbd2_, "dbd1 <= 0 <= dbd2 is required");
+          checks.check(dbd1_ <= ZERO<RealT> && ZERO<RealT> <= dbd2_, "dbd1 <= 0 <= dbd2 is required");
         }
 
-        check(std::isfinite(kqv_) && kqv_ >= ZERO<RealT>, "kqv must be finite and non-negative");
+        checks.check(std::isfinite(kqv_) && kqv_ >= ZERO<RealT>, "kqv must be finite and non-negative");
 
         const bool finite_injection_limits = std::isfinite(Iql1_) && std::isfinite(Iqh1_);
-        check(finite_injection_limits, "Iql1 and Iqh1 must be finite");
+        checks.check(finite_injection_limits, "Iql1 and Iqh1 must be finite");
         if (finite_injection_limits)
         {
-          check(Iql1_ <= Iqh1_, "Iql1 must be less than or equal to Iqh1");
+          checks.check(Iql1_ <= Iqh1_, "Iql1 must be less than or equal to Iqh1");
         }
 
         const bool finite_reactive_limits = std::isfinite(Qmin_) && std::isfinite(Qmax_);
-        check(finite_reactive_limits, "Qmin and Qmax must be finite");
+        checks.check(finite_reactive_limits, "Qmin and Qmax must be finite");
         if (finite_reactive_limits)
         {
-          check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
+          checks.check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
         }
 
-        check(std::isfinite(Kqp_) && Kqp_ >= ZERO<RealT>, "Kqp must be finite and non-negative");
-        check(std::isfinite(Kqi_) && Kqi_ >= ZERO<RealT>, "Kqi must be finite and non-negative");
+        checks.check(std::isfinite(Kqp_) && Kqp_ >= ZERO<RealT>, "Kqp must be finite and non-negative");
+        checks.check(std::isfinite(Kqi_) && Kqi_ >= ZERO<RealT>, "Kqi must be finite and non-negative");
 
         const bool finite_voltage_limits = std::isfinite(Vmin_) && std::isfinite(Vmax_);
-        check(finite_voltage_limits, "Vmin and Vmax must be finite");
+        checks.check(finite_voltage_limits, "Vmin and Vmax must be finite");
         if (finite_voltage_limits)
         {
-          check(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax");
+          checks.check(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax");
         }
 
-        check(std::isfinite(Kvp_) && Kvp_ >= ZERO<RealT>, "Kvp must be finite and non-negative");
-        check(std::isfinite(Kvi_) && Kvi_ >= ZERO<RealT>, "Kvi must be finite and non-negative");
-        check(std::isfinite(Tiq_), "Tiq must be finite");
-        check(std::isfinite(Tpord_), "Tpord must be finite");
+        checks.check(std::isfinite(Kvp_) && Kvp_ >= ZERO<RealT>, "Kvp must be finite and non-negative");
+        checks.check(std::isfinite(Kvi_) && Kvi_ >= ZERO<RealT>, "Kvi must be finite and non-negative");
+        checks.check(std::isfinite(Tiq_), "Tiq must be finite");
+        checks.check(std::isfinite(Tpord_), "Tpord must be finite");
 
         const bool finite_ramp_limits = std::isfinite(dPmin_) && std::isfinite(dPmax_);
-        check(finite_ramp_limits, "dPmin and dPmax must be finite");
+        checks.check(finite_ramp_limits, "dPmin and dPmax must be finite");
         if (finite_ramp_limits)
         {
-          check(dPmin_ < ZERO<RealT> && ZERO<RealT> < dPmax_, "dPmin < 0 < dPmax is required");
+          checks.check(dPmin_ < ZERO<RealT> && ZERO<RealT> < dPmax_, "dPmin < 0 < dPmax is required");
         }
 
         const bool finite_active_limits = std::isfinite(Pmin_) && std::isfinite(Pmax_);
-        check(finite_active_limits, "Pmin and Pmax must be finite");
+        checks.check(finite_active_limits, "Pmin and Pmax must be finite");
         if (finite_active_limits)
         {
-          check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
+          checks.check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
         }
 
-        check(std::isfinite(Imax_) && Imax_ > ZERO<RealT>, "Imax must be finite and positive");
+        checks.check(std::isfinite(Imax_) && Imax_ > ZERO<RealT>, "Imax must be finite and positive");
 
-        auto check_optional_signal = [&]<ReecbExternalVariables variable>(const char* name)
-        {
-          if (signals_.template isAttached<variable>() && !signals_.template isLinked<variable>())
-          {
-            Log::error() << "Reecb: " << name << " signal attached with no linked source\n";
-            ret += 1;
-          }
-        };
+        signals_.template checkOptional<ReecbExternalVariables::PE>(checks, "pe");
+        signals_.template checkOptional<ReecbExternalVariables::QGEN>(checks, "qgen");
+        signals_.template checkOptional<ReecbExternalVariables::QEXT>(checks, "qext");
+        signals_.template checkOptional<ReecbExternalVariables::PFAREF>(checks, "pfaref");
+        signals_.template checkOptional<ReecbExternalVariables::PREF>(checks, "pref");
 
-        check_optional_signal.template operator()<ReecbExternalVariables::PE>("pe");
-        check_optional_signal.template operator()<ReecbExternalVariables::QGEN>("qgen");
-        check_optional_signal.template operator()<ReecbExternalVariables::QEXT>("qext");
-        check_optional_signal.template operator()<ReecbExternalVariables::PFAREF>("pfaref");
-        check_optional_signal.template operator()<ReecbExternalVariables::PREF>("pref");
-
-        return ret;
+        return static_cast<int>(parameter_error_count_) + checks.errorCount();
       }
 
       /**

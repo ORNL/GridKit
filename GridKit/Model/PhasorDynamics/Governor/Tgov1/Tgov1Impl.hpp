@@ -15,6 +15,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -235,43 +236,19 @@ namespace GridKit
         static constexpr auto DELTAOMEGA = Tgov1ExternalVariables::DELTAOMEGA;
         static constexpr auto PREF       = Tgov1ExternalVariables::PREF;
 
-        int ret = 0;
+        Utilities::ConfigurationChecks checks("Tgov1");
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Tgov1: " << message << '\n';
-            ret += 1;
-          }
-        };
+        checks.check(Trate_ > ZERO<RealT>, "Trate must be positive");
+        checks.check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
+        checks.check(R_ != ZERO<RealT>, "R must be nonzero");
+        checks.check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
+        checks.check(signals_.template isAssigned<Tgov1InternalVariables::PM>(),
+                     "pmech output signal must be assigned");
 
-        check(Trate_ > ZERO<RealT>, "Trate must be positive");
-        check(va_system_base_ > ZERO<RealT>, "system power base must be positive");
-        check(R_ != ZERO<RealT>, "R must be nonzero");
-        check(Pvmin_ <= Pvmax_, "Pvmin must be less than or equal to Pvmax");
-        check(signals_.template isAssigned<Tgov1InternalVariables::PM>(),
-              "pmech output signal must be assigned");
+        signals_.template checkOptional<DELTAOMEGA>(checks, "speed");
+        signals_.template checkOptional<PREF>(checks, "pref");
 
-        if (signals_.template isAttached<DELTAOMEGA>())
-        {
-          if (!signals_.template isLinked<DELTAOMEGA>())
-          {
-            Log::error() << "Tgov1: speed signal attached with no linked generator\n";
-            ret += 1;
-          }
-        }
-
-        if (signals_.template isAttached<PREF>())
-        {
-          if (!signals_.template isLinked<PREF>())
-          {
-            Log::error() << "Tgov1: pref signal attached with no linked source\n";
-            ret += 1;
-          }
-        }
-
-        return ret;
+        return checks.errorCount();
       }
 
       /**

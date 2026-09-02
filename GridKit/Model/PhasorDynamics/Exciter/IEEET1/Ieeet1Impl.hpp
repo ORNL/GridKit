@@ -16,6 +16,7 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -122,54 +123,34 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::verify() const
       {
-        int ret = 0;
+        Utilities::ConfigurationChecks checks("Ieeet1");
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Ieeet1: " << message << '\n';
-            ret += 1;
-          }
-        };
-
-        check(Ka_ > ZERO<RealT>, "Ka must be positive");
-        check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
-        check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
-              "Ispdlim must be 0 or 1");
+        checks.check(Ka_ > ZERO<RealT>, "Ka must be positive");
+        checks.check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
+        checks.check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
+                     "Ispdlim must be 0 or 1");
 
         const bool saturation_disabled =
             Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
 
         if (!saturation_disabled)
         {
-          check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
-          check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
-          check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
-          check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
+          checks.check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
+          checks.check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
+          checks.check(Se1_ >= ZERO<RealT>, "Se1 must be non-negative when saturation is enabled");
+          checks.check(Se2_ >= ZERO<RealT>, "Se2 must be non-negative when saturation is enabled");
 
           const bool sat_ordered = (E2_ > E1_ && Se2_ > Se1_) || (E2_ < E1_ && Se2_ < Se1_);
-          check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
+          checks.check(sat_ordered, "E1/E2 and Se1/Se2 must be ordered consistently");
         }
 
-        auto check_attached_signal =
-            [&]<Ieeet1ExternalVariables variable>(const char* name)
-        {
-          if (signals_.template isAttached<variable>()
-              && !signals_.template isLinked<variable>())
-          {
-            Log::error() << "Ieeet1: " << name << " signal attached with no linked source\n";
-            ret += 1;
-          }
-        };
+        signals_.template checkOptional<Ieeet1ExternalVariables::OMEGA>(checks, "speed");
+        signals_.template checkOptional<Ieeet1ExternalVariables::VREF>(checks, "vref");
+        signals_.template checkOptional<Ieeet1ExternalVariables::VS>(checks, "vs");
+        signals_.template checkOptional<Ieeet1ExternalVariables::VUEL>(checks, "vuel");
+        signals_.template checkOptional<Ieeet1ExternalVariables::VOEL>(checks, "voel");
 
-        check_attached_signal.template operator()<Ieeet1ExternalVariables::OMEGA>("speed");
-        check_attached_signal.template operator()<Ieeet1ExternalVariables::VREF>("vref");
-        check_attached_signal.template operator()<Ieeet1ExternalVariables::VS>("vs");
-        check_attached_signal.template operator()<Ieeet1ExternalVariables::VUEL>("vuel");
-        check_attached_signal.template operator()<Ieeet1ExternalVariables::VOEL>("voel");
-
-        return ret;
+        return checks.errorCount();
       }
 
       /**
@@ -222,19 +203,10 @@ namespace GridKit
         }
 
         // Setpoint members provide the defaults for unattached signals.
-        auto read_signal = [&]<Ieeet1ExternalVariables variable>(const ScalarT& default_value) -> ScalarT
-        {
-          if (signals_.template isAttached<variable>())
-          {
-            return signals_.template readExternalVariable<variable>();
-          }
-          return default_value;
-        };
-
-        const ScalarT omega = read_signal.template operator()<Ieeet1ExternalVariables::OMEGA>(omega_set_);
-        const ScalarT vs    = read_signal.template operator()<Ieeet1ExternalVariables::VS>(vs_set_);
-        const ScalarT vuel  = read_signal.template operator()<Ieeet1ExternalVariables::VUEL>(vuel_set_);
-        const ScalarT voel  = read_signal.template operator()<Ieeet1ExternalVariables::VOEL>(voel_set_);
+        const ScalarT omega = signals_.template readOrDefault<Ieeet1ExternalVariables::OMEGA>(omega_set_);
+        const ScalarT vs    = signals_.template readOrDefault<Ieeet1ExternalVariables::VS>(vs_set_);
+        const ScalarT vuel  = signals_.template readOrDefault<Ieeet1ExternalVariables::VUEL>(vuel_set_);
+        const ScalarT voel  = signals_.template readOrDefault<Ieeet1ExternalVariables::VOEL>(voel_set_);
 
         uel_on_ = ZERO<RealT>;
         if (signals_.template isAttached<Ieeet1ExternalVariables::VUEL>())
@@ -427,23 +399,12 @@ namespace GridKit
         auto* ws = ws_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
-        auto read_signal = [&]<Ieeet1ExternalVariables variable>(const ScalarT& latched)
-        {
-          const auto index   = static_cast<size_t>(variable);
-          ws[index]          = latched;
-          ws_indices_[index] = INVALID_INDEX<IdxT>;
-          if (signals_.template isAttached<variable>())
-          {
-            ws[index]          = signals_.template readExternalVariable<variable>();
-            ws_indices_[index] = signals_.template readExternalVariableIndex<variable>();
-          }
-        };
-
-        read_signal.template operator()<Ieeet1ExternalVariables::OMEGA>(omega_set_);
-        read_signal.template operator()<Ieeet1ExternalVariables::VREF>(vref_set_);
-        read_signal.template operator()<Ieeet1ExternalVariables::VS>(vs_set_);
-        read_signal.template operator()<Ieeet1ExternalVariables::VUEL>(vuel_set_);
-        read_signal.template operator()<Ieeet1ExternalVariables::VOEL>(voel_set_);
+        auto* ws_indices = ws_indices_.data();
+        signals_.template refreshWorkspace<Ieeet1ExternalVariables::OMEGA>(omega_set_, ws, ws_indices);
+        signals_.template refreshWorkspace<Ieeet1ExternalVariables::VREF>(vref_set_, ws, ws_indices);
+        signals_.template refreshWorkspace<Ieeet1ExternalVariables::VS>(vs_set_, ws, ws_indices);
+        signals_.template refreshWorkspace<Ieeet1ExternalVariables::VUEL>(vuel_set_, ws, ws_indices);
+        signals_.template refreshWorkspace<Ieeet1ExternalVariables::VOEL>(voel_set_, ws, ws_indices);
 
         // Bus voltages
         auto* wb = wb_.getData();
