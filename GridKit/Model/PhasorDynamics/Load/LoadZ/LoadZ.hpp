@@ -58,7 +58,7 @@ namespace GridKit
 
       virtual int verify() const override final
       {
-        return 0;
+        return static_cast<int>(parameter_error_count_);
       }
 
     public:
@@ -116,6 +116,9 @@ namespace GridKit
       RealT g_;
 
       std::unique_ptr<MonitorT> monitor_;
+
+      /// Count of parameter-loading errors reported through verify()
+      IdxT parameter_error_count_{0};
     };
 
   } // namespace PhasorDynamics

@@ -110,7 +110,10 @@ namespace GridKit
         // Input States (which can be parameters)
         ScalarT pref_set_{0};
 
-        // Component ports
+        /// Count of parameter-loading errors reported through verify()
+        IdxT parameter_error_count_{0};
+
+        /// Component ports
         SignalPortsT ports_;
 
         // Parameter initialization function
