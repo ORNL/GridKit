@@ -7,9 +7,12 @@
 
 #pragma once
 
+#include <optional>
+
 #include <GridKit/Model/EMT/Component.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedData.hpp>
 #include <GridKit/Model/EMT/ComponentSignals.hpp>
+#include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFit.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
@@ -86,6 +89,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
+      using Component<scalar_type, index_type>::own_size_;
 
     public:
       using ScalarT    = scalar_type;
@@ -94,6 +98,7 @@ namespace GridKit
       using ModelDataT = LineLumpedData<RealT, IdxT>;
       using SignalT    = SignalNode<ScalarT, IdxT>;
       using Port3T     = Port3<ScalarT, IdxT>;
+      using VectorFitT = VectorFit<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LineLumped, LineLumpedData>;
 
       LineLumped();
@@ -147,6 +152,18 @@ namespace GridKit
       ABCMatrix<RealT> L_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
       ABCMatrix<RealT> G_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
       ABCMatrix<RealT> C_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
+
+      /* Setpoints for control variables */
+      RealT rl_on_{ONE<RealT>};
+
+      /* Rational submodels */
+      std::optional<VectorFitT> z_;
+      std::optional<VectorFitT> y1_;
+      std::optional<VectorFitT> y2_;
+      bool                      fit_ez_singular_{false};
+      Port3T                    i12_port_{};
+      Port3T                    sh1_rows_port_{};
+      Port3T                    sh2_rows_port_{};
 
       ComponentSignals<ScalarT, IdxT, LineLumpedInternalVariables, LineLumpedExternalVariables> signals_;
 

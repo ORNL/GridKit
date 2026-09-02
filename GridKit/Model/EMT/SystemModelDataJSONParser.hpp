@@ -6,6 +6,9 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/EMT/Bus/BusDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceDataJSONParser.hpp>
 #include <GridKit/Model/EMT/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/EMT/SignalNode/SignalNodeDataJSONParser.hpp>
 #include <GridKit/Model/EMT/SystemModelData.hpp>

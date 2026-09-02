@@ -30,6 +30,21 @@ namespace GridKit
     {
       initializeParameters(data);
       size_ = 3;
+      if (data.Z.has_value())
+      {
+        z_.emplace(*data.Z, ONE<RealT>);
+        own_size_ = 3;
+        this->registerSubmodel(&*z_);
+        size_  = own_size_ + z_->size();
+        rl_on_ = ZERO<RealT>;
+
+        // The specification admits a zero or nonsingular linear coefficient
+        const auto& E   = data.Z->E;
+        const RealT det = E[0][0] * (E[1][1] * E[2][2] - E[1][2] * E[2][1])
+                          - E[0][1] * (E[1][0] * E[2][2] - E[1][2] * E[2][0])
+                          + E[0][2] * (E[1][0] * E[2][1] - E[1][1] * E[2][0]);
+        fit_e_singular_ = z_->hasFeedthroughDerivative() && det == 0.0;
+      }
       initializeMonitor();
     }
 
@@ -84,6 +99,16 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
+      // Bind the current port and wire the rational impedance before its
+      // allocation, so index assignment can route into it
+      this->bindPort(i_port_, 0);
+      if (z_.has_value())
+      {
+        z_->attachInput(&i_port_);
+        z_->attachOutput(&i_port_);
+        this->allocateSubmodels();
+      }
+
       // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
       {
@@ -120,6 +145,25 @@ namespace GridKit
         ++error_count;
       }
 
+      if (z_.has_value())
+      {
+        error_count += z_->verify();
+
+        if (hasResistance() || hasInductance())
+        {
+          Log::error() << "LoadZ: the rational impedance excludes the "
+                          "resistance and inductance matrices\n";
+          ++error_count;
+        }
+
+        if (fit_e_singular_)
+        {
+          Log::error() << "LoadZ: the rational impedance linear coefficient "
+                          "must be zero or nonsingular\n";
+          ++error_count;
+        }
+      }
+
       return error_count;
     }
 
@@ -143,7 +187,12 @@ namespace GridKit
       yp[1] = 0.0;
       yp[2] = 0.0;
 
-      if (!hasInductance())
+      if (z_.has_value())
+      {
+        this->initializeSubmodels();
+      }
+
+      if (!hasInductance() && !z_.has_value())
       {
         const ScalarT va = signals_.template readExternalVariable<LoadZExternalVariables::VA>();
         const ScalarT vb = signals_.template readExternalVariable<LoadZExternalVariables::VB>();
@@ -177,6 +226,26 @@ namespace GridKit
     }
 
     /**
+     * @brief Whether any resistance entry is nonzero.
+     */
+    template <typename scalar_type, typename index_type>
+    bool LoadZ<scalar_type, index_type>::hasResistance() const
+    {
+      bool nonzero = false;
+      for (size_t n = 0; n < 3; ++n)
+      {
+        for (size_t k = 0; k < 3; ++k)
+        {
+          if (R_[n][k] != 0.0)
+          {
+            nonzero = true;
+          }
+        }
+      }
+      return nonzero;
+    }
+
+    /**
      * @brief Whether any inductance entry is nonzero.
      *
      * The injected current is differential when the inductance matrix is
@@ -205,11 +274,20 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::tagDifferentiable()
     {
-      const bool differential = hasInductance();
+      bool differential = hasInductance();
+      if (z_.has_value())
+      {
+        differential = z_->hasFeedthroughDerivative();
+      }
 
       tag_[0] = differential;
       tag_[1] = differential;
       tag_[2] = differential;
+
+      if (z_.has_value())
+      {
+        this->tagDifferentiableSubmodels();
+      }
 
       return 0;
     }
@@ -260,15 +338,19 @@ namespace GridKit
       const ScalarT vb = y_ext[1];
       const ScalarT vc = y_ext[2];
 
-      /* 3 load branch differential equations */
-      f[0] = R_[0][0] * ia + R_[0][1] * ib + R_[0][2] * ic
-             + L_[0][0] * ia_dot + L_[0][1] * ib_dot + L_[0][2] * ic_dot
+      /* 3 load branch equations; the rational impedance terms accumulate
+         through the submodel when the resistance and inductance mask is off */
+      f[0] = rl_on_
+                 * (R_[0][0] * ia + R_[0][1] * ib + R_[0][2] * ic
+                    + L_[0][0] * ia_dot + L_[0][1] * ib_dot + L_[0][2] * ic_dot)
              + va;
-      f[1] = R_[1][0] * ia + R_[1][1] * ib + R_[1][2] * ic
-             + L_[1][0] * ia_dot + L_[1][1] * ib_dot + L_[1][2] * ic_dot
+      f[1] = rl_on_
+                 * (R_[1][0] * ia + R_[1][1] * ib + R_[1][2] * ic
+                    + L_[1][0] * ia_dot + L_[1][1] * ib_dot + L_[1][2] * ic_dot)
              + vb;
-      f[2] = R_[2][0] * ia + R_[2][1] * ib + R_[2][2] * ic
-             + L_[2][0] * ia_dot + L_[2][1] * ib_dot + L_[2][2] * ic_dot
+      f[2] = rl_on_
+                 * (R_[2][0] * ia + R_[2][1] * ib + R_[2][2] * ic
+                    + L_[2][0] * ia_dot + L_[2][1] * ib_dot + L_[2][2] * ic_dot)
              + vc;
 
       return 0;
@@ -306,6 +388,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
       evaluateInternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f);
+      this->evaluateSubmodelInternalResiduals();
       f_.setDataUpdated();
 
       return 0;
@@ -322,6 +405,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
       this->scatterExternalResidual();
+      this->evaluateSubmodelExternalResiduals();
 
       return 0;
     }

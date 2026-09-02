@@ -107,7 +107,7 @@ namespace GridKit
        * Drivers call this after applying a discrete event so the next
        * evaluateJacobian() rediscovers the pattern.
        */
-      void resetJacobianStructure();
+      void resetJacobianStructure() override;
 
       void addBus(BusT* bus);
       void addSignal(SignalT* signal);
