@@ -16,6 +16,8 @@ if(GRIDKIT_ENABLE_ENZYME)
       GridKit::emt_core
       PUBLIC
       GridKit::emt_signal
+      PUBLIC
+      GridKit::emt_vector_fit
       PRIVATE
       ClangEnzymeFlags
     COMPILE_OPTIONS
@@ -34,7 +36,9 @@ else()
       PUBLIC
       GridKit::emt_core
       PUBLIC
-      GridKit::emt_signal)
+      GridKit::emt_signal
+      PUBLIC
+      GridKit::emt_vector_fit)
 endif()
 
 gridkit_add_library(
@@ -45,7 +49,9 @@ gridkit_add_library(
     PUBLIC
     GridKit::emt_core
     PUBLIC
-    GridKit::emt_signal_dependency_tracking)
+    GridKit::emt_signal_dependency_tracking
+    PUBLIC
+    GridKit::emt_vector_fit_dependency_tracking)
 
 # Link to interface target for all components
 target_link_libraries(

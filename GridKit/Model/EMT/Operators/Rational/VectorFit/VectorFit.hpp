@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <array>
 #include <vector>
 
 #include <GridKit/Model/EMT/Component.hpp>
@@ -226,23 +227,33 @@ namespace GridKit
       virtual void resetJacobianStructure() override final;
 
       /**
-       * @brief Attach the input port exposing the input triple.
+       * @brief Attach the input nodes exposing the input triple.
        *
        * The nodes supply the input values, their derivatives, and the global
        * variable indices.
        */
+      void attachInput(SignalT* a, SignalT* b, SignalT* c)
+      {
+        input_ = {a, b, c};
+      }
+
       void attachInput(Port3T* input)
       {
-        input_ = input;
+        attachInput(input->a(), input->b(), input->c());
       }
 
       /**
-       * @brief Attach the output port whose residual rows receive the
+       * @brief Attach the output nodes whose residual rows receive the
        * operator output terms.
        */
+      void attachOutput(SignalT* a, SignalT* b, SignalT* c)
+      {
+        output_ = {a, b, c};
+      }
+
       void attachOutput(Port3T* output)
       {
-        output_ = output;
+        attachOutput(output->a(), output->b(), output->c());
       }
 
       /**
@@ -291,8 +302,8 @@ namespace GridKit
       std::vector<VectorFitComplexSection<ScalarT, IdxT>> complex_sections_;
       VectorFitFeedthroughSection<ScalarT, IdxT>          feedthrough_;
 
-      Port3T* input_{nullptr};
-      Port3T* output_{nullptr};
+      std::array<SignalT*, 3> input_{};
+      std::array<SignalT*, 3> output_{};
 
       /* Linear time-invariant Jacobian cache */
       bool               jacobian_cached_{false};

@@ -7,9 +7,12 @@
 
 #pragma once
 
+#include <optional>
+
 #include <GridKit/Model/EMT/Component.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceData.hpp>
 #include <GridKit/Model/EMT/ComponentSignals.hpp>
+#include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFit.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
@@ -78,6 +81,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
+      using Component<scalar_type, index_type>::own_size_;
 
     public:
       using ScalarT    = scalar_type;
@@ -86,6 +90,7 @@ namespace GridKit
       using ModelDataT = VoltageSourceData<RealT, IdxT>;
       using SignalT    = SignalNode<ScalarT, IdxT>;
       using Port3T     = Port3<ScalarT, IdxT>;
+      using VectorFitT = VectorFit<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<VoltageSource, VoltageSourceData>;
 
       VoltageSource();
@@ -130,6 +135,22 @@ namespace GridKit
       RealT            omega_{0.0};
       ABCMatrix<RealT> Rs_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
       ABCMatrix<RealT> Ls_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
+
+      /// Masks selecting the series-matrix or rational-admittance form of
+      /// the branch rows; exactly one is one
+      RealT rl_on_{ONE<RealT>};
+      RealT fit_on_{ZERO<RealT>};
+
+      /// Rational source admittance submodel
+      std::optional<VectorFitT> yfit_;
+
+      /// The rational admittance linear coefficient must be zero, because
+      /// the branch voltage is algebraic
+      bool fit_ey_nonzero_{false};
+
+      /// Port over the branch voltage variables read by the rational
+      /// admittance
+      Port3T u_port_{};
 
       ComponentSignals<ScalarT, IdxT, VoltageSourceInternalVariables, VoltageSourceExternalVariables> signals_;
 
