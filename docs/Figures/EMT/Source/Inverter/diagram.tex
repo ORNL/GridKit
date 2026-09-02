@@ -20,14 +20,17 @@
 \node[pm] at (-4.55, -3.7) {$-$};
 
 % ================= Representative IGBT leg =================
-\node[igbt] (S+) at (0, 1.85) {};
-\node[igbt] (S-) at (0, -1.85) {};
+\node[igbt, xscale=-1] (S+) at (0, 1.85) {};
+\node[igbt, xscale=-1] (S-) at (0, -1.85) {};
 \draw[line] (S+.C) -- (0, 3.7);
 \draw[line] (S+.E) -- (0, 0);
 \draw[line] (S-.C) -- (0, 0);
 \draw[line] (S-.E) -- (0, -3.7);
-\node[sig, anchor=east] at ($(S+.G)+(-0.15,0)$) {$\mathbf{s}$};
-\node[sig, anchor=east] at ($(S-.G)+(-0.15,0)$) {$1-\mathbf{s}$};
+\node[sig, anchor=west] at ($(S-.G)+(0.15,0)$) {$1-\mathbf{s}$};
+
+% ================= External switching input =================
+\node[signal, label={[sig]above:$\mathbf{s}$}] (sinput) at (1.55, 5.15) {};
+\draw[->, line] (sinput) |- (S+.G);
 
 % ================= Phase terminal =================
 \node[signal, label={[sig]left:$\mathbf{v}_{\mathrm{o}}$}] (phase) at (0, 0) {};
