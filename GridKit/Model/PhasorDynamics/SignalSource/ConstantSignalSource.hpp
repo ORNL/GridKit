@@ -70,6 +70,9 @@ namespace GridKit
       /// Component ports
       SignalPortsT ports_;
 
+      /// Count of parameter-loading errors reported through verify()
+      IdxT parameter_error_count_{0};
+
       // Parameter initialization function
       void initializeParameters(const ModelDataT& data);
     };

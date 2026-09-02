@@ -6,6 +6,8 @@
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -59,20 +61,14 @@ namespace GridKit
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
 
-      if (data.parameters.contains(Parameter::R))
-      {
-        R_ = std::get<RealT>(data.parameters.at(Parameter::R));
-      }
+      Utilities::ConfigurationChecks checks("BusFault");
+      Utilities::ParameterReader     reader(data, checks);
 
-      if (data.parameters.contains(Parameter::X))
-      {
-        X_ = std::get<RealT>(data.parameters.at(Parameter::X));
-      }
+      reader.loadReal(Parameter::R, R_);
+      reader.loadReal(Parameter::X, X_);
+      reader.loadSwitch(Parameter::state0, status_);
 
-      if (data.parameters.contains(Parameter::state0))
-      {
-        status_ = std::get<bool>(data.parameters.at(Parameter::state0));
-      }
+      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
       if (data.buses.contains(Buses::bus))
       {
