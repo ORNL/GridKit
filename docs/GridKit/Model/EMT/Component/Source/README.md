@@ -5,6 +5,7 @@
 :titlesonly:
 :hidden:
 
+Inverter <Inverter/README>
 VoltageSource <VoltageSource/README>
 ```
 
