@@ -12,3 +12,4 @@
 #include <GridKit/AutomaticDifferentiation/Enzyme/DfDyp.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/DhDwb.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/DhDy.hpp>
+#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobian.hpp>
