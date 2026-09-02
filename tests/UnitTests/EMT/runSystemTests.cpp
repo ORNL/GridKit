@@ -14,6 +14,9 @@ int main()
   result += test.switchEnergization();
   result += test.machineFlatStart();
   result += test.machineGovernorFlatStart();
+  result += test.twinCircuit();
+  result += test.twinLine();
+  result += test.twinSource();
 #endif
 
   return result.summary();

@@ -38,6 +38,15 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTSynchronousMachineTest COMMAND test_emt_synchronous_machine)
 
+add_executable(test_emt_vector_fit runVectorFitTests.cpp)
+target_link_libraries(
+  test_emt_vector_fit
+  GridKit::definitions
+  GridKit::emt_vector_fit
+  GridKit::emt_vector_fit_dependency_tracking
+  GridKit::testing)
+add_test(NAME EMTVectorFitTest COMMAND test_emt_vector_fit)
+
 add_executable(test_emt_system runSystemTests.cpp)
 target_link_libraries(
   test_emt_system
@@ -55,4 +64,5 @@ install(
           test_emt_line_lumped
           test_emt_synchronous_machine
           test_emt_system
+          test_emt_vector_fit
   RUNTIME DESTINATION bin)

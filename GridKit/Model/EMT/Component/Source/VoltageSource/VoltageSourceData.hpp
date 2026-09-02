@@ -6,7 +6,10 @@
  */
 #pragma once
 
+#include <optional>
+
 #include <GridKit/Model/EMT/ComponentData.hpp>
+#include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFitData.hpp>
 
 namespace GridKit
 {
@@ -77,6 +80,10 @@ namespace GridKit
       using SignalInputs         = VoltageSourceSignalInputs;
       using SignalOutputs        = VoltageSourceSignalOutputs;
       using MonitorableVariables = VoltageSourceMonitorableVariables;
+
+      /// Rational source admittance submodel, replacing the series matrices
+      /// when present
+      std::optional<VectorFitData<real_type, index_type>> Y;
     };
   } // namespace EMT
 } // namespace GridKit

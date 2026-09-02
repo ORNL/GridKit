@@ -6,7 +6,10 @@
  */
 #pragma once
 
+#include <optional>
+
 #include <GridKit/Model/EMT/ComponentData.hpp>
+#include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFitData.hpp>
 
 namespace GridKit
 {
@@ -83,6 +86,15 @@ namespace GridKit
       using SignalInputs         = LineLumpedSignalInputs;
       using SignalOutputs        = LineLumpedSignalOutputs;
       using MonitorableVariables = LineLumpedMonitorableVariables;
+
+      /// Rational per-unit-length series impedance submodel, replacing the
+      /// series matrices when present
+      std::optional<VectorFitData<real_type, index_type>> Zp;
+
+      /// Rational per-unit-length shunt admittance coefficient set,
+      /// instantiated once per terminal, replacing the shunt matrices when
+      /// present
+      std::optional<VectorFitData<real_type, index_type>> Yp;
     };
   } // namespace EMT
 } // namespace GridKit

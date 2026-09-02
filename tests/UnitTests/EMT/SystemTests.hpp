@@ -339,6 +339,287 @@ namespace GridKit
         })";
       }
 
+      /// The twin-circuit pair: a parallel R-L branch is exactly a
+      /// one-real-pole rational impedance, Z(s) = R || sL
+      /// = R - (R^2/L)/(s + R/L). With R = 10 and L = 0.04: D = 10 I,
+      /// p = -250, A = -2500 I.
+      static std::string twinPrimitiveCaseJson()
+      {
+        return R"({
+          "header": {
+            "case_name": "EMT twin circuit, primitive form",
+            "case_description": "Parallel R and L loads built from primitives",
+            "case_comments": "Used by EMT SystemTests"
+          },
+          "buses": [
+            { "number": 1, "class": "Bus", "name": "Bus_1" }
+          ],
+          "devices": [
+            {
+              "class": "VoltageSource",
+              "id": "source_1",
+              "params": {
+                "E": [100.0, 100.0, 100.0],
+                "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
+                "omega": 376.99111843077515,
+                "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+                "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
+              },
+              "ports": { "bus": 1 }
+            },
+            {
+              "class": "LoadZ",
+              "id": "load_r",
+              "params": {
+                "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]]
+              },
+              "ports": { "bus": 1 }
+            },
+            {
+              "class": "LoadZ",
+              "id": "load_l",
+              "params": {
+                "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
+              },
+              "ports": { "bus": 1 }
+            }
+          ]
+        })";
+      }
+
+      static std::string twinRationalCaseJson()
+      {
+        return R"({
+          "header": {
+            "case_name": "EMT twin circuit, rational form",
+            "case_description": "The parallel R and L branch as a rational impedance",
+            "case_comments": "Used by EMT SystemTests"
+          },
+          "buses": [
+            { "number": 1, "class": "Bus", "name": "Bus_1" }
+          ],
+          "devices": [
+            {
+              "class": "VoltageSource",
+              "id": "source_1",
+              "params": {
+                "E": [100.0, 100.0, 100.0],
+                "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
+                "omega": 376.99111843077515,
+                "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+                "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
+              },
+              "ports": { "bus": 1 }
+            },
+            {
+              "class": "LoadZ",
+              "id": "load_rl",
+              "params": {},
+              "ports": { "bus": 1 },
+              "submodels": {
+                "Z": {
+                  "D": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
+                  "poles": [[-250.0, 0.0]],
+                  "residues": [
+                    [[[-2500.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
+                     [[0.0, 0.0], [-2500.0, 0.0], [0.0, 0.0]],
+                     [[0.0, 0.0], [0.0, 0.0], [-2500.0, 0.0]]]
+                  ]
+                }
+              }
+            }
+          ]
+        })";
+      }
+
+      static std::string twinLineMatrixCaseJson()
+      {
+        return R"({
+          "header": {
+            "case_name": "EMT twin line, matrix form",
+            "case_description": "Matrix-parameter line with explicit series-RL shunt loads at each terminal",
+            "case_comments": "Used by EMT SystemTests"
+          },
+          "buses": [
+            { "number": 1, "class": "Bus", "name": "Bus_1" },
+            { "number": 2, "class": "Bus", "name": "Bus_2" }
+          ],
+          "devices": [
+            {
+              "class": "VoltageSource",
+              "id": "source_1",
+              "params": {
+                "E": [100.0, 100.0, 100.0],
+                "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
+                "omega": 376.99111843077515,
+                "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+                "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
+              },
+              "ports": { "bus": 1 }
+            },
+            {
+              "class": "LineLumped",
+              "id": "line_1_2",
+              "params": {
+                "N": 3,
+                "K": 3,
+                "conductors": [1, 2, 3],
+                "dx": 1.0,
+                "Rp": [[2.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 2.0]],
+                "Lp": [[0.02, 0.0, 0.0], [0.0, 0.02, 0.0], [0.0, 0.0, 0.02]],
+                "Gp": [[1.0e-4, 0.0, 0.0], [0.0, 1.0e-4, 0.0], [0.0, 0.0, 1.0e-4]],
+                "Cp": [[1.0e-5, 0.0, 0.0], [0.0, 1.0e-5, 0.0], [0.0, 0.0, 1.0e-5]]
+              },
+              "ports": { "bus1": 1, "bus2": 2 }
+            },
+            {
+              "class": "LoadZ",
+              "id": "load_2",
+              "params": {
+                "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
+                "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
+              },
+              "ports": { "bus": 2 }
+            },
+            {
+              "class": "LoadZ",
+              "id": "load_sh1",
+              "params": {
+                "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
+                "L": [[0.1, 0.0, 0.0], [0.0, 0.1, 0.0], [0.0, 0.0, 0.1]]
+              },
+              "ports": { "bus": 1 }
+            },
+            {
+              "class": "LoadZ",
+              "id": "load_sh2",
+              "params": {
+                "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
+                "L": [[0.1, 0.0, 0.0], [0.0, 0.1, 0.0], [0.0, 0.0, 0.1]]
+              },
+              "ports": { "bus": 2 }
+            }
+          ]
+        })";
+      }
+
+      static std::string twinLineRationalCaseJson()
+      {
+        return R"({
+          "header": {
+            "case_name": "EMT twin line, rational form",
+            "case_description": "Line with rational series and shunt fits absorbing the terminal RL shunts",
+            "case_comments": "Used by EMT SystemTests"
+          },
+          "buses": [
+            { "number": 1, "class": "Bus", "name": "Bus_1" },
+            { "number": 2, "class": "Bus", "name": "Bus_2" }
+          ],
+          "devices": [
+            {
+              "class": "VoltageSource",
+              "id": "source_1",
+              "params": {
+                "E": [100.0, 100.0, 100.0],
+                "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
+                "omega": 376.99111843077515,
+                "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+                "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
+              },
+              "ports": { "bus": 1 }
+            },
+            {
+              "class": "LineLumped",
+              "id": "line_1_2",
+              "params": {
+                "N": 3,
+                "K": 3,
+                "conductors": [1, 2, 3],
+                "dx": 2.0
+              },
+              "ports": { "bus1": 1, "bus2": 2 },
+              "submodels": {
+                "Zp": {
+                  "D": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+                  "E": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
+                },
+                "Yp": {
+                  "D": [[5.0e-5, 0.0, 0.0], [0.0, 5.0e-5, 0.0], [0.0, 0.0, 5.0e-5]],
+                  "E": [[5.0e-6, 0.0, 0.0], [0.0, 5.0e-6, 0.0], [0.0, 0.0, 5.0e-6]],
+                  "poles": [[-100.0, 0.0]],
+                  "residues": [
+                    [[[10.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
+                     [[0.0, 0.0], [10.0, 0.0], [0.0, 0.0]],
+                     [[0.0, 0.0], [0.0, 0.0], [10.0, 0.0]]]
+                  ]
+                }
+              }
+            },
+            {
+              "class": "LoadZ",
+              "id": "load_2",
+              "params": {
+                "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
+                "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
+              },
+              "ports": { "bus": 2 }
+            }
+          ]
+        })";
+      }
+
+      static std::string twinSourceCaseJson()
+      {
+        return R"({
+          "header": {
+            "case_name": "EMT twin source, rational form",
+            "case_description": "The series R and L source branch as a rational admittance",
+            "case_comments": "Used by EMT SystemTests"
+          },
+          "buses": [
+            { "number": 1, "class": "Bus", "name": "Bus_1" }
+          ],
+          "devices": [
+            {
+              "class": "VoltageSource",
+              "id": "source_1",
+              "params": {
+                "E": [100.0, 100.0, 100.0],
+                "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
+                "omega": 376.99111843077515
+              },
+              "ports": { "bus": 1 },
+              "submodels": {
+                "Y": {
+                  "poles": [[-100.0, 0.0]],
+                  "residues": [
+                    [[[100.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
+                     [[0.0, 0.0], [100.0, 0.0], [0.0, 0.0]],
+                     [[0.0, 0.0], [0.0, 0.0], [100.0, 0.0]]]
+                  ]
+                }
+              }
+            },
+            {
+              "class": "LoadZ",
+              "id": "load_r",
+              "params": {
+                "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]]
+              },
+              "ports": { "bus": 1 }
+            },
+            {
+              "class": "LoadZ",
+              "id": "load_l",
+              "params": {
+                "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
+              },
+              "ports": { "bus": 1 }
+            }
+          ]
+        })";
+      }
+
     public:
       /**
        * @brief Case JSON parses into the expected data containers.
@@ -741,6 +1022,231 @@ namespace GridKit
         success *= isEqual(y[3 + 1], RealT{1.0}, 1.0e-7);
         success *= isEqual(y[3 + 20], te0, 1.0e-6);
         success *= isEqual(y[30 + 2], pm0, 1.0e-6);
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Twin-circuit trajectory test for the rational operator.
+       *
+       * The same source energizes a parallel R-L branch twice: once built
+       * from primitive loads and once as a one-real-pole rational impedance
+       * with hand-derived coefficients. The trajectories of the shared
+       * variables must agree at the measured solver floor mid-transient and
+       * at steady state, and the rational branch current must equal the sum
+       * of the primitive branch currents.
+       */
+      TestOutcome twinCircuit()
+      {
+        TestStatus success = true;
+
+        std::istringstream primitive_stream(twinPrimitiveCaseJson());
+        const auto         primitive_data = GridKit::EMT::parseSystemModelData(primitive_stream);
+        std::istringstream rational_stream(twinRationalCaseJson());
+        const auto         rational_data = GridKit::EMT::parseSystemModelData(rational_stream);
+
+        GridKit::EMT::SystemModel<ScalarT, IdxT> primitive(primitive_data);
+        primitive.allocate();
+        GridKit::EMT::SystemModel<ScalarT, IdxT> rational(rational_data);
+        rational.allocate();
+
+        // Layouts: bus v [0,3), source e [3,6) i [6,9); then either the two
+        // primitive load currents [9,15) or the rational current [9,12) and
+        // one memory-state triple [12,15)
+        success *= (primitive.size() == 15);
+        success *= (rational.size() == 15);
+        success *= (rational.verify() == 0);
+
+        AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida_primitive(&primitive);
+        ida_primitive.setMaxSteps(1000000);
+        ida_primitive.setTolerance(1.0e-9, 1.0e-9);
+        ida_primitive.configureSimulation();
+        ida_primitive.initializeSimulation(0.0, true);
+
+        AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida_rational(&rational);
+        ida_rational.setMaxSteps(1000000);
+        ida_rational.setTolerance(1.0e-9, 1.0e-9);
+        ida_rational.configureSimulation();
+        ida_rational.initializeSimulation(0.0, true);
+
+        const auto* y_primitive = primitive.y().getData();
+        const auto* y_rational  = rational.y().getData();
+
+        // Tolerance is the measured trajectory-agreement floor at the 1.0e-9
+        // solver tolerance with headroom.
+        const RealT agreement_tol = 1.0e-6;
+
+        for (const RealT t_check : {0.01, 0.3})
+        {
+          ida_primitive.runSimulation(t_check);
+          ida_rational.runSimulation(t_check);
+
+          for (size_t j = 0; j < 9; ++j)
+          {
+            success *= isEqual(y_rational[j], y_primitive[j], agreement_tol);
+          }
+          for (size_t n = 0; n < 3; ++n)
+          {
+            success *= isEqual(y_rational[9 + n],
+                               y_primitive[9 + n] + y_primitive[12 + n],
+                               agreement_tol);
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Rational line agrees with an equivalent matrix-parameter line.
+       *
+       * The rational line carries a feedthrough-only series fit and a shunt
+       * fit with one real pole, scaled by a segment length of two. The twin
+       * builds the same electrical circuit from the matrix-parameter line and
+       * explicit series-RL loads at each terminal absorbing the shunt pole
+       * term. The shared trajectories must agree at the measured solver
+       * floor, and each rational shunt current must equal the matrix shunt
+       * current plus the terminal load current.
+       */
+      TestOutcome twinLine()
+      {
+        TestStatus success = true;
+
+        std::istringstream matrix_stream(twinLineMatrixCaseJson());
+        const auto         matrix_data = GridKit::EMT::parseSystemModelData(matrix_stream);
+        std::istringstream rational_stream(twinLineRationalCaseJson());
+        const auto         rational_data = GridKit::EMT::parseSystemModelData(rational_stream);
+
+        GridKit::EMT::SystemModel<ScalarT, IdxT> matrix(matrix_data);
+        matrix.allocate();
+        GridKit::EMT::SystemModel<ScalarT, IdxT> rational(rational_data);
+        rational.allocate();
+
+        // Layouts: bus voltages [0,6), source e [6,9) i [9,12), line i12
+        // [12,15) ish1 [15,18) ish2 [18,21); then either load_2 [21,24) and
+        // the terminal loads [24,30), or the two shunt memory-state triples
+        // [21,27) and load_2 [27,30)
+        success *= (matrix.size() == 30);
+        success *= (rational.size() == 30);
+        success *= (rational.verify() == 0);
+
+        AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida_matrix(&matrix);
+        ida_matrix.setMaxSteps(1000000);
+        ida_matrix.setTolerance(1.0e-9, 1.0e-9);
+        ida_matrix.configureSimulation();
+        ida_matrix.initializeSimulation(0.0, true);
+
+        AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida_rational(&rational);
+        ida_rational.setMaxSteps(1000000);
+        ida_rational.setTolerance(1.0e-9, 1.0e-9);
+        ida_rational.configureSimulation();
+        ida_rational.initializeSimulation(0.0, true);
+
+        const auto* y_matrix   = matrix.y().getData();
+        const auto* y_rational = rational.y().getData();
+
+        // Tolerance is the measured trajectory-agreement floor at the 1.0e-9
+        // solver tolerance with headroom.
+        const RealT agreement_tol = 1.0e-6;
+
+        for (const RealT t_check : {0.01, 0.3})
+        {
+          ida_matrix.runSimulation(t_check);
+          ida_rational.runSimulation(t_check);
+
+          for (size_t j = 0; j < 15; ++j)
+          {
+            success *= isEqual(y_rational[j], y_matrix[j], agreement_tol);
+          }
+          for (size_t n = 0; n < 3; ++n)
+          {
+            success *= isEqual(y_rational[15 + n],
+                               y_matrix[15 + n] + y_matrix[24 + n],
+                               agreement_tol);
+            success *= isEqual(y_rational[18 + n],
+                               y_matrix[18 + n] + y_matrix[27 + n],
+                               agreement_tol);
+            success *= isEqual(y_rational[27 + n], y_matrix[21 + n], agreement_tol);
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Rational-admittance source agrees with the series-matrix form.
+       *
+       * The series R and L source branch is exactly the one-real-pole
+       * admittance \f$ (1/L_s)/(s + R_s/L_s) \f$ with no feedthrough. The
+       * twin drives the primitive-load circuit of the twin-circuit test from
+       * the same source written both ways. The shared trajectories must
+       * agree at the measured solver floor, the branch voltage must equal
+       * the EMF minus the terminal voltage, and the memory state scaled by
+       * the residue must recover the primitive branch current.
+       */
+      TestOutcome twinSource()
+      {
+        TestStatus success = true;
+
+        std::istringstream primitive_stream(twinPrimitiveCaseJson());
+        const auto         primitive_data = GridKit::EMT::parseSystemModelData(primitive_stream);
+        std::istringstream rational_stream(twinSourceCaseJson());
+        const auto         rational_data = GridKit::EMT::parseSystemModelData(rational_stream);
+
+        GridKit::EMT::SystemModel<ScalarT, IdxT> primitive(primitive_data);
+        primitive.allocate();
+        GridKit::EMT::SystemModel<ScalarT, IdxT> rational(rational_data);
+        rational.allocate();
+
+        // Layouts: bus v [0,3), source e [3,6); then either the primitive
+        // branch current [6,9) and the loads [9,15), or the branch voltage
+        // [6,9), one memory-state triple [9,12), and the loads [12,18)
+        success *= (primitive.size() == 15);
+        success *= (rational.size() == 18);
+        success *= (rational.verify() == 0);
+
+        AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida_primitive(&primitive);
+        ida_primitive.setMaxSteps(1000000);
+        ida_primitive.setTolerance(1.0e-9, 1.0e-9);
+        ida_primitive.configureSimulation();
+        ida_primitive.initializeSimulation(0.0, true);
+
+        AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida_rational(&rational);
+        ida_rational.setMaxSteps(1000000);
+        ida_rational.setTolerance(1.0e-9, 1.0e-9);
+        ida_rational.configureSimulation();
+        ida_rational.initializeSimulation(0.0, true);
+
+        const auto* y_primitive = primitive.y().getData();
+        const auto* y_rational  = rational.y().getData();
+
+        // Tolerance is the measured trajectory-agreement floor at the 1.0e-9
+        // solver tolerance with headroom.
+        const RealT agreement_tol = 1.0e-6;
+
+        // The residue folded into the memory-state output
+        const RealT residue = 100.0;
+
+        for (const RealT t_check : {0.01, 0.3})
+        {
+          ida_primitive.runSimulation(t_check);
+          ida_rational.runSimulation(t_check);
+
+          for (size_t j = 0; j < 6; ++j)
+          {
+            success *= isEqual(y_rational[j], y_primitive[j], agreement_tol);
+          }
+          for (size_t n = 0; n < 3; ++n)
+          {
+            success *= isEqual(y_rational[6 + n],
+                               y_rational[3 + n] - y_rational[n],
+                               agreement_tol);
+            success *= isEqual(residue * y_rational[9 + n],
+                               y_primitive[6 + n],
+                               agreement_tol);
+            success *= isEqual(y_rational[12 + n], y_primitive[9 + n], agreement_tol);
+            success *= isEqual(y_rational[15 + n], y_primitive[12 + n], agreement_tol);
+          }
+        }
 
         return success.report(__func__);
       }

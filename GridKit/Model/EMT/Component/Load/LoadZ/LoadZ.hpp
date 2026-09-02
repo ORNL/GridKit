@@ -7,9 +7,12 @@
 
 #pragma once
 
+#include <optional>
+
 #include <GridKit/Model/EMT/Component.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/EMT/ComponentSignals.hpp>
+#include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFit.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
@@ -74,6 +77,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
+      using Component<scalar_type, index_type>::own_size_;
 
     public:
       using ScalarT    = scalar_type;
@@ -82,6 +86,7 @@ namespace GridKit
       using ModelDataT = LoadZData<RealT, IdxT>;
       using SignalT    = SignalNode<ScalarT, IdxT>;
       using Port3T     = Port3<ScalarT, IdxT>;
+      using VectorFitT = VectorFit<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
 
       LoadZ();
@@ -110,6 +115,7 @@ namespace GridKit
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
+      bool hasResistance() const;
       bool hasInductance() const;
 
       const Model::VariableMonitorBase* getMonitor() const override;
@@ -124,6 +130,14 @@ namespace GridKit
       /* Input parameters */
       ABCMatrix<RealT> R_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
       ABCMatrix<RealT> L_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
+
+      /* Setpoints for control variables */
+      RealT rl_on_{ONE<RealT>};
+
+      /* Rational impedance submodel */
+      std::optional<VectorFitT> z_;
+      bool                      fit_e_singular_{false};
+      Port3T                    i_port_{};
 
       ComponentSignals<ScalarT, IdxT, LoadZInternalVariables, LoadZExternalVariables> signals_;
 
