@@ -1065,12 +1065,15 @@ namespace GridKit
       /**
        * @brief Softened nonnegative root of a current-circle squared radius
        *
-       * Evaluates @f$\sqrt{\max(0, s)}@f$ with the root softened at the
-       * @ref CURRENT_CIRCLE_DELTA scale. The hinge is exact, so an exhausted
-       * circle has exactly no capacity and an over-driven one stays finite and
-       * nonnegative; the softening bounds the slope where the circle closes,
-       * which the exact root leaves unbounded. Neither step uses the smoothing
-       * scale, so the current circle does not move with it.
+       * Evaluates @f$\sqrt{\max(0, s)}@f$ as a softened root of a smoothed
+       * hinge. The root is softened at the @ref CURRENT_CIRCLE_DELTA scale,
+       * which bounds the slope where the circle closes; the exact root leaves
+       * it unbounded. The hinge is smoothed at the much narrower
+       * @ref CURRENT_CIRCLE_KNEE scale, which keeps the result nonnegative and
+       * gives it one derivative at the closed circle rather than a
+       * one-sided pair. Neither step uses the smoothing scale, so the current
+       * circle does not move with it, and neither root can reach zero, so both
+       * are differentiable everywhere.
        *
        * @tparam ValueT Differentiable scalar or plain real.
        * @param[in] square Squared circle radius on the component base.
@@ -1081,7 +1084,11 @@ namespace GridKit
       [[gnu::always_inline]] inline ValueT
       Reecb<scalar_type, index_type>::circleRoot(ValueT square)
       {
-        const ValueT hinged = HALF<RealT> * (square + std::abs(square));
+        const ValueT hinged =
+            HALF<RealT>
+            * (square
+               + std::sqrt(square * square
+                           + CURRENT_CIRCLE_KNEE * CURRENT_CIRCLE_KNEE));
         return hinged / std::sqrt(hinged + CURRENT_CIRCLE_HINGE);
       }
 

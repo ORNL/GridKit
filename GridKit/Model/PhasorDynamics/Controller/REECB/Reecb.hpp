@@ -118,6 +118,12 @@ namespace GridKit
         static constexpr RealT CURRENT_CIRCLE_HINGE =
             CURRENT_CIRCLE_DELTA * CURRENT_CIRCLE_DELTA;
 
+        /// Current-circle radicand knee [p.u. current squared]. Sized so a closed
+        /// circle leaves a capacity within INITIALIZATION_TOLERANCE of zero, which
+        /// keeps the knee off every initialization comparison.
+        static constexpr RealT CURRENT_CIRCLE_KNEE =
+            CURRENT_CIRCLE_DELTA * INITIALIZATION_TOLERANCE;
+
         Reecb(BusT* bus);
         Reecb(BusT* bus, const ModelDataT& data);
         ~Reecb();

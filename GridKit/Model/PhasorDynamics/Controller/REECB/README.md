@@ -430,15 +430,21 @@ $\delta_L=10^{-2}$ p.u.:
 \text{circleroot}(s)
 =\dfrac{s^+}{\sqrt{s^++\delta_L^2}},
 \qquad
-s^+=\tfrac{1}{2}\left(s+|s|\right).
+s^+=\tfrac{1}{2}\left(s+\sqrt{s^2+\kappa_L^2}\right).
 ```
 
-The hinge is exact, so an exhausted circle has no capacity and an over-driven
-one stays at zero rather than turning negative or unrepresentable. The
-softening bounds the slope by $\delta_L^{-1}$ and derates capacities of order
-$\delta_L$, at most $3\times10^{-3}$ p.u. and under $5\times10^{-5}$ p.u. at
-rated current. Neither step uses the smoothing scale $\mu$, so the current
-circle does not move with it. At $s=0$ the hinge is a subgradient point.
+The softening bounds the slope by $\delta_L^{-1}$ and derates capacities of
+order $\delta_L$, at most $3\times10^{-3}$ p.u. and under $5\times10^{-5}$
+p.u. at rated current. The hinge keeps the capacity nonnegative, so an
+over-driven circle reads as closed rather than turning negative or
+unrepresentable, and its knee $\kappa_L=\delta_L\epsilon_0$ is narrow enough
+that a closed circle is left within $\epsilon_0$ of zero. That places the knee
+below every initialization comparison while still giving the row one
+derivative at $s=0$, rather than the pair of one-sided derivatives an exact
+hinge would leave for the two differentiation paths to choose between. Neither
+radicand can reach zero, so both roots are differentiable everywhere, and
+neither step uses the smoothing scale $\mu$, so the current circle does not
+move with it.
 
 [^wecc-reecb-specification]: [WECC REMTF, *Generic Solar Photovoltaic System Dynamic Simulation Model Specification*](https://www.wecc.org/sites/default/files/documents/meeting/2024/WECC-Solar-PV-Dynamic-Model-Specification-September-2012.pdf), September 2012.
 

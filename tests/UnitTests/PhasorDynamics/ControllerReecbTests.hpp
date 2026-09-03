@@ -1680,13 +1680,14 @@ namespace GridKit
         };
 
         // The probe state commands 0.4 on the active axis and 0.2 on the
-        // reactive axis, both on the component base, so these limits straddle
-        // the circle radicand hinge on each priority axis. An exhausted circle
-        // sits on the hinge itself, where the two paths are free to take
-        // different one-sided derivatives, so it is not compared here.
-        const std::array<CurrentCircleProbe, 4> current_circle_probes{{
+        // reactive axis, both on the component base, so these limits put the
+        // circle radicand above, exactly at, and below zero on each priority
+        // axis. The smoothed hinge has a single derivative at the closed
+        // circle, so both paths are compared there too.
+        const std::array<CurrentCircleProbe, 5> current_circle_probes{{
             {"open current circle", true, 2.5, 2.0},
             {"closing current circle", true, 0.41, 0.05},
+            {"exhausted current circle", true, 0.4, 0.0},
             {"hinged current circle", true, 0.2, 0.0},
             {"hinged current circle on the reactive axis", false, 0.1, 0.0},
         }};
@@ -1928,7 +1929,8 @@ namespace GridKit
       static RealT circleCapacitySquared(RealT square)
       {
         const RealT hinge  = ReecbT::CURRENT_CIRCLE_HINGE;
-        const RealT hinged = HALF<RealT> * (square + std::abs(square));
+        const RealT knee   = ReecbT::CURRENT_CIRCLE_KNEE;
+        const RealT hinged = HALF<RealT> * (square + std::hypot(square, knee));
         return hinged / std::sqrt(hinged + hinge);
       }
 
