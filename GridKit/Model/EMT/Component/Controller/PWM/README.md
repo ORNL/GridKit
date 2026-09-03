@@ -23,7 +23,7 @@ $f_{\mathrm{c}}$ | [Hz] | `fc` | Carrier frequency | Required, $f_{\mathrm{c}}>f
 \begin{aligned}
 0 &\le M \le 1 \\
 f_{\mathrm{c}} &> f_{\mathrm{m}} > 0 \\
-\dfrac{f_{\mathrm{c}}}{f_{\mathrm{m}}} &\in \mathbb{N}
+\dfrac{f_{\mathrm{c}}}{f_{\mathrm{m}}} &\in 3\mathbb{N}
 \end{aligned}
 ```
 
@@ -33,25 +33,15 @@ f_{\mathrm{c}} &> f_{\mathrm{m}} > 0 \\
 m_f := \dfrac{f_{\mathrm{c}}}{f_{\mathrm{m}}}
 ```
 
-The phase-offset vector is
+The normalized pulse half-width is
 
 ```math
-\boldsymbol{\phi}
-:=
-\begin{bmatrix}
-0 & -\dfrac{2\pi}{3} & \dfrac{2\pi}{3}
-\end{bmatrix}^{\mathsf{T}}
-```
-
-The normalized pulse half-widths are
-
-```math
-D_{k,m} := \dfrac{1}{4}
+D_m := \dfrac{1}{4}
 \left[
-  1+M\sin\left(\dfrac{2\pi m}{m_f}+\phi_k\right)
+  1+M\sin\left(\dfrac{2\pi m}{m_f}\right)
 \right]
 \qquad
-k\in\{a,b,c\},\quad m\in\{0,\ldots,m_f-1\}
+m\in\{0,\ldots,m_f-1\}
 ```
 
 The centered carrier phase is
@@ -61,6 +51,16 @@ The centered carrier phase is
 :=
 \operatorname{mod}\left(x+\dfrac{m_f}{2},m_f\right)
 -\dfrac{m_f}{2}
+```
+
+The phase carrier functions are
+
+```math
+\begin{aligned}
+\theta_a(x) &:= \theta(x) \\
+\theta_b(x) &:= \theta\left(x-\dfrac{m_f}{3}\right) \\
+\theta_c(x) &:= \theta\left(x+\dfrac{m_f}{3}\right)
+\end{aligned}
 ```
 
 The centered pulse function uses the GridKit
@@ -123,11 +123,11 @@ None.
 ```math
 \begin{aligned}
 s_a &\leftarrow \sum_{m=0}^{m_f-1}
-  p\left(\theta\left(f_{\mathrm{c}}t-m-D_{a,m}\right),D_{a,m}\right) \\
+  p\left(\theta_a\left(f_{\mathrm{c}}t-m-D_m\right),D_m\right) \\
 s_b &\leftarrow \sum_{m=0}^{m_f-1}
-  p\left(\theta\left(f_{\mathrm{c}}t-m-D_{b,m}\right),D_{b,m}\right) \\
+  p\left(\theta_b\left(f_{\mathrm{c}}t-m-D_m\right),D_m\right) \\
 s_c &\leftarrow \sum_{m=0}^{m_f-1}
-  p\left(\theta\left(f_{\mathrm{c}}t-m-D_{c,m}\right),D_{c,m}\right)
+  p\left(\theta_c\left(f_{\mathrm{c}}t-m-D_m\right),D_m\right)
 \end{aligned}
 ```
 
