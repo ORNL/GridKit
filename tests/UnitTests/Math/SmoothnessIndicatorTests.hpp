@@ -225,6 +225,14 @@ namespace GridKit
         success *= std::isfinite(Math::ramp(far_below));
         success *= (Math::ramp(far_below) < roundoff);
 
+        const RealT saved_mu   = Math::MU<RealT>;
+        const RealT custom_mu  = 500.0;
+        Math::MU<RealT>        = custom_mu;
+        success               *= (std::abs(Math::ramp(scalar(0.0))
+                             - std::log(scalar(2.0)) / scalar(custom_mu))
+                    < roundoff);
+        Math::MU<RealT>        = saved_mu;
+
         success *= (smooth_clip > lower);
         success *= (smooth_clip < upper);
         success *= std::isfinite(Math::clamp(far_above, lower, upper));

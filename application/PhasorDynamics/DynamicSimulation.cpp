@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -23,6 +24,8 @@ int runApplication(int argc, const char* argv[])
   // Study file
   checkCommandLine(argc, "DynamicSimulation");
   auto study = parseStudyData(argv[1]);
+
+  GridKit::Math::MU<real_type> = study.mu;
 
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);
