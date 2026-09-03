@@ -6,34 +6,6 @@
 
 \begin{document}
 
-\def\modulationIndex{0.8}
-\def\modulationFrequency{60}
-\def\carrierFrequency{900}
-\def\topScale{216000}
-\def\bottomScale{900}
-
-\tikzset{declare function={
-  sigmaS(\x,\m) = ifthenelse(\x>=0,
-    1/(1+exp(-\m*\x)), exp(\m*\x)/(1+exp(\m*\x)));
-  st(\x) = \x-floor(\x);
-  taum(\x,\q) = \x-(st(\carrierFrequency*\x)-\q)/\carrierFrequency;
-  da(\x) = (1+
-    \modulationIndex*sin(360*\modulationFrequency*\x))/(2*\carrierFrequency);
-  db(\x) = (1+
-    \modulationIndex*sin(360*\modulationFrequency*\x-120))/(2*\carrierFrequency);
-  dc(\x) = (1+
-    \modulationIndex*sin(360*\modulationFrequency*\x+120))/(2*\carrierFrequency);
-  pa(\x,\q,\m) = sigmaS(\x-taum(\x,\q),\m)
-    -sigmaS(\x-taum(\x,\q)-da(taum(\x,\q)),\m);
-  pb(\x,\q,\m) = sigmaS(\x-taum(\x,\q),\m)
-    -sigmaS(\x-taum(\x,\q)-db(taum(\x,\q)),\m);
-  pc(\x,\q,\m) = sigmaS(\x-taum(\x,\q),\m)
-    -sigmaS(\x-taum(\x,\q)-dc(taum(\x,\q)),\m);
-  sa(\x,\m) = pa(\x,-1,\m)+pa(\x,0,\m)+pa(\x,1,\m);
-  sb(\x,\m) = pb(\x,-1,\m)+pb(\x,0,\m)+pb(\x,1,\m);
-  sc(\x,\m) = pc(\x,-1,\m)+pc(\x,0,\m)+pc(\x,1,\m);
-}}
-
 \begin{tikzpicture}[emt diagram]
 \begin{groupplot}[
   group style={group name=pwm, group size=1 by 7, vertical sep=0.18cm},
@@ -58,8 +30,6 @@
   },
   every axis plot/.append style={black, semithick, no markers},
   cycle list={{black}},
-  samples=1201,
-  domain=-0.00015:0.01682,
   clip=true
 ]
 
@@ -68,14 +38,14 @@
   axis x line=none,
   xtick=\empty
 ]
-\addplot {sa(x,\topScale)};
+\addplot table [x=t, y=sa_top] {diagram.dat};
 
 \nextgroupplot[
   ylabel={$s_b$},
   axis x line=none,
   xtick=\empty
 ]
-\addplot {sb(x,\topScale)};
+\addplot table [x=t, y=sb_top] {diagram.dat};
 
 \nextgroupplot[
   ylabel={$s_c$},
@@ -85,7 +55,7 @@
   xlabel={$t\,[\mathrm{s}]$},
   xlabel style={font=\small}
 ]
-\addplot {sc(x,\topScale)};
+\addplot table [x=t, y=sc_top] {diagram.dat};
 
 \nextgroupplot[hide axis]
 
@@ -94,14 +64,14 @@
   axis x line=none,
   xtick=\empty
 ]
-\addplot {sa(x,\bottomScale)};
+\addplot table [x=t, y=sa_bottom] {diagram.dat};
 
 \nextgroupplot[
   ylabel={$s_b$},
   axis x line=none,
   xtick=\empty
 ]
-\addplot {sb(x,\bottomScale)};
+\addplot table [x=t, y=sb_bottom] {diagram.dat};
 
 \nextgroupplot[
   ylabel={$s_c$},
@@ -111,12 +81,12 @@
   xlabel={$t\,[\mathrm{s}]$},
   xlabel style={font=\small}
 ]
-\addplot {sc(x,\bottomScale)};
+\addplot table [x=t, y=sc_bottom] {diagram.dat};
 
 \end{groupplot}
 \node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r2.east)
-  {$\mu=4f_{\mathrm{c}}f_{\mathrm{m}}$};
+  {$\mu=240$};
 \node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r6.east)
-  {$\mu=f_{\mathrm{c}}$};
+  {$\mu=1$};
 \end{tikzpicture}
 \end{document}

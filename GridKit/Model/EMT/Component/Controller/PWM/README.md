@@ -7,7 +7,7 @@ DAE variables or residual rows.
 
 ![PWM model switching signal](../../../../../../docs/Figures/EMT/Controller/PWM/diagram.png)
 
-Figure 1: PWM switching signal for $M=0.8$, $f_{\mathrm{m}}=60\,\mathrm{Hz}$, and $f_{\mathrm{c}}=900\,\mathrm{Hz}$ at $\mu=4f_{\mathrm{c}}f_{\mathrm{m}}$ and $\mu=f_{\mathrm{c}}$
+Figure 1: PWM switching signal for $M=0.8$, $f_{\mathrm{m}}=60\,\mathrm{Hz}$, and $f_{\mathrm{c}}=900\,\mathrm{Hz}$ at $\mu=240$ and $\mu=1$
 
 ## Model Parameters
 
@@ -22,33 +22,51 @@ $f_{\mathrm{c}}$ | [Hz] | `fc` | Carrier frequency | Required, $f_{\mathrm{c}}>f
 ```math
 \begin{aligned}
 0 &\le M \le 1 \\
-f_{\mathrm{c}} &> f_{\mathrm{m}} > 0
+f_{\mathrm{c}} &> f_{\mathrm{m}} > 0 \\
+\dfrac{f_{\mathrm{c}}}{f_{\mathrm{m}}} &\in \mathbb{N}
 \end{aligned}
 ```
 
 ### Derived Parameters
 
-*Important!*: We can and should smooth approximate sawtooth in a cheap way.
-
 ```math
 \begin{aligned}
-\operatorname{st}(x) &:= x-\text{floor}(x) \\
-\tau_m &:= t-\dfrac{\operatorname{st}(f_{\mathrm{c}}t)-m}{f_{\mathrm{c}}}
-\qquad m\in\{-1,0,1\}
+T_{\mathrm{c}} &:= \dfrac{1}{f_{\mathrm{c}}} \\
+T_{\mathrm{m}} &:= \dfrac{1}{f_{\mathrm{m}}} \\
+m_f &:= \dfrac{T_{\mathrm{m}}}{T_{\mathrm{c}}}
+     = \dfrac{f_{\mathrm{c}}}{f_{\mathrm{m}}}
 \end{aligned}
 ```
 
-The three-phase pulse-width vector is
+The phase-offset vector is
 
 ```math
-\mathbf{d}(t)
-=
-\dfrac{1}{2f_{\mathrm{c}}}
+\boldsymbol{\phi}
+:=
 \begin{bmatrix}
-1 + M\sin\left(2\pi f_{\mathrm{m}}t\right) \\
-1 + M\sin\left(2\pi f_{\mathrm{m}}t-\dfrac{2\pi}{3}\right) \\
-1 + M\sin\left(2\pi f_{\mathrm{m}}t+\dfrac{2\pi}{3}\right)
-\end{bmatrix}
+0 & -\dfrac{2\pi}{3} & \dfrac{2\pi}{3}
+\end{bmatrix}^{\mathsf{T}}
+```
+
+The normalized pulse half-widths and centered carrier phases are
+
+```math
+\begin{aligned}
+D_{k,m} &:= \dfrac{1}{4}
+\left[
+  1+M\sin\left(\dfrac{2\pi m}{m_f}+\phi_k\right)
+\right] \\
+\theta_{k,m}(t) &:=
+\operatorname{mod}\left(
+  f_{\mathrm{c}}t
+  -D_{k,m}
+  +\dfrac{m_f}{2},
+  m_f
+\right)
+-\dfrac{m_f}{2}
+\qquad
+k\in\{a,b,c\},\quad m\in\{0,\ldots,m_f-1\}
+\end{aligned}
 ```
 
 ## Model Ports
@@ -105,20 +123,20 @@ $\sigma$ denotes the GridKit [`sigmoid`](../../../../../CommonMath.md#primitives
 
 ```math
 \begin{aligned}
-s_a &\leftarrow \sum_{m=-1}^{1}
+s_a &\leftarrow \sum_{m=0}^{m_f-1}
   \left[
-    \sigma\left(t-\tau_m\right)
-    -\sigma\left(t-\tau_m-d_a\left(\tau_m\right)\right)
+    \sigma\left(\theta_{a,m}\left(t-mT_{\mathrm{c}}\right)+D_{a,m}\right)
+    -\sigma\left(\theta_{a,m}\left(t-mT_{\mathrm{c}}\right)-D_{a,m}\right)
   \right] \\
-s_b &\leftarrow \sum_{m=-1}^{1}
+s_b &\leftarrow \sum_{m=0}^{m_f-1}
   \left[
-    \sigma\left(t-\tau_m\right)
-    -\sigma\left(t-\tau_m-d_b\left(\tau_m\right)\right)
+    \sigma\left(\theta_{b,m}\left(t-mT_{\mathrm{c}}\right)+D_{b,m}\right)
+    -\sigma\left(\theta_{b,m}\left(t-mT_{\mathrm{c}}\right)-D_{b,m}\right)
   \right] \\
-s_c &\leftarrow \sum_{m=-1}^{1}
+s_c &\leftarrow \sum_{m=0}^{m_f-1}
   \left[
-    \sigma\left(t-\tau_m\right)
-    -\sigma\left(t-\tau_m-d_c\left(\tau_m\right)\right)
+    \sigma\left(\theta_{c,m}\left(t-mT_{\mathrm{c}}\right)+D_{c,m}\right)
+    -\sigma\left(\theta_{c,m}\left(t-mT_{\mathrm{c}}\right)-D_{c,m}\right)
   \right]
 \end{aligned}
 ```
