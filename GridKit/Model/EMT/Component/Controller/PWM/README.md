@@ -30,7 +30,10 @@ f_{\mathrm{c}} &> f_{\mathrm{m}} > 0 \\
 ### Derived Parameters
 
 ```math
-m_f := \dfrac{f_{\mathrm{c}}}{f_{\mathrm{m}}}
+\begin{aligned}
+T_{\mathrm{m}} &:= \dfrac{1}{f_{\mathrm{m}}} \\
+m_f &:= \dfrac{f_{\mathrm{c}}}{2f_{\mathrm{m}}}
+\end{aligned}
 ```
 
 The normalized pulse half-width is
@@ -38,37 +41,23 @@ The normalized pulse half-width is
 ```math
 D_m := \dfrac{1}{4}
 \left[
-  1+M\sin\left(\dfrac{2\pi m}{m_f}\right)
+  1+M\sin\left(\dfrac{\pi m}{m_f}\right)
 \right]
 \qquad
-m\in\{0,\ldots,m_f-1\}
+m\in\{0,\ldots,2m_f-1\}
 ```
 
-The centered carrier phase is
+The pulse-aligned carrier phase is
 
 ```math
-\theta(x)
+\theta_m(x)
 :=
-\operatorname{mod}\left(x+\dfrac{m_f}{2},m_f\right)
--\dfrac{m_f}{2}
+\operatorname{mod}\left(f_{\mathrm{c}}x-m-D_m+m_f,2m_f\right)
+-m_f
 ```
 
-The phase carrier functions are
-
-```math
-\begin{aligned}
-\theta_a(x) &:= \theta(x) \\
-\theta_b(x) &:= \theta\left(x-\dfrac{m_f}{3}\right) \\
-\theta_c(x) &:= \theta\left(x+\dfrac{m_f}{3}\right)
-\end{aligned}
-```
-
-The centered pulse function uses the GridKit
+The switching function uses the GridKit
 [`sigmoid`](../../../../../CommonMath.md#primitives)
-
-```math
-p(x,D) := \sigma(x+D)-\sigma(x-D)
-```
 
 ## Model Ports
 
@@ -122,12 +111,21 @@ None.
 
 ```math
 \begin{aligned}
-s_a &\leftarrow \sum_{m=0}^{m_f-1}
-  p\left(\theta_a\left(f_{\mathrm{c}}t-m-D_m\right),D_m\right) \\
-s_b &\leftarrow \sum_{m=0}^{m_f-1}
-  p\left(\theta_b\left(f_{\mathrm{c}}t-m-D_m\right),D_m\right) \\
-s_c &\leftarrow \sum_{m=0}^{m_f-1}
-  p\left(\theta_c\left(f_{\mathrm{c}}t-m-D_m\right),D_m\right)
+s_a(t) &\leftarrow \sum_{m=0}^{2m_f-1}
+  \left[
+    \sigma\left(\theta_m(t)+D_m\right)
+    -\sigma\left(\theta_m(t)-D_m\right)
+  \right] \\
+s_b\left(t+\dfrac{T_{\mathrm{m}}}{3}\right) &\leftarrow \sum_{m=0}^{2m_f-1}
+  \left[
+    \sigma\left(\theta_m(t)+D_m\right)
+    -\sigma\left(\theta_m(t)-D_m\right)
+  \right] \\
+s_c\left(t-\dfrac{T_{\mathrm{m}}}{3}\right) &\leftarrow \sum_{m=0}^{2m_f-1}
+  \left[
+    \sigma\left(\theta_m(t)+D_m\right)
+    -\sigma\left(\theta_m(t)-D_m\right)
+  \right]
 \end{aligned}
 ```
 
