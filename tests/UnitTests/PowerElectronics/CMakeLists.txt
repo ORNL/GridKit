@@ -6,9 +6,7 @@ target_link_libraries(
 add_executable(test_subsystem_model_with_hires runSubsystemModelWithHiresTest.cpp)
 target_link_libraries(
   test_subsystem_model_with_hires
-  PRIVATE GridKit::power_elec_partition_interfaces 
-          GridKit::testing
-          GridKit::sparse_matrix)
+  PRIVATE GridKit::power_elec_partition_interfaces GridKit::testing GridKit::sparse_matrix)
 
 add_executable(test_power_electronics_component_clone runComponentCloneTests.cpp)
 target_link_libraries(
@@ -21,7 +19,8 @@ target_link_libraries(
 
 add_test(NAME PowerElectronicsNodeTest COMMAND $<TARGET_FILE:test_power_electronics_node>)
 add_test(NAME SubsystemModelWithHires COMMAND $<TARGET_FILE:test_subsystem_model_with_hires>)
-add_test(NAME PowerElectronicsComponentCloneTest COMMAND $<TARGET_FILE:test_power_electronics_component_clone>)
+add_test(NAME PowerElectronicsComponentCloneTest
+         COMMAND $<TARGET_FILE:test_power_electronics_component_clone>)
 
 install(TARGETS test_power_electronics_node RUNTIME DESTINATION bin)
 install(TARGETS test_subsystem_model_with_hires RUNTIME DESTINATION bin)
