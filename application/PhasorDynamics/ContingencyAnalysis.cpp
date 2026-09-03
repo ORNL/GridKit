@@ -6,6 +6,7 @@
 #include <omp.h>
 #endif
 
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -153,6 +154,8 @@ int main(int argc, const char* argv[])
   // Study file
   checkCommandLine(argc, "ContingencyAnalysis");
   auto study_data = parseStudyData(argv[1]);
+
+  GridKit::Math::MU<real_type> = study_data.mu;
 
   const auto start = Clock::now();
 

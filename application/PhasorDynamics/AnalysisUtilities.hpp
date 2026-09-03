@@ -1,16 +1,19 @@
 #pragma once
 
+#include <cmath>
 #include <cstddef>
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -60,6 +63,8 @@ namespace GridKit
       double                                         rel_tol;
       /// absolute tolerance for the solver
       double                                         abs_tol;
+      /// CommonMath smoothing scale
+      double                                         mu{Math::DEFAULT_MU<double>};
       /// fixed solver time step size, or 0 for adaptive stepping
       double                                         dt_fixed;
       /// maximum number of solver time steps, or 0 for the IDA default
@@ -99,8 +104,13 @@ namespace GridKit
       j.at("system_model_file").get_to(c.system_model_file);
       c.dt_monitor = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);
-      c.rel_tol            = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
-      c.abs_tol            = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
+      c.rel_tol = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
+      c.abs_tol = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
+      c.mu      = j.value("mu", Math::DEFAULT_MU<double>);
+      if (!(c.mu > 0.0 && std::isfinite(c.mu)))
+      {
+        throw std::invalid_argument("\"mu\" must be a positive finite number");
+      }
       c.dt_fixed           = j.value("dt_fixed", 0.0);
       c.max_steps          = j.value("max_steps", std::size_t{0});
       c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
