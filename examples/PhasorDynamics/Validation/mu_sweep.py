@@ -18,13 +18,12 @@ import numpy as np
 
 CASES = (
     "ACTIVSg200",
-    "ACTIVSg500",
     "ACTIVSg2000",
-    "ACTIVSg10k",
     "Hawaii",
     "IEEE39",
     "WECC240",
 )
+PLOT_CASES = ("IEEE39", "ACTIVSg200", "WECC240", "ACTIVSg2000")
 SIGNALS = (
     ("omega", r"$\Delta\omega$", "_omega"),
     ("p", r"$P$", "_p"),
@@ -32,7 +31,25 @@ SIGNALS = (
     ("vmag", r"$|V|$", "_Vm"),
 )
 GENERATOR_CLASSES = {"genrou", "gensal", "genclassical"}
-COLORS = ("#173665", "#079b88", "#d45b00", "#7851a9")
+COLORS = ("#3b72a8", "#e9ac3c", "#d179a5", "#4e9e8c")
+GRID_COLOR = "#d8d8d8"
+FAILURE_COLOR = "#a51c30"
+RC_PARAMS = {
+    "font.family": "serif",
+    "font.serif": ["Latin Modern Roman", "CMU Serif", "DejaVu Serif"],
+    "mathtext.fontset": "cm",
+    "font.size": 10.0,
+    "axes.labelsize": 11.0,
+    "axes.edgecolor": "#000000",
+    "axes.linewidth": 0.8,
+    "xtick.labelsize": 10.0,
+    "ytick.labelsize": 10.0,
+    "xtick.direction": "out",
+    "ytick.direction": "out",
+    "legend.fontsize": 10.5,
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+}
 FIELDNAMES = (
     "case",
     "mu",
@@ -282,71 +299,63 @@ def read_results(path):
         return list(csv.DictReader(stream))
 
 
-def plot_results(rows, path):
-    mus = sorted({float(row["mu"]) for row in rows})
-    case_names = [name for name in CASES if any(row["case"] == name for row in rows)]
-    plt.rcParams.update({
-        "font.family": "serif",
-        "font.serif": ["Times New Roman", "Nimbus Roman", "STIXGeneral", "DejaVu Serif"],
-        "mathtext.fontset": "stix",
-        "axes.edgecolor": "#333333",
-        "axes.linewidth": 0.7,
-        "xtick.direction": "in",
-        "ytick.direction": "in",
-        "xtick.top": True,
-        "ytick.right": True,
-        "pdf.fonttype": 42,
-        "ps.fonttype": 42,
-    })
+def use_text_optical_size():
+    """Latin Modern registers every optical size under one family; keep the 10pt face."""
+    from matplotlib import font_manager
 
-    figure, axes = plt.subplots(4, 2, figsize=(7.2, 9.2), sharex=True, sharey=True)
-    axes = axes.ravel()
+    stale = [face for face in font_manager.fontManager.ttflist
+             if "lmroman" in face.fname.lower() and "lmroman10" not in face.fname.lower()]
+    for face in stale:
+        font_manager.fontManager.ttflist.remove(face)
+
+
+def plot_results(rows, path):
+    from matplotlib.ticker import FixedFormatter, FixedLocator, NullLocator
+
+    lookup = {(row["case"], float(row["mu"]), row["signal"]): row for row in rows}
+    case_names = [name for name in PLOT_CASES
+                  if any(row["case"] == name for row in rows)]
+    mus = sorted({float(row["mu"]) for row in rows if row["case"] in case_names})
+    use_text_optical_size()
+    plt.rcParams.update(RC_PARAMS)
+
+    figure, axes = plt.subplots(2, 2, figsize=(7.0, 6.2), sharex=True, sharey=True)
     handles = []
-    for panel, (axis, case_name) in enumerate(zip(axes, case_names)):
+    for panel, (axis, (signal, label, _suffix)) in enumerate(zip(axes.ravel(), SIGNALS)):
         failed_mus = set()
-        for color, (signal, label, _suffix) in zip(COLORS, SIGNALS):
-            values = []
-            for mu in mus:
-                row = next(row for row in rows
-                           if row["case"] == case_name
-                           and float(row["mu"]) == mu
-                           and row["signal"] == signal)
-                values.append(100.0 * float(row["relative_max_error"]))
-                if row.get("status", "ok") != "ok":
-                    failed_mus.add(mu)
+        for color, case_name in zip(COLORS, case_names):
+            found = [(mu, lookup.get((case_name, mu, signal))) for mu in mus]
+            present = [(mu, row) for mu, row in found if row is not None]
+            failed_mus.update(mu for mu, row in present
+                              if row.get("status", "ok") != "ok")
             line, = axis.plot(
-                mus, values, color=color, marker="o", markersize=4.5,
-                markeredgecolor="white", markeredgewidth=0.6, linewidth=1.8,
-                label=label,
+                [mu for mu, _row in present],
+                [float(row["relative_max_error"]) for _mu, row in present],
+                color=color, marker="o", markersize=3.4, linewidth=1.6, label=case_name,
             )
             if panel == 0:
                 handles.append(line)
-        axis.set_xscale("log", base=2)
+        axis.set_xscale("log")
         axis.set_yscale("log")
-        axis.set_xticks(mus, [f"{mu:g}" for mu in mus])
-        axis.grid(True, color="#dddddd", linewidth=0.55)
+        axis.xaxis.set_major_locator(FixedLocator(mus))
+        axis.xaxis.set_major_formatter(FixedFormatter([f"{mu:g}" for mu in mus]))
+        axis.xaxis.set_minor_locator(NullLocator())
+        axis.grid(True, which="major", color=GRID_COLOR, linewidth=0.5)
         axis.set_axisbelow(True)
-        axis.text(0.04, 0.94, f"({chr(ord('a') + panel)})", transform=axis.transAxes,
-                  va="top", fontweight="bold")
-        axis.text(0.96, 0.08, case_name, transform=axis.transAxes,
-                  ha="right", va="bottom", fontsize=11, fontweight="bold")
+        axis.text(0.035, 0.055, label, transform=axis.transAxes,
+                  ha="left", va="bottom", fontsize=12.0)
         for mu in failed_mus:
-            axis.plot(mu, 0.06, marker="x", color="#a51c30", markersize=6,
+            axis.plot(mu, 0.055, marker="x", color=FAILURE_COLOR, markersize=6,
                       markeredgewidth=1.2, transform=axis.get_xaxis_transform(),
                       clip_on=False)
-        if failed_mus:
-            axis.text(0.04, 0.08, r"$\times$ solver failure", color="#a51c30",
-                      transform=axis.transAxes, va="bottom", fontsize=7.5)
 
-    for axis in axes[len(case_names):]:
-        axis.axis("off")
-    figure.legend(handles=handles, loc="upper center", ncol=len(SIGNALS),
+    figure.legend(handles=handles, loc="upper center", ncol=len(case_names),
                   frameon=False, bbox_to_anchor=(0.5, 0.995),
-                  handlelength=2.4, columnspacing=1.8)
-    figure.supxlabel(r"CommonMath smoothing scale, $\mu$", y=0.025)
-    figure.supylabel(r"Maximum relative error [\%]", x=0.025)
-    figure.subplots_adjust(top=0.94, bottom=0.07, left=0.12, right=0.98,
-                           hspace=0.14, wspace=0.13)
+                  handlelength=2.2, columnspacing=2.6)
+    figure.supxlabel(r"Smoothing scale $\mu$", y=0.028)
+    figure.supylabel("Max Relative Error", x=0.022)
+    figure.subplots_adjust(top=0.93, bottom=0.105, left=0.105, right=0.985,
+                           hspace=0.10, wspace=0.08)
     path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(path, dpi=600, bbox_inches="tight", pad_inches=0.03)
     plt.close(figure)
