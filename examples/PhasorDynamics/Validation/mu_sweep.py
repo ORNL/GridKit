@@ -23,7 +23,7 @@ CASES = (
     "IEEE39",
     "WECC240",
 )
-PLOT_CASES = ("IEEE39", "ACTIVSg200", "WECC240", "ACTIVSg2000")
+PLOT_CASES = ("IEEE39", "ACTIVSg200", "ACTIVSg2000", "WECC240")
 SIGNALS = (
     ("omega", r"$\Delta\omega$", "_omega"),
     ("p", r"$P$", "_p"),
@@ -31,24 +31,36 @@ SIGNALS = (
     ("vmag", r"$|V|$", "_Vm"),
 )
 GENERATOR_CLASSES = {"genrou", "gensal", "genclassical"}
-COLORS = ("#3b72a8", "#e9ac3c", "#d179a5", "#4e9e8c")
-GRID_COLOR = "#d8d8d8"
+CASE_STYLES = {
+    "IEEE39": ("NE", "#2f9184"),
+    "ACTIVSg200": ("Illinois", "#8663a6"),
+    "ACTIVSg2000": ("Texas", "#cc7330"),
+    "WECC240": ("WECC", "#b84a47"),
+}
+GRID_COLOR = "#dde2e7"
 FAILURE_COLOR = "#a51c30"
 RC_PARAMS = {
     "font.family": "serif",
-    "font.serif": ["Latin Modern Roman", "CMU Serif", "DejaVu Serif"],
-    "mathtext.fontset": "cm",
-    "font.size": 10.0,
-    "axes.labelsize": 11.0,
-    "axes.edgecolor": "#000000",
-    "axes.linewidth": 0.8,
-    "xtick.labelsize": 10.0,
-    "ytick.labelsize": 10.0,
-    "xtick.direction": "out",
-    "ytick.direction": "out",
-    "legend.fontsize": 10.5,
+    "font.serif": ["Liberation Serif", "Times New Roman", "Nimbus Roman", "DejaVu Serif"],
+    "mathtext.fontset": "stix",
+    "font.size": 15.0,
+    "axes.labelsize": 15.0,
+    "axes.edgecolor": "#222222",
+    "axes.linewidth": 1.0,
+    "xtick.labelsize": 14.0,
+    "ytick.labelsize": 14.0,
+    "xtick.direction": "in",
+    "ytick.direction": "in",
+    "xtick.major.size": 5.0,
+    "ytick.major.size": 5.0,
+    "xtick.minor.size": 2.8,
+    "ytick.minor.size": 2.8,
+    "legend.fontsize": 15.0,
+    "figure.facecolor": "white",
+    "axes.facecolor": "white",
     "pdf.fonttype": 42,
     "ps.fonttype": 42,
+    "svg.fonttype": "none",
 }
 FIELDNAMES = (
     "case",
@@ -301,16 +313,6 @@ def read_results(path):
         return list(csv.DictReader(stream))
 
 
-def use_text_optical_size():
-    """Latin Modern registers every optical size under one family; keep the 10pt face."""
-    from matplotlib import font_manager
-
-    stale = [face for face in font_manager.fontManager.ttflist
-             if "lmroman" in face.fname.lower() and "lmroman10" not in face.fname.lower()]
-    for face in stale:
-        font_manager.fontManager.ttflist.remove(face)
-
-
 def set_mu_axis(axis, mus):
     """Label every sampled mu when they are few; fall back to decades when dense."""
     from matplotlib.ticker import (FixedFormatter, FixedLocator, LogFormatterMathtext,
@@ -328,19 +330,37 @@ def set_mu_axis(axis, mus):
     axis.xaxis.set_minor_locator(NullLocator())
 
 
+def style_axis(axis):
+    axis.grid(True, which="major", color=GRID_COLOR, linewidth=0.6)
+    axis.set_axisbelow(True)
+    axis.tick_params(which="both", top=True, right=True)
+
+
+def save_figure(figure, path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(path, dpi=600)
+    outputs = [path]
+    if path.suffix.lower() == ".png":
+        pdf = path.with_suffix(".pdf")
+        figure.savefig(pdf)
+        outputs.append(pdf)
+    plt.close(figure)
+    print("Wrote " + " and ".join(str(output) for output in outputs))
+
+
 def plot_results(rows, path):
     lookup = {(row["case"], float(row["mu"]), row["signal"]): row for row in rows}
     case_names = [name for name in PLOT_CASES
                   if any(row["case"] == name for row in rows)]
     mus = sorted({float(row["mu"]) for row in rows if row["case"] in case_names})
-    use_text_optical_size()
     plt.rcParams.update(RC_PARAMS)
 
-    figure, axes = plt.subplots(2, 2, figsize=(7.0, 6.2), sharex=True, sharey=True)
+    figure, axes = plt.subplots(2, 2, figsize=(7.0, 7.7), sharex=True, sharey=True)
     handles = []
     for panel, (axis, (signal, label, _suffix)) in enumerate(zip(axes.ravel(), SIGNALS)):
         failed_mus = set()
-        for color, case_name in zip(COLORS, case_names):
+        for case_name in case_names:
+            display_name, color = CASE_STYLES[case_name]
             found = [(mu, lookup.get((case_name, mu, signal))) for mu in mus]
             present = [(mu, row) for mu, row in found if row is not None]
             failed_mus.update(mu for mu, row in present
@@ -348,32 +368,30 @@ def plot_results(rows, path):
             line, = axis.plot(
                 [mu for mu, _row in present],
                 [float(row["relative_max_error"]) for _mu, row in present],
-                color=color, marker="o", markersize=3.4, linewidth=1.6, label=case_name,
+                color=color, linewidth=2.2, solid_capstyle="round", label=display_name,
             )
             if panel == 0:
                 handles.append(line)
         set_mu_axis(axis, mus)
         axis.set_yscale("log")
-        axis.grid(True, which="major", color=GRID_COLOR, linewidth=0.5)
-        axis.set_axisbelow(True)
-        axis.text(0.035, 0.055, label, transform=axis.transAxes,
-                  ha="left", va="bottom", fontsize=12.0)
+        style_axis(axis)
+        letter = chr(ord("a") + panel)
+        axis.text(0.965, 0.94, rf"$\mathbf{{({letter})}}$ {label}",
+                  transform=axis.transAxes, ha="right", va="top", fontsize=15.0)
         for mu in failed_mus:
-            axis.plot(mu, 0.055, marker="x", color=FAILURE_COLOR, markersize=6,
-                      markeredgewidth=1.2, transform=axis.get_xaxis_transform(),
+            axis.plot(mu, 0.02, marker="x", color=FAILURE_COLOR, markersize=5,
+                      markeredgewidth=1.0, transform=axis.get_xaxis_transform(),
                       clip_on=False)
 
     figure.legend(handles=handles, loc="upper center", ncol=len(case_names),
-                  frameon=False, bbox_to_anchor=(0.5, 0.995),
-                  handlelength=2.2, columnspacing=2.6)
-    figure.supxlabel(r"Smoothing scale $\mu$", y=0.028)
-    figure.supylabel("Max Relative Error", x=0.022)
-    figure.subplots_adjust(top=0.93, bottom=0.105, left=0.105, right=0.985,
-                           hspace=0.10, wspace=0.08)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    figure.savefig(path, dpi=600, bbox_inches="tight", pad_inches=0.03)
-    plt.close(figure)
-    print(f"Wrote {path}")
+                  frameon=False, bbox_to_anchor=(0.5, 0.985),
+                  handlelength=1.5, columnspacing=1.3)
+    for axis in axes[-1, :]:
+        axis.set_xlabel(r"$\mu$ - Smoothing scale")
+    figure.supylabel("Max relative error", x=0.025)
+    figure.subplots_adjust(top=0.90, bottom=0.105, left=0.125, right=0.985,
+                           hspace=0.18, wspace=0.08)
+    save_figure(figure, path)
 
 
 def collect_runs(rows):
@@ -392,11 +410,11 @@ def plot_runtime_results(rows, path):
     case_names = [name for name in PLOT_CASES
                   if any(case_name == name for case_name, _mu in runs)]
     mus = sorted({mu for case_name, mu in runs if case_name in case_names})
-    use_text_optical_size()
     plt.rcParams.update(RC_PARAMS)
 
-    figure, axis = plt.subplots(figsize=(7.0, 3.6))
-    for color, case_name in zip(COLORS, case_names):
+    figure, axis = plt.subplots(figsize=(7.0, 3.5))
+    for case_name in case_names:
+        display_name, color = CASE_STYLES[case_name]
         points = [
             (mu, runs[(case_name, mu)][0])
             for mu in mus
@@ -405,23 +423,19 @@ def plot_runtime_results(rows, path):
         axis.plot(
             [mu for mu, _runtime in points],
             [runtime for _mu, runtime in points],
-            color=color, marker="o", markersize=3.4, linewidth=1.6, label=case_name,
+            color=color, linewidth=2.2, solid_capstyle="round", label=display_name,
         )
 
     set_mu_axis(axis, mus)
     axis.set_yscale("log")
-    axis.set_xlabel(r"Smoothing scale $\mu$")
-    axis.set_ylabel("Elapsed Runtime (s)")
-    axis.grid(True, which="major", color=GRID_COLOR, linewidth=0.5)
-    axis.set_axisbelow(True)
+    axis.set_xlabel(r"$\mu$ - Smoothing scale")
+    axis.set_ylabel("Elapsed runtime [sec]")
+    style_axis(axis)
 
     figure.legend(loc="upper center", ncol=len(case_names), frameon=False,
-                  bbox_to_anchor=(0.5, 0.995), handlelength=2.2, columnspacing=2.6)
-    figure.subplots_adjust(top=0.82, bottom=0.17, left=0.12, right=0.985)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    figure.savefig(path, dpi=600, bbox_inches="tight", pad_inches=0.03)
-    plt.close(figure)
-    print(f"Wrote {path}")
+                  bbox_to_anchor=(0.5, 0.985), handlelength=1.5, columnspacing=1.3)
+    figure.subplots_adjust(top=0.78, bottom=0.20, left=0.13, right=0.985)
+    save_figure(figure, path)
 
 
 def main():
