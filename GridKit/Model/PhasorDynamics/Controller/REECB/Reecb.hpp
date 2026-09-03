@@ -44,7 +44,6 @@ namespace GridKit
         VPIQ,   ///< \f$V_Q^\mathrm{PI}\f$ Algebraic reactive-power PI output [p.u.]
         EPIV,   ///< \f$e_V^\mathrm{PI}\f$ Algebraic voltage-control error [p.u.]
         RPORD,  ///< \f$r_P^\mathrm{ord}\f$ Algebraic limited active-power order rate [p.u./s]
-        ILMAX,  ///< \f$I_L^\max\f$ Algebraic current-circle continuation state on component base [p.u.]
         ILCAP,  ///< \f$I_L^\mathrm{cap}\f$ Algebraic off-axis current capacity on component base [p.u.]
         IQMAX,  ///< \f$I_q^\max\f$ Algebraic reactive-current limit on component base [p.u.]
         IPMAX,  ///< \f$I_p^\max\f$ Algebraic active-current limit on component base [p.u.]
@@ -106,9 +105,18 @@ namespace GridKit
         using InternalVariablesT = ReecbInternalVariables;
         using ExternalVariablesT = ReecbExternalVariables;
 
-        /// Current-circle regularization and initialization reconstruction tolerance.
+        /// Initialization reconstruction tolerance.
         static constexpr RealT INITIALIZATION_TOLERANCE =
             static_cast<RealT>(100.0) * std::numeric_limits<RealT>::epsilon();
+
+        /// Current-circle root softening on the component base [p.u. current].
+        /// Bounds the off-axis capacity slope where the priority axis saturates
+        /// the circle, at the cost of derating capacities below this scale.
+        static constexpr RealT CURRENT_CIRCLE_DELTA = static_cast<RealT>(1.0e-2);
+
+        /// Softening applied to the current-circle radicand [p.u. current squared].
+        static constexpr RealT CURRENT_CIRCLE_HINGE =
+            CURRENT_CIRCLE_DELTA * CURRENT_CIRCLE_DELTA;
 
         Reecb(BusT* bus);
         Reecb(BusT* bus, const ModelDataT& data);
@@ -144,7 +152,6 @@ namespace GridKit
         struct InitialCurrentLimit
         {
           RealT total_limit;
-          RealT continuation;
           RealT off_axis_capacity;
         };
 
@@ -154,15 +161,15 @@ namespace GridKit
         /// Smooth anti-windup derivative within a moving symmetric band.
         [[gnu::always_inline]] static inline ScalarT awband(ScalarT state, ScalarT rate, ScalarT band);
 
-        /// Current-circle continuation state for an initial component-base limit.
-        static RealT circleState(RealT imax, RealT high);
+        /// Softened nonnegative root of a current-circle squared radius.
+        template <typename ValueT>
+        [[gnu::always_inline]] static inline ValueT circleRoot(ValueT square);
 
-        /// Off-axis component-base capacity provided by a continuation state.
-        static RealT capacity(RealT ilmax);
+        /// Off-axis component-base capacity left by a priority-axis command.
+        static RealT circleCapacity(RealT imax, RealT high);
 
-        /// Bisect an initial-limit bracket to its first upper-side point.
-        template <typename FuncT>
-        static RealT bisect(RealT a, RealT b, FuncT below);
+        /// Total limit whose off-axis capacity is exactly `low`.
+        static RealT circleLimit(RealT high, RealT low);
 
         /// Solve the smallest feasible initial limit at or above `lower`.
         static std::optional<InitialCurrentLimit> solveInitialLimit(RealT lower, RealT high, RealT low);

@@ -152,7 +152,6 @@ $e_Q$                        | [p.u.]   | Reactive-power error                  
 $V_Q^\mathrm{PI}$           | [p.u.]   | Reactive-power PI output                      |
 $e_V^\mathrm{PI}$           | [p.u.]   | Voltage-control error                         |
 $r_P^\mathrm{ord}$          | [p.u./s] | Limited active-power order rate               | Component base
-$I_L^{\max}$                | [p.u.]   | Current-circle continuation state             | Component base
 $I_L^\mathrm{cap}$          | [p.u.]   | Off-axis current capacity                     | Component base
 $I_q^{\max}$                | [p.u.]   | Reactive-current limit                        | Component base
 $I_p^{\max}$                | [p.u.]   | Active-current limit                          | Component base
@@ -209,8 +208,7 @@ $P^\mathrm{ref}$       | [p.u.] | Unknown | External active-power reference     
   0 &= -V_Q^\mathrm{PI}+\text{clamp}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}) \\
   0 &= -e_V^\mathrm{PI}+s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
   0 &= -r_P^\mathrm{ord}+\text{aslew}\!\left(\dfrac{k_\mathrm{base}P^\mathrm{ref}-P^\mathrm{ord}}{T_\mathrm{pord}};\,R_P^{\min},R_P^{\max}\right) \\
-  0 &= -I_L^{\max}\sqrt{(I_L^{\max})^2+\epsilon_0}+(I^{\max}-I^\mathrm{high})(I^{\max}+I^\mathrm{high}) \\
-  0 &= -I_L^\mathrm{cap}+\dfrac{(I_L^{\max})^2}{\sqrt{(I_L^{\max})^2+\epsilon_0}} \\
+  0 &= -I_L^\mathrm{cap}+\text{circleroot}\big((I^{\max}-I^\mathrm{high})(I^{\max}+I^\mathrm{high})\big) \\
   0 &= -I_q^{\max}+s_\mathrm{pq}I_L^\mathrm{cap}+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
   0 &= -I_p^{\max}+s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}I_L^\mathrm{cap} \\
   0 &= -I_q^\mathrm{base}+\text{clamp}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}) \\
@@ -224,6 +222,7 @@ Here
 $I^\mathrm{high}=s_\mathrm{pq}k_\mathrm{base}I_p^\mathrm{cmd}
 +s_\mathrm{pq}^\mathrm{off}k_\mathrm{base}I_q^\mathrm{cmd}$ and
 $\epsilon_0=100\epsilon_\mathrm{machine}$.
+[Appendix C](#appendix-c-circleroot) defines `circleroot`.
 
 CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup) and
 [smooth limiter](../../../../CommonMath.md#derived-functions) functions used in
@@ -279,15 +278,22 @@ $I^\max$, if needed, to the smallest finite limit satisfying
   h &= s_\mathrm{pq}I_p+s_\mathrm{pq}^\mathrm{off}|I_q| \\
   \ell &= s_\mathrm{pq}I_q^\mathrm{need}+s_\mathrm{pq}^\mathrm{off}I_p \\
   I &\ge \text{max}(I^\max,h,\ell,I_q^\mathrm{need}) \\
-  x\sqrt{x^2+\epsilon_0} &= (I-h)(I+h) \\
-  \dfrac{x^2}{\sqrt{x^2+\epsilon_0}} &\ge \ell.
+  \text{circleroot}\big((I-h)(I+h)\big) &\ge \ell.
 \end{aligned}
 ```
 
-The solution initializes $I^\max\leftarrow I$, $I_L^\max\leftarrow x$, and
-$I_L^\mathrm{cap}\leftarrow x^2/\sqrt{x^2+\epsilon_0}$. The operating point is
-rejected if no finite solution exists or the reactive-current injection is
-incompatible. Q, V, and P limits are expanded as needed; each adjustment logs
+Inverting `circleroot` on the open side of its hinge gives that limit in closed
+form,
+
+```math
+I=\sqrt{h^2+\tfrac{1}{2}\ell\left(\ell+\sqrt{\ell^2+4\delta_L^2}\right)},
+```
+
+taken to the first representable limit whose reconstructed capacity covers
+$\ell$. The solution initializes $I^\max\leftarrow I$ and
+$I_L^\mathrm{cap}\leftarrow\text{circleroot}\big((I-h)(I+h)\big)$. The
+operating point is rejected if no finite solution exists or the
+reactive-current injection is incompatible. Q, V, and P limits are expanded as needed; each adjustment logs
 a warning.
 
 ```math
@@ -411,6 +417,28 @@ where $\rho$ is GridKit's smooth
 [`ramp`](../../../../CommonMath.md#primitives). With exact one-sided ramps this
 reduces to $\text{clamp}(f;\ell,u)$; the smooth form preserves
 $\text{aslew}(0;\ell,u)=0$.
+
+## Appendix C: `circleroot`
+
+The off-axis capacity is the leg of the current circle the priority-axis
+command leaves, $\sqrt{\max(0,s)}$ with
+$s=(I^{\max}-I^\mathrm{high})(I^{\max}+I^\mathrm{high})$. The exact root has an
+unbounded slope where the circle closes, so REECB softens it at
+$\delta_L=10^{-2}$ p.u.:
+
+```math
+\text{circleroot}(s)
+=\dfrac{s^+}{\sqrt{s^++\delta_L^2}},
+\qquad
+s^+=\tfrac{1}{2}\left(s+|s|\right).
+```
+
+The hinge is exact, so an exhausted circle has no capacity and an over-driven
+one stays at zero rather than turning negative or unrepresentable. The
+softening bounds the slope by $\delta_L^{-1}$ and derates capacities of order
+$\delta_L$, at most $3\times10^{-3}$ p.u. and under $5\times10^{-5}$ p.u. at
+rated current. Neither step uses the smoothing scale $\mu$, so the current
+circle does not move with it. At $s=0$ the hinge is a subgradient point.
 
 [^wecc-reecb-specification]: [WECC REMTF, *Generic Solar Photovoltaic System Dynamic Simulation Model Specification*](https://www.wecc.org/sites/default/files/documents/meeting/2024/WECC-Solar-PV-Dynamic-Model-Specification-September-2012.pdf), September 2012.
 

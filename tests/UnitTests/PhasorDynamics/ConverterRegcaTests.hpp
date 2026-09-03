@@ -209,9 +209,7 @@ namespace GridKit
 
         // P0 and IL1 default to the makeData() values; each row breaks
         // exactly one initialize() guard.
-        const std::array<RejectionCase, 4> rejected{{
-            {"terminal voltage at Vhvmax", kHvrcmVoltageLimit, 0.0, 1.1},
-            {"terminal voltage above Vhvmax", kHvrcmVoltageLimit + 0.1, 0.0, 1.1},
+        const std::array<RejectionCase, 2> rejected{{
             {"terminal voltage just below VA1", kJustBelowVa1, 0.0, 1.1},
             {"zero terminal voltage", 0.0, 0.0, 1.1},
         }};
@@ -247,6 +245,27 @@ namespace GridKit
             std::cout << "Expected rejection: LVPL ceiling below the active current\n";
             success = false;
           }
+        }
+
+        // The HVRCM law is defined at every terminal voltage, so a point
+        // above Vhvmax initializes with the management current active and
+        // still reproduces the requested Q0.
+        {
+          auto data                   = makeData();
+          data.parameters[Params::q0] = 0.1;
+
+          const RealT terminal_voltage = kHvrcmVoltageLimit + kHvrcmMargin;
+
+          Fixture<ScalarT> fixture(data, terminal_voltage);
+          success *= fixture.initialize();
+          success *= (fixture.evaluate() == 0);
+          success *= allResidualsZero(fixture.regca);
+
+          const auto* y  = fixture.regca.y().getData();
+          success       *= scalarMatches(y[index(Vars::IQEXTRA)],
+                                   kHvrcmGain * Math::ramp(kHvrcmMargin),
+                                   "IQEXTRA above Vhvmax");
+          success       *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR above Vhvmax");
         }
 
         // VA1 itself is an admissible LVACM boundary and the operating
@@ -580,19 +599,17 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// High-voltage reactive current management: the initialization root,
-      /// the residual across the transition, and its local derivative.
+      /// High-voltage reactive current management: the initialization value,
+      /// the residual across the ceiling, and its local derivative.
       TestOutcome highVoltageManagement()
       {
         TestStatus success = true;
 
-        // Initialization near Vhvmax solves the smooth constraint for a
-        // nonzero IQEXTRA. Half the transition margin keeps the root
-        // distinct from the margin, so a swapped-argument residual cannot
-        // satisfy this operating point.
+        // Initialization above Vhvmax injects the management current and
+        // leaves Q0 intact. A swapped-argument row would compensate below
+        // the ceiling instead, where this operating point has no current.
         {
-          const RealT margin           = 0.5 * hvrcmTransition();
-          const RealT terminal_voltage = kHvrcmVoltageLimit - margin;
+          const RealT terminal_voltage = kHvrcmVoltageLimit + kHvrcmMargin;
 
           auto data                   = makeData();
           data.parameters[Params::q0] = 0.1;
@@ -602,19 +619,14 @@ namespace GridKit
           success *= (fixture.evaluate() == 0);
           success *= allResidualsZero(fixture.regca);
 
-          // The zero residual already pins the root to the HVRCM equation.
-          // What remains to check is that it is a genuine compensation
-          // above the margin it cancels, and that it leaves Q0 intact.
-          const auto* y = fixture.regca.y().getData();
-          if (!(y[index(Vars::IQEXTRA)] > margin))
-          {
-            std::cout << "IQEXTRA is not above the voltage margin it compensates\n";
-            success = false;
-          }
-          success *= scalarMatches(y[index(Vars::IQ)] - y[index(Vars::IQEXTRA)],
+          const auto* y  = fixture.regca.y().getData();
+          success       *= scalarMatches(y[index(Vars::IQEXTRA)],
+                                   kHvrcmGain * Math::ramp(kHvrcmMargin),
+                                   "IQEXTRA above Vhvmax");
+          success       *= scalarMatches(y[index(Vars::IQ)] - y[index(Vars::IQEXTRA)],
                                    0.1 / terminal_voltage,
                                    "IQ preserves Q0 after HVRCM compensation");
-          success *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR");
+          success       *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR");
         }
 
         // Numeric answer keys pin both sign and magnitude of the HVRCM row.
@@ -629,17 +641,15 @@ namespace GridKit
             RealT expected_residual;
           };
 
-          const RealT transition = hvrcmTransition();
-
-          // Away from the transition the smooth tail is below the tolerance
-          // and the row reduces to -IQEXTRA; at and beyond the ceiling the
-          // tail is the whole answer.
+          // Below the ceiling the smooth tail is under the tolerance and the
+          // row reduces to -IQEXTRA; at the ceiling the tail is the whole
+          // answer; above it the row is the Khv gain on the excess voltage.
           const std::array<HvrcmCase, 5> cases{{
-              {kHvrcmVoltageLimit - 0.2, 0.05, -0.05},
-              {kHvrcmVoltageLimit - 0.1, -0.05, 0.05},
-              {kHvrcmVoltageLimit - transition, transition, 0.0},
-              {kHvrcmVoltageLimit, 0.0, transition},
-              {kHvrcmVoltageLimit + 0.1, 0.1, 0.1},
+              {kHvrcmVoltageLimit - kHvrcmMargin, 0.05, -0.05},
+              {kHvrcmVoltageLimit - 0.3, -0.05, 0.05},
+              {kHvrcmVoltageLimit, 0.0, kHvrcmGain * hvrcmTransition()},
+              {kHvrcmVoltageLimit + kHvrcmMargin, 0.1, kHvrcmGain * kHvrcmMargin - 0.1},
+              {kHvrcmVoltageLimit + 0.3, kHvrcmGain * 0.3, 0.0},
           }};
 
           auto* y = fixture.regca.y().getData();
@@ -658,8 +668,9 @@ namespace GridKit
           }
         }
 
-        // At the transition point both partial derivatives of the HVRCM row
-        // are exactly one half.
+        // The row is an explicit assignment, so its own partial derivative is
+        // minus one everywhere; at the ceiling the voltage sensitivity is half
+        // the Khv gain.
         {
           using DepVar = DependencyTracking::Variable;
 
@@ -667,8 +678,8 @@ namespace GridKit
           success *= fixture.initialize();
 
           auto* y                 = fixture.regca.y().getData();
-          y[index(Vars::VT)]      = kHvrcmVoltageLimit - hvrcmTransition();
-          y[index(Vars::IQEXTRA)] = hvrcmTransition();
+          y[index(Vars::VT)]      = kHvrcmVoltageLimit;
+          y[index(Vars::IQEXTRA)] = 0.0;
           fixture.regca.y().setDataUpdated();
           numberVariables(fixture);
 
@@ -678,8 +689,8 @@ namespace GridKit
               fixture.regca.getResidual().getData()[index(Vars::IQEXTRA)].getDependencies();
 
           const DepVar::DependencyMap expected{{
-              {index(Vars::VT), 0.5},
-              {index(Vars::IQEXTRA), -0.5},
+              {index(Vars::VT), 0.5 * kHvrcmGain},
+              {index(Vars::IQEXTRA), -1.0},
           }};
           success *= isEqual(dependencies, expected, kTol);
         }
@@ -847,10 +858,15 @@ namespace GridKit
       static constexpr RealT kHvrcmVoltageLimit        = 1.2;
       static constexpr RealT kDynamicHvrcmVoltageLimit = 1.3;
 
-      /// The smooth ramp at a zero argument. Used as an HVRCM voltage
-      /// margin, this is the one margin whose constraint root is the margin
-      /// itself, so the HVRCM row is exactly zero there and its two partial
-      /// derivatives are exactly one half.
+      /// Khv default applied when the parameter is absent from makeData().
+      static constexpr RealT kHvrcmGain = 0.7;
+
+      /// Voltage offset from Vhvmax used by the HVRCM answer keys. Wide
+      /// enough that the smooth ramp tail below the ceiling stays under kTol.
+      static constexpr RealT kHvrcmMargin = 0.2;
+
+      /// The smooth ramp at a zero argument: the HVRCM current the row holds
+      /// exactly at the ceiling.
       static RealT hvrcmTransition()
       {
         return Math::ramp(static_cast<RealT>(0.0));

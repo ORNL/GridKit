@@ -33,9 +33,9 @@ namespace GridKit
         VA0,    ///< LVACM lower breakpoint voltage
         VA1,    ///< LVACM upper breakpoint voltage
         Vhvmax, ///< Terminal-voltage ceiling for HV reactive management
+        Khv,    ///< Optional HV reactive management gain, defaults to 0.7
 
         Qmin, ///< Optional PowerWorld compatibility field, accepted and unused
-        Khv,  ///< Optional PowerWorld compatibility field, accepted and unused
         Xe    ///< Optional PowerWorld compatibility field, accepted and unused
       };
 

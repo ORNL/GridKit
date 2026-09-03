@@ -75,7 +75,6 @@ namespace GridKit
             Vars::VPIQ,
             Vars::EPIV,
             Vars::RPORD,
-            Vars::ILMAX,
             Vars::ILCAP,
             Vars::IQMAX,
             Vars::IPMAX,
@@ -304,9 +303,8 @@ namespace GridKit
             {Vars::VPIQ, 0.5},
             {Vars::EPIV, 0.0},
             {Vars::RPORD, 0.0},
-            {Vars::ILMAX, 2.0},
-            {Vars::ILCAP, 2.0},
-            {Vars::IQMAX, 2.0},
+            {Vars::ILCAP, circleCapacity(2.0)},
+            {Vars::IQMAX, circleCapacity(2.0)},
             {Vars::IPMAX, 2.5},
             {Vars::IQBASE, 0.0},
             {Vars::IQRAW, 1.5},
@@ -371,7 +369,7 @@ namespace GridKit
         success                    *= stateMatches(system_base.reecb,
                                                    {{Vars::PMEAS, 0.75},
                                                     {Vars::PORD, 1.5},
-                                                    {Vars::ILMAX, 2.0}},
+                                                    {Vars::ILCAP, circleCapacity(2.0)}},
                                 "omitted component rating");
         success                    *= allResidualsWithinInitTolerance(system_base.reecb);
 
@@ -422,7 +420,8 @@ namespace GridKit
         Fixture<ScalarT> adjusted_imax(expanded_current);
         success *= adjusted_imax.initialize(0.75, 0.75);
         success *= (adjusted_imax.evaluate() == 0);
-        success *= stateMatches(adjusted_imax.reecb, {{Vars::ILMAX, 1.5}}, "adjusted Imax");
+        // The expanded circle leaves exactly the capacity the commands need.
+        success *= stateMatches(adjusted_imax.reecb, {{Vars::ILCAP, 1.5}}, "adjusted Imax");
         success *= allResidualsWithinInitTolerance(adjusted_imax.reecb);
 
         auto reactive_pi                      = data;
@@ -676,17 +675,20 @@ namespace GridKit
           bool        p_priority;
           RealT       iqcmd;
           RealT       ipcmd;
-          RealT       ilmax;
+          RealT       capacity;
           const char* label;
         };
 
+        // A circle wide enough for both commands keeps the capacity its
+        // geometry gives; an expanded one leaves exactly the low-priority
+        // command it had to grow to admit.
         const std::array<BoundaryCase, 7> boundary_cases{{
-            {true, 0.75, 0.0, 2.5, "zero active-current command"},
-            {true, 0.0, 1.25, 0.0, "zero reactive-current capacity"},
+            {true, 0.75, 0.0, circleCapacity(2.5), "zero active-current command"},
+            {true, 0.0, 1.25, circleCapacity(0.0), "zero reactive-current capacity"},
             {true, 1.0, 0.75, 2.0, "upper reactive-current command"},
             {true, -1.0, 0.75, 2.0, "lower reactive-current command"},
             {false, 0.75, 1.0, 2.0, "upper active-current command"},
-            {false, 1.25, 0.0, 0.0, "zero active-current capacity"},
+            {false, 1.25, 0.0, circleCapacity(0.0), "zero active-current capacity"},
             {true, 0.75, 1.5, 1.5, "expanded current circle"},
         }};
         for (const auto& test_case : boundary_cases)
@@ -698,7 +700,9 @@ namespace GridKit
           success *= (boundary.evaluate() == 0);
           success *= scalarPreserved(boundary.iqcmd(), test_case.iqcmd, test_case.label);
           success *= scalarPreserved(boundary.ipcmd(), test_case.ipcmd, test_case.label);
-          success *= stateMatches(boundary.reecb, {{Vars::ILMAX, test_case.ilmax}}, test_case.label);
+          success *= stateMatches(boundary.reecb,
+                                  {{Vars::ILCAP, test_case.capacity}},
+                                  test_case.label);
           success *= allResidualsWithinInitTolerance(boundary.reecb);
         }
 
@@ -728,9 +732,7 @@ namespace GridKit
           success           *= (capacity_fixture.evaluate() == 0);
           success           *= scalarPreserved(capacity_fixture.iqcmd(), iqcmd, "low-priority command");
           success           *= scalarPreserved(capacity_fixture.ipcmd(), ipcmd, "high-priority command");
-          const RealT ilmax  = static_cast<RealT>(capacity_fixture.reecb.y().getData()[index(Vars::ILMAX)]);
-          const RealT ilcap  = ilmax * ilmax
-                              / std::sqrt(ilmax * ilmax + ReecbT::INITIALIZATION_TOLERANCE);
+          const RealT ilcap  = static_cast<RealT>(capacity_fixture.reecb.y().getData()[index(Vars::ILCAP)]);
           if (ilcap < iqcmd)
           {
             std::cout << "REECB low-priority capacity does not include its initial command\n";
@@ -767,7 +769,9 @@ namespace GridKit
         success                  *= exhausted.initialize(0.0, 1.25);
         success                  *= (exhausted.evaluate() == 0);
         success                  *= scalarPreserved(exhausted.iqcmd(), 0.0, "exhausted reactive-current capacity");
-        success                  *= stateMatches(exhausted.reecb, {{Vars::ILMAX, 0.0}}, "injection does not expand current circle");
+        success                  *= stateMatches(exhausted.reecb,
+                                                 {{Vars::ILCAP, circleCapacity(0.0)}},
+                                "injection does not expand current circle");
         success                  *= allResidualsWithinInitTolerance(exhausted.reecb);
 
         Log::setVerbosity(previous_verbosity);
@@ -803,8 +807,10 @@ namespace GridKit
             {Vars::VPIQ, 0.0},
             {Vars::EPIV, 0.0},
             {Vars::RPORD, 0.0},
-            {Vars::ILMAX, 0.32},
-            {Vars::ILCAP, 0.0},
+            // The key state leaves a squared circle radius of 1.76, whose
+            // softened root is 1.3266122288300735, against a held capacity
+            // of 1.20.
+            {Vars::ILCAP, 0.1266122288300735},
             {Vars::IQMAX, 0.0},
             {Vars::IPMAX, 0.0},
             {Vars::IQBASE, 0.0},
@@ -882,7 +888,9 @@ namespace GridKit
                   success *= allResidualsWithinInitTolerance(fixture.reecb);
                   success *= scalarPreserved(fixture.iqcmd(), 0.75, "selector iqcmd");
                   success *= scalarPreserved(fixture.ipcmd(), 0.75, "selector ipcmd");
-                  success *= stateMatches(fixture.reecb, {{Vars::ILMAX, 2.0}}, "selector ILMAX");
+                  success *= stateMatches(fixture.reecb,
+                                          {{Vars::ILCAP, circleCapacity(2.0)}},
+                                          "selector ILCAP");
 
                   // Exactly one reactive path carries the operating point.
                   const auto* y = fixture.reecb.y().getData();
@@ -1210,7 +1218,6 @@ namespace GridKit
             setState(fixture.reecb,
                      {{Vars::XPIV, test_case.state},
                       {Vars::EPIV, test_case.reference - 1.0},
-                      {Vars::ILMAX, 0.5},
                       {Vars::ILCAP, 0.5},
                       {Vars::IQMAX, 0.5}});
             success *= (fixture.evaluate() == 0);
@@ -1249,7 +1256,6 @@ namespace GridKit
                       {Vars::IQV, 0.0},
                       {Vars::IQRAW, 0.0},
                       {Vars::IQCMD, 0.0},
-                      {Vars::ILMAX, 3.0},
                       {Vars::ILCAP, 3.0},
                       {Vars::IQMAX, 3.0}});
             success *= (fixture.evaluate() == 0);
@@ -1300,7 +1306,7 @@ namespace GridKit
       }
 
       /// Check the active-power ramp, its voltage gate and anti-windup, both
-      /// command limits, the priority circle, and the signed continuation.
+      /// command limits, the priority circle, and its hinged region.
       TestOutcome activeCurrentControl()
       {
         TestStatus success = true;
@@ -1449,8 +1455,7 @@ namespace GridKit
             success *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             setState(fixture.reecb,
-                     {{Vars::ILMAX, 2.0},
-                      {Vars::ILCAP, 2.0},
+                     {{Vars::ILCAP, 2.0},
                       {Vars::IQMAX, 2.0},
                       {Vars::IQRAW, test_case.input},
                       {Vars::IQCMD, 0.0},
@@ -1480,8 +1485,7 @@ namespace GridKit
             success *= fixture.prepare(0.2, 0.0);
             setControlState(fixture.reecb);
             setState(fixture.reecb,
-                     {{Vars::ILMAX, 2.0},
-                      {Vars::ILCAP, 2.0},
+                     {{Vars::ILCAP, 2.0},
                       {Vars::IPMAX, 2.0},
                       {Vars::IPCMD, 0.0},
                       {Vars::PORD, test_case.input}});
@@ -1494,11 +1498,14 @@ namespace GridKit
 
         {
           // The priority selector chooses which command consumes the circle.
+          // Squared circle radius the selected command leaves at the
+          // answer-key state, and the capacity state that key holds.
           const std::array<std::pair<bool, RealT>, 2> priority_cases{{
-              {true, 0.32},
-              {false, 0.56},
+              {true, 1.76},
+              {false, 2.00},
           }};
-          for (const auto& [p_priority, expected] : priority_cases)
+          const RealT                                 key_capacity = 1.20;
+          for (const auto& [p_priority, square] : priority_cases)
           {
             auto data                       = makeResidualData();
             data.parameters[Params::Pqflag] = p_priority;
@@ -1513,9 +1520,10 @@ namespace GridKit
             {
               label = "P-priority current circle";
             }
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::ILMAX, expected}},
-                                      label);
+            success *= residualsMatch(
+                fixture.reecb,
+                {{Vars::ILCAP, circleCapacitySquared(square) - key_capacity}},
+                label);
           }
         }
 
@@ -1543,55 +1551,61 @@ namespace GridKit
               ipcmd = limit;
             }
             setState(fixture.reecb,
-                     {{Vars::ILMAX, 0.0},
+                     {{Vars::ILCAP, 0.0},
                       {Vars::IQCMD, iqcmd},
                       {Vars::IPCMD, ipcmd}});
             success *= (fixture.evaluate() == 0);
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::ILMAX, 0.0}},
+                                      {{Vars::ILCAP, circleCapacity(0.0)}},
                                       "finite selected current circle");
             success *= allResidualsFinite(fixture.reecb);
           }
         }
 
         {
-          // The signed-square continuation keeps a negative capacity iterate
-          // finite, and its magnitude still bounds the low-priority command.
+          // A priority-axis command beyond the circle drives the radicand
+          // negative. The hinged root keeps the capacity finite and
+          // nonnegative there, and it still bounds the low-priority command.
           auto data                       = makeData();
           data.parameters[Params::Imax]   = 1.0;
           data.parameters[Params::Pqflag] = true;
 
-          const std::array<DrivenCase, 3> continuation_cases{{
-              {-0.5, 1.0},
-              {0.5, 0.5},
-              {0.0, 0.75},
-          }};
-          for (const auto& test_case : continuation_cases)
+          struct CircleCase
           {
+            RealT ipcmd;
+            RealT square;
+          };
+
+          // The component base doubles the command against a unit limit, so
+          // these place the squared circle radius above, at, and below zero.
+          const std::array<CircleCase, 3> circle_cases{{
+              {0.25, 0.75},
+              {0.5, 0.0},
+              {0.75, -1.25},
+          }};
+          for (const auto& test_case : circle_cases)
+          {
+            const RealT expected_capacity = circleCapacitySquared(test_case.square);
+            if (expected_capacity < ZERO<RealT>)
+            {
+              std::cout << "REECB hinged current circle gives a negative capacity\n";
+              success = false;
+            }
+
             Fixture<ScalarT> fixture(data);
-            success *= fixture.prepare(0.0, 0.25);
+            success *= fixture.prepare(0.0, test_case.ipcmd);
             setControlState(fixture.reecb);
             setState(fixture.reecb,
-                     {{Vars::ILMAX, test_case.input},
-                      {Vars::ILCAP, 0.0},
+                     {{Vars::ILCAP, 0.0},
                       {Vars::IQMAX, 0.0},
                       {Vars::IQRAW, 0.0},
-                      {Vars::IPCMD, 0.25},
+                      {Vars::IPCMD, test_case.ipcmd},
                       {Vars::IQCMD, 0.0},
                       {Vars::QV, 1.0}});
             success *= (fixture.evaluate() == 0);
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::ILMAX, test_case.expected}},
-                                      "signed capacity continuation");
-
-            RealT expected_capacity = 0.0;
-            if (test_case.input != ZERO<RealT>)
-            {
-              expected_capacity = 0.5;
-            }
-            success *= residualsMatch(fixture.reecb,
                                       {{Vars::ILCAP, expected_capacity}},
-                                      "signed off-axis capacity");
+                                      "hinged off-axis capacity");
 
             setState(fixture.reecb, {{Vars::ILCAP, expected_capacity}});
             success *= (fixture.evaluate() == 0);
@@ -1661,21 +1675,30 @@ namespace GridKit
         {
           const char* label;
           bool        p_priority;
-          RealT       ilmax;
+          RealT       imax;
+          RealT       capacity;
         };
 
-        const std::array<CurrentCircleProbe, 2> current_circle_probes{{
-            {"negative signed current-circle capacity", true, -2.0},
-            {"zero current-circle capacity", false, 0.0},
+        // The probe state commands 0.4 on the active axis and 0.2 on the
+        // reactive axis, both on the component base, so these limits straddle
+        // the circle radicand hinge on each priority axis. An exhausted circle
+        // sits on the hinge itself, where the two paths are free to take
+        // different one-sided derivatives, so it is not compared here.
+        const std::array<CurrentCircleProbe, 4> current_circle_probes{{
+            {"open current circle", true, 2.5, 2.0},
+            {"closing current circle", true, 0.41, 0.05},
+            {"hinged current circle", true, 0.2, 0.0},
+            {"hinged current circle on the reactive axis", false, 0.1, 0.0},
         }};
         for (const auto& probe : current_circle_probes)
         {
           auto data                        = makeJacobianData();
           data.parameters[Params::Pqflag]  = probe.p_priority;
+          data.parameters[Params::Imax]    = probe.imax;
           success                         *= jacobiansMatch(
               dependencyTrackingJacobian(
-                  data, kNonunitAlpha, success, probe.ilmax),
-              enzymeJacobian(data, kNonunitAlpha, success, probe.ilmax),
+                  data, kNonunitAlpha, success, probe.capacity),
+              enzymeJacobian(data, kNonunitAlpha, success, probe.capacity),
               probe.label);
         }
 
@@ -1683,7 +1706,7 @@ namespace GridKit
         {
           const char* label;
           RealT       mva;
-          RealT       ilmax;
+          RealT       capacity;
           RealT       epiv;
         };
 
@@ -1701,8 +1724,8 @@ namespace GridKit
           data.parameters[Params::mva]  = probe.mva;
           success                      *= jacobiansMatch(
               dependencyTrackingJacobian(
-                  data, kNonunitAlpha, success, probe.ilmax, probe.epiv),
-              enzymeJacobian(data, kNonunitAlpha, success, probe.ilmax, probe.epiv),
+                  data, kNonunitAlpha, success, probe.capacity, probe.epiv),
+              enzymeJacobian(data, kNonunitAlpha, success, probe.capacity, probe.epiv),
               probe.label);
         }
 
@@ -1898,6 +1921,23 @@ namespace GridKit
 
       inline static const RealT kUnitSlopeAngle = std::atan(ONE<RealT>);
 
+      /// Off-axis capacity the ILCAP row holds at a squared circle radius.
+      /// Written from the softened root in the model README, so the expected
+      /// values below stay keyed to the geometry they describe. The squared
+      /// form also reaches the hinged region, where the radicand is negative.
+      static RealT circleCapacitySquared(RealT square)
+      {
+        const RealT hinge  = ReecbT::CURRENT_CIRCLE_HINGE;
+        const RealT hinged = HALF<RealT> * (square + std::abs(square));
+        return hinged / std::sqrt(hinged + hinge);
+      }
+
+      /// Off-axis capacity at a given current-circle radius.
+      static RealT circleCapacity(RealT radius)
+      {
+        return circleCapacitySquared(radius * radius);
+      }
+
       static constexpr size_t kBusVrColumn = index(Vars::MAXIMUM);
 
       Data makeMinimalData() const
@@ -2079,7 +2119,6 @@ namespace GridKit
                   {Vars::VPIQ, 1.00},
                   {Vars::EPIV, 0.20},
                   {Vars::RPORD, 0.20},
-                  {Vars::ILMAX, 1.20},
                   {Vars::ILCAP, 1.20},
                   {Vars::IQMAX, 1.20},
                   {Vars::IPMAX, 1.50},
@@ -2118,7 +2157,6 @@ namespace GridKit
                   {Vars::VPIQ, 0.0},
                   {Vars::EPIV, 0.0},
                   {Vars::RPORD, 0.0},
-                  {Vars::ILMAX, 1.4},
                   {Vars::ILCAP, 1.4},
                   {Vars::IQMAX, 1.4},
                   {Vars::IPMAX, 1.5},
@@ -2133,7 +2171,7 @@ namespace GridKit
       /// probe. The optional states place selected smooth branches explicitly.
       template <typename T>
       void setJacobianState(Fixture<T>& fixture,
-                            RealT       ilmax,
+                            RealT       capacity,
                             RealT       epiv = static_cast<RealT>(0.2)) const
       {
         fixture.input(Ext::PE)     = static_cast<T>(0.25);
@@ -2159,10 +2197,9 @@ namespace GridKit
                   {Vars::VPIQ, 1.0},
                   {Vars::EPIV, epiv},
                   {Vars::RPORD, 0.05},
-                  {Vars::ILMAX, ilmax},
-                  {Vars::ILCAP, std::abs(ilmax)},
-                  {Vars::IQMAX, std::abs(ilmax)},
-                  {Vars::IPMAX, std::abs(ilmax)},
+                  {Vars::ILCAP, capacity},
+                  {Vars::IQMAX, capacity},
+                  {Vars::IPMAX, capacity},
                   {Vars::IQBASE, 0.2},
                   {Vars::IQRAW, 0.2},
                   {Vars::IQCMD, 0.1},
@@ -2383,7 +2420,6 @@ namespace GridKit
             "VPIQ",
             "EPIV",
             "RPORD",
-            "ILMAX",
             "ILCAP",
             "IQMAX",
             "IPMAX",
@@ -2711,15 +2747,15 @@ namespace GridKit
       dependencyTrackingJacobian(const Data& data,
                                  RealT       alpha,
                                  TestStatus& success,
-                                 RealT       ilmax = 2.0,
-                                 RealT       epiv  = static_cast<RealT>(0.2)) const
+                                 RealT       capacity = 2.0,
+                                 RealT       epiv     = static_cast<RealT>(0.2)) const
       {
         using DepVar = DependencyTracking::Variable;
 
         Fixture<DepVar> fixture(data, kStateVr, kStateVi);
         fixture.attachAllInputs();
         success *= fixture.prepare(0.0, 0.2);
-        setJacobianState(fixture, ilmax, epiv);
+        setJacobianState(fixture, capacity, epiv);
         numberVariables(fixture, alpha);
         success *= (fixture.evaluate() == 0);
 
@@ -2737,8 +2773,8 @@ namespace GridKit
       enzymeJacobian(const Data& data,
                      RealT       alpha,
                      TestStatus& success,
-                     RealT       ilmax = 2.0,
-                     RealT       epiv  = static_cast<RealT>(0.2)) const
+                     RealT       capacity = 2.0,
+                     RealT       epiv     = static_cast<RealT>(0.2)) const
       {
         Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
         fixture.attachAllInputs();
@@ -2749,7 +2785,7 @@ namespace GridKit
           fixture.bus.setVariableIndex(row, fixture.reecb.size() + row);
         }
 
-        setJacobianState(fixture, ilmax, epiv);
+        setJacobianState(fixture, capacity, epiv);
         fixture.reecb.updateTime(0.0, alpha);
         success *= (fixture.evaluate() == 0);
         success *= (fixture.reecb.evaluateJacobian() == 0);

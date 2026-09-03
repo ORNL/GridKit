@@ -177,36 +177,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Calculate the initial HVRCM extra current.
-       *
-       * Solves the smooth HVRCM residual for \f$I_q^\mathrm{extra}\f$ given the
-       * strictly positive voltage margin \f$V_\mathrm{hv}^{\max} - V_T\f$.
-       *
-       * @param[in] dv Strictly positive voltage margin.
-       * @return Initial HVRCM extra current.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Regca<scalar_type, index_type>::initialHvrcmCurrent(
-          scalar_type dv) const
-      {
-        static constexpr RealT log_two = std::numbers::ln2_v<RealT>;
-
-        const ScalarT x = Math::MU<RealT> * dv;
-
-        // Both branches evaluate log(1 - exp(-x)) and are algebraically
-        // identical, so their values and derivatives agree at x = log(2).
-        // The split only avoids cancellation for small x.
-        if (x < log_two)
-        {
-          return -(log_two - HALF<RealT> * x
-                   + std::log(std::sinh(HALF<RealT> * x)))
-                 / Math::MU<RealT>;
-        }
-
-        return -std::log1p(-std::exp(-x)) / Math::MU<RealT>;
-      }
-
-      /**
        * @brief Set the LVPL release slope above the upper breakpoint.
        *
        * The finite slope is measured in p.u. current per p.u. voltage. The
@@ -302,6 +272,10 @@ namespace GridKit
         load_required_real(Params::VA0, VA0_, "VA0");
         load_required_real(Params::VA1, VA1_, "VA1");
         load_required_real(Params::Vhvmax, Vhvmax_, "Vhvmax");
+        if (data.parameters.contains(Params::Khv))
+        {
+          load_required_real(Params::Khv, Khv_, "Khv");
+        }
 
         setDerivedParameters();
       }
@@ -457,6 +431,7 @@ namespace GridKit
         check(Rpmax_ >= ZERO<RealT>, "Rpmax must be non-negative");
         check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
         check(KL_ > ZERO<RealT>, "LVPL release slope must be positive");
+        check(Khv_ >= ZERO<RealT>, "Khv must be non-negative");
         check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
         check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
               "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
@@ -491,8 +466,8 @@ namespace GridKit
        *
        * @pre allocate() has completed, verify() reports no errors, and the
        *      terminal bus has been initialized.
-       * @pre \f$V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}\f$, and with LVPL
-       *      enabled \f$I_{p,0} \le I_{L,0}\f$.
+       * @pre \f$V_{A1} \le V_{T,0}\f$, and with LVPL enabled
+       *      \f$I_{p,0} \le I_{L,0}\f$.
        * @post All internal derivatives are zero. Unattached command ports retain
        *       the resolved setpoints as constant commands.
        * @return Zero on success; nonzero when the operating point is rejected.
@@ -527,13 +502,6 @@ namespace GridKit
               << "Regca: terminal voltage magnitude must be at least VA1 at initialization\n";
           return 1;
         }
-        if (vt >= Vhvmax_)
-        {
-          Log::error()
-              << "Regca: terminal voltage magnitude must be below Vhvmax at initialization\n";
-          return 1;
-        }
-
         // P0 is a system-base power-flow injection. Resolve the component-base
         // active current through the LVACM network-interface gain.
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
@@ -548,11 +516,8 @@ namespace GridKit
         }
         const ScalarT ipcmd0 = ip0;
 
-        // Solve the smooth HVRCM constraint and preserve the requested Q0. The
-        // Vhvmax check above keeps the voltage margin strictly positive, so the
-        // solve is always finite.
-        const ScalarT dv       = Vhvmax_ - vt;
-        const ScalarT iqextra0 = initialHvrcmCurrent(dv);
+        // Evaluate the HVRCM law and preserve the requested Q0.
+        const ScalarT iqextra0 = Khv_ * Math::ramp(vt - Vhvmax_);
         const ScalarT qnet0    = toComponentBase(static_cast<ScalarT>(q0_) / vt);
         const ScalarT iqcmd0   = qnet0 + iqextra0;
         const ScalarT ir0      = (vi * qnet0 + vr * ip0 * lvacm) / vt;
@@ -698,7 +663,7 @@ namespace GridKit
         f[VT]      = -vt * vt + vr * vr + vi * vi;
         f[IR]      = -toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
         f[II]      = -toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
-        f[IQEXTRA] = -iqextra + Math::ramp(iqextra - (Vhvmax_ - vt));
+        f[IQEXTRA] = -iqextra + Khv_ * Math::ramp(vt - Vhvmax_);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_)
                 + KL_ * Math::ramp(vm - VL1_);
         f[PBR] = -pbr + vr * ir + vi * ii;

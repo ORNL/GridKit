@@ -12,7 +12,6 @@
 #include <limits>
 #include <mutex>
 #include <numbers>
-#include <numeric>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -348,7 +347,6 @@ namespace GridKit
         const auto VPIQ   = static_cast<size_t>(ReecbInternalVariables::VPIQ);
         const auto EPIV   = static_cast<size_t>(ReecbInternalVariables::EPIV);
         const auto RPORD  = static_cast<size_t>(ReecbInternalVariables::RPORD);
-        const auto ILMAX  = static_cast<size_t>(ReecbInternalVariables::ILMAX);
         const auto ILCAP  = static_cast<size_t>(ReecbInternalVariables::ILCAP);
         const auto IQMAX  = static_cast<size_t>(ReecbInternalVariables::IQMAX);
         const auto IPMAX  = static_cast<size_t>(ReecbInternalVariables::IPMAX);
@@ -442,7 +440,6 @@ namespace GridKit
           return false;
         }
         const RealT imax   = current_limit->total_limit;
-        const RealT ilmax0 = current_limit->continuation;
         const RealT ilcap0 = current_limit->off_axis_capacity;
 
         RealT iqmax0 = imax;
@@ -614,7 +611,7 @@ namespace GridKit
         const RealT iqcmd_check = Math::clamp(iqraw_check, -iqmax0, iqmax0);
         const RealT ipcmd_check = Math::clamp(pord0 / vmeas_safe0, ZERO<RealT>, ipmax0);
 
-        if (!std::isfinite(imax) || !std::isfinite(ilmax0) || !std::isfinite(ilcap0)
+        if (!std::isfinite(imax) || !std::isfinite(ilcap0)
             || !std::isfinite(iqmax0) || !std::isfinite(ipmax0)
             || !std::isfinite(ipraw0) || !std::isfinite(iqraw0) || !std::isfinite(pord0)
             || !std::isfinite(pref0_system) || !std::isfinite(qtarget0) || !std::isfinite(qref0)
@@ -654,7 +651,6 @@ namespace GridKit
         point.variables[VPIQ]   = vpiq0;
         point.variables[EPIV]   = epiv0;
         point.variables[RPORD]  = ZERO<RealT>;
-        point.variables[ILMAX]  = ilmax0;
         point.variables[ILCAP]  = ilcap0;
         point.variables[IQMAX]  = iqmax0;
         point.variables[IPMAX]  = ipmax0;
@@ -923,7 +919,6 @@ namespace GridKit
         const auto VPIQ   = static_cast<size_t>(ReecbInternalVariables::VPIQ);
         const auto EPIV   = static_cast<size_t>(ReecbInternalVariables::EPIV);
         const auto RPORD  = static_cast<size_t>(ReecbInternalVariables::RPORD);
-        const auto ILMAX  = static_cast<size_t>(ReecbInternalVariables::ILMAX);
         const auto ILCAP  = static_cast<size_t>(ReecbInternalVariables::ILCAP);
         const auto IQMAX  = static_cast<size_t>(ReecbInternalVariables::IQMAX);
         const auto IPMAX  = static_cast<size_t>(ReecbInternalVariables::IPMAX);
@@ -953,7 +948,6 @@ namespace GridKit
         const ScalarT vpiq         = y[VPIQ];
         const ScalarT epiv         = y[EPIV];
         const ScalarT rpord        = y[RPORD];
-        const ScalarT ilmax        = y[ILMAX];
         const ScalarT ilcap        = y[ILCAP];
         const ScalarT iqmax        = y[IQMAX];
         const ScalarT ipmax        = y[IPMAX];
@@ -984,7 +978,6 @@ namespace GridKit
         const ScalarT q_pi_state  = Kqp_ * eq + xpiq;
         const ScalarT v_pi_state  = Kvp_ * epiv + xpiv;
         const ScalarT fpord       = (pref - pord) / Tpord_;
-        const ScalarT ilnorm      = std::sqrt(ilmax * ilmax + INITIALIZATION_TOLERANCE);
         // Select before the factored square to avoid 0 * inf on the inactive path.
         const ScalarT high        = pq_on_ * ipcmd + pq_off_ * iqcmd;
         const ScalarT q_pi_rate   = q_pi_on_ * sdip * Math::antiwindup(q_pi_state, Kqi_ * eq, Vmin_, Vmax_);
@@ -1012,8 +1005,7 @@ namespace GridKit
         f[VPIQ]   = -vpiq + Math::clamp(q_pi_state, Vmin_, Vmax_);
         f[EPIV]   = -epiv + q_pi_on_ * vpiq + v_ref_on_ * extref - q_on_ * vmeas;
         f[RPORD]  = -rpord + aslew(fpord, dPmin_, dPmax_);
-        f[ILMAX]  = -ilmax * ilnorm + (Imax_ - high) * (Imax_ + high);
-        f[ILCAP]  = -ilcap + (ilmax / ilnorm) * ilmax;
+        f[ILCAP]  = -ilcap + circleRoot((Imax_ - high) * (Imax_ + high));
         f[IQMAX]  = -iqmax + pq_on_ * ilcap + pq_off_ * Imax_;
         f[IPMAX]  = -ipmax + pq_on_ * Imax_ + pq_off_ * ilcap;
         f[IQBASE] = -iqbase + Math::clamp(v_pi_state, -iqmax, iqmax);
@@ -1071,95 +1063,68 @@ namespace GridKit
       }
 
       /**
-       * @brief Compute the initial current-circle continuation state
+       * @brief Softened nonnegative root of a current-circle squared radius
        *
-       * Solves the implemented `ILMAX` row for its nonnegative continuation
-       * state at a total-current limit and priority-axis current.
+       * Evaluates @f$\sqrt{\max(0, s)}@f$ with the root softened at the
+       * @ref CURRENT_CIRCLE_DELTA scale. The hinge is exact, so an exhausted
+       * circle has exactly no capacity and an over-driven one stays finite and
+       * nonnegative; the softening bounds the slope where the circle closes,
+       * which the exact root leaves unbounded. Neither step uses the smoothing
+       * scale, so the current circle does not move with it.
        *
-       * @param[in] imax Total-current limit on the component base.
-       * @param[in] high Priority-axis current command on the component base.
-       * @return Initial `ILMAX` state on the component base, or a quiet NaN
-       *         when the circle geometry is invalid or unrepresentable.
-       * @pre `imax` and `high` are finite and @f$0 \le high \le imax@f$.
+       * @tparam ValueT Differentiable scalar or plain real.
+       * @param[in] square Squared circle radius on the component base.
+       * @return Softened off-axis current on the component base.
        */
       template <typename scalar_type, typename index_type>
-      typename Reecb<scalar_type, index_type>::RealT
-      Reecb<scalar_type, index_type>::circleState(RealT imax, RealT high)
+      template <typename ValueT>
+      [[gnu::always_inline]] inline ValueT
+      Reecb<scalar_type, index_type>::circleRoot(ValueT square)
       {
-        const RealT rhs = (imax - high) * (imax + high);
-        if (!std::isfinite(rhs) || rhs < ZERO<RealT>)
-        {
-          return std::numeric_limits<RealT>::quiet_NaN();
-        }
-        if (rhs == ZERO<RealT>)
-        {
-          return ZERO<RealT>;
-        }
-
-        const RealT ratio = INITIALIZATION_TOLERANCE / rhs;
-        return std::sqrt(rhs)
-               * std::sqrt(TWO<RealT>
-                           / (std::hypot(ratio, TWO<RealT>) + ratio));
+        const ValueT hinged = HALF<RealT> * (square + std::abs(square));
+        return hinged / std::sqrt(hinged + CURRENT_CIRCLE_HINGE);
       }
 
       /**
-       * @brief Compute off-axis capacity from a continuation state
+       * @brief Compute the off-axis capacity left on the current circle
        *
-       * This expression must match the `ilcap` calculation during residual
-       * evaluation so initialization lands on the implemented model.
+       * Evaluates the same expression as the `ILCAP` row so initialization
+       * lands on the implemented model.
        *
-       * @param[in] ilmax Current-circle continuation state on the component base.
+       * @param[in] imax Total-current limit on the component base.
+       * @param[in] high Priority-axis current command on the component base.
        * @return Available off-axis current on the component base.
        */
       template <typename scalar_type, typename index_type>
       typename Reecb<scalar_type, index_type>::RealT
-      Reecb<scalar_type, index_type>::capacity(RealT ilmax)
+      Reecb<scalar_type, index_type>::circleCapacity(RealT imax, RealT high)
       {
-        const RealT ilnorm = std::sqrt(ilmax * ilmax + INITIALIZATION_TOLERANCE);
-        return (ilmax / ilnorm) * ilmax;
+        return circleRoot((imax - high) * (imax + high));
       }
 
       /**
-       * @brief Bisect an initial-limit interval to machine rounding
+       * @brief Compute the total-current limit that leaves a required capacity
        *
-       * The upper endpoint is returned because initialization needs the first
-       * not-below point; solveInitialLimit() separately validates that point as
-       * finite and feasible. A finite floating-point interval contains finitely
-       * many representable values, so the loop terminates when no interior
-       * midpoint remains.
+       * Inverts the `ILCAP` row on the open side of its hinge, where
+       * @f$I_L^\mathrm{cap}\sqrt{s + \delta^2} = s@f$ has the positive root
+       * @f$s = \tfrac{1}{2}I_L^\mathrm{cap}\left(I_L^\mathrm{cap}
+       * + \sqrt{I_L^{\mathrm{cap}\,2} + 4\delta^2}\right)@f$. Capacity is
+       * strictly increasing there, so the inverse is unique, and a zero
+       * requirement returns the priority-axis command.
        *
-       * @tparam FuncT Monotone predicate type.
-       * @param[in] a Lower endpoint, where `below` is true.
-       * @param[in] b Upper endpoint, where `below` is false.
-       * @param[in] below Predicate returning true only when finite reconstructed
-       *                  capacity lies below the requirement.
-       * @return The first representable upper-side endpoint.
-       * @pre `a` and `b` are finite, `a < b`, and `below` is monotone.
+       * @param[in] high Priority-axis current command on the component base.
+       * @param[in] low Required off-axis capacity on the component base.
+       * @return Total-current limit on the component base.
+       * @pre `high` and `low` are finite and nonnegative.
        */
       template <typename scalar_type, typename index_type>
-      template <typename FuncT>
       typename Reecb<scalar_type, index_type>::RealT
-      Reecb<scalar_type, index_type>::bisect(RealT a, RealT b, FuncT below)
+      Reecb<scalar_type, index_type>::circleLimit(RealT high, RealT low)
       {
-        while (true)
-        {
-          const RealT mid = std::midpoint(a, b);
-          if (mid <= a || b <= mid)
-          {
-            break;
-          }
-
-          if (below(mid))
-          {
-            a = mid;
-          }
-          else
-          {
-            b = mid;
-          }
-        }
-
-        return b;
+        const RealT square = HALF<RealT> * low
+                             * (low
+                                + std::hypot(low, TWO<RealT> * CURRENT_CIRCLE_DELTA));
+        return std::hypot(high, std::sqrt(square));
       }
 
       /**
@@ -1168,9 +1133,8 @@ namespace GridKit
        * @param[in] lower Lower bound for the component-base total-current limit.
        * @param[in] high Priority-axis current command on the component base.
        * @param[in] low Required off-axis capacity on the component base.
-       * @return The mutually consistent total limit, continuation state, and
-       *         off-axis capacity, or `std::nullopt` when no finite feasible
-       *         limit is found.
+       * @return The mutually consistent total limit and off-axis capacity, or
+       *         `std::nullopt` when no finite feasible limit is found.
        * @pre The arguments are finite and nonnegative, with `lower >= high` and
        *      `lower >= low`.
        * @warning This function contains conditional branching and may be used
@@ -1180,75 +1144,23 @@ namespace GridKit
       auto Reecb<scalar_type, index_type>::solveInitialLimit(
           RealT lower, RealT high, RealT low) -> std::optional<InitialCurrentLimit>
       {
-        const RealT ilmax = circleState(lower, high);
-        const RealT ilcap = capacity(ilmax);
-        if (!std::isfinite(ilcap))
+        RealT imax = std::max(lower, circleLimit(high, low));
+        RealT cap  = circleCapacity(imax, high);
+
+        // The closed-form inverse can land a rounding step under the
+        // requirement. Capacity increases with the limit, so walk up to the
+        // first representable limit that covers it.
+        while (std::isfinite(imax) && cap < low)
+        {
+          imax = std::nextafter(imax, std::numeric_limits<RealT>::max());
+          cap  = circleCapacity(imax, high);
+        }
+
+        if (!std::isfinite(imax) || !std::isfinite(cap) || cap < low)
         {
           return std::nullopt;
         }
-        if (!(ilcap < low))
-        {
-          return InitialCurrentLimit{lower, ilmax, ilcap};
-        }
-
-        const auto below = [high, low](RealT limit)
-        {
-          const RealT state = circleState(limit, high);
-          const RealT cap   = capacity(state);
-          return std::isfinite(cap) && cap < low;
-        };
-
-        // Invert ilcap = ilmax^2 / sqrt(ilmax^2 + tolerance), then recover
-        // imax from imax^2 = high^2 + ilmax * sqrt(ilmax^2 + tolerance).
-        const RealT delta = std::sqrt(INITIALIZATION_TOLERANCE);
-        const RealT ilreq = std::sqrt(low)
-                            * std::sqrt(HALF<RealT>
-                                        * (low + std::hypot(low, TWO<RealT> * delta)));
-        const RealT seed = std::hypot(
-            high, std::sqrt(ilreq) * std::sqrt(std::hypot(ilreq, delta)));
-
-        const RealT maximum = std::numeric_limits<RealT>::max();
-        RealT       a       = lower;
-        RealT       b       = seed;
-        if (!std::isfinite(b))
-        {
-          b = maximum;
-        }
-        else
-        {
-          b = std::max(b, std::nextafter(a, maximum));
-        }
-        if (!(a < b))
-        {
-          return std::nullopt;
-        }
-
-        while (below(b))
-        {
-          a = b;
-          if (b >= maximum)
-          {
-            return std::nullopt;
-          }
-          if (b > maximum / TWO<RealT>)
-          {
-            b = maximum;
-          }
-          else
-          {
-            b *= TWO<RealT>;
-          }
-        }
-
-        const RealT result      = bisect(a, b, below);
-        const RealT final_state = circleState(result, high);
-        const RealT final_cap   = capacity(final_state);
-        if (!std::isfinite(result) || !std::isfinite(final_state)
-            || !std::isfinite(final_cap) || final_cap < low)
-        {
-          return std::nullopt;
-        }
-        return InitialCurrentLimit{result, final_state, final_cap};
+        return InitialCurrentLimit{imax, cap};
       }
 
       /**

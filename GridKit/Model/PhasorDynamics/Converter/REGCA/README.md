@@ -3,13 +3,13 @@
 REGCA is a first-generation WECC renewable generator/converter model for
 inverter-coupled resources.
 
-The network equations solve $I_q^\mathrm{extra}$ for whatever nonnegative
-current is needed to keep $V_T$ at or below $V_\mathrm{hv}^{\max}$. It is
-approximately zero when the limit is inactive:
+High-voltage reactive current management draws an inductive current
+proportional to the terminal-voltage excess above $V_\mathrm{hv}^{\max}$, and
+none below it:
 
 ```math
-0 \le I_q^\mathrm{extra}
-  \perp \left(V_\mathrm{hv}^{\max} - V_T\right) \ge 0.
+I_q^\mathrm{extra}
+  = K_\mathrm{hv}\max\left(0,\; V_T - V_\mathrm{hv}^{\max}\right).
 ```
 
 GridKit uses the smooth HVRCM form shown in the algebraic equations below.
@@ -19,7 +19,7 @@ GridKit uses the smooth HVRCM form shown in the algebraic equations below.
 - Internal current states and limiter quantities are on component base.
 - Signal ports, monitor outputs, branch currents, and branch powers are on system base.
 - LVACM uses $V_T$; LVPL uses $V_M$.
-- PowerWorld fields `Qmin`, `Khv`, and `Xe` are accepted as optional DYD compatibility fields and are not used by the equations below.
+- PowerWorld fields `Qmin` and `Xe` are accepted as optional DYD compatibility fields and are not used by the equations below.
 
 ## Block Diagram
 
@@ -46,8 +46,8 @@ $V_{L1}$                         | [p.u.]   | `VL1`    | LVPL upper breakpoint v
 $V_{A0}$                         | [p.u.]   | `VA0`    | LVACM lower breakpoint voltage                        | 0.4           | Block name: `LVPnt0`
 $V_{A1}$                         | [p.u.]   | `VA1`    | LVACM upper breakpoint voltage                        | 0.9           | Block name: `LVPnt1`
 $V_\mathrm{hv}^{\max}$           | [p.u.]   | `Vhvmax` | Terminal-voltage ceiling for HV reactive management   | 1.2           | Block name: `VLim`
+$K_\mathrm{hv}$                  | [p.u.]   | `Khv`    | HV reactive management gain                           | 0.7           | Optional; block name: `Khv`
 $Q^{\min}$                       | [p.u.]   | `Qmin`   | Unused compatibility field                            |               | Optional
-$K_\mathrm{hv}$                  | [p.u.]   | `Khv`    | Unused compatibility field                            |               | Optional
 $X_\mathrm{e}$                   | [p.u.]   | `Xe`     | Unused compatibility field                            |               | Optional
 
 All listed JSON parameters are required unless marked optional.
@@ -73,7 +73,9 @@ every other condition is a configuration error.
   0
     &\le V_{L0} < V_{L1} \\
   0
-    &\le V_{A0} < V_{A1} < V_\mathrm{hv}^{\max}
+    &\le V_{A0} < V_{A1} < V_\mathrm{hv}^{\max} \\
+  K_\mathrm{hv}
+    &\ge 0
 \end{aligned}
 ```
 
@@ -204,9 +206,7 @@ the sign that enables the corresponding limit.
        - V_\mathrm{r}(I_q - I_q^\mathrm{extra})
        + V_\mathrm{i} I_p\,\text{linseg}(V_T; V_{A0}, V_{A1}, 1) \\
   0 &= -I_q^\mathrm{extra}
-       + \text{ramp}\!\left(
-           I_q^\mathrm{extra} - (V_\mathrm{hv}^{\max} - V_T)
-         \right) \\
+       + K_\mathrm{hv}\,\text{ramp}(V_T - V_\mathrm{hv}^{\max}) \\
   0 &= -I_L
        + \text{linseg}(V_M; V_{L0}, V_{L1}, I_{L1})
        + K_L\,\text{ramp}(V_M - V_{L1}) \\
@@ -244,10 +244,8 @@ CommonMath defines the [primitives](../../../../CommonMath.md#primitives) and
 
 ### Internal Initialization
 
-REGCA requires $V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}$. The lower bound
-excludes initialization below the nominal upper LVACM breakpoint. The strict
-upper bound is required because the smooth HVRCM constraint has no finite root
-at or above the voltage limit.
+REGCA requires $V_{A1} \le V_{T,0}$, which excludes initialization below the
+nominal upper LVACM breakpoint.
 
 With LVPL enabled, REGCA additionally requires $I_{p,0} \le I_{L,0}$.
 Initialization rejects an operating point above the active-current integrator
@@ -272,12 +270,7 @@ to zero:
   k_\mathrm{base} I_{p,0}^\mathrm{cmd}
     &= I_{p,0} \\
   I_{q,0}^\mathrm{extra}
-    &\leftarrow \text{nonnegative solution of }
-       0 = -I_{q,0}^\mathrm{extra}
-       + \text{ramp}\!\left(
-           I_{q,0}^\mathrm{extra}
-           - (V_\mathrm{hv}^{\max} - V_{T,0})
-         \right) \\
+    &= K_\mathrm{hv}\,\text{ramp}(V_{T,0} - V_\mathrm{hv}^{\max}) \\
   I_{q,0}^\mathrm{cmd}
     &= \dfrac{Q_0}{V_{T,0}}
        + \dfrac{I_{q,0}^\mathrm{extra}}{k_\mathrm{base}} \\
@@ -285,12 +278,6 @@ to zero:
     &= k_\mathrm{base} I_{q,0}^\mathrm{cmd}
 \end{aligned}
 ```
-
-For the closed-form HVRCM solve, let
-$x = \mu(V_\mathrm{hv}^{\max} - V_{T,0})$. The implementation switches at
-$x = \log 2$ between two algebraically identical forms of
-$\log(1 - \exp(-x))$. Their values and derivatives agree at the switch; the
-split only avoids cancellation for small $x$.
 
 The remaining algebraic quantities are then initialized as follows:
 
@@ -335,7 +322,7 @@ Output | Units  | Description                 | Note
 - `residualEquations()` checks every model residual against a fixed numerical answer key.
 - `activeCurrentControl()` checks `rrpwr`, enabled and bypassed LVPL behavior, and tracking of a moving LVPL ceiling.
 - `reactiveCurrentControl()` checks the positive, negative, and unrestricted reactive-current recovery-rate branches.
-- `highVoltageManagement()` checks HVRCM initialization, residual values through its transition, and its local derivative.
+- `highVoltageManagement()` checks HVRCM initialization above the ceiling, residual values across it, and its local derivative.
 - `jacobian()` compares the dependency-tracking and Enzyme Jacobians for enabled and bypassed LVPL configurations when Enzyme support is enabled.
 
 Because CommonMath limiters are smooth approximations, tests use smooth-equation

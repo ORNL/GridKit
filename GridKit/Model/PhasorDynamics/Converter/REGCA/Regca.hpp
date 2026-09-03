@@ -197,8 +197,6 @@ namespace GridKit
                        * gap_rate;
         }
 
-        ScalarT initialHvrcmCurrent(ScalarT dv) const;
-
         ScalarT& Vr();
         ScalarT& Vi();
         ScalarT& Ir();
@@ -225,6 +223,7 @@ namespace GridKit
         RealT VA0_{0};
         RealT VA1_{0};
         RealT Vhvmax_{0};
+        RealT Khv_{0.7};
         RealT KL_{100.0};
 
         IdxT parameter_error_count_{0};
