@@ -261,7 +261,6 @@ namespace GridKit
       model_data.monitor_sink.clear();
       clearMonitoredVariables(model_data.bus);
       clearMonitoredVariables(model_data.branch);
-      clearMonitoredVariables(model_data.bus_fault);
       clearMonitoredVariables(model_data.regca);
       clearMonitoredVariables(model_data.genrou);
       clearMonitoredVariables(model_data.gensal);
