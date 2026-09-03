@@ -35,7 +35,7 @@ The oriented bridge incidence matrix and bridge Laplacian are
 2 & -1 & -1 \\
 -1 & 2 & -1 \\
 -1 & -1 & 2
-\end{bmatrix}.
+\end{bmatrix}
 \end{aligned}
 ```
 
@@ -44,9 +44,7 @@ The oriented bridge incidence matrix and bridge Laplacian are
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{v}$ | `v` | Input | [V] | Bus voltage at source port | $\mathbf{v} \in \mathbb{R}^3$
-$s_a$ | `sa` | Input | [-] | Phase-a switching function | $s_a \in [0,1]$
-$s_b$ | `sb` | Input | [-] | Phase-b switching function | $s_b \in [0,1]$
-$s_c$ | `sc` | Input | [-] | Phase-c switching function | $s_c \in [0,1]$
+$\mathbf{s}$ | `s` | Input | [-] | Switching function vector | $\mathbf{s} \in [0,1]^3$
 $V_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC-link voltage | $V_{\mathrm{dc}} \ge 0$
 $\mathbf{i}$ | `i` | Output | [A] | Current injection at source port | $\mathbf{i} \in \mathbb{R}^3$
 
