@@ -149,7 +149,7 @@ namespace GridKit
         IdxT parameter_error_count_{0};
 
         ComponentSignals<ScalarT, IdxT, IeeestInternalVariables, IeeestExternalVariables> signals_;
-        std::unique_ptr<MonitorT> monitor_;
+        std::unique_ptr<MonitorT>                                                         monitor_;
       };
 
     } // namespace Stabilizer
