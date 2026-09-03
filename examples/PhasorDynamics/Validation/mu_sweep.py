@@ -23,7 +23,7 @@ CASES = (
     "IEEE39",
     "WECC240",
 )
-PLOT_CASES = ("IEEE39", "ACTIVSg200", "ACTIVSg2000", "WECC240")
+PLOT_CASES = ("Hawaii", "IEEE39", "ACTIVSg200", "ACTIVSg2000", "WECC240")
 SIGNALS = (
     ("omega", r"$\Delta\omega$", "_omega"),
     ("p", r"$P$", "_p"),
@@ -32,6 +32,7 @@ SIGNALS = (
 )
 GENERATOR_CLASSES = {"genrou", "gensal", "genclassical"}
 CASE_STYLES = {
+    "Hawaii": ("Hawaii", "#3b6ea5"),
     "IEEE39": ("NE", "#2f9184"),
     "ACTIVSg200": ("Illinois", "#8663a6"),
     "ACTIVSg2000": ("Texas", "#cc7330"),
@@ -201,12 +202,17 @@ def failure_record(case_name, mu, signal, run_seconds, returncode, notes):
     }
 
 
+def sort_key(row):
+    signals = [signal for signal, _label, _suffix in SIGNALS]
+    return (CASES.index(row["case"]), float(row["mu"]), signals.index(row["signal"]))
+
+
 def write_results(rows, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=FIELDNAMES)
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows(sorted(rows, key=sort_key))
 
 
 def run_sweep(args):
@@ -319,6 +325,7 @@ def set_mu_axis(axis, mus):
                                    LogLocator, NullFormatter, NullLocator)
 
     axis.set_xscale("log")
+    axis.set_xlim(min(mus), max(mus))
     if len(mus) > 8:
         axis.xaxis.set_major_locator(LogLocator(base=10.0))
         axis.xaxis.set_major_formatter(LogFormatterMathtext(base=10.0))
@@ -389,8 +396,10 @@ def plot_results(rows, path):
     for axis in axes[-1, :]:
         axis.set_xlabel(r"$\mu$ - Smoothing scale")
     figure.supylabel("Max relative error", x=0.025)
-    figure.subplots_adjust(top=0.90, bottom=0.105, left=0.125, right=0.985,
-                           hspace=0.18, wspace=0.08)
+    # The mu axis ends on real data, so the end labels sit at the panel edges
+    # and need room between the columns.
+    figure.subplots_adjust(top=0.90, bottom=0.105, left=0.125, right=0.975,
+                           hspace=0.18, wspace=0.16)
     save_figure(figure, path)
 
 
