@@ -353,7 +353,7 @@ namespace GridKit
 
         if (auto input_port = ports_.in.template port<IeeestSignalInputs::input>())
         {
-          y_ext[0]                = ports_.in.template port<IeeestSignalInputs::input>().readSignal();
+          y_ext[0]                 = ports_.in.template port<IeeestSignalInputs::input>().readSignal();
           variable_indices_ext_[0] = ports_.in.template port<IeeestSignalInputs::input>().signalVariableIndex();
         }
       }
