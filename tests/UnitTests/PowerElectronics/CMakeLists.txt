@@ -13,7 +13,8 @@ target_link_libraries(
           GridKit::testing)
 
 add_test(NAME PowerElectronicsNodeTest COMMAND $<TARGET_FILE:test_power_electronics_node>)
-add_test(NAME PowerElectronicsComponentCloneTest COMMAND $<TARGET_FILE:test_power_electronics_component_clone>)
+add_test(NAME PowerElectronicsComponentCloneTest
+         COMMAND $<TARGET_FILE:test_power_electronics_component_clone>)
 
 install(TARGETS test_power_electronics_node RUNTIME DESTINATION bin)
 install(TARGETS test_power_electronics_component_clone RUNTIME DESTINATION bin)
