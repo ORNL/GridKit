@@ -1,0 +1,76 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{colorbrewer}
+\input{../../diagram-style.tex}
+
+\pgfplotsset{
+  colormap={pwmblues}{
+    color=(Blues-D); color=(Blues-F); color=(Blues-G);
+    color=(Blues-H); color=(Blues-J); color=(Blues-K);
+    color=(Blues-M)
+  }
+}
+
+\begin{document}
+
+\begin{tikzpicture}[emt diagram]
+\begin{axis}[
+  name=pwmaxis,
+  set layers=axis on top,
+  width=11.2cm,
+  height=5.8cm,
+  scale only axis,
+  xmin=-0.00015,
+  xmax=0.01682,
+  ymin=-0.03,
+  ymax=1.03,
+  xtick={0,0.0041667,0.0083333,0.0125,0.0166667},
+  xticklabels={$0$,$0.0042$,$0.0083$,$0.0125$,$0.0167$},
+  ytick={0,1},
+  axis x line=bottom,
+  axis y line=left,
+  axis line style={black!75, line width=0.5pt, -},
+  tick style={black!75, line width=0.4pt},
+  ticklabel style={font=\scriptsize},
+  scaled x ticks=false,
+  xlabel={$t\,[\mathrm{s}]$},
+  xlabel style={font=\small},
+  ylabel={$s_a$},
+  ylabel style={
+    font=\small,
+    rotate=0,
+    at={(axis description cs:-0.08,0.5)},
+    anchor=east
+  },
+  colormap name=pwmblues,
+  point meta min=0,
+  point meta max=2.3802112417,
+  colorbar sampled={surf, mark=none, shader=flat, samples=512},
+  colorbar/width=0.13cm,
+  colorbar style={
+    x=,
+    y=,
+    scale only axis,
+    axis lines=box,
+    axis line style={black!75, line width=0.3pt, -},
+    tick style={black!75, line width=0.3pt},
+    ytick pos=right,
+    ytick={0,1,2,2.3802112417},
+    yticklabels={$1$,$10$,$100$,$240$},
+    yticklabel style={font=\scriptsize},
+    title={$\mu$},
+    title style={font=\small}
+  },
+  clip=true
+]
+\addplot[draw=none] coordinates {(0,0)};
+\end{axis}
+\begin{pgfonlayer}{main}
+\begin{scope}[shift={(pwmaxis.south west)}]
+\clip (0,0) rectangle (11.2cm,5.8cm);
+\input{mu-sweep.dat}
+\end{scope}
+\end{pgfonlayer}
+\end{tikzpicture}
+\end{document}
