@@ -32,9 +32,7 @@ f_{\mathrm{c}} &> f_{\mathrm{m}} > 0 \\
 ```math
 \begin{aligned}
 T_{\mathrm{c}} &:= \dfrac{1}{f_{\mathrm{c}}} \\
-T_{\mathrm{m}} &:= \dfrac{1}{f_{\mathrm{m}}} \\
-m_f &:= \dfrac{T_{\mathrm{m}}}{T_{\mathrm{c}}}
-     = \dfrac{f_{\mathrm{c}}}{f_{\mathrm{m}}}
+m_f &:= \dfrac{f_{\mathrm{c}}}{f_{\mathrm{m}}}
 \end{aligned}
 ```
 
