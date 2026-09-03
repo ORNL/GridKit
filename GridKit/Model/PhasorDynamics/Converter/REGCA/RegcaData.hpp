@@ -14,8 +14,8 @@ namespace GridKit
   {
     namespace Converter
     {
-      /// Parameter keys for the REGCA converter model. All keys are
-      /// required except the optional PowerWorld compatibility fields.
+      /// Parameter keys for the REGCA converter model. Khv, Qmin, and Xe are
+      /// optional; all other keys are required.
       enum class RegcaParameters
       {
         p0,     ///< Initial active power injection on system base
@@ -32,10 +32,10 @@ namespace GridKit
         VL1,    ///< LVPL upper breakpoint voltage
         VA0,    ///< LVACM lower breakpoint voltage
         VA1,    ///< LVACM upper breakpoint voltage
-        Vhvmax, ///< Terminal-voltage ceiling for HV reactive management
+        Vhvmax, ///< Terminal-voltage activation threshold for HV reactive management
 
         Qmin, ///< Optional PowerWorld compatibility field, accepted and unused
-        Khv,  ///< Optional PowerWorld compatibility field, accepted and unused
+        Khv,  ///< Optional HV reactive management gain, defaults to 0.7
         Xe    ///< Optional PowerWorld compatibility field, accepted and unused
       };
 
