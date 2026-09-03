@@ -311,8 +311,8 @@ namespace GridKit
 
         const auto VREAL = static_cast<size_t>(SexsPtiExternalVariables::VREAL);
         const auto VIMAG = static_cast<size_t>(SexsPtiExternalVariables::VIMAG);
-        y_ext[VREAL]    = bus_->Vr();
-        y_ext[VIMAG]    = bus_->Vi();
+        y_ext[VREAL]     = bus_->Vr();
+        y_ext[VIMAG]     = bus_->Vi();
         if (bus_->size() > 0)
         {
           variable_indices_ext_[VREAL] = bus_->getVariableIndex(0);

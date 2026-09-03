@@ -449,8 +449,8 @@ namespace GridKit
         const auto VS     = static_cast<size_t>(Esdc1aExternalVariables::VS);
         const auto VUEL   = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
 
-        y_ext[VR_EXT]                = Vr();
-        y_ext[VI_EXT]                = Vi();
+        y_ext[VR_EXT]                 = Vr();
+        y_ext[VI_EXT]                 = Vi();
         variable_indices_ext_[VR_EXT] = INVALID_INDEX<IdxT>;
         variable_indices_ext_[VI_EXT] = INVALID_INDEX<IdxT>;
         if (bus_->size() > 0)
@@ -459,10 +459,10 @@ namespace GridKit
           variable_indices_ext_[VI_EXT] = bus_->getVariableIndex(1);
         }
 
-        y_ext[OMEGA]                = omega_set_;
-        y_ext[VREF]                 = vref_set_;
-        y_ext[VS]                   = vs_set_;
-        y_ext[VUEL]                 = vuel_set_;
+        y_ext[OMEGA]                 = omega_set_;
+        y_ext[VREF]                  = vref_set_;
+        y_ext[VS]                    = vs_set_;
+        y_ext[VUEL]                  = vuel_set_;
         variable_indices_ext_[OMEGA] = INVALID_INDEX<IdxT>;
         variable_indices_ext_[VREF]  = INVALID_INDEX<IdxT>;
         variable_indices_ext_[VS]    = INVALID_INDEX<IdxT>;

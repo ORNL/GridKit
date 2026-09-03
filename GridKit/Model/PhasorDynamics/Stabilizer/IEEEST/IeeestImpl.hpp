@@ -356,7 +356,7 @@ namespace GridKit
 
         if (signals_.template isAttached<IeeestExternalVariables::U>())
         {
-          y_ext[0]                = signals_.template readExternalVariable<IeeestExternalVariables::U>();
+          y_ext[0]                 = signals_.template readExternalVariable<IeeestExternalVariables::U>();
           variable_indices_ext_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
         }
       }

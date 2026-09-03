@@ -443,8 +443,8 @@ namespace GridKit
         // Bus voltages
         const auto VREAL = static_cast<size_t>(Ieeet1ExternalVariables::VREAL);
         const auto VIMAG = static_cast<size_t>(Ieeet1ExternalVariables::VIMAG);
-        y_ext[VREAL]    = bus_->Vr();
-        y_ext[VIMAG]    = bus_->Vi();
+        y_ext[VREAL]     = bus_->Vr();
+        y_ext[VIMAG]     = bus_->Vi();
         if (bus_->size() > 0)
         {
           variable_indices_ext_[VREAL] = bus_->getVariableIndex(0);

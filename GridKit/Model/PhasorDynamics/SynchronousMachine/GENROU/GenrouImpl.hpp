@@ -622,7 +622,7 @@ namespace GridKit
       y_ext[2] = pmech_set_;
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
-        y_ext[2]                = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
+        y_ext[2]                 = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
         variable_indices_ext_[2] = signals_.template readExternalVariableIndex<GenrouExternalVariables::PM>();
       }
 
@@ -630,7 +630,7 @@ namespace GridKit
       y_ext[3] = efd_set_;
       if (signals_.template isAttached<GenrouExternalVariables::EFD>())
       {
-        y_ext[3]                = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
+        y_ext[3]                 = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
         variable_indices_ext_[3] = signals_.template readExternalVariableIndex<GenrouExternalVariables::EFD>();
       }
     }

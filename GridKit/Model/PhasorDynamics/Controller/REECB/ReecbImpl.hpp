@@ -806,8 +806,8 @@ namespace GridKit
         const auto PFAREF = static_cast<size_t>(ReecbExternalVariables::PFAREF);
         const auto PREF   = static_cast<size_t>(ReecbExternalVariables::PREF);
 
-        y_ext[VR_EXT]                = Vr();
-        y_ext[VI_EXT]                = Vi();
+        y_ext[VR_EXT]                 = Vr();
+        y_ext[VI_EXT]                 = Vi();
         variable_indices_ext_[VR_EXT] = INVALID_INDEX<IdxT>;
         variable_indices_ext_[VI_EXT] = INVALID_INDEX<IdxT>;
         if (bus_->size() > 0)
@@ -816,11 +816,11 @@ namespace GridKit
           variable_indices_ext_[VI_EXT] = bus_->getVariableIndex(1);
         }
 
-        y_ext[PE]                    = pe_set_;
-        y_ext[QGEN]                  = qgen_set_;
-        y_ext[QEXT]                  = qext_set_;
-        y_ext[PFAREF]                = pfaref_set_;
-        y_ext[PREF]                  = pref_set_;
+        y_ext[PE]                     = pe_set_;
+        y_ext[QGEN]                   = qgen_set_;
+        y_ext[QEXT]                   = qext_set_;
+        y_ext[PFAREF]                 = pfaref_set_;
+        y_ext[PREF]                   = pref_set_;
         variable_indices_ext_[PE]     = INVALID_INDEX<IdxT>;
         variable_indices_ext_[QGEN]   = INVALID_INDEX<IdxT>;
         variable_indices_ext_[QEXT]   = INVALID_INDEX<IdxT>;
