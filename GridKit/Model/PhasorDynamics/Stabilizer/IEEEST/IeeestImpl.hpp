@@ -173,8 +173,8 @@ namespace GridKit
         }
 
         ws_.resize(1);
+        ws_.setToZero();
         ws_indices_.resize(1);
-        ws_[0]         = 0.0;
         ws_indices_[0] = INVALID_INDEX<IdxT>;
 
         if (signals_.template isAssigned<IeeestInternalVariables::VSS>())
@@ -237,7 +237,7 @@ namespace GridKit
           yp[static_cast<size_t>(i)] = 0.0;
         }
 
-        ws_[0] = u;
+        ws_.getData()[0] = u;
         ws_indices_[0] =
             signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
 
@@ -351,16 +351,18 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::evaluateResidual()
       {
+        auto* ws = ws_.getData();
+
         if (signals_.template isAttached<IeeestExternalVariables::U>())
         {
-          ws_[0]         = signals_.template readExternalVariable<IeeestExternalVariables::U>();
+          ws[0]          = signals_.template readExternalVariable<IeeestExternalVariables::U>();
           ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
         }
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, nullptr, ws, f);
         f_.setDataUpdated();
 
         return 0;

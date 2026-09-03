@@ -107,10 +107,12 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.assign(2, ScalarT{0});
+        wb_.resize(2);
+        wb_.setToZero();
 
         const auto signal_size = static_cast<size_t>(Esdc1aExternalVariables::MAXIMUM);
-        ws_.assign(signal_size, ScalarT{0});
+        ws_.resize(static_cast<IdxT>(signal_size));
+        ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         for (IdxT j = 0; j < size_; ++j)
@@ -454,45 +456,48 @@ namespace GridKit
         const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
         const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
 
-        ws_[OMEGA] = omega_set_;
-        ws_[VREF]  = vref_set_;
-        ws_[VS]    = vs_set_;
-        ws_[VUEL]  = vuel_set_;
+        auto* ws = ws_.getData();
+
+        ws[OMEGA] = omega_set_;
+        ws[VREF]  = vref_set_;
+        ws[VS]    = vs_set_;
+        ws[VUEL]  = vuel_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
         {
-          ws_[OMEGA] = signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
+          ws[OMEGA] = signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
           ws_indices_[OMEGA] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::OMEGA>();
         }
         if (signals_.template isAttached<Esdc1aExternalVariables::VREF>())
         {
-          ws_[VREF] = signals_.template readExternalVariable<Esdc1aExternalVariables::VREF>();
+          ws[VREF] = signals_.template readExternalVariable<Esdc1aExternalVariables::VREF>();
           ws_indices_[VREF] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VREF>();
         }
         if (signals_.template isAttached<Esdc1aExternalVariables::VS>())
         {
-          ws_[VS] = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
+          ws[VS] = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
           ws_indices_[VS] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VS>();
         }
         if (signals_.template isAttached<Esdc1aExternalVariables::VUEL>())
         {
-          ws_[VUEL] = signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
+          ws[VUEL] = signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
           ws_indices_[VUEL] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VUEL>();
         }
 
-        wb_[0] = Vr();
-        wb_[1] = Vi();
+        auto* wb = wb_.getData();
+        wb[0]    = Vr();
+        wb[1]    = Vi();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
 
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, wb, ws, f);
         f_.setDataUpdated();
         return 0;
       }

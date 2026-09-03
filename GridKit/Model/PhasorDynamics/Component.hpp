@@ -361,8 +361,14 @@ namespace GridKit
 
       IdxT gridkit_component_id_{0};
 
-      std::vector<ScalarT> wb_;
-      std::vector<ScalarT> h_;
+      /// Bus interface values seen by the internal residual
+      VectorT           wb_;
+      /// External residual equations vector
+      VectorT           h_;
+      /// External signal values seen by the internal residual
+      VectorT           ws_;
+      /// Global indices of attached external signals
+      std::vector<IdxT> ws_indices_;
 
       RealT time_;
       RealT alpha_;

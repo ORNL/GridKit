@@ -80,6 +80,8 @@ namespace GridKit
       using Component<scalar_type, index_type>::y_;
       using Component<scalar_type, index_type>::yp_;
       using Component<scalar_type, index_type>::wb_;
+      using Component<scalar_type, index_type>::ws_;
+      using Component<scalar_type, index_type>::ws_indices_;
       using Component<scalar_type, index_type>::h_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
@@ -258,10 +260,6 @@ namespace GridKit
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set
       ScalarT efd_set_{0.0};   // TODO remove default initialization and ensure this gets set
-
-      /* Local copies of signal variables */
-      std::vector<ScalarT> ws_;
-      std::vector<IdxT>    ws_indices_;
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;

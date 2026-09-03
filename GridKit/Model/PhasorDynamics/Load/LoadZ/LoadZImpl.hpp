@@ -213,15 +213,18 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::evaluateResidual()
     {
-      wb_[0]         = Vr();
-      wb_[1]         = Vi();
+      auto* wb = wb_.getData();
+      wb[0]    = Vr();
+      wb[1]    = Vi();
+
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
-      evaluateInternalResidual(y, yp, wb_.data(), f);
-      evaluateBusResidual(y, yp, wb_.data(), h_.data());
-      Ir() += h_[0];
-      Ii() += h_[1];
+      auto*       h  = h_.getData();
+      evaluateInternalResidual(y, yp, wb, f);
+      evaluateBusResidual(y, yp, wb, h);
+      Ir() += h[0];
+      Ii() += h[1];
       if (bus_->size() > 0)
       {
         bus_->getResidual().setDataUpdated();

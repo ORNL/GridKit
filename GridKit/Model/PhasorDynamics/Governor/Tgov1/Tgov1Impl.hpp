@@ -209,7 +209,8 @@ namespace GridKit
 
         // Resize signal variable data
         const auto signal_size = static_cast<size_t>(Tgov1ExternalVariables::MAXIMUM);
-        ws_.assign(signal_size, ScalarT{0});
+        ws_.resize(static_cast<IdxT>(signal_size));
+        ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         // Set output signals
@@ -406,20 +407,22 @@ namespace GridKit
         const auto DELTAOMEGA = static_cast<size_t>(Tgov1ExternalVariables::DELTAOMEGA);
         const auto PREF       = static_cast<size_t>(Tgov1ExternalVariables::PREF);
 
-        ws_[DELTAOMEGA] = ScalarT{ZERO<RealT>};
-        ws_[PREF]       = pref_set_;
+        auto* ws = ws_.getData();
+
+        ws[DELTAOMEGA] = ScalarT{ZERO<RealT>};
+        ws[PREF]       = pref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
         {
-          ws_[DELTAOMEGA] = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+          ws[DELTAOMEGA] = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
           ws_indices_[DELTAOMEGA] =
               signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
         }
 
         if (signals_.template isAttached<Tgov1ExternalVariables::PREF>())
         {
-          ws_[PREF] = signals_.template readExternalVariable<Tgov1ExternalVariables::PREF>();
+          ws[PREF] = signals_.template readExternalVariable<Tgov1ExternalVariables::PREF>();
           ws_indices_[PREF] =
               signals_.template readExternalVariableIndex<Tgov1ExternalVariables::PREF>();
         }
@@ -427,7 +430,7 @@ namespace GridKit
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, nullptr, ws, f);
 
         f_.setDataUpdated();
 

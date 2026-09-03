@@ -103,10 +103,12 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.assign(2, ScalarT{0});
+        wb_.resize(2);
+        wb_.setToZero();
 
         const auto signal_size = static_cast<size_t>(RepcaExternalVariables::MAXIMUM);
-        ws_.assign(signal_size, ScalarT{0});
+        ws_.resize(static_cast<IdxT>(signal_size));
+        ws_.setToZero();
         ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
 
         for (IdxT j = 0; j < size_; ++j)
@@ -608,32 +610,34 @@ namespace GridKit
         const auto QREF    = static_cast<size_t>(RepcaExternalVariables::QREF);
         const auto FREQREF = static_cast<size_t>(RepcaExternalVariables::FREQREF);
 
-        ws_[VREF]    = vref_set_;
-        ws_[PREF]    = pref_set_;
-        ws_[QREF]    = qref_set_;
-        ws_[FREQ]    = static_cast<ScalarT>(ONE<RealT>);
-        ws_[FREQREF] = freqref_set_;
+        auto* ws = ws_.getData();
+
+        ws[VREF]    = vref_set_;
+        ws[PREF]    = pref_set_;
+        ws[QREF]    = qref_set_;
+        ws[FREQ]    = static_cast<ScalarT>(ONE<RealT>);
+        ws[FREQREF] = freqref_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
-        ws_[IR] =
+        ws[IR] =
             signals_.template readExternalVariable<RepcaExternalVariables::IR>();
         ws_indices_[IR] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::IR>();
-        ws_[II] =
+        ws[II] =
             signals_.template readExternalVariable<RepcaExternalVariables::II>();
         ws_indices_[II] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::II>();
-        ws_[P] =
+        ws[P] =
             signals_.template readExternalVariable<RepcaExternalVariables::P>();
         ws_indices_[P] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::P>();
-        ws_[Q] =
+        ws[Q] =
             signals_.template readExternalVariable<RepcaExternalVariables::Q>();
         ws_indices_[Q] =
             signals_.template readExternalVariableIndex<RepcaExternalVariables::Q>();
         if (signals_.template isAttached<RepcaExternalVariables::FREQ>())
         {
-          ws_[FREQ] =
+          ws[FREQ] =
               signals_.template readExternalVariable<RepcaExternalVariables::FREQ>();
           ws_indices_[FREQ] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQ>();
@@ -641,41 +645,42 @@ namespace GridKit
 
         if (signals_.template isAttached<RepcaExternalVariables::VREF>())
         {
-          ws_[VREF] =
+          ws[VREF] =
               signals_.template readExternalVariable<RepcaExternalVariables::VREF>();
           ws_indices_[VREF] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::VREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::PREF>())
         {
-          ws_[PREF] =
+          ws[PREF] =
               signals_.template readExternalVariable<RepcaExternalVariables::PREF>();
           ws_indices_[PREF] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::PREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::QREF>())
         {
-          ws_[QREF] =
+          ws[QREF] =
               signals_.template readExternalVariable<RepcaExternalVariables::QREF>();
           ws_indices_[QREF] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::QREF>();
         }
         if (signals_.template isAttached<RepcaExternalVariables::FREQREF>())
         {
-          ws_[FREQREF] =
+          ws[FREQREF] =
               signals_.template readExternalVariable<RepcaExternalVariables::FREQREF>();
           ws_indices_[FREQREF] =
               signals_.template readExternalVariableIndex<RepcaExternalVariables::FREQREF>();
         }
 
-        wb_[0] = Vr();
-        wb_[1] = Vi();
+        auto* wb = wb_.getData();
+        wb[0]    = Vr();
+        wb[1]    = Vi();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
 
-        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateInternalResidual(y, yp, wb, ws, f);
         f_.setDataUpdated();
         return 0;
       }

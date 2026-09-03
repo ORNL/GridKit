@@ -8,7 +8,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <vector>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
@@ -96,6 +95,8 @@ namespace GridKit
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
+        using Component<scalar_type, index_type>::ws_;
+        using Component<scalar_type, index_type>::ws_indices_;
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
 
@@ -214,9 +215,6 @@ namespace GridKit
 
         ComponentSignals<ScalarT, IdxT, RepcaInternalVariables, RepcaExternalVariables> signals_;
         std::unique_ptr<MonitorT>                                                       monitor_;
-
-        std::vector<ScalarT> ws_;
-        std::vector<IdxT>    ws_indices_;
       };
     } // namespace Controller
   } // namespace PhasorDynamics
