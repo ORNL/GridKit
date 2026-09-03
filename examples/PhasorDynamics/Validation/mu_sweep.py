@@ -78,6 +78,8 @@ def parse_args():
                         default=Path(__file__).with_name("mu_sweep_errors.csv"))
     parser.add_argument("--figure", type=Path,
                         default=Path(__file__).with_name("mu_sweep_errors.png"))
+    parser.add_argument("--runtime-figure", type=Path,
+                        default=Path(__file__).with_name("mu_sweep_runtime.png"))
     parser.add_argument("--plot-only", action="store_true")
     parser.add_argument("--resume", action="store_true")
     return parser.parse_args()
@@ -309,9 +311,24 @@ def use_text_optical_size():
         font_manager.fontManager.ttflist.remove(face)
 
 
-def plot_results(rows, path):
-    from matplotlib.ticker import FixedFormatter, FixedLocator, NullLocator
+def set_mu_axis(axis, mus):
+    """Label every sampled mu when they are few; fall back to decades when dense."""
+    from matplotlib.ticker import (FixedFormatter, FixedLocator, LogFormatterMathtext,
+                                   LogLocator, NullFormatter, NullLocator)
 
+    axis.set_xscale("log")
+    if len(mus) > 8:
+        axis.xaxis.set_major_locator(LogLocator(base=10.0))
+        axis.xaxis.set_major_formatter(LogFormatterMathtext(base=10.0))
+        axis.xaxis.set_minor_locator(LogLocator(base=10.0, subs=tuple(range(2, 10))))
+        axis.xaxis.set_minor_formatter(NullFormatter())
+        return
+    axis.xaxis.set_major_locator(FixedLocator(mus))
+    axis.xaxis.set_major_formatter(FixedFormatter([f"{mu:g}" for mu in mus]))
+    axis.xaxis.set_minor_locator(NullLocator())
+
+
+def plot_results(rows, path):
     lookup = {(row["case"], float(row["mu"]), row["signal"]): row for row in rows}
     case_names = [name for name in PLOT_CASES
                   if any(row["case"] == name for row in rows)]
@@ -335,11 +352,8 @@ def plot_results(rows, path):
             )
             if panel == 0:
                 handles.append(line)
-        axis.set_xscale("log")
+        set_mu_axis(axis, mus)
         axis.set_yscale("log")
-        axis.xaxis.set_major_locator(FixedLocator(mus))
-        axis.xaxis.set_major_formatter(FixedFormatter([f"{mu:g}" for mu in mus]))
-        axis.xaxis.set_minor_locator(NullLocator())
         axis.grid(True, which="major", color=GRID_COLOR, linewidth=0.5)
         axis.set_axisbelow(True)
         axis.text(0.035, 0.055, label, transform=axis.transAxes,
@@ -362,10 +376,59 @@ def plot_results(rows, path):
     print(f"Wrote {path}")
 
 
+def collect_runs(rows):
+    runs = {}
+    for row in rows:
+        key = (row["case"], float(row["mu"]))
+        value = (float(row["run_seconds"]), row.get("status", "ok"))
+        if key in runs and runs[key] != value:
+            raise ValueError(f"Inconsistent run data for {key}")
+        runs[key] = value
+    return runs
+
+
+def plot_runtime_results(rows, path):
+    runs = collect_runs(rows)
+    case_names = [name for name in PLOT_CASES
+                  if any(case_name == name for case_name, _mu in runs)]
+    mus = sorted({mu for case_name, mu in runs if case_name in case_names})
+    use_text_optical_size()
+    plt.rcParams.update(RC_PARAMS)
+
+    figure, axis = plt.subplots(figsize=(7.0, 3.6))
+    for color, case_name in zip(COLORS, case_names):
+        points = [
+            (mu, runs[(case_name, mu)][0])
+            for mu in mus
+            if (case_name, mu) in runs and runs[(case_name, mu)][1] == "ok"
+        ]
+        axis.plot(
+            [mu for mu, _runtime in points],
+            [runtime for _mu, runtime in points],
+            color=color, marker="o", markersize=3.4, linewidth=1.6, label=case_name,
+        )
+
+    set_mu_axis(axis, mus)
+    axis.set_yscale("log")
+    axis.set_xlabel(r"Smoothing scale $\mu$")
+    axis.set_ylabel("Elapsed Runtime (s)")
+    axis.grid(True, which="major", color=GRID_COLOR, linewidth=0.5)
+    axis.set_axisbelow(True)
+
+    figure.legend(loc="upper center", ncol=len(case_names), frameon=False,
+                  bbox_to_anchor=(0.5, 0.995), handlelength=2.2, columnspacing=2.6)
+    figure.subplots_adjust(top=0.82, bottom=0.17, left=0.12, right=0.985)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(path, dpi=600, bbox_inches="tight", pad_inches=0.03)
+    plt.close(figure)
+    print(f"Wrote {path}")
+
+
 def main():
     args = parse_args()
     rows = read_results(args.output) if args.plot_only else run_sweep(args)
     plot_results(rows, args.figure)
+    plot_runtime_results(rows, args.runtime_figure)
 
 
 if __name__ == "__main__":
