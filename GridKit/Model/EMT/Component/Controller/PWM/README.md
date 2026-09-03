@@ -30,10 +30,7 @@ f_{\mathrm{c}} &> f_{\mathrm{m}} > 0 \\
 ### Derived Parameters
 
 ```math
-\begin{aligned}
-T_{\mathrm{c}} &:= \dfrac{1}{f_{\mathrm{c}}} \\
-m_f &:= \dfrac{f_{\mathrm{c}}}{f_{\mathrm{m}}}
-\end{aligned}
+m_f := \dfrac{f_{\mathrm{c}}}{f_{\mathrm{m}}}
 ```
 
 The phase-offset vector is
@@ -46,25 +43,31 @@ The phase-offset vector is
 \end{bmatrix}^{\mathsf{T}}
 ```
 
-The normalized pulse half-widths and centered carrier phases are
+The normalized pulse half-widths are
 
 ```math
-\begin{aligned}
-D_{k,m} &:= \dfrac{1}{4}
+D_{k,m} := \dfrac{1}{4}
 \left[
   1+M\sin\left(\dfrac{2\pi m}{m_f}+\phi_k\right)
-\right] \\
-\theta_{k,m}(t) &:=
-\operatorname{mod}\left(
-  f_{\mathrm{c}}t
-  -D_{k,m}
-  +\dfrac{m_f}{2},
-  m_f
-\right)
--\dfrac{m_f}{2}
+\right]
 \qquad
 k\in\{a,b,c\},\quad m\in\{0,\ldots,m_f-1\}
-\end{aligned}
+```
+
+The centered carrier phase is
+
+```math
+\theta(x)
+:=
+\operatorname{mod}\left(x+\dfrac{m_f}{2},m_f\right)
+-\dfrac{m_f}{2}
+```
+
+The centered pulse function uses the GridKit
+[`sigmoid`](../../../../../CommonMath.md#primitives)
+
+```math
+p(x,D) := \sigma(x+D)-\sigma(x-D)
 ```
 
 ## Model Ports
@@ -117,25 +120,14 @@ None.
 
 ### External Equations
 
-$\sigma$ denotes the GridKit [`sigmoid`](../../../../../CommonMath.md#primitives).
-
 ```math
 \begin{aligned}
 s_a &\leftarrow \sum_{m=0}^{m_f-1}
-  \left[
-    \sigma\left(\theta_{a,m}\left(t-mT_{\mathrm{c}}\right)+D_{a,m}\right)
-    -\sigma\left(\theta_{a,m}\left(t-mT_{\mathrm{c}}\right)-D_{a,m}\right)
-  \right] \\
+  p\left(\theta\left(f_{\mathrm{c}}t-m-D_{a,m}\right),D_{a,m}\right) \\
 s_b &\leftarrow \sum_{m=0}^{m_f-1}
-  \left[
-    \sigma\left(\theta_{b,m}\left(t-mT_{\mathrm{c}}\right)+D_{b,m}\right)
-    -\sigma\left(\theta_{b,m}\left(t-mT_{\mathrm{c}}\right)-D_{b,m}\right)
-  \right] \\
+  p\left(\theta\left(f_{\mathrm{c}}t-m-D_{b,m}\right),D_{b,m}\right) \\
 s_c &\leftarrow \sum_{m=0}^{m_f-1}
-  \left[
-    \sigma\left(\theta_{c,m}\left(t-mT_{\mathrm{c}}\right)+D_{c,m}\right)
-    -\sigma\left(\theta_{c,m}\left(t-mT_{\mathrm{c}}\right)-D_{c,m}\right)
-  \right]
+  p\left(\theta\left(f_{\mathrm{c}}t-m-D_{c,m}\right),D_{c,m}\right)
 \end{aligned}
 ```
 
