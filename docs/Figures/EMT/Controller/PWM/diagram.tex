@@ -1,0 +1,122 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{groupplots}
+\input{../../diagram-style.tex}
+
+\begin{document}
+
+\def\modulationIndex{0.8}
+\def\modulationFrequency{60}
+\def\carrierFrequency{900}
+\def\topScale{216000}
+\def\bottomScale{900}
+
+\tikzset{declare function={
+  sigmaS(\x,\m) = ifthenelse(\x>=0,
+    1/(1+exp(-\m*\x)), exp(\m*\x)/(1+exp(\m*\x)));
+  st(\x) = \x-floor(\x);
+  taum(\x,\q) = \x-(st(\carrierFrequency*\x)-\q)/\carrierFrequency;
+  da(\x) = (1+
+    \modulationIndex*sin(360*\modulationFrequency*\x))/(2*\carrierFrequency);
+  db(\x) = (1+
+    \modulationIndex*sin(360*\modulationFrequency*\x-120))/(2*\carrierFrequency);
+  dc(\x) = (1+
+    \modulationIndex*sin(360*\modulationFrequency*\x+120))/(2*\carrierFrequency);
+  pa(\x,\q,\m) = sigmaS(\x-taum(\x,\q),\m)
+    -sigmaS(\x-taum(\x,\q)-da(taum(\x,\q)),\m);
+  pb(\x,\q,\m) = sigmaS(\x-taum(\x,\q),\m)
+    -sigmaS(\x-taum(\x,\q)-db(taum(\x,\q)),\m);
+  pc(\x,\q,\m) = sigmaS(\x-taum(\x,\q),\m)
+    -sigmaS(\x-taum(\x,\q)-dc(taum(\x,\q)),\m);
+  sa(\x,\m) = pa(\x,-1,\m)+pa(\x,0,\m)+pa(\x,1,\m);
+  sb(\x,\m) = pb(\x,-1,\m)+pb(\x,0,\m)+pb(\x,1,\m);
+  sc(\x,\m) = pc(\x,-1,\m)+pc(\x,0,\m)+pc(\x,1,\m);
+}}
+
+\begin{tikzpicture}[emt diagram]
+\begin{groupplot}[
+  group style={group name=pwm, group size=1 by 7, vertical sep=0.18cm},
+  width=11.2cm,
+  height=1.18cm,
+  scale only axis,
+  xmin=-0.00015,
+  xmax=0.01682,
+  ymin=-0.08,
+  ymax=1.08,
+  ytick={0,1},
+  axis y line=left,
+  axis line style={black!75, line width=0.5pt, -},
+  tick style={black!75, line width=0.4pt},
+  ticklabel style={font=\scriptsize},
+  scaled x ticks=false,
+  ylabel style={
+    font=\small,
+    rotate=0,
+    at={(axis description cs:-0.11,0.5)},
+    anchor=east
+  },
+  every axis plot/.append style={black, semithick, no markers},
+  cycle list={{black}},
+  samples=1201,
+  domain=-0.00015:0.01682,
+  clip=true
+]
+
+\nextgroupplot[
+  ylabel={$s_a$},
+  axis x line=none,
+  xtick=\empty
+]
+\addplot {sa(x,\topScale)};
+
+\nextgroupplot[
+  ylabel={$s_b$},
+  axis x line=none,
+  xtick=\empty
+]
+\addplot {sb(x,\topScale)};
+
+\nextgroupplot[
+  ylabel={$s_c$},
+  axis x line=bottom,
+  xtick={0,0.0041667,0.0083333,0.0125,0.0166667},
+  xticklabels={$0$,$0.0042$,$0.0083$,$0.0125$,$0.0167$},
+  xlabel={$t\,[\mathrm{s}]$},
+  xlabel style={font=\small}
+]
+\addplot {sc(x,\topScale)};
+
+\nextgroupplot[hide axis]
+
+\nextgroupplot[
+  ylabel={$s_a$},
+  axis x line=none,
+  xtick=\empty
+]
+\addplot {sa(x,\bottomScale)};
+
+\nextgroupplot[
+  ylabel={$s_b$},
+  axis x line=none,
+  xtick=\empty
+]
+\addplot {sb(x,\bottomScale)};
+
+\nextgroupplot[
+  ylabel={$s_c$},
+  axis x line=bottom,
+  xtick={0,0.0041667,0.0083333,0.0125,0.0166667},
+  xticklabels={$0$,$0.0042$,$0.0083$,$0.0125$,$0.0167$},
+  xlabel={$t\,[\mathrm{s}]$},
+  xlabel style={font=\small}
+]
+\addplot {sc(x,\bottomScale)};
+
+\end{groupplot}
+\node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r2.east)
+  {$\mu=4f_{\mathrm{c}}f_{\mathrm{m}}$};
+\node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r6.east)
+  {$\mu=f_{\mathrm{c}}$};
+\end{tikzpicture}
+\end{document}
