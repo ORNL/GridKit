@@ -50,11 +50,7 @@ namespace GridKit
         idc_(other.idc_),
         allocated_(other.allocated_)
     {
-      /*
-       * VectorT disables its normal copy constructor and copy-assignment
-       * operator. Use its provided copyFromExternal() operation to perform
-       * an independent copy of the vector data.
-       */
+
       auto copyVector = [](VectorT& destination, const VectorT& source)
       {
         const IdxT source_size = source.getSize();
@@ -149,11 +145,30 @@ namespace GridKit
       copyVector(param_lo_, other.param_lo_);
     }
 
+    /**
+     * @brief Create an independent copy of this component.
+     *
+     * The clone preserves the component's model configuration, parameters,
+     * topology, and structural data, but does not preserve bindings to
+     * system-owned state or residual storage.
+     *
+     * @note By default, the cloned component's state, state-derivative, and
+     * residual pointers are not set. The user is responsible for setting these
+     * pointers to the appropriate storage before evaluating the residual.
+     */
     virtual CircuitComponent<ScalarT, IdxT>* clone() const
     {
       return nullptr;
     }
 
+    /**
+     * @brief Indicates whether this component supports cloning.
+     *
+     * Derived components that implement clone() should override this method
+     * and return true.
+     *
+     * @return true if the component can be cloned, false otherwise.
+     */
     virtual bool isCloneable() const
     {
       return false;
