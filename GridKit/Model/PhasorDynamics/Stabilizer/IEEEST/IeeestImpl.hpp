@@ -371,8 +371,8 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::evaluateResidual()
       {
-        auto* ws = ws_.getData();
-        const auto U = static_cast<size_t>(IeeestExternalVariables::U);
+        auto*      ws = ws_.getData();
+        const auto U  = static_cast<size_t>(IeeestExternalVariables::U);
 
         ws[U]          = ports_.in.template port<IeeestSignalInputs::input>().readSignal();
         ws_indices_[U] = ports_.in.template port<IeeestSignalInputs::input>().signalVariableIndex();
