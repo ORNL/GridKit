@@ -28,6 +28,8 @@ f_{\mathrm{c}} &> f_{\mathrm{m}} > 0
 
 ### Derived Parameters
 
+*Important!*: We can and should smooth approximate sawtooth in a cheap way.
+
 ```math
 \begin{aligned}
 \operatorname{st}(x) &:= x-\text{floor}(x) \\
