@@ -18,20 +18,14 @@ namespace GridKit
       N, ///< Number of phases
     };
 
-    /// Buses for a bus
-    enum class BusBuses : size_t
+    /// Inputs supported by a bus
+    enum class BusInputs : size_t
     {
       SIZE
     };
 
-    /// Signal inputs supported for a bus
-    enum class BusSignalInputs : size_t
-    {
-      SIZE
-    };
-
-    /// Signal outputs supported for a bus
-    enum class BusSignalOutputs : size_t
+    /// Outputs supported by a bus
+    enum class BusOutputs : size_t
     {
       SIZE
     };
@@ -56,23 +50,19 @@ namespace GridKit
     struct BusData : public ComponentData<real_type,
                                           index_type,
                                           BusParameters,
-                                          BusBuses,
-                                          BusSignalInputs,
-                                          BusSignalOutputs,
+                                          BusInputs,
+                                          BusOutputs,
                                           BusMonitorableVariables>
     {
       BusData() = default;
 
       using Parameters           = BusParameters;
-      using Buses                = BusBuses;
-      using SignalInputs         = BusSignalInputs;
-      using SignalOutputs        = BusSignalOutputs;
+      using Inputs               = BusInputs;
+      using Outputs              = BusOutputs;
       using MonitorableVariables = BusMonitorableVariables;
 
       using IdxT  = index_type;
       using RealT = real_type;
-
-      IdxT bus_id{0}; ///< The unique ID of the bus
 
       RealT va0{0.0}; ///< Initial instantaneous phase a voltage
       RealT vb0{0.0}; ///< Initial instantaneous phase b voltage

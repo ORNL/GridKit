@@ -279,15 +279,13 @@ namespace GridKit
             "case_description": "Parser and wiring coverage",
             "case_comments": ""
           },
-          "buses": [
-            { "number": 1, "class": "Bus", "name": "Bus_1" }
-          ],
           "signals": [
-            { "name": "ea", "signal_id": 11 },
-            { "name": "eb", "signal_id": 12 },
-            { "name": "ec", "signal_id": 13 }
+            { "id": "ea" },
+            { "id": "eb" },
+            { "id": "ec" }
           ],
           "devices": [
+            { "class": "Bus", "id": "bus_1" },
             {
               "class": "DependentVoltageSource",
               "id": "source_1",
@@ -296,7 +294,12 @@ namespace GridKit
                 "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                 "Ls": [[0.1, 0.0, 0.0], [0.0, 0.1, 0.0], [0.0, 0.0, 0.1]]
               },
-              "ports": { "bus": 1, "ea": 11, "eb": 12, "ec": 13 }
+              "inputs": {
+                "bus": "bus_1",
+                "ea": "ea",
+                "eb": "eb",
+                "ec": "ec"
+              }
             }
           ]
         })");
@@ -304,11 +307,18 @@ namespace GridKit
         const auto data  = EMT::parseSystemModelData(stream);
         success         *= (data.dependent_voltage_source.size() == 1);
 
-        using Input         = EMT::DependentVoltageSourceSignalInputs;
-        const auto& inputs  = data.dependent_voltage_source[0].signal_inputs;
-        success            *= (inputs.at(Input::ea) == 11);
-        success            *= (inputs.at(Input::eb) == 12);
-        success            *= (inputs.at(Input::ec) == 13);
+        using Input         = EMT::DependentVoltageSourceInputs;
+        const auto& inputs  = data.dependent_voltage_source[0].inputs;
+        success            *= (data.bus.size() == 1);
+        success            *= (data.bus[0].id == "bus_1");
+        success            *= (data.signal.size() == 3);
+        success            *= (data.signal[0].id == "ea");
+        success            *= (data.signal[1].id == "eb");
+        success            *= (data.signal[2].id == "ec");
+        success            *= (inputs.at(Input::bus) == "bus_1");
+        success            *= (inputs.at(Input::ea) == "ea");
+        success            *= (inputs.at(Input::eb) == "eb");
+        success            *= (inputs.at(Input::ec) == "ec");
 
         EMT::SystemModel<ScalarT, IdxT> system(data);
         auto*                           source  = dynamic_cast<SourceT*>(system.getComponent(1));

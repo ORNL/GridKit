@@ -1,6 +1,8 @@
 /**
  * @file Signal model implementation.
  */
+#include <utility>
+
 #include <GridKit/Model/EMT/Signal/Signal.hpp>
 #include <GridKit/Model/EMT/Signal/SignalData.hpp>
 
@@ -14,8 +16,14 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
+    Signal<scalar_type, index_type>::Signal(std::string id)
+      : id_(std::move(id))
+    {
+    }
+
+    template <typename scalar_type, typename index_type>
     Signal<scalar_type, index_type>::Signal(const SignalData<RealT, IdxT>& data)
-      : signal_id_(data.signal_id)
+      : Signal(data.id)
     {
     }
 

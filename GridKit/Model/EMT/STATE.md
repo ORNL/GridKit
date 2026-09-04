@@ -30,8 +30,8 @@ Contained in the optional `header` key is an object with the following items:
 
 ### Buses
 
-Contained in the `buses` key is an object mapping bus keys of the form
-`bus_id_<number>` to bus states:
+Contained in the `buses` key is an object mapping Bus component IDs from the
+case file to bus states:
 
    Name  | Value
  --------|-------------------------------------------------------
@@ -41,8 +41,8 @@ Contained in the `buses` key is an object mapping bus keys of the form
 
 ### Devices
 
-Contained in the `devices` key is an object mapping device disambiguation
-strings to device states:
+Contained in the `devices` key is an object mapping component IDs from the
+case file to device states:
 
    Name   | Value
  ---------|-------------------------------------------------------

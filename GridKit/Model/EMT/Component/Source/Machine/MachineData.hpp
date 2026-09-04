@@ -40,25 +40,19 @@ namespace GridKit
       q0,   ///< Initial reactive power injection
     };
 
-    /// Buses for a synchronous machine
-    enum class MachineBuses : size_t
+    /// Inputs supported by a synchronous machine
+    enum class MachineInputs : size_t
     {
-      bus, ///< Unique ID of the bus to which the machine is connected
+      bus, ///< Component ID of the connected bus
+      pm,  ///< Mechanical-power signal ID from a governor
+      efd, ///< Field-voltage signal ID from an exciter
       SIZE
     };
 
-    /// Signal inputs supported for a synchronous machine
-    enum class MachineSignalInputs : size_t
+    /// Outputs supported by a synchronous machine
+    enum class MachineOutputs : size_t
     {
-      pm,  ///< Mechanical power from a governor
-      efd, ///< Field voltage from an exciter
-      SIZE
-    };
-
-    /// Signal outputs supported for a synchronous machine
-    enum class MachineSignalOutputs : size_t
-    {
-      speed, ///< Rotor speed
+      speed, ///< Rotor-speed output signal ID
       SIZE
     };
 
@@ -93,17 +87,15 @@ namespace GridKit
     struct MachineData : public ComponentData<real_type,
                                               index_type,
                                               MachineParameters,
-                                              MachineBuses,
-                                              MachineSignalInputs,
-                                              MachineSignalOutputs,
+                                              MachineInputs,
+                                              MachineOutputs,
                                               MachineMonitorableVariables>
     {
       MachineData() = default;
 
       using Parameters           = MachineParameters;
-      using Buses                = MachineBuses;
-      using SignalInputs         = MachineSignalInputs;
-      using SignalOutputs        = MachineSignalOutputs;
+      using Inputs               = MachineInputs;
+      using Outputs              = MachineOutputs;
       using MonitorableVariables = MachineMonitorableVariables;
     };
   } // namespace EMT

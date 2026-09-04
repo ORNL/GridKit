@@ -32,17 +32,9 @@ namespace GridKit
       };
 
       /**
-       * @brief Placeholder enum for TGOV1 bus keys.
+       * @brief TGOV1 inputs.
        */
-      enum class Tgov1Buses : size_t
-      {
-        SIZE,
-      };
-
-      /**
-       * @brief TGOV1 signal inputs.
-       */
-      enum class Tgov1SignalInputs : size_t
+      enum class Tgov1Inputs : size_t
       {
         speed, ///< \f$\omega_r\f$ Optional machine rotor-speed signal ID
         pref,  ///< \f$P_\mathrm{ref}\f$ Optional governor-reference signal ID
@@ -50,9 +42,9 @@ namespace GridKit
       };
 
       /**
-       * @brief TGOV1 signal outputs.
+       * @brief TGOV1 outputs.
        */
-      enum class Tgov1SignalOutputs : size_t
+      enum class Tgov1Outputs : size_t
       {
         pmech, ///< \f$P_m\f$ Required mechanical-power output signal ID
         SIZE,
@@ -76,17 +68,15 @@ namespace GridKit
       struct Tgov1Data : public ComponentData<real_type,
                                               index_type,
                                               Tgov1Parameters,
-                                              Tgov1Buses,
-                                              Tgov1SignalInputs,
-                                              Tgov1SignalOutputs,
+                                              Tgov1Inputs,
+                                              Tgov1Outputs,
                                               Tgov1MonitorableVariables>
       {
         Tgov1Data() = default;
 
         using Parameters           = Tgov1Parameters;
-        using Buses                = Tgov1Buses;
-        using SignalInputs         = Tgov1SignalInputs;
-        using SignalOutputs        = Tgov1SignalOutputs;
+        using Inputs               = Tgov1Inputs;
+        using Outputs              = Tgov1Outputs;
         using MonitorableVariables = Tgov1MonitorableVariables;
       };
     } // namespace Controller
