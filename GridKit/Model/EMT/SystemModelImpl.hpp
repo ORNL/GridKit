@@ -73,6 +73,44 @@ namespace GridKit
         addComponent(source);
       }
 
+      // Add dependent voltage sources
+      for (const auto& sourcedata : data.dependent_voltage_source)
+      {
+        IdxT bus_index = 0;
+        if (sourcedata.buses.contains(DependentVoltageSourceBuses::bus))
+        {
+          bus_index = sourcedata.buses.at(DependentVoltageSourceBuses::bus);
+        }
+
+        auto* source = new DependentVoltageSource<ScalarT, IdxT>(sourcedata);
+
+        constexpr auto VA = DependentVoltageSourceExternalVariables::VA;
+        source->getSignals().template attachPort<VA>(&(getBus(bus_index)->voltagePort()));
+
+        if (sourcedata.signal_inputs.contains(DependentVoltageSourceSignalInputs::ea))
+        {
+          IdxT           ea = sourcedata.signal_inputs.at(DependentVoltageSourceSignalInputs::ea);
+          constexpr auto EA = DependentVoltageSourceExternalVariables::EA;
+          source->getSignals().template attachSignal<EA>(getSignal(ea));
+        }
+
+        if (sourcedata.signal_inputs.contains(DependentVoltageSourceSignalInputs::eb))
+        {
+          IdxT           eb = sourcedata.signal_inputs.at(DependentVoltageSourceSignalInputs::eb);
+          constexpr auto EB = DependentVoltageSourceExternalVariables::EB;
+          source->getSignals().template attachSignal<EB>(getSignal(eb));
+        }
+
+        if (sourcedata.signal_inputs.contains(DependentVoltageSourceSignalInputs::ec))
+        {
+          IdxT           ec = sourcedata.signal_inputs.at(DependentVoltageSourceSignalInputs::ec);
+          constexpr auto EC = DependentVoltageSourceExternalVariables::EC;
+          source->getSignals().template attachSignal<EC>(getSignal(ec));
+        }
+
+        addComponent(source);
+      }
+
       // Add synchronous machines
       for (const auto& machinedata : data.machine)
       {
