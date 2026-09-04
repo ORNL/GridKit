@@ -35,8 +35,7 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     Bus<scalar_type, index_type>::Bus(const ModelDataT& data)
-      : bus_id_(data.bus_id),
-        va0_(data.va0),
+      : va0_(data.va0),
         vb0_(data.vb0),
         vc0_(data.vc0),
         monitor_(std::make_unique<MonitorT>(data))

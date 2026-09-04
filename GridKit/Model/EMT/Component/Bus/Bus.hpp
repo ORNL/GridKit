@@ -88,11 +88,6 @@ namespace GridKit
       virtual int evaluateExternalResidual() override final;
       virtual int evaluateJacobian() override final;
 
-      IdxT busID() const
-      {
-        return bus_id_;
-      }
-
       /**
        * @brief The bus connection surface.
        *
@@ -117,9 +112,6 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      /* Identification */
-      IdxT bus_id_{0};
-
       /* Initial terminal conditions */
       ScalarT va0_{0.0};
       ScalarT vb0_{0.0};

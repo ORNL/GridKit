@@ -26,21 +26,15 @@ namespace GridKit
       Ls,    ///< Series inductance matrix
     };
 
-    /// Buses for a voltage source
-    enum class VoltageSourceBuses : size_t
+    /// Inputs supported by a voltage source
+    enum class VoltageSourceInputs : size_t
     {
-      bus, ///< Unique ID of the bus to which the source is connected
+      bus, ///< Component ID of the connected bus
       SIZE
     };
 
-    /// Signal inputs supported for a voltage source
-    enum class VoltageSourceSignalInputs : size_t
-    {
-      SIZE
-    };
-
-    /// Signal outputs supported for a voltage source
-    enum class VoltageSourceSignalOutputs : size_t
+    /// Outputs supported by a voltage source
+    enum class VoltageSourceOutputs : size_t
     {
       SIZE
     };
@@ -68,17 +62,15 @@ namespace GridKit
     struct VoltageSourceData : public ComponentData<real_type,
                                                     index_type,
                                                     VoltageSourceParameters,
-                                                    VoltageSourceBuses,
-                                                    VoltageSourceSignalInputs,
-                                                    VoltageSourceSignalOutputs,
+                                                    VoltageSourceInputs,
+                                                    VoltageSourceOutputs,
                                                     VoltageSourceMonitorableVariables>
     {
       VoltageSourceData() = default;
 
       using Parameters           = VoltageSourceParameters;
-      using Buses                = VoltageSourceBuses;
-      using SignalInputs         = VoltageSourceSignalInputs;
-      using SignalOutputs        = VoltageSourceSignalOutputs;
+      using Inputs               = VoltageSourceInputs;
+      using Outputs              = VoltageSourceOutputs;
       using MonitorableVariables = VoltageSourceMonitorableVariables;
 
       /// Rational source admittance submodel, replacing the series matrices
