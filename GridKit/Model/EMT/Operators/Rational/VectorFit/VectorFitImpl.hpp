@@ -126,7 +126,7 @@ namespace GridKit
     }
 
     /*!
-     * @brief allocate method resizes local storage and registers coupling nodes.
+     * @brief allocate method resizes local storage and registers coupling signals.
      */
     template <typename scalar_type, typename index_type>
     int VectorFit<scalar_type, index_type>::allocate()
@@ -154,8 +154,8 @@ namespace GridKit
       this->allocateExternalVectors(3, 3);
       for (IdxT n = 0; n < 3; ++n)
       {
-        this->setExternalVariableNode(n, input_[static_cast<size_t>(n)]);
-        this->setExternalResidualNode(n, output_[static_cast<size_t>(n)]);
+        this->setExternalVariableSignal(n, input_[static_cast<size_t>(n)]);
+        this->setExternalResidualSignal(n, output_[static_cast<size_t>(n)]);
       }
 
       // The feedthrough reads the input derivative, so the input variables
@@ -186,7 +186,7 @@ namespace GridKit
       {
         if (input_[n] == nullptr || output_[n] == nullptr)
         {
-          Log::error() << "VectorFit: the input and output nodes must be attached\n";
+          Log::error() << "VectorFit: the input and output signals must be attached\n";
           ++error_count;
           break;
         }

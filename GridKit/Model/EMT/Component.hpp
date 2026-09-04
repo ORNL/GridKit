@@ -5,7 +5,7 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Constants.hpp>
-#include <GridKit/Model/EMT/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/EMT/Signal/Signal.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -22,7 +22,7 @@ namespace GridKit
      * Every EMT model is a Component, including buses and models that own
      * submodels. A component owns its internal variables and one residual row
      * per internal variable, reads external variables and their derivatives
-     * through bound signal nodes, and accumulates external residual
+     * through bound signals, and accumulates external residual
      * contributions into residual rows owned by other components.
      */
     template <class scalar_type, typename index_type>
@@ -35,7 +35,7 @@ namespace GridKit
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
       using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
-      using SignalT    = SignalNode<ScalarT, IdxT>;
+      using SignalT    = Signal<ScalarT, IdxT>;
       using Port3T     = Port3<ScalarT, IdxT>;
 
       Component() = default;
@@ -270,21 +270,21 @@ namespace GridKit
       }
 
       /**
-       * @brief Register the signal node backing one external variable slot.
+       * @brief Register the signal backing one external variable slot.
        */
-      int setExternalVariableNode(IdxT slot, SignalT* node)
+      int setExternalVariableSignal(IdxT slot, SignalT* signal)
       {
-        external_variable_nodes_[static_cast<size_t>(slot)] = node;
+        external_variable_signals_[static_cast<size_t>(slot)] = signal;
         return 0;
       }
 
       /**
-       * @brief Register the signal node whose residual row receives one
+       * @brief Register the signal whose residual row receives one
        * external residual contribution.
        */
-      int setExternalResidualNode(IdxT row, SignalT* node)
+      int setExternalResidualSignal(IdxT row, SignalT* signal)
       {
-        external_residual_nodes_[static_cast<size_t>(row)] = node;
+        external_residual_signals_[static_cast<size_t>(row)] = signal;
         return 0;
       }
 
@@ -412,16 +412,16 @@ namespace GridKit
         y_ext_.assign(static_cast<size_t>(n_vars), ScalarT{});
         yp_ext_.assign(static_cast<size_t>(n_vars), ScalarT{});
         variable_indices_ext_.assign(static_cast<size_t>(n_vars), INVALID_INDEX<IdxT>);
-        external_variable_nodes_.assign(static_cast<size_t>(n_vars), nullptr);
+        external_variable_signals_.assign(static_cast<size_t>(n_vars), nullptr);
         f_ext_.assign(static_cast<size_t>(n_rows), ScalarT{});
         residual_indices_ext_.assign(static_cast<size_t>(n_rows), INVALID_INDEX<IdxT>);
-        external_residual_nodes_.assign(static_cast<size_t>(n_rows), nullptr);
+        external_residual_signals_.assign(static_cast<size_t>(n_rows), nullptr);
       }
 
       /**
        * @brief Bind a three-phase port over three consecutive local variables.
        *
-       * Each phase node exposes the variable, its derivative, and its
+       * Each phase signal exposes the variable, its derivative, and its
        * residual row along with the global indices, so the port can serve as
        * a connection surface for values, derivative reads, and residual
        * accumulation.
@@ -436,45 +436,45 @@ namespace GridKit
         auto* f  = f_.getData();
         for (IdxT n = 0; n < 3; ++n)
         {
-          port.nodes[static_cast<size_t>(n)].set(&y[local_first + n],
-                                                 &yp[local_first + n],
-                                                 &f[local_first + n],
-                                                 &getVariableIndex(local_first + n),
-                                                 &getResidualIndex(local_first + n));
+          port.signals[static_cast<size_t>(n)].set(&y[local_first + n],
+                                                   &yp[local_first + n],
+                                                   &f[local_first + n],
+                                                   &getVariableIndex(local_first + n),
+                                                   &getResidualIndex(local_first + n));
         }
         return 0;
       }
 
       /**
        * @brief Gather external variables, derivatives, and index maps through
-       * the registered signal nodes.
+       * the registered signals.
        *
        * Models with latched defaults for optional signals override this
        * method, call the base implementation, and patch the unattached slots.
        */
       virtual void gatherExternalVariables()
       {
-        for (size_t i = 0; i < external_variable_nodes_.size(); ++i)
+        for (size_t i = 0; i < external_variable_signals_.size(); ++i)
         {
-          auto* node = external_variable_nodes_[i];
-          if (node != nullptr && node->linked())
+          auto* signal = external_variable_signals_[i];
+          if (signal != nullptr && signal->linked())
           {
-            y_ext_[i]                = node->read();
-            variable_indices_ext_[i] = node->getVariableIndex();
+            y_ext_[i]                = signal->read();
+            variable_indices_ext_[i] = signal->getVariableIndex();
             yp_ext_[i]               = ScalarT{};
-            if (node->derivativeLinked())
+            if (signal->derivativeLinked())
             {
-              yp_ext_[i] = node->readDerivative();
+              yp_ext_[i] = signal->readDerivative();
             }
           }
         }
 
-        for (size_t i = 0; i < external_residual_nodes_.size(); ++i)
+        for (size_t i = 0; i < external_residual_signals_.size(); ++i)
         {
-          auto* node = external_residual_nodes_[i];
-          if (node != nullptr && node->residualLinked())
+          auto* signal = external_residual_signals_[i];
+          if (signal != nullptr && signal->residualLinked())
           {
-            residual_indices_ext_[i] = node->getResidualIndex();
+            residual_indices_ext_[i] = signal->getResidualIndex();
           }
         }
       }
@@ -485,12 +485,12 @@ namespace GridKit
        */
       void scatterExternalResidual()
       {
-        for (size_t i = 0; i < external_residual_nodes_.size(); ++i)
+        for (size_t i = 0; i < external_residual_signals_.size(); ++i)
         {
-          auto* node = external_residual_nodes_[i];
-          if (node != nullptr && node->residualLinked())
+          auto* signal = external_residual_signals_[i];
+          if (signal != nullptr && signal->residualLinked())
           {
-            node->accumulateResidual(f_ext_[i]);
+            signal->accumulateResidual(f_ext_[i]);
           }
         }
       }
@@ -678,10 +678,10 @@ namespace GridKit
       std::vector<ScalarT> f_ext_;
       bool                 allocated_{false};
 
-      /// Signal node backing each external variable slot
-      std::vector<SignalT*> external_variable_nodes_;
-      /// Signal node whose residual row receives each external residual row
-      std::vector<SignalT*> external_residual_nodes_;
+      /// Signal backing each external variable slot
+      std::vector<SignalT*> external_variable_signals_;
+      /// Signal whose residual row receives each external residual row
+      std::vector<SignalT*> external_residual_signals_;
 
       /// Registered submodels, in row order after this component's own rows
       std::vector<Component*> submodels_;

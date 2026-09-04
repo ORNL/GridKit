@@ -62,7 +62,7 @@ namespace GridKit
     }
 
     /*!
-     * @brief allocate method resizes local storage and registers coupling nodes.
+     * @brief allocate method resizes local storage and registers coupling signals.
      */
     template <typename scalar_type, typename index_type>
     int Switch<scalar_type, index_type>::allocate()
@@ -88,13 +88,13 @@ namespace GridKit
 
       // Resize coupling data
       this->allocateExternalVectors(static_cast<IdxT>(SwitchExternalVariables::MAXIMUM), 6);
-      signals_.registerExternalVariableNodes(*this);
-      this->setExternalResidualNode(0, signals_.template getAttachedSignalNode<SwitchExternalVariables::V1A>());
-      this->setExternalResidualNode(1, signals_.template getAttachedSignalNode<SwitchExternalVariables::V1B>());
-      this->setExternalResidualNode(2, signals_.template getAttachedSignalNode<SwitchExternalVariables::V1C>());
-      this->setExternalResidualNode(3, signals_.template getAttachedSignalNode<SwitchExternalVariables::V2A>());
-      this->setExternalResidualNode(4, signals_.template getAttachedSignalNode<SwitchExternalVariables::V2B>());
-      this->setExternalResidualNode(5, signals_.template getAttachedSignalNode<SwitchExternalVariables::V2C>());
+      signals_.registerExternalVariableSignals(*this);
+      this->setExternalResidualSignal(0, signals_.template getAttachedSignal<SwitchExternalVariables::V1A>());
+      this->setExternalResidualSignal(1, signals_.template getAttachedSignal<SwitchExternalVariables::V1B>());
+      this->setExternalResidualSignal(2, signals_.template getAttachedSignal<SwitchExternalVariables::V1C>());
+      this->setExternalResidualSignal(3, signals_.template getAttachedSignal<SwitchExternalVariables::V2A>());
+      this->setExternalResidualSignal(4, signals_.template getAttachedSignal<SwitchExternalVariables::V2B>());
+      this->setExternalResidualSignal(5, signals_.template getAttachedSignal<SwitchExternalVariables::V2C>());
 
       allocated_ = true;
       return 0;

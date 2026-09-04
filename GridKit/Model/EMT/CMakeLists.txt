@@ -30,11 +30,9 @@ target_link_libraries(
   emt_components_dependency_tracking
   INTERFACE GridKit::emt_core)
 
-add_subdirectory(Bus)
-add_subdirectory(Component)
-add_subdirectory(Governor)
+add_subdirectory(Signal)
 add_subdirectory(Operators)
-add_subdirectory(SignalNode)
+add_subdirectory(Component)
 
 add_library(GridKit::emt_components ALIAS emt_components)
 add_library(GridKit::emt_components_dependency_tracking ALIAS emt_components_dependency_tracking)

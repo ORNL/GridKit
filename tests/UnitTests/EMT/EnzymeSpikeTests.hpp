@@ -15,7 +15,7 @@
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
-#include <GridKit/Model/EMT/Bus/Bus.hpp>
+#include <GridKit/Model/EMT/Component/Bus/Bus.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
 #include <GridKit/Testing/Testing.hpp>

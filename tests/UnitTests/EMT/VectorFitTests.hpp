@@ -114,7 +114,7 @@ namespace GridKit
 
           for (size_t n = 0; n < 3; ++n)
           {
-            io_port.nodes[n].set(&u[n], &u_dot[n], &out_row[n], &io_index[n], &io_index[n]);
+            io_port.signals[n].set(&u[n], &u_dot[n], &out_row[n], &io_index[n], &io_index[n]);
           }
 
           vf.attachInput(&io_port);

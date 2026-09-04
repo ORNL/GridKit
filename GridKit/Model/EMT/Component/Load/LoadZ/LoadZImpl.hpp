@@ -82,7 +82,7 @@ namespace GridKit
     }
 
     /*!
-     * @brief allocate method resizes local storage and registers coupling nodes.
+     * @brief allocate method resizes local storage and registers coupling signals.
      */
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::allocate()
@@ -118,10 +118,10 @@ namespace GridKit
 
       // Resize coupling data
       this->allocateExternalVectors(static_cast<IdxT>(LoadZExternalVariables::MAXIMUM), 3);
-      signals_.registerExternalVariableNodes(*this);
-      this->setExternalResidualNode(0, signals_.template getAttachedSignalNode<LoadZExternalVariables::VA>());
-      this->setExternalResidualNode(1, signals_.template getAttachedSignalNode<LoadZExternalVariables::VB>());
-      this->setExternalResidualNode(2, signals_.template getAttachedSignalNode<LoadZExternalVariables::VC>());
+      signals_.registerExternalVariableSignals(*this);
+      this->setExternalResidualSignal(0, signals_.template getAttachedSignal<LoadZExternalVariables::VA>());
+      this->setExternalResidualSignal(1, signals_.template getAttachedSignal<LoadZExternalVariables::VB>());
+      this->setExternalResidualSignal(2, signals_.template getAttachedSignal<LoadZExternalVariables::VC>());
 
       allocated_ = true;
       return 0;
