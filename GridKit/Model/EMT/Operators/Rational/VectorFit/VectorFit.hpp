@@ -207,7 +207,7 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = VectorFitData<RealT, IdxT>;
-      using SignalT    = SignalNode<ScalarT, IdxT>;
+      using SignalT    = Signal<ScalarT, IdxT>;
       using Port3T     = Port3<ScalarT, IdxT>;
 
       VectorFit(const ModelDataT& data, RealT scale);
@@ -227,9 +227,9 @@ namespace GridKit
       virtual void resetJacobianStructure() override final;
 
       /**
-       * @brief Attach the input nodes exposing the input triple.
+       * @brief Attach the input signals exposing the input triple.
        *
-       * The nodes supply the input values, their derivatives, and the global
+       * The signals supply the input values, their derivatives, and the global
        * variable indices.
        */
       void attachInput(SignalT* a, SignalT* b, SignalT* c)
@@ -243,7 +243,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Attach the output nodes whose residual rows receive the
+       * @brief Attach the output signals whose residual rows receive the
        * operator output terms.
        */
       void attachOutput(SignalT* a, SignalT* b, SignalT* c)
@@ -260,7 +260,7 @@ namespace GridKit
        * @brief Whether the operator reads the input derivative.
        *
        * A nonzero linear coefficient makes the input differential and marks
-       * derivative coupling on the input nodes.
+       * derivative coupling on the input signals.
        */
       bool hasFeedthroughDerivative() const;
 

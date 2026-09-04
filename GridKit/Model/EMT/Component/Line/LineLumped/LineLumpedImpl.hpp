@@ -152,7 +152,7 @@ namespace GridKit
     }
 
     /*!
-     * @brief allocate method resizes local storage and registers coupling nodes.
+     * @brief allocate method resizes local storage and registers coupling signals.
      */
     template <typename scalar_type, typename index_type>
     int LineLumped<scalar_type, index_type>::allocate()
@@ -179,13 +179,13 @@ namespace GridKit
       {
         z_->attachInput(&i12_port_);
         z_->attachOutput(&i12_port_);
-        y1_->attachInput(signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V1A>(),
-                         signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V1B>(),
-                         signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V1C>());
+        y1_->attachInput(signals_.template getAttachedSignal<LineLumpedExternalVariables::V1A>(),
+                         signals_.template getAttachedSignal<LineLumpedExternalVariables::V1B>(),
+                         signals_.template getAttachedSignal<LineLumpedExternalVariables::V1C>());
         y1_->attachOutput(&sh1_rows_port_);
-        y2_->attachInput(signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V2A>(),
-                         signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V2B>(),
-                         signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V2C>());
+        y2_->attachInput(signals_.template getAttachedSignal<LineLumpedExternalVariables::V2A>(),
+                         signals_.template getAttachedSignal<LineLumpedExternalVariables::V2B>(),
+                         signals_.template getAttachedSignal<LineLumpedExternalVariables::V2C>());
         y2_->attachOutput(&sh2_rows_port_);
         this->allocateSubmodels();
       }
@@ -199,13 +199,13 @@ namespace GridKit
 
       // Resize coupling data
       this->allocateExternalVectors(static_cast<IdxT>(LineLumpedExternalVariables::MAXIMUM), 6);
-      signals_.registerExternalVariableNodes(*this);
-      this->setExternalResidualNode(0, signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V1A>());
-      this->setExternalResidualNode(1, signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V1B>());
-      this->setExternalResidualNode(2, signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V1C>());
-      this->setExternalResidualNode(3, signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V2A>());
-      this->setExternalResidualNode(4, signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V2B>());
-      this->setExternalResidualNode(5, signals_.template getAttachedSignalNode<LineLumpedExternalVariables::V2C>());
+      signals_.registerExternalVariableSignals(*this);
+      this->setExternalResidualSignal(0, signals_.template getAttachedSignal<LineLumpedExternalVariables::V1A>());
+      this->setExternalResidualSignal(1, signals_.template getAttachedSignal<LineLumpedExternalVariables::V1B>());
+      this->setExternalResidualSignal(2, signals_.template getAttachedSignal<LineLumpedExternalVariables::V1C>());
+      this->setExternalResidualSignal(3, signals_.template getAttachedSignal<LineLumpedExternalVariables::V2A>());
+      this->setExternalResidualSignal(4, signals_.template getAttachedSignal<LineLumpedExternalVariables::V2B>());
+      this->setExternalResidualSignal(5, signals_.template getAttachedSignal<LineLumpedExternalVariables::V2C>());
 
       // The shunt rows read the terminal voltage derivatives, so the
       // connected bus voltages become differential.

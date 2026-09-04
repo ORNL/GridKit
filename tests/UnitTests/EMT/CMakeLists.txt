@@ -27,16 +27,16 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTLineLumpedTest COMMAND test_emt_line_lumped)
 
-add_executable(test_emt_synchronous_machine runSynchronousMachineTests.cpp)
+add_executable(test_emt_machine runMachineTests.cpp)
 target_link_libraries(
-  test_emt_synchronous_machine
+  test_emt_machine
   GridKit::definitions
-  GridKit::emt_synchronous_machine
-  GridKit::emt_synchronous_machine_dependency_tracking
+  GridKit::emt_machine
+  GridKit::emt_machine_dependency_tracking
   GridKit::emt_bus
   GridKit::emt_bus_dependency_tracking
   GridKit::testing)
-add_test(NAME EMTSynchronousMachineTest COMMAND test_emt_synchronous_machine)
+add_test(NAME EMTMachineTest COMMAND test_emt_machine)
 
 add_executable(test_emt_vector_fit runVectorFitTests.cpp)
 target_link_libraries(
@@ -62,7 +62,7 @@ add_test(NAME EMTSystemTest COMMAND test_emt_system)
 install(
   TARGETS test_emt_enzyme_spike
           test_emt_line_lumped
-          test_emt_synchronous_machine
+          test_emt_machine
           test_emt_system
           test_emt_vector_fit
   RUNTIME DESTINATION bin)
