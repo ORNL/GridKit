@@ -50,13 +50,17 @@ T_{\mathrm{c}} &:= \dfrac{2\pi}{\omega_{\mathrm{c}}}
 ```
 
 For phase $\ell\in\{a,b,c\}$ and carrier interval $k\in\mathbb{Z}$, the
-carrier reference time, sampled modulation signal, and full duty ratio are
+sampled modulation signal, full duty ratio, and switching instants are
 
 ```math
 \begin{aligned}
-t_k &:= \left(k+\alpha\right)T_{\mathrm{c}} \\
-m_{\ell,k} &:= M\sin\left(\omega_{\mathrm{m}}t_k+\phi_\ell\right) \\
-d_{\ell,k} &:= \dfrac{1+m_{\ell,k}}{2}.
+m_{\ell,k}
+&:= M\sin\left(\omega_{\mathrm{m}}(k+\alpha)T_{\mathrm{c}}+\phi_\ell\right) \\
+d_{\ell,k} &:= \dfrac{1+m_{\ell,k}}{2} \\
+t_{\ell,k}^{\mathrm{on}}
+&:= \left[k+\alpha(1-d_{\ell,k})\right]T_{\mathrm{c}} \\
+t_{\ell,k}^{\mathrm{off}}
+&:= \left[k+\alpha+(1-\alpha)d_{\ell,k}\right]T_{\mathrm{c}}
 \end{aligned}
 ```
 
@@ -119,13 +123,11 @@ s_\ell(t)
 \leftarrow
 \sum_{k\in\mathbb{Z}}
 \left[
-  \sigma\left(\dfrac{t-t_k}{T_{\mathrm{c}}}
-                     +\alpha d_{\ell,k}\right)
-  -\sigma\left(\dfrac{t-t_k}{T_{\mathrm{c}}}
-                     -(1-\alpha)d_{\ell,k}\right)
+  \sigma\left(t-t_{\ell,k}^{\mathrm{on}}\right)
+  -\sigma\left(t-t_{\ell,k}^{\mathrm{off}}\right)
 \right],
 \qquad
-\ell\in\{a,b,c\}.
+\ell\in\{a,b,c\}
 ```
 
 ## Initialization
