@@ -225,6 +225,14 @@ namespace GridKit
         success *= std::isfinite(Math::ramp(far_below));
         success *= (Math::ramp(far_below) < roundoff);
 
+        // Verify ramp uses the configured runtime smoothing scale.
+        const RealT original_mu   = Math::MU<RealT>;
+        const RealT configured_mu = 500.0;
+
+        Math::MU<RealT>  = configured_mu;
+        success         *= within(Math::ramp(scalar(0.0)), std::log(scalar(2.0)) / scalar(configured_mu), roundoff);
+        Math::MU<RealT>  = original_mu;
+
         success *= (smooth_clip > lower);
         success *= (smooth_clip < upper);
         success *= std::isfinite(Math::clamp(far_above, lower, upper));
