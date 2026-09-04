@@ -5,12 +5,12 @@
 
 #include <nlohmann/json.hpp>
 
-#include <GridKit/Model/EMT/Bus/BusDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Bus/BusDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceDataJSONParser.hpp>
 #include <GridKit/Model/EMT/ComponentDataJSONParser.hpp>
-#include <GridKit/Model/EMT/SignalNode/SignalNodeDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Signal/SignalDataJSONParser.hpp>
 #include <GridKit/Model/EMT/SystemModelData.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -79,7 +79,7 @@ namespace GridKit
       /// Gets all electrical buses
       j.at("buses").get_to(sm.bus);
 
-      /// Gets all signal nodes (allows for systems without signals)
+      /// Gets all signals (allows for systems without signals)
       if (j.contains("signals"))
       {
         j.at("signals").get_to(sm.signal);
@@ -95,11 +95,11 @@ namespace GridKit
           raw_component.get_to(source);
           sm.voltage_source.push_back(source);
         }
-        else if (kind == "SynchronousMachine")
+        else if (kind == "Machine")
         {
-          typename SystemModelData<RealT, IdxT>::SynchronousMachineDataT machine;
+          typename SystemModelData<RealT, IdxT>::MachineDataT machine;
           raw_component.get_to(machine);
-          sm.synchronous_machine.push_back(machine);
+          sm.machine.push_back(machine);
         }
         else if (kind == "LineLumped")
         {

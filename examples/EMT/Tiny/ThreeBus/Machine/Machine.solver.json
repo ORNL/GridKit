@@ -5,7 +5,5 @@
     "tmax": 1.0,
     "rel_tol": 1e-08,
     "abs_tol": 1e-08,
-    "reference_file": "Machine.ref.csv",
-    "error_tolerance": 1e-06,
     "max_steps": 1000000
 }

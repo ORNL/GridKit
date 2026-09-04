@@ -1,7 +1,9 @@
 # Source Models
 
-Source models prescribe EMT waveforms and inject currents into EMT buses.
+Source models represent prescribed electrical sources and electromechanical
+machines connected to EMT buses.
 
 ## Models
 
+- [Machine](Machine/README.md)
 - [VoltageSource](VoltageSource/README.md)
