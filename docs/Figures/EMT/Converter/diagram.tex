@@ -29,18 +29,12 @@
 \node[sig, anchor=west] at ($(S+.G)+(0.15,0)$) {$\mathbf{s}$};
 \node[sig, anchor=west] at ($(S-.G)+(0.15,0)$) {$1-\mathbf{s}$};
 
-% ================= Phase terminal =================
+% ================= Bridge-voltage output =================
 \node[signal, label={[sig]left:$\mathbf{v}_{\mathrm{o}}$}] (phase) at (0, 0) {};
-
-% ================= Terminal admittance branch =================
-\node[block, minimum width=2.1cm, minimum height=0.9cm]
-    (Y) at (2.30, 0) {$\mathbf{Y}(s)$};
-\draw[line] (phase) -- (Y.west);
-\draw[->, line] (Y.east) -- (5.05, 0);
-\node[sig, anchor=west] at (5.30, 0) {$\mathbf{i}$};
+\draw[->, line] (phase) -- (3.35, 0);
 
 % ================= Model enclosure =================
-\draw[enclosure] (-2.55, -4.45) rectangle (4.05, 4.45);
+\draw[enclosure] (-2.55, -4.45) rectangle (2.35, 4.45);
 
 \end{tikzpicture}
 \end{document}

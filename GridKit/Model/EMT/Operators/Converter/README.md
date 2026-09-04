@@ -1,7 +1,8 @@
 # Converter Model
 
-`Converter` represents a three-phase, two-level EMT voltage-source inverter
-connected to the EMT bus through terminal admittance.
+`Converter` maps a DC-link voltage and three-phase switching function to the
+bridge voltage of a two-level voltage-source inverter. The operator adds no DAE
+variables or residual rows.
 
 ## Block Diagram
 
@@ -44,16 +45,13 @@ The normalized phase incidence matrix and zero-sequence projector are
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}$ | `v` | Input | [V] | Bus voltage at converter port | $\mathbf{v} \in \mathbb{R}^3$
 $\mathbf{s}$ | `s` | Input | [-] | Switching function vector | $\mathbf{s} \in [0,1]^3$
 $V_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC-link voltage | $V_{\mathrm{dc}} \ge 0$
-$\mathbf{i}$ | `i` | Output | [A] | Current injection at converter port | $\mathbf{i} \in \mathbb{R}^3$
+$\mathbf{v}_{\mathrm{o}}$ | `vo` | Output | [V] | Bridge voltage vector | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
 
 ## Submodels
 
-Symbol | Description | Type | Order | JSON | Inputs | Outputs
------- | ----------- | ---- | ----- | ---- | ------ | -------
-$\mathbf{y}$ | Terminal admittance | [VectorFit](../../Operators/Rational/VectorFit/README.md) | $3Q_{\mathbf{y}}$ | `Y` | $\mathbb{R}^3$ | $\mathbb{R}^3$
+None.
 
 ### Submodel Validation
 
@@ -69,17 +67,13 @@ None.
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{v}_{\mathrm{o}}$ | [V] | Bridge voltage vector | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
+None.
 
 ### External Variables
 
 #### Differential
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{v}$ | [V] | Bus voltage vector owned by EMT bus | $\mathbf{v} \in \mathbb{R}^3$
+None.
 
 #### Algebraic
 
@@ -98,15 +92,12 @@ None.
 
 #### Algebraic
 
-```math
-0 = \mathbf{v}_{\mathrm{o}}
-  - V_\mathrm{dc}\mathbf{P}\mathbf{s}
-```
+None.
 
 ### External Equations
 
 ```math
-\mathbf{i} \leftarrow \mathbf{y}[\mathbf{v}_{\mathrm{o}} - \mathbf{v}]
+\mathbf{v}_{\mathrm{o}} \leftarrow V_\mathrm{dc}\mathbf{P}\mathbf{s}
 ```
 
 ## Initialization
@@ -118,4 +109,3 @@ None beyond the EMT initialization contract.
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `vo` | [V] | Bridge voltage | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
-`i` | [A] | Converter current injection | $\mathbf{i} \in \mathbb{R}^3$
