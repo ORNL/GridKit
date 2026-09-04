@@ -44,7 +44,7 @@ supported:
 ### Buses
 
 Contained in the `buses` key is an array of objects, each of which represents
-a [Bus](Bus/README.md) and has the following fields:
+a [Bus](Component/Bus/README.md) and has the following fields:
 
   Name               | Description
   -------------------|------------------------------------------------------
@@ -58,12 +58,12 @@ a [Bus](Bus/README.md) and has the following fields:
 ### Signals
 
 Contained in the optional `signals` key is an array of objects, each of which
-represents a scalar signal node connecting device signal ports:
+represents a scalar signal connecting device signal ports:
 
   Name               | Description
   -------------------|------------------------------------------------------
-  `name`             | String containing the name of the signal node
-  `signal_id`        | Unique non-negative integer identifying the signal node
+  `name`             | String containing the name of the signal
+  `signal_id`        | Unique non-negative integer identifying the signal
 
 ### Devices
 
@@ -86,8 +86,8 @@ represents a device and has the following fields:
   `LineLumped`          | [LineLumped](Component/Line/LineLumped/README.md)
   `LoadZ`               | [LoadZ](Component/Load/LoadZ/README.md)
   `Switch`              | [Switch](Component/Switch/README.md)
-  `SynchronousMachine`  | [SynchronousMachine](Component/Machine/SynchronousMachine/README.md)
-  `Tgov1`               | [Tgov1](Governor/Tgov1/README.md)
+  `Machine`              | [Machine](Component/Source/Machine/README.md)
+  `Tgov1`                | [TGOV1](Component/Controller/TGOV1/README.md)
 
 #### Parameter values
 

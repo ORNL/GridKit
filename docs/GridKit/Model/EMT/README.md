@@ -5,10 +5,9 @@
 :titlesonly:
 :hidden:
 
-Bus <Bus/README>
 Component <Component/README>
-Governor <Governor/README>
 Operators <Operators/README>
+Signal <Signal/README>
 ```
 
 ```{include} ../../../../GridKit/Model/EMT/README.md

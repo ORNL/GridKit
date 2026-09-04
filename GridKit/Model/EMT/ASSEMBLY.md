@@ -29,7 +29,7 @@ internal row, so the assembled row set of a model is
   + \sum_e \mathbf{f}^\text{ext}_e
 ```
 
-The [Bus](Bus/README.md) is the concrete case. Its internal rows are
+The [Bus](Component/Bus/README.md) is the concrete case. Its internal rows are
 current-balance rows into which connected devices accumulate their external
 equations. Model documentation marks such a contribution with an arrow,
 $\mathbf{f} \leftarrow \dots$.

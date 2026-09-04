@@ -213,7 +213,7 @@ namespace GridKit
           ],
           "devices": [
             {
-              "class": "SynchronousMachine",
+              "class": "Machine",
               "id": "machine_1",
               "params": {
                 "N": 3,
@@ -255,7 +255,7 @@ namespace GridKit
       }
 
       /// The machine flat-start case with a TGOV1 governor wired through
-      /// signal nodes: machine speed to the governor, governor mechanical
+      /// signals: machine speed to the governor, governor mechanical
       /// power back to the machine.
       static std::string machineGovernorCaseJson()
       {
@@ -283,7 +283,7 @@ namespace GridKit
           ],
           "devices": [
             {
-              "class": "SynchronousMachine",
+              "class": "Machine",
               "id": "machine_1",
               "params": {
                 "N": 3,

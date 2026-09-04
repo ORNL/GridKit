@@ -27,7 +27,7 @@ namespace GridKit
     class Switch;
 
     template <typename scalar_type, typename index_type>
-    class SignalNode;
+    class Signal;
 
     /**
      * @brief Prototype for a system model class
@@ -66,7 +66,7 @@ namespace GridKit
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
       using BusT       = Bus<ScalarT, IdxT>;
-      using SignalT    = SignalNode<ScalarT, IdxT>;
+      using SignalT    = Signal<ScalarT, IdxT>;
       using ComponentT = Component<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitorController<ScalarT>;
 

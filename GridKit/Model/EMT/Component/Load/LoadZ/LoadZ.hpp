@@ -84,7 +84,7 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = LoadZData<RealT, IdxT>;
-      using SignalT    = SignalNode<ScalarT, IdxT>;
+      using SignalT    = Signal<ScalarT, IdxT>;
       using Port3T     = Port3<ScalarT, IdxT>;
       using VectorFitT = VectorFit<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;

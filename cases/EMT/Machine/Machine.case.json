@@ -1,0 +1,218 @@
+{
+    "header": {
+        "case_name": "EMT governed machine over an overhead line",
+        "case_description": "A synchronous machine with a TGOV1 governor serves a resistive load through 100 km of overhead line",
+        "case_comments": "Line parameters are the reduced 3x3 matrices of the 345 kV horizontal geometry at 60 Hz, computed with the GridWorkbench overhead line parameter functions"
+    },
+    "monitors": [
+        {
+            "file_name": "mon.csv",
+            "format": "csv"
+        }
+    ],
+    "buses": [
+        {
+            "number": 1,
+            "class": "Bus",
+            "name": "Bus_1",
+            "mon": [
+                "va",
+                "vb",
+                "vc"
+            ]
+        },
+        {
+            "number": 2,
+            "class": "Bus",
+            "name": "Bus_2",
+            "mon": [
+                "va",
+                "vb",
+                "vc"
+            ]
+        }
+    ],
+    "signals": [
+        {
+            "name": "speed_1",
+            "signal_id": 1
+        },
+        {
+            "name": "pmech_1",
+            "signal_id": 2
+        }
+    ],
+    "devices": [
+        {
+            "class": "Machine",
+            "id": "machine_1",
+            "params": {
+                "N": 3,
+                "S": 500000000.0,
+                "V": 345000.0,
+                "f": 60.0,
+                "H": 3.7,
+                "F": 0.0,
+                "Rs": 0.003,
+                "Ll": 0.15,
+                "Lmd": 1.66,
+                "Lmq": 1.61,
+                "L0": 0.15,
+                "Rfd": 0.0006,
+                "Llfd": 0.165,
+                "R1d": 0.0284,
+                "Ll1d": 0.1713,
+                "R1q": 0.0062,
+                "Ll1q": 0.7252,
+                "R2q": 0.0237,
+                "Ll2q": 0.125,
+                "S10": 0.1,
+                "S12": 0.5
+            },
+            "ports": {
+                "bus": 1,
+                "speed": 1,
+                "pm": 2
+            },
+            "mon": [
+                "omega",
+                "te",
+                "ia",
+                "p"
+            ]
+        },
+        {
+            "class": "Tgov1",
+            "id": "governor_1",
+            "params": {
+                "Trate": 500.0,
+                "R": 0.05,
+                "T1": 0.5,
+                "T2": 2.5,
+                "T3": 7.5,
+                "Pvmax": 1.0,
+                "Pvmin": 0.0,
+                "Dt": 0.0
+            },
+            "ports": {
+                "speed": 1,
+                "pmech": 2
+            }
+        },
+        {
+            "class": "LineLumped",
+            "id": "line_1_2",
+            "params": {
+                "N": 3,
+                "K": 3,
+                "conductors": [
+                    1,
+                    2,
+                    3
+                ],
+                "dx": 100000.0,
+                "Rp": [
+                    [
+                        0.0001395696823706,
+                        0.0001147888566206,
+                        0.0001119296971976
+                    ],
+                    [
+                        0.0001147888566206,
+                        0.0001445937853239,
+                        0.0001147888566206
+                    ],
+                    [
+                        0.0001119296971976,
+                        0.0001147888566206,
+                        0.0001395696823706
+                    ]
+                ],
+                "Lp": [
+                    [
+                        1.750922239503e-06,
+                        8.275775319582e-07,
+                        6.938904276089e-07
+                    ],
+                    [
+                        8.275775319582e-07,
+                        1.741292124489e-06,
+                        8.275775319582e-07
+                    ],
+                    [
+                        6.938904276089e-07,
+                        8.275775319582e-07,
+                        1.750922239503e-06
+                    ]
+                ],
+                "Gp": [
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ]
+                ],
+                "Cp": [
+                    [
+                        1.022089167046e-11,
+                        -2.069513635803e-12,
+                        -7.161062912086e-13
+                    ],
+                    [
+                        -2.069513635803e-12,
+                        1.073143952637e-11,
+                        -2.069513635803e-12
+                    ],
+                    [
+                        -7.161062912086e-13,
+                        -2.069513635803e-12,
+                        1.022089167046e-11
+                    ]
+                ]
+            },
+            "ports": {
+                "bus1": 1,
+                "bus2": 2
+            },
+            "mon": [
+                "i12a"
+            ]
+        },
+        {
+            "class": "LoadZ",
+            "id": "load_2",
+            "params": {
+                "R": [
+                    [
+                        500.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        500.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        500.0
+                    ]
+                ]
+            },
+            "ports": {
+                "bus": 2
+            }
+        }
+    ]
+}
