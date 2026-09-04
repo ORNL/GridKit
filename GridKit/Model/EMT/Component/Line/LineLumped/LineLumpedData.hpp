@@ -28,22 +28,16 @@ namespace GridKit
       Cp,         ///< Shunt capacitance matrix per unit length
     };
 
-    /// Buses for a lumped line
-    enum class LineLumpedBuses : size_t
+    /// Inputs supported by a lumped line
+    enum class LineLumpedInputs : size_t
     {
-      bus1, ///< Unique ID of the terminal 1 bus
-      bus2, ///< Unique ID of the terminal 2 bus
+      bus1, ///< Component ID of the terminal 1 bus
+      bus2, ///< Component ID of the terminal 2 bus
       SIZE
     };
 
-    /// Signal inputs supported for a lumped line
-    enum class LineLumpedSignalInputs : size_t
-    {
-      SIZE
-    };
-
-    /// Signal outputs supported for a lumped line
-    enum class LineLumpedSignalOutputs : size_t
+    /// Outputs supported by a lumped line
+    enum class LineLumpedOutputs : size_t
     {
       SIZE
     };
@@ -74,17 +68,15 @@ namespace GridKit
     struct LineLumpedData : public ComponentData<real_type,
                                                  index_type,
                                                  LineLumpedParameters,
-                                                 LineLumpedBuses,
-                                                 LineLumpedSignalInputs,
-                                                 LineLumpedSignalOutputs,
+                                                 LineLumpedInputs,
+                                                 LineLumpedOutputs,
                                                  LineLumpedMonitorableVariables>
     {
       LineLumpedData() = default;
 
       using Parameters           = LineLumpedParameters;
-      using Buses                = LineLumpedBuses;
-      using SignalInputs         = LineLumpedSignalInputs;
-      using SignalOutputs        = LineLumpedSignalOutputs;
+      using Inputs               = LineLumpedInputs;
+      using Outputs              = LineLumpedOutputs;
       using MonitorableVariables = LineLumpedMonitorableVariables;
 
       /// Rational per-unit-length series impedance submodel, replacing the

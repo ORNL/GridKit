@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <sstream>
 #include <stdexcept>
 
@@ -29,6 +30,29 @@ namespace GridKit
     template <typename RealT = double, typename IdxT = size_t>
     void from_json(const json& j, SystemModelData<RealT, IdxT>& sm)
     {
+      if (j.contains("buses"))
+      {
+        throw std::runtime_error(
+            "Legacy top-level 'buses' is not supported; list Bus entries in 'devices'");
+      }
+
+      auto validate_ids = [](const json& objects, const char* kind)
+      {
+        std::set<std::string> ids;
+        for (const auto& object : objects)
+        {
+          const auto id = object.at("id").template get<std::string>();
+          if (id.empty())
+          {
+            throw std::runtime_error(std::string(kind) + " ID must not be empty");
+          }
+          if (!ids.insert(id).second)
+          {
+            throw std::runtime_error("Duplicate " + std::string(kind) + " ID: \"" + id + "\"");
+          }
+        }
+      };
+
       auto enum_parse = []<typename EnumT, typename KeyT>(EnumT, KeyT&& key)
       {
         return magic_enum::enum_cast<EnumT>(key, magic_enum::case_insensitive);
@@ -77,20 +101,25 @@ namespace GridKit
         }
       }
 
-      /// Gets all electrical buses
-      j.at("buses").get_to(sm.bus);
-
       /// Gets all signals (allows for systems without signals)
       if (j.contains("signals"))
       {
+        validate_ids(j.at("signals"), "signal");
         j.at("signals").get_to(sm.signal);
       }
 
       /// Gets all components
+      validate_ids(j.at("devices"), "device");
       for (auto& raw_component : j.at("devices"))
       {
         auto kind = raw_component.at("class").get<std::string>();
-        if (kind == "DependentVoltageSource")
+        if (kind == "Bus")
+        {
+          typename SystemModelData<RealT, IdxT>::BusDataT bus;
+          raw_component.get_to(bus);
+          sm.bus.push_back(bus);
+        }
+        else if (kind == "DependentVoltageSource")
         {
           typename SystemModelData<RealT, IdxT>::DependentVoltageSourceDataT source;
           raw_component.get_to(source);

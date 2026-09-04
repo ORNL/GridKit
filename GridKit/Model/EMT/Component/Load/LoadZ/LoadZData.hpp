@@ -23,21 +23,15 @@ namespace GridKit
       L, ///< Load inductance matrix
     };
 
-    /// Buses for an impedance load
-    enum class LoadZBuses : size_t
+    /// Inputs supported by an impedance load
+    enum class LoadZInputs : size_t
     {
-      bus, ///< Unique ID of the bus to which the load is connected
+      bus, ///< Component ID of the connected bus
       SIZE
     };
 
-    /// Signal inputs supported for an impedance load
-    enum class LoadZSignalInputs : size_t
-    {
-      SIZE
-    };
-
-    /// Signal outputs supported for an impedance load
-    enum class LoadZSignalOutputs : size_t
+    /// Outputs supported by an impedance load
+    enum class LoadZOutputs : size_t
     {
       SIZE
     };
@@ -62,17 +56,15 @@ namespace GridKit
     struct LoadZData : public ComponentData<real_type,
                                             index_type,
                                             LoadZParameters,
-                                            LoadZBuses,
-                                            LoadZSignalInputs,
-                                            LoadZSignalOutputs,
+                                            LoadZInputs,
+                                            LoadZOutputs,
                                             LoadZMonitorableVariables>
     {
       LoadZData() = default;
 
       using Parameters           = LoadZParameters;
-      using Buses                = LoadZBuses;
-      using SignalInputs         = LoadZSignalInputs;
-      using SignalOutputs        = LoadZSignalOutputs;
+      using Inputs               = LoadZInputs;
+      using Outputs              = LoadZOutputs;
       using MonitorableVariables = LoadZMonitorableVariables;
 
       /// Rational impedance submodel, replacing the resistance and

@@ -5,12 +5,12 @@
         "description": "Steady-state operating point for the governed machine case"
     },
     "buses": {
-        "bus_id_1": {
+        "bus_1": {
             "va": 281691.32042006549,
             "vb": -140845.66021003269,
             "vc": -140845.66021003269
         },
-        "bus_id_2": {
+        "bus_2": {
             "va": 278730.29936255980,
             "vb": -157186.59183334332,
             "vc": -122657.87110354088

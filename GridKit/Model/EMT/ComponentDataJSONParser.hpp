@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
@@ -27,32 +28,35 @@ namespace GridKit
     template <typename RealT,
               typename IdxT,
               typename Parameters,
-              typename Buses,
-              typename SignalInputs,
-              typename SignalOutputs,
+              typename Inputs,
+              typename Outputs,
               typename MonitorableVariables>
       requires std::is_enum_v<Parameters>
-               && std::is_enum_v<Buses>
-               && std::is_enum_v<SignalInputs>
-               && std::is_enum_v<SignalOutputs>
+               && std::is_enum_v<Inputs>
+               && std::is_enum_v<Outputs>
                && std::is_enum_v<MonitorableVariables>
     void from_json(const json&                          j,
                    ComponentData<RealT,
                                  IdxT,
                                  Parameters,
-                                 Buses,
-                                 SignalInputs,
-                                 SignalOutputs,
+                                 Inputs,
+                                 Outputs,
                                  MonitorableVariables>& c)
     {
       j.at("class").get_to(c.device_class);
 
-      j.at("id").get_to(c.disambiguation_string);
+      j.at("id").get_to(c.id);
 
       std::stringstream error_context;
       error_context << "\n\tSee the \"" << c.device_class
-                    << "\" device with \"id\": \"" << c.disambiguation_string
+                    << "\" device with \"id\": \"" << c.id
                     << "\" in the \"devices\" list of your JSON file.";
+
+      if (j.contains("ports"))
+      {
+        throw std::runtime_error(
+            "Legacy 'ports' is not supported; use 'inputs' and 'outputs'");
+      }
 
       auto parse_vector = [&error_context](const json& value, auto& parameter_slot, const std::string& key) -> bool
       {
@@ -122,78 +126,84 @@ namespace GridKit
         return true;
       };
 
-      for (auto& raw_parameter : j.at("params").items())
+      if (j.contains("params"))
       {
-        auto key = magic_enum::enum_cast<Parameters>(raw_parameter.key());
-        if (key.has_value())
+        for (auto& raw_parameter : j.at("params").items())
         {
-          // NOTE: this is necessary because it doesn't seem like nlohmann/json
-          //       handles std::variant out of the box
-          if (raw_parameter.value().is_boolean())
+          auto key = magic_enum::enum_cast<Parameters>(raw_parameter.key());
+          if (key.has_value())
           {
-            c.parameters[key.value()] = raw_parameter.value().template get<bool>();
-          }
-          else if (raw_parameter.value().is_number_float())
-          {
-            c.parameters[key.value()] = raw_parameter.value().template get<RealT>();
-          }
-          else if (raw_parameter.value().is_number_integer())
-          {
-            c.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
-          }
-          else if (raw_parameter.value().is_array() && !raw_parameter.value().empty()
-                   && raw_parameter.value().at(0).is_array())
-          {
-            parse_matrix(raw_parameter.value(), c.parameters[key.value()], raw_parameter.key());
-          }
-          else if (raw_parameter.value().is_array())
-          {
-            parse_vector(raw_parameter.value(), c.parameters[key.value()], raw_parameter.key());
+            // NOTE: this is necessary because it doesn't seem like nlohmann/json
+            //       handles std::variant out of the box
+            if (raw_parameter.value().is_boolean())
+            {
+              c.parameters[key.value()] = raw_parameter.value().template get<bool>();
+            }
+            else if (raw_parameter.value().is_number_float())
+            {
+              c.parameters[key.value()] = raw_parameter.value().template get<RealT>();
+            }
+            else if (raw_parameter.value().is_number_integer())
+            {
+              c.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
+            }
+            else if (raw_parameter.value().is_array() && !raw_parameter.value().empty()
+                     && raw_parameter.value().at(0).is_array())
+            {
+              parse_matrix(raw_parameter.value(), c.parameters[key.value()], raw_parameter.key());
+            }
+            else if (raw_parameter.value().is_array())
+            {
+              parse_vector(raw_parameter.value(), c.parameters[key.value()], raw_parameter.key());
+            }
+            else
+            {
+              Log::error() << "\n\tInvalid initial parameter value type: "
+                           << "\"" << raw_parameter.key() << "\": "
+                           << raw_parameter.value()
+                           << " (typed as \"" << raw_parameter.value().type_name()
+                           << "\")." << error_context.str() << std::endl;
+            }
           }
           else
           {
-            Log::error() << "\n\tInvalid initial parameter value type: "
-                         << "\"" << raw_parameter.key() << "\": "
-                         << raw_parameter.value()
-                         << " (typed as \"" << raw_parameter.value().type_name()
-                         << "\")." << error_context.str() << std::endl;
+            Log::error() << "\n\tInitial parameter \"" << raw_parameter.key()
+                         << "\" has no value." << error_context.str()
+                         << std::endl;
           }
-        }
-        else
-        {
-          Log::error() << "\n\tInitial parameter \"" << raw_parameter.key()
-                       << "\" has no value." << error_context.str()
-                       << std::endl;
         }
       }
 
-      for (auto& raw_port : j.at("ports").items())
+      if (j.contains("inputs"))
       {
-        auto bus = magic_enum::enum_cast<Buses>(raw_port.key());
-        if (bus.has_value() && bus.value() != Buses::SIZE)
+        for (auto& raw_input : j.at("inputs").items())
         {
-          raw_port.value().get_to(c.buses[bus.value()]);
-          continue;
+          auto input = magic_enum::enum_cast<Inputs>(raw_input.key());
+          if (!input.has_value() || input.value() == Inputs::SIZE)
+          {
+            Log::error() << "\n\tInvalid input mapping: \"" << raw_input.key()
+                         << "\" has no value." << error_context.str()
+                         << std::endl;
+            throw std::runtime_error("JSON parser failed");
+          }
+          raw_input.value().get_to(c.inputs[input.value()]);
         }
+      }
 
-        auto signal_input = magic_enum::enum_cast<SignalInputs>(raw_port.key());
-        if (signal_input.has_value() && signal_input.value() != SignalInputs::SIZE)
+      if (j.contains("outputs"))
+      {
+        for (auto& raw_output : j.at("outputs").items())
         {
-          raw_port.value().get_to(c.signal_inputs[signal_input.value()]);
-          continue;
+          auto output = magic_enum::enum_cast<Outputs>(raw_output.key());
+          if (!output.has_value() || output.value() == Outputs::SIZE)
+          {
+            Log::error() << "\n\tInvalid output mapping: \"" << raw_output.key()
+                         << "\" has no value." << error_context.str()
+                         << std::endl;
+            throw std::runtime_error("JSON parser failed");
+          }
+          raw_output.value().get_to(c.outputs[output.value()]);
         }
-
-        auto signal_output = magic_enum::enum_cast<SignalOutputs>(raw_port.key());
-        if (signal_output.has_value() && signal_output.value() != SignalOutputs::SIZE)
-        {
-          raw_port.value().get_to(c.signal_outputs[signal_output.value()]);
-          continue;
-        }
-
-        Log::error() << "\n\tInvalid port mapping: \"" << raw_port.key()
-                     << "\" has no value." << error_context.str()
-                     << std::endl;
-        throw std::runtime_error("JSON parser failed");
       }
 
       if (j.contains("mon"))
