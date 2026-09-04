@@ -47,7 +47,7 @@ namespace GridKit
         }
       }
 
-      for (auto& machine : model_data.synchronous_machine)
+      for (auto& machine : model_data.machine)
       {
         const auto entry = state_data.devices.find(machine.disambiguation_string);
         if (entry == state_data.devices.end())
@@ -56,7 +56,7 @@ namespace GridKit
         }
 
         const auto& state = entry->second;
-        using Parameter   = SynchronousMachineParameters;
+        using Parameter   = MachineParameters;
         if (state.p.has_value())
         {
           machine.parameters[Parameter::p0] = *state.p;
