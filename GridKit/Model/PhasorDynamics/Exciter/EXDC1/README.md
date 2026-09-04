@@ -1,107 +1,255 @@
-# **EXDC1**
+# EXDC1
 
-> [!NOTE]  
-> This documentation is not in the standard format and EXDC1 is not scheduled to be developed as of 06/26/2025.
+EXDC1 is a direct-current excitation-system model with a voltage transducer,
+input lead–lag compensation, a limited voltage regulator, exciter saturation,
+and stabilizing feedback.
 
+## Notes
 
-![](../../../../../docs/Figures/EXDC1.JPG)
+- Internal voltage signals are on component base.
+- The speed input is machine speed deviation, so the field-voltage multiplier
+  is $1 + \omega$.
 
-Figure 1: Exciter EXDC1 model. Figure courtesy of [PoweWorld](https://www.powerworld.com/WebHelp/).
+## Block Diagram
 
-## Nomenclature
+![EXDC1 exciter block diagram](../../../../../docs/Figures/EXDC1.JPG)
 
-### Inputs
-- $V_{REF}$ - voltage reference set point
-- $E_{C}$ - output from the terminal voltage transducer
-- $V_{S}$ -  power system stabilizer output signal (if present)
-- $V_{UEL}$ and $V_{OEL}$ - limiters
+Figure 1: EXDC1 exciter model. Figure courtesy of the
+[PowerWorld EXDC1 model reference](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20EXDC1.htm).
 
-### Differential Variables
-- $V_{t}$ - terminal voltage (2 is sensed $V_{t}$)
-- $V_{B}$ - input to a voltage regulator (3)
-- $V_{R}$ - voltage regulator output also know as exciter field voltage (4)
-- $V_{F}$ - stabilizing feedback signal (5)
-### Parameters
-- $T_{R}$ - filter time constant, sec (0)
-- $K_{A}$ - voltage regulator gain (40)
-- $T_{A}$ - time constant, sec (0.1)
-- $T_{B}$ - lag time constant, sec (0)
-- $T_{C}$ - lead time constant, sec (0)
-- $V_{RMAX}$ - maximum control element output, pu (1)
-- $V_{RMIN}$ - minimum control element output, pu (-1)
-- $K_{E}$ - exciter field resistance line slope margine, pu (0.1)
-- $T_{E}$ - exciter time constant, sec (0.5)
-- $K_{F}$ - rate feedback gain, pu (0.05)
-- $T_{F1}$ - rate feedback time constant, sec (0.7)
-- $E1$ - field voltage value, 1 (2.8)
-- $SE1$ - saturation factor at E1, (3.7)
-- $E2$ - field voltage value, 2 (3.7)
-- $SE2$ - saturation factor at E2, (0.33)
+## Model Parameters
 
-## Equations
-First block
+Symbol         | Units  | Description                                  | Typical Value
+---------------|--------|----------------------------------------------|--------------
+$T_R$          | [sec]  | Voltage transducer time constant             | 0.0
+$K_A$          | [p.u.] | Voltage-regulator gain                       | 40.0
+$T_A$          | [sec]  | Voltage-regulator time constant              | 0.1
+$T_B$          | [sec]  | Input lead–lag denominator time constant     | 0.0
+$T_C$          | [sec]  | Input lead–lag numerator time constant       | 0.0
+$V_R^{\max}$   | [p.u.] | Maximum voltage-regulator output             | 1.0
+$V_R^{\min}$   | [p.u.] | Minimum voltage-regulator output             | -1.0
+$K_E$          | [p.u.] | Exciter field resistance line slope margin   | 0.1
+$T_E$          | [sec]  | Exciter time constant                        | 0.5
+$K_F$          | [p.u.] | Stabilizing feedback gain                    | 0.05
+$T_{F1}$       | [sec]  | Stabilizing feedback time constant           | 0.7
+$E_1$          | [p.u.] | First saturation voltage point               | 2.8
+$S_E(E_1)$     | [p.u.] | Saturation coefficient at $E_1$              | 0.08
+$E_2$          | [p.u.] | Second saturation voltage point              | 3.7
+$S_E(E_2)$     | [p.u.] | Saturation coefficient at $E_2$              | 0.33
+
+### Parameter Validation
+
+All parameters must be finite. Valid parameter sets satisfy
+
 ```math
-\dfrac{dV_{t}}{dt}=\dfrac{1}{T_{R}}(E_{C}-V_{t})
+\begin{aligned}
+K_A &> 0 \\
+T_R, T_B, T_C, T_{F1} &\ge 0 \\
+T_A, T_E &> 0 \\
+T_B &> 0
+  \quad\text{or}\quad
+T_B = T_C = 0 \\
+V_R^{\min} &\le V_R^{\max}
+\end{aligned}
 ```
-Second block
+
+The saturation points are either disabled together,
+
 ```math
-\dfrac{dx_{1}}{dt}=\dfrac{1}{T_{B}}((V_{REF}-V_{t}-V_{F}+V_{S}+V_{UEL}+V_{OEL})-V_{B})
+S_E(E_1) = S_E(E_2) = 0
 ```
+
+or define a valid two-point scaled-quadratic fit:
+
 ```math
-V_{B}=x_{1}+\dfrac{T_{C}}{T_{B}}(V_{REF}-V_{t}-V_{F}+V_{S}+V_{UEL}+V_{OEL})
+\begin{aligned}
+E_1, E_2 &> 0 \\
+S_E(E_1), S_E(E_2) &\ge 0 \\
+(E_2 - E_1) \left[S_E(E_2) - S_E(E_1)\right] &> 0
+\end{aligned}
 ```
-Third block
+
+### Model Derived Parameters
+
+The scaled saturation contribution is
+
 ```math
-\dfrac{dV_{R}}{dt} = \begin{cases}
-   \dfrac{1}{T_{A}}(K_{A}V_{B}-V_{R}) &\text{if } V_{RMIN}<=V_{R}<= V_{RMAX}\\
-   0 &\text{if } V_{B}>0 \text{  and  } V_{R}>=V_{RMAX} &\text{ also then } V_{R}=V_{RMAX}\\
-   0 &\text{if } V_{B}<0 \text{  and  } V_{R}<=V_{RMIN} &\text{ also then } V_{R}=V_{RMIN}\\
-\end{cases}
+E S_E(E) = S_B q(E - S_A)
 ```
-Fourth block
+
+where $q$ is the quadratic ramp. When saturation is disabled,
+
 ```math
-\dfrac{d\dfrac{E_{FD}}{\omega}}{dt}=\dfrac{1}{T_{E}}(V_{R}-\dfrac{(K_{E}+S_{E})E_{FD}}{\omega})
+S_A = S_B = 0
 ```
-Feedback loop
+
+When one saturation value is zero,
+
 ```math
-\dfrac{dx_{2}}{dt}=-\dfrac{V_{F}}{T_{F1}}
+\begin{aligned}
+S_E(E_1) = 0 &: \quad
+  S_A = E_1, \qquad
+  S_B = \dfrac{E_2 S_E(E_2)}{(E_2 - E_1)^2} \\
+S_E(E_2) = 0 &: \quad
+  S_A = E_2, \qquad
+  S_B = \dfrac{E_1 S_E(E_1)}{(E_1 - E_2)^2}
+\end{aligned}
 ```
+
+When both saturation values are positive,
+
 ```math
-V_{F}=x_{2}+\dfrac{K_{F}}{T_{F1}}\dfrac{E_{FD}}{\omega}
+\begin{aligned}
+C &= \sqrt{\dfrac{E_2 S_E(E_2)}{E_1 S_E(E_1)}} \\
+S_A &= \dfrac{C E_1 - E_2}{C - 1} \\
+S_B &= \dfrac{E_1 S_E(E_1)}{(E_1 - S_A)^2}
+\end{aligned}
 ```
-Saturation is modeled using an alternative quadratic function, with the value of Se specified at two points :
+
+## Model Ports
+
+Name    | Port   | Init    | Description
+--------|--------|---------|------------
+`ec`    | Input  | Known   | Compensated terminal-voltage magnitude
+`speed` | Input  | Known   | Machine speed deviation
+`vref`  | Input  | Unknown | Voltage-control reference
+`vs`    | Input  | Known   | Stabilizer input signal
+`vuel`  | Input  | Known   | Under-excitation limiter input
+`voel`  | Input  | Known   | Over-excitation limiter input
+`efd`   | Output | Known   | Field-voltage output
+
+## Model Variables
+
+### Internal Variables
+
+#### Differential
+
+Symbol              | Units  | Description                         | Note
+--------------------|--------|-------------------------------------|-----
+$V_C$               | [p.u.] | Filtered terminal-voltage magnitude | Algebraic when $T_R = 0$
+$x_{\mathrm{LL}}$   | [p.u.] | Input lead–lag denominator state    | Algebraic when $T_B = 0$
+$V_R$               | [p.u.] | Voltage-regulator output            |
+$E_{\mathrm{fd}}'$  | [p.u.] | Field-voltage state                 | Before the speed multiplier
+$V_F$               | [p.u.] | Stabilizing feedback state          | Algebraic when $T_{F1} = 0$
+
+#### Algebraic
+
+Symbol              | Units  | Description
+--------------------|--------|--------------------------------------
+$e_V$               | [p.u.] | Voltage-error summing output
+$V_B$               | [p.u.] | Input lead–lag output
+$s_e$               | [p.u.] | Scaled-quadratic saturation contribution
+$V_{\mathrm{FE}}$   | [p.u.] | Exciter feedback drive
+$E_{\mathrm{fd}}$   | [p.u.] | Field-voltage output
+
+### External Variables
+
+#### Differential
+
+None.
+
+#### Algebraic
+
+Symbol              | Units  | Description
+--------------------|--------|---------------------------------------
+$E_C$               | [p.u.] | Compensated terminal-voltage magnitude
+$\omega$            | [p.u.] | Machine speed deviation
+$V_{\mathrm{ref}}$  | [p.u.] | Voltage-control reference
+$V_S$               | [p.u.] | Stabilizer input signal
+$V_{\mathrm{UEL}}$  | [p.u.] | Under-excitation limiter input
+$V_{\mathrm{OEL}}$  | [p.u.] | Over-excitation limiter input
+
+## Model Equations
+
+### Internal Equations
+
+#### Differential
+
 ```math
-Sat(x) = \begin{cases}
-   \dfrac{B(x-A)^2}{x} &\text{if } x>A \\
-   0 &\text{if } x<=A
-\end{cases}
+\begin{aligned}
+0 &= -T_R \dot{V}_C - V_C + E_C \\
+0 &= -T_B \dot{x}_{\mathrm{LL}} - x_{\mathrm{LL}} + e_V \\
+0 &= -T_A \dot{V}_R
+  + \text{antiwindup}
+    \left(
+      V_R, -V_R + K_A V_B;
+      V_R^{\min}, V_R^{\max}
+    \right) \\
+0 &= -T_E \dot{E}_{\mathrm{fd}}' + V_R - V_{\mathrm{FE}} \\
+0 &= -T_{F1} \dot{V}_F - V_F
+  + \dfrac{K_F}{T_E} \left(V_R - V_{\mathrm{FE}}\right)
+\end{aligned}
 ```
-same as with the synchronous machines. There are two solutions, and one where $A<1$ should be chosen.
- 
+
+#### Algebraic
+
+```math
+\begin{aligned}
+0 &= -e_V + V_{\mathrm{ref}} + V_S + V_{\mathrm{UEL}} + V_{\mathrm{OEL}} - V_C - V_F \\
+0 &=
+  \begin{cases}
+    -V_B + e_V & T_B = T_C = 0 \\
+    -T_B \left(V_B - x_{\mathrm{LL}}\right)
+      + T_C \left(e_V - x_{\mathrm{LL}}\right) & T_B > 0
+  \end{cases} \\
+0 &= -s_e + S_B q\left(E_{\mathrm{fd}}' - S_A\right) \\
+0 &= -V_{\mathrm{FE}} + K_E E_{\mathrm{fd}}' + s_e \\
+0 &= -E_{\mathrm{fd}} + (1 + \omega) E_{\mathrm{fd}}'
+\end{aligned}
+```
+
+The limiter and saturation use the CommonMath
+[antiwindup](../../../../CommonMath.md#antiwindup) and
+[quadratic ramp](../../../../CommonMath.md#quadratic-ramp) functions.
+
+### External Equations
+
+None.
+
 ## Initialization
+
+### Input Initialization
+
 ```math
-V_{t}=V_{t_{0}}
+\begin{aligned}
+E_C &\leftarrow \text{compensated terminal-voltage magnitude} \\
+E_{\mathrm{fd}} &\leftarrow \text{machine field voltage} \\
+\omega &\leftarrow \text{machine speed deviation or }0 \\
+V_S &\leftarrow \text{stabilizer signal or }0 \\
+V_{\mathrm{UEL}} &\leftarrow \text{under-excitation limiter input or }0 \\
+V_{\mathrm{OEL}} &\leftarrow \text{over-excitation limiter input or }0
+\end{aligned}
 ```
+
+### Internal Initialization
+
 ```math
-E_{C}=V_{t_{0}}
+\begin{aligned}
+V_C &\leftarrow E_C \\
+E_{\mathrm{fd}}' &\leftarrow \dfrac{E_{\mathrm{fd}}}{1 + \omega} \\
+s_e &\leftarrow S_B q\left(E_{\mathrm{fd}}' - S_A\right) \\
+V_{\mathrm{FE}} &\leftarrow K_E E_{\mathrm{fd}}' + s_e \\
+V_R &\leftarrow V_{\mathrm{FE}} \\
+V_B &\leftarrow \dfrac{V_R}{K_A} \\
+V_F &\leftarrow 0 \\
+e_V &\leftarrow V_B \\
+x_{\mathrm{LL}} &\leftarrow e_V \\
+\dot{V}_C, \dot{x}_{\mathrm{LL}}, \dot{V}_R,
+\dot{E}_{\mathrm{fd}}', \dot{V}_F &\leftarrow 0
+\end{aligned}
 ```
+
+Initialization requires $1 + \omega > 0$ and
+$V_R^{\min} \le V_R \le V_R^{\max}$.
+
+### Output Initialization
+
 ```math
-(V_{REF}-V_{t}-V_{F}+V_{S}+V_{UEL}+V_{OEL})=V_{B}
+V_{\mathrm{ref}}
+\leftarrow
+e_V + V_C + V_F - V_S - V_{\mathrm{UEL}} - V_{\mathrm{OEL}}
 ```
-```math
-V_{R}=V{R_{0}}
-```
-```math
-V_{B}=\dfrac{V{R_{0}}}{K_{A}}
-```
-```math
-\dfrac{E_{FD}}{\omega}=\dfrac{E_{FD_{0}}}{\omega}
-```
-```math
-V_{R}-\dfrac{(K_{E}+S_{E})E_{FD}}{\omega}=0
-```
-```math
-V_{F}=0
-```
-```math
-x_{2_{0}}=-\dfrac{K_{F}}{T_{F1}}\dfrac{E_{FD}}{\omega}
+
+## Monitors
+
+TBD.

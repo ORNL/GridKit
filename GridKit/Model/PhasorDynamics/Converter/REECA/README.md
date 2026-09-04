@@ -112,7 +112,7 @@ The off-mode flag complements are:
 \end{aligned}
 ```
 
-The VDL functions use GridKit's smooth [Linear Segment](../../../../CommonMath.md#derived-functions) helper and provide flat extrapolation outside the first and fourth voltage points:
+The VDL functions use GridKit's smooth [Linear Segment](../../../../CommonMath.md#linear-segment) helper and provide flat extrapolation outside the first and fourth voltage points:
 
 ```math
 \begin{aligned}
@@ -136,6 +136,20 @@ The VDL functions use GridKit's smooth [Linear Segment](../../../../CommonMath.m
       \right)
 \end{aligned}
 ```
+
+## Model Ports
+
+Name      | Port   | Init | Description
+----------|--------|------|------------
+`bus`     | Bus    | TBD  | Terminal-bus voltage
+`speed`   | Input  | TBD  | Generator speed deviation
+`pe`      | Input  | TBD  | Electrical active-power feedback
+`qgen`    | Input  | TBD  | Reactive-power feedback
+`qext`    | Input  | TBD  | External reactive-power command
+`pfaref`  | Input  | TBD  | Power-factor angle reference
+`pref`    | Input  | TBD  | Active-power reference
+`iqcmd`   | Output | TBD  | Reactive-current command
+`ipcmd`   | Output | TBD  | Active-current command
 
 ## Model Variables
 
@@ -207,7 +221,9 @@ For readability, define:
 \end{aligned}
 ```
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 The state-equation residuals use compact limiter notation where applicable. The measurement filters are written in descriptor form: if $T_{\mathrm{rv}} = 0$ or $T_{\mathrm{p}} = 0$, the corresponding variable should be tagged algebraic. The $Q_V$ equation also uses $T_{\mathrm{iq}}$ as a derivative coefficient, but $T_{\mathrm{iq}} > 0$ remains required because the freeze multiplier makes the zero-time case structurally different.
 
@@ -251,7 +267,7 @@ The state-equation residuals use compact limiter notation where applicable. The 
 
 CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup) target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 The algebraic targets use CommonMath helper notation where applicable:
 
@@ -288,7 +304,14 @@ The algebraic targets use CommonMath helper notation where applicable:
 
 The $V_T$, $I_{\mathrm{q}}^{\mathrm{circ}}$, and $I_{\mathrm{p}}^{\mathrm{circ}}$ variables use nonnegative branches of squared algebraic residuals. This preserves the $s_{PQ}=0$ Q-priority and $s_{PQ}=1$ P-priority current-circle behavior without explicit square roots; a consistent solution should satisfy the nonnegative branch and nonnegative radicands.
 
-CommonMath defines the helper targets and smooth approximations for [min, max, clamp, deadband2, and outside](../../../../CommonMath.md#derived-functions).
+CommonMath defines the helper targets and smooth approximations for
+[min](../../../../CommonMath.md#minimum), [max](../../../../CommonMath.md#maximum),
+[clamp](../../../../CommonMath.md#clamp), [deadband2](../../../../CommonMath.md#type-ii-deadband),
+and [outside](../../../../CommonMath.md#outside).
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -389,9 +412,9 @@ x_{\mathrm{PIV},0} = I_{\mathrm{qbase},0} - K_{\mathrm{vp}} e_{\mathrm{PIV},0}
 
 The current-circle variables use the nonnegative branch of the squared algebraic residuals; initialization must reject negative radicands. A standard steady-state initialization assumes $s_{\mathrm{dip},0}=0$. If initialized during voltage-dip or overvoltage logic, $Q_V$, $P_{\mathrm{ord}}$, and the PI histories are not uniquely determined without the unsupported hold-timer histories, so the implementation should solve a saturation-consistent state or reject the start.
 
-## Model Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `iqcmd`         | [p.u.] | Reactive-current command output     | Converter base
 `ipcmd`         | [p.u.] | Active-current command output       | Converter base

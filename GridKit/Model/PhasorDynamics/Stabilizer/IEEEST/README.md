@@ -33,7 +33,7 @@ The IEEE 421.5 IEEEST also defines a cutout window ($V_{cl}$, $V_{cu}$) and an
 input delay ($T_{delay}$). These parameters are accepted for input-format
 compatibility but are not modeled here.
 
-### Derived Parameters
+### Model Derived Parameters
 
 ```math
 \begin{aligned}
@@ -44,6 +44,13 @@ a_3 &= A_1 A_4 + A_2 A_3 \\
 a_4 &= A_2 A_4
 \end{aligned}
 ```
+
+## Model Ports
+
+Name     | Port   | Init  | Description
+---------|--------|-------|------------
+`input`  | Input  | Known | Required stabilizer input signal
+`output` | Output | Known | Limited stabilizer output signal
 
 ## Model Variables
 
@@ -70,6 +77,10 @@ $V_{ss}$   | [p.u.] | Limited stabilizer signal (model output)
 
 ### External Variables
 
+#### Differential
+
+None.
+
 #### Algebraic
 
 Symbol | Units  | Description
@@ -78,7 +89,9 @@ $u$    | [p.u.] | Stabilizer input signal
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -92,7 +105,7 @@ $u$    | [p.u.] | Stabilizer input signal
 \end{aligned}
 ```
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -105,10 +118,20 @@ $u$    | [p.u.] | Stabilizer input signal
 ```
 
 The output limiter uses GridKit's smooth
-[Clamp](../../../../CommonMath.md#derived-functions).
+[Clamp](../../../../CommonMath.md#clamp).
+
+### External Equations
+
+None.
 
 ## Initialization
 
 All states and their derivatives initialize to zero. The stabilizer comes
 online at rest and produces signal only in response to deviations in the input
 $u$.
+
+## Monitors
+
+Monitor | Units  | Description               | Note
+--------|--------|---------------------------|------
+`vss`   | [p.u.] | Limited stabilizer signal | $V_{ss}$; model output

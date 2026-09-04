@@ -68,6 +68,8 @@ every other condition is a configuration error.
     &\ge 0 \\
   I_{L1}
     &\ge 0 \\
+  K_L
+    &> 0 \\
   s_L
     &\in \{0,1\} \\
   0
@@ -167,7 +169,9 @@ f_\mathrm{p}^{\lim}
   = \text{rrpwr}(I_p, f_\mathrm{p}; R_p^{\max}).
 ```
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 The $I_q$ limiter branch is selected by the initial reactive power $Q_0$ and
 the sign that enables the corresponding limit.
@@ -192,7 +196,7 @@ the sign that enables the corresponding limit.
 ```
 
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -217,10 +221,12 @@ the sign that enables the corresponding limit.
 \end{aligned}
 ```
 
-CommonMath defines the [primitives](../../../../CommonMath.md#primitives) and
-[derived functions](../../../../CommonMath.md#derived-functions) used above.
+CommonMath defines the [`ramp`](../../../../CommonMath.md#ramp),
+[`max`](../../../../CommonMath.md#maximum), [`min`](../../../../CommonMath.md#minimum),
+[`clamp`](../../../../CommonMath.md#clamp), and
+[`linseg`](../../../../CommonMath.md#linear-segment) functions used above.
 
-## Network Interface
+### External Equations
 
 ```math
 \begin{aligned}
@@ -318,10 +324,10 @@ The remaining algebraic quantities are then initialized as follows:
 \end{aligned}
 ```
 
-## Monitorable Outputs
+## Monitors
 
-Output | Units  | Description                 | Note
--------|--------|-----------------------------|------
+Monitor | Units  | Description                 | Note
+--------|--------|-----------------------------|------
 `ir`   | [p.u.] | Real current injection      | System base; exported through `ibranchr` when assigned
 `ii`   | [p.u.] | Imaginary current injection | System base; exported through `ibranchi` when assigned
 `p`    | [p.u.] | Active-power output         | System base; exported through `pbranch` when assigned

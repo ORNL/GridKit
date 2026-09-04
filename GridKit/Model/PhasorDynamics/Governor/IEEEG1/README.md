@@ -102,8 +102,18 @@ The governor component base and nonlinear governor-output curve are:
 \end{aligned}
 ```
 
-CommonMath defines the [linear segment](../../../../CommonMath.md#derived-functions)
+CommonMath defines the [linear segment](../../../../CommonMath.md#linear-segment)
 helper used by $N_{\mathrm{GV}}$.
+
+## Model Ports
+
+Name         | Port   | Init | Description
+-------------|--------|------|------------
+`speed`      | Input  | TBD  | Machine speed deviation
+`pref`       | Input  | TBD  | Governor reference
+`paux`       | Input  | TBD  | Auxiliary power input
+`pmech_hp`   | Output | TBD  | High-pressure mechanical-power output
+`pmech_lp`   | Output | TBD  | Low-pressure mechanical-power output
 
 ## Model Variables
 
@@ -148,7 +158,9 @@ $P_{\mathrm{aux}}$              | [p.u.] | Auxiliary power input          | Sour
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -171,7 +183,7 @@ $P_{\mathrm{aux}}$              | [p.u.] | Auxiliary power input          | Sour
 CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -191,9 +203,16 @@ target and smooth approximation.
 ```
 
 CommonMath defines helper targets and smooth approximations for
-[deadband1, deadband2, clamp, and linseg](../../../../CommonMath.md#derived-functions).
+[deadband1](../../../../CommonMath.md#type-i-deadband),
+[deadband2](../../../../CommonMath.md#type-ii-deadband),
+[clamp](../../../../CommonMath.md#clamp), and
+[linseg](../../../../CommonMath.md#linear-segment).
 When $T_1=T_2=0$, the governor lead-lag block is bypassed so
 $y_{\omega}=K\omega_{\mathrm{db}}$.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -231,9 +250,9 @@ $P^{\min}$ and $P^{\max}$ and the opening/closing rate limits to be inactive.
 Starts where governor response limits fix the limits to the initial condition
 must document those effective limits before applying the residuals.
 
-## Model Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `pmech_hp`      | [p.u.] | High-pressure mechanical-power output | $P_m^{\mathrm{HP}}$
 `pmech_lp`      | [p.u.] | Low-pressure mechanical-power output | $P_m^{\mathrm{LP}}$

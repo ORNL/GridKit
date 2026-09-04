@@ -56,7 +56,7 @@ HYGOV parameter sets are rejected by the following checks:
   T_r, T_f, T_g, T_w, T_{\mathrm{np}}
     &\ge 0 \\
   R_{\mathrm{temp}}
-    &\ne 0 \\
+    &> 0 \\
   T_n
     &\ge 0 \\
   V_{\mathrm{elm}}
@@ -98,7 +98,7 @@ raised to that floor in place, so every equation below uses the raised value:
     &\leftarrow \max\!\left(T_x,\epsilon_T\right),
        \quad x\in\{r,f,g,w,\mathrm{np}\} \\
   k_{\mathrm{base}}
-    &= \dfrac{S^\mathrm{sys}}{T^\mathrm{rate}} \\
+    &= \dfrac{S^\mathrm{sys}}{10^6\,T^\mathrm{rate}} \\
   k_n
     &= \dfrac{T_n}{T_{\mathrm{np}}} \\
   N_{\mathrm{GV}}(x)
@@ -114,9 +114,10 @@ raised to that floor in place, so every equation below uses the raised value:
 \end{aligned}
 ```
 
-Multiplying by $k_\mathrm{base}$ converts system base to component base.
+Multiplying by $k_\mathrm{base}$ converts system base to component base;
+$S^\mathrm{sys}$ is the system power base in VA.
 
-CommonMath defines the [`linseg`](../../../../CommonMath.md#linseg) helper
+CommonMath defines the [`linseg`](../../../../CommonMath.md#linear-segment) helper
 used by $N_{\mathrm{GV}}$.
 
 ## Model Ports
@@ -176,7 +177,9 @@ $P^\mathrm{aux}$  | [p.u.] | Known   | Auxiliary power input       | Optional si
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 The effective desired-gate response limits
 $G_{\mathrm{resp}}^{\min}$ and $G_{\mathrm{resp}}^{\max}$ and the effective
@@ -211,7 +214,7 @@ dam head $H_{\mathrm{dam}}^{\mathrm{eff}}$ are resolved during initialization.
 CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -247,7 +250,12 @@ target and smooth approximation.
 ```
 
 CommonMath defines helper targets and smooth approximations for
-[deadband1 and clamp](../../../../CommonMath.md#derived-functions).
+[deadband1](../../../../CommonMath.md#type-i-deadband) and
+[clamp](../../../../CommonMath.md#clamp).
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -345,9 +353,9 @@ unchanged.
 \end{aligned}
 ```
 
-## Monitorable Outputs
+## Monitors
 
-Output         | Units  | Description                  | Note
+Monitor        | Units  | Description                  | Note
 ---------------|--------|------------------------------|------
 `pmech`        | [p.u.] | Mechanical-power output      | $P_{\mathrm{m}}$ (system base)
 `filter`       | [p.u.] | Governor error filter output | $x_f$ (component base)
@@ -401,9 +409,9 @@ which can be written in terms of our smooth functions as
 \end{aligned}
 ```
 
-CommonMath defines the [`ramp`](GridKit/CommonMath.md#-ramp),
-[`above`](GridKit/CommonMath.md#above), and
-[`below`](GridKit/CommonMath.md#below) targets and smooth approximations. This is deferred until we permit non Hessenberg forms. Once permitted we should define:
+CommonMath defines the [`ramp`](../../../../CommonMath.md#ramp),
+[`above`](../../../../CommonMath.md#above), and
+[`below`](../../../../CommonMath.md#below) targets and smooth approximations. This is deferred until we permit non Hessenberg forms. Once permitted we should define:
 
 ```math
 \begin{aligned}

@@ -24,6 +24,14 @@ $S_\mathrm{mach}$ | [MVA] | machine power base        |
 - $f_\mathrm{base} = f_\mathrm{sys} ~~~$ frequency base taken from the system at initialization
 - $S_\mathrm{mach,VA} = 10^6 S_\mathrm{mach} ~~~$ derived machine base used for machine-base/system-base conversions
 
+## Model Ports
+
+Name              | Port  | Init  | Description
+------------------|-------|-------|------------
+`bus`             | Bus   | Known | Terminal bus voltage and current-balance residuals
+`exciter_signal`  | Input | N/A   | Accepted by the parser but not wired; $E_p$ is a fixed setpoint
+`governor_signal` | Input | N/A   | Accepted by the parser but not wired; $P_m$ is a fixed setpoint
+
 <br>
 
 ## Model Variables
@@ -35,15 +43,15 @@ $S_\mathrm{mach}$ | [MVA] | machine power base        |
 Symbol      | Units   | Description         | Note
 ------------|---------|---------------------|----------------------
 $\delta$    | [rad]   | machine power angle |
-$\omega$    | [p.u]   | machine speed deviation       | Optionally read by a governor or a stabilizer component
+$\omega$    | [p.u]   | machine speed deviation       |
 
 #### Algebraic
 
 Symbol  | Units  | Description                         | Note
 --------|--------|-------------------------------------|-------------
 $T_{e}$ | [p.u.] | electrical torque                   |
-$I_r$   | [p.u.] | machine real injection current      | read by bus
-$I_i$   | [p.u.] | machine imaginary injection current | read by bus
+$I_r$   | [p.u.] | machine real injection current      | Machine base; converted to system base for the bus and monitors
+$I_i$   | [p.u.] | machine imaginary injection current | Machine base; converted to system base for the bus and monitors
 
 Note: All three can be expressed as a function called by the model equations. We add
 these as variables as they are needed for outputs.
@@ -66,15 +74,19 @@ Symbol | Units   | Description                   | Note
 -------|---------|-------------------------------|----------------------
 $V_r$  | [p.u.]  | machine bus real voltage      | owned by a bus object
 $V_i$  | [p.u.]  | machine bus imaginary voltage | owned by a bus object
-$P_m$  | [p.u.]  | mechanical power input        | owned by governor, constant if no governor is connected to the machine
-$E_p$  | [p.u.]  | field winding voltage         | owned by exciter, constant if no exciter is connected to the machine
+
+The mechanical power $P_m$ and internal transient-emf magnitude $E_p$ are
+fixed setpoints computed during initialization; they are neither solver
+variables nor connected signals.
 
 <br>
 
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math 
 \begin{aligned}
@@ -83,7 +95,7 @@ $E_p$  | [p.u.]  | field winding voltage         | owned by exciter, constant if
 \end{aligned}
 ```
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -95,6 +107,24 @@ $E_p$  | [p.u.]  | field winding voltage         | owned by exciter, constant if
 As noted earlier, all three algebraic equations can be expressed as functions
 and substituted directly in the component and bus equations, respectively. We
 use redundant variables for modeling convenience.
+
+### External Equations
+
+The machine-base terminal currents are converted to system base and added to
+the connected bus residuals. Here $I_r^{\mathrm{mach}}\equiv I_r$ and
+$I_i^{\mathrm{mach}}\equiv I_i$ denote the internal machine-base currents, and
+$S_\mathrm{sys,VA}$ is the system power base in volt-amperes:
+
+```math
+\begin{aligned}
+I_r^{\mathrm{bus}}
+  &\leftarrow I_r^{\mathrm{bus}}
+  + \dfrac{S_\mathrm{mach,VA}}{S_\mathrm{sys,VA}} I_r^{\mathrm{mach}} \\
+I_i^{\mathrm{bus}}
+  &\leftarrow I_i^{\mathrm{bus}}
+  + \dfrac{S_\mathrm{mach,VA}}{S_\mathrm{sys,VA}} I_i^{\mathrm{mach}}.
+\end{aligned}
+```
 
 <br>
 
@@ -164,13 +194,14 @@ P_{m} &= T_{e}
 With this, we initialize the machine at a steady state.
 
 
-## Model Outputs
+## Monitors
 
-Symbol     | Units  | Description                       | Note
------------|--------|-----------------------------------|------
-$I_r$      | [p.u.] | Terminal current, real component on network reference frame | Oriented leaving the machine, system base
-$I_i$      | [p.u.] | Terminal current, imaginary component on network reference frame | Oriented leaving the machine, system base
-$P$        | [p.u.] | Active power, $V_rI_r+V_iI_i$     | Oriented leaving the machine, system base
-$Q$        | [p.u.] | Reactive power, $V_iI_r-V_rI_i$   | Oriented leaving the machine, system base
-$\delta$   | [rad]  | Machine internal rotor angle      |
-$\omega$   | [p.u.] | Machine speed deviation           | $\omega=0$ at synchronous speed
+Monitor | Units | Description                                                        | Note
+--------|-------|--------------------------------------------------------------------|------
+`ir`    | [p.u.] | Terminal current, real component $I_r$ in the network frame         | Oriented leaving the machine; system base
+`ii`    | [p.u.] | Terminal current, imaginary component $I_i$ in the network frame    | Oriented leaving the machine; system base
+`p`     | [p.u.] | Active power $P=V_rI_r+V_iI_i$                                     | Oriented leaving the machine; system base
+`q`     | [p.u.] | Reactive power $Q=V_iI_r-V_rI_i$                                   | Oriented leaving the machine; system base
+`delta` | [rad]  | Machine internal rotor angle $\delta$                               |
+`omega` | [p.u.] | Machine speed deviation $\omega$                                   | $\omega=0$ at synchronous speed
+`speed` | [p.u.] | Per-unit machine speed                                              | $1+\omega$

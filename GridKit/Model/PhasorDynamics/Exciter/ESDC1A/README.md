@@ -58,8 +58,6 @@ Invalid ESDC1A parameter sets are rejected by the following checks:
     &\ge 0 \\
   V_R^{\min}
     &\le V_R^{\max} \\
-  s_{\mathrm{spd}}, s_{\mathrm{lim}}
-    &\in \{0,1\} \\
   I_{\mathrm{UEL}}
     &\in \{0,1,2,3\}
 \end{aligned}
@@ -222,13 +220,15 @@ $V_{\mathrm{UEL}}$                  | [p.u.] | Known   | Under-excitation limite
 
 ## Model Equations
 
+### Internal Equations
+
+#### Differential
+
 Define the pre-limit exciter field-voltage rate:
 
 ```math
 f_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
 ```
-
-### Differential Equations
 
 ```math
 \begin{aligned}
@@ -271,7 +271,7 @@ f_E = \dfrac{V_R-V_{\mathrm{FE}}}{T_E}.
 The field-voltage-state limiter uses the fixed-lower-bound anti-windup rule
 of [Appendix A](#appendix-a-awmin).
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -309,8 +309,12 @@ of [Appendix A](#appendix-a-awmin).
 ```
 
 CommonMath defines helper targets and smooth approximations for
-[max](../../../../CommonMath.md#derived-functions), the [ramp](../../../../CommonMath.md#primitives)
-$\rho$, and the [quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+[max](../../../../CommonMath.md#maximum), the [ramp](../../../../CommonMath.md#ramp)
+$\rho$, and the [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -338,7 +342,7 @@ Initialization never replaces the seeded value held in $E_{\mathrm{fd}}$.
 All internal derivatives are set to zero. The steady-state residuals are then
 resolved in dependency order. The smooth high-value gate requires its input to
 be recovered through the inverse CommonMath
-[ramp](../../../../CommonMath.md#primitives) $\rho^{-1}$ when the UEL input is
+[ramp](../../../../CommonMath.md#ramp) $\rho^{-1}$ when the UEL input is
 routed through the gate:
 
 ```math
@@ -404,9 +408,9 @@ ESDC1A writes the resolved voltage-control reference to an attached `vref`
 signal input. If no controller is connected, that value is used as a constant
 reference input.
 
-## Monitorable Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
 `vc`            | [p.u.] | Filtered terminal-voltage magnitude | $V_C$
@@ -460,6 +464,6 @@ The model evaluates this rule with the following smooth approximation:
   \right]f.
 ```
 
-CommonMath defines the [`above`](../../../../CommonMath.md#derived-functions)
-and [`sigmoid`](../../../../CommonMath.md#primitives) targets and smooth
+CommonMath defines the [`above`](../../../../CommonMath.md#above)
+and [`sigmoid`](../../../../CommonMath.md#logistic-function) targets and smooth
 approximations.

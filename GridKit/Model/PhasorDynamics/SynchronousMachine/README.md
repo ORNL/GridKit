@@ -33,14 +33,14 @@ To convert to the network base, the following must be performed.
 \end{aligned}
 ```
 
-For example, say the terminal impedence is $Z=0.05$ in per-unit on the
-machine's base of $S_{base,machine}=50$  MW, and the system base is
-$S_{base,sys}=100$ MW. Then the terminal impedance on the system
+For example, say the terminal impedance is $Z=0.05$ in per-unit on the
+machine's base of $S_{base,machine}=50$  MVA, and the system base is
+$S_{base,sys}=100$ MVA. Then the terminal impedance on the system
 base is calculated as follows.
 
 ``` math
 \begin{aligned}
-  Z_{sys} = 0.05\dfrac{100 \text{MW}}{50 \text{MW}} = 0.1
+  Z_{sys} = 0.05\dfrac{100 \text{MVA}}{50 \text{MVA}} = 0.1
 \end{aligned}
 ```
 

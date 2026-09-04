@@ -27,18 +27,33 @@ compilation and testing.
 We recommend developers follow these steps when adding new component models:
 1. Create a subdirectory within appropriate model family directory.
 2. Create a README file in markdown format that contains all information
-   needed to implement the model. This should include:
-    1. List of model parameters in a table format.
-    2. List of _derived_ model parameters with mathematical expression
-       describing how they are obtained from instantiation parameters.
-    3. Model internal variables. Use separate tables for differential and
-       algebraic variables.
-    4. Model external variables (always algebraic in phasor dynamics).
-    5. Model differential and algebraic equations (in separate subsections).
-    6. Model initialization procedure with equations in order in which
-       initialization computations are performed.
-    7. List of model outputs with equations for computing those outputs
-       where applicable.
+   needed to implement the model. Model READMEs use the following section
+   order.
+    1. Model title and a one- or two-sentence purpose
+    2. `Notes` (optional)
+    3. `Block Diagram` (optional)
+    4. `Model Parameters`
+       - `Parameter Validation`
+       - `Model Derived Parameters`
+    5. `Model Ports`
+    6. `Model Variables`
+       - `Internal Variables`
+         - `Differential`
+         - `Algebraic`
+       - `External Variables`
+         - `Differential`
+         - `Algebraic`
+    7. `Model Equations`
+       - `Internal Equations`
+         - `Differential`
+         - `Algebraic`
+       - `External Equations`
+    8. `Initialization`
+       - `Input Initialization` (when applicable)
+       - `Internal Initialization` (when applicable)
+       - `Output Initialization` (when applicable)
+    9. `Monitors`
+    10. `Testing` (optional)
 3. Create all six `MyModel*.*pp` implementation files and `CMakeLists.txt`
    file, which specifies build requirements (files to compile, files to
    include, libraries to link and location to install to). Ensure the code
@@ -46,7 +61,7 @@ We recommend developers follow these steps when adding new component models:
     - You may want to start with a "dummy" implementation first to make sure
       the build and installation works correctly before proceeding to the
       implementation. 
-4. Create unit tests in `tests/UnitTesting/PhasorDynamics` directory. The
+4. Create unit tests in `tests/UnitTests/PhasorDynamics` directory. The
    implementation consists of `MyModelTests.hpp` with implementation of
    individual unit tests, the test driver in `runMyModelTests.cpp`, and
    `CMakeLists.txt` with build and installation configuration of tests. Unit
@@ -64,14 +79,14 @@ We recommend developers follow these steps when adding new component models:
 5. Once model is tested, add it to the system composer. This requires following steps:
     1. Add header file `MyModel.hpp` to `ComponentLibrary.hpp`, so that
        `MyModel` declaration is visible to the `SystemModel` class.
-    2. Modify `SystemModelJsonParser.hpp` so that `MyModel` is recognized by the
+    2. Modify `SystemModelDataJSONParser.hpp` so that `MyModel` is recognized by the
        parser.
     3. Modify `SystemModelData.hpp` so that `MyModelData` is visible to the system
        model.
     4. Modify `SystemModel.hpp` so that `MyModel` components can be connected by the
        system composer.
     5. Recommended: If applicable, add a smoke test to
-       `tests/UnitTesting/PhasorDynamics/SystemSingleComponentTests.hpp` for the
+       `tests/UnitTests/PhasorDynamics/SystemSingleComponentTests.hpp` for the
        basic construction of `MyModel` through `SystemModel`.
 6. Recommended: Create an example in `examples/PhasorDynamics` using the new component.
 

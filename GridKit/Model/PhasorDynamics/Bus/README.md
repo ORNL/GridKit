@@ -1,4 +1,4 @@
-# Bus Model
+# Bus
 
 A bus is a point of interconnection of electrical devices. The bus component
 model also plays a key role in coupling system components. Each bus $k$ owns
@@ -10,7 +10,7 @@ them. Instead, each component connected to the bus adds its contribution to the
 residual. The bus initializes the residual to zero each time the numerical
 integrator requests residual evaluation.
 
-## Sign Convention
+## Notes
 
 Current entering the bus has positive sign, and current exiting the bus has
 negative sign.
@@ -22,9 +22,90 @@ balance instead of power balance.
 
 ## Model Parameters
 
-Buses are uniquely identified by their numeric bus ID. Each bus has an
-associated nominal voltage.
+Symbol            | Units | JSON | Description         | Note
+------------------|-------|------|---------------------|-------
+$V_\mathrm{base}$ | [kV]  | `kv` | Nominal bus voltage | Unused
 
-Symbol              | Units | JSON | Description
---------------------|-------|------|------------
-$V_\mathrm{base}$   | [kV]  | `kv` | Nominal bus voltage
+### Parameter Validation
+
+None.
+
+### Model Derived Parameters
+
+None.
+
+## Model Ports
+
+None.
+
+## Model Variables
+
+### Internal Variables
+
+#### Differential
+
+None.
+
+#### Algebraic
+
+Symbol | Units  | Description
+-------|--------|------------
+$V_r$  | [p.u.] | Bus voltage, real component
+$V_i$  | [p.u.] | Bus voltage, imaginary component
+
+### External Variables
+
+#### Differential
+
+None.
+
+#### Algebraic
+
+None.
+
+## Model Equations
+
+### Internal Equations
+
+#### Differential
+
+None.
+
+#### Algebraic
+
+Let $\mathcal{E}$ denote the set of components connected to the bus.
+
+```math
+\begin{aligned}
+0 &= \sum_{e \in \mathcal{E}} I_{r,e} \\
+0 &= \sum_{e \in \mathcal{E}} I_{i,e}
+\end{aligned}
+```
+
+### External Equations
+
+None.
+
+## Initialization
+
+### Internal Initialization
+
+Bus initializes its algebraic voltage variables as
+
+```math
+\begin{aligned}
+V_r &\leftarrow \text{bus voltage, real component} \\
+V_i &\leftarrow \text{bus voltage, imaginary component}
+\end{aligned}
+```
+
+The derivative vector entries initialize to zero.
+
+## Monitors
+
+Monitor | Units  | Description                     | Note
+--------|--------|---------------------------------|-----
+`Vr`    | [p.u.] | Bus voltage, real component      |
+`Vi`    | [p.u.] | Bus voltage, imaginary component |
+`Vm`    | [p.u.] | Bus voltage magnitude            | $\sqrt{V_r^2+V_i^2}$
+`Va`    | [rad]  | Bus voltage angle                | $\operatorname{atan2}(V_i,V_r)$

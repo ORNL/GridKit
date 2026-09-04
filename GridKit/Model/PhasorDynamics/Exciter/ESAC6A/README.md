@@ -81,6 +81,18 @@ saturation factors are zero, use $S_A=0$ and $S_B=0$. Otherwise:
 \end{aligned}
 ```
 
+## Model Ports
+
+Name    | Port   | Init | Description
+--------|--------|------|------------
+`ec`    | Input  | TBD  | Compensated terminal voltage magnitude $E_C$
+`vref`  | Input  | TBD  | Voltage-control reference $V_{\mathrm{ref}}$
+`vuel`  | Input  | TBD  | Under-excitation limiter input $V_{\mathrm{uel}}$
+`vs`    | Input  | TBD  | Stabilizer input signal $V_S$
+`ifd`   | Input  | TBD  | Machine field current $I_{\mathrm{fd}}$
+`speed` | Input  | TBD  | Machine speed deviation $\omega$
+`efd`   | Output | TBD  | Field-voltage output $E_{\mathrm{fd}}$
+
 ## Model Variables
 
 ### Internal Variables
@@ -130,7 +142,9 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -142,7 +156,7 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 \end{aligned}
 ```
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -172,11 +186,15 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 \end{aligned}
 ```
 
-CommonMath defines helper targets for [clamp](../../../../CommonMath.md#derived-functions)
-and the primitive [quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+CommonMath defines helper targets for [clamp](../../../../CommonMath.md#clamp)
+and the primitive [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
 The rectifier loading function $f(I_N)$ is the source curve shown in Fig. 1.
 When $T_B=T_C=0$, the second lead-lag block is bypassed. When $T_H=T_J=0$, the
 feedback-limiter lead-lag block is bypassed before the 0-to-$V_H^{\max}$ clamp.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -218,9 +236,9 @@ $V_{E,0}\ne 0$, inactive $V_A$, $V_R$, and $V_H$ limits, and nonsingular
 regulator gains/time constants. Starts that bind those limits are outside
 these closed-form equations.
 
-## Model Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
 `ve`            | [p.u.] | Exciter alternator voltage state    | $V_E$

@@ -70,6 +70,7 @@ All real parameters must be finite. Invalid parameter sets are rejected by:
 ```math
 \begin{aligned}
   S^\mathrm{base} &> 0 \\
+  T_\mathrm{fltr}, T_\mathrm{ft}, T_\mathrm{fv}, T_\mathrm{p}, T_\mathrm{lag} &\ge 0 \\
   D_\mathrm{bd1} &\le 0 \le D_\mathrm{bd2} \\
   e^{\min} &\le 0 \le e^{\max} \\
   Q^{\min} &\le Q^{\max} \\
@@ -227,8 +228,9 @@ target and smooth approximation.
 \end{aligned}
 ```
 
-CommonMath defines the [derived limiter functions](../../../../CommonMath.md#derived-functions)
-used above; Appendix A defines `droop`.
+CommonMath defines the [`above`](../../../../CommonMath.md#above),
+[`deadband2`](../../../../CommonMath.md#type-ii-deadband), and
+[`clamp`](../../../../CommonMath.md#clamp) functions used above; Appendix A defines `droop`.
 
 ### External Equations
 
@@ -314,9 +316,9 @@ Initialization is atomic; candidates are validated before state or signal writes
 \end{aligned}
 ```
 
-## Monitorable Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `qext`          | [p.u.] | Reactive-power command output       | $Q^\mathrm{ext}$; system base
 `pext`          | [p.u.] | Active-power command output         | $P^\mathrm{ext}$; system base
@@ -349,7 +351,7 @@ Output          | Units  | Description                         | Note
 ```
 
 where $\sigma$ is GridKit's smooth
-[`sigmoid`](../../../../CommonMath.md#primitives). The response preserves
+[`sigmoid`](../../../../CommonMath.md#logistic-function). The response preserves
 $\text{droop}(0;D_\mathrm{dn},D_\mathrm{up})=0$.
 
 [^frequency-measurement]: Background for phase-derived, filtered frequency

@@ -80,6 +80,19 @@ saturation factors are zero, use $S_A=0$ and $S_B=0$. Otherwise:
 \end{aligned}
 ```
 
+## Model Ports
+
+Name    | Port   | Init | Description
+--------|--------|------|------------
+`ec`    | Input  | TBD  | Compensated terminal voltage magnitude $E_C$
+`vref`  | Input  | TBD  | Voltage-control reference $V_{\mathrm{ref}}$
+`vs`    | Input  | TBD  | Stabilizer input signal $V_S$
+`vuel`  | Input  | TBD  | Under-excitation limiter input $V_{\mathrm{uel}}$
+`voel`  | Input  | TBD  | Over-excitation limiter input $V_{\mathrm{oel}}$
+`ifd`   | Input  | TBD  | Machine field current $I_{\mathrm{fd}}$
+`speed` | Input  | TBD  | Machine speed deviation $\omega$
+`efd`   | Output | TBD  | Field-voltage output $E_{\mathrm{fd}}$
+
 ## Model Variables
 
 ### Internal Variables
@@ -130,7 +143,9 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
 
 ```math
 \begin{aligned}
@@ -151,7 +166,7 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -170,10 +185,15 @@ target and smooth approximation.
 \end{aligned}
 ```
 
-CommonMath defines helper targets for [min and clamp](../../../../CommonMath.md#derived-functions)
-and the primitive [quadratic ramp](../../../../CommonMath.md#primitives) $q$.
+CommonMath defines helper targets for [min](../../../../CommonMath.md#minimum)
+and [clamp](../../../../CommonMath.md#clamp), and the primitive
+[quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
 The rectifier loading function $f(I_N)$ is the source curve shown in Fig. 1.
 When $T_B=T_C=0$, the lead-lag block is bypassed so $V_{\mathrm{ll}}=e_V$.
+
+### External Equations
+
+None.
 
 ## Initialization
 
@@ -224,9 +244,9 @@ the low-value gate selecting the amplifier path. Starts with active low-value
 gate limiting or saturated regulator states are outside these closed-form
 equations.
 
-## Model Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
 `ve`            | [p.u.] | Exciter alternator voltage state    | $V_E$

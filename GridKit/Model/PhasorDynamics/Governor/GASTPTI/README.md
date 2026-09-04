@@ -155,7 +155,7 @@ $V_{\mathrm{resp}}^{\max}$, and $s^{\mathrm{valve}}$ are defined under
 ```
 
 CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
-and [`min`](../../../../CommonMath.md#min) targets and smooth approximations.
+and [`min`](../../../../CommonMath.md#minimum) targets and smooth approximations.
 
 ### External Equations
 
@@ -235,9 +235,9 @@ Initialization preserves the machine-seeded system-base $P_{\mathrm{m}}$. An
 attached `pref` signal receives the initialized reference; an unattached port
 latches that value for subsequent residual evaluations.
 
-## Monitorable Outputs
+## Monitors
 
-Output   | Units  | Description                        | Note
+Monitor  | Units  | Description                        | Note
 ---------|--------|------------------------------------|-----
 `pmech`  | [p.u.] | Mechanical-power output            | $P_{\text{m}}$; system base
 `xvalve` | [p.u.] | Fuel-valve state                   | $x_V$; component base
@@ -270,4 +270,4 @@ $\mu$,
 ```
 
 This is the positive-range inverse of GridKit's smooth
-[`ramp`](../../../../CommonMath.md#rho-ramp).
+[`ramp`](../../../../CommonMath.md#ramp).
