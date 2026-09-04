@@ -134,7 +134,7 @@ namespace GridKit
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        [[gnu::always_inline]] inline int evaluateInternalResidual(
+        [[gnu::always_inline]] inline int evaluateInternalResidualKernel(
             const ScalarT* y,
             const ScalarT* yp,
             const ScalarT* wb,

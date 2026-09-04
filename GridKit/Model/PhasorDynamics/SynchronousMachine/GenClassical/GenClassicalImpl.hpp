@@ -280,7 +280,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateInternalResidual(
+    __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateInternalResidualKernel(
         const ScalarT* y,
         const ScalarT* yp,
         const ScalarT* wb,
@@ -352,7 +352,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
       auto*       h  = h_.getData();
-      evaluateInternalResidual(y, yp, wb, f);
+      evaluateInternalResidualKernel(y, yp, wb, f);
       evaluateBusResidual(y, yp, wb, h);
 
       Ir() += h[0];

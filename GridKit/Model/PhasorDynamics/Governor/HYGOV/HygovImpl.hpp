@@ -534,7 +534,7 @@ namespace GridKit
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
 
-        evaluateInternalResidual(y, yp, nullptr, ws, f);
+        evaluateInternalResidualKernel(y, yp, nullptr, ws, f);
         f_.setDataUpdated();
         return 0;
       }
@@ -569,7 +569,7 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int
-      Hygov<scalar_type, index_type>::evaluateInternalResidual(
+      Hygov<scalar_type, index_type>::evaluateInternalResidualKernel(
           const ScalarT*                  y,
           const ScalarT*                  yp,
           [[maybe_unused]] const ScalarT* wb,

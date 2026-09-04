@@ -855,7 +855,7 @@ namespace GridKit
         wb[0]    = Vr();
         wb[1]    = Vi();
 
-        evaluateInternalResidual(y_.getData(), yp_.getData(), wb, ws, f_.getData());
+        evaluateInternalResidualKernel(y_.getData(), yp_.getData(), wb, ws, f_.getData());
         f_.setDataUpdated();
         return 0;
       }
@@ -901,7 +901,7 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       [[gnu::always_inline]] inline int
-      Reecb<scalar_type, index_type>::evaluateInternalResidual(
+      Reecb<scalar_type, index_type>::evaluateInternalResidualKernel(
           const ScalarT* y,
           const ScalarT* yp,
           const ScalarT* wb,

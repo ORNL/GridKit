@@ -298,7 +298,7 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int Ieeest<scalar_type, index_type>::evaluateInternalResidual(
+      __attribute__((always_inline)) inline int Ieeest<scalar_type, index_type>::evaluateInternalResidualKernel(
           const ScalarT*                  y,
           const ScalarT*                  yp,
           [[maybe_unused]] const ScalarT* wb,
@@ -362,7 +362,7 @@ namespace GridKit
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, nullptr, ws, f);
+        evaluateInternalResidualKernel(y, yp, nullptr, ws, f);
         f_.setDataUpdated();
 
         return 0;
