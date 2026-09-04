@@ -36,6 +36,7 @@ int runApplication(int argc, const char* argv[])
       return 1;
     }
   }
+  configureCommonMath<real_type>(study);
 
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);
