@@ -29,7 +29,7 @@ namespace GridKit
     CircuitComponent() = default;
 
     /**
-     * @brief Constructs an independent copy of a circuit component.
+     * @brief Constructs a copy of a circuit component.
      *
      * Copies the component metadata, local vector data, connection-node mapping,
      * and COO Jacobian storage. Dynamically allocated component-owned data is
@@ -37,11 +37,11 @@ namespace GridKit
      * storage with @p other.
      *
      * Pointers to state, state-derivative, and residual storage supplied by a
-     * parent system are intentionally not copied. The internal pointers
-     * (`y_int_`, `yp_int_`, and `f_int_`) are initialized to `nullptr`, and the
-     * external variable pointers (`y_ext_`, `yp_ext_`, and `f_ext_`) are allocated
-     * but initialized to `nullptr`. The copied component must therefore be
-     * connected to the appropriate parent-system storage before it is evaluated.
+     * parent system are copied as-is. Consequently, the copied component initially
+     * references the same parent-system storage as @p other. The pointer arrays
+     * used for external variables are independently allocated, but their entries
+     * point to the same external state, state-derivative, and residual storage as
+     * the original component.
      *
      * Local vectors, including the state, state derivative, residual, tolerances,
      * quadrature data, adjoint data, and parameter vectors, retain the values of
@@ -49,9 +49,9 @@ namespace GridKit
      *
      * @param other Component to copy.
      *
-     * @note Copying a component reproduces its component-owned data and structural
-     *       information, but does not preserve its connections to parent-system
-     *       state or residual storage.
+     * @note If the copied component is subsequently attached to a different parent
+     *       system, its state, state-derivative, and residual pointers must be
+     *       reassigned to the storage provided by that system before evaluation.
      */
     CircuitComponent(const CircuitComponent& other)
       : n_extern_(other.n_extern_),
@@ -62,13 +62,9 @@ namespace GridKit
         size_quad_(other.size_quad_),
         size_opt_(other.size_opt_),
         current_jac_size_(other.current_jac_size_),
-
-        // These pointers refer to storage supplied by a parent system.
-        // The copied component must be connected to its own storage later.
-        y_int_(nullptr),
-        yp_int_(nullptr),
-        f_int_(nullptr),
-
+        y_int_(other.y_int_),
+        yp_int_(other.yp_int_),
+        f_int_(other.f_int_),
         tag_(other.tag_),
         time_(other.time_),
         alpha_(other.alpha_),
@@ -150,9 +146,9 @@ namespace GridKit
 
         for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
         {
-          y_ext_[i]  = nullptr;
-          yp_ext_[i] = nullptr;
-          f_ext_[i]  = nullptr;
+          y_ext_[i]  = other.y_ext_[i];
+          yp_ext_[i] = other.yp_ext_[i];
+          f_ext_[i]  = other.f_ext_[i];
         }
       }
 
