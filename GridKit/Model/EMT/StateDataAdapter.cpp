@@ -6,8 +6,6 @@
  */
 #include "StateDataAdapter.hpp"
 
-#include <string>
-
 namespace GridKit
 {
   namespace EMT
@@ -25,8 +23,7 @@ namespace GridKit
     {
       for (auto& bus : model_data.bus)
       {
-        const auto key   = "bus_id_" + std::to_string(bus.bus_id);
-        const auto entry = state_data.buses.find(key);
+        const auto entry = state_data.buses.find(bus.id);
         if (entry == state_data.buses.end())
         {
           continue;
@@ -49,7 +46,7 @@ namespace GridKit
 
       for (auto& machine : model_data.machine)
       {
-        const auto entry = state_data.devices.find(machine.disambiguation_string);
+        const auto entry = state_data.devices.find(machine.id);
         if (entry == state_data.devices.end())
         {
           continue;
@@ -69,7 +66,7 @@ namespace GridKit
 
       for (auto& sw : model_data.sw)
       {
-        const auto entry = state_data.devices.find(sw.disambiguation_string);
+        const auto entry = state_data.devices.find(sw.id);
         if (entry == state_data.devices.end())
         {
           continue;

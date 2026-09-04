@@ -1,123 +1,39 @@
 #pragma once
 
-#include <sstream>
 #include <stdexcept>
 
-#include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/EMT/Component/Bus/BusData.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Model/EMT/ComponentDataJSONParser.hpp>
 
 namespace GridKit
 {
   namespace EMT
   {
-    using json = nlohmann::json;
-    using Log  = ::GridKit::Utilities::Logger;
-
     /// JSON parser function implementation for the `BusData` type
-    ///
-    /// See the `INPUT_FORMAT.md` in `GridKit/Model/EMT` for more information
     template <typename RealT, typename IdxT>
-    void from_json(const json& j, BusData<RealT, IdxT>& bd)
+    void from_json(const json& j, BusData<RealT, IdxT>& data)
     {
-      j.at("name").get_to(bd.disambiguation_string);
+      using BaseT = ComponentData<RealT,
+                                  IdxT,
+                                  BusParameters,
+                                  BusInputs,
+                                  BusOutputs,
+                                  BusMonitorableVariables>;
+      from_json(j, static_cast<BaseT&>(data));
 
-      j.at("number").get_to(bd.bus_id);
-
-      std::stringstream error_context;
-      error_context << "\n\tSee bus number " << bd.bus_id
-                    << " (\"name\": \"" << bd.disambiguation_string << "\") "
-                    << "in the \"buses\" list of your JSON file.";
-
-      auto string_class = j.at("class").get<std::string>();
-      if (string_class != "Bus")
+      if (data.device_class != "Bus")
       {
-        Log::error() << "\n\tInvalid bus class: \"" << string_class << "\"."
-                     << error_context.str() << std::endl;
-        throw std::runtime_error("JSON parser failed");
+        throw std::runtime_error("JSON parser failed: expected Bus class");
       }
-      bd.device_class = string_class;
 
       if (j.contains("init"))
       {
-        for (auto& raw_parameter : j.at("init").items())
-        {
-          if (raw_parameter.key() == "va")
-          {
-            raw_parameter.value().get_to(bd.va0);
-          }
-          else if (raw_parameter.key() == "vb")
-          {
-            raw_parameter.value().get_to(bd.vb0);
-          }
-          else if (raw_parameter.key() == "vc")
-          {
-            raw_parameter.value().get_to(bd.vc0);
-          }
-          else
-          {
-            Log::error() << "\n\tInvalid initial parameter \""
-                         << raw_parameter.key() << "\" in \"init\" section."
-                         << error_context.str() << std::endl;
-          }
-        }
-      }
-
-      using Parameters = typename BusData<RealT, IdxT>::Parameters;
-      if (j.contains("params"))
-      {
-        for (auto& raw_parameter : j.at("params").items())
-        {
-          auto key = magic_enum::enum_cast<Parameters>(raw_parameter.key());
-          if (key.has_value())
-          {
-            // NOTE: this is necessary because it doesn't seem like nlohmann/json
-            //       handles std::variant out of the box
-            if (raw_parameter.value().is_number_integer())
-            {
-              bd.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
-            }
-            else
-            {
-              Log::error() << "\n\tInvalid bus parameter value type: "
-                           << "\"" << raw_parameter.key() << "\": "
-                           << raw_parameter.value()
-                           << " (typed as \"" << raw_parameter.value().type_name()
-                           << "\")." << error_context.str() << std::endl;
-              throw std::runtime_error("JSON parser failed");
-            }
-          }
-          else
-          {
-            Log::error() << "\n\tBus parameter \"" << raw_parameter.key()
-                         << "\" has no value." << error_context.str()
-                         << std::endl;
-          }
-        }
-      }
-
-      if (j.contains("mon"))
-      {
-        using magic_enum::case_insensitive;
-        using magic_enum::enum_cast;
-        using MonitorableVariables = typename BusData<RealT, IdxT>::MonitorableVariables;
-        for (auto& raw_monitored_variable : j.at("mon"))
-        {
-          auto var_name  = raw_monitored_variable.get<std::string>();
-          auto monitored = enum_cast<MonitorableVariables>(var_name, case_insensitive);
-          if (monitored.has_value())
-          {
-            bd.monitored_variables.insert(monitored.value());
-          }
-          else
-          {
-            Log::error() << "\n\tInvalid monitored variable: \"" << var_name
-                         << "\" in \"mon\" list." << error_context.str()
-                         << std::endl;
-          }
-        }
+        const auto& init = j.at("init");
+        data.va0         = init.value("va", RealT{0});
+        data.vb0         = init.value("vb", RealT{0});
+        data.vc0         = init.value("vc", RealT{0});
       }
     }
   } // namespace EMT

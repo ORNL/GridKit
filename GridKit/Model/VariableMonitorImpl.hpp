@@ -8,6 +8,22 @@ namespace GridKit
 {
   namespace Model
   {
+    namespace VariableMonitorDetail
+    {
+      template <typename DataT>
+      std::string makeLabel(const DataT& data)
+      {
+        if constexpr (requires { data.id; })
+        {
+          return data.device_class + "_" + data.id;
+        }
+        else
+        {
+          return data.device_class + "_" + data.disambiguation_string;
+        }
+      }
+    } // namespace VariableMonitorDetail
+
     template <typename scalar_type>
     class VariableMonitorController;
 
@@ -78,7 +94,7 @@ namespace GridKit
        * @param data Expected to be derived from ComponentData
        */
       VariableMonitor(const ObjData& data)
-        : VariableMonitor(data.device_class + "_" + data.disambiguation_string,
+        : VariableMonitor(VariableMonitorDetail::makeLabel(data),
                           data.monitored_variables)
       {
       }

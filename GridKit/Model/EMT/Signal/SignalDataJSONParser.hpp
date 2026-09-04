@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdexcept>
-
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/EMT/Signal/SignalData.hpp>
@@ -18,8 +16,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     void from_json(const json& j, SignalData<RealT, IdxT>& sd)
     {
-      j.at("name").get_to(sd.name);
-      j.at("signal_id").get_to(sd.signal_id);
+      j.at("id").get_to(sd.id);
     }
   } // namespace EMT
 } // namespace GridKit

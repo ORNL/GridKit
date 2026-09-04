@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <stdexcept>
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/EMT/SystemModel.hpp>
@@ -46,7 +47,7 @@ namespace GridKit
       for (const auto& busdata : data.bus)
       {
         auto* bus = new Bus<ScalarT, IdxT>(busdata);
-        addBus(bus);
+        addBus(busdata.id, bus);
       }
 
       // Add signals
@@ -59,16 +60,11 @@ namespace GridKit
       // Add voltage sources
       for (const auto& sourcedata : data.voltage_source)
       {
-        IdxT bus_index = 0;
-        if (sourcedata.buses.contains(VoltageSourceBuses::bus))
-        {
-          bus_index = sourcedata.buses.at(VoltageSourceBuses::bus);
-        }
-
         auto* source = new VoltageSource<ScalarT, IdxT>(sourcedata);
 
-        constexpr auto VA = VoltageSourceExternalVariables::VA;
-        source->getSignals().template attachPort<VA>(&(getBus(bus_index)->voltagePort()));
+        constexpr auto VA  = VoltageSourceExternalVariables::VA;
+        const auto&    bus = sourcedata.inputs.at(VoltageSourceInputs::bus);
+        source->getSignals().template attachPort<VA>(&(getBus(bus)->voltagePort()));
 
         addComponent(source);
       }
@@ -76,34 +72,29 @@ namespace GridKit
       // Add dependent voltage sources
       for (const auto& sourcedata : data.dependent_voltage_source)
       {
-        IdxT bus_index = 0;
-        if (sourcedata.buses.contains(DependentVoltageSourceBuses::bus))
-        {
-          bus_index = sourcedata.buses.at(DependentVoltageSourceBuses::bus);
-        }
-
         auto* source = new DependentVoltageSource<ScalarT, IdxT>(sourcedata);
 
-        constexpr auto VA = DependentVoltageSourceExternalVariables::VA;
-        source->getSignals().template attachPort<VA>(&(getBus(bus_index)->voltagePort()));
+        constexpr auto VA  = DependentVoltageSourceExternalVariables::VA;
+        const auto&    bus = sourcedata.inputs.at(DependentVoltageSourceInputs::bus);
+        source->getSignals().template attachPort<VA>(&(getBus(bus)->voltagePort()));
 
-        if (sourcedata.signal_inputs.contains(DependentVoltageSourceSignalInputs::ea))
+        if (sourcedata.inputs.contains(DependentVoltageSourceInputs::ea))
         {
-          IdxT           ea = sourcedata.signal_inputs.at(DependentVoltageSourceSignalInputs::ea);
+          const auto&    ea = sourcedata.inputs.at(DependentVoltageSourceInputs::ea);
           constexpr auto EA = DependentVoltageSourceExternalVariables::EA;
           source->getSignals().template attachSignal<EA>(getSignal(ea));
         }
 
-        if (sourcedata.signal_inputs.contains(DependentVoltageSourceSignalInputs::eb))
+        if (sourcedata.inputs.contains(DependentVoltageSourceInputs::eb))
         {
-          IdxT           eb = sourcedata.signal_inputs.at(DependentVoltageSourceSignalInputs::eb);
+          const auto&    eb = sourcedata.inputs.at(DependentVoltageSourceInputs::eb);
           constexpr auto EB = DependentVoltageSourceExternalVariables::EB;
           source->getSignals().template attachSignal<EB>(getSignal(eb));
         }
 
-        if (sourcedata.signal_inputs.contains(DependentVoltageSourceSignalInputs::ec))
+        if (sourcedata.inputs.contains(DependentVoltageSourceInputs::ec))
         {
-          IdxT           ec = sourcedata.signal_inputs.at(DependentVoltageSourceSignalInputs::ec);
+          const auto&    ec = sourcedata.inputs.at(DependentVoltageSourceInputs::ec);
           constexpr auto EC = DependentVoltageSourceExternalVariables::EC;
           source->getSignals().template attachSignal<EC>(getSignal(ec));
         }
@@ -114,34 +105,29 @@ namespace GridKit
       // Add synchronous machines
       for (const auto& machinedata : data.machine)
       {
-        IdxT bus_index = 0;
-        if (machinedata.buses.contains(MachineBuses::bus))
-        {
-          bus_index = machinedata.buses.at(MachineBuses::bus);
-        }
-
         auto* machine = new Machine<ScalarT, IdxT>(machinedata);
 
-        constexpr auto VA = MachineExternalVariables::VA;
-        machine->getSignals().template attachPort<VA>(&(getBus(bus_index)->voltagePort()));
+        constexpr auto VA  = MachineExternalVariables::VA;
+        const auto&    bus = machinedata.inputs.at(MachineInputs::bus);
+        machine->getSignals().template attachPort<VA>(&(getBus(bus)->voltagePort()));
 
-        if (machinedata.signal_outputs.contains(MachineSignalOutputs::speed))
+        if (machinedata.outputs.contains(MachineOutputs::speed))
         {
-          IdxT           speed = machinedata.signal_outputs.at(MachineSignalOutputs::speed);
+          const auto&    speed = machinedata.outputs.at(MachineOutputs::speed);
           constexpr auto OMEGA = MachineInternalVariables::OMEGA;
           machine->getSignals().template assignSignal<OMEGA>(getSignal(speed));
         }
 
-        if (machinedata.signal_inputs.contains(MachineSignalInputs::pm))
+        if (machinedata.inputs.contains(MachineInputs::pm))
         {
-          IdxT           pm = machinedata.signal_inputs.at(MachineSignalInputs::pm);
+          const auto&    pm = machinedata.inputs.at(MachineInputs::pm);
           constexpr auto PM = MachineExternalVariables::PM;
           machine->getSignals().template attachSignal<PM>(getSignal(pm));
         }
 
-        if (machinedata.signal_inputs.contains(MachineSignalInputs::efd))
+        if (machinedata.inputs.contains(MachineInputs::efd))
         {
-          IdxT           efd = machinedata.signal_inputs.at(MachineSignalInputs::efd);
+          const auto&    efd = machinedata.inputs.at(MachineInputs::efd);
           constexpr auto EFD = MachineExternalVariables::EFD;
           machine->getSignals().template attachSignal<EFD>(getSignal(efd));
         }
@@ -152,24 +138,14 @@ namespace GridKit
       // Add lumped lines
       for (const auto& linedata : data.line_lumped)
       {
-        IdxT bus1_index = 0;
-        if (linedata.buses.contains(LineLumpedBuses::bus1))
-        {
-          bus1_index = linedata.buses.at(LineLumpedBuses::bus1);
-        }
-
-        IdxT bus2_index = 0;
-        if (linedata.buses.contains(LineLumpedBuses::bus2))
-        {
-          bus2_index = linedata.buses.at(LineLumpedBuses::bus2);
-        }
-
         auto* line = new LineLumped<ScalarT, IdxT>(linedata);
 
-        constexpr auto V1A = LineLumpedExternalVariables::V1A;
-        constexpr auto V2A = LineLumpedExternalVariables::V2A;
-        line->getSignals().template attachPort<V1A>(&(getBus(bus1_index)->voltagePort()));
-        line->getSignals().template attachPort<V2A>(&(getBus(bus2_index)->voltagePort()));
+        constexpr auto V1A  = LineLumpedExternalVariables::V1A;
+        constexpr auto V2A  = LineLumpedExternalVariables::V2A;
+        const auto&    bus1 = linedata.inputs.at(LineLumpedInputs::bus1);
+        const auto&    bus2 = linedata.inputs.at(LineLumpedInputs::bus2);
+        line->getSignals().template attachPort<V1A>(&(getBus(bus1)->voltagePort()));
+        line->getSignals().template attachPort<V2A>(&(getBus(bus2)->voltagePort()));
 
         addComponent(line);
       }
@@ -177,16 +153,11 @@ namespace GridKit
       // Add loads
       for (const auto& loaddata : data.loadz)
       {
-        IdxT bus_index = 0;
-        if (loaddata.buses.contains(LoadZBuses::bus))
-        {
-          bus_index = loaddata.buses.at(LoadZBuses::bus);
-        }
-
         auto* load = new LoadZ<ScalarT, IdxT>(loaddata);
 
-        constexpr auto VA = LoadZExternalVariables::VA;
-        load->getSignals().template attachPort<VA>(&(getBus(bus_index)->voltagePort()));
+        constexpr auto VA  = LoadZExternalVariables::VA;
+        const auto&    bus = loaddata.inputs.at(LoadZInputs::bus);
+        load->getSignals().template attachPort<VA>(&(getBus(bus)->voltagePort()));
 
         addComponent(load);
       }
@@ -196,23 +167,23 @@ namespace GridKit
       {
         auto* gov = new Controller::Tgov1<ScalarT, IdxT>(govdata);
 
-        if (govdata.signal_inputs.contains(Controller::Tgov1SignalInputs::speed))
+        if (govdata.inputs.contains(Controller::Tgov1Inputs::speed))
         {
-          IdxT           speed = govdata.signal_inputs.at(Controller::Tgov1SignalInputs::speed);
+          const auto&    speed = govdata.inputs.at(Controller::Tgov1Inputs::speed);
           constexpr auto OMEGA = Controller::Tgov1ExternalVariables::OMEGA;
           gov->getSignals().template attachSignal<OMEGA>(getSignal(speed));
         }
 
-        if (govdata.signal_inputs.contains(Controller::Tgov1SignalInputs::pref))
+        if (govdata.inputs.contains(Controller::Tgov1Inputs::pref))
         {
-          IdxT           pref = govdata.signal_inputs.at(Controller::Tgov1SignalInputs::pref);
+          const auto&    pref = govdata.inputs.at(Controller::Tgov1Inputs::pref);
           constexpr auto PREF = Controller::Tgov1ExternalVariables::PREF;
           gov->getSignals().template attachSignal<PREF>(getSignal(pref));
         }
 
-        if (govdata.signal_outputs.contains(Controller::Tgov1SignalOutputs::pmech))
+        if (govdata.outputs.contains(Controller::Tgov1Outputs::pmech))
         {
-          IdxT           pmech = govdata.signal_outputs.at(Controller::Tgov1SignalOutputs::pmech);
+          const auto&    pmech = govdata.outputs.at(Controller::Tgov1Outputs::pmech);
           constexpr auto PM    = Controller::Tgov1InternalVariables::PM;
           gov->getSignals().template assignSignal<PM>(getSignal(pmech));
         }
@@ -223,26 +194,16 @@ namespace GridKit
       // Add switches
       for (const auto& switchdata : data.sw)
       {
-        IdxT bus1_index = 0;
-        if (switchdata.buses.contains(SwitchBuses::bus1))
-        {
-          bus1_index = switchdata.buses.at(SwitchBuses::bus1);
-        }
-
-        IdxT bus2_index = 0;
-        if (switchdata.buses.contains(SwitchBuses::bus2))
-        {
-          bus2_index = switchdata.buses.at(SwitchBuses::bus2);
-        }
-
         auto* sw = new Switch<ScalarT, IdxT>(switchdata);
 
-        constexpr auto V1A = SwitchExternalVariables::V1A;
-        constexpr auto V2A = SwitchExternalVariables::V2A;
-        sw->getSignals().template attachPort<V1A>(&(getBus(bus1_index)->voltagePort()));
-        sw->getSignals().template attachPort<V2A>(&(getBus(bus2_index)->voltagePort()));
+        constexpr auto V1A  = SwitchExternalVariables::V1A;
+        constexpr auto V2A  = SwitchExternalVariables::V2A;
+        const auto&    bus1 = switchdata.inputs.at(SwitchInputs::bus1);
+        const auto&    bus2 = switchdata.inputs.at(SwitchInputs::bus2);
+        sw->getSignals().template attachPort<V1A>(&(getBus(bus1)->voltagePort()));
+        sw->getSignals().template attachPort<V2A>(&(getBus(bus2)->voltagePort()));
 
-        addSwitch(sw);
+        addSwitch(switchdata.id, sw);
       }
 
       for (const auto& sink : data.monitor_sink)
@@ -759,9 +720,19 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::addBus(BusT* bus)
+    void SystemModel<scalar_type, index_type>::addBus(const std::string& id, BusT* bus)
     {
-      gridkit_bus_indices_[bus->busID()] = static_cast<IdxT>(components_.size());
+      if (id.empty())
+      {
+        throw std::invalid_argument("Bus ID must not be empty");
+      }
+      const bool inserted = gridkit_bus_indices_.emplace(
+                                                    id, static_cast<IdxT>(components_.size()))
+                                .second;
+      if (!inserted)
+      {
+        throw std::invalid_argument("Duplicate bus ID: \"" + id + "\"");
+      }
       addComponent(bus);
     }
 
@@ -775,8 +746,17 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::addSignal(SignalT* signal)
     {
-      IdxT gridkit_signal_id                      = static_cast<IdxT>(signals_.size());
-      gridkit_signal_indices_[signal->signalId()] = gridkit_signal_id;
+      if (signal->id().empty())
+      {
+        throw std::invalid_argument("Signal ID must not be empty");
+      }
+      const bool inserted = gridkit_signal_indices_.emplace(
+                                                       signal->id(), static_cast<IdxT>(signals_.size()))
+                                .second;
+      if (!inserted)
+      {
+        throw std::invalid_argument("Duplicate signal ID: \"" + signal->id() + "\"");
+      }
       signals_.push_back(signal);
     }
 
@@ -785,8 +765,8 @@ namespace GridKit
      *
      * Add component at the end of the components array and set GridKit's component ID
      *
-     * @todo: No integer user-facing component_id for now, but we could map GridKit's
-     * component ID to the disambiguation_string
+     * The GridKit component ID is the component's position in this flat
+     * runtime list; case-file string IDs are used only by the wiring maps.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -806,11 +786,20 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::addSwitch(ComponentT* component)
+    void SystemModel<scalar_type, index_type>::addSwitch(const std::string& id,
+                                                         ComponentT*        component)
     {
-      IdxT gridkit_component_id                  = static_cast<IdxT>(components_.size());
-      IdxT gridkit_switch_id                     = static_cast<IdxT>(gridkit_switch_indices_.size());
-      gridkit_switch_indices_[gridkit_switch_id] = gridkit_component_id;
+      if (id.empty())
+      {
+        throw std::invalid_argument("Switch ID must not be empty");
+      }
+      const bool inserted = gridkit_switch_indices_.emplace(
+                                                       id, static_cast<IdxT>(components_.size()))
+                                .second;
+      if (!inserted)
+      {
+        throw std::invalid_argument("Duplicate switch ID: \"" + id + "\"");
+      }
       addComponent(component);
     }
 
@@ -820,12 +809,11 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::BusT*
-    SystemModel<scalar_type, index_type>::getBus(IdxT bus_id)
+    SystemModel<scalar_type, index_type>::getBus(const std::string& id)
     {
-      // Should fail if user-provided bus_id is incorrect
-      IdxT  gridkit_component_id = gridkit_bus_indices_.at(bus_id);
+      IdxT  gridkit_component_id = gridkit_bus_indices_.at(id);
       auto* bus                  = dynamic_cast<BusT*>(components_[gridkit_component_id]);
-      assert(bus != nullptr && bus->busID() == bus_id);
+      assert(bus != nullptr);
       return bus;
     }
 
@@ -835,11 +823,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     SystemModel<scalar_type, index_type>::SignalT*
-    SystemModel<scalar_type, index_type>::getSignal(IdxT signal_id)
+    SystemModel<scalar_type, index_type>::getSignal(const std::string& id)
     {
-      // Should fail if user-provided signal_id is incorrect
-      IdxT gridkit_signal_id = gridkit_signal_indices_.at(signal_id);
-      assert((signals_[gridkit_signal_id])->signalId() == signal_id);
+      IdxT gridkit_signal_id = gridkit_signal_indices_.at(id);
+      assert((signals_[gridkit_signal_id])->id() == id);
       return signals_[gridkit_signal_id];
     }
 
@@ -864,9 +851,9 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Switch<scalar_type, index_type>*
-    SystemModel<scalar_type, index_type>::getSwitch(IdxT switch_id)
+    SystemModel<scalar_type, index_type>::getSwitch(const std::string& id)
     {
-      IdxT component_id = gridkit_switch_indices_.at(switch_id);
+      IdxT component_id = gridkit_switch_indices_.at(id);
       return dynamic_cast<Switch<ScalarT, IdxT>*>(components_[component_id]);
     }
 

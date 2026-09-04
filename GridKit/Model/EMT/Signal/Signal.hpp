@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <string>
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/ScalarTraits.hpp>
@@ -36,7 +37,8 @@ namespace GridKit
       using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
       Signal();
-      Signal(const SignalData<RealT, IdxT>& data);
+      explicit Signal(std::string id);
+      explicit Signal(const SignalData<RealT, IdxT>& data);
 
       virtual ~Signal() = default;
 
@@ -60,9 +62,9 @@ namespace GridKit
       void markDerivativeCoupling();
       bool hasDerivativeCoupling() const;
 
-      const IdxT signalId() const
+      const std::string& id() const noexcept
       {
-        return signal_id_;
+        return id_;
       }
 
       IdxT getVariableIndex() const
@@ -76,10 +78,10 @@ namespace GridKit
       }
 
     private:
-      ScalarT* signal_{nullptr};
-      ScalarT* derivative_{nullptr};
-      ScalarT* residual_{nullptr};
-      IdxT     signal_id_{0};
+      ScalarT*    signal_{nullptr};
+      ScalarT*    derivative_{nullptr};
+      ScalarT*    residual_{nullptr};
+      std::string id_;
 
     protected:
       IdxT* variable_index_{nullptr};

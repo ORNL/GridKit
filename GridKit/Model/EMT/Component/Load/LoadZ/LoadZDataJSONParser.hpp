@@ -20,9 +20,8 @@ namespace GridKit
       using BaseT = ComponentData<RealT,
                                   IdxT,
                                   LoadZParameters,
-                                  LoadZBuses,
-                                  LoadZSignalInputs,
-                                  LoadZSignalOutputs,
+                                  LoadZInputs,
+                                  LoadZOutputs,
                                   LoadZMonitorableVariables>;
       from_json(j, static_cast<BaseT&>(d));
 

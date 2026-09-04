@@ -109,23 +109,23 @@ namespace GridKit
        */
       void resetJacobianStructure() override;
 
-      void addBus(BusT* bus);
+      void addBus(const std::string& id, BusT* bus);
       void addSignal(SignalT* signal);
       void addComponent(ComponentT* component);
-      void addSwitch(ComponentT* component);
+      void addSwitch(const std::string& id, ComponentT* component);
 
-      BusT*                  getBus(IdxT bus_id);
-      SignalT*               getSignal(IdxT signal_id);
+      BusT*                  getBus(const std::string& id);
+      SignalT*               getSignal(const std::string& id);
       ComponentT*            getComponent(IdxT gridkit_component_id);
-      Switch<ScalarT, IdxT>* getSwitch(IdxT switch_id);
+      Switch<ScalarT, IdxT>* getSwitch(const std::string& id);
 
     private:
       std::vector<ComponentT*> components_;
       std::vector<SignalT*>    signals_;
 
-      std::map<IdxT, IdxT> gridkit_bus_indices_;    ///< Map between bus_id and component index, wiring only
-      std::map<IdxT, IdxT> gridkit_signal_indices_; ///< Map between gridkit_signal_id and signal_id
-      std::map<IdxT, IdxT> gridkit_switch_indices_; ///< Map between switch_id and component index
+      std::map<std::string, IdxT> gridkit_bus_indices_;    ///< Component ID to bus index
+      std::map<std::string, IdxT> gridkit_signal_indices_; ///< Signal ID to signal index
+      std::map<std::string, IdxT> gridkit_switch_indices_; ///< Component ID to switch index
 
       bool owns_components_{false};
 

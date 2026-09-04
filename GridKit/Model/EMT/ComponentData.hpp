@@ -38,14 +38,12 @@ namespace GridKit
     template <typename real_type,
               typename index_type,
               typename Parameters,
-              typename Buses,
-              typename SignalInputs,
-              typename SignalOutputs,
+              typename Inputs,
+              typename Outputs,
               typename MonitorableVariables>
       requires std::is_enum_v<Parameters>
-               && std::is_enum_v<Buses>
-               && std::is_enum_v<SignalInputs>
-               && std::is_enum_v<SignalOutputs>
+               && std::is_enum_v<Inputs>
+               && std::is_enum_v<Outputs>
                && std::is_enum_v<MonitorableVariables>
     struct ComponentData
     {
@@ -57,22 +55,20 @@ namespace GridKit
       /// Class of device this is for
       std::string device_class;
 
+      /// Unique component identifier within the system
+      std::string id;
+
       /// Mapping of parameters to parameter values
       std::map<Parameters, ParameterValue<RealT, IdxT>> parameters;
 
-      /// Mapping of terminal attachments to bus identifiers
-      std::map<Buses, IdxT> buses;
+      /// Mapping of model inputs to component or signal identifiers
+      std::map<Inputs, std::string> inputs;
 
-      /// Mapping of signal inputs to signal identifiers
-      std::map<SignalInputs, IdxT> signal_inputs;
-
-      /// Mapping of signal outputs to signal identifiers
-      std::map<SignalOutputs, IdxT> signal_outputs;
+      /// Mapping of model outputs to signal identifiers
+      std::map<Outputs, std::string> outputs;
 
       /// Set of variables being monitored
       std::set<MonitorableVariables> monitored_variables;
-
-      std::string disambiguation_string; ///< Disambiguation string for this device
 
     protected:
       ComponentData() = default;

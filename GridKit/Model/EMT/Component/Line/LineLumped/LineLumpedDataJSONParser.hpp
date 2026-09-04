@@ -21,9 +21,8 @@ namespace GridKit
       using BaseT = ComponentData<RealT,
                                   IdxT,
                                   LineLumpedParameters,
-                                  LineLumpedBuses,
-                                  LineLumpedSignalInputs,
-                                  LineLumpedSignalOutputs,
+                                  LineLumpedInputs,
+                                  LineLumpedOutputs,
                                   LineLumpedMonitorableVariables>;
       from_json(j, static_cast<BaseT&>(d));
 
