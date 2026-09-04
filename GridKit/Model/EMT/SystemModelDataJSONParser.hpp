@@ -8,6 +8,7 @@
 #include <GridKit/Model/EMT/Component/Bus/BusDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSourceDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceDataJSONParser.hpp>
 #include <GridKit/Model/EMT/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Signal/SignalDataJSONParser.hpp>
@@ -89,7 +90,13 @@ namespace GridKit
       for (auto& raw_component : j.at("devices"))
       {
         auto kind = raw_component.at("class").get<std::string>();
-        if (kind == "VoltageSource")
+        if (kind == "DependentVoltageSource")
+        {
+          typename SystemModelData<RealT, IdxT>::DependentVoltageSourceDataT source;
+          raw_component.get_to(source);
+          sm.dependent_voltage_source.push_back(source);
+        }
+        else if (kind == "VoltageSource")
         {
           typename SystemModelData<RealT, IdxT>::VoltageSourceDataT source;
           raw_component.get_to(source);
