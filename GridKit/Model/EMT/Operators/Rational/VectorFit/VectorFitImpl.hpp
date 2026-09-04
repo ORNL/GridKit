@@ -383,13 +383,20 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int VectorFit<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
+      if (size_ == 0)
+      {
+        return 0;
+      }
+
+      auto* abs_tol = abs_tol_.getData();
+
       IdxT offset = 0;
       for (const auto& section : real_sections_)
       {
         const RealT floor = rel_tol / std::max(ONE<RealT>, std::abs(section.a));
         for (IdxT n = 0; n < 3; ++n)
         {
-          abs_tol_.setToConst(offset + n, static_cast<ScalarT>(floor));
+          abs_tol[offset + n] = static_cast<ScalarT>(floor);
         }
         offset += 3;
       }
@@ -400,10 +407,12 @@ namespace GridKit
         const RealT floor     = rel_tol / std::max(ONE<RealT>, magnitude);
         for (IdxT n = 0; n < 6; ++n)
         {
-          abs_tol_.setToConst(offset + n, static_cast<ScalarT>(floor));
+          abs_tol[offset + n] = static_cast<ScalarT>(floor);
         }
         offset += 6;
       }
+
+      abs_tol_.setDataUpdated();
 
       return 0;
     }

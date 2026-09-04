@@ -82,6 +82,7 @@ represents a device and has the following fields:
 
   Class                 | Model
   ----------------------|------------------------------------------------------
+  `DependentVoltageSource` | [DependentVoltageSource](Component/Source/DependentVoltageSource/README.md)
   `VoltageSource`       | [VoltageSource](Component/Source/VoltageSource/README.md)
   `LineLumped`          | [LineLumped](Component/Line/LineLumped/README.md)
   `LoadZ`               | [LoadZ](Component/Load/LoadZ/README.md)
