@@ -19,18 +19,19 @@ None.
 
 ### Derived Parameters
 
-The oriented bridge incidence matrix and bridge Laplacian are
+The normalized phase incidence matrix and zero-sequence projector are
 
 ```math
 \begin{aligned}
 \mathbf{A} &=
-\begin{bmatrix}
+\dfrac{1}{\sqrt{3}}\begin{bmatrix}
 1 & -1 & 0 \\
 0 & 1 & -1 \\
 -1 & 0 & 1
 \end{bmatrix} \\
 \mathbf{P} &= \mathbf{A}^\mathsf{T}\mathbf{A}
 =
+\dfrac{1}{3}
 \begin{bmatrix}
 2 & -1 & -1 \\
 -1 & 2 & -1 \\
@@ -70,7 +71,7 @@ None.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{e}$ | [V] | Bridge voltage vector | $\mathbf{e} \in \mathbb{R}^3$
+$\mathbf{v}_{\mathrm{o}}$ | [V] | Bridge voltage vector | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
 
 ### External Variables
 
@@ -98,14 +99,14 @@ None.
 #### Algebraic
 
 ```math
-0 = \mathbf{e}
-  - \dfrac{V_{\mathrm{dc}}}{3}\mathbf{P}\mathbf{s}
+0 = \mathbf{v}_{\mathrm{o}}
+  - V_\mathrm{dc}\mathbf{P}\mathbf{s}
 ```
 
 ### External Equations
 
 ```math
-\mathbf{i} \leftarrow \mathbf{y}[\mathbf{e} - \mathbf{v}]
+\mathbf{i} \leftarrow \mathbf{y}[\mathbf{v}_{\mathrm{o}} - \mathbf{v}]
 ```
 
 ## Initialization
@@ -116,5 +117,5 @@ None beyond the EMT initialization contract.
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
-`e` | [V] | Bridge voltage | $\mathbf{e} \in \mathbb{R}^3$
+`vo` | [V] | Bridge voltage | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
 `i` | [A] | Converter current injection | $\mathbf{i} \in \mathbb{R}^3$
