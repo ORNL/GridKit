@@ -138,11 +138,6 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        /// Hinge width chosen so closed-circle leakage stays below the
-        /// initialization tolerance [p.u. current squared].
-        static constexpr RealT CURRENT_CIRCLE_KNEE =
-            INITIALIZATION_TOLERANCE / Math::MU<RealT>;
-
         struct InitialPoint;
 
         struct InitialCurrentLimit

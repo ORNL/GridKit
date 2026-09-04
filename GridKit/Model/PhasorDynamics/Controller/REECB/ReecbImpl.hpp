@@ -1081,7 +1081,8 @@ namespace GridKit
       Reecb<scalar_type, index_type>::sqrtramp(ValueT x)
       {
         const RealT root_width = ONE<RealT> / Math::MU<RealT>;
-        const RealT knee       = CURRENT_CIRCLE_KNEE;
+        // Keep closed-circle leakage below the initialization tolerance.
+        const RealT knee       = INITIALIZATION_TOLERANCE / Math::MU<RealT>;
 
         const ValueT absolute    = std::abs(x);
         const ValueT normalizer  = absolute + knee;
@@ -1117,12 +1118,13 @@ namespace GridKit
         }
 
         const RealT mu       = Math::MU<RealT>;
+        const RealT knee     = INITIALIZATION_TOLERANCE / mu;
         const RealT scaled_y = HALF<RealT> * mu * y;
         const RealT hinged   = y / mu
                              * (scaled_y + std::hypot(scaled_y, ONE<RealT>));
         const RealT square = hinged
-                             - QUARTER<RealT> * CURRENT_CIRCLE_KNEE
-                                   * (CURRENT_CIRCLE_KNEE / hinged);
+                             - QUARTER<RealT> * knee
+                                   * (knee / hinged);
         return std::max(ZERO<RealT>, square);
       }
 

@@ -154,6 +154,8 @@ int main(int argc, const char* argv[])
   checkCommandLine(argc, "ContingencyAnalysis");
   auto study_data = parseStudyData(argv[1]);
 
+  configureCommonMath<real_type>(study_data);
+
   const auto start = Clock::now();
 
   auto faults   = study_data.model_data.bus_fault;

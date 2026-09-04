@@ -38,8 +38,11 @@ namespace GridKit
 
       static constexpr ScalarT kTol =
           static_cast<ScalarT>(100.0) * std::numeric_limits<ScalarT>::epsilon();
-      static constexpr RealT kSmoothTol =
-          std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
+
+      static RealT smoothTolerance()
+      {
+        return std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
+      }
 
       /// Construction, the monitor, and every verify() error class: missing
       /// and invalid parameters, a null bus, and an unlinked command port.
@@ -187,8 +190,8 @@ namespace GridKit
         // The latched commands restore both displaced states at their ideal
         // interior first-order rates.
         const auto* f  = latched.regca.getResidual().getData();
-        success       *= scalarMatches(f[index(Vars::IP)], 0.5, "latched active-current rate", kSmoothTol);
-        success       *= scalarMatches(f[index(Vars::IQ)], 0.3, "latched reactive-current rate", kSmoothTol);
+        success        *= scalarMatches(f[index(Vars::IP)], 0.5, "latched active-current rate", smoothTolerance());
+        success        *= scalarMatches(f[index(Vars::IQ)], 0.3, "latched reactive-current rate", smoothTolerance());
 
         return success.report(__func__);
       }
@@ -378,7 +381,7 @@ namespace GridKit
         const auto* f = residual.getData();
         for (const auto& row : expected)
         {
-          success *= scalarMatches(f[index(row.variable)], row.value, row.name, kSmoothTol);
+          success *= scalarMatches(f[index(row.variable)], row.value, row.name, smoothTolerance());
         }
 
         return success.report(__func__);
@@ -577,7 +580,7 @@ namespace GridKit
 
         // Initialization above Vhvmax activates HVRCM and preserves Q0.
         {
-          const RealT terminal_voltage = kHvrcmVoltageLimit + kHvrcmOffset;
+          const RealT terminal_voltage = kHvrcmVoltageLimit + hvrcmOffset();
 
           auto data                   = makeData();
           data.parameters[Params::q0] = 0.1;
@@ -589,8 +592,8 @@ namespace GridKit
 
           const auto* y              = fixture.regca.y().getData();
           const RealT extra_current  = y[index(Vars::IQEXTRA)];
-          success                   *= scalarMatches(
-              extra_current, kHvrcmGain * kHvrcmOffset, "IQEXTRA with the default Khv", kSmoothTol);
+          success                    *= scalarMatches(
+              extra_current, kHvrcmGain * hvrcmOffset(), "IQEXTRA with the default Khv", smoothTolerance());
           success *= scalarMatches(
               y[index(Vars::IQ)] - y[index(Vars::IQEXTRA)], 0.1 / terminal_voltage, "IQ preserves Q0 after HVRCM compensation");
           success *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR");
@@ -630,12 +633,12 @@ namespace GridKit
             return fixture.regca.getResidual().getData()[index(Vars::IQEXTRA)];
           };
 
-          const RealT below = residualAt(kHvrcmVoltageLimit - kHvrcmOffset, 0.0);
+          const RealT below = residualAt(kHvrcmVoltageLimit - hvrcmOffset(), 0.0);
           const RealT at    = residualAt(kHvrcmVoltageLimit, 0.0);
-          const RealT above = residualAt(kHvrcmVoltageLimit + kHvrcmOffset, 0.0);
+          const RealT above = residualAt(kHvrcmVoltageLimit + hvrcmOffset(), 0.0);
 
           success *= scalarMatches(at, kHvrcmGain * hvrcmTransition(), "HVRCM residual at the threshold");
-          success *= scalarMatches(above - below, kHvrcmGain * kHvrcmOffset, "HVRCM symmetric residual difference");
+          success *= scalarMatches(above - below, kHvrcmGain * hvrcmOffset(), "HVRCM symmetric residual difference");
 
           const RealT shifted  = residualAt(kHvrcmVoltageLimit, 0.1);
           success             *= scalarMatches(shifted - at, -0.1, "HVRCM extra-current residual shift");
@@ -832,11 +835,13 @@ namespace GridKit
       static constexpr RealT kHvrcmGain = 0.7;
 
       /// Offset whose smooth-ramp tail decays by one significand width.
-      static constexpr RealT kHvrcmOffset =
-          static_cast<RealT>(std::numeric_limits<RealT>::digits)
-          * std::numbers::ln2_v<RealT> / Math::MU<RealT>;
+      static RealT hvrcmOffset()
+      {
+        return static_cast<RealT>(std::numeric_limits<RealT>::digits)
+               * std::numbers::ln2_v<RealT> / Math::MU<RealT>;
+      }
 
-      static constexpr RealT hvrcmTransition()
+      static RealT hvrcmTransition()
       {
         return std::numbers::ln2_v<RealT> / Math::MU<RealT>;
       }
