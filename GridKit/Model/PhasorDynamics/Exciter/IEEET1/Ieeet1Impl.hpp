@@ -96,14 +96,8 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        // Resize bus data
-        wb_.resize(2);
-
-        // Resize signal variable data
-        const auto signal_size = static_cast<size_t>(Ieeet1ExternalVariables::MAXIMUM);
-        ws_.resize(static_cast<IdxT>(signal_size));
-        ws_.setToZero();
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        // Resize coupling data
+        this->allocateExternalVectors(static_cast<IdxT>(Ieeet1ExternalVariables::MAXIMUM));
 
         // Set output signals
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
@@ -359,19 +353,20 @@ namespace GridKit
       __attribute__((always_inline)) inline int Ieeet1<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
         const auto OMEGA = static_cast<size_t>(Ieeet1ExternalVariables::OMEGA);
+        const auto VREAL = static_cast<size_t>(Ieeet1ExternalVariables::VREAL);
+        const auto VIMAG = static_cast<size_t>(Ieeet1ExternalVariables::VIMAG);
         const auto VREF  = static_cast<size_t>(Ieeet1ExternalVariables::VREF);
         const auto VS    = static_cast<size_t>(Ieeet1ExternalVariables::VS);
         const auto VUEL  = static_cast<size_t>(Ieeet1ExternalVariables::VUEL);
         const auto VOEL  = static_cast<size_t>(Ieeet1ExternalVariables::VOEL);
 
         // Read bus voltage components
-        ScalarT vreal = wb[0];
-        ScalarT vimag = wb[1];
+        ScalarT vreal = y_ext[VREAL];
+        ScalarT vimag = y_ext[VIMAG];
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
         // Read Internal Variables
@@ -392,11 +387,11 @@ namespace GridKit
         ScalarT vfx_dot  = yp[3];
 
         // Set signal variable aliases
-        ScalarT omega = ws[OMEGA];
-        ScalarT vref  = ws[VREF];
-        ScalarT vs    = ws[VS];
-        ScalarT vuel  = ws[VUEL];
-        ScalarT voel  = ws[VOEL];
+        ScalarT omega = y_ext[OMEGA];
+        ScalarT vref  = y_ext[VREF];
+        ScalarT vs    = y_ext[VS];
+        ScalarT vuel  = y_ext[VUEL];
+        ScalarT voel  = y_ext[VOEL];
 
         // The 'pre-limit' derivative of Vr.
         ScalarT func = (-vr + Ka_ * vtr) / Ta_;
@@ -418,24 +413,24 @@ namespace GridKit
       }
 
       /**
-       * @brief Residual evaluation
+       * @brief Gather external variables and index maps.
        *
        */
       template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::evaluateResidual()
+      void Ieeet1<scalar_type, index_type>::gatherExternalVariables()
       {
-        auto* ws = ws_.getData();
+        auto* y_ext = y_ext_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
         auto read_signal = [&]<Ieeet1ExternalVariables variable>(const ScalarT& latched)
         {
-          const auto index   = static_cast<size_t>(variable);
-          ws[index]          = latched;
-          ws_indices_[index] = INVALID_INDEX<IdxT>;
+          const auto index             = static_cast<size_t>(variable);
+          y_ext[index]                 = latched;
+          variable_indices_ext_[index] = INVALID_INDEX<IdxT>;
           if (signals_.template isAttached<variable>())
           {
-            ws[index]          = signals_.template readExternalVariable<variable>();
-            ws_indices_[index] = signals_.template readExternalVariableIndex<variable>();
+            y_ext[index]                 = signals_.template readExternalVariable<variable>();
+            variable_indices_ext_[index] = signals_.template readExternalVariableIndex<variable>();
           }
         };
 
@@ -446,19 +441,42 @@ namespace GridKit
         read_signal.template operator()<Ieeet1ExternalVariables::VOEL>(voel_set_);
 
         // Bus voltages
-        auto* wb = wb_.getData();
-        wb[0]    = bus_->Vr();
-        wb[1]    = bus_->Vi();
+        const auto VREAL = static_cast<size_t>(Ieeet1ExternalVariables::VREAL);
+        const auto VIMAG = static_cast<size_t>(Ieeet1ExternalVariables::VIMAG);
+        y_ext[VREAL]     = bus_->Vr();
+        y_ext[VIMAG]     = bus_->Vi();
+        if (bus_->size() > 0)
+        {
+          variable_indices_ext_[VREAL] = bus_->getVariableIndex(0);
+          variable_indices_ext_[VIMAG] = bus_->getVariableIndex(1);
+        }
+      }
+
+      /**
+       * @brief Residual evaluation
+       *
+       */
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         // Residual evaluation
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb, ws, f);
+        evaluateInternalResidual(y, yp, y_ext_.getData(), f);
 
         f_.setDataUpdated();
 
         return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
 
       /**

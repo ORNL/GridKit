@@ -74,12 +74,7 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        wb_.resize(2);
-
-        const auto signal_size = static_cast<size_t>(SexsPtiExternalVariables::MAXIMUM);
-        ws_.resize(static_cast<IdxT>(signal_size));
-        ws_.setToZero();
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        this->allocateExternalVectors(static_cast<IdxT>(SexsPtiExternalVariables::MAXIMUM));
 
         if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
         {
@@ -256,14 +251,15 @@ namespace GridKit
       __attribute__((always_inline)) inline int SexsPti<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
-        const auto VREF = static_cast<size_t>(SexsPtiExternalVariables::VREF);
-        const auto VS   = static_cast<size_t>(SexsPtiExternalVariables::VS);
-        const auto VUEL = static_cast<size_t>(SexsPtiExternalVariables::VUEL);
-        const auto VOEL = static_cast<size_t>(SexsPtiExternalVariables::VOEL);
+        const auto VREAL = static_cast<size_t>(SexsPtiExternalVariables::VREAL);
+        const auto VIMAG = static_cast<size_t>(SexsPtiExternalVariables::VIMAG);
+        const auto VREF  = static_cast<size_t>(SexsPtiExternalVariables::VREF);
+        const auto VS    = static_cast<size_t>(SexsPtiExternalVariables::VS);
+        const auto VUEL  = static_cast<size_t>(SexsPtiExternalVariables::VUEL);
+        const auto VOEL  = static_cast<size_t>(SexsPtiExternalVariables::VOEL);
 
         ScalarT vr      = y[0];
         ScalarT efd     = y[1];
@@ -271,11 +267,11 @@ namespace GridKit
         ScalarT vr_dot  = yp[0];
         ScalarT efd_dot = yp[1];
 
-        ScalarT Ec   = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
-        ScalarT vref = ws[VREF];
-        ScalarT vs   = ws[VS];
-        ScalarT vuel = ws[VUEL];
-        ScalarT voel = ws[VOEL];
+        ScalarT Ec   = std::sqrt(y_ext[VREAL] * y_ext[VREAL] + y_ext[VIMAG] * y_ext[VIMAG]);
+        ScalarT vref = y_ext[VREF];
+        ScalarT vs   = y_ext[VS];
+        ScalarT vuel = y_ext[VUEL];
+        ScalarT voel = y_ext[VOEL];
 
         ScalarT func = (-efd + (K_ / Tb_) * (-vr + Ta_ * vtr)) / Te_;
 
@@ -286,21 +282,25 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Gather external variables and index maps.
+       *
+       */
       template <typename scalar_type, typename index_type>
-      int SexsPti<scalar_type, index_type>::evaluateResidual()
+      void SexsPti<scalar_type, index_type>::gatherExternalVariables()
       {
-        auto* ws = ws_.getData();
+        auto* y_ext = y_ext_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
         auto read_signal = [&]<SexsPtiExternalVariables variable>(const ScalarT& latched)
         {
-          const auto index   = static_cast<size_t>(variable);
-          ws[index]          = latched;
-          ws_indices_[index] = INVALID_INDEX<IdxT>;
+          const auto index             = static_cast<size_t>(variable);
+          y_ext[index]                 = latched;
+          variable_indices_ext_[index] = INVALID_INDEX<IdxT>;
           if (signals_.template isAttached<variable>())
           {
-            ws[index]          = signals_.template readExternalVariable<variable>();
-            ws_indices_[index] = signals_.template readExternalVariableIndex<variable>();
+            y_ext[index]                 = signals_.template readExternalVariable<variable>();
+            variable_indices_ext_[index] = signals_.template readExternalVariableIndex<variable>();
           }
         };
 
@@ -309,18 +309,37 @@ namespace GridKit
         read_signal.template operator()<SexsPtiExternalVariables::VUEL>(vuel_set_);
         read_signal.template operator()<SexsPtiExternalVariables::VOEL>(voel_set_);
 
-        auto* wb = wb_.getData();
-        wb[0]    = bus_->Vr();
-        wb[1]    = bus_->Vi();
+        const auto VREAL = static_cast<size_t>(SexsPtiExternalVariables::VREAL);
+        const auto VIMAG = static_cast<size_t>(SexsPtiExternalVariables::VIMAG);
+        y_ext[VREAL]     = bus_->Vr();
+        y_ext[VIMAG]     = bus_->Vi();
+        if (bus_->size() > 0)
+        {
+          variable_indices_ext_[VREAL] = bus_->getVariableIndex(0);
+          variable_indices_ext_[VIMAG] = bus_->getVariableIndex(1);
+        }
+      }
+
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb, ws, f);
+        evaluateInternalResidual(y, yp, y_ext_.getData(), f);
 
         f_.setDataUpdated();
 
         return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
 
       template <typename scalar_type, typename index_type>

@@ -107,13 +107,7 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        wb_.resize(2);
-        wb_.setToZero();
-
-        const auto signal_size = static_cast<size_t>(Esdc1aExternalVariables::MAXIMUM);
-        ws_.resize(static_cast<IdxT>(signal_size));
-        ws_.setToZero();
-        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+        this->allocateExternalVectors(static_cast<IdxT>(Esdc1aExternalVariables::MAXIMUM));
 
         for (IdxT j = 0; j < size_; ++j)
         {
@@ -439,67 +433,98 @@ namespace GridKit
       }
 
       /**
-       * @brief Residuals of system equations
+       * @brief Gather external variables and index maps.
        *
-       * Refreshes the bus and signal interface buffers and evaluates the
-       * internal residual. ESDC1A injects no current, so there is no bus
-       * residual. An unattached input port falls back to the value latched
-       * by initialize().
-       *
-       * @return Zero on success.
+       * Unattached signal inputs retain the values latched by initialize().
        */
       template <typename scalar_type, typename index_type>
-      int Esdc1a<scalar_type, index_type>::evaluateResidual()
+      void Esdc1a<scalar_type, index_type>::gatherExternalVariables()
       {
-        const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
-        const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
-        const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
-        const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
+        auto* y_ext = y_ext_.getData();
 
-        auto* ws = ws_.getData();
+        const auto VR_EXT = static_cast<size_t>(Esdc1aExternalVariables::VR);
+        const auto VI_EXT = static_cast<size_t>(Esdc1aExternalVariables::VI);
+        const auto OMEGA  = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
+        const auto VREF   = static_cast<size_t>(Esdc1aExternalVariables::VREF);
+        const auto VS     = static_cast<size_t>(Esdc1aExternalVariables::VS);
+        const auto VUEL   = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
 
-        ws[OMEGA] = omega_set_;
-        ws[VREF]  = vref_set_;
-        ws[VS]    = vs_set_;
-        ws[VUEL]  = vuel_set_;
-        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+        y_ext[VR_EXT]                 = Vr();
+        y_ext[VI_EXT]                 = Vi();
+        variable_indices_ext_[VR_EXT] = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VI_EXT] = INVALID_INDEX<IdxT>;
+        if (bus_->size() > 0)
+        {
+          variable_indices_ext_[VR_EXT] = bus_->getVariableIndex(0);
+          variable_indices_ext_[VI_EXT] = bus_->getVariableIndex(1);
+        }
+
+        y_ext[OMEGA]                 = omega_set_;
+        y_ext[VREF]                  = vref_set_;
+        y_ext[VS]                    = vs_set_;
+        y_ext[VUEL]                  = vuel_set_;
+        variable_indices_ext_[OMEGA] = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VREF]  = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VS]    = INVALID_INDEX<IdxT>;
+        variable_indices_ext_[VUEL]  = INVALID_INDEX<IdxT>;
 
         if (signals_.template isAttached<Esdc1aExternalVariables::OMEGA>())
         {
-          ws[OMEGA] = signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
-          ws_indices_[OMEGA] =
+          y_ext[OMEGA] =
+              signals_.template readExternalVariable<Esdc1aExternalVariables::OMEGA>();
+          variable_indices_ext_[OMEGA] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::OMEGA>();
         }
         if (signals_.template isAttached<Esdc1aExternalVariables::VREF>())
         {
-          ws[VREF] = signals_.template readExternalVariable<Esdc1aExternalVariables::VREF>();
-          ws_indices_[VREF] =
+          y_ext[VREF] =
+              signals_.template readExternalVariable<Esdc1aExternalVariables::VREF>();
+          variable_indices_ext_[VREF] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VREF>();
         }
         if (signals_.template isAttached<Esdc1aExternalVariables::VS>())
         {
-          ws[VS] = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
-          ws_indices_[VS] =
+          y_ext[VS] = signals_.template readExternalVariable<Esdc1aExternalVariables::VS>();
+          variable_indices_ext_[VS] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VS>();
         }
         if (signals_.template isAttached<Esdc1aExternalVariables::VUEL>())
         {
-          ws[VUEL] = signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
-          ws_indices_[VUEL] =
+          y_ext[VUEL] =
+              signals_.template readExternalVariable<Esdc1aExternalVariables::VUEL>();
+          variable_indices_ext_[VUEL] =
               signals_.template readExternalVariableIndex<Esdc1aExternalVariables::VUEL>();
         }
+      }
 
-        auto* wb = wb_.getData();
-        wb[0]    = Vr();
-        wb[1]    = Vi();
+      /**
+       * @brief Evaluate the internal ESDC1A residual equations.
+       */
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
 
-        evaluateInternalResidual(y, yp, wb, ws, f);
+        evaluateInternalResidual(y, yp, y_ext_.getData(), f);
         f_.setDataUpdated();
         return 0;
+      }
+
+      /**
+       * @brief Evaluate internal equations and external contributions.
+       *
+       * ESDC1A contributes no external residual, so the base implementation
+       * returns zero after the internal equations are evaluated.
+       */
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
 
       /**
@@ -525,9 +550,8 @@ namespace GridKit
        *
        * @param[in] y Internal variables in Esdc1aInternalVariables order.
        * @param[in] yp Internal derivatives in the same enum order.
-       * @param[in] wb Terminal-bus \f$(V_{\mathrm{r}},V_{\mathrm{i}})\f$
-       *               voltage components.
-       * @param[in] ws Signal values in Esdc1aExternalVariables order.
+       * @param[in] y_ext Terminal-bus voltage components and signal values in
+       *                  Esdc1aExternalVariables order.
        * @param[out] f Residuals in Esdc1aInternalVariables order.
        * @return Zero on success.
        */
@@ -536,8 +560,7 @@ namespace GridKit
       Esdc1a<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y,
           const ScalarT* yp,
-          const ScalarT* wb,
-          const ScalarT* ws,
+          const ScalarT* y_ext,
           ScalarT*       f)
       {
         const auto EFDP = static_cast<size_t>(Esdc1aInternalVariables::EFDP);
@@ -552,10 +575,12 @@ namespace GridKit
         const auto VFE  = static_cast<size_t>(Esdc1aInternalVariables::VFE);
         const auto EFD  = static_cast<size_t>(Esdc1aInternalVariables::EFD);
 
-        const auto OMEGA = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
-        const auto VREF  = static_cast<size_t>(Esdc1aExternalVariables::VREF);
-        const auto VS    = static_cast<size_t>(Esdc1aExternalVariables::VS);
-        const auto VUEL  = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
+        const auto VR_EXT = static_cast<size_t>(Esdc1aExternalVariables::VR);
+        const auto VI_EXT = static_cast<size_t>(Esdc1aExternalVariables::VI);
+        const auto OMEGA  = static_cast<size_t>(Esdc1aExternalVariables::OMEGA);
+        const auto VREF   = static_cast<size_t>(Esdc1aExternalVariables::VREF);
+        const auto VS     = static_cast<size_t>(Esdc1aExternalVariables::VS);
+        const auto VUEL   = static_cast<size_t>(Esdc1aExternalVariables::VUEL);
 
         const ScalarT efdp = y[EFDP];
         const ScalarT vc   = y[VC];
@@ -575,12 +600,13 @@ namespace GridKit
         const ScalarT vf_dot   = yp[VF];
         const ScalarT xll_dot  = yp[XLL];
 
-        const ScalarT omega = ws[OMEGA];
-        const ScalarT vref  = ws[VREF];
-        const ScalarT vs    = ws[VS];
-        const ScalarT vuel  = ws[VUEL];
+        const ScalarT omega = y_ext[OMEGA];
+        const ScalarT vref  = y_ext[VREF];
+        const ScalarT vs    = y_ext[VS];
+        const ScalarT vuel  = y_ext[VUEL];
 
-        const ScalarT ec                = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
+        const ScalarT ec = std::sqrt(
+            y_ext[VR_EXT] * y_ext[VR_EXT] + y_ext[VI_EXT] * y_ext[VI_EXT]);
         const ScalarT ev_target         = vref + vs + uel_on_ * vuel - vc - vf;
         const ScalarT vfe_target        = Ke_eff_ * efdp + se;
         const ScalarT efdp_rate         = (vr - vfe) / Te_;

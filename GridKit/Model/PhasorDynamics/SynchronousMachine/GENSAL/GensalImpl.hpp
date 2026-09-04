@@ -212,15 +212,11 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Resize bus data
-      wb_.resize(2);
-      h_.resize(2);
-
-      // Resize signal variable data
-      ws_.resize(2);
-      ws_indices_.resize(2);
-      ws_indices_[0] = INVALID_INDEX<IdxT>;
-      ws_indices_[1] = INVALID_INDEX<IdxT>;
+      // Resize coupling data
+      this->allocateExternalVectors(static_cast<IdxT>(GensalExternalVariables::MAXIMUM));
+      f_ext_.resize(2);
+      f_ext_.setToZero();
+      residual_indices_ext_.assign(2, INVALID_INDEX<IdxT>);
 
       // Set output signals
       if (signals_.template isAssigned<GensalInternalVariables::OMEGA>())
@@ -379,8 +375,7 @@ namespace GridKit
     __attribute__((always_inline)) inline int Gensal<scalar_type, index_type>::evaluateInternalResidual(
         const ScalarT* y,
         const ScalarT* yp,
-        const ScalarT* wb,
-        const ScalarT* ws,
+        const ScalarT* y_ext,
         ScalarT*       f)
     {
       /* Read variables */
@@ -407,12 +402,12 @@ namespace GridKit
       ScalarT psiqpp_dot = yp[4];
 
       // Set coupling variable aliases
-      ScalarT vr = wb[0];
-      ScalarT vi = wb[1];
+      ScalarT vr = y_ext[0];
+      ScalarT vi = y_ext[1];
 
       // Set signal variable aliases
-      ScalarT pmech = toMachineBase(ws[0]);
-      ScalarT efd   = ws[1];
+      ScalarT pmech = toMachineBase(y_ext[2]);
+      ScalarT efd   = y_ext[3];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
@@ -438,22 +433,103 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus residual
+     * @brief External residual
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Gensal<scalar_type, index_type>::evaluateBusResidual(
+    __attribute__((always_inline)) inline int Gensal<scalar_type, index_type>::evaluateExternalResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+        [[maybe_unused]] const ScalarT* y_ext,
+        ScalarT*                        f_ext)
     {
       ScalarT ir = y[12];
       ScalarT ii = y[13];
 
       // Convert current injection to system base for the network.
-      h[0] = toSystemBase(ir);
-      h[1] = toSystemBase(ii);
+      f_ext[0] = toSystemBase(ir);
+      f_ext[1] = toSystemBase(ii);
+
+      return 0;
+    }
+
+    /**
+     * @brief Gather external variables and index maps.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    void Gensal<scalar_type, index_type>::gatherExternalVariables()
+    {
+      auto* y_ext = y_ext_.getData();
+
+      // Bus voltages
+      y_ext[0] = Vr();
+      y_ext[1] = Vi();
+      if (bus_->size() > 0)
+      {
+        variable_indices_ext_[0] = bus_->getVariableIndex(0);
+        variable_indices_ext_[1] = bus_->getVariableIndex(1);
+        residual_indices_ext_[0] = bus_->getResidualIndex(0);
+        residual_indices_ext_[1] = bus_->getResidualIndex(1);
+      }
+
+      // Mechanical Power
+      y_ext[2] = pmech_set_;
+      if (signals_.template isAttached<GensalExternalVariables::PM>())
+      {
+        y_ext[2]                 = signals_.template readExternalVariable<GensalExternalVariables::PM>();
+        variable_indices_ext_[2] = signals_.template readExternalVariableIndex<GensalExternalVariables::PM>();
+      }
+
+      // Exciter Efield
+      y_ext[3] = efd_set_;
+      if (signals_.template isAttached<GensalExternalVariables::EFD>())
+      {
+        y_ext[3]                 = signals_.template readExternalVariable<GensalExternalVariables::EFD>();
+        variable_indices_ext_[3] = signals_.template readExternalVariableIndex<GensalExternalVariables::EFD>();
+      }
+    }
+
+    /**
+     * \brief Internal residual for the generator model.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int Gensal<scalar_type, index_type>::evaluateInternalResidual()
+    {
+      gatherExternalVariables();
+
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      auto*       f  = f_.getData();
+      evaluateInternalResidual(y, yp, y_ext_.getData(), f);
+      f_.setDataUpdated();
+
+      return 0;
+    }
+
+    /**
+     * \brief External residual contributions to the bus.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int Gensal<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      auto* y_ext = y_ext_.getData();
+      auto* f_ext = f_ext_.getData();
+
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      evaluateExternalResidual(y, yp, y_ext, f_ext);
+
+      // Gensal contribution to bus algebraic equations
+      Ir() += f_ext[0];
+      Ii() += f_ext[1];
+
+      if (bus_->size() > 0)
+      {
+        bus_->getResidual().setDataUpdated();
+      }
 
       return 0;
     }
@@ -465,48 +541,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Gensal<scalar_type, index_type>::evaluateResidual()
     {
-      auto* ws = ws_.getData();
-
-      // Mechanical Power
-      ws[0] = pmech_set_;
-      if (signals_.template isAttached<GensalExternalVariables::PM>())
-      {
-        ws[0]          = signals_.template readExternalVariable<GensalExternalVariables::PM>();
-        ws_indices_[0] = signals_.template readExternalVariableIndex<GensalExternalVariables::PM>();
-      }
-
-      // Exciter Efield
-      ws[1] = efd_set_;
-      if (signals_.template isAttached<GensalExternalVariables::EFD>())
-      {
-        ws[1]          = signals_.template readExternalVariable<GensalExternalVariables::EFD>();
-        ws_indices_[1] = signals_.template readExternalVariableIndex<GensalExternalVariables::EFD>();
-      }
-
-      // Bus voltages
-      auto* wb = wb_.getData();
-      wb[0]    = Vr();
-      wb[1]    = Vi();
-
-      // Residual evaluation
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      auto*       f  = f_.getData();
-      auto*       h  = h_.getData();
-      evaluateInternalResidual(y, yp, wb, ws, f);
-      evaluateBusResidual(y, yp, wb, h);
-
-      // Gensal contribution to bus algebraic equations
-      Ir() += h[0];
-      Ii() += h[1];
-
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
-      f_.setDataUpdated();
-
-      return 0;
+      evaluateInternalResidual();
+      return evaluateExternalResidual();
     }
 
     template <typename scalar_type, typename index_type>

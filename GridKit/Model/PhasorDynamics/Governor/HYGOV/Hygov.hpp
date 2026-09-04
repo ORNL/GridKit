@@ -76,10 +76,9 @@ namespace GridKit
         using Component<scalar_type, index_type>::tag_;
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
-        using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::ws_;
-        using Component<scalar_type, index_type>::ws_indices_;
+        using Component<scalar_type, index_type>::variable_indices_ext_;
         using Component<scalar_type, index_type>::y_;
+        using Component<scalar_type, index_type>::y_ext_;
         using Component<scalar_type, index_type>::yp_;
 
       public:
@@ -102,6 +101,7 @@ namespace GridKit
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
+        int evaluateInternalResidual() override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
@@ -119,11 +119,11 @@ namespace GridKit
         __attribute__((always_inline)) inline int evaluateInternalResidual(
             const ScalarT* y,
             const ScalarT* yp,
-            const ScalarT* wb,
-            const ScalarT* ws,
+            const ScalarT* y_ext,
             ScalarT*       f);
 
       private:
+        void gatherExternalVariables();
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();

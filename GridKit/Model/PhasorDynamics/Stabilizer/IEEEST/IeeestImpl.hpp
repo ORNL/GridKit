@@ -172,10 +172,7 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        ws_.resize(1);
-        ws_.setToZero();
-        ws_indices_.resize(1);
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
+        this->allocateExternalVectors(static_cast<IdxT>(IeeestExternalVariables::MAXIMUM));
 
         if (signals_.template isAssigned<IeeestInternalVariables::VSS>())
         {
@@ -228,8 +225,9 @@ namespace GridKit
         const ScalarT u =
             signals_.template readExternalVariable<IeeestExternalVariables::U>();
 
-        auto* y  = y_.getData();
-        auto* yp = yp_.getData();
+        auto* y     = y_.getData();
+        auto* yp    = yp_.getData();
+        auto* y_ext = y_ext_.getData();
 
         for (IdxT i = 0; i < size_; ++i)
         {
@@ -237,8 +235,8 @@ namespace GridKit
           yp[static_cast<size_t>(i)] = 0.0;
         }
 
-        ws_.getData()[0] = u;
-        ws_indices_[0] =
+        y_ext[0] = u;
+        variable_indices_ext_[0] =
             signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
 
         y[0] = use_notch_ * u;
@@ -299,11 +297,10 @@ namespace GridKit
 
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int Ieeest<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT*                  y,
-          const ScalarT*                  yp,
-          [[maybe_unused]] const ScalarT* wb,
-          const ScalarT*                  ws,
-          ScalarT*                        f)
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* y_ext,
+          ScalarT*       f)
       {
         ScalarT x1  = y[0];
         ScalarT x2  = y[1];
@@ -326,7 +323,7 @@ namespace GridKit
         ScalarT x6_dot = yp[5];
         ScalarT x7_dot = yp[6];
 
-        ScalarT u = ws[0];
+        ScalarT u = y_ext[0];
 
         const ScalarT x2_rhs = (use_4th_order_ + use_3rd_order_) * x3
                                + use_2nd_order_ * (-a0_ * x1 - a1_ * x2 + u) * safe_inv_a2_;
@@ -348,24 +345,41 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Gather external variables and index maps.
+       *
+       */
       template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::evaluateResidual()
+      void Ieeest<scalar_type, index_type>::gatherExternalVariables()
       {
-        auto* ws = ws_.getData();
+        auto* y_ext = y_ext_.getData();
 
         if (signals_.template isAttached<IeeestExternalVariables::U>())
         {
-          ws[0]          = signals_.template readExternalVariable<IeeestExternalVariables::U>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
+          y_ext[0]                 = signals_.template readExternalVariable<IeeestExternalVariables::U>();
+          variable_indices_ext_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
         }
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Ieeest<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        gatherExternalVariables();
 
         const auto* y  = y_.getData();
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, nullptr, ws, f);
+        evaluateInternalResidual(y, yp, y_ext_.getData(), f);
         f_.setDataUpdated();
 
         return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Ieeest<scalar_type, index_type>::evaluateResidual()
+      {
+        evaluateInternalResidual();
+        return this->evaluateExternalResidual();
       }
 
       template <typename scalar_type, typename index_type>

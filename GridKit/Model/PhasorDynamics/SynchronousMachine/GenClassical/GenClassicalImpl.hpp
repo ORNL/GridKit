@@ -196,8 +196,10 @@ namespace GridKit
       }
 
       // Resize coupling data
-      wb_.resize(2);
-      h_.resize(2);
+      this->allocateExternalVectors(static_cast<IdxT>(GenClassicalExternalVariables::MAXIMUM));
+      f_ext_.resize(2);
+      f_ext_.setToZero();
+      residual_indices_ext_.assign(2, INVALID_INDEX<IdxT>);
 
       allocated_ = true;
       return 0;
@@ -283,7 +285,7 @@ namespace GridKit
     __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateInternalResidual(
         const ScalarT* y,
         const ScalarT* yp,
-        const ScalarT* wb,
+        const ScalarT* y_ext,
         ScalarT*       f)
     {
       // Set variable aliases for better readability.
@@ -300,8 +302,8 @@ namespace GridKit
       const ScalarT omega_dot = yp[1];
 
       // Set coupling variable aliases
-      const ScalarT vr = wb[0];
-      const ScalarT vi = wb[1];
+      const ScalarT vr = y_ext[0];
+      const ScalarT vi = y_ext[1];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
@@ -319,20 +321,83 @@ namespace GridKit
     }
 
     /**
-     * @brief Bus residual
+     * @brief External residual
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateBusResidual(
+    __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateExternalResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+        [[maybe_unused]] const ScalarT* y_ext,
+        ScalarT*                        f_ext)
     {
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];
-      h[0]             = toSystemBase(ir);
-      h[1]             = toSystemBase(ii);
+      f_ext[0]         = toSystemBase(ir);
+      f_ext[1]         = toSystemBase(ii);
+
+      return 0;
+    }
+
+    /**
+     * @brief Gather external variables and index maps.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    void GenClassical<scalar_type, index_type>::gatherExternalVariables()
+    {
+      auto* y_ext = y_ext_.getData();
+
+      y_ext[0] = Vr();
+      y_ext[1] = Vi();
+      if (bus_->size() > 0)
+      {
+        variable_indices_ext_[0] = bus_->getVariableIndex(0);
+        variable_indices_ext_[1] = bus_->getVariableIndex(1);
+        residual_indices_ext_[0] = bus_->getResidualIndex(0);
+        residual_indices_ext_[1] = bus_->getResidualIndex(1);
+      }
+    }
+
+    /**
+     * \brief Internal residual for the generator model.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::evaluateInternalResidual()
+    {
+      gatherExternalVariables();
+
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      auto*       f  = f_.getData();
+      evaluateInternalResidual(y, yp, y_ext_.getData(), f);
+      f_.setDataUpdated();
+
+      return 0;
+    }
+
+    /**
+     * \brief External residual contributions to the bus.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::evaluateExternalResidual()
+    {
+      auto* y_ext = y_ext_.getData();
+      auto* f_ext = f_ext_.getData();
+
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      evaluateExternalResidual(y, yp, y_ext, f_ext);
+
+      Ir() += f_ext[0];
+      Ii() += f_ext[1];
+
+      if (bus_->size() > 0)
+      {
+        bus_->getResidual().setDataUpdated();
+      }
 
       return 0;
     }
@@ -344,27 +409,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::evaluateResidual()
     {
-      auto* wb = wb_.getData();
-      wb[0]    = Vr();
-      wb[1]    = Vi();
-
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      auto*       f  = f_.getData();
-      auto*       h  = h_.getData();
-      evaluateInternalResidual(y, yp, wb, f);
-      evaluateBusResidual(y, yp, wb, h);
-
-      Ir() += h[0];
-      Ii() += h[1];
-
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
-      f_.setDataUpdated();
-
-      return 0;
+      evaluateInternalResidual();
+      return evaluateExternalResidual();
     }
 
     template <typename scalar_type, typename index_type>
