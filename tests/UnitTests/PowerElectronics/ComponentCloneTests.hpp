@@ -10,131 +10,6 @@
 
 namespace GridKit
 {
-  template <typename ComponentT, typename ScalarT, typename IdxT>
-  bool verifyComponentClone(ComponentT& component)
-  {
-    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
-
-    bool success = true;
-
-    auto* clone = dynamic_cast<ComponentT*>(component.clone());
-
-    if (clone == nullptr)
-    {
-      return false;
-    }
-
-    /**************************************************************************
-     * Verify the Clone Initially Matches the Original
-     **************************************************************************/
-
-    success &= clone != &component;
-    success &= clone->size() == component.size();
-    success &= clone->nnz() == component.nnz();
-    success &= clone->getInternalSize() == component.getInternalSize();
-    success &= clone->getExternSize() == component.getExternSize();
-    success &= clone->getExternIndices() == component.getExternIndices();
-    success &= clone->getIDcomponent() == component.getIDcomponent();
-
-    /**************************************************************************
-     * Verify Connection Independence
-     **************************************************************************/
-
-    for (IdxT i = 0; i < component.size(); ++i)
-    {
-      const IdxT connection = component.getNodeConnection(i);
-
-      success &= clone->getNodeConnection(i) == connection;
-
-      clone->setConnectionNodes(i, connection + 1);
-
-      success &= component.getNodeConnection(i) == connection;
-      success &= clone->getNodeConnection(i) == connection + 1;
-
-      clone->setConnectionNodes(i, connection);
-    }
-
-    /**************************************************************************
-     * Verify State Independence
-     **************************************************************************/
-
-    auto checkVectorIndependence = [&success](auto& original, auto& copy)
-    {
-      success &= original.getSize() == copy.getSize();
-
-      if (original.getSize() == 0)
-      {
-        return;
-      }
-
-      auto* original_data = original.getData();
-      auto* copy_data     = copy.getData();
-
-      success &= original_data != copy_data;
-
-      const auto original_value = original_data[0];
-
-      copy_data[0] = original_value + 1.0;
-
-      success &= original_data[0] == original_value;
-      success &= copy_data[0] == original_value + 1.0;
-
-      copy_data[0] = original_value;
-    };
-
-    checkVectorIndependence(component.y(), clone->y());
-    checkVectorIndependence(component.yp(), clone->yp());
-    checkVectorIndependence(component.getResidual(), clone->getResidual());
-    checkVectorIndependence(component.absoluteTolerance(), clone->absoluteTolerance());
-    checkVectorIndependence(component.param(), clone->param());
-
-    /**************************************************************************
-     * Verify Jacobian Independence
-     **************************************************************************/
-
-    if (component.nnz() > 0)
-    {
-      auto* original_rows   = component.jacobianCooRows();
-      auto* original_cols   = component.jacobianCooCols();
-      auto* original_values = component.jacobianCooValues();
-
-      auto* clone_rows   = clone->jacobianCooRows();
-      auto* clone_cols   = clone->jacobianCooCols();
-      auto* clone_values = clone->jacobianCooValues();
-
-      success &= clone_rows != original_rows;
-      success &= clone_cols != original_cols;
-      success &= clone_values != original_values;
-
-      for (IdxT i = 0; i < component.nnz(); ++i)
-      {
-        success &= clone_rows[i] == original_rows[i];
-        success &= clone_cols[i] == original_cols[i];
-        success &= clone_values[i] == original_values[i];
-      }
-
-      const IdxT  original_row   = original_rows[0];
-      const IdxT  original_col   = original_cols[0];
-      const RealT original_value = original_values[0];
-
-      clone_rows[0]   = original_row + 1;
-      clone_cols[0]   = original_col + 1;
-      clone_values[0] = original_value + 1.0;
-
-      success &= original_rows[0] == original_row;
-      success &= original_cols[0] == original_col;
-      success &= original_values[0] == original_value;
-
-      clone_rows[0]   = original_row;
-      clone_cols[0]   = original_col;
-      clone_values[0] = original_value;
-    }
-
-    delete clone;
-
-    return success;
-  }
-
   namespace Testing
   {
     template <typename ScalarT, typename IdxT>
@@ -214,7 +89,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        success *= verifyComponentClone<Generator, ScalarT, IdxT>(*generator_);
+        success *= verifyComponentClone<Generator>(*generator_);
 
         return success.report(__func__);
       }
@@ -223,7 +98,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        success *= verifyComponentClone<Line, ScalarT, IdxT>(*line_);
+        success *= verifyComponentClone<Line>(*line_);
 
         return success.report(__func__);
       }
@@ -232,7 +107,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        success *= verifyComponentClone<Load, ScalarT, IdxT>(*load_);
+        success *= verifyComponentClone<Load>(*load_);
 
         return success.report(__func__);
       }
@@ -241,12 +116,137 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        success *= verifyComponentClone<BusDQ, ScalarT, IdxT>(*bus_dq_);
+        success *= verifyComponentClone<BusDQ>(*bus_dq_);
 
         return success.report(__func__);
       }
 
     private:
+      template <typename ComponentT>
+      bool verifyComponentClone(ComponentT& component)
+      {
+        using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+
+        bool success = true;
+
+        auto* clone = dynamic_cast<ComponentT*>(component.clone());
+
+        if (clone == nullptr)
+        {
+          return false;
+        }
+
+        /**************************************************************************
+         * Verify the Clone Initially Matches the Original
+         **************************************************************************/
+
+        success &= clone != &component;
+        success &= clone->size() == component.size();
+        success &= clone->nnz() == component.nnz();
+        success &= clone->getInternalSize() == component.getInternalSize();
+        success &= clone->getExternSize() == component.getExternSize();
+        success &= clone->getExternIndices() == component.getExternIndices();
+        success &= clone->getIDcomponent() == component.getIDcomponent();
+
+        /**************************************************************************
+         * Verify Connection Independence
+         **************************************************************************/
+
+        for (IdxT i = 0; i < component.size(); ++i)
+        {
+          const IdxT connection = component.getNodeConnection(i);
+
+          success &= clone->getNodeConnection(i) == connection;
+
+          clone->setConnectionNodes(i, connection + 1);
+
+          success &= component.getNodeConnection(i) == connection;
+          success &= clone->getNodeConnection(i) == connection + 1;
+
+          clone->setConnectionNodes(i, connection);
+        }
+
+        /**************************************************************************
+         * Verify State Independence
+         **************************************************************************/
+
+        auto checkVectorIndependence = [&success](auto& original, auto& copy)
+        {
+          success &= original.getSize() == copy.getSize();
+
+          if (original.getSize() == 0)
+          {
+            return;
+          }
+
+          auto* original_data = original.getData();
+          auto* copy_data     = copy.getData();
+
+          success &= original_data != copy_data;
+
+          const auto original_value = original_data[0];
+
+          copy_data[0] = original_value + 1.0;
+
+          success &= original_data[0] == original_value;
+          success &= copy_data[0] == original_value + 1.0;
+
+          copy_data[0] = original_value;
+        };
+
+        checkVectorIndependence(component.y(), clone->y());
+        checkVectorIndependence(component.yp(), clone->yp());
+        checkVectorIndependence(component.getResidual(), clone->getResidual());
+        checkVectorIndependence(component.absoluteTolerance(), clone->absoluteTolerance());
+        checkVectorIndependence(component.param(), clone->param());
+
+        /**************************************************************************
+         * Verify Jacobian Independence
+         **************************************************************************/
+
+        if (component.nnz() > 0)
+        {
+          auto* original_rows   = component.jacobianCooRows();
+          auto* original_cols   = component.jacobianCooCols();
+          auto* original_values = component.jacobianCooValues();
+
+          auto* clone_rows   = clone->jacobianCooRows();
+          auto* clone_cols   = clone->jacobianCooCols();
+          auto* clone_values = clone->jacobianCooValues();
+
+          success &= clone_rows != original_rows;
+          success &= clone_cols != original_cols;
+          success &= clone_values != original_values;
+
+          for (IdxT i = 0; i < component.nnz(); ++i)
+          {
+            success &= clone_rows[i] == original_rows[i];
+            success &= clone_cols[i] == original_cols[i];
+            success &= clone_values[i] == original_values[i];
+          }
+
+          const IdxT  original_row   = original_rows[0];
+          const IdxT  original_col   = original_cols[0];
+          const RealT original_value = original_values[0];
+
+          clone_rows[0]   = original_row + 1;
+          clone_cols[0]   = original_col + 1;
+          clone_values[0] = original_value + 1.0;
+
+          success &= original_rows[0] == original_row;
+          success &= original_cols[0] == original_col;
+          success &= original_values[0] == original_value;
+
+          clone_rows[0]   = original_row;
+          clone_cols[0]   = original_col;
+          clone_values[0] = original_value;
+        }
+
+        delete clone;
+
+        return success;
+      }
+
       SignalNode signal_;
 
       Bus bus1_;
