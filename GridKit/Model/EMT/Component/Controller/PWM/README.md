@@ -7,7 +7,7 @@ DAE variables or residual rows.
 
 ![PWM model switching signal](../../../../../../docs/Figures/EMT/Controller/PWM/diagram.png)
 
-Figure 1: Centered PWM switching signal for $M=0.8$, $f_{\mathrm{m}}=60\,\mathrm{Hz}$, and $f_{\mathrm{c}}=900\,\mathrm{Hz}$ at $\mu=240$ and $\mu=1$
+Figure 1: Centered PWM switching signal for $M=0.8$, $f_{\mathrm{m}}=60\,\mathrm{Hz}$, and $f_{\mathrm{c}}=900\,\mathrm{Hz}$ at $\mu^{-1}=0.005\,\mathrm{ms}$ and $\mu^{-1}=1\,\mathrm{ms}$
 
 ## Model Parameters
 
