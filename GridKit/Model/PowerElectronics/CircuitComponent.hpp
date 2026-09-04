@@ -5,6 +5,7 @@
 #include <cassert>
 #include <memory>
 #include <set>
+#include <stdexcept>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -27,6 +28,31 @@ namespace GridKit
 
     CircuitComponent() = default;
 
+    /**
+     * @brief Constructs an independent copy of a circuit component.
+     *
+     * Copies the component metadata, local vector data, connection-node mapping,
+     * and COO Jacobian storage. Dynamically allocated component-owned data is
+     * deep-copied so that the new component does not share ownership of this
+     * storage with @p other.
+     *
+     * Pointers to state, state-derivative, and residual storage supplied by a
+     * parent system are intentionally not copied. The internal pointers
+     * (`y_int_`, `yp_int_`, and `f_int_`) are initialized to `nullptr`, and the
+     * external variable pointers (`y_ext_`, `yp_ext_`, and `f_ext_`) are allocated
+     * but initialized to `nullptr`. The copied component must therefore be
+     * connected to the appropriate parent-system storage before it is evaluated.
+     *
+     * Local vectors, including the state, state derivative, residual, tolerances,
+     * quadrature data, adjoint data, and parameter vectors, retain the values of
+     * the original component.
+     *
+     * @param other Component to copy.
+     *
+     * @note Copying a component reproduces its component-owned data and structural
+     *       information, but does not preserve its connections to parent-system
+     *       state or residual storage.
+     */
     CircuitComponent(const CircuitComponent& other)
       : n_extern_(other.n_extern_),
         n_intern_(other.n_intern_),
@@ -158,7 +184,7 @@ namespace GridKit
      */
     virtual CircuitComponent<ScalarT, IdxT>* clone() const
     {
-      return nullptr;
+      throw std::runtime_error("clone() is not supported for this component.");
     }
 
     /**
