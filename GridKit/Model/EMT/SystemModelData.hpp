@@ -10,6 +10,7 @@
 #include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1Data.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedData.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZData.hpp>
+#include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSourceData.hpp>
 #include <GridKit/Model/EMT/Component/Source/Machine/MachineData.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceData.hpp>
 #include <GridKit/Model/EMT/Component/Switch/SwitchData.hpp>
@@ -28,8 +29,11 @@ namespace GridKit
     template <typename real_type = double, typename index_type = size_t>
     struct SystemModelData
     {
-      using RealT              = real_type;
-      using IdxT               = index_type;
+      using RealT = real_type;
+      using IdxT  = index_type;
+
+      using DependentVoltageSourceDataT = DependentVoltageSourceData<RealT, IdxT>;
+
       using BusDataT           = BusData<RealT, IdxT>;
       using LineLumpedDataT    = LineLumpedData<RealT, IdxT>;
       using LoadZDataT         = LoadZData<RealT, IdxT>;
@@ -66,6 +70,8 @@ namespace GridKit
 
       /// Additional comments about the case being described by this model
       std::string case_comments;
+
+      std::vector<DependentVoltageSourceDataT> dependent_voltage_source; ///< Dependent voltage sources
 
       std::vector<BusDataT>           bus;            ///< Buses within the model
       std::vector<VoltageSourceDataT> voltage_source; ///< Voltage sources within the model
