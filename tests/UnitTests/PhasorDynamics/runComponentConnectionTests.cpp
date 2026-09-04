@@ -11,6 +11,7 @@ int main()
   result += test.genrouEsdc1a();
   result += test.genrouHygov();
   result += test.regcaRepca();
+  result += test.ieeestIeeet1();
   result += gastpti.genrouGastPti();
   result += gastpti.gensalGastPti();
   result += test.regcaReecb();
