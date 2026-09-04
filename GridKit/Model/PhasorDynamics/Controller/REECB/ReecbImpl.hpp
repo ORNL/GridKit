@@ -20,7 +20,9 @@
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -169,29 +171,20 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::verify() const
       {
-        int ret = static_cast<int>(parameter_error_count_);
+        Utilities::ConfigurationChecks checks("Reecb");
 
-        auto check = [&](bool condition, const char* message)
-        {
-          if (!condition)
-          {
-            Log::error() << "Reecb: " << message << '\n';
-            ret += 1;
-          }
-        };
-
-        check(bus_ != nullptr, "terminal bus is required");
+        checks.check(bus_ != nullptr, "terminal bus is required");
 
         const RealT component_power_base = componentPowerBase();
         const bool  valid_component_base = std::isfinite(component_power_base) && component_power_base > ZERO<RealT>;
         const bool  valid_system_base    = std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>;
-        check(valid_component_base, "component power base must be finite and positive");
-        check(valid_system_base, "system power base must be finite and positive");
+        checks.check(valid_component_base, "component power base must be finite and positive");
+        checks.check(valid_system_base, "system power base must be finite and positive");
         if (valid_component_base && valid_system_base)
         {
           const RealT system_to_component = va_system_base_ / component_power_base;
           const RealT component_to_system = component_power_base / va_system_base_;
-          check(
+          checks.check(
               std::isfinite(system_to_component)
                   && system_to_component > ZERO<RealT>
                   && std::isfinite(component_to_system)
@@ -199,87 +192,78 @@ namespace GridKit
               "system/component power-base conversion ratios must be finite and positive");
         }
 
-        check(std::isfinite(Trv_), "Trv must be finite");
-        check(std::isfinite(Tp_), "Tp must be finite");
-        check(std::isfinite(Vref0_), "Vref0 must be finite");
+        checks.check(std::isfinite(Trv_), "Trv must be finite");
+        checks.check(std::isfinite(Tp_), "Tp must be finite");
+        checks.check(std::isfinite(Vref0_), "Vref0 must be finite");
 
         const bool finite_voltage_thresholds = std::isfinite(Vdip_) && std::isfinite(Vup_);
-        check(finite_voltage_thresholds, "Vdip and Vup must be finite");
+        checks.check(finite_voltage_thresholds, "Vdip and Vup must be finite");
         if (finite_voltage_thresholds)
         {
-          check(Vdip_ < Vup_, "Vdip must be less than Vup");
+          checks.check(Vdip_ < Vup_, "Vdip must be less than Vup");
         }
 
         const bool finite_voltage_deadband = std::isfinite(dbd1_) && std::isfinite(dbd2_);
-        check(finite_voltage_deadband, "dbd1 and dbd2 must be finite");
+        checks.check(finite_voltage_deadband, "dbd1 and dbd2 must be finite");
         if (finite_voltage_deadband)
         {
-          check(dbd1_ <= ZERO<RealT> && ZERO<RealT> <= dbd2_, "dbd1 <= 0 <= dbd2 is required");
+          checks.check(dbd1_ <= ZERO<RealT> && ZERO<RealT> <= dbd2_, "dbd1 <= 0 <= dbd2 is required");
         }
 
-        check(std::isfinite(kqv_) && kqv_ >= ZERO<RealT>, "kqv must be finite and non-negative");
+        checks.check(std::isfinite(kqv_) && kqv_ >= ZERO<RealT>, "kqv must be finite and non-negative");
 
         const bool finite_injection_limits = std::isfinite(Iql1_) && std::isfinite(Iqh1_);
-        check(finite_injection_limits, "Iql1 and Iqh1 must be finite");
+        checks.check(finite_injection_limits, "Iql1 and Iqh1 must be finite");
         if (finite_injection_limits)
         {
-          check(Iql1_ <= Iqh1_, "Iql1 must be less than or equal to Iqh1");
+          checks.check(Iql1_ <= Iqh1_, "Iql1 must be less than or equal to Iqh1");
         }
 
         const bool finite_reactive_limits = std::isfinite(Qmin_) && std::isfinite(Qmax_);
-        check(finite_reactive_limits, "Qmin and Qmax must be finite");
+        checks.check(finite_reactive_limits, "Qmin and Qmax must be finite");
         if (finite_reactive_limits)
         {
-          check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
+          checks.check(Qmin_ <= Qmax_, "Qmin must be less than or equal to Qmax");
         }
 
-        check(std::isfinite(Kqp_) && Kqp_ >= ZERO<RealT>, "Kqp must be finite and non-negative");
-        check(std::isfinite(Kqi_) && Kqi_ >= ZERO<RealT>, "Kqi must be finite and non-negative");
+        checks.check(std::isfinite(Kqp_) && Kqp_ >= ZERO<RealT>, "Kqp must be finite and non-negative");
+        checks.check(std::isfinite(Kqi_) && Kqi_ >= ZERO<RealT>, "Kqi must be finite and non-negative");
 
         const bool finite_voltage_limits = std::isfinite(Vmin_) && std::isfinite(Vmax_);
-        check(finite_voltage_limits, "Vmin and Vmax must be finite");
+        checks.check(finite_voltage_limits, "Vmin and Vmax must be finite");
         if (finite_voltage_limits)
         {
-          check(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax");
+          checks.check(Vmin_ <= Vmax_, "Vmin must be less than or equal to Vmax");
         }
 
-        check(std::isfinite(Kvp_) && Kvp_ >= ZERO<RealT>, "Kvp must be finite and non-negative");
-        check(std::isfinite(Kvi_) && Kvi_ >= ZERO<RealT>, "Kvi must be finite and non-negative");
-        check(std::isfinite(Tiq_), "Tiq must be finite");
-        check(std::isfinite(Tpord_), "Tpord must be finite");
+        checks.check(std::isfinite(Kvp_) && Kvp_ >= ZERO<RealT>, "Kvp must be finite and non-negative");
+        checks.check(std::isfinite(Kvi_) && Kvi_ >= ZERO<RealT>, "Kvi must be finite and non-negative");
+        checks.check(std::isfinite(Tiq_), "Tiq must be finite");
+        checks.check(std::isfinite(Tpord_), "Tpord must be finite");
 
         const bool finite_ramp_limits = std::isfinite(dPmin_) && std::isfinite(dPmax_);
-        check(finite_ramp_limits, "dPmin and dPmax must be finite");
+        checks.check(finite_ramp_limits, "dPmin and dPmax must be finite");
         if (finite_ramp_limits)
         {
-          check(dPmin_ < ZERO<RealT> && ZERO<RealT> < dPmax_, "dPmin < 0 < dPmax is required");
+          checks.check(dPmin_ < ZERO<RealT> && ZERO<RealT> < dPmax_, "dPmin < 0 < dPmax is required");
         }
 
         const bool finite_active_limits = std::isfinite(Pmin_) && std::isfinite(Pmax_);
-        check(finite_active_limits, "Pmin and Pmax must be finite");
+        checks.check(finite_active_limits, "Pmin and Pmax must be finite");
         if (finite_active_limits)
         {
-          check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
+          checks.check(Pmin_ <= Pmax_, "Pmin must be less than or equal to Pmax");
         }
 
-        check(std::isfinite(Imax_) && Imax_ > ZERO<RealT>, "Imax must be finite and positive");
+        checks.check(std::isfinite(Imax_) && Imax_ > ZERO<RealT>, "Imax must be finite and positive");
 
-        auto check_optional_signal = [&]<ReecbExternalVariables variable>(const char* name)
-        {
-          if (signals_.template isAttached<variable>() && !signals_.template isLinked<variable>())
-          {
-            Log::error() << "Reecb: " << name << " signal attached with no linked source\n";
-            ret += 1;
-          }
-        };
+        signals_.template checkOptional<ReecbExternalVariables::PE>(checks, "pe");
+        signals_.template checkOptional<ReecbExternalVariables::QGEN>(checks, "qgen");
+        signals_.template checkOptional<ReecbExternalVariables::QEXT>(checks, "qext");
+        signals_.template checkOptional<ReecbExternalVariables::PFAREF>(checks, "pfaref");
+        signals_.template checkOptional<ReecbExternalVariables::PREF>(checks, "pref");
 
-        check_optional_signal.template operator()<ReecbExternalVariables::PE>("pe");
-        check_optional_signal.template operator()<ReecbExternalVariables::QGEN>("qgen");
-        check_optional_signal.template operator()<ReecbExternalVariables::QEXT>("qext");
-        check_optional_signal.template operator()<ReecbExternalVariables::PFAREF>("pfaref");
-        check_optional_signal.template operator()<ReecbExternalVariables::PREF>("pref");
-
-        return ret;
+        return static_cast<int>(parameter_error_count_) + checks.errorCount();
       }
 
       /**
@@ -1252,80 +1236,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Load one real-valued parameter
-       *
-       * Real and integer serialized values are accepted. Any other stored type
-       * records a loading error while preserving the existing value.
-       *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored parameter value.
-       * @param[in] name Serialized parameter name for diagnostics.
-       */
-      template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::loadRealParameter(
-          const ModelDataT& data,
-          ReecbParameters   parameter,
-          RealT&            target,
-          const char*       name)
-      {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* real_value = std::get_if<RealT>(&value))
-        {
-          target = *real_value;
-        }
-        else if (const auto* index_value = std::get_if<IdxT>(&value))
-        {
-          target = static_cast<RealT>(*index_value);
-        }
-        else
-        {
-          Log::error() << "Reecb: parameter '" << name << "' must be numeric\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
-       * @brief Load one optional Boolean parameter
-       *
-       * Any non-Boolean stored type records a loading error while preserving
-       * the existing default.
-       *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored Boolean value.
-       * @param[in] name Serialized parameter name for diagnostics.
-       */
-      template <typename scalar_type, typename index_type>
-      void Reecb<scalar_type, index_type>::loadBooleanParameter(
-          const ModelDataT& data,
-          ReecbParameters   parameter,
-          bool&             target,
-          const char*       name)
-      {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* bool_value = std::get_if<bool>(&value))
-        {
-          target = *bool_value;
-        }
-        else
-        {
-          Log::error() << "Reecb: parameter '" << name << "' must be boolean\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
        * @brief Validate and floor one explicit controller lag
        *
        * Nonfinite and negative values record errors before replacement so
@@ -1376,42 +1286,43 @@ namespace GridKit
 
         parameter_error_count_ = 0;
         mva_given_             = data.parameters.contains(Params::mva);
-        Vref0_given_           = false;
+        Vref0_given_           = data.parameters.contains(Params::Vref0);
 
-        loadRealParameter(data, Params::mva, mva_base_, "mva");
-        loadBooleanParameter(data, Params::PfFlag, PfFlag_, "PfFlag");
-        loadBooleanParameter(data, Params::VFlag, VFlag_, "VFlag");
-        loadBooleanParameter(data, Params::QFlag, QFlag_, "QFlag");
-        loadBooleanParameter(data, Params::Pqflag, Pqflag_, "Pqflag");
-        loadRealParameter(data, Params::Trv, Trv_, "Trv");
-        loadRealParameter(data, Params::Tp, Tp_, "Tp");
-        if (data.parameters.contains(Params::Vref0))
-        {
-          loadRealParameter(data, Params::Vref0, Vref0_, "Vref0");
-          Vref0_given_ = true;
-        }
-        loadRealParameter(data, Params::Vdip, Vdip_, "Vdip");
-        loadRealParameter(data, Params::Vup, Vup_, "Vup");
-        loadRealParameter(data, Params::dbd1, dbd1_, "dbd1");
-        loadRealParameter(data, Params::dbd2, dbd2_, "dbd2");
-        loadRealParameter(data, Params::kqv, kqv_, "kqv");
-        loadRealParameter(data, Params::Iql1, Iql1_, "Iql1");
-        loadRealParameter(data, Params::Iqh1, Iqh1_, "Iqh1");
-        loadRealParameter(data, Params::Qmax, Qmax_, "Qmax");
-        loadRealParameter(data, Params::Qmin, Qmin_, "Qmin");
-        loadRealParameter(data, Params::Kqp, Kqp_, "Kqp");
-        loadRealParameter(data, Params::Kqi, Kqi_, "Kqi");
-        loadRealParameter(data, Params::Vmax, Vmax_, "Vmax");
-        loadRealParameter(data, Params::Vmin, Vmin_, "Vmin");
-        loadRealParameter(data, Params::Kvp, Kvp_, "Kvp");
-        loadRealParameter(data, Params::Kvi, Kvi_, "Kvi");
-        loadRealParameter(data, Params::Tiq, Tiq_, "Tiq");
-        loadRealParameter(data, Params::Tpord, Tpord_, "Tpord");
-        loadRealParameter(data, Params::dPmax, dPmax_, "dPmax");
-        loadRealParameter(data, Params::dPmin, dPmin_, "dPmin");
-        loadRealParameter(data, Params::Pmax, Pmax_, "Pmax");
-        loadRealParameter(data, Params::Pmin, Pmin_, "Pmin");
-        loadRealParameter(data, Params::Imax, Imax_, "Imax");
+        Utilities::ConfigurationChecks checks("Reecb");
+        Utilities::ParameterReader     reader(data, checks);
+
+        reader.loadReal(Params::mva, mva_base_);
+        reader.loadSwitch(Params::PfFlag, PfFlag_);
+        reader.loadSwitch(Params::VFlag, VFlag_);
+        reader.loadSwitch(Params::QFlag, QFlag_);
+        reader.loadSwitch(Params::Pqflag, Pqflag_);
+        reader.loadReal(Params::Trv, Trv_);
+        reader.loadReal(Params::Tp, Tp_);
+        reader.loadReal(Params::Vref0, Vref0_);
+        reader.loadReal(Params::Vdip, Vdip_);
+        reader.loadReal(Params::Vup, Vup_);
+        reader.loadReal(Params::dbd1, dbd1_);
+        reader.loadReal(Params::dbd2, dbd2_);
+        reader.loadReal(Params::kqv, kqv_);
+        reader.loadReal(Params::Iql1, Iql1_);
+        reader.loadReal(Params::Iqh1, Iqh1_);
+        reader.loadReal(Params::Qmax, Qmax_);
+        reader.loadReal(Params::Qmin, Qmin_);
+        reader.loadReal(Params::Kqp, Kqp_);
+        reader.loadReal(Params::Kqi, Kqi_);
+        reader.loadReal(Params::Vmax, Vmax_);
+        reader.loadReal(Params::Vmin, Vmin_);
+        reader.loadReal(Params::Kvp, Kvp_);
+        reader.loadReal(Params::Kvi, Kvi_);
+        reader.loadReal(Params::Tiq, Tiq_);
+        reader.loadReal(Params::Tpord, Tpord_);
+        reader.loadReal(Params::dPmax, dPmax_);
+        reader.loadReal(Params::dPmin, dPmin_);
+        reader.loadReal(Params::Pmax, Pmax_);
+        reader.loadReal(Params::Pmin, Pmin_);
+        reader.loadReal(Params::Imax, Imax_);
+
+        parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
         setDerivedParameters();
       }

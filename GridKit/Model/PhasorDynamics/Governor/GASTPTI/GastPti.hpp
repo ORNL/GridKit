@@ -109,10 +109,6 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        void loadRealParameter(const ModelDataT& data,
-                               GastPtiParameters parameter,
-                               RealT&            target,
-                               const char*       name);
         bool floorTimeConstant(RealT& value, const char* name);
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();

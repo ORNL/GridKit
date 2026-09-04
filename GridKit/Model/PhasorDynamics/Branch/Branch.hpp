@@ -131,9 +131,6 @@ namespace GridKit
       void setDerivedParams();
       void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
       void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
-      bool readRealParameter(const ModelDataT&               data,
-                             typename ModelDataT::Parameters parameter,
-                             RealT&                          target);
 
       static __attribute__((always_inline)) inline void addAdmittanceContribution(const RealT   G,
                                                                                   const RealT   B,

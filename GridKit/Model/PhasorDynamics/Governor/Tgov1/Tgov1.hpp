@@ -134,6 +134,9 @@ namespace GridKit
         // Input States (which can be parameters)
         ScalarT pref_set_{0};
 
+        /// Count of parameter-loading errors reported through verify()
+        IdxT parameter_error_count_{0};
+
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;
 

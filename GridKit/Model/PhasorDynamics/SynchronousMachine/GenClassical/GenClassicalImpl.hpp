@@ -15,6 +15,8 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -74,40 +76,18 @@ namespace GridKit
     {
       using Parameter = typename ModelDataT::Parameters;
       using Buses     = typename ModelDataT::Buses;
-      if (data.parameters.contains(Parameter::p0))
-      {
-        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
-      }
 
-      if (data.parameters.contains(Parameter::q0))
-      {
-        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
-      }
+      Utilities::ConfigurationChecks checks("GenClassical");
+      Utilities::ParameterReader     reader(data, checks);
+      reader.loadReal(Parameter::p0, p0_);
+      reader.loadReal(Parameter::q0, q0_);
+      reader.loadReal(Parameter::H, H_);
+      reader.loadReal(Parameter::D, D_);
+      reader.loadReal(Parameter::Ra, Ra_);
+      reader.loadReal(Parameter::Xdp, Xdp_);
+      reader.loadReal(Parameter::mva, mva_base_);
 
-      if (data.parameters.contains(Parameter::H))
-      {
-        H_ = std::get<RealT>(data.parameters.at(Parameter::H));
-      }
-
-      if (data.parameters.contains(Parameter::D))
-      {
-        D_ = std::get<RealT>(data.parameters.at(Parameter::D));
-      }
-
-      if (data.parameters.contains(Parameter::Ra))
-      {
-        Ra_ = std::get<RealT>(data.parameters.at(Parameter::Ra));
-      }
-
-      if (data.parameters.contains(Parameter::Xdp))
-      {
-        Xdp_ = std::get<RealT>(data.parameters.at(Parameter::Xdp));
-      }
-
-      if (data.parameters.contains(Parameter::mva))
-      {
-        mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
-      }
+      parameter_error_count_ = static_cast<IdxT>(checks.errorCount());
 
       if (data.buses.contains(Buses::bus))
       {

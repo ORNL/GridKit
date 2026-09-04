@@ -13,7 +13,9 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/ConfigurationChecks.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
 {
@@ -95,62 +97,24 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::verify() const
       {
-        int ret = missing_param_count_;
+        Utilities::ConfigurationChecks checks("SexsPti");
 
-        if (bus_ == nullptr)
-        {
-          Log::error() << "SexsPti: bus pointer is null\n";
-          ret += 1;
-        }
-        if (Ta_ < 0.0)
-        {
-          Log::error() << "SexsPti: Ta must be non-negative\n";
-          ret += 1;
-        }
-        if (Tb_ <= 0.0)
-        {
-          Log::error() << "SexsPti: Tb must be positive\n";
-          ret += 1;
-        }
-        if (Te_ <= 0.0)
-        {
-          Log::error() << "SexsPti: Te must be positive\n";
-          ret += 1;
-        }
-        if (K_ <= 0.0)
-        {
-          Log::error() << "SexsPti: K must be positive\n";
-          ret += 1;
-        }
-        if (Efdmin_ >= Efdmax_)
-        {
-          Log::error() << "SexsPti: Efdmin must be less than Efdmax\n";
-          ret += 1;
-        }
+        checks.check(bus_ != nullptr, "bus pointer is null");
+        checks.check(Ta_ >= 0.0, "Ta must be non-negative");
+        checks.check(Tb_ > 0.0, "Tb must be positive");
+        checks.check(Te_ > 0.0, "Te must be positive");
+        checks.check(K_ > 0.0, "K must be positive");
+        checks.check(Efdmin_ < Efdmax_, "Efdmin must be less than Efdmax");
 
-        if (!signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
-        {
-          Log::error() << "SexsPti: required EFD signal is not assigned\n";
-          ret += 1;
-        }
+        checks.check(signals_.template isAssigned<SexsPtiInternalVariables::EFD>(),
+                     "required EFD signal is not assigned");
 
-        auto check_attached_signal =
-            [&]<SexsPtiExternalVariables variable>(const char* name)
-        {
-          if (signals_.template isAttached<variable>()
-              && !signals_.template isLinked<variable>())
-          {
-            Log::error() << "SexsPti: " << name << " signal attached with no linked source\n";
-            ret += 1;
-          }
-        };
+        signals_.template checkOptional<SexsPtiExternalVariables::VREF>(checks, "vref");
+        signals_.template checkOptional<SexsPtiExternalVariables::VS>(checks, "vs");
+        signals_.template checkOptional<SexsPtiExternalVariables::VUEL>(checks, "vuel");
+        signals_.template checkOptional<SexsPtiExternalVariables::VOEL>(checks, "voel");
 
-        check_attached_signal.template operator()<SexsPtiExternalVariables::VREF>("vref");
-        check_attached_signal.template operator()<SexsPtiExternalVariables::VS>("vs");
-        check_attached_signal.template operator()<SexsPtiExternalVariables::VUEL>("vuel");
-        check_attached_signal.template operator()<SexsPtiExternalVariables::VOEL>("voel");
-
-        return ret;
+        return missing_param_count_ + checks.errorCount();
       }
 
       template <typename scalar_type, typename index_type>
@@ -166,18 +130,9 @@ namespace GridKit
         }
 
         // Setpoint members provide the defaults for unattached signals.
-        auto read_signal = [&]<SexsPtiExternalVariables variable>(const ScalarT& default_value) -> ScalarT
-        {
-          if (signals_.template isAttached<variable>())
-          {
-            return signals_.template readExternalVariable<variable>();
-          }
-          return default_value;
-        };
-
-        const ScalarT vs   = read_signal.template operator()<SexsPtiExternalVariables::VS>(vs_set_);
-        const ScalarT vuel = read_signal.template operator()<SexsPtiExternalVariables::VUEL>(vuel_set_);
-        const ScalarT voel = read_signal.template operator()<SexsPtiExternalVariables::VOEL>(voel_set_);
+        const ScalarT vs   = signals_.template readOrDefault<SexsPtiExternalVariables::VS>(vs_set_);
+        const ScalarT vuel = signals_.template readOrDefault<SexsPtiExternalVariables::VUEL>(vuel_set_);
+        const ScalarT voel = signals_.template readOrDefault<SexsPtiExternalVariables::VOEL>(voel_set_);
 
         uel_on_ = ZERO<RealT>;
         if (signals_.template isAttached<SexsPtiExternalVariables::VUEL>())
@@ -292,22 +247,11 @@ namespace GridKit
         auto* ws = ws_.getData();
 
         // Attached signals are read live; unattached ones keep the latched value.
-        auto read_signal = [&]<SexsPtiExternalVariables variable>(const ScalarT& latched)
-        {
-          const auto index   = static_cast<size_t>(variable);
-          ws[index]          = latched;
-          ws_indices_[index] = INVALID_INDEX<IdxT>;
-          if (signals_.template isAttached<variable>())
-          {
-            ws[index]          = signals_.template readExternalVariable<variable>();
-            ws_indices_[index] = signals_.template readExternalVariableIndex<variable>();
-          }
-        };
-
-        read_signal.template operator()<SexsPtiExternalVariables::VREF>(vref_set_);
-        read_signal.template operator()<SexsPtiExternalVariables::VS>(vs_set_);
-        read_signal.template operator()<SexsPtiExternalVariables::VUEL>(vuel_set_);
-        read_signal.template operator()<SexsPtiExternalVariables::VOEL>(voel_set_);
+        auto* ws_indices = ws_indices_.data();
+        signals_.template refreshWorkspace<SexsPtiExternalVariables::VREF>(vref_set_, ws, ws_indices);
+        signals_.template refreshWorkspace<SexsPtiExternalVariables::VS>(vs_set_, ws, ws_indices);
+        signals_.template refreshWorkspace<SexsPtiExternalVariables::VUEL>(vuel_set_, ws, ws_indices);
+        signals_.template refreshWorkspace<SexsPtiExternalVariables::VOEL>(voel_set_, ws, ws_indices);
 
         auto* wb = wb_.getData();
         wb[0]    = bus_->Vr();
@@ -328,27 +272,17 @@ namespace GridKit
       {
         using Params = typename ModelDataT::Parameters;
 
-        missing_param_count_ = 0;
+        Utilities::ConfigurationChecks checks("SexsPti");
+        Utilities::ParameterReader     reader(data, checks);
 
-        auto load = [&](auto param, RealT& member, const char* name)
-        {
-          if (data.parameters.contains(param))
-          {
-            member = std::get<RealT>(data.parameters.at(param));
-          }
-          else
-          {
-            Log::error() << "SexsPti: missing required parameter '" << name << "'\n";
-            ++missing_param_count_;
-          }
-        };
+        reader.requireReal(Params::Ta, Ta_);
+        reader.requireReal(Params::Tb, Tb_);
+        reader.requireReal(Params::Te, Te_);
+        reader.requireReal(Params::K, K_);
+        reader.requireReal(Params::Efdmax, Efdmax_);
+        reader.requireReal(Params::Efdmin, Efdmin_);
 
-        load(Params::Ta, Ta_, "Ta");
-        load(Params::Tb, Tb_, "Tb");
-        load(Params::Te, Te_, "Te");
-        load(Params::K, K_, "K");
-        load(Params::Efdmax, Efdmax_, "Efdmax");
-        load(Params::Efdmin, Efdmin_, "Efdmin");
+        missing_param_count_ = checks.errorCount();
       }
 
       template <typename scalar_type, typename index_type>
