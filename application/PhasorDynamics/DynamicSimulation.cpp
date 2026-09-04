@@ -23,6 +23,8 @@ int main(int argc, const char* argv[])
   checkCommandLine(argc, "DynamicSimulation");
   auto study = parseStudyData(argv[1]);
 
+  configureCommonMath<real_type>(study);
+
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);
   sys.allocate();
