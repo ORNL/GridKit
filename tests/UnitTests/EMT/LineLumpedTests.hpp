@@ -12,7 +12,7 @@
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
-#include <GridKit/Model/EMT/Bus/Bus.hpp>
+#include <GridKit/Model/EMT/Component/Bus/Bus.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumped.hpp>
 #include <GridKit/Testing/Testing.hpp>
 

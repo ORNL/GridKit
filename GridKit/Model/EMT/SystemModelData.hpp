@@ -6,14 +6,14 @@
 #include <string>
 #include <vector>
 
-#include <GridKit/Model/EMT/Bus/BusData.hpp>
+#include <GridKit/Model/EMT/Component/Bus/BusData.hpp>
+#include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1Data.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedData.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZData.hpp>
-#include <GridKit/Model/EMT/Component/Machine/SynchronousMachine/SynchronousMachineData.hpp>
+#include <GridKit/Model/EMT/Component/Source/Machine/MachineData.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceData.hpp>
 #include <GridKit/Model/EMT/Component/Switch/SwitchData.hpp>
-#include <GridKit/Model/EMT/Governor/Tgov1/Tgov1Data.hpp>
-#include <GridKit/Model/EMT/SignalNode/SignalNodeData.hpp>
+#include <GridKit/Model/EMT/Signal/SignalData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
@@ -28,17 +28,17 @@ namespace GridKit
     template <typename real_type = double, typename index_type = size_t>
     struct SystemModelData
     {
-      using RealT                   = real_type;
-      using IdxT                    = index_type;
-      using BusDataT                = BusData<RealT, IdxT>;
-      using LineLumpedDataT         = LineLumpedData<RealT, IdxT>;
-      using LoadZDataT              = LoadZData<RealT, IdxT>;
-      using SynchronousMachineDataT = SynchronousMachineData<RealT, IdxT>;
-      using VoltageSourceDataT      = VoltageSourceData<RealT, IdxT>;
-      using SwitchDataT             = SwitchData<RealT, IdxT>;
-      using Tgov1DataT              = Governor::Tgov1Data<RealT, IdxT>;
-      using SignalDataT             = SignalNodeData<RealT, IdxT>;
-      using MonitorSinkSpec         = Model::VariableMonitorBase::SinkSpec;
+      using RealT              = real_type;
+      using IdxT               = index_type;
+      using BusDataT           = BusData<RealT, IdxT>;
+      using LineLumpedDataT    = LineLumpedData<RealT, IdxT>;
+      using LoadZDataT         = LoadZData<RealT, IdxT>;
+      using MachineDataT       = MachineData<RealT, IdxT>;
+      using VoltageSourceDataT = VoltageSourceData<RealT, IdxT>;
+      using SwitchDataT        = SwitchData<RealT, IdxT>;
+      using Tgov1DataT         = Controller::Tgov1Data<RealT, IdxT>;
+      using SignalDataT        = SignalData<RealT, IdxT>;
+      using MonitorSinkSpec    = Model::VariableMonitorBase::SinkSpec;
 
       /// The version of the EMT case format this system model was parsed from
       ///
@@ -67,14 +67,14 @@ namespace GridKit
       /// Additional comments about the case being described by this model
       std::string case_comments;
 
-      std::vector<BusDataT>                bus;                 ///< Buses within the model
-      std::vector<VoltageSourceDataT>      voltage_source;      ///< Voltage sources within the model
-      std::vector<SynchronousMachineDataT> synchronous_machine; ///< Synchronous machines within the model
-      std::vector<LineLumpedDataT>         line_lumped;         ///< Lumped lines within the model
-      std::vector<LoadZDataT>              loadz;               ///< LoadZ instances within the model
-      std::vector<SwitchDataT>             sw;                  ///< Switches within the model
-      std::vector<Tgov1DataT>              gov;                 ///< Governors within the model
-      std::vector<SignalDataT>             signal;              ///< Signal nodes
+      std::vector<BusDataT>           bus;            ///< Buses within the model
+      std::vector<VoltageSourceDataT> voltage_source; ///< Voltage sources within the model
+      std::vector<MachineDataT>       machine;        ///< Machines within the model
+      std::vector<LineLumpedDataT>    line_lumped;    ///< Lumped lines within the model
+      std::vector<LoadZDataT>         loadz;          ///< LoadZ instances within the model
+      std::vector<SwitchDataT>        sw;             ///< Switches within the model
+      std::vector<Tgov1DataT>         gov;            ///< Governors within the model
+      std::vector<SignalDataT>        signal;         ///< Signals
 
       /// Monitor sink specs
       std::vector<MonitorSinkSpec> monitor_sink;

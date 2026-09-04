@@ -5,9 +5,11 @@
 :titlesonly:
 :hidden:
 
+Bus <Bus/README>
+Controller <Controller/README>
+Converter <Converter/README>
 Line <Line/README>
 Load <Load/README>
-Machine <Machine/README>
 Source <Source/README>
 Switch <Switch/README>
 ```

@@ -49,10 +49,10 @@ namespace GridKit
         addBus(bus);
       }
 
-      // Add signal nodes
+      // Add signals
       for (const auto& signaldata : data.signal)
       {
-        SignalNode<ScalarT, IdxT>* signal = new SignalNode<ScalarT, IdxT>(signaldata);
+        Signal<ScalarT, IdxT>* signal = new Signal<ScalarT, IdxT>(signaldata);
         addSignal(signal);
       }
 
@@ -74,38 +74,38 @@ namespace GridKit
       }
 
       // Add synchronous machines
-      for (const auto& machinedata : data.synchronous_machine)
+      for (const auto& machinedata : data.machine)
       {
         IdxT bus_index = 0;
-        if (machinedata.buses.contains(SynchronousMachineBuses::bus))
+        if (machinedata.buses.contains(MachineBuses::bus))
         {
-          bus_index = machinedata.buses.at(SynchronousMachineBuses::bus);
+          bus_index = machinedata.buses.at(MachineBuses::bus);
         }
 
-        auto* machine = new SynchronousMachine<ScalarT, IdxT>(machinedata);
+        auto* machine = new Machine<ScalarT, IdxT>(machinedata);
 
-        constexpr auto VA = SynchronousMachineExternalVariables::VA;
+        constexpr auto VA = MachineExternalVariables::VA;
         machine->getSignals().template attachPort<VA>(&(getBus(bus_index)->voltagePort()));
 
-        if (machinedata.signal_outputs.contains(SynchronousMachineSignalOutputs::speed))
+        if (machinedata.signal_outputs.contains(MachineSignalOutputs::speed))
         {
-          IdxT           speed = machinedata.signal_outputs.at(SynchronousMachineSignalOutputs::speed);
-          constexpr auto OMEGA = SynchronousMachineInternalVariables::OMEGA;
-          machine->getSignals().template assignSignalNode<OMEGA>(getSignal(speed));
+          IdxT           speed = machinedata.signal_outputs.at(MachineSignalOutputs::speed);
+          constexpr auto OMEGA = MachineInternalVariables::OMEGA;
+          machine->getSignals().template assignSignal<OMEGA>(getSignal(speed));
         }
 
-        if (machinedata.signal_inputs.contains(SynchronousMachineSignalInputs::pm))
+        if (machinedata.signal_inputs.contains(MachineSignalInputs::pm))
         {
-          IdxT           pm = machinedata.signal_inputs.at(SynchronousMachineSignalInputs::pm);
-          constexpr auto PM = SynchronousMachineExternalVariables::PM;
-          machine->getSignals().template attachSignalNode<PM>(getSignal(pm));
+          IdxT           pm = machinedata.signal_inputs.at(MachineSignalInputs::pm);
+          constexpr auto PM = MachineExternalVariables::PM;
+          machine->getSignals().template attachSignal<PM>(getSignal(pm));
         }
 
-        if (machinedata.signal_inputs.contains(SynchronousMachineSignalInputs::efd))
+        if (machinedata.signal_inputs.contains(MachineSignalInputs::efd))
         {
-          IdxT           efd = machinedata.signal_inputs.at(SynchronousMachineSignalInputs::efd);
-          constexpr auto EFD = SynchronousMachineExternalVariables::EFD;
-          machine->getSignals().template attachSignalNode<EFD>(getSignal(efd));
+          IdxT           efd = machinedata.signal_inputs.at(MachineSignalInputs::efd);
+          constexpr auto EFD = MachineExternalVariables::EFD;
+          machine->getSignals().template attachSignal<EFD>(getSignal(efd));
         }
 
         addComponent(machine);
@@ -156,27 +156,27 @@ namespace GridKit
       // Add Tgov1 governors after the machines they read at initialization
       for (const auto& govdata : data.gov)
       {
-        auto* gov = new Governor::Tgov1<ScalarT, IdxT>(govdata);
+        auto* gov = new Controller::Tgov1<ScalarT, IdxT>(govdata);
 
-        if (govdata.signal_inputs.contains(Governor::Tgov1SignalInputs::speed))
+        if (govdata.signal_inputs.contains(Controller::Tgov1SignalInputs::speed))
         {
-          IdxT           speed = govdata.signal_inputs.at(Governor::Tgov1SignalInputs::speed);
-          constexpr auto OMEGA = Governor::Tgov1ExternalVariables::OMEGA;
-          gov->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
+          IdxT           speed = govdata.signal_inputs.at(Controller::Tgov1SignalInputs::speed);
+          constexpr auto OMEGA = Controller::Tgov1ExternalVariables::OMEGA;
+          gov->getSignals().template attachSignal<OMEGA>(getSignal(speed));
         }
 
-        if (govdata.signal_inputs.contains(Governor::Tgov1SignalInputs::pref))
+        if (govdata.signal_inputs.contains(Controller::Tgov1SignalInputs::pref))
         {
-          IdxT           pref = govdata.signal_inputs.at(Governor::Tgov1SignalInputs::pref);
-          constexpr auto PREF = Governor::Tgov1ExternalVariables::PREF;
-          gov->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+          IdxT           pref = govdata.signal_inputs.at(Controller::Tgov1SignalInputs::pref);
+          constexpr auto PREF = Controller::Tgov1ExternalVariables::PREF;
+          gov->getSignals().template attachSignal<PREF>(getSignal(pref));
         }
 
-        if (govdata.signal_outputs.contains(Governor::Tgov1SignalOutputs::pmech))
+        if (govdata.signal_outputs.contains(Controller::Tgov1SignalOutputs::pmech))
         {
-          IdxT           pmech = govdata.signal_outputs.at(Governor::Tgov1SignalOutputs::pmech);
-          constexpr auto PM    = Governor::Tgov1InternalVariables::PM;
-          gov->getSignals().template assignSignalNode<PM>(getSignal(pmech));
+          IdxT           pmech = govdata.signal_outputs.at(Controller::Tgov1SignalOutputs::pmech);
+          constexpr auto PM    = Controller::Tgov1InternalVariables::PM;
+          gov->getSignals().template assignSignal<PM>(getSignal(pmech));
         }
 
         addComponent(gov);

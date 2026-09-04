@@ -105,7 +105,7 @@ namespace GridKit
     }
 
     /*!
-     * @brief allocate method resizes local storage and registers coupling nodes.
+     * @brief allocate method resizes local storage and registers coupling signals.
      */
     template <typename scalar_type, typename index_type>
     int VoltageSource<scalar_type, index_type>::allocate()
@@ -128,9 +128,9 @@ namespace GridKit
       if (yfit_.has_value())
       {
         yfit_->attachInput(&u_port_);
-        yfit_->attachOutput(signals_.template getAttachedSignalNode<VoltageSourceExternalVariables::VA>(),
-                            signals_.template getAttachedSignalNode<VoltageSourceExternalVariables::VB>(),
-                            signals_.template getAttachedSignalNode<VoltageSourceExternalVariables::VC>());
+        yfit_->attachOutput(signals_.template getAttachedSignal<VoltageSourceExternalVariables::VA>(),
+                            signals_.template getAttachedSignal<VoltageSourceExternalVariables::VB>(),
+                            signals_.template getAttachedSignal<VoltageSourceExternalVariables::VC>());
         this->allocateSubmodels();
       }
 
@@ -143,10 +143,10 @@ namespace GridKit
 
       // Resize coupling data
       this->allocateExternalVectors(static_cast<IdxT>(VoltageSourceExternalVariables::MAXIMUM), 3);
-      signals_.registerExternalVariableNodes(*this);
-      this->setExternalResidualNode(0, signals_.template getAttachedSignalNode<VoltageSourceExternalVariables::VA>());
-      this->setExternalResidualNode(1, signals_.template getAttachedSignalNode<VoltageSourceExternalVariables::VB>());
-      this->setExternalResidualNode(2, signals_.template getAttachedSignalNode<VoltageSourceExternalVariables::VC>());
+      signals_.registerExternalVariableSignals(*this);
+      this->setExternalResidualSignal(0, signals_.template getAttachedSignal<VoltageSourceExternalVariables::VA>());
+      this->setExternalResidualSignal(1, signals_.template getAttachedSignal<VoltageSourceExternalVariables::VB>());
+      this->setExternalResidualSignal(2, signals_.template getAttachedSignal<VoltageSourceExternalVariables::VC>());
 
       allocated_ = true;
       return 0;
