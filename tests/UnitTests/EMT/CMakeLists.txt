@@ -16,6 +16,16 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTEnzymeSpikeTest COMMAND test_emt_enzyme_spike)
 
+add_executable(test_emt_dependent_voltage_source runDependentVoltageSourceTests.cpp)
+target_link_libraries(
+  test_emt_dependent_voltage_source
+  GridKit::definitions
+  GridKit::emt_systemmodel
+  GridKit::emt_dependent_voltage_source_dependency_tracking
+  GridKit::emt_bus_dependency_tracking
+  GridKit::testing)
+add_test(NAME EMTDependentVoltageSourceTest COMMAND test_emt_dependent_voltage_source)
+
 add_executable(test_emt_line_lumped runLineLumpedTests.cpp)
 target_link_libraries(
   test_emt_line_lumped
@@ -60,7 +70,8 @@ endif()
 add_test(NAME EMTSystemTest COMMAND test_emt_system)
 
 install(
-  TARGETS test_emt_enzyme_spike
+  TARGETS test_emt_dependent_voltage_source
+          test_emt_enzyme_spike
           test_emt_line_lumped
           test_emt_machine
           test_emt_system

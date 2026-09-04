@@ -5,6 +5,7 @@
 :titlesonly:
 :hidden:
 
+DependentVoltageSource <DependentVoltageSource/README>
 Machine <Machine/README>
 VoltageSource <VoltageSource/README>
 ```
