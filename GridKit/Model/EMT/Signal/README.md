@@ -17,4 +17,4 @@ component that owns the phase variables.
 
 Symbol | Description
 -------|------------
-`signal_id` | Unique identifier for the signal
+`id` | Unique string identifier for the signal

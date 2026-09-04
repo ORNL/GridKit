@@ -32,4 +32,4 @@ integrator at the event time.
  --------------------|-------------------------------------------------------
   `time`             | A floating point value for time event occurs
   `type`             | Event type (one of { "switch_open", "switch_close" })
-  `element_id`       | An integer value referencing the element associated with the event (e.g., switch id)
+  `element_id`       | String ID of the `Switch` component associated with the event

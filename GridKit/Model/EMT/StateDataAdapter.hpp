@@ -16,10 +16,9 @@ namespace GridKit
     /**
      * @brief Apply a parsed operating point to parsed system model data.
      *
-     * Buses are matched by `bus_id_<number>` and devices by their
-     * disambiguation string. Records without a match and fields without a
-     * value are ignored, so partial states are legal. See `STATE.md` for the
-     * state format.
+     * Buses and other devices are matched by their component string ID.
+     * Records without a match and fields without a value are ignored, so
+     * partial states are legal. See `STATE.md` for the state format.
      */
     void applyState(SystemModelData<double, size_t>& model_data,
                     const Model::StateData&          state_data);

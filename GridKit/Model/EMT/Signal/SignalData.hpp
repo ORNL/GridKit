@@ -23,10 +23,7 @@ namespace GridKit
     template <typename real_type, typename index_type>
     struct SignalData
     {
-      using IdxT = index_type;
-
-      std::string name;         ///< A name given to this signal
-      IdxT        signal_id{0}; ///< The unique ID of the signal
+      std::string id; ///< Unique signal identifier within the system
     };
   } // namespace EMT
 } // namespace GridKit

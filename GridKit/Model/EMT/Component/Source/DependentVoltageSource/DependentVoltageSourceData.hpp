@@ -23,24 +23,18 @@ namespace GridKit
       Ls, ///< Series inductance matrix
     };
 
-    /// Buses for a dependent voltage source
-    enum class DependentVoltageSourceBuses : size_t
+    /// Inputs supported by a dependent voltage source
+    enum class DependentVoltageSourceInputs : size_t
     {
-      bus, ///< Unique ID of the bus to which the source is connected
+      bus, ///< Component ID of the connected bus
+      ea,  ///< Phase-a source-voltage signal ID
+      eb,  ///< Phase-b source-voltage signal ID
+      ec,  ///< Phase-c source-voltage signal ID
       SIZE
     };
 
-    /// Signal inputs supported for a dependent voltage source
-    enum class DependentVoltageSourceSignalInputs : size_t
-    {
-      ea, ///< Phase-a source voltage
-      eb, ///< Phase-b source voltage
-      ec, ///< Phase-c source voltage
-      SIZE
-    };
-
-    /// Signal outputs supported for a dependent voltage source
-    enum class DependentVoltageSourceSignalOutputs : size_t
+    /// Outputs supported by a dependent voltage source
+    enum class DependentVoltageSourceOutputs : size_t
     {
       SIZE
     };
@@ -68,17 +62,15 @@ namespace GridKit
     struct DependentVoltageSourceData : public ComponentData<real_type,
                                                              index_type,
                                                              DependentVoltageSourceParameters,
-                                                             DependentVoltageSourceBuses,
-                                                             DependentVoltageSourceSignalInputs,
-                                                             DependentVoltageSourceSignalOutputs,
+                                                             DependentVoltageSourceInputs,
+                                                             DependentVoltageSourceOutputs,
                                                              DependentVoltageSourceMonitorableVariables>
     {
       DependentVoltageSourceData() = default;
 
       using Parameters           = DependentVoltageSourceParameters;
-      using Buses                = DependentVoltageSourceBuses;
-      using SignalInputs         = DependentVoltageSourceSignalInputs;
-      using SignalOutputs        = DependentVoltageSourceSignalOutputs;
+      using Inputs               = DependentVoltageSourceInputs;
+      using Outputs              = DependentVoltageSourceOutputs;
       using MonitorableVariables = DependentVoltageSourceMonitorableVariables;
 
       /// Rational source admittance submodel, replacing the series matrices
