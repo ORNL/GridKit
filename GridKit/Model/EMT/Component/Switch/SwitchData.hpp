@@ -19,22 +19,16 @@ namespace GridKit
       open, ///< Ganged switch command, true is open and false is closed
     };
 
-    /// Buses for a switch
-    enum class SwitchBuses : size_t
+    /// Inputs supported by a switch
+    enum class SwitchInputs : size_t
     {
-      bus1, ///< Unique ID of the terminal 1 bus
-      bus2, ///< Unique ID of the terminal 2 bus
+      bus1, ///< Component ID of the terminal 1 bus
+      bus2, ///< Component ID of the terminal 2 bus
       SIZE
     };
 
-    /// Signal inputs supported for a switch
-    enum class SwitchSignalInputs : size_t
-    {
-      SIZE
-    };
-
-    /// Signal outputs supported for a switch
-    enum class SwitchSignalOutputs : size_t
+    /// Outputs supported by a switch
+    enum class SwitchOutputs : size_t
     {
       SIZE
     };
@@ -60,17 +54,15 @@ namespace GridKit
     struct SwitchData : public ComponentData<real_type,
                                              index_type,
                                              SwitchParameters,
-                                             SwitchBuses,
-                                             SwitchSignalInputs,
-                                             SwitchSignalOutputs,
+                                             SwitchInputs,
+                                             SwitchOutputs,
                                              SwitchMonitorableVariables>
     {
       SwitchData() = default;
 
       using Parameters           = SwitchParameters;
-      using Buses                = SwitchBuses;
-      using SignalInputs         = SwitchSignalInputs;
-      using SignalOutputs        = SwitchSignalOutputs;
+      using Inputs               = SwitchInputs;
+      using Outputs              = SwitchOutputs;
       using MonitorableVariables = SwitchMonitorableVariables;
     };
   } // namespace EMT

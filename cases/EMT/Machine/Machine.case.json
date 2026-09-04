@@ -10,39 +10,33 @@
             "format": "csv"
         }
     ],
-    "buses": [
-        {
-            "number": 1,
-            "class": "Bus",
-            "name": "Bus_1",
-            "mon": [
-                "va",
-                "vb",
-                "vc"
-            ]
-        },
-        {
-            "number": 2,
-            "class": "Bus",
-            "name": "Bus_2",
-            "mon": [
-                "va",
-                "vb",
-                "vc"
-            ]
-        }
-    ],
     "signals": [
         {
-            "name": "speed_1",
-            "signal_id": 1
+            "id": "speed_1"
         },
         {
-            "name": "pmech_1",
-            "signal_id": 2
+            "id": "pmech_1"
         }
     ],
     "devices": [
+        {
+            "class": "Bus",
+            "id": "bus_1",
+            "mon": [
+                "va",
+                "vb",
+                "vc"
+            ]
+        },
+        {
+            "class": "Bus",
+            "id": "bus_2",
+            "mon": [
+                "va",
+                "vb",
+                "vc"
+            ]
+        },
         {
             "class": "Machine",
             "id": "machine_1",
@@ -69,10 +63,12 @@
                 "S10": 0.1,
                 "S12": 0.5
             },
-            "ports": {
-                "bus": 1,
-                "speed": 1,
-                "pm": 2
+            "inputs": {
+                "bus": "bus_1",
+                "pm": "pmech_1"
+            },
+            "outputs": {
+                "speed": "speed_1"
             },
             "mon": [
                 "omega",
@@ -94,9 +90,11 @@
                 "Pvmin": 0.0,
                 "Dt": 0.0
             },
-            "ports": {
-                "speed": 1,
-                "pmech": 2
+            "inputs": {
+                "speed": "speed_1"
+            },
+            "outputs": {
+                "pmech": "pmech_1"
             }
         },
         {
@@ -180,9 +178,9 @@
                     ]
                 ]
             },
-            "ports": {
-                "bus1": 1,
-                "bus2": 2
+            "inputs": {
+                "bus1": "bus_1",
+                "bus2": "bus_2"
             },
             "mon": [
                 "i12a"
@@ -210,8 +208,8 @@
                     ]
                 ]
             },
-            "ports": {
-                "bus": 2
+            "inputs": {
+                "bus": "bus_2"
             }
         }
     ]

@@ -43,8 +43,8 @@ namespace GridKit
       double      time;
       /// Event type
       Type        type;
-      /// ID of element used in event (e.g., switch id)
-      std::size_t element_id;
+      /// String ID of the component used in the event
+      std::string element_id;
     };
 
     /**

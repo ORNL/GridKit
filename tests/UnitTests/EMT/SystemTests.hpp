@@ -50,10 +50,8 @@ namespace GridKit
             "case_description": "One bus with a voltage source and an impedance load",
             "case_comments": "Used by EMT SystemTests"
           },
-          "buses": [
-            { "number": 1, "class": "Bus", "name": "Bus_1" }
-          ],
           "devices": [
+            { "class": "Bus", "id": "bus_1" },
             {
               "class": "VoltageSource",
               "id": "source_1",
@@ -64,7 +62,7 @@ namespace GridKit
                 "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                 "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LoadZ",
@@ -73,7 +71,7 @@ namespace GridKit
                 "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
                 "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             }
           ]
         })";
@@ -90,11 +88,9 @@ namespace GridKit
             "case_description": "Voltage source, lumped line, and impedance load",
             "case_comments": "Used by EMT SystemTests"
           },
-          "buses": [
-            { "number": 1, "class": "Bus", "name": "Bus_1" },
-            { "number": 2, "class": "Bus", "name": "Bus_2" }
-          ],
           "devices": [
+            { "class": "Bus", "id": "bus_1" },
+            { "class": "Bus", "id": "bus_2" },
             {
               "class": "VoltageSource",
               "id": "source_1",
@@ -105,7 +101,7 @@ namespace GridKit
                 "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                 "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LineLumped",
@@ -120,7 +116,7 @@ namespace GridKit
                 "Gp": [[1.0e-4, 0.0, 0.0], [0.0, 1.0e-4, 0.0], [0.0, 0.0, 1.0e-4]],
                 "Cp": [[1.0e-5, 0.0, 0.0], [0.0, 1.0e-5, 0.0], [0.0, 0.0, 1.0e-5]]
               },
-              "ports": { "bus1": 1, "bus2": 2 }
+              "inputs": { "bus1": "bus_1", "bus2": "bus_2" }
             },
             {
               "class": "LoadZ",
@@ -129,7 +125,7 @@ namespace GridKit
                 "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
                 "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
               },
-              "ports": { "bus": 2 }
+              "inputs": { "bus": "bus_2" }
             }
           ]
         })";
@@ -145,11 +141,9 @@ namespace GridKit
             "case_description": "Voltage source energizing an impedance load through a switch",
             "case_comments": "Used by EMT SystemTests"
           },
-          "buses": [
-            { "number": 1, "class": "Bus", "name": "Bus_1" },
-            { "number": 2, "class": "Bus", "name": "Bus_2" }
-          ],
           "devices": [
+            { "class": "Bus", "id": "bus_1" },
+            { "class": "Bus", "id": "bus_2" },
             {
               "class": "VoltageSource",
               "id": "source_1",
@@ -160,13 +154,13 @@ namespace GridKit
                 "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                 "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "Switch",
               "id": "switch_1_2",
               "params": { "open": true },
-              "ports": { "bus1": 1, "bus2": 2 }
+              "inputs": { "bus1": "bus_1", "bus2": "bus_2" }
             },
             {
               "class": "LoadZ",
@@ -174,7 +168,7 @@ namespace GridKit
               "params": {
                 "R": [[100.0, 0.0, 0.0], [0.0, 100.0, 0.0], [0.0, 0.0, 100.0]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LoadZ",
@@ -182,7 +176,7 @@ namespace GridKit
               "params": {
                 "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]]
               },
-              "ports": { "bus": 2 }
+              "inputs": { "bus": "bus_2" }
             }
           ]
         })";
@@ -199,19 +193,16 @@ namespace GridKit
             "case_description": "Synchronous machine serving a resistive load",
             "case_comments": "Used by EMT SystemTests"
           },
-          "buses": [
+          "devices": [
             {
-              "number": 1,
               "class": "Bus",
-              "name": "Bus_1",
+              "id": "bus_1",
               "init": {
                 "va": 11267.65281680262,
                 "vb": -5633.82640840131,
                 "vc": -5633.82640840131
               }
-            }
-          ],
-          "devices": [
+            },
             {
               "class": "Machine",
               "id": "machine_1",
@@ -240,7 +231,7 @@ namespace GridKit
                 "p0": 50.0e6,
                 "q0": 0.0
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LoadZ",
@@ -248,7 +239,7 @@ namespace GridKit
               "params": {
                 "R": [[3.8088, 0.0, 0.0], [0.0, 3.8088, 0.0], [0.0, 0.0, 3.8088]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             }
           ]
         })";
@@ -265,23 +256,20 @@ namespace GridKit
             "case_description": "Synchronous machine with a TGOV1 governor serving a resistive load",
             "case_comments": "Used by EMT SystemTests"
           },
-          "buses": [
+          "signals": [
+            { "id": "speed_1" },
+            { "id": "pmech_1" }
+          ],
+          "devices": [
             {
-              "number": 1,
               "class": "Bus",
-              "name": "Bus_1",
+              "id": "bus_1",
               "init": {
                 "va": 11267.65281680262,
                 "vb": -5633.82640840131,
                 "vc": -5633.82640840131
               }
-            }
-          ],
-          "signals": [
-            { "name": "speed_1", "signal_id": 1 },
-            { "name": "pmech_1", "signal_id": 2 }
-          ],
-          "devices": [
+            },
             {
               "class": "Machine",
               "id": "machine_1",
@@ -310,7 +298,8 @@ namespace GridKit
                 "p0": 50.0e6,
                 "q0": 0.0
               },
-              "ports": { "bus": 1, "speed": 1, "pm": 2 }
+              "inputs": { "bus": "bus_1", "pm": "pmech_1" },
+              "outputs": { "speed": "speed_1" }
             },
             {
               "class": "Tgov1",
@@ -325,7 +314,8 @@ namespace GridKit
                 "Pvmin": 0.0,
                 "Dt": 0.0
               },
-              "ports": { "speed": 1, "pmech": 2 }
+              "inputs": { "speed": "speed_1" },
+              "outputs": { "pmech": "pmech_1" }
             },
             {
               "class": "LoadZ",
@@ -333,7 +323,7 @@ namespace GridKit
               "params": {
                 "R": [[3.8088, 0.0, 0.0], [0.0, 3.8088, 0.0], [0.0, 0.0, 3.8088]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             }
           ]
         })";
@@ -351,10 +341,8 @@ namespace GridKit
             "case_description": "Parallel R and L loads built from primitives",
             "case_comments": "Used by EMT SystemTests"
           },
-          "buses": [
-            { "number": 1, "class": "Bus", "name": "Bus_1" }
-          ],
           "devices": [
+            { "class": "Bus", "id": "bus_1" },
             {
               "class": "VoltageSource",
               "id": "source_1",
@@ -365,7 +353,7 @@ namespace GridKit
                 "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                 "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LoadZ",
@@ -373,7 +361,7 @@ namespace GridKit
               "params": {
                 "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LoadZ",
@@ -381,7 +369,7 @@ namespace GridKit
               "params": {
                 "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             }
           ]
         })";
@@ -395,10 +383,8 @@ namespace GridKit
             "case_description": "The parallel R and L branch as a rational impedance",
             "case_comments": "Used by EMT SystemTests"
           },
-          "buses": [
-            { "number": 1, "class": "Bus", "name": "Bus_1" }
-          ],
           "devices": [
+            { "class": "Bus", "id": "bus_1" },
             {
               "class": "VoltageSource",
               "id": "source_1",
@@ -409,13 +395,13 @@ namespace GridKit
                 "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                 "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LoadZ",
               "id": "load_rl",
               "params": {},
-              "ports": { "bus": 1 },
+              "inputs": { "bus": "bus_1" },
               "submodels": {
                 "Z": {
                   "D": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
@@ -440,11 +426,9 @@ namespace GridKit
             "case_description": "Matrix-parameter line with explicit series-RL shunt loads at each terminal",
             "case_comments": "Used by EMT SystemTests"
           },
-          "buses": [
-            { "number": 1, "class": "Bus", "name": "Bus_1" },
-            { "number": 2, "class": "Bus", "name": "Bus_2" }
-          ],
           "devices": [
+            { "class": "Bus", "id": "bus_1" },
+            { "class": "Bus", "id": "bus_2" },
             {
               "class": "VoltageSource",
               "id": "source_1",
@@ -455,7 +439,7 @@ namespace GridKit
                 "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                 "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LineLumped",
@@ -470,7 +454,7 @@ namespace GridKit
                 "Gp": [[1.0e-4, 0.0, 0.0], [0.0, 1.0e-4, 0.0], [0.0, 0.0, 1.0e-4]],
                 "Cp": [[1.0e-5, 0.0, 0.0], [0.0, 1.0e-5, 0.0], [0.0, 0.0, 1.0e-5]]
               },
-              "ports": { "bus1": 1, "bus2": 2 }
+              "inputs": { "bus1": "bus_1", "bus2": "bus_2" }
             },
             {
               "class": "LoadZ",
@@ -479,7 +463,7 @@ namespace GridKit
                 "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
                 "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
               },
-              "ports": { "bus": 2 }
+              "inputs": { "bus": "bus_2" }
             },
             {
               "class": "LoadZ",
@@ -488,7 +472,7 @@ namespace GridKit
                 "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
                 "L": [[0.1, 0.0, 0.0], [0.0, 0.1, 0.0], [0.0, 0.0, 0.1]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LoadZ",
@@ -497,7 +481,7 @@ namespace GridKit
                 "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
                 "L": [[0.1, 0.0, 0.0], [0.0, 0.1, 0.0], [0.0, 0.0, 0.1]]
               },
-              "ports": { "bus": 2 }
+              "inputs": { "bus": "bus_2" }
             }
           ]
         })";
@@ -511,11 +495,9 @@ namespace GridKit
             "case_description": "Line with rational series and shunt fits absorbing the terminal RL shunts",
             "case_comments": "Used by EMT SystemTests"
           },
-          "buses": [
-            { "number": 1, "class": "Bus", "name": "Bus_1" },
-            { "number": 2, "class": "Bus", "name": "Bus_2" }
-          ],
           "devices": [
+            { "class": "Bus", "id": "bus_1" },
+            { "class": "Bus", "id": "bus_2" },
             {
               "class": "VoltageSource",
               "id": "source_1",
@@ -526,7 +508,7 @@ namespace GridKit
                 "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                 "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LineLumped",
@@ -537,7 +519,7 @@ namespace GridKit
                 "conductors": [1, 2, 3],
                 "dx": 2.0
               },
-              "ports": { "bus1": 1, "bus2": 2 },
+              "inputs": { "bus1": "bus_1", "bus2": "bus_2" },
               "submodels": {
                 "Zp": {
                   "D": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
@@ -562,7 +544,7 @@ namespace GridKit
                 "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
                 "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
               },
-              "ports": { "bus": 2 }
+              "inputs": { "bus": "bus_2" }
             }
           ]
         })";
@@ -576,10 +558,8 @@ namespace GridKit
             "case_description": "The series R and L source branch as a rational admittance",
             "case_comments": "Used by EMT SystemTests"
           },
-          "buses": [
-            { "number": 1, "class": "Bus", "name": "Bus_1" }
-          ],
           "devices": [
+            { "class": "Bus", "id": "bus_1" },
             {
               "class": "VoltageSource",
               "id": "source_1",
@@ -588,7 +568,7 @@ namespace GridKit
                 "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
                 "omega": 376.99111843077515
               },
-              "ports": { "bus": 1 },
+              "inputs": { "bus": "bus_1" },
               "submodels": {
                 "Y": {
                   "poles": [[-100.0, 0.0]],
@@ -606,7 +586,7 @@ namespace GridKit
               "params": {
                 "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             },
             {
               "class": "LoadZ",
@@ -614,7 +594,7 @@ namespace GridKit
               "params": {
                 "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
               },
-              "ports": { "bus": 1 }
+              "inputs": { "bus": "bus_1" }
             }
           ]
         })";
@@ -635,8 +615,55 @@ namespace GridKit
         success *= (data.bus.size() == 1);
         success *= (data.voltage_source.size() == 1);
         success *= (data.loadz.size() == 1);
-        success *= (data.bus[0].bus_id == 1);
-        success *= (data.voltage_source[0].disambiguation_string == "source_1");
+        success *= (data.bus[0].id == "bus_1");
+        success *= (data.voltage_source[0].id == "source_1");
+        success *= (data.voltage_source[0].inputs.at(
+                        GridKit::EMT::VoltageSourceInputs::bus)
+                    == "bus_1");
+        success *= (data.loadz[0].id == "load_1");
+        success *= (data.loadz[0].inputs.at(GridKit::EMT::LoadZInputs::bus)
+                    == "bus_1");
+
+        std::istringstream governed_stream(machineGovernorCaseJson());
+        const auto         governed = GridKit::EMT::parseSystemModelData(governed_stream);
+
+        success *= (governed.signal.size() == 2);
+        success *= (governed.signal[0].id == "speed_1");
+        success *= (governed.signal[1].id == "pmech_1");
+        success *= (governed.machine.size() == 1);
+        success *= (governed.gov.size() == 1);
+        success *= (governed.machine[0].inputs.at(GridKit::EMT::MachineInputs::bus)
+                    == "bus_1");
+        success *= (governed.machine[0].inputs.at(GridKit::EMT::MachineInputs::pm)
+                    == "pmech_1");
+        success *= (governed.machine[0].outputs.at(GridKit::EMT::MachineOutputs::speed)
+                    == "speed_1");
+        success *= (governed.gov[0].inputs.at(
+                        GridKit::EMT::Controller::Tgov1Inputs::speed)
+                    == "speed_1");
+        success *= (governed.gov[0].outputs.at(
+                        GridKit::EMT::Controller::Tgov1Outputs::pmech)
+                    == "pmech_1");
+
+        try
+        {
+          std::istringstream duplicate_stream(R"({
+            "header": {
+              "case_name": "duplicate IDs",
+              "case_description": "Parser rejection coverage",
+              "case_comments": ""
+            },
+            "devices": [
+              { "class": "Bus", "id": "duplicate" },
+              { "class": "Bus", "id": "duplicate" }
+            ]
+          })");
+          (void) GridKit::EMT::parseSystemModelData(duplicate_stream);
+          success *= false;
+        }
+        catch (const std::runtime_error&)
+        {
+        }
 
         return success.report(__func__);
       }
@@ -845,6 +872,7 @@ namespace GridKit
         // Component order: bus 1, bus 2, source, load 1, load 2, switch
         auto* sw  = dynamic_cast<GridKit::EMT::Switch<ScalarT, IdxT>*>(sys.getComponent(5));
         success  *= (sw != nullptr);
+        success  *= (sw == sys.getSwitch("switch_1_2"));
         success  *= sw->isOpen();
 
         AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida(&sys);

@@ -20,9 +20,8 @@ namespace GridKit
       using BaseT = ComponentData<RealT,
                                   IdxT,
                                   DependentVoltageSourceParameters,
-                                  DependentVoltageSourceBuses,
-                                  DependentVoltageSourceSignalInputs,
-                                  DependentVoltageSourceSignalOutputs,
+                                  DependentVoltageSourceInputs,
+                                  DependentVoltageSourceOutputs,
                                   DependentVoltageSourceMonitorableVariables>;
       from_json(j, static_cast<BaseT&>(d));
 
