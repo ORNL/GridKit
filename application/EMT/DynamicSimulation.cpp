@@ -60,12 +60,15 @@ int main(int argc, const char* argv[])
   // Initilize simultation for first run
   auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
+  IdaStats  total_stats;
   ida.initializeSimulation(0.0);
   record_state(0.0);
   for (const auto& event : study.events)
   {
     // Run to event time
     ida.runSimulation(event.time, dt_monitor, record_state);
+    // IDAReInit resets the counters, so retain each completed segment.
+    total_stats += ida.getStats();
 
     // Set up run for event (to start at event time)
     switch (event.type)
@@ -90,6 +93,7 @@ int main(int argc, const char* argv[])
 
   // Run to final time
   ida.runSimulation(final_time, dt_monitor, record_state);
+  total_stats += ida.getStats();
 
   real_type stop = static_cast<real_type>(clock());
 
@@ -101,6 +105,13 @@ int main(int argc, const char* argv[])
 
   // Report run time
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+  std::cout << "IDA statistics: steps=" << total_stats.num_steps_
+            << ", residual_evals=" << total_stats.num_residual_evals_
+            << ", linear_setups=" << total_stats.num_linear_decompositions_
+            << ", error_test_fails=" << total_stats.num_error_test_fails_
+            << ", nonlinear_iters=" << total_stats.num_nonlinear_iters_
+            << ", nonlinear_convergence_fails=" << total_stats.num_nonlinear_convergence_fails_
+            << '\n';
 
   return status.get();
 }
