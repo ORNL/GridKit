@@ -21,6 +21,7 @@ add_subdirectory(TransmissionLine)
 add_subdirectory(MicrogridLoad)
 add_subdirectory(MicrogridLine)
 add_subdirectory(MicrogridBusDQ)
+add_subdirectory(PartitionInterface)
 
 install(
   FILES CircuitComponent.hpp
@@ -29,4 +30,5 @@ install(
         SystemModelPowerElectronics.hpp
         NodeBase.hpp
         ExternalConnection.hpp
+        SubsystemModel.hpp
   DESTINATION include/GridKit/Model/PowerElectronics)
