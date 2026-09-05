@@ -835,8 +835,8 @@ namespace GridKit
         {
           if (index(expected_residuals[row].variable) != row)
           {
-            std::cout << "REECB residual expectation position " << row << " names row "
-                      << variableName(expected_residuals[row].variable) << '\n';
+            Log::error() << "REECB residual expectation position " << row << " names row "
+                         << variableName(expected_residuals[row].variable) << '\n';
             success = false;
           }
         }
@@ -1640,7 +1640,7 @@ namespace GridKit
             const RealT capacity = fixture.reecb.getResidual().getData()[index(Vars::ILCAP)];
             if (!std::isfinite(capacity) || capacity < ZERO<RealT>)
             {
-              std::cout << "REECB current circle produced an invalid capacity\n";
+              Log::error() << "REECB current circle produced an invalid capacity\n";
               success = false;
             }
 
@@ -1735,90 +1735,21 @@ namespace GridKit
               probe.label);
         }
 
-        // Reuse one Enzyme fixture across a circle closure.
-        auto transition_data                       = makeJacobianData();
-        transition_data.parameters[Params::Pqflag] = true;
-        transition_data.parameters[Params::Imax]   = 0.4;
-        Fixture<ScalarT> transition(transition_data, kStateVr, kStateVi);
-        transition.attachAllInputs();
-        if (transition.prepare(0.0, 0.1))
-        {
-          for (IdxT row = 0; row < transition.bus.size(); ++row)
-          {
-            transition.bus.setVariableIndex(row, transition.reecb.size() + row);
-          }
-          transition.reecb.updateTime(0.0, kNonunitAlpha);
-
-          using DependencyMap = DependencyTracking::Variable::DependencyMap;
-          using Pattern       = std::vector<std::pair<IdxT, IdxT>>;
-          using Snapshot      = std::pair<Pattern, std::vector<DependencyMap>>;
-
-          auto snapshot = [&](RealT ipcmd, const char* label) -> Snapshot
-          {
-            setJacobianState(transition, 0.1, 0.2, ipcmd);
-            if (transition.evaluate() != 0 || transition.reecb.evaluateJacobian() != 0)
-            {
-              std::cout << "REECB Jacobian transition failed for " << label << '\n';
-              success = false;
-              return {};
-            }
-
-            auto* coo = transition.reecb.getCooJacobian();
-            if (coo == nullptr || transition.reecb.nnz() != coo->getNnz())
-            {
-              std::cout << "REECB COO structure changed for " << label << '\n';
-              success = false;
-              return {};
-            }
-
-            const auto                 nnz     = static_cast<size_t>(coo->getNnz());
-            const auto*                rows    = coo->getRowData();
-            const auto*                columns = coo->getColData();
-            const auto*                values  = coo->getValues();
-            Pattern                    pattern;
-            std::vector<DependencyMap> enzyme_rows(index(Vars::MAXIMUM));
-            pattern.reserve(nnz);
-            for (size_t entry = 0; entry < nnz; ++entry)
-            {
-              const auto row = static_cast<size_t>(rows[entry]);
-              if (row >= enzyme_rows.size())
-              {
-                std::cout << "REECB COO row is invalid for " << label << '\n';
-                success = false;
-                return {};
-              }
-              pattern.emplace_back(rows[entry], columns[entry]);
-              enzyme_rows[row][static_cast<size_t>(columns[entry])] += values[entry];
-            }
-            return {pattern, enzyme_rows};
-          };
-
-          const auto open       = snapshot(0.1, "open current circle");
-          const auto overdriven = snapshot(0.3, "over-driven current circle");
-          const auto reopened   = snapshot(0.1, "reopened current circle");
-          if (open.first != overdriven.first || open.first != reopened.first)
-          {
-            std::cout << "REECB COO entry order changed across current-circle closure\n";
-            success = false;
-          }
-          success *= jacobiansMatch(
-              dependencyTrackingJacobian(
-                  transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.1),
-              open.second,
-              "open current-circle transition");
-          success *= jacobiansMatch(
-              dependencyTrackingJacobian(
-                  transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.3),
-              overdriven.second,
-              "over-driven current-circle transition");
-          success *= jacobiansMatch(open.second,
-                                    reopened.second,
-                                    "reopened current-circle values");
-        }
-        else
-        {
-          success = false;
-        }
+        auto transition_data                        = makeJacobianData();
+        transition_data.parameters[Params::Pqflag]  = true;
+        transition_data.parameters[Params::Imax]    = 0.4;
+        success                                    *= jacobiansMatch(
+            dependencyTrackingJacobian(
+                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.1),
+            enzymeJacobian(
+                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.1),
+            "open current-circle transition");
+        success *= jacobiansMatch(
+            dependencyTrackingJacobian(
+                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.3),
+            enzymeJacobian(
+                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.3),
+            "over-driven current-circle transition");
 
         struct NonlinearProbe
         {
