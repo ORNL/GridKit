@@ -19,6 +19,7 @@ namespace GridKit
 
     // Available template instantiations
     // template class SystemModel<double, long int>;
+    template class Container<double, size_t>;
     template class SystemModel<double, size_t>;
 
   } // namespace EMT

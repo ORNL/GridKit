@@ -1,0 +1,8 @@
+{
+    "system_model_file": "GovernedMachine.case.json",
+    "dt_monitor": 0.0,
+    "tmax": 1.0,
+    "rel_tol": 1e-09,
+    "abs_tol": 1e-09,
+    "max_steps": 1000000
+}

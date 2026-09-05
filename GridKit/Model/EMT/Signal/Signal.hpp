@@ -49,6 +49,10 @@ namespace GridKit
                IdxT*    variable_index,
                IdxT*    residual_index);
 
+      /** Reserve this signal for one component output. */
+      void claimProducer();
+      bool hasProducer() const;
+
       bool linked() const;
       bool derivativeLinked() const;
       bool residualLinked() const;
@@ -82,6 +86,7 @@ namespace GridKit
       ScalarT*    derivative_{nullptr};
       ScalarT*    residual_{nullptr};
       std::string id_;
+      bool        producer_claimed_{false};
 
     protected:
       IdxT* variable_index_{nullptr};

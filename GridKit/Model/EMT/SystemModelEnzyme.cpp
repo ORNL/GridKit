@@ -13,11 +13,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     bool SystemModel<scalar_type, index_type>::hasJacobian()
     {
-      bool has_jacobian = true;
-      for (const auto& component : components_)
-      {
-        has_jacobian = has_jacobian && component->hasJacobian();
-      }
+      const bool has_jacobian = ContainerT::hasJacobian();
 
       if (!has_jacobian)
       {
@@ -31,6 +27,7 @@ namespace GridKit
 
     // Available template instantiations
     // template class SystemModel<double, long int>;
+    template class Container<double, size_t>;
     template class SystemModel<double, size_t>;
 
   } // namespace EMT
