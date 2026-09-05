@@ -139,3 +139,6 @@ None beyond the EMT initialization contract.
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `s` | [-] | Three-phase switching function | $\mathbf{s} \in [0,1]^3$
+
+In case JSON, `mon: ["s"]` expands to the scalar monitors `sa`, `sb`, `sc`.
+See [case connections](../../../INPUT_FORMAT.md#case-connections) for vector signal wiring.
