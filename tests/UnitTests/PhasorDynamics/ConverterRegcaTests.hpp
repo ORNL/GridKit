@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <numbers>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -37,6 +38,8 @@ namespace GridKit
 
       static constexpr ScalarT kTol =
           static_cast<ScalarT>(100.0) * std::numeric_limits<ScalarT>::epsilon();
+      static constexpr RealT kSmoothTol =
+          std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
 
       /// Construction, the monitor, and every verify() error class: missing
       /// and invalid parameters, a null bus, and an unlinked command port.
@@ -79,9 +82,15 @@ namespace GridKit
         success *= invalidParameterCase(bus, Params::VL1, 0.3);
         success *= invalidParameterCase(bus, Params::VA1, 0.3);
 
-        // Vhvmax must lie strictly above VA1: rejected at VA1 and just below.
+        // Vhvmax must lie strictly above VA1: reject equality and reversed ordering.
         success *= invalidParameterCase(bus, Params::Vhvmax, kVa1);
-        success *= invalidParameterCase(bus, Params::Vhvmax, kJustBelowVa1);
+        success *= invalidParameterCase(bus, Params::Vhvmax, HALF<RealT> * kVa1);
+
+        // Khv is optional, finite, and non-negative.
+        success *= invalidParameterCase(bus, Params::Khv, -0.1);
+        success *= invalidParameterCase(bus,
+                                        Params::Khv,
+                                        std::numeric_limits<RealT>::infinity());
 
         // A null bus and an attached command with no linked source count as
         // configuration errors on the same footing as bad parameters.
@@ -134,21 +143,19 @@ namespace GridKit
         success *= fixture.initialize();
         success *= (fixture.evaluate() == 0);
 
-        // Fixed answer key for Vr = 0.8, Vi = 0.6, P0 = 0.4, Q0 = -0.1, and
-        // a 50 MVA component base: IP = 2 P0 / VT and IQ = 2 Q0 / VT on the
-        // component base, with IR and II returned to the system base.
+        // P0/Q0 and branch currents remain on system base; current-command
+        // signals convert the 50 MVA component-base states back to system base.
         const auto* y  = fixture.regca.y().getData();
         success       *= scalarMatches(y[index(Vars::VM)], 1.0, "VM");
         success       *= scalarMatches(y[index(Vars::VT)], 1.0, "VT");
-        success       *= scalarMatches(y[index(Vars::IP)], 0.80000000000025173, "IP");
-        success       *= scalarMatches(y[index(Vars::IQ)], -0.2, "IQ");
+        success       *= scalarMatches(y[index(Vars::IQ)] - y[index(Vars::IQEXTRA)], -0.2, "net reactive current");
         success       *= scalarMatches(y[index(Vars::IR)], 0.26, "IR");
         success       *= scalarMatches(y[index(Vars::II)], 0.32, "II");
         success       *= scalarMatches(y[index(Vars::PBR)], 0.4, "PBR");
         success       *= scalarMatches(y[index(Vars::QBR)], -0.1, "QBR");
 
-        success *= scalarMatches(fixture.ipcmd, 0.40000000000012587, "published ipcmd");
-        success *= scalarMatches(fixture.iqcmd, -0.1, "published iqcmd");
+        success *= scalarMatches(fixture.ipcmd, 0.5 * y[index(Vars::IP)], "published ipcmd base conversion");
+        success *= scalarMatches(fixture.iqcmd, 0.5 * y[index(Vars::IQ)], "published iqcmd base conversion");
         success *= scalarMatches(pbranch_node.read(), 0.4, "pbranch signal");
 
         // The accumulated bus injection is the system-base branch current.
@@ -165,34 +172,32 @@ namespace GridKit
 
         Fixture<ScalarT> latched(latch_data);
         success *= latched.initialize();
+        success *= (latched.evaluate() == 0);
+        success *= allResidualsZero(latched.regca);
 
         auto* latched_y  = latched.regca.y().getData();
-        success         *= scalarMatches(latched_y[index(Vars::IP)],
-                                 0.60000000000018872,
-                                 "initialized IP");
-        success         *= scalarMatches(latched_y[index(Vars::IQ)], 0.2, "initialized IQ");
+        success         *= scalarMatches(latched_y[index(Vars::PBR)], 0.6, "latched PBR");
+        success         *= scalarMatches(latched_y[index(Vars::QBR)], 0.2, "latched QBR");
 
-        latched_y[index(Vars::IP)] = 0.5;
-        latched_y[index(Vars::IQ)] = 0.14;
+        latched_y[index(Vars::IP)] -= 0.1;  // arbitrary current displacement
+        latched_y[index(Vars::IQ)] -= 0.06; // arbitrary current displacement
         latched.regca.y().setDataUpdated();
         success *= (latched.evaluate() == 0);
 
-        // f[IP] = (0.6 - 0.5) / Tg and f[IQ] = (0.2 - 0.14) / Tg with
-        // Tg = 0.2; both rates sit inside every limiter.
+        // The latched commands restore both displaced states at their ideal
+        // interior first-order rates.
         const auto* f  = latched.regca.getResidual().getData();
-        success       *= scalarMatches(f[index(Vars::IP)],
-                                 0.50000000000094358,
-                                 "latched active-current rate");
-        success       *= scalarMatches(f[index(Vars::IQ)], 0.3, "latched reactive-current rate");
+        success       *= scalarMatches(f[index(Vars::IP)], 0.5, "latched active-current rate", kSmoothTol);
+        success       *= scalarMatches(f[index(Vars::IQ)], 0.3, "latched reactive-current rate", kSmoothTol);
 
         return success.report(__func__);
       }
 
-      /// The admissible initialization domain: every rejected operating
-      /// point, then the accepted boundaries next to them.
+      /// Rejected and representative admissible initialization points.
       TestOutcome initializationDomain()
       {
-        TestStatus success = true;
+        TestStatus  success = true;
+        const RealT vm      = 0.65;
 
         const auto previous_verbosity = Log::verbosity();
         // Suppress expected errors from the inadmissible initialization cases below.
@@ -203,26 +208,16 @@ namespace GridKit
         {
           const char* label;
           RealT       vr;
-          RealT       p0;
-          RealT       il1;
         };
 
-        // P0 and IL1 default to the makeData() values; each row breaks
-        // exactly one initialize() guard.
-        const std::array<RejectionCase, 4> rejected{{
-            {"terminal voltage at Vhvmax", kHvrcmVoltageLimit, 0.0, 1.1},
-            {"terminal voltage above Vhvmax", kHvrcmVoltageLimit + 0.1, 0.0, 1.1},
-            {"terminal voltage just below VA1", kJustBelowVa1, 0.0, 1.1},
-            {"zero terminal voltage", 0.0, 0.0, 1.1},
+        const std::array<RejectionCase, 2> rejected{{
+            {"terminal voltage below VA1", HALF<RealT> * kVa1},
+            {"zero terminal voltage", 0.0},
         }};
 
         for (const auto& test_case : rejected)
         {
-          auto data                    = makeData();
-          data.parameters[Params::p0]  = test_case.p0;
-          data.parameters[Params::IL1] = test_case.il1;
-
-          Fixture<ScalarT> fixture(data, test_case.vr);
+          Fixture<ScalarT> fixture(makeData(), test_case.vr);
           success *= fixture.prepare();
           if (fixture.regca.initialize() == 0)
           {
@@ -266,99 +261,93 @@ namespace GridKit
           success       *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR at the LVACM upper breakpoint");
         }
 
-        // A ceiling just above the requested current is admissible.
+        // Inside the LVPL segment, initialization accepts an active current
+        // strictly below the moving limit.
         {
           auto data                    = makeData();
-          data.parameters[Params::p0]  = 0.6;
-          data.parameters[Params::IL1] = 0.61;
-
-          Fixture<ScalarT> fixture(data);
-          success *= fixture.initialize();
-          success *= (fixture.evaluate() == 0);
-          success *= allResidualsZero(fixture.regca);
-
-          const auto* y  = fixture.regca.y().getData();
-          success       *= scalarMatches(y[index(Vars::IP)],
-                                   0.60000000000018872,
-                                   "IP below the LVPL ceiling");
-          success       *= scalarMatches(y[index(Vars::PBR)], 0.6, "PBR below the LVPL ceiling");
-        }
-
-        // The active-current state may initialize exactly on the LVPL ceiling.
-        // VA1 is lowered so the terminal voltage sits inside the LVPL ramp,
-        // where the release term vanishes.
-        {
-          auto data                    = makeData();
-          data.parameters[Params::IL1] = 0.0;
+          data.parameters[Params::p0]  = 0.25;
+          data.parameters[Params::IL1] = 1.0;
           data.parameters[Params::VA1] = 0.5;
 
-          Fixture<ScalarT> fixture(data, 0.6);
+          Fixture<ScalarT> fixture(data, vm);
           success *= fixture.initialize();
           success *= (fixture.evaluate() == 0);
           success *= allResidualsZero(fixture.regca);
 
-          const auto* y  = fixture.regca.y().getData();
-          success       *= scalarMatches(y[index(Vars::IP)], 0.0, "IP at the LVPL ceiling");
-          success       *= scalarMatches(y[index(Vars::IL)], 0.0, "LVPL ceiling at IP");
+          const auto* y = fixture.regca.y().getData();
+          if (!(y[index(Vars::IP)] < y[index(Vars::IL)]))
+          {
+            std::cout << "IP is not below the active LVPL limit\n";
+            success = false;
+          }
+          success *= scalarMatches(y[index(Vars::PBR)], 0.25, "PBR below the LVPL limit");
         }
 
         // Above the upper breakpoint the ceiling releases: an operating point
         // beyond IL1 initializes at healthy voltage.
         {
-          auto data                   = makeData();
-          data.parameters[Params::p0] = 1.3;
+          const RealT il1              = 1.1;
+          auto        data             = makeData();
+          data.parameters[Params::p0]  = 1.3;
+          data.parameters[Params::IL1] = il1;
 
           Fixture<ScalarT> fixture(data);
           success *= fixture.initialize();
           success *= (fixture.evaluate() == 0);
           success *= allResidualsZero(fixture.regca);
 
-          const auto* y  = fixture.regca.y().getData();
-          success       *= scalarMatches(y[index(Vars::IP)],
-                                   1.3000000000004091,
-                                   "IP beyond IL1 with the ceiling released");
-          success       *= scalarMatches(y[index(Vars::PBR)], 1.3, "PBR beyond IL1 with the ceiling released");
+          const auto* y = fixture.regca.y().getData();
+          if (!(y[index(Vars::IP)] > il1))
+          {
+            std::cout << "IP did not exceed IL1 in the released region\n";
+            success = false;
+          }
+          success *= scalarMatches(y[index(Vars::PBR)], 1.3, "PBR beyond IL1");
         }
 
-        // With LVPL bypassed a collapsed ceiling does not constrain the
-        // initialization.
+        // Bypassing LVPL admits the same midpoint operating point even when
+        // its active current exceeds the moving limit.
         {
           auto data                    = makeData();
-          data.parameters[Params::p0]  = 0.6;
+          data.parameters[Params::p0]  = 0.25;
           data.parameters[Params::sL]  = false;
           data.parameters[Params::IL1] = 0.2;
+          data.parameters[Params::VA1] = 0.5;
 
-          Fixture<ScalarT> fixture(data);
+          Fixture<ScalarT> fixture(data, vm);
           success *= fixture.initialize();
           success *= (fixture.evaluate() == 0);
           success *= allResidualsZero(fixture.regca);
 
-          const auto* y  = fixture.regca.y().getData();
-          success       *= scalarMatches(y[index(Vars::IP)],
-                                   0.60000000000018872,
-                                   "IP with LVPL bypassed");
+          const auto* y = fixture.regca.y().getData();
+          if (!(y[index(Vars::IP)] > y[index(Vars::IL)]))
+          {
+            std::cout << "Bypassed IP did not exceed the LVPL limit\n";
+            success = false;
+          }
+          success *= scalarMatches(y[index(Vars::PBR)], 0.25, "PBR with LVPL bypassed");
         }
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
-      /// The complete equation answer key at a hand-computed state.
+      /// Check every residual row at a hand-computable midpoint state.
       TestOutcome residualEquations()
       {
         TestStatus success = true;
 
         Fixture<ScalarT> fixture(makeDynamicData(), kStateVr, kStateVi);
-        fixture.attachIpcmd(kStateIpcmd);
+        fixture.attachIpcmd(kStateIp);
         fixture.attachIqcmd(kStateIqcmd);
         success *= fixture.initialize();
 
         // initialize() published steady-state commands over the attached
-        // values; restore the commands the answer key assumes.
-        fixture.ipcmd = kStateIpcmd;
+        // values; restore the commands used by the residual state.
+        fixture.ipcmd = kStateIp;
         fixture.iqcmd = kStateIqcmd;
 
-        setAnswerKeyState(fixture.regca);
+        setResidualState(fixture.regca);
         success *= (fixture.evaluate() == 0);
 
         struct ExpectedResidual
@@ -368,19 +357,19 @@ namespace GridKit
           RealT       value;
         };
 
-        // Each entry is the expected value of the named README equation at
-        // the answer-key state.
+        // The LVACM and LVPL states use the midpoint of their breakpoint
+        // interval, where linseg is exactly one half for every MU.
         const std::array<ExpectedResidual, 10> expected{{
-            {Vars::VM, "VM", 0.865},               // -VM' + (VT - VM) / TM
-            {Vars::IQ, "IQ", 1.52},                // -IQ' + max(fq, Rqmin)
-            {Vars::IP, "IP", 0.22},                // -IP' + IL' + awmax(IP - IL, fp_limited - IL', 0)
-            {Vars::VT, "VT", -0.035},              // -VT^2 + Vr^2 + Vi^2
-            {Vars::IR, "IR", 0.24999999999974593}, // -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
-            {Vars::II, "II", 0.25099999999993317}, // -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
-            {Vars::IQEXTRA, "IQEXTRA", -0.03},     // smooth HVRCM constraint
-            {Vars::IL, "IL", 0.35},                // -IL + linseg(VM, VL0, VL1, IL1)
-            {Vars::PBR, "PBR", 0.0},               // -PBR + Vr*IR + Vi*II
-            {Vars::QBR, "QBR", 0.0},               // -QBR + Vi*IR - Vr*II
+            {Vars::VM, "VM", -0.01},
+            {Vars::IQ, "IQ", 1.52},
+            {Vars::IP, "IP", -0.03},
+            {Vars::VT, "VT", 0.5425},
+            {Vars::IR, "IR", -0.2875},
+            {Vars::II, "II", 0.1265},
+            {Vars::IQEXTRA, "IQEXTRA", -0.03},
+            {Vars::IL, "IL", 0.35},
+            {Vars::PBR, "PBR", 0.0},
+            {Vars::QBR, "QBR", 0.0},
         }};
 
         const auto& residual  = fixture.regca.getResidual();
@@ -389,7 +378,7 @@ namespace GridKit
         const auto* f = residual.getData();
         for (const auto& row : expected)
         {
-          success *= scalarMatches(f[index(row.variable)], row.value, row.name);
+          success *= scalarMatches(f[index(row.variable)], row.value, row.name, kSmoothTol);
         }
 
         return success.report(__func__);
@@ -580,19 +569,15 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// High-voltage reactive current management: the initialization root,
-      /// the residual across the transition, and its local derivative.
+      /// High-voltage reactive current management: initialization, gain,
+      /// threshold behavior, and the local derivative.
       TestOutcome highVoltageManagement()
       {
         TestStatus success = true;
 
-        // Initialization near Vhvmax solves the smooth constraint for a
-        // nonzero IQEXTRA. Half the transition margin keeps the root
-        // distinct from the margin, so a swapped-argument residual cannot
-        // satisfy this operating point.
+        // Initialization above Vhvmax activates HVRCM and preserves Q0.
         {
-          const RealT margin           = 0.5 * hvrcmTransition();
-          const RealT terminal_voltage = kHvrcmVoltageLimit - margin;
+          const RealT terminal_voltage = kHvrcmVoltageLimit + kHvrcmOffset;
 
           auto data                   = makeData();
           data.parameters[Params::q0] = 0.1;
@@ -602,64 +587,61 @@ namespace GridKit
           success *= (fixture.evaluate() == 0);
           success *= allResidualsZero(fixture.regca);
 
-          // The zero residual already pins the root to the HVRCM equation.
-          // What remains to check is that it is a genuine compensation
-          // above the margin it cancels, and that it leaves Q0 intact.
-          const auto* y = fixture.regca.y().getData();
-          if (!(y[index(Vars::IQEXTRA)] > margin))
-          {
-            std::cout << "IQEXTRA is not above the voltage margin it compensates\n";
-            success = false;
-          }
-          success *= scalarMatches(y[index(Vars::IQ)] - y[index(Vars::IQEXTRA)],
-                                   0.1 / terminal_voltage,
-                                   "IQ preserves Q0 after HVRCM compensation");
+          const auto* y              = fixture.regca.y().getData();
+          const RealT extra_current  = y[index(Vars::IQEXTRA)];
+          success                   *= scalarMatches(
+              extra_current, kHvrcmGain * kHvrcmOffset, "IQEXTRA with the default Khv", kSmoothTol);
+          success *= scalarMatches(
+              y[index(Vars::IQ)] - y[index(Vars::IQEXTRA)], 0.1 / terminal_voltage, "IQ preserves Q0 after HVRCM compensation");
           success *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR");
         }
 
-        // Numeric answer keys pin both sign and magnitude of the HVRCM row.
+        // At the activation threshold, the analytical ramp value is ln(2)/MU.
+        // This also checks that a supplied Khv replaces the default.
+        {
+          for (const RealT gain : {0.0, 0.5})
+          {
+            auto data                    = makeData();
+            data.parameters[Params::Khv] = gain;
+
+            Fixture<ScalarT> fixture(data, kHvrcmVoltageLimit);
+            success *= fixture.initialize();
+            success *= (fixture.evaluate() == 0);
+            success *= allResidualsZero(fixture.regca);
+
+            const auto* y  = fixture.regca.y().getData();
+            success       *= scalarMatches(y[index(Vars::IQEXTRA)], gain * hvrcmTransition(), "IQEXTRA at a supplied Khv");
+          }
+        }
+
+        // The ramp identity ramp(x) - ramp(-x) = x pins the orientation and
+        // gain without encoding a MU-specific decimal.
         {
           Fixture<ScalarT> fixture(makeData());
           success *= fixture.initialize();
 
-          struct HvrcmCase
+          auto* y          = fixture.regca.y().getData();
+          auto  residualAt = [&](RealT voltage, RealT extra_current)
           {
-            RealT voltage;
-            RealT extra_current;
-            RealT expected_residual;
+            y[index(Vars::VT)]      = voltage;
+            y[index(Vars::IQEXTRA)] = extra_current;
+            fixture.regca.y().setDataUpdated();
+            success *= (fixture.evaluate() == 0);
+            return fixture.regca.getResidual().getData()[index(Vars::IQEXTRA)];
           };
 
-          const RealT transition = hvrcmTransition();
+          const RealT below = residualAt(kHvrcmVoltageLimit - kHvrcmOffset, 0.0);
+          const RealT at    = residualAt(kHvrcmVoltageLimit, 0.0);
+          const RealT above = residualAt(kHvrcmVoltageLimit + kHvrcmOffset, 0.0);
 
-          // Away from the transition the smooth tail is below the tolerance
-          // and the row reduces to -IQEXTRA; at and beyond the ceiling the
-          // tail is the whole answer.
-          const std::array<HvrcmCase, 5> cases{{
-              {kHvrcmVoltageLimit - 0.2, 0.05, -0.05},
-              {kHvrcmVoltageLimit - 0.1, -0.05, 0.05},
-              {kHvrcmVoltageLimit - transition, transition, 0.0},
-              {kHvrcmVoltageLimit, 0.0, transition},
-              {kHvrcmVoltageLimit + 0.1, 0.1, 0.1},
-          }};
+          success *= scalarMatches(at, kHvrcmGain * hvrcmTransition(), "HVRCM residual at the threshold");
+          success *= scalarMatches(above - below, kHvrcmGain * kHvrcmOffset, "HVRCM symmetric residual difference");
 
-          auto* y = fixture.regca.y().getData();
-          for (const auto& test_case : cases)
-          {
-            y[index(Vars::VT)]      = test_case.voltage;
-            y[index(Vars::IQEXTRA)] = test_case.extra_current;
-            fixture.regca.y().setDataUpdated();
-
-            success *= (fixture.evaluate() == 0);
-
-            const auto* f  = fixture.regca.getResidual().getData();
-            success       *= scalarMatches(f[index(Vars::IQEXTRA)],
-                                     test_case.expected_residual,
-                                     "HVRCM residual");
-          }
+          const RealT shifted  = residualAt(kHvrcmVoltageLimit, 0.1);
+          success             *= scalarMatches(shifted - at, -0.1, "HVRCM extra-current residual shift");
         }
 
-        // At the transition point both partial derivatives of the HVRCM row
-        // are exactly one half.
+        // At the threshold, the voltage sensitivity is half the Khv gain.
         {
           using DepVar = DependencyTracking::Variable;
 
@@ -667,8 +649,8 @@ namespace GridKit
           success *= fixture.initialize();
 
           auto* y                 = fixture.regca.y().getData();
-          y[index(Vars::VT)]      = kHvrcmVoltageLimit - hvrcmTransition();
-          y[index(Vars::IQEXTRA)] = hvrcmTransition();
+          y[index(Vars::VT)]      = kHvrcmVoltageLimit;
+          y[index(Vars::IQEXTRA)] = 0.0;
           fixture.regca.y().setDataUpdated();
           numberVariables(fixture);
 
@@ -678,8 +660,8 @@ namespace GridKit
               fixture.regca.getResidual().getData()[index(Vars::IQEXTRA)].getDependencies();
 
           const DepVar::DependencyMap expected{{
-              {index(Vars::VT), 0.5},
-              {index(Vars::IQEXTRA), -0.5},
+              {index(Vars::VT), 0.5 * kHvrcmGain},
+              {index(Vars::IQEXTRA), -1.0},
           }};
           success *= isEqual(dependencies, expected, kTol);
         }
@@ -837,23 +819,26 @@ namespace GridKit
       // Bus and command values shared by the residual and Jacobian fixtures.
       static constexpr RealT kStateVr    = 0.95;
       static constexpr RealT kStateVi    = 0.25;
+      static constexpr RealT kStateIp    = 0.2;
       static constexpr RealT kStateIpcmd = 0.9;
       static constexpr RealT kStateIqcmd = 0.1;
 
-      static constexpr RealT kVa1          = 0.9;
-      static constexpr RealT kJustBelowVa1 = kVa1 - 1.0e-6;
+      static constexpr RealT kVa1 = 0.9;
 
       /// Vhvmax in makeData() and in makeDynamicData().
       static constexpr RealT kHvrcmVoltageLimit        = 1.2;
       static constexpr RealT kDynamicHvrcmVoltageLimit = 1.3;
 
-      /// The smooth ramp at a zero argument. Used as an HVRCM voltage
-      /// margin, this is the one margin whose constraint root is the margin
-      /// itself, so the HVRCM row is exactly zero there and its two partial
-      /// derivatives are exactly one half.
-      static RealT hvrcmTransition()
+      static constexpr RealT kHvrcmGain = 0.7;
+
+      /// Offset whose smooth-ramp tail decays by one significand width.
+      static constexpr RealT kHvrcmOffset =
+          static_cast<RealT>(std::numeric_limits<RealT>::digits)
+          * std::numbers::ln2_v<RealT> / Math::MU<RealT>;
+
+      static constexpr RealT hvrcmTransition()
       {
-        return Math::ramp(static_cast<RealT>(0.0));
+        return std::numbers::ln2_v<RealT> / Math::MU<RealT>;
       }
 
       Data makeData()
@@ -883,7 +868,7 @@ namespace GridKit
         data.parameters[Params::VL0]    = 0.4;
         data.parameters[Params::VL1]    = 0.9;
         data.parameters[Params::VA0]    = 0.4;
-        data.parameters[Params::VA1]    = 0.9;
+        data.parameters[Params::VA1]    = kVa1;
         data.parameters[Params::Vhvmax] = kHvrcmVoltageLimit;
 
         return data;
@@ -918,17 +903,17 @@ namespace GridKit
       }
 #endif
 
-      /// Writes the answer-key state shared by the residual and Jacobian
-      /// tests. Values only; in the dependency-tracking fixture, number
-      /// variables after this call.
+      /// Write the state shared by the residual and Jacobian tests. In a
+      /// dependency-tracking fixture, number variables after this call.
       template <typename T>
-      void setAnswerKeyState(PhasorDynamics::Converter::Regca<T, IdxT>& regca)
+      void setResidualState(PhasorDynamics::Converter::Regca<T, IdxT>& regca)
       {
-        auto* y                 = regca.y().getData();
-        y[index(Vars::VM)]      = 0.65;
+        const RealT v           = 0.65;
+        auto*       y           = regca.y().getData();
+        y[index(Vars::VM)]      = v;
         y[index(Vars::IQ)]      = -0.2;
-        y[index(Vars::IP)]      = 0.85;
-        y[index(Vars::VT)]      = 1.0;
+        y[index(Vars::IP)]      = kStateIp;
+        y[index(Vars::VT)]      = v;
         y[index(Vars::IR)]      = 0.5;
         y[index(Vars::II)]      = 0.18;
         y[index(Vars::IQEXTRA)] = 0.03;
@@ -1003,9 +988,12 @@ namespace GridKit
         return success;
       }
 
-      bool scalarMatches(ScalarT actual, ScalarT expected, const char* label) const
+      bool scalarMatches(ScalarT     actual,
+                         ScalarT     expected,
+                         const char* label,
+                         RealT       tolerance = kTol) const
       {
-        if (isEqual(actual, expected, kTol))
+        if (isEqual(actual, expected, tolerance))
         {
           return true;
         }
@@ -1017,19 +1005,19 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// Move the answer-key state to the HVRCM and active-current limiter
+      /// Move the residual state to the HVRCM and active-current limiter
       /// transition points, where the Jacobian has the richest structure.
       template <typename T>
       void setJacobianState(
           PhasorDynamics::Converter::Regca<T, IdxT>& regca,
           RealT                                      current)
       {
-        setAnswerKeyState(regca);
+        setResidualState(regca);
         auto* y                 = regca.y().getData();
         y[index(Vars::IP)]      = current;
         y[index(Vars::IL)]      = 0.0;
-        y[index(Vars::VT)]      = kDynamicHvrcmVoltageLimit - hvrcmTransition();
-        y[index(Vars::IQEXTRA)] = hvrcmTransition();
+        y[index(Vars::VT)]      = kDynamicHvrcmVoltageLimit;
+        y[index(Vars::IQEXTRA)] = kHvrcmGain * hvrcmTransition();
         regca.y().setDataUpdated();
       }
 

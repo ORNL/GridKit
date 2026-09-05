@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <initializer_list>
 #include <iomanip>
 #include <iostream>
@@ -75,7 +77,6 @@ namespace GridKit
             Vars::VPIQ,
             Vars::EPIV,
             Vars::RPORD,
-            Vars::ILMAX,
             Vars::ILCAP,
             Vars::IQMAX,
             Vars::IPMAX,
@@ -288,32 +289,37 @@ namespace GridKit
         success                  *= fixture.initialize(kInitialIqcmd, kInitialIpcmd);
         success                  *= (fixture.evaluate() == 0);
 
-        const std::array<VariableValue, index(Vars::MAXIMUM)> initial_state{{
-            {Vars::VMEAS, 1.0},
-            {Vars::PMEAS, 1.5},
-            {Vars::XPIQ, 0.0},
-            {Vars::XPIV, 0.0},
-            {Vars::QV, 1.5},
-            {Vars::PORD, 1.5},
-            {Vars::VT, 1.0},
-            {Vars::VSAFE, 1.0},
-            {Vars::SDIP, 1.0},
-            {Vars::IQV, 0.0},
-            {Vars::QREF, 1.5},
-            {Vars::EQ, 0.0},
-            {Vars::VPIQ, 0.5},
-            {Vars::EPIV, 0.0},
-            {Vars::RPORD, 0.0},
-            {Vars::ILMAX, 2.0},
-            {Vars::ILCAP, 2.0},
-            {Vars::IQMAX, 2.0},
-            {Vars::IPMAX, 2.5},
-            {Vars::IQBASE, 0.0},
-            {Vars::IQRAW, 1.5},
-            {Vars::IQCMD, 0.75},
-            {Vars::IPCMD, 0.75},
-        }};
-        success *= stateMatches(fixture.reecb, initial_state, "initialization");
+        success *= stateMatches(fixture.reecb,
+                                {{Vars::VMEAS, 1.0},
+                                 {Vars::PMEAS, 1.5},
+                                 {Vars::XPIQ, 0.0},
+                                 {Vars::XPIV, 0.0},
+                                 {Vars::QV, 1.5},
+                                 {Vars::PORD, 1.5},
+                                 {Vars::VT, 1.0},
+                                 {Vars::VSAFE, 1.0},
+                                 {Vars::SDIP, 1.0},
+                                 {Vars::IQV, 0.0},
+                                 {Vars::QREF, 1.5},
+                                 {Vars::EQ, 0.0},
+                                 {Vars::VPIQ, 0.5},
+                                 {Vars::EPIV, 0.0},
+                                 {Vars::RPORD, 0.0},
+                                 {Vars::IPMAX, 2.5},
+                                 {Vars::IQBASE, 0.0},
+                                 {Vars::IQRAW, 1.5},
+                                 {Vars::IQCMD, 0.75},
+                                 {Vars::IPCMD, 0.75}},
+                                "initialization");
+        success *= stateMatches(fixture.reecb,
+                                {{Vars::ILCAP, 2.0}},
+                                "initial current-circle capacity",
+                                kCircleTol);
+
+        const auto* initial_values  = fixture.reecb.y().getData();
+        success                    *= scalarMatches(initial_values[index(Vars::IQMAX)],
+                                 initial_values[index(Vars::ILCAP)],
+                                 "initial reactive-current limit");
 
         success *= scalarPreserved(fixture.iqcmd(), kInitialIqcmd, "preserved iqcmd");
         success *= scalarPreserved(fixture.ipcmd(), kInitialIpcmd, "preserved ipcmd");
@@ -370,9 +376,12 @@ namespace GridKit
         success                    *= (system_base.evaluate() == 0);
         success                    *= stateMatches(system_base.reecb,
                                                    {{Vars::PMEAS, 0.75},
-                                                    {Vars::PORD, 1.5},
-                                                    {Vars::ILMAX, 2.0}},
+                                                    {Vars::PORD, 1.5}},
                                 "omitted component rating");
+        success                    *= stateMatches(system_base.reecb,
+                                                   {{Vars::ILCAP, 2.0}},
+                                "omitted-rating current-circle capacity",
+                                kCircleTol);
         success                    *= allResidualsWithinInitTolerance(system_base.reecb);
 
         return success.report(__func__);
@@ -422,7 +431,7 @@ namespace GridKit
         Fixture<ScalarT> adjusted_imax(expanded_current);
         success *= adjusted_imax.initialize(0.75, 0.75);
         success *= (adjusted_imax.evaluate() == 0);
-        success *= stateMatches(adjusted_imax.reecb, {{Vars::ILMAX, 1.5}}, "adjusted Imax");
+        success *= stateMatches(adjusted_imax.reecb, {{Vars::ILCAP, 1.5}}, "adjusted Imax");
         success *= allResidualsWithinInitTolerance(adjusted_imax.reecb);
 
         auto reactive_pi                      = data;
@@ -590,7 +599,7 @@ namespace GridKit
         const std::array<ExactnessCase, 3> active_cases{{
             {1.0e-6, "near the lower active-current limit"},
             {0.75, "interior active-current command"},
-            {1.249999, "near the upper active-current limit"},
+            {1.25 - 1.0e-6, "near the upper active-current limit"},
         }};
 
         // The recovered order limits are widened so the reconstruction, not
@@ -659,8 +668,8 @@ namespace GridKit
 
         // The reactive command shares the inverse, at both signs.
         const std::array<RealT, 2> reactive_commands{{
-            static_cast<RealT>(0.999999),
-            static_cast<RealT>(-0.999999),
+            static_cast<RealT>(1.0 - 1.0e-6),
+            static_cast<RealT>(-1.0 + 1.0e-6),
         }};
         for (const RealT iqcmd : reactive_commands)
         {
@@ -676,7 +685,7 @@ namespace GridKit
           bool        p_priority;
           RealT       iqcmd;
           RealT       ipcmd;
-          RealT       ilmax;
+          RealT       capacity;
           const char* label;
         };
 
@@ -698,7 +707,10 @@ namespace GridKit
           success *= (boundary.evaluate() == 0);
           success *= scalarPreserved(boundary.iqcmd(), test_case.iqcmd, test_case.label);
           success *= scalarPreserved(boundary.ipcmd(), test_case.ipcmd, test_case.label);
-          success *= stateMatches(boundary.reecb, {{Vars::ILMAX, test_case.ilmax}}, test_case.label);
+          success *= stateMatches(boundary.reecb,
+                                  {{Vars::ILCAP, test_case.capacity}},
+                                  test_case.label,
+                                  kCircleTol);
           success *= allResidualsWithinInitTolerance(boundary.reecb);
         }
 
@@ -710,7 +722,7 @@ namespace GridKit
         success *= scalarPreserved(separated.iqcmd(), 5.0e-13, "scale-separated current command");
         success *= allResidualsWithinInitTolerance(separated.reecb);
 
-        // A low configured Imax requires representable bisection to preserve
+        // A low configured Imax must still be expanded far enough to preserve
         // a strict low-priority command.
         auto capacity_data                       = exactness_data;
         capacity_data.parameters[Params::mva]    = 100.0;
@@ -728,14 +740,15 @@ namespace GridKit
           success           *= (capacity_fixture.evaluate() == 0);
           success           *= scalarPreserved(capacity_fixture.iqcmd(), iqcmd, "low-priority command");
           success           *= scalarPreserved(capacity_fixture.ipcmd(), ipcmd, "high-priority command");
-          const RealT ilmax  = static_cast<RealT>(capacity_fixture.reecb.y().getData()[index(Vars::ILMAX)]);
-          const RealT ilcap  = ilmax * ilmax
-                              / std::sqrt(ilmax * ilmax + ReecbT::INITIALIZATION_TOLERANCE);
+          const RealT ilcap  = static_cast<RealT>(capacity_fixture.reecb.y().getData()[index(Vars::ILCAP)]);
           if (ilcap < iqcmd)
           {
             std::cout << "REECB low-priority capacity does not include its initial command\n";
             success = false;
           }
+          success *= scalarMatches(ilcap,
+                                   iqcmd,
+                                   "minimal low-priority capacity");
           success *= allResidualsWithinInitTolerance(capacity_fixture.reecb);
         }
 
@@ -767,26 +780,30 @@ namespace GridKit
         success                  *= exhausted.initialize(0.0, 1.25);
         success                  *= (exhausted.evaluate() == 0);
         success                  *= scalarPreserved(exhausted.iqcmd(), 0.0, "exhausted reactive-current capacity");
-        success                  *= stateMatches(exhausted.reecb, {{Vars::ILMAX, 0.0}}, "injection does not expand current circle");
-        success                  *= allResidualsWithinInitTolerance(exhausted.reecb);
+
+        success *= stateMatches(exhausted.reecb,
+                                {{Vars::ILCAP, 0.0}},
+                                "injection does not expand current circle",
+                                kCircleTol);
+        success *= allResidualsWithinInitTolerance(exhausted.reecb);
 
         Log::setVerbosity(previous_verbosity);
         return success.report(__func__);
       }
 
-      /// Check every residual row against an independent numerical answer key.
-      /// The expected values are literals, not a second implementation of REECB.
+      /// Check every residual row at a hand-computable state.
       TestOutcome residualEquations()
       {
         TestStatus success = true;
 
         Fixture<ScalarT> fixture(makeResidualData(), kStateVr, kStateVi);
         fixture.attachAllInputs();
-        setAnswerKeyInputs(fixture);
+        setResidualInputs(fixture);
         success *= fixture.prepare(0.25, 0.35);
-        setAnswerKeyState(fixture.reecb);
+        setResidualState(fixture.reecb);
         success *= (fixture.evaluate() == 0);
 
+        const RealT                                           ideal_circle_leg = circleLeg(1.76);
         const std::array<VariableValue, index(Vars::MAXIMUM)> expected_residuals{{
             {Vars::VMEAS, 0.99},
             {Vars::PMEAS, 0.145},
@@ -803,8 +820,7 @@ namespace GridKit
             {Vars::VPIQ, 0.0},
             {Vars::EPIV, 0.0},
             {Vars::RPORD, 0.0},
-            {Vars::ILMAX, 0.32},
-            {Vars::ILCAP, 0.0},
+            {Vars::ILCAP, ideal_circle_leg - 1.20},
             {Vars::IQMAX, 0.0},
             {Vars::IPMAX, 0.0},
             {Vars::IQBASE, 0.0},
@@ -819,14 +835,27 @@ namespace GridKit
         {
           if (index(expected_residuals[row].variable) != row)
           {
-            std::cout << "REECB residual key position " << row << " names row "
-                      << variableName(expected_residuals[row].variable) << '\n';
+            Log::error() << "REECB residual expectation position " << row << " names row "
+                         << variableName(expected_residuals[row].variable) << '\n';
             success = false;
           }
         }
-        success *= residualsMatch(fixture.reecb,
-                                  expected_residuals,
-                                  "independent numerical answer key");
+        const auto* residuals = fixture.reecb.getResidual().getData();
+        for (const auto& [variable, expected] : expected_residuals)
+        {
+          RealT tolerance = kTol;
+          if (variable == Vars::ILCAP)
+          {
+            tolerance = kCircleTol;
+          }
+
+          success *= variableMatches(residuals[index(variable)],
+                                     expected,
+                                     "residual",
+                                     variable,
+                                     "hand-computable state",
+                                     tolerance);
+        }
 
         return success.report(__func__);
       }
@@ -882,7 +911,10 @@ namespace GridKit
                   success *= allResidualsWithinInitTolerance(fixture.reecb);
                   success *= scalarPreserved(fixture.iqcmd(), 0.75, "selector iqcmd");
                   success *= scalarPreserved(fixture.ipcmd(), 0.75, "selector ipcmd");
-                  success *= stateMatches(fixture.reecb, {{Vars::ILMAX, 2.0}}, "selector ILMAX");
+                  success *= stateMatches(fixture.reecb,
+                                          {{Vars::ILCAP, 2.0}},
+                                          "selector ILCAP",
+                                          kCircleTol);
 
                   // Exactly one reactive path carries the operating point.
                   const auto* y = fixture.reecb.y().getData();
@@ -1210,7 +1242,6 @@ namespace GridKit
             setState(fixture.reecb,
                      {{Vars::XPIV, test_case.state},
                       {Vars::EPIV, test_case.reference - 1.0},
-                      {Vars::ILMAX, 0.5},
                       {Vars::ILCAP, 0.5},
                       {Vars::IQMAX, 0.5}});
             success *= (fixture.evaluate() == 0);
@@ -1249,7 +1280,6 @@ namespace GridKit
                       {Vars::IQV, 0.0},
                       {Vars::IQRAW, 0.0},
                       {Vars::IQCMD, 0.0},
-                      {Vars::ILMAX, 3.0},
                       {Vars::ILCAP, 3.0},
                       {Vars::IQMAX, 3.0}});
             success *= (fixture.evaluate() == 0);
@@ -1300,7 +1330,7 @@ namespace GridKit
       }
 
       /// Check the active-power ramp, its voltage gate and anti-windup, both
-      /// command limits, the priority circle, and the signed continuation.
+      /// command limits, and the priority current circle across closure.
       TestOutcome activeCurrentControl()
       {
         TestStatus success = true;
@@ -1449,8 +1479,7 @@ namespace GridKit
             success *= fixture.prepare(0.0, 0.2);
             setControlState(fixture.reecb);
             setState(fixture.reecb,
-                     {{Vars::ILMAX, 2.0},
-                      {Vars::ILCAP, 2.0},
+                     {{Vars::ILCAP, 2.0},
                       {Vars::IQMAX, 2.0},
                       {Vars::IQRAW, test_case.input},
                       {Vars::IQCMD, 0.0},
@@ -1480,8 +1509,7 @@ namespace GridKit
             success *= fixture.prepare(0.2, 0.0);
             setControlState(fixture.reecb);
             setState(fixture.reecb,
-                     {{Vars::ILMAX, 2.0},
-                      {Vars::ILCAP, 2.0},
+                     {{Vars::ILCAP, 2.0},
                       {Vars::IPMAX, 2.0},
                       {Vars::IPCMD, 0.0},
                       {Vars::PORD, test_case.input}});
@@ -1494,19 +1522,20 @@ namespace GridKit
 
         {
           // The priority selector chooses which command consumes the circle.
+          const RealT                                 capacity_state = 1.20;
           const std::array<std::pair<bool, RealT>, 2> priority_cases{{
-              {true, 0.32},
-              {false, 0.56},
+              {true, 1.76},
+              {false, 2.00},
           }};
-          for (const auto& [p_priority, expected] : priority_cases)
+          for (const auto& [p_priority, square] : priority_cases)
           {
             auto data                       = makeResidualData();
             data.parameters[Params::Pqflag] = p_priority;
             Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
             fixture.attachAllInputs();
-            setAnswerKeyInputs(fixture);
+            setResidualInputs(fixture);
             success *= fixture.prepare(0.25, 0.35);
-            setAnswerKeyState(fixture.reecb);
+            setResidualState(fixture.reecb);
             success           *= (fixture.evaluate() == 0);
             const char* label  = "Q-priority current circle";
             if (p_priority)
@@ -1514,8 +1543,9 @@ namespace GridKit
               label = "P-priority current circle";
             }
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::ILMAX, expected}},
-                                      label);
+                                      {{Vars::ILCAP, circleLeg(square) - capacity_state}},
+                                      label,
+                                      kCircleTol);
           }
         }
 
@@ -1543,67 +1573,88 @@ namespace GridKit
               ipcmd = limit;
             }
             setState(fixture.reecb,
-                     {{Vars::ILMAX, 0.0},
+                     {{Vars::ILCAP, 0.0},
                       {Vars::IQCMD, iqcmd},
                       {Vars::IPCMD, ipcmd}});
             success *= (fixture.evaluate() == 0);
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::ILMAX, 0.0}},
+                                      {{Vars::ILCAP, 0.0}},
                                       "finite selected current circle");
             success *= allResidualsFinite(fixture.reecb);
           }
+
+          const RealT open_limit               = std::sqrt(maximum) / TWO<RealT>;
+          auto        open_data                = makeData();
+          open_data.parameters[Params::mva]    = 100.0;
+          open_data.parameters[Params::Imax]   = open_limit;
+          open_data.parameters[Params::Pqflag] = true;
+          Fixture<ScalarT> open(open_data);
+          success *= open.prepare(0.0, 0.0);
+          setControlState(open.reecb);
+          setState(open.reecb, {{Vars::ILCAP, 0.0}, {Vars::IPCMD, 0.0}});
+          success *= (open.evaluate() == 0);
+          success *= residualsMatch(open.reecb,
+                                    {{Vars::ILCAP, open_limit}},
+                                    "finite open current circle",
+                                    kCircleTol);
+          success *= allResidualsFinite(open.reecb);
         }
 
         {
-          // The signed-square continuation keeps a negative capacity iterate
-          // finite, and its magnitude still bounds the low-priority command.
+          // Probe the current circle above, at, and below closure.
           auto data                       = makeData();
           data.parameters[Params::Imax]   = 1.0;
           data.parameters[Params::Pqflag] = true;
 
-          const std::array<DrivenCase, 3> continuation_cases{{
-              {-0.5, 1.0},
-              {0.5, 0.5},
-              {0.0, 0.75},
-          }};
-          for (const auto& test_case : continuation_cases)
+          struct CircleCase
           {
+            RealT ipcmd;
+            RealT square;
+          };
+
+          const std::array<CircleCase, 3> circle_cases{{
+              {0.25, 0.75},
+              {0.5, 0.0},
+              {0.75, -1.25},
+          }};
+          for (const auto& test_case : circle_cases)
+          {
+            const RealT ideal_capacity = circleLeg(test_case.square);
+
             Fixture<ScalarT> fixture(data);
-            success *= fixture.prepare(0.0, 0.25);
+            success *= fixture.prepare(0.0, test_case.ipcmd);
             setControlState(fixture.reecb);
             setState(fixture.reecb,
-                     {{Vars::ILMAX, test_case.input},
-                      {Vars::ILCAP, 0.0},
+                     {{Vars::ILCAP, 0.0},
                       {Vars::IQMAX, 0.0},
                       {Vars::IQRAW, 0.0},
-                      {Vars::IPCMD, 0.25},
+                      {Vars::IPCMD, test_case.ipcmd},
                       {Vars::IQCMD, 0.0},
                       {Vars::QV, 1.0}});
             success *= (fixture.evaluate() == 0);
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::ILMAX, test_case.expected}},
-                                      "signed capacity continuation");
+                                      {{Vars::ILCAP, ideal_capacity}},
+                                      "off-axis capacity",
+                                      kCircleTol);
 
-            RealT expected_capacity = 0.0;
-            if (test_case.input != ZERO<RealT>)
+            const RealT capacity = fixture.reecb.getResidual().getData()[index(Vars::ILCAP)];
+            if (!std::isfinite(capacity) || capacity < ZERO<RealT>)
             {
-              expected_capacity = 0.5;
+              Log::error() << "REECB current circle produced an invalid capacity\n";
+              success = false;
             }
-            success *= residualsMatch(fixture.reecb,
-                                      {{Vars::ILCAP, expected_capacity}},
-                                      "signed off-axis capacity");
 
-            setState(fixture.reecb, {{Vars::ILCAP, expected_capacity}});
+            setState(fixture.reecb, {{Vars::ILCAP, capacity}});
             success *= (fixture.evaluate() == 0);
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::IQMAX, expected_capacity}},
+                                      {{Vars::IQMAX, capacity}},
                                       "reactive-current capacity");
 
             setState(fixture.reecb,
-                     {{Vars::IQMAX, expected_capacity}, {Vars::IQRAW, 1.0}});
+                     {{Vars::IQMAX, capacity}, {Vars::IQRAW, 1.0}});
             success *= (fixture.evaluate() == 0);
             success *= residualsMatch(fixture.reecb,
-                                      {{Vars::IQCMD, expected_capacity}},
+                                      {{Vars::IQCMD, capacity}},
                                       "capacity magnitude bound");
             success *= allResidualsFinite(fixture.reecb);
           }
@@ -1661,29 +1712,50 @@ namespace GridKit
         {
           const char* label;
           bool        p_priority;
-          RealT       ilmax;
+          RealT       imax;
+          RealT       capacity;
         };
 
-        const std::array<CurrentCircleProbe, 2> current_circle_probes{{
-            {"negative signed current-circle capacity", true, -2.0},
-            {"zero current-circle capacity", false, 0.0},
+        const std::array<CurrentCircleProbe, 5> current_circle_probes{{
+            {"open current circle", true, 2.5, 2.0},
+            {"closing current circle", true, 0.41, 0.05},
+            {"closed current circle", true, 0.4, 0.0},
+            {"over-driven current circle", true, 0.2, 0.0},
+            {"over-driven current circle on the reactive axis", false, 0.1, 0.0},
         }};
         for (const auto& probe : current_circle_probes)
         {
           auto data                        = makeJacobianData();
           data.parameters[Params::Pqflag]  = probe.p_priority;
+          data.parameters[Params::Imax]    = probe.imax;
           success                         *= jacobiansMatch(
               dependencyTrackingJacobian(
-                  data, kNonunitAlpha, success, probe.ilmax),
-              enzymeJacobian(data, kNonunitAlpha, success, probe.ilmax),
+                  data, kNonunitAlpha, success, probe.capacity),
+              enzymeJacobian(data, kNonunitAlpha, success, probe.capacity),
               probe.label);
         }
+
+        auto transition_data                        = makeJacobianData();
+        transition_data.parameters[Params::Pqflag]  = true;
+        transition_data.parameters[Params::Imax]    = 0.4;
+        success                                    *= jacobiansMatch(
+            dependencyTrackingJacobian(
+                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.1),
+            enzymeJacobian(
+                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.1),
+            "open current-circle transition");
+        success *= jacobiansMatch(
+            dependencyTrackingJacobian(
+                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.3),
+            enzymeJacobian(
+                transition_data, kNonunitAlpha, success, 0.1, 0.2, 0.3),
+            "over-driven current-circle transition");
 
         struct NonlinearProbe
         {
           const char* label;
           RealT       mva;
-          RealT       ilmax;
+          RealT       capacity;
           RealT       epiv;
         };
 
@@ -1701,8 +1773,8 @@ namespace GridKit
           data.parameters[Params::mva]  = probe.mva;
           success                      *= jacobiansMatch(
               dependencyTrackingJacobian(
-                  data, kNonunitAlpha, success, probe.ilmax, probe.epiv),
-              enzymeJacobian(data, kNonunitAlpha, success, probe.ilmax, probe.epiv),
+                  data, kNonunitAlpha, success, probe.capacity, probe.epiv),
+              enzymeJacobian(data, kNonunitAlpha, success, probe.capacity, probe.epiv),
               probe.label);
         }
 
@@ -1898,6 +1970,16 @@ namespace GridKit
 
       inline static const RealT kUnitSlopeAngle = std::atan(ONE<RealT>);
 
+      /// Exact off-axis leg of the ideal current circle.
+      static RealT circleLeg(RealT square)
+      {
+        return std::sqrt(std::max(square, ZERO<RealT>));
+      }
+
+      /// MU-aware tolerance for ideal current-circle comparisons.
+      static constexpr RealT kCircleTol =
+          std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
+
       static constexpr size_t kBusVrColumn = index(Vars::MAXIMUM);
 
       Data makeMinimalData() const
@@ -2048,7 +2130,7 @@ namespace GridKit
       }
 
       template <typename T>
-      void setAnswerKeyInputs(Fixture<T>& fixture) const
+      void setResidualInputs(Fixture<T>& fixture) const
       {
         fixture.input(Ext::PE)     = static_cast<T>(0.3);
         fixture.input(Ext::QGEN)   = static_cast<T>(-0.1);
@@ -2057,11 +2139,10 @@ namespace GridKit
         fixture.input(Ext::PREF)   = static_cast<T>(0.325);
       }
 
-      /// The rich state shared by the residual answer key and the priority
-      /// circle. Every smooth-transition argument keeps a saturation margin,
-      /// so each row carries its ideal value.
+      /// State shared by the residual and priority-circle checks. Each smooth
+      /// transition retains enough margin to take its ideal value.
       template <typename T>
-      void setAnswerKeyState(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb) const
+      void setResidualState(PhasorDynamics::Controller::Reecb<T, IdxT>& reecb) const
       {
         setState(reecb,
                  {{Vars::VMEAS, 0.80},
@@ -2079,7 +2160,6 @@ namespace GridKit
                   {Vars::VPIQ, 1.00},
                   {Vars::EPIV, 0.20},
                   {Vars::RPORD, 0.20},
-                  {Vars::ILMAX, 1.20},
                   {Vars::ILCAP, 1.20},
                   {Vars::IQMAX, 1.20},
                   {Vars::IPMAX, 1.50},
@@ -2118,7 +2198,6 @@ namespace GridKit
                   {Vars::VPIQ, 0.0},
                   {Vars::EPIV, 0.0},
                   {Vars::RPORD, 0.0},
-                  {Vars::ILMAX, 1.4},
                   {Vars::ILCAP, 1.4},
                   {Vars::IQMAX, 1.4},
                   {Vars::IPMAX, 1.5},
@@ -2133,8 +2212,9 @@ namespace GridKit
       /// probe. The optional states place selected smooth branches explicitly.
       template <typename T>
       void setJacobianState(Fixture<T>& fixture,
-                            RealT       ilmax,
-                            RealT       epiv = static_cast<RealT>(0.2)) const
+                            RealT       capacity,
+                            RealT       epiv  = static_cast<RealT>(0.2),
+                            RealT       ipcmd = static_cast<RealT>(0.2)) const
       {
         fixture.input(Ext::PE)     = static_cast<T>(0.25);
         fixture.input(Ext::QGEN)   = static_cast<T>(0.5);
@@ -2159,14 +2239,13 @@ namespace GridKit
                   {Vars::VPIQ, 1.0},
                   {Vars::EPIV, epiv},
                   {Vars::RPORD, 0.05},
-                  {Vars::ILMAX, ilmax},
-                  {Vars::ILCAP, std::abs(ilmax)},
-                  {Vars::IQMAX, std::abs(ilmax)},
-                  {Vars::IPMAX, std::abs(ilmax)},
+                  {Vars::ILCAP, capacity},
+                  {Vars::IQMAX, capacity},
+                  {Vars::IPMAX, capacity},
                   {Vars::IQBASE, 0.2},
                   {Vars::IQRAW, 0.2},
                   {Vars::IQCMD, 0.1},
-                  {Vars::IPCMD, 0.2}});
+                  {Vars::IPCMD, ipcmd}});
         fixture.reecb.yp().setDataUpdated();
       }
 
@@ -2222,10 +2301,10 @@ namespace GridKit
           }
         }
 
-        setAnswerKeyInputs(implicit_defaults);
-        setAnswerKeyInputs(explicit_defaults);
-        setAnswerKeyState(implicit_defaults.reecb);
-        setAnswerKeyState(explicit_defaults.reecb);
+        setResidualInputs(implicit_defaults);
+        setResidualInputs(explicit_defaults);
+        setResidualState(implicit_defaults.reecb);
+        setResidualState(explicit_defaults.reecb);
         if (implicit_defaults.evaluate() != 0 || explicit_defaults.evaluate() != 0)
         {
           success = false;
@@ -2383,7 +2462,6 @@ namespace GridKit
             "VPIQ",
             "EPIV",
             "RPORD",
-            "ILMAX",
             "ILCAP",
             "IQMAX",
             "IPMAX",
@@ -2496,7 +2574,8 @@ namespace GridKit
       bool rowsMatch(const VectorT& vector,
                      const ValuesT& values,
                      const char*    what,
-                     const char*    context) const
+                     const char*    context,
+                     RealT          tolerance = kTol) const
       {
         bool        success       = true;
         const auto* vector_values = vector.getData();
@@ -2506,7 +2585,8 @@ namespace GridKit
                                expected,
                                what,
                                variable,
-                               context))
+                               context,
+                               tolerance))
           {
             success = false;
           }
@@ -2516,32 +2596,36 @@ namespace GridKit
 
       bool residualsMatch(const ReecbT&                        reecb,
                           std::initializer_list<VariableValue> values,
-                          const char*                          context = "") const
+                          const char*                          context   = "",
+                          RealT                                tolerance = kTol) const
       {
-        return rowsMatch(reecb.getResidual(), values, "residual", context);
+        return rowsMatch(reecb.getResidual(), values, "residual", context, tolerance);
       }
 
       template <size_t size>
       bool residualsMatch(const ReecbT&                          reecb,
                           const std::array<VariableValue, size>& values,
-                          const char*                            context = "") const
+                          const char*                            context   = "",
+                          RealT                                  tolerance = kTol) const
       {
-        return rowsMatch(reecb.getResidual(), values, "residual", context);
+        return rowsMatch(reecb.getResidual(), values, "residual", context, tolerance);
       }
 
       bool stateMatches(const ReecbT&                        reecb,
                         std::initializer_list<VariableValue> values,
-                        const char*                          context = "") const
+                        const char*                          context   = "",
+                        RealT                                tolerance = kTol) const
       {
-        return rowsMatch(reecb.y(), values, "state", context);
+        return rowsMatch(reecb.y(), values, "state", context, tolerance);
       }
 
       template <size_t size>
       bool stateMatches(const ReecbT&                          reecb,
                         const std::array<VariableValue, size>& values,
-                        const char*                            context = "") const
+                        const char*                            context   = "",
+                        RealT                                  tolerance = kTol) const
       {
-        return rowsMatch(reecb.y(), values, "state", context);
+        return rowsMatch(reecb.y(), values, "state", context, tolerance);
       }
 
       bool allResidualsWithinInitTolerance(const ReecbT& reecb) const
@@ -2711,15 +2795,16 @@ namespace GridKit
       dependencyTrackingJacobian(const Data& data,
                                  RealT       alpha,
                                  TestStatus& success,
-                                 RealT       ilmax = 2.0,
-                                 RealT       epiv  = static_cast<RealT>(0.2)) const
+                                 RealT       capacity = 2.0,
+                                 RealT       epiv     = static_cast<RealT>(0.2),
+                                 RealT       ipcmd    = static_cast<RealT>(0.2)) const
       {
         using DepVar = DependencyTracking::Variable;
 
         Fixture<DepVar> fixture(data, kStateVr, kStateVi);
         fixture.attachAllInputs();
         success *= fixture.prepare(0.0, 0.2);
-        setJacobianState(fixture, ilmax, epiv);
+        setJacobianState(fixture, capacity, epiv, ipcmd);
         numberVariables(fixture, alpha);
         success *= (fixture.evaluate() == 0);
 
@@ -2737,8 +2822,9 @@ namespace GridKit
       enzymeJacobian(const Data& data,
                      RealT       alpha,
                      TestStatus& success,
-                     RealT       ilmax = 2.0,
-                     RealT       epiv  = static_cast<RealT>(0.2)) const
+                     RealT       capacity = 2.0,
+                     RealT       epiv     = static_cast<RealT>(0.2),
+                     RealT       ipcmd    = static_cast<RealT>(0.2)) const
       {
         Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
         fixture.attachAllInputs();
@@ -2749,7 +2835,7 @@ namespace GridKit
           fixture.bus.setVariableIndex(row, fixture.reecb.size() + row);
         }
 
-        setJacobianState(fixture, ilmax, epiv);
+        setJacobianState(fixture, capacity, epiv, ipcmd);
         fixture.reecb.updateTime(0.0, alpha);
         success *= (fixture.evaluate() == 0);
         success *= (fixture.reecb.evaluateJacobian() == 0);

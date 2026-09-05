@@ -19,6 +19,7 @@
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -846,12 +847,7 @@ namespace GridKit
 
         const auto data = makeResidualData();
 
-        Fixture<ScalarT> enzyme(data);
-        enzyme.attachAllInputs();
-        success *= enzyme.initialize(initial_pmech);
-
-        const auto compare = [&](Fixture<ScalarT>&                    enzyme_fixture,
-                                 const Data&                          case_data,
+        const auto compare = [&](const Data&                          case_data,
                                  RealT                                pmech,
                                  const char*                          context,
                                  std::initializer_list<VariableValue> overrides)
@@ -859,7 +855,7 @@ namespace GridKit
           const auto dependency_jacobian =
               dependencyTrackingJacobian(case_data, pmech, success, overrides);
           const auto enzyme_jacobian =
-              enzymeJacobian(enzyme_fixture, success, overrides, context);
+              enzymeJacobian(case_data, pmech, success, overrides, context);
 
           success *= jacobianMatches(enzyme_jacobian,
                                      dependency_jacobian,
@@ -867,28 +863,23 @@ namespace GridKit
                                      kTol);
         };
 
-        compare(enzyme,
-                data,
+        compare(data,
                 initial_pmech,
                 "load-limited Enzyme versus dependency tracking",
                 {});
-        compare(enzyme,
-                data,
+        compare(data,
                 initial_pmech,
                 "temperature-limited Enzyme versus dependency tracking",
                 {{Internal::VLOAD, 1.5}, {Internal::VTEMP, 0.3}});
-        compare(enzyme,
-                data,
+        compare(data,
                 initial_pmech,
                 "equal-selector Enzyme versus dependency tracking",
                 {{Internal::VLOAD, 0.9}, {Internal::VTEMP, 0.9}});
-        compare(enzyme,
-                data,
+        compare(data,
                 initial_pmech,
                 "blocked-response Enzyme versus dependency tracking",
                 {{Internal::XVALVE, 1.6}, {Internal::VLV, 1.85}});
-        compare(enzyme,
-                data,
+        compare(data,
                 initial_pmech,
                 "restoring-response Enzyme versus dependency tracking",
                 {{Internal::XVALVE, 1.6}, {Internal::VLV, 1.35}});
@@ -903,8 +894,7 @@ namespace GridKit
 
         const RealT adjusted_boundary = static_cast<RealT>(
             adjusted.gastpti.y().getData()[index(Internal::XVALVE)]);
-        compare(adjusted,
-                data,
+        compare(data,
                 over_rated_pmech,
                 "adjusted-boundary Enzyme versus dependency tracking",
                 {{Internal::XVALVE, adjusted_boundary},
@@ -922,8 +912,7 @@ namespace GridKit
         Fixture<ScalarT> collapsed(collapsed_data);
         collapsed.attachAllInputs();
         success *= collapsed.initialize(initial_pmech);
-        compare(collapsed,
-                collapsed_data,
+        compare(collapsed_data,
                 initial_pmech,
                 "collapsed Enzyme versus dependency tracking",
                 {});
@@ -932,8 +921,7 @@ namespace GridKit
         collapsed.input(index(External::PREF))  = ZERO<RealT>;
         collapsed.seedPmech(over_rated_pmech);
         success *= (collapsed.gastpti.initialize() == 0);
-        compare(collapsed,
-                collapsed_data,
+        compare(collapsed_data,
                 over_rated_pmech,
                 "reinitialized Enzyme versus dependency tracking",
                 {});
@@ -1710,11 +1698,15 @@ namespace GridKit
 
 #ifdef GRIDKIT_ENABLE_ENZYME
       std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
-          Fixture<ScalarT>&                    fixture,
+          const Data&                          data,
+          RealT                                pmech,
           TestStatus&                          success,
           std::initializer_list<VariableValue> overrides,
           const char*                          context) const
       {
+        Fixture<ScalarT> fixture(data);
+        fixture.attachAllInputs();
+        success *= fixture.initialize(pmech);
         setAnswerKeyInputs(fixture);
         setAnswerKeyState(fixture.gastpti);
         setState(fixture.gastpti, overrides);
@@ -1726,32 +1718,13 @@ namespace GridKit
           return {};
         }
 
-        auto* coo = fixture.gastpti.getCooJacobian();
-        if (coo == nullptr || fixture.gastpti.nnz() != coo->getNnz())
+        if (fixture.gastpti.constructCsr() != 0)
         {
-          std::cout << "GASTPTI COO structure changed for " << context << '\n';
+          std::cout << "GASTPTI CSR construction failed for " << context << '\n';
           success = false;
           return {};
         }
-
-        std::vector<DependencyTracking::Variable::DependencyMap> rows(
-            static_cast<size_t>(fixture.gastpti.size()));
-        const auto* row_indices    = coo->getRowData();
-        const auto* column_indices = coo->getColData();
-        const auto* values         = coo->getValues();
-
-        for (IdxT entry = 0; entry < coo->getNnz(); ++entry)
-        {
-          const auto row = static_cast<size_t>(row_indices[entry]);
-          if (row >= rows.size())
-          {
-            std::cout << "GASTPTI COO row is invalid for " << context << '\n';
-            success = false;
-            return {};
-          }
-          rows[row][static_cast<size_t>(column_indices[entry])] += values[entry];
-        }
-        return rows;
+        return MapFromCsr(fixture.gastpti.getCsrJacobian());
       }
 
 #endif

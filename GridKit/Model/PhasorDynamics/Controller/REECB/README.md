@@ -152,7 +152,6 @@ $e_Q$                        | [p.u.]   | Reactive-power error                  
 $V_Q^\mathrm{PI}$           | [p.u.]   | Reactive-power PI output                      |
 $e_V^\mathrm{PI}$           | [p.u.]   | Voltage-control error                         |
 $r_P^\mathrm{ord}$          | [p.u./s] | Limited active-power order rate               | Component base
-$I_L^{\max}$                | [p.u.]   | Current-circle continuation state             | Component base
 $I_L^\mathrm{cap}$          | [p.u.]   | Off-axis current capacity                     | Component base
 $I_q^{\max}$                | [p.u.]   | Reactive-current limit                        | Component base
 $I_p^{\max}$                | [p.u.]   | Active-current limit                          | Component base
@@ -209,8 +208,7 @@ $P^\mathrm{ref}$       | [p.u.] | Unknown | External active-power reference     
   0 &= -V_Q^\mathrm{PI}+\text{clamp}(K_\mathrm{qp}e_Q+x_Q^\mathrm{PI};\,V^{\min},V^{\max}) \\
   0 &= -e_V^\mathrm{PI}+s_Q^\mathrm{PI}V_Q^\mathrm{PI}+s_V^\mathrm{ref}Q^\mathrm{ext}-s_QV^\mathrm{meas} \\
   0 &= -r_P^\mathrm{ord}+\text{aslew}\!\left(\dfrac{k_\mathrm{base}P^\mathrm{ref}-P^\mathrm{ord}}{T_\mathrm{pord}};\,R_P^{\min},R_P^{\max}\right) \\
-  0 &= -I_L^{\max}\sqrt{(I_L^{\max})^2+\epsilon_0}+(I^{\max}-I^\mathrm{high})(I^{\max}+I^\mathrm{high}) \\
-  0 &= -I_L^\mathrm{cap}+\dfrac{(I_L^{\max})^2}{\sqrt{(I_L^{\max})^2+\epsilon_0}} \\
+  0 &= -I_L^\mathrm{cap}+\text{sqrtramp}\big((I^{\max}-I^\mathrm{high})(I^{\max}+I^\mathrm{high})\big) \\
   0 &= -I_q^{\max}+s_\mathrm{pq}I_L^\mathrm{cap}+s_\mathrm{pq}^\mathrm{off}I^{\max} \\
   0 &= -I_p^{\max}+s_\mathrm{pq}I^{\max}+s_\mathrm{pq}^\mathrm{off}I_L^\mathrm{cap} \\
   0 &= -I_q^\mathrm{base}+\text{clamp}(K_\mathrm{vp}e_V^\mathrm{PI}+x_V^\mathrm{PI};\,-I_q^{\max},I_q^{\max}) \\
@@ -224,6 +222,7 @@ Here
 $I^\mathrm{high}=s_\mathrm{pq}k_\mathrm{base}I_p^\mathrm{cmd}
 +s_\mathrm{pq}^\mathrm{off}k_\mathrm{base}I_q^\mathrm{cmd}$ and
 $\epsilon_0=100\epsilon_\mathrm{machine}$.
+[Appendix C](#appendix-c-sqrtramp) defines `sqrtramp`.
 
 CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup) and
 [smooth limiter](../../../../CommonMath.md#derived-functions) functions used in
@@ -272,23 +271,23 @@ and $I_q=k_\mathrm{base}I_q^\mathrm{cmd}$ be the component-base commands.
 
 Let $I_q^\mathrm{need}$ be the smooth-clamp input magnitude required to
 reproduce $I_q$, including the Volt/VAr recovery margin. Initialization raises
-$I^\max$, if needed, to the smallest finite limit satisfying
+$I^\max$, if needed, to a finite limit satisfying
 
 ```math
 \begin{aligned}
   h &= s_\mathrm{pq}I_p+s_\mathrm{pq}^\mathrm{off}|I_q| \\
   \ell &= s_\mathrm{pq}I_q^\mathrm{need}+s_\mathrm{pq}^\mathrm{off}I_p \\
   I &\ge \text{max}(I^\max,h,\ell,I_q^\mathrm{need}) \\
-  x\sqrt{x^2+\epsilon_0} &= (I-h)(I+h) \\
-  \dfrac{x^2}{\sqrt{x^2+\epsilon_0}} &\ge \ell.
+  \text{sqrtramp}\big((I-h)(I+h)\big) &\ge \ell.
 \end{aligned}
 ```
 
-The solution initializes $I^\max\leftarrow I$, $I_L^\max\leftarrow x$, and
-$I_L^\mathrm{cap}\leftarrow x^2/\sqrt{x^2+\epsilon_0}$. The operating point is
-rejected if no finite solution exists or the reactive-current injection is
-incompatible. Q, V, and P limits are expanded as needed; each adjustment logs
-a warning.
+The solution initializes
+$I^\max\leftarrow I$ and
+$I_L^\mathrm{cap}\leftarrow\text{sqrtramp}\big((I-h)(I+h)\big)$. The
+operating point is rejected if no finite solution exists or the
+reactive-current injection is incompatible. Q, V, and P limits are expanded as
+needed; each adjustment logs a warning.
 
 ```math
 \begin{aligned}
@@ -375,11 +374,11 @@ Output  | Units  | Description                     | Note
 - `initializationAndSignals()` checks initialization, signals, monitors, and power bases.
 - `initializationDomain()` checks rejected inputs and limit expansion.
 - `initializationExactness()` checks endpoint and current-circle initialization.
-- `residualEquations()` checks the fixed residual answer key.
+- `residualEquations()` checks residual equations at a hand-computable state.
 - `selectorConfigurations()` checks selectors and optional ports.
 - `voltVarReferenceBase()` checks `qext` units.
 - `reactiveControl()` checks the reactive-control paths.
-- `activeCurrentControl()` checks active-current control and current priority.
+- `activeCurrentControl()` checks active-current control, current priority, and the current circle.
 - `jacobian()` compares the Enzyme and dependency-tracking Jacobians.
 - `regcaReecbRepca()` checks the public-signal REGCA-REECB-REPCA control loop.
 - `reecb()` checks construction through the production system-data path.
@@ -411,6 +410,26 @@ where $\rho$ is GridKit's smooth
 [`ramp`](../../../../CommonMath.md#primitives). With exact one-sided ramps this
 reduces to $\text{clamp}(f;\ell,u)$; the smooth form preserves
 $\text{aslew}(0;\ell,u)=0$.
+
+## Appendix C: `sqrtramp`
+
+The off-axis capacity approaches $\sqrt{\max(0,s)}$, where
+$s=(I^{\max}-I^\mathrm{high})(I^{\max}+I^\mathrm{high})$. Let
+$\kappa=\epsilon_0/\mu$, with $\mu$ GridKit's
+[smoothing scale](../../../../CommonMath.md#primitives). REECB uses
+
+```math
+\begin{aligned}
+  h_\kappa(s) &= \tfrac{1}{2}\left(s+\sqrt{s^2+\kappa^2}\right), \\
+  \text{sqrtramp}(s) &=
+    \dfrac{\mu h_\kappa(s)}{\sqrt{\mu^2 h_\kappa(s)+1}}.
+\end{aligned}
+```
+
+Both softenings are differentiable for every finite $s$. The narrow hinge
+leaves a negligible positive capacity when the circle is closed or
+over-driven, while preserving the current-command dependence through the
+transition. Increasing $\mu$ recovers the exact current-circle leg.
 
 [^wecc-reecb-specification]: [WECC REMTF, *Generic Solar Photovoltaic System Dynamic Simulation Model Specification*](https://www.wecc.org/sites/default/files/documents/meeting/2024/WECC-Solar-PV-Dynamic-Model-Specification-September-2012.pdf), September 2012.
 
