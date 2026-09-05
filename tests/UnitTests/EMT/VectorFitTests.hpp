@@ -62,16 +62,17 @@ namespace GridKit
         const ComplexT pair_pole{-2.2, 7.3};
         data.poles.push_back(pair_pole);
         data.poles.push_back(std::conj(pair_pole));
-        auto& pair_residue      = data.residues.emplace_back();
-        pair_residue            = {{{{ComplexT{0.31, 0.15}, ComplexT{0.011, 0.021}, ComplexT{0.012, 0.032}}},
-                                    {{ComplexT{0.013, 0.043}, ComplexT{0.32, 0.25}, ComplexT{0.014, 0.054}}},
-                                    {{ComplexT{0.015, 0.065}, ComplexT{0.016, 0.076}, ComplexT{0.33, 0.35}}}}};
-        auto& conjugate_residue = data.residues.emplace_back();
+        auto& pair_residue           = data.residues.emplace_back();
+        pair_residue                 = {{{{ComplexT{0.31, 0.15}, ComplexT{0.011, 0.021}, ComplexT{0.012, 0.032}}},
+                                         {{ComplexT{0.013, 0.043}, ComplexT{0.32, 0.25}, ComplexT{0.014, 0.054}}},
+                                         {{ComplexT{0.015, 0.065}, ComplexT{0.016, 0.076}, ComplexT{0.33, 0.35}}}}};
+        const auto pair_copy         = pair_residue;
+        auto&      conjugate_residue = data.residues.emplace_back();
         for (size_t n = 0; n < 3; ++n)
         {
           for (size_t k = 0; k < 3; ++k)
           {
-            conjugate_residue[n][k] = std::conj(pair_residue[n][k]);
+            conjugate_residue[n][k] = std::conj(pair_copy[n][k]);
           }
         }
 

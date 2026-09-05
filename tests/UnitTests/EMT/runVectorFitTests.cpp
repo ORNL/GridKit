@@ -9,9 +9,7 @@ int main()
   result += test.validation();
   result += test.residual();
   result += test.steadyState();
-#ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
-#endif
 
   return result.summary();
 }
