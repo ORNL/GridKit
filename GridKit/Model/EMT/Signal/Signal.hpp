@@ -1,7 +1,10 @@
 #pragma once
 
 #include <array>
+#include <functional>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/ScalarTraits.hpp>
@@ -32,9 +35,10 @@ namespace GridKit
     class Signal
     {
     public:
-      using ScalarT = scalar_type;
-      using IdxT    = index_type;
-      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using ScalarT   = scalar_type;
+      using IdxT      = index_type;
+      using RealT     = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using GradientT = std::vector<std::pair<IdxT, RealT>>;
 
       Signal();
       explicit Signal(std::string id);
@@ -48,6 +52,14 @@ namespace GridKit
                ScalarT* residual,
                IdxT*    variable_index,
                IdxT*    residual_index);
+
+      /// Bind an algebraic expression without allocating a DAE variable.
+      /// The gradient appends derivatives with respect to global variables,
+      /// including structural entries whose current coefficient is zero.
+      void setComputed(std::function<ScalarT()>               value,
+                       std::function<void(GradientT&, RealT)> gradient);
+      bool computed() const;
+      void appendGradient(GradientT& gradient, RealT scale = RealT{1}) const;
 
       /** Reserve this signal for one component output. */
       void claimProducer();
@@ -73,7 +85,7 @@ namespace GridKit
 
       IdxT getVariableIndex() const
       {
-        return *variable_index_;
+        return variable_index_ == nullptr ? INVALID_INDEX<IdxT> : *variable_index_;
       }
 
       IdxT getResidualIndex() const
@@ -82,11 +94,14 @@ namespace GridKit
       }
 
     private:
-      ScalarT*    signal_{nullptr};
-      ScalarT*    derivative_{nullptr};
-      ScalarT*    residual_{nullptr};
-      std::string id_;
-      bool        producer_claimed_{false};
+      ScalarT*                               signal_{nullptr};
+      ScalarT*                               derivative_{nullptr};
+      ScalarT*                               residual_{nullptr};
+      std::string                            id_;
+      bool                                   producer_claimed_{false};
+      std::function<ScalarT()>               value_;
+      std::function<void(GradientT&, RealT)> gradient_;
+      mutable bool                           evaluating_{false};
 
     protected:
       IdxT* variable_index_{nullptr};

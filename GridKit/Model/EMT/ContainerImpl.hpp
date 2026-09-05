@@ -112,6 +112,20 @@ namespace GridKit
         add<Switch<ScalarT, IdxT>>(switch_data.id, qualified_data);
       }
 
+      for (const auto& model_data : data.pwm)
+      {
+        auto qualified_data = model_data;
+        qualified_data.id   = qualify(model_data.id);
+        add<Controller::Pwm<ScalarT, IdxT>>(model_data.id, qualified_data);
+      }
+
+      for (const auto& model_data : data.converter)
+      {
+        auto qualified_data = model_data;
+        qualified_data.id   = qualify(model_data.id);
+        add<Converter<ScalarT, IdxT>>(model_data.id, qualified_data);
+      }
+
       // Outputs are aliases of already-declared internal endpoints. Publishing
       // them bottom-up lets a parent bind one child's input to a sibling's
       // output before any leaf component is wired.
@@ -161,6 +175,44 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Container<scalar_type, index_type>::wire(const ModelDataT& data)
     {
+      for (const auto& model_data : data.pwm)
+      {
+        auto& model = component<Controller::Pwm<ScalarT, IdxT>>(model_data.id);
+        if (model_data.outputs.contains(Controller::PwmOutputs::sa))
+        {
+          model.assignOutput(0, &signal(model_data.outputs.at(Controller::PwmOutputs::sa)));
+        }
+        if (model_data.outputs.contains(Controller::PwmOutputs::sb))
+        {
+          model.assignOutput(1, &signal(model_data.outputs.at(Controller::PwmOutputs::sb)));
+        }
+        if (model_data.outputs.contains(Controller::PwmOutputs::sc))
+        {
+          model.assignOutput(2, &signal(model_data.outputs.at(Controller::PwmOutputs::sc)));
+        }
+      }
+
+      for (const auto& model_data : data.converter)
+      {
+        auto& model = component<Converter<ScalarT, IdxT>>(model_data.id);
+        model.attachInput(&source(model_data.inputs.at(ConverterInputs::sa)),
+                          &source(model_data.inputs.at(ConverterInputs::sb)),
+                          &source(model_data.inputs.at(ConverterInputs::sc)),
+                          &source(model_data.inputs.at(ConverterInputs::vdc)));
+        if (model_data.outputs.contains(ConverterOutputs::voa))
+        {
+          model.assignOutput(0, &signal(model_data.outputs.at(ConverterOutputs::voa)));
+        }
+        if (model_data.outputs.contains(ConverterOutputs::vob))
+        {
+          model.assignOutput(1, &signal(model_data.outputs.at(ConverterOutputs::vob)));
+        }
+        if (model_data.outputs.contains(ConverterOutputs::voc))
+        {
+          model.assignOutput(2, &signal(model_data.outputs.at(ConverterOutputs::voc)));
+        }
+      }
+
       for (const auto& source_data : data.voltage_source)
       {
         auto&       source_model = component<VoltageSource<ScalarT, IdxT>>(source_data.id);
