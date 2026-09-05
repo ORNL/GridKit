@@ -4,9 +4,11 @@
 #include <cmath>
 #include <iostream>
 #include <numbers>
+#include <stdexcept>
 
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceData.hpp>
+#include <GridKit/Model/EMT/PhasorInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
@@ -22,8 +24,8 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     VoltageSource<scalar_type, index_type>::VoltageSource()
+      : VoltageSource(ModelDataT{})
     {
-      size_ = 6;
     }
 
     template <typename scalar_type, typename index_type>
@@ -31,28 +33,28 @@ namespace GridKit
       : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
-      size_ = 6;
+      equation_size_ = 6;
       if (data.Y.has_value())
       {
-        equation_size_ = 6;
+        if (data.Y->rows != 3 || data.Y->cols != 3)
+        {
+          throw std::invalid_argument("VoltageSource: Y must be a three-phase operator");
+        }
         yfit_.emplace(*data.Y, ONE<RealT>);
         this->addOperator(&*yfit_);
-        size_   = equation_size_ + yfit_->size();
-        rl_on_  = ZERO<RealT>;
-        fit_on_ = ONE<RealT>;
-
-        fit_ey_nonzero_ = false;
-        for (size_t n = 0; n < 3; ++n)
-        {
-          for (size_t k = 0; k < 3; ++k)
-          {
-            if (data.Y->E[n][k] != 0.0)
-            {
-              fit_ey_nonzero_ = true;
-            }
-          }
-        }
+        rl_on_          = ZERO<RealT>;
+        fit_on_         = ONE<RealT>;
+        fit_ey_nonzero_ = yfit_->hasFeedthroughDerivative();
       }
+      else
+      {
+        VectorFitData<RealT, IdxT> impedance;
+        impedance.D = Rs_;
+        impedance.E = Ls_;
+        zfit_.emplace(impedance, ONE<RealT>);
+        this->addOperator(&*zfit_);
+      }
+      size_ = equation_size_ + (yfit_.has_value() ? yfit_->size() : zfit_->size());
       initializeMonitor();
     }
 
@@ -68,6 +70,11 @@ namespace GridKit
     void VoltageSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
+      if (data.parameters.contains(Parameter::N))
+      {
+        n_phases_ = std::get<IdxT>(data.parameters.at(Parameter::N));
+      }
+
       if (data.parameters.contains(Parameter::E))
       {
         E_ = std::get<ABCVector<RealT>>(data.parameters.at(Parameter::E));
@@ -131,7 +138,16 @@ namespace GridKit
         yfit_->attachOutput(signals_.template getAttachedSignal<VoltageSourceExternalVariables::VA>(),
                             signals_.template getAttachedSignal<VoltageSourceExternalVariables::VB>(),
                             signals_.template getAttachedSignal<VoltageSourceExternalVariables::VC>());
-        this->allocateOperators();
+      }
+      if (zfit_.has_value())
+      {
+        zfit_->attachInput(&u_port_);
+        zfit_->attachOutput(&u_port_);
+      }
+      const int status = this->allocateOperators();
+      if (status != 0)
+      {
+        return status;
       }
 
       // Default variable and residual index mapping to local index
@@ -162,6 +178,16 @@ namespace GridKit
     {
       int error_count = 0;
 
+      if (zfit_.has_value())
+      {
+        error_count += zfit_->verify();
+        if (!independentDerivativeColumns<RealT>(Ls_))
+        {
+          Log::error() << "VoltageSource: nonzero series-inductance columns must be independent\n";
+          ++error_count;
+        }
+      }
+
       if (!signals_.template isAttached<VoltageSourceExternalVariables::VA>()
           || !signals_.template isAttached<VoltageSourceExternalVariables::VB>()
           || !signals_.template isAttached<VoltageSourceExternalVariables::VC>())
@@ -170,7 +196,22 @@ namespace GridKit
         ++error_count;
       }
 
-      if (omega_ <= 0.0)
+      if (n_phases_ != IdxT{3})
+      {
+        Log::error() << "VoltageSource: only three phases are supported\n";
+        ++error_count;
+      }
+      for (size_t n = 0; n < 3; ++n)
+      {
+        if (!std::isfinite(E_[n]) || E_[n] < 0.0 || !std::isfinite(phi_[n]))
+        {
+          Log::error() << "VoltageSource: source magnitudes must be finite and nonnegative, "
+                          "and phase offsets must be finite\n";
+          ++error_count;
+        }
+      }
+
+      if (!std::isfinite(omega_) || omega_ <= 0.0)
       {
         Log::error() << "VoltageSource: the source angular frequency must be positive\n";
         ++error_count;
@@ -222,29 +263,81 @@ namespace GridKit
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      y[0] = sqrt2 * E_[0] * std::cos(phi_[0]);
-      y[1] = sqrt2 * E_[1] * std::cos(phi_[1]);
-      y[2] = sqrt2 * E_[2] * std::cos(phi_[2]);
+      y[0] = sqrt2 * E_[0] * std::cos(omega_ * time_ + phi_[0]);
+      y[1] = sqrt2 * E_[1] * std::cos(omega_ * time_ + phi_[1]);
+      y[2] = sqrt2 * E_[2] * std::cos(omega_ * time_ + phi_[2]);
       y[3] = 0.0;
       y[4] = 0.0;
       y[5] = 0.0;
 
-      yp[0] = 0.0;
-      yp[1] = 0.0;
-      yp[2] = 0.0;
+      yp[0] = -omega_ * sqrt2 * E_[0] * std::sin(omega_ * time_ + phi_[0]);
+      yp[1] = -omega_ * sqrt2 * E_[1] * std::sin(omega_ * time_ + phi_[1]);
+      yp[2] = -omega_ * sqrt2 * E_[2] * std::sin(omega_ * time_ + phi_[2]);
       yp[3] = 0.0;
       yp[4] = 0.0;
       yp[5] = 0.0;
 
       if (yfit_.has_value())
       {
-        this->initializeOperators();
+        this->gatherExternalVariables();
+        for (size_t n = 0; n < 3; ++n)
+        {
+          y[3 + n]  = y[n] - y_ext_[n];
+          yp[3 + n] = yp[n] - yp_ext_[n];
+        }
       }
+      const int status = this->initializeOperators();
 
       y_.setDataUpdated();
       yp_.setDataUpdated();
 
-      return 0;
+      return status;
+    }
+
+    /**
+     * @brief Initialize branch samples and rational memory in sinusoidal steady state.
+     */
+    template <typename scalar_type, typename index_type>
+    int VoltageSource<scalar_type, index_type>::initializeSteadyState(RealT omega)
+    {
+      if (!std::isfinite(omega) || omega <= ZERO<RealT> || omega != omega_)
+      {
+        return 1;
+      }
+      this->gatherExternalVariables();
+      auto*            y  = y_.getData();
+      auto*            yp = yp_.getData();
+      ABCVector<RealT> u{};
+      ABCVector<RealT> u_dot{};
+      for (size_t n = 0; n < 3; ++n)
+      {
+        const RealT angle = omega_ * time_ + phi_[n];
+        y[n]              = std::numbers::sqrt2_v<RealT> * E_[n] * std::cos(angle);
+        yp[n]             = -omega_ * std::numbers::sqrt2_v<RealT> * E_[n] * std::sin(angle);
+        u[n]              = static_cast<RealT>(y[n] - y_ext_[n]);
+        u_dot[n]          = static_cast<RealT>(yp[n] - yp_ext_[n]);
+      }
+      ABCVector<RealT> branch     = u;
+      ABCVector<RealT> branch_dot = u_dot;
+      if (zfit_.has_value())
+      {
+        ABCMatrix<RealT> Z_re{};
+        ABCMatrix<RealT> Z_im{};
+        zfit_->transfer(omega, Z_re, Z_im);
+        if (solvePhasorSystem(Z_re, Z_im, omega, u, u_dot, branch, branch_dot) != 0)
+        {
+          return 1;
+        }
+      }
+      for (size_t n = 0; n < 3; ++n)
+      {
+        y[3 + n]  = branch[n];
+        yp[3 + n] = branch_dot[n];
+      }
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+      return yfit_.has_value() ? yfit_->initializeSteadyState(omega, branch, branch_dot)
+                               : zfit_->initializeSteadyState(omega, branch, branch_dot);
     }
 
     /**
@@ -253,27 +346,15 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int VoltageSource<scalar_type, index_type>::tagDifferentiable()
     {
-      tag_[0] = false;
-      tag_[1] = false;
-      tag_[2] = false;
-
-      // The branch rows carry the differential series current, or the
-      // algebraic branch voltage when the rational admittance is present
-      bool differential = true;
-      if (yfit_.has_value())
+      for (size_t n = 0; n < 3; ++n)
       {
-        differential = false;
+        tag_[n] = false;
       }
-      tag_[3] = differential;
-      tag_[4] = differential;
-      tag_[5] = differential;
-
-      if (yfit_.has_value())
+      for (size_t n = 0; n < 3; ++n)
       {
-        this->tagDifferentiableOperators();
+        tag_[3 + n] = zfit_.has_value() && zfit_->hasInputDerivative(static_cast<IdxT>(n));
       }
-
-      return 0;
+      return this->tagDifferentiableOperators();
     }
 
     /**
@@ -292,7 +373,7 @@ namespace GridKit
     int VoltageSource<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
       abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
-      return 0;
+      return this->setAbsoluteToleranceOperators(rel_tol);
     }
 
     /**
@@ -302,7 +383,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int VoltageSource<scalar_type, index_type>::evaluateInternalResidual(
         const ScalarT*                  y,
-        const ScalarT*                  yp,
+        [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  y_ext,
         [[maybe_unused]] const ScalarT* yp_ext,
         ScalarT*                        f)
@@ -314,11 +395,6 @@ namespace GridKit
       const ScalarT ia = y[3];
       const ScalarT ib = y[4];
       const ScalarT ic = y[5];
-
-      /* Read derivatives */
-      const ScalarT ia_dot = yp[3];
-      const ScalarT ib_dot = yp[4];
-      const ScalarT ic_dot = yp[5];
 
       // Set coupling variable aliases
       const ScalarT va = y_ext[0];
@@ -332,21 +408,11 @@ namespace GridKit
       f[1] = eb - sqrt2 * E_[1] * std::cos(omega_ * time_ + phi_[1]);
       f[2] = ec - sqrt2 * E_[2] * std::cos(omega_ * time_ + phi_[2]);
 
-      /* 3 series branch equations, series-matrix or rational-admittance
-         form; the fit form defines the algebraic branch voltage u read by
-         the rational admittance */
-      f[3] = rl_on_
-                 * (Rs_[0][0] * ia + Rs_[0][1] * ib + Rs_[0][2] * ic
-                    + Ls_[0][0] * ia_dot + Ls_[0][1] * ib_dot + Ls_[0][2] * ic_dot)
-             + fit_on_ * ia + va - ea;
-      f[4] = rl_on_
-                 * (Rs_[1][0] * ia + Rs_[1][1] * ib + Rs_[1][2] * ic
-                    + Ls_[1][0] * ia_dot + Ls_[1][1] * ib_dot + Ls_[1][2] * ic_dot)
-             + fit_on_ * ib + vb - eb;
-      f[5] = rl_on_
-                 * (Rs_[2][0] * ia + Rs_[2][1] * ib + Rs_[2][2] * ic
-                    + Ls_[2][0] * ia_dot + Ls_[2][1] * ib_dot + Ls_[2][2] * ic_dot)
-             + fit_on_ * ic + vc - ec;
+      // The admittance input is the branch voltage. The legacy impedance
+      // contributes its voltage drop through its VectorFit output.
+      f[3] = fit_on_ * ia + va - ea;
+      f[4] = fit_on_ * ib + vb - eb;
+      f[5] = fit_on_ * ic + vc - ec;
 
       return 0;
     }
@@ -416,6 +482,64 @@ namespace GridKit
       return evaluateExternalResidual();
     }
 
+    /**
+     * @brief Exact local Jacobian with signal chain rules and operator contributions.
+     */
+    template <typename scalar_type, typename index_type>
+    int VoltageSource<scalar_type, index_type>::evaluateJacobian()
+    {
+      this->gatherExternalVariables();
+      const auto&                              external = this->externalVariableSignals();
+      std::vector<typename SignalT::GradientT> gradients(external.size());
+      size_t                                   capacity = 12;
+      for (size_t k = 0; k < external.size(); ++k)
+      {
+        external[k]->appendGradient(gradients[k]);
+        capacity += gradients[k].size();
+      }
+      if (yfit_.has_value())
+        capacity += static_cast<size_t>(yfit_->jacobianCapacity());
+      if (zfit_.has_value())
+        capacity += static_cast<size_t>(zfit_->jacobianCapacity());
+      if (this->hasComputedInputs() || capacity > jacobian_capacity_)
+      {
+        this->resetJacobianStructure();
+      }
+      if (capacity > jacobian_capacity_)
+      {
+        delete[] J_rows_buffer_;
+        delete[] J_cols_buffer_;
+        delete[] J_vals_buffer_;
+        J_rows_buffer_     = new IdxT[capacity];
+        J_cols_buffer_     = new IdxT[capacity];
+        J_vals_buffer_     = new RealT[capacity];
+        jacobian_capacity_ = capacity;
+      }
+      nnz_        = 0;
+      auto append = [this](IdxT row, IdxT column, RealT value)
+      {
+        J_rows_buffer_[nnz_]   = row;
+        J_cols_buffer_[nnz_]   = column;
+        J_vals_buffer_[nnz_++] = value;
+      };
+      for (size_t n = 0; n < 3; ++n)
+      {
+        append(residual_indices_[n], variable_indices_[n], ONE<RealT>);
+        append(residual_indices_[3 + n], variable_indices_[n], -ONE<RealT>);
+        append(residual_indices_[3 + n], variable_indices_[3 + n], fit_on_);
+        append(residual_indices_ext_[n], variable_indices_[3 + n], rl_on_);
+        for (const auto& [column, value] : gradients[n])
+        {
+          append(residual_indices_[3 + n], column, value);
+        }
+      }
+      const int status = this->evaluateOperatorJacobians();
+      if (status != 0)
+        return status;
+      this->appendOperatorJacobians();
+      return this->constructCoo();
+    }
+
     template <typename scalar_type, typename index_type>
     const Model::VariableMonitorBase* VoltageSource<scalar_type, index_type>::getMonitor() const
     {
@@ -434,11 +558,11 @@ namespace GridKit
       monitor_->set(Variable::ec, [this]
                     { return y_.getData()[2]; });
       monitor_->set(Variable::ia, [this]
-                    { return y_.getData()[3]; });
+                    { return yfit_.has_value() ? yfit_->output(0) : y_.getData()[3]; });
       monitor_->set(Variable::ib, [this]
-                    { return y_.getData()[4]; });
+                    { return yfit_.has_value() ? yfit_->output(1) : y_.getData()[4]; });
       monitor_->set(Variable::ic, [this]
-                    { return y_.getData()[5]; });
+                    { return yfit_.has_value() ? yfit_->output(2) : y_.getData()[5]; });
     }
 
   } // namespace EMT

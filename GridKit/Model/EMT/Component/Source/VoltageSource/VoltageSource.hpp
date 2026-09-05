@@ -53,9 +53,8 @@ namespace GridKit
     /*!
      * @brief Implementation of a three-phase sinusoidal EMT voltage source.
      *
-     * The initial three-phase formulation realizes the terminal admittance as
-     * a series resistance and inductance, with the injected current as a
-     * differential variable.
+     * Terminal admittance and legacy series impedance are realized by
+     * VectorFit submodels.
      */
     template <typename scalar_type, typename index_type>
     class VoltageSource : public Component<scalar_type, index_type>
@@ -101,6 +100,8 @@ namespace GridKit
       virtual int allocate() override final;
       virtual int verify() const override final;
       virtual int initialize() override final;
+      /// Initialize from the attached sinusoidal voltage samples.
+      int         initializeSteadyState(RealT omega);
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
@@ -130,6 +131,7 @@ namespace GridKit
 
     private:
       /* Input parameters */
+      IdxT             n_phases_{3};
       ABCVector<RealT> E_{{0.0, 0.0, 0.0}};
       ABCVector<RealT> phi_{{0.0, 0.0, 0.0}};
       RealT            omega_{0.0};
@@ -144,6 +146,9 @@ namespace GridKit
       /// Rational source admittance operator
       std::optional<VectorFitT> yfit_;
 
+      /// Legacy series impedance, realized as D + sE without memory states
+      std::optional<VectorFitT> zfit_;
+
       /// The rational admittance linear coefficient must be zero, because
       /// the branch voltage is algebraic
       bool fit_ey_nonzero_{false};
@@ -155,6 +160,7 @@ namespace GridKit
       ComponentSignals<ScalarT, IdxT, VoltageSourceInternalVariables, VoltageSourceExternalVariables> signals_;
 
       std::unique_ptr<MonitorT> monitor_;
+      size_t                    jacobian_capacity_{0};
     };
 
   } // namespace EMT
