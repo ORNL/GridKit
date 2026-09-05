@@ -1,0 +1,24 @@
+{
+    "system_model_file": "CoupledGrid.case.json",
+    "state_file": "CoupledGrid.state.json",
+    "dt_monitor": 1.6666666666666667e-05,
+    "tmax": 1.2,
+    "rel_tol": 1e-06,
+    "abs_tol": 1e-07,
+    "mu": 240.0,
+    "max_steps": 2000000,
+    "consistent_ic_type": "ya_ydp",
+    "events": [
+        {
+            "time": 0.5,
+            "type": "switch_close",
+            "element_id": "load_step"
+        },
+        {
+            "time": 0.8,
+            "type": "switch_open",
+            "element_id": "load_step"
+        }
+    ],
+    "output_file": "low.csv"
+}

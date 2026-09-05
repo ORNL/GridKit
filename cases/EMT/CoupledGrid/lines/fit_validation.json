@@ -1,0 +1,148 @@
+{
+  "training_points": 401,
+  "held_out_points": 400,
+  "max_held_out_entry_relative_error": 0.0022919941291986044,
+  "rms_held_out_entry_relative_error": 0.0008874778766730292,
+  "max_held_out_matrix_relative_error": 0.0020637990873071045,
+  "pole_rates_per_s": [
+    12.755970757749942,
+    50.79736185357689,
+    241.54668199279115,
+    988.5839163404627,
+    3958.389514112919,
+    15387.780715327708,
+    60978.08024869138,
+    311008.82200247946
+  ],
+  "pole_fit_function_evaluations": 42,
+  "passivity": {
+    "realization": "R0 + s*Linf + sum A_k*s/(s+a_k), all matrices symmetric PSD",
+    "R0_eigenvalues_ohm_per_m": [
+      0.00016603259506043437,
+      0.00016603265079089458,
+      0.00016617769780983622
+    ],
+    "Linf_eigenvalues_H_per_m": [
+      9.815336353294911e-07,
+      1.146626240138992e-06,
+      2.902206253892974e-06
+    ],
+    "A_eigenvalues_ohm_per_m": [
+      [
+        1.3232989440338207e-08,
+        1.3282072205301714e-08,
+        7.928390229561925e-06
+      ],
+      [
+        -1.5780311649576236e-21,
+        2.425064112211923e-21,
+        2.2064616124114802e-05
+      ],
+      [
+        8.132138457789887e-07,
+        8.146954906635589e-07,
+        0.00010557805566825421
+      ],
+      [
+        -2.710505431213761e-20,
+        5.421010862427522e-20,
+        0.00039771695769872674
+      ],
+      [
+        6.146778852627489e-05,
+        6.150109777641508e-05,
+        0.0015920273318004345
+      ],
+      [
+        0.0003091116554396406,
+        0.00030941382012620986,
+        0.005834484334861301
+      ],
+      [
+        2.9630408903873407e-06,
+        4.926086090358252e-06,
+        0.020468147263555274
+      ],
+      [
+        0.004946468730857852,
+        0.005048242463137544,
+        0.12287049694778429
+      ]
+    ],
+    "max_projection_entry_change_ohm_per_m": 1.4920710954168177e-06
+  },
+  "source": {
+    "repository": "https://github.com/lukelowry/openline",
+    "revision": "56c405add9f082fa0816338978f25a8242c2cc15",
+    "sweep_sha256": "5d0d3ad8f8e8d8bd7cc16138a7b0ff3c26955e4085a1e58fbc1bc90e3c82393e",
+    "driver_sha256": "ccaac114a04ba0039659169d3c0fdbd8eaa7fddc691a9a5ebe2fa1e68208f311"
+  },
+  "frequency_band_Hz": [
+    1.0,
+    30000.0
+  ],
+  "physical_parameters": {
+    "system_voltage_kV": 13.8,
+    "conductor": "ACSR_Linnet, 336.4 kcmil, 26 aluminum / 7 steel strands",
+    "conductor_diameter_m": 0.018288,
+    "core_diameter_m": 0.00673608,
+    "catalog_GMR_m": 0.007415784,
+    "catalog_DC_resistance_ohm_per_m_at_20C": 0.0001660105,
+    "conductor_temperature_C": 20,
+    "earth_resistivity_ohm_m": 100,
+    "phase_coordinates_m": [
+      [
+        -1.2,
+        10.5
+      ],
+      [
+        0.0,
+        11.0
+      ],
+      [
+        1.2,
+        10.5
+      ]
+    ],
+    "transposition": "Untransposed",
+    "formulations": [
+      "SchelkunoffInternal",
+      "PerfectEarthExternal",
+      "CarsonEarthReturn",
+      "MaxwellPerfectEarth"
+    ]
+  },
+  "shunt_max_entry_relative_error": 7.832754193716767e-13,
+  "independent_capacitance_max_entry_relative_error": 4.743587119942261e-10,
+  "capacitance_F_per_m": [
+    [
+      8.525007402858672e-12,
+      -2.5422333622757574e-12,
+      -1.4742961483983916e-12
+    ],
+    [
+      -2.5422333622757574e-12,
+      8.978748535945851e-12,
+      -2.5422333622757574e-12
+    ],
+    [
+      -1.4742961483983916e-12,
+      -2.5422333622757574e-12,
+      8.525007402858691e-12
+    ]
+  ],
+  "sampled_passivity_band_Hz": [
+    0.0001,
+    1000000000.0
+  ],
+  "sampled_passivity_points": 20001,
+  "minimum_sampled_real_Z_eigenvalue_ohm_per_m": 0.00016603259506047424,
+  "pi_600m_relative_nodal_admittance_Frobenius_error_by_Hz": {
+    "60": 1.137343974368542e-07,
+    "900": 2.3375077342417517e-05,
+    "2700": 0.00020725268458824327,
+    "9000": 0.002277918562452003,
+    "30000": 0.025340091549838132
+  },
+  "definition": "Entry relative error = abs(fit-OpenLine)/abs(OpenLine); odd-index points held out"
+}
