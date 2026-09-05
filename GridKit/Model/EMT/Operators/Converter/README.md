@@ -109,3 +109,6 @@ None beyond the EMT initialization contract.
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `vo` | [V] | Bridge voltage | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
+
+In case JSON, `mon: ["vo"]` expands to the scalar monitors `voa`, `vob`, `voc`.
+See [case connections](../../INPUT_FORMAT.md#case-connections) for vector signal wiring.

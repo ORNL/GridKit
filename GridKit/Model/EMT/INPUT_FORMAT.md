@@ -194,6 +194,10 @@ future file-backed Containers; file inclusion is not part of this revision.
   `DependentVoltageSource` | `ea`    | Input     | Signal        | Yes
   `DependentVoltageSource` | `eb`    | Input     | Signal        | Yes
   `DependentVoltageSource` | `ec`    | Input     | Signal        | Yes
+  `PWM`                    | `s`     | Output    | Three Signal IDs | No
+  `Converter`              | `s`     | Input     | Three Signal IDs | Yes
+  `Converter`              | `vdc`   | Input     | Signal        | Yes
+  `Converter`              | `vo`    | Output    | Three Signal IDs | No
   `Machine`                | `bus`   | Input     | Bus component | Yes
   `Machine`                | `pm`    | Input     | Signal        | No
   `Machine`                | `efd`   | Input     | Signal        | No
@@ -212,10 +216,42 @@ Declaring a signal creates a named connection. Its value is supplied by a
 component output or by the embedding program. Omit an optional input to use
 the model's internal default or latched value.
 
+PWM and Converter vector ports use arrays of three scalar signal IDs in
+phase order `a`, `b`, `c`. The scalar keys `sa`, `sb`, `sc` and `voa`, `vob`,
+`voc` address individual phases. Vector monitors `s` and `vo` expand to these
+three scalar columns.
+
+```json
+{
+  "class": "PWM",
+  "id": "pwm",
+  "params": { "M": 0.8, "fm": 60, "fc": 900 },
+  "outputs": { "s": ["sa", "sb", "sc"] },
+  "mon": ["s"]
+}
+```
+
+```json
+{
+  "class": "Converter",
+  "id": "bridge",
+  "inputs": { "s": ["sa", "sb", "sc"], "vdc": "dc" },
+  "outputs": { "vo": ["ea", "eb", "ec"] },
+  "mon": ["vo"]
+}
+```
+
+The embedding program or another component supplies `dc`. A
+DependentVoltageSource can consume `ea`, `eb`, and `ec`. Computed signals
+are evaluated from the current time and inputs when read, including through
+Container boundaries. These connections introduce no DAE variables.
+
 #### Device classes
 
   Class                 | Model
   ----------------------|------------------------------------------------------
+  `PWM`                 | [PWM](Component/Controller/PWM/README.md)
+  `Converter`           | [Converter](Operators/Converter/README.md)
   `Bus`                 | [Bus](Component/Bus/README.md)
   `DependentVoltageSource` | [DependentVoltageSource](Component/Source/DependentVoltageSource/README.md)
   `VoltageSource`       | [VoltageSource](Component/Source/VoltageSource/README.md)
