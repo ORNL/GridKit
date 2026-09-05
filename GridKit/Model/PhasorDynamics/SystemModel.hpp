@@ -117,6 +117,9 @@ namespace GridKit
 
       bool owns_components_{false};
 
+      /// Offset between y and yp for DependencyTracking::Variable numbers
+      IdxT y_yp_offset_;
+
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
     }; // class SystemModel

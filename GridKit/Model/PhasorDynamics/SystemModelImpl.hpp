@@ -557,6 +557,26 @@ namespace GridKit
         status += component->initialize();
       }
 
+     // For DependencyTracking::Variable, set variable numbers
+     if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+     {
+       auto* y  = y_.getData();
+       auto* yp = yp_.getData();
+
+       // Offset the number for yp variables to track y and yp simultaneously. 
+       // @todo For a hierarchical system, the offsets must be provided by a higher level
+       y_yp_offset_ = size_;
+       for (IdxT j = 0; j < size_; ++j)
+       {
+          const IdxT var_idx = this->getVariableIndex(j);
+          if (var_idx != INVALID_INDEX<IdxT>) 
+          {
+            y[j].setVariableNumber(static_cast<size_t>(var_idx));
+            yp[j].setVariableNumber(static_cast<size_t>(var_idx) + static_cast<size_t>(y_yp_offset_));
+          }
+        }
+      } 
+
       y_.setDataUpdated();
       yp_.setDataUpdated();
 
