@@ -10,6 +10,8 @@ int main()
   result += test.signalGradients();
   result += test.dependencyTracking();
   result += test.parseAndAssemble();
+  result += test.constantSignals();
+  result += test.runtimeSmoothing();
   result += test.monitors();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();

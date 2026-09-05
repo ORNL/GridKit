@@ -98,3 +98,16 @@ install(
           test_emt_system
           test_emt_vector_fit
   RUNTIME DESTINATION bin)
+
+if(GRIDKIT_ENABLE_SUNDIALS)
+  add_executable(test_emt_study_data runStudyDataTests.cpp)
+  target_include_directories(
+    test_emt_study_data PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+                                ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+  target_link_libraries(
+    test_emt_study_data
+    GridKit::emt_systemmodel
+    GridKit::solvers_dyn
+    GridKit::testing)
+  add_test(NAME EMTStudyDataTest COMMAND test_emt_study_data)
+endif()

@@ -8,6 +8,11 @@ activation functions for saturation, limits, deadbands, and antiwindup behavior.
 - [Primitives](#primitives)
 - [Derived Functions](#derived-functions)
 
+The default is `Math::DEFAULT_MU<RealT> = 240`. `Math::MU<RealT>` is a
+process-wide runtime value. Configure it before model construction or worker
+startup; changing it while models are active is unsupported. The EMT solver
+file exposes it as the positive finite `mu` option.
+
 ## Primitives
 
 | Symbol | Name | API | Description |
