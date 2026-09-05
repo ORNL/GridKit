@@ -45,9 +45,7 @@ $\mathbf{y}$ | Terminal admittance | [VectorFit](../../../Operators/Rational/Vec
 
 ### Submodel Validation
 
-```math
-\mathbf{E}^{\mathbf{y}} = \mathbf{0}
-```
+None.
 
 ## Model Variables
 
