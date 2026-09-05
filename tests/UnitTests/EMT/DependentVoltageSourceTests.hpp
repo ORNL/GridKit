@@ -63,9 +63,9 @@ namespace GridKit
         EMT::VectorFitData<RealT, IdxT> fit;
         fit.D = {{{{1.7, 0.21, 0.32}}, {{0.13, 1.9, 0.24}}, {{0.35, 0.16, 2.1}}}};
         fit.poles.emplace_back(-3.1, 0.0);
-        fit.residues.push_back({{{{ComplexT{0.61}, ComplexT{0.041}, ComplexT{0.022}}},
-                                 {{ComplexT{0.043}, ComplexT{0.72}, ComplexT{0.054}}},
-                                 {{ComplexT{0.025}, ComplexT{0.046}, ComplexT{0.83}}}}});
+        fit.residues.push_back(EMT::ABCMatrix<ComplexT>{{{{ComplexT{0.61}, ComplexT{0.041}, ComplexT{0.022}}},
+                                                         {{ComplexT{0.043}, ComplexT{0.72}, ComplexT{0.054}}},
+                                                         {{ComplexT{0.025}, ComplexT{0.046}, ComplexT{0.83}}}}});
         data.Y = fit;
         return data;
       }

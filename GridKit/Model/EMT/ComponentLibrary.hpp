@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GridKit/Model/EMT/Component/Bus/Bus.hpp>
+#include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/Pwm.hpp>
 #include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumped.hpp>

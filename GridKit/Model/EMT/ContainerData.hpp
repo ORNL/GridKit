@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <GridKit/Model/EMT/Component/Bus/BusData.hpp>
+#include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1Data.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedData.hpp>
@@ -44,6 +45,7 @@ namespace GridKit
       using SignalDataT                 = SignalData<RealT, IdxT>;
       using SwitchDataT                 = SwitchData<RealT, IdxT>;
       using Tgov1DataT                  = Controller::Tgov1Data<RealT, IdxT>;
+      using Ieeet1DataT                 = Controller::Ieeet1Data<RealT, IdxT>;
       using VoltageSourceDataT          = VoltageSourceData<RealT, IdxT>;
 
       /// Identifier within the parent scope. Empty only for the root.
@@ -67,6 +69,7 @@ namespace GridKit
       std::vector<MachineDataT>                machine;
       std::vector<SwitchDataT>                 sw;
       std::vector<Tgov1DataT>                  gov;
+      std::vector<Ieeet1DataT>                 exciter;
       std::vector<VoltageSourceDataT>          voltage_source;
     };
   } // namespace EMT

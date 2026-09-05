@@ -99,6 +99,8 @@ namespace GridKit
       virtual int allocate() override final;
       virtual int verify() const override final;
       virtual int initialize() override final;
+      /// Initialize from the attached sinusoidal voltage samples.
+      int         initializeSteadyState(RealT omega);
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
@@ -117,7 +119,6 @@ namespace GridKit
     private:
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
-      bool hasInductance(size_t) const;
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
@@ -141,6 +142,9 @@ namespace GridKit
       /// Rational source admittance operator
       std::optional<VectorFitT> yfit_;
 
+      /// Legacy series impedance, realized as D + sE without memory states
+      std::optional<VectorFitT> zfit_;
+
       /// The rational admittance linear coefficient must be zero, because
       /// the branch voltage is algebraic
       bool fit_ey_nonzero_{false};
@@ -152,6 +156,7 @@ namespace GridKit
       ComponentSignals<ScalarT, IdxT, DependentVoltageSourceInternalVariables, DependentVoltageSourceExternalVariables> signals_;
 
       std::unique_ptr<MonitorT> monitor_;
+      size_t                    jacobian_capacity_{0};
     };
 
   } // namespace EMT

@@ -580,8 +580,19 @@ namespace GridKit
 
       int allocateOperators()
       {
-        for (auto* op : operators_)
+        for (size_t i = 0; i < operators_.size(); ++i)
         {
+          auto* op = operators_[i];
+          // A system bind already supplies each operator's slice. Components
+          // allocated on their own instead keep the complete state locally.
+          if (!op->allocated_)
+          {
+            const int status = op->bind(y_, yp_, f_, abs_tol_, operator_offsets_[i]);
+            if (status != 0)
+            {
+              return status;
+            }
+          }
           const int status = op->allocate();
           if (status != 0)
           {

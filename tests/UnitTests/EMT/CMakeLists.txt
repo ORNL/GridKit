@@ -26,6 +26,12 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTDependentVoltageSourceTest COMMAND test_emt_dependent_voltage_source)
 
+add_executable(test_emt_admittance_components runAdmittanceComponentsTests.cpp)
+target_link_libraries(
+  test_emt_admittance_components GridKit::emt_systemmodel GridKit::testing)
+add_test(NAME EMTAdmittanceComponentsTest COMMAND test_emt_admittance_components)
+install(TARGETS test_emt_admittance_components RUNTIME DESTINATION bin)
+
 add_executable(test_emt_line_lumped runLineLumpedTests.cpp)
 target_link_libraries(
   test_emt_line_lumped
@@ -111,3 +117,24 @@ if(GRIDKIT_ENABLE_SUNDIALS)
     GridKit::testing)
   add_test(NAME EMTStudyDataTest COMMAND test_emt_study_data)
 endif()
+
+add_executable(test_emt_ieeet1 runIeeet1Tests.cpp)
+target_link_libraries(
+  test_emt_ieeet1
+  GridKit::definitions
+  GridKit::emt_ieeet1
+  GridKit::emt_ieeet1_dependency_tracking
+  GridKit::testing)
+add_test(NAME EMTIeeet1Test COMMAND test_emt_ieeet1)
+install(TARGETS test_emt_ieeet1 RUNTIME DESTINATION bin)
+
+add_executable(test_emt_rational runRationalTests.cpp)
+target_include_directories(
+  test_emt_rational
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
+target_link_libraries(
+  test_emt_rational
+  GridKit::emt_vector_fit
+  GridKit::emt_state_space
+  GridKit::testing)
+add_test(NAME EMTRationalTest COMMAND test_emt_rational)
