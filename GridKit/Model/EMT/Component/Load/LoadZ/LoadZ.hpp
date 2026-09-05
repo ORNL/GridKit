@@ -77,7 +77,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
-      using Component<scalar_type, index_type>::own_size_;
+      using Component<scalar_type, index_type>::equation_size_;
 
     public:
       using ScalarT    = scalar_type;
@@ -134,7 +134,7 @@ namespace GridKit
       /* Setpoints for control variables */
       RealT rl_on_{ONE<RealT>};
 
-      /* Rational impedance submodel */
+      /* Rational impedance operator */
       std::optional<VectorFitT> z_;
       bool                      fit_e_singular_{false};
       Port3T                    i_port_{};

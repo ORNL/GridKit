@@ -34,10 +34,10 @@ namespace GridKit
       size_ = 6;
       if (data.Y.has_value())
       {
-        own_size_ = 6;
+        equation_size_ = 6;
         yfit_.emplace(*data.Y, ONE<RealT>);
-        this->registerSubmodel(&*yfit_);
-        size_   = own_size_ + yfit_->size();
+        this->addOperator(&*yfit_);
+        size_   = equation_size_ + yfit_->size();
         rl_on_  = ZERO<RealT>;
         fit_on_ = ONE<RealT>;
 
@@ -131,7 +131,7 @@ namespace GridKit
         yfit_->attachOutput(signals_.template getAttachedSignal<VoltageSourceExternalVariables::VA>(),
                             signals_.template getAttachedSignal<VoltageSourceExternalVariables::VB>(),
                             signals_.template getAttachedSignal<VoltageSourceExternalVariables::VC>());
-        this->allocateSubmodels();
+        this->allocateOperators();
       }
 
       // Default variable and residual index mapping to local index
@@ -238,7 +238,7 @@ namespace GridKit
 
       if (yfit_.has_value())
       {
-        this->initializeSubmodels();
+        this->initializeOperators();
       }
 
       y_.setDataUpdated();
@@ -270,7 +270,7 @@ namespace GridKit
 
       if (yfit_.has_value())
       {
-        this->tagDifferentiableSubmodels();
+        this->tagDifferentiableOperators();
       }
 
       return 0;
@@ -383,7 +383,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
       evaluateInternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f);
-      this->evaluateSubmodelInternalResiduals();
+      this->evaluateOperatorInternalResiduals();
       f_.setDataUpdated();
 
       return 0;
@@ -400,7 +400,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
       this->scatterExternalResidual();
-      this->evaluateSubmodelExternalResiduals();
+      this->evaluateOperatorExternalResiduals();
 
       return 0;
     }

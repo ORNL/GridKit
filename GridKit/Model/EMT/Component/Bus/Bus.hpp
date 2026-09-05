@@ -80,6 +80,12 @@ namespace GridKit
       virtual int setGridKitComponentID(IdxT) override final;
       virtual int allocate() override final;
       virtual int verify() const override final;
+
+      int initializationOrder() const noexcept override final
+      {
+        return 0;
+      }
+
       virtual int initialize() override final;
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;

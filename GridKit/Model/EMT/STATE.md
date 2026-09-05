@@ -30,8 +30,9 @@ Contained in the optional `header` key is an object with the following items:
 
 ### Buses
 
-Contained in the `buses` key is an object mapping Bus component IDs from the
-case file to bus states:
+Contained in the `buses` key is an object mapping Bus component paths from the
+case file to bus states. A root Bus uses its local ID; a nested Bus uses its
+dot-qualified path, for example `left.network.bus`:
 
    Name  | Value
  --------|-------------------------------------------------------
@@ -41,8 +42,9 @@ case file to bus states:
 
 ### Devices
 
-Contained in the `devices` key is an object mapping component IDs from the
-case file to device states:
+Contained in the `devices` key is an object mapping component paths from the
+case file to device states. Nested paths are qualified by each containing
+Container, for example `plant.machine`:
 
    Name   | Value
  ---------|-------------------------------------------------------

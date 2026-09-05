@@ -16,7 +16,7 @@ namespace GridKit
     /**
      * @brief Apply a parsed operating point to parsed system model data.
      *
-     * Buses and other devices are matched by their component string ID.
+     * Buses and other devices are matched by their component path.
      * Records without a match and fields without a value are ignored, so
      * partial states are legal. See `STATE.md` for the state format.
      */

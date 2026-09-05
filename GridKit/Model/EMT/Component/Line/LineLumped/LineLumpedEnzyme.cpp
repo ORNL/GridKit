@@ -30,7 +30,7 @@ namespace GridKit
         // Reserve space for the dense blocks.
         // The size of the buffer is the sum of maximum capacities of the blocks.
         // Enyme will compute the appropriate nnz from sparsification.
-        auto size        = static_cast<size_t>(this->ownSize());
+        auto size        = static_cast<size_t>(this->equationSize());
         auto f_ext_size  = f_ext_.size();
         auto y_ext_size  = y_ext_.size();
         auto buffer_size = 2 * (size + f_ext_size) * (size + y_ext_size);
@@ -76,8 +76,8 @@ namespace GridKit
       SparseJacobian<ModelT, Equation::External, Variable::Y>::eval(
           this, n_fext, n_y, rie, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
 
-      this->evaluateSubmodelJacobians();
-      this->appendSubmodelJacobians();
+      this->evaluateOperatorJacobians();
+      this->appendOperatorJacobians();
 
       this->constructCoo();
 

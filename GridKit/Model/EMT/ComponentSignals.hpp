@@ -283,7 +283,17 @@ namespace GridKit
 #endif
 
         static_assert(variable < InternalVariables::MAXIMUM);
-        internal_variable_signals_[static_cast<size_t>(variable)] = signal;
+        auto& assigned = internal_variable_signals_[static_cast<size_t>(variable)];
+        if (assigned)
+        {
+          if (*assigned != signal)
+          {
+            throw std::logic_error("An internal variable signal cannot be reassigned");
+          }
+          return;
+        }
+        signal->claimProducer();
+        assigned = signal;
       }
 
       /// Registers every attached external variable signal with a component

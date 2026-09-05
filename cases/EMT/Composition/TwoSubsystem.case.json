@@ -1,0 +1,78 @@
+{
+    "header": {
+        "case_name": "EMT two-container source-line-load case",
+        "case_description": "Two independently scoped EMT subsystems connected through exported terminals",
+        "case_comments": "The sibling subsystems intentionally reuse the local Bus ID 'bus'"
+    },
+    "devices": [
+        {
+            "class": "Container",
+            "id": "left",
+            "outputs": {
+                "terminal": "bus"
+            },
+            "devices": [
+                {
+                    "class": "Bus",
+                    "id": "bus"
+                },
+                {
+                    "class": "VoltageSource",
+                    "id": "source",
+                    "params": {
+                        "E": [100.0, 100.0, 100.0],
+                        "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
+                        "omega": 376.99111843077515,
+                        "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+                        "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
+                    },
+                    "inputs": {
+                        "bus": "bus"
+                    }
+                }
+            ]
+        },
+        {
+            "class": "Container",
+            "id": "right",
+            "outputs": {
+                "terminal": "bus"
+            },
+            "devices": [
+                {
+                    "class": "Bus",
+                    "id": "bus"
+                },
+                {
+                    "class": "LoadZ",
+                    "id": "load",
+                    "params": {
+                        "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
+                        "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
+                    },
+                    "inputs": {
+                        "bus": "bus"
+                    }
+                }
+            ]
+        },
+        {
+            "class": "LineLumped",
+            "id": "tie_line",
+            "params": {
+                "N": 3,
+                "K": 3,
+                "conductors": [1, 2, 3],
+                "dx": 1.0,
+                "Rp": [[2.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 2.0]],
+                "Lp": [[0.02, 0.0, 0.0], [0.0, 0.02, 0.0], [0.0, 0.0, 0.02]],
+                "Gp": [[1.0e-4, 0.0, 0.0], [0.0, 1.0e-4, 0.0], [0.0, 0.0, 1.0e-4]],
+                "Cp": [[1.0e-5, 0.0, 0.0], [0.0, 1.0e-5, 0.0], [0.0, 0.0, 1.0e-5]]
+            },
+            "inputs": {
+                "bus1": "left.terminal",
+                "bus2": "right.terminal"
+            }
+        }
+    ]
+}

@@ -20,7 +20,7 @@ namespace GridKit
      * @brief Component model implementation base class.
      *
      * Every EMT model is a Component, including buses and models that own
-     * submodels. A component owns its internal variables and one residual row
+     * operators. A component owns its internal variables and one residual row
      * per internal variable, reads external variables and their derivatives
      * through bound signals, and accumulates external residual
      * contributions into residual rows owned by other components.
@@ -73,6 +73,17 @@ namespace GridKit
 
       virtual int verify() const = 0;
 
+      /**
+       * @brief Stable ordering key for component initialization.
+       *
+       * Containers initialize all leaves in ascending order. Components with
+       * the same value retain their hierarchy order.
+       */
+      virtual int initializationOrder() const noexcept
+      {
+        return 1;
+      }
+
       virtual int evaluateInternalResidual()
       {
         return this->evaluateResidual();
@@ -83,7 +94,7 @@ namespace GridKit
         return 0;
       }
 
-      IdxT size() override final
+      IdxT size() override
       {
         return size_;
       }
@@ -147,8 +158,8 @@ namespace GridKit
        * @brief Bind this component's state and residual vectors to the slice
        * [offset, offset + size()) of the system vectors.
        *
-       * The component's own rows occupy the first ownSize() entries of the
-       * slice; each registered submodel is bound to the sub-slice that
+       * The component's own rows occupy the first equationSize() entries of the
+       * slice; each embedded operator is bound to the sub-slice that
        * follows, in registration order.
        *
        * After binding, the component reads and writes system storage directly
@@ -173,7 +184,7 @@ namespace GridKit
        *
        * @return 0 if successful, non-zero otherwise.
        */
-      int bind(VectorT& y, VectorT& yp, VectorT& f, VectorT& abs_tol, IdxT offset)
+      virtual int bind(VectorT& y, VectorT& yp, VectorT& f, VectorT& abs_tol, IdxT offset)
       {
         if (y.getSize() < offset + size_
             || yp.getSize() < offset + size_
@@ -197,7 +208,7 @@ namespace GridKit
           return 1;
         }
 
-        const IdxT own_size = ownSize();
+        const IdxT own_size = equationSize();
 
         const int y_status       = y_.setData(y_data + offset, own_size, memory::HOST);
         const int yp_status      = yp_.setData(yp_data + offset, own_size, memory::HOST);
@@ -210,12 +221,12 @@ namespace GridKit
           return 1;
         }
 
-        for (size_t i = 0; i < submodels_.size(); ++i)
+        for (size_t i = 0; i < operators_.size(); ++i)
         {
-          const int submodel_status = submodels_[i]->bind(y, yp, f, abs_tol, offset + submodel_offsets_[i]);
-          if (submodel_status != 0)
+          const int operator_status = operators_[i]->bind(y, yp, f, abs_tol, offset + operator_offsets_[i]);
+          if (operator_status != 0)
           {
-            return submodel_status;
+            return operator_status;
           }
         }
 
@@ -226,13 +237,13 @@ namespace GridKit
       /**
        * @brief Assign the global index of one local variable.
        *
-       * Indices for rows owned by a registered submodel are forwarded into
-       * the submodel's local index space in addition to being recorded here.
+       * Indices for rows owned by an embedded operator are forwarded into
+       * the operator's local index space in addition to being recorded here.
        */
       int setVariableIndex(IdxT local_index, IdxT global_index)
       {
         variable_indices_[static_cast<size_t>(local_index)] = global_index;
-        routeSubmodelIndex(local_index, global_index, true);
+        routeOperatorIndex(local_index, global_index, true);
         return 0;
       }
 
@@ -249,13 +260,30 @@ namespace GridKit
       /**
        * @brief Assign the global index of one local residual row.
        *
-       * Indices for rows owned by a registered submodel are forwarded into
-       * the submodel's local index space in addition to being recorded here.
+       * Indices for rows owned by an embedded operator are forwarded into
+       * the operator's local index space in addition to being recorded here.
        */
       int setResidualIndex(IdxT local_index, IdxT global_index)
       {
         residual_indices_[static_cast<size_t>(local_index)] = global_index;
-        routeSubmodelIndex(local_index, global_index, false);
+        routeOperatorIndex(local_index, global_index, false);
+        return 0;
+      }
+
+      /**
+       * @brief Assign contiguous system indices to this equation block.
+       *
+       * Containers override this once for an entire subtree. The default
+       * implementation also preserves the private operator rows used by the
+       * rational EMT devices.
+       */
+      virtual int assignGlobalIndices(IdxT first)
+      {
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          setVariableIndex(j, first + j);
+          setResidualIndex(j, first + j);
+        }
         return 0;
       }
 
@@ -308,9 +336,9 @@ namespace GridKit
       {
         time_  = t;
         alpha_ = a;
-        for (auto* submodel : submodels_)
+        for (auto* op : operators_)
         {
-          submodel->updateTime(t, a);
+          op->updateTime(t, a);
         }
       }
 
@@ -327,7 +355,7 @@ namespace GridKit
        * Discrete state changes can change which Jacobian entries are exactly
        * zero, and exact zeros are dropped from the discovered sparsity
        * pattern, so the cached COO and CSR structures must be rebuilt by the
-       * next evaluateJacobian() call. Registered submodels are invalidated
+       * next evaluateJacobian() call. Registered operators are invalidated
        * along with their parent.
        */
       virtual void resetJacobianStructure()
@@ -343,9 +371,9 @@ namespace GridKit
 
         nnz_ = 0;
 
-        for (auto* submodel : submodels_)
+        for (auto* op : operators_)
         {
-          submodel->resetJacobianStructure();
+          op->resetJacobianStructure();
         }
       }
 
@@ -378,15 +406,15 @@ namespace GridKit
       /**
        * @brief Number of rows owned directly by this component.
        *
-       * Equal to size() for a component without submodels.
+       * Equal to size() for a component without operators.
        */
-      IdxT ownSize() const
+      IdxT equationSize() const
       {
-        if (submodels_.empty())
+        if (operators_.empty())
         {
           return size_;
         }
-        return own_size_;
+        return equation_size_;
       }
 
       /**
@@ -496,25 +524,25 @@ namespace GridKit
       }
 
       /**
-       * @brief Register a submodel owning the next rows of this component.
+       * @brief Add an embedded operator owning the next rows of this component.
        *
-       * The caller adds the submodel's size into size_ before allocation.
+       * The caller adds the operator's size into size_ before allocation.
        *
-       * @pre own_size_ is already set, because the submodel's local row
+       * @pre equation_size_ is already set, because the operator's local row
        * offset is recorded here.
        */
-      int registerSubmodel(Component* submodel)
+      int addOperator(Component* op)
       {
-        submodel_offsets_.push_back(own_size_ + submodelSize());
-        submodels_.push_back(submodel);
+        operator_offsets_.push_back(equation_size_ + operatorSize());
+        operators_.push_back(op);
         return 0;
       }
 
-      int allocateSubmodels()
+      int allocateOperators()
       {
-        for (auto* submodel : submodels_)
+        for (auto* op : operators_)
         {
-          const int status = submodel->allocate();
+          const int status = op->allocate();
           if (status != 0)
           {
             return status;
@@ -523,11 +551,11 @@ namespace GridKit
         return 0;
       }
 
-      int initializeSubmodels()
+      int initializeOperators()
       {
-        for (auto* submodel : submodels_)
+        for (auto* op : operators_)
         {
-          const int status = submodel->initialize();
+          const int status = op->initialize();
           if (status != 0)
           {
             return status;
@@ -536,35 +564,35 @@ namespace GridKit
         return 0;
       }
 
-      int tagDifferentiableSubmodels()
+      int tagDifferentiableOperators()
       {
-        for (size_t i = 0; i < submodels_.size(); ++i)
+        for (size_t i = 0; i < operators_.size(); ++i)
         {
-          submodels_[i]->tagDifferentiable();
-          const auto& submodel_tag = submodels_[i]->tag();
-          const auto  offset       = static_cast<size_t>(submodel_offsets_[i]);
-          for (size_t j = 0; j < submodel_tag.size(); ++j)
+          operators_[i]->tagDifferentiable();
+          const auto& operator_tag = operators_[i]->tag();
+          const auto  offset       = static_cast<size_t>(operator_offsets_[i]);
+          for (size_t j = 0; j < operator_tag.size(); ++j)
           {
-            tag_[offset + j] = submodel_tag[j];
+            tag_[offset + j] = operator_tag[j];
           }
         }
         return 0;
       }
 
-      int setAbsoluteToleranceSubmodels(RealT rel_tol)
+      int setAbsoluteToleranceOperators(RealT rel_tol)
       {
-        for (auto* submodel : submodels_)
+        for (auto* op : operators_)
         {
-          submodel->setAbsoluteTolerance(rel_tol);
+          op->setAbsoluteTolerance(rel_tol);
         }
         return 0;
       }
 
-      int evaluateSubmodelInternalResiduals()
+      int evaluateOperatorInternalResiduals()
       {
-        for (auto* submodel : submodels_)
+        for (auto* op : operators_)
         {
-          const int status = submodel->evaluateInternalResidual();
+          const int status = op->evaluateInternalResidual();
           if (status != 0)
           {
             return status;
@@ -573,11 +601,11 @@ namespace GridKit
         return 0;
       }
 
-      int evaluateSubmodelExternalResiduals()
+      int evaluateOperatorExternalResiduals()
       {
-        for (auto* submodel : submodels_)
+        for (auto* op : operators_)
         {
-          const int status = submodel->evaluateExternalResidual();
+          const int status = op->evaluateExternalResidual();
           if (status != 0)
           {
             return status;
@@ -586,11 +614,11 @@ namespace GridKit
         return 0;
       }
 
-      int evaluateSubmodelJacobians()
+      int evaluateOperatorJacobians()
       {
-        for (auto* submodel : submodels_)
+        for (auto* op : operators_)
         {
-          const int status = submodel->evaluateJacobian();
+          const int status = op->evaluateJacobian();
           if (status != 0)
           {
             return status;
@@ -600,29 +628,29 @@ namespace GridKit
       }
 
       /**
-       * @brief Copy submodel Jacobian triplets into this component's buffers.
+       * @brief Copy operator Jacobian triplets into this component's buffers.
        *
-       * Submodel triplets already carry global indices because index
+       * Operator triplets already carry global indices because index
        * assignment was routed through setVariableIndex and setResidualIndex,
        * so this component presents one COO to the system.
        *
        * @pre This component's Jacobian buffers have capacity for its own
-       * entries plus every submodel's entries.
+       * entries plus every operator's entries.
        */
-      int appendSubmodelJacobians()
+      int appendOperatorJacobians()
       {
-        for (auto* submodel : submodels_)
+        for (auto* op : operators_)
         {
-          auto* coo = submodel->getCooJacobian();
+          auto* coo = op->getCooJacobian();
           if (coo == nullptr)
           {
             continue;
           }
-          const IdxT  submodel_nnz = coo->getNnz();
+          const IdxT  operator_nnz = coo->getNnz();
           const auto* rows         = coo->getRowData();
           const auto* cols         = coo->getColData();
           const auto* vals         = coo->getValues();
-          for (IdxT i = 0; i < submodel_nnz; ++i)
+          for (IdxT i = 0; i < operator_nnz; ++i)
           {
             J_rows_buffer_[nnz_] = rows[i];
             J_cols_buffer_[nnz_] = cols[i];
@@ -658,8 +686,8 @@ namespace GridKit
       }
 
       IdxT              size_{0};
-      /// Rows owned directly by this component, excluding submodel rows
-      IdxT              own_size_{0};
+      /// Rows owned directly by this component, excluding operator rows
+      IdxT              equation_size_{0};
       IdxT              nnz_{0};
       /// Global (system-level) variable indices
       std::vector<IdxT> variable_indices_;
@@ -683,10 +711,10 @@ namespace GridKit
       /// Signal whose residual row receives each external residual row
       std::vector<SignalT*> external_residual_signals_;
 
-      /// Registered submodels, in row order after this component's own rows
-      std::vector<Component*> submodels_;
-      /// Local row offset of each registered submodel
-      std::vector<IdxT>       submodel_offsets_;
+      /// Registered operators, in row order after this component's own rows
+      std::vector<Component*> operators_;
+      /// Local row offset of each embedded operator
+      std::vector<IdxT>       operator_offsets_;
 
       std::vector<ScalarT> g_;
 
@@ -720,35 +748,35 @@ namespace GridKit
       using NotImplementedError = GridKit::Utilities::NotImplementedError;
 
     private:
-      IdxT submodelSize() const
+      IdxT operatorSize() const
       {
         IdxT total = 0;
-        for (const auto* submodel : submodels_)
+        for (const auto* op : operators_)
         {
-          total += const_cast<Component*>(submodel)->size();
+          total += const_cast<Component*>(op)->size();
         }
         return total;
       }
 
-      void routeSubmodelIndex(IdxT local_index, IdxT global_index, bool is_variable)
+      void routeOperatorIndex(IdxT local_index, IdxT global_index, bool is_variable)
       {
-        if (submodels_.empty() || local_index < own_size_)
+        if (operators_.empty() || local_index < equation_size_)
         {
           return;
         }
-        for (size_t i = submodels_.size(); i > 0; --i)
+        for (size_t i = operators_.size(); i > 0; --i)
         {
-          const auto submodel_i = i - 1;
-          if (local_index >= submodel_offsets_[submodel_i])
+          const auto operator_i = i - 1;
+          if (local_index >= operator_offsets_[operator_i])
           {
-            const IdxT submodel_local = local_index - submodel_offsets_[submodel_i];
+            const IdxT operator_local = local_index - operator_offsets_[operator_i];
             if (is_variable)
             {
-              submodels_[submodel_i]->setVariableIndex(submodel_local, global_index);
+              operators_[operator_i]->setVariableIndex(operator_local, global_index);
             }
             else
             {
-              submodels_[submodel_i]->setResidualIndex(submodel_local, global_index);
+              operators_[operator_i]->setResidualIndex(operator_local, global_index);
             }
             return;
           }

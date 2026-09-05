@@ -8,9 +8,11 @@ int main()
 
   result += test.parse();
   result += test.system();
+  result += test.boundaryAssembly();
 #ifdef GRIDKIT_ENABLE_SUNDIALS
   result += test.steadyState();
   result += test.threeBusSteadyState();
+  result += test.recursiveSteadyState();
   result += test.switchEnergization();
   result += test.machineFlatStart();
   result += test.machineGovernorFlatStart();
