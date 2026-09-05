@@ -8,10 +8,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
-#include <limits>
 #include <mutex>
-#include <numbers>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>

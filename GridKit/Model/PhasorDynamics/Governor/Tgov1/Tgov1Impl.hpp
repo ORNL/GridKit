@@ -9,7 +9,6 @@
  */
 
 #include <algorithm>
-#include <limits>
 #include <mutex>
 
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>

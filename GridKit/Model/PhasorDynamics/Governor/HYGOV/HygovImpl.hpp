@@ -7,8 +7,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cmath>
-#include <limits>
 #include <mutex>
 #include <numeric>
 #include <variant>
