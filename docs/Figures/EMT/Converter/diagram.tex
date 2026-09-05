@@ -1,6 +1,6 @@
 \documentclass[tikz,border=12pt]{standalone}
 \usepackage[american]{circuitikz}
-\input{../../diagram-style.tex}
+\input{../diagram-style.tex}
 
 \tikzset{
     igbt/.style = {nigbt, bodydiode, semithick, scale=1.2}
@@ -26,24 +26,15 @@
 \draw[line] (S+.E) -- (0, 0);
 \draw[line] (S-.C) -- (0, 0);
 \draw[line] (S-.E) -- (0, -3.7);
+\node[sig, anchor=west] at ($(S+.G)+(0.15,0)$) {$\mathbf{s}$};
 \node[sig, anchor=west] at ($(S-.G)+(0.15,0)$) {$1-\mathbf{s}$};
 
-% ================= External switching input =================
-\node[signal, label={[sig]above:$\mathbf{s}$}] (sinput) at (1.55, 5.15) {};
-\draw[->, line] (sinput) |- (S+.G);
-
-% ================= Phase terminal =================
+% ================= Bridge-voltage output =================
 \node[signal, label={[sig]left:$\mathbf{v}_{\mathrm{o}}$}] (phase) at (0, 0) {};
-
-% ================= Terminal admittance branch =================
-\node[block, minimum width=2.1cm, minimum height=0.9cm]
-    (Y) at (2.30, 0) {$\mathbf{Y}(s)$};
-\draw[line] (phase) -- (Y.west);
-\draw[->, line] (Y.east) -- (5.05, 0);
-\node[sig, anchor=west] at (5.30, 0) {$\mathbf{i}$};
+\draw[->, line] (phase) -- (3.35, 0);
 
 % ================= Model enclosure =================
-\draw[enclosure] (-2.55, -4.45) rectangle (4.05, 4.45);
+\draw[enclosure] (-2.55, -4.45) rectangle (2.35, 4.45);
 
 \end{tikzpicture}
 \end{document}

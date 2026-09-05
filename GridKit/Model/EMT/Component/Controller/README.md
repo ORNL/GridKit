@@ -1,6 +1,6 @@
 # Controller Models
 
-Controller models prescribe EMT control signals.
+EMT controller models exchange signals with other components.
 
 ## Models
 
