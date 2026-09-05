@@ -180,6 +180,10 @@ namespace GridKit
         {
           raw_device.get_to(data.gov.emplace_back());
         }
+        else if (kind == "Ieeet1" || kind == "IEEET1")
+        {
+          raw_device.get_to(data.exciter.emplace_back());
+        }
         else
         {
           Log::error() << "\n\tInvalid device class: \"" << kind << "\". "

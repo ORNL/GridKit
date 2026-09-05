@@ -681,7 +681,9 @@ namespace GridKit
       monitor_->set(Variable::ifd, [this]
                     { return y_.getData()[12]; });
       monitor_->set(Variable::efd, [this]
-                    { return efd_set_; });
+                    { return signals_.template isAttached<MachineExternalVariables::EFD>()
+                                 ? signals_.template readExternalVariable<MachineExternalVariables::EFD>()
+                                 : efd_set_; });
       monitor_->set(Variable::ks, [this]
                     { return y_.getData()[19]; });
       monitor_->set(Variable::psi_at, [this]

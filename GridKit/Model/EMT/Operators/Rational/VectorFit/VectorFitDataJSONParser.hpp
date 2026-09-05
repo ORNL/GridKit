@@ -7,6 +7,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <GridKit/Model/EMT/Operators/Rational/RationalDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFitData.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -17,70 +18,57 @@ namespace GridKit
     using json = nlohmann::json;
     using Log  = ::GridKit::Utilities::Logger;
 
-    /// JSON parser function implementation for the `VectorFitData` type
-    ///
-    /// The layout matches the fitting application's rational model files:
-    /// `rows`, `cols`, `D` and `E` as 3x3 arrays, `poles` as an array of
-    /// `[re, im]` pairs, and `residues` as `residues[q][row][col] = [re, im]`.
-    /// See the `INPUT_FORMAT.md` in `GridKit/Model/EMT` for more information
+    /// Parse matrix dimensions and pole-major residue data without truncation.
     template <typename RealT, typename IdxT>
     void from_json(const json& j, VectorFitData<RealT, IdxT>& vf)
     {
-      if (j.contains("rows"))
+      VectorFitData<RealT, IdxT> data;
+      data.rows = parseRationalDimension<IdxT>(j, "rows");
+      data.cols = parseRationalDimension<IdxT>(j, "cols");
+      if (data.rows <= 0 || data.cols <= 0)
       {
-        j.at("rows").get_to(vf.rows);
+        throw std::invalid_argument("VectorFit: dimensions must be positive");
       }
-
-      if (j.contains("cols"))
-      {
-        j.at("cols").get_to(vf.cols);
-      }
-
-      auto parse_matrix = [](const json& value, ABCMatrix<RealT>& matrix)
-      {
-        for (size_t n = 0; n < 3; ++n)
-        {
-          for (size_t k = 0; k < 3; ++k)
-          {
-            value.at(n).at(k).get_to(matrix[n][k]);
-          }
-        }
-      };
-
+      const size_t rows = static_cast<size_t>(data.rows), cols = static_cast<size_t>(data.cols);
+      data.D    = RationalMatrix<RealT>(rows, cols);
+      data.E    = RationalMatrix<RealT>(rows, cols);
+      auto real = [](const json& value)
+      { return value.template get<RealT>(); };
       if (j.contains("D"))
       {
-        parse_matrix(j.at("D"), vf.D);
+        data.D = parseRationalMatrix<RealT>(j.at("D"), rows, cols, real);
       }
-
       if (j.contains("E"))
       {
-        parse_matrix(j.at("E"), vf.E);
+        data.E = parseRationalMatrix<RealT>(j.at("E"), rows, cols, real);
       }
-
       if (j.contains("poles"))
       {
-        for (const auto& raw_pole : j.at("poles"))
+        if (!j.at("poles").is_array())
         {
-          vf.poles.emplace_back(raw_pole.at(0).template get<RealT>(),
-                                raw_pole.at(1).template get<RealT>());
+          throw std::invalid_argument("VectorFit: poles must be an array");
+        }
+        for (const auto& pole : j.at("poles"))
+        {
+          data.poles.push_back(parseRationalComplex<RealT>(pole));
         }
       }
-
       if (j.contains("residues"))
       {
-        for (const auto& raw_residue : j.at("residues"))
+        if (!j.at("residues").is_array())
         {
-          auto& residue = vf.residues.emplace_back();
-          for (size_t n = 0; n < 3; ++n)
-          {
-            for (size_t k = 0; k < 3; ++k)
-            {
-              residue[n][k] = {raw_residue.at(n).at(k).at(0).template get<RealT>(),
-                               raw_residue.at(n).at(k).at(1).template get<RealT>()};
-            }
-          }
+          throw std::invalid_argument("VectorFit: residues must be an array");
+        }
+        for (const auto& residue : j.at("residues"))
+        {
+          data.residues.push_back(parseRationalMatrix<std::complex<RealT>>(residue, rows, cols, parseRationalComplex<RealT>));
         }
       }
+      if (data.validate())
+      {
+        throw std::invalid_argument("VectorFit: invalid rational coefficients");
+      }
+      vf = std::move(data);
     }
 
     /**

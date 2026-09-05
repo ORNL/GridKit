@@ -1,6 +1,6 @@
 # LoadZ Model
 
-`LoadZ` represents an $N$-phase impedance load. Current $\mathbf{i}$ is injected
+`LoadZ` represents a three-phase impedance load. Current $\mathbf{i}$ is injected
 from the load into the EMT bus.
 
 ## Block Diagram
@@ -13,12 +13,14 @@ Figure 1: LoadZ model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$N$ | [-] | `N` | Number of phases | Required, positive integer
+$N$ | [-] | `N` | Number of phases | Fixed at $3$
+$\mathbf{R}$ | [$\Omega$] | `R` | Resistance matrix | Used when `Z` is absent
+$\mathbf{L}$ | [H] | `L` | Inductance matrix | Used when `Z` is absent
 
 ### Parameter Validation
 
 ```math
-N \in \mathbb{Z}_{>0}
+N = 3
 ```
 
 ### Derived Parameters
@@ -40,14 +42,11 @@ $\mathbf{z}$ | Impedance | [VectorFit](../../../Operators/Rational/VectorFit/REA
 
 ### Submodel Validation
 
-The current is differential when $\mathbf{E}^{\mathbf{z}}$ is nonsingular and
-algebraic when $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$.
-
-```math
-\mathbf{E}^{\mathbf{z}}=\mathbf{0}
-\qquad \text{or} \qquad
-\mathrm{rank}(\mathbf{E}^{\mathbf{z}})=N.
-```
+`Z` has three inputs and three outputs. When `Z` is supplied, `R` and `L`
+must be zero. Each current component is differential when its column of
+$\mathbf{E}^{\mathbf{z}}$ is nonzero and algebraic otherwise. Nonzero columns
+must be linearly independent, so the tagged current derivatives can be
+initialized consistently.
 
 ## Model Variables
 
@@ -57,13 +56,13 @@ algebraic when $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{i}$ | [A] | Current injection from load into EMT bus | $\mathbf{i} \in \mathbb{R}^N$, $\mathrm{rank}(\mathbf{E}^{\mathbf{z}})=N$
+$\mathbf{i}$ | [A] | Current injection from load into EMT bus | $\mathbf{i} \in \mathbb{R}^N$, nonzero column of $\mathbf{E}^{\mathbf{z}}$
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{i}$ | [A] | Current injection from load into EMT bus | $\mathbf{i} \in \mathbb{R}^N$, $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$
+$\mathbf{i}$ | [A] | Current injection from load into EMT bus | $\mathbf{i} \in \mathbb{R}^N$, zero column of $\mathbf{E}^{\mathbf{z}}$
 
 ### External Variables
 
@@ -83,7 +82,7 @@ None.
 
 #### Differential
 
-For $\mathrm{rank}(\mathbf{E}^{\mathbf{z}})=N$,
+The impedance output contributes to the current equations,
 
 ```math
 0 = \mathbf{z}[\mathbf{i}] + \mathbf{v}
@@ -91,7 +90,7 @@ For $\mathrm{rank}(\mathbf{E}^{\mathbf{z}})=N$,
 
 #### Algebraic
 
-For $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$, the same residual is algebraic.
+Current components with zero columns of $\mathbf{E}^{\mathbf{z}}$ are algebraic.
 
 ### External Equations
 
@@ -101,7 +100,14 @@ For $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$, the same residual is algebraic.
 
 ## Initialization
 
-None beyond the EMT initialization contract.
+The default initialization starts inductive currents and rational memory
+states de-energized. A legacy purely resistive load solves its current from
+the bus voltage when its resistance matrix is nonsingular. Singular resistance
+retains the zero-current guess for the assembled circuit initialization.
+`initializeSteadyState(omega)` instead uses the attached
+voltage values and derivatives as sinusoidal samples, solves
+$\mathbf{Z}(j\omega)\mathbf{I}=-\mathbf{V}$, and initializes all rational
+memory states. Singular transfer matrices return an initialization error.
 
 ## Monitors
 
@@ -109,15 +115,7 @@ Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `i` | [A] | Load current injection | $\mathbf{i} \in \mathbb{R}^N$
 
-## Development
+## Resistance-Inductance Specialization
 
-The initial three-phase formulation uses resistance and inductance matrices.
-
-### Differential Equations
-
-```math
-0 =
-\mathbf{R}\mathbf{i}
-+ \mathbf{L}\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}
-+ \mathbf{v}
-```
+When `Z` is absent, the same VectorFit submodel uses $\mathbf{D}=\mathbf{R}$
+and $\mathbf{E}=\mathbf{L}$ with no poles. Both matrices must be finite.

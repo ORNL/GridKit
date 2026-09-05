@@ -43,10 +43,14 @@ $\mathbf{E}$ | $\mathrm{s}[y]/[u]$ | `E` | Linear coefficient | $\mathbf{E} \in 
 $\mathbf{p}$ | $[\mathrm{s}^{-1}]$ | `poles` | Poles | $\mathbf{p} \in \mathbb{C}^Q$
 $\mathbf{R}$ | $[y]/(\mathrm{s}[u])$ | `residues` | Residues | $\mathbf{R} \in \mathbb{C}^{N \times K \times Q}$
 
+Coefficient files accept positive integer `rows` and `cols` for $N$ and $K$;
+both default to three. Matrix dimensions must match exactly. Complex values use
+`[real, imaginary]` pairs; `VectorFit` residues are stored pole-first.
+
 ### Parameter Validation
 
-The input and output dimensions are positive integers, and the pole count is a
-nonnegative integer. Let $\mathcal{Q}_\mathrm{r} \subseteq \mathcal{Q}$ contain
+All coefficients must be finite. The input and output dimensions are positive
+integers, and the pole count is a nonnegative integer. Let $\mathcal{Q}_\mathrm{r} \subseteq \mathcal{Q}$ contain
 the real-pole indices and
 $\mathcal{Q}_\mathrm{c} \subseteq \mathcal{Q}$ the first indices of the
 nonreal conjugate pairs. Define their partner-index set as
@@ -182,7 +186,11 @@ vanishes.
 
 ## Initialization
 
-None beyond the EMT initialization contract.
+The memory states start at zero, with derivatives set from the current input
+so the internal equations are consistent. Consumers may instead initialize a
+sinusoidal steady state from the angular frequency, input values, and input
+derivatives. Zero angular frequency requests a constant equilibrium and
+requires zero input derivatives. Initialization at a pole is rejected.
 
 ## Monitors
 

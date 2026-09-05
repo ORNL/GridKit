@@ -316,7 +316,7 @@ Monitor | Units | Description | Note
 `omega` | [p.u.] | Rotor speed |
 `te` | [p.u.] | Electrical torque |
 `ifd` | [p.u.] | Field current |
-`efd` | [p.u.] | Latched field voltage setpoint | Exciter base
+`efd` | [p.u.] | Applied field voltage | Connected exciter output or initialized setpoint, exciter base
 `ks` | [-] | Saturation factor |
 `psi_at` | [p.u.] | Air-gap flux magnitude |
 `ia` | [A] | Phase a current injection | SI

@@ -1,9 +1,12 @@
 #pragma once
 
+#include <cmath>
 #include <iostream>
+#include <stdexcept>
 
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSourceData.hpp>
+#include <GridKit/Model/EMT/PhasorInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
@@ -19,8 +22,8 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     DependentVoltageSource<scalar_type, index_type>::DependentVoltageSource()
+      : DependentVoltageSource(ModelDataT{})
     {
-      size_ = 3;
     }
 
     template <typename scalar_type, typename index_type>
@@ -28,28 +31,28 @@ namespace GridKit
       : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
-      size_ = 3;
+      equation_size_ = 3;
       if (data.Y.has_value())
       {
-        equation_size_ = 3;
+        if (data.Y->rows != 3 || data.Y->cols != 3)
+        {
+          throw std::invalid_argument("DependentVoltageSource: Y must be a three-phase operator");
+        }
         yfit_.emplace(*data.Y, ONE<RealT>);
         this->addOperator(&*yfit_);
-        size_   = equation_size_ + yfit_->size();
-        rl_on_  = ZERO<RealT>;
-        fit_on_ = ONE<RealT>;
-
-        fit_ey_nonzero_ = false;
-        for (size_t n = 0; n < 3; ++n)
-        {
-          for (size_t k = 0; k < 3; ++k)
-          {
-            if (data.Y->E[n][k] != 0.0)
-            {
-              fit_ey_nonzero_ = true;
-            }
-          }
-        }
+        rl_on_          = ZERO<RealT>;
+        fit_on_         = ONE<RealT>;
+        fit_ey_nonzero_ = yfit_->hasFeedthroughDerivative();
       }
+      else
+      {
+        VectorFitData<RealT, IdxT> impedance;
+        impedance.D = Rs_;
+        impedance.E = Ls_;
+        zfit_.emplace(impedance, ONE<RealT>);
+        this->addOperator(&*zfit_);
+      }
+      size_ = equation_size_ + (yfit_.has_value() ? yfit_->size() : zfit_->size());
       initializeMonitor();
     }
 
@@ -118,7 +121,16 @@ namespace GridKit
         yfit_->attachOutput(signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VA>(),
                             signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VB>(),
                             signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VC>());
-        this->allocateOperators();
+      }
+      if (zfit_.has_value())
+      {
+        zfit_->attachInput(&u_port_);
+        zfit_->attachOutput(&u_port_);
+      }
+      const int status = this->allocateOperators();
+      if (status != 0)
+      {
+        return status;
       }
 
       // Default variable and residual index mapping to local index
@@ -148,6 +160,16 @@ namespace GridKit
     int DependentVoltageSource<scalar_type, index_type>::verify() const
     {
       int error_count = 0;
+
+      if (zfit_.has_value())
+      {
+        error_count += zfit_->verify();
+        if (!independentDerivativeColumns<RealT>(Ls_))
+        {
+          Log::error() << "DependentVoltageSource: nonzero series-inductance columns must be independent\n";
+          ++error_count;
+        }
+      }
 
       if (n_phases_ != IdxT{3})
       {
@@ -232,13 +254,62 @@ namespace GridKit
 
       if (yfit_.has_value())
       {
-        this->initializeOperators();
+        this->gatherExternalVariables();
+        for (size_t n = 0; n < 3; ++n)
+        {
+          y[n]  = y_ext_[3 + n] - y_ext_[n];
+          yp[n] = yp_ext_[3 + n] - yp_ext_[n];
+        }
       }
+      const int status = this->initializeOperators();
 
       y_.setDataUpdated();
       yp_.setDataUpdated();
 
-      return 0;
+      return status;
+    }
+
+    /**
+     * @brief Initialize branch samples and rational memory in sinusoidal steady state.
+     */
+    template <typename scalar_type, typename index_type>
+    int DependentVoltageSource<scalar_type, index_type>::initializeSteadyState(RealT omega)
+    {
+      if (!std::isfinite(omega) || omega <= ZERO<RealT>)
+      {
+        return 1;
+      }
+      this->gatherExternalVariables();
+      auto*            y  = y_.getData();
+      auto*            yp = yp_.getData();
+      ABCVector<RealT> u{};
+      ABCVector<RealT> u_dot{};
+      for (size_t n = 0; n < 3; ++n)
+      {
+        u[n]     = static_cast<RealT>(y_ext_[3 + n] - y_ext_[n]);
+        u_dot[n] = static_cast<RealT>(yp_ext_[3 + n] - yp_ext_[n]);
+      }
+      ABCVector<RealT> branch     = u;
+      ABCVector<RealT> branch_dot = u_dot;
+      if (zfit_.has_value())
+      {
+        ABCMatrix<RealT> Z_re{};
+        ABCMatrix<RealT> Z_im{};
+        zfit_->transfer(omega, Z_re, Z_im);
+        if (solvePhasorSystem(Z_re, Z_im, omega, u, u_dot, branch, branch_dot) != 0)
+        {
+          return 1;
+        }
+      }
+      for (size_t n = 0; n < 3; ++n)
+      {
+        y[n]  = branch[n];
+        yp[n] = branch_dot[n];
+      }
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+      return yfit_.has_value() ? yfit_->initializeSteadyState(omega, branch, branch_dot)
+                               : zfit_->initializeSteadyState(omega, branch, branch_dot);
     }
 
     /**
@@ -247,35 +318,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int DependentVoltageSource<scalar_type, index_type>::tagDifferentiable()
     {
-      // The branch rows carry the differential series current, or the
-      // algebraic branch voltage when the rational admittance is present
       for (size_t n = 0; n < 3; ++n)
       {
-        tag_[n] = !yfit_.has_value() && hasInductance(n);
+        tag_[n] = zfit_.has_value() && zfit_->hasInputDerivative(static_cast<IdxT>(n));
       }
-
-      if (yfit_.has_value())
-      {
-        this->tagDifferentiableOperators();
-      }
-
-      return 0;
-    }
-
-    /**
-     * @brief Whether the series realization contains derivative terms.
-     */
-    template <typename scalar_type, typename index_type>
-    bool DependentVoltageSource<scalar_type, index_type>::hasInductance(size_t phase) const
-    {
-      for (size_t n = 0; n < 3; ++n)
-      {
-        if (Ls_[n][phase] != 0.0)
-        {
-          return true;
-        }
-      }
-      return false;
+      return this->tagDifferentiableOperators();
     }
 
     /**
@@ -304,7 +351,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int DependentVoltageSource<scalar_type, index_type>::evaluateInternalResidual(
         const ScalarT*                  y,
-        const ScalarT*                  yp,
+        [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  y_ext,
         [[maybe_unused]] const ScalarT* yp_ext,
         ScalarT*                        f)
@@ -314,11 +361,6 @@ namespace GridKit
       const ScalarT ib = y[1];
       const ScalarT ic = y[2];
 
-      /* Read derivatives */
-      const ScalarT ia_dot = yp[0];
-      const ScalarT ib_dot = yp[1];
-      const ScalarT ic_dot = yp[2];
-
       // Set coupling variable aliases
       const ScalarT va = y_ext[0];
       const ScalarT vb = y_ext[1];
@@ -327,21 +369,11 @@ namespace GridKit
       const ScalarT eb = y_ext[4];
       const ScalarT ec = y_ext[5];
 
-      /* 3 series branch equations, series-matrix or rational-admittance
-         form; the fit form defines the algebraic branch voltage u read by
-         the rational admittance */
-      f[0] = rl_on_
-                 * (Rs_[0][0] * ia + Rs_[0][1] * ib + Rs_[0][2] * ic
-                    + Ls_[0][0] * ia_dot + Ls_[0][1] * ib_dot + Ls_[0][2] * ic_dot)
-             + fit_on_ * ia + va - ea;
-      f[1] = rl_on_
-                 * (Rs_[1][0] * ia + Rs_[1][1] * ib + Rs_[1][2] * ic
-                    + Ls_[1][0] * ia_dot + Ls_[1][1] * ib_dot + Ls_[1][2] * ic_dot)
-             + fit_on_ * ib + vb - eb;
-      f[2] = rl_on_
-                 * (Rs_[2][0] * ia + Rs_[2][1] * ib + Rs_[2][2] * ic
-                    + Ls_[2][0] * ia_dot + Ls_[2][1] * ib_dot + Ls_[2][2] * ic_dot)
-             + fit_on_ * ic + vc - ec;
+      // The admittance input is the branch voltage. The legacy impedance
+      // contributes its voltage drop through its VectorFit output.
+      f[0] = fit_on_ * ia + va - ea;
+      f[1] = fit_on_ * ib + vb - eb;
+      f[2] = fit_on_ * ic + vc - ec;
 
       return 0;
     }
@@ -409,6 +441,66 @@ namespace GridKit
     {
       evaluateInternalResidual();
       return evaluateExternalResidual();
+    }
+
+    /**
+     * @brief Exact local Jacobian with signal chain rules and operator contributions.
+     */
+    template <typename scalar_type, typename index_type>
+    int DependentVoltageSource<scalar_type, index_type>::evaluateJacobian()
+    {
+      this->gatherExternalVariables();
+      const auto&                              external = this->externalVariableSignals();
+      std::vector<typename SignalT::GradientT> gradients(external.size());
+      size_t                                   capacity = 6;
+      for (size_t k = 0; k < external.size(); ++k)
+      {
+        external[k]->appendGradient(gradients[k]);
+        capacity += gradients[k].size();
+      }
+      if (yfit_.has_value())
+        capacity += static_cast<size_t>(yfit_->jacobianCapacity());
+      if (zfit_.has_value())
+        capacity += static_cast<size_t>(zfit_->jacobianCapacity());
+      if (this->hasComputedInputs() || capacity > jacobian_capacity_)
+      {
+        this->resetJacobianStructure();
+      }
+      if (capacity > jacobian_capacity_)
+      {
+        delete[] J_rows_buffer_;
+        delete[] J_cols_buffer_;
+        delete[] J_vals_buffer_;
+        J_rows_buffer_     = new IdxT[capacity];
+        J_cols_buffer_     = new IdxT[capacity];
+        J_vals_buffer_     = new RealT[capacity];
+        jacobian_capacity_ = capacity;
+      }
+      nnz_        = 0;
+      auto append = [this](IdxT row, IdxT column, RealT value)
+      {
+        J_rows_buffer_[nnz_]   = row;
+        J_cols_buffer_[nnz_]   = column;
+        J_vals_buffer_[nnz_++] = value;
+      };
+      for (size_t n = 0; n < 3; ++n)
+      {
+        append(residual_indices_[n], variable_indices_[n], fit_on_);
+        append(residual_indices_ext_[n], variable_indices_[n], rl_on_);
+        for (const auto& [column, value] : gradients[n])
+        {
+          append(residual_indices_[n], column, value);
+        }
+        for (const auto& [column, value] : gradients[3 + n])
+        {
+          append(residual_indices_[n], column, -value);
+        }
+      }
+      const int status = this->evaluateOperatorJacobians();
+      if (status != 0)
+        return status;
+      this->appendOperatorJacobians();
+      return this->constructCoo();
     }
 
     template <typename scalar_type, typename index_type>
