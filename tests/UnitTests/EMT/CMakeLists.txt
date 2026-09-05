@@ -58,6 +58,9 @@ target_link_libraries(
 add_test(NAME EMTVectorFitTest COMMAND test_emt_vector_fit)
 
 add_executable(test_emt_system runSystemTests.cpp)
+target_include_directories(
+  test_emt_system
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 target_link_libraries(
   test_emt_system
   GridKit::definitions

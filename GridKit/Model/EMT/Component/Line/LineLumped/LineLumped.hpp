@@ -89,7 +89,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
-      using Component<scalar_type, index_type>::own_size_;
+      using Component<scalar_type, index_type>::equation_size_;
 
     public:
       using ScalarT    = scalar_type;
@@ -156,7 +156,7 @@ namespace GridKit
       /* Setpoints for control variables */
       RealT rl_on_{ONE<RealT>};
 
-      /* Rational submodels */
+      /* Rational operators */
       std::optional<VectorFitT> z_;
       std::optional<VectorFitT> y1_;
       std::optional<VectorFitT> y2_;

@@ -10,6 +10,77 @@ namespace GridKit
 {
   namespace EMT
   {
+    namespace
+    {
+      void applyContainerState(ContainerData<double, size_t>& data,
+                               const Model::StateData&        state_data,
+                               const std::string&             prefix)
+      {
+        for (auto& bus : data.bus)
+        {
+          const auto entry = state_data.buses.find(prefix + bus.id);
+          if (entry == state_data.buses.end())
+          {
+            continue;
+          }
+
+          const auto& state = entry->second;
+          if (state.va.has_value())
+          {
+            bus.va0 = *state.va;
+          }
+          if (state.vb.has_value())
+          {
+            bus.vb0 = *state.vb;
+          }
+          if (state.vc.has_value())
+          {
+            bus.vc0 = *state.vc;
+          }
+        }
+
+        for (auto& machine : data.machine)
+        {
+          const auto entry = state_data.devices.find(prefix + machine.id);
+          if (entry == state_data.devices.end())
+          {
+            continue;
+          }
+
+          const auto& state = entry->second;
+          using Parameter   = MachineParameters;
+          if (state.p.has_value())
+          {
+            machine.parameters[Parameter::p0] = *state.p;
+          }
+          if (state.q.has_value())
+          {
+            machine.parameters[Parameter::q0] = *state.q;
+          }
+        }
+
+        for (auto& sw : data.sw)
+        {
+          const auto entry = state_data.devices.find(prefix + sw.id);
+          if (entry == state_data.devices.end())
+          {
+            continue;
+          }
+
+          const auto& state = entry->second;
+          if (state.open.has_value())
+          {
+            sw.parameters[SwitchParameters::open] = *state.open;
+          }
+        }
+
+        for (auto& child : data.container)
+        {
+          applyContainerState(child, state_data, prefix + child.id + ".");
+        }
+      }
+    } // namespace
+
     /**
      * @brief Apply a parsed operating point to parsed system model data.
      *
@@ -21,63 +92,7 @@ namespace GridKit
     void applyState(SystemModelData<double, size_t>& model_data,
                     const Model::StateData&          state_data)
     {
-      for (auto& bus : model_data.bus)
-      {
-        const auto entry = state_data.buses.find(bus.id);
-        if (entry == state_data.buses.end())
-        {
-          continue;
-        }
-
-        const auto& state = entry->second;
-        if (state.va.has_value())
-        {
-          bus.va0 = *state.va;
-        }
-        if (state.vb.has_value())
-        {
-          bus.vb0 = *state.vb;
-        }
-        if (state.vc.has_value())
-        {
-          bus.vc0 = *state.vc;
-        }
-      }
-
-      for (auto& machine : model_data.machine)
-      {
-        const auto entry = state_data.devices.find(machine.id);
-        if (entry == state_data.devices.end())
-        {
-          continue;
-        }
-
-        const auto& state = entry->second;
-        using Parameter   = MachineParameters;
-        if (state.p.has_value())
-        {
-          machine.parameters[Parameter::p0] = *state.p;
-        }
-        if (state.q.has_value())
-        {
-          machine.parameters[Parameter::q0] = *state.q;
-        }
-      }
-
-      for (auto& sw : model_data.sw)
-      {
-        const auto entry = state_data.devices.find(sw.id);
-        if (entry == state_data.devices.end())
-        {
-          continue;
-        }
-
-        const auto& state = entry->second;
-        if (state.open.has_value())
-        {
-          sw.parameters[SwitchParameters::open] = *state.open;
-        }
-      }
+      applyContainerState(model_data, state_data, "");
     }
   } // namespace EMT
 } // namespace GridKit

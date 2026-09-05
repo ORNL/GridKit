@@ -34,14 +34,14 @@ namespace GridKit
       setDerivedParams();
       if (data.Zp.has_value() && data.Yp.has_value())
       {
-        own_size_ = 9;
+        equation_size_ = 9;
         z_.emplace(*data.Zp, dx_);
-        this->registerSubmodel(&*z_);
+        this->addOperator(&*z_);
         y1_.emplace(*data.Yp, dx_);
-        this->registerSubmodel(&*y1_);
+        this->addOperator(&*y1_);
         y2_.emplace(*data.Yp, dx_);
-        this->registerSubmodel(&*y2_);
-        size_  = own_size_ + z_->size() + y1_->size() + y2_->size();
+        this->addOperator(&*y2_);
+        size_  = equation_size_ + z_->size() + y1_->size() + y2_->size();
         rl_on_ = ZERO<RealT>;
 
         // The series linear coefficient must be nonsingular so the series
@@ -170,7 +170,7 @@ namespace GridKit
       residual_indices_.resize(size);
 
       // Bind the series current and shunt-row ports and wire the rational
-      // submodels before their allocation, so index assignment can route
+      // operators before their allocation, so index assignment can route
       // into them
       this->bindPort(i12_port_, 0);
       this->bindPort(sh1_rows_port_, 3);
@@ -187,7 +187,7 @@ namespace GridKit
                          signals_.template getAttachedSignal<LineLumpedExternalVariables::V2B>(),
                          signals_.template getAttachedSignal<LineLumpedExternalVariables::V2C>());
         y2_->attachOutput(&sh2_rows_port_);
-        this->allocateSubmodels();
+        this->allocateOperators();
       }
 
       // Default variable and residual index mapping to local index
@@ -275,7 +275,7 @@ namespace GridKit
         }
         if (matrices_nonzero)
         {
-          Log::error() << "LineLumped: the rational submodels exclude the "
+          Log::error() << "LineLumped: the rational operators exclude the "
                           "per-unit-length matrices\n";
           ++error_count;
         }
@@ -301,7 +301,7 @@ namespace GridKit
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      for (IdxT j = 0; j < this->ownSize(); ++j)
+      for (IdxT j = 0; j < this->equationSize(); ++j)
       {
         y[j]  = 0.0;
         yp[j] = 0.0;
@@ -309,7 +309,7 @@ namespace GridKit
 
       if (z_.has_value())
       {
-        this->initializeSubmodels();
+        this->initializeOperators();
       }
 
       y_.setDataUpdated();
@@ -336,7 +336,7 @@ namespace GridKit
 
       if (z_.has_value())
       {
-        this->tagDifferentiableSubmodels();
+        this->tagDifferentiableOperators();
       }
 
       return 0;
@@ -405,7 +405,7 @@ namespace GridKit
       const ScalarT v2c_dot = yp_ext[5];
 
       /* 3 series branch equations; the rational series terms accumulate
-         through the submodel when the matrix mask is off */
+         through the operator when the matrix mask is off */
       f[0] = rl_on_
                  * (R_[0][0] * i12a + R_[0][1] * i12b + R_[0][2] * i12c
                     + L_[0][0] * i12a_dot + L_[0][1] * i12b_dot + L_[0][2] * i12c_dot)
@@ -491,7 +491,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
       evaluateInternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f);
-      this->evaluateSubmodelInternalResiduals();
+      this->evaluateOperatorInternalResiduals();
       f_.setDataUpdated();
 
       return 0;
@@ -508,7 +508,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
       this->scatterExternalResidual();
-      this->evaluateSubmodelExternalResiduals();
+      this->evaluateOperatorExternalResiduals();
 
       return 0;
     }
