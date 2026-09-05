@@ -5,6 +5,7 @@
 #include <cassert>
 #include <memory>
 #include <set>
+#include <stdexcept>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -26,6 +27,174 @@ namespace GridKit
     using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
     CircuitComponent() = default;
+
+    /**
+     * @brief Constructs a copy of a circuit component.
+     *
+     * Copies the component metadata, local vector data, connection-node mapping,
+     * and COO Jacobian storage. Dynamically allocated component-owned data is
+     * deep-copied so that the new component does not share ownership of this
+     * storage with @p other.
+     *
+     * Pointers to state, state-derivative, and residual storage supplied by a
+     * parent system are copied as-is. Consequently, the copied component initially
+     * references the same parent-system storage as @p other. The pointer arrays
+     * used for external variables are independently allocated, but their entries
+     * point to the same external state, state-derivative, and residual storage as
+     * the original component.
+     *
+     * Local vectors, including the state, state derivative, residual, tolerances,
+     * quadrature data, adjoint data, and parameter vectors, retain the values of
+     * the original component.
+     *
+     * @param other Component to copy.
+     *
+     * @note If the copied component is subsequently attached to a different parent
+     *       system, its state, state-derivative, and residual pointers must be
+     *       reassigned to the storage provided by that system before evaluation.
+     */
+    CircuitComponent(const CircuitComponent& other)
+      : n_extern_(other.n_extern_),
+        n_intern_(other.n_intern_),
+        extern_indices_(other.extern_indices_),
+        size_(other.size_),
+        nnz_(other.nnz_),
+        size_quad_(other.size_quad_),
+        size_opt_(other.size_opt_),
+        current_jac_size_(other.current_jac_size_),
+        y_int_(other.y_int_),
+        yp_int_(other.yp_int_),
+        f_int_(other.f_int_),
+        tag_(other.tag_),
+        time_(other.time_),
+        alpha_(other.alpha_),
+        max_steps_(other.max_steps_),
+        idc_(other.idc_),
+        allocated_(other.allocated_)
+    {
+
+      auto copyVector = [](VectorT& destination, const VectorT& source)
+      {
+        const IdxT source_size = source.getSize();
+
+        if (source_size == 0)
+        {
+          return;
+        }
+
+        destination.resize(source_size);
+        destination.copyFromExternal(source);
+      };
+
+      /*
+       * Deep-copy the local-to-global connection mapping.
+       */
+      if (other.connection_nodes_)
+      {
+        connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
+
+        for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
+        {
+          connection_nodes_[i] = other.connection_nodes_[i];
+        }
+      }
+
+      /*
+       * Deep-copy the COO Jacobian row indices.
+       */
+      if (other.jacobian_coo_rows_)
+      {
+        jacobian_coo_rows_ = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
+
+        for (size_t i = 0; i < static_cast<size_t>(nnz_); ++i)
+        {
+          jacobian_coo_rows_[i] = other.jacobian_coo_rows_[i];
+        }
+      }
+
+      /*
+       * Deep-copy the COO Jacobian column indices.
+       */
+      if (other.jacobian_coo_cols_)
+      {
+        jacobian_coo_cols_ = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
+
+        for (size_t i = 0; i < static_cast<size_t>(nnz_); ++i)
+        {
+          jacobian_coo_cols_[i] = other.jacobian_coo_cols_[i];
+        }
+      }
+
+      /*
+       * Deep-copy the COO Jacobian values.
+       */
+      if (other.jacobian_coo_values_)
+      {
+        jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
+
+        for (size_t i = 0; i < static_cast<size_t>(nnz_); ++i)
+        {
+          jacobian_coo_values_[i] = other.jacobian_coo_values_[i];
+        }
+      }
+
+      if (size_ > 0)
+      {
+        y_ext_  = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+        yp_ext_ = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+        f_ext_  = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
+
+        for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
+        {
+          y_ext_[i]  = other.y_ext_[i];
+          yp_ext_[i] = other.yp_ext_[i];
+          f_ext_[i]  = other.f_ext_[i];
+        }
+      }
+
+      // State, state derivative, residual, and absolute tolerance.
+      copyVector(y_, other.y_);
+      copyVector(yp_, other.yp_);
+      copyVector(f_, other.f_);
+      copyVector(abs_tol_, other.abs_tol_);
+      copyVector(g_, other.g_);
+      copyVector(yB_, other.yB_);
+      copyVector(ypB_, other.ypB_);
+      copyVector(fB_, other.fB_);
+      copyVector(gB_, other.gB_);
+      copyVector(param_, other.param_);
+      copyVector(param_up_, other.param_up_);
+      copyVector(param_lo_, other.param_lo_);
+    }
+
+    /**
+     * @brief Create an independent copy of this component.
+     *
+     * The clone preserves the component's model configuration, parameters,
+     * topology, and structural data, but does not preserve bindings to
+     * system-owned state or residual storage.
+     *
+     * @note By default, the cloned component's state, state-derivative, and
+     * residual pointers are not set. The user is responsible for setting these
+     * pointers to the appropriate storage before evaluating the residual.
+     */
+    virtual CircuitComponent<ScalarT, IdxT>* clone() const
+    {
+      throw std::runtime_error("clone() is not supported for this component.");
+    }
+
+    /**
+     * @brief Indicates whether this component supports cloning.
+     *
+     * Derived components that implement clone() should override this method
+     * and return true.
+     *
+     * @return true if the component can be cloned, false otherwise.
+     */
+    virtual bool isCloneable() const
+    {
+      return false;
+    }
 
     /**
      * @note Cannot be marked final, since it is overriden to recurse in the system model.
@@ -51,7 +220,7 @@ namespace GridKit
       return this->n_intern_;
     }
 
-    std::set<size_t> getExternIndices()
+    std::set<IdxT> getExternIndices()
     {
       return this->extern_indices_;
     }
@@ -69,7 +238,7 @@ namespace GridKit
     int setInternalConnectionNodes(size_t local_index, IdxT global_index)
     {
       assert(!extern_indices_.contains(static_cast<IdxT>(local_index)));
-      connection_nodes_[local_index] = global_index;
+      setConnectionNodes(local_index, global_index);
       return 0;
     }
 
@@ -88,10 +257,27 @@ namespace GridKit
     int setExternalConnectionNodes(size_t local_index, ExternalConnection<ScalarT, IdxT> connection)
     {
       assert(extern_indices_.contains(local_index));
-      y_ext_[local_index]            = connection.y_;
-      yp_ext_[local_index]           = connection.yp_;
-      f_ext_[local_index]            = connection.f_;
-      connection_nodes_[local_index] = connection.idx_;
+      y_ext_[local_index]  = connection.y_;
+      yp_ext_[local_index] = connection.yp_;
+      f_ext_[local_index]  = connection.f_;
+      setConnectionNodes(local_index, connection.idx_);
+      return 0;
+    }
+
+    /**
+     * @brief Update the connection index for a variable.
+     *
+     * Sets only the connection index without modifying the variable's
+     * internal/external classification or its associated data pointers.
+     *
+     * @param local_index Index of the local variable.
+     * @param connection_index New connection index for the variable.
+     *
+     * @return int 0 if successful.
+     */
+    int setConnectionNodes(size_t local_index, IdxT connection_index)
+    {
+      connection_nodes_[local_index] = connection_index;
       return 0;
     }
 
@@ -132,9 +318,10 @@ namespace GridKit
       jacobian_coo_cols_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
       jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
 
-      y_ext_            = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
-      yp_ext_           = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
-      f_ext_            = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
+      y_ext_  = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+      yp_ext_ = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+      f_ext_  = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
+
       connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
       tag_.resize(static_cast<size_t>(size_));
@@ -439,6 +626,16 @@ namespace GridKit
     IdxT getIDcomponent() const
     {
       return idc_;
+    }
+
+    /**
+     * @brief Check whether the component has already been allocated.
+     *
+     * @return true if allocate() has previously completed, false otherwise.
+     */
+    bool isAllocated() const
+    {
+      return allocated_;
     }
 
   protected:

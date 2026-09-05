@@ -139,6 +139,18 @@ namespace GridKit
     return 0;
   }
 
+  template <class ScalarT, typename IdxT>
+  bool Resistor<ScalarT, IdxT>::isCloneable() const
+  {
+    return true;
+  }
+
+  template <class ScalarT, typename IdxT>
+  CircuitComponent<ScalarT, IdxT>* Resistor<ScalarT, IdxT>::clone() const
+  {
+    return new Resistor<ScalarT, IdxT>(*this);
+  }
+
   // Available template instantiations
   template class Resistor<double, long int>;
   template class Resistor<double, size_t>;
