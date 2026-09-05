@@ -50,8 +50,8 @@ namespace GridKit
     /*!
      * @brief Implementation of a three-phase EMT impedance load.
      *
-     * The initial three-phase formulation uses resistance and inductance
-     * matrices, with the injected current as a differential variable.
+     * The impedance is realized by a VectorFit submodel, including the
+     * resistance-inductance specialization.
      */
     template <typename scalar_type, typename index_type>
     class LoadZ : public Component<scalar_type, index_type>
@@ -97,6 +97,8 @@ namespace GridKit
       virtual int allocate() override final;
       virtual int verify() const override final;
       virtual int initialize() override final;
+      /// Initialize from the attached sinusoidal bus-voltage samples.
+      int         initializeSteadyState(RealT omega);
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
@@ -128,20 +130,20 @@ namespace GridKit
 
     private:
       /* Input parameters */
+      IdxT             n_phases_{3};
       ABCMatrix<RealT> R_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
       ABCMatrix<RealT> L_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
 
-      /* Setpoints for control variables */
-      RealT rl_on_{ONE<RealT>};
-
       /* Rational impedance operator */
       std::optional<VectorFitT> z_;
-      bool                      fit_e_singular_{false};
+      bool                      supplied_fit_{false};
+      bool                      derivative_columns_independent_{true};
       Port3T                    i_port_{};
 
       ComponentSignals<ScalarT, IdxT, LoadZInternalVariables, LoadZExternalVariables> signals_;
 
       std::unique_ptr<MonitorT> monitor_;
+      size_t                    jacobian_capacity_{0};
     };
 
   } // namespace EMT

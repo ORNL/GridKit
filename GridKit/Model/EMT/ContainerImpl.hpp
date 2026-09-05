@@ -112,6 +112,13 @@ namespace GridKit
         add<Controller::Tgov1<ScalarT, IdxT>>(governor_data.id, qualified_data);
       }
 
+      for (const auto& exciter_data : data.exciter)
+      {
+        auto qualified_data = exciter_data;
+        qualified_data.id   = qualify(exciter_data.id);
+        add<Controller::Ieeet1<ScalarT, IdxT>>(exciter_data.id, qualified_data);
+      }
+
       for (const auto& switch_data : data.sw)
       {
         auto qualified_data = switch_data;
@@ -308,6 +315,41 @@ namespace GridKit
         {
           governor_model.getSignals().template assignSignal<Controller::Tgov1InternalVariables::PM>(
               &signal(governor_data.outputs.at(Controller::Tgov1Outputs::pmech)));
+        }
+      }
+
+      for (const auto& exciter_data : data.exciter)
+      {
+        using Inputs        = Controller::Ieeet1Inputs;
+        using External      = Controller::Ieeet1ExternalVariables;
+        using Internal      = Controller::Ieeet1InternalVariables;
+        auto& exciter_model = component<Controller::Ieeet1<ScalarT, IdxT>>(exciter_data.id);
+        auto& signals       = exciter_model.getSignals();
+        signals.template attachPort<External::VA>(&port(exciter_data.inputs.at(Inputs::bus)));
+        if (exciter_data.inputs.contains(Inputs::speed))
+        {
+          signals.template attachSignal<External::OMEGA>(&source(exciter_data.inputs.at(Inputs::speed)));
+        }
+        if (exciter_data.inputs.contains(Inputs::vref))
+        {
+          signals.template attachSignal<External::VREF>(&source(exciter_data.inputs.at(Inputs::vref)));
+        }
+        if (exciter_data.inputs.contains(Inputs::vs))
+        {
+          signals.template attachSignal<External::VS>(&source(exciter_data.inputs.at(Inputs::vs)));
+        }
+        if (exciter_data.inputs.contains(Inputs::vuel))
+        {
+          signals.template attachSignal<External::VUEL>(&source(exciter_data.inputs.at(Inputs::vuel)));
+        }
+        if (exciter_data.inputs.contains(Inputs::voel))
+        {
+          signals.template attachSignal<External::VOEL>(&source(exciter_data.inputs.at(Inputs::voel)));
+        }
+        if (exciter_data.outputs.contains(Controller::Ieeet1Outputs::efd))
+        {
+          signals.template assignSignal<Internal::EFD>(
+              &signal(exciter_data.outputs.at(Controller::Ieeet1Outputs::efd)));
         }
       }
 

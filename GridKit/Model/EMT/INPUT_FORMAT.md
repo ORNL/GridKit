@@ -209,6 +209,13 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Tgov1`                  | `speed` | Input     | Signal        | No
   `Tgov1`                  | `pref`  | Input     | Signal        | No
   `Tgov1`                  | `pmech` | Output    | Signal        | Yes
+  `Ieeet1`                 | `bus`   | Input     | Bus component | Yes
+  `Ieeet1`                 | `speed` | Input     | Signal        | No
+  `Ieeet1`                 | `vref`  | Input     | Signal        | No
+  `Ieeet1`                 | `vs`    | Input     | Signal        | No
+  `Ieeet1`                 | `vuel`  | Input     | Signal        | No
+  `Ieeet1`                 | `voel`  | Input     | Signal        | No
+  `Ieeet1`                 | `efd`   | Output    | Signal        | Yes
   `Switch`                 | `bus1`  | Input     | Bus component | Yes
   `Switch`                 | `bus2`  | Input     | Bus component | Yes
   `Container`              | user-defined | Input/output | Public boundary | No
@@ -216,6 +223,10 @@ future file-backed Containers; file inclusion is not part of this revision.
 Declaring a signal creates a named connection. Its value is supplied by the
 optional constant `value`, a component output, or the embedding program.
 Omit an optional input to use the model's internal default or latched value.
+
+`IEEET1` is also accepted as the class name for `Ieeet1`. Its rated
+line-to-line RMS voltage parameter `V` converts bus voltages to per unit;
+connect its `efd` output to the Machine field-voltage input.
 
 PWM and Converter vector ports use arrays of three scalar signal IDs in
 phase order `a`, `b`, `c`. The scalar keys `sa`, `sb`, `sc` and `voa`, `vob`,

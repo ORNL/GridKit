@@ -1,10 +1,13 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
+#include <stdexcept>
 
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZData.hpp>
+#include <GridKit/Model/EMT/PhasorInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
@@ -20,8 +23,8 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     LoadZ<scalar_type, index_type>::LoadZ()
+      : LoadZ(ModelDataT{})
     {
-      size_ = 3;
     }
 
     template <typename scalar_type, typename index_type>
@@ -29,22 +32,28 @@ namespace GridKit
       : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
-      size_ = 3;
-      if (data.Z.has_value())
+      equation_size_ = 3;
+      supplied_fit_  = data.Z.has_value();
+      if (supplied_fit_)
       {
+        if (data.Z->rows != 3 || data.Z->cols != 3)
+        {
+          throw std::invalid_argument("LoadZ: Z must be a three-phase operator");
+        }
         z_.emplace(*data.Z, ONE<RealT>);
-        equation_size_ = 3;
-        this->addOperator(&*z_);
-        size_  = equation_size_ + z_->size();
-        rl_on_ = ZERO<RealT>;
-
-        // The specification admits a zero or nonsingular linear coefficient
-        const auto& E   = data.Z->E;
-        const RealT det = E[0][0] * (E[1][1] * E[2][2] - E[1][2] * E[2][1])
-                          - E[0][1] * (E[1][0] * E[2][2] - E[1][2] * E[2][0])
-                          + E[0][2] * (E[1][0] * E[2][1] - E[1][1] * E[2][0]);
-        fit_e_singular_ = z_->hasFeedthroughDerivative() && det == 0.0;
+        derivative_columns_independent_ = data.Z->E.hasShape(3, 3)
+                                          && independentDerivativeColumns<RealT>(data.Z->E);
       }
+      else
+      {
+        VectorFitData<RealT, IdxT> impedance;
+        impedance.D = R_;
+        impedance.E = L_;
+        z_.emplace(impedance, ONE<RealT>);
+        derivative_columns_independent_ = independentDerivativeColumns<RealT>(L_);
+      }
+      this->addOperator(&*z_);
+      size_ = equation_size_ + z_->size();
       initializeMonitor();
     }
 
@@ -60,6 +69,11 @@ namespace GridKit
     void LoadZ<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
+      if (data.parameters.contains(Parameter::N))
+      {
+        n_phases_ = std::get<IdxT>(data.parameters.at(Parameter::N));
+      }
+
       if (data.parameters.contains(Parameter::R))
       {
         R_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::R));
@@ -102,11 +116,12 @@ namespace GridKit
       // Bind the current port and wire the rational impedance before its
       // allocation, so index assignment can route into it
       this->bindPort(i_port_, 0);
-      if (z_.has_value())
+      z_->attachInput(&i_port_);
+      z_->attachOutput(&i_port_);
+      const int status = this->allocateOperators();
+      if (status != 0)
       {
-        z_->attachInput(&i_port_);
-        z_->attachOutput(&i_port_);
-        this->allocateOperators();
+        return status;
       }
 
       // Default variable and residual index mapping to local index
@@ -135,7 +150,17 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::verify() const
     {
-      int error_count = 0;
+      int error_count = z_->verify();
+      if (!derivative_columns_independent_)
+      {
+        Log::error() << "LoadZ: nonzero impedance derivative columns must be independent\n";
+        ++error_count;
+      }
+      if (n_phases_ != IdxT{3})
+      {
+        Log::error() << "LoadZ: only three phases are supported\n";
+        ++error_count;
+      }
 
       if (!signals_.template isAttached<LoadZExternalVariables::VA>()
           || !signals_.template isAttached<LoadZExternalVariables::VB>()
@@ -145,23 +170,11 @@ namespace GridKit
         ++error_count;
       }
 
-      if (z_.has_value())
+      if (supplied_fit_ && (hasResistance() || hasInductance()))
       {
-        error_count += z_->verify();
-
-        if (hasResistance() || hasInductance())
-        {
-          Log::error() << "LoadZ: the rational impedance excludes the "
-                          "resistance and inductance matrices\n";
-          ++error_count;
-        }
-
-        if (fit_e_singular_)
-        {
-          Log::error() << "LoadZ: the rational impedance linear coefficient "
-                          "must be zero or nonsingular\n";
-          ++error_count;
-        }
+        Log::error() << "LoadZ: the rational impedance excludes the "
+                        "resistance and inductance matrices\n";
+        ++error_count;
       }
 
       return error_count;
@@ -187,42 +200,77 @@ namespace GridKit
       yp[1] = 0.0;
       yp[2] = 0.0;
 
-      if (z_.has_value())
+      if (!hasInductance() && !supplied_fit_)
       {
-        this->initializeOperators();
-      }
-
-      if (!hasInductance() && !z_.has_value())
-      {
-        const ScalarT va = signals_.template readExternalVariable<LoadZExternalVariables::VA>();
-        const ScalarT vb = signals_.template readExternalVariable<LoadZExternalVariables::VB>();
-        const ScalarT vc = signals_.template readExternalVariable<LoadZExternalVariables::VC>();
-
-        // Solve R i = -v by the cofactor inverse
-        const RealT det = R_[0][0] * (R_[1][1] * R_[2][2] - R_[1][2] * R_[2][1])
-                          - R_[0][1] * (R_[1][0] * R_[2][2] - R_[1][2] * R_[2][0])
-                          + R_[0][2] * (R_[1][0] * R_[2][1] - R_[1][1] * R_[2][0]);
-        if (det != 0.0)
+        this->gatherExternalVariables();
+        ABCVector<RealT> voltage{};
+        ABCVector<RealT> current{};
+        ABCVector<RealT> derivative{};
+        for (size_t n = 0; n < 3; ++n)
         {
-          y[0] = -((R_[1][1] * R_[2][2] - R_[1][2] * R_[2][1]) * va
-                   + (R_[0][2] * R_[2][1] - R_[0][1] * R_[2][2]) * vb
-                   + (R_[0][1] * R_[1][2] - R_[0][2] * R_[1][1]) * vc)
-                 / det;
-          y[1] = -((R_[1][2] * R_[2][0] - R_[1][0] * R_[2][2]) * va
-                   + (R_[0][0] * R_[2][2] - R_[0][2] * R_[2][0]) * vb
-                   + (R_[0][2] * R_[1][0] - R_[0][0] * R_[1][2]) * vc)
-                 / det;
-          y[2] = -((R_[1][0] * R_[2][1] - R_[1][1] * R_[2][0]) * va
-                   + (R_[0][1] * R_[2][0] - R_[0][0] * R_[2][1]) * vb
-                   + (R_[0][0] * R_[1][1] - R_[0][1] * R_[1][0]) * vc)
-                 / det;
+          voltage[n] = -static_cast<RealT>(y_ext_[n]);
         }
+        if (solvePhasorSystem(R_, ABCMatrix<RealT>{}, ONE<RealT>, voltage, ABCVector<RealT>{}, current, derivative) == 0)
+        {
+          for (size_t n = 0; n < 3; ++n)
+          {
+            y[n] = current[n];
+          }
+        }
+        // Singular resistance leaves the zero-current guess for the
+        // assembled circuit initialization, including an ideal short.
       }
 
       y_.setDataUpdated();
       yp_.setDataUpdated();
 
-      return 0;
+      return this->initializeOperators();
+    }
+
+    /**
+     * @brief Solve Z(j omega) I = -V and initialize the impedance memory.
+     */
+    template <typename scalar_type, typename index_type>
+    int LoadZ<scalar_type, index_type>::initializeSteadyState(RealT omega)
+    {
+      if (!std::isfinite(omega) || omega <= ZERO<RealT>)
+      {
+        return 1;
+      }
+      this->gatherExternalVariables();
+      ABCVector<RealT> v{};
+      ABCVector<RealT> v_dot{};
+      ABCVector<RealT> current{};
+      ABCVector<RealT> current_dot{};
+      for (size_t n = 0; n < 3; ++n)
+      {
+        v[n]     = -static_cast<RealT>(y_ext_[n]);
+        v_dot[n] = -static_cast<RealT>(yp_ext_[n]);
+      }
+      ABCMatrix<RealT> Z_re{};
+      ABCMatrix<RealT> Z_im{};
+      try
+      {
+        z_->transfer(omega, Z_re, Z_im);
+      }
+      catch (const std::domain_error&)
+      {
+        return 1;
+      }
+      if (solvePhasorSystem(Z_re, Z_im, omega, v, v_dot, current, current_dot) != 0)
+      {
+        return 1;
+      }
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+      for (size_t n = 0; n < 3; ++n)
+      {
+        y[n]  = current[n];
+        yp[n] = current_dot[n];
+      }
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+      return z_->initializeSteadyState(omega, current, current_dot);
     }
 
     /**
@@ -248,8 +296,7 @@ namespace GridKit
     /**
      * @brief Whether any inductance entry is nonzero.
      *
-     * The injected current is differential when the inductance matrix is
-     * nonsingular and algebraic when it is zero.
+     * Used to retain the de-energized startup of legacy inductive loads.
      */
     template <typename scalar_type, typename index_type>
     bool LoadZ<scalar_type, index_type>::hasInductance() const
@@ -274,22 +321,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::tagDifferentiable()
     {
-      bool differential = hasInductance();
-      if (z_.has_value())
+      for (size_t n = 0; n < 3; ++n)
       {
-        differential = z_->hasFeedthroughDerivative();
+        tag_[n] = z_->hasInputDerivative(static_cast<IdxT>(n));
       }
-
-      tag_[0] = differential;
-      tag_[1] = differential;
-      tag_[2] = differential;
-
-      if (z_.has_value())
-      {
-        this->tagDifferentiableOperators();
-      }
-
-      return 0;
+      return this->tagDifferentiableOperators();
     }
 
     /**
@@ -308,7 +344,7 @@ namespace GridKit
     int LoadZ<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
       abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
-      return 0;
+      return this->setAbsoluteToleranceOperators(rel_tol);
     }
 
     /**
@@ -317,41 +353,16 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateInternalResidual(
-        const ScalarT*                  y,
-        const ScalarT*                  yp,
+        [[maybe_unused]] const ScalarT* y,
+        [[maybe_unused]] const ScalarT* yp,
         const ScalarT*                  y_ext,
         [[maybe_unused]] const ScalarT* yp_ext,
         ScalarT*                        f)
     {
-      /* Read variables */
-      const ScalarT ia = y[0];
-      const ScalarT ib = y[1];
-      const ScalarT ic = y[2];
-
-      /* Read derivatives */
-      const ScalarT ia_dot = yp[0];
-      const ScalarT ib_dot = yp[1];
-      const ScalarT ic_dot = yp[2];
-
-      // Set coupling variable aliases
-      const ScalarT va = y_ext[0];
-      const ScalarT vb = y_ext[1];
-      const ScalarT vc = y_ext[2];
-
-      /* 3 load branch equations; the rational impedance terms accumulate
-         through the operator when the resistance and inductance mask is off */
-      f[0] = rl_on_
-                 * (R_[0][0] * ia + R_[0][1] * ib + R_[0][2] * ic
-                    + L_[0][0] * ia_dot + L_[0][1] * ib_dot + L_[0][2] * ic_dot)
-             + va;
-      f[1] = rl_on_
-                 * (R_[1][0] * ia + R_[1][1] * ib + R_[1][2] * ic
-                    + L_[1][0] * ia_dot + L_[1][1] * ib_dot + L_[1][2] * ic_dot)
-             + vb;
-      f[2] = rl_on_
-                 * (R_[2][0] * ia + R_[2][1] * ib + R_[2][2] * ic
-                    + L_[2][0] * ia_dot + L_[2][1] * ib_dot + L_[2][2] * ic_dot)
-             + vc;
+      // The impedance output accumulates into these branch rows.
+      f[0] = y_ext[0];
+      f[1] = y_ext[1];
+      f[2] = y_ext[2];
 
       return 0;
     }
@@ -419,6 +430,58 @@ namespace GridKit
     {
       evaluateInternalResidual();
       return evaluateExternalResidual();
+    }
+
+    /**
+     * @brief Exact local Jacobian with signal chain rules and operator contributions.
+     */
+    template <typename scalar_type, typename index_type>
+    int LoadZ<scalar_type, index_type>::evaluateJacobian()
+    {
+      this->gatherExternalVariables();
+      const auto&                              external = this->externalVariableSignals();
+      std::vector<typename SignalT::GradientT> gradients(external.size());
+      size_t                                   capacity = 3;
+      for (size_t k = 0; k < external.size(); ++k)
+      {
+        external[k]->appendGradient(gradients[k]);
+        capacity += gradients[k].size();
+      }
+      capacity += static_cast<size_t>(z_->jacobianCapacity());
+      if (this->hasComputedInputs() || capacity > jacobian_capacity_)
+      {
+        this->resetJacobianStructure();
+      }
+      if (capacity > jacobian_capacity_)
+      {
+        delete[] J_rows_buffer_;
+        delete[] J_cols_buffer_;
+        delete[] J_vals_buffer_;
+        J_rows_buffer_     = new IdxT[capacity];
+        J_cols_buffer_     = new IdxT[capacity];
+        J_vals_buffer_     = new RealT[capacity];
+        jacobian_capacity_ = capacity;
+      }
+      nnz_        = 0;
+      auto append = [this](IdxT row, IdxT column, RealT value)
+      {
+        J_rows_buffer_[nnz_]   = row;
+        J_cols_buffer_[nnz_]   = column;
+        J_vals_buffer_[nnz_++] = value;
+      };
+      for (size_t n = 0; n < 3; ++n)
+      {
+        append(residual_indices_ext_[n], variable_indices_[n], ONE<RealT>);
+        for (const auto& [column, value] : gradients[n])
+        {
+          append(residual_indices_[n], column, value);
+        }
+      }
+      const int status = this->evaluateOperatorJacobians();
+      if (status != 0)
+        return status;
+      this->appendOperatorJacobians();
+      return this->constructCoo();
     }
 
     template <typename scalar_type, typename index_type>

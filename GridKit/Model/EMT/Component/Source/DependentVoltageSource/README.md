@@ -64,7 +64,9 @@ None.
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{u}$ | [V] | Admittance input $\mathbf{e}-\mathbf{v}$ | Present when `Y` is supplied
 
 ### External Variables
 
@@ -90,7 +92,9 @@ None.
 
 #### Algebraic
 
-None.
+```math
+0 = \mathbf{u} + \mathbf{v} - \mathbf{e}
+```
 
 ### External Equations
 
@@ -100,7 +104,11 @@ None.
 
 ## Initialization
 
-None beyond the EMT initialization contract.
+The default initialization sets the branch voltage to the source voltage minus
+the bus voltage and starts rational memory states de-energized. Legacy series
+currents start at zero. `initializeSteadyState(omega)` instead uses the attached
+voltage values and derivatives as sinusoidal samples, solves the legacy
+impedance branch when needed, and initializes all rational memory states.
 
 ## Monitors
 
@@ -109,18 +117,17 @@ Monitor | Units | Description | Note
 `e` | [V] | Source voltage | $\mathbf{e} \in \mathbb{R}^3$
 `i` | [A] | Source current injection | $\mathbf{i} \in \mathbb{R}^3$
 
-## Development
+## Series Impedance Specialization
 
-The initial three-phase formulation realizes the terminal admittance as a
-series resistance and inductance. Each branch-current component is differential
-when its column of $\mathbf{L}_\mathrm{s}$ is nonzero and algebraic otherwise.
-
-### Series Branch Equations
+When `Y` is absent, a VectorFit impedance submodel uses
+$\mathbf{D}=\mathbf{R}_\mathrm{s}$ and
+$\mathbf{E}=\mathbf{L}_\mathrm{s}$, with no poles. It reads the owned branch
+current and contributes its output to
 
 ```math
-0 =
-\mathbf{R}_\mathrm{s}\mathbf{i}
-+ \mathbf{L}_\mathrm{s}\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}
-+ \mathbf{v}
-- \mathbf{e}
+0 = \mathbf{z}[\mathbf{i}] + \mathbf{v} - \mathbf{e}.
 ```
+
+Each current component is differential when its column of
+$\mathbf{L}_\mathrm{s}$ is nonzero and algebraic otherwise. Both series
+matrices must be finite. Nonzero inductance columns must be linearly independent.

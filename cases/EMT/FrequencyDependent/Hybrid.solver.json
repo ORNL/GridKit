@@ -1,0 +1,10 @@
+{
+    "system_model_file": "Hybrid.case.json",
+    "dt_monitor": 0.0001,
+    "tmax": 0.2,
+    "rel_tol": 1e-07,
+    "abs_tol": 1e-09,
+    "mu": 50000.0,
+    "max_steps": 1000000,
+    "output_file": "Hybrid.csv"
+}
