@@ -72,8 +72,26 @@ if(GRIDKIT_ENABLE_SUNDIALS)
 endif()
 add_test(NAME EMTSystemTest COMMAND test_emt_system)
 
+add_executable(test_emt_pwm_converter runPwmConverterTests.cpp)
+target_include_directories(
+  test_emt_pwm_converter
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+          ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+target_link_libraries(
+  test_emt_pwm_converter
+  GridKit::emt_systemmodel
+  GridKit::emt_pwm_dependency_tracking
+  GridKit::emt_converter_dependency_tracking
+  GridKit::testing)
+if(GRIDKIT_ENABLE_SUNDIALS)
+  target_link_libraries(test_emt_pwm_converter GridKit::solvers_dyn)
+  target_compile_definitions(test_emt_pwm_converter PRIVATE GRIDKIT_ENABLE_SUNDIALS)
+endif()
+add_test(NAME EMTPwmConverterTest COMMAND test_emt_pwm_converter)
+
 install(
-  TARGETS test_emt_dependent_voltage_source
+  TARGETS test_emt_pwm_converter
+          test_emt_dependent_voltage_source
           test_emt_enzyme_spike
           test_emt_line_lumped
           test_emt_machine

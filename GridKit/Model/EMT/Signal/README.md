@@ -13,6 +13,14 @@ contributions into the owner's residual row. Three fully bound signals
 form a `Port3`, the three-phase electrical connection point owned by the
 component that owns the phase variables.
 
+Computed algebraic signals bind a value getter and its gradient with respect
+to global DAE variables. They own no variable index, derivative, or residual
+row, and cannot be initialized by a consumer. Reads evaluate the current
+inputs recursively. Residual Jacobians compose the local input derivatives
+with the signal gradients. The input graph must be acyclic, and its gradient
+structure must remain fixed after allocation, including entries whose current
+coefficient is zero.
+
 ## Model Parameters
 
 Symbol | Description

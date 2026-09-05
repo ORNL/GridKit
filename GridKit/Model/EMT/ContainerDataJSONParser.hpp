@@ -7,12 +7,14 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/EMT/Component/Bus/BusDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Controller/PWM/PwmDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSourceDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceDataJSONParser.hpp>
 #include <GridKit/Model/EMT/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/EMT/ContainerData.hpp>
+#include <GridKit/Model/EMT/Operators/Converter/ConverterDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Signal/SignalDataJSONParser.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -137,6 +139,14 @@ namespace GridKit
           auto& child = data.container.emplace_back();
           raw_device.at("id").get_to(child.id);
           parseContainerData(raw_device, child, scope + "." + child.id);
+        }
+        else if (kind == "PWM")
+        {
+          raw_device.get_to(data.pwm.emplace_back());
+        }
+        else if (kind == "Converter")
+        {
+          raw_device.get_to(data.converter.emplace_back());
         }
         else if (kind == "Bus")
         {
