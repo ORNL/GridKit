@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cmath>
 #include <mutex>
 #include <variant>
 
