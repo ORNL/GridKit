@@ -179,8 +179,8 @@ namespace GridKit
         success         *= scalarMatches(latched_y[index(Vars::PBR)], 0.6, "latched PBR");
         success         *= scalarMatches(latched_y[index(Vars::QBR)], 0.2, "latched QBR");
 
-        latched_y[index(Vars::IP)] -= 0.1;
-        latched_y[index(Vars::IQ)] -= 0.06;
+        latched_y[index(Vars::IP)] -= 0.1; // arbitrary current displacement
+        latched_y[index(Vars::IQ)] -= 0.06; // arbitrary current displacement
         latched.regca.y().setDataUpdated();
         success *= (latched.evaluate() == 0);
 
