@@ -1,5 +1,9 @@
 # Electromagnetic Transients (EMT) Examples
 
+[IBR](IBR/README.md) provides six runnable scenarios for a synthetic ten-bus
+grid with three machines and three converters, full monitoring, and plotting
+scripts.
+
 This directory preserves the intended model composition for future EMT
 examples. The trees describe ownership and nesting only. They do not define a
 case-file schema.

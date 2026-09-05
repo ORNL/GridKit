@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <optional>
 #include <string>
 
 namespace GridKit
@@ -23,7 +24,8 @@ namespace GridKit
     template <typename real_type, typename index_type>
     struct SignalData
     {
-      std::string id; ///< Unique signal identifier within the system
+      std::string              id;    ///< Unique signal identifier within the system
+      std::optional<real_type> value; ///< Constant value, otherwise supplied by a producer
     };
   } // namespace EMT
 } // namespace GridKit

@@ -49,6 +49,7 @@ represents a scalar signal connecting device signal ports:
   Name               | Description
   -------------------|------------------------------------------------------
   `id`               | Nonempty string uniquely identifying the signal in its Container
+  `value`            | Optional finite number supplying a constant signal; must not also have a component producer
 
 ### Devices
 
@@ -212,9 +213,9 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Switch`                 | `bus2`  | Input     | Bus component | Yes
   `Container`              | user-defined | Input/output | Public boundary | No
 
-Declaring a signal creates a named connection. Its value is supplied by a
-component output or by the embedding program. Omit an optional input to use
-the model's internal default or latched value.
+Declaring a signal creates a named connection. Its value is supplied by the
+optional constant `value`, a component output, or the embedding program.
+Omit an optional input to use the model's internal default or latched value.
 
 PWM and Converter vector ports use arrays of three scalar signal IDs in
 phase order `a`, `b`, `c`. The scalar keys `sa`, `sb`, `sc` and `voa`, `vob`,
@@ -241,7 +242,8 @@ three scalar columns.
 }
 ```
 
-The embedding program or another component supplies `dc`. A
+For a constant DC link, declare `{"id": "dc", "value": 1000.0}`.
+Alternatively, the embedding program or another component supplies `dc`. A
 DependentVoltageSource can consume `ea`, `eb`, and `ec`. Computed signals
 are evaluated from the current time and inputs when read, including through
 Container boundaries. These connections introduce no DAE variables.
