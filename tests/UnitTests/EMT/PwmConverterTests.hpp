@@ -344,6 +344,70 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome constantSignals()
+      {
+        TestStatus success             = true;
+        auto       fixture             = caseJson();
+        fixture["signals"][0]["value"] = 600;
+        System system(fixture.get<EMT::SystemModelData<double, size_t>>());
+        success *= system.allocate() == 0 && system.initialize() == 0 && system.verify() == 0;
+        success *= system.size() == 9 && system.signal("dc").read() == 600.0;
+        Signal::GradientT gradient;
+        system.signal("dc").appendGradient(gradient, 1.0);
+        success *= gradient.empty();
+        system.updateTime(0.125, 1.0);
+        const auto&  bridge  = system.component<Converter>("bridge");
+        const double a       = reference(0.125, 0.8, 1, 15, 0.5, 0);
+        const double b       = reference(0.125, 0.8, 1, 15, 0.5, 1);
+        const double c       = reference(0.125, 0.8, 1, 15, 0.5, 2);
+        success             *= std::abs(bridge.output(0) - 200.0 * (2 * a - b - c)) < 1e-10;
+        for (const auto& invalid : {json("600"), json(true), json(nullptr)})
+        {
+          fixture["signals"][0]["value"]  = invalid;
+          success                        *= throws([&]
+                            { fixture.get<EMT::SystemModelData<double, size_t>>(); });
+        }
+        fixture                         = caseJson();
+        fixture["signals"][1]["value"]  = 0.0;
+        success                        *= throws([&]
+                          { System duplicate(fixture.get<EMT::SystemModelData<double, size_t>>()); });
+        return success.report(__func__);
+      }
+
+      TestOutcome runtimeSmoothing()
+      {
+        TestStatus success = true;
+
+        struct RestoreMu
+        {
+          double value = Math::MU<double>;
+
+          ~RestoreMu()
+          {
+            Math::MU<double> = value;
+          }
+        } restore;
+
+        for (const double mu : {240.0, 50000.0})
+        {
+          Math::MU<double> = mu;
+          Pwm    model(pwmData());
+          double minimum = 1.0;
+          double maximum = 0.0;
+          for (size_t sample = 0; sample < 200; ++sample)
+          {
+            const double time = static_cast<double>(sample) / 12000.0;
+            model.updateTime(time, 0.0);
+            const auto value  = model.output(0);
+            minimum           = std::min(minimum, value);
+            maximum           = std::max(maximum, value);
+            success          *= std::abs(value - reference(time, .8, 60, 900, .5, 0)) < 1e-12;
+          }
+          success *= mu == 240.0 ? maximum - minimum < .1 : maximum - minimum > .99;
+        }
+        return success.report(__func__);
+      }
+
       TestOutcome monitors()
       {
         TestStatus success = true;

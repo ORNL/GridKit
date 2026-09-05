@@ -1,0 +1,24 @@
+{
+    "system_model_file": "../../../cases/EMT/IBR/TenBus.case.json",
+    "state_file": "../../../cases/EMT/IBR/TenBus.state.json",
+    "dt_monitor": 0.0001,
+    "tmax": 3.0,
+    "rel_tol": 1e-07,
+    "abs_tol": 1e-09,
+    "max_steps": 1000000,
+    "events": [
+        {
+            "time": 1.0,
+            "type": "switch_open",
+            "element_id": "tie"
+        },
+        {
+            "time": 1.8,
+            "type": "switch_close",
+            "element_id": "tie"
+        }
+    ],
+    "output_file": "05_TieReclosing.csv",
+    "state_output_file": "05_TieReclosing.states.csv",
+    "consistent_ic_type": "ya_ydp"
+}

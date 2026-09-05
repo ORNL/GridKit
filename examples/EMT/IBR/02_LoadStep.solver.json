@@ -1,0 +1,19 @@
+{
+    "system_model_file": "../../../cases/EMT/IBR/TenBus.case.json",
+    "state_file": "../../../cases/EMT/IBR/TenBus.state.json",
+    "dt_monitor": 0.0001,
+    "tmax": 3.0,
+    "rel_tol": 1e-07,
+    "abs_tol": 1e-09,
+    "max_steps": 1000000,
+    "events": [
+        {
+            "time": 1.0,
+            "type": "switch_close",
+            "element_id": "load_step"
+        }
+    ],
+    "output_file": "02_LoadStep.csv",
+    "state_output_file": "02_LoadStep.states.csv",
+    "consistent_ic_type": "ya_ydp"
+}

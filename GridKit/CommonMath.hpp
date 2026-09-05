@@ -10,16 +10,22 @@ namespace GridKit
 {
   namespace Math
   {
+    template <typename RealT>
+    inline constexpr RealT DEFAULT_MU = 240.0;
+
     /**
      * @brief Smoothing scale shared by CommonMath primitives
      *
      * Used by @ref sigmoid, @ref ramp, and functions composed from them to set
      * the width of smooth transitions.
      *
+     * @warning Process-wide setting; configure before constructing models or
+     * launching workers.
+     *
      * @tparam RealT - real data type
      */
     template <typename RealT>
-    inline constexpr RealT MU = 240.0;
+    inline RealT MU = DEFAULT_MU<RealT>;
 
     /**
      * @brief Scaled sigmoid activation function

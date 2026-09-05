@@ -8,6 +8,7 @@
 #include <GridKit/Testing/Testing.hpp>
 
 #include "AnalysisUtilities.hpp"
+#include "StateMonitor.hpp"
 
 using namespace AnalysisManager::Sundials;
 using namespace GridKit::EMT;
@@ -22,9 +23,18 @@ int main(int argc, const char* argv[])
   // Study file
   checkCommandLine(argc, "EMTDynamicSimulation");
   auto study = parseStudyData(argv[1]);
+  configureCommonMath<real_type>(study);
+
+#ifndef GRIDKIT_ENABLE_SUNDIALS_SPARSE
+  throw std::runtime_error("EMTDynamicSimulation requires SUNDIALS with sparse KLU support");
+#endif
 
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);
+  if (!sys.hasJacobian())
+  {
+    throw std::runtime_error("EMTDynamicSimulation requires a sparse model Jacobian; enable Enzyme");
+  }
   sys.allocate();
 
   // Set up simulation
@@ -34,6 +44,13 @@ int main(int argc, const char* argv[])
   ida.setMaxSteps(study.max_steps);
   ida.setConsistentICType(study.consistent_ic_type);
   ida.configureSimulation();
+  std::cout << "Linear solver: SUNDIALS KLU (sparse)\n"
+            << "DAE variables: " << sys.size()
+            << ", Jacobian nonzeros: " << sys.getCsrJacobian()->getNnz()
+            << ", mu: " << study.mu << std::endl;
+  StateMonitor<scalar_type, index_type> state_monitor(sys, study);
+  auto                                  record_state = [&](real_type time)
+  { state_monitor.write(time); };
 
   // Start timer
   real_type start = static_cast<real_type>(clock());
@@ -44,10 +61,11 @@ int main(int argc, const char* argv[])
   auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
   ida.initializeSimulation(0.0);
+  record_state(0.0);
   for (const auto& event : study.events)
   {
     // Run to event time
-    ida.runSimulation(event.time, dt_monitor);
+    ida.runSimulation(event.time, dt_monitor, record_state);
 
     // Set up run for event (to start at event time)
     switch (event.type)
@@ -67,10 +85,11 @@ int main(int argc, const char* argv[])
     sys.evaluateJacobian();
     ida.configureLinearSolver();
     ida.initializeSimulation(event.time);
+    record_state(event.time);
   }
 
   // Run to final time
-  ida.runSimulation(final_time, dt_monitor);
+  ida.runSimulation(final_time, dt_monitor, record_state);
 
   real_type stop = static_cast<real_type>(clock());
 
