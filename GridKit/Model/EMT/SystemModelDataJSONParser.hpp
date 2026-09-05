@@ -1,18 +1,10 @@
 #pragma once
 
-#include <set>
-#include <sstream>
 #include <stdexcept>
 
 #include <nlohmann/json.hpp>
 
-#include <GridKit/Model/EMT/Component/Bus/BusDataJSONParser.hpp>
-#include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedDataJSONParser.hpp>
-#include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZDataJSONParser.hpp>
-#include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSourceDataJSONParser.hpp>
-#include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceDataJSONParser.hpp>
-#include <GridKit/Model/EMT/ComponentDataJSONParser.hpp>
-#include <GridKit/Model/EMT/Signal/SignalDataJSONParser.hpp>
+#include <GridKit/Model/EMT/ContainerDataJSONParser.hpp>
 #include <GridKit/Model/EMT/SystemModelData.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -30,29 +22,6 @@ namespace GridKit
     template <typename RealT = double, typename IdxT = size_t>
     void from_json(const json& j, SystemModelData<RealT, IdxT>& sm)
     {
-      if (j.contains("buses"))
-      {
-        throw std::runtime_error(
-            "Legacy top-level 'buses' is not supported; list Bus entries in 'devices'");
-      }
-
-      auto validate_ids = [](const json& objects, const char* kind)
-      {
-        std::set<std::string> ids;
-        for (const auto& object : objects)
-        {
-          const auto id = object.at("id").template get<std::string>();
-          if (id.empty())
-          {
-            throw std::runtime_error(std::string(kind) + " ID must not be empty");
-          }
-          if (!ids.insert(id).second)
-          {
-            throw std::runtime_error("Duplicate " + std::string(kind) + " ID: \"" + id + "\"");
-          }
-        }
-      };
-
       auto enum_parse = []<typename EnumT, typename KeyT>(EnumT, KeyT&& key)
       {
         return magic_enum::enum_cast<EnumT>(key, magic_enum::case_insensitive);
@@ -101,73 +70,10 @@ namespace GridKit
         }
       }
 
-      /// Gets all signals (allows for systems without signals)
-      if (j.contains("signals"))
+      parseContainerData(j, static_cast<ContainerData<RealT, IdxT>&>(sm), "root");
+      if (!sm.inputs.empty())
       {
-        validate_ids(j.at("signals"), "signal");
-        j.at("signals").get_to(sm.signal);
-      }
-
-      /// Gets all components
-      validate_ids(j.at("devices"), "device");
-      for (auto& raw_component : j.at("devices"))
-      {
-        auto kind = raw_component.at("class").get<std::string>();
-        if (kind == "Bus")
-        {
-          typename SystemModelData<RealT, IdxT>::BusDataT bus;
-          raw_component.get_to(bus);
-          sm.bus.push_back(bus);
-        }
-        else if (kind == "DependentVoltageSource")
-        {
-          typename SystemModelData<RealT, IdxT>::DependentVoltageSourceDataT source;
-          raw_component.get_to(source);
-          sm.dependent_voltage_source.push_back(source);
-        }
-        else if (kind == "VoltageSource")
-        {
-          typename SystemModelData<RealT, IdxT>::VoltageSourceDataT source;
-          raw_component.get_to(source);
-          sm.voltage_source.push_back(source);
-        }
-        else if (kind == "Machine")
-        {
-          typename SystemModelData<RealT, IdxT>::MachineDataT machine;
-          raw_component.get_to(machine);
-          sm.machine.push_back(machine);
-        }
-        else if (kind == "LineLumped")
-        {
-          typename SystemModelData<RealT, IdxT>::LineLumpedDataT line;
-          raw_component.get_to(line);
-          sm.line_lumped.push_back(line);
-        }
-        else if (kind == "LoadZ")
-        {
-          typename SystemModelData<RealT, IdxT>::LoadZDataT loadz;
-          raw_component.get_to(loadz);
-          sm.loadz.push_back(loadz);
-        }
-        else if (kind == "Switch")
-        {
-          typename SystemModelData<RealT, IdxT>::SwitchDataT sw;
-          raw_component.get_to(sw);
-          sm.sw.push_back(sw);
-        }
-        else if (kind == "Tgov1")
-        {
-          typename SystemModelData<RealT, IdxT>::Tgov1DataT gov;
-          raw_component.get_to(gov);
-          sm.gov.push_back(gov);
-        }
-        else
-        {
-          Log::error() << "\n\tInvalid device class: \"" << kind << "\". "
-                       << "\n\tSee the \"devices\" list in your JSON file."
-                       << std::endl;
-          throw std::runtime_error("JSON parser failed");
-        }
+        throw std::runtime_error("The root SystemModel cannot bind Container inputs");
       }
     }
   } // namespace EMT

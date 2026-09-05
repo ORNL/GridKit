@@ -46,7 +46,11 @@ endif()
 gridkit_add_library(
   emt_systemmodel
   SOURCES ${_system_model_source} SystemModelData.cpp StateDataAdapter.cpp
-  HEADERS SystemModel.hpp SystemModelData.hpp StateDataAdapter.hpp
+  HEADERS Container.hpp
+          ContainerData.hpp
+          SystemModel.hpp
+          SystemModelData.hpp
+          StateDataAdapter.hpp
   LINK_LIBRARIES
     PUBLIC
     GridKit::emt_core

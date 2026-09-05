@@ -97,6 +97,12 @@ namespace GridKit
         int setGridKitComponentID(IdxT) override final;
         int allocate() override final;
         int verify() const override final;
+
+        int initializationOrder() const noexcept override final
+        {
+          return 2;
+        }
+
         int initialize() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT) override final;

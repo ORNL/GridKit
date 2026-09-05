@@ -8,12 +8,17 @@
 
 #include <cmath>
 #include <complex>
+#include <exception>
 #include <numbers>
 #include <sstream>
 #include <string>
+#include <utility>
+
+#include <nlohmann/json.hpp>
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
+#include <GridKit/Model/EMT/ComponentLibrary.hpp>
 #include <GridKit/Model/EMT/SystemModel.hpp>
 #include <GridKit/Model/EMT/SystemModelData.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -126,6 +131,74 @@ namespace GridKit
                 "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
               },
               "inputs": { "bus": "bus_2" }
+            }
+          ]
+        })";
+      }
+
+      /// The source and load are separate recursive EMT scopes. Each scope
+      /// owns a local Bus named "bus" and exports only its terminal; the root
+      /// line connects the two public boundaries.
+      static std::string recursiveCaseJson()
+      {
+        return R"({
+          "header": {
+            "case_name": "EMT two-container source-line-load case",
+            "case_description": "Two EMT subsystems connected through exported terminals",
+            "case_comments": "Used by EMT SystemTests"
+          },
+          "devices": [
+            {
+              "class": "Container",
+              "id": "left",
+              "outputs": { "terminal": "bus" },
+              "devices": [
+                { "class": "Bus", "id": "bus" },
+                {
+                  "class": "VoltageSource",
+                  "id": "source",
+                  "params": {
+                    "E": [100.0, 100.0, 100.0],
+                    "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
+                    "omega": 376.99111843077515,
+                    "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+                    "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
+                  },
+                  "inputs": { "bus": "bus" }
+                }
+              ]
+            },
+            {
+              "class": "Container",
+              "id": "right",
+              "outputs": { "terminal": "bus" },
+              "devices": [
+                { "class": "Bus", "id": "bus" },
+                {
+                  "class": "LoadZ",
+                  "id": "load",
+                  "params": {
+                    "R": [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
+                    "L": [[0.04, 0.0, 0.0], [0.0, 0.04, 0.0], [0.0, 0.0, 0.04]]
+                  },
+                  "inputs": { "bus": "bus" }
+                }
+              ]
+            },
+            {
+              "class": "LineLumped",
+              "id": "tie_line",
+              "params": {
+                "N": 3,
+                "K": 3,
+                "conductors": [1, 2, 3],
+                "dx": 1.0,
+                "Rp": [[2.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 2.0]],
+                "Lp": [[0.02, 0.0, 0.0], [0.0, 0.02, 0.0], [0.0, 0.0, 0.02]],
+                "Gp": [[1.0e-4, 0.0, 0.0], [0.0, 1.0e-4, 0.0], [0.0, 0.0, 1.0e-4]],
+                "Cp": [[1.0e-5, 0.0, 0.0], [0.0, 1.0e-5, 0.0], [0.0, 0.0, 1.0e-5]]
+              },
+              "inputs": { "bus1": "left.terminal", "bus2": "right.terminal" }
             }
           ]
         })";
@@ -327,6 +400,70 @@ namespace GridKit
             }
           ]
         })";
+      }
+
+      /// The same governed machine split across sibling Containers. Each
+      /// Container owns its local signals; its inputs bind directly to the
+      /// other Container's public outputs.
+      static std::string nestedMachineGovernorCaseJson()
+      {
+        auto root     = nlohmann::json::parse(machineGovernorCaseJson());
+        auto devices  = root.at("devices");
+        auto bus      = devices.at(0);
+        auto machine  = devices.at(1);
+        auto governor = devices.at(2);
+        auto load     = devices.at(3);
+
+        bus["id"]                    = "bus";
+        machine["inputs"]["bus"]     = "bus";
+        machine["inputs"]["pm"]      = "pmech";
+        machine["outputs"]["speed"]  = "speed";
+        load["inputs"]["bus"]        = "bus";
+        governor["inputs"]["speed"]  = "speed";
+        governor["outputs"]["pmech"] = "pmech";
+
+        root.erase("signals");
+        root["header"]["case_name"] = "EMT nested governed machine flat-start case";
+        root["devices"]             = nlohmann::json::array({
+            {
+                {"class", "Container"},
+                {"id", "plant"},
+                {"inputs", {{"pmech", "control.pmech"}}},
+                {"outputs", {{"speed", "speed"}}},
+                {"signals", nlohmann::json::array({{{"id", "speed"}}})},
+                {"devices", nlohmann::json::array({bus, machine, load})},
+            },
+            {
+                {"class", "Container"},
+                {"id", "control"},
+                {"inputs", {{"speed", "plant.speed"}}},
+                {"outputs", {{"pmech", "pmech"}}},
+                {"signals", nlohmann::json::array({{{"id", "pmech"}}})},
+                {"devices", nlohmann::json::array({governor})},
+            },
+        });
+        return root.dump();
+      }
+
+      /// A child Container imports a parent Bus directly; it introduces no
+      /// boundary Bus or equations of its own.
+      static std::string importedBusCaseJson()
+      {
+        auto root             = nlohmann::json::parse(caseJson());
+        auto devices          = root.at("devices");
+        auto load             = devices.at(2);
+        load["inputs"]["bus"] = "terminal";
+        root["devices"]       = nlohmann::json::array({
+            devices.at(0),
+            devices.at(1),
+            {
+                {"class", "Container"},
+                {"id", "load_group"},
+                {"inputs", {{"terminal", "bus_1"}}},
+                {"devices", nlohmann::json::array({load})},
+            },
+        });
+        return root.dump();
       }
 
       /// The twin-circuit pair: a parallel R-L branch is exactly a
@@ -645,6 +782,16 @@ namespace GridKit
                         GridKit::EMT::Controller::Tgov1Outputs::pmech)
                     == "pmech_1");
 
+        std::istringstream recursive_stream(recursiveCaseJson());
+        const auto         recursive  = GridKit::EMT::parseSystemModelData(recursive_stream);
+        success                      *= (recursive.container.size() == 2);
+        success                      *= (recursive.container[0].id == "left");
+        success                      *= (recursive.container[1].id == "right");
+        success                      *= (recursive.container[0].bus[0].id == "bus");
+        success                      *= (recursive.container[1].bus[0].id == "bus");
+        success                      *= (recursive.line_lumped[0].inputs.at(GridKit::EMT::LineLumpedInputs::bus1)
+                    == "left.terminal");
+
         try
         {
           std::istringstream duplicate_stream(R"({
@@ -664,6 +811,56 @@ namespace GridKit
         catch (const std::runtime_error&)
         {
         }
+
+        auto rejects = [](const std::string& text)
+        {
+          try
+          {
+            std::istringstream invalid_stream(text);
+            (void) GridKit::EMT::parseSystemModelData(invalid_stream);
+            return false;
+          }
+          catch (const std::runtime_error&)
+          {
+            return true;
+          }
+        };
+
+        success *= rejects(R"({
+          "header": {
+            "case_name": "invalid Container field",
+            "case_description": "Parser rejection coverage",
+            "case_comments": ""
+          },
+          "devices": [
+            { "class": "Container", "id": "child", "typo": true, "devices": [] }
+          ]
+        })");
+        success *= rejects(R"({
+          "header": {
+            "case_name": "input name collision",
+            "case_description": "Parser rejection coverage",
+            "case_comments": ""
+          },
+          "devices": [
+            {
+              "class": "Container",
+              "id": "child",
+              "inputs": { "command": "parent_signal" },
+              "signals": [{ "id": "command" }],
+              "devices": []
+            }
+          ]
+        })");
+        success *= rejects(R"({
+          "header": {
+            "case_name": "root input",
+            "case_description": "Parser rejection coverage",
+            "case_comments": ""
+          },
+          "inputs": { "command": "nowhere" },
+          "devices": []
+        })");
 
         return success.report(__func__);
       }
@@ -702,10 +899,187 @@ namespace GridKit
         success         *= (tag[11] == true);
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-        success *= sys.hasJacobian();
-        success *= (sys.getCsrJacobian() != nullptr);
-        success *= (sys.nnz() > 0);
+        success                   *= sys.hasJacobian();
+        success                   *= (sys.getCsrJacobian() != nullptr);
+        success                   *= (sys.nnz() > 0);
+        const auto structural_nnz  = sys.getCsrJacobian()->getNnz();
+        sys.evaluateJacobian();
+        success *= (sys.nnz() == structural_nnz);
 #endif
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Container inputs bind exact parent endpoints for both electrical
+       * and scalar composition.
+       */
+      TestOutcome boundaryAssembly()
+      {
+        TestStatus success = true;
+
+        using ContainerT = GridKit::EMT::Container<ScalarT, IdxT>;
+        using BusT       = GridKit::EMT::Bus<ScalarT, IdxT>;
+        using LoadT      = GridKit::EMT::LoadZ<ScalarT, IdxT>;
+        using MachineT   = GridKit::EMT::Machine<ScalarT, IdxT>;
+        using GovernorT  = GridKit::EMT::Controller::Tgov1<ScalarT, IdxT>;
+
+        std::istringstream                       electrical_stream(importedBusCaseJson());
+        const auto                               electrical_data = GridKit::EMT::parseSystemModelData(electrical_stream);
+        GridKit::EMT::SystemModel<ScalarT, IdxT> electrical(electrical_data);
+
+        auto& bus         = electrical.template component<BusT>("bus_1");
+        auto& load_group  = electrical.template component<ContainerT>("load_group");
+        auto& load        = electrical.template component<LoadT>("load_group.load_1");
+        success          *= (load_group.inputPort("terminal").a() == bus.voltagePort().a());
+        success          *= (load.getSignals().template getAttachedSignal<GridKit::EMT::LoadZExternalVariables::VA>()
+                    == bus.voltagePort().a());
+        electrical.allocate();
+        success *= (load_group.size() == load.size());
+
+        // A provider may appear after its consumer in the hierarchy. The Bus
+        // still initializes before the Machine that imports its terminal.
+        auto imported_machine           = nlohmann::json::parse(machineCaseJson());
+        auto machine_devices            = imported_machine.at("devices");
+        auto provider_bus               = machine_devices.at(0);
+        auto imported_model             = machine_devices.at(1);
+        auto imported_load              = machine_devices.at(2);
+        imported_model["inputs"]["bus"] = "terminal";
+        imported_load["inputs"]["bus"]  = "terminal";
+        imported_machine["devices"]     = nlohmann::json::array({
+            {
+                {"class", "Container"},
+                {"id", "consumer"},
+                {"inputs", {{"terminal", "provider.terminal"}}},
+                {"devices", nlohmann::json::array({imported_model, imported_load})},
+            },
+            {
+                {"class", "Container"},
+                {"id", "provider"},
+                {"outputs", {{"terminal", "bus_1"}}},
+                {"devices", nlohmann::json::array({provider_bus})},
+            },
+        });
+        std::istringstream imported_machine_stream(imported_machine.dump());
+        const auto         imported_machine_data =
+            GridKit::EMT::parseSystemModelData(imported_machine_stream);
+        GridKit::EMT::SystemModel<ScalarT, IdxT> machine_system(imported_machine_data);
+        machine_system.allocate();
+        machine_system.initialize();
+        machine_system.evaluateResidual();
+
+        const auto& imported_bus =
+            machine_system.template component<BusT>("provider.bus_1");
+        success *= isEqual(imported_bus.y().getData()[0], RealT{11267.65281680262}, RealT{1.0e-9});
+
+        RealT machine_residual_norm = 0.0;
+        for (IdxT j = 0; j < machine_system.size(); ++j)
+        {
+          const auto value       = machine_system.getResidual().getData()[j];
+          machine_residual_norm += value * value;
+        }
+        success *= (std::sqrt(machine_residual_norm) < 1.0e-6);
+
+        std::istringstream                       scalar_stream(nestedMachineGovernorCaseJson());
+        const auto                               scalar_data = GridKit::EMT::parseSystemModelData(scalar_stream);
+        GridKit::EMT::SystemModel<ScalarT, IdxT> scalar(scalar_data);
+
+        auto& plant    = scalar.template component<ContainerT>("plant");
+        auto& control  = scalar.template component<ContainerT>("control");
+        auto& machine  = scalar.template component<MachineT>("plant.machine_1");
+        auto& governor = scalar.template component<GovernorT>("control.governor_1");
+        auto& speed    = plant.outputSignal("speed");
+        auto& pmech    = control.outputSignal("pmech");
+
+        success *= (&control.inputSignal("speed") == &speed);
+        success *= (&plant.inputSignal("pmech") == &pmech);
+        success *= (governor.getSignals().template getAttachedSignal<GridKit::EMT::Controller::Tgov1ExternalVariables::OMEGA>()
+                    == &speed);
+        success *= (machine.getSignals().template getAttachedSignal<GridKit::EMT::MachineExternalVariables::PM>()
+                    == &pmech);
+
+        scalar.allocate();
+        success *= (scalar.size() == 33);
+        success *= (plant.size() == 30);
+        success *= (control.size() == 3);
+
+        try
+        {
+          plant.output("late", speed);
+          success *= false;
+        }
+        catch (const std::logic_error&)
+        {
+        }
+
+        // Initialization is a root execution policy, not a sibling-order
+        // accident. Reverse the two Containers and retain a consistent start.
+        auto reversed_json          = nlohmann::json::parse(nestedMachineGovernorCaseJson());
+        auto first                  = reversed_json["devices"][0];
+        reversed_json["devices"][0] = reversed_json["devices"][1];
+        reversed_json["devices"][1] = std::move(first);
+        std::istringstream                       reversed_stream(reversed_json.dump());
+        const auto                               reversed_data = GridKit::EMT::parseSystemModelData(reversed_stream);
+        GridKit::EMT::SystemModel<ScalarT, IdxT> reversed(reversed_data);
+        reversed.allocate();
+        reversed.initialize();
+        reversed.evaluateResidual();
+        RealT residual_norm = 0.0;
+        for (IdxT j = 0; j < reversed.size(); ++j)
+        {
+          const auto value  = reversed.getResidual().getData()[j];
+          residual_norm    += value * value;
+        }
+        success *= (std::sqrt(residual_norm) < 1.0e-6);
+
+        auto rejects_model = [](const std::string& text)
+        {
+          try
+          {
+            std::istringstream                       invalid_stream(text);
+            const auto                               invalid_data = GridKit::EMT::parseSystemModelData(invalid_stream);
+            GridKit::EMT::SystemModel<ScalarT, IdxT> invalid(invalid_data);
+            return false;
+          }
+          catch (const std::exception&)
+          {
+            return true;
+          }
+        };
+
+        success *= rejects_model(R"({
+          "header": {
+            "case_name": "unproduced boundary",
+            "case_description": "Assembly rejection coverage",
+            "case_comments": ""
+          },
+          "devices": [
+            {
+              "class": "Container",
+              "id": "child",
+              "outputs": { "idle": "idle" },
+              "signals": [{ "id": "idle" }],
+              "devices": []
+            }
+          ]
+        })");
+
+        auto private_reference                             = nlohmann::json::parse(recursiveCaseJson());
+        private_reference["devices"][2]["inputs"]["bus1"]  = "left.bus";
+        success                                           *= rejects_model(private_reference.dump());
+
+        success *= rejects_model(R"({
+          "header": {
+            "case_name": "duplicate signal producer",
+            "case_description": "Assembly rejection coverage",
+            "case_comments": ""
+          },
+          "signals": [{ "id": "pmech" }],
+          "devices": [
+            { "class": "Tgov1", "id": "first", "outputs": { "pmech": "pmech" } },
+            { "class": "Tgov1", "id": "second", "outputs": { "pmech": "pmech" } }
+          ]
+        })");
 
         return success.report(__func__);
       }
@@ -847,6 +1221,115 @@ namespace GridKit
           success *= isEqual(y[15 + n], (ish1 * rotation).real(), 3.0e-8);
           success *= isEqual(y[18 + n], (ish2 * rotation).real(), 3.0e-8);
           success *= isEqual(y[21 + n], (ild * rotation).real(), 3.0e-8);
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Integrate two nested EMT systems connected through their
+       * exported Bus ports and compare with the same analytic ladder circuit.
+       */
+      TestOutcome recursiveSteadyState()
+      {
+        TestStatus success = true;
+
+        std::istringstream stream(recursiveCaseJson());
+        const auto         data = GridKit::EMT::parseSystemModelData(stream);
+
+        using ContainerT = GridKit::EMT::Container<ScalarT, IdxT>;
+        using BusT       = GridKit::EMT::Bus<ScalarT, IdxT>;
+        using SourceT    = GridKit::EMT::VoltageSource<ScalarT, IdxT>;
+        using LineT      = GridKit::EMT::LineLumped<ScalarT, IdxT>;
+        using LoadT      = GridKit::EMT::LoadZ<ScalarT, IdxT>;
+
+        GridKit::EMT::SystemModel<ScalarT, IdxT> sys(data);
+        auto&                                    left   = sys.template component<ContainerT>("left");
+        auto&                                    right  = sys.template component<ContainerT>("right");
+        auto&                                    bus1   = left.template component<BusT>("bus");
+        auto&                                    source = left.template component<SourceT>("source");
+        auto&                                    bus2   = right.template component<BusT>("bus");
+        auto&                                    load   = right.template component<LoadT>("load");
+        auto&                                    line   = sys.template component<LineT>("tie_line");
+
+        success *= (&sys.template component<BusT>("left.bus") == &bus1);
+        success *= (&sys.template component<BusT>("right.bus") == &bus2);
+        success *= (line.getSignals().template getAttachedSignal<GridKit::EMT::LineLumpedExternalVariables::V1A>()
+                    == bus1.voltagePort().a());
+        success *= (line.getSignals().template getAttachedSignal<GridKit::EMT::LineLumpedExternalVariables::V2A>()
+                    == bus2.voltagePort().a());
+
+        sys.allocate();
+        success              *= (sys.size() == 24);
+        success              *= (left.size() == 9);
+        success              *= (right.size() == 6);
+        const auto* system_y  = sys.y().getData();
+        success              *= (left.y().getData() == system_y);
+        success              *= (right.y().getData() == system_y + 9);
+        success              *= (line.y().getData() == system_y + 15);
+        success              *= (bus1.y().getData() == left.y().getData());
+        success              *= (source.y().getData() == left.y().getData() + 3);
+        success              *= (bus2.y().getData() == right.y().getData());
+        success              *= (load.y().getData() == right.y().getData() + 3);
+
+        sys.tagDifferentiable();
+        for (size_t j = 0; j < 3; ++j)
+        {
+          success *= bus1.tag()[j];
+          success *= bus2.tag()[j];
+          success *= sys.tag()[bus1.getVariableIndex(static_cast<IdxT>(j))];
+          success *= sys.tag()[bus2.getVariableIndex(static_cast<IdxT>(j))];
+        }
+
+        AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida(&sys);
+        ida.setMaxSteps(1000000);
+        ida.setTolerance(1.0e-9, 1.0e-9);
+        ida.configureSimulation();
+        ida.initializeSimulation(0.0, true);
+
+        const RealT t_final = 0.3;
+        ida.runSimulation(t_final);
+
+        const RealT               omega = 376.99111843077515;
+        const RealT               E_rms = 100.0;
+        const RealT               sqrt2 = std::numbers::sqrt2_v<RealT>;
+        const std::complex<RealT> Zs{1.0, omega * 0.01};
+        const std::complex<RealT> Zl{2.0, omega * 0.02};
+        const std::complex<RealT> Yh = std::complex<RealT>{1.0e-4, omega * 1.0e-5} / RealT{2.0};
+        const std::complex<RealT> Zload{10.0, omega * 0.04};
+        const std::complex<RealT> rotation = std::exp(std::complex<RealT>{0.0, omega * t_final});
+
+        const std::complex<RealT> a11 = RealT{1.0} / Zs + Yh + RealT{1.0} / Zl;
+        const std::complex<RealT> a12 = -RealT{1.0} / Zl;
+        const std::complex<RealT> a21 = -RealT{1.0} / Zl;
+        const std::complex<RealT> a22 = RealT{1.0} / Zl + Yh + RealT{1.0} / Zload;
+        const std::complex<RealT> det = a11 * a22 - a12 * a21;
+
+        const auto*                y_bus1   = bus1.y().getData();
+        const auto*                y_source = source.y().getData();
+        const auto*                y_bus2   = bus2.y().getData();
+        const auto*                y_load   = load.y().getData();
+        const auto*                y_line   = line.y().getData();
+        const std::array<RealT, 3> phi{0.0, -2.0943951023931953, 2.0943951023931953};
+        for (size_t n = 0; n < 3; ++n)
+        {
+          const std::complex<RealT> e_pk = sqrt2 * E_rms * std::exp(std::complex<RealT>{0.0, phi[n]});
+          const std::complex<RealT> b1   = e_pk / Zs;
+          const std::complex<RealT> v1   = (b1 * a22) / det;
+          const std::complex<RealT> v2   = (-a21 * b1) / det;
+          const std::complex<RealT> i12  = (v1 - v2) / Zl;
+          const std::complex<RealT> isrc = (e_pk - v1) / Zs;
+          const std::complex<RealT> ish1 = -Yh * v1;
+          const std::complex<RealT> ish2 = -Yh * v2;
+          const std::complex<RealT> ild  = -v2 / Zload;
+
+          success *= isEqual(y_bus1[n], (v1 * rotation).real(), 3.0e-8);
+          success *= isEqual(y_bus2[n], (v2 * rotation).real(), 3.0e-8);
+          success *= isEqual(y_source[3 + n], (isrc * rotation).real(), 3.0e-8);
+          success *= isEqual(y_line[n], (i12 * rotation).real(), 3.0e-8);
+          success *= isEqual(y_line[3 + n], (ish1 * rotation).real(), 3.0e-8);
+          success *= isEqual(y_line[6 + n], (ish2 * rotation).real(), 3.0e-8);
+          success *= isEqual(y_load[n], (ild * rotation).real(), 3.0e-8);
         }
 
         return success.report(__func__);
@@ -1002,14 +1485,14 @@ namespace GridKit
       }
 
       /**
-       * @brief Governed machine flat start: the TGOV1 governor initializes
-       * from the machine dispatch and the trajectory stays flat.
+       * @brief Governed machine split across sibling Containers: the TGOV1
+       * governor initializes from the machine dispatch and stays flat.
        */
       TestOutcome machineGovernorFlatStart()
       {
         TestStatus success = true;
 
-        std::istringstream stream(machineGovernorCaseJson());
+        std::istringstream stream(nestedMachineGovernorCaseJson());
         const auto         data = GridKit::EMT::parseSystemModelData(stream);
 
         GridKit::EMT::SystemModel<ScalarT, IdxT> sys(data);
