@@ -1,0 +1,114 @@
+{
+    "header": {
+        "case_name": "EMT nested governed machine case",
+        "case_description": "A machine plant and governor control system connected through Container boundaries",
+        "case_comments": "The two sibling Containers exchange speed and mechanical-power signals directly"
+    },
+    "devices": [
+        {
+            "class": "Container",
+            "id": "plant",
+            "inputs": {
+                "pmech": "control.pmech"
+            },
+            "outputs": {
+                "speed": "speed"
+            },
+            "signals": [
+                { "id": "speed" }
+            ],
+            "devices": [
+                {
+                    "class": "Bus",
+                    "id": "bus",
+                    "init": {
+                        "va": 11267.65281680262,
+                        "vb": -5633.82640840131,
+                        "vc": -5633.82640840131
+                    }
+                },
+                {
+                    "class": "Machine",
+                    "id": "machine",
+                    "params": {
+                        "N": 3,
+                        "S": 100.0e6,
+                        "V": 13800.0,
+                        "f": 60.0,
+                        "H": 3.7,
+                        "F": 0.0,
+                        "Rs": 0.003,
+                        "Ll": 0.15,
+                        "Lmd": 1.66,
+                        "Lmq": 1.61,
+                        "L0": 0.15,
+                        "Rfd": 0.0006,
+                        "Llfd": 0.165,
+                        "R1d": 0.0284,
+                        "Ll1d": 0.1713,
+                        "R1q": 0.0062,
+                        "Ll1q": 0.7252,
+                        "R2q": 0.0237,
+                        "Ll2q": 0.125,
+                        "S10": 0.1,
+                        "S12": 0.5,
+                        "p0": 50.0e6,
+                        "q0": 0.0
+                    },
+                    "inputs": {
+                        "bus": "bus",
+                        "pm": "pmech"
+                    },
+                    "outputs": {
+                        "speed": "speed"
+                    }
+                },
+                {
+                    "class": "LoadZ",
+                    "id": "load",
+                    "params": {
+                        "R": [[3.8088, 0.0, 0.0], [0.0, 3.8088, 0.0], [0.0, 0.0, 3.8088]]
+                    },
+                    "inputs": {
+                        "bus": "bus"
+                    }
+                }
+            ]
+        },
+        {
+            "class": "Container",
+            "id": "control",
+            "inputs": {
+                "speed": "plant.speed"
+            },
+            "outputs": {
+                "pmech": "pmech"
+            },
+            "signals": [
+                { "id": "pmech" }
+            ],
+            "devices": [
+                {
+                    "class": "Tgov1",
+                    "id": "governor",
+                    "params": {
+                        "Trate": 100.0,
+                        "R": 0.05,
+                        "T1": 0.5,
+                        "T2": 2.5,
+                        "T3": 7.5,
+                        "Pvmax": 1.0,
+                        "Pvmin": 0.0,
+                        "Dt": 0.0
+                    },
+                    "inputs": {
+                        "speed": "speed"
+                    },
+                    "outputs": {
+                        "pmech": "pmech"
+                    }
+                }
+            ]
+        }
+    ]
+}

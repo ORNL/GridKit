@@ -18,6 +18,7 @@ namespace GridKit
 
     // Available template instantiations
     // template class SystemModel<DependencyTracking::Variable, long int>;
+    template class Container<DependencyTracking::Variable, size_t>;
     template class SystemModel<DependencyTracking::Variable, size_t>;
 
   } // namespace EMT
