@@ -46,7 +46,14 @@ namespace GridKit
 
       for (const auto& signal_data : data.signal)
       {
-        addSignal(signal_data.id);
+        auto& signal = addSignal(signal_data.id);
+        if (signal_data.value.has_value())
+        {
+          const auto value = signal_data.value.value();
+          signal.setComputed([value]
+                             { return static_cast<ScalarT>(value); },
+                             [](typename SignalT::GradientT&, RealT) {});
+        }
       }
 
       for (const auto& bus_data : data.bus)

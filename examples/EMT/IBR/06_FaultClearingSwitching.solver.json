@@ -1,0 +1,30 @@
+{
+    "system_model_file": "../../../cases/EMT/IBR/TenBus.case.json",
+    "state_file": "../../../cases/EMT/IBR/TenBus.state.json",
+    "dt_monitor": 1e-05,
+    "tmax": 3.0,
+    "rel_tol": 1e-07,
+    "abs_tol": 1e-09,
+    "max_steps": 1000000,
+    "events": [
+        {
+            "time": 1.0,
+            "type": "switch_close",
+            "element_id": "fault"
+        },
+        {
+            "time": 1.06,
+            "type": "switch_open",
+            "element_id": "fault"
+        }
+    ],
+    "output_file": "06_FaultClearingSwitching.csv",
+    "state_output_file": "06_FaultClearingSwitching.states.csv",
+    "consistent_ic_type": "ya_ydp",
+    "mu": 50000.0,
+    "signal_values": {
+        "dc_4": 28918.846170570516,
+        "dc_5": 28918.846170570516,
+        "dc_6": 28918.846170570516
+    }
+}
