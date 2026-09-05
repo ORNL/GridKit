@@ -185,6 +185,10 @@ namespace GridKit
         {
           return 1;
         }
+        if (this->size_ == 0)
+        {
+          return 0;
+        }
         auto* y  = this->y_.getData();
         auto* yp = this->yp_.getData();
         for (IdxT j = 0; j < this->size_; ++j)
@@ -368,7 +372,7 @@ namespace GridKit
           }
         }
         size_t      offset = 0;
-        const auto* y      = this->y_.getData();
+        const auto* y      = this->size_ == 0 ? nullptr : this->y_.getData();
         for (const auto& section : sections_)
         {
           for (size_t j = 0; j < section.order; ++j)
@@ -394,6 +398,10 @@ namespace GridKit
           return 1;
         }
         this->gatherExternalVariables();
+        if (this->size_ == 0)
+        {
+          return 0;
+        }
         const auto* y      = this->y_.getData();
         const auto* yp     = this->yp_.getData();
         auto*       f      = this->f_.getData();
