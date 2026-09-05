@@ -4,7 +4,7 @@
  *
  */
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobian.hpp>
+#include <GridKit/Model/EMT/SignalJacobian.hpp>
 
 #include "VectorFitImpl.hpp"
 
@@ -33,7 +33,7 @@ namespace GridKit
 
       this->gatherExternalVariables();
 
-      if (jacobian_cached_)
+      if (jacobian_cached_ && !this->hasComputedInputs())
       {
         for (IdxT i = alpha_range_begin_; i < alpha_range_end_; ++i)
         {
@@ -47,12 +47,17 @@ namespace GridKit
         // Reserve space for the dense blocks.
         // The size of the buffer is the sum of maximum capacities of the blocks.
         // Enyme will compute the appropriate nnz from sparsification.
-        auto buffer_size = static_cast<size_t>(jacobianCapacity());
-        J_rows_buffer_   = new IdxT[buffer_size];
-        J_cols_buffer_   = new IdxT[buffer_size];
-        J_vals_buffer_   = new RealT[buffer_size];
+        auto buffer_size  = static_cast<size_t>(jacobianCapacity());
+        buffer_size      *= this->externalJacobianExpansion();
+        J_rows_buffer_    = new IdxT[buffer_size];
+        J_cols_buffer_    = new IdxT[buffer_size];
+        J_vals_buffer_    = new RealT[buffer_size];
       }
 
+      if (this->hasComputedInputs())
+      {
+        this->resetJacobianStructure();
+      }
       nnz_ = 0;
 
       using GridKit::Enzyme::Sparse::Equation;
@@ -82,8 +87,8 @@ namespace GridKit
 
         SparseJacobian<RealSectionT, Equation::Internal, Variable::Y>::eval(
             &section, 3, 3, ri, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
-        SparseJacobian<RealSectionT, Equation::Internal, Variable::YExt>::eval(
-            &section, 3, 3, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
+        SignalJacobian<RealSectionT, Equation::Internal, Variable::YExt>::eval(
+            this, &section, 3, 3, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
         SparseJacobian<RealSectionT, Equation::External, Variable::Y>::eval(
             &section, 3, 3, rie, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
         offset += 3;
@@ -98,15 +103,15 @@ namespace GridKit
 
         SparseJacobian<ComplexSectionT, Equation::Internal, Variable::Y>::eval(
             &section, 6, 6, ri, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
-        SparseJacobian<ComplexSectionT, Equation::Internal, Variable::YExt>::eval(
-            &section, 6, 3, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
+        SignalJacobian<ComplexSectionT, Equation::Internal, Variable::YExt>::eval(
+            this, &section, 6, 3, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
         SparseJacobian<ComplexSectionT, Equation::External, Variable::Y>::eval(
             &section, 3, 6, rie, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
         offset += 6;
       }
 
-      SparseJacobian<FeedthroughSectionT, Equation::External, Variable::YExt>::eval(
-          &feedthrough_, 3, 3, rie, vie, y_base, yp_base, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
+      SignalJacobian<FeedthroughSectionT, Equation::External, Variable::YExt>::eval(
+          this, &feedthrough_, 3, 3, rie, vie, y_base, yp_base, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
 
       // Alpha-scaled blocks last, contiguous, at unit scaling
       alpha_range_begin_ = nnz_;
@@ -126,8 +131,8 @@ namespace GridKit
       }
       if (hasFeedthroughDerivative())
       {
-        SparseJacobian<FeedthroughSectionT, Equation::External, Variable::YpExt>::eval(
-            &feedthrough_, 3, 3, rie, vie, y_base, yp_base, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, ONE<RealT>);
+        SignalJacobian<FeedthroughSectionT, Equation::External, Variable::YpExt>::eval(
+            this, &feedthrough_, 3, 3, rie, vie, y_base, yp_base, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, ONE<RealT>);
       }
 
       alpha_range_end_ = nnz_;

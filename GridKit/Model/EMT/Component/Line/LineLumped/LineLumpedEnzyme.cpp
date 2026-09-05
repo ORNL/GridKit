@@ -4,7 +4,7 @@
  *
  */
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobian.hpp>
+#include <GridKit/Model/EMT/SignalJacobian.hpp>
 
 #include "LineLumpedImpl.hpp"
 
@@ -40,9 +40,10 @@ namespace GridKit
           buffer_size += static_cast<size_t>(y1_->jacobianCapacity());
           buffer_size += static_cast<size_t>(y2_->jacobianCapacity());
         }
-        J_rows_buffer_ = new IdxT[buffer_size];
-        J_cols_buffer_ = new IdxT[buffer_size];
-        J_vals_buffer_ = new RealT[buffer_size];
+        buffer_size    *= this->externalJacobianExpansion();
+        J_rows_buffer_  = new IdxT[buffer_size];
+        J_cols_buffer_  = new IdxT[buffer_size];
+        J_vals_buffer_  = new RealT[buffer_size];
       }
 
       nnz_ = 0;
@@ -69,10 +70,10 @@ namespace GridKit
           this, n_f, n_y, ri, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
       SparseJacobian<ModelT, Equation::Internal, Variable::Yp>::eval(
           this, n_f, n_y, ri, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, alpha_);
-      SparseJacobian<ModelT, Equation::Internal, Variable::YExt>::eval(
-          this, n_f, n_yext, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
-      SparseJacobian<ModelT, Equation::Internal, Variable::YpExt>::eval(
-          this, n_f, n_yext, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, alpha_);
+      SignalJacobian<ModelT, Equation::Internal, Variable::YExt>::eval(
+          this, this, n_f, n_yext, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
+      SignalJacobian<ModelT, Equation::Internal, Variable::YpExt>::eval(
+          this, this, n_f, n_yext, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, alpha_);
       SparseJacobian<ModelT, Equation::External, Variable::Y>::eval(
           this, n_fext, n_y, rie, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
 

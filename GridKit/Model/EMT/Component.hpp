@@ -196,6 +196,12 @@ namespace GridKit
           return 1;
         }
 
+        if (size_ == 0)
+        {
+          allocated_ = true;
+          return 0;
+        }
+
         auto* y_data       = y.getData(memory::HOST);
         auto* yp_data      = yp.getData(memory::HOST);
         auto* f_data       = f.getData(memory::HOST);
@@ -304,6 +310,40 @@ namespace GridKit
       {
         external_variable_signals_[static_cast<size_t>(slot)] = signal;
         return 0;
+      }
+
+      const std::vector<SignalT*>& externalVariableSignals() const
+      {
+        return external_variable_signals_;
+      }
+
+      bool hasComputedInputs() const
+      {
+        for (const auto* signal : external_variable_signals_)
+        {
+          if (signal != nullptr && signal->computed())
+          {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      /// Maximum number of global columns represented by one input signal.
+      size_t externalJacobianExpansion() const
+      {
+        size_t                      expansion = 1;
+        typename SignalT::GradientT gradient;
+        for (const auto* signal : external_variable_signals_)
+        {
+          if (signal != nullptr && signal->computed())
+          {
+            gradient.clear();
+            signal->appendGradient(gradient);
+            expansion = std::max(expansion, gradient.size());
+          }
+        }
+        return expansion;
       }
 
       /**
