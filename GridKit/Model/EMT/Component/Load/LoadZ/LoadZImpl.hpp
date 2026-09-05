@@ -33,9 +33,9 @@ namespace GridKit
       if (data.Z.has_value())
       {
         z_.emplace(*data.Z, ONE<RealT>);
-        own_size_ = 3;
-        this->registerSubmodel(&*z_);
-        size_  = own_size_ + z_->size();
+        equation_size_ = 3;
+        this->addOperator(&*z_);
+        size_  = equation_size_ + z_->size();
         rl_on_ = ZERO<RealT>;
 
         // The specification admits a zero or nonsingular linear coefficient
@@ -106,7 +106,7 @@ namespace GridKit
       {
         z_->attachInput(&i_port_);
         z_->attachOutput(&i_port_);
-        this->allocateSubmodels();
+        this->allocateOperators();
       }
 
       // Default variable and residual index mapping to local index
@@ -189,7 +189,7 @@ namespace GridKit
 
       if (z_.has_value())
       {
-        this->initializeSubmodels();
+        this->initializeOperators();
       }
 
       if (!hasInductance() && !z_.has_value())
@@ -286,7 +286,7 @@ namespace GridKit
 
       if (z_.has_value())
       {
-        this->tagDifferentiableSubmodels();
+        this->tagDifferentiableOperators();
       }
 
       return 0;
@@ -339,7 +339,7 @@ namespace GridKit
       const ScalarT vc = y_ext[2];
 
       /* 3 load branch equations; the rational impedance terms accumulate
-         through the submodel when the resistance and inductance mask is off */
+         through the operator when the resistance and inductance mask is off */
       f[0] = rl_on_
                  * (R_[0][0] * ia + R_[0][1] * ib + R_[0][2] * ic
                     + L_[0][0] * ia_dot + L_[0][1] * ib_dot + L_[0][2] * ic_dot)
@@ -388,7 +388,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
       evaluateInternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f);
-      this->evaluateSubmodelInternalResiduals();
+      this->evaluateOperatorInternalResiduals();
       f_.setDataUpdated();
 
       return 0;
@@ -405,7 +405,7 @@ namespace GridKit
       const auto* yp = yp_.getData();
       evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
       this->scatterExternalResidual();
-      this->evaluateSubmodelExternalResiduals();
+      this->evaluateOperatorExternalResiduals();
 
       return 0;
     }

@@ -79,7 +79,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
-      using Component<scalar_type, index_type>::own_size_;
+      using Component<scalar_type, index_type>::equation_size_;
 
     public:
       using ScalarT    = scalar_type;
@@ -138,7 +138,7 @@ namespace GridKit
       RealT rl_on_{ONE<RealT>};
       RealT fit_on_{ZERO<RealT>};
 
-      /// Rational source admittance submodel
+      /// Rational source admittance operator
       std::optional<VectorFitT> yfit_;
 
       /// The rational admittance linear coefficient must be zero, because
