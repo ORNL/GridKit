@@ -1,16 +1,21 @@
 #pragma once
 
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/EMT/StateDataAdapter.hpp>
 #include <GridKit/Model/EMT/SystemModelData.hpp>
 #include <GridKit/Model/StateData.hpp>
@@ -64,6 +69,10 @@ namespace GridKit
       double                                         rel_tol;
       /// absolute tolerance for the solver
       double                                         abs_tol;
+      /// Process-wide CommonMath smoothing scale
+      double                                         mu{Math::DEFAULT_MU<double>};
+      /// Study overrides for declared constant signals, by component path
+      std::map<std::string, double>                  signal_values;
       /// fixed solver time step size, or 0 for adaptive stepping
       double                                         dt_fixed;
       /// maximum number of solver time steps, or 0 for the IDA default
@@ -74,6 +83,8 @@ namespace GridKit
       std::vector<SystemEvent>                       events;
       /// path to output file
       fs::path                                       output_file;
+      /// Optional CSV containing every DAE variable and derivative
+      fs::path                                       state_output_file;
       /// path to reference file for validation
       fs::path                                       reference_file;
       /// Error tolerance (between output file and reference file)
@@ -87,6 +98,13 @@ namespace GridKit
     };
 
     using json = ::nlohmann::json;
+
+    /** Configure before constructing models, including PWM's cached horizon. */
+    template <typename RealT>
+    inline void configureCommonMath(const StudyData& study)
+    {
+      Math::MU<RealT> = static_cast<RealT>(study.mu);
+    }
 
     inline constexpr double DEFAULT_SOLVER_REL_TOL   = 1.0e-7;
     inline constexpr double DEFAULT_SOLVER_ABS_TOL   = 1.0e-9;
@@ -106,8 +124,29 @@ namespace GridKit
       }
       c.dt_monitor = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);
-      c.rel_tol            = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
-      c.abs_tol            = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
+      c.rel_tol = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
+      c.abs_tol = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
+      c.mu      = j.value("mu", Math::DEFAULT_MU<double>);
+      if (!std::isfinite(c.mu) || c.mu <= 0.0)
+      {
+        throw std::invalid_argument("\"mu\" must be a positive finite number");
+      }
+      c.signal_values.clear();
+      if (j.contains("signal_values"))
+      {
+        if (!j.at("signal_values").is_object())
+        {
+          throw std::invalid_argument("signal_values must be an object");
+        }
+        for (const auto& [name, value] : j.at("signal_values").items())
+        {
+          if (!value.is_number() || !std::isfinite(value.get<double>()))
+          {
+            throw std::invalid_argument("A signal_values entry must be a finite number");
+          }
+          c.signal_values.emplace(name, value.get<double>());
+        }
+      }
       c.dt_fixed           = j.value("dt_fixed", 0.0);
       c.max_steps          = j.value("max_steps", std::size_t{0});
       c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
@@ -152,6 +191,10 @@ namespace GridKit
       if (j.contains("output_file"))
       {
         j.at("output_file").get_to(c.output_file);
+      }
+      if (j.contains("state_output_file"))
+      {
+        j.at("state_output_file").get_to(c.state_output_file);
       }
 
       if (j.contains("reference_file"))
@@ -243,6 +286,33 @@ namespace GridKit
 
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
       data.model_data = parseSystemModelData(data.system_model_file);
+
+      // Override only explicitly declared constants, never component outputs.
+      for (const auto& [path, value] : data.signal_values)
+      {
+        ContainerData<double, size_t>* scope     = &data.model_data;
+        auto                           remaining = path;
+        while (remaining.find('.') != std::string::npos)
+        {
+          const auto dot   = remaining.find('.');
+          const auto name  = remaining.substr(0, dot);
+          auto       child = std::find_if(scope->container.begin(), scope->container.end(), [&](const auto& candidate)
+                                    { return candidate.id == name; });
+          if (child == scope->container.end())
+          {
+            throw std::invalid_argument("Unknown constant signal: " + path);
+          }
+          scope = &*child;
+          remaining.erase(0, dot + 1);
+        }
+        auto signal = std::find_if(scope->signal.begin(), scope->signal.end(), [&](const auto& candidate)
+                                   { return candidate.id == remaining; });
+        if (signal == scope->signal.end() || !signal->value.has_value())
+        {
+          throw std::invalid_argument("signal_values requires a declared constant: " + path);
+        }
+        signal->value = value;
+      }
 
       // Apply the operating point after the case parameters, so the case
       // stays parameters and topology only
