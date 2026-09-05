@@ -565,14 +565,14 @@ namespace GridKit
 
        // Offset the number for yp variables to track y and yp simultaneously. 
        // @todo For a hierarchical system, the offsets must be provided by a higher level
-       y_yp_offset_ = size_;
+       y_yp_tracking_offset_ = size_;
        for (IdxT j = 0; j < size_; ++j)
        {
           const IdxT var_idx = this->getVariableIndex(j);
           if (var_idx != INVALID_INDEX<IdxT>) 
           {
             y[j].setVariableNumber(static_cast<size_t>(var_idx));
-            yp[j].setVariableNumber(static_cast<size_t>(var_idx) + static_cast<size_t>(y_yp_offset_));
+            yp[j].setVariableNumber(static_cast<size_t>(var_idx) + static_cast<size_t>(y_yp_tracking_offset_));
           }
         }
       } 

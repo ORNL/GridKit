@@ -47,13 +47,13 @@ namespace GridKit
     
             // Merge-count y and yp dependencies
             IdxT jac_col;
-            if (col < y_yp_offset_)
+            if (col < y_yp_tracking_offset_)
             {
               jac_col = col;
             }
             else
             {
-              jac_col = col - y_yp_offset_;
+              jac_col = col - y_yp_tracking_offset_;
             }
     
             if (row_map.insert({jac_col, RealT{}}).second)
@@ -80,14 +80,14 @@ namespace GridKit
             const IdxT col = static_cast<IdxT>(dep.first);
     
             IdxT jac_col;
-            if (col < y_yp_offset_)
+            if (col < y_yp_tracking_offset_)
             {
               jac_col = col;
               row_map[jac_col] += static_cast<RealT>(dep.second);
             }
             else
             {
-              jac_col = col - y_yp_offset_;
+              jac_col = col - y_yp_tracking_offset_;
               row_map[jac_col] += alpha_ * static_cast<RealT>(dep.second);
             }
           }
@@ -117,14 +117,14 @@ namespace GridKit
             const IdxT col = static_cast<IdxT>(dep.first);
     
             IdxT jac_col;
-            if (col < y_yp_offset_)
+            if (col < y_yp_tracking_offset_)
             {
               jac_col = col;
               row_map[jac_col] += static_cast<RealT>(dep.second);
             }
             else
             {
-              jac_col = col - y_yp_offset_;
+              jac_col = col - y_yp_tracking_offset_;
               row_map[jac_col] += alpha_ * static_cast<RealT>(dep.second);
             }
           }
