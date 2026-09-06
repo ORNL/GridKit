@@ -1,7 +1,7 @@
 # Phasor dynamics
 
 This directory contains an implementation of a system model using phasor
-dynamics. 
+dynamics.
 
 ## Modeling checklist
 
@@ -12,7 +12,7 @@ files:
 - `MyModel.hpp`: Component model declaration.
 - `MyModelData.hpp`: Definitions of model data including model parameters,
                      model connection ports and model outputs (monitored
-                     variables). 
+                     variables).
 - `MyModelDependencyTracking.cpp`: Compilation unit for Jacobian evaluation
                                    using dependency tracking data type (a.k.a
                                    tapeless automatic differentiation).
@@ -60,7 +60,7 @@ We recommend developers follow these steps when adding new component models:
    builds correctly.
     - You may want to start with a "dummy" implementation first to make sure
       the build and installation works correctly before proceeding to the
-      implementation. 
+      implementation.
 4. Create unit tests in `tests/UnitTests/PhasorDynamics` directory. The
    implementation consists of `MyModelTests.hpp` with implementation of
    individual unit tests, the test driver in `runMyModelTests.cpp`, and

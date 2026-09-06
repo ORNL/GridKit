@@ -1,13 +1,8 @@
-# Stabilizer Model
+# Stabilizer Models
 
-## Introduction
-
-A stabilizer models the control system that is designed to damp or prevent oscillations.
-Stabilizers can be used to improve the stability and response of the exciter, governor, etc.
+Stabilizers damp machine oscillations. IEEEST is implemented; PSS1A remains a specification draft.
 
 ## Types
 
-The GridKit implemented stabilizers include:
-
-- IEEEST (See [IEEEST](IEEEST/README.md))
-- PSS1A (See [PSS1A](PSS1A/README.md))
+- [IEEEST](IEEEST/README.md): IEEE stabilizer
+- [PSS1A](PSS1A/README.md): Power system stabilizer

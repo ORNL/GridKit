@@ -1,13 +1,15 @@
-# **Hydro Turbine-Governor Model (HYGOV)**
+# HYGOV
 
 HYGOV is a hydro turbine-governor model with temporary droop, a gate servo, and
 a nonlinear single-penstock turbine.
 
+> [!WARNING]
+> HYGOVD `dbL`/`dbH`, mechanical backlash (`db2`), and Kaplan blade-servo
+> behavior are not modeled. Nonzero `db2` values log a warning and are ignored.
+
 ## Notes
 
-- HYGOVD `dbL`/`dbH`, `db2` backlash, and Kaplan blade-servo fields are not
-  modeled. The `db2` JSON field is accepted for source-format compatibility.
-  A nonzero value logs a warning and is ignored.
+None.
 
 ## Block Diagram
 
@@ -19,22 +21,22 @@ Figure 1: HYGOV governor model. Figure courtesy of the
 ## Model Parameters
 
 Symbol                  | Units    | JSON          | Description                              | Typical Value | Note
-------------------------|----------|---------------|------------------------------------------|---------------|------
+------------------------|----------|---------------|------------------------------------------|---------------|------------------------------------
 $T^\mathrm{rate}$       | [MW]     | `Trate`       | Turbine-rating power base                | 100.0         | Required
 $R_{\mathrm{perm}}$     | [p.u.]   | `Rperm`       | Permanent droop                          | 0.04          | Source label: `R`
 $R_{\mathrm{temp}}$     | [p.u.]   | `Rtemp`       | Temporary droop                          | 0.3           | Source label: `r`
-$T_r$                   | [sec]    | `Tr`          | Temporary-droop reset time constant      | 5.0           |
-$T_f$                   | [sec]    | `Tf`          | Governor error filter time constant      | 0.05          |
-$T_g$                   | [sec]    | `Tg`          | Gate servo time constant                 | 0.5           |
+$T_\mathrm{r}$                   | [s]      | `Tr`          | Temporary-droop reset time constant      | 5.0           |
+$T_\mathrm{f}$                   | [s]      | `Tf`          | Governor error filter time constant      | 0.05          |
+$T_\mathrm{g}$                   | [s]      | `Tg`          | Gate servo time constant                 | 0.5           |
 $V_{\mathrm{elm}}$      | [p.u./s] | `Velm`        | Maximum desired-gate velocity magnitude  | 0.2           |
 $G^{\max}$              | [p.u.]   | `Gmax`        | Configured upper gate response limit     | 1.0           |
 $G^{\min}$              | [p.u.]   | `Gmin`        | Configured lower gate response limit     | 0.0           |
-$T_w$                   | [sec]    | `Tw`          | Water inertia time constant              | 1.0           |
-$A_t$                   | [p.u.]   | `At`          | Turbine gain                             | 1.2           |
+$T_\mathrm{w}$                   | [s]      | `Tw`          | Water inertia time constant              | 1.0           |
+$A_\mathrm{t}$                   | [p.u.]   | `At`          | Turbine gain                             | 1.2           |
 $D_{\mathrm{turb}}$     | [p.u.]   | `Dturb`       | Turbine damping coefficient              | 0.5           |
 $q_{\mathrm{NL}}$       | [p.u.]   | `Qnl`         | No-load flow at nominal head             | 0.05          |
-$T_n$                   | [sec]    | `Tn`          | Speed lead-lag numerator time constant   | 0.0           |
-$T_{\mathrm{np}}$       | [sec]    | `Tnp`         | Speed lead-lag denominator time constant | 0.0           |
+$T_\mathrm{n}$                   | [s]      | `Tn`          | Speed lead–lag numerator time constant   | 0.0           |
+$T_{\mathrm{np}}$       | [s]      | `Tnp`         | Speed lead–lag denominator time constant | 0.0           |
 $D_{\omega}$            | [p.u.]   | `db1`         | Type 1 speed deadband threshold          | 0.0           |
 $D_2$                   | [p.u.]   | `db2`         | Unsupported mechanical backlash deadband | 0.0           | Nonzero values warn and are ignored
 $H_{\mathrm{dam}}$      | [p.u.]   | `Hdam`        | Configured dam head                      | 1.0           | Lower bound on effective head
@@ -46,24 +48,22 @@ Real-valued parameters accept real or integer JSON values. All-zero `Gv` and
 
 ### Parameter Validation
 
-Real-valued parameters, `Known` initial values, power bases, and base-conversion
-ratios must be finite. The bases and ratios must also be positive. A valid
-HYGOV parameter set must satisfy the following conditions:
+A valid HYGOV parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}
   T^\mathrm{rate} &> 0 \\
-  T_r, T_f, T_g, T_w, T_{\mathrm{np}}
+  T_\mathrm{r}, T_\mathrm{f}, T_\mathrm{g}, T_\mathrm{w}, T_{\mathrm{np}}
     &\ge 0 \\
   R_{\mathrm{temp}}
     &> 0 \\
-  T_n
+  T_\mathrm{n}
     &\ge 0 \\
   V_{\mathrm{elm}}
     &\ge 0 \\
   G^{\min}
     &< G^{\max} \\
-  A_t
+  A_\mathrm{t}
     &> 0 \\
   D_{\mathrm{turb}}
     &\ge 0 \\
@@ -79,10 +79,13 @@ HYGOV parameter set must satisfy the following conditions:
     \quad k\in\{0,\ldots,4\} \\
   G_V^{(0)} \le G^{\min}
     &< G^{\max} \le G_V^{(5)} \\
-  P_{\mathrm{m}}(G_V^{(5)}) - P_{\mathrm{m}}(G_V^{(0)})
+  P_\mathrm{m}(G_V^{(5)}) - P_\mathrm{m}(G_V^{(0)})
     &> \epsilon_{\mathrm{init}}
 \end{aligned}
 ```
+
+Real-valued parameters, `Known` initial values, power bases, and base-conversion
+ratios must be finite. The bases and ratios must also be positive.
 
 The final condition uses the steady mechanical power and tolerance defined
 under [Internal Initialization](#internal-initialization).
@@ -95,30 +98,27 @@ raised to that floor in place, so every equation below uses the raised value:
 ```math
 \begin{aligned}
   T_x
-    &\leftarrow \max\!\left(T_x,\epsilon_T\right),
+    &\leftarrow \max\!(T_x,\epsilon_T),
        \quad x\in\{r,f,g,w,\mathrm{np}\} \\
   k_{\mathrm{base}}
     &= \dfrac{S^\mathrm{sys}}{10^6\,T^\mathrm{rate}} \\
-  k_n
-    &= \dfrac{T_n}{T_{\mathrm{np}}} \\
+  k_\mathrm{n}
+    &= \dfrac{T_\mathrm{n}}{T_{\mathrm{np}}} \\
   N_{\mathrm{GV}}(x)
     &=
       P_{\mathrm{GV}}^{(0)}
       + \sum_{k\in\{0,\ldots,4\}}
-        \text{linseg}\!\left(
+        \text{linseg}\!(
           x;\,
           G_V^{(k)},\,
           G_V^{(k+1)},\,
           P_{\mathrm{GV}}^{(k+1)} - P_{\mathrm{GV}}^{(k)}
-        \right)
+        )
 \end{aligned}
 ```
 
 Multiplying by $k_\mathrm{base}$ converts system base to component base;
 $S^\mathrm{sys}$ is the system power base in VA.
-
-CommonMath defines the [`linseg`](../../../../CommonMath.md#linear-segment) helper
-used by $N_{\mathrm{GV}}$.
 
 ## Model Ports
 
@@ -129,9 +129,8 @@ Name    | Port   | Init    | Description
 `paux`  | Input  | Known   | Auxiliary power input
 `pmech` | Output | Known   | Mechanical power output
 
-`Known` ports hold their initial values before `initialize()` and are preserved
-by it. `Unknown` inputs are resolved during initialization and written to
-attached signal storage, or retained as constant inputs when unattached. The
+`Known` values are seeded before initialization and preserved. `Unknown` inputs
+are initialized in attached signal storage or held constant when unattached. The
 `pmech` output must be assigned. The signal inputs are optional. Unattached
 `speed` and `paux` inputs default to zero.
 
@@ -141,25 +140,25 @@ attached signal storage, or retained as constant inputs when unattached. The
 
 #### Differential
 
-Symbol                  | Units  | Description                         | Note
-------------------------|--------|-------------------------------------|------
-$x_n$                   | [p.u.] | Speed lead-lag denominator state    | Not circled in Fig. 1. Realizes the `Tn`/`Tnp` block
-$x_f$                   | [p.u.] | Governor error filter output        | State 1 in Fig. 1
-$c$                     | [p.u.] | Desired-gate position               | State 2 in Fig. 1
-$g$                     | [p.u.] | Gate position                       | State 3 in Fig. 1
-$q$                     | [p.u.] | Turbine flow                        | State 4 in Fig. 1
+Symbol | Units  | Description                      | Note
+-------|--------|----------------------------------|-----------------------------------------------------
+$x_\mathrm{n}$  | [p.u.] | Speed lead–lag denominator state | Not circled in Fig. 1. Realizes the `Tn`/`Tnp` block
+$x_\mathrm{f}$  | [p.u.] | Governor error filter output     | State 1 in Fig. 1
+$c$    | [p.u.] | Desired-gate position            | State 2 in Fig. 1
+$g$    | [p.u.] | Gate position                    | State 3 in Fig. 1
+$q$    | [p.u.] | Turbine flow                     | State 4 in Fig. 1
 
 #### Algebraic
 
-Symbol                  | Units    | Description                                 | Note
-------------------------|----------|---------------------------------------------|------
-$\omega_{\mathrm{db}}$  | [p.u.]   | Type 1 deadbanded speed deviation           |
-$e_f$                   | [p.u.]   | Governor error into the filter              | Reference path less conditioned speed and permanent-droop feedback
-$f_c$                   | [p.u./s] | Desired-gate derivative target              | Before rate and position limits
-$r_c$                   | [p.u./s] | Rate-limited desired-gate derivative target | Limited by $\pm V_{\mathrm{elm}}$
-$P_{\mathrm{GV}}$       | [p.u.]   | Nonlinear gate-to-power curve output        | $N_{\mathrm{GV}}(g)$
-$H$                     | [p.u.]   | Turbine head                                | Implicit water-column head
-$P_{\mathrm{m}}$        | [p.u.]   | Mechanical power to generator               | System base
+Symbol                 | Units    | Description                                 | Note
+-----------------------|----------|---------------------------------------------|-------------------------------------------------------------------
+$\omega_{\mathrm{db}}$ | [p.u.]   | Type 1 deadbanded speed deviation           |
+$e_f$                  | [p.u.]   | Governor error into the filter              | Reference path less conditioned speed and permanent-droop feedback
+$f_c$                  | [p.u./s] | Desired-gate derivative target              | Before rate and position limits
+$r_c$                  | [p.u./s] | Rate-limited desired-gate derivative target | Limited by $\pm V_{\mathrm{elm}}$
+$P_{\mathrm{GV}}$      | [p.u.]   | Nonlinear gate-to-power curve output        | $N_{\mathrm{GV}}(g)$
+$H$                    | [p.u.]   | Turbine head                                | Implicit water-column head
+$P_\mathrm{m}$                  | [p.u.]   | Mechanical power to generator               | System base
 
 ### External Variables
 
@@ -169,13 +168,15 @@ None.
 
 #### Algebraic
 
-Symbol            | Units  | Init    | Description                 | Note
-------------------|--------|---------|-----------------------------|------
-$\omega$          | [p.u.] | Known   | Machine speed deviation     | Optional signal port `speed`. Defaults to zero
-$P^\mathrm{ref}$  | [p.u.] | Unknown | Active-power/load reference | Optional signal port `pref`, system base
-$P^\mathrm{aux}$  | [p.u.] | Known   | Auxiliary power input       | Optional signal port `paux`, system base, defaults to zero
+Symbol           | Units  | Description                 | Note
+-----------------|--------|-----------------------------|-----------------------------------------------------------
+$\omega$         | [p.u.] | Machine speed deviation     | Optional signal port `speed`. Defaults to zero
+$P^\mathrm{ref}$ | [p.u.] | Active-power/load reference | Optional signal port `pref`, system base
+$P^\mathrm{aux}$ | [p.u.] | Auxiliary power input       | Optional signal port `paux`, system base, defaults to zero
 
 ## Model Equations
+
+Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`clamp`](../../../../CommonMath.md#clamp), [`deadband1`](../../../../CommonMath.md#type-i-deadband), [`linseg`](../../../../CommonMath.md#linear-segment).
 
 ### Internal Equations
 
@@ -190,29 +191,26 @@ dam head $H_{\mathrm{dam}}^{\mathrm{eff}}$ are resolved during initialization.
   0 &=
     -\dot{x}_n
     + \dfrac{1}{T_{\mathrm{np}}}
-      \left(\omega_{\mathrm{db}} - x_n\right) \\
+      (\omega_{\mathrm{db}} - x_\mathrm{n}) \\
   0 &=
     -\dot{x}_f
-    + \dfrac{1}{T_f}
-      \left(e_f - x_f\right) \\
+    + \dfrac{1}{T_\mathrm{f}}
+      (e_f - x_\mathrm{f}) \\
   0 &=
     -\dot{c}
     + \text{antiwindup}
-      \left(c, r_c;\, G_{\mathrm{resp}}^{\min},
-        G_{\mathrm{resp}}^{\max}\right) \\
+      (c, r_c;\, G_{\mathrm{resp}}^{\min},
+        G_{\mathrm{resp}}^{\max}) \\
   0 &=
     -\dot{g}
-    + \dfrac{1}{T_g}
-      \left(c - g\right) \\
+    + \dfrac{1}{T_\mathrm{g}}
+      (c - g) \\
   0 &=
     -\dot{q}
-    + \dfrac{1}{T_w}
-      \left(H_{\mathrm{dam}}^{\mathrm{eff}} - H\right)
+    + \dfrac{1}{T_\mathrm{w}}
+      (H_{\mathrm{dam}}^{\mathrm{eff}} - H)
 \end{aligned}
 ```
-
-CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
-target and smooth approximation.
 
 #### Algebraic
 
@@ -221,21 +219,21 @@ target and smooth approximation.
   0 &=
     -\omega_{\mathrm{db}}
     + \text{deadband1}
-      \left(\omega;\, -D_{\omega}, D_{\omega}\right) \\
+      (\omega;\, -D_{\omega}, D_{\omega}) \\
   0 &=
     -e_f
-    + k_{\mathrm{base}}\left(P^\mathrm{ref} + P^\mathrm{aux}\right)
-    - x_n
-    - k_n\left(\omega_{\mathrm{db}} - x_n\right)
+    + k_{\mathrm{base}}(P^\mathrm{ref} + P^\mathrm{aux})
+    - x_\mathrm{n}
+    - k_\mathrm{n}(\omega_{\mathrm{db}} - x_\mathrm{n})
     - R_{\mathrm{perm}}c \\
   0 &=
     -R_{\mathrm{temp}}f_c
-    + \dfrac{x_f}{T_r}
-    + \dfrac{e_f - x_f}{T_f} \\
+    + \dfrac{x_\mathrm{f}}{T_\mathrm{r}}
+    + \dfrac{e_f - x_\mathrm{f}}{T_\mathrm{f}} \\
   0 &=
     -r_c
     + \text{clamp}
-      \left(f_c;\, -V_{\mathrm{elm}}, V_{\mathrm{elm}}\right) \\
+      (f_c;\, -V_{\mathrm{elm}}, V_{\mathrm{elm}}) \\
   0 &=
     -P_{\mathrm{GV}}
     + N_{\mathrm{GV}}(g) \\
@@ -243,15 +241,11 @@ target and smooth approximation.
     -q^2
     + H P_{\mathrm{GV}}^2 \\
   0 &=
-    -k_{\mathrm{base}}P_{\mathrm{m}}
-    + A_t H\left(q - q_{\mathrm{NL}}\right)
+    -k_{\mathrm{base}}P_\mathrm{m}
+    + A_\mathrm{t} H(q - q_{\mathrm{NL}})
     - D_{\mathrm{turb}}\omega g
 \end{aligned}
 ```
-
-CommonMath defines helper targets and smooth approximations for
-[deadband1](../../../../CommonMath.md#type-i-deadband) and
-[clamp](../../../../CommonMath.md#clamp).
 
 ### External Equations
 
@@ -265,14 +259,14 @@ None.
 \begin{aligned}
   \omega
     &\leftarrow \text{machine speed deviation} \\
-  P_{\mathrm{m}}
+  P_\mathrm{m}
     &\leftarrow \text{machine mechanical power on system base} \\
   P^\mathrm{aux}
     &\leftarrow \text{auxiliary power input on system base}
 \end{aligned}
 ```
 
-Initialization never replaces the system-base value held in $P_{\mathrm{m}}$.
+Initialization never replaces the system-base value held in $P_\mathrm{m}$.
 
 ### Internal Initialization
 
@@ -301,12 +295,12 @@ simulation.
     &\leftarrow H_{\mathrm{dam}}^{\mathrm{eff}} \\
   g
     &\leftarrow \text{gate in } [G_V^{(0)},G_V^{(5)}] \text{ satisfying} \\
-  &\qquad k_{\mathrm{base}}P_{\mathrm{m}}
-    = A_t H\left(\sqrt{H}\,N_{\mathrm{GV}}(g) - q_{\mathrm{NL}}\right) \\
+  &\qquad k_{\mathrm{base}}P_\mathrm{m}
+    = A_\mathrm{t} H\left(\sqrt{H}\,N_{\mathrm{GV}}(g) - q_{\mathrm{NL}}\right) \\
   G_{\mathrm{resp}}^{\min}
-    &\leftarrow \min\!\left(G^{\min},g\right) \\
+    &\leftarrow \min\!(G^{\min},g) \\
   G_{\mathrm{resp}}^{\max}
-    &\leftarrow \max\!\left(G^{\max},g\right) \\
+    &\leftarrow \max\!(G^{\max},g) \\
   P_{\mathrm{GV}}
     &\leftarrow N_{\mathrm{GV}}(g) \\
   q
@@ -314,10 +308,10 @@ simulation.
   c
     &\leftarrow g \\
   \omega_{\mathrm{db}}
-    &\leftarrow \text{deadband1}\!\left(\omega;\, -D_{\omega}, D_{\omega}\right) \\
-  x_n
+    &\leftarrow \text{deadband1}\!(\omega;\, -D_{\omega}, D_{\omega}) \\
+  x_\mathrm{n}
     &\leftarrow \omega_{\mathrm{db}} \\
-  x_f
+  x_\mathrm{f}
     &\leftarrow 0 \\
   e_f
     &\leftarrow 0 \\
@@ -348,8 +342,8 @@ unchanged.
       \left[
         e_f
         - k_{\mathrm{base}}P^\mathrm{aux}
-        + x_n
-        + k_n\left(\omega_{\mathrm{db}} - x_n\right)
+        + x_\mathrm{n}
+        + k_\mathrm{n}(\omega_{\mathrm{db}} - x_\mathrm{n})
         + R_{\mathrm{perm}}c
       \right]
 \end{aligned}
@@ -357,33 +351,14 @@ unchanged.
 
 ## Monitors
 
-Monitor        | Units  | Description                  | Note
----------------|--------|------------------------------|------
-`pmech`        | [p.u.] | Mechanical-power output      | $P_{\mathrm{m}}$ (system base)
-`filter`       | [p.u.] | Governor error filter output | $x_f$ (component base)
-`desiredgate`  | [p.u.] | Desired-gate position        | $c$ (component base)
-`gate`         | [p.u.] | Gate position                | $g$ (component base)
-`flow`         | [p.u.] | Turbine flow                 | $q$ (component base)
-`head`         | [p.u.] | Turbine head                 | $H$ (component base)
-
-## Testing
-
-- `validation()` checks construction, monitor creation, parameter validation,
-  signal configuration, and minimum time-constant handling.
-- `initializationAndSignals()` checks initialization, base conversion,
-  signal publication, monitor output, and unattached-reference latching.
-- `initializationDomain()` checks effective-limit and effective-head
-  initialization, rejection atomicity, and initialization boundaries.
-- `initializationExactness()` checks that initialized steady residuals rest
-  at machine rounding across the gate curve.
-- `residualEquations()` checks every model residual against a fixed
-  numerical answer key.
-- `governorControl()` checks the speed deadband, the desired-gate velocity
-  limit, and the gate-position anti-windup.
-- `turbineDynamics()` checks the gate-power curve, the water column, turbine
-  damping, and initialization through the nonlinear curve.
-- `jacobian()` compares the dependency-tracking and Enzyme Jacobians across
-  the gate curve when Enzyme support is enabled.
+Monitor       | Units  | Description                  | Note
+--------------|--------|------------------------------|-----------------------
+`pmech`       | [p.u.] | Mechanical-power output      | $P_\mathrm{m}$ (system base)
+`filter`      | [p.u.] | Governor error filter output | $x_\mathrm{f}$ (component base)
+`desiredgate` | [p.u.] | Desired-gate position        | $c$ (component base)
+`gate`        | [p.u.] | Gate position                | $g$ (component base)
+`flow`        | [p.u.] | Turbine flow                 | $q$ (component base)
+`head`        | [p.u.] | Turbine head                 | $H$ (component base)
 
 ## Appendix A: Backlash
 
@@ -394,13 +369,13 @@ Input $u$, output $y$, half-play $b$, with $|u - y| \le b$.
   \dot{y}
     &=
       \begin{cases}
-        \dot{u} & |u - y| = b \text{ and } \dot{u}\left(u - y\right) > 0 \\
+        \dot{u} & |u - y| = b \text{ and } \dot{u}(u - y) > 0 \\
         0       & \text{otherwise}
       \end{cases}
 \end{aligned}
 ```
 
-which can be written in terms of our smooth functions as 
+which can be written in terms of our smooth functions as
 
 ```math
 \begin{aligned}

@@ -1,8 +1,10 @@
 # Bus Model
 
 `Bus` represents an $N$-phase bus in instantaneous phase coordinates. It owns
-the differential bus voltage and contributes the current-balance residual to
-the assembled DAE. $\mathcal{E}$ denotes the set of connected devices.
+the bus voltage and contributes the current-balance residual to
+the assembled DAE. $\mathcal{D}$ denotes the set of connected devices.
+Bus voltage and its residual are algebraic when no connected model contributes
+a voltage derivative; see [assembly](../README.md#assembly).
 
 ## Block Diagram
 
@@ -30,7 +32,7 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{i}_e$ | `i` | Input | [A] | Current from connected device $e$ | One port per $e \in \mathcal{E}$, $\mathbf{i}_e \in \mathbb{R}^N$
+$\mathbf{i}_d$ | `i` | Input | [A] | Current from connected device $d$ | One port per $d \in \mathcal{D}$, $\mathbf{i}_d \in \mathbb{R}^N$
 $\mathbf{v}$ | `v` | Output | [V] | Bus voltage supplied to connected devices | $\mathbf{v} \in \mathbb{R}^N$
 
 ## Submodels
@@ -38,6 +40,10 @@ $\mathbf{v}$ | `v` | Output | [V] | Bus voltage supplied to connected devices | 
 None.
 
 ### Submodel Validation
+
+None.
+
+### Submodel Wiring
 
 None.
 
@@ -72,7 +78,7 @@ None.
 #### Differential
 
 ```math
-0 = \sum_{e \in \mathcal{E}} \mathbf{i}_e
+0 = \sum_{d \in \mathcal{D}} \mathbf{i}_d
 ```
 
 #### Algebraic
@@ -83,13 +89,9 @@ None.
 
 None.
 
-### Wiring
-
-None.
-
 ## Initialization
 
-None beyond the EMT initialization contract.
+None.
 
 ## Monitors
 

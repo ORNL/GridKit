@@ -1,22 +1,21 @@
-# **Bus Fed or Solid Fed Static Excitation System Model (SCRX)**
+# SCRX
 
-SCRX is a static excitation system with a voltage-error lead-lag block, a
+SCRX is a static excitation system with a voltage-error lead–lag block, a
 limited exciter lag, and a source selector that scales the exciter output by
 either terminal voltage or a constant source.
 
-Notes:
+## Notes
+
 - Internal voltage signals are on model base unless otherwise stated.
 - The source diagram shows a shared SCRX/SCRX1-style selector. In the diagram,
   `C_SWITCH = 0` selects the bus-fed multiplier $E_T$, and `C_SWITCH = 1`
   selects the solid-fed multiplier 1.
-- Some source material labels the lead-lag numerator input as `TA/TB`; the
+- Some source material labels the lead–lag numerator input as `TA/TB`; the
   model equations below use explicit time constants $T_A$ and $T_B$.
 - `Rc_Rfd` is a source-data parameter for input compatibility, but it is not an
   active block in Fig. 1 and is not used by the equations below.
 
 ## Block Diagram
-
-Standard model of the SCRX Exciter.
 
 ![](../../../../../docs/Figures/PhasorDynamics/SCRX_diagram.png)
 
@@ -24,16 +23,16 @@ Figure 1: Exciter SCRX model. Figure courtesy of [PowerWorld](https://www.powerw
 
 ## Model Parameters
 
-Symbol                              | Units    | JSON       | Description                                             | Typical Value | Note
-------------------------------------|----------|------------|---------------------------------------------------------|---------------|------
-$T_A$                               | [sec]    | `Ta`       | Lead-lag numerator time constant                        | 0.0           | Source label: `TA/TB` in some SCRX source data
-$T_B$                               | [sec]    | `Tb`       | Lead-lag denominator time constant                      | 0.0           | Block name: `TB`; if zero, the lead-lag block is algebraic
-$K$                                 | [p.u.]   | `K`        | Exciter gain                                            | 1.0           | Block name: `K`
-$T_E$                               | [sec]    | `Te`       | Exciter lag time constant                               | 0.0           | Block name: `TE`; if zero, $E_{\mathrm{fd}}'$ is algebraic
-$E_{\mathrm{fd}}^{\max}$            | [p.u.]   | `Efdmax`   | Maximum limited exciter output before source multiplier | 5.0           | Block name: `EFDMAX`
-$E_{\mathrm{fd}}^{\min}$            | [p.u.]   | `Efdmin`   | Minimum limited exciter output before source multiplier | -5.0          | Block name: `EFDMIN`
-$C_{\mathrm{sw}}$                   | [binary] | `Cswitch`  | Source multiplier selector                              | 0             | Source label: `C_SWITCH`; 0 = bus-fed $E_T$, 1 = solid-fed constant 1
-$R_c/R_{\mathrm{fd}}$               | [p.u.]   | `Rc_Rfd`   | Source-data compatibility parameter                     | 0.0           | Not active in Fig. 1 equations
+Symbol                   | Units    | JSON      | Description                                             | Typical Value | Note
+-------------------------|----------|-----------|---------------------------------------------------------|---------------|----------------------------------------------------------------------
+$T_A$                    | [s]      | `Ta`      | Lead–lag numerator time constant                        | 0.0           | Source label: `TA/TB` in some SCRX source data
+$T_B$                    | [s]      | `Tb`      | Lead–lag denominator time constant                      | 0.0           | Source label: `TB`; if zero, the lead–lag block is algebraic
+$K$                      | [p.u.]   | `K`       | Exciter gain                                            | 1.0           |
+$T_E$                    | [s]      | `Te`      | Exciter lag time constant                               | 0.0           | Source label: `TE`; if zero, $E_{\mathrm{fd}}'$ is algebraic
+$E_{\mathrm{fd}}^{\max}$ | [p.u.]   | `Efdmax`  | Maximum limited exciter output before source multiplier | 5.0           | Source label: `EFDMAX`
+$E_{\mathrm{fd}}^{\min}$ | [p.u.]   | `Efdmin`  | Minimum limited exciter output before source multiplier | -5.0          | Source label: `EFDMIN`
+$C_{\mathrm{sw}}$        | [binary] | `Cswitch` | Source multiplier selector                              | 0             | Source label: `C_SWITCH`; 0 = bus-fed $E_T$, 1 = solid-fed constant 1
+$R_c/R_{\mathrm{fd}}$    | [p.u.]   | `Rc_Rfd`  | Source-data compatibility parameter                     | 0.0           | Not active in Fig. 1 equations
 
 ### Parameter Validation
 
@@ -58,9 +57,6 @@ The source multiplier is:
 \end{aligned}
 ```
 
-When $T_B=0$, the lead-lag block is treated as a bypass with
-$V_{\mathrm{ll}}=e_V$.
-
 ## Model Ports
 
 Name   | Port   | Init | Description
@@ -79,19 +75,19 @@ Name   | Port   | Init | Description
 
 #### Differential
 
-Symbol                              | Units  | Description                                             | Note
-------------------------------------|--------|---------------------------------------------------------|------
-$x_{\mathrm{ll}}$                   | [p.u.] | Lead-lag block state                                    | State 1 in Fig. 1
-$E_{\mathrm{fd}}'$                  | [p.u.] | Limited exciter output before source multiplier         | State 2 in Fig. 1; algebraic when $T_E=0$
+Symbol             | Units  | Description                                     | Note
+-------------------|--------|-------------------------------------------------|------------------------------------------
+$x_{\mathrm{LL}}$  | [p.u.] | Lead–lag block state                            | State 1 in Fig. 1
+$E_{\mathrm{fd}}'$ | [p.u.] | Limited exciter output before source multiplier | State 2 in Fig. 1; algebraic when $T_E=0$
 
 #### Algebraic
 
-Symbol                              | Units  | Description                                             | Note
-------------------------------------|--------|---------------------------------------------------------|------
-$e_V$                               | [p.u.] | Voltage-error signal before lead-lag block              | Summing junction in Fig. 1
-$V_{\mathrm{ll}}$                   | [p.u.] | Lead-lag output                                         | Drives the limited exciter lag
-$M_{\mathrm{src}}$                  | [p.u.] | Source multiplier                                       | $E_T$ when $C_{\mathrm{sw}}=0$, 1 when $C_{\mathrm{sw}}=1$
-$E_{\mathrm{fd}}$                   | [p.u.] | Field-voltage output                                    | Output after source multiplier
+Symbol             | Units  | Description                                | Note
+-------------------|--------|--------------------------------------------|-----------------------------------------------------------
+$e_V$              | [p.u.] | Voltage-error signal before lead–lag block | Summing junction in Fig. 1
+$V_{\mathrm{LL}}$  | [p.u.] | Lead–lag output                            | Drives the limited exciter lag
+$M_{\mathrm{src}}$ | [p.u.] | Source multiplier                          | $E_T$ when $C_{\mathrm{sw}}=0$, 1 when $C_{\mathrm{sw}}=1$
+$E_{\mathrm{fd}}$  | [p.u.] | Field-voltage output                       | Output after source multiplier
 
 ### External Variables
 
@@ -112,39 +108,38 @@ $V_{\mathrm{oel}}$                  | [p.u.] | Over-excitation limiter input    
 
 ## Model Equations
 
+Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup).
+
 ### Internal Equations
 
 #### Differential
 
 ```math
 \begin{aligned}
-  0 &= -T_B\dot x_{\mathrm{ll}} - x_{\mathrm{ll}} + e_V \\
+  0 &= -T_B\dot x_{\mathrm{LL}} - x_{\mathrm{LL}} + e_V \\
   0 &=
     -T_E\dot E_{\mathrm{fd}}'
-    + \text{antiwindup}\!\left(
+    + \text{antiwindup}\!(
         E_{\mathrm{fd}}',
-        -E_{\mathrm{fd}}' + K V_{\mathrm{ll}},
+        -E_{\mathrm{fd}}' + K V_{\mathrm{LL}};
         E_{\mathrm{fd}}^{\min},
         E_{\mathrm{fd}}^{\max}
-      \right)
+      )
 \end{aligned}
 ```
-
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
-target and smooth approximation.
 
 #### Algebraic
 
 ```math
 \begin{aligned}
   0 &= -e_V + V_{\mathrm{ref}} + V_{\mathrm{uel}} + V_S + V_{\mathrm{oel}} - E_C \\
-  0 &= -T_B(V_{\mathrm{ll}} - x_{\mathrm{ll}}) + T_A(e_V - x_{\mathrm{ll}}) \\
+  0 &= -T_B(V_{\mathrm{LL}} - x_{\mathrm{LL}}) + T_A(e_V - x_{\mathrm{LL}}) \\
   0 &= -M_{\mathrm{src}} + (1 - C_{\mathrm{sw}})E_T + C_{\mathrm{sw}} \\
   0 &= -E_{\mathrm{fd}} + M_{\mathrm{src}}E_{\mathrm{fd}}'
 \end{aligned}
 ```
 
-When $T_B=0$, SCRX bypasses the lead-lag block so $V_{\mathrm{ll}}=e_V$.
+When $T_B=0$, SCRX bypasses the lead–lag block so $V_{\mathrm{LL}}=e_V$.
 
 ### External Equations
 
@@ -158,25 +153,26 @@ or stabilizer inputs, sets all internal derivatives to zero, and evaluates:
 
 ```math
 \begin{aligned}
-  M_{\mathrm{src},0} &= (1 - C_{\mathrm{sw}})E_{T,0} + C_{\mathrm{sw}} \\
-  E_{\mathrm{fd},0}' &= \dfrac{E_{\mathrm{fd},0}}{M_{\mathrm{src},0}} \\
-  V_{\mathrm{ll},0} &= \dfrac{E_{\mathrm{fd},0}'}{K} \\
-  x_{\mathrm{ll},0} &= e_{V,0} = V_{\mathrm{ll},0} \\
-  V_{\mathrm{ref},0}
-    &= e_{V,0} + E_{C,0}
-       - V_{\mathrm{uel},0} - V_{S,0} - V_{\mathrm{oel},0}
+  M_{\mathrm{src}} &\leftarrow (1 - C_{\mathrm{sw}})E_T + C_{\mathrm{sw}} \\
+  E_{\mathrm{fd}}' &\leftarrow \dfrac{E_{\mathrm{fd}}}{M_{\mathrm{src}}} \\
+  V_{\mathrm{LL}} &\leftarrow \dfrac{E_{\mathrm{fd}}'}{K} \\
+  e_V &\leftarrow V_{\mathrm{LL}} \\
+  x_{\mathrm{LL}} &\leftarrow e_V \\
+  V_{\mathrm{ref}}
+    &\leftarrow e_V + E_C
+       - V_{\mathrm{uel}} - V_S - V_{\mathrm{oel}}
 \end{aligned}
 ```
 
-This closed-form start requires $M_{\mathrm{src},0}\ne 0$, $K\ne 0$, and
-$E_{\mathrm{fd}}^{\min}\le E_{\mathrm{fd},0}'\le E_{\mathrm{fd}}^{\max}$.
+This closed-form start requires $M_{\mathrm{src}}\ne 0$, $K\ne 0$, and
+$E_{\mathrm{fd}}^{\min}\le E_{\mathrm{fd}}'\le E_{\mathrm{fd}}^{\max}$.
 Starts that bind the exciter limit are outside these closed-form equations.
 
 ## Monitors
 
-Monitor         | Units  | Description                         | Note
-----------------|--------|-------------------------------------|------
-`efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
-`efd_pre`       | [p.u.] | Limited exciter output before source multiplier | $E_{\mathrm{fd}}'$
-`vll`           | [p.u.] | Lead-lag output                     | $V_{\mathrm{ll}}$
-`msrc`          | [p.u.] | Source multiplier                   | $M_{\mathrm{src}}$
+Monitor   | Units  | Description                                     | Note
+----------|--------|-------------------------------------------------|-------------------
+`efd`     | [p.u.] | Field-voltage output                            | $E_{\mathrm{fd}}$
+`efd_pre` | [p.u.] | Limited exciter output before source multiplier | $E_{\mathrm{fd}}'$
+`vll`     | [p.u.] | Lead–lag output                                 | $V_{\mathrm{LL}}$
+`msrc`    | [p.u.] | Source multiplier                               | $M_{\mathrm{src}}$

@@ -4,12 +4,8 @@
 
 ```math
 \mathbf{D}_{\boldsymbol{\tau}}(s)
-  = \mathrm{diag}\left(\exp(-s\tau_1),\ldots,\exp(-s\tau_M)\right).
+  = \mathrm{diag}(\exp(-s\tau_1),\ldots,\exp(-s\tau_M))
 ```
-
-At runtime, accepted-step input samples are reconstructed with cubic Hermite
-interpolation. `Delay` adds no DAE variables or residual rows. A scalar delay
-is the $M=1$ case.
 
 ## Block Diagram
 
@@ -58,6 +54,10 @@ None.
 
 None.
 
+### Submodel Wiring
+
+None.
+
 ## Model Variables
 
 History samples are implementation data, not DAE variables or residual rows.
@@ -103,8 +103,6 @@ Each channel satisfies $y_m(t)=u_m(t-\tau_m)$.
 ```math
 \mathbf{y} \leftarrow \mathbf{u}(t-\boldsymbol{\tau})
 ```
-
-
 
 ## History Realization
 
@@ -161,7 +159,7 @@ A prehistory for $\mathbf{u}(t)$ and
 $\mathrm{d}\mathbf{u}/\mathrm{d}t$ must be specified over
 
 ```math
-t \in [t_0-\tau_{\max},t_0].
+t \in [t_0-\tau_{\max},t_0]
 ```
 
 Its endpoint value and derivative must match the initialized input at $t_0$.
@@ -169,12 +167,12 @@ The delay does not synthesize prehistory. At $t_0$,
 
 ```math
 \begin{aligned}
-\mathbf{y}(t_0)
+\mathbf{y}
   &\leftarrow \mathbf{u}(t_0-\boldsymbol{\tau}) \\
-\left.\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}\right|_{t_0}
+\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}
   &\leftarrow
   \left.\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-  \right|_{t_0-\boldsymbol{\tau}}.
+  \right|_{t_0-\boldsymbol{\tau}}
 \end{aligned}
 ```
 

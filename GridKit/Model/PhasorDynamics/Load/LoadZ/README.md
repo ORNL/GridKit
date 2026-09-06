@@ -5,10 +5,10 @@ adds their current contribution to the connected bus residual.
 
 ## Model Parameters
 
-Symbol | Units  | JSON | Description
--------|--------|------|------------
-$R$    | [p.u.] | `R`  | Load resistance
-$X$    | [p.u.] | `X`  | Load reactance
+Symbol | Units  | JSON | Description     | Typical Value | Note
+-------|--------|------|-----------------|---------------|-----
+$R$    | [p.u.] | `R`  | Load resistance |               |
+$X$    | [p.u.] | `X`  | Load reactance  |               |
 
 ### Parameter Validation
 
@@ -18,8 +18,8 @@ None.
 
 ```math
 \begin{aligned}
-G &= \frac{R}{R^2 + X^2} \\
-B &= -\frac{X}{R^2 + X^2}
+G &= \dfrac{R}{R^2 + X^2} \\
+B &= -\dfrac{X}{R^2 + X^2}
 \end{aligned}
 ```
 
@@ -79,19 +79,18 @@ None.
 ```math
 \begin{aligned}
 I_r^{\mathrm{bus}} &\leftarrow I_r^{\mathrm{bus}} + I_r \\
-I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i.
+I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i
 \end{aligned}
 ```
 
 ## Initialization
 
-Initialization solves the algebraic current states from the connected bus
-voltage. Let $V_{r0}$ and $V_{i0}$ be the initialized bus voltage components.
+The initial bus voltage determines the terminal currents:
 
 ```math
 \begin{aligned}
-I_r &= -(G V_{r0} - B V_{i0}) \\
-I_i &= -(B V_{r0} + G V_{i0})
+I_r &\leftarrow -G V_r + B V_i \\
+I_i &\leftarrow -B V_r - G V_i
 \end{aligned}
 ```
 

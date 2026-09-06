@@ -1,11 +1,9 @@
-# **Renewable Energy Generator/Converter Model (REGCB)**
+# REGCB
 
 REGCB is a WECC renewable energy generator/converter model for inverter-coupled
 resources.
 
 ## Block Diagram
-
-Standard model diagram for the REGCB converter interface.
 
 ![](../../../../../docs/Figures/PhasorDynamics_REGCB_Diagram.png)
 

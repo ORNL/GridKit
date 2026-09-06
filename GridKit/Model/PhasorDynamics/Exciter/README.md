@@ -1,25 +1,17 @@
-# **Exciter Models**
+# Exciter Models
 
-> [!NOTE]
-> IEEET1, SEXS-PTI, and ESDC1A exciters are currently implemented.
-
-
-## Introduction
-
-An exciter generally models, regulates, and sustains
-device internal voltage.
-
+Exciters regulate machine field voltage. IEEET1, SEXS-PTI, and ESDC1A are implemented.
 
 ## Types
-There are a few standard Exciter models
-- ESAC6A Excitation Model (See [ESAC6A](ESAC6A/README.md))
-- IEEE Type 1 Excitation Model (See [IEEET1](IEEET1/README.md))
-- IEEE DC1 Excitation Model (See [EXDC1](EXDC1/README.md))
-- IEEE DC1A Excitation Model (See [ESDC1A](ESDC1A/README.md))
-- ESDC2A Excitation Model (See [ESDC2A](ESDC2A/README.md))
-- EXAC1 Excitation Model (See [EXAC1](EXAC1/README.md))
-- IEEE ST4B Excitation Model (See [ESST4B](ESST4B/README.md))
-- SCRX Excitation Model (See [SCRX](SCRX/README.md))
-- EXAC2 Excitation Model (See [EXAC2](EXAC2/README.md))
-- EXPIC1 Excitation Model (See [EXPIC1](EXPIC1/README.md))
-- Simplified Excitation System Model (See [SEXS-PTI](SEXS-PTI/README.md))
+
+- [ESAC6A](ESAC6A/README.md)
+- [ESDC1A](ESDC1A/README.md)
+- [ESDC2A](ESDC2A/README.md)
+- [ESST4B](ESST4B/README.md)
+- [EXAC1](EXAC1/README.md)
+- [EXAC2](EXAC2/README.md)
+- [EXDC1](EXDC1/README.md)
+- [EXPIC1](EXPIC1/README.md)
+- [IEEET1](IEEET1/README.md)
+- [SCRX](SCRX/README.md)
+- [SEXS-PTI](SEXS-PTI/README.md)
