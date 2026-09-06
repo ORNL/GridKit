@@ -155,21 +155,7 @@ namespace GridKit
         T1_ = std::max(T1_, TIME_CONSTANT_MINIMUM);
         T3_ = std::max(T3_, TIME_CONSTANT_MINIMUM);
 
-        va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
-      }
-
-      // System base -> component base when reading signals.
-      template <typename scalar_type, typename index_type>
-      scalar_type Tgov1<scalar_type, index_type>::toComponentBase(scalar_type value) const
-      {
-        return value * va_system_base_ / va_component_base_;
-      }
-
-      // Governor base -> system base for signals output.
-      template <typename scalar_type, typename index_type>
-      scalar_type Tgov1<scalar_type, index_type>::toSystemBase(scalar_type value) const
-      {
-        return value / toComponentBase(static_cast<scalar_type>(ONE<RealT>));
+        this->setComponentBase(Trate_ * static_cast<RealT>(1.0e6));
       }
 
       /**

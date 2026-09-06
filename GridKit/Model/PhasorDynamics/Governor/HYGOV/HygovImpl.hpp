@@ -28,10 +28,7 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @brief Construct a HYGOV governor without parameters
-       *
-       * The model is sized with the documented parameter defaults but without
-       * a monitor or assigned mechanical-power output.
+       * @brief Construct an unconfigured HYGOV governor
        */
       template <typename scalar_type, typename index_type>
       Hygov<scalar_type, index_type>::Hygov()
@@ -146,16 +143,8 @@ namespace GridKit
           }
         };
 
-        RealT      component_power_base = va_component_base_;
-        const bool component_base_is_omitted =
-            !(component_power_base > ZERO<RealT>);
-        if (component_base_is_omitted)
-        {
-          component_power_base = va_system_base_;
-        }
-
-        const bool valid_component_base = std::isfinite(component_power_base)
-                                          && component_power_base > ZERO<RealT>;
+        const bool valid_component_base = std::isfinite(va_component_base_)
+                                          && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
                                        && va_system_base_ > ZERO<RealT>;
         check(valid_component_base,
@@ -164,8 +153,8 @@ namespace GridKit
               "system power base must be finite and positive");
         if (valid_component_base && valid_system_base)
         {
-          const RealT system_to_component = va_system_base_ / component_power_base;
-          const RealT component_to_system = component_power_base / va_system_base_;
+          const RealT system_to_component = va_system_base_ / va_component_base_;
+          const RealT component_to_system = va_component_base_ / va_system_base_;
           const bool  valid_base_ratios   = std::isfinite(system_to_component)
                                          && system_to_component > ZERO<RealT>
                                          && std::isfinite(component_to_system)
@@ -294,12 +283,6 @@ namespace GridKit
         {
           Log::error() << "Hygov: cannot initialize with invalid configuration\n";
           return 1;
-        }
-
-        ret = va_component_base_ > ZERO<RealT>;
-        if (!ret)
-        {
-          va_component_base_ = va_system_base_;
         }
 
         auto* y = y_.getData();
@@ -641,11 +624,9 @@ namespace GridKit
       /**
        * @brief Read the parameters out of the model data
        *
-       * Every omitted parameter keeps the default documented in the model
-       * README. A non-numeric or nonfinite value is counted and reported by
-       * verify() rather than throwing. Integer JSON values are accepted for
-       * real parameters. All-zero `Gv` and `Pgv` source points select the
-       * identity gate curve.
+       * Omitted optional parameters retain their documented defaults. Loading
+       * errors are counted for verify() rather than thrown. All-zero `Gv` and
+       * `Pgv` source points select the identity gate curve.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -692,16 +673,18 @@ namespace GridKit
           return true;
         };
 
-        bool ret = load_real(Params::Trate, va_component_base_, "Trate");
-        if (ret)
+        if (data.parameters.contains(Params::Trate))
         {
-          ret = va_component_base_ > ZERO<RealT>;
-          if (!ret)
+          RealT trate{};
+          if (load_real(Params::Trate, trate, "Trate"))
           {
-            Log::error() << "Hygov: Trate must be positive when provided\n";
-            ++parameter_error_count_;
+            this->setComponentBase(trate * static_cast<RealT>(1.0e6));
           }
-          va_component_base_ *= static_cast<RealT>(1.0e6);
+        }
+        else
+        {
+          Log::error() << "Hygov: missing required parameter 'Trate'\n";
+          ++parameter_error_count_;
         }
         load_real(Params::Rperm, Rperm_, "Rperm");
         load_real(Params::Rtemp, Rtemp_, "Rtemp");
@@ -1074,30 +1057,6 @@ namespace GridKit
         }
 
         return bisectInitialRoot(a, b, fa, fb, residual);
-      }
-
-      /**
-       * @brief Convert a system-base power to HYGOV component base
-       *
-       * @param[in] value Quantity on the system base.
-       * @return The same quantity on the component base.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Hygov<scalar_type, index_type>::toComponentBase(scalar_type value) const
-      {
-        return value * va_system_base_ / va_component_base_;
-      }
-
-      /**
-       * @brief Convert a component-base power to the system base
-       *
-       * @param[in] value Quantity on the component base.
-       * @return The same quantity on the system base.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Hygov<scalar_type, index_type>::toSystemBase(scalar_type value) const
-      {
-        return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
       }
 
     } // namespace Governor

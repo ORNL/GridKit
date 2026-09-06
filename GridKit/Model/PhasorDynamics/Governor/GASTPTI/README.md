@@ -35,7 +35,7 @@ $K_T$             | [p.u.]    | `Kt`    | Exhaust-temperature feedback gain     
 $V^{\max}$        | [p.u.]    | `Vmax`  | Upper valve response limit            | 1.0         | Component base
 $V^{\min}$        | [p.u.]    | `Vmin`  | Lower valve response limit            | 0.0         | Component base
 $D^\mathrm{turb}$ | [p.u.]    | `Dturb` | Turbine damping coefficient           | 0.0         | Component-base power per speed deviation
-$T^\mathrm{rate}$ | [MW]      | `Trate` | Turbine rating                        | System base | Same-valued MVA component base when provided; GridKit addition
+$T^\mathrm{rate}$ | [MW]      | `Trate` | Turbine rating                        | Required    | Same-valued MVA component base; GridKit addition
 
 ### Parameter Validation
 
@@ -45,7 +45,7 @@ $T^\mathrm{rate}$ | [MW]      | `Trate` | Turbine rating                        
   R &> 0 \\
   T_1,T_2,T_3 &\ge 0 \\
   A_T,K_T,D^\mathrm{turb} &\ge 0 \\
-  T^\mathrm{rate} &> 0 \quad \text{when provided} \\
+  T^\mathrm{rate} &> 0 \\
   V^{\min} &\le V^{\max}
 \end{aligned}
 ```
@@ -60,11 +60,7 @@ $\epsilon_T$ are raised to that floor in place:
   T_x &\leftarrow \max\!\left(T_x,\epsilon_T\right),
     && x\in\{1,2,3\} \\
   S^{\mathrm{base}}
-    &\leftarrow
-      \begin{cases}
-        10^6 T^\mathrm{rate} & T^\mathrm{rate}\text{ provided} \\
-        S^{\mathrm{sys}} & T^\mathrm{rate}\text{ omitted}
-      \end{cases} \\
+    &\leftarrow 10^6 T^\mathrm{rate} \\
   k_{\mathrm{base}}
     &= \dfrac{S^{\mathrm{sys}}}{S^{\mathrm{base}}}
 \end{aligned}

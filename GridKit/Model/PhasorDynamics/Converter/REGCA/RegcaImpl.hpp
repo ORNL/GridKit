@@ -114,31 +114,7 @@ namespace GridKit
           use_rqmin_ = ONE<RealT>;
         }
 
-        va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
-      }
-
-      /**
-       * @brief Convert a system-base per-unit value to the component base.
-       *
-       * @param[in] value Value on the system base.
-       * @return Value on the REGCA component base.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Regca<scalar_type, index_type>::toComponentBase(scalar_type value) const
-      {
-        return value * va_system_base_ / va_converter_base_;
-      }
-
-      /**
-       * @brief Convert a component-base per-unit value to the system base.
-       *
-       * @param[in] value Value on the REGCA component base.
-       * @return Value on the system base.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Regca<scalar_type, index_type>::toSystemBase(scalar_type value) const
-      {
-        return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
+        this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
       }
 
       /**

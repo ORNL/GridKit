@@ -84,7 +84,10 @@ namespace GridKit
         success *= (minimal.verify() > 0); // required pmech assignment is absent
         success *= (verifyData(makeData()) == 0);
         success *= defaultsMatchDocumentedValues();
-        success *= omittedRatingUsesSystemBase();
+
+        auto missing_trate = makeMinimalData();
+        missing_trate.parameters.erase(Params::Trate);
+        success *= (verifyData(missing_trate) > 0);
 
         success *= invalidParameterCase(Params::R, 0.0);
         success *= invalidParameterCase(Params::R, -0.1);
@@ -1059,8 +1062,9 @@ namespace GridKit
       Data makeMinimalData() const
       {
         Data data;
-        data.device_class          = "GastPti";
-        data.disambiguation_string = "gastpti_test";
+        data.device_class              = "GastPti";
+        data.disambiguation_string     = "gastpti_test";
+        data.parameters[Params::Trate] = 100.0;
         data.monitored_variables.insert(Mon::pmech);
         data.monitored_variables.insert(Mon::xvalve);
         data.monitored_variables.insert(Mon::xflow);
@@ -1153,8 +1157,8 @@ namespace GridKit
                        {Internal::XTEMP, 0.03}});
       }
 
-      /// Omitting every parameter must give exactly the model built from the
-      /// defaults the README documents, at rest and under load.
+      /// Omitting every optional parameter must give exactly the model built
+      /// from the defaults the README documents, at rest and under load.
       bool defaultsMatchDocumentedValues() const
       {
         Fixture<ScalarT> implicit_defaults(makeMinimalData());
@@ -1212,56 +1216,6 @@ namespace GridKit
         if (!vectorUnchanged(implicit_defaults.gastpti.getResidual(),
                              copyVector(explicit_defaults.gastpti.getResidual()),
                              "documented-default dynamic residual"))
-        {
-          success = false;
-        }
-        return success;
-      }
-
-      /// An omitted rating follows a system-base change made after allocation.
-      bool omittedRatingUsesSystemBase() const
-      {
-        constexpr RealT system_va_base = static_cast<RealT>(75.0e6);
-
-        auto omitted_data = makeExplicitDefaultData();
-        omitted_data.parameters.erase(Params::Trate);
-        auto explicit_data                      = omitted_data;
-        explicit_data.parameters[Params::Trate] = static_cast<RealT>(75.0);
-
-        Fixture<ScalarT> omitted(omitted_data);
-        Fixture<ScalarT> explicit_system_base(explicit_data, system_va_base);
-        omitted.attachAllInputs();
-        explicit_system_base.attachAllInputs();
-
-        bool success = omitted.prepare(0.3);
-        omitted.gastpti.setSystemBase(60.0, system_va_base);
-        success = success && omitted.gastpti.initialize() == 0
-                  && explicit_system_base.initialize(0.3);
-        if (!success)
-        {
-          std::cout << "GASTPTI omitted-rating comparison failed to initialize\n";
-          return false;
-        }
-
-        if (omitted.evaluate() != 0 || explicit_system_base.evaluate() != 0)
-        {
-          success = false;
-        }
-        if (!vectorUnchanged(omitted.gastpti.y(),
-                             copyVector(explicit_system_base.gastpti.y()),
-                             "omitted-rating state"))
-        {
-          success = false;
-        }
-        if (!vectorUnchanged(omitted.gastpti.getResidual(),
-                             copyVector(explicit_system_base.gastpti.getResidual()),
-                             "omitted-rating residual"))
-        {
-          success = false;
-        }
-        if (!scalarMatches(omitted.input(index(External::PREF)),
-                           explicit_system_base.input(index(External::PREF)),
-                           "omitted-rating published pref"))
         {
           success = false;
         }

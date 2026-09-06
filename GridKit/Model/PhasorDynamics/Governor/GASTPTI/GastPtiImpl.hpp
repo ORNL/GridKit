@@ -28,12 +28,7 @@ namespace GridKit
       using Log = ::GridKit::Utilities::Logger;
 
       /**
-       * @brief Construct a GASTPTI governor without parameters
-       *
-       * The model is sized and every parameter keeps its documented default.
-       * No monitor or mechanical-power output assignment is created, so
-       * getMonitor() returns nullptr and verify() rejects the model until the
-       * containing system assigns `pmech`.
+       * @brief Construct an unconfigured GASTPTI governor
        */
       template <typename scalar_type, typename index_type>
       GastPti<scalar_type, index_type>::GastPti()
@@ -167,23 +162,17 @@ namespace GridKit
 
         check(std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
               "Dturb must be finite and non-negative");
-        const RealT component_power_base = trate_provided_ ? va_component_base_ : va_system_base_;
-        const bool  valid_component_base = std::isfinite(component_power_base)
-                                          && component_power_base > ZERO<RealT>;
-        const bool valid_system_base =
-            std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>;
-        if (trate_provided_)
-        {
-          check(std::isfinite(Trate_) && Trate_ > ZERO<RealT>
-                    && valid_component_base,
-                "Trate must define a finite positive component power base");
-        }
+        const bool valid_component_base = std::isfinite(va_component_base_)
+                                          && va_component_base_ > ZERO<RealT>;
+        const bool valid_system_base = std::isfinite(va_system_base_)
+                                       && va_system_base_ > ZERO<RealT>;
+        check(valid_component_base, "component power base must be finite and positive");
         check(valid_system_base, "system power base must be finite and positive");
 
         if (valid_component_base && valid_system_base)
         {
-          const RealT system_to_component = va_system_base_ / component_power_base;
-          const RealT component_to_system = component_power_base / va_system_base_;
+          const RealT system_to_component = va_system_base_ / va_component_base_;
+          const RealT component_to_system = va_component_base_ / va_system_base_;
           check(std::isfinite(system_to_component)
                     && system_to_component > ZERO<RealT>
                     && std::isfinite(component_to_system)
@@ -292,11 +281,6 @@ namespace GridKit
         {
           Log::error() << "GastPti: cannot initialize with invalid configuration\n";
           return 1;
-        }
-
-        if (!trate_provided_)
-        {
-          va_component_base_ = va_system_base_;
         }
 
         auto*         y             = y_.getData();
@@ -659,10 +643,8 @@ namespace GridKit
       /**
        * @brief Read the parameters out of the model data
        *
-       * Every parameter is optional and keeps the default documented in the
-       * model README when omitted. A non-numeric value is counted and reported
-       * by verify() rather than throwing. Integer JSON values are accepted for
-       * real parameters.
+       * Omitted optional parameters retain their documented defaults. Loading
+       * errors are counted for verify() rather than thrown.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -672,7 +654,6 @@ namespace GridKit
         using Params = typename ModelDataT::Parameters;
 
         parameter_error_count_ = 0;
-        trate_provided_        = data.parameters.contains(Params::Trate);
 
         loadRealParameter(data, Params::R, R_, "R");
         loadRealParameter(data, Params::T1, T1_, "T1");
@@ -683,7 +664,17 @@ namespace GridKit
         loadRealParameter(data, Params::Vmax, Vmax_, "Vmax");
         loadRealParameter(data, Params::Vmin, Vmin_, "Vmin");
         loadRealParameter(data, Params::Dturb, Dturb_, "Dturb");
-        loadRealParameter(data, Params::Trate, Trate_, "Trate");
+        if (data.parameters.contains(Params::Trate))
+        {
+          RealT trate{};
+          loadRealParameter(data, Params::Trate, trate, "Trate");
+          this->setComponentBase(trate * static_cast<RealT>(1.0e6));
+        }
+        else
+        {
+          Log::error() << "GastPti: missing required parameter 'Trate'\n";
+          ++parameter_error_count_;
+        }
 
         setDerivedParameters();
       }
@@ -732,11 +723,9 @@ namespace GridKit
        * @brief Resolve the parameter-derived constants
        *
        * Validates and raises each turbine lag in place so every explicit
-       * differential row retains a nonzero denominator, sizes the component
-       * power base from a supplied turbine rating, and resets the parameter-only
-       * response defaults. An omitted rating is resolved from the current system
-       * base during initialize(). That method transactionally finalizes the
-       * operating-point-dependent response bounds and valve mask.
+       * differential row retains a nonzero denominator and resets the
+       * parameter-only response defaults. initialize() transactionally
+       * finalizes the operating-point-dependent response bounds and valve mask.
        * Recording invalid lag inputs before the in-place floor preserves the
        * loading error for verify().
        */
@@ -756,11 +745,6 @@ namespace GridKit
                          &logTimeConstantWarning);
         }
 
-        va_component_base_ = ZERO<RealT>;
-        if (trate_provided_)
-        {
-          va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
-        }
         Vmin_response_ = Vmin_;
         Vmax_response_ = Vmax_;
 
@@ -785,31 +769,6 @@ namespace GridKit
 
         const RealT mu = Math::MU<RealT>;
         return value + std::log(-std::expm1(-mu * value)) / mu;
-      }
-
-      /**
-       * @brief Convert a system-base power to GASTPTI component base
-       *
-       * @param[in] value Quantity on the system base.
-       * @return The same quantity on the component base.
-       */
-      template <typename scalar_type, typename index_type>
-      [[gnu::always_inline]] inline scalar_type
-      GastPti<scalar_type, index_type>::toComponentBase(scalar_type value) const
-      {
-        return value * (va_system_base_ / va_component_base_);
-      }
-
-      /**
-       * @brief Convert a component-base power to the system base
-       *
-       * @param[in] value Quantity on the component base.
-       * @return The same quantity on the system base.
-       */
-      template <typename scalar_type, typename index_type>
-      auto GastPti<scalar_type, index_type>::toSystemBase(RealT value) const -> RealT
-      {
-        return value * (va_component_base_ / va_system_base_);
       }
 
     } // namespace Governor

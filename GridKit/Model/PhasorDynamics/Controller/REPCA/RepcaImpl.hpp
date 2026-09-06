@@ -1042,7 +1042,7 @@ namespace GridKit
         Tp_    = std::max(Tp_, TIME_CONSTANT_MINIMUM);
         Tlag_  = std::max(Tlag_, TIME_CONSTANT_MINIMUM);
 
-        va_component_base_ = mva_base_ * static_cast<RealT>(1.0e6);
+        this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
 
         vcomp_on_  = VcompFlag_ ? ONE<RealT> : ZERO<RealT>;
         vcomp_off_ = ONE<RealT> - vcomp_on_;
@@ -1206,31 +1206,6 @@ namespace GridKit
                  + std::log(std::sinh(HALF<RealT> * x));
         }
         return std::log1p(-std::exp(-x));
-      }
-
-      /**
-       * @brief Convert a system-base power or current quantity to REPCA component base
-       *
-       * @param[in] value Quantity on the system base.
-       * @return The same quantity on the REPCA component base.
-       */
-      template <typename scalar_type, typename index_type>
-      [[gnu::always_inline]] inline scalar_type
-      Repca<scalar_type, index_type>::toComponentBase(scalar_type value) const
-      {
-        return value * (va_system_base_ / va_component_base_);
-      }
-
-      /**
-       * @brief Convert a component-base power quantity to system base
-       *
-       * @param[in] value Quantity on the REPCA component base.
-       * @return The same quantity on the system base.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Repca<scalar_type, index_type>::toSystemBase(scalar_type value) const
-      {
-        return value * (va_component_base_ / va_system_base_);
       }
 
       /**

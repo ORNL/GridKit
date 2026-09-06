@@ -127,20 +127,6 @@ namespace GridKit
       return monitor_.get();
     }
 
-    // System base -> machine base when reading system values.
-    template <typename scalar_type, typename index_type>
-    scalar_type Gensal<scalar_type, index_type>::toMachineBase(ScalarT value) const
-    {
-      return value * va_system_base_ / va_machine_base_;
-    }
-
-    // Machine base -> system base for network and signal output.
-    template <typename scalar_type, typename index_type>
-    scalar_type Gensal<scalar_type, index_type>::toSystemBase(ScalarT value) const
-    {
-      return value / toMachineBase(static_cast<ScalarT>(ONE<RealT>));
-    }
-
     template <typename scalar_type, typename index_type>
     void Gensal<scalar_type, index_type>::initializeMonitor()
     {
@@ -275,8 +261,8 @@ namespace GridKit
       // Network frame terminal values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
-      ScalarT p   = toMachineBase(static_cast<ScalarT>(p0_));
-      ScalarT q   = toMachineBase(static_cast<ScalarT>(q0_));
+      ScalarT p   = toComponentBase(static_cast<ScalarT>(p0_));
+      ScalarT q   = toComponentBase(static_cast<ScalarT>(q0_));
       ScalarT vm2 = vr * vr + vi * vi;
       ScalarT ir  = (p * vr + q * vi) / vm2;
       ScalarT ii  = (p * vi - q * vr) / vm2;
@@ -411,7 +397,7 @@ namespace GridKit
       ScalarT vi = wb[1];
 
       // Set signal variable aliases
-      ScalarT pmech = toMachineBase(ws[0]);
+      ScalarT pmech = toComponentBase(ws[0]);
       ScalarT efd   = ws[1];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
@@ -526,15 +512,15 @@ namespace GridKit
         }
         SB_ = S12_ / ((SA_ - 1.2) * (SA_ - 1.2));
       }
-      Xd1_             = Xd_ - Xdp_;
-      Xd2_             = Xdp_ - Xl_;
-      Xd3_             = (Xdp_ - Xdpp_) / (Xd2_ * Xd2_);
-      Xd4_             = (Xdp_ - Xdpp_) / Xd2_;
-      Xd5_             = (Xdpp_ - Xl_) / Xd2_;
-      Xq2_             = Xq_ - Xdpp_;
-      G_               = Ra_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
-      B_               = -Xdpp_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
-      va_machine_base_ = mva_base_ * static_cast<RealT>(1.0e6);
+      Xd1_ = Xd_ - Xdp_;
+      Xd2_ = Xdp_ - Xl_;
+      Xd3_ = (Xdp_ - Xdpp_) / (Xd2_ * Xd2_);
+      Xd4_ = (Xdp_ - Xdpp_) / Xd2_;
+      Xd5_ = (Xdpp_ - Xl_) / Xd2_;
+      Xq2_ = Xq_ - Xdpp_;
+      G_   = Ra_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
+      B_   = -Xdpp_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
+      this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
     }
   } // namespace PhasorDynamics
 } // namespace GridKit

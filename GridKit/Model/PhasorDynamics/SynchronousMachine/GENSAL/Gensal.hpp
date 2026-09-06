@@ -80,7 +80,8 @@ namespace GridKit
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
       using Component<scalar_type, index_type>::freq_system_base_;
-      using Component<scalar_type, index_type>::va_system_base_;
+      using Component<scalar_type, index_type>::toComponentBase;
+      using Component<scalar_type, index_type>::toSystemBase;
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::allocated_;
@@ -124,26 +125,6 @@ namespace GridKit
       /// Associate variable getter functions with enum values
       void initializeMonitor();
       void setDerivedParams();
-
-      /**
-       * @brief Convert per-unit current or power from system base to machine base.
-       *
-       * @note For terminal-current quantities, this scaling assumes the machine
-       * voltage base matches the interfacing bus voltage base. A voltage-base
-       * mismatch is not a concern here because the model is formulated at the
-       * machine terminals using the connected bus voltage base.
-       */
-      ScalarT toMachineBase(ScalarT value) const;
-
-      /**
-       * @brief Convert per-unit current or power from machine base to system base.
-       *
-       * @note For terminal-current quantities, this scaling assumes the machine
-       * voltage base matches the interfacing bus voltage base. A voltage-base
-       * mismatch is not a concern here because the model is formulated at the
-       * machine terminals using the connected bus voltage base.
-       */
-      ScalarT toSystemBase(ScalarT value) const;
 
       ScalarT& Vr()
       {
@@ -199,18 +180,16 @@ namespace GridKit
       RealT mva_base_{100.0};
 
       /* Derived parameters */
-      RealT SA_;
-      RealT SB_;
-      RealT Xd1_;
-      RealT Xd2_;
-      RealT Xd3_;
-      RealT Xd4_;
-      RealT Xd5_;
-      RealT Xq2_;
-      RealT G_;
-      RealT B_;
-      RealT va_machine_base_;
-
+      RealT   SA_;
+      RealT   SB_;
+      RealT   Xd1_;
+      RealT   Xd2_;
+      RealT   Xd3_;
+      RealT   Xd4_;
+      RealT   Xd5_;
+      RealT   Xq2_;
+      RealT   G_;
+      RealT   B_;
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set
       ScalarT efd_set_{0.0};   // TODO remove default initialization and ensure this gets set

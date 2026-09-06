@@ -92,6 +92,9 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
+        using Component<scalar_type, index_type>::toComponentBase;
+        using Component<scalar_type, index_type>::toSystemBase;
+        using Component<scalar_type, index_type>::va_component_base_;
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
@@ -155,9 +158,6 @@ namespace GridKit
 
         static RealT logOneMinusExp(RealT x);
 
-        [[gnu::always_inline]] inline ScalarT toComponentBase(ScalarT value) const;
-        ScalarT                               toSystemBase(ScalarT value) const;
-
         ScalarT& Vr();
         ScalarT& Vi();
 
@@ -201,7 +201,6 @@ namespace GridKit
         RealT Tlag_{static_cast<RealT>(3.0)};
 
         IdxT  parameter_error_count_{0};
-        RealT va_component_base_{ZERO<RealT>};
         RealT vcomp_on_{ONE<RealT>};
         RealT vcomp_off_{ZERO<RealT>};
         RealT ref_on_{ONE<RealT>};

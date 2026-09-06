@@ -114,7 +114,8 @@ namespace GridKit
         PhasorDynamics::Genrou<ScalarT, IdxT>     machine(&bus);
 
         PhasorDynamics::Governor::HygovData<RealT, IdxT> governor_data;
-        governor_data.parameters[GovernorParams::Tnp] = static_cast<RealT>(1.0);
+        governor_data.parameters[GovernorParams::Trate] = static_cast<RealT>(100.0);
+        governor_data.parameters[GovernorParams::Tnp]   = static_cast<RealT>(1.0);
 
         PhasorDynamics::Governor::Hygov<ScalarT, IdxT> governor(governor_data);
 

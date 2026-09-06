@@ -89,20 +89,6 @@ namespace GridKit
       return monitor_.get();
     }
 
-    // System base -> machine base when reading system values.
-    template <typename scalar_type, typename index_type>
-    scalar_type GenClassical<scalar_type, index_type>::toMachineBase(ScalarT value) const
-    {
-      return value * va_system_base_ / va_machine_base_;
-    }
-
-    // Machine base -> system base for network and signal output.
-    template <typename scalar_type, typename index_type>
-    scalar_type GenClassical<scalar_type, index_type>::toSystemBase(ScalarT value) const
-    {
-      return value / toMachineBase(static_cast<ScalarT>(ONE<RealT>));
-    }
-
     template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::initializeMonitor()
     {
@@ -218,8 +204,8 @@ namespace GridKit
       // Network frame terminal values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
-      ScalarT p   = toMachineBase(static_cast<ScalarT>(p0_));
-      ScalarT q   = toMachineBase(static_cast<ScalarT>(q0_));
+      ScalarT p   = toComponentBase(static_cast<ScalarT>(p0_));
+      ScalarT q   = toComponentBase(static_cast<ScalarT>(q0_));
       ScalarT vm2 = vr * vr + vi * vi;
       ScalarT ir  = (p * vr + q * vi) / vm2;
       ScalarT ii  = (p * vi - q * vr) / vm2;
@@ -242,7 +228,7 @@ namespace GridKit
       y[4] = ii;
 
       // Convert Te to system base for governor PM signal.
-      pmech_set_ = toSystemBase(Te);
+      pmech_set_ = this->toSystemBase(Te);
       if (signals_.template isAttached<GenClassicalExternalVariables::PM>())
       {
         signals_.template writeExternalVariable<GenClassicalExternalVariables::PM>(pmech_set_);
@@ -325,7 +311,7 @@ namespace GridKit
       const ScalarT vi = wb[1];
 
       // Set signal variable aliases
-      const ScalarT pmech = toMachineBase(ws[0]);
+      const ScalarT pmech = this->toComponentBase(ws[0]);
       const ScalarT efd   = ws[1];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
@@ -410,9 +396,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::setDerivedParams()
     {
-      G_               = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
-      B_               = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
-      va_machine_base_ = mva_base_ * static_cast<RealT>(1.0e6);
+      G_ = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      B_ = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
     }
 
   } // namespace PhasorDynamics

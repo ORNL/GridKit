@@ -10,9 +10,8 @@ inverter-coupled resource.[^wecc-reecb-specification]
   reference instead of a system-base reactive power.
 
 > [!WARNING]
-> GridKit does not yet inherit `mva` from the associated REGCA model. Set it
-> explicitly to the REGCA component base; omitting it falls back to the system
-> base and is correct only when those bases match.[^reecb-mva-base]
+> GridKit does not inherit `mva` from the associated REGCA model. Set `mva`
+> to the REGCA component base.[^reecb-mva-base]
 
 > [!WARNING]
 > GridKit does not yet apply the associated generator's Governor Response Limits
@@ -29,7 +28,7 @@ Figure 1: REECB electrical-control model. Figure courtesy of the
 
 Symbol                              | Units     | JSON     | Description                                             | Default       | Note
 ------------------------------------|-----------|----------|---------------------------------------------------------|---------------|-----
-$S^\mathrm{base}$                   | [MVA]     | `mva`    | REECB component power base                              | System base   | Explicit values must be positive
+$S^\mathrm{base}$                   | [MVA]     | `mva`    | REECB component power base                              | Required      | Must be positive
 $s_\mathrm{pf}$                     | [boolean] | `PfFlag` | Power-factor control selector                           | `false`       | `true` = power-factor control, `false` = reactive-power control
 $s_V$                               | [boolean] | `VFlag`  | Voltage-reference selector under $s_Q=1$                | `false`       | `true` = cascaded Q-PI voltage command, `false` = direct external voltage reference
 $s_Q$                               | [boolean] | `QFlag`  | Reactive-path selector                                  | `false`       | `true` = Volt/VAr PI control, `false` = reactive-current lag
@@ -60,9 +59,8 @@ $P^{\max}$                          | [p.u.]    | `Pmax`   | Maximum active-powe
 $P^{\min}$                          | [p.u.]    | `Pmin`   | Minimum active-power order                              | 0.0           |
 $I^{\max}$                          | [p.u.]    | `Imax`   | Maximum converter current                               | 1.3           |
 
-All parameters are optional. An omitted parameter starts from its listed
-default; the time-constant floor below is then applied. Real-valued parameters
-accept real or integer JSON values; selectors require Boolean JSON values.
+Real-valued parameters accept real or integer JSON values; selectors require
+Boolean JSON values.
 
 ### Parameter Validation
 
@@ -70,7 +68,7 @@ Invalid REECB parameter sets are rejected by the following checks:
 
 ```math
 \begin{aligned}
-  S^\mathrm{base} &> 0,\quad \text{when provided} \\
+  S^\mathrm{base} &> 0 \\
   T_\mathrm{rv},T_\mathrm{p},T_\mathrm{iq},T_\mathrm{pord} &\ge 0 \\
   V_\mathrm{dip} &< V_\mathrm{up} \\
   D_1^\mathrm{db} &\le 0 \le D_2^\mathrm{db} \\

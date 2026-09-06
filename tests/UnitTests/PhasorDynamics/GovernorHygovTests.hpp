@@ -68,6 +68,11 @@ namespace GridKit
         success *= (minimal.hygov.verify() == 0);
         success *= defaultsMatchDocumentedValues();
 
+        auto missing_trate_data = makeMinimalData();
+        missing_trate_data.parameters.erase(Params::Trate);
+        Fixture<ScalarT> missing_trate(missing_trate_data);
+        success *= (missing_trate.hygov.verify() > 0);
+
         success *= (empty.verify() > 0);
 
         const RealT nan      = std::numeric_limits<RealT>::quiet_NaN();
@@ -1054,8 +1059,9 @@ namespace GridKit
       Data makeMinimalData() const
       {
         Data data;
-        data.device_class          = "Hygov";
-        data.disambiguation_string = "hygov_test";
+        data.device_class              = "Hygov";
+        data.disambiguation_string     = "hygov_test";
+        data.parameters[Params::Trate] = 100.0;
         data.monitored_variables.insert(Mon::pmech);
         data.monitored_variables.insert(Mon::filter);
         data.monitored_variables.insert(Mon::desiredgate);

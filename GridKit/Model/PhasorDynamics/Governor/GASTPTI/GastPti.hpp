@@ -63,6 +63,9 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
+        using Component<scalar_type, index_type>::toComponentBase;
+        using Component<scalar_type, index_type>::toSystemBase;
+        using Component<scalar_type, index_type>::va_component_base_;
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
@@ -118,9 +121,7 @@ namespace GridKit
         void initializeMonitor();
         void setDerivedParameters();
 
-        static RealT                              iramp(RealT value);
-        [[gnu::always_inline]] inline scalar_type toComponentBase(scalar_type value) const;
-        RealT                                     toSystemBase(RealT value) const;
+        static RealT iramp(RealT value);
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
@@ -134,16 +135,11 @@ namespace GridKit
         RealT Vmax_{ONE<RealT>};
         RealT Vmin_{ZERO<RealT>};
         RealT Dturb_{ZERO<RealT>};
-        RealT Trate_{ZERO<RealT>};
-
-        RealT va_component_base_{ZERO<RealT>};
         RealT Vmin_response_{ZERO<RealT>};
         RealT Vmax_response_{ONE<RealT>};
         RealT s_valve_{ONE<RealT>};
 
-        IdxT parameter_error_count_{0};
-        bool trate_provided_{false};
-
+        IdxT    parameter_error_count_{0};
         ScalarT pref_set_{0};
 
         ComponentSignals<ScalarT, IdxT, GastPtiInternalVariables, GastPtiExternalVariables> signals_;
