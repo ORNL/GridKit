@@ -73,9 +73,7 @@ $T_{\mathrm{hld2}}$                 | [sec]    | Active-current limit hold time 
 
 ### Parameter Validation
 
-Implementations should reject invalid REECA parameter sets. If source data preprocessing adjusts active-power ramp-rate or order limits, apply these checks to the effective values used by the equations.
-
-The required checks are:
+A valid REECA parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}

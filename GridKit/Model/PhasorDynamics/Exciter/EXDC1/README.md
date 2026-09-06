@@ -39,7 +39,8 @@ $S_E(E_2)$     | [p.u.] | Saturation coefficient at $E_2$              | 0.33
 
 ### Parameter Validation
 
-All parameters must be finite. Valid parameter sets satisfy
+All parameters must be finite. A valid EXDC1 parameter set must satisfy the
+following conditions:
 
 ```math
 \begin{aligned}

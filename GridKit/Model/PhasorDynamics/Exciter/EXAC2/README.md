@@ -51,7 +51,7 @@ $s_{\mathrm{spd}}$                  | [binary] | `Spdmlt`  | Speed multiplier fl
 
 ### Parameter Validation
 
-Invalid EXAC2 parameter sets are rejected by the following checks.
+A valid EXAC2 parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}

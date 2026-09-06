@@ -41,7 +41,7 @@ All listed JSON parameters are required unless marked optional.
 
 ### Parameter Validation
 
-Invalid REGCA parameter sets are rejected by the following checks. Let $\epsilon_T=10^{-3}$.
+A valid REGCA parameter set must satisfy the following conditions. Let $\epsilon_T=10^{-3}$.
 Time constants below $\epsilon_T$ are raised to $\epsilon_T$ and logged as a warning,
 every other condition is a configuration error.
 
@@ -349,6 +349,7 @@ The model evaluates this rule with the following continuously differentiable
 \end{aligned}
 ```
 
+Where $\sigma$ is GridKit's smooth [`sigmoid`](../../../../CommonMath.md#logistic-function).
 The one-sided weights and their first derivatives vanish at $x=0$. The
 approximation therefore equals `slew` exactly at zero and preserves the
 outward rate limit for finite $\mu$ while gradually releasing restoring motion.

@@ -48,7 +48,7 @@ JSON booleans, and `UEL` must be a JSON integer.
 
 ### Parameter Validation
 
-Invalid ESDC1A parameter sets are rejected by the following checks:
+A valid ESDC1A parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}
@@ -309,6 +309,7 @@ of [Appendix A](#appendix-a-awmin).
 ```
 
 CommonMath defines helper targets and smooth approximations for
+[antiwindup](../../../../CommonMath.md#antiwindup),
 [max](../../../../CommonMath.md#maximum), the [ramp](../../../../CommonMath.md#ramp)
 $\rho$, and the [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $q$.
 

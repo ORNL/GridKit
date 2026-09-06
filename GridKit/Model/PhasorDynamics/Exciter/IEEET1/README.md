@@ -33,7 +33,7 @@ $I_{\mathrm{spdlim}}$ | [binary] | Speed limit flag indicator       | 0       |
 
 ### Parameter Validation
 
-Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilon_T=10^{-3}$.
+A valid IEEET1 parameter set must satisfy the following conditions. Let $\epsilon_T=10^{-3}$.
 Time constants below $\epsilon_T$ are raised to $\epsilon_T$ and logged as a warning;
 every other condition is a configuration error.
 

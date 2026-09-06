@@ -39,6 +39,7 @@ $T^\mathrm{rate}$ | [MW]      | `Trate` | Turbine rating                        
 
 ### Parameter Validation
 
+A valid GASTPTI parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}
@@ -218,6 +219,10 @@ $m_T$ so `iramp` is defined. All candidates and response bounds are validated
 before state, derivatives, or signals are changed; failed initialization is
 atomic.
 
+A response limit that excludes the initialized fuel flow is widened to include
+it, and a warning is logged. This matches PowerWorld's default
+`Modify Limits and Run` treatment of initial limit violations.
+
 ### Output Initialization
 
 ```math
@@ -262,7 +267,7 @@ For a positive smooth-ramp output $v>0$ and CommonMath smoothing parameter
 $\mu$,
 
 ```math
-\text{iramp}(v) = v+\dfrac{1}{\mu}\log\left(1-e^{-\mu v}\right).
+\text{iramp}(v) = v+\dfrac{1}{\mu}\log\left(1-\exp(-\mu v)\right)
 ```
 
 This is the positive-range inverse of GridKit's smooth

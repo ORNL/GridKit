@@ -47,8 +47,8 @@ Real-valued parameters accept real or integer JSON values. All-zero `Gv` and
 ### Parameter Validation
 
 Real-valued parameters, `Known` initial values, power bases, and base-conversion
-ratios must be finite. The bases and ratios must also be positive. Invalid
-HYGOV parameter sets are rejected by the following checks:
+ratios must be finite. The bases and ratios must also be positive. A valid
+HYGOV parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}
@@ -283,7 +283,9 @@ derivatives are set to zero.
 Initialization first solves the gate at the configured dam head over the full
 $[G_V^{(0)},G_V^{(5)}]$ gate curve. If that gate lies outside the configured
 $[G^{\min},G^{\max}]$ interval, the corresponding response limit is expanded
-to include it. The configured parameters are unchanged.
+to include it. The configured parameters are unchanged. This matches
+PowerWorld's default `Modify Limits and Run` treatment of initial limit
+violations.
 
 If the required mechanical power exceeds the value at $G_V^{(5)}$, the gate is
 pinned there and an effective dam head
