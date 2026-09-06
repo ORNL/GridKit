@@ -105,6 +105,13 @@ namespace GridKit
         add<LoadZ<ScalarT, IdxT>>(load_data.id, qualified_data);
       }
 
+      for (const auto& stabilizer_data : data.ieeest)
+      {
+        auto qualified_data = stabilizer_data;
+        qualified_data.id   = qualify(stabilizer_data.id);
+        add<Controller::Ieeest<ScalarT, IdxT>>(stabilizer_data.id, qualified_data);
+      }
+
       for (const auto& governor_data : data.gastpti)
       {
         auto qualified_data = governor_data;
@@ -310,6 +317,23 @@ namespace GridKit
         auto& load_model = component<LoadZ<ScalarT, IdxT>>(load_data.id);
         load_model.getSignals().template attachPort<LoadZExternalVariables::VA>(
             &port(load_data.inputs.at(LoadZInputs::bus)));
+      }
+
+      for (const auto& stabilizer_data : data.ieeest)
+      {
+        auto& stabilizer_model = component<Controller::Ieeest<ScalarT, IdxT>>(stabilizer_data.id);
+        if (stabilizer_data.inputs.contains(Controller::IeeestInputs::input))
+          stabilizer_model.getSignals().template attachSignal<Controller::IeeestExternalVariables::U>(
+              &source(stabilizer_data.inputs.at(Controller::IeeestInputs::input)));
+        if (stabilizer_data.inputs.contains(Controller::IeeestInputs::speed))
+          stabilizer_model.getSignals().template attachSignal<Controller::IeeestExternalVariables::OMEGA>(
+              &source(stabilizer_data.inputs.at(Controller::IeeestInputs::speed)));
+        if (stabilizer_data.inputs.contains(Controller::IeeestInputs::vct))
+          stabilizer_model.getSignals().template attachSignal<Controller::IeeestExternalVariables::VCT>(
+              &source(stabilizer_data.inputs.at(Controller::IeeestInputs::vct)));
+        if (stabilizer_data.outputs.contains(Controller::IeeestOutputs::output))
+          stabilizer_model.getSignals().template assignSignal<Controller::IeeestInternalVariables::VSS>(
+              &signal(stabilizer_data.outputs.at(Controller::IeeestOutputs::output)));
       }
 
       for (const auto& governor_data : data.gastpti)

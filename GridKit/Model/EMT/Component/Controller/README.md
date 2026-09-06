@@ -10,3 +10,4 @@ EMT controller models exchange signals with other components.
 
 - [SEXS-PTI](SEXS-PTI/README.md): simplified excitation system.
 - [GASTPTI](GASTPTI/README.md): gas turbine governor with exhaust-temperature limiting.
+- [IEEEST](IEEEST/README.md): power system stabilizer.
