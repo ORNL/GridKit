@@ -7,6 +7,7 @@
 
 #include <GridKit/Model/EMT/Component/Bus/BusData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/GASTPTI/GastPtiData.hpp>
+#include <GridKit/Model/EMT/Component/Controller/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SEXS-PTI/SexsPtiData.hpp>
@@ -46,6 +47,7 @@ namespace GridKit
       using MachineDataT                = MachineData<RealT, IdxT>;
       using SignalDataT                 = SignalData<RealT, IdxT>;
       using SwitchDataT                 = SwitchData<RealT, IdxT>;
+      using IeeestDataT                 = Controller::IeeestData<RealT, IdxT>;
       using GastPtiDataT                = Controller::GastPtiData<RealT, IdxT>;
       using Tgov1DataT                  = Controller::Tgov1Data<RealT, IdxT>;
       using SexsPtiDataT                = Controller::SexsPtiData<RealT, IdxT>;
@@ -72,6 +74,7 @@ namespace GridKit
       std::vector<LoadZDataT>                  loadz;
       std::vector<MachineDataT>                machine;
       std::vector<SwitchDataT>                 sw;
+      std::vector<IeeestDataT>                 ieeest;
       std::vector<GastPtiDataT>                gastpti;
       std::vector<Tgov1DataT>                  gov;
       std::vector<SexsPtiDataT>                sexs_pti;

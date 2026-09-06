@@ -176,6 +176,10 @@ namespace GridKit
         {
           raw_device.get_to(data.sw.emplace_back());
         }
+        else if (kind == "Ieeest" || kind == "IEEEST")
+        {
+          raw_device.get_to(data.ieeest.emplace_back());
+        }
         else if (kind == "GastPti" || kind == "GASTPTI" || kind == "GAST")
         {
           raw_device.get_to(data.gastpti.emplace_back());

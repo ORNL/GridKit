@@ -96,7 +96,7 @@ namespace GridKit
 
         int initializationOrder() const noexcept override final
         {
-          return 2;
+          return 3;
         }
 
         int initialize() override final;

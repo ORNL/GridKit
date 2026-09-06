@@ -298,3 +298,14 @@ Inputs `speed` and `pref` are optional, and output `pmech` is required.
 `speed` is absolute rotor speed (one at synchronous). Required parameter
 `S` is the connected machine rating in VA; `pref` and `pmech` use that base.
 The optional `Trate` is in MW and defines the internal turbine base.
+
+### IEEEST stabilizer
+
+`Ieeest` and `IEEEST` select the complete PhasorDynamics stabilizer cascade
+with EMT signal connections and compensated-voltage cutout. Connect
+exactly one of `inputs.input` (generic per-unit signal) or `inputs.speed`
+(absolute per-unit rotor speed), and connect `outputs.output` to the
+exciter `vs` signal. Nonzero `Vcl` or `Vcu` requires `inputs.vct` in per
+unit. Zero disables a threshold. The PSLF delay extension is unsupported;
+`Tdelay` must be zero. See [IEEEST](Component/Controller/IEEEST/README.md)
+for the parameter, bypass, initialization, and limiter contracts.

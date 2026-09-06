@@ -159,3 +159,13 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTGastPtiTest COMMAND test_emt_gastpti)
 install(TARGETS test_emt_gastpti RUNTIME DESTINATION bin)
+
+add_executable(test_emt_ieeest runIeeestTests.cpp)
+target_link_libraries(
+  test_emt_ieeest
+  GridKit::emt_ieeest
+  GridKit::emt_ieeest_dependency_tracking
+  GridKit::phasor_dynamics_stabilizer_ieeest
+  GridKit::testing)
+add_test(NAME EMTIeeestTest COMMAND test_emt_ieeest)
+install(TARGETS test_emt_ieeest RUNTIME DESTINATION bin)
