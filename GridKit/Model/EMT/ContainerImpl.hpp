@@ -112,6 +112,13 @@ namespace GridKit
         add<Controller::Tgov1<ScalarT, IdxT>>(governor_data.id, qualified_data);
       }
 
+      for (const auto& exciter_data : data.sexs_pti)
+      {
+        auto qualified_data = exciter_data;
+        qualified_data.id   = qualify(exciter_data.id);
+        add<Controller::SexsPti<ScalarT, IdxT>>(exciter_data.id, qualified_data);
+      }
+
       for (const auto& exciter_data : data.exciter)
       {
         auto qualified_data = exciter_data;
@@ -315,6 +322,37 @@ namespace GridKit
         {
           governor_model.getSignals().template assignSignal<Controller::Tgov1InternalVariables::PM>(
               &signal(governor_data.outputs.at(Controller::Tgov1Outputs::pmech)));
+        }
+      }
+
+      for (const auto& exciter_data : data.sexs_pti)
+      {
+        using Inputs        = Controller::SexsPtiInputs;
+        using External      = Controller::SexsPtiExternalVariables;
+        using Internal      = Controller::SexsPtiInternalVariables;
+        auto& exciter_model = component<Controller::SexsPti<ScalarT, IdxT>>(exciter_data.id);
+        auto& signals       = exciter_model.getSignals();
+        signals.template attachPort<External::VA>(&port(exciter_data.inputs.at(Inputs::bus)));
+        if (exciter_data.inputs.contains(Inputs::vref))
+        {
+          signals.template attachSignal<External::VREF>(&source(exciter_data.inputs.at(Inputs::vref)));
+        }
+        if (exciter_data.inputs.contains(Inputs::vs))
+        {
+          signals.template attachSignal<External::VS>(&source(exciter_data.inputs.at(Inputs::vs)));
+        }
+        if (exciter_data.inputs.contains(Inputs::vuel))
+        {
+          signals.template attachSignal<External::VUEL>(&source(exciter_data.inputs.at(Inputs::vuel)));
+        }
+        if (exciter_data.inputs.contains(Inputs::voel))
+        {
+          signals.template attachSignal<External::VOEL>(&source(exciter_data.inputs.at(Inputs::voel)));
+        }
+        if (exciter_data.outputs.contains(Controller::SexsPtiOutputs::efd))
+        {
+          signals.template assignSignal<Internal::EFD>(
+              &signal(exciter_data.outputs.at(Controller::SexsPtiOutputs::efd)));
         }
       }
 
