@@ -1,0 +1,12 @@
+Bus #,1,2,3
+Gen id,1',1',1'
+type,GAST,GAST,GAST
+R,0.08,0.08,0.08
+T1,0.5,0.5,0.5
+T2,0.5,0.5,0.5
+T3,3,3,3
+Ambient temperature load limit,1,1,1
+KT,2,2,2
+VMAX,1,1,1
+VMIN,0,0,0
+Dturb,0,0,0

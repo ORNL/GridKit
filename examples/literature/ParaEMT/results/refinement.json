@@ -1,0 +1,328 @@
+{
+  "governor_step": {
+    "phase_voltage_pu": {
+      "all_samples": {
+        "max_absolute_difference": 0.012687442753739998,
+        "rms_difference": 0.004580156204559848,
+        "max_at_time_s": 2.999,
+        "max_at_column": "bus1_vc_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 0.002207969600749999,
+        "rms_difference": 0.0007349663949956928,
+        "max_at_time_s": 0.9985,
+        "max_at_column": "bus9_vc_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 0.002287351073493999,
+        "rms_difference": 0.001567230410408399,
+        "max_at_time_s": 1.018,
+        "max_at_column": "bus9_vb_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 0.012687442753739998,
+        "rms_difference": 0.005611741548914687,
+        "max_at_time_s": 2.999,
+        "max_at_column": "bus1_vc_pu"
+      }
+    },
+    "voltage_magnitude_pu": {
+      "all_samples": {
+        "max_absolute_difference": 0.00017504078899999165,
+        "rms_difference": 4.694047631144233e-05,
+        "max_at_time_s": 0.001,
+        "max_at_column": "bus6_vm_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 0.00017504078899999165,
+        "rms_difference": 5.5840016179677675e-05,
+        "max_at_time_s": 0.001,
+        "max_at_column": "bus6_vm_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 8.56538589999456e-05,
+        "rms_difference": 5.544462416029796e-05,
+        "max_at_time_s": 1.0,
+        "max_at_column": "bus7_vm_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 8.543280299999623e-05,
+        "rms_difference": 4.162240112982013e-05,
+        "max_at_time_s": 1.0205,
+        "max_at_column": "bus7_vm_pu"
+      }
+    },
+    "rotor_speed_pu": {
+      "all_samples": {
+        "max_absolute_difference": 1.4921823500047005e-05,
+        "rms_difference": 1.1489015145957457e-05,
+        "max_at_time_s": 2.0585,
+        "max_at_column": "gen3_speed_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 1.0600374699909487e-05,
+        "rms_difference": 6.030067591284425e-06,
+        "max_at_time_s": 0.9995,
+        "max_at_column": "gen2_speed_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 1.0882951700041943e-05,
+        "rms_difference": 1.0556856329836922e-05,
+        "max_at_time_s": 1.02,
+        "max_at_column": "gen3_speed_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 1.4921823500047005e-05,
+        "rms_difference": 1.3435442776176945e-05,
+        "max_at_time_s": 2.0585,
+        "max_at_column": "gen3_speed_pu"
+      }
+    },
+    "exciter_voltage_pu": {
+      "all_samples": {
+        "max_absolute_difference": 0.00019621934800007068,
+        "rms_difference": 0.00013721465634984235,
+        "max_at_time_s": 2.1175,
+        "max_at_column": "gen3_efd_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 0.0001257904750000538,
+        "rms_difference": 6.622947914096596e-05,
+        "max_at_time_s": 0.9995,
+        "max_at_column": "gen3_efd_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 0.00012970863000005828,
+        "rms_difference": 0.00011961640722416059,
+        "max_at_time_s": 1.02,
+        "max_at_column": "gen3_efd_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 0.00019621934800007068,
+        "rms_difference": 0.00016176635482443766,
+        "max_at_time_s": 2.1175,
+        "max_at_column": "gen3_efd_pu"
+      }
+    },
+    "mechanical_power_pu": {
+      "all_samples": {
+        "max_absolute_difference": 0.0001641151836000443,
+        "rms_difference": 9.855641860238927e-05,
+        "max_at_time_s": 3.0,
+        "max_at_column": "gen1_pm_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 3.7975180900096106e-05,
+        "rms_difference": 1.6397063062710414e-05,
+        "max_at_time_s": 0.9995,
+        "max_at_column": "gen3_pm_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 3.942461029993183e-05,
+        "rms_difference": 3.737551444123075e-05,
+        "max_at_time_s": 1.02,
+        "max_at_column": "gen3_pm_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 0.0001641151836000443,
+        "rms_difference": 0.00012070386774575702,
+        "max_at_time_s": 3.0,
+        "max_at_column": "gen1_pm_pu"
+      }
+    },
+    "stabilizer_output_pu": {
+      "all_samples": {
+        "max_absolute_difference": 0.000650735195256,
+        "rms_difference": 8.143136819715643e-05,
+        "max_at_time_s": 0.0185,
+        "max_at_column": "gen3_pss_vs_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 0.000650735195256,
+        "rms_difference": 0.00013059433826746153,
+        "max_at_time_s": 0.0185,
+        "max_at_column": "gen3_pss_vs_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 0.00011736158488020001,
+        "rms_difference": 7.416728456082187e-05,
+        "max_at_time_s": 1.0,
+        "max_at_column": "gen3_pss_vs_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 9.513180708361001e-05,
+        "rms_difference": 3.712435702056922e-05,
+        "max_at_time_s": 1.0205,
+        "max_at_column": "gen3_pss_vs_pu"
+      }
+    },
+    "sampled_bus1_peak_magnitude_pu": {
+      "dt50us": 1.040107045537,
+      "dt25us": 1.040106554039
+    },
+    "interpretation": "ParaEMT time-step comparison only; no GridKit or independently verified truth data"
+  },
+  "trip": {
+    "phase_voltage_pu": {
+      "all_samples": {
+        "max_absolute_difference": 4.188233787642,
+        "rms_difference": 0.01465811112200588,
+        "max_at_time_s": 1.0,
+        "max_at_column": "bus1_va_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 0.002207969600749999,
+        "rms_difference": 0.0007349663949956928,
+        "max_at_time_s": 0.9985,
+        "max_at_column": "bus9_vc_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 4.188233787642,
+        "rms_difference": 0.16522197600056912,
+        "max_at_time_s": 1.0,
+        "max_at_column": "bus1_va_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 0.018571513921299965,
+        "rms_difference": 0.006534011319060069,
+        "max_at_time_s": 1.022,
+        "max_at_column": "bus1_va_pu"
+      }
+    },
+    "voltage_magnitude_pu": {
+      "all_samples": {
+        "max_absolute_difference": 4.466493812425,
+        "rms_difference": 0.019246468049302554,
+        "max_at_time_s": 1.0,
+        "max_at_column": "bus1_vm_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 0.00017504078899999165,
+        "rms_difference": 5.5840016179677675e-05,
+        "max_at_time_s": 0.001,
+        "max_at_column": "bus6_vm_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 4.466493812425,
+        "rms_difference": 0.23281793966536804,
+        "max_at_time_s": 1.0,
+        "max_at_column": "bus1_vm_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 0.01515448023019994,
+        "rms_difference": 0.0003731758066599146,
+        "max_at_time_s": 1.0245,
+        "max_at_column": "bus1_vm_pu"
+      }
+    },
+    "rotor_speed_pu": {
+      "all_samples": {
+        "max_absolute_difference": 0.001981920285999972,
+        "rms_difference": 0.00045715671833966717,
+        "max_at_time_s": 3.0,
+        "max_at_column": "gen1_speed_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 1.0600374699909487e-05,
+        "rms_difference": 6.030067591284425e-06,
+        "max_at_time_s": 0.9995,
+        "max_at_column": "gen2_speed_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 1.2957520999945515e-05,
+        "rms_difference": 1.0571993793676349e-05,
+        "max_at_time_s": 1.02,
+        "max_at_column": "gen1_speed_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 0.001981920285999972,
+        "rms_difference": 0.0005627505675643452,
+        "max_at_time_s": 3.0,
+        "max_at_column": "gen1_speed_pu"
+      }
+    },
+    "exciter_voltage_pu": {
+      "all_samples": {
+        "max_absolute_difference": 0.013162691707999885,
+        "rms_difference": 0.003144912940129469,
+        "max_at_time_s": 3.0,
+        "max_at_column": "gen1_efd_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 0.0001257904750000538,
+        "rms_difference": 6.622947914096596e-05,
+        "max_at_time_s": 0.9995,
+        "max_at_column": "gen3_efd_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 0.00012897906099995637,
+        "rms_difference": 0.0001193088738860477,
+        "max_at_time_s": 1.02,
+        "max_at_column": "gen3_efd_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 0.013162691707999885,
+        "rms_difference": 0.003871137650778425,
+        "max_at_time_s": 3.0,
+        "max_at_column": "gen1_efd_pu"
+      }
+    },
+    "mechanical_power_pu": {
+      "all_samples": {
+        "max_absolute_difference": 0.009952091923299988,
+        "rms_difference": 0.0017803232001858758,
+        "max_at_time_s": 3.0,
+        "max_at_column": "gen1_pm_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 3.7975180900096106e-05,
+        "rms_difference": 1.6397063062710414e-05,
+        "max_at_time_s": 0.9995,
+        "max_at_column": "gen3_pm_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 3.942276930002375e-05,
+        "rms_difference": 3.7378231919080105e-05,
+        "max_at_time_s": 1.02,
+        "max_at_column": "gen3_pm_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 0.009952091923299988,
+        "rms_difference": 0.002191574702739439,
+        "max_at_time_s": 3.0,
+        "max_at_column": "gen1_pm_pu"
+      }
+    },
+    "stabilizer_output_pu": {
+      "all_samples": {
+        "max_absolute_difference": 0.011346564416050002,
+        "rms_difference": 0.0038782664993784956,
+        "max_at_time_s": 2.2075,
+        "max_at_column": "gen1_pss_vs_pu"
+      },
+      "before_event": {
+        "max_absolute_difference": 0.000650735195256,
+        "rms_difference": 0.00013059433826746153,
+        "max_at_time_s": 0.0185,
+        "max_at_column": "gen3_pss_vs_pu"
+      },
+      "event_through_20ms": {
+        "max_absolute_difference": 0.0059015593796700044,
+        "rms_difference": 0.0018996046826799877,
+        "max_at_time_s": 1.003,
+        "max_at_column": "gen2_pss_vs_pu"
+      },
+      "after_20ms": {
+        "max_absolute_difference": 0.011346564416050002,
+        "rms_difference": 0.004769396575079513,
+        "max_at_time_s": 2.2075,
+        "max_at_column": "gen1_pss_vs_pu"
+      }
+    },
+    "sampled_bus1_peak_magnitude_pu": {
+      "dt50us": 3.595604888835,
+      "dt25us": 8.06209870126
+    },
+    "interpretation": "ParaEMT time-step comparison only; no GridKit or independently verified truth data"
+  }
+}
