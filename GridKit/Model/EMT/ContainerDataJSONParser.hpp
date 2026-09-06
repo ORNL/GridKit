@@ -180,6 +180,10 @@ namespace GridKit
         {
           raw_device.get_to(data.gov.emplace_back());
         }
+        else if (kind == "SexsPti" || kind == "SEXS-PTI" || kind == "SEXS")
+        {
+          raw_device.get_to(data.sexs_pti.emplace_back());
+        }
         else if (kind == "Ieeet1" || kind == "IEEET1")
         {
           raw_device.get_to(data.exciter.emplace_back());
