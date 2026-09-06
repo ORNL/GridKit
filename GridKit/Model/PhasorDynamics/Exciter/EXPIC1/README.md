@@ -52,7 +52,7 @@ $K_C$                               | [p.u.]   | `Kc`      | Rectifier loading c
 
 ### Parameter Validation
 
-Invalid EXPIC1 parameter sets are rejected by the following checks.
+A valid EXPIC1 parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}

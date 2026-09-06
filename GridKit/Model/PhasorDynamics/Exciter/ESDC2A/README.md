@@ -46,7 +46,7 @@ $s_{\mathrm{lim}}$                  | [binary]  | `exclim`  | Exciter feedback l
 
 ### Parameter Validation
 
-Invalid ESDC2A parameter sets are rejected by the following checks. Source data
+A valid ESDC2A parameter set must satisfy the following conditions. Source data
 may apply PowerWorld-style autocorrections before these equations are evaluated.
 
 ```math

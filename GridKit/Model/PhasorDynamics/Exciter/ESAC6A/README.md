@@ -51,7 +51,7 @@ $s_{\mathrm{spd}}$                  | [binary] | `Spdmlt`  | Speed multiplier fl
 
 ### Parameter Validation
 
-Invalid ESAC6A parameter sets are rejected by the following checks.
+A valid ESAC6A parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}

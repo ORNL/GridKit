@@ -47,7 +47,7 @@ $V_G^{\max}$                        | [p.u.] | `VgMax`     | Maximum exciter-out
 
 ### Parameter Validation
 
-Invalid ESST4B parameter sets are rejected by the following checks.
+A valid ESST4B parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}

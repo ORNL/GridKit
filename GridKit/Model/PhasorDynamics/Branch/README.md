@@ -88,7 +88,7 @@ The off-nominal transformer transformation uses bus 1 as the tap side:
     &=
     \begin{bmatrix}
       \tau^{-1} & 0 \\
-      0 & e^{j\theta}
+      0 & \exp(j\theta)
     \end{bmatrix}
 \end{aligned}
 ```

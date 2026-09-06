@@ -62,7 +62,7 @@ $P_{\mathrm{GV}}^{(k)}$         | [p.u.] | `Pgv1`-`Pgv6` | Governor-output curve
 
 ### Parameter Validation
 
-Invalid IEEEG1 parameter sets are rejected by the following checks. If source
+A valid IEEEG1 parameter set must satisfy the following conditions. If source
 governor-response settings adjust limits, apply these checks to the effective
 values used by the equations.
 

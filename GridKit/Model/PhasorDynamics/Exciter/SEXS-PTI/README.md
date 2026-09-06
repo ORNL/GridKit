@@ -27,7 +27,7 @@ All six parameters are required; there are no defaults.
 
 ### Parameter Validation
 
-Invalid SEXS-PTI parameter sets are rejected by the following checks:
+A valid SEXS-PTI parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}

@@ -37,7 +37,7 @@ $R_c/R_{\mathrm{fd}}$               | [p.u.]   | `Rc_Rfd`   | Source-data compat
 
 ### Parameter Validation
 
-Invalid SCRX parameter sets are rejected by the following checks.
+A valid SCRX parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}
