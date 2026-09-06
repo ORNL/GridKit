@@ -34,7 +34,7 @@ N &\in \mathbb{Z}_{>0} \\
 Define the phase-index set
 
 ```math
-\mathcal{N} = \{1,\ldots,N\}.
+\mathcal{N} = \{1,\ldots,N\}
 ```
 
 ## Model Ports
@@ -51,6 +51,10 @@ Symbol | Description | Type | Order | JSON | Inputs | Outputs
 $\mathbf{y}$ | Terminal admittance | [VectorFit](../../../Operators/Rational/VectorFit/README.md) | $NQ_{\mathbf{y}}$ | `Y` | $\mathbb{R}^N$ | $\mathbb{R}^N$
 
 ### Submodel Validation
+
+None.
+
+### Submodel Wiring
 
 None.
 
@@ -103,7 +107,7 @@ None.
 
 ## Initialization
 
-None beyond the EMT initialization contract.
+None.
 
 ## Monitors
 
@@ -111,18 +115,3 @@ Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `e` | [V] | Source voltage | $\mathbf{e} \in \mathbb{R}^N$
 `i` | [A] | Source current injection | $\mathbf{i} \in \mathbb{R}^N$
-
-## Development
-
-The initial three-phase formulation realizes the terminal admittance as a
-series resistance and inductance, with $\mathbf{i}$ as a differential variable.
-
-### Differential Equations
-
-```math
-0 =
-\mathbf{R}_\mathrm{s}\mathbf{i}
-+ \mathbf{L}_\mathrm{s}\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}
-+ \mathbf{v}
-- \mathbf{e}
-```

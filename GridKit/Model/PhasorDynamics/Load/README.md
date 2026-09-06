@@ -1,13 +1,8 @@
 # Load Models
 
-## Introduction
-
-Load models represent power consumed by devices connected to the phasor dynamics
-network.
+Loads represent power consumed by devices connected to the network.
 
 ## Types
 
-The GridKit load documentation includes:
-
-- Constant impedance load model (See [LoadZ](LoadZ/README.md))
-- ZIP load model (See [LoadZIP](LoadZIP/README.md))
+- [LoadZ](LoadZ/README.md): Constant impedance
+- [LoadZIP](LoadZIP/README.md): Constant impedance, current, and power fractions

@@ -1,10 +1,15 @@
-# **IEEE Type DC2A Excitation System Model (ESDC2A)**
+# ESDC2A
 
-ESDC2A is an IEEE Type DC excitation system with a voltage transducer, lead-lag
+ESDC2A is an IEEE Type DC excitation system with a voltage transducer, lead–lag
 input compensation, high-value under-excitation limiter selection, limited
 voltage regulator, exciter feedback, saturation, and optional speed multiplier.
 
-Notes:
+> [!WARNING]
+> Initialization does not yet invert the smooth gates and limits used by the
+> model equations.
+
+## Notes
+
 - Internal voltage signals are on model base unless otherwise stated.
 - The diagram labels the optional multiplier input as `Speed`; GridKit uses
   machine speed deviation, so the enabled multiplier is $1+\omega$.
@@ -15,39 +20,36 @@ Notes:
 
 ## Block Diagram
 
-Standard model of the ESDC2A Exciter.
-
 ![](../../../../../docs/Figures/PhasorDynamics/ESDC2A_diagram.png)
 
 Figure 1: Exciter ESDC2A model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 
-Symbol                              | Units     | JSON      | Description                                             | Typical Value | Note
-------------------------------------|-----------|-----------|---------------------------------------------------------|---------------|------
-$T_R$                               | [sec]     | `Tr`      | Transducer time constant                                | 0.0           | Block name: `Tr`; if zero, $V_C$ is algebraic
-$K_A$                               | [p.u.]    | `Ka`      | Voltage-regulator gain                                  | 40.0          | Block name: `Ka`
-$T_A$                               | [sec]     | `Ta`      | Voltage-regulator time constant                         | 0.1           | Block name: `Ta`
-$T_B$                               | [sec]     | `Tb`      | Lag time constant for voltage-regulator input lead-lag  | 0.0           | Block name: `Tb`; if $T_B=T_C=0$, the lead-lag block is bypassed
-$T_C$                               | [sec]     | `Tc`      | Lead time constant for voltage-regulator input lead-lag | 0.0           | Block name: `Tc`; must be zero when $T_B=0$
-$V_R^{\max}$                        | [p.u.]    | `Vrmax`   | Maximum voltage-regulator output                        | 1.0           | Block name: `Vrmax`
-$V_R^{\min}$                        | [p.u.]    | `Vrmin`   | Minimum voltage-regulator output                        | -1.0          | Block name: `Vrmin`
-$K_E$                               | [p.u.]    | `Ke`      | Exciter field-resistance line-slope margin              | 0.1           | Block name: `Ke`
-$T_E$                               | [sec]     | `Te`      | Exciter time constant                                   | 0.5           | Block name: `Te`
-$K_F$                               | [p.u.]    | `Kf`      | Stabilizing feedback gain                               | 0.05          | Block name: `Kf`
-$T_{F1}$                            | [sec]     | `Tf1`     | Feedback lead time constant                             | 0.7           | Block name: `Tf1`
-$s_{\mathrm{spd}}$                  | [binary]  | `Spdmlt`  | Speed multiplier flag                                   | 0             | Block name: `Spdmlt`; 1 enables the speed multiplier
-$E_1$                               | [p.u.]    | `E1`      | First saturation voltage point                          | 2.8           | Block name: `E1`
-$S_E(E_1)$                          | [p.u.]    | `SE1`     | Saturation value at $E_1$                               | 0.08          | Block name: `Se1`
-$E_2$                               | [p.u.]    | `E2`      | Second saturation voltage point                         | 3.7           | Block name: `E2`
-$S_E(E_2)$                          | [p.u.]    | `SE2`     | Saturation value at $E_2$                               | 0.33          | Block name: `Se2`
-$I_{\mathrm{uel}}$                  | [integer] | `UEL`     | Under-excitation limiter input-location selector        | 0             | Block name: `UEL`; 0/1 = HV gate input, 2/3 = input-error summing junction
-$s_{\mathrm{lim}}$                  | [binary]  | `exclim`  | Exciter feedback lower-limit flag                       | 1             | Block name: `exclim`; nonzero enables the zero lower limit on $V_{\mathrm{fe}}$
+Symbol             | Units     | JSON     | Description                                             | Typical Value | Note
+-------------------|-----------|----------|---------------------------------------------------------|---------------|----------------------------------------------------------
+$T_R$              | [s]       | `Tr`     | Transducer time constant                                | 0.0           | if zero, $V_C$ is algebraic
+$K_A$              | [p.u.]    | `Ka`     | Voltage-regulator gain                                  | 40.0          |
+$T_A$              | [s]       | `Ta`     | Voltage-regulator time constant                         | 0.1           |
+$T_B$              | [s]       | `Tb`     | Lag time constant for voltage-regulator input lead–lag  | 0.0           | if $T_B=T_C=0$, the lead–lag block is bypassed
+$T_C$              | [s]       | `Tc`     | Lead time constant for voltage-regulator input lead–lag | 0.0           | must be zero when $T_B=0$
+$V_R^{\max}$       | [p.u.]    | `Vrmax`  | Maximum voltage-regulator output                        | 1.0           |
+$V_R^{\min}$       | [p.u.]    | `Vrmin`  | Minimum voltage-regulator output                        | -1.0          |
+$K_E$              | [p.u.]    | `Ke`     | Exciter field-resistance line-slope margin              | 0.1           |
+$T_E$              | [s]       | `Te`     | Exciter time constant                                   | 0.5           |
+$K_F$              | [p.u.]    | `Kf`     | Stabilizing feedback gain                               | 0.05          |
+$T_{F1}$           | [s]       | `Tf1`    | Feedback lead time constant                             | 0.7           |
+$s_{\mathrm{spd}}$ | [binary]  | `Spdmlt` | Speed multiplier flag                                   | 0             | 1 enables the speed multiplier
+$E_1$              | [p.u.]    | `E1`     | First saturation voltage point                          | 2.8           |
+$S_E(E_1)$         | [p.u.]    | `SE1`    | Saturation value at $E_1$                               | 0.08          | Source label: `Se1`
+$E_2$              | [p.u.]    | `E2`     | Second saturation voltage point                         | 3.7           |
+$S_E(E_2)$         | [p.u.]    | `SE2`    | Saturation value at $E_2$                               | 0.33          | Source label: `Se2`
+$I_{\mathrm{uel}}$ | [integer] | `UEL`    | Under-excitation limiter input-location selector        | 0             | 0/1 = HV gate input, 2/3 = input-error summing junction
+$s_{\mathrm{lim}}$ | [binary]  | `exclim` | Exciter feedback lower-limit flag                       | 1             | nonzero enables the zero lower limit on $V_{\mathrm{FE}}$
 
 ### Parameter Validation
 
-A valid ESDC2A parameter set must satisfy the following conditions. Source data
-may apply PowerWorld-style autocorrections before these equations are evaluated.
+A valid ESDC2A parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}
@@ -121,24 +123,24 @@ Name    | Port   | Init | Description
 
 #### Differential
 
-Symbol                              | Units  | Description                                             | Note
-------------------------------------|--------|---------------------------------------------------------|------
-$E_{\mathrm{fd}}'$                  | [p.u.] | Field-voltage state before optional speed multiplier    | State 1 in Fig. 1; source label: `EFD`
-$V_C$                               | [p.u.] | Sensed compensated voltage                              | State 2 in Fig. 1; source label: `Sensed Vt`; algebraic when $T_R=0$
-$V_R$                               | [p.u.] | Voltage-regulator output                                | State 3 in Fig. 1; source label: `VR`
-$V_F$                               | [p.u.] | Stabilizing feedback washout output                     | State 4 in Fig. 1; source label: `VF`; algebraic when $T_{F1}=0$
-$x_{\mathrm{ll}}$                   | [p.u.] | Lead-lag block state                                    | State 5 in Fig. 1; source label: `Lead-Lag`
+Symbol             | Units  | Description                                          | Note
+-------------------|--------|------------------------------------------------------|---------------------------------------------------------------------
+$E_{\mathrm{fd}}'$ | [p.u.] | Field-voltage state before optional speed multiplier | State 1 in Fig. 1; Source label: `EFD`
+$V_C$              | [p.u.] | Sensed compensated voltage                           | State 2 in Fig. 1; Source label: `Sensed Vt`; algebraic when $T_R=0$
+$V_R$              | [p.u.] | Voltage-regulator output                             | State 3 in Fig. 1; Source label: `VR`
+$V_F$              | [p.u.] | Stabilizing feedback washout output                  | State 4 in Fig. 1; Source label: `VF`; algebraic when $T_{F1}=0$
+$x_{\mathrm{LL}}$  | [p.u.] | Lead–lag block state                                 | State 5 in Fig. 1; Source label: `Lead-Lag`
 
 #### Algebraic
 
-Symbol                              | Units  | Description                                             | Note
-------------------------------------|--------|---------------------------------------------------------|------
-$e_V$                               | [p.u.] | Voltage-regulator input error before lead-lag block     | Includes selected $V_{\mathrm{uel}}$ summing-junction input
-$V_{\mathrm{ll}}$                   | [p.u.] | Lead-lag block output                                   | Input to high-value gate
-$V_{\mathrm{hv}}$                   | [p.u.] | High-value gate output                                  | Selects $V_{\mathrm{ll}}$ or alternate $V_{\mathrm{uel}}$
-$S_E$                               | [p.u.] | Saturation coefficient evaluated at $E_{\mathrm{fd}}'$  | Uses derived saturation curve
-$V_{\mathrm{fe}}$                   | [p.u.] | Exciter feedback signal after optional lower limit      | Lower limited at zero when $s_{\mathrm{lim}}=1$
-$E_{\mathrm{fd}}$                   | [p.u.] | Field-voltage output                                    | Output after optional speed multiplier
+Symbol            | Units  | Description                                            | Note
+------------------|--------|--------------------------------------------------------|------------------------------------------------------------
+$e_V$             | [p.u.] | Voltage-regulator input error before lead–lag block    | Includes selected $V_{\mathrm{uel}}$ summing-junction input
+$V_{\mathrm{LL}}$ | [p.u.] | Lead–lag block output                                  | Input to high-value gate
+$V_{\mathrm{HV}}$ | [p.u.] | High-value gate output                                 | Selects $V_{\mathrm{LL}}$ or alternate $V_{\mathrm{uel}}$
+$S_E$             | [p.u.] | Saturation coefficient evaluated at $E_{\mathrm{fd}}'$ | Uses derived saturation curve
+$V_{\mathrm{FE}}$ | [p.u.] | Exciter feedback signal after optional lower limit     | Lower limited at zero when $s_{\mathrm{lim}}=1$
+$E_{\mathrm{fd}}$ | [p.u.] | Field-voltage output                                   | Output after optional speed multiplier
 
 ### External Variables
 
@@ -158,6 +160,8 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 
 ## Model Equations
 
+Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup), [`max`](../../../../CommonMath.md#maximum), [$q$](../../../../CommonMath.md#quadratic-ramp), [$\rho$](../../../../CommonMath.md#ramp).
+
 ### Internal Equations
 
 #### Differential
@@ -165,43 +169,37 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 ```math
 \begin{aligned}
   0 &= -T_R\dot V_C - V_C + E_C \\
-  0 &= -T_B\dot x_{\mathrm{ll}} - x_{\mathrm{ll}} + e_V \\
+  0 &= -T_B\dot x_{\mathrm{LL}} - x_{\mathrm{LL}} + e_V \\
   0 &= -T_A\dot V_R
-       + \text{antiwindup}\!\left(
+       + \text{antiwindup}\!(
           V_R,
-          -V_R + K_A V_{\mathrm{hv}},
+          -V_R + K_A V_{\mathrm{HV}};
           V_R^{\min},
           V_R^{\max}
-       \right) \\
-  0 &= -T_E\dot E_{\mathrm{fd}}' + V_R - V_{\mathrm{fe}} \\
-  0 &= -T_E T_{F1}\dot V_F - T_E V_F + K_F(V_R - V_{\mathrm{fe}})
+       ) \\
+  0 &= -T_E\dot E_{\mathrm{fd}}' + V_R - V_{\mathrm{FE}} \\
+  0 &= -T_E T_{F1}\dot V_F - T_E V_F + K_F(V_R - V_{\mathrm{FE}})
 \end{aligned}
 ```
-
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
-target and smooth approximation.
 
 #### Algebraic
 
 ```math
 \begin{aligned}
   0 &= -e_V + V_{\mathrm{ref}} + V_S + s_{\mathrm{uel}}V_{\mathrm{uel}} - V_C - V_F \\
-  0 &= -T_B(V_{\mathrm{ll}} - x_{\mathrm{ll}}) + T_C(e_V - x_{\mathrm{ll}}) \\
-  0 &= -V_{\mathrm{hv}}
-       + s_{\mathrm{uel}}V_{\mathrm{ll}}
-       + s_{\mathrm{uel}}^{\mathrm{off}}\text{max}(V_{\mathrm{ll}}, V_{\mathrm{uel}}) \\
+  0 &= -T_B(V_{\mathrm{LL}} - x_{\mathrm{LL}}) + T_C(e_V - x_{\mathrm{LL}}) \\
+  0 &= -V_{\mathrm{HV}}
+       + s_{\mathrm{uel}}V_{\mathrm{LL}}
+       + s_{\mathrm{uel}}^{\mathrm{off}}\text{max}(V_{\mathrm{LL}}, V_{\mathrm{uel}}) \\
   0 &= -S_E + S_B\,q(E_{\mathrm{fd}}' - S_A) \\
-  0 &= -V_{\mathrm{fe}}
+  0 &= -V_{\mathrm{FE}}
        + s_{\mathrm{lim}}^{\mathrm{off}}(K_E + S_E)E_{\mathrm{fd}}'
-       + s_{\mathrm{lim}}\rho\!\left((K_E + S_E)E_{\mathrm{fd}}'\right) \\
-  0 &= -E_{\mathrm{fd}} + \left(1 + s_{\mathrm{spd}}\omega\right)E_{\mathrm{fd}}'
+       + s_{\mathrm{lim}}\rho\!((K_E + S_E)E_{\mathrm{fd}}') \\
+  0 &= -E_{\mathrm{fd}} + (1 + s_{\mathrm{spd}}\omega)E_{\mathrm{fd}}'
 \end{aligned}
 ```
 
-CommonMath defines the helper targets and smooth approximations for
-[max](../../../../CommonMath.md#maximum) and the primitives
-[ramp](../../../../CommonMath.md#ramp) and [quadratic ramp](../../../../CommonMath.md#quadratic-ramp) $\rho$ and $q$.
-When $T_B=T_C=0$, the lead-lag block is bypassed so $V_{\mathrm{ll}}=e_V$.
+When $T_B=T_C=0$, the lead–lag block is bypassed so $V_{\mathrm{LL}}=e_V$.
 
 ### External Equations
 
@@ -215,33 +213,35 @@ $V_{\mathrm{uel}}$, sets all internal derivatives to zero, and evaluates:
 
 ```math
 \begin{aligned}
-  E_{\mathrm{fd},0}' &= \dfrac{E_{\mathrm{fd},0}}{1 + s_{\mathrm{spd}}\omega_0} \\
-  S_{E,0} &= S_B\,q(E_{\mathrm{fd},0}' - S_A) \\
-  V_{\mathrm{fe},0}
-    &= s_{\mathrm{lim}}^{\mathrm{off}}(K_E + S_{E,0})E_{\mathrm{fd},0}'
-       + s_{\mathrm{lim}}\rho\!\left((K_E + S_{E,0})E_{\mathrm{fd},0}'\right) \\
-  V_{R,0} &= V_{\mathrm{fe},0} \\
-  V_{\mathrm{hv},0} &= \dfrac{V_{R,0}}{K_A} \\
-  V_{C,0} &= E_{C,0} \\
-  V_{F,0} &= 0 \\
-  x_{\mathrm{ll},0} &= V_{\mathrm{ll},0} = e_{V,0} = V_{\mathrm{hv},0} \\
-  V_{\mathrm{ref},0}
-    &= e_{V,0} + V_{C,0} + V_{F,0} - V_{S,0} - s_{\mathrm{uel}}V_{\mathrm{uel},0}
+  E_{\mathrm{fd}}' &\leftarrow \dfrac{E_{\mathrm{fd}}}{1 + s_{\mathrm{spd}}\omega} \\
+  S_E &\leftarrow S_B\,q(E_{\mathrm{fd}}' - S_A) \\
+  V_{\mathrm{FE}}
+    &\leftarrow s_{\mathrm{lim}}^{\mathrm{off}}(K_E + S_E)E_{\mathrm{fd}}'
+       + s_{\mathrm{lim}}\rho\!((K_E + S_E)E_{\mathrm{fd}}') \\
+  V_R &\leftarrow V_{\mathrm{FE}} \\
+  V_{\mathrm{HV}} &\leftarrow \dfrac{V_R}{K_A} \\
+  V_C &\leftarrow E_C \\
+  V_F &\leftarrow 0 \\
+  V_{\mathrm{LL}} &\leftarrow V_{\mathrm{HV}} \\
+  e_V &\leftarrow V_{\mathrm{LL}} \\
+  x_{\mathrm{LL}} &\leftarrow e_V \\
+  V_{\mathrm{ref}}
+    &\leftarrow e_V + V_C + V_F - V_S - s_{\mathrm{uel}}V_{\mathrm{uel}}
 \end{aligned}
 ```
 
-This closed-form start requires $1 + s_{\mathrm{spd}}\omega_0 \ne 0$,
-$V_R^{\min} \le V_{R,0} \le V_R^{\max}$, and, when $s_{\mathrm{uel}}=0$,
-$V_{\mathrm{hv},0} \ge V_{\mathrm{uel},0}$. Saturated voltage-regulator starts
+This closed-form start requires $1 + s_{\mathrm{spd}}\omega \ne 0$,
+$V_R^{\min} \le V_R \le V_R^{\max}$, and, when $s_{\mathrm{uel}}=0$,
+$V_{\mathrm{HV}} \ge V_{\mathrm{uel}}$. Saturated voltage-regulator starts
 and active high-value-gate starts are outside these closed-form equations.
 
 ## Monitors
 
-Monitor         | Units  | Description                         | Note
-----------------|--------|-------------------------------------|------
-`efd`           | [p.u.] | Field-voltage output                | $E_{\mathrm{fd}}$
-`vc`            | [p.u.] | Sensed compensated voltage          | $V_C$
-`vr`            | [p.u.] | Voltage-regulator output            | $V_R$
-`vf`            | [p.u.] | Stabilizing feedback state          | $V_F$
-`se`            | [p.u.] | Saturation coefficient              | $S_E$
-`vfe`           | [p.u.] | Exciter feedback signal             | $V_{\mathrm{fe}}$
+Monitor | Units  | Description                | Note
+--------|--------|----------------------------|------------------
+`efd`   | [p.u.] | Field-voltage output       | $E_{\mathrm{fd}}$
+`vc`    | [p.u.] | Sensed compensated voltage | $V_C$
+`vr`    | [p.u.] | Voltage-regulator output   | $V_R$
+`vf`    | [p.u.] | Stabilizing feedback state | $V_F$
+`se`    | [p.u.] | Saturation coefficient     | $S_E$
+`vfe`   | [p.u.] | Exciter feedback signal    | $V_{\mathrm{FE}}$

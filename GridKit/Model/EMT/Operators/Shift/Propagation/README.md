@@ -11,6 +11,14 @@ delay per mode, and a fitted output factor while preserving the input units.
 \end{aligned}
 ```
 
+With $\mathbf{G}_\mathrm{in}$ and $\mathbf{G}_\mathrm{out}$ the transfer matrices
+of the input and output factors,
+
+```math
+\mathbf{H}^\mathrm{mps}_m(s)
+  = \mathbf{G}_\mathrm{out}(s)_{:,m}\,\mathbf{G}_\mathrm{in}(s)_{m,:}
+```
+
 ## Block Diagram
 
 ![Propagation operator block diagram](../../../../../../docs/Figures/EMT/Propagation/diagram.png)
@@ -57,7 +65,6 @@ Symbol | Description | Type | Order | JSON | Inputs | Outputs
 $\mathbf{g}_\mathrm{in}$ | Input factor | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_{\mathbf{g}_\mathrm{in}}$ | `input` | $\mathbb{R}^K$ | $\mathbb{R}^M$
 $\mathbf{d}$ | Modal delay bank | [Delay](../Delay/README.md) | History | `delays` | $\mathbb{R}^M$ | $\mathbb{R}^M$
 $\mathbf{g}_\mathrm{out}$ | Output factor | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_{\mathbf{g}_\mathrm{out}}$ | `output` | $\mathbb{R}^M$ | $\mathbb{R}^K$
-
 
 ### Submodel Validation
 
@@ -122,7 +129,8 @@ None.
 
 ## Initialization
 
-TBD
+Initialize the rational factors using the [EMT initialization contract](../../../README.md#initialization).
+Provide the input-factor output history required by [Delay](../Delay/README.md#initialization).
 
 ## Monitors
 

@@ -6,12 +6,12 @@ contribution to the connected bus residual.
 
 ## Model Parameters
 
-Symbol          | Units  | JSON     | Description                    | Typical Value
-----------------|--------|----------|--------------------------------|--------------
-$P_\text{nom}$  | [p.u.] | `Pnom`   | Nominal consumed real power    | 0.0
-$Q_\text{nom}$  | [p.u.] | `Qnom`   | Nominal consumed reactive power | 0.0
-$\alpha_I$      | [-]    | `alphaI` | Constant current load fraction | 0.0
-$\alpha_P$      | [-]    | `alphaP` | Constant power load fraction   | 0.0
+Symbol           | Units  | JSON     | Description                     | Typical Value | Note
+-----------------|--------|----------|---------------------------------|---------------|-----
+$P_\mathrm{nom}$ | [p.u.] | `Pnom`   | Nominal consumed real power     | 0.0           |
+$Q_\mathrm{nom}$ | [p.u.] | `Qnom`   | Nominal consumed reactive power | 0.0           |
+$\alpha_I$       | [-]    | `alphaI` | Constant current load fraction  | 0.0           |
+$\alpha_P$       | [-]    | `alphaP` | Constant power load fraction    | 0.0           |
 
 ### Parameter Validation
 
@@ -19,12 +19,12 @@ None.
 
 ### Model Derived Parameters
 
-$V_\text{nom}$ is the initial voltage magnitude of the respective bus.
+$V_\mathrm{nom}$ is the initial voltage magnitude of the respective bus.
 
 ```math
 \begin{aligned}
-G &= \frac{P_\text{nom}}{V_\text{nom}^2} \\
-B &= \frac{Q_\text{nom}}{V_\text{nom}^2} \\
+G &= \dfrac{P_\mathrm{nom}}{V_\mathrm{nom}^2} \\
+B &= -\dfrac{Q_\mathrm{nom}}{V_\mathrm{nom}^2} \\
 \alpha_Z &= 1 - \alpha_I - \alpha_P
 \end{aligned}
 ```
@@ -77,17 +77,17 @@ None.
 
 ```math
 \begin{aligned}
-0 &= I_r + (G V_r + B V_i)
+0 &= I_r + (G V_r - B V_i)
 \left[
 \alpha_Z
-+ \alpha_I \frac{V_\text{nom}}{V}
-+ \alpha_P \frac{V_\text{nom}^2}{V^2}
++ \alpha_I \dfrac{V_\mathrm{nom}}{V}
++ \alpha_P \dfrac{V_\mathrm{nom}^2}{V^2}
 \right] \\
-0 &= I_i + (G V_i - B V_r)
+0 &= I_i + (G V_i + B V_r)
 \left[
 \alpha_Z
-+ \alpha_I \frac{V_\text{nom}}{V}
-+ \alpha_P \frac{V_\text{nom}^2}{V^2}
++ \alpha_I \dfrac{V_\mathrm{nom}}{V}
++ \alpha_P \dfrac{V_\mathrm{nom}^2}{V^2}
 \right]
 \end{aligned}
 ```
@@ -97,7 +97,7 @@ None.
 ```math
 \begin{aligned}
 I_r^{\mathrm{bus}} &\leftarrow I_r^{\mathrm{bus}} + I_r \\
-I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i.
+I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i
 \end{aligned}
 ```
 
@@ -105,8 +105,8 @@ I_i^{\mathrm{bus}} &\leftarrow I_i^{\mathrm{bus}} + I_i.
 
 ```math
 \begin{aligned}
-    I_r &\leftarrow -G V_{r} - B V_{i} \\
-    I_i &\leftarrow -G V_{i} + B V_{r} 
+    I_r &\leftarrow -G V_r + B V_i \\
+    I_i &\leftarrow -G V_i - B V_r
 \end{aligned}
 ```
 

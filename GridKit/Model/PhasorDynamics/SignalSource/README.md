@@ -1,14 +1,14 @@
-# ConstantSignalSource
+# SignalSource
 
 Zero-state component that publishes constant real and imaginary scalar values
 on two output signals.
 
 ## Model Parameters
 
-Symbol | Units       | JSON | Description                     | Default
--------|-------------|------|---------------------------------|--------
-$S_r$  | unspecified | `Sr` | Constant real output value      | 0.0
-$S_i$  | unspecified | `Si` | Constant imaginary output value | 0.0
+Symbol | Units       | JSON | Description                     | Typical Value | Note
+-------|-------------|------|---------------------------------|---------------|-----
+$S_r$  | unspecified | `Sr` | Constant real output value      | 0.0           |
+$S_i$  | unspecified | `Si` | Constant imaginary output value | 0.0           |
 
 ### Parameter Validation
 
@@ -21,7 +21,7 @@ None.
 ## Model Ports
 
 Name | Port   | Init  | Description
------|--------|-------|------------
+-----|--------|-------|-----------------------------------
 `sr` | Output | Known | Constant real component $S_r$
 `si` | Output | Known | Constant imaginary component $S_i$
 

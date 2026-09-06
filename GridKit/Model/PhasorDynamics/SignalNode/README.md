@@ -1,4 +1,4 @@
-# Signal Node
+# SignalNode
 
 Signal nodes provide scalar connection points between phasor-dynamics
 components. Components attach external inputs to signal nodes and assign
@@ -10,9 +10,17 @@ without owning the producing model.
 
 ## Model Parameters
 
-Symbol | Description
--------|------------
-`signal_id` | Unique identifier for the signal node
+Symbol      | Units | JSON        | Description                           | Typical Value | Note
+------------|-------|-------------|---------------------------------------|---------------|-----
+`signal_id` | [-]   | `signal_id` | Unique identifier for the signal node |               |
+
+### Parameter Validation
+
+None.
+
+### Model Derived Parameters
+
+None.
 
 ## Model Ports
 

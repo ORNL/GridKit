@@ -1,15 +1,15 @@
-# General Synchronous Machine Model
+# Synchronous Machine Models
 
-## Convention
+## Conventions
 
 ![](../../../../docs/Figures/SM1.JPG)
 
 Figure 1: Synchronous Machine. Figure courtesy of
 [PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf/)
 
-The following conventions are used for the d-q reference frame.
+For the d–q reference frame:
 - The q-axis leads the d-axis
-- The Rotor angle is w.r.t. to q-axis
+- The rotor angle is measured from the q-axis
 
 ## Types
 
@@ -21,39 +21,24 @@ The following conventions are used for the d-q reference frame.
 - GENTPJ
 - GENQEC
 
-### Per-Unit Basis
+## Per-Unit Basis
 
-In relevant models, the terminal impedances are on the generator impedance base.
-To convert to the network base, the following must be performed.
+Terminal impedances use the machine base. With a common voltage base,
 
 ```math
-\begin{aligned}
-  Z_{term} &
-  \mapsto Z_{term}\dfrac{S_{base,sys}}{S_{base,machine}}
-\end{aligned}
+Z^\mathrm{sys}=Z^\mathrm{mach}\dfrac{S^\mathrm{sys}}{S^\mathrm{base}}
 ```
 
-For example, say the terminal impedance is $Z=0.05$ in per-unit on the
-machine's base of $S_{base,machine}=50$  MVA, and the system base is
-$S_{base,sys}=100$ MVA. Then the terminal impedance on the system
-base is calculated as follows.
+$S^\mathrm{sys}$ and $S^\mathrm{base}$ are the system and machine power
+bases in megavolt-amperes.
 
-``` math
-\begin{aligned}
-  Z_{sys} = 0.05\dfrac{100 \text{MVA}}{50 \text{MVA}} = 0.1
-\end{aligned}
+## Saturation
+
+GENROU and GENSAL use the smooth [quadratic ramp](../../../CommonMath.md#quadratic-ramp):
+
+```math
+k_\mathrm{sat}=S_Bq(\psi-S_A)
 ```
 
-#### Saturation
-
-Saturation means increasingly large amounts of current are needed to increase
-the flux density. The Scaled Quadratic saturation model is currently implemented.
-``` math
-\begin{aligned}
-  k_{sat} =
-  \begin{cases}
-    S_B(\psi''-S_A)^2 &\text{if } \psi''>S_A \\
-    0 &\text{if } \psi''\leq S_A
-  \end{cases}
-\end{aligned}
-```
+Here $\psi=\psi''$ for GENROU and $\psi=E'_q$ for GENSAL. Each model defines
+its saturation fit.

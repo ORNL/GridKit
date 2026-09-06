@@ -46,8 +46,12 @@ algebraic when $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$.
 ```math
 \mathbf{E}^{\mathbf{z}}=\mathbf{0}
 \qquad \text{or} \qquad
-\mathrm{rank}(\mathbf{E}^{\mathbf{z}})=N.
+\mathrm{rank}(\mathbf{E}^{\mathbf{z}})=N
 ```
+
+### Submodel Wiring
+
+None.
 
 ## Model Variables
 
@@ -95,29 +99,18 @@ For $\mathbf{E}^{\mathbf{z}}=\mathbf{0}$, the same residual is algebraic.
 
 ### External Equations
 
+The load supplies input $d$ of the [bus current balance](../../../Bus/README.md#model-equations):
+
 ```math
-\mathbf{f} \leftarrow \mathbf{i}
+\mathbf{i}_d \leftarrow \mathbf{i}
 ```
 
 ## Initialization
 
-None beyond the EMT initialization contract.
+None.
 
 ## Monitors
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `i` | [A] | Load current injection | $\mathbf{i} \in \mathbb{R}^N$
-
-## Development
-
-The initial three-phase formulation uses resistance and inductance matrices.
-
-### Differential Equations
-
-```math
-0 =
-\mathbf{R}\mathbf{i}
-+ \mathbf{L}\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}
-+ \mathbf{v}
-```

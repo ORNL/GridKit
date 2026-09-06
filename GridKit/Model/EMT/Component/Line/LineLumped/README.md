@@ -20,7 +20,7 @@ Define the phase- and conductor-index sets
 ```math
 \mathcal{N} = \{1,\ldots,N\},
 \qquad
-\mathcal{K} = \{1,\ldots,K\}.
+\mathcal{K} = \{1,\ldots,K\}
 ```
 
 Symbol | Units | JSON | Description | Note
@@ -79,6 +79,10 @@ independent states.
 \mathrm{rank}(\mathbf{E}^{\mathbf{z}}) = K
 ```
 
+### Submodel Wiring
+
+None.
+
 ## Model Variables
 
 ### Internal Variables
@@ -124,10 +128,10 @@ None.
 
 ```math
 \begin{aligned}
-0 &= \Delta x\,\mathbf{y}_2[\mathbf{P}_\phi^\mathsf T\mathbf{v}_2]
-  + 2\mathbf{i}_2^\mathrm{sh} \\
 0 &= \Delta x\,\mathbf{y}_1[\mathbf{P}_\phi^\mathsf T\mathbf{v}_1]
-  + 2\mathbf{i}_1^\mathrm{sh}
+  + 2\mathbf{i}_1^\mathrm{sh} \\
+0 &= \Delta x\,\mathbf{y}_2[\mathbf{P}_\phi^\mathsf T\mathbf{v}_2]
+  + 2\mathbf{i}_2^\mathrm{sh}
 \end{aligned}
 ```
 
@@ -136,21 +140,21 @@ None.
 ```math
 \begin{aligned}
 \mathbf{i}_1 &\leftarrow
-  \mathbf{P}_\phi\left(
+  \mathbf{P}_\phi(
     \mathbf{i}_1^\mathrm{sh}
     - \mathbf{i}_{12}
-  \right) \\
+  ) \\
 \mathbf{i}_2 &\leftarrow
-  \mathbf{P}_\phi\left(
+  \mathbf{P}_\phi(
     \mathbf{i}_2^\mathrm{sh}
     + \mathbf{i}_{12}
-  \right)
+  )
 \end{aligned}
 ```
 
 ## Initialization
 
-None beyond the EMT initialization contract.
+None.
 
 ## Monitors
 
@@ -159,40 +163,3 @@ Monitor | Units | Description | Note
 `i12` | [A] | Series current from terminal 1 to terminal 2 | $\mathbf{i}_{12} \in \mathbb{R}^K$
 `i_sh1` | [A] | Shunt current at terminal 1 | $\mathbf{i}_1^\mathrm{sh} \in \mathbb{R}^K$
 `i_sh2` | [A] | Shunt current at terminal 2 | $\mathbf{i}_2^\mathrm{sh} \in \mathbb{R}^K$
-
-## Development
-
-The initial three-phase formulation is a subset of the generalized formulation
-above.
-
-### Derived Parameters
-
-```math
-\begin{aligned}
-\mathbf{R} &= \Delta x\,\mathbf{R}' \\
-\mathbf{L} &= \Delta x\,\mathbf{L}' \\
-\mathbf{G} &= \Delta x\,\mathbf{G}' \\
-\mathbf{C} &= \Delta x\,\mathbf{C}'
-\end{aligned}
-```
-
-### Differential Equations
-
-```math
-0 = \mathbf{R}\mathbf{i}_{12}
-  + \mathbf{L}\dfrac{\mathrm{d}\mathbf{i}_{12}}{\mathrm{d}t}
-  + \mathbf{v}_2-\mathbf{v}_1
-```
-
-### Algebraic Equations
-
-```math
-\begin{aligned}
-0 &= \mathbf{G}\mathbf{v}_2
-  + \mathbf{C}\dfrac{\mathrm{d}\mathbf{v}_2}{\mathrm{d}t}
-  + 2\mathbf{i}_2^\mathrm{sh} \\
-0 &= \mathbf{G}\mathbf{v}_1
-  + \mathbf{C}\dfrac{\mathrm{d}\mathbf{v}_1}{\mathrm{d}t}
-  + 2\mathbf{i}_1^\mathrm{sh}
-\end{aligned}
-```

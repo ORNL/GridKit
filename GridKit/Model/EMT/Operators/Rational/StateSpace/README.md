@@ -5,12 +5,8 @@ real or complex poles and factorized residue terms. For pole count $Q$, define
 the pole-index set
 
 ```math
-\mathcal{Q} = \{q \in \mathbb{Z}_{>0} \mid q \le Q\}.
+\mathcal{Q} = \{q \in \mathbb{Z}_{>0} \mid q \le Q\}
 ```
-
-Thus $\mathcal{Q}$ is empty when $Q=0$.
-
-Then
 
 ```math
 \mathbf{H}(s) \approx \mathbf{D} + s\mathbf{E}
@@ -49,21 +45,17 @@ $\mathbf{B}$ | $[\mathrm{s}^{-1}]$ | `B` | Input matrix | $\mathbf{B} \in \mathb
 
 ### Parameter Validation
 
-The input and output dimensions are positive integers, and the pole count is a
-nonnegative integer. Let $\mathcal{Q}_\mathrm{r} \subseteq \mathcal{Q}$ contain
+Let $\mathcal{Q}_\mathrm{r} \subseteq \mathcal{Q}$ contain
 the real-pole indices and
 $\mathcal{Q}_\mathrm{c} \subseteq \mathcal{Q}$ the first indices of the
 nonreal conjugate pairs. Define their partner-index set as
 
 ```math
 \mathcal{Q}_\mathrm{c}^{+}
-  = \{q+1 \mid q \in \mathcal{Q}_\mathrm{c}\}.
+  = \{q+1 \mid q \in \mathcal{Q}_\mathrm{c}\}
 ```
 
-The three sets $\mathcal{Q}_\mathrm{r}$, $\mathcal{Q}_\mathrm{c}$, and
-$\mathcal{Q}_\mathrm{c}^{+}$ are pairwise disjoint and together contain every
-pole index. Real poles have real factors, and each nonreal pole and its factors
-are followed by their conjugates.
+The sets $\mathcal{Q}_\mathrm{r}$, $\mathcal{Q}_\mathrm{c}$, and $\mathcal{Q}_\mathrm{c}^{+}$ are pairwise disjoint.
 
 ```math
 \begin{aligned}
@@ -95,10 +87,10 @@ p_{q+1} &= p_q^{\ast},
 \mathbf{P} &= \mathrm{diag}(p_1,\ldots,p_Q) \\
 \mathbf{a} &= \mathrm{Re}(\mathbf{p}) \\
 \boldsymbol{\omega} &= \mathrm{Im}(\mathbf{p}) \\
-\mathbf{C}_{\mathrm{r}} &= \mathrm{Re}(\mathbf{C}) \\
-\mathbf{C}_{\mathrm{i}} &= \mathrm{Im}(\mathbf{C}) \\
-\mathbf{B}_{\mathrm{r}} &= \mathrm{Re}(\mathbf{B}) \\
-\mathbf{B}_{\mathrm{i}} &= \mathrm{Im}(\mathbf{B})
+\mathbf{C}_r &= \mathrm{Re}(\mathbf{C}) \\
+\mathbf{C}_i &= \mathrm{Im}(\mathbf{C}) \\
+\mathbf{B}_r &= \mathrm{Re}(\mathbf{B}) \\
+\mathbf{B}_i &= \mathrm{Im}(\mathbf{B})
 \end{aligned}
 ```
 
@@ -114,6 +106,10 @@ $\mathbf{y}$ | `out` | Output | $[y]$ | Output vector port | $\mathbf{y} \in \ma
 None.
 
 ### Submodel Validation
+
+None.
+
+### Submodel Wiring
 
 None.
 
@@ -161,10 +157,10 @@ $\mathbf{u}$ | $[u]$ | Input vector | Algebraic-input configuration, $\mathbf{u}
      \quad q \in \mathcal{Q}_\mathrm{r} \\
 0 &= -\dfrac{\mathrm{d}w_q}{\mathrm{d}t}
      + a_qw_q-\omega_qv_q
-     + (\mathbf{B}_{\mathrm{r}})_{q,:}\mathbf{u} \\
+     + (\mathbf{B}_r)_{q,:}\mathbf{u} \\
 0 &= -\dfrac{\mathrm{d}v_q}{\mathrm{d}t}
      + \omega_qw_q+a_qv_q
-     + (\mathbf{B}_{\mathrm{i}})_{q,:}\mathbf{u},
+     + (\mathbf{B}_i)_{q,:}\mathbf{u},
      \quad q \in \mathcal{Q}_\mathrm{c}
 \end{aligned}
 ```
@@ -182,16 +178,13 @@ None.
   + \sum_{q \in \mathcal{Q}_\mathrm{r}}
     \mathbf{C}_{:,q}w_q
   + 2\sum_{q \in \mathcal{Q}_\mathrm{c}}
-    ((\mathbf{C}_{\mathrm{r}})_{:,q}w_q
-    -(\mathbf{C}_{\mathrm{i}})_{:,q}v_q)
+    ((\mathbf{C}_r)_{:,q}w_q
+    -(\mathbf{C}_i)_{:,q}v_q)
 ```
-
-For algebraic input, $\mathbf{E}=\mathbf{0}$ and the input-derivative term
-vanishes.
 
 ## Initialization
 
-None beyond the EMT initialization contract.
+None.
 
 ## Monitors
 

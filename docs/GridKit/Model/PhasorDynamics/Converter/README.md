@@ -7,7 +7,6 @@
 
 REGCA <REGCA/README>
 REGCB <REGCB/README>
-REECA <REECA/README>
 ```
 
 ```{include} ../../../../../GridKit/Model/PhasorDynamics/Converter/README.md
