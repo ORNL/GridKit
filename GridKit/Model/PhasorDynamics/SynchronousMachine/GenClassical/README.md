@@ -1,30 +1,57 @@
-# Classical Generator
+# **Classical Generator Model (GENCLS)**
 
-An electrical machine model with two differential variables (i.e. second-order
-model) is often called classical generator model. While its predictive ability
-is limited, it is useful for studies of grid network properties. Mathematically,
-it is equivalent to a driven damped pendulum model.
+GENCLS is the 2nd order synchronous machine model: a constant transient EMF
+behind the transient reactance. See the
+[General Synchronous Machine Model](../README.md) for general synchronous
+machine information.
+
+## Notes
+
+- No field dynamics: the `efd` input is the EMF behind $X'_d$ and is held
+  constant when unconnected.
+- No saliency and no saturation.
 
 ## Model Parameters
 
-Symbol      | Units   | Description                     | Note
-------------|---------|---------------------------------|----------------------
-$P_0$       | [p.u.]  | initial active power injection  |
-$Q_0$       | [p.u.]  | initial reactive power injection |
-$H$         | [s]     | rotor inertia                   |
-$D$         | [p.u.]  | damping coefficient             |
-$R_a$       | [p.u.]  | winding resistance              |
-$X_{dp}$    | [p.u.]  | machine reactance parameter     |
-$S_\mathrm{mach}$ | [MVA] | machine power base        |
+Symbol            | Units  | JSON  | Description                      | Typical Value | Note
+------------------|--------|-------|----------------------------------|---------------|------
+$P_0$             | [p.u.] | `p0`  | Initial active power injection   | 1.0           | System base; required initialization source
+$Q_0$             | [p.u.] | `q0`  | Initial reactive power injection | 0.0           | System base; required initialization source
+$S^\mathrm{base}$ | [MVA]  | `mva` | Machine component power base     | 100.0         |
+$H$               | [sec]  | `H`   | Rotor inertia                    | 3.0           |
+$D$               | [p.u.] | `D`   | Damping coefficient              | 0.0           |
+$R_a$             | [p.u.] | `Ra`  | Armature resistance              | 0.0           | Component base
+$X'_d$            | [p.u.] | `Xdp` | Direct-axis transient reactance  | 0.2           | Component base
+
+### Parameter Validation
+
+None.
 
 ### Model Derived Parameters
 
-- $G = \dfrac{R_a}{R_a^2 + X_{dp}^2} ~~~$ equivalent stator winding conductance
-- $B = \dfrac{-X_{dp}}{R_a^2 + X_{dp}^2} ~~~$ equivalent stator winding susceptance
-- $f_\mathrm{base} = f_\mathrm{sys} ~~~$ frequency base taken from the system at initialization
-- $S_\mathrm{mach,VA} = 10^6 S_\mathrm{mach} ~~~$ derived machine base used for machine-base/system-base conversions
+```math
+\begin{aligned}
+  G
+    &= \dfrac{R_a}{R_a^2+(X'_d)^2} \\
+  B
+    &= -\dfrac{X'_d}{R_a^2+(X'_d)^2} \\
+  k_\mathrm{base}
+    &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}}
+\end{aligned}
+```
 
-<br>
+Multiplying by $k_\mathrm{base}$ converts system base to component base;
+$S^\mathrm{sys}$ and $S^\mathrm{base}$ are stored in VA and $f^\mathrm{sys}$
+is the system frequency base in Hz.
+
+## Model Ports
+
+Name    | Port   | Init    | Description
+--------|--------|---------|------------
+`bus`   | Bus    | Known   | Terminal bus voltage
+`pmech` | Input  | Unknown | Mechanical-power input
+`efd`   | Input  | Unknown | Field-voltage input
+`speed` | Output | Known   | Speed-deviation output
 
 ## Model Variables
 
@@ -32,29 +59,20 @@ $S_\mathrm{mach}$ | [MVA] | machine power base        |
 
 #### Differential
 
-Symbol      | Units   | Description         | Note
-------------|---------|---------------------|----------------------
-$\delta$    | [rad]   | machine power angle |
-$\omega$    | [p.u]   | machine speed deviation       | Optionally read by a governor or a stabilizer component
+Symbol   | Units  | Description         | Note
+---------|--------|---------------------|------
+$\delta$ | [rad]  | Rotor angle         |
+$\omega$ | [p.u.] | Speed deviation     | Exported through `speed` when assigned
 
 #### Algebraic
 
-Symbol  | Units  | Description                         | Note
---------|--------|-------------------------------------|-------------
-$T_{e}$ | [p.u.] | electrical torque                   |
-$I_r$   | [p.u.] | machine real injection current      | read by bus
-$I_i$   | [p.u.] | machine imaginary injection current | read by bus
-
-Note: All three can be expressed as a function called by the model equations. We add
-these as variables as they are needed for outputs.
-
-<br>
+Symbol         | Units  | Description                           | Note
+---------------|--------|---------------------------------------|------
+$T_\mathrm{e}$ | [p.u.] | Electrical torque                     | Component base
+$I_\mathrm{r}$ | [p.u.] | Terminal current, real component      | Component base
+$I_\mathrm{i}$ | [p.u.] | Terminal current, imaginary component | Component base
 
 ### External Variables
-
-External variables enter component model equations but are owned by other
-components. The other components also provide equations needed to have a
-balanced system of equations. 
 
 #### Differential
 
@@ -62,115 +80,96 @@ None.
 
 #### Algebraic
 
-Symbol | Units   | Description                   | Note
--------|---------|-------------------------------|----------------------
-$V_r$  | [p.u.]  | machine bus real voltage      | owned by a bus object
-$V_i$  | [p.u.]  | machine bus imaginary voltage | owned by a bus object
-$P_m$  | [p.u.]  | mechanical power input        | owned by governor, constant if no governor is connected to the machine
-$E_p$  | [p.u.]  | field winding voltage         | owned by exciter, constant if no exciter is connected to the machine
-
-<br>
-
+Symbol          | Units  | Init    | Description                           | Note
+----------------|--------|---------|---------------------------------------|------
+$V_\mathrm{r}$  | [p.u.] | Known   | Terminal voltage, real component      | Bus input
+$V_\mathrm{i}$  | [p.u.] | Known   | Terminal voltage, imaginary component | Bus input
+$P_\mathrm{m}$  | [p.u.] | Unknown | Mechanical power                      | Optional signal port `pmech`; system base
+$E_\mathrm{fd}$ | [p.u.] | Unknown | Field voltage                         | Optional signal port `efd`; component base
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
 
-```math 
-\begin{aligned}
-\dot{\delta} &= \omega \cdot 2\pi f_\mathrm{base} \\
-\dot{\omega} &= \frac{1}{2H}\left( \frac{P_{m} - D\omega}{1+\omega}   - T_{e}\right)
-\end{aligned}
-```
-
-### Algebraic Equations
+#### Differential
 
 ```math
 \begin{aligned}
-    0 &= T_{e} - \left( G E_p^2 - E_p \left[(G V_r - B V_i)\cos\delta + (B V_r + G V_i)\sin\delta \right]\right) \\
-    0 &= I_r + G V_r - B V_i - E_p(G \cos\delta - B \sin\delta) \\
-    0 &= I_i + B V_r + G V_i - E_p(B \cos\delta + G \sin\delta)
+  0 &= -\dot\delta + 2\pi f^\mathrm{sys}\omega \\
+  0 &= -\dot\omega + \dfrac{1}{2H}\left(\dfrac{k_\mathrm{base}P_\mathrm{m}-D\omega}{1+\omega}-T_\mathrm{e}\right)
 \end{aligned}
 ```
-As noted earlier, all three algebraic equations can be expressed as functions
-and substituted directly in the component and bus equations, respectively. We
-use redundant variables for modeling convenience.
 
-<br>
+#### Algebraic
+
+```math
+\begin{aligned}
+  0 &= -T_\mathrm{e} + GE_\mathrm{fd}^2 - E_\mathrm{fd}\left[(GV_\mathrm{r}-BV_\mathrm{i})\cos(\delta)+(BV_\mathrm{r}+GV_\mathrm{i})\sin(\delta)\right] \\
+  0 &= -I_\mathrm{r} + E_\mathrm{fd}(G\cos(\delta)-B\sin(\delta)) - GV_\mathrm{r} + BV_\mathrm{i} \\
+  0 &= -I_\mathrm{i} + E_\mathrm{fd}(B\cos(\delta)+G\sin(\delta)) - BV_\mathrm{r} - GV_\mathrm{i}
+\end{aligned}
+```
+
+### External Equations
+
+```math
+\begin{aligned}
+  \Delta I^\mathrm{bus}_\mathrm{r} &\mathrel{+}= \dfrac{I_\mathrm{r}}{k_\mathrm{base}} \\
+  \Delta I^\mathrm{bus}_\mathrm{i} &\mathrel{+}= \dfrac{I_\mathrm{i}}{k_\mathrm{base}}
+\end{aligned}
+```
 
 ## Initialization
 
-To initialize the model, given bus voltages $V_r$, $V_i$, and initial generator
-injection active and reactive power, $P$ and $Q$, we take following steps to
-initialize the system:
+### Input Initialization
 
-Complex power is defined as
-```math
-S=VI^{*}
-```
-or
-```math
-P + jQ = (V_r + j V_i)(I_r - j I_i).
-```
-From here, we compute injection currents from the initial power injection and bus
-voltages as
 ```math
 \begin{aligned}
-I_r &= \frac{PV_r + QV_i}{V_r^2 + V_i^2} \\
-I_i &= \frac{PV_i - QV_r}{V_r^2 + V_i^2}
-\end{aligned} 
-```
-
-We substitute the expressions above into equations for current injections and
-obtain
-```math
-\begin{aligned}
-E_p \sin\delta &= \dfrac{-B I_r + G I_i}{G^2 + B^2} + V_i \\
-E_p \cos\delta &= \dfrac{G I_r + B I_i}{G^2 + B^2} + V_r
-\end{aligned}
-```
-By dividing these two equations, we get an expression for the machine angle at the
-steady state:
-```math
-\delta = \arctan \dfrac{E_i}{E_r} \, ,
-```
-And by squaring and adding them, we get an expression for the field
-winding voltage at the steady state
-```math
-E_p = \sqrt{E_r^2 + E_i^2}   \, ,
-```
-where
-```math
-\begin{aligned}
-E_r &= \dfrac{G I_r + B I_i}{G^2 + B^2} + V_r \, ,\\
-E_i &= \dfrac{-B I_r + G I_i}{G^2 + B^2} + V_i \, .
+  V_\mathrm{r}, V_\mathrm{i}
+    &\leftarrow \text{terminal-bus voltage} \\
+  P_0, Q_0
+    &\leftarrow \text{power-flow injection on system base}
 \end{aligned}
 ```
 
-Next, we set the machine speed deviation to zero:
-```math
-\omega = 0
-```
+### Internal Initialization
 
-Now, we can compute the electrical torque and set the mechanical torque to be equal
-to the electrical:
+All internal derivatives are initialized to zero:
+
 ```math
 \begin{aligned}
-T_{e} &= G E_p^2 - E_p \left[ (G V_r - B V_i ) \cos\delta + (B V_r + G V_i )\sin\delta \right] \\
-P_{m} &= T_{e} 
-\end{aligned} 
+  I_\mathrm{r}
+    &\leftarrow k_\mathrm{base}\dfrac{V_\mathrm{r}P_0+V_\mathrm{i}Q_0}{V_\mathrm{r}^2+V_\mathrm{i}^2} \\
+  I_\mathrm{i}
+    &\leftarrow k_\mathrm{base}\dfrac{V_\mathrm{i}P_0-V_\mathrm{r}Q_0}{V_\mathrm{r}^2+V_\mathrm{i}^2} \\
+  \delta
+    &\leftarrow \text{arg}\left[V_\mathrm{r}+jV_\mathrm{i}+(R_a+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})\right] \\
+  \omega
+    &\leftarrow 0 \\
+  T_\mathrm{e}
+    &\leftarrow V_\mathrm{r}I_\mathrm{r}+V_\mathrm{i}I_\mathrm{i}+R_a(I_\mathrm{r}^2+I_\mathrm{i}^2)
+\end{aligned}
 ```
 
-With this, we initialize the machine at a steady state.
+### Output Initialization
 
+```math
+\begin{aligned}
+  P_\mathrm{m}
+    &\leftarrow \dfrac{T_\mathrm{e}}{k_\mathrm{base}} \\
+  E_\mathrm{fd}
+    &\leftarrow \left|V_\mathrm{r}+jV_\mathrm{i}+(R_a+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})\right|
+\end{aligned}
+```
 
-## Model Outputs
+## Monitors
 
-Symbol     | Units  | Description                       | Note
------------|--------|-----------------------------------|------
-$I_r$      | [p.u.] | Terminal current, real component on network reference frame | Oriented leaving the machine, system base
-$I_i$      | [p.u.] | Terminal current, imaginary component on network reference frame | Oriented leaving the machine, system base
-$P$        | [p.u.] | Active power, $V_rI_r+V_iI_i$     | Oriented leaving the machine, system base
-$Q$        | [p.u.] | Reactive power, $V_iI_r-V_rI_i$   | Oriented leaving the machine, system base
-$\delta$   | [rad]  | Machine internal rotor angle      |
-$\omega$   | [p.u.] | Machine speed deviation           | $\omega=0$ at synchronous speed
+Monitor | Units  | Description                           | Note
+--------|--------|---------------------------------------|------
+`ir`    | [p.u.] | Terminal current, real component      | System base; oriented leaving the machine
+`ii`    | [p.u.] | Terminal current, imaginary component | System base; oriented leaving the machine
+`p`     | [p.u.] | Active power                          | System base; $V_\mathrm{r}I_\mathrm{r}+V_\mathrm{i}I_\mathrm{i}$
+`q`     | [p.u.] | Reactive power                        | System base; $V_\mathrm{i}I_\mathrm{r}-V_\mathrm{r}I_\mathrm{i}$
+`delta` | [rad]  | Rotor angle                           |
+`omega` | [p.u.] | Speed deviation                       | $\omega=0$ at synchronous speed
+`speed` | [p.u.] | Per-unit machine speed                | $1+\omega$

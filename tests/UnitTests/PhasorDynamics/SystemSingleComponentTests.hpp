@@ -410,7 +410,8 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus);
+        PhasorDynamics::GenClassicalData<RealT, IdxT> data;
+        PhasorDynamics::GenClassical<ScalarT, IdxT>   gen(&bus, data);
         system->addComponent(&gen);
 
         success *= system->allocate() == 0;

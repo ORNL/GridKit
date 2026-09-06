@@ -5,7 +5,6 @@
  * @brief Tests for classical generator model.
  *
  */
-#include <iomanip>
 #include <iostream>
 #include <numbers>
 #include <sstream>
@@ -13,7 +12,7 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -61,10 +60,11 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+        auto* bus  = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+        auto  data = makeGenClassicalData();
 
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
-            new PhasorDynamics::GenClassical<ScalarT, IdxT>(bus);
+            new PhasorDynamics::GenClassical<ScalarT, IdxT>(bus, data);
 
         success *= (machine != nullptr);
 
@@ -78,77 +78,165 @@ namespace GridKit
       }
 
       /**
-       * A test case to verify residual values
+       * @brief Checks initialized state against hand-computed values.
+       */
+      TestOutcome initial()
+      {
+        TestStatus success = true;
+
+        using Parameter = typename GenClassicalDataT::Parameters;
+
+        auto data                       = makeGenClassicalData();
+        data.parameters[Parameter::p0]  = RealT{3.0};
+        data.parameters[Parameter::q0]  = RealT{-1.0};
+        data.parameters[Parameter::H]   = RealT{1.0};
+        data.parameters[Parameter::D]   = RealT{1.0};
+        data.parameters[Parameter::Ra]  = RealT{0.1};
+        data.parameters[Parameter::Xdp] = RealT{2.3};
+
+        const std::vector<ScalarT> var_answer = {
+            3.0 * std::numbers::pi_v<RealT> / 4.0, // delta
+            0.0,                                   // omega
+            3.5,                                   // Te
+            1.0,                                   // Ir
+            2.0,                                   // Ii
+        };
+
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 1.0);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+
+        bus.allocate();
+        bus.initialize();
+        gen.allocate();
+        gen.initialize();
+
+        const auto* y  = gen.y().getData();
+        const auto* yp = gen.yp().getData();
+        for (size_t i = 0; i < var_answer.size(); ++i)
+        {
+          if (!isEqual(y[i], var_answer[i], tol_))
+          {
+            std::cout << "Incorrect result: "
+                      << y[i] << " != " << var_answer[i] << "\n";
+            success = false;
+            break;
+          }
+
+          if (!isEqual(yp[i], 0.0, tol_))
+          {
+            std::cout << "Incorrect result: "
+                      << yp[i] << " != 0\n";
+            success = false;
+            break;
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Checks residual evaluation at initialized steady state.
        */
       TestOutcome residual()
       {
         TestStatus success = true;
 
-        // Classical generator parameters
-        RealT H{0.5};
-        RealT D{-1.0};
-        RealT Ra{0.5};
-        RealT Xdp{0.5};
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
+        auto                                        data = makeGenClassicalData();
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
 
-        // Classical generator inputs
-        RealT Pm{1.0};
-        RealT Ep{2.0};
-
-        ScalarT Vr1{1.0}; ///< Bus-1 real voltage
-        ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
-
-        // Test answer keys
-        const std::vector<ScalarT> res_answer = {0.0,
-                                                 -0.5,
-                                                 -6.0,
-                                                 2.0,
-                                                 -6.0};
-
-        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1.0, 1.0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
+        bus.evaluateResidual();
 
-        // Allocate but not initialize genrator model
         gen.allocate();
-        gen.setPmech(Pm);
-        gen.setEp(Ep);
-
-        // Set variable values matching the answer key
-        auto* y  = gen.y().getData();
-        auto* yp = gen.yp().getData();
-
-        static constexpr auto pi = std::numbers::pi_v<RealT>;
-
-        y[0] = pi;   // delta
-        y[1] = 1.0;  // omega
-        y[2] = 2.0;  // telec
-        y[3] = -2.0; // ir
-        y[4] = -4.0; // ii
-
-        // Set derivative values matching the answer key
-        yp[0] = 2 * pi * 60.0; // delta_dot
-        yp[1] = -1.5;          // omega_dot
-        yp[2] = 0;
-        yp[3] = 0;
-        yp[4] = 0;
-
-        gen.y().setDataUpdated();
-        gen.yp().setDataUpdated();
+        gen.initialize();
         gen.evaluateResidual();
-        auto&       residual      = gen.getResidual();
-        const auto* residual_data = residual.getData();
 
-        for (size_t i = 0; i < res_answer.size(); ++i)
+        const auto& f      = gen.getResidual();
+        const auto* f_data = f.getData();
+        for (std::size_t i = 0; i < f.getSize(); ++i)
         {
-          if (!isEqual(residual_data[i], res_answer[i], tol_))
+          if (!isEqual(f_data[i], 0.0, tol_))
           {
-            std::cout << "Incorrect result for residual " << i << ": "
-                      << residual_data[i] << " != " << res_answer[i] << "\n";
             success = false;
             break;
           }
         }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Checks initialized steady state with nonzero armature resistance.
+       */
+      TestOutcome residual_nonzero_ra()
+      {
+        TestStatus success = true;
+
+        using Parameter = typename GenClassicalDataT::Parameters;
+
+        auto data                       = makeGenClassicalData();
+        data.parameters[Parameter::p0]  = RealT{3.0};
+        data.parameters[Parameter::q0]  = RealT{-1.0};
+        data.parameters[Parameter::H]   = RealT{1.0};
+        data.parameters[Parameter::D]   = RealT{1.0};
+        data.parameters[Parameter::Ra]  = RealT{0.6};
+        data.parameters[Parameter::Xdp] = RealT{0.2};
+
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 1.0);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+
+        gen.allocate();
+        gen.initialize();
+        gen.evaluateResidual();
+
+        const auto& f      = gen.getResidual();
+        const auto* f_data = f.getData();
+        for (std::size_t i = 0; i < f.getSize(); ++i)
+        {
+          if (!isEqual(f_data[i], 0.0, tol_))
+          {
+            success = false;
+            break;
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Checks GenClassical uses the configured system frequency base.
+       */
+      TestOutcome frequency_base()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
+        auto                                        data = makeGenClassicalData();
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+
+        bus.allocate();
+        bus.initialize();
+
+        gen.setSystemBase(50.0, 100.0e6);
+        gen.allocate();
+
+        auto* y  = gen.y().getData();
+        auto* yp = gen.yp().getData();
+        y[1]     = 1.0;
+        yp[0]    = TWO<RealT> * std::numbers::pi_v<RealT> * 50.0;
+
+        gen.y().setDataUpdated();
+        gen.yp().setDataUpdated();
+        gen.evaluateResidual();
+
+        const auto* f  = gen.getResidual().getData();
+        success       *= isEqual(f[0], 0.0, tol_);
 
         return success.report(__func__);
       }
@@ -203,99 +291,132 @@ namespace GridKit
       }
 
       /**
-       *
-       * Verifies correctness of the system initialization
+       * @brief Checks the speed output and the seeded pmech and efd inputs.
        */
-      TestOutcome initial()
+      TestOutcome signals()
       {
         TestStatus success = true;
 
-        // Classical generator parameters
-        RealT p0{3.0};
-        RealT q0{-1.0};
-        RealT H{1.0};
-        RealT D{1.0};
-        RealT Ra{0.1};
-        RealT Xdp{2.3};
+        using Parameter = typename GenClassicalDataT::Parameters;
+        using Internal  = PhasorDynamics::GenClassicalInternalVariables;
+        using External  = PhasorDynamics::GenClassicalExternalVariables;
 
-        ScalarT Vr1{1.0}; ///< Bus-1 real voltage
-        ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
+        auto data                       = makeGenClassicalData();
+        data.parameters[Parameter::mva] = RealT{50.0};
 
-        // Test answer keys
-        const std::vector<ScalarT> var_answer = {
-            3.0 * std::numbers::pi_v<RealT> / 4.0, // delta
-            0.0,                                   // omega
-            3.5,                                   // Te
-            1.0,                                   // Ir
-            2.0,                                   // Ii
-        };
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>   speed;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>   pmech;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>   efd;
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
 
-        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, p0, q0, H, D, Ra, Xdp);
+        ScalarT pmech_value{0.0};
+        ScalarT efd_value{0.0};
+        IdxT    index{0};
+        pmech.set(&pmech_value, &index);
+        efd.set(&efd_value, &index);
+
+        gen.getSignals().template assignSignalNode<Internal::OMEGA>(&speed);
+        gen.getSignals().template attachSignalNode<External::PM>(&pmech);
+        gen.getSignals().template attachSignalNode<External::EFD>(&efd);
+
         bus.allocate();
         bus.initialize();
+        bus.evaluateResidual();
+
+        gen.setSystemBase(60.0, 100.0e6);
         gen.allocate();
+        success *= gen.verify() == 0;
+        success *= speed.linked();
+
         gen.initialize();
+        gen.evaluateResidual();
 
-        const auto* y  = gen.y().getData();
-        const auto* yp = gen.yp().getData();
-        for (size_t i = 0; i < var_answer.size(); ++i)
+        // With Ra = 0 the seeded system-base mechanical power equals p0.
+        success *= isEqual(speed.read(), 0.0, tol_);
+        success *= isEqual(pmech.read(), 1.0, tol_);
+        success *= isEqual(efd.read(), std::sqrt(RealT{2.0}), tol_);
+
+        const auto& f      = gen.getResidual();
+        const auto* f_data = f.getData();
+        for (std::size_t i = 0; i < f.getSize(); ++i)
         {
-          if (!isEqual(y[i], var_answer[i], tol_))
-          {
-            std::cout << "Incorrect result: "
-                      << y[i] << " != " << var_answer[i] << "\n";
-            success = false;
-            break;
-          }
-
-          if (!isEqual(yp[i], 0.0, tol_))
-          {
-            std::cout << "Incorrect result: "
-                      << yp[i] << " != 0\n";
-            success = false;
-            break;
-          }
+          success *= isEqual(f_data[i], 0.0, tol_);
         }
 
         return success.report(__func__);
       }
 
       /**
-       * Verifies the residual evaluates to zero for the initial conditions
+       * @brief Verifies residual equations against hard-coded values.
        */
-      TestOutcome zeroInitialResidual()
+      TestOutcome hard_coded_residual()
       {
         TestStatus success = true;
 
-        // Classical generator parameters
-        RealT p0{3.0};
-        RealT q0{-1.0};
-        RealT H{1.0};
-        RealT D{1.0};
-        RealT Ra{0.6};
-        RealT Xdp{0.2};
+        using Parameter = typename GenClassicalDataT::Parameters;
+        using External  = PhasorDynamics::GenClassicalExternalVariables;
 
-        ScalarT Vr1{1.0}; ///< Bus real voltage
-        ScalarT Vi1{1.0}; ///< Bus imaginary voltage
+        auto data                       = makeGenClassicalData();
+        data.parameters[Parameter::p0]  = RealT{1.0};
+        data.parameters[Parameter::q0]  = RealT{1.0};
+        data.parameters[Parameter::H]   = RealT{0.5};
+        data.parameters[Parameter::D]   = RealT{-1.0};
+        data.parameters[Parameter::Ra]  = RealT{0.5};
+        data.parameters[Parameter::Xdp] = RealT{0.5};
 
-        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, p0, q0, H, D, Ra, Xdp);
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 1.0);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>   pmech;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>   efd;
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+
+        ScalarT pmech_value{1.0};
+        ScalarT efd_value{2.0};
+        IdxT    index{0};
+        pmech.set(&pmech_value, &index);
+        efd.set(&efd_value, &index);
+
+        gen.getSignals().template attachSignalNode<External::PM>(&pmech);
+        gen.getSignals().template attachSignalNode<External::EFD>(&efd);
+
+        const std::vector<ScalarT> res_answer = {
+            0.0,
+            -0.5,
+            -6.0,
+            2.0,
+            -6.0};
+
         bus.allocate();
         bus.initialize();
-        gen.allocate();
-        gen.initialize();
-        gen.evaluateResidual();
-        auto&       res      = gen.getResidual();
-        const auto* res_data = res.getData();
-        const auto* yp       = gen.yp().getData();
 
-        for (size_t i = 0; i < res.getSize(); ++i)
+        gen.allocate();
+
+        auto* y  = gen.y().getData();
+        auto* yp = gen.yp().getData();
+
+        static constexpr auto pi = std::numbers::pi_v<RealT>;
+
+        y[0] = pi;   // delta
+        y[1] = 1.0;  // omega
+        y[2] = 2.0;  // telec
+        y[3] = -2.0; // ir
+        y[4] = -4.0; // ii
+
+        yp[0] = 2.0 * pi * 60.0; // delta_dot
+        yp[1] = -1.5;            // omega_dot
+
+        gen.y().setDataUpdated();
+        gen.yp().setDataUpdated();
+        gen.evaluateResidual();
+        auto&       residual      = gen.getResidual();
+        const auto* residual_data = residual.getData();
+
+        for (size_t i = 0; i < res_answer.size(); ++i)
         {
-          if (!isEqual(res_data[i], 0.0, tol_))
+          if (!isEqual(residual_data[i], res_answer[i], tol_))
           {
-            std::cout << "Incorrect result: "
-                      << yp[i] << " != 0\n";
+            std::cout << "Incorrect result for residual " << i << ": "
+                      << residual_data[i] << " != " << res_answer[i] << "\n";
             success = false;
             break;
           }
@@ -306,83 +427,70 @@ namespace GridKit
 
 #ifdef GRIDKIT_ENABLE_ENZYME
       /**
-       * A test case to verify Jacobian values
+       * @brief Checks Jacobian evaluation.
        */
       TestOutcome jacobian()
       {
         TestStatus success = true;
 
-        // Classical generator parameters
-        RealT H{0.5};
-        RealT D{-1.0};
-        RealT Ra{0.5};
-        RealT Xdp{0.5};
+        auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
-        // Jacobian via DependencyTracking
-        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian(H, D, Ra, Xdp);
+        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian();
+        std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian              = EnzymeJacobian();
 
-        // Jacobian via Enzyme
-        std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(H, D, Ra, Xdp);
-
-        /// Compare DependencyTracking dependencies to Enzyme's
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]));
+          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
         }
 
         return success.report(__func__);
       }
 
     private:
-      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
-          const RealT H, const RealT D, const RealT Ra, const RealT Xdp)
+      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian()
       {
-        DependencyTracking::Variable Vr1{1.0}; ///< Bus-1 real voltage
-        DependencyTracking::Variable Vi1{1.0}; ///< Bus-1 imaginary voltage
-
+        DependencyTracking::Variable                                     Vr1{1.0};
+        DependencyTracking::Variable                                     Vi1{1.0};
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<DependencyTracking::Variable, IdxT> gen(&bus, 1.0, 1.0, H, D, Ra, Xdp);
+        auto                                                             data = makeGenClassicalData();
+        PhasorDynamics::GenClassical<DependencyTracking::Variable, IdxT> gen(&bus, data);
 
         bus.allocate();
         gen.allocate();
 
-        // Get d/dy
         bus.initialize();
         gen.initialize();
 
         auto* gen_y = gen.y().getData();
         for (size_t i = 0; i < gen.size(); ++i)
         {
-          gen_y[i].setVariableNumber(i); ///< Generator independent variables
+          gen_y[i].setVariableNumber(i);
         }
         gen.y().setDataUpdated();
         auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus_y[i].setVariableNumber(i + gen.size()); // Bus independent variables
+          bus_y[i].setVariableNumber(i + gen.size());
         }
         bus.y().setDataUpdated();
 
         bus.evaluateResidual();
-        gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                ///< the dependencies
+        gen.evaluateResidual();
         auto&                                     residual_y_view = gen.getResidual();
         std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
-        // Get d/dy'
         bus.initialize();
         gen.initialize();
 
         auto* gen_yp = gen.yp().getData();
         for (size_t i = 0; i < gen.size(); ++i)
         {
-          gen_yp[i].setVariableNumber(i); ///< Generator independent variables
+          gen_yp[i].setVariableNumber(i);
         }
         gen.yp().setDataUpdated();
 
         bus.evaluateResidual();
-        gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                ///< the dependencies
+        gen.evaluateResidual();
         auto&                                     residual_yp_view = gen.getResidual();
         std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
 
@@ -397,7 +505,6 @@ namespace GridKit
           std::cout << "\n";
         }
 
-        // Extract the dependencies and add d/dy' to d/dy
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
         for (IdxT i = 0; i < residual_y.size(); ++i)
         {
@@ -420,7 +527,6 @@ namespace GridKit
             }
           }
 
-          // Insert yp dependencies that did not exist in the y dependencies
           for (const auto& pair_yp : dependency_yp)
           {
             auto index_yp = pair_yp.first;
@@ -436,14 +542,13 @@ namespace GridKit
         return dependencies;
       }
 
-      std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          const RealT H, const RealT D, const RealT Ra, const RealT Xdp)
+      std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian()
       {
-        ScalarT Vr1{1.0}; ///< Bus-1 real voltage
-        ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
-
+        ScalarT                                     Vr1{1.0};
+        ScalarT                                     Vi1{1.0};
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1.0, 1.0, H, D, Ra, Xdp);
+        auto                                        data = makeGenClassicalData();
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
 
         bus.allocate();
         gen.allocate();
@@ -455,8 +560,8 @@ namespace GridKit
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + gen.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + gen.size()); // Reset bus residual indices
+          bus.setVariableIndex(i, i + gen.size());
+          bus.setResidualIndex(i, i + gen.size());
         }
 
         bus.evaluateResidual();
@@ -472,7 +577,6 @@ namespace GridKit
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 #endif
-
     }; // class GenClassicalTests
 
   } // namespace Testing

@@ -2,8 +2,7 @@
  * @file GenClassicalImpl.hpp
  * @author Abdourahman Barry (abdourahman@vt.edu)
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Definition of a Classical generator model.
- *
+ * @brief Definition of a classical generator model.
  *
  */
 
@@ -15,54 +14,13 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /**
-     * @brief Constructor for a classical generator model
-     */
-    template <typename scalar_type, typename index_type>
-    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus)
-      : bus_(bus),
-        bus_id_(0),
-        p0_(0.0),
-        q0_(0.0),
-        H_(3.0),
-        D_(0.0),
-        Ra_(0.0),
-        Xdp_(0.5),
-        mva_base_(100.)
-    {
-      size_ = 5;
-      setDerivedParams();
-    }
-
-    /**
-     * @brief Constructor for a classical generator model
-     */
-    template <typename scalar_type, typename index_type>
-    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus,
-                                                        RealT p0,
-                                                        RealT q0,
-                                                        RealT H,
-                                                        RealT D,
-                                                        RealT Ra,
-                                                        RealT Xdp)
-      : bus_(bus),
-        bus_id_(0),
-        p0_(p0),
-        q0_(q0),
-        H_(H),
-        D_(D),
-        Ra_(Ra),
-        Xdp_(Xdp),
-        mva_base_(100.)
-    {
-      size_ = 5;
-      setDerivedParams();
-    }
+    using Log = ::GridKit::Utilities::Logger;
 
     /**
      * @brief Constructor for a classical generator model
@@ -72,8 +30,24 @@ namespace GridKit
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
+      initializeParameters(data);
+      initializeMonitor();
+
+      size_ = 5;
+      setDerivedParams();
+    }
+
+    template <typename scalar_type, typename index_type>
+    GenClassical<scalar_type, index_type>::~GenClassical()
+    {
+    }
+
+    /// Helper function to extract and assign model parameters from the model's associated
+    /// data structure.
+    template <typename scalar_type, typename index_type>
+    void GenClassical<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    {
       using Parameter = typename ModelDataT::Parameters;
-      using Buses     = typename ModelDataT::Buses;
       if (data.parameters.contains(Parameter::p0))
       {
         p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
@@ -108,21 +82,6 @@ namespace GridKit
       {
         mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
       }
-
-      if (data.buses.contains(Buses::bus))
-      {
-        bus_id_ = data.buses.at(Buses::bus);
-      }
-
-      initializeMonitor();
-
-      size_ = 5;
-      setDerivedParams();
-    }
-
-    template <typename scalar_type, typename index_type>
-    GenClassical<scalar_type, index_type>::~GenClassical()
-    {
     }
 
     template <typename scalar_type, typename index_type>
@@ -131,14 +90,16 @@ namespace GridKit
       return monitor_.get();
     }
 
+    // System base -> machine base when reading system values.
     template <typename scalar_type, typename index_type>
-    GenClassical<scalar_type, index_type>::ScalarT GenClassical<scalar_type, index_type>::toMachineBase(ScalarT value) const
+    scalar_type GenClassical<scalar_type, index_type>::toMachineBase(ScalarT value) const
     {
       return value * va_system_base_ / va_machine_base_;
     }
 
+    // Machine base -> system base for network and signal output.
     template <typename scalar_type, typename index_type>
-    GenClassical<scalar_type, index_type>::ScalarT GenClassical<scalar_type, index_type>::toSystemBase(ScalarT value) const
+    scalar_type GenClassical<scalar_type, index_type>::toSystemBase(ScalarT value) const
     {
       return value / toMachineBase(static_cast<ScalarT>(ONE<RealT>));
     }
@@ -147,6 +108,7 @@ namespace GridKit
     void GenClassical<scalar_type, index_type>::initializeMonitor()
     {
       using Variable = typename ModelDataT::MonitorableVariables;
+      // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
                     { return toSystemBase(y_.getData()[3]); });
       monitor_->set(Variable::ii, [this]
@@ -173,7 +135,7 @@ namespace GridKit
       return 0;
     }
 
-    /**
+    /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
     template <typename scalar_type, typename index_type>
@@ -195,47 +157,109 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Resize coupling data
+      // Resize bus data
       wb_.resize(2);
       h_.resize(2);
+
+      // Resize signal variable data
+      ws_.resize(2);
+      ws_indices_.resize(2);
+      ws_indices_[0] = INVALID_INDEX<IdxT>;
+      ws_indices_[1] = INVALID_INDEX<IdxT>;
+
+      // Set output signals
+      if (signals_.template isAssigned<GenClassicalInternalVariables::OMEGA>())
+      {
+        auto* y = y_.getData();
+        signals_.template getSignalNode<GenClassicalInternalVariables::OMEGA>()->set(&y[1], &(this->getVariableIndex(1)));
+      }
 
       allocated_ = true;
       return 0;
     }
 
     /**
+     * @brief verify method checks that attached signals are also linked
+     */
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::verify() const
+    {
+      static constexpr auto PM  = GenClassicalExternalVariables::PM;
+      static constexpr auto EFD = GenClassicalExternalVariables::EFD;
+
+      int ret = 0;
+
+      if (signals_.template isAttached<PM>())
+      {
+        if (!signals_.template isLinked<PM>())
+        {
+          Log::error() << "GenClassical: pmech signal attached with no linked governor\n";
+          ret += 1;
+        }
+      }
+
+      if (signals_.template isAttached<EFD>())
+      {
+        if (!signals_.template isLinked<EFD>())
+        {
+          Log::error() << "GenClassical: efd signal attached with no linked exciter\n";
+          ret += 1;
+        }
+      }
+
+      return ret;
+    }
+
+    /**
      * Initialization of the generator model
+     *
      */
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::initialize()
     {
-      ScalarT vr    = Vr();
-      ScalarT vi    = Vi();
-      ScalarT p     = toMachineBase(static_cast<ScalarT>(p0_));
-      ScalarT q     = toMachineBase(static_cast<ScalarT>(q0_));
-      ScalarT vm2   = vr * vr + vi * vi;
-      ScalarT ir    = (p * vr + q * vi) / vm2;
-      ScalarT ii    = (p * vi - q * vr) / vm2;
-      ScalarT Er    = Ra_ * ir - Xdp_ * ii + vr;
-      ScalarT Ei    = Ra_ * ii + Xdp_ * ir + vi;
+      // Network frame terminal values
+      ScalarT vr  = Vr();
+      ScalarT vi  = Vi();
+      ScalarT p   = toMachineBase(static_cast<ScalarT>(p0_));
+      ScalarT q   = toMachineBase(static_cast<ScalarT>(q0_));
+      ScalarT vm2 = vr * vr + vi * vi;
+      ScalarT ir  = (p * vr + q * vi) / vm2;
+      ScalarT ii  = (p * vi - q * vr) / vm2;
+
+      ScalarT Er    = vr + Ra_ * ir - Xdp_ * ii;
+      ScalarT Ei    = vi + Ra_ * ii + Xdp_ * ir;
       ScalarT delta = std::atan2(Ei, Er);
-      ScalarT omega = static_cast<ScalarT>(0.0);
-      ScalarT Ep    = std::sqrt(Er * Er + Ei * Ei);
-      ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
+      ScalarT omega(0.0);
+
+      ScalarT efd = std::sqrt(Er * Er + Ei * Ei);
+      ScalarT Te  = G_ * efd * efd - efd * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
 
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      y[0]       = delta;
-      y[1]       = omega;
-      y[2]       = Te;
-      y[3]       = ir;
-      y[4]       = ii;
-      pmech_set_ = Te;
-      ep_set_    = Ep;
+      y[0] = delta;
+      y[1] = omega;
+      y[2] = Te;
+      y[3] = ir;
+      y[4] = ii;
 
-      for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
-        yp[i] = 0.0;
+      // Convert Te to system base for governor PM signal.
+      pmech_set_ = toSystemBase(Te);
+      if (signals_.template isAttached<GenClassicalExternalVariables::PM>())
+      {
+        signals_.template writeExternalVariable<GenClassicalExternalVariables::PM>(pmech_set_);
+      }
+
+      efd_set_ = efd;
+      if (signals_.template isAttached<GenClassicalExternalVariables::EFD>())
+      {
+        signals_.template writeExternalVariable<GenClassicalExternalVariables::EFD>(efd_set_);
+      }
+
+      for (IdxT i = 0; i < size_; ++i)
+      {
+        yp[static_cast<size_t>(i)] = 0.0;
+      }
 
       y_.setDataUpdated();
       yp_.setDataUpdated();
@@ -280,40 +304,42 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateInternalResidual(
+    __attribute__((always_inline)) inline int GenClassical<scalar_type, index_type>::evaluateInternalResidual(
         const ScalarT* y,
         const ScalarT* yp,
         const ScalarT* wb,
+        const ScalarT* ws,
         ScalarT*       f)
     {
-      // Set variable aliases for better readability.
-      const ScalarT delta = y[0];
-      const ScalarT omega = y[1];
-      const ScalarT telec = y[2];
-      const ScalarT ir    = y[3];
-      const ScalarT ii    = y[4];
-      const ScalarT pmech = pmech_set_; /* Later optionally acquire from governor */
-      const ScalarT ep    = ep_set_;    /* Later optionally acquire from exciter */
+      /* Read variables */
+      ScalarT delta = y[0];
+      ScalarT omega = y[1];
+      ScalarT telec = y[2];
+      ScalarT ir    = y[3];
+      ScalarT ii    = y[4];
 
-      // Set derivative aliases for better readability
-      const ScalarT delta_dot = yp[0];
-      const ScalarT omega_dot = yp[1];
+      /* Read derivatives */
+      ScalarT delta_dot = yp[0];
+      ScalarT omega_dot = yp[1];
 
       // Set coupling variable aliases
-      const ScalarT vr = wb[0];
-      const ScalarT vi = wb[1];
+      ScalarT vr = wb[0];
+      ScalarT vi = wb[1];
+
+      // Set signal variable aliases
+      ScalarT pmech = toMachineBase(ws[0]);
+      ScalarT efd   = ws[1];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
-      // GenClassical differential equations
+      /* 2 GenClassical differential equations */
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
 
-      // GenClassical algebraic equations
-      f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));
-
-      f[3] = ir + G_ * vr - B_ * vi - ep * (G_ * std::cos(delta) - B_ * std::sin(delta));
-      f[4] = ii + B_ * vr + G_ * vi - ep * (B_ * std::cos(delta) + G_ * std::sin(delta));
+      /* 3 GenClassical algebraic equations */
+      f[2] = telec - (G_ * efd * efd - efd * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));
+      f[3] = ir - (efd * (G_ * std::cos(delta) - B_ * std::sin(delta)) - G_ * vr + B_ * vi);
+      f[4] = ii - (efd * (B_ * std::cos(delta) + G_ * std::sin(delta)) - B_ * vr - G_ * vi);
 
       return 0;
     }
@@ -323,38 +349,61 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateBusResidual(
+    __attribute__((always_inline)) inline int GenClassical<scalar_type, index_type>::evaluateBusResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
         [[maybe_unused]] const ScalarT* wb,
         ScalarT*                        h)
     {
-      const ScalarT ir = y[3];
-      const ScalarT ii = y[4];
-      h[0]             = toSystemBase(ir);
-      h[1]             = toSystemBase(ii);
+      ScalarT ir = y[3];
+      ScalarT ii = y[4];
+
+      // Convert current injection to system base for the network.
+      h[0] = toSystemBase(ir);
+      h[1] = toSystemBase(ii);
 
       return 0;
     }
 
     /**
-     * \brief Residual for the generator model.
+     * \brief Residual evaluation and contribution to the connected bus
      *
      */
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::evaluateResidual()
     {
+      auto* ws = ws_.getData();
+
+      // Mechanical Power
+      ws[0] = pmech_set_;
+      if (signals_.template isAttached<GenClassicalExternalVariables::PM>())
+      {
+        ws[0]          = signals_.template readExternalVariable<GenClassicalExternalVariables::PM>();
+        ws_indices_[0] = signals_.template readExternalVariableIndex<GenClassicalExternalVariables::PM>();
+      }
+
+      // Exciter Efield
+      ws[1] = efd_set_;
+      if (signals_.template isAttached<GenClassicalExternalVariables::EFD>())
+      {
+        ws[1]          = signals_.template readExternalVariable<GenClassicalExternalVariables::EFD>();
+        ws_indices_[1] = signals_.template readExternalVariableIndex<GenClassicalExternalVariables::EFD>();
+      }
+
+      // Bus voltages
       auto* wb = wb_.getData();
       wb[0]    = Vr();
       wb[1]    = Vi();
 
+      // Residual evaluation
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
       auto*       h  = h_.getData();
-      evaluateInternalResidual(y, yp, wb, f);
+      evaluateInternalResidual(y, yp, wb, ws, f);
       evaluateBusResidual(y, yp, wb, h);
 
+      // GenClassical contribution to bus algebraic equations
       Ir() += h[0];
       Ii() += h[1];
 

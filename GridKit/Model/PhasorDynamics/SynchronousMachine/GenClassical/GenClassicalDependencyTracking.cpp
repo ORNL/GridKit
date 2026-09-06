@@ -1,4 +1,3 @@
-
 #include "GenClassicalImpl.hpp"
 
 namespace GridKit
@@ -6,7 +5,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Jacobian evaluation not implemented
+     * @brief Jacobian evaluation not implemented yet
      *
      * @return int - error code, 0 = success
      */
@@ -14,14 +13,12 @@ namespace GridKit
     int GenClassical<scalar_type, index_type>::evaluateJacobian()
     {
       Log::misc() << "Evaluate Jacobian for GenClassical..." << std::endl;
-      Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
-
+      Log::misc() << "Jacobian evaluation not implemented!" << std::endl;
       return 0;
     }
 
     // Available template instantiations
     template class GenClassical<DependencyTracking::Variable, long int>;
     template class GenClassical<DependencyTracking::Variable, size_t>;
-
   } // namespace PhasorDynamics
 } // namespace GridKit

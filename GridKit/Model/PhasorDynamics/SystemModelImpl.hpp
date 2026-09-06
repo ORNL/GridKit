@@ -291,6 +291,28 @@ namespace GridKit
           bus_index = gendata.buses.at(GenClassicalBuses::bus);
         }
         auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
+
+        if (gendata.signal_outputs.contains(GenClassicalSignalOutputs::speed))
+        {
+          IdxT           speed = gendata.signal_outputs.at(GenClassicalSignalOutputs::speed);
+          constexpr auto OMEGA = GenClassicalInternalVariables::OMEGA;
+          gen->getSignals().template assignSignalNode<OMEGA>(getSignal(speed));
+        }
+
+        if (gendata.signal_inputs.contains(GenClassicalSignalInputs::pmech))
+        {
+          IdxT           pmech = gendata.signal_inputs.at(GenClassicalSignalInputs::pmech);
+          constexpr auto PM    = GenClassicalExternalVariables::PM;
+          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
+        }
+
+        if (gendata.signal_inputs.contains(GenClassicalSignalInputs::efd))
+        {
+          IdxT           efd = gendata.signal_inputs.at(GenClassicalSignalInputs::efd);
+          constexpr auto EFD = GenClassicalExternalVariables::EFD;
+          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
+        }
+
         addComponent(gen);
       }
 

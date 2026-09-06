@@ -24,6 +24,22 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
+/// Classical generator data sharing the machine parameters of the example
+GridKit::PhasorDynamics::GenClassicalData<real_type, index_type> genData(real_type p0, real_type q0)
+{
+  using Parameter = GridKit::PhasorDynamics::GenClassicalParameters;
+
+  GridKit::PhasorDynamics::GenClassicalData<real_type, index_type> data;
+  data.parameters[Parameter::p0]  = p0;
+  data.parameters[Parameter::q0]  = q0;
+  data.parameters[Parameter::H]   = 3.0;
+  data.parameters[Parameter::D]   = 0.1;
+  data.parameters[Parameter::Ra]  = 0.0;
+  data.parameters[Parameter::Xdp] = 0.2;
+
+  return data;
+}
+
 int main()
 {
   using namespace GridKit::PhasorDynamics;
@@ -52,15 +68,15 @@ int main()
   Branch<scalar_type, index_type> branch89(&bus8, &bus9, 0.001, 0.005, 0, 0);
   Branch<scalar_type, index_type> branch910(&bus9, &bus10, 0.001, 0.005, 0, 0);
 
-  GenClassical<scalar_type, index_type> gen2(&bus2, 0.5, -0.00442101, 3., 0.1, 0., 0.2);
-  GenClassical<scalar_type, index_type> gen3(&bus3, 0.5, -0.02510812, 3., 0.1, 0., 0.2);
-  GenClassical<scalar_type, index_type> gen4(&bus4, 0.5, -0.04339553, 3., 0.1, 0., 0.2);
-  GenClassical<scalar_type, index_type> gen5(&bus5, 0.5, -0.2334993, 3., 0.1, 0., 0.2);
-  GenClassical<scalar_type, index_type> gen6(&bus6, 0.5, 0.69907194, 3., 0.1, 0., 0.2);
-  GenClassical<scalar_type, index_type> gen7(&bus7, 0.5, -0.08318208, 3., 0.1, 0., 0.2);
-  GenClassical<scalar_type, index_type> gen8(&bus8, 0.5, -0.09123614, 3., 0.1, 0., 0.2);
-  GenClassical<scalar_type, index_type> gen9(&bus9, 0.5, -0.09662372, 3., 0.1, 0., 0.2);
-  GenClassical<scalar_type, index_type> gen10(&bus10, 0.5, -0.09932297, 3., 0.1, 0., 0.2);
+  GenClassical<scalar_type, index_type> gen2(&bus2, genData(0.5, -0.00442101));
+  GenClassical<scalar_type, index_type> gen3(&bus3, genData(0.5, -0.02510812));
+  GenClassical<scalar_type, index_type> gen4(&bus4, genData(0.5, -0.04339553));
+  GenClassical<scalar_type, index_type> gen5(&bus5, genData(0.5, -0.2334993));
+  GenClassical<scalar_type, index_type> gen6(&bus6, genData(0.5, 0.69907194));
+  GenClassical<scalar_type, index_type> gen7(&bus7, genData(0.5, -0.08318208));
+  GenClassical<scalar_type, index_type> gen8(&bus8, genData(0.5, -0.09123614));
+  GenClassical<scalar_type, index_type> gen9(&bus9, genData(0.5, -0.09662372));
+  GenClassical<scalar_type, index_type> gen10(&bus10, genData(0.5, -0.09932297));
 
   BusFault<scalar_type, index_type> fault(&bus10, 0, 1e-5, 0);
 

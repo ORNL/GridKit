@@ -10,9 +10,12 @@ int main()
 
   result += test.genrouEsdc1a();
   result += test.genrouHygov();
+  result += test.genClassicalEsdc1a();
+  result += test.genClassicalHygov();
   result += test.regcaRepca();
   result += gastpti.genrouGastPti();
   result += gastpti.gensalGastPti();
+  result += gastpti.genClassicalGastPti();
   result += test.regcaReecb();
 
   return result.summary();
