@@ -105,6 +105,13 @@ namespace GridKit
         add<LoadZ<ScalarT, IdxT>>(load_data.id, qualified_data);
       }
 
+      for (const auto& governor_data : data.gastpti)
+      {
+        auto qualified_data = governor_data;
+        qualified_data.id   = qualify(governor_data.id);
+        add<Controller::GastPti<ScalarT, IdxT>>(governor_data.id, qualified_data);
+      }
+
       for (const auto& governor_data : data.gov)
       {
         auto qualified_data = governor_data;
@@ -303,6 +310,26 @@ namespace GridKit
         auto& load_model = component<LoadZ<ScalarT, IdxT>>(load_data.id);
         load_model.getSignals().template attachPort<LoadZExternalVariables::VA>(
             &port(load_data.inputs.at(LoadZInputs::bus)));
+      }
+
+      for (const auto& governor_data : data.gastpti)
+      {
+        auto& governor_model = component<Controller::GastPti<ScalarT, IdxT>>(governor_data.id);
+        if (governor_data.inputs.contains(Controller::GastPtiInputs::speed))
+        {
+          governor_model.getSignals().template attachSignal<Controller::GastPtiExternalVariables::OMEGA>(
+              &source(governor_data.inputs.at(Controller::GastPtiInputs::speed)));
+        }
+        if (governor_data.inputs.contains(Controller::GastPtiInputs::pref))
+        {
+          governor_model.getSignals().template attachSignal<Controller::GastPtiExternalVariables::PREF>(
+              &source(governor_data.inputs.at(Controller::GastPtiInputs::pref)));
+        }
+        if (governor_data.outputs.contains(Controller::GastPtiOutputs::pmech))
+        {
+          governor_model.getSignals().template assignSignal<Controller::GastPtiInternalVariables::PMECH>(
+              &signal(governor_data.outputs.at(Controller::GastPtiOutputs::pmech)));
+        }
       }
 
       for (const auto& governor_data : data.gov)
