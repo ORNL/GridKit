@@ -12,7 +12,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Jacobian evaluation not implemented yet
+     * @brief Jacobian evaluation not implemented
      *
      * @return int - error code, 0 = success
      */
@@ -20,7 +20,8 @@ namespace GridKit
     int GenClassical<scalar_type, index_type>::evaluateJacobian()
     {
       Log::misc() << "Evaluate Jacobian for GenClassical..." << std::endl;
-      Log::misc() << "Jacobian evaluation not implemented!" << std::endl;
+      Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
+
       return 0;
     }
 

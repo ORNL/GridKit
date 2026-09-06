@@ -19,9 +19,9 @@ namespace GridKit
       q0,  ///< \f$Q_0\f$ Initial reactive power
       H,   ///< \f$H\f$ Rotor inertia
       D,   ///< \f$D\f$ Damping coefficient
-      Ra,  ///< \f$R_a\f$ Winding resistance
-      Xdp, ///< \f$X'_d\f$ Direct axis transient reactance
-      mva, ///< \f$S_\mathrm{mach}\f$ MVA base of the classical generator model
+      Ra,  ///< \f$R_a\f$ Armature resistance
+      Xdp, ///< \f$X'_d\f$ Direct-axis transient reactance
+      mva, ///< \f$S^\mathrm{base}\f$ Component power base
     };
 
     /// Buses for a classical generator model

@@ -17,7 +17,7 @@ Symbol            | Units  | JSON  | Description                      | Typical 
 ------------------|--------|-------|----------------------------------|---------------|------
 $P_0$             | [p.u.] | `p0`  | Initial active power injection   | 1.0           | System base; required initialization source
 $Q_0$             | [p.u.] | `q0`  | Initial reactive power injection | 0.0           | System base; required initialization source
-$S^\mathrm{base}$ | [MVA]  | `mva` | Machine component power base     | 100.0         |
+$S^\mathrm{base}$ | [MVA]  | `mva` | GENCLS component power base      | 100.0         |
 $H$               | [sec]  | `H`   | Rotor inertia                    | 3.0           |
 $D$               | [p.u.] | `D`   | Damping coefficient              | 0.0           |
 $R_a$             | [p.u.] | `Ra`  | Armature resistance              | 0.0           | Component base
@@ -40,9 +40,9 @@ None.
 \end{aligned}
 ```
 
-Multiplying by $k_\mathrm{base}$ converts system base to component base;
-$S^\mathrm{sys}$ and $S^\mathrm{base}$ are stored in VA and $f^\mathrm{sys}$
-is the system frequency base in Hz.
+Multiplying by $k_\mathrm{base}$ converts system base to component base.
+$S^\mathrm{sys}$ and $S^\mathrm{base}$ are stored in VA; $f^\mathrm{sys}$ is
+the system frequency base in Hz.
 
 ## Model Ports
 
@@ -104,7 +104,7 @@ $E_\mathrm{fd}$ | [p.u.] | Unknown | Field voltage                         | Opt
 
 ```math
 \begin{aligned}
-  0 &= -T_\mathrm{e} + GE_\mathrm{fd}^2 - E_\mathrm{fd}\left[(GV_\mathrm{r}-BV_\mathrm{i})\cos(\delta)+(BV_\mathrm{r}+GV_\mathrm{i})\sin(\delta)\right] \\
+  0 &= -T_\mathrm{e} + GE_\mathrm{fd}^2 - E_\mathrm{fd}[(GV_\mathrm{r}-BV_\mathrm{i})\cos(\delta)+(BV_\mathrm{r}+GV_\mathrm{i})\sin(\delta)] \\
   0 &= -I_\mathrm{r} + E_\mathrm{fd}(G\cos(\delta)-B\sin(\delta)) - GV_\mathrm{r} + BV_\mathrm{i} \\
   0 &= -I_\mathrm{i} + E_\mathrm{fd}(B\cos(\delta)+G\sin(\delta)) - BV_\mathrm{r} - GV_\mathrm{i}
 \end{aligned}
@@ -143,7 +143,7 @@ All internal derivatives are initialized to zero:
   I_\mathrm{i}
     &\leftarrow k_\mathrm{base}\dfrac{V_\mathrm{i}P_0-V_\mathrm{r}Q_0}{V_\mathrm{r}^2+V_\mathrm{i}^2} \\
   \delta
-    &\leftarrow \text{arg}\left[V_\mathrm{r}+jV_\mathrm{i}+(R_a+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})\right] \\
+    &\leftarrow \text{arg}[V_\mathrm{r}+jV_\mathrm{i}+(R_a+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})] \\
   \omega
     &\leftarrow 0 \\
   T_\mathrm{e}
@@ -158,7 +158,7 @@ All internal derivatives are initialized to zero:
   P_\mathrm{m}
     &\leftarrow \dfrac{T_\mathrm{e}}{k_\mathrm{base}} \\
   E_\mathrm{fd}
-    &\leftarrow \left|V_\mathrm{r}+jV_\mathrm{i}+(R_a+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})\right|
+    &\leftarrow |V_\mathrm{r}+jV_\mathrm{i}+(R_a+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})|
 \end{aligned}
 ```
 

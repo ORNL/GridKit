@@ -24,7 +24,7 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
-/// Classical generator data sharing the machine parameters of the example
+/// Machine data shared by the example generators
 GridKit::PhasorDynamics::GenClassicalData<real_type, index_type> genData(real_type p0, real_type q0)
 {
   using Parameter = GridKit::PhasorDynamics::GenClassicalParameters;

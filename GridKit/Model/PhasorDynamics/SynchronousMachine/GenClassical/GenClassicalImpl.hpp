@@ -42,8 +42,7 @@ namespace GridKit
     {
     }
 
-    /// Helper function to extract and assign model parameters from the model's associated
-    /// data structure.
+    /// Read model parameters from the data structure
     template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
@@ -135,7 +134,7 @@ namespace GridKit
       return 0;
     }
 
-    /*!
+    /**
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
     template <typename scalar_type, typename index_type>
@@ -212,7 +211,6 @@ namespace GridKit
 
     /**
      * Initialization of the generator model
-     *
      */
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::initialize()
@@ -229,7 +227,7 @@ namespace GridKit
       ScalarT Er    = vr + Ra_ * ir - Xdp_ * ii;
       ScalarT Ei    = vi + Ra_ * ii + Xdp_ * ir;
       ScalarT delta = std::atan2(Ei, Er);
-      ScalarT omega(0.0);
+      ScalarT omega = static_cast<ScalarT>(0.0);
 
       ScalarT efd = std::sqrt(Er * Er + Ei * Ei);
       ScalarT Te  = G_ * efd * efd - efd * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
@@ -311,32 +309,32 @@ namespace GridKit
         const ScalarT* ws,
         ScalarT*       f)
     {
-      /* Read variables */
-      ScalarT delta = y[0];
-      ScalarT omega = y[1];
-      ScalarT telec = y[2];
-      ScalarT ir    = y[3];
-      ScalarT ii    = y[4];
+      // Set variable aliases for better readability.
+      const ScalarT delta = y[0];
+      const ScalarT omega = y[1];
+      const ScalarT telec = y[2];
+      const ScalarT ir    = y[3];
+      const ScalarT ii    = y[4];
 
-      /* Read derivatives */
-      ScalarT delta_dot = yp[0];
-      ScalarT omega_dot = yp[1];
+      // Set derivative aliases for better readability
+      const ScalarT delta_dot = yp[0];
+      const ScalarT omega_dot = yp[1];
 
       // Set coupling variable aliases
-      ScalarT vr = wb[0];
-      ScalarT vi = wb[1];
+      const ScalarT vr = wb[0];
+      const ScalarT vi = wb[1];
 
       // Set signal variable aliases
-      ScalarT pmech = toMachineBase(ws[0]);
-      ScalarT efd   = ws[1];
+      const ScalarT pmech = toMachineBase(ws[0]);
+      const ScalarT efd   = ws[1];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
-      /* 2 GenClassical differential equations */
+      // GenClassical differential equations
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
 
-      /* 3 GenClassical algebraic equations */
+      // GenClassical algebraic equations
       f[2] = telec - (G_ * efd * efd - efd * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));
       f[3] = ir - (efd * (G_ * std::cos(delta) - B_ * std::sin(delta)) - G_ * vr + B_ * vi);
       f[4] = ii - (efd * (B_ * std::cos(delta) + G_ * std::sin(delta)) - B_ * vr - G_ * vi);
@@ -355,18 +353,16 @@ namespace GridKit
         [[maybe_unused]] const ScalarT* wb,
         ScalarT*                        h)
     {
-      ScalarT ir = y[3];
-      ScalarT ii = y[4];
-
-      // Convert current injection to system base for the network.
-      h[0] = toSystemBase(ir);
-      h[1] = toSystemBase(ii);
+      const ScalarT ir = y[3];
+      const ScalarT ii = y[4];
+      h[0]             = toSystemBase(ir);
+      h[1]             = toSystemBase(ii);
 
       return 0;
     }
 
     /**
-     * \brief Residual evaluation and contribution to the connected bus
+     * \brief Residual for the generator model.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -374,7 +370,6 @@ namespace GridKit
     {
       auto* ws = ws_.getData();
 
-      // Mechanical Power
       ws[0] = pmech_set_;
       if (signals_.template isAttached<GenClassicalExternalVariables::PM>())
       {
@@ -382,7 +377,6 @@ namespace GridKit
         ws_indices_[0] = signals_.template readExternalVariableIndex<GenClassicalExternalVariables::PM>();
       }
 
-      // Exciter Efield
       ws[1] = efd_set_;
       if (signals_.template isAttached<GenClassicalExternalVariables::EFD>())
       {
@@ -390,12 +384,10 @@ namespace GridKit
         ws_indices_[1] = signals_.template readExternalVariableIndex<GenClassicalExternalVariables::EFD>();
       }
 
-      // Bus voltages
       auto* wb = wb_.getData();
       wb[0]    = Vr();
       wb[1]    = Vi();
 
-      // Residual evaluation
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
@@ -403,7 +395,6 @@ namespace GridKit
       evaluateInternalResidual(y, yp, wb, ws, f);
       evaluateBusResidual(y, yp, wb, h);
 
-      // GenClassical contribution to bus algebraic equations
       Ir() += h[0];
       Ii() += h[1];
 
