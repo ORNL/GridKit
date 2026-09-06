@@ -1,0 +1,9 @@
+Bus #,1,2,3
+Gen id,1',1',1'
+type,SEXS,SEXS,SEXS
+TA_o_TB,0,0,0
+TB,10,10,10
+K,10,10,10
+TE,0.1,0.1,0.1
+Emin,0,0,0
+Emax,3,3,3
