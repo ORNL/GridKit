@@ -1,0 +1,104 @@
+{
+  "collected_on": "2026-09-06",
+  "GridKit_branch": "lukel/emt-playground",
+  "GridKit_revision": "4bd28126",
+  "scope": "ParaEMT IEEE 9-bus source inputs; equivalence and simulation investigation",
+  "artifacts": [
+    {
+      "path": "ieee9.raw",
+      "bytes": 4814,
+      "sha256": "7cbaf5154aebf0e91db1656c4032676ad504b92ff7fdd2d6c3e87b1968ecd6f7",
+      "source": {
+        "repository": "https://github.com/NatLabRockies/ParaEMT_public",
+        "commit": "d79d735a4a587d56c5b88187d1a499195b6b2b84",
+        "path": "models/9bus_psse/ieee9.raw",
+        "url": "https://raw.githubusercontent.com/NatLabRockies/ParaEMT_public/d79d735a4a587d56c5b88187d1a499195b6b2b84/models/9bus_psse/ieee9.raw",
+        "license": "BSD-3-Clause; upstream LICENSE.md retained"
+      },
+      "transformation": "none; byte-for-byte copy"
+    },
+    {
+      "path": "9bus.xlsx",
+      "bytes": 22216,
+      "sha256": "57e34d7d981a3b20ab2aedd0676c62d5c7521514cf252c6a82936e535b0970a3",
+      "source": {
+        "repository": "https://github.com/NatLabRockies/ParaEMT_public",
+        "commit": "d79d735a4a587d56c5b88187d1a499195b6b2b84",
+        "path": "models/9bus_psse/9bus.xlsx",
+        "url": "https://raw.githubusercontent.com/NatLabRockies/ParaEMT_public/d79d735a4a587d56c5b88187d1a499195b6b2b84/models/9bus_psse/9bus.xlsx",
+        "license": "BSD-3-Clause; upstream LICENSE.md retained"
+      },
+      "transformation": "none; byte-for-byte copy"
+    },
+    {
+      "path": "pfd_9_1_1.json",
+      "bytes": 2460,
+      "sha256": "bb5e331db1b5688cf1386a0bfda38c3218198cb49957756f158afc4eac69dce4",
+      "source": {
+        "repository": "https://github.com/NatLabRockies/ParaEMT_public",
+        "commit": "d79d735a4a587d56c5b88187d1a499195b6b2b84",
+        "path": "cases/pfd_9_1_1.json",
+        "url": "https://raw.githubusercontent.com/NatLabRockies/ParaEMT_public/d79d735a4a587d56c5b88187d1a499195b6b2b84/cases/pfd_9_1_1.json",
+        "license": "BSD-3-Clause; upstream LICENSE.md retained"
+      },
+      "transformation": "none; byte-for-byte copy"
+    },
+    {
+      "path": "LICENSE.md",
+      "bytes": 1484,
+      "sha256": "c7bd38158175c454562090f8f8fe597cfc904bffc6a6de39e764fc21e1533cb1",
+      "source": {
+        "repository": "https://github.com/NatLabRockies/ParaEMT_public",
+        "commit": "d79d735a4a587d56c5b88187d1a499195b6b2b84",
+        "path": "LICENSE.md",
+        "url": "https://raw.githubusercontent.com/NatLabRockies/ParaEMT_public/d79d735a4a587d56c5b88187d1a499195b6b2b84/LICENSE.md",
+        "license": "BSD-3-Clause; upstream LICENSE.md retained"
+      },
+      "transformation": "none; byte-for-byte copy"
+    },
+    {
+      "path": "gen.csv",
+      "bytes": 338,
+      "sha256": "511c30b8e491b8d3a37ef1877832aac547233ee619bcd5e4f52bc99974f8e8fd",
+      "source": {
+        "local_source": "9bus.xlsx",
+        "sheet": "gen",
+        "license": "BSD-3-Clause"
+      },
+      "transformation": "Exported worksheet XML cell values and resolved shared strings to CSV; labels, empty cells and numeric strings retained"
+    },
+    {
+      "path": "exc.csv",
+      "bytes": 122,
+      "sha256": "3a9a39d6c2cb958d3dbe17b4f021d1e07387cccacfb3f562d14d20af5555129a",
+      "source": {
+        "local_source": "9bus.xlsx",
+        "sheet": "exc",
+        "license": "BSD-3-Clause"
+      },
+      "transformation": "Exported worksheet XML cell values and resolved shared strings to CSV; labels, empty cells and numeric strings retained"
+    },
+    {
+      "path": "gov.csv",
+      "bytes": 184,
+      "sha256": "b4f16d93e78d440f7df5f6276b029cab8af63b1bfb273bd141f0e771fba9e0f4",
+      "source": {
+        "local_source": "9bus.xlsx",
+        "sheet": "gov",
+        "license": "BSD-3-Clause"
+      },
+      "transformation": "Exported worksheet XML cell values and resolved shared strings to CSV; labels, empty cells and numeric strings retained"
+    },
+    {
+      "path": "pss.csv",
+      "bytes": 431,
+      "sha256": "052dba6dbe68917f3a606fce52e02a52b491a1207a92e792ce17316a30750736",
+      "source": {
+        "local_source": "9bus.xlsx",
+        "sheet": "pss",
+        "license": "BSD-3-Clause"
+      },
+      "transformation": "Exported worksheet XML cell values and resolved shared strings to CSV; labels, empty cells and numeric strings retained"
+    }
+  ]
+}
