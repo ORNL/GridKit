@@ -378,8 +378,8 @@ namespace GridKit
                                                    {{Vars::PMEAS, 0.75},
                                                     {Vars::PORD, 1.5}},
                                 "omitted component rating");
-        success                     *= stateMatches(system_base.reecb,
-                                                    {{Vars::ILCAP, 2.0}},
+        success                    *= stateMatches(system_base.reecb,
+                                                   {{Vars::ILCAP, 2.0}},
                                 "omitted-rating current-circle capacity",
                                 circleTolerance());
         success                    *= allResidualsWithinInitTolerance(system_base.reecb);
