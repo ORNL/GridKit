@@ -8,3 +8,5 @@ add_subdirectory(PWM)
 add_subdirectory(TGOV1)
 
 add_subdirectory(SEXS-PTI)
+
+add_subdirectory(GASTPTI)
