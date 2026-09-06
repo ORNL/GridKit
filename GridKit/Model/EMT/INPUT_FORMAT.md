@@ -292,3 +292,9 @@ Parameter values are typed by their JSON representation:
 `SexsPti`, `SEXS-PTI`, and `SEXS` name the EMT [SEXS-PTI controller](Component/Controller/SEXS-PTI/README.md).
 Its required `V` is the terminal line-to-line RMS voltage in volts; optional
 `Tr` adds terminal-voltage measurement lag and defaults to zero.
+
+`GastPti`, `GASTPTI`, and `GAST` name the EMT [GASTPTI controller](Component/Controller/GASTPTI/README.md).
+Inputs `speed` and `pref` are optional, and output `pmech` is required.
+`speed` is absolute rotor speed (one at synchronous). Required parameter
+`S` is the connected machine rating in VA; `pref` and `pmech` use that base.
+The optional `Trate` is in MW and defines the internal turbine base.

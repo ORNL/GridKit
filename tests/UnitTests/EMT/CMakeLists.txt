@@ -149,3 +149,13 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTSexsPtiTest COMMAND test_emt_sexs_pti)
 install(TARGETS test_emt_sexs_pti RUNTIME DESTINATION bin)
+
+add_executable(test_emt_gastpti runGastPtiTests.cpp)
+target_link_libraries(
+  test_emt_gastpti
+  GridKit::emt_gastpti
+  GridKit::emt_gastpti_dependency_tracking
+  GridKit::phasor_dynamics_governor_gastpti
+  GridKit::testing)
+add_test(NAME EMTGastPtiTest COMMAND test_emt_gastpti)
+install(TARGETS test_emt_gastpti RUNTIME DESTINATION bin)
