@@ -138,3 +138,14 @@ target_link_libraries(
   GridKit::emt_state_space
   GridKit::testing)
 add_test(NAME EMTRationalTest COMMAND test_emt_rational)
+
+add_executable(test_emt_sexs_pti runSexsPtiTests.cpp)
+target_link_libraries(
+  test_emt_sexs_pti
+  GridKit::emt_sexs_pti
+  GridKit::emt_sexs_pti_dependency_tracking
+  GridKit::phasor_dynamics_exciter_sexspti
+  GridKit::phasor_dynamics_bus
+  GridKit::testing)
+add_test(NAME EMTSexsPtiTest COMMAND test_emt_sexs_pti)
+install(TARGETS test_emt_sexs_pti RUNTIME DESTINATION bin)

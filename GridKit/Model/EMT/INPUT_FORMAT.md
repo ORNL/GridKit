@@ -206,6 +206,9 @@ future file-backed Containers; file inclusion is not part of this revision.
   `LineLumped`             | `bus1`  | Input     | Bus component | Yes
   `LineLumped`             | `bus2`  | Input     | Bus component | Yes
   `LoadZ`                  | `bus`   | Input     | Bus component | Yes
+  `SexsPti`                | `bus` | Input | Bus component | Yes
+  `SexsPti`                | `vref`, `vs`, `vuel`, `voel` | Input | Signal | No
+  `SexsPti`                | `efd` | Output | Signal | Yes
   `Tgov1`                  | `speed` | Input     | Signal        | No
   `Tgov1`                  | `pref`  | Input     | Signal        | No
   `Tgov1`                  | `pmech` | Output    | Signal        | Yes
@@ -285,3 +288,7 @@ Parameter values are typed by their JSON representation:
 - A length-3 array maps to a three-phase vector parameter, integer-valued
   when every element is an integer.
 - A 3x3 nested array maps to a real three-phase matrix parameter.
+
+`SexsPti`, `SEXS-PTI`, and `SEXS` name the EMT [SEXS-PTI controller](Component/Controller/SEXS-PTI/README.md).
+Its required `V` is the terminal line-to-line RMS voltage in volts; optional
+`Tr` adds terminal-voltage measurement lag and defaults to zero.
