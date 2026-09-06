@@ -1,0 +1,40 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[american]{circuitikz}
+\input{../diagram-style.tex}
+
+\tikzset{
+    igbt/.style = {nigbt, bodydiode, semithick, scale=1.2}
+}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram]
+
+% ================= DC input =================
+\node[signal] (dc+) at (-4.15, 3.7) {};
+\node[signal] (dc-) at (-4.15, -3.7) {};
+\draw[line] (dc+) -- (0, 3.7);
+\draw[line] (dc-) -- (0, -3.7);
+
+\node[pm] at (-4.55, 3.7) {$+$};
+\node[sig] at (-4.55, 0) {$V_{\mathrm{dc}}$};
+\node[pm] at (-4.55, -3.7) {$-$};
+
+% ================= Representative IGBT leg =================
+\node[igbt, xscale=-1] (S+) at (0, 1.85) {};
+\node[igbt, xscale=-1] (S-) at (0, -1.85) {};
+\draw[line] (S+.C) -- (0, 3.7);
+\draw[line] (S+.E) -- (0, 0);
+\draw[line] (S-.C) -- (0, 0);
+\draw[line] (S-.E) -- (0, -3.7);
+\node[sig, anchor=west] at ($(S+.G)+(0.15,0)$) {$\mathbf{s}$};
+\node[sig, anchor=west] at ($(S-.G)+(0.15,0)$) {$1-\mathbf{s}$};
+
+% ================= Bridge-voltage output =================
+\node[signal, label={[sig]left:$\mathbf{v}_{\mathrm{o}}$}] (phase) at (0, 0) {};
+\draw[->, line] (phase) -- (3.35, 0);
+
+% ================= Model enclosure =================
+\draw[enclosure] (-2.55, -4.45) rectangle (2.35, 4.45);
+
+\end{tikzpicture}
+\end{document}
