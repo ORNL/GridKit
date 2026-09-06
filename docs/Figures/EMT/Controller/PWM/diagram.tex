@@ -1,0 +1,92 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{groupplots}
+\input{../../diagram-style.tex}
+
+\begin{document}
+
+\begin{tikzpicture}[emt diagram]
+\begin{groupplot}[
+  group style={group name=pwm, group size=1 by 7, vertical sep=0.18cm},
+  width=11.2cm,
+  height=1.18cm,
+  scale only axis,
+  xmin=-0.00015,
+  xmax=0.01682,
+  ymin=-0.08,
+  ymax=1.08,
+  ytick={0,1},
+  axis y line=left,
+  axis line style={black!75, line width=0.5pt, -},
+  tick style={black!75, line width=0.4pt},
+  ticklabel style={font=\scriptsize},
+  scaled x ticks=false,
+  ylabel style={
+    font=\small,
+    rotate=0,
+    at={(axis description cs:-0.11,0.5)},
+    anchor=east
+  },
+  every axis plot/.append style={black, semithick, no markers},
+  cycle list={{black}},
+  clip=true
+]
+
+\nextgroupplot[
+  ylabel={$s_a$},
+  axis x line=none,
+  xtick=\empty
+]
+\addplot table [x=t, y=sa_top] {diagram.dat};
+
+\nextgroupplot[
+  ylabel={$s_b$},
+  axis x line=none,
+  xtick=\empty
+]
+\addplot table [x=t, y=sb_top] {diagram.dat};
+
+\nextgroupplot[
+  ylabel={$s_c$},
+  axis x line=bottom,
+  xtick={0,0.0041667,0.0083333,0.0125,0.0166667},
+  xticklabels={$0$,$0.0042$,$0.0083$,$0.0125$,$0.0167$},
+  xlabel={$t\,[\mathrm{s}]$},
+  xlabel style={font=\small}
+]
+\addplot table [x=t, y=sc_top] {diagram.dat};
+
+\nextgroupplot[hide axis]
+
+\nextgroupplot[
+  ylabel={$s_a$},
+  axis x line=none,
+  xtick=\empty
+]
+\addplot table [x=t, y=sa_bottom] {diagram.dat};
+
+\nextgroupplot[
+  ylabel={$s_b$},
+  axis x line=none,
+  xtick=\empty
+]
+\addplot table [x=t, y=sb_bottom] {diagram.dat};
+
+\nextgroupplot[
+  ylabel={$s_c$},
+  axis x line=bottom,
+  xtick={0,0.0041667,0.0083333,0.0125,0.0166667},
+  xticklabels={$0$,$0.0042$,$0.0083$,$0.0125$,$0.0167$},
+  xlabel={$t\,[\mathrm{s}]$},
+  xlabel style={font=\small}
+]
+\addplot table [x=t, y=sc_bottom] {diagram.dat};
+
+\end{groupplot}
+\node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r2.east)
+  {$\mu^{-1}=0.005\,\mathrm{ms}$};
+\node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r6.east)
+  {$\mu^{-1}=1\,\mathrm{ms}$};
+\end{tikzpicture}
+\end{document}

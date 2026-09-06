@@ -1,10 +1,10 @@
 # Component Models
 
-This directory documents EMT component models for devices connected to EMT
-buses.
+This directory documents EMT component models.
 
 ## Contents
 
+- [Controller](Controller/README.md)
 - [Lines](Line/README.md)
 - [Loads](Load/README.md)
 - [Sources](Source/README.md)
