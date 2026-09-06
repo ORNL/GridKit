@@ -5,6 +5,7 @@
 :titlesonly:
 :hidden:
 
+Converter <Converter/README>
 Rational <Rational/README>
 Shift <Shift/README>
 ```
