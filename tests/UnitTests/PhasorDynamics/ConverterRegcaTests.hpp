@@ -190,8 +190,8 @@ namespace GridKit
         // The latched commands restore both displaced states at their ideal
         // interior first-order rates.
         const auto* f  = latched.regca.getResidual().getData();
-        success        *= scalarMatches(f[index(Vars::IP)], 0.5, "latched active-current rate", smoothTolerance());
-        success        *= scalarMatches(f[index(Vars::IQ)], 0.3, "latched reactive-current rate", smoothTolerance());
+        success       *= scalarMatches(f[index(Vars::IP)], 0.5, "latched active-current rate", smoothTolerance());
+        success       *= scalarMatches(f[index(Vars::IQ)], 0.3, "latched reactive-current rate", smoothTolerance());
 
         return success.report(__func__);
       }
@@ -592,7 +592,7 @@ namespace GridKit
 
           const auto* y              = fixture.regca.y().getData();
           const RealT extra_current  = y[index(Vars::IQEXTRA)];
-          success                    *= scalarMatches(
+          success                   *= scalarMatches(
               extra_current, kHvrcmGain * hvrcmOffset(), "IQEXTRA with the default Khv", smoothTolerance());
           success *= scalarMatches(
               y[index(Vars::IQ)] - y[index(Vars::IQEXTRA)], 0.1 / terminal_voltage, "IQ preserves Q0 after HVRCM compensation");
