@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <vector>
@@ -35,22 +36,20 @@ std::vector<size_t> getNodeConnections(const std::vector<Node*>& nodes);
 int main()
 {
 
-  constexpr size_t num_network_sections = 2;
-  constexpr double time                 = 0.1;
-  constexpr double alpha                = 0.1;
+  constexpr size_t N_size = 2;
+  constexpr double time   = 0.1;
+  constexpr double alpha  = 0.1;
 
   bool use_jac = true;
 
   // ---------------------------------------------------------------------------
   // build the grid network and assemble the system model
   // ---------------------------------------------------------------------------
-  GridKit::ScaleMicrogridNetwork network(num_network_sections);
-
-  GridKit::buildScaleMicrogridNetwork(network);
+  ScaleMicrogridNetwork<double, size_t> network(N_size);
 
   auto* system = new System(use_jac);
 
-  GridKit::assembleSystemLeftToRight(network, *system);
+  assembleSystemLeftToRight(network, *system);
   system->allocate();
 
   std::vector<double> y(system->size());
@@ -87,14 +86,14 @@ int main()
   std::vector<Component*> components = {
       network.generators[0],
       network.generators[1],
-      network.lines[1],
+      network.lines[0],
       network.loads[0],
       network.busesDQ[0],
       network.busesDQ[1],
       network.generators[2],
       network.generators[3],
+      network.lines[1],
       network.lines[2],
-      network.lines[3],
       network.loads[2],
       network.busesDQ[2],
       network.busesDQ[3]};
@@ -115,7 +114,7 @@ int main()
 
   auto* bus_interface = new GridKit::BusPartitionInterface<double, size_t>(
       &network.buses[1],
-      network.lines[2],
+      network.lines[1],
       14);
 
   if (int err = bus_interface->allocate())
@@ -135,7 +134,7 @@ int main()
   partition1->addComponent(network.busesDQ[0]);
   partition1->addComponent(network.loads[0]);
   partition1->addNode(&network.buses[0]);
-  partition1->addComponent(network.lines[1]);
+  partition1->addComponent(network.lines[0]);
   partition1->addComponent(network.generators[1]);
   partition1->addComponent(network.busesDQ[1]);
   partition1->addInterface(bus_interface);
@@ -148,11 +147,11 @@ int main()
   partition2->addComponent(network.generators[2]);
   partition2->addComponent(network.busesDQ[2]);
   partition2->addComponent(network.loads[2]);
-  partition2->addComponent(network.lines[2]);
+  partition2->addComponent(network.lines[1]);
   partition2->addNode(&network.buses[2]);
   partition2->addComponent(network.generators[3]);
   partition2->addComponent(network.busesDQ[3]);
-  partition2->addComponent(network.lines[3]);
+  partition2->addComponent(network.lines[2]);
   partition2->addNode(&network.buses[3]);
 
   std::vector<Subsystem*> partitions = {partition1, partition2};
@@ -164,7 +163,7 @@ int main()
 
   std::vector<double> partition_residual(system->size(), 0.0);
 
-  GridKit::evaluatePartitionResiduals(partitions, y, yp, partition_residual, time, alpha);
+  evaluatePartitionResiduals(partitions, y, yp, partition_residual, time, alpha);
 
   // ---------------------------------------------------------------------------
   // Verify the subsystem Jacobians
@@ -178,7 +177,11 @@ int main()
 
     auto* partition_jacobian = partition->getCsrJacobian();
 
-    jacobians_match = jacobians_match && GridKit::Testing::verifySubsystemJacobian(*system_jacobian, *partition_jacobian, *partition);
+    jacobians_match = jacobians_match
+                      && GridKit::Testing::verifySubsystemJacobian(*system_jacobian,
+                                                                   *partition_jacobian,
+                                                                   *partition,
+                                                                   1e-13);
   }
 
   if (!jacobians_match)
