@@ -7,6 +7,7 @@
 #pragma once
 
 #include <GridKit/Model/EMT/ComponentData.hpp>
+#include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFitData.hpp>
 
 namespace GridKit
 {
@@ -41,7 +42,10 @@ namespace GridKit
     {
       va,
       vb,
-      vc
+      vc,
+      i_sha,
+      i_shb,
+      i_shc
     };
 
     /**
@@ -69,6 +73,9 @@ namespace GridKit
 
       using IdxT  = index_type;
       using RealT = real_type;
+
+      /// Named bus shunts, each with an independent realization.
+      std::map<std::string, VectorFitData<RealT, IdxT>> shunts;
     };
   } // namespace EMT
 } // namespace GridKit

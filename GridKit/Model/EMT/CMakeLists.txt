@@ -48,6 +48,7 @@ gridkit_add_library(
   emt_systemmodel
   SOURCES ${_system_model_source} SystemModelData.cpp
   HEADERS Container.hpp
+          ContainerRuntime.hpp
           ContainerData.hpp
           SystemModel.hpp
           SystemModelData.hpp

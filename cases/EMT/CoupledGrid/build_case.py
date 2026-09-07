@@ -112,7 +112,7 @@ def main():
             "signals": [], "devices": []}
     devices = case["devices"]
     for bus in range(1, 15):
-        devices.append(dict(id=f"bus_{bus}", **{"class": "Bus"}, mon=["va", "vb", "vc"]))
+        devices.append(dict(id=f"bus_{bus}", **{"class": "Bus"}, mon=["va", "vb", "vc", "i_sha", "i_shb", "i_shc"]))
     devices.append({"class": "VoltageSource", "id": "source_1",
                     "params": {"E": [VLL / np.sqrt(3)] * 3,
                                "phi": (grid_angle + PHASES).tolist(), "omega": W},
@@ -154,7 +154,7 @@ def main():
         devices.append({"class": "LineLumped", "id": f"line_{a}_{b}",
                         "params": {"N": 3, "K": 3, "conductors": [1, 2, 3], "dx": float(length)},
                         "submodels": line_model, "inputs": {"bus1": f"bus_{a}", "bus2": f"bus_{b}"},
-                        "mon": ["i12a", "i12b", "i12c", "i_sh1a", "i_sh1b", "i_sh1c", "i_sh2a", "i_sh2b", "i_sh2c"]})
+                        "mon": ["i12a", "i12b", "i12c"]})
     for bus, impedance in load_z.items():
         params = {"R": np.diag(impedance.real).tolist(), "L": np.diag(impedance.imag / W).tolist()}
         devices.append({"class": "LoadZ", "id": f"load_{bus}", "params": params,
