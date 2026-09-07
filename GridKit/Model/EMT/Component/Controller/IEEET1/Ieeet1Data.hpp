@@ -38,7 +38,9 @@ namespace GridKit
       /// Signal inputs for a IEEET1 Exciter model
       enum class Ieeet1Inputs : size_t
       {
-        bus,   ///< Terminal voltage port
+        va,    ///< Phase-a terminal voltage
+        vb,    ///< Phase-b terminal voltage
+        vc,    ///< Phase-c terminal voltage
         speed, ///< Unique ID of the machine rotor-speed signal (1 p.u. synchronous)
         vref,  ///< Unique ID of the voltage reference signal (optional)
         vs,    ///< Unique ID of the stabilizer output signal (optional)

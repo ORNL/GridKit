@@ -258,8 +258,9 @@ namespace GridKit
        *
        */
       template <typename scalar_type, typename index_type>
-      int Tgov1<scalar_type, index_type>::initialize()
+      int Tgov1<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
+        this->validateOutputValues(outputs);
         if (verify() != 0)
         {
           Log::error() << "Tgov1: cannot initialize with invalid configuration\n";
@@ -278,7 +279,8 @@ namespace GridKit
           domega0 = signals_.template readExternalVariable<Tgov1ExternalVariables::OMEGA>() - ONE<RealT>;
         }
 
-        const ScalarT pm0    = y[PM];
+        const ScalarT pm0    = static_cast<ScalarT>(this->outputValue(outputs, Outputs::pmech, static_cast<RealT>(y[PM])));
+        y[PM]                = pm0;
         const ScalarT pv0    = pm0 + Dt_ * domega0;
         const ScalarT pturb0 = pv0;
         const ScalarT pref0  = domega0 + R_ * pv0;

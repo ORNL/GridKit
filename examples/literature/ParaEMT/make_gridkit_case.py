@@ -97,7 +97,8 @@ def main():
         devices.append({'id': f'gen_{bus}', 'class': 'Machine', 'params': params,
                         'inputs': {'bus': f'bus_{bus}', 'pm': f'pm_{bus}', 'efd': f'efd_{bus}'},
                         'outputs': {'speed': f'speed_{bus}'}, 'mon': ['omega','efd','p','q']})
-        state['devices'][f'gen_{bus}'] = {'p': float(sg[i].real*power), 'q': float(sg[i].imag*power)}
+        current = (sg[i] * power / (1.5 * v[bus])).conjugate()
+        state['devices'][f'gen_{bus}'] = dict(zip(('ia', 'ib', 'ic'), [float((current * r).real) for r in rotation]))
         # The ParaEMT bus measurement sheet has te=0.02 s on every bus.
         ep = {'V': voltage, 'Tr': .02, 'Ta': float(exc['TA_o_TB'][i])*float(exc['TB'][i])}
         ep.update({key: float(exc[src][i]) for key,src in [('Tb','TB'),('Te','TE'),('K','K'),('Efdmin','Emin'),('Efdmax','Emax')]})

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+#include <map>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -36,7 +38,6 @@ namespace GridKit
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
       using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
       using SignalT    = Signal<ScalarT, IdxT>;
-      using Port3T     = Port3<ScalarT, IdxT>;
 
       Component() = default;
 
@@ -73,6 +74,40 @@ namespace GridKit
 
       virtual int verify() const = 0;
 
+    protected:
+      template <typename Outputs>
+      static void validateOutputValues(const std::map<Outputs, RealT>& outputs)
+      {
+        for (const auto& [output, value] : outputs)
+        {
+          if (static_cast<size_t>(output) >= static_cast<size_t>(Outputs::SIZE)
+              || !std::isfinite(value))
+          {
+            throw std::invalid_argument("Invalid initial model output");
+          }
+        }
+      }
+
+      template <typename Outputs>
+      static RealT outputValue(const std::map<Outputs, RealT>& outputs, Outputs key, RealT fallback)
+      {
+        const auto entry = outputs.find(key);
+        return entry == outputs.end() ? fallback : entry->second;
+      }
+
+      template <typename Outputs>
+      static void checkOutputValue(const std::map<Outputs, RealT>& outputs, Outputs key, RealT actual)
+      {
+        const auto entry = outputs.find(key);
+        if (entry != outputs.end()
+            && (!std::isfinite(actual)
+                || std::abs(actual - entry->second) > RealT{1e-10} * (RealT{1} + std::abs(entry->second))))
+        {
+          throw std::invalid_argument("Initial output conflicts with the model operating point");
+        }
+      }
+
+    public:
       /**
        * @brief Stable ordering key for component initialization.
        *
@@ -254,6 +289,11 @@ namespace GridKit
       }
 
       IdxT& getVariableIndex(IdxT local_index)
+      {
+        return variable_indices_[static_cast<size_t>(local_index)];
+      }
+
+      IdxT getVariableIndex(IdxT local_index) const
       {
         return variable_indices_[static_cast<size_t>(local_index)];
       }
@@ -486,31 +526,9 @@ namespace GridKit
         external_residual_signals_.assign(static_cast<size_t>(n_rows), nullptr);
       }
 
-      /**
-       * @brief Bind a three-phase port over three consecutive local variables.
-       *
-       * Each phase signal exposes the variable, its derivative, and its
-       * residual row along with the global indices, so the port can serve as
-       * a connection surface for values, derivative reads, and residual
-       * accumulation.
-       *
-       * @pre The component vectors are allocated or bound, and the index
-       * vectors are sized.
-       */
-      int bindPort(Port3T& port, IdxT local_first)
+      void bindSignal(SignalT& signal, IdxT local)
       {
-        auto* y  = y_.getData();
-        auto* yp = yp_.getData();
-        auto* f  = f_.getData();
-        for (IdxT n = 0; n < 3; ++n)
-        {
-          port.signals[static_cast<size_t>(n)].set(&y[local_first + n],
-                                                   &yp[local_first + n],
-                                                   &f[local_first + n],
-                                                   &getVariableIndex(local_first + n),
-                                                   &getResidualIndex(local_first + n));
-        }
-        return 0;
+        signal.set(&y_.getData()[local], &yp_.getData()[local], &f_.getData()[local], &getVariableIndex(local), &getResidualIndex(local));
       }
 
       /**
@@ -540,8 +558,10 @@ namespace GridKit
         for (size_t i = 0; i < external_residual_signals_.size(); ++i)
         {
           auto* signal = external_residual_signals_[i];
-          if (signal != nullptr && signal->residualLinked())
+          if (signal != nullptr)
           {
+            if (!signal->residualLinked())
+              throw std::logic_error("Electrical voltage input has no current-balance residual row");
             residual_indices_ext_[i] = signal->getResidualIndex();
           }
         }
@@ -594,19 +614,6 @@ namespace GridKit
             }
           }
           const int status = op->allocate();
-          if (status != 0)
-          {
-            return status;
-          }
-        }
-        return 0;
-      }
-
-      int initializeOperators()
-      {
-        for (auto* op : operators_)
-        {
-          const int status = op->initialize();
           if (status != 0)
           {
             return status;

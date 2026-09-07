@@ -37,6 +37,16 @@ namespace GridKit
         }
       }
 
+      void parseCurrent(const json& object, const char* key, std::optional<double>& current)
+      {
+        parseOptional(object, key, current);
+        if (current.has_value()
+            && (!object.at(key).is_number() || !std::isfinite(*current)))
+        {
+          throw std::invalid_argument(std::string("State field \"") + key + "\" must be a finite number");
+        }
+      }
+
       InjectionState parseInjectionState(const json& value)
       {
         requireObject(value, "Injection state");
@@ -88,6 +98,12 @@ namespace GridKit
         parseOptional(value, "q", state.q);
         parseOptional(value, "tap", state.tap);
         parseOptional(value, "phase", state.phase);
+        parseCurrent(value, "i12a", state.i12a);
+        parseCurrent(value, "i12b", state.i12b);
+        parseCurrent(value, "i12c", state.i12c);
+        parseCurrent(value, "ia", state.ia);
+        parseCurrent(value, "ib", state.ib);
+        parseCurrent(value, "ic", state.ic);
         return state;
       }
 
@@ -196,6 +212,12 @@ namespace GridKit
         writeOptional(value, "q", state.q);
         writeOptional(value, "tap", state.tap);
         writeOptional(value, "phase", state.phase);
+        writeOptional(value, "i12a", state.i12a);
+        writeOptional(value, "i12b", state.i12b);
+        writeOptional(value, "i12c", state.i12c);
+        writeOptional(value, "ia", state.ia);
+        writeOptional(value, "ib", state.ib);
+        writeOptional(value, "ic", state.ic);
         return value;
       }
 

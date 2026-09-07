@@ -107,8 +107,8 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = MachineData<RealT, IdxT>;
+      using Outputs    = typename ModelDataT::Outputs;
       using SignalT    = Signal<ScalarT, IdxT>;
-      using Port3T     = Port3<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<Machine, MachineData>;
 
       Machine();
@@ -118,7 +118,9 @@ namespace GridKit
       virtual int setGridKitComponentID(IdxT) override final;
       virtual int allocate() override final;
       virtual int verify() const override final;
-      virtual int initialize() override final;
+
+      int         initialize(const std::map<Outputs, RealT>& outputs = {});
+      void        assignOutput(Outputs output, SignalT* signal);
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
@@ -162,8 +164,6 @@ namespace GridKit
 
     private:
       /* Initial terminal conditions */
-      RealT p0_{0.0};
-      RealT q0_{0.0};
 
       /* Input parameters */
       RealT S_{0.0};

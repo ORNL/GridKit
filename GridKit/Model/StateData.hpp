@@ -51,6 +51,12 @@ namespace GridKit
       std::optional<double> q;
       std::optional<double> tap;
       std::optional<double> phase;
+      std::optional<double> i12a; ///< Instantaneous phase a series current, terminal 1 to 2 [A]
+      std::optional<double> i12b; ///< Instantaneous phase b series current, terminal 1 to 2 [A]
+      std::optional<double> i12c; ///< Instantaneous phase c series current, terminal 1 to 2 [A]
+      std::optional<double> ia;   ///< Instantaneous phase a current injection [A]
+      std::optional<double> ib;   ///< Instantaneous phase b current injection [A]
+      std::optional<double> ic;   ///< Instantaneous phase c current injection [A]
     };
 
     /// Portable model state parsed from or written to a state artifact.

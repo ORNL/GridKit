@@ -126,6 +126,7 @@ int printMicrogridSystems(index_type N_size)
   // setup simulation
   idas.setTolerance(rel_tol);
   idas.setMaxSteps(SCALE_MICROGRID_MAX_STEPS);
+  sys_model.initialize();
   idas.configureSimulation();
   idas.getDefaultInitialCondition();
   idas.initializeSimulation(t_init);

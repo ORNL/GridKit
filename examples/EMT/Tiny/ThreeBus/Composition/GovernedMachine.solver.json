@@ -1,4 +1,5 @@
 {
+    "state_file": "GovernedMachine.state.json",
     "system_model_file": "GovernedMachine.case.json",
     "dt_monitor": 0.0,
     "tmax": 1.0,

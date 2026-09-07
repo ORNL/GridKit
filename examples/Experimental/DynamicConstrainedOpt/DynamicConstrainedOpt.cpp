@@ -45,6 +45,7 @@ int main()
   double t_final = 20.0;
 
   // setup simulation
+  model.initialize();
   idas.configureSimulation();
   idas.configureAdjoint();
   idas.getDefaultInitialCondition();

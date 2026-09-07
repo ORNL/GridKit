@@ -9,7 +9,6 @@
 #include <string>
 #include <string_view>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include <GridKit/Model/EMT/Component.hpp>
@@ -62,7 +61,6 @@ namespace GridKit
       using VectorT    = typename Component<ScalarT, IdxT>::VectorT;
       using ComponentT = Component<ScalarT, IdxT>;
       using SignalT    = Signal<ScalarT, IdxT>;
-      using Port3T     = Port3<ScalarT, IdxT>;
       using ModelDataT = ContainerData<RealT, IdxT>;
 
       Container();
@@ -120,21 +118,15 @@ namespace GridKit
 
       /** Bind a public input to its parent-scope endpoint. */
       void input(std::string name, SignalT& signal);
-      void input(std::string name, Port3T& port);
 
       SignalT&       inputSignal(std::string_view name);
       const SignalT& inputSignal(std::string_view name) const;
-      Port3T&        inputPort(std::string_view name);
-      const Port3T&  inputPort(std::string_view name) const;
 
-      /** Define a public scalar or three-phase output. */
+      /** Define a public scalar output. */
       void output(std::string name, SignalT& signal);
-      void output(std::string name, Port3T& port);
 
       SignalT&       outputSignal(std::string_view name);
       const SignalT& outputSignal(std::string_view name) const;
-      Port3T&        outputPort(std::string_view name);
-      const Port3T&  outputPort(std::string_view name) const;
 
       IdxT size() override;
       int  bind(VectorT& y,
@@ -144,17 +136,17 @@ namespace GridKit
                 IdxT     offset) override;
       int  assignGlobalIndices(IdxT first) override;
 
-      int  setGridKitComponentID(IdxT component_id) override;
-      int  allocate() override;
-      int  verify() const override;
-      int  initialize() override;
-      int  tagDifferentiable() override;
-      int  setAbsoluteTolerance(RealT rel_tol) override;
-      int  evaluateInternalResidual() override;
-      int  evaluateExternalResidual() override;
-      int  evaluateResidual() override;
-      int  evaluateJacobian() override;
-      bool hasJacobian() override;
+      int         setGridKitComponentID(IdxT component_id) override;
+      int         allocate() override;
+      int         verify() const override;
+      virtual int initialize(const std::map<std::string, std::map<std::string, RealT>>& state = {});
+      int         tagDifferentiable() override;
+      int         setAbsoluteTolerance(RealT rel_tol) override;
+      int         evaluateInternalResidual() override;
+      int         evaluateExternalResidual() override;
+      int         evaluateResidual() override;
+      int         evaluateJacobian() override;
+      bool        hasJacobian() override;
 
       void updateTime(RealT t, RealT a) override;
       void resetJacobianStructure() override;
@@ -192,25 +184,21 @@ namespace GridKit
       }
 
     private:
-      using Endpoint = std::variant<SignalT*, Port3T*>;
-
       static void validateName(std::string_view name, std::string_view kind);
       void        declare(const ModelDataT& data, std::string path);
       void        assemble(const ModelDataT& data);
       void        wire(const ModelDataT& data);
       void        validateBoundary() const;
       void        declareInput(std::string name);
-      void        bindInput(std::string_view name, Endpoint endpoint);
+      void        bindInput(std::string_view name, SignalT* endpoint);
       void        refreshLayout();
 
       std::string qualify(std::string_view local_name) const;
 
       SignalT& source(std::string_view reference);
-      Port3T&  port(std::string_view reference);
-      Endpoint endpoint(std::string_view reference);
-      Endpoint resolveOutput(std::string_view reference);
-      Endpoint inputEndpoint(std::string_view name) const;
-      Endpoint outputEndpoint(std::string_view name);
+      SignalT* endpoint(std::string_view reference);
+      SignalT* resolveOutput(std::string_view reference);
+      SignalT* inputEndpoint(std::string_view name) const;
 
       Container&       childContainer(std::string_view id);
       const Container& childContainer(std::string_view id) const;
@@ -223,8 +211,8 @@ namespace GridKit
       std::map<std::string, ComponentT*, std::less<>> children_by_id_;
 
       std::set<std::string, std::less<>>           input_names_;
-      std::map<std::string, Endpoint, std::less<>> inputs_;
-      std::map<std::string, Endpoint, std::less<>> outputs_;
+      std::map<std::string, SignalT*, std::less<>> inputs_;
+      std::map<std::string, SignalT*, std::less<>> outputs_;
 
       std::vector<IdxT> offsets_;
       std::string       path_;

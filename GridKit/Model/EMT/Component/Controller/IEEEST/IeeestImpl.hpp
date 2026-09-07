@@ -345,8 +345,9 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::initialize()
+      int Ieeest<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
+        this->validateOutputValues(outputs);
         if (!allocated_ || verify() != 0)
         {
           Log::error() << "Ieeest: cannot initialize with invalid configuration\n";
@@ -378,6 +379,7 @@ namespace GridKit
         // Preserve the current T6 = 0 bypass behavior.
         y[10] = bypass_T6_block_ * Ks_ * u;
         y[11] = cutoutGate(y_ext_[2]) * Math::clamp(y[10], Lsmin_, Lsmax_);
+        this->checkOutputValue(outputs, Outputs::output, static_cast<RealT>(y[11]));
 
         y_.setDataUpdated();
         yp_.setDataUpdated();

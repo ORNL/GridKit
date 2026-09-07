@@ -67,7 +67,7 @@ namespace AnalysisManager
       yp_ = N_VClone(yy_);
       checkAllocation((void*) yp_, "N_VClone");
 
-      // get initial conditions
+      // Copy the caller-initialized model state
       this->getDefaultInitialCondition();
 
       // Create vectors to store restart initial condition
@@ -206,7 +206,7 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Get default initial condition
+     * @brief Copy the current model state into the solver
      *
      * @tparam ScalarT
      * @tparam IdxT
@@ -214,8 +214,6 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::getDefaultInitialCondition()
     {
-      model_->initialize();
-
       copyVec(model_->y(), yy_);
       copyVec(model_->yp(), yp_);
 

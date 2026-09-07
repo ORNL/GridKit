@@ -154,6 +154,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   // setup simulation
   idas->setTolerance(rel_tol, abs_tol);
   idas->setMaxSteps(SCALE_MICROGRID_MAX_STEPS);
+  sys_model->initialize();
   idas->configureSimulation();
   idas->getDefaultInitialCondition();
   idas->initializeSimulation(t_init);

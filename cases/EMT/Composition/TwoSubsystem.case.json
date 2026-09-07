@@ -9,7 +9,7 @@
             "class": "Container",
             "id": "left",
             "outputs": {
-                "terminal": "bus"
+                "va": "bus.va", "vb": "bus.vb", "vc": "bus.vc"
             },
             "devices": [
                 {
@@ -36,7 +36,7 @@
             "class": "Container",
             "id": "right",
             "outputs": {
-                "terminal": "bus"
+                "va": "bus.va", "vb": "bus.vb", "vc": "bus.vc"
             },
             "devices": [
                 {
@@ -70,8 +70,8 @@
                 "Cp": [[1.0e-5, 0.0, 0.0], [0.0, 1.0e-5, 0.0], [0.0, 0.0, 1.0e-5]]
             },
             "inputs": {
-                "bus1": "left.terminal",
-                "bus2": "right.terminal"
+                "bus1": "left",
+                "bus2": "right"
             }
         }
     ]

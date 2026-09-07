@@ -90,10 +90,12 @@ namespace GridKit
           f.resize(system_size);
           abs_tol.resize(system_size);
 
-          source.getSignals().template attachPort<EMT::DependentVoltageSourceExternalVariables::VA>(
-              &terminal.voltagePort());
-          source.getSignals().template attachPort<EMT::DependentVoltageSourceExternalVariables::EA>(
-              &drive.voltagePort());
+          source.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::VA>(&terminal.outputSignal(GridKit::EMT::BusOutputs::va));
+          source.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::VB>(&terminal.outputSignal(GridKit::EMT::BusOutputs::vb));
+          source.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::VC>(&terminal.outputSignal(GridKit::EMT::BusOutputs::vc));
+          source.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::EA>(&drive.outputSignal(GridKit::EMT::BusOutputs::va));
+          source.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::EB>(&drive.outputSignal(GridKit::EMT::BusOutputs::vb));
+          source.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::EC>(&drive.outputSignal(GridKit::EMT::BusOutputs::vc));
 
           IdxT offset = 0;
           for (auto* component : components())
@@ -108,9 +110,11 @@ namespace GridKit
             offset += component->size();
           }
 
+          drive.initialize();
+          terminal.initialize();
+          source.initialize();
           for (auto* component : components())
           {
-            component->initialize();
             component->tagDifferentiable();
           }
         }
@@ -315,7 +319,7 @@ namespace GridKit
         success            *= (data.signal[0].id == "ea");
         success            *= (data.signal[1].id == "eb");
         success            *= (data.signal[2].id == "ec");
-        success            *= (inputs.at(Input::bus) == "bus_1");
+        success            *= (inputs.at(Input::va) == "bus_1.va");
         success            *= (inputs.at(Input::ea) == "ea");
         success            *= (inputs.at(Input::eb) == "eb");
         success            *= (inputs.at(Input::ec) == "ec");

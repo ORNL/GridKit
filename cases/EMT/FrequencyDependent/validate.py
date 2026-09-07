@@ -86,6 +86,7 @@ def circuit(exe, results, frequency):
 def hybrid(exe, results):
     case = json.loads((HERE / 'Hybrid.case.json').read_text())
     study = json.loads((HERE / 'Hybrid.solver.json').read_text())
+    study['state_file'] = str((HERE / study['state_file']).resolve())
     rows = run(exe, results / 'hybrid', case, study)
     tight = dict(study, rel_tol=study['rel_tol'] / 10, abs_tol=study['abs_tol'] / 10)
     reference = run(exe, results / 'hybrid-tight', case, tight)

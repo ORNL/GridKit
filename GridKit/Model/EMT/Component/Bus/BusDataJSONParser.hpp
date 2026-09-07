@@ -27,14 +27,6 @@ namespace GridKit
       {
         throw std::runtime_error("JSON parser failed: expected Bus class");
       }
-
-      if (j.contains("init"))
-      {
-        const auto& init = j.at("init");
-        data.va0         = init.value("va", RealT{0});
-        data.vb0         = init.value("vb", RealT{0});
-        data.vc0         = init.value("vc", RealT{0});
-      }
     }
   } // namespace EMT
 } // namespace GridKit

@@ -27,7 +27,7 @@ namespace GridKit
                     { return output(2); });
       for (size_t phase = 0; phase < 3; ++phase)
       {
-        output_port_.signals[phase].setComputed(
+        output_port_[phase].setComputed(
             [this, phase]
             { return output(phase); },
             [this, phase](typename SignalT::GradientT& gradient, RealT scale)
@@ -54,9 +54,9 @@ namespace GridKit
       assigned = signal;
       signal->setComputed(
           [this, phase]
-          { return output_port_.signals[phase].read(); },
+          { return output_port_[phase].read(); },
           [this, phase](typename SignalT::GradientT& gradient, RealT scale)
-          { output_port_.signals[phase].appendGradient(gradient, scale); });
+          { output_port_[phase].appendGradient(gradient, scale); });
     }
 
     template <typename scalar_type, typename index_type>
@@ -79,8 +79,13 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Converter<scalar_type, index_type>::initialize()
+    int Converter<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
     {
+      this->validateOutputValues(outputs);
+      for (const auto& [key, value] : outputs)
+      {
+        this->checkOutputValue(outputs, key, static_cast<RealT>(output(static_cast<size_t>(key))));
+      }
       return verify();
     }
 
@@ -134,16 +139,6 @@ namespace GridKit
         throw std::logic_error("Attach Converter inputs before allocation");
       }
       input_ = {a, b, c, vdc};
-    }
-
-    template <typename scalar_type, typename index_type>
-    void Converter<scalar_type, index_type>::attachInput(Port3T* s, SignalT* vdc)
-    {
-      if (s == nullptr)
-      {
-        throw std::invalid_argument("Converter switching port is null");
-      }
-      attachInput(s->a(), s->b(), s->c(), vdc);
     }
 
     template <typename scalar_type, typename index_type>

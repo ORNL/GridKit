@@ -57,11 +57,6 @@ public:
     return 0;
   }
 
-  int initialize() override
-  {
-    return verify();
-  }
-
   int tagDifferentiable() override
   {
     return 0;
