@@ -7,7 +7,8 @@ Cases, executable driver, simulation outputs, and reproducible plots are here.
 
 **[Open the plot gallery](plots/index.html)** ·
 [Trip PDF](plots/trip/comparison.pdf) ·
-[Governor-step PDF](plots/governor_step/comparison.pdf)
+[Governor-step PDF](plots/governor_step/comparison.pdf) ·
+[Runtime comparison](RUNTIMES.md)
 
 Each figure contains one response: **ParaEMT on top, GridKit in the middle,
 GridKit − ParaEMT on the bottom**, with identical time and vertical limits
@@ -32,10 +33,10 @@ Earlier plot filenames now point to figures in this layout.
 
 Both events occur at 1 s; each run covers 0–3 s. Every generator retains
 its full GridKit machine, governor, exciter and stabilizer. Each simulator
-saves 6,001 common samples spaced 0.5 ms apart. ParaEMT also saves every
+saves 60,001 common samples spaced 50 µs apart. ParaEMT also saves every
 integration step between 0.995 and 1.015 s in `event_waveforms.csv.gz`.
 The bus event plots use these native samples inside that interval and
-regular samples outside it. Error panels always use the common 0.5 ms
+regular samples outside it. Error panels always use the common 50 µs
 grid, without interpolation, phase alignment or fitted gains.
 
 | Experiment | GridKit | ParaEMT |
@@ -71,15 +72,15 @@ channels in each group, using GridKit tolerance `1e-9` and `mu=50000`:
 
 | Quantity, pu | vs ParaEMT 50 µs | vs 25 µs | vs 12.5 µs | GridKit 1e-8 vs 1e-9 |
 | --- | ---: | ---: | ---: | ---: |
-| Phase voltage | 0.0256144 | 0.0129270 | 0.00652691 | 5.34e-7 |
-| Voltage magnitude | 0.000351428 | 0.000176387 | 0.000150910 | 1.24e-7 |
-| Rotor speed | 3.01155e-5 | 1.51938e-5 | 7.66618e-6 | 1.02e-9 |
-| Mechanical power | 0.000322696 | 0.000162724 | 0.0000820428 | 7.08e-9 |
-| Field voltage | 0.000392251 | 0.000196044 | 0.0000978681 | 2.14e-8 |
-| Stabilizer output | 0.00132813 | 0.000677390 | 0.000349509 | 1.31e-6 |
+| Phase voltage | 0.0256288 | 0.0129372 | 0.00653278 | 5.34048e-07 |
+| Voltage magnitude | 0.000351683 | 0.000176497 | 0.000303192 | 1.28087e-07 |
+| Rotor speed | 3.01155e-05 | 1.51938e-05 | 7.66617e-06 | 1.01776e-09 |
+| Mechanical power | 0.000322696 | 0.000162724 | 8.20427e-05 | 7.0769e-09 |
+| Field voltage | 0.000392251 | 0.000196044 | 9.7868e-05 | 2.1424e-08 |
+| Stabilizer output | 0.00132954 | 0.000677736 | 0.000349688 | 1.31205e-06 |
 
 Most differences approximately halve under ParaEMT time-step refinement.
-The finest voltage-magnitude maximum occurs at bus 3 at 3 ms during
+The finest voltage-magnitude maximum occurs at bus 3 at 50 µs during
 startup. The original power flow requires a voltage-phasor adjustment
 of at most `4.85e-6 pu` to give a consistent continuous inductive initial
 state. Initialization and numerical-method differences remain.
@@ -87,8 +88,8 @@ state. Initialization and numerical-method differences remain.
 For the trip, excluding G1 internal signals and considering samples after
 1.02 s, the finest comparison has maximum differences of `1.15e-5 pu`
 in G2/G3 speed, `1.10e-4 pu` in mechanical power and field voltage,
-and `3.13e-4 pu` in stabilizer output. Voltage-magnitude discrepancy is
-larger (`0.02984 pu`, bus 4 at 1.0245 s). The full intervals, all channels,
+and `3.15e-4 pu` in stabilizer output. Voltage-magnitude discrepancy is
+larger (`0.03076 pu`, bus 1 at 1.02385 s). The full intervals, all channels,
 all three ParaEMT steps, and both GridKit tolerance refinements are in
 [governor metrics](results/gridkit_comparison.json) and
 [trip metrics](results/gridkit_trip_comparison.json). There is no
@@ -127,8 +128,16 @@ CSVs, a column schema, run log, solver statistics, executable hash,
 initial/final assembled-Jacobian checks, both event state limits, and
 monitor restart adjustments. The `1e-9` runs also retain full state and
 derivative CSVs with explicit column maps. Finest sampled original KCL
-mismatches are `0.000162 A` for the governor event and `0.000086 A` for
+mismatches are `0.000162 A` for the governor event and `0.000087 A` for
 the trip, independently recomputed by `verify.py`.
+
+`benchmark.py` measures three runs per setting with result capture disabled,
+pinned to one logical CPU. ParaEMT kernels are warmed on a disposable state
+before timing, with a check that no JIT specialization occurs in the timed
+loop. The runner checks each final state against the captured
+trajectory. It reports loop wall/CPU times, initialization, process wall time,
+and accepted/fixed step counts in [RUNTIMES.md](RUNTIMES.md).
+[Cold-process costs](RUNTIMES_COLD.md) are retained separately.
 
 The driver handles initialization, writable setpoints, terminal constraints,
 and the ideal opening. These operations are not yet available together in
@@ -154,7 +163,11 @@ read XLSX on current Python. The serial path does not require METIS.
 [environment.txt](environment.txt) records the environment.
 
 [sources.json](sources.json) records SHA-256 hashes and upstream Git blob
-identities. `python3 verify.py` checks the frozen artifact snapshot,
+identities, including hashes of local raw outputs. Normalized waveform CSVs,
+event samples, solver-work data, run summaries, and plots are tracked. Logs,
+raw monitor CSVs, and full-state archives are ignored and retained locally;
+a fresh checkout must regenerate them before running the full verification.
+`python3 verify.py` checks the frozen artifact snapshot,
 complete data, native-step samples, event invariants, independent original
 KCL, winding inverses, plot channel coverage, PDF page counts, and gallery
 links. Use `--regenerated` after rerunning to skip frozen local hashes

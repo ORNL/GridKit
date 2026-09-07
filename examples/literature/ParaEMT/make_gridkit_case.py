@@ -130,7 +130,7 @@ def main():
     for name, content in [('9bus.case.json',case),('9bus.state.json',state),('network.state.json',seed),('index_reduction.json',reduction)]:
         (OUT/name).write_text(json.dumps(content,indent=2)+'\n')
     for label,tol in [('tol1e-7',1e-7),('tol1e-8',1e-8),('tol1e-9',1e-9)]:
-        study = {'system_model_file': '9bus.case.json', 'state_file': '9bus.state.json', 'dt_monitor': .0005, 'tmax': 3.0, 'rel_tol': tol, 'abs_tol': tol, 'max_steps': 1000000, 'mu': 50000.0, 'consistent_ic_type': 'ya_ydp', 'output_file': 'mon.csv', 'state_output_file': 'state.csv'}
+        study = {'system_model_file': '9bus.case.json', 'state_file': '9bus.state.json', 'dt_monitor': .00005, 'tmax': 3.0, 'rel_tol': tol, 'abs_tol': tol, 'max_steps': 1000000, 'mu': 50000.0, 'consistent_ic_type': 'ya_ydp', 'output_file': 'mon.csv', 'state_output_file': 'state.csv'}
         (OUT/(label+'.solver.json')).write_text(json.dumps(study,indent=2)+'\n')
         study.update(system_model_file='9bus-trip.case.json',state_file='9bus-trip.state.json')
         (OUT/('trip-'+label+'.solver.json')).write_text(json.dumps(study,indent=2)+'\n')
