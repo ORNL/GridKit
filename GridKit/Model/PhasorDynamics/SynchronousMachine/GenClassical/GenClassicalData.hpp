@@ -1,7 +1,7 @@
 /**
  * @file GenClassicalData.hpp
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Modeling data for branches (transmission lines)
+ * @brief Modeling data for a classical generator model.
  *
  */
 #pragma once
@@ -15,62 +15,56 @@ namespace GridKit
     /// Initial parameters for a classical generator model
     enum class GenClassicalParameters
     {
-      p0,  ///< Initial active power
-      q0,  ///< Initial reactive power
-      H,   ///< Rotor inertia
-      D,   ///< Damping coefficient
-      Ra,  ///< Winding resistance
-      Xdp, ///< Direct axis transient reactance
-      mva  ///< MVA Base of the generator
+      p0,  ///< \f$P_0\f$ Initial active power
+      q0,  ///< \f$Q_0\f$ Initial reactive power
+      H,   ///< \f$H\f$ Rotor inertia
+      D,   ///< \f$D\f$ Damping coefficient
+      Ra,  ///< \f$R_a\f$ Armature resistance
+      Xdp, ///< \f$X'_d\f$ Direct-axis transient reactance
+      mva, ///< \f$S^\mathrm{base}\f$ Component power base
     };
 
-    /// Buses supported for a classical generator model
+    /// Buses for a classical generator model
     enum class GenClassicalBuses : size_t
     {
       bus, ///< Unique ID of the connecting bus
       SIZE
     };
 
-    /// Signal inputs supported for a classical generator model
-    ///
-    /// @warning GenClassical signal support is incomplete. These legacy signal
-    /// names are not wired by SystemModel today; the intended refactor is to
-    /// align this model with Genrou/Gensal by supporting `pmech`, `speed`, and
-    /// `efd` signals through ComponentSignals.
+    /// Signal inputs for a classical generator model
     enum class GenClassicalSignalInputs : size_t
     {
-      exciter_signal,  ///< Unique ID of the bus providing the exciter signal
-      governor_signal, ///< Unique ID of the bus providing the governor signal
+      pmech, ///< \f$P_m\f$ Unique ID of the signal providing mechanical power
+      efd,   ///< \f$E_{fd}\f$ Unique ID of the signal providing exciter field voltage
       SIZE
     };
 
-    /// Signal outputs supported for a classical generator model
+    /// Signal outputs for a classical generator model
     enum class GenClassicalSignalOutputs : size_t
     {
+      speed, ///< \f$\omega\f$ Unique ID of the signal receiving speed deviation
       SIZE
     };
 
     /// Variables able to be monitored for a classical generator model
     enum class GenClassicalMonitorableVariables
     {
-      ir,
-      ii,
-      p,
-      q,
-      delta,
-      omega,
-      speed
+      ir,    ///< \f$I_r\f$ Network-frame real terminal current
+      ii,    ///< \f$I_i\f$ Network-frame imaginary terminal current
+      p,     ///< \f$P\f$ Active power
+      q,     ///< \f$Q\f$ Reactive power
+      delta, ///< \f$\delta\f$ Rotor angle
+      omega, ///< \f$\omega\f$ Speed deviation
+      speed  ///< \f$1+\omega\f$ Per-unit machine speed
     };
 
     /**
-     * @brief Contains modeling data for a GenClassical generator model.
+     * @brief Contains modeling data for a classical generator model.
      *
      * @tparam real_type  Real parameter data type
      * @tparam index_type Integer parameter data type
      *
      * Integer parameters are of the same type as matrix and vector indices.
-     *
-     * @todo Decide on naming scheme for model parameters.
      */
     template <typename real_type, typename index_type>
     struct GenClassicalData : public ComponentData<real_type,

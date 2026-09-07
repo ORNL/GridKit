@@ -13,10 +13,12 @@ if(GRIDKIT_ENABLE_ENZYME)
     HEADERS ${_install_headers}
     INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
-      PRIVATE
-      ClangEnzymeFlags
       PUBLIC
       GridKit::phasor_dynamics_core
+      PUBLIC
+      GridKit::phasor_dynamics_signal
+      PRIVATE
+      ClangEnzymeFlags
     COMPILE_OPTIONS
       PRIVATE
       -mllvm
@@ -27,15 +29,23 @@ else()
     phasor_dynamics_gen_classical
     SOURCES GenClassical.cpp
     HEADERS ${_install_headers}
-    LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core
-    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+    LINK_LIBRARIES
+      PUBLIC
+      GridKit::phasor_dynamics_core
+      PUBLIC
+      GridKit::phasor_dynamics_signal)
 endif()
 
 gridkit_add_library(
   phasor_dynamics_gen_classical_dependency_tracking
   SOURCES GenClassicalDependencyTracking.cpp
-  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core
-  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+  LINK_LIBRARIES
+    PUBLIC
+    GridKit::phasor_dynamics_core
+    PUBLIC
+    GridKit::phasor_dynamics_signal_dependency_tracking)
 
 # Link to interface target for all components
 target_link_libraries(
