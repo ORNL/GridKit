@@ -84,6 +84,7 @@ int main(int argc, const char* argv[])
   // Set up simulation
   Ida<scalar_type, size_t> ida(&sys);
   ida.setMaxSteps(10000);
+  sys.initialize();
   ida.configureSimulation();
 
   // Run simulation

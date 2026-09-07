@@ -89,8 +89,12 @@ namespace GridKit
           f.resize(system_size);
           abs_tol.resize(system_size);
 
-          line.getSignals().template attachPort<GridKit::EMT::LineLumpedExternalVariables::V1A>(&bus1.voltagePort());
-          line.getSignals().template attachPort<GridKit::EMT::LineLumpedExternalVariables::V2A>(&bus2.voltagePort());
+          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V1A>(&bus1.outputSignal(GridKit::EMT::BusOutputs::va));
+          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V1B>(&bus1.outputSignal(GridKit::EMT::BusOutputs::vb));
+          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V1C>(&bus1.outputSignal(GridKit::EMT::BusOutputs::vc));
+          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V2A>(&bus2.outputSignal(GridKit::EMT::BusOutputs::va));
+          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V2B>(&bus2.outputSignal(GridKit::EMT::BusOutputs::vb));
+          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V2C>(&bus2.outputSignal(GridKit::EMT::BusOutputs::vc));
 
           IdxT offset = 0;
           for (auto* component : components())
@@ -105,9 +109,11 @@ namespace GridKit
             offset += component->size();
           }
 
+          bus1.initialize();
+          bus2.initialize();
+          line.initialize();
           for (auto* component : components())
           {
-            component->initialize();
             component->tagDifferentiable();
           }
         }

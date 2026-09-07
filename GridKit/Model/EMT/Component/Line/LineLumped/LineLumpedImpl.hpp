@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumped.hpp>
@@ -172,21 +173,24 @@ namespace GridKit
       // Bind the series current and shunt-row ports and wire the rational
       // operators before their allocation, so index assignment can route
       // into them
-      this->bindPort(i12_port_, 0);
-      this->bindPort(sh1_rows_port_, 3);
-      this->bindPort(sh2_rows_port_, 6);
+      for (IdxT phase = 0; phase < 3; ++phase)
+        this->bindSignal(i12_port_[static_cast<size_t>(phase)], 0 + phase);
+      for (IdxT phase = 0; phase < 3; ++phase)
+        this->bindSignal(sh1_rows_port_[static_cast<size_t>(phase)], 3 + phase);
+      for (IdxT phase = 0; phase < 3; ++phase)
+        this->bindSignal(sh2_rows_port_[static_cast<size_t>(phase)], 6 + phase);
       if (z_.has_value())
       {
-        z_->attachInput(&i12_port_);
-        z_->attachOutput(&i12_port_);
+        z_->attachInput(&i12_port_[0], &i12_port_[1], &i12_port_[2]);
+        z_->attachOutput(&i12_port_[0], &i12_port_[1], &i12_port_[2]);
         y1_->attachInput(signals_.template getAttachedSignal<LineLumpedExternalVariables::V1A>(),
                          signals_.template getAttachedSignal<LineLumpedExternalVariables::V1B>(),
                          signals_.template getAttachedSignal<LineLumpedExternalVariables::V1C>());
-        y1_->attachOutput(&sh1_rows_port_);
+        y1_->attachOutput(&sh1_rows_port_[0], &sh1_rows_port_[1], &sh1_rows_port_[2]);
         y2_->attachInput(signals_.template getAttachedSignal<LineLumpedExternalVariables::V2A>(),
                          signals_.template getAttachedSignal<LineLumpedExternalVariables::V2B>(),
                          signals_.template getAttachedSignal<LineLumpedExternalVariables::V2C>());
-        y2_->attachOutput(&sh2_rows_port_);
+        y2_->attachOutput(&sh2_rows_port_[0], &sh2_rows_port_[1], &sh2_rows_port_[2]);
         this->allocateOperators();
       }
 
@@ -219,6 +223,7 @@ namespace GridKit
         signals_.template markDerivativeCoupling<LineLumpedExternalVariables::V2C>();
       }
 
+      signals_.bindInternalVariableSignals(*this);
       allocated_ = true;
       return 0;
     }
@@ -296,8 +301,9 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    int LineLumped<scalar_type, index_type>::initialize()
+    int LineLumped<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
     {
+      this->validateOutputValues(outputs);
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
@@ -307,9 +313,16 @@ namespace GridKit
         yp[j] = 0.0;
       }
 
+      for (const auto& [output, value] : outputs)
+      {
+        y[static_cast<size_t>(output)] = static_cast<ScalarT>(value);
+      }
+
       if (z_.has_value())
       {
-        this->initializeOperators();
+        const int status = z_->initialize() + y1_->initialize() + y2_->initialize();
+        if (status != 0)
+          return status;
       }
 
       y_.setDataUpdated();

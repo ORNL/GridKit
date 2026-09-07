@@ -87,6 +87,7 @@ namespace GridKit
         using IdxT       = index_type;
         using RealT      = typename Component<ScalarT, IdxT>::RealT;
         using ModelDataT = Tgov1Data<RealT, IdxT>;
+        using Outputs    = typename ModelDataT::Outputs;
         using SignalT    = Signal<ScalarT, IdxT>;
 
         Tgov1();
@@ -103,7 +104,7 @@ namespace GridKit
           return 2;
         }
 
-        int initialize() override final;
+        int initialize(const std::map<Outputs, RealT>& outputs = {});
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT) override final;
         int evaluateInternalResidual() override final;

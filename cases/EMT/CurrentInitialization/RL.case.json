@@ -1,0 +1,192 @@
+{
+  "header": {
+    "case_name": "RL current initialization",
+    "case_description": "Prescribed and steady AC inductor currents",
+    "case_comments": "Analytic RL validation; currents and sources are inside a nested Container."
+  },
+  "devices": [
+    {
+      "class": "Container",
+      "id": "network",
+      "devices": [
+        {
+          "class": "Bus",
+          "id": "source_bus"
+        },
+        {
+          "class": "Bus",
+          "id": "ground_bus"
+        },
+        {
+          "class": "VoltageSource",
+          "id": "source",
+          "params": {
+            "E": [
+              7.071067811865475,
+              7.071067811865475,
+              7.071067811865475
+            ],
+            "phi": [
+              0.0,
+              -2.0943951023931953,
+              2.0943951023931953
+            ],
+            "omega": 20.0
+          },
+          "inputs": {
+            "bus": "source_bus"
+          }
+        },
+        {
+          "class": "VoltageSource",
+          "id": "ground",
+          "params": {
+            "E": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "phi": [
+              0.0,
+              -2.0943951023931953,
+              2.0943951023931953
+            ],
+            "omega": 20.0
+          },
+          "inputs": {
+            "bus": "ground_bus"
+          }
+        },
+        {
+          "class": "LineLumped",
+          "id": "line",
+          "params": {
+            "dx": 1.0,
+            "Rp": [
+              [
+                2.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                2.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                2.0
+              ]
+            ],
+            "Lp": [
+              [
+                0.05,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.05,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.05
+              ]
+            ]
+          },
+          "inputs": {
+            "bus1": "source_bus",
+            "bus2": "ground_bus"
+          },
+          "mon": [
+            "i12a",
+            "i12b",
+            "i12c"
+          ]
+        },
+        {
+          "class": "LoadZ",
+          "id": "load",
+          "params": {
+            "R": [
+              [
+                4.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                4.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                4.0
+              ]
+            ],
+            "L": [
+              [
+                0.1,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.1,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.1
+              ]
+            ]
+          },
+          "inputs": {
+            "bus": "source_bus"
+          },
+          "mon": [
+            "ia",
+            "ib",
+            "ic"
+          ]
+        },
+        {
+          "class": "LoadZ",
+          "id": "resistor",
+          "params": {
+            "R": [
+              [
+                5.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                5.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                5.0
+              ]
+            ]
+          },
+          "inputs": {
+            "bus": "source_bus"
+          },
+          "mon": [
+            "ia",
+            "ib",
+            "ic"
+          ]
+        }
+      ]
+    }
+  ]
+}

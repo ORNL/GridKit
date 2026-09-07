@@ -65,22 +65,31 @@ represents a device and has the following fields:
   `outputs`          | Optional object mapping supported output keys to signal IDs
   `mon`              | Optional array of variables to monitor, from the device model's Monitors table
 
-Electrical inputs such as `bus`, `bus1`, and `bus2` refer to Bus component
-IDs. Scalar control inputs refer to signal IDs, and scalar outputs assign the
-component output to a signal ID. Device and signal IDs share one local
-namespace and must be unique within their Container. The same local ID may be
-reused in a different Container. Local IDs must not contain `.`, which is
-reserved for a child boundary reference such as `plant.speed`.
+All model inputs are scalar signals. Electrical models read `va`, `vb`, and
+`vc`; two-terminal models read `v1a`, `v1b`, `v1c`, `v2a`, `v2b`, and `v2c`.
+A voltage phase signal also carries its derivative and KCL residual row, so
+connected devices accumulate their currents without separate output wiring.
 
-Electrical current injection and bus-voltage sharing are established together
-when an electrical input is connected. They do not require a second case-file
-output entry. Consequently, a Bus has no `inputs` or `outputs` entries in case
-JSON even though its model equations exchange voltage and current with the
-connected devices.
+The case parser accepts `"bus": "b"` as shorthand for
+`"va": "b.va", "vb": "b.vb", "vc": "b.vc"`. Likewise `bus1` and `bus2`
+expand to the corresponding terminal phases. The shortcut and an explicit
+phase for that terminal cannot appear together. Only scalar phase mappings
+remain in model data. A Container can export each phase, for example
+`plant.va`, as an ordinary scalar output.
 
-A Bus is an ordinary device. It may additionally contain an optional `init`
-object with the initial instantaneous phase voltages `va`, `vb`, and `vc` in
-volts; missing entries default to zero.
+Bus `outputs` can publish `va`, `vb`, and `vc` on named signals. Its optional
+`ia`, `ib`, and `ic` inputs add externally supplied injections to the same KCL
+rows. Physical components already inject through their voltage connections;
+do not add those contributions a second time with explicit Bus inputs.
+
+Initial values belong exclusively in the [state file](STATE.md), keyed by
+component path and existing output names. Case files reject `init` sections.
+Bus voltages default to zero. Model initialization reconstructs
+internal variables from known outputs and attached inputs.
+
+Device and signal IDs share one local namespace and must be unique within
+their Container. Local IDs cannot contain `.`, which separates component,
+boundary, and voltage-phase references.
 
 Legacy top-level `buses` arrays and per-device `ports` objects are not
 supported. Move each Bus into `devices`, then split every old `ports` entry
@@ -115,7 +124,7 @@ For example, these two independently scoped systems each own a Bus called
     {
       "class": "Container",
       "id": "left",
-      "outputs": { "terminal": "bus" },
+      "outputs": { "va": "bus.va", "vb": "bus.vb", "vc": "bus.vc" },
       "devices": [
         { "class": "Bus", "id": "bus" },
         {
@@ -128,7 +137,7 @@ For example, these two independently scoped systems each own a Bus called
     {
       "class": "Container",
       "id": "right",
-      "outputs": { "terminal": "bus" },
+      "outputs": { "va": "bus.va", "vb": "bus.vb", "vc": "bus.vc" },
       "devices": [
         { "class": "Bus", "id": "bus" },
         {
@@ -142,15 +151,15 @@ For example, these two independently scoped systems each own a Bus called
       "class": "LineLumped",
       "id": "tie",
       "inputs": {
-        "bus1": "left.terminal",
-        "bus2": "right.terminal"
+        "bus1": "left",
+        "bus2": "right"
       }
     }
   ]
 }
 ```
 
-`left.terminal` is the exact three-phase port owned by `left`'s Bus. A
+`left.va`, `left.vb`, and `left.vc` reference the phase signals owned by `left`'s Bus. A
 boundary adds no state or residual equation. Two independently owned Bus
 variables therefore cannot be identified by an alias; connect them with an
 explicit Line, Switch, transformer, or constraint Component.
@@ -176,9 +185,9 @@ Signal exported by `plant`; no relay Signal or copy equation is introduced:
 }
 ```
 
-The same rule applies to electrical inputs. A child may bind
-`"inputs": {"terminal": "parent_bus"}` and connect an internal LoadZ to
-`"terminal"`; both refer to the exact Port3 owned by `parent_bus`.
+Electrical boundaries use scalar signals too. A child binds
+`"inputs": {"va": "parent_bus.va", "vb": "parent_bus.vb", "vc": "parent_bus.vc"}`.
+An internal LoadZ connects with `"inputs": {"va": "va", "vb": "vb", "vc": "vc"}`.
 
 An inline Container may contain only `id`, `class`, `inputs`, `outputs`,
 `signals`, and `devices`. It does not have its own header, monitor sinks,
@@ -189,9 +198,10 @@ future file-backed Containers; file inclusion is not part of this revision.
 
   Class                    | Key     | Direction | Target kind   | Required
   -------------------------|---------|-----------|---------------|---------
-  `Bus`                    | —       | —         | —             | —
-  `VoltageSource`          | `bus`   | Input     | Bus component | Yes
-  `DependentVoltageSource` | `bus`   | Input     | Bus component | Yes
+  `Bus`                    | `va`, `vb`, `vc` | Output | Signal | No
+  `Bus`                    | `ia`, `ib`, `ic` | Input | Signal | No
+  `VoltageSource`          | `va`, `vb`, `vc` | Input | Voltage signal | Yes
+  `DependentVoltageSource` | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `DependentVoltageSource` | `ea`    | Input     | Signal        | Yes
   `DependentVoltageSource` | `eb`    | Input     | Signal        | Yes
   `DependentVoltageSource` | `ec`    | Input     | Signal        | Yes
@@ -199,28 +209,30 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Converter`              | `s`     | Input     | Three Signal IDs | Yes
   `Converter`              | `vdc`   | Input     | Signal        | Yes
   `Converter`              | `vo`    | Output    | Three Signal IDs | No
-  `Machine`                | `bus`   | Input     | Bus component | Yes
+  `Machine`                | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `Machine`                | `pm`    | Input     | Signal        | No
   `Machine`                | `efd`   | Input     | Signal        | No
-  `Machine`                | `speed` | Output    | Signal        | No
-  `LineLumped`             | `bus1`  | Input     | Bus component | Yes
-  `LineLumped`             | `bus2`  | Input     | Bus component | Yes
-  `LoadZ`                  | `bus`   | Input     | Bus component | Yes
-  `SexsPti`                | `bus` | Input | Bus component | Yes
+  `Machine`                | `speed`, `ia`, `ib`, `ic` | Output | Signal | No
+  `VoltageSource`, `DependentVoltageSource`, `LoadZ` | `ia`, `ib`, `ic` | Output | Signal | No
+  `LineLumped`, `Switch` | `i12a`, `i12b`, `i12c` | Output | Signal | No
+  `LineLumped`             | `v1a`, `v1b`, `v1c` | Input | Voltage signal | Yes
+  `LineLumped`             | `v2a`, `v2b`, `v2c` | Input | Voltage signal | Yes
+  `LoadZ`                  | `va`, `vb`, `vc` | Input | Voltage signal | Yes
+  `SexsPti`                | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `SexsPti`                | `vref`, `vs`, `vuel`, `voel` | Input | Signal | No
   `SexsPti`                | `efd` | Output | Signal | Yes
   `Tgov1`                  | `speed` | Input     | Signal        | No
   `Tgov1`                  | `pref`  | Input     | Signal        | No
   `Tgov1`                  | `pmech` | Output    | Signal        | Yes
-  `Ieeet1`                 | `bus`   | Input     | Bus component | Yes
+  `Ieeet1`                 | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `Ieeet1`                 | `speed` | Input     | Signal        | No
   `Ieeet1`                 | `vref`  | Input     | Signal        | No
   `Ieeet1`                 | `vs`    | Input     | Signal        | No
   `Ieeet1`                 | `vuel`  | Input     | Signal        | No
   `Ieeet1`                 | `voel`  | Input     | Signal        | No
   `Ieeet1`                 | `efd`   | Output    | Signal        | Yes
-  `Switch`                 | `bus1`  | Input     | Bus component | Yes
-  `Switch`                 | `bus2`  | Input     | Bus component | Yes
+  `Switch`                 | `v1a`, `v1b`, `v1c` | Input | Voltage signal | Yes
+  `Switch`                 | `v2a`, `v2b`, `v2c` | Input | Voltage signal | Yes
   `Container`              | user-defined | Input/output | Public boundary | No
 
 Declaring a signal creates a named connection. Its value is supplied by the

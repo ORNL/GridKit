@@ -26,13 +26,18 @@ namespace GridKit
     /// Inputs supported by an impedance load
     enum class LoadZInputs : size_t
     {
-      bus, ///< Component ID of the connected bus
+      va, ///< Phase-a terminal voltage
+      vb, ///< Phase-b terminal voltage
+      vc, ///< Phase-c terminal voltage
       SIZE
     };
 
     /// Outputs supported by an impedance load
     enum class LoadZOutputs : size_t
     {
+      ia,
+      ib,
+      ic,
       SIZE
     };
 

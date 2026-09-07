@@ -101,7 +101,7 @@ namespace GridKit
         std::array<ScalarT, 3> out_row{};
         std::array<IdxT, 3>    io_index{9, 10, 11};
 
-        GridKit::EMT::Port3<ScalarT, IdxT> io_port;
+        std::array<GridKit::EMT::Signal<ScalarT, IdxT>, 3> io_port;
 
         VectorFitT vf;
 
@@ -115,11 +115,11 @@ namespace GridKit
 
           for (size_t n = 0; n < 3; ++n)
           {
-            io_port.signals[n].set(&u[n], &u_dot[n], &out_row[n], &io_index[n], &io_index[n]);
+            io_port[n].set(&u[n], &u_dot[n], &out_row[n], &io_index[n], &io_index[n]);
           }
 
-          vf.attachInput(&io_port);
-          vf.attachOutput(&io_port);
+          vf.attachInput(&io_port[0], &io_port[1], &io_port[2]);
+          vf.attachOutput(&io_port[0], &io_port[1], &io_port[2]);
 
           vf.bind(y, yp, f, abs_tol, 0);
           vf.allocate();

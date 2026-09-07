@@ -87,6 +87,9 @@ namespace GridKit
         }
       }
 
+      if (j.contains("init"))
+        throw std::invalid_argument("EMT case init is not supported; use a state file");
+
       std::set<std::string> local_names;
       for (const auto& [name, reference] : data.inputs)
       {

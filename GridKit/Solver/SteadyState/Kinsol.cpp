@@ -99,8 +99,6 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Kinsol<ScalarT, IdxT>::getDefaultInitialCondition()
     {
-      model_->initialize();
-
       copyVec(model_->y(), yy_);
 
       return 0;

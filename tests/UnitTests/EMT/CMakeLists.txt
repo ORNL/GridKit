@@ -78,6 +78,17 @@ if(GRIDKIT_ENABLE_SUNDIALS)
 endif()
 add_test(NAME EMTSystemTest COMMAND test_emt_system)
 
+add_executable(test_emt_current_state runCurrentStateTests.cpp)
+target_include_directories(
+  test_emt_current_state
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
+target_link_libraries(
+  test_emt_current_state
+  GridKit::emt_systemmodel
+  GridKit::model_state_data
+  GridKit::testing)
+add_test(NAME EMTCurrentStateTest COMMAND test_emt_current_state)
+
 add_executable(test_emt_pwm_converter runPwmConverterTests.cpp)
 target_include_directories(
   test_emt_pwm_converter

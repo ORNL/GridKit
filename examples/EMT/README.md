@@ -4,6 +4,10 @@
 grid with three machines and three converters, full monitoring, and plotting
 scripts.
 
+[Current initialization](../../cases/EMT/CurrentInitialization/README.md)
+checks line and load currents supplied by state files against analytic RL
+solutions through the normal EMT application.
+
 This directory preserves the intended model composition for future EMT
 examples. The trees describe ownership and nesting only. They do not define a
 case-file schema.

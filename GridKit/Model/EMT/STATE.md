@@ -4,10 +4,8 @@
 
 This document describes the JSON data format for EMT operating points. A
 case file carries parameters and topology only; a state file carries the
-operating point. The state format is the shared
-[Model::StateData](../StateData.hpp) container with the instantaneous
-phase-coordinate fields, so partial states are legal: any missing record or
-field keeps its default.
+operating point. Case files reject `init` sections. Fields use each component's
+existing `Outputs` enum. Missing records or null fields use model defaults.
 
 The state carries instantaneous SI values at the initialization instant.
 Synthesizing instantaneous values from an RMS or phasor description is an
@@ -48,14 +46,15 @@ Container, for example `plant.machine`:
 
    Name   | Value
  ---------|-------------------------------------------------------
-  `p`     | Optional active power injection in watts
-  `q`     | Optional reactive power injection in vars
   `open`  | Optional Boolean switch command, true is open
+  `i12a`, `i12b`, `i12c` | Optional instantaneous `LineLumped` or `Switch` series currents from terminal 1 to terminal 2, in amperes
+  `ia`, `ib`, `ic` | Optional instantaneous `Machine`, `LoadZ`, `VoltageSource`, or `DependentVoltageSource` current injections into the bus, in amperes
+
+Other outputs use their model output names and units. All output values must
+be finite; missing or null values use model defaults.
 
 ## Application
 
-[StateDataAdapter](StateDataAdapter.hpp) applies a parsed state to parsed
-system model data before the system model is constructed, so model
-constructors remain the single ingestion path: bus voltages land in the bus
-initial conditions, machine dispatch lands in the machine `p0` and `q0`
-parameters, and switch commands land in the switch `open` parameter.
+The application reads the state file and passes its values to
+`SystemModel::initialize(state)` after allocation. The integrator then solves
+consistent algebraic variables and derivatives.

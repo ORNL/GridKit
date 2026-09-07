@@ -55,24 +55,24 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
-      // Sparse discovery needs an initialized operating point. Dense
-      // difference quotients initialize later in the solver as before.
-      if (hasJacobian())
-      {
-        const int status = this->initialize();
-        if (status != 0)
-        {
-          Log::error() << "System model initialization failed with status "
-                       << status << '\n';
-          throw std::runtime_error("SystemModel allocation failed");
-        }
-        this->evaluateResidual();
-        this->evaluateJacobian();
-      }
-
       initializeMonitor();
       startMonitor();
       allocated_ = true;
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::initialize(const std::map<std::string, std::map<std::string, RealT>>& state)
+    {
+      const int status = ContainerT::initialize(state);
+      if (status != 0)
+        return status;
+      if (hasJacobian())
+      {
+        this->resetJacobianStructure();
+        this->evaluateResidual();
+        this->evaluateJacobian();
+      }
       return 0;
     }
 

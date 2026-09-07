@@ -16,6 +16,8 @@ namespace GridKit
   class ModelEvaluatorImpl : public Model::Evaluator<ScalarT, IdxT>
   {
   public:
+    virtual int initialize() = 0;
+
     using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
     using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
