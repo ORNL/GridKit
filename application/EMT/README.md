@@ -30,6 +30,7 @@ at each restart, including switch events.
   `events`             | An ordered array of actions (see [Events](#events) below)
   `output_file`        | Path to output (CSV) file (optional)
   `state_output_file`  | Optional CSV of every DAE variable and derivative at the monitor times, with a companion `.csv.json` index map. Output paths are relative to the working directory. Event times include pre-event and post-event rows.
+  `step_output_file`   | Optional CSV of every accepted internal step, with columns `time`, `step`, and BDF `order`. This observes adaptive stepping independently of `dt_monitor`.
   `reference_file`     | A string containing the name of the case (optional)
   `error_type`         | One of { "relative" (default), "absolute" }
   `error_tolerance`    | A floating-point value for highest allowable total error (default: 1.0e-4)

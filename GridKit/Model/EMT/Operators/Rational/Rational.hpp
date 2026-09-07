@@ -394,6 +394,30 @@ namespace GridKit
         return value;
       }
 
+      /// Time derivative of a proper output at an accepted solver state.
+      ScalarT outputDerivative(IdxT n) const
+      {
+        if (hasFeedthroughDerivative())
+          throw std::logic_error("Rational: output derivative requires a proper transfer");
+        const size_t row = static_cast<size_t>(n);
+        ScalarT      value{0};
+        for (size_t k = 0; k < cols_; ++k)
+          if (D_[row][k] != RealT{0})
+            value += D_[row][k] * input_[k]->readDerivative();
+        size_t offset = 0;
+        for (const auto& section : sections_)
+        {
+          for (size_t j = 0; j < section.order; ++j)
+          {
+            value += section.Cr[row][j] * this->yp_.getData()[offset + j];
+            if (section.pair)
+              value -= section.Ci[row][j] * this->yp_.getData()[offset + section.order + j];
+          }
+          offset += section.order * (section.pair ? 2 : 1);
+        }
+        return value;
+      }
+
       int evaluateInternalResidual() override
       {
         if (!coupling_allocated_ || errors_)
