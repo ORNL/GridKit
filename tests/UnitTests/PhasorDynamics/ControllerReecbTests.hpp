@@ -319,7 +319,7 @@ namespace GridKit
         success *= stateMatches(fixture.reecb,
                                 {{Vars::ILCAP, 2.0}},
                                 "initial current-circle capacity",
-                                kCircleTol);
+                                circleTol());
 
         const auto* initial_values  = fixture.reecb.y().getData();
         success                    *= scalarMatches(initial_values[index(Vars::IQMAX)],
@@ -696,7 +696,7 @@ namespace GridKit
           success *= stateMatches(boundary.reecb,
                                   {{Vars::ILCAP, test_case.capacity}},
                                   test_case.label,
-                                  kCircleTol);
+                                  circleTol());
           success *= allResidualsWithinInitTolerance(boundary.reecb);
         }
 
@@ -770,7 +770,7 @@ namespace GridKit
         success *= stateMatches(exhausted.reecb,
                                 {{Vars::ILCAP, 0.0}},
                                 "injection does not expand current circle",
-                                kCircleTol);
+                                circleTol());
         success *= allResidualsWithinInitTolerance(exhausted.reecb);
 
         Log::setVerbosity(previous_verbosity);
@@ -832,7 +832,7 @@ namespace GridKit
           RealT tolerance = kTol;
           if (variable == Vars::ILCAP)
           {
-            tolerance = kCircleTol;
+            tolerance = circleTol();
           }
 
           success *= variableMatches(residuals[index(variable)],
@@ -900,7 +900,7 @@ namespace GridKit
                   success *= stateMatches(fixture.reecb,
                                           {{Vars::ILCAP, 2.0}},
                                           "selector ILCAP",
-                                          kCircleTol);
+                                          circleTol());
 
                   // Exactly one reactive path carries the operating point.
                   const auto* y = fixture.reecb.y().getData();
@@ -1531,7 +1531,7 @@ namespace GridKit
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::ILCAP, circleLeg(square) - capacity_state}},
                                       label,
-                                      kCircleTol);
+                                      circleTol());
           }
         }
 
@@ -1582,7 +1582,7 @@ namespace GridKit
           success *= residualsMatch(open.reecb,
                                     {{Vars::ILCAP, open_limit}},
                                     "finite open current circle",
-                                    kCircleTol);
+                                    circleTol());
           success *= allResidualsFinite(open.reecb);
         }
 
@@ -1621,7 +1621,7 @@ namespace GridKit
             success *= residualsMatch(fixture.reecb,
                                       {{Vars::ILCAP, ideal_capacity}},
                                       "off-axis capacity",
-                                      kCircleTol);
+                                      circleTol());
 
             const RealT capacity = fixture.reecb.getResidual().getData()[index(Vars::ILCAP)];
             if (!std::isfinite(capacity) || capacity < ZERO<RealT>)
@@ -1963,8 +1963,10 @@ namespace GridKit
       }
 
       /// MU-aware tolerance for ideal current-circle comparisons.
-      static constexpr RealT kCircleTol =
-          std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
+      static RealT circleTol()
+      {
+        return std::max(ONE<RealT> / (Math::MU<RealT> * Math::MU<RealT>), kTol);
+      }
 
       static constexpr size_t kBusVrColumn = index(Vars::MAXIMUM);
 
