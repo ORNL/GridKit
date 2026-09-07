@@ -66,7 +66,7 @@ TestStatus runStudy(StudyData study_data)
     }
 
     // Re-initialize simulation at event time
-    ida.initializeSimulation(event.time, true);
+    ida.restartSimulation(event.time, true);
   }
 
   // Run to final time

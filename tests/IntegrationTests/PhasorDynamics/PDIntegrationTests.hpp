@@ -254,12 +254,12 @@ namespace GridKit
 
         // Introduce fault and run for the next 0.1s
         fault->setStatus(true);
-        ida.initializeSimulation(1.0);
+        ida.restartSimulation(1.0);
         ida.runSimulation(1.1, dt);
 
         // Clear the fault and run until t = 10s.
         fault->setStatus(false);
-        ida.initializeSimulation(1.1);
+        ida.restartSimulation(1.1);
         ida.runSimulation(10.0, dt);
 
         sys.stopMonitor();
@@ -895,7 +895,7 @@ namespace GridKit
         const RealT pbranch0 = static_cast<RealT>(pbranch_signal->read());
 
         pref_signal->init(pref0 + REFERENCE_PULSE);
-        success *= ida.initializeSimulation(ZERO<RealT>) == 0;
+        success *= ida.restartSimulation(ZERO<RealT>) == 0;
         success *= ida.runSimulation(PULSE_DURATION, OUTPUT_INTERVAL) == 0;
 
         struct SignalResponse
@@ -920,7 +920,7 @@ namespace GridKit
         }
 
         pref_signal->init(pref0);
-        success *= ida.initializeSimulation(PULSE_DURATION) == 0;
+        success *= ida.restartSimulation(PULSE_DURATION) == 0;
         success *= ida.runSimulation(PULSE_DURATION + RECOVERY_HORIZON,
                                      OUTPUT_INTERVAL)
                    == 0;

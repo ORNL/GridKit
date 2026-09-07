@@ -77,16 +77,16 @@ namespace GridKit
         return admittance_.verify();
       }
 
-      int initializationOrder() const noexcept override
-      {
-        return 4;
-      }
-
       int initializeState(const std::map<std::string, RealT>& values) override
       {
         if (!values.empty())
           throw std::invalid_argument("Norton shunt current is initialized from its admittance");
         return initialize();
+      }
+
+      typename Base::InitializationPortsT initializationPorts() override
+      {
+        return {{voltage_.begin(), voltage_.end()}, {}, {}};
       }
 
       int initialize()

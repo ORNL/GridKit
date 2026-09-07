@@ -88,6 +88,33 @@
         },
         {
             "id": "ec_6"
+        },
+        {
+            "id": "filter_4_ia"
+        },
+        {
+            "id": "filter_4_ib"
+        },
+        {
+            "id": "filter_4_ic"
+        },
+        {
+            "id": "filter_5_ia"
+        },
+        {
+            "id": "filter_5_ib"
+        },
+        {
+            "id": "filter_5_ic"
+        },
+        {
+            "id": "filter_6_ia"
+        },
+        {
+            "id": "filter_6_ib"
+        },
+        {
+            "id": "filter_6_ic"
         }
     ],
     "devices": [
@@ -450,7 +477,12 @@
                     "sb_4",
                     "sc_4"
                 ],
-                "vdc": "dc_4"
+                "vdc": "dc_4",
+                "i": [
+                    "filter_4_ia",
+                    "filter_4_ib",
+                    "filter_4_ic"
+                ]
             },
             "outputs": {
                 "vo": [
@@ -460,7 +492,8 @@
                 ]
             },
             "mon": [
-                "vo"
+                "vo",
+                "idc"
             ]
         },
         {
@@ -515,7 +548,12 @@
                 "ia",
                 "ib",
                 "ic"
-            ]
+            ],
+            "outputs": {
+                "ia": "filter_4_ia",
+                "ib": "filter_4_ib",
+                "ic": "filter_4_ic"
+            }
         },
         {
             "class": "PWM",
@@ -546,7 +584,12 @@
                     "sb_5",
                     "sc_5"
                 ],
-                "vdc": "dc_5"
+                "vdc": "dc_5",
+                "i": [
+                    "filter_5_ia",
+                    "filter_5_ib",
+                    "filter_5_ic"
+                ]
             },
             "outputs": {
                 "vo": [
@@ -556,7 +599,8 @@
                 ]
             },
             "mon": [
-                "vo"
+                "vo",
+                "idc"
             ]
         },
         {
@@ -611,7 +655,12 @@
                 "ia",
                 "ib",
                 "ic"
-            ]
+            ],
+            "outputs": {
+                "ia": "filter_5_ia",
+                "ib": "filter_5_ib",
+                "ic": "filter_5_ic"
+            }
         },
         {
             "class": "PWM",
@@ -642,7 +691,12 @@
                     "sb_6",
                     "sc_6"
                 ],
-                "vdc": "dc_6"
+                "vdc": "dc_6",
+                "i": [
+                    "filter_6_ia",
+                    "filter_6_ib",
+                    "filter_6_ic"
+                ]
             },
             "outputs": {
                 "vo": [
@@ -652,7 +706,8 @@
                 ]
             },
             "mon": [
-                "vo"
+                "vo",
+                "idc"
             ]
         },
         {
@@ -707,7 +762,12 @@
                 "ia",
                 "ib",
                 "ic"
-            ]
+            ],
+            "outputs": {
+                "ia": "filter_6_ia",
+                "ib": "filter_6_ib",
+                "ic": "filter_6_ic"
+            }
         },
         {
             "class": "LineLumped",

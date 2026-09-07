@@ -4,6 +4,7 @@
 
 #include <GridKit/Model/EMT/Component.hpp>
 #include <GridKit/Model/EMT/Component/Bus/BusData.hpp>
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 
 namespace GridKit
 {
@@ -95,11 +96,6 @@ namespace GridKit
         return errors;
       }
 
-      int initializationOrder() const noexcept override
-      {
-        return 0;
-      }
-
       int initialize(const std::map<Outputs, RealT>& outputs = {})
       {
         this->validateOutputValues(outputs);
@@ -113,16 +109,31 @@ namespace GridKit
         return 0;
       }
 
+      void validateInitialState(const std::map<std::string, RealT>& values) const override
+      {
+        this->template parseInitialOutputs<KCL>(values);
+      }
+
       int initializeState(const std::map<std::string, RealT>& values) override
       {
-        std::map<Outputs, RealT> outputs;
-        for (const auto& [name, value] : values)
+        return this->initializeOutputs(*this, values);
+      }
+
+      typename Base::InitializationPortsT initializationPorts() override
+      {
+        return {{}, {{"va", &voltage_[0]}, {"vb", &voltage_[1]}, {"vc", &voltage_[2]}}, {}};
+      }
+
+      void prepareInitialization(typename Base::InitialStateT& initial) override
+      {
+        const auto outputs = this->template parseInitialOutputs<KCL>(initial.outputs(*this));
+        for (size_t p = 0; p < 3; ++p)
         {
-          if (name.size() != 2 || name[0] != 'v' || name[1] < 'a' || name[1] > 'c')
-            throw std::invalid_argument("Unknown initial bus output: " + name);
-          outputs[static_cast<Outputs>(name[1] - 'a')] = value;
+          const auto value = this->outputValue(outputs, static_cast<Outputs>(p), RealT{0});
+          initial.provide(voltage_[p], value);
+          if (aliases_[p])
+            initial.provide(*aliases_[p], value);
         }
-        return initialize(outputs);
       }
 
       int setAbsoluteTolerance(RealT tolerance) override

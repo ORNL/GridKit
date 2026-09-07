@@ -260,7 +260,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void DynamicConstraint<ScalarT, IdxT>::finalize_solution([[maybe_unused]] SolverReturn               status,
                                                              [[maybe_unused]] Index                      n,
-                                                             [[maybe_unused]] const Number*              x,
+                                                             const Number*                               x,
                                                              [[maybe_unused]] const Number*              z_L,
                                                              [[maybe_unused]] const Number*              z_U,
                                                              [[maybe_unused]] Index                      m,
@@ -270,6 +270,10 @@ namespace AnalysisManager
                                                              [[maybe_unused]] const IpoptData*           ip_data,
                                                              [[maybe_unused]] IpoptCalculatedQuantities* ip_cq)
     {
+      auto* parameters = model_->param().getData();
+      for (IdxT i = 0; i < model_->sizeParams(); ++i)
+        parameters[static_cast<size_t>(i)] = x[i];
+      model_->param().setDataUpdated();
     }
 
     template class DynamicConstraint<sunrealtype, long int>;

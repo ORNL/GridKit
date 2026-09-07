@@ -20,9 +20,14 @@ gridkit_add_library(
   INTERFACE_TARGET
   HEADERS Component.hpp
           ComponentData.hpp
+          ComponentInitialization.hpp
           ComponentLibrary.hpp
           ComponentSignals.hpp
+          InitialState.hpp
+          JsonValidation.hpp
           PhasorInitialization.hpp
+  INCLUDE_DIRECTORIES INTERFACE $<BUILD_INTERFACE:${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include>
+                      $<BUILD_INTERFACE:${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include>
   LINK_LIBRARIES
     INTERFACE
     GridKit::definitions
@@ -32,6 +37,13 @@ gridkit_add_library(
     GridKit::dense_vector
     INTERFACE
     GridKit::sparse_matrix)
+
+install(DIRECTORY ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include/magic_enum DESTINATION include)
+install(FILES ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/LICENSE
+        DESTINATION share/licenses/GridKit/magic-enum)
+install(DIRECTORY ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include/nlohmann DESTINATION include)
+install(FILES ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/LICENSE.MIT
+        DESTINATION share/licenses/GridKit/nlohmann-json)
 
 target_link_libraries(
   emt_components

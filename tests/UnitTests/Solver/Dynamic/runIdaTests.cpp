@@ -8,6 +8,12 @@ int main()
   GridKit::Testing::TestingResults           result;
   GridKit::Testing::IdaTests<double, size_t> test;
 
+  result += test.acceptedHistory();
+  result += test.historyStepLimits();
+  result += test.maximumSteps();
+  result += test.invalidTimes();
+  result += test.quadratureAndAdjoint();
+  result += test.evaluationFailures();
   result += test.preservesInitialState();
   result += test.callback();
   result += test.dtMonitorZero();

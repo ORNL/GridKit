@@ -82,8 +82,8 @@ namespace GridKit
        *
        * Sizes the state, residual, and signal-interface buffers, seeds the
        * identity index maps, and points the assigned `pmech` node at the
-       * internal state it publishes. That node aliases GASTPTI storage from
-       * here on, which is how initialize() reads the seed the machine wrote.
+       * internal state it publishes. Initialization receives the resolved
+       * mechanical-power output through its output-value map.
        * Repeated allocation by this model reuses its existing link.
        * GASTPTI attaches to no bus, so the bus-interface buffer stays empty.
        *
@@ -250,9 +250,9 @@ namespace GridKit
       }
 
       /**
-       * @brief Initialize GASTPTI from the seeded mechanical-power port
+       * @brief Initialize GASTPTI from its mechanical-power operating point
        *
-       * Reads the required machine-base `pmech` seed and optional speed input,
+       * Reads the resolved machine-base `pmech` value and optional speed input,
        * resolves the response limits and valve mask, and seats every
        * algebraic row. For an active response interval, it inverts the smooth
        * low-value selector so its output reproduces the initialized flow; this
@@ -264,7 +264,7 @@ namespace GridKit
        * modified.
        *
        * @pre allocate() has completed.
-       * @pre The machine model has seeded the assigned `pmech` node.
+       * @pre Connected machine requirements have been resolved by the system.
        *
        * @return int 0 on success; nonzero when allocation, configuration,
        *             seed, candidate, response-limit, or active temperature-
@@ -553,45 +553,6 @@ namespace GridKit
       //
 
       /**
-       * @brief Load one optional real-valued parameter
-       *
-       * Real and integer serialized values are accepted. Any other stored
-       * type records a loading error while preserving the existing default.
-       *
-       * @param[in] data Model parameter data.
-       * @param[in] parameter Parameter key to load.
-       * @param[in,out] target Stored parameter value.
-       * @param[in] name Serialized parameter name for diagnostics.
-       */
-      template <typename scalar_type, typename index_type>
-      void GastPti<scalar_type, index_type>::loadRealParameter(
-          const ModelDataT& data,
-          GastPtiParameters parameter,
-          RealT&            target,
-          const char*       name)
-      {
-        if (!data.parameters.contains(parameter))
-        {
-          return;
-        }
-
-        const auto& value = data.parameters.at(parameter);
-        if (const auto* real_value = std::get_if<RealT>(&value))
-        {
-          target = *real_value;
-        }
-        else if (const auto* index_value = std::get_if<IdxT>(&value))
-        {
-          target = static_cast<RealT>(*index_value);
-        }
-        else
-        {
-          Log::error() << "GastPti: parameter '" << name << "' must be numeric\n";
-          ++parameter_error_count_;
-        }
-      }
-
-      /**
        * @brief Validate and floor one turbine time constant
        *
        * Invalid or nonfinite values record a parameter error and are replaced
@@ -624,9 +585,8 @@ namespace GridKit
        * @brief Read the parameters out of the model data
        *
        * Every parameter is optional and keeps the default documented in the
-       * model README when omitted. A non-numeric value is counted and reported
-       * by verify() rather than throwing. Integer JSON values are accepted for
-       * real parameters.
+       * model README when omitted. Supplied values use the shared finite,
+       * typed parameter reader; invalid value types throw with parameter context.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -638,17 +598,17 @@ namespace GridKit
         parameter_error_count_ = 0;
         trate_provided_        = data.parameters.contains(Params::Trate);
 
-        loadRealParameter(data, Params::S, va_machine_base_, "S");
-        loadRealParameter(data, Params::R, R_, "R");
-        loadRealParameter(data, Params::T1, T1_, "T1");
-        loadRealParameter(data, Params::T2, T2_, "T2");
-        loadRealParameter(data, Params::T3, T3_, "T3");
-        loadRealParameter(data, Params::At, At_, "At");
-        loadRealParameter(data, Params::Kt, Kt_, "Kt");
-        loadRealParameter(data, Params::Vmax, Vmax_, "Vmax");
-        loadRealParameter(data, Params::Vmin, Vmin_, "Vmin");
-        loadRealParameter(data, Params::Dturb, Dturb_, "Dturb");
-        loadRealParameter(data, Params::Trate, Trate_, "Trate");
+        va_machine_base_ = parameter<RealT>(data, Params::S, va_machine_base_);
+        R_               = parameter<RealT>(data, Params::R, R_);
+        T1_              = parameter<RealT>(data, Params::T1, T1_);
+        T2_              = parameter<RealT>(data, Params::T2, T2_);
+        T3_              = parameter<RealT>(data, Params::T3, T3_);
+        At_              = parameter<RealT>(data, Params::At, At_);
+        Kt_              = parameter<RealT>(data, Params::Kt, Kt_);
+        Vmax_            = parameter<RealT>(data, Params::Vmax, Vmax_);
+        Vmin_            = parameter<RealT>(data, Params::Vmin, Vmin_);
+        Dturb_           = parameter<RealT>(data, Params::Dturb, Dturb_);
+        Trate_           = parameter<RealT>(data, Params::Trate, Trate_);
 
         setDerivedParameters();
       }

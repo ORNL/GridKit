@@ -815,7 +815,7 @@ namespace GridKit
             (void) GridKit::EMT::parseSystemModelData(invalid_stream);
             return false;
           }
-          catch (const std::runtime_error&)
+          catch (const std::exception&)
           {
             return true;
           }
@@ -1428,7 +1428,7 @@ namespace GridKit
         sys.evaluateResidual();
         sys.evaluateJacobian();
         ida.configureLinearSolver();
-        ida.initializeSimulation(t_close, true);
+        ida.restartSimulation(t_close, true);
 
         const RealT t_final = 0.4;
         ida.runSimulation(t_final);

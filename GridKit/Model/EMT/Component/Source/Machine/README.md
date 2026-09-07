@@ -270,6 +270,11 @@ unit with peak-value phasors sampled at the initialization instant $t_0$;
 $\bar{v}$ and $\bar{\imath}$ denote the terminal voltage and injected current
 phasors.
 
+The resulting mechanical-power and field-voltage requirements are reconciled
+with the connected producers before initialization. Governors and exciters
+initialize their own outputs; a connected constant must match the required
+operating point. Unattached inputs retain the machine's local setpoints.
+
 ```math
 \begin{aligned}
 \bar{v} &\leftarrow \dfrac{1}{V_\mathrm{pk}}\left(

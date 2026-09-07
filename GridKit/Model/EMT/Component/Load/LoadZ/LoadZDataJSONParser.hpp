@@ -23,7 +23,9 @@ namespace GridKit
                                   LoadZInputs,
                                   LoadZOutputs,
                                   LoadZMonitorableVariables>;
-      from_json(j, static_cast<BaseT&>(d));
+      from_json(j, static_cast<BaseT&>(d), {"submodels"});
+      if (j.contains("submodels"))
+        validateJsonFields(j.at("submodels"), d.device_class + " \"" + d.id + "\" submodels", {"Z"});
 
       if (j.contains("submodels") && j.at("submodels").contains("Z"))
       {

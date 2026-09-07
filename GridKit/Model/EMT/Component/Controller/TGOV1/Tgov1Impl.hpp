@@ -88,45 +88,14 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::Trate))
-        {
-          Trate_ = std::get<RealT>(data.parameters.at(Parameter::Trate));
-        }
-
-        if (data.parameters.contains(Parameter::R))
-        {
-          R_ = std::get<RealT>(data.parameters.at(Parameter::R));
-        }
-
-        if (data.parameters.contains(Parameter::Pvmin))
-        {
-          Pvmin_ = std::get<RealT>(data.parameters.at(Parameter::Pvmin));
-        }
-
-        if (data.parameters.contains(Parameter::Pvmax))
-        {
-          Pvmax_ = std::get<RealT>(data.parameters.at(Parameter::Pvmax));
-        }
-
-        if (data.parameters.contains(Parameter::T1))
-        {
-          T1_ = std::get<RealT>(data.parameters.at(Parameter::T1));
-        }
-
-        if (data.parameters.contains(Parameter::T2))
-        {
-          T2_ = std::get<RealT>(data.parameters.at(Parameter::T2));
-        }
-
-        if (data.parameters.contains(Parameter::T3))
-        {
-          T3_ = std::get<RealT>(data.parameters.at(Parameter::T3));
-        }
-
-        if (data.parameters.contains(Parameter::Dt))
-        {
-          Dt_ = std::get<RealT>(data.parameters.at(Parameter::Dt));
-        }
+        Trate_ = parameter<RealT>(data, Parameter::Trate, Trate_);
+        R_     = parameter<RealT>(data, Parameter::R, R_);
+        Pvmin_ = parameter<RealT>(data, Parameter::Pvmin, Pvmin_);
+        Pvmax_ = parameter<RealT>(data, Parameter::Pvmax, Pvmax_);
+        T1_    = parameter<RealT>(data, Parameter::T1, T1_);
+        T2_    = parameter<RealT>(data, Parameter::T2, T2_);
+        T3_    = parameter<RealT>(data, Parameter::T3, T3_);
+        Dt_    = parameter<RealT>(data, Parameter::Dt, Dt_);
       }
 
       /**

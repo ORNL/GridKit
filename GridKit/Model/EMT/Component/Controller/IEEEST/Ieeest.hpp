@@ -100,16 +100,16 @@ namespace GridKit
         int allocate() override final;
         int verify() const override final;
 
-        int initializationOrder() const noexcept override final
-        {
-          return 2;
-        }
-
         int initialize(const std::map<Outputs, RealT>& outputs = {});
 
         int initializeState(const std::map<std::string, RealT>& values) override
         {
           return this->initializeOutputs(*this, values);
+        }
+
+        void validateInitialState(const std::map<std::string, RealT>& values) const override
+        {
+          this->template parseInitialOutputs<Ieeest>(values);
         }
 
         int evaluateInternalResidual() override final;
@@ -159,7 +159,6 @@ namespace GridKit
         RealT use_speed_{0};
         RealT lower_cutout_{0};
         RealT upper_cutout_{0};
-        int   parameter_errors_{0};
         RealT a0_{1};
         RealT a1_{0};
         RealT a2_{0};

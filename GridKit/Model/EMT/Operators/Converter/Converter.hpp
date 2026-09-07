@@ -31,14 +31,19 @@ namespace GridKit
 
       int initialize(const std::map<Outputs, RealT>& outputs = {});
 
+      typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+      {
+        return {};
+      }
+
       int initializeState(const std::map<std::string, RealT>& values) override
       {
         return this->initializeOutputs(*this, values);
       }
 
-      int initializationOrder() const noexcept override final
+      void validateInitialState(const std::map<std::string, RealT>& values) const override
       {
-        return 4;
+        this->template parseInitialOutputs<Converter>(values);
       }
 
       int setAbsoluteTolerance(RealT) override final;
@@ -47,10 +52,10 @@ namespace GridKit
       int evaluateResidual() override final;
       int assembleJacobian(RealT y_scale, RealT yp_scale) override final;
 
-      /// Publish one phase on a named scalar signal. No DAE index is assigned.
-      void    assignOutput(size_t phase, SignalT* signal);
-      ScalarT output(size_t phase) const;
-      void    attachInput(SignalT* a, SignalT* b, SignalT* c, SignalT* vdc);
+      /// Publish a bridge output on a named scalar signal. No DAE index is assigned.
+      void    assignOutput(Outputs output, SignalT* signal);
+      ScalarT output(Outputs output) const;
+      void    attachInput(const std::array<SignalT*, 3>& switching, SignalT* vdc, const std::array<SignalT*, 3>& current);
 
       SignalT& outputSignal(Outputs output)
       {
@@ -65,13 +70,20 @@ namespace GridKit
                 vdc * ((s[2] - s[0]) + (s[2] - s[1])) / 3};
       }
 
+      /// DC current drawn by the bridge for AC currents directed out of it.
+      __attribute__((always_inline)) static ScalarT dcCurrent(const ABCVector<ScalarT>& s, const ABCVector<ScalarT>& current)
+      {
+        const auto projected = voltage(s, ScalarT{1});
+        return projected[0] * current[0] + projected[1] * current[1] + projected[2] * current[2];
+      }
+
     private:
-      void                              appendOutputGradient(size_t phase, typename SignalT::GradientT& gradient, RealT scale) const;
+      void                              appendOutputGradient(Outputs output, typename SignalT::GradientT& gradient, RealT scale) const;
       const Model::VariableMonitorBase* getMonitor() const override;
 
-      std::array<SignalT*, 4>   input_{};
-      std::array<SignalT, 3>    output_port_;
-      std::array<SignalT*, 3>   assigned_output_{};
+      std::array<SignalT*, 7>   input_{};
+      std::array<SignalT, 4>    output_port_;
+      std::array<SignalT*, 4>   assigned_output_{};
       std::unique_ptr<MonitorT> monitor_;
     };
   } // namespace EMT

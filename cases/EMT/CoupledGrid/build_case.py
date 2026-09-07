@@ -140,15 +140,17 @@ def main():
              "outputs": {"efd": f"efd_{bus}"}, "mon": ["efd", "vts", "vr"]}]
     for bus in (9, 11, 13):
         gates, emf = ([f"{name}{p}_{bus}" for p in "abc"] for name in ("s", "e"))
-        case["signals"] += [{"id": f"dc_{bus}", "value": dc}] + [{"id": s} for s in gates + emf]
+        current = [f"filter_{bus}_i{p}" for p in "abc"]
+        case["signals"] += [{"id": f"dc_{bus}", "value": dc}] + [{"id": s} for s in gates + emf + current]
         devices += [
             {"class": "PWM", "id": f"pwm_{bus}", "params": dict(M=M, fm=F, fc=FC, alignment=.5),
              "outputs": {"s": gates}, "mon": ["s"]},
-            {"class": "Converter", "id": f"converter_{bus}", "inputs": {"s": gates, "vdc": f"dc_{bus}"},
-             "outputs": {"vo": emf}, "mon": ["vo"]},
+            {"class": "Converter", "id": f"converter_{bus}", "inputs": {"s": gates, "vdc": f"dc_{bus}", "i": current},
+             "outputs": {"vo": emf}, "mon": ["vo", "idc"]},
             {"class": "DependentVoltageSource", "id": f"filter_{bus}",
              "submodels": {"Y": rl_admittance(filter_r, filter_l)},
              "inputs": dict(bus=f"bus_{bus}", **dict(zip(("ea", "eb", "ec"), emf))),
+             "outputs": dict(zip(("ia", "ib", "ic"), current)),
              "mon": ["ea", "eb", "ec", "ia", "ib", "ic"]}]
     for a, b, length in LINES:
         devices.append({"class": "LineLumped", "id": f"line_{a}_{b}",

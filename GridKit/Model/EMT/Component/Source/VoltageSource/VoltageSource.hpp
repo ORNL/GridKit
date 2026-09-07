@@ -110,6 +110,17 @@ namespace GridKit
         return this->initializeOutputs(*this, values);
       }
 
+      void validateInitialState(const std::map<std::string, RealT>& values) const override
+      {
+        this->template parseInitialOutputs<VoltageSource>(values);
+      }
+
+      typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+      {
+        return yfit_ ? Component<ScalarT, IdxT>::initializationPorts()
+                     : typename Component<ScalarT, IdxT>::InitializationPortsT{};
+      }
+
       void        assignOutput(Outputs output, SignalT* signal);
       /// Initialize from the attached sinusoidal voltage samples.
       int         initializeSteadyState(RealT omega);

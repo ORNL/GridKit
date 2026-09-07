@@ -104,9 +104,19 @@ namespace GridKit
 
       int initialize(const std::map<Outputs, RealT>& outputs = {});
 
+      typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+      {
+        return {};
+      }
+
       int initializeState(const std::map<std::string, RealT>& values) override
       {
         return this->initializeOutputs(*this, values);
+      }
+
+      void validateInitialState(const std::map<std::string, RealT>& values) const override
+      {
+        this->template parseInitialOutputs<Switch>(values);
       }
 
       virtual int setAbsoluteTolerance(RealT) override final;

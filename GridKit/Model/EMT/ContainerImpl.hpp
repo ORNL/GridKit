@@ -253,22 +253,15 @@ namespace GridKit
       for (const auto& model_data : data.converter)
       {
         auto& model = component<Converter<ScalarT, IdxT>>(model_data.id);
-        model.attachInput(&source(model_data.inputs.at(ConverterInputs::sa)),
-                          &source(model_data.inputs.at(ConverterInputs::sb)),
-                          &source(model_data.inputs.at(ConverterInputs::sc)),
-                          &source(model_data.inputs.at(ConverterInputs::vdc)));
-        if (model_data.outputs.contains(ConverterOutputs::voa))
-        {
-          model.assignOutput(0, &signal(model_data.outputs.at(ConverterOutputs::voa)));
-        }
-        if (model_data.outputs.contains(ConverterOutputs::vob))
-        {
-          model.assignOutput(1, &signal(model_data.outputs.at(ConverterOutputs::vob)));
-        }
-        if (model_data.outputs.contains(ConverterOutputs::voc))
-        {
-          model.assignOutput(2, &signal(model_data.outputs.at(ConverterOutputs::voc)));
-        }
+        model.attachInput({&source(model_data.inputs.at(ConverterInputs::sa)),
+                           &source(model_data.inputs.at(ConverterInputs::sb)),
+                           &source(model_data.inputs.at(ConverterInputs::sc))},
+                          &source(model_data.inputs.at(ConverterInputs::vdc)),
+                          {&source(model_data.inputs.at(ConverterInputs::ia)),
+                           &source(model_data.inputs.at(ConverterInputs::ib)),
+                           &source(model_data.inputs.at(ConverterInputs::ic))});
+        for (const auto& [output, reference] : model_data.outputs)
+          model.assignOutput(output, &signal(reference));
       }
 
       for (const auto& source_data : data.voltage_source)
@@ -351,13 +344,11 @@ namespace GridKit
         else
         {
           if (line_data.parameters.contains(Parameter::Gp))
-            Y.D = std::get<ABCMatrix<RealT>>(line_data.parameters.at(Parameter::Gp));
+            Y.D = parameter<ABCMatrix<RealT>>(line_data, Parameter::Gp);
           if (line_data.parameters.contains(Parameter::Cp))
-            Y.E = std::get<ABCMatrix<RealT>>(line_data.parameters.at(Parameter::Cp));
+            Y.E = parameter<ABCMatrix<RealT>>(line_data, Parameter::Cp);
         }
-        const RealT dx = line_data.parameters.contains(Parameter::dx)
-                             ? std::get<RealT>(line_data.parameters.at(Parameter::dx))
-                             : RealT{0};
+        const RealT dx = parameter<RealT>(line_data, Parameter::dx, RealT{0});
         std::string name;
         for (char c : qualify(line_data.id))
           name += c == '/' ? "//" : c == '.' ? "/"

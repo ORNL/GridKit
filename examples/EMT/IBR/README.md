@@ -51,7 +51,7 @@ a shortened time horizon and checks their events and output completeness.
 
 ## Recorded data and checks
 
-Each full run records 222 model quantities plus time, including all available
+Each full run records 225 model quantities plus time, including all available
 Bus, Machine, PWM, Converter, dependent-source, line, load and switch monitors.
 The complete state CSV separately records all 231 DAE variables (78 differential, 153 algebraic) and all 231
 derivatives, including the three internal states of each TGOV1 governor.

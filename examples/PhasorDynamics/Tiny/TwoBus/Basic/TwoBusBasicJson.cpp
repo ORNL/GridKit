@@ -96,12 +96,12 @@ int main(int argc, const char* argv[])
 
   // Introduce fault and run for the next 0.1s
   fault->setStatus(true);
-  ida.initializeSimulation(1.0);
+  ida.restartSimulation(1.0);
   ida.runSimulation(1.1, dt_monitor);
 
   // Clear the fault and run until t = 10s.
   fault->setStatus(false);
-  ida.initializeSimulation(1.1);
+  ida.restartSimulation(1.1);
   ida.runSimulation(10.0, dt_monitor);
   real_type stop = static_cast<real_type>(clock());
 

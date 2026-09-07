@@ -1,6 +1,7 @@
 #pragma once
 
-#include <sstream>
+#include <initializer_list>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -9,22 +10,18 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/EMT/ComponentData.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Model/EMT/JsonValidation.hpp>
 
 namespace GridKit
 {
   namespace EMT
   {
     using json = nlohmann::json;
-    using Log  = ::GridKit::Utilities::Logger;
 
     /// JSON parser function for the `ComponentData` class and descendants
     ///
-    /// Scalar values follow the PhasorDynamics convention: booleans, floats,
-    /// and integers map to the matching variant alternatives, so real-valued
-    /// parameters must be written with a decimal point. A length-3 array maps
-    /// to a three-phase vector, integer-valued when every element is an
-    /// integer, and a 3x3 nested array maps to a real three-phase matrix.
+    /// Numeric syntax does not determine the model parameter type: typed reads
+    /// validate scalar and three-phase values against the requested type.
     template <typename RealT,
               typename IdxT,
               typename Parameters,
@@ -35,144 +32,100 @@ namespace GridKit
                && std::is_enum_v<Inputs>
                && std::is_enum_v<Outputs>
                && std::is_enum_v<MonitorableVariables>
-    void from_json(const json&                          j,
+    void from_json(const json&                             j,
                    ComponentData<RealT,
                                  IdxT,
                                  Parameters,
                                  Inputs,
                                  Outputs,
-                                 MonitorableVariables>& c)
+                                 MonitorableVariables>&    c,
+                   std::initializer_list<std::string_view> extra_fields = {})
     {
       j.at("class").get_to(c.device_class);
-
       j.at("id").get_to(c.id);
+      const auto context = c.device_class + " \"" + c.id + "\"";
+      validateJsonFields(j, context, {"class", "id", "params", "inputs", "outputs", "mon"}, extra_fields);
+      c.parameters.clear();
+      c.inputs.clear();
+      c.outputs.clear();
+      c.monitored_variables.clear();
 
-      std::stringstream error_context;
-      error_context << "\n\tSee the \"" << c.device_class
-                    << "\" device with \"id\": \"" << c.id
-                    << "\" in the \"devices\" list of your JSON file.";
-
-      auto parse_vector = [&error_context](const json& value, auto& parameter_slot, const std::string& key) -> bool
+      auto is_index = [](const json& value)
       {
-        if (value.size() != 3)
-        {
-          Log::error() << "\n\tInvalid three-phase vector length for \""
-                       << key << "\": " << value.size() << "."
-                       << error_context.str() << std::endl;
+        if (!value.is_number_integer())
           return false;
-        }
-
-        bool all_integers = true;
-        for (const auto& element : value)
-        {
-          if (!element.is_number_integer())
-          {
-            all_integers = false;
-          }
-        }
-
-        if (all_integers)
-        {
-          ABCVector<IdxT> vec{};
-          for (size_t n = 0; n < 3; ++n)
-          {
-            value.at(n).get_to(vec[n]);
-          }
-          parameter_slot = vec;
-          return true;
-        }
-
-        ABCVector<RealT> vec{};
-        for (size_t n = 0; n < 3; ++n)
-        {
-          value.at(n).get_to(vec[n]);
-        }
-        parameter_slot = vec;
-        return true;
-      };
-
-      auto parse_matrix = [&error_context](const json& value, auto& parameter_slot, const std::string& key) -> bool
-      {
-        if (value.size() != 3)
-        {
-          Log::error() << "\n\tInvalid three-phase matrix row count for \""
-                       << key << "\": " << value.size() << "."
-                       << error_context.str() << std::endl;
+        if (!value.is_number_unsigned() && value.template get<int64_t>() < 0)
           return false;
-        }
-
-        ABCMatrix<RealT> mat{};
-        for (size_t n = 0; n < 3; ++n)
-        {
-          const auto& row = value.at(n);
-          if (!row.is_array() || row.size() != 3)
-          {
-            Log::error() << "\n\tInvalid three-phase matrix row for \""
-                         << key << "\"." << error_context.str() << std::endl;
-            return false;
-          }
-          for (size_t k = 0; k < 3; ++k)
-          {
-            row.at(k).get_to(mat[n][k]);
-          }
-        }
-        parameter_slot = mat;
-        return true;
+        return value.template get<uint64_t>() <= static_cast<uint64_t>(std::numeric_limits<IdxT>::max());
       };
-
       if (j.contains("params"))
       {
-        for (auto& raw_parameter : j.at("params").items())
+        const auto& params = j.at("params");
+        if (!params.is_object())
+          throw std::invalid_argument(context + " params must be an object");
+        for (const auto& [name, value] : params.items())
         {
-          auto key = magic_enum::enum_cast<Parameters>(raw_parameter.key());
-          if (key.has_value())
+          std::optional<Parameters> key;
+          if constexpr (magic_enum::enum_count<Parameters>() != 0)
+            key = magic_enum::enum_cast<Parameters>(name);
+          const auto field = context + " parameter \"" + name + "\"";
+          if (!key || name == "SIZE")
+            throw std::invalid_argument(field + " is unknown");
+          auto& slot = c.parameters[*key];
+          if (value.is_boolean())
+            slot = value.template get<bool>();
+          else if (is_index(value))
+            slot = value.template get<IdxT>();
+          else if (value.is_number())
+            slot = parseFiniteReal<RealT>(value, field);
+          else if (value.is_array())
           {
-            // NOTE: this is necessary because it doesn't seem like nlohmann/json
-            //       handles std::variant out of the box
-            if (raw_parameter.value().is_boolean())
+            if (value.size() != 3)
+              throw std::invalid_argument(field + " requires a length-3 vector or 3x3 matrix");
+            if (value.at(0).is_array())
             {
-              c.parameters[key.value()] = raw_parameter.value().template get<bool>();
+              ABCMatrix<RealT> matrix{};
+              for (size_t n = 0; n < 3; ++n)
+              {
+                if (!value.at(n).is_array() || value.at(n).size() != 3)
+                  throw std::invalid_argument(field + " requires a 3x3 matrix");
+                for (size_t k = 0; k < 3; ++k)
+                  matrix[n][k] = parseFiniteReal<RealT>(value.at(n).at(k), field);
+              }
+              slot = matrix;
             }
-            else if (raw_parameter.value().is_number_float())
+            else if (std::all_of(value.begin(), value.end(), is_index))
             {
-              c.parameters[key.value()] = raw_parameter.value().template get<RealT>();
-            }
-            else if (raw_parameter.value().is_number_integer())
-            {
-              c.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
-            }
-            else if (raw_parameter.value().is_array() && !raw_parameter.value().empty()
-                     && raw_parameter.value().at(0).is_array())
-            {
-              parse_matrix(raw_parameter.value(), c.parameters[key.value()], raw_parameter.key());
-            }
-            else if (raw_parameter.value().is_array())
-            {
-              parse_vector(raw_parameter.value(), c.parameters[key.value()], raw_parameter.key());
+              ABCVector<IdxT> vector{};
+              for (size_t n = 0; n < 3; ++n)
+                vector[n] = value.at(n).template get<IdxT>();
+              slot = vector;
             }
             else
             {
-              Log::error() << "\n\tInvalid initial parameter value type: "
-                           << "\"" << raw_parameter.key() << "\": "
-                           << raw_parameter.value()
-                           << " (typed as \"" << raw_parameter.value().type_name()
-                           << "\")." << error_context.str() << std::endl;
+              ABCVector<RealT> vector{};
+              for (size_t n = 0; n < 3; ++n)
+                vector[n] = parseFiniteReal<RealT>(value.at(n), field);
+              slot = vector;
             }
           }
           else
-          {
-            Log::error() << "\n\tInitial parameter \"" << raw_parameter.key()
-                         << "\" has no value." << error_context.str()
-                         << std::endl;
-          }
+            throw std::invalid_argument(field + " has an invalid value type");
         }
       }
 
+      auto reference = [&context](const json& value, const std::string& name)
+      {
+        if (!value.is_string() || value.template get<std::string>().empty())
+          throw std::invalid_argument(context + " mapping \"" + name + "\" requires a nonempty signal ID");
+        return value.template get<std::string>();
+      };
       if (j.contains("inputs"))
       {
-        for (auto& raw_input : j.at("inputs").items())
+        if (!j.at("inputs").is_object())
+          throw std::invalid_argument(context + " inputs must be an object");
+        for (const auto& [name, value] : j.at("inputs").items())
         {
-          const auto& name = raw_input.key();
           if (name == "bus" || name == "bus1" || name == "bus2")
           {
             const std::string prefix = name == "bus" ? "v" : "v" + name.substr(3);
@@ -180,55 +133,40 @@ namespace GridKit
             {
               const auto input = magic_enum::enum_cast<Inputs>(prefix + phase);
               if (!input || j.at("inputs").contains(prefix + phase))
-                throw std::invalid_argument("Invalid or duplicate bus shortcut: " + name);
-              c.inputs[*input] = raw_input.value().template get<std::string>() + ".v" + phase;
+                throw std::invalid_argument(context + " has an invalid or duplicate bus shortcut \"" + name + "\"");
+              c.inputs[*input] = reference(value, name) + ".v" + phase;
             }
             continue;
           }
-          auto input = magic_enum::enum_cast<Inputs>(raw_input.key());
-          if (!input.has_value() || input.value() == Inputs::SIZE)
-          {
-            Log::error() << "\n\tInvalid input mapping: \"" << raw_input.key()
-                         << "\" has no value." << error_context.str()
-                         << std::endl;
-            throw std::runtime_error("JSON parser failed");
-          }
-          raw_input.value().get_to(c.inputs[input.value()]);
+          const auto input = magic_enum::enum_cast<Inputs>(name);
+          if (!input || *input == Inputs::SIZE)
+            throw std::invalid_argument(context + " has unknown input \"" + name + "\"");
+          c.inputs[*input] = reference(value, name);
         }
       }
-
       if (j.contains("outputs"))
       {
-        for (auto& raw_output : j.at("outputs").items())
+        if (!j.at("outputs").is_object())
+          throw std::invalid_argument(context + " outputs must be an object");
+        for (const auto& [name, value] : j.at("outputs").items())
         {
-          auto output = magic_enum::enum_cast<Outputs>(raw_output.key());
-          if (!output.has_value() || output.value() == Outputs::SIZE)
-          {
-            Log::error() << "\n\tInvalid output mapping: \"" << raw_output.key()
-                         << "\" has no value." << error_context.str()
-                         << std::endl;
-            throw std::runtime_error("JSON parser failed");
-          }
-          raw_output.value().get_to(c.outputs[output.value()]);
+          const auto output = magic_enum::enum_cast<Outputs>(name);
+          if (!output || *output == Outputs::SIZE)
+            throw std::invalid_argument(context + " has unknown output \"" + name + "\"");
+          c.outputs[*output] = reference(value, name);
         }
       }
-
       if (j.contains("mon"))
       {
-        for (auto& raw_monitored_variable : j.at("mon"))
+        if (!j.at("mon").is_array())
+          throw std::invalid_argument(context + " mon must be an array");
+        for (const auto& value : j.at("mon"))
         {
-          auto var_name  = raw_monitored_variable.get<std::string>();
-          auto monitored = magic_enum::enum_cast<MonitorableVariables>(var_name);
-          if (monitored.has_value())
-          {
-            c.monitored_variables.insert(monitored.value());
-          }
-          else
-          {
-            Log::error() << "\n\tInvalid monitored variable: \"" << var_name
-                         << "\" in \"mon\" list." << error_context.str()
-                         << std::endl;
-          }
+          const auto name      = value.template get<std::string>();
+          const auto monitored = magic_enum::enum_cast<MonitorableVariables>(name);
+          if (!monitored || name == "SIZE")
+            throw std::invalid_argument(context + " has unknown monitored variable \"" + name + "\"");
+          c.monitored_variables.insert(*monitored);
         }
       }
     }

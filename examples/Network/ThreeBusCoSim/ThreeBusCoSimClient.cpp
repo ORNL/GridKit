@@ -172,12 +172,12 @@ int main()
 
   // Introduce fault and run for the next 0.1s
   sys.getBusFault(0)->setStatus(true);
-  ida.initializeSimulation(1.0);
+  ida.restartSimulation(1.0);
   ida.runSimulation(1.1, dt, step_cb);
 
   // Clear the fault and run until t = 10s.
   sys.getBusFault(0)->setStatus(false);
-  ida.initializeSimulation(1.1);
+  ida.restartSimulation(1.1);
   ida.runSimulation(10.0, dt, step_cb);
 
   return 0;

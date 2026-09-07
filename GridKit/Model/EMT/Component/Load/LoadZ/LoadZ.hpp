@@ -107,6 +107,11 @@ namespace GridKit
         return this->initializeOutputs(*this, values);
       }
 
+      void validateInitialState(const std::map<std::string, RealT>& values) const override
+      {
+        this->template parseInitialOutputs<LoadZ>(values);
+      }
+
       /// Initialize from the attached sinusoidal bus-voltage samples.
       int         initializeSteadyState(RealT omega);
       virtual int setAbsoluteTolerance(RealT) override final;

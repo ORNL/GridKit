@@ -8,7 +8,9 @@
 #include <limits>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <type_traits>
+#include <utility>
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
@@ -65,6 +67,8 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::configureSimulation()
     {
       int retval = 0;
+      // Structural evaluation can read history before a study is initialized.
+      model_->resetHistory();
 
       // Allocate solution vectors
       yy_ = N_VNew_Serial(static_cast<sunindextype>(model_->size()), context_);
@@ -88,21 +92,22 @@ namespace AnalysisManager
       retval = IDAInit(solver_, this->Residual, t0, yy_, yp_);
       checkOutput(retval, "IDAInit");
 
-      // Set pointer to model data
-      retval = IDASetUserData(solver_, model_);
+      // Callbacks use the solver to retain model exceptions until IDA returns.
+      retval = IDASetUserData(solver_, this);
       checkOutput(retval, "IDASetUserData");
 
       // Tag differential variables
       tag_ = N_VClone(yy_);
       checkAllocation((void*) tag_, "N_VClone");
       retval = model_->tagDifferentiable();
-      checkOutput(retval, "tagDifferentiable");
+      checkModelOutput(retval, "tagDifferentiable");
       copyVec(model_->tag(), tag_);
 
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
 
       setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_, suppress_alg_);
+      setMaximumStep();
 
       // Set up linear solver
       return this->configureLinearSolver();
@@ -231,6 +236,24 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeSimulation(RealT t0, bool findConsistent)
     {
+      return initializeState(t0, findConsistent, true);
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::restartSimulation(RealT t0, bool findConsistent)
+    {
+      RealT time;
+      checkOutput(IDAGetCurrentTime(solver_, &time), "IDAGetCurrentTime");
+      if (t0 != time)
+        throw std::invalid_argument("Event restart must use the current simulation time");
+      return initializeState(t0, findConsistent, false);
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::initializeState(RealT t0, bool findConsistent, bool reset_history)
+    {
+      if (!std::isfinite(t0))
+        throw std::invalid_argument("Initial simulation time must be finite");
       int retval = 0;
 
       t_init_ = t0;
@@ -238,12 +261,16 @@ namespace AnalysisManager
       // Discrete changes can alter the DAE partition. Validate and refresh it
       // at the restart state before asking IDA for consistent conditions.
       updateModelState(t0);
+      if (reset_history)
+        model_->resetHistory();
       model_->updateTime(t0, 1.0);
       retval = model_->tagDifferentiable();
-      checkOutput(retval, "tagDifferentiable");
+      checkModelOutput(retval, "tagDifferentiable");
       copyVec(model_->tag(), tag_);
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
+
+      setMaximumStep();
 
       // Need to reinitialize IDA to set to get correct initial conditions
       retval = IDAReInit(solver_, t0, yy_, yp_);
@@ -254,18 +281,17 @@ namespace AnalysisManager
       {
         const int consistentICType = getIDAConsistentICType();
         retval                     = IDACalcIC(solver_, consistentICType, t0 + 0.1);
-        checkOutput(retval, "IDACalcIC");
+        checkCallbackOutput(retval, "IDACalcIC");
 
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
         checkOutput(retval, "IDAGetConsistentIC");
-
-        copyVec(yy_, model_->y());
-        copyVec(yp_, model_->yp());
       }
+
+      updateModelState(t0);
+      model_->acceptStep(t0);
 
       if (model_->monitoring())
       {
-        updateModelState(t0);
         model_->printMonitoredVariables();
       }
 
@@ -280,18 +306,20 @@ namespace AnalysisManager
      * monitor step.
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::getMonitorStepCount(RealT tf, RealT dt_monitor) const
+    int Ida<ScalarT, IdxT>::getMonitorStepCount(RealT tf, RealT dt_monitor, RealT start) const
     {
       if (dt_monitor <= 0.0)
       {
         return 1;
       }
 
-      const RealT n_est   = (tf - t_init_) / dt_monitor;
+      const RealT n_est = (tf - start) / dt_monitor;
+      if (!std::isfinite(n_est) || n_est > std::numeric_limits<int>::max())
+        throw std::invalid_argument("Too many requested monitor samples");
       const RealT epsilon = std::numeric_limits<RealT>::epsilon()
-                            * std::max({std::abs(t_init_), std::abs(tf), RealT(1.0)})
+                            * std::max({std::abs(start), std::abs(tf), RealT(1.0)})
                             / dt_monitor;
-      return static_cast<int>(std::ceil(n_est - epsilon));
+      return static_cast<int>(std::max(RealT(1), std::ceil(n_est - epsilon)));
     }
 
     /**
@@ -301,9 +329,9 @@ namespace AnalysisManager
      * repeated time-step arithmetic.
      */
     template <class ScalarT, typename IdxT>
-    typename Ida<ScalarT, IdxT>::RealT Ida<ScalarT, IdxT>::getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const
+    typename Ida<ScalarT, IdxT>::RealT Ida<ScalarT, IdxT>::getMonitorTime(RealT tf, RealT dt_monitor, RealT start, int step, int nsteps) const
     {
-      return step == nsteps ? tf : std::fma((RealT) step, dt_monitor, t_init_);
+      return step == nsteps ? tf : std::fma((RealT) step, dt_monitor, start);
     }
 
     /**
@@ -344,37 +372,83 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<std::function<void(RealT)>> step_callback)
     {
-      int retval = 0;
-      int nsteps = getMonitorStepCount(tf, dt_monitor);
+      return runForward(tf, dt_monitor, step_callback, false, false);
+    }
 
-      for (int i = 1; i <= nsteps; i++)
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setMaximumStep()
+    {
+      const RealT limit = model_->maximumStepSize();
+      if (!(limit > 0.0))
+        throw std::invalid_argument("Model maximum step size must be positive");
+      if (time_step_ > limit)
+        throw std::invalid_argument("Fixed step exceeds the model maximum step size");
+      const RealT maximum = time_step_ > 0.0 ? time_step_ : (std::isfinite(limit) ? limit : 0.0);
+      checkOutput(IDASetMaxStep(solver_, maximum), "IDASetMaxStep");
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::runForward(RealT tf, RealT dt_monitor, const std::optional<std::function<void(RealT)>>& step_callback, bool quadrature, bool checkpoint)
+    {
+      if (!std::isfinite(tf) || !std::isfinite(dt_monitor))
+        throw std::invalid_argument("Simulation target and monitor interval must be finite");
+      RealT time;
+      checkOutput(IDAGetCurrentTime(solver_, &time), "IDAGetCurrentTime");
+      if (tf == time)
+        return 0;
+      if (tf < time)
+        throw std::invalid_argument("Forward simulation target precedes the current time");
+      const RealT start          = time;
+      const int   nsteps         = getMonitorStepCount(tf, dt_monitor, start);
+      int         monitor_step   = 1;
+      int         retval         = 0;
+      IdxT        internal_steps = 0;
+      checkOutput(IDASetStopTime(solver_, tf), "IDASetStopTime");
+
+      while (time < tf)
       {
-        const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
-        RealT       tret;
-        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
-        checkOutput(retval, "IDASolve");
-
-        if (step_callback.has_value() || model_->monitoring())
+        if (max_steps_ > 0 && ++internal_steps > max_steps_)
+          checkOutput(IDA_TOO_MUCH_WORK, checkpoint ? "IDASolveF" : "IDASolve");
+        if (checkpoint)
         {
-          // The callback may try to observe upated values in the model, so we
-          // should update them here (At this point, the model's values are one
-          // internal integrator step out of date)
-          updateModelState(tret);
-
-          if (model_->monitoring())
-          {
-            model_->printMonitoredVariables();
-          }
-          if (step_callback.has_value())
-          {
-            (*step_callback)(tret);
-          }
+          int ncheck;
+          retval = IDASolveF(solver_, tf, &time, yy_, yp_, IDA_ONE_STEP, &ncheck);
+          checkCallbackOutput(retval, "IDASolveF");
         }
+        else
+        {
+          retval = IDASolve(solver_, tf, &time, yy_, yp_, IDA_ONE_STEP);
+          checkCallbackOutput(retval, "IDASolve");
+        }
+        // Observe before committing: history owners may prune old knots on acceptStep.
+        bool sampled = false;
+        while (monitor_step <= nsteps)
+        {
+          const RealT tout = getMonitorTime(tf, dt_monitor, start, monitor_step, nsteps);
+          if (tout > time)
+            break;
+          checkOutput(IDAGetDky(solver_, tout, 0, yy_), "IDAGetDky");
+          checkOutput(IDAGetDky(solver_, tout, 1, yp_), "IDAGetDky");
+          if (quadrature)
+            checkOutput(IDAGetQuadDky(solver_, tout, 0, q_), "IDAGetQuadDky");
+          updateModelState(tout);
+          if (model_->monitoring())
+            model_->printMonitoredVariables();
+          if (step_callback)
+            (*step_callback)(tout);
+          ++monitor_step;
+          internal_steps = 0;
+          sampled        = true;
+        }
+        if (sampled)
+        {
+          checkOutput(IDAGetDky(solver_, time, 0, yy_), "IDAGetDky");
+          checkOutput(IDAGetDky(solver_, time, 1, yp_), "IDAGetDky");
+        }
+        updateModelState(time);
+        model_->acceptStep(time);
       }
-
-      updateModelState(tf);
-
-      return retval;
+      return 0;
     }
 
     /**
@@ -456,29 +530,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulationQuadrature(RealT tf, RealT dt_monitor)
     {
-      int retval = 0;
-      int nsteps = getMonitorStepCount(tf, dt_monitor);
-
-      for (int i = 1; i <= nsteps; i++)
-      {
-        const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
-        RealT       tret;
-        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
-        checkOutput(retval, "IDASolve");
-
-        retval = IDAGetQuad(solver_, &tret, q_);
-        checkOutput(retval, "IDAGetQuad");
-
-        updateModelState(tret);
-        if (model_->monitoring())
-        {
-          model_->printMonitoredVariables();
-        }
-      }
-
-      updateModelState(tf);
-
-      return retval;
+      return runForward(tf, dt_monitor, {}, true, false);
     }
 
     /**
@@ -547,7 +599,7 @@ namespace AnalysisManager
     {
       int retval = 0;
 
-      model_->initializeAdjoint();
+      checkModelOutput(model_->initializeAdjoint(), "initializeAdjoint");
 
       copyVec(model_->yB(), yyB_);
       copyVec(model_->ypB(), ypB_);
@@ -567,7 +619,7 @@ namespace AnalysisManager
                     backward_max_steps_,
                     backward_suppress_alg_);
 
-      retval = IDASetUserDataB(solver_, backwardID_, model_);
+      retval = IDASetUserDataB(solver_, backwardID_, this);
       checkOutput(retval, "IDASetUserDataB");
 
       // Allocate Jacobian matrix, if not already
@@ -642,30 +694,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runForwardSimulation(RealT tf, RealT dt_monitor)
     {
-      int retval = 0;
-      int ncheck;
-      int nsteps = getMonitorStepCount(tf, dt_monitor);
-
-      for (int i = 1; i <= nsteps; i++)
-      {
-        const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
-        RealT       tret;
-        retval = IDASolveF(solver_, tout, &tret, yy_, yp_, IDA_NORMAL, &ncheck);
-        checkOutput(retval, "IDASolveF");
-
-        retval = IDAGetQuad(solver_, &tret, q_);
-        checkOutput(retval, "IDAGetQuad");
-
-        updateModelState(tret);
-        if (model_->monitoring())
-        {
-          model_->printMonitoredVariables();
-        }
-      }
-
-      updateModelState(tf);
-
-      return retval;
+      return runForward(tf, dt_monitor, {}, true, true);
     }
 
     /**
@@ -684,7 +713,7 @@ namespace AnalysisManager
       // std::cout << "Backward integration for adjoint analysis ... ";
 
       retval = IDASolveB(solver_, t_init, IDA_NORMAL);
-      checkOutput(retval, "IDASolveB");
+      checkCallbackOutput(retval, "IDASolveB");
 
       IDAGetNumSteps(IDAGetAdjIDABmem(solver_, backwardID_), &nstB);
       // std::cout << "done ( nst = " << nstB << " )\n";
@@ -733,6 +762,40 @@ namespace AnalysisManager
       return 0;
     }
 
+    // No C++ exception may cross a SUNDIALS callback boundary.
+    template <class ScalarT, typename IdxT>
+    template <class Function>
+    int Ida<ScalarT, IdxT>::evaluateCallback(Function&& evaluate) noexcept
+    {
+      if (callback_error_)
+        return -1;
+      try
+      {
+        evaluate();
+        return 0;
+      }
+      catch (...)
+      {
+        callback_error_ = std::current_exception();
+        return -1;
+      }
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::checkCallbackOutput(int retval, const char* functionName)
+    {
+      if (callback_error_)
+        std::rethrow_exception(std::exchange(callback_error_, {}));
+      checkOutput(retval, functionName);
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::checkModelOutput(int retval, const char* functionName)
+    {
+      if (retval != 0)
+        throw std::runtime_error(std::string("Model ") + functionName + " failed with status " + std::to_string(retval));
+    }
+
     /**
      * @brief Residual evaluation
      *
@@ -742,16 +805,16 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Residual(RealT tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      auto& ida = *static_cast<Ida*>(user_data);
+      return ida.evaluateCallback([&]()
+                                  {
+                                    auto* model = ida.model_;
+                                    copyVec(yy, model->y());
+                                    copyVec(yp, model->yp());
+                                    model->updateTime(tres, 0.0);
 
-      copyVec(yy, model->y());
-      copyVec(yp, model->yp());
-      model->updateTime(tres, 0.0);
-
-      model->evaluateResidual();
-      copyVec(model->getResidual(), rr);
-
-      return 0;
+                                    checkModelOutput(model->evaluateResidual(), "evaluateResidual");
+                                    copyVec(model->getResidual(), rr); });
     }
 
     /**
@@ -765,43 +828,42 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Jac(RealT t, RealT cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      auto& ida = *static_cast<Ida*>(user_data);
+      return ida.evaluateCallback([&]()
+                                  {
+                                    auto* model = ida.model_;
+                                    copyVec(yy, model->y());
+                                    copyVec(yp, model->yp());
+                                    model->updateTime(t, cj);
 
-      copyVec(yy, model->y());
-      copyVec(yp, model->yp());
-      model->updateTime(t, cj);
+                                    checkModelOutput(model->evaluateJacobian(), "evaluateJacobian");
 
-      model->evaluateJacobian();
+                                    using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
+                                    CsrMatrixT* Jac  = model->getCsrJacobian();
 
-      using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
-      CsrMatrixT* Jac  = model->getCsrJacobian();
+                                    IdxT n   = Jac->getNumRows();
+                                    IdxT nnz = Jac->getNnz();
 
-      IdxT n   = Jac->getNumRows();
-      IdxT nnz = Jac->getNnz();
+                                    if (static_cast<sunindextype>(nnz) > SUNSparseMatrix_NNZ(J))
+                                    {
+                                      const int status = SUNSparseMatrix_Reallocate(J, static_cast<sunindextype>(nnz));
+                                      checkOutput(status, "SUNSparseMatrix_Reallocate");
+                                    }
+                                    SUNMatZero(J);
 
-      if (static_cast<sunindextype>(nnz) > SUNSparseMatrix_NNZ(J))
-      {
-        const int status = SUNSparseMatrix_Reallocate(J, static_cast<sunindextype>(nnz));
-        if (status != 0)
-          return status;
-      }
-      SUNMatZero(J);
+                                    sunindextype* sun_row_ptrs = SUNSparseMatrix_IndexPointers(J);
+                                    sunindextype* sun_cols     = SUNSparseMatrix_IndexValues(J);
+                                    RealT*        sun_vals     = SUNSparseMatrix_Data(J);
 
-      sunindextype* sun_row_ptrs = SUNSparseMatrix_IndexPointers(J);
-      sunindextype* sun_cols     = SUNSparseMatrix_IndexValues(J);
-      RealT*        sun_vals     = SUNSparseMatrix_Data(J);
+                                    // Get reference to the jacobian entries
+                                    IdxT*  row_ptrs = Jac->getRowData();
+                                    IdxT*  cols     = Jac->getColData();
+                                    RealT* vals     = Jac->getValues();
 
-      // Get reference to the jacobian entries
-      IdxT*  row_ptrs = Jac->getRowData();
-      IdxT*  cols     = Jac->getColData();
-      RealT* vals     = Jac->getValues();
-
-      // Copy data from model jac to sundials
-      std::copy(row_ptrs, row_ptrs + n + 1, sun_row_ptrs);
-      std::copy(cols, cols + nnz, sun_cols);
-      std::copy(vals, vals + nnz, sun_vals);
-
-      return 0;
+                                    // Copy data from model jac to sundials
+                                    std::copy(row_ptrs, row_ptrs + n + 1, sun_row_ptrs);
+                                    std::copy(cols, cols + nnz, sun_cols);
+                                    std::copy(vals, vals + nnz, sun_vals); });
     }
 
     /**
@@ -813,16 +875,16 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Integrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      auto& ida = *static_cast<Ida*>(user_data);
+      return ida.evaluateCallback([&]()
+                                  {
+                                    auto* model = ida.model_;
+                                    copyVec(yy, model->y());
+                                    copyVec(yp, model->yp());
+                                    model->updateTime(tt, 0.0);
 
-      copyVec(yy, model->y());
-      copyVec(yp, model->yp());
-      model->updateTime(tt, 0.0);
-
-      model->evaluateIntegrand();
-      copyVec(model->getIntegrand(), rhsQ);
-
-      return 0;
+                                    checkModelOutput(model->evaluateIntegrand(), "evaluateIntegrand");
+                                    copyVec(model->getIntegrand(), rhsQ); });
     }
 
     /**
@@ -834,18 +896,18 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::adjointResidual(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      auto& ida = *static_cast<Ida*>(user_data);
+      return ida.evaluateCallback([&]()
+                                  {
+                                    auto* model = ida.model_;
+                                    copyVec(yy, model->y());
+                                    copyVec(yp, model->yp());
+                                    copyVec(yyB, model->yB());
+                                    copyVec(ypB, model->ypB());
+                                    model->updateTime(tt, 0.0);
 
-      copyVec(yy, model->y());
-      copyVec(yp, model->yp());
-      copyVec(yyB, model->yB());
-      copyVec(ypB, model->ypB());
-      model->updateTime(tt, 0.0);
-
-      model->evaluateAdjointResidual();
-      copyVec(model->getAdjointResidual(), rrB);
-
-      return 0;
+                                    checkModelOutput(model->evaluateAdjointResidual(), "evaluateAdjointResidual");
+                                    copyVec(model->getAdjointResidual(), rrB); });
     }
 
     /**
@@ -857,18 +919,18 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::adjointIntegrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      auto& ida = *static_cast<Ida*>(user_data);
+      return ida.evaluateCallback([&]()
+                                  {
+                                    auto* model = ida.model_;
+                                    copyVec(yy, model->y());
+                                    copyVec(yp, model->yp());
+                                    copyVec(yyB, model->yB());
+                                    copyVec(ypB, model->ypB());
+                                    model->updateTime(tt, 0.0);
 
-      copyVec(yy, model->y());
-      copyVec(yp, model->yp());
-      copyVec(yyB, model->yB());
-      copyVec(ypB, model->ypB());
-      model->updateTime(tt, 0.0);
-
-      model->evaluateAdjointIntegrand();
-      copyVec(model->getAdjointIntegrand(), rhsQB);
-
-      return 0;
+                                    checkModelOutput(model->evaluateAdjointIntegrand(), "evaluateAdjointIntegrand");
+                                    copyVec(model->getAdjointIntegrand(), rhsQB); });
     }
 
     /**
@@ -1254,7 +1316,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::setMaxSteps(IdxT max_steps)
     {
-      max_steps_ = max_steps;
+      max_steps_ = max_steps == 0 ? DEFAULT_MAX_STEPS : max_steps;
     }
 
     /**
@@ -1364,9 +1426,9 @@ namespace AnalysisManager
         return;
       }
 
+      checkModelOutput(model_->setAbsoluteTolerance(rel_tol), "setAbsoluteTolerance");
       N_Vector abs_tol_vec = N_VClone(yy_);
       checkAllocation((void*) abs_tol_vec, "N_VClone");
-      model_->setAbsoluteTolerance(rel_tol);
       copyVec(model_->absoluteTolerance(), abs_tol_vec);
       N_VScale(abs_tol_fac, abs_tol_vec, abs_tol_vec);
 
@@ -1404,9 +1466,9 @@ namespace AnalysisManager
         return;
       }
 
+      checkModelOutput(model_->setAbsoluteTolerance(rel_tol), "setAbsoluteTolerance");
       N_Vector abs_tol_vec = N_VClone(yy_);
       checkAllocation((void*) abs_tol_vec, "N_VClone");
-      model_->setAbsoluteTolerance(rel_tol);
       copyVec(model_->absoluteTolerance(), abs_tol_vec);
 
       retval = IDAQuadSVtolerances(mem, rel_tol, abs_tol_vec);

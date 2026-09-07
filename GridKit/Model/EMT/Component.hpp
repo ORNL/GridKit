@@ -8,6 +8,7 @@
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/EMT/DaeAnalysis.hpp>
+#include <GridKit/Model/EMT/InitialState.hpp>
 #include <GridKit/Model/EMT/Signal/Signal.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Errors.hpp>
@@ -32,13 +33,15 @@ namespace GridKit
     class Component : public Model::Evaluator<scalar_type, index_type>
     {
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
-      using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
-      using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
-      using SignalT    = Signal<ScalarT, IdxT>;
+      using ScalarT              = scalar_type;
+      using IdxT                 = index_type;
+      using RealT                = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using CsrMatrixT           = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
+      using CooMatrixT           = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
+      using VectorT              = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+      using SignalT              = Signal<ScalarT, IdxT>;
+      using InitialStateT        = InitialState<ScalarT, IdxT>;
+      using InitializationPortsT = typename InitialStateT::Ports;
 
       Component() = default;
 
@@ -82,9 +85,52 @@ namespace GridKit
         throw std::invalid_argument("Component has no state initializer");
       }
 
+      virtual void validateInitialState(const std::map<std::string, RealT>& values) const
+      {
+        if (!values.empty())
+          throw std::invalid_argument("Component has no prescribed initial outputs");
+      }
+
+      virtual InitializationPortsT initializationPorts()
+      {
+        return {externalVariableSignals(), {}, {}};
+      }
+
+      virtual void prepareInitialization(InitialStateT&)
+      {
+      }
+
+      void resetHistory() override
+      {
+        for (auto* op : operators_)
+          op->resetHistory();
+      }
+
+      void acceptStep(RealT time) override
+      {
+        for (auto* op : operators_)
+          op->acceptStep(time);
+      }
+
+      RealT maximumStepSize() const override
+      {
+        RealT step = std::numeric_limits<RealT>::infinity();
+        for (const auto* op : operators_)
+        {
+          const auto limit = op->maximumStepSize();
+          if (!(limit > RealT{0}))
+            throw std::invalid_argument("EMT history step bound must be positive");
+          step = std::min(step, limit);
+        }
+        return step;
+      }
+
     protected:
       template <typename ModelT>
       static int initializeOutputs(ModelT& model, const std::map<std::string, RealT>& values);
+
+      template <typename ModelT>
+      static std::map<typename ModelT::Outputs, RealT> parseInitialOutputs(const std::map<std::string, RealT>& values);
 
       template <typename Outputs>
       static void validateOutputValues(const std::map<Outputs, RealT>& outputs)
@@ -119,17 +165,6 @@ namespace GridKit
       }
 
     public:
-      /**
-       * @brief Stable ordering key for component initialization.
-       *
-       * Containers initialize all leaves in ascending order. Components with
-       * the same value retain their hierarchy order.
-       */
-      virtual int initializationOrder() const noexcept
-      {
-        return 1;
-      }
-
       virtual int evaluateInternalResidual()
       {
         return this->evaluateResidual();

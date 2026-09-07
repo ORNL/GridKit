@@ -62,7 +62,7 @@ int main(int argc, const char* argv[])
     }
 
     // Re-initialize simulation at event time
-    ida.initializeSimulation(event.time);
+    ida.restartSimulation(event.time);
   }
 
   // Run to final time
