@@ -261,29 +261,21 @@ namespace GridKit
         return gridkit_component_id_;
       }
 
+      /**
+       * @brief CSR construction dispatch depending on ScalarT
+       *  
+       * @note Currently only used for testing purposes.
+       */
       int constructCsr()
       {
-        if (coo_jac_ == nullptr)
-        {
-          constructCoo();
-        }
-
-        if (csr_jac_ == nullptr)
-        {
-          IdxT* row_ptrs = coo_jac_->getCsrRowData();
-
-          nnz_ = coo_jac_->getNnz();
-
-          IdxT*  cols = new IdxT[static_cast<size_t>(nnz_)];
-          RealT* vals = new RealT[static_cast<size_t>(nnz_)];
-
-          std::copy(coo_jac_->getColData(), coo_jac_->getColData() + nnz_, cols);
-          std::copy(coo_jac_->getValues(), coo_jac_->getValues() + nnz_, vals);
-
-          csr_jac_ = new CsrMatrixT(coo_jac_->getNumRows(), coo_jac_->getNumColumns(), nnz_, &row_ptrs, &cols, &vals);
-        }
-
-        return 0;
+        //if constexpr (std::is_same_v<ScalarT, DependencyTracking::Variable>)
+        //{
+        //  return constructCsrFromDependencies();
+        //}
+        //else
+        //{
+          return constructCsrFromCoo();
+        //}
       }
 
     protected:
@@ -316,6 +308,9 @@ namespace GridKit
         abs_tol_.resize(n);
       }
 
+      /**
+       * @brief COO construction from raw buffers.
+       */
       int constructCoo()
       {
         if (coo_jac_ == nullptr)
@@ -335,6 +330,36 @@ namespace GridKit
           }
           coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
           coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST);
+        }
+
+        return 0;
+      }
+
+      /**
+       * @brief CSR construction from COO.
+       *
+       * @note Currently only used for testing purposes.
+       */
+      int constructCsrFromCoo()
+      {
+        if (coo_jac_ == nullptr)
+        {
+          constructCoo();
+        }
+
+        if (csr_jac_ == nullptr)
+        {
+          IdxT* row_ptrs = coo_jac_->getCsrRowData();
+
+          nnz_ = coo_jac_->getNnz();
+
+          IdxT*  cols = new IdxT[static_cast<size_t>(nnz_)];
+          RealT* vals = new RealT[static_cast<size_t>(nnz_)];
+
+          std::copy(coo_jac_->getColData(), coo_jac_->getColData() + nnz_, cols);
+          std::copy(coo_jac_->getValues(), coo_jac_->getValues() + nnz_, vals);
+
+          csr_jac_ = new CsrMatrixT(coo_jac_->getNumRows(), coo_jac_->getNumColumns(), nnz_, &row_ptrs, &cols, &vals);
         }
 
         return 0;
