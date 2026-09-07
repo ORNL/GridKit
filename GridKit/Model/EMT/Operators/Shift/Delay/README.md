@@ -8,8 +8,9 @@
 ```
 
 At runtime, accepted-step input samples are reconstructed with cubic Hermite
-interpolation. `Delay` adds no DAE variables or residual rows. A scalar delay
-is the $M=1$ case.
+interpolation. Each channel owns an algebraic delayed-output variable. When a
+step extends beyond its delay, the delayed value depends implicitly on the
+current trial input. A scalar delay is the $M=1$ case.
 
 ## Block Diagram
 
@@ -48,7 +49,7 @@ Symbol | Port | Type | Units | Description | Note
 $\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^M$
 $\mathbf{y}$ | `out` | Output | $[u]$ | Delayed output port | $\mathbf{y} \in \mathbb{R}^M$
 
-The output provides both value and time derivative.
+The output is a bound DAE signal, with its derivative supplied by the solver.
 
 ## Submodels
 
@@ -60,7 +61,8 @@ None.
 
 ## Model Variables
 
-History samples are implementation data, not DAE variables or residual rows.
+History samples are implementation data. Only the delayed outputs occupy DAE
+variables and residual rows.
 
 ### Internal Variables
 
@@ -70,7 +72,9 @@ None.
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{y}$ | $[u]$ | Delayed output | $\mathbf{y} \in \mathbb{R}^M$
 
 ### External Variables
 
@@ -94,17 +98,13 @@ None.
 
 #### Algebraic
 
-None.
+```math
+0=-y_m(t)+u_m(t-\tau_m),\qquad m\in\{1,\ldots,M\}
+```
 
 ### External Equations
 
-Each channel satisfies $y_m(t)=u_m(t-\tau_m)$.
-
-```math
-\mathbf{y} \leftarrow \mathbf{u}(t-\boldsymbol{\tau})
-```
-
-
+None.
 
 ## History Realization
 
@@ -114,7 +114,7 @@ Accepted input history is stored as the knot sequence
 
 ```math
 (t_j,\ \mathbf{u}_j,\ \mathbf{u}'_j),
-\qquad 0 = t_0 < t_1 < \cdots < t_n,
+\qquad t_0 \le t_1 \le \cdots \le t_n,
 ```
 
 where $\mathbf{u}_j$ and $\mathbf{u}'_j$ are the input value and derivative at
@@ -125,15 +125,14 @@ and read the record at $t-\tau_m$ independently.
 
 Figure 2: Delay history record and channel taps
 
-> [!WARNING]
-> Later knots are appended only at accepted steps, and the solver step size
-> must not exceed $\tau_{\min}$. These constraints keep every lookup at or
-> behind the accepted frontier; the realization must not extrapolate beyond
-> it.
+Later knots are appended only at accepted steps. Rejected trials and monitor
+samples never enter the record. At a discontinuity, two knots retain the left
+and right limits at the same time. Old knots are removed after retaining the
+bracket needed by the longest delay.
 
 ### Interpolation
 
-Suppressing the channel index, a lookup at $\xi \le 0$ uses the analytic
+Suppressing the channel index, a lookup at $\xi < t_0$ uses the analytic
 prehistory. For $\xi \in (t_j,t_{j+1}]$, the bracketing knots define the cubic
 Hermite interpolant
 
@@ -151,9 +150,45 @@ u(\xi)
 \end{aligned}
 ```
 
-Its derivative comes from the same polynomial. For smooth input and exact
-knot data, the interpolant is $C^1$ with nominal fourth-order value accuracy
-and third-order derivative accuracy in the knot spacing.
+For smooth input and exact knot data, the interpolant is $C^1$ with nominal
+fourth-order value accuracy in the knot spacing. The first segment after a
+restart uses linear interpolation because consistent-condition calculation
+does not update algebraic input derivatives.
+
+### Steps Longer Than a Delay
+
+Let $t_n$ be the accepted frontier and $t=t_n+h$ a trial endpoint. If
+$\xi=t-\tau_m>t_n$, define $\theta=(\xi-t_n)/h$. The overlap polynomial uses
+the accepted value and slope and the current trial value:
+
+```math
+u_m(\xi)
+  \approx (1-\theta^2)u_{m,n}
+    +h\theta(1-\theta)u'_{m,n}
+    +\theta^2u_m(t).
+```
+
+The $\theta^2$ coefficient participates in the sparse Jacobian, including
+the chain rule for computed input signals. It does not introduce a trial
+input-derivative dependency. Immediately after a restart the overlap uses
+linear interpolation, with coefficient $\theta$.
+
+The solver remains adaptive. `limit_step: true` requests the reference
+method-of-steps bound $h\le\tau_{\min}$; the default is `false`. This option
+is also accepted by `Propagation` and applies to its delay bank. Unrestricted
+overlap has a third-order local value error for smooth exact input data;
+IDA's error test alone is not an independent bound on history reconstruction
+error. Compare refined tolerances and the bounded-step realization when
+assessing transient accuracy.
+
+### Discontinuities
+
+An accepted input jump schedules its arrival at $t+\tau_m$. IDA stops at the
+next arrival, retains the left limit, then calculates consistent right-limit
+conditions and restarts. Repeated arrivals are propagated through subsequent
+reflections. A relative jump threshold of $10^{-10}$ suppresses roundoff-level
+restart cascades. Smooth dispersive tails continue under the usual adaptive
+error control.
 
 ## Initialization
 
@@ -164,8 +199,9 @@ $\mathrm{d}\mathbf{u}/\mathrm{d}t$ must be specified over
 t \in [t_0-\tau_{\max},t_0].
 ```
 
-Its endpoint value and derivative must match the initialized input at $t_0$.
-The delay does not synthesize prehistory. At $t_0$,
+The delay does not synthesize prehistory. A supplied endpoint differing from
+the consistent initial input represents a switching event at $t_0$; both
+limits are retained. At $t_0$,
 
 ```math
 \begin{aligned}

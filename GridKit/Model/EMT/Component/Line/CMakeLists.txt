@@ -4,3 +4,5 @@
 #]]
 
 add_subdirectory(LineLumped)
+
+add_subdirectory(LineDistributed)

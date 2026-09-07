@@ -710,6 +710,23 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
+    auto Container<scalar_type, index_type>::nextDiscontinuityTime(RealT after) const -> RealT
+    {
+      RealT time = ComponentT::nextDiscontinuityTime(after);
+      for (const auto& child : children_)
+        time = std::min(time, child->nextDiscontinuityTime(after));
+      return time;
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Container<scalar_type, index_type>::beginDiscontinuity(RealT time)
+    {
+      ComponentT::beginDiscontinuity(time);
+      for (auto& child : children_)
+        child->beginDiscontinuity(time);
+    }
+
+    template <typename scalar_type, typename index_type>
     auto Container<scalar_type, index_type>::maximumStepSize() const -> RealT
     {
       RealT step = ComponentT::maximumStepSize();

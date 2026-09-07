@@ -98,6 +98,13 @@ at scale `dx/2`. Each terminal preserves its scalar aliases and phase order.
 The bus exposes `<name>_Ish_a`, `b`, `c` outputs and `<name>_inc_a`, `b`, `c`
 inputs. `LineLumped` supplies `i21 = -i12` to terminal 1 and `i12` to terminal 2.
 
+`LineDistributed` similarly creates one bus-owned characteristic admittance
+per terminal from `submodels.Yc`, at unit scale. Its `submodels.H` contains
+`K` and a nonempty `modes` array, each entry holding a positive `tau` and a
+proper square VectorFit `H`. The line supplies each bus's incident current
+from the opposite terminal's reflected current through an independent
+propagation instance. See [Propagation](Operators/Shift/Propagation/README.md).
+
 Initial values belong exclusively in the [state file](STATE.md), keyed by
 component path and existing output names.
 Bus voltages default to zero. Model initialization reconstructs
@@ -237,6 +244,9 @@ future file-backed Containers; file inclusion is not part of this revision.
   `LineLumped`, `Switch` | `i12a`, `i12b`, `i12c` | Output | Signal | No
   `LineLumped`             | `v1a`, `v1b`, `v1c` | Input | Voltage signal | Yes
   `LineLumped`             | `v2a`, `v2b`, `v2c` | Input | Voltage signal | Yes
+  `LineDistributed`        | `v1a`, `v1b`, `v1c`, `v2a`, `v2b`, `v2c` | Input | Voltage signal | Yes
+  `LineDistributed`        | `i_ref1a`, `i_ref1b`, `i_ref1c`, `i_ref2a`, `i_ref2b`, `i_ref2c` | Output | Signal | No
+  `LineDistributed`        | `i_inc1a`, `i_inc1b`, `i_inc1c`, `i_inc2a`, `i_inc2b`, `i_inc2c` | Output | Signal | No
   `LoadZ`                  | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `SexsPti`                | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `SexsPti`                | `vref`, `vs`, `vuel`, `voel` | Input | Signal | No
@@ -327,6 +337,7 @@ The capacitor adds one differential voltage. Set its initial value with
   `DependentVoltageSource` | [DependentVoltageSource](Component/Source/DependentVoltageSource/README.md)
   `VoltageSource`       | [VoltageSource](Component/Source/VoltageSource/README.md)
   `LineLumped`          | [LineLumped](Component/Line/LineLumped/README.md)
+  `LineDistributed`     | [LineDistributed](Component/Line/LineDistributed/README.md)
   `LoadZ`               | [LoadZ](Component/Load/LoadZ/README.md)
   `Switch`              | [Switch](Component/Switch/README.md)
   `Machine`              | [Machine](Component/Source/Machine/README.md)

@@ -171,6 +171,17 @@ namespace GridKit
       {
       }
 
+      /// Next known discontinuity carried by accepted history.
+      virtual RealT nextDiscontinuityTime(RealT) const
+      {
+        return std::numeric_limits<RealT>::infinity();
+      }
+
+      /// Select the right limit before calculating consistent conditions.
+      virtual void beginDiscontinuity(RealT)
+      {
+      }
+
       /// Largest admissible forward step, e.g. the shortest transport delay.
       virtual RealT maximumStepSize() const
       {

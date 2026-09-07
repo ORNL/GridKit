@@ -55,6 +55,8 @@ P_{\phi,nk} =
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{v}_1$ | `v1` | Input | [V] | Terminal 1 voltage connection used to assemble its Norton source | $\mathbb{R}^N$
+$\mathbf{v}_2$ | `v2` | Input | [V] | Terminal 2 voltage connection used to assemble its Norton source | $\mathbb{R}^N$
 $\mathbf{i}_1^\mathrm{c}$ | `Ish1` | Input | [A] | Characteristic-admittance current from terminal 1 Bus | $\mathbb{R}^K$
 $\mathbf{i}_2^\mathrm{c}$ | `Ish2` | Input | [A] | Characteristic-admittance current from terminal 2 Bus | $\mathbb{R}^K$
 $\mathbf{i}_1^\mathrm{ref}$ | `i_ref1` | Output | [A] | Reflected current at terminal 1 | $\mathbb{R}^K$
@@ -82,11 +84,17 @@ uniform line, so
 
 The terminal admittances have independent states in their buses;
 the propagation instances have independent states and histories in the line.
+In case files, `bus1` and `bus2` select the terminal buses using the usual
+scalar voltage aliases. Assembly creates their Norton sources and connects
+the characteristic and incident currents shown above.
 
 ### Submodel Validation
 
 The characteristic-admittance fits must be stable, proper, and positive real.
 Together with the propagation fits, they must produce a passive line model.
+The runtime validates dimensions, properness, and stable poles. Positive
+realness and passivity of the combined fitted line are offline fitting
+requirements; pole stability alone does not establish either property.
 
 ### Submodel Wiring
 
@@ -126,6 +134,8 @@ Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{i}_1^\mathrm{c}$ | [A] | Characteristic-admittance current owned by terminal 1 Norton source | $\mathbb{R}^K$
 $\mathbf{i}_2^\mathrm{c}$ | [A] | Characteristic-admittance current owned by terminal 2 Norton source | $\mathbb{R}^K$
+$\mathbf{i}_1^\mathrm{inc}$ | [A] | Output of the terminal 2-to-1 propagation operator | $\mathbb{R}^K$
+$\mathbf{i}_2^\mathrm{inc}$ | [A] | Output of the terminal 1-to-2 propagation operator | $\mathbb{R}^K$
 
 ## Model Equations
 
@@ -153,18 +163,43 @@ None.
 
 ## Initialization
 
-None beyond the EMT initialization contract.
+Supply each terminal's reflected-current prehistory in the state file's
+[`history`](../../../STATE.md#history) section. The history contains an
+angular frequency, instantaneous current values, and their time derivatives.
+It is constant when $\omega=0$ and harmonic otherwise:
+
+```math
+\mathbf{i}_e^{\mathrm{ref}}(t)
+  =\mathbf{i}_e^{\mathrm{ref}}(t_0)\cos\!\left(\omega(t-t_0)\right)
+   +\dfrac{\dot{\mathbf{i}}_e^{\mathrm{ref}}(t_0)}{\omega}
+      \sin\!\left(\omega(t-t_0)\right).
+```
+
+Each propagation instance initializes its rational states and filtered
+history from its local reflected-current prehistory. The opposite terminal
+receives its delayed output. A zero history represents energization from an
+unenergized line. Initial reflected outputs, if also specified in `devices`,
+must agree with the history endpoint. IDA then reconciles the network's
+algebraic variables and differential-state derivatives.
 
 ## Monitors
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
-`i_c1` | [A] | Characteristic-admittance current at terminal 1 | $\mathbf{i}_1^\mathrm{c} \in \mathbb{R}^K$
-`i_c2` | [A] | Characteristic-admittance current at terminal 2 | $\mathbf{i}_2^\mathrm{c} \in \mathbb{R}^K$
-`i_inc1` | [A] | Incident current at terminal 1 | $\mathbf{i}_1^\mathrm{inc} \in \mathbb{R}^K$
-`i_inc2` | [A] | Incident current at terminal 2 | $\mathbf{i}_2^\mathrm{inc} \in \mathbb{R}^K$
+`i_c1a`, `i_c1b`, `i_c1c` | [A] | Characteristic-admittance current at terminal 1 | $\mathbf{i}_1^\mathrm{c} \in \mathbb{R}^K$
+`i_c2a`, `i_c2b`, `i_c2c` | [A] | Characteristic-admittance current at terminal 2 | $\mathbf{i}_2^\mathrm{c} \in \mathbb{R}^K$
+`i_inc1a`, `i_inc1b`, `i_inc1c` | [A] | Incident current at terminal 1 | $\mathbf{i}_1^\mathrm{inc} \in \mathbb{R}^K$
+`i_inc2a`, `i_inc2b`, `i_inc2c` | [A] | Incident current at terminal 2 | $\mathbf{i}_2^\mathrm{inc} \in \mathbb{R}^K$
+`i_ref1a`, `i_ref1b`, `i_ref1c` | [A] | Reflected current at terminal 1 | $\mathbf{i}_1^\mathrm{ref} \in \mathbb{R}^K$
+`i_ref2a`, `i_ref2b`, `i_ref2c` | [A] | Reflected current at terminal 2 | $\mathbf{i}_2^\mathrm{ref} \in \mathbb{R}^K$
+
+The three-phase implementation exposes scalar monitor names by appending
+`a`, `b`, or `c`, for example `i_inc1a`. Reflected and incident current
+outputs use the same phase suffixes.
 
 ## Development
 
-The initial three-phase formulation takes $N=K=3$ and
-$\mathbf{P}_\phi=\mathbf{I}_3$.
+The implemented three-phase formulation requires $N=K=3$ and
+$\mathbf{c}=[1,2,3]^\mathsf{T}$, hence $\mathbf{P}_\phi=\mathbf{I}_3$.
+The generalized conductor mapping above documents the extension; other
+dimensions are rejected by this implementation, as for `LineLumped`.

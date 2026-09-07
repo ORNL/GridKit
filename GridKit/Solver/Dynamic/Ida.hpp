@@ -150,6 +150,12 @@ namespace AnalysisManager
 
       IdaStats getStats() const;
 
+      /// Observe accepted internal steps after the model history is committed.
+      void setAcceptedStepCallback(std::function<void(RealT, RealT, int)> callback)
+      {
+        accepted_step_callback_ = std::move(callback);
+      }
+
     private:
       static int Residual(RealT    t,
                           N_Vector yy,
@@ -214,7 +220,9 @@ namespace AnalysisManager
       SUNLinearSolver linearSolver_{};
       SUNLinearSolver linearSolverB_{};
 
-      std::exception_ptr callback_error_;
+      std::exception_ptr                     callback_error_;
+      IdaStats                               history_stats_;
+      std::function<void(RealT, RealT, int)> accepted_step_callback_;
 
       RealT t_init_{};
 

@@ -256,13 +256,15 @@ namespace AnalysisManager
         throw std::invalid_argument("Initial simulation time must be finite");
       int retval = 0;
 
-      t_init_ = t0;
+      t_init_        = t0;
+      history_stats_ = {};
 
       // Discrete changes can alter the DAE partition. Validate and refresh it
       // at the restart state before asking IDA for consistent conditions.
       updateModelState(t0);
       if (reset_history)
         model_->resetHistory();
+      model_->beginDiscontinuity(t0);
       model_->updateTime(t0, 1.0);
       retval = model_->tagDifferentiable();
       checkModelOutput(retval, "tagDifferentiable");
@@ -407,6 +409,9 @@ namespace AnalysisManager
 
       while (time < tf)
       {
+        const RealT discontinuity = model_->nextDiscontinuityTime(time);
+        const RealT target        = std::min(tf, discontinuity);
+        checkOutput(IDASetStopTime(solver_, target), "IDASetStopTime");
         if (max_steps_ > 0 && ++internal_steps > max_steps_)
           checkOutput(IDA_TOO_MUCH_WORK, checkpoint ? "IDASolveF" : "IDASolve");
         if (checkpoint)
@@ -447,6 +452,27 @@ namespace AnalysisManager
         }
         updateModelState(time);
         model_->acceptStep(time);
+        if (accepted_step_callback_)
+        {
+          RealT step;
+          int   order;
+          checkOutput(IDAGetLastStep(solver_, &step), "IDAGetLastStep");
+          checkOutput(IDAGetLastOrder(solver_, &order), "IDAGetLastOrder");
+          accepted_step_callback_(time, step, order);
+        }
+        if (time == discontinuity)
+        {
+          if (quadrature || checkpoint)
+            throw std::logic_error("History discontinuities require the forward DAE simulation interface");
+          const auto stats    = getStats();
+          const auto ic_type  = consistent_ic_type_;
+          consistent_ic_type_ = IdaConsistentICType::YA_YDP;
+          initializeState(time, true, false);
+          consistent_ic_type_ = ic_type;
+          history_stats_      = stats;
+          if (step_callback)
+            (*step_callback)(time);
+        }
       }
       return 0;
     }
@@ -1124,6 +1150,7 @@ namespace AnalysisManager
       retval = IDAGetNonlinSolvStats(solver_, &stats.num_nonlinear_iters_, &stats.num_nonlinear_convergence_fails_);
       checkOutput(retval, "IDAGetNonlinSolvStats");
 
+      stats += history_stats_;
       return stats;
     }
 

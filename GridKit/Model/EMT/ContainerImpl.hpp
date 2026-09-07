@@ -100,6 +100,13 @@ namespace GridKit
         add<LineLumped<ScalarT, IdxT>>(line_data.id, qualified_data);
       }
 
+      for (const auto& line_data : data.line_distributed)
+      {
+        auto qualified_data = line_data;
+        qualified_data.id   = qualify(line_data.id);
+        add<LineDistributed<ScalarT, IdxT>>(line_data.id, qualified_data);
+      }
+
       for (const auto& load_data : data.loadz)
       {
         auto qualified_data = load_data;
@@ -380,6 +387,31 @@ namespace GridKit
         line_model.attachTerminal(1, voltage2);
       }
 
+      for (const auto& line_data : data.line_distributed)
+      {
+        auto& line_model = component<LineDistributed<ScalarT, IdxT>>(line_data.id);
+        for (const auto& [output, reference] : line_data.outputs)
+          line_model.assignOutput(output, &signal(reference));
+        auto [bus1, phases1, voltage1] = terminal(line_data.inputs, LineDistributedInputs::v1a);
+        auto [bus2, phases2, voltage2] = terminal(line_data.inputs, LineDistributedInputs::v2a);
+        std::string name;
+        for (char c : qualify(line_data.id))
+          name += c == '/' ? "//" : c == '.' ? "/"
+                                             : std::string(1, c);
+        std::array<BusT*, 2>                     buses{bus1, bus2};
+        std::array<typename BusT::PhaseOrder, 2> phases{phases1, phases2};
+        for (size_t e = 0; e < 2; ++e)
+        {
+          typename BusT::PhaseSignals incident, characteristic;
+          for (size_t p = 0; p < 3; ++p)
+            incident[p] = &line_model.incidentSignal(e, p);
+          auto& norton = buses[e]->addNorton(name + "_" + std::to_string(e + 1), line_data.Yc, incident, ONE<RealT>, phases[e]);
+          for (size_t p = 0; p < 3; ++p)
+            characteristic[p] = &norton.outputSignal(p);
+          line_model.attachTerminal(e, characteristic);
+        }
+      }
+
       for (const auto& load_data : data.loadz)
       {
         auto& load_model = component<LoadZ<ScalarT, IdxT>>(load_data.id);
@@ -550,6 +582,12 @@ namespace GridKit
         const auto name  = reference.substr(dot + 1);
         if (auto* container = dynamic_cast<Container*>(&child))
           return &container->outputSignal(name);
+        if (auto* line = dynamic_cast<LineDistributed<ScalarT, IdxT>*>(&child))
+        {
+          const auto output = magic_enum::enum_cast<LineDistributedOutputs>(name);
+          if (output && *output != LineDistributedOutputs::SIZE)
+            return &line->outputSignal(*output);
+        }
         if (auto* line = dynamic_cast<LineLumped<ScalarT, IdxT>*>(&child))
         {
           const auto output = magic_enum::enum_cast<LineLumpedOutputs>(name);

@@ -112,6 +112,20 @@ namespace GridKit
           op->acceptStep(time);
       }
 
+      RealT nextDiscontinuityTime(RealT after) const override
+      {
+        RealT time = std::numeric_limits<RealT>::infinity();
+        for (const auto* op : operators_)
+          time = std::min(time, op->nextDiscontinuityTime(after));
+        return time;
+      }
+
+      void beginDiscontinuity(RealT time) override
+      {
+        for (auto* op : operators_)
+          op->beginDiscontinuity(time);
+      }
+
       RealT maximumStepSize() const override
       {
         RealT step = std::numeric_limits<RealT>::infinity();

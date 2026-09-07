@@ -13,6 +13,7 @@
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1Data.hpp>
+#include <GridKit/Model/EMT/Component/Line/LineDistributed/LineDistributedData.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedData.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSourceData.hpp>
@@ -68,21 +69,22 @@ namespace GridKit
       std::vector<SignalDataT>   signal;    ///< Signals local to this scope
       std::vector<ContainerData> container; ///< Child scopes
 
-      std::vector<PwmDataT>                    pwm;
-      std::vector<DcLinkDataT>                 dc_link;
-      std::vector<ConverterDataT>              converter;
-      std::vector<BusDataT>                    bus;
-      std::vector<DependentVoltageSourceDataT> dependent_voltage_source;
-      std::vector<LineLumpedDataT>             line_lumped;
-      std::vector<LoadZDataT>                  loadz;
-      std::vector<MachineDataT>                machine;
-      std::vector<SwitchDataT>                 sw;
-      std::vector<IeeestDataT>                 ieeest;
-      std::vector<GastPtiDataT>                gastpti;
-      std::vector<Tgov1DataT>                  gov;
-      std::vector<SexsPtiDataT>                sexs_pti;
-      std::vector<Ieeet1DataT>                 exciter;
-      std::vector<VoltageSourceDataT>          voltage_source;
+      std::vector<PwmDataT>                         pwm;
+      std::vector<DcLinkDataT>                      dc_link;
+      std::vector<ConverterDataT>                   converter;
+      std::vector<BusDataT>                         bus;
+      std::vector<DependentVoltageSourceDataT>      dependent_voltage_source;
+      std::vector<LineLumpedDataT>                  line_lumped;
+      std::vector<LineDistributedData<RealT, IdxT>> line_distributed;
+      std::vector<LoadZDataT>                       loadz;
+      std::vector<MachineDataT>                     machine;
+      std::vector<SwitchDataT>                      sw;
+      std::vector<IeeestDataT>                      ieeest;
+      std::vector<GastPtiDataT>                     gastpti;
+      std::vector<Tgov1DataT>                       gov;
+      std::vector<SexsPtiDataT>                     sexs_pti;
+      std::vector<Ieeet1DataT>                      exciter;
+      std::vector<VoltageSourceDataT>               voltage_source;
     };
   } // namespace EMT
 } // namespace GridKit
