@@ -31,9 +31,8 @@ namespace GridKit
         // The size of the buffer is the sum of maximum capacities of the blocks.
         // Enyme will compute the appropriate nnz from sparsification.
         auto size        = static_cast<size_t>(this->equationSize());
-        auto f_ext_size  = f_ext_.size();
         auto y_ext_size  = y_ext_.size();
-        auto buffer_size = 2 * (size + f_ext_size) * (size + y_ext_size);
+        auto buffer_size = 2 * size * (size + y_ext_size);
         if (z_.has_value())
         {
           buffer_size += static_cast<size_t>(z_->jacobianCapacity());

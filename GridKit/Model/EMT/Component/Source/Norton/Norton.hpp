@@ -25,8 +25,8 @@ namespace GridKit
       using PhaseSignals = std::array<SignalT*, 3>;
       using YDataT       = VectorFitData<RealT, IdxT>;
 
-      Norton(const YDataT& Y, PhaseSignals voltage, PhaseSignals incident, RealT scale)
-        : voltage_(voltage), incident_(incident), admittance_(Y, scale)
+      Norton(const YDataT& Y, PhaseSignals voltage, RealT scale)
+        : voltage_(voltage), admittance_(Y, scale)
       {
         if (Y.rows != 3 || Y.cols != 3 || Y.validate() != 0 || !std::isfinite(scale))
           throw std::invalid_argument("Norton: expected a finite three-phase admittance");
@@ -39,11 +39,6 @@ namespace GridKit
         admittance_.attachOutput(&shunt_[0], &shunt_[1], &shunt_[2]);
       }
 
-      SignalT& voltage(size_t phase) const
-      {
-        return *voltage_.at(phase);
-      }
-
       SignalT& outputSignal(size_t phase)
       {
         return shunt_.at(phase);
@@ -52,27 +47,6 @@ namespace GridKit
       const SignalT& outputSignal(size_t phase) const
       {
         return shunt_.at(phase);
-      }
-
-      SignalT* inputSignal(size_t phase) const
-      {
-        return incident_.at(phase);
-      }
-
-      ScalarT incidentCurrent(size_t phase) const
-      {
-        const auto* signal = incident_.at(phase);
-        return signal ? signal->read() : ScalarT{0};
-      }
-
-      ScalarT shuntCurrent(size_t phase) const
-      {
-        return shunt_.at(phase).read();
-      }
-
-      ScalarT current(size_t phase) const
-      {
-        return incidentCurrent(phase) - shunt_.at(phase).read();
       }
 
       int setGridKitComponentID(IdxT id) override
@@ -100,11 +74,7 @@ namespace GridKit
 
       int verify() const override
       {
-        int errors = admittance_.verify();
-        for (const auto* signal : incident_)
-          if (signal && !signal->linked())
-            ++errors;
-        return errors;
+        return admittance_.verify();
       }
 
       int initializationOrder() const noexcept override
@@ -162,37 +132,22 @@ namespace GridKit
         auto* f = this->f_.getData();
         for (size_t p = 0; p < 3; ++p)
         {
-          incident_value_[p] = incidentCurrent(p);
-          f[p]               = -shunt_[p].read();
+          f[p] = -shunt_[p].read();
         }
         const int status = this->evaluateOperatorInternalResiduals();
         this->f_.setDataUpdated();
         return status;
       }
 
-      int evaluateExternalResidual() override
-      {
-        for (size_t p = 0; p < 3; ++p)
-          voltage_[p]->accumulateResidual(incident_value_[p] - shunt_[p].read());
-        return this->evaluateOperatorExternalResiduals();
-      }
-
       int evaluateResidual() override
       {
         const int status = evaluateInternalResidual();
-        return status == 0 ? evaluateExternalResidual() : status;
+        return status == 0 ? this->evaluateExternalResidual() : status;
       }
 
       int assembleJacobian(RealT y_scale, RealT yp_scale) override
       {
-        std::array<typename SignalT::GradientT, 3> gradients;
-        size_t                                     capacity = 6 + static_cast<size_t>(admittance_.jacobianCapacity()) * admittance_.externalJacobianExpansion();
-        for (size_t p = 0; p < 3; ++p)
-        {
-          if (incident_[p])
-            incident_[p]->appendGradient(gradients[p]);
-          capacity += gradients[p].size();
-        }
+        const size_t capacity = 3 + static_cast<size_t>(admittance_.jacobianCapacity()) * admittance_.externalJacobianExpansion();
         if (capacity > jacobian_capacity_)
         {
           this->resetJacobianStructure();
@@ -218,9 +173,6 @@ namespace GridKit
         for (IdxT p = 0; p < 3; ++p)
         {
           append(this->getResidualIndex(p), this->getVariableIndex(p), -ONE<RealT>);
-          append(voltage_[static_cast<size_t>(p)]->getResidualIndex(), this->getVariableIndex(p), -ONE<RealT>);
-          for (const auto& [column, value] : gradients[static_cast<size_t>(p)])
-            append(voltage_[static_cast<size_t>(p)]->getResidualIndex(), column, value);
         }
         const int status = this->evaluateOperatorJacobians(y_scale, yp_scale);
         if (status != 0)
@@ -230,8 +182,7 @@ namespace GridKit
       }
 
     private:
-      PhaseSignals             voltage_, incident_;
-      std::array<ScalarT, 3>   incident_value_{};
+      PhaseSignals             voltage_;
       std::array<SignalT, 3>   shunt_;
       VectorFit<ScalarT, IdxT> admittance_;
       size_t                   jacobian_capacity_{0};

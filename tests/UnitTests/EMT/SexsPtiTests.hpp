@@ -43,6 +43,7 @@ namespace GridKit::Testing
       explicit Fixture(const Data& parameters = data(), bool attached = true)
         : model(parameters)
       {
+        inputs[0] = 1.10;
         inputs[1] = 0.03;
         inputs[2] = 0.04;
         inputs[3] = -0.02;

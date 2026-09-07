@@ -103,6 +103,11 @@ namespace GridKit::Testing
           model.getSignals().template attachSignal<EMT::LoadZExternalVariables::VB>(&terminal.outputSignal(GridKit::EMT::BusOutputs::vb));
           model.getSignals().template attachSignal<EMT::LoadZExternalVariables::VC>(&terminal.outputSignal(GridKit::EMT::BusOutputs::vc));
         }
+        for (size_t p = 0; p < 3; ++p)
+        {
+          terminal.addCurrent(p, model.currentSignal(p));
+        }
+
         IdxT offset = 0;
         for (auto* component : components())
         {
@@ -376,10 +381,12 @@ namespace GridKit::Testing
     template <typename ModelT>
     static bool standaloneStorage(const typename ModelT::ModelDataT& data, size_t branch_offset, size_t fit_offset)
     {
-      BusT bus;
+      BusT   bus;
+      ModelT model(data);
+      for (size_t p = 0; p < 3; ++p)
+        bus.addCurrent(p, model.currentSignal(p));
       bus.allocate();
       bus.initialize();
-      ModelT model(data);
       if constexpr (std::is_same_v<ModelT, SourceT>)
       {
         model.getSignals().template attachSignal<EMT::VoltageSourceExternalVariables::VA>(&bus.outputSignal(GridKit::EMT::BusOutputs::va));
@@ -463,14 +470,17 @@ namespace GridKit::Testing
       fixture.yp.setDataUpdated();
       for (RealT alpha : {1.7, 5.3})
       {
-        fixture.model.updateTime(0.17, alpha);
-        fixture.model.evaluateJacobian();
         std::map<std::pair<IdxT, IdxT>, RealT> entries;
-        auto*                                  coo = fixture.model.getCooJacobian();
-        if (coo == nullptr)
-          return false;
-        for (IdxT n = 0; n < coo->getNnz(); ++n)
-          entries[{coo->getRowData()[n], coo->getColData()[n]}] += coo->getValues()[n];
+        for (auto* component : fixture.components())
+        {
+          component->updateTime(0.17, alpha);
+          component->evaluateJacobian();
+          auto* coo = component->getCooJacobian();
+          if (coo == nullptr)
+            continue;
+          for (IdxT n = 0; n < coo->getNnz(); ++n)
+            entries[{coo->getRowData()[n], coo->getColData()[n]}] += coo->getValues()[n];
+        }
         constexpr RealT step = 1.0e-5;
         for (IdxT k = 0; k < size; ++k)
         {

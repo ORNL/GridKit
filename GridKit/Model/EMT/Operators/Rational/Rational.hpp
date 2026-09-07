@@ -123,7 +123,7 @@ namespace GridKit
         }
         for (auto* output : output_)
         {
-          if (output == nullptr || (coupling_allocated_ && !output->residualLinked()))
+          if (output && coupling_allocated_ && !output->residualLinked())
           {
             ++errors;
           }
@@ -154,10 +154,6 @@ namespace GridKit
         for (IdxT k = 0; k < cols(); ++k)
         {
           this->setExternalVariableSignal(k, input_[static_cast<size_t>(k)]);
-          if (hasInputDerivative(k))
-          {
-            input_[static_cast<size_t>(k)]->markDerivativeCoupling();
-          }
         }
         for (IdxT n = 0; n < rows(); ++n)
         {
