@@ -222,8 +222,12 @@ future file-backed Containers; file inclusion is not part of this revision.
   `DependentVoltageSource` | `eb`    | Input     | Signal        | Yes
   `DependentVoltageSource` | `ec`    | Input     | Signal        | Yes
   `PWM`                    | `s`     | Output    | Three Signal IDs | No
+  `DCLink`                 | `isrc`, `idc` | Input | Signal | Yes
+  `DCLink`                 | `vdc` | Output | Signal | No
   `Converter`              | `s`     | Input     | Three Signal IDs | Yes
   `Converter`              | `vdc`   | Input     | Signal        | Yes
+  `Converter`              | `i`     | Input     | Three Signal IDs | Yes
+  `Converter`              | `idc`   | Output    | Signal        | No
   `Converter`              | `vo`    | Output    | Three Signal IDs | No
   `Machine`                | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `Machine`                | `pm`    | Input     | Signal        | No
@@ -294,11 +298,30 @@ the DC link as `idc`, with `vdc * idc = vo · i`. Computed signals
 are evaluated from the current time and inputs when read, including through
 Container boundaries. These connections introduce no DAE variables.
 
+For a dynamic DC link, declare `dc` and `idc` without constant values, and a
+source-current signal such as `{"id": "isrc", "value": 80.0}`. Connect the capacitor
+to the bridge above:
+
+```json
+{
+  "class": "DCLink",
+  "id": "capacitor",
+  "params": { "C": 0.02 },
+  "inputs": { "isrc": "isrc", "idc": "idc" },
+  "outputs": { "vdc": "dc" },
+  "mon": ["vdc", "isrc", "idc", "energy"]
+}
+```
+
+The capacitor adds one differential voltage. Set its initial value with
+`"capacitor": {"vdc": 600.0}` in the state file's `devices` object.
+
 #### Device classes
 
   Class                 | Model
   ----------------------|------------------------------------------------------
   `PWM`                 | [PWM](Component/Controller/PWM/README.md)
+  `DCLink`              | [DC Link](Component/Controller/DCLink/README.md)
   `Converter`           | [Converter](Operators/Converter/README.md)
   `Bus`                 | [Bus](Component/Bus/README.md)
   `DependentVoltageSource` | [DependentVoltageSource](Component/Source/DependentVoltageSource/README.md)
