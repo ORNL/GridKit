@@ -21,12 +21,18 @@ namespace GridKit
     /// Inputs supported by a bus
     enum class BusInputs : size_t
     {
+      ia,
+      ib,
+      ic,
       SIZE
     };
 
     /// Outputs supported by a bus
     enum class BusOutputs : size_t
     {
+      va,
+      vb,
+      vc,
       SIZE
     };
 
@@ -63,10 +69,6 @@ namespace GridKit
 
       using IdxT  = index_type;
       using RealT = real_type;
-
-      RealT va0{0.0}; ///< Initial instantaneous phase a voltage
-      RealT vb0{0.0}; ///< Initial instantaneous phase b voltage
-      RealT vc0{0.0}; ///< Initial instantaneous phase c voltage
     };
   } // namespace EMT
 } // namespace GridKit

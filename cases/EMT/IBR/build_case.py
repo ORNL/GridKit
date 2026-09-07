@@ -117,7 +117,9 @@ def main():
     for bus, voltage in enumerate(voltages, 1):
         state["buses"][f"bus_{bus}"] = dict(zip(("va", "vb", "vc"), (np.sqrt(2) * np.real(voltage * np.exp(1j * np.array([0, -2*np.pi/3, 2*np.pi/3])))).tolist()))
     for bus, power in enumerate(machine_power, 1):
-        state["devices"][f"machine_{bus}"] = {"p": float(power.real), "q": float(power.imag)}
+        current = np.conj(power / (3 * voltages[bus - 1]))
+        phases = np.sqrt(2) * np.real(current * np.exp(1j * np.array([0, -2*np.pi/3, 2*np.pi/3])))
+        state["devices"][f"machine_{bus}"] = dict(zip(("ia", "ib", "ic"), phases.tolist()))
     write_json(HERE / "TenBus.case.json", case)
     write_json(HERE / "TenBus.state.json", state)
     print(f"Smoothing fundamental gain: {attenuation:.8f}; effective DC: {dc:.3f} V")

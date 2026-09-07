@@ -21,6 +21,8 @@ namespace GridKit
     class Component : public Model::Evaluator<scalar_type, index_type>
     {
     public:
+      virtual int initialize() = 0;
+
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;

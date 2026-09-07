@@ -84,16 +84,24 @@ namespace GridKit::Testing
         tolerance.resize(size);
         if constexpr (std::is_same_v<ModelT, DependentT>)
         {
-          model.getSignals().template attachPort<EMT::DependentVoltageSourceExternalVariables::VA>(&terminal.voltagePort());
-          model.getSignals().template attachPort<EMT::DependentVoltageSourceExternalVariables::EA>(&drive.voltagePort());
+          model.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::VA>(&terminal.outputSignal(GridKit::EMT::BusOutputs::va));
+          model.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::VB>(&terminal.outputSignal(GridKit::EMT::BusOutputs::vb));
+          model.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::VC>(&terminal.outputSignal(GridKit::EMT::BusOutputs::vc));
+          model.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::EA>(&drive.outputSignal(GridKit::EMT::BusOutputs::va));
+          model.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::EB>(&drive.outputSignal(GridKit::EMT::BusOutputs::vb));
+          model.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::EC>(&drive.outputSignal(GridKit::EMT::BusOutputs::vc));
         }
         else if constexpr (std::is_same_v<ModelT, SourceT>)
         {
-          model.getSignals().template attachPort<EMT::VoltageSourceExternalVariables::VA>(&terminal.voltagePort());
+          model.getSignals().template attachSignal<EMT::VoltageSourceExternalVariables::VA>(&terminal.outputSignal(GridKit::EMT::BusOutputs::va));
+          model.getSignals().template attachSignal<EMT::VoltageSourceExternalVariables::VB>(&terminal.outputSignal(GridKit::EMT::BusOutputs::vb));
+          model.getSignals().template attachSignal<EMT::VoltageSourceExternalVariables::VC>(&terminal.outputSignal(GridKit::EMT::BusOutputs::vc));
         }
         else
         {
-          model.getSignals().template attachPort<EMT::LoadZExternalVariables::VA>(&terminal.voltagePort());
+          model.getSignals().template attachSignal<EMT::LoadZExternalVariables::VA>(&terminal.outputSignal(GridKit::EMT::BusOutputs::va));
+          model.getSignals().template attachSignal<EMT::LoadZExternalVariables::VB>(&terminal.outputSignal(GridKit::EMT::BusOutputs::vb));
+          model.getSignals().template attachSignal<EMT::LoadZExternalVariables::VC>(&terminal.outputSignal(GridKit::EMT::BusOutputs::vc));
         }
         IdxT offset = 0;
         for (auto* component : components())
@@ -107,9 +115,11 @@ namespace GridKit::Testing
           }
           offset += component->size();
         }
+        terminal.initialize();
+        drive.initialize();
+        model.initialize();
         for (auto* component : components())
         {
-          component->initialize();
           component->tagDifferentiable();
         }
       }
@@ -314,7 +324,9 @@ namespace GridKit::Testing
       LoadT malformed_coefficient(load);
       BusT  bus;
       bus.allocate();
-      malformed_coefficient.getSignals().template attachPort<EMT::LoadZExternalVariables::VA>(&bus.voltagePort());
+      malformed_coefficient.getSignals().template attachSignal<EMT::LoadZExternalVariables::VA>(&bus.outputSignal(GridKit::EMT::BusOutputs::va));
+      malformed_coefficient.getSignals().template attachSignal<EMT::LoadZExternalVariables::VB>(&bus.outputSignal(GridKit::EMT::BusOutputs::vb));
+      malformed_coefficient.getSignals().template attachSignal<EMT::LoadZExternalVariables::VC>(&bus.outputSignal(GridKit::EMT::BusOutputs::vc));
       success *= (malformed_coefficient.allocate() != 0);
       success *= (malformed_coefficient.verify() > 0);
       typename SourceT::ModelDataT source;
@@ -374,11 +386,15 @@ namespace GridKit::Testing
       ModelT model(data);
       if constexpr (std::is_same_v<ModelT, SourceT>)
       {
-        model.getSignals().template attachPort<EMT::VoltageSourceExternalVariables::VA>(&bus.voltagePort());
+        model.getSignals().template attachSignal<EMT::VoltageSourceExternalVariables::VA>(&bus.outputSignal(GridKit::EMT::BusOutputs::va));
+        model.getSignals().template attachSignal<EMT::VoltageSourceExternalVariables::VB>(&bus.outputSignal(GridKit::EMT::BusOutputs::vb));
+        model.getSignals().template attachSignal<EMT::VoltageSourceExternalVariables::VC>(&bus.outputSignal(GridKit::EMT::BusOutputs::vc));
       }
       else
       {
-        model.getSignals().template attachPort<EMT::LoadZExternalVariables::VA>(&bus.voltagePort());
+        model.getSignals().template attachSignal<EMT::LoadZExternalVariables::VA>(&bus.outputSignal(GridKit::EMT::BusOutputs::va));
+        model.getSignals().template attachSignal<EMT::LoadZExternalVariables::VB>(&bus.outputSignal(GridKit::EMT::BusOutputs::vb));
+        model.getSignals().template attachSignal<EMT::LoadZExternalVariables::VC>(&bus.outputSignal(GridKit::EMT::BusOutputs::vc));
       }
       if (model.allocate() != 0 || model.initialize() != 0 || model.y().getSize() != model.size())
         return false;

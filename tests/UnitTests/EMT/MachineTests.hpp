@@ -66,8 +66,6 @@ namespace GridKit
         data.parameters[Parameter::Ll2q] = RealT{0.125};
         data.parameters[Parameter::S10]  = RealT{0.1};
         data.parameters[Parameter::S12]  = RealT{0.5};
-        data.parameters[Parameter::p0]   = RealT{50.0e6};
-        data.parameters[Parameter::q0]   = RealT{10.0e6};
         return data;
       }
 
@@ -87,17 +85,16 @@ namespace GridKit
         MachineT machine;
 
         Fixture()
-          : bus(ScalarT{11267.65281680262},
-                ScalarT{-5633.82640840131},
-                ScalarT{-5633.82640840131}),
-            machine(makeResidualData())
+          : machine(makeResidualData())
         {
           y.resize(system_size);
           yp.resize(system_size);
           f.resize(system_size);
           abs_tol.resize(system_size);
 
-          machine.getSignals().template attachPort<GridKit::EMT::MachineExternalVariables::VA>(&bus.voltagePort());
+          machine.getSignals().template attachSignal<GridKit::EMT::MachineExternalVariables::VA>(&bus.outputSignal(GridKit::EMT::BusOutputs::va));
+          machine.getSignals().template attachSignal<GridKit::EMT::MachineExternalVariables::VB>(&bus.outputSignal(GridKit::EMT::BusOutputs::vb));
+          machine.getSignals().template attachSignal<GridKit::EMT::MachineExternalVariables::VC>(&bus.outputSignal(GridKit::EMT::BusOutputs::vc));
 
           IdxT offset = 0;
           for (auto* component : components())
@@ -112,11 +109,16 @@ namespace GridKit
             offset += component->size();
           }
 
+          using Output = typename BusT::Outputs;
+          bus.initialize({{Output::va, RealT{11267.65281680262}},
+                          {Output::vb, RealT{-5633.82640840131}},
+                          {Output::vc, RealT{-5633.82640840131}}});
+          const RealT re = 50.0e6 / (1.5 * 11267.65281680262);
+          const RealT im = -10.0e6 / (1.5 * 11267.65281680262);
+          using Current  = typename MachineT::Outputs;
+          machine.initialize({{Current::ia, re}, {Current::ib, -0.5 * re + std::sqrt(3.0) * 0.5 * im}, {Current::ic, -0.5 * re - std::sqrt(3.0) * 0.5 * im}});
           for (auto* component : components())
-          {
-            component->initialize();
             component->tagDifferentiable();
-          }
         }
 
         std::array<GridKit::EMT::Component<ScalarT, IdxT>*, 2> components()
@@ -191,6 +193,59 @@ namespace GridKit
 
         success *= (std::abs(f[0]) > 1.0e2);
 
+        return success.report(__func__);
+      }
+
+      TestOutcome outputInitialization()
+      {
+        TestStatus success = true;
+        Fixture    fixture;
+        using Output = typename MachineT::Outputs;
+        using Signal = EMT::Signal<ScalarT, IdxT>;
+        std::array<Signal, 3> currents;
+        for (size_t phase = 0; phase < 3; ++phase)
+          fixture.machine.assignOutput(static_cast<Output>(static_cast<size_t>(Output::ia) + phase), &currents[phase]);
+        for (const auto& [active, reactive] : {std::pair{40.0e6, -5.0e6}, std::pair{70.0e6, 20.0e6}})
+        {
+          const RealT      v  = fixture.bus.y().getData()[0];
+          const RealT      re = active / (1.5 * v);
+          const RealT      im = -reactive / (1.5 * v);
+          const std::array values{re, -0.5 * re + std::sqrt(3.0) * 0.5 * im, -0.5 * re - std::sqrt(3.0) * 0.5 * im};
+          success *= fixture.machine.initialize({{Output::ia, values[0]}, {Output::ib, values[1]}, {Output::ic, values[2]}}) == 0;
+          RealT p = 0, q = 0;
+          for (size_t phase = 0; phase < 3; ++phase)
+          {
+            success             *= std::abs(currents[phase].read() - values[phase]) < 1e-9;
+            const auto* voltage  = fixture.bus.y().getData();
+            p                   += voltage[phase] * currents[phase].read();
+            q                   += (voltage[(phase + 1) % 3] - voltage[(phase + 2) % 3]) * currents[phase].read() / std::sqrt(3.0);
+          }
+          success *= std::abs(p - active) < 1e-7;
+          success *= std::abs(q - reactive) < 1e-7;
+          fixture.evaluateResidual();
+          for (IdxT row = 3; row < system_size; ++row)
+            success *= std::abs(fixture.f.getData()[row]) < 1e-12;
+          for (auto* signal : {&currents[0], &currents[1], &currents[2]})
+          {
+            typename Signal::GradientT gradient;
+            signal->appendGradient(gradient);
+            std::map<IdxT, RealT> coefficients;
+            for (const auto& [column, value] : gradient)
+              coefficients[column] += value;
+            for (const auto& [column, value] : coefficients)
+            {
+              auto&       y         = fixture.y.getData()[column];
+              const auto  original  = y;
+              const RealT step      = 1e-5 * (1 + std::abs(y));
+              y                     = original + step;
+              const auto plus       = signal->read();
+              y                     = original - step;
+              const auto minus      = signal->read();
+              y                     = original;
+              success              *= std::abs((plus - minus) / (2 * step) - value) < 1e-5 * (1 + std::abs(value));
+            }
+          }
+        }
         return success.report(__func__);
       }
 

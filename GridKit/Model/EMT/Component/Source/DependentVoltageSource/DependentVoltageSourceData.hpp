@@ -26,16 +26,21 @@ namespace GridKit
     /// Inputs supported by a dependent voltage source
     enum class DependentVoltageSourceInputs : size_t
     {
-      bus, ///< Component ID of the connected bus
-      ea,  ///< Phase-a source-voltage signal ID
-      eb,  ///< Phase-b source-voltage signal ID
-      ec,  ///< Phase-c source-voltage signal ID
+      va, ///< Phase-a terminal voltage
+      vb, ///< Phase-b terminal voltage
+      vc, ///< Phase-c terminal voltage
+      ea, ///< Phase-a source-voltage signal ID
+      eb, ///< Phase-b source-voltage signal ID
+      ec, ///< Phase-c source-voltage signal ID
       SIZE
     };
 
     /// Outputs supported by a dependent voltage source
     enum class DependentVoltageSourceOutputs : size_t
     {
+      ia,
+      ib,
+      ic,
       SIZE
     };
 

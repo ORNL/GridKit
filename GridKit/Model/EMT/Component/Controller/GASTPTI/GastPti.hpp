@@ -75,6 +75,7 @@ namespace GridKit
         using IdxT               = index_type;
         using RealT              = typename Component<ScalarT, IdxT>::RealT;
         using ModelDataT         = GastPtiData<RealT, IdxT>;
+        using Outputs            = typename ModelDataT::Outputs;
         using SignalT            = Signal<ScalarT, IdxT>;
         using MonitorT           = Model::VariableMonitor<GastPti, GastPtiData>;
         using InternalVariablesT = GastPtiInternalVariables;
@@ -93,7 +94,7 @@ namespace GridKit
           return 2;
         }
 
-        int initialize() override final;
+        int initialize(const std::map<Outputs, RealT>& outputs = {});
         int evaluateInternalResidual() override final;
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;

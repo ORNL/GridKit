@@ -47,6 +47,7 @@ int main()
   // setup simulation
   idas->setMaxSteps(1000);
   idas->setBackwardMaxSteps(1000);
+  model->initialize();
   idas->configureSimulation();
   idas->configureAdjoint();
   idas->getDefaultInitialCondition();

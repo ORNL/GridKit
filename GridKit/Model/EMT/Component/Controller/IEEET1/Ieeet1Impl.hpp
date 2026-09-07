@@ -184,8 +184,9 @@ namespace GridKit
 
       /** Initialize after the machine has seeded the field-voltage output. */
       template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::initialize()
+      int Ieeet1<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
+        this->validateOutputValues(outputs);
         if (!allocated_ || verify() != 0)
         {
           Log::error() << "Ieeet1: cannot initialize with invalid configuration\n";
@@ -199,7 +200,8 @@ namespace GridKit
         const ScalarT voel         = external[7];
         const ScalarT speed_factor = ONE<RealT> + (omega - ONE<RealT>) *Ispdlim_;
         auto*         y            = y_.getData();
-        const ScalarT efd0         = y[7];
+        const ScalarT efd0         = static_cast<ScalarT>(this->outputValue(outputs, Outputs::efd, static_cast<RealT>(y[7])));
+        y[7]                       = efd0;
         if (!(static_cast<RealT>(speed_factor) > ZERO<RealT>)
             || !std::isfinite(static_cast<RealT>(speed_factor)))
         {

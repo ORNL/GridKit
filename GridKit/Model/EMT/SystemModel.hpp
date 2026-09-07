@@ -61,6 +61,7 @@ namespace GridKit
       ~SystemModel() override;
 
       int  allocate() override;
+      int  initialize(const std::map<std::string, std::map<std::string, RealT>>& state = {}) override;
       bool hasJacobian() override;
       int  evaluateJacobian() override;
 

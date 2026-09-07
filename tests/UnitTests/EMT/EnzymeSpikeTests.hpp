@@ -70,8 +70,12 @@ namespace GridKit
           f.resize(system_size);
           abs_tol.resize(system_size);
 
-          source.getSignals().template attachPort<GridKit::EMT::VoltageSourceExternalVariables::VA>(&bus.voltagePort());
-          load.getSignals().template attachPort<GridKit::EMT::LoadZExternalVariables::VA>(&bus.voltagePort());
+          source.getSignals().template attachSignal<GridKit::EMT::VoltageSourceExternalVariables::VA>(&bus.outputSignal(GridKit::EMT::BusOutputs::va));
+          source.getSignals().template attachSignal<GridKit::EMT::VoltageSourceExternalVariables::VB>(&bus.outputSignal(GridKit::EMT::BusOutputs::vb));
+          source.getSignals().template attachSignal<GridKit::EMT::VoltageSourceExternalVariables::VC>(&bus.outputSignal(GridKit::EMT::BusOutputs::vc));
+          load.getSignals().template attachSignal<GridKit::EMT::LoadZExternalVariables::VA>(&bus.outputSignal(GridKit::EMT::BusOutputs::va));
+          load.getSignals().template attachSignal<GridKit::EMT::LoadZExternalVariables::VB>(&bus.outputSignal(GridKit::EMT::BusOutputs::vb));
+          load.getSignals().template attachSignal<GridKit::EMT::LoadZExternalVariables::VC>(&bus.outputSignal(GridKit::EMT::BusOutputs::vc));
 
           IdxT offset = 0;
           for (auto* component : components())
@@ -86,9 +90,11 @@ namespace GridKit
             offset += component->size();
           }
 
+          bus.initialize();
+          source.initialize();
+          load.initialize();
           for (auto* component : components())
           {
-            component->initialize();
             component->tagDifferentiable();
           }
         }
