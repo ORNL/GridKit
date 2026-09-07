@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GridKit/Model/EMT/Component/Bus/Bus.hpp>
+#include <GridKit/Model/EMT/Component/Controller/DCLink/DcLink.hpp>
 #include <GridKit/Model/EMT/Component/Controller/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1.hpp>

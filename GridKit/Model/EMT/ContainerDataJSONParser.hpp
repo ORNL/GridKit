@@ -129,6 +129,10 @@ namespace GridKit
         {
           raw_device.get_to(data.pwm.emplace_back());
         }
+        else if (kind == "DCLink")
+        {
+          raw_device.get_to(data.dc_link.emplace_back());
+        }
         else if (kind == "Converter")
         {
           raw_device.get_to(data.converter.emplace_back());

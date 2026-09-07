@@ -1,0 +1,11 @@
+{
+  "header": {
+    "version": 1,
+    "time": 0
+  },
+  "devices": {
+    "dc": {
+      "vdc": 600
+    }
+  }
+}
