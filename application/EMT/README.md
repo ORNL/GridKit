@@ -4,6 +4,14 @@
 (enable Enzyme for the EMT components). It reports the selected solver and
 Jacobian size and rejects configurations that would fall back to dense.
 
+Before consistent initialization, the assembled model derives its differential
+variables from `F_yp` and checks the initial-value Jacobian
+`[F_yp(:, differential), F_y(:, algebraic)]`. A structural matching failure or
+numerical singularity is reported with component paths and local indices.
+This validates the current variable partition and operating point; it does
+not perform index reduction. The check and IDA variable tags are refreshed
+at each restart, including switch events.
+
 ## Root elements
 
    Name                | Value

@@ -63,7 +63,8 @@ namespace GridKit
       int  allocate() override;
       int  initialize(const std::map<std::string, std::map<std::string, RealT>>& state = {}) override;
       bool hasJacobian() override;
-      int  evaluateJacobian() override;
+      int  tagDifferentiable() override;
+      int  assembleJacobian(RealT y_scale, RealT yp_scale) override;
 
       void initializeMonitor();
       void startMonitor() override;
