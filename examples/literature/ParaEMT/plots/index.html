@@ -1,0 +1,136 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>GridKit / ParaEMT responses</title>
+<style>body{font:17px system-ui;max-width:1400px;margin:2rem auto;padding:0 1rem;color:#172a3a;background:#f6f8fa}a{color:#075b9d}nav{display:flex;gap:2rem}.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:1rem}article{background:white;padding:1rem;border:1px solid #dce1e5;border-radius:6px}img{width:100%}h2{margin-top:3rem}table{border-collapse:collapse}td,th{padding:.5rem 1rem;border-bottom:1px solid #dce1e5}</style>
+<h1>ParaEMT / GridKit: each response separately</h1><nav><a href="#trip">Trip</a><a href="#governor_step">Governor step</a></nav>
+<p>Every figure: ParaEMT on top, GridKit in the middle, GridKit − ParaEMT on the bottom. All three panels use identical x/y scales. Three-phase signals stay together. Speed is shown as deviation from synchronous speed in pu. Errors use common output times without interpolation or phase alignment.</p>
+<p>Trip caveat: GridKit models an ideal terminal opening. ParaEMT freezes generator 1 electrical history but continues its state kernel. Its post-trip generator 1 response and trip spike cannot validate the disconnected GridKit machine.</p>
+<section id="trip"><h2>Generator 1 trip at 1 s</h2>
+<p><a href="trip/comparison.pdf">Complete PDF · 60 figures</a></p>
+<table><tr><th>Response</th><th>Full run</th><th>Event zoom</th><th>Late waveform</th></tr>
+<tr><td>Bus 1 · three-phase voltage</td><td></td><td><a href="trip/bus1_abc_event.png">event</a></td><td><a href="trip/bus1_abc_late.png">late</a></td></tr>
+<tr><td>Bus 1 · voltage magnitude</td><td><a href="trip/bus1_vm_full.png">full</a></td><td><a href="trip/bus1_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 2 · three-phase voltage</td><td></td><td><a href="trip/bus2_abc_event.png">event</a></td><td><a href="trip/bus2_abc_late.png">late</a></td></tr>
+<tr><td>Bus 2 · voltage magnitude</td><td><a href="trip/bus2_vm_full.png">full</a></td><td><a href="trip/bus2_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 3 · three-phase voltage</td><td></td><td><a href="trip/bus3_abc_event.png">event</a></td><td><a href="trip/bus3_abc_late.png">late</a></td></tr>
+<tr><td>Bus 3 · voltage magnitude</td><td><a href="trip/bus3_vm_full.png">full</a></td><td><a href="trip/bus3_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 4 · three-phase voltage</td><td></td><td><a href="trip/bus4_abc_event.png">event</a></td><td><a href="trip/bus4_abc_late.png">late</a></td></tr>
+<tr><td>Bus 4 · voltage magnitude</td><td><a href="trip/bus4_vm_full.png">full</a></td><td><a href="trip/bus4_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 5 · three-phase voltage</td><td></td><td><a href="trip/bus5_abc_event.png">event</a></td><td><a href="trip/bus5_abc_late.png">late</a></td></tr>
+<tr><td>Bus 5 · voltage magnitude</td><td><a href="trip/bus5_vm_full.png">full</a></td><td><a href="trip/bus5_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 6 · three-phase voltage</td><td></td><td><a href="trip/bus6_abc_event.png">event</a></td><td><a href="trip/bus6_abc_late.png">late</a></td></tr>
+<tr><td>Bus 6 · voltage magnitude</td><td><a href="trip/bus6_vm_full.png">full</a></td><td><a href="trip/bus6_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 7 · three-phase voltage</td><td></td><td><a href="trip/bus7_abc_event.png">event</a></td><td><a href="trip/bus7_abc_late.png">late</a></td></tr>
+<tr><td>Bus 7 · voltage magnitude</td><td><a href="trip/bus7_vm_full.png">full</a></td><td><a href="trip/bus7_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 8 · three-phase voltage</td><td></td><td><a href="trip/bus8_abc_event.png">event</a></td><td><a href="trip/bus8_abc_late.png">late</a></td></tr>
+<tr><td>Bus 8 · voltage magnitude</td><td><a href="trip/bus8_vm_full.png">full</a></td><td><a href="trip/bus8_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 9 · three-phase voltage</td><td></td><td><a href="trip/bus9_abc_event.png">event</a></td><td><a href="trip/bus9_abc_late.png">late</a></td></tr>
+<tr><td>Bus 9 · voltage magnitude</td><td><a href="trip/bus9_vm_full.png">full</a></td><td><a href="trip/bus9_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 1 · rotor speed deviation</td><td><a href="trip/gen1_speed_pu_full.png">full</a></td><td><a href="trip/gen1_speed_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 1 · mechanical power</td><td><a href="trip/gen1_pm_pu_full.png">full</a></td><td><a href="trip/gen1_pm_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 1 · field voltage</td><td><a href="trip/gen1_efd_pu_full.png">full</a></td><td><a href="trip/gen1_efd_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 1 · stabilizer output</td><td><a href="trip/gen1_pss_vs_pu_full.png">full</a></td><td><a href="trip/gen1_pss_vs_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 2 · rotor speed deviation</td><td><a href="trip/gen2_speed_pu_full.png">full</a></td><td><a href="trip/gen2_speed_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 2 · mechanical power</td><td><a href="trip/gen2_pm_pu_full.png">full</a></td><td><a href="trip/gen2_pm_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 2 · field voltage</td><td><a href="trip/gen2_efd_pu_full.png">full</a></td><td><a href="trip/gen2_efd_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 2 · stabilizer output</td><td><a href="trip/gen2_pss_vs_pu_full.png">full</a></td><td><a href="trip/gen2_pss_vs_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 3 · rotor speed deviation</td><td><a href="trip/gen3_speed_pu_full.png">full</a></td><td><a href="trip/gen3_speed_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 3 · mechanical power</td><td><a href="trip/gen3_pm_pu_full.png">full</a></td><td><a href="trip/gen3_pm_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 3 · field voltage</td><td><a href="trip/gen3_efd_pu_full.png">full</a></td><td><a href="trip/gen3_efd_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 3 · stabilizer output</td><td><a href="trip/gen3_pss_vs_pu_full.png">full</a></td><td><a href="trip/gen3_pss_vs_pu_event.png">event</a></td><td></td></tr>
+</table><div class="gallery">
+<article><h3>Bus 1 · three-phase voltage · event zoom</h3><a href="trip/bus1_abc_event.png"><img loading="lazy" src="trip/bus1_abc_event.png" alt="Bus 1 · three-phase voltage"></a></article>
+<article><h3>Bus 1 · voltage magnitude · event zoom</h3><a href="trip/bus1_vm_event.png"><img loading="lazy" src="trip/bus1_vm_event.png" alt="Bus 1 · voltage magnitude"></a></article>
+<article><h3>Bus 2 · three-phase voltage · event zoom</h3><a href="trip/bus2_abc_event.png"><img loading="lazy" src="trip/bus2_abc_event.png" alt="Bus 2 · three-phase voltage"></a></article>
+<article><h3>Bus 2 · voltage magnitude · event zoom</h3><a href="trip/bus2_vm_event.png"><img loading="lazy" src="trip/bus2_vm_event.png" alt="Bus 2 · voltage magnitude"></a></article>
+<article><h3>Bus 3 · three-phase voltage · event zoom</h3><a href="trip/bus3_abc_event.png"><img loading="lazy" src="trip/bus3_abc_event.png" alt="Bus 3 · three-phase voltage"></a></article>
+<article><h3>Bus 3 · voltage magnitude · event zoom</h3><a href="trip/bus3_vm_event.png"><img loading="lazy" src="trip/bus3_vm_event.png" alt="Bus 3 · voltage magnitude"></a></article>
+<article><h3>Bus 4 · three-phase voltage · event zoom</h3><a href="trip/bus4_abc_event.png"><img loading="lazy" src="trip/bus4_abc_event.png" alt="Bus 4 · three-phase voltage"></a></article>
+<article><h3>Bus 4 · voltage magnitude · event zoom</h3><a href="trip/bus4_vm_event.png"><img loading="lazy" src="trip/bus4_vm_event.png" alt="Bus 4 · voltage magnitude"></a></article>
+<article><h3>Bus 5 · three-phase voltage · event zoom</h3><a href="trip/bus5_abc_event.png"><img loading="lazy" src="trip/bus5_abc_event.png" alt="Bus 5 · three-phase voltage"></a></article>
+<article><h3>Bus 5 · voltage magnitude · event zoom</h3><a href="trip/bus5_vm_event.png"><img loading="lazy" src="trip/bus5_vm_event.png" alt="Bus 5 · voltage magnitude"></a></article>
+<article><h3>Bus 6 · three-phase voltage · event zoom</h3><a href="trip/bus6_abc_event.png"><img loading="lazy" src="trip/bus6_abc_event.png" alt="Bus 6 · three-phase voltage"></a></article>
+<article><h3>Bus 6 · voltage magnitude · event zoom</h3><a href="trip/bus6_vm_event.png"><img loading="lazy" src="trip/bus6_vm_event.png" alt="Bus 6 · voltage magnitude"></a></article>
+<article><h3>Bus 7 · three-phase voltage · event zoom</h3><a href="trip/bus7_abc_event.png"><img loading="lazy" src="trip/bus7_abc_event.png" alt="Bus 7 · three-phase voltage"></a></article>
+<article><h3>Bus 7 · voltage magnitude · event zoom</h3><a href="trip/bus7_vm_event.png"><img loading="lazy" src="trip/bus7_vm_event.png" alt="Bus 7 · voltage magnitude"></a></article>
+<article><h3>Bus 8 · three-phase voltage · event zoom</h3><a href="trip/bus8_abc_event.png"><img loading="lazy" src="trip/bus8_abc_event.png" alt="Bus 8 · three-phase voltage"></a></article>
+<article><h3>Bus 8 · voltage magnitude · event zoom</h3><a href="trip/bus8_vm_event.png"><img loading="lazy" src="trip/bus8_vm_event.png" alt="Bus 8 · voltage magnitude"></a></article>
+<article><h3>Bus 9 · three-phase voltage · event zoom</h3><a href="trip/bus9_abc_event.png"><img loading="lazy" src="trip/bus9_abc_event.png" alt="Bus 9 · three-phase voltage"></a></article>
+<article><h3>Bus 9 · voltage magnitude · event zoom</h3><a href="trip/bus9_vm_event.png"><img loading="lazy" src="trip/bus9_vm_event.png" alt="Bus 9 · voltage magnitude"></a></article>
+<article><h3>Generator 1 · rotor speed deviation · event zoom</h3><a href="trip/gen1_speed_pu_event.png"><img loading="lazy" src="trip/gen1_speed_pu_event.png" alt="Generator 1 · rotor speed deviation"></a></article>
+<article><h3>Generator 1 · mechanical power · event zoom</h3><a href="trip/gen1_pm_pu_event.png"><img loading="lazy" src="trip/gen1_pm_pu_event.png" alt="Generator 1 · mechanical power"></a></article>
+<article><h3>Generator 1 · field voltage · event zoom</h3><a href="trip/gen1_efd_pu_event.png"><img loading="lazy" src="trip/gen1_efd_pu_event.png" alt="Generator 1 · field voltage"></a></article>
+<article><h3>Generator 1 · stabilizer output · event zoom</h3><a href="trip/gen1_pss_vs_pu_event.png"><img loading="lazy" src="trip/gen1_pss_vs_pu_event.png" alt="Generator 1 · stabilizer output"></a></article>
+<article><h3>Generator 2 · rotor speed deviation · event zoom</h3><a href="trip/gen2_speed_pu_event.png"><img loading="lazy" src="trip/gen2_speed_pu_event.png" alt="Generator 2 · rotor speed deviation"></a></article>
+<article><h3>Generator 2 · mechanical power · event zoom</h3><a href="trip/gen2_pm_pu_event.png"><img loading="lazy" src="trip/gen2_pm_pu_event.png" alt="Generator 2 · mechanical power"></a></article>
+<article><h3>Generator 2 · field voltage · event zoom</h3><a href="trip/gen2_efd_pu_event.png"><img loading="lazy" src="trip/gen2_efd_pu_event.png" alt="Generator 2 · field voltage"></a></article>
+<article><h3>Generator 2 · stabilizer output · event zoom</h3><a href="trip/gen2_pss_vs_pu_event.png"><img loading="lazy" src="trip/gen2_pss_vs_pu_event.png" alt="Generator 2 · stabilizer output"></a></article>
+<article><h3>Generator 3 · rotor speed deviation · event zoom</h3><a href="trip/gen3_speed_pu_event.png"><img loading="lazy" src="trip/gen3_speed_pu_event.png" alt="Generator 3 · rotor speed deviation"></a></article>
+<article><h3>Generator 3 · mechanical power · event zoom</h3><a href="trip/gen3_pm_pu_event.png"><img loading="lazy" src="trip/gen3_pm_pu_event.png" alt="Generator 3 · mechanical power"></a></article>
+<article><h3>Generator 3 · field voltage · event zoom</h3><a href="trip/gen3_efd_pu_event.png"><img loading="lazy" src="trip/gen3_efd_pu_event.png" alt="Generator 3 · field voltage"></a></article>
+<article><h3>Generator 3 · stabilizer output · event zoom</h3><a href="trip/gen3_pss_vs_pu_event.png"><img loading="lazy" src="trip/gen3_pss_vs_pu_event.png" alt="Generator 3 · stabilizer output"></a></article>
+</div></section>
+<section id="governor_step"><h2>Governor reference −0.02 pu at 1 s</h2>
+<p><a href="governor_step/comparison.pdf">Complete PDF · 60 figures</a></p>
+<table><tr><th>Response</th><th>Full run</th><th>Event zoom</th><th>Late waveform</th></tr>
+<tr><td>Bus 1 · three-phase voltage</td><td></td><td><a href="governor_step/bus1_abc_event.png">event</a></td><td><a href="governor_step/bus1_abc_late.png">late</a></td></tr>
+<tr><td>Bus 1 · voltage magnitude</td><td><a href="governor_step/bus1_vm_full.png">full</a></td><td><a href="governor_step/bus1_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 2 · three-phase voltage</td><td></td><td><a href="governor_step/bus2_abc_event.png">event</a></td><td><a href="governor_step/bus2_abc_late.png">late</a></td></tr>
+<tr><td>Bus 2 · voltage magnitude</td><td><a href="governor_step/bus2_vm_full.png">full</a></td><td><a href="governor_step/bus2_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 3 · three-phase voltage</td><td></td><td><a href="governor_step/bus3_abc_event.png">event</a></td><td><a href="governor_step/bus3_abc_late.png">late</a></td></tr>
+<tr><td>Bus 3 · voltage magnitude</td><td><a href="governor_step/bus3_vm_full.png">full</a></td><td><a href="governor_step/bus3_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 4 · three-phase voltage</td><td></td><td><a href="governor_step/bus4_abc_event.png">event</a></td><td><a href="governor_step/bus4_abc_late.png">late</a></td></tr>
+<tr><td>Bus 4 · voltage magnitude</td><td><a href="governor_step/bus4_vm_full.png">full</a></td><td><a href="governor_step/bus4_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 5 · three-phase voltage</td><td></td><td><a href="governor_step/bus5_abc_event.png">event</a></td><td><a href="governor_step/bus5_abc_late.png">late</a></td></tr>
+<tr><td>Bus 5 · voltage magnitude</td><td><a href="governor_step/bus5_vm_full.png">full</a></td><td><a href="governor_step/bus5_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 6 · three-phase voltage</td><td></td><td><a href="governor_step/bus6_abc_event.png">event</a></td><td><a href="governor_step/bus6_abc_late.png">late</a></td></tr>
+<tr><td>Bus 6 · voltage magnitude</td><td><a href="governor_step/bus6_vm_full.png">full</a></td><td><a href="governor_step/bus6_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 7 · three-phase voltage</td><td></td><td><a href="governor_step/bus7_abc_event.png">event</a></td><td><a href="governor_step/bus7_abc_late.png">late</a></td></tr>
+<tr><td>Bus 7 · voltage magnitude</td><td><a href="governor_step/bus7_vm_full.png">full</a></td><td><a href="governor_step/bus7_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 8 · three-phase voltage</td><td></td><td><a href="governor_step/bus8_abc_event.png">event</a></td><td><a href="governor_step/bus8_abc_late.png">late</a></td></tr>
+<tr><td>Bus 8 · voltage magnitude</td><td><a href="governor_step/bus8_vm_full.png">full</a></td><td><a href="governor_step/bus8_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Bus 9 · three-phase voltage</td><td></td><td><a href="governor_step/bus9_abc_event.png">event</a></td><td><a href="governor_step/bus9_abc_late.png">late</a></td></tr>
+<tr><td>Bus 9 · voltage magnitude</td><td><a href="governor_step/bus9_vm_full.png">full</a></td><td><a href="governor_step/bus9_vm_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 1 · rotor speed deviation</td><td><a href="governor_step/gen1_speed_pu_full.png">full</a></td><td><a href="governor_step/gen1_speed_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 1 · mechanical power</td><td><a href="governor_step/gen1_pm_pu_full.png">full</a></td><td><a href="governor_step/gen1_pm_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 1 · field voltage</td><td><a href="governor_step/gen1_efd_pu_full.png">full</a></td><td><a href="governor_step/gen1_efd_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 1 · stabilizer output</td><td><a href="governor_step/gen1_pss_vs_pu_full.png">full</a></td><td><a href="governor_step/gen1_pss_vs_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 2 · rotor speed deviation</td><td><a href="governor_step/gen2_speed_pu_full.png">full</a></td><td><a href="governor_step/gen2_speed_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 2 · mechanical power</td><td><a href="governor_step/gen2_pm_pu_full.png">full</a></td><td><a href="governor_step/gen2_pm_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 2 · field voltage</td><td><a href="governor_step/gen2_efd_pu_full.png">full</a></td><td><a href="governor_step/gen2_efd_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 2 · stabilizer output</td><td><a href="governor_step/gen2_pss_vs_pu_full.png">full</a></td><td><a href="governor_step/gen2_pss_vs_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 3 · rotor speed deviation</td><td><a href="governor_step/gen3_speed_pu_full.png">full</a></td><td><a href="governor_step/gen3_speed_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 3 · mechanical power</td><td><a href="governor_step/gen3_pm_pu_full.png">full</a></td><td><a href="governor_step/gen3_pm_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 3 · field voltage</td><td><a href="governor_step/gen3_efd_pu_full.png">full</a></td><td><a href="governor_step/gen3_efd_pu_event.png">event</a></td><td></td></tr>
+<tr><td>Generator 3 · stabilizer output</td><td><a href="governor_step/gen3_pss_vs_pu_full.png">full</a></td><td><a href="governor_step/gen3_pss_vs_pu_event.png">event</a></td><td></td></tr>
+</table><div class="gallery">
+<article><h3>Bus 1 · three-phase voltage · event zoom</h3><a href="governor_step/bus1_abc_event.png"><img loading="lazy" src="governor_step/bus1_abc_event.png" alt="Bus 1 · three-phase voltage"></a></article>
+<article><h3>Bus 1 · voltage magnitude · event zoom</h3><a href="governor_step/bus1_vm_event.png"><img loading="lazy" src="governor_step/bus1_vm_event.png" alt="Bus 1 · voltage magnitude"></a></article>
+<article><h3>Bus 2 · three-phase voltage · event zoom</h3><a href="governor_step/bus2_abc_event.png"><img loading="lazy" src="governor_step/bus2_abc_event.png" alt="Bus 2 · three-phase voltage"></a></article>
+<article><h3>Bus 2 · voltage magnitude · event zoom</h3><a href="governor_step/bus2_vm_event.png"><img loading="lazy" src="governor_step/bus2_vm_event.png" alt="Bus 2 · voltage magnitude"></a></article>
+<article><h3>Bus 3 · three-phase voltage · event zoom</h3><a href="governor_step/bus3_abc_event.png"><img loading="lazy" src="governor_step/bus3_abc_event.png" alt="Bus 3 · three-phase voltage"></a></article>
+<article><h3>Bus 3 · voltage magnitude · event zoom</h3><a href="governor_step/bus3_vm_event.png"><img loading="lazy" src="governor_step/bus3_vm_event.png" alt="Bus 3 · voltage magnitude"></a></article>
+<article><h3>Bus 4 · three-phase voltage · event zoom</h3><a href="governor_step/bus4_abc_event.png"><img loading="lazy" src="governor_step/bus4_abc_event.png" alt="Bus 4 · three-phase voltage"></a></article>
+<article><h3>Bus 4 · voltage magnitude · event zoom</h3><a href="governor_step/bus4_vm_event.png"><img loading="lazy" src="governor_step/bus4_vm_event.png" alt="Bus 4 · voltage magnitude"></a></article>
+<article><h3>Bus 5 · three-phase voltage · event zoom</h3><a href="governor_step/bus5_abc_event.png"><img loading="lazy" src="governor_step/bus5_abc_event.png" alt="Bus 5 · three-phase voltage"></a></article>
+<article><h3>Bus 5 · voltage magnitude · event zoom</h3><a href="governor_step/bus5_vm_event.png"><img loading="lazy" src="governor_step/bus5_vm_event.png" alt="Bus 5 · voltage magnitude"></a></article>
+<article><h3>Bus 6 · three-phase voltage · event zoom</h3><a href="governor_step/bus6_abc_event.png"><img loading="lazy" src="governor_step/bus6_abc_event.png" alt="Bus 6 · three-phase voltage"></a></article>
+<article><h3>Bus 6 · voltage magnitude · event zoom</h3><a href="governor_step/bus6_vm_event.png"><img loading="lazy" src="governor_step/bus6_vm_event.png" alt="Bus 6 · voltage magnitude"></a></article>
+<article><h3>Bus 7 · three-phase voltage · event zoom</h3><a href="governor_step/bus7_abc_event.png"><img loading="lazy" src="governor_step/bus7_abc_event.png" alt="Bus 7 · three-phase voltage"></a></article>
+<article><h3>Bus 7 · voltage magnitude · event zoom</h3><a href="governor_step/bus7_vm_event.png"><img loading="lazy" src="governor_step/bus7_vm_event.png" alt="Bus 7 · voltage magnitude"></a></article>
+<article><h3>Bus 8 · three-phase voltage · event zoom</h3><a href="governor_step/bus8_abc_event.png"><img loading="lazy" src="governor_step/bus8_abc_event.png" alt="Bus 8 · three-phase voltage"></a></article>
+<article><h3>Bus 8 · voltage magnitude · event zoom</h3><a href="governor_step/bus8_vm_event.png"><img loading="lazy" src="governor_step/bus8_vm_event.png" alt="Bus 8 · voltage magnitude"></a></article>
+<article><h3>Bus 9 · three-phase voltage · event zoom</h3><a href="governor_step/bus9_abc_event.png"><img loading="lazy" src="governor_step/bus9_abc_event.png" alt="Bus 9 · three-phase voltage"></a></article>
+<article><h3>Bus 9 · voltage magnitude · event zoom</h3><a href="governor_step/bus9_vm_event.png"><img loading="lazy" src="governor_step/bus9_vm_event.png" alt="Bus 9 · voltage magnitude"></a></article>
+<article><h3>Generator 1 · rotor speed deviation · event zoom</h3><a href="governor_step/gen1_speed_pu_event.png"><img loading="lazy" src="governor_step/gen1_speed_pu_event.png" alt="Generator 1 · rotor speed deviation"></a></article>
+<article><h3>Generator 1 · mechanical power · event zoom</h3><a href="governor_step/gen1_pm_pu_event.png"><img loading="lazy" src="governor_step/gen1_pm_pu_event.png" alt="Generator 1 · mechanical power"></a></article>
+<article><h3>Generator 1 · field voltage · event zoom</h3><a href="governor_step/gen1_efd_pu_event.png"><img loading="lazy" src="governor_step/gen1_efd_pu_event.png" alt="Generator 1 · field voltage"></a></article>
+<article><h3>Generator 1 · stabilizer output · event zoom</h3><a href="governor_step/gen1_pss_vs_pu_event.png"><img loading="lazy" src="governor_step/gen1_pss_vs_pu_event.png" alt="Generator 1 · stabilizer output"></a></article>
+<article><h3>Generator 2 · rotor speed deviation · event zoom</h3><a href="governor_step/gen2_speed_pu_event.png"><img loading="lazy" src="governor_step/gen2_speed_pu_event.png" alt="Generator 2 · rotor speed deviation"></a></article>
+<article><h3>Generator 2 · mechanical power · event zoom</h3><a href="governor_step/gen2_pm_pu_event.png"><img loading="lazy" src="governor_step/gen2_pm_pu_event.png" alt="Generator 2 · mechanical power"></a></article>
+<article><h3>Generator 2 · field voltage · event zoom</h3><a href="governor_step/gen2_efd_pu_event.png"><img loading="lazy" src="governor_step/gen2_efd_pu_event.png" alt="Generator 2 · field voltage"></a></article>
+<article><h3>Generator 2 · stabilizer output · event zoom</h3><a href="governor_step/gen2_pss_vs_pu_event.png"><img loading="lazy" src="governor_step/gen2_pss_vs_pu_event.png" alt="Generator 2 · stabilizer output"></a></article>
+<article><h3>Generator 3 · rotor speed deviation · event zoom</h3><a href="governor_step/gen3_speed_pu_event.png"><img loading="lazy" src="governor_step/gen3_speed_pu_event.png" alt="Generator 3 · rotor speed deviation"></a></article>
+<article><h3>Generator 3 · mechanical power · event zoom</h3><a href="governor_step/gen3_pm_pu_event.png"><img loading="lazy" src="governor_step/gen3_pm_pu_event.png" alt="Generator 3 · mechanical power"></a></article>
+<article><h3>Generator 3 · field voltage · event zoom</h3><a href="governor_step/gen3_efd_pu_event.png"><img loading="lazy" src="governor_step/gen3_efd_pu_event.png" alt="Generator 3 · field voltage"></a></article>
+<article><h3>Generator 3 · stabilizer output · event zoom</h3><a href="governor_step/gen3_pss_vs_pu_event.png"><img loading="lazy" src="governor_step/gen3_pss_vs_pu_event.png" alt="Generator 3 · stabilizer output"></a></article>
+</div></section>
+</html>

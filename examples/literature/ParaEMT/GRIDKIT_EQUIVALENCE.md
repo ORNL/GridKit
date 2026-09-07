@@ -1,52 +1,46 @@
-# Requirements for an equivalent GridKit case
+# GridKit equivalent 9-bus case
 
-Assessed on `lukel/emt-playground`, GridKit revision
-`4bd2812605dd0bbbc1352668bc750497c17347f3`. The obstacle is implementing and
-wiring the missing EMT controllers. This collection contains no runnable
-GridKit case and makes no GridKit/ParaEMT agreement claim.
+The complete 3-second governor-step and ideal-opening cases have been simulated in GridKit
+with three machines, three SEXS-PTI exciters, three GASTPTI governors,
+three IEEEST stabilizers, six pi lines, three transformer series branches,
+and three series RL loads. The scripts and results are in this directory.
+The reference is the authors' pinned ParaEMT revision
+[`d79d735a`](https://github.com/NatLabRockies/ParaEMT_public/tree/d79d735a4a587d56c5b88187d1a499195b6b2b84),
+not an arbitrary IEEE 9-bus parameter set.
 
-| Part | ParaEMT case | Current GridKit EMT status |
-| --- | --- | --- |
-| Machines | Three GENROU equivalent circuits with two d-axis and two q-axis rotor circuits | `Machine` has corresponding flux/current structure; parameter conversion below is feasible but unvalidated |
-| Excitation | SEXS, with terminal-voltage measurement and IEEEST input | EMT exposes IEEET1; SEXS-PTI exists only in PhasorDynamics |
-| Governors | GAST on all three machines | EMT exposes TGOV1; GASTPTI exists only in PhasorDynamics |
-| Stabilizers | IEEEST on all three machines | No EMT IEEEST; PhasorDynamics implementation exists |
-| Network | Six pi lines and three series transformer impedances on per-unit voltage bases | `LineLumped` can represent the continuous pi/RL circuits after referring voltages to a common physical base |
-| Loads | Three constant series RL loads for this case and load option 1 | `LoadZ` can represent the continuous RL loads |
-| Events | Governor reference step or generator disconnection at 1 s | EMT application schedules switch open/close; no governor-reference-step event is exposed |
-| Numerical method | Partitioned updates with explicit control steps, damped companion circuits and trip reinitialization | IDA DAE integration; numerical damping and event limits must be assessed separately from physical parameter equivalence |
+The normal `EMTDynamicSimulation` application cannot run this case by
+itself. [gridkit_9bus.cpp](gridkit_9bus.cpp) supplies steady-state network
+currents/derivatives, writable governor references, the scheduled step,
+and the exact generator-terminal constraint reformulation below. All
+machine and controller residuals come from the actual GridKit libraries.
+No controllers are frozen or replaced by constant outputs.
 
-The available EMT device data and registration can be checked in
-[ContainerData.hpp](../../../GridKit/Model/EMT/ContainerData.hpp) and
-[ContainerDataJSONParser.hpp](../../../GridKit/Model/EMT/ContainerDataJSONParser.hpp).
-The existing phasor implementations are
-[SEXS-PTI](../../../GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/),
-[GASTPTI](../../../GridKit/Model/PhasorDynamics/Governor/GASTPTI/) and
-[IEEEST](../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/).
-They inherit the PhasorDynamics component interface and cannot be named as
-EMT devices in the current builder. Porting or adapting them requires EMT
-signals/ports, initialization, parser/factory registration and Jacobian
-support. Substituting TGOV1/IEEET1, constant mechanical power/field voltage,
-or removing the stabilizers would define a different experiment.
+| Part | GridKit implementation |
+| --- | --- |
+| GENROU equivalent circuits | Existing EMT `Machine`, with converted fundamental winding parameters |
+| SEXS | EMT `SEXS-PTI`, direct PhasorDynamics port, plus the actual 0.02 s terminal-magnitude measurement lag |
+| GAST | EMT `GASTPTI`, full droop, valve antiwindup, fuel-flow and temperature lags, temperature selection, damping, rating conversion, and initialization |
+| IEEEST | EMT `IEEEST`, complete notch/lead–lag/washout/output-limit cascade; absolute rotor speed is converted to deviation inside the model |
+| Lines and transformers | Existing `LineLumped`, diagonal phase matrices, transformer shunts zero |
+| Loads | Existing `LoadZ`, series RL, using ParaEMT load option 1 |
+| Disturbances | Bus-1 governor reference increment −0.02 pu, or an ideal generator-terminal opening, at 1 s |
 
-The missing controls are active, not unused workbook metadata.
-`Initialize.InitExc/InitGov/InitPss` initialize them, `CombineX` allocates
-their states, and `EmtSimu.updateX` passes their data to `numba_updateX`.
-The saved `gen*_pm_pu`, `gen*_efd_pu` and `gen*_pss_vs_pu` trajectories show
-their response. Match the actual pinned kernels, including limiter and
-zero-time-constant behavior, when adapting existing GridKit classes.
+The three model commits are `bef5be65` (`SEXS-PTI Implementaiton`),
+`17e4f901` (`GASTPTI Implementaiton`), and `34a1f088`
+(`IEEEST Implementaiton`). They include JSON/builder registration,
+monitoring, analytic/dependency-tracking and sparse Enzyme Jacobians,
+documentation, and tests against the PhasorDynamics implementations.
+IEEEST also implements compensated-voltage cutout using CommonMath
+smoothing. The separate PSLF transport-delay extension is explicitly
+rejected for nonzero `Tdelay`; the reference case uses no delay and
+has both voltage cutouts disabled.
 
-## Machine parameter mapping
+## Machine parameters
 
-Do not copy GENROU reactances/time constants into similarly named EMT
-fundamental parameters without conversion. ParaEMT's
-`DyData.ToEquiCirData` and `Initialize.MergeMacG` in
-[Lib_BW.py](upstream/Lib_BW.py) expose the actual winding matrix used in
-simulation. The saved `machine_parameters.json` contains those raw `ec_*`
-arrays. GridKit's machine equations are in
-[MachineImpl.hpp](../../../GridKit/Model/EMT/Component/Source/Machine/MachineImpl.hpp).
-
-Comparing the continuous flux equations gives this candidate mapping:
+[make_gridkit_case.py](make_gridkit_case.py) reads the original worksheet
+exports, solved JSON, and saved `machine_parameters.json`. The latter
+contains the actual matrices assembled by ParaEMT's `ToEquiCirData` and
+`MergeMacG` routines in [Lib_BW.py](upstream/Lib_BW.py).
 
 | GridKit parameter | ParaEMT expression |
 | --- | --- |
@@ -56,61 +50,186 @@ Comparing the continuous flux equations gives this candidate mapping:
 | `Ll1q` | `ec_L11q - ec_Laq` |
 | `Ll2q` | `ec_L22q - ec_Laq` |
 | `Rfd`, `R1d`, `R1q`, `R2q` | Corresponding `ec_R* / ws` |
-| `S`, `V`, `f` | Machine MVA base × 1e6, nominal line-line RMS kV × 1e3, 60 Hz |
-| `p0`, `q0` | Solved generator MW/Mvar × 1e6 |
-| `H`, `F`, `S10`, `S12` | Workbook `H`, 0, 0, 0 for this case |
+| `S`, `V`, `f` | Original 150/250/100 MVA ratings in VA; referred 230 kV LL RMS; 60 Hz |
+| `H`, `F`, `S10`, `S12` | Workbook `H`; zero damping and saturation for this case |
 
-The resistance scaling follows GridKit's rotor equation
-`(1/ws) * d(psi_fd)/dt + Rfd * ifd - efd = 0`; ParaEMT's rotor circuit
-uses an unscaled flux derivative. Its exciter conversion changes by the
-same factor. The d/q axis angle and current conventions still need to be
-aligned before comparing internal states.
+GridKit's rotor equations use `(1/ws)*d(psi)/dt`; ParaEMT uses an unscaled
+rotor flux derivative. The resistance and exciter conversions therefore
+change together by `ws`. Compare the published exciter-base `efd` output,
+not the differently scaled internal rotor voltage.
 
-There is a subtle difference between intermediate and assembled ParaEMT
-parameters: `ec_L1d = 0.2`, but the assembled d-axis damper self-inductance
-is `ec_L11d = 1.4083333333`. With `ec_Lad = 1.3`, GridKit's candidate
-`Ll1d` is **0.1083333333**, not 0.2. Similarly, `Ll2q` should be
-`1.3586956522 - 1.25 = 0.1086956522`, not intermediate `ec_L2q = 0.125`.
-These expressions are an equation-based mapping proposal, not a validated
-GridKit machine initialization or completed case conversion.
+`Ll1d` is **0.1083333333**, not the intermediate ParaEMT `ec_L1d=0.2`.
+`Ll2q` is **0.1086956522**, not `ec_L2q=0.125`. These values reproduce
+the assembled winding self-inductances. The comparison uses external
+voltages, speed, power, field voltage, and stabilizer output; internal
+rotor angles are not compared across different Park conventions.
 
-## Network and measurements
+## Network and operating point
 
-The pinned ParaEMT network kernel in [lib_numba.py](upstream/lib_numba.py)
-uses dimensionless bus voltages and series RL transformer branches; it
-does not introduce explicit ideal winding-ratio equations. The supplied
-transformer taps are all one on their respective voltage bases. An
-equivalent continuous network can therefore be referred to, for example,
-230 kV everywhere, with 100 MVA network base and `Z_base = 529 ohm`.
-Machine voltage ratings and bus initial voltages must be referred together;
-keep each machine's own MVA base and per-unit internal parameters.
+ParaEMT uses dimensionless bus voltages and series RL transformer
+branches with unit taps on their respective voltage bases. Referring all
+bus and machine voltages together to 230 kV preserves this network. The
+network base is 100 MVA, so `Z_base=529 ohm`. Physical terminal voltages
+can be recovered on the original 16.5/18/13.8/230 kV bases from the saved
+per-unit waveforms.
 
-On that base, use diagonal phase matrices with line
-`R = Re(Z_pu) * Z_base`, `L = Im(Z_pu) * Z_base / ws` and total pi
-`C = B_pu / (ws * Z_base)` (half at each end). Transformer branches use
-their series impedance with zero shunt. Loads use
-`Z_pu = Vm^2 / conjugate((P+jQ)/100 MVA)` and the same R/L conversion.
-This is a representation of the case's balanced continuous network; it
-does not establish transformer zero-sequence, saturation or unbalanced
-fault equivalence to a physical winding model.
+For each line, `R=Re(Zpu)*Z_base`, `L=Im(Zpu)*Z_base/ws`, and total
+`C=Bpu/(ws*Z_base)`, split equally between the terminals. Transformer
+branches have their original series impedance and zero shunt. Loads use
+`Zpu=Vm^2/conjugate((P+jQ)/100 MVA)`, retaining the **original** load
+impedances when refining the operating point.
 
-ParaEMT also adds time-step-dependent damping to line inductors/capacitors
-and inductive loads (`damptrap`, `Rp`, `Rs` in `numba_InitNet`) and uses
-`Init_mac_alpha = 99/101`. Copying the physical RLC parameters alone will
-not reproduce finite-step damping exactly. First compare initialization,
-60 Hz phase relationships and the governor step; then refine the time step
-and GridKit tolerance separately. The supplied trip spike is a reason to
-investigate event behavior before setting waveform acceptance tolerances.
+The supplied JSON rounds voltages and dispatch independently. Its initial
+KCL mismatch prevents a consistent inductive start. The converter solves
+the passive network by Schur reduction, fixing all three generator
+voltage magnitudes, generator-2/3 real power, and generator-1 angle.
+[initialization.json](gridkit/initialization.json) records every change:
+maximum voltage-phasor adjustment **4.8466e-6 pu**, slack generation
+adjustment **0.00156184 MW**, and maximum reactive-generation adjustment
+**0.00069636 Mvar**. No dynamic parameter is fitted to the reference.
+The resulting passive-node current mismatch is about `1.1e-14 pu`.
 
-The SEXS input uses the filtered voltage magnitude state from ParaEMT's
-bus measurement block; its time constant is in the workbook's `vm` sheet.
-IEEEST uses rotor speed deviation. Preserve those signal definitions,
-their initialization, the 150/250/100 MVA machine bases and generator
-terminal voltage bases of 16.5/18/13.8 kV. The solved JSON, rather than a
-generic IEEE 9-bus operating point, is the reference initialization.
+## Generator-terminal current constraints
 
-After these model and event gaps are addressed, author the EMT `devices`,
-`inputs`, `outputs`, state and solver JSON, then compare physical bus
-waveforms, rotor speed, mechanical power, exciter output and stabilizer
-output against the saved columns. A simulation and tolerance study remain
-necessary before calling that future case equivalent or validated.
+At buses 1–3, the machine and transformer impose a constraint on
+inductive states. This connection has a higher-index DAE; direct IDA
+consistency calculation and direct integration failed, even after the
+balanced initial residual was reduced to `5.82e-11` in mixed physical
+units. IDA's documented consistency algorithm targets index-one systems:
+[SUNDIALS mathematical considerations](https://sundials.readthedocs.io/en/latest/ida/Mathematics_link.html#initial-condition).
+
+[GeneratorTerminalConstraint.hpp](GeneratorTerminalConstraint.hpp)
+differentiates only these three-phase KCL constraints, using the exact
+unsaturated winding equations. Write
+
+```math
+\begin{bmatrix}\psi_d\\\psi_{fd}\\\psi_{1d}\end{bmatrix}
+= M_d\begin{bmatrix}i_d\\i_{fd}\\i_{1d}\end{bmatrix},\qquad
+\begin{bmatrix}\psi_q\\\psi_{1q}\\\psi_{2q}\end{bmatrix}
+= M_q\begin{bmatrix}i_q\\i_{1q}\\i_{2q}\end{bmatrix}.
+```
+
+The first rows of `inverse(M_d)` and `inverse(M_q)` give `di_d/dt`
+and `di_q/dt` from the corresponding flux derivatives. For phase angle
+`theta_k`, the exact current derivative is
+
+```math
+\dot i_k = \cos\theta_k\,\dot i_d-\sin\theta_k\,\dot i_q
+-\omega_b\omega(\sin\theta_k\,i_d+\cos\theta_k\,i_q)
+-\dot\psi_0/L_0.
+```
+
+Original terminal KCL is `I_base*i_k+i_transformer,k=0`. Its residual is
+replaced by `(I_base*di_k/dt+di_transformer,k/dt)/omega_b=0`; the original
+zero initial KCL is preserved in exact arithmetic. The transformer shunt
+currents are identically zero. The helper adds **no states** and no
+physical admittance. It substitutes the flux expressions above rather
+than treating algebraic current derivatives as extra independent states.
+The driver rejects saturated machines or nonzero transformer shunts.
+This is a case-specific reformulation, not a general index-reduction
+facility in the EMT application.
+
+The governor-step system has **258 variables** and **1086 Jacobian entries**.
+The driver checks the whole Jacobian against central differences at the
+initial and final states, including `dF/dy + alpha*dF/dyp`. Maximum scaled
+difference is `3.81e-6` (the denominator is `1+abs(FD)`, with an absolute
+perturbation of `1e-6`); this checks differentiation, not solution accuracy.
+It also verifies that event consistency calculation changes **no
+differential state**. `run.json` records these checks.
+
+Original generator-terminal KCL is monitored independently throughout
+the run. Maximum sampled mismatch falls from **0.009862 A** to
+**0.000609 A** to **0.000162 A** as GridKit tolerance goes from `1e-7`
+to `1e-8` to `1e-9`. These are currents on the referred 230 kV base.
+They quantify numerical drift in the differentiated constraint.
+
+## Ideal generator-terminal opening
+
+The trip case adds a three-variable `machine_bus_1`. Before the event,
+its three equations enforce equality with network `bus_1`, so the circuit
+is the same. At 1 s the helper separates these terminals and uses
+
+```math
+\dot i_{\mathrm{transformer},k}/\omega_b=0,\qquad
+I_{\mathrm{base}}\dot i_{\mathrm{machine},k}/\omega_b=0
+```
+
+at the network and machine terminal, respectively. The currents are
+explicitly projected to zero at the opening, so these differentiated
+constraints preserve the open-circuit KCL. The original full machine and
+controller equations remain active, with the exciter sensing the isolated
+machine terminal. The helper retains a fixed sparse structure in both
+configurations. The trip system has **261 variables** and **1128 Jacobian
+entries**, with assembled-Jacobian finite-difference checks before and
+after opening.
+
+Rotor winding fluxes cannot jump without impulsive rotor voltages.
+For the d axis, the open-circuit projection therefore solves
+
+```math
+\begin{bmatrix}L_{md}+L_{lfd}&L_{md}\\L_{md}&L_{md}+L_{l1d}\end{bmatrix}
+\begin{bmatrix}i_{fd}^{+}\\i_{1d}^{+}\end{bmatrix}
+=\begin{bmatrix}\psi_{fd}^{-}\\\psi_{1d}^{-}\end{bmatrix},\qquad
+\psi_d^{+}=L_{md}(i_{fd}^{+}+i_{1d}^{+}).
+```
+
+The q axis uses the corresponding two damper windings; `psi_0` becomes
+zero. Only these three stator fluxes and the three transformer currents
+are projected. Rotor fluxes, angle, speed, all controller states, other
+inductor currents, and network capacitor voltages retain their left limits.
+The subsequent IDA consistency solve changes no differential state from
+that explicit projection. `event_state_limits.json` saves all before,
+projected, and consistent values; `run.json` identifies the six affected
+indices. `verify.py` checks this independently against the winding
+parameters and verifies zero stator current after consistency.
+
+This ideal interruption is a finite pre/post-event construction. A voltage
+impulse is required to interrupt stored inductive current instantaneously;
+its finite peak and waveform require a specified arc/snubber/breaker model.
+No such model, pulse width, or artificial admittance has been added here.
+Continuous controller equations are integrated on each side of the event;
+this construction does not claim a resolved measurement-chain response
+to an unspecified voltage impulse.
+
+ParaEMT's event is different. `Lib_BW.GenTrip` zeros G1 injection and
+rebuilds the network without its Norton conductance. `lib_numba.numba_updateIg`
+skips G1 afterward, leaving its electrical history unchanged, while
+`numba_updateX` still updates its states using that history and network
+bus voltage (the skip is commented out). `Re_Init` also changes network
+history. G1's resulting internal trajectory does not represent the same
+isolated full machine as GridKit. It is plotted explicitly, with that
+limitation; it is not used as an equivalent-machine answer key.
+
+The ParaEMT bus-1 event-step magnitude grows from **3.595605** to
+**8.062099** to **17.045898 pu** at 50, 25 and 12.5 microseconds. Every
+integration step from 0.995 to 1.015 s is retained in the native event
+CSV, including the spike. On the common 0.5 ms grid, GridKit retains its
+left-limit sample at 1 s, whereas ParaEMT includes its event step. Raw
+GridKit monitoring retains both restart limits; neither those records
+nor the ParaEMT spike are silently removed from the archived data.
+
+## Agreement and remaining limits
+
+The three GridKit tolerance runs and three ParaEMT time-step runs are
+compared in [gridkit_comparison.json](results/gridkit_comparison.json).
+No waveform shifting or fitted gain is applied. Most discrepancies
+approximately halve as ParaEMT's step is halved; GridKit's own refinement
+differences are much smaller. This supports the parameter/equation
+mapping for this balanced governor-step experiment.
+
+The maximum voltage-magnitude discrepancy at 12.5 µs is `1.5091e-4 pu`,
+at bus 3 at **3 ms**, during ParaEMT's startup transient. It does not
+follow the same full-run halving trend. Its individual causes have not
+been separated. ParaEMT has explicit controller updates, time-step-dependent
+network damping, and fixed machine companion damping (`99/101`);
+GridKit solves the continuous DAE with IDA. The original rounded initial
+state also differs slightly. These are measured comparisons, not an
+externally established acceptance tolerance or a reproduction of a
+specific published figure.
+
+These experiments do not validate unbalanced transformer winding behavior,
+saturation, PLL dynamics, or active voltage cutouts. The trip is an
+ideal-opening comparison with different post-trip G1 semantics; its
+nonconverged ParaEMT voltage spike remains unsuitable as an answer key. General application support for consistent
+inductive initialization, scheduled writable setpoints, and these
+terminal constraints remains to be integrated outside this case driver.

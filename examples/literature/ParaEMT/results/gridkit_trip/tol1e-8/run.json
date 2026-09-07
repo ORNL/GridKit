@@ -1,0 +1,72 @@
+{
+  "abs_tol": 1e-08,
+  "dae_variables": 261,
+  "duration_s": 3.0,
+  "event": {
+    "explicit_state_projection": [
+      {
+        "after": 0.9981000699129805,
+        "before": 0.9374127141082096,
+        "index": 32
+      },
+      {
+        "after": -0.3917839088935329,
+        "before": -0.4556748561522766,
+        "index": 33
+      },
+      {
+        "after": 0.0,
+        "before": 4.6422436233602266e-18,
+        "index": 34
+      },
+      {
+        "after": 0.0,
+        "before": -244.5481296433129,
+        "index": 156
+      },
+      {
+        "after": 0.0,
+        "before": 202.22414387220468,
+        "index": 157
+      },
+      {
+        "after": 0.0,
+        "before": 42.32398577110832,
+        "index": 158
+      }
+    ],
+    "generator_bus": 1,
+    "increment_pu": 0.0,
+    "pref_before": 0.47882190218584353,
+    "time_s": 1.0,
+    "type": "ideal-generator-terminal-opening"
+  },
+  "event_differential_state_change": 0.0,
+  "initial_max_absolute_residual_mixed_units": 5.820766091346741e-11,
+  "jacobian_check_max_scaled_difference": {
+    "final": 3.807232189955942e-06,
+    "initial": 3.807232189955942e-06
+  },
+  "max_generator_kcl_mismatch_A": 0.0004926595761389763,
+  "mu": 50000.0,
+  "output_interval_s": 0.0005,
+  "rel_tol": 1e-08,
+  "simulator": "GridKit EMT",
+  "solver": {
+    "error_test_failures": 7531,
+    "linear_setups": 15413,
+    "nonlinear_convergence_failures": 743,
+    "nonlinear_iterations": 221552,
+    "residual_evaluations": 221554,
+    "steps": 137888
+  },
+  "wall_s": 2.704725009,
+  "GridKit_revision": "34a1f0887e7dc561736b592b5190aca87d6a43ae",
+  "command": [
+    "/home/lukel/GridKit/build/paraemt-9bus/paraemt_9bus",
+    "/home/lukel/GridKit/examples/literature/ParaEMT/gridkit/trip-tol1e-8.solver.json",
+    "trip"
+  ],
+  "executable_sha256": "c2810aea2f3267c0d4a190fe0d3beb89df0a11bdefb610e9de5e3c68cde5f96e",
+  "case_driver": "gridkit_9bus.cpp and GeneratorTerminalConstraint.hpp (local literature files)"
+}

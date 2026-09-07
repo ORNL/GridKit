@@ -1,0 +1,13 @@
+{
+  "system_model_file": "9bus-trip.case.json",
+  "state_file": "9bus-trip.state.json",
+  "dt_monitor": 0.0005,
+  "tmax": 3.0,
+  "rel_tol": 1e-07,
+  "abs_tol": 1e-07,
+  "max_steps": 1000000,
+  "mu": 50000.0,
+  "consistent_ic_type": "ya_ydp",
+  "output_file": "mon.csv",
+  "state_output_file": "state.csv"
+}

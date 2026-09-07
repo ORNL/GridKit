@@ -1,100 +1,164 @@
-# ParaEMT 9-bus reference simulations
+# ParaEMT / GridKit 9-bus comparison
 
-**GridKit equivalence is blocked by missing EMT SEXS, GAST and IEEEST
-controllers. No equivalent GridKit case was created or simulated.** The
-corresponding PhasorDynamics classes use different component and signal
-interfaces. [GRIDKIT_EQUIVALENCE.md](GRIDKIT_EQUIVALENCE.md) records the
-required work, source locations, and machine/network parameter mapping.
+The full governor-step and ideal generator-trip cases run in GridKit.
+The required SEXS-PTI, GASTPTI, and IEEEST models were ported from
+PhasorDynamics and committed separately; all 20 EMT tests pass.
+Cases, executable driver, simulation outputs, and reproducible plots are here.
 
-Four ParaEMT simulations were completed on 2026-09-06 using the authors'
-[revision d79d735a](https://github.com/NatLabRockies/ParaEMT_public/tree/d79d735a4a587d56c5b88187d1a499195b6b2b84).
-These are locally generated reference candidates, not published waveform
-data or a reproduction of a particular figure in the paper. Model equations
-and imported upstream source files are unchanged.
+**[Open the plot gallery](plots/index.html)** ·
+[Trip PDF](plots/trip/comparison.pdf) ·
+[Governor-step PDF](plots/governor_step/comparison.pdf)
 
-| Experiment | Settings | Results |
+Each figure contains one response: **ParaEMT on top, GridKit in the middle,
+GridKit − ParaEMT on the bottom**, with identical time and vertical limits
+in all three panels. Three-phase signals are plotted together. Bus waveform
+views show 0.990–1.025 s, approximately two cycles around the event, plus a
+separate late-time view. Slow responses retain full-run and event views.
+Speed is displayed as deviation from synchronous speed, in pu.
+
+There are **60 figures per experiment**, covering all 48 normalized channels:
+27 phase voltages, nine voltage magnitudes, and speed, mechanical power,
+field voltage, and stabilizer output for each of the three generators.
+`plots/coverage.json` records every figure's channels, shared axes and limits.
+Earlier plot filenames now point to figures in this layout.
+
+- [Bus 1 three-phase trip waveform](plots/trip/bus1_abc_event.png)
+- [Bus 4 three-phase trip waveform](plots/trip/bus4_abc_event.png)
+- [Generator 2 trip speed response](plots/trip/gen2_speed_pu_full.png)
+- [Generator 1 trip speed response](plots/trip/gen1_speed_pu_full.png)
+- [Generator 1 governor-step speed response](plots/governor_step/gen1_speed_pu_full.png)
+
+## Experiments and interpretation
+
+Both events occur at 1 s; each run covers 0–3 s. Every generator retains
+its full GridKit machine, governor, exciter and stabilizer. Each simulator
+saves 6,001 common samples spaced 0.5 ms apart. ParaEMT also saves every
+integration step between 0.995 and 1.015 s in `event_waveforms.csv.gz`.
+The bus event plots use these native samples inside that interval and
+regular samples outside it. Error panels always use the common 0.5 ms
+grid, without interpolation, phase alignment or fitted gains.
+
+| Experiment | GridKit | ParaEMT |
 | --- | --- | --- |
-| Governor step | Generator at bus 1: GAST reference −0.02 pu at 1 s; generators remain connected | [Response plot](plots/governor_step_response.png), [50 µs CSV](results/governor_step/dt50us/reference.csv.gz), [25 µs CSV](results/governor_step/dt25us/reference.csv.gz) |
-| Generator trip | Upstream `GenTrip`: generator at bus 1 disconnected at 1 s | [Response plot](plots/trip_response.png), [trip waveform plot](plots/trip_waveforms.png), [50 µs CSV](results/trip/dt50us/reference.csv.gz), [25 µs CSV](results/trip/dt25us/reference.csv.gz) |
+| Governor step | G1 governor reference −0.02 pu on its machine base | Same supplied GAST reference step |
+| Generator trip | Ideal opening between G1 and bus 1, with a separate isolated machine terminal | Upstream `GenTrip` removes G1 Norton injection and conductance; its electrical history stops updating while its state kernel continues |
 
-Each run covers 0–3 s with serial sparse LU, load option 1 (constant RLC),
-and ParaEMT's bus measurements/PLL enabled from time zero. The case contains
-9 buses, 6 pi lines, 3 transformer series branches, 3 loads, and 3 each of
-GENROU, SEXS, GAST and IEEEST; no IBRs. Initialization uses the supplied
-solved power-flow JSON and the complete parameter workbook. No external
-power-flow application or downloaded pickle is needed.
+**The post-trip G1 models differ.** GridKit's disconnected generator
+accelerates and its governor responds; ParaEMT's archived G1 internal
+states are not an equivalent isolated-machine trajectory. All G1 traces
+remain visible. Mechanical power is the turbine output, not electrical
+power injected into the network after disconnection.
 
-The 50 µs runs take 60,000 steps and the 25 µs runs take 120,000. Each saved
-CSV contains 6,001 rows on the same 0.5 ms output grid, including the initial
-point. Both disturbances were applied at exactly 1 s. All saved CSV values
-are finite. Sampling at 0.5 ms does not resolve every integration step or
-establish accuracy of high-frequency switching transients.
+The GridKit opening explicitly projects stator and transformer currents
+to zero while preserving rotor winding fluxes, rotor motion, controller
+states, and all other network differential states. It represents finite
+pre/post-event states, without an arc, snubber, or finite voltage-impulse
+amplitude. The common-grid GridKit sample at 1 s is the **left limit**;
+ParaEMT's sample includes its trip step. Both GridKit monitor limits and
+the exact state projection are archived.
 
-The maximum absolute differences between the 50 and 25 µs results, over all
-saved samples and all channels in each group, are:
+ParaEMT's bus-1 trip voltage magnitude at 1 s grows from **3.595605 pu**
+to **8.062099 pu** to **17.045898 pu** at 50, 25 and 12.5 µs. The spike is
+retained in all relevant plots; it is not a converged transient-voltage
+answer key. These trip comparisons demonstrate responses and numerical
+differences, not complete validation of an identical breaker model.
+[GRIDKIT_EQUIVALENCE.md](GRIDKIT_EQUIVALENCE.md) gives the mapping and event equations.
 
-| Quantity | Governor step | Generator trip |
-| --- | ---: | ---: |
-| Instantaneous phase voltage, pu | 0.0126874 | 4.18823 |
-| Three-phase voltage magnitude, pu | 0.000175041 | 4.46649 |
-| Rotor speed, pu | 0.0000149218 | 0.00198192 |
-| Mechanical power, pu on machine base | 0.000164115 | 0.00995209 |
-| Exciter output, pu on exciter base | 0.000196219 | 0.0131627 |
-| Stabilizer output, pu | 0.000650735 | 0.0113466 |
+## Measured agreement
 
-The trip's sampled bus-1 voltage magnitude at 1 s grows from **3.595605 pu
-to 8.062099 pu** when the time step is halved. This waveform is unsuitable
-as a validated transient voltage answer key. Its cause has not been
-established; inspect trip reinitialization, network history and numerical
-damping before adopting it. The upstream state kernel also continues to
-update the disconnected machine's internal states; the trip response plot
-therefore shows generators 2 and 3. The CSV preserves generator 1 as well.
+Maximum absolute governor-step discrepancies over all saved samples and
+channels in each group, using GridKit tolerance `1e-9` and `mu=50000`:
 
-The governor step is a better starting point for future controller/network
-comparison, but the phase-voltage difference is still about 0.0127 pu, and
-two time steps do not prove convergence. These metrics are numerical
-differences within ParaEMT, not errors against known truth or GridKit.
-[refinement.json](results/refinement.json) also separates the pre-event,
-first 20 ms, and later intervals and identifies the maximum-error channel
-and time. No pass/fail tolerances have been invented from these results.
+| Quantity, pu | vs ParaEMT 50 µs | vs 25 µs | vs 12.5 µs | GridKit 1e-8 vs 1e-9 |
+| --- | ---: | ---: | ---: | ---: |
+| Phase voltage | 0.0256144 | 0.0129270 | 0.00652691 | 5.34e-7 |
+| Voltage magnitude | 0.000351428 | 0.000176387 | 0.000150910 | 1.24e-7 |
+| Rotor speed | 3.01155e-5 | 1.51938e-5 | 7.66618e-6 | 1.02e-9 |
+| Mechanical power | 0.000322696 | 0.000162724 | 0.0000820428 | 7.08e-9 |
+| Field voltage | 0.000392251 | 0.000196044 | 0.0000978681 | 2.14e-8 |
+| Stabilizer output | 0.00132813 | 0.000677390 | 0.000349509 | 1.31e-6 |
 
-Each result directory includes `columns.json` (units), `run.json` (settings,
-versions and timing), `run.log`, and `machine_parameters.json` (raw ParaEMT
-equivalent-circuit arrays). The finer governor-step run also retains all
-saved upstream state vectors in `states.npz`; read using
-`numpy.load(..., allow_pickle=False)`. State ordering is documented in
-`Initialize.CombineX` in [Lib_BW.py](upstream/Lib_BW.py). Phase voltages use
-the peak phase base: multiply by `sqrt(2/3) * V_LL_RMS` to obtain volts.
-`vm` is the instantaneous three-phase magnitude, not windowed RMS.
+Most differences approximately halve under ParaEMT time-step refinement.
+The finest voltage-magnitude maximum occurs at bus 3 at 3 ms during
+startup. The original power flow requires a voltage-phasor adjustment
+of at most `4.85e-6 pu` to give a consistent continuous inductive initial
+state. Initialization and numerical-method differences remain.
 
-Reproduce from this directory with Python 3.12 (executed with 3.12.3):
+For the trip, excluding G1 internal signals and considering samples after
+1.02 s, the finest comparison has maximum differences of `1.15e-5 pu`
+in G2/G3 speed, `1.10e-4 pu` in mechanical power and field voltage,
+and `3.13e-4 pu` in stabilizer output. Voltage-magnitude discrepancy is
+larger (`0.02984 pu`, bus 4 at 1.0245 s). The full intervals, all channels,
+all three ParaEMT steps, and both GridKit tolerance refinements are in
+[governor metrics](results/gridkit_comparison.json) and
+[trip metrics](results/gridkit_trip_comparison.json). There is no
+literature-defined pass/fail tolerance for these locally generated data.
+
+## Reproduce
+
+Use Python 3.12 and a built GridKit checkout with Enzyme and SUNDIALS KLU.
+The standalone CMake project imports the existing GridKit build's libraries.
+From this directory:
 
 ```bash
 python3 -m venv /tmp/paraemt-reference-venv
 /tmp/paraemt-reference-venv/bin/pip install -r upstream/requirements.txt
-/tmp/paraemt-reference-venv/bin/python run_reference.py --event governor-step --dt-us 50 --output results/governor_step/dt50us
-/tmp/paraemt-reference-venv/bin/python run_reference.py --event governor-step --dt-us 25 --save-states --output results/governor_step/dt25us
-/tmp/paraemt-reference-venv/bin/python run_reference.py --event trip --dt-us 50 --output results/trip/dt50us
-/tmp/paraemt-reference-venv/bin/python run_reference.py --event trip --dt-us 25 --output results/trip/dt25us
-MPLCONFIGDIR=/tmp/paraemt-matplotlib /tmp/paraemt-reference-venv/bin/python plot_results.py
 ```
 
-The wrapper follows the original driver's step order and history handling;
-it selects `systemN=2`, shortens the horizon from 10 to 3 s, exports labeled
-compressed CSV instead of pickle, and keeps output spacing fixed while
-refining the step. For the governor experiment it moves the already supplied
-−0.02 pu reference step from 100 to 1 s and moves the trip beyond the run.
-An `ElementTree.getiterator` compatibility alias lets upstream's pinned
-`xlrd==1.2.0` read XLSX on current Python. The serial LU path does not need
-METIS. [environment.txt](environment.txt) records the installed packages.
+The six saved ParaEMT references use `--event governor-step` or `--event trip`,
+with `--dt-us 50`, `25`, or `12.5`. For example:
 
-Original inputs: `ieee9.raw`, `pfd_9_1_1.json`, and `9bus.xlsx`. The four
-short CSV files at this directory's root are worksheet exports, not
-simulation results. Original source and license are preserved under
-`upstream/` and [LICENSE.md](LICENSE.md). [sources.json](sources.json)
-records SHA-256 hashes and upstream Git blob identities. Run
-`python3 verify.py` to check the collected artifacts and saved CSV structure;
-regenerated floating-point results or timings may have different hashes.
+```bash
+/tmp/paraemt-reference-venv/bin/python run_reference.py --event trip --dt-us 12.5 --save-states --output results/trip/dt12_5us > results/trip/dt12_5us/run.log 2>&1
+MPLCONFIGDIR=/tmp/paraemt-matplotlib /tmp/paraemt-reference-venv/bin/python run_gridkit.py --gridkit-build ../../../build/emt-rational
+python3 verify.py --regenerated
+```
+
+`run_gridkit.py` generates both cases, builds the driver, runs each event
+at three IDA tolerances, normalizes and compares the data, and regenerates
+the figures. To regenerate only figures from saved CSVs:
+
+```bash
+MPLCONFIGDIR=/tmp/paraemt-matplotlib /tmp/paraemt-reference-venv/bin/python plot_comparison.py
+```
+
+Each GridKit result folder includes compressed normalized and raw monitor
+CSVs, a column schema, run log, solver statistics, executable hash,
+initial/final assembled-Jacobian checks, both event state limits, and
+monitor restart adjustments. The `1e-9` runs also retain full state and
+derivative CSVs with explicit column maps. Finest sampled original KCL
+mismatches are `0.000162 A` for the governor event and `0.000086 A` for
+the trip, independently recomputed by `verify.py`.
+
+The driver handles initialization, writable setpoints, terminal constraints,
+and the ideal opening. These operations are not yet available together in
+the ordinary `EMTDynamicSimulation` application.
+
+## Source and provenance
+
+References were generated locally from the authors'
+[revision d79d735a](https://github.com/NatLabRockies/ParaEMT_public/tree/d79d735a4a587d56c5b88187d1a499195b6b2b84).
+They are not published waveform answer keys or a reproduction of a specific
+paper figure. The case contains nine buses, six pi lines, three transformer
+series branches, three loads, and three each of GENROU, SEXS, GAST and IEEEST;
+no IBRs. It uses serial sparse LU, constant-impedance load option 1, and
+bus measurements/PLL enabled from zero.
+
+Original inputs are `ieee9.raw`, `pfd_9_1_1.json`, and `9bus.xlsx`.
+Root-level `gen.csv`, `exc.csv`, `gov.csv`, and `pss.csv` are worksheet
+exports. Original source is preserved byte for byte under `upstream/`,
+with its BSD-3-Clause [license](LICENSE.md). The wrapper preserves the
+upstream stepping order, trip history handling, and model equations.
+An `ElementTree.getiterator` compatibility alias lets pinned `xlrd==1.2.0`
+read XLSX on current Python. The serial path does not require METIS.
+[environment.txt](environment.txt) records the environment.
+
+[sources.json](sources.json) records SHA-256 hashes and upstream Git blob
+identities. `python3 verify.py` checks the frozen artifact snapshot,
+complete data, native-step samples, event invariants, independent original
+KCL, winding inverses, plot channel coverage, PDF page counts, and gallery
+links. Use `--regenerated` after rerunning to skip frozen local hashes
+while retaining source and numerical checks.
 
 Reference: Xiong et al., *ParaEMT: An Open Source, Parallelizable, and
 HPC-Compatible EMT Simulator for Large-Scale IBR-Rich Power Grids*, IEEE

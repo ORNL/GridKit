@@ -29,12 +29,17 @@ t=2.0000 s
 t=2.5000 s
 t=3.0000 s
 {
-  "simulator": "ParaEMT (GridKit not run)",
+  "simulator": "ParaEMT",
   "upstream_revision": "d79d735a4a587d56c5b88187d1a499195b6b2b84",
   "systemN": 2,
   "duration_s": 3.0,
   "dt_s": 5e-05,
   "output_interval_s": 0.0005,
+  "event_waveform_interval_s": 5e-05,
+  "event_waveform_window_s": [
+    0.995,
+    1.015
+  ],
   "steps": 60000,
   "samples": 6001,
   "network_solver": "serial sparse LU",
@@ -96,8 +101,8 @@ t=3.0000 s
     "xlrd": "1.2.0",
     "matplotlib": "3.9.2"
   },
-  "initialization_wall_s": 5.645169890980469,
-  "loop_wall_s": 15.212530331016751,
+  "initialization_wall_s": 5.389032027014764,
+  "loop_wall_s": 14.993539219984086,
   "all_saved_values_finite": true,
   "state_layout_source": "upstream/Lib_BW.py Initialize.CombineX"
 }
