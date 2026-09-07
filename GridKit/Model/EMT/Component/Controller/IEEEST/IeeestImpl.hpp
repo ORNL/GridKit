@@ -389,25 +389,6 @@ namespace GridKit
         return 0;
       }
 
-      template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::tagDifferentiable()
-      {
-        tag_[0]  = true;
-        tag_[1]  = true;
-        tag_[2]  = true;
-        tag_[3]  = true;
-        tag_[4]  = (T2_ != 0.0);
-        tag_[5]  = (T4_ != 0.0);
-        tag_[6]  = (T6_ != 0.0);
-        tag_[7]  = false;
-        tag_[8]  = false;
-        tag_[9]  = false;
-        tag_[10] = false;
-        tag_[11] = false;
-
-        return 0;
-      }
-
       /**
        * @brief Compute the absolute tolerance for each variable in the model
        *

@@ -40,12 +40,11 @@ namespace GridKit
           return this->initializeOutputs(*this, values);
         }
 
-        int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT) override final;
         int evaluateInternalResidual() override final;
         int evaluateExternalResidual() override final;
         int evaluateResidual() override final;
-        int evaluateJacobian() override final;
+        int assembleJacobian(RealT y_scale, RealT yp_scale) override final;
 
         /// Publish one phase on a named scalar signal. No DAE index is assigned.
         void    assignOutput(size_t phase, SignalT* signal);

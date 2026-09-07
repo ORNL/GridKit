@@ -34,6 +34,28 @@ The [Bus](Component/Bus/README.md) contains `KCL` and Norton sources.
 external equations. Model documentation marks such a contribution with an arrow,
 $\mathbf{f} \leftarrow \dots$.
 
+## DAE validation
+
+At the executable root, `tagDifferentiable()` derives differential columns
+from the assembled `F_yp`, including contributions to variables owned by
+other components. EMT derivative coefficients must be independent of time
+and state within a fixed topology; zero parameter coefficients and exact
+cancellation are removed after accumulation. Classification is then
+distributed to every child and embedded operator.
+
+For differential indices `d` and algebraic indices `a`, initialization must
+solve for `(yp[d], y[a])` with `y[d]` fixed. The system checks
+`M = [F_yp(:, d), F_y(:, a)]` using a sparse maximum matching followed by
+equilibrated KLU factorization. Structural slots in `F_y` are retained even
+when their current coefficient is zero. A reciprocal pivot-condition estimate
+at or below `size() * epsilon` is treated as numerical singularity at working
+precision. Diagnostics distinguish structural deficiency from numerical
+failure at the supplied state and identify component paths and local indices.
+
+This checks local solvability in the existing coordinates. It neither proves
+regularity at all future states nor performs constraint reduction. IDA refreshes
+the classification and validation before each restart.
+
 ## Model Interface
 
 A model implements two member functions. Both read the same inputs and differ
@@ -49,6 +71,13 @@ its contribution into `f_ext`. Both must be inlinable and reach state only
 through their arguments so Enzyme can differentiate them in place.
 
 ## Local Jacobian
+
+`assembleJacobian(y_scale, yp_scale)` uses the same local derivatives to form
+`y_scale * F_y + yp_scale * F_yp`. The evaluator's `evaluateJacobian()` supplies
+`(1, alpha)` for IDA; `(1, 0)` and `(0, 1)` obtain the individual partials.
+Changing the active blocks invalidates the cached sparse layout. Contributions
+from children, embedded operators, and computed-signal gradients use the same
+coefficients.
 
 Rows are grouped by model, the internal rows first, and columns likewise, the
 internal variables first. Value and derivative partials share the same block
@@ -256,8 +285,8 @@ struct SparseJacobian
 };
 ```
 
-A model asks for the blocks it has. The scaling argument is $\alpha$ for the
-derivative variables and defaults to one for the others.
+A model asks for the blocks it has, passing `y_scale` for value variables and
+`yp_scale` for derivative variables. Disabled blocks are omitted.
 
 ```cpp
 using GridKit::Enzyme::Sparse::Equation;
@@ -265,12 +294,14 @@ using GridKit::Enzyme::Sparse::SparseJacobian;
 using GridKit::Enzyme::Sparse::Variable;
 
 // Lower left of the value matrix, the external equation against internal variables
-SparseJacobian<LoadZT, Equation::External, Variable::Y>::eval(
-    this, n_ext, n_var, ext_indices, var_indices,
-    y, yp, y_ext, yp_ext, rows, cols, vals, nnz);
+if (y_scale != 0)
+  SparseJacobian<ModelT, Equation::External, Variable::Y>::eval(
+      this, n_ext, n_var, ext_indices, var_indices,
+      y, yp, y_ext, yp_ext, rows, cols, vals, nnz, y_scale);
 
 // Same region of the derivative matrix
-SparseJacobian<LoadZT, Equation::External, Variable::Yp>::eval(
-    this, n_ext, n_var, ext_indices, var_indices,
-    y, yp, y_ext, yp_ext, rows, cols, vals, nnz, alpha);
+if (yp_scale != 0)
+  SparseJacobian<ModelT, Equation::External, Variable::Yp>::eval(
+      this, n_ext, n_var, ext_indices, var_indices,
+      y, yp, y_ext, yp_ext, rows, cols, vals, nnz, yp_scale);
 ```

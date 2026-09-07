@@ -91,12 +91,6 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int Pwm<scalar_type, index_type>::tagDifferentiable()
-      {
-        return 0;
-      }
-
-      template <typename scalar_type, typename index_type>
       int Pwm<scalar_type, index_type>::setAbsoluteTolerance(RealT)
       {
         return 0;
@@ -121,7 +115,7 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int Pwm<scalar_type, index_type>::evaluateJacobian()
+      int Pwm<scalar_type, index_type>::assembleJacobian(RealT, RealT)
       {
         return 0;
       }

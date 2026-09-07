@@ -151,12 +151,6 @@ namespace GridKit
         return status == 0 ? initializeShunt() : status;
       }
 
-      int tagDifferentiable() override
-      {
-        std::fill(this->tag_.begin(), this->tag_.end(), false);
-        return this->tagDifferentiableOperators();
-      }
-
       int setAbsoluteTolerance(RealT tolerance) override
       {
         this->abs_tol_.setToConst(static_cast<ScalarT>(tolerance));
@@ -189,7 +183,7 @@ namespace GridKit
         return status == 0 ? evaluateExternalResidual() : status;
       }
 
-      int evaluateJacobian() override
+      int assembleJacobian(RealT y_scale, RealT yp_scale) override
       {
         std::array<typename SignalT::GradientT, 3> gradients;
         size_t                                     capacity = 6 + static_cast<size_t>(admittance_.jacobianCapacity()) * admittance_.externalJacobianExpansion();
@@ -213,10 +207,13 @@ namespace GridKit
         this->nnz_  = 0;
         auto append = [&](IdxT row, IdxT column, RealT value)
         {
-          const auto j            = this->nnz_++;
-          this->J_rows_buffer_[j] = row;
-          this->J_cols_buffer_[j] = column;
-          this->J_vals_buffer_[j] = value;
+          if (y_scale == ZERO<RealT>)
+            return;
+          value                   *= y_scale;
+          const auto j             = this->nnz_++;
+          this->J_rows_buffer_[j]  = row;
+          this->J_cols_buffer_[j]  = column;
+          this->J_vals_buffer_[j]  = value;
         };
         for (IdxT p = 0; p < 3; ++p)
         {
@@ -225,7 +222,7 @@ namespace GridKit
           for (const auto& [column, value] : gradients[static_cast<size_t>(p)])
             append(voltage_[static_cast<size_t>(p)]->getResidualIndex(), column, value);
         }
-        const int status = this->evaluateOperatorJacobians();
+        const int status = this->evaluateOperatorJacobians(y_scale, yp_scale);
         if (status != 0)
           return status;
         this->appendOperatorJacobians();

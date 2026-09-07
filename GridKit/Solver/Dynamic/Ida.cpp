@@ -90,7 +90,8 @@ namespace AnalysisManager
       // Tag differential variables
       tag_ = N_VClone(yy_);
       checkAllocation((void*) tag_, "N_VClone");
-      model_->tagDifferentiable();
+      retval = model_->tagDifferentiable();
+      checkOutput(retval, "tagDifferentiable");
       copyVec(model_->tag(), tag_);
 
       retval = IDASetId(solver_, tag_);
@@ -228,6 +229,16 @@ namespace AnalysisManager
       int retval = 0;
 
       t_init_ = t0;
+
+      // Discrete changes can alter the DAE partition. Validate and refresh it
+      // at the restart state before asking IDA for consistent conditions.
+      updateModelState(t0);
+      model_->updateTime(t0, 1.0);
+      retval = model_->tagDifferentiable();
+      checkOutput(retval, "tagDifferentiable");
+      copyVec(model_->tag(), tag_);
+      retval = IDASetId(solver_, tag_);
+      checkOutput(retval, "IDASetId");
 
       // Need to reinitialize IDA to set to get correct initial conditions
       retval = IDAReInit(solver_, t0, yy_, yp_);
@@ -760,14 +771,20 @@ namespace AnalysisManager
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
       CsrMatrixT* Jac  = model->getCsrJacobian();
 
+      IdxT n   = Jac->getNumRows();
+      IdxT nnz = Jac->getNnz();
+
+      if (static_cast<sunindextype>(nnz) > SUNSparseMatrix_NNZ(J))
+      {
+        const int status = SUNSparseMatrix_Reallocate(J, static_cast<sunindextype>(nnz));
+        if (status != 0)
+          return status;
+      }
       SUNMatZero(J);
 
       sunindextype* sun_row_ptrs = SUNSparseMatrix_IndexPointers(J);
       sunindextype* sun_cols     = SUNSparseMatrix_IndexValues(J);
       RealT*        sun_vals     = SUNSparseMatrix_Data(J);
-
-      IdxT n   = Jac->getNumRows();
-      IdxT nnz = Jac->getNnz();
 
       // Get reference to the jacobian entries
       IdxT*  row_ptrs = Jac->getRowData();

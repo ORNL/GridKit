@@ -459,20 +459,6 @@ namespace GridKit
     }
 
     /**
-     * \brief Identify differential variables.
-     */
-    template <typename scalar_type, typename index_type>
-    int Machine<scalar_type, index_type>::tagDifferentiable()
-    {
-      for (size_t j = 0; j < static_cast<size_t>(size_); ++j)
-      {
-        tag_[j] = j < 9;
-      }
-
-      return 0;
-    }
-
-    /**
      * @brief Compute the absolute tolerance for each variable in the model
      *
      * @param rel_tol The relative tolerance which can be used to pick the

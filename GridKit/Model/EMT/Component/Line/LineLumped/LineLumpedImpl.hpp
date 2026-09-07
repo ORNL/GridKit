@@ -322,24 +322,6 @@ namespace GridKit
     }
 
     /**
-     * \brief Identify differential variables.
-     */
-    template <typename scalar_type, typename index_type>
-    int LineLumped<scalar_type, index_type>::tagDifferentiable()
-    {
-      tag_[0] = true;
-      tag_[1] = true;
-      tag_[2] = true;
-
-      if (z_.has_value())
-      {
-        this->tagDifferentiableOperators();
-      }
-
-      return 0;
-    }
-
-    /**
      * @brief Compute the absolute tolerance for each variable in the model
      *
      * @param rel_tol The relative tolerance which can be used to pick the

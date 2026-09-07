@@ -77,17 +77,46 @@ namespace GridKit
     }
 
     /**
+     * @brief Classify and validate the assembled DAE before IDA initialization.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::tagDifferentiable()
+    {
+      if (this->boundToParent())
+        return ComponentT::tagDifferentiable();
+      if (!hasJacobian())
+        throw std::runtime_error("EMT DAE validation requires an exact model Jacobian");
+
+      const auto Fyp      = this->jacobianEntries(ZERO<RealT>, ONE<RealT>);
+      const auto Fy       = this->jacobianEntries(ONE<RealT>, ZERO<RealT>);
+      const auto analysis = analyzeDae(static_cast<size_t>(size_), Fy, Fyp);
+      if (analysis.status != DaeAnalysis::Status::regular)
+      {
+        std::string message = analysis.status == DaeAnalysis::Status::structurally_singular
+                                  ? "EMT DAE is structurally deficient in the current differential/algebraic partition."
+                                  : "EMT DAE initial-value Jacobian is numerically singular at the supplied state.";
+        for (const auto row : analysis.equations)
+          message += "\n  Equation: " + this->describeDaeIndex(static_cast<IdxT>(row));
+        for (const auto column : analysis.variables)
+          message += "\n  Variable: " + this->describeDaeIndex(static_cast<IdxT>(column));
+        throw std::runtime_error(message);
+      }
+      this->setDifferentialTags(analysis.differential);
+      return this->evaluateJacobian();
+    }
+
+    /**
      * @brief Deduplicate the hierarchy's aggregate COO into the solver CSR.
      */
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::evaluateJacobian()
+    int SystemModel<scalar_type, index_type>::assembleJacobian(RealT y_scale, RealT yp_scale)
     {
       if (this->boundToParent())
       {
-        return ContainerT::evaluateJacobian();
+        return ContainerT::assembleJacobian(y_scale, yp_scale);
       }
 
-      const int status = ContainerT::evaluateJacobian();
+      const int status = ContainerT::assembleJacobian(y_scale, yp_scale);
       if (status != 0)
       {
         return status;

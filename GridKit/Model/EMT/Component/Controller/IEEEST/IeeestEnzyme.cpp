@@ -23,7 +23,7 @@ namespace GridKit
        * @return int - error code, 0 = success
        */
       template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::evaluateJacobian()
+      int Ieeest<scalar_type, index_type>::assembleJacobian(RealT y_scale, RealT yp_scale)
       {
         gatherExternalVariables();
 
@@ -59,12 +59,21 @@ namespace GridKit
         const auto* ye     = y_ext_.data();
         const auto* ype    = yp_ext_.data();
 
-        SparseJacobian<ModelT, Equation::Internal, Variable::Y>::eval(
-            this, n_f, n_y, ri, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
-        SparseJacobian<ModelT, Equation::Internal, Variable::Yp>::eval(
-            this, n_f, n_y, ri, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, alpha_);
-        SignalJacobian<ModelT, Equation::Internal, Variable::YExt>::eval(
-            this, this, n_f, n_yext, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
+        if (y_scale != ZERO<RealT>)
+        {
+          SparseJacobian<ModelT, Equation::Internal, Variable::Y>::eval(
+              this, n_f, n_y, ri, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, y_scale);
+        }
+        if (yp_scale != ZERO<RealT>)
+        {
+          SparseJacobian<ModelT, Equation::Internal, Variable::Yp>::eval(
+              this, n_f, n_y, ri, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, yp_scale);
+        }
+        if (y_scale != ZERO<RealT>)
+        {
+          SignalJacobian<ModelT, Equation::Internal, Variable::YExt>::eval(
+              this, this, n_f, n_yext, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, y_scale);
+        }
 
         // Keep structural zeros when a limiter changes its active region. System assembly reuses this COO layout.
         std::map<std::pair<IdxT, IdxT>, RealT>          entries;
