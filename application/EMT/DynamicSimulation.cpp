@@ -1,13 +1,13 @@
 #include <filesystem>
 #include <fstream>
 
-#include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
 #include <GridKit/Model/EMT/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
 #include "AnalysisUtilities.hpp"
+#include "EventSchedule.hpp"
 #include "StateMonitor.hpp"
 
 using namespace AnalysisManager::Sundials;
@@ -30,7 +30,8 @@ int main(int argc, const char* argv[])
 #endif
 
   // Instantiate system
-  SystemModel<scalar_type, index_type> sys(study.model_data);
+  SystemModel<scalar_type, index_type>   sys(study.model_data);
+  EventSchedule<scalar_type, index_type> events(sys, study);
   if (!sys.hasJacobian())
   {
     throw std::runtime_error("EMTDynamicSimulation requires a sparse model Jacobian; enable Enzyme");
@@ -45,7 +46,7 @@ int main(int argc, const char* argv[])
   ida.setFixedStep(study.dt_fixed);
   ida.setMaxSteps(study.max_steps);
   ida.setConsistentICType(study.consistent_ic_type);
-  ida.configureSimulation();
+  events.configure(ida);
   std::cout << "Linear solver: SUNDIALS KLU (sparse)\n"
             << "DAE variables: " << sys.size()
             << ", Jacobian nonzeros: " << sys.getCsrJacobian()->getNnz()
@@ -57,45 +58,7 @@ int main(int argc, const char* argv[])
   // Start timer
   real_type start = static_cast<real_type>(clock());
 
-  using EventType = SystemEvent::Type;
-
-  // Initilize simultation for first run
-  auto      dt_monitor = study.dt_monitor;
-  real_type final_time = study.tmax;
-  IdaStats  total_stats;
-  ida.initializeSimulation(0.0);
-  record_state(0.0);
-  for (const auto& event : study.events)
-  {
-    // Run to event time
-    ida.runSimulation(event.time, dt_monitor, record_state);
-    // IDAReInit resets the counters, so retain each completed segment.
-    total_stats += ida.getStats();
-
-    // Set up run for event (to start at event time)
-    switch (event.type)
-    {
-    case EventType::SWITCH_OPEN:
-      sys.getSwitch(event.element_id)->setOpen(true);
-      break;
-    case EventType::SWITCH_CLOSE:
-      sys.getSwitch(event.element_id)->setOpen(false);
-      break;
-    }
-
-    // A switch event changes the Jacobian sparsity pattern: rediscover the
-    // structure, rebuild the linear solver, and reinitialize at event time
-    sys.resetJacobianStructure();
-    sys.evaluateResidual();
-    sys.evaluateJacobian();
-    ida.configureLinearSolver();
-    ida.initializeSimulation(event.time);
-    record_state(event.time);
-  }
-
-  // Run to final time
-  ida.runSimulation(final_time, dt_monitor, record_state);
-  total_stats += ida.getStats();
+  const auto total_stats = events.run(ida, record_state);
 
   real_type stop = static_cast<real_type>(clock());
 

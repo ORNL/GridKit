@@ -1,9 +1,10 @@
 # Assembly
 
-An EMT model is defined by two equation groups. The internal equation fills the
-model's internal DAE rows. The external equation contributes to the internal
-rows of a connected model by accumulation. Each block of the assembled
-Jacobian is one derivative of one group.
+EMT assembly supports two equation groups. Internal equations fill a model's
+DAE rows. Embedded operators contribute to their consumer's equations through
+external rows. Each Jacobian block differentiates one equation group.
+Electrical devices expose terminal-current signals; only KCL sums those
+currents into the bus equations.
 
 ## Notation
 
@@ -30,9 +31,13 @@ internal row, so the assembled row set of a model is
 ```
 
 The [Bus](Component/Bus/README.md) contains `KCL` and Norton sources.
-`KCL` owns the current-balance rows into which the sources accumulate their
-external equations. Model documentation marks such a contribution with an arrow,
-$\mathbf{f} \leftarrow \dots$.
+`KCL` owns both current-balance residuals and their Jacobian contributions.
+During wiring, `Bus::addCurrent(phase, signal, sign)` registers each current,
+with positive sign meaning injection into the bus. KCL reads every registered
+signal and appends its gradient with the same sign. Norton terminals register
+incident currents positively and shunt currents negatively; other devices
+register their existing branch-current outputs. Registration closes at allocation.
+Devices never write directly into bus residuals.
 
 ## DAE validation
 

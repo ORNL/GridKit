@@ -20,8 +20,17 @@ with the signal gradients. The input graph must be acyclic, and its gradient
 structure must remain fixed after allocation, including entries whose current
 coefficient is zero.
 
+A declared constant (`{"id": "pref", "value": 0.2}`) owns its finite value
+without a DAE variable, derivative, residual row, or gradient entries.
+`bindConstant(value)` reserves its producer; `setConstantValue(value)` updates
+only a declared constant. Consumer initialization cannot overwrite it.
+Rebinding a signal to a component variable or expression clears its constant
+status. The EMT application's `signal_step` event uses this explicit update
+operation to change references at a scheduled time.
+
 ## Model Parameters
 
 Symbol | Description
 -------|------------
 `id` | Unique string identifier for the signal
+`value` | Optional initial value of a declared, externally writable constant

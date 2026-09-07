@@ -253,6 +253,8 @@ future file-backed Containers; file inclusion is not part of this revision.
 
 Declaring a signal creates a named connection. Its value is supplied by the
 optional constant `value`, a component output, or the embedding program.
+Declared constants can be updated by the application's `signal_step` events;
+their finite values are preserved when connected controllers initialize.
 Omit an optional input to use the model's internal default or latched value.
 
 `IEEET1` is also accepted as the class name for `Ieeet1`. Its rated

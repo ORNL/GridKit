@@ -1,6 +1,7 @@
 /**
  * @file Signal model implementation.
  */
+#include <cmath>
 #include <stdexcept>
 #include <utility>
 
@@ -26,6 +27,8 @@ namespace GridKit
     Signal<scalar_type, index_type>::Signal(const SignalData<RealT, IdxT>& data)
       : Signal(data.id)
     {
+      if (data.value)
+        bindConstant(*data.value);
     }
 
     template <typename scalar_type, typename index_type>
@@ -49,6 +52,7 @@ namespace GridKit
       residual_index_   = residual_index;
       value_            = {};
       gradient_         = {};
+      constant_.reset();
     }
 
     template <typename scalar_type, typename index_type>
@@ -68,12 +72,40 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     bool Signal<scalar_type, index_type>::computed() const
     {
-      return static_cast<bool>(value_);
+      return constant() || static_cast<bool>(value_);
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Signal<scalar_type, index_type>::bindConstant(RealT value)
+    {
+      if (!std::isfinite(value))
+        throw std::invalid_argument("Constant signal value must be finite");
+      claimProducer();
+      set(nullptr, nullptr);
+      constant_ = value;
+    }
+
+    template <typename scalar_type, typename index_type>
+    bool Signal<scalar_type, index_type>::constant() const noexcept
+    {
+      return constant_.has_value();
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Signal<scalar_type, index_type>::setConstantValue(RealT value)
+    {
+      if (!constant())
+        throw std::logic_error("Signal \"" + id_ + "\" is not a declared constant");
+      if (!std::isfinite(value))
+        throw std::invalid_argument("Constant signal value must be finite");
+      constant_ = value;
     }
 
     template <typename scalar_type, typename index_type>
     void Signal<scalar_type, index_type>::appendGradient(GradientT& gradient, RealT scale) const
     {
+      if (constant())
+        return;
       if (computed())
       {
         if (evaluating_)
@@ -135,6 +167,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     scalar_type Signal<scalar_type, index_type>::read() const
     {
+      if (constant())
+        return static_cast<ScalarT>(*constant_);
       if (computed())
       {
         if (evaluating_)
@@ -197,20 +231,5 @@ namespace GridKit
       *derivative_ = derivative;
     }
 
-    template <typename scalar_type, typename index_type>
-    void Signal<scalar_type, index_type>::markDerivativeCoupling()
-    {
-      if (computed())
-      {
-        throw std::logic_error("Computed algebraic signals do not expose derivatives");
-      }
-      derivative_coupling_ = true;
-    }
-
-    template <typename scalar_type, typename index_type>
-    bool Signal<scalar_type, index_type>::hasDerivativeCoupling() const
-    {
-      return derivative_coupling_;
-    }
   } // namespace EMT
 } // namespace GridKit

@@ -77,6 +77,12 @@ namespace GridKit
           load.getSignals().template attachSignal<GridKit::EMT::LoadZExternalVariables::VB>(&bus.outputSignal(GridKit::EMT::BusOutputs::vb));
           load.getSignals().template attachSignal<GridKit::EMT::LoadZExternalVariables::VC>(&bus.outputSignal(GridKit::EMT::BusOutputs::vc));
 
+          for (size_t p = 0; p < 3; ++p)
+          {
+            bus.addCurrent(p, source.currentSignal(p));
+            bus.addCurrent(p, load.currentSignal(p));
+          }
+
           IdxT offset = 0;
           for (auto* component : components())
           {

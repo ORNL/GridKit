@@ -35,9 +35,8 @@ namespace GridKit
         // The size of the buffer is the sum of maximum capacities of the blocks.
         // Enyme will compute the appropriate nnz from sparsification.
         auto size         = static_cast<size_t>(size_);
-        auto f_ext_size   = f_ext_.size();
         auto y_ext_size   = y_ext_.size();
-        auto buffer_size  = 2 * (size + f_ext_size) * (size + y_ext_size);
+        auto buffer_size  = 2 * size * (size + y_ext_size);
         buffer_size      *= this->externalJacobianExpansion();
         J_rows_buffer_    = new IdxT[buffer_size];
         J_cols_buffer_    = new IdxT[buffer_size];
@@ -54,10 +53,8 @@ namespace GridKit
       const auto  n_f    = static_cast<size_t>(f_.getSize());
       const auto  n_y    = static_cast<size_t>(y_.getSize());
       const auto  n_yext = y_ext_.size();
-      const auto  n_fext = f_ext_.size();
       const auto* ri     = (this->getResidualIndices()).data();
       const auto* vi     = (this->getVariableIndices()).data();
-      const auto* rie    = residual_indices_ext_.data();
       const auto* vie    = variable_indices_ext_.data();
       const auto* y      = y_.getData();
       const auto* yp     = yp_.getData();
@@ -73,11 +70,6 @@ namespace GridKit
       {
         SignalJacobian<ModelT, Equation::Internal, Variable::YExt>::eval(
             this, this, n_f, n_yext, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, y_scale);
-      }
-      if (y_scale != ZERO<RealT>)
-      {
-        SparseJacobian<ModelT, Equation::External, Variable::Y>::eval(
-            this, n_fext, n_y, rie, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, y_scale);
       }
 
       this->constructCoo();

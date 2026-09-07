@@ -295,10 +295,6 @@ namespace
     auto        data    = vectorData();
     Fixture<VF> fixture(data);
     success &= fixture.model.size() == 12;
-    for (size_t k = 0; k < 4; ++k)
-    {
-      success &= fixture.input_signals[k].hasDerivativeCoupling() == (k == 1);
-    }
     std::fill(fixture.u.begin(), fixture.u.end(), 2.0);
     success            &= fixture.model.initialize() == 0;
     const auto initial  = fixture.residual();
