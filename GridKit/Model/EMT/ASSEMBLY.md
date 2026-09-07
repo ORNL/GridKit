@@ -92,8 +92,16 @@ commits a new right limit at the event time.
 
 `maximumStepSize()` bounds forward steps, for example by the shortest transport
 delay. Containers and components propagate history notifications and take the
-smallest child or operator bound. This lifecycle supports future history-based
-models; it does not implement Delay or Propagation.
+smallest child or operator bound. `Delay` supports both this bounded
+method-of-steps realization and implicit overlap within a larger adaptive
+step; `Propagation` composes rational matrices with that history realization.
+
+`nextDiscontinuityTime(t)` reports the next known delayed arrival. IDA stops
+there and calls `beginDiscontinuity(t)` before calculating consistent
+right-limit conditions. Components and containers forward both hooks to
+their owned operators and children. Automatic history restarts are supported
+by forward DAE simulation; quadrature and adjoint checkpoint replay do not
+support these restarts.
 
 ## Model Interface
 

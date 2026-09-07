@@ -4,6 +4,10 @@
 grid with three machines and three converters, full monitoring, and plotting
 scripts.
 
+[Distributed lines](Distributed/README.md) compares lossless Bergeron and π
+lines and runs adaptive frequency-dependent 8- and 20-bus studies, including
+machine, fault, load-switching, and open-loop PWM converter cases.
+
 [Current initialization](../../cases/EMT/CurrentInitialization/README.md)
 checks line and load currents supplied by state files against analytic RL
 solutions through the normal EMT application.
@@ -41,13 +45,13 @@ LineDistributed
     Yc[1]: VectorFit
     Yc[2]: VectorFit
     H21: Propagation
-      input: VectorFit
-      delays[M]: Delay
-      output: VectorFit
+      modes[M]
+        H: VectorFit
+        tau: Delay applied to all K matrix outputs
     H12: Propagation
-      input: VectorFit
-      delays[M]: Delay
-      output: VectorFit
+      modes[M]
+        H: VectorFit
+        tau: Delay applied to all K matrix outputs
 ```
 
 Yc represents characteristic admittance. H21 and H12 represent directional

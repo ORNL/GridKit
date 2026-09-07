@@ -52,10 +52,20 @@ namespace GridKit
     };
 
     /**
+     * @brief Reflected-current data defining a constant or harmonic line prehistory
+     */
+    struct LineHistory
+    {
+      double                           omega;
+      std::array<ABCVector<double>, 2> value, derivative;
+    };
+
+    /**
      * @brief Data defined in JSON file for parameterized study
      */
     struct StudyData
     {
+      std::map<std::string, LineHistory>                   history;
       std::map<std::string, std::map<std::string, double>> state;
       /// path to system model JSON file
       fs::path                                             system_model_file;
@@ -85,6 +95,8 @@ namespace GridKit
       fs::path                                             output_file;
       /// Optional CSV containing every DAE variable and derivative
       fs::path                                             state_output_file;
+      /// Optional accepted internal step log, independent of monitor cadence
+      fs::path                                             step_output_file;
       /// path to reference file for validation
       fs::path                                             reference_file;
       /// Error tolerance (between output file and reference file)
@@ -154,7 +166,7 @@ namespace GridKit
     {
       using namespace magic_enum;
 
-      validateJsonFields(j, "EMT study", {"system_model_file", "state_file", "dt_monitor", "tmax", "rel_tol", "abs_tol", "mu", "signal_values", "dt_fixed", "max_steps", "consistent_ic_type", "events", "output_file", "state_output_file", "reference_file", "error_tolerance", "error_type", "abs_err_threshold"});
+      validateJsonFields(j, "EMT study", {"system_model_file", "state_file", "dt_monitor", "tmax", "rel_tol", "abs_tol", "mu", "signal_values", "dt_fixed", "max_steps", "consistent_ic_type", "events", "output_file", "state_output_file", "step_output_file", "reference_file", "error_tolerance", "error_type", "abs_err_threshold"});
       const auto real = [&j](const char* key, double fallback)
       { return j.contains(key) ? parseFiniteReal<double>(j.at(key), key) : fallback; };
 
@@ -230,6 +242,9 @@ namespace GridKit
         j.at("state_output_file").get_to(c.state_output_file);
       }
 
+      if (j.contains("step_output_file"))
+        j.at("step_output_file").get_to(c.step_output_file);
+
       if (j.contains("reference_file"))
       {
         j.at("reference_file").get_to(c.reference_file);
@@ -301,7 +316,7 @@ namespace GridKit
     inline std::map<std::string, std::map<std::string, double>>
     parseInitialState(const json& state, const ContainerData<double, size_t>& model)
     {
-      validateJsonFields(state, "State", {"header", "buses", "devices"});
+      validateJsonFields(state, "State", {"header", "buses", "devices", "history"});
       if (state.contains("header") && !state.at("header").is_null())
       {
         const auto& header = state.at("header");
@@ -345,7 +360,7 @@ namespace GridKit
         };
         std::apply([&](const auto&... devices)
                    { (add(devices), ...); },
-                   std::tie(scope.bus, scope.loadz, scope.voltage_source, scope.dependent_voltage_source, scope.machine, scope.line_lumped, scope.sw, scope.pwm, scope.converter, scope.dc_link, scope.ieeest, scope.gastpti, scope.gov, scope.sexs_pti, scope.exciter));
+                   std::tie(scope.bus, scope.loadz, scope.voltage_source, scope.dependent_voltage_source, scope.machine, scope.line_lumped, scope.line_distributed, scope.sw, scope.pwm, scope.converter, scope.dc_link, scope.ieeest, scope.gastpti, scope.gov, scope.sexs_pti, scope.exciter));
         for (const auto& child : scope.container)
           self(self, child, prefix + child.id + ".");
       };
@@ -455,7 +470,33 @@ namespace GridKit
         std::ifstream state_stream(data.state_file);
         if (!state_stream)
           throw std::invalid_argument("Cannot open state file: " + data.state_file.string());
-        data.state = parseInitialState(json::parse(state_stream), data.model_data);
+        const auto state = json::parse(state_stream);
+        data.state       = parseInitialState(state, data.model_data);
+        if (state.contains("history"))
+        {
+          if (!state.at("history").is_object())
+            throw std::invalid_argument("State history must be an object");
+          for (const auto& [path, entry] : state.at("history").items())
+          {
+            validateJsonFields(entry, "Line history " + path, {"omega", "i_ref1", "i_ref2", "d_i_ref1", "d_i_ref2"});
+            LineHistory history;
+            history.omega = parseFiniteReal<double>(entry.at("omega"), "History omega");
+            for (size_t e = 0; e < 2; ++e)
+            {
+              const auto  name       = "i_ref" + std::to_string(e + 1);
+              const auto& value      = entry.at(name);
+              const auto& derivative = entry.at("d_" + name);
+              if (!value.is_array() || value.size() != 3 || !derivative.is_array() || derivative.size() != 3)
+                throw std::invalid_argument("Line history requires three values and derivatives per terminal");
+              for (size_t p = 0; p < 3; ++p)
+              {
+                history.value[e][p]      = parseFiniteReal<double>(value[p], "History value");
+                history.derivative[e][p] = parseFiniteReal<double>(derivative[p], "History derivative");
+              }
+            }
+            data.history.emplace(path, history);
+          }
+        }
       }
       std::string model_output_file;
       // Find output file (CSV) specified in model input file

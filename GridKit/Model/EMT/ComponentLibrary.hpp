@@ -8,6 +8,7 @@
 #include <GridKit/Model/EMT/Component/Controller/PWM/Pwm.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1.hpp>
+#include <GridKit/Model/EMT/Component/Line/LineDistributed/LineDistributed.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumped.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSource.hpp>
