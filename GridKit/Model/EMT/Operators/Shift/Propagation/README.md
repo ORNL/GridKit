@@ -1,8 +1,16 @@
 # Propagation Model
 
 For input units $[u]$, `Propagation` is the $K$-channel current-form propagation
-operator used by `LineDistributed`. It applies a fitted input factor, one scalar
-delay per mode, and a fitted output factor while preserving the input units.
+operator used by `LineDistributed`. Each mode applies a proper rational matrix
+and a scalar transport delay. The mode outputs are summed, preserving the
+input units.
+
+```math
+\begin{aligned}
+\mathbf{H}(s)
+  &= \sum_{m=1}^M \mathbf{H}^\mathrm{mps}_m(s) e^{-s\tau_m}
+\end{aligned}
+```
 
 ## Block Diagram
 
@@ -24,17 +32,19 @@ K \in \mathbb{Z}_{>0}
 
 ### Derived Parameters
 
-The full modal basis has one mode per channel:
+Each entry of `modes` supplies `tau` and a `K`-by-`K` VectorFit coefficient
+set `H`. Modes with the same delay may be grouped into one matrix; consequently
+the number of fitted delay groups need not equal the channel count.
 
 ```math
 \begin{aligned}
-M &= K \\
+M &= \operatorname{size}(\texttt{modes}) \\
 \boldsymbol{\tau} &= [\tau_1,\ldots,\tau_M]^\mathsf T
 \end{aligned}
 ```
 
-The modal delays are produced by the offline propagation fitting and enter
-through the delay bank's `delays` coefficient set.
+The modal delays are produced by the offline propagation fitting. Each scalar
+delay is applied to all $K$ outputs of its corresponding matrix.
 
 ## Model Ports
 
@@ -47,50 +57,26 @@ $\mathbf{y}$ | `out` | Output | $[u]$ | Output vector port | $\mathbf{y} \in \ma
 
 Symbol | Description | Type | Order | JSON | Inputs | Outputs
 ------ | ----------- | ---- | ----- | ---- | ------ | -------
-$\mathbf{g}_\mathrm{in}$ | Input factor | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_{\mathbf{g}_\mathrm{in}}$ | `input` | $\mathbb{R}^K$ | $\mathbb{R}^M$
-$\mathbf{d}$ | Modal delay bank | [Delay](../Delay/README.md) | History | `delays` | $\mathbb{R}^M$ | $\mathbb{R}^M$
-$\mathbf{g}_\mathrm{out}$ | Output factor | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_{\mathbf{g}_\mathrm{out}}$ | `output` | $\mathbb{R}^M$ | $\mathbb{R}^K$
+$\mathbf{h}^{\mathrm{mps}}_m$ | Rational part of mode $m$ | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_m$ | `modes[m].H` | $\mathbb{R}^K$ | $\mathbb{R}^K$
+$\mathbf{d}_m$ | Transport delay of mode $m$ | [Delay](../Delay/README.md) | $K$ algebraic rows and history | `modes[m].tau` | $\mathbb{R}^K$ | $\mathbb{R}^K$
 
-The offline fitting targets and propagation factorization are
-
-```math
-\begin{aligned}
-\mathbf{G}^\mathrm{in}(s)
-  &\approx \mathbf{H}^\mathrm{mps}(s)\mathbf{T}_i^{-1}(s) \\
-\mathbf{G}^\mathrm{out}(s) &\approx \mathbf{T}_i(s) \\
-\mathbf{H}^\mathrm{mps}(s)
-  &= \mathrm{diag}(h_1^\mathrm{mps}(s),\ldots,h_M^\mathrm{mps}(s)) \\
-\mathbf{D}_{\boldsymbol{\tau}}(s)
-  &= \mathrm{diag}(\exp(-s\tau_1),\ldots,\exp(-s\tau_M)) \\
-\mathbf{H}(s)
-  &= \mathbf{T}_i(s)\mathbf{D}_{\boldsymbol{\tau}}(s)
-     \mathbf{H}^\mathrm{mps}(s)\mathbf{T}_i^{-1}(s) \\
-  &\approx \mathbf{G}^\mathrm{out}(s)\mathbf{D}_{\boldsymbol{\tau}}(s)
-     \mathbf{G}^\mathrm{in}(s)
-\end{aligned}
-```
-
-$\mathbf{H}^\mathrm{mps}$ is the diagonal modal minimum-phase-shift propagation
-function with the modal delays removed. The current modal transformation
-$\mathbf{T}_i$ maps modal currents to phase coordinates, and
-$\mathbf{T}_i^{-1}$ maps phase currents to modal coordinates.
 
 ### Submodel Validation
 
-Both rational factors must have stable poles and no term linear in $s$. The
-input factor has algebraic input; the output factor has differential input
-from the modal delay bank.
+Every rational matrix must have stable poles and no term linear in $s$.
+There must be at least one mode, and all delays must be finite and positive.
 
 ```math
-\mathbf{E}^\mathrm{in}=\mathbf{E}^\mathrm{out}=\mathbf{0}
+\mathbf{E}_m=\mathbf{0},\qquad
+\operatorname{Re}(p_{mq})<0,\qquad \tau_m>0
 ```
 
 ### Submodel Wiring
 
 ```math
 \begin{aligned}
-\mathbf{w} &\leftarrow \mathbf{g}_\mathrm{in}[\mathbf{u}] \\
-\mathbf{z} &\leftarrow \mathbf{d}[\mathbf{w}]
+\mathbf{w}_m &\leftarrow \mathbf{h}^{\mathrm{mps}}_m[\mathbf{u}] \\
+\mathbf{z}_m &\leftarrow \mathbf{d}_m[\mathbf{w}_m]
 \end{aligned}
 ```
 
@@ -133,12 +119,31 @@ None.
 ### External Equations
 
 ```math
-\mathbf{y} \leftarrow \mathbf{g}_\mathrm{out}[\mathbf{z}]
+\mathbf{y} \leftarrow \sum_{m=1}^M \mathbf{z}_m
 ```
 
 ## Initialization
 
-TBD
+For a supplied constant or harmonic input prehistory, initialize each rational
+matrix with the same input value, derivative, and angular frequency. Its
+frequency response gives the filtered prehistory supplied to the delay bank.
+The two propagation directions of a line use independent instances.
+
+For $\omega>0$, write
+$\widehat{\mathbf{u}}=\mathbf{u}(t_0)-j\mathbf{u}'(t_0)/\omega$. Then
+
+```math
+\begin{aligned}
+\widehat{\mathbf{w}}_m
+  &\leftarrow \mathbf{H}^{\mathrm{mps}}_m(j\omega)\widehat{\mathbf{u}} \\
+\mathbf{y}(t_0)
+  &\leftarrow \operatorname{Re}\!\left(
+    \sum_{m=1}^M e^{-j\omega\tau_m}\widehat{\mathbf{w}}_m\right).
+\end{aligned}
+```
+
+At $\omega=0$, the supplied derivative must vanish and the prehistory is
+constant. A zero prehistory represents an initially unenergized line.
 
 ## Monitors
 
