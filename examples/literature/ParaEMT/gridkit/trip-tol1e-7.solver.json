@@ -1,7 +1,7 @@
 {
   "system_model_file": "9bus-trip.case.json",
   "state_file": "9bus-trip.state.json",
-  "dt_monitor": 0.0005,
+  "dt_monitor": 5e-05,
   "tmax": 3.0,
   "rel_tol": 1e-07,
   "abs_tol": 1e-07,

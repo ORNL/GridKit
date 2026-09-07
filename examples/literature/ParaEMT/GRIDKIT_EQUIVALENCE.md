@@ -4,6 +4,14 @@ The complete 3-second governor-step and ideal-opening cases have been simulated 
 with three machines, three SEXS-PTI exciters, three GASTPTI governors,
 three IEEEST stabilizers, six pi lines, three transformer series branches,
 and three series RL loads. The scripts and results are in this directory.
+Both output files now use a 50 microsecond monitor interval. ParaEMT
+uses the number of saved snapshots to select one-, two-, then
+three-point predictor startup in `predictX`; this wrapper retains that
+behavior. The no-capture timing path preserves the same snapshot-count
+transitions without retaining result arrays, and its final state must
+match the capture run. This output-cadence dependence is an upstream
+numerical detail, not a GridKit adaptive-step restriction.
+
 The reference is the authors' pinned ParaEMT revision
 [`d79d735a`](https://github.com/NatLabRockies/ParaEMT_public/tree/d79d735a4a587d56c5b88187d1a499195b6b2b84),
 not an arbitrary IEEE 9-bus parameter set.
@@ -138,7 +146,7 @@ It also verifies that event consistency calculation changes **no
 differential state**. `run.json` records these checks.
 
 Original generator-terminal KCL is monitored independently throughout
-the run. Maximum sampled mismatch falls from **0.009862 A** to
+the run. Maximum sampled mismatch falls from **0.009896 A** to
 **0.000609 A** to **0.000162 A** as GridKit tolerance goes from `1e-7`
 to `1e-8` to `1e-9`. These are currents on the referred 230 kV base.
 They quantify numerical drift in the differentiated constraint.
@@ -203,7 +211,7 @@ limitation; it is not used as an equivalent-machine answer key.
 The ParaEMT bus-1 event-step magnitude grows from **3.595605** to
 **8.062099** to **17.045898 pu** at 50, 25 and 12.5 microseconds. Every
 integration step from 0.995 to 1.015 s is retained in the native event
-CSV, including the spike. On the common 0.5 ms grid, GridKit retains its
+CSV, including the spike. On the common 50 µs grid, GridKit retains its
 left-limit sample at 1 s, whereas ParaEMT includes its event step. Raw
 GridKit monitoring retains both restart limits; neither those records
 nor the ParaEMT spike are silently removed from the archived data.
@@ -217,8 +225,8 @@ approximately halve as ParaEMT's step is halved; GridKit's own refinement
 differences are much smaller. This supports the parameter/equation
 mapping for this balanced governor-step experiment.
 
-The maximum voltage-magnitude discrepancy at 12.5 µs is `1.5091e-4 pu`,
-at bus 3 at **3 ms**, during ParaEMT's startup transient. It does not
+The maximum voltage-magnitude discrepancy at 12.5 µs is `3.03192e-4 pu`,
+at bus 3 at **50 microseconds**, during ParaEMT's startup transient. It does not
 follow the same full-run halving trend. Its individual causes have not
 been separated. ParaEMT has explicit controller updates, time-step-dependent
 network damping, and fixed machine companion damping (`99/101`);

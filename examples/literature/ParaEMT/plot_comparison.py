@@ -50,7 +50,7 @@ def generate(event):
             for view,window in windows:
                 g,r=select(grid,window),select(ref,window)
                 # Native-step data exposes the ParaEMT event spike. Error uses
-                # the exact common 0.5 ms sample times, never interpolation.
+                # the exact common 50 µs sample times, never interpolation.
                 dense=view=='event' and name.startswith('bus')
                 # Keep the short native-step interval and regular samples on
                 # either side; no interpolation or missing ends of the window.
@@ -77,8 +77,8 @@ def generate(event):
                 if len(columns)==3:
                     axes[0].legend(handles=[Line2D([0],[0],color=c,label=f'Phase {p}') for p,c in zip('abc',COLORS)],loc='upper right',ncol=3,fontsize=9)
                 fig.suptitle(f'{title}\n{label} · {view.replace("event","event zoom").replace("late","late waveform")}',fontsize=14)
-                note='Identical x/y scales in all three panels. Error at common 0.5 ms samples; no time shift or error magnification.'
-                if dense:note+='\nParaEMT shows every integration step from 0.995 to 1.015 s, with 0.5 ms samples outside that interval.'
+                note='Identical x/y scales in all three panels. Error at common 50 µs samples; no time shift or error magnification.'
+                if dense:note+='\nParaEMT shows every integration step from 0.995 to 1.015 s, with 50 µs samples outside that interval.'
                 if event=='trip':
                     note+='\nGridKit t=1 is the left limit; ParaEMT includes its trip step. GridKit does not assign a finite voltage-impulse amplitude.'
                     if name.startswith('gen1_'):note+='\nG1 post-trip models differ: GridKit isolates the machine; ParaEMT freezes electrical history but continues the state kernel.'
@@ -97,7 +97,8 @@ def generate(event):
 
 
 def main():
-    plt.rcParams.update({'font.size':10,'axes.spines.top':False,'axes.spines.right':False,'path.simplify':False})
+    plt.rcParams.update({'font.size':10,'axes.spines.top':False,'axes.spines.right':False,
+                         'path.simplify':True,'path.simplify_threshold':.05})
     # Remove only the superseded figures named by this generator's old manifest.
     previous=PLOTS/'coverage.json'
     if previous.exists():
@@ -107,7 +108,7 @@ def main():
     previous.write_text(json.dumps(reports,indent=2)+'\n')
     document=['<!doctype html><html lang="en"><meta charset="utf-8"><title>GridKit / ParaEMT responses</title>',
       '<style>body{font:17px system-ui;max-width:1400px;margin:2rem auto;padding:0 1rem;color:#172a3a;background:#f6f8fa}a{color:#075b9d}nav{display:flex;gap:2rem}.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:1rem}article{background:white;padding:1rem;border:1px solid #dce1e5;border-radius:6px}img{width:100%}h2{margin-top:3rem}table{border-collapse:collapse}td,th{padding:.5rem 1rem;border-bottom:1px solid #dce1e5}</style>',
-      '<h1>ParaEMT / GridKit: each response separately</h1><nav><a href="#trip">Trip</a><a href="#governor_step">Governor step</a></nav>',
+      '<h1>ParaEMT / GridKit: each response separately</h1><nav><a href="#trip">Trip</a><a href="#governor_step">Governor step</a><a href="../RUNTIMES.md">Runtimes</a></nav>',
       '<p>Every figure: ParaEMT on top, GridKit in the middle, GridKit − ParaEMT on the bottom. All three panels use identical x/y scales. Three-phase signals stay together. Speed is shown as deviation from synchronous speed in pu. Errors use common output times without interpolation or phase alignment.</p>',
       '<p>Trip caveat: GridKit models an ideal terminal opening. ParaEMT freezes generator 1 electrical history but continues its state kernel. Its post-trip generator 1 response and trip spike cannot validate the disconnected GridKit machine.</p>']
     for report in reports:
