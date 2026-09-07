@@ -87,8 +87,8 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = SwitchData<RealT, IdxT>;
+      using Outputs    = typename ModelDataT::Outputs;
       using SignalT    = Signal<ScalarT, IdxT>;
-      using Port3T     = Port3<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<Switch, SwitchData>;
 
       Switch();
@@ -98,7 +98,8 @@ namespace GridKit
       virtual int setGridKitComponentID(IdxT) override final;
       virtual int allocate() override final;
       virtual int verify() const override final;
-      virtual int initialize() override final;
+
+      int         initialize(const std::map<Outputs, RealT>& outputs = {});
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;

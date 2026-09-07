@@ -45,7 +45,6 @@ namespace GridKit
        * undefined behaviour.
        */
       virtual int allocate()                          = 0;
-      virtual int initialize()                        = 0;
       /**
        * @brief Fill the \ref tag() vector with proper indicators.
        *

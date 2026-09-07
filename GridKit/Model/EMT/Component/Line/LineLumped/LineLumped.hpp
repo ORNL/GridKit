@@ -96,8 +96,8 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = LineLumpedData<RealT, IdxT>;
+      using Outputs    = typename ModelDataT::Outputs;
       using SignalT    = Signal<ScalarT, IdxT>;
-      using Port3T     = Port3<ScalarT, IdxT>;
       using VectorFitT = VectorFit<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LineLumped, LineLumpedData>;
 
@@ -108,7 +108,8 @@ namespace GridKit
       virtual int setGridKitComponentID(IdxT) override final;
       virtual int allocate() override final;
       virtual int verify() const override final;
-      virtual int initialize() override final;
+
+      int         initialize(const std::map<Outputs, RealT>& outputs = {});
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
@@ -161,9 +162,9 @@ namespace GridKit
       std::optional<VectorFitT> y1_;
       std::optional<VectorFitT> y2_;
       bool                      fit_ez_singular_{false};
-      Port3T                    i12_port_{};
-      Port3T                    sh1_rows_port_{};
-      Port3T                    sh2_rows_port_{};
+      std::array<SignalT, 3>    i12_port_{};
+      std::array<SignalT, 3>    sh1_rows_port_{};
+      std::array<SignalT, 3>    sh2_rows_port_{};
 
       ComponentSignals<ScalarT, IdxT, LineLumpedInternalVariables, LineLumpedExternalVariables> signals_;
 

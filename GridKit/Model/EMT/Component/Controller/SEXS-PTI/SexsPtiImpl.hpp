@@ -168,8 +168,9 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int SexsPti<scalar_type, index_type>::initialize()
+      int SexsPti<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
+        this->validateOutputValues(outputs);
         if (!allocated_ || verify() != 0)
           return 1;
         gatherExternalVariables();
@@ -181,6 +182,8 @@ namespace GridKit
         {
           efd0 = y[1];
         }
+
+        efd0 = this->outputValue(outputs, Outputs::efd, static_cast<RealT>(efd0));
 
         // Setpoint members provide the defaults for unattached signals.
         auto read_signal = [&]<SexsPtiExternalVariables variable>(const ScalarT& default_value) -> ScalarT

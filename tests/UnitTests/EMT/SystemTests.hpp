@@ -151,7 +151,7 @@ namespace GridKit
             {
               "class": "Container",
               "id": "left",
-              "outputs": { "terminal": "bus" },
+              "outputs": { "va": "bus.va", "vb": "bus.vb", "vc": "bus.vc" },
               "devices": [
                 { "class": "Bus", "id": "bus" },
                 {
@@ -171,7 +171,7 @@ namespace GridKit
             {
               "class": "Container",
               "id": "right",
-              "outputs": { "terminal": "bus" },
+              "outputs": { "va": "bus.va", "vb": "bus.vb", "vc": "bus.vc" },
               "devices": [
                 { "class": "Bus", "id": "bus" },
                 {
@@ -198,7 +198,7 @@ namespace GridKit
                 "Gp": [[1.0e-4, 0.0, 0.0], [0.0, 1.0e-4, 0.0], [0.0, 0.0, 1.0e-4]],
                 "Cp": [[1.0e-5, 0.0, 0.0], [0.0, 1.0e-5, 0.0], [0.0, 0.0, 1.0e-5]]
               },
-              "inputs": { "bus1": "left.terminal", "bus2": "right.terminal" }
+              "inputs": { "bus1": "left", "bus2": "right" }
             }
           ]
         })";
@@ -255,6 +255,13 @@ namespace GridKit
         })";
       }
 
+      static std::map<std::string, std::map<std::string, RealT>> machineState(
+          std::string bus = "bus_1", std::string machine = "machine_1")
+      {
+        return {{bus, {{"va", 11267.65281680262}, {"vb", -5633.82640840131}, {"vc", -5633.82640840131}}},
+                {machine, {{"ia", 2958.3209453903114}, {"ib", -1479.1604726951557}, {"ic", -1479.1604726951557}}}};
+      }
+
       /// Synchronous machine at bus 1 serving a purely resistive load. The
       /// bus initial voltage and machine power schedule are consistent with
       /// the load, so the initialized trajectory is an exact steady state.
@@ -269,12 +276,7 @@ namespace GridKit
           "devices": [
             {
               "class": "Bus",
-              "id": "bus_1",
-              "init": {
-                "va": 11267.65281680262,
-                "vb": -5633.82640840131,
-                "vc": -5633.82640840131
-              }
+              "id": "bus_1"
             },
             {
               "class": "Machine",
@@ -300,9 +302,7 @@ namespace GridKit
                 "R2q": 0.0237,
                 "Ll2q": 0.125,
                 "S10": 0.1,
-                "S12": 0.5,
-                "p0": 50.0e6,
-                "q0": 0.0
+                "S12": 0.5
               },
               "inputs": { "bus": "bus_1" }
             },
@@ -336,12 +336,7 @@ namespace GridKit
           "devices": [
             {
               "class": "Bus",
-              "id": "bus_1",
-              "init": {
-                "va": 11267.65281680262,
-                "vb": -5633.82640840131,
-                "vc": -5633.82640840131
-              }
+              "id": "bus_1"
             },
             {
               "class": "Machine",
@@ -367,9 +362,7 @@ namespace GridKit
                 "R2q": 0.0237,
                 "Ll2q": 0.125,
                 "S10": 0.1,
-                "S12": 0.5,
-                "p0": 50.0e6,
-                "q0": 0.0
+                "S12": 0.5
               },
               "inputs": { "bus": "bus_1", "pm": "pmech_1" },
               "outputs": { "speed": "speed_1" }
@@ -449,17 +442,19 @@ namespace GridKit
       /// boundary Bus or equations of its own.
       static std::string importedBusCaseJson()
       {
-        auto root             = nlohmann::json::parse(caseJson());
-        auto devices          = root.at("devices");
-        auto load             = devices.at(2);
-        load["inputs"]["bus"] = "terminal";
-        root["devices"]       = nlohmann::json::array({
+        auto root    = nlohmann::json::parse(caseJson());
+        auto devices = root.at("devices");
+        auto load    = devices.at(2);
+        load["inputs"].erase("bus");
+        for (const auto* phase : {"va", "vb", "vc"})
+          load["inputs"][phase] = phase;
+        root["devices"] = nlohmann::json::array({
             devices.at(0),
             devices.at(1),
             {
                 {"class", "Container"},
                 {"id", "load_group"},
-                {"inputs", {{"terminal", "bus_1"}}},
+                {"inputs", {{"va", "bus_1.va"}, {"vb", "bus_1.vb"}, {"vc", "bus_1.vc"}}},
                 {"devices", nlohmann::json::array({load})},
             },
         });
@@ -755,11 +750,11 @@ namespace GridKit
         success *= (data.bus[0].id == "bus_1");
         success *= (data.voltage_source[0].id == "source_1");
         success *= (data.voltage_source[0].inputs.at(
-                        GridKit::EMT::VoltageSourceInputs::bus)
-                    == "bus_1");
+                        GridKit::EMT::VoltageSourceInputs::va)
+                    == "bus_1.va");
         success *= (data.loadz[0].id == "load_1");
-        success *= (data.loadz[0].inputs.at(GridKit::EMT::LoadZInputs::bus)
-                    == "bus_1");
+        success *= (data.loadz[0].inputs.at(GridKit::EMT::LoadZInputs::va)
+                    == "bus_1.va");
 
         std::istringstream governed_stream(machineGovernorCaseJson());
         const auto         governed = GridKit::EMT::parseSystemModelData(governed_stream);
@@ -769,8 +764,8 @@ namespace GridKit
         success *= (governed.signal[1].id == "pmech_1");
         success *= (governed.machine.size() == 1);
         success *= (governed.gov.size() == 1);
-        success *= (governed.machine[0].inputs.at(GridKit::EMT::MachineInputs::bus)
-                    == "bus_1");
+        success *= (governed.machine[0].inputs.at(GridKit::EMT::MachineInputs::va)
+                    == "bus_1.va");
         success *= (governed.machine[0].inputs.at(GridKit::EMT::MachineInputs::pm)
                     == "pmech_1");
         success *= (governed.machine[0].outputs.at(GridKit::EMT::MachineOutputs::speed)
@@ -789,8 +784,8 @@ namespace GridKit
         success                      *= (recursive.container[1].id == "right");
         success                      *= (recursive.container[0].bus[0].id == "bus");
         success                      *= (recursive.container[1].bus[0].id == "bus");
-        success                      *= (recursive.line_lumped[0].inputs.at(GridKit::EMT::LineLumpedInputs::bus1)
-                    == "left.terminal");
+        success                      *= (recursive.line_lumped[0].inputs.at(GridKit::EMT::LineLumpedInputs::v1a)
+                    == "left.va");
 
         try
         {
@@ -877,6 +872,7 @@ namespace GridKit
 
         GridKit::EMT::SystemModel<ScalarT, IdxT> sys(data);
         sys.allocate();
+        sys.initialize();
 
         success *= (sys.size() == 12);
         success *= (sys.verify() == 0);
@@ -931,32 +927,37 @@ namespace GridKit
         auto& bus         = electrical.template component<BusT>("bus_1");
         auto& load_group  = electrical.template component<ContainerT>("load_group");
         auto& load        = electrical.template component<LoadT>("load_group.load_1");
-        success          *= (load_group.inputPort("terminal").a() == bus.voltagePort().a());
+        success          *= (&load_group.inputSignal("va") == &bus.outputSignal(EMT::BusOutputs::va));
         success          *= (load.getSignals().template getAttachedSignal<GridKit::EMT::LoadZExternalVariables::VA>()
-                    == bus.voltagePort().a());
+                    == &bus.outputSignal(EMT::BusOutputs::va));
         electrical.allocate();
+        electrical.initialize();
         success *= (load_group.size() == load.size());
 
         // A provider may appear after its consumer in the hierarchy. The Bus
         // still initializes before the Machine that imports its terminal.
-        auto imported_machine           = nlohmann::json::parse(machineCaseJson());
-        auto machine_devices            = imported_machine.at("devices");
-        auto provider_bus               = machine_devices.at(0);
-        auto imported_model             = machine_devices.at(1);
-        auto imported_load              = machine_devices.at(2);
-        imported_model["inputs"]["bus"] = "terminal";
-        imported_load["inputs"]["bus"]  = "terminal";
-        imported_machine["devices"]     = nlohmann::json::array({
+        auto imported_machine = nlohmann::json::parse(machineCaseJson());
+        auto machine_devices  = imported_machine.at("devices");
+        auto provider_bus     = machine_devices.at(0);
+        auto imported_model   = machine_devices.at(1);
+        auto imported_load    = machine_devices.at(2);
+        imported_model["inputs"].erase("bus");
+        for (const auto* phase : {"va", "vb", "vc"})
+          imported_model["inputs"][phase] = phase;
+        imported_load["inputs"].erase("bus");
+        for (const auto* phase : {"va", "vb", "vc"})
+          imported_load["inputs"][phase] = phase;
+        imported_machine["devices"] = nlohmann::json::array({
             {
                 {"class", "Container"},
                 {"id", "consumer"},
-                {"inputs", {{"terminal", "provider.terminal"}}},
+                {"inputs", {{"va", "provider.va"}, {"vb", "provider.vb"}, {"vc", "provider.vc"}}},
                 {"devices", nlohmann::json::array({imported_model, imported_load})},
             },
             {
                 {"class", "Container"},
                 {"id", "provider"},
-                {"outputs", {{"terminal", "bus_1"}}},
+                {"outputs", {{"va", "bus_1.va"}, {"vb", "bus_1.vb"}, {"vc", "bus_1.vc"}}},
                 {"devices", nlohmann::json::array({provider_bus})},
             },
         });
@@ -965,7 +966,7 @@ namespace GridKit
             GridKit::EMT::parseSystemModelData(imported_machine_stream);
         GridKit::EMT::SystemModel<ScalarT, IdxT> machine_system(imported_machine_data);
         machine_system.allocate();
-        machine_system.initialize();
+        machine_system.initialize(machineState("provider.bus_1", "consumer.machine_1"));
         machine_system.evaluateResidual();
 
         const auto& imported_bus =
@@ -999,6 +1000,7 @@ namespace GridKit
                     == &pmech);
 
         scalar.allocate();
+        scalar.initialize(machineState("plant.bus", "plant.machine_1"));
         success *= (scalar.size() == 33);
         success *= (plant.size() == 30);
         success *= (control.size() == 3);
@@ -1022,7 +1024,7 @@ namespace GridKit
         const auto                               reversed_data = GridKit::EMT::parseSystemModelData(reversed_stream);
         GridKit::EMT::SystemModel<ScalarT, IdxT> reversed(reversed_data);
         reversed.allocate();
-        reversed.initialize();
+        reversed.initialize(machineState("plant.bus", "plant.machine_1"));
         reversed.evaluateResidual();
         RealT residual_norm = 0.0;
         for (IdxT j = 0; j < reversed.size(); ++j)
@@ -1098,6 +1100,7 @@ namespace GridKit
 
         GridKit::EMT::SystemModel<ScalarT, IdxT> sys(data);
         sys.allocate();
+        sys.initialize();
 
         AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida(&sys);
         ida.setMaxSteps(100000);
@@ -1154,6 +1157,7 @@ namespace GridKit
 
         GridKit::EMT::SystemModel<ScalarT, IdxT> sys(data);
         sys.allocate();
+        sys.initialize();
 
         success *= (sys.size() == 24);
 
@@ -1255,11 +1259,12 @@ namespace GridKit
         success *= (&sys.template component<BusT>("left.bus") == &bus1);
         success *= (&sys.template component<BusT>("right.bus") == &bus2);
         success *= (line.getSignals().template getAttachedSignal<GridKit::EMT::LineLumpedExternalVariables::V1A>()
-                    == bus1.voltagePort().a());
+                    == &bus1.outputSignal(EMT::BusOutputs::va));
         success *= (line.getSignals().template getAttachedSignal<GridKit::EMT::LineLumpedExternalVariables::V2A>()
-                    == bus2.voltagePort().a());
+                    == &bus2.outputSignal(EMT::BusOutputs::va));
 
         sys.allocate();
+        sys.initialize();
         success              *= (sys.size() == 24);
         success              *= (left.size() == 9);
         success              *= (right.size() == 6);
@@ -1351,6 +1356,7 @@ namespace GridKit
 
         GridKit::EMT::SystemModel<ScalarT, IdxT> sys(data);
         sys.allocate();
+        sys.initialize();
 
         // Component order: bus 1, bus 2, source, load 1, load 2, switch
         auto* sw  = dynamic_cast<GridKit::EMT::Switch<ScalarT, IdxT>*>(sys.getComponent(5));
@@ -1435,12 +1441,12 @@ namespace GridKit
 
         GridKit::EMT::SystemModel<ScalarT, IdxT> sys(data);
         sys.allocate();
+        sys.initialize(machineState());
 
         // Layout: bus v [0,3), machine [3,27), load i [27,30)
         success *= (sys.size() == 30);
 
         // The initialized state satisfies the assembled residual exactly.
-        sys.initialize();
         sys.evaluateResidual();
         const auto* f             = sys.getResidual().getData();
         RealT       residual_norm = 0.0;
@@ -1497,11 +1503,11 @@ namespace GridKit
 
         GridKit::EMT::SystemModel<ScalarT, IdxT> sys(data);
         sys.allocate();
+        sys.initialize(machineState("plant.bus", "plant.machine_1"));
 
         // Layout: bus v [0,3), machine [3,27), load i [27,30), governor [30,33)
         success *= (sys.size() == 33);
 
-        sys.initialize();
         sys.evaluateResidual();
         const auto* f             = sys.getResidual().getData();
         RealT       residual_norm = 0.0;
@@ -1558,8 +1564,10 @@ namespace GridKit
 
         GridKit::EMT::SystemModel<ScalarT, IdxT> primitive(primitive_data);
         primitive.allocate();
+        primitive.initialize();
         GridKit::EMT::SystemModel<ScalarT, IdxT> rational(rational_data);
         rational.allocate();
+        rational.initialize();
 
         // Layouts: bus v [0,3), source e [3,6) i [6,9); then either the two
         // primitive load currents [9,15) or the rational current [9,12) and
@@ -1629,8 +1637,10 @@ namespace GridKit
 
         GridKit::EMT::SystemModel<ScalarT, IdxT> matrix(matrix_data);
         matrix.allocate();
+        matrix.initialize();
         GridKit::EMT::SystemModel<ScalarT, IdxT> rational(rational_data);
         rational.allocate();
+        rational.initialize();
 
         // Layouts: bus voltages [0,6), source e [6,9) i [9,12), line i12
         // [12,15) ish1 [15,18) ish2 [18,21); then either load_2 [21,24) and
@@ -1705,8 +1715,10 @@ namespace GridKit
 
         GridKit::EMT::SystemModel<ScalarT, IdxT> primitive(primitive_data);
         primitive.allocate();
+        primitive.initialize();
         GridKit::EMT::SystemModel<ScalarT, IdxT> rational(rational_data);
         rational.allocate();
+        rational.initialize();
 
         // Layouts: bus v [0,3), source e [3,6); then either the primitive
         // branch current [6,9) and the loads [9,15), or the branch voltage

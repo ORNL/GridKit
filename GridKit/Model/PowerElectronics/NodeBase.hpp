@@ -198,7 +198,7 @@ namespace GridKit
         return 0;
       }
 
-      int initialize() override
+      virtual int initialize()
       {
         // TODO: fill this in
         return 0;

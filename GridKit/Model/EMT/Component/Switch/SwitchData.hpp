@@ -22,14 +22,21 @@ namespace GridKit
     /// Inputs supported by a switch
     enum class SwitchInputs : size_t
     {
-      bus1, ///< Component ID of the terminal 1 bus
-      bus2, ///< Component ID of the terminal 2 bus
+      v1a, ///< Terminal 1 phase-a voltage
+      v1b, ///< Terminal 1 phase-b voltage
+      v1c, ///< Terminal 1 phase-c voltage
+      v2a, ///< Terminal 2 phase-a voltage
+      v2b, ///< Terminal 2 phase-b voltage
+      v2c, ///< Terminal 2 phase-c voltage
       SIZE
     };
 
     /// Outputs supported by a switch
     enum class SwitchOutputs : size_t
     {
+      i12a,
+      i12b,
+      i12c,
       SIZE
     };
 

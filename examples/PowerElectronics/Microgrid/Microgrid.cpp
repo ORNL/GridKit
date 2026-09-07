@@ -127,6 +127,7 @@ int main(int /* argc */, char const** /* argv */)
   // setup simulation
   idas->setTolerance(rel_tol);
   idas->setMaxSteps(max_step_number);
+  sysmodel->initialize();
   idas->configureSimulation();
   idas->getDefaultInitialCondition();
   idas->initializeSimulation(t_init);

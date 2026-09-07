@@ -72,7 +72,7 @@ namespace GridKit
         return 0;
       }
 
-      int initialize() override
+      int initialize()
       {
         auto* y  = y_.getData();
         auto* yp = yp_.getData();

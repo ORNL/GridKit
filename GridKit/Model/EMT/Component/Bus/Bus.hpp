@@ -69,11 +69,11 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = BusData<RealT, IdxT>;
-      using Port3T     = Port3<ScalarT, IdxT>;
+      using Outputs    = typename ModelDataT::Outputs;
+      using SignalT    = Signal<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<Bus, BusData>;
 
       Bus();
-      Bus(ScalarT va0, ScalarT vb0, ScalarT vc0);
       Bus(const ModelDataT& data);
       virtual ~Bus();
 
@@ -86,7 +86,7 @@ namespace GridKit
         return 0;
       }
 
-      virtual int initialize() override final;
+      int         initialize(const std::map<Outputs, RealT>& outputs = {});
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
@@ -101,9 +101,20 @@ namespace GridKit
        * and the current-balance residual row that connected components
        * accumulate their injections into. The signals are bound in allocate().
        */
-      Port3T& voltagePort()
+      void attachInput(BusInputs input, SignalT* signal)
       {
-        return v_port_;
+        currents_.at(static_cast<size_t>(input)) = signal;
+      }
+
+      void assignOutput(Outputs output, SignalT* signal)
+      {
+        signal->claimProducer();
+        outputs_.at(static_cast<size_t>(output)) = signal;
+      }
+
+      SignalT& outputSignal(Outputs output)
+      {
+        return v_port_.at(static_cast<size_t>(output));
       }
 
     private:
@@ -118,12 +129,10 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
-      /* Initial terminal conditions */
-      ScalarT va0_{0.0};
-      ScalarT vb0_{0.0};
-      ScalarT vc0_{0.0};
-
-      Port3T v_port_{};
+      std::array<SignalT, 3>  v_port_{};
+      std::array<SignalT*, 3> currents_{};
+      std::array<SignalT*, 3> outputs_{};
+      size_t                  jacobian_capacity_{0};
 
       std::unique_ptr<MonitorT> monitor_;
     };

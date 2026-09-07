@@ -1,6 +1,7 @@
 gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/EMT/Composition/TwoSubsystem.case.json)
 gridkit_example_add_file(TwoSubsystem.solver.json)
 gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/EMT/Composition/GovernedMachine.case.json)
+gridkit_example_add_file(${CMAKE_SOURCE_DIR}/cases/EMT/Composition/GovernedMachine.state.json)
 gridkit_example_add_file(GovernedMachine.solver.json)
 
 if(GRIDKIT_ENABLE_ENZYME AND GRIDKIT_ENABLE_SUNDIALS_SPARSE)

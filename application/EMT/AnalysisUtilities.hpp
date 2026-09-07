@@ -16,9 +16,7 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/CommonMath.hpp>
-#include <GridKit/Model/EMT/StateDataAdapter.hpp>
 #include <GridKit/Model/EMT/SystemModelData.hpp>
-#include <GridKit/Model/StateData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -57,44 +55,45 @@ namespace GridKit
      */
     struct StudyData
     {
+      std::map<std::string, std::map<std::string, double>> state;
       /// path to system model JSON file
-      fs::path                                       system_model_file;
+      fs::path                                             system_model_file;
       /// path to model state JSON file, empty for none
-      fs::path                                       state_file;
+      fs::path                                             state_file;
       /// monitor output time step size, or 0 for no intermediate monitoring
-      double                                         dt_monitor;
+      double                                               dt_monitor;
       /// max time
-      double                                         tmax;
+      double                                               tmax;
       /// relative tolerance for the solver
-      double                                         rel_tol;
+      double                                               rel_tol;
       /// absolute tolerance for the solver
-      double                                         abs_tol;
+      double                                               abs_tol;
       /// Process-wide CommonMath smoothing scale
-      double                                         mu{Math::DEFAULT_MU<double>};
+      double                                               mu{Math::DEFAULT_MU<double>};
       /// Study overrides for declared constant signals, by component path
-      std::map<std::string, double>                  signal_values;
+      std::map<std::string, double>                        signal_values;
       /// fixed solver time step size, or 0 for adaptive stepping
-      double                                         dt_fixed;
+      double                                               dt_fixed;
       /// maximum number of solver time steps, or 0 for the IDA default
-      std::size_t                                    max_steps;
+      std::size_t                                          max_steps;
       /// IDA consistent initial condition calculation type
-      AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
+      AnalysisManager::Sundials::IdaConsistentICType       consistent_ic_type;
       /// set of system events
-      std::vector<SystemEvent>                       events;
+      std::vector<SystemEvent>                             events;
       /// path to output file
-      fs::path                                       output_file;
+      fs::path                                             output_file;
       /// Optional CSV containing every DAE variable and derivative
-      fs::path                                       state_output_file;
+      fs::path                                             state_output_file;
       /// path to reference file for validation
-      fs::path                                       reference_file;
+      fs::path                                             reference_file;
       /// Error tolerance (between output file and reference file)
-      std::vector<double>                            error_tol;
+      std::vector<double>                                  error_tol;
       /// Type of total error (relative or absolute)
-      Testing::ErrorType                             error_type;
+      Testing::ErrorType                                   error_type;
       /// Smallest value at which to scale for relative error
-      double                                         abs_err_threshold;
+      double                                               abs_err_threshold;
       /// Instance of model data
-      SystemModelData<>                              model_data;
+      SystemModelData<>                                    model_data;
     };
 
     using json = ::nlohmann::json;
@@ -314,12 +313,39 @@ namespace GridKit
         signal->value = value;
       }
 
-      // Apply the operating point after the case parameters, so the case
-      // stays parameters and topology only
       if (!data.state_file.empty())
       {
-        const auto state_data = ::GridKit::Model::parseStateData(data.state_file);
-        applyState(data.model_data, state_data);
+        std::ifstream state_stream(data.state_file);
+        if (!state_stream)
+          throw std::invalid_argument("Cannot open state file: " + data.state_file.string());
+        const auto state = json::parse(state_stream);
+        if (!state.is_object())
+          throw std::invalid_argument("State must be a JSON object");
+        for (const auto* section : {"buses", "devices"})
+        {
+          if (!state.contains(section) || state.at(section).is_null())
+            continue;
+          if (!state.at(section).is_object())
+            throw std::invalid_argument(std::string("State ") + section + " must be an object");
+          for (const auto& [path, outputs] : state.at(section).items())
+          {
+            if (outputs.is_null())
+              continue;
+            if (!outputs.is_object())
+              throw std::invalid_argument("Component state must be an object: " + path);
+            for (const auto& [name, value] : outputs.items())
+            {
+              if (value.is_null() || name == "injections")
+                continue;
+              if (name == "open" && value.is_boolean())
+                data.state[path][name] = value.get<bool>() ? 1.0 : 0.0;
+              else if (value.is_number() && std::isfinite(value.get<double>()))
+                data.state[path][name] = value.get<double>();
+              else
+                throw std::invalid_argument("Initial output must be finite: " + path + "." + name);
+            }
+          }
+        }
       }
       std::string model_output_file;
       // Find output file (CSV) specified in model input file

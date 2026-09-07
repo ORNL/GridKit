@@ -178,6 +178,19 @@ namespace GridKit
       {
         for (auto& raw_input : j.at("inputs").items())
         {
+          const auto& name = raw_input.key();
+          if (name == "bus" || name == "bus1" || name == "bus2")
+          {
+            const std::string prefix = name == "bus" ? "v" : "v" + name.substr(3);
+            for (const char phase : {'a', 'b', 'c'})
+            {
+              const auto input = magic_enum::enum_cast<Inputs>(prefix + phase);
+              if (!input || j.at("inputs").contains(prefix + phase))
+                throw std::invalid_argument("Invalid or duplicate bus shortcut: " + name);
+              c.inputs[*input] = raw_input.value().template get<std::string>() + ".v" + phase;
+            }
+            continue;
+          }
           auto input = magic_enum::enum_cast<Inputs>(raw_input.key());
           if (!input.has_value() || input.value() == Inputs::SIZE)
           {

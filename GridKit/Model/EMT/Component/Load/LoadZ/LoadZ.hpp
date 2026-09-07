@@ -84,8 +84,8 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = LoadZData<RealT, IdxT>;
+      using Outputs    = typename ModelDataT::Outputs;
       using SignalT    = Signal<ScalarT, IdxT>;
-      using Port3T     = Port3<ScalarT, IdxT>;
       using VectorFitT = VectorFit<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
 
@@ -96,7 +96,8 @@ namespace GridKit
       virtual int setGridKitComponentID(IdxT) override final;
       virtual int allocate() override final;
       virtual int verify() const override final;
-      virtual int initialize() override final;
+
+      int         initialize(const std::map<Outputs, RealT>& outputs = {});
       /// Initialize from the attached sinusoidal bus-voltage samples.
       int         initializeSteadyState(RealT omega);
       virtual int tagDifferentiable() override final;
@@ -138,7 +139,7 @@ namespace GridKit
       std::optional<VectorFitT> z_;
       bool                      supplied_fit_{false};
       bool                      derivative_columns_independent_{true};
-      Port3T                    i_port_{};
+      std::array<SignalT, 3>    i_port_{};
 
       ComponentSignals<ScalarT, IdxT, LoadZInternalVariables, LoadZExternalVariables> signals_;
 

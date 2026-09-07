@@ -270,8 +270,9 @@ namespace GridKit
        *             gate checks fail.
        */
       template <typename scalar_type, typename index_type>
-      int GastPti<scalar_type, index_type>::initialize()
+      int GastPti<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
+        this->validateOutputValues(outputs);
         const auto XVALVE = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
         const auto XFLOW  = static_cast<size_t>(GastPtiInternalVariables::XFLOW);
         const auto XTEMP  = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
@@ -298,7 +299,8 @@ namespace GridKit
         }
 
         auto*         y              = y_.getData();
-        const ScalarT pmech_machine0 = y[PMECH];
+        const ScalarT pmech_machine0 = static_cast<ScalarT>(this->outputValue(outputs, Outputs::pmech, static_cast<RealT>(y[PMECH])));
+        y[PMECH]                     = pmech_machine0;
         if (!std::isfinite(static_cast<RealT>(pmech_machine0)))
         {
           Log::error() << "GastPti: initial pmech seed must be finite\n";

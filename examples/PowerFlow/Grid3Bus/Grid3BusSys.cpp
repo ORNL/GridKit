@@ -105,6 +105,7 @@ int monolithicCase()
   Kinsol<double, size_t>* kinsol = new Kinsol<double, size_t>(model);
 
   // setup simulation
+  model->initialize();
   kinsol->configureSimulation();
   // initialize simulation with default initial guess V=1, theta=0
   kinsol->getDefaultInitialCondition();
@@ -167,6 +168,7 @@ int parserCase()
   Kinsol<double, size_t>* kinsol = new Kinsol<double, size_t>(sysmodel);
 
   // setup simulation
+  sysmodel->initialize();
   kinsol->configureSimulation();
   // initialize simulation with default initial guess
   kinsol->getDefaultInitialCondition();
@@ -316,6 +318,7 @@ int hardwiredCase()
   Kinsol<double, size_t>* kinsol = new Kinsol<double, size_t>(sysmodel);
 
   // setup simulation
+  sysmodel->initialize();
   kinsol->configureSimulation();
   // initialize simulation with default initial guess
   kinsol->getDefaultInitialCondition();

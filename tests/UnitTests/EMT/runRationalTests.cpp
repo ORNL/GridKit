@@ -281,10 +281,10 @@ namespace
     success            &= ss_json.get<SSData>().validate() == 0;
     VFData scaled;
     scaled.D[0][0] = std::numeric_limits<double>::max();
-    VF                    invalid(scaled, 2.0);
-    Port3<double, size_t> unused_port;
-    invalid.attachInput(&unused_port);
-    invalid.attachOutput(&unused_port);
+    VF                                    invalid(scaled, 2.0);
+    std::array<Signal<double, size_t>, 3> unused_port;
+    invalid.attachInput(&unused_port[0], &unused_port[1], &unused_port[2]);
+    invalid.attachOutput(&unused_port[0], &unused_port[1], &unused_port[2]);
     success &= invalid.verify() != 0;
     return success;
   }

@@ -87,8 +87,8 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using ModelDataT = VoltageSourceData<RealT, IdxT>;
+      using Outputs    = typename ModelDataT::Outputs;
       using SignalT    = Signal<ScalarT, IdxT>;
-      using Port3T     = Port3<ScalarT, IdxT>;
       using VectorFitT = VectorFit<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<VoltageSource, VoltageSourceData>;
 
@@ -99,7 +99,9 @@ namespace GridKit
       virtual int setGridKitComponentID(IdxT) override final;
       virtual int allocate() override final;
       virtual int verify() const override final;
-      virtual int initialize() override final;
+
+      int         initialize(const std::map<Outputs, RealT>& outputs = {});
+      void        assignOutput(Outputs output, SignalT* signal);
       /// Initialize from the attached sinusoidal voltage samples.
       int         initializeSteadyState(RealT omega);
       virtual int tagDifferentiable() override final;
@@ -155,7 +157,7 @@ namespace GridKit
 
       /// Port over the branch voltage variables read by the rational
       /// admittance
-      Port3T u_port_{};
+      std::array<SignalT, 3> u_port_{};
 
       ComponentSignals<ScalarT, IdxT, VoltageSourceInternalVariables, VoltageSourceExternalVariables> signals_;
 

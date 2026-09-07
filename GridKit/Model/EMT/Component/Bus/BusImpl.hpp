@@ -22,25 +22,17 @@ namespace GridKit
     Bus<scalar_type, index_type>::Bus()
     {
       size_ = 3;
-    }
-
-    template <typename scalar_type, typename index_type>
-    Bus<scalar_type, index_type>::Bus(ScalarT va0, ScalarT vb0, ScalarT vc0)
-      : va0_(va0),
-        vb0_(vb0),
-        vc0_(vc0)
-    {
-      size_ = 3;
+      for (auto& voltage : v_port_)
+        voltage.claimProducer();
     }
 
     template <typename scalar_type, typename index_type>
     Bus<scalar_type, index_type>::Bus(const ModelDataT& data)
-      : va0_(data.va0),
-        vb0_(data.vb0),
-        vc0_(data.vc0),
-        monitor_(std::make_unique<MonitorT>(data))
+      : monitor_(std::make_unique<MonitorT>(data))
     {
       size_ = 3;
+      for (auto& voltage : v_port_)
+        voltage.claimProducer();
       initializeMonitor();
     }
 
@@ -85,7 +77,9 @@ namespace GridKit
       }
 
       // Resize coupling data
-      this->allocateExternalVectors(0, 0);
+      this->allocateExternalVectors(3, 0);
+      for (IdxT n = 0; n < 3; ++n)
+        this->setExternalVariableSignal(n, currents_[static_cast<size_t>(n)]);
 
       // Bind the voltage port to the phase variables and residual rows
       auto* y  = y_.getData();
@@ -93,11 +87,13 @@ namespace GridKit
       auto* f  = f_.getData();
       for (IdxT n = 0; n < size_; ++n)
       {
-        v_port_.signals[static_cast<size_t>(n)].set(&y[n],
-                                                    &yp[n],
-                                                    &f[n],
-                                                    &(this->getVariableIndex(n)),
-                                                    &(this->getResidualIndex(n)));
+        v_port_[static_cast<size_t>(n)].set(&y[n],
+                                            &yp[n],
+                                            &f[n],
+                                            &(this->getVariableIndex(n)),
+                                            &(this->getResidualIndex(n)));
+        if (auto* output = outputs_[static_cast<size_t>(n)])
+          output->set(&y[n], &yp[n], &f[n], &this->getVariableIndex(n), &this->getResidualIndex(n));
       }
 
       allocated_ = true;
@@ -110,6 +106,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::verify() const
     {
+      for (const auto* current : currents_)
+        if (current != nullptr && !current->linked())
+          return 1;
       return 0;
     }
 
@@ -118,14 +117,15 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    int Bus<scalar_type, index_type>::initialize()
+    int Bus<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
     {
+      this->validateOutputValues(outputs);
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      y[0]  = va0_;
-      y[1]  = vb0_;
-      y[2]  = vc0_;
+      y[0]  = this->outputValue(outputs, Outputs::va, ZERO<RealT>);
+      y[1]  = this->outputValue(outputs, Outputs::vb, ZERO<RealT>);
+      y[2]  = this->outputValue(outputs, Outputs::vc, ZERO<RealT>);
       yp[0] = 0.0;
       yp[1] = 0.0;
       yp[2] = 0.0;
@@ -146,9 +146,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::tagDifferentiable()
     {
-      tag_[0] = v_port_.signals[0].hasDerivativeCoupling();
-      tag_[1] = v_port_.signals[1].hasDerivativeCoupling();
-      tag_[2] = v_port_.signals[2].hasDerivativeCoupling();
+      for (size_t phase = 0; phase < 3; ++phase)
+        tag_[phase] = v_port_[phase].hasDerivativeCoupling()
+                      || (outputs_[phase] && outputs_[phase]->hasDerivativeCoupling());
 
       return 0;
     }
@@ -186,9 +186,9 @@ namespace GridKit
         [[maybe_unused]] const ScalarT* yp_ext,
         ScalarT*                        f)
     {
-      f[0] = 0.0;
-      f[1] = 0.0;
-      f[2] = 0.0;
+      f[0] = y_ext[0];
+      f[1] = y_ext[1];
+      f[2] = y_ext[2];
 
       return 0;
     }
@@ -212,6 +212,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::evaluateInternalResidual()
     {
+      this->gatherExternalVariables();
       const auto* y  = y_.getData();
       const auto* yp = yp_.getData();
       auto*       f  = f_.getData();
@@ -232,6 +233,39 @@ namespace GridKit
     {
       evaluateInternalResidual();
       return evaluateExternalResidual();
+    }
+
+    template <typename scalar_type, typename index_type>
+    int Bus<scalar_type, index_type>::evaluateJacobian()
+    {
+      std::array<typename SignalT::GradientT, 3> gradients;
+      size_t                                     entries = 0;
+      for (size_t phase = 0; phase < 3; ++phase)
+      {
+        if (currents_[phase])
+          currents_[phase]->appendGradient(gradients[phase]);
+        entries += gradients[phase].size();
+      }
+      this->resetJacobianStructure();
+      if (entries > jacobian_capacity_)
+      {
+        delete[] J_rows_buffer_;
+        delete[] J_cols_buffer_;
+        delete[] J_vals_buffer_;
+        J_rows_buffer_     = new IdxT[entries];
+        J_cols_buffer_     = new IdxT[entries];
+        J_vals_buffer_     = new RealT[entries];
+        jacobian_capacity_ = entries;
+      }
+      nnz_ = 0;
+      for (size_t phase = 0; phase < 3; ++phase)
+        for (const auto& [column, value] : gradients[phase])
+        {
+          J_rows_buffer_[nnz_]   = this->getResidualIndex(static_cast<IdxT>(phase));
+          J_cols_buffer_[nnz_]   = column;
+          J_vals_buffer_[nnz_++] = value;
+        }
+      return entries == 0 ? 0 : this->constructCoo();
     }
 
     template <typename scalar_type, typename index_type>

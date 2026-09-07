@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include <magic_enum/magic_enum.hpp>
+
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/EMT/ComponentLibrary.hpp>
 #include <GridKit/Model/EMT/Container.hpp>
@@ -10,6 +12,70 @@ namespace GridKit
 {
   namespace EMT
   {
+    namespace
+    {
+      template <typename ModelT, typename RealT>
+      int initializeModel(ModelT& model, const std::map<std::string, RealT>& values)
+      {
+        using Outputs = typename ModelT::Outputs;
+        std::map<Outputs, RealT> outputs;
+        for (const auto& [name, value] : values)
+        {
+          if constexpr (std::is_same_v<Outputs, SwitchOutputs>)
+          {
+            if (name == "open")
+            {
+              if (value != RealT{0} && value != RealT{1})
+                throw std::invalid_argument("Switch open must be Boolean");
+              model.setOpen(value == RealT{1});
+              continue;
+            }
+          }
+          const auto output = magic_enum::enum_cast<Outputs>(name);
+          if (!output || *output == Outputs::SIZE)
+            throw std::invalid_argument("Unknown initial output: " + name);
+          outputs[*output] = value;
+        }
+        return model.initialize(outputs);
+      }
+
+      template <typename ScalarT, typename IdxT, typename RealT>
+      int initializeComponent(Component<ScalarT, IdxT>& component, const std::map<std::string, RealT>& values)
+      {
+        if (auto* model = dynamic_cast<Bus<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<Machine<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<LineLumped<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<LoadZ<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<VoltageSource<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<DependentVoltageSource<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<Switch<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<Controller::Tgov1<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<Controller::GastPti<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<Controller::Ieeest<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<Controller::SexsPti<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<Controller::Ieeet1<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<Controller::Pwm<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (auto* model = dynamic_cast<Converter<ScalarT, IdxT>*>(&component))
+          return initializeModel(*model, values);
+        if (component.size() == 0 && values.empty())
+          return 0;
+        throw std::invalid_argument("Component has no typed initialization implementation");
+      }
+    } // namespace
+
     template <typename scalar_type, typename index_type>
     Container<scalar_type, index_type>::Container()
     {
@@ -167,14 +233,7 @@ namespace GridKit
       for (const auto& [name, reference] : data.outputs)
       {
         const auto value = resolveOutput(reference);
-        if (std::holds_alternative<SignalT*>(value))
-        {
-          output(name, *std::get<SignalT*>(value));
-        }
-        else
-        {
-          output(name, *std::get<Port3T*>(value));
-        }
+        output(name, *value);
       }
 
       refreshLayout();
@@ -210,6 +269,15 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Container<scalar_type, index_type>::wire(const ModelDataT& data)
     {
+      for (const auto& bus_data : data.bus)
+      {
+        auto& bus = component<Bus<ScalarT, IdxT>>(bus_data.id);
+        for (const auto& [output, reference] : bus_data.outputs)
+          bus.assignOutput(output, &signal(reference));
+        for (const auto& [input, reference] : bus_data.inputs)
+          bus.attachInput(input, &source(reference));
+      }
+
       for (const auto& model_data : data.pwm)
       {
         auto& model = component<Controller::Pwm<ScalarT, IdxT>>(model_data.id);
@@ -250,18 +318,28 @@ namespace GridKit
 
       for (const auto& source_data : data.voltage_source)
       {
-        auto&       source_model = component<VoltageSource<ScalarT, IdxT>>(source_data.id);
-        const auto& bus_ref      = source_data.inputs.at(VoltageSourceInputs::bus);
-        source_model.getSignals().template attachPort<VoltageSourceExternalVariables::VA>(
-            &port(bus_ref));
+        auto& source_model = component<VoltageSource<ScalarT, IdxT>>(source_data.id);
+        for (const auto& [output, reference] : source_data.outputs)
+          source_model.assignOutput(output, &signal(reference));
+        source_model.getSignals().template attachSignal<VoltageSourceExternalVariables::VA>(
+            &source(source_data.inputs.at(VoltageSourceInputs::va)));
+        source_model.getSignals().template attachSignal<VoltageSourceExternalVariables::VB>(
+            &source(source_data.inputs.at(VoltageSourceInputs::vb)));
+        source_model.getSignals().template attachSignal<VoltageSourceExternalVariables::VC>(
+            &source(source_data.inputs.at(VoltageSourceInputs::vc)));
       }
 
       for (const auto& source_data : data.dependent_voltage_source)
       {
-        auto&       source_model = component<DependentVoltageSource<ScalarT, IdxT>>(source_data.id);
-        const auto& bus_ref      = source_data.inputs.at(DependentVoltageSourceInputs::bus);
-        source_model.getSignals().template attachPort<DependentVoltageSourceExternalVariables::VA>(
-            &port(bus_ref));
+        auto& source_model = component<DependentVoltageSource<ScalarT, IdxT>>(source_data.id);
+        for (const auto& [output, reference] : source_data.outputs)
+          source_model.assignOutput(output, &signal(reference));
+        source_model.getSignals().template attachSignal<DependentVoltageSourceExternalVariables::VA>(
+            &source(source_data.inputs.at(DependentVoltageSourceInputs::va)));
+        source_model.getSignals().template attachSignal<DependentVoltageSourceExternalVariables::VB>(
+            &source(source_data.inputs.at(DependentVoltageSourceInputs::vb)));
+        source_model.getSignals().template attachSignal<DependentVoltageSourceExternalVariables::VC>(
+            &source(source_data.inputs.at(DependentVoltageSourceInputs::vc)));
 
         if (source_data.inputs.contains(DependentVoltageSourceInputs::ea))
         {
@@ -283,14 +361,15 @@ namespace GridKit
       for (const auto& machine_data : data.machine)
       {
         auto& machine_model = component<Machine<ScalarT, IdxT>>(machine_data.id);
-        machine_model.getSignals().template attachPort<MachineExternalVariables::VA>(
-            &port(machine_data.inputs.at(MachineInputs::bus)));
+        machine_model.getSignals().template attachSignal<MachineExternalVariables::VA>(
+            &source(machine_data.inputs.at(MachineInputs::va)));
+        machine_model.getSignals().template attachSignal<MachineExternalVariables::VB>(
+            &source(machine_data.inputs.at(MachineInputs::vb)));
+        machine_model.getSignals().template attachSignal<MachineExternalVariables::VC>(
+            &source(machine_data.inputs.at(MachineInputs::vc)));
 
-        if (machine_data.outputs.contains(MachineOutputs::speed))
-        {
-          machine_model.getSignals().template assignSignal<MachineInternalVariables::OMEGA>(
-              &signal(machine_data.outputs.at(MachineOutputs::speed)));
-        }
+        for (const auto& [output, reference] : machine_data.outputs)
+          machine_model.assignOutput(output, &signal(reference));
         if (machine_data.inputs.contains(MachineInputs::pm))
         {
           machine_model.getSignals().template attachSignal<MachineExternalVariables::PM>(
@@ -306,17 +385,33 @@ namespace GridKit
       for (const auto& line_data : data.line_lumped)
       {
         auto& line_model = component<LineLumped<ScalarT, IdxT>>(line_data.id);
-        line_model.getSignals().template attachPort<LineLumpedExternalVariables::V1A>(
-            &port(line_data.inputs.at(LineLumpedInputs::bus1)));
-        line_model.getSignals().template attachPort<LineLumpedExternalVariables::V2A>(
-            &port(line_data.inputs.at(LineLumpedInputs::bus2)));
+        for (const auto& [output, reference] : line_data.outputs)
+          line_model.getSignals().assignSignal(static_cast<LineLumpedInternalVariables>(output), &signal(reference));
+        line_model.getSignals().template attachSignal<LineLumpedExternalVariables::V1A>(
+            &source(line_data.inputs.at(LineLumpedInputs::v1a)));
+        line_model.getSignals().template attachSignal<LineLumpedExternalVariables::V1B>(
+            &source(line_data.inputs.at(LineLumpedInputs::v1b)));
+        line_model.getSignals().template attachSignal<LineLumpedExternalVariables::V1C>(
+            &source(line_data.inputs.at(LineLumpedInputs::v1c)));
+        line_model.getSignals().template attachSignal<LineLumpedExternalVariables::V2A>(
+            &source(line_data.inputs.at(LineLumpedInputs::v2a)));
+        line_model.getSignals().template attachSignal<LineLumpedExternalVariables::V2B>(
+            &source(line_data.inputs.at(LineLumpedInputs::v2b)));
+        line_model.getSignals().template attachSignal<LineLumpedExternalVariables::V2C>(
+            &source(line_data.inputs.at(LineLumpedInputs::v2c)));
       }
 
       for (const auto& load_data : data.loadz)
       {
         auto& load_model = component<LoadZ<ScalarT, IdxT>>(load_data.id);
-        load_model.getSignals().template attachPort<LoadZExternalVariables::VA>(
-            &port(load_data.inputs.at(LoadZInputs::bus)));
+        for (const auto& [output, reference] : load_data.outputs)
+          load_model.getSignals().assignSignal(static_cast<LoadZInternalVariables>(output), &signal(reference));
+        load_model.getSignals().template attachSignal<LoadZExternalVariables::VA>(
+            &source(load_data.inputs.at(LoadZInputs::va)));
+        load_model.getSignals().template attachSignal<LoadZExternalVariables::VB>(
+            &source(load_data.inputs.at(LoadZInputs::vb)));
+        load_model.getSignals().template attachSignal<LoadZExternalVariables::VC>(
+            &source(load_data.inputs.at(LoadZInputs::vc)));
       }
 
       for (const auto& stabilizer_data : data.ieeest)
@@ -383,7 +478,9 @@ namespace GridKit
         using Internal      = Controller::SexsPtiInternalVariables;
         auto& exciter_model = component<Controller::SexsPti<ScalarT, IdxT>>(exciter_data.id);
         auto& signals       = exciter_model.getSignals();
-        signals.template attachPort<External::VA>(&port(exciter_data.inputs.at(Inputs::bus)));
+        signals.template attachSignal<External::VA>(&source(exciter_data.inputs.at(Inputs::va)));
+        signals.template attachSignal<External::VB>(&source(exciter_data.inputs.at(Inputs::vb)));
+        signals.template attachSignal<External::VC>(&source(exciter_data.inputs.at(Inputs::vc)));
         if (exciter_data.inputs.contains(Inputs::vref))
         {
           signals.template attachSignal<External::VREF>(&source(exciter_data.inputs.at(Inputs::vref)));
@@ -414,7 +511,9 @@ namespace GridKit
         using Internal      = Controller::Ieeet1InternalVariables;
         auto& exciter_model = component<Controller::Ieeet1<ScalarT, IdxT>>(exciter_data.id);
         auto& signals       = exciter_model.getSignals();
-        signals.template attachPort<External::VA>(&port(exciter_data.inputs.at(Inputs::bus)));
+        signals.template attachSignal<External::VA>(&source(exciter_data.inputs.at(Inputs::va)));
+        signals.template attachSignal<External::VB>(&source(exciter_data.inputs.at(Inputs::vb)));
+        signals.template attachSignal<External::VC>(&source(exciter_data.inputs.at(Inputs::vc)));
         if (exciter_data.inputs.contains(Inputs::speed))
         {
           signals.template attachSignal<External::OMEGA>(&source(exciter_data.inputs.at(Inputs::speed)));
@@ -445,10 +544,20 @@ namespace GridKit
       for (const auto& switch_data : data.sw)
       {
         auto& switch_model = component<Switch<ScalarT, IdxT>>(switch_data.id);
-        switch_model.getSignals().template attachPort<SwitchExternalVariables::V1A>(
-            &port(switch_data.inputs.at(SwitchInputs::bus1)));
-        switch_model.getSignals().template attachPort<SwitchExternalVariables::V2A>(
-            &port(switch_data.inputs.at(SwitchInputs::bus2)));
+        for (const auto& [output, reference] : switch_data.outputs)
+          switch_model.getSignals().assignSignal(static_cast<SwitchInternalVariables>(output), &signal(reference));
+        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V1A>(
+            &source(switch_data.inputs.at(SwitchInputs::v1a)));
+        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V1B>(
+            &source(switch_data.inputs.at(SwitchInputs::v1b)));
+        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V1C>(
+            &source(switch_data.inputs.at(SwitchInputs::v1c)));
+        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V2A>(
+            &source(switch_data.inputs.at(SwitchInputs::v2a)));
+        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V2B>(
+            &source(switch_data.inputs.at(SwitchInputs::v2b)));
+        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V2C>(
+            &source(switch_data.inputs.at(SwitchInputs::v2c)));
       }
     }
 
@@ -639,21 +748,6 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void Container<scalar_type, index_type>::input(std::string name, Port3T& port_value)
-    {
-      if (allocated_ || bound_)
-      {
-        throw std::logic_error("A Container cannot change after allocation");
-      }
-      validateName(name, "Input");
-      if (!input_names_.contains(name))
-      {
-        declareInput(name);
-      }
-      bindInput(name, &port_value);
-    }
-
-    template <typename scalar_type, typename index_type>
     void Container<scalar_type, index_type>::declareInput(std::string name)
     {
       validateName(name, "Input");
@@ -667,7 +761,7 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     void Container<scalar_type, index_type>::bindInput(std::string_view name,
-                                                       Endpoint         value)
+                                                       SignalT*         value)
     {
       if (!input_names_.contains(name))
       {
@@ -681,7 +775,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    typename Container<scalar_type, index_type>::Endpoint
+    typename Container<scalar_type, index_type>::SignalT*
     Container<scalar_type, index_type>::inputEndpoint(std::string_view name) const
     {
       const auto found = inputs_.find(name);
@@ -697,12 +791,7 @@ namespace GridKit
     Container<scalar_type, index_type>::inputSignal(std::string_view name)
     {
       const auto value = inputEndpoint(name);
-      if (!std::holds_alternative<SignalT*>(value))
-      {
-        throw std::invalid_argument("Container input \"" + std::string(name)
-                                    + "\" is not a scalar signal");
-      }
-      return *std::get<SignalT*>(value);
+      return *value;
     }
 
     template <typename scalar_type, typename index_type>
@@ -710,38 +799,7 @@ namespace GridKit
     Container<scalar_type, index_type>::inputSignal(std::string_view name) const
     {
       const auto value = inputEndpoint(name);
-      if (!std::holds_alternative<SignalT*>(value))
-      {
-        throw std::invalid_argument("Container input \"" + std::string(name)
-                                    + "\" is not a scalar signal");
-      }
-      return *std::get<SignalT*>(value);
-    }
-
-    template <typename scalar_type, typename index_type>
-    typename Container<scalar_type, index_type>::Port3T&
-    Container<scalar_type, index_type>::inputPort(std::string_view name)
-    {
-      const auto value = inputEndpoint(name);
-      if (!std::holds_alternative<Port3T*>(value))
-      {
-        throw std::invalid_argument("Container input \"" + std::string(name)
-                                    + "\" is not a three-phase port");
-      }
-      return *std::get<Port3T*>(value);
-    }
-
-    template <typename scalar_type, typename index_type>
-    const typename Container<scalar_type, index_type>::Port3T&
-    Container<scalar_type, index_type>::inputPort(std::string_view name) const
-    {
-      const auto value = inputEndpoint(name);
-      if (!std::holds_alternative<Port3T*>(value))
-      {
-        throw std::invalid_argument("Container input \"" + std::string(name)
-                                    + "\" is not a three-phase port");
-      }
-      return *std::get<Port3T*>(value);
+      return *value;
     }
 
     template <typename scalar_type, typename index_type>
@@ -760,31 +818,16 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    void Container<scalar_type, index_type>::output(std::string name, Port3T& port_value)
-    {
-      if (allocated_ || bound_)
-      {
-        throw std::logic_error("A Container cannot change after allocation");
-      }
-      validateName(name, "Output");
-      if (input_names_.contains(name) || outputs_.contains(name))
-      {
-        throw std::invalid_argument("Duplicate boundary name \"" + name + "\"");
-      }
-      outputs_.emplace(std::move(name), &port_value);
-    }
-
-    template <typename scalar_type, typename index_type>
     typename Container<scalar_type, index_type>::SignalT&
     Container<scalar_type, index_type>::outputSignal(std::string_view name)
     {
       const auto found = outputs_.find(name);
-      if (found == outputs_.end() || !std::holds_alternative<SignalT*>(found->second))
+      if (found == outputs_.end())
       {
         throw std::invalid_argument("Container output \"" + std::string(name)
                                     + "\" is not a scalar signal");
       }
-      return *std::get<SignalT*>(found->second);
+      return *found->second;
     }
 
     template <typename scalar_type, typename index_type>
@@ -792,38 +835,12 @@ namespace GridKit
     Container<scalar_type, index_type>::outputSignal(std::string_view name) const
     {
       const auto found = outputs_.find(name);
-      if (found == outputs_.end() || !std::holds_alternative<SignalT*>(found->second))
+      if (found == outputs_.end())
       {
         throw std::invalid_argument("Container output \"" + std::string(name)
                                     + "\" is not a scalar signal");
       }
-      return *std::get<SignalT*>(found->second);
-    }
-
-    template <typename scalar_type, typename index_type>
-    typename Container<scalar_type, index_type>::Port3T&
-    Container<scalar_type, index_type>::outputPort(std::string_view name)
-    {
-      const auto found = outputs_.find(name);
-      if (found == outputs_.end() || !std::holds_alternative<Port3T*>(found->second))
-      {
-        throw std::invalid_argument("Container output \"" + std::string(name)
-                                    + "\" is not a three-phase port");
-      }
-      return *std::get<Port3T*>(found->second);
-    }
-
-    template <typename scalar_type, typename index_type>
-    const typename Container<scalar_type, index_type>::Port3T&
-    Container<scalar_type, index_type>::outputPort(std::string_view name) const
-    {
-      const auto found = outputs_.find(name);
-      if (found == outputs_.end() || !std::holds_alternative<Port3T*>(found->second))
-      {
-        throw std::invalid_argument("Container output \"" + std::string(name)
-                                    + "\" is not a three-phase port");
-      }
-      return *std::get<Port3T*>(found->second);
+      return *found->second;
     }
 
     template <typename scalar_type, typename index_type>
@@ -831,90 +848,39 @@ namespace GridKit
     Container<scalar_type, index_type>::source(std::string_view reference)
     {
       const auto value = endpoint(reference);
-      if (!std::holds_alternative<SignalT*>(value))
-      {
-        throw std::invalid_argument("Endpoint \"" + std::string(reference)
-                                    + "\" is not a scalar signal");
-      }
-      return *std::get<SignalT*>(value);
+      return *value;
     }
 
     template <typename scalar_type, typename index_type>
-    typename Container<scalar_type, index_type>::Port3T&
-    Container<scalar_type, index_type>::port(std::string_view reference)
-    {
-      const auto value = endpoint(reference);
-      if (!std::holds_alternative<Port3T*>(value))
-      {
-        throw std::invalid_argument("Endpoint \"" + std::string(reference)
-                                    + "\" is not a three-phase port");
-      }
-      return *std::get<Port3T*>(value);
-    }
-
-    template <typename scalar_type, typename index_type>
-    typename Container<scalar_type, index_type>::Endpoint
+    typename Container<scalar_type, index_type>::SignalT*
     Container<scalar_type, index_type>::endpoint(std::string_view reference)
     {
-      const auto dot = reference.find('.');
-      if (dot != std::string_view::npos)
-      {
-        return childContainer(reference.substr(0, dot)).outputEndpoint(reference.substr(dot + 1));
-      }
       if (const auto found = inputs_.find(reference); found != inputs_.end())
-      {
         return found->second;
-      }
-      if (const auto found = signals_by_id_.find(reference); found != signals_by_id_.end())
-      {
-        return found->second;
-      }
-      if (const auto found = children_by_id_.find(reference); found != children_by_id_.end())
-      {
-        if (auto* bus = dynamic_cast<Bus<ScalarT, IdxT>*>(found->second); bus != nullptr)
-        {
-          return &bus->voltagePort();
-        }
-      }
-      throw std::invalid_argument("Unknown endpoint \"" + std::string(reference) + "\"");
+      return resolveOutput(reference);
     }
 
     template <typename scalar_type, typename index_type>
-    typename Container<scalar_type, index_type>::Endpoint
+    typename Container<scalar_type, index_type>::SignalT*
     Container<scalar_type, index_type>::resolveOutput(std::string_view reference)
     {
+      if (const auto found = signals_by_id_.find(reference); found != signals_by_id_.end())
+        return found->second;
       const auto dot = reference.find('.');
       if (dot != std::string_view::npos)
       {
-        return childContainer(reference.substr(0, dot)).outputEndpoint(reference.substr(dot + 1));
-      }
-
-      if (const auto found = signals_by_id_.find(reference); found != signals_by_id_.end())
-      {
-        return found->second;
-      }
-      if (const auto found = children_by_id_.find(reference); found != children_by_id_.end())
-      {
-        auto* bus = dynamic_cast<Bus<ScalarT, IdxT>*>(found->second);
-        if (bus != nullptr)
+        auto&      child = component(reference.substr(0, dot));
+        const auto name  = reference.substr(dot + 1);
+        if (auto* container = dynamic_cast<Container*>(&child))
+          return &container->outputSignal(name);
+        if (auto* bus = dynamic_cast<Bus<ScalarT, IdxT>*>(&child))
         {
-          return &bus->voltagePort();
+          const auto output = magic_enum::enum_cast<BusOutputs>(name);
+          if (output && *output != BusOutputs::SIZE)
+            return &bus->outputSignal(*output);
         }
       }
-      throw std::invalid_argument("Output reference \"" + std::string(reference)
-                                  + "\" is not a local signal, Bus, or child output");
-    }
-
-    template <typename scalar_type, typename index_type>
-    typename Container<scalar_type, index_type>::Endpoint
-    Container<scalar_type, index_type>::outputEndpoint(std::string_view name)
-    {
-      const auto found = outputs_.find(name);
-      if (found == outputs_.end())
-      {
-        throw std::invalid_argument("Unknown Container output \"" + std::string(name) + "\"");
-      }
-      return found->second;
+      throw std::invalid_argument("Unknown scalar signal: " + std::string(reference));
     }
 
     template <typename scalar_type, typename index_type>
@@ -940,8 +906,7 @@ namespace GridKit
 
       for (const auto& [name, value] : outputs_)
       {
-        if (std::holds_alternative<SignalT*>(value)
-            && !std::get<SignalT*>(value)->hasProducer())
+        if (!value->hasProducer())
         {
           throw std::invalid_argument("Container output \"" + name
                                       + "\" has no internal producer");
@@ -1085,26 +1050,46 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Container<scalar_type, index_type>::initialize()
+    int Container<scalar_type, index_type>::initialize(const std::map<std::string, std::map<std::string, RealT>>& state)
     {
-      std::vector<ComponentT*> leaves;
-      forEachComponent([&leaves](ComponentT& component)
-                       {
-        if (dynamic_cast<Container*>(&component) == nullptr)
+      std::map<ComponentT*, std::string> paths;
+      auto                               collect = [&](auto&& self, Container& scope, const std::string& prefix) -> void
+      {
+        for (const auto& [name, child] : scope.children_by_id_)
         {
-          leaves.push_back(&component);
-        } });
+          const auto path = prefix + name;
+          paths.emplace(child, path);
+          if (auto* container = dynamic_cast<Container*>(child))
+            self(self, *container, path + ".");
+        }
+      };
+      collect(collect, *this, "");
+      std::vector<ComponentT*> leaves;
+      forEachComponent([&](ComponentT& component)
+                       {
+                         if (dynamic_cast<Container*>(&component) == nullptr)
+                           leaves.push_back(&component); });
       std::stable_sort(leaves.begin(), leaves.end(), [](const auto* lhs, const auto* rhs)
                        { return lhs->initializationOrder() < rhs->initializationOrder(); });
-
-      int status = 0;
+      const std::map<std::string, RealT> empty;
       for (auto* leaf : leaves)
       {
-        status += leaf->initialize();
+        const auto& path  = paths.at(leaf);
+        const auto  entry = state.find(path);
+        try
+        {
+          const int status = initializeComponent(*leaf, entry == state.end() ? empty : entry->second);
+          if (status != 0)
+            return status;
+        }
+        catch (const std::exception& error)
+        {
+          throw std::invalid_argument(path + ": " + error.what());
+        }
       }
       y_.setDataUpdated();
       yp_.setDataUpdated();
-      return status;
+      return 0;
     }
 
     template <typename scalar_type, typename index_type>

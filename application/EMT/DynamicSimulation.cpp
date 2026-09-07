@@ -36,6 +36,8 @@ int main(int argc, const char* argv[])
     throw std::runtime_error("EMTDynamicSimulation requires a sparse model Jacobian; enable Enzyme");
   }
   sys.allocate();
+  if (sys.initialize(study.state) != 0)
+    throw std::runtime_error("EMT model initialization failed");
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);

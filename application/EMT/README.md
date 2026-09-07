@@ -9,6 +9,7 @@ Jacobian size and rejects configurations that would fall back to dense.
    Name                | Value
  ----------------------|-------------------------------------------------------
   `system_model_file`  | Path to the system model file[^1]
+  `state_file`         | Optional path to an EMT operating-point [state file](../../GridKit/Model/EMT/STATE.md), relative to the solver file; uses component output names and Boolean switch status
   `dt_monitor`         | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
   `tmax`               | A floating-point value for max time
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)
