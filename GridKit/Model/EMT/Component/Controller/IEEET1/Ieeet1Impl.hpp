@@ -252,10 +252,6 @@ namespace GridKit
         y[6]      = ksat;
         y[8]      = ksat;
         vref_set_ = vref;
-        if (signals_.template isAttached<Ieeet1ExternalVariables::VREF>())
-        {
-          signals_.template writeExternalVariable<Ieeet1ExternalVariables::VREF>(vref);
-        }
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
         return 0;

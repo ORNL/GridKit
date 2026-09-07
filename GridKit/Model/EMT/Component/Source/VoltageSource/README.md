@@ -102,11 +102,14 @@ None.
 0 = \mathbf{u} + \mathbf{v} - \mathbf{e}
 ```
 
-### External Equations
+### Terminal Currents
 
 ```math
-\mathbf{i} \leftarrow \mathbf{y}[\mathbf{e} - \mathbf{v}]
+\mathbf{i} = \mathbf{y}[\mathbf{e} - \mathbf{v}]
 ```
+
+The bus registers these current signals and owns their residual and Jacobian
+contributions to KCL.
 
 ## Initialization
 

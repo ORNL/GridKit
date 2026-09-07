@@ -23,9 +23,8 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Machine<scalar_type, index_type>::Machine()
+      : Machine(ModelDataT{})
     {
-      size_ = 24;
-      setDerivedParams();
     }
 
     template <typename scalar_type, typename index_type>
@@ -35,6 +34,8 @@ namespace GridKit
       initializeParameters(data);
       size_ = 24;
       setDerivedParams();
+      for (size_t p = 0; p < 3; ++p)
+        assignOutput(static_cast<Outputs>(static_cast<size_t>(Outputs::ia) + p), &current_[p]);
       initializeMonitor();
     }
 
@@ -222,11 +223,8 @@ namespace GridKit
       }
 
       // Resize coupling data
-      this->allocateExternalVectors(static_cast<IdxT>(MachineExternalVariables::MAXIMUM), 3);
+      this->allocateExternalVectors(static_cast<IdxT>(MachineExternalVariables::MAXIMUM), 0);
       signals_.registerExternalVariableSignals(*this);
-      this->setExternalResidualSignal(0, signals_.template getAttachedSignal<MachineExternalVariables::VA>());
-      this->setExternalResidualSignal(1, signals_.template getAttachedSignal<MachineExternalVariables::VB>());
-      this->setExternalResidualSignal(2, signals_.template getAttachedSignal<MachineExternalVariables::VC>());
 
       // Set output signals
       if (signals_.template isAssigned<MachineInternalVariables::OMEGA>())
@@ -584,29 +582,6 @@ namespace GridKit
     }
 
     /**
-     * @brief External residual
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Machine<scalar_type, index_type>::evaluateExternalResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* y_ext,
-        [[maybe_unused]] const ScalarT* yp_ext,
-        ScalarT*                        f_ext)
-    {
-      const ScalarT isa = y[21];
-      const ScalarT isb = y[22];
-      const ScalarT isc = y[23];
-
-      f_ext[0] = toSystemSI(isa);
-      f_ext[1] = toSystemSI(isb);
-      f_ext[2] = toSystemSI(isc);
-
-      return 0;
-    }
-
-    /**
      * @brief Gather external variables and index maps.
      *
      * The latched setpoints back the field voltage and mechanical power
@@ -637,29 +612,13 @@ namespace GridKit
     }
 
     /**
-     * @brief External residual contributions to the bus.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int Machine<scalar_type, index_type>::evaluateExternalResidual()
-    {
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
-      this->scatterExternalResidual();
-
-      return 0;
-    }
-
-    /**
-     * @brief Residual contribution of the machine is pushed to the bus.
+     * @brief Assemble the machine equations.
      *
      */
     template <typename scalar_type, typename index_type>
     int Machine<scalar_type, index_type>::evaluateResidual()
     {
-      evaluateInternalResidual();
-      return evaluateExternalResidual();
+      return evaluateInternalResidual();
     }
 
     template <typename scalar_type, typename index_type>

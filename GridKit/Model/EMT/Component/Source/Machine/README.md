@@ -247,11 +247,14 @@ inductances, and the saturation row uses the
 \end{aligned}
 ```
 
-### External Equations
+### Terminal Currents
 
 ```math
-\mathbf{i} \leftarrow I_\mathrm{pk}\,\mathbf{i}_s
+\mathbf{i} = I_\mathrm{pk}\,\mathbf{i}_s
 ```
+
+The bus registers these current signals and owns their residual and Jacobian
+contributions to KCL.
 
 ### Wiring
 

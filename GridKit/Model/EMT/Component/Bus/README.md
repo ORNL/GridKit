@@ -1,7 +1,9 @@
 # Bus Model
 
 `Bus` is a container of `KCL` and Norton sources. `KCL` owns the bus voltage;
-each Norton source owns its shunt current and admittance states.
+each Norton source owns its shunt current and admittance states. KCL owns the
+sum of all registered terminal currents and its Jacobian. Positive current
+means injection into the bus.
 $\mathcal{E}$ denotes the set of Norton sources.
 
 ## Block Diagram
@@ -41,7 +43,7 @@ $\mathbf{v}$ | `v` | Output | [V] | Bus voltage supplied to connected devices | 
 Symbol | Description | Type | Order | JSON | Inputs | Outputs
 ------ | ----------- | ---- | ----- | ---- | ------ | -------
 $\mathbf{v}$ | Bus voltage and current balance | KCL | $N$ | — | Current contributions | $\mathbb{R}^N$
-$\mathbf{n}_e$ | Norton source | [Norton](../Source/Norton/README.md) | $K_e(1+Q_e)$ | Device coefficients or `shunts.<name>` | $\mathbf{P}_e^\mathsf T\mathbf{v},\mathbf{i}_e^\mathrm{inc}$ | $\mathbf{i}_e^\mathrm{sh}$
+$\mathbf{n}_e$ | Norton source | [Norton](../Source/Norton/README.md) | $K_e(1+Q_e)$ | Device coefficients or `shunts.<name>` | $\mathbf{P}_e^\mathsf T\mathbf{v}$ | $\mathbf{i}_e^\mathrm{sh}$
 
 ### Submodel Validation
 
@@ -90,11 +92,17 @@ None.
 #### Algebraic
 
 ```math
-0=\sum_{e\in\mathcal E}\mathbf{P}_e
-  (\mathbf{i}_e^\mathrm{inc}-\mathbf{i}_e^\mathrm{sh})
+0=\sum_{r\in\mathcal R}\sigma_r\mathbf{P}_r\mathbf{i}_r
 ```
 
-Direct current inputs also contribute to KCL.
+$\mathcal R$ contains all current registrations, with sign $\sigma_r$ and
+phase map $\mathbf P_r$. Norton incident and shunt currents have signs $+1$
+and $-1$, respectively.
+
+Every current contribution uses `addCurrent(phase, signal, sign)` before
+allocation. This includes device branch currents, scalar bus inputs, and the
+incident and shunt currents of Norton terminals. KCL evaluates the signed sum
+and the corresponding signal gradients; devices do not stamp bus equations.
 
 ### External Equations
 

@@ -19,7 +19,7 @@ at each restart, including switch events.
   `system_model_file`  | Path to the system model file[^1]
   `state_file`         | Optional path to an EMT operating-point [state file](../../GridKit/Model/EMT/STATE.md), relative to the solver file; uses component output names and Boolean switch status
   `dt_monitor`         | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
-  `tmax`               | A floating-point value for max time
+  `tmax`               | Finite, nonnegative simulation end time
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)
   `abs_tol`            | Absolute solver tolerance override (default: 1.0e-9)
   `mu`                | Positive finite CommonMath smoothing scale (default: 240); configured before model construction
@@ -27,7 +27,7 @@ at each restart, including switch events.
   `dt_fixed`           | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
-  `events`             | An array of event groups (see [Events](#events) below)
+  `events`             | An ordered array of actions (see [Events](#events) below)
   `output_file`        | Path to output (CSV) file (optional)
   `state_output_file`  | Optional CSV of every DAE variable and derivative at the monitor times, with a companion `.csv.json` index map. Output paths are relative to the working directory. Event times include pre-event and post-event rows.
   `reference_file`     | A string containing the name of the case (optional)
@@ -44,13 +44,32 @@ the run. Separate application processes can use different values.
 
 ## Events
 
-Each event group describes a system event that occurs at a given time point.
-A switch event changes the Jacobian sparsity pattern, so the driver
-rediscovers the structure, rebuilds the linear solver, and reinitializes the
-integrator at the event time.
+Each action has a finite `time` in `[0, tmax]`. Times must be nondecreasing.
+The application validates the entire schedule and all targets before running.
 
-   Name              | Value
- --------------------|-------------------------------------------------------
-  `time`             | A floating point value for time event occurs
-  `type`             | Event type (one of { "switch_open", "switch_close" })
-  `element_id`       | String ID of the `Switch` component associated with the event
+```json
+"events": [
+  {"time": 0.1, "type": "switch", "element_id": "plant.breaker", "open": true},
+  {"time": 0.2, "type": "signal_step", "signal_id": "plant.pref", "value": 0.8}
+]
+```
+
+A `switch` action sets the named `Switch` component's Boolean `open` status.
+A `signal_step` sets the absolute, finite `value` of a declared constant signal,
+identified by its qualified path. Declare that signal with a `value` in the
+model and connect it to the controller reference input. Component outputs and
+computed expressions cannot be event targets. Supplied reference inputs are
+preserved during controller initialization; an unattached reference uses the
+controller's inferred operating-point value.
+
+Actions at the same time execute in listed order, followed by one integrator
+restart. Thus the last of several simultaneous steps to one signal wins.
+Time-zero actions apply after model initialization and before the first DAE
+check and solver configuration. They produce a single initial output sample.
+Later event times retain both pre-event and post-event samples.
+
+Switch actions also rediscover the Jacobian structure and rebuild the linear
+solver once per group. After any event, IDA solves for algebraic values and
+derivatives while preserving differential states (`ya_ydp`), even when the
+study uses `consistent_ic_type: "y"` at startup. Component initialization is
+not repeated at events.

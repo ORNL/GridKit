@@ -71,8 +71,6 @@ namespace GridKit
       using Component<scalar_type, index_type>::y_ext_;
       using Component<scalar_type, index_type>::yp_ext_;
       using Component<scalar_type, index_type>::variable_indices_ext_;
-      using Component<scalar_type, index_type>::residual_indices_ext_;
-      using Component<scalar_type, index_type>::f_ext_;
       using Component<scalar_type, index_type>::f_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
@@ -96,6 +94,11 @@ namespace GridKit
       VoltageSource(const ModelDataT& data);
       virtual ~VoltageSource();
 
+      SignalT& currentSignal(size_t phase)
+      {
+        return current_.at(phase);
+      }
+
       virtual int setGridKitComponentID(IdxT) override final;
       virtual int allocate() override final;
       virtual int verify() const override final;
@@ -113,7 +116,6 @@ namespace GridKit
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
       virtual int evaluateResidual() override final;
-      virtual int evaluateExternalResidual() override final;
       virtual int assembleJacobian(RealT y_scale, RealT yp_scale) override final;
 
       auto getSignals() -> ComponentSignals<ScalarT,
@@ -133,10 +135,10 @@ namespace GridKit
     public:
       __attribute__((always_inline)) inline int evaluateInternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateExternalResidual(
-          const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
+      std::array<SignalT, 3> current_;
+
       /* Input parameters */
       IdxT             n_phases_{3};
       ABCVector<RealT> E_{{0.0, 0.0, 0.0}};
@@ -145,9 +147,7 @@ namespace GridKit
       ABCMatrix<RealT> Rs_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
       ABCMatrix<RealT> Ls_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
 
-      /// Masks selecting the series-matrix or rational-admittance form of
-      /// the branch rows; exactly one is one
-      RealT rl_on_{ONE<RealT>};
+      /// One for the rational-admittance form of the branch rows, zero otherwise.
       RealT fit_on_{ZERO<RealT>};
 
       /// Rational source admittance operator

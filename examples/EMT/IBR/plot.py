@@ -338,7 +338,7 @@ def plot_scenario(name, case, results):
                    max_power_balance_error_w=float(np.max(np.abs(imbalance))), pwm_range=[gate_min, gate_max])
     (directory / 'metrics.json').write_text(json.dumps(metrics, indent=2)+'\n')
     cards = ''.join(f'<figure><a href="plots/{key}.png"><img loading="lazy" src="plots/{key}.png" alt="{html.escape(label)}"></a><figcaption>{html.escape(label)}</figcaption></figure>' for key, label in gallery)
-    events_text = ', '.join(f"{e['time']:g} s: {e['type']} {e['element_id']}" for e in events) or 'No switching events'
+    events_text = ', '.join(f"{e['time']:g} s: {'open' if e['open'] else 'close'} {e['element_id']}" for e in events) or 'No switching events'
     (directory / 'index.html').write_text(page_html(title, f'<p><a href="../index.html">All scenarios</a> · {events_text}</p><p><a href="{study["output_file"]}">Model monitors CSV</a> · <a href="{study["state_output_file"]}">All states and derivatives CSV</a> · <a href="{study["state_output_file"]}.json">State index map</a> · <a href="plots/all_dae_variables.pdf">All DAE traces PDF</a> · <a href="metrics.json">Checks and metrics</a> · <a href="run.log">Solver log</a></p><p>Positive source P/Q means injection into the grid. RMS and displayed powers use a trailing 1/60 s window. Startup is retained. Dotted lines mark events.</p><div class="gallery">{cards}</div>'))
     print(name, json.dumps(metrics), flush=True)
     return metrics, comparison_trace(t, data)

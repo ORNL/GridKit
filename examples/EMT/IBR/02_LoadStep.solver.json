@@ -9,7 +9,8 @@
     "events": [
         {
             "time": 1.0,
-            "type": "switch_close",
+            "type": "switch",
+            "open": false,
             "element_id": "load_step"
         }
     ],

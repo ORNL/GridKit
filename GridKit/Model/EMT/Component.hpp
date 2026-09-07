@@ -137,6 +137,14 @@ namespace GridKit
 
       virtual int evaluateExternalResidual()
       {
+        for (auto* op : operators_)
+        {
+          const int status = op->evaluateExternalResidual();
+          if (status != 0)
+          {
+            return status;
+          }
+        }
         return 0;
       }
 
@@ -621,7 +629,7 @@ namespace GridKit
           if (signal != nullptr)
           {
             if (!signal->residualLinked())
-              throw std::logic_error("Electrical voltage input has no current-balance residual row");
+              throw std::logic_error("External residual destination is not bound to an equation");
             residual_indices_ext_[i] = signal->getResidualIndex();
           }
         }
@@ -696,19 +704,6 @@ namespace GridKit
         for (auto* op : operators_)
         {
           const int status = op->evaluateInternalResidual();
-          if (status != 0)
-          {
-            return status;
-          }
-        }
-        return 0;
-      }
-
-      int evaluateOperatorExternalResiduals()
-      {
-        for (auto* op : operators_)
-        {
-          const int status = op->evaluateExternalResidual();
           if (status != 0)
           {
             return status;

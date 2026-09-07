@@ -15,9 +15,7 @@ namespace GridKit
     Bus<scalar_type, index_type>::Bus()
       : kcl_(this->template add<KCLT>("KCL"))
     {
-      zero_.setComputed([]
-                        { return ScalarT{0}; },
-                        [](typename SignalT::GradientT&, RealT) {});
+      zero_.bindConstant(ZERO<RealT>);
       for (size_t p = 0; p < 3; ++p)
         this->output(std::string("v") + "abc"[p], outputSignal(static_cast<Outputs>(p)));
     }
@@ -39,9 +37,11 @@ namespace GridKit
       for (auto*& signal : incident)
         if (!signal)
           signal = &zero_;
-      auto& source = this->template add<NortonT>(name, Y, voltages(phases), incident, scale);
+      auto& source = this->template add<NortonT>(name, Y, voltages(phases), scale);
       for (size_t p = 0; p < 3; ++p)
       {
+        addCurrent(phases[p], *incident[p]);
+        addCurrent(phases[p], source.outputSignal(p), -ONE<RealT>);
         this->input(name + "_inc_" + "abc"[p], *incident[p]);
         this->output(name + "_Ish_" + "abc"[p], source.outputSignal(p));
         shunt_monitors_[phases[p]].push_back(&source.outputSignal(p));

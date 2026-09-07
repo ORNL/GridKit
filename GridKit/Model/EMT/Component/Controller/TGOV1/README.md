@@ -156,6 +156,10 @@ P_\mathrm{ref} &\leftarrow \Delta\omega + R\,P_v
 Initialization fails when the initial valve position falls outside
 $[P_v^{\min}, P_v^{\max}]$.
 
+The inferred reference above is latched only for an unattached `pref` input.
+A supplied reference is preserved; consistent initialization computes the
+derivatives when it differs from the inferred operating-point value.
+
 ## Monitors
 
 None.

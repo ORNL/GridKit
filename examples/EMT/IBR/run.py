@@ -80,7 +80,7 @@ def run_one(name, exe, results, smoke, check_only=False):
                     if abs(sample_time - event['time']) < 1e-12:
                         samples.append(float(row[f"Switch_{event['element_id']}_open"]))
     for event, samples in zip(study['events'], event_samples):
-        command = float(event['type'] == 'switch_open')
+        command = float(event['open'])
         if len(samples) != 2 or samples[-1] != command or samples[0] == command:
             raise ValueError(f'{name}: event command not recorded correctly: {event}')
     hashes = {key: hashlib.sha256(Path(study[key]).read_bytes()).hexdigest() for key in ('system_model_file', 'state_file')}

@@ -243,11 +243,6 @@ namespace GridKit
         vuel_set_ = vuel;
         voel_set_ = voel;
 
-        if (signals_.template isAttached<SexsPtiExternalVariables::VREF>())
-        {
-          signals_.template writeExternalVariable<SexsPtiExternalVariables::VREF>(vref_set_);
-        }
-
         y_.setDataUpdated();
         yp_.setDataUpdated();
 

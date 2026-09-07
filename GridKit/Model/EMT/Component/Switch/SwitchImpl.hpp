@@ -88,15 +88,11 @@ namespace GridKit
       }
 
       // Resize coupling data
-      this->allocateExternalVectors(static_cast<IdxT>(SwitchExternalVariables::MAXIMUM), 6);
+      this->allocateExternalVectors(static_cast<IdxT>(SwitchExternalVariables::MAXIMUM), 0);
       signals_.registerExternalVariableSignals(*this);
-      this->setExternalResidualSignal(0, signals_.template getAttachedSignal<SwitchExternalVariables::V1A>());
-      this->setExternalResidualSignal(1, signals_.template getAttachedSignal<SwitchExternalVariables::V1B>());
-      this->setExternalResidualSignal(2, signals_.template getAttachedSignal<SwitchExternalVariables::V1C>());
-      this->setExternalResidualSignal(3, signals_.template getAttachedSignal<SwitchExternalVariables::V2A>());
-      this->setExternalResidualSignal(4, signals_.template getAttachedSignal<SwitchExternalVariables::V2B>());
-      this->setExternalResidualSignal(5, signals_.template getAttachedSignal<SwitchExternalVariables::V2C>());
 
+      for (IdxT p = 0; p < 3; ++p)
+        this->bindSignal(current_[static_cast<size_t>(p)], p);
       signals_.bindInternalVariableSignals(*this);
       allocated_ = true;
       return 0;
@@ -213,32 +209,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief External residual
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int Switch<scalar_type, index_type>::evaluateExternalResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* y_ext,
-        [[maybe_unused]] const ScalarT* yp_ext,
-        ScalarT*                        f_ext)
-    {
-      const ScalarT i12a = y[0];
-      const ScalarT i12b = y[1];
-      const ScalarT i12c = y[2];
-
-      f_ext[0] = -i12a;
-      f_ext[1] = -i12b;
-      f_ext[2] = -i12c;
-      f_ext[3] = i12a;
-      f_ext[4] = i12b;
-      f_ext[5] = i12c;
-
-      return 0;
-    }
-
     template <typename scalar_type, typename index_type>
     int Switch<scalar_type, index_type>::evaluateInternalResidual()
     {
@@ -254,29 +224,13 @@ namespace GridKit
     }
 
     /**
-     * @brief External residual contributions to the terminal buses.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int Switch<scalar_type, index_type>::evaluateExternalResidual()
-    {
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
-      this->scatterExternalResidual();
-
-      return 0;
-    }
-
-    /**
-     * @brief Residual contribution of the switch is pushed to the buses.
+     * @brief Assemble the switch equations.
      *
      */
     template <typename scalar_type, typename index_type>
     int Switch<scalar_type, index_type>::evaluateResidual()
     {
-      evaluateInternalResidual();
-      return evaluateExternalResidual();
+      return evaluateInternalResidual();
     }
 
     template <typename scalar_type, typename index_type>

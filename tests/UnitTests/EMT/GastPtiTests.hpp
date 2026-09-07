@@ -31,7 +31,7 @@ namespace GridKit::Testing
     struct Fixture
     {
       EMT::Controller::GastPti<Scalar, size_t>   model;
-      std::array<Scalar, 2>                      inputs{Scalar{1.02}, Scalar{0}};
+      std::array<Scalar, 2>                      inputs{Scalar{1.02}, Scalar{(0.8 + 0.12 * 0.02 + 0.02 / 0.06) / 2.0}};
       std::array<size_t, 2>                      indices{7, 8};
       std::array<EMT::Signal<Scalar, size_t>, 2> signals;
       EMT::Signal<Scalar, size_t>                pmech;

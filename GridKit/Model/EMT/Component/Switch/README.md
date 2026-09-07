@@ -90,14 +90,17 @@ None.
 \end{cases}
 ```
 
-### External Equations
+### Terminal Currents
 
 ```math
 \begin{aligned}
-\mathbf{i}_1 &\leftarrow -\mathbf{i}_{12} \\
-\mathbf{i}_2 &\leftarrow \mathbf{i}_{12}.
+\mathbf{i}_1 &= -\mathbf{i}_{12} \\
+\mathbf{i}_2 &= \mathbf{i}_{12}.
 \end{aligned}
 ```
+
+The bus registers these current signals and owns their residual and Jacobian
+contributions to KCL.
 
 ## Initialization
 

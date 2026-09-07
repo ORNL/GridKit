@@ -52,7 +52,7 @@ None.
 Name   | Port   | Init    | Description
 -------|--------|---------|------------
 `bus`  | Bus    | Known   | Three-phase terminal voltage in volts
-`vref` | Input  | Unknown | Voltage-control reference
+`vref` | Input  | Known when attached | Voltage-control reference; inferred when unattached
 `vs`   | Input  | Known   | Stabilizer input signal
 `vuel` | Input  | Known   | Under-excitation limiter input
 `voel` | Input  | Known   | Over-excitation limiter input
@@ -159,8 +159,10 @@ V_{ref} &= E_C + V_{tr,0} - V_S - V_{OEL} - V_{UEL}
 
 The measured terminal voltage initializes to `V_t`. All derivatives initialize
 to zero. An initial field voltage outside the configured limits is rejected.
-Optional attached inputs are read live; the reference is seeded from the
-operating point. Unattached inputs use their initialized values.
+Optional attached inputs are preserved and read live. The inferred reference
+above is used only when `vref` is unattached. If a supplied reference differs,
+consistent initialization resolves algebraic values and derivatives while
+retaining the initialized differential states.
 
 ## Monitors
 

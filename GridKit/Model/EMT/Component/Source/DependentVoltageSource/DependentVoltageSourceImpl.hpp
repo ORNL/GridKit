@@ -41,7 +41,6 @@ namespace GridKit
         }
         yfit_.emplace(*data.Y, ONE<RealT>);
         this->addOperator(&*yfit_);
-        rl_on_          = ZERO<RealT>;
         fit_on_         = ONE<RealT>;
         fit_ey_nonzero_ = yfit_->hasFeedthroughDerivative();
       }
@@ -54,6 +53,8 @@ namespace GridKit
         this->addOperator(&*zfit_);
       }
       size_ = equation_size_ + (yfit_.has_value() ? yfit_->size() : zfit_->size());
+      for (size_t p = 0; p < 3; ++p)
+        assignOutput(static_cast<Outputs>(p), &current_[p]);
       initializeMonitor();
     }
 
@@ -120,9 +121,6 @@ namespace GridKit
       if (yfit_.has_value())
       {
         yfit_->attachInput(&u_port_[0], &u_port_[1], &u_port_[2]);
-        yfit_->attachOutput(signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VA>(),
-                            signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VB>(),
-                            signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VC>());
       }
       if (zfit_.has_value())
       {
@@ -143,11 +141,8 @@ namespace GridKit
       }
 
       // Resize coupling data
-      this->allocateExternalVectors(static_cast<IdxT>(DependentVoltageSourceExternalVariables::MAXIMUM), 3);
+      this->allocateExternalVectors(static_cast<IdxT>(DependentVoltageSourceExternalVariables::MAXIMUM), 0);
       signals_.registerExternalVariableSignals(*this);
-      this->setExternalResidualSignal(0, signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VA>());
-      this->setExternalResidualSignal(1, signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VB>());
-      this->setExternalResidualSignal(2, signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VC>());
 
       allocated_ = true;
       return 0;
@@ -393,29 +388,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief External residual
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int DependentVoltageSource<scalar_type, index_type>::evaluateExternalResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* y_ext,
-        [[maybe_unused]] const ScalarT* yp_ext,
-        ScalarT*                        f_ext)
-    {
-      const ScalarT ia = y[0];
-      const ScalarT ib = y[1];
-      const ScalarT ic = y[2];
-
-      f_ext[0] = rl_on_ * ia;
-      f_ext[1] = rl_on_ * ib;
-      f_ext[2] = rl_on_ * ic;
-
-      return 0;
-    }
-
     template <typename scalar_type, typename index_type>
     int DependentVoltageSource<scalar_type, index_type>::evaluateInternalResidual()
     {
@@ -432,30 +404,14 @@ namespace GridKit
     }
 
     /**
-     * @brief External residual contributions to the bus.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int DependentVoltageSource<scalar_type, index_type>::evaluateExternalResidual()
-    {
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
-      this->scatterExternalResidual();
-      this->evaluateOperatorExternalResiduals();
-
-      return 0;
-    }
-
-    /**
-     * @brief Residual contribution of the source is pushed to the bus.
+     * @brief Assemble the source equations and its embedded operator.
      *
      */
     template <typename scalar_type, typename index_type>
     int DependentVoltageSource<scalar_type, index_type>::evaluateResidual()
     {
       evaluateInternalResidual();
-      return evaluateExternalResidual();
+      return this->evaluateExternalResidual();
     }
 
     /**
@@ -467,7 +423,7 @@ namespace GridKit
       this->gatherExternalVariables();
       const auto&                              external = this->externalVariableSignals();
       std::vector<typename SignalT::GradientT> gradients(external.size());
-      size_t                                   capacity = 6;
+      size_t                                   capacity = 3;
       for (size_t k = 0; k < external.size(); ++k)
       {
         external[k]->appendGradient(gradients[k]);
@@ -504,7 +460,6 @@ namespace GridKit
       for (size_t n = 0; n < 3; ++n)
       {
         append(residual_indices_[n], variable_indices_[n], fit_on_);
-        append(residual_indices_ext_[n], variable_indices_[n], rl_on_);
         for (const auto& [column, value] : gradients[n])
         {
           append(residual_indices_[n], column, value);
