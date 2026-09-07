@@ -23,8 +23,7 @@ if(GRIDKIT_ENABLE_ENZYME)
       PRIVATE
       -mllvm
       -enzyme-auto-sparsity=1
-      -fno-math-errno
-      -fno-vectorize)
+      -fno-math-errno)
 else()
   gridkit_add_library(
     phasor_dynamics_gen_classical
