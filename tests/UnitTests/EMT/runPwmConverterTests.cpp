@@ -8,6 +8,7 @@ int main()
   result += test.validation();
   result += test.bridgeVoltages();
   result += test.signalGradients();
+  result += test.powerBalance();
   result += test.dependencyTracking();
   result += test.parseAndAssemble();
   result += test.constantSignals();

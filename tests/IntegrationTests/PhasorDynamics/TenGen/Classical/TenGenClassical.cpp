@@ -199,7 +199,7 @@ int main()
 
   // Introduce fault to ground and run for 0.1s
   fault.setStatus(1);
-  ida.initializeSimulation(1.0);
+  ida.restartSimulation(1.0);
   ida.runSimulation(1.1, dt, output_cb);
 
   // Pm = 0.5 pu, H = 3 s; neglect electrical output and damping during the fault.
@@ -211,7 +211,7 @@ int main()
 
   // Clear fault and run until t = 10s.
   fault.setStatus(0);
-  ida.initializeSimulation(1.1);
+  ida.restartSimulation(1.1);
   ida.runSimulation(10.0, dt, output_cb);
   real_type stop = static_cast<real_type>(clock());
 

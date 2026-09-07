@@ -37,6 +37,8 @@ namespace GridKit
       {
         return;
       }
+      if (!j.at("mon").is_array())
+        throw std::invalid_argument("mon must be an array");
       auto monitors = json::array();
       for (const auto& monitor : j.at("mon"))
       {

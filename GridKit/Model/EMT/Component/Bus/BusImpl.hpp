@@ -24,6 +24,8 @@ namespace GridKit
     Bus<scalar_type, index_type>::Bus(const ModelDataT& data)
       : Bus()
     {
+      if (parameter<IdxT>(data, ModelDataT::Parameters::N, IdxT{3}) != 3)
+        throw std::invalid_argument("Bus \"" + data.id + "\" requires N = 3");
       monitor_ = std::make_unique<MonitorT>(data);
       for (const auto& [name, Y] : data.shunts)
         addShunt(name, Y);

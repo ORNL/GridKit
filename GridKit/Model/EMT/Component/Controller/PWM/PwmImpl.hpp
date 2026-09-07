@@ -129,29 +129,12 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Pwm<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        using Parameter = typename ModelDataT::Parameters;
-        auto read       = [&data](Parameter key, RealT fallback)
-        {
-          const auto entry = data.parameters.find(key);
-          if (entry == data.parameters.end())
-          {
-            return fallback;
-          }
-          if (const auto* value = std::get_if<RealT>(&entry->second))
-          {
-            return *value;
-          }
-          if (const auto* value = std::get_if<IdxT>(&entry->second))
-          {
-            return static_cast<RealT>(*value);
-          }
-          return std::numeric_limits<RealT>::quiet_NaN();
-        };
+        using Parameter    = typename ModelDataT::Parameters;
         const auto missing = std::numeric_limits<RealT>::quiet_NaN();
-        M_                 = read(Parameter::M, missing);
-        fm_                = read(Parameter::fm, missing);
-        fc_                = read(Parameter::fc, missing);
-        alignment_         = read(Parameter::alignment, RealT{0.5});
+        M_                 = parameter<RealT>(data, Parameter::M, missing);
+        fm_                = parameter<RealT>(data, Parameter::fm, missing);
+        fc_                = parameter<RealT>(data, Parameter::fc, missing);
+        alignment_         = parameter<RealT>(data, Parameter::alignment, RealT{0.5});
         horizon_           = std::log(4 / std::numeric_limits<RealT>::epsilon()) / Math::MU<RealT>;
 
         const RealT ratio     = fc_ / fm_;

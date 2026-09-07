@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <initializer_list>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
@@ -200,27 +201,13 @@ namespace GridKit
         return (*external_variable_signals_[static_cast<size_t>(variable)])->getVariableIndex();
       }
 
-      /// Writes a value to the specified external variable
-      ///
-      /// @warning This method should be used only in component initialization
-      /// methods. Use only if you know what you are doing.
-      ///
-      /// @tparam variable The external variable to write to
-      /// @param[in] value The value to write to the signal
-      /// @pre A signal has been assigned to the requested external
-      ///      variable
-      /// @post The signal of the corresponding external variable has
-      ///       the given value written to it
-      template <ExternalVariables variable>
-      auto writeExternalVariable(ScalarT value)
+      std::vector<SignalT*> attachedSignals(std::initializer_list<ExternalVariables> variables) const
       {
-        static_assert(variable < ExternalVariables::MAXIMUM);
-        if (!external_variable_signals_[static_cast<size_t>(variable)])
-        {
-          throw std::logic_error("A signal has not been assigned to this external variable");
-        }
-
-        (*external_variable_signals_[static_cast<size_t>(variable)])->init(value);
+        std::vector<SignalT*> result;
+        for (auto variable : variables)
+          if (const auto& signal = external_variable_signals_.at(static_cast<size_t>(variable)))
+            result.push_back(*signal);
+        return result;
       }
 
       /// Assigns a signal to an internal variable on this component

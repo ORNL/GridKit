@@ -502,27 +502,25 @@ namespace GridKit
                        {
                          if (dynamic_cast<Container*>(&component) == nullptr)
                            leaves.push_back(&component); });
-      std::stable_sort(leaves.begin(), leaves.end(), [](const auto* lhs, const auto* rhs)
-                       { return lhs->initializationOrder() < rhs->initializationOrder(); });
+      std::set<std::string> initial_paths;
+      for (auto* leaf : leaves)
+        initial_paths.insert(paths.at(leaf));
+      for (const auto& [path, values] : state)
+        if (!initial_paths.contains(path))
+          throw std::invalid_argument("Unknown initial state path: " + path);
+
+      typename ComponentT::InitialStateT initial;
       const std::map<std::string, RealT> empty;
       for (auto* leaf : leaves)
       {
         const auto& path  = paths.at(leaf);
         const auto  entry = state.find(path);
-        try
-        {
-          const int status = leaf->initializeState(entry == state.end() ? empty : entry->second);
-          if (status != 0)
-            return status;
-        }
-        catch (const std::exception& error)
-        {
-          throw std::invalid_argument(path + ": " + error.what());
-        }
+        initial.add(*leaf, path, entry == state.end() ? empty : entry->second, leaf->initializationPorts());
       }
+      const int status = initial.initialize();
       y_.setDataUpdated();
       yp_.setDataUpdated();
-      return 0;
+      return status;
     }
 
     template <typename scalar_type, typename index_type>
@@ -693,6 +691,36 @@ namespace GridKit
       {
         child->resetJacobianStructure();
       }
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Container<scalar_type, index_type>::resetHistory()
+    {
+      ComponentT::resetHistory();
+      for (auto& child : children_)
+        child->resetHistory();
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Container<scalar_type, index_type>::acceptStep(RealT time)
+    {
+      ComponentT::acceptStep(time);
+      for (auto& child : children_)
+        child->acceptStep(time);
+    }
+
+    template <typename scalar_type, typename index_type>
+    auto Container<scalar_type, index_type>::maximumStepSize() const -> RealT
+    {
+      RealT step = ComponentT::maximumStepSize();
+      for (const auto& child : children_)
+      {
+        const auto limit = child->maximumStepSize();
+        if (!(limit > RealT{0}))
+          throw std::invalid_argument("EMT history step bound must be positive");
+        step = std::min(step, limit);
+      }
+      return step;
     }
   } // namespace EMT
 } // namespace GridKit

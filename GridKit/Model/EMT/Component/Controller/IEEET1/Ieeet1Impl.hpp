@@ -183,7 +183,7 @@ namespace GridKit
         return ret;
       }
 
-      /** Initialize after the machine has seeded the field-voltage output. */
+      /** Initialize from the resolved field-voltage output. */
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
@@ -374,66 +374,21 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::V))
-        {
-          V_ = std::get<RealT>(data.parameters.at(Parameter::V));
-        }
-        if (data.parameters.contains(Parameter::Tr))
-        {
-          Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
-        }
-        if (data.parameters.contains(Parameter::Ka))
-        {
-          Ka_ = std::get<RealT>(data.parameters.at(Parameter::Ka));
-        }
-        if (data.parameters.contains(Parameter::Ta))
-        {
-          Ta_ = std::get<RealT>(data.parameters.at(Parameter::Ta));
-        }
-        if (data.parameters.contains(Parameter::Ke))
-        {
-          Ke_ = std::get<RealT>(data.parameters.at(Parameter::Ke));
-        }
-        if (data.parameters.contains(Parameter::Te))
-        {
-          Te_ = std::get<RealT>(data.parameters.at(Parameter::Te));
-        }
-        if (data.parameters.contains(Parameter::Kf))
-        {
-          Kf_ = std::get<RealT>(data.parameters.at(Parameter::Kf));
-        }
-        if (data.parameters.contains(Parameter::Tf))
-        {
-          Tf_ = std::get<RealT>(data.parameters.at(Parameter::Tf));
-        }
-        if (data.parameters.contains(Parameter::Vrmin))
-        {
-          Vrmin_ = std::get<RealT>(data.parameters.at(Parameter::Vrmin));
-        }
-        if (data.parameters.contains(Parameter::Vrmax))
-        {
-          Vrmax_ = std::get<RealT>(data.parameters.at(Parameter::Vrmax));
-        }
-        if (data.parameters.contains(Parameter::E1))
-        {
-          E1_ = std::get<RealT>(data.parameters.at(Parameter::E1));
-        }
-        if (data.parameters.contains(Parameter::E2))
-        {
-          E2_ = std::get<RealT>(data.parameters.at(Parameter::E2));
-        }
-        if (data.parameters.contains(Parameter::Se1))
-        {
-          Se1_ = std::get<RealT>(data.parameters.at(Parameter::Se1));
-        }
-        if (data.parameters.contains(Parameter::Se2))
-        {
-          Se2_ = std::get<RealT>(data.parameters.at(Parameter::Se2));
-        }
-        if (data.parameters.contains(Parameter::Ispdlim))
-        {
-          Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
-        }
+        V_       = parameter<RealT>(data, Parameter::V, V_);
+        Tr_      = parameter<RealT>(data, Parameter::Tr, Tr_);
+        Ka_      = parameter<RealT>(data, Parameter::Ka, Ka_);
+        Ta_      = parameter<RealT>(data, Parameter::Ta, Ta_);
+        Ke_      = parameter<RealT>(data, Parameter::Ke, Ke_);
+        Te_      = parameter<RealT>(data, Parameter::Te, Te_);
+        Kf_      = parameter<RealT>(data, Parameter::Kf, Kf_);
+        Tf_      = parameter<RealT>(data, Parameter::Tf, Tf_);
+        Vrmin_   = parameter<RealT>(data, Parameter::Vrmin, Vrmin_);
+        Vrmax_   = parameter<RealT>(data, Parameter::Vrmax, Vrmax_);
+        E1_      = parameter<RealT>(data, Parameter::E1, E1_);
+        E2_      = parameter<RealT>(data, Parameter::E2, E2_);
+        Se1_     = parameter<RealT>(data, Parameter::Se1, Se1_);
+        Se2_     = parameter<RealT>(data, Parameter::Se2, Se2_);
+        Ispdlim_ = parameter<RealT>(data, Parameter::Ispdlim, Ispdlim_);
 
         Ke_eff_ = Ke_;
         setDerivedParameters();

@@ -280,15 +280,17 @@ three scalar columns.
 {
   "class": "Converter",
   "id": "bridge",
-  "inputs": { "s": ["sa", "sb", "sc"], "vdc": "dc" },
-  "outputs": { "vo": ["ea", "eb", "ec"] },
-  "mon": ["vo"]
+  "inputs": { "s": ["sa", "sb", "sc"], "vdc": "dc", "i": ["ia", "ib", "ic"] },
+  "outputs": { "vo": ["ea", "eb", "ec"], "idc": "idc" },
+  "mon": ["vo", "idc"]
 }
 ```
 
 For a constant DC link, declare `{"id": "dc", "value": 1000.0}`.
 Alternatively, the embedding program or another component supplies `dc`. A
-DependentVoltageSource can consume `ea`, `eb`, and `ec`. Computed signals
+DependentVoltageSource can consume `ea`, `eb`, and `ec` and publish its phase
+currents to `ia`, `ib`, and `ic`. The bridge publishes the current drawn from
+the DC link as `idc`, with `vdc * idc = vo · i`. Computed signals
 are evaluated from the current time and inputs when read, including through
 Container boundaries. These connections introduce no DAE variables.
 
@@ -310,14 +312,16 @@ Container boundaries. These connections introduce no DAE variables.
 
 #### Parameter values
 
-Parameter values are typed by their JSON representation:
+Parameter types follow each model's declarations:
 
-- A boolean, a number with a decimal point, or an integer maps to a Boolean,
-  real, or integer parameter respectively; real-valued scalar parameters must
-  be written with a decimal point.
-- A length-3 array maps to a three-phase vector parameter, integer-valued
-  when every element is an integer.
-- A 3x3 nested array maps to a real three-phase matrix parameter.
+- Real parameters accept finite numeric values written as integer or floating
+  literals. Boolean values are distinct from numbers.
+- Index parameters require nonnegative integral values within the model's index
+  range; fractional values and out-of-range conversions are rejected.
+- Three-phase vectors require exactly three entries, and matrices require
+  exactly three rows of three numeric entries.
+- Unknown fields, parameter names, ports, monitored variables, and submodels are
+  errors. Invalid input reports the component and offending field.
 
 `SexsPti`, `SEXS-PTI`, and `SEXS` name the EMT [SEXS-PTI controller](Component/Controller/SEXS-PTI/README.md).
 Its required `V` is the terminal line-to-line RMS voltage in volts; optional

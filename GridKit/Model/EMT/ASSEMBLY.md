@@ -61,6 +61,40 @@ This checks local solvability in the existing coordinates. It neither proves
 regularity at all future states nor performs constraint reduction. IDA refreshes
 the classification and validation before each restart.
 
+## Operating-point initialization
+
+Components declare the signals they read during initialization, their
+initializable outputs, and any outputs whose operating point they require.
+The system resolves dependencies through signal gradients and initializes
+producers before consumers. Machine mechanical-power and field-voltage
+requirements precede their governor and exciter initializers.
+
+`InitialState` reconciles these requirements with prescribed outputs and
+declared constants before any state is changed. Each producer then initializes
+its own variables using the resolved output values. Unknown state paths,
+unknown output names, conflicting requirements, and cyclic initialization
+dependencies are errors. Computed outputs own no state; their prescribed values
+are checked after the stateful producers initialize.
+
+## Accepted-step history
+
+History belongs to the model or operator that uses it. IDA's
+`initializeSimulation(t0)` starts a fresh study and calls `resetHistory()` after
+loading its initial state. `restartSimulation(t0)` retains history for an event
+at the current time. Restoring saved initial conditions and initializing again
+starts another fresh study without reconfiguring the solver. Configuration also
+resets history before the initial structural Jacobian evaluation.
+
+`acceptStep(t)` records the consistent initial state and each
+accepted internal solver step; trial evaluations and interpolated monitor
+samples are never committed. A discontinuity preserves prior history and
+commits a new right limit at the event time.
+
+`maximumStepSize()` bounds forward steps, for example by the shortest transport
+delay. Containers and components propagate history notifications and take the
+smallest child or operator bound. This lifecycle supports future history-based
+models; it does not implement Delay or Propagation.
+
 ## Model Interface
 
 A model implements two member functions. Both read the same inputs and differ

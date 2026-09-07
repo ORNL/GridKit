@@ -48,7 +48,7 @@ namespace GridKit
       using Parameter = typename ModelDataT::Parameters;
       if (data.parameters.contains(Parameter::open))
       {
-        setOpen(std::get<bool>(data.parameters.at(Parameter::open)));
+        setOpen(parameter<bool>(data, Parameter::open));
       }
     }
 

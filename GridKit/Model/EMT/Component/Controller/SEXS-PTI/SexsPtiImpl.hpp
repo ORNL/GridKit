@@ -339,7 +339,7 @@ namespace GridKit
         {
           if (data.parameters.contains(param))
           {
-            member = std::get<RealT>(data.parameters.at(param));
+            member = parameter<RealT>(data, param);
           }
           else
           {
@@ -350,7 +350,7 @@ namespace GridKit
 
         load(Params::V, V_, "V");
         if (data.parameters.contains(Params::Tr))
-          Tr_ = std::get<RealT>(data.parameters.at(Params::Tr));
+          Tr_ = parameter<RealT>(data, Params::Tr);
         load(Params::Ta, Ta_, "Ta");
         load(Params::Tb, Tb_, "Tb");
         load(Params::Te, Te_, "Te");

@@ -35,7 +35,9 @@ namespace GridKit
       initializeParameters(data);
       equation_size_ = size_ = 3;
       setDerivedParams();
-      if (data.Zp.has_value() && data.Yp.has_value())
+      if (data.Zp.has_value() != data.Yp.has_value())
+        throw std::invalid_argument("LineLumped \"" + data.id + "\" requires both Zp and Yp submodels");
+      if (data.Zp.has_value())
       {
         z_.emplace(*data.Zp, dx_);
         this->addOperator(&*z_);
@@ -66,35 +68,12 @@ namespace GridKit
     void LineLumped<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::conductors))
-      {
-        conductors_ = std::get<ABCVector<IdxT>>(data.parameters.at(Parameter::conductors));
-      }
-
-      if (data.parameters.contains(Parameter::dx))
-      {
-        dx_ = std::get<RealT>(data.parameters.at(Parameter::dx));
-      }
-
-      if (data.parameters.contains(Parameter::Rp))
-      {
-        Rp_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::Rp));
-      }
-
-      if (data.parameters.contains(Parameter::Lp))
-      {
-        Lp_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::Lp));
-      }
-
-      if (data.parameters.contains(Parameter::Gp))
-      {
-        Gp_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::Gp));
-      }
-
-      if (data.parameters.contains(Parameter::Cp))
-      {
-        Cp_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::Cp));
-      }
+      conductors_     = parameter<ABCVector<IdxT>>(data, Parameter::conductors, conductors_);
+      dx_             = parameter<RealT>(data, Parameter::dx, dx_);
+      Rp_             = parameter<ABCMatrix<RealT>>(data, Parameter::Rp, Rp_);
+      Lp_             = parameter<ABCMatrix<RealT>>(data, Parameter::Lp, Lp_);
+      Gp_             = parameter<ABCMatrix<RealT>>(data, Parameter::Gp, Gp_);
+      Cp_             = parameter<ABCMatrix<RealT>>(data, Parameter::Cp, Cp_);
     }
 
     /**
