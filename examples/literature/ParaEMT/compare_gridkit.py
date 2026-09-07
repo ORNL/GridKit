@@ -43,8 +43,8 @@ def normalized_gridkit(directory):
         for key,column in [('speed_pu',f'Machine_gen_{gen}_omega'),('efd_pu',f'Machine_gen_{gen}_efd'),('pm_pu',f'GASTPTI_gov_{gen}_pmech'),('pss_vs_pu',f'IEEEST_stabilizer_{gen}_vss')]:
             out[f'gen{gen}_{key}'] = df[column]
     frame = pd.DataFrame(out)
-    assert frame.shape == (6001,49) and np.isfinite(frame.to_numpy()).all()
-    np.testing.assert_allclose(frame.time_s, np.arange(6001)*.0005,rtol=0,atol=1e-12)
+    assert frame.shape == (60001,49) and np.isfinite(frame.to_numpy()).all()
+    np.testing.assert_allclose(frame.time_s, np.arange(60001)*.00005,rtol=0,atol=1e-12)
     frame.to_csv(directory/'gridkit.csv.gz',index=False,float_format='%.12e',compression={'method':'gzip','mtime':0})
     schema = json.loads((RESULTS/'governor_step/dt25us/columns.json').read_text())
     for key in schema: schema[key] = schema[key].replace('ParaEMT','GridKit').replace('GAST ','GASTPTI ')
@@ -82,7 +82,7 @@ def compare_event(event):
     refs={label: pd.read_csv(RESULTS/event/label/'reference.csv.gz') for label in ('dt50us','dt25us','dt12_5us')}
     grid,ref=grids['tol1e-9'],refs['dt12_5us']
     summary={'experiment':event,
-      'comparison':'Same 0.5 ms samples; no time/angle shifting, fitted gains, or baseline subtraction. GridKit t=1 is the left limit; ParaEMT t=1 includes its event step.',
+      'comparison':'Same 50 µs samples; no time/angle shifting, fitted gains, or baseline subtraction. GridKit t=1 is the left limit; ParaEMT t=1 includes its event step.',
       'gridkit_to_paraemt':{key:metrics(grid,value) for key,value in refs.items()},
       'gridkit_refinement':{'1e-7_to_1e-8':metrics(grids['tol1e-7'],grids['tol1e-8']),'1e-8_to_1e-9':metrics(grids['tol1e-8'],grid)},
       'paraemt_refinement':{'50_to_25us':metrics(refs['dt50us'],refs['dt25us']),'25_to_12.5us':metrics(refs['dt25us'],ref)},

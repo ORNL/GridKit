@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><title>GridKit / ParaEMT responses</title>
 <style>body{font:17px system-ui;max-width:1400px;margin:2rem auto;padding:0 1rem;color:#172a3a;background:#f6f8fa}a{color:#075b9d}nav{display:flex;gap:2rem}.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:1rem}article{background:white;padding:1rem;border:1px solid #dce1e5;border-radius:6px}img{width:100%}h2{margin-top:3rem}table{border-collapse:collapse}td,th{padding:.5rem 1rem;border-bottom:1px solid #dce1e5}</style>
-<h1>ParaEMT / GridKit: each response separately</h1><nav><a href="#trip">Trip</a><a href="#governor_step">Governor step</a></nav>
+<h1>ParaEMT / GridKit: each response separately</h1><nav><a href="#trip">Trip</a><a href="#governor_step">Governor step</a><a href="../RUNTIMES.md">Runtimes</a></nav>
 <p>Every figure: ParaEMT on top, GridKit in the middle, GridKit − ParaEMT on the bottom. All three panels use identical x/y scales. Three-phase signals stay together. Speed is shown as deviation from synchronous speed in pu. Errors use common output times without interpolation or phase alignment.</p>
 <p>Trip caveat: GridKit models an ideal terminal opening. ParaEMT freezes generator 1 electrical history but continues its state kernel. Its post-trip generator 1 response and trip spike cannot validate the disconnected GridKit machine.</p>
 <section id="trip"><h2>Generator 1 trip at 1 s</h2>

@@ -57,13 +57,13 @@ def check_state(fine,models,trip):
         for count,row in enumerate(reader,1):
             assert len(row)==len(header)
             values=[float(v) for v in row];assert all(map(math.isfinite,values))
-            assert abs(values[0]-(count-1)*.0005)<1e-11
+            assert abs(values[0]-(count-1)*.00005)<1e-11
             for generator,gen,transformer,shunt,scale in pairs:
                 machine_current=scale*values[1+gen]
                 opened=trip and generator==1 and values[0]>1
                 maximum=max(maximum,abs((0 if opened else machine_current)+values[1+transformer]+values[1+shunt]))
                 if opened:maximum=max(maximum,abs(machine_current))
-        assert count==6001
+        assert count==60001
     reported=json.loads((fine/'run.json').read_text())['max_generator_kcl_mismatch_A']
     assert abs(maximum-reported)<1e-10,(maximum,reported)
     for directory in fine.parent.glob('tol*'):check_event(directory,index,models)
@@ -95,9 +95,9 @@ def main():
             expected=set(schema)-{'time_s'}
             for count,row in enumerate(reader,1):
                 assert all(math.isfinite(float(value)) for value in row.values()),(path,count)
-                assert abs(float(row['time_s'])-(count-1)*.0005)<1e-11,(path,count)
+                assert abs(float(row['time_s'])-(count-1)*.00005)<1e-11,(path,count)
                 regular[round(float(row['time_s']),10)]=row
-            assert count==6001,(path,count)
+            assert count==60001,(path,count)
         metadata=json.loads((path.parent/'run.json').read_text())
         if metadata['simulator'].startswith('GridKit'):
             assert max(metadata['jacobian_check_max_scaled_difference'].values())<1e-4
@@ -135,7 +135,25 @@ def main():
         assert pdf.startswith(b'%PDF') and len(re.findall(rb'/Type /Page\b',pdf))==len(report['pages'])
     for link in re.findall(r'(?:href|src)="([^"]+)"',(ROOT/'plots/index.html').read_text()):
         if not link.startswith('#'):assert (ROOT/'plots'/link).is_file(),link
-    print(f"Verified {len(manifest['artifacts'])} artifacts, 12 normalized runs, 6 native-step event exports, both event projections, full-state current balance, winding inverses, and all 48 channels in both PDF/gallery reports. KCL maxima (A): {drift}")
+    distinct_trials=set()
+    for kind in ('runtime','runtime_cold'):
+        trials=list((ROOT/'results'/kind).glob('*/*/*/trial*/run.json'))
+        assert len(trials)==36,(kind,len(trials))
+        for path in trials:
+            run=json.loads(path.read_text())
+            distinct_trials.add(run.get('reused_from',str(path.parent.relative_to(ROOT))))
+            event,simulator,setting=path.parts[-5:-2]
+            folder=event if simulator=='ParaEMT' else 'gridkit' if event=='governor_step' else 'gridkit_trip'
+            baseline=json.loads((ROOT/'results'/folder/setting/'run.json').read_text())
+            assert not run['result_capture'] and run['final_state_matches_capture']
+            assert len(run['final_state'])==len(baseline['final_state'])
+            for a,b in zip(run['final_state'],baseline['final_state']):assert abs(a-b)<=1e-12*(1+abs(b))
+            for key in ('loop_wall_s','loop_cpu_s','process_wall_s'):assert math.isfinite(run[key]) and run[key]>0
+            if kind=='runtime' and simulator=='ParaEMT':
+                assert run['jit_specializations_stable']
+                assert run['jit_signatures_before_loop']==run['jit_signatures_after_loop']
+    assert len(distinct_trials)==54,len(distinct_trials)
+    print(f"Verified {len(manifest['artifacts'])} artifacts, 12 normalized runs, 6 native-step event exports, both event projections, full-state current balance, winding inverses, all 48 plot channels, and 54 distinct cold/warm runtime trials. KCL maxima (A): {drift}")
 
 
 if __name__=='__main__': main()

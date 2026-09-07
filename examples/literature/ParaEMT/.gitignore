@@ -1,0 +1,7 @@
+# Keep normalized plot data and run summaries; ignore raw simulation output.
+*.log
+/results/**/mon.csv
+/results/**/mon.csv.gz
+/results/**/state.csv
+/results/**/state.csv.gz
+/results/**/states.npz
