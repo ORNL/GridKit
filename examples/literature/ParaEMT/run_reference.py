@@ -31,6 +31,36 @@ if not hasattr(ET.ElementTree, "getiterator"):
 from psutils import initialize_emt
 
 
+def normalized(t, x, v, xb, pfd, dyd):
+    data = {"time_s": t}
+    schema = {"time_s": "Simulation time, seconds"}
+    for phase_idx, phase in enumerate("abc"):
+        for bus_idx, bus in enumerate(pfd.bus_num):
+            key = f"bus{bus}_v{phase}_pu"
+            data[key] = v[:, phase_idx * len(pfd.bus_num) + bus_idx]
+            schema[key] = "Instantaneous phase voltage / (sqrt(2/3) * nominal line-line RMS voltage)"
+    for i, bus in enumerate(pfd.bus_num):
+        key = f"bus{bus}_vm_pu"
+        data[key] = xb[:, i * dyd.bus_odr + 3]
+        schema[key] = "ParaEMT instantaneous three-phase magnitude sqrt(2/3*(va^2+vb^2+vc^2)); not windowed RMS"
+    for i, bus in enumerate(pfd.gen_bus):
+        columns = {
+            "speed_pu": (dyd.gen_genrou_xi_st + i * dyd.gen_genrou_odr + 1, pfd.ws,
+                         "Rotor electrical speed / synchronous electrical speed"),
+            "efd_pu": (dyd.exc_sexs_xi_st + i * dyd.exc_sexs_odr + 1, 1,
+                       "SEXS field voltage on ParaEMT exciter base"),
+            "pm_pu": (dyd.gov_gast_xi_st + i * dyd.gov_gast_odr + 3, 1,
+                      "GAST mechanical power on machine MVA base"),
+            "pss_vs_pu": (dyd.pss_ieeest_xi_st + i * dyd.pss_ieeest_odr + 9, 1,
+                          "IEEEST stabilizer output into SEXS"),
+        }
+        for name, (index, scale, description) in columns.items():
+            key = f"gen{bus}_{name}"
+            data[key] = x[:, index] / scale
+            schema[key] = description
+    return pd.DataFrame(data), schema
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dt-us", type=float, default=50.0)
@@ -76,6 +106,7 @@ def main():
         emt.t_gentrip = 1000.0
     init_end = time.perf_counter()
     event_applied_at = None
+    dense_t, dense_x, dense_v, dense_xb = [], [], [], []
 
     # Preserve upstream prediction history, save cadence, and reinitialization.
     for tn in range(1, nsteps + 1):
@@ -97,6 +128,11 @@ def main():
         emt.BusMea(pfd, dyd, tn)
         emt.updateX(pfd, dyd, ini, tn)
         emt.updateXibr(pfd, dyd, ini, ts)
+        if .995-1e-12 <= tn*ts <= 1.015+1e-12:
+            dense_t.append(tn*ts)
+            dense_x.append(emt.x_pv_1.copy())
+            dense_v.append(emt.Vsol.copy())
+            dense_xb.append(emt.x_bus_pv_1.copy())
         emt.x_pred = {0: emt.x_pred[1], 1: emt.x_pred[2], 2: emt.x_pv_1}
         if tn % dsrate == 0:
             k = tn // dsrate
@@ -122,34 +158,12 @@ def main():
     x = np.stack(list(emt.x.values()))
     v = np.stack(list(emt.v.values()))
     xb = np.stack(list(emt.x_bus.values()))
-    data = {"time_s": t}
-    schema = {"time_s": "Simulation time, seconds"}
-    for phase_idx, phase in enumerate("abc"):
-        for bus_idx, bus in enumerate(pfd.bus_num):
-            key = f"bus{bus}_v{phase}_pu"
-            data[key] = v[:, phase_idx * len(pfd.bus_num) + bus_idx]
-            schema[key] = "Instantaneous phase voltage / (sqrt(2/3) * nominal line-line RMS voltage)"
-    for i, bus in enumerate(pfd.bus_num):
-        key = f"bus{bus}_vm_pu"
-        data[key] = xb[:, i * dyd.bus_odr + 3]
-        schema[key] = "ParaEMT instantaneous three-phase magnitude sqrt(2/3*(va^2+vb^2+vc^2)); not windowed RMS"
-    for i, bus in enumerate(pfd.gen_bus):
-        columns = {
-            "speed_pu": (dyd.gen_genrou_xi_st + i * dyd.gen_genrou_odr + 1, pfd.ws,
-                         "Rotor electrical speed / synchronous electrical speed"),
-            "efd_pu": (dyd.exc_sexs_xi_st + i * dyd.exc_sexs_odr + 1, 1,
-                       "SEXS field voltage on ParaEMT exciter base"),
-            "pm_pu": (dyd.gov_gast_xi_st + i * dyd.gov_gast_odr + 3, 1,
-                      "GAST mechanical power on machine MVA base"),
-            "pss_vs_pu": (dyd.pss_ieeest_xi_st + i * dyd.pss_ieeest_odr + 9, 1,
-                          "IEEEST stabilizer output into SEXS"),
-        }
-        for name, (index, scale, description) in columns.items():
-            key = f"gen{bus}_{name}"
-            data[key] = x[:, index] / scale
-            schema[key] = description
-    pd.DataFrame(data).to_csv(output / "reference.csv.gz", index=False, float_format="%.12e",
-                             compression={"method": "gzip", "mtime": 0})
+    frame, schema = normalized(t, x, v, xb, pfd, dyd)
+    frame.to_csv(output / "reference.csv.gz", index=False, float_format="%.12e",
+                 compression={"method": "gzip", "mtime": 0})
+    dense, _ = normalized(np.array(dense_t), np.stack(dense_x), np.stack(dense_v), np.stack(dense_xb), pfd, dyd)
+    dense.to_csv(output / "event_waveforms.csv.gz", index=False, float_format="%.12e",
+                 compression={"method": "gzip", "mtime": 0})
     # All saved state vectors, including controller and bus-measurement states.
     if args.save_states:
         np.savez_compressed(output / "states.npz", time_s=t, x=x, v=v, x_bus=xb,
@@ -159,10 +173,11 @@ def main():
                           if name.startswith("ec_") and isinstance(value, np.ndarray)}
     (output / "machine_parameters.json").write_text(json.dumps(machine_parameters, indent=2) + "\n")
     metadata = {
-        "simulator": "ParaEMT (GridKit not run)",
+        "simulator": "ParaEMT",
         "upstream_revision": "d79d735a4a587d56c5b88187d1a499195b6b2b84",
         "systemN": 2, "duration_s": args.duration, "dt_s": ts,
-        "output_interval_s": dsrate * ts, "steps": nsteps, "samples": len(t),
+        "output_interval_s": dsrate * ts, "event_waveform_interval_s": ts,
+        "event_waveform_window_s": [.995,1.015], "steps": nsteps, "samples": len(t),
         "network_solver": "serial sparse LU", "loadmodel_option": 1,
         "models": {"GENROU": 3, "SEXS": 3, "GAST": 3, "IEEEST": 3},
         "generator_bus": pfd.gen_bus.tolist(), "generator_MVA_base": pfd.gen_MVA_base.tolist(),

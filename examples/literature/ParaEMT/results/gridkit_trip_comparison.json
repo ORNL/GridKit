@@ -1,0 +1,2807 @@
+{
+  "experiment": "trip",
+  "comparison": "Same 0.5 ms samples; no time/angle shifting, fitted gains, or baseline subtraction. GridKit t=1 is the left limit; ParaEMT t=1 includes its event step.",
+  "gridkit_to_paraemt": {
+    "dt50us": {
+      "all": {
+        "phase_voltage": {
+          "max_abs_pu": 4.250890823773773,
+          "rms_pu": 0.01767968422654581,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 2.5556048882372275,
+          "rms_pu": 0.011302301813607201,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.02998839578557566,
+          "rms_pu": 0.00842563559531519,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.20531243890866985,
+          "rms_pu": 0.04474616931876141,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.177732525940816,
+          "rms_pu": 0.03642420445130597,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.11427850238872223,
+          "rms_pu": 0.04647361686338038,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.687
+        }
+      },
+      "before_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.004471016277382408,
+          "rms_pu": 0.0014887197338551467,
+          "channel": "bus9_vc_pu",
+          "time_s": 0.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.00035142364101270473,
+          "rms_pu": 0.0001103497074761791,
+          "channel": "bus6_vm_pu",
+          "time_s": 0.001
+        },
+        "rotor_speed": {
+          "max_abs_pu": 2.1472768143793175e-05,
+          "rms_pu": 1.2218552628091072e-05,
+          "channel": "gen2_speed_pu",
+          "time_s": 0.9995
+        },
+        "mechanical_power": {
+          "max_abs_pu": 7.697495550851308e-05,
+          "rms_pu": 3.182962289721385e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 0.9995
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.0002545222036474115,
+          "rms_pu": 0.00013731259218779278,
+          "channel": "gen3_efd_pu",
+          "time_s": 0.9995
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0013281255397696093,
+          "rms_pu": 0.000265662907493492,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 0.0185
+        }
+      },
+      "event_through_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 4.250890823773773,
+          "rms_pu": 0.16992900245316048,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 2.5556048882372275,
+          "rms_pu": 0.13570894596093813,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.0003299262415952242,
+          "rms_pu": 0.00011545314948747495,
+          "channel": "gen1_speed_pu",
+          "time_s": 1.02
+        },
+        "mechanical_power": {
+          "max_abs_pu": 7.99045977327717e-05,
+          "rms_pu": 7.275124341419473e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 1.02
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.00032464395640596777,
+          "rms_pu": 0.0002570755674162571,
+          "channel": "gen1_efd_pu",
+          "time_s": 1.02
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.10600208585081555,
+          "rms_pu": 0.05876265696786562,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.013
+        }
+      },
+      "after_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.14997003435918627,
+          "rms_pu": 0.013433309951350598,
+          "channel": "bus2_vb_pu",
+          "time_s": 1.0005
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.08612693068250976,
+          "rms_pu": 0.003188109095912576,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.016
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.02998839578557566,
+          "rms_pu": 0.0103201102635513,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.20531243890866985,
+          "rms_pu": 0.05480720345121297,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.177732525940816,
+          "rms_pu": 0.04461396915214263,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.11427850238872223,
+          "rms_pu": 0.056922756880985165,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.687
+        }
+      },
+      "after_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 0.06736176120479542,
+          "rms_pu": 0.013175168942440035,
+          "channel": "bus4_va_pu",
+          "time_s": 1.022
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.06143347447420133,
+          "rms_pu": 0.001701299789691085,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.0245
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.02998839578557566,
+          "rms_pu": 0.01037209442522818,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.20531243890866985,
+          "rms_pu": 0.05508331153127525,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.177732525940816,
+          "rms_pu": 0.044838718621691386,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.11427850238872223,
+          "rms_pu": 0.05689620619348621,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.687
+        }
+      }
+    },
+    "dt25us": {
+      "all": {
+        "phase_voltage": {
+          "max_abs_pu": 8.439124611415773,
+          "rms_pu": 0.028042888281956942,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 7.0220987006622275,
+          "rms_pu": 0.030265916408910916,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.02800647549957569,
+          "rms_pu": 0.007983530971056975,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.19536034698536986,
+          "rms_pu": 0.04300509976374273,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.1908952176488159,
+          "rms_pu": 0.0395539521382553,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.10728168761660868,
+          "rms_pu": 0.043097148076334954,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.6855
+        }
+      },
+      "before_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.0022630466766324093,
+          "rms_pu": 0.0007537777204959661,
+          "channel": "bus9_vc_pu",
+          "time_s": 0.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.0001763828520127131,
+          "rms_pu": 5.46476699423226e-05,
+          "channel": "bus6_vm_pu",
+          "time_s": 0.001
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.0872393443883688e-05,
+          "rms_pu": 6.188500414467694e-06,
+          "channel": "gen2_speed_pu",
+          "time_s": 0.9995
+        },
+        "mechanical_power": {
+          "max_abs_pu": 3.899977460841697e-05,
+          "rms_pu": 1.5972823171602658e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 0.9995
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.0001287317286473577,
+          "rms_pu": 7.116426407641857e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 0.9995
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0006773903445136092,
+          "rms_pu": 0.0001350736826190733,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 0.0185
+        }
+      },
+      "event_through_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 8.439124611415773,
+          "rms_pu": 0.3327979775207413,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 7.0220987006622275,
+          "rms_pu": 0.36590704958883796,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.0003169687205952787,
+          "rms_pu": 0.00010842548754246551,
+          "channel": "gen1_speed_pu",
+          "time_s": 1.02
+        },
+        "mechanical_power": {
+          "max_abs_pu": 4.0481828432747946e-05,
+          "rms_pu": 3.554949281992912e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 1.02
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.0002192990494058744,
+          "rms_pu": 0.00013923661319800105,
+          "channel": "gen1_efd_pu",
+          "time_s": 1.02
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.10300036515569308,
+          "rms_pu": 0.057184390256050106,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.0165
+        }
+      },
+      "after_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.1328678194696863,
+          "rms_pu": 0.006927704062470098,
+          "channel": "bus2_vb_pu",
+          "time_s": 1.0005
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.058904241075709796,
+          "rms_pu": 0.0021291673701115087,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.016
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.02800647549957569,
+          "rms_pu": 0.009778602413572124,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.19536034698536986,
+          "rms_pu": 0.05267466317232869,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.1908952176488159,
+          "rms_pu": 0.04844751064196731,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.10728168761660868,
+          "rms_pu": 0.05278732305594141,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.6855
+        }
+      },
+      "after_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 0.04879024728349546,
+          "rms_pu": 0.006688171632044303,
+          "channel": "bus4_va_pu",
+          "time_s": 1.022
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.04627899424400139,
+          "rms_pu": 0.0013905800417874138,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.0245
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.02800647549957569,
+          "rms_pu": 0.009827859015064083,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.19536034698536986,
+          "rms_pu": 0.052940028273533224,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.1908952176488159,
+          "rms_pu": 0.04869157822897628,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.10728168761660868,
+          "rms_pu": 0.05273320900410315,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.6855
+        }
+      }
+    },
+    "dt12_5us": {
+      "all": {
+        "phase_voltage": {
+          "max_abs_pu": 16.847933440727772,
+          "rms_pu": 0.05489045517780356,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 16.005898413322228,
+          "rms_pu": 0.06888095983514078,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.026960593078075745,
+          "rms_pu": 0.007754594320168377,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.19020479531746987,
+          "rms_pu": 0.042108136400767965,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.19784406167381596,
+          "rms_pu": 0.04118191031220726,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.10367541704503969,
+          "rms_pu": 0.04134747923486167,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.685
+        }
+      },
+      "before_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.0011474718472674079,
+          "rms_pu": 0.00038242044648915377,
+          "channel": "bus9_vc_pu",
+          "time_s": 0.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.00015091060489069719,
+          "rms_pu": 2.6891138630660364e-05,
+          "channel": "bus3_vm_pu",
+          "time_s": 0.003
+        },
+        "rotor_speed": {
+          "max_abs_pu": 5.512996643863843e-06,
+          "rms_pu": 3.1408113047005704e-06,
+          "channel": "gen2_speed_pu",
+          "time_s": 0.9995
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.9806914608455628e-05,
+          "rms_pu": 8.74477775712397e-06,
+          "channel": "gen3_pm_pu",
+          "time_s": 0.9995
+        },
+        "field_voltage": {
+          "max_abs_pu": 6.548808564743602e-05,
+          "rms_pu": 3.798219242978276e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 0.9995
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0003495119913191908,
+          "rms_pu": 6.905019842153846e-05,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 0.018
+        }
+      },
+      "event_through_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 16.847933440727772,
+          "rms_pu": 0.6632301090237298,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 16.005898413322228,
+          "rms_pu": 0.8332785055820504,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.00031044124749524116,
+          "rms_pu": 0.00010510761623719233,
+          "channel": "gen1_speed_pu",
+          "time_s": 1.02
+        },
+        "mechanical_power": {
+          "max_abs_pu": 2.055762313279974e-05,
+          "rms_pu": 1.704002403115975e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 1.02
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.000166479040405898,
+          "rms_pu": 8.158909908561193e-05,
+          "channel": "gen1_efd_pu",
+          "time_s": 1.02
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.10150290257658408,
+          "rms_pu": 0.05640336842903868,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.0165
+        }
+      },
+      "after_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.10869625500328628,
+          "rms_pu": 0.0035823136102276078,
+          "channel": "bus2_vb_pu",
+          "time_s": 1.0005
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.035206258858009765,
+          "rms_pu": 0.0013065483714987734,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.016
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.026960593078075745,
+          "rms_pu": 0.009498190780304581,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.19020479531746987,
+          "rms_pu": 0.051576021193976314,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.19784406167381596,
+          "rms_pu": 0.05044152922460196,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.10367541704503969,
+          "rms_pu": 0.05064430943094828,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.685
+        }
+      },
+      "after_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 0.030371636671195468,
+          "rms_pu": 0.0033953180364506,
+          "channel": "bus4_va_pu",
+          "time_s": 1.022
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.029840873270501334,
+          "rms_pu": 0.0009779287475252295,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.0245
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.026960593078075745,
+          "rms_pu": 0.009546034920082946,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.19020479531746987,
+          "rms_pu": 0.051835851632233386,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.19784406167381596,
+          "rms_pu": 0.050695643660817975,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.10367541704503969,
+          "rms_pu": 0.05057485045406811,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 1.685
+        }
+      }
+    }
+  },
+  "gridkit_refinement": {
+    "1e-7_to_1e-8": {
+      "all": {
+        "phase_voltage": {
+          "max_abs_pu": 7.34560996097644e-06,
+          "rms_pu": 2.019265942209e-06,
+          "channel": "bus2_vc_pu",
+          "time_s": 2.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 9.245431682458616e-07,
+          "rms_pu": 1.6649928091545253e-07,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.1585
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.6253311252434344e-08,
+          "rms_pu": 7.234572792763415e-09,
+          "channel": "gen2_speed_pu",
+          "time_s": 2.856
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.290099670425704e-07,
+          "rms_pu": 4.461695225460273e-08,
+          "channel": "gen3_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 1.824748487866401e-07,
+          "rms_pu": 8.968945195481103e-08,
+          "channel": "gen3_efd_pu",
+          "time_s": 2.9965
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 9.39804938714095e-06,
+          "rms_pu": 3.4841129052662868e-06,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 1.292
+        }
+      },
+      "before_event": {
+        "phase_voltage": {
+          "max_abs_pu": 8.656687022767784e-07,
+          "rms_pu": 1.8425726750972322e-07,
+          "channel": "bus6_vc_pu",
+          "time_s": 0.495
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 8.443332513152768e-07,
+          "rms_pu": 1.5619336302403312e-07,
+          "channel": "bus6_vm_pu",
+          "time_s": 0.404
+        },
+        "rotor_speed": {
+          "max_abs_pu": 4.046587842587712e-09,
+          "rms_pu": 1.4152044312903833e-09,
+          "channel": "gen3_speed_pu",
+          "time_s": 0.9915
+        },
+        "mechanical_power": {
+          "max_abs_pu": 6.849913303241806e-09,
+          "rms_pu": 2.6782780349624626e-09,
+          "channel": "gen2_pm_pu",
+          "time_s": 0.9995
+        },
+        "field_voltage": {
+          "max_abs_pu": 4.601879100007977e-08,
+          "rms_pu": 2.280853419405591e-08,
+          "channel": "gen1_efd_pu",
+          "time_s": 0.9995
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 9.125086755357287e-06,
+          "rms_pu": 3.350118184549326e-06,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 0.999
+        }
+      },
+      "event_through_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 9.396891680335528e-07,
+          "rms_pu": 3.1780274351663716e-07,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0035
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 4.005382023830606e-07,
+          "rms_pu": 1.1143896580935965e-07,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.0065
+        },
+        "rotor_speed": {
+          "max_abs_pu": 4.4756439665505354e-09,
+          "rms_pu": 2.1701801661788704e-09,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.0085
+        },
+        "mechanical_power": {
+          "max_abs_pu": 7.113974298533776e-09,
+          "rms_pu": 6.513217395581959e-09,
+          "channel": "gen2_pm_pu",
+          "time_s": 1.02
+        },
+        "field_voltage": {
+          "max_abs_pu": 4.619035554043194e-08,
+          "rms_pu": 4.1726297063680305e-08,
+          "channel": "gen1_efd_pu",
+          "time_s": 1.02
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 8.744281315125736e-06,
+          "rms_pu": 1.8999759795418195e-06,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 1.0
+        }
+      },
+      "after_event": {
+        "phase_voltage": {
+          "max_abs_pu": 7.34560996097644e-06,
+          "rms_pu": 2.4698515933472644e-06,
+          "channel": "bus2_vc_pu",
+          "time_s": 2.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 9.245431682458616e-07,
+          "rms_pu": 1.714379259262199e-07,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.1585
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.6253311252434344e-08,
+          "rms_pu": 8.804539376002055e-09,
+          "channel": "gen2_speed_pu",
+          "time_s": 2.856
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.290099670425704e-07,
+          "rms_pu": 5.4616019354651544e-08,
+          "channel": "gen3_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 1.824748487866401e-07,
+          "rms_pu": 1.0866341060803007e-07,
+          "channel": "gen3_efd_pu",
+          "time_s": 2.9965
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 9.39804938714095e-06,
+          "rms_pu": 3.5480284559879027e-06,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 1.292
+        }
+      },
+      "after_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 7.34560996097644e-06,
+          "rms_pu": 2.482089615541926e-06,
+          "channel": "bus2_vc_pu",
+          "time_s": 2.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 9.245431682458616e-07,
+          "rms_pu": 1.7193042961851788e-07,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.1585
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.6253311252434344e-08,
+          "rms_pu": 8.846158440927061e-09,
+          "channel": "gen2_speed_pu",
+          "time_s": 2.856
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.290099670425704e-07,
+          "rms_pu": 5.488725725343273e-08,
+          "channel": "gen3_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 1.824748487866401e-07,
+          "rms_pu": 1.091303872712149e-07,
+          "channel": "gen3_efd_pu",
+          "time_s": 2.9965
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 9.39804938714095e-06,
+          "rms_pu": 3.5622815546729765e-06,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 1.292
+        }
+      }
+    },
+    "1e-8_to_1e-9": {
+      "all": {
+        "phase_voltage": {
+          "max_abs_pu": 1.100926868710661e-06,
+          "rms_pu": 3.102438082826764e-07,
+          "channel": "bus2_vb_pu",
+          "time_s": 2.993
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 1.2878996780152363e-07,
+          "rms_pu": 2.2405171641980597e-08,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.083
+        },
+        "rotor_speed": {
+          "max_abs_pu": 2.331280501977062e-09,
+          "rms_pu": 1.0762017206234974e-09,
+          "channel": "gen3_speed_pu",
+          "time_s": 2.5435
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.9446584897941932e-08,
+          "rms_pu": 6.879376681448688e-09,
+          "channel": "gen3_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 2.598488135774346e-08,
+          "rms_pu": 1.3149073908748467e-08,
+          "channel": "gen2_efd_pu",
+          "time_s": 2.4835
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 1.120852917702031e-06,
+          "rms_pu": 3.723972006914858e-07,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 2.7505
+        }
+      },
+      "before_event": {
+        "phase_voltage": {
+          "max_abs_pu": 1.2127360715652458e-07,
+          "rms_pu": 2.659791363339391e-08,
+          "channel": "bus6_vb_pu",
+          "time_s": 0.5395
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 1.1978286562630558e-07,
+          "rms_pu": 2.107005546046084e-08,
+          "channel": "bus6_vm_pu",
+          "time_s": 0.5395
+        },
+        "rotor_speed": {
+          "max_abs_pu": 5.092239963033762e-10,
+          "rms_pu": 1.9373198186597147e-10,
+          "channel": "gen3_speed_pu",
+          "time_s": 0.986
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.0382398274444427e-09,
+          "rms_pu": 4.167038625849704e-10,
+          "channel": "gen2_pm_pu",
+          "time_s": 0.9995
+        },
+        "field_voltage": {
+          "max_abs_pu": 7.666828727437291e-09,
+          "rms_pu": 3.547907898693375e-09,
+          "channel": "gen3_efd_pu",
+          "time_s": 0.996
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 9.92795140091775e-07,
+          "rms_pu": 3.176867307588372e-07,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 0.455
+        }
+      },
+      "event_through_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 1.1020261926186076e-07,
+          "rms_pu": 4.533370670962593e-08,
+          "channel": "bus1_vb_pu",
+          "time_s": 1.002
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 7.362945320110725e-08,
+          "rms_pu": 1.908886458040534e-08,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.0155
+        },
+        "rotor_speed": {
+          "max_abs_pu": 5.49299827845573e-10,
+          "rms_pu": 3.7863318681018353e-10,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.02
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.0852254650473014e-09,
+          "rms_pu": 1.001405099868501e-09,
+          "channel": "gen2_pm_pu",
+          "time_s": 1.02
+        },
+        "field_voltage": {
+          "max_abs_pu": 7.845366134517917e-09,
+          "rms_pu": 7.082441289656273e-09,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.02
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 6.568380159222009e-07,
+          "rms_pu": 1.8045332566710313e-07,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 1.002
+        }
+      },
+      "after_event": {
+        "phase_voltage": {
+          "max_abs_pu": 1.100926868710661e-06,
+          "rms_pu": 3.795348111742071e-07,
+          "channel": "bus2_vb_pu",
+          "time_s": 2.993
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 1.2878996780152363e-07,
+          "rms_pu": 2.3046392063413644e-08,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.083
+        },
+        "rotor_speed": {
+          "max_abs_pu": 2.331280501977062e-09,
+          "rms_pu": 1.3110303520582862e-09,
+          "channel": "gen3_speed_pu",
+          "time_s": 2.5435
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.9446584897941932e-08,
+          "rms_pu": 8.421015772168736e-09,
+          "channel": "gen3_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 2.598488135774346e-08,
+          "rms_pu": 1.5908625886119693e-08,
+          "channel": "gen2_efd_pu",
+          "time_s": 2.4835
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 1.120852917702031e-06,
+          "rms_pu": 3.9694110861171576e-07,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 2.7505
+        }
+      },
+      "after_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 1.100926868710661e-06,
+          "rms_pu": 3.8141960235633154e-07,
+          "channel": "bus2_vb_pu",
+          "time_s": 2.993
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 1.2878996780152363e-07,
+          "rms_pu": 2.3080984130282152e-08,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.083
+        },
+        "rotor_speed": {
+          "max_abs_pu": 2.331280501977062e-09,
+          "rms_pu": 1.3170863372881472e-09,
+          "channel": "gen3_speed_pu",
+          "time_s": 2.5435
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.9446584897941932e-08,
+          "rms_pu": 8.462840155611771e-09,
+          "channel": "gen3_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 2.598488135774346e-08,
+          "rms_pu": 1.597290844985845e-08,
+          "channel": "gen2_efd_pu",
+          "time_s": 2.4835
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 1.120852917702031e-06,
+          "rms_pu": 3.9855544487714225e-07,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 2.7505
+        }
+      }
+    }
+  },
+  "paraemt_refinement": {
+    "50_to_25us": {
+      "all": {
+        "phase_voltage": {
+          "max_abs_pu": 4.188233787642,
+          "rms_pu": 0.01465811112200588,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 4.466493812425,
+          "rms_pu": 0.019246468049302554,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.001981920285999972,
+          "rms_pu": 0.00045715671833966717,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.009952091923299988,
+          "rms_pu": 0.0017803232001858758,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.013162691707999885,
+          "rms_pu": 0.003144912940129469,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.011346564416050002,
+          "rms_pu": 0.0038782664993784956,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 2.2075
+        }
+      },
+      "before_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.002207969600749999,
+          "rms_pu": 0.0007349663949956928,
+          "channel": "bus9_vc_pu",
+          "time_s": 0.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.00017504078899999165,
+          "rms_pu": 5.5840016179677675e-05,
+          "channel": "bus6_vm_pu",
+          "time_s": 0.001
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.0600374699909487e-05,
+          "rms_pu": 6.030067591284425e-06,
+          "channel": "gen2_speed_pu",
+          "time_s": 0.9995
+        },
+        "mechanical_power": {
+          "max_abs_pu": 3.7975180900096106e-05,
+          "rms_pu": 1.6397063062710414e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 0.9995
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.0001257904750000538,
+          "rms_pu": 6.622947914096596e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 0.9995
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.000650735195256,
+          "rms_pu": 0.00013059433826746153,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 0.0185
+        }
+      },
+      "event_through_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 4.188233787642,
+          "rms_pu": 0.16522197600056912,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 4.466493812425,
+          "rms_pu": 0.23281793966536804,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.2957520999945515e-05,
+          "rms_pu": 1.0571993793676349e-05,
+          "channel": "gen1_speed_pu",
+          "time_s": 1.02
+        },
+        "mechanical_power": {
+          "max_abs_pu": 3.942276930002375e-05,
+          "rms_pu": 3.7378231919080105e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 1.02
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.00012897906099995637,
+          "rms_pu": 0.0001193088738860477,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.02
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0059015593796700044,
+          "rms_pu": 0.0018996046826799877,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "after_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.044715383134400044,
+          "rms_pu": 0.006604116125980135,
+          "channel": "bus2_vb_pu",
+          "time_s": 1.0035
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.040003646898900014,
+          "rms_pu": 0.0012501265893202574,
+          "channel": "bus2_vm_pu",
+          "time_s": 1.007
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.001981920285999972,
+          "rms_pu": 0.0005599307433367224,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.009952091923299988,
+          "rms_pu": 0.0021805925034234386,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.013162691707999885,
+          "rms_pu": 0.0038517518161585796,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.011346564416050002,
+          "rms_pu": 0.004749384987883321,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 2.2075
+        }
+      },
+      "after_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 0.018571513921299965,
+          "rms_pu": 0.006534011319060069,
+          "channel": "bus1_va_pu",
+          "time_s": 1.022
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.01515448023019994,
+          "rms_pu": 0.0003731758066599146,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0245
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.001981920285999972,
+          "rms_pu": 0.0005627505675643452,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.009952091923299988,
+          "rms_pu": 0.002191574702739439,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.013162691707999885,
+          "rms_pu": 0.003871137650778425,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.011346564416050002,
+          "rms_pu": 0.004769396575079513,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 2.2075
+        }
+      }
+    },
+    "25_to_12.5us": {
+      "all": {
+        "phase_voltage": {
+          "max_abs_pu": 8.408808829312001,
+          "rms_pu": 0.02749080883016965,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 8.98379971266,
+          "rms_pu": 0.03866408685899348,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.001045882421499944,
+          "rms_pu": 0.0002377437934153598,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.0051555516678999935,
+          "rms_pu": 0.0009191242630174917,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.006948844025000067,
+          "rms_pu": 0.0016342051469231224,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.005937508418711,
+          "rms_pu": 0.002066835342421964,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 2.1865
+        }
+      },
+      "before_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.0011155748293650014,
+          "rms_pu": 0.00037143951641527783,
+          "channel": "bus9_vc_pu",
+          "time_s": 0.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.00010316222800010877,
+          "rms_pu": 2.7926208372947582e-05,
+          "channel": "bus3_vm_pu",
+          "time_s": 0.0005
+        },
+        "rotor_speed": {
+          "max_abs_pu": 5.359396800019844e-06,
+          "rms_pu": 3.0477015409378587e-06,
+          "channel": "gen2_speed_pu",
+          "time_s": 0.9995
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.9192859999961343e-05,
+          "rms_pu": 8.294359792323188e-06,
+          "channel": "gen3_pm_pu",
+          "time_s": 0.9995
+        },
+        "field_voltage": {
+          "max_abs_pu": 6.324364299992169e-05,
+          "rms_pu": 3.332766732465226e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 0.9995
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.00032789652039790006,
+          "rms_pu": 6.603165458059862e-05,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 0.0185
+        }
+      },
+      "event_through_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 8.408808829312001,
+          "rms_pu": 0.3309758579669719,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 8.98379971266,
+          "rms_pu": 0.46774611207867484,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 6.52747310003754e-06,
+          "rms_pu": 5.345860674006215e-06,
+          "channel": "gen1_speed_pu",
+          "time_s": 1.02
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.9924205299948206e-05,
+          "rms_pu": 1.889558390805711e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 1.02
+        },
+        "field_voltage": {
+          "max_abs_pu": 6.498775899999032e-05,
+          "rms_pu": 6.004410284292397e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.02
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0029560666455700074,
+          "rms_pu": 0.000945358593325404,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "after_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.043052814358299996,
+          "rms_pu": 0.003405375013532695,
+          "channel": "bus2_vb_pu",
+          "time_s": 1.002
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.030397285067499946,
+          "rms_pu": 0.0009111052485010167,
+          "channel": "bus3_vm_pu",
+          "time_s": 1.0045
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.001045882421499944,
+          "rms_pu": 0.0002911917687893793,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.0051555516678999935,
+          "rms_pu": 0.0011257712155243564,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.006948844025000067,
+          "rms_pu": 0.002001512203013031,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.005937508418711,
+          "rms_pu": 0.002531126223400475,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 2.1865
+        }
+      },
+      "after_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 0.01841861061229999,
+          "rms_pu": 0.00331820315891308,
+          "channel": "bus1_va_pu",
+          "time_s": 1.022
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.01643812097350006,
+          "rms_pu": 0.0004262793435486125,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0245
+        },
+        "rotor_speed": {
+          "max_abs_pu": 0.001045882421499944,
+          "rms_pu": 0.00029265824575438456,
+          "channel": "gen1_speed_pu",
+          "time_s": 3.0
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.0051555516678999935,
+          "rms_pu": 0.0011314410476034713,
+          "channel": "gen1_pm_pu",
+          "time_s": 3.0
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.006948844025000067,
+          "rms_pu": 0.002011586395674352,
+          "channel": "gen1_efd_pu",
+          "time_s": 3.0
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.005937508418711,
+          "rms_pu": 0.0025420583219333288,
+          "channel": "gen1_pss_vs_pu",
+          "time_s": 2.1865
+        }
+      }
+    }
+  },
+  "initialization": {
+    "method": "Schur reduction of the original constant-Z network; fixed generator Vm, P2, P3 and angle1",
+    "max_voltage_phasor_adjustment_pu": 4.8465808142348335e-06,
+    "bus_Vm_pu": [
+      1.04,
+      1.0250000000000001,
+      1.025,
+      1.0257886607948088,
+      0.9956309914321101,
+      1.012654562004556,
+      1.025769350514531,
+      1.01588246756849,
+      1.0323529545731054
+    ],
+    "bus_Va_rad": [
+      0.0,
+      0.1619648421250103,
+      0.08141336074209131,
+      -0.03869106811707281,
+      -0.06961906302797566,
+      -0.06435888668844685,
+      0.06491922212983413,
+      0.012695856320985617,
+      0.034323762397384994
+    ],
+    "gen_MW": [
+      71.64256184158117,
+      163.0,
+      84.99999999999999
+    ],
+    "gen_Mvar": [
+      27.045498998668982,
+      6.653696357956068,
+      -10.85971882583888
+    ],
+    "gen_MW_adjustment": [
+      0.0015618415811644581,
+      0.0,
+      -1.4210854715202004e-14
+    ],
+    "gen_Mvar_adjustment": [
+      0.0004989986689807324,
+      0.000696357956068816,
+      0.0002811741611186136
+    ],
+    "max_passive_bus_current_mismatch_pu": 1.0695084443661335e-14
+  },
+  "per_channel": {
+    "bus1_va_pu": {
+      "all": {
+        "max_abs_pu": 16.847933440727772,
+        "rms_pu": 0.21751672614978826,
+        "time_s": 1.0
+      },
+      "after_event": {
+        "max_abs_pu": 0.034094586860465625,
+        "rms_pu": 0.004339408583461842,
+        "time_s": 1.019
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.030371636671195357,
+        "rms_pu": 0.003957849350060692,
+        "time_s": 1.022
+      }
+    },
+    "bus1_vb_pu": {
+      "all": {
+        "max_abs_pu": 13.947002105006266,
+        "rms_pu": 0.18006952003920848,
+        "time_s": 1.0
+      },
+      "after_event": {
+        "max_abs_pu": 0.02768229185786386,
+        "rms_pu": 0.003983216576763495,
+        "time_s": 1.016
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.024877372888924,
+        "rms_pu": 0.0037151927952796676,
+        "time_s": 1.022
+      }
+    },
+    "bus1_vc_pu": {
+      "all": {
+        "max_abs_pu": 2.900931335716506,
+        "rms_pu": 0.037539329161116214,
+        "time_s": 1.0
+      },
+      "after_event": {
+        "max_abs_pu": 0.0073279098839214366,
+        "rms_pu": 0.003198650547273917,
+        "time_s": 1.0155
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.006735515149015037,
+        "rms_pu": 0.0031921427689321196,
+        "time_s": 2.9995
+      }
+    },
+    "bus1_vm_pu": {
+      "all": {
+        "max_abs_pu": 16.005898413322228,
+        "rms_pu": 0.20662628320804302,
+        "time_s": 1.0
+      },
+      "after_event": {
+        "max_abs_pu": 0.035206258858009765,
+        "rms_pu": 0.002260264776472801,
+        "time_s": 1.016
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.029840873270500445,
+        "rms_pu": 0.0017996319498043932,
+        "time_s": 1.0245
+      }
+    },
+    "bus2_va_pu": {
+      "all": {
+        "max_abs_pu": 0.02163666788104679,
+        "rms_pu": 0.002845728557133608,
+        "time_s": 1.0005
+      },
+      "after_event": {
+        "max_abs_pu": 0.02163666788104679,
+        "rms_pu": 0.0034748611485716395,
+        "time_s": 1.0005
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.0072391575123605095,
+        "rms_pu": 0.0034067990478824587,
+        "time_s": 2.996
+      }
+    },
+    "bus2_vb_pu": {
+      "all": {
+        "max_abs_pu": 0.10869625500328628,
+        "rms_pu": 0.0034122382107835817,
+        "time_s": 1.0005
+      },
+      "after_event": {
+        "max_abs_pu": 0.10869625500328628,
+        "rms_pu": 0.004170528689037353,
+        "time_s": 1.0005
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.007218748959239581,
+        "rms_pu": 0.0033998714740594046,
+        "time_s": 2.985
+      }
+    },
+    "bus2_vc_pu": {
+      "all": {
+        "max_abs_pu": 0.08705958712223982,
+        "rms_pu": 0.003124602632857154,
+        "time_s": 1.0005
+      },
+      "after_event": {
+        "max_abs_pu": 0.08705958712223982,
+        "rms_pu": 0.003817311948781825,
+        "time_s": 1.0005
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.007230324024749719,
+        "rms_pu": 0.003394906779941798,
+        "time_s": 2.9905
+      }
+    },
+    "bus2_vm_pu": {
+      "all": {
+        "max_abs_pu": 0.02135062757228201,
+        "rms_pu": 0.0006074346297438335,
+        "time_s": 1.0015
+      },
+      "after_event": {
+        "max_abs_pu": 0.02135062757228201,
+        "rms_pu": 0.0007437333539736937,
+        "time_s": 1.0015
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.0058075139548887655,
+        "rms_pu": 0.00024565620273653727,
+        "time_s": 1.0245
+      }
+    },
+    "bus3_va_pu": {
+      "all": {
+        "max_abs_pu": 0.02607729760615296,
+        "rms_pu": 0.0028558172244205885,
+        "time_s": 1.0005
+      },
+      "after_event": {
+        "max_abs_pu": 0.02607729760615296,
+        "rms_pu": 0.003487026875795635,
+        "time_s": 1.0005
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.007081350024542382,
+        "rms_pu": 0.0033316315018323602,
+        "time_s": 2.988
+      }
+    },
+    "bus3_vb_pu": {
+      "all": {
+        "max_abs_pu": 0.10485423642739422,
+        "rms_pu": 0.0036406551511793885,
+        "time_s": 1.0005
+      },
+      "after_event": {
+        "max_abs_pu": 0.10485423642739422,
+        "rms_pu": 0.004450651279501075,
+        "time_s": 1.0005
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.007090615209969663,
+        "rms_pu": 0.003327456029573618,
+        "time_s": 2.9935
+      }
+    },
+    "bus3_vc_pu": {
+      "all": {
+        "max_abs_pu": 0.07877693882144154,
+        "rms_pu": 0.003160636269330628,
+        "time_s": 1.0005
+      },
+      "after_event": {
+        "max_abs_pu": 0.07877693882144154,
+        "rms_pu": 0.0038613613118623586,
+        "time_s": 1.0005
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.007097258811162736,
+        "rms_pu": 0.003329302864144883,
+        "time_s": 2.999
+      }
+    },
+    "bus3_vm_pu": {
+      "all": {
+        "max_abs_pu": 0.03106947229195489,
+        "rms_pu": 0.0009949351567587184,
+        "time_s": 1.002
+      },
+      "after_event": {
+        "max_abs_pu": 0.03106947229195489,
+        "rms_pu": 0.0012184313324916387,
+        "time_s": 1.002
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.003852654863991889,
+        "rms_pu": 0.00013027413000291142,
+        "time_s": 1.024
+      }
+    },
+    "bus4_va_pu": {
+      "all": {
+        "max_abs_pu": 0.03409458686046585,
+        "rms_pu": 0.003552549393970216,
+        "time_s": 1.019
+      },
+      "after_event": {
+        "max_abs_pu": 0.03409458686046585,
+        "rms_pu": 0.004339408583462352,
+        "time_s": 1.019
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.030371636671195468,
+        "rms_pu": 0.003957849350061276,
+        "time_s": 1.022
+      }
+    },
+    "bus4_vb_pu": {
+      "all": {
+        "max_abs_pu": 0.02768229185786375,
+        "rms_pu": 0.003261108918354222,
+        "time_s": 1.016
+      },
+      "after_event": {
+        "max_abs_pu": 0.02768229185786375,
+        "rms_pu": 0.003983216576763233,
+        "time_s": 1.016
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.024877372888923666,
+        "rms_pu": 0.0037151927952794655,
+        "time_s": 1.022
+      }
+    },
+    "bus4_vc_pu": {
+      "all": {
+        "max_abs_pu": 0.0073279098839214366,
+        "rms_pu": 0.0026209763598428744,
+        "time_s": 1.0155
+      },
+      "after_event": {
+        "max_abs_pu": 0.0073279098839214366,
+        "rms_pu": 0.003198650547273638,
+        "time_s": 1.0155
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.006735515149015027,
+        "rms_pu": 0.0031921427689318486,
+        "time_s": 2.9995
+      }
+    },
+    "bus4_vm_pu": {
+      "all": {
+        "max_abs_pu": 0.03520625885800932,
+        "rms_pu": 0.00185113942780272,
+        "time_s": 1.016
+      },
+      "after_event": {
+        "max_abs_pu": 0.03520625885800932,
+        "rms_pu": 0.002260264776472909,
+        "time_s": 1.016
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.029840873270501334,
+        "rms_pu": 0.001799631949804682,
+        "time_s": 1.0245
+      }
+    },
+    "bus5_va_pu": {
+      "all": {
+        "max_abs_pu": 0.016152173289713634,
+        "rms_pu": 0.002757997201592801,
+        "time_s": 1.016
+      },
+      "after_event": {
+        "max_abs_pu": 0.016152173289713634,
+        "rms_pu": 0.0033681719526814464,
+        "time_s": 1.016
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.013565799084996999,
+        "rms_pu": 0.003280065781252419,
+        "time_s": 1.033
+      }
+    },
+    "bus5_vb_pu": {
+      "all": {
+        "max_abs_pu": 0.012546294151482895,
+        "rms_pu": 0.0026832530347262076,
+        "time_s": 1.019
+      },
+      "after_event": {
+        "max_abs_pu": 0.012546294151482895,
+        "rms_pu": 0.0032763907194249147,
+        "time_s": 1.019
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.01121203690453798,
+        "rms_pu": 0.003221149289730212,
+        "time_s": 1.0335
+      }
+    },
+    "bus5_vc_pu": {
+      "all": {
+        "max_abs_pu": 0.006626309884490693,
+        "rms_pu": 0.0025417641734105582,
+        "time_s": 2.9995
+      },
+      "after_event": {
+        "max_abs_pu": 0.006626309884490693,
+        "rms_pu": 0.003102408169876638,
+        "time_s": 2.9995
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.006626309884490693,
+        "rms_pu": 0.0031124519822553656,
+        "time_s": 2.9995
+      }
+    },
+    "bus5_vm_pu": {
+      "all": {
+        "max_abs_pu": 0.016821566117904974,
+        "rms_pu": 0.0008252057830636968,
+        "time_s": 1.016
+      },
+      "after_event": {
+        "max_abs_pu": 0.016821566117904974,
+        "rms_pu": 0.0010107158220459393,
+        "time_s": 1.016
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.014043536277581148,
+        "rms_pu": 0.0007957820053092988,
+        "time_s": 1.033
+      }
+    },
+    "bus6_va_pu": {
+      "all": {
+        "max_abs_pu": 0.012952164978676128,
+        "rms_pu": 0.002724338063855916,
+        "time_s": 1.016
+      },
+      "after_event": {
+        "max_abs_pu": 0.012952164978676128,
+        "rms_pu": 0.003326160102454441,
+        "time_s": 1.016
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.011605469492155351,
+        "rms_pu": 0.00327503163469192,
+        "time_s": 1.0305
+      }
+    },
+    "bus6_vb_pu": {
+      "all": {
+        "max_abs_pu": 0.010453321405626909,
+        "rms_pu": 0.0026743112711312043,
+        "time_s": 1.019
+      },
+      "after_event": {
+        "max_abs_pu": 0.010453321405626909,
+        "rms_pu": 0.003264732307926694,
+        "time_s": 1.019
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.009066533696712287,
+        "rms_pu": 0.003234924767067339,
+        "time_s": 1.0305
+      }
+    },
+    "bus6_vc_pu": {
+      "all": {
+        "max_abs_pu": 0.006741479356698259,
+        "rms_pu": 0.002583948521461645,
+        "time_s": 2.9995
+      },
+      "after_event": {
+        "max_abs_pu": 0.006741479356698259,
+        "rms_pu": 0.0031535541200049884,
+        "time_s": 2.9995
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.006741479356698259,
+        "rms_pu": 0.003165537066547424,
+        "time_s": 2.9995
+      }
+    },
+    "bus6_vm_pu": {
+      "all": {
+        "max_abs_pu": 0.013407881373646013,
+        "rms_pu": 0.0006656953247296842,
+        "time_s": 1.016
+      },
+      "after_event": {
+        "max_abs_pu": 0.013407881373646013,
+        "rms_pu": 0.0008153312456540548,
+        "time_s": 1.016
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.010927109152591985,
+        "rms_pu": 0.0006472440370195885,
+        "time_s": 1.025
+      }
+    },
+    "bus7_va_pu": {
+      "all": {
+        "max_abs_pu": 0.010576919816510766,
+        "rms_pu": 0.002781214639353633,
+        "time_s": 1.0245
+      },
+      "after_event": {
+        "max_abs_pu": 0.010576919816510766,
+        "rms_pu": 0.0033955748740491635,
+        "time_s": 1.0245
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.010576919816510766,
+        "rms_pu": 0.0033872019985469776,
+        "time_s": 1.0245
+      }
+    },
+    "bus7_vb_pu": {
+      "all": {
+        "max_abs_pu": 0.009808057613783117,
+        "rms_pu": 0.0027579333251486885,
+        "time_s": 1.0245
+      },
+      "after_event": {
+        "max_abs_pu": 0.009808057613783117,
+        "rms_pu": 0.003366980272927258,
+        "time_s": 1.0245
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.009808057613783117,
+        "rms_pu": 0.0033673076177667604,
+        "time_s": 1.0245
+      }
+    },
+    "bus7_vc_pu": {
+      "all": {
+        "max_abs_pu": 0.007113379581294231,
+        "rms_pu": 0.002722457363398573,
+        "time_s": 2.999
+      },
+      "after_event": {
+        "max_abs_pu": 0.007113379581294231,
+        "rms_pu": 0.0033232791164451553,
+        "time_s": 2.999
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.007113379581294231,
+        "rms_pu": 0.003337887124342336,
+        "time_s": 2.999
+      }
+    },
+    "bus7_vm_pu": {
+      "all": {
+        "max_abs_pu": 0.011254505957053795,
+        "rms_pu": 0.000444227574095482,
+        "time_s": 1.0245
+      },
+      "after_event": {
+        "max_abs_pu": 0.011254505957053795,
+        "rms_pu": 0.0005433516386522299,
+        "time_s": 1.0245
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.011254505957053795,
+        "rms_pu": 0.0004565486069003486,
+        "time_s": 1.0245
+      }
+    },
+    "bus8_va_pu": {
+      "all": {
+        "max_abs_pu": 0.018929288703006475,
+        "rms_pu": 0.0029056921258822357,
+        "time_s": 1.0105
+      },
+      "after_event": {
+        "max_abs_pu": 0.018929288703006475,
+        "rms_pu": 0.0035487735116083415,
+        "time_s": 1.0105
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.018785540691082736,
+        "rms_pu": 0.0034820825372029168,
+        "time_s": 1.0245
+      }
+    },
+    "bus8_vb_pu": {
+      "all": {
+        "max_abs_pu": 0.016184981751701022,
+        "rms_pu": 0.002830422916663119,
+        "time_s": 1.025
+      },
+      "after_event": {
+        "max_abs_pu": 0.016184981751701022,
+        "rms_pu": 0.003456333979412756,
+        "time_s": 1.025
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.016184981751701022,
+        "rms_pu": 0.003417783430477991,
+        "time_s": 1.025
+      }
+    },
+    "bus8_vc_pu": {
+      "all": {
+        "max_abs_pu": 0.007004810943874191,
+        "rms_pu": 0.0026921487813611226,
+        "time_s": 2.991
+      },
+      "after_event": {
+        "max_abs_pu": 0.007004810943874191,
+        "rms_pu": 0.003286320846552806,
+        "time_s": 2.991
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.007004810943874191,
+        "rms_pu": 0.0032976159508699863,
+        "time_s": 2.991
+      }
+    },
+    "bus8_vm_pu": {
+      "all": {
+        "max_abs_pu": 0.019536148592948166,
+        "rms_pu": 0.0008455820242989974,
+        "time_s": 1.0245
+      },
+      "after_event": {
+        "max_abs_pu": 0.019536148592948166,
+        "rms_pu": 0.0010355347195596242,
+        "time_s": 1.0245
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.019536148592948166,
+        "rms_pu": 0.0008729073580448325,
+        "time_s": 1.0245
+      }
+    },
+    "bus9_va_pu": {
+      "all": {
+        "max_abs_pu": 0.007096326365715784,
+        "rms_pu": 0.0027265981265989013,
+        "time_s": 2.9965
+      },
+      "after_event": {
+        "max_abs_pu": 0.007096326365715784,
+        "rms_pu": 0.003328105341373544,
+        "time_s": 2.9965
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.007096326365715784,
+        "rms_pu": 0.0033371310718710535,
+        "time_s": 2.9965
+      }
+    },
+    "bus9_vb_pu": {
+      "all": {
+        "max_abs_pu": 0.007085298425969645,
+        "rms_pu": 0.002720259135970724,
+        "time_s": 2.9935
+      },
+      "after_event": {
+        "max_abs_pu": 0.007085298425969645,
+        "rms_pu": 0.003320337680514727,
+        "time_s": 2.9935
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.007085298425969645,
+        "rms_pu": 0.0033315575284879506,
+        "time_s": 2.9935
+      }
+    },
+    "bus9_vc_pu": {
+      "all": {
+        "max_abs_pu": 0.007084131431635318,
+        "rms_pu": 0.0027166404575339077,
+        "time_s": 2.999
+      },
+      "after_event": {
+        "max_abs_pu": 0.007084131431635318,
+        "rms_pu": 0.003315780223745445,
+        "time_s": 2.999
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.007084131431635318,
+        "rms_pu": 0.0033312878695258776,
+        "time_s": 2.999
+      }
+    },
+    "bus9_vm_pu": {
+      "all": {
+        "max_abs_pu": 0.0051277745111920625,
+        "rms_pu": 0.00019153589271444236,
+        "time_s": 1.024
+      },
+      "after_event": {
+        "max_abs_pu": 0.0051277745111920625,
+        "rms_pu": 0.00023331356270801259,
+        "time_s": 1.024
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.0051277745111920625,
+        "rms_pu": 0.00017272914953158315,
+        "time_s": 1.024
+      }
+    },
+    "gen1_speed_pu": {
+      "all": {
+        "max_abs_pu": 0.026960593078075745,
+        "rms_pu": 0.013431347140500689,
+        "time_s": 3.0
+      },
+      "after_event": {
+        "max_abs_pu": 0.026960593078075745,
+        "rms_pu": 0.016451344144845993,
+        "time_s": 3.0
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.026960593078075745,
+        "rms_pu": 0.016534212617632098,
+        "time_s": 3.0
+      }
+    },
+    "gen1_efd_pu": {
+      "all": {
+        "max_abs_pu": 0.19784406167381596,
+        "rms_pu": 0.07132908402860978,
+        "time_s": 3.0
+      },
+      "after_event": {
+        "max_abs_pu": 0.19784406167381596,
+        "rms_pu": 0.08736720494856724,
+        "time_s": 3.0
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.19784406167381596,
+        "rms_pu": 0.08780734413260895,
+        "time_s": 3.0
+      }
+    },
+    "gen1_pm_pu": {
+      "all": {
+        "max_abs_pu": 0.19020479531746987,
+        "rms_pu": 0.0729333707926159,
+        "time_s": 3.0
+      },
+      "after_event": {
+        "max_abs_pu": 0.19020479531746987,
+        "rms_pu": 0.08933221508329836,
+        "time_s": 3.0
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.19020479531746987,
+        "rms_pu": 0.08978225427582742,
+        "time_s": 3.0
+      }
+    },
+    "gen1_pss_vs_pu": {
+      "all": {
+        "max_abs_pu": 0.10367541704503969,
+        "rms_pu": 0.071615838146522,
+        "time_s": 1.685
+      },
+      "after_event": {
+        "max_abs_pu": 0.10367541704503969,
+        "rms_pu": 0.08771843361425144,
+        "time_s": 1.685
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.10367541704503969,
+        "rms_pu": 0.087598170300556,
+        "time_s": 1.685
+      }
+    },
+    "gen2_speed_pu": {
+      "all": {
+        "max_abs_pu": 1.1464075610367885e-05,
+        "rms_pu": 7.524596413236693e-06,
+        "time_s": 1.8085
+      },
+      "after_event": {
+        "max_abs_pu": 1.1464075610367885e-05,
+        "rms_pu": 8.947992341873073e-06,
+        "time_s": 1.8085
+      },
+      "after_20ms": {
+        "max_abs_pu": 1.1464075610367885e-05,
+        "rms_pu": 8.979279808864787e-06,
+        "time_s": 1.8085
+      }
+    },
+    "gen2_efd_pu": {
+      "all": {
+        "max_abs_pu": 0.00010083285628437189,
+        "rms_pu": 6.983141031156093e-05,
+        "time_s": 1.8215
+      },
+      "after_event": {
+        "max_abs_pu": 0.00010083285628437189,
+        "rms_pu": 8.146425517370437e-05,
+        "time_s": 1.8215
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.00010083285628437189,
+        "rms_pu": 8.160516505714628e-05,
+        "time_s": 1.8215
+      }
+    },
+    "gen2_pm_pu": {
+      "all": {
+        "max_abs_pu": 0.00010974685826303787,
+        "rms_pu": 6.658176001395641e-05,
+        "time_s": 2.683
+      },
+      "after_event": {
+        "max_abs_pu": 0.00010974685826303787,
+        "rms_pu": 8.129687162155788e-05,
+        "time_s": 2.683
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.00010974685826303787,
+        "rms_pu": 8.16818706292565e-05,
+        "time_s": 2.683
+      }
+    },
+    "gen2_pss_vs_pu": {
+      "all": {
+        "max_abs_pu": 0.0029609831348323817,
+        "rms_pu": 8.7339496607884e-05,
+        "time_s": 1.003
+      },
+      "after_event": {
+        "max_abs_pu": 0.0029609831348323817,
+        "rms_pu": 9.423910067989395e-05,
+        "time_s": 1.003
+      },
+      "after_20ms": {
+        "max_abs_pu": 8.80768246499658e-05,
+        "rms_pu": 5.4471061573051597e-05,
+        "time_s": 2.384
+      }
+    },
+    "gen3_speed_pu": {
+      "all": {
+        "max_abs_pu": 1.1435418996730284e-05,
+        "rms_pu": 7.522165626054301e-06,
+        "time_s": 1.9545
+      },
+      "after_event": {
+        "max_abs_pu": 1.1435418996730284e-05,
+        "rms_pu": 8.94753951745766e-06,
+        "time_s": 1.9545
+      },
+      "after_20ms": {
+        "max_abs_pu": 1.1435418996730284e-05,
+        "rms_pu": 8.976290919482384e-06,
+        "time_s": 1.9545
+      }
+    },
+    "gen3_efd_pu": {
+      "all": {
+        "max_abs_pu": 0.00010990079129591379,
+        "rms_pu": 7.814154918108652e-05,
+        "time_s": 1.954
+      },
+      "after_event": {
+        "max_abs_pu": 0.00010990079129591379,
+        "rms_pu": 9.205758685097144e-05,
+        "time_s": 1.954
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.00010990079129591379,
+        "rms_pu": 9.22796213927548e-05,
+        "time_s": 1.954
+      }
+    },
+    "gen3_pm_pu": {
+      "all": {
+        "max_abs_pu": 0.00010982708735474134,
+        "rms_pu": 6.667183121597277e-05,
+        "time_s": 2.69
+      },
+      "after_event": {
+        "max_abs_pu": 0.00010982708735474134,
+        "rms_pu": 8.139861465536187e-05,
+        "time_s": 2.69
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.00010982708735474134,
+        "rms_pu": 8.178349110284746e-05,
+        "time_s": 2.69
+      }
+    },
+    "gen3_pss_vs_pu": {
+      "all": {
+        "max_abs_pu": 0.002294667023391886,
+        "rms_pu": 7.883917456856605e-05,
+        "time_s": 1.002
+      },
+      "after_event": {
+        "max_abs_pu": 0.002294667023391886,
+        "rms_pu": 7.587138444684563e-05,
+        "time_s": 1.002
+      },
+      "after_20ms": {
+        "max_abs_pu": 0.00031347563902377196,
+        "rms_pu": 6.393944245127164e-05,
+        "time_s": 1.108
+      }
+    }
+  },
+  "limitations": [
+    "GridKit uses an ideal terminal opening with explicit current-interruption projection. No finite breaker arc, snubber, or voltage impulse amplitude is modeled.",
+    "ParaEMT removes G1 Norton injection and conductance, freezes its electrical history, but continues its state kernel. G1 post-trip machine/controller traces are not equivalent physical models.",
+    "All traces and the nonconverging ParaEMT event sample are retained. Cross-simulator discrepancies are observations, not pass/fail errors."
+  ],
+  "connected_generators_and_network": {
+    "dt50us": {
+      "all": {
+        "phase_voltage": {
+          "max_abs_pu": 4.250890823773773,
+          "rms_pu": 0.01767968422654581,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 2.5556048882372275,
+          "rms_pu": 0.011302301813607201,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 4.6630815146886384e-05,
+          "rms_pu": 3.056763067001641e-05,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.9615
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.00044650398883105957,
+          "rms_pu": 0.00026849700366449896,
+          "channel": "gen3_pm_pu",
+          "time_s": 2.71
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.00043474455074732354,
+          "rms_pu": 0.0002905972606048597,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.9685
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.011818609160072394,
+          "rms_pu": 0.00033608457157222553,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "before_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.004471016277382408,
+          "rms_pu": 0.0014887197338551467,
+          "channel": "bus9_vc_pu",
+          "time_s": 0.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.00035142364101270473,
+          "rms_pu": 0.0001103497074761791,
+          "channel": "bus6_vm_pu",
+          "time_s": 0.001
+        },
+        "rotor_speed": {
+          "max_abs_pu": 2.1472768143793175e-05,
+          "rms_pu": 1.2116926293496539e-05,
+          "channel": "gen2_speed_pu",
+          "time_s": 0.9995
+        },
+        "mechanical_power": {
+          "max_abs_pu": 7.697495550851308e-05,
+          "rms_pu": 3.56628499924693e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 0.9995
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.0002545222036474115,
+          "rms_pu": 0.000139912017987265,
+          "channel": "gen3_efd_pu",
+          "time_s": 0.9995
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0013281255397696093,
+          "rms_pu": 0.00030065800525380903,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 0.0185
+        }
+      },
+      "event_through_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 4.250890823773773,
+          "rms_pu": 0.16992900245316048,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 2.5556048882372275,
+          "rms_pu": 0.13570894596093813,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 2.2597508747224104e-05,
+          "rms_pu": 2.013678472035287e-05,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.008
+        },
+        "mechanical_power": {
+          "max_abs_pu": 7.99045977327717e-05,
+          "rms_pu": 7.796750103651616e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 1.02
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.0002614688220023975,
+          "rms_pu": 0.000256030795846131,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.02
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.011818609160072394,
+          "rms_pu": 0.0025555788863142765,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "after_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.14997003435918627,
+          "rms_pu": 0.013433309951350598,
+          "channel": "bus2_vb_pu",
+          "time_s": 1.0005
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.08612693068250976,
+          "rms_pu": 0.003188109095912576,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.016
+        },
+        "rotor_speed": {
+          "max_abs_pu": 4.6630815146886384e-05,
+          "rms_pu": 3.6445561501705396e-05,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.9615
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.00044650398883105957,
+          "rms_pu": 0.00032789724071606574,
+          "channel": "gen3_pm_pu",
+          "time_s": 2.71
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.00043474455074732354,
+          "rms_pu": 0.0003418881807626377,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.9685
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.011818609160072394,
+          "rms_pu": 0.0003524924081878522,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "after_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 0.06736176120479542,
+          "rms_pu": 0.013175168942440035,
+          "channel": "bus4_va_pu",
+          "time_s": 1.022
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.06143347447420133,
+          "rms_pu": 0.001701299789691085,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.0245
+        },
+        "rotor_speed": {
+          "max_abs_pu": 4.6630815146886384e-05,
+          "rms_pu": 3.65733998008725e-05,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.9615
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.00044650398883105957,
+          "rms_pu": 0.00032945586550990104,
+          "channel": "gen3_pm_pu",
+          "time_s": 2.71
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.00043474455074732354,
+          "rms_pu": 0.0003426451937081535,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.9685
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0012645489401176546,
+          "rms_pu": 0.00024061641949805866,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 1.1075
+        }
+      }
+    },
+    "dt25us": {
+      "all": {
+        "phase_voltage": {
+          "max_abs_pu": 8.439124611415773,
+          "rms_pu": 0.028042888281956942,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 7.0220987006622275,
+          "rms_pu": 0.030265916408910916,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 2.3230140878238714e-05,
+          "rms_pu": 1.5244011138673839e-05,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.9585
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.00022263151678658666,
+          "rms_pu": 0.00013431447181627918,
+          "channel": "gen3_pm_pu",
+          "time_s": 2.702
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.0002188051383285039,
+          "rms_pu": 0.00014688112910638272,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.9625
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.005917049780402389,
+          "rms_pu": 0.00016699724286319182,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "before_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.0022630466766324093,
+          "rms_pu": 0.0007537777204959661,
+          "channel": "bus9_vc_pu",
+          "time_s": 0.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.0001763828520127131,
+          "rms_pu": 5.46476699423226e-05,
+          "channel": "bus6_vm_pu",
+          "time_s": 0.001
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.0872393443883688e-05,
+          "rms_pu": 6.135719438600198e-06,
+          "channel": "gen2_speed_pu",
+          "time_s": 0.9995
+        },
+        "mechanical_power": {
+          "max_abs_pu": 3.899977460841697e-05,
+          "rms_pu": 1.808572324093815e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 0.9995
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.0001287317286473577,
+          "rms_pu": 7.138851907365557e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 0.9995
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0006773903445136092,
+          "rms_pu": 0.00015296602313160312,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 0.0185
+        }
+      },
+      "event_through_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 8.439124611415773,
+          "rms_pu": 0.3327979775207413,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 7.0220987006622275,
+          "rms_pu": 0.36590704958883796,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.1437056147256541e-05,
+          "rms_pu": 1.0212603498921221e-05,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.008
+        },
+        "mechanical_power": {
+          "max_abs_pu": 4.0481828432747946e-05,
+          "rms_pu": 3.950164221703535e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 1.02
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.00013248976100244114,
+          "rms_pu": 0.00012981538346135883,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.02
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.005917049780402389,
+          "rms_pu": 0.001243497104973233,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "after_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.1328678194696863,
+          "rms_pu": 0.006927704062470098,
+          "channel": "bus2_vb_pu",
+          "time_s": 1.0005
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.058904241075709796,
+          "rms_pu": 0.0021291673701115087,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.016
+        },
+        "rotor_speed": {
+          "max_abs_pu": 2.3230140878238714e-05,
+          "rms_pu": 1.8159707151667477e-05,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.9585
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.00022263151678658666,
+          "rms_pu": 0.00016401571127243087,
+          "channel": "gen3_pm_pu",
+          "time_s": 2.702
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.0002188051383285039,
+          "rms_pu": 0.0001726679232274296,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.9625
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.005917049780402389,
+          "rms_pu": 0.0001736015604982864,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "after_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 0.04879024728349546,
+          "rms_pu": 0.006688171632044303,
+          "channel": "bus4_va_pu",
+          "time_s": 1.022
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.04627899424400139,
+          "rms_pu": 0.0013905800417874138,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.0245
+        },
+        "rotor_speed": {
+          "max_abs_pu": 2.3230140878238714e-05,
+          "rms_pu": 1.8222400878209e-05,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.9585
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.00022263151678658666,
+          "rms_pu": 0.00016479413394966251,
+          "channel": "gen3_pm_pu",
+          "time_s": 2.702
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.0002188051383285039,
+          "rms_pu": 0.00017304637953020858,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.9625
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0006286283718237723,
+          "rms_pu": 0.00012014455445696663,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 1.108
+        }
+      }
+    },
+    "dt12_5us": {
+      "all": {
+        "phase_voltage": {
+          "max_abs_pu": 16.847933440727772,
+          "rms_pu": 0.05489045517780356,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 16.005898413322228,
+          "rms_pu": 0.06888095983514078,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.1464075610367885e-05,
+          "rms_pu": 7.523381117818218e-06,
+          "channel": "gen2_speed_pu",
+          "time_s": 1.8085
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.00010982708735474134,
+          "rms_pu": 6.662681083560598e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 2.69
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.00010990079129591379,
+          "rms_pu": 7.410306192905171e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.954
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0029609831348323817,
+          "rms_pu": 8.319796606399526e-05,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "before_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.0011474718472674079,
+          "rms_pu": 0.00038242044648915377,
+          "channel": "bus9_vc_pu",
+          "time_s": 0.9985
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.00015091060489069719,
+          "rms_pu": 2.6891138630660364e-05,
+          "channel": "bus3_vm_pu",
+          "time_s": 0.003
+        },
+        "rotor_speed": {
+          "max_abs_pu": 5.512996643863843e-06,
+          "rms_pu": 3.1131865613545574e-06,
+          "channel": "gen2_speed_pu",
+          "time_s": 0.9995
+        },
+        "mechanical_power": {
+          "max_abs_pu": 1.9806914608455628e-05,
+          "rms_pu": 9.192698596695598e-06,
+          "channel": "gen3_pm_pu",
+          "time_s": 0.9995
+        },
+        "field_voltage": {
+          "max_abs_pu": 6.548808564743602e-05,
+          "rms_pu": 3.692380875073086e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 0.9995
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0003495119913191908,
+          "rms_pu": 7.82976143065428e-05,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 0.018
+        }
+      },
+      "event_through_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 16.847933440727772,
+          "rms_pu": 0.6632301090237298,
+          "channel": "bus1_va_pu",
+          "time_s": 1.0
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 16.005898413322228,
+          "rms_pu": 0.8332785055820504,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.0
+        },
+        "rotor_speed": {
+          "max_abs_pu": 5.7963539472627446e-06,
+          "rms_pu": 5.183973832441102e-06,
+          "channel": "gen3_speed_pu",
+          "time_s": 1.008
+        },
+        "mechanical_power": {
+          "max_abs_pu": 2.055762313279974e-05,
+          "rms_pu": 2.0057104383036375e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 1.02
+        },
+        "field_voltage": {
+          "max_abs_pu": 6.750200200245082e-05,
+          "rms_pu": 6.625419176996846e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.02
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0029609831348323817,
+          "rms_pu": 0.0006110308704374077,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "after_event": {
+        "phase_voltage": {
+          "max_abs_pu": 0.10869625500328628,
+          "rms_pu": 0.0035823136102276078,
+          "channel": "bus2_vb_pu",
+          "time_s": 1.0005
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.035206258858009765,
+          "rms_pu": 0.0013065483714987734,
+          "channel": "bus1_vm_pu",
+          "time_s": 1.016
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.1464075610367885e-05,
+          "rms_pu": 8.947765932529909e-06,
+          "channel": "gen2_speed_pu",
+          "time_s": 1.8085
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.00010982708735474134,
+          "rms_pu": 8.134775904493053e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 2.69
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.00010990079129591379,
+          "rms_pu": 8.692244867647991e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.954
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.0029609831348323817,
+          "rms_pu": 8.554962032305065e-05,
+          "channel": "gen2_pss_vs_pu",
+          "time_s": 1.003
+        }
+      },
+      "after_20ms": {
+        "phase_voltage": {
+          "max_abs_pu": 0.030371636671195468,
+          "rms_pu": 0.0033953180364506,
+          "channel": "bus4_va_pu",
+          "time_s": 1.022
+        },
+        "voltage_magnitude": {
+          "max_abs_pu": 0.029840873270501334,
+          "rms_pu": 0.0009779287475252295,
+          "channel": "bus4_vm_pu",
+          "time_s": 1.0245
+        },
+        "rotor_speed": {
+          "max_abs_pu": 1.1464075610367885e-05,
+          "rms_pu": 8.977785488556428e-06,
+          "channel": "gen2_speed_pu",
+          "time_s": 1.8085
+        },
+        "mechanical_power": {
+          "max_abs_pu": 0.00010982708735474134,
+          "rms_pu": 8.173269665948911e-05,
+          "channel": "gen3_pm_pu",
+          "time_s": 2.69
+        },
+        "field_voltage": {
+          "max_abs_pu": 0.00010990079129591379,
+          "rms_pu": 8.71060603184252e-05,
+          "channel": "gen3_efd_pu",
+          "time_s": 1.954
+        },
+        "stabilizer_output": {
+          "max_abs_pu": 0.00031347563902377196,
+          "rms_pu": 5.939422888578761e-05,
+          "channel": "gen3_pss_vs_pu",
+          "time_s": 1.108
+        }
+      }
+    }
+  },
+  "paraemt_bus1_event_magnitude_pu": {
+    "dt50us": 3.595604888835,
+    "dt25us": 8.06209870126,
+    "dt12_5us": 17.04589841392
+  }
+}
