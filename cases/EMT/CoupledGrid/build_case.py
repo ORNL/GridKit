@@ -178,8 +178,8 @@ def main():
             "system_model_file": "CoupledGrid.case.json", "state_file": "CoupledGrid.state.json",
             "dt_monitor": 1 / 60000, "tmax": 1.2, "rel_tol": 1e-6, "abs_tol": 1e-7,
             "mu": mu, "max_steps": 2000000, "consistent_ic_type": "ya_ydp",
-            "events": [{"time": .5, "type": "switch_close", "element_id": "load_step"},
-                       {"time": .8, "type": "switch_open", "element_id": "load_step"}],
+            "events": [{"time": .5, "type": "switch", "element_id": "load_step", "open": False},
+                       {"time": .8, "type": "switch", "element_id": "load_step", "open": True}],
             "output_file": f"{name}.csv"})
     print(f"Fixed DC voltage: {dc:.9f} V; filter R={filter_r:.6f} ohm, L={filter_l:.9f} H")
     print("Machine initial P+jQ [MVA]:", power / 1e6)

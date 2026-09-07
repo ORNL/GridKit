@@ -6,7 +6,9 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <sstream>
+#include <type_traits>
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
@@ -19,6 +21,9 @@ namespace AnalysisManager
 
   namespace Sundials
   {
+
+    using MatrixHandle       = std::unique_ptr<std::remove_pointer_t<SUNMatrix>, decltype(&SUNMatDestroy)>;
+    using LinearSolverHandle = std::unique_ptr<std::remove_pointer_t<SUNLinearSolver>, decltype(&SUNLinSolFree)>;
 
     template <class ScalarT, typename IdxT>
     Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
@@ -157,18 +162,17 @@ namespace AnalysisManager
       sunindextype n   = static_cast<sunindextype>(model_->size());
       sunindextype nnz = static_cast<sunindextype>(model_->getCsrJacobian()->getNnz());
 
-      JacobianMat_ = SUNSparseMatrix(n,
-                                     n,
-                                     nnz,
-                                     CSR_MAT,
-                                     context_);
-      checkAllocation((void*) JacobianMat_, "SUNSparseMatrix");
+      MatrixHandle matrix(SUNSparseMatrix(n, n, nnz, CSR_MAT, context_), SUNMatDestroy);
+      checkAllocation(matrix.get(), "SUNSparseMatrix");
+      LinearSolverHandle linear_solver(SUNLinSol_KLU(yy_, matrix.get(), context_), SUNLinSolFree);
+      checkAllocation(linear_solver.get(), "SUNLinSol_KLU");
 
-      linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
-      checkAllocation((void*) linearSolver_, "SUNLinSol_KLU");
-
-      retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
+      retval = IDASetLinearSolver(solver_, linear_solver.get(), matrix.get());
       checkOutput(retval, "IDASetLinearSolver");
+      SUNLinSolFree(linearSolver_);
+      SUNMatDestroy(JacobianMat_);
+      linearSolver_ = linear_solver.release();
+      JacobianMat_  = matrix.release();
 
       retval = IDASetJacFn(solver_, this->Jac);
       checkOutput(retval, "IDASetJacFn");
@@ -188,16 +192,17 @@ namespace AnalysisManager
     {
       int retval = 0;
 
-      JacobianMat_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
-                                    static_cast<sunindextype>(model_->size()),
-                                    context_);
-      checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
+      MatrixHandle matrix(SUNDenseMatrix(static_cast<sunindextype>(model_->size()), static_cast<sunindextype>(model_->size()), context_), SUNMatDestroy);
+      checkAllocation(matrix.get(), "SUNDenseMatrix");
+      LinearSolverHandle linear_solver(SUNLinSol_Dense(yy_, matrix.get(), context_), SUNLinSolFree);
+      checkAllocation(linear_solver.get(), "SUNLinSol_Dense");
 
-      linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
-      checkAllocation((void*) linearSolver_, "SUNLinSol_Dense");
-
-      retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
+      retval = IDASetLinearSolver(solver_, linear_solver.get(), matrix.get());
       checkOutput(retval, "IDASetLinearSolver");
+      SUNLinSolFree(linearSolver_);
+      SUNMatDestroy(JacobianMat_);
+      linearSolver_ = linear_solver.release();
+      JacobianMat_  = matrix.release();
 
       return retval;
     }

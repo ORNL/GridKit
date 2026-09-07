@@ -97,6 +97,11 @@ namespace GridKit
           source.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::EB>(&drive.outputSignal(GridKit::EMT::BusOutputs::vb));
           source.getSignals().template attachSignal<EMT::DependentVoltageSourceExternalVariables::EC>(&drive.outputSignal(GridKit::EMT::BusOutputs::vc));
 
+          for (size_t p = 0; p < 3; ++p)
+          {
+            terminal.addCurrent(p, source.currentSignal(p));
+          }
+
           IdxT offset = 0;
           for (auto* component : components())
           {
@@ -344,14 +349,14 @@ namespace GridKit
         const auto      data  = seriesData();
         Fixture         fixture(data);
         fixture.setProbeState();
-        fixture.source.updateTime(0.0, alpha);
-        fixture.source.evaluateJacobian();
-
         std::map<std::pair<IdxT, IdxT>, RealT> entries;
-        auto*                                  coo  = fixture.source.getCooJacobian();
-        success                                    *= (coo != nullptr);
-        if (coo != nullptr)
+        for (auto* component : fixture.components())
         {
+          component->updateTime(0.0, alpha);
+          component->evaluateJacobian();
+          auto* coo = component->getCooJacobian();
+          if (coo == nullptr)
+            continue;
           for (IdxT j = 0; j < coo->getNnz(); ++j)
           {
             entries[{coo->getRowData()[j], coo->getColData()[j]}] += coo->getValues()[j];

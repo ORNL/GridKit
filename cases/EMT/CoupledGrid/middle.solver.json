@@ -11,12 +11,14 @@
     "events": [
         {
             "time": 0.5,
-            "type": "switch_close",
+            "type": "switch",
+            "open": false,
             "element_id": "load_step"
         },
         {
             "time": 0.8,
-            "type": "switch_open",
+            "type": "switch",
+            "open": true,
             "element_id": "load_step"
         }
     ],

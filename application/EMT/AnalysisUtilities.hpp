@@ -10,6 +10,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <magic_enum/magic_enum.hpp>
@@ -29,25 +30,22 @@ namespace GridKit
 
     using Log = GridKit::Utilities::Logger;
 
-    /**
-     * @brief Describes an event that is used to modify the simulation at the
-     * given time point
-     */
+    struct SwitchEvent
+    {
+      std::string element_id;
+      bool        open;
+    };
+
+    struct SignalStep
+    {
+      std::string signal_id;
+      double      value;
+    };
+
     struct SystemEvent
     {
-      /// Type of event determines action performed
-      enum class Type
-      {
-        SWITCH_OPEN,
-        SWITCH_CLOSE
-      };
-
-      /// Time event takes place
-      double      time;
-      /// Event type
-      Type        type;
-      /// String ID of the component used in the event
-      std::string element_id;
+      double                                time;
+      std::variant<SwitchEvent, SignalStep> action;
     };
 
     /**
@@ -97,6 +95,43 @@ namespace GridKit
     };
 
     using json = ::nlohmann::json;
+
+    inline void from_json(const json& j, SystemEvent& event)
+    {
+      if (!j.is_object() || j.size() != 4 || !j.at("time").is_number())
+        throw std::invalid_argument("An event requires time, type, and its two action fields");
+      j.at("time").get_to(event.time);
+      const auto type = j.at("type").get<std::string>();
+      if (type == "switch")
+      {
+        if (!j.at("open").is_boolean())
+          throw std::invalid_argument("A switch event requires a Boolean open value");
+        event.action = SwitchEvent{j.at("element_id").get<std::string>(), j.at("open").get<bool>()};
+      }
+      else if (type == "signal_step")
+      {
+        if (!j.at("value").is_number() || !std::isfinite(j.at("value").get<double>()))
+          throw std::invalid_argument("A signal_step value must be finite");
+        event.action = SignalStep{j.at("signal_id").get<std::string>(), j.at("value").get<double>()};
+      }
+      else
+      {
+        throw std::invalid_argument("Unknown EMT event type: " + type);
+      }
+    }
+
+    inline void validateEventTimes(const std::vector<SystemEvent>& events, double tmax)
+    {
+      if (!std::isfinite(tmax) || tmax < 0.0)
+        throw std::invalid_argument("tmax must be finite and nonnegative");
+      double previous = 0.0;
+      for (const auto& event : events)
+      {
+        if (!std::isfinite(event.time) || event.time < previous || event.time > tmax)
+          throw std::invalid_argument("Event times must be finite, ordered, and within [0, tmax]");
+        previous = event.time;
+      }
+    }
 
     /** Configure before constructing models, including PWM's cached horizon. */
     template <typename RealT>
@@ -168,24 +203,10 @@ namespace GridKit
         }
       }
 
+      c.events.clear();
       if (j.contains("events"))
-      {
-        for (auto& raw_event : j.at("events"))
-        {
-          auto& event = c.events.emplace_back();
-          raw_event.at("time").get_to(event.time);
-          raw_event.at("element_id").get_to(event.element_id);
-
-          auto type_str   = raw_event.at("type").get<std::string>();
-          using EventType = SystemEvent::Type;
-          auto type_wrap  = enum_cast<EventType>(type_str, case_insensitive);
-          if (!type_wrap.has_value())
-          {
-            Log::error() << "Unable to parse event type \"" << type_str << "\"\n";
-          }
-          event.type = type_wrap.value();
-        }
-      }
+        j.at("events").get_to(c.events);
+      validateEventTimes(c.events, c.tmax);
 
       if (j.contains("output_file"))
       {

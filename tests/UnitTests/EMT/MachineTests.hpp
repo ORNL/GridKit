@@ -96,6 +96,11 @@ namespace GridKit
           machine.getSignals().template attachSignal<GridKit::EMT::MachineExternalVariables::VB>(&bus.outputSignal(GridKit::EMT::BusOutputs::vb));
           machine.getSignals().template attachSignal<GridKit::EMT::MachineExternalVariables::VC>(&bus.outputSignal(GridKit::EMT::BusOutputs::vc));
 
+          for (size_t p = 0; p < 3; ++p)
+          {
+            bus.addCurrent(p, machine.currentSignal(p));
+          }
+
           IdxT offset = 0;
           for (auto* component : components())
           {

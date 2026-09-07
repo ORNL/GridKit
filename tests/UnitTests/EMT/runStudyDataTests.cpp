@@ -41,6 +41,66 @@ int main()
                        { input.get<EMT::StudyData>(); });
   }
 
+  const json switch_event  = {{"time", 0.0}, {"type", "switch"}, {"element_id", "plant.breaker"}, {"open", false}};
+  const json signal_event  = {{"time", 0.5}, {"type", "signal_step"}, {"signal_id", "plant.reference"}, {"value", 0.8}};
+  input                    = base;
+  input["events"]          = {switch_event, signal_event, signal_event};
+  const auto events        = input.get<EMT::StudyData>().events;
+  success                 *= events.size() == 3 && events[0].time == 0.0 && events[1].time == 0.5;
+  success                 *= std::get<EMT::SwitchEvent>(events[0].action).element_id == "plant.breaker";
+  success                 *= !std::get<EMT::SwitchEvent>(events[0].action).open;
+  success                 *= std::get<EMT::SignalStep>(events[1].action).signal_id == "plant.reference";
+  success                 *= std::get<EMT::SignalStep>(events[1].action).value == 0.8;
+  auto rejects_event       = [&](const json& event)
+  {
+    input["events"] = {event};
+    return rejects([&]
+                   { input.get<EMT::StudyData>(); });
+  };
+  for (const auto& invalid : {json(true), json("0.5"), json(-0.1), json(1.1), json(std::numeric_limits<double>::infinity())})
+  {
+    auto event     = signal_event;
+    event["time"]  = invalid;
+    success       *= rejects_event(event);
+  }
+  for (const auto& invalid : {json(true), json("0.8"), json(nullptr), json(std::numeric_limits<double>::infinity())})
+  {
+    auto event      = signal_event;
+    event["value"]  = invalid;
+    success        *= rejects_event(event);
+  }
+  for (const auto& invalid : {json(0), json("false"), json(nullptr)})
+  {
+    auto event     = switch_event;
+    event["open"]  = invalid;
+    success       *= rejects_event(event);
+  }
+  for (const auto& type : {"switch_open", "switch_close", "unknown"})
+  {
+    auto event     = switch_event;
+    event["type"]  = type;
+    success       *= rejects_event(event);
+  }
+  for (const auto& key : {"time", "type", "signal_id", "value"})
+  {
+    auto event = signal_event;
+    event.erase(key);
+    success *= rejects_event(event);
+  }
+  auto extra           = signal_event;
+  extra["element_id"]  = "plant.breaker";
+  success             *= rejects_event(extra);
+  input["events"]      = {signal_event, switch_event};
+  success             *= rejects([&]
+                     { input.get<EMT::StudyData>(); });
+  input                = base;
+  for (double invalid : {-1.0, std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()})
+  {
+    input["tmax"]  = invalid;
+    success       *= rejects([&]
+                       { input.get<EMT::StudyData>(); });
+  }
+
   const auto directory = std::filesystem::temp_directory_path()
                          / ("gridkit-emt-study-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
   std::filesystem::create_directory(directory);
@@ -93,6 +153,6 @@ int main()
   std::filesystem::remove_all(directory);
 
   Testing::TestingResults results;
-  results += success.report("EMT study mu, constant signals, and state");
+  results += success.report("EMT study mu, constants, typed events, and state");
   return results.summary();
 }

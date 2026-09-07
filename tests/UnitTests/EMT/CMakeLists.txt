@@ -4,6 +4,17 @@
 #]]
 
 if(GRIDKIT_ENABLE_ENZYME AND GRIDKIT_ENABLE_SUNDIALS_SPARSE)
+  add_executable(test_emt_events runEventTests.cpp)
+  target_include_directories(
+    test_emt_events PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+                            ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+  target_link_libraries(
+    test_emt_events
+    GridKit::emt_systemmodel
+    GridKit::solvers_dyn
+    GridKit::testing)
+  add_test(NAME EMTEventsTest COMMAND test_emt_events)
+
   add_executable(test_emt_dae_analysis runDaeAnalysisTests.cpp)
   target_include_directories(test_emt_dae_analysis
                              PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)

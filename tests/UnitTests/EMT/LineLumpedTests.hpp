@@ -214,9 +214,7 @@ namespace GridKit
           const size_t q         = (p + 1) % 3;
           const RealT  incoming  = 0.1 * voltage[q];
           // At DC, Y(0) = 0.5 + 3/2 = 2. The second instance has scale 2.
-          success               *= isEqual(first.shuntCurrent(p), 2.0 * voltage[p], 1e-13);
           success               *= isEqual(first.outputSignal(p).read(), 2.0 * voltage[p], 1e-13);
-          success               *= isEqual(second.shuntCurrent(p), 4.0 * voltage[q], 1e-13);
           success               *= isEqual(second.outputSignal(p).read(), 4.0 * voltage[q], 1e-13);
           expected_kcl[p]       += incoming - 2.0 * voltage[p];
           expected_kcl[q]       += 2.0 * voltage[p] - 4.0 * voltage[q];

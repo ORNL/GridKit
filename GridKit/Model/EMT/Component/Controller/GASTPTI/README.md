@@ -88,7 +88,7 @@ speed-deviation variable is the EMT input `speed` minus one.
 Name    | Port   | Init    | Description
 --------|--------|---------|------------
 `speed` | Input  | Known   | Optional absolute rotor speed; defaults to one
-`pref`  | Input  | Unknown | Optional active-power/load reference; latches its initialized value when unattached
+`pref`  | Input  | Known when attached | Optional active-power/load reference; inferred and latched when unattached
 `pmech` | Output | Known   | Required mechanical power output
 
 ## Model Variables
@@ -123,7 +123,7 @@ None.
 Symbol           | Units  | Init    | Description                 | Note
 -----------------|--------|---------|-----------------------------|-----
 $\omega$         | [p.u.] | Known   | Machine rotor-speed deviation (EMT input minus one)     | Optional `speed`; defaults to zero
-$P^\mathrm{ref}$ | [p.u.] | Unknown | Active-power/load reference | Optional `pref`; machine base
+$P^\mathrm{ref}$ | [p.u.] | Known when attached | Active-power/load reference | Optional `pref`; machine base
 
 ## Model Equations
 
@@ -232,7 +232,9 @@ $m_T$ so `iramp` is defined. All candidates and response bounds are validated
 before state, derivatives, or signals are changed; failed initialization is
 atomic.
 
-### Output Initialization
+### Reference Initialization
+
+For an unattached `pref` input, the controller latches the inferred reference:
 
 ```math
 P^\mathrm{ref}
@@ -241,9 +243,10 @@ P^\mathrm{ref}
   \left(V_D+\dfrac{\omega}{R}\right).
 ```
 
-Initialization preserves the machine-seeded machine-base $P_{\mathrm{m}}$. An
-attached `pref` signal receives the initialized reference; an unattached port
-latches that value for subsequent residual evaluations.
+Initialization preserves the machine-seeded machine-base $P_{\mathrm{m}}$ and
+any supplied `pref` input. If that input differs from the inferred reference,
+consistent initialization resolves algebraic values and derivatives while
+retaining the initialized differential states.
 
 ## Monitorable Outputs
 
