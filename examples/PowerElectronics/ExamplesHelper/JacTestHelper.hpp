@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include <iostream>
-#include <optional>
+#include <limits>
 #include <unordered_map>
 #include <vector>
 
@@ -43,23 +43,23 @@ namespace GridKit
      * full-system Jacobian, false otherwise.
      */
 
-    template <typename RealT, typename IdxT>
+    template <typename ScalarT, typename IdxT>
     bool verifySubsystemJacobian(
-        GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& full_jac,
-        GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& sub_jac,
-        GridKit::SubsystemModel<RealT, IdxT>&           subsystem,
-        std::optional<RealT>                            tolerance = std::nullopt)
+        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>& full_jac,
+        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>& sub_jac,
+        GridKit::SubsystemModel<ScalarT, IdxT>&           subsystem,
+        ScalarT                                           tolerance = std::numeric_limits<ScalarT>::epsilon())
     {
       constexpr auto host      = memory::HOST;
       // Full-system CSR data.
       const IdxT*    full_rows = full_jac.getRowData(host);
       const IdxT*    full_cols = full_jac.getColData(host);
-      const RealT*   full_vals = full_jac.getValues(host);
+      const ScalarT* full_vals = full_jac.getValues(host);
 
       // Subsystem CSR data.
-      const IdxT*  sub_rows = sub_jac.getRowData(host);
-      const IdxT*  sub_cols = sub_jac.getColData(host);
-      const RealT* sub_vals = sub_jac.getValues(host);
+      const IdxT*    sub_rows = sub_jac.getRowData(host);
+      const IdxT*    sub_cols = sub_jac.getColData(host);
+      const ScalarT* sub_vals = sub_jac.getValues(host);
 
       const IdxT num_sub_rows = sub_jac.getNumRows();
       const IdxT num_sub_cols = sub_jac.getNumColumns();
@@ -166,7 +166,7 @@ namespace GridKit
          * Jacobian uses global column indices. Convert each local column to its
          * corresponding global column so the two rows can be compared directly.
          */
-        std::unordered_map<IdxT, RealT> sub_row_entries;
+        std::unordered_map<IdxT, ScalarT> sub_row_entries;
 
         for (IdxT sub_index = sub_begin; sub_index < sub_end; ++sub_index)
         {
@@ -224,27 +224,17 @@ namespace GridKit
             continue;
           }
 
-          const RealT full_value = full_vals[full_index];
-          const RealT sub_value  = sub_entry->second;
-          const RealT difference = std::abs(full_value - sub_value);
+          const ScalarT full_value = full_vals[full_index];
+          const ScalarT sub_value  = sub_entry->second;
+          const ScalarT difference = std::abs(full_value - sub_value);
 
           // Different component evaluation orders can change the order of floating-point
           // summation and introduce small roundoff differences. Use an appropriate
           // tolerance when comparing against the monolithic reference.
           // if tolerance is not supplied we simply use default machine precision provided
           // by GridKit's Test::isEqual
-          auto isEqual = [&tolerance](RealT value, RealT reference)
-          {
-            if (tolerance)
-            {
-              return GridKit::Testing::isEqual(value, reference, *tolerance);
-            }
-
-            return GridKit::Testing::isEqual(value, reference);
-          };
-
           // Then the values must agree, fail otherwise
-          if (!isEqual(sub_value, full_value))
+          if (!GridKit::Testing::isEqual(sub_value, full_value, tolerance))
           {
             std::cout << "Jacobian value mismatch at ("
                       << global_row << ", "
