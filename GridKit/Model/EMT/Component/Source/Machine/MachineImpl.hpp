@@ -51,106 +51,26 @@ namespace GridKit
     void Machine<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::S))
-      {
-        S_ = std::get<RealT>(data.parameters.at(Parameter::S));
-      }
-
-      if (data.parameters.contains(Parameter::V))
-      {
-        V_ = std::get<RealT>(data.parameters.at(Parameter::V));
-      }
-
-      if (data.parameters.contains(Parameter::f))
-      {
-        freq_ = std::get<RealT>(data.parameters.at(Parameter::f));
-      }
-
-      if (data.parameters.contains(Parameter::H))
-      {
-        H_ = std::get<RealT>(data.parameters.at(Parameter::H));
-      }
-
-      if (data.parameters.contains(Parameter::F))
-      {
-        Fric_ = std::get<RealT>(data.parameters.at(Parameter::F));
-      }
-
-      if (data.parameters.contains(Parameter::Rs))
-      {
-        Rs_ = std::get<RealT>(data.parameters.at(Parameter::Rs));
-      }
-
-      if (data.parameters.contains(Parameter::Ll))
-      {
-        Ll_ = std::get<RealT>(data.parameters.at(Parameter::Ll));
-      }
-
-      if (data.parameters.contains(Parameter::Lmd))
-      {
-        Lmd_ = std::get<RealT>(data.parameters.at(Parameter::Lmd));
-      }
-
-      if (data.parameters.contains(Parameter::Lmq))
-      {
-        Lmq_ = std::get<RealT>(data.parameters.at(Parameter::Lmq));
-      }
-
-      L0_ = Ll_;
-      if (data.parameters.contains(Parameter::L0))
-      {
-        L0_ = std::get<RealT>(data.parameters.at(Parameter::L0));
-      }
-
-      if (data.parameters.contains(Parameter::Rfd))
-      {
-        Rfd_ = std::get<RealT>(data.parameters.at(Parameter::Rfd));
-      }
-
-      if (data.parameters.contains(Parameter::Llfd))
-      {
-        Llfd_ = std::get<RealT>(data.parameters.at(Parameter::Llfd));
-      }
-
-      if (data.parameters.contains(Parameter::R1d))
-      {
-        R1d_ = std::get<RealT>(data.parameters.at(Parameter::R1d));
-      }
-
-      if (data.parameters.contains(Parameter::Ll1d))
-      {
-        Ll1d_ = std::get<RealT>(data.parameters.at(Parameter::Ll1d));
-      }
-
-      if (data.parameters.contains(Parameter::R1q))
-      {
-        R1q_ = std::get<RealT>(data.parameters.at(Parameter::R1q));
-      }
-
-      if (data.parameters.contains(Parameter::Ll1q))
-      {
-        Ll1q_ = std::get<RealT>(data.parameters.at(Parameter::Ll1q));
-      }
-
-      if (data.parameters.contains(Parameter::R2q))
-      {
-        R2q_ = std::get<RealT>(data.parameters.at(Parameter::R2q));
-      }
-
-      if (data.parameters.contains(Parameter::Ll2q))
-      {
-        Ll2q_ = std::get<RealT>(data.parameters.at(Parameter::Ll2q));
-      }
-
-      if (data.parameters.contains(Parameter::S10))
-      {
-        S10_ = std::get<RealT>(data.parameters.at(Parameter::S10));
-      }
-
-      if (data.parameters.contains(Parameter::S12))
-      {
-        S12_ = std::get<RealT>(data.parameters.at(Parameter::S12));
-      }
+      S_              = parameter<RealT>(data, Parameter::S, S_);
+      V_              = parameter<RealT>(data, Parameter::V, V_);
+      freq_           = parameter<RealT>(data, Parameter::f, freq_);
+      H_              = parameter<RealT>(data, Parameter::H, H_);
+      Fric_           = parameter<RealT>(data, Parameter::F, Fric_);
+      Rs_             = parameter<RealT>(data, Parameter::Rs, Rs_);
+      Ll_             = parameter<RealT>(data, Parameter::Ll, Ll_);
+      Lmd_            = parameter<RealT>(data, Parameter::Lmd, Lmd_);
+      Lmq_            = parameter<RealT>(data, Parameter::Lmq, Lmq_);
+      L0_             = parameter<RealT>(data, Parameter::L0, Ll_);
+      Rfd_            = parameter<RealT>(data, Parameter::Rfd, Rfd_);
+      Llfd_           = parameter<RealT>(data, Parameter::Llfd, Llfd_);
+      R1d_            = parameter<RealT>(data, Parameter::R1d, R1d_);
+      Ll1d_           = parameter<RealT>(data, Parameter::Ll1d, Ll1d_);
+      R1q_            = parameter<RealT>(data, Parameter::R1q, R1q_);
+      Ll1q_           = parameter<RealT>(data, Parameter::Ll1q, Ll1q_);
+      R2q_            = parameter<RealT>(data, Parameter::R2q, R2q_);
+      Ll2q_           = parameter<RealT>(data, Parameter::Ll2q, Ll2q_);
+      S10_            = parameter<RealT>(data, Parameter::S10, S10_);
+      S12_            = parameter<RealT>(data, Parameter::S12, S12_);
     }
 
     /**
@@ -333,19 +253,19 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Machine<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
+    std::array<scalar_type, 24> Machine<scalar_type, index_type>::operatingPoint(
+        const std::map<Outputs, RealT>& outputs, const std::array<ScalarT, 3>& voltage) const
     {
       this->validateOutputValues(outputs);
       this->checkOutputValue(outputs, Outputs::speed, ONE<RealT>);
-      using Variables = MachineExternalVariables;
 
       const RealT pi    = std::numbers::pi_v<RealT>;
       const RealT gamma = TWO<RealT> * pi / THREE<RealT>;
 
       // Terminal voltage in machine per unit
-      const ScalarT va = toMachinePU(signals_.template readExternalVariable<Variables::VA>());
-      const ScalarT vb = toMachinePU(signals_.template readExternalVariable<Variables::VB>());
-      const ScalarT vc = toMachinePU(signals_.template readExternalVariable<Variables::VC>());
+      const ScalarT va = toMachinePU(voltage[0]);
+      const ScalarT vb = toMachinePU(voltage[1]);
+      const ScalarT vc = toMachinePU(voltage[2]);
 
       // Clarke transform gives the rotating peak-value phasor at the
       // initialization instant
@@ -402,8 +322,7 @@ namespace GridKit
 
       const ScalarT te = psid * iq - psiq * id;
 
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
+      std::array<ScalarT, 24> y{};
 
       y[0]  = theta0;
       y[1]  = ONE<RealT>;
@@ -430,29 +349,36 @@ namespace GridKit
       y[22] = id * std::cos(theta0 - gamma) - iq * std::sin(theta0 - gamma);
       y[23] = id * std::cos(theta0 + gamma) - iq * std::sin(theta0 + gamma);
 
-      pm_set_ = te + Fric_;
-      if (signals_.template isAttached<Variables::PM>())
-      {
-        signals_.template writeExternalVariable<Variables::PM>(pm_set_);
-      }
+      return y;
+    }
 
-      efd_set_ = Lmd_ * ifd;
-      if (signals_.template isAttached<Variables::EFD>())
-      {
-        signals_.template writeExternalVariable<Variables::EFD>(efd_set_);
-      }
+    template <typename scalar_type, typename index_type>
+    void Machine<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
+    {
+      using V = MachineExternalVariables;
+      std::array<ScalarT, 3> voltage;
+      for (size_t p = 0; p < 3; ++p)
+        voltage[p] = static_cast<ScalarT>(initial.value(*signals_.getAttachedSignal(static_cast<V>(p))));
+      const auto point = operatingPoint(this->template parseInitialOutputs<Machine>(initial.outputs(*this)), voltage);
+      if (signals_.template isAttached<V::PM>())
+        initial.require(*signals_.template getAttachedSignal<V::PM>(), static_cast<RealT>(point[20] + Fric_), *this);
+      if (signals_.template isAttached<V::EFD>())
+        initial.require(*signals_.template getAttachedSignal<V::EFD>(), static_cast<RealT>(Lmd_ * point[12]), *this);
+    }
 
-      for (IdxT i = 0; i < size_; ++i)
-      {
-        yp[static_cast<size_t>(i)] = 0.0;
-      }
-
+    template <typename scalar_type, typename index_type>
+    int Machine<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
+    {
+      using V          = MachineExternalVariables;
+      const auto point = operatingPoint(outputs, {signals_.template readExternalVariable<V::VA>(), signals_.template readExternalVariable<V::VB>(), signals_.template readExternalVariable<V::VC>()});
+      std::copy(point.begin(), point.end(), y_.getData());
+      pm_set_  = point[20] + Fric_;
+      efd_set_ = Lmd_ * point[12];
+      yp_.setToConst(ScalarT{0});
       // The rotor angle advances at synchronous speed in steady state.
-      yp[0] = omega_base_;
-
+      yp_.getData()[0] = omega_base_;
       y_.setDataUpdated();
       yp_.setDataUpdated();
-
       return 0;
     }
 

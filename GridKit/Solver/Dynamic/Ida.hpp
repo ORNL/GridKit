@@ -51,9 +51,9 @@ namespace AnalysisManager
     {
       using DynamicSolver<ScalarT, IdxT>::model_;
 
-      using EvaluatorT   = GridKit::Model::Evaluator<ScalarT, IdxT>;
-      using RealT        = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      using VectorT      = typename EvaluatorT::VectorT;
+      using EvaluatorT = GridKit::Model::Evaluator<ScalarT, IdxT>;
+      using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using VectorT    = typename EvaluatorT::VectorT;
       using StepCallback = std::function<void(RealT)>;
 
     public:
@@ -69,16 +69,16 @@ namespace AnalysisManager
       int configureLinearSolverDense();
       /// Copy the current model state into the solver.
       int getDefaultInitialCondition();
+      /// Start a fresh study from the loaded state, discarding previous history.
       int initializeSimulation(RealT t0, bool findConsistent = true);
+      /// Recompute consistent event conditions at the current time, retaining history.
+      int restartSimulation(RealT t0, bool findConsistent = true);
 
       int getStepCount(RealT tf, RealT dt) const;
-
-      int runSimulation(RealT tf, RealT dt_monitor = 0, std::optional<StepCallback> step_callback = {});
-      int runSimulationStep(RealT                       tf,
-                            RealT                       dt_monitor,
-                            int                         step,
-                            int                         nsteps,
+      int runSimulationStep(RealT tf, RealT dt_monitor, int step, int nsteps,
                             std::optional<StepCallback> callback = {});
+
+      int runSimulation(RealT tf, RealT dt_monitor = 0, std::optional<std::function<void(RealT)>> step_callback = {});
       int deleteSimulation();
 
       int configureQuadrature();
@@ -197,12 +197,22 @@ namespace AnalysisManager
                                   N_Vector rhsQB,
                                   void*    user_data);
 
-      RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const;
+      int   getMonitorStepCount(RealT tf, RealT dt_monitor, RealT start) const;
+      RealT getMonitorTime(RealT tf, RealT dt_monitor, RealT start, int step, int nsteps) const;
       int   getIDAConsistentICType() const;
       void  updateModelState(RealT t);
+      int   initializeState(RealT t0, bool findConsistent, bool reset_history);
+      void  setMaximumStep();
+      int   runForward(RealT tf, RealT dt_monitor, const std::optional<std::function<void(RealT)>>& step_callback, bool quadrature, bool checkpoint);
+
+      template <class Function>
+      int  evaluateCallback(Function&& evaluate) noexcept;
+      void checkCallbackOutput(int retval, const char* functionName);
 
     private:
-      static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;
+      static constexpr ScalarT DEFAULT_REL_TOL   = 1e-5;
+      // One shared forward budget for IDA and the accepted-step loop; 0 selects it.
+      static constexpr IdxT    DEFAULT_MAX_STEPS = 500;
 
       void*           solver_{};
       SUNContext      context_{};
@@ -210,6 +220,8 @@ namespace AnalysisManager
       SUNMatrix       JacobianMatB_{};
       SUNLinearSolver linearSolver_{};
       SUNLinearSolver linearSolverB_{};
+
+      std::exception_ptr callback_error_;
 
       RealT t_init_{};
 
@@ -230,7 +242,7 @@ namespace AnalysisManager
       RealT               time_step_{};
       RealT               rel_tol_{DEFAULT_REL_TOL};
       RealT               abs_tol_override_{};
-      IdxT                max_steps_{};
+      IdxT                max_steps_{DEFAULT_MAX_STEPS};
       int                 max_order_{5};
       bool                suppress_alg_{false};
       IdaConsistentICType consistent_ic_type_{IdaConsistentICType::YA_YDP};
@@ -257,6 +269,7 @@ namespace AnalysisManager
       // int check_flag(void *flagvalue, const char *funcname, int opt);
       static void checkAllocation(void* v, const char* functionName);
       static void checkOutput(int retval, const char* functionName);
+      static void checkModelOutput(int retval, const char* functionName);
 
       void setIDAOptions(void*   mem,
                          ScalarT time_step,

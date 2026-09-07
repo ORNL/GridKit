@@ -237,6 +237,20 @@ namespace GridKit::Testing
       {
         auto d                  = data();
         d.parameters[parameter] = value;
+        if (!std::isfinite(value))
+        {
+          bool rejected = false;
+          try
+          {
+            Fixture invalid(d);
+          }
+          catch (const std::invalid_argument&)
+          {
+            rejected = true;
+          }
+          success *= rejected;
+          continue;
+        }
         Fixture f(d);
         success *= f.model.initialize() != 0;
         success *= near(f.pmech.read(), 0.4);

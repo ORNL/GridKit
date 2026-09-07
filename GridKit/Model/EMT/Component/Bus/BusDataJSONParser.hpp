@@ -22,7 +22,7 @@ namespace GridKit
                                   BusInputs,
                                   BusOutputs,
                                   BusMonitorableVariables>;
-      from_json(j, static_cast<BaseT&>(data));
+      from_json(j, static_cast<BaseT&>(data), {"shunts"});
 
       if (data.device_class != "Bus")
       {

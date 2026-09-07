@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
@@ -153,6 +154,28 @@ namespace GridKit
       virtual IdxT sizeQuadrature()             = 0;
       virtual IdxT sizeParams()                 = 0;
       virtual void updateTime(RealT t, RealT a) = 0;
+
+      /// Start a fresh study, discarding committed history from earlier runs.
+      virtual void resetHistory()
+      {
+      }
+
+      /**
+       * @brief Commit the current state at an accepted forward time.
+       *
+       * Called after consistent initialization and each accepted internal step,
+       * never for trial evaluations or interpolated monitor samples. A restart
+       * can commit a new right limit at the same time as the previous left limit.
+       */
+      virtual void acceptStep(RealT)
+      {
+      }
+
+      /// Largest admissible forward step, e.g. the shortest transport delay.
+      virtual RealT maximumStepSize() const
+      {
+        return std::numeric_limits<RealT>::infinity();
+      }
 
       /**
        * @brief Get the absolute tolerance for each variable in the model

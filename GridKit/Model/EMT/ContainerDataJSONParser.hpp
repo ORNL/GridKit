@@ -16,14 +16,12 @@
 #include <GridKit/Model/EMT/ContainerData.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/ConverterDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Signal/SignalDataJSONParser.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace EMT
   {
     using json = nlohmann::json;
-    using Log  = ::GridKit::Utilities::Logger;
 
     inline void validateLocalName(const std::string& name,
                                   const std::string& kind,
@@ -48,12 +46,6 @@ namespace GridKit
                             ContainerData<RealT, IdxT>& data,
                             const std::string&          scope)
     {
-      if (j.contains("buses"))
-      {
-        throw std::runtime_error(
-            "Legacy 'buses' is not supported; list Bus entries in 'devices'");
-      }
-
       if (j.contains("inputs"))
       {
         j.at("inputs").get_to(data.inputs);
@@ -95,6 +87,8 @@ namespace GridKit
       }
       if (j.contains("signals"))
       {
+        if (!j.at("signals").is_array())
+          throw std::invalid_argument("Signals must be an array in \"" + scope + "\"");
         for (const auto& raw_signal : j.at("signals"))
         {
           const auto id = raw_signal.at("id").template get<std::string>();
@@ -108,6 +102,8 @@ namespace GridKit
       }
 
       const auto& devices = j.at("devices");
+      if (!devices.is_array())
+        throw std::invalid_argument("Devices must be an array in \"" + scope + "\"");
       for (const auto& raw_device : devices)
       {
         const auto id = raw_device.at("id").template get<std::string>();
@@ -123,18 +119,7 @@ namespace GridKit
         const auto kind = raw_device.at("class").template get<std::string>();
         if (kind == "Container")
         {
-          static const std::set<std::string> allowed_keys{
-              "class", "devices", "id", "inputs", "outputs", "signals"};
-          for (const auto& [key, value] : raw_device.items())
-          {
-            static_cast<void>(value);
-            if (!allowed_keys.contains(key))
-            {
-              throw std::runtime_error("Invalid Container field \"" + key + "\" in \""
-                                       + scope + "."
-                                       + raw_device.at("id").template get<std::string>() + "\"");
-            }
-          }
+          validateJsonFields(raw_device, "Container \"" + scope + "." + raw_device.at("id").template get<std::string>() + "\"", {"class", "devices", "id", "inputs", "outputs", "signals"});
 
           auto& child = data.container.emplace_back();
           raw_device.at("id").get_to(child.id);
@@ -198,10 +183,7 @@ namespace GridKit
         }
         else
         {
-          Log::error() << "\n\tInvalid device class: \"" << kind << "\". "
-                       << "\n\tSee the \"devices\" list in scope \"" << scope << "\"."
-                       << std::endl;
-          throw std::runtime_error("JSON parser failed");
+          throw std::invalid_argument("Invalid device class \"" + kind + "\" in \"" + scope + "\"");
         }
       }
     }
@@ -209,6 +191,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     void from_json(const json& j, ContainerData<RealT, IdxT>& data)
     {
+      validateJsonFields(j, "Container", {"class", "devices", "id", "inputs", "outputs", "signals"});
       j.at("id").get_to(data.id);
       validateLocalName(data.id, "Container", data.id);
       parseContainerData(j, data, data.id);

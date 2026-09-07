@@ -89,16 +89,26 @@ namespace GridKit
         int allocate() override final;
         int verify() const override final;
 
-        int initializationOrder() const noexcept override final
-        {
-          return 2;
-        }
-
         int initialize(const std::map<Outputs, RealT>& outputs = {});
+
+        typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+        {
+          using V = GastPtiExternalVariables;
+          typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+          ports.inputs = signals_.attachedSignals({V::OMEGA});
+          if (signals_.template isAssigned<GastPtiInternalVariables::PMECH>())
+            ports.outputs.emplace("pmech", signals_.template getSignal<GastPtiInternalVariables::PMECH>());
+          return ports;
+        }
 
         int initializeState(const std::map<std::string, RealT>& values) override
         {
           return this->initializeOutputs(*this, values);
+        }
+
+        void validateInitialState(const std::map<std::string, RealT>& values) const override
+        {
+          this->template parseInitialOutputs<GastPti>(values);
         }
 
         int evaluateInternalResidual() override final;
@@ -122,10 +132,6 @@ namespace GridKit
             ScalarT*       f);
 
       private:
-        void loadRealParameter(const ModelDataT& data,
-                               GastPtiParameters parameter,
-                               RealT&            target,
-                               const char*       name);
         bool floorTimeConstant(RealT& value, const char* name);
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();

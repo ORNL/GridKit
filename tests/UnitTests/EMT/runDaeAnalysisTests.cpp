@@ -175,7 +175,7 @@ namespace
     system.getSwitch("plant.breaker")->setOpen(true);
     system.resetJacobianStructure();
     return rejects([&]
-                   { ida.initializeSimulation(0.001); },
+                   { ida.restartSimulation(0.001); },
                    "EMT DAE");
   }
 

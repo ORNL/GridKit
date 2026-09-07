@@ -172,6 +172,20 @@ namespace GridKit
         {
           Data parameters                  = data();
           parameters.parameters[parameter] = value;
+          if (!std::isfinite(value))
+          {
+            bool rejected = false;
+            try
+            {
+              Fixture invalid(parameters);
+            }
+            catch (const std::invalid_argument&)
+            {
+              rejected = true;
+            }
+            success *= rejected;
+            continue;
+          }
           Fixture    fixture(parameters);
           const auto old_reference  = fixture.inputs[4];
           success                  *= fixture.model.verify() != 0;

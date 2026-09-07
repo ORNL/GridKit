@@ -24,7 +24,9 @@ namespace GridKit
                                   LineLumpedInputs,
                                   LineLumpedOutputs,
                                   LineLumpedMonitorableVariables>;
-      from_json(j, static_cast<BaseT&>(d));
+      from_json(j, static_cast<BaseT&>(d), {"submodels"});
+      if (j.contains("submodels"))
+        validateJsonFields(j.at("submodels"), d.device_class + " \"" + d.id + "\" submodels", {"Zp", "Yp"});
 
       if (j.contains("submodels") && j.at("submodels").contains("Zp"))
       {

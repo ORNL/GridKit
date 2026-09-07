@@ -47,6 +47,12 @@ int main()
 
   // setup simulation
   model->initialize();
+  // Resolve quadrature differences at the finite-difference perturbation scale.
+  const double integration_tol = 1e-8;
+  idas->setTolerance(integration_tol);
+  idas->setBackwardTolerance(integration_tol);
+  idas->setQuadratureTolerance(0.1 * integration_tol);
+  idas->setBackwardQuadratureTolerance(0.1 * integration_tol);
   idas->configureSimulation();
   idas->configureAdjoint();
   idas->getDefaultInitialCondition();
