@@ -124,14 +124,6 @@ namespace GridKit
         return initialize(outputs);
       }
 
-      int tagDifferentiable() override
-      {
-        for (size_t p = 0; p < 3; ++p)
-          this->tag_[p] = voltage_[p].hasDerivativeCoupling()
-                          || (aliases_[p] && aliases_[p]->hasDerivativeCoupling());
-        return 0;
-      }
-
       int setAbsoluteTolerance(RealT tolerance) override
       {
         this->abs_tol_.setToConst(static_cast<ScalarT>(tolerance));
@@ -156,14 +148,14 @@ namespace GridKit
         return evaluateInternalResidual();
       }
 
-      int evaluateJacobian() override
+      int assembleJacobian(RealT y_scale, RealT) override
       {
         std::array<typename SignalT::GradientT, 3> gradients;
         size_t                                     entries = 0;
         for (size_t p = 0; p < 3; ++p)
         {
-          if (current_[p])
-            current_[p]->appendGradient(gradients[p]);
+          if (y_scale != ZERO<RealT> && current_[p])
+            current_[p]->appendGradient(gradients[p], y_scale);
           entries += gradients[p].size();
         }
         if (entries != capacity_)

@@ -7,6 +7,7 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Constants.hpp>
+#include <GridKit/Model/EMT/DaeAnalysis.hpp>
 #include <GridKit/Model/EMT/Signal/Signal.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Errors.hpp>
@@ -416,6 +417,55 @@ namespace GridKit
         return coo_jac_;
       }
 
+      int evaluateJacobian() override final
+      {
+        return evaluateJacobian(ONE<RealT>, alpha_);
+      }
+
+      /// The same assembly supplies IDA's Jacobian and either exact partial.
+      int evaluateJacobian(RealT y_scale, RealT yp_scale)
+      {
+        const unsigned blocks = (y_scale != ZERO<RealT> ? 1u : 0u)
+                                | (yp_scale != ZERO<RealT> ? 2u : 0u);
+        if (blocks != jacobian_blocks_)
+          resetJacobianStructure();
+        jacobian_blocks_ = blocks;
+        return assembleJacobian(y_scale, yp_scale);
+      }
+
+      virtual int assembleJacobian(RealT y_scale, RealT yp_scale) = 0;
+
+      JacobianEntries jacobianEntries(RealT y_scale, RealT yp_scale)
+      {
+        if (evaluateJacobian(y_scale, yp_scale) != 0)
+          throw std::runtime_error("EMT Jacobian assembly failed");
+        JacobianEntries entries;
+        if (coo_jac_)
+        {
+          entries.reserve(static_cast<size_t>(coo_jac_->getNnz()));
+          for (IdxT j = 0; j < coo_jac_->getNnz(); ++j)
+            entries.push_back({static_cast<size_t>(coo_jac_->getRowData()[j]),
+                               static_cast<size_t>(coo_jac_->getColData()[j]),
+                               static_cast<double>(coo_jac_->getValues()[j])});
+        }
+        return entries;
+      }
+
+      int tagDifferentiable() override
+      {
+        setDifferentialTags(derivativeColumns(jacobianEntries(ZERO<RealT>, ONE<RealT>)));
+        return evaluateJacobian();
+      }
+
+      /// Apply a classification derived from the complete assembled derivative matrix.
+      virtual void setDifferentialTags(const std::set<size_t>& columns)
+      {
+        for (size_t j = 0; j < variable_indices_.size(); ++j)
+          tag_[j] = columns.contains(static_cast<size_t>(variable_indices_[j]));
+        for (auto* op : operators_)
+          op->setDifferentialTags(columns);
+      }
+
       /// @todo Remove this method. It should be part of DynamicSolver class.
       bool hasJacobian() override
       {
@@ -632,21 +682,6 @@ namespace GridKit
         return 0;
       }
 
-      int tagDifferentiableOperators()
-      {
-        for (size_t i = 0; i < operators_.size(); ++i)
-        {
-          operators_[i]->tagDifferentiable();
-          const auto& operator_tag = operators_[i]->tag();
-          const auto  offset       = static_cast<size_t>(operator_offsets_[i]);
-          for (size_t j = 0; j < operator_tag.size(); ++j)
-          {
-            tag_[offset + j] = operator_tag[j];
-          }
-        }
-        return 0;
-      }
-
       int setAbsoluteToleranceOperators(RealT rel_tol)
       {
         for (auto* op : operators_)
@@ -682,11 +717,11 @@ namespace GridKit
         return 0;
       }
 
-      int evaluateOperatorJacobians()
+      int evaluateOperatorJacobians(RealT y_scale, RealT yp_scale)
       {
         for (auto* op : operators_)
         {
-          const int status = op->evaluateJacobian();
+          const int status = op->evaluateJacobian(y_scale, yp_scale);
           if (status != 0)
           {
             return status;
@@ -816,6 +851,8 @@ namespace GridKit
       using NotImplementedError = GridKit::Utilities::NotImplementedError;
 
     private:
+      unsigned jacobian_blocks_{3};
+
       IdxT operatorSize() const
       {
         IdxT total = 0;

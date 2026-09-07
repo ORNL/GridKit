@@ -9,7 +9,7 @@ namespace GridKit
     namespace Controller
     {
       template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::evaluateJacobian()
+      int Ieeest<scalar_type, index_type>::assembleJacobian(RealT y_scale, RealT yp_scale)
       {
         gatherExternalVariables();
         if (J_rows_buffer_ == nullptr)
@@ -26,17 +26,20 @@ namespace GridKit
           J_cols_buffer_[nnz_]   = column;
           J_vals_buffer_[nnz_++] = value;
         };
-        auto internal = [&](IdxT row, IdxT column, RealT value)
+        auto internal = [&](IdxT row, IdxT column, RealT value, RealT derivative = ZERO<RealT>)
         {
-          entry(row, this->getVariableIndex(column), value);
+          if (y_scale != ZERO<RealT> || (yp_scale != ZERO<RealT> && derivative != ZERO<RealT>) )
+            entry(row, this->getVariableIndex(column), y_scale * value + yp_scale * derivative);
         };
         auto external = [&](IdxT row, size_t slot, RealT value)
         {
+          if (y_scale == ZERO<RealT>)
+            return;
           auto* signal = this->externalVariableSignals()[slot];
           if (signal != nullptr)
           {
             typename SignalT::GradientT gradient;
-            signal->appendGradient(gradient, value);
+            signal->appendGradient(gradient, y_scale * value);
             for (const auto& [column, derivative] : gradient)
               entry(row, column, derivative);
           }
@@ -45,24 +48,24 @@ namespace GridKit
         const RealT b3   = use_3rd_order_ * safe_inv_a3_;
         const RealT b4   = use_4th_order_ * safe_inv_a4_;
         const RealT high = use_4th_order_ + use_3rd_order_;
-        internal(0, 0, -alpha_);
+        internal(0, 0, ZERO<RealT>, -ONE<RealT>);
         internal(0, 1, use_notch_);
         internal(1, 0, -b2);
-        internal(1, 1, -a1_ * b2 - alpha_);
+        internal(1, 1, -a1_ * b2, -ONE<RealT>);
         internal(1, 2, high);
         internal(2, 0, -b3);
         internal(2, 1, -a1_ * b3);
-        internal(2, 2, -a2_ * b3 - alpha_);
+        internal(2, 2, -a2_ * b3, -ONE<RealT>);
         internal(2, 3, use_4th_order_);
         internal(3, 0, -b4);
         internal(3, 1, -a1_ * b4);
         internal(3, 2, -a2_ * b4);
-        internal(3, 3, -a3_ * b4 - alpha_);
-        internal(4, 4, -ONE<RealT> - T2_ * alpha_);
+        internal(3, 3, -a3_ * b4, -ONE<RealT>);
+        internal(4, 4, -ONE<RealT>, -T2_);
         internal(4, 7, ONE<RealT>);
-        internal(5, 5, -ONE<RealT> - T4_ * alpha_);
+        internal(5, 5, -ONE<RealT>, -T4_);
         internal(5, 8, ONE<RealT>);
-        internal(6, 6, -ONE<RealT> - T6_ * alpha_);
+        internal(6, 6, -ONE<RealT>, -T6_);
         internal(6, 9, ONE<RealT>);
         internal(7, 0, use_notch_ * (ONE<RealT> - A6_ * b2));
         internal(7, 1, use_notch_ * (A5_ - A6_ * a1_ * b2));

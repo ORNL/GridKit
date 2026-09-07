@@ -158,19 +158,6 @@ namespace GridKit
     }
 
     /**
-     * \brief Identify differential variables.
-     */
-    template <typename scalar_type, typename index_type>
-    int Switch<scalar_type, index_type>::tagDifferentiable()
-    {
-      tag_[0] = false;
-      tag_[1] = false;
-      tag_[2] = false;
-
-      return 0;
-    }
-
-    /**
      * @brief Compute the absolute tolerance for each variable in the model
      *
      * @param rel_tol The relative tolerance which can be used to pick the
