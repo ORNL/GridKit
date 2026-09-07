@@ -99,7 +99,13 @@ namespace GridKit
       virtual int allocate() override final;
       virtual int verify() const override final;
 
-      int         initialize(const std::map<Outputs, RealT>& outputs = {});
+      int initialize(const std::map<Outputs, RealT>& outputs = {});
+
+      int initializeState(const std::map<std::string, RealT>& values) override
+      {
+        return this->initializeOutputs(*this, values);
+      }
+
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;

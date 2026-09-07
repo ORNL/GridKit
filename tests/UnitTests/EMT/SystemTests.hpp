@@ -1143,6 +1143,41 @@ namespace GridKit
       }
 
       /**
+       * @brief Compare a bus-owned RC shunt against the analytic voltage decay.
+       */
+      TestOutcome busShuntDecay()
+      {
+        TestStatus                      success = true;
+        std::istringstream              stream(R"({
+          "header": {"case_name": "bus shunt", "case_description": "RC decay", "case_comments": ""},
+          "devices": [{"class": "Bus", "id": "bus", "shunts": {
+            "rc": {"D": [[2,0,0],[0,2,0],[0,0,2]],
+                   "E": [[0.1,0,0],[0,0.1,0],[0,0,0.1]]}
+          }}]
+        })");
+        EMT::SystemModel<ScalarT, IdxT> sys(EMT::parseSystemModelData(stream));
+        success *= sys.allocate() == 0;
+        success *= sys.initialize({{"bus", {{"va", 10.0}, {"vb", -4.0}, {"vc", 2.0}}}}) == 0;
+        success *= sys.verify() == 0 && sys.size() == 6;
+        AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida(&sys);
+        ida.setTolerance(1e-10, 1e-10);
+        ida.configureSimulation();
+        ida.initializeSimulation(0.0, true);
+        const std::array<RealT, 3> initial{10.0, -4.0, 2.0};
+        for (const RealT time : {0.01, 0.1})
+        {
+          ida.runSimulation(time);
+          for (size_t p = 0; p < 3; ++p)
+          {
+            // Independent RC solution: C dv/dt + G v = 0.
+            success *= std::abs(sys.y().getData()[p] - initial[p] * std::exp(-20.0 * time)) < 1e-7;
+            success *= std::abs(sys.y().getData()[3 + p]) < 1e-9;
+          }
+        }
+        return success.report(__func__);
+      }
+
+      /**
        * @brief Integrate the source-line-load case to sinusoidal steady state
        * and compare against the analytic per-phase phasor ladder solution.
        *
@@ -1165,9 +1200,10 @@ namespace GridKit
         const auto& tag = sys.tag();
         // Both bus voltages are differential through the line's shunt
         // capacitance.
-        for (size_t j = 0; j < 6; ++j)
+        for (size_t j = 0; j < 3; ++j)
         {
           success *= (tag[j] == true);
+          success *= (tag[6 + j] == true);
         }
 
         AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida(&sys);
@@ -1198,7 +1234,9 @@ namespace GridKit
         const std::complex<RealT> a22 = RealT{1.0} / Zl + Yh + RealT{1.0} / Zload;
         const std::complex<RealT> det = a11 * a22 - a12 * a21;
 
-        const auto* y = sys.y().getData();
+        const auto* y    = sys.y().getData();
+        auto&       bus1 = sys.template component<EMT::Bus<ScalarT, IdxT>>("bus_1");
+        auto&       bus2 = sys.template component<EMT::Bus<ScalarT, IdxT>>("bus_2");
 
         const std::array<RealT, 3> phi{0.0, -2.0943951023931953, 2.0943951023931953};
         for (size_t n = 0; n < 3; ++n)
@@ -1213,17 +1251,17 @@ namespace GridKit
           const std::complex<RealT> ish2 = -Yh * v2;
           const std::complex<RealT> ild  = -v2 / Zload;
 
-          // Layout: bus1 v [0,3), bus2 v [3,6), source e [6,9) i [9,12),
-          // line i12 [12,15) i_sh1 [15,18) i_sh2 [18,21), load i [21,24)
+          // Layout: bus1 v/shunt [0,6), bus2 v/shunt [6,12), source e/i
+          // [12,18), line i12 [18,21), load i [21,24).
           // Tolerance is the measured error floor at the 1.0e-9 solver
           // tolerance with headroom, phase-a bus 1 voltage 1.5e-8, dominated
           // by integration error over the stiff shunt dynamics.
           success *= isEqual(y[n], (v1 * rotation).real(), 3.0e-8);
-          success *= isEqual(y[3 + n], (v2 * rotation).real(), 3.0e-8);
-          success *= isEqual(y[9 + n], (isrc * rotation).real(), 3.0e-8);
-          success *= isEqual(y[12 + n], (i12 * rotation).real(), 3.0e-8);
-          success *= isEqual(y[15 + n], (ish1 * rotation).real(), 3.0e-8);
-          success *= isEqual(y[18 + n], (ish2 * rotation).real(), 3.0e-8);
+          success *= isEqual(y[6 + n], (v2 * rotation).real(), 3.0e-8);
+          success *= isEqual(y[15 + n], (isrc * rotation).real(), 3.0e-8);
+          success *= isEqual(y[18 + n], (i12 * rotation).real(), 3.0e-8);
+          success *= isEqual(-bus1.outputSignal(std::string("line_1_2_1_Ish_") + "abc"[n]).read(), (ish1 * rotation).real(), 3.0e-8);
+          success *= isEqual(-bus2.outputSignal(std::string("line_1_2_2_Ish_") + "abc"[n]).read(), (ish2 * rotation).real(), 3.0e-8);
           success *= isEqual(y[21 + n], (ild * rotation).real(), 3.0e-8);
         }
 
@@ -1266,16 +1304,16 @@ namespace GridKit
         sys.allocate();
         sys.initialize();
         success              *= (sys.size() == 24);
-        success              *= (left.size() == 9);
-        success              *= (right.size() == 6);
+        success              *= (left.size() == 12);
+        success              *= (right.size() == 9);
         const auto* system_y  = sys.y().getData();
         success              *= (left.y().getData() == system_y);
-        success              *= (right.y().getData() == system_y + 9);
-        success              *= (line.y().getData() == system_y + 15);
+        success              *= (right.y().getData() == system_y + 12);
+        success              *= (line.y().getData() == system_y + 21);
         success              *= (bus1.y().getData() == left.y().getData());
-        success              *= (source.y().getData() == left.y().getData() + 3);
+        success              *= (source.y().getData() == left.y().getData() + 6);
         success              *= (bus2.y().getData() == right.y().getData());
-        success              *= (load.y().getData() == right.y().getData() + 3);
+        success              *= (load.y().getData() == right.y().getData() + 6);
 
         sys.tagDifferentiable();
         for (size_t j = 0; j < 3; ++j)
@@ -1332,8 +1370,8 @@ namespace GridKit
           success *= isEqual(y_bus2[n], (v2 * rotation).real(), 3.0e-8);
           success *= isEqual(y_source[3 + n], (isrc * rotation).real(), 3.0e-8);
           success *= isEqual(y_line[n], (i12 * rotation).real(), 3.0e-8);
-          success *= isEqual(y_line[3 + n], (ish1 * rotation).real(), 3.0e-8);
-          success *= isEqual(y_line[6 + n], (ish2 * rotation).real(), 3.0e-8);
+          success *= isEqual(-bus1.outputSignal(std::string("tie_line_1_Ish_") + "abc"[n]).read(), (ish1 * rotation).real(), 3.0e-8);
+          success *= isEqual(-bus2.outputSignal(std::string("tie_line_2_Ish_") + "abc"[n]).read(), (ish2 * rotation).real(), 3.0e-8);
           success *= isEqual(y_load[n], (ild * rotation).real(), 3.0e-8);
         }
 
@@ -1642,10 +1680,7 @@ namespace GridKit
         rational.allocate();
         rational.initialize();
 
-        // Layouts: bus voltages [0,6), source e [6,9) i [9,12), line i12
-        // [12,15) ish1 [15,18) ish2 [18,21); then either load_2 [21,24) and
-        // the terminal loads [24,30), or the two shunt memory-state triples
-        // [21,27) and load_2 [27,30)
+        // The rational shunt memories now belong to the terminal buses.
         success *= (matrix.size() == 30);
         success *= (rational.size() == 30);
         success *= (rational.verify() == 0);
@@ -1662,8 +1697,7 @@ namespace GridKit
         ida_rational.configureSimulation();
         ida_rational.initializeSimulation(0.0, true);
 
-        const auto* y_matrix   = matrix.y().getData();
-        const auto* y_rational = rational.y().getData();
+        using BusT = EMT::Bus<ScalarT, IdxT>;
 
         // Tolerance is the measured trajectory-agreement floor at the 1.0e-9
         // solver tolerance with headroom.
@@ -1674,19 +1708,26 @@ namespace GridKit
           ida_matrix.runSimulation(t_check);
           ida_rational.runSimulation(t_check);
 
-          for (size_t j = 0; j < 15; ++j)
+          for (const auto* name : {"bus_1", "bus_2", "source_1", "line_1_2", "load_2"})
           {
-            success *= isEqual(y_rational[j], y_matrix[j], agreement_tol);
+            const auto&  lhs   = rational.component(name).y();
+            const auto&  rhs   = matrix.component(name).y();
+            const size_t count = std::string_view(name) == "source_1" ? 6 : 3;
+            for (size_t j = 0; j < count; ++j)
+              success *= isEqual(lhs.getData()[j], rhs.getData()[j], agreement_tol);
           }
           for (size_t n = 0; n < 3; ++n)
           {
-            success *= isEqual(y_rational[15 + n],
-                               y_matrix[15 + n] + y_matrix[24 + n],
+            const auto port1  = std::string("line_1_2_1_Ish_") + "abc"[n];
+            const auto port2  = std::string("line_1_2_2_Ish_") + "abc"[n];
+            success          *= isEqual(-rational.template component<BusT>("bus_1").outputSignal(port1).read(),
+                               -matrix.template component<BusT>("bus_1").outputSignal(port1).read()
+                                   + matrix.component("load_sh1").y().getData()[n],
                                agreement_tol);
-            success *= isEqual(y_rational[18 + n],
-                               y_matrix[18 + n] + y_matrix[27 + n],
+            success          *= isEqual(-rational.template component<BusT>("bus_2").outputSignal(port2).read(),
+                               -matrix.template component<BusT>("bus_2").outputSignal(port2).read()
+                                   + matrix.component("load_sh2").y().getData()[n],
                                agreement_tol);
-            success *= isEqual(y_rational[27 + n], y_matrix[21 + n], agreement_tol);
           }
         }
 

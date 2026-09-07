@@ -6,6 +6,7 @@
 
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSourceData.hpp>
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 #include <GridKit/Model/EMT/PhasorInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 

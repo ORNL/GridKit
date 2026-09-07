@@ -6,6 +6,7 @@
 
 #include <GridKit/Model/EMT/Component/Bus/BusData.hpp>
 #include <GridKit/Model/EMT/ComponentDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFitDataJSONParser.hpp>
 
 namespace GridKit
 {
@@ -26,6 +27,14 @@ namespace GridKit
       if (data.device_class != "Bus")
       {
         throw std::runtime_error("JSON parser failed: expected Bus class");
+      }
+      data.shunts.clear();
+      if (j.contains("shunts"))
+      {
+        if (!j.at("shunts").is_object())
+          throw std::invalid_argument("Bus shunts must be a named object");
+        for (const auto& [name, coefficients] : j.at("shunts").items())
+          data.shunts.emplace(name, parseVectorFitOperand<RealT, IdxT>(coefficients));
       }
     }
   } // namespace EMT

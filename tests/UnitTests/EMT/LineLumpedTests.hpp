@@ -67,8 +67,8 @@ namespace GridKit
       /**
        * @brief Two buses joined by one lumped line.
        *
-       * Variable layout: bus 1 voltages [0, 3), bus 2 voltages [3, 6),
-       * line variables [6, 15).
+       * Variable layout: bus 1 voltage/shunt current [0, 6), bus 2
+       * voltage/shunt current [6, 12), series current [12, 15).
        */
       struct Fixture
       {
@@ -89,23 +89,24 @@ namespace GridKit
           f.resize(system_size);
           abs_tol.resize(system_size);
 
-          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V1A>(&bus1.outputSignal(GridKit::EMT::BusOutputs::va));
-          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V1B>(&bus1.outputSignal(GridKit::EMT::BusOutputs::vb));
-          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V1C>(&bus1.outputSignal(GridKit::EMT::BusOutputs::vc));
-          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V2A>(&bus2.outputSignal(GridKit::EMT::BusOutputs::va));
-          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V2B>(&bus2.outputSignal(GridKit::EMT::BusOutputs::vb));
-          line.getSignals().template attachSignal<GridKit::EMT::LineLumpedExternalVariables::V2C>(&bus2.outputSignal(GridKit::EMT::BusOutputs::vc));
+          const auto data = makeResidualData();
+          using Parameter = typename LineT::ModelDataT::Parameters;
+          typename BusT::YDataT Y;
+          Y.D              = std::get<EMT::ABCMatrix<RealT>>(data.parameters.at(Parameter::Gp));
+          Y.E              = std::get<EMT::ABCMatrix<RealT>>(data.parameters.at(Parameter::Cp));
+          const auto scale = 0.5 * std::get<RealT>(data.parameters.at(Parameter::dx));
+          using Output     = EMT::LineLumpedOutputs;
+          bus1.addNorton("line_1", Y, {&line.outputSignal(Output::i21a), &line.outputSignal(Output::i21b), &line.outputSignal(Output::i21c)}, scale);
+          bus2.addNorton("line_2", Y, {&line.outputSignal(Output::i12a), &line.outputSignal(Output::i12b), &line.outputSignal(Output::i12c)}, scale);
+          line.attachTerminal(0, bus1.voltages());
+          line.attachTerminal(1, bus2.voltages());
 
           IdxT offset = 0;
           for (auto* component : components())
           {
             component->bind(y, yp, f, abs_tol, offset);
             component->allocate();
-            for (IdxT j = 0; j < component->size(); ++j)
-            {
-              component->setVariableIndex(j, offset + j);
-              component->setResidualIndex(j, offset + j);
-            }
+            component->assignGlobalIndices(offset);
             offset += component->size();
           }
 
@@ -158,6 +159,116 @@ namespace GridKit
       };
 
     public:
+      /** Independent terminal states, shunt ports, and the full bus Jacobian. */
+      TestOutcome nortonTerminals()
+      {
+        TestStatus                      success = true;
+        BusT                            bus;
+        EMT::VectorFitData<RealT, IdxT> Y;
+        Y.poles = {{-2.0, 0.0}};
+        Y.residues.resize(1);
+        for (size_t p = 0; p < 3; ++p)
+        {
+          Y.D[p][p]           = 0.5;
+          Y.E[p][p]           = 0.25;
+          Y.residues[0][p][p] = 3.0;
+        }
+        std::array<typename BusT::SignalT, 3> incident;
+        typename BusT::PhaseSignals           inputs;
+        for (size_t p = 0; p < 3; ++p)
+        {
+          auto* voltage = &bus.outputSignal(static_cast<EMT::BusOutputs>((p + 1) % 3));
+          incident[p].setComputed([voltage]
+                                  { return 0.1 * voltage->read(); },
+                                  [voltage](typename BusT::SignalT::GradientT& gradient, RealT scale)
+                                  { voltage->appendGradient(gradient, 0.1 * scale); });
+          inputs[p] = &incident[p];
+        }
+        auto& first     = bus.addNorton("first", Y, inputs);
+        auto& second    = bus.addNorton("second", Y, {&first.outputSignal(0), &first.outputSignal(1), &first.outputSignal(2)}, 2.0, {1, 2, 0});
+        success        *= &first == &bus.norton("first");
+        success        *= &bus.outputSignal("first_Ish_a") == &first.outputSignal(0);
+        success        *= &bus.inputSignal("first_inc_a") == inputs[0];
+        success        *= bus.template component<EMT::KCL<ScalarT, IdxT>>("KCL").size() == 3;
+        success        *= bus.size() == 15;
+        bool duplicate  = false;
+        try
+        {
+          bus.addShunt("first", Y);
+        }
+        catch (const std::invalid_argument&)
+        {
+          duplicate = true;
+        }
+        success *= duplicate && bus.size() == 15;
+        success *= bus.allocate() == 0;
+        success *= bus.verify() == 0;
+        success *= bus.initialize({{EMT::BusOutputs::va, 2.0}, {EMT::BusOutputs::vb, -4.0}, {EMT::BusOutputs::vc, 6.0}}) == 0;
+        success *= bus.initializeSteadyState(0.0) == 0;
+        bus.tagDifferentiable();
+        bus.evaluateResidual();
+        const std::array<RealT, 3> voltage{2.0, -4.0, 6.0};
+        std::array<RealT, 3>       expected_kcl{};
+        for (size_t p = 0; p < 3; ++p)
+        {
+          const size_t q         = (p + 1) % 3;
+          const RealT  incoming  = 0.1 * voltage[q];
+          // At DC, Y(0) = 0.5 + 3/2 = 2. The second instance has scale 2.
+          success               *= isEqual(first.shuntCurrent(p), 2.0 * voltage[p], 1e-13);
+          success               *= isEqual(first.outputSignal(p).read(), 2.0 * voltage[p], 1e-13);
+          success               *= isEqual(second.shuntCurrent(p), 4.0 * voltage[q], 1e-13);
+          success               *= isEqual(second.outputSignal(p).read(), 4.0 * voltage[q], 1e-13);
+          expected_kcl[p]       += incoming - 2.0 * voltage[p];
+          expected_kcl[q]       += 2.0 * voltage[p] - 4.0 * voltage[q];
+          success               *= bus.tag()[p] && !first.tag()[p] && first.tag()[3 + p];
+          success               *= first.getVariableIndex(static_cast<IdxT>(3 + p))
+                     != second.getVariableIndex(static_cast<IdxT>(3 + p));
+        }
+        for (size_t p = 0; p < 3; ++p)
+          success *= isEqual(bus.getResidual().getData()[p], expected_kcl[p], 1e-13);
+        for (IdxT row = 3; row < bus.size(); ++row)
+          success *= std::abs(bus.getResidual().getData()[row]) < 1e-12;
+
+        const RealT alpha = 2.7, step = 1e-6;
+        bus.updateTime(0.0, alpha);
+        success *= bus.evaluateJacobian() == 0;
+        std::map<std::pair<IdxT, IdxT>, RealT> jacobian;
+        auto*                                  coo = bus.getCooJacobian();
+        for (IdxT k = 0; k < coo->getNnz(); ++k)
+          jacobian[{coo->getRowData()[k], coo->getColData()[k]}] += coo->getValues()[k];
+        for (IdxT col = 0; col < bus.size(); ++col)
+        {
+          auto*      y       = bus.y().getData();
+          auto*      yp      = bus.yp().getData();
+          const auto saved_y = y[col], saved_yp = yp[col];
+          y[col]  = saved_y + step;
+          yp[col] = saved_yp + alpha * step;
+          bus.evaluateResidual();
+          std::vector<RealT> plus(bus.getResidual().getData(), bus.getResidual().getData() + bus.size());
+          y[col]  = saved_y - step;
+          yp[col] = saved_yp - alpha * step;
+          bus.evaluateResidual();
+          for (IdxT row = 0; row < bus.size(); ++row)
+          {
+            const RealT difference  = (plus[static_cast<size_t>(row)] - bus.getResidual().getData()[row]) / (2 * step);
+            success                *= std::abs(jacobian[{row, col}] - difference) < 2e-8;
+          }
+          y[col]  = saved_y;
+          yp[col] = saved_yp;
+        }
+        bool frozen = false;
+        try
+        {
+          bus.addShunt("late", Y);
+        }
+        catch (const std::logic_error&)
+        {
+          frozen = true;
+        }
+        success *= frozen;
+        return success.report(__func__);
+      }
+
       /**
        * @brief Wiring smoke test: shunt capacitance makes the bus voltages
        * differential.
@@ -168,7 +279,13 @@ namespace GridKit
 
         Fixture fixture;
 
-        success *= (fixture.line.size() == 9);
+        success *= (fixture.line.size() == 3);
+        success *= &fixture.line.inputSignal(EMT::LineLumpedInputs::v1a)
+                   == &fixture.bus1.outputSignal(EMT::BusOutputs::va);
+        success *= &fixture.line.inputSignal(EMT::LineLumpedInputs::v2c)
+                   == &fixture.bus2.outputSignal(EMT::BusOutputs::vc);
+        success *= &fixture.bus1.inputSignal("line_1_inc_a") == &fixture.line.outputSignal(EMT::LineLumpedOutputs::i21a);
+        success *= &fixture.bus2.inputSignal("line_2_inc_c") == &fixture.line.outputSignal(EMT::LineLumpedOutputs::i12c);
         success *= (fixture.bus1.verify() == 0);
         success *= (fixture.bus2.verify() == 0);
         success *= (fixture.line.verify() == 0);
@@ -181,8 +298,8 @@ namespace GridKit
         success *= (fixture.bus2.tag()[2] == true);
 
         success *= (fixture.line.tag()[0] == true);
-        success *= (fixture.line.tag()[3] == false);
-        success *= (fixture.line.tag()[6] == false);
+        success *= (fixture.bus1.tag()[3] == false);
+        success *= (fixture.bus2.tag()[3] == false);
 
         return success.report(__func__);
       }
@@ -213,36 +330,27 @@ namespace GridKit
 
         std::array<RealT, system_size> expected{};
 
-        // Bus current balances: line injections
+        // The series current is positive from bus 1 to bus 2.
         for (size_t n = 0; n < 3; ++n)
         {
-          expected[n]     = y[9 + n] - y[6 + n];
-          expected[3 + n] = y[12 + n] + y[6 + n];
+          expected[n]     = -y[12 + n] - y[3 + n];
+          expected[6 + n] = y[12 + n] - y[9 + n];
         }
 
-        // Series rows
         for (size_t n = 0; n < 3; ++n)
         {
-          RealT row = y[3 + n] - y[n];
+          RealT series = y[6 + n] - y[n];
+          RealT shunt1 = -y[3 + n];
+          RealT shunt2 = -y[9 + n];
           for (size_t k = 0; k < 3; ++k)
           {
-            row += dx * Rp[n][k] * y[6 + k] + dx * Lp[n][k] * yp[6 + k];
+            series += dx * Rp[n][k] * y[12 + k] + dx * Lp[n][k] * yp[12 + k];
+            shunt1 += 0.5 * dx * (Gp[n][k] * y[k] + Cp[n][k] * yp[k]);
+            shunt2 += 0.5 * dx * (Gp[n][k] * y[6 + k] + Cp[n][k] * yp[6 + k]);
           }
-          expected[6 + n] = row;
-        }
-
-        // Shunt rows
-        for (size_t n = 0; n < 3; ++n)
-        {
-          RealT row1 = 2.0 * y[9 + n];
-          RealT row2 = 2.0 * y[12 + n];
-          for (size_t k = 0; k < 3; ++k)
-          {
-            row1 += dx * Gp[n][k] * y[k] + dx * Cp[n][k] * yp[k];
-            row2 += dx * Gp[n][k] * y[3 + k] + dx * Cp[n][k] * yp[3 + k];
-          }
-          expected[9 + n]  = row1;
-          expected[12 + n] = row2;
+          expected[12 + n] = series;
+          expected[3 + n]  = shunt1;
+          expected[9 + n]  = shunt2;
         }
 
         for (IdxT j = 0; j < system_size; ++j)

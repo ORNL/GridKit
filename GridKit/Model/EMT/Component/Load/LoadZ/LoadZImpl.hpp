@@ -7,6 +7,7 @@
 
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZData.hpp>
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 #include <GridKit/Model/EMT/PhasorInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 

@@ -251,7 +251,7 @@ def plot_scenario(name, case, results):
     emit(fig, '12_switches', 'switch commands and phase currents')
 
     # Independent KCL reconstruction from recorded physical branch quantities.
-    kcl = {b: np.zeros_like(voltage[b]) for b in voltage}
+    kcl = {b: -phase(data, f'Bus_bus_{b}', 'i_sh') for b in voltage}
     for b in (1, 2, 3): kcl[b] += phase(data, f'Machine_machine_{b}', 'i')
     for b in (4, 5, 6): kcl[b] += converter_i[b]
     for device in loads:
@@ -261,8 +261,8 @@ def plot_scenario(name, case, results):
     for device in lines:
         a, b = [int(device['inputs'][key].split('_')[-1]) for key in ('bus1', 'bus2')]
         prefix = 'LineLumped_'+device['id']; current = phase(data, prefix, 'i12')
-        kcl[a] += phase(data, prefix, 'i_sh1') - current
-        kcl[b] += phase(data, prefix, 'i_sh2') + current
+        kcl[a] -= current
+        kcl[b] += current
         r, l, c = [np.array(device['params'][key]) * device['params']['dx'] for key in ('Rp', 'Lp', 'Cp')]
         derivative = np.column_stack([states[f"yp:{device['id']}[{n}]"] for n in range(3)])
         losses += np.einsum('ni,ij,nj->n', current, r, current)

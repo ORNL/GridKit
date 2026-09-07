@@ -1,5 +1,7 @@
 #pragma once
 
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
+
 /**
  * @file IeeestImpl.hpp
  * @author Luke Lowery (lukel@tamu.edu)

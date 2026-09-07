@@ -19,6 +19,8 @@ namespace GridKit
   {
     template <typename real_type, typename index_type>
     struct ContainerData;
+    template <typename scalar_type, typename index_type>
+    class Bus;
 
     /**
      * @brief A component that owns and composes child components.
@@ -61,6 +63,7 @@ namespace GridKit
       using VectorT    = typename Component<ScalarT, IdxT>::VectorT;
       using ComponentT = Component<ScalarT, IdxT>;
       using SignalT    = Signal<ScalarT, IdxT>;
+      using BusT       = Bus<ScalarT, IdxT>;
       using ModelDataT = ContainerData<RealT, IdxT>;
 
       Container();
@@ -152,6 +155,11 @@ namespace GridKit
       void resetJacobianStructure() override;
 
     protected:
+      virtual ComponentT* initialStateComponent()
+      {
+        return nullptr;
+      }
+
       bool boundToParent() const noexcept
       {
         return bound_;
@@ -186,8 +194,8 @@ namespace GridKit
     private:
       static void validateName(std::string_view name, std::string_view kind);
       void        declare(const ModelDataT& data, std::string path);
-      void        assemble(const ModelDataT& data);
-      void        wire(const ModelDataT& data);
+      void        assemble(const ModelDataT& data, const std::vector<BusT*>& buses);
+      void        wire(const ModelDataT& data, const std::vector<BusT*>& buses);
       void        validateBoundary() const;
       void        declareInput(std::string name);
       void        bindInput(std::string_view name, SignalT* endpoint);
@@ -221,3 +229,5 @@ namespace GridKit
     };
   } // namespace EMT
 } // namespace GridKit
+
+#include <GridKit/Model/EMT/ContainerRuntime.hpp>

@@ -101,6 +101,11 @@ namespace GridKit
 
       int initialize(const std::map<Outputs, RealT>& outputs = {});
 
+      int initializeState(const std::map<std::string, RealT>& values) override
+      {
+        return this->initializeOutputs(*this, values);
+      }
+
       int initializationOrder() const noexcept override final
       {
         return 4;

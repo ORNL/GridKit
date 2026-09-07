@@ -66,8 +66,8 @@ def circuit(exe, results, frequency):
     phasors = {'Bus_grid_v': v1, 'Bus_terminal_v': v2,
                'VoltageSource_source_i': ys * (e - v1),
                'LineLumped_line_i12': yl * (v1 - v2),
-               'LineLumped_line_i_sh1': -yh * v1,
-               'LineLumped_line_i_sh2': -yh * v2,
+               'Bus_grid_i_sh': yh * v1,
+               'Bus_terminal_i_sh': yh * v2,
                'LoadZ_load_i': -yz * v2}
     error = 0.
     for row in rows[-4 * 96:]:
@@ -103,12 +103,12 @@ def hybrid(exe, results):
             raise AssertionError('Machine field input differs from the IEEET1 output')
         for phase in 'abc':
             grid = (row['VoltageSource_source_i' + phase]
-                    + row['LineLumped_line_i_sh1' + phase]
+                    - row['Bus_grid_i_sh' + phase]
                     - row['LineLumped_line_i12' + phase])
             terminal = (row['Machine_machine_i' + phase]
                         + row['DependentVoltageSource_filter_i' + phase]
                         + row['LoadZ_load_i' + phase]
-                        + row['LineLumped_line_i_sh2' + phase]
+                        - row['Bus_terminal_i_sh' + phase]
                         + row['LineLumped_line_i12' + phase])
             kcl = max(kcl, abs(grid), abs(terminal))
     if error > 2e-3 or kcl > .05:

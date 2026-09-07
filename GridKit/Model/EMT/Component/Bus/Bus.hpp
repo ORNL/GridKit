@@ -2,140 +2,106 @@
  * @file Bus.hpp
  * @author Luke Lowery (lukel@tamu.edu)
  * @brief Declaration of the EMT bus model.
- *
  */
-
 #pragma once
 
-#include <GridKit/Model/EMT/Component.hpp>
-#include <GridKit/Model/EMT/Component/Bus/BusData.hpp>
+#include <GridKit/Model/EMT/Component/Bus/KCL.hpp>
+#include <GridKit/Model/EMT/Component/Source/Norton/Norton.hpp>
+#include <GridKit/Model/EMT/Container.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
-// Forward declarations.
 namespace GridKit
 {
   namespace EMT
   {
-    template <typename real_type, typename index_type>
-    struct BusData;
-  } // namespace EMT
-} // namespace GridKit
-
-namespace GridKit
-{
-  namespace EMT
-  {
-    /// Internal variables of a `Bus`
     enum class BusInternalVariables : size_t
     {
-      VA, ///< \f$v_a\f$
-      VB, ///< \f$v_b\f$
-      VC, ///< \f$v_c\f$
-      MAXIMUM,
+      VA,
+      VB,
+      VC,
+      MAXIMUM
     };
 
-    /*!
-     * @brief Implementation of a three-phase EMT bus.
-     *
-     * The bus owns the three phase-voltage variables and the three
-     * current-balance residual rows. Connected components accumulate their
-     * current injections into the residual rows through the voltage port.
-     */
     template <typename scalar_type, typename index_type>
-    class Bus : public Component<scalar_type, index_type>
+    class Bus : public Container<scalar_type, index_type>
     {
-      using Component<scalar_type, index_type>::gridkit_component_id_;
-      using Component<scalar_type, index_type>::size_;
-      using Component<scalar_type, index_type>::nnz_;
-      using Component<scalar_type, index_type>::y_;
-      using Component<scalar_type, index_type>::yp_;
-      using Component<scalar_type, index_type>::f_;
-      using Component<scalar_type, index_type>::tag_;
-      using Component<scalar_type, index_type>::abs_tol_;
-      using Component<scalar_type, index_type>::y_ext_;
-      using Component<scalar_type, index_type>::yp_ext_;
-      using Component<scalar_type, index_type>::variable_indices_ext_;
-      using Component<scalar_type, index_type>::residual_indices_ext_;
-      using Component<scalar_type, index_type>::f_ext_;
-      using Component<scalar_type, index_type>::J_rows_buffer_;
-      using Component<scalar_type, index_type>::J_cols_buffer_;
-      using Component<scalar_type, index_type>::J_vals_buffer_;
-      using Component<scalar_type, index_type>::variable_indices_;
-      using Component<scalar_type, index_type>::residual_indices_;
-      using Component<scalar_type, index_type>::allocated_;
-
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using ModelDataT = BusData<RealT, IdxT>;
-      using Outputs    = typename ModelDataT::Outputs;
-      using SignalT    = Signal<ScalarT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<Bus, BusData>;
+      using ScalarT      = scalar_type;
+      using IdxT         = index_type;
+      using Base         = Container<ScalarT, IdxT>;
+      using RealT        = typename Base::RealT;
+      using SignalT      = typename Base::SignalT;
+      using ModelDataT   = BusData<RealT, IdxT>;
+      using Outputs      = typename ModelDataT::Outputs;
+      using KCLT         = KCL<ScalarT, IdxT>;
+      using NortonT      = Norton<ScalarT, IdxT>;
+      using PhaseSignals = typename NortonT::PhaseSignals;
+      using PhaseOrder   = typename KCLT::PhaseOrder;
+      using YDataT       = typename NortonT::YDataT;
+      using MonitorT     = Model::VariableMonitor<Bus, BusData>;
 
       Bus();
-      Bus(const ModelDataT& data);
-      virtual ~Bus();
+      explicit Bus(const ModelDataT& data);
+      ~Bus() override;
 
-      virtual int setGridKitComponentID(IdxT) override final;
-      virtual int allocate() override final;
-      virtual int verify() const override final;
+      int initialize(const std::map<Outputs, RealT>& outputs = {});
 
-      int initializationOrder() const noexcept override final
+      int initialize(const std::map<std::string, std::map<std::string, RealT>>& state) override
       {
-        return 0;
+        return Base::initialize(state);
       }
 
-      int         initialize(const std::map<Outputs, RealT>& outputs = {});
-      virtual int tagDifferentiable() override final;
-      virtual int setAbsoluteTolerance(RealT) override final;
-      virtual int evaluateInternalResidual() override final;
-      virtual int evaluateResidual() override final;
-      virtual int evaluateExternalResidual() override final;
-      virtual int evaluateJacobian() override final;
+      int initializeSteadyState(RealT omega);
 
-      /**
-       * @brief The bus connection surface.
-       *
-       * Each phase signal exposes the phase-voltage variable, its derivative,
-       * and the current-balance residual row that connected components
-       * accumulate their injections into. The signals are bound in allocate().
-       */
       void attachInput(BusInputs input, SignalT* signal)
       {
-        currents_.at(static_cast<size_t>(input)) = signal;
+        kcl_.attachInput(input, signal);
       }
 
       void assignOutput(Outputs output, SignalT* signal)
       {
-        signal->claimProducer();
-        outputs_.at(static_cast<size_t>(output)) = signal;
+        kcl_.assignOutput(output, signal);
       }
+
+      using Base::outputSignal;
 
       SignalT& outputSignal(Outputs output)
       {
-        return v_port_.at(static_cast<size_t>(output));
+        return kcl_.outputSignal(output);
+      }
+
+      PhaseSignals voltages(PhaseOrder phases = {0, 1, 2})
+      {
+        return kcl_.voltages(phases);
+      }
+
+      IdxT voltagePhase(const SignalT* signal) const
+      {
+        return kcl_.voltagePhase(signal);
+      }
+
+      NortonT& addNorton(std::string name, const YDataT& Y, PhaseSignals incident = {}, RealT scale = ONE<RealT>, PhaseOrder phases = {0, 1, 2});
+      NortonT& addShunt(std::string name, const YDataT& Y);
+
+      NortonT& norton(std::string_view name)
+      {
+        return this->template component<NortonT>(name);
+      }
+
+    protected:
+      typename Base::ComponentT* initialStateComponent() override
+      {
+        return &kcl_;
       }
 
     private:
-      void initializeMonitor();
-
+      void                              initializeMonitor();
       const Model::VariableMonitorBase* getMonitor() const override;
 
-    public:
-      __attribute__((always_inline)) inline int evaluateInternalResidual(
-          const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateExternalResidual(
-          const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-
-    private:
-      std::array<SignalT, 3>  v_port_{};
-      std::array<SignalT*, 3> currents_{};
-      std::array<SignalT*, 3> outputs_{};
-      size_t                  jacobian_capacity_{0};
-
-      std::unique_ptr<MonitorT> monitor_;
+      KCLT&                                kcl_;
+      SignalT                              zero_;
+      std::array<std::vector<SignalT*>, 3> shunt_monitors_;
+      std::unique_ptr<MonitorT>            monitor_;
     };
-
   } // namespace EMT
 } // namespace GridKit

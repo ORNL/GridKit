@@ -37,8 +37,6 @@ namespace GridKit
         if (z_.has_value())
         {
           buffer_size += static_cast<size_t>(z_->jacobianCapacity());
-          buffer_size += static_cast<size_t>(y1_->jacobianCapacity());
-          buffer_size += static_cast<size_t>(y2_->jacobianCapacity());
         }
         buffer_size    *= this->externalJacobianExpansion();
         J_rows_buffer_  = new IdxT[buffer_size];
@@ -56,10 +54,8 @@ namespace GridKit
       const auto  n_f    = static_cast<size_t>(f_.getSize());
       const auto  n_y    = static_cast<size_t>(y_.getSize());
       const auto  n_yext = y_ext_.size();
-      const auto  n_fext = f_ext_.size();
       const auto* ri     = (this->getResidualIndices()).data();
       const auto* vi     = (this->getVariableIndices()).data();
-      const auto* rie    = residual_indices_ext_.data();
       const auto* vie    = variable_indices_ext_.data();
       const auto* y      = y_.getData();
       const auto* yp     = yp_.getData();
@@ -72,10 +68,6 @@ namespace GridKit
           this, n_f, n_y, ri, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, alpha_);
       SignalJacobian<ModelT, Equation::Internal, Variable::YExt>::eval(
           this, this, n_f, n_yext, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
-      SignalJacobian<ModelT, Equation::Internal, Variable::YpExt>::eval(
-          this, this, n_f, n_yext, ri, vie, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_, alpha_);
-      SparseJacobian<ModelT, Equation::External, Variable::Y>::eval(
-          this, n_fext, n_y, rie, vi, y, yp, ye, ype, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, nnz_);
 
       this->evaluateOperatorJacobians();
       this->appendOperatorJacobians();
