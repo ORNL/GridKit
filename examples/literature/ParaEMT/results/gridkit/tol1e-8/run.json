@@ -1,0 +1,40 @@
+{
+  "abs_tol": 1e-08,
+  "dae_variables": 258,
+  "duration_s": 3.0,
+  "event": {
+    "explicit_state_projection": [],
+    "generator_bus": 1,
+    "increment_pu": -0.02,
+    "pref_before": 0.47882190218584353,
+    "time_s": 1.0,
+    "type": "governor-reference-step"
+  },
+  "event_differential_state_change": 0.0,
+  "initial_max_absolute_residual_mixed_units": 5.820766091346741e-11,
+  "jacobian_check_max_scaled_difference": {
+    "final": 3.807232189955942e-06,
+    "initial": 3.807232189955942e-06
+  },
+  "max_generator_kcl_mismatch_A": 0.0006091875484059983,
+  "mu": 50000.0,
+  "output_interval_s": 0.0005,
+  "rel_tol": 1e-08,
+  "simulator": "GridKit EMT",
+  "solver": {
+    "error_test_failures": 6189,
+    "linear_setups": 12125,
+    "nonlinear_convergence_failures": 1096,
+    "nonlinear_iterations": 167962,
+    "residual_evaluations": 167964,
+    "steps": 98255
+  },
+  "wall_s": 2.383322823,
+  "GridKit_revision": "34a1f0887e7dc561736b592b5190aca87d6a43ae",
+  "command": [
+    "/home/lukel/GridKit/build/paraemt-9bus/paraemt_9bus",
+    "/home/lukel/GridKit/examples/literature/ParaEMT/gridkit/tol1e-8.solver.json"
+  ],
+  "executable_sha256": "c2810aea2f3267c0d4a190fe0d3beb89df0a11bdefb610e9de5e3c68cde5f96e",
+  "case_driver": "gridkit_9bus.cpp and GeneratorTerminalConstraint.hpp (local literature files)"
+}
