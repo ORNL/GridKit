@@ -1,0 +1,59 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[american]{circuitikz}
+\input{diagram-style.tex}
+\input{pulse-circuit-data.tex}
+
+% Every row spans the same physical length. Cell pitch is exactly lineWidth/n.
+\newcommand{\lineWidth}{15}
+\newcommand{\rowPitch}{2.55}
+\newcommand{\shuntDepth}{1.25}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram]
+\draw[<->,thin] (0,1.25) -- (\lineWidth,1.25)
+    node[midway,fill=white,inner sep=4pt] {$\ell=\studyLength\,\mathrm{km}$};
+\node[sig,anchor=south] at (0,0.35) {$v_s$};
+\node[sig,anchor=south] at (\lineWidth,0.35) {$v_r$};
+
+\foreach \n/\dx/\row in \circuitRows {
+    \begin{scope}[yshift=-\row*\rowPitch cm]
+        \pgfmathsetmacro{\cellWidth}{\lineWidth/\n}
+        % Keep leads between the two series symbols at every resolution.
+        \pgfmathsetmacro{\symbolLength}{min(1.25,0.43*\cellWidth)}
+        \pgfmathsetmacro{\symbolStroke}{min(0.6,0.15+0.3*\cellWidth)}
+        \pgfmathsetmacro{\capScale}{min(1,0.9*\cellWidth)}
+        \ctikzset{bipoles/length=\symbolLength cm}
+        \node[sig,anchor=east,align=right] at (-0.45,-0.52)
+            {$n=\n$\\[4pt]$\Delta x=\dx\,\mathrm{km}$};
+
+        \foreach \k in {1,...,\n} {
+            \pgfmathsetmacro{\leftX}{(\k-1)*\cellWidth}
+            \pgfmathsetmacro{\midX}{(\k-0.5)*\cellWidth}
+            \pgfmathsetmacro{\rightX}{\k*\cellWidth}
+            \draw[line width=\symbolStroke pt]
+                (\leftX,0) to[R] (\midX,0) to[L] (\rightX,0);
+        }
+        \ctikzset{bipoles/length=0.9cm}
+        \foreach \k in {0,...,\n} {
+            % Only the horizontal capacitor width contracts with cell pitch.
+            \begin{scope}[shift={({\k*\cellWidth},0)},xscale=\capScale,transform shape]
+                \draw[thin] (0,0) to[C] (0,-\shuntDepth);
+            \end{scope}
+            \fill ({\k*\cellWidth},-\shuntDepth) circle[radius=1.2pt];
+        }
+        \fill (0,0) circle[radius=1.2pt];
+        \fill (\lineWidth,0) circle[radius=1.2pt];
+
+        \ifnum\n=1
+            \node[sig,above=5pt] at ({\lineWidth/4},0.16) {$R(\omega)$};
+            \node[sig,above=5pt] at ({3*\lineWidth/4},0.16) {$L(\omega)$};
+            \node[sig,anchor=west] at (0.35,-0.65) {$C/2$};
+            \node[sig,anchor=east] at ({\lineWidth-0.35},-0.65) {$C/2$};
+        \fi
+        \ifnum\n=5
+            \node[sig,anchor=west] at ({\cellWidth+0.35},-0.65) {$C$};
+        \fi
+    \end{scope}
+}
+\end{tikzpicture}
+\end{document}
