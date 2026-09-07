@@ -52,12 +52,6 @@ namespace GridKit
                     << "\" device with \"id\": \"" << c.id
                     << "\" in the \"devices\" list of your JSON file.";
 
-      if (j.contains("ports"))
-      {
-        throw std::runtime_error(
-            "Legacy 'ports' is not supported; use 'inputs' and 'outputs'");
-      }
-
       auto parse_vector = [&error_context](const json& value, auto& parameter_slot, const std::string& key) -> bool
       {
         if (value.size() != 3)
