@@ -6,6 +6,66 @@ compare frequency-dependent distributed lines with 60 Hz π equivalents in
 synthetic 8- and 20-bus networks. Generated cases, raw waveforms, accepted-step
 logs, resource measurements, and plots remain in `local/emt-distributed`.
 
+## Square-pulse example
+
+The focused pulse study uses the same 60 km overhead geometry with a 1 kV,
+100 µs square source-voltage pulse, a 100 Ω source resistance, and a 600 Ω receiving
+resistance per phase. Equal phase excitation isolates the zero-sequence
+response. The line starts unenergized, and the simulation retains 2 ms after
+pulse launch.
+
+The dashed trace is the prescribed source voltage $e(t)$. The current into
+the line is $i(t)=[e(t)-v_s(t)]/(100\,\Omega)$ per phase, where $v_s$ is the
+computed sending-terminal voltage.
+
+After building the application and generating the `fits-final` coefficients
+as described below, run:
+
+```sh
+python3 examples/EMT/Distributed/pulse.py
+```
+
+Open `local/emt-distributed/pulse/index.html` for three figures: dimensioned
+geometry and sag, the three line discretizations, and sending/receiving
+pulses. A table reports the response peaks and spatial convergence. Each
+figure is saved as SVG, PDF, and PNG. The geometry and circuits also include
+editable TeX sources and data, using the shared EMT README diagram style.
+Rendering those diagrams requires `pdflatex`, `circuitikz`, `dvisvgm`, and
+`pdftoppm`. Raw cases, solver logs, coefficient files, waveforms,
+metrics, validation details, and input hashes remain in the same directory.
+Use `--output` to retain a separate study, `--fits` to select its source fits,
+and `--stage plot` to regenerate figures and reference checks from retained
+simulations. Add `--gridworkbench /path/to/GridWorkbench` to recompute the
+geometry on an independent frequency grid and check the new series fits
+between the original fitting samples.
+
+Use `--stage diagrams` to redraw only the geometry, circuits, and gallery
+from retained results, preserving the waveform figure and simulation data.
+The circuit figure shows `n=1,5,20` on a common 60 km horizontal scale,
+with section widths proportional to `1/n`. Its series R(ω) and L(ω) symbols
+represent the fitted frequency-dependent impedance. End shunts are C/2 and
+interior shunts are C; each lower node denotes the common reference potential.
+The waveform figure compares the same three resolutions with the distributed
+model over 0–1000 µs after launch. The complete five-model data and full 2 ms
+validation window remain in the results files.
+
+The distributed model uses the existing `Yc` and `H` fits. Its 1-, 5-, 20-, and
+100-section lumped comparisons use frequency-dependent `Zp` and `Yp`, rather
+than the older study's 60 Hz π equivalents. Series impedance is fitted from
+the same `parameters.npz` samples as a sum of passive modal RL branches,
+with positive modal resistance and inductance. The shunt capacitance is exact
+for this geometry. The script checks both modal series fits against a 0.02%
+maximum relative-error limit over the supplied frequency samples.
+
+All five EMT circuits run at nominal and ten-times tighter tolerances using
+adaptive IDA and sparse KLU. Independent Laplace-domain circuit solutions
+check each simulation; halving the inverse-transform spacing checks the
+references. The RMS spatial comparison uses the complete 2 ms response
+window. Numerical checks report errors at the source discontinuities
+separately. An ideal square pulse has unlimited bandwidth, whereas the source
+geometry fits cover 0.01 Hz–10 MHz. See the generated report for measured
+errors and the inherited distributed fit's passivity limitations.
+
 ## Run
 
 Build the EMT application with Enzyme and sparse SUNDIALS enabled:
