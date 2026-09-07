@@ -7,6 +7,7 @@ int main()
   GridKit::Testing::MachineTests<double, size_t> test;
 
   result += test.initialization();
+  result += test.outputInitialization();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif

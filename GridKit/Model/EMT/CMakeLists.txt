@@ -46,19 +46,16 @@ endif()
 
 gridkit_add_library(
   emt_systemmodel
-  SOURCES ${_system_model_source} SystemModelData.cpp StateDataAdapter.cpp
+  SOURCES ${_system_model_source} SystemModelData.cpp
   HEADERS Container.hpp
           ContainerData.hpp
           SystemModel.hpp
           SystemModelData.hpp
-          StateDataAdapter.hpp
   LINK_LIBRARIES
     PUBLIC
     GridKit::emt_core
     PUBLIC
     GridKit::emt_components
-    PUBLIC
-    GridKit::model_state_data
   INCLUDE_DIRECTORIES
     PRIVATE
     ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include

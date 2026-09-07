@@ -58,6 +58,7 @@ int main()
   idas.setBackwardTolerance(0.1 * tol);
   idas.setQuadratureTolerance(0.1 * tol);
   idas.setBackwardQuadratureTolerance(0.1 * tol);
+  model.initialize();
   idas.configureSimulation();
   idas.configureAdjoint();
   idas.getDefaultInitialCondition();

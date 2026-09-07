@@ -114,18 +114,19 @@ namespace GridKit
 
       // Bind the branch voltage port and wire the rational admittance before
       // its allocation, so index assignment can route into it
-      this->bindPort(u_port_, 0);
+      for (IdxT phase = 0; phase < 3; ++phase)
+        this->bindSignal(u_port_[static_cast<size_t>(phase)], 0 + phase);
       if (yfit_.has_value())
       {
-        yfit_->attachInput(&u_port_);
+        yfit_->attachInput(&u_port_[0], &u_port_[1], &u_port_[2]);
         yfit_->attachOutput(signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VA>(),
                             signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VB>(),
                             signals_.template getAttachedSignal<DependentVoltageSourceExternalVariables::VC>());
       }
       if (zfit_.has_value())
       {
-        zfit_->attachInput(&u_port_);
-        zfit_->attachOutput(&u_port_);
+        zfit_->attachInput(&u_port_[0], &u_port_[1], &u_port_[2]);
+        zfit_->attachOutput(&u_port_[0], &u_port_[1], &u_port_[2]);
       }
       const int status = this->allocateOperators();
       if (status != 0)
@@ -239,8 +240,28 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    int DependentVoltageSource<scalar_type, index_type>::initialize()
+    void DependentVoltageSource<scalar_type, index_type>::assignOutput(Outputs output, SignalT* signal)
     {
+      const auto phase = static_cast<IdxT>(output);
+      if (output >= Outputs::SIZE || signal == nullptr)
+        throw std::invalid_argument("Invalid DependentVoltageSource output");
+      signal->claimProducer();
+      signal->setComputed(
+          [this, phase]
+          { return yfit_ ? yfit_->output(phase) : y_.getData()[0 + phase]; },
+          [this, phase](typename SignalT::GradientT& gradient, RealT scale)
+          {
+            if (yfit_)
+              yfit_->appendOutputGradient(phase, gradient, scale);
+            else
+              gradient.emplace_back(this->getVariableIndex(0 + phase), scale);
+          });
+    }
+
+    template <typename scalar_type, typename index_type>
+    int DependentVoltageSource<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
+    {
+      this->validateOutputValues(outputs);
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
@@ -261,7 +282,13 @@ namespace GridKit
           yp[n] = yp_ext_[3 + n] - yp_ext_[n];
         }
       }
-      const int status = this->initializeOperators();
+      if (!yfit_)
+        for (const auto& [output, value] : outputs)
+          y[0 + static_cast<size_t>(output)] = static_cast<ScalarT>(value);
+      const int status = yfit_ ? yfit_->initialize() : zfit_->initialize();
+      if (yfit_)
+        for (const auto& [output, value] : outputs)
+          this->checkOutputValue(outputs, output, static_cast<RealT>(yfit_->output(static_cast<IdxT>(output))));
 
       y_.setDataUpdated();
       yp_.setDataUpdated();

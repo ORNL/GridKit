@@ -101,6 +101,7 @@ int main(int /* argc */, char const** /* argv */)
 
   // setup simulation
   idas.setTolerance(rel_tol, abs_tol);
+  sysmodel.initialize();
   idas.configureSimulation();
   idas.getDefaultInitialCondition();
   idas.initializeSimulation(t_init);

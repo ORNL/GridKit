@@ -32,7 +32,7 @@ namespace GridKit
         return 0;
       }
 
-      int initialize() override
+      int initialize()
       {
         if (!allocated_)
         {
@@ -314,7 +314,7 @@ namespace GridKit
     public:
       using RealT = typename NullEvaluator<ScalarT, IdxT>::RealT;
 
-      int initialize() override
+      int initialize()
       {
         if (!allocated_)
         {
@@ -389,7 +389,7 @@ namespace GridKit
       {
       }
 
-      int initialize() override
+      int initialize()
       {
         if (!allocated_)
         {
@@ -445,6 +445,20 @@ namespace GridKit
     class IdaTests
     {
     public:
+      TestOutcome preservesInitialState()
+      {
+        TestStatus                          success = true;
+        Model::NullEvaluator<ScalarT, IdxT> model;
+        model.initialize();
+        model.y().getData()[0]  = 3.0;
+        model.yp().getData()[0] = -2.0;
+        Ida<ScalarT, IdxT> ida(&model);
+        success *= ida.configureSimulation() == 0;
+        success *= model.y().getData()[0] == 3.0;
+        success *= model.yp().getData()[0] == -2.0;
+        return success.report(__func__);
+      }
+
       TestOutcome callback()
       {
         const unsigned n_steps = 100;
@@ -453,6 +467,7 @@ namespace GridKit
         Model::NullEvaluator<ScalarT, IdxT> model;
 
         Ida<double, size_t> ida(&model);
+        model.initialize();
         ida.configureSimulation();
 
         unsigned observed_steps = 0;
@@ -476,6 +491,7 @@ namespace GridKit
         Model::NullEvaluator<ScalarT, IdxT> model;
 
         Ida<double, size_t> ida(&model);
+        model.initialize();
         ida.configureSimulation();
 
         unsigned observed_steps = 0;
@@ -502,6 +518,7 @@ namespace GridKit
         Model::NullEvaluator<ScalarT, IdxT> model;
 
         Ida<double, size_t> ida(&model);
+        model.initialize();
         ida.configureSimulation();
 
         unsigned observed_steps = 0;
@@ -533,6 +550,7 @@ namespace GridKit
         Ida<double, size_t> ida(&model);
         ida.setFixedStep(1.0 / n_steps);
         ida.setTolerance(1.0e-6);
+        model.initialize();
         ida.configureSimulation();
 
         ida.initializeSimulation(0.0, false);
@@ -556,6 +574,7 @@ namespace GridKit
           ida.setSuppressAlgebraicErrors(suppress_alg);
           ida.setTolerance(1.0e-6);
           ida.setMaxSteps(10000);
+          model.initialize();
           ida.configureSimulation();
 
           ida.initializeSimulation(0.0, false);
@@ -589,6 +608,7 @@ namespace GridKit
           Ida<ScalarT, IdxT> ida(&model);
           ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::YA_YDP);
           ida.setTolerance(tol);
+          model.initialize();
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 
@@ -605,6 +625,7 @@ namespace GridKit
           Ida<ScalarT, IdxT> ida(&model);
           ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::Y);
           ida.setTolerance(tol);
+          model.initialize();
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 
@@ -619,6 +640,7 @@ namespace GridKit
 
           Ida<ScalarT, IdxT> ida(&model);
           ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::Y);
+          model.initialize();
           ida.configureSimulation();
           ida.initializeSimulation(0.0);
 

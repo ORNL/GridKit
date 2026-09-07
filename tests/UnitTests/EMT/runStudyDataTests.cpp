@@ -68,9 +68,31 @@ int main()
   success                *= rejects(parse);
   input["signal_values"]  = {{"dc", "3000"}};
   success                *= rejects(parse);
+
+  input               = base;
+  input["state_file"] = "state.json";
+  auto parse_state    = [&](const json& state)
+  {
+    std::ofstream(directory / "state.json") << state.dump();
+    return parse().state;
+  };
+  const auto state  = parse_state({{"buses", {{"child.bus", {{"va", 10}, {"vb", -5.0}, {"vc", nullptr}, {"injections", json::array()}}}}},
+                                   {"devices", {{"child.load", {{"ia", -2.0}}}, {"switch", {{"open", true}}}, {"unused", nullptr}}}});
+  success          *= state == std::map<std::string, std::map<std::string, double>>{{"child.bus", {{"va", 10.0}, {"vb", -5.0}}}, {"child.load", {{"ia", -2.0}}}, {"switch", {{"open", 1.0}}}};
+  success          *= parse_state({{"devices", {{"load", {{"ia", nullptr}}}}}}).empty();
+  for (const auto& invalid : {json(true), json("1"), json::array({1})})
+  {
+    success *= rejects([&]
+                       { parse_state({{"devices", {{"load", {{"ia", invalid}}}}}}); });
+  }
+  for (const auto& invalid : {json::array(), json{{"buses", 1}}, json{{"devices", {{"load", 1}}}}})
+  {
+    success *= rejects([&]
+                       { parse_state(invalid); });
+  }
   std::filesystem::remove_all(directory);
 
   Testing::TestingResults results;
-  results += success.report("EMT study mu and constant signals");
+  results += success.report("EMT study mu, constant signals, and state");
   return results.summary();
 }

@@ -109,34 +109,5 @@ namespace GridKit
       bool  derivative_coupling_{false};
     };
 
-    /*!
-     * @brief Three-phase electrical port bundling one signal per phase.
-     *
-     * Owned by value by the component that owns the phase variables and
-     * residual rows.
-     */
-    template <typename scalar_type, typename index_type>
-    struct Port3
-    {
-      using SignalT = Signal<scalar_type, index_type>;
-
-      std::array<SignalT, 3> signals{};
-
-      SignalT* a()
-      {
-        return &signals[0];
-      }
-
-      SignalT* b()
-      {
-        return &signals[1];
-      }
-
-      SignalT* c()
-      {
-        return &signals[2];
-      }
-    };
-
   } // namespace EMT
 } // namespace GridKit

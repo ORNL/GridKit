@@ -296,7 +296,7 @@ namespace GridKit
       return connection_nodes_[local_index];
     }
 
-    int initialize() override
+    virtual int initialize()
     {
       y_.setDataUpdated();
       yp_.setDataUpdated();

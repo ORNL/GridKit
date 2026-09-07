@@ -17,8 +17,8 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using SignalT    = Signal<ScalarT, IdxT>;
-      using Port3T     = Port3<ScalarT, IdxT>;
       using ModelDataT = ConverterData<RealT, IdxT>;
+      using Outputs    = typename ModelDataT::Outputs;
       using MonitorT   = Model::VariableMonitor<Converter, ConverterData>;
 
       Converter();
@@ -28,7 +28,14 @@ namespace GridKit
       int setGridKitComponentID(IdxT id) override final;
       int allocate() override final;
       int verify() const override final;
-      int initialize() override final;
+
+      int initialize(const std::map<Outputs, RealT>& outputs = {});
+
+      int initializationOrder() const noexcept override final
+      {
+        return 4;
+      }
+
       int tagDifferentiable() override final;
       int setAbsoluteTolerance(RealT) override final;
       int evaluateInternalResidual() override final;
@@ -40,11 +47,10 @@ namespace GridKit
       void    assignOutput(size_t phase, SignalT* signal);
       ScalarT output(size_t phase) const;
       void    attachInput(SignalT* a, SignalT* b, SignalT* c, SignalT* vdc);
-      void    attachInput(Port3T* s, SignalT* vdc);
 
-      Port3T& voltagePort()
+      SignalT& outputSignal(Outputs output)
       {
-        return output_port_;
+        return output_port_.at(static_cast<size_t>(output));
       }
 
       /// Two-level bridge projection, also usable directly in residual kernels.
@@ -60,7 +66,7 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
       std::array<SignalT*, 4>   input_{};
-      Port3T                    output_port_;
+      std::array<SignalT, 3>    output_port_;
       std::array<SignalT*, 3>   assigned_output_{};
       std::unique_ptr<MonitorT> monitor_;
     };

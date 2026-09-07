@@ -33,7 +33,7 @@ namespace GridKit
                       { return output(2); });
         for (size_t phase = 0; phase < 3; ++phase)
         {
-          output_port_.signals[phase].setComputed(
+          output_port_[phase].setComputed(
               [this, phase]
               { return output(phase); },
               [](typename SignalT::GradientT&, RealT) {});
@@ -59,9 +59,9 @@ namespace GridKit
         assigned = signal;
         signal->setComputed(
             [this, phase]
-            { return output_port_.signals[phase].read(); },
+            { return output_port_[phase].read(); },
             [this, phase](typename SignalT::GradientT& gradient, RealT scale)
-            { output_port_.signals[phase].appendGradient(gradient, scale); });
+            { output_port_[phase].appendGradient(gradient, scale); });
       }
 
       template <typename scalar_type, typename index_type>
@@ -79,8 +79,13 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      int Pwm<scalar_type, index_type>::initialize()
+      int Pwm<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
+        this->validateOutputValues(outputs);
+        for (const auto& [key, value] : outputs)
+        {
+          this->checkOutputValue(outputs, key, static_cast<RealT>(output(static_cast<size_t>(key))));
+        }
         return verify();
       }
 

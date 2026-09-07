@@ -33,6 +33,7 @@ int main(int argc, const char* argv[])
   ida.setFixedStep(study.dt_fixed);
   ida.setMaxSteps(study.max_steps);
   ida.setConsistentICType(study.consistent_ic_type);
+  sys.initialize();
   ida.configureSimulation();
 
   // Start timer

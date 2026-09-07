@@ -154,6 +154,7 @@ int main()
   // Set up simulation
   Ida<ScalarT, IdxT> ida(&sys);
   ida.setTolerance(1.0e-7, 1.0e-9);
+  sys.initialize();
   ida.configureSimulation();
 
   // TODO: Take one step at a time and exchange data between.

@@ -39,6 +39,7 @@ TestStatus runStudy(StudyData study_data)
   ida.setFixedStep(study_data.dt_fixed);
   ida.setMaxSteps(study_data.max_steps);
   ida.setConsistentICType(study_data.consistent_ic_type);
+  sys.initialize();
   ida.configureSimulation();
 
   using EventType = SystemEvent::Type;

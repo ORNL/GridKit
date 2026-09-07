@@ -32,12 +32,12 @@ namespace GridKit
       template <typename Scalar = double>
       struct Fixture
       {
-        EMT::Controller::Ieeet1<Scalar, size_t>    model;
-        std::array<Scalar, 8>                      inputs{};
-        std::array<size_t, 8>                      indices{9, 10, 11, 12, 13, 14, 15, 16};
-        EMT::Port3<Scalar, size_t>                 voltage;
-        std::array<EMT::Signal<Scalar, size_t>, 5> signals;
-        EMT::Signal<Scalar, size_t>                efd;
+        EMT::Controller::Ieeet1<Scalar, size_t>             model;
+        std::array<Scalar, 8>                               inputs{};
+        std::array<size_t, 8>                               indices{9, 10, 11, 12, 13, 14, 15, 16};
+        std::array<GridKit::EMT::Signal<Scalar, size_t>, 3> voltage;
+        std::array<EMT::Signal<Scalar, size_t>, 5>          signals;
+        EMT::Signal<Scalar, size_t>                         efd;
 
         explicit Fixture(const Data& parameters = data(), bool attached = true)
           : model(parameters)
@@ -51,8 +51,10 @@ namespace GridKit
           inputs[6] = 0.04;
           inputs[7] = -0.02;
           for (size_t phase = 0; phase < 3; ++phase)
-            voltage.signals[phase].set(&inputs[phase], &indices[phase]);
-          model.getSignals().template attachPort<External::VA>(&voltage);
+            voltage[phase].set(&inputs[phase], &indices[phase]);
+          model.getSignals().template attachSignal<External::VA>(&voltage[0]);
+          model.getSignals().template attachSignal<External::VB>(&voltage[1]);
+          model.getSignals().template attachSignal<External::VC>(&voltage[2]);
           if (attached)
           {
             for (size_t i = 0; i < signals.size(); ++i)
@@ -82,8 +84,9 @@ namespace GridKit
       {
         TestStatus success = true;
         Fixture    fixture;
-        success                       *= fixture.model.initialize() == 0;
-        const auto*                 y  = fixture.model.y().getData();
+        fixture.model.y().getData()[7]  = 0.0;
+        success                        *= fixture.model.initialize({{Data::Outputs::efd, 1.428}}) == 0;
+        const auto*                 y   = fixture.model.y().getData();
         const std::array<double, 9> expected{1.0, 0.7, 1.4, 0.7, 0.07, 0.0, 0.0, 1.428, 0.0};
         for (size_t i = 0; i < expected.size(); ++i)
           success *= near(y[i], expected[i]);

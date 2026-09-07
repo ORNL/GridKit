@@ -31,7 +31,6 @@ namespace GridKit
       using Base     = Component<ScalarT, IdxT>;
       using RealT    = typename Base::RealT;
       using SignalT  = Signal<ScalarT, IdxT>;
-      using Port3T   = Port3<ScalarT, IdxT>;
       using MatrixT  = RationalMatrix<RealT>;
       using ComplexT = std::complex<RealT>;
 
@@ -71,16 +70,6 @@ namespace GridKit
       void attachOutput(SignalT* a, SignalT* b, SignalT* c)
       {
         attachOutput(std::vector<SignalT*>{a, b, c});
-      }
-
-      void attachInput(Port3T* port)
-      {
-        attachInput(port->a(), port->b(), port->c());
-      }
-
-      void attachOutput(Port3T* port)
-      {
-        attachOutput(port->a(), port->b(), port->c());
       }
 
       bool hasInputDerivative(IdxT k) const
@@ -179,7 +168,7 @@ namespace GridKit
         return 0;
       }
 
-      int initialize() override
+      int initialize()
       {
         if (!coupling_allocated_ || verify() != 0)
         {
@@ -354,6 +343,30 @@ namespace GridKit
         }
         this->abs_tol_.setDataUpdated();
         return 0;
+      }
+
+      void appendOutputGradient(IdxT n, typename SignalT::GradientT& gradient, RealT scale) const
+      {
+        const size_t row = static_cast<size_t>(n);
+        for (size_t k = 0; k < cols_; ++k)
+        {
+          if (E_[row][k] != RealT{0})
+            throw std::logic_error("A derivative-dependent rational output cannot be a computed signal");
+          if (D_[row][k] != RealT{0})
+            input_[k]->appendGradient(gradient, scale * D_[row][k]);
+        }
+        size_t offset = 0;
+        for (const auto& section : sections_)
+        {
+          for (size_t j = 0; j < section.order; ++j)
+          {
+            if (section.Cr[row][j] != RealT{0})
+              gradient.emplace_back(this->getVariableIndex(static_cast<IdxT>(offset + j)), scale * section.Cr[row][j]);
+            if (section.pair && section.Ci[row][j] != RealT{0})
+              gradient.emplace_back(this->getVariableIndex(static_cast<IdxT>(offset + section.order + j)), -scale * section.Ci[row][j]);
+          }
+          offset += section.order * (section.pair ? 2 : 1);
+        }
       }
 
       ScalarT output(IdxT n) const

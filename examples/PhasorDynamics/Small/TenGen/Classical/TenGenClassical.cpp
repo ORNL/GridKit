@@ -174,6 +174,7 @@ int main()
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
+  sys.initialize();
   ida.configureSimulation();
 
   // Run simulation, output each `dt` interval

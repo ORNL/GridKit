@@ -80,13 +80,9 @@ public:
     }
   }
 
-  int initialize() override
+  int initialize(const std::map<std::string, std::map<std::string, double>>& state) override
   {
-    // getDefaultInitialCondition is IDA's public model-to-solver copy path.
-    // After the explicit opening projection, its state is already initialized.
-    if (tripped_)
-      return 0;
-    const int status = System::initialize();
+    const int status = System::initialize(state);
     if (status != 0)
       return status;
     for (const auto& [name, data] : seed_.items())
@@ -236,6 +232,7 @@ int main(int argc, char** argv)
   if (!sys.hasJacobian())
     throw std::runtime_error("Sparse Enzyme GridKit build required");
   sys.allocate();
+  sys.initialize(study.state);
   Ida<double, size_t> ida(&sys);
   ida.setTolerance(study.rel_tol, study.abs_tol);
   ida.setMaxSteps(study.max_steps);

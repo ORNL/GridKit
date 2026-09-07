@@ -149,16 +149,6 @@ namespace GridKit
       {
         S12_ = std::get<RealT>(data.parameters.at(Parameter::S12));
       }
-
-      if (data.parameters.contains(Parameter::p0))
-      {
-        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
-      }
-
-      if (data.parameters.contains(Parameter::q0))
-      {
-        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
-      }
     }
 
     /**
@@ -319,14 +309,35 @@ namespace GridKit
     /**
      * Initialization of the synchronous machine model
      *
-     * The bus terminal instantaneous voltages and the machine power
+     * The bus terminal instantaneous voltages and the machine current
      * injections are taken as a balanced positive-sequence operating point.
      * All algebra is in machine per unit with peak-value phasors sampled at
      * the initialization instant.
      */
     template <typename scalar_type, typename index_type>
-    int Machine<scalar_type, index_type>::initialize()
+    void Machine<scalar_type, index_type>::assignOutput(Outputs output, SignalT* signal)
     {
+      if (output == Outputs::speed)
+      {
+        signals_.template assignSignal<MachineInternalVariables::OMEGA>(signal);
+        return;
+      }
+      if (output >= Outputs::SIZE || signal == nullptr)
+        throw std::invalid_argument("Invalid Machine output");
+      const auto phase = static_cast<IdxT>(output) - static_cast<IdxT>(Outputs::ia);
+      signal->claimProducer();
+      signal->setComputed(
+          [this, phase]
+          { return toSystemSI(y_.getData()[21 + phase]); },
+          [this, phase](typename SignalT::GradientT& gradient, RealT scale)
+          { gradient.emplace_back(this->getVariableIndex(21 + phase), scale * i_peak_base_); });
+    }
+
+    template <typename scalar_type, typename index_type>
+    int Machine<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
+    {
+      this->validateOutputValues(outputs);
+      this->checkOutputValue(outputs, Outputs::speed, ONE<RealT>);
       using Variables = MachineExternalVariables;
 
       const RealT pi    = std::numbers::pi_v<RealT>;
@@ -343,12 +354,16 @@ namespace GridKit
       const ScalarT v_im = (vb - vc) / std::sqrt(THREE<RealT>);
       const ScalarT vm2  = v_re * v_re + v_im * v_im;
 
-      // Injected current phasor from the scheduled power
-      const ScalarT p = static_cast<ScalarT>(p0_) / S_;
-      const ScalarT q = static_cast<ScalarT>(q0_) / S_;
-
-      const ScalarT i_re = (p * v_re + q * v_im) / vm2;
-      const ScalarT i_im = (p * v_im - q * v_re) / vm2;
+      if (vm2 <= ZERO<RealT>)
+        throw std::invalid_argument("Machine initialization requires nonzero terminal voltage");
+      const ScalarT ia = static_cast<ScalarT>(this->outputValue(outputs, Outputs::ia, ZERO<RealT>) / i_peak_base_);
+      const ScalarT ib = static_cast<ScalarT>(this->outputValue(outputs, Outputs::ib, ZERO<RealT>) / i_peak_base_);
+      const ScalarT ic = static_cast<ScalarT>(this->outputValue(outputs, Outputs::ic, ZERO<RealT>) / i_peak_base_);
+      if (std::abs(ia + ib + ic) > 1e-10 * (ONE<RealT> + std::abs(ia) + std::abs(ib) + std::abs(ic))
+          || std::abs(va + vb + vc) > 1e-10 * (ONE<RealT> + std::abs(va) + std::abs(vb) + std::abs(vc)))
+        throw std::invalid_argument("Machine initialization requires balanced terminal voltages and currents");
+      const ScalarT i_re = (TWO<RealT> / THREE<RealT>) *(ia - HALF<RealT> * ib - HALF<RealT> * ic);
+      const ScalarT i_im = (ib - ic) / std::sqrt(THREE<RealT>);
 
       // Saturation from the air-gap flux magnitude behind the leakage
       // impedance

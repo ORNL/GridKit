@@ -96,6 +96,7 @@ namespace GridKit
       this->setExternalResidualSignal(4, signals_.template getAttachedSignal<SwitchExternalVariables::V2B>());
       this->setExternalResidualSignal(5, signals_.template getAttachedSignal<SwitchExternalVariables::V2C>());
 
+      signals_.bindInternalVariableSignals(*this);
       allocated_ = true;
       return 0;
     }
@@ -136,14 +137,15 @@ namespace GridKit
      * The open command is applied before enforcing the algebraic equations.
      */
     template <typename scalar_type, typename index_type>
-    int Switch<scalar_type, index_type>::initialize()
+    int Switch<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
     {
+      this->validateOutputValues(outputs);
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      y[0]  = 0.0;
-      y[1]  = 0.0;
-      y[2]  = 0.0;
+      y[0]  = this->outputValue(outputs, Outputs::i12a, ZERO<RealT>);
+      y[1]  = this->outputValue(outputs, Outputs::i12b, ZERO<RealT>);
+      y[2]  = this->outputValue(outputs, Outputs::i12c, ZERO<RealT>);
       yp[0] = 0.0;
       yp[1] = 0.0;
       yp[2] = 0.0;

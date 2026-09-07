@@ -36,14 +36,14 @@ namespace GridKit
       Ll2q, ///< q-axis damper 2 leakage inductance
       S10,  ///< Saturation factor at 1.0 per unit flux
       S12,  ///< Saturation factor at 1.2 per unit flux
-      p0,   ///< Initial active power injection
-      q0,   ///< Initial reactive power injection
     };
 
     /// Inputs supported by a synchronous machine
     enum class MachineInputs : size_t
     {
-      bus, ///< Component ID of the connected bus
+      va,  ///< Phase-a terminal voltage
+      vb,  ///< Phase-b terminal voltage
+      vc,  ///< Phase-c terminal voltage
       pm,  ///< Mechanical-power signal ID from a governor
       efd, ///< Field-voltage signal ID from an exciter
       SIZE
@@ -52,7 +52,10 @@ namespace GridKit
     /// Outputs supported by a synchronous machine
     enum class MachineOutputs : size_t
     {
-      speed, ///< Rotor-speed output signal ID
+      speed, ///< Rotor speed [pu]
+      ia,    ///< Phase-a current injection [A]
+      ib,    ///< Phase-b current injection [A]
+      ic,    ///< Phase-c current injection [A]
       SIZE
     };
 

@@ -123,8 +123,8 @@ namespace GridKit
                   const double s  = pwm.output(phase);
                   success        *= std::abs(s - reference(t, M, fm, fc, alignment, phase)) < 3.0e-14;
                   success        *= s >= 0 && s <= 1;
-                  success        *= pwm.switchingPort().signals[phase].read() == s;
-                  success        *= pwm.switchingPort().signals[phase].getVariableIndex() == INVALID_INDEX<size_t>;
+                  success        *= pwm.outputSignal(static_cast<EMT::Controller::PwmOutputs>(phase)).read() == s;
+                  success        *= pwm.outputSignal(static_cast<EMT::Controller::PwmOutputs>(phase)).getVariableIndex() == INVALID_INDEX<size_t>;
                 }
               }
               pwm.updateTime(0.273 / fm, 1);
@@ -234,7 +234,7 @@ namespace GridKit
           for (size_t phase = 0; phase < 3; ++phase)
           {
             Signal::GradientT gradient;
-            converter.voltagePort().signals[phase].appendGradient(gradient);
+            converter.outputSignal(static_cast<EMT::ConverterOutputs>(phase)).appendGradient(gradient);
             success *= gradient.size() == 4;
             for (size_t n = 0; n < 4; ++n)
             {
@@ -252,9 +252,9 @@ namespace GridKit
         }
         // A second bridge composes the first expression's gradients recursively.
         Converter second;
-        second.attachInput(&converter.voltagePort(), &signals[3]);
+        second.attachInput(&converter.outputSignal(EMT::ConverterOutputs::voa), &converter.outputSignal(EMT::ConverterOutputs::vob), &converter.outputSignal(EMT::ConverterOutputs::voc), &signals[3]);
         Signal::GradientT gradient;
-        second.voltagePort().a()->appendGradient(gradient);
+        second.outputSignal(EMT::ConverterOutputs::voa).appendGradient(gradient);
         double dc_derivative = 0;
         for (const auto& [index, coefficient] : gradient)
           if (index == indices[3])
@@ -272,11 +272,11 @@ namespace GridKit
         success *= throws([&]
                           { published.markDerivativeCoupling(); });
         Converter cycle;
-        cycle.attachInput(&cycle.voltagePort(), &signals[3]);
+        cycle.attachInput(&cycle.outputSignal(EMT::ConverterOutputs::voa), &cycle.outputSignal(EMT::ConverterOutputs::vob), &cycle.outputSignal(EMT::ConverterOutputs::voc), &signals[3]);
         success *= throws([&]
                           { cycle.output(0); });
         success *= throws([&]
-                          { cycle.voltagePort().a()->appendGradient(gradient); });
+                          { cycle.outputSignal(EMT::ConverterOutputs::voa).appendGradient(gradient); });
         return success.report(__func__);
       }
 
@@ -422,6 +422,7 @@ namespace GridKit
           system.signal("dc").set(&dc, &index);
           system.allocate();
           system.initialize();
+          system.initialize();
           system.updateTime(0.123, 1);
           system.printMonitoredVariables();
           system.stopMonitor();
@@ -460,6 +461,7 @@ namespace GridKit
         for (size_t n = 0; n < 4; ++n)
           system.signal(names[n]).set(&initial[n], &indices[n]);
         system.allocate();
+        system.initialize();
         auto* y = system.y().getData();
         for (size_t n = 0; n < system.size(); ++n)
           y[n] = 0.2 + 0.1 * static_cast<double>(n);
@@ -497,8 +499,8 @@ namespace GridKit
         for (size_t n = 0; n < 3; ++n)
           fit_data.D[n][n] = static_cast<double>(n + 1);
         EMT::VectorFit<double, size_t> fit(fit_data, 1.0);
-        fit.attachInput(&system.component<Converter>("bridge").voltagePort());
-        fit.attachOutput(&system.component<EMT::Bus<double, size_t>>("bus").voltagePort());
+        fit.attachInput(&system.component<Converter>("bridge").outputSignal(EMT::ConverterOutputs::voa), &system.component<Converter>("bridge").outputSignal(EMT::ConverterOutputs::vob), &system.component<Converter>("bridge").outputSignal(EMT::ConverterOutputs::voc));
+        fit.attachOutput(&system.component<EMT::Bus<double, size_t>>("bus").outputSignal(EMT::BusOutputs::va), &system.component<EMT::Bus<double, size_t>>("bus").outputSignal(EMT::BusOutputs::vb), &system.component<EMT::Bus<double, size_t>>("bus").outputSignal(EMT::BusOutputs::vc));
         fit.allocate();
         for (double dc : {600.0, 0.0, 250.0})
         {
@@ -533,6 +535,7 @@ namespace GridKit
         size_t     index = INVALID_INDEX<size_t>;
         system.signal("dc").set(&dc, &index);
         system.allocate();
+        system.initialize();
         AnalysisManager::Sundials::Ida<double, size_t> ida(&system);
         ida.setMaxSteps(100000);
         ida.setTolerance(1.0e-9, 1.0e-9);

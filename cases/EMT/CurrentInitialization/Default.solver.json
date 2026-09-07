@@ -1,0 +1,12 @@
+{
+  "system_model_file": "RL.case.json",
+  "state_file": "Default.state.json",
+  "dt_monitor": 0.0005,
+  "tmax": 0.4,
+  "rel_tol": 1e-10,
+  "abs_tol": 1e-10,
+  "consistent_ic_type": "ya_ydp",
+  "max_steps": 100000,
+  "output_file": "mon.csv",
+  "state_output_file": "state.csv"
+}

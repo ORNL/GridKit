@@ -115,9 +115,10 @@ namespace GridKit
 
       // Bind the current port and wire the rational impedance before its
       // allocation, so index assignment can route into it
-      this->bindPort(i_port_, 0);
-      z_->attachInput(&i_port_);
-      z_->attachOutput(&i_port_);
+      for (IdxT phase = 0; phase < 3; ++phase)
+        this->bindSignal(i_port_[static_cast<size_t>(phase)], 0 + phase);
+      z_->attachInput(&i_port_[0], &i_port_[1], &i_port_[2]);
+      z_->attachOutput(&i_port_[0], &i_port_[1], &i_port_[2]);
       const int status = this->allocateOperators();
       if (status != 0)
       {
@@ -138,6 +139,7 @@ namespace GridKit
       this->setExternalResidualSignal(1, signals_.template getAttachedSignal<LoadZExternalVariables::VB>());
       this->setExternalResidualSignal(2, signals_.template getAttachedSignal<LoadZExternalVariables::VC>());
 
+      signals_.bindInternalVariableSignals(*this);
       allocated_ = true;
       return 0;
     }
@@ -184,12 +186,13 @@ namespace GridKit
      * Initialization of the load model
      *
      * A purely resistive load solves its algebraic current from the bus
-     * voltage. An inductive load starts de-energized and the integrator
-     * initialization establishes consistent conditions.
+     * voltage. Inductive currents default to zero. Supplied initial currents
+     * override these defaults before integrator initialization.
      */
     template <typename scalar_type, typename index_type>
-    int LoadZ<scalar_type, index_type>::initialize()
+    int LoadZ<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
     {
+      this->validateOutputValues(outputs);
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
@@ -221,10 +224,15 @@ namespace GridKit
         // assembled circuit initialization, including an ideal short.
       }
 
+      for (const auto& [output, value] : outputs)
+      {
+        y[static_cast<size_t>(output)] = static_cast<ScalarT>(value);
+      }
+
       y_.setDataUpdated();
       yp_.setDataUpdated();
 
-      return this->initializeOperators();
+      return z_->initialize();
     }
 
     /**

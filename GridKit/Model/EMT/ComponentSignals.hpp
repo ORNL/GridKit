@@ -55,8 +55,6 @@ namespace GridKit
       using IdxT    = index_type;
       /// Signal type
       using SignalT = Signal<ScalarT, IdxT>;
-      /// Three-phase electrical port type
-      using Port3T  = Port3<ScalarT, IdxT>;
 
       /// Attaches a signal to an external variable on this component
       ///
@@ -78,30 +76,6 @@ namespace GridKit
 
         static_assert(variable < ExternalVariables::MAXIMUM);
         external_variable_signals_[static_cast<size_t>(variable)] = signal;
-      }
-
-      /// Attaches a three-phase port to three consecutive external variables
-      /// starting at the indicated variable
-      ///
-      /// @tparam first The external variable of the first phase
-      /// @param[in] port The three-phase port to attach
-      /// @pre The provided pointer to a port is not `nullptr`
-      /// @post The port's phase signals are attached to the three consecutive
-      ///       external variables starting at the indicated variable
-      template <ExternalVariables first>
-      auto attachPort(Port3T* port)
-      {
-#ifndef NDEBUG
-        if (port == nullptr)
-        {
-          throw std::logic_error("A null pointer to a port has been passed to attachPort");
-        }
-#endif
-
-        static_assert(static_cast<size_t>(first) + 2 < static_cast<size_t>(ExternalVariables::MAXIMUM));
-        external_variable_signals_[static_cast<size_t>(first)]     = port->a();
-        external_variable_signals_[static_cast<size_t>(first) + 1] = port->b();
-        external_variable_signals_[static_cast<size_t>(first) + 2] = port->c();
       }
 
       /// Check if a signal has been attached to an external variable
@@ -275,6 +249,12 @@ namespace GridKit
       template <InternalVariables variable>
       auto assignSignal(SignalT* signal)
       {
+        static_assert(variable < InternalVariables::MAXIMUM);
+        assignSignal(variable, signal);
+      }
+
+      void assignSignal(InternalVariables variable, SignalT* signal)
+      {
 #ifndef NDEBUG
         if (signal == nullptr)
         {
@@ -282,8 +262,7 @@ namespace GridKit
         }
 #endif
 
-        static_assert(variable < InternalVariables::MAXIMUM);
-        auto& assigned = internal_variable_signals_[static_cast<size_t>(variable)];
+        auto& assigned = internal_variable_signals_.at(static_cast<size_t>(variable));
         if (assigned)
         {
           if (*assigned != signal)
@@ -294,6 +273,22 @@ namespace GridKit
         }
         signal->claimProducer();
         assigned = signal;
+      }
+
+      template <typename ComponentT>
+      void bindInternalVariableSignals(ComponentT& component) const
+      {
+        for (size_t slot = 0; slot < internal_variable_signals_.size(); ++slot)
+        {
+          if (const auto& signal = internal_variable_signals_[slot])
+          {
+            (*signal)->set(&component.y().getData()[slot],
+                           &component.yp().getData()[slot],
+                           &component.getResidual().getData()[slot],
+                           &component.getVariableIndex(static_cast<IdxT>(slot)),
+                           &component.getResidualIndex(static_cast<IdxT>(slot)));
+          }
+        }
       }
 
       /// Registers every attached external variable signal with a component

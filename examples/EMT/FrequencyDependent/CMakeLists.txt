@@ -2,6 +2,7 @@ foreach(
   _file
   Circuit.case.json
   Hybrid.case.json
+  Hybrid.state.json
   Hybrid.solver.json
   README.md
   validate.py)

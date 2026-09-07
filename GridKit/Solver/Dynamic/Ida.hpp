@@ -59,12 +59,14 @@ namespace AnalysisManager
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Ida();
 
+      /// Configure from an allocated, initialized model without resetting its state.
       int configureSimulation();
       int configureLinearSolver();
 #ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
       int configureLinearSolverSparse();
 #endif
       int configureLinearSolverDense();
+      /// Copy the current model state into the solver.
       int getDefaultInitialCondition();
       int initializeSimulation(RealT t0, bool findConsistent = true);
 

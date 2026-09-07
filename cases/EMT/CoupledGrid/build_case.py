@@ -168,7 +168,9 @@ def main():
         voltage = v[sl(bus)] if bus != 14 else np.zeros(3)
         state["buses"][f"bus_{bus}"] = dict(zip(("va", "vb", "vc"), (np.sqrt(2) * voltage.real).tolist()))
     for bus, p in zip(MACHINES, power):
-        state["devices"][f"machine_{bus}"] = {"p": float(p.real), "q": float(p.imag)}
+        current = np.conj(p / (3 * ((2 * v[sl(bus)][0] - v[sl(bus)][1] - v[sl(bus)][2]) / 3)))
+        phases = np.sqrt(2) * np.real(current * np.exp(1j * np.array([0, -2*np.pi/3, 2*np.pi/3])))
+        state["devices"][f"machine_{bus}"] = dict(zip(("ia", "ib", "ic"), phases.tolist()))
     write_json(HERE / "CoupledGrid.case.json", case)
     write_json(HERE / "CoupledGrid.state.json", state)
     for mu, name in zip(MU, ("low", "middle", "high")):

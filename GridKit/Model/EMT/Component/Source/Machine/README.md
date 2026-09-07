@@ -52,8 +52,6 @@ $R_\mathrm{2q}$ | [p.u.] | `R2q` | q-axis damper 2 resistance | Positive
 $L_\mathrm{l2q}$ | [p.u.] | `Ll2q` | q-axis damper 2 leakage inductance | Positive
 $S(1.0)$ | [p.u.] | `S10` | Saturation factor at $1.0$ per-unit flux | Nonnegative
 $S(1.2)$ | [p.u.] | `S12` | Saturation factor at $1.2$ per-unit flux | Nonnegative
-$P_0$ | [W] | `p0` | Initial active power injection | SI, into bus
-$Q_0$ | [var] | `q0` | Initial reactive power injection | SI, into bus
 
 ### Parameter Validation
 
@@ -263,7 +261,7 @@ $E_\mathrm{fd}^\mathrm{set}$ and $P_m^\mathrm{set}$ when unattached.
 
 ## Initialization
 
-The bus terminal voltage and the scheduled power injections are taken as a
+The terminal voltages and supplied phase-current injections are taken as a
 balanced positive-sequence operating point. All algebra is in machine per
 unit with peak-value phasors sampled at the initialization instant $t_0$;
 $\bar{v}$ and $\bar{\imath}$ denote the terminal voltage and injected current
@@ -274,8 +272,9 @@ phasors.
 \bar{v} &\leftarrow \dfrac{1}{V_\mathrm{pk}}\left(
    \dfrac{2}{3}\left(v_a - \dfrac{v_b}{2} - \dfrac{v_c}{2}\right)
    + \mathrm{j}\,\dfrac{v_b - v_c}{\sqrt{3}}\right) \\
-\bar{s} &\leftarrow \dfrac{P_0 + \mathrm{j} Q_0}{S_\mathrm{b}},
-  \qquad \bar{\imath} \leftarrow \left(\bar{s}/\bar{v}\right)^{\ast} \\
+\bar{\imath} &\leftarrow \dfrac{1}{I_\mathrm{pk}}\left(
+   \dfrac{2}{3}\left(i_a^\mathrm{SI} - \dfrac{i_b^\mathrm{SI}}{2} - \dfrac{i_c^\mathrm{SI}}{2}\right)
+   + \mathrm{j}\,\dfrac{i_b^\mathrm{SI} - i_c^\mathrm{SI}}{\sqrt{3}}\right) \\
 \psi_\mathrm{at} &\leftarrow \left|\bar{v} + (R_s + \mathrm{j} L_l)\,\bar{\imath}\right|,
   \qquad K_s \leftarrow \dfrac{1}{1 + S_B\,\mathrm{qramp}(\psi_\mathrm{at} - S_A)} \\
 \theta &\leftarrow \angle\left(\bar{v} + (R_s + \mathrm{j} L_q)\,\bar{\imath}\right)

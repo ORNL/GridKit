@@ -33,12 +33,12 @@ namespace GridKit::Testing
     template <typename Scalar = double>
     struct Fixture
     {
-      EMT::Controller::SexsPti<Scalar, size_t>   model;
-      std::array<Scalar, 7>                      inputs{};
-      std::array<size_t, 7>                      indices{4, 5, 6, 7, 8, 9, 10};
-      std::array<EMT::Signal<Scalar, size_t>, 4> signals;
-      EMT::Port3<Scalar, size_t>                 voltage;
-      EMT::Signal<Scalar, size_t>                efd;
+      EMT::Controller::SexsPti<Scalar, size_t>            model;
+      std::array<Scalar, 7>                               inputs{};
+      std::array<size_t, 7>                               indices{4, 5, 6, 7, 8, 9, 10};
+      std::array<EMT::Signal<Scalar, size_t>, 4>          signals;
+      std::array<GridKit::EMT::Signal<Scalar, size_t>, 3> voltage;
+      EMT::Signal<Scalar, size_t>                         efd;
 
       explicit Fixture(const Data& parameters = data(), bool attached = true)
         : model(parameters)
@@ -50,8 +50,10 @@ namespace GridKit::Testing
         inputs[5] = -inputs[4] / 2.0;
         inputs[6] = -inputs[4] / 2.0;
         for (size_t i = 0; i < 3; ++i)
-          voltage.signals[i].set(&inputs[i + 4], &indices[i + 4]);
-        model.getSignals().template attachPort<External::VA>(&voltage);
+          voltage[i].set(&inputs[i + 4], &indices[i + 4]);
+        model.getSignals().template attachSignal<External::VA>(&voltage[0]);
+        model.getSignals().template attachSignal<External::VB>(&voltage[1]);
+        model.getSignals().template attachSignal<External::VC>(&voltage[2]);
         if (attached)
         {
           for (size_t i = 0; i < 4; ++i)
@@ -83,11 +85,12 @@ namespace GridKit::Testing
         for (bool attached : {false, true})
         {
           Fixture f(data(tr), attached);
-          success *= f.model.initialize() == 0;
-          success *= near(f.model.y().getData()[0], -0.06);
-          success *= near(f.efd.read(), 1.5);
-          success *= near(f.model.y().getData()[2], 0.15);
-          success *= near(f.model.y().getData()[3], 1.0);
+          f.model.y().getData()[1]  = 0.0;
+          success                  *= f.model.initialize({{Data::Outputs::efd, 1.5}}) == 0;
+          success                  *= near(f.model.y().getData()[0], -0.06);
+          success                  *= near(f.efd.read(), 1.5);
+          success                  *= near(f.model.y().getData()[2], 0.15);
+          success                  *= near(f.model.y().getData()[3], 1.0);
           if (attached)
             success *= near(f.inputs[0], 1.10);
           f.model.evaluateResidual();
