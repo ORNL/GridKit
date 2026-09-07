@@ -400,10 +400,6 @@ namespace GridKit
         y[VLV]    = static_cast<ScalarT>(vlv0);
 
         pref_set_ = static_cast<ScalarT>(pref0);
-        if (signals_.template isAttached<GastPtiExternalVariables::PREF>())
-        {
-          signals_.template writeExternalVariable<GastPtiExternalVariables::PREF>(pref_set_);
-        }
 
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));

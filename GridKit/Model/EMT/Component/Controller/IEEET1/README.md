@@ -63,7 +63,7 @@ Name | Kind | Initialization | Description
 -----|------|----------------|------------
 `bus` | Three-phase input | Known | Instantaneous terminal voltages in volts
 `speed` | Scalar input | Known | Optional machine rotor speed; 1 p.u. when unattached
-`vref` | Scalar input | Solved | Optional voltage reference; initialized by the controller
+`vref` | Scalar input | Known when attached | Optional voltage reference; inferred when unattached
 `vs` | Scalar input | Known | Optional stabilizer input; zero when unattached
 `vuel` | Scalar input | Known | Optional under-excitation limiter input; zero when unattached
 `voel` | Scalar input | Known | Optional over-excitation limiter input; zero when unattached
@@ -151,9 +151,10 @@ V_\mathrm{ref}&=E_C+V_{tr}-V_S-V_\mathrm{UEL}-V_\mathrm{OEL}.
 \end{aligned}
 ```
 
-All internal derivatives initialize to zero. An attached `vref` receives the
-resolved reference; otherwise it is held locally. Attached inputs are read
-live during residual and Jacobian evaluations.
+All internal derivatives initially default to zero. The inferred reference
+above is held locally for an unattached `vref`. An attached reference is
+preserved and read live during residual and Jacobian evaluations; consistent
+initialization resolves the derivatives if it differs from the inferred value.
 
 ## Monitors
 

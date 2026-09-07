@@ -388,21 +388,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief External residual
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int LineLumped<scalar_type, index_type>::evaluateExternalResidual(
-        [[maybe_unused]] const ScalarT* y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* y_ext,
-        [[maybe_unused]] const ScalarT* yp_ext,
-        [[maybe_unused]] ScalarT*       f_ext)
-    {
-      return 0;
-    }
-
     template <typename scalar_type, typename index_type>
     int LineLumped<scalar_type, index_type>::evaluateInternalResidual()
     {
@@ -419,16 +404,6 @@ namespace GridKit
     }
 
     /**
-     * @brief Add the embedded series-impedance contribution.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int LineLumped<scalar_type, index_type>::evaluateExternalResidual()
-    {
-      return this->evaluateOperatorExternalResiduals();
-    }
-
-    /**
      * @brief Evaluate the series-current equation and its embedded impedance.
      *
      */
@@ -436,7 +411,7 @@ namespace GridKit
     int LineLumped<scalar_type, index_type>::evaluateResidual()
     {
       evaluateInternalResidual();
-      return evaluateExternalResidual();
+      return this->evaluateExternalResidual();
     }
 
     template <typename scalar_type, typename index_type>

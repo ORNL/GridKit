@@ -2,6 +2,7 @@
 
 #include <array>
 #include <functional>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -61,6 +62,11 @@ namespace GridKit
       bool computed() const;
       void appendGradient(GradientT& gradient, RealT scale = RealT{1}) const;
 
+      /// Declare an externally writable constant with no DAE variable.
+      void bindConstant(RealT value);
+      bool constant() const noexcept;
+      void setConstantValue(RealT value);
+
       /** Reserve this signal for one component output. */
       void claimProducer();
       bool hasProducer() const;
@@ -74,9 +80,6 @@ namespace GridKit
       void    accumulateResidual(ScalarT value);
       void    init(ScalarT signal_in);
       void    initDerivative(ScalarT derivative_in);
-
-      void markDerivativeCoupling();
-      bool hasDerivativeCoupling() const;
 
       const std::string& id() const noexcept
       {
@@ -101,12 +104,12 @@ namespace GridKit
       bool                                   producer_claimed_{false};
       std::function<ScalarT()>               value_;
       std::function<void(GradientT&, RealT)> gradient_;
+      std::optional<RealT>                   constant_;
       mutable bool                           evaluating_{false};
 
     protected:
       IdxT* variable_index_{nullptr};
       IdxT* residual_index_{nullptr};
-      bool  derivative_coupling_{false};
     };
 
   } // namespace EMT

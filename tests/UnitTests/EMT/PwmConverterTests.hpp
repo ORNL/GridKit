@@ -269,8 +269,6 @@ namespace GridKit
                           { published.init(0.0); });
         success *= throws([&]
                           { published.readDerivative(); });
-        success *= throws([&]
-                          { published.markDerivativeCoupling(); });
         Converter cycle;
         cycle.attachInput(&cycle.outputSignal(EMT::ConverterOutputs::voa), &cycle.outputSignal(EMT::ConverterOutputs::vob), &cycle.outputSignal(EMT::ConverterOutputs::voc), &signals[3]);
         success *= throws([&]

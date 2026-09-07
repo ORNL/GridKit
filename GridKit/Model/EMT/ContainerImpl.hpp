@@ -52,10 +52,7 @@ namespace GridKit
         auto& signal = addSignal(signal_data.id);
         if (signal_data.value.has_value())
         {
-          const auto value = signal_data.value.value();
-          signal.setComputed([value]
-                             { return static_cast<ScalarT>(value); },
-                             [](typename SignalT::GradientT&, RealT) {});
+          signal.bindConstant(*signal_data.value);
         }
       }
 
@@ -208,11 +205,32 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Container<scalar_type, index_type>::wire(const ModelDataT& data, const std::vector<BusT*>& buses)
     {
+      auto terminal = [&](const auto& inputs, auto first)
+      {
+        std::array<SignalT*, 3> voltage;
+        for (size_t p = 0; p < 3; ++p)
+          voltage[p] = &source(inputs.at(static_cast<decltype(first)>(static_cast<size_t>(first) + p)));
+        for (auto* bus : buses)
+        {
+          typename BusT::PhaseOrder phases;
+          bool                      found = true;
+          for (size_t p = 0; p < 3; ++p)
+          {
+            const IdxT phase = bus->voltagePhase(voltage[p]);
+            found            = found && phase != INVALID_INDEX<IdxT>;
+            phases[p]        = static_cast<size_t>(phase);
+          }
+          if (found)
+            return std::make_tuple(bus, phases, voltage);
+        }
+        throw std::invalid_argument("Terminal phases must belong to one Bus");
+      };
+
       for (const auto& bus_data : data.bus)
       {
         auto& bus = component<Bus<ScalarT, IdxT>>(bus_data.id);
         for (const auto& [input, reference] : bus_data.inputs)
-          bus.attachInput(input, &source(reference));
+          bus.addCurrent(static_cast<size_t>(input), source(reference));
       }
 
       for (const auto& model_data : data.pwm)
@@ -258,12 +276,12 @@ namespace GridKit
         auto& source_model = component<VoltageSource<ScalarT, IdxT>>(source_data.id);
         for (const auto& [output, reference] : source_data.outputs)
           source_model.assignOutput(output, &signal(reference));
-        source_model.getSignals().template attachSignal<VoltageSourceExternalVariables::VA>(
-            &source(source_data.inputs.at(VoltageSourceInputs::va)));
-        source_model.getSignals().template attachSignal<VoltageSourceExternalVariables::VB>(
-            &source(source_data.inputs.at(VoltageSourceInputs::vb)));
-        source_model.getSignals().template attachSignal<VoltageSourceExternalVariables::VC>(
-            &source(source_data.inputs.at(VoltageSourceInputs::vc)));
+        auto [bus, phases, voltage] = terminal(source_data.inputs, VoltageSourceInputs::va);
+        for (size_t p = 0; p < 3; ++p)
+        {
+          source_model.getSignals().attachSignal(static_cast<VoltageSourceExternalVariables>(p), voltage[p]);
+          bus->addCurrent(phases[p], source_model.currentSignal(p));
+        }
       }
 
       for (const auto& source_data : data.dependent_voltage_source)
@@ -271,12 +289,12 @@ namespace GridKit
         auto& source_model = component<DependentVoltageSource<ScalarT, IdxT>>(source_data.id);
         for (const auto& [output, reference] : source_data.outputs)
           source_model.assignOutput(output, &signal(reference));
-        source_model.getSignals().template attachSignal<DependentVoltageSourceExternalVariables::VA>(
-            &source(source_data.inputs.at(DependentVoltageSourceInputs::va)));
-        source_model.getSignals().template attachSignal<DependentVoltageSourceExternalVariables::VB>(
-            &source(source_data.inputs.at(DependentVoltageSourceInputs::vb)));
-        source_model.getSignals().template attachSignal<DependentVoltageSourceExternalVariables::VC>(
-            &source(source_data.inputs.at(DependentVoltageSourceInputs::vc)));
+        auto [bus, phases, voltage] = terminal(source_data.inputs, DependentVoltageSourceInputs::va);
+        for (size_t p = 0; p < 3; ++p)
+        {
+          source_model.getSignals().attachSignal(static_cast<DependentVoltageSourceExternalVariables>(p), voltage[p]);
+          bus->addCurrent(phases[p], source_model.currentSignal(p));
+        }
 
         if (source_data.inputs.contains(DependentVoltageSourceInputs::ea))
         {
@@ -297,13 +315,13 @@ namespace GridKit
 
       for (const auto& machine_data : data.machine)
       {
-        auto& machine_model = component<Machine<ScalarT, IdxT>>(machine_data.id);
-        machine_model.getSignals().template attachSignal<MachineExternalVariables::VA>(
-            &source(machine_data.inputs.at(MachineInputs::va)));
-        machine_model.getSignals().template attachSignal<MachineExternalVariables::VB>(
-            &source(machine_data.inputs.at(MachineInputs::vb)));
-        machine_model.getSignals().template attachSignal<MachineExternalVariables::VC>(
-            &source(machine_data.inputs.at(MachineInputs::vc)));
+        auto& machine_model         = component<Machine<ScalarT, IdxT>>(machine_data.id);
+        auto [bus, phases, voltage] = terminal(machine_data.inputs, MachineInputs::va);
+        for (size_t p = 0; p < 3; ++p)
+        {
+          machine_model.getSignals().attachSignal(static_cast<MachineExternalVariables>(p), voltage[p]);
+          bus->addCurrent(phases[p], machine_model.currentSignal(p));
+        }
 
         for (const auto& [output, reference] : machine_data.outputs)
           machine_model.assignOutput(output, &signal(reference));
@@ -324,28 +342,8 @@ namespace GridKit
         auto& line_model = component<LineLumped<ScalarT, IdxT>>(line_data.id);
         for (const auto& [output, reference] : line_data.outputs)
           line_model.assignOutput(output, &signal(reference));
-        auto terminal = [&](LineLumpedInputs first)
-        {
-          std::array<SignalT*, 3> voltage;
-          for (size_t p = 0; p < 3; ++p)
-            voltage[p] = &source(line_data.inputs.at(static_cast<LineLumpedInputs>(static_cast<size_t>(first) + p)));
-          for (auto* bus : buses)
-          {
-            typename BusT::PhaseOrder phases;
-            bool                      found = true;
-            for (size_t p = 0; p < 3; ++p)
-            {
-              const IdxT phase = bus->voltagePhase(voltage[p]);
-              found            = found && phase != INVALID_INDEX<IdxT>;
-              phases[p]        = static_cast<size_t>(phase);
-            }
-            if (found)
-              return std::make_tuple(bus, phases, voltage);
-          }
-          throw std::invalid_argument(line_data.id + ": terminal phases must belong to one Bus");
-        };
-        auto [bus1, phases1, voltage1] = terminal(LineLumpedInputs::v1a);
-        auto [bus2, phases2, voltage2] = terminal(LineLumpedInputs::v2a);
+        auto [bus1, phases1, voltage1] = terminal(line_data.inputs, LineLumpedInputs::v1a);
+        auto [bus2, phases2, voltage2] = terminal(line_data.inputs, LineLumpedInputs::v2a);
         typename BusT::YDataT Y;
         using Parameter = LineLumpedParameters;
         if (line_data.Yp)
@@ -381,12 +379,12 @@ namespace GridKit
         auto& load_model = component<LoadZ<ScalarT, IdxT>>(load_data.id);
         for (const auto& [output, reference] : load_data.outputs)
           load_model.getSignals().assignSignal(static_cast<LoadZInternalVariables>(output), &signal(reference));
-        load_model.getSignals().template attachSignal<LoadZExternalVariables::VA>(
-            &source(load_data.inputs.at(LoadZInputs::va)));
-        load_model.getSignals().template attachSignal<LoadZExternalVariables::VB>(
-            &source(load_data.inputs.at(LoadZInputs::vb)));
-        load_model.getSignals().template attachSignal<LoadZExternalVariables::VC>(
-            &source(load_data.inputs.at(LoadZInputs::vc)));
+        auto [bus, phases, voltage] = terminal(load_data.inputs, LoadZInputs::va);
+        for (size_t p = 0; p < 3; ++p)
+        {
+          load_model.getSignals().attachSignal(static_cast<LoadZExternalVariables>(p), voltage[p]);
+          bus->addCurrent(phases[p], load_model.currentSignal(p));
+        }
       }
 
       for (const auto& stabilizer_data : data.ieeest)
@@ -521,18 +519,15 @@ namespace GridKit
         auto& switch_model = component<Switch<ScalarT, IdxT>>(switch_data.id);
         for (const auto& [output, reference] : switch_data.outputs)
           switch_model.getSignals().assignSignal(static_cast<SwitchInternalVariables>(output), &signal(reference));
-        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V1A>(
-            &source(switch_data.inputs.at(SwitchInputs::v1a)));
-        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V1B>(
-            &source(switch_data.inputs.at(SwitchInputs::v1b)));
-        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V1C>(
-            &source(switch_data.inputs.at(SwitchInputs::v1c)));
-        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V2A>(
-            &source(switch_data.inputs.at(SwitchInputs::v2a)));
-        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V2B>(
-            &source(switch_data.inputs.at(SwitchInputs::v2b)));
-        switch_model.getSignals().template attachSignal<SwitchExternalVariables::V2C>(
-            &source(switch_data.inputs.at(SwitchInputs::v2c)));
+        for (size_t end = 0; end < 2; ++end)
+        {
+          auto [bus, phases, voltage] = terminal(switch_data.inputs, static_cast<SwitchInputs>(3 * end));
+          for (size_t p = 0; p < 3; ++p)
+          {
+            switch_model.getSignals().attachSignal(static_cast<SwitchExternalVariables>(3 * end + p), voltage[p]);
+            bus->addCurrent(phases[p], switch_model.currentSignal(p), end == 0 ? -ONE<RealT> : ONE<RealT>);
+          }
+        }
       }
     }
 

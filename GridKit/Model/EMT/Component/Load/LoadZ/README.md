@@ -98,11 +98,7 @@ Current components with zero columns of $\mathbf{E}^{\mathbf{z}}$ are algebraic.
 
 ### External Equations
 
-The load supplies input $d$ of the [bus current balance](../../../Bus/README.md#model-equations):
-
-```math
-\mathbf{i}_d \leftarrow \mathbf{i}
-```
+None. The bus registers the current output $\mathbf{i}$ and includes it in KCL.
 
 ## Initialization
 

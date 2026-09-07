@@ -46,7 +46,7 @@ namespace GridKit
           inputs[1] = -std::sqrt(2.0 / 3.0) * 50.0;
           inputs[2] = -std::sqrt(2.0 / 3.0) * 50.0;
           inputs[3] = 1.02;
-          inputs[4] = 0.0;
+          inputs[4] = 1.02;
           inputs[5] = 0.03;
           inputs[6] = 0.04;
           inputs[7] = -0.02;
@@ -137,7 +137,7 @@ namespace GridKit
             }
             for (double field : {0.5, 1.0, 2.0, 3.0})
             {
-              Fixture fixture(parameters);
+              Fixture fixture(parameters, false);
               fixture.model.y().getData()[7]  = field;
               success                        *= fixture.model.initialize() == 0;
               const double above_knee         = std::max(field - 1.0, 0.0);
@@ -152,7 +152,7 @@ namespace GridKit
         }
         Data automatic                      = data();
         automatic.parameters[Parameter::Ke] = 0.0;
-        Fixture fixture(automatic);
+        Fixture fixture(automatic, false);
         success                        *= fixture.model.initialize() == 0;
         success                        *= near(fixture.model.y().getData()[1], 0.5);
         fixture.model.y().getData()[7]  = 2.04;

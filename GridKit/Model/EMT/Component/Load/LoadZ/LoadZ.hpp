@@ -68,8 +68,6 @@ namespace GridKit
       using Component<scalar_type, index_type>::y_ext_;
       using Component<scalar_type, index_type>::yp_ext_;
       using Component<scalar_type, index_type>::variable_indices_ext_;
-      using Component<scalar_type, index_type>::residual_indices_ext_;
-      using Component<scalar_type, index_type>::f_ext_;
       using Component<scalar_type, index_type>::f_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
@@ -93,6 +91,11 @@ namespace GridKit
       LoadZ(const ModelDataT& data);
       virtual ~LoadZ();
 
+      SignalT& currentSignal(size_t phase)
+      {
+        return i_port_.at(phase);
+      }
+
       virtual int setGridKitComponentID(IdxT) override final;
       virtual int allocate() override final;
       virtual int verify() const override final;
@@ -109,7 +112,6 @@ namespace GridKit
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
       virtual int evaluateResidual() override final;
-      virtual int evaluateExternalResidual() override final;
       virtual int assembleJacobian(RealT y_scale, RealT yp_scale) override final;
 
       auto getSignals() -> ComponentSignals<ScalarT,
@@ -130,8 +132,6 @@ namespace GridKit
 
     public:
       __attribute__((always_inline)) inline int evaluateInternalResidual(
-          const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateExternalResidual(
           const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:

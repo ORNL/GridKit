@@ -134,11 +134,8 @@ namespace GridKit
       }
 
       // Resize coupling data
-      this->allocateExternalVectors(static_cast<IdxT>(LoadZExternalVariables::MAXIMUM), 3);
+      this->allocateExternalVectors(static_cast<IdxT>(LoadZExternalVariables::MAXIMUM), 0);
       signals_.registerExternalVariableSignals(*this);
-      this->setExternalResidualSignal(0, signals_.template getAttachedSignal<LoadZExternalVariables::VA>());
-      this->setExternalResidualSignal(1, signals_.template getAttachedSignal<LoadZExternalVariables::VB>());
-      this->setExternalResidualSignal(2, signals_.template getAttachedSignal<LoadZExternalVariables::VC>());
 
       signals_.bindInternalVariableSignals(*this);
       allocated_ = true;
@@ -363,29 +360,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief External residual
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateExternalResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* y_ext,
-        [[maybe_unused]] const ScalarT* yp_ext,
-        ScalarT*                        f_ext)
-    {
-      const ScalarT ia = y[0];
-      const ScalarT ib = y[1];
-      const ScalarT ic = y[2];
-
-      f_ext[0] = ia;
-      f_ext[1] = ib;
-      f_ext[2] = ic;
-
-      return 0;
-    }
-
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::evaluateInternalResidual()
     {
@@ -402,30 +376,14 @@ namespace GridKit
     }
 
     /**
-     * @brief External residual contributions to the bus.
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    int LoadZ<scalar_type, index_type>::evaluateExternalResidual()
-    {
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
-      this->scatterExternalResidual();
-      this->evaluateOperatorExternalResiduals();
-
-      return 0;
-    }
-
-    /**
-     * @brief Residual contribution of the load is pushed to the bus.
+     * @brief Assemble the load equations and its embedded operator.
      *
      */
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::evaluateResidual()
     {
       evaluateInternalResidual();
-      return evaluateExternalResidual();
+      return this->evaluateExternalResidual();
     }
 
     /**
@@ -437,7 +395,7 @@ namespace GridKit
       this->gatherExternalVariables();
       const auto&                              external = this->externalVariableSignals();
       std::vector<typename SignalT::GradientT> gradients(external.size());
-      size_t                                   capacity = 3;
+      size_t                                   capacity = 0;
       for (size_t k = 0; k < external.size(); ++k)
       {
         external[k]->appendGradient(gradients[k]);
@@ -470,7 +428,6 @@ namespace GridKit
       };
       for (size_t n = 0; n < 3; ++n)
       {
-        append(residual_indices_ext_[n], variable_indices_[n], ONE<RealT>);
         for (const auto& [column, value] : gradients[n])
         {
           append(residual_indices_[n], column, value);

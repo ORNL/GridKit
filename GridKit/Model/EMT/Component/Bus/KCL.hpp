@@ -39,11 +39,11 @@ namespace GridKit
         return {&voltage_.at(phases[0]), &voltage_.at(phases[1]), &voltage_.at(phases[2])};
       }
 
-      void attachInput(BusInputs input, SignalT* signal)
+      void addCurrent(size_t phase, SignalT& signal, RealT sign = ONE<RealT>)
       {
         if (this->allocated_)
-          throw std::logic_error("KCL inputs cannot change after allocation");
-        current_.at(static_cast<size_t>(input)) = signal;
+          throw std::logic_error("KCL currents cannot change after allocation");
+        currents_.at(phase).push_back({&signal, sign});
       }
 
       void assignOutput(Outputs output, SignalT* signal)
@@ -89,8 +89,9 @@ namespace GridKit
       int verify() const override
       {
         int errors = 0;
-        for (auto* signal : current_)
-          errors += signal && !signal->linked();
+        for (const auto& phase : currents_)
+          for (const auto& current : phase)
+            errors += !current.signal->linked();
         return errors;
       }
 
@@ -133,13 +134,13 @@ namespace GridKit
       int evaluateInternalResidual() override
       {
         for (size_t p = 0; p < 3; ++p)
-          this->f_.getData()[p] = current_[p] ? current_[p]->read() : ScalarT{0};
+        {
+          auto& residual = this->f_.getData()[p];
+          residual       = ScalarT{0};
+          for (const auto& current : currents_[p])
+            residual += current.sign * current.signal->read();
+        }
         this->f_.setDataUpdated();
-        return 0;
-      }
-
-      int evaluateExternalResidual() override
-      {
         return 0;
       }
 
@@ -154,8 +155,9 @@ namespace GridKit
         size_t                                     entries = 0;
         for (size_t p = 0; p < 3; ++p)
         {
-          if (y_scale != ZERO<RealT> && current_[p])
-            current_[p]->appendGradient(gradients[p], y_scale);
+          if (y_scale != ZERO<RealT>)
+            for (const auto& current : currents_[p])
+              current.signal->appendGradient(gradients[p], y_scale * current.sign);
           entries += gradients[p].size();
         }
         if (entries != capacity_)
@@ -182,9 +184,16 @@ namespace GridKit
       }
 
     private:
-      std::array<SignalT, 3> voltage_;
-      PhaseSignals           current_{}, aliases_{};
-      size_t                 capacity_{0};
+      struct Current
+      {
+        SignalT* signal;
+        RealT    sign;
+      };
+
+      std::array<std::vector<Current>, 3> currents_;
+      std::array<SignalT, 3>              voltage_;
+      PhaseSignals                        aliases_{};
+      size_t                              capacity_{0};
     };
   } // namespace EMT
 } // namespace GridKit

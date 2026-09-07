@@ -200,27 +200,6 @@ namespace GridKit
         return (*external_variable_signals_[static_cast<size_t>(variable)])->getVariableIndex();
       }
 
-      /// Marks derivative coupling on the specified external variable
-      ///
-      /// A component calls this during allocation when its equations read the
-      /// derivative of the external variable, so the owning component can
-      /// classify the variable as differential.
-      ///
-      /// @tparam variable The external variable to mark
-      /// @pre A signal has been assigned to the requested external
-      ///      variable
-      template <ExternalVariables variable>
-      auto markDerivativeCoupling()
-      {
-        static_assert(variable < ExternalVariables::MAXIMUM);
-        if (!external_variable_signals_[static_cast<size_t>(variable)])
-        {
-          throw std::logic_error("A signal has not been assigned to this external variable");
-        }
-
-        (*external_variable_signals_[static_cast<size_t>(variable)])->markDerivativeCoupling();
-      }
-
       /// Writes a value to the specified external variable
       ///
       /// @warning This method should be used only in component initialization

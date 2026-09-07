@@ -1,7 +1,8 @@
 # Norton Model
 
-`Norton` represents a current source in parallel with an admittance.
-It owns the algebraic shunt current $\mathbf{i}^\mathrm{sh}$ and admittance states.
+`Norton` realizes the shunt branch of a Norton terminal. The bus registers
+the incident current and subtracts this branch's output in KCL.
+The branch owns the algebraic shunt current $\mathbf{i}^\mathrm{sh}$ and admittance states.
 
 ## Model Parameters
 
@@ -12,7 +13,6 @@ None.
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf v$ | `v` | Input | [V] | Terminal voltage | $\mathbb R^K$
-$\mathbf{i}^\mathrm{inc}$ | `i_inc` | Input | [A] | Incident current | $\mathbb R^K$
 $\mathbf{i}^\mathrm{sh}$ | `Ish` | Output | [A] | Shunt current | $\mathbb R^K$
 
 ## Submodels
@@ -67,9 +67,7 @@ None.
 
 ### External Equations
 
-```math
-\Delta\mathbf{i}\mathrel{+}=\mathbf{i}^\mathrm{inc}-\mathbf{i}^\mathrm{sh}
-```
+None. The bus owns terminal-current accumulation.
 
 ## Initialization
 

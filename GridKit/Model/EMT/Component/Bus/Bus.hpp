@@ -14,14 +14,6 @@ namespace GridKit
 {
   namespace EMT
   {
-    enum class BusInternalVariables : size_t
-    {
-      VA,
-      VB,
-      VC,
-      MAXIMUM
-    };
-
     template <typename scalar_type, typename index_type>
     class Bus : public Container<scalar_type, index_type>
     {
@@ -53,9 +45,9 @@ namespace GridKit
 
       int initializeSteadyState(RealT omega);
 
-      void attachInput(BusInputs input, SignalT* signal)
+      void addCurrent(size_t phase, SignalT& signal, RealT sign = ONE<RealT>)
       {
-        kcl_.attachInput(input, signal);
+        kcl_.addCurrent(phase, signal, sign);
       }
 
       void assignOutput(Outputs output, SignalT* signal)

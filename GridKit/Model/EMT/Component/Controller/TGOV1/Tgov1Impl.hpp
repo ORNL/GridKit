@@ -300,10 +300,6 @@ namespace GridKit
         y[PV]  = pv0;
 
         pref_set_ = pref0;
-        if (signals_.template isAttached<Tgov1ExternalVariables::PREF>())
-        {
-          signals_.template writeExternalVariable<Tgov1ExternalVariables::PREF>(pref_set_);
-        }
 
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
