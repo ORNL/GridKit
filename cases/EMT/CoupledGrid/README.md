@@ -42,7 +42,10 @@ and controller limit equations. In PWM, it acts on time differences in seconds.
 Changing mu changes the differential equations, including the applied inverter
 fundamental voltage; it is not a solver tolerance. DC voltage is deliberately
 held fixed to expose this effect. The high-mu case is a comparison baseline,
-not the hard-switching limit or an accuracy reference.
+not the hard-switching limit or an accuracy reference. The logistic 10–90%
+edge widths are 18.3, 4.73, and 1.22 ms, respectively; all exceed the 1.11 ms
+carrier period. These runs check smoothed harmonics, not resolved switching.
+See the [ten-bus switching study](../../../examples/EMT/IBR/README.md#resolved-switching-study).
 
 The exact ideal-pulse Fourier coefficient is attenuated by
 

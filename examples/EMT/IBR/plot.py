@@ -5,6 +5,7 @@ import csv
 import html
 import json
 import os
+import sys
 from pathlib import Path
 
 os.environ.setdefault('MPLCONFIGDIR', '/tmp/gridkit-ibr-matplotlib')
@@ -16,6 +17,9 @@ from matplotlib.patches import Circle, Rectangle
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parents[2] / 'cases/EMT/CoupledGrid'))
+from pwm_analysis import pwm_peak_coefficients
+
 TITLES = {'01_Baseline': 'Baseline and startup', '02_LoadStep': '2 MW nominal load connection',
           '03_LoadPulse': 'Load connection and shedding', '04_FaultClearing': 'Three-phase resistive fault and clearing',
           '05_TieReclosing': 'Tie opening and reclosing',
@@ -52,6 +56,119 @@ def spectrum(signal, dt):
     if len(signal) % 2 == 0:
         amplitude[-1] *= .5
     return frequency, amplitude
+
+
+def switching_detail(directory):
+    """Inspect the recorded switching transient and check pulse-edge harmonics."""
+    study = json.loads((directory / 'run.solver.json').read_text())
+    case = json.loads(Path(study['system_model_file']).read_text())
+    t, data = read_csv(directory / study['output_file'])
+    dt = study['dt_monitor']
+    mu = study.get('mu', 240.)
+    mask = (t >= study['tmax'] - .5) & (t < study['tmax'])
+    if (np.count_nonzero(mask) != round(.5 / dt)
+            or not np.allclose(np.diff(t[mask]), dt, rtol=1e-7, atol=1e-12)):
+        raise ValueError('Switching spectra require a complete uniform final 0.5 s window')
+    constants = {s['id']: s['value'] for s in case['signals'] if 'value' in s}
+    constants.update(study.get('signal_values', {}))
+    devices = {d['id']: d for d in case['devices']}
+    kcl_errors = []
+    for b in (4, 5, 6):
+        kcl = (phase(data, f'DependentVoltageSource_filter_{b}', 'i')
+               - phase(data, f'Bus_bus_{b}', 'i_sh'))
+        for device in case['devices']:
+            if device['class'] == 'LoadZ' and device['inputs']['bus'] == f'bus_{b}':
+                kcl += phase(data, 'LoadZ_' + device['id'], 'i')
+            if device['class'] == 'LineLumped':
+                for port, current in (('bus1', 'i12'), ('bus2', 'i21')):
+                    if device['inputs'][port] == f'bus_{b}':
+                        kcl -= phase(data, 'LineLumped_' + device['id'], current)
+        kcl_errors.append(float(np.max(np.abs(kcl))))
+    checks = []
+    fig, axs = plt.subplots(2, 1, figsize=(11, 7), sharex=True)
+    for b in (4, 5, 6):
+        pwm = devices[f'pwm_{b}']['params']
+        prediction = pwm_peak_coefficients(mu, fc=pwm['fc'], f=pwm['fm'], M=pwm['M'],
+                                          vdc=constants[f'dc_{b}'], alignment=pwm['alignment'])
+        for ax, key, field, atol in zip(
+                axs, (f'PWM_pwm_{b}_sa', f'Converter_converter_{b}_voa'),
+                ('gate_peak', 'converter_peak_v'), (1e-8, 1e-3)):
+            frequency, amplitude = spectrum(data[key][mask], dt)
+            for row in prediction:
+                index = round(row['frequency_hz'] * len(t[mask]) * dt)
+                if index >= len(frequency) or not np.isclose(frequency[index], row['frequency_hz']):
+                    raise ValueError('Predicted harmonic is not a resolved coherent FFT bin')
+                measured, expected = float(amplitude[index]), row[field]
+                checks.append(dict(signal=key, frequency_hz=row['frequency_hz'],
+                                   measured_peak=measured, predicted_peak=expected,
+                                   absolute_error=abs(measured - expected),
+                                   passed=abs(measured - expected) <= atol + 1e-5 * expected))
+            if b == 4:
+                ax.semilogy(frequency, np.maximum(amplitude, atol / 10), label='Simulation')
+                visible = [row for row in prediction if row[field] > atol]
+                ax.scatter([row['frequency_hz'] for row in visible],
+                           [row[field] for row in visible], facecolors='none',
+                           edgecolors=COLORS[1], label='Pulse-edge prediction', zorder=3)
+                ax.set_xlim(0, 3000); ax.legend()
+    report = dict(mu=mu, edge_10_90_us=2*np.log(9)/mu*1e6,
+                  window_s=[study['tmax']-.5, study['tmax']],
+                  relative_tolerance=1e-5, gate_absolute_tolerance=1e-8,
+                  voltage_absolute_tolerance_v=1e-3,
+                  max_ibr_bus_kcl_error_a=max(kcl_errors),
+                  passed=max(kcl_errors) <= .02 and all(row['passed'] for row in checks),
+                  harmonics=checks)
+    (directory / 'switching_validation.json').write_text(json.dumps(report, indent=2)+'\n')
+    plots = directory / 'plots'; plots.mkdir(exist_ok=True)
+    axs[0].set_ylabel('Gate peak amplitude [−]')
+    axs[1].set_ylabel('Bridge peak amplitude [V]'); axs[1].set_xlabel('Frequency [Hz]')
+    save(fig, plots, 'switching_prediction', f'IBR 4 — sampled-edge check, μ={mu:g}', [], time_axis=False)
+    transient_detail(t, data, study, plots)
+    if not report['passed']:
+        raise ValueError(f'Switching check failed: {directory / "switching_validation.json"}')
+    print(f'{directory}: {len(checks)} harmonic checks and IBR bus KCL passed')
+
+
+def transient_detail(t, data, study, plots):
+    """Use matching fault windows and axes across smoothing settings."""
+    plots.mkdir(exist_ok=True)
+    events = study['events']
+    if events:
+        first, last = events[0]['time'], events[-1]['time']
+        windows = [(first-.02, last+.04), (first-.002, first+.004),
+                   (last-.002, last+.004)]
+        titles = ('Disturbance and recovery', 'First event', 'Last event')
+        if events[0]['element_id'] == 'fault':
+            titles = ('Fault and recovery', 'Fault inception', 'Fault clearing')
+        elif len(events) == 1:
+            windows[2] = (first+.02, first+.026)
+            titles = ('Disturbance and recovery', 'Event detail', 'Recovery detail')
+    else:
+        windows = [(0., study['tmax']), (0., .006), (study['tmax']-.006, study['tmax'])]
+        titles = ('Startup and steady operation', 'Startup detail', 'Steady switching')
+    fig, axs = plt.subplots(2, 3, figsize=(15, 7))
+    for column, (start, end) in enumerate(windows):
+        selected = (t >= start) & (t <= end)
+        values = np.column_stack((t[selected]*1000,
+                                  data['Converter_converter_4_voa'][selected]/1000,
+                                  data['DependentVoltageSource_filter_4_ia'][selected]))
+        np.savetxt(plots / f'switching_window_{column}.csv', values, delimiter=',',
+                   header='time_ms,voa_kv,ia_a', comments='')
+        for row, color in enumerate(('#0072B2', '#E69F00')):
+            ax = axs[row, column]
+            ax.plot(values[:, 0], values[:, row+1], color=color, lw=.9)
+            for event in events:
+                if start <= event['time'] <= end:
+                    ax.axvline(event['time']*1000, color='#555555', ls=':', lw=.9)
+            ax.set_xlim(start*1000, end*1000); ax.set_xlabel('Time [ms]')
+        axs[0, column].set_title(titles[column])
+        if events and events[0]['element_id'] == 'fault':
+            axs[0, column].set_ylim(-21, 21)
+            axs[1, column].set_ylim(((-1100, 1100), (-200, 850), (-550, 550))[column])
+    axs[0, 0].set_ylabel('Bridge phase-a voltage [kV]')
+    axs[1, 0].set_ylabel('Phase-a injection into bus 4 [A]')
+    save(fig, plots, 'switching_transient',
+         f'Ten-bus IBR 4 — μ={study.get("mu", 240.):g}, 900 Hz PWM, '
+         f'{study["dt_monitor"]*1e6:g} μs samples', [], time_axis=False)
 
 
 def powers(v, i):
@@ -411,7 +528,25 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--results', type=Path, default=HERE/'results')
     parser.add_argument('--reuse-plots', action='store_true', help='Reuse existing per-scenario galleries for unchanged outputs')
+    parser.add_argument('--switching-only', action='store_true', help='Plot and check only the resolved switching study')
+    parser.add_argument('--transients-only', action='store_true', help='Plot matching voltage/current panels for available runs')
     args = parser.parse_args(); results = args.results.resolve(); results.mkdir(parents=True, exist_ok=True)
+    if args.transients_only:
+        cards = []
+        for directory in sorted(results.iterdir()):
+            if not (directory / 'run.solver.json').exists():
+                continue
+            study = json.loads((directory / 'run.solver.json').read_text())
+            t, data = read_csv(directory / study['output_file'])
+            transient_detail(t, data, study, directory / 'plots')
+            cards.append(f'<figure><figcaption>{html.escape(directory.name)}</figcaption>'
+                         f'<a href="{directory.name}/plots/switching_transient.svg">'
+                         f'<img src="{directory.name}/plots/switching_transient.png"></a></figure>')
+        (results / 'transients.html').write_text(page_html('Ten-bus IBR transients', ''.join(cards)))
+        return
+    if args.switching_only:
+        switching_detail(results / '06_FaultClearingSwitching')
+        return
     study = json.loads((HERE/'01_Baseline.solver.json').read_text())
     case = json.loads((HERE/study['system_model_file']).read_text())
     one_line(case, results)
@@ -443,6 +578,7 @@ def main():
     axs[0].legend(fontsize=9,ncol=2)
     save(fig, results, 'baseline_differences', 'Disturbance response relative to the undisturbed run', gallery)
     switching_comparison(results)
+    switching_detail(results / '06_FaultClearingSwitching')
     (results/'summary.json').write_text(json.dumps(metrics,indent=2)+'\n')
     with (results/'summary.csv').open('w',newline='') as stream:
         writer=csv.DictWriter(stream,fieldnames=sorted(metrics[0]));writer.writeheader();writer.writerows(metrics)

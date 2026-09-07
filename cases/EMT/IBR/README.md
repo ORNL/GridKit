@@ -47,7 +47,9 @@ constant DC value of about 407.357 kV to give a 1.02 pu open-circuit AC
 fundamental. This is explicit mathematical compensation for broad smoothing,
 not a realistic DC-link rating or an implicit transformer. The actual gate
 signals are correspondingly smooth and the carrier ripple is strongly suppressed.
-Changing shared MU requires regenerating and rechecking this case.
+At `mu=240`, the 18.3 ms logistic edge width exceeds the 1.11 ms carrier
+period; this setting does not validate switching. Changing mu requires
+recomputing the DC compensation or supplying the documented solver overrides.
 
 The converters have fixed-frequency modulation and ideal unlimited DC sources.
 There is no PLL, current controller, current limit, DC energy storage, exciter,
