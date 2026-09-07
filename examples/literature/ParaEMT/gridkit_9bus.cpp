@@ -1,5 +1,6 @@
 // Case-specific initialization and disturbance driver; component equations are unchanged.
 #include <chrono>
+#include <ctime>
 #include <iomanip>
 #include <map>
 
@@ -205,13 +206,31 @@ double checkJacobian(NineBus& sys, double time)
 
 int main(int argc, char** argv)
 {
-  if (argc != 2 && argc != 3)
-    throw std::invalid_argument("Usage: paraemt_9bus path/to/solver.json [trip]");
-  const bool trip = argc == 3 && std::string(argv[2]) == "trip";
-  if (argc == 3 && !trip)
-    throw std::invalid_argument("Unknown event");
+  if (argc < 2 || argc > 4)
+    throw std::invalid_argument("Usage: paraemt_9bus solver.json [trip] [--benchmark]");
+  bool trip = false, benchmark = false;
+  for (int i = 2; i < argc; ++i)
+    if (std::string(argv[i]) == "trip")
+      trip = true;
+    else if (std::string(argv[i]) == "--benchmark")
+      benchmark = true;
+    else
+      throw std::invalid_argument("Unknown argument");
   const auto begin = std::chrono::steady_clock::now();
   auto       study = GridKit::EMT::parseStudyData(argv[1]);
+  if (benchmark)
+  {
+    study.output_file.clear();
+    study.state_output_file.clear();
+    study.model_data.monitor_sink.clear();
+    auto disable = [](auto& devices)
+    { for (auto& device : devices) device.monitored_variables.clear(); };
+    disable(study.model_data.bus);
+    disable(study.model_data.machine);
+    disable(study.model_data.sexs_pti);
+    disable(study.model_data.gastpti);
+    disable(study.model_data.ieeest);
+  }
   GridKit::EMT::configureCommonMath<double>(study);
   NineBus sys(study, std::filesystem::path(argv[1]).parent_path() / "network.state.json", trip);
   if (!sys.hasJacobian())
@@ -222,13 +241,28 @@ int main(int argc, char** argv)
   ida.setMaxSteps(study.max_steps);
   ida.setConsistentICType(study.consistent_ic_type);
   ida.configureSimulation();
+  if (benchmark && sys.monitoring())
+    throw std::runtime_error("Benchmark must disable model monitoring");
   const double                               jacobian_initial = checkJacobian(sys, 0.0);
   GridKit::EMT::StateMonitor<double, size_t> state(sys, study);
-  double                                     current_mismatch = 0;
-  auto                                       record           = [&](double time)
+  IdaStats                                   completed_segments;
+  std::ofstream                              work;
+  if (!benchmark)
+  {
+    work.open("solver_work.csv");
+    work << "time_s,accepted_steps,residual_evaluations,error_test_failures\n";
+  }
+  double current_mismatch = 0;
+  auto   record           = [&](double time)
   {
     state.write(time);
     current_mismatch = std::max(current_mismatch, sys.generatorCurrentMismatch());
+    if (std::abs(time / .01 - std::round(time / .01)) < 1e-8)
+    {
+      auto stats  = ida.getStats();
+      stats      += completed_segments;
+      work << std::setprecision(12) << time << ',' << stats.num_steps_ << ',' << stats.num_residual_evals_ << ',' << stats.num_error_test_fails_ << '\n';
+    }
   };
   std::cout << "DAE variables: " << sys.size() << ", Jacobian nonzeros: " << sys.getCsrJacobian()->getNnz() << std::endl;
   ida.initializeSimulation(0.0, false);
@@ -237,28 +271,29 @@ int main(int argc, char** argv)
   for (size_t i = 0; i < sys.size(); ++i)
     initial_residual = std::max(initial_residual, std::abs(sys.getResidual().getData()[i]));
   std::cout << "Initial maximum absolute residual (mixed physical units): " << initial_residual << std::endl;
-  record(0);
-  ida.runSimulation(1.0, study.dt_monitor, record);
-  auto                      total       = ida.getStats();
+  const auto loop_begin = std::chrono::steady_clock::now();
+  const auto cpu_begin  = std::clock();
+  if (!benchmark)
+    record(0);
+  if (benchmark)
+    ida.runSimulation(1.0, study.dt_monitor);
+  else
+    ida.runSimulation(1.0, study.dt_monitor, record);
+  auto total                            = ida.getStats();
+  completed_segments                    = total;
   auto*                     pref        = sys.getSignal("pref_1");
   const double              pref_before = pref->read();
   const std::vector<double> before_event(sys.y().getData(), sys.y().getData() + sys.size());
   json                      projection = json::array();
   if (trip)
-  {
     projection = sys.tripGenerator();
-    std::cout << "Generator 1 ideal terminal opening at 1 s" << std::endl;
-  }
   else
-  {
     pref->init(pref_before - .02);
-    std::cout << "Governor reference step: " << std::setprecision(15) << pref_before << " -> " << pref->read() << " at 1 s" << std::endl;
-  }
   const std::vector<double> event_state(sys.y().getData(), sys.y().getData() + sys.size());
   if (trip)
     ida.getDefaultInitialCondition();
-  // IDA recomputes algebraic values and derivatives, retaining the explicitly
-  // supplied differential states (projected first for an ideal opening).
+  // Recompute algebraic values and derivatives, preserving the explicit
+  // differential-state projection used by the ideal opening.
   ida.initializeSimulation(1.0);
   double event_state_change = 0;
   for (size_t i = 0; i < sys.size(); ++i)
@@ -266,18 +301,22 @@ int main(int argc, char** argv)
       event_state_change = std::max(event_state_change, std::abs(sys.y().getData()[i] - event_state[i]));
   if (event_state_change != 0)
     throw std::runtime_error("Event consistency solve changed a differential state");
-  std::ofstream("event_state_limits.json") << json{{"time_s", 1.0},
-                                                   {"before", before_event},
-                                                   {"after_projection", event_state},
-                                                   {"after_consistency", std::vector<double>(sys.y().getData(), sys.y().getData() + sys.size())},
-                                                   {"differential", sys.tag()}}
-                                                  .dump(2)
-                                           << '\n';
-  ida.runSimulation(study.tmax, study.dt_monitor, record);
+  if (!benchmark)
+    std::ofstream("event_state_limits.json") << json{{"time_s", 1.0}, {"before", before_event}, {"after_projection", event_state}, {"after_consistency", std::vector<double>(sys.y().getData(), sys.y().getData() + sys.size())}, {"differential", sys.tag()}}.dump(2) << '\n';
+  if (benchmark)
+    ida.runSimulation(study.tmax, study.dt_monitor);
+  else
+    ida.runSimulation(study.tmax, study.dt_monitor, record);
+  const double loop_wall       = std::chrono::duration<double>(std::chrono::steady_clock::now() - loop_begin).count();
+  const double loop_cpu        = static_cast<double>(std::clock() - cpu_begin) / CLOCKS_PER_SEC;
   total                       += ida.getStats();
   const double jacobian_final  = checkJacobian(sys, study.tmax);
+  for (size_t i = 0; i < sys.size(); ++i)
+    if (!std::isfinite(sys.y().getData()[i]))
+      throw std::runtime_error("Nonfinite final state");
   sys.stopMonitor();
-  double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - begin).count();
-  std::ofstream("run.json") << json{{"simulator", "GridKit EMT"}, {"duration_s", study.tmax}, {"output_interval_s", study.dt_monitor}, {"rel_tol", study.rel_tol}, {"abs_tol", study.abs_tol}, {"mu", study.mu}, {"dae_variables", sys.size()}, {"jacobian_check_max_scaled_difference", {{"initial", jacobian_initial}, {"final", jacobian_final}}}, {"initial_max_absolute_residual_mixed_units", initial_residual}, {"max_generator_kcl_mismatch_A", current_mismatch}, {"wall_s", seconds}, {"event_differential_state_change", event_state_change}, {"event", {{"time_s", 1.0}, {"type", trip ? "ideal-generator-terminal-opening" : "governor-reference-step"}, {"generator_bus", 1}, {"pref_before", pref_before}, {"increment_pu", trip ? 0.0 : -.02}, {"explicit_state_projection", projection}}}, {"solver", {{"steps", total.num_steps_}, {"residual_evaluations", total.num_residual_evals_}, {"linear_setups", total.num_linear_decompositions_}, {"error_test_failures", total.num_error_test_fails_}, {"nonlinear_iterations", total.num_nonlinear_iters_}, {"nonlinear_convergence_failures", total.num_nonlinear_convergence_fails_}}}}.dump(2) << '\n';
-  std::cout << "IDA steps: " << total.num_steps_ << ", residual evaluations: " << total.num_residual_evals_ << "\nComplete in " << seconds << " wall seconds\n";
+  const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - begin).count();
+  std::ofstream("run.json") << json{{"simulator", "GridKit EMT"}, {"duration_s", study.tmax}, {"output_interval_s", study.dt_monitor}, {"rel_tol", study.rel_tol}, {"abs_tol", study.abs_tol}, {"mu", study.mu}, {"dae_variables", sys.size()}, {"initialization_wall_s", std::chrono::duration<double>(loop_begin - begin).count()}, {"loop_wall_s", loop_wall}, {"loop_cpu_s", loop_cpu}, {"result_capture", !benchmark}, {"final_state", std::vector<double>(sys.y().getData(), sys.y().getData() + sys.size())}, {"jacobian_check_max_scaled_difference", {{"initial", jacobian_initial}, {"final", jacobian_final}}}, {"initial_max_absolute_residual_mixed_units", initial_residual}, {"max_generator_kcl_mismatch_A", current_mismatch}, {"wall_s", seconds}, {"event_differential_state_change", event_state_change}, {"event", {{"time_s", 1.0}, {"type", trip ? "ideal-generator-terminal-opening" : "governor-reference-step"}, {"generator_bus", 1}, {"pref_before", pref_before}, {"increment_pu", trip ? 0.0 : -.02}, {"explicit_state_projection", projection}}}, {"solver", {{"steps", total.num_steps_}, {"residual_evaluations", total.num_residual_evals_}, {"linear_setups", total.num_linear_decompositions_}, {"error_test_failures", total.num_error_test_fails_}, {"nonlinear_iterations", total.num_nonlinear_iters_}, {"nonlinear_convergence_failures", total.num_nonlinear_convergence_fails_}}}}.dump(2) << '\n';
+  std::cout << "IDA steps: " << total.num_steps_ << ", residual evaluations: " << total.num_residual_evals_
+            << "\nLoop: " << loop_wall << " wall s, " << loop_cpu << " CPU s\nComplete in " << seconds << " wall seconds\n";
 }

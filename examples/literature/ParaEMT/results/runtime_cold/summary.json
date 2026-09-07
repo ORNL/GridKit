@@ -1,0 +1,362 @@
+[
+  {
+    "event": "governor_step",
+    "simulator": "ParaEMT",
+    "setting": "dt50us",
+    "trials": 3,
+    "accepted_or_fixed_steps": 60000,
+    "duration_per_step_us": 50.0,
+    "capture_loop_wall_s": 16.418566420004936,
+    "loop_wall_s": {
+      "median": 20.340171200979967,
+      "min": 16.80600490499637,
+      "max": 21.238490902003832
+    },
+    "loop_cpu_s": {
+      "median": 18.471059411,
+      "min": 16.088710105,
+      "max": 19.299853859000002
+    },
+    "initialization_wall_s": {
+      "median": 6.15257803699933,
+      "min": 5.426623670005938,
+      "max": 8.107519454002613
+    },
+    "process_wall_s": {
+      "median": 27.39036384600331,
+      "min": 23.08280025899876,
+      "max": 30.454560306010535
+    }
+  },
+  {
+    "event": "governor_step",
+    "simulator": "ParaEMT",
+    "setting": "dt25us",
+    "trials": 3,
+    "accepted_or_fixed_steps": 120000,
+    "duration_per_step_us": 25.0,
+    "capture_loop_wall_s": 22.129653156007407,
+    "loop_wall_s": {
+      "median": 25.218885810987558,
+      "min": 24.652744208986405,
+      "max": 29.021285293012625
+    },
+    "loop_cpu_s": {
+      "median": 23.408737264000003,
+      "min": 23.085812384,
+      "max": 26.127936398
+    },
+    "initialization_wall_s": {
+      "median": 6.737135823990684,
+      "min": 5.417705564002972,
+      "max": 6.810737040010281
+    },
+    "process_wall_s": {
+      "median": 33.02590244001476,
+      "min": 31.000908732996322,
+      "max": 36.70751287898747
+    }
+  },
+  {
+    "event": "governor_step",
+    "simulator": "ParaEMT",
+    "setting": "dt12_5us",
+    "trials": 3,
+    "accepted_or_fixed_steps": 240000,
+    "duration_per_step_us": 12.5,
+    "capture_loop_wall_s": 35.434652333991835,
+    "loop_wall_s": {
+      "median": 34.85031773999799,
+      "min": 33.312431339989416,
+      "max": 37.19375416400726
+    },
+    "loop_cpu_s": {
+      "median": 33.299982494000005,
+      "min": 31.927169307999996,
+      "max": 34.507233574
+    },
+    "initialization_wall_s": {
+      "median": 5.93686733598588,
+      "min": 5.644204476004234,
+      "max": 6.0170584459847305
+    },
+    "process_wall_s": {
+      "median": 42.02947837099782,
+      "min": 39.94204320499557,
+      "max": 43.99220130997128
+    }
+  },
+  {
+    "event": "governor_step",
+    "simulator": "GridKit",
+    "setting": "tol1e-7",
+    "trials": 3,
+    "accepted_or_fixed_steps": 72480,
+    "duration_per_step_us": 41.390728476821195,
+    "capture_loop_wall_s": 10.77933808,
+    "loop_wall_s": {
+      "median": 1.062339418,
+      "min": 1.05204796,
+      "max": 1.06565011
+    },
+    "loop_cpu_s": {
+      "median": 1.019193,
+      "min": 1.004142,
+      "max": 1.022591
+    },
+    "initialization_wall_s": {
+      "median": 0.019743948,
+      "min": 0.016000676,
+      "max": 0.022887795
+    },
+    "process_wall_s": {
+      "median": 1.1033855239802506,
+      "min": 1.0969890439882874,
+      "max": 1.1114506250014529
+    },
+    "residual_evaluations": 127293,
+    "error_test_failures": 4677
+  },
+  {
+    "event": "governor_step",
+    "simulator": "GridKit",
+    "setting": "tol1e-8",
+    "trials": 3,
+    "accepted_or_fixed_steps": 98255,
+    "duration_per_step_us": 30.532797313113836,
+    "capture_loop_wall_s": 11.052010551,
+    "loop_wall_s": {
+      "median": 1.46679799,
+      "min": 1.418031847,
+      "max": 1.543729139
+    },
+    "loop_cpu_s": {
+      "median": 1.379414,
+      "min": 1.338192,
+      "max": 1.426221
+    },
+    "initialization_wall_s": {
+      "median": 0.022229277,
+      "min": 0.020054224,
+      "max": 0.025610083
+    },
+    "process_wall_s": {
+      "median": 1.5097078329999931,
+      "min": 1.456799489009427,
+      "max": 1.5961057700042147
+    },
+    "residual_evaluations": 167964,
+    "error_test_failures": 6189
+  },
+  {
+    "event": "governor_step",
+    "simulator": "GridKit",
+    "setting": "tol1e-9",
+    "trials": 3,
+    "accepted_or_fixed_steps": 133682,
+    "duration_per_step_us": 22.441315958767824,
+    "capture_loop_wall_s": 11.788095961,
+    "loop_wall_s": {
+      "median": 2.171584536,
+      "min": 2.140983691,
+      "max": 2.420092542
+    },
+    "loop_cpu_s": {
+      "median": 2.041678,
+      "min": 1.996531,
+      "max": 2.155838
+    },
+    "initialization_wall_s": {
+      "median": 0.014540856,
+      "min": 0.014060702,
+      "max": 0.024275177
+    },
+    "process_wall_s": {
+      "median": 2.207616550003877,
+      "min": 2.178640929982066,
+      "max": 2.473556114011444
+    },
+    "residual_evaluations": 227507,
+    "error_test_failures": 11043
+  },
+  {
+    "event": "trip",
+    "simulator": "ParaEMT",
+    "setting": "dt50us",
+    "trials": 3,
+    "accepted_or_fixed_steps": 60000,
+    "duration_per_step_us": 50.0,
+    "capture_loop_wall_s": 15.705233966000378,
+    "loop_wall_s": {
+      "median": 17.834095130994683,
+      "min": 16.328435726987664,
+      "max": 18.342481568979565
+    },
+    "loop_cpu_s": {
+      "median": 16.887706394,
+      "min": 15.730824753,
+      "max": 17.371831401
+    },
+    "initialization_wall_s": {
+      "median": 5.552755696000531,
+      "min": 5.349080282001523,
+      "max": 5.660176625009626
+    },
+    "process_wall_s": {
+      "median": 24.066666099010035,
+      "min": 22.61369815899525,
+      "max": 24.842486713983817
+    }
+  },
+  {
+    "event": "trip",
+    "simulator": "ParaEMT",
+    "setting": "dt25us",
+    "trials": 3,
+    "accepted_or_fixed_steps": 120000,
+    "duration_per_step_us": 25.0,
+    "capture_loop_wall_s": 21.37257983299787,
+    "loop_wall_s": {
+      "median": 24.505078766000224,
+      "min": 23.220652524003526,
+      "max": 25.862580534012523
+    },
+    "loop_cpu_s": {
+      "median": 23.315120907,
+      "min": 22.183342476,
+      "max": 24.425355953
+    },
+    "initialization_wall_s": {
+      "median": 5.458171321981354,
+      "min": 5.302142586995615,
+      "max": 7.436754577996908
+    },
+    "process_wall_s": {
+      "median": 32.17073525200249,
+      "min": 29.261563875013962,
+      "max": 32.78856862100656
+    }
+  },
+  {
+    "event": "trip",
+    "simulator": "ParaEMT",
+    "setting": "dt12_5us",
+    "trials": 3,
+    "accepted_or_fixed_steps": 240000,
+    "duration_per_step_us": 12.5,
+    "capture_loop_wall_s": 33.541894561989466,
+    "loop_wall_s": {
+      "median": 37.234597756003495,
+      "min": 34.92309300598572,
+      "max": 40.279619173990795
+    },
+    "loop_cpu_s": {
+      "median": 35.196179565,
+      "min": 33.496289812,
+      "max": 37.482775238
+    },
+    "initialization_wall_s": {
+      "median": 6.149464760004776,
+      "min": 5.399835502001224,
+      "max": 6.67873183399206
+    },
+    "process_wall_s": {
+      "median": 44.24384752599872,
+      "min": 41.16033192400937,
+      "max": 47.82426558498992
+    }
+  },
+  {
+    "event": "trip",
+    "simulator": "GridKit",
+    "setting": "tol1e-7",
+    "trials": 3,
+    "accepted_or_fixed_steps": 95002,
+    "duration_per_step_us": 31.57828256247237,
+    "capture_loop_wall_s": 10.954911771,
+    "loop_wall_s": {
+      "median": 1.247417926,
+      "min": 1.226696922,
+      "max": 1.290111831
+    },
+    "loop_cpu_s": {
+      "median": 1.206486,
+      "min": 1.203201,
+      "max": 1.233704
+    },
+    "initialization_wall_s": {
+      "median": 0.01579528,
+      "min": 0.015161122,
+      "max": 0.016397517
+    },
+    "process_wall_s": {
+      "median": 1.287056336994283,
+      "min": 1.2756535420194268,
+      "max": 1.3280770020210184
+    },
+    "residual_evaluations": 159414,
+    "error_test_failures": 5247
+  },
+  {
+    "event": "trip",
+    "simulator": "GridKit",
+    "setting": "tol1e-8",
+    "trials": 3,
+    "accepted_or_fixed_steps": 137888,
+    "duration_per_step_us": 21.756788117892782,
+    "capture_loop_wall_s": 12.15282657,
+    "loop_wall_s": {
+      "median": 1.808859061,
+      "min": 1.75540535,
+      "max": 1.846677982
+    },
+    "loop_cpu_s": {
+      "median": 1.735202,
+      "min": 1.706302,
+      "max": 1.744874
+    },
+    "initialization_wall_s": {
+      "median": 0.01676029,
+      "min": 0.016328033,
+      "max": 0.022277916
+    },
+    "process_wall_s": {
+      "median": 1.8449156350106932,
+      "min": 1.7976893399900291,
+      "max": 1.8906339349923655
+    },
+    "residual_evaluations": 221554,
+    "error_test_failures": 7531
+  },
+  {
+    "event": "trip",
+    "simulator": "GridKit",
+    "setting": "tol1e-9",
+    "trials": 3,
+    "accepted_or_fixed_steps": 194152,
+    "duration_per_step_us": 15.451810952243603,
+    "capture_loop_wall_s": 12.682199007,
+    "loop_wall_s": {
+      "median": 2.652583562,
+      "min": 2.617906807,
+      "max": 2.687744202
+    },
+    "loop_cpu_s": {
+      "median": 2.56072,
+      "min": 2.500553,
+      "max": 2.579313
+    },
+    "initialization_wall_s": {
+      "median": 0.014508961,
+      "min": 0.014145036,
+      "max": 0.019810564
+    },
+    "process_wall_s": {
+      "median": 2.69281080699875,
+      "min": 2.6607990259944927,
+      "max": 2.7234396889980417
+    },
+    "residual_evaluations": 307078,
+    "error_test_failures": 13101
+  }
+]
