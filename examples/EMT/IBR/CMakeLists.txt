@@ -8,6 +8,7 @@ foreach(
   06_FaultClearingSwitching.solver.json
   run.py
   plot.py
+  switching_transient.png
   README.md)
   gridkit_example_add_file(${_file})
 endforeach()

@@ -68,6 +68,25 @@ The switching function uses the GridKit
 [`sigmoid`](../../../../../CommonMath.md#primitives) with shared sharpness
 $\mu>0$.
 
+The isolated-edge width and harmonic attenuation relative to ideal PWM are
+
+```math
+\begin{aligned}
+\Delta t_{10\text{–}90} &= \dfrac{2\ln 9}{\mu} \\
+A(f,\mu) &= \dfrac{2\pi^2 f/\mu}{\sinh(2\pi^2 f/\mu)}
+\end{aligned}
+```
+
+$\mu$ | $\Delta t_{10\text{–}90}$ | Interpretation at $f_{\mathrm{c}}=900\,\mathrm{Hz}$
+----- | ------------------------- | ---------------------------------------------------------
+$240$ | $18.3\,\mathrm{ms}$ | Broad smoothing; switching suppressed
+$50000$ | $87.9\,\mathrm{\mu s}$ | Resolved smoothed switching with sufficiently fine steps
+$200000$ | $22.0\,\mathrm{\mu s}$ | Sharper edges; finer steps required
+
+Set solver `mu` before model construction. It also affects other CommonMath
+primitives. Monitor spacing alone does not establish integration accuracy;
+check switching harmonics against the sampled-edge prediction.
+
 ## Model Ports
 
 Symbol | Port | Type | Units | Description | Note
