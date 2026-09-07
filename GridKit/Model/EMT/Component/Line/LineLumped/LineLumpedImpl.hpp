@@ -6,6 +6,7 @@
 
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumped.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedData.hpp>
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
@@ -16,14 +17,15 @@ namespace GridKit
      * @brief Constructor for a three-phase lumped line
      *
      * System sizes:
-     * - Number of equations = 9
-     * - Number of independent variables = 9
+     * - Number of equations = 3
+     * - Number of independent variables = 3
      */
     template <typename scalar_type, typename index_type>
     LineLumped<scalar_type, index_type>::LineLumped()
     {
-      size_ = 9;
+      equation_size_ = size_ = 3;
       setDerivedParams();
+      initializePorts();
     }
 
     template <typename scalar_type, typename index_type>
@@ -31,18 +33,13 @@ namespace GridKit
       : monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
-      size_ = 9;
+      equation_size_ = size_ = 3;
       setDerivedParams();
       if (data.Zp.has_value() && data.Yp.has_value())
       {
-        equation_size_ = 9;
         z_.emplace(*data.Zp, dx_);
         this->addOperator(&*z_);
-        y1_.emplace(*data.Yp, dx_);
-        this->addOperator(&*y1_);
-        y2_.emplace(*data.Yp, dx_);
-        this->addOperator(&*y2_);
-        size_  = equation_size_ + z_->size() + y1_->size() + y2_->size();
+        size_  = equation_size_ + z_->size();
         rl_on_ = ZERO<RealT>;
 
         // The series linear coefficient must be nonsingular so the series
@@ -53,6 +50,7 @@ namespace GridKit
                           + E[0][2] * (E[1][0] * E[2][1] - E[1][1] * E[2][0]);
         fit_ez_singular_ = det == 0.0;
       }
+      initializePorts();
       initializeMonitor();
     }
 
@@ -113,33 +111,58 @@ namespace GridKit
         {
           R_[n][k] = dx_ * Rp_[n][k];
           L_[n][k] = dx_ * Lp_[n][k];
-          G_[n][k] = dx_ * Gp_[n][k];
-          C_[n][k] = dx_ * Cp_[n][k];
         }
       }
     }
 
-    /**
-     * @brief Whether any shunt capacitance entry is nonzero.
-     *
-     * A nonzero shunt capacitance makes the shunt rows read the terminal
-     * voltage derivatives.
-     */
     template <typename scalar_type, typename index_type>
-    bool LineLumped<scalar_type, index_type>::hasShuntCapacitance() const
+    void LineLumped<scalar_type, index_type>::initializePorts()
     {
-      bool nonzero = false;
-      for (size_t n = 0; n < 3; ++n)
+      for (size_t p = 0; p < 3; ++p)
+        i21_port_[p].setComputed(
+            [this, p]
+            { return -i12_port_[p].read(); },
+            [this, p](typename SignalT::GradientT& gradient, RealT scale)
+            { i12_port_[p].appendGradient(gradient, -scale); });
+    }
+
+    template <typename scalar_type, typename index_type>
+    void LineLumped<scalar_type, index_type>::attachTerminal(size_t end, PhaseSignals voltage)
+    {
+      if (allocated_)
+        throw std::logic_error("LineLumped terminals cannot change after allocation");
+      if (end > 1)
+        throw std::out_of_range("Invalid LineLumped terminal");
+      for (size_t p = 0; p < 3; ++p)
+        if (!voltage[p])
+          throw std::invalid_argument("LineLumped requires terminal voltage inputs");
+      for (size_t p = 0; p < 3; ++p)
+        signals_.attachSignal(static_cast<LineLumpedExternalVariables>(3 * end + p), voltage[p]);
+    }
+
+    template <typename scalar_type, typename index_type>
+    typename LineLumped<scalar_type, index_type>::SignalT& LineLumped<scalar_type, index_type>::outputSignal(Outputs output)
+    {
+      const size_t index = static_cast<size_t>(output);
+      if (index < 3)
+        return i12_port_[index];
+      return i21_port_.at(index - 3);
+    }
+
+    template <typename scalar_type, typename index_type>
+    void LineLumped<scalar_type, index_type>::assignOutput(Outputs output, SignalT* signal)
+    {
+      if (static_cast<size_t>(output) < 3)
+        signals_.assignSignal(static_cast<LineLumpedInternalVariables>(output), signal);
+      else
       {
-        for (size_t k = 0; k < 3; ++k)
-        {
-          if (C_[n][k] != 0.0)
-          {
-            nonzero = true;
-          }
-        }
+        auto* value = &outputSignal(output);
+        signal->claimProducer();
+        signal->setComputed([value]
+                            { return value->read(); },
+                            [value](typename SignalT::GradientT& gradient, RealT scale)
+                            { value->appendGradient(gradient, scale); });
       }
-      return nonzero;
     }
 
     /**
@@ -170,28 +193,15 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
-      // Bind the series current and shunt-row ports and wire the rational
-      // operators before their allocation, so index assignment can route
-      // into them
       for (IdxT phase = 0; phase < 3; ++phase)
-        this->bindSignal(i12_port_[static_cast<size_t>(phase)], 0 + phase);
-      for (IdxT phase = 0; phase < 3; ++phase)
-        this->bindSignal(sh1_rows_port_[static_cast<size_t>(phase)], 3 + phase);
-      for (IdxT phase = 0; phase < 3; ++phase)
-        this->bindSignal(sh2_rows_port_[static_cast<size_t>(phase)], 6 + phase);
+        this->bindSignal(i12_port_[static_cast<size_t>(phase)], phase);
       if (z_.has_value())
       {
         z_->attachInput(&i12_port_[0], &i12_port_[1], &i12_port_[2]);
         z_->attachOutput(&i12_port_[0], &i12_port_[1], &i12_port_[2]);
-        y1_->attachInput(signals_.template getAttachedSignal<LineLumpedExternalVariables::V1A>(),
-                         signals_.template getAttachedSignal<LineLumpedExternalVariables::V1B>(),
-                         signals_.template getAttachedSignal<LineLumpedExternalVariables::V1C>());
-        y1_->attachOutput(&sh1_rows_port_[0], &sh1_rows_port_[1], &sh1_rows_port_[2]);
-        y2_->attachInput(signals_.template getAttachedSignal<LineLumpedExternalVariables::V2A>(),
-                         signals_.template getAttachedSignal<LineLumpedExternalVariables::V2B>(),
-                         signals_.template getAttachedSignal<LineLumpedExternalVariables::V2C>());
-        y2_->attachOutput(&sh2_rows_port_[0], &sh2_rows_port_[1], &sh2_rows_port_[2]);
-        this->allocateOperators();
+        const int status = this->allocateOperators();
+        if (status != 0)
+          return status;
       }
 
       // Default variable and residual index mapping to local index
@@ -201,28 +211,8 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Resize coupling data
-      this->allocateExternalVectors(static_cast<IdxT>(LineLumpedExternalVariables::MAXIMUM), 6);
+      this->allocateExternalVectors(static_cast<IdxT>(LineLumpedExternalVariables::MAXIMUM), 0);
       signals_.registerExternalVariableSignals(*this);
-      this->setExternalResidualSignal(0, signals_.template getAttachedSignal<LineLumpedExternalVariables::V1A>());
-      this->setExternalResidualSignal(1, signals_.template getAttachedSignal<LineLumpedExternalVariables::V1B>());
-      this->setExternalResidualSignal(2, signals_.template getAttachedSignal<LineLumpedExternalVariables::V1C>());
-      this->setExternalResidualSignal(3, signals_.template getAttachedSignal<LineLumpedExternalVariables::V2A>());
-      this->setExternalResidualSignal(4, signals_.template getAttachedSignal<LineLumpedExternalVariables::V2B>());
-      this->setExternalResidualSignal(5, signals_.template getAttachedSignal<LineLumpedExternalVariables::V2C>());
-
-      // The shunt rows read the terminal voltage derivatives, so the
-      // connected bus voltages become differential.
-      if (hasShuntCapacitance())
-      {
-        signals_.template markDerivativeCoupling<LineLumpedExternalVariables::V1A>();
-        signals_.template markDerivativeCoupling<LineLumpedExternalVariables::V1B>();
-        signals_.template markDerivativeCoupling<LineLumpedExternalVariables::V1C>();
-        signals_.template markDerivativeCoupling<LineLumpedExternalVariables::V2A>();
-        signals_.template markDerivativeCoupling<LineLumpedExternalVariables::V2B>();
-        signals_.template markDerivativeCoupling<LineLumpedExternalVariables::V2C>();
-      }
-
       signals_.bindInternalVariableSignals(*this);
       allocated_ = true;
       return 0;
@@ -263,16 +253,13 @@ namespace GridKit
 
       if (z_.has_value())
       {
-        error_count += z_->verify();
-        error_count += y1_->verify();
-        error_count += y2_->verify();
-
-        bool matrices_nonzero = hasShuntCapacitance();
+        error_count           += z_->verify();
+        bool matrices_nonzero  = false;
         for (size_t n = 0; n < 3; ++n)
         {
           for (size_t k = 0; k < 3; ++k)
           {
-            if (Rp_[n][k] != 0.0 || Lp_[n][k] != 0.0 || Gp_[n][k] != 0.0)
+            if (Rp_[n][k] != 0.0 || Lp_[n][k] != 0.0 || Gp_[n][k] != 0.0 || Cp_[n][k] != 0.0)
             {
               matrices_nonzero = true;
             }
@@ -304,6 +291,9 @@ namespace GridKit
     int LineLumped<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
     {
       this->validateOutputValues(outputs);
+      for (const auto& [output, value] : outputs)
+        if (static_cast<size_t>(output) >= 3)
+          throw std::invalid_argument("LineLumped initial outputs must be series currents");
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
@@ -320,7 +310,7 @@ namespace GridKit
 
       if (z_.has_value())
       {
-        const int status = z_->initialize() + y1_->initialize() + y2_->initialize();
+        const int status = z_->initialize();
         if (status != 0)
           return status;
       }
@@ -340,12 +330,6 @@ namespace GridKit
       tag_[0] = true;
       tag_[1] = true;
       tag_[2] = true;
-      tag_[3] = false;
-      tag_[4] = false;
-      tag_[5] = false;
-      tag_[6] = false;
-      tag_[7] = false;
-      tag_[8] = false;
 
       if (z_.has_value())
       {
@@ -371,7 +355,7 @@ namespace GridKit
     int LineLumped<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
       abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
-      return 0;
+      return this->setAbsoluteToleranceOperators(rel_tol);
     }
 
     /**
@@ -380,22 +364,16 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int LineLumped<scalar_type, index_type>::evaluateInternalResidual(
-        const ScalarT* y,
-        const ScalarT* yp,
-        const ScalarT* y_ext,
-        const ScalarT* yp_ext,
-        ScalarT*       f)
+        const ScalarT*                  y,
+        const ScalarT*                  yp,
+        const ScalarT*                  y_ext,
+        [[maybe_unused]] const ScalarT* yp_ext,
+        ScalarT*                        f)
     {
       /* Read variables */
-      const ScalarT i12a  = y[0];
-      const ScalarT i12b  = y[1];
-      const ScalarT i12c  = y[2];
-      const ScalarT ish1a = y[3];
-      const ScalarT ish1b = y[4];
-      const ScalarT ish1c = y[5];
-      const ScalarT ish2a = y[6];
-      const ScalarT ish2b = y[7];
-      const ScalarT ish2c = y[8];
+      const ScalarT i12a = y[0];
+      const ScalarT i12b = y[1];
+      const ScalarT i12c = y[2];
 
       /* Read derivatives */
       const ScalarT i12a_dot = yp[0];
@@ -409,13 +387,6 @@ namespace GridKit
       const ScalarT v2a = y_ext[3];
       const ScalarT v2b = y_ext[4];
       const ScalarT v2c = y_ext[5];
-
-      const ScalarT v1a_dot = yp_ext[0];
-      const ScalarT v1b_dot = yp_ext[1];
-      const ScalarT v1c_dot = yp_ext[2];
-      const ScalarT v2a_dot = yp_ext[3];
-      const ScalarT v2b_dot = yp_ext[4];
-      const ScalarT v2c_dot = yp_ext[5];
 
       /* 3 series branch equations; the rational series terms accumulate
          through the operator when the matrix mask is off */
@@ -432,34 +403,6 @@ namespace GridKit
                     + L_[2][0] * i12a_dot + L_[2][1] * i12b_dot + L_[2][2] * i12c_dot)
              + v2c - v1c;
 
-      /* 3 terminal 1 shunt algebraic equations */
-      f[3] = rl_on_
-                 * (G_[0][0] * v1a + G_[0][1] * v1b + G_[0][2] * v1c
-                    + C_[0][0] * v1a_dot + C_[0][1] * v1b_dot + C_[0][2] * v1c_dot)
-             + TWO<RealT> * ish1a;
-      f[4] = rl_on_
-                 * (G_[1][0] * v1a + G_[1][1] * v1b + G_[1][2] * v1c
-                    + C_[1][0] * v1a_dot + C_[1][1] * v1b_dot + C_[1][2] * v1c_dot)
-             + TWO<RealT> * ish1b;
-      f[5] = rl_on_
-                 * (G_[2][0] * v1a + G_[2][1] * v1b + G_[2][2] * v1c
-                    + C_[2][0] * v1a_dot + C_[2][1] * v1b_dot + C_[2][2] * v1c_dot)
-             + TWO<RealT> * ish1c;
-
-      /* 3 terminal 2 shunt algebraic equations */
-      f[6] = rl_on_
-                 * (G_[0][0] * v2a + G_[0][1] * v2b + G_[0][2] * v2c
-                    + C_[0][0] * v2a_dot + C_[0][1] * v2b_dot + C_[0][2] * v2c_dot)
-             + TWO<RealT> * ish2a;
-      f[7] = rl_on_
-                 * (G_[1][0] * v2a + G_[1][1] * v2b + G_[1][2] * v2c
-                    + C_[1][0] * v2a_dot + C_[1][1] * v2b_dot + C_[1][2] * v2c_dot)
-             + TWO<RealT> * ish2b;
-      f[8] = rl_on_
-                 * (G_[2][0] * v2a + G_[2][1] * v2b + G_[2][2] * v2c
-                    + C_[2][0] * v2a_dot + C_[2][1] * v2b_dot + C_[2][2] * v2c_dot)
-             + TWO<RealT> * ish2c;
-
       return 0;
     }
 
@@ -469,29 +412,12 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int LineLumped<scalar_type, index_type>::evaluateExternalResidual(
-        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* y,
         [[maybe_unused]] const ScalarT* yp,
         [[maybe_unused]] const ScalarT* y_ext,
         [[maybe_unused]] const ScalarT* yp_ext,
-        ScalarT*                        f_ext)
+        [[maybe_unused]] ScalarT*       f_ext)
     {
-      const ScalarT i12a  = y[0];
-      const ScalarT i12b  = y[1];
-      const ScalarT i12c  = y[2];
-      const ScalarT ish1a = y[3];
-      const ScalarT ish1b = y[4];
-      const ScalarT ish1c = y[5];
-      const ScalarT ish2a = y[6];
-      const ScalarT ish2b = y[7];
-      const ScalarT ish2c = y[8];
-
-      f_ext[0] = ish1a - i12a;
-      f_ext[1] = ish1b - i12b;
-      f_ext[2] = ish1c - i12c;
-      f_ext[3] = ish2a + i12a;
-      f_ext[4] = ish2b + i12b;
-      f_ext[5] = ish2c + i12c;
-
       return 0;
     }
 
@@ -511,23 +437,17 @@ namespace GridKit
     }
 
     /**
-     * @brief External residual contributions to the terminal buses.
+     * @brief Add the embedded series-impedance contribution.
      *
      */
     template <typename scalar_type, typename index_type>
     int LineLumped<scalar_type, index_type>::evaluateExternalResidual()
     {
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      evaluateExternalResidual(y, yp, y_ext_.data(), yp_ext_.data(), f_ext_.data());
-      this->scatterExternalResidual();
-      this->evaluateOperatorExternalResiduals();
-
-      return 0;
+      return this->evaluateOperatorExternalResiduals();
     }
 
     /**
-     * @brief Residual contribution of the line is pushed to the buses.
+     * @brief Evaluate the series-current equation and its embedded impedance.
      *
      */
     template <typename scalar_type, typename index_type>
@@ -554,18 +474,6 @@ namespace GridKit
                     { return y_.getData()[1]; });
       monitor_->set(Variable::i12c, [this]
                     { return y_.getData()[2]; });
-      monitor_->set(Variable::i_sh1a, [this]
-                    { return y_.getData()[3]; });
-      monitor_->set(Variable::i_sh1b, [this]
-                    { return y_.getData()[4]; });
-      monitor_->set(Variable::i_sh1c, [this]
-                    { return y_.getData()[5]; });
-      monitor_->set(Variable::i_sh2a, [this]
-                    { return y_.getData()[6]; });
-      monitor_->set(Variable::i_sh2b, [this]
-                    { return y_.getData()[7]; });
-      monitor_->set(Variable::i_sh2c, [this]
-                    { return y_.getData()[8]; });
     }
 
   } // namespace EMT

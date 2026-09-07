@@ -7,4 +7,5 @@ machines connected to EMT buses.
 
 - [DependentVoltageSource](DependentVoltageSource/README.md)
 - [Machine](Machine/README.md)
+- [Norton](Norton/README.md)
 - [VoltageSource](VoltageSource/README.md)

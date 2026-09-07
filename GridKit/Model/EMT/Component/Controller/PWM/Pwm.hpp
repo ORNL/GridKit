@@ -34,6 +34,12 @@ namespace GridKit
         int verify() const override final;
 
         int initialize(const std::map<Outputs, RealT>& outputs = {});
+
+        int initializeState(const std::map<std::string, RealT>& values) override
+        {
+          return this->initializeOutputs(*this, values);
+        }
+
         int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT) override final;
         int evaluateInternalResidual() override final;

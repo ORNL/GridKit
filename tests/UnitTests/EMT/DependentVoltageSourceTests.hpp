@@ -102,11 +102,7 @@ namespace GridKit
           {
             component->bind(y, yp, f, abs_tol, offset);
             component->allocate();
-            for (IdxT j = 0; j < component->size(); ++j)
-            {
-              component->setVariableIndex(j, offset + j);
-              component->setResidualIndex(j, offset + j);
-            }
+            component->assignGlobalIndices(offset);
             offset += component->size();
           }
 

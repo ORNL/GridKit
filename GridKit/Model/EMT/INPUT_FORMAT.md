@@ -82,6 +82,22 @@ Bus `outputs` can publish `va`, `vb`, and `vc` on named signals. Its optional
 rows. Physical components already inject through their voltage connections;
 do not add those contributions a second time with explicit Bus inputs.
 
+Bus `shunts` contains named VectorFit admittances with zero incident current:
+
+```json
+{
+  "class": "Bus", "id": "pcc",
+  "shunts": {
+    "filter": {"E": [[2e-5,0,0],[0,2e-5,0],[0,0,2e-5]]}
+  }
+}
+```
+
+Assembly splits line `Yp` (or `Gp`/`Cp`) between two bus-owned Norton sources
+at scale `dx/2`. Each terminal preserves its scalar aliases and phase order.
+The bus exposes `<name>_Ish_a`, `b`, `c` outputs and `<name>_inc_a`, `b`, `c`
+inputs. `LineLumped` supplies `i21 = -i12` to terminal 1 and `i12` to terminal 2.
+
 Initial values belong exclusively in the [state file](STATE.md), keyed by
 component path and existing output names.
 Bus voltages default to zero. Model initialization reconstructs

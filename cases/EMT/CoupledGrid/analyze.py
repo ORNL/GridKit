@@ -87,7 +87,7 @@ def powers(t, voltage, current, frequency):
 
 def kcl(t, data, devices):
     """Sum every monitored terminal injection; includes both line shunts."""
-    balances = {d['id']: np.zeros((len(t), 3)) for d in devices if d['class'] == 'Bus'}
+    balances = {d['id']: -phases(data, d, 'i_sh') for d in devices if d['class'] == 'Bus'}
     for d in devices:
         cls, inputs = d['class'], d.get('inputs', {})
         if cls in ('VoltageSource', 'DependentVoltageSource', 'Machine', 'LoadZ'):
@@ -96,9 +96,6 @@ def kcl(t, data, devices):
             current = phases(data, d, 'i12')
             balances[inputs['bus1']] -= current
             balances[inputs['bus2']] += current
-            if cls == 'LineLumped':
-                balances[inputs['bus1']] += phases(data, d, 'i_sh1')
-                balances[inputs['bus2']] += phases(data, d, 'i_sh2')
     per_bus = {}
     for bus, balance in balances.items():
         row, phase = np.unravel_index(np.argmax(np.abs(balance)), balance.shape)

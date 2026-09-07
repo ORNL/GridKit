@@ -108,11 +108,7 @@ namespace GridKit::Testing
         {
           component->bind(y, yp, f, tolerance, offset);
           component->allocate();
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->setVariableIndex(j, offset + j);
-            component->setResidualIndex(j, offset + j);
-          }
+          component->assignGlobalIndices(offset);
           offset += component->size();
         }
         terminal.initialize();
