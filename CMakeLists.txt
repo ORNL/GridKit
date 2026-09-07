@@ -51,6 +51,9 @@ option(GridKit_ENABLE_THREADS "Enable THreads" OFF)
 # ZeroMQ support is disabled by default
 option(GridKit_ENABLE_ZMQ "Enable ZeroMQ support" OFF)
 
+# Python notebooks under application/notebooks are disabled by default
+option(GridKit_ENABLE_NOTEBOOKS "Include the Python notebooks under application/notebooks" OFF)
+
 # This allows use of "GRIDKIT_*" versions of the above options
 list(
   APPEND
@@ -63,7 +66,8 @@ list(
   UBSAN
   OPENMP
   THREADS
-  ZMQ)
+  ZMQ
+  NOTEBOOKS)
 foreach(_opt IN LISTS _gridkit_enable_options)
   if(NOT DEFINED GRIDKIT_ENABLE_${_opt})
     set(GRIDKIT_ENABLE_${_opt} ${GridKit_ENABLE_${_opt}})

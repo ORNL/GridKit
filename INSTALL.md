@@ -114,6 +114,7 @@ installed headers, libraries, and CMake config files.
 | `GridKit_ENABLE_ENZYME` | `OFF` | Build with Enzyme automatic differentiation |
 | `GridKit_ENABLE_ASAN` | `OFF` | Enable address sanitizer |
 | `GridKit_ENABLE_UBSAN` | `OFF` | Enable undefined behavior sanitizer |
+| `GridKit_ENABLE_NOTEBOOKS` | `OFF` | Include the Python notebooks under `application/notebooks` |
 | `BUILD_SHARED_LIBS` | `ON` | Build shared libraries |
 | `CMAKE_INSTALL_PREFIX` | system default | Installation root |
 

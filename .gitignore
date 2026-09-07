@@ -10,3 +10,5 @@ docs/_build/
 docs/api/reference/
 docs/xml/
 __pycache__
+*.egg-info/
+.pytest_cache/
