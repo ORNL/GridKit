@@ -18,6 +18,7 @@
 
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1Data.hpp>
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 #include <GridKit/Model/EMT/Signal/Signal.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>

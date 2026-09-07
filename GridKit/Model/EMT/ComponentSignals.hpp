@@ -67,15 +67,15 @@ namespace GridKit
       template <ExternalVariables variable>
       auto attachSignal(SignalT* signal)
       {
-#ifndef NDEBUG
-        if (signal == nullptr)
-        {
-          throw std::logic_error("A null pointer to a signal has been passed to attachSignal");
-        }
-#endif
-
         static_assert(variable < ExternalVariables::MAXIMUM);
-        external_variable_signals_[static_cast<size_t>(variable)] = signal;
+        attachSignal(variable, signal);
+      }
+
+      void attachSignal(ExternalVariables variable, SignalT* signal)
+      {
+        if (!signal || variable >= ExternalVariables::MAXIMUM)
+          throw std::invalid_argument("Invalid external signal connection");
+        external_variable_signals_.at(static_cast<size_t>(variable)) = signal;
       }
 
       /// Check if a signal has been attached to an external variable
@@ -136,12 +136,17 @@ namespace GridKit
       auto getAttachedSignal() -> SignalT*
       {
         static_assert(variable < ExternalVariables::MAXIMUM);
-        if (!external_variable_signals_[static_cast<size_t>(variable)])
-        {
-          throw std::logic_error("A signal has not been attached to this external variable");
-        }
+        return getAttachedSignal(variable);
+      }
 
-        return *external_variable_signals_[static_cast<size_t>(variable)];
+      SignalT* getAttachedSignal(ExternalVariables variable)
+      {
+        if (variable >= ExternalVariables::MAXIMUM)
+          throw std::invalid_argument("Invalid external variable");
+        const auto& signal = external_variable_signals_.at(static_cast<size_t>(variable));
+        if (!signal)
+          throw std::logic_error("A signal has not been attached to this external variable");
+        return *signal;
       }
 
       /// Returns the value of the specified external variable

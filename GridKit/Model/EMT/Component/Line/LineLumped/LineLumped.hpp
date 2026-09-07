@@ -32,15 +32,9 @@ namespace GridKit
     /// Internal variables of a `LineLumped`
     enum class LineLumpedInternalVariables : size_t
     {
-      I12A,  ///< \f$i_{12,a}\f$
-      I12B,  ///< \f$i_{12,b}\f$
-      I12C,  ///< \f$i_{12,c}\f$
-      ISH1A, ///< \f$i^\mathrm{sh}_{1,a}\f$
-      ISH1B, ///< \f$i^\mathrm{sh}_{1,b}\f$
-      ISH1C, ///< \f$i^\mathrm{sh}_{1,c}\f$
-      ISH2A, ///< \f$i^\mathrm{sh}_{2,a}\f$
-      ISH2B, ///< \f$i^\mathrm{sh}_{2,b}\f$
-      ISH2C, ///< \f$i^\mathrm{sh}_{2,c}\f$
+      I12A, ///< \f$i_{12,a}\f$
+      I12B, ///< \f$i_{12,b}\f$
+      I12C, ///< \f$i_{12,c}\f$
       MAXIMUM,
     };
 
@@ -62,8 +56,8 @@ namespace GridKit
      * The initial three-phase formulation uses resistance, inductance,
      * conductance, and capacitance matrices per unit length, scaled by the
      * segment length, with the shunt admittance split between the two
-     * terminals. The shunt rows read the terminal voltage derivatives, so
-     * connected bus voltages are classified as differential.
+     * terminals. The buses own the shunt currents and admittance states;
+     * the line owns the series current and impedance.
      */
     template <typename scalar_type, typename index_type>
     class LineLumped : public Component<scalar_type, index_type>
@@ -92,24 +86,41 @@ namespace GridKit
       using Component<scalar_type, index_type>::equation_size_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using ModelDataT = LineLumpedData<RealT, IdxT>;
-      using Outputs    = typename ModelDataT::Outputs;
-      using SignalT    = Signal<ScalarT, IdxT>;
-      using VectorFitT = VectorFit<ScalarT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<LineLumped, LineLumpedData>;
+      using ScalarT      = scalar_type;
+      using IdxT         = index_type;
+      using RealT        = typename Component<ScalarT, IdxT>::RealT;
+      using ModelDataT   = LineLumpedData<RealT, IdxT>;
+      using Outputs      = typename ModelDataT::Outputs;
+      using SignalT      = Signal<ScalarT, IdxT>;
+      using VectorFitT   = VectorFit<ScalarT, IdxT>;
+      using MonitorT     = Model::VariableMonitor<LineLumped, LineLumpedData>;
+      using PhaseSignals = std::array<SignalT*, 3>;
 
       LineLumped();
       LineLumped(const ModelDataT& data);
       virtual ~LineLumped();
 
+      void attachTerminal(size_t end, PhaseSignals voltage);
+
+      SignalT& inputSignal(LineLumpedInputs input)
+      {
+        return *signals_.getAttachedSignal(static_cast<LineLumpedExternalVariables>(input));
+      }
+
+      SignalT& outputSignal(Outputs output);
+      void     assignOutput(Outputs output, SignalT* signal);
+
       virtual int setGridKitComponentID(IdxT) override final;
       virtual int allocate() override final;
       virtual int verify() const override final;
 
-      int         initialize(const std::map<Outputs, RealT>& outputs = {});
+      int initialize(const std::map<Outputs, RealT>& outputs = {});
+
+      int initializeState(const std::map<std::string, RealT>& values) override
+      {
+        return this->initializeOutputs(*this, values);
+      }
+
       virtual int tagDifferentiable() override final;
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
@@ -127,9 +138,9 @@ namespace GridKit
 
     private:
       void initializeParameters(const ModelDataT& data);
+      void initializePorts();
       void initializeMonitor();
       void setDerivedParams();
-      bool hasShuntCapacitance() const;
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
@@ -151,20 +162,15 @@ namespace GridKit
       /* Derivied parameters */
       ABCMatrix<RealT> R_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
       ABCMatrix<RealT> L_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
-      ABCMatrix<RealT> G_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
-      ABCMatrix<RealT> C_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};
 
       /* Setpoints for control variables */
       RealT rl_on_{ONE<RealT>};
 
       /* Rational operators */
       std::optional<VectorFitT> z_;
-      std::optional<VectorFitT> y1_;
-      std::optional<VectorFitT> y2_;
       bool                      fit_ez_singular_{false};
       std::array<SignalT, 3>    i12_port_{};
-      std::array<SignalT, 3>    sh1_rows_port_{};
-      std::array<SignalT, 3>    sh2_rows_port_{};
+      std::array<SignalT, 3>    i21_port_{};
 
       ComponentSignals<ScalarT, IdxT, LineLumpedInternalVariables, LineLumpedExternalVariables> signals_;
 

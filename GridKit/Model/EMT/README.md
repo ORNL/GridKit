@@ -28,8 +28,7 @@ and reusable operators in instantaneous phase coordinates.
 
 ## Assembly
 
-Bus voltage is algebraic unless a connected model contributes a voltage
-derivative to the bus current-balance.
+Bus voltage is algebraic unless a connected admittance depends on its derivative.
 
 ## Initialization
 
