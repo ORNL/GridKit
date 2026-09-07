@@ -8,7 +8,6 @@ namespace GridKit
   {
     enum class ConverterParameters
     {
-      NONE,
     };
 
     enum class ConverterInputs : size_t
@@ -17,6 +16,9 @@ namespace GridKit
       sb,
       sc,
       vdc,
+      ia,
+      ib,
+      ic,
       SIZE,
     };
 
@@ -25,6 +27,7 @@ namespace GridKit
       voa,
       vob,
       voc,
+      idc,
       SIZE,
     };
 
@@ -33,6 +36,7 @@ namespace GridKit
       voa,
       vob,
       voc,
+      idc,
     };
 
     template <typename real_type, typename index_type>

@@ -70,20 +70,9 @@ namespace GridKit
     void DependentVoltageSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::N))
-      {
-        n_phases_ = std::get<IdxT>(data.parameters.at(Parameter::N));
-      }
-
-      if (data.parameters.contains(Parameter::Rs))
-      {
-        Rs_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::Rs));
-      }
-
-      if (data.parameters.contains(Parameter::Ls))
-      {
-        Ls_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::Ls));
-      }
+      n_phases_       = parameter<IdxT>(data, Parameter::N, n_phases_);
+      Rs_             = parameter<ABCMatrix<RealT>>(data, Parameter::Rs, Rs_);
+      Ls_             = parameter<ABCMatrix<RealT>>(data, Parameter::Ls, Ls_);
     }
 
     /**

@@ -72,35 +72,12 @@ namespace GridKit
     void VoltageSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::N))
-      {
-        n_phases_ = std::get<IdxT>(data.parameters.at(Parameter::N));
-      }
-
-      if (data.parameters.contains(Parameter::E))
-      {
-        E_ = std::get<ABCVector<RealT>>(data.parameters.at(Parameter::E));
-      }
-
-      if (data.parameters.contains(Parameter::phi))
-      {
-        phi_ = std::get<ABCVector<RealT>>(data.parameters.at(Parameter::phi));
-      }
-
-      if (data.parameters.contains(Parameter::omega))
-      {
-        omega_ = std::get<RealT>(data.parameters.at(Parameter::omega));
-      }
-
-      if (data.parameters.contains(Parameter::Rs))
-      {
-        Rs_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::Rs));
-      }
-
-      if (data.parameters.contains(Parameter::Ls))
-      {
-        Ls_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::Ls));
-      }
+      n_phases_       = parameter<IdxT>(data, Parameter::N, n_phases_);
+      E_              = parameter<ABCVector<RealT>>(data, Parameter::E, E_);
+      phi_            = parameter<ABCVector<RealT>>(data, Parameter::phi, phi_);
+      omega_          = parameter<RealT>(data, Parameter::omega, omega_);
+      Rs_             = parameter<ABCMatrix<RealT>>(data, Parameter::Rs, Rs_);
+      Ls_             = parameter<ABCMatrix<RealT>>(data, Parameter::Ls, Ls_);
     }
 
     /**

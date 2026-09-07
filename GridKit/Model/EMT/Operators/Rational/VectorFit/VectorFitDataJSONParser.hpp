@@ -22,6 +22,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     void from_json(const json& j, VectorFitData<RealT, IdxT>& vf)
     {
+      validateJsonFields(j, "VectorFit", {"rows", "cols", "D", "E", "poles", "residues"});
       VectorFitData<RealT, IdxT> data;
       data.rows = parseRationalDimension<IdxT>(j, "rows");
       data.cols = parseRationalDimension<IdxT>(j, "cols");
@@ -33,7 +34,7 @@ namespace GridKit
       data.D    = RationalMatrix<RealT>(rows, cols);
       data.E    = RationalMatrix<RealT>(rows, cols);
       auto real = [](const json& value)
-      { return value.template get<RealT>(); };
+      { return parseFiniteReal<RealT>(value, "VectorFit matrix element"); };
       if (j.contains("D"))
       {
         data.D = parseRationalMatrix<RealT>(j.at("D"), rows, cols, real);

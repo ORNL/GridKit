@@ -70,20 +70,9 @@ namespace GridKit
     void LoadZ<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::N))
-      {
-        n_phases_ = std::get<IdxT>(data.parameters.at(Parameter::N));
-      }
-
-      if (data.parameters.contains(Parameter::R))
-      {
-        R_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::R));
-      }
-
-      if (data.parameters.contains(Parameter::L))
-      {
-        L_ = std::get<ABCMatrix<RealT>>(data.parameters.at(Parameter::L));
-      }
+      n_phases_       = parameter<IdxT>(data, Parameter::N, n_phases_);
+      R_              = parameter<ABCMatrix<RealT>>(data, Parameter::R, R_);
+      L_              = parameter<ABCMatrix<RealT>>(data, Parameter::L, L_);
     }
 
     /**

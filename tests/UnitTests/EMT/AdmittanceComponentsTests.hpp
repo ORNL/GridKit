@@ -333,8 +333,16 @@ namespace GridKit::Testing
       typename SourceT::ModelDataT source;
       source.Y                                                  = fitData();
       source.parameters[SourceT::ModelDataT::Parameters::omega] = std::numeric_limits<RealT>::infinity();
-      Fixture<SourceT> nonfinite_frequency(source);
-      success                                                   *= (nonfinite_frequency.model.verify() > 0);
+      bool rejected                                             = false;
+      try
+      {
+        Fixture<SourceT> nonfinite_frequency(source);
+      }
+      catch (const std::invalid_argument&)
+      {
+        rejected = true;
+      }
+      success                                                   *= rejected;
       source.parameters[SourceT::ModelDataT::Parameters::omega]  = 7.3;
       source.parameters[SourceT::ModelDataT::Parameters::E]      = EMT::ABCVector<RealT>{{1.0, -0.1, 1.0}};
       Fixture<SourceT> negative_magnitude(source);

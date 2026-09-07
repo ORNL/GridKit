@@ -152,8 +152,11 @@ namespace GridKit
       int         assembleJacobian(RealT y_scale, RealT yp_scale) override;
       bool        hasJacobian() override;
 
-      void updateTime(RealT t, RealT a) override;
-      void resetJacobianStructure() override;
+      void  updateTime(RealT t, RealT a) override;
+      void  resetJacobianStructure() override;
+      void  resetHistory() override;
+      void  acceptStep(RealT time) override;
+      RealT maximumStepSize() const override;
 
     protected:
       virtual ComponentT* initialStateComponent()

@@ -137,13 +137,12 @@ None.
 
 ### Wiring
 
-The mechanical-power output $P_m$ is exposed on the `pmech` signal, which the
-connected machine seeds during initialization.
+The mechanical-power output $P_m$ is exposed on the `pmech` signal. The connected
+machine requests its operating-point value before the governor initializes.
 
 ## Initialization
 
-The machine-provided $P_m$ is preserved and the steady state follows in
-dependency order:
+The governor initializes its own state from the resolved $P_m$ requirement:
 
 ```math
 \begin{aligned}

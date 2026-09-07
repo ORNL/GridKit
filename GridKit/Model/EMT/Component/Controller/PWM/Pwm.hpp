@@ -40,6 +40,11 @@ namespace GridKit
           return this->initializeOutputs(*this, values);
         }
 
+        void validateInitialState(const std::map<std::string, RealT>& values) const override
+        {
+          this->template parseInitialOutputs<Pwm>(values);
+        }
+
         int setAbsoluteTolerance(RealT) override final;
         int evaluateInternalResidual() override final;
         int evaluateExternalResidual() override final;

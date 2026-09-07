@@ -291,7 +291,7 @@ int main(int argc, char** argv)
     ida.getDefaultInitialCondition();
   // Recompute algebraic values and derivatives, preserving the explicit
   // differential-state projection used by the ideal opening.
-  ida.initializeSimulation(1.0);
+  ida.restartSimulation(1.0);
   double event_state_change = 0;
   for (size_t i = 0; i < sys.size(); ++i)
     if (sys.tag()[i])

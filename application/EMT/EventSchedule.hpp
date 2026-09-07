@@ -68,7 +68,7 @@ namespace GridKit::EMT
         }
         // A discontinuity changes algebraic values and derivatives, not states.
         ida.setConsistentICType(AnalysisManager::Sundials::IdaConsistentICType::YA_YDP);
-        ida.initializeSimulation(time);
+        ida.restartSimulation(time);
         monitor(time);
       }
       if (study_.tmax > time)

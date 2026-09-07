@@ -99,16 +99,26 @@ namespace GridKit
         int allocate() override final;
         int verify() const override final;
 
-        int initializationOrder() const noexcept override final
-        {
-          return 2;
-        }
-
         int initialize(const std::map<Outputs, RealT>& outputs = {});
+
+        typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+        {
+          using V = Tgov1ExternalVariables;
+          typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+          ports.inputs = signals_.attachedSignals({V::OMEGA});
+          if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
+            ports.outputs.emplace("pmech", signals_.template getSignal<Tgov1InternalVariables::PM>());
+          return ports;
+        }
 
         int initializeState(const std::map<std::string, RealT>& values) override
         {
           return this->initializeOutputs(*this, values);
+        }
+
+        void validateInitialState(const std::map<std::string, RealT>& values) const override
+        {
+          this->template parseInitialOutputs<Tgov1>(values);
         }
 
         int setAbsoluteTolerance(RealT) override final;

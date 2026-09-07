@@ -6,14 +6,12 @@
 
 #include <GridKit/Model/EMT/ContainerDataJSONParser.hpp>
 #include <GridKit/Model/EMT/SystemModelData.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace EMT
   {
     using json          = nlohmann::json;
-    using Log           = ::GridKit::Utilities::Logger;
     using MonitorFormat = ::GridKit::Model::VariableMonitorFormat;
 
     /// JSON parser function implementation for the `SystemModelData` type
@@ -27,16 +25,21 @@ namespace GridKit
         return magic_enum::enum_cast<EnumT>(key, magic_enum::case_insensitive);
       };
 
-      auto header = j.at("header");
+      validateJsonFields(j, "System model", {"header", "monitors", "signals", "devices", "inputs", "outputs"});
+      const auto& header = j.at("header");
+      validateJsonFields(header, "System model header", {"format_version", "format_revision", "case_name", "case_date_time", "case_description", "case_comments"});
 
       if (header.contains("format_version"))
       {
-        header.at("format_version").get_to(sm.format_version);
+        sm.format_version = parseFiniteReal<double>(header.at("format_version"), "format_version");
       }
 
       if (header.contains("format_revision"))
       {
-        header.at("format_revision").get_to(sm.format_revision);
+        const auto revision = parseFiniteReal<double>(header.at("format_revision"), "format_revision");
+        if (revision < 0 || revision > std::numeric_limits<unsigned short>::max() || std::trunc(revision) != revision)
+          throw std::invalid_argument("format_revision requires a nonnegative integer within the revision range");
+        sm.format_revision = static_cast<unsigned short>(revision);
       }
 
       header.at("case_name").get_to(sm.case_name);
@@ -51,8 +54,11 @@ namespace GridKit
 
       if (j.contains("monitors"))
       {
-        for (auto&& raw_mon : j.at("monitors"))
+        if (!j.at("monitors").is_array())
+          throw std::invalid_argument("System model monitors must be an array");
+        for (const auto& raw_mon : j.at("monitors"))
         {
+          validateJsonFields(raw_mon, "Monitor sink", {"file_name", "format", "delim"});
           auto file_name = raw_mon.value("file_name", std::string{});
           auto fmt_str   = raw_mon.at("format").get<std::string>();
           auto format    = enum_parse(MonitorFormat{}, fmt_str);
@@ -63,9 +69,7 @@ namespace GridKit
           }
           else
           {
-            Log::error() << "\n\tInvalid monitor format: \"" << fmt_str << "\"."
-                         << "\n\tSee the \"monitors\" list in your JSON file."
-                         << std::endl;
+            throw std::invalid_argument("Invalid monitor format \"" + fmt_str + "\"");
           }
         }
       }

@@ -41,6 +41,25 @@ int main()
                        { input.get<EMT::StudyData>(); });
   }
 
+  for (const auto& patch : {
+           json{{"unknown", 1}}, json{{"consistent_ic_type", "typo"}}, json{{"error_type", "typo"}}, json{{"max_steps", -1}}, json{{"max_steps", 1.5}}, json{{"max_steps", true}}, json{{"max_steps", std::numeric_limits<uint64_t>::max()}}, json{{"dt_monitor", -1}}, json{{"dt_fixed", -1}}, json{{"rel_tol", -1}}, json{{"abs_tol", -1}}, json{{"error_tolerance", json::array()}}, json{{"error_tolerance", {1.0, -1.0}}}, json{{"abs_err_threshold", -1}}, json{{"tmax", true}}})
+  {
+    input = base;
+    input.update(patch);
+    success *= rejects([&]
+                       { input.get<EMT::StudyData>(); });
+  }
+  for (const auto* key : {"dt_monitor", "dt_fixed", "rel_tol", "abs_tol", "abs_err_threshold", "error_tolerance"})
+  {
+    for (const auto& invalid : {json(true), json("1"), json(std::numeric_limits<double>::infinity())})
+    {
+      input       = base;
+      input[key]  = invalid;
+      success    *= rejects([&]
+                         { input.get<EMT::StudyData>(); });
+    }
+  }
+
   const json switch_event  = {{"time", 0.0}, {"type", "switch"}, {"element_id", "plant.breaker"}, {"open", false}};
   const json signal_event  = {{"time", 0.5}, {"type", "signal_step"}, {"signal_id", "plant.reference"}, {"value", 0.8}};
   input                    = base;
@@ -129,26 +148,40 @@ int main()
   input["signal_values"]  = {{"dc", "3000"}};
   success                *= rejects(parse);
 
-  input               = base;
-  input["state_file"] = "state.json";
-  auto parse_state    = [&](const json& state)
+  input                                = base;
+  input["state_file"]                  = "state.json";
+  auto state_model                     = model;
+  state_model["devices"][0]["devices"] = {{{"class", "Bus"}, {"id", "bus"}},
+                                          {{"class", "LoadZ"}, {"id", "load"}}};
+  state_model["devices"].push_back({{"class", "Switch"}, {"id", "switch"}});
+  std::ofstream(directory / "case.json") << state_model.dump();
+  auto parse_state = [&](const json& state)
   {
     std::ofstream(directory / "state.json") << state.dump();
     return parse().state;
   };
-  const auto state  = parse_state({{"buses", {{"child.bus", {{"va", 10}, {"vb", -5.0}, {"vc", nullptr}, {"injections", json::array()}}}}},
-                                   {"devices", {{"child.load", {{"ia", -2.0}}}, {"switch", {{"open", true}}}, {"unused", nullptr}}}});
+  const auto state  = parse_state({{"header", {{"version", 1}, {"time", 0.0}, {"created", "2026-09-07"}, {"description", nullptr}}},
+                                   {"buses", {{"child.bus", {{"va", 10}, {"vb", -5.0}, {"vc", nullptr}}}}},
+                                   {"devices", {{"child.load", {{"ia", -2.0}}}, {"switch", {{"open", true}}}}}});
   success          *= state == std::map<std::string, std::map<std::string, double>>{{"child.bus", {{"va", 10.0}, {"vb", -5.0}}}, {"child.load", {{"ia", -2.0}}}, {"switch", {{"open", 1.0}}}};
-  success          *= parse_state({{"devices", {{"load", {{"ia", nullptr}}}}}}).empty();
+  success          *= parse_state({{"devices", {{"child.load", {{"ia", nullptr}}}, {"switch", nullptr}}}}).empty();
+  success          *= parse_state({{"header", nullptr}, {"buses", nullptr}, {"devices", nullptr}}).empty();
   for (const auto& invalid : {json(true), json("1"), json::array({1})})
   {
     success *= rejects([&]
-                       { parse_state({{"devices", {{"load", {{"ia", invalid}}}}}}); });
+                       { parse_state({{"devices", {{"child.load", {{"ia", invalid}}}}}}); });
   }
-  for (const auto& invalid : {json::array(), json{{"buses", 1}}, json{{"devices", {{"load", 1}}}}})
+  for (const auto& invalid : {
+           json::array(), json{{"buses", 1}}, json{{"devices", {{"child.load", 1}}}}, json{{"typo", nullptr}}, json{{"header", {{"typo", nullptr}}}}, json{{"devices", {{"missing", nullptr}}}}, json{{"devices", {{"child.missing", nullptr}}}}, json{{"devices", {{"child", nullptr}}}}, json{{"devices", {{"child.load", {{"typo", nullptr}}}}}}, json{{"buses", {{"child.bus", {{"injections", json::object()}}}}}}, json{{"buses", {{"child.load", nullptr}}}}, json{{"buses", {{"child.bus", nullptr}}}, {"devices", {{"child.bus", nullptr}}}}, json{{"devices", {{"switch", {{"open", 1}}}}}}})
   {
     success *= rejects([&]
                        { parse_state(invalid); });
+  }
+  for (const auto& patch : {
+           json{{"version", -1}}, json{{"version", 1.5}}, json{{"version", true}}, json{{"version", std::numeric_limits<uint64_t>::max()}}, json{{"time", 1}}, json{{"time", true}}, json{{"created", 1}}, json{{"description", false}}})
+  {
+    success *= rejects([&]
+                       { parse_state({{"header", patch}}); });
   }
   std::filesystem::remove_all(directory);
 

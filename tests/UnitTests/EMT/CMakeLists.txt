@@ -203,3 +203,21 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTIeeestTest COMMAND test_emt_ieeest)
 install(TARGETS test_emt_ieeest RUNTIME DESTINATION bin)
+
+add_executable(test_emt_model_data runModelDataTests.cpp)
+target_include_directories(
+  test_emt_model_data
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+          ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+target_link_libraries(
+  test_emt_model_data GridKit::emt_systemmodel GridKit::testing)
+add_test(NAME EMTModelDataTest COMMAND test_emt_model_data)
+
+add_executable(test_emt_initialization runInitializationTests.cpp)
+target_include_directories(
+  test_emt_initialization
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+          ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+target_link_libraries(
+  test_emt_initialization GridKit::emt_systemmodel GridKit::testing)
+add_test(NAME EMTInitializationTest COMMAND test_emt_initialization)

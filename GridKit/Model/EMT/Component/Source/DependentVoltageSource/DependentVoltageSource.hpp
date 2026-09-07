@@ -109,9 +109,15 @@ namespace GridKit
         return this->initializeOutputs(*this, values);
       }
 
-      int initializationOrder() const noexcept override final
+      void validateInitialState(const std::map<std::string, RealT>& values) const override
       {
-        return 4;
+        this->template parseInitialOutputs<DependentVoltageSource>(values);
+      }
+
+      typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+      {
+        return yfit_ ? Component<ScalarT, IdxT>::initializationPorts()
+                     : typename Component<ScalarT, IdxT>::InitializationPortsT{};
       }
 
       void        assignOutput(Outputs output, SignalT* signal);

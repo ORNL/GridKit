@@ -1,12 +1,18 @@
 #pragma once
 
 #include <array>
+#include <cmath>
+#include <limits>
 #include <map>
 #include <optional>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <variant>
+
+#include <magic_enum/magic_enum.hpp>
 
 namespace GridKit
 {
@@ -73,5 +79,74 @@ namespace GridKit
     protected:
       ComponentData() = default;
     };
+
+    namespace detail
+    {
+      /// Convert parameter values without treating booleans as numbers or wrapping indices.
+      template <typename T, typename U>
+      T parameterValue(const U& value)
+      {
+        if constexpr (std::is_same_v<T, bool> && std::is_same_v<U, bool>)
+        {
+          return value;
+        }
+        else if constexpr (std::is_arithmetic_v<T> && std::is_arithmetic_v<U>
+                           && !std::is_same_v<T, bool> && !std::is_same_v<U, bool>)
+        {
+          if constexpr (std::is_integral_v<T>)
+          {
+            if constexpr (std::is_integral_v<U>)
+            {
+              if (value < 0 || !std::in_range<T>(value))
+                throw std::invalid_argument("requires a nonnegative integer within the index range");
+            }
+            else if (!std::isfinite(value) || value < 0 || std::trunc(value) != value
+                     || value >= std::ldexp(U{1}, std::numeric_limits<T>::digits))
+            {
+              throw std::invalid_argument("requires a nonnegative integer within the index range");
+            }
+          }
+          const auto result = static_cast<T>(value);
+          if (!std::isfinite(result))
+            throw std::invalid_argument("requires finite numeric values");
+          return result;
+        }
+        else if constexpr (requires { typename T::value_type; typename U::value_type; })
+        {
+          T result{};
+          for (size_t n = 0; n < result.size(); ++n)
+            result[n] = parameterValue<typename T::value_type>(value[n]);
+          return result;
+        }
+        throw std::invalid_argument("has an incompatible value type");
+      }
+    } // namespace detail
+
+    /// Read a required, typed parameter with component and parameter context on errors.
+    template <typename T, typename Data, typename Parameter>
+    T parameter(const Data& data, Parameter key)
+    {
+      try
+      {
+        const auto entry = data.parameters.find(key);
+        if (entry == data.parameters.end())
+          throw std::invalid_argument("is required");
+        return std::visit([](const auto& value)
+                          { return detail::parameterValue<T>(value); },
+                          entry->second);
+      }
+      catch (const std::invalid_argument& error)
+      {
+        throw std::invalid_argument(data.device_class + " \"" + data.id + "\" parameter \""
+                                    + std::string(magic_enum::enum_name(key)) + "\" " + error.what());
+      }
+    }
+
+    /// Read an optional parameter, preserving the model default when omitted.
+    template <typename T, typename Data, typename Parameter>
+    T parameter(const Data& data, Parameter key, const T& fallback)
+    {
+      return data.parameters.contains(key) ? parameter<T>(data, key) : fallback;
+    }
   } // namespace EMT
 } // namespace GridKit

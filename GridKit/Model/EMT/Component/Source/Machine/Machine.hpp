@@ -129,6 +129,19 @@ namespace GridKit
         return this->initializeOutputs(*this, values);
       }
 
+      void validateInitialState(const std::map<std::string, RealT>& values) const override
+      {
+        this->template parseInitialOutputs<Machine>(values);
+      }
+
+      typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+      {
+        using V = MachineExternalVariables;
+        return {signals_.attachedSignals({V::VA, V::VB, V::VC}), {}, signals_.attachedSignals({V::PM, V::EFD})};
+      }
+
+      void prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial) override;
+
       void        assignOutput(Outputs output, SignalT* signal);
       virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateInternalResidual() override final;
@@ -144,6 +157,9 @@ namespace GridKit
       }
 
     private:
+      std::array<ScalarT, 24> operatingPoint(const std::map<Outputs, RealT>& outputs,
+                                             const std::array<ScalarT, 3>&   voltage) const;
+
       void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
       void setDerivedParams();
