@@ -83,7 +83,7 @@ rows. Physical components already inject through their voltage connections;
 do not add those contributions a second time with explicit Bus inputs.
 
 Initial values belong exclusively in the [state file](STATE.md), keyed by
-component path and existing output names. Case files reject `init` sections.
+component path and existing output names.
 Bus voltages default to zero. Model initialization reconstructs
 internal variables from known outputs and attached inputs.
 

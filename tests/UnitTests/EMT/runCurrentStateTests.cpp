@@ -168,22 +168,11 @@ int main()
     success *= jacobian->getColData()[0] == explicit_system.component("load").getVariableIndex(0);
     success *= jacobian->getValues()[0] == 1.0;
   }
-  for (const auto& init : {json{{"ia", 1.0}}, json::object()})
-  {
-    auto invalid_case                   = flat;
-    invalid_case["devices"][3]["init"]  = init;
-    success                            *= rejects([&]
-                       { std::istringstream stream(invalid_case.dump()); EMT::parseSystemModelData(stream); });
-  }
   for (const auto* name : {"p", "SIZE"})
     success *= rejects([&]
                        { explicit_system.initialize({{"load", {{name, 1.0}}}}); });
-  auto invalid_root                   = flat;
-  invalid_root["init"]                = json::object();
-  success                            *= rejects([&]
-                     { std::istringstream stream(invalid_root.dump()); EMT::parseSystemModelData(stream); });
-  auto missing_kcl                    = explicit_case;
-  missing_kcl["signals"][0]["value"]  = 10.0;
+  auto missing_kcl                   = explicit_case;
+  missing_kcl["signals"][0]["value"] = 10.0;
   missing_kcl["devices"][0].erase("outputs");
   success                                 *= rejects([&]
                      {

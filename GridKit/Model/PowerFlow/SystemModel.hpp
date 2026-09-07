@@ -24,8 +24,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class SystemModel : public ModelEvaluatorImpl<ScalarT, IdxT>
   {
-    using bus_type       = Model::Evaluator<ScalarT, IdxT>;
-    using component_type = Model::Evaluator<ScalarT, IdxT>;
+    using bus_type       = ModelEvaluatorImpl<ScalarT, IdxT>;
+    using component_type = ModelEvaluatorImpl<ScalarT, IdxT>;
     using RealT          = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
     using VectorT        = typename ModelEvaluatorImpl<ScalarT, IdxT>::VectorT;
 

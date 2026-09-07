@@ -4,8 +4,8 @@
 
 This document describes the JSON data format for EMT operating points. A
 case file carries parameters and topology only; a state file carries the
-operating point. Case files reject `init` sections. Fields use each component's
-existing `Outputs` enum. Missing records or null fields use model defaults.
+operating point. Fields use each component's existing `Outputs` enum.
+Missing records or null fields use model defaults.
 
 The state carries instantaneous SI values at the initialization instant.
 Synthesizing instantaneous values from an RMS or phasor description is an
