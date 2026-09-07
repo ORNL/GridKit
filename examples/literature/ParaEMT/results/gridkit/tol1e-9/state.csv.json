@@ -1,0 +1,1811 @@
+{
+  "description": "CSV columns are time, all y, then all yp in global index order. Local indices and units follow each component's internal variable definitions. Algebraic yp values are solver interpolants, not independent states.",
+  "variables": [
+    {
+      "class": "Bus",
+      "component": "bus_1",
+      "differential": false,
+      "index": 0,
+      "local_index": 0
+    },
+    {
+      "class": "Bus",
+      "component": "bus_1",
+      "differential": false,
+      "index": 1,
+      "local_index": 1
+    },
+    {
+      "class": "Bus",
+      "component": "bus_1",
+      "differential": false,
+      "index": 2,
+      "local_index": 2
+    },
+    {
+      "class": "Bus",
+      "component": "bus_2",
+      "differential": false,
+      "index": 3,
+      "local_index": 0
+    },
+    {
+      "class": "Bus",
+      "component": "bus_2",
+      "differential": false,
+      "index": 4,
+      "local_index": 1
+    },
+    {
+      "class": "Bus",
+      "component": "bus_2",
+      "differential": false,
+      "index": 5,
+      "local_index": 2
+    },
+    {
+      "class": "Bus",
+      "component": "bus_3",
+      "differential": false,
+      "index": 6,
+      "local_index": 0
+    },
+    {
+      "class": "Bus",
+      "component": "bus_3",
+      "differential": false,
+      "index": 7,
+      "local_index": 1
+    },
+    {
+      "class": "Bus",
+      "component": "bus_3",
+      "differential": false,
+      "index": 8,
+      "local_index": 2
+    },
+    {
+      "class": "Bus",
+      "component": "bus_4",
+      "differential": true,
+      "index": 9,
+      "local_index": 0
+    },
+    {
+      "class": "Bus",
+      "component": "bus_4",
+      "differential": true,
+      "index": 10,
+      "local_index": 1
+    },
+    {
+      "class": "Bus",
+      "component": "bus_4",
+      "differential": true,
+      "index": 11,
+      "local_index": 2
+    },
+    {
+      "class": "Bus",
+      "component": "bus_5",
+      "differential": true,
+      "index": 12,
+      "local_index": 0
+    },
+    {
+      "class": "Bus",
+      "component": "bus_5",
+      "differential": true,
+      "index": 13,
+      "local_index": 1
+    },
+    {
+      "class": "Bus",
+      "component": "bus_5",
+      "differential": true,
+      "index": 14,
+      "local_index": 2
+    },
+    {
+      "class": "Bus",
+      "component": "bus_6",
+      "differential": true,
+      "index": 15,
+      "local_index": 0
+    },
+    {
+      "class": "Bus",
+      "component": "bus_6",
+      "differential": true,
+      "index": 16,
+      "local_index": 1
+    },
+    {
+      "class": "Bus",
+      "component": "bus_6",
+      "differential": true,
+      "index": 17,
+      "local_index": 2
+    },
+    {
+      "class": "Bus",
+      "component": "bus_7",
+      "differential": true,
+      "index": 18,
+      "local_index": 0
+    },
+    {
+      "class": "Bus",
+      "component": "bus_7",
+      "differential": true,
+      "index": 19,
+      "local_index": 1
+    },
+    {
+      "class": "Bus",
+      "component": "bus_7",
+      "differential": true,
+      "index": 20,
+      "local_index": 2
+    },
+    {
+      "class": "Bus",
+      "component": "bus_8",
+      "differential": true,
+      "index": 21,
+      "local_index": 0
+    },
+    {
+      "class": "Bus",
+      "component": "bus_8",
+      "differential": true,
+      "index": 22,
+      "local_index": 1
+    },
+    {
+      "class": "Bus",
+      "component": "bus_8",
+      "differential": true,
+      "index": 23,
+      "local_index": 2
+    },
+    {
+      "class": "Bus",
+      "component": "bus_9",
+      "differential": true,
+      "index": 24,
+      "local_index": 0
+    },
+    {
+      "class": "Bus",
+      "component": "bus_9",
+      "differential": true,
+      "index": 25,
+      "local_index": 1
+    },
+    {
+      "class": "Bus",
+      "component": "bus_9",
+      "differential": true,
+      "index": 26,
+      "local_index": 2
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": true,
+      "index": 27,
+      "local_index": 0
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": true,
+      "index": 28,
+      "local_index": 1
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": true,
+      "index": 29,
+      "local_index": 2
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": true,
+      "index": 30,
+      "local_index": 3
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": true,
+      "index": 31,
+      "local_index": 4
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": true,
+      "index": 32,
+      "local_index": 5
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": true,
+      "index": 33,
+      "local_index": 6
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": true,
+      "index": 34,
+      "local_index": 7
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": true,
+      "index": 35,
+      "local_index": 8
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 36,
+      "local_index": 9
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 37,
+      "local_index": 10
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 38,
+      "local_index": 11
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 39,
+      "local_index": 12
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 40,
+      "local_index": 13
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 41,
+      "local_index": 14
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 42,
+      "local_index": 15
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 43,
+      "local_index": 16
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 44,
+      "local_index": 17
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 45,
+      "local_index": 18
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 46,
+      "local_index": 19
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 47,
+      "local_index": 20
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 48,
+      "local_index": 21
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 49,
+      "local_index": 22
+    },
+    {
+      "class": "Machine",
+      "component": "gen_1",
+      "differential": false,
+      "index": 50,
+      "local_index": 23
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_1",
+      "differential": true,
+      "index": 246,
+      "local_index": 0
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_1",
+      "differential": true,
+      "index": 247,
+      "local_index": 1
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_1",
+      "differential": false,
+      "index": 248,
+      "local_index": 2
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_1",
+      "differential": true,
+      "index": 249,
+      "local_index": 3
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_1",
+      "differential": true,
+      "index": 225,
+      "local_index": 0
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_1",
+      "differential": true,
+      "index": 226,
+      "local_index": 1
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_1",
+      "differential": true,
+      "index": 227,
+      "local_index": 2
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_1",
+      "differential": false,
+      "index": 228,
+      "local_index": 3
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_1",
+      "differential": false,
+      "index": 229,
+      "local_index": 4
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_1",
+      "differential": false,
+      "index": 230,
+      "local_index": 5
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_1",
+      "differential": false,
+      "index": 231,
+      "local_index": 6
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": true,
+      "index": 189,
+      "local_index": 0
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": true,
+      "index": 190,
+      "local_index": 1
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": true,
+      "index": 191,
+      "local_index": 2
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": true,
+      "index": 192,
+      "local_index": 3
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": true,
+      "index": 193,
+      "local_index": 4
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": false,
+      "index": 194,
+      "local_index": 5
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": true,
+      "index": 195,
+      "local_index": 6
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": false,
+      "index": 196,
+      "local_index": 7
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": false,
+      "index": 197,
+      "local_index": 8
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": false,
+      "index": 198,
+      "local_index": 9
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": false,
+      "index": 199,
+      "local_index": 10
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_1",
+      "differential": false,
+      "index": 200,
+      "local_index": 11
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": true,
+      "index": 51,
+      "local_index": 0
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": true,
+      "index": 52,
+      "local_index": 1
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": true,
+      "index": 53,
+      "local_index": 2
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": true,
+      "index": 54,
+      "local_index": 3
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": true,
+      "index": 55,
+      "local_index": 4
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": true,
+      "index": 56,
+      "local_index": 5
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": true,
+      "index": 57,
+      "local_index": 6
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": true,
+      "index": 58,
+      "local_index": 7
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": true,
+      "index": 59,
+      "local_index": 8
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 60,
+      "local_index": 9
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 61,
+      "local_index": 10
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 62,
+      "local_index": 11
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 63,
+      "local_index": 12
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 64,
+      "local_index": 13
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 65,
+      "local_index": 14
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 66,
+      "local_index": 15
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 67,
+      "local_index": 16
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 68,
+      "local_index": 17
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 69,
+      "local_index": 18
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 70,
+      "local_index": 19
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 71,
+      "local_index": 20
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 72,
+      "local_index": 21
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 73,
+      "local_index": 22
+    },
+    {
+      "class": "Machine",
+      "component": "gen_2",
+      "differential": false,
+      "index": 74,
+      "local_index": 23
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_2",
+      "differential": true,
+      "index": 250,
+      "local_index": 0
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_2",
+      "differential": true,
+      "index": 251,
+      "local_index": 1
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_2",
+      "differential": false,
+      "index": 252,
+      "local_index": 2
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_2",
+      "differential": true,
+      "index": 253,
+      "local_index": 3
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_2",
+      "differential": true,
+      "index": 232,
+      "local_index": 0
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_2",
+      "differential": true,
+      "index": 233,
+      "local_index": 1
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_2",
+      "differential": true,
+      "index": 234,
+      "local_index": 2
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_2",
+      "differential": false,
+      "index": 235,
+      "local_index": 3
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_2",
+      "differential": false,
+      "index": 236,
+      "local_index": 4
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_2",
+      "differential": false,
+      "index": 237,
+      "local_index": 5
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_2",
+      "differential": false,
+      "index": 238,
+      "local_index": 6
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": true,
+      "index": 201,
+      "local_index": 0
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": true,
+      "index": 202,
+      "local_index": 1
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": true,
+      "index": 203,
+      "local_index": 2
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": true,
+      "index": 204,
+      "local_index": 3
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": true,
+      "index": 205,
+      "local_index": 4
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": false,
+      "index": 206,
+      "local_index": 5
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": true,
+      "index": 207,
+      "local_index": 6
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": false,
+      "index": 208,
+      "local_index": 7
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": false,
+      "index": 209,
+      "local_index": 8
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": false,
+      "index": 210,
+      "local_index": 9
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": false,
+      "index": 211,
+      "local_index": 10
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_2",
+      "differential": false,
+      "index": 212,
+      "local_index": 11
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": true,
+      "index": 75,
+      "local_index": 0
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": true,
+      "index": 76,
+      "local_index": 1
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": true,
+      "index": 77,
+      "local_index": 2
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": true,
+      "index": 78,
+      "local_index": 3
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": true,
+      "index": 79,
+      "local_index": 4
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": true,
+      "index": 80,
+      "local_index": 5
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": true,
+      "index": 81,
+      "local_index": 6
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": true,
+      "index": 82,
+      "local_index": 7
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": true,
+      "index": 83,
+      "local_index": 8
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 84,
+      "local_index": 9
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 85,
+      "local_index": 10
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 86,
+      "local_index": 11
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 87,
+      "local_index": 12
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 88,
+      "local_index": 13
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 89,
+      "local_index": 14
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 90,
+      "local_index": 15
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 91,
+      "local_index": 16
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 92,
+      "local_index": 17
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 93,
+      "local_index": 18
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 94,
+      "local_index": 19
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 95,
+      "local_index": 20
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 96,
+      "local_index": 21
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 97,
+      "local_index": 22
+    },
+    {
+      "class": "Machine",
+      "component": "gen_3",
+      "differential": false,
+      "index": 98,
+      "local_index": 23
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_3",
+      "differential": true,
+      "index": 254,
+      "local_index": 0
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_3",
+      "differential": true,
+      "index": 255,
+      "local_index": 1
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_3",
+      "differential": false,
+      "index": 256,
+      "local_index": 2
+    },
+    {
+      "class": "SEXS-PTI",
+      "component": "exc_3",
+      "differential": true,
+      "index": 257,
+      "local_index": 3
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_3",
+      "differential": true,
+      "index": 239,
+      "local_index": 0
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_3",
+      "differential": true,
+      "index": 240,
+      "local_index": 1
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_3",
+      "differential": true,
+      "index": 241,
+      "local_index": 2
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_3",
+      "differential": false,
+      "index": 242,
+      "local_index": 3
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_3",
+      "differential": false,
+      "index": 243,
+      "local_index": 4
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_3",
+      "differential": false,
+      "index": 244,
+      "local_index": 5
+    },
+    {
+      "class": "GASTPTI",
+      "component": "gov_3",
+      "differential": false,
+      "index": 245,
+      "local_index": 6
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": true,
+      "index": 213,
+      "local_index": 0
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": true,
+      "index": 214,
+      "local_index": 1
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": true,
+      "index": 215,
+      "local_index": 2
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": true,
+      "index": 216,
+      "local_index": 3
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": true,
+      "index": 217,
+      "local_index": 4
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": false,
+      "index": 218,
+      "local_index": 5
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": true,
+      "index": 219,
+      "local_index": 6
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": false,
+      "index": 220,
+      "local_index": 7
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": false,
+      "index": 221,
+      "local_index": 8
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": false,
+      "index": 222,
+      "local_index": 9
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": false,
+      "index": 223,
+      "local_index": 10
+    },
+    {
+      "class": "IEEEST",
+      "component": "stabilizer_3",
+      "differential": false,
+      "index": 224,
+      "local_index": 11
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_5",
+      "differential": true,
+      "index": 99,
+      "local_index": 0
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_5",
+      "differential": true,
+      "index": 100,
+      "local_index": 1
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_5",
+      "differential": true,
+      "index": 101,
+      "local_index": 2
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_5",
+      "differential": false,
+      "index": 102,
+      "local_index": 3
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_5",
+      "differential": false,
+      "index": 103,
+      "local_index": 4
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_5",
+      "differential": false,
+      "index": 104,
+      "local_index": 5
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_5",
+      "differential": false,
+      "index": 105,
+      "local_index": 6
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_5",
+      "differential": false,
+      "index": 106,
+      "local_index": 7
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_5",
+      "differential": false,
+      "index": 107,
+      "local_index": 8
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_6",
+      "differential": true,
+      "index": 108,
+      "local_index": 0
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_6",
+      "differential": true,
+      "index": 109,
+      "local_index": 1
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_6",
+      "differential": true,
+      "index": 110,
+      "local_index": 2
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_6",
+      "differential": false,
+      "index": 111,
+      "local_index": 3
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_6",
+      "differential": false,
+      "index": 112,
+      "local_index": 4
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_6",
+      "differential": false,
+      "index": 113,
+      "local_index": 5
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_6",
+      "differential": false,
+      "index": 114,
+      "local_index": 6
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_6",
+      "differential": false,
+      "index": 115,
+      "local_index": 7
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_4_6",
+      "differential": false,
+      "index": 116,
+      "local_index": 8
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_5_7",
+      "differential": true,
+      "index": 117,
+      "local_index": 0
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_5_7",
+      "differential": true,
+      "index": 118,
+      "local_index": 1
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_5_7",
+      "differential": true,
+      "index": 119,
+      "local_index": 2
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_5_7",
+      "differential": false,
+      "index": 120,
+      "local_index": 3
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_5_7",
+      "differential": false,
+      "index": 121,
+      "local_index": 4
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_5_7",
+      "differential": false,
+      "index": 122,
+      "local_index": 5
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_5_7",
+      "differential": false,
+      "index": 123,
+      "local_index": 6
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_5_7",
+      "differential": false,
+      "index": 124,
+      "local_index": 7
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_5_7",
+      "differential": false,
+      "index": 125,
+      "local_index": 8
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_6_9",
+      "differential": true,
+      "index": 126,
+      "local_index": 0
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_6_9",
+      "differential": true,
+      "index": 127,
+      "local_index": 1
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_6_9",
+      "differential": true,
+      "index": 128,
+      "local_index": 2
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_6_9",
+      "differential": false,
+      "index": 129,
+      "local_index": 3
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_6_9",
+      "differential": false,
+      "index": 130,
+      "local_index": 4
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_6_9",
+      "differential": false,
+      "index": 131,
+      "local_index": 5
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_6_9",
+      "differential": false,
+      "index": 132,
+      "local_index": 6
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_6_9",
+      "differential": false,
+      "index": 133,
+      "local_index": 7
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_6_9",
+      "differential": false,
+      "index": 134,
+      "local_index": 8
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_7_8",
+      "differential": true,
+      "index": 135,
+      "local_index": 0
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_7_8",
+      "differential": true,
+      "index": 136,
+      "local_index": 1
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_7_8",
+      "differential": true,
+      "index": 137,
+      "local_index": 2
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_7_8",
+      "differential": false,
+      "index": 138,
+      "local_index": 3
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_7_8",
+      "differential": false,
+      "index": 139,
+      "local_index": 4
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_7_8",
+      "differential": false,
+      "index": 140,
+      "local_index": 5
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_7_8",
+      "differential": false,
+      "index": 141,
+      "local_index": 6
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_7_8",
+      "differential": false,
+      "index": 142,
+      "local_index": 7
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_7_8",
+      "differential": false,
+      "index": 143,
+      "local_index": 8
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_8_9",
+      "differential": true,
+      "index": 144,
+      "local_index": 0
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_8_9",
+      "differential": true,
+      "index": 145,
+      "local_index": 1
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_8_9",
+      "differential": true,
+      "index": 146,
+      "local_index": 2
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_8_9",
+      "differential": false,
+      "index": 147,
+      "local_index": 3
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_8_9",
+      "differential": false,
+      "index": 148,
+      "local_index": 4
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_8_9",
+      "differential": false,
+      "index": 149,
+      "local_index": 5
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_8_9",
+      "differential": false,
+      "index": 150,
+      "local_index": 6
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_8_9",
+      "differential": false,
+      "index": 151,
+      "local_index": 7
+    },
+    {
+      "class": "LineLumped",
+      "component": "line_8_9",
+      "differential": false,
+      "index": 152,
+      "local_index": 8
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_4_1",
+      "differential": true,
+      "index": 153,
+      "local_index": 0
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_4_1",
+      "differential": true,
+      "index": 154,
+      "local_index": 1
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_4_1",
+      "differential": true,
+      "index": 155,
+      "local_index": 2
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_4_1",
+      "differential": false,
+      "index": 156,
+      "local_index": 3
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_4_1",
+      "differential": false,
+      "index": 157,
+      "local_index": 4
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_4_1",
+      "differential": false,
+      "index": 158,
+      "local_index": 5
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_4_1",
+      "differential": false,
+      "index": 159,
+      "local_index": 6
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_4_1",
+      "differential": false,
+      "index": 160,
+      "local_index": 7
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_4_1",
+      "differential": false,
+      "index": 161,
+      "local_index": 8
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_7_2",
+      "differential": true,
+      "index": 162,
+      "local_index": 0
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_7_2",
+      "differential": true,
+      "index": 163,
+      "local_index": 1
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_7_2",
+      "differential": true,
+      "index": 164,
+      "local_index": 2
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_7_2",
+      "differential": false,
+      "index": 165,
+      "local_index": 3
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_7_2",
+      "differential": false,
+      "index": 166,
+      "local_index": 4
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_7_2",
+      "differential": false,
+      "index": 167,
+      "local_index": 5
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_7_2",
+      "differential": false,
+      "index": 168,
+      "local_index": 6
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_7_2",
+      "differential": false,
+      "index": 169,
+      "local_index": 7
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_7_2",
+      "differential": false,
+      "index": 170,
+      "local_index": 8
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_9_3",
+      "differential": true,
+      "index": 171,
+      "local_index": 0
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_9_3",
+      "differential": true,
+      "index": 172,
+      "local_index": 1
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_9_3",
+      "differential": true,
+      "index": 173,
+      "local_index": 2
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_9_3",
+      "differential": false,
+      "index": 174,
+      "local_index": 3
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_9_3",
+      "differential": false,
+      "index": 175,
+      "local_index": 4
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_9_3",
+      "differential": false,
+      "index": 176,
+      "local_index": 5
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_9_3",
+      "differential": false,
+      "index": 177,
+      "local_index": 6
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_9_3",
+      "differential": false,
+      "index": 178,
+      "local_index": 7
+    },
+    {
+      "class": "LineLumped",
+      "component": "xfmr_9_3",
+      "differential": false,
+      "index": 179,
+      "local_index": 8
+    },
+    {
+      "class": "LoadZ",
+      "component": "load_5",
+      "differential": true,
+      "index": 180,
+      "local_index": 0
+    },
+    {
+      "class": "LoadZ",
+      "component": "load_5",
+      "differential": true,
+      "index": 181,
+      "local_index": 1
+    },
+    {
+      "class": "LoadZ",
+      "component": "load_5",
+      "differential": true,
+      "index": 182,
+      "local_index": 2
+    },
+    {
+      "class": "LoadZ",
+      "component": "load_6",
+      "differential": true,
+      "index": 183,
+      "local_index": 0
+    },
+    {
+      "class": "LoadZ",
+      "component": "load_6",
+      "differential": true,
+      "index": 184,
+      "local_index": 1
+    },
+    {
+      "class": "LoadZ",
+      "component": "load_6",
+      "differential": true,
+      "index": 185,
+      "local_index": 2
+    },
+    {
+      "class": "LoadZ",
+      "component": "load_8",
+      "differential": true,
+      "index": 186,
+      "local_index": 0
+    },
+    {
+      "class": "LoadZ",
+      "component": "load_8",
+      "differential": true,
+      "index": 187,
+      "local_index": 1
+    },
+    {
+      "class": "LoadZ",
+      "component": "load_8",
+      "differential": true,
+      "index": 188,
+      "local_index": 2
+    }
+  ]
+}

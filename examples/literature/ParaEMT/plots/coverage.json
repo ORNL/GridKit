@@ -1,0 +1,3188 @@
+[
+  {
+    "event": "trip",
+    "title": "Generator 1 trip at 1 s",
+    "pdf": "trip/comparison.pdf",
+    "pages": [
+      {
+        "image": "trip/bus1_abc_event.png",
+        "title": "Bus 1 \u00b7 three-phase voltage",
+        "response": "bus1_abc",
+        "view": "event",
+        "channels": [
+          "bus1_va_pu",
+          "bus1_vb_pu",
+          "bus1_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -17.76728545298148,
+          18.80728545357948
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus1_abc_late.png",
+        "title": "Bus 1 \u00b7 three-phase voltage",
+        "response": "bus1_abc",
+        "view": "late",
+        "channels": [
+          "bus1_va_pu",
+          "bus1_vb_pu",
+          "bus1_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -0.9848438670443199,
+          0.98401992960592
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus1_vm_full.png",
+        "title": "Bus 1 \u00b7 voltage magnitude",
+        "response": "bus1_vm",
+        "view": "full",
+        "channels": [
+          "bus1_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -17.989006222956522,
+          19.02900622355452
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus1_vm_event.png",
+        "title": "Bus 1 \u00b7 voltage magnitude",
+        "response": "bus1_vm",
+        "view": "event",
+        "channels": [
+          "bus1_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -17.989006222956522,
+          19.02900622355452
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus2_abc_event.png",
+        "title": "Bus 2 \u00b7 three-phase voltage",
+        "response": "bus2_abc",
+        "view": "event",
+        "channels": [
+          "bus2_va_pu",
+          "bus2_vb_pu",
+          "bus2_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.1483758043851,
+          1.1540982583261
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus2_abc_late.png",
+        "title": "Bus 2 \u00b7 three-phase voltage",
+        "response": "bus2_abc",
+        "view": "late",
+        "channels": [
+          "bus2_va_pu",
+          "bus2_vb_pu",
+          "bus2_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.059262027563396,
+          1.059350775872796
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus2_vm_full.png",
+        "title": "Bus 2 \u00b7 voltage magnitude",
+        "response": "bus2_vm",
+        "view": "full",
+        "channels": [
+          "bus2_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.06905728110199398,
+          1.111605038977094
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus2_vm_event.png",
+        "title": "Bus 2 \u00b7 voltage magnitude",
+        "response": "bus2_vm",
+        "view": "event",
+        "channels": [
+          "bus2_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.06908425307125397,
+          1.112081543767354
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus3_abc_event.png",
+        "title": "Bus 3 \u00b7 three-phase voltage",
+        "response": "bus3_abc",
+        "view": "event",
+        "channels": [
+          "bus3_va_pu",
+          "bus3_vb_pu",
+          "bus3_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.14939843668042,
+          1.1721362534314201
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus3_abc_late.png",
+        "title": "Bus 3 \u00b7 three-phase voltage",
+        "response": "bus3_abc",
+        "view": "late",
+        "channels": [
+          "bus3_va_pu",
+          "bus3_vb_pu",
+          "bus3_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.036684070994686,
+          1.036809100134386
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus3_vm_full.png",
+        "title": "Bus 3 \u00b7 voltage magnitude",
+        "response": "bus3_vm",
+        "view": "full",
+        "channels": [
+          "bus3_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.06575359708169198,
+          1.116218757511492
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus3_vm_event.png",
+        "title": "Bus 3 \u00b7 voltage magnitude",
+        "response": "bus3_vm",
+        "view": "event",
+        "channels": [
+          "bus3_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.06687561520421201,
+          1.136041077676012
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus4_abc_event.png",
+        "title": "Bus 4 \u00b7 three-phase voltage",
+        "response": "bus4_abc",
+        "view": "event",
+        "channels": [
+          "bus4_va_pu",
+          "bus4_vb_pu",
+          "bus4_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.15078489373274,
+          1.1821801196997401
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus4_abc_late.png",
+        "title": "Bus 4 \u00b7 three-phase voltage",
+        "response": "bus4_abc",
+        "view": "late",
+        "channels": [
+          "bus4_va_pu",
+          "bus4_vb_pu",
+          "bus4_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -0.9848438670443199,
+          0.98401992960592
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus4_vm_full.png",
+        "title": "Bus 4 \u00b7 voltage magnitude",
+        "response": "bus4_vm",
+        "view": "full",
+        "channels": [
+          "bus4_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.10189794325677999,
+          1.14301349885378
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus4_vm_event.png",
+        "title": "Bus 4 \u00b7 voltage magnitude",
+        "response": "bus4_vm",
+        "view": "event",
+        "channels": [
+          "bus4_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.10189794325677999,
+          1.14301349885378
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus5_abc_event.png",
+        "title": "Bus 5 \u00b7 three-phase voltage",
+        "response": "bus5_abc",
+        "view": "event",
+        "channels": [
+          "bus5_va_pu",
+          "bus5_vb_pu",
+          "bus5_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.117041743596608,
+          1.149153393479808
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus5_abc_late.png",
+        "title": "Bus 5 \u00b7 three-phase voltage",
+        "response": "bus5_abc",
+        "view": "late",
+        "channels": [
+          "bus5_va_pu",
+          "bus5_vb_pu",
+          "bus5_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -0.9701554247983979,
+          0.969371838036498
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus5_vm_full.png",
+        "title": "Bus 5 \u00b7 voltage magnitude",
+        "response": "bus5_vm",
+        "view": "full",
+        "channels": [
+          "bus5_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.07674172903267201,
+          1.074330756317472
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus5_vm_event.png",
+        "title": "Bus 5 \u00b7 voltage magnitude",
+        "response": "bus5_vm",
+        "view": "event",
+        "channels": [
+          "bus5_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.07765890520891203,
+          1.090534202097712
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus6_abc_event.png",
+        "title": "Bus 6 \u00b7 three-phase voltage",
+        "response": "bus6_abc",
+        "view": "event",
+        "channels": [
+          "bus6_va_pu",
+          "bus6_vb_pu",
+          "bus6_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.13600171799658,
+          1.1663537699875801
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus6_abc_late.png",
+        "title": "Bus 6 \u00b7 three-phase voltage",
+        "response": "bus6_abc",
+        "view": "late",
+        "channels": [
+          "bus6_va_pu",
+          "bus6_vb_pu",
+          "bus6_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -0.985637061592736,
+          0.984902237477536
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus6_vm_full.png",
+        "title": "Bus 6 \u00b7 voltage magnitude",
+        "response": "bus6_vm",
+        "view": "full",
+        "channels": [
+          "bus6_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.07460032207523395,
+          1.077824722144334
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus6_vm_event.png",
+        "title": "Bus 6 \u00b7 voltage magnitude",
+        "response": "bus6_vm",
+        "view": "event",
+        "channels": [
+          "bus6_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.07621691790119396,
+          1.106384581736294
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus7_abc_event.png",
+        "title": "Bus 7 \u00b7 three-phase voltage",
+        "response": "bus7_abc",
+        "view": "event",
+        "channels": [
+          "bus7_va_pu",
+          "bus7_vb_pu",
+          "bus7_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.14892470778688,
+          1.1492202940348801
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus7_abc_late.png",
+        "title": "Bus 7 \u00b7 three-phase voltage",
+        "response": "bus7_abc",
+        "view": "late",
+        "channels": [
+          "bus7_va_pu",
+          "bus7_vb_pu",
+          "bus7_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.040461659706436,
+          1.039354168711836
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus7_vm_full.png",
+        "title": "Bus 7 \u00b7 voltage magnitude",
+        "response": "bus7_vm",
+        "view": "full",
+        "channels": [
+          "bus7_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.07619195509572597,
+          1.135973762158626
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus7_vm_event.png",
+        "title": "Bus 7 \u00b7 voltage magnitude",
+        "response": "bus7_vm",
+        "view": "event",
+        "channels": [
+          "bus7_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.07619195509572597,
+          1.135973762158626
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus8_abc_event.png",
+        "title": "Bus 8 \u00b7 three-phase voltage",
+        "response": "bus8_abc",
+        "view": "event",
+        "channels": [
+          "bus8_va_pu",
+          "bus8_vb_pu",
+          "bus8_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.1523570002689,
+          1.1764810836279
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus8_abc_late.png",
+        "title": "Bus 8 \u00b7 three-phase voltage",
+        "response": "bus8_abc",
+        "view": "late",
+        "channels": [
+          "bus8_va_pu",
+          "bus8_vb_pu",
+          "bus8_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.026333808423798,
+          1.025418904990298
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus8_vm_full.png",
+        "title": "Bus 8 \u00b7 voltage magnitude",
+        "response": "bus8_vm",
+        "view": "full",
+        "channels": [
+          "bus8_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.08647710716887405,
+          1.193570300163974
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus8_vm_event.png",
+        "title": "Bus 8 \u00b7 voltage magnitude",
+        "response": "bus8_vm",
+        "view": "event",
+        "channels": [
+          "bus8_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.08647710716887405,
+          1.193570300163974
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus9_abc_event.png",
+        "title": "Bus 9 \u00b7 three-phase voltage",
+        "response": "bus9_abc",
+        "view": "event",
+        "channels": [
+          "bus9_va_pu",
+          "bus9_vb_pu",
+          "bus9_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.1562731889050402,
+          1.15627398266904
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/bus9_abc_late.png",
+        "title": "Bus 9 \u00b7 three-phase voltage",
+        "response": "bus9_abc",
+        "view": "late",
+        "channels": [
+          "bus9_va_pu",
+          "bus9_vb_pu",
+          "bus9_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.037731808601318,
+          1.035716196883818
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus9_vm_full.png",
+        "title": "Bus 9 \u00b7 voltage magnitude",
+        "response": "bus9_vm",
+        "view": "full",
+        "channels": [
+          "bus9_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.06886934096741999,
+          1.13534447152042
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/bus9_vm_event.png",
+        "title": "Bus 9 \u00b7 voltage magnitude",
+        "response": "bus9_vm",
+        "view": "event",
+        "channels": [
+          "bus9_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.06962089826442,
+          1.14862198376742
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "trip/gen1_speed_pu_full.png",
+        "title": "Generator 1 \u00b7 rotor speed deviation",
+        "response": "gen1_speed_pu",
+        "view": "full",
+        "channels": [
+          "gen1_speed_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.002730937346764062,
+          0.028641245743764098
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen1_speed_pu_event.png",
+        "title": "Generator 1 \u00b7 rotor speed deviation",
+        "response": "gen1_speed_pu",
+        "view": "event",
+        "channels": [
+          "gen1_speed_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.0003562367857360371,
+          0.005647623079736093
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen1_pm_pu_full.png",
+        "title": "Generator 1 \u00b7 mechanical power",
+        "response": "gen1_pm_pu",
+        "view": "full",
+        "channels": [
+          "gen1_pm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.230659968486644,
+          0.524503264004044
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen1_pm_pu_event.png",
+        "title": "Generator 1 \u00b7 mechanical power",
+        "response": "gen1_pm_pu",
+        "view": "event",
+        "channels": [
+          "gen1_pm_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.03287046323866799,
+          0.507828071241268
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen1_efd_pu_full.png",
+        "title": "Generator 1 \u00b7 field voltage",
+        "response": "gen1_efd_pu",
+        "view": "full",
+        "channels": [
+          "gen1_efd_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.31058919862428,
+          1.79398669111428
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen1_efd_pu_event.png",
+        "title": "Generator 1 \u00b7 field voltage",
+        "response": "gen1_efd_pu",
+        "view": "event",
+        "channels": [
+          "gen1_efd_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.0924678235737001,
+          1.5511004534847002
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen1_pss_vs_pu_full.png",
+        "title": "Generator 1 \u00b7 stabilizer output",
+        "response": "gen1_pss_vs_pu",
+        "view": "full",
+        "channels": [
+          "gen1_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.01266561443081772,
+          0.11026075844933172
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen1_pss_vs_pu_event.png",
+        "title": "Generator 1 \u00b7 stabilizer output",
+        "response": "gen1_pss_vs_pu",
+        "view": "event",
+        "channels": [
+          "gen1_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.00768325088577408,
+          0.10768325088577409
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen2_speed_pu_full.png",
+        "title": "Generator 2 \u00b7 rotor speed deviation",
+        "response": "gen2_speed_pu",
+        "view": "full",
+        "channels": [
+          "gen2_speed_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.008067619183002053,
+          0.0014431064573020812
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen2_speed_pu_event.png",
+        "title": "Generator 2 \u00b7 rotor speed deviation",
+        "response": "gen2_speed_pu",
+        "view": "event",
+        "channels": [
+          "gen2_speed_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.005462416070666041,
+          0.00031877835936604314
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen2_pm_pu_full.png",
+        "title": "Generator 2 \u00b7 mechanical power",
+        "response": "gen2_pm_pu",
+        "view": "full",
+        "channels": [
+          "gen2_pm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.04302527636008201,
+          0.7580646076731821
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen2_pm_pu_event.png",
+        "title": "Generator 2 \u00b7 mechanical power",
+        "response": "gen2_pm_pu",
+        "view": "event",
+        "channels": [
+          "gen2_pm_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.039515563521913925,
+          0.6974437145170139
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen2_efd_pu_full.png",
+        "title": "Generator 2 \u00b7 field voltage",
+        "response": "gen2_efd_pu",
+        "view": "full",
+        "channels": [
+          "gen2_efd_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.09197209109557994,
+          1.62489461121658
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen2_efd_pu_event.png",
+        "title": "Generator 2 \u00b7 field voltage",
+        "response": "gen2_efd_pu",
+        "view": "event",
+        "channels": [
+          "gen2_efd_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.08319182141197994,
+          1.47087028693698
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen2_pss_vs_pu_full.png",
+        "title": "Generator 2 \u00b7 stabilizer output",
+        "response": "gen2_pss_vs_pu",
+        "view": "full",
+        "channels": [
+          "gen2_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.1115023259913358,
+          0.1032077591802658
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen2_pss_vs_pu_event.png",
+        "title": "Generator 2 \u00b7 stabilizer output",
+        "response": "gen2_pss_vs_pu",
+        "view": "event",
+        "channels": [
+          "gen2_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.10600526222918306,
+          0.006092966048900804
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen3_speed_pu_full.png",
+        "title": "Generator 3 \u00b7 rotor speed deviation",
+        "response": "gen3_speed_pu",
+        "view": "full",
+        "channels": [
+          "gen3_speed_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.008029820558113947,
+          0.001604786059214085
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen3_speed_pu_event.png",
+        "title": "Generator 3 \u00b7 rotor speed deviation",
+        "response": "gen3_speed_pu",
+        "view": "event",
+        "channels": [
+          "gen3_speed_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.00483937223289801,
+          0.0002832935035980366
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen3_pm_pu_full.png",
+        "title": "Generator 3 \u00b7 mechanical power",
+        "response": "gen3_pm_pu",
+        "view": "full",
+        "channels": [
+          "gen3_pm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.054994625470756044,
+          0.969521611018556
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen3_pm_pu_event.png",
+        "title": "Generator 3 \u00b7 mechanical power",
+        "response": "gen3_pm_pu",
+        "view": "event",
+        "channels": [
+          "gen3_pm_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.05152405718789197,
+          0.909587528347692
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen3_efd_pu_full.png",
+        "title": "Generator 3 \u00b7 field voltage",
+        "response": "gen3_efd_pu",
+        "view": "full",
+        "channels": [
+          "gen3_efd_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.09853970880726014,
+          1.74091132942426
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen3_efd_pu_event.png",
+        "title": "Generator 3 \u00b7 field voltage",
+        "response": "gen3_efd_pu",
+        "view": "event",
+        "channels": [
+          "gen3_efd_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.08738040250390006,
+          1.5448506448409
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen3_pss_vs_pu_full.png",
+        "title": "Generator 3 \u00b7 stabilizer output",
+        "response": "gen3_pss_vs_pu",
+        "view": "full",
+        "channels": [
+          "gen3_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.112,
+          0.112
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "trip/gen3_pss_vs_pu_event.png",
+        "title": "Generator 3 \u00b7 stabilizer output",
+        "response": "gen3_pss_vs_pu",
+        "view": "event",
+        "channels": [
+          "gen3_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.10601880853834121,
+          0.006332284177361212
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      }
+    ],
+    "covered_channels": [
+      "bus1_va_pu",
+      "bus1_vb_pu",
+      "bus1_vc_pu",
+      "bus1_vm_pu",
+      "bus2_va_pu",
+      "bus2_vb_pu",
+      "bus2_vc_pu",
+      "bus2_vm_pu",
+      "bus3_va_pu",
+      "bus3_vb_pu",
+      "bus3_vc_pu",
+      "bus3_vm_pu",
+      "bus4_va_pu",
+      "bus4_vb_pu",
+      "bus4_vc_pu",
+      "bus4_vm_pu",
+      "bus5_va_pu",
+      "bus5_vb_pu",
+      "bus5_vc_pu",
+      "bus5_vm_pu",
+      "bus6_va_pu",
+      "bus6_vb_pu",
+      "bus6_vc_pu",
+      "bus6_vm_pu",
+      "bus7_va_pu",
+      "bus7_vb_pu",
+      "bus7_vc_pu",
+      "bus7_vm_pu",
+      "bus8_va_pu",
+      "bus8_vb_pu",
+      "bus8_vc_pu",
+      "bus8_vm_pu",
+      "bus9_va_pu",
+      "bus9_vb_pu",
+      "bus9_vc_pu",
+      "bus9_vm_pu",
+      "gen1_efd_pu",
+      "gen1_pm_pu",
+      "gen1_pss_vs_pu",
+      "gen1_speed_pu",
+      "gen2_efd_pu",
+      "gen2_pm_pu",
+      "gen2_pss_vs_pu",
+      "gen2_speed_pu",
+      "gen3_efd_pu",
+      "gen3_pm_pu",
+      "gen3_pss_vs_pu",
+      "gen3_speed_pu"
+    ]
+  },
+  {
+    "event": "governor_step",
+    "title": "Governor reference \u22120.02 pu at 1 s",
+    "pdf": "governor_step/comparison.pdf",
+    "pages": [
+      {
+        "image": "governor_step/bus1_abc_event.png",
+        "title": "Bus 1 \u00b7 three-phase voltage",
+        "response": "bus1_abc",
+        "view": "event",
+        "channels": [
+          "bus1_va_pu",
+          "bus1_vb_pu",
+          "bus1_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.16481435321562,
+          1.16481411374262
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus1_abc_late.png",
+        "title": "Bus 1 \u00b7 three-phase voltage",
+        "response": "bus1_abc",
+        "view": "late",
+        "channels": [
+          "bus1_va_pu",
+          "bus1_vb_pu",
+          "bus1_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.16331643607046,
+          1.16030057650346
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus1_vm_full.png",
+        "title": "Bus 1 \u00b7 voltage magnitude",
+        "response": "bus1_vm",
+        "view": "full",
+        "channels": [
+          "bus1_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.0625114255526199,
+          1.10251142496562
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus1_vm_event.png",
+        "title": "Bus 1 \u00b7 voltage magnitude",
+        "response": "bus1_vm",
+        "view": "event",
+        "channels": [
+          "bus1_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.06241441126987993,
+          1.10241441136788
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus2_abc_event.png",
+        "title": "Bus 2 \u00b7 three-phase voltage",
+        "response": "bus2_abc",
+        "view": "event",
+        "channels": [
+          "bus2_va_pu",
+          "bus2_vb_pu",
+          "bus2_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.14803394307982,
+          1.14803384525282
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus2_abc_late.png",
+        "title": "Bus 2 \u00b7 three-phase voltage",
+        "response": "bus2_abc",
+        "view": "late",
+        "channels": [
+          "bus2_va_pu",
+          "bus2_vb_pu",
+          "bus2_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.14698699794944,
+          1.14509133266144
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus2_vm_full.png",
+        "title": "Bus 2 \u00b7 voltage magnitude",
+        "response": "bus2_vm",
+        "view": "full",
+        "channels": [
+          "bus2_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.06153599336342,
+          1.08653599083642
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus2_vm_event.png",
+        "title": "Bus 2 \u00b7 voltage magnitude",
+        "response": "bus2_vm",
+        "view": "event",
+        "channels": [
+          "bus2_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.06153415977807998,
+          1.08653415856208
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus3_abc_event.png",
+        "title": "Bus 3 \u00b7 three-phase voltage",
+        "response": "bus3_abc",
+        "view": "event",
+        "channels": [
+          "bus3_va_pu",
+          "bus3_vb_pu",
+          "bus3_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.14803483380438,
+          1.14803499827738
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus3_abc_late.png",
+        "title": "Bus 3 \u00b7 three-phase voltage",
+        "response": "bus3_abc",
+        "view": "late",
+        "channels": [
+          "bus3_va_pu",
+          "bus3_vb_pu",
+          "bus3_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.14383588506612,
+          1.14678695517612
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus3_vm_full.png",
+        "title": "Bus 3 \u00b7 voltage magnitude",
+        "response": "bus3_vm",
+        "view": "full",
+        "channels": [
+          "bus3_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.06162692483854012,
+          1.0866269265875401
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus3_vm_event.png",
+        "title": "Bus 3 \u00b7 voltage magnitude",
+        "response": "bus3_vm",
+        "view": "event",
+        "channels": [
+          "bus3_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.06153511865998009,
+          1.0865351171369801
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus4_abc_event.png",
+        "title": "Bus 4 \u00b7 three-phase voltage",
+        "response": "bus4_abc",
+        "view": "event",
+        "channels": [
+          "bus4_va_pu",
+          "bus4_vb_pu",
+          "bus4_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.14890159694624,
+          1.14890162411424
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus4_abc_late.png",
+        "title": "Bus 4 \u00b7 three-phase voltage",
+        "response": "bus4_abc",
+        "view": "late",
+        "channels": [
+          "bus4_va_pu",
+          "bus4_vb_pu",
+          "bus4_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.14738169737218,
+          1.14506040971918
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus4_vm_full.png",
+        "title": "Bus 4 \u00b7 voltage magnitude",
+        "response": "bus4_vm",
+        "view": "full",
+        "channels": [
+          "bus4_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.06159941213766001,
+          1.08738807205066
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus4_vm_event.png",
+        "title": "Bus 4 \u00b7 voltage magnitude",
+        "response": "bus4_vm",
+        "view": "event",
+        "channels": [
+          "bus4_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.06156586232905992,
+          1.08735452376806
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus5_abc_event.png",
+        "title": "Bus 5 \u00b7 three-phase voltage",
+        "response": "bus5_abc",
+        "view": "event",
+        "channels": [
+          "bus5_va_pu",
+          "bus5_vb_pu",
+          "bus5_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.115115395841962,
+          1.115115602367462
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus5_abc_late.png",
+        "title": "Bus 5 \u00b7 three-phase voltage",
+        "response": "bus5_abc",
+        "view": "late",
+        "channels": [
+          "bus5_va_pu",
+          "bus5_vb_pu",
+          "bus5_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.11297563048365,
+          1.11303551576475
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus5_vm_full.png",
+        "title": "Bus 5 \u00b7 voltage magnitude",
+        "response": "bus5_vm",
+        "view": "full",
+        "channels": [
+          "bus5_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.059772640501907975,
+          1.055403631292908
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus5_vm_event.png",
+        "title": "Bus 5 \u00b7 voltage magnitude",
+        "response": "bus5_vm",
+        "view": "event",
+        "channels": [
+          "bus5_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.059746807010528036,
+          1.0553777985089279
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus6_abc_event.png",
+        "title": "Bus 6 \u00b7 three-phase voltage",
+        "response": "bus6_abc",
+        "view": "event",
+        "channels": [
+          "bus6_va_pu",
+          "bus6_vb_pu",
+          "bus6_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.13418189646564,
+          1.13418181910364
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus6_abc_late.png",
+        "title": "Bus 6 \u00b7 three-phase voltage",
+        "response": "bus6_abc",
+        "view": "late",
+        "channels": [
+          "bus6_va_pu",
+          "bus6_vb_pu",
+          "bus6_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.13221964363868,
+          1.1318776376566801
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus6_vm_full.png",
+        "title": "Bus 6 \u00b7 voltage magnitude",
+        "response": "bus6_vm",
+        "view": "full",
+        "channels": [
+          "bus6_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.060787858164399855,
+          1.0734424193684
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus6_vm_event.png",
+        "title": "Bus 6 \u00b7 voltage magnitude",
+        "response": "bus6_vm",
+        "view": "event",
+        "channels": [
+          "bus6_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.060768176344680076,
+          1.07342273911068
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus7_abc_event.png",
+        "title": "Bus 7 \u00b7 three-phase voltage",
+        "response": "bus7_abc",
+        "view": "event",
+        "channels": [
+          "bus7_va_pu",
+          "bus7_vb_pu",
+          "bus7_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.1489072127064601,
+          1.14890731893946
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus7_abc_late.png",
+        "title": "Bus 7 \u00b7 three-phase voltage",
+        "response": "bus7_abc",
+        "view": "late",
+        "channels": [
+          "bus7_va_pu",
+          "bus7_vb_pu",
+          "bus7_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.145303374377,
+          1.1476293636630002
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus7_vm_full.png",
+        "title": "Bus 7 \u00b7 voltage magnitude",
+        "response": "bus7_vm",
+        "view": "full",
+        "channels": [
+          "bus7_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.06159578630393995,
+          1.08736514463094
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus7_vm_event.png",
+        "title": "Bus 7 \u00b7 voltage magnitude",
+        "response": "bus7_vm",
+        "view": "event",
+        "channels": [
+          "bus7_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.06159204450744001,
+          1.08736139443944
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus8_abc_event.png",
+        "title": "Bus 8 \u00b7 three-phase voltage",
+        "response": "bus8_abc",
+        "view": "event",
+        "channels": [
+          "bus8_va_pu",
+          "bus8_vb_pu",
+          "bus8_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.1378177847971,
+          1.1378183040661
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus8_abc_late.png",
+        "title": "Bus 8 \u00b7 three-phase voltage",
+        "response": "bus8_abc",
+        "view": "late",
+        "channels": [
+          "bus8_va_pu",
+          "bus8_vb_pu",
+          "bus8_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.13649127787048,
+          1.1347141143704802
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus8_vm_full.png",
+        "title": "Bus 8 \u00b7 voltage magnitude",
+        "response": "bus8_vm",
+        "view": "full",
+        "channels": [
+          "bus8_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.06099254541329987,
+          1.0768750125523
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus8_vm_event.png",
+        "title": "Bus 8 \u00b7 voltage magnitude",
+        "response": "bus8_vm",
+        "view": "event",
+        "channels": [
+          "bus8_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.060983041695259935,
+          1.07686550882426
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus9_abc_event.png",
+        "title": "Bus 9 \u00b7 three-phase voltage",
+        "response": "bus9_abc",
+        "view": "event",
+        "channels": [
+          "bus9_va_pu",
+          "bus9_vb_pu",
+          "bus9_vc_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -1.15627388812556,
+          1.15627402224756
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/bus9_abc_late.png",
+        "title": "Bus 9 \u00b7 three-phase voltage",
+        "response": "bus9_abc",
+        "view": "late",
+        "channels": [
+          "bus9_va_pu",
+          "bus9_vb_pu",
+          "bus9_vc_pu"
+        ],
+        "x_limits_s": [
+          2.99,
+          3.0
+        ],
+        "y_limits": [
+          -1.1543444518947,
+          1.1542372022197
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus9_vm_full.png",
+        "title": "Bus 9 \u00b7 voltage magnitude",
+        "response": "bus9_vm",
+        "view": "full",
+        "channels": [
+          "bus9_vm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.061993756025179945,
+          1.09434671161018
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/bus9_vm_event.png",
+        "title": "Bus 9 \u00b7 voltage magnitude",
+        "response": "bus9_vm",
+        "view": "event",
+        "channels": [
+          "bus9_vm_pu"
+        ],
+        "x_limits_s": [
+          0.99,
+          1.025
+        ],
+        "y_limits": [
+          -0.06198001161617985,
+          1.09433296505918
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": true
+      },
+      {
+        "image": "governor_step/gen1_speed_pu_full.png",
+        "title": "Generator 1 \u00b7 rotor speed deviation",
+        "response": "gen1_speed_pu",
+        "view": "full",
+        "channels": [
+          "gen1_speed_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.00038085471128999513,
+          2.957956639003001e-05
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen1_speed_pu_event.png",
+        "title": "Generator 1 \u00b7 rotor speed deviation",
+        "response": "gen1_speed_pu",
+        "view": "event",
+        "channels": [
+          "gen1_speed_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -1.982636512201319e-05,
+          8.153607822050102e-06
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen1_pm_pu_full.png",
+        "title": "Generator 1 \u00b7 mechanical power",
+        "response": "gen1_pm_pu",
+        "view": "full",
+        "channels": [
+          "gen1_pm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.028807906597834006,
+          0.507563557549734
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen1_pm_pu_event.png",
+        "title": "Generator 1 \u00b7 mechanical power",
+        "response": "gen1_pm_pu",
+        "view": "event",
+        "channels": [
+          "gen1_pm_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.028754154173263997,
+          0.507560514959664
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen1_efd_pu_full.png",
+        "title": "Generator 1 \u00b7 field voltage",
+        "response": "gen1_efd_pu",
+        "view": "full",
+        "channels": [
+          "gen1_efd_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.08617291722520008,
+          1.5225805893812001
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen1_efd_pu_event.png",
+        "title": "Generator 1 \u00b7 field voltage",
+        "response": "gen1_efd_pu",
+        "view": "event",
+        "channels": [
+          "gen1_efd_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.08611926648363989,
+          1.52257755202164
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen1_pss_vs_pu_full.png",
+        "title": "Generator 1 \u00b7 stabilizer output",
+        "response": "gen1_pss_vs_pu",
+        "view": "full",
+        "channels": [
+          "gen1_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.0020393114232499696,
+          0.00018818106774946125
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen1_pss_vs_pu_event.png",
+        "title": "Generator 1 \u00b7 stabilizer output",
+        "response": "gen1_pss_vs_pu",
+        "view": "event",
+        "channels": [
+          "gen1_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.000955828133866048,
+          8.751809602444794e-05
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen2_speed_pu_full.png",
+        "title": "Generator 2 \u00b7 rotor speed deviation",
+        "response": "gen2_speed_pu",
+        "view": "full",
+        "channels": [
+          "gen2_speed_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.00036156325073998907,
+          2.854304653998163e-05
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen2_speed_pu_event.png",
+        "title": "Generator 2 \u00b7 rotor speed deviation",
+        "response": "gen2_speed_pu",
+        "view": "event",
+        "channels": [
+          "gen2_speed_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -1.0071852762025823e-05,
+          7.560091861977813e-06
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen2_pm_pu_full.png",
+        "title": "Generator 2 \u00b7 mechanical power",
+        "response": "gen2_pm_pu",
+        "view": "full",
+        "channels": [
+          "gen2_pm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.039436028483741996,
+          0.6951743648058419
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen2_pm_pu_event.png",
+        "title": "Generator 2 \u00b7 mechanical power",
+        "response": "gen2_pm_pu",
+        "view": "event",
+        "channels": [
+          "gen2_pm_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.03928063256587807,
+          0.6933074618611781
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen2_efd_pu_full.png",
+        "title": "Generator 2 \u00b7 field voltage",
+        "response": "gen2_efd_pu",
+        "view": "full",
+        "channels": [
+          "gen2_efd_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.08325393214057994,
+          1.47087380301158
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen2_efd_pu_event.png",
+        "title": "Generator 2 \u00b7 field voltage",
+        "response": "gen2_efd_pu",
+        "view": "event",
+        "channels": [
+          "gen2_efd_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.08319182145137993,
+          1.47087028688638
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen2_pss_vs_pu_full.png",
+        "title": "Generator 2 \u00b7 stabilizer output",
+        "response": "gen2_pss_vs_pu",
+        "view": "full",
+        "channels": [
+          "gen2_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.0019567882519927263,
+          0.0003745412116261626
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen2_pss_vs_pu_event.png",
+        "title": "Generator 2 \u00b7 stabilizer output",
+        "response": "gen2_pss_vs_pu",
+        "view": "event",
+        "channels": [
+          "gen2_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.00044820050971296096,
+          6.912921633324313e-05
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen3_speed_pu_full.png",
+        "title": "Generator 3 \u00b7 rotor speed deviation",
+        "response": "gen3_speed_pu",
+        "view": "full",
+        "channels": [
+          "gen3_speed_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.0003625594747359573,
+          2.8622349136031566e-05
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen3_speed_pu_event.png",
+        "title": "Generator 3 \u00b7 rotor speed deviation",
+        "response": "gen3_speed_pu",
+        "view": "event",
+        "channels": [
+          "gen3_speed_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -1.0499928802050196e-05,
+          7.458673902023261e-06
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 1,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen3_pm_pu_full.png",
+        "title": "Generator 3 \u00b7 mechanical power",
+        "response": "gen3_pm_pu",
+        "view": "full",
+        "channels": [
+          "gen3_pm_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.05140486752334602,
+          0.906621194318846
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen3_pm_pu_event.png",
+        "title": "Generator 3 \u00b7 mechanical power",
+        "response": "gen3_pm_pu",
+        "view": "event",
+        "channels": [
+          "gen3_pm_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.051248990371351964,
+          0.904744005459752
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen3_efd_pu_full.png",
+        "title": "Generator 3 \u00b7 field voltage",
+        "response": "gen3_efd_pu",
+        "view": "full",
+        "channels": [
+          "gen3_efd_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.08744213201508014,
+          1.54485413942908
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen3_efd_pu_event.png",
+        "title": "Generator 3 \u00b7 field voltage",
+        "response": "gen3_efd_pu",
+        "view": "event",
+        "channels": [
+          "gen3_efd_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.08738040260117987,
+          1.5448506447301802
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen3_pss_vs_pu_full.png",
+        "title": "Generator 3 \u00b7 stabilizer output",
+        "response": "gen3_pss_vs_pu",
+        "view": "full",
+        "channels": [
+          "gen3_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.0,
+          3.0
+        ],
+        "y_limits": [
+          -0.0019629737527808258,
+          0.0004804045877705886
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      },
+      {
+        "image": "governor_step/gen3_pss_vs_pu_event.png",
+        "title": "Generator 3 \u00b7 stabilizer output",
+        "response": "gen3_pss_vs_pu",
+        "view": "event",
+        "channels": [
+          "gen3_pss_vs_pu"
+        ],
+        "x_limits_s": [
+          0.95,
+          1.35
+        ],
+        "y_limits": [
+          -0.0005114115928226132,
+          0.0001164037474397664
+        ],
+        "panels": [
+          "ParaEMT",
+          "GridKit",
+          "GridKit - ParaEMT"
+        ],
+        "shared_x_and_y": true,
+        "response_offset_pu": 0,
+        "paraemt_native_steps": false
+      }
+    ],
+    "covered_channels": [
+      "bus1_va_pu",
+      "bus1_vb_pu",
+      "bus1_vc_pu",
+      "bus1_vm_pu",
+      "bus2_va_pu",
+      "bus2_vb_pu",
+      "bus2_vc_pu",
+      "bus2_vm_pu",
+      "bus3_va_pu",
+      "bus3_vb_pu",
+      "bus3_vc_pu",
+      "bus3_vm_pu",
+      "bus4_va_pu",
+      "bus4_vb_pu",
+      "bus4_vc_pu",
+      "bus4_vm_pu",
+      "bus5_va_pu",
+      "bus5_vb_pu",
+      "bus5_vc_pu",
+      "bus5_vm_pu",
+      "bus6_va_pu",
+      "bus6_vb_pu",
+      "bus6_vc_pu",
+      "bus6_vm_pu",
+      "bus7_va_pu",
+      "bus7_vb_pu",
+      "bus7_vc_pu",
+      "bus7_vm_pu",
+      "bus8_va_pu",
+      "bus8_vb_pu",
+      "bus8_vc_pu",
+      "bus8_vm_pu",
+      "bus9_va_pu",
+      "bus9_vb_pu",
+      "bus9_vc_pu",
+      "bus9_vm_pu",
+      "gen1_efd_pu",
+      "gen1_pm_pu",
+      "gen1_pss_vs_pu",
+      "gen1_speed_pu",
+      "gen2_efd_pu",
+      "gen2_pm_pu",
+      "gen2_pss_vs_pu",
+      "gen2_speed_pu",
+      "gen3_efd_pu",
+      "gen3_pm_pu",
+      "gen3_pss_vs_pu",
+      "gen3_speed_pu"
+    ]
+  }
+]

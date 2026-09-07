@@ -1,0 +1,5 @@
+DAE variables: 258, Jacobian nonzeros: 1086
+Initial maximum absolute residual (mixed physical units): 5.82077e-11
+Governor reference step: 0.478821902185844 -> 0.458821902185844 at 1 s
+IDA steps: 98255, residual evaluations: 167964
+Complete in 2.383322823 wall seconds
