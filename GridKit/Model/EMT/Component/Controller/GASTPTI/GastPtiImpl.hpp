@@ -411,27 +411,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Identify the differential variables
-       *
-       * The fuel-valve, fuel-flow, and exhaust-temperature feedback states
-       * carry derivatives; every other internal variable is algebraic.
-       *
-       */
-      template <typename scalar_type, typename index_type>
-      int GastPti<scalar_type, index_type>::tagDifferentiable()
-      {
-        const auto XVALVE = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
-        const auto XFLOW  = static_cast<size_t>(GastPtiInternalVariables::XFLOW);
-        const auto XTEMP  = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
-
-        std::fill(tag_.begin(), tag_.end(), false);
-        tag_[XVALVE] = true;
-        tag_[XFLOW]  = true;
-        tag_[XTEMP]  = true;
-        return 0;
-      }
-
-      /**
        * @brief Compute the absolute tolerance for each variable in the model
        *
        * All GASTPTI variables are per-unit quantities of the same order, so

@@ -312,19 +312,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Identify differential variables.
-       */
-      template <typename scalar_type, typename index_type>
-      int Tgov1<scalar_type, index_type>::tagDifferentiable()
-      {
-        tag_[0] = true;  // Ptx
-        tag_[1] = true;  // Pv
-        tag_[2] = false; // Pmech
-
-        return 0;
-      }
-
-      /**
        * @brief Compute the absolute tolerance for each variable in the model
        *
        * @param rel_tol The relative tolerance which can be used to pick the

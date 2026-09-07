@@ -7,6 +7,15 @@ add_library(emt_components INTERFACE)
 add_library(emt_components_dependency_tracking INTERFACE)
 
 gridkit_add_library(
+  emt_dae_analysis
+  SOURCES DaeAnalysis.cpp
+  HEADERS DaeAnalysis.hpp)
+if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
+  target_link_libraries(emt_dae_analysis PRIVATE SUNDIALS::KLU)
+  target_compile_definitions(emt_dae_analysis PRIVATE GRIDKIT_ENABLE_SUNDIALS_SPARSE)
+endif()
+
+gridkit_add_library(
   emt_core
   INTERFACE_TARGET
   HEADERS Component.hpp
@@ -57,6 +66,8 @@ gridkit_add_library(
     GridKit::emt_core
     PUBLIC
     GridKit::emt_components
+    PUBLIC
+    GridKit::emt_dae_analysis
   INCLUDE_DIRECTORIES
     PRIVATE
     ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
@@ -72,6 +83,8 @@ gridkit_add_library(
     GridKit::emt_core
     PUBLIC
     GridKit::emt_components_dependency_tracking
+    PUBLIC
+    GridKit::emt_dae_analysis
   INCLUDE_DIRECTORIES
     PRIVATE
     ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include

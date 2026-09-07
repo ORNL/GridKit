@@ -324,12 +324,6 @@ namespace GridKit
         }
       }
 
-      int tagDifferentiable() override
-      {
-        std::fill(this->tag_.begin(), this->tag_.end(), true);
-        return 0;
-      }
-
       int setAbsoluteTolerance(RealT tolerance) override
       {
         size_t offset = 0;
@@ -479,7 +473,7 @@ namespace GridKit
       }
 
       /** Exact J = dF/dy + alpha dF/dyp, including computed-input chain rules. */
-      int evaluateJacobian() override
+      int assembleJacobian(RealT y_scale, RealT yp_scale) override
       {
         if (!coupling_allocated_ || errors_)
         {
@@ -508,16 +502,17 @@ namespace GridKit
           capacity_            = capacity;
         }
         this->nnz_  = 0;
-        auto append = [&](IdxT row, IdxT col, RealT value)
+        auto append = [&](IdxT row, IdxT col, RealT value, RealT derivative = ZERO<RealT>)
         {
-          if (row == INVALID_INDEX<IdxT> || col == INVALID_INDEX<IdxT>)
+          if (row == INVALID_INDEX<IdxT> || col == INVALID_INDEX<IdxT>
+              || (y_scale == ZERO<RealT> && (yp_scale == ZERO<RealT> || derivative == ZERO<RealT>) ))
           {
             return;
           }
           const auto j            = this->nnz_++;
           this->J_rows_buffer_[j] = row;
           this->J_cols_buffer_[j] = col;
-          this->J_vals_buffer_[j] = value;
+          this->J_vals_buffer_[j] = y_scale * value + yp_scale * derivative;
         };
         auto input = [&](IdxT row, size_t k, RealT value)
         {
@@ -537,7 +532,7 @@ namespace GridKit
             }
             if (E_[n][k] != RealT{0})
             {
-              append(row, this->variable_indices_ext_[k], this->alpha_ * E_[n][k]);
+              append(row, this->variable_indices_ext_[k], ZERO<RealT>, E_[n][k]);
             }
           }
         }
@@ -548,12 +543,12 @@ namespace GridKit
           {
             const size_t w = offset + j, v = w + section.order;
             const auto   rw = this->residual_indices_[w], cw = this->variable_indices_[w];
-            append(rw, cw, section.a - this->alpha_);
+            append(rw, cw, section.a, -ONE<RealT>);
             if (section.pair)
             {
               append(rw, this->variable_indices_[v], -section.w);
               append(this->residual_indices_[v], cw, section.w);
-              append(this->residual_indices_[v], this->variable_indices_[v], section.a - this->alpha_);
+              append(this->residual_indices_[v], this->variable_indices_[v], section.a, -ONE<RealT>);
             }
             for (size_t k = 0; k < cols_; ++k)
             {

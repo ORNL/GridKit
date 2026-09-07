@@ -118,11 +118,10 @@ namespace GridKit
           return this->initializeOutputs(*this, values);
         }
 
-        int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateInternalResidual() override final;
         int evaluateResidual() override final;
-        int evaluateJacobian() override final;
+        int assembleJacobian(RealT y_scale, RealT yp_scale) override final;
 
         /// Get the `ComponentSignals` from this `Ieeet1`
         auto getSignals()
