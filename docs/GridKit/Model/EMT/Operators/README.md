@@ -7,6 +7,7 @@
 
 Converter <Converter/README>
 Rational <Rational/README>
+Reference <Reference/README>
 Shift <Shift/README>
 ```
 
