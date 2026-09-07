@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 
+#include <GridKit/Model/EMT/Component/Line/LineDistributed/LineDistributed.hpp>
 #include <GridKit/Model/EMT/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -36,6 +38,8 @@ int main(int argc, const char* argv[])
   {
     throw std::runtime_error("EMTDynamicSimulation requires a sparse model Jacobian; enable Enzyme");
   }
+  for (const auto& [path, history] : study.history)
+    sys.component<LineDistributed<scalar_type, index_type>>(path).setPrehistory(history.omega, history.value, history.derivative);
   sys.allocate();
   if (sys.initialize(study.state) != 0)
     throw std::runtime_error("EMT model initialization failed");
@@ -46,6 +50,17 @@ int main(int argc, const char* argv[])
   ida.setFixedStep(study.dt_fixed);
   ida.setMaxSteps(study.max_steps);
   ida.setConsistentICType(study.consistent_ic_type);
+  std::ofstream step_output;
+  if (!study.step_output_file.empty())
+  {
+    step_output.open(study.step_output_file);
+    if (!step_output)
+      throw std::runtime_error("Cannot open accepted-step output file");
+    step_output << "time,step,order\n"
+                << std::setprecision(17);
+    ida.setAcceptedStepCallback([&](real_type time, real_type step, int order)
+                                { step_output << time << ',' << step << ',' << order << '\n'; });
+  }
   events.configure(ida);
   std::cout << "Linear solver: SUNDIALS KLU (sparse)\n"
             << "DAE variables: " << sys.size()
