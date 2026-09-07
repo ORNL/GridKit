@@ -325,19 +325,6 @@ namespace GridKit
     }
 
     /**
-     * \brief Identify differential variables.
-     */
-    template <typename scalar_type, typename index_type>
-    int LoadZ<scalar_type, index_type>::tagDifferentiable()
-    {
-      for (size_t n = 0; n < 3; ++n)
-      {
-        tag_[n] = z_->hasInputDerivative(static_cast<IdxT>(n));
-      }
-      return this->tagDifferentiableOperators();
-    }
-
-    /**
      * @brief Compute the absolute tolerance for each variable in the model
      *
      * @param rel_tol The relative tolerance which can be used to pick the
@@ -445,7 +432,7 @@ namespace GridKit
      * @brief Exact local Jacobian with signal chain rules and operator contributions.
      */
     template <typename scalar_type, typename index_type>
-    int LoadZ<scalar_type, index_type>::evaluateJacobian()
+    int LoadZ<scalar_type, index_type>::assembleJacobian(RealT y_scale, RealT yp_scale)
     {
       this->gatherExternalVariables();
       const auto&                              external = this->externalVariableSignals();
@@ -472,11 +459,14 @@ namespace GridKit
         jacobian_capacity_ = capacity;
       }
       nnz_        = 0;
-      auto append = [this](IdxT row, IdxT column, RealT value)
+      auto append = [this, y_scale](IdxT row, IdxT column, RealT value)
       {
-        J_rows_buffer_[nnz_]   = row;
-        J_cols_buffer_[nnz_]   = column;
-        J_vals_buffer_[nnz_++] = value;
+        if (y_scale == ZERO<RealT>)
+          return;
+        value                  *= y_scale;
+        J_rows_buffer_[nnz_]    = row;
+        J_cols_buffer_[nnz_]    = column;
+        J_vals_buffer_[nnz_++]  = value;
       };
       for (size_t n = 0; n < 3; ++n)
       {
@@ -486,7 +476,7 @@ namespace GridKit
           append(residual_indices_[n], column, value);
         }
       }
-      const int status = this->evaluateOperatorJacobians();
+      const int status = this->evaluateOperatorJacobians(y_scale, yp_scale);
       if (status != 0)
         return status;
       this->appendOperatorJacobians();

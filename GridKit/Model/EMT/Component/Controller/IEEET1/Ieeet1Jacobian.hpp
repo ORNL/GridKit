@@ -9,7 +9,7 @@ namespace GridKit
     namespace Controller
     {
       template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::evaluateJacobian()
+      int Ieeet1<scalar_type, index_type>::assembleJacobian(RealT y_scale, RealT yp_scale)
       {
         gatherExternalVariables();
         if (J_rows_buffer_ == nullptr)
@@ -26,17 +26,20 @@ namespace GridKit
           J_cols_buffer_[nnz_]   = column;
           J_vals_buffer_[nnz_++] = value;
         };
-        auto internal = [&](IdxT row, IdxT column, RealT value)
+        auto internal = [&](IdxT row, IdxT column, RealT value, RealT derivative = ZERO<RealT>)
         {
-          entry(row, this->getVariableIndex(column), value);
+          if (y_scale != ZERO<RealT> || (yp_scale != ZERO<RealT> && derivative != ZERO<RealT>) )
+            entry(row, this->getVariableIndex(column), y_scale * value + yp_scale * derivative);
         };
         auto external = [&](IdxT row, size_t slot, RealT value)
         {
+          if (y_scale == ZERO<RealT>)
+            return;
           auto* signal = this->externalVariableSignals()[slot];
           if (signal != nullptr)
           {
             typename SignalT::GradientT gradient;
-            signal->appendGradient(gradient, value);
+            signal->appendGradient(gradient, y_scale * value);
             for (const auto& [column, derivative] : gradient)
               entry(row, column, derivative);
           }
@@ -58,13 +61,13 @@ namespace GridKit
         const RealT gate_rate = -(ONE<RealT> - upper) * mu * negative * (ONE<RealT> - negative)
                                 + (ONE<RealT> - lower) * mu * positive * (ONE<RealT> - positive);
         const RealT limited_rate_derivative = gate + rate * gate_rate;
-        internal(0, 0, -ONE<RealT> / Tr_ - alpha_);
-        internal(1, 1, rate * gate_x - limited_rate_derivative / Ta_ - alpha_);
+        internal(0, 0, -ONE<RealT> / Tr_, -ONE<RealT>);
+        internal(1, 1, rate * gate_x - limited_rate_derivative / Ta_, -ONE<RealT>);
         internal(1, 4, limited_rate_derivative * Ka_ / Ta_);
         internal(2, 1, ONE<RealT> / Te_);
-        internal(2, 2, -Ke_eff_ / Te_ - alpha_);
+        internal(2, 2, -Ke_eff_ / Te_, -ONE<RealT>);
         internal(2, 6, -ONE<RealT> / Te_);
-        internal(3, 3, -alpha_);
+        internal(3, 3, ZERO<RealT>, -ONE<RealT>);
         internal(3, 5, ONE<RealT> / Tf_);
         internal(4, 0, -ONE<RealT>);
         internal(4, 4, -ONE<RealT>);

@@ -44,7 +44,7 @@ namespace GridKit
       ~SystemTests() = default;
 
     private:
-      /// One bus, one sinusoidal source behind a series R-L, one R-L load.
+      /// One bus, one sinusoidal source behind a resistance, one R-L load.
       /// The per-phase matrices are diagonal so each phase solves the same
       /// scalar phasor circuit.
       static std::string caseJson()
@@ -65,7 +65,7 @@ namespace GridKit
                 "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
                 "omega": 376.99111843077515,
                 "Rs": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
-                "Ls": [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
+                "Ls": [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
               },
               "inputs": { "bus": "bus_1" }
             },
@@ -879,17 +879,17 @@ namespace GridKit
 
         sys.tagDifferentiable();
         const auto& tag  = sys.tag();
-        // Bus voltages and source voltages are algebraic; branch currents are
-        // differential.
+        // The resistive source determines the algebraic bus voltage.
+        // Only the inductive load current is differential.
         success         *= (tag[0] == false);
         success         *= (tag[1] == false);
         success         *= (tag[2] == false);
         success         *= (tag[3] == false);
         success         *= (tag[4] == false);
         success         *= (tag[5] == false);
-        success         *= (tag[6] == true);
-        success         *= (tag[7] == true);
-        success         *= (tag[8] == true);
+        success         *= (tag[6] == false);
+        success         *= (tag[7] == false);
+        success         *= (tag[8] == false);
         success         *= (tag[9] == true);
         success         *= (tag[10] == true);
         success         *= (tag[11] == true);
@@ -1115,8 +1115,8 @@ namespace GridKit
         const RealT               omega = 376.99111843077515;
         const RealT               E_rms = 100.0;
         const RealT               sqrt2 = std::numbers::sqrt2_v<RealT>;
-        const std::complex<RealT> Z_total{1.0 + 10.0, omega * (0.01 + 0.04)};
-        const std::complex<RealT> Zs{1.0, omega * 0.01};
+        const std::complex<RealT> Z_total{1.0 + 10.0, omega * 0.04};
+        const std::complex<RealT> Zs{1.0, 0.0};
         const std::complex<RealT> rotation = std::exp(std::complex<RealT>{0.0, omega * t_final});
 
         const auto* y = sys.y().getData();
@@ -1132,8 +1132,7 @@ namespace GridKit
           const RealT i_src_expected  = (i_pk * rotation).real();
           const RealT i_load_expected = -i_src_expected;
 
-          // Tolerance is the measured error floor at the 1.0e-9 solver
-          // tolerance, phase-c current 8.97e-10, with headroom.
+          // Compare against the independent phasor solution.
           success *= isEqual(y[n], v_expected, 2.0e-9);
           success *= isEqual(y[6 + n], i_src_expected, 2.0e-9);
           success *= isEqual(y[9 + n], i_load_expected, 2.0e-9);

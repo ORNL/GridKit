@@ -254,17 +254,6 @@ namespace GridKit
         return 0;
       }
 
-      template <typename scalar_type, typename index_type>
-      int SexsPti<scalar_type, index_type>::tagDifferentiable()
-      {
-        tag_[0] = true;
-        tag_[1] = true;
-        tag_[2] = false;
-        tag_[3] = Tr_ > ZERO<RealT>;
-
-        return 0;
-      }
-
       /**
        * @brief Compute the absolute tolerance for each variable in the model
        *

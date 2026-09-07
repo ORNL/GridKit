@@ -113,10 +113,9 @@ namespace GridKit
         }
 
         int evaluateInternalResidual() override final;
-        int tagDifferentiable() override final;
         int setAbsoluteTolerance(RealT rel_tol) override final;
         int evaluateResidual() override final;
-        int evaluateJacobian() override final;
+        int assembleJacobian(RealT y_scale, RealT yp_scale) override final;
 
         /// Get the `ComponentSignals` from this `Ieeest`
         auto getSignals()

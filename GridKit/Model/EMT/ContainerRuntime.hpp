@@ -526,20 +526,27 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Container<scalar_type, index_type>::tagDifferentiable()
+    void Container<scalar_type, index_type>::setDifferentialTags(const std::set<size_t>& columns)
     {
-      std::fill(tag_.begin(), tag_.end(), false);
-      for (size_t i = 0; i < children_.size(); ++i)
+      ComponentT::setDifferentialTags(columns);
+      for (auto& child : children_)
+        child->setDifferentialTags(columns);
+    }
+
+    template <typename scalar_type, typename index_type>
+    std::string Container<scalar_type, index_type>::describeDaeIndex(IdxT index) const
+    {
+      for (const auto& [name, child] : children_by_id_)
       {
-        auto& child = children_[i];
-        child->tagDifferentiable();
-        const auto& child_tag = child->tag();
-        for (size_t j = 0; j < child_tag.size(); ++j)
-        {
-          tag_[static_cast<size_t>(offsets_[i]) + j] = child_tag[j];
-        }
+        const auto& indices = child->getVariableIndices();
+        const auto  found   = std::find(indices.begin(), indices.end(), index);
+        if (found == indices.end())
+          continue;
+        if (const auto* scope = dynamic_cast<const Container*>(child))
+          return name + "." + scope->describeDaeIndex(index);
+        return name + "[" + std::to_string(found - indices.begin()) + "]";
       }
-      return 0;
+      return "[" + std::to_string(index) + "]";
     }
 
     template <typename scalar_type, typename index_type>
@@ -596,12 +603,12 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Container<scalar_type, index_type>::evaluateJacobian()
+    int Container<scalar_type, index_type>::assembleJacobian(RealT y_scale, RealT yp_scale)
     {
       size_t required = 0;
       for (auto& child : children_)
       {
-        const int status = child->evaluateJacobian();
+        const int status = child->evaluateJacobian(y_scale, yp_scale);
         if (status != 0)
         {
           return status;
