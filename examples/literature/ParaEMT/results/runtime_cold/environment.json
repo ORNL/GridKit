@@ -1,0 +1,17 @@
+{
+  "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "processor": "12th Gen Intel(R) Core(TM) i9-12900K",
+  "logical_cpus": 24,
+  "affinity_cpu": 0,
+  "environment": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "NUMBA_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "repetitions": 3,
+  "GridKit_revision": "257ccb317a7b5d4a530ba6b96688c6ff3c6f5c49",
+  "execution": "Sequential fresh child processes pinned to one logical CPU; no concurrent benchmark jobs. Initialization includes ParaEMT preprocess/JIT; timed loops begin afterward.",
+  "limits": "This compares implementation cost at the stated settings, not at matched waveform error. Trip G1 models differ. Python imports/process startup are included only in process wall time.",
+  "classification": "Cold fresh processes; ParaEMT timed loops include first-use compilation of stepping kernels."
+}

@@ -1,9 +1,16 @@
 {
   "collected_on": "2026-09-06",
   "GridKit_branch": "lukel/emt-playground",
-  "GridKit_revision": "34a1f0887e7dc561736b592b5190aca87d6a43ae",
-  "scope": "Pinned ParaEMT sources; six ParaEMT and six GridKit runs; full controller ports, ideal-opening limitations, native event samples, and 120 figures with identical three-panel axes",
+  "GridKit_revision": "257ccb317a7b5d4a530ba6b96688c6ff3c6f5c49",
+  "scope": "Six ParaEMT and six GridKit 9-bus runs with 50 us monitoring; 120 response figures; native event samples; cold and warmed runtime comparisons containing 54 distinct timed trajectories",
   "artifacts": [
+    {
+      "path": ".gitignore",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 196,
+      "sha256": "11811ac9d36eede8d1efb2b40961644af9ae89a64fb6656c6d002133446b0a82"
+    },
     {
       "path": "9bus.xlsx",
       "bytes": 22216,
@@ -23,22 +30,22 @@
       "path": "CMakeLists.txt",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 581,
-      "sha256": "8551651d90e11a66faa263853b15ce94c0964ac2548b1b7471c5a4b6af3a75ce"
+      "bytes": 595,
+      "sha256": "00225286847d99440281693fc46841556c1059cadb4005fd6ac3b97aae27b7b1"
     },
     {
       "path": "GRIDKIT_EQUIVALENCE.md",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 12813,
-      "sha256": "b735b2c3ca998cdebb3fb6b4f35eb7e426a3347e7ff639279e289092e177f637"
+      "bytes": 13297,
+      "sha256": "0d84a01416987de771dd54b2bfc4ae975637ac73761aff9b3d2e569528e79bf6"
     },
     {
       "path": "GeneratorTerminalConstraint.hpp",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 5370,
-      "sha256": "a9cb293b447b4c069ac0b2a6cfbfb597d37b8a80c02694af9193b66594a5557f"
+      "bytes": 6158,
+      "sha256": "75edb52e413b50e087a962c4df393dec59ce74b66685a2c7ee0ece2b4b674e87"
     },
     {
       "path": "LICENSE.md",
@@ -59,15 +66,36 @@
       "path": "README.md",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 9065,
-      "sha256": "1cd27361fec792be65f6bf40329f8a566c0b7d6476a9f5c3e4cb16cc0ba83651"
+      "bytes": 9918,
+      "sha256": "febd961af1947ab5eec04e242e6f3938e93706150895962065630d572226bf91"
+    },
+    {
+      "path": "RUNTIMES.md",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4785,
+      "sha256": "105526f48c1ab33019b926bd1bd60f3d3228e86b0842756152be8588f68f0168"
+    },
+    {
+      "path": "RUNTIMES_COLD.md",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4653,
+      "sha256": "886784a8d9a0be78aee36ee9e1596a8a94cde43e66e0d810c4b344a3b0d889d4"
+    },
+    {
+      "path": "benchmark.py",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 12877,
+      "sha256": "44d697a0e096e8088aed1c7fc6fbb2f04cf7bb0762e7c88bad9a178508acdf38"
     },
     {
       "path": "compare_gridkit.py",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 6988,
-      "sha256": "9f8f485189d43339ec626a6e313928a3725ca47e407faf4aeaffef79b736db9e"
+      "bytes": 6991,
+      "sha256": "5df85beaf69cdfefc25d7f26e8a482abe7f429c56a30af9a46dea72b5f40545d"
     },
     {
       "path": "environment.txt",
@@ -165,50 +193,50 @@
       "path": "gridkit/tol1e-7.solver.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 297,
-      "sha256": "93c51078e1e70191658cd8389f3864775eb3a46cb26346afbf17d5762d82699f"
+      "bytes": 296,
+      "sha256": "e13fc512e481617df88452c48e20fc74cef7dbeaeb6421f7321f2b3cb2ad4f1c"
     },
     {
       "path": "gridkit/tol1e-8.solver.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 297,
-      "sha256": "f0f6e687fe91bbfe78caacc2279f240d773fea48cd0c9f849fa830a4c7be711e"
+      "bytes": 296,
+      "sha256": "da87a99ba2492362e197ecc0c5838a58162be40b8a036dfdd3bce139879137ac"
     },
     {
       "path": "gridkit/tol1e-9.solver.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 297,
-      "sha256": "b7fa1733429cebb30f8a46a9390050460831c91642c15736953d1a81813da8a7"
+      "bytes": 296,
+      "sha256": "a6ac32d1b5bb501f06ce3c321504f126dea31dc20e2aa89e91c64e1f1fafa4e0"
     },
     {
       "path": "gridkit/trip-tol1e-7.solver.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 307,
-      "sha256": "ebb1f28a8840f4172909714bc8a864c9688a8c1bd6535e3b41c967d87795fde6"
+      "bytes": 306,
+      "sha256": "66fa8b4e67e674bf922fd07c4f88f97b5823b3e9d83d4d081d46663ff0af93a5"
     },
     {
       "path": "gridkit/trip-tol1e-8.solver.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 307,
-      "sha256": "3b1548695e603242696d2e9e114dd9aa35c0aff13da50206f9dbafac99609348"
+      "bytes": 306,
+      "sha256": "052ed0ffd3b955764b38f907bca546f34c90a025bfd93c1ff26b51b9ef5bdd13"
     },
     {
       "path": "gridkit/trip-tol1e-9.solver.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 307,
-      "sha256": "f1fb137ab19d45d8012846976176fb8ffc428cbc5eb2c4635eec73eec8b72c36"
+      "bytes": 306,
+      "sha256": "8aa36ece836bfcc1236981d8ada4abfdc01e151dc86442028e130daabd5061e2"
     },
     {
       "path": "gridkit_9bus.cpp",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 13270,
-      "sha256": "444c2319b18fb3d7bef955b1d0cbf984b4ece11e5759b34f89d8bf5e81ef4cb0"
+      "bytes": 15922,
+      "sha256": "3b987a421d3a7aabe0cb7d1fcf8c4985ca65d236b417874acf321543bd4c5b87"
     },
     {
       "path": "ieee9.raw",
@@ -229,8 +257,8 @@
       "path": "make_gridkit_case.py",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 10010,
-      "sha256": "910b747222d032fe8948801fe88fb49cda997f13cecf8ddb899682a420f7d2e2"
+      "bytes": 10011,
+      "sha256": "9cbaf4e0430953d4fe4111e7c8a843df2ab0ccfc102b9e8836f97d259cc32f10"
     },
     {
       "path": "pfd_9_1_1.json",
@@ -251,8 +279,8 @@
       "path": "plot_comparison.py",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 9937,
-      "sha256": "101c41bf585965a73e00a858fcbc5e01323e13f176e29d1e188f8993dbbaeb40"
+      "bytes": 10029,
+      "sha256": "efae2f868f130347382e839f2d2b98bf972ac6393f101beb46c65ada98e41976"
     },
     {
       "path": "plot_results.py",
@@ -265,911 +293,953 @@
       "path": "plots/coverage.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 75875,
-      "sha256": "78ca2363caf6668570ad40b724ebe2d4fde4a75ab4df71e663d2ef00f6eb10f4"
+      "bytes": 75888,
+      "sha256": "2e9cb377ccd1caf3e3557109bcdb3bd09fcc1287b9c8aa59c68561595a8218e7"
     },
     {
       "path": "plots/governor_step/bus1_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 296645,
-      "sha256": "b4b1575f483a5dab2f006aa7093fcf1f067079ae2ea4807d1f05210a54d98ede"
+      "bytes": 297864,
+      "sha256": "110259e81e401d96870d64e175e30ea70d25fc88574c201bc0ccadcc97d4d4ff"
     },
     {
       "path": "plots/governor_step/bus1_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 191366,
-      "sha256": "0b74686f1ca8b7fd1261a12902e05309b36407aa6abfe7f0d62baa280883075e"
+      "bytes": 196479,
+      "sha256": "baa868a76712039c967f09c588471dca7fa79057b82ba3b4faabb6de49d6adfe"
     },
     {
       "path": "plots/governor_step/bus1_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 119887,
-      "sha256": "2c88d4deda75645d36744aab6abf55e7f9d9f1c6c9f6350a750c08ed9e2b0c65"
+      "bytes": 120066,
+      "sha256": "81c3b2f7adb4e5ced7a3227bc44c4254863ebe993031c4b0e2b0a1ca56b63f4b"
     },
     {
       "path": "plots/governor_step/bus1_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 104236,
-      "sha256": "89f046fca562a627756cc81e3c0eef8242412819a7e20778bc4ea2c379033b3a"
+      "bytes": 103841,
+      "sha256": "b7266fa26c5b40aaaf5b37da036029f4f4d0d1328eb04300596d9fa81cb0b98c"
     },
     {
       "path": "plots/governor_step/bus2_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 296950,
-      "sha256": "334e7cba65de296b2417d8b37d8dd08ff9ab206f532e1b40fe532e7f91b2234d"
+      "bytes": 297556,
+      "sha256": "8005e7ec7ea6e3a26e1056447999d37a0f1416f0c8e3e92f8b655585bb949caf"
     },
     {
       "path": "plots/governor_step/bus2_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 191130,
-      "sha256": "f14f3ddfda632067aeee2ddb220c6103ee86b02bca6e1d8b5d0153396b51d790"
+      "bytes": 195960,
+      "sha256": "3e4e856ae6ba9dd710bb670b9230cfecc9aa35ddc83dc73ba4869be1618a9e48"
     },
     {
       "path": "plots/governor_step/bus2_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 120113,
-      "sha256": "a82b0e2aef1219151b0fca1be099c5f231352f99a8b2ea44327c14c993235342"
+      "bytes": 120292,
+      "sha256": "2f312a22264ab66bf241d06775bb45baabee6798e520c5caa67b79e533190135"
     },
     {
       "path": "plots/governor_step/bus2_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 104256,
-      "sha256": "320b9edd73eb13b395197d25579fc6c4f11013dbb139667c24eb87a7a24d7c0e"
+      "bytes": 103922,
+      "sha256": "7b7a7fabd4e066a10edd256c39a44ad3e033bd028810c39d44982959bca6cf56"
     },
     {
       "path": "plots/governor_step/bus3_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 297204,
-      "sha256": "c8b62d7d1ff67fdfb60128240834ef4568b1db775ab1fd450b7fe073ad51dbd9"
+      "bytes": 297664,
+      "sha256": "a1e273ed41dd6d5e3cfdb42d5099f653e60b3e990e665b4611fd2b3c287e76ec"
     },
     {
       "path": "plots/governor_step/bus3_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 190971,
-      "sha256": "427a486b1db529c94257a77aff38b3cf088bf7896ac332d3832277b4a5c595ae"
+      "bytes": 195993,
+      "sha256": "8fd1f97f838325afbae814b82999d51347f5f2e048b14dfd33285a0178f056b9"
     },
     {
       "path": "plots/governor_step/bus3_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 120042,
-      "sha256": "6631105ccf5d80d5ef270a6c7a95627d555f04d7641f2abcbf192e99096b1c7b"
+      "bytes": 120221,
+      "sha256": "c7bfa2bd3688cc7c2599eecc5160e33b2d7d23bf5d7ced7144b4a43b53737832"
     },
     {
       "path": "plots/governor_step/bus3_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 104318,
-      "sha256": "bf155fe2bf5bd4024b7a25d4759d4a094dc79f57fc2f9d27237b80b742430a53"
+      "bytes": 104005,
+      "sha256": "ae8c3835c2d826284a1603090107f4ce4216840246367a1c4400e665a86cd059"
     },
     {
       "path": "plots/governor_step/bus4_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 297433,
-      "sha256": "465e77e6fa1758d7ef1276e211f3bd68eb70397d8e4dfdc2fd081a28d028c9e9"
+      "bytes": 298282,
+      "sha256": "abcc643155d6c9eed1d832331a2460cf379268a0935b6cdacd62e7e44c840961"
     },
     {
       "path": "plots/governor_step/bus4_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 191758,
-      "sha256": "84df852ef3a0d51070b7576f905ee76453cb39040ceb0d477d318d63e8c8b75d"
+      "bytes": 196199,
+      "sha256": "b0bc1e698ae8f5d1433f9378b980bca61494a3df4364419a59098447355d9deb"
     },
     {
       "path": "plots/governor_step/bus4_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 119890,
-      "sha256": "cc6cfb745994b3dcabbcef7493819a4cf3b77137cb15d19a1c050bc4d8965aa1"
+      "bytes": 120070,
+      "sha256": "a4f6968d240eebf190f01e4455b7d7ee044b66ba9e72332f56d15f9eeaaffcb4"
     },
     {
       "path": "plots/governor_step/bus4_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 104284,
-      "sha256": "e552f5614d3bdd5495099e2a48d953c16a75ebed5dd8d6402a8e16e229cbbc17"
+      "bytes": 103828,
+      "sha256": "c1fa144fba441d76fd76d47bcd2454ce182625d1aabf85318fe82147573bb47a"
     },
     {
       "path": "plots/governor_step/bus5_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 296007,
-      "sha256": "01194cda03099f15d3bfcbbbd597837fdd5e248cf3f63c9c7362865798e9fc19"
+      "bytes": 297864,
+      "sha256": "3cac0f5ad0b038f2ccbea956501ea80ff83bdc7a339fff07cfc4d2ba3693ff26"
     },
     {
       "path": "plots/governor_step/bus5_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 192292,
-      "sha256": "caa4069dc475c09b9c88a5271499e4430b5c9d4bf8fca9fa31008827118147eb"
+      "bytes": 195276,
+      "sha256": "0276ad8c836f9684756ff459a8ef84a076a87630a351f2ee3c715508034ffe46"
     },
     {
       "path": "plots/governor_step/bus5_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 119849,
-      "sha256": "ab2826085398c2b88fb9656ad3aa2a05d9007393e08d7025eeb37a11a01670cc"
+      "bytes": 120029,
+      "sha256": "50bf231c0055f8628078bb83139dc04698317592e5e1ed9ab4c1ca221d00c623"
     },
     {
       "path": "plots/governor_step/bus5_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 104273,
-      "sha256": "a82f5e3b9253c06aa5925aca9d3c200980ece613b9e5f5e8d5e99920166e7eda"
+      "bytes": 103796,
+      "sha256": "10cdd107f292ba2b8ab3a247c00e684ce4eeba5833bb411a6e8b2c0108834ddb"
     },
     {
       "path": "plots/governor_step/bus6_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 297109,
-      "sha256": "8577dfcf8a03ac1b5152106fed08e05379a1650ebfc774b0267782cbdb0e821b"
+      "bytes": 298303,
+      "sha256": "4e56dea67bc05c6ac1ad4a49391dcd0b9267b67bba622fe91298b1ed48737b80"
     },
     {
       "path": "plots/governor_step/bus6_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 193853,
-      "sha256": "0d56d69adb77ccf2c2178e074ed91c80c47ec6736be7ac51007f51f6204b3850"
+      "bytes": 196059,
+      "sha256": "e936ff21a8d1daa7caadca3b7af7bb6c96020c134bdeb1c9bdd90cfb77bfdebb"
     },
     {
       "path": "plots/governor_step/bus6_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 120239,
-      "sha256": "2731492db56c8579ce59ee7e16bedfdf95ab599b0c9eefa32af244e2045ec3b0"
+      "bytes": 120419,
+      "sha256": "5888095d6c6f7e87e070c1740632e7d0a7bb6b7efd11a23be44d8da22038686b"
     },
     {
       "path": "plots/governor_step/bus6_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 104547,
-      "sha256": "44617b8c683ad60336e3db7a62c1ae0f7b06310558c679cb4c22f06e0ed99e34"
+      "bytes": 104138,
+      "sha256": "99efc595720905544a65911c5146a7bce45b26feefd2a6d96855466f415bf638"
     },
     {
       "path": "plots/governor_step/bus7_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 296832,
-      "sha256": "ae0c5293db512877fa4ef04224e70309d0fafe10996e0acde20ce70a88ac336d"
+      "bytes": 297847,
+      "sha256": "c1a4ada584218ad55f445050b3690b634f5687d0f1e3c2723d7c0a1cf4d6a2ac"
     },
     {
       "path": "plots/governor_step/bus7_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 192439,
-      "sha256": "17142c1b17e2dd0d4cdcddad73f2a9ebd97b93baf47ec2fff6aa16c39d1dea3c"
+      "bytes": 196001,
+      "sha256": "80314b81060521716d62b73d1267f1a7ed41d61269e67cbae749983e8fe1eac5"
     },
     {
       "path": "plots/governor_step/bus7_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 119985,
-      "sha256": "79cbc4c8cd311f595b3e48c9e3ca914b7d91a4113c8ce856b673e4256167dc9a"
+      "bytes": 120163,
+      "sha256": "05662b40ab016bbcbc95b512f43c1fa05a9804a60b7beca00fa2ebeb52f9af2f"
     },
     {
       "path": "plots/governor_step/bus7_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 104141,
-      "sha256": "9a0d4d557c5a3d2d29aa5c437102e81ef35e6d03f40e85a3ab0cb07e5d819182"
+      "bytes": 103794,
+      "sha256": "dab2ca6f18b280ddbe36fafbf69828b02c84e716add664333ffebe1356efb1e9"
     },
     {
       "path": "plots/governor_step/bus8_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 295940,
-      "sha256": "b3ec0b47529250c63083ca6c5a403cb3a861449ca9f23a70f15507c4906019a8"
+      "bytes": 298432,
+      "sha256": "c131212bb16cefaeee26b3fdaabd485468e51ffc58a5720c6101b8e389ddae6e"
     },
     {
       "path": "plots/governor_step/bus8_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 193303,
-      "sha256": "77da8c21b44f41e638195f0c27310c9f3c6b4132b348d59eff80d18db115e76d"
+      "bytes": 196637,
+      "sha256": "35e0ff19381b78f038f600335dbf57da7237099846c01c60e46f62f3f32e49c7"
     },
     {
       "path": "plots/governor_step/bus8_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 120313,
-      "sha256": "b48c99642ae4de46b1b081ae00906ccd8f7f04599284dd1c1dfb52077aa2beb5"
+      "bytes": 120492,
+      "sha256": "64f7cf97c117c4c3aa6162a4926bf0383e20a86a94b2ba3489b0212b3e6b38eb"
     },
     {
       "path": "plots/governor_step/bus8_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 104614,
-      "sha256": "b4d6088be1e2a4d9befbdbf027095286ff213c25effb491ea33789f025e45c89"
+      "bytes": 104265,
+      "sha256": "ca9a018d84f9f096928188a319c5c9229780d3c34a773274787ef68008cc76e4"
     },
     {
       "path": "plots/governor_step/bus9_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 296390,
-      "sha256": "1a4d3604200df097b93d188cc9db0580a6522bdb08196891e77bc7a17ea8b019"
+      "bytes": 297918,
+      "sha256": "82a4ecc2ff3517125128280714d50b1a87661b53d220a8eb826469fc1695460c"
     },
     {
       "path": "plots/governor_step/bus9_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 193432,
-      "sha256": "6e4a972f3177c363931d69792ef948b5d83e59983ed0b40c81144d6a64d40f81"
+      "bytes": 196883,
+      "sha256": "6103a73e3733efb5a2bc627de91f90df1a2d79bb33008f4ecc1213b100f12e18"
     },
     {
       "path": "plots/governor_step/bus9_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 120350,
-      "sha256": "57c44931c1dc70d6ed0e1ba6e24a3e654e158807e8717eef86bf778b134b8f1a"
+      "bytes": 120529,
+      "sha256": "e30ca1c79d23297e9e0967003d5705a13cb3e12e550d2f33643c7b9914c421f8"
     },
     {
       "path": "plots/governor_step/bus9_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 104511,
-      "sha256": "9e339bfd4749c6fc0e2b04f646ac83fbc326e9fc49524c2bd334c135c74da60a"
+      "bytes": 104155,
+      "sha256": "41aab1e70f21642095b1e2f1027267b54ebe44aa497b7b2cb335daf4e1c3f0c9"
     },
     {
       "path": "plots/governor_step/comparison.pdf",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 4065676,
-      "sha256": "6a6708a994965f16139f2b19b3711a2648333039398beb1fa25d8701ee09909f"
+      "bytes": 382106,
+      "sha256": "26901cd26d426f14b41d72b09b1dbb76962cf3b59f1c81387c1f936d0b6be40a"
     },
     {
       "path": "plots/governor_step/gen1_efd_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 114669,
-      "sha256": "993df25c8c978ef9d367ba17909a5e1d8ddbc00b3d26a6a026a6f666b09c6c9b"
+      "bytes": 114552,
+      "sha256": "f1d558b2340250869a6a43ab7d5ce5c411650139c3f539623efe056f179152f6"
     },
     {
       "path": "plots/governor_step/gen1_efd_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 113079,
-      "sha256": "ed6961148f7658733d0d4ce950156ef79ca42fef894434e7d59e4fb585cf986d"
+      "bytes": 112679,
+      "sha256": "0a8c91af66dc076c0697983b8d1b45a7ff3bc2cd9726e675e2ab9f83c464293b"
     },
     {
       "path": "plots/governor_step/gen1_pm_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 114790,
-      "sha256": "b7553687c8020cec8a6193bd351535700f3e23cb17cb7c632dd71c73d7f3b646"
+      "bytes": 114430,
+      "sha256": "b955b7af417e4deeb1fc1ee04ffbc70f04d625bc16ffdcf744ecbe03c0112b49"
     },
     {
       "path": "plots/governor_step/gen1_pm_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 114708,
-      "sha256": "95924fa03ee1bf969d55225bbe6c79a541064acdf3773b0fe7e7355061968c42"
+      "bytes": 114094,
+      "sha256": "9efc3b4c26fa2862965dc89341b414e0f59d2bf665c4611c5665375d79cc7a26"
     },
     {
       "path": "plots/governor_step/gen1_pss_vs_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 148440,
-      "sha256": "c79b1068bd86050d57fec677bf1dc90728f5f15449883bd9c1b61d68a73f4a06"
+      "bytes": 147770,
+      "sha256": "ce4aa1fed87e77922152f4815a5f2aa8209e77f8aa1ec9c0060db2c4c758f052"
     },
     {
       "path": "plots/governor_step/gen1_pss_vs_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 149010,
-      "sha256": "23ffb0adac7be83acef33450b87ed8891d1df5fe56d821931ff80008fb645c60"
+      "bytes": 147895,
+      "sha256": "71c17466f2ec49dc2ad5fe94a8f2d6b60b7ec0f99bb95c5150d0a5760acdf0fa"
     },
     {
       "path": "plots/governor_step/gen1_speed_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 148611,
-      "sha256": "ab4113d0125f71dda71644fcb20b1d9978de6571b0a2a210c4ef7da7da5e857f"
+      "bytes": 147476,
+      "sha256": "11d602bf35bd949edfc77af5f8d09c334d8456fb38428bf82c2573b786e3662f"
     },
     {
       "path": "plots/governor_step/gen1_speed_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 145354,
-      "sha256": "17f9c18bb1d78d83b773411e73efb60ba4a014383a76c59728d93ebc09b23e6f"
+      "bytes": 144802,
+      "sha256": "2886a6eef9cf2f17baa8785d9ad2b912226aa692c2c62431359dd85c4b4e57a1"
     },
     {
       "path": "plots/governor_step/gen2_efd_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 111968,
-      "sha256": "0f8d0590a3bc5437eb61fa1e00103bf20d25d7b9ca7a2705ffae644f9015703c"
+      "bytes": 111758,
+      "sha256": "035f349c5f85ca7edd4d793d53e018534a1d7bc8778749af6e5af807e499eaa7"
     },
     {
       "path": "plots/governor_step/gen2_efd_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 110185,
-      "sha256": "40a0000042fb1b6999c5d4ad1cd6279c1411b4a51609d0c6b35946aec6b38ba2"
+      "bytes": 109784,
+      "sha256": "65914d994535d6d860d4e5e8de1c98251f06ab2b299532656fc081df3a16a9bb"
     },
     {
       "path": "plots/governor_step/gen2_pm_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 108444,
-      "sha256": "8ecf4221aa3f53957c59bb33f0b5657ac8c7c6454b49acbc7199e1406e1cc9f5"
+      "bytes": 108287,
+      "sha256": "7df84255e4b02850d303e587a8434b777ef6885f4b7c07524aaf4ba41b3acd24"
     },
     {
       "path": "plots/governor_step/gen2_pm_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 107701,
-      "sha256": "fafcfd0f206751e1fbdf99ed1d9546d965df23b8a745c9e662a30237fc2609aa"
+      "bytes": 107397,
+      "sha256": "23b836edb8738178a09d9d3c49d227adc867d6dbd074cd993b6148a10efac607"
     },
     {
       "path": "plots/governor_step/gen2_pss_vs_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 144853,
-      "sha256": "64779470adf35f0b70886502e19047d0940358b29b45ef231ca0bb310c6c2e3c"
+      "bytes": 143794,
+      "sha256": "f8ab7c308666f324b4efe01a7e8252167c1cd6c050d0b273dfd3dcac62295b55"
     },
     {
       "path": "plots/governor_step/gen2_pss_vs_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 147698,
-      "sha256": "249d46aad637e674d3d41df6d7089bfdce5638004050df84bea72fd542cbb1b6"
+      "bytes": 145234,
+      "sha256": "dea2b74d7a623a9de9e91c90acf2db607602b72bb4e28ea8b6be48988da7c6a9"
     },
     {
       "path": "plots/governor_step/gen2_speed_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 132759,
-      "sha256": "78f027fbcd17c858eba21f2511829814c352f6874a71c20863aac67666ba37ff"
+      "bytes": 132077,
+      "sha256": "598f75ec4cbf2fba0d78707ff396ce8c84f8b18f74734c12c53dc4562d7b2522"
     },
     {
       "path": "plots/governor_step/gen2_speed_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 144426,
-      "sha256": "05917af2f602c1d73fbcb75c8d639472206519521c71377efac5a0ae3829ba65"
+      "bytes": 144417,
+      "sha256": "1a156d6bf3b9fbd918976f71d09d773f9a531c0e4e844386529fb79619982656"
     },
     {
       "path": "plots/governor_step/gen3_efd_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 114018,
-      "sha256": "c572339698f40d70e0a220f4d338ded4ac13760c538bad24ee8ddef73e161554"
+      "bytes": 113776,
+      "sha256": "88667acc5e4ade5e742cdce01d3d23a0d11febdecae49c19a4cc00d4cb8e0e87"
     },
     {
       "path": "plots/governor_step/gen3_efd_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 113040,
-      "sha256": "87215ba2b241b76b85c4d2d21be9d04b0a1e5741040e109281f6c76d07352552"
+      "bytes": 112660,
+      "sha256": "512c88406c2d3ed024369d57bcb26e1820a6565c44f51eee5ae5bc47a5dcda13"
     },
     {
       "path": "plots/governor_step/gen3_pm_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 111699,
-      "sha256": "92fae8a006ef3a9f879d75c2a9710b9d57cae9b77b19aec2d0de1d54affbf856"
+      "bytes": 111517,
+      "sha256": "2b740403291c415d141c302262adb28d52c5e7101427f5a2736eebf2d03cc499"
     },
     {
       "path": "plots/governor_step/gen3_pm_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 110654,
-      "sha256": "db9e60c3d5317e0615b5dc30f8dc2e5d74dd3e3f5a9e236301b32320263d3dcc"
+      "bytes": 110389,
+      "sha256": "c113122aab87eb7683a1ed0b84a66aea8cc47b06cfb98858ed2ba25a3a92f5ac"
     },
     {
       "path": "plots/governor_step/gen3_pss_vs_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 156219,
-      "sha256": "cf2256793996312ab3b83676a85922d0ff03910d8efbeef1755c4ecf30adfc35"
+      "bytes": 154727,
+      "sha256": "f91fc75b57b268e69c9987c53a8f7061b62f433146f34d9b42021f5b1aff66e7"
     },
     {
       "path": "plots/governor_step/gen3_pss_vs_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 146980,
-      "sha256": "95044f52c4640771970223ade01154565de886a123ed25a967bd74bb5cd4f47a"
+      "bytes": 145048,
+      "sha256": "734b83500ac202193583552b160c20773a882c0f76a143ddea4811011cef1c87"
     },
     {
       "path": "plots/governor_step/gen3_speed_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 134347,
-      "sha256": "da68b159e3aebe67fa5b116791961113ee24cf874fcd109420db191d17dbcd3a"
+      "bytes": 133779,
+      "sha256": "f2b2cc216ae5cc24695de8a2af23950a03aa7c1bf96efbd92f1108c58d67d69c"
     },
     {
       "path": "plots/governor_step/gen3_speed_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 145115,
-      "sha256": "d869a51dc677e03878ad52d9991c3c6093e3298c273e07e154e01ea67b2a3556"
+      "bytes": 144385,
+      "sha256": "ed3f87a1b37e0ef8475d7d56e79d74c3e682926a08127e10a6b7f22915b1f869"
+    },
+    {
+      "path": "plots/governor_step_adaptive_work.png",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 469571,
+      "sha256": "a4524be87d90e12bced0548f50bc1d57d19db87991a6f65240bf93792fd33236"
     },
     {
       "path": "plots/governor_step_response.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 145354,
-      "sha256": "17f9c18bb1d78d83b773411e73efb60ba4a014383a76c59728d93ebc09b23e6f"
+      "bytes": 144802,
+      "sha256": "2886a6eef9cf2f17baa8785d9ad2b912226aa692c2c62431359dd85c4b4e57a1"
     },
     {
       "path": "plots/gridkit_governor_step.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 145354,
-      "sha256": "17f9c18bb1d78d83b773411e73efb60ba4a014383a76c59728d93ebc09b23e6f"
+      "bytes": 144802,
+      "sha256": "2886a6eef9cf2f17baa8785d9ad2b912226aa692c2c62431359dd85c4b4e57a1"
     },
     {
       "path": "plots/gridkit_stabilizers_and_refinement.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 149010,
-      "sha256": "23ffb0adac7be83acef33450b87ed8891d1df5fe56d821931ff80008fb645c60"
+      "bytes": 147895,
+      "sha256": "71c17466f2ec49dc2ad5fe94a8f2d6b60b7ec0f99bb95c5150d0a5760acdf0fa"
     },
     {
       "path": "plots/gridkit_voltages.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 296645,
-      "sha256": "b4b1575f483a5dab2f006aa7093fcf1f067079ae2ea4807d1f05210a54d98ede"
+      "bytes": 297864,
+      "sha256": "110259e81e401d96870d64e175e30ea70d25fc88574c201bc0ccadcc97d4d4ff"
     },
     {
       "path": "plots/index.html",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 24458,
-      "sha256": "d57b881340c4332908d0dbc134bbddb1ed3ef55429fe4efdf1279938447ce16b"
+      "bytes": 24495,
+      "sha256": "093a2426e5b8d2220507d842b652fa7923fb6f42983304c6023b26ec16fb7cd3"
+    },
+    {
+      "path": "plots/runtime_cold/governor_step_adaptive_work.png",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 468976,
+      "sha256": "09d86f7123232168bbf4240ac539c6ecc23993d76dbaed6ed29d9928385b3064"
+    },
+    {
+      "path": "plots/runtime_cold/runtime_comparison.png",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 95171,
+      "sha256": "2295c25f8a59092a62717d0db122465c91e67e157bfa6f2b9e7a3d4135c0c0ce"
+    },
+    {
+      "path": "plots/runtime_cold/trip_adaptive_work.png",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 410714,
+      "sha256": "b37242af07b542b4e1e27d7659defc398079f65db80bdea5179d66b26ab48385"
+    },
+    {
+      "path": "plots/runtime_comparison.png",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 92135,
+      "sha256": "2711264e1111fe670c977cd23723943f14b96891a17ef9dd62218e95a23b9821"
     },
     {
       "path": "plots/trip/bus1_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 170911,
-      "sha256": "cf13d9b2e96a1d324eb4e2f9dcc1ee1fe544edc4bc92983e320dc4b9019ec2af"
+      "bytes": 169748,
+      "sha256": "9c0146aaa89ce0e41826e9f6335a5c697b6512f7dffd817b670298997af47cda"
     },
     {
       "path": "plots/trip/bus1_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 197425,
-      "sha256": "c75ba4aa256e7e8d54ef19d6ba51ead8cb077d934930c78025da70d1669a92b8"
+      "bytes": 201496,
+      "sha256": "d30e2cb21136fe6985b03482be501cdf3397409bebc30bf6bbc340ac491b1b40"
     },
     {
       "path": "plots/trip/bus1_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 130603,
-      "sha256": "f3bef7dbcac700d1c74f2ad53dd752ceed7c62ace6d370e399cf36c006cc6665"
+      "bytes": 130130,
+      "sha256": "1a03ddd792ff042a730981fc9866dda89cd02cad1f761d2013a2f89ddc49afbf"
     },
     {
       "path": "plots/trip/bus1_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 103714,
-      "sha256": "fef14576c4381266305339207654d7941608d3b79fbbc478db1cb3238eff172d"
+      "bytes": 103328,
+      "sha256": "1cdd7c43f4afa38b399153c501871af741e35e6396dfa28f7efb29b4950c9456"
     },
     {
       "path": "plots/trip/bus2_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 306675,
-      "sha256": "de33de7a78f09e7780ec512af5eb54468a062e57843593a98ffee52ad9bd546c"
+      "bytes": 310299,
+      "sha256": "553dffe0baef7edfb052bb6602cfbc091e413d3d4b68532abd0fd27810441e74"
     },
     {
       "path": "plots/trip/bus2_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 202233,
-      "sha256": "f40d55dbe037eab465790710935204de9b8eed34cd841987187f427a725af68c"
+      "bytes": 205368,
+      "sha256": "e297f53b79fef85f8594d480aed9c2e5c8a17bedc1678d694436b03624f0f33a"
     },
     {
       "path": "plots/trip/bus2_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 148497,
-      "sha256": "8273a74695745acba46d1d7c068fcdfb17167330ed47e040f4657f33690ad319"
+      "bytes": 152349,
+      "sha256": "d8151a67cf38901b9f64e45cf07705d8926f6e7af3d54de5e621ed2f6c7a4fbc"
     },
     {
       "path": "plots/trip/bus2_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 118689,
-      "sha256": "9a07466d777f04e6ef01683ce9c1237fd8d67ca076c369a6b5aabd76fac7c5aa"
+      "bytes": 118581,
+      "sha256": "8f874c4770ba112b7fa08f5214c66a39d3e8f05a59ea96ec8c3dc3f9fdea601b"
     },
     {
       "path": "plots/trip/bus3_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 303469,
-      "sha256": "1c5cf02db87e757a3d6447e75d941a96da2ffe8fd5ebe6a8865cff8b1df47f76"
+      "bytes": 305661,
+      "sha256": "aaf719f5dcd2b1322111556bee3eb2b9280ebcebdc2d521b45a71dc95feb0882"
     },
     {
       "path": "plots/trip/bus3_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 201116,
-      "sha256": "3881090e817913e2989a763c3336d6be1870b98bf3606075edc827c1d24ba450"
+      "bytes": 205301,
+      "sha256": "f58e608f3876de587d5ab7dc00d8faec63f17510af20c15f919bf035ab5a75cc"
     },
     {
       "path": "plots/trip/bus3_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 150051,
-      "sha256": "f0d9d34d99ca948aee10c3d865eadd4d7d0795a5da7d7217013b74a33202bd06"
+      "bytes": 153004,
+      "sha256": "ca9c9a61290dfd5c65502dd87e5060b14d3f460430935b92f5a3dd1d51c2448f"
     },
     {
       "path": "plots/trip/bus3_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 119066,
-      "sha256": "b6b2f41990483a2ff500ef7c0890467c2da2f639eb4ce91eea88fbb1deb6272b"
+      "bytes": 118300,
+      "sha256": "fc9b1beb6709172caa63a79d1b53956be72f7bc46405f108245e53f31ccc02c8"
     },
     {
       "path": "plots/trip/bus4_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 328406,
-      "sha256": "dd918cf1b80d32119395ab526f2e78a021176a12d401cc525031eb7f279c749b"
+      "bytes": 340118,
+      "sha256": "70f95a27110b60b35e5a409672f03c5973fd8e1810b6700622b91d532bf43206"
     },
     {
       "path": "plots/trip/bus4_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 197571,
-      "sha256": "0a41a03431a4e6cdeb90b6b220d860b2e710757d4df0d9ab3ff3b792727dff80"
+      "bytes": 201644,
+      "sha256": "7549bce049c9f68e276962f38891345e5ba0ea396fb2d90028a865440387a250"
     },
     {
       "path": "plots/trip/bus4_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 184201,
-      "sha256": "f38f44efb0861b036c5f2bcfc5172c932c06a950a89798359d6186d157937804"
+      "bytes": 193691,
+      "sha256": "d0f699e157f5eaa5135f598061987db22fbebb481508e9597f6f00e9a59d1014"
     },
     {
       "path": "plots/trip/bus4_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 119796,
-      "sha256": "f6d4ab162fe048b7d9a9d14618f19b9e0f11ba6e2fa60a3000e405e0923cbe41"
+      "bytes": 119268,
+      "sha256": "7d58ef3b5079fd97c3171e18c044fac4afec09cfc0c4ed233fc474d4bc864bed"
     },
     {
       "path": "plots/trip/bus5_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 310324,
-      "sha256": "cd10a10355de5ba92e2865434b4db1236be88fdc4fb64c76c30b0e36ae75abfc"
+      "bytes": 315694,
+      "sha256": "dc5cd6cad87602da831bd6909855bb3933367d572f3520cdb29a8bed2cc03a3f"
     },
     {
       "path": "plots/trip/bus5_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 198533,
-      "sha256": "452167daa987e88250a58d616039f8738ba0fab05dc68af808f5382b6063a08a"
+      "bytes": 201283,
+      "sha256": "3f48fb204245c8e94ab285063e0f463d36761a741696cf87d9cb3a851da29a9a"
     },
     {
       "path": "plots/trip/bus5_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 165896,
-      "sha256": "5c10c2d6907174f1bcf9733a6398d98eaf9a1f0e661234788ace4fcc9720b1e0"
+      "bytes": 172085,
+      "sha256": "93ec5e669e24a5ae730edc9d56f9320d9bf7e27d9b9f493c335c856d05bd2343"
     },
     {
       "path": "plots/trip/bus5_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 119543,
-      "sha256": "9e82d2ddfcb930ff25dc561bc7fac73949748342d4713806ba55f1c5768a97ee"
+      "bytes": 119422,
+      "sha256": "308b9ac785759836c067600444253e59a80967d14d360d940f0ea5746e871e75"
     },
     {
       "path": "plots/trip/bus6_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 306607,
-      "sha256": "73763703ee05f508e4cd295500e337fecdb5c1c09ba2f751d4efff69c89b2662"
+      "bytes": 312008,
+      "sha256": "9fd1acec567ce9daa3a981e02e1926611ee526a6a1deca022b12a980baa28086"
     },
     {
       "path": "plots/trip/bus6_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 198262,
-      "sha256": "c46f5ee9028a636f53b547ecee45b86c0ed632d858b4c699e93882d31ecbd91e"
+      "bytes": 201724,
+      "sha256": "c2f9f19f06f5acd0f93b5b88f8fa5d9054f72149fcfd12d4b0d3b63ce122fd2a"
     },
     {
       "path": "plots/trip/bus6_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 162937,
-      "sha256": "96945fb4e20bbb0ee91911ae0c6eac997b0ebb263b7e9c47ca69cc40b587a195"
+      "bytes": 168217,
+      "sha256": "297e7cb67150c9530449344ee8b6cc8cf600ca341bc1bdb73082fa546078b3ab"
     },
     {
       "path": "plots/trip/bus6_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 119677,
-      "sha256": "0f8fde406943edea58ee930ef51b40a1887fddffe4180f1a82bf4c497cd35cdc"
+      "bytes": 119541,
+      "sha256": "311f05c1eda719a25331399b99d6f0783fa3feda6f633d459fe0e81a1c2f8a25"
     },
     {
       "path": "plots/trip/bus7_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 308135,
-      "sha256": "ddaf89d37ee5a89e0479ac49dcc8925d0aa669ae7e95075ce21cca2e93dac7f4"
+      "bytes": 310764,
+      "sha256": "6884e9ac9700f05191eefbcf6d5373b2284e016fa0244cd855c33edf2aeb66d8"
     },
     {
       "path": "plots/trip/bus7_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 201980,
-      "sha256": "ef7d5f9d9149470e8b6b96308ed67094533eedad5d1da0fc8376f5b505faee41"
+      "bytes": 205390,
+      "sha256": "b6fc6f598ebe27b8b81c8a4e68300a7e612b567d4a21465aa70e71151f5b4e09"
     },
     {
       "path": "plots/trip/bus7_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 154445,
-      "sha256": "a618673b9f8030f08799475fe88f5791eb6593746031191c53074ed690f5273c"
+      "bytes": 159259,
+      "sha256": "d00c2323c8b1c31d6792a52ea21d681d5327c73faf0b831a811d20adf54ce4d7"
     },
     {
       "path": "plots/trip/bus7_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 118436,
-      "sha256": "d882a04ae6f8693e2f08b7761398d04205c4c1a357371f9ac372accf65eba5c4"
+      "bytes": 118276,
+      "sha256": "f6bdb8a46fa41bb34b7ff21c70ffd7013f2b4cb03b82e42bf374861344f3c60e"
     },
     {
       "path": "plots/trip/bus8_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 311167,
-      "sha256": "d11a293c886de3ee61018b7da1010ef8d895b4a6a700b89f22437daea6e66747"
+      "bytes": 316816,
+      "sha256": "6822d024afe920d74ed1d540f7c36da5ff4dc3192d8dbbb40f9f2717d5f74f8a"
     },
     {
       "path": "plots/trip/bus8_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 202018,
-      "sha256": "84c2dbd460c865374f55c0a53c193c6a220ae53df7dc5b05e6506ae8a3332387"
+      "bytes": 204996,
+      "sha256": "739967b380b59a0047cdcf77e4ec4e2f2a3d5fa089a046d6d29bc86da05175b3"
     },
     {
       "path": "plots/trip/bus8_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 163684,
-      "sha256": "393c4007a6e2ae84253c0f13a44172d4d78623d9ff44a5b4828c0023527f24fe"
+      "bytes": 169786,
+      "sha256": "bb3ab21c96fa7beaf12c3319f843578e7cc1a61a30d92c7b83ea6427ff3bafd5"
     },
     {
       "path": "plots/trip/bus8_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 119737,
-      "sha256": "6a573fa9cc8984ac0f9f7fd31267255a729f832d1fd05aee6f637a0b893da461"
+      "bytes": 119167,
+      "sha256": "d2327475f159e7073b3b9d7cd83147c79b4be3daf1699dca54068eb30fb7ffdc"
     },
     {
       "path": "plots/trip/bus9_abc_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 306138,
-      "sha256": "4dfaf2ac15b0500270be4d0aabb3ee17ad837cf1ddd936d6b5145fc614b8839a"
+      "bytes": 308588,
+      "sha256": "bfb1780248ed540c633f81e4a053a84e57eba228aed4a38c88d01c14b6679f3b"
     },
     {
       "path": "plots/trip/bus9_abc_late.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 200420,
-      "sha256": "1eb7300c4ea12f18397a402526c37ac7196638720536eb84c038c5262ba07dff"
+      "bytes": 205559,
+      "sha256": "6556df67c5ca5979f42ef3fe76c3f1b11f51d7d22b215d499a9ce32973edcfd6"
     },
     {
       "path": "plots/trip/bus9_vm_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 153213,
-      "sha256": "d91c9a4e94c86fd801334bf16b77dcdad0b849b800f290a0683f05195212a05d"
+      "bytes": 156946,
+      "sha256": "8c658ef91b1069dc061b90538e45a935a66a196b83d9f1eaca6563a6bbc0ff24"
     },
     {
       "path": "plots/trip/bus9_vm_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 118944,
-      "sha256": "e333b0e62868eecb39434cd8304cf7857465560117f6f74d212f43801326dc06"
+      "bytes": 118781,
+      "sha256": "f80e916b2a5a22eeb77b115317c096b54353481e463867c1d49c8483fdfda466"
     },
     {
       "path": "plots/trip/comparison.pdf",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 4170796,
-      "sha256": "023f5ce3a2e027d643a8aab377223720a05090581c5037c5fe616ffa90b0d917"
+      "bytes": 684825,
+      "sha256": "24b7ea762af6a9b50f9c4e1a545b2419f823a0a681fd475992edf072ef7995d5"
     },
     {
       "path": "plots/trip/gen1_efd_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 138498,
-      "sha256": "59393011cb8ee53739d0c202969de5d68ec5543b208b3d8bda746abf0a3fe763"
+      "bytes": 138030,
+      "sha256": "dc340d463631d7a157d8018d4d15ab4fdec86d992ad23ccad86b369b8fa72891"
     },
     {
       "path": "plots/trip/gen1_efd_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 127809,
-      "sha256": "23273850c0d5dad576b342fa95c729ba9262e48120734ae56593464bc184bfec"
+      "bytes": 127060,
+      "sha256": "7bb1debc5fac270eb12aa6b041d7398e899032b7ca0290b6d1adbcb440f6d7c7"
     },
     {
       "path": "plots/trip/gen1_pm_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 134552,
-      "sha256": "464ad67b6a703ad2f5327ce252466d411362eb20438e98beca89df5f3c84f7a2"
+      "bytes": 134136,
+      "sha256": "09d8755bf1f9d1d28a7f4fe1eb37017ce16bd4688b89b91a452ca8189620bc08"
     },
     {
       "path": "plots/trip/gen1_pm_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 139962,
-      "sha256": "951e763ea93b17b48d11beab7987982c641b975aa5296d891df7769a02d5e6d9"
+      "bytes": 139674,
+      "sha256": "f9790ad06b230bb69da4e40e305d8cd8b682c78002140de64ab731c05a8db81c"
     },
     {
       "path": "plots/trip/gen1_pss_vs_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 134885,
-      "sha256": "e481ab661a0998c9e5b99aa52d089194f58774d631d2813eb2bed548d9101343"
+      "bytes": 134078,
+      "sha256": "e67a28ffc74048a1bb83424e1603c6bffcc6ca7ccd2c26d5c5f88f98348e099f"
     },
     {
       "path": "plots/trip/gen1_pss_vs_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 150161,
-      "sha256": "47301f102a4dde06cbe8998aa2f3afeec7d928b319bed41140b7be9f8aaf3377"
+      "bytes": 149427,
+      "sha256": "d23afe7c4fa36f5d264e1fbfd9974e88003c82d06439fdccf140aeca42b0d740"
     },
     {
       "path": "plots/trip/gen1_speed_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 165490,
-      "sha256": "ec3f96fb52f6ef18e78cafccf5b8de84c2ca506acf527e12d5343a4f8897203b"
+      "bytes": 165255,
+      "sha256": "bdda4cfd9147129597b76489a4c8f6f09dbf447d4ad4371c623ce97c9ca697f7"
     },
     {
       "path": "plots/trip/gen1_speed_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 161349,
-      "sha256": "4d5e8b3565f1de805b017e35f2361a0ce95efcd822ca09939ad1a670f6dfc384"
+      "bytes": 160686,
+      "sha256": "7824e543705e924e0817e9fd7fad6ffc24ff45b520ad70d090da24ae62b4dd44"
     },
     {
       "path": "plots/trip/gen2_efd_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 123574,
-      "sha256": "19796fc6f5dbdd0a6152554d2cb039d04e43d728ec7aff2d6c52d4df42ef2bb9"
+      "bytes": 123138,
+      "sha256": "d50cac467f14e67a7b99df71b16f93ffc2ae4c4aae5cfc6f02c7d726ff305253"
     },
     {
       "path": "plots/trip/gen2_efd_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 127325,
-      "sha256": "b425309ca7fd3db06035fabfe8113425c75f99fcfa8c95237ca44f10694e12a0"
+      "bytes": 126851,
+      "sha256": "82f3c2ea2f40c61051b1be305d0656fa4a0f5d78e829c285f00ae65108f55253"
     },
     {
       "path": "plots/trip/gen2_pm_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 119109,
-      "sha256": "037565fa028f29ec2b8b02b2416889cb5a3e9d9786f19ed94d2a83a7e74df1b8"
+      "bytes": 118772,
+      "sha256": "97992e6f7bfbea06a823d543cfb08a64d11cf5eded85877005839d451ff98231"
     },
     {
       "path": "plots/trip/gen2_pm_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 121451,
-      "sha256": "b2a6d433a534fa001d56c8edf6d3ba17ea0748f285e081447fded8e0e4883365"
+      "bytes": 120868,
+      "sha256": "8b749fc2c6d125748b9e2c1bc1c53ac05efeacf6f93d262598d825e98e0316ff"
     },
     {
       "path": "plots/trip/gen2_pss_vs_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 132372,
-      "sha256": "4fdc6b376714b94f354904134722c558ffd6ebdf456c953258722b25cbae89de"
+      "bytes": 132170,
+      "sha256": "c4786565fa3115998300d4c839a0f096edf8e5cf752868f1bc2d2290223501cd"
     },
     {
       "path": "plots/trip/gen2_pss_vs_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 139933,
-      "sha256": "ce8d91dfd3ae50ce93c76564d440104a6464fbd1eb6245fbd41c196f1003e183"
+      "bytes": 139290,
+      "sha256": "25ab999201b23fb4f9361ff91ff053ca26cbd028e8252fcb1979c017e45588b7"
     },
     {
       "path": "plots/trip/gen2_speed_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 167340,
-      "sha256": "119f06f1a21ab5afc7394cc982a171ae8019a9a6ffcb5e652fe006a593a82db4"
+      "bytes": 167190,
+      "sha256": "f84183318f60283f380db346f7b5233c2e6bc09965944f7482d9b3aaa5b76a48"
     },
     {
       "path": "plots/trip/gen2_speed_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 161677,
-      "sha256": "e21fab983c922330d64e8a7ae1e97a413ddd8eddc883f8c7b1c55b2f76d528c3"
+      "bytes": 161361,
+      "sha256": "5bd5375daafb53cea7ee66b3d0b6b5fb25b69bde5ed1f0d4c6f7ba985d9857e3"
     },
     {
       "path": "plots/trip/gen3_efd_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 124744,
-      "sha256": "9cc3e2f30317eff7421fec78ab2399ef620e8b4c5a3e32db2ab5df46a344abaf"
+      "bytes": 124130,
+      "sha256": "e46ce00bd0513a31ce61cee50a1665c318a11e767e33b06022c67de94e9b01c8"
     },
     {
       "path": "plots/trip/gen3_efd_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 115140,
-      "sha256": "4c28fb91345827defb4d845d4e0702fdc7b5ff599e3c7237cda9faa0ff2d2c14"
+      "bytes": 114753,
+      "sha256": "633b6be115d7394e445a668dda994b913bc81dcdd40e29dee37688c23f0d4712"
     },
     {
       "path": "plots/trip/gen3_pm_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 122156,
-      "sha256": "35a00469a48fa8a569cb61f34f4567d335a25caa4f97c450d54c74da9c54e48a"
+      "bytes": 121759,
+      "sha256": "4a60b964ba080abeb5aa4e8e69238c82b3ed4dcae681816c5bc846cf36531aa6"
     },
     {
       "path": "plots/trip/gen3_pm_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 124192,
-      "sha256": "6fbc4be4d47c09bfeaef372e1f483c1245a2e94fc63f18acbc929c45b60754f1"
+      "bytes": 123754,
+      "sha256": "bf1a71ef3f89878e6a90508aa901ddae6464c57d6db8b237a7e3b15fc97ed28d"
     },
     {
       "path": "plots/trip/gen3_pss_vs_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 158063,
-      "sha256": "11ada14d72ccc83834bf4ce36b3003769f19dbeb310d98772b0f349ad4e6dde6"
+      "bytes": 157883,
+      "sha256": "e865080a94942ee02e81f82b2232f2f4920cb2931e93272c5ebc79690d741c8c"
     },
     {
       "path": "plots/trip/gen3_pss_vs_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 155412,
-      "sha256": "241b95f7ac70c2b615a255e32878740a5c482424e926832fa18af88abf46c082"
+      "bytes": 154781,
+      "sha256": "58a6adc99712a8a25e63e3c96dfd4501bb0fd72cbd7115896e5a15e566d649d7"
     },
     {
       "path": "plots/trip/gen3_speed_pu_event.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 161440,
-      "sha256": "25f0143b153416c67ad8afbc3b972382d274e00d94731961a7e87532d9e11433"
+      "bytes": 160912,
+      "sha256": "e8522415fd6b9f7e333a61ab1f1dc22b4f57914f8c61000264c97998f2e80684"
     },
     {
       "path": "plots/trip/gen3_speed_pu_full.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 161383,
-      "sha256": "8817f1d0d3ca6de7790d5f3dd85b9a86bdd0f6c257e71a725f656b8e1f732059"
+      "bytes": 160790,
+      "sha256": "8ed91c76257a40c0b746a5e9987bdf85e5ee202758a1c76009832226bb9110c0"
+    },
+    {
+      "path": "plots/trip_adaptive_work.png",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 410981,
+      "sha256": "203cc77974aff7ca71169e0a2c3be8f59a9596f85c1db4b9735283aeb2e3ca39"
     },
     {
       "path": "plots/trip_response.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 161677,
-      "sha256": "e21fab983c922330d64e8a7ae1e97a413ddd8eddc883f8c7b1c55b2f76d528c3"
+      "bytes": 161361,
+      "sha256": "5bd5375daafb53cea7ee66b3d0b6b5fb25b69bde5ed1f0d4c6f7ba985d9857e3"
     },
     {
       "path": "plots/trip_waveforms.png",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 328406,
-      "sha256": "dd918cf1b80d32119395ab526f2e78a021176a12d401cc525031eb7f279c749b"
+      "bytes": 340118,
+      "sha256": "70f95a27110b60b35e5a409672f03c5973fd8e1810b6700622b91d532bf43206"
     },
     {
       "path": "pss.csv",
@@ -1194,8 +1264,8 @@
       "path": "results/governor_step/dt12_5us/event_waveforms.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 505521,
-      "sha256": "0a3796931a81c69e28b04c7118632f6ca14481932a01355bb4ed83f7ffd52816"
+      "bytes": 505816,
+      "sha256": "8053cd5ee7f047dbfdbc612d8a770e7ad60cd96f486fc09fc8d842e1f6c5a526"
     },
     {
       "path": "results/governor_step/dt12_5us/machine_parameters.json",
@@ -1208,29 +1278,29 @@
       "path": "results/governor_step/dt12_5us/reference.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2064540,
-      "sha256": "1fe6fe6b7b9838e3c0432e8249862ba51356c1e187bb61f2ff03ca61f8ac0b93"
+      "bytes": 19959874,
+      "sha256": "9a5912faebb3a3a3815075730681e59e4a2721aa3bdc49194064f289a0718d4d"
     },
     {
       "path": "results/governor_step/dt12_5us/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1428,
-      "sha256": "9e755c76d978e50beeaa70818bec08858cc756539e841b2e7f34d5717278df6e"
+      "bytes": 4071,
+      "sha256": "5f102743bf351f596622a8e6afa2dcd52ce2748fcbbe50f4eb75ee9a6e56b2bc"
     },
     {
       "path": "results/governor_step/dt12_5us/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2295,
-      "sha256": "0756f57d797d03a4603bdb03672110c30ae42621e96a525bbe3a63b08a98b278"
+      "bytes": 4938,
+      "sha256": "745d5a80cb95c652215678c134d0115e7c5c8fbd3452b44110ec8bace455e82a"
     },
     {
       "path": "results/governor_step/dt12_5us/states.npz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 7089513,
-      "sha256": "f2b16320d7ca40414b003166891789da0cafdae0541a85f8933836e6d2bac133"
+      "bytes": 67260342,
+      "sha256": "1196c3406430f63a730392c5e7403b43e64ab605c810ef5ea97c5e300bf3fe1e"
     },
     {
       "path": "results/governor_step/dt25us/columns.json",
@@ -1243,8 +1313,8 @@
       "path": "results/governor_step/dt25us/event_waveforms.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 258800,
-      "sha256": "d733df343045f7f9bdf14c0e114516ae908ff3824bd8dcf2bbd1692ea8406dd2"
+      "bytes": 258823,
+      "sha256": "93527f9a20f4a44b6ff0fa4a89defd6c0ca83fe5f8f267328966183052e8d769"
     },
     {
       "path": "results/governor_step/dt25us/machine_parameters.json",
@@ -1257,29 +1327,29 @@
       "path": "results/governor_step/dt25us/reference.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2070498,
-      "sha256": "95ba208f753a3bad2ec5a0009ff7b07ee0ab1ca738fb9e2d5ed544ae5f219c3b"
+      "bytes": 20012111,
+      "sha256": "c0426ad46fc9c769d7320b3e9e64cc29d7bf6eefa7b7e80ec518cef0bff93ac8"
     },
     {
       "path": "results/governor_step/dt25us/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1425,
-      "sha256": "00510d303b2c393691c377d90bbf5b624ffa097b96841b999d4b0de641b80eae"
+      "bytes": 4069,
+      "sha256": "001374fc8c2204a138ab08eab94bec2fb52c00fbb5284a6ac68d2cbf79127ecc"
     },
     {
       "path": "results/governor_step/dt25us/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2292,
-      "sha256": "11f62c46244bbef97c995edba8c495948bae46ee4423a444548b1dda4066a293"
+      "bytes": 4936,
+      "sha256": "02c7640ae4ef913f93f26eb20439aaf195d3455559b2e3350c7ea673a652afad"
     },
     {
       "path": "results/governor_step/dt25us/states.npz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 7114398,
-      "sha256": "87dc80f82be93f61f95063977e138ad7c80023ad28d098cf36c1db9a20ea53ee"
+      "bytes": 67578856,
+      "sha256": "156e2241b319f6bb76de4f9e6978fc2b97681db0e53c374bd35bbda972e78649"
     },
     {
       "path": "results/governor_step/dt50us/columns.json",
@@ -1292,8 +1362,8 @@
       "path": "results/governor_step/dt50us/event_waveforms.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 133121,
-      "sha256": "6f9823f12740fb19f50205f6838760e66283ff3f2d4efba2a1e4d90f70343ba1"
+      "bytes": 133086,
+      "sha256": "b745048ca85b211ad03cd37f93c0b359f4f0930d7d836d70aa2035f4478509df"
     },
     {
       "path": "results/governor_step/dt50us/machine_parameters.json",
@@ -1306,22 +1376,22 @@
       "path": "results/governor_step/dt50us/reference.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2077522,
-      "sha256": "0f49b5740410fdf7292030ac6f7f2b9ed3225fd2bcbdb8579dc56a084dbef36a"
+      "bytes": 20079115,
+      "sha256": "0bbe04277eb0e8290fe646e8e3e06d2a42ed185dbe293f6c008fc418764fcc3f"
     },
     {
       "path": "results/governor_step/dt50us/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1422,
-      "sha256": "1ba011551b7316e68e6abeb50aa984827f5ce608b8f64fb1a69aed2251be805b"
+      "bytes": 4051,
+      "sha256": "622d2c680753b23148e809e92da8f8aa6a88cc5ea3811262fa73e22b01eb98c7"
     },
     {
       "path": "results/governor_step/dt50us/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2289,
-      "sha256": "177e60ff441000aa823e881f9d7e9bfb8c4d39b34d05d0d2f10ff3d8384116c5"
+      "bytes": 4918,
+      "sha256": "b356783340f8f0cd2aacb57aea00cc6158c9172ce237cf8e03ef442259efdb9a"
     },
     {
       "path": "results/gridkit/tol1e-7/columns.json",
@@ -1341,15 +1411,15 @@
       "path": "results/gridkit/tol1e-7/gridkit.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2057925,
-      "sha256": "414b82fad4d23203b0550d92aabad3213e8f6ffc6f47683319bb9d04976b7804"
+      "bytes": 19891856,
+      "sha256": "00c8a85d0457b92dc3d7f3a6a3cb1abbe48a526d643093828bc5ca87153a23d8"
     },
     {
       "path": "results/gridkit/tol1e-7/mon.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2663366,
-      "sha256": "ce1f337ab6f03b7a68103b7f51b34066d24b18f4bf7c502ca0bdcc286509a42d"
+      "bytes": 25913190,
+      "sha256": "176012643d625ae71ea2b6a1360dba1d9217caf84000ed6e3970ffd138fb4bb0"
     },
     {
       "path": "results/gridkit/tol1e-7/restart_monitor_adjustments.json",
@@ -1362,15 +1432,22 @@
       "path": "results/gridkit/tol1e-7/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1314,
-      "sha256": "0cd9853304039c6f5992069ad18157e1d29be19135b8d5dc8b4e0e35a82ab45e"
+      "bytes": 7480,
+      "sha256": "d615dce2ec2c45a6e494421f99aa62e84be5110585e3a7a16b626ba7b633d320"
     },
     {
       "path": "results/gridkit/tol1e-7/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 269,
-      "sha256": "fb3ffabc3dfdce9131cc5b684aec65e26424c814e925a593be9b8a878a9b240b"
+      "bytes": 230,
+      "sha256": "a208292a925fcba6580ffe721e9a3d6dc278471c757069213caadeaca6fa9867"
+    },
+    {
+      "path": "results/gridkit/tol1e-7/solver_work.csv",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 6562,
+      "sha256": "ba0d54d85ec1889bf3f9a657c614088da6402ce22e3e547b3b0df9195a9c8210"
     },
     {
       "path": "results/gridkit/tol1e-7/state.csv.json",
@@ -1397,15 +1474,15 @@
       "path": "results/gridkit/tol1e-8/gridkit.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2035110,
-      "sha256": "2c7c57c3f1f00af722058a6028f67e8cd595c4866666e9069de7a3b231934bdb"
+      "bytes": 19595483,
+      "sha256": "4c99bae31d48ac53ba431fdf312693cce10e0dbcfe8f7140b60aee5bbd68a70b"
     },
     {
       "path": "results/gridkit/tol1e-8/mon.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2636944,
-      "sha256": "02019cd866001d9fa099fb3e149b9b50d307c8bb022447d49c1272e7adcda5aa"
+      "bytes": 25634547,
+      "sha256": "16f2b239212171450d218453999a4f819b9a844f89c95733a418638e19ca19c4"
     },
     {
       "path": "results/gridkit/tol1e-8/restart_monitor_adjustments.json",
@@ -1418,15 +1495,22 @@
       "path": "results/gridkit/tol1e-8/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1316,
-      "sha256": "f482ae9ce361549940fdfb7ca977caa12f21608b2e9370f1deead8993b61e5ac"
+      "bytes": 7454,
+      "sha256": "cc32b16298cb4944f694c593c3b14ecd3245fcd34ffd3de661557c583376aef3"
     },
     {
       "path": "results/gridkit/tol1e-8/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 269,
-      "sha256": "222e22faa8eceb155367b67bfcf6e6fe229c7e285017cc4361dfc772c25917da"
+      "bytes": 229,
+      "sha256": "37be4ff6fdfefb31532b4535a438ef4076b0356e04cff89cc19ae79a187c76d2"
+    },
+    {
+      "path": "results/gridkit/tol1e-8/solver_work.csv",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 6649,
+      "sha256": "71f02702c2608a17f366bc3b02d7f6d2748c9944f18c622e639194cac01ca7bf"
     },
     {
       "path": "results/gridkit/tol1e-8/state.csv.json",
@@ -1453,15 +1537,15 @@
       "path": "results/gridkit/tol1e-9/gridkit.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2006448,
-      "sha256": "673762484fab925ac2c1649711daefc058c256c2ac03ca767ebcb918702fc3b5"
+      "bytes": 19293034,
+      "sha256": "3f8ec15a4320aa6a12467ab48afd49964a3ca164ccbac1db77a56564e03d68c6"
     },
     {
       "path": "results/gridkit/tol1e-9/mon.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2618724,
-      "sha256": "f19faa6fe725d4c7423635fe1d78981f1ecbf4444b4a5dd00d2708d6b6bed80a"
+      "bytes": 25449757,
+      "sha256": "c465040d5f3b958012dd421b7bdb440379c2dc6990c1cc1f32172ab53ec71d9a"
     },
     {
       "path": "results/gridkit/tol1e-9/restart_monitor_adjustments.json",
@@ -1474,22 +1558,29 @@
       "path": "results/gridkit/tol1e-9/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1318,
-      "sha256": "b2a743b29c48a4529fbc0723a98512164694eb740703de14d0c1a84b67f70551"
+      "bytes": 7447,
+      "sha256": "a17e30813185d44b2e16b89c46dbba4b3060dd983f99bfc78bbc5ab113692cff"
     },
     {
       "path": "results/gridkit/tol1e-9/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 270,
-      "sha256": "23a4c7e576a3ea36668952e0c08b50f5f881c73b172c1d10887152c9c5fc3475"
+      "bytes": 230,
+      "sha256": "2b7bf551b0a59e1ee978e9f65caed6829d26f3e94710224b17d14ba111e4b206"
+    },
+    {
+      "path": "results/gridkit/tol1e-9/solver_work.csv",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 6838,
+      "sha256": "35ca49cf9517d166bdcd78b52791889d0c56cc21a855449cb3557e62066c2a4c"
     },
     {
       "path": "results/gridkit/tol1e-9/state.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 25841073,
-      "sha256": "1390234eb19462260b6e5551a268ff23b271e05c069a36529a2369a8d6f7d2a9"
+      "bytes": 254026248,
+      "sha256": "dc0965c654276a4c5bce89276dc252497edd934db2fc95b8a9b854a20c9d826e"
     },
     {
       "path": "results/gridkit/tol1e-9/state.csv.json",
@@ -1502,8 +1593,8 @@
       "path": "results/gridkit_comparison.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 64392,
-      "sha256": "418e120cedbbb65ea5fd4b403b334177f1f7d339733ee560f1939ac98f574840"
+      "bytes": 64621,
+      "sha256": "40d3168f0d3e268cfcdd717129bac7528ac5110103edb8e9e902f86523bc299b"
     },
     {
       "path": "results/gridkit_trip/tol1e-7/columns.json",
@@ -1523,15 +1614,15 @@
       "path": "results/gridkit_trip/tol1e-7/gridkit.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1999272,
-      "sha256": "0a686b45545957536c982232c89fa316cb424749031cb85b0a97662ae709d750"
+      "bytes": 19470365,
+      "sha256": "d86e4e19db52165e605b08ca108c30f438a8a22caf6534fd370ae32ca17541de"
     },
     {
       "path": "results/gridkit_trip/tol1e-7/mon.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2789905,
-      "sha256": "f49e182d751408e65c2a41613abd347878d0eca2148c83a39efd173a0980fe79"
+      "bytes": 27190581,
+      "sha256": "4d57044a8957f1f7a4fe73a2075cdec0922b28735bfb0d65387c50eebc867682"
     },
     {
       "path": "results/gridkit_trip/tol1e-7/restart_monitor_adjustments.json",
@@ -1544,15 +1635,22 @@
       "path": "results/gridkit_trip/tol1e-7/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1964,
-      "sha256": "8693697d4ce72e64a1d26b390d1e5b0dcfe32b56b262e7a6456c760f0b3dfe00"
+      "bytes": 8110,
+      "sha256": "4bcb4deb6ec8aeff18696704d1383c34685e6945c578d31b839a74d190828b6d"
     },
     {
       "path": "results/gridkit_trip/tol1e-7/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 236,
-      "sha256": "b6bd0b22364722f758c528f764e86103b9f4b1e0aac810f93db9268e25dc6397"
+      "bytes": 230,
+      "sha256": "dda8435b111b28b6aeec244dcb89f43da4a110888ebf8a9eeba9bb6327677d90"
+    },
+    {
+      "path": "results/gridkit_trip/tol1e-7/solver_work.csv",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 6614,
+      "sha256": "ca79ac27ac7b84f40c3c78ef87bb723db1c7769f2b54a7118e3c5aa8a4fdf4ab"
     },
     {
       "path": "results/gridkit_trip/tol1e-7/state.csv.json",
@@ -1579,15 +1677,15 @@
       "path": "results/gridkit_trip/tol1e-8/gridkit.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1980880,
-      "sha256": "65e495c2411ff5be3ddfe1b8cb7e8143180fab9ab22e7efe3948d629ca24406b"
+      "bytes": 19230858,
+      "sha256": "c49dc446ff789cfba5716433028708211c992832455c230d56d2da9ac8ae963c"
     },
     {
       "path": "results/gridkit_trip/tol1e-8/mon.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2773585,
-      "sha256": "80dd1ac38a301df877812f47cbe78eac5ffa4f7b8ce3dd9b1fd71902342c3a52"
+      "bytes": 27058847,
+      "sha256": "0a835ef71346f682a524658a865cbd9e9c8e0410f923525b077339c6faea8cb5"
     },
     {
       "path": "results/gridkit_trip/tol1e-8/restart_monitor_adjustments.json",
@@ -1600,15 +1698,22 @@
       "path": "results/gridkit_trip/tol1e-8/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1964,
-      "sha256": "321764a0c773999683664834e8fac1c5978a387ab47a3d41b73cb0307099ffd9"
+      "bytes": 8040,
+      "sha256": "e2c53119fff092d24664b624d632a71b6a9ff136b1c4aa62663166673d27b85a"
     },
     {
       "path": "results/gridkit_trip/tol1e-8/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 237,
-      "sha256": "93c1c3ffd3a2477569a7e478833f83076f75d86fc7c239f5e6f363718062a5f2"
+      "bytes": 231,
+      "sha256": "a7d72d78d75b7ee12d0e16f81288fe4baf02ef9edc75e1bd268ac67aab18a699"
+    },
+    {
+      "path": "results/gridkit_trip/tol1e-8/solver_work.csv",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 6807,
+      "sha256": "f0c5292a3ce9982b844c8219a4596b4dc97293fb70b82d0229b84dcf4f53abd0"
     },
     {
       "path": "results/gridkit_trip/tol1e-8/state.csv.json",
@@ -1635,15 +1740,15 @@
       "path": "results/gridkit_trip/tol1e-9/gridkit.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1952461,
-      "sha256": "fc62ba2405d02ed166b26081f1d7853183845da333e7a979b5b589a58a54a03a"
+      "bytes": 18936283,
+      "sha256": "a19085c236a18fa17a094f3d89fecdea37ca046a8b551402ba1bed185d831e6c"
     },
     {
       "path": "results/gridkit_trip/tol1e-9/mon.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2758322,
-      "sha256": "ee9dc1736913b1a9d042a81a9af5ba34e6c6ec0397bb0d75b87ab7a368f563ce"
+      "bytes": 26898030,
+      "sha256": "acef383af949a4cf9bbc41823bea14cfc96ca98276956b0feb99f4787b7928f4"
     },
     {
       "path": "results/gridkit_trip/tol1e-9/restart_monitor_adjustments.json",
@@ -1656,22 +1761,29 @@
       "path": "results/gridkit_trip/tol1e-9/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1964,
-      "sha256": "6826380549282ce7d868649785dc55eac48d5d23da358295937dea7563200b68"
+      "bytes": 8057,
+      "sha256": "52ff155114a25c98c5b32688de19689e5f56b525c98d043f640976a414e4a4a6"
     },
     {
       "path": "results/gridkit_trip/tol1e-9/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 237,
-      "sha256": "7ce0df74a82c23fa3593e4da7561016d878d2423a10d851dca1347e24dbec092"
+      "bytes": 231,
+      "sha256": "7ce0747cb42e4a0ca6e20ca710fb1234910f882bb213d9069ddfe26b9139cddc"
+    },
+    {
+      "path": "results/gridkit_trip/tol1e-9/solver_work.csv",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 6994,
+      "sha256": "800643fbacd2ffbda209726bfc15c5f0b788070eb21305dcce8c49710216232b"
     },
     {
       "path": "results/gridkit_trip/tol1e-9/state.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 25940034,
-      "sha256": "a30137b6bdb7c64cc53af5088d6075289fa9ccf3b756d56c82f8d196db0a5102"
+      "bytes": 255633179,
+      "sha256": "91b1fdcb52eb7ae460ab57cb8da17b51bc657f3bb68f9d45ab8e553fddec52d7"
     },
     {
       "path": "results/gridkit_trip/tol1e-9/state.csv.json",
@@ -1684,8 +1796,8 @@
       "path": "results/gridkit_trip_comparison.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 82167,
-      "sha256": "09ff9e2924b22527b3b347e0623cc41adf2c1031ab0d341a5ed8c5e1f36c27cb"
+      "bytes": 82463,
+      "sha256": "78e09cf7872621d210da13b8cd385bd5076086607b0502140ae5516141390f42"
     },
     {
       "path": "results/refinement.json",
@@ -1693,6 +1805,1042 @@
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
       "bytes": 11011,
       "sha256": "6e89882ac6a8c21fa01c5d0b38b7f64c51fdfd1eb4c8d16ef9d7002005d5d322"
+    },
+    {
+      "path": "results/runtime/environment.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 791,
+      "sha256": "829d735d95aae758743a4e134c9956aafd24f50410399ebb895fce7890fa9ce5"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-7/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7575,
+      "sha256": "ebbca16e382057db861df2ef529ad8691cf0931975ef88ec4fb323f1e8e69f02"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-7/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 229,
+      "sha256": "d8f63b7feaf2153d88acc61c29777cb278f53fc3ad3d18449d32dff78acbea06"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-7/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7574,
+      "sha256": "df29263c677f8dd6be9624e59b113515bc65281b0edd91446825c1bbd4cc962c"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-7/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "ccfb10e876cafe83176ab77b5c970d39714383863a3c222542189339c7749b1f"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-7/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7574,
+      "sha256": "6e0881b51e3938edb46b3f23cff74ad743deecc4408995f3d37c299cca21fbc2"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-7/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "8bc21ef67befb8f56dc7d8c8722677f3569931fc59a8a268b01edee55fdcc231"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-8/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7544,
+      "sha256": "cecca73959ad4f015bd985bd1ef9be1b1dc4912a15f01b56820ae76dde388c61"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-8/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "10a10720a0dbc8e1bdce652989abdea5991ce8605fd61dd01c1508f600fc85ea"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-8/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7544,
+      "sha256": "b10b065327ceec9efe0e848dbc29c31034146b1328b50594850264f046f2adfd"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-8/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "811dedb102e5237df5650302bb00b0129eef93bfa589acd6f17a20523d26ae25"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-8/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7544,
+      "sha256": "f5bf6318d9b8498639cd81ff0f21dc9d190dc40c2c1974f386ba3c120b8735a2"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-8/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 229,
+      "sha256": "6fe8750ffc64ff3dca8daf7193feee02557622b4c2773a6a9ed01c0818ca1476"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-9/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7536,
+      "sha256": "5f2d0f58f73b5242a2ed8763f551700a3c74af488187eb9232d784e5b4c357d8"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-9/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "2c1354ec3053827002db5c5414e58253be3bf84c2f3f002e78d109da4632aab5"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-9/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7536,
+      "sha256": "2c4c2e6cdbbd9cd52feb4195a315792f3d1ce5243c806aa0cfdf0b5663a05e7e"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-9/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "3af6e81871f9125e1dd5cb45648a32b5d745346bf827c09ff705e80b9c60d94d"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-9/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7536,
+      "sha256": "ef976cca8da4c0277c417570d5a85133766e9d8ba6994a3bcb7be04aea6cbbfe"
+    },
+    {
+      "path": "results/runtime/governor_step/GridKit/tol1e-9/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "92602a077ab964bf687b52859877f7d4aa1efa45adb3e30bfc539c8175631d63"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt12_5us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33258,
+      "sha256": "63c97acf382ba42eb3c7cd74adedb15235c284c16449e4d3d2847e057b89561a"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt12_5us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33419,
+      "sha256": "d4ba137d887bc2ebf4b49052e777a5d87e40ad5c13fdbf1701775166dc6969d5"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt12_5us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33256,
+      "sha256": "345b6473ba98101ce27e0fdbcc7f3c3a3252e5988da34998eb47708599daed31"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt12_5us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33418,
+      "sha256": "1705a08cea59ba7a57e33f81319b62371f8831492a5ec8db333b1bd6f888c9b8"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt12_5us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33256,
+      "sha256": "843f124a08361dcb551a8699213174249997b960ca52a3ce17179b942b7cc756"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt12_5us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33417,
+      "sha256": "0a98ffb205ac115d4eaa28583e7987593a7817852209d46008983c4a896a5528"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt25us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33254,
+      "sha256": "2fc2701e93309b6429dc566dcaea8872ed0a44b3dadbf36f46432dfc18f0b45d"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt25us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33420,
+      "sha256": "1ab884ee1a9c780869692a40360b4e24c92f2f8370992743b8870a326273193b"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt25us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33248,
+      "sha256": "57e53a76cd635e81a1b67dd46dd1c1f71a922ff242e390571028b687cd539a56"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt25us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33414,
+      "sha256": "4e0400d6a65db71f988f9ef0eff645a7a865252b0d529df4a6a7e10cc5f9547d"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt25us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33251,
+      "sha256": "1ed76e3d05c4a3e62ad57c7514d65c293ce022d6d418e942b9fac008435968fa"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt25us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33416,
+      "sha256": "3a62e8334364041387f77a21197a239e9a68c368c038e41258d4f6166906107b"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt50us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33244,
+      "sha256": "047930ea871db77a9564cb957c1b9ecaf782f995d6604017fd9f0a4fdfef9d83"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt50us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33409,
+      "sha256": "55cf4c37412632ab8b5657e8cec44be6395f1e17c38253ad721b1af31c7dda44"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt50us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33242,
+      "sha256": "c10270af7736b2568b0e910c0911b859a7388b9a3e54566dfe46a19c81ce7f1a"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt50us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33408,
+      "sha256": "55c8a5f6822a748d0132c8751eeda64d6f27b6106bb0c77d652d5d8c8e2b7189"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt50us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33243,
+      "sha256": "3eba6952b59dffc9af70f0317d0b17f06a53ea4703a363d0b75065414a236516"
+    },
+    {
+      "path": "results/runtime/governor_step/ParaEMT/dt50us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33408,
+      "sha256": "495f41cfe8082e7f8ee26c421cd313270959f6ead5bc427c78d526fdab0ed873"
+    },
+    {
+      "path": "results/runtime/summary.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 9391,
+      "sha256": "d668ec58947d5123e580d6ee6c93b5e3c38b235799a6bf436dd412d8861173ef"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-7/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8192,
+      "sha256": "838df77a0b862a855056a8be4b4bf1aa8fe7ab9a4caa08d47552d71d026a46d8"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-7/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 229,
+      "sha256": "fdd5054c90d7acbe08afbff6cb9c720ae61f123d88b6e676b92774890c0feaec"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-7/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8191,
+      "sha256": "c3360e09a53097cd2e5d698d62d437ffaff11c3ee437d48254d51984b3a96f34"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-7/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "dcafd62b92eabdbea19a7dfcdbfb8bfe19552a9afdb88922e5d7d669d4718ab3"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-7/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8192,
+      "sha256": "c2dc7efd935ceba3978af2dc7434a011ecd3a5e5474220c48bd2ac36f530b5b7"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-7/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 228,
+      "sha256": "f4f7305321719f2eb3b1d25eb20afed705c0c4b51f5a5a95e7d2959167ecf28b"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-8/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8122,
+      "sha256": "6ee5627435a68528cf3f5496038ad03cd7b851220a695fd64be8bbcb1a88cc08"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-8/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "8906e3b734a9a6f92f9d50a82e125799db72d7eb164bab81b02f496b38142cce"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-8/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8122,
+      "sha256": "5512ba22dc4b57a43d271fb80ec7774454da33062b440a799258690a046e8420"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-8/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "43ff5aa8008565b6c5f6fbcfd44be0a54601fdcd4da6812eb6cbb4178e59fbb0"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-8/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8122,
+      "sha256": "044ad61521b734a6c3d97aaf247a20a89e3a3f8db20e658343e8493b1dc00ec1"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-8/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "c83fa332df33239ad638b18ccf4840815729251c4d693f63dcba89fcf05f0ad3"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-9/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8136,
+      "sha256": "ee55926305a5bf59743c0c9caf8517168226a89ed2ec629497daf23898bd9322"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-9/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "9499d9c864c7b14438b999ddaf3f0edbec36fc3903be605f267ea7e1485d981d"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-9/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8139,
+      "sha256": "6711e944ffbf6904d71b729f49a197fe974daae8647daf6662150a8affa7286e"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-9/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "a53a4d5eb9184f98d9fe5d9780e8f6b5fcf7cd31b895c00f443e6543c442b9cb"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-9/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8139,
+      "sha256": "2a84481982fb0c705a2391189204830567ec74768c4af0c675c92cae10bd8c58"
+    },
+    {
+      "path": "results/runtime/trip/GridKit/tol1e-9/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "35d9d3690131be7352806bc5c85bd6ececa8c25cfd273418f5a37d672cf75a6e"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt12_5us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33185,
+      "sha256": "4de302c3fa9efb03b87e91d9c817f3674884f73640fb1f48808502896e1bcd61"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt12_5us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33365,
+      "sha256": "430a305e6707f38066a6101d4da31a0a784903478a6b7fbb844fc4dfaa791294"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt12_5us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33178,
+      "sha256": "8e1d5c48ded7da35b93c0550f0a6b5e4e53e82af21b4dc0c6cde0405974501df"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt12_5us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33358,
+      "sha256": "75dc48c0aa542d35c4870b475d9c2fd73be1a21c803fb7964456fd8483f5872c"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt12_5us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33178,
+      "sha256": "6d43725f0d8e2698e8dd7cb83d5e834c83a76fa2a2723c91a768a46c0836bccb"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt12_5us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33358,
+      "sha256": "1a9eb3dcb70d64c9b5e19f8e92862cb79bf92e009c43de7c8c1dc96841540ed0"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt25us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33172,
+      "sha256": "ccb5040feac0d9f502bacdfa59e333407f51537770b35ce050d6b63f4175c3ad"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt25us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33355,
+      "sha256": "b9d8aae7125c87972d7c55b93ccea9e13147c26f18af32c2c61b0a4172e44ec6"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt25us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33174,
+      "sha256": "0ce0bc5f29261bb44c34cb157ed66135612ddf1170214f818cb9b968a83c21ac"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt25us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33357,
+      "sha256": "5924fa45cc8c2e8cb8b30167b66acb50dd65baa205bfab0d58be7508546ad0b8"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt25us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33181,
+      "sha256": "d3b28765f97408b5cd825b44d916b2e6889853d15d115c63d9c27db77abf010b"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt25us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33364,
+      "sha256": "b3c7a8a28ea33f3a089551370d791b64e9bee1a67eeea8233c98bc7c76da7d25"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt50us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33179,
+      "sha256": "98d8abe0a9f8d5e4ab216657884f24fc8081e2b14d4079affb9e92d61943ce71"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt50us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33362,
+      "sha256": "e9968c7055140140f99cf76c5f98c4c01ffd479aecdf2e8e03459ee8ca69f53a"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt50us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33178,
+      "sha256": "d269c08a785359cac3ca08bb7422a6c0961c085cbad0848f14d7bd15b4c16c4c"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt50us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33361,
+      "sha256": "0ff11fa801bdbdebf7dbc1eba502577de2cd0ad2d605f27c016e33c16fd8d746"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt50us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33178,
+      "sha256": "086c76a6fc02ea95bf6f52c80e6d87994bf606949c58294cf8e01cede98b7db2"
+    },
+    {
+      "path": "results/runtime/trip/ParaEMT/dt50us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 33362,
+      "sha256": "a47f974e3f217815ed19143090e3aa0b9be34998bcc0152e2f547d4363177aa0"
+    },
+    {
+      "path": "results/runtime_cold/environment.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 907,
+      "sha256": "8952b8df2506d8e36e86da68a8f11135ff7776a63f267a62a657182c17c74944"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-7/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7497,
+      "sha256": "c793c7bb4a5c26350ee39aca61d571019e98b56e826eedb0fff6c34261d3ef18"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-7/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 229,
+      "sha256": "d8f63b7feaf2153d88acc61c29777cb278f53fc3ad3d18449d32dff78acbea06"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-7/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7496,
+      "sha256": "69d493249f9c4ec1a9b2765b4d77df9537bde5af6f310aa410eef938021ccd77"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-7/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "ccfb10e876cafe83176ab77b5c970d39714383863a3c222542189339c7749b1f"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-7/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7496,
+      "sha256": "39d47b1ebf44be7d8af48eee5cb6e51a818bfd34e19bff0749a972b0c07e3457"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-7/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "8bc21ef67befb8f56dc7d8c8722677f3569931fc59a8a268b01edee55fdcc231"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-8/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7466,
+      "sha256": "3e5717546f920bba08e8d3f69048b079aff73377b6e1a4a729ebf7ef3352cd25"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-8/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "10a10720a0dbc8e1bdce652989abdea5991ce8605fd61dd01c1508f600fc85ea"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-8/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7466,
+      "sha256": "64cfd65623f487aa7a984fc1170ac5ff8f0163eb035086175bfba865e77e7f3f"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-8/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "811dedb102e5237df5650302bb00b0129eef93bfa589acd6f17a20523d26ae25"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-8/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7466,
+      "sha256": "01054a8ca6bcb276ecaa414485ba6c255e0900c27d8534af0e6343ac330c9f9b"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-8/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 229,
+      "sha256": "6fe8750ffc64ff3dca8daf7193feee02557622b4c2773a6a9ed01c0818ca1476"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-9/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7458,
+      "sha256": "74afa57d5fb43b1520f1b9a11e88006d45d50593c8ff2080197d72b29fb6c83c"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-9/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "2c1354ec3053827002db5c5414e58253be3bf84c2f3f002e78d109da4632aab5"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-9/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7458,
+      "sha256": "9e31ded6e8d03715414c8424d6bea09c0b9d2555ec16c27de75a275621c88ef9"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-9/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "3af6e81871f9125e1dd5cb45648a32b5d745346bf827c09ff705e80b9c60d94d"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-9/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 7458,
+      "sha256": "14924cb2ec4f44e40a95a82ad8eebef0c371bf846c56e1c76977590a039ff798"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/GridKit/tol1e-9/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "92602a077ab964bf687b52859877f7d4aa1efa45adb3e30bfc539c8175631d63"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt12_5us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4706,
+      "sha256": "8e3315844fa526c2fc0552d26f75d14106c5de57d6bd058701ae4fc086b214e2"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt12_5us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4868,
+      "sha256": "b9147ab7ee4609b360c95e05b82c4491845eb5693e9f3f73a385fd5601e9b0a2"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt12_5us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4702,
+      "sha256": "e32976bce8f92ee0e3a7c2d4f68e3448cacee63f9977737728ca295baf2c3756"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt12_5us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4864,
+      "sha256": "79a977a188cd8ad37ccb78f339e53c65b25c4fd2886a9bed698e9c9907ada7a2"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt12_5us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4708,
+      "sha256": "1918992f1915bc66d4dea78b1a1ddb946261fd919fd9c1b72d7021c0cf753a86"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt12_5us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4870,
+      "sha256": "e91d7972ed49bccaeca91467974d6ae05dc629a3570678108af1826e6567af77"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt25us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4696,
+      "sha256": "9f0e5fecdeeb921627ce61efff97e8ca248c699293462ce19e8b021861d4d086"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt25us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4861,
+      "sha256": "0e15998c2d1a9dfaba04424f22bfe1997f817ea52061c9dd8bcf9fc3b097cb1d"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt25us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4701,
+      "sha256": "6046c502cfed139c84d497922ef6e3226951e23dc31ba6cb620ac3b8d06000dc"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt25us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4867,
+      "sha256": "39aa7dc37e5a2aaf282544a684b5eee7af5802dba8e20544505ae774fbeac133"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt25us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4695,
+      "sha256": "2535d011b5e134f2770ebeb0d5f6d61ea61ff715d7650346d1c23544d9a9c379"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt25us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4861,
+      "sha256": "ff901106676812f1e6427fa96148935c928c5578bf47658cdc00bd07c597e4ad"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt50us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4683,
+      "sha256": "be67af49eebc9a063cef5f0fdaa2a662790ba5ef8ee2aca5d2ea1ee62f4577c5"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt50us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4849,
+      "sha256": "981328ad1cd21497f76d5f7f522694bc34be4bbfdf4ebc116a6b778d2c79d7af"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt50us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4691,
+      "sha256": "db33e231d01353662b221e6e5bfbfb489f7db6e98e16d3d587b282524b7ac3fd"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt50us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4856,
+      "sha256": "aae9a84e30db9cc02b93a07fe2e513b919b08f8f8ef5392c04e78687ee139201"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt50us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4683,
+      "sha256": "ec0850f20154dbb8c8b5cfc1313b72b6829ebd30bb617ad637fd53822b8b74bf"
+    },
+    {
+      "path": "results/runtime_cold/governor_step/ParaEMT/dt50us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4849,
+      "sha256": "28192ac6d225f387583322c8b35b0aff37a8f431c136a3fd76e2181d1c42823b"
+    },
+    {
+      "path": "results/runtime_cold/summary.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8919,
+      "sha256": "785ea987893eeb155e57d506f5deb7908688ac1f23668a61da57e63293630f9e"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-7/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8123,
+      "sha256": "fae38091c7a588f4c26851df18dcfd91dbe128e4056520a7d55f2d4787af8e46"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-7/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 229,
+      "sha256": "fdd5054c90d7acbe08afbff6cb9c720ae61f123d88b6e676b92774890c0feaec"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-7/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8122,
+      "sha256": "62244c54a3ebadc4e61650fcdaed9d99eaf6170353201539f4fab7b6483c4f0d"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-7/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "dcafd62b92eabdbea19a7dfcdbfb8bfe19552a9afdb88922e5d7d669d4718ab3"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-7/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8123,
+      "sha256": "a8709b5ab20589d2688e6125fc8b749672f1bdcc72ff7f6294e3c1f37a7a39b9"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-7/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 228,
+      "sha256": "f4f7305321719f2eb3b1d25eb20afed705c0c4b51f5a5a95e7d2959167ecf28b"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-8/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8053,
+      "sha256": "0a0f581d6e986c677ffb6f9bc0409dd28679ab5fa15ccc7249a2235a9a166bde"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-8/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "8906e3b734a9a6f92f9d50a82e125799db72d7eb164bab81b02f496b38142cce"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-8/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8053,
+      "sha256": "f59c43d1a8db77baee74dffd9afbf2bdb13ed3b9a73ac7c72491d42b15015d01"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-8/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "43ff5aa8008565b6c5f6fbcfd44be0a54601fdcd4da6812eb6cbb4178e59fbb0"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-8/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8053,
+      "sha256": "f4054f2aeb1f41f493eec1b5b4392a4d6914d6a61d087dffa8f503b4743ce19b"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-8/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 230,
+      "sha256": "c83fa332df33239ad638b18ccf4840815729251c4d693f63dcba89fcf05f0ad3"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-9/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8067,
+      "sha256": "35f0ca2ff5cee7cb6bee08bb90ec8e3a93faac0283350e858c204e09fd2b08be"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-9/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "9499d9c864c7b14438b999ddaf3f0edbec36fc3903be605f267ea7e1485d981d"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-9/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8070,
+      "sha256": "6c4a6aa77b315960675c416f30daeb516c344ed8999f0b5dc6dba9e34e2315b9"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-9/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "a53a4d5eb9184f98d9fe5d9780e8f6b5fcf7cd31b895c00f443e6543c442b9cb"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-9/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 8070,
+      "sha256": "0012ac1338819ee3dbe3e57241ca1fa0084087f689c770cc1b827f4278a3851c"
+    },
+    {
+      "path": "results/runtime_cold/trip/GridKit/tol1e-9/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 231,
+      "sha256": "35d9d3690131be7352806bc5c85bd6ececa8c25cfd273418f5a37d672cf75a6e"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt12_5us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4623,
+      "sha256": "5fb24f7d0a7d61cf90fcd5ceafbeaa4482f5066e2172647572be49867573d4a7"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt12_5us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4803,
+      "sha256": "a77a7e791243517cc75682588a60a07465410ed51bab4f0a3de3ee7dec2e7d55"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt12_5us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4624,
+      "sha256": "e6138093971b14c1cf18c6796c5dae3021495264f149a5fcff56dac168a9670e"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt12_5us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4804,
+      "sha256": "9d907efe3987490dabd7320ca39ba2290779b8c079b48cacd4d8b4c512420562"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt12_5us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4623,
+      "sha256": "e3d250393848ac7a033947a8f15b3c5f9567e0c86f8dd39e0c212efd36c36a81"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt12_5us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4803,
+      "sha256": "cfe31bd63624e34582707f8eeabd32f282acfe8758c6cbe6bb858dc9a198d968"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt25us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4619,
+      "sha256": "08d79ad4c18c10664b34be6139650b336f540b50815e2a812b4973154929834b"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt25us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4803,
+      "sha256": "d1fcbce9629642d5247be8e3a23f5bcbfcb13affcd9137366c3fa89e929034d6"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt25us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4620,
+      "sha256": "41ad624edb5ec0bb0d91fd01d78950326e56fc80b5ab87491be236db9d252b3e"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt25us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4803,
+      "sha256": "be4419d7c4dfeebb098d175f79c346e683b0faca621b8be4c301ed8f02245f57"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt25us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4619,
+      "sha256": "7b12a38918a337fc66741b1ba11d91ef4a5d796e9da52bfc550e1d3ba6b65130"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt25us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4803,
+      "sha256": "05a02bc4ac6dac5a9dea45995f5f38aef263e7c9ad0e7dedbaf787e9fcedef6d"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt50us/trial1/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4620,
+      "sha256": "c585e0add66cce14173a6d14045ac5138219da9367f47a07fb62bd69d88f3297"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt50us/trial1/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4803,
+      "sha256": "7fb47fabb0fd60636e170ff1c7a014dd22891f6b315e47c38a3256dd6049740b"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt50us/trial2/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4619,
+      "sha256": "14c5784837f9721998912f4c1f2830811d60d9c9da469e027d28d1f3e7a8b391"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt50us/trial2/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4803,
+      "sha256": "5bfe1086e728df1cf3d71ba43b24be1b642d0e7b420c0fde4883001b31244b43"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt50us/trial3/run.json",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4620,
+      "sha256": "9b6db8affac71b027d51ddd5a922620ad46a61bd6eb6214118410b25e19d319c"
+    },
+    {
+      "path": "results/runtime_cold/trip/ParaEMT/dt50us/trial3/run.log",
+      "origin": "local",
+      "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
+      "bytes": 4803,
+      "sha256": "ffae28a1ea8200845d3a98e7f08c8c51c245dbfb0f530dafa5f7d90ef8428e21"
     },
     {
       "path": "results/trip/dt12_5us/columns.json",
@@ -1705,8 +2853,8 @@
       "path": "results/trip/dt12_5us/event_waveforms.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 515387,
-      "sha256": "1cede0fabd8cb9b3e25da949f83fd002f857668ef94fa001cd79d27663be141e"
+      "bytes": 515601,
+      "sha256": "7849a30efcad77f12450b26d8ac2b6a9898a48f57919d18fa3307bc69a4dbad7"
     },
     {
       "path": "results/trip/dt12_5us/machine_parameters.json",
@@ -1719,29 +2867,29 @@
       "path": "results/trip/dt12_5us/reference.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2051534,
-      "sha256": "5ed0f31b8d547bc7145c1d508d507887c2fba1a2a92b4611ddc2102462df8d7d"
+      "bytes": 19972919,
+      "sha256": "a0bcf8cc0c0511aee18aff5a70ca762565dd40d38ca730fe5f7f3101375d6fc8"
     },
     {
       "path": "results/trip/dt12_5us/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1418,
-      "sha256": "0bb728b07da2670e53af745f3292106223be44ae94faeda6b1fcb8d04429a28e"
+      "bytes": 4006,
+      "sha256": "7d42d97fd73e04aa6d6313b04f512be8c4d98691d2d8ad05c4ff19804fa3e734"
     },
     {
       "path": "results/trip/dt12_5us/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2285,
-      "sha256": "2f5f722c926535e5033913de34ea4175f23f0e06d95ff88e2dd0bc7a1993387f"
+      "bytes": 4873,
+      "sha256": "58b902b86d91bc62db4d6f33fb002cb6e865768a497cca24187cf78198851060"
     },
     {
       "path": "results/trip/dt12_5us/states.npz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 7176452,
-      "sha256": "a3cf8c93dafbb2f24a67a7c822716e1e83dd59c741b4f340a61f47e060c1ec5d"
+      "bytes": 68999684,
+      "sha256": "58e68f4f84b0405780231094bee0c037cb0385f82ec709af8e370d27069152ce"
     },
     {
       "path": "results/trip/dt25us/columns.json",
@@ -1754,8 +2902,8 @@
       "path": "results/trip/dt25us/event_waveforms.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 262031,
-      "sha256": "55b7ee6b181f2c21d89e5afcddcb3d22a0b8100f28edef3c0dc0024fbed14026"
+      "bytes": 262211,
+      "sha256": "1952bcc239a42473b5d6e22e81a47ff959a1d5502f02626642cedd1e49e9036e"
     },
     {
       "path": "results/trip/dt25us/machine_parameters.json",
@@ -1768,22 +2916,22 @@
       "path": "results/trip/dt25us/reference.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2056113,
-      "sha256": "8fddd6654f1f73f8a32e79ccd30dde8961c231d6258c390f02bbfac8992a6ed6"
+      "bytes": 20020244,
+      "sha256": "6bab56d3c841ac90937fa720e900767494db03a2302791e3b4e0ef97a675c888"
     },
     {
       "path": "results/trip/dt25us/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1417,
-      "sha256": "199b571e8a2f3d233cfea694ae32d69bc9cc649b3796ac4e51941602073094f6"
+      "bytes": 4010,
+      "sha256": "904010154637768279b98769f1641c78d48723ff370360f7f9acb8569935d9f1"
     },
     {
       "path": "results/trip/dt25us/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2284,
-      "sha256": "5235a6380ab00bc07607a7fc184b77c02f4e662c78bdac874583a0be3ed4153f"
+      "bytes": 4877,
+      "sha256": "53d87514b5949fec85a7624cb718dbf34fbe29c9e5a5430d953ca9f747e94ed5"
     },
     {
       "path": "results/trip/dt50us/columns.json",
@@ -1796,8 +2944,8 @@
       "path": "results/trip/dt50us/event_waveforms.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 133727,
-      "sha256": "d4bdfcb95caa0c72d4e66aca7e22042640c7af7429f3ffb441e2b656bdd0c135"
+      "bytes": 133718,
+      "sha256": "9b81c2b6046afa8f56ac65f56fc1e5565e114cc0d3a091047faea51863fc7a13"
     },
     {
       "path": "results/trip/dt50us/machine_parameters.json",
@@ -1810,22 +2958,22 @@
       "path": "results/trip/dt50us/reference.csv.gz",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2062398,
-      "sha256": "af3d11ec674a9222ec4e7697601374016609bd55ea170be49ef42d88a762b92a"
+      "bytes": 20077371,
+      "sha256": "6ff43a422e1cbc3241e65fac7838a5e1fa379902cc12ecc329a88544225655a7"
     },
     {
       "path": "results/trip/dt50us/run.json",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 1412,
-      "sha256": "0aa3d4749903b5674857ed804da48b2f961d0ade6e9061cef2c0c753b604f4d8"
+      "bytes": 4010,
+      "sha256": "101a586821780b3b7d523858145d7899c5b1d55bc6664899d4149cf88ebefe61"
     },
     {
       "path": "results/trip/dt50us/run.log",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 2279,
-      "sha256": "9c1c07578ea6910bcdfe5a675264ad3b8bf88d6ab8dfe932daddee8b9529b445"
+      "bytes": 4877,
+      "sha256": "c89095f89359482c758890514f705a580c00b2f343a5b5151e4fddc3cc10d03e"
     },
     {
       "path": "run_gridkit.py",
@@ -1838,8 +2986,8 @@
       "path": "run_reference.py",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 9496,
-      "sha256": "c14c2db78f3d4e2b7ee6dcebaaa91111280b6fe541765fa9dcedaacd609c4657"
+      "bytes": 13997,
+      "sha256": "69431de43e0377ff0b6ef25da17b9a62f473ee0914625afdbe66b4e6bd52284f"
     },
     {
       "path": "upstream/Lib_BW.py",
@@ -2010,8 +3158,8 @@
       "path": "verify.py",
       "origin": "local",
       "transformation": "Local case, reproducibility code, documentation, or generated simulation artifact",
-      "bytes": 7913,
-      "sha256": "8ca5005873b19ffb9480cd32439129760c10efb79270f760ef4be0a83d84433b"
+      "bytes": 9180,
+      "sha256": "d75f7117bedf9a72311f05a8b66053a2692a07417bbea193edd8234a84007aff"
     }
   ]
 }
