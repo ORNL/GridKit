@@ -268,14 +268,14 @@ namespace GridKit
        */
       int constructCsr()
       {
-        //if constexpr (std::is_same_v<ScalarT, DependencyTracking::Variable>)
-        //{
-        //  return constructCsrFromDependencies();
-        //}
-        //else
-        //{
+        if constexpr (std::is_same_v<ScalarT, DependencyTracking::Variable>)
+        {
+          return constructCsrFromDependencies();
+        }
+        else
+        {
           return constructCsrFromCoo();
-        //}
+        }
       }
 
     protected:
@@ -301,7 +301,6 @@ namespace GridKit
        */
       void allocateVectors(IdxT n)
       {
-
         y_.resize(n);
         yp_.resize(n);
         f_.resize(n);
@@ -309,7 +308,9 @@ namespace GridKit
       }
 
       /**
-       * @brief COO construction from raw buffers.
+       * @brief COO construction from component-level raw buffers.
+       * 
+       * @note the components retain ownership of the data in the raw buffers.
        */
       int constructCoo()
       {
@@ -360,6 +361,120 @@ namespace GridKit
           std::copy(coo_jac_->getValues(), coo_jac_->getValues() + nnz_, vals);
 
           csr_jac_ = new CsrMatrixT(coo_jac_->getNumRows(), coo_jac_->getNumColumns(), nnz_, &row_ptrs, &cols, &vals);
+        }
+
+        return 0;
+      }
+
+      /**
+       * @brief CSR construction from Dependency maps.
+       *
+       * @note Currently only used for testing purposes.
+       */
+      int constructCsrFromDependencies()
+      {
+        static_assert(std::is_same_v<ScalarT, DependencyTracking::Variable>,
+                      "constructCsrFromDependencies() requires ScalarT = DependencyTracking::Variable");
+
+        using DependencyMap = typename ScalarT::DependencyMap;
+
+        const auto* f = f_.getData();
+      
+        if (csr_jac_ == nullptr)
+        {
+          IdxT* row_ptrs = new IdxT[static_cast<size_t>(size_) + 1];
+          row_ptrs[0] = 0;
+      
+          // Count the number of non-zeros
+          IdxT nnz = 0;
+          for (IdxT row = 0; row < size_; ++row)
+          {
+            DependencyMap row_map;
+      
+            for (const auto& dep : f[row].getDependencies())
+            {
+              const auto col = dep.first;
+      
+              // Merge-count y and yp dependencies
+              const IdxT jac_col = static_cast<IdxT>(col / 2);
+      
+              if (row_map.insert({jac_col, RealT{}}).second)
+              {
+                ++nnz;
+              }
+            }
+      
+            row_ptrs[static_cast<size_t>(row) + 1] = nnz;
+          }
+      
+          // Allocate column and value pointers
+          IdxT* cols  = new IdxT[static_cast<size_t>(nnz)];
+          RealT* vals = new RealT[static_cast<size_t>(nnz)];
+      
+          // Store column and values
+          IdxT i = 0;
+          for (IdxT row = 0; row < size_; ++row)
+          {
+            DependencyMap row_map;
+      
+            for (const auto& dep : f[row].getDependencies())
+            {
+              const auto col = dep.first;
+      
+              const IdxT jac_col = static_cast<IdxT>(col / 2);
+              // Even indices for y and odd indices for yp
+              if (col % 2 == 0)
+              {
+                row_map[jac_col] += static_cast<RealT>(dep.second);
+              }
+              else
+              {
+                row_map[jac_col] += alpha_ * static_cast<RealT>(dep.second);
+              }
+            }
+      
+            for (const auto& entry : row_map)
+            {
+              cols[i] = static_cast<IdxT>(entry.first);
+              vals[i] = static_cast<RealT>(entry.second);
+              ++i;
+            }
+          }
+      
+          nnz_ = nnz;
+          csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+        }
+        else
+        {
+          RealT* vals = csr_jac_->getValues();
+      
+          IdxT i = 0;
+          for (IdxT row = 0; row < size_; ++row)
+          {
+            DependencyMap row_map;
+      
+            for (const auto& dep : f[row].getDependencies())
+            {
+              const auto col = dep.first;
+      
+              const IdxT jac_col = static_cast<IdxT>(col / 2);
+              // Even indices for y and odd indices for yp
+              if (col % 2 == 0)
+              {
+                row_map[jac_col] += static_cast<RealT>(dep.second);
+              }
+              else
+              {
+                row_map[jac_col] += alpha_ * static_cast<RealT>(dep.second);
+              }
+            }
+      
+            for (const auto& entry : row_map)
+            {
+              vals[i] = static_cast<RealT>(entry.second);
+              ++i;
+            }
+          }
         }
 
         return 0;
