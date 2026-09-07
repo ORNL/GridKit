@@ -4,7 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
-#include <format>
+#include <iomanip>
 #include <iostream>
 #include <string>
 
@@ -93,7 +93,7 @@ MonolithicReference evaluateMonolithicSystem(GridKit::PowerElectronicsModel<real
   reference.y.resize(system->size());
   reference.yp.resize(system->size());
 
-  for (size_t i = 0; i < system->size(); ++i)
+  for (index_type i = 0; i < system->size(); ++i)
   {
     reference.y[i]  = static_cast<real_type>(i + 1);
     reference.yp[i] = static_cast<real_type>(i + 1);
@@ -103,7 +103,7 @@ MonolithicReference evaluateMonolithicSystem(GridKit::PowerElectronicsModel<real
   auto* system_y  = system->y().getData();
   auto* system_yp = system->yp().getData();
 
-  for (size_t i = 0; i < system->size(); ++i)
+  for (index_type i = 0; i < system->size(); ++i)
   {
     system_y[i]  = reference.y[i];
     system_yp[i] = reference.yp[i];
@@ -169,8 +169,9 @@ MonolithicReference evaluateMonolithicSystem(GridKit::PowerElectronicsModel<real
  * @post The returned result reports the partition timing, speedup, residual
  *       error, and subsystem Jacobian validation status.
  */
+template <class ScalarT, typename IdxT>
 RunResult evaluatePartitioning(
-    GridKit::ScaleMicrogridNetwork&                        network,
+    ScaleMicrogridNetwork<ScalarT, IdxT>&                  network,
     GridKit::PowerElectronicsModel<real_type, index_type>* system,
     const MonolithicReference&                             reference,
     index_type                                             num_partitions)
@@ -182,7 +183,7 @@ RunResult evaluatePartitioning(
 
   std::vector<GridKit::SubsystemModel<real_type, index_type>*> subsystems;
 
-  GridKit::partitionNetwork(network, subsystems, num_partitions);
+  partitionNetwork(network, subsystems, num_partitions);
 
   for (auto* partition : subsystems)
   {
@@ -199,7 +200,7 @@ RunResult evaluatePartitioning(
   // ---------------------------------------------------------------------------
   auto start_time = std::chrono::high_resolution_clock::now();
 
-  GridKit::evaluatePartitionResiduals(subsystems, reference.y, reference.yp, f, 0.1, 0.1);
+  evaluatePartitionResiduals(subsystems, reference.y, reference.yp, f, 0.1, 0.1);
 
   auto end_time = std::chrono::high_resolution_clock::now();
 
@@ -211,13 +212,18 @@ RunResult evaluatePartitioning(
 
   auto* system_jacobian = system->getCsrJacobian();
 
-  bool jacobian_match = true;
+  bool      jacobian_match = true;
+  real_type Jac_tol        = 1e-13;
 
   for (auto* partition : subsystems)
   {
     partition->evaluateJacobian();
 
-    jacobian_match = jacobian_match && GridKit::Testing::verifySubsystemJacobian(*system_jacobian, *partition->getCsrJacobian(), *partition);
+    jacobian_match = jacobian_match
+                     && GridKit::Testing::verifySubsystemJacobian(*system_jacobian,
+                                                                  *partition->getCsrJacobian(),
+                                                                  *partition,
+                                                                  Jac_tol);
   }
 
   // ---------------------------------------------------------------------------
@@ -225,9 +231,9 @@ RunResult evaluatePartitioning(
   // ---------------------------------------------------------------------------
   real_type max_error = 0.0;
 
-  for (size_t i = 0; i < system->size(); ++i)
+  for (index_type i = 0; i < system->size(); ++i)
   {
-    error[i] = std::abs(f[i] - reference.residual[i]) / (reference.residual[i] + 1.0);
+    error[i] = std::abs(f[i] - reference.residual[i]) / (std::abs(reference.residual[i]) + 1.0);
 
     if (max_error < error[i])
     {
@@ -275,6 +281,47 @@ RunResult evaluatePartitioning(
   }
 
   return result;
+}
+
+/**
+ * @brief Print the header for the partition evaluation results table.
+ */
+void printResultsHeader()
+{
+  std::cout << std::left
+            << std::setw(16) << "num_partitions"
+            << std::right
+            << std::setw(16) << "partition_time"
+            << std::setw(18) << "monolithic_time"
+            << std::setw(12) << "speedup"
+            << std::setw(14) << "error"
+            << std::setw(16) << "Jacobians"
+            << '\n';
+
+  std::cout << std::string(92, '-') << '\n';
+}
+
+/**
+ * @brief Print one row of partition evaluation results.
+ *
+ * @param[in] result Results from the partitioned system evaluation.
+ */
+void printResult(const RunResult& result)
+{
+  std::cout << std::left
+            << std::setw(16) << result.num_partitions
+            << std::right
+            << std::setw(14) << std::fixed << std::setprecision(4)
+            << result.partition_eval_time << " s"
+            << std::setw(16) << result.monolithic_eval_time << " s"
+            << std::setw(11) << std::setprecision(2)
+            << result.speedup << "x"
+            << std::setw(14) << std::scientific << std::setprecision(3)
+            << result.max_error << ' '
+            << std::setw(16) << result.jacobian_status
+            << '\n';
+
+  std::cout << std::defaultfloat;
 }
 
 /**
@@ -366,38 +413,29 @@ int main(int argc, char const* argv[])
     }
   }
 
-  bool use_jac = true;
+  const bool use_jac = true;
 
   // Build the physical network once.
-  GridKit::ScaleMicrogridNetwork network(N_size);
-  GridKit::buildScaleMicrogridNetwork(network);
+  ScaleMicrogridNetwork<real_type, index_type> network(N_size);
 
   // Build, assemble and allocate the monolithic system once.
   auto* system = new GridKit::PowerElectronicsModel<real_type, index_type>(use_jac);
 
-  GridKit::assembleSystemLeftToRight(network, *system);
+  assembleSystemLeftToRight(network, *system);
   system->allocate();
 
   // Evaluate the monolithic reference once.
-  MonolithicReference reference = evaluateMonolithicSystem(system);
+  const MonolithicReference reference = evaluateMonolithicSystem(system);
 
-  std::cout << std::format("{:<16}{:>16}{:>18}{:>12}{:>14}{:>16}\n",
-                           "num_partitions",
-                           "partition_time",
-                           "monolithic_time",
-                           "speedup",
-                           "error",
-                           "Jacobians");
-
-  std::cout << std::string(93, '-') << "\n";
+  printResultsHeader();
 
   // Only the partitioned system is rebuilt and evaluated for each partition count.
-  for (index_type p : num_partitions_list)
+  for (const index_type p : num_partitions_list)
   {
     assert(p <= 2 * N_size);
 
-    // Takes in the network, partition it into p partitions, and perform parallel function eval
-    RunResult r = evaluatePartitioning(network, system, reference, p);
+    // Partition the network and perform the parallel function evaluation.
+    const RunResult r = evaluatePartitioning(network, system, reference, p);
 
     if (!r.success)
     {
@@ -405,14 +443,8 @@ int main(int argc, char const* argv[])
       return 1;
     }
 
-    // Output the results from partition evaluation
-    std::cout << std::format("{:<16d}{:>14.4f} s{:>16.4f} s{:>11.2f}x{:>14.3e} {:>16s}\n",
-                             r.num_partitions,
-                             r.partition_eval_time,
-                             r.monolithic_eval_time,
-                             r.speedup,
-                             r.max_error,
-                             r.jacobian_status);
+    // Output the partition evaluation results.
+    printResult(r);
   }
 
   delete system;
