@@ -1,0 +1,86 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{diagram-style.tex}
+\input{pulse-geometry-data.tex}
+\usetikzlibrary{patterns}
+
+% Layout tunables. Cross-section coordinates use the same scale in x and y.
+\newcommand{\crossScale}{0.20}
+\newcommand{\spanScale}{0.022}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram]
+\begin{scope}[x=\crossScale cm,y=\crossScale cm]
+    \node[anchor=west] at (-13,34) {\textbf{(a)} Cross-section used for fitting};
+    \fill[pattern=north east lines,pattern color=black!35] (-13,-1) rectangle (13,0);
+    \draw[semithick] (-13,0) -- (13,0);
+
+    \foreach \x/\phase in {-7.2/a,0/b,7.2/c} {
+        \draw[semithick,fill=white] (\x-0.2285,\phaseMean) circle[radius=1.1pt];
+        \draw[semithick,fill=white] (\x+0.2285,\phaseMean) circle[radius=1.1pt];
+        \node[sig,above=5pt] at (\x,\phaseMean) {$\phase$};
+        \draw[thin,black!45] (\x,\phaseMean-1) -- (\x,13.0);
+    }
+    \foreach \x in {-4.3,4.3} {
+        \fill (\x,\shieldMean) circle[radius=1.1pt];
+        \draw[thin,black!45] (\x,\shieldMean-1) -- (\x,22.5);
+    }
+    \draw[<->,thin] (-4.3,23.4) -- (4.3,23.4)
+        node[midway,below=3pt,sig] {$8.6\,\mathrm{m}$};
+    \node[sig,above=5pt] at (0,\shieldMean) {Shield wires};
+    \draw[<->,thin] (-7.2,13.5) -- (0,13.5)
+        node[midway,below=3pt,sig] {$7.2\,\mathrm{m}$};
+    \draw[<->,thin] (0,13.5) -- (7.2,13.5)
+        node[midway,below=3pt,sig] {$7.2\,\mathrm{m}$};
+
+    \draw[thin,black!45] (-8,\phaseMean) -- (-12.5,\phaseMean);
+    \draw[<->,thin] (-11.5,0) -- (-11.5,\phaseMean)
+        node[midway,left=3pt,sig,rotate=90,anchor=south] {$\phaseMeanLabel\,\mathrm{m}$};
+    \draw[thin,black!45] (5,\shieldMean) -- (12.5,\shieldMean);
+    \draw[<->,thin] (11.5,0) -- (11.5,\shieldMean)
+        node[midway,right=3pt,sig,rotate=90,anchor=north] {$\shieldMeanLabel\,\mathrm{m}$};
+    \node[sig,below=5pt] at (0,-1) {Earth: $\sigma=0.01\,\mathrm{S/m}$};
+\end{scope}
+
+\begin{scope}[xshift=4.1cm,x=\spanScale cm,y=\crossScale cm]
+    \node[anchor=west] at (0,34) {\textbf{(b)} Representative span};
+    \draw[black!45,thin] (0,0) -- (0,29.5) (350,0) -- (350,29.5);
+    \draw[semithick] plot file {phase-span.dat};
+    \draw[semithick,dashed] plot file {shield-span.dat};
+    \draw[thin,black!45] (0,24) -- (350,24);
+    \draw[thin,black!45] (0,29.5) -- (350,29.5);
+    \foreach \x in {0,350} {
+        \fill (\x,24) circle[radius=1.2pt];
+        \fill (\x,29.5) circle[radius=1.2pt];
+    }
+    \draw[<->,thin] (175,\phaseMid) -- (175,24)
+        node[midway,right=3pt,sig] {$\phaseSagLabel\,\mathrm{m}$};
+    \draw[<->,thin] (175,\shieldMid) -- (175,29.5)
+        node[midway,right=3pt,sig] {$\shieldSagLabel\,\mathrm{m}$};
+    \node[sig,anchor=west] at (355,24) {$24\,\mathrm{m}$};
+    \node[sig,anchor=west] at (355,29.5) {$29.5\,\mathrm{m}$};
+    \node[sig] at (75,\phaseMid-3.0) {Phase conductors};
+    \node[sig,fill=white,inner sep=2pt] at (73,\shieldMid+2.8) {Shield wires};
+    \fill[pattern=north east lines,pattern color=black!35] (0,-1) rectangle (350,0);
+    \draw[semithick] (0,0) -- (350,0);
+    \draw[thin,black!45] (0,-1.5) -- (0,-4) (350,-1.5) -- (350,-4);
+    \draw[<->,thin] (0,-3) -- (350,-3)
+        node[midway,fill=white,inner sep=3pt,sig] {$350\,\mathrm{m}$};
+\end{scope}
+
+% Bundle detail has its own enlarged scale, independent of the cross-section.
+\begin{scope}[yshift=-2.0cm]
+    \node[anchor=west] at (-2.6,0.65) {\textbf{(c)} Twin Drake ACSR bundle};
+    \foreach \x in {-1.8,1.8} {
+        \draw[semithick,fill=white] (\x,0) circle[radius=0.1108];
+        \fill[black!35] (\x,0) circle[radius=0.0405];
+        \draw[thin,black!45] (\x,-0.16) -- (\x,-0.65);
+    }
+    \draw[<->,thin] (-1.8,-0.48) -- (1.8,-0.48)
+        node[midway,fill=white,inner sep=3pt,sig] {$0.457\,\mathrm{m}$};
+    \node[sig,below] at (0,-0.77) {Conductor diameter: $28.14\,\mathrm{mm}$};
+\end{scope}
+\node[sig,anchor=west,align=left] at (4.1,-2.15)
+    {Study length: $60\,\mathrm{km}$\\[5pt]
+     Uniform line with cyclically averaged phase parameters.};
+\end{tikzpicture}
+\end{document}
