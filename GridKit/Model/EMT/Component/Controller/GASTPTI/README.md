@@ -243,7 +243,7 @@ P^\mathrm{ref}
   \left(V_D+\dfrac{\omega}{R}\right).
 ```
 
-Initialization preserves the machine-seeded machine-base $P_{\mathrm{m}}$ and
+Initialization uses the resolved machine-base $P_{\mathrm{m}}$ and preserves
 any supplied `pref` input. If that input differs from the inferred reference,
 consistent initialization resolves algebraic values and derivatives while
 retaining the initialized differential states.

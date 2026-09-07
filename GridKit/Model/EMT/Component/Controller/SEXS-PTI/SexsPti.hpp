@@ -95,16 +95,26 @@ namespace GridKit
         int allocate() override final;
         int verify() const override final;
 
-        int initializationOrder() const noexcept override final
-        {
-          return 3;
-        }
-
         int initialize(const std::map<Outputs, RealT>& outputs = {});
+
+        typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+        {
+          using V = SexsPtiExternalVariables;
+          typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+          ports.inputs = signals_.attachedSignals({V::VS, V::VUEL, V::VOEL, V::VA, V::VB, V::VC});
+          if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
+            ports.outputs.emplace("efd", signals_.template getSignal<SexsPtiInternalVariables::EFD>());
+          return ports;
+        }
 
         int initializeState(const std::map<std::string, RealT>& values) override
         {
           return this->initializeOutputs(*this, values);
+        }
+
+        void validateInitialState(const std::map<std::string, RealT>& values) const override
+        {
+          this->template parseInitialOutputs<SexsPti>(values);
         }
 
         int evaluateInternalResidual() override final;

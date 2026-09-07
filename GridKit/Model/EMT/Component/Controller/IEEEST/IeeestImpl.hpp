@@ -50,186 +50,24 @@ namespace GridKit
       void Ieeest<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Parameter = typename ModelDataT::Parameters;
-        if (data.parameters.contains(Parameter::A1))
-        {
-          const auto& value = data.parameters.at(Parameter::A1);
-          if (const auto* real = std::get_if<RealT>(&value))
-            A1_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            A1_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::A2))
-        {
-          const auto& value = data.parameters.at(Parameter::A2);
-          if (const auto* real = std::get_if<RealT>(&value))
-            A2_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            A2_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::A3))
-        {
-          const auto& value = data.parameters.at(Parameter::A3);
-          if (const auto* real = std::get_if<RealT>(&value))
-            A3_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            A3_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::A4))
-        {
-          const auto& value = data.parameters.at(Parameter::A4);
-          if (const auto* real = std::get_if<RealT>(&value))
-            A4_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            A4_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::A5))
-        {
-          const auto& value = data.parameters.at(Parameter::A5);
-          if (const auto* real = std::get_if<RealT>(&value))
-            A5_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            A5_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::A6))
-        {
-          const auto& value = data.parameters.at(Parameter::A6);
-          if (const auto* real = std::get_if<RealT>(&value))
-            A6_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            A6_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::T1))
-        {
-          const auto& value = data.parameters.at(Parameter::T1);
-          if (const auto* real = std::get_if<RealT>(&value))
-            T1_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            T1_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::T2))
-        {
-          const auto& value = data.parameters.at(Parameter::T2);
-          if (const auto* real = std::get_if<RealT>(&value))
-            T2_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            T2_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::T3))
-        {
-          const auto& value = data.parameters.at(Parameter::T3);
-          if (const auto* real = std::get_if<RealT>(&value))
-            T3_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            T3_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::T4))
-        {
-          const auto& value = data.parameters.at(Parameter::T4);
-          if (const auto* real = std::get_if<RealT>(&value))
-            T4_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            T4_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::T5))
-        {
-          const auto& value = data.parameters.at(Parameter::T5);
-          if (const auto* real = std::get_if<RealT>(&value))
-            T5_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            T5_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::T6))
-        {
-          const auto& value = data.parameters.at(Parameter::T6);
-          if (const auto* real = std::get_if<RealT>(&value))
-            T6_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            T6_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::Ks))
-        {
-          const auto& value = data.parameters.at(Parameter::Ks);
-          if (const auto* real = std::get_if<RealT>(&value))
-            Ks_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            Ks_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::Lsmin))
-        {
-          const auto& value = data.parameters.at(Parameter::Lsmin);
-          if (const auto* real = std::get_if<RealT>(&value))
-            Lsmin_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            Lsmin_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::Lsmax))
-        {
-          const auto& value = data.parameters.at(Parameter::Lsmax);
-          if (const auto* real = std::get_if<RealT>(&value))
-            Lsmax_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            Lsmax_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::Vcl))
-        {
-          const auto& value = data.parameters.at(Parameter::Vcl);
-          if (const auto* real = std::get_if<RealT>(&value))
-            Vcl_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            Vcl_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::Vcu))
-        {
-          const auto& value = data.parameters.at(Parameter::Vcu);
-          if (const auto* real = std::get_if<RealT>(&value))
-            Vcu_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            Vcu_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
-        if (data.parameters.contains(Parameter::Tdelay))
-        {
-          const auto& value = data.parameters.at(Parameter::Tdelay);
-          if (const auto* real = std::get_if<RealT>(&value))
-            Tdelay_ = *real;
-          else if (const auto* integer = std::get_if<IdxT>(&value))
-            Tdelay_ = static_cast<RealT>(*integer);
-          else
-            ++parameter_errors_;
-        }
+        A1_             = parameter<RealT>(data, Parameter::A1, A1_);
+        A2_             = parameter<RealT>(data, Parameter::A2, A2_);
+        A3_             = parameter<RealT>(data, Parameter::A3, A3_);
+        A4_             = parameter<RealT>(data, Parameter::A4, A4_);
+        A5_             = parameter<RealT>(data, Parameter::A5, A5_);
+        A6_             = parameter<RealT>(data, Parameter::A6, A6_);
+        T1_             = parameter<RealT>(data, Parameter::T1, T1_);
+        T2_             = parameter<RealT>(data, Parameter::T2, T2_);
+        T3_             = parameter<RealT>(data, Parameter::T3, T3_);
+        T4_             = parameter<RealT>(data, Parameter::T4, T4_);
+        T5_             = parameter<RealT>(data, Parameter::T5, T5_);
+        T6_             = parameter<RealT>(data, Parameter::T6, T6_);
+        Ks_             = parameter<RealT>(data, Parameter::Ks, Ks_);
+        Lsmin_          = parameter<RealT>(data, Parameter::Lsmin, Lsmin_);
+        Lsmax_          = parameter<RealT>(data, Parameter::Lsmax, Lsmax_);
+        Vcl_            = parameter<RealT>(data, Parameter::Vcl, Vcl_);
+        Vcu_            = parameter<RealT>(data, Parameter::Vcu, Vcu_);
+        Tdelay_         = parameter<RealT>(data, Parameter::Tdelay, Tdelay_);
 
         lower_cutout_ = static_cast<RealT>(Vcl_ != 0);
         upper_cutout_ = static_cast<RealT>(Vcu_ != 0);
@@ -305,7 +143,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::verify() const
       {
-        int  ret   = parameter_errors_;
+        int  ret   = 0;
         auto check = [&](bool valid, const char* message)
         {
           if (!valid)

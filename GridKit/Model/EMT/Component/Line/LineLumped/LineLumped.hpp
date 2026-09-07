@@ -114,9 +114,22 @@ namespace GridKit
 
       int initialize(const std::map<Outputs, RealT>& outputs = {});
 
+      typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+      {
+        return {};
+      }
+
       int initializeState(const std::map<std::string, RealT>& values) override
       {
         return this->initializeOutputs(*this, values);
+      }
+
+      void validateInitialState(const std::map<std::string, RealT>& values) const override
+      {
+        const auto outputs = this->template parseInitialOutputs<LineLumped>(values);
+        for (const auto& [output, value] : outputs)
+          if (static_cast<size_t>(output) >= 3)
+            throw std::invalid_argument("LineLumped initial outputs must be series currents");
       }
 
       virtual int setAbsoluteTolerance(RealT) override final;

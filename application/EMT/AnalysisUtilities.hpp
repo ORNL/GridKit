@@ -8,8 +8,10 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <variant>
 #include <vector>
 
@@ -17,6 +19,7 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/CommonMath.hpp>
+#include <GridKit/Model/EMT/JsonValidation.hpp>
 #include <GridKit/Model/EMT/SystemModelData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -151,16 +154,20 @@ namespace GridKit
     {
       using namespace magic_enum;
 
+      validateJsonFields(j, "EMT study", {"system_model_file", "state_file", "dt_monitor", "tmax", "rel_tol", "abs_tol", "mu", "signal_values", "dt_fixed", "max_steps", "consistent_ic_type", "events", "output_file", "state_output_file", "reference_file", "error_tolerance", "error_type", "abs_err_threshold"});
+      const auto real = [&j](const char* key, double fallback)
+      { return j.contains(key) ? parseFiniteReal<double>(j.at(key), key) : fallback; };
+
       j.at("system_model_file").get_to(c.system_model_file);
       if (j.contains("state_file"))
       {
         j.at("state_file").get_to(c.state_file);
       }
-      c.dt_monitor = j.value("dt_monitor", 0.0);
-      j.at("tmax").get_to(c.tmax);
-      c.rel_tol = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
-      c.abs_tol = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
-      c.mu      = j.value("mu", Math::DEFAULT_MU<double>);
+      c.dt_monitor = real("dt_monitor", 0.0);
+      c.tmax       = parseFiniteReal<double>(j.at("tmax"), "tmax");
+      c.rel_tol    = real("rel_tol", DEFAULT_SOLVER_REL_TOL);
+      c.abs_tol    = real("abs_tol", DEFAULT_SOLVER_ABS_TOL);
+      c.mu         = real("mu", Math::DEFAULT_MU<double>);
       if (!std::isfinite(c.mu) || c.mu <= 0.0)
       {
         throw std::invalid_argument("\"mu\" must be a positive finite number");
@@ -174,15 +181,22 @@ namespace GridKit
         }
         for (const auto& [name, value] : j.at("signal_values").items())
         {
-          if (!value.is_number() || !std::isfinite(value.get<double>()))
-          {
-            throw std::invalid_argument("A signal_values entry must be a finite number");
-          }
-          c.signal_values.emplace(name, value.get<double>());
+          c.signal_values.emplace(name, parseFiniteReal<double>(value, "signal_values entry \"" + name + "\""));
         }
       }
-      c.dt_fixed           = j.value("dt_fixed", 0.0);
-      c.max_steps          = j.value("max_steps", std::size_t{0});
+      c.dt_fixed = real("dt_fixed", 0.0);
+      if (c.dt_monitor < 0 || c.dt_fixed < 0 || c.rel_tol <= 0 || c.abs_tol <= 0)
+        throw std::invalid_argument("EMT study requires nonnegative time steps and positive solver tolerances");
+      c.max_steps = 0;
+      if (j.contains("max_steps"))
+      {
+        const auto& steps = j.at("max_steps");
+        if (!steps.is_number_integer()
+            || (!steps.is_number_unsigned() && steps.get<int64_t>() < 0)
+            || steps.get<uint64_t>() > static_cast<uint64_t>(std::numeric_limits<long int>::max()))
+          throw std::invalid_argument("max_steps requires a nonnegative integer within the solver's index range");
+        c.max_steps = steps.get<size_t>();
+      }
       c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
       if (j.contains("consistent_ic_type"))
       {
@@ -197,9 +211,8 @@ namespace GridKit
         }
         else
         {
-          Log::error() << "Invalid IDA consistent initial condition type \""
-                       << consistent_ic_type_str << "\"; "
-                       << "must be either \"y\" or \"ya_ydp\"";
+          throw std::invalid_argument("Invalid consistent_ic_type \"" + consistent_ic_type_str
+                                      + "\"; expected \"y\" or \"ya_ydp\"");
         }
       }
 
@@ -222,22 +235,29 @@ namespace GridKit
         j.at("reference_file").get_to(c.reference_file);
       }
 
+      c.error_tol.clear();
       if (j.contains("error_tolerance"))
       {
         auto& tolj = j.at("error_tolerance");
         if (tolj.is_array())
         {
-          tolj.get_to(c.error_tol);
+          if (tolj.empty())
+            throw std::invalid_argument("error_tolerance must not be empty");
+          for (const auto& value : tolj)
+            c.error_tol.push_back(parseFiniteReal<double>(value, "error_tolerance"));
         }
         else
         {
-          tolj.get_to(c.error_tol.emplace_back());
+          c.error_tol.push_back(parseFiniteReal<double>(tolj, "error_tolerance"));
         }
       }
       else
       {
         c.error_tol.push_back(DEFAULT_VERIFICATION_TOL);
       }
+      if (std::any_of(c.error_tol.begin(), c.error_tol.end(), [](double tolerance)
+                      { return tolerance <= 0; }))
+        throw std::invalid_argument("error_tolerance must be positive");
 
       using ErrorType = Testing::ErrorType;
       if (j.contains("error_type"))
@@ -246,8 +266,7 @@ namespace GridKit
         auto type_wrap = enum_cast<ErrorType>(type_str, case_insensitive);
         if (!type_wrap.has_value())
         {
-          Log::error() << "Invalid error type \"" << type_str << "\"; "
-                       << "must be either \"relative\" or \"absolute\"";
+          throw std::invalid_argument("Invalid error_type \"" + type_str + "\"; expected \"relative\" or \"absolute\"");
         }
         c.error_type = type_wrap.value();
       }
@@ -256,7 +275,9 @@ namespace GridKit
         c.error_type = ErrorType::RELATIVE;
       }
 
-      c.abs_err_threshold = j.value("abs_err_threshold", Testing::DEFAULT_ABS_ERROR_THRESHOLD);
+      c.abs_err_threshold = real("abs_err_threshold", Testing::DEFAULT_ABS_ERROR_THRESHOLD);
+      if (c.abs_err_threshold < 0)
+        throw std::invalid_argument("abs_err_threshold must be nonnegative");
     }
 
     /**
@@ -274,6 +295,101 @@ namespace GridKit
         Log::error() << "Failed to open file: " << file_path << std::endl;
       }
       return fs;
+    }
+
+    /// Validate all named records before discarding null values that request model defaults.
+    inline std::map<std::string, std::map<std::string, double>>
+    parseInitialState(const json& state, const ContainerData<double, size_t>& model)
+    {
+      validateJsonFields(state, "State", {"header", "buses", "devices"});
+      if (state.contains("header") && !state.at("header").is_null())
+      {
+        const auto& header = state.at("header");
+        validateJsonFields(header, "State header", {"version", "time", "created", "description"});
+        if (header.contains("version") && !header.at("version").is_null())
+        {
+          const auto& version = header.at("version");
+          if (!version.is_number_integer()
+              || (!version.is_number_unsigned() && version.get<int64_t>() < 0)
+              || version.get<uint64_t>() > std::numeric_limits<unsigned int>::max())
+            throw std::invalid_argument("State header version requires a nonnegative integer within the version range");
+        }
+        if (header.contains("time") && !header.at("time").is_null()
+            && parseFiniteReal<double>(header.at("time"), "State header time") != 0)
+          throw std::invalid_argument("The EMT application requires an initial state at time zero");
+        for (const auto* name : {"created", "description"})
+          if (header.contains(name) && !header.at(name).is_null() && !header.at(name).is_string())
+            throw std::invalid_argument(std::string("State header ") + name + " must be a string");
+      }
+
+      std::map<std::string, std::set<std::string>> allowed;
+      std::set<std::string>                        buses;
+      const auto                                   collect = [&](auto&& self, const auto& scope, const std::string& prefix) -> void
+      {
+        const auto add = [&](const auto& devices)
+        {
+          using Data    = typename std::decay_t<decltype(devices)>::value_type;
+          using Outputs = typename Data::Outputs;
+          for (const auto& device : devices)
+          {
+            const auto path  = prefix + device.id;
+            auto&      names = allowed[path];
+            for (const auto output : magic_enum::enum_values<Outputs>())
+              if (output != Outputs::SIZE)
+                names.emplace(magic_enum::enum_name(output));
+            if constexpr (std::is_same_v<Outputs, SwitchOutputs>)
+              names.insert("open");
+            if constexpr (std::is_same_v<Outputs, BusOutputs>)
+              buses.insert(path);
+          }
+        };
+        std::apply([&](const auto&... devices)
+                   { (add(devices), ...); },
+                   std::tie(scope.bus, scope.loadz, scope.voltage_source, scope.dependent_voltage_source, scope.machine, scope.line_lumped, scope.sw, scope.pwm, scope.converter, scope.ieeest, scope.gastpti, scope.gov, scope.sexs_pti, scope.exciter));
+        for (const auto& child : scope.container)
+          self(self, child, prefix + child.id + ".");
+      };
+      collect(collect, model, "");
+
+      std::map<std::string, std::map<std::string, double>> result;
+      std::set<std::string>                                seen;
+      for (const auto* section : {"buses", "devices"})
+      {
+        if (!state.contains(section) || state.at(section).is_null())
+          continue;
+        if (!state.at(section).is_object())
+          throw std::invalid_argument(std::string("State ") + section + " must be an object");
+        for (const auto& [path, outputs] : state.at(section).items())
+        {
+          const auto record = allowed.find(path);
+          if (record == allowed.end())
+            throw std::invalid_argument("Unknown initial state component: " + path);
+          if (std::string_view(section) == "buses" && !buses.contains(path))
+            throw std::invalid_argument("Initial bus state requires a Bus component: " + path);
+          if (!seen.insert(path).second)
+            throw std::invalid_argument("Duplicate initial state component: " + path);
+          if (outputs.is_null())
+            continue;
+          if (!outputs.is_object())
+            throw std::invalid_argument("Component state must be an object: " + path);
+          for (const auto& [name, value] : outputs.items())
+          {
+            if (!record->second.contains(name))
+              throw std::invalid_argument("Unknown initial output: " + path + "." + name);
+            if (value.is_null())
+              continue;
+            if (name == "open")
+            {
+              if (!value.is_boolean())
+                throw std::invalid_argument("Initial switch open must be Boolean: " + path);
+              result[path][name] = value.get<bool>() ? 1.0 : 0.0;
+            }
+            else
+              result[path][name] = parseFiniteReal<double>(value, "Initial output " + path + "." + name);
+          }
+        }
+      }
+      return result;
     }
 
     /**
@@ -339,34 +455,7 @@ namespace GridKit
         std::ifstream state_stream(data.state_file);
         if (!state_stream)
           throw std::invalid_argument("Cannot open state file: " + data.state_file.string());
-        const auto state = json::parse(state_stream);
-        if (!state.is_object())
-          throw std::invalid_argument("State must be a JSON object");
-        for (const auto* section : {"buses", "devices"})
-        {
-          if (!state.contains(section) || state.at(section).is_null())
-            continue;
-          if (!state.at(section).is_object())
-            throw std::invalid_argument(std::string("State ") + section + " must be an object");
-          for (const auto& [path, outputs] : state.at(section).items())
-          {
-            if (outputs.is_null())
-              continue;
-            if (!outputs.is_object())
-              throw std::invalid_argument("Component state must be an object: " + path);
-            for (const auto& [name, value] : outputs.items())
-            {
-              if (value.is_null() || name == "injections")
-                continue;
-              if (name == "open" && value.is_boolean())
-                data.state[path][name] = value.get<bool>() ? 1.0 : 0.0;
-              else if (value.is_number() && std::isfinite(value.get<double>()))
-                data.state[path][name] = value.get<double>();
-              else
-                throw std::invalid_argument("Initial output must be finite: " + path + "." + name);
-            }
-          }
-        }
+        data.state = parseInitialState(json::parse(state_stream), data.model_data);
       }
       std::string model_output_file;
       // Find output file (CSV) specified in model input file

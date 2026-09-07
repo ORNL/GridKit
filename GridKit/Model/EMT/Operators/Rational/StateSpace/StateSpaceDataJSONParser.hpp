@@ -13,6 +13,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     void from_json(const nlohmann::json& j, StateSpaceData<RealT, IdxT>& result)
     {
+      validateJsonFields(j, "StateSpace", {"rows", "cols", "D", "E", "poles", "B", "C"});
       StateSpaceData<RealT, IdxT> data;
       data.rows = parseRationalDimension<IdxT>(j, "rows");
       data.cols = parseRationalDimension<IdxT>(j, "cols");
@@ -24,7 +25,7 @@ namespace GridKit
       data.D    = RationalMatrix<RealT>(rows, cols);
       data.E    = RationalMatrix<RealT>(rows, cols);
       auto real = [](const nlohmann::json& value)
-      { return value.template get<RealT>(); };
+      { return parseFiniteReal<RealT>(value, "StateSpace matrix element"); };
       if (j.contains("D"))
       {
         data.D = parseRationalMatrix<RealT>(j.at("D"), rows, cols, real);

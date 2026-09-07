@@ -16,12 +16,12 @@ Figure 1: Bus model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$N$ | [-] | `N` | Number of phases | Required, positive integer
+$N$ | [-] | `N` | Number of phases | Optional; defaults to 3, the supported phase count
 
 ### Parameter Validation
 
 ```math
-N \in \mathbb{Z}_{>0}
+N = 3
 ```
 
 ### Derived Parameters

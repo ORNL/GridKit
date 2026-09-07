@@ -611,7 +611,12 @@
                     "sb",
                     "sc"
                 ],
-                "vdc": "dc"
+                "vdc": "dc",
+                "i": [
+                    "filter_ia",
+                    "filter_ib",
+                    "filter_ic"
+                ]
             },
             "outputs": {
                 "vo": [
@@ -621,7 +626,8 @@
                 ]
             },
             "mon": [
-                "vo"
+                "vo",
+                "idc"
             ]
         },
         {
@@ -780,7 +786,12 @@
                 "ia",
                 "ib",
                 "ic"
-            ]
+            ],
+            "outputs": {
+                "ia": "filter_ia",
+                "ib": "filter_ib",
+                "ic": "filter_ic"
+            }
         }
     ],
     "signals": [
@@ -811,6 +822,15 @@
         },
         {
             "id": "ec"
+        },
+        {
+            "id": "filter_ia"
+        },
+        {
+            "id": "filter_ib"
+        },
+        {
+            "id": "filter_ic"
         }
     ]
 }

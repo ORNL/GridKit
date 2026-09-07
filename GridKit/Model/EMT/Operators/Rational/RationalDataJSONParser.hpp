@@ -6,6 +6,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <GridKit/Model/EMT/JsonValidation.hpp>
 #include <GridKit/Model/EMT/Operators/Rational/RationalMatrix.hpp>
 
 namespace GridKit
@@ -39,7 +40,8 @@ namespace GridKit
       {
         throw std::invalid_argument("Rational: complex values require [real, imaginary]");
       }
-      return {value.at(0).template get<RealT>(), value.at(1).template get<RealT>()};
+      return {parseFiniteReal<RealT>(value.at(0), "Rational complex real part"),
+              parseFiniteReal<RealT>(value.at(1), "Rational complex imaginary part")};
     }
 
     template <typename T, typename Parse>
