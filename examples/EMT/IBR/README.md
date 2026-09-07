@@ -41,8 +41,9 @@ Open [results/index.html](results/index.html) for the one-line diagram, scenario
 comparison, and links to each scenario's plots and raw data. The HTML is local
 and requires no server or internet connection. PNG figures are accompanied by
 SVG for the summary plots and PDF for the one-line and complete DAE traces.
-Generated data and plots live under ignored `results/`; no generated output is
-part of the source case. Expect roughly 6 GB of CSV data for all six runs.
+Generated data and plots live under ignored `results/`, except the reference
+image `switching_transient.png` beside this README. Expect roughly 6 GB of CSV
+data for all six runs.
 
 A solver JSON also runs directly with `EMTDynamicSimulation`; its output paths
 are relative to the current working directory. Build and install trees preserve
@@ -51,7 +52,7 @@ a shortened time horizon and checks their events and output completeness.
 
 ## Recorded data and checks
 
-Each full run records 225 model quantities plus time, including all available
+Each full run records 201 model quantities plus time, including all available
 Bus, Machine, PWM, Converter, dependent-source, line, load and switch monitors.
 The complete state CSV separately records all 231 DAE variables (78 differential, 153 algebraic) and all 231
 derivatives, including the three internal states of each TGOV1 governor.
@@ -87,9 +88,13 @@ the original CSVs retain every sample and every derivative.
 
 ## Resolved switching study
 
+![Ten-bus IBR bridge voltage and network-current injection during fault clearing](switching_transient.png)
+
 `06_FaultClearingSwitching.solver.json` sets `mu=50000` before model
 construction. The logistic 10–90% transition width is `2 ln(9)/mu`, about
-87.9 µs, resolved by the 10 µs output interval. The carrier remains 900 Hz.
+87.9 µs, sampled at 10 µs intervals. The carrier remains 900 Hz. At default
+`mu=240`, the width is 18.3 ms: the first five studies suppress switching.
+For sharper edges, `mu=200000` gives 22.0 µs and requires finer time resolution.
 
 Its `signal_values` override sets each DC source to 28918.846170570516 V.
 This replaces the default case's 407357 V smoothing compensation and preserves
@@ -97,6 +102,30 @@ the 1.02 pu open-circuit AC fundamental; it is not an automatic rescaling by
 the solver. Changing only mu while retaining 407357 V would apply excessive
 AC voltage. The shared mu also changes machine saturation and governor
 limiter smoothing, so this is a study-wide smoothing comparison.
+
+`run.py --mu VALUE` adjusts the three DC constants to preserve the AC
+fundamental and selects output spacing of at most 10 µs. Group comparisons
+under `results/mu-240/`, `results/mu-3600/`, and `results/mu-50000/`, each
+containing scenario directories. `mu=3600` gives a 1.22 ms edge width and
+retains only 11.9% and 4.17% of the ideal 780 and 1020 Hz sideband amplitudes.
+Use `plot.py --transients-only --results PATH` for matching voltage/current
+panels and a `transients.html` gallery without the complete state plots.
+
+To rerun and inspect only the switching transient:
+
+```bash
+python3 examples/EMT/IBR/run.py --exe build/application/EMT/EMTDynamicSimulation --scenario 06_FaultClearingSwitching
+python3 examples/EMT/IBR/plot.py --switching-only
+```
+
+This plots bridge voltage `voa` and `DependentVoltageSource_filter_4_ia`
+(positive into bus 4), with full samples around fault clearing. It checks KCL
+at all three IBR buses and PWM/bridge harmonics through 2.94 kHz against the independent
+[sampled-edge predictor](../../../cases/EMT/CoupledGrid/pwm_analysis.py), including
+logistic attenuation. The 900 Hz carrier cancels in bridge phase voltage;
+its 780 and 1020 Hz sidebands remain. Results are in `switching_validation.json`
+and `plots/switching_*.png` within the scenario directory. These checks validate
+the smoothed switching equations, not semiconductor edge physics.
 
 All full simulations use sparse KLU. Earlier short dense-versus-Enzyme
 cross-checks are retained as historical verification data; the EMT driver now

@@ -6,11 +6,15 @@ import hashlib
 import json
 import math
 import subprocess
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parents[2] / 'cases/EMT/CoupledGrid'))
+from pwm_analysis import attenuation
+
 SCENARIOS = sorted(p.name.removesuffix('.solver.json') for p in HERE.glob('*.solver.json'))
 
 
@@ -33,13 +37,26 @@ def validate_csv(path, final_time):
     return dict(rows=count, columns=len(header), duplicate_event_times=duplicates, final_time=previous)
 
 
-def run_one(name, exe, results, smoke, check_only=False):
+def run_one(name, exe, results, smoke, check_only=False, mu=None):
     source = HERE / (name + '.solver.json')
     study = json.loads(source.read_text())
     directory = results / name
     directory.mkdir(parents=True, exist_ok=True)
     for key in ('system_model_file', 'state_file'):
         study[key] = str((HERE / study[key]).resolve())
+    if mu is not None:
+        case = json.loads(Path(study['system_model_file']).read_text())
+        constants = {s['id']: s['value'] for s in case['signals'] if 'value' in s}
+        constants.update(study.get('signal_values', {}))
+        devices = {d['id']: d for d in case['devices']}
+        dc = {}
+        for b in (4, 5, 6):
+            fm = devices[f'pwm_{b}']['params']['fm']
+            dc[f'dc_{b}'] = constants[f'dc_{b}'] * attenuation(fm, study.get('mu', 240.)) / attenuation(fm, mu)
+        study.setdefault('signal_values', {}).update(dc)
+        study['mu'] = mu
+        edge_step = 10**math.floor(math.log10(2*math.log(9)/mu/8))
+        study['dt_monitor'] = min(study['dt_monitor'], 1e-5, edge_step)
     if smoke:
         study['tmax'] *= .01
         study['dt_monitor'] = .001
@@ -104,11 +121,12 @@ def main():
     parser.add_argument('--results', type=Path, default=HERE / 'results')
     parser.add_argument('--scenario', nargs='+', choices=SCENARIOS, default=SCENARIOS)
     parser.add_argument('--jobs', type=int, default=1)
+    parser.add_argument('--mu', type=float, help='Override smoothing and adjust DC to preserve the AC fundamental')
     parser.add_argument('--check-only', action='store_true', help='Validate existing outputs without rerunning')
     parser.add_argument('--smoke', action='store_true', help='Short integration and event checks for CTest')
     args = parser.parse_args()
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        list(pool.map(lambda name: run_one(name, args.exe.resolve(), args.results.resolve(), args.smoke, args.check_only), args.scenario))
+        list(pool.map(lambda name: run_one(name, args.exe.resolve(), args.results.resolve(), args.smoke, args.check_only, args.mu), args.scenario))
 
 
 if __name__ == '__main__':
