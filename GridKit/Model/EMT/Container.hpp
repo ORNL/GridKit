@@ -157,6 +157,8 @@ namespace GridKit
       void  resetHistory() override;
       void  acceptStep(RealT time) override;
       RealT maximumStepSize() const override;
+      RealT nextDiscontinuityTime(RealT after) const override;
+      void  beginDiscontinuity(RealT time) override;
 
     protected:
       virtual ComponentT* initialStateComponent()

@@ -15,7 +15,7 @@ upstream tool concern and is outside the EMT model specification.
 
 ## Format
 
-The root object may contain `header`, `buses`, and `devices`.
+The root object may contain `header`, `buses`, `devices`, and `history`.
 
 ### Header
 
@@ -58,6 +58,33 @@ Container, for example `plant.machine`:
 
 Other outputs use their model output names and units. All output values must
 be finite; missing or null values use model defaults.
+
+### History
+
+Each `LineDistributed` requires a record in `history`, keyed by its qualified
+component path. All five fields are required:
+
+Name | Units | Value
+---- | ----- | -----
+`omega` | rad/s | Finite nonnegative prehistory angular frequency
+`i_ref1`, `i_ref2` | A | Three instantaneous reflected-current values per terminal
+`d_i_ref1`, `d_i_ref2` | A/s | Three reflected-current derivatives per terminal
+
+For `omega: 0`, both derivatives must be zero and the prehistory is constant.
+For positive frequency the values and derivatives define the harmonic
+prehistory described by [LineDistributed](Component/Line/LineDistributed/README.md#initialization).
+These are explicit time-domain history data, separate from topology and fit
+coefficients. A zero history is suitable for a line energized at time zero:
+
+```json
+"history": {
+  "tie": {
+    "omega": 0,
+    "i_ref1": [0, 0, 0], "i_ref2": [0, 0, 0],
+    "d_i_ref1": [0, 0, 0], "d_i_ref2": [0, 0, 0]
+  }
+}
+```
 
 ## Application
 

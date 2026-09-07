@@ -8,6 +8,7 @@
 
 #include <GridKit/Model/EMT/Component/Bus/BusDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Line/LineDistributed/LineDistributedDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSourceDataJSONParser.hpp>
@@ -156,6 +157,10 @@ namespace GridKit
         else if (kind == "LineLumped")
         {
           raw_device.get_to(data.line_lumped.emplace_back());
+        }
+        else if (kind == "LineDistributed")
+        {
+          raw_device.get_to(data.line_distributed.emplace_back());
         }
         else if (kind == "LoadZ")
         {
