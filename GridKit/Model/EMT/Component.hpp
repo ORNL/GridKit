@@ -74,7 +74,17 @@ namespace GridKit
 
       virtual int verify() const = 0;
 
+      virtual int initializeState(const std::map<std::string, RealT>& values)
+      {
+        if (this->size() == 0 && values.empty())
+          return 0;
+        throw std::invalid_argument("Component has no state initializer");
+      }
+
     protected:
+      template <typename ModelT>
+      static int initializeOutputs(ModelT& model, const std::map<std::string, RealT>& values);
+
       template <typename Outputs>
       static void validateOutputValues(const std::map<Outputs, RealT>& outputs)
       {

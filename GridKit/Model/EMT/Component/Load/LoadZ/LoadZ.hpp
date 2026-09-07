@@ -97,7 +97,13 @@ namespace GridKit
       virtual int allocate() override final;
       virtual int verify() const override final;
 
-      int         initialize(const std::map<Outputs, RealT>& outputs = {});
+      int initialize(const std::map<Outputs, RealT>& outputs = {});
+
+      int initializeState(const std::map<std::string, RealT>& values) override
+      {
+        return this->initializeOutputs(*this, values);
+      }
+
       /// Initialize from the attached sinusoidal bus-voltage samples.
       int         initializeSteadyState(RealT omega);
       virtual int tagDifferentiable() override final;

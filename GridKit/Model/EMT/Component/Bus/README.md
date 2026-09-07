@@ -1,8 +1,8 @@
 # Bus Model
 
-`Bus` represents an $N$-phase bus in instantaneous phase coordinates. It owns
-the differential bus voltage and contributes the current-balance residual to
-the assembled DAE. $\mathcal{E}$ denotes the set of connected devices.
+`Bus` is a container of `KCL` and Norton sources. `KCL` owns the bus voltage;
+each Norton source owns its shunt current and admittance states.
+$\mathcal{E}$ denotes the set of Norton sources.
 
 ## Block Diagram
 
@@ -24,22 +24,28 @@ N \in \mathbb{Z}_{>0}
 
 ### Derived Parameters
 
-None.
+Terminal $e$ has $K_e$ current channels and a conductor-to-phase map
+$\mathbf{P}_e\in\mathbb{R}^{N\times K_e}$ supplied by the connected device.
+For a direct phase connection, $K_e=N$ and $\mathbf{P}_e=\mathbf{I}_N$.
 
 ## Model Ports
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{i}_e$ | `i` | Input | [A] | Current from connected device $e$ | One port per $e \in \mathcal{E}$, $\mathbf{i}_e \in \mathbb{R}^N$
+$\mathbf{i}_e^\mathrm{inc}$ | `i_inc` | Input | [A] | Incident current from device $e$ | One per terminal, $\mathbb{R}^{K_e}$
+$\mathbf{i}_e^\mathrm{sh}$ | `Ish` | Output | [A] | Shunt current supplied to device $e$ | One per terminal, $\mathbb{R}^{K_e}$
 $\mathbf{v}$ | `v` | Output | [V] | Bus voltage supplied to connected devices | $\mathbf{v} \in \mathbb{R}^N$
 
 ## Submodels
 
-None.
+Symbol | Description | Type | Order | JSON | Inputs | Outputs
+------ | ----------- | ---- | ----- | ---- | ------ | -------
+$\mathbf{v}$ | Bus voltage and current balance | KCL | $N$ | — | Current contributions | $\mathbb{R}^N$
+$\mathbf{n}_e$ | Norton source | [Norton](../Source/Norton/README.md) | $K_e(1+Q_e)$ | Device coefficients or `shunts.<name>` | $\mathbf{P}_e^\mathsf T\mathbf{v},\mathbf{i}_e^\mathrm{inc}$ | $\mathbf{i}_e^\mathrm{sh}$
 
 ### Submodel Validation
 
-None.
+Each source satisfies its admittance coefficient constraints.
 
 ## Model Variables
 
@@ -53,7 +59,11 @@ $\mathbf{v}$ | [V] | Bus voltage vector | $\mathbf{v} \in \mathbb{R}^N$
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{i}_e^\mathrm{sh}$ | [A] | Shunt current owned by Norton source $e$ | $\mathbb{R}^{K_e}$
+
+A bus voltage is algebraic when no connected equation depends on its derivative.
 
 ### External Variables
 
@@ -72,27 +82,32 @@ None.
 #### Differential
 
 ```math
-0 = \sum_{e \in \mathcal{E}} \mathbf{i}_e
+0=-\mathbf{i}_e^\mathrm{sh}
+  +\mathbf{y}_e[\mathbf{P}_e^\mathsf T\mathbf{v}],
+\qquad e\in\mathcal E
 ```
 
 #### Algebraic
 
-None.
+```math
+0=\sum_{e\in\mathcal E}\mathbf{P}_e
+  (\mathbf{i}_e^\mathrm{inc}-\mathbf{i}_e^\mathrm{sh})
+```
+
+Direct current inputs also contribute to KCL.
 
 ### External Equations
 
 None.
 
-### Wiring
-
-None.
-
 ## Initialization
 
-None beyond the EMT initialization contract.
+`KCL` initializes the voltage from the bus state entry. Each Norton source
+initializes its admittance states and shunt current.
 
 ## Monitors
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `v` | [V] | Bus voltage | $\mathbf{v} \in \mathbb{R}^N$
+`i_sh` | [A] | Total shunt current | $\sum_{e\in\mathcal E}\mathbf P_e\mathbf i_e^\mathrm{sh}$

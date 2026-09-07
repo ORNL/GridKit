@@ -46,6 +46,9 @@ namespace GridKit
       i12a,
       i12b,
       i12c,
+      i21a,
+      i21b,
+      i21c,
       SIZE
     };
 
@@ -54,13 +57,7 @@ namespace GridKit
     {
       i12a,
       i12b,
-      i12c,
-      i_sh1a,
-      i_sh1b,
-      i_sh1c,
-      i_sh2a,
-      i_sh2b,
-      i_sh2c
+      i12c
     };
 
     /**

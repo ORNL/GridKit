@@ -8,6 +8,7 @@
 
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceData.hpp>
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 #include <GridKit/Model/EMT/PhasorInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 

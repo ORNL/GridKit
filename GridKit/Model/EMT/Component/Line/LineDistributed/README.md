@@ -1,6 +1,8 @@
 # LineDistributed Model
 
 `LineDistributed` represents an $N$-phase, $K$-conductor distributed EMT line.
+Each Bus owns its characteristic-admittance current and states. The line
+owns the reflected outputs, propagation states, and histories.
 
 ## Block Diagram
 
@@ -53,10 +55,12 @@ P_{\phi,nk} =
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}_1$ | `v1` | Input | [V] | Terminal 1 bus voltage | $\mathbf{v}_1 \in \mathbb{R}^N$
-$\mathbf{v}_2$ | `v2` | Input | [V] | Terminal 2 bus voltage | $\mathbf{v}_2 \in \mathbb{R}^N$
-$\mathbf{i}_1$ | `i1` | Output | [A] | Current injection at terminal 1 | $\mathbf{i}_1 \in \mathbb{R}^N$
-$\mathbf{i}_2$ | `i2` | Output | [A] | Current injection at terminal 2 | $\mathbf{i}_2 \in \mathbb{R}^N$
+$\mathbf{i}_1^\mathrm{c}$ | `Ish1` | Input | [A] | Characteristic-admittance current from terminal 1 Bus | $\mathbb{R}^K$
+$\mathbf{i}_2^\mathrm{c}$ | `Ish2` | Input | [A] | Characteristic-admittance current from terminal 2 Bus | $\mathbb{R}^K$
+$\mathbf{i}_1^\mathrm{ref}$ | `i_ref1` | Output | [A] | Reflected current at terminal 1 | $\mathbb{R}^K$
+$\mathbf{i}_2^\mathrm{ref}$ | `i_ref2` | Output | [A] | Reflected current at terminal 2 | $\mathbb{R}^K$
+$\mathbf{i}_1^\mathrm{inc}$ | `i_inc1` | Output | [A] | Incident current supplied to terminal 1 Bus | $\mathbb{R}^K$
+$\mathbf{i}_2^\mathrm{inc}$ | `i_inc2` | Output | [A] | Incident current supplied to terminal 2 Bus | $\mathbb{R}^K$
 
 ## Submodels
 
@@ -76,8 +80,8 @@ uniform line, so
 \mathbf{H}_{12}(s)=\mathbf{H}_{21}(s).
 ```
 
-The two terminal-admittance instances maintain independent states, and the two
-directional propagation instances maintain independent states and histories.
+The terminal admittances have independent states in their buses;
+the propagation instances have independent states and histories in the line.
 
 ### Submodel Validation
 
@@ -88,10 +92,6 @@ Together with the propagation fits, they must produce a passive line model.
 
 ```math
 \begin{aligned}
-\mathbf{i}_1^\mathrm{c} &\leftarrow
-  \mathbf{y}_1^\mathrm{c}[\mathbf{P}_\phi^\mathsf T\mathbf{v}_1] \\
-\mathbf{i}_2^\mathrm{c} &\leftarrow
-  \mathbf{y}_2^\mathrm{c}[\mathbf{P}_\phi^\mathsf T\mathbf{v}_2] \\
 \mathbf{i}_1^\mathrm{inc} &\leftarrow
   \mathbf{h}_{21}[\mathbf{i}_2^\mathrm{ref}] \\
 \mathbf{i}_2^\mathrm{inc} &\leftarrow
@@ -111,21 +111,21 @@ None.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{i}_1^\mathrm{ref}$ | [A] | Reflected current at terminal 1 | $\mathbf{i}_1^\mathrm{ref} \in \mathbb{R}^K$
-$\mathbf{i}_2^\mathrm{ref}$ | [A] | Reflected current at terminal 2 | $\mathbf{i}_2^\mathrm{ref} \in \mathbb{R}^K$
+$\mathbf{i}_1^\mathrm{ref}$ | [A] | Reflected current at terminal 1 | $\mathbb{R}^K$
+$\mathbf{i}_2^\mathrm{ref}$ | [A] | Reflected current at terminal 2 | $\mathbb{R}^K$
 
 ### External Variables
 
 #### Differential
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{v}_1$ | [V] | Terminal 1 voltage owned by EMT bus | $\mathbf{v}_1 \in \mathbb{R}^N$
-$\mathbf{v}_2$ | [V] | Terminal 2 voltage owned by EMT bus | $\mathbf{v}_2 \in \mathbb{R}^N$
+None.
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{i}_1^\mathrm{c}$ | [A] | Characteristic-admittance current owned by terminal 1 Norton source | $\mathbb{R}^K$
+$\mathbf{i}_2^\mathrm{c}$ | [A] | Characteristic-admittance current owned by terminal 2 Norton source | $\mathbb{R}^K$
 
 ## Model Equations
 
@@ -137,35 +137,23 @@ None.
 
 #### Algebraic
 
-The residuals use the signals defined under Submodel Wiring.
-
 ```math
-\begin{aligned}
-0 &= -\mathbf{i}_1^\mathrm{ref}
-  + 2\mathbf{i}_1^\mathrm{c}
-  - \mathbf{i}_1^\mathrm{inc} \\
-0 &= -\mathbf{i}_2^\mathrm{ref}
-  + 2\mathbf{i}_2^\mathrm{c}
-  - \mathbf{i}_2^\mathrm{inc}
-\end{aligned}
+0=-\mathbf{i}_e^\mathrm{ref}+2\mathbf{i}_e^\mathrm{c}-\mathbf{i}_e^\mathrm{inc},
+\qquad e\in\{1,2\}
 ```
 
 ### External Equations
 
 ```math
 \begin{aligned}
-\mathbf{i}_1 &\leftarrow
-  \mathbf{P}_\phi(\mathbf{i}_1^\mathrm{inc}-\mathbf{i}_1^\mathrm{c}) \\
-\mathbf{i}_2 &\leftarrow
-  \mathbf{P}_\phi(\mathbf{i}_2^\mathrm{inc}-\mathbf{i}_2^\mathrm{c})
+\Delta\mathbf{i}_1 &\mathrel{+}= \mathbf{i}_1^\mathrm{inc} \\
+\Delta\mathbf{i}_2 &\mathrel{+}= \mathbf{i}_2^\mathrm{inc}
 \end{aligned}
 ```
 
 ## Initialization
 
-The characteristic-admittance and propagation submodels initialize according
-to their own specifications. There is no additional line-level initialization
-procedure.
+None beyond the EMT initialization contract.
 
 ## Monitors
 
@@ -180,40 +168,3 @@ Monitor | Units | Description | Note
 
 The initial three-phase formulation takes $N=K=3$ and
 $\mathbf{P}_\phi=\mathbf{I}_3$.
-
-```math
-\begin{aligned}
-0 &= -\mathbf{i}_1^\mathrm{ref}
-  + 2\mathbf{i}_1^\mathrm{c}
-  - \mathbf{i}_1^\mathrm{inc} \\
-0 &= -\mathbf{i}_2^\mathrm{ref}
-  + 2\mathbf{i}_2^\mathrm{c}
-  - \mathbf{i}_2^\mathrm{inc}
-\end{aligned}
-```
-
-the external equations reduce to
-
-```math
-\begin{aligned}
-\mathbf{i}_1
-  &\leftarrow \mathbf{i}_1^\mathrm{inc}-\mathbf{i}_1^\mathrm{c} \\
-\mathbf{i}_2
-  &\leftarrow \mathbf{i}_2^\mathrm{inc}-\mathbf{i}_2^\mathrm{c}
-\end{aligned}
-```
-
-and the submodel wiring reduces to
-
-```math
-\begin{aligned}
-\mathbf{i}_1^\mathrm{c}
-  &\leftarrow \mathbf{y}_1^\mathrm{c}[\mathbf{v}_1] \\
-\mathbf{i}_2^\mathrm{c}
-  &\leftarrow \mathbf{y}_2^\mathrm{c}[\mathbf{v}_2] \\
-\mathbf{i}_1^\mathrm{inc}
-  &\leftarrow \mathbf{h}_{21}[\mathbf{i}_2^\mathrm{ref}] \\
-\mathbf{i}_2^\mathrm{inc}
-  &\leftarrow \mathbf{h}_{12}[\mathbf{i}_1^\mathrm{ref}]
-\end{aligned}
-```

@@ -14,6 +14,7 @@
 
 #include <GridKit/Model/EMT/Component/Controller/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/EMT/Component/Controller/GASTPTI/GastPtiData.hpp>
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 #include <GridKit/Model/EMT/Signal/Signal.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>

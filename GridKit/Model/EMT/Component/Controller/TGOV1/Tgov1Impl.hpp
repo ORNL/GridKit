@@ -1,5 +1,7 @@
 #pragma once
 
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
+
 /**
  * @file Tgov1Impl.hpp
  * @author Luke Lowery (lukel@tamu.edu)

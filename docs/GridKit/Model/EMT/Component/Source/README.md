@@ -7,6 +7,7 @@
 
 DependentVoltageSource <DependentVoltageSource/README>
 Machine <Machine/README>
+Norton <Norton/README>
 VoltageSource <VoltageSource/README>
 ```
 

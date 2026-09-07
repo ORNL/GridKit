@@ -11,6 +11,7 @@ int main()
   result += test.boundaryAssembly();
 #ifdef GRIDKIT_ENABLE_SUNDIALS
   result += test.steadyState();
+  result += test.busShuntDecay();
   result += test.threeBusSteadyState();
   result += test.recursiveSteadyState();
   result += test.switchEnergization();

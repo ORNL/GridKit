@@ -74,7 +74,7 @@ def main():
             "signals": [], "devices": []}
     devices = case["devices"]
     for bus in range(1, 11):
-        devices.append({"class": "Bus", "id": f"bus_{bus}", "mon": ["va", "vb", "vc"]})
+        devices.append({"class": "Bus", "id": f"bus_{bus}", "mon": ["va", "vb", "vc", "i_sha", "i_shb", "i_shc"]})
     machine_params = dict(N=3, S=10e6, V=VLL, f=FREQUENCY, F=0.0, Rs=.003,
                           Ll=.15, Lmd=1.66, Lmq=1.61, L0=.15, Rfd=.0006,
                           Llfd=.165, R1d=.0284, Ll1d=.1713, R1q=.0062,
@@ -105,7 +105,7 @@ def main():
                         "params": {"N": 3, "K": 3, "conductors": [1, 2, 3], "dx": 1.0,
                                    "Rp": diagonal(r), "Lp": diagonal(l), "Gp": diagonal(0.0), "Cp": diagonal(1e-6 if a <= 3 and b <= 3 else 0.0)},
                         "inputs": {"bus1": f"bus_{a}", "bus2": f"bus_{b}"},
-                        "mon": ["i12a", "i12b", "i12c", "i_sh1a", "i_sh1b", "i_sh1c", "i_sh2a", "i_sh2b", "i_sh2c"]})
+                        "mon": ["i12a", "i12b", "i12c"]})
     for bus, resistance in loads.items():
         devices.append({"class": "LoadZ", "id": f"load_{bus}", "params": {"R": diagonal(resistance)},
                         "inputs": {"bus": f"bus_{bus}"}, "mon": ["ia", "ib", "ic"]})

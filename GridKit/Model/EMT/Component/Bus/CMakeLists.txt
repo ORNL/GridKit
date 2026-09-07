@@ -3,7 +3,7 @@
 #    - Luke Lowery <lukel@tamu.edu>
 # ]]
 
-set(_install_headers Bus.hpp BusData.hpp)
+set(_install_headers Bus.hpp BusData.hpp KCL.hpp)
 
 if(GRIDKIT_ENABLE_ENZYME)
   gridkit_add_library(
@@ -16,6 +16,8 @@ if(GRIDKIT_ENABLE_ENZYME)
       GridKit::emt_core
       PUBLIC
       GridKit::emt_signal
+      PUBLIC
+      GridKit::emt_norton
       PRIVATE
       ClangEnzymeFlags
     COMPILE_OPTIONS
@@ -34,7 +36,9 @@ else()
       PUBLIC
       GridKit::emt_core
       PUBLIC
-      GridKit::emt_signal)
+      GridKit::emt_signal
+      PUBLIC
+      GridKit::emt_norton)
 endif()
 
 gridkit_add_library(
@@ -45,7 +49,9 @@ gridkit_add_library(
     PUBLIC
     GridKit::emt_core
     PUBLIC
-    GridKit::emt_signal_dependency_tracking)
+    GridKit::emt_signal_dependency_tracking
+    PUBLIC
+    GridKit::emt_norton_dependency_tracking)
 
 # Link to interface target for all components
 target_link_libraries(

@@ -110,11 +110,16 @@ int main()
       success *= system.component("line").y().getData()[phase] == 0.0;
       success *= system.component("load").y().getData()[phase] == 0.0;
     }
-    success *= system.component("network.resistor").y().getData()[0] == 99.0;
-    success *= system.component("network.resistor").y().getData()[1] == 1.0;
-    success *= system.component("resistor").y().getData()[0] == -2.0;
-    for (size_t index = 3; index < 9; ++index)
-      success *= system.component("network.line").y().getData()[index] == 0.0;
+    success    *= system.component("network.resistor").y().getData()[0] == 99.0;
+    success    *= system.component("network.resistor").y().getData()[1] == 1.0;
+    success    *= system.component("resistor").y().getData()[0] == -2.0;
+    auto& line  = system.component<EMT::LineLumped<double, size_t>>("network.line");
+    success    *= line.size() == 3;
+    for (size_t phase = 0; phase < 3; ++phase)
+    {
+      success *= line.outputSignal(static_cast<EMT::LineLumpedOutputs>(phase)).read() == line_current[phase];
+      success *= line.outputSignal(static_cast<EMT::LineLumpedOutputs>(3 + phase)).read() == -line_current[phase];
+    }
   }
   results += success.report("Nested current states, partial defaults, and repeated initialization");
 
@@ -148,6 +153,10 @@ int main()
   success                          *= explicit_data.loadz[0].inputs.at(EMT::LoadZInputs::va) == "v_a";
   success                          *= data.loadz[0].inputs.at(EMT::LoadZInputs::vb) == "bus1.vb";
   EMT::SystemModel<double, size_t> explicit_system(explicit_data);
+  success *= explicit_system.component<EMT::LineLumped<double, size_t>>("line")
+                 .getSignals()
+                 .getAttachedSignal<EMT::LineLumpedExternalVariables::V1A>()
+             == &explicit_system.signal("v_a");
   success *= explicit_system.allocate() == 0;
   success *= explicit_system.initialize({{"bus1", {{"va", 10.0}, {"vb", -5.0}, {"vc", -5.0}}}, {"load", {{"ia", -2.0}}}}) == 0;
   explicit_system.tagDifferentiable();
@@ -156,18 +165,21 @@ int main()
   success *= explicit_system.signal("i_a").read() == -2.0;
   // KCL includes both physical device contributions and an additional controlled injection.
   explicit_system.evaluateResidual();
-  success        *= explicit_system.component("bus1").getResidual().getData()[0] == -4.0;
-  success        *= explicit_system.component("bus2").getResidual().getData()[0] == -2.0;
-  auto& bus2      = explicit_system.component("bus2");
-  success        *= bus2.evaluateJacobian() == 0;
-  auto* jacobian  = bus2.getCooJacobian();
-  success        *= jacobian != nullptr && jacobian->getNnz() == 1;
-  if (jacobian && jacobian->getNnz() == 1)
+  success                    *= explicit_system.component("bus1").getResidual().getData()[0] == -4.0;
+  success                    *= explicit_system.component("bus2").getResidual().getData()[0] == -2.0;
+  auto& bus2                  = explicit_system.component("bus2");
+  success                    *= bus2.evaluateJacobian() == 0;
+  auto* jacobian              = bus2.getCooJacobian();
+  success                    *= jacobian != nullptr;
+  double controlled_gradient  = 0.0;
+  if (jacobian)
   {
-    success *= jacobian->getRowData()[0] == bus2.getResidualIndex(0);
-    success *= jacobian->getColData()[0] == explicit_system.component("load").getVariableIndex(0);
-    success *= jacobian->getValues()[0] == 1.0;
+    for (size_t k = 0; k < jacobian->getNnz(); ++k)
+      if (jacobian->getRowData()[k] == bus2.getResidualIndex(0)
+          && jacobian->getColData()[k] == explicit_system.component("load").getVariableIndex(0))
+        controlled_gradient += jacobian->getValues()[k];
   }
+  success *= controlled_gradient == 1.0;
   for (const auto* name : {"p", "SIZE"})
     success *= rejects([&]
                        { explicit_system.initialize({{"load", {{name, 1.0}}}}); });

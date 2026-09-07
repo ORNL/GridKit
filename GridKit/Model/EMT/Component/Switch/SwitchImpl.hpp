@@ -5,6 +5,7 @@
 
 #include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
 #include <GridKit/Model/EMT/Component/Switch/SwitchData.hpp>
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit

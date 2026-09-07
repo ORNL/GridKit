@@ -51,7 +51,7 @@ namespace GridKit::EMT
         {
           const auto  path      = prefix + device.at("id").get<std::string>();
           const auto& component = system_.component(path);
-          if (dynamic_cast<const Container<ScalarT, IdxT>*>(&component) != nullptr)
+          if (device.at("class") == "Container")
           {
             self(self, device, path + ".");
             continue;

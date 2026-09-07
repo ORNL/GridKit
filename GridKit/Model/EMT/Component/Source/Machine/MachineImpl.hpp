@@ -7,6 +7,7 @@
 
 #include <GridKit/Model/EMT/Component/Source/Machine/Machine.hpp>
 #include <GridKit/Model/EMT/Component/Source/Machine/MachineData.hpp>
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit

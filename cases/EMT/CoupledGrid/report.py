@@ -235,7 +235,7 @@ def make_report(summary, metrics, case, fit, line_model):
                                 number(max(c["common_mode_sum_max_abs_v"] for c in checks), 6)])
     text += [table(["Mu", "Max sampled KCL residual (A)", "Max converter harmonic error (V peak)",
                     "Max gate harmonic error", "Max abs(va+vb+vc) (V)"], validation_rows), "",
-             "KCL sums every monitored source, load, machine, line-series, line-shunt, and switch terminal "
+             "KCL sums every monitored source, load, machine, line-series, bus-shunt, and switch terminal "
              "injection at every recorded time. PWM validation compares independently integrated ideal pulse "
              "edges with measured final-window Fourier coefficients for all harmonics 1–49. It validates "
              "the applied PWM/bridge waveform, not the whole network solution.", "",

@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/Converter.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
