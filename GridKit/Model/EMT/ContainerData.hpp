@@ -11,6 +11,7 @@
 #include <GridKit/Model/EMT/Component/Controller/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/EMT/Component/Controller/InnerCurrentControl/InnerCurrentControlData.hpp>
+#include <GridKit/Model/EMT/Component/Controller/OuterPowerControl/OuterPowerControlData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/OuterVoltageControl/OuterVoltageControlData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SEXS-PTI/SexsPtiData.hpp>
@@ -50,6 +51,7 @@ namespace GridKit
 
       using InnerCurrentControlDataT    = Controller::InnerCurrentControlData<RealT, IdxT>;
       using OuterVoltageControlDataT    = Controller::OuterVoltageControlData<RealT, IdxT>;
+      using OuterPowerControlDataT      = Controller::OuterPowerControlData<RealT, IdxT>;
       using ParkDataT                   = ParkData<RealT, IdxT>;
       using PllDataT                    = PllData<RealT, IdxT>;
       using AngleDataT                  = AngleData<RealT, IdxT>;
@@ -87,6 +89,7 @@ namespace GridKit
 
       std::vector<InnerCurrentControlDataT>         inner_current_control;
       std::vector<OuterVoltageControlDataT>         outer_voltage_control;
+      std::vector<OuterPowerControlDataT>           outer_power_control;
       std::vector<ParkDataT>                        park;
       std::vector<PllDataT>                         pll;
       std::vector<AngleDataT>                       angle;
