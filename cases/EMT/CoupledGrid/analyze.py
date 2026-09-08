@@ -151,7 +151,7 @@ def converter_validation(t, data, case, mu, mask):
         params = pwm['params']
         predicted = pwm_peak_coefficients(mu, fc=params['fc'], f=params['fm'], M=params['M'],
                                           vdc=vdc, alignment=params.get('alignment', .5))
-        voltage = phases(data, converter, 'vo')[mask]
+        voltage = phases(data, converter, 'e')[mask]
         gate = phases(data, pwm, 's')[mask]
         rows = []
         for h in predicted:

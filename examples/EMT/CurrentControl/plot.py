@@ -123,7 +123,7 @@ def harmonics(run, end, prediction):
         raise ValueError('The harmonic plot needs at least one complete carrier period')
     begin, end = (last - count) / fc, last / fc
     data = run['data']
-    t, voltage = data['t'], data['Converter_bridge_voa']
+    t, voltage = data['t'], data['Converter_bridge_ea']
     bridge = data['DCLink_dc_vdc'] * (prediction[:, 0] - prediction.mean(axis=1))
     frequencies = np.array([fm, fc-2*fm, fc-fm, fc, fc+fm, fc+2*fm,
                             2*fc-fm, 2*fc+fm, 3*fc-2*fm, 3*fc+2*fm])
@@ -208,8 +208,8 @@ def switching_figure(run, prediction, end):
     ax[0].plot(d['t'], prediction[:, 0], '--', color=ORANGE, label='continuous PWM reference')
     ax[0].set_ylabel('Switching function [−]')
     ax[0].set_title(f'{run["fc"]:g} Hz PWM, PLL-synchronized voltage control, {mu_label(run["mu"])}')
-    ax[1].plot(d['t'], d['Converter_bridge_voa'], color=BLUE, label=r'bridge $v_{o,a}$')
-    ax[1].plot(d['t'], d['Filter_filter_voa'], color=ORANGE, label='capacitor $v_a$')
+    ax[1].plot(d['t'], d['Converter_bridge_ea'], color=BLUE, label=r'bridge $e_a$')
+    ax[1].plot(d['t'], d['Filter_filter_voa'], color=ORANGE, label=r'capacitor $v_{\mathrm{o},a}$')
     ax[1].set_ylabel('Phase voltage [V]')
     ax[2].plot(d['t'], d['Filter_filter_ia'], color=BLUE, label='inverter-side $i_a$')
     ax[2].plot(d['t'], d['Filter_filter_iga'], color=ORANGE, label='grid-side $i_{g,a}$')
@@ -221,7 +221,7 @@ def switching_figure(run, prediction, end):
 def summarize(run, prediction, spectrum):
     d, t = run['data'], run['data']['t']
     s = np.column_stack([d[f'PWM_pwm_s{p}'] for p in 'abc'])
-    voltage = np.column_stack([d[f'Converter_bridge_vo{p}'] for p in 'abc'])
+    voltage = np.column_stack([d[f'Converter_bridge_e{p}'] for p in 'abc'])
     current = np.column_stack([d[f'Filter_filter_i{p}'] for p in 'abc'])
     vdc = d['DCLink_dc_vdc']
     energy = d['DCLink_dc_energy']

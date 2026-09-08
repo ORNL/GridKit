@@ -84,7 +84,7 @@
         ]
       },
       "outputs": {
-        "vo": [
+        "e": [
           "ea",
           "eb",
           "ec"
@@ -92,9 +92,9 @@
         "idc": "idc"
       },
       "mon": [
-        "voa",
-        "vob",
-        "voc",
+        "ea",
+        "eb",
+        "ec",
         "idc"
       ]
     },

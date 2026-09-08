@@ -76,7 +76,7 @@ def main():
         pwm, converter, source = (devices[f"{name}_{bus}"] for name in ("pwm", "converter", "filter"))
         require(converter["inputs"]["s"] == pwm["outputs"]["s"], "PWM-converter connection is incomplete")
         require([source["inputs"][name] for name in ("ea", "eb", "ec")]
-                == converter["outputs"]["vo"], "Converter-source connection is incomplete")
+                == converter["outputs"]["e"], "Converter-source connection is incomplete")
         require(source["class"] == "DependentVoltageSource" and "Y" in source["submodels"],
                 "IBR source lacks its frequency-dependent filter")
     solvers = [read_json(HERE / f"{name}.solver.json") for name in ("low", "middle", "high")]

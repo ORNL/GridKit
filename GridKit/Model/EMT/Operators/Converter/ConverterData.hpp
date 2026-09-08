@@ -24,18 +24,18 @@ namespace GridKit
 
     enum class ConverterOutputs : size_t
     {
-      voa,
-      vob,
-      voc,
+      ea,
+      eb,
+      ec,
       idc,
       SIZE,
     };
 
     enum class ConverterMonitorableVariables
     {
-      voa,
-      vob,
-      voc,
+      ea,
+      eb,
+      ec,
       idc,
     };
 

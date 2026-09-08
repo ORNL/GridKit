@@ -21,7 +21,7 @@ None.
 
 ### Derived Parameters
 
-The normalized phase incidence matrix and zero-sequence projector are
+The normalized phase incidence matrix and zero-sequence removal projector are
 
 ```math
 \begin{aligned}
@@ -48,9 +48,13 @@ Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{s}$ | `s` | Input | [-] | Switching function vector | $\mathbf{s} \in [0,1]^3$
 $v_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC-link voltage | $v_{\mathrm{dc}} \ge 0$
-$\mathbf{i}$ | `i` | Input | [A] | AC terminal currents | Positive out of the bridge
-$\mathbf{v}_{\mathrm{o}}$ | `vo` | Output | [V] | Bridge voltage vector | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
+$\mathbf{i}$ | `i` | Input | [A] | AC terminal currents | $\mathbf{i} \in \mathbb{R}^3$, positive out of the bridge
+$\mathbf{e}$ | `e` | Output | [V] | Bridge voltage vector | $\mathbf{e} \in \mathbb{R}^3$
 $i_{\mathrm{dc}}$ | `idc` | Output | [A] | DC-link current | Positive into the bridge
+
+Vectors use $(a,b,c)$ order. The bridge voltage $\mathbf{e}$ is referred to
+the AC neutral; $\mathbf{P}$ removes the common-mode pole voltage, so
+$e_a+e_b+e_c=0$.
 
 ## Submodels
 
@@ -76,7 +80,7 @@ None.
 
 #### Differential
 
-None.
+The connected DC-link voltage and AC-current variables may be differential.
 
 #### Algebraic
 
@@ -84,7 +88,7 @@ Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{s}$ | [-] | Switching function vector | $\mathbf{s} \in [0,1]^3$
 $v_{\mathrm{dc}}$ | [V] | DC-link voltage | $v_{\mathrm{dc}} \ge 0$
-$\mathbf{i}$ | [A] | AC terminal currents | Positive out of the bridge
+$\mathbf{i}$ | [A] | AC terminal currents | $\mathbf{i} \in \mathbb{R}^3$, positive out of the bridge
 
 ## Model Equations
 
@@ -102,7 +106,7 @@ None.
 
 ```math
 \begin{aligned}
-\mathbf{v}_{\mathrm{o}} &\leftarrow v_{\mathrm{dc}}\mathbf{P}\mathbf{s} \\
+\mathbf{e} &\leftarrow v_{\mathrm{dc}}\mathbf{P}\mathbf{s} \\
 i_{\mathrm{dc}} &\leftarrow (\mathbf{P}\mathbf{s})^\mathsf{T}\mathbf{i}
 \end{aligned}
 ```
@@ -112,8 +116,14 @@ DC voltage, without division by $v_{\mathrm{dc}}$:
 
 ```math
 v_{\mathrm{dc}} i_{\mathrm{dc}}
-  = \mathbf{v}_\mathrm{o}^\mathsf{T}\mathbf{i}.
+  = \mathbf{e}^\mathsf{T}\mathbf{i}.
 ```
+
+Positive $i_{\mathrm{dc}}$ flows physically into the bridge, but its signal is
+an output: the switching function and AC currents determine the DC current
+drawn. [DCLink](../../Component/Controller/DCLink/README.md) receives this current
+and supplies $v_{\mathrm{dc}}$. Its source-current input $i_{\mathrm{src}}$ is
+separate from the converter current.
 
 ## Initialization
 
@@ -123,8 +133,8 @@ None beyond the EMT initialization contract.
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
-`vo` | [V] | Bridge voltage | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
+`e` | [V] | Bridge voltage | $\mathbf{e} \in \mathbb{R}^3$
 `idc` | [A] | DC-link current | Positive into the bridge
 
-In case JSON, `mon: ["vo"]` expands to the scalar monitors `voa`, `vob`, `voc`.
+In case JSON, `mon: ["e"]` expands to the scalar monitors `ea`, `eb`, `ec`.
 See [case connections](../../INPUT_FORMAT.md#case-connections) for vector signal wiring.

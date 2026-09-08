@@ -256,7 +256,7 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Converter`              | `vdc`   | Input     | Signal        | Yes
   `Converter`              | `i`     | Input     | Three Signal IDs | Yes
   `Converter`              | `idc`   | Output    | Signal        | No
-  `Converter`              | `vo`    | Output    | Three Signal IDs | No
+  `Converter`              | `e`     | Output    | Three Signal IDs | No
   `Machine`                | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `Machine`                | `pm`    | Input     | Signal        | No
   `Machine`                | `efd`   | Input     | Signal        | No
@@ -309,8 +309,9 @@ connect its `efd` output to the Machine field-voltage input.
 
 PWM, Converter, and Modulation vector ports use arrays of three scalar signal
 IDs in phase order `a`, `b`, `c`. The scalar keys `ma`, `mb`, `mc`, `sa`, `sb`,
-`sc`, and `voa`, `vob`, `voc` address individual phases. Vector monitors `m`,
-`s`, and `vo` expand to these three scalar columns.
+`sc`, and `ea`, `eb`, `ec` address individual phases. Vector monitors `m`,
+`s`, and `e` expand to these three scalar columns. Filter capacitor voltage
+uses the separate vector `vo` and scalar names `voa`, `vob`, `voc`.
 
 ```json
 {
@@ -343,8 +344,8 @@ its derivatives through the connected signals.
   "class": "Converter",
   "id": "bridge",
   "inputs": { "s": ["sa", "sb", "sc"], "vdc": "dc", "i": ["ia", "ib", "ic"] },
-  "outputs": { "vo": ["ea", "eb", "ec"], "idc": "idc" },
-  "mon": ["vo", "idc"]
+  "outputs": { "e": ["ea", "eb", "ec"], "idc": "idc" },
+  "mon": ["e", "idc"]
 }
 ```
 
@@ -377,7 +378,7 @@ terminal Bus and exposes capacitor voltage for the PLL and controllers:
 
 Declare the output signal IDs in `signals`, and a Bus named `terminal` in
 `devices`. The bridge publishes the current drawn from
-the DC link as `idc`, with `vdc * idc = vo · i`. Computed signals
+the DC link as `idc`, with `vdc * idc = e · i`. Computed signals
 are evaluated when read, including through Container boundaries. These
 connections introduce no DAE variables.
 

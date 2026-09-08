@@ -70,7 +70,7 @@ The runner rejects nonfinite values, incomplete rows, missing final times,
 incomplete state index maps, and incorrect pre/post-event switch commands.
 It records input hashes, timings and sample counts in `validation.json`.
 The plotting script independently reconstructs every bus's phase KCL and
-checks the converter identity `vo = vdc (s - mean(s))` and PWM bounds. It also
+checks the converter identity `e = vdc (s - mean(s))` and PWM bounds. It also
 plots network power balance including line resistance losses and line magnetic
 and capacitive energy rates from recorded states/derivatives. Converter power
 is measured at the AC bus, so filter losses lie upstream of that boundary.
@@ -117,7 +117,7 @@ python3 examples/EMT/IBR/run.py --exe build/application/EMT/EMTDynamicSimulation
 python3 examples/EMT/IBR/plot.py --switching-only
 ```
 
-This plots bridge voltage `voa` and `DependentVoltageSource_filter_4_ia`
+This plots bridge voltage `ea` and `DependentVoltageSource_filter_4_ia`
 (positive into bus 4), with full samples around fault clearing. It checks KCL
 at all three IBR buses and PWM/bridge harmonics through 2.94 kHz against the independent
 continuous pulse-sum reference evaluated at the current sinusoidal duty.
