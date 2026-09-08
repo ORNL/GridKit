@@ -12,13 +12,18 @@ foreach(
   gridkit_example_add_file(${_file})
 endforeach()
 
+add_subdirectory(REGFMA)
+
 # Preserve the solver files' relative case paths in build and install trees.
 foreach(
   _file
   TenBus.case.json
   TenBus.state.json
+  REGFMA.case.json
+  REGFMA.state.json
   README.md
-  build_case.py)
+  build_case.py
+  build_regfma_case.py)
   configure_file(${CMAKE_SOURCE_DIR}/cases/EMT/IBR/${_file}
                  ${CMAKE_BINARY_DIR}/cases/EMT/IBR/${_file} COPYONLY)
   install(FILES ${CMAKE_SOURCE_DIR}/cases/EMT/IBR/${_file} DESTINATION share/gridkit/cases/EMT/IBR)

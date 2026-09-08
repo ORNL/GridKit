@@ -5,6 +5,9 @@ These six studies share `TenBus.case.json` and the initial-state estimate
 See the [case description](../../../cases/EMT/IBR/README.md) for topology,
 parameters, initialization, and continuous PWM smoothing.
 
+The [REGFMA fault example](REGFMA/README.md) uses the same network with
+three grid-forming REGFM_A1 sources and has its own runner and response plots.
+
 | Solver file | Events |
 |---|---|
 | `01_Baseline.solver.json` | No events; startup and undisturbed operation |

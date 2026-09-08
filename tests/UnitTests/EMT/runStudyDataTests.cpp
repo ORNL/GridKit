@@ -152,7 +152,8 @@ int main()
   input["state_file"]                  = "state.json";
   auto state_model                     = model;
   state_model["devices"][0]["devices"] = {{{"class", "Bus"}, {"id", "bus"}},
-                                          {{"class", "LoadZ"}, {"id", "load"}}};
+                                          {{"class", "LoadZ"}, {"id", "load"}},
+                                          {{"class", "REGFMA"}, {"id", "regfma"}}};
   state_model["devices"].push_back({{"class", "Switch"}, {"id", "switch"}});
   std::ofstream(directory / "case.json") << state_model.dump();
   auto parse_state = [&](const json& state)
@@ -166,6 +167,10 @@ int main()
   success          *= state == std::map<std::string, std::map<std::string, double>>{{"child.bus", {{"va", 10.0}, {"vb", -5.0}}}, {"child.load", {{"ia", -2.0}}}, {"switch", {{"open", 1.0}}}};
   success          *= parse_state({{"devices", {{"child.load", {{"ia", nullptr}}}, {"switch", nullptr}}}}).empty();
   success          *= parse_state({{"header", nullptr}, {"buses", nullptr}, {"devices", nullptr}}).empty();
+  success          *= parse_state({{"devices", {{"child.regfma", {{"ia", 2.0}, {"ib", -1.0}, {"ic", -1.0}}}}}})
+             == std::map<std::string, std::map<std::string, double>>{{"child.regfma", {{"ia", 2.0}, {"ib", -1.0}, {"ic", -1.0}}}};
+  success *= rejects([&]
+                     { parse_state({{"devices", {{"child.regfma", {{"pf", 0.4}}}}}}); });
   for (const auto& invalid : {json(true), json("1"), json::array({1})})
   {
     success *= rejects([&]
