@@ -287,11 +287,13 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    typename Delay<scalar_type, index_type>::RealT Delay<scalar_type, index_type>::nextDiscontinuityTime(RealT after) const
+    typename Delay<scalar_type, index_type>::RealT Delay<scalar_type, index_type>::nextHistoryDiscontinuity(RealT after) const
     {
       const RealT epsilon = RealT{32} * std::numeric_limits<RealT>::epsilon() * std::max(std::abs(after), tau_max_);
       const auto  next    = discontinuities_.upper_bound(after + epsilon);
-      return next == discontinuities_.end() ? std::numeric_limits<RealT>::infinity() : *next;
+      if (next == discontinuities_.end())
+        return std::numeric_limits<RealT>::infinity();
+      return *next;
     }
 
     template <typename scalar_type, typename index_type>

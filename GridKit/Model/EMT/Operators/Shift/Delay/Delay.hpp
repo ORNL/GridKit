@@ -8,6 +8,7 @@
 #include <functional>
 #include <set>
 
+#include <GridKit/Model/EMT/HistoryDiscontinuity.hpp>
 #include <GridKit/Model/EMT/Operators/Shift/Delay/DelayData.hpp>
 #include <GridKit/Model/EMT/Operators/Shift/Shift.hpp>
 
@@ -16,7 +17,8 @@ namespace GridKit
   namespace EMT
   {
     template <typename scalar_type, typename index_type>
-    class Delay : public Shift<scalar_type, index_type>
+    class Delay : public Shift<scalar_type, index_type>,
+                  public HistoryDiscontinuity<typename Component<scalar_type, index_type>::RealT>
     {
     public:
       using Base       = Shift<scalar_type, index_type>;
@@ -42,7 +44,7 @@ namespace GridKit
       void     resetHistory() override final;
       void     acceptStep(RealT time) override final;
       RealT    maximumStepSize() const override final;
-      RealT    nextDiscontinuityTime(RealT after) const override final;
+      RealT    nextHistoryDiscontinuity(RealT after) const override final;
       void     beginDiscontinuity(RealT time) override final;
       void     updateTime(RealT time, RealT alpha) override final;
       int      evaluateInternalResidual() override final;
