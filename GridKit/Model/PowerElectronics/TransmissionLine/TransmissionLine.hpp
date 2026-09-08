@@ -33,6 +33,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::y_int_;
     using CircuitComponent<ScalarT, IdxT>::yp_ext_;
     using CircuitComponent<ScalarT, IdxT>::yp_int_;
+    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
     using CircuitComponent<ScalarT, IdxT>::f_ext_;
     using CircuitComponent<ScalarT, IdxT>::f_int_;
@@ -54,6 +55,7 @@ namespace GridKit
 
     int initialize();
     int tagDifferentiable();
+    int setAbsoluteTolerance(RealT);
     int evaluateInternalResidual() final;
     int evaluateExternalResidual() final;
     int evaluateJacobian();
@@ -63,6 +65,8 @@ namespace GridKit
     int evaluateAdjointResidual();
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
+
+    CircuitComponent<ScalarT, IdxT>* clone() const;
 
   private:
     RealT R_;

@@ -88,6 +88,8 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
+    CircuitComponent<ScalarT, IdxT>* clone() const;
+
   private:
     RealT wb_;
     RealT wc_;

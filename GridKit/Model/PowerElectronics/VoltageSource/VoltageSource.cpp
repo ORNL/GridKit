@@ -142,6 +142,12 @@ namespace GridKit
     return 0;
   }
 
+  template <class ScalarT, typename IdxT>
+  CircuitComponent<ScalarT, IdxT>* VoltageSource<ScalarT, IdxT>::clone() const
+  {
+    return new VoltageSource<ScalarT, IdxT>(*this);
+  }
+
   // Available template instantiations
   template class VoltageSource<double, long int>;
   template class VoltageSource<double, size_t>;

@@ -149,6 +149,12 @@ namespace GridKit
     return 0;
   }
 
+  template <class ScalarT, typename IdxT>
+  CircuitComponent<ScalarT, IdxT>* Inductor<ScalarT, IdxT>::clone() const
+  {
+    return new Inductor<ScalarT, IdxT>(*this);
+  }
+
   // Available template instantiations
   template class Inductor<double, long int>;
   template class Inductor<double, size_t>;
