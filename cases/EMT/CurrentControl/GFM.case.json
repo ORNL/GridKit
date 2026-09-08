@@ -1,0 +1,633 @@
+{
+  "header": {
+    "case_name": "GFM switching inverter",
+    "case_description": "Cascaded dq control with sampled PWM and a physical LCL filter",
+    "case_comments": "Power-invariant dq controls; ideal DC source; resolved sampled switching."
+  },
+  "signals": [
+    {
+      "id": "omega",
+      "value": 376.99111843077515
+    },
+    {
+      "id": "vdc",
+      "value": 400
+    },
+    {
+      "id": "zero",
+      "value": 0
+    },
+    {
+      "id": "vrefd",
+      "value": 208
+    },
+    {
+      "id": "voa"
+    },
+    {
+      "id": "vob"
+    },
+    {
+      "id": "voc"
+    },
+    {
+      "id": "iia"
+    },
+    {
+      "id": "iib"
+    },
+    {
+      "id": "iic"
+    },
+    {
+      "id": "iga"
+    },
+    {
+      "id": "igb"
+    },
+    {
+      "id": "igc"
+    },
+    {
+      "id": "theta"
+    },
+    {
+      "id": "vd"
+    },
+    {
+      "id": "vq"
+    },
+    {
+      "id": "v0"
+    },
+    {
+      "id": "id"
+    },
+    {
+      "id": "iq"
+    },
+    {
+      "id": "i0"
+    },
+    {
+      "id": "igd"
+    },
+    {
+      "id": "igq"
+    },
+    {
+      "id": "ig0"
+    },
+    {
+      "id": "irefd"
+    },
+    {
+      "id": "irefq"
+    },
+    {
+      "id": "ilimd"
+    },
+    {
+      "id": "ilimq"
+    },
+    {
+      "id": "ud"
+    },
+    {
+      "id": "uq"
+    },
+    {
+      "id": "ua"
+    },
+    {
+      "id": "ub"
+    },
+    {
+      "id": "uc"
+    },
+    {
+      "id": "ma"
+    },
+    {
+      "id": "mb"
+    },
+    {
+      "id": "mc"
+    },
+    {
+      "id": "sa"
+    },
+    {
+      "id": "sb"
+    },
+    {
+      "id": "sc"
+    },
+    {
+      "id": "ea"
+    },
+    {
+      "id": "eb"
+    },
+    {
+      "id": "ec"
+    }
+  ],
+  "devices": [
+    {
+      "class": "Bus",
+      "id": "capacitor",
+      "outputs": {
+        "va": "voa",
+        "vb": "vob",
+        "vc": "voc"
+      },
+      "mon": [
+        "va",
+        "vb",
+        "vc"
+      ],
+      "shunts": {
+        "C": {
+          "rows": 3,
+          "cols": 3,
+          "E": [
+            [
+              0.0001,
+              0,
+              0
+            ],
+            [
+              0,
+              0.0001,
+              0
+            ],
+            [
+              0,
+              0,
+              0.0001
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "class": "Bus",
+      "id": "terminal",
+      "mon": [
+        "va",
+        "vb",
+        "vc"
+      ]
+    },
+    {
+      "class": "DependentVoltageSource",
+      "id": "filter",
+      "params": {
+        "Rs": [
+          [
+            0.2,
+            0,
+            0
+          ],
+          [
+            0,
+            0.2,
+            0
+          ],
+          [
+            0,
+            0,
+            0.2
+          ]
+        ],
+        "Ls": [
+          [
+            0.002,
+            0,
+            0
+          ],
+          [
+            0,
+            0.002,
+            0
+          ],
+          [
+            0,
+            0,
+            0.002
+          ]
+        ]
+      },
+      "inputs": {
+        "bus": "capacitor",
+        "ea": "ea",
+        "eb": "eb",
+        "ec": "ec"
+      },
+      "outputs": {
+        "ia": "iia",
+        "ib": "iib",
+        "ic": "iic"
+      },
+      "mon": [
+        "ia",
+        "ib",
+        "ic"
+      ]
+    },
+    {
+      "class": "LineLumped",
+      "id": "grid_filter",
+      "params": {
+        "dx": 1,
+        "Rp": [
+          [
+            0.1,
+            0,
+            0
+          ],
+          [
+            0,
+            0.1,
+            0
+          ],
+          [
+            0,
+            0,
+            0.1
+          ]
+        ],
+        "Lp": [
+          [
+            0.001,
+            0,
+            0
+          ],
+          [
+            0,
+            0.001,
+            0
+          ],
+          [
+            0,
+            0,
+            0.001
+          ]
+        ]
+      },
+      "inputs": {
+        "bus1": "capacitor",
+        "bus2": "terminal"
+      },
+      "outputs": {
+        "i12a": "iga",
+        "i12b": "igb",
+        "i12c": "igc"
+      },
+      "mon": [
+        "i12a",
+        "i12b",
+        "i12c"
+      ]
+    },
+    {
+      "class": "LoadZ",
+      "id": "load",
+      "params": {
+        "R": [
+          [
+            20,
+            0,
+            0
+          ],
+          [
+            0,
+            20,
+            0
+          ],
+          [
+            0,
+            0,
+            20
+          ]
+        ]
+      },
+      "inputs": {
+        "bus": "terminal"
+      },
+      "mon": [
+        "ia",
+        "ib",
+        "ic"
+      ]
+    },
+    {
+      "class": "Bus",
+      "id": "load_bus"
+    },
+    {
+      "class": "LoadZ",
+      "id": "extra_load",
+      "params": {
+        "R": [
+          [
+            20,
+            0,
+            0
+          ],
+          [
+            0,
+            20,
+            0
+          ],
+          [
+            0,
+            0,
+            20
+          ]
+        ]
+      },
+      "inputs": {
+        "bus": "load_bus"
+      },
+      "mon": [
+        "ia",
+        "ib",
+        "ic"
+      ]
+    },
+    {
+      "class": "Switch",
+      "id": "load_switch",
+      "params": {
+        "open": true
+      },
+      "inputs": {
+        "bus1": "terminal",
+        "bus2": "load_bus"
+      },
+      "mon": [
+        "open"
+      ]
+    },
+    {
+      "class": "Angle",
+      "id": "angle",
+      "inputs": {
+        "omega": "omega"
+      },
+      "outputs": {
+        "theta": "theta"
+      },
+      "mon": [
+        "theta"
+      ]
+    },
+    {
+      "class": "Park",
+      "id": "voltage",
+      "inputs": {
+        "input": [
+          "voa",
+          "vob",
+          "voc"
+        ],
+        "theta": "theta"
+      },
+      "outputs": {
+        "out": [
+          "vd",
+          "vq",
+          "v0"
+        ]
+      },
+      "mon": [
+        "out"
+      ]
+    },
+    {
+      "class": "Park",
+      "id": "current",
+      "inputs": {
+        "input": [
+          "iia",
+          "iib",
+          "iic"
+        ],
+        "theta": "theta"
+      },
+      "outputs": {
+        "out": [
+          "id",
+          "iq",
+          "i0"
+        ]
+      },
+      "mon": [
+        "out"
+      ]
+    },
+    {
+      "class": "Park",
+      "id": "grid_current",
+      "inputs": {
+        "input": [
+          "iga",
+          "igb",
+          "igc"
+        ],
+        "theta": "theta"
+      },
+      "outputs": {
+        "out": [
+          "igd",
+          "igq",
+          "ig0"
+        ]
+      },
+      "mon": [
+        "out"
+      ]
+    },
+    {
+      "class": "OuterVoltageControl",
+      "id": "voltage_control",
+      "params": {
+        "C": 0.0001,
+        "Kp": 0.03769911184307752,
+        "Ki": 2.131834550635301,
+        "Kaw": 376.99111843077515
+      },
+      "inputs": {
+        "vref": [
+          "vrefd",
+          "zero"
+        ],
+        "v": [
+          "vd",
+          "vq"
+        ],
+        "ig": [
+          "igd",
+          "igq"
+        ],
+        "omega": "omega",
+        "ilim": [
+          "ilimd",
+          "ilimq"
+        ]
+      },
+      "outputs": {
+        "iref": [
+          "irefd",
+          "irefq"
+        ]
+      },
+      "mon": [
+        "eta",
+        "iref"
+      ]
+    },
+    {
+      "class": "InnerCurrentControl",
+      "id": "current_control",
+      "params": {
+        "L": 0.002,
+        "Kp": 5.026548245743669,
+        "Ki": 502.65482457436696,
+        "Kaw": 2513.2741228718346,
+        "Imax": 30,
+        "Mmax": 0.95
+      },
+      "inputs": {
+        "v": [
+          "vd",
+          "vq"
+        ],
+        "i": [
+          "id",
+          "iq"
+        ],
+        "iref": [
+          "irefd",
+          "irefq"
+        ],
+        "omega": "omega",
+        "vdc": "vdc"
+      },
+      "outputs": {
+        "ilim": [
+          "ilimd",
+          "ilimq"
+        ],
+        "u": [
+          "ud",
+          "uq"
+        ]
+      },
+      "mon": [
+        "xi",
+        "ilim",
+        "u"
+      ]
+    },
+    {
+      "class": "Park",
+      "id": "inverse",
+      "params": {
+        "inverse": true
+      },
+      "inputs": {
+        "input": [
+          "ud",
+          "uq",
+          "zero"
+        ],
+        "theta": "theta"
+      },
+      "outputs": {
+        "out": [
+          "ua",
+          "ub",
+          "uc"
+        ]
+      }
+    },
+    {
+      "class": "Modulation",
+      "id": "modulation",
+      "inputs": {
+        "u": [
+          "ua",
+          "ub",
+          "uc"
+        ],
+        "vdc": "vdc"
+      },
+      "outputs": {
+        "m": [
+          "ma",
+          "mb",
+          "mc"
+        ]
+      },
+      "mon": [
+        "m"
+      ]
+    },
+    {
+      "class": "PWM",
+      "id": "pwm",
+      "params": {
+        "fc": 6000,
+        "alignment": 0.5
+      },
+      "inputs": {
+        "m": [
+          "ma",
+          "mb",
+          "mc"
+        ]
+      },
+      "outputs": {
+        "s": [
+          "sa",
+          "sb",
+          "sc"
+        ]
+      },
+      "mon": [
+        "s"
+      ]
+    },
+    {
+      "class": "Converter",
+      "id": "bridge",
+      "inputs": {
+        "s": [
+          "sa",
+          "sb",
+          "sc"
+        ],
+        "vdc": "vdc",
+        "i": [
+          "iia",
+          "iib",
+          "iic"
+        ]
+      },
+      "outputs": {
+        "vo": [
+          "ea",
+          "eb",
+          "ec"
+        ]
+      },
+      "mon": [
+        "vo",
+        "idc"
+      ]
+    }
+  ]
+}

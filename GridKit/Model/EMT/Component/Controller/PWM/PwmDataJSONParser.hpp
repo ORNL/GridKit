@@ -13,6 +13,7 @@ namespace GridKit
       void from_json(const json& raw, PwmData<RealT, IdxT>& data)
       {
         auto j = raw;
+        expandPhasePort(j, "inputs", "m", {"ma", "mb", "mc"});
         expandPhasePort(j, "outputs", "s", {"sa", "sb", "sc"});
         expandPhaseMonitor(j, "s", {"sa", "sb", "sc"});
         using BaseT = ComponentData<RealT, IdxT, PwmParameters, PwmInputs, PwmOutputs, PwmMonitorableVariables>;

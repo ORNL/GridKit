@@ -156,6 +156,41 @@ namespace GridKit
         add<Switch<ScalarT, IdxT>>(switch_data.id, qualified_data);
       }
 
+      for (const auto& model_data : data.inner_current_control)
+      {
+        auto qualified_data = model_data;
+        qualified_data.id   = qualify(model_data.id);
+        add<Controller::InnerCurrentControl<ScalarT, IdxT>>(model_data.id, qualified_data);
+      }
+
+      for (const auto& model_data : data.outer_voltage_control)
+      {
+        auto qualified_data = model_data;
+        qualified_data.id   = qualify(model_data.id);
+        add<Controller::OuterVoltageControl<ScalarT, IdxT>>(model_data.id, qualified_data);
+      }
+
+      for (const auto& model_data : data.park)
+      {
+        auto qualified_data = model_data;
+        qualified_data.id   = qualify(model_data.id);
+        add<Park<ScalarT, IdxT>>(model_data.id, qualified_data);
+      }
+
+      for (const auto& model_data : data.angle)
+      {
+        auto qualified_data = model_data;
+        qualified_data.id   = qualify(model_data.id);
+        add<Angle<ScalarT, IdxT>>(model_data.id, qualified_data);
+      }
+
+      for (const auto& model_data : data.modulation)
+      {
+        auto qualified_data = model_data;
+        qualified_data.id   = qualify(model_data.id);
+        add<Modulation<ScalarT, IdxT>>(model_data.id, qualified_data);
+      }
+
       for (const auto& model_data : data.pwm)
       {
         auto qualified_data = model_data;
@@ -247,9 +282,65 @@ namespace GridKit
           bus.addCurrent(static_cast<size_t>(input), source(reference));
       }
 
+      for (const auto& model_data : data.inner_current_control)
+      {
+        auto& model  = component<Controller::InnerCurrentControl<ScalarT, IdxT>>(model_data.id);
+        using Inputs = Controller::InnerCurrentControlInputs;
+        std::array<SignalT*, static_cast<size_t>(Inputs::SIZE)> inputs{};
+        for (size_t n = 0; n < inputs.size(); ++n)
+          inputs[n] = &source(model_data.inputs.at(static_cast<Inputs>(n)));
+        model.attachInput(inputs);
+        for (const auto& [output, reference] : model_data.outputs)
+          model.assignOutput(output, &signal(reference));
+      }
+
+      for (const auto& model_data : data.outer_voltage_control)
+      {
+        auto& model  = component<Controller::OuterVoltageControl<ScalarT, IdxT>>(model_data.id);
+        using Inputs = Controller::OuterVoltageControlInputs;
+        std::array<SignalT*, static_cast<size_t>(Inputs::SIZE)> inputs{};
+        for (size_t n = 0; n < inputs.size(); ++n)
+          inputs[n] = &source(model_data.inputs.at(static_cast<Inputs>(n)));
+        model.attachInput(inputs);
+        for (const auto& [output, reference] : model_data.outputs)
+          model.assignOutput(output, &signal(reference));
+      }
+
+      for (const auto& model_data : data.park)
+      {
+        auto& model = component<Park<ScalarT, IdxT>>(model_data.id);
+        model.attachInput({&source(model_data.inputs.at(ParkInputs::u1)),
+                           &source(model_data.inputs.at(ParkInputs::u2)),
+                           &source(model_data.inputs.at(ParkInputs::u3))},
+                          &source(model_data.inputs.at(ParkInputs::theta)));
+        for (const auto& [output, reference] : model_data.outputs)
+          model.assignOutput(output, &signal(reference));
+      }
+
+      for (const auto& model_data : data.angle)
+      {
+        auto& model = component<Angle<ScalarT, IdxT>>(model_data.id);
+        model.attachInput(&source(model_data.inputs.at(AngleInputs::omega)));
+        for (const auto& [output, reference] : model_data.outputs)
+          model.assignOutput(output, &signal(reference));
+      }
+
+      for (const auto& model_data : data.modulation)
+      {
+        auto& model = component<Modulation<ScalarT, IdxT>>(model_data.id);
+        model.attachInput({&source(model_data.inputs.at(ModulationInputs::ua)),
+                           &source(model_data.inputs.at(ModulationInputs::ub)),
+                           &source(model_data.inputs.at(ModulationInputs::uc))},
+                          &source(model_data.inputs.at(ModulationInputs::vdc)));
+        for (const auto& [output, reference] : model_data.outputs)
+          model.assignOutput(output, &signal(reference));
+      }
+
       for (const auto& model_data : data.pwm)
       {
         auto& model = component<Controller::Pwm<ScalarT, IdxT>>(model_data.id);
+        for (const auto& [input, reference] : model_data.inputs)
+          model.assignInput(static_cast<size_t>(input), &source(reference));
         if (model_data.outputs.contains(Controller::PwmOutputs::sa))
         {
           model.assignOutput(0, &signal(model_data.outputs.at(Controller::PwmOutputs::sa)));
