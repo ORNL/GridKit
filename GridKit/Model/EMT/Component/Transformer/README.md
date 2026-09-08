@@ -233,9 +233,10 @@ $\bar{y}_e = \beta_e(G_\mathrm{c} - \mathrm{j}/L_\mathrm{m})$ and $\bar{z} = \ma
 
 Each quantity takes the real part of its phasor at $t_0$; each state
 derivative takes the real part of $\mathrm{j}\omega_\mathrm{b}$ times its phasor.
-State-file `psi1a`, `psi1b`, `psi1c`, `psi2a`, `psi2b`, and `psi2c` values
-override the flux linkages at $t_0$. The assembled consistent initialization
-resolves the remaining variables.
+State-file `i12a`, `i12b`, `i12c`, `psi1a`, `psi1b`, `psi1c`, `psi2a`,
+`psi2b`, and `psi2c` values override the series current and flux linkages at
+$t_0$. The assembled consistent initialization resolves the remaining
+variables.
 
 ## Monitors
 

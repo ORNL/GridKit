@@ -359,7 +359,7 @@ namespace GridKit
             if constexpr (std::is_same_v<Outputs, SwitchOutputs>)
               names.insert("open");
             if constexpr (std::is_same_v<Outputs, TransformerOutputs>)
-              names = {"psi1a", "psi1b", "psi1c", "psi2a", "psi2b", "psi2c"};
+              names = {"i12a", "i12b", "i12c", "psi1a", "psi1b", "psi1c", "psi2a", "psi2b", "psi2c"};
             if constexpr (std::is_same_v<Outputs, BusOutputs>)
               buses.insert(path);
           }

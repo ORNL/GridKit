@@ -1,0 +1,57 @@
+{
+  "header": {
+    "case_name": "Transformer bank",
+    "case_description": "138/69 kV two-winding bank between a stiff source and a resistive load",
+    "case_comments": "Breaker energization drives the core past the knee; the steady state file starts on the phasor solution."
+  },
+  "devices": [
+    { "class": "Bus", "id": "grid" },
+    { "class": "Bus", "id": "hv" },
+    { "class": "Bus", "id": "lv" },
+    {
+      "class": "VoltageSource",
+      "id": "source",
+      "params": {
+        "E": [79674.33714816836, 79674.33714816836, 79674.33714816836],
+        "phi": [0.0, -2.0943951023931953, 2.0943951023931953],
+        "omega": 376.99111843077515,
+        "Rs": [[0.5, 0.0, 0.0], [0.0, 0.5, 0.0], [0.0, 0.0, 0.5]]
+      },
+      "inputs": { "bus": "grid" }
+    },
+    {
+      "class": "Switch",
+      "id": "breaker",
+      "params": { "open": false },
+      "inputs": { "bus1": "grid", "bus2": "hv" },
+      "mon": ["open", "i12a"]
+    },
+    {
+      "class": "Transformer",
+      "id": "bank",
+      "params": {
+        "S": 100.0e6,
+        "V1": 138.0e3,
+        "V2": 69.0e3,
+        "f": 60.0,
+        "R": 0.005,
+        "X": 0.1,
+        "I0": 0.01,
+        "P0": 60.0e3,
+        "knee": 1.2,
+        "Lsat": 0.25
+      },
+      "inputs": { "bus1": "hv", "bus2": "lv" },
+      "mon": ["i12a", "psi1a", "psi1b", "psi1c", "i1a", "i1b", "i1c", "i2a"]
+    },
+    {
+      "class": "LoadZ",
+      "id": "load",
+      "params": {
+        "R": [[79.35, 0.0, 0.0], [0.0, 79.35, 0.0], [0.0, 0.0, 79.35]]
+      },
+      "inputs": { "bus": "lv" },
+      "mon": ["ia"]
+    }
+  ]
+}

@@ -138,7 +138,7 @@ namespace GridKit
       virtual int allocate() override final;
       virtual int verify() const override final;
 
-      int initialize(const std::array<RealT, 6>& flux = {});
+      int initialize(const std::array<RealT, 9>& state = {});
 
       typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
       {
@@ -190,7 +190,7 @@ namespace GridKit
       /// Two-slope magnetizing characteristic in transformer per unit.
       __attribute__((always_inline)) inline ScalarT magnetizingCurrent(ScalarT psi) const;
 
-      static constexpr std::array<std::string_view, 6> flux_keys_{"psi1a", "psi1b", "psi1c", "psi2a", "psi2b", "psi2c"};
+      static constexpr std::array<std::string_view, 9> state_keys_{"i12a", "i12b", "i12c", "psi1a", "psi1b", "psi1c", "psi2a", "psi2b", "psi2c"};
 
       std::array<std::array<SignalT, 3>, 2> current_;
 
