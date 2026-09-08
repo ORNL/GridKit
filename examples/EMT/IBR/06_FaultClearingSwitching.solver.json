@@ -23,10 +23,5 @@
     "output_file": "06_FaultClearingSwitching.csv",
     "state_output_file": "06_FaultClearingSwitching.states.csv",
     "consistent_ic_type": "ya_ydp",
-    "mu": 50000.0,
-    "signal_values": {
-        "dc_4": 28918.846170570516,
-        "dc_5": 28918.846170570516,
-        "dc_6": 28918.846170570516
-    }
+    "mu": 50000.0
 }

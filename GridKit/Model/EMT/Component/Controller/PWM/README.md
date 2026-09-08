@@ -208,3 +208,18 @@ at each pulse edge. Consequently,
 The switching limit holds away from the edges. For varying modulation,
 $s_\ell(t)\to d_\ell(t)$ under broad smoothing. The fixed-duty mean identity
 does not assert an exact carrier-period mean for a changing command.
+
+## Appendix B: Pulse-sum evaluation
+
+Outside a pulse interval, let $\delta$ be the distance to its nearest edge.
+With $r=e^{-\mu dT_{\mathrm{c}}}$ and $z=e^{-\mu\delta}$, its contribution is
+
+```math
+\sigma(t-a_k)-\sigma(t-b_k)
+=\dfrac{z(1-r)}{(1+z)(1+zr)}.
+```
+
+The nearest pulse is evaluated directly. Each outward replica updates
+$z\leftarrow z e^{-\mu T_{\mathrm{c}}}$, avoiding repeated sigmoid evaluations.
+The same pulse window and compensated summation are retained; this recurrence
+is an algebraic rearrangement of the pulse sum.
