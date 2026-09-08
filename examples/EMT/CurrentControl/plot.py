@@ -209,10 +209,10 @@ def switching_figure(run, prediction, end):
     ax[0].set_ylabel('Switching function [−]')
     ax[0].set_title(f'{run["fc"]:g} Hz PWM, PLL-synchronized voltage control, {mu_label(run["mu"])}')
     ax[1].plot(d['t'], d['Converter_bridge_voa'], color=BLUE, label=r'bridge $v_{o,a}$')
-    ax[1].plot(d['t'], d['Bus_capacitor_va'], color=ORANGE, label='capacitor $v_a$')
+    ax[1].plot(d['t'], d['Filter_filter_voa'], color=ORANGE, label='capacitor $v_a$')
     ax[1].set_ylabel('Phase voltage [V]')
-    ax[2].plot(d['t'], d['DependentVoltageSource_filter_ia'], color=BLUE, label='inverter-side $i_a$')
-    ax[2].plot(d['t'], d['LineLumped_grid_filter_i12a'], color=ORANGE, label='grid-side $i_{g,a}$')
+    ax[2].plot(d['t'], d['Filter_filter_ia'], color=BLUE, label='inverter-side $i_a$')
+    ax[2].plot(d['t'], d['Filter_filter_iga'], color=ORANGE, label='grid-side $i_{g,a}$')
     ax[2].set_ylabel('Phase current [A]')
     time_axes(ax, run, end)
     return fig
@@ -222,7 +222,7 @@ def summarize(run, prediction, spectrum):
     d, t = run['data'], run['data']['t']
     s = np.column_stack([d[f'PWM_pwm_s{p}'] for p in 'abc'])
     voltage = np.column_stack([d[f'Converter_bridge_vo{p}'] for p in 'abc'])
-    current = np.column_stack([d[f'DependentVoltageSource_filter_i{p}'] for p in 'abc'])
+    current = np.column_stack([d[f'Filter_filter_i{p}'] for p in 'abc'])
     vdc = d['DCLink_dc_vdc']
     energy = d['DCLink_dc_energy']
     power = vdc * (d['DCLink_dc_isrc'] - d['DCLink_dc_idc'])

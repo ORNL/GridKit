@@ -17,12 +17,12 @@ def steady_state(case, irefd, irefq):
     grid = devices['grid']['params']
     omega = grid['omega']
     source = math.sqrt(3) * grid['E'][0]
-    line = devices['grid_filter']['params']
-    z = complex(line['Rp'][0][0], omega * line['Lp'][0][0]) * line['dx']
+    filt = devices['filter']['params']
+    z = complex(filt['Rg'][0][0], omega * filt['Lg'][0][0])
     current = complex(irefd, irefq)
     drop = z * current
     voltage = math.sqrt(source * source - drop.imag * drop.imag) + drop.real
-    c = devices['capacitor']['shunts']['C']['E'][0][0]
+    c = filt['C'][0][0]
     inverter_current = current + 1j * omega * c * voltage
     return {'voltage_V': voltage, 'id_A': inverter_current.real,
             'iq_A': inverter_current.imag, 'p_W': voltage * irefd,
@@ -42,8 +42,8 @@ def measure(path, begin, end, final_time=None):
             if not all(math.isfinite(value) for value in row.values()):
                 raise AssertionError('Nonfinite monitor value')
             t = row['t']
-            v = [row[f'Bus_capacitor_v{p}'] for p in 'abc']
-            i = [row[f'LineLumped_grid_filter_i12{p}'] for p in 'abc']
+            v = [row[f'Filter_filter_vo{p}'] for p in 'abc']
+            i = [row[f'Filter_filter_ig{p}'] for p in 'abc']
             power = sum(a * b for a, b in zip(v, i))
             reactive = ((v[1]-v[2])*i[0] + (v[2]-v[0])*i[1] + (v[0]-v[1])*i[2]) / math.sqrt(3)
             vd, vq = row['Park_voltage_y1'], row['Park_voltage_y2']
