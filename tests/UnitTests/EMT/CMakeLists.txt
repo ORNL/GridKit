@@ -88,6 +88,17 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTTransformerTest COMMAND test_emt_transformer)
 
+add_executable(test_emt_pll runPllTests.cpp)
+target_link_libraries(
+  test_emt_pll
+  GridKit::definitions
+  GridKit::emt_pll
+  GridKit::emt_pll_dependency_tracking
+  GridKit::emt_bus
+  GridKit::emt_bus_dependency_tracking
+  GridKit::testing)
+add_test(NAME EMTPllTest COMMAND test_emt_pll)
+
 add_executable(test_emt_vector_fit runVectorFitTests.cpp)
 target_link_libraries(
   test_emt_vector_fit

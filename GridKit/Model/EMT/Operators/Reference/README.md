@@ -7,6 +7,7 @@ direction through the `inverse` parameter.
 
 ## Models
 
+- [PLL](PLL/README.md): bus voltage to reference angle and frequency.
 - [Angle](Angle/README.md): electrical angular frequency to reference angle.
 - [Clarke](Clarke/README.md): $abc$ to $\alpha\beta0$; specification only.
 - [Park](Park/README.md): $abc$ to $dq0$.

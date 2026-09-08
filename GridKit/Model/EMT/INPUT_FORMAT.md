@@ -231,6 +231,8 @@ future file-backed Containers; file inclusion is not part of this revision.
   `DependentVoltageSource` | `ec`    | Input     | Signal        | Yes
   `PWM`                    | `m`     | Input     | Three Signal IDs | No
   `PWM`                    | `s`     | Output    | Three Signal IDs | No
+  `PLL`                    | `va`, `vb`, `vc` | Input | Voltage signal | Yes
+  `PLL`                    | `theta`, `omega` | Output | Signal | No
   `Park`                   | `input` | Input     | Three Signal IDs | Yes
   `Park`                   | `theta` | Input     | Signal | Yes
   `Park`                   | `out` | Output | Three Signal IDs | No
@@ -406,6 +408,7 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   ----------------------|------------------------------------------------------
   `PWM`                 | [PWM](Component/Controller/PWM/README.md)
   `Park`                | [Park](Operators/Reference/Park/README.md)
+  `PLL`                 | [PLL](Operators/Reference/PLL/README.md)
   `Angle`               | [Angle](Operators/Reference/Angle/README.md)
   `Modulation`          | [Modulation](Operators/Modulation/README.md)
   `InnerCurrentControl` | [InnerCurrentControl](Component/Controller/InnerCurrentControl/README.md)
