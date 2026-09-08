@@ -1,0 +1,30 @@
+\documentclass[border=3pt]{standalone}
+\usepackage{tikz,pgfplots}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
+\input{../../../../docs/Figures/EMT/diagram-style.tex}
+\definecolor{curveBlue}{RGB}{0,114,178}
+\definecolor{curveOrange}{RGB}{230,159,0}
+\definecolor{curveGreen}{RGB}{0,158,115}
+\begin{document}
+\begin{tikzpicture}[font=\small]
+\begin{groupplot}[group style={group size=1 by 3,vertical sep=12mm,x descriptions at=edge bottom},width=183mm,height=48mm,xmin=0,xmax=16.666667,xlabel={Time [ms]},grid=major,grid style={gray!20},legend style={draw=none,font=\footnotesize}]
+\nextgroupplot[title={(a) PWM switching function},ylabel={$s_a$ [-]},ymin=0,ymax=1,legend to name=switchinglegend,legend columns=3]
+\addplot[curveBlue,dotted,line width=0.7pt] table[x=time_ms,y=s,col sep=comma] {low.plot.csv};
+\addlegendentry{$\mu=240\,\mathrm{s}^{-1}$}
+\addplot[curveOrange,dashed,line width=0.7pt] table[x=time_ms,y=s,col sep=comma] {middle.plot.csv};
+\addlegendentry{$\mu=3600\,\mathrm{s}^{-1}$}
+\addplot[curveGreen,line width=0.7pt] table[x=time_ms,y=s,col sep=comma] {high.plot.csv};
+\addlegendentry{$\mu=50000\,\mathrm{s}^{-1}$}
+\nextgroupplot[title={(b) Converter bridge voltage},ylabel={$e_a$ [kV]}]
+\addplot[curveBlue,dotted,line width=0.7pt] table[x=time_ms,y=e_kV,col sep=comma] {low.plot.csv};
+\addplot[curveOrange,dashed,line width=0.7pt] table[x=time_ms,y=e_kV,col sep=comma] {middle.plot.csv};
+\addplot[curveGreen,line width=0.7pt] table[x=time_ms,y=e_kV,col sep=comma] {high.plot.csv};
+\nextgroupplot[title={(c) RL reactor current; startup included},ylabel={$i_a$ [A]}]
+\addplot[curveBlue,dotted,line width=0.7pt] table[x=time_ms,y=i_A,col sep=comma] {low.plot.csv};
+\addplot[curveOrange,dashed,line width=0.7pt] table[x=time_ms,y=i_A,col sep=comma] {middle.plot.csv};
+\addplot[curveGreen,line width=0.7pt] table[x=time_ms,y=i_A,col sep=comma] {high.plot.csv};
+\end{groupplot}
+\node[anchor=north] at ([yshift=-12mm]group c1r3.south) {\pgfplotslegendfromname{switchinglegend}};
+\end{tikzpicture}
+\end{document}
