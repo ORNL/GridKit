@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Plot resolved switching-control simulations and retain compressed waveforms."""
+"""Plot current-control runs with shared comparison axes and numerical summaries."""
+import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -12,205 +14,292 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-OUT = HERE / 'simulation'
-FC = 6000.0
-MU = 1e6
-VDC = 400.0
-UMAX = np.sqrt(3 / 8) * .95 * VDC
+NAMES = ['GFL', 'GFM']
 BLUE, ORANGE, GREY = '#0072B2', '#D55E00', '#555555'
 plt.rcParams.update({'font.size': 10, 'axes.spines.top': False, 'axes.spines.right': False,
                      'axes.grid': True, 'grid.alpha': .2, 'lines.linewidth': 1.2,
                      'savefig.dpi': 180, 'figure.constrained_layout.use': True})
 
 
-def read(name):
-    csv = OUT / f'{name}.csv'
+def read_run(folder, name):
+    record = json.loads((folder / f'{name}.run.json').read_text())
+    for filename, expected in record['input_sha256'].items():
+        if hashlib.sha256((folder / filename).read_bytes()).hexdigest() != expected:
+            raise ValueError(f'{folder / filename}: input changed since simulation')
+    solver = json.loads((folder / f'{name}.solver.json').read_text())
+    case = json.loads((folder / solver['system_model_file']).read_text())
+    csv = folder / solver['output_file']
     if csv.exists():
-        data = np.genfromtxt(csv, delimiter=',', names=True)
-        data = {n: data[n] for n in data.dtype.names}
-        np.savez_compressed(OUT / f'{name}.npz', **data)
-        return data
-    with np.load(OUT / f'{name}.npz') as data:
-        return {n: data[n] for n in data.files}
+        raw = np.genfromtxt(csv, delimiter=',', names=True)
+        data = {key: np.atleast_1d(raw[key]) for key in raw.dtype.names}
+        np.savez_compressed(folder / f'{name}.npz', **data)
+    else:
+        with np.load(folder / f'{name}.npz') as raw:
+            data = {key: raw[key] for key in raw.files}
+    t = data['t']
+    if len(t) < 2 or not all(np.isfinite(x).all() for x in data.values()) or (np.diff(t) < 0).any():
+        raise ValueError(f'{folder}/{name}: invalid waveform data')
+    if not np.isclose(t[-1], solver['tmax'], rtol=0, atol=1e-10):
+        raise ValueError(f'{folder}/{name}: incomplete simulation')
+    signals = {s['id']: s['value'] for s in case['signals'] if 'value' in s}
+    signals.update(solver.get('signal_values', {}))
+    devices = {d['id']: d for d in case['devices']}
+    return {'name': name, 'folder': folder, 'data': data, 'solver': solver,
+            'signals': signals, 'devices': devices, 'record': record,
+            'fc': devices['pwm']['params']['fc'], 'mu': solver['mu'],
+            'frequency': signals['omega'] / (2 * np.pi), 'vdc': signals['vdc']}
 
 
-def save(fig, name):
-    for ext in ['png', 'pdf']:
-        fig.savefig(OUT / f'{name}.{ext}')
-    plt.close(fig)
+def integral(t, x, points):
+    """Integrate linear segments, retaining both sides of duplicate event times."""
+    dt = np.diff(t)
+    cumulative = np.r_[0, np.cumsum(.5 * (x[:-1] + x[1:]) * dt)]
+    slope = np.divide(np.diff(x), dt, out=np.zeros_like(x[:-1]), where=dt > 0)
+    index = np.clip(np.searchsorted(t, points, side='right') - 1, 0, len(t) - 2)
+    local = np.asarray(points) - t[index]
+    return cumulative[index] + local * x[index] + .5 * local**2 * slope[index]
 
 
 def mean(t, x, begin, end):
-    sel = (t >= begin) & (t <= end)
-    return float(np.trapz(x[sel], t[sel]) / (t[sel][-1] - t[sel][0]))
+    return float(np.diff(integral(t, x, [begin, end]))[0] / (end - begin))
 
 
-def carrier_mean(t, x):
-    """Time-weighted means for plotting, without changing the simulated model."""
-    k = np.floor(t * FC).astype(int)
-    dt = np.diff(t)
-    weight = np.bincount(k[:-1], weights=dt)
-    accum = np.bincount(k[:-1], weights=.5 * (x[:-1] + x[1:]) * dt)
-    good = weight > 0
-    return (np.arange(len(weight))[good] + .5) / FC, accum[good] / weight[good]
+def carrier_mean(t, x, fc):
+    boundaries = np.arange(int(np.floor(t[-1] * fc + 1e-9)) + 1) / fc
+    return .5 * (boundaries[:-1] + boundaries[1:]), np.diff(integral(t, x, boundaries)) * fc
 
 
-def trace(ax, t, x, label, color):
+def trace(ax, run, key, label, color=BLUE):
+    t, x = run['data']['t'], run['data'][key]
     ax.plot(t, x, color=color, alpha=.18, linewidth=.45)
-    tm, xm = carrier_mean(t, x)
+    tm, xm = carrier_mean(t, x, run['fc'])
     ax.plot(tm, xm, color=color, label=label)
 
 
-def predictor(d):
-    """Reconstruct pulses from sampled commands and their documented edge times."""
-    t = d['t']
-    k = np.floor(t * FC + 1e-10).astype(int)
-    sample_time = np.arange(k.max() + 1) / FC
-    sample_indices = np.searchsorted(t, sample_time - 1e-13)
-    if np.max(np.abs(t[sample_indices] - sample_time)) > 1e-10:
+def duty(run, intervals):
+    """Use the pre-latch command from the preceding accepted carrier boundary."""
+    t = run['data']['t']
+    times = np.maximum(np.asarray(intervals) - 1, 0) / run['fc']
+    indices = np.searchsorted(t, times - 1e-12)
+    if np.any(indices >= len(t)) or np.max(np.abs(t[indices] - times)) > 1e-10:
         raise ValueError('Carrier-boundary command samples are missing')
-    modulation = np.column_stack([d[f'Modulation_modulation_m{p}'][sample_indices] for p in 'abc'])
-    switches = np.zeros((len(t), 3))
-    # Three nearby intervals cover all tails at this carrier and edge width.
-    for offset in [-1, 0, 1]:
-        interval = k + offset
-        # All periodic replicas use the command active in interval k.
-        idx = np.clip(k - 1, 0, len(modulation) - 1)
-        duty = (1 + modulation[idx]) / 2
-        on = (interval[:, None] + .5 * (1 - duty)) / FC
-        off = (interval[:, None] + .5 * (1 + duty)) / FC
-        sigmoid = lambda x: .5 * (1 + np.tanh(.5 * MU * x))
-        switches += sigmoid(t[:, None] - on) - sigmoid(t[:, None] - off)
-    return switches
+    return .5 * (1 + np.column_stack([run['data'][f'Modulation_modulation_m{p}'][indices] for p in 'abc']))
 
 
-def harmonics(d):
-    """Integrate each held command's periodic PWM waveform analytically."""
-    t = d['t']
-    begin, end = .2 - 1 / 60, .2
-    intervals = np.arange(round(begin * FC), round(end * FC))
-    idx = np.searchsorted(t, (intervals - 1) / FC - 1e-13)
-    m = np.column_stack([d[f'Modulation_modulation_m{p}'][idx] for p in 'abc'])
-    duty = (1 + m) / 2
-    # Fourier coefficients of the centered pulse, including sigmoid smoothing.
-    decay = 2 * np.pi**2 * FC / MU
-    count = max(1, int(np.ceil(np.log(4 / np.finfo(float).eps) / decay)))
-    orders = np.arange(-count, count + 1)
-    argument = decay * np.abs(orders)
-    attenuation = np.ones(len(orders))
-    nonzero = orders != 0
-    x = argument[nonzero]
-    attenuation[nonzero] = 2 * x * np.exp(-x) / (-np.expm1(-2 * x))
-    coefficients = (duty[:, :, None] * np.sinc(duty[:, :, None] * orders)
-                    * np.exp(-1j * np.pi * orders) * attenuation)
-    bridge_coefficients = VDC * np.einsum('p,kpn->kn', [2/3, -1/3, -1/3], coefficients)
-    inside = (t > begin) & (t < end)
-    time = np.r_[begin, t[inside], end]
-    voltage = np.interp(time, t, d['Converter_bridge_voa'])
-    frequencies = np.array([60, 5880, 5940, 6000, 6060, 6120, 11940, 12060, 17880, 18120])
+def attenuation(x):
+    return np.divide(2 * x * np.exp(-x), -np.expm1(-2 * x),
+                     out=np.ones_like(x, dtype=float), where=x != 0)
+
+
+def pulse_prediction(run):
+    t, fc, mu = run['data']['t'], run['fc'], run['mu']
+    intervals = np.floor(t * fc + 1e-9).astype(int)
+    d = duty(run, intervals)
+    phase = (t * fc - intervals)[:, None]
+    alignment = run['devices']['pwm']['params'].get('alignment', .5)
+    on, off = alignment * (1 - d), alignment + (1 - alignment) * d
+    tail = np.log(4 / np.finfo(float).eps)
+    radius = int(np.ceil(tail * fc / mu))
+    decay = 2 * np.pi**2 * fc / mu
+    count = max(1, int(np.ceil(tail / decay)))
+    # Use the shorter equivalent expansion for sharp edges or broad smoothing.
+    if 2 * radius + 1 <= count:
+        s = np.zeros_like(d)
+        for offset in range(-radius, radius + 1):
+            s += .5 * (np.tanh(.5 * mu / fc * (phase - on - offset))
+                       - np.tanh(.5 * mu / fc * (phase - off - offset)))
+        return s
+    s = d.copy()
+    center = .5 * (on + off)
+    for n in range(1, count + 1):
+        s += 2 * d * np.sinc(n * d) * attenuation(np.asarray(n * decay)) * np.cos(2 * np.pi * n * (phase - center))
+    return s
+
+
+def harmonics(run, end):
+    """Compare measured Fourier amplitudes with the held-pulse coefficients."""
+    fc, fm, mu = run['fc'], run['frequency'], run['mu']
+    last = int(np.floor(end * fc + 1e-9))
+    count = min(last, int(round(fc / fm)))
+    if count < 1:
+        raise ValueError('The harmonic plot needs at least one complete carrier period')
+    intervals = np.arange(last - count, last)
+    begin, end = (last - count) / fc, last / fc
+    d = duty(run, intervals)
+    alignment = run['devices']['pwm']['params'].get('alignment', .5)
+    center = alignment + (.5 - alignment) * d
+    decay = 2 * np.pi**2 * fc / mu
+    order = max(1, int(np.ceil(np.log(4 / np.finfo(float).eps) / decay)))
+    n = np.arange(-order, order + 1)
+    coefficients = (d[:, :, None] * np.sinc(d[:, :, None] * n)
+                    * np.exp(-2j * np.pi * center[:, :, None] * n)
+                    * attenuation(decay * np.abs(n)))
+    bridge = run['vdc'] * np.einsum('p,kpn->kn', [2/3, -1/3, -1/3], coefficients)
+    t, voltage = run['data']['t'], run['data']['Converter_bridge_voa']
+    frequencies = np.array([fm, fc-2*fm, fc-fm, fc, fc+fm, fc+2*fm,
+                            2*fc-fm, 2*fc+fm, 3*fc-2*fm, 3*fc+2*fm])
     measured, predicted = [], []
     for f in frequencies:
-        omega = 2 * np.pi * f
-        difference = orders - f / FC
-        integral = np.exp(1j * np.pi * difference) * np.sinc(difference) / FC
-        phase = np.exp(-1j * omega * intervals / FC)
-        predicted.append(abs(2 * np.sum(phase[:, None] * bridge_coefficients * integral) / (end - begin)))
-        measured.append(abs(2 * np.trapz(voltage * np.exp(-1j * omega * time), time) / (end - begin)))
-    return frequencies, np.array(measured), np.array(predicted)
+        difference = n - f / fc
+        cell = np.exp(1j * np.pi * difference) * np.sinc(difference) / fc
+        phase = np.exp(-2j * np.pi * f * intervals / fc)
+        predicted.append(abs(2 * np.sum(phase[:, None] * bridge * cell) / (end - begin)))
+        samples = voltage * np.exp(-2j * np.pi * f * t)
+        measured.append(abs(2 * np.diff(integral(t, samples, [begin, end]))[0] / (end - begin)))
+    return {'window_s': [begin, end], 'frequencies_hz': frequencies.tolist(),
+            'measured_peak_V': measured, 'predicted_peak_V': predicted,
+            'maximum_absolute_error_V': float(np.max(np.abs(np.array(measured) - predicted)))}
+
+
+def reference(run, signal):
+    values = np.full_like(run['data']['t'], run['signals'][signal])
+    for event in run['solver']['events']:
+        if event.get('signal_id') == signal:
+            values[run['data']['t'] >= event['time']] = event['value']
+    return values
+
+
+def time_axes(axes, run, end):
+    for ax in axes:
+        ax.set_xlim(0, end)
+        ax.set_xticks(np.linspace(0, end, 6))
+        for event in run['solver']['events']:
+            if event['time'] <= end:
+                ax.axvline(event['time'], color=GREY, linewidth=.7, linestyle=':')
+        ax.legend(loc='upper right', ncol=3, fontsize=9)
+    axes[-1].set_xlabel('Time [s]')
+
+
+def control_figure(run, end):
+    name, d = run['name'], run['data']
+    fig, ax = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
+    if name == 'GFL':
+        ax[0].plot(d['t'], reference(run, 'irefd'), '--', color=GREY, label='requested $i_d$')
+        ax[0].plot(d['t'], d['InnerCurrentControl_current_control_ilimd'], color=ORANGE, label='limited $i_d$')
+        trace(ax[0], run, 'Park_current_y1', '$i_d$')
+        trace(ax[1], run, 'Park_current_y2', '$i_q$')
+        ax[1].plot(d['t'], reference(run, 'irefq'), '--', color=ORANGE, label='requested $i_q$')
+        ax[0].set_ylabel('d-axis current [A]')
+        ax[1].set_ylabel('q-axis current [A]')
+    else:
+        trace(ax[0], run, 'Park_voltage_y1', '$v_d$')
+        trace(ax[1], run, 'Park_voltage_y2', '$v_q$')
+        ax[0].plot(d['t'], reference(run, 'vrefd'), '--', color=ORANGE, label=r'$v_d^{\mathrm{ref}}$')
+        ax[1].axhline(0, color=ORANGE, linestyle='--', label=r'$v_q^{\mathrm{ref}}$')
+        ax[0].set_ylabel('d-axis voltage [V]')
+        ax[1].set_ylabel('q-axis voltage [V]')
+    command = np.hypot(d['InnerCurrentControl_current_control_ud'], d['InnerCurrentControl_current_control_uq'])
+    limit = np.sqrt(3 / 8) * run['devices']['current_control']['params']['Mmax'] * run['vdc']
+    ax[2].plot(d['t'], command, color=BLUE, label=r'$\|\mathbf{u}\|_2$')
+    ax[2].axhline(limit, color=ORANGE, linestyle='--', label='available voltage command')
+    ax[2].set_ylabel('Voltage command [V]')
+    ax[0].set_title(fr'{name}: $\mu={run["mu"]:g}$, {run["vdc"]:g} V DC')
+    time_axes(ax, run, end)
+    ax[2].legend(loc='lower right', ncol=2, fontsize=9)
+    fig.supxlabel('Feedback traces: faint instantaneous values; solid carrier-period means.', fontsize=9)
+    return fig
+
+
+def switching_figure(run, prediction, end):
+    d = run['data']
+    fig, ax = plt.subplots(3, 1, figsize=(10, 7), sharex=True)
+    ax[0].plot(d['t'], d['PWM_pwm_sa'], color=BLUE, label='$s_a$')
+    ax[0].plot(d['t'], prediction[:, 0], '--', color=ORANGE, label='pulse prediction')
+    ax[0].set_ylabel('Gate state [−]')
+    ax[0].set_title(fr'{run["fc"]:g} Hz PWM, islanded voltage control, $\mu={run["mu"]:g}$')
+    ax[1].plot(d['t'], d['Converter_bridge_voa'], color=BLUE, label=r'bridge $v_{o,a}$')
+    ax[1].plot(d['t'], d['Bus_capacitor_va'], color=ORANGE, label='capacitor $v_a$')
+    ax[1].set_ylabel('Phase voltage [V]')
+    ax[2].plot(d['t'], d['DependentVoltageSource_filter_ia'], color=BLUE, label='inverter-side $i_a$')
+    ax[2].plot(d['t'], d['LineLumped_grid_filter_i12a'], color=ORANGE, label='grid-side $i_{g,a}$')
+    ax[2].set_ylabel('Phase current [A]')
+    time_axes(ax, run, end)
+    return fig
+
+
+def summarize(run, prediction, spectrum):
+    d, t = run['data'], run['data']['t']
+    s = np.column_stack([d[f'PWM_pwm_s{p}'] for p in 'abc'])
+    voltage = np.column_stack([d[f'Converter_bridge_vo{p}'] for p in 'abc'])
+    current = np.column_stack([d[f'DependentVoltageSource_filter_i{p}'] for p in 'abc'])
+    interior = np.abs(t * run['fc'] - np.round(t * run['fc'])) > 1e-8
+    result = {'final_time_s': run['solver']['tmax'], 'monitor_samples': run['samples'],
+              'carrier_hz': run['fc'], 'mu': run['mu'], 'dc_voltage_V': run['vdc'],
+              'edge_10_90_s': 2 * np.log(9) / run['mu'],
+              'bridge_identity_max_error_V': float(np.max(np.abs(voltage - run['vdc'] * (s - s.mean(axis=1)[:, None])))),
+              'bridge_power_max_error_W': float(np.max(np.abs((voltage * current).sum(axis=1) - run['vdc'] * d['Converter_bridge_idc']))),
+              'pulse_prediction_max_error': float(np.max(np.abs(prediction[interior] - s[interior]))),
+              'maximum_reference_norm_A': float(np.max(np.hypot(d['InnerCurrentControl_current_control_ilimd'], d['InnerCurrentControl_current_control_ilimq']))),
+              'maximum_voltage_command_V': float(np.max(np.hypot(d['InnerCurrentControl_current_control_ud'], d['InnerCurrentControl_current_control_uq']))),
+              'tracking_window_s': spectrum['window_s'], 'harmonics': spectrum}
+    for key, column in [('id_A', 'Park_current_y1'), ('iq_A', 'Park_current_y2'),
+                        ('vd_V', 'Park_voltage_y1'), ('vq_V', 'Park_voltage_y2')]:
+        result[f'mean_{key}'] = mean(t, d[column], *spectrum['window_s'])
+    return result
 
 
 def main():
-    data = {name: read(name) for name in ['GFL', 'GFM']}
-    summary = {'carrier_hz': FC, 'edge_10_90_us': 2 * np.log(9) / MU * 1e6,
-               'formal_tests_run': False, 'studies': {}}
-    for name, d in data.items():
-        t = d['t']
-        if not all(np.isfinite(x).all() for x in d.values()) or (np.diff(t) < 0).any():
-            raise ValueError(f'{name}: nonfinite or nonmonotonic output')
-        s = np.column_stack([d[f'PWM_pwm_s{p}'] for p in 'abc'])
-        bridge = np.column_stack([d[f'Converter_bridge_vo{p}'] for p in 'abc'])
-        current = np.column_stack([d[f'DependentVoltageSource_filter_i{p}'] for p in 'abc'])
-        ilim = np.hypot(d['InnerCurrentControl_current_control_ilimd'], d['InnerCurrentControl_current_control_ilimq'])
-        u = np.hypot(d['InnerCurrentControl_current_control_ud'], d['InnerCurrentControl_current_control_uq'])
-        pred = predictor(d)
-        # The two observations at a sampling instant straddle the latch update.
-        interior = np.abs(t * FC - np.round(t * FC)) > .05
-        final = (.18, .2)
-        summary['studies'][name] = {
-            'final_time_s': float(t[-1]), 'samples': len(t),
-            'maximum_reference_norm_A': float(ilim.max()), 'maximum_voltage_command_V': float(u.max()),
-            'bridge_identity_max_error_V': float(np.max(np.abs(bridge - VDC * (s - s.mean(axis=1)[:, None])))),
-            'bridge_power_max_error_W': float(np.max(np.abs((bridge * current).sum(axis=1) - VDC * d['Converter_bridge_idc']))),
-            'pulse_reconstruction_max_error': float(np.max(np.abs(pred[interior] - s[interior]))),
-            'final_mean_id_A': mean(t, d['Park_current_y1'], *final),
-            'final_mean_iq_A': mean(t, d['Park_current_y2'], *final),
-            'final_mean_vd_V': mean(t, d['Park_voltage_y1'], *final),
-            'final_mean_vq_V': mean(t, d['Park_voltage_y2'], *final),
-        }
-        fig, ax = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
-        if name == 'GFL':
-            req = np.select([t < .04, t < .08, t < .12], [8, 16, 45], default=8)
-            ax[0].plot(t, req, '--', color=GREY, label='requested $i_d$')
-            ax[0].plot(t, d['InnerCurrentControl_current_control_ilimd'], color=ORANGE, label='limited $i_d$')
-            trace(ax[0], t, d['Park_current_y1'], '$i_d$', BLUE)
-            ax[0].set_ylabel('d-axis current [A]')
-            trace(ax[1], t, d['Park_current_y2'], '$i_q$', BLUE)
-            ax[1].axhline(0, color=ORANGE, linestyle='--', label='requested $i_q$')
-            ax[1].set_ylabel('q-axis current [A]')
-            ax[0].set_title('Current tracking, reference limiting, and recovery')
-            summary['studies'][name]['limited_interval_mean_id_A'] = mean(t, d['Park_current_y1'], .11, .12)
-        else:
-            trace(ax[0], t, d['Park_voltage_y1'], '$v_d$', BLUE)
-            ax[0].axhline(208, color=ORANGE, linestyle='--', label='$v_d^{ref}=208$ V')
-            ax[0].set_ylabel('d-axis voltage [V]')
-            trace(ax[1], t, d['Park_voltage_y2'], '$v_q$', BLUE)
-            ax[1].axhline(0, color=ORANGE, linestyle='--', label='$v_q^{ref}=0$ V')
-            ax[1].set_ylabel('q-axis voltage [V]')
-            ax[0].set_title('Islanded voltage control: connect and disconnect a second load')
-        ax[2].plot(t, u, color=BLUE, label=r'$\|\mathbf{u}\|_2$')
-        ax[2].axhline(UMAX, color=ORANGE, linestyle='--', label='available voltage command')
-        ax[2].set_ylabel('Voltage command [V]')
-        ax[2].set_xlabel('Time [s]')
-        for a in ax:
-            for event in ([.04, .08, .12] if name == 'GFL' else [.04, .12]):
-                a.axvline(event, color=GREY, linewidth=.7, linestyle=':')
-            a.legend(loc='upper right', ncol=3, fontsize=9)
-        ax[2].legend(loc='lower right', ncol=2, fontsize=9)
-        fig.supxlabel('Feedback traces: faint instantaneous values; solid carrier-period means.', fontsize=9)
-        save(fig, name)
-    d = data['GFM']; t = d['t']; mask = (t >= .18) & (t <= .181)
-    fig, ax = plt.subplots(3, 1, figsize=(10, 7), sharex=True)
-    ax[0].plot(1e3 * t[mask], d['PWM_pwm_sa'][mask], color=BLUE, label='$s_a$')
-    ax[0].plot(1e3 * t[mask], predictor(d)[mask, 0], '--', color=ORANGE, label='pulse-edge reconstruction')
-    ax[0].set_ylabel('Gate state [−]'); ax[0].set_title('Resolved 6 kHz switching, islanded steady operation')
-    ax[1].plot(1e3 * t[mask], d['Converter_bridge_voa'][mask], color=BLUE, label='bridge $e_a$')
-    ax[1].plot(1e3 * t[mask], d['Bus_capacitor_va'][mask], color=ORANGE, label='capacitor $v_{o,a}$')
-    ax[1].set_ylabel('Phase voltage [V]')
-    ax[2].plot(1e3 * t[mask], d['DependentVoltageSource_filter_ia'][mask], color=BLUE, label='inverter-side $i_{i,a}$')
-    ax[2].plot(1e3 * t[mask], d['LineLumped_grid_filter_i12a'][mask], color=ORANGE, label='grid-side $i_{g,a}$')
-    ax[2].set_ylabel('Phase current [A]'); ax[2].set_xlabel('Time [ms]')
-    for a in ax: a.legend(loc='best', ncol=2)
-    save(fig, 'switching')
-    fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
-    for ax, (name, d) in zip(axes, data.items()):
-        frequencies, measured, predicted = harmonics(d)
-        x = np.arange(len(frequencies))
-        ax.bar(x - .18, measured, .36, color=BLUE, label='simulated bridge voltage')
-        ax.bar(x + .18, predicted, .36, color=ORANGE, label='analytic PWM prediction')
-        ax.set_yscale('log')
-        ax.set_ylabel('Peak amplitude [V]')
-        ax.set_title(name)
-        ax.legend(loc='upper right')
-        summary['studies'][name]['harmonics'] = {
-            'frequencies_hz': frequencies.tolist(), 'measured_peak_V': measured.tolist(),
-            'predicted_peak_V': predicted.tolist(),
-            'maximum_absolute_error_V': float(np.max(np.abs(measured - predicted))),
-        }
-    axes[-1].set_xticks(x, [str(f) for f in frequencies])
-    axes[-1].set_xlabel('Frequency [Hz]')
-    save(fig, 'harmonics')
-    (OUT / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
-    print(json.dumps(summary, indent=2))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, default=Path('simulation'), help='Run directory, relative to this example')
+    parser.add_argument('--compare', type=Path, nargs='+', default=[], help='Additional run directories with shared plot axes')
+    parser.add_argument('--tmax', type=float, help='Plot end time; defaults to the common available interval')
+    args = parser.parse_args()
+    folders = [(HERE / path).resolve() for path in [args.output, *args.compare]]
+    if len(set(folders)) != len(folders):
+        parser.error('Run directories must be distinct')
+    runs = {folder: {name: read_run(folder, name) for name in NAMES} for folder in folders}
+    available = min(run['data']['t'][-1] for studies in runs.values() for run in studies.values())
+    end = available if args.tmax is None else args.tmax
+    if not np.isfinite(end) or end <= 0 or end > available + 1e-10:
+        parser.error('tmax must be positive and within every simulation')
+    figures = {name: [] for name in [*NAMES, 'switching', 'harmonics']}
+    summaries = {}
+    for folder, studies in runs.items():
+        summary = {'time_window_s': [0, end], 'studies': {}}
+        fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
+        for ax, (name, run) in zip(axes, studies.items()):
+            run['samples'] = len(run['data']['t'])
+            mask = run['data']['t'] <= end
+            run['data'] = {key: value[mask] for key, value in run['data'].items()}
+            prediction = pulse_prediction(run)
+            spectrum = harmonics(run, end)
+            summary['studies'][name] = summarize(run, prediction, spectrum)
+            figures[name].append((folder, control_figure(run, end)))
+            if name == 'GFM':
+                figures['switching'].append((folder, switching_figure(run, prediction, end)))
+            x = np.arange(len(spectrum['frequencies_hz']))
+            ax.bar(x - .18, spectrum['measured_peak_V'], .36, color=BLUE, label='simulated bridge voltage')
+            ax.bar(x + .18, spectrum['predicted_peak_V'], .36, color=ORANGE, label='analytic PWM prediction')
+            ax.set_yscale('log')
+            ax.set_ylim(bottom=1e-3)
+            ax.set_xlim(-.6, len(x) - .4)
+            ax.set_ylabel('Peak amplitude [V]')
+            ax.set_title(fr'{name}: $\mu={run["mu"]:g}$')
+            ax.legend(loc='upper right')
+        axes[-1].set_xticks(x, [f'{f:g}' for f in spectrum['frequencies_hz']])
+        axes[-1].set_xlabel('Frequency [Hz]')
+        begin, finish = spectrum['window_s']
+        fig.supxlabel(f'Fourier amplitudes over {begin:.5f}–{finish:.5f} s; the window includes transients.', fontsize=9)
+        figures['harmonics'].append((folder, fig))
+        summaries[folder] = summary
+    limits = {}
+    for name, group in figures.items():
+        limits[name] = []
+        for axes in zip(*(fig.axes for _, fig in group)):
+            bounds = (min(ax.get_ylim()[0] for ax in axes), max(ax.get_ylim()[1] for ax in axes))
+            for ax in axes:
+                ax.set_ylim(*bounds)
+            limits[name].append({'x': list(axes[0].get_xlim()), 'y': list(bounds)})
+            if any(ax.get_xlim() != axes[0].get_xlim() for ax in axes):
+                raise ValueError(f'{name}: incompatible comparison axes')
+        for folder, fig in group:
+            for extension in ['png', 'pdf']:
+                fig.savefig(folder / f'{name}.{extension}')
+            plt.close(fig)
+    for folder, summary in summaries.items():
+        summary['axis_limits'] = limits
+        (folder / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+        print(f'{folder}: four PNG/PDF figures and summary.json')
 
 
 if __name__ == '__main__':

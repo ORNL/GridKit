@@ -8,40 +8,43 @@
 \node[hblock] (Z) at (0, 2.1) {$\mathbf{Z}(s)$};
 
 % ================= Shunt branches Y(s) =================
-\node[vblock] (Yk) at (-2.8, -0.2) {$\mathbf{Y}(s)$};
-\node[vblock] (Ym) at ( 2.8, -0.2) {$\mathbf{Y}(s)$};
+\node[vblock] (Yk) at (-3.6, -0.2) {$\mathbf{Y}(s)$};
+\node[vblock] (Ym) at ( 3.6, -0.2) {$\mathbf{Y}(s)$};
 
-% ================= Top rail + injection leads (current leaving) =================
-\draw[->, line] (Z.west) -- (-6.2, 2.1);
-\draw[->, line] (Z.east) -- ( 6.2, 2.1);
-\node[sig, anchor=east] at (-6.45, 2.1) {$\mathbf{i}_1$};
-\node[sig, anchor=west] at ( 6.45, 2.1) {$\mathbf{i}_2$};
+% ================= Voltage terminals =================
+\node[signal, label={[sig]above:$\mathbf{v}_1$}] (Tk) at (-3.6, 2.1) {};
+\node[signal, label={[sig]above:$\mathbf{v}_2$}] (Tm) at ( 3.6, 2.1) {};
 
-% shunt taps (T-junctions on the rail)
-\node[signal] (Tk) at (-2.8, 2.1) {};
-\node[signal] (Tm) at ( 2.8, 2.1) {};
+% ================= Series terminal currents =================
+\draw[line] (Z.west) -- (Tk);
+\draw[line] (Z.east) -- (Tm);
+\draw[->, line] (Tk) -- (-2.0,2.1)
+    node[midway, above, sig] {$\mathbf{i}_{12}$};
+\draw[->, line] (Tm) -- (2.0,2.1)
+    node[midway, above, sig] {$\mathbf{i}_{21}$};
 
 % ================= Shunt wiring =================
 \draw[line] (Tk) -- (Yk.north);
 \draw[line] (Tm) -- (Ym.north);
-\draw[line] (Yk.south) -- (-2.8, -2.5);
-\draw[line] (Ym.south) -- ( 2.8, -2.5);
+\draw[line] (Yk.south) -- (-3.6, -2.5);
+\draw[line] (Ym.south) -- ( 3.6, -2.5);
 
 % ================= Ground symbols =================
-\draw[semithick] (-3.15,-2.50) -- (-2.45,-2.50);
-\draw[semithick] (-3.02,-2.65) -- (-2.58,-2.65);
-\draw[semithick] (-2.89,-2.80) -- (-2.71,-2.80);
+\draw[semithick] (-3.95,-2.50) -- (-3.25,-2.50);
+\draw[semithick] (-3.82,-2.65) -- (-3.38,-2.65);
+\draw[semithick] (-3.69,-2.80) -- (-3.51,-2.80);
 
-\draw[semithick] ( 2.45,-2.50) -- ( 3.15,-2.50);
-\draw[semithick] ( 2.58,-2.65) -- ( 3.02,-2.65);
-\draw[semithick] ( 2.71,-2.80) -- ( 2.89,-2.80);
+\draw[semithick] ( 3.25,-2.50) -- ( 3.95,-2.50);
+\draw[semithick] ( 3.38,-2.65) -- ( 3.82,-2.65);
+\draw[semithick] ( 3.51,-2.80) -- ( 3.69,-2.80);
 
-% ================= Terminals + labels =================
-\node[signal, label={[sig]above:$\mathbf{v}_1$}] at (-5.4, 2.1) {};
-\node[signal, label={[sig]above:$\mathbf{v}_2$}] at ( 5.4, 2.1) {};
-
-% ================= Model enclosure =================
-\draw[enclosure] (-4.6, -3.6) rectangle (4.6, 3.6);
+% ================= Ownership =================
+\draw[enclosure] (-5.4, -3.6) rectangle (5.4, 3.6);
+\draw[dashed, semithick] (-1.8, -3.6) -- (-1.8, 3.6);
+\draw[dashed, semithick] ( 1.8, -3.6) -- ( 1.8, 3.6);
+\node[sig] at (-3.6,3.95) {Bus 1};
+\node[sig] at (0,3.95) {LineLumped};
+\node[sig] at (3.6,3.95) {Bus 2};
 
 \end{tikzpicture}
 \end{document}

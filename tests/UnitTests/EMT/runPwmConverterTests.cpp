@@ -13,6 +13,9 @@ int main()
   result += test.parseAndAssemble();
   result += test.constantSignals();
   result += test.runtimeSmoothing();
+  result += test.sampledMean();
+  result += test.sampledResolution();
+  result += test.sampledTiming();
   result += test.monitors();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();

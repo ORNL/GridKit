@@ -1,3 +1,5 @@
+/*.csv
+__pycache__/
 simulation/*
 !simulation/*.png
 !simulation/*.pdf
