@@ -228,7 +228,22 @@ future file-backed Containers; file inclusion is not part of this revision.
   `DependentVoltageSource` | `ea`    | Input     | Signal        | Yes
   `DependentVoltageSource` | `eb`    | Input     | Signal        | Yes
   `DependentVoltageSource` | `ec`    | Input     | Signal        | Yes
+  `PWM`                    | `m`     | Input     | Three Signal IDs | No
   `PWM`                    | `s`     | Output    | Three Signal IDs | No
+  `Park`                   | `input` | Input     | Three Signal IDs | Yes
+  `Park`                   | `theta` | Input     | Signal | Yes
+  `Park`                   | `out` | Output | Three Signal IDs | No
+  `Angle`                  | `omega` | Input | Signal | Yes
+  `Angle`                  | `theta` | Output | Signal | No
+  `Modulation`             | `u` | Input | Three Signal IDs | Yes
+  `Modulation`             | `vdc` | Input | Signal | Yes
+  `Modulation`             | `m` | Output | Three Signal IDs | No
+  `InnerCurrentControl`    | `v`, `i`, `iref` | Input | Two Signal IDs | Yes
+  `InnerCurrentControl`    | `omega`, `vdc` | Input | Signal | Yes
+  `InnerCurrentControl`    | `ilim`, `u` | Output | Two Signal IDs | No
+  `OuterVoltageControl`    | `vref`, `v`, `ig`, `ilim` | Input | Two Signal IDs | Yes
+  `OuterVoltageControl`    | `omega` | Input | Signal | Yes
+  `OuterVoltageControl`    | `iref` | Output | Two Signal IDs | No
   `DCLink`                 | `isrc`, `idc` | Input | Signal | Yes
   `DCLink`                 | `vdc` | Output | Signal | No
   `Converter`              | `s`     | Input     | Three Signal IDs | Yes
@@ -275,16 +290,32 @@ Omit an optional input to use the model's internal default or latched value.
 line-to-line RMS voltage parameter `V` converts bus voltages to per unit;
 connect its `efd` output to the Machine field-voltage input.
 
-PWM and Converter vector ports use arrays of three scalar signal IDs in
-phase order `a`, `b`, `c`. The scalar keys `sa`, `sb`, `sc` and `voa`, `vob`,
-`voc` address individual phases. Vector monitors `s` and `vo` expand to these
-three scalar columns.
+PWM, Converter, and Modulation vector ports use arrays of three scalar signal
+IDs in phase order `a`, `b`, `c`. The scalar keys `ma`, `mb`, `mc`, `sa`, `sb`,
+`sc`, and `voa`, `vob`, `voc` address individual phases. Vector monitors `m`,
+`s`, and `vo` expand to these three scalar columns.
 
 ```json
 {
   "class": "PWM",
   "id": "pwm",
   "params": { "M": 0.8, "fm": 60, "fc": 900 },
+  "outputs": { "s": ["sa", "sb", "sc"] },
+  "mon": ["s"]
+}
+```
+
+To drive PWM from a controller, connect all three modulation inputs. Only
+`fc` is required in this mode; `M` and `fm` apply to the unconnected sinusoidal
+mode. The input is sampled at accepted carrier boundaries and applied over the
+following carrier period.
+
+```json
+{
+  "class": "PWM",
+  "id": "pwm",
+  "params": { "fc": 10000 },
+  "inputs": { "m": ["ma", "mb", "mc"] },
   "outputs": { "s": ["sa", "sb", "sc"] },
   "mon": ["s"]
 }
@@ -305,8 +336,9 @@ Alternatively, the embedding program or another component supplies `dc`. A
 DependentVoltageSource can consume `ea`, `eb`, and `ec` and publish its phase
 currents to `ia`, `ib`, and `ic`. The bridge publishes the current drawn from
 the DC link as `idc`, with `vdc * idc = vo · i`. Computed signals
-are evaluated from the current time and inputs when read, including through
-Container boundaries. These connections introduce no DAE variables.
+are evaluated when read, including through Container boundaries. Sampled PWM
+uses its held modulation command between carrier boundaries. These connections
+introduce no DAE variables.
 
 For a dynamic DC link, declare `dc` and `idc` without constant values, and a
 source-current signal such as `{"id": "isrc", "value": 80.0}`. Connect the capacitor
@@ -326,11 +358,47 @@ to the bridge above:
 The capacitor adds one differential voltage. Set its initial value with
 `"capacitor": {"vdc": 600.0}` in the state file's `devices` object.
 
+The current and voltage controllers use two-signal vector ports in power-invariant
+`d`, `q` order. The same angle and angular frequency must be used for all
+connected Park transforms and controller inputs. For example:
+
+```json
+{
+  "class": "InnerCurrentControl",
+  "id": "current",
+  "params": { "L": 0.002, "Kp": 4.0, "Ki": 200.0, "Kaw": 2000.0, "Imax": 30.0, "Mmax": 0.95 },
+  "inputs": { "v": ["vd", "vq"], "i": ["id", "iq"], "iref": ["irefd", "irefq"], "omega": "omega", "vdc": "dc" },
+  "outputs": { "ilim": ["ilimd", "ilimq"], "u": ["ud", "uq"] },
+  "mon": ["xi", "ilim", "u"]
+}
+```
+
+Use `Park` with `input` in `a`, `b`, `c` order and `out` in `d`, `q`, `0` order.
+Set `params: {"inverse": true}` to reverse the transformation. Its scalar keys
+are `u1`, `u2`, `u3` and `y1`, `y2`, `y3`. Connect `Angle.theta` to each Park
+operator and supply the same `omega` to the Angle and controllers.
+
+For the switching bridge, inverse-transform `[ud, uq, 0]`, connect the resulting
+three-phase voltage command to `Modulation.u`, and connect `Modulation.m` to
+`PWM.m`. Both the current controller and Modulation use the bridge's DC-link
+voltage. Modulation requires a finite positive DC voltage.
+
+For cascaded grid-forming control, connect `OuterVoltageControl.iref` to the
+current controller's `iref`, and return the limited `ilim` to the voltage
+controller. The `v` input is the filter-capacitor voltage; the current loop's
+`i` input is the inverter-side current and the voltage loop's `ig` input is the
+grid-side current. Vector monitors expand to scalar `d` and `q` columns.
+
 #### Device classes
 
   Class                 | Model
   ----------------------|------------------------------------------------------
   `PWM`                 | [PWM](Component/Controller/PWM/README.md)
+  `Park`                | [Park](Operators/Reference/Park/README.md)
+  `Angle`               | [Angle](Operators/Reference/Angle/README.md)
+  `Modulation`          | [Modulation](Operators/Modulation/README.md)
+  `InnerCurrentControl` | [InnerCurrentControl](Component/Controller/InnerCurrentControl/README.md)
+  `OuterVoltageControl` | [OuterVoltageControl](Component/Controller/OuterVoltageControl/README.md)
   `DCLink`              | [DC Link](Component/Controller/DCLink/README.md)
   `Converter`           | [Converter](Operators/Converter/README.md)
   `Bus`                 | [Bus](Component/Bus/README.md)

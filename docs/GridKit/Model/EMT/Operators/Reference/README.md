@@ -5,6 +5,7 @@
 :titlesonly:
 :hidden:
 
+Angle <Angle/README>
 Clarke <Clarke/README>
 Park <Park/README>
 Rotation <Rotation/README>

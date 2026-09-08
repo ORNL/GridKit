@@ -4,6 +4,8 @@ EMT controller models exchange signals with other components.
 
 ## Models
 
+- [InnerCurrentControl](InnerCurrentControl/README.md): converter current control in $dq$ coordinates.
+- [OuterVoltageControl](OuterVoltageControl/README.md): filter-capacitor voltage control in $dq$ coordinates.
 - [DC Link](DCLink/README.md): capacitor voltage and current balance.
 - [IEEET1](IEEET1/README.md)
 - [PWM](PWM/README.md)
