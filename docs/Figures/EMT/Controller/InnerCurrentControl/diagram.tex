@@ -45,25 +45,17 @@
     -- (command.north);
 \node[pm, above right=1pt and 0pt of command.north] {$+$};
 
-% DC-dependent voltage-command limit.
-\node[signal, label={[sig]above:$\mathbf{z}$}] (z) at (7.8,-0.8) {};
-\node[block, minimum width=3.2cm, minimum height=1.3cm]
-    (Ulim) at (10.4,-0.8)
-    {$v_{\mathrm{dc}}\mathcal{L}_u^{-1/2}$};
-\node[signal] (u) at (12.8,-0.8) {};
-\draw[line] (command.east) -- (z);
-\draw[->, line] (z) -- (Ulim.west);
-\draw[line] (Ulim.east) -- (u);
-\draw[->, line] (u) -- node[sig, above, pos=0.75] {$\mathbf{u}$} (14.5,-0.8);
-
-% Tracking anti-windup: limited minus unlimited voltage command.
+% Voltage command output and tracking return on the right boundary.
+\node[signal] (u) at (7.8,-0.8) {};
 \node[sum] (tracking) at (7.8,\trackingrow) {$\Sigma$};
 \node[block, minimum width=\gainwidth] (Kaw)
     at (2.2,\trackingrow) {$K_{\mathrm{aw}}$};
-\coordinate (uloop) at (12.8,\trackingrow);
-\draw[->, line] (z) -- (tracking.north);
+\draw[line] (command.east) -- (u);
+\draw[->, line] (u) -- node[sig, above, pos=0.75] {$\mathbf{u}$} (10.2,-0.8);
+\draw[->, line] (u) -- (tracking.north);
 \node[pm, above left=1pt and 0pt of tracking.north] {$-$};
-\draw[->, line] (u) -- (uloop) -- (tracking.east);
+\draw[->, line] (10.2,\trackingrow) -- node[sig, above, pos=0.25]
+    {$\mathbf{u}^{\mathrm{lim}}$} (tracking.east);
 \node[pm, above right=0pt and 1pt of tracking.east] {$+$};
 \draw[->, line] (tracking.west) -- (Kaw.east);
 \draw[->, line] (Kaw.north) -- (rate.south);
@@ -74,7 +66,6 @@
 \node[sig] (i) at (0,5) {$\mathbf{i}$};
 \node[sig] (omega) at (6.3,5) {$\omega$};
 \node[sig] (v) at (7.1,5) {$\mathbf{v}$};
-\node[sig] (vdc) at (10.4,5) {$v_{\mathrm{dc}}$};
 \node[signal] (isplit) at (0,3.6) {};
 \draw[->, line] (icmd.east) -- (Ilim.west);
 \draw[->, line] (i.south) -- (error.north);
@@ -82,7 +73,6 @@
 \draw[->, line] (isplit) -- (5.5,3.6) -- (feedforward.north -| 5.5,0);
 \draw[->, line] (omega.south) -- (feedforward.north -| omega);
 \draw[->, line] (v.south) -- (feedforward.north -| v);
-\draw[->, line] (vdc.south) -- (Ulim.north);
 
 % Limited current is returned to the outer controller.
 \draw[->, line] (ilim) -- (-1,5);
@@ -92,8 +82,7 @@
 \begin{scope}[on background layer]
     \node[operator enclosure, densely dotted,
         fit=(Ilim)(ilim)(error)(Kp)(Ki)(rate)(integrator)
-            (feedforward)(command)(z)(Ulim)(u)(tracking)(Kaw)(uloop)
-            (isplit)] {};
+            (feedforward)(command)(u)(tracking)(Kaw)(isplit)] {};
 \end{scope}
 
 \end{tikzpicture}

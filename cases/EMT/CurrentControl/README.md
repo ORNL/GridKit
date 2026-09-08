@@ -9,8 +9,9 @@ controllers, and reference-frame operators.
 
 Both cases connect `PLL` to the Filter capacitor-voltage outputs. Its `theta` output supplies every
 `Park` transform, and its `omega` output supplies the controller frequency
-inputs. The inverse transform and `Modulation` convert the limited dq voltage
-command to the phase modulation inputs of `PWM`.
+inputs. `Modulation` limits the dq voltage command to the available DC
+voltage and returns the limited command to `InnerCurrentControl`; the inverse
+transform converts its modulation command to the phase inputs of `PWM`.
 
 `GFL` uses `OuterPowerControl` with grid-current targets derived as `Pref/V`
 and `-Qref/V`. `GFM` uses `OuterVoltageControl` to regulate the
@@ -21,8 +22,8 @@ its `ilim` output for anti-windup.
 
 `DCLink` uses 20 mF with an initial voltage of 400 V. Constant source current
 matches the initial fundamental power balance; subsequent power imbalance
-changes the DC voltage. Its voltage feeds current control, Modulation, and
-Converter; the converter DC current returns to the capacitor.
+changes the DC voltage. Its voltage feeds Modulation and Converter; the
+converter DC current returns to the capacitor.
 
 Initial states are balanced fundamental operating-point estimates. The PLL
 infers its initial angle from capacitor voltage; controller outputs determine

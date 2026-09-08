@@ -20,7 +20,6 @@ namespace GridKit
         Ki,   ///< \f$K_I\f$ Integral gain [ohm/s]
         Kaw,  ///< \f$K_{\mathrm{aw}}\f$ Tracking anti-windup gain [1/s]
         Imax, ///< \f$I^{\max}\f$ Current-command norm limit [A]
-        Mmax, ///< \f$M^{\max}\f$ Modulation limit [-]
       };
 
       enum class InnerCurrentControlInputs : size_t
@@ -32,7 +31,8 @@ namespace GridKit
         icmdd, ///< \f$i_d^{\mathrm{cmd}}\f$ Current command [A]
         icmdq, ///< \f$i_q^{\mathrm{cmd}}\f$ Current command [A]
         omega, ///< \f$\omega\f$ Electrical angular frequency [rad/s]
-        vdc,   ///< \f$v_{\mathrm{dc}}\f$ DC-link voltage [V]
+        ulimd, ///< \f$u_d^{\mathrm{lim}}\f$ Limited voltage command [V]
+        ulimq, ///< \f$u_q^{\mathrm{lim}}\f$ Limited voltage command [V]
         SIZE,
       };
 

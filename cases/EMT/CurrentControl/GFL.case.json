@@ -91,13 +91,16 @@
       "id": "uq"
     },
     {
-      "id": "ua"
+      "id": "md"
     },
     {
-      "id": "ub"
+      "id": "mq"
     },
     {
-      "id": "uc"
+      "id": "ulimd"
+    },
+    {
+      "id": "ulimq"
     },
     {
       "id": "ma"
@@ -408,8 +411,7 @@
         "Kp": 5.026548245743669,
         "Ki": 502.65482457436696,
         "Kaw": 2513.2741228718346,
-        "Imax": 30,
-        "Mmax": 0.95
+        "Imax": 30
       },
       "inputs": {
         "v": [
@@ -421,10 +423,13 @@
           "iq"
         ],
         "omega": "omega",
-        "vdc": "vdc",
         "icmd": [
           "icmdd",
           "icmdq"
+        ],
+        "ulim": [
+          "ulimd",
+          "ulimq"
         ]
       },
       "outputs": {
@@ -444,6 +449,33 @@
       ]
     },
     {
+      "class": "Modulation",
+      "id": "modulation",
+      "params": {
+        "Mmax": 0.95
+      },
+      "inputs": {
+        "u": [
+          "ud",
+          "uq"
+        ],
+        "vdc": "vdc"
+      },
+      "outputs": {
+        "m": [
+          "md",
+          "mq"
+        ],
+        "ulim": [
+          "ulimd",
+          "ulimq"
+        ]
+      },
+      "mon": [
+        "m"
+      ]
+    },
+    {
       "class": "Park",
       "id": "inverse",
       "params": {
@@ -451,40 +483,21 @@
       },
       "inputs": {
         "input": [
-          "ud",
-          "uq",
+          "md",
+          "mq",
           "zero"
         ],
         "theta": "theta"
       },
       "outputs": {
         "out": [
-          "ua",
-          "ub",
-          "uc"
-        ]
-      }
-    },
-    {
-      "class": "Modulation",
-      "id": "modulation",
-      "inputs": {
-        "u": [
-          "ua",
-          "ub",
-          "uc"
-        ],
-        "vdc": "vdc"
-      },
-      "outputs": {
-        "m": [
           "ma",
           "mb",
           "mc"
         ]
       },
       "mon": [
-        "m"
+        "out"
       ]
     },
     {

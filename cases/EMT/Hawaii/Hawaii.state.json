@@ -1059,6 +1059,14 @@
     },
     "fault_switch": {
       "open": true
+    },
+    "fault_discharge_switch": {
+      "open": false
+    },
+    "fault_load": {
+      "ia": 0.0,
+      "ib": 0.0,
+      "ic": 0.0
     }
   }
 }

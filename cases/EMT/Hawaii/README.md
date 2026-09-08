@@ -95,12 +95,13 @@ evidence of matching GENROU fault dynamics.
 Each source REGCA unit is replaced by the
 [GFL switching-inverter arrangement](../CurrentControl/README.md): PLL,
 voltage and current Park transforms, OuterPowerControl, InnerCurrentControl,
-inverse Park, Modulation, PWM, Converter, DCLink, and a physical LCL Filter.
+Modulation, inverse Park, PWM, Converter, DCLink, and a physical LCL Filter.
 `Converter.e` drives `Filter.e`; `Filter.ig` injects into the original bus.
 `Filter.i` supplies Converter and the inner current loop, while `Filter.ig`
 supplies the outer loop through a separate Park transform. PLL and the
 voltage Park transform read `Filter.vo`. All Park transforms share PLL's
-`theta`, and the inner controller receives PLL's `omega`.
+`theta`, and the inner controller receives PLL's `omega`. Modulation limits
+the dq voltage command and returns it to the inner controller.
 Current targets `Pref/V` and
 `-Qref/V` are derived from power-reference parameters and rated voltage.
 Those parameters reproduce the initialized grid current in the capacitor-voltage frame.
@@ -163,18 +164,29 @@ controls.
 
 ## Fault and comparison
 
-At 1.0 s, `fault_switch` closes a three-phase grounded resistive `LoadZ` at
-bus 1; it opens at 1.10 s. Each phase resistance is
-$0.01 V_{\mathrm{b},1}^2/S_\mathrm{b}=1.9044$ ohm, matching the magnitude of
-the source inductive fault impedance. This resistive choice changes the fault current angle and dissipation. It permits
-commanded clearing without stranding inductive energy in an ideal open switch.
-No transmission branch trips.
+At 1.0 s, `fault_switch` connects a three-phase grounded inductive `LoadZ` at
+bus 1; it opens at 1.15 s. The fault uses zero resistance and diagonal
+inductance $L_f=0.01 V_{\mathrm{b},1}^2/(\omega_\mathrm{b}S_\mathrm{b})
+=5.05158$ mH per phase, matching the source $\mathrm{j}0.01$ p.u. impedance
+at 60 Hz. The inductors start de-energized. No transmission branch trips.
 
-The supplied PowerWorld reference and source validation solver clear at
-**1.15 s**, whereas this request specifies **1.10 s**. The four comparison
-plots label both intervals. Differences include timing, fault impedance,
-machine conversion, core branches, and replacement inverter controls; their
-error statistics are descriptive and are not a PowerWorld validation claim.
+`fault_discharge_switch` connects a separate grounded resistive `LoadZ` to
+`fault_bus` whenever the grid fault switch is open. It opens at fault inception
+and closes at clearing, in the same event groups as `fault_switch`.
+The discharge resistance is $R_d=1.9044$ ohm per phase; it is disconnected
+throughout the applied fault. After clearing, the isolated inductor currents
+remain continuous and decay according to $L_f\dot{\mathbf{i}}+R_d\mathbf{i}=0$,
+with $L_f/R_d=2.65258$ ms. This discharge circuit is an explicit idealized
+clearing assumption; its stored energy is dissipated locally after the grid
+connection opens.
+
+The source PhasorDynamics validation solver and EMT solver both clear at
+**1.15 s**. The comparison plots use freshly simulated GridKit PhasorDynamics
+trajectories and label the actual intervals recorded by each run. Differences include
+machine conversion, core branches, and replacement
+inverter controls; the error statistics describe these different models.
+The copied phasor case is unchanged. Both faults have the same fundamental
+impedance and clearing time; EMT additionally retains the inductor transient.
 Machine speed is plotted as $\omega_r-1$, powers on the 100 MVA system base,
 and bus voltage as the positive-sequence magnitude on its local voltage base.
 
@@ -187,8 +199,9 @@ Initial power flow | At bus 23, total synchronous dispatch changes by -0.152426 
 Positive-sequence network | Uncoupled balanced three-phase equivalents; no source-derived zero-sequence or frequency-dependent data
 Exciter sensing | Existing 1 ms sensing floor replaces source zero lag
 REGCA/REECB/REPCA | Explicit switching plants with fabricated filter/control/DC data and the omitted functions listed above
-Fault impedance | Resistive magnitude equivalent replaces inductance
-Fault clearing | Requested 1.10 s replaces reference 1.15 s
+Fault impedance | 5.05158 mH per phase reproduces the source inductive impedance at 60 Hz
+Fault clearing circuit | Isolated switched discharge resistors preserve inductor current and dissipate stored energy
+Fault clearing | 1.15 s, matching the PhasorDynamics validation solver
 Measurements | Centred cycle averages remove switching ripple from the phasor comparison
 
 ## Run and validation
@@ -203,9 +216,10 @@ python3 validate.py --exe ../../../build/application/EMT/EMTDynamicSimulation
 
 The validator uses only the Python standard library. It checks conversion
 invariants, LCL wiring and initial KVL/current/DC-power balances, finite
-trajectories, event timing, terminal dispatch, current-reference limits,
+trajectories, paired event timing, fault-current continuity and analytical
+discharge decay, terminal dispatch, current-reference limits,
 DC voltage, and the fault/recovery response. The monitored current-limit
 ratio allows $10^{-4}$ numerical interpolation error. Solver monitor cadence
-does not measure accepted solver steps. The full ten-second study and
-PowerWorld comparison scripts live in `examples/EMT/Hawaii`; generated plots,
+does not measure accepted solver steps. The full five-second study and
+GridKit PhasorDynamics comparison scripts live in `examples/EMT/Hawaii`; generated plots,
 metrics, raw simulation CSVs, and logs belong in ignored result directories.
