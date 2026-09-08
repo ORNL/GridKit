@@ -43,14 +43,16 @@ Symbol | Port | Type | Units | Description | Note
 $\mathbf{v}^{\mathrm{ref}}$ | `vref` | Input | [V] | Capacitor-voltage reference | $\mathbf{v}^{\mathrm{ref}} \in \mathbb{R}^2$
 $\mathbf{v}$ | `v` | Input | [V] | Filter-capacitor voltage | $\mathbf{v} \in \mathbb{R}^2$
 $\mathbf{i}_g$ | `ig` | Input | [A] | Grid-side filter current | $\mathbf{i}_g \in \mathbb{R}^2$
-$\omega$ | `omega` | Input | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied by the angle source
+$\omega$ | `omega` | Input | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied through the frequency signal port
 $\mathbf{i}^{\mathrm{lim}}$ | `ilim` | Input | [A] | Limited current command | From InnerCurrentControl
 $\mathbf{i}^{\mathrm{cmd}}$ | `icmd` | Output | [A] | Total current command | $\mathbf{i}^{\mathrm{cmd}} \in \mathbb{R}^2$
 
 All vectors use $(d,q)$ order in the same power-invariant
 [Park](../../../Operators/Reference/Park/README.md) frame, with zero-sequence
-components omitted. All inputs must be connected and finite. A grid-forming
-primary controller supplies the common frame angle, frequency, and
+components omitted. All inputs must be connected and finite. In the
+[voltage-control example](../../../../../../examples/EMT/CurrentControl/README.md),
+[PLL](../../../Operators/Reference/PLL/README.md) supplies the common frame angle
+and frequency through signal ports, with
 $\mathbf{v}^{\mathrm{ref}}=[V^\star,0]^\mathsf{T}$. For balanced voltage,
 $V^\star=V_{\mathrm{LL,rms}}^\star$.
 
@@ -91,7 +93,7 @@ Symbol | Units | Description | Note
 $\mathbf{v}^{\mathrm{ref}}$ | [V] | Capacitor-voltage reference | $\mathbf{v}^{\mathrm{ref}} \in \mathbb{R}^2$
 $\mathbf{v}$ | [V] | Filter-capacitor voltage | $\mathbf{v} \in \mathbb{R}^2$
 $\mathbf{i}_g$ | [A] | Grid-side filter current | $\mathbf{i}_g \in \mathbb{R}^2$
-$\omega$ | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied by the angle source
+$\omega$ | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied through the frequency signal port
 $\mathbf{i}^{\mathrm{lim}}$ | [A] | Limited current command | From InnerCurrentControl
 
 ## Model Equations

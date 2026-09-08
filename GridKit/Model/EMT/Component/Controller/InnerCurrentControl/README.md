@@ -58,7 +58,7 @@ Symbol | Port | Type | Units | Description | Note
 $\mathbf{v}$ | `v` | Input | [V] | Filter-capacitor voltage | $\mathbf{v} \in \mathbb{R}^2$
 $\mathbf{i}$ | `i` | Input | [A] | Inverter-side filter current | $\mathbf{i} \in \mathbb{R}^2$
 $\mathbf{i}^{\mathrm{cmd}}$ | `icmd` | Input | [A] | Total current command | $\mathbf{i}^{\mathrm{cmd}} \in \mathbb{R}^2$
-$\omega$ | `omega` | Input | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied by the angle source
+$\omega$ | `omega` | Input | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied through the frequency signal port
 $v_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC-link voltage | $v_{\mathrm{dc}} \ge 0$
 $\mathbf{i}^{\mathrm{lim}}$ | `ilim` | Output | [A] | Limited current command | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
 $\mathbf{u}$ | `u` | Output | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
@@ -67,9 +67,10 @@ All vectors use $(d,q)$ order in the same power-invariant
 [Park](../../../Operators/Reference/Park/README.md) frame, with zero-sequence
 components omitted. All inputs must be connected and finite.
 
-The `omega` input is read from the angle source throughout the simulation.
-It may vary with time or be supplied as a constant. The `ilim` output provides
-outer-loop anti-windup feedback.
+The `omega` signal input is read throughout the simulation. In the switching
+examples, [PLL](../../../Operators/Reference/PLL/README.md) supplies this frequency
+and the common Park angle through its output signals. The `ilim` output
+provides outer-loop anti-windup feedback.
 
 ## Submodels
 
@@ -109,7 +110,7 @@ Symbol | Units | Description | Note
 $\mathbf{v}$ | [V] | Filter-capacitor voltage | $\mathbf{v} \in \mathbb{R}^2$
 $\mathbf{i}$ | [A] | Inverter-side filter current | $\mathbf{i} \in \mathbb{R}^2$
 $\mathbf{i}^{\mathrm{cmd}}$ | [A] | Total current command | $\mathbf{i}^{\mathrm{cmd}} \in \mathbb{R}^2$
-$\omega$ | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied by the angle source
+$\omega$ | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied through the frequency signal port
 $v_{\mathrm{dc}}$ | [V] | DC-link voltage | $v_{\mathrm{dc}} \ge 0$
 
 ## Model Equations
