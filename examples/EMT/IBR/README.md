@@ -3,7 +3,7 @@
 These six studies share `TenBus.case.json` and the initial-state estimate
 `TenBus.state.json` in `cases/EMT/IBR/`.
 See the [case description](../../../cases/EMT/IBR/README.md) for topology,
-parameters, initialization, and the explicitly compensated PWM smoothing.
+parameters, initialization, and continuous PWM smoothing.
 
 | Solver file | Events |
 |---|---|
@@ -12,7 +12,7 @@ parameters, initialization, and the explicitly compensated PWM smoothing.
 | `03_LoadPulse.solver.json` | Connect that load at 1.0 s; shed it at 1.5 s |
 | `04_FaultClearing.solver.json` | Apply a three-phase 2 Ω/phase shunt at 1.0 s; clear at 1.06 s |
 | `05_TieReclosing.solver.json` | Open the 7–8 tie at 1.0 s; reclose at 1.8 s |
-| `06_FaultClearingSwitching.solver.json` | Same fault/clearing times as 04, with `mu=50000`, 10 µs monitoring and explicitly adjusted DC constants |
+| `06_FaultClearingSwitching.solver.json` | Same fault/clearing times as 04, with `mu=50000` and 10 µs monitoring |
 
 Every run spans 0–3 s with adaptive IDA stepping and sparse KLU. The first
 five use 100 µs monitor spacing and default `mu=240`; the sixth uses 10 µs.
@@ -41,14 +41,16 @@ Open the local `results/index.html` for the one-line diagram, scenario
 comparison, and links to each scenario's plots and raw data. The HTML is local
 and requires no server or internet connection. PNG figures are accompanied by
 SVG for the summary plots and PDF for the one-line and complete DAE traces.
-Generated data and plots live under ignored `results/`, except the reference
-image `switching_transient.png` beside this README. Expect roughly 6 GB of CSV
-data for all six runs.
+Generated data and plots live under ignored `results/`. Expect roughly 6 GB
+of CSV data for all six full runs.
 
 A solver JSON also runs directly with `EMTDynamicSimulation`; its output paths
 are relative to the current working directory. Build and install trees preserve
-the same relative case paths. CTest `EMTTenBusIBR` runs all six scenarios with
-a shortened time horizon and checks their events and output completeness.
+the same relative case paths. CTest `EMTTenBusIBR` runs only `04_FaultClearing`
+over 0–30 ms, with fault application at 10 ms, clearing at 10.6 ms, and 1 ms
+monitoring (34 samples including event pairs). It checks nominal converter
+voltage, event commands and output completeness. `run.py --smoke` selects
+this single scenario by default; the full studies are separate manual runs.
 
 ## Recorded data and checks
 
@@ -88,26 +90,20 @@ the original CSVs retain every sample and every derivative.
 
 ## Resolved switching study
 
-![Ten-bus IBR bridge voltage and network-current injection during fault clearing](switching_transient.png)
-
 `06_FaultClearingSwitching.solver.json` sets `mu=50000` before model
 construction. The logistic 10–90% transition width is `2 ln(9)/mu`, about
 87.9 µs, sampled at 10 µs intervals. The carrier remains 900 Hz. At default
 `mu=240`, the width is 18.3 ms: the first five studies suppress switching.
 For sharper edges, `mu=200000` gives 22.0 µs and requires finer time resolution.
 
-Its `signal_values` override sets each DC source to 28918.846170570516 V.
-This replaces the default case's 407357 V smoothing compensation and preserves
-the 1.02 pu open-circuit AC fundamental; it is not an automatic rescaling by
-the solver. Changing only mu while retaining 407357 V would apply excessive
-AC voltage. The shared mu also changes machine saturation and governor
-limiter smoothing, so this is a study-wide smoothing comparison.
+All scenarios retain the same 28732.515 V DC sources. The shared mu also
+changes machine saturation and governor limiter smoothing, so this is a
+study-wide smoothing comparison.
 
-`run.py --mu VALUE` adjusts the three DC constants to preserve the AC
-fundamental and selects output spacing of at most 10 µs. Group comparisons
+`run.py --mu VALUE` changes smoothing and selects output spacing of at most
+10 µs, leaving DC voltage unchanged. Group comparisons
 under `results/mu-240/`, `results/mu-3600/`, and `results/mu-50000/`, each
-containing scenario directories. `mu=3600` gives a 1.22 ms edge width and
-retains only 11.9% and 4.17% of the ideal 780 and 1020 Hz sideband amplitudes.
+containing scenario directories. `mu=3600` gives a 1.22 ms edge width.
 Use `plot.py --transients-only --results PATH` for matching voltage/current
 panels and a `transients.html` gallery without the complete state plots.
 
@@ -121,12 +117,10 @@ python3 examples/EMT/IBR/plot.py --switching-only
 This plots bridge voltage `voa` and `DependentVoltageSource_filter_4_ia`
 (positive into bus 4), with full samples around fault clearing. It checks KCL
 at all three IBR buses and PWM/bridge harmonics through 2.94 kHz against the independent
-sampled-edge predictor in `cases/EMT/CoupledGrid/pwm_analysis.py`, including
-logistic attenuation. The 900 Hz carrier cancels in bridge phase voltage;
+continuous pulse-sum reference evaluated at the current sinusoidal duty.
+The 900 Hz carrier cancels in bridge phase voltage;
 its 780 and 1020 Hz sidebands remain. Results are in `switching_validation.json`
 and `plots/switching_*.png` within the scenario directory. These checks validate
 the smoothed switching equations, not semiconductor edge physics.
 
-All full simulations use sparse KLU. Earlier short dense-versus-Enzyme
-cross-checks are retained as historical verification data; the EMT driver now
-rejects dense fallback, and subsequent simulations use sparse exclusively.
+All full simulations use sparse KLU.

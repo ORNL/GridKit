@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <numbers>
@@ -169,6 +170,8 @@ namespace GridKit
         sinusoidal_parameters_valid_ = parameters_valid_ && std::isfinite(M_) && M_ >= 0 && M_ <= 1
                                        && std::isfinite(fm_) && fm_ > 0 && fc_ > fm_
                                        && std::isfinite(1 / fm_);
+        if (parameters_valid_)
+          replica_decay_ = std::exp(-Math::MU<RealT> / fc_);
       }
 
       template <typename scalar_type, typename index_type>
@@ -249,14 +252,40 @@ namespace GridKit
         const RealT t     = std::remainder(this->time_, tc);
         const auto  first = static_cast<long long>(std::floor((t - horizon_) * fc_));
         const auto  last  = static_cast<long long>(std::floor((t + horizon_) * fc_));
-        ScalarT     sum{0};
-        ScalarT     correction{0};
-        for (auto k = first; k <= last; ++k)
+        const RealT mu    = Math::MU<RealT>;
+        const auto  on    = alignment_ * (1 - duty) * tc;
+        const auto  off   = (alignment_ + (1 - alignment_) * duty) * tc;
+
+        // Evaluate the nearest pulse directly; the remaining replicas form two tails.
+        const auto center = std::clamp(
+            static_cast<long long>(std::round((t - static_cast<RealT>((on + off) / 2)) * fc_)),
+            first,
+            last);
+        const auto width = mu * duty * tc;
+        const auto r     = std::exp(-width);
+        const auto h     = std::tanh(width / 2);
+        const auto span  = 2 * h / (1 + h); // Stable 1 - exp(-width).
+
+        ScalarT                        sum = pulse(duty, t - static_cast<RealT>(center) * tc);
+        ScalarT                        correction{0};
+        const std::array<long long, 2> count{center - first, last - center};
+        const std::array<ScalarT, 2>   distance{
+            t - static_cast<RealT>(center - 1) * tc - off,
+            static_cast<RealT>(center + 1) * tc + on - t};
+
+        for (size_t side = 0; side < count.size(); ++side)
         {
-          const auto term = pulse(duty, t - static_cast<RealT>(k) * tc) - correction;
-          const auto next = sum + term;
-          correction      = (next - sum) - term;
-          sum             = next;
+          if (count[side] == 0)
+            continue;
+          auto z = std::exp(-mu * distance[side]);
+          for (long long k = 0; k < count[side]; ++k)
+          {
+            const auto term  = z * span / ((1 + z) * (1 + z * r)) - correction;
+            const auto next  = sum + term;
+            correction       = (next - sum) - term;
+            sum              = next;
+            z               *= replica_decay_;
+          }
         }
         return sum;
       }

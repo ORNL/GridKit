@@ -83,6 +83,7 @@ namespace GridKit
         bool  parameters_valid_{false};
         bool  sinusoidal_parameters_valid_{false};
         RealT horizon_{0.0};
+        RealT replica_decay_{0.0};
 
         std::array<SignalT*, 3>   input_{};
         std::array<SignalT, 3>    output_port_;

@@ -5,7 +5,6 @@ import csv
 import html
 import json
 import os
-import sys
 from pathlib import Path
 
 os.environ.setdefault('MPLCONFIGDIR', '/tmp/gridkit-ibr-matplotlib')
@@ -17,8 +16,6 @@ from matplotlib.patches import Circle, Rectangle
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parents[2] / 'cases/EMT/CoupledGrid'))
-from pwm_analysis import pwm_peak_coefficients
 
 TITLES = {'01_Baseline': 'Baseline and startup', '02_LoadStep': '2 MW nominal load connection',
           '03_LoadPulse': 'Load connection and shedding', '04_FaultClearing': 'Three-phase resistive fault and clearing',
@@ -58,8 +55,24 @@ def spectrum(signal, dt):
     return frequency, amplitude
 
 
+def pwm_reference(t, pwm, mu, vdc):
+    """Independent sigmoid sum with the current duty in every pulse replica."""
+    phase = np.array([0, -2*np.pi/3, 2*np.pi/3])
+    duty = (1 + pwm['M'] * np.sin(2*np.pi*pwm['fm']*t[:, None] + phase)) / 2
+    on = pwm['alignment'] * (1 - duty)
+    off = on + duty
+    carrier = np.remainder(t * pwm['fc'], 1)[:, None]
+    radius = int(np.ceil(np.log(4 / np.finfo(float).eps) * pwm['fc'] / mu))
+    gate = np.zeros_like(duty)
+    for k in range(-radius, radius + 1):
+        gate += .5 * (np.tanh(.5 * mu / pwm['fc'] * (carrier - on - k))
+                      - np.tanh(.5 * mu / pwm['fc'] * (carrier - off - k)))
+    bridge = vdc * (gate - gate.mean(axis=1, keepdims=True))
+    return gate[:, 0], bridge[:, 0]
+
+
 def switching_detail(directory):
-    """Inspect the recorded switching transient and check pulse-edge harmonics."""
+    """Inspect the switching transient and check continuous-PWM harmonics."""
     study = json.loads((directory / 'run.solver.json').read_text())
     case = json.loads(Path(study['system_model_file']).read_text())
     t, data = read_csv(directory / study['output_file'])
@@ -80,35 +93,37 @@ def switching_detail(directory):
             if device['class'] == 'LoadZ' and device['inputs']['bus'] == f'bus_{b}':
                 kcl += phase(data, 'LoadZ_' + device['id'], 'i')
             if device['class'] == 'LineLumped':
-                for port, current in (('bus1', 'i12'), ('bus2', 'i21')):
+                for port, sign in (('bus1', -1), ('bus2', 1)):
                     if device['inputs'][port] == f'bus_{b}':
-                        kcl -= phase(data, 'LineLumped_' + device['id'], current)
+                        kcl += sign * phase(data, 'LineLumped_' + device['id'], 'i12')
         kcl_errors.append(float(np.max(np.abs(kcl))))
     checks = []
     fig, axs = plt.subplots(2, 1, figsize=(11, 7), sharex=True)
     for b in (4, 5, 6):
         pwm = devices[f'pwm_{b}']['params']
-        prediction = pwm_peak_coefficients(mu, fc=pwm['fc'], f=pwm['fm'], M=pwm['M'],
-                                          vdc=constants[f'dc_{b}'], alignment=pwm['alignment'])
-        for ax, key, field, atol in zip(
+        prediction = pwm_reference(t[mask], pwm, mu, constants[f'dc_{b}'])
+        for ax, key, reference, atol in zip(
                 axs, (f'PWM_pwm_{b}_sa', f'Converter_converter_{b}_voa'),
-                ('gate_peak', 'converter_peak_v'), (1e-8, 1e-3)):
+                prediction, (1e-8, 1e-3)):
             frequency, amplitude = spectrum(data[key][mask], dt)
-            for row in prediction:
-                index = round(row['frequency_hz'] * len(t[mask]) * dt)
-                if index >= len(frequency) or not np.isclose(frequency[index], row['frequency_hz']):
+            _, predicted = spectrum(reference, dt)
+            indices = []
+            for harmonic in range(1, 50):
+                target = harmonic * pwm['fm']
+                index = round(target * len(t[mask]) * dt)
+                if index >= len(frequency) or not np.isclose(frequency[index], target):
                     raise ValueError('Predicted harmonic is not a resolved coherent FFT bin')
-                measured, expected = float(amplitude[index]), row[field]
-                checks.append(dict(signal=key, frequency_hz=row['frequency_hz'],
+                indices.append(index)
+                measured, expected = float(amplitude[index]), float(predicted[index])
+                checks.append(dict(signal=key, frequency_hz=target,
                                    measured_peak=measured, predicted_peak=expected,
                                    absolute_error=abs(measured - expected),
                                    passed=abs(measured - expected) <= atol + 1e-5 * expected))
             if b == 4:
                 ax.semilogy(frequency, np.maximum(amplitude, atol / 10), label='Simulation')
-                visible = [row for row in prediction if row[field] > atol]
-                ax.scatter([row['frequency_hz'] for row in visible],
-                           [row[field] for row in visible], facecolors='none',
-                           edgecolors=COLORS[1], label='Pulse-edge prediction', zorder=3)
+                visible = [index for index in indices if predicted[index] > atol]
+                ax.scatter(frequency[visible], predicted[visible], facecolors='none',
+                           edgecolors=COLORS[1], label='Continuous PWM reference', zorder=3)
                 ax.set_xlim(0, 3000); ax.legend()
     report = dict(mu=mu, edge_10_90_us=2*np.log(9)/mu*1e6,
                   window_s=[study['tmax']-.5, study['tmax']],
@@ -121,7 +136,7 @@ def switching_detail(directory):
     plots = directory / 'plots'; plots.mkdir(exist_ok=True)
     axs[0].set_ylabel('Gate peak amplitude [−]')
     axs[1].set_ylabel('Bridge peak amplitude [V]'); axs[1].set_xlabel('Frequency [Hz]')
-    save(fig, plots, 'switching_prediction', f'IBR 4 — sampled-edge check, μ={mu:g}', [], time_axis=False)
+    save(fig, plots, 'switching_prediction', f'IBR 4 — continuous PWM check, μ={mu:g}', [], time_axis=False)
     transient_detail(t, data, study, plots)
     if not report['passed']:
         raise ValueError(f'Switching check failed: {directory / "switching_validation.json"}')
@@ -495,7 +510,7 @@ def switching_comparison(results):
     axs[0].legend()
     gallery = []
     save(fig, results, 'switching_waveform_comparison',
-         'Fault-study pre-event waveforms — DC adjusted to preserve the AC fundamental', gallery)
+         'Fault-study pre-event waveforms — common DC voltage', gallery)
     fig, axs = plt.subplots(2, 1, figsize=(13, 9), sharex=True)
     spectral_metrics = []
     for name, (t, data, study) in series.items():
@@ -583,7 +598,7 @@ def main():
     with (results/'summary.csv').open('w',newline='') as stream:
         writer=csv.DictWriter(stream,fieldnames=sorted(metrics[0]));writer.writeheader();writer.writerows(metrics)
     rows=''.join(f'<tr><td><a href="{m["scenario"]}/index.html">{m["title"]}</a></td><td>{m["samples"]:,}</td><td>{m["min_main_bus_rms_after_event_pu"]:.4f}</td><td>{m["min_machine_frequency_after_event_hz"]:.4f}–{m["max_machine_frequency_after_event_hz"]:.4f}</td><td>{m["max_kcl_error_a"]:.2e}</td></tr>' for m in metrics)
-    (results/'index.html').write_text(page_html('Synthetic EMT 10-bus simulation review', f'<p>Six actual GridKit/IDA sparse KLU runs, each 0–3 s; five at 100 µs monitoring and one at 10 µs. Three machines, three open-loop PWM converters and seven loads. Full startup and pre/post-event samples are retained.</p><p><b>Model scope:</b> ideal constant DC sources, fixed 60 Hz modulation, no PLL, current limit, DC-link dynamics or converter protection. The first five use μ=240 s⁻¹ with compensated DC. The sixth uses μ=50000 s⁻¹ and 28.919 kV DC to retain the same AC fundamental while revealing switching features. These are synthetic network-response demonstrations, not a hardware switching-loss or ride-through validation.</p><p><a href="../README.md">Case/scenario documentation</a> · <a href="summary.csv">Metrics CSV</a> · <a href="summary.json">Metrics JSON</a> · <a href="one_line.svg">One-line SVG</a> · <a href="one_line.pdf">One-line PDF</a></p><figure><img src="one_line.png" alt="Ten bus one-line diagram"></figure><table><tr><th>Scenario / plots and data</th><th>Samples</th><th>Minimum B1–B8 RMS after 1 s [pu]</th><th>Machine frequency range after 1 s [Hz]</th><th>Max KCL error [A]</th></tr>{rows}</table><p>RMS values use a trailing one-cycle window. Startup minima are excluded from this comparison; all raw startup data remain available.</p><div class="gallery"><figure><a href="switching_waveform_comparison.png"><img src="switching_waveform_comparison.png"></a></figure><figure><a href="switching_spectrum_comparison.png"><img src="switching_spectrum_comparison.png"></a></figure><figure><a href="scenario_comparison.png"><img src="scenario_comparison.png"></a></figure><figure><a href="baseline_differences.png"><img src="baseline_differences.png"></a></figure></div>'))
+    (results/'index.html').write_text(page_html('Synthetic EMT 10-bus simulation review', f'<p>Six actual GridKit/IDA sparse KLU runs, each 0–3 s; five at 100 µs monitoring and one at 10 µs. Three machines, three open-loop PWM converters and seven loads. Full startup and pre/post-event samples are retained.</p><p><b>Model scope:</b> ideal constant DC sources, fixed 60 Hz modulation, no PLL, current limit, DC-link dynamics or converter protection. The first five use μ=240 s⁻¹ and the sixth uses μ=50000 s⁻¹. All use the same 28.733 kV DC sources; larger μ reveals switching features. These are synthetic network-response demonstrations, not a hardware switching-loss or ride-through validation.</p><p><a href="../README.md">Case/scenario documentation</a> · <a href="summary.csv">Metrics CSV</a> · <a href="summary.json">Metrics JSON</a> · <a href="one_line.svg">One-line SVG</a> · <a href="one_line.pdf">One-line PDF</a></p><figure><img src="one_line.png" alt="Ten bus one-line diagram"></figure><table><tr><th>Scenario / plots and data</th><th>Samples</th><th>Minimum B1–B8 RMS after 1 s [pu]</th><th>Machine frequency range after 1 s [Hz]</th><th>Max KCL error [A]</th></tr>{rows}</table><p>RMS values use a trailing one-cycle window. Startup minima are excluded from this comparison; all raw startup data remain available.</p><div class="gallery"><figure><a href="switching_waveform_comparison.png"><img src="switching_waveform_comparison.png"></a></figure><figure><a href="switching_spectrum_comparison.png"><img src="switching_spectrum_comparison.png"></a></figure><figure><a href="scenario_comparison.png"><img src="scenario_comparison.png"></a></figure><figure><a href="baseline_differences.png"><img src="baseline_differences.png"></a></figure></div>'))
 
 
 if __name__ == '__main__':
