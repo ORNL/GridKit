@@ -10,9 +10,8 @@ namespace GridKit
     /**
      * @brief Accepted-history discontinuities that restart the integrator.
      *
-     * Delay is the only owner. Every other EMT model is smooth by design and
-     * samples through nextSampleTime, which stops without restarting. The
-     * private constructor makes any other derivation a compile error.
+     * Delay is the only owner. Every other EMT model is smooth by design.
+     * The private constructor makes any other derivation a compile error.
      */
     template <typename RealT>
     class HistoryDiscontinuity

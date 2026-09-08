@@ -127,14 +127,6 @@ namespace GridKit
         return time;
       }
 
-      RealT nextSampleTime(RealT after) const override
-      {
-        RealT time = std::numeric_limits<RealT>::infinity();
-        for (const auto* op : operators_)
-          time = std::min(time, op->nextSampleTime(after));
-        return time;
-      }
-
       void beginDiscontinuity(RealT time) override
       {
         for (auto* op : operators_)

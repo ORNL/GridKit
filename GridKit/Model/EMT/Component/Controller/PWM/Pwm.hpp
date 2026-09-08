@@ -1,8 +1,5 @@
 #pragma once
 
-#include <deque>
-#include <limits>
-
 #include <GridKit/Model/EMT/Component.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
@@ -13,7 +10,7 @@ namespace GridKit
   {
     namespace Controller
     {
-      /// Sampled pulse-width modulation with no DAE variables or residual rows.
+      /// Continuous pulse-width modulation with no DAE variables or residual rows.
       template <typename scalar_type, typename index_type>
       class Pwm : public Component<scalar_type, index_type>
       {
@@ -39,7 +36,6 @@ namespace GridKit
 
         typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
         {
-          // State owners initialize before this zero-state model samples its input.
           return {};
         }
 
@@ -59,16 +55,13 @@ namespace GridKit
         int evaluateResidual() override final;
         int assembleJacobian(RealT y_scale, RealT yp_scale) override final;
 
-        void  resetHistory() override final;
-        void  acceptStep(RealT time) override final;
-        RealT nextSampleTime(RealT after) const override final;
         RealT maximumStepSize() const override final;
 
-        void assignInput(size_t phase, SignalT* signal);
+        void assignInput(Inputs key, SignalT* signal);
 
         /// Publish one phase on a named scalar signal. No DAE index is assigned.
-        void    assignOutput(size_t phase, SignalT* signal);
-        ScalarT output(size_t phase) const;
+        void    assignOutput(Outputs output, SignalT* signal);
+        ScalarT output(Outputs output) const;
 
         SignalT& outputSignal(Outputs output)
         {
@@ -78,35 +71,18 @@ namespace GridKit
       private:
         void                              initializeParameters(const ModelDataT& data);
         const Model::VariableMonitorBase* getMonitor() const override;
-        bool                              sampledInput() const;
-        std::array<RealT, 3>              readModulation() const;
-        void                              invalidateCache();
-        RealT                             pulse(RealT duty, RealT local_time) const;
-        RealT                             train(RealT duty, RealT t) const;
-        RealT                             crossfade(RealT x) const;
+        bool                              hasInput() const;
+        ScalarT                           modulation(size_t phase) const;
+        ScalarT                           pulse(ScalarT duty, RealT local_time) const;
+        void                              appendOutputGradient(Outputs output, typename SignalT::GradientT& gradient, RealT scale) const;
 
-        struct Sample
-        {
-          long long            interval;
-          std::array<RealT, 3> modulation;
-        };
-
-        RealT              M_{0.0};
-        RealT              fm_{0.0};
-        RealT              fc_{0.0};
-        RealT              alignment_{0.5};
-        bool               parameters_valid_{false};
-        bool               sinusoidal_parameters_valid_{false};
-        RealT              horizon_{0.0};
-        RealT              crossfade_rate_{0.0};
-        std::deque<Sample> samples_;
-
-        // Output workspace, independent of the DAE state.
-        mutable std::array<RealT, 3> cached_time_{
-            std::numeric_limits<RealT>::quiet_NaN(),
-            std::numeric_limits<RealT>::quiet_NaN(),
-            std::numeric_limits<RealT>::quiet_NaN()};
-        mutable std::array<RealT, 3> cached_output_{};
+        RealT M_{0.0};
+        RealT fm_{0.0};
+        RealT fc_{0.0};
+        RealT alignment_{0.5};
+        bool  parameters_valid_{false};
+        bool  sinusoidal_parameters_valid_{false};
+        RealT horizon_{0.0};
 
         std::array<SignalT*, 3>   input_{};
         std::array<SignalT, 3>    output_port_;
