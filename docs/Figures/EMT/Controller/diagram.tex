@@ -1,0 +1,125 @@
+% Shared body for the inverter wiring figures. The wrappers diagram_gfl.tex
+% and diagram_gfm.tex set \gfmfalse or \gfmtrue before inputting this file;
+% the switch selects the outer controller, its setpoint inputs, and the extra
+% voltage and frequency wiring the grid-forming loop needs.
+
+% TUNABLES: tier heights, the dq frame boundary, the DC-link bus, and the
+% setpoint row.
+\def\measurementrow{-3.6}
+\def\framerow{-6.0}
+\def\controlrow{-7.8}
+\def\dcbusrow{-9.3}
+\def\setpointrow{-10.7}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram,
+    block/.append style={minimum height=1.25cm, align=center}]
+
+% ================= DC link and bridge =================
+\node[block] (dclink) at (0, 0) {DCLink\\{\small $C$}};
+\node[block] (bridge) at (4.0, 0) {Converter};
+\node[signal, label={[sig]above:$i_{\mathrm{src}}$}] (isrc) at (-2.4, 0) {};
+\draw[->, line] (isrc) -- (dclink.west);
+\draw[->, line] ([yshift=2.5mm]bridge.west)
+    -- node[sig, above] {$i_{\mathrm{dc}}$} ([yshift=2.5mm]dclink.east);
+\draw[->, line] ([yshift=-2.5mm]dclink.east) -- ([yshift=-2.5mm]bridge.west);
+\node[signal] (vdc) at (2.0, -0.25) {};
+
+% ================= LCL filter and terminal =================
+\node[block, minimum width=4.4cm] (filter) at (8.8, 0)
+    {DependentVoltageSource\\{\small $\mathbf{R}_\mathrm{s},\ \mathbf{L}_\mathrm{s}$}};
+\node[block] (cbus) at (14.1, 0) {Bus\\{\small shunt $C$}};
+\node[block, minimum width=2.6cm] (line) at (18.8, 0)
+    {LineLumped\\{\small $\mathbf{R}_\mathrm{p},\ \mathbf{L}_\mathrm{p}$}};
+\node[block] (tbus) at (23.2, 0) {Bus\\{\small terminal}};
+\draw[->, line] (bridge.east) -- (filter.west);
+\node[signal, label={[sig]above:$\mathbf{v}_{\mathrm{o}}$}] at (5.9, 0) {};
+\draw[->, line] (filter.east) -- (cbus.west);
+\node[signal, label={[sig]above:$\mathbf{i}$}] (iabc) at (11.9, 0) {};
+\draw[line] (cbus.east) -- (line.west);
+\node[signal, label={[sig]above:$\mathbf{v}$}] (vabc) at (16.4, 0) {};
+\draw[line] (line.east) -- (tbus.west);
+\node[signal, label={[sig]above:$\mathbf{i}_g$}] (igabc) at (21.1, 0) {};
+
+% ================= Reference frame, modulation, and control =================
+\node[block] (pwm) at (4.0, \measurementrow) {PWM};
+\node[block] (pll) at (14.6, \measurementrow) {PLL};
+\node[block] (mod) at (4.0, \controlrow) {Modulation};
+\node[block, minimum width=5.6cm] (icc) at (14.15, \controlrow)
+    {InnerCurrentControl};
+\node[block, minimum width=3.8cm] (outer) at (20.6, \controlrow)
+    {\ifgfm OuterVoltageControl\else OuterPowerControl\fi};
+
+% ================= Phase-domain measurements =================
+% Reference-frame transformations are implicit at the dq boundary.
+\node[signal] (isplit) at (11.9, -1.2) {};
+\draw[line] (iabc) -- (isplit);
+\draw[->, line] (isplit) -- (4.5, -1.2) -- ([xshift=5mm]bridge.south);
+\draw[->, line] (isplit) -- ([xshift=-22.5mm]icc.north);
+\node[signal] (vsplit) at (16.4, -2.4) {};
+\draw[line] (vabc) -- (vsplit);
+\draw[->, line] (vsplit) -- (14.6, -2.4) -- (pll.north);
+\draw[->, line] (vsplit) -- ([xshift=22.5mm]icc.north);
+\draw[->, line] (igabc) -- ([xshift=5mm]outer.north);
+
+% ================= Reference angle and frequency =================
+% The PLL angle defines the dq region.
+\draw[->, line] ([xshift=6mm]pll.south) -- (15.2, \framerow);
+\node[sig, anchor=west] at (15.35, -5.0) {$\theta$};
+\draw[->, line] ([xshift=-4mm]pll.south) -- ([xshift=0.5mm]icc.north);
+\node[sig, anchor=east] at (14.05, -5.0) {$\omega$};
+
+\ifgfm
+% ================= Grid-forming voltage and frequency wiring =================
+% The voltage loop also reads the capacitor voltage and the frequency; the
+% frequency branch jumps the angle and voltage drops.
+\node[signal] (vouter) at (16.4, -5.2) {};
+\draw[->, line] (vouter) -- (20.2, -5.2) -- ([xshift=-4mm]outer.north);
+\draw[wire jump] (14.85, -5.5) -- (15.55, -5.5);
+\draw[wire jump] (16.05, -5.5) -- (16.75, -5.5);
+\node[signal] (omegaouter) at (14.2, -5.5) {};
+\draw[->, line] (omegaouter) -- (19.3, -5.5) -- ([xshift=-13mm]outer.north);
+\fi
+
+% ================= Control chain =================
+\draw[->, line] ([yshift=-2.5mm]outer.west)
+    -- node[sig, below] {$\mathbf{i}^{\mathrm{cmd}}$} ([yshift=-2.5mm]icc.east);
+\draw[->, line] ([yshift=2.5mm]icc.east)
+    -- node[sig, above] {$\mathbf{i}^{\mathrm{lim}}$} ([yshift=2.5mm]outer.west);
+\draw[->, line] (icc.west) -- node[sig, above] {$\mathbf{u}$} (mod.east);
+\draw[->, line] (mod.north) -- node[sig, right] {$\mathbf{m}$} (pwm.south);
+\draw[->, line] ([xshift=-5mm]pwm.north)
+    -- node[sig, right] {$\mathbf{s}$} ([xshift=-5mm]bridge.south);
+
+% ================= DC-link voltage bus =================
+\node[signal] (vdcmod) at (2.0, \controlrow) {};
+\draw[line] (vdc) -- node[sig, right, near start] {$v_{\mathrm{dc}}$} (vdcmod);
+\draw[->, line] (vdcmod) -- (mod.west);
+\coordinate (vdcbus) at (2.0, \dcbusrow);
+\draw[->, line] (vdcmod) -- (vdcbus)
+    -- node[sig, below] {$v_{\mathrm{dc}}$} (14.15, \dcbusrow) -- (icc.south);
+
+% ================= Setpoints =================
+\ifgfm
+\node[signal, label={[sig]below:$\mathbf{v}^{\mathrm{ref}}$}] (vref) at (20.6, \setpointrow) {};
+\draw[->, line] (vref) -- (outer.south);
+\else
+\node[signal, label={[sig]below:$P^{\mathrm{ref}}$}] (pref) at (20.0, \setpointrow) {};
+\draw[->, line] (pref) -- ([xshift=-6mm]outer.south);
+\node[signal, label={[sig]below:$Q^{\mathrm{ref}}$}] (qref) at (21.2, \setpointrow) {};
+\draw[->, line] (qref) -- ([xshift=6mm]outer.south);
+\fi
+
+% ================= Configuration and frame enclosures =================
+\begin{scope}[on background layer]
+    \node[operator enclosure, densely dotted,
+        fit=(dclink)(bridge)(filter)(cbus)(line)(tbus)
+            (pwm)(pll)(mod)(icc)(outer)(vdcbus)] (enclosure) {};
+\end{scope}
+\coordinate (frame) at (10.6, \framerow);
+\draw[enclosure, densely dotted]
+    (frame |- enclosure.south) -- (frame) -- (frame -| enclosure.east);
+\node[sig, anchor=north west] at ($(frame)+(0.15,-0.1)$) {$dq$};
+
+\end{tikzpicture}
+\end{document}
