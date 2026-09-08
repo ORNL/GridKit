@@ -4,6 +4,7 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -40,6 +41,22 @@ namespace GridKit
       using IdxT      = index_type;
       using RealT     = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using GradientT = std::vector<std::pair<IdxT, RealT>>;
+
+      /// Reuse computed values while reading one immutable state snapshot.
+      /// Each scope owns its values; nothing is reused after it ends.
+      class ReadScope
+      {
+      public:
+        ReadScope();
+        ~ReadScope();
+        ReadScope(const ReadScope&)            = delete;
+        ReadScope& operator=(const ReadScope&) = delete;
+
+      private:
+        friend class Signal;
+        ReadScope*                                 previous_;
+        std::unordered_map<const Signal*, ScalarT> values_;
+      };
 
       Signal();
       explicit Signal(std::string id);
@@ -97,6 +114,8 @@ namespace GridKit
       }
 
     private:
+      static thread_local ReadScope* read_scope_;
+
       ScalarT*                               signal_{nullptr};
       ScalarT*                               derivative_{nullptr};
       ScalarT*                               residual_{nullptr};
