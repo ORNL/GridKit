@@ -12,14 +12,14 @@
         {
             "time": 0.5,
             "type": "switch",
-            "open": false,
-            "element_id": "load_step"
+            "element_id": "load_step",
+            "open": false
         },
         {
             "time": 0.8,
             "type": "switch",
-            "open": true,
-            "element_id": "load_step"
+            "element_id": "load_step",
+            "open": true
         }
     ],
     "output_file": "low.csv"

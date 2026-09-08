@@ -7,8 +7,6 @@ from pathlib import Path
 import numpy as np
 from scipy.optimize import root
 
-from pwm_analysis import pwm_peak_coefficients
-
 HERE = Path(__file__).resolve().parent
 VLL, F, FC, M = 13800.0, 60.0, 900.0, .8
 W = 2 * np.pi * F
@@ -51,8 +49,7 @@ def main():
     line_model = json.loads((HERE / "lines/model.json").read_text())
     z, ysh = (response(line_model[key], 1j * W) for key in ("Zp", "Yp"))
     # DC voltage and every physical parameter stay fixed in the mu sweep.
-    gate_peak = pwm_peak_coefficients(MU[-1], max_harmonic=1)[0]["gate_peak"]
-    dc = 1.05 * VLL * np.sqrt(2 / 3) / gate_peak
+    dc = 2 * 1.05 * VLL * np.sqrt(2 / 3) / M
     e_ibr = 1.05 * VLL / np.sqrt(3) * np.exp(1j * (-np.pi / 2 + PHASES))
     grid_angle = -np.pi / 2 - .07
     e_grid = VLL / np.sqrt(3) * np.exp(1j * (grid_angle + PHASES))
@@ -164,7 +161,7 @@ def main():
     devices.append({"class": "Switch", "id": "load_step", "params": {"open": True},
                     "inputs": {"bus1": "bus_10", "bus2": "bus_14"},
                     "mon": ["open", "i12a", "i12b", "i12c"]})
-    state = {"header": {"version": 1, "time": 0., "description": "Common high-mu fundamental estimate; internal line/filter states start at model defaults, so energization transients remain."},
+    state = {"header": {"version": 1, "time": 0., "description": "Common fundamental estimate; internal line/filter states start at model defaults, so energization transients remain."},
              "buses": {}, "devices": {}}
     for bus in range(1, 15):
         voltage = v[sl(bus)] if bus != 14 else np.zeros(3)

@@ -27,7 +27,7 @@ def interpolate(time, values, point):
     return values[k] + fraction * (values[k + 1] - values[k])
 
 
-def document(kind, names, lower, upper, error_lower, error_upper, style_path):
+def document(kind, names, lower, upper, error_lower, error_upper, style_path, duration):
     """Use the EMT shared fonts/styles; data and size remain directly editable."""
     # All channels are retained. Highlight fault bus 1; other channels share a
     # neutral style so the comparison is readable without a 37-entry legend.
@@ -46,12 +46,12 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path):
              f'\\def\\ylower{{{lower:.8g}}}\\def\\yupper{{{upper:.8g}}}',
              r'\begin{document}', r'\begin{tikzpicture}[font=\small]',
              r'\begin{groupplot}[group style={group size=1 by 3,vertical sep=11mm,x descriptions at=edge bottom},',
-             r'width=\figwidth,height=\panelheight,xmin=0,xmax=10,grid=major,grid style={gray!20},',
+             f'width=\\figwidth,height=\\panelheight,xmin=0,xmax={duration:g},grid=major,grid style={{gray!20}},',
              r'tick label style={font=\footnotesize},scaled y ticks=false,',
              r'xlabel={Time [s]},ylabel style={font=\small},legend style={draw=none,font=\footnotesize}]']
     for panel, color, title, clear in [('e', 'emtBlue', '(a) EMT: switching GFL plants; fault cleared at 1.10 s', 1.1),
                                       ('r', 'referenceOrange', '(b) PowerWorld reference; fault cleared at 1.15 s', 1.15)]:
-        legend = (r',legend style={at={(0.98,0.98)},anchor=north east,legend columns=3,fill=white,draw=none,font=\scriptsize}'
+        legend = (r',legend style={at={(0.02,0.98)},anchor=north west,legend columns=3,fill=white,draw=none,font=\scriptsize}'
                   if kind != 'vmag' else '')
         lines.append(f'\\nextgroupplot[title={{{title}}},ylabel={{{LABELS[kind]}}},ymin=\\ylower,ymax=\\yupper{legend}]')
         lines.append(f'\\path[fill=gray!15] (axis cs:1,\\ylower) rectangle (axis cs:{clear},\\yupper);')
@@ -68,7 +68,7 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path):
             for k, bus in enumerate(machine_buses):
                 lines.extend([f'\\addlegendimage{{{palette[k]},line width=0.7pt}}', f'\\addlegendentry{{Bus {bus}}}'])
         label = 'All 37 buses; bus 1 in black' if kind == 'vmag' else 'All 30 synchronous machines'
-        lines.append(f'\\node[anchor=south east,font=\\footnotesize,fill=white,inner sep=2pt] at (rel axis cs:0.99,0.02) {{{label}}};')
+        lines.append(f'\\node[anchor=south west,font=\\footnotesize,fill=white,inner sep=2pt] at (rel axis cs:0.01,0.02) {{{label}}};')
     lines.append(f'\\nextgroupplot[title={{(c) EMT minus PowerWorld: range across channels}},ylabel={{Difference [p.u.]}},ymin={error_lower:.8g},ymax={error_upper:.8g}]')
     lines.extend([
         f'\\addplot[name path=lo,draw=none] table[x=time,y=minimum,col sep=comma] {{Hawaii.{kind}.csv}};',
@@ -76,7 +76,7 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path):
         r'\addplot[emtBlue!25] fill between[of=lo and hi];',
         f'\\addplot[emtBlue,line width=0.5pt] table[x=time,y=minimum,col sep=comma] {{Hawaii.{kind}.csv}};',
         f'\\addplot[emtBlue,line width=0.5pt] table[x=time,y=maximum,col sep=comma] {{Hawaii.{kind}.csv}};',
-        r'\addplot[gray,dashed] coordinates {(0,0) (10,0)};',
+        f'\\addplot[gray,dashed] coordinates {{(0,0) ({duration:g},0)}};',
         r'\end{groupplot}', r'\end{tikzpicture}', r'\end{document}', ''])
     return '\n'.join(lines)
 
@@ -84,7 +84,7 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--averaged', type=Path, required=True)
-    parser.add_argument('--output', type=Path, default=ROOT)
+    parser.add_argument('--output', type=Path, default=ROOT / 'results')
     parser.add_argument('--no-render', action='store_true')
     args = parser.parse_args()
     output = args.output.resolve()
@@ -93,8 +93,8 @@ def main():
     averaged_hash = hashlib.sha256(args.averaged.read_bytes()).hexdigest()
     if averaged_hash != run_metrics['averaged_sha256']:
         raise ValueError('Averaged data do not match the validated run')
-    if run_metrics['final_time_s'] != 10.0 or run_metrics['source_revision'] != REVISION:
-        raise ValueError('Comparison requires the complete ten-second study at the frozen source revision')
+    if run_metrics['final_time_s'] < 1.5 or run_metrics['source_revision'] != REVISION:
+        raise ValueError('Comparison requires fault recovery through 1.5 s at the frozen source revision')
     with args.averaged.open(newline='') as stream:
         emt = [{key: float(value) for key, value in row.items()} for row in csv.DictReader(stream)]
     metrics = {'source_revision': REVISION, 'averaged_sha256': averaged_hash,
@@ -137,7 +137,8 @@ def main():
         emargin = max(1e-6, 0.1 * (ehigh - elow))
         name = f'Hawaii.{kind}'
         style = os.path.relpath(ROOT.parents[2] / 'docs/Figures/EMT/diagram-style.tex', output)
-        (output / (name + '.tex')).write_text(document(kind, names, low - margin, high + margin, elow - emargin, ehigh + emargin, style))
+        (output / (name + '.tex')).write_text(document(kind, names, low - margin, high + margin,
+                                                     elow - emargin, ehigh + emargin, style, run_metrics['final_time_s']))
         if not args.no_render:
             with tempfile.TemporaryDirectory(prefix='gridkit-hawaii-plot-') as temporary:
                 command = ['pdflatex', '-interaction=nonstopmode', '-halt-on-error', '-output-directory=' + temporary, name + '.tex']

@@ -29,7 +29,9 @@ Actual load power varies with voltage because these are impedance loads.
 ## Mu comparison
 
 The common carrier frequency is 900 Hz, modulation index is 0.8, and the
-DC voltage is fixed at 30,306.481793 V in every run. The three settings are
+DC voltage is fixed at 29,577.588644 V in every run. It is chosen from
+$M v_{\mathrm{dc}}/2=1.05 V_{\mathrm{LL}}\sqrt{2/3}$, without compensation
+for smoothing. The three settings are
 
 | Study | Mu | Definition |
 | --- | ---: | --- |
@@ -39,30 +41,25 @@ DC voltage is fixed at 30,306.481793 V in every run. The three settings are
 
 The shared CommonMath parameter also changes smoothing in machine saturation
 and controller limit equations. In PWM, it acts on time differences in seconds.
-Changing mu changes the differential equations, including the applied inverter
-fundamental voltage; it is not a solver tolerance. DC voltage is deliberately
-held fixed to expose this effect. The high-mu case is a comparison baseline,
+Small mu suppresses switching and approaches instantaneous duty; large mu
+resolves switching. The carrier-period mean is exactly the duty for a fixed
+command. Mu is not a solver tolerance. DC voltage and the physical circuit
+remain fixed across the sweep. The high-mu case is a comparison baseline,
 not the hard-switching limit or an accuracy reference. The logistic 10–90%
 edge widths are 18.3, 4.73, and 1.22 ms, respectively; all exceed the 1.11 ms
 carrier period. These runs check smoothed harmonics, not resolved switching.
 See the [ten-bus switching study](../../../examples/EMT/IBR/README.md#resolved-switching-study).
 
-The exact ideal-pulse Fourier coefficient is attenuated by
-
-```math
-A(f,\mu)=\frac{2\pi^2 f/\mu}{\sinh(2\pi^2 f/\mu)}.
-```
-
-At 60 Hz the three gains are 0.070985, 0.773148, and 0.982186.
-The independent calculation in `pwm_analysis.py` includes sampling and pulse
-alignment. Converter common-mode removal cancels the 900 Hz triplen carrier;
+The independent calculation in `pwm_analysis.py` evaluates a periodic sigmoid
+sum using the instantaneous sinusoidal duty in every replica, then obtains
+harmonic amplitudes by Fourier quadrature. It includes pulse alignment and
+resolves edges independently of the simulation monitor spacing. The analyzer
+rejects disagreement with this reference. Converter common-mode removal cancels the 900 Hz triplen carrier;
 780 Hz and 1020 Hz sidebands remain useful comparisons.
 
 These are open-loop ideal-DC converter sources with RL reactors. There is no
-PLL, current control, DC-link dynamics, or protection. At low mu their reduced
-internal fundamental causes large reactive absorption. This demonstrates the
-smoothing parameter's effect, not credible protected IBR operation at that
-setting. The untransposed line and unequal loads excite phase coupling.
+PLL, current control, DC-link dynamics, or protection. The untransposed line
+and unequal loads excite phase coupling.
 
 ## Run and render
 
@@ -70,7 +67,7 @@ Use an EMT build with Enzyme, SUNDIALS, and sparse KLU. NumPy, SciPy, and
 Matplotlib are needed for case generation, analysis, and plotting.
 
 ```bash
-cmake --build build/emt-rational --target EMTDynamicSimulation -j 10
+cmake --build build --target EMTDynamicSimulation -j 10
 python3 cases/EMT/CoupledGrid/build_case.py
 python3 cases/EMT/CoupledGrid/run.py
 python3 cases/EMT/CoupledGrid/analyze.py --case cases/EMT/CoupledGrid/CoupledGrid.case.json --results build/emt-coupled-results

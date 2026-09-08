@@ -77,8 +77,13 @@ def main():
         require(converter["inputs"]["s"] == pwm["outputs"]["s"], "PWM-converter connection is incomplete")
         require([source["inputs"][name] for name in ("ea", "eb", "ec")]
                 == converter["outputs"]["e"], "Converter-source connection is incomplete")
+        require([source["outputs"][name] for name in ("ia", "ib", "ic")]
+                == converter["inputs"]["i"], "Converter current feedback is incomplete")
         require(source["class"] == "DependentVoltageSource" and "Y" in source["submodels"],
                 "IBR source lacks its frequency-dependent filter")
+        dc = next(s['value'] for s in case['signals'] if s['id'] == converter['inputs']['vdc'])
+        require(np.isclose(dc * pwm['params']['M'] / 2, 1.05 * 13800 * np.sqrt(2 / 3), rtol=1e-12),
+                'DC voltage must preserve the specified averaged bridge voltage without mu compensation')
     solvers = [read_json(HERE / f"{name}.solver.json") for name in ("low", "middle", "high")]
     expected_mu = [240., np.sqrt(240. * 3600.), 3600.]
     for solver, expected in zip(solvers, expected_mu):

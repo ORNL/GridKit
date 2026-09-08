@@ -20,15 +20,60 @@ def require(condition, message):
         raise AssertionError(message)
 
 
-def conversion_checks(case, report):
+def conversion_checks(case, state, report):
     counts = collections.Counter(d['class'] for d in case['devices'])
     expected = {'Machine': 30, 'Tgov1': 30, 'Ieeet1': 30, 'Ieeest': 14,
                 'LineLumped': 77, 'Transformer': 12, 'LoadZ': 28, 'Switch': 1,
                 'PLL': 9, 'OuterPowerControl': 9, 'InnerCurrentControl': 9,
-                'PWM': 9, 'Converter': 9, 'DCLink': 9, 'DependentVoltageSource': 9}
+                'PWM': 9, 'Converter': 9, 'DCLink': 9, 'Filter': 9, 'Park': 36}
     for kind, count in expected.items():
         require(counts[kind] == count, f'{kind} count: {counts[kind]} != {count}')
     require(not counts['Regfma'] and not counts['REGFMA'], 'Unexpected REGFMA replacement')
+    require(not counts['DependentVoltageSource'], 'Inverter plants must use LCL Filters')
+    devices = {d['id']: d for d in case['devices']}
+    signals = {s['id']: s.get('value') for s in case['signals']}
+
+    def phasor(values, prefix):
+        a, b, c = (values[prefix + p] for p in 'abc')
+        return complex(math.sqrt(2 / 3) * (a - (b + c) / 2), (b - c) / math.sqrt(2))
+
+    for plant, data in report['inverters'].items():
+        filt, pll, inner, outer, bridge, dc = (devices[plant + suffix] for suffix in
+                                             ('_filter', '_pll', '_inner', '_power', '_bridge', '_dc'))
+        voltage, current, grid_current, inverse = (devices[plant + suffix] for suffix in
+                                                  ('_voltage', '_current', '_grid_current', '_inverse'))
+        require(filt['inputs']['e'] == bridge['outputs']['e'], 'Bridge voltage must drive its Filter')
+        require(bridge['inputs']['i'] == current['inputs']['input'] == filt['outputs']['i'],
+                'Bridge and inner loop must read converter-side current')
+        require(voltage['inputs']['input'] == [pll['inputs']['v' + p] for p in 'abc'] == filt['outputs']['vo'],
+                'PLL and voltage feedback must read capacitor voltage')
+        require(grid_current['inputs']['input'] == filt['outputs']['ig'], 'Grid-current measurement')
+        require(outer['inputs']['i'] == grid_current['outputs']['out'][:2], 'Outer-loop grid-current feedback')
+        require(inner['inputs']['i'] == current['outputs']['out'][:2], 'Inner-loop converter-current feedback')
+        require(inner['inputs']['v'] == voltage['outputs']['out'][:2], 'Inner-loop capacitor-voltage feedback')
+        require(all(p['inputs']['theta'] == pll['outputs']['theta'] for p in (voltage, current, grid_current, inverse)),
+                'Park transforms must share the PLL angle')
+        require(inner['inputs']['omega'] == pll['outputs']['omega'], 'Inner loop must use PLL frequency')
+        require(outer['inputs']['ilim'] == inner['outputs']['ilim']
+                and inner['inputs']['icmd'] == outer['outputs']['icmd'], 'Outer-loop anti-windup connection')
+        require(dc['inputs']['idc'] == bridge['outputs']['idc'], 'DC current feedback')
+        require(dc['outputs']['vdc'] == inner['inputs']['vdc'] == bridge['inputs']['vdc'], 'Shared DC voltage')
+        initial = state['devices'][filt['id']]
+        v = phasor(state['buses'][filt['inputs']['bus']], 'v')
+        vo, i, ig = (phasor(initial, key) for key in ('vo', 'i', 'ig'))
+        params = filt['params']
+        omega = 2 * math.pi * 60
+        zs = complex(params['Rs'][0][0], omega * params['Ls'][0][0])
+        zg = complex(params['Rg'][0][0], omega * params['Lg'][0][0])
+        base_i, base_v = data['rating_VA'] / data['voltage_V'], data['voltage_V']
+        require(abs(vo - v - zg * ig) / base_v < 1e-12, 'Initial grid-side KVL')
+        require(abs(i - ig - 1j * omega * params['C'][0][0] * vo) / base_i < 1e-12,
+                'Initial capacitor current balance')
+        u = state['devices'][inner['id']]
+        e = complex(u['ud'], u['uq']) * vo / abs(vo)
+        require(abs(e - vo - zs * i) / base_v < 1e-12, 'Initial converter-side KVL')
+        pdc = signals[dc['inputs']['isrc']] * state['devices'][dc['id']]['vdc']
+        require(abs(pdc - (e * i.conjugate()).real) / data['rating_VA'] < 1e-12, 'Initial DC power balance')
     regularized = 0
     largest_time_error = 0.0
     for machine in report['machines'].values():
@@ -42,13 +87,13 @@ def conversion_checks(case, report):
             regularized += data['effective_Xpp'] != data['source_Xpp']
     require(regularized == 18, 'Damper regularization count')
     require(report['power_flow']['max_KCL_pu'] < 1e-10, 'Initial network current balance')
-    return {'regularized_machines': regularized,
+    return {'LCL_plants': counts['Filter'], 'regularized_machines': regularized,
             'largest_open_time_relative_change': largest_time_error,
             'initial_max_KCL_pu': report['power_flow']['max_KCL_pu']}
 
 
 def analyze(csv_path, step_path, study, case, state, report, record, output):
-    metrics = {'conversion': conversion_checks(case, report), 'study': study,
+    metrics = {'conversion': conversion_checks(case, state, report), 'study': study,
                'source_revision': report['source_revision'], 'cpu_time_s': record['cpu_time_s'],
                'study_sha256': record['study_sha256']}
     metrics['input_sha256'] = record['input_sha256']
@@ -150,15 +195,16 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
             error = abs(first[f'Machine_{m}_{kind}'] - data[f'dispatch_{unit}']) / data['rating_VA']
             pq_initial_error = max(pq_initial_error, error)
     for plant, data in report['inverters'].items():
-        vd, vq = (first[f'Park_{plant}_voltage_y{n}'] for n in (1, 2))
-        id_, iq = (first[f'Park_{plant}_current_y{n}'] for n in (1, 2))
-        power = {'p': vd * id_ + vq * iq, 'q': vq * id_ - vd * iq}
+        filt = next(d for d in case['devices'] if d['id'] == plant + '_filter')
+        v = [first[f'Bus_{filt["inputs"]["bus"]}_v{p}'] for p in 'abc']
+        i = [first[f'Filter_{plant}_filter_ig{p}'] for p in 'abc']
+        power = {'p': sum(a * b for a, b in zip(v, i)),
+                 'q': ((v[1] - v[2]) * i[0] + (v[2] - v[0]) * i[1] + (v[0] - v[1]) * i[2]) / math.sqrt(3)}
         for kind, unit in (('p', 'W'), ('q', 'var')):
             error = abs(power[kind] - data[f'dispatch_{unit}']) / data['rating_VA']
             pq_initial_error = max(pq_initial_error, error)
     require(pq_initial_error < 1e-10, f'Initial dispatch error: {pq_initial_error}')
-    # The full baseline run has a 5.543e-5 relative algebraic interpolation
-    # error at 2.000556 s. Pin a 1e-4 allowance for monitored limiter values.
+    # Allow numerical interpolation error in the monitored algebraic limiter.
     current_limit_tolerance = 1e-4
     require(imax_ratio <= 1 + current_limit_tolerance, f'Current limiter exceeded: {imax_ratio}')
     require(0.8 < dc_range[0] and dc_range[1] < 1.2, f'DC voltage range: {dc_range}')
