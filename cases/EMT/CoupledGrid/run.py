@@ -55,7 +55,7 @@ def build_environment(binary):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--binary", type=Path, default=ROOT / "build/emt-rational/application/EMT/EMTDynamicSimulation")
+    parser.add_argument("--binary", type=Path, default=ROOT / "build/application/EMT/EMTDynamicSimulation")
     parser.add_argument("--output", type=Path, default=ROOT / "build/emt-coupled-results")
     parser.add_argument("--trials", type=int, default=3)
     parser.add_argument("--names", nargs="+", choices=("low", "middle", "high"), default=["low", "middle", "high"])
