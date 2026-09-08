@@ -5,7 +5,7 @@
     "tmax": 3.0,
     "mu": 240.0,
     "rel_tol": 1e-07,
-    "abs_tol": 1e-09,
+    "abs_tol": 1e-06,
     "max_steps": 300000,
     "consistent_ic_type": "ya_ydp",
     "output_file": "FaultClearing.csv",

@@ -236,6 +236,60 @@ namespace GridKit
       }
 
       /**
+       * @brief State-file keys seed the differential states and reject the rest.
+       */
+      TestOutcome initialState()
+      {
+        TestStatus success = true;
+
+        Fixture fixture;
+
+        success       *= (fixture.transformer.initializeState({{"i12b", 0.3}, {"psi1a", -0.7}, {"psi2c", 1.1}}) == 0);
+        const auto* y  = fixture.y.getData();
+        for (IdxT j = 6; j < system_size; ++j)
+        {
+          RealT expected = 0.0;
+          if (j == 7)
+          {
+            expected = 0.3;
+          }
+          if (j == 9)
+          {
+            expected = -0.7;
+          }
+          if (j == 14)
+          {
+            expected = 1.1;
+          }
+          success *= (y[j] == expected);
+        }
+
+        bool rejected = false;
+        try
+        {
+          fixture.transformer.validateInitialState({{"i1a", 1.0}});
+        }
+        catch (const std::invalid_argument&)
+        {
+          rejected = true;
+        }
+        success *= rejected;
+
+        rejected = false;
+        try
+        {
+          fixture.transformer.initializeState({{"psi1a", std::numeric_limits<RealT>::infinity()}});
+        }
+        catch (const std::invalid_argument&)
+        {
+          rejected = true;
+        }
+        success *= rejected;
+
+        return success.report(__func__);
+      }
+
+      /**
        * @brief Assembled residual against an independent computation.
        */
       TestOutcome residual()

@@ -1,0 +1,20 @@
+{
+  "system_model_file": "Transformer.case.json",
+  "state_file": "Energization.state.json",
+  "dt_monitor": 0.0001,
+  "tmax": 0.25,
+  "rel_tol": 1e-8,
+  "abs_tol": 1e-8,
+  "consistent_ic_type": "ya_ydp",
+  "max_steps": 400000,
+  "events": [
+    {
+      "time": 0.004166666666666667,
+      "type": "switch",
+      "element_id": "breaker",
+      "open": false
+    }
+  ],
+  "output_file": "mon.csv",
+  "state_output_file": "state.csv"
+}
