@@ -53,6 +53,7 @@ Container, for example `plant.machine`:
    Name   | Value
  ---------|-------------------------------------------------------
   `open`  | Optional Boolean switch command, true is open
+  `theta`, `omega` | Optional `PLL` angle in radians and angular frequency in radians per second; defaults are the inferred voltage angle and nominal frequency
   `theta` | Optional `Angle` reference angle in radians, default zero
   `xid`, `xiq` | Optional `InnerCurrentControl` integral contributions in volts, default zero
   `etad`, `etaq` | Optional `OuterVoltageControl` integral contributions in amperes, default zero
