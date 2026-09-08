@@ -18,6 +18,7 @@
 #include <GridKit/Model/EMT/Component/Source/REGFMA/Regfma.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
+#include <GridKit/Model/EMT/Component/Transformer/Transformer.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/Converter.hpp>
 #include <GridKit/Model/EMT/Operators/Modulation/Modulation.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Angle/Angle.hpp>
