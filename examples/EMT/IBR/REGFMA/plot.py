@@ -46,9 +46,9 @@ def main():
     steps = read_csv(directory / study['step_output_file'])
     t = data['t']
     events = study['events']
-    expected = round(study['tmax'] / study['dt_monitor']) + 1 + len(events)
-    if (len(t) != expected or t[0] != 0 or abs(t[-1] - study['tmax']) > 1e-12
-            or np.any(np.diff(t) < 0)):
+    regular = np.arange(round(study['tmax'] / study['dt_monitor']) + 1) * study['dt_monitor']
+    expected = np.sort(np.r_[regular, [event['time'] for event in events]])
+    if len(t) != len(expected) or not np.allclose(t, expected, rtol=0, atol=1e-12):
         raise ValueError('Incomplete monitor timeline')
     for event in events:
         rows = np.flatnonzero(np.isclose(t, event['time'], rtol=0, atol=1e-12))
@@ -89,13 +89,15 @@ def main():
                         'qf': data[f'{prefix}_qf'] * params['S'] / 1e6,
                         'e': data[f'{prefix}_edroop'], 'vabc': voltage, 'iabc': current}
         summary[f'regfma_{bus}'] = {
-            'minimum_voltage_pu': float(vpu.min()), 'maximum_current_pu': float(magnitude.max()),
+            'minimum_voltage_pu': float(vpu.min()), 'maximum_voltage_pu': float(vpu.max()),
+            'maximum_current_pu': float(magnitude.max()),
             'minimum_frequency_Hz': float(frequency.min()), 'maximum_frequency_Hz': float(frequency.max()),
             'final_frequency_Hz': float(frequency[-1]), 'final_voltage_pu': float(vpu[-1]),
             'final_active_power_MW': float(p[-1] / 1e6), 'final_reactive_power_Mvar': float(q[-1] / 1e6)}
     if (checks['max_kcl_error_A'] > .01 or checks['max_zero_sequence_current_A'] > .001
             or checks['max_active_power_error_W'] > .1 or checks['max_reactive_power_error_var'] > .1):
         raise ValueError(f'Terminal consistency check failed: {checks}')
+    v7 = np.linalg.norm(phases(data, 'Bus_bus_7', 'v') @ CLARKE.T, axis=1) / 13800
     boundaries = [0.] + [event['time'] for event in events] + [study['tmax']]
     intervals = []
     for start, stop in zip(boundaries[:-1], boundaries[1:]):
@@ -103,6 +105,7 @@ def main():
         intervals.append({'start_s': start, 'stop_s': stop, 'accepted_steps': int(mask.sum()),
                           'median_step_s': float(np.median(steps['step'][mask]))})
     summary = {'run': run, 'monitor_samples': len(t), 'sources': summary, 'checks': checks,
+               'maximum_bus_7_voltage_pu': float(v7.max()),
                'step_intervals': intervals,
                'minimum_accepted_step_s': float(steps['step'].min()),
                'maximum_accepted_step_s': float(steps['step'].max())}
@@ -118,7 +121,8 @@ def main():
             for event in events:
                 ax.axvline(event['time'], color='#555555', lw=.7, ls=':')
             ax.set_xlim(*limits)
-            ax.legend(loc='best', fontsize=8, ncol=2)
+            location = 'lower right' if name == 'response' and ax is axes[0, 0] else 'best'
+            ax.legend(loc=location, fontsize=8, ncol=2)
         for ax in axes[-1].flat:
             ax.set_xlabel('Time [s]')
         for extension in ('png', 'pdf'):
@@ -137,8 +141,17 @@ def main():
                                 (axes[2, 1], 'e', 'Internal voltage command [p.u.]')):
             ax.plot(t, source[key], color=color, ls={4: '-', 5: '--', 6: '-.'}[bus], lw=1.2, label=label)
             ax.set_ylabel(ylabel)
-    v7 = np.linalg.norm(phases(data, 'Bus_bus_7', 'v') @ CLARKE.T, axis=1) / 13800
     axes[0, 0].plot(t, v7, color=COLORS[3], lw=1, ls='--', label='Fault connection, bus 7')
+    axes[0, 0].set_ylim(0, 1.25)
+    inset = axes[0, 0].inset_axes([.59, .43, .38, .44])
+    for color, (bus, source) in zip(COLORS, sources.items()):
+        inset.plot(t, source['v'], color=color, ls={4: '-', 5: '--', 6: '-.'}[bus], lw=1)
+    inset.plot(t, v7, color=COLORS[3], ls='--', lw=1)
+    inset.axvspan(fault_start, fault_end, color='#555555', alpha=.10, linewidth=0)
+    inset.set(xlim=(fault_start - .01, fault_end + .01), ylim=(0, 1.08 * v7.max()),
+              xticks=[fault_start, fault_end], yticks=[0, 4, 8])
+    inset.set_title('Event voltage [p.u.]', fontsize=8)
+    inset.tick_params(labelsize=7)
     for machine, color in zip((1, 2, 3), COLORS):
         axes[0, 1].plot(t, data[f'Machine_machine_{machine}_omega'] * 60,
                         color=color, lw=.8, ls='--', label=f'Machine {machine}')
@@ -172,6 +185,10 @@ img{{width:100%;height:auto}}a{{color:#176b9c}}</style>
 fault from 1.00 to 1.06 s; 3 s simulation, μ = {study['mu']:g}.</p>
 <p>{run['wall_seconds']:.3f} s wall time; {run['simulation_cpu_seconds']:.3f} s simulation CPU;
 {run['ida']['steps']:,} accepted steps; {len(t):,} monitor samples.</p>
+<p>Recorded voltage peaks: {max(source['v'].max() for source in sources.values()):.3f} p.u.
+at REGFMA terminals and {v7.max():.3f} p.u. at bus 7. The solver reported
+{run['ida']['error_test_fails']:,} error-test failures; see the
+<a href="summary.json">interval step statistics</a>.</p>
 <p>Terminal consistency and event checks passed. These are simulation results,
 not external model validation. See <a href="../README.md">study details</a>.</p>
 <p><a href="summary.json">Metrics and checks</a> · <a href="FaultClearing.csv">Monitor CSV</a> ·
