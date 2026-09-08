@@ -7,6 +7,7 @@ int main()
   GridKit::Testing::TransformerTests<double, size_t> test;
 
   result += test.wiring();
+  result += test.initialState();
   result += test.residual();
   result += test.steadyState();
   result += test.connection();

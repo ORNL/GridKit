@@ -12,7 +12,7 @@ Unconnected power and voltage references are initialized from the operating poin
 `FaultClearing.solver.json` applies the existing three-phase 2 Ω/phase shunt
 at 1.00 s and clears it at 1.06 s. The simulation spans 0–3 s with adaptive
 IDA stepping, sparse KLU, `mu=240`, relative tolerance 1e-7, and absolute
-tolerance 1e-9. Monitoring uses 100 µs spacing, with both pre-event and
+tolerance 1e-6. Monitoring uses 100 µs spacing, with both pre-event and
 post-event samples retained. Monitor spacing is not the accepted solver step.
 
 ## Run and review
