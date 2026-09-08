@@ -39,6 +39,79 @@ namespace GridKit
         return data;
       }
 
+      struct RestoreMu
+      {
+        double value = Math::MU<double>;
+
+        ~RestoreMu()
+        {
+          Math::MU<double> = value;
+        }
+      };
+
+      struct SampledPwm
+      {
+        struct Period
+        {
+          std::array<double, 3> mean{};
+          std::array<double, 3> variance{};
+          bool                  bounded = true;
+        };
+
+        std::array<Signal, 3> inputs;
+        Pwm                   model;
+        double                fc;
+
+        SampledPwm(const std::array<double, 3>& modulation, double frequency, double alignment = 0.5)
+          : model(pwmData(0, 60, frequency, alignment)), fc(frequency)
+        {
+          for (size_t phase = 0; phase < 3; ++phase)
+          {
+            inputs[phase].bindConstant(modulation[phase]);
+            model.assignInput(phase, &inputs[phase]);
+          }
+          if (model.allocate() != 0 || model.initialize() != 0)
+            throw std::runtime_error("Cannot initialize sampled PWM fixture");
+        }
+
+        void command(const std::array<double, 3>& modulation)
+        {
+          for (size_t phase = 0; phase < 3; ++phase)
+            inputs[phase].setConstantValue(modulation[phase]);
+        }
+
+        void accept(size_t interval)
+        {
+          model.updateTime(static_cast<double>(interval) / fc, 0);
+          model.acceptStep(static_cast<double>(interval) / fc);
+        }
+
+        std::array<double, 3> output(double carrier_time)
+        {
+          model.updateTime(carrier_time / fc, 0);
+          return {model.output(0), model.output(1), model.output(2)};
+        }
+
+        Period measure(size_t interval, size_t count)
+        {
+          Period result;
+          // Midpoints exclude the command jumps at carrier boundaries.
+          for (size_t n = 0; n < count; ++n)
+          {
+            const auto s = output(static_cast<double>(interval) + (static_cast<double>(n) + 0.5) / static_cast<double>(count));
+            for (size_t phase = 0; phase < 3; ++phase)
+            {
+              result.mean[phase]     += s[phase] / static_cast<double>(count);
+              result.variance[phase] += s[phase] * s[phase] / static_cast<double>(count);
+              result.bounded          = result.bounded && s[phase] >= 0 && s[phase] <= 1;
+            }
+          }
+          for (size_t phase = 0; phase < 3; ++phase)
+            result.variance[phase] = std::max(0.0, result.variance[phase] - result.mean[phase] * result.mean[phase]);
+          return result;
+        }
+      };
+
       // Independent, long-double evaluation of the documented infinite sum.
       // A much wider fixed window makes truncation negligible in these cases.
       static double reference(double t, double M, double fm, double fc, double alignment, size_t phase, long long radius = 2000)
@@ -453,16 +526,7 @@ namespace GridKit
       TestOutcome runtimeSmoothing()
       {
         TestStatus success = true;
-
-        struct RestoreMu
-        {
-          double value = Math::MU<double>;
-
-          ~RestoreMu()
-          {
-            Math::MU<double> = value;
-          }
-        } restore;
+        RestoreMu  restore;
 
         for (const double mu : {240.0, 50000.0})
         {
@@ -480,6 +544,112 @@ namespace GridKit
             success          *= std::abs(value - reference(time, .8, 60, 900, .5, 0)) < 1e-12;
           }
           success *= mu == 240.0 ? maximum - minimum < .1 : maximum - minimum > .99;
+        }
+        return success.report(__func__);
+      }
+
+      // Protect mean, resolution, and causality; controller transients and solver
+      // step sequences are deliberately outside this model contract.
+      TestOutcome sampledMean()
+      {
+        TestStatus                                 success = true;
+        RestoreMu                                  restore;
+        const std::array<std::array<double, 3>, 4> commands{{{-1, 0, 1}, {0.6, -0.4, 0.2}, {-0.2, 0.8, -0.6}, {0, 0, 0}}};
+        for (double sharpness : {0.04, 4.0, 20.0, 200.0})
+        {
+          Math::MU<double> = sharpness * 6000;
+          // At least 17 samples across each 10-90% edge; check refinement too.
+          const auto count = static_cast<size_t>(std::max(32.0, std::ceil(4 * sharpness)));
+          for (double alignment : {0.0, 0.5, 1.0})
+          {
+            SampledPwm fixture(commands[0], 6000, alignment);
+            for (size_t interval = 0; interval < commands.size(); ++interval)
+            {
+              fixture.command(commands[interval]);
+              if (interval != 0)
+                fixture.accept(interval);
+              const auto  coarse  = fixture.measure(interval, count);
+              const auto  fine    = fixture.measure(interval, 2 * count);
+              const auto& active  = commands[interval == 0 ? 0 : interval - 1];
+              success            *= coarse.bounded && fine.bounded;
+              for (size_t phase = 0; phase < 3; ++phase)
+              {
+                // Duty tolerance is independent of the production pulse sum.
+                success *= std::abs(fine.mean[phase] - (1 + active[phase]) / 2) < 1e-6;
+                success *= std::abs(fine.mean[phase] - coarse.mean[phase]) < 1e-7;
+              }
+            }
+          }
+        }
+        return success.report(__func__);
+      }
+
+      TestOutcome sampledResolution()
+      {
+        TestStatus                  success = true;
+        RestoreMu                   restore;
+        const std::array<double, 3> modulation{-0.6, 0, 0.6};
+        std::array<double, 3>       previous{};
+        for (double sharpness : {0.04, 4.0, 20.0, 200.0})
+        {
+          Math::MU<double> = sharpness * 6000;
+          SampledPwm fixture(modulation, 6000);
+          const auto count   = static_cast<size_t>(std::max(64.0, std::ceil(8 * sharpness)));
+          const auto period  = fixture.measure(0, count);
+          success           *= period.bounded;
+          for (size_t phase = 0; phase < 3; ++phase)
+          {
+            const double duty            = (1 + modulation[phase]) / 2;
+            const double ideal_variance  = duty * (1 - duty);
+            success                     *= std::abs(period.mean[phase] - duty) < 1e-6;
+            success                     *= period.variance[phase] <= ideal_variance + 1e-6;
+            if (sharpness == 0.04)
+              success *= period.variance[phase] < 1e-6;
+            else
+              success *= period.variance[phase] > previous[phase] + 1e-4;
+            if (sharpness == 200)
+              success *= period.variance[phase] > 0.8 * ideal_variance;
+            previous[phase] = period.variance[phase];
+          }
+        }
+        return success.report(__func__);
+      }
+
+      TestOutcome sampledTiming()
+      {
+        TestStatus success = true;
+        RestoreMu  restore;
+        for (double sharpness : {0.04, 20.0, 200.0})
+        {
+          Math::MU<double> = sharpness * 6000;
+          SampledPwm first({-0.8, 0.2, 0.7}, 6000);
+          SampledPwm second({0.8, -0.2, -0.7}, 6000);
+          for (auto* fixture : {&first, &second})
+          {
+            fixture->command({-0.6, 0, 0.6});
+            fixture->accept(1);
+            fixture->command({0.3, -0.3, 0.1});
+            fixture->accept(2);
+          }
+          // Equal active/queued commands erase older history, even with broad tails.
+          // Interior accepted steps and trial/monitor reads must not latch inputs.
+          first.command({1, -1, 0.8});
+          first.model.acceptStep(2.2 / 6000);
+          for (double time : {2.31, 2.72, 2.41, 2.93})
+          {
+            const auto a = first.output(time);
+            const auto b = second.output(time);
+            for (size_t phase = 0; phase < 3; ++phase)
+              success *= std::abs(a[phase] - b[phase]) < 1e-10;
+          }
+          // Only a later accepted carrier boundary may sample the new command.
+          first.command({0.3, -0.3, 0.1});
+          first.accept(3);
+          second.accept(3);
+          const auto a = first.output(3.37);
+          const auto b = second.output(3.37);
+          for (size_t phase = 0; phase < 3; ++phase)
+            success *= std::abs(a[phase] - b[phase]) < 1e-10;
         }
         return success.report(__func__);
       }
