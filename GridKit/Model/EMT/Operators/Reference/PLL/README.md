@@ -40,11 +40,12 @@ V_\mathrm{pk} &= \sqrt{\dfrac{2}{3}}\,V
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}$ | `va`, `vb`, `vc` | Input | [V] | Bus phase voltages | Required, $abc$ order
+$\mathbf{v}$ | `va`, `vb`, `vc` | Input | [V] | Three-phase voltage | Required, $abc$ order
 $\theta$ | `theta` | Output | [rad] | Electrical reference angle | d-axis relative to the phase-a axis
 $\omega$ | `omega` | Output | [rad/s] | Electrical angular frequency |
 
-In case JSON, `bus` binds the three voltage inputs. Connect `theta` to the
+In case JSON, `bus` binds the three voltage inputs to a Bus. Individual signal
+ports also accept the Filter capacitor-voltage outputs. Connect `theta` to the
 [Park operators](../Park/README.md) and `omega` to the connected controllers.
 
 ## Submodels
@@ -78,11 +79,11 @@ $\omega$ | [rad/s] | Electrical angular frequency |
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{v}$ | [V] | Bus phase voltages | Differential-input configuration
+$\mathbf{v}$ | [V] | Input phase voltages | Differential-input configuration
 
 #### Algebraic
 
-Otherwise, the bus-voltage variables above are algebraic.
+Otherwise, the voltage variables above are algebraic.
 
 ## Model Equations
 

@@ -103,7 +103,7 @@ def switching_detail(directory):
         pwm = devices[f'pwm_{b}']['params']
         prediction = pwm_reference(t[mask], pwm, mu, constants[f'dc_{b}'])
         for ax, key, reference, atol in zip(
-                axs, (f'PWM_pwm_{b}_sa', f'Converter_converter_{b}_voa'),
+                axs, (f'PWM_pwm_{b}_sa', f'Converter_converter_{b}_ea'),
                 prediction, (1e-8, 1e-3)):
             frequency, amplitude = spectrum(data[key][mask], dt)
             _, predicted = spectrum(reference, dt)
@@ -164,10 +164,10 @@ def transient_detail(t, data, study, plots):
     for column, (start, end) in enumerate(windows):
         selected = (t >= start) & (t <= end)
         values = np.column_stack((t[selected]*1000,
-                                  data['Converter_converter_4_voa'][selected]/1000,
+                                  data['Converter_converter_4_ea'][selected]/1000,
                                   data['DependentVoltageSource_filter_4_ia'][selected]))
         np.savetxt(plots / f'switching_window_{column}.csv', values, delimiter=',',
-                   header='time_ms,voa_kv,ia_a', comments='')
+                   header='time_ms,ea_kv,ia_a', comments='')
         for row, color in enumerate(('#0072B2', '#E69F00')):
             ax = axs[row, column]
             ax.plot(values[:, 0], values[:, row+1], color=color, lw=.9)
@@ -332,7 +332,7 @@ def plot_scenario(name, case, results):
     for b, row in zip((4, 5, 6), axs):
         for p in 'abc':
             row[0].plot(t[window], data[f'PWM_pwm_{b}_s{p}'][window], label=p)
-            row[1].plot(t[window], data[f'Converter_converter_{b}_vo{p}'][window]/1000, label=p)
+            row[1].plot(t[window], data[f'Converter_converter_{b}_e{p}'][window]/1000, label=p)
         row[0].set_ylabel(f'IBR {b-3}: s [–]'); row[1].set_ylabel('Bridge voltage [kV]')
         for ax in row: ax.set_xlim(.99, 1.025)
     axs[0, 0].legend(ncol=3)
@@ -414,7 +414,7 @@ def plot_scenario(name, case, results):
     max_kcl = float(max(np.max(np.abs(value)) for value in kcl.values()))
     max_bridge = 0.; gate_min, gate_max = 1., 0.
     for b in (4, 5, 6):
-        s = phase(data, f'PWM_pwm_{b}', 's'); e = phase(data, f'Converter_converter_{b}', 'vo')
+        s = phase(data, f'PWM_pwm_{b}', 's'); e = phase(data, f'Converter_converter_{b}', 'e')
         dc = study.get('signal_values', {}).get(f'dc_{b}', next(d['value'] for d in case['signals'] if d['id'] == f'dc_{b}'))
         expected = dc * (s - np.mean(s, axis=1, keepdims=True))
         max_bridge = max(max_bridge, float(np.max(np.abs(e - expected))))
@@ -432,7 +432,7 @@ def plot_scenario(name, case, results):
 
     # A coherent 0.5 s window at the end: no fabricated switching ripple.
     mask = (t >= 2.5) & (t < 3.)
-    signal = data['Converter_converter_4_voa'][mask]
+    signal = data['Converter_converter_4_ea'][mask]
     frequency, amplitude = spectrum(signal, study['dt_monitor'])
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.semilogy(frequency, np.maximum(amplitude, 1e-12)); ax.set_xlim(0, 2000)
@@ -503,7 +503,7 @@ def switching_comparison(results):
         mask = (t >= .970) & (t <= .976)
         label = f"mu={study.get('mu', 240):g}"
         for ax, key, scale, unit in zip(axs,
-                ('PWM_pwm_4_sa', 'Converter_converter_4_voa', 'DependentVoltageSource_filter_4_ia'),
+                ('PWM_pwm_4_sa', 'Converter_converter_4_ea', 'DependentVoltageSource_filter_4_ia'),
                 (1, 1e-3, 1), ('Phase-a switching function', 'Bridge phase-a voltage [kV]', 'Filter phase-a current [A]')):
             ax.plot(t[mask], data[key][mask]*scale, label=label)
             ax.set_ylabel(unit)
@@ -516,7 +516,7 @@ def switching_comparison(results):
     for name, (t, data, study) in series.items():
         mask = (t >= 2.5) & (t < 3.0)
         label = f"mu={study.get('mu',240):g}"
-        for ax, key, unit in zip(axs, ('PWM_pwm_4_sa','Converter_converter_4_voa'),
+        for ax, key, unit in zip(axs, ('PWM_pwm_4_sa','Converter_converter_4_ea'),
                                  ('Switching-function peak amplitude', 'Bridge-voltage peak amplitude [V]')):
             signal = data[key][mask]
             frequency, amplitude = spectrum(signal, study['dt_monitor'])

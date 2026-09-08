@@ -8,13 +8,13 @@
 \node[block, minimum width=2.4cm, minimum height=0.9cm]
     (source) at (-2.5, 0) {$\mathbf{R}_{\mathrm{s}} + s\mathbf{L}_{\mathrm{s}}$};
 \node[block, minimum width=2.4cm, minimum height=0.9cm]
-    (grid) at (2.5, 0) {$\mathbf{R}_{\mathrm{g}} + s\mathbf{L}_{\mathrm{g}}$};
+    (grid) at (2.5, 0) {$\mathbf{R}_g + s\mathbf{L}_g$};
 \node[signal, label={[sig]above:$\mathbf{e}$}] (e) at (-5.0, 0) {};
 \node[signal, label={[sig]above:$\mathbf{v}$}] (v) at (5.0, 0) {};
 \node[signal, label={[sig]above:$\mathbf{v}_{\mathrm{o}}$}] (vo) at (0, 0) {};
 \draw[->, line] (e) -- node[sig, below] {$\mathbf{i}$} (source.west);
 \draw[line] (source.east) -- (vo) -- (grid.west);
-\draw[->, line] (grid.east) -- node[sig, below] {$\mathbf{i}_{\mathrm{g}}$} (v);
+\draw[->, line] (grid.east) -- node[sig, below] {$\mathbf{i}_g$} (v);
 
 % ================= Shunt capacitor =================
 \draw[line] (vo) -- (0, -1.1);
