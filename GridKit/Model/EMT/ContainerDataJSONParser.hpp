@@ -199,6 +199,10 @@ namespace GridKit
         {
           raw_device.get_to(data.sw.emplace_back());
         }
+        else if (kind == "Transformer")
+        {
+          raw_device.get_to(data.transformer.emplace_back());
+        }
         else if (kind == "Ieeest" || kind == "IEEEST")
         {
           raw_device.get_to(data.ieeest.emplace_back());

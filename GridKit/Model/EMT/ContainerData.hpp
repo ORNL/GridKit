@@ -23,6 +23,7 @@
 #include <GridKit/Model/EMT/Component/Source/REGFMA/RegfmaData.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceData.hpp>
 #include <GridKit/Model/EMT/Component/Switch/SwitchData.hpp>
+#include <GridKit/Model/EMT/Component/Transformer/TransformerData.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/ConverterData.hpp>
 #include <GridKit/Model/EMT/Operators/Modulation/ModulationData.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Angle/AngleData.hpp>
@@ -62,6 +63,7 @@ namespace GridKit
       using RegfmaDataT                 = RegfmaData<RealT, IdxT>;
       using SignalDataT                 = SignalData<RealT, IdxT>;
       using SwitchDataT                 = SwitchData<RealT, IdxT>;
+      using TransformerDataT            = TransformerData<RealT, IdxT>;
       using IeeestDataT                 = Controller::IeeestData<RealT, IdxT>;
       using GastPtiDataT                = Controller::GastPtiData<RealT, IdxT>;
       using Tgov1DataT                  = Controller::Tgov1Data<RealT, IdxT>;
@@ -97,6 +99,7 @@ namespace GridKit
       std::vector<MachineDataT>                     machine;
       std::vector<RegfmaDataT>                      regfma;
       std::vector<SwitchDataT>                      sw;
+      std::vector<TransformerDataT>                 transformer;
       std::vector<IeeestDataT>                      ieeest;
       std::vector<GastPtiDataT>                     gastpti;
       std::vector<Tgov1DataT>                       gov;
