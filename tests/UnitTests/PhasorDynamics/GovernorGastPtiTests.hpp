@@ -823,9 +823,9 @@ namespace GridKit
         success *= (selector.evaluate() == 0);
 
         const DependencyTracking::Variable::DependencyMap expected{
-            {index(Internal::VLOAD), 0.5},
-            {index(Internal::VTEMP), 0.5},
-            {index(Internal::VLV), -1.0},
+            {2 * index(Internal::VLOAD), 0.5}, // @todo Remove these
+            {2 * index(Internal::VTEMP), 0.5}, // @todo Remove these
+            {2 * index(Internal::VLV), -1.0}, // @todo Remove these
         };
         success *= jacobianRowMatches(
             selector.gastpti.getResidual().getData()[index(Internal::VLV)].getDependencies(),
@@ -858,7 +858,7 @@ namespace GridKit
           const auto dependency_jacobian =
               dependencyTrackingJacobian(case_data, pmech, success, overrides);
           const auto enzyme_jacobian =
-              enzymeJacobian(case_data, pmech, success, overrides, context);
+              enzymeJacobian(case_data, pmech, success, overrides);
 
           success *= jacobianMatches(enzyme_jacobian,
                                      dependency_jacobian,
@@ -1603,6 +1603,7 @@ namespace GridKit
         return success;
       }
 
+      /// @todo Remove and setup the test to not rely on explicit variable numbering
       void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const
       {
         auto* y  = fixture.gastpti.y().getData();
@@ -1611,12 +1612,12 @@ namespace GridKit
         const auto model_size = static_cast<size_t>(fixture.gastpti.size());
         for (size_t i = 0; i < model_size; ++i)
         {
-          y[i].setVariableNumber(i);
-          yp[i].setVariableNumber(i);
+          y[i].setVariableNumber(2 * i);
+          yp[i].setVariableNumber(2 * i + 1);
         }
         for (size_t port = 0; port < index(External::MAXIMUM); ++port)
         {
-          fixture.input(port).setVariableNumber(fixture.inputIndex(port));
+          fixture.input(port).setVariableNumber(2 * fixture.inputIndex(port));
         }
 
         fixture.gastpti.y().setDataUpdated();
@@ -1638,16 +1639,11 @@ namespace GridKit
         setAnswerKeyState(fixture.gastpti);
         setState(fixture.gastpti, overrides);
         numberVariables(fixture);
+        fixture.gastpti.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);
+        success *= (fixture.gastpti.evaluateJacobian() == 0);
 
-        const auto                                               model_size = static_cast<size_t>(fixture.gastpti.size());
-        std::vector<DependencyTracking::Variable::DependencyMap> rows(model_size);
-        const auto*                                              f = fixture.gastpti.getResidual().getData();
-        for (size_t i = 0; i < model_size; ++i)
-        {
-          rows[i] = f[i].getDependencies();
-        }
-        return rows;
+        return MapFromCsr(fixture.gastpti.getCsrJacobian());
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
@@ -1655,8 +1651,7 @@ namespace GridKit
           const Data&                          data,
           RealT                                pmech,
           TestStatus&                          success,
-          std::initializer_list<VariableValue> overrides,
-          const char*                          context) const
+          std::initializer_list<VariableValue> overrides) const
       {
         Fixture<ScalarT> fixture(data);
         fixture.attachAllInputs();
@@ -1665,19 +1660,10 @@ namespace GridKit
         setAnswerKeyState(fixture.gastpti);
         setState(fixture.gastpti, overrides);
         fixture.gastpti.updateTime(0.0, 1.0);
-        if (fixture.evaluate() != 0 || fixture.gastpti.evaluateJacobian() != 0)
-        {
-          std::cout << "GASTPTI Jacobian evaluation failed for " << context << '\n';
-          success = false;
-          return {};
-        }
+        success *= (fixture.evaluate() == 0);
+        success *= (fixture.gastpti.evaluateJacobian() == 0);
+        success *= (fixture.gastpti.constructCsr() == 0);
 
-        if (fixture.gastpti.constructCsr() != 0)
-        {
-          std::cout << "GASTPTI CSR construction failed for " << context << '\n';
-          success = false;
-          return {};
-        }
         return MapFromCsr(fixture.gastpti.getCsrJacobian());
       }
 

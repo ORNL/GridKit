@@ -2,8 +2,6 @@
  * @file BusToSignalAdapterDependencyTracking.cpp
  * @author Philip Fackler (facklerpw@ornl.gov)
  *
- * @brief Deinition of BusToSignalAdapter connector interface.
- *
  */
 
 #include "BusToSignalAdapterImpl.hpp"

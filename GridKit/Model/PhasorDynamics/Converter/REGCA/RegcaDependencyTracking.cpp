@@ -13,20 +13,28 @@ namespace GridKit
     namespace Converter
     {
       /**
-       * @brief Report that dependency tracking does not assemble a separate Jacobian.
+       * @brief Evaluate DependencyTracking::Variable Jacobian.
        *
-       * Dependency tracking recovers the sparsity pattern from the residual.
+       * @note Currently only used for testing.
+       *
+       * DependencyTracking::Variable stores the Jacobian as dependency maps,
+       * updated during calls to evaluateResidual().
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for Regca..." << std::endl;
-        Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
+        Log::misc() << "Evaluate DependencyTracking Jacobian for Regca...\n";
+        Log::misc() << "Jacobian evaluation is experimental!\n";
+
+        this->constructCsr();
+
         return 0;
       }
 
+      // Available template instantiations
       template class Regca<DependencyTracking::Variable, long int>;
       template class Regca<DependencyTracking::Variable, size_t>;
+
     } // namespace Converter
   } // namespace PhasorDynamics
 } // namespace GridKit

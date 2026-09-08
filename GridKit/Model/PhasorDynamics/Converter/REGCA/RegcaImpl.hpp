@@ -498,8 +498,8 @@ namespace GridKit
         y[PBR]     = vr * y[IR] + vi * y[II];
         y[QBR]     = vi * y[IR] - vr * y[II];
 
-        ipcmd_set_ = this->toSystemBase(ipcmd0);
-        iqcmd_set_ = this->toSystemBase(iqcmd0);
+        ipcmd_set_ = static_cast<RealT>(this->toSystemBase(ipcmd0));
+        iqcmd_set_ = static_cast<RealT>(this->toSystemBase(iqcmd0));
 
         // Publish the resolved system-base commands for downstream controller
         // initialization. Unattached ports retain these values as constant
@@ -515,6 +515,13 @@ namespace GridKit
 
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
+
+        // For DependencyTracking::Variable, set variable numbers
+        if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
+
         return 0;
       }
 

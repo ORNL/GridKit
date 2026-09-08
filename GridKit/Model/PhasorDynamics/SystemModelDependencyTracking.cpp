@@ -7,8 +7,6 @@ namespace GridKit
     /**
      * @brief By default, Jacobians are not available
      *
-     * DependencyTracking::Variable stores the Jacobian as dependency maps,
-     * updated during calls to evaluateResidual().
      */
     template <typename scalar_type, typename index_type>
     bool SystemModel<scalar_type, index_type>::hasJacobian()
@@ -22,6 +20,7 @@ namespace GridKit
     /**
      * @brief Evaluate system DependencyTracking::Variable Jacobian.
      *
+     * @note Currently only used for testing.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()

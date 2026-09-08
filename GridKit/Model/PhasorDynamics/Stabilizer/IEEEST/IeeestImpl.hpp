@@ -253,6 +253,12 @@ namespace GridKit
         y[10] = bypass_T6_block_ * Ks_ * u;
         y[11] = Math::clamp(y[10], Lsmin_, Lsmax_);
 
+        // For DependencyTracking::Variable, set variable numbers
+        if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
+
         y_.setDataUpdated();
         yp_.setDataUpdated();
 

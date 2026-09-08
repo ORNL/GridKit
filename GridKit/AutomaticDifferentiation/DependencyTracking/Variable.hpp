@@ -255,6 +255,10 @@ namespace GridKit
 
       /**
           @brief Turns variable into parameter, or vice versa.
+
+          @todo is_fixed_ is currently not contributing to the semantics of
+                the derivatives. Leaving as-is for now, as it is not used 
+                for anything other than printed diagnostics.
        */
       void setFixed(bool b = false)
       {

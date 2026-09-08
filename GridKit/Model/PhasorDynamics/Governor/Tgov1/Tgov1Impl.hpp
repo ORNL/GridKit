@@ -302,7 +302,7 @@ namespace GridKit
         y[PTX] = pturb0;
         y[PV]  = pv0;
 
-        pref_set_ = pref0;
+        pref_set_ = static_cast<RealT>(pref0);
         if (signals_.template isAttached<Tgov1ExternalVariables::PREF>())
         {
           signals_.template writeExternalVariable<Tgov1ExternalVariables::PREF>(pref_set_);
@@ -310,6 +310,12 @@ namespace GridKit
 
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
+
+        // For DependencyTracking::Variable, set variable numbers
+        if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
 
         return 0;
       }

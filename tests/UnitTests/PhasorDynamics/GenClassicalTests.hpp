@@ -458,88 +458,26 @@ namespace GridKit
         bus.allocate();
         gen.allocate();
 
-        bus.initialize();
-        gen.initialize();
-
-        auto* gen_y = gen.y().getData();
-        for (size_t i = 0; i < gen.size(); ++i)
-        {
-          gen_y[i].setVariableNumber(i);
-        }
-        gen.y().setDataUpdated();
-        auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus_y[i].setVariableNumber(i + gen.size());
+          bus.setVariableIndex(i, i + gen.size());
+          bus.setResidualIndex(i, i + gen.size());
         }
-        bus.y().setDataUpdated();
-
-        bus.evaluateResidual();
-        gen.evaluateResidual();
-        auto&                                     residual_y_view = gen.getResidual();
-        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         bus.initialize();
         gen.initialize();
 
-        auto* gen_yp = gen.yp().getData();
-        for (size_t i = 0; i < gen.size(); ++i)
-        {
-          gen_yp[i].setVariableNumber(i);
-        }
-        gen.yp().setDataUpdated();
+        gen.updateTime(0.0, 1.0);
 
         bus.evaluateResidual();
         gen.evaluateResidual();
-        auto&                                     residual_yp_view = gen.getResidual();
-        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
 
-        // Print the dependencies
-        for (size_t i = 0; i < residual_y.size(); ++i)
-        {
-          std::cout << i << "th residual, y: ";
-          (residual_y[i]).print(std::cout);
-          std::cout << "\n";
-          std::cout << i << "th residual, yp: ";
-          (residual_yp[i]).print(std::cout);
-          std::cout << "\n";
-        }
+        gen.evaluateJacobian();
+        auto* model_jacobian = gen.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: GenClassical DependencyTracking Jacobian\n";
+        model_jacobian->print();
 
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
-        for (IdxT i = 0; i < residual_y.size(); ++i)
-        {
-          DependencyTracking::Variable::DependencyMap dependency_y  = (residual_y[i]).getDependencies();
-          DependencyTracking::Variable::DependencyMap dependency_yp = (residual_yp[i]).getDependencies();
-
-          for (const auto& pair_y : dependency_y)
-          {
-            auto index_y = pair_y.first;
-            auto value_y = pair_y.second;
-            auto it_yp   = dependency_yp.find(index_y);
-            if (it_yp != dependency_yp.end())
-            {
-              auto value_yp = it_yp->second;
-              dependencies[i].insert(std::make_pair(index_y, value_y + value_yp));
-            }
-            else
-            {
-              dependencies[i].insert(std::make_pair(index_y, value_y));
-            }
-          }
-
-          for (const auto& pair_yp : dependency_yp)
-          {
-            auto index_yp = pair_yp.first;
-            auto value_yp = pair_yp.second;
-            auto it_y     = dependency_y.find(index_yp);
-            if (it_y == dependency_y.end())
-            {
-              dependencies[i].insert(std::make_pair(index_yp, value_yp));
-            }
-          }
-        }
-
-        return dependencies;
+        return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian()
@@ -553,16 +491,16 @@ namespace GridKit
         bus.allocate();
         gen.allocate();
 
-        bus.initialize();
-        gen.initialize();
-
-        gen.updateTime(0.0, 1.0);
-
         for (size_t i = 0; i < bus.size(); ++i)
         {
           bus.setVariableIndex(i, i + gen.size());
           bus.setResidualIndex(i, i + gen.size());
         }
+
+        bus.initialize();
+        gen.initialize();
+
+        gen.updateTime(0.0, 1.0);
 
         bus.evaluateResidual();
         gen.evaluateResidual();
@@ -570,8 +508,8 @@ namespace GridKit
         bus.evaluateJacobian();
         gen.evaluateJacobian();
         gen.constructCsr();
-        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* model_jacobian = gen.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: GenClassical Jacobian\n";
+        auto* model_jacobian = gen.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: GenClassical Enzyme Jacobian\n";
         model_jacobian->print();
 
         return GridKit::Testing::MapFromCsr(model_jacobian);

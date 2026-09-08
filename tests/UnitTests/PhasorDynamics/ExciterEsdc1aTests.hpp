@@ -804,9 +804,10 @@ namespace GridKit
           const auto& dependencies =
               transition.esdc1a.getResidual().getData()[static_cast<size_t>(Internal::EFDP)].getDependencies();
           const DepVar::DependencyMap expected{{
-              {static_cast<size_t>(Internal::EFDP), -13.0},
-              {static_cast<size_t>(Internal::VR), 1.0},
-              {static_cast<size_t>(Internal::VFE), -1.0},
+              {2 * static_cast<size_t>(Internal::EFDP), -12.0}, // @todo Remove these
+              {2 * static_cast<size_t>(Internal::EFDP) + 1, -1.0}, // @todo Remove these
+              {2 * static_cast<size_t>(Internal::VR), 1.0}, // @todo Remove these
+              {2 * static_cast<size_t>(Internal::VFE), -1.0}, // @todo Remove these
           }};
           success *= isEqual(dependencies, expected, kTol);
         }
@@ -1438,6 +1439,7 @@ namespace GridKit
         return false;
       }
 
+      /// @todo Remove and setup the test to not rely on explicit variable numbering
       void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const
       {
         auto* y     = fixture.esdc1a.y().getData();
@@ -1447,16 +1449,16 @@ namespace GridKit
         const auto model_size = static_cast<size_t>(fixture.esdc1a.size());
         for (size_t i = 0; i < model_size; ++i)
         {
-          y[i].setVariableNumber(i);
-          yp[i].setVariableNumber(i);
+          y[i].setVariableNumber(2 * i);
+          yp[i].setVariableNumber(2 * i + 1);
         }
         for (size_t i = 0; i < static_cast<size_t>(fixture.bus.size()); ++i)
         {
-          bus_y[i].setVariableNumber(model_size + i);
+          bus_y[i].setVariableNumber(2 * (model_size + i));
         }
         for (External port : {External::OMEGA, External::VREF, External::VS, External::VUEL})
         {
-          fixture.input(port).setVariableNumber(fixture.inputIndex(port));
+          fixture.input(port).setVariableNumber(2 * fixture.inputIndex(port));
         }
 
         fixture.esdc1a.y().setDataUpdated();
@@ -1478,16 +1480,11 @@ namespace GridKit
         fixture.input(External::VUEL) = kJacobianVuel;
         setAnswerKeyState(fixture.esdc1a);
         numberVariables(fixture);
+        fixture.esdc1a.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);
+        success *= (fixture.esdc1a.evaluateJacobian() == 0);
 
-        const auto                         model_size = static_cast<size_t>(fixture.esdc1a.size());
-        std::vector<DepVar::DependencyMap> rows(model_size);
-        const auto*                        f = fixture.esdc1a.getResidual().getData();
-        for (size_t i = 0; i < model_size; ++i)
-        {
-          rows[i] = f[i].getDependencies();
-        }
-        return rows;
+        return MapFromCsr(fixture.esdc1a.getCsrJacobian());
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
@@ -1510,6 +1507,7 @@ namespace GridKit
         success *= (fixture.evaluate() == 0);
         success *= (fixture.esdc1a.evaluateJacobian() == 0);
         success *= (fixture.esdc1a.constructCsr() == 0);
+
         return MapFromCsr(fixture.esdc1a.getCsrJacobian());
       }
 #endif

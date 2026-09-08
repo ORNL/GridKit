@@ -380,7 +380,7 @@ namespace GridKit
         y[VTEMP]  = static_cast<ScalarT>(vtemp0);
         y[VLV]    = static_cast<ScalarT>(vlv0);
 
-        pref_set_ = static_cast<ScalarT>(pref0);
+        pref_set_ = static_cast<RealT>(pref0);
         if (signals_.template isAttached<GastPtiExternalVariables::PREF>())
         {
           signals_.template writeExternalVariable<GastPtiExternalVariables::PREF>(pref_set_);
@@ -388,6 +388,13 @@ namespace GridKit
 
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
+
+        // For DependencyTracking::Variable, set variable numbers
+        if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
+
         return 0;
       }
 

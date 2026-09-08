@@ -264,7 +264,7 @@ namespace GridKit
       /**
        * @brief CSR construction dispatch depending on ScalarT
        *
-       * @note Currently only used for testing purposes.
+       * @note Currently only used for testing.
        */
       int constructCsr()
       {
@@ -339,7 +339,9 @@ namespace GridKit
       /**
        * @brief CSR construction from COO.
        *
-       * @note Currently only used for testing purposes.
+       * @note Currently only used for testing.
+       * @todo The matrix is only computed on the first call, and the data is stale on subsequent calls.
+       * @todo Unify with system-level construction that retains map_to_csr_.
        */
       int constructCsrFromCoo()
       {
@@ -369,14 +371,12 @@ namespace GridKit
       /**
        * @brief CSR construction from Dependency maps.
        *
-       * @note Currently only used for testing purposes.
+       * @note Currently only used for testing.
        *       See \ref initializeDependencyTrackingVariableNumbers()
        */
       int constructCsrFromDependencies()
+        requires std::is_same_v<ScalarT, DependencyTracking::Variable>
       {
-        static_assert(std::is_same_v<ScalarT, DependencyTracking::Variable>,
-                      "constructCsrFromDependencies() requires ScalarT = DependencyTracking::Variable");
-
         using DependencyMap = typename ScalarT::DependencyMap;
 
         const auto* f = f_.getData();
@@ -485,12 +485,11 @@ namespace GridKit
        * @brief Initialize DependencyTracking variable numbers.
        *
        * @note Assigns even indices to y and odd indices to yp.
+       *       Should be called in intialize(), after variables have been set (and updated as needed).
        */
       int initializeDependencyTrackingVariableNumbers()
+        requires std::is_same_v<ScalarT, DependencyTracking::Variable>
       {
-        static_assert(std::is_same_v<ScalarT, DependencyTracking::Variable>,
-                      "initializeDependencyTrackingVariableNumbers() requires ScalarT = DependencyTracking::Variable");
-
         auto* y  = y_.getData();
         auto* yp = yp_.getData();
 

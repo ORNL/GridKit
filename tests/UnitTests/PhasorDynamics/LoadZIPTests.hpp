@@ -224,73 +224,25 @@ namespace GridKit
         bus.allocate();
         load.allocate();
 
-        bus.initialize();
-        load.initialize();
-
-        auto* load_y = load.y().getData();
-        for (size_t i = 0; i < load.size(); ++i)
-        {
-          load_y[i].setVariableNumber(i);
-        }
-        load.y().setDataUpdated();
-        auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus_y[i].setVariableNumber(i + load.size());
+          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
+          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
         }
-        bus.y().setDataUpdated();
-
-        bus.evaluateResidual();
-        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                 ///< the dependencies
-        auto&                                     residual_y_view = load.getResidual();
-        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         bus.initialize();
         load.initialize();
 
-        auto* load_yp = load.yp().getData();
-        for (size_t i = 0; i < load.size(); ++i)
-        {
-          load_yp[i].setVariableNumber(i);
-        }
-        load.yp().setDataUpdated();
+        load.updateTime(0.0, 1.0);
 
         bus.evaluateResidual();
-        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                 ///< the dependencies
-        auto&                                     residual_yp_view = load.getResidual();
-        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
+        load.evaluateResidual(); //< Tracks dependencies
+        load.evaluateJacobian(); //< Converts dependencies to CSR
+        auto* model_jacobian = load.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: LoadZIP DependencyTracking Jacobian\n";
+        model_jacobian->print();
 
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
-        for (IdxT i = 0; i < residual_y.size(); ++i)
-        {
-          auto dependency_y  = residual_y[i].getDependencies();
-          auto dependency_yp = residual_yp[i].getDependencies();
-
-          for (const auto& pair_y : dependency_y)
-          {
-            auto it_yp = dependency_yp.find(pair_y.first);
-            if (it_yp != dependency_yp.end())
-            {
-              dependencies[i].insert(std::make_pair(pair_y.first, pair_y.second + it_yp->second));
-            }
-            else
-            {
-              dependencies[i].insert(std::make_pair(pair_y.first, pair_y.second));
-            }
-          }
-
-          for (const auto& pair_yp : dependency_yp)
-          {
-            if (!dependency_y.contains(pair_yp.first))
-            {
-              dependencies[i].insert(std::make_pair(pair_yp.first, pair_yp.second));
-            }
-          }
-        }
-
-        return dependencies;
+        return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
@@ -305,16 +257,16 @@ namespace GridKit
         bus.allocate();
         load.allocate();
 
+        for (size_t i = 0; i < bus.size(); ++i)
+        {
+          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
+          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+        }
+
         bus.initialize();
         load.initialize();
 
         load.updateTime(0.0, 1.0);
-
-        for (size_t i = 0; i < bus.size(); ++i)
-        {
-          bus.setVariableIndex(i, i + load.size());
-          bus.setResidualIndex(i, i + load.size());
-        }
 
         bus.evaluateResidual();
         load.evaluateResidual();
@@ -322,8 +274,8 @@ namespace GridKit
         bus.evaluateJacobian();
         load.evaluateJacobian();
         load.constructCsr();
-        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* model_jacobian = load.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: LoadZIP Jacobian\n";
+        auto* model_jacobian = load.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: LoadZIP Enzyme Jacobian\n";
         model_jacobian->print();
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
@@ -331,7 +283,7 @@ namespace GridKit
 #endif
 
     private:
-      static constexpr RealT tol_ = 1.0e-10;
+      static constexpr RealT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
 
       auto makeData() -> DataT
       {

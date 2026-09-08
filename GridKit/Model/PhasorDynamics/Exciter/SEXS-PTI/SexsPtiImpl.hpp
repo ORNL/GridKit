@@ -207,10 +207,10 @@ namespace GridKit
           yp[static_cast<size_t>(i)] = 0.0;
         }
 
-        vref_set_ = vref;
-        vs_set_   = vs;
-        vuel_set_ = vuel;
-        voel_set_ = voel;
+        vref_set_ = static_cast<RealT>(vref);
+        vs_set_   = static_cast<RealT>(vs);
+        vuel_set_ = static_cast<RealT>(vuel);
+        voel_set_ = static_cast<RealT>(voel);
 
         if (signals_.template isAttached<SexsPtiExternalVariables::VREF>())
         {
@@ -219,6 +219,12 @@ namespace GridKit
 
         y_.setDataUpdated();
         yp_.setDataUpdated();
+
+        // For DependencyTracking::Variable, set variable numbers
+        if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
 
         return 0;
       }

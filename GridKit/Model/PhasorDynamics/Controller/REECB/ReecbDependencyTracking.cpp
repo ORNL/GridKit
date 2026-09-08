@@ -13,19 +13,28 @@ namespace GridKit
     namespace Controller
     {
       /**
-       * @brief Report that DependencyTracking exposes structure through the
-       *        residual rather than a separately assembled Jacobian.
+       * @brief Evaluate DependencyTracking::Variable Jacobian.
+       *
+       * @note Currently only used for testing.
+       *
+       * DependencyTracking::Variable stores the Jacobian as dependency maps,
+       * updated during calls to evaluateResidual().
        */
       template <typename scalar_type, typename index_type>
       int Reecb<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for Reecb...\n";
-        Log::misc() << "Jacobian evaluation is not implemented!\n";
+        Log::misc() << "Evaluate DependencyTracking Jacobian for Reecb...\n";
+        Log::misc() << "Jacobian evaluation is experimental!\n";
+
+        this->constructCsr();
+
         return 0;
       }
 
+      // Available template instantiations
       template class Reecb<DependencyTracking::Variable, long int>;
       template class Reecb<DependencyTracking::Variable, size_t>;
+
     } // namespace Controller
   } // namespace PhasorDynamics
 } // namespace GridKit

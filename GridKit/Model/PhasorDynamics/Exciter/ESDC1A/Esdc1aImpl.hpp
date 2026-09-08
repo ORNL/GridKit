@@ -379,10 +379,10 @@ namespace GridKit
         y[VFE]  = vfe0;
         y[EFD]  = efd0;
 
-        omega_set_ = omega0;
-        vref_set_  = vref0;
-        vs_set_    = vs0;
-        vuel_set_  = vuel0;
+        omega_set_ = static_cast<RealT>(omega0);
+        vref_set_  = static_cast<RealT>(vref0);
+        vs_set_    = static_cast<RealT>(vs0);
+        vuel_set_  = static_cast<RealT>(vuel0);
 
         if (signals_.template isAttached<Esdc1aExternalVariables::VREF>())
         {
@@ -391,6 +391,13 @@ namespace GridKit
 
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
+        
+        // For DependencyTracking::Variable, set variable numbers
+        if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
+
         return 0;
       }
 

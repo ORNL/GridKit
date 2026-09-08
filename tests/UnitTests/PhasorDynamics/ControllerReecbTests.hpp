@@ -355,21 +355,6 @@ namespace GridKit
         success *= scalarPreserved(latched.ipcmd(), kInitialIpcmd, "unassigned ipcmd");
         success *= allResidualsWithinInitTolerance(latched.reecb);
 
-        // Initialization preserves AD metadata on the owned command inputs.
-        Fixture<DependencyTracking::Variable> tracked_commands(
-            makeData(), 1.0, 0.0, kSystemBaseVa, false);
-        success                  *= tracked_commands.prepare(kInitialIqcmd, kInitialIpcmd);
-        auto*      tracked_state  = tracked_commands.reecb.y().getData();
-        const auto iqcmd_index    = index(Vars::IQCMD);
-        const auto ipcmd_index    = index(Vars::IPCMD);
-        tracked_state[iqcmd_index].setVariableNumber(iqcmd_index);
-        tracked_state[ipcmd_index].setVariableNumber(ipcmd_index);
-        const auto iqcmd_dependencies  = tracked_state[iqcmd_index].getDependencies();
-        const auto ipcmd_dependencies  = tracked_state[ipcmd_index].getDependencies();
-        success                       *= (tracked_commands.reecb.initialize() == 0);
-        success                       *= isEqual(tracked_state[iqcmd_index].getDependencies(), iqcmd_dependencies);
-        success                       *= isEqual(tracked_state[ipcmd_index].getDependencies(), ipcmd_dependencies);
-
         return success.report(__func__);
       }
 
@@ -2751,7 +2736,8 @@ namespace GridKit
         return success;
       }
 
-      void numberVariables(Fixture<DependencyTracking::Variable>& fixture, RealT alpha) const
+      /// @todo Remove and setup the test to not rely on explicit variable numbering
+      void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const
       {
         auto* y     = fixture.reecb.y().getData();
         auto* yp    = fixture.reecb.yp().getData();
@@ -2759,18 +2745,17 @@ namespace GridKit
 
         for (size_t row = 0; row < index(Vars::MAXIMUM); ++row)
         {
-          y[row].setVariableNumber(row);
-          yp[row].setVariableNumber(row);
-          yp[row].scaleDependencies(alpha);
+          y[row].setVariableNumber(2 * row);
+          yp[row].setVariableNumber(2 * row + 1);
         }
         for (size_t row = 0; row < static_cast<size_t>(fixture.bus.size()); ++row)
         {
-          bus_y[row].setVariableNumber(kBusVrColumn + row);
+          bus_y[row].setVariableNumber(2 * (kBusVrColumn + row));
         }
         for (size_t port = 0; port < index(Ext::MAXIMUM); ++port)
         {
           const auto variable = static_cast<Ext>(port);
-          fixture.input(variable).setVariableNumber(fixture.inputIndex(variable));
+          fixture.input(variable).setVariableNumber(2 * fixture.inputIndex(variable));
         }
 
         fixture.reecb.y().setDataUpdated();
@@ -2792,16 +2777,12 @@ namespace GridKit
         fixture.attachAllInputs();
         success *= fixture.prepare(0.0, 0.2);
         setJacobianState(fixture, capacity, epiv, ipcmd);
-        numberVariables(fixture, alpha);
-        success *= (fixture.evaluate() == 0);
+        numberVariables(fixture);
+        fixture.reecb.updateTime(0.0, alpha);
+        success *= (fixture.reecb.evaluateResidual() == 0);
+        success *= (fixture.reecb.evaluateJacobian() == 0);
 
-        std::vector<DependencyTracking::Variable::DependencyMap> rows(index(Vars::MAXIMUM));
-        const auto*                                              f = fixture.reecb.getResidual().getData();
-        for (size_t row = 0; row < rows.size(); ++row)
-        {
-          rows[row] = f[row].getDependencies();
-        }
-        return rows;
+        return GridKit::Testing::MapFromCsr(fixture.reecb.getCsrJacobian());
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
@@ -2824,10 +2805,11 @@ namespace GridKit
 
         setJacobianState(fixture, capacity, epiv, ipcmd);
         fixture.reecb.updateTime(0.0, alpha);
-        success *= (fixture.evaluate() == 0);
+        success *= (fixture.reecb.evaluateResidual() == 0);
         success *= (fixture.reecb.evaluateJacobian() == 0);
         success *= (fixture.reecb.constructCsr() == 0);
-        return MapFromCsr(fixture.reecb.getCsrJacobian());
+
+        return GridKit::Testing::MapFromCsr(fixture.reecb.getCsrJacobian());
       }
 
       bool jacobiansMatch(

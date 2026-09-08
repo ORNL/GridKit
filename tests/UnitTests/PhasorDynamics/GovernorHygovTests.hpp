@@ -770,8 +770,8 @@ namespace GridKit
           const auto& dependencies =
               blocked.hygov.getResidual().getData()[static_cast<size_t>(Internal::C)].getDependencies();
           const DepVar::DependencyMap expected{{
-              {static_cast<size_t>(Internal::C), -1.0},
-              {static_cast<size_t>(Internal::RC), 0.0},
+              {2 * static_cast<size_t>(Internal::C), -1.0}, // @todo Remove these
+              {2 * static_cast<size_t>(Internal::RC), 0.0}, // @todo Remove these
           }};
           success *= isEqual(dependencies, expected, kTol);
         }
@@ -1557,6 +1557,7 @@ namespace GridKit
         return false;
       }
 
+      /// @todo Remove and setup the test to not rely on explicit variable numbering
       void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const
       {
         auto* y  = fixture.hygov.y().getData();
@@ -1565,12 +1566,12 @@ namespace GridKit
         const auto model_size = static_cast<size_t>(fixture.hygov.size());
         for (size_t i = 0; i < model_size; ++i)
         {
-          y[i].setVariableNumber(i);
-          yp[i].setVariableNumber(i);
+          y[i].setVariableNumber(2 * i);
+          yp[i].setVariableNumber(2 * i);
         }
         for (External port : {External::OMEGA, External::PREF, External::PAUX})
         {
-          fixture.input(port).setVariableNumber(fixture.inputIndex(port));
+          fixture.input(port).setVariableNumber(2 * fixture.inputIndex(port));
         }
 
         fixture.hygov.y().setDataUpdated();
@@ -1609,16 +1610,11 @@ namespace GridKit
         setAnswerKeyState(fixture.hygov);
         setState(fixture.hygov, {{Internal::G, gate}});
         numberVariables(fixture);
+        fixture.hygov.updateTime(0.0, 1.0);
         success *= (fixture.evaluate() == 0);
+        success *= (fixture.hygov.evaluateJacobian() == 0);
 
-        const auto                         model_size = static_cast<size_t>(fixture.hygov.size());
-        std::vector<DepVar::DependencyMap> rows(model_size);
-        const auto*                        f = fixture.hygov.getResidual().getData();
-        for (size_t i = 0; i < model_size; ++i)
-        {
-          rows[i] = f[i].getDependencies();
-        }
-        return rows;
+        return MapFromCsr(fixture.hygov.getCsrJacobian());
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
@@ -1636,6 +1632,7 @@ namespace GridKit
         success *= (fixture.evaluate() == 0);
         success *= (fixture.hygov.evaluateJacobian() == 0);
         success *= (fixture.hygov.constructCsr() == 0);
+
         return MapFromCsr(fixture.hygov.getCsrJacobian());
       }
 #endif

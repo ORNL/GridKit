@@ -440,13 +440,13 @@ namespace GridKit
 
       ScalarT Te = y[12];
       // Convert Te to system base for governor PM signal.
-      pmech_set_ = this->toSystemBase(Te);
+      pmech_set_ = static_cast<RealT>(this->toSystemBase(Te));
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
         signals_.template writeExternalVariable<GenrouExternalVariables::PM>(pmech_set_);
       }
 
-      efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
+      efd_set_ = static_cast<RealT>(Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat);
       if (signals_.template isAttached<GenrouExternalVariables::EFD>())
       {
         signals_.template writeExternalVariable<GenrouExternalVariables::EFD>(efd_set_);
@@ -459,6 +459,12 @@ namespace GridKit
 
       y_.setDataUpdated();
       yp_.setDataUpdated();
+
+      // For DependencyTracking::Variable, set variable numbers
+      if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+      {
+        this->initializeDependencyTrackingVariableNumbers();
+      }
 
       return 0;
     }

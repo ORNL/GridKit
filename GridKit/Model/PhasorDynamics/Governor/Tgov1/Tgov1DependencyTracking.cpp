@@ -12,21 +12,30 @@ namespace GridKit
     namespace Governor
     {
       /**
-       * @brief Jacobian evaluation not implemented yet
+       * @brief Evaluate DependencyTracking::Variable Jacobian.
+       *
+       * @note Currently only used for testing.
+       *
+       * DependencyTracking::Variable stores the Jacobian as dependency maps,
+       * updated during calls to evaluateResidual().
        *
        * @return int - error code, 0 = success
        */
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for Tgov1..." << std::endl;
-        Log::misc() << "Jacobian evaluation not implemented!" << std::endl;
+        Log::misc() << "Evaluate DependencyTracking Jacobian for Tgov1...\n";
+        Log::misc() << "Jacobian evaluation is experimental!\n";
+
+        this->constructCsr();
+
         return 0;
       }
 
       // Available template instantiations
       template class Tgov1<DependencyTracking::Variable, long int>;
       template class Tgov1<DependencyTracking::Variable, size_t>;
+
     } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit

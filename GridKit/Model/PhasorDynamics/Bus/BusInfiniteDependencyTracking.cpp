@@ -1,3 +1,8 @@
+/**
+ * @file BusInfiniteDependencyTracking.cpp
+ * @author Slaven Peles (peless@ornl.gov)
+ *
+ */
 
 #include "BusInfiniteImpl.hpp"
 
