@@ -303,7 +303,7 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT pmech0       = toComponentBase(pmech_system0);
+        const ScalarT pmech0       = this->toComponentBase(pmech_system0);
         const RealT   pmech0_value = static_cast<RealT>(pmech0);
         const RealT   xflow0       = pmech0_value + Dturb_ * omega0;
         const RealT   vtemp0       = At_ + Kt_ * (At_ - xflow0);
@@ -357,7 +357,7 @@ namespace GridKit
         }
 
         const RealT pref_component0 = vload0 + omega0 / R_;
-        const RealT pref0           = toSystemBase(pref_component0);
+        const RealT pref0           = this->toSystemBase(pref_component0);
         if (!std::isfinite(vload0) || !std::isfinite(vlv0)
             || !std::isfinite(pref_component0) || !std::isfinite(pref0))
         {
@@ -552,7 +552,7 @@ namespace GridKit
         const ScalarT xtemp_dot  = yp[XTEMP];
 
         const ScalarT omega = ws[OMEGA];
-        const ScalarT pref  = toComponentBase(ws[PREF]);
+        const ScalarT pref  = this->toComponentBase(ws[PREF]);
 
         const ScalarT valve_target =
             Math::antiwindup(xvalve, vlv - xvalve, Vmin_response_, Vmax_response_);
@@ -563,7 +563,7 @@ namespace GridKit
         f[VLOAD]  = -omega + R_ * (pref - vload);
         f[VTEMP]  = -vtemp + At_ + Kt_ * (At_ - xtemp);
         f[VLV]    = -vlv + Math::min(vload, vtemp);
-        f[PMECH]  = -toComponentBase(pmech) + xflow - Dturb_ * omega;
+        f[PMECH]  = -this->toComponentBase(pmech) + xflow - Dturb_ * omega;
 
         return 0;
       }

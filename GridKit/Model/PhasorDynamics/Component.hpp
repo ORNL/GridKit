@@ -292,14 +292,14 @@ namespace GridKit
         va_component_base_ = va_component_base;
       }
 
-      template <typename ValueT>
-      ValueT toComponentBase(ValueT value) const
+      template <typename value_type>
+      value_type toComponentBase(value_type value) const
       {
         return value * (va_system_base_ / va_component_base_);
       }
 
-      template <typename ValueT>
-      ValueT toSystemBase(ValueT value) const
+      template <typename value_type>
+      value_type toSystemBase(value_type value) const
       {
         return value * (va_component_base_ / va_system_base_);
       }

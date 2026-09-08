@@ -133,13 +133,13 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
-                    { return toSystemBase(y_.getData()[12]); });
+                    { return this->toSystemBase(y_.getData()[12]); });
       monitor_->set(Variable::ii, [this]
-                    { return toSystemBase(y_.getData()[13]); });
+                    { return this->toSystemBase(y_.getData()[13]); });
       monitor_->set(Variable::p, [this]
-                    { return toSystemBase(Vr() * y_.getData()[12] + Vi() * y_.getData()[13]); });
+                    { return this->toSystemBase(Vr() * y_.getData()[12] + Vi() * y_.getData()[13]); });
       monitor_->set(Variable::q, [this]
-                    { return toSystemBase(Vi() * y_.getData()[12] - Vr() * y_.getData()[13]); });
+                    { return this->toSystemBase(Vi() * y_.getData()[12] - Vr() * y_.getData()[13]); });
       monitor_->set(Variable::delta, [this]
                     { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
@@ -261,8 +261,8 @@ namespace GridKit
       // Network frame terminal values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
-      ScalarT p   = toComponentBase(static_cast<ScalarT>(p0_));
-      ScalarT q   = toComponentBase(static_cast<ScalarT>(q0_));
+      ScalarT p   = this->toComponentBase(static_cast<ScalarT>(p0_));
+      ScalarT q   = this->toComponentBase(static_cast<ScalarT>(q0_));
       ScalarT vm2 = vr * vr + vi * vi;
       ScalarT ir  = (p * vr + q * vi) / vm2;
       ScalarT ii  = (p * vi - q * vr) / vm2;
@@ -302,7 +302,7 @@ namespace GridKit
       y[13] = ii;
 
       // Convert Te to system base for governor PM signal.
-      pmech_set_ = toSystemBase(Te);
+      pmech_set_ = this->toSystemBase(Te);
       if (signals_.template isAttached<GensalExternalVariables::PM>())
       {
         signals_.template writeExternalVariable<GensalExternalVariables::PM>(pmech_set_);
@@ -397,7 +397,7 @@ namespace GridKit
       ScalarT vi = wb[1];
 
       // Set signal variable aliases
-      ScalarT pmech = toComponentBase(ws[0]);
+      ScalarT pmech = this->toComponentBase(ws[0]);
       ScalarT efd   = ws[1];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
@@ -438,8 +438,8 @@ namespace GridKit
       ScalarT ii = y[13];
 
       // Convert current injection to system base for the network.
-      h[0] = toSystemBase(ir);
-      h[1] = toSystemBase(ii);
+      h[0] = this->toSystemBase(ir);
+      h[1] = this->toSystemBase(ii);
 
       return 0;
     }

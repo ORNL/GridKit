@@ -316,8 +316,8 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT pmech0 = toComponentBase(pmech0_system);
-        const ScalarT paux0  = toComponentBase(paux0_system);
+        const ScalarT pmech0 = this->toComponentBase(pmech0_system);
+        const ScalarT paux0  = this->toComponentBase(paux0_system);
         ret                  = is_finite(pmech0)
               && is_finite(paux0);
         if (!ret)
@@ -372,7 +372,7 @@ namespace GridKit
         const ScalarT omegadb0 = Math::deadband1(omega0, -db1_, db1_);
         const ScalarT xn0      = omegadb0;
         const ScalarT yomega0  = xn0 + leadlag_gain_ * (omegadb0 - xn0);
-        const ScalarT pref0    = toSystemBase(yomega0 + Rperm_ * gate0 - paux0);
+        const ScalarT pref0    = this->toSystemBase(yomega0 + Rperm_ * gate0 - paux0);
 
         ret = is_finite(h0)
               && is_finite(pgv0)
@@ -607,12 +607,12 @@ namespace GridKit
         f[G]       = -g_dot + (c - g) / Tg_;
         f[Q]       = -q_dot + (Hdam_eff_ - head) / Tw_;
         f[OMEGADB] = -omegadb + Math::deadband1(omega, -db1_, db1_);
-        f[EF]      = -ef + toComponentBase(pref + paux) - yomega - Rperm_ * c;
+        f[EF]      = -ef + this->toComponentBase(pref + paux) - yomega - Rperm_ * c;
         f[FC]      = -Rtemp_ * fc + xf / Tr_ + (ef - xf) / Tf_;
         f[RC]      = -rc + Math::clamp(fc, -Velm_, Velm_);
         f[PGV]     = -pgv + gatePower(g);
         f[H]       = -q * q + head * pgv * pgv;
-        f[PMECH]   = -toComponentBase(pmech) + At_ * head * (q - Qnl_) - Dturb_ * omega * g;
+        f[PMECH]   = -this->toComponentBase(pmech) + At_ * head * (q - Qnl_) - Dturb_ * omega * g;
 
         return 0;
       }

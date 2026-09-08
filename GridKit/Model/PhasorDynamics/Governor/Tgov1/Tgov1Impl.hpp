@@ -286,7 +286,7 @@ namespace GridKit
         }
 
         const ScalarT pmech0 = y[PM];
-        const ScalarT pm0    = toComponentBase(pmech0);
+        const ScalarT pm0    = this->toComponentBase(pmech0);
         const ScalarT pv0    = pm0 + Dt_ * omega0;
         const ScalarT pturb0 = pv0;
         const ScalarT pref0  = omega0 + R_ * pv0;
@@ -378,7 +378,7 @@ namespace GridKit
 
         f[PTX] = -pturb_dot - (pturb - pv - T2_ * pv_dot) / T3_;
         f[PV]  = -pv_dot + Math::antiwindup(pv, -pv + (pref - omega) / R_, Pvmin_, Pvmax_) / T1_;
-        f[PM]  = -toComponentBase(pmech) + pturb - Dt_ * omega;
+        f[PM]  = -this->toComponentBase(pmech) + pturb - Dt_ * omega;
 
         return 0;
       }

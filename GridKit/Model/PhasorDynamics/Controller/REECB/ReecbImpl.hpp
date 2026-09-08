@@ -362,16 +362,16 @@ namespace GridKit
 
         const RealT ipcmd0_system = static_cast<RealT>(y[IPCMD]);
         const RealT iqcmd0_system = static_cast<RealT>(y[IQCMD]);
-        const RealT ipcmd0        = toComponentBase(ipcmd0_system);
-        const RealT iqcmd0        = toComponentBase(iqcmd0_system);
+        const RealT ipcmd0        = this->toComponentBase(ipcmd0_system);
+        const RealT iqcmd0        = this->toComponentBase(iqcmd0_system);
         const RealT vr0           = static_cast<RealT>(Vr());
         const RealT vi0           = static_cast<RealT>(Vi());
         const RealT vt0           = std::sqrt(vr0 * vr0 + vi0 * vi0);
         const RealT vmeas0        = vt0;
         const RealT vmeas_safe0   = Math::max(vmeas0, VMEAS_MINIMUM);
 
-        RealT pe0_system   = toSystemBase(ipcmd0 * vmeas_safe0);
-        RealT qgen0_system = toSystemBase(iqcmd0 * vmeas_safe0);
+        RealT pe0_system   = this->toSystemBase(ipcmd0 * vmeas_safe0);
+        RealT qgen0_system = this->toSystemBase(iqcmd0 * vmeas_safe0);
 
         if (signals_.template isAttached<ReecbExternalVariables::PE>())
         {
@@ -384,8 +384,8 @@ namespace GridKit
               signals_.template readExternalVariable<ReecbExternalVariables::QGEN>());
         }
 
-        const RealT pmeas0 = toComponentBase(pe0_system);
-        const RealT qgen0  = toComponentBase(qgen0_system);
+        const RealT pmeas0 = this->toComponentBase(pe0_system);
+        const RealT qgen0  = this->toComponentBase(qgen0_system);
         RealT       vref0  = vmeas0;
         if (Vref0_given_)
         {
@@ -489,7 +489,7 @@ namespace GridKit
         }
         const RealT pmin         = std::min(Pmin_, pord0);
         const RealT pmax         = std::max(Pmax_, pord0);
-        const RealT pref0_system = toSystemBase(pord0);
+        const RealT pref0_system = this->toSystemBase(pord0);
 
         RealT qtarget0 = ZERO<RealT>;
         if (!QFlag_)
@@ -530,8 +530,8 @@ namespace GridKit
         }
         else
         {
-          qext0_port = toSystemBase(qtarget0);
-          qref0      = toComponentBase(qext0_port);
+          qext0_port = this->toSystemBase(qtarget0);
+          qref0      = this->toComponentBase(qext0_port);
         }
 
         const RealT eq0   = Math::clamp(qref0, qmin, qmax) - qgen0;
@@ -963,13 +963,13 @@ namespace GridKit
         const ScalarT vr = wb[0];
         const ScalarT vi = wb[1];
 
-        const ScalarT pe     = toComponentBase(ws[PE]);
-        const ScalarT qgen   = toComponentBase(ws[QGEN]);
+        const ScalarT pe     = this->toComponentBase(ws[PE]);
+        const ScalarT qgen   = this->toComponentBase(ws[QGEN]);
         const ScalarT extref = ws[QEXT];
         const ScalarT pfaref = ws[PFAREF];
-        const ScalarT pref   = toComponentBase(ws[PREF]);
-        const ScalarT iqcmd  = toComponentBase(iqcmd_system);
-        const ScalarT ipcmd  = toComponentBase(ipcmd_system);
+        const ScalarT pref   = this->toComponentBase(ws[PREF]);
+        const ScalarT iqcmd  = this->toComponentBase(iqcmd_system);
+        const ScalarT ipcmd  = this->toComponentBase(ipcmd_system);
 
         const ScalarT verr        = Math::deadband2(Vref0_ - vmeas, dbd1_, dbd2_);
         const ScalarT q_pi_state  = Kqp_ * eq + xpiq;
@@ -985,7 +985,7 @@ namespace GridKit
         // The Volt/VAr channel is a system-base reactive power unless
         // direct-voltage mode selects it as a terminal-voltage reference,
         // which takes no power-base conversion.
-        const ScalarT qref_target = q_ref_on_ * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * toComponentBase(extref));
+        const ScalarT qref_target = q_ref_on_ * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * this->toComponentBase(extref));
 
         f[VMEAS]  = -vmeas_dot + (vt - vmeas) / Trv_;
         f[PMEAS]  = -pmeas_dot + (pe - pmeas) / Tp_;
