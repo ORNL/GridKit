@@ -99,6 +99,16 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTPllTest COMMAND test_emt_pll)
 
+add_executable(test_emt_outer_power_control runOuterPowerControlTests.cpp)
+target_link_libraries(
+  test_emt_outer_power_control
+  GridKit::definitions
+  GridKit::emt_outer_power_control
+  GridKit::emt_outer_power_control_dependency_tracking
+  GridKit::emt_inner_current_control
+  GridKit::testing)
+add_test(NAME EMTOuterPowerControlTest COMMAND test_emt_outer_power_control)
+
 add_executable(test_emt_vector_fit runVectorFitTests.cpp)
 target_link_libraries(
   test_emt_vector_fit

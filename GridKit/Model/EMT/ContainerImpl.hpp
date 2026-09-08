@@ -183,6 +183,12 @@ namespace GridKit
         qualified_data.id   = qualify(model_data.id);
         add<Controller::OuterVoltageControl<ScalarT, IdxT>>(model_data.id, qualified_data);
       }
+      for (const auto& model_data : data.outer_power_control)
+      {
+        auto qualified_data = model_data;
+        qualified_data.id   = qualify(model_data.id);
+        add<Controller::OuterPowerControl<ScalarT, IdxT>>(model_data.id, qualified_data);
+      }
 
       for (const auto& model_data : data.park)
       {
@@ -318,6 +324,17 @@ namespace GridKit
       {
         auto& model  = component<Controller::OuterVoltageControl<ScalarT, IdxT>>(model_data.id);
         using Inputs = Controller::OuterVoltageControlInputs;
+        std::array<SignalT*, static_cast<size_t>(Inputs::SIZE)> inputs{};
+        for (size_t n = 0; n < inputs.size(); ++n)
+          inputs[n] = &source(model_data.inputs.at(static_cast<Inputs>(n)));
+        model.attachInput(inputs);
+        for (const auto& [output, reference] : model_data.outputs)
+          model.assignOutput(output, &signal(reference));
+      }
+      for (const auto& model_data : data.outer_power_control)
+      {
+        auto& model  = component<Controller::OuterPowerControl<ScalarT, IdxT>>(model_data.id);
+        using Inputs = Controller::OuterPowerControlInputs;
         std::array<SignalT*, static_cast<size_t>(Inputs::SIZE)> inputs{};
         for (size_t n = 0; n < inputs.size(); ++n)
           inputs[n] = &source(model_data.inputs.at(static_cast<Inputs>(n)));
