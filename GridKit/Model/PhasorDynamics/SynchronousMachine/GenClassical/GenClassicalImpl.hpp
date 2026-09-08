@@ -89,33 +89,19 @@ namespace GridKit
       return monitor_.get();
     }
 
-    // System base -> machine base when reading system values.
-    template <typename scalar_type, typename index_type>
-    scalar_type GenClassical<scalar_type, index_type>::toMachineBase(ScalarT value) const
-    {
-      return value * va_system_base_ / va_machine_base_;
-    }
-
-    // Machine base -> system base for network and signal output.
-    template <typename scalar_type, typename index_type>
-    scalar_type GenClassical<scalar_type, index_type>::toSystemBase(ScalarT value) const
-    {
-      return value / toMachineBase(static_cast<ScalarT>(ONE<RealT>));
-    }
-
     template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::initializeMonitor()
     {
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
-                    { return toSystemBase(y_.getData()[3]); });
+                    { return this->toSystemBase(y_.getData()[3]); });
       monitor_->set(Variable::ii, [this]
-                    { return toSystemBase(y_.getData()[4]); });
+                    { return this->toSystemBase(y_.getData()[4]); });
       monitor_->set(Variable::p, [this]
-                    { return toSystemBase(Vr() * y_.getData()[3] + Vi() * y_.getData()[4]); });
+                    { return this->toSystemBase(Vr() * y_.getData()[3] + Vi() * y_.getData()[4]); });
       monitor_->set(Variable::q, [this]
-                    { return toSystemBase(Vi() * y_.getData()[3] - Vr() * y_.getData()[4]); });
+                    { return this->toSystemBase(Vi() * y_.getData()[3] - Vr() * y_.getData()[4]); });
       monitor_->set(Variable::delta, [this]
                     { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
@@ -218,8 +204,8 @@ namespace GridKit
       // Network frame terminal values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
-      ScalarT p   = toMachineBase(static_cast<ScalarT>(p0_));
-      ScalarT q   = toMachineBase(static_cast<ScalarT>(q0_));
+      ScalarT p   = this->toComponentBase(static_cast<ScalarT>(p0_));
+      ScalarT q   = this->toComponentBase(static_cast<ScalarT>(q0_));
       ScalarT vm2 = vr * vr + vi * vi;
       ScalarT ir  = (p * vr + q * vi) / vm2;
       ScalarT ii  = (p * vi - q * vr) / vm2;
@@ -242,7 +228,7 @@ namespace GridKit
       y[4] = ii;
 
       // Convert Te to system base for governor PM signal.
-      pmech_set_ = toSystemBase(Te);
+      pmech_set_ = this->toSystemBase(Te);
       if (signals_.template isAttached<GenClassicalExternalVariables::PM>())
       {
         signals_.template writeExternalVariable<GenClassicalExternalVariables::PM>(pmech_set_);
@@ -325,7 +311,7 @@ namespace GridKit
       const ScalarT vi = wb[1];
 
       // Set signal variable aliases
-      const ScalarT pmech = toMachineBase(ws[0]);
+      const ScalarT pmech = this->toComponentBase(ws[0]);
       const ScalarT efd   = ws[1];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
@@ -355,8 +341,8 @@ namespace GridKit
     {
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];
-      h[0]             = toSystemBase(ir);
-      h[1]             = toSystemBase(ii);
+      h[0]             = this->toSystemBase(ir);
+      h[1]             = this->toSystemBase(ii);
 
       return 0;
     }
@@ -410,9 +396,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void GenClassical<scalar_type, index_type>::setDerivedParams()
     {
-      G_               = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
-      B_               = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
-      va_machine_base_ = mva_base_ * static_cast<RealT>(1.0e6);
+      G_ = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      B_ = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
     }
 
   } // namespace PhasorDynamics

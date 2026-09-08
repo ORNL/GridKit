@@ -287,6 +287,23 @@ namespace GridKit
       }
 
     protected:
+      void setComponentBase(RealT va_component_base)
+      {
+        va_component_base_ = va_component_base;
+      }
+
+      template <typename value_type>
+      value_type toComponentBase(value_type value) const
+      {
+        return value * (va_system_base_ / va_component_base_);
+      }
+
+      template <typename value_type>
+      value_type toSystemBase(value_type value) const
+      {
+        return value * (va_component_base_ / va_system_base_);
+      }
+
       /**
        * @brief Allocate this component's state and residual vectors.
        */
@@ -375,6 +392,7 @@ namespace GridKit
 
       RealT freq_system_base_{60.0};
       RealT va_system_base_{100.0e6};
+      RealT va_component_base_{0};
 
       using NotImplementedError = GridKit::Utilities::NotImplementedError;
 

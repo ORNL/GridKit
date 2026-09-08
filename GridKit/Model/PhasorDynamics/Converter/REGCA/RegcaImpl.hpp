@@ -114,31 +114,7 @@ namespace GridKit
           use_rqmin_ = ONE<RealT>;
         }
 
-        va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
-      }
-
-      /**
-       * @brief Convert a system-base per-unit value to the component base.
-       *
-       * @param[in] value Value on the system base.
-       * @return Value on the REGCA component base.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Regca<scalar_type, index_type>::toComponentBase(scalar_type value) const
-      {
-        return value * va_system_base_ / va_converter_base_;
-      }
-
-      /**
-       * @brief Convert a component-base per-unit value to the system base.
-       *
-       * @param[in] value Value on the REGCA component base.
-       * @return Value on the system base.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Regca<scalar_type, index_type>::toSystemBase(scalar_type value) const
-      {
-        return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
+        this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
       }
 
       /**
@@ -493,7 +469,7 @@ namespace GridKit
         // P0 is a system-base power-flow injection. Resolve the component-base
         // active current through the LVACM network-interface gain.
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        const ScalarT ip0   = toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
+        const ScalarT ip0   = this->toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
         const ScalarT il0   = Math::linseg(vt, VL0_, VL1_, IL1_)
                             + KL_ * Math::ramp(vt - VL1_);
 
@@ -506,7 +482,7 @@ namespace GridKit
 
         // Evaluate the HVRCM law and preserve the requested Q0.
         const ScalarT iqextra0 = Khv_ * Math::ramp(vt - Vhvmax_);
-        const ScalarT qnet0    = toComponentBase(static_cast<ScalarT>(q0_) / vt);
+        const ScalarT qnet0    = this->toComponentBase(static_cast<ScalarT>(q0_) / vt);
         const ScalarT iqcmd0   = qnet0 + iqextra0;
         const ScalarT ir0      = (vi * qnet0 + vr * ip0 * lvacm) / vt;
         const ScalarT ii0      = (-vr * qnet0 + vi * ip0 * lvacm) / vt;
@@ -517,13 +493,13 @@ namespace GridKit
         y[IQ]      = iqcmd0;
         y[IQEXTRA] = iqextra0;
         y[IL]      = il0;
-        y[IR]      = toSystemBase(ir0);
-        y[II]      = toSystemBase(ii0);
+        y[IR]      = this->toSystemBase(ir0);
+        y[II]      = this->toSystemBase(ii0);
         y[PBR]     = vr * y[IR] + vi * y[II];
         y[QBR]     = vi * y[IR] - vr * y[II];
 
-        ipcmd_set_ = toSystemBase(ipcmd0);
-        iqcmd_set_ = toSystemBase(iqcmd0);
+        ipcmd_set_ = this->toSystemBase(ipcmd0);
+        iqcmd_set_ = this->toSystemBase(iqcmd0);
 
         // Publish the resolved system-base commands for downstream controller
         // initialization. Unattached ports retain these values as constant
@@ -621,8 +597,8 @@ namespace GridKit
         const ScalarT vr = wb[0];
         const ScalarT vi = wb[1];
 
-        const ScalarT ipcmd = toComponentBase(ws[IPCMD]);
-        const ScalarT iqcmd = toComponentBase(ws[IQCMD]);
+        const ScalarT ipcmd = this->toComponentBase(ws[IPCMD]);
+        const ScalarT iqcmd = this->toComponentBase(ws[IQCMD]);
 
         // Form the unconstrained current derivatives, then apply the REGCA
         // recovery rate limits in p.u./s.
@@ -649,8 +625,8 @@ namespace GridKit
         f[IP] = -ip_dot + bypass_lvpl_ * fp_limited
                 + use_lvpl_ * awmax(ip, fp_limited, il, il_rate);
         f[VT]      = -vt * vt + vr * vr + vi * vi;
-        f[IR]      = -toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
-        f[II]      = -toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
+        f[IR]      = -this->toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
+        f[II]      = -this->toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
         f[IQEXTRA] = -iqextra + Khv_ * Math::ramp(vt - Vhvmax_);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_)
                 + KL_ * Math::ramp(vm - VL1_);

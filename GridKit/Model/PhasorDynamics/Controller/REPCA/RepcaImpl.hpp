@@ -295,8 +295,8 @@ namespace GridKit
 
         const ScalarT qext0_system = y[QEXT];
         const ScalarT pext0_system = y[PEXT];
-        const ScalarT qext0        = toComponentBase(qext0_system);
-        const ScalarT pext0        = toComponentBase(pext0_system);
+        const ScalarT qext0        = this->toComponentBase(qext0_system);
+        const ScalarT pext0        = this->toComponentBase(pext0_system);
 
         const ScalarT vr = Vr();
         const ScalarT vi = Vi();
@@ -308,8 +308,8 @@ namespace GridKit
             signals_.template readExternalVariable<RepcaExternalVariables::P>();
         const ScalarT q_system =
             signals_.template readExternalVariable<RepcaExternalVariables::Q>();
-        const ScalarT ir   = toComponentBase(ir_system);
-        const ScalarT ii   = toComponentBase(ii_system);
+        const ScalarT ir   = this->toComponentBase(ir_system);
+        const ScalarT ii   = this->toComponentBase(ii_system);
         ScalarT       freq = static_cast<ScalarT>(ONE<RealT>);
         if (signals_.template isAttached<RepcaExternalVariables::FREQ>())
         {
@@ -329,8 +329,8 @@ namespace GridKit
           return 1;
         }
 
-        const ScalarT p = toComponentBase(p_system);
-        const ScalarT q = toComponentBase(q_system);
+        const ScalarT p = this->toComponentBase(p_system);
+        const ScalarT q = this->toComponentBase(q_system);
 
         const ScalarT vldc_r = vr - Rc_ * ir + Xc_ * ii;
         const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
@@ -418,9 +418,9 @@ namespace GridKit
         }
         else
         {
-          qref0_system = toSystemBase(qmeas0 + erq0);
+          qref0_system = this->toSystemBase(qmeas0 + erq0);
         }
-        const ScalarT pref0_system = p_system + toSystemBase(ep0 - pfreq0);
+        const ScalarT pref0_system = p_system + this->toSystemBase(ep0 - pfreq0);
 
         const bool candidates_are_finite =
             is_finite(qext0_system)
@@ -785,12 +785,12 @@ namespace GridKit
         const ScalarT erqdb  = y[ERQDB];
         const ScalarT erqlim = y[ERQLIM];
         const ScalarT qpi    = y[QPI];
-        const ScalarT qext   = toComponentBase(y[QEXT]);
+        const ScalarT qext   = this->toComponentBase(y[QEXT]);
         const ScalarT ef     = y[EF];
         const ScalarT ep     = y[EP];
         const ScalarT eplim  = y[EPLIM];
         const ScalarT ppi    = y[PPI];
-        const ScalarT pext   = toComponentBase(y[PEXT]);
+        const ScalarT pext   = this->toComponentBase(y[PEXT]);
 
         const ScalarT vmeas_dot = yp[VMEAS];
         const ScalarT qmeas_dot = yp[QMEAS];
@@ -803,15 +803,15 @@ namespace GridKit
         const ScalarT vr = wb[0];
         const ScalarT vi = wb[1];
 
-        const ScalarT ir      = toComponentBase(ws[IR]);
-        const ScalarT ii      = toComponentBase(ws[II]);
-        const ScalarT p       = toComponentBase(ws[P]);
-        const ScalarT q       = toComponentBase(ws[Q]);
+        const ScalarT ir      = this->toComponentBase(ws[IR]);
+        const ScalarT ii      = this->toComponentBase(ws[II]);
+        const ScalarT p       = this->toComponentBase(ws[P]);
+        const ScalarT q       = this->toComponentBase(ws[Q]);
         const ScalarT freq    = ws[FREQ];
         const ScalarT freqref = ws[FREQREF];
         const ScalarT vref    = ws[VREF];
-        const ScalarT qref    = toComponentBase(ws[QREF]);
-        const ScalarT pref_in = toComponentBase(ws[PREF_INPUT]);
+        const ScalarT qref    = this->toComponentBase(ws[QREF]);
+        const ScalarT pref_in = this->toComponentBase(ws[PREF_INPUT]);
 
         const ScalarT vldc_r = vr - Rc_ * ir + Xc_ * ii;
         const ScalarT vldc_i = vi - Rc_ * ii - Xc_ * ir;
@@ -1042,7 +1042,7 @@ namespace GridKit
         Tp_    = std::max(Tp_, TIME_CONSTANT_MINIMUM);
         Tlag_  = std::max(Tlag_, TIME_CONSTANT_MINIMUM);
 
-        va_component_base_ = mva_base_ * static_cast<RealT>(1.0e6);
+        this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
 
         vcomp_on_  = VcompFlag_ ? ONE<RealT> : ZERO<RealT>;
         vcomp_off_ = ONE<RealT> - vcomp_on_;
@@ -1206,31 +1206,6 @@ namespace GridKit
                  + std::log(std::sinh(HALF<RealT> * x));
         }
         return std::log1p(-std::exp(-x));
-      }
-
-      /**
-       * @brief Convert a system-base power or current quantity to REPCA component base
-       *
-       * @param[in] value Quantity on the system base.
-       * @return The same quantity on the REPCA component base.
-       */
-      template <typename scalar_type, typename index_type>
-      [[gnu::always_inline]] inline scalar_type
-      Repca<scalar_type, index_type>::toComponentBase(scalar_type value) const
-      {
-        return value * (va_system_base_ / va_component_base_);
-      }
-
-      /**
-       * @brief Convert a component-base power quantity to system base
-       *
-       * @param[in] value Quantity on the REPCA component base.
-       * @return The same quantity on the system base.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Repca<scalar_type, index_type>::toSystemBase(scalar_type value) const
-      {
-        return value * (va_component_base_ / va_system_base_);
       }
 
       /**

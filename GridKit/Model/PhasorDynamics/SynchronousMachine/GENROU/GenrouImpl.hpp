@@ -270,33 +270,19 @@ namespace GridKit
       return monitor_.get();
     }
 
-    // System base -> machine base when reading system values.
-    template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::ScalarT Genrou<scalar_type, index_type>::toMachineBase(ScalarT value) const
-    {
-      return value * va_system_base_ / va_machine_base_;
-    }
-
-    // Machine base -> system base for network and signal output.
-    template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::ScalarT Genrou<scalar_type, index_type>::toSystemBase(ScalarT value) const
-    {
-      return value / toMachineBase(static_cast<ScalarT>(ONE<RealT>));
-    }
-
     template <typename scalar_type, typename index_type>
     void Genrou<scalar_type, index_type>::initializeMonitor()
     {
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
-                    { return toSystemBase(y_.getData()[15]); });
+                    { return this->toSystemBase(y_.getData()[15]); });
       monitor_->set(Variable::ii, [this]
-                    { return toSystemBase(y_.getData()[16]); });
+                    { return this->toSystemBase(y_.getData()[16]); });
       monitor_->set(Variable::p, [this]
-                    { return toSystemBase(Vr() * y_.getData()[15] + Vi() * y_.getData()[16]); });
+                    { return this->toSystemBase(Vr() * y_.getData()[15] + Vi() * y_.getData()[16]); });
       monitor_->set(Variable::q, [this]
-                    { return toSystemBase(Vi() * y_.getData()[15] - Vr() * y_.getData()[16]); });
+                    { return this->toSystemBase(Vi() * y_.getData()[15] - Vr() * y_.getData()[16]); });
       monitor_->set(Variable::delta, [this]
                     { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
@@ -400,8 +386,8 @@ namespace GridKit
       // Network Frame Terminal Values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
-      ScalarT p   = toMachineBase(static_cast<ScalarT>(p0_));
-      ScalarT q   = toMachineBase(static_cast<ScalarT>(q0_));
+      ScalarT p   = this->toComponentBase(static_cast<ScalarT>(p0_));
+      ScalarT q   = this->toComponentBase(static_cast<ScalarT>(q0_));
       ScalarT vm2 = vr * vr + vi * vi;
       ScalarT ir  = (p * vr + q * vi) / vm2;
       ScalarT ii  = (p * vi - q * vr) / vm2;
@@ -454,7 +440,7 @@ namespace GridKit
 
       ScalarT Te = y[12];
       // Convert Te to system base for governor PM signal.
-      pmech_set_ = toSystemBase(Te);
+      pmech_set_ = this->toSystemBase(Te);
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
         signals_.template writeExternalVariable<GenrouExternalVariables::PM>(pmech_set_);
@@ -553,7 +539,7 @@ namespace GridKit
       ScalarT vi = wb[1];
 
       // Set signal variable aliases
-      ScalarT pmech = toMachineBase(ws[0]);
+      ScalarT pmech = this->toComponentBase(ws[0]);
       ScalarT efd   = ws[1];
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
@@ -597,8 +583,8 @@ namespace GridKit
       ScalarT ii = y[16];
 
       // Convert current injection to system base for the network.
-      h[0] = toSystemBase(ir);
-      h[1] = toSystemBase(ii);
+      h[0] = this->toSystemBase(ir);
+      h[1] = this->toSystemBase(ii);
 
       return 0;
     }
@@ -669,20 +655,20 @@ namespace GridKit
           SA_ = SB_;
         SB_ = S12_ / ((SA_ - 1.2) * (SA_ - 1.2));
       }
-      Xd1_             = Xd_ - Xdp_;
-      Xd2_             = Xdp_ - Xl_;
-      Xd3_             = (Xdp_ - Xdpp_) / (Xd2_ * Xd2_);
-      Xd4_             = (Xdp_ - Xdpp_) / Xd2_;
-      Xd5_             = (Xdpp_ - Xl_) / Xd2_;
-      Xq1_             = Xq_ - Xqp_;
-      Xq2_             = Xqp_ - Xl_;
-      Xq3_             = (Xqp_ - Xqpp_) / (Xq2_ * Xq2_);
-      Xq4_             = (Xqp_ - Xqpp_) / Xq2_;
-      Xq5_             = (Xqpp_ - Xl_) / Xq2_;
-      Xqd_             = (Xq_ - Xl_) / (Xd_ - Xl_);
-      G_               = Ra_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
-      B_               = -Xqpp_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
-      va_machine_base_ = mva_base_ * static_cast<RealT>(1.0e6);
+      Xd1_ = Xd_ - Xdp_;
+      Xd2_ = Xdp_ - Xl_;
+      Xd3_ = (Xdp_ - Xdpp_) / (Xd2_ * Xd2_);
+      Xd4_ = (Xdp_ - Xdpp_) / Xd2_;
+      Xd5_ = (Xdpp_ - Xl_) / Xd2_;
+      Xq1_ = Xq_ - Xqp_;
+      Xq2_ = Xqp_ - Xl_;
+      Xq3_ = (Xqp_ - Xqpp_) / (Xq2_ * Xq2_);
+      Xq4_ = (Xqp_ - Xqpp_) / Xq2_;
+      Xq5_ = (Xqpp_ - Xl_) / Xq2_;
+      Xqd_ = (Xq_ - Xl_) / (Xd_ - Xl_);
+      G_   = Ra_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
+      B_   = -Xqpp_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
+      this->setComponentBase(mva_base_ * static_cast<RealT>(1.0e6));
     }
   } // namespace PhasorDynamics
 } // namespace GridKit

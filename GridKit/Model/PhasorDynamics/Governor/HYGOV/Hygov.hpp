@@ -74,6 +74,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
+        using Component<scalar_type, index_type>::va_component_base_;
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
@@ -149,9 +150,6 @@ namespace GridKit
         /// Solve the dam head that reproduces mechanical power at Gv5.
         RealT solveInitialDamHead(RealT pmech) const;
 
-        ScalarT toComponentBase(ScalarT value) const;
-        ScalarT toSystemBase(ScalarT value) const;
-
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
 
@@ -179,11 +177,9 @@ namespace GridKit
         std::array<RealT, 6> Gv_{};
         std::array<RealT, 6> Pgv_{};
 
-        RealT va_component_base_{ZERO<RealT>};
         RealT leadlag_gain_{ZERO<RealT>};
 
-        IdxT parameter_error_count_{0};
-
+        IdxT    parameter_error_count_{0};
         RealT   Gmin_response_{Gmin_};
         RealT   Gmax_response_{Gmax_};
         RealT   Hdam_eff_{Hdam_};

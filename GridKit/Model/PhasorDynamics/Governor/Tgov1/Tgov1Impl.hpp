@@ -155,21 +155,7 @@ namespace GridKit
         T1_ = std::max(T1_, TIME_CONSTANT_MINIMUM);
         T3_ = std::max(T3_, TIME_CONSTANT_MINIMUM);
 
-        va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
-      }
-
-      // System base -> component base when reading signals.
-      template <typename scalar_type, typename index_type>
-      scalar_type Tgov1<scalar_type, index_type>::toComponentBase(scalar_type value) const
-      {
-        return value * va_system_base_ / va_component_base_;
-      }
-
-      // Governor base -> system base for signals output.
-      template <typename scalar_type, typename index_type>
-      scalar_type Tgov1<scalar_type, index_type>::toSystemBase(scalar_type value) const
-      {
-        return value / toComponentBase(static_cast<scalar_type>(ONE<RealT>));
+        this->setComponentBase(Trate_ * static_cast<RealT>(1.0e6));
       }
 
       /**
@@ -300,7 +286,7 @@ namespace GridKit
         }
 
         const ScalarT pmech0 = y[PM];
-        const ScalarT pm0    = toComponentBase(pmech0);
+        const ScalarT pm0    = this->toComponentBase(pmech0);
         const ScalarT pv0    = pm0 + Dt_ * omega0;
         const ScalarT pturb0 = pv0;
         const ScalarT pref0  = omega0 + R_ * pv0;
@@ -392,7 +378,7 @@ namespace GridKit
 
         f[PTX] = -pturb_dot - (pturb - pv - T2_ * pv_dot) / T3_;
         f[PV]  = -pv_dot + Math::antiwindup(pv, -pv + (pref - omega) / R_, Pvmin_, Pvmax_) / T1_;
-        f[PM]  = -toComponentBase(pmech) + pturb - Dt_ * omega;
+        f[PM]  = -this->toComponentBase(pmech) + pturb - Dt_ * omega;
 
         return 0;
       }

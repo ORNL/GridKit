@@ -314,6 +314,7 @@ namespace GridKit
       TestOutcome gastpti()
       {
         using Outputs = PhasorDynamics::Governor::GastPtiSignalOutputs;
+        using Params  = PhasorDynamics::Governor::GastPtiParameters;
         using Vars    = PhasorDynamics::Governor::GastPtiInternalVariables;
 
         TestStatus success = true;
@@ -326,6 +327,7 @@ namespace GridKit
         auto& gastpti                          = data.gastpti.emplace_back();
         gastpti.device_class                   = "GastPti";
         gastpti.disambiguation_string          = "gastpti_test";
+        gastpti.parameters[Params::Trate]      = static_cast<RealT>(100.0);
         gastpti.signal_outputs[Outputs::pmech] = static_cast<IdxT>(1);
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
@@ -361,6 +363,7 @@ namespace GridKit
 
         Data reecb_data;
         reecb_data.buses[Buses::bus]        = bus_id;
+        reecb_data.parameters[Params::mva]  = static_cast<RealT>(100.0);
         reecb_data.parameters[Params::Tp]   = static_cast<RealT>(0.02);
         reecb_data.parameters[Params::Pmin] = static_cast<RealT>(-1.0);
         data.reecb.push_back(reecb_data);

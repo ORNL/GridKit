@@ -79,7 +79,6 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
-        using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
         using Component<scalar_type, index_type>::ws_;
@@ -132,9 +131,6 @@ namespace GridKit
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
-
-        ScalarT toComponentBase(ScalarT value) const;
-        ScalarT toSystemBase(ScalarT value) const;
 
         /**
          * @brief Smooth approximation of the REGCA `rrpwr` rate limiter.
@@ -228,7 +224,6 @@ namespace GridKit
         IdxT parameter_error_count_{0};
 
         // Derived parameters
-        RealT va_converter_base_{0};
         RealT use_lvpl_{0};
         RealT bypass_lvpl_{1};
         RealT use_rqmax_{0};

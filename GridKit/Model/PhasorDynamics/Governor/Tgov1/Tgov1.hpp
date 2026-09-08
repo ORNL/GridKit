@@ -128,9 +128,6 @@ namespace GridKit
         RealT T3_{static_cast<RealT>(7.5)};
         RealT Dt_{ZERO<RealT>};
 
-        // Derived parameters
-        RealT va_component_base_{0};
-
         // Input States (which can be parameters)
         ScalarT pref_set_{0};
 
@@ -138,10 +135,8 @@ namespace GridKit
         ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;
 
         // Parameter initialization function
-        void    initializeParameters(const ModelDataT& data);
-        void    setDerivedParams();
-        ScalarT toComponentBase(ScalarT value) const;
-        ScalarT toSystemBase(ScalarT value) const;
+        void initializeParameters(const ModelDataT& data);
+        void setDerivedParams();
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();

@@ -114,6 +114,11 @@ namespace GridKit
         success *= (documented_defaults.reecb.verify() == 0);
         success *= defaultsMatchDocumentedValues();
 
+        auto missing_mva_data = makeMinimalData();
+        missing_mva_data.parameters.erase(Params::mva);
+        Fixture<ScalarT> missing_mva(missing_mva_data);
+        success *= (missing_mva.reecb.verify() > 0);
+
         // Integer JSON values are accepted for real parameters; booleans are
         // not numeric.
         auto integer_numeric                    = makeData();
@@ -364,25 +369,6 @@ namespace GridKit
         success                       *= (tracked_commands.reecb.initialize() == 0);
         success                       *= isEqual(tracked_state[iqcmd_index].getDependencies(), iqcmd_dependencies);
         success                       *= isEqual(tracked_state[ipcmd_index].getDependencies(), ipcmd_dependencies);
-
-        // An omitted component rating falls back to the system power base, so
-        // the same commands land on a different measured power.
-        auto system_base_data = makeData();
-        system_base_data.parameters.erase(Params::mva);
-        Fixture<ScalarT> system_base(system_base_data, 1.0, 0.0, static_cast<RealT>(50.0e6));
-        system_base.attachAllInputs();
-        system_base.input(Ext::PE)  = 0.75;
-        success                    *= system_base.initialize(kInitialIqcmd, 1.5);
-        success                    *= (system_base.evaluate() == 0);
-        success                    *= stateMatches(system_base.reecb,
-                                                   {{Vars::PMEAS, 0.75},
-                                                    {Vars::PORD, 1.5}},
-                                "omitted component rating");
-        success                    *= stateMatches(system_base.reecb,
-                                                   {{Vars::ILCAP, 2.0}},
-                                "omitted-rating current-circle capacity",
-                                kCircleTol);
-        success                    *= allResidualsWithinInitTolerance(system_base.reecb);
 
         return success.report(__func__);
       }
@@ -1985,8 +1971,9 @@ namespace GridKit
       Data makeMinimalData() const
       {
         Data data;
-        data.device_class          = "Reecb";
-        data.disambiguation_string = "reecb_test";
+        data.device_class            = "Reecb";
+        data.disambiguation_string   = "reecb_test";
+        data.parameters[Params::mva] = 100.0;
         data.monitored_variables.insert(Mon::iqcmd);
         data.monitored_variables.insert(Mon::ipcmd);
         data.monitored_variables.insert(Mon::vmeas);
@@ -2249,8 +2236,8 @@ namespace GridKit
         fixture.reecb.yp().setDataUpdated();
       }
 
-      /// Omitting every parameter must give exactly the model built from the
-      /// defaults the README documents, at rest and under load.
+      /// Omitting every optional parameter must give exactly the model built
+      /// from the defaults the README documents, at rest and under load.
       bool defaultsMatchDocumentedValues() const
       {
         Fixture<ScalarT> implicit_defaults(makeMinimalData(), kStateVr, kStateVi);

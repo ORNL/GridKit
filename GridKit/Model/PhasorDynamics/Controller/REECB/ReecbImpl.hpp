@@ -46,10 +46,7 @@ namespace GridKit
       };
 
       /**
-       * @brief Construct REECB with its documented parameter defaults
-       *
-       * The terminal bus is retained, the model is sized, and no monitor or
-       * signal connection is created.
+       * @brief Construct an unconfigured REECB controller
        *
        * @param[in] bus Terminal bus measured by the controller.
        */
@@ -181,21 +178,21 @@ namespace GridKit
 
         check(bus_ != nullptr, "terminal bus is required");
 
-        const RealT component_power_base = componentPowerBase();
-        const bool  valid_component_base = std::isfinite(component_power_base) && component_power_base > ZERO<RealT>;
-        const bool  valid_system_base    = std::isfinite(va_system_base_) && va_system_base_ > ZERO<RealT>;
+        const bool valid_component_base = std::isfinite(va_component_base_)
+                                          && va_component_base_ > ZERO<RealT>;
+        const bool valid_system_base = std::isfinite(va_system_base_)
+                                       && va_system_base_ > ZERO<RealT>;
         check(valid_component_base, "component power base must be finite and positive");
         check(valid_system_base, "system power base must be finite and positive");
         if (valid_component_base && valid_system_base)
         {
-          const RealT system_to_component = va_system_base_ / component_power_base;
-          const RealT component_to_system = component_power_base / va_system_base_;
-          check(
-              std::isfinite(system_to_component)
-                  && system_to_component > ZERO<RealT>
-                  && std::isfinite(component_to_system)
-                  && component_to_system > ZERO<RealT>,
-              "system/component power-base conversion ratios must be finite and positive");
+          const RealT system_to_component = va_system_base_ / va_component_base_;
+          const RealT component_to_system = va_component_base_ / va_system_base_;
+          check(std::isfinite(system_to_component)
+                    && system_to_component > ZERO<RealT>
+                    && std::isfinite(component_to_system)
+                    && component_to_system > ZERO<RealT>,
+                "system/component power-base conversion ratios must be finite and positive");
         }
 
         check(std::isfinite(Trv_), "Trv must be finite");
@@ -365,16 +362,16 @@ namespace GridKit
 
         const RealT ipcmd0_system = static_cast<RealT>(y[IPCMD]);
         const RealT iqcmd0_system = static_cast<RealT>(y[IQCMD]);
-        const RealT ipcmd0        = toComponentBase(ipcmd0_system);
-        const RealT iqcmd0        = toComponentBase(iqcmd0_system);
+        const RealT ipcmd0        = this->toComponentBase(ipcmd0_system);
+        const RealT iqcmd0        = this->toComponentBase(iqcmd0_system);
         const RealT vr0           = static_cast<RealT>(Vr());
         const RealT vi0           = static_cast<RealT>(Vi());
         const RealT vt0           = std::sqrt(vr0 * vr0 + vi0 * vi0);
         const RealT vmeas0        = vt0;
         const RealT vmeas_safe0   = Math::max(vmeas0, VMEAS_MINIMUM);
 
-        RealT pe0_system   = toSystemBase(ipcmd0 * vmeas_safe0);
-        RealT qgen0_system = toSystemBase(iqcmd0 * vmeas_safe0);
+        RealT pe0_system   = this->toSystemBase(ipcmd0 * vmeas_safe0);
+        RealT qgen0_system = this->toSystemBase(iqcmd0 * vmeas_safe0);
 
         if (signals_.template isAttached<ReecbExternalVariables::PE>())
         {
@@ -387,8 +384,8 @@ namespace GridKit
               signals_.template readExternalVariable<ReecbExternalVariables::QGEN>());
         }
 
-        const RealT pmeas0 = toComponentBase(pe0_system);
-        const RealT qgen0  = toComponentBase(qgen0_system);
+        const RealT pmeas0 = this->toComponentBase(pe0_system);
+        const RealT qgen0  = this->toComponentBase(qgen0_system);
         RealT       vref0  = vmeas0;
         if (Vref0_given_)
         {
@@ -492,7 +489,7 @@ namespace GridKit
         }
         const RealT pmin         = std::min(Pmin_, pord0);
         const RealT pmax         = std::max(Pmax_, pord0);
-        const RealT pref0_system = toSystemBase(pord0);
+        const RealT pref0_system = this->toSystemBase(pord0);
 
         RealT qtarget0 = ZERO<RealT>;
         if (!QFlag_)
@@ -533,8 +530,8 @@ namespace GridKit
         }
         else
         {
-          qext0_port = toSystemBase(qtarget0);
-          qref0      = toComponentBase(qext0_port);
+          qext0_port = this->toSystemBase(qtarget0);
+          qref0      = this->toComponentBase(qext0_port);
         }
 
         const RealT eq0   = Math::clamp(qref0, qmin, qmax) - qgen0;
@@ -966,13 +963,13 @@ namespace GridKit
         const ScalarT vr = wb[0];
         const ScalarT vi = wb[1];
 
-        const ScalarT pe     = toComponentBase(ws[PE]);
-        const ScalarT qgen   = toComponentBase(ws[QGEN]);
+        const ScalarT pe     = this->toComponentBase(ws[PE]);
+        const ScalarT qgen   = this->toComponentBase(ws[QGEN]);
         const ScalarT extref = ws[QEXT];
         const ScalarT pfaref = ws[PFAREF];
-        const ScalarT pref   = toComponentBase(ws[PREF]);
-        const ScalarT iqcmd  = toComponentBase(iqcmd_system);
-        const ScalarT ipcmd  = toComponentBase(ipcmd_system);
+        const ScalarT pref   = this->toComponentBase(ws[PREF]);
+        const ScalarT iqcmd  = this->toComponentBase(iqcmd_system);
+        const ScalarT ipcmd  = this->toComponentBase(ipcmd_system);
 
         const ScalarT verr        = Math::deadband2(Vref0_ - vmeas, dbd1_, dbd2_);
         const ScalarT q_pi_state  = Kqp_ * eq + xpiq;
@@ -988,7 +985,7 @@ namespace GridKit
         // The Volt/VAr channel is a system-base reactive power unless
         // direct-voltage mode selects it as a terminal-voltage reference,
         // which takes no power-base conversion.
-        const ScalarT qref_target = q_ref_on_ * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * toComponentBase(extref));
+        const ScalarT qref_target = q_ref_on_ * (pf_on_ * pmeas * std::tan(pfaref) + pf_off_ * this->toComponentBase(extref));
 
         f[VMEAS]  = -vmeas_dot + (vt - vmeas) / Trv_;
         f[PMEAS]  = -pmeas_dot + (pe - pmeas) / Tp_;
@@ -1317,8 +1314,8 @@ namespace GridKit
       /**
        * @brief Read parameters from model data
        *
-       * Omitted parameters retain their documented defaults. Loading errors
-       * are counted for verify() rather than thrown.
+       * Omitted optional parameters retain their documented defaults. Loading
+       * errors are counted for verify() rather than thrown.
        *
        * @param[in] data Parameters and monitored-variable selections.
        */
@@ -1328,10 +1325,19 @@ namespace GridKit
         using Params = typename ModelDataT::Parameters;
 
         parameter_error_count_ = 0;
-        mva_given_             = data.parameters.contains(Params::mva);
         Vref0_given_           = false;
 
-        loadRealParameter(data, Params::mva, mva_base_, "mva");
+        if (data.parameters.contains(Params::mva))
+        {
+          RealT mva{};
+          loadRealParameter(data, Params::mva, mva, "mva");
+          this->setComponentBase(mva * static_cast<RealT>(1.0e6));
+        }
+        else
+        {
+          Log::error() << "Reecb: missing required parameter 'mva'\n";
+          ++parameter_error_count_;
+        }
         loadBooleanParameter(data, Params::PfFlag, PfFlag_, "PfFlag");
         loadBooleanParameter(data, Params::VFlag, VFlag_, "VFlag");
         loadBooleanParameter(data, Params::QFlag, QFlag_, "QFlag");
@@ -1404,9 +1410,9 @@ namespace GridKit
       /**
        * @brief Resolve parameter-derived constants and selector masks
        *
-       * Raises explicit controller lags in place, converts any supplied component
-       * rating, and resolves selector masks. Invalid lag inputs are
-       * recorded before replacement so verify() retains each error.
+       * Raises explicit controller lags in place and resolves selector masks.
+       * Invalid lag inputs are recorded before replacement so verify() retains
+       * each error.
        */
       template <typename scalar_type, typename index_type>
       void Reecb<scalar_type, index_type>::setDerivedParameters()
@@ -1424,8 +1430,6 @@ namespace GridKit
           std::call_once(time_constant_warning_flag_,
                          &logTimeConstantWarning);
         }
-
-        va_component_base_ = mva_base_ * static_cast<RealT>(1.0e6);
 
         if (PfFlag_ && QFlag_)
         {
@@ -1541,49 +1545,6 @@ namespace GridKit
         const RealT b = mu * (upper - output);
         input         = lower + (a + logOneMinusExp(a) - logOneMinusExp(b)) / mu;
         return std::isfinite(input);
-      }
-
-      /**
-       * @brief Resolve the REECB component power base
-       *
-       * @return The supplied component base, or the system base when `mva` is omitted.
-       */
-      template <typename scalar_type, typename index_type>
-      typename Reecb<scalar_type, index_type>::RealT
-      Reecb<scalar_type, index_type>::componentPowerBase() const
-      {
-        if (mva_given_)
-        {
-          return va_component_base_;
-        }
-        return va_system_base_;
-      }
-
-      /**
-       * @brief Convert a system-base power or current to REECB component base
-       *
-       * @param[in] value Quantity on the system base.
-       * @return The same quantity on the REECB component base.
-       */
-      template <typename scalar_type, typename index_type>
-      template <typename ValueT>
-      [[gnu::always_inline]] inline ValueT
-      Reecb<scalar_type, index_type>::toComponentBase(ValueT value) const
-      {
-        return value * (va_system_base_ / componentPowerBase());
-      }
-
-      /**
-       * @brief Convert a component-base power or current to system base
-       *
-       * @param[in] value Quantity on the REECB component base.
-       * @return The same quantity on the system base.
-       */
-      template <typename scalar_type, typename index_type>
-      template <typename ValueT>
-      ValueT Reecb<scalar_type, index_type>::toSystemBase(ValueT value) const
-      {
-        return value * (componentPowerBase() / va_system_base_);
       }
 
       /**

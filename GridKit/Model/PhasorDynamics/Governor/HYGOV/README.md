@@ -20,7 +20,7 @@ Figure 1: HYGOV governor model. Figure courtesy of the
 
 Symbol                  | Units    | JSON          | Description                              | Typical Value | Note
 ------------------------|----------|---------------|------------------------------------------|---------------|------
-$T^\mathrm{rate}$       | [MW]     | `Trate`       | Turbine-rating power base                | 100.0         | System power base when omitted
+$T^\mathrm{rate}$       | [MW]     | `Trate`       | Turbine-rating power base                | 100.0         | Required
 $R_{\mathrm{perm}}$     | [p.u.]   | `Rperm`       | Permanent droop                          | 0.04          | Source label: `R`
 $R_{\mathrm{temp}}$     | [p.u.]   | `Rtemp`       | Temporary droop                          | 0.3           | Source label: `r`
 $T_r$                   | [sec]    | `Tr`          | Temporary-droop reset time constant      | 5.0           |
@@ -41,8 +41,8 @@ $H_{\mathrm{dam}}$      | [p.u.]   | `Hdam`        | Configured dam head        
 $G_V^{(k)}$             | [p.u.]   | `Gv0`-`Gv5`   | Gate point $k$ of the gain curve         | 0.0           | $k=0,\ldots,5$
 $P_{\mathrm{GV}}^{(k)}$ | [p.u.]   | `Pgv0`-`Pgv5` | Power point $k$ of the gain curve        | 0.0           | $k=0,\ldots,5$
 
-Every parameter is optional. Real-valued parameters accept real or integer
-JSON values. All-zero `Gv` and `Pgv` source points select the identity curve.
+Real-valued parameters accept real or integer JSON values. All-zero `Gv` and
+`Pgv` source points select the identity curve.
 
 ### Parameter Validation
 
@@ -52,7 +52,7 @@ HYGOV parameter sets are rejected by the following checks:
 
 ```math
 \begin{aligned}
-  T^\mathrm{rate} &> 0 \quad \text{when provided} \\
+  T^\mathrm{rate} &> 0 \\
   T_r, T_f, T_g, T_w, T_{\mathrm{np}}
     &\ge 0 \\
   R_{\mathrm{temp}}
@@ -98,7 +98,7 @@ raised to that floor in place, so every equation below uses the raised value:
     &\leftarrow \max\!\left(T_x,\epsilon_T\right),
        \quad x\in\{r,f,g,w,\mathrm{np}\} \\
   k_{\mathrm{base}}
-    &= \dfrac{S^\mathrm{sys}}{T^\mathrm{rate}} \\
+    &= \dfrac{S^\mathrm{sys}}{10^6 T^\mathrm{rate}} \\
   k_n
     &= \dfrac{T_n}{T_{\mathrm{np}}} \\
   N_{\mathrm{GV}}(x)

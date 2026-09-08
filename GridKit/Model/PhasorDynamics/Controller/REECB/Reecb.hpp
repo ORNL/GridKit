@@ -87,6 +87,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
+        using Component<scalar_type, index_type>::va_component_base_;
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
@@ -189,13 +190,6 @@ namespace GridKit
 
         static RealT logOneMinusExp(RealT x);
         bool         iclamp(RealT output, RealT lower, RealT upper, RealT& input) const;
-        RealT        componentPowerBase() const;
-
-        template <typename ValueT>
-        [[gnu::always_inline]] inline ValueT toComponentBase(ValueT value) const;
-
-        template <typename ValueT>
-        ValueT toSystemBase(ValueT value) const;
 
         ScalarT& Vr();
         ScalarT& Vi();
@@ -208,7 +202,6 @@ namespace GridKit
         BusT* bus_{nullptr};
 
         // Input parameters
-        RealT mva_base_{0};
         bool  PfFlag_{false};
         bool  VFlag_{false};
         bool  QFlag_{false};
@@ -239,12 +232,10 @@ namespace GridKit
         RealT Pmin_{0};
         RealT Imax_{1.3};
 
-        bool mva_given_{false};
         bool Vref0_given_{false};
         IdxT parameter_error_count_{0};
 
         // Derived parameters
-        RealT va_component_base_{0};
         RealT pf_on_{0};
         RealT pf_off_{1};
         RealT q_on_{0};
