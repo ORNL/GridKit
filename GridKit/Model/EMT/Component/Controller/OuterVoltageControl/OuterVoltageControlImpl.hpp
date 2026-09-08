@@ -33,8 +33,8 @@ namespace GridKit
               { return output(key); },
               [this, key](typename SignalT::GradientT& gradient, RealT scale)
               { appendOutputGradient(key, gradient, scale); });
-          monitor_->set(static_cast<Mon>(n + 2), [this, key]
-                        { return output(key); });
+          monitor_->set(static_cast<Mon>(n + 2), [this, n]
+                        { return output_[n].read(); });
         }
       }
 

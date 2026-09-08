@@ -14,6 +14,23 @@ namespace GridKit
   namespace EMT
   {
     template <typename scalar_type, typename index_type>
+    thread_local typename Signal<scalar_type, index_type>::ReadScope*
+        Signal<scalar_type, index_type>::read_scope_ = nullptr;
+
+    template <typename scalar_type, typename index_type>
+    Signal<scalar_type, index_type>::ReadScope::ReadScope()
+      : previous_(read_scope_)
+    {
+      read_scope_ = this;
+    }
+
+    template <typename scalar_type, typename index_type>
+    Signal<scalar_type, index_type>::ReadScope::~ReadScope()
+    {
+      read_scope_ = previous_;
+    }
+
+    template <typename scalar_type, typename index_type>
     Signal<scalar_type, index_type>::Signal()
     {
     }
@@ -176,10 +193,19 @@ namespace GridKit
         {
           throw std::logic_error("Cyclic computed signal \"" + id_ + "\"");
         }
+        auto* scope = read_scope_;
+        if (scope != nullptr)
+        {
+          const auto entry = scope->values_.find(this);
+          if (entry != scope->values_.end())
+            return entry->second;
+        }
         evaluating_ = true;
         try
         {
-          auto value  = value_();
+          auto value = value_();
+          if (scope != nullptr)
+            scope->values_.emplace(this, value);
           evaluating_ = false;
           return value;
         }
