@@ -49,7 +49,7 @@ namespace GridKit
         }
       };
 
-      struct SampledPwm
+      struct ContinuousPwm
       {
         struct Period
         {
@@ -62,16 +62,16 @@ namespace GridKit
         Pwm                   model;
         double                fc;
 
-        SampledPwm(const std::array<double, 3>& modulation, double frequency, double alignment = 0.5)
+        ContinuousPwm(const std::array<double, 3>& modulation, double frequency, double alignment = 0.5)
           : model(pwmData(0, 60, frequency, alignment)), fc(frequency)
         {
           for (size_t phase = 0; phase < 3; ++phase)
           {
             inputs[phase].bindConstant(modulation[phase]);
-            model.assignInput(phase, &inputs[phase]);
+            model.assignInput(static_cast<Pwm::Inputs>(phase), &inputs[phase]);
           }
           if (model.allocate() != 0 || model.initialize() != 0)
-            throw std::runtime_error("Cannot initialize sampled PWM fixture");
+            throw std::runtime_error("Cannot initialize continuous PWM fixture");
         }
 
         void command(const std::array<double, 3>& modulation)
@@ -80,22 +80,16 @@ namespace GridKit
             inputs[phase].setConstantValue(modulation[phase]);
         }
 
-        void accept(size_t interval)
-        {
-          model.updateTime(static_cast<double>(interval) / fc, 0);
-          model.acceptStep(static_cast<double>(interval) / fc);
-        }
-
         std::array<double, 3> output(double carrier_time)
         {
           model.updateTime(carrier_time / fc, 0);
-          return {model.output(0), model.output(1), model.output(2)};
+          return {model.output(Pwm::Outputs::sa), model.output(Pwm::Outputs::sb), model.output(Pwm::Outputs::sc)};
         }
 
         Period measure(size_t interval, size_t count)
         {
           Period result;
-          // Midpoints exclude the command jumps at carrier boundaries.
+          // Composite midpoint quadrature over one carrier period.
           for (size_t n = 0; n < count; ++n)
           {
             const auto s = output(static_cast<double>(interval) + (static_cast<double>(n) + 0.5) / static_cast<double>(count));
@@ -103,7 +97,7 @@ namespace GridKit
             {
               result.mean[phase]     += s[phase] / static_cast<double>(count);
               result.variance[phase] += s[phase] * s[phase] / static_cast<double>(count);
-              result.bounded          = result.bounded && s[phase] >= 0 && s[phase] <= 1;
+              result.bounded          = result.bounded && s[phase] >= -1e-13 && s[phase] <= 1 + 1e-13;
             }
           }
           for (size_t phase = 0; phase < 3; ++phase)
@@ -126,11 +120,10 @@ namespace GridKit
         long double result = 0;
         for (long long k = center - radius; k <= center + radius; ++k)
         {
-          const long double sample  = (static_cast<long double>(k) + alignment) / fc;
-          const long double duty    = (1 + M * std::sin(2 * pi * fm * sample + phi[phase])) / 2;
-          const long double on      = (k + alignment * (1 - duty)) / fc;
-          const long double off     = (static_cast<long double>(k) + alignment + (1 - alignment) * duty) / fc;
-          result                   += sigmoid(t - on) - sigmoid(t - off);
+          const long double duty  = (1 + M * std::sin(2 * pi * fm * t + phi[phase])) / 2;
+          const long double on    = (k + alignment * (1 - duty)) / fc;
+          const long double off   = (static_cast<long double>(k) + alignment + (1 - alignment) * duty) / fc;
+          result                 += sigmoid(t - on) - sigmoid(t - off);
         }
         return static_cast<double>(result);
       }
@@ -196,7 +189,7 @@ namespace GridKit
                 pwm.updateTime(t, 1);
                 for (size_t phase = 0; phase < 3; ++phase)
                 {
-                  const double s  = pwm.output(phase);
+                  const double s  = pwm.output(static_cast<Pwm::Outputs>(phase));
                   success        *= std::abs(s - reference(t, M, fm, fc, alignment, phase)) < 3.0e-14;
                   success        *= s >= 0 && s <= 1;
                   success        *= pwm.outputSignal(static_cast<EMT::Controller::PwmOutputs>(phase)).read() == s;
@@ -204,11 +197,11 @@ namespace GridKit
                 }
               }
               pwm.updateTime(0.273 / fm, 1);
-              const double a = pwm.output(0);
+              const double a = pwm.output(Pwm::Outputs::sa);
               pwm.updateTime((0.273 + 1.0 / 3) / fm, 1);
-              success *= std::abs(a - pwm.output(1)) < 2.0e-14;
+              success *= std::abs(a - pwm.output(Pwm::Outputs::sb)) < 2.0e-14;
               pwm.updateTime((0.273 + 1) / fm, 1);
-              success *= std::abs(a - pwm.output(0)) < 2.0e-14;
+              success *= std::abs(a - pwm.output(Pwm::Outputs::sa)) < 2.0e-14;
             }
           }
         }
@@ -217,7 +210,7 @@ namespace GridKit
         {
           full_duty.updateTime(t, 1);
           for (size_t phase = 0; phase < 3; ++phase)
-            success *= std::abs(full_duty.output(phase) - reference(t, 1, 1, 3, 0.75, phase)) < 3.0e-14;
+            success *= std::abs(full_duty.output(static_cast<Pwm::Outputs>(phase)) - reference(t, 1, 1, 3, 0.75, phase)) < 3.0e-14;
         }
         return success.report(__func__);
       }
@@ -233,7 +226,7 @@ namespace GridKit
           Pwm pwm(data);
           success *= pwm.verify() != 0;
           success *= throws([&]
-                            { pwm.output(0); });
+                            { pwm.output(Pwm::Outputs::sa); });
         }
         for (auto key : {P::M, P::fm, P::fc, P::alignment})
         {
@@ -254,7 +247,7 @@ namespace GridKit
           success              *= throws([&]
                             { Pwm invalid(data); });
         }
-        for (const auto& data : {pwmData(1.1), pwmData(0.8, 0), pwmData(0.8, 60, 60), pwmData(0.8, 60, 960), pwmData(0.8, 60, 901), pwmData(0.8, 60, 900, 1.1)})
+        for (const auto& data : {pwmData(1.1), pwmData(0.8, 0), pwmData(0.8, 60, 60), pwmData(0.8, 60, 900, 1.1)})
         {
           success *= Pwm(data).verify() != 0;
         }
@@ -263,7 +256,7 @@ namespace GridKit
         Pwm centered(data), explicit_center(pwmData());
         centered.updateTime(0.001, 1);
         explicit_center.updateTime(0.001, 1);
-        success *= centered.verify() == 0 && centered.output(0) == explicit_center.output(0);
+        success *= centered.verify() == 0 && centered.output(Pwm::Outputs::sa) == explicit_center.output(Pwm::Outputs::sa);
         Converter converter;
         success *= converter.verify() != 0;
         success *= throws([&]
@@ -434,7 +427,7 @@ namespace GridKit
         success *= idc.getDependencies().size() == 6;
         EMT::Controller::Pwm<Variable, size_t> pwm(pwmData());
         success *= pwm.verify() == 0;
-        success *= std::abs(static_cast<double>(pwm.output(0)) - reference(0, 0.8, 60, 900, 0.5, 0)) < 3.0e-14;
+        success *= std::abs(static_cast<double>(pwm.output(Pwm::Outputs::sa)) - reference(0, 0.8, 60, 900, 0.5, 0)) < 3.0e-14;
         return success.report(__func__);
       }
 
@@ -538,55 +531,40 @@ namespace GridKit
           {
             const double time = static_cast<double>(sample) / 12000.0;
             model.updateTime(time, 0.0);
-            const auto value  = model.output(0);
+            const auto value  = model.output(Pwm::Outputs::sa);
             minimum           = std::min(minimum, value);
             maximum           = std::max(maximum, value);
             success          *= std::abs(value - reference(time, .8, 60, 900, .5, 0)) < 1e-12;
           }
-          success *= mu == 240.0 ? maximum - minimum < .1 : maximum - minimum > .99;
+          success *= mu == 240.0 ? std::abs(maximum - minimum - .8) < 1e-10 : maximum - minimum > .99;
         }
         return success.report(__func__);
       }
 
-      // Protect mean, resolution, and causality; controller transients and solver
-      // step sequences are deliberately outside this model contract.
-      TestOutcome sampledMean()
+      // Protect the mean and resolution limits without fixing controller transients
+      // or the integrator's accepted-step sequence.
+      TestOutcome continuousMean()
       {
         TestStatus                                 success = true;
         RestoreMu                                  restore;
         const std::array<std::array<double, 3>, 4> commands{{{-1, 0, 1}, {0.6, -0.4, 0.2}, {-0.2, 0.8, -0.6}, {0, 0, 0}}};
         for (double sharpness : {0.04, 4.0, 20.0, 200.0})
         {
-          Math::MU<double>        = sharpness * 6000;
-          // The hold crossfade rate is floored so it completes within one carrier.
-          const double crossfade  = std::max(sharpness, 2 * std::log(4 / std::numeric_limits<double>::epsilon()));
-          // At least 17 samples across each 10-90% edge and crossfade; check refinement too.
-          const auto   count      = static_cast<size_t>(std::max(32.0, std::ceil(4 * crossfade)));
-          // A crossfade between different commands shifts the interval mean by at most
-          // 2 ln 2 / (mu_c Tc); equal neighbouring commands leave it exact.
-          const double shift      = 2 * std::log(2.0) / crossfade;
-          // Midpoint-rule bound for a slope of at most mu_c / 4 at the window ends.
-          const double quadrature = 1e-7 + crossfade / (24.0 * static_cast<double>(count * count));
+          Math::MU<double> = sharpness * 6000;
+          const auto count = static_cast<size_t>(std::max(64.0, std::ceil(8 * sharpness)));
           for (double alignment : {0.0, 0.5, 1.0})
           {
-            SampledPwm fixture(commands[0], 6000, alignment);
-            for (size_t interval = 0; interval < commands.size(); ++interval)
+            ContinuousPwm fixture(commands[0], 6000, alignment);
+            for (const auto& command : commands)
             {
-              fixture.command(commands[interval]);
-              if (interval != 0)
-                fixture.accept(interval);
-              const auto  coarse = fixture.measure(interval, count);
-              const auto  fine   = fixture.measure(interval, 2 * count);
-              const auto& active = commands[interval == 0 ? 0 : interval - 1];
-              double      bound  = 1e-6;
-              if (interval != 0)
-                bound += shift;
-              success *= coarse.bounded && fine.bounded;
+              fixture.command(command);
+              const auto coarse  = fixture.measure(0, count);
+              const auto fine    = fixture.measure(0, 2 * count);
+              success           *= coarse.bounded && fine.bounded;
               for (size_t phase = 0; phase < 3; ++phase)
               {
-                // Duty tolerance is independent of the production pulse sum.
-                success *= std::abs(fine.mean[phase] - (1 + active[phase]) / 2) < bound;
-                success *= std::abs(fine.mean[phase] - coarse.mean[phase]) < quadrature;
+                success *= std::abs(fine.mean[phase] - (1 + command[phase]) / 2) < 1e-6;
+                success *= std::abs(fine.mean[phase] - coarse.mean[phase]) < 1e-6;
               }
             }
           }
@@ -594,7 +572,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome sampledResolution()
+      TestOutcome continuousResolution()
       {
         TestStatus                  success = true;
         RestoreMu                   restore;
@@ -603,10 +581,10 @@ namespace GridKit
         for (double sharpness : {0.04, 4.0, 20.0, 200.0})
         {
           Math::MU<double> = sharpness * 6000;
-          SampledPwm fixture(modulation, 6000);
-          const auto count   = static_cast<size_t>(std::max(64.0, std::ceil(8 * sharpness)));
-          const auto period  = fixture.measure(0, count);
-          success           *= period.bounded;
+          ContinuousPwm fixture(modulation, 6000);
+          const auto    count   = static_cast<size_t>(std::max(64.0, std::ceil(8 * sharpness)));
+          const auto    period  = fixture.measure(0, count);
+          success              *= period.bounded;
           for (size_t phase = 0; phase < 3; ++phase)
           {
             const double duty            = (1 + modulation[phase]) / 2;
@@ -625,41 +603,49 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome sampledTiming()
+      TestOutcome continuousInput()
       {
         TestStatus success = true;
         RestoreMu  restore;
         for (double sharpness : {0.04, 20.0, 200.0})
         {
           Math::MU<double> = sharpness * 6000;
-          SampledPwm first({-0.8, 0.2, 0.7}, 6000);
-          SampledPwm second({0.8, -0.2, -0.7}, 6000);
-          for (auto* fixture : {&first, &second})
-          {
-            fixture->command({-0.6, 0, 0.6});
-            fixture->accept(1);
-            fixture->command({0.3, -0.3, 0.1});
-            fixture->accept(2);
-          }
-          // Equal active/queued commands erase older history, even with broad tails.
-          // Interior accepted steps and trial/monitor reads must not latch inputs.
-          first.command({1, -1, 0.8});
-          first.model.acceptStep(2.2 / 6000);
-          for (double time : {2.31, 2.72, 2.41, 2.93})
-          {
-            const auto a = first.output(time);
-            const auto b = second.output(time);
-            for (size_t phase = 0; phase < 3; ++phase)
-              success *= std::abs(a[phase] - b[phase]) < 1e-10;
-          }
-          // Only a later accepted carrier boundary may sample the new command.
-          first.command({0.3, -0.3, 0.1});
-          first.accept(3);
-          second.accept(3);
-          const auto a = first.output(3.37);
-          const auto b = second.output(3.37);
+          std::array<double, 3> values{-0.6, 0, 0.6};
+          std::array<size_t, 3> indices{0, 1, 2};
+          std::array<Signal, 3> inputs;
+          Pwm                   model(pwmData(0, 60, 6000));
           for (size_t phase = 0; phase < 3; ++phase)
-            success *= std::abs(a[phase] - b[phase]) < 1e-10;
+          {
+            inputs[phase].set(&values[phase], &indices[phase]);
+            model.assignInput(static_cast<Pwm::Inputs>(phase), &inputs[phase]);
+          }
+          success *= model.allocate() == 0 && model.initialize() == 0;
+          for (double time : {0.31, 0.72, 0.41, 0.93})
+          {
+            model.updateTime(time / 6000, 0);
+            for (size_t phase = 0; phase < 3; ++phase)
+            {
+              const auto        key  = static_cast<Pwm::Outputs>(phase);
+              const auto        base = model.output(key);
+              Signal::GradientT gradient;
+              model.outputSignal(key).appendGradient(gradient);
+              success                        *= gradient.size() == 1 && gradient[0].first == phase;
+              const double saved              = values[phase];
+              values[phase]                   = saved + 1e-6;
+              const auto plus                 = model.output(key);
+              values[phase]                   = saved - 1e-6;
+              const auto minus                = model.output(key);
+              values[phase]                   = saved;
+              const double finite_difference  = (plus - minus) / 2e-6;
+              success                        *= std::abs(gradient[0].second - finite_difference) < 1e-6 * (1 + std::abs(finite_difference));
+              success                        *= model.output(key) == base;
+              if (sharpness == 0.04)
+              {
+                success *= std::abs(base - (1 + saved) / 2) < 1e-12;
+                success *= std::abs(gradient[0].second - .5) < 1e-12;
+              }
+            }
+          }
         }
         return success.report(__func__);
       }

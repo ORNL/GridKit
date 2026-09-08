@@ -177,14 +177,6 @@ namespace GridKit
         return std::numeric_limits<RealT>::infinity();
       }
 
-      /// Next instant at which a smooth model samples its inputs. The
-      /// integrator stops there to commit the sample and continues without
-      /// restarting.
-      virtual RealT nextSampleTime(RealT) const
-      {
-        return std::numeric_limits<RealT>::infinity();
-      }
-
       /// Select the right limit before calculating consistent conditions.
       virtual void beginDiscontinuity(RealT)
       {

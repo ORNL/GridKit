@@ -340,19 +340,9 @@ namespace GridKit
       {
         auto& model = component<Controller::Pwm<ScalarT, IdxT>>(model_data.id);
         for (const auto& [input, reference] : model_data.inputs)
-          model.assignInput(static_cast<size_t>(input), &source(reference));
-        if (model_data.outputs.contains(Controller::PwmOutputs::sa))
-        {
-          model.assignOutput(0, &signal(model_data.outputs.at(Controller::PwmOutputs::sa)));
-        }
-        if (model_data.outputs.contains(Controller::PwmOutputs::sb))
-        {
-          model.assignOutput(1, &signal(model_data.outputs.at(Controller::PwmOutputs::sb)));
-        }
-        if (model_data.outputs.contains(Controller::PwmOutputs::sc))
-        {
-          model.assignOutput(2, &signal(model_data.outputs.at(Controller::PwmOutputs::sc)));
-        }
+          model.assignInput(input, &source(reference));
+        for (const auto& [output, reference] : model_data.outputs)
+          model.assignOutput(output, &signal(reference));
       }
 
       for (const auto& model_data : data.dc_link)

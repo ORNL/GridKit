@@ -102,10 +102,8 @@ right-limit conditions. `Delay` is the only source of such discontinuities:
 it implements the `HistoryDiscontinuity` interface, whose private constructor
 admits no other model, and the component query is final and only aggregates
 that interface through owned operators and container children. Every other
-model is smooth by design. A model that samples its inputs reports the next
-sampling instant through `nextSampleTime(t)`; IDA stops there to commit the
-sample and continues without restarting. Automatic history restarts are
-supported by forward DAE simulation; quadrature and adjoint checkpoint replay
+model is smooth by design. Automatic history restarts are supported by
+forward DAE simulation; quadrature and adjoint checkpoint replay
 do not support these restarts.
 
 ## Model Interface

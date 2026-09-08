@@ -219,7 +219,7 @@ int main()
   pwm_data.parameters = {{PwmParameter::M, 0.8}, {PwmParameter::fm, 60.0}, {PwmParameter::fc, 900.0}, {PwmParameter::alignment, 0.5}};
   EMT::Controller::Pwm<double, size_t> pwm(pwm_data);
   pwm.allocate();
-  success *= pwm.initialize({{EMT::Controller::PwmOutputs::sa, static_cast<double>(pwm.output(0))}}) == 0;
+  success *= pwm.initialize({{EMT::Controller::PwmOutputs::sa, static_cast<double>(pwm.output(EMT::Controller::PwmOutputs::sa))}}) == 0;
   success *= rejects([&]
                      { pwm.initialize({{EMT::Controller::PwmOutputs::sa, 20.0}}); });
   results += success.report("Computed outputs reject incompatible initial values");

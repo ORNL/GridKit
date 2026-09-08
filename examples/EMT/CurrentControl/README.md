@@ -2,10 +2,11 @@
 
 `GFL` tracks a current reference against a stiff grid with a known angle.
 `GFM` supplies an islanded load through cascaded voltage and current control.
-Both use the same sampled PWM, converter, and physical LCL filter.
+Both use the same continuous PWM, converter, and physical LCL filter.
 
-The bridge has a 400 V DC supply and 6 kHz centered PWM. The filter uses
-2 mH / 0.2 Ω, 100 µF, and 1 mH / 0.1 Ω. Nominal voltage is 208 V
+The bridge has a 20 mF DC link initialized at 400 V and 6 kHz centered PWM.
+Constant source current matches the initial fundamental power balance. The
+filter uses 2 mH / 0.2 Ω, 100 µF, and 1 mH / 0.1 Ω. Nominal voltage is 208 V
 line-to-line RMS at 60 Hz; dq quantities use the power-invariant Park transform.
 Current and voltage loop bandwidths are nominally 400 Hz and 60 Hz.
 
@@ -33,7 +34,7 @@ python3 examples/EMT/CurrentControl/run.py --mu 240 --tmax 0.1 --dt-monitor 1e-5
 python3 examples/EMT/CurrentControl/plot.py --compare simulation-smooth
 ```
 
-`mu` changes switching resolution while preserving the held duty's
+`mu` changes switching resolution while preserving the fixed-duty
 carrier-period mean. The logistic 10–90% width is 4.39 µs at `1000000`
 and 18.3 ms at `240`. The circuit and controller parameters are unchanged.
 
@@ -44,8 +45,8 @@ and gives corresponding panels identical x- and y-axis limits.
 
 Each run retains its effective inputs, hashes, waveforms, log, and IDA statistics.
 The plotter writes PNG/PDF figures, compressed waveforms, and `summary.json`
-with tracking, bridge power balance, and analytic PWM comparisons. Generated
-inputs and data are ignored; PNG/PDF figures remain available for review.
+with tracking, bridge power balance, DC-link energy balance, and continuous
+PWM comparisons. Generated inputs and data are ignored; PNG/PDF figures remain available for review.
 CSV waveforms may be removed after plotting; the plotter also reads NPZ files.
 
 Plot | Resolved switching | Broad smoothing
@@ -57,6 +58,6 @@ Fourier amplitudes | [Harmonics](simulation/harmonics.png) | [Harmonics](simulat
 
 ## Regression coverage
 
-The sampled-PWM unit fixture checks duty mean, the smoothing-to-switching
-transition, and accepted-boundary command timing. These examples report
-closed-loop behavior without prescribing exact transients or solver steps.
+The continuous-PWM unit fixture checks duty mean, the smoothing-to-switching
+transition, and input values and gradients at the same evaluation time. These
+examples report closed-loop behavior without prescribing exact transients or solver steps.
