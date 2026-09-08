@@ -1,0 +1,12 @@
+{
+  "header": {
+    "version": 1,
+    "time": 0.0,
+    "description": "Breaker open with a de-energized bank"
+  },
+  "devices": {
+    "breaker": {
+      "open": true
+    }
+  }
+}

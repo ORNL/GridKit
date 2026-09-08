@@ -8,3 +8,5 @@ add_subdirectory(CoupledGrid)
 add_subdirectory(DCLink)
 
 add_subdirectory(CurrentControl)
+
+add_subdirectory(Transformer)
