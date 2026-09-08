@@ -36,20 +36,15 @@ matrices numerically equal to the total line parameters.
 ## Converter scope and smoothing
 
 Each PWM uses M=0.8, fm=60 Hz, fc=900 Hz, and centered pulses. The default
-shared `GridKit::Math::MU<double>` is 240 s⁻¹. For the documented logistic
-smoothing, the fundamental attenuation is
+shared `GridKit::Math::MU<double>` is 240 s⁻¹. Continuous PWM preserves the
+fixed-duty carrier-period mean. `build_case.py` therefore sets
+`Vdc = 2 sqrt(2/3) (1.02 × 13800) / M = 28732.515 V` for a 1.02 pu
+mean open-circuit line-to-line voltage. All studies use this same DC voltage;
+changing mu requires no DC compensation.
 
-`(π ω / μ) / sinh(π ω / μ) = 0.07098472`, with `ω=2π·60`.
-
-`build_case.py` computes the exact fundamental Fourier coefficient of the
-sampled ideal pulse train, applies this attenuation, and selects an effective
-constant DC value of about 407.357 kV to give a 1.02 pu open-circuit AC
-fundamental. This is explicit mathematical compensation for broad smoothing,
-not a realistic DC-link rating or an implicit transformer. The actual gate
-signals are correspondingly smooth and the carrier ripple is strongly suppressed.
 At `mu=240`, the 18.3 ms logistic edge width exceeds the 1.11 ms carrier
-period; this setting does not validate switching. Changing mu requires
-recomputing the DC compensation or supplying the documented solver overrides.
+period; this setting suppresses switching. At `mu=50000`, the width is
+87.9 µs and the carrier switching is resolved.
 
 The converters have fixed-frequency modulation and ideal unlimited DC sources.
 There is no PLL, current controller, current limit, DC energy storage, exciter,
@@ -62,16 +57,17 @@ voltage is held at its initialized value; governors regulate mechanical power.
 Run `python3 cases/EMT/IBR/build_case.py` from the repository root (requires
 NumPy) to regenerate the case and state files. The script solves a linear
 fundamental-frequency network with specified machine terminal voltages and
-converter source voltages, then derives machine P/Q and instantaneous bus
-voltages. It does not synthesize any simulation results.
+converter source voltages, then derives machine P/Q, instantaneous bus
+voltages, line currents and filter currents. It does not synthesize any
+simulation results.
 
-Line and filter currents still start at their model defaults. IDA computes
-consistent algebraic variables and derivatives while retaining differential
-states, so an energization transient remains. All examples retain it and apply
-disturbances at 1 s. Compare each event run against the undisturbed baseline.
+IDA computes consistent algebraic variables and derivatives while retaining
+these differential initial states. This is a fundamental-frequency estimate;
+switching ripple and model initialization can still produce startup transients.
+Full studies apply disturbances at 1 s. Compare each event run against the
+undisturbed baseline.
 
-A sixth solver study uses runtime `mu=50000` and explicit DC overrides to
-resolve carrier switching while preserving the AC fundamental. The shared
+A sixth solver study uses runtime `mu=50000` to resolve carrier switching. The shared
 scale affects machine saturation and governor limiters as well as PWM.
 
 See [the six scenarios and plotting workflow](../../../examples/EMT/IBR/README.md).
