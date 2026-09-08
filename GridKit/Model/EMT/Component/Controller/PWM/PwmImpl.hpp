@@ -150,6 +150,9 @@ namespace GridKit
         fc_                = parameter<RealT>(data, Parameter::fc, missing);
         alignment_         = parameter<RealT>(data, Parameter::alignment, RealT{0.5});
         horizon_           = std::log(4 / std::numeric_limits<RealT>::epsilon()) / Math::MU<RealT>;
+        // The hold crossfade must complete within half a carrier on each side
+        // of a boundary to stay causal with the one-carrier delay.
+        crossfade_rate_    = std::max(Math::MU<RealT>, 2 * std::log(4 / std::numeric_limits<RealT>::epsilon()) * fc_);
 
         parameters_valid_ = std::isfinite(fc_) && fc_ > 0
                             && std::isfinite(1 / fc_)
@@ -229,9 +232,15 @@ namespace GridKit
           if (verify() != 0 || !std::isfinite(this->time_)
               || std::abs(this->time_ * fc_) >= static_cast<RealT>(std::numeric_limits<long long>::max() / 2))
             throw std::domain_error("Cannot initialize sampled PWM with invalid inputs or time");
-          // Initialize the active command and the one queued for the next interval.
-          const auto interval   = static_cast<long long>(std::floor(this->time_ * fc_));
+          // Initialize the previous, active, and queued commands. A start on a
+          // carrier boundary must resolve to the interval that begins there.
+          auto        interval  = static_cast<long long>(std::floor(this->time_ * fc_));
+          const RealT boundary  = static_cast<RealT>(interval + 1) / fc_;
+          const RealT tolerance = 16 * std::numeric_limits<RealT>::epsilon() * std::max(RealT{1}, std::abs(boundary));
+          if (this->time_ >= boundary - tolerance)
+            ++interval;
           const auto modulation = readModulation();
+          samples_.push_back({interval - 1, modulation});
           samples_.push_back({interval, modulation});
           samples_.push_back({interval + 1, modulation});
         }
@@ -253,14 +262,14 @@ namespace GridKit
         if (time > next + tolerance)
           throw std::logic_error("PWM: solver skipped a modulation sampling instant");
         samples_.push_back({next_interval, readModulation()});
-        // Retain only the active command and the one queued for the next interval.
-        while (samples_.size() > 2)
+        // Retain the previous, active, and queued commands for the crossfade.
+        while (samples_.size() > 3)
           samples_.pop_front();
         invalidateCache();
       }
 
       template <typename scalar_type, typename index_type>
-      auto Pwm<scalar_type, index_type>::nextDiscontinuityTime(RealT after) const -> RealT
+      auto Pwm<scalar_type, index_type>::nextSampleTime(RealT after) const -> RealT
       {
         if (!sampledInput())
           return std::numeric_limits<RealT>::infinity();
@@ -275,8 +284,66 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       auto Pwm<scalar_type, index_type>::maximumStepSize() const -> RealT
       {
-        return sampledInput() ? std::min(1 / (20 * fc_), 1 / Math::MU<RealT>)
-                              : std::numeric_limits<RealT>::infinity();
+        if (!sampledInput())
+          return std::numeric_limits<RealT>::infinity();
+        return std::min(1 / (20 * fc_), 1 / Math::MU<RealT>);
+      }
+
+      template <typename scalar_type, typename index_type>
+      auto Pwm<scalar_type, index_type>::pulse(RealT duty, RealT local_time) const -> RealT
+      {
+        const RealT tc  = 1 / fc_;
+        const RealT on  = alignment_ * (1 - duty) * tc;
+        const RealT off = (alignment_ + (1 - alignment_) * duty) * tc;
+        // Reflection avoids subtracting two values close to one in the tail.
+        if (local_time <= (on + off) / 2)
+          return Math::sigmoid(local_time - on) - Math::sigmoid(local_time - off);
+        return Math::sigmoid(off - local_time) - Math::sigmoid(on - local_time);
+      }
+
+      template <typename scalar_type, typename index_type>
+      auto Pwm<scalar_type, index_type>::train(RealT duty, RealT t) const -> RealT
+      {
+        // Periodic replica of one held pulse. Poisson summation gives the same
+        // function as a Fourier series whose terms decay like
+        // exp(-2 pi^2 n fc / mu); use whichever representation needs fewer terms.
+        const RealT pi        = std::numbers::pi_v<RealT>;
+        const RealT tc        = 1 / fc_;
+        const RealT tail      = horizon_ * Math::MU<RealT>;
+        const RealT decay     = 2 * pi * pi * fc_ / Math::MU<RealT>;
+        const auto  first     = static_cast<long long>(std::floor((t - horizon_) * fc_));
+        const auto  last      = static_cast<long long>(std::floor((t + horizon_) * fc_));
+        const auto  harmonics = static_cast<long long>(std::ceil(tail / decay));
+        if (harmonics < last - first + 1)
+        {
+          const RealT centre = (alignment_ + (1 - 2 * alignment_) * duty / 2) * tc;
+          const RealT local  = t - std::floor(t * fc_) * tc - centre;
+          RealT       series = duty;
+          for (long long n = 1; n <= harmonics; ++n)
+          {
+            const RealT order  = static_cast<RealT>(n);
+            const RealT x      = decay * order;
+            series            += 2 * std::sin(pi * order * duty) / (pi * order) * (x / std::sinh(x))
+                      * std::cos(2 * pi * order * fc_ * local);
+          }
+          return series;
+        }
+        RealT sum        = 0;
+        RealT correction = 0;
+        for (auto k = first; k <= last; ++k)
+        {
+          const RealT term = pulse(duty, t - static_cast<RealT>(k) * tc) - correction;
+          const RealT next = sum + term;
+          correction       = (next - sum) - term;
+          sum              = next;
+        }
+        return sum;
+      }
+
+      template <typename scalar_type, typename index_type>
+      auto Pwm<scalar_type, index_type>::crossfade(RealT x) const -> RealT
+      {
+        return (1 + std::tanh(crossfade_rate_ * x / 2)) / 2;
       }
 
       template <typename scalar_type, typename index_type>
@@ -290,49 +357,48 @@ namespace GridKit
         {
           return static_cast<ScalarT>(cached_output_[phase]);
         }
-        const RealT                pi = std::numbers::pi_v<RealT>;
-        const std::array<RealT, 3> phi{0, -2 * pi / 3, 2 * pi / 3};
-        const RealT                tc      = 1 / fc_;
-        const bool                 sampled = sampledInput();
-        if (sampled && samples_.empty())
-          throw std::logic_error("PWM: initialize held modulation before evaluating switching outputs");
-        const RealT t          = sampled ? this->time_ : std::remainder(this->time_, 1 / fm_);
-        const auto  first      = static_cast<long long>(std::floor((t - horizon_) * fc_));
-        const auto  last       = static_cast<long long>(std::floor((t + horizon_) * fc_));
-        const auto  intervals  = sampled ? 0LL : static_cast<long long>(std::round(fc_ / fm_));
-        RealT       sum        = 0;
-        RealT       correction = 0;
-        for (auto k = first; k <= last; ++k)
+        RealT value = 0;
+        if (sampledInput())
         {
-          RealT modulation;
-          if (sampled)
+          if (samples_.size() != 3)
+            throw std::logic_error("PWM: initialize held modulation before evaluating switching outputs");
+          // Smooth sample-and-hold: crossfade the committed periodic trains at
+          // the carrier boundaries. The one-carrier delay commits trains k-1,
+          // k, and k+1 for t_k <= t < t_{k+1}, so no weight reads a future command.
+          const RealT t = this->time_;
+          for (const auto& sample : samples_)
           {
-            // Every periodic pulse replica uses the active held command.
-            modulation = samples_.front().modulation[phase];
+            const RealT begin   = static_cast<RealT>(sample.interval) / fc_;
+            const RealT end     = static_cast<RealT>(sample.interval + 1) / fc_;
+            const RealT weight  = crossfade(t - begin) - crossfade(t - end);
+            value              += weight * train((1 + sample.modulation[phase]) / 2, t);
           }
-          else
-          {
-            // Reduce the prescribed sinusoid while retaining carrier prehistory.
-            const auto sample = static_cast<RealT>(k % intervals) + alignment_;
-            modulation        = M_ * std::sin(2 * pi * sample / static_cast<RealT>(intervals) + phi[phase]);
-          }
-          const RealT duty       = (1 + modulation) / 2;
-          const RealT local_time = t - static_cast<RealT>(k) * tc;
-          const RealT on         = alignment_ * (1 - duty) * tc;
-          const RealT off        = (alignment_ + (1 - alignment_) * duty) * tc;
-          // Reflection avoids subtracting two values close to one in the tail.
-          const RealT pulse      = local_time <= (on + off) / 2
-                                       ? Math::sigmoid(local_time - on) - Math::sigmoid(local_time - off)
-                                       : Math::sigmoid(off - local_time) - Math::sigmoid(on - local_time);
-          const RealT term       = pulse - correction;
-          const RealT next       = sum + term;
-          correction             = (next - sum) - term;
-          sum                    = next;
         }
-        // The omitted tails are bounded by 2 sigmoid(-horizon), independently
-        // of the carrier frequency, since the unsmoothed pulses do not overlap.
+        else
+        {
+          // Reduce the prescribed sinusoid while retaining carrier prehistory.
+          const RealT                pi = std::numbers::pi_v<RealT>;
+          const std::array<RealT, 3> phi{0, -2 * pi / 3, 2 * pi / 3};
+          const RealT                tc         = 1 / fc_;
+          const RealT                t          = std::remainder(this->time_, 1 / fm_);
+          const auto                 first      = static_cast<long long>(std::floor((t - horizon_) * fc_));
+          const auto                 last       = static_cast<long long>(std::floor((t + horizon_) * fc_));
+          const auto                 intervals  = static_cast<long long>(std::round(fc_ / fm_));
+          RealT                      correction = 0;
+          for (auto k = first; k <= last; ++k)
+          {
+            const auto  sample     = static_cast<RealT>(k % intervals) + alignment_;
+            const RealT modulation = M_ * std::sin(2 * pi * sample / static_cast<RealT>(intervals) + phi[phase]);
+            const RealT term       = pulse((1 + modulation) / 2, t - static_cast<RealT>(k) * tc) - correction;
+            const RealT next       = value + term;
+            correction             = (next - value) - term;
+            value                  = next;
+          }
+          // The omitted tails are bounded by 2 sigmoid(-horizon), independently
+          // of the carrier frequency, since the unsmoothed pulses do not overlap.
+        }
         cached_time_[phase]   = this->time_;
-        cached_output_[phase] = std::clamp(sum, RealT{0}, RealT{1});
+        cached_output_[phase] = std::clamp(value, RealT{0}, RealT{1});
         return static_cast<ScalarT>(cached_output_[phase]);
       }
     } // namespace Controller

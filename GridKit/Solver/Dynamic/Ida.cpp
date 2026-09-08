@@ -409,8 +409,10 @@ namespace AnalysisManager
 
       while (time < tf)
       {
+        // Sampling instants only stop the integrator; history discontinuities restart it.
         const RealT discontinuity = model_->nextDiscontinuityTime(time);
-        const RealT target        = std::min(tf, discontinuity);
+        const RealT sample        = model_->nextSampleTime(time);
+        const RealT target        = std::min({tf, discontinuity, sample});
         checkOutput(IDASetStopTime(solver_, target), "IDASetStopTime");
         if (max_steps_ > 0 && ++internal_steps > max_steps_)
           checkOutput(IDA_TOO_MUCH_WORK, checkpoint ? "IDASolveF" : "IDASolve");

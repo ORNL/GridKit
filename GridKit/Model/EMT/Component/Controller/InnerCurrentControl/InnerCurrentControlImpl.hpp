@@ -150,8 +150,12 @@ namespace GridKit
       int InnerCurrentControl<scalar_type, index_type>::initializeState(const std::map<std::string, RealT>& values)
       {
         validateInitialState(values);
-        return initialize({values.contains("xid") ? values.at("xid") : RealT{0},
-                           values.contains("xiq") ? values.at("xiq") : RealT{0}});
+        std::array<RealT, 2> integral{};
+        if (values.contains("xid"))
+          integral[0] = values.at("xid");
+        if (values.contains("xiq"))
+          integral[1] = values.at("xiq");
+        return initialize(integral);
       }
 
       template <typename scalar_type, typename index_type>
@@ -248,7 +252,9 @@ namespace GridKit
         const auto                 slope  = Math::sigmoid(norm - RealT{1});
         for (size_t n = 0; n < 2; ++n)
         {
-          const auto diagonal   = n == axis ? RealT{1} : RealT{0};
+          RealT diagonal = ZERO<RealT>;
+          if (n == axis)
+            diagonal = ONE<RealT>;
           const auto derivative = diagonal / factor
                                   - reference[axis] * current_coefficient_ * reference[n] * slope
                                         / (factor * factor * factor);
@@ -261,7 +267,9 @@ namespace GridKit
           size_t axis, typename SignalT::GradientT& gradient, RealT scale) const
       {
         const auto other = 1 - axis;
-        const auto sign  = axis == 0 ? RealT{-1} : RealT{1};
+        RealT      sign  = ONE<RealT>;
+        if (axis == 0)
+          sign = -ONE<RealT>;
         input_[axis]->appendGradient(gradient, scale);
         input_[other + 2]->appendGradient(gradient, scale * sign * inductance_ * static_cast<RealT>(input_[6]->read()));
         input_[6]->appendGradient(gradient, scale * sign * inductance_ * static_cast<RealT>(input_[other + 2]->read()));
@@ -291,7 +299,9 @@ namespace GridKit
         const auto                 slope        = Math::sigmoid(voltage_norm - vdc * vdc);
         for (size_t n = 0; n < 2; ++n)
         {
-          const auto diagonal   = n == axis ? RealT{1} : RealT{0};
+          RealT diagonal = ZERO<RealT>;
+          if (n == axis)
+            diagonal = ONE<RealT>;
           const auto derivative = vdc * (diagonal / factor - z[axis] * voltage_coefficient_ * z[n] * slope / (factor * factor * factor));
           appendUnlimitedVoltageGradient(n, gradient, scale * derivative);
         }
@@ -338,7 +348,9 @@ namespace GridKit
             this->J_cols_buffer_[j] = column;
             this->J_vals_buffer_[j] = value;
           }
-        return entries == 0 ? 0 : this->constructCoo();
+        if (entries == 0)
+          return 0;
+        return this->constructCoo();
       }
     } // namespace Controller
   } // namespace EMT
