@@ -300,11 +300,11 @@ namespace GridKit
           yp[i] = 0.0;
         }
 
-        omega_set_ = omega;
-        vref_set_  = vref;
-        vs_set_    = vs;
-        vuel_set_  = vuel;
-        voel_set_  = voel;
+        omega_set_ = static_cast<RealT>(omega);
+        vref_set_  = static_cast<RealT>(vref);
+        vs_set_    = static_cast<RealT>(vs);
+        vuel_set_  = static_cast<RealT>(vuel);
+        voel_set_  = static_cast<RealT>(voel);
 
         if (auto vref_port = ports_.in.template port<Ieeet1SignalInputs::vref>())
         {
@@ -313,6 +313,12 @@ namespace GridKit
 
         y_.setDataUpdated();
         yp_.setDataUpdated();
+
+        // For DependencyTracking::Variable, set variable numbers
+        if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+        {
+          this->initializeDependencyTrackingVariableNumbers();
+        }
 
         return 0;
       }

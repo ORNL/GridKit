@@ -497,7 +497,7 @@ namespace GridKit
         // Evaluate and get the system Jacobian
         system.evaluateResidual();
         system.evaluateJacobian();
-        GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* system_jacobian = system.getCsrJacobian();
+        auto* system_jacobian = system.getCsrJacobian();
         std::cout << "Sparse Csr Matrix: System Jacobian with DependencyTracking\n";
         system_jacobian->print();
 
@@ -517,7 +517,7 @@ namespace GridKit
         // Evaluate and get the system Jacobian
         system.evaluateResidual();
         system.evaluateJacobian();
-        GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* system_jacobian = system.getCsrJacobian();
+        auto* system_jacobian = system.getCsrJacobian();
         std::cout << "Sparse Csr Matrix: System Jacobian with Enzyme\n";
         system_jacobian->print();
 

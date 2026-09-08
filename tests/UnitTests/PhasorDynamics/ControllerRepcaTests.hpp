@@ -1014,15 +1014,17 @@ namespace GridKit
           setState(blocked.repca,
                    {{Vars::QPI, 1.7}, {Vars::ERQLIM, 0.4}, {Vars::SFRZ, 1.0}});
           setDerivative(blocked.repca, {{Vars::XQPI, 0.0}});
-          numberVariables(blocked, 1.0);
+          numberVariables(blocked);
+          blocked.repca.updateTime(0.0, 1.0);
           success *= (blocked.repca.evaluateResidual() == 0);
 
           const DependencyTracking::Variable::DependencyMap expected{
-              {index(Vars::XQPI), -1.0},
-              {index(Vars::SFRZ), 0.0},
-              {index(Vars::ERQLIM), 0.0},
-              {index(Vars::QPI), 0.0},
+              {2 * index(Vars::XQPI) + 1, -1.0}, // @todo Remove these
+              {2 * index(Vars::SFRZ), 0.0}, // @todo Remove these
+              {2 * index(Vars::ERQLIM), 0.0}, // @todo Remove these
+              {2 * index(Vars::QPI), 0.0}, // @todo Remove these
           };
+
           success *= jacobianRowMatches(
               blocked.repca.getResidual().getData()[index(Vars::XQPI)].getDependencies(),
               expected,
@@ -2282,8 +2284,8 @@ namespace GridKit
         return success;
       }
 
-      void numberVariables(Fixture<DependencyTracking::Variable>& fixture,
-                           RealT                                  alpha) const
+      /// @todo Remove and setup the test to not rely on explicit variable numbering
+      void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const
       {
         auto* y     = fixture.repca.y().getData();
         auto* yp    = fixture.repca.yp().getData();
@@ -2291,17 +2293,16 @@ namespace GridKit
 
         for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
         {
-          y[row].setVariableNumber(row);
-          yp[row].setVariableNumber(row);
-          yp[row].scaleDependencies(alpha);
+          y[row].setVariableNumber(2 * row);
+          yp[row].setVariableNumber(2 * row + 1);
         }
         for (size_t row = 0; row < static_cast<size_t>(fixture.bus.size()); ++row)
         {
-          bus_y[row].setVariableNumber(kBusVrColumn + row);
+          bus_y[row].setVariableNumber(2 * (kBusVrColumn + row));
         }
         for (auto variable : Utilities::enum_values<Ext>())
         {
-          fixture.input(variable).setVariableNumber(fixture.inputIndex(variable));
+          fixture.input(variable).setVariableNumber(2 * fixture.inputIndex(variable));
         }
 
         fixture.repca.y().setDataUpdated();
@@ -2321,16 +2322,12 @@ namespace GridKit
         setAnswerKeyInputs(fixture);
         success *= fixture.prepare(0.0, 0.0);
         setAnswerKeyState(fixture.repca);
-        numberVariables(fixture, alpha);
+        numberVariables(fixture);
+        fixture.repca.updateTime(0.0, alpha);
         success *= (fixture.repca.evaluateResidual() == 0);
+        success *= (fixture.repca.evaluateJacobian() == 0);
 
-        std::vector<DependencyTracking::Variable::DependencyMap> rows(Utilities::enum_size<Vars>());
-        const auto*                                              f = fixture.repca.getResidual().getData();
-        for (size_t row = 0; row < Utilities::enum_size<Vars>(); ++row)
-        {
-          rows[row] = f[row].getDependencies();
-        }
-        return rows;
+        return MapFromCsr(fixture.repca.getCsrJacobian());
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
@@ -2354,6 +2351,7 @@ namespace GridKit
         success *= (fixture.repca.evaluateResidual() == 0);
         success *= (fixture.repca.evaluateJacobian() == 0);
         success *= (fixture.repca.constructCsr() == 0);
+
         return MapFromCsr(fixture.repca.getCsrJacobian());
       }
 #endif
