@@ -30,11 +30,12 @@ python3 examples/EMT/CurrentControl/run.py
 python3 examples/EMT/CurrentControl/plot.py
 ```
 
-Compare resolved switching and broad smoothing over the same 0.1 s window:
+Compare resolved switching and broad smoothing over the same 0.2 s window,
+including load connection and disconnection:
 
 ```bash
-python3 examples/EMT/CurrentControl/run.py --tmax 0.1
-python3 examples/EMT/CurrentControl/run.py --mu 240 --tmax 0.1 --dt-monitor 1e-5 --output simulation-smooth
+python3 examples/EMT/CurrentControl/run.py --tmax 0.2
+python3 examples/EMT/CurrentControl/run.py --mu 240 --tmax 0.2 --dt-monitor 1e-5 --output simulation-smooth
 python3 examples/EMT/CurrentControl/plot.py --compare simulation-smooth
 ```
 
@@ -75,12 +76,10 @@ The validator uses only the Python standard library.
 python3 examples/EMT/CurrentControl/validate.py --exe build/application/EMT/EMTDynamicSimulation
 ```
 
-The saved GFL plots and `PQ.metrics.json` belong to the previous P/Q-input
-controller. Saved GFM plots also predate the controller output-initialization
-migration. They have not been regenerated or revalidated for the current-input
-interface. The validator now uses the balanced LCL solution for supplied dq
-current targets and reconstructs P and Q independently from phase samples and
-Park measurements. The reactive-power bound is 0.002 var: repeated resolved-switching runs
+The saved plots use the current controller interfaces and output-based
+initialization. The validator uses the balanced LCL solution for the supplied
+dq current targets and reconstructs P and Q independently from phase samples
+and Park measurements. The reactive-power bound is 0.002 var: repeated resolved-switching runs
 differed from the balanced analytic solution by 0.001194 var. The current
 reference fixes dq current; it does not impose exact average reactive power
 in the presence of switching ripple.
