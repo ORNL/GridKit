@@ -185,12 +185,6 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  bool SynchronousMachine<ScalarT, IdxT>::isCloneable() const
-  {
-    return true;
-  }
-
-  template <class ScalarT, typename IdxT>
   CircuitComponent<ScalarT, IdxT>* SynchronousMachine<ScalarT, IdxT>::clone() const
   {
     return new SynchronousMachine<ScalarT, IdxT>(*this);

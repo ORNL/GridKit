@@ -143,12 +143,6 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  bool VoltageSource<ScalarT, IdxT>::isCloneable() const
-  {
-    return true;
-  }
-
-  template <class ScalarT, typename IdxT>
   CircuitComponent<ScalarT, IdxT>* VoltageSource<ScalarT, IdxT>::clone() const
   {
     return new VoltageSource<ScalarT, IdxT>(*this);

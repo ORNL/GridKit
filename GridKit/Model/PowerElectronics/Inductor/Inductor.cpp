@@ -150,12 +150,6 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  bool Inductor<ScalarT, IdxT>::isCloneable() const
-  {
-    return true;
-  }
-
-  template <class ScalarT, typename IdxT>
   CircuitComponent<ScalarT, IdxT>* Inductor<ScalarT, IdxT>::clone() const
   {
     return new Inductor<ScalarT, IdxT>(*this);

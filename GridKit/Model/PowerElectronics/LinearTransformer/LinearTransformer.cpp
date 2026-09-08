@@ -136,12 +136,6 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  bool LinearTransformer<ScalarT, IdxT>::isCloneable() const
-  {
-    return true;
-  }
-
-  template <class ScalarT, typename IdxT>
   CircuitComponent<ScalarT, IdxT>* LinearTransformer<ScalarT, IdxT>::clone() const
   {
     return new LinearTransformer<ScalarT, IdxT>(*this);

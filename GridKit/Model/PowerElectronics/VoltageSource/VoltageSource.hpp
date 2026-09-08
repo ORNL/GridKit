@@ -60,11 +60,10 @@ namespace GridKit
     int evaluateJacobian() final;
     int evaluateIntegrand();
 
-    int  initializeAdjoint();
-    int  evaluateAdjointResidual();
+    int initializeAdjoint();
+    int evaluateAdjointResidual();
     // int evaluateAdjointJacobian();
-    int  evaluateAdjointIntegrand();
-    bool isCloneable() const;
+    int evaluateAdjointIntegrand();
 
     CircuitComponent<ScalarT, IdxT>* clone() const;
 

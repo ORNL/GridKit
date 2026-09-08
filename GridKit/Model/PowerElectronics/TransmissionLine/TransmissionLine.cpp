@@ -206,12 +206,6 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  bool TransmissionLine<ScalarT, IdxT>::isCloneable() const
-  {
-    return true;
-  }
-
-  template <class ScalarT, typename IdxT>
   CircuitComponent<ScalarT, IdxT>* TransmissionLine<ScalarT, IdxT>::clone() const
   {
     return new TransmissionLine<ScalarT, IdxT>(*this);

@@ -176,12 +176,6 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  bool MicrogridLoad<ScalarT, IdxT>::isCloneable() const
-  {
-    return true;
-  }
-
-  template <class ScalarT, typename IdxT>
   CircuitComponent<ScalarT, IdxT>* MicrogridLoad<ScalarT, IdxT>::clone() const
   {
     return new MicrogridLoad<ScalarT, IdxT>(*this);

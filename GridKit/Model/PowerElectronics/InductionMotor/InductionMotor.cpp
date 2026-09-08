@@ -151,12 +151,6 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  bool InductionMotor<ScalarT, IdxT>::isCloneable() const
-  {
-    return true;
-  }
-
-  template <class ScalarT, typename IdxT>
   CircuitComponent<ScalarT, IdxT>* InductionMotor<ScalarT, IdxT>::clone() const
   {
     return new InductionMotor<ScalarT, IdxT>(*this);

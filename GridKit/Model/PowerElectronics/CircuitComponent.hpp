@@ -28,6 +28,7 @@ namespace GridKit
 
     CircuitComponent() = default;
 
+  protected:
     /**
      * @brief Constructs a copy of a circuit component.
      *
@@ -167,6 +168,7 @@ namespace GridKit
       copyVector(param_lo_, other.param_lo_);
     }
 
+  public:
     /**
      * @brief Create an independent copy of this component.
      *
@@ -688,7 +690,6 @@ namespace GridKit
      */
     std::unique_ptr<IdxT[]> connection_nodes_;
 
-  protected:
     /// The number of variables in this component. Should be equal to \ref n_extern_ plus \ref n_intern_. \see size()
     IdxT size_{0};
     /// The number of nonzero elements in this component's Jacobian. \see nnz()
