@@ -24,9 +24,9 @@ Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 $T_\mathrm{rate}$ | [MVA] | `Trate` | Governor component power base | Required, positive
 $R$ | [p.u.] | `R` | Permanent droop | Nonzero
-$T_1$ | [sec] | `T1` | Steam-bowl time constant | Raised to the time-constant floor
-$T_2$ | [sec] | `T2` | Turbine numerator time constant |
-$T_3$ | [sec] | `T3` | Reheater time constant | Raised to the time-constant floor
+$T_1$ | [s] | `T1` | Steam-bowl time constant | Raised to the time-constant floor
+$T_2$ | [s] | `T2` | Turbine numerator time constant |
+$T_3$ | [s] | `T3` | Reheater time constant | Raised to the time-constant floor
 $P_v^{\max}$ | [p.u.] | `Pvmax` | Maximum valve position |
 $P_v^{\min}$ | [p.u.] | `Pvmin` | Minimum valve position |
 $D_t$ | [p.u.] | `Dt` | Turbine damping coefficient |

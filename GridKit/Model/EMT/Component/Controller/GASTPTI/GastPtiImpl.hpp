@@ -493,10 +493,10 @@ namespace GridKit
        * @param[in] y Internal variables in `GastPtiInternalVariables` order;
        *              each variable uses the base documented by its enum.
        * @param[in] yp Internal derivatives in the same enum order and bases.
-       * @param[in] wb Bus voltage components; unused, GASTPTI attaches to no bus.
-       * @param[in] ws External signals in `GastPtiExternalVariables` order:
+       * @param[in] external External signals in `GastPtiExternalVariables` order:
        *               absolute per-unit rotor speed followed by machine-base
        *               active-power reference.
+       * @param[in] external_dot External derivatives; unused.
        * @param[out] f Model-owned residuals in `GastPtiInternalVariables` order.
        */
       template <typename scalar_type, typename index_type>

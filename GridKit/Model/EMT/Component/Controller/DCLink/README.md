@@ -1,13 +1,29 @@
-# DC Link Model
+# DCLink Model
 
 `DCLink` represents an ideal DC-link capacitor. It owns one differential voltage
 and exchanges current and voltage signals with the source and converter.
+
+## Block Diagram
+
+None.
 
 ## Model Parameters
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 $C$ | [F] | `C` | DC-link capacitance | Required, finite and positive
+
+### Parameter Validation
+
+```math
+C > 0
+```
+
+The capacitance must be finite.
+
+### Derived Parameters
+
+None.
 
 ## Model Ports
 
@@ -23,6 +39,10 @@ the capacitor; positive converter current discharges it. Negative current permit
 regeneration. Voltage is signed; the model imposes no clamp or protection logic.
 
 ## Submodels
+
+None.
+
+### Submodel Validation
 
 None.
 
@@ -42,25 +62,41 @@ None.
 
 ### External Variables
 
-The input signals $i_{\mathrm{src}}$ and $i_{\mathrm{dc}}$ are read without modifying
-their producers.
+#### Differential
 
-## Residual Equations
+None.
+
+#### Algebraic
+
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$i_{\mathrm{src}}$ | [A] | Source current | Positive into the capacitor
+$i_{\mathrm{dc}}$ | [A] | Converter current | Positive out of the capacitor
+
+## Model Equations
+
+### Internal Equations
+
+#### Differential
 
 ```math
-f_{v_{\mathrm{dc}}}
-= i_{\mathrm{src}} - i_{\mathrm{dc}} - C\dot{v}_{\mathrm{dc}} = 0
+0 = -C\dfrac{\mathrm{d}v_{\mathrm{dc}}}{\mathrm{d}t}
+    + i_{\mathrm{src}} - i_{\mathrm{dc}}
 ```
 
-The analytic Jacobian composes both input-signal gradients and contributes
-$-C$ to the voltage-derivative column. Differential classification follows from
-the assembled derivative matrix.
+#### Algebraic
+
+None.
+
+### External Equations
+
+None.
 
 ## Initialization
 
 The state-file key `vdc` sets the initial voltage, defaulting to zero. Only finite
 values are accepted. The consistent-initial-condition solve preserves this voltage
-and obtains $\dot{v}_{\mathrm{dc}}=(i_{\mathrm{src}}-i_{\mathrm{dc}})/C$ from the
+and obtains $\mathrm{d}v_{\mathrm{dc}}/\mathrm{d}t=(i_{\mathrm{src}}-i_{\mathrm{dc}})/C$ from the
 connected network. Initialization does not depend on the current inputs, so the
 converter feedback connection adds no initialization ordering cycle.
 
@@ -76,7 +112,7 @@ Monitor | Units | Description | Note
 The energy balance is
 
 ```math
-\dot{E}=v_{\mathrm{dc}}i_{\mathrm{src}}-v_{\mathrm{dc}}i_{\mathrm{dc}}.
+\dfrac{\mathrm{d}E}{\mathrm{d}t}=v_{\mathrm{dc}}i_{\mathrm{src}}-v_{\mathrm{dc}}i_{\mathrm{dc}}.
 ```
 
 See the [charge/discharge case](../../../../../../cases/EMT/DCLink/README.md) for

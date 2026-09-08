@@ -8,7 +8,7 @@ and reusable operators in instantaneous phase coordinates.
 > phases.
 
 > [!NOTE]
-> PWM smoothing $\mu$ selects simulation resolution within the same model:
+> Sampled-input PWM smoothing $\mu$ selects simulation resolution within the same model:
 > small values intentionally suppress switching; large values resolve it.
 > The commanded carrier-period mean is preserved throughout this range.
 
@@ -38,8 +38,8 @@ Bus voltage is algebraic unless a connected admittance depends on its derivative
 ## Initialization
 
 EMT models are initialized using real-valued, instantaneous phase-coordinate
-quantities in $\mathbb{R}^N$. RMS or phasor calculations, when used by an
-upstream initialization workflow, are outside the EMT model specification.
+quantities in $\mathbb{R}^N$. Initialization helpers may use RMS or phasor
+calculations internally; runtime variables remain instantaneous.
 
 Initial differential states, algebraic variables, derivatives, and discrete
 inputs must be consistent with the assembled EMT equations at $t_0$. Models

@@ -8,31 +8,31 @@ namespace GridKit
   {
     enum class ParkParameters
     {
-      inverse,
+      inverse, ///< Apply the inverse Park transformation
     };
 
     enum class ParkInputs : size_t
     {
-      u1,
-      u2,
-      u3,
-      theta,
+      u1,    ///< \f$u_1\f$ Input component
+      u2,    ///< \f$u_2\f$ Input component
+      u3,    ///< \f$u_3\f$ Input component
+      theta, ///< \f$\theta\f$ Electrical angle [rad]
       SIZE,
     };
 
     enum class ParkOutputs : size_t
     {
-      y1,
-      y2,
-      y3,
+      y1, ///< \f$y_1\f$ Output component
+      y2, ///< \f$y_2\f$ Output component
+      y3, ///< \f$y_3\f$ Output component
       SIZE,
     };
 
     enum class ParkMonitorableVariables
     {
-      y1,
-      y2,
-      y3,
+      y1, ///< \f$y_1\f$ Output component
+      y2, ///< \f$y_2\f$ Output component
+      y3, ///< \f$y_3\f$ Output component
     };
 
     template <typename real_type, typename index_type>

@@ -1,7 +1,7 @@
 # [[
 #  Author(s):
 #    - Luke Lowery <lukel@tamu.edu>
-#]]
+# ]]
 
 add_subdirectory(Bus)
 add_subdirectory(Controller)

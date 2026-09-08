@@ -1,25 +1,22 @@
 # Machine Model
 
-`Machine` represents an $N$-phase round-rotor synchronous machine
+`Machine` represents a three-phase round-rotor synchronous machine
 in instantaneous phase coordinates with fundamental per-unit winding
 parameters. The rotor carries the field winding $\mathrm{fd}$, one d-axis
 damper $\mathrm{1d}$, and two q-axis dampers $\mathrm{1q}$ and $\mathrm{2q}$.
 Current $\mathbf{i}$ is injected from the machine into the EMT bus.
 
-The winding physics rows are written in the rotor $dq0$ frame; explicit Park
-residual rows define the $dq0$ projections of the terminal voltage and the
-instantaneous abc stator currents, so the bus coupling is instantaneous abc SI
-volts and amps while the machine physics validates line by line against the
-reference model. The equivalent time-varying inductance synthesis in abc
-coordinates is recorded in [Development](#development).
+Winding equations use the rotor $dq0$ frame. Terminal voltages are transformed
+directly; algebraic inverse-Park rows define the injected phase currents in SI
+units. The equivalent phase-domain inductance synthesis is given in
+[Development](#development).
 
 > [!NOTE]
-> The formulation supports $N$ phases; initial development targets three
-> phases. Internal machine quantities are in the machine per-unit system on
-> the rated bases. Round-rotor saturation applies one factor $K_s$ to both
-> magnetizing inductances. The differential leakage inductance between
-> same-axis rotor windings is neglected. The reference model is the MathWorks
-> Synchronous Machine block with round rotor and fundamental parameters.
+> Internal machine quantities use the rated machine per-unit bases.
+> Round-rotor saturation applies one factor $K_s$ to both magnetizing
+> inductances. Differential leakage between same-axis rotor windings is
+> neglected. The reference is the MathWorks Synchronous Machine block with
+> round rotor and fundamental parameters.
 
 ## Block Diagram
 
@@ -31,7 +28,6 @@ Figure 1: Machine model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$N$ | [-] | `N` | Number of phases | Required, positive integer
 $S_\mathrm{b}$ | [VA] | `S` | Rated three-phase apparent power | Required, positive
 $V_\mathrm{b}$ | [V] | `V` | Rated line-to-line RMS voltage | Required, positive
 $f_\mathrm{b}$ | [Hz] | `f` | Rated electrical frequency | Required, positive
@@ -57,7 +53,6 @@ $S(1.2)$ | [p.u.] | `S12` | Saturation factor at $1.2$ per-unit flux | Nonnegati
 
 ```math
 \begin{aligned}
-N &\in \mathbb{Z}_{>0} \\
 S_\mathrm{b} &> 0 \\
 V_\mathrm{b} &> 0 \\
 f_\mathrm{b} &> 0 \\
@@ -72,6 +67,8 @@ S(1.0), S(1.2) &\ge 0
 ```
 
 ### Derived Parameters
+
+The phase count is fixed at $N=3$, with $\mathcal{N}=\{1,2,3\}$.
 
 ```math
 \begin{aligned}
@@ -152,11 +149,15 @@ $\mathbf{i}_s$ | [p.u.] | Instantaneous stator currents | $\mathbf{i}_s \in \mat
 
 #### Differential
 
+When a connected equation depends on the bus-voltage derivative:
+
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{v}$ | [V] | Bus voltage vector owned by EMT bus | $\mathbf{v} \in \mathbb{R}^N$
 
 #### Algebraic
+
+Otherwise, the bus-voltage variables above are algebraic.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
@@ -166,8 +167,8 @@ $P_m$ | [p.u.] | Mechanical power owned by a governor | Latched setpoint when un
 ## Model Equations
 
 The Park transformation uses the phase offsets
-$\gamma_a = 0$, $\gamma_b = -2\pi/3$, $\gamma_c = +2\pi/3$, with the q-axis
-lagging the d-axis. For a phase quantity $\mathbf{x}$,
+$\gamma_a = 0$, $\gamma_b = -2\pi/3$, and $\gamma_c = +2\pi/3$.
+For a phase quantity $\mathbf{x}$,
 
 ```math
 x_d = \dfrac{2}{3}\sum_{n \in \mathcal{N}} x_n \cos(\theta + \gamma_n),
@@ -353,7 +354,3 @@ phase-a self inductance is
 L_{aa}(\theta) = \dfrac{L_\mathrm{ad} + L_\mathrm{aq}}{3} + \dfrac{L_0}{3} + L_l\,\dfrac{2}{3}
   + \dfrac{L_\mathrm{ad} - L_\mathrm{aq}}{3}\cos 2\theta .
 ```
-
-Writing the explicit Park rows instead keeps every entry of the saturated
-synthesis out of the Jacobian and validates the winding rows directly against
-the reference model.

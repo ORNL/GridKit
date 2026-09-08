@@ -1,7 +1,7 @@
 # Ten-bus EMT converter scenarios
 
-These six studies share [one case](../../../cases/EMT/IBR/TenBus.case.json) and
-[one initial-state estimate](../../../cases/EMT/IBR/TenBus.state.json).
+These six studies share `TenBus.case.json` and the initial-state estimate
+`TenBus.state.json` in `cases/EMT/IBR/`.
 See the [case description](../../../cases/EMT/IBR/README.md) for topology,
 parameters, initialization, and the explicitly compensated PWM smoothing.
 
@@ -37,7 +37,7 @@ existing outputs, and `--results PATH` selects another output directory (pass
 it to both scripts). The runner requires only Python's standard library;
 plotting and case regeneration require NumPy and Matplotlib.
 
-Open [results/index.html](results/index.html) for the one-line diagram, scenario
+Open the local `results/index.html` for the one-line diagram, scenario
 comparison, and links to each scenario's plots and raw data. The HTML is local
 and requires no server or internet connection. PNG figures are accompanied by
 SVG for the summary plots and PDF for the one-line and complete DAE traces.
@@ -121,7 +121,7 @@ python3 examples/EMT/IBR/plot.py --switching-only
 This plots bridge voltage `voa` and `DependentVoltageSource_filter_4_ia`
 (positive into bus 4), with full samples around fault clearing. It checks KCL
 at all three IBR buses and PWM/bridge harmonics through 2.94 kHz against the independent
-[sampled-edge predictor](../../../cases/EMT/CoupledGrid/pwm_analysis.py), including
+sampled-edge predictor in `cases/EMT/CoupledGrid/pwm_analysis.py`, including
 logistic attenuation. The 900 Hz carrier cancels in bridge phase voltage;
 its 780 and 1020 Hz sidebands remain. Results are in `switching_validation.json`
 and `plots/switching_*.png` within the scenario directory. These checks validate

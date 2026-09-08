@@ -8,6 +8,8 @@
 Component <Component/README>
 Operators <Operators/README>
 Signal <Signal/README>
+Case Format <INPUT_FORMAT>
+State Format <STATE>
 ```
 
 ```{include} ../../../../GridKit/Model/EMT/README.md
