@@ -16,8 +16,8 @@ namespace GridKit
       Rs, ///< \f$\mathbf{R}_\mathrm{s}\f$ Converter-side resistance [ohm]
       Ls, ///< \f$\mathbf{L}_\mathrm{s}\f$ Converter-side inductance [H]
       C,  ///< \f$\mathbf{C}\f$ Shunt capacitance [F]
-      Rg, ///< \f$\mathbf{R}_\mathrm{g}\f$ Grid-side resistance [ohm]
-      Lg, ///< \f$\mathbf{L}_\mathrm{g}\f$ Grid-side inductance [H]
+      Rg, ///< \f$\mathbf{R}_g\f$ Grid-side resistance [ohm]
+      Lg, ///< \f$\mathbf{L}_g\f$ Grid-side inductance [H]
     };
 
     enum class FilterInputs : size_t

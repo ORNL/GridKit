@@ -44,7 +44,7 @@ def main():
     assert report['choices']['carrier_alignment'] == 0.5, 'Pulse oracle assumes centred carriers'
     for device in case['devices']:
         device.pop('mon', None)
-        monitors = {'PWM': ['s'], 'Modulation': ['m'], 'Converter': ['vo', 'idc'],
+        monitors = {'PWM': ['s'], 'Modulation': ['m'], 'Converter': ['e', 'idc'],
                     'DependentVoltageSource': ['ia', 'ib', 'ic'], 'DCLink': ['vdc']}
         if device['class'] in monitors:
             device['mon'] = monitors[device['class']]
@@ -78,7 +78,7 @@ def main():
         for row in data:
             edges = [pulse(row['t'], row[f'Modulation_{plant}_modulation_m{p}'], fc, mu) for p in 'abc']
             pulse_error = max(pulse_error, *(abs(a - row[f'PWM_{plant}_pwm_s{p}']) for a, p in zip(edges, 'abc')))
-            voltage = [row[f'Converter_{plant}_bridge_vo{p}'] for p in 'abc']
+            voltage = [row[f'Converter_{plant}_bridge_e{p}'] for p in 'abc']
             current = [row[f'DependentVoltageSource_{plant}_filter_i{p}'] for p in 'abc']
             vdc = row[f'DCLink_{plant}_dc_vdc']
             power_error = max(power_error, abs(sum(v * i for v, i in zip(voltage, current))

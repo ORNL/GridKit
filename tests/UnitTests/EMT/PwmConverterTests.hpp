@@ -144,7 +144,7 @@ namespace GridKit
            "params": {"R": [[10,0,0],[0,10,0],[0,0,10]]}},
           {"class": "Converter", "id": "bridge",
            "inputs": {"s": ["control.a", "control.b", "control.c"], "vdc": "dc", "i": ["ia", "ib", "ic"]},
-           "outputs": {"vo": ["ea", "eb", "ec"], "idc": "idc"}, "mon": ["vo", "idc"]},
+           "outputs": {"e": ["ea", "eb", "ec"], "idc": "idc"}, "mon": ["e", "idc"]},
           {"class": "Container", "id": "control",
            "signals": [{"id": "a"}, {"id": "b"}, {"id": "c"}],
            "outputs": {"a": "a", "b": "b", "c": "c"},
@@ -260,7 +260,7 @@ namespace GridKit
         Converter converter;
         success *= converter.verify() != 0;
         success *= throws([&]
-                          { converter.output(ConverterOutput::voa); });
+                          { converter.output(ConverterOutput::ea); });
         return success.report(__func__);
       }
 
@@ -271,20 +271,20 @@ namespace GridKit
         for (size_t bits = 0; bits < 8; ++bits)
         {
           EMT::ABCVector<double> s{double(bits & 1), double((bits >> 1) & 1), double((bits >> 2) & 1)};
-          const auto             vo = Converter::voltage(s, 600);
+          const auto             e = Converter::voltage(s, 600);
           for (size_t n = 0; n < 3; ++n)
           {
-            success *= vo[n] == expected[bits][n];
+            success *= e[n] == expected[bits][n];
           }
         }
-        const auto vo       = Converter::voltage({0.2, 0.7, 0.6}, 600);
-        success            *= std::abs(vo[0] + 180) < 1.0e-12;
-        success            *= std::abs(vo[1] - 120) < 1.0e-12;
-        success            *= std::abs(vo[2] - 60) < 1.0e-12;
+        const auto e        = Converter::voltage({0.2, 0.7, 0.6}, 600);
+        success            *= std::abs(e[0] + 180) < 1.0e-12;
+        success            *= std::abs(e[1] - 120) < 1.0e-12;
+        success            *= std::abs(e[2] - 60) < 1.0e-12;
         const auto shifted  = Converter::voltage({0.3, 0.8, 0.7}, 600);
         for (size_t n = 0; n < 3; ++n)
         {
-          success *= std::abs(vo[n] - shifted[n]) < 1.0e-12;
+          success *= std::abs(e[n] - shifted[n]) < 1.0e-12;
           success *= Converter::voltage({0.2, 0.7, 0.6}, 0)[n] == 0;
         }
         return success.report(__func__);
@@ -364,29 +364,29 @@ namespace GridKit
         success            *= std::abs(switching_derivative - (plus - minus) / 2e-4) < 1e-8;
         // A second bridge composes the first expression's gradients recursively.
         Converter second;
-        second.attachInput({&converter.outputSignal(ConverterOutput::voa), &converter.outputSignal(ConverterOutput::vob), &converter.outputSignal(ConverterOutput::voc)}, &signals[3], {&signals[4], &signals[5], &signals[6]});
+        second.attachInput({&converter.outputSignal(ConverterOutput::ea), &converter.outputSignal(ConverterOutput::eb), &converter.outputSignal(ConverterOutput::ec)}, &signals[3], {&signals[4], &signals[5], &signals[6]});
         Signal::GradientT gradient;
-        second.outputSignal(EMT::ConverterOutputs::voa).appendGradient(gradient);
+        second.outputSignal(EMT::ConverterOutputs::ea).appendGradient(gradient);
         double dc_derivative = 0;
         for (const auto& [index, coefficient] : gradient)
           if (index == indices[3])
             dc_derivative += coefficient;
-        success *= std::abs(dc_derivative - 2 * converter.output(ConverterOutput::voa)) < 1.0e-10;
+        success *= std::abs(dc_derivative - 2 * converter.output(ConverterOutput::ea)) < 1.0e-10;
         Signal published;
-        converter.assignOutput(ConverterOutput::voa, &published);
-        success *= published.read() == converter.output(ConverterOutput::voa);
+        converter.assignOutput(ConverterOutput::ea, &published);
+        success *= published.read() == converter.output(ConverterOutput::ea);
         success *= throws([&]
-                          { second.assignOutput(ConverterOutput::vob, &published); });
+                          { second.assignOutput(ConverterOutput::eb, &published); });
         success *= throws([&]
                           { published.init(0.0); });
         success *= throws([&]
                           { published.readDerivative(); });
         Converter cycle;
-        cycle.attachInput({&cycle.outputSignal(ConverterOutput::voa), &cycle.outputSignal(ConverterOutput::vob), &cycle.outputSignal(ConverterOutput::voc)}, &signals[3], {&signals[4], &signals[5], &signals[6]});
+        cycle.attachInput({&cycle.outputSignal(ConverterOutput::ea), &cycle.outputSignal(ConverterOutput::eb), &cycle.outputSignal(ConverterOutput::ec)}, &signals[3], {&signals[4], &signals[5], &signals[6]});
         success *= throws([&]
-                          { cycle.output(ConverterOutput::voa); });
+                          { cycle.output(ConverterOutput::ea); });
         success *= throws([&]
-                          { cycle.outputSignal(EMT::ConverterOutputs::voa).appendGradient(gradient); });
+                          { cycle.outputSignal(EMT::ConverterOutputs::ea).appendGradient(gradient); });
         return success.report(__func__);
       }
 
@@ -417,9 +417,9 @@ namespace GridKit
         TestStatus success       = true;
         using Variable           = DependencyTracking::Variable;
         using TrackingConverter  = EMT::Converter<Variable, size_t>;
-        const auto vo            = TrackingConverter::voltage({Variable{0.2, 0}, Variable{0.7, 1}, Variable{0.6, 2}}, Variable{600, 3});
-        success                 *= std::abs(static_cast<double>(vo[0]) + 180) < 1.0e-12;
-        success                 *= vo[0].getDependencies().size() == 4;
+        const auto e             = TrackingConverter::voltage({Variable{0.2, 0}, Variable{0.7, 1}, Variable{0.6, 2}}, Variable{600, 3});
+        success                 *= std::abs(static_cast<double>(e[0]) + 180) < 1.0e-12;
+        success                 *= e[0].getDependencies().size() == 4;
         const auto idc           = TrackingConverter::dcCurrent(
             {Variable{.2, 0}, Variable{.7, 1}, Variable{.6, 2}},
             {Variable{13, 4}, Variable{-7, 5}, Variable{2, 6}});
@@ -502,7 +502,7 @@ namespace GridKit
         const double a       = reference(0.125, 0.8, 1, 15, 0.5, 0);
         const double b       = reference(0.125, 0.8, 1, 15, 0.5, 1);
         const double c       = reference(0.125, 0.8, 1, 15, 0.5, 2);
-        success             *= std::abs(bridge.output(ConverterOutput::voa) - 200.0 * (2 * a - b - c)) < 1e-10;
+        success             *= std::abs(bridge.output(ConverterOutput::ea) - 200.0 * (2 * a - b - c)) < 1e-10;
         for (const auto& invalid : {json("600"), json(true), json(nullptr)})
         {
           fixture["signals"][0]["value"]  = invalid;
@@ -730,7 +730,7 @@ namespace GridKit
         success *= contents.find("PWM_control.pwm") != std::string::npos;
         success *= contents.find("Converter_bridge") != std::string::npos;
         success *= contents.find("\"sa\"") != std::string::npos;
-        success *= contents.find("\"voc\"") != std::string::npos;
+        success *= contents.find("\"ec\"") != std::string::npos;
         success *= contents.find("\"idc\"") != std::string::npos;
         success *= !throws([&]
                            {
@@ -738,8 +738,8 @@ namespace GridKit
           success *= parsed.size() == 2;
           success *= std::abs(parsed[0]["PWM_control.pwm"]["sa"].get<double>() - reference(0.123, 0.8, 1, 15, 0.5, 0)) < 3.0e-14;
           const auto& entry = parsed[0]["Converter_bridge"];
-          success *= std::abs(entry["voa"].get<double>() + entry["vob"].get<double>() + entry["voc"].get<double>()) < 1.0e-12;
-          for (const auto* key : {"voa", "vob", "voc"})
+          success *= std::abs(entry["ea"].get<double>() + entry["eb"].get<double>() + entry["ec"].get<double>()) < 1.0e-12;
+          for (const auto* key : {"ea", "eb", "ec"})
             success *= parsed[1]["Converter_bridge"][key].get<double>() == .5 * entry[key].get<double>(); });
         file.close();
         std::filesystem::remove(path);
@@ -800,7 +800,7 @@ namespace GridKit
         for (size_t n = 0; n < 3; ++n)
           fit_data.D[n][n] = static_cast<double>(n + 1);
         EMT::VectorFit<double, size_t> fit(fit_data, 1.0);
-        fit.attachInput(&system.component<Converter>("bridge").outputSignal(EMT::ConverterOutputs::voa), &system.component<Converter>("bridge").outputSignal(EMT::ConverterOutputs::vob), &system.component<Converter>("bridge").outputSignal(EMT::ConverterOutputs::voc));
+        fit.attachInput(&system.component<Converter>("bridge").outputSignal(EMT::ConverterOutputs::ea), &system.component<Converter>("bridge").outputSignal(EMT::ConverterOutputs::eb), &system.component<Converter>("bridge").outputSignal(EMT::ConverterOutputs::ec));
         fit.attachOutput(&system.component<EMT::Bus<double, size_t>>("bus").outputSignal(EMT::BusOutputs::va), &system.component<EMT::Bus<double, size_t>>("bus").outputSignal(EMT::BusOutputs::vb), &system.component<EMT::Bus<double, size_t>>("bus").outputSignal(EMT::BusOutputs::vc));
         fit.allocate();
         for (double dc : {600.0, 0.0, 250.0})

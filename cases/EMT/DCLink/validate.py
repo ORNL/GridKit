@@ -37,7 +37,7 @@ def validate(executable, output, plot=False):
         assert all(math.isfinite(value) for value in state.values())
         assert abs(row['t'] - state['time']) < 1e-12
         v, src, dc, e = (row['DCLink_dc_' + name] for name in ('vdc', 'isrc', 'idc', 'energy'))
-        pac = sum(row['Converter_bridge_vo' + p] * row['DependentVoltageSource_filter_i' + p] for p in 'abc')
+        pac = sum(row['Converter_bridge_e' + p] * row['DependentVoltageSource_filter_i' + p] for p in 'abc')
         power_error = max(power_error, abs(v * dc - pac))
         residual_error = max(residual_error, abs(capacitance * state['yp:dc[0]'] - (src - dc)))
         assert abs(dc - v / resistance) < 1e-8

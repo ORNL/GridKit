@@ -178,10 +178,10 @@ def main():
     for run in runs:
         t, data = run["t"], run["data"]
         mask = (t >= zoom[0]) & (t <= zoom[1])
-        series = [monitor(data, pwm, "sa"), monitor(data, converter, "voa") / 1000,
+        series = [monitor(data, pwm, "sa"), monitor(data, converter, "ea") / 1000,
                    run["ibr_current"][:, 0], run["voltage"][i_bus["id"]][:, 0] / 1000]
         for ax, value, label in zip(axs, series, ["PWM $s_a$ [1]",
-            "Bridge $v_{oa}$ [kV]", f"{ibr_name} $i_a$ [A]", f"{i_bus['id']} $v_a$ [kV]"]):
+            "Bridge $e_a$ [kV]", f"{ibr_name} $i_a$ [A]", f"{i_bus['id']} $v_a$ [kV]"]):
             ax.plot(t[mask], value[mask], color=run["color"], label=run["label"], lw=1.3)
             ax.set_ylabel(label)
     save(fig, "switching_waveforms", f"{ibr_name} switching detail · five {carrier:g} Hz carrier periods",
@@ -199,7 +199,7 @@ def main():
         mask = (t >= t_end - n / frequency) & (t < t_end - dt / 4)
         if n < 1 or mask.sum() < 16:
             raise ValueError("At least one post-event cycle is needed for the spectrum")
-        signals = [monitor(data, pwm, "sa")[mask], monitor(data, converter, "voa")[mask], run["ibr_current"][mask, 0]]
+        signals = [monitor(data, pwm, "sa")[mask], monitor(data, converter, "ea")[mask], run["ibr_current"][mask, 0]]
         for ax, signal, label in zip(axs, signals, ["PWM peak [1]", "Bridge peak [V]", f"{ibr_name} current peak [A]"]):
             window = np.hanning(len(signal))
             amplitude = 2 * np.abs(np.fft.rfft(signal * window)) / window.sum()
