@@ -30,6 +30,9 @@
     "current_control": {
       "xid": 1.6,
       "xiq": 0.0
+    },
+    "dc": {
+      "vdc": 400.0
     }
   }
 }

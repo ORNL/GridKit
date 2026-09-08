@@ -717,15 +717,6 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    auto Container<scalar_type, index_type>::nextSampleTime(RealT after) const -> RealT
-    {
-      RealT time = ComponentT::nextSampleTime(after);
-      for (const auto& child : children_)
-        time = std::min(time, child->nextSampleTime(after));
-      return time;
-    }
-
-    template <typename scalar_type, typename index_type>
     void Container<scalar_type, index_type>::beginDiscontinuity(RealT time)
     {
       ComponentT::beginDiscontinuity(time);
