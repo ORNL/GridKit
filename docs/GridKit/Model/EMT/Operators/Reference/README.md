@@ -5,7 +5,6 @@
 :titlesonly:
 :hidden:
 
-Angle <Angle/README>
 PLL <PLL/README>
 Clarke <Clarke/README>
 Park <Park/README>

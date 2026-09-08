@@ -1,7 +1,7 @@
 % Shared body for the inverter wiring figures. The wrappers diagram_gfl.tex
 % and diagram_gfm.tex set \gfmfalse or \gfmtrue before inputting this file;
 % the switch selects the outer controller, its setpoint inputs, and the extra
-% voltage and frequency wiring the grid-forming loop needs.
+% voltage and frequency wiring the voltage loop needs.
 
 % TUNABLES: tier heights, the PLL frame boundary, and the setpoint column.
 \def\framerow{-2.8}
@@ -52,7 +52,7 @@
 \draw[->, line] (igabc) -- ([xshift=\ifgfm 2.5mm\else 0mm\fi]outer.north);
 
 \ifgfm
-% ================= Grid-forming voltage wiring =================
+% ================= Outer voltage-control wiring =================
 % The voltage loop also reads the capacitor voltage.
 \node[signal] (vouter) at (12.65, -2.2) {};
 \draw[->, line] (vouter) -- (15.65, -2.2) -- ([xshift=-2.5mm]outer.north);

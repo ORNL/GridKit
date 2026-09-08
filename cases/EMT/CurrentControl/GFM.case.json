@@ -1,13 +1,12 @@
 {
   "header": {
-    "case_name": "GFM switching inverter",
-    "case_description": "Cascaded dq control with continuous PWM and a physical LCL filter",
+    "case_name": "GFM voltage control with PLL",
+    "case_description": "Grid-connected cascaded voltage and current control with continuous PWM and a physical LCL filter",
     "case_comments": "Power-invariant dq controls; dynamic DC link; continuous PWM with selectable smoothing."
   },
   "signals": [
     {
-      "id": "omega",
-      "value": 376.99111843077515
+      "id": "omega"
     },
     {
       "id": "vdc"
@@ -318,26 +317,20 @@
       ]
     },
     {
-      "class": "LoadZ",
-      "id": "load",
+      "class": "VoltageSource",
+      "id": "grid",
       "params": {
-        "R": [
-          [
-            20,
-            0,
-            0
-          ],
-          [
-            0,
-            20,
-            0
-          ],
-          [
-            0,
-            0,
-            20
-          ]
-        ]
+        "E": [
+          119.47038724720491,
+          119.47038724720491,
+          119.47038724720491
+        ],
+        "phi": [
+          -0.018753578203200394,
+          -2.1131486805963955,
+          2.075641524189995
+        ],
+        "omega": 376.99111843077515
       },
       "inputs": {
         "bus": "terminal"
@@ -349,65 +342,25 @@
       ]
     },
     {
-      "class": "Bus",
-      "id": "load_bus"
-    },
-    {
-      "class": "LoadZ",
-      "id": "extra_load",
+      "class": "PLL",
+      "id": "pll",
       "params": {
-        "R": [
-          [
-            20,
-            0,
-            0
-          ],
-          [
-            0,
-            20,
-            0
-          ],
-          [
-            0,
-            0,
-            20
-          ]
-        ]
+        "V": 208,
+        "f": 60,
+        "Kp": 80,
+        "Ki": 2500
       },
       "inputs": {
-        "bus": "load_bus"
-      },
-      "mon": [
-        "ia",
-        "ib",
-        "ic"
-      ]
-    },
-    {
-      "class": "Switch",
-      "id": "load_switch",
-      "params": {
-        "open": true
-      },
-      "inputs": {
-        "bus1": "terminal",
-        "bus2": "load_bus"
-      },
-      "mon": [
-        "open"
-      ]
-    },
-    {
-      "class": "Angle",
-      "id": "angle",
-      "inputs": {
-        "omega": "omega"
+        "bus": "capacitor"
       },
       "outputs": {
-        "theta": "theta"
+        "theta": "theta",
+        "omega": "omega"
       },
       "mon": [
-        "theta"
+        "theta",
+        "omega",
+        "vq"
       ]
     },
     {
@@ -481,7 +434,7 @@
       "id": "voltage_control",
       "params": {
         "C": 0.0001,
-        "Kp": 0.03769911184307752,
+        "Kp": 0.15079644737231007,
         "Ki": 2.131834550635301,
         "Kaw": 376.99111843077515
       },
