@@ -13,8 +13,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     bool SystemModel<scalar_type, index_type>::hasJacobian()
     {
-      Log::warning() << "GridKit was not built with Enzyme. "
-                     << "DependencyTracking::Variable Jacobians are only available for testing in PhasorDynamics.\n";
+      Log::warning() << "DependencyTracking::Variable Jacobians are only available for testing.\n"
+                     << "Falling back to dense Jacobians for PhasorDyanmics simulations.\n";
 
       return false;
     }
@@ -25,12 +25,12 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateJacobian()
-    { 
+    {
       this->constructCsr();
 
-      //Log::misc() << "System DependencyTracking Jacobian\n";
-      //csr_jac_->print(Log::misc());
-    
+      // Log::misc() << "System DependencyTracking Jacobian\n";
+      // csr_jac_->print(Log::misc());
+
       return 0;
     }
 
