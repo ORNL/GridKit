@@ -358,13 +358,15 @@ namespace GridKit
               names = {"etad", "etaq"};
             if constexpr (std::is_same_v<Outputs, SwitchOutputs>)
               names.insert("open");
+            if constexpr (std::is_same_v<Outputs, TransformerOutputs>)
+              names = {"psi1a", "psi1b", "psi1c", "psi2a", "psi2b", "psi2c"};
             if constexpr (std::is_same_v<Outputs, BusOutputs>)
               buses.insert(path);
           }
         };
         std::apply([&](const auto&... devices)
                    { (add(devices), ...); },
-                   std::tie(scope.bus, scope.loadz, scope.voltage_source, scope.dependent_voltage_source, scope.machine, scope.regfma, scope.line_lumped, scope.line_distributed, scope.sw, scope.inner_current_control, scope.outer_voltage_control, scope.park, scope.angle, scope.modulation, scope.pwm, scope.converter, scope.dc_link, scope.ieeest, scope.gastpti, scope.gov, scope.sexs_pti, scope.exciter));
+                   std::tie(scope.bus, scope.loadz, scope.voltage_source, scope.dependent_voltage_source, scope.machine, scope.regfma, scope.line_lumped, scope.line_distributed, scope.sw, scope.transformer, scope.inner_current_control, scope.outer_voltage_control, scope.park, scope.angle, scope.modulation, scope.pwm, scope.converter, scope.dc_link, scope.ieeest, scope.gastpti, scope.gov, scope.sexs_pti, scope.exciter));
         for (const auto& child : scope.container)
           self(self, child, prefix + child.id + ".");
       };
