@@ -173,61 +173,85 @@
 \end{scope}
 \end{scope}
 
-% Algebraic voltage source, direction-preserving fault limit, and measurements.
+% Limited nominal-frequency current reference and physical RL branch.
 \begin{scope}[yshift=\terminalrow cm]
 \node[block, minimum width=3.8cm, minimum height=1.4cm] (edroop) at (1,0)
     {$E_\mathrm{droop}\begin{bmatrix}
         \cos(\omega_0 t+\delta)\\\sin(\omega_0 t+\delta)
       \end{bmatrix}$};
 \node[sum] (voltage) at (4.5,0) {$\Sigma$};
-\node[block, minimum width=\gainwidth] (reactance) at (6.4,0) {$-\dfrac{\mathbf{J}}{X_L}$};
-\node[block, minimum width=2.6cm, minimum height=1.4cm] (flimit) at (10,0)
+\node[block, minimum width=\gainwidth] (impedance) at (6.4,0) {$\mathbf{Z}_L^{-1}$};
+\node[block, minimum width=2.6cm, minimum height=1.4cm] (flimit) at (9.7,0)
     {$\dfrac{\mathbf{i}^{\mathrm{trial}}}{\sqrt{\mathcal{L}_F}}$};
-\node[signal] (ic) at (12.3,0) {};
-\node[block, minimum width=2.6cm] (abc) at (15,0) {$I_\mathrm{b}\mathbf{C}^{\mathsf{T}}$};
+\node[block, minimum width=2.6cm] (abc) at (13.1,0)
+    {$V_\mathrm{b}\mathbf{C}^{\mathsf{T}}\mathbf{Z}_L$};
+\node[sum] (emf) at (16,0) {$\Sigma$};
+\node[sum] (drop) at (18.4,0) {$\Sigma$};
+\node[block, minimum width=2.6cm, minimum height=1.4cm] (rl) at (21.3,0)
+    {$\dfrac{\mathbf{I}_N}{Ls+R}$};
+\node[signal] (ic) at (24,0) {};
 \node[sig, above] at (1,1.8) {$E_\mathrm{droop},\delta$};
 \draw[->, line] (1,1.8) -- (edroop.north);
 \draw[->, line] (edroop.east) -- (voltage.west);
 \node[pm, above left=0pt and 1pt of voltage.west] {$+$};
-\draw[->, line] (voltage.east) -- (reactance.west);
-\draw[->, line] (reactance.east) -- node[sig, above] {$\mathbf{i}^{\mathrm{trial}}$} (flimit.west);
-\draw[line] (flimit.east) -- (ic);
-\draw[->, line] (ic) -- (abc.west);
-\draw[->, line] (abc.east) -- (18.4,0);
-\node[sig, anchor=west] at (18.5,0) {$\mathbf{i}$};
+\draw[->, line] (voltage.east) -- (impedance.west);
+\draw[->, line] (impedance.east) -- node[sig, above] {$\mathbf{i}^{\mathrm{trial}}$} (flimit.west);
+\draw[->, line] (flimit.east) -- node[sig, above] {$\mathbf{i}^{\mathrm{lim}}$} (abc.west);
+\draw[->, line] (abc.east) -- (emf.west);
+\node[pm, above left=0pt and 1pt of emf.west] {$+$};
+\draw[->, line] (emf.east) -- node[sig, above] {$\mathbf{e}$} (drop.west);
+\node[pm, above left=0pt and 1pt of drop.west] {$+$};
+\draw[->, line] (drop.east) -- (rl.west);
+\draw[line] (rl.east) -- (ic);
+\draw[->, line] (ic) -- (25.3,0);
+\node[sig, anchor=west] at (25.4,0) {$\mathbf{i}$};
 
-\node[block, minimum width=2.6cm] (clarke) at (1,-2.5) {$\dfrac{\mathbf{C}}{V_\mathrm{b}}$};
-\node[signal, label={[sig]below:$\widehat{\mathbf{v}}$}] (vc) at (4.5,-2.5) {};
-\node[sig, anchor=east] at (-1.8,-2.5) {$\mathbf{v}$};
-\draw[->, line] (-1.7,-2.5) -- (clarke.west);
+% The applied emf includes the full bus voltage, including its common mode.
+\node[signal] (vphase) at (-0.7,-3.2) {};
+\node[block, minimum width=2.0cm] (clarke) at (1,-3.2) {$\dfrac{\mathbf{C}}{V_\mathrm{b}}$};
+\node[signal, label={[sig]below:$\widehat{\mathbf{v}}$}] (vc) at (4.5,-3.2) {};
+\node[sig, anchor=east] at (-1.8,-3.2) {$\mathbf{v}$};
+\draw[line] (-1.7,-3.2) -- (vphase);
+\draw[->, line] (vphase) -- (clarke.west);
 \draw[line] (clarke.east) -- (vc);
 \draw[->, line] (vc) -- (voltage.south);
 \node[pm, below right=1pt and 0pt of voltage.south] {$-$};
-\node[block, minimum width=3.8cm, minimum height=1.5cm] (measure) at (8.4,-2.5)
+\node[signal] (vfeed) at (16,-5.3) {};
+\draw[line] (vphase) -- (-0.7,-5.3) -- (vfeed);
+\draw[->, line] (vfeed) -- (emf.south);
+\node[pm, below right=1pt and 0pt of emf.south] {$+$};
+\draw[->, line] (vfeed) -| (drop.south);
+\node[pm, below right=1pt and 0pt of drop.south] {$-$};
+
+% Measurements use the actual differential filter current.
+\node[block, minimum width=3.8cm, minimum height=1.5cm] (measure) at (8.4,-3.2)
     {$\begin{aligned}
       P&=\widehat{\mathbf{v}}^{\mathsf T}\widehat{\mathbf{i}}\\
       Q&=\widehat{\mathbf{v}}^{\mathsf T}\mathbf{J}\widehat{\mathbf{i}}\\
       V&=\sqrt{\|\widehat{\mathbf{v}}\|^2+\epsilon_V^2}
     \end{aligned}$};
-\node[block, minimum width=3.0cm, minimum height=1.5cm] (filters) at (15,-2.5)
+\node[block, minimum width=2.2cm, minimum height=1.4cm] (imeasure) at (21.3,-2)
+    {$\dfrac{\mathbf{C}}{I_\mathrm{b}}$};
+\draw[->, line] (ic) |- (imeasure.east);
+\draw[->, wire jump] (imeasure.west) -- (11.2,-2) |- (measure.east);
+\node[sig, above] at (12,-2) {$\widehat{\mathbf{i}}$};
+\draw[->, line] (vc) -- (measure.west);
+\node[block, minimum width=3.0cm, minimum height=1.5cm] (filters) at (13.1,-3.2)
     {$\begin{gathered}
       (1+T_{Pf}s)^{-1}\\
       (1+T_{Qf}s)^{-1}\\
       (1+T_{Vf}s)^{-1}
     \end{gathered}$};
-\draw[->, line] (vc) -- (measure.west);
-\draw[->, line] (ic) |- (measure.east);
-\node[sig, above] at (11.3,-2.5) {$\widehat{\mathbf{i}}$};
-\draw[->, line] (measure.south) -- (8.4,-4.1) -| (filters.south);
-\node[sig, below] at (11.7,-4.1) {$P,Q,V$};
-\draw[->, line] (filters.east) -- (18.4,-2.5);
-\node[sig, anchor=west] at (18.5,-2.5) {$P_f,Q_f,V_f$};
-\coordinate (measurement-loop) at (8.4,-4.4);
-\node[sig] at (9.2,-5.4) {(c) Terminal current and filtered measurements};
+\draw[->, line] (measure.south) -- (8.4,-4.7) -| (filters.south);
+\node[sig, below] at (10.8,-4.7) {$P,Q,V$};
+\draw[->, wire jump] (filters.east) -- (25.3,-3.2);
+\node[sig, anchor=west] at (25.4,-3.2) {$P_f,Q_f,V_f$};
+\coordinate (voltage-loop) at (-0.7,-5.3);
+\node[sig] at (11.5,-6.4) {(c) Current reference, physical RL branch, and measurements};
 \begin{scope}[on background layer]
     \node[operator enclosure,
-        fit=(edroop)(voltage)(reactance)(flimit)(ic)(abc)(clarke)(vc)(measure)(filters)
-            (measurement-loop)] {};
+        fit=(edroop)(voltage)(impedance)(flimit)(abc)(emf)(drop)(rl)(ic)
+            (clarke)(vc)(measure)(imeasure)(filters)(voltage-loop)] {};
 \end{scope}
 \end{scope}
 

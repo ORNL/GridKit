@@ -87,7 +87,7 @@ namespace GridKit
         external(VREF, {XV, IA, IB, IC});
       }
       if (yp_scale != RealT{0})
-        for (size_t row = 0; row < IA; ++row)
+        for (size_t row = 0; row < static_cast<size_t>(I::MAXIMUM); ++row)
           entries[{ri[row], vi[row]}] = RealT{0};
       for (IdxT n = 0; n < this->nnz_; ++n)
         entries[{this->J_rows_buffer_[n], this->J_cols_buffer_[n]}] += this->J_vals_buffer_[n];
