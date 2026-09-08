@@ -1,8 +1,8 @@
 {
   "header": {
     "case_name": "GFM switching inverter",
-    "case_description": "Cascaded dq control with sampled PWM and a physical LCL filter",
-    "case_comments": "Power-invariant dq controls; ideal DC source; resolved sampled switching."
+    "case_description": "Cascaded dq control with continuous PWM and a physical LCL filter",
+    "case_comments": "Power-invariant dq controls; dynamic DC link; continuous PWM with selectable smoothing."
   },
   "signals": [
     {
@@ -10,8 +10,7 @@
       "value": 376.99111843077515
     },
     {
-      "id": "vdc",
-      "value": 400
+      "id": "vdc"
     },
     {
       "id": "zero",
@@ -131,9 +130,36 @@
     },
     {
       "id": "ec"
+    },
+    {
+      "id": "isrc",
+      "value": 5.4619491308650945
+    },
+    {
+      "id": "idc"
     }
   ],
   "devices": [
+    {
+      "class": "DCLink",
+      "id": "dc",
+      "params": {
+        "C": 0.02
+      },
+      "inputs": {
+        "isrc": "isrc",
+        "idc": "idc"
+      },
+      "outputs": {
+        "vdc": "vdc"
+      },
+      "mon": [
+        "vdc",
+        "isrc",
+        "idc",
+        "energy"
+      ]
+    },
     {
       "class": "Bus",
       "id": "capacitor",
@@ -622,7 +648,8 @@
           "ea",
           "eb",
           "ec"
-        ]
+        ],
+        "idc": "idc"
       },
       "mon": [
         "vo",

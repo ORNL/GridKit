@@ -313,8 +313,8 @@ IDs in phase order `a`, `b`, `c`. The scalar keys `ma`, `mb`, `mc`, `sa`, `sb`,
 
 To drive PWM from a controller, connect all three modulation inputs. Only
 `fc` is required in this mode; `M` and `fm` apply to the unconnected sinusoidal
-mode. The input is sampled at accepted carrier boundaries and applied over the
-following carrier period.
+mode. The switching function uses the current modulation input and propagates
+its derivatives through the connected signals.
 
 ```json
 {
@@ -342,9 +342,8 @@ Alternatively, the embedding program or another component supplies `dc`. A
 DependentVoltageSource can consume `ea`, `eb`, and `ec` and publish its phase
 currents to `ia`, `ib`, and `ic`. The bridge publishes the current drawn from
 the DC link as `idc`, with `vdc * idc = vo · i`. Computed signals
-are evaluated when read, including through Container boundaries. Sampled PWM
-uses its held modulation command between carrier boundaries. These connections
-introduce no DAE variables.
+are evaluated when read, including through Container boundaries. These
+connections introduce no DAE variables.
 
 For a dynamic DC link, declare `dc` and `idc` without constant values, and a
 source-current signal such as `{"id": "isrc", "value": 80.0}`. Connect the capacitor

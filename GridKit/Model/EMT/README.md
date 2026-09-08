@@ -8,9 +8,9 @@ and reusable operators in instantaneous phase coordinates.
 > phases.
 
 > [!NOTE]
-> Sampled-input PWM smoothing $\mu$ selects simulation resolution within the same model:
+> Continuous PWM smoothing $\mu$ selects simulation resolution within the same model:
 > small values intentionally suppress switching; large values resolve it.
-> The commanded carrier-period mean is preserved throughout this range.
+> The fixed-duty carrier-period mean is preserved throughout this range.
 
 ## Conventions
 

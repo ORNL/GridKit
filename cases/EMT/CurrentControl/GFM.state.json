@@ -34,6 +34,9 @@
     "voltage_control": {
       "etad": 0,
       "etaq": 0
+    },
+    "dc": {
+      "vdc": 400.0
     }
   }
 }
