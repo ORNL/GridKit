@@ -60,6 +60,9 @@ Container, for example `plant.machine`:
   `i12a`, `i12b`, `i12c` | Optional instantaneous `LineLumped` or `Switch` series currents from terminal 1 to terminal 2, in amperes
   `i12a`, `i12b`, `i12c`, `psi1a`, `psi1b`, `psi1c`, `psi2a`, `psi2b`, `psi2c` | Optional `Transformer` series leakage current and magnetizing flux linkages in per unit, default zero
   `ia`, `ib`, `ic` | Optional instantaneous `Machine`, `LoadZ`, `VoltageSource`, or `DependentVoltageSource` current injections into the bus, in amperes
+  `ia`, `ib`, `ic` | Optional `Filter` converter-side currents toward the capacitor, in amperes; default zero
+  `voa`, `vob`, `voc` | Optional `Filter` capacitor voltages, in volts; default zero
+  `iga`, `igb`, `igc` | Optional `Filter` grid-side current injections into the terminal Bus, in amperes; default zero
 
 Other outputs use their model output names and units. All state values must
 be finite; missing or null values use model defaults. The current and voltage

@@ -1,0 +1,58 @@
+# [[
+#  Author(s):
+#    - Luke Lowery <lukel@tamu.edu>
+# ]]
+
+set(_install_headers Filter.hpp FilterData.hpp FilterDataJSONParser.hpp)
+
+if(GRIDKIT_ENABLE_ENZYME)
+  gridkit_add_library(
+    emt_filter
+    SOURCES FilterEnzyme.cpp
+    HEADERS ${_install_headers}
+    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+    LINK_LIBRARIES
+      PUBLIC
+      GridKit::emt_core
+      PUBLIC
+      GridKit::emt_signal
+      PRIVATE
+      ClangEnzymeFlags
+    COMPILE_OPTIONS
+      PRIVATE
+      -mllvm
+      # Enzyme 16 crashes while lowering automatic sparsity for the coupled
+      # LCL rows. SparseJacobian still uses its explicit sparse callbacks.
+      -enzyme-auto-sparsity=0
+      -fno-math-errno
+      -fno-vectorize)
+else()
+  gridkit_add_library(
+    emt_filter
+    SOURCES Filter.cpp
+    HEADERS ${_install_headers}
+    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+    LINK_LIBRARIES
+      PUBLIC
+      GridKit::emt_core
+      PUBLIC
+      GridKit::emt_signal)
+endif()
+
+gridkit_add_library(
+  emt_filter_dependency_tracking
+  SOURCES FilterDependencyTracking.cpp
+  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+  LINK_LIBRARIES
+    PUBLIC
+    GridKit::emt_core
+    PUBLIC
+    GridKit::emt_signal_dependency_tracking)
+
+# Link to interface target for all components
+target_link_libraries(
+  emt_components
+  INTERFACE GridKit::emt_filter)
+target_link_libraries(
+  emt_components_dependency_tracking
+  INTERFACE GridKit::emt_filter_dependency_tracking)
