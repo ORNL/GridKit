@@ -3,11 +3,31 @@
 This study replaces the three PWM/Converter/filter assemblies in the
 [ten-bus case](../../../../cases/EMT/IBR/README.md) with three 5 MVA
 [REGFMA (REGFM_A1)](../../../../GridKit/Model/EMT/Component/Source/REGFMA/README.md)
-sources at buses 4, 5, and 6. The ten buses, three governed synchronous
-machines, lines, loads, switches, and initial terminal injections are retained.
-Each source uses 13.8 kV, `XL=0.15`, `mp=0.01`, `mq=0.05`, `ImaxF=2`,
+sources at buses 4, 5, and 6. The ten network buses, three governed synchronous
+machines, lines, loads, switches, and initial net network injections are retained.
+Each source uses 13.8 kV, `XL=0.15`, `RL=0.03`, `mp=0.01`, `mq=0.05`, `ImaxF=2`,
 `VFlag=true`, and `QVFlag=true`; other parameters use the model defaults.
 Unconnected power and voltage references are initialized from the operating point.
+
+The physical filter uses the source's single RL coupling branch and a series RC
+shunt at its bus. On the 5 MVA, 13.8 kV base, its per-phase values are
+
+Quantity | Value
+-------- | -----
+Series resistance | 1.14264 Ω
+Series inductance | 15.1547 mH
+Shunt capacitance | 4.64290 µF
+Capacitor damping resistance | 0.114264 Ω
+Undamped LC resonance | 600 Hz
+
+These filter parameters follow the main-circuit defaults in the
+[PNNL PSCAD reference](https://github.com/pnnl/PSCAD-and-PSSE-Version-of-WECC-Grid-Forming-Inverter-Models/releases/tag/V1).
+Its separate virtual-admittance and inner-current controls are not reproduced
+by this averaged EMT realization. No additional series inductance is added to
+`XL`. Three capacitor buses and three resistive `LineLumped` branches realize
+the shunts with existing components. The capacitor voltages and currents are
+initialized at 60 Hz; source currents include the shunt currents so the net
+network injections match the original operating point.
 
 `FaultClearing.solver.json` applies the existing three-phase 2 Ω/phase shunt
 at 1.00 s and clears it at 1.06 s. The simulation spans 0–3 s with adaptive
@@ -60,11 +80,15 @@ frequency is `omega/(2 pi)`; machine rotor frequency is `60 omega`.
 
 The plotting script verifies input hashes, finite data, the monitor timeline,
 pre/post-event switch commands, and accepted-step counts. It independently
-reconstructs phase current balance at buses 4–6 and each REGFMA's terminal
-active and reactive power, and checks zero-sequence current and the radial
-current limit. These are numerical consistency checks, not external validation.
+reconstructs phase current balance at buses 4–6 and the capacitor buses, and
+each REGFMA's terminal active and reactive power. It checks the damping-resistor
+voltage drops, zero-sequence current, inductor-current continuity across events,
+and the radial current-reference limit reconstructed from the applied source
+voltage. Actual current peaks are recorded separately; physical inductor current
+can overshoot the reference limit. These are numerical consistency checks,
+not external validation.
 
-REGFMA represents a balanced positive-sequence source behind an algebraic
-reactance with droop control and current limiting. The surrounding EMT network
-retains its line dynamics. This example demonstrates that model's fault
-response; it does not represent PWM switching or hardware protection.
+REGFMA uses WECC droop and limiting controls with a physical RL branch in
+balanced EMT coordinates. The surrounding network retains its line dynamics.
+This example demonstrates that averaged model's fault response; it does not
+represent PWM switching or hardware protection.

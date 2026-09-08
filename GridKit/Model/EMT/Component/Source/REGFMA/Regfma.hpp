@@ -40,7 +40,7 @@ namespace GridKit
       MAXIMUM,
     };
 
-    /// WECC REGFM_A1 reduced positive-sequence source in EMT coordinates.
+    /// Averaged EMT realization of WECC REGFM_A1 with physical RL coupling.
     template <typename scalar_type, typename index_type>
     class Regfma : public Component<scalar_type, index_type>
     {
@@ -120,14 +120,14 @@ namespace GridKit
       __attribute__((always_inline)) inline std::array<ScalarT, 5> controls(const ScalarT* y, const ScalarT* ye) const;
       /// Terminal alpha-beta voltage/current and terminal active/reactive power, in per unit.
       __attribute__((always_inline)) inline std::array<ScalarT, 6> measurements(const ScalarT* y, const ScalarT* ye) const;
-      /// Limited alpha-beta current in per unit.
+      /// Limited alpha-beta current reference in per unit.
       __attribute__((always_inline)) inline std::array<ScalarT, 2> source(const ScalarT* y, const ScalarT* ye) const;
       ScalarT                                                      monitorValue(RegfmaMonitorableVariables variable);
       RealT                                                        initialVoltageCommand(RealT voltage) const;
 
       static constexpr RealT VOLTAGE_EPSILON = static_cast<RealT>(1.0e-8);
 
-      RealT S_, V_, omega0_, XL_, mp_, mq_, kpv_, kiv_;
+      RealT S_, V_, omega0_, XL_, RL_, mp_, mq_, kpv_, kiv_;
       RealT Emin_, Emax_, Pmin_, Pmax_, Qmin_, Qmax_;
       RealT kppmax_, kipmax_, kpqmax_, kiqmax_, TPf_, TQf_, TVf_, ImaxF_;
       RealT voltage_control_;
