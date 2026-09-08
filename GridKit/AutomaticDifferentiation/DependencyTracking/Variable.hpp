@@ -13,7 +13,6 @@
 #include <map>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/ScalarTraits.hpp>
@@ -264,10 +263,6 @@ namespace GridKit
       // get the 'input set' of a variable
       using DependencyMap = std::map<size_t, double>;
       inline const DependencyMap& getDependencies() const;
-
-      // set as the independent state variable and assign ID to it
-      inline void registerVariable(std::vector<Variable*>& x,
-                                   const size_t&           offset);
 
       // adds all dependencies of v to *this
       inline void addDependencies(const Variable& v);
