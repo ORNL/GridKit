@@ -17,19 +17,6 @@ namespace GridKit
     }
 
     /**
-        @brief Registers a variable as an unknown of the system and
-        adds a pointer to the global @a x vector.
-    */
-    void Variable::registerVariable(std::vector<Variable*>& x,
-                                    const size_t&           offset)
-    {
-      setVariableNumber(offset); // define global variable number
-      setFixed(false);           // not a constant
-
-      x[offset] = this;
-    }
-
-    /**
         @brief Adds all dependencies of v to *this.
     */
     void Variable::addDependencies(const Variable& v)
