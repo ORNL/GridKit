@@ -85,19 +85,19 @@
 
 \end{groupplot}
 
-% Modulation input and the sampled switching interface.
-\node[block, minimum width=2.6cm, align=center] (sample)
+% Continuous modulation and switching interface.
+\node[block, minimum width=2.6cm] (duty)
   at ([xshift=2.5cm,yshift=1.5cm]pwm c1r1.north west)
-  {Sample and hold\\$\mathbf{m}_k=\mathbf{m}(t_{k-1})$};
-\node[block, minimum width=2.6cm, align=center] (switching)
+  {$d_\ell=\dfrac{1+m_\ell}{2}$};
+\node[block, minimum width=2.6cm] (switching)
   at ([xshift=7cm,yshift=1.5cm]pwm c1r1.north west)
-  {Pulse timing\\and switching};
-\draw[->, line] ([xshift=-1.3cm]sample.west)
-  -- node[sig, above] {$\mathbf{m}$} (sample.west);
-\draw[->, line] (sample.east)
-  -- node[sig, above] {$\mathbf{m}_k$} (switching.west);
+  {$S_\mu(t,d_\ell)$};
+\draw[->, line] ([xshift=-1.3cm]duty.west)
+  -- node[sig, above] {$m_\ell$} (duty.west);
+\draw[->, line] (duty.east)
+  -- node[sig, above] {$d_\ell$} (switching.west);
 \draw[->, line] (switching.east)
-  -- node[sig, above] {$\mathbf{s}$} ++(1.3cm,0);
+  -- node[sig, above] {$s_\ell$} ++(1.3cm,0);
 
 \node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r2.east)
   {$\mu^{-1}=0.005\,\mathrm{ms}$};
