@@ -229,6 +229,9 @@ future file-backed Containers; file inclusion is not part of this revision.
   `DependentVoltageSource` | `ea`    | Input     | Signal        | Yes
   `DependentVoltageSource` | `eb`    | Input     | Signal        | Yes
   `DependentVoltageSource` | `ec`    | Input     | Signal        | Yes
+  `Filter`                 | `v` | Input | Three Bus-voltage signals | Yes
+  `Filter`                 | `e` | Input | Three Signal IDs | Yes
+  `Filter`                 | `i`, `vo`, `ig` | Output | Three Signal IDs | No
   `PWM`                    | `m`     | Input     | Three Signal IDs | No
   `PWM`                    | `s`     | Output    | Three Signal IDs | No
   `OuterPowerControl`      | `i`, `ilim` | Input | Two Signal IDs | Yes
@@ -347,8 +350,33 @@ its derivatives through the connected signals.
 
 For a constant DC link, declare `{"id": "dc", "value": 1000.0}`.
 Alternatively, the embedding program or another component supplies `dc`. A
-DependentVoltageSource can consume `ea`, `eb`, and `ec` and publish its phase
-currents to `ia`, `ib`, and `ic`. The bridge publishes the current drawn from
+`Filter` can consume `ea`, `eb`, and `ec` and publish its converter-side
+currents to `ia`, `ib`, and `ic`. It injects its grid-side current into the
+terminal Bus and exposes capacitor voltage for the PLL and controllers:
+
+```json
+{
+  "class": "Filter",
+  "id": "filter",
+  "params": {
+    "Rs": [[0.2, 0, 0], [0, 0.2, 0], [0, 0, 0.2]],
+    "Ls": [[0.002, 0, 0], [0, 0.002, 0], [0, 0, 0.002]],
+    "C": [[0.0001, 0, 0], [0, 0.0001, 0], [0, 0, 0.0001]],
+    "Rg": [[0.1, 0, 0], [0, 0.1, 0], [0, 0, 0.1]],
+    "Lg": [[0.001, 0, 0], [0, 0.001, 0], [0, 0, 0.001]]
+  },
+  "inputs": { "bus": "terminal", "e": ["ea", "eb", "ec"] },
+  "outputs": {
+    "i": ["ia", "ib", "ic"],
+    "vo": ["voa", "vob", "voc"],
+    "ig": ["iga", "igb", "igc"]
+  },
+  "mon": ["i", "vo", "ig"]
+}
+```
+
+Declare the output signal IDs in `signals`, and a Bus named `terminal` in
+`devices`. The bridge publishes the current drawn from
 the DC link as `idc`, with `vdc * idc = vo · i`. Computed signals
 are evaluated when read, including through Container boundaries. These
 connections introduce no DAE variables.
@@ -417,6 +445,7 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `Converter`           | [Converter](Operators/Converter/README.md)
   `Bus`                 | [Bus](Component/Bus/README.md)
   `DependentVoltageSource` | [DependentVoltageSource](Component/Source/DependentVoltageSource/README.md)
+  `Filter`              | [Filter](Component/Filter/README.md)
   `VoltageSource`       | [VoltageSource](Component/Source/VoltageSource/README.md)
   `LineLumped`          | [LineLumped](Component/Line/LineLumped/README.md)
   `LineDistributed`     | [LineDistributed](Component/Line/LineDistributed/README.md)

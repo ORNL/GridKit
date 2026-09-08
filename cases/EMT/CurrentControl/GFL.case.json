@@ -157,43 +157,6 @@
     },
     {
       "class": "Bus",
-      "id": "capacitor",
-      "outputs": {
-        "va": "voa",
-        "vb": "vob",
-        "vc": "voc"
-      },
-      "mon": [
-        "va",
-        "vb",
-        "vc"
-      ],
-      "shunts": {
-        "C": {
-          "rows": 3,
-          "cols": 3,
-          "E": [
-            [
-              0.0001,
-              0,
-              0
-            ],
-            [
-              0,
-              0.0001,
-              0
-            ],
-            [
-              0,
-              0,
-              0.0001
-            ]
-          ]
-        }
-      }
-    },
-    {
-      "class": "Bus",
       "id": "terminal",
       "mon": [
         "va",
@@ -202,7 +165,7 @@
       ]
     },
     {
-      "class": "DependentVoltageSource",
+      "class": "Filter",
       "id": "filter",
       "params": {
         "Rs": [
@@ -238,31 +201,25 @@
             0,
             0.002
           ]
-        ]
-      },
-      "inputs": {
-        "bus": "capacitor",
-        "ea": "ea",
-        "eb": "eb",
-        "ec": "ec"
-      },
-      "outputs": {
-        "ia": "iia",
-        "ib": "iib",
-        "ic": "iic"
-      },
-      "mon": [
-        "ia",
-        "ib",
-        "ic"
-      ]
-    },
-    {
-      "class": "LineLumped",
-      "id": "grid_filter",
-      "params": {
-        "dx": 1,
-        "Rp": [
+        ],
+        "C": [
+          [
+            0.0001,
+            0,
+            0
+          ],
+          [
+            0,
+            0.0001,
+            0
+          ],
+          [
+            0,
+            0,
+            0.0001
+          ]
+        ],
+        "Rg": [
           [
             0.1,
             0,
@@ -279,7 +236,7 @@
             0.1
           ]
         ],
-        "Lp": [
+        "Lg": [
           [
             0.001,
             0,
@@ -298,18 +255,34 @@
         ]
       },
       "inputs": {
-        "bus1": "capacitor",
-        "bus2": "terminal"
+        "bus": "terminal",
+        "e": [
+          "ea",
+          "eb",
+          "ec"
+        ]
       },
       "outputs": {
-        "i12a": "iga",
-        "i12b": "igb",
-        "i12c": "igc"
+        "i": [
+          "iia",
+          "iib",
+          "iic"
+        ],
+        "vo": [
+          "voa",
+          "vob",
+          "voc"
+        ],
+        "ig": [
+          "iga",
+          "igb",
+          "igc"
+        ]
       },
       "mon": [
-        "i12a",
-        "i12b",
-        "i12c"
+        "i",
+        "vo",
+        "ig"
       ]
     },
     {
@@ -347,7 +320,9 @@
         "Ki": 2500
       },
       "inputs": {
-        "bus": "capacitor"
+        "va": "voa",
+        "vb": "vob",
+        "vc": "voc"
       },
       "outputs": {
         "theta": "theta",

@@ -2,11 +2,12 @@
 
 `GFL.case.json` and `GFM.case.json` share an ideal two-level switching
 bridge, dynamic DC link, and physical LCL filter connected to a stiff grid.
-The converter voltage feeds a `DependentVoltageSource` with series resistance
-and inductance. The capacitor is a Bus shunt, and `LineLumped` carries grid-side
-current from the capacitor bus to the terminal bus.
+The converter voltage feeds a `Filter` component, which owns both inductor
+currents and the capacitor voltage and injects grid-side current into the
+terminal Bus. Its `i`, `vo`, and `ig` signal outputs supply the converter,
+controllers, and reference-frame operators.
 
-Both cases use `PLL` at the capacitor bus. Its `theta` output supplies every
+Both cases connect `PLL` to the Filter capacitor-voltage outputs. Its `theta` output supplies every
 `Park` transform, and its `omega` output supplies the controller frequency
 inputs. The inverse transform and `Modulation` convert the limited dq voltage
 command to the phase modulation inputs of `PWM`.

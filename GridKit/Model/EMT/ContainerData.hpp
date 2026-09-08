@@ -16,6 +16,7 @@
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1Data.hpp>
+#include <GridKit/Model/EMT/Component/Filter/FilterData.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineDistributed/LineDistributedData.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedData.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZData.hpp>
@@ -53,6 +54,7 @@ namespace GridKit
       using OuterPowerControlDataT      = Controller::OuterPowerControlData<RealT, IdxT>;
       using ParkDataT                   = ParkData<RealT, IdxT>;
       using PllDataT                    = PllData<RealT, IdxT>;
+      using FilterDataT                 = FilterData<RealT, IdxT>;
       using ModulationDataT             = ModulationData<RealT, IdxT>;
       using PwmDataT                    = Controller::PwmData<RealT, IdxT>;
       using DcLinkDataT                 = Controller::DcLinkData<RealT, IdxT>;
@@ -90,6 +92,7 @@ namespace GridKit
       std::vector<OuterPowerControlDataT>           outer_power_control;
       std::vector<ParkDataT>                        park;
       std::vector<PllDataT>                         pll;
+      std::vector<FilterDataT>                      filter;
       std::vector<ModulationDataT>                  modulation;
       std::vector<PwmDataT>                         pwm;
       std::vector<DcLinkDataT>                      dc_link;

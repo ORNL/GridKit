@@ -6,6 +6,7 @@ This directory documents EMT component models.
 
 - [Buses](Bus/README.md)
 - [Controllers](Controller/README.md)
+- [Filter](Filter/README.md)
 - [Lines](Line/README.md)
 - [Loads](Load/README.md)
 - [Sources](Source/README.md)

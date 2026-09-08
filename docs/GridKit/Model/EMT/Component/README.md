@@ -7,6 +7,7 @@
 
 Bus <Bus/README>
 Controller <Controller/README>
+Filter <Filter/README>
 Line <Line/README>
 Load <Load/README>
 Source <Source/README>
