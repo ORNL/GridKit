@@ -1,2 +1,10 @@
-results/
+/results/*
+!/results/Hawaii.vmag.png
+!/results/Hawaii.vmag.pdf
+!/results/Hawaii.omega.png
+!/results/Hawaii.omega.pdf
+!/results/Hawaii.p.png
+!/results/Hawaii.p.pdf
+!/results/Hawaii.q.png
+!/results/Hawaii.q.pdf
 phasor-reference/

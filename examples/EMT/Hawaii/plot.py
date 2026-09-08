@@ -49,7 +49,9 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path, du
     for panel, color, title, fault in [
             ('e', 'emtBlue', f'(a) GridKit EMT; fault cleared at {emt_fault[1]:.2f} s', emt_fault),
             ('r', 'referenceOrange', f'(b) GridKit PhasorDynamics; fault cleared at {phasor_fault[1]:.2f} s', phasor_fault)]:
-        legend = (r',legend style={at={(0.02,0.98)},anchor=north west,legend columns=3,fill=white,draw=none,font=\scriptsize}'
+        if kind != 'vmag':
+            title += f' ({count} machines)'
+        legend = (r',legend style={at={(0.98,0.98)},anchor=north east,legend columns=3,fill=white,draw=none,font=\scriptsize}'
                   if kind != 'vmag' else '')
         lines.append(f'\\nextgroupplot[title={{{title}}},ylabel={{{LABELS[kind]}}},ymin=\\ylower,ymax=\\yupper{legend}]')
         lines.append(f'\\path[fill=gray!15] (axis cs:{fault[0]},\\ylower) rectangle (axis cs:{fault[1]},\\yupper);')
@@ -65,8 +67,8 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path, du
         if kind != 'vmag':
             for k, bus in enumerate(machine_buses):
                 lines.extend([f'\\addlegendimage{{{palette[k]},line width=0.7pt}}', f'\\addlegendentry{{Bus {bus}}}'])
-        label = 'All 37 buses; bus 1 in black' if kind == 'vmag' else 'All 30 synchronous machines'
-        lines.append(f'\\node[anchor=south west,font=\\footnotesize,fill=white,inner sep=2pt] at (rel axis cs:0.01,0.02) {{{label}}};')
+        if kind == 'vmag':
+            lines.append(f'\\node[anchor=south east,font=\\footnotesize,fill=white,inner sep=2pt] at (rel axis cs:0.99,0.02) {{All {count} buses; bus 1 in black}};')
     lines.append(f'\\nextgroupplot[title={{(c) EMT minus PhasorDynamics: range across channels}},ylabel={{Difference [p.u.]}},ymin={error_lower:.8g},ymax={error_upper:.8g}]')
     lines.extend([
         f'\\addplot[name path=lo,draw=none] table[x=time,y=minimum,col sep=comma] {{Hawaii.{kind}.csv}};',
