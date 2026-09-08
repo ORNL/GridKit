@@ -8,6 +8,7 @@
 DependentVoltageSource <DependentVoltageSource/README>
 Machine <Machine/README>
 Norton <Norton/README>
+REGFMA <REGFMA/README>
 VoltageSource <VoltageSource/README>
 ```
 
