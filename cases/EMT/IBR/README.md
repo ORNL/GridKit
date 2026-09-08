@@ -76,9 +76,11 @@ See [the six scenarios and plotting workflow](../../../examples/EMT/IBR/README.m
 
 `REGFMA.case.json` replaces the three PWM/Converter/filter assemblies with
 5 MVA REGFMA (REGFM_A1) sources at buses 4–6. The network, machines, loads,
-switches, and nominal voltage are retained. `REGFMA.state.json` preserves the
-initial bus voltages and terminal currents; each source derives its internal
-voltage and unattached references from that operating-point estimate.
+switches, and nominal voltage are retained. Each source has physical RL coupling
+and a damped capacitor shunt. `REGFMA.state.json` preserves the initial network
+bus voltages and net injections; source currents also supply the initialized
+capacitor shunts. Each source derives its internal voltage and unattached
+references from that operating-point estimate.
 
 Run `python3 cases/EMT/IBR/build_regfma_case.py` to regenerate these two files
 from the existing ten-bus case and state. See the

@@ -1,7 +1,7 @@
 {
     "header": {
         "case_name": "Ten-bus EMT grid with REGFMA",
-        "case_description": "Three governed synchronous machines and three REGFM_A1 sources",
+        "case_description": "Three governed synchronous machines and three REGFM_A1 sources with damped RLC filters",
         "case_comments": "13.8 kV, 60 Hz; the network and initial terminal injections follow TenBus.case.json."
     },
     "signals": [
@@ -1330,12 +1330,96 @@
             ]
         },
         {
+            "class": "Bus",
+            "id": "capacitor_4",
+            "shunts": {
+                "C": {
+                    "E": [
+                        [
+                            4.64290132476532e-06,
+                            0.0,
+                            0.0
+                        ],
+                        [
+                            0.0,
+                            4.64290132476532e-06,
+                            0.0
+                        ],
+                        [
+                            0.0,
+                            0.0,
+                            4.64290132476532e-06
+                        ]
+                    ]
+                }
+            },
+            "mon": [
+                "va",
+                "vb",
+                "vc",
+                "i_sha",
+                "i_shb",
+                "i_shc"
+            ]
+        },
+        {
+            "class": "LineLumped",
+            "id": "damping_4",
+            "params": {
+                "dx": 1.0,
+                "Rp": [
+                    [
+                        0.114264,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.114264,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.114264
+                    ]
+                ],
+                "Lp": [
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ]
+                ]
+            },
+            "inputs": {
+                "bus1": "bus_4",
+                "bus2": "capacitor_4"
+            },
+            "mon": [
+                "i12a",
+                "i12b",
+                "i12c"
+            ]
+        },
+        {
             "class": "REGFMA",
             "id": "regfma_4",
             "params": {
                 "S": 5000000.0,
                 "V": 13800.0,
                 "XL": 0.15,
+                "RL": 0.03,
                 "mp": 0.01,
                 "mq": 0.05,
                 "ImaxF": 2.0,
@@ -1347,6 +1431,7 @@
             },
             "mon": [
                 "i",
+                "e",
                 "pf",
                 "qf",
                 "vf",
@@ -1359,12 +1444,96 @@
             ]
         },
         {
+            "class": "Bus",
+            "id": "capacitor_5",
+            "shunts": {
+                "C": {
+                    "E": [
+                        [
+                            4.64290132476532e-06,
+                            0.0,
+                            0.0
+                        ],
+                        [
+                            0.0,
+                            4.64290132476532e-06,
+                            0.0
+                        ],
+                        [
+                            0.0,
+                            0.0,
+                            4.64290132476532e-06
+                        ]
+                    ]
+                }
+            },
+            "mon": [
+                "va",
+                "vb",
+                "vc",
+                "i_sha",
+                "i_shb",
+                "i_shc"
+            ]
+        },
+        {
+            "class": "LineLumped",
+            "id": "damping_5",
+            "params": {
+                "dx": 1.0,
+                "Rp": [
+                    [
+                        0.114264,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.114264,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.114264
+                    ]
+                ],
+                "Lp": [
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ]
+                ]
+            },
+            "inputs": {
+                "bus1": "bus_5",
+                "bus2": "capacitor_5"
+            },
+            "mon": [
+                "i12a",
+                "i12b",
+                "i12c"
+            ]
+        },
+        {
             "class": "REGFMA",
             "id": "regfma_5",
             "params": {
                 "S": 5000000.0,
                 "V": 13800.0,
                 "XL": 0.15,
+                "RL": 0.03,
                 "mp": 0.01,
                 "mq": 0.05,
                 "ImaxF": 2.0,
@@ -1376,6 +1545,7 @@
             },
             "mon": [
                 "i",
+                "e",
                 "pf",
                 "qf",
                 "vf",
@@ -1388,12 +1558,96 @@
             ]
         },
         {
+            "class": "Bus",
+            "id": "capacitor_6",
+            "shunts": {
+                "C": {
+                    "E": [
+                        [
+                            4.64290132476532e-06,
+                            0.0,
+                            0.0
+                        ],
+                        [
+                            0.0,
+                            4.64290132476532e-06,
+                            0.0
+                        ],
+                        [
+                            0.0,
+                            0.0,
+                            4.64290132476532e-06
+                        ]
+                    ]
+                }
+            },
+            "mon": [
+                "va",
+                "vb",
+                "vc",
+                "i_sha",
+                "i_shb",
+                "i_shc"
+            ]
+        },
+        {
+            "class": "LineLumped",
+            "id": "damping_6",
+            "params": {
+                "dx": 1.0,
+                "Rp": [
+                    [
+                        0.114264,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.114264,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.114264
+                    ]
+                ],
+                "Lp": [
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ]
+                ]
+            },
+            "inputs": {
+                "bus1": "bus_6",
+                "bus2": "capacitor_6"
+            },
+            "mon": [
+                "i12a",
+                "i12b",
+                "i12c"
+            ]
+        },
+        {
             "class": "REGFMA",
             "id": "regfma_6",
             "params": {
                 "S": 5000000.0,
                 "V": 13800.0,
                 "XL": 0.15,
+                "RL": 0.03,
                 "mp": 0.01,
                 "mq": 0.05,
                 "ImaxF": 2.0,
@@ -1405,6 +1659,7 @@
             },
             "mon": [
                 "i",
+                "e",
                 "pf",
                 "qf",
                 "vf",
