@@ -650,6 +650,60 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome signalReadScope()
+      {
+        TestStatus success = true;
+        double     value   = 2;
+        size_t     index   = 0;
+        size_t     calls   = 0;
+        Signal     input, square, alias;
+        input.set(&value, &index);
+        square.setComputed([&]
+                           { ++calls; return input.read() * input.read(); },
+                           [&](Signal::GradientT& gradient, double scale)
+                           { input.appendGradient(gradient, 2 * input.read() * scale); });
+        alias.setComputed([&]
+                          { return square.read(); },
+                          [&](Signal::GradientT& gradient, double scale)
+                          { square.appendGradient(gradient, scale); });
+        {
+          Signal::ReadScope scope;
+          success *= square.read() == 4 && alias.read() == 4 && calls == 1;
+          Signal::GradientT gradient;
+          alias.appendGradient(gradient);
+          alias.appendGradient(gradient, 2);
+          success *= gradient == Signal::GradientT{{0, 4}, {0, 8}};
+          {
+            Signal::ReadScope nested;
+            success *= alias.read() == 4 && calls == 2;
+          }
+          success *= alias.read() == 4 && calls == 2;
+        }
+        // A new row sees a changed state even when time has not advanced.
+        value = 3;
+        {
+          Signal::ReadScope scope;
+          success *= alias.read() == 9 && square.read() == 9 && calls == 3;
+        }
+        // Solver reads outside a monitor scope always evaluate the current state.
+        value    = 4;
+        success *= alias.read() == 16 && calls == 4;
+        value    = 5;
+        success *= alias.read() == 25 && calls == 5;
+
+        Signal cycle;
+        cycle.setComputed([&]
+                          { return cycle.read(); },
+                          [](Signal::GradientT&, double) {});
+        success *= throws([&]
+                          { Signal::ReadScope scope; cycle.read(); });
+        value    = 6;
+        success *= alias.read() == 36 && calls == 6;
+        value    = 7;
+        success *= alias.read() == 49 && calls == 7;
+        return success.report(__func__);
+      }
+
       TestOutcome monitors()
       {
         TestStatus success = true;
@@ -667,6 +721,8 @@ namespace GridKit
           system.initialize();
           system.updateTime(0.123, 1);
           system.printMonitoredVariables();
+          dc = 300;
+          system.printMonitoredVariables();
           system.stopMonitor();
         }
         std::ifstream     file(path);
@@ -679,10 +735,12 @@ namespace GridKit
         success *= !throws([&]
                            {
           const auto parsed = json::parse(contents);
-          success *= parsed.size() == 1;
+          success *= parsed.size() == 2;
           success *= std::abs(parsed[0]["PWM_control.pwm"]["sa"].get<double>() - reference(0.123, 0.8, 1, 15, 0.5, 0)) < 3.0e-14;
           const auto& entry = parsed[0]["Converter_bridge"];
-          success *= std::abs(entry["voa"].get<double>() + entry["vob"].get<double>() + entry["voc"].get<double>()) < 1.0e-12; });
+          success *= std::abs(entry["voa"].get<double>() + entry["vob"].get<double>() + entry["voc"].get<double>()) < 1.0e-12;
+          for (const auto* key : {"voa", "vob", "voc"})
+            success *= parsed[1]["Converter_bridge"][key].get<double>() == .5 * entry[key].get<double>(); });
         file.close();
         std::filesystem::remove(path);
         return success.report(__func__);

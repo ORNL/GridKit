@@ -26,8 +26,8 @@ namespace GridKit
       for (size_t n = 0; n < output_port_.size(); ++n)
       {
         const auto key = static_cast<Outputs>(n);
-        monitor_->set(static_cast<typename ModelDataT::MonitorableVariables>(n), [this, key]
-                      { return output(key); });
+        monitor_->set(static_cast<typename ModelDataT::MonitorableVariables>(n), [this, n]
+                      { return output_port_[n].read(); });
         output_port_[n].setComputed(
             [this, key]
             { return output(key); },

@@ -16,6 +16,7 @@ int main()
   result += test.continuousMean();
   result += test.continuousResolution();
   result += test.continuousInput();
+  result += test.signalReadScope();
   result += test.monitors();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();

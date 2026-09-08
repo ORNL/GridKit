@@ -202,6 +202,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::printMonitoredVariables() const
     {
+      typename SignalT::ReadScope scope;
       monitor_->print();
     }
 
