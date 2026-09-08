@@ -47,7 +47,7 @@ def read_run(folder, name):
     return {'name': name, 'folder': folder, 'data': data, 'solver': solver,
             'signals': signals, 'devices': devices, 'record': record,
             'fc': devices['pwm']['params']['fc'], 'mu': solver['mu'],
-            'frequency': devices['grid']['params']['omega'] / (2 * np.pi) if name == 'GFL' else signals['omega'] / (2 * np.pi)}
+            'frequency': devices['grid']['params']['omega'] / (2 * np.pi)}
 
 
 def integral(t, x, points):
@@ -167,7 +167,7 @@ def time_axes(axes, run, end):
 
 def control_figure(run, end):
     name, d = run['name'], run['data']
-    fig, ax = plt.subplots(4, 1, figsize=(10, 9), sharex=True)
+    fig, ax = plt.subplots(5, 1, figsize=(10, 10), sharex=True)
     if name == 'GFL':
         trace(ax[0], run, 'Park_grid_current_y1', '$i_d$')
         trace(ax[1], run, 'Park_grid_current_y2', '$i_q$')
@@ -191,6 +191,9 @@ def control_figure(run, end):
     ax[2].set_ylabel('Voltage command [V]')
     ax[3].plot(d['t'], d['DCLink_dc_vdc'], color=BLUE, label='$v_{\\mathrm{dc}}$')
     ax[3].set_ylabel('DC voltage [V]')
+    ax[4].plot(d['t'], d['PLL_pll_omega'] / (2 * np.pi), color=BLUE, label='PLL frequency')
+    ax[4].axhline(run['frequency'], color=ORANGE, linestyle='--', label='grid frequency')
+    ax[4].set_ylabel('Frequency [Hz]')
     ax[0].set_title(f'{name}: {mu_label(run["mu"])}')
     time_axes(ax, run, end)
     ax[2].legend(loc='lower right', ncol=2, fontsize=9)
@@ -204,7 +207,7 @@ def switching_figure(run, prediction, end):
     ax[0].plot(d['t'], d['PWM_pwm_sa'], color=BLUE, label='$s_a$')
     ax[0].plot(d['t'], prediction[:, 0], '--', color=ORANGE, label='continuous PWM reference')
     ax[0].set_ylabel('Switching function [−]')
-    ax[0].set_title(f'{run["fc"]:g} Hz PWM, islanded voltage control, {mu_label(run["mu"])}')
+    ax[0].set_title(f'{run["fc"]:g} Hz PWM, PLL-synchronized voltage control, {mu_label(run["mu"])}')
     ax[1].plot(d['t'], d['Converter_bridge_voa'], color=BLUE, label=r'bridge $v_{o,a}$')
     ax[1].plot(d['t'], d['Bus_capacitor_va'], color=ORANGE, label='capacitor $v_a$')
     ax[1].set_ylabel('Phase voltage [V]')
@@ -226,6 +229,8 @@ def summarize(run, prediction, spectrum):
     balance = energy - energy[0] - integral(t, power, t)
     result = {'final_time_s': float(t[-1]), 'monitor_samples': len(t),
               'carrier_hz': run['fc'], 'mu': run['mu'],
+              'mean_pll_frequency_Hz': mean(t, d['PLL_pll_omega'], *spectrum['window_s']) / (2 * np.pi),
+              'maximum_pll_frequency_error_Hz': float(np.max(np.abs(d['PLL_pll_omega'] / (2 * np.pi) - run['frequency']))),
               'initial_dc_voltage_V': float(vdc[0]), 'final_dc_voltage_V': float(vdc[-1]),
               'minimum_dc_voltage_V': float(vdc.min()),
               'dc_energy_balance_max_error_J': float(np.max(np.abs(balance))),

@@ -1,14 +1,16 @@
 # Controller Models
 
-EMT controller models exchange signals with other components.
+EMT controller models exchange signals with other components. In the switching
+inverter examples, PLL supplies angle to the Park operators and frequency to
+the controllers through signal ports.
 
 ## Grid Following
 
 ![Grid-following inverter wiring](../../../../../docs/Figures/EMT/Controller/diagram_gfl.png)
 
-## Grid Forming
+## GFM Voltage Control
 
-![Grid-forming inverter wiring](../../../../../docs/Figures/EMT/Controller/diagram_gfm.png)
+![GFM case wiring with PLL](../../../../../docs/Figures/EMT/Controller/diagram_gfm.png)
 
 ## Models
 

@@ -36,4 +36,10 @@ if(Python3_Interpreter_FOUND
       ${Python3_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/validate.py --exe
       $<TARGET_FILE:EMTDynamicSimulation>)
   set_tests_properties(EMTGflPowerControl PROPERTIES TIMEOUT 300)
+  add_test(
+    NAME EMTPLLVoltageControl
+    COMMAND
+      ${Python3_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/validate.py --exe
+      $<TARGET_FILE:EMTDynamicSimulation> --scenario GFM)
+  set_tests_properties(EMTPLLVoltageControl PROPERTIES TIMEOUT 300)
 endif()
