@@ -1,26 +1,23 @@
-# Switching inverter current and voltage control
+# Inverter current and voltage control
 
-These studies connect the shared `InnerCurrentControl`, sampled `PWM`, and
-`Converter` to a physical LCL filter. `GFL` tracks a prescribed current reference
-against a stiff grid with its known reference angle. `GFM` uses
-`OuterVoltageControl` to supply an islanded load at prescribed voltage and
-frequency. The examples isolate the cascaded controls; PLL and primary droop
-controllers connect through the same reference ports.
+`GFL` tracks a current reference against a stiff grid with a known angle.
+`GFM` supplies an islanded load through cascaded voltage and current control.
+Both use the same sampled PWM, converter, and physical LCL filter.
 
-The bridge uses 6 kHz centered PWM, a 400 V DC supply, and `mu=1000000`.
-The logistic 10–90% edge width is 4.39 µs. The filter has 2 mH / 0.2 Ω on the
-inverter side, 100 µF shunt capacitance, and 1 mH / 0.1 Ω on the grid side.
-Nominal voltage is 208 V line-to-line RMS at 60 Hz. The current-loop gains
-use a 400 Hz nominal RL bandwidth; the voltage loop uses a 60 Hz nominal
-bandwidth. All dq quantities use GridKit's power-invariant Park transform.
+The bridge has a 400 V DC supply and 6 kHz centered PWM. The filter uses
+2 mH / 0.2 Ω, 100 µF, and 1 mH / 0.1 Ω. Nominal voltage is 208 V
+line-to-line RMS at 60 Hz; dq quantities use the power-invariant Park transform.
+Current and voltage loop bandwidths are nominally 400 Hz and 60 Hz.
 
-Both studies run for 0.2 s with 2 µs output spacing.
-
-The current study steps the d-axis reference through 8, 16, 45, and 8 A;
-the 45 A request exceeds the 30 A reference limit. The voltage study connects
-and disconnects a second 20 Ω/phase load. Both retain all PWM pulses.
+The current reference steps through 8, 16, 45, and 8 A, with a 30 A limit.
+The voltage study connects and disconnects a second 20 Ω/phase load.
+Initial states are fundamental operating-point estimates; switching ripple
+develops during startup. See the [cases](../../../cases/EMT/CurrentControl/README.md)
+for connections and initialization.
 
 ## Run and plot
+
+Defaults are 0.2 s, 2 µs monitoring, and `mu=1000000`.
 
 ```bash
 cmake --build build --target EMTDynamicSimulation -j 10
@@ -28,21 +25,38 @@ python3 examples/EMT/CurrentControl/run.py
 python3 examples/EMT/CurrentControl/plot.py
 ```
 
-The runner stores solver logs and CSV waveforms under `simulation/`. The plotting
-script writes PNG and PDF figures, compressed waveform data, and a numerical
-summary beside them. This directory is deliberately available for review and
-optional staging. No files are staged by the scripts. `*.run.json` records input and executable
-hashes. Once the compressed files exist, the CSV copies can be removed;
-`plot.py` also reads the retained NPZ waveforms.
+Compare resolved switching and broad smoothing over the same 0.1 s window:
 
-![Current reference tracking and limiting](simulation/GFL.png)
+```bash
+python3 examples/EMT/CurrentControl/run.py --tmax 0.1
+python3 examples/EMT/CurrentControl/run.py --mu 240 --tmax 0.1 --dt-monitor 1e-5 --output simulation-smooth
+python3 examples/EMT/CurrentControl/plot.py --compare simulation-smooth
+```
 
-![Islanded voltage control and load switching](simulation/GFM.png)
+`mu` changes switching resolution while preserving the held duty's
+carrier-period mean. The logistic 10–90% width is 4.39 µs at `1000000`
+and 18.3 ms at `240`. The circuit and controller parameters are unchanged.
 
-![Resolved PWM and bridge switching](simulation/switching.png)
+`--scenario GFL` or `--scenario GFM` selects one study. `--exe` selects the
+executable; output and comparison paths are relative to this example.
+The plotter uses the common available interval, or its `--tmax` option,
+and gives corresponding panels identical x- and y-axis limits.
 
-![Bridge harmonics and pulse-edge prediction](simulation/harmonics.png)
+Each run retains its effective inputs, hashes, waveforms, log, and IDA statistics.
+The plotter writes PNG/PDF figures, compressed waveforms, and `summary.json`
+with tracking, bridge power balance, and analytic PWM comparisons. Generated
+inputs and data are ignored; PNG/PDF figures remain available for review.
+CSV waveforms may be removed after plotting; the plotter also reads NPZ files.
 
-See the [case files](../../../cases/EMT/CurrentControl/README.md) for the physical
-connections and initialization. These are local simulation demonstrations;
-formal tests and external benchmark comparisons are separate work.
+Plot | Resolved switching | Broad smoothing
+---- | ------------------ | ---------------
+Current tracking | [GFL](simulation/GFL.png) | [GFL](simulation-smooth/GFL.png)
+Voltage control | [GFM](simulation/GFM.png) | [GFM](simulation-smooth/GFM.png)
+PWM and bridge | [Switching](simulation/switching.png) | [Switching](simulation-smooth/switching.png)
+Fourier amplitudes | [Harmonics](simulation/harmonics.png) | [Harmonics](simulation-smooth/harmonics.png)
+
+## Regression coverage
+
+The sampled-PWM unit fixture checks duty mean, the smoothing-to-switching
+transition, and accepted-boundary command timing. These examples report
+closed-loop behavior without prescribing exact transients or solver steps.

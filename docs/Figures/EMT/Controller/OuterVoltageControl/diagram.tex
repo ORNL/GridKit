@@ -3,44 +3,40 @@
 
 % TUNABLES: gain width and spacing of the two lower branches.
 \def\gainwidth{1.35cm}
-\def\integralrow{-1.9}
-\def\trackingrow{-3.8}
+\def\integralrow{-2.2}
+\def\trackingrow{-3.6}
 
 \begin{document}
 \begin{tikzpicture}[emt diagram]
 
 % Voltage error and proportional path.
-\node[sum] (error) at (0,0) {$\Sigma$};
-\coordinate (esplit) at (1.2,0);
-\node[block, minimum width=\gainwidth] (Kp) at (3,0) {$K_P$};
+\node[sum] (error) at (3,2.4) {$\Sigma$};
+\node[signal] (esplit) at (3,0) {};
+\node[block, minimum width=\gainwidth] (Kp) at (5.1,0) {$K_P$};
 \node[sum] (command) at (7.2,0) {$\Sigma$};
-\draw[line] (error.east) -- (esplit);
+\draw[line] (error.south) -- (esplit);
 \draw[->, line] (esplit) -- node[sig, above] {$\mathbf{e}$} (Kp.west);
 \draw[->, line] (Kp.east) -- (command.west);
 \node[pm, above left=0pt and 1pt of command.west] {$+$};
 
 % Integral path, with anti-windup added before integration.
 \node[block, minimum width=\gainwidth] (Ki)
-    at (1.2,\integralrow) {$K_I$};
-\node[sum] (rate) at (3,\integralrow) {$\Sigma$};
+    at (3,\integralrow) {$K_I$};
+\node[sum] (rate) at (5.1,\integralrow) {$\Sigma$};
 \node[block, minimum width=\gainwidth] (integrator)
-    at (5.1,\integralrow) {$\dfrac{\mathbf{I}}{s}$};
-\node[signal, label={[sig]above:$\boldsymbol{\eta}$}] (eta)
-    at (6.35,\integralrow) {};
+    at (7.2,\integralrow) {$\dfrac{\mathbf{I}}{s}$};
 \draw[->, line] (esplit) -- (Ki.north);
 \draw[->, line] (Ki.east) -- (rate.west);
 \node[pm, above left=0pt and 1pt of rate.west] {$+$};
 \draw[->, line] (rate.east) -- (integrator.west);
-\draw[line] (integrator.east) -- (eta);
-\draw[->, line] (eta) -| (command.south);
+\draw[->, line] (integrator.north) -- (command.south);
 \node[pm, below right=1pt and 0pt of command.south] {$+$};
 
 % Grid-current feedforward and capacitor-current decoupling.
-\node[block, minimum width=4cm, minimum height=1.7cm]
-    (feedforward) at (7.2,3)
-    {$\mathbf{i}_g+\mathcal{J}\omega C\mathbf{v}$};
-\draw[->, line] (feedforward.south)
-    -- node[sig, right] {$\mathbf{b}$} (command.north);
+\node[block, minimum width=2.6cm]
+    (feedforward) at (7.2,1.3)
+    {$\mathbf{i}_g+\mathbf{J}\omega C\mathbf{v}$};
+\draw[->, line] (feedforward.south) -- (command.north);
 \node[pm, above right=1pt and 0pt of command.north] {$+$};
 
 % Total current reference supplied to the inner current controller.
@@ -56,33 +52,33 @@
 \draw[->, line] (iref) -- (tracking.north);
 \node[pm, above left=1pt and 0pt of tracking.north] {$-$};
 \draw[->, line] (tracking.west) -- (Kaw.east);
-\draw[->, line] (Kaw.west) -| (rate.south);
+\draw[->, line] (Kaw.north) -- (rate.south);
 \node[pm, below left=1pt and 0pt of rate.south] {$+$};
 
 % External inputs share the same frame and signal ownership conventions.
 \node[signal, label={[sig]above:$\mathbf{v}^{\mathrm{ref}}$}]
-    (vref) at (-2.2,0) {};
-\node[signal, label={[sig]above:$\mathbf{v}$}] (v) at (-2.2,2.5) {};
-\node[signal, label={[sig]above:$\omega$}] (omega) at (-2.2,3) {};
-\node[signal, label={[sig]above:$\mathbf{i}_g$}] (ig) at (-2.2,3.5) {};
+    (vref) at (3,3.8) {};
+\node[signal, label={[sig]above:$\mathbf{v}$}] (v) at (6.4,3.8) {};
+\node[signal, label={[sig]above:$\omega$}] (omega) at (7.2,3.8) {};
+\node[signal, label={[sig]above:$\mathbf{i}_g$}] (ig) at (8,3.8) {};
 \node[signal, label={[sig]above:$\mathbf{i}^{\mathrm{lim}}$}]
     (ilim) at (11,\trackingrow) {};
-\coordinate (vsplit) at (error |- v);
-\draw[->, line] ($(vref)+(-0.8,0)$) -- (error.west);
-\node[pm, above left=0pt and 1pt of error.west] {$+$};
-\draw[->, line] ($(v)+(-0.8,0)$) -- (feedforward.west |- v);
-\draw[->, line] (vsplit) -- (error.north);
-\node[pm, above left=1pt and 0pt of error.north] {$-$};
-\draw[->, line] ($(omega)+(-0.8,0)$) -- (feedforward.west |- omega);
-\draw[->, line] ($(ig)+(-0.8,0)$) -- (feedforward.west |- ig);
-\draw[->, line] ($(ilim)+(0.8,0)$) -- (tracking.east);
+\node[signal] (vsplit) at (v |- error) {};
+\draw[->, line] (vref) -- (error.north);
+\node[pm, above right=1pt and 0pt of error.north] {$+$};
+\draw[->, line] (v) -- (feedforward.north -| v);
+\draw[->, line] (vsplit) -- (error.east);
+\node[pm, above right=0pt and 1pt of error.east] {$-$};
+\draw[->, line] (omega) -- (feedforward.north -| omega);
+\draw[->, line] (ig) -- (feedforward.north -| ig);
+\draw[->, line] (ilim) -- (tracking.east);
 \node[pm, above right=0pt and 1pt of tracking.east] {$+$};
 
 % Enclose the model-owned states, variables, and feedback paths.
 \begin{scope}[on background layer]
     \node[operator enclosure,
-        fit=(error)(Kp)(Ki)(rate)(integrator)(eta)
-            (feedforward)(command)(iref)(tracking)(Kaw)] {};
+        fit=(error)(Kp)(Ki)(rate)(integrator)
+            (feedforward)(command)(iref)(tracking)(Kaw)(vsplit)] {};
 \end{scope}
 
 \end{tikzpicture}

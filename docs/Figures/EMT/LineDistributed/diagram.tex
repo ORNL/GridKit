@@ -6,69 +6,54 @@
 
 % ================= Terminal 1 (left column) =================
 \node[sum]   (kcl1)  at (-2.4,  2.4) {$\Sigma$};
-\node[vblock] (Yc1)  at (-2.4,  0.0) {$\mathbf{Y}^{\mathrm{c}}_1(s)$};
+\node[vblock] (Yc1)  at (-4.0,  0.0) {$\mathbf{Y}^{\mathrm{c}}_1(s)$};
 \node[sum]   (wave1) at (-2.4, -2.4) {$\Sigma$};
 
 \node[signal, label={[sig]left:$\mathbf{v}_1$}] (v1) at (-5.6, 0) {};
 
-\draw[->, line] (Yc1.north) -- (kcl1);
-\draw[->, line] (Yc1.south) -- (wave1);
-\draw[->, line] (kcl1.west) -- (-4.0, 2.4)
-                                -- (-4.0, -2.4) -- (wave1);
-\coordinate (i1port) at (-5.6, 0.8);
-\draw[->, line] (-4.0, 0.8) -- (i1port);
-\node[sig, left=3pt of i1port] {$\mathbf{i}_1$};
+\draw[->, line] (Yc1.north) |- (kcl1.west);
+\draw[->, line] (Yc1.south) |- (wave1.west);
+\draw[->, line] (kcl1.south) -- (wave1.north);
+\node[signal] (i1split) at (kcl1 |- v1) {};
+\draw[->, line] (i1split) -- node[sig, above] {$\Delta\mathbf{i}_1$} ++(1.6,0);
 
-% Voltage lead crosses over the continuous current path.
-\draw[line] (v1) -- (-4.18, 0);
-\draw[wire jump] (-4.18, 0)
-    arc[start angle=180, end angle=0, radius=0.18];
-\draw[->, line] (-3.82, 0) -- (Yc1.west);
+\draw[->, line] (v1) -- (Yc1.west);
 
 % ================= Terminal 2 (right column) =================
 \node[sum]   (wave2) at (2.4,  2.4) {$\Sigma$};
-\node[vblock] (Yc2)  at (2.4,  0.0) {$\mathbf{Y}^{\mathrm{c}}_2(s)$};
+\node[vblock] (Yc2)  at (4.0,  0.0) {$\mathbf{Y}^{\mathrm{c}}_2(s)$};
 \node[sum]   (kcl2)  at (2.4, -2.4) {$\Sigma$};
 
 \node[signal, label={[sig]right:$\mathbf{v}_2$}] (v2) at (5.6, 0) {};
 
-\draw[->, line] (Yc2.north) -- (wave2);
-\draw[->, line] (Yc2.south) -- (kcl2);
-\draw[->, line] (kcl2.east) -- (4.0, -2.4)
-                               -- (4.0, 2.4) -- (wave2);
-\coordinate (i2port) at (5.6, 0.8);
-\draw[->, line] (4.0, 0.8) -- (i2port);
-\node[sig, right=3pt of i2port] {$\mathbf{i}_2$};
+\draw[->, line] (Yc2.north) |- (wave2.east);
+\draw[->, line] (Yc2.south) |- (kcl2.east);
+\draw[->, line] (kcl2.north) -- (wave2.south);
+\node[signal] (i2split) at (kcl2 |- v2) {};
+\draw[->, line] (i2split) -- node[sig, above] {$\Delta\mathbf{i}_2$} ++(-1.6,0);
 
-% Voltage lead crosses over the continuous current path.
-\draw[line] (v2) -- (4.18, 0);
-\draw[wire jump] (4.18, 0)
-    arc[start angle=0, end angle=180, radius=0.18];
-\draw[->, line] (3.82, 0) -- (Yc2.east);
+\draw[->, line] (v2) -- (Yc2.east);
 
 % ================= Propagation channels (straight rows) =================
 % 1 -> 2 (lower row, left to right)
 \node[hblock] (H12) at (0, -2.4) {$\mathbf{H}_{12}(s)$};
-\draw[->, line] (wave1.east) -- (H12.west);
-\draw[->, line] (H12.east) -- (kcl2.west);
+\draw[->, line] (wave1.east) -- node[sig, above] {$\mathbf{i}^{\mathrm{ref}}_1$} (H12.west);
+\draw[->, line] (H12.east) -- node[sig, above] {$\mathbf{i}^{\mathrm{inc}}_2$} (kcl2.west);
 
 % 2 -> 1 (upper row, right to left)
 \node[hblock] (H21) at (0,  2.4) {$\mathbf{H}_{21}(s)$};
-\draw[->, line] (wave2.west) -- (H21.east);
-\draw[->, line] (H21.west) -- (kcl1.east);
+\draw[->, line] (wave2.west) -- node[sig, above] {$\mathbf{i}^{\mathrm{ref}}_2$} (H21.east);
+\draw[->, line] (H21.west) -- node[sig, above] {$\mathbf{i}^{\mathrm{inc}}_1$} (kcl1.east);
 
 % ================= Summation signs =================
-\node[pm] at ($(kcl1)+(-0.26,-0.50)$) {$-$};   % Yc1 v1 subtracts
-\node[pm] at ($(kcl1)+( 0.45, 0.26)$) {$+$};   % incident current adds
-\node[pm] at ($(wave1)+(0.26, 0.50)$) {$+$};   % Yc1 v1
-\node[pm] at ($(wave1)+(-0.45,-0.26)$) {$-$};  % i1
-\node[pm] at ($(kcl2)+( 0.26, 0.50)$) {$-$};   % Yc2 v2 subtracts
+\node[pm] at ($(kcl1)+(-0.45, 0.26)$) {$-$};   % Yc1 v1 subtracts
+\node[pm] at ($(kcl1)+( 0.45,-0.26)$) {$+$};   % incident current adds
+\node[pm] at ($(wave1)+(-0.45,-0.26)$) {$+$};  % Yc1 v1
+\node[pm] at ($(wave1)+(-0.26, 0.50)$) {$-$};  % i1
+\node[pm] at ($(kcl2)+( 0.45,-0.26)$) {$-$};   % Yc2 v2 subtracts
 \node[pm] at ($(kcl2)+(-0.45,-0.26)$) {$+$};   % incident current adds
-\node[pm] at ($(wave2)+(-0.26,-0.50)$) {$+$};  % Yc2 v2
-\node[pm] at ($(wave2)+( 0.45, 0.26)$) {$-$};  % i2
-
-% ================= Model enclosure =================
-\draw[enclosure] (-4.8, -3.6) rectangle (4.8, 3.6);
+\node[pm] at ($(wave2)+( 0.45, 0.26)$) {$+$};  % Yc2 v2
+\node[pm] at ($(wave2)+( 0.26,-0.50)$) {$-$};  % i2
 
 \end{tikzpicture}
 \end{document}
