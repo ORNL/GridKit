@@ -11,11 +11,11 @@ currents into the bus equations.
 Symbol | Description
 ------ | -----------
 $\mathbf{y}$ | Internal variables of the model
-$\dot{\mathbf{y}}$ | Internal variable derivatives
-$\mathbf{y}^\text{ext}$ | External variables, internal to a connected model
-$\dot{\mathbf{y}}^\text{ext}$ | External variable derivatives
+$\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}$ | Internal variable derivatives
+$\mathbf{y}^\mathrm{ext}$ | External variables, internal to a connected model
+$\dfrac{\mathrm{d}\mathbf{y}^\mathrm{ext}}{\mathrm{d}t}$ | External variable derivatives
 $\mathbf{f}$ | Internal equation
-$\mathbf{f}^\text{ext}$ | External equation
+$\mathbf{f}^\mathrm{ext}$ | External equation
 $\alpha$ | Time derivative coefficient supplied by the integrator
 
 ## System Form
@@ -26,8 +26,8 @@ to exactly one model, and each scalar internal variable corresponds to one
 internal row, so the assembled row set of a model is
 
 ```math
-0 = \mathbf{f}(t,\mathbf{y},\dot{\mathbf{y}},\mathbf{y}^\text{ext}, \dot{\mathbf{y}}^\text{ext})
-  + \sum_e \mathbf{f}^\text{ext}_e
+0 = \mathbf{f}(t,\mathbf{y},\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t},\mathbf{y}^\mathrm{ext}, \dfrac{\mathrm{d}\mathbf{y}^\mathrm{ext}}{\mathrm{d}t})
+  + \sum_e \mathbf{f}^\mathrm{ext}_e
 ```
 
 The [Bus](Component/Bus/README.md) contains `KCL` and Norton sources.
@@ -111,7 +111,7 @@ only in where the output lands.
 Member function | Output | Placement
 --------------- | ------ | ---------
 `evaluateInternalResidual(y, yp, y_ext, yp_ext, f)` | $\mathbf{f}$ | Internal rows of the model
-`evaluateExternalResidual(y, yp, y_ext, yp_ext, f_ext)` | $\mathbf{f}^\text{ext}$ | Accumulated into internal rows of a connected model
+`evaluateExternalResidual(y, yp, y_ext, yp_ext, f_ext)` | $\mathbf{f}^\mathrm{ext}$ | Accumulated into internal rows of a connected model
 
 The internal equation fills its output, while the external equation accumulates
 its contribution into `f_ext`. Both must be inlinable and reach state only
@@ -136,21 +136,21 @@ terms.
 \begin{bmatrix}
 \dfrac{\partial\mathbf{f}}{\partial\mathbf{y}}
 &
-\dfrac{\partial\mathbf{f}}{\partial\mathbf{y}^\text{ext}}
+\dfrac{\partial\mathbf{f}}{\partial\mathbf{y}^\mathrm{ext}}
 \\[3ex]
-\dfrac{\partial\mathbf{f}^\text{ext}}{\partial\mathbf{y}}
+\dfrac{\partial\mathbf{f}^\mathrm{ext}}{\partial\mathbf{y}}
 &
-\dfrac{\partial\mathbf{f}^\text{ext}}{\partial\mathbf{y}^\text{ext}}
+\dfrac{\partial\mathbf{f}^\mathrm{ext}}{\partial\mathbf{y}^\mathrm{ext}}
 \end{bmatrix}
 +\ \alpha
 \begin{bmatrix}
-\dfrac{\partial\mathbf{f}}{\partial\dot{\mathbf{y}}}
+\dfrac{\partial\mathbf{f}}{\partial\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}}
 &
-\dfrac{\partial\mathbf{f}}{\partial\dot{\mathbf{y}}^\text{ext}}
+\dfrac{\partial\mathbf{f}}{\partial\dfrac{\mathrm{d}\mathbf{y}^\mathrm{ext}}{\mathrm{d}t}}
 \\[3ex]
-\dfrac{\partial\mathbf{f}^\text{ext}}{\partial\dot{\mathbf{y}}}
+\dfrac{\partial\mathbf{f}^\mathrm{ext}}{\partial\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}}
 &
-\dfrac{\partial\mathbf{f}^\text{ext}}{\partial\dot{\mathbf{y}}^\text{ext}}
+\dfrac{\partial\mathbf{f}^\mathrm{ext}}{\partial\dfrac{\mathrm{d}\mathbf{y}^\mathrm{ext}}{\mathrm{d}t}}
 \end{bmatrix}
 ```
 
@@ -176,10 +176,10 @@ covers every block and each of the eight is one pair of enum values.
 
 Variable | `Equation::Internal` | `Equation::External`
 -------- | -------------------- | --------------------
-`Variable::Y` | $\partial\mathbf{f}/\partial\mathbf{y}$ | $\partial\mathbf{f}^\text{ext}/\partial\mathbf{y}$
-`Variable::Yp` | $\partial\mathbf{f}/\partial\dot{\mathbf{y}}$ | $\partial\mathbf{f}^\text{ext}/\partial\dot{\mathbf{y}}$
-`Variable::YExt` | $\partial\mathbf{f}/\partial\mathbf{y}^\text{ext}$ | $\partial\mathbf{f}^\text{ext}/\partial\mathbf{y}^\text{ext}$
-`Variable::YpExt` | $\partial\mathbf{f}/\partial\dot{\mathbf{y}}^\text{ext}$ | $\partial\mathbf{f}^\text{ext}/\partial\dot{\mathbf{y}}^\text{ext}$
+`Variable::Y` | $\partial\mathbf{f}/\partial\mathbf{y}$ | $\partial\mathbf{f}^\mathrm{ext}/\partial\mathbf{y}$
+`Variable::Yp` | $\partial\mathbf{f}/\partial\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}$ | $\partial\mathbf{f}^\mathrm{ext}/\partial\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}$
+`Variable::YExt` | $\partial\mathbf{f}/\partial\mathbf{y}^\mathrm{ext}$ | $\partial\mathbf{f}^\mathrm{ext}/\partial\mathbf{y}^\mathrm{ext}$
+`Variable::YpExt` | $\partial\mathbf{f}/\partial\dfrac{\mathrm{d}\mathbf{y}^\mathrm{ext}}{\mathrm{d}t}$ | $\partial\mathbf{f}^\mathrm{ext}/\partial\dfrac{\mathrm{d}\mathbf{y}^\mathrm{ext}}{\mathrm{d}t}$
 
 The derivative variables carry $\alpha$ as a value scaling, so the two matrices
 above assemble into one Jacobian.
@@ -201,7 +201,7 @@ enum class Variable
 ```
 
 The wrapper selects the member function from the equation group. Differentiating
-against $\dot{\mathbf{y}}^\text{ext}$ requires it to be an input, so both member
+against $\dfrac{\mathrm{d}\mathbf{y}^\mathrm{ext}}{\mathrm{d}t}$ requires it to be an input, so both member
 functions take it alongside the other three.
 
 ```cpp
@@ -267,8 +267,8 @@ struct SparseJacobian
     {
       // Sparse storage. @see LowerSparseStorage.hpp
       ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
-                                                     (void*) ident_store<ScalarT, IdxT>,
-                                                     var_i);
+                                                   (void*) ident_store<ScalarT, IdxT>,
+                                                   var_i);
       ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
                                                      (void*) sparse_store<ScalarT, IdxT>,
                                                      var_i,
@@ -290,42 +290,74 @@ struct SparseJacobian
       if constexpr (variable == Variable::Y)
       {
         __enzyme_fwddiff<void>(residual,
-                               enzyme_const, model,
-                               enzyme_dup, y, output,
-                               enzyme_const, yp,
-                               enzyme_const, y_ext,
-                               enzyme_const, yp_ext,
-                               enzyme_dupnoneed, seed, d_output);
+                               enzyme_const,
+                               model,
+                               enzyme_dup,
+                               y,
+                               output,
+                               enzyme_const,
+                               yp,
+                               enzyme_const,
+                               y_ext,
+                               enzyme_const,
+                               yp_ext,
+                               enzyme_dupnoneed,
+                               seed,
+                               d_output);
       }
       else if constexpr (variable == Variable::Yp)
       {
         __enzyme_fwddiff<void>(residual,
-                               enzyme_const, model,
-                               enzyme_const, y,
-                               enzyme_dup, yp, output,
-                               enzyme_const, y_ext,
-                               enzyme_const, yp_ext,
-                               enzyme_dupnoneed, seed, d_output);
+                               enzyme_const,
+                               model,
+                               enzyme_const,
+                               y,
+                               enzyme_dup,
+                               yp,
+                               output,
+                               enzyme_const,
+                               y_ext,
+                               enzyme_const,
+                               yp_ext,
+                               enzyme_dupnoneed,
+                               seed,
+                               d_output);
       }
       else if constexpr (variable == Variable::YExt)
       {
         __enzyme_fwddiff<void>(residual,
-                               enzyme_const, model,
-                               enzyme_const, y,
-                               enzyme_const, yp,
-                               enzyme_dup, y_ext, output,
-                               enzyme_const, yp_ext,
-                               enzyme_dupnoneed, seed, d_output);
+                               enzyme_const,
+                               model,
+                               enzyme_const,
+                               y,
+                               enzyme_const,
+                               yp,
+                               enzyme_dup,
+                               y_ext,
+                               output,
+                               enzyme_const,
+                               yp_ext,
+                               enzyme_dupnoneed,
+                               seed,
+                               d_output);
       }
       else
       {
         __enzyme_fwddiff<void>(residual,
-                               enzyme_const, model,
-                               enzyme_const, y,
-                               enzyme_const, yp,
-                               enzyme_const, y_ext,
-                               enzyme_dup, yp_ext, output,
-                               enzyme_dupnoneed, seed, d_output);
+                               enzyme_const,
+                               model,
+                               enzyme_const,
+                               y,
+                               enzyme_const,
+                               yp,
+                               enzyme_const,
+                               y_ext,
+                               enzyme_dup,
+                               yp_ext,
+                               output,
+                               enzyme_dupnoneed,
+                               seed,
+                               d_output);
       }
     }
   }
@@ -343,12 +375,10 @@ using GridKit::Enzyme::Sparse::Variable;
 // Lower left of the value matrix, the external equation against internal variables
 if (y_scale != 0)
   SparseJacobian<ModelT, Equation::External, Variable::Y>::eval(
-      this, n_ext, n_var, ext_indices, var_indices,
-      y, yp, y_ext, yp_ext, rows, cols, vals, nnz, y_scale);
+      this, n_ext, n_var, ext_indices, var_indices, y, yp, y_ext, yp_ext, rows, cols, vals, nnz, y_scale);
 
 // Same region of the derivative matrix
 if (yp_scale != 0)
   SparseJacobian<ModelT, Equation::External, Variable::Yp>::eval(
-      this, n_ext, n_var, ext_indices, var_indices,
-      y, yp, y_ext, yp_ext, rows, cols, vals, nnz, yp_scale);
+      this, n_ext, n_var, ext_indices, var_indices, y, yp, y_ext, yp_ext, rows, cols, vals, nnz, yp_scale);
 ```

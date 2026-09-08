@@ -99,7 +99,7 @@ None.
 #### Algebraic
 
 ```math
-0=-y_m(t)+u_m(t-\tau_m),\qquad m\in\{1,\ldots,M\}
+0 = -y_m(t)+u_m(t-\tau_m),\qquad m\in\{1,\ldots,M\}
 ```
 
 ### External Equations
@@ -113,12 +113,11 @@ None.
 Accepted input history is stored as the knot sequence
 
 ```math
-(t_j,\ \mathbf{u}_j,\ \mathbf{u}'_j),
+(t_k,\ \mathbf{u}_k,\ \left.\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}\right|_{t_k}),
 \qquad t_0 \le t_1 \le \cdots \le t_n,
 ```
 
-where $\mathbf{u}_j$ and $\mathbf{u}'_j$ are the input value and derivative at
-$t_j$. The first knot holds the initialized values. Channels share knot times
+Each knot stores the input value and derivative at $t_k$. The first knot holds the initialized values. Channels share knot times
 and read the record at $t-\tau_m$ independently.
 
 ![Delay history record and per-channel taps](../../../../../../docs/Figures/EMT/DelayHistory/diagram.png)
@@ -133,20 +132,20 @@ bracket needed by the longest delay.
 ### Interpolation
 
 Suppressing the channel index, a lookup at $\xi < t_0$ uses the analytic
-prehistory. For $\xi \in (t_j,t_{j+1}]$, the bracketing knots define the cubic
+prehistory. For $\xi \in (t_k,t_{k+1}]$, the bracketing knots define the cubic
 Hermite interpolant
 
 ```math
 \begin{aligned}
-h_j &= t_{j+1}-t_j,
+h_k &= t_{k+1}-t_k,
 \qquad
-\theta = \dfrac{\xi-t_j}{h_j} \\
+\theta = \dfrac{\xi-t_k}{h_k} \\
 u(\xi)
-  &= (1-\theta)^2(1+2\theta)\,u_j
-   + \theta(1-\theta)^2\,h_j\,u'_j \\
+  &= (1-\theta)^2(1+2\theta)\,u_k
+   + \theta(1-\theta)^2\,h_k\,\left.\dfrac{\mathrm{d}u}{\mathrm{d}t}\right|_{t_k} \\
   &\quad
-   + \theta^2(3-2\theta)\,u_{j+1}
-   - \theta^2(1-\theta)\,h_j\,u'_{j+1},
+   + \theta^2(3-2\theta)\,u_{k+1}
+   - \theta^2(1-\theta)\,h_k\,\left.\dfrac{\mathrm{d}u}{\mathrm{d}t}\right|_{t_{k+1}},
 \end{aligned}
 ```
 
@@ -164,7 +163,7 @@ the accepted value and slope and the current trial value:
 ```math
 u_m(\xi)
   \approx (1-\theta^2)u_{m,n}
-    +h\theta(1-\theta)u'_{m,n}
+    +h\theta(1-\theta)\left.\dfrac{\mathrm{d}u_m}{\mathrm{d}t}\right|_{t_n}
     +\theta^2u_m(t).
 ```
 

@@ -98,6 +98,8 @@ None.
 
 #### Differential
 
+When a connected equation depends on the bus-voltage derivative:
+
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{v}_1$ | [V] | Terminal 1 voltage owned by EMT bus | $\mathbf{v}_1 \in \mathbb{R}^N$
@@ -105,7 +107,7 @@ $\mathbf{v}_2$ | [V] | Terminal 2 voltage owned by EMT bus | $\mathbf{v}_2 \in \
 
 #### Algebraic
 
-None.
+Otherwise, the bus-voltage variables above are algebraic.
 
 ## Model Equations
 
@@ -115,7 +117,7 @@ None.
 
 ```math
 0 = \Delta x\,\mathbf{z}[\mathbf{i}_{12}]
-  + \mathbf{P}_\phi^\mathsf T(\mathbf{v}_2-\mathbf{v}_1)
+  + \mathbf{P}_\phi^\mathsf{T}(\mathbf{v}_2-\mathbf{v}_1)
 ```
 
 #### Algebraic
@@ -124,12 +126,8 @@ None.
 
 ### External Equations
 
-```math
-\begin{aligned}
-\Delta\mathbf{i}_1 &\mathrel{+}= -\mathbf{i}_{12} \\
-\Delta\mathbf{i}_2 &\mathrel{+}= \mathbf{i}_{12}
-\end{aligned}
-```
+None. The buses register $-\mathbf{i}_{12}$ and $-\mathbf{i}_{21}$ as
+series-current injections at terminals 1 and 2. Each bus owns its shunt branch.
 
 ## Initialization
 

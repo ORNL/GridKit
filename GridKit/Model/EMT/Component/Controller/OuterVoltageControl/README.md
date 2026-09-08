@@ -29,7 +29,7 @@ All parameters must be finite and positive.
 The matrix representation of the complex unit is
 
 ```math
-\mathcal{J} =
+\mathbf{J} =
 \begin{bmatrix}
 0 & -1 \\
 1 & 0
@@ -99,7 +99,7 @@ The voltage error and feedforward current are
 ```math
 \begin{aligned}
 \mathbf{e} &= \mathbf{v}^{\mathrm{ref}}-\mathbf{v} \\
-\mathbf{b} &= \mathbf{i}_g+\mathcal{J}\omega C\mathbf{v}
+\mathbf{b} &= \mathbf{i}_g+\mathbf{J}\omega C\mathbf{v}
 \end{aligned}
 ```
 
@@ -141,9 +141,8 @@ Monitor | Units | Description | Note
 `eta` | [A] | Integral contribution | $\boldsymbol{\eta} \in \mathbb{R}^2$
 `iref` | [A] | Total current reference | $\mathbf{i}^{\mathrm{ref}} \in \mathbb{R}^2$
 
-In case JSON, vector ports use two signal IDs in $(d,q)$ order. The vector
-monitors `eta` and `iref` expand to `etad`, `etaq`, `irefd`, and `irefq`,
-respectively.
+See [case connections](../../../INPUT_FORMAT.md#case-connections) for vector
+ports and monitor expansion.
 
 [^unifi]: UNIFI Consortium, [*UNIFI's Grid-Forming (GFM) Inverter Reference Design: A Tutorial on Modeling, Control, and Experimental Implementation*](https://docs.nlr.gov/docs/fy25osti/92994.pdf),
     NREL/TP-5D00-92994, July 2025, Section 2.2, equation (6), and Figure 2.

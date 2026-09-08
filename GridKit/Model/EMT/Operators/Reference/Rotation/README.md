@@ -98,7 +98,7 @@ None.
 0 = -\mathbf{y} +
 \begin{cases}
 \mathbf{R}(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{false} \\
-\mathbf{R}^\top(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
+\mathbf{R}^\mathsf{T}(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
 \end{cases}
 ```
 
@@ -114,7 +114,7 @@ From the initialized $\mathbf{u}$ and $\theta$,
 \mathbf{y} \leftarrow
 \begin{cases}
 \mathbf{R}(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{false} \\
-\mathbf{R}^\top(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
+\mathbf{R}^\mathsf{T}(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
 \end{cases}
 ```
 
@@ -127,8 +127,8 @@ If initial output derivatives are required:
   + \dfrac{\partial\mathbf{R}(\theta)}{\partial\theta}
     \mathbf{u}\dfrac{\mathrm{d}\theta}{\mathrm{d}t},
   & \mathrm{inverse} = \mathrm{false} \\
-\mathbf{R}^\top(\theta)\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-  + \dfrac{\partial\mathbf{R}^\top(\theta)}{\partial\theta}
+\mathbf{R}^\mathsf{T}(\theta)\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
+  + \dfrac{\partial\mathbf{R}^\mathsf{T}(\theta)}{\partial\theta}
     \mathbf{u}\dfrac{\mathrm{d}\theta}{\mathrm{d}t},
   & \mathrm{inverse} = \mathrm{true}
 \end{cases}

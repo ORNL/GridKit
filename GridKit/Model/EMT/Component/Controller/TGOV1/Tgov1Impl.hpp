@@ -40,8 +40,8 @@ namespace GridKit
       /**
        * @brief Constructs a Tgov1 governor model from its parameters
        *
-       * @param pmech $P_m$ internal variable signal
-       * @param omega $\omega_r$ external variable signal
+       * @param pmech \f$P_m\f$ internal variable signal
+       * @param omega \f$\omega_r\f$ external variable signal
        */
       template <typename scalar_type, typename index_type>
       Tgov1<scalar_type, index_type>::Tgov1(SignalT* pmech, SignalT* omega)

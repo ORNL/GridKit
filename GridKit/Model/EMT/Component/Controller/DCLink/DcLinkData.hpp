@@ -10,28 +10,28 @@ namespace GridKit
     {
       enum class DcLinkParameters
       {
-        C,
+        C, ///< \f$C\f$ Capacitance [F]
       };
 
       enum class DcLinkInputs : size_t
       {
-        isrc,
-        idc,
+        isrc, ///< \f$i_{\mathrm{src}}\f$ Source current [A]
+        idc,  ///< \f$i_{\mathrm{dc}}\f$ Converter current [A]
         SIZE,
       };
 
       enum class DcLinkOutputs : size_t
       {
-        vdc,
+        vdc, ///< \f$v_{\mathrm{dc}}\f$ DC-link voltage [V]
         SIZE,
       };
 
       enum class DcLinkMonitorableVariables
       {
-        vdc,
-        isrc,
-        idc,
-        energy,
+        vdc,    ///< \f$v_{\mathrm{dc}}\f$ DC-link voltage [V]
+        isrc,   ///< \f$i_{\mathrm{src}}\f$ Source current [A]
+        idc,    ///< \f$i_{\mathrm{dc}}\f$ Converter current [A]
+        energy, ///< \f$E\f$ Capacitor energy [J]
       };
 
       template <typename real_type, typename index_type>

@@ -1,8 +1,8 @@
 # Switch Model
 
-`Switch` represents an ideal $N$-phase EMT switch between two buses. Series
+`Switch` represents an ideal three-phase EMT switch between two buses. Series
 current $\mathbf{i}_{12}$ is directed from terminal 1 to terminal 2. The
-required Boolean input `open` operates all phases: `true` is open and
+Boolean command `open` operates all phases: `true` is open and
 `false` is closed. The switch contains no energy storage; switching
 transients arise from the connected EMT network.
 
@@ -16,12 +16,13 @@ Figure 1: Switch model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$N$ | [-] | `N` | Number of phases | Required, positive integer
+$N$ | [-] | `N` | Number of phases | Fixed at $3$
+$\mathrm{open}$ | [-] | `open` | Ganged switch command | Default `false` (closed)
 
 ### Parameter Validation
 
 ```math
-N \in \mathbb{Z}_{>0}
+N = 3
 ```
 
 ### Derived Parameters
@@ -34,9 +35,7 @@ Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{v}_1$ | `v1` | Input | [V] | Terminal 1 bus voltage | $\mathbf{v}_1 \in \mathbb{R}^N$
 $\mathbf{v}_2$ | `v2` | Input | [V] | Terminal 2 bus voltage | $\mathbf{v}_2 \in \mathbb{R}^N$
-$\mathrm{open}$ | `open` | Input | [-] | Ganged switch command | Required Boolean; `true` open, `false` closed
-$\mathbf{i}_1$ | `i1` | Output | [A] | Current injection at terminal 1 | $\mathbf{i}_1 \in \mathbb{R}^N$
-$\mathbf{i}_2$ | `i2` | Output | [A] | Current injection at terminal 2 | $\mathbf{i}_2 \in \mathbb{R}^N$
+$\mathbf{i}_{12}$ | `i12` | Output | [A] | Series current from terminal 1 to terminal 2 | $\mathbf{i}_{12} \in \mathbb{R}^N$
 
 ## Submodels
 
@@ -64,6 +63,8 @@ $\mathbf{i}_{12}$ | [A] | Series current from terminal 1 to terminal 2 | $\mathb
 
 #### Differential
 
+When a connected equation depends on the bus-voltage derivative:
+
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{v}_1$ | [V] | Terminal 1 voltage owned by EMT bus | $\mathbf{v}_1 \in \mathbb{R}^N$
@@ -71,7 +72,7 @@ $\mathbf{v}_2$ | [V] | Terminal 2 voltage owned by EMT bus | $\mathbf{v}_2 \in \
 
 #### Algebraic
 
-None.
+Otherwise, the bus-voltage variables above are algebraic.
 
 ## Model Equations
 
@@ -84,9 +85,10 @@ None.
 #### Algebraic
 
 ```math
+\mathbf{0} =
 \begin{cases}
-\mathbf{i}_{12} = \mathbf{0}, & \text{open}, \\
-\mathbf{v}_2-\mathbf{v}_1 = \mathbf{0}, & \text{closed}.
+\mathbf{i}_{12}, & \mathrm{open}=\mathrm{true} \\
+\mathbf{v}_2-\mathbf{v}_1, & \mathrm{open}=\mathrm{false}
 \end{cases}
 ```
 
@@ -104,8 +106,10 @@ contributions to KCL.
 
 ## Initialization
 
-The `open` command is applied at $t_0$ before enforcing the algebraic
-equations. The switch has no additional model-specific initialization.
+The state-file `open` value overrides the parameter at $t_0$. Initial
+`i12a`, `i12b`, and `i12c` values default to zero. The assembled consistent
+initialization enforces the switch equations. Events update the command
+through `setOpen`; it is not a signal input.
 
 ## Monitors
 

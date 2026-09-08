@@ -92,7 +92,7 @@ None.
 0 = -\mathbf{y} +
 \begin{cases}
 \mathbf{C}\mathbf{u}, & \mathrm{inverse} = \mathrm{false} \\
-\mathbf{C}^\top\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
+\mathbf{C}^\mathsf{T}\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
 \end{cases}
 ```
 
@@ -108,7 +108,7 @@ From the initialized input,
 \mathbf{y} \leftarrow
 \begin{cases}
 \mathbf{C}\mathbf{u}, & \mathrm{inverse} = \mathrm{false} \\
-\mathbf{C}^\top\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
+\mathbf{C}^\mathsf{T}\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
 \end{cases}
 ```
 
@@ -119,7 +119,7 @@ If initial output derivatives are required:
 \begin{cases}
 \mathbf{C}\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t},
   & \mathrm{inverse} = \mathrm{false} \\
-\mathbf{C}^\top\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t},
+\mathbf{C}^\mathsf{T}\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t},
   & \mathrm{inverse} = \mathrm{true}
 \end{cases}
 ```

@@ -1,5 +1,6 @@
 /**
- * @file Signal model implementation.
+ * @file SignalImpl.hpp
+ * @brief Signal model implementation.
  */
 #include <cmath>
 #include <stdexcept>

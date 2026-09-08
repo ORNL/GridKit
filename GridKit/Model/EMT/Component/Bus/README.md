@@ -43,7 +43,7 @@ $\mathbf{v}$ | `v` | Output | [V] | Bus voltage supplied to connected devices | 
 Symbol | Description | Type | Order | JSON | Inputs | Outputs
 ------ | ----------- | ---- | ----- | ---- | ------ | -------
 $\mathbf{v}$ | Bus voltage and current balance | KCL | $N$ | — | Current contributions | $\mathbb{R}^N$
-$\mathbf{n}_e$ | Norton source | [Norton](../Source/Norton/README.md) | $K_e(1+Q_e)$ | Device coefficients or `shunts.<name>` | $\mathbf{P}_e^\mathsf T\mathbf{v}$ | $\mathbf{i}_e^\mathrm{sh}$
+$\mathbf{n}_e$ | Norton source | [Norton](../Source/Norton/README.md) | $K_e(1+Q_e)$ | Device coefficients or `shunts.<name>` | $\mathbf{P}_e^\mathsf{T}\mathbf{v}$ | $\mathbf{i}_e^\mathrm{sh}$
 
 ### Submodel Validation
 
@@ -55,17 +55,11 @@ Each source satisfies its admittance coefficient constraints.
 
 #### Differential
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{v}$ | [V] | Bus voltage vector | $\mathbf{v} \in \mathbb{R}^N$
+None.
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{i}_e^\mathrm{sh}$ | [A] | Shunt current owned by Norton source $e$ | $\mathbb{R}^{K_e}$
-
-A bus voltage is algebraic when no connected equation depends on its derivative.
+None.
 
 ### External Variables
 
@@ -83,30 +77,36 @@ None.
 
 #### Differential
 
-```math
-0=-\mathbf{i}_e^\mathrm{sh}
-  +\mathbf{y}_e[\mathbf{P}_e^\mathsf T\mathbf{v}],
-\qquad e\in\mathcal E
-```
+None.
 
 #### Algebraic
 
-```math
-0=\sum_{r\in\mathcal R}\sigma_r\mathbf{P}_r\mathbf{i}_r
-```
-
-$\mathcal R$ contains all current registrations, with sign $\sigma_r$ and
-phase map $\mathbf P_r$. Norton incident and shunt currents have signs $+1$
-and $-1$, respectively.
-
-Every current contribution uses `addCurrent(phase, signal, sign)` before
-allocation. This includes device branch currents, scalar bus inputs, and the
-incident and shunt currents of Norton terminals. KCL evaluates the signed sum
-and the corresponding signal gradients; devices do not stamp bus equations.
+None.
 
 ### External Equations
 
 None.
+
+### Submodel Equations
+
+The Norton sources own their shunt-current rows; KCL owns the voltage rows:
+
+```math
+\begin{aligned}
+0 &= -\mathbf{i}_e^\mathrm{sh}
+     +\mathbf{y}_e[\mathbf{P}_e^\mathsf{T}\mathbf{v}],
+     \quad e\in\mathcal{E} \\
+0 &= \sum_{r\in\mathcal{R}}\sigma_r\mathbf{P}_r\mathbf{i}_r
+\end{aligned}
+```
+
+$\mathcal{R}$ contains all current registrations, with sign $\sigma_r$ and
+phase map $\mathbf{P}_r$. Norton incident and shunt currents have signs $+1$
+and $-1$, respectively. Bus voltage is algebraic unless a connected equation
+depends on its derivative.
+
+Current signals are registered before allocation. KCL evaluates their signed
+sum and signal gradients; connected devices do not stamp bus equations.
 
 ## Initialization
 
@@ -118,4 +118,4 @@ initializes its admittance states and shunt current.
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `v` | [V] | Bus voltage | $\mathbf{v} \in \mathbb{R}^N$
-`i_sh` | [A] | Total shunt current | $\sum_{e\in\mathcal E}\mathbf P_e\mathbf i_e^\mathrm{sh}$
+`i_sh` | [A] | Total shunt current | $\sum_{e\in\mathcal{E}}\mathbf{P}_e\mathbf{i}_e^\mathrm{sh}$

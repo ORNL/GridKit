@@ -43,7 +43,7 @@ The limit coefficients and matrix representation of the complex unit are
 \begin{aligned}
 a_i &= \dfrac{1}{(I^{\max})^2} \\
 a_u &= \dfrac{8}{3(M^{\max})^2} \\
-\mathcal{J} &=
+\mathbf{J} &=
 \begin{bmatrix}
 0 & -1 \\
 1 & 0
@@ -122,7 +122,7 @@ The current error, feedforward voltage, unlimited voltage command, and limiter f
 ```math
 \begin{aligned}
 \mathbf{e} &= \mathbf{i}^{\mathrm{lim}} - \mathbf{i} \\
-\mathbf{b} &= \mathbf{v} + \mathcal{J}\omega L\mathbf{i} \\
+\mathbf{b} &= \mathbf{v} + \mathbf{J}\omega L\mathbf{i} \\
 \mathbf{z} &= \mathbf{b} + K_P\mathbf{e} + \boldsymbol{\xi} \\
 \mathcal{L}_i(\mathbf{i}^{\mathrm{ref}}) &=
   \max\left(1,a_i\|\mathbf{i}^{\mathrm{ref}}\|_2^2\right) \\
@@ -186,9 +186,8 @@ Monitor | Units | Description | Note
 `ilim` | [A] | Limited current reference | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
 `u` | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
 
-In case JSON, vector ports use two signal IDs in $(d,q)$ order. The vector
-monitors `xi`, `ilim`, and `u` expand to `xid`, `xiq`, `ilimd`, `ilimq`, `ud`,
-and `uq`, respectively.
+See [case connections](../../../INPUT_FORMAT.md#case-connections) for vector
+ports and monitor expansion.
 
 [^unifi]: UNIFI Consortium, [*UNIFI's Grid-Forming (GFM) Inverter Reference Design: A Tutorial on Modeling, Control, and Experimental Implementation*](https://docs.nlr.gov/docs/fy25osti/92994.pdf),
     NREL/TP-5D00-92994, July 2025, Section 2.2, equations (7), (12), and Section 5.1.

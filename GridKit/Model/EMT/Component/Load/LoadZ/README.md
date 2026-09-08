@@ -68,13 +68,15 @@ $\mathbf{i}$ | [A] | Current injection from load into EMT bus | $\mathbf{i} \in 
 
 #### Differential
 
+When a connected equation depends on the bus-voltage derivative:
+
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{v}$ | [V] | Bus voltage vector owned by EMT bus | $\mathbf{v} \in \mathbb{R}^N$
 
 #### Algebraic
 
-None.
+Otherwise, the bus-voltage variables above are algebraic.
 
 ## Model Equations
 
@@ -104,7 +106,7 @@ the bus voltage when its resistance matrix is nonsingular. Singular resistance
 retains the zero-current guess for the assembled circuit initialization.
 `initializeSteadyState(omega)` instead uses the attached
 voltage values and derivatives as sinusoidal samples, solves
-$\mathbf{Z}(j\omega)\mathbf{I}=-\mathbf{V}$, and initializes all rational
+$\mathbf{Z}(\mathrm{j}\omega)\mathbf{I}=-\mathbf{V}$, and initializes all rational
 memory states. Singular transfer matrices return an initialization error.
 
 ## Monitors
