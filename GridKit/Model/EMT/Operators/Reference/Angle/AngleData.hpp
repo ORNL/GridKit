@@ -12,19 +12,19 @@ namespace GridKit
 
     enum class AngleInputs : size_t
     {
-      omega,
+      omega, ///< \f$\omega\f$ Electrical angular frequency [rad/s]
       SIZE,
     };
 
     enum class AngleOutputs : size_t
     {
-      theta,
+      theta, ///< \f$\theta\f$ Electrical angle [rad]
       SIZE,
     };
 
     enum class AngleMonitorableVariables
     {
-      theta,
+      theta, ///< \f$\theta\f$ Electrical angle [rad]
     };
 
     template <typename real_type, typename index_type>

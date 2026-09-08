@@ -1,7 +1,7 @@
 # [[
 #  Author(s):
 #    - Luke Lowery <lukel@tamu.edu>
-#]]
+# ]]
 
 add_library(emt_components INTERFACE)
 add_library(emt_components_dependency_tracking INTERFACE)

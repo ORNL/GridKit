@@ -1,4 +1,4 @@
-# **Gas Turbine-Governor Model (GASTPTI)**
+# GASTPTI Model
 
 GASTPTI is a gas turbine-governor model with speed-droop fuel control and an
 exhaust-temperature low-value selector.
@@ -29,22 +29,21 @@ connected machine power base. Required `S` supplies that base in VA.
 
 ## Model Parameters
 
-Symbol            | Units     | JSON    | Description                           | Default     | Note
-------------------|-----------|---------|---------------------------------------|-------------|-----
-$S^{\mathrm{machine}}$ | [VA] | `S` | Connected-machine power base | Required |
-$R$               | [p.u.]    | `R`     | Permanent speed droop                 | 0.05        | Speed deviation per component-base power deviation
-$T_1$             | [sec]     | `T1`    | Fuel-valve time constant              | 0.4         |
-$T_2$             | [sec]     | `T2`    | Fuel-flow time constant               | 0.1         |
-$T_3$             | [sec]     | `T3`    | Exhaust-temperature time constant     | 3.0         |
-$A_T$             | [p.u.]    | `At`    | Ambient-temperature load limit        | 1.0         | Component base
-$K_T$             | [p.u.]    | `Kt`    | Exhaust-temperature feedback gain     | 2.0         |
-$V^{\max}$        | [p.u.]    | `Vmax`  | Upper valve response limit            | 1.0         | Component base
-$V^{\min}$        | [p.u.]    | `Vmin`  | Lower valve response limit            | 0.0         | Component base
-$D^\mathrm{turb}$ | [p.u.]    | `Dturb` | Turbine damping coefficient           | 0.0         | Component-base power per speed deviation
-$T^\mathrm{rate}$ | [MW]      | `Trate` | Turbine rating                        | Machine base | Same-valued MVA component base when provided; GridKit addition
+Symbol | Units | JSON | Description | Note
+------ | ----- | ---- | ----------- | ----
+$S^{\mathrm{machine}}$ | [VA] | `S` | Connected-machine power base | Required
+$R$ | [p.u.] | `R` | Permanent speed droop | Default 0.05; Speed deviation per component-base power deviation
+$T_1$ | [s] | `T1` | Fuel-valve time constant | Default 0.4
+$T_2$ | [s] | `T2` | Fuel-flow time constant | Default 0.1
+$T_3$ | [s] | `T3` | Exhaust-temperature time constant | Default 3.0
+$A_T$ | [p.u.] | `At` | Ambient-temperature load limit | Default 1.0; Component base
+$K_T$ | [p.u.] | `Kt` | Exhaust-temperature feedback gain | Default 2.0
+$V^{\max}$ | [p.u.] | `Vmax` | Upper valve response limit | Default 1.0; Component base
+$V^{\min}$ | [p.u.] | `Vmin` | Lower valve response limit | Default 0.0; Component base
+$D^\mathrm{turb}$ | [p.u.] | `Dturb` | Turbine damping coefficient | Default 0.0; Component-base power per speed deviation
+$T^\mathrm{rate}$ | [MW] | `Trate` | Turbine rating | Default Machine base; Same-valued MVA component base when provided; GridKit addition
 
 ### Parameter Validation
-
 
 ```math
 \begin{aligned}
@@ -56,7 +55,7 @@ $T^\mathrm{rate}$ | [MW]      | `Trate` | Turbine rating                        
 \end{aligned}
 ```
 
-### Model Derived Parameters
+### Derived Parameters
 
 Let $\epsilon_T=10^{-3}\ \mathrm{s}$. Accepted time constants below
 $\epsilon_T$ are raised to that floor in place:
@@ -77,7 +76,7 @@ $\epsilon_T$ are raised to that floor in place:
 ```
 
 Multiplication by $k_{\mathrm{base}}$ converts machine-base power to component
-base.$S^{\mathrm{machine}}$ and$S^{\mathrm{base}}$ are stored in VA.
+base. $S^{\mathrm{machine}}$ and $S^{\mathrm{base}}$ are stored in VA.
 
 `S` must be finite and positive. The optional turbine rating `Trate` remains
 in MW; when omitted it uses the machine base `S`. In equations below, the
@@ -85,11 +84,19 @@ speed-deviation variable is the EMT input `speed` minus one.
 
 ## Model Ports
 
-Name    | Port   | Init    | Description
---------|--------|---------|------------
-`speed` | Input  | Known   | Optional absolute rotor speed; defaults to one
-`pref`  | Input  | Known when attached | Optional active-power/load reference; inferred and latched when unattached
-`pmech` | Output | Known   | Required mechanical power output
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\omega_r$ | `speed` | Input | [p.u.] | Machine rotor speed | Optional, defaults to one
+$P^\mathrm{ref}$ | `pref` | Input | [p.u.] | Active-power reference | Machine base; inferred when unattached
+$P_{\mathrm{m}}$ | `pmech` | Output | [p.u.] | Mechanical power | Machine base; seeded by the machine
+
+## Submodels
+
+None.
+
+### Submodel Validation
+
+None.
 
 ## Model Variables
 
@@ -110,7 +117,7 @@ Symbol           | Units  | Description                   | Note
 $V_D$            | [p.u.] | Speed/load fuel demand        | Component base
 $V_T$            | [p.u.] | Temperature-limit fuel demand | Component base
 $V$              | [p.u.] | Low-value selector output     | Component base
-$P_{\text{m}}$   | [p.u.] | Mechanical power output       | Machine base
+$P_{\mathrm{m}}$   | [p.u.] | Mechanical power output       | Machine base
 
 ### External Variables
 
@@ -120,12 +127,14 @@ None.
 
 #### Algebraic
 
-Symbol           | Units  | Init    | Description                 | Note
------------------|--------|---------|-----------------------------|-----
-$\omega$         | [p.u.] | Known   | Machine rotor-speed deviation (EMT input minus one)     | Optional `speed`; defaults to zero
-$P^\mathrm{ref}$ | [p.u.] | Known when attached | Active-power/load reference | Optional `pref`; machine base
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\omega_r$ | [p.u.] | Machine rotor speed | Optional `speed`; defaults to one
+$P^\mathrm{ref}$ | [p.u.] | Active-power reference | Optional `pref`; machine base
 
 ## Model Equations
+
+The speed deviation is $\omega = \omega_r - 1$.
 
 ### Internal Equations
 
@@ -138,17 +147,17 @@ $V_{\mathrm{resp}}^{\max}$, and $s^{\mathrm{valve}}$ are defined under
 ```math
 \begin{aligned}
   0 &=
-    -\dot{x}_V
+    -\dfrac{\mathrm{d}x_V}{\mathrm{d}t}
     + \dfrac{s^{\mathrm{valve}}}{T_1}
-      \text{antiwindup}\!\left(
+      \mathrm{antiwindup}\!\left(
         x_V,V-x_V;
         V_{\mathrm{resp}}^{\min},V_{\mathrm{resp}}^{\max}
       \right) \\
   0 &=
-    -\dot{x}_F
+    -\dfrac{\mathrm{d}x_F}{\mathrm{d}t}
     + \dfrac{1}{T_2}\left(-x_F+x_V\right) \\
   0 &=
-    -\dot{x}_T
+    -\dfrac{\mathrm{d}x_T}{\mathrm{d}t}
     + \dfrac{1}{T_3}\left(-x_T+x_F\right).
 \end{aligned}
 ```
@@ -159,13 +168,13 @@ $V_{\mathrm{resp}}^{\max}$, and $s^{\mathrm{valve}}$ are defined under
 \begin{aligned}
   0 &= - \omega + R(k_{\mathrm{base}}P^\mathrm{ref}-V_D) \\
   0 &= -V_T + A_T+K_T(A_T-x_T) \\
-  0 &= -V + \text{min}(V_D,V_T) \\
-  0 &= -k_{\mathrm{base}}P_{\text{m}} + x_F-D^\mathrm{turb}\omega.
+  0 &= -V + \min(V_D,V_T) \\
+  0 &= -k_{\mathrm{base}}P_{\mathrm{m}} + x_F-D^\mathrm{turb}\omega.
 \end{aligned}
 ```
 
-CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
-and [`min`](../../../../CommonMath.md#min) targets and smooth approximations.
+CommonMath defines the [`antiwindup`](../../../../../CommonMath.md#antiwindup)
+and [`min`](../../../../../CommonMath.md#minimum) targets and smooth approximations.
 
 ### External Equations
 
@@ -178,7 +187,7 @@ None.
 ```math
 \begin{aligned}
   \omega &\leftarrow \text{machine speed deviation} \\
-  P_{\text{m}} &\leftarrow \text{machine mechanical power}
+  P_{\mathrm{m}} &\leftarrow \text{machine mechanical power}
 \end{aligned}
 ```
 
@@ -187,7 +196,7 @@ None.
 ```math
 \begin{aligned}
   x_F
-    &\leftarrow k_{\mathrm{base}}P_{\text{m}}
+    &\leftarrow k_{\mathrm{base}}P_{\mathrm{m}}
        +D^\mathrm{turb}\omega \\
   x_V,x_T
     &\leftarrow x_F \\
@@ -215,13 +224,13 @@ s^{\mathrm{valve}}
   \leftarrow
   \begin{cases}
     \left(
-      V_T-\text{iramp}\!\left(m_T\right),
+      V_T-\mathrm{iramp}\!\left(m_T\right),
       x_F
     \right)
       & s^{\mathrm{valve}}=1 \\
     \left(
       x_F,
-      \text{min}\!\left(x_F,V_T\right)
+      \min\!\left(x_F,V_T\right)
     \right)
       & s^{\mathrm{valve}}=0
   \end{cases}
@@ -248,30 +257,16 @@ any supplied `pref` input. If that input differs from the inferred reference,
 consistent initialization resolves algebraic values and derivatives while
 retaining the initialized differential states.
 
-## Monitorable Outputs
+## Monitors
 
-Output   | Units  | Description                        | Note
+Monitor  | Units  | Description                        | Note
 ---------|--------|------------------------------------|-----
-`pmech`  | [p.u.] | Mechanical-power output            | $P_{\text{m}}$; machine base
+`pmech`  | [p.u.] | Mechanical-power output            | $P_{\mathrm{m}}$; machine base
 `xvalve` | [p.u.] | Fuel-valve state                   | $x_V$; component base
 `xflow`  | [p.u.] | Fuel-flow state                    | $x_F$; component base
 `xtemp`  | [p.u.] | Exhaust-temperature feedback state | $x_T$; component base
 `vload`  | [p.u.] | Speed/load fuel demand             | $V_D$; component base
 `vtemp`  | [p.u.] | Temperature-limit fuel demand      | $V_T$; component base
-
-## Testing
-
-- `validation()` checks defaults, parameter domains, signal configuration, and
-  time-constant floors.
-- `initializationAndSignals()` checks base conversion, signal initialization,
-  monitor values, and unattached-reference latching.
-- `initializationDomain()` checks accepted and rejected operating points.
-- `initializationExactness()` checks the smooth-selector inverse.
-- `residualEquations()` checks every residual against a fixed numerical answer key.
-- `governorControl()` checks droop, damping, response limits, and anti-windup.
-- `temperatureLimiting()` checks the low-value selector.
-- `jacobian()` compares full Enzyme and DependencyTracking maps across selector,
-  anti-windup, and collapsed-limit configurations when enabled.
 
 ## Appendix A: `iramp`
 
@@ -279,8 +274,8 @@ For a positive smooth-ramp output $v>0$ and CommonMath smoothing parameter
 $\mu$,
 
 ```math
-\text{iramp}(v) = v+\dfrac{1}{\mu}\log\left(1-e^{-\mu v}\right).
+\mathrm{iramp}(v) = v+\dfrac{1}{\mu}\log\left(1-e^{-\mu v}\right).
 ```
 
 This is the positive-range inverse of GridKit's smooth
-[`ramp`](../../../../CommonMath.md#rho-ramp).
+[`ramp`](../../../../../CommonMath.md#ramp).

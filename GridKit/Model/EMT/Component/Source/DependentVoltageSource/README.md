@@ -15,8 +15,8 @@ Figure 1: DependentVoltageSource model
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 $N$ | [-] | `N` | Number of phases | Fixed at $3$
-$\mathbf{R}_\mathrm{s}$ | [$\Omega$] | `Rs` | Series resistance matrix | Used when $\mathbf{Y}$ is absent
-$\mathbf{L}_\mathrm{s}$ | [H] | `Ls` | Series inductance matrix | Used when $\mathbf{Y}$ is absent
+$\mathbf{R}_\mathrm{s}$ | [$\Omega$] | `Rs` | Series resistance matrix | Used when `Y` is absent
+$\mathbf{L}_\mathrm{s}$ | [H] | `Ls` | Series inductance matrix | Used when `Y` is absent
 
 ### Parameter Validation
 
@@ -50,9 +50,9 @@ $\mathbf{y}$ | Terminal admittance | [VectorFit](../../../Operators/Rational/Vec
 
 ### Submodel Validation
 
-When $\mathbf{Y}$ is supplied, $\mathbf{R}_\mathrm{s}$ and
+When `Y` is supplied, $\mathbf{R}_\mathrm{s}$ and
 $\mathbf{L}_\mathrm{s}$ must be zero and the linear coefficient of
-$\mathbf{Y}$ must be zero.
+`Y` must be zero.
 
 ## Model Variables
 
@@ -72,11 +72,15 @@ $\mathbf{u}$ | [V] | Admittance input $\mathbf{e}-\mathbf{v}$ | Present when `Y`
 
 #### Differential
 
+When a connected equation depends on the bus-voltage derivative:
+
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{v}$ | [V] | Bus voltage vector owned by EMT bus | $\mathbf{v} \in \mathbb{R}^3$
 
 #### Algebraic
+
+Otherwise, the bus-voltage variables above are algebraic.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----

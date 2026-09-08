@@ -8,7 +8,7 @@ owns the reflected outputs, propagation states, and histories.
 
 ![LineDistributed model block diagram](../../../../../../docs/Figures/EMT/LineDistributed/diagram.png)
 
-Figure 1: LineDistributed model
+Figure 1: LineDistributed terminal interconnection
 
 The conductor-to-phase mappings are shown in the equations and omitted from
 the diagram for clarity.
@@ -148,17 +148,20 @@ None.
 #### Algebraic
 
 ```math
-0=-\mathbf{i}_e^\mathrm{ref}+2\mathbf{i}_e^\mathrm{c}-\mathbf{i}_e^\mathrm{inc},
+0 = -\mathbf{i}_e^\mathrm{ref}+2\mathbf{i}_e^\mathrm{c}-\mathbf{i}_e^\mathrm{inc},
 \qquad e\in\{1,2\}
 ```
 
 ### External Equations
 
+None. Each bus registers its incident-current output
+$\mathbf{i}_e^\mathrm{inc}$ with positive sign and its characteristic-admittance
+current $\mathbf{i}_e^\mathrm{c}$ with negative sign. The net injection shown
+in the diagram is
+
 ```math
-\begin{aligned}
-\Delta\mathbf{i}_1 &\mathrel{+}= \mathbf{i}_1^\mathrm{inc} \\
-\Delta\mathbf{i}_2 &\mathrel{+}= \mathbf{i}_2^\mathrm{inc}
-\end{aligned}
+\Delta\mathbf{i}_e = \mathbf{P}_\phi
+  (\mathbf{i}_e^\mathrm{inc}-\mathbf{i}_e^\mathrm{c}),\quad e\in\{1,2\}.
 ```
 
 ## Initialization
@@ -171,7 +174,7 @@ It is constant when $\omega=0$ and harmonic otherwise:
 ```math
 \mathbf{i}_e^{\mathrm{ref}}(t)
   =\mathbf{i}_e^{\mathrm{ref}}(t_0)\cos\!\left(\omega(t-t_0)\right)
-   +\dfrac{\dot{\mathbf{i}}_e^{\mathrm{ref}}(t_0)}{\omega}
+   +\dfrac{1}{\omega}\left.\dfrac{\mathrm{d}\mathbf{i}_e^{\mathrm{ref}}}{\mathrm{d}t}\right|_{t_0}
       \sin\!\left(\omega(t-t_0)\right).
 ```
 

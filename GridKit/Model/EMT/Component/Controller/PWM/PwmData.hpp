@@ -10,33 +10,33 @@ namespace GridKit
     {
       enum class PwmParameters
       {
-        M,
-        fm,
-        fc,
-        alignment,
+        M,         ///< \f$M\f$ Prescribed modulation index [-]
+        fm,        ///< \f$f_{\mathrm{m}}\f$ Modulation frequency [Hz]
+        fc,        ///< \f$f_{\mathrm{c}}\f$ Carrier frequency [Hz]
+        alignment, ///< \f$\alpha\f$ Pulse alignment [-]
       };
 
       enum class PwmInputs : size_t
       {
-        ma,
-        mb,
-        mc,
+        ma, ///< \f$m_a\f$ Phase modulation command [-]
+        mb, ///< \f$m_b\f$ Phase modulation command [-]
+        mc, ///< \f$m_c\f$ Phase modulation command [-]
         SIZE,
       };
 
       enum class PwmOutputs : size_t
       {
-        sa,
-        sb,
-        sc,
+        sa, ///< \f$s_a\f$ Phase switching function [-]
+        sb, ///< \f$s_b\f$ Phase switching function [-]
+        sc, ///< \f$s_c\f$ Phase switching function [-]
         SIZE,
       };
 
       enum class PwmMonitorableVariables
       {
-        sa,
-        sb,
-        sc,
+        sa, ///< \f$s_a\f$ Phase switching function [-]
+        sb, ///< \f$s_b\f$ Phase switching function [-]
+        sc, ///< \f$s_c\f$ Phase switching function [-]
       };
 
       template <typename real_type, typename index_type>

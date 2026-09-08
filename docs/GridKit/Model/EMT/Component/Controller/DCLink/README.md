@@ -1,4 +1,4 @@
-# DC Link Model
+# DCLink
 
 ```{include} ../../../../../../../GridKit/Model/EMT/Component/Controller/DCLink/README.md
 :start-line: 1

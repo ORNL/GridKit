@@ -47,10 +47,10 @@ The normalized phase incidence matrix and zero-sequence projector are
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{s}$ | `s` | Input | [-] | Switching function vector | $\mathbf{s} \in [0,1]^3$
-$V_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC-link voltage | $V_{\mathrm{dc}} \ge 0$
+$v_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC-link voltage | $v_{\mathrm{dc}} \ge 0$
 $\mathbf{i}$ | `i` | Input | [A] | AC terminal currents | Positive out of the bridge
 $\mathbf{v}_{\mathrm{o}}$ | `vo` | Output | [V] | Bridge voltage vector | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
-$I_{\mathrm{dc}}$ | `idc` | Output | [A] | DC-link current | Positive into the bridge
+$i_{\mathrm{dc}}$ | `idc` | Output | [A] | DC-link current | Positive into the bridge
 
 ## Submodels
 
@@ -83,7 +83,7 @@ None.
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{s}$ | [-] | Switching function vector | $\mathbf{s} \in [0,1]^3$
-$V_{\mathrm{dc}}$ | [V] | DC-link voltage | $V_{\mathrm{dc}} \ge 0$
+$v_{\mathrm{dc}}$ | [V] | DC-link voltage | $v_{\mathrm{dc}} \ge 0$
 $\mathbf{i}$ | [A] | AC terminal currents | Positive out of the bridge
 
 ## Model Equations
@@ -102,16 +102,16 @@ None.
 
 ```math
 \begin{aligned}
-\mathbf{v}_{\mathrm{o}} &\leftarrow V_\mathrm{dc}\mathbf{P}\mathbf{s} \\
-I_\mathrm{dc} &\leftarrow (\mathbf{P}\mathbf{s})^\mathsf{T}\mathbf{i}
+\mathbf{v}_{\mathrm{o}} &\leftarrow v_{\mathrm{dc}}\mathbf{P}\mathbf{s} \\
+i_{\mathrm{dc}} &\leftarrow (\mathbf{P}\mathbf{s})^\mathsf{T}\mathbf{i}
 \end{aligned}
 ```
 
 The current transformation preserves instantaneous power, including at zero
-DC voltage, without division by $V_\mathrm{dc}$:
+DC voltage, without division by $v_{\mathrm{dc}}$:
 
 ```math
-V_\mathrm{dc} I_\mathrm{dc}
+v_{\mathrm{dc}} i_{\mathrm{dc}}
   = \mathbf{v}_\mathrm{o}^\mathsf{T}\mathbf{i}.
 ```
 
