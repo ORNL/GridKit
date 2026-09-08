@@ -8,6 +8,7 @@
 
 #include <GridKit/Model/EMT/Component/Bus/BusDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Controller/InnerCurrentControl/InnerCurrentControlDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Controller/OuterPowerControl/OuterPowerControlDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Controller/OuterVoltageControl/OuterVoltageControlDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineDistributed/LineDistributedDataJSONParser.hpp>
@@ -134,6 +135,10 @@ namespace GridKit
         else if (kind == "InnerCurrentControl")
         {
           raw_device.get_to(data.inner_current_control.emplace_back());
+        }
+        else if (kind == "OuterPowerControl")
+        {
+          raw_device.get_to(data.outer_power_control.emplace_back());
         }
         else if (kind == "OuterVoltageControl")
         {
