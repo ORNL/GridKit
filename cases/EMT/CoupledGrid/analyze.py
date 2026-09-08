@@ -3,6 +3,7 @@
 
 import argparse
 import csv
+import hashlib
 import json
 from pathlib import Path
 
@@ -168,6 +169,8 @@ def converter_validation(t, data, case, mu, mask):
             'common_mode_sum_max_abs_v': float(np.max(np.abs(np.sum(voltage, axis=1)))),
             'selected_harmonics': [h for h in rows if h['harmonic'] in (1, 13, 15, 17)],
         }
+        if max(h['gate_abs_error'] for h in rows) > 1e-6 or max(h['voltage_abs_error_v'] for h in rows) > 1e-6 * max(1., vdc):
+            raise ValueError(f"{converter['id']}: PWM harmonics disagree with the continuous-duty reference")
     return result
 
 
@@ -216,7 +219,7 @@ def analyze(case, manifest, root):
             'power': 'Mean P uses all instantaneous abc products; positive means injection into the grid. Fundamental Q is imag(sum(V60 * conj(I60))) with RMS phasors.',
             'sequence': 'RMS 60 Hz abc Fourier coefficients; positive sequence has b lagging a by 120 degrees. Voltage units are V; negative/positive ratio is percent.',
             'residual': 'RMS after subtracting DC and the 60 Hz component; includes harmonics and transient drift, so it is not THD.',
-            'comparison': 'Primary minus high-mu describes different smoothed models. Primary minus tight uses the same mu and measures sensitivity to integration tolerances.',
+            'comparison': 'Primary minus high-mu compares smoothing settings. Primary minus tight uses the same mu and measures sensitivity to integration tolerances.',
             'timing': 'Median of supplied Complete in CPU seconds; wall seconds are separate. IDA counters include every event segment and consistent-initial-condition work.',
         },
         'baseline_mu': runs[-1]['mu'], 'runs': [],
@@ -262,7 +265,10 @@ def main():
     args = parser.parse_args()
     root = args.results.resolve()
     manifest = json.loads((args.manifest or root / 'summary.json').read_text())
-    result = analyze(json.loads(args.case.read_text()), manifest, root)
+    case_text = args.case.read_bytes()
+    if manifest.get('provenance', {}).get('case_sha256') != hashlib.sha256(case_text).hexdigest():
+        raise ValueError('Current case differs from the simulated case hash')
+    result = analyze(json.loads(case_text), manifest, root)
     output = args.output or root / 'metrics.json'
     output.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')
     print(f'Wrote numerical comparisons to {output}')

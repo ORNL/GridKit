@@ -7,8 +7,11 @@
     "transformer_P0_W": 0.0,
     "transformer_knee": 1.2,
     "transformer_Lsat": 0.25,
-    "filter_R_pu": 0.01,
-    "filter_X_pu": 0.2,
+    "filter_Rs_pu": 0.01,
+    "filter_Xs_pu": 0.2,
+    "filter_Rg_pu": 0.005,
+    "filter_Xg_pu": 0.1,
+    "filter_B_pu": 0.1,
     "inner_bandwidth_Hz": 300.0,
     "Mmax": 0.95,
     "PLL_Kp": 80.0,
@@ -1313,7 +1316,14 @@
       "dispatch_W": 39129936.69509888,
       "dispatch_var": 44080.00968396664,
       "initial_vdc_V": 138000.0,
-      "dc_C_F": 0.05303507666456627
+      "dc_C_F": 0.05303507666456627,
+      "filter_Rs_ohm": 0.9427722772277228,
+      "filter_Ls_H": 0.05001562271026494,
+      "filter_C_F": 2.813598202807784e-06,
+      "filter_Rg_ohm": 0.4713861386138614,
+      "filter_Lg_H": 0.02500781135513247,
+      "filter_resonance_Hz": 734.8469228349534,
+      "initial_bridge_power_W": 39583703.15129277
     },
     "23_9": {
       "rating_VA": 16200000.762939453,
@@ -1322,7 +1332,14 @@
       "dispatch_W": 12531810.998916626,
       "dispatch_var": 44080.00968396664,
       "initial_vdc_V": 138000.0,
-      "dc_C_F": 0.017013233315416355
+      "dc_C_F": 0.017013233315416355,
+      "filter_Rs_ohm": 2.938888750481841,
+      "filter_Ls_H": 0.1559128906121163,
+      "filter_C_F": 9.025800600414095e-07,
+      "filter_Rg_ohm": 1.4694443752409205,
+      "filter_Lg_H": 0.07795644530605815,
+      "filter_resonance_Hz": 734.8469228349533,
+      "initial_bridge_power_W": 12676842.124902328
     },
     "26_1": {
       "rating_VA": 22000000.0,
@@ -1331,7 +1348,14 @@
       "dispatch_W": 20000000.298023224,
       "dispatch_var": 5999999.865889549,
       "initial_vdc_V": 138000.0,
-      "dc_C_F": 0.023104389834068473
+      "dc_C_F": 0.023104389834068473,
+      "filter_Rs_ohm": 2.164090909090909,
+      "filter_Ls_H": 0.11480858849401723,
+      "filter_C_F": 1.2257259497380446e-06,
+      "filter_Rg_ohm": 1.0820454545454545,
+      "filter_Lg_H": 0.057404294247008616,
+      "filter_resonance_Hz": 734.8469228349535,
+      "initial_bridge_power_W": 20286600.864939533
     },
     "26_2": {
       "rating_VA": 11199999.809265137,
@@ -1340,7 +1364,14 @@
       "dispatch_W": 10199999.809265137,
       "dispatch_var": 3099999.949336052,
       "initial_vdc_V": 138000.0,
-      "dc_C_F": 0.011762234624307012
+      "dc_C_F": 0.011762234624307012,
+      "filter_Rs_ohm": 4.250892929535132,
+      "filter_Ls_H": 0.22551687409663476,
+      "filter_C_F": 6.240059274217013e-07,
+      "filter_Rg_ohm": 2.125446464767566,
+      "filter_Lg_H": 0.11275843704831738,
+      "filter_resonance_Hz": 734.8469228349534,
+      "initial_bridge_power_W": 10346683.64111543
     },
     "27_1": {
       "rating_VA": 33000000.0,
@@ -1349,7 +1380,14 @@
       "dispatch_W": 30000001.192092896,
       "dispatch_var": -5400000.140070915,
       "initial_vdc_V": 138000.0,
-      "dc_C_F": 0.03465658475110271
+      "dc_C_F": 0.03465658475110271,
+      "filter_Rs_ohm": 1.4427272727272729,
+      "filter_Ls_H": 0.0765390589960115,
+      "filter_C_F": 1.8385889246070665e-06,
+      "filter_Rg_ohm": 0.7213636363636364,
+      "filter_Lg_H": 0.03826952949800575,
+      "filter_resonance_Hz": 734.8469228349534,
+      "initial_bridge_power_W": 30427969.634633563
     },
     "27_2": {
       "rating_VA": 30399999.618530273,
@@ -1358,7 +1396,14 @@
       "dispatch_W": 27599999.30858612,
       "dispatch_var": -5000000.074505806,
       "initial_vdc_V": 138000.0,
-      "dc_C_F": 0.03192606555191165
+      "dc_C_F": 0.03192606555191165,
+      "filter_Rs_ohm": 1.5661184407048283,
+      "filter_Ls_H": 0.08308516376851494,
+      "filter_C_F": 1.693730382020873e-06,
+      "filter_Rg_ohm": 0.7830592203524142,
+      "filter_Lg_H": 0.04154258188425747,
+      "filter_resonance_Hz": 734.8469228349534,
+      "initial_bridge_power_W": 27993450.804881994
     },
     "28_1": {
       "rating_VA": 53900001.525878906,
@@ -1367,7 +1412,14 @@
       "dispatch_W": 46299988.03138733,
       "dispatch_var": -5486747.995018959,
       "initial_vdc_V": 138000.0,
-      "dc_C_F": 0.05660575669594508
+      "dc_C_F": 0.05660575669594508,
+      "filter_Rs_ohm": 0.8833023868680431,
+      "filter_Ls_H": 0.046860647038306245,
+      "filter_C_F": 3.003028661872271e-06,
+      "filter_Rg_ohm": 0.44165119343402154,
+      "filter_Lg_H": 0.023430323519153123,
+      "filter_resonance_Hz": 734.8469228349534,
+      "initial_bridge_power_W": 46913240.84005395
     },
     "28_2": {
       "rating_VA": 75900001.5258789,
@@ -1376,7 +1428,14 @@
       "dispatch_W": 68999999.76158142,
       "dispatch_var": -5486747.995018959,
       "initial_vdc_V": 138000.0,
-      "dc_C_F": 0.07971014653001356
+      "dc_C_F": 0.07971014653001356,
+      "filter_Rs_ohm": 0.6272727146621581,
+      "filter_Ls_H": 0.03327785106838482,
+      "filter_C_F": 4.228754611610316e-06,
+      "filter_Rg_ohm": 0.31363635733107903,
+      "filter_Lg_H": 0.01663892553419241,
+      "filter_resonance_Hz": 734.8469228349534,
+      "initial_bridge_power_W": 69952861.25552148
     },
     "33_1": {
       "rating_VA": 30399999.618530273,
@@ -1385,7 +1444,14 @@
       "dispatch_W": 27599999.30858612,
       "dispatch_var": 8299999.684095383,
       "initial_vdc_V": 138000.0,
-      "dc_C_F": 0.03192606555191165
+      "dc_C_F": 0.03192606555191165,
+      "filter_Rs_ohm": 1.5661184407048283,
+      "filter_Ls_H": 0.08308516376851494,
+      "filter_C_F": 1.693730382020873e-06,
+      "filter_Rg_ohm": 0.7830592203524142,
+      "filter_Lg_H": 0.04154258188425747,
+      "filter_resonance_Hz": 734.8469228349534,
+      "initial_bridge_power_W": 27994611.660291653
     }
   },
   "emt_counts": {
@@ -1398,9 +1464,9 @@
     "Ieeet1": 30,
     "Ieeest": 14,
     "DCLink": 9,
-    "DependentVoltageSource": 9,
+    "Filter": 9,
     "PLL": 9,
-    "Park": 27,
+    "Park": 36,
     "OuterPowerControl": 9,
     "InnerCurrentControl": 9,
     "Modulation": 9,

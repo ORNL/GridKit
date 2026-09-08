@@ -25,7 +25,7 @@
         },
         {
             "id": "dc_9",
-            "value": 30306.48179297833
+            "value": 29577.588644106876
         },
         {
             "id": "sa_9"
@@ -46,8 +46,17 @@
             "id": "ec_9"
         },
         {
+            "id": "filter_9_ia"
+        },
+        {
+            "id": "filter_9_ib"
+        },
+        {
+            "id": "filter_9_ic"
+        },
+        {
             "id": "dc_11",
-            "value": 30306.48179297833
+            "value": 29577.588644106876
         },
         {
             "id": "sa_11"
@@ -68,8 +77,17 @@
             "id": "ec_11"
         },
         {
+            "id": "filter_11_ia"
+        },
+        {
+            "id": "filter_11_ib"
+        },
+        {
+            "id": "filter_11_ic"
+        },
+        {
             "id": "dc_13",
-            "value": 30306.48179297833
+            "value": 29577.588644106876
         },
         {
             "id": "sa_13"
@@ -88,24 +106,6 @@
         },
         {
             "id": "ec_13"
-        },
-        {
-            "id": "filter_9_ia"
-        },
-        {
-            "id": "filter_9_ib"
-        },
-        {
-            "id": "filter_9_ic"
-        },
-        {
-            "id": "filter_11_ia"
-        },
-        {
-            "id": "filter_11_ib"
-        },
-        {
-            "id": "filter_11_ic"
         },
         {
             "id": "filter_13_ia"
@@ -759,6 +759,11 @@
                 "eb": "eb_9",
                 "ec": "ec_9"
             },
+            "outputs": {
+                "ia": "filter_9_ia",
+                "ib": "filter_9_ib",
+                "ic": "filter_9_ic"
+            },
             "mon": [
                 "ea",
                 "eb",
@@ -766,12 +771,7 @@
                 "ia",
                 "ib",
                 "ic"
-            ],
-            "outputs": {
-                "ia": "filter_9_ia",
-                "ib": "filter_9_ib",
-                "ic": "filter_9_ic"
-            }
+            ]
         },
         {
             "class": "PWM",
@@ -922,6 +922,11 @@
                 "eb": "eb_11",
                 "ec": "ec_11"
             },
+            "outputs": {
+                "ia": "filter_11_ia",
+                "ib": "filter_11_ib",
+                "ic": "filter_11_ic"
+            },
             "mon": [
                 "ea",
                 "eb",
@@ -929,12 +934,7 @@
                 "ia",
                 "ib",
                 "ic"
-            ],
-            "outputs": {
-                "ia": "filter_11_ia",
-                "ib": "filter_11_ib",
-                "ic": "filter_11_ic"
-            }
+            ]
         },
         {
             "class": "PWM",
@@ -1085,6 +1085,11 @@
                 "eb": "eb_13",
                 "ec": "ec_13"
             },
+            "outputs": {
+                "ia": "filter_13_ia",
+                "ib": "filter_13_ib",
+                "ic": "filter_13_ic"
+            },
             "mon": [
                 "ea",
                 "eb",
@@ -1092,12 +1097,7 @@
                 "ia",
                 "ib",
                 "ic"
-            ],
-            "outputs": {
-                "ia": "filter_13_ia",
-                "ib": "filter_13_ib",
-                "ic": "filter_13_ic"
-            }
+            ]
         },
         {
             "class": "LineLumped",

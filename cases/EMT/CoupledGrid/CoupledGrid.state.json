@@ -2,7 +2,7 @@
     "header": {
         "version": 1,
         "time": 0.0,
-        "description": "Common high-mu fundamental estimate; internal line/filter states start at model defaults, so energization transients remain."
+        "description": "Common fundamental estimate; internal line/filter states start at model defaults, so energization transients remain."
     },
     "buses": {
         "bus_1": {
@@ -78,14 +78,14 @@
     },
     "devices": {
         "machine_3": {
-            "ia": -10.652927260986349,
-            "ib": -55.65769878596409,
-            "ic": 66.31062604695043
+            "ia": -10.652927260986363,
+            "ib": -55.657698785964136,
+            "ic": 66.31062604695049
         },
         "machine_7": {
-            "ia": -37.85329795745837,
-            "ib": -30.06995718772981,
-            "ic": 67.92325514518818
+            "ia": -37.85329795745839,
+            "ib": -30.069957187729834,
+            "ic": 67.92325514518821
         }
     }
 }

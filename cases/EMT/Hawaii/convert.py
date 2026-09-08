@@ -21,8 +21,11 @@ CHOICES = {
     'transformer_P0_W': 0.0,
     'transformer_knee': 1.2,
     'transformer_Lsat': 0.25,
-    'filter_R_pu': 0.01,
-    'filter_X_pu': 0.20,
+    'filter_Rs_pu': 0.01,
+    'filter_Xs_pu': 0.20,
+    'filter_Rg_pu': 0.005,
+    'filter_Xg_pu': 0.10,
+    'filter_B_pu': 0.10,
     'inner_bandwidth_Hz': 300.0,
     'Mmax': 0.95,
     'PLL_Kp': 80.0,
@@ -304,15 +307,22 @@ def convert(source):
         prefix = d['id'].removesuffix('_regca')
         n = ports['bus']
         vb, rating = buses[n]['params']['kv'] * 1000, p['mva'] * 1e6
-        r = CHOICES['filter_R_pu'] * vb**2 / rating
-        inductance = CHOICES['filter_X_pu'] * vb**2 / (rating * OMEGA)
+        zb = vb**2 / rating
+        rs, rg = CHOICES['filter_Rs_pu'] * zb, CHOICES['filter_Rg_pu'] * zb
+        ls, lg = CHOICES['filter_Xs_pu'] * zb / OMEGA, CHOICES['filter_Xg_pu'] * zb / OMEGA
+        c = CHOICES['filter_B_pu'] / (OMEGA * zb)
         wc = 2 * math.pi * CHOICES['inner_bandwidth_Hz']
         vdc = CHOICES['dc_voltage_ratio'] * vb
         capacitance = 2 * CHOICES['dc_energy_seconds'] * rating / vdc**2
         pq = dispatch[d['id']] * SYSTEM_BASE
-        current = (pq / (vb * voltage[n])).conjugate()
-        current_dq = current * cmath.exp(-1j * cmath.phase(voltage[n]))
-        bridge_power = pq.real + r * abs(current)**2
+        v = vb * voltage[n]
+        ig = (pq / v).conjugate()
+        vo = v + complex(rg, OMEGA * lg) * ig
+        current = ig + 1j * OMEGA * c * vo
+        e = vo + complex(rs, OMEGA * ls) * current
+        rotation = cmath.exp(-1j * cmath.phase(vo))
+        current_dq, grid_current_dq = current * rotation, ig * rotation
+        bridge_power = pq.real + rg * abs(ig)**2 + rs * abs(current)**2
         reecb = next(e for e in source['devices'] if e['id'] == prefix + '_reecb')
         imax = reecb['params']['Imax'] * rating / vb
 
@@ -324,22 +334,26 @@ def convert(source):
 
         add('DCLink', prefix + '_dc', {'C': capacitance},
             {'isrc': s('isrc', bridge_power / vdc), 'idc': s('idc')}, {'vdc': s('vdc')}, ['vdc'])
-        add('DependentVoltageSource', prefix + '_filter', {'Rs': diagonal(r), 'Ls': diagonal(inductance)},
-            dict(zip(('ea', 'eb', 'ec'), vector('e', 'abc')), bus=f'bus_{n}'),
-            dict(zip(('ia', 'ib', 'ic'), vector('i', 'abc'))))
+        add('Filter', prefix + '_filter',
+            {'Rs': diagonal(rs), 'Ls': diagonal(ls), 'C': diagonal(c), 'Rg': diagonal(rg), 'Lg': diagonal(lg)},
+            {'e': vector('e', 'abc'), 'bus': f'bus_{n}'},
+            {'i': vector('i', 'abc'), 'vo': vector('vo', 'abc'), 'ig': vector('ig', 'abc')}, ['i', 'vo', 'ig'])
         add('PLL', prefix + '_pll', {'V': vb, 'f': FREQUENCY, 'Kp': CHOICES['PLL_Kp'], 'Ki': CHOICES['PLL_Ki']},
-            {'bus': f'bus_{n}'}, {'theta': s('theta'), 'omega': s('omega')}, ['omega'])
-        add('Park', prefix + '_voltage', inputs={'input': [f'b{n}_v{phase}' for phase in 'abc'], 'theta': s('theta')},
+            dict(zip(('va', 'vb', 'vc'), vector('vo', 'abc'))),
+            {'theta': s('theta'), 'omega': s('omega')}, ['omega'])
+        add('Park', prefix + '_voltage', inputs={'input': vector('vo', 'abc'), 'theta': s('theta')},
             outputs={'out': vector('v', 'dq0')}, mon=['out'])
         add('Park', prefix + '_current', inputs={'input': vector('i', 'abc'), 'theta': s('theta')},
             outputs={'out': vector('i', 'dq0')}, mon=['out'])
+        add('Park', prefix + '_grid_current', inputs={'input': vector('ig', 'abc'), 'theta': s('theta')},
+            outputs={'out': vector('ig', 'dq0')}, mon=['out'])
         add('OuterPowerControl', prefix + '_power',
-            {'V': vb, 'Pref': vb * current_dq.real, 'Qref': -vb * current_dq.imag,
+            {'V': vb, 'Pref': vb * grid_current_dq.real, 'Qref': -vb * grid_current_dq.imag,
              'Kp': CHOICES['outer_Kp'], 'Ki': CHOICES['outer_Ki'], 'Kaw': CHOICES['outer_Kaw']},
-            {'i': vector('i', 'dq'), 'ilim': vector('ilim', 'dq')},
+            {'i': vector('ig', 'dq'), 'ilim': vector('ilim', 'dq')},
             {'icmd': vector('icmd', 'dq')}, ['icmd'])
         add('InnerCurrentControl', prefix + '_inner',
-            {'L': inductance, 'Kp': inductance * wc, 'Ki': r * wc, 'Kaw': wc,
+            {'L': ls, 'Kp': ls * wc, 'Ki': rs * wc, 'Kaw': wc,
              'Imax': imax, 'Mmax': CHOICES['Mmax']},
             {'v': vector('v', 'dq'), 'i': vector('i', 'dq'), 'icmd': vector('icmd', 'dq'),
              'omega': s('omega'), 'vdc': s('vdc')},
@@ -353,13 +367,20 @@ def convert(source):
         add('Converter', prefix + '_bridge', inputs={'s': vector('s', 'abc'), 'vdc': s('vdc'), 'i': vector('i', 'abc')},
             outputs={'e': vector('e', 'abc'), 'idc': s('idc')})
         state['devices'][prefix + '_dc'] = {'vdc': vdc}
-        state['devices'][prefix + '_filter'] = samples(current, 'i', math.sqrt(2 / 3))
+        state['devices'][prefix + '_filter'] = {
+            **samples(current, 'i', math.sqrt(2 / 3)),
+            **samples(vo, 'vo', math.sqrt(2 / 3)),
+            **samples(ig, 'ig', math.sqrt(2 / 3))}
         state['devices'][prefix + '_power'] = {'icmdd': current_dq.real, 'icmdq': current_dq.imag}
-        command = vb * abs(voltage[n]) + complex(r, OMEGA * inductance) * current_dq
+        command = e * rotation
         state['devices'][prefix + '_inner'] = {'ud': command.real, 'uq': command.imag}
         report['inverters'][prefix] = {'rating_VA': rating, 'voltage_V': vb, 'Imax_A': imax,
                                        'dispatch_W': pq.real, 'dispatch_var': pq.imag,
-                                       'initial_vdc_V': vdc, 'dc_C_F': capacitance}
+                                       'initial_vdc_V': vdc, 'dc_C_F': capacitance,
+                                       'filter_Rs_ohm': rs, 'filter_Ls_H': ls, 'filter_C_F': c,
+                                       'filter_Rg_ohm': rg, 'filter_Lg_H': lg,
+                                       'filter_resonance_Hz': math.sqrt((ls + lg) / (ls * lg * c)) / (2 * math.pi),
+                                       'initial_bridge_power_W': bridge_power}
     add('Bus', 'fault_bus')
     add('Switch', 'fault_switch', {'open': True}, {'bus1': 'bus_1', 'bus2': 'fault_bus'}, mon=['open'])
     add('LoadZ', 'fault_load', {'R': diagonal(CHOICES['fault_R_pu'] * (buses[1]['params']['kv'] * 1000)**2 / SYSTEM_BASE)},
