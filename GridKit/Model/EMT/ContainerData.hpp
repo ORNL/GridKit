@@ -20,6 +20,7 @@
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSourceData.hpp>
 #include <GridKit/Model/EMT/Component/Source/Machine/MachineData.hpp>
+#include <GridKit/Model/EMT/Component/Source/REGFMA/RegfmaData.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceData.hpp>
 #include <GridKit/Model/EMT/Component/Switch/SwitchData.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/ConverterData.hpp>
@@ -58,6 +59,7 @@ namespace GridKit
       using LineLumpedDataT             = LineLumpedData<RealT, IdxT>;
       using LoadZDataT                  = LoadZData<RealT, IdxT>;
       using MachineDataT                = MachineData<RealT, IdxT>;
+      using RegfmaDataT                 = RegfmaData<RealT, IdxT>;
       using SignalDataT                 = SignalData<RealT, IdxT>;
       using SwitchDataT                 = SwitchData<RealT, IdxT>;
       using IeeestDataT                 = Controller::IeeestData<RealT, IdxT>;
@@ -93,6 +95,7 @@ namespace GridKit
       std::vector<LineDistributedData<RealT, IdxT>> line_distributed;
       std::vector<LoadZDataT>                       loadz;
       std::vector<MachineDataT>                     machine;
+      std::vector<RegfmaDataT>                      regfma;
       std::vector<SwitchDataT>                      sw;
       std::vector<IeeestDataT>                      ieeest;
       std::vector<GastPtiDataT>                     gastpti;

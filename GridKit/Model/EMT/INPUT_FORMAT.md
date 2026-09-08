@@ -256,6 +256,9 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Machine`                | `pm`    | Input     | Signal        | No
   `Machine`                | `efd`   | Input     | Signal        | No
   `Machine`                | `speed`, `ia`, `ib`, `ic` | Output | Signal | No
+  `REGFMA`                 | `v` | Input | Three voltage signal IDs | Yes
+  `REGFMA`                 | `pref`, `qref`, `vref` | Input | Signal | No
+  `REGFMA`                 | `i` | Output | Three Signal IDs | No
   `VoltageSource`, `DependentVoltageSource`, `LoadZ` | `ia`, `ib`, `ic` | Output | Signal | No
   `LineLumped`, `Switch` | `i12a`, `i12b`, `i12c` | Output | Signal | No
   `LineLumped`             | `v1a`, `v1b`, `v1c` | Input | Voltage signal | Yes
@@ -414,6 +417,7 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `LoadZ`               | [LoadZ](Component/Load/LoadZ/README.md)
   `Switch`              | [Switch](Component/Switch/README.md)
   `Machine`              | [Machine](Component/Source/Machine/README.md)
+  `REGFMA`, `Regfma`      | [REGFMA/REGFM_A1](Component/Source/REGFMA/README.md)
   `Tgov1`                | [TGOV1](Component/Controller/TGOV1/README.md)
   `Ieeet1`              | [IEEET1](Component/Controller/IEEET1/README.md)
   `SexsPti`             | [SEXS-PTI](Component/Controller/SEXS-PTI/README.md)

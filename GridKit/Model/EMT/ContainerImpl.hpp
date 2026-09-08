@@ -93,6 +93,13 @@ namespace GridKit
         add<Machine<ScalarT, IdxT>>(machine_data.id, qualified_data);
       }
 
+      for (const auto& source_data : data.regfma)
+      {
+        auto qualified_data = source_data;
+        qualified_data.id   = qualify(source_data.id);
+        add<Regfma<ScalarT, IdxT>>(source_data.id, qualified_data);
+      }
+
       for (const auto& line_data : data.line_lumped)
       {
         auto qualified_data = line_data;
@@ -430,6 +437,25 @@ namespace GridKit
         {
           machine_model.getSignals().template attachSignal<MachineExternalVariables::EFD>(
               &source(machine_data.inputs.at(MachineInputs::efd)));
+        }
+      }
+
+      for (const auto& source_data : data.regfma)
+      {
+        auto& source_model = component<Regfma<ScalarT, IdxT>>(source_data.id);
+        for (const auto& [output, reference] : source_data.outputs)
+          source_model.assignOutput(output, &signal(reference));
+        auto [bus, phases, voltage] = terminal(source_data.inputs, RegfmaInputs::va);
+        for (size_t p = 0; p < 3; ++p)
+        {
+          source_model.getSignals().attachSignal(static_cast<RegfmaExternalVariables>(p), voltage[p]);
+          bus->addCurrent(phases[p], source_model.currentSignal(p));
+        }
+        for (const auto input : {RegfmaInputs::pref, RegfmaInputs::qref, RegfmaInputs::vref})
+        {
+          if (source_data.inputs.contains(input))
+            source_model.getSignals().attachSignal(static_cast<RegfmaExternalVariables>(input),
+                                                   &source(source_data.inputs.at(input)));
         }
       }
 
