@@ -14,6 +14,7 @@
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSourceDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Source/REGFMA/RegfmaDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceDataJSONParser.hpp>
 #include <GridKit/Model/EMT/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/EMT/ContainerData.hpp>
@@ -177,6 +178,10 @@ namespace GridKit
         else if (kind == "Machine")
         {
           raw_device.get_to(data.machine.emplace_back());
+        }
+        else if (kind == "REGFMA" || kind == "Regfma")
+        {
+          raw_device.get_to(data.regfma.emplace_back());
         }
         else if (kind == "LineLumped")
         {

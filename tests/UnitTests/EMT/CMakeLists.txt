@@ -226,3 +226,16 @@ add_executable(test_emt_dc_link runDcLinkTests.cpp)
 target_link_libraries(
   test_emt_dc_link GridKit::emt_dc_link GridKit::testing)
 add_test(NAME EMTDcLinkTest COMMAND test_emt_dc_link)
+
+add_executable(test_emt_regfma runRegfmaTests.cpp)
+target_link_libraries(
+  test_emt_regfma
+  GridKit::emt_systemmodel
+  GridKit::emt_regfma_dependency_tracking
+  GridKit::testing)
+if(GRIDKIT_ENABLE_ENZYME AND GRIDKIT_ENABLE_SUNDIALS_SPARSE)
+  target_link_libraries(test_emt_regfma GridKit::solvers_dyn)
+  target_compile_definitions(test_emt_regfma PRIVATE GRIDKIT_ENABLE_SUNDIALS)
+endif()
+add_test(NAME EMTRegfmaTest COMMAND test_emt_regfma)
+install(TARGETS test_emt_regfma RUNTIME DESTINATION bin)

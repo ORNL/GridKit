@@ -15,6 +15,7 @@
 #include <GridKit/Model/EMT/Component/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/EMT/Component/Source/DependentVoltageSource/DependentVoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Source/Machine/Machine.hpp>
+#include <GridKit/Model/EMT/Component/Source/REGFMA/Regfma.hpp>
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/Converter.hpp>

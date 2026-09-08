@@ -5,5 +5,6 @@
 
 add_subdirectory(DependentVoltageSource)
 add_subdirectory(Machine)
+add_subdirectory(REGFMA)
 add_subdirectory(VoltageSource)
 add_subdirectory(Norton)
