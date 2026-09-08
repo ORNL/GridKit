@@ -8,15 +8,11 @@
 #include <iostream>
 #include <string>
 
-#include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
-#include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
-#include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-#include "PowerElectronicsExamplesHelper/JacTestHelper.hpp"
-#include "PowerElectronicsExamplesHelper/MicrogridNetwork.hpp"
-#include "PowerElectronicsExamplesHelper/PartitionUtilities.hpp"
+#include <examples/PowerElectronics/ExamplesHelper/JacTestHelper.hpp>
+#include <examples/PowerElectronics/ExamplesHelper/PartitionUtilities.hpp>
 
 using index_type = size_t;
 using real_type  = double;
@@ -220,10 +216,10 @@ RunResult evaluatePartitioning(
     partition->evaluateJacobian();
 
     jacobian_match = jacobian_match
-                     && GridKit::Testing::verifySubsystemJacobian(*system_jacobian,
-                                                                  *partition->getCsrJacobian(),
-                                                                  *partition,
-                                                                  Jac_tol);
+                     && verifySubsystemJacobian(*system_jacobian,
+                                                *partition->getCsrJacobian(),
+                                                *partition,
+                                                Jac_tol);
   }
 
   // ---------------------------------------------------------------------------

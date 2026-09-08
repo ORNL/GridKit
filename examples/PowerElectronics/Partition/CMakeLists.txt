@@ -1,23 +1,14 @@
-find_package(OpenMP)
-
 add_executable(PartitionMicrogrid PartitionMicrogrid.cpp)
-target_include_directories(
-  PartitionMicrogrid
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
-
-target_link_libraries(
-  PartitionMicrogrid
-  PRIVATE GridKit::power_elec_disgen
-          GridKit::power_elec_microline
-          GridKit::power_elec_microload
-          GridKit::solvers_dyn
-          GridKit::power_elec_microbusdq
-          GridKit::power_elec_partition_interfaces)
-
 add_executable(PartitionScaleMicrogrid PartitionScaleMicrogrid.cpp)
-target_include_directories(
-  PartitionScaleMicrogrid
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+
+target_link_libraries(
+  PartitionMicrogrid
+  PRIVATE GridKit::power_elec_disgen
+          GridKit::power_elec_microline
+          GridKit::power_elec_microload
+          GridKit::solvers_dyn
+          GridKit::power_elec_microbusdq
+          power_elec_partition_examples_helper)
 
 target_link_libraries(
   PartitionScaleMicrogrid
@@ -26,9 +17,9 @@ target_link_libraries(
           GridKit::power_elec_microload
           GridKit::solvers_dyn
           GridKit::power_elec_microbusdq
-          GridKit::power_elec_partition_interfaces)
+          power_elec_partition_examples_helper)
 
-if(OpenMP_CXX_FOUND)
+if(GRIDKIT_ENABLE_OPENMP)
   target_link_libraries(PartitionScaleMicrogrid PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
