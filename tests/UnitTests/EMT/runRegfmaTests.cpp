@@ -34,10 +34,13 @@ namespace
   using json      = nlohmann::json;
   using Complex   = std::complex<double>;
 
-  constexpr double omega        = 2 * std::numbers::pi * 60;
-  constexpr double base_voltage = 1000;
-  constexpr double base_power   = 1e6;
-  constexpr size_t states       = static_cast<size_t>(Internal::MAXIMUM);
+  constexpr double omega          = 2 * std::numbers::pi * 60;
+  constexpr double base_voltage   = 1000;
+  constexpr double base_power     = 1e6;
+  constexpr double base_impedance = base_voltage * base_voltage / base_power;
+  constexpr double reactance      = 0.15;
+  constexpr double inductance     = reactance * base_impedance / omega;
+  constexpr size_t states         = static_cast<size_t>(Internal::MAXIMUM);
 
   size_t index(Internal variable)
   {
@@ -92,12 +95,13 @@ namespace
   struct Fixture
   {
     EMT::Regfma<Scalar, size_t>                model;
+    double                                     resistance_pu;
     std::array<Scalar, 6>                      inputs{};
     std::array<size_t, 6>                      columns{states, states + 1, states + 2, states + 3, states + 4, states + 5};
     std::array<EMT::Signal<Scalar, size_t>, 6> signals;
 
     explicit Fixture(const Data& input = data(), bool references = false)
-      : model(input)
+      : model(input), resistance_pu(EMT::parameter<double>(input, Parameter::RL, 0.03))
     {
       const auto voltage = phases(std::polar(1.0, 0.31), base_voltage);
       std::copy(voltage.begin(), voltage.end(), inputs.begin());
@@ -155,27 +159,32 @@ namespace
             model.evaluateResidual();
             for (size_t row = 0; row < states; ++row)
               success *= near(model.getResidual().getData()[row], 0.0, 2e-8);
+            const auto derivative = phases(Complex(0, omega) * Complex(0.4, -0.1) * std::polar(1.0, 0.31), base_power / base_voltage);
+            for (size_t phase = 0; phase < 3; ++phase)
+              success *= near(model.yp().getData()[index(Internal::IA) + phase], derivative[phase], 1e-9);
           }
 #ifdef GRIDKIT_ENABLE_ENZYME
           model.tagDifferentiable();
           for (size_t row = 0; row < states; ++row)
-            success *= model.tag()[row] == (row < 9);
+            success *= model.tag()[row];
 #endif
         }
     return success.report("REGFMA bases, terminal power, both flags and consistent initialization");
   }
 
-  // Recover the algebraic current target without assuming its implementation.
+  // The physical RL law determines the applied voltage drop. Dividing that
+  // drop by the rated-frequency impedance recovers the limited command.
   std::array<double, 3> target(Fixture<>& fixture)
   {
     fixture.model.evaluateResidual();
-    std::array<double, 3> result;
+    std::array<double, 3> drop;
     for (size_t phase = 0; phase < 3; ++phase)
     {
-      const size_t row = index(Internal::IA) + phase;
-      result[phase]    = fixture.model.getResidual().getData()[row] + fixture.model.y().getData()[row];
+      const size_t row        = index(Internal::IA) + phase;
+      const double derivative = fixture.model.getResidual().getData()[row] + fixture.model.yp().getData()[row];
+      drop[phase]             = inductance * derivative + fixture.resistance_pu * base_impedance * fixture.model.y().getData()[row];
     }
-    return result;
+    return phases(phasor(drop, base_voltage) / Complex(fixture.resistance_pu, reactance), base_power / base_voltage);
   }
 
   Testing::TestOutcome droopAndFaultCurrent()
@@ -197,7 +206,7 @@ namespace
     // voltage and current. For faults, the WECC cap preserves current angle.
     const Complex initial_voltage  = std::polar(1.0, 0.31);
     const Complex initial_current  = Complex(0.4, -0.1) * std::polar(1.0, 0.31);
-    const Complex internal         = initial_voltage + Complex(0, 0.15) * initial_current;
+    const Complex internal         = initial_voltage + Complex(fixture.resistance_pu, reactance) * initial_current;
     const auto    normal           = phasor(target(fixture), base_power / base_voltage);
     success                       *= near(std::abs(normal - initial_current), 0.0, 1e-8);
     for (const auto voltage : {Complex{}, std::polar(0.05, -0.6), std::polar(0.3, 1.5)})
@@ -206,7 +215,7 @@ namespace
       std::copy(abc.begin(), abc.end(), fixture.inputs.begin());
       const auto    abc_current  = target(fixture);
       const Complex current      = phasor(abc_current, base_power / base_voltage);
-      const Complex unlimited    = (internal - voltage) / Complex(0, 0.15);
+      const Complex unlimited    = (internal - voltage) / Complex(fixture.resistance_pu, reactance);
       success                   *= near(std::abs(current), 2.0, 1e-8);
       success                   *= std::real(current * std::conj(unlimited)) > 0;
       success                   *= near(std::imag(current * std::conj(unlimited)), 0.0, 1e-7);
@@ -215,7 +224,54 @@ namespace
     const auto restored = phases(initial_voltage, base_voltage);
     std::copy(restored.begin(), restored.end(), fixture.inputs.begin());
     success *= near(std::abs(phasor(target(fixture), base_power / base_voltage) - initial_current), 0.0, 1e-8);
-    return success.report("REGFMA P-f droop and WECC radial fault-current limit and release");
+    return success.report("REGFMA P-f droop and radial fault-current command limit and release");
+  }
+
+  Testing::TestOutcome physicalCurrentDynamics()
+  {
+    Testing::TestStatus success = true;
+    for (double resistance : {0.03, 0.07})
+    {
+      auto parameters                      = data(false);
+      parameters.parameters[Parameter::RL] = resistance;
+      Fixture fixture(parameters);
+      success                                     *= fixture.initialize() == 0;
+      const Complex               initial_voltage  = std::polar(1.0, 0.31);
+      const Complex               initial_current  = Complex(0.4, -0.1) * std::polar(1.0, 0.31);
+      const Complex               internal         = initial_voltage + Complex(resistance, reactance) * initial_current;
+      const std::array<double, 3> error{57.0, -13.0, -23.0};
+      const double                rate = resistance * base_impedance / inductance;
+      // Hold the filtered controls at their operating point and excite the
+      // physical current modes around the nominal rotating trajectory.
+      for (double time : {0.0, 0.005, 0.020})
+      {
+        const Complex rotation   = std::polar(1.0, omega * time);
+        const auto    voltage    = phases(initial_voltage * rotation, base_voltage);
+        const auto    emf        = phases(internal * rotation, base_voltage);
+        const auto    current    = phases(initial_current * rotation, base_power / base_voltage);
+        const auto    derivative = phases(Complex(0, omega) * initial_current * rotation, base_power / base_voltage);
+        std::copy(voltage.begin(), voltage.end(), fixture.inputs.begin());
+        fixture.model.updateTime(time, 1.0);
+        double sum = 0, sum_derivative = 0;
+        for (size_t phase = 0; phase < 3; ++phase)
+        {
+          const size_t row                   = index(Internal::IA) + phase;
+          const double deviation             = error[phase] * std::exp(-rate * time);
+          fixture.model.y().getData()[row]   = current[phase] + deviation;
+          fixture.model.yp().getData()[row]  = derivative[phase] - rate * deviation;
+          success                           *= near(inductance * fixture.model.yp().getData()[row],
+                          emf[phase] - voltage[phase] - resistance * base_impedance * fixture.model.y().getData()[row]);
+          sum                               += fixture.model.y().getData()[row];
+          sum_derivative                    += fixture.model.yp().getData()[row];
+        }
+        fixture.model.evaluateResidual();
+        for (size_t phase = 0; phase < 3; ++phase)
+          success *= near(fixture.model.getResidual().getData()[index(Internal::IA) + phase], 0.0, 1e-7);
+        success *= near(sum, 21.0 * std::exp(-rate * time));
+        success *= near(sum_derivative, -rate * sum, 1e-9);
+      }
+    }
+    return success.report("REGFMA physical RL voltage law and stable balanced and zero-sequence free-current decay");
   }
 
   Testing::TestOutcome powerLimits()
@@ -318,7 +374,7 @@ namespace
         const double  command    = 1.02 + 0.05 * (0.15 - q) + q_upper + q_lower;
         const double  voltage    = std::clamp(voltage_control ? 0.01 * (command - 0.92) + 1.03 : command, 0.0, 1.15);
         const double  phase      = 0.17 + omega * 0.002;
-        const Complex unlimited  = (std::polar(voltage, phase) - std::polar(1.0, 0.31)) / Complex(0, 0.15);
+        const Complex unlimited  = (std::polar(voltage, phase) - std::polar(1.0, 0.31)) / Complex(fixture.resistance_pu, reactance);
         const Complex expected   = unlimited * std::min(1.0, 2.0 / std::abs(unlimited));
         const Complex actual     = phasor(target(fixture), base_power / base_voltage);
         success                 *= near(std::abs(actual - expected), 0.0, 1e-5);
@@ -344,7 +400,7 @@ namespace
                     omega * 0.01 * 0.1);
     auto internal_voltage  = [&]
     {
-      return std::abs(std::polar(1.0, 0.31) + Complex(0, 0.15) * phasor(target(fixture), base_power / base_voltage));
+      return std::abs(std::polar(1.0, 0.31) + Complex(fixture.resistance_pu, reactance) * phasor(target(fixture), base_power / base_voltage));
     };
     const double initial_voltage  = internal_voltage();
     fixture.inputs[4]            += 0.2;
@@ -552,13 +608,13 @@ namespace
     success                     *= near(monitored("pf"), 0.4) && near(monitored("qf"), 0.0) && near(monitored("vf"), 1.0);
     success                     *= near(monitored("omega"), omega);
     const auto expected_current  = phases(0.4, base_power / base_voltage);
-    const auto expected_voltage  = phases(Complex(1.0, 0.15 * 0.4), base_voltage);
+    const auto expected_voltage  = phases(Complex(1.0, 0.0) + Complex(0.03, reactance) * 0.4, base_voltage);
     for (size_t phase = 0; phase < 3; ++phase)
     {
       success *= near(monitored(std::string("i") + "abc"[phase]), expected_current[phase]);
       success *= near(monitored(std::string("e") + "abc"[phase]), expected_voltage[phase]);
     }
-    success *= near(monitored("edroop"), std::abs(Complex(1.0, 0.15 * 0.4)));
+    success *= near(monitored("edroop"), std::abs(Complex(1.0, 0.0) + Complex(0.03, reactance) * 0.4));
     file.close();
     std::filesystem::remove(path);
     for (const auto& [direction, phase] : {std::pair{"inputs", "va"}, std::pair{"outputs", "ia"}})
@@ -592,7 +648,7 @@ namespace
       for (size_t row = 0; row < system.size(); ++row)
         success *= near(system.getResidual().getData()[row], 0.0, 1e-7);
     }
-    for (const auto [parameter, value] : std::map<Parameter, double>{{Parameter::S, 0.0}, {Parameter::V, -1.0}, {Parameter::XL, 0.0}, {Parameter::mp, 0.0}, {Parameter::TPf, 0.0}, {Parameter::TQf, -1.0}, {Parameter::TVf, 0.0}, {Parameter::ImaxF, 0.0}, {Parameter::Pmax, -1.0}, {Parameter::Qmax, -1.0}, {Parameter::Emin, 2.0}, {Parameter::kpv, -1.0}, {Parameter::omega0, std::numeric_limits<double>::infinity()}})
+    for (const auto [parameter, value] : std::map<Parameter, double>{{Parameter::S, 0.0}, {Parameter::V, -1.0}, {Parameter::XL, 0.0}, {Parameter::RL, 0.0}, {Parameter::mp, 0.0}, {Parameter::TPf, 0.0}, {Parameter::TQf, -1.0}, {Parameter::TVf, 0.0}, {Parameter::ImaxF, 0.0}, {Parameter::Pmax, -1.0}, {Parameter::Qmax, -1.0}, {Parameter::Emin, 2.0}, {Parameter::kpv, -1.0}, {Parameter::omega0, std::numeric_limits<double>::infinity()}})
     {
       auto invalid                   = data();
       invalid.parameters[parameter]  = value;
@@ -635,7 +691,9 @@ namespace
 #ifdef GRIDKIT_ENABLE_SUNDIALS
   Testing::TestOutcome loadStepAndFaultRecovery()
   {
-    auto input = caseData();
+    auto             input        = caseData();
+    constexpr double capacitance  = 100e-6;
+    input["devices"][0]["shunts"] = {{"capacitor", {{"E", {{capacitance, 0.0, 0.0}, {0.0, capacitance, 0.0}, {0.0, 0.0, capacitance}}}}}};
     for (const auto& [name, resistance] : {std::pair{"step", 5.0}, std::pair{"fault", 0.05}})
     {
       const std::string bus               = std::string(name) + "_bus";
@@ -651,39 +709,64 @@ namespace
                     {0.045, EMT::SwitchEvent{"fault", true}}};
     EMT::EventSchedule<double, size_t> events(system, study);
     system.allocate();
-    Testing::TestStatus                            success = system.initialize(caseState()) == 0;
+    auto       state           = caseState();
+    const auto initial_current = phases(Complex(0.4, omega * capacitance * base_impedance), base_power / base_voltage);
+    for (size_t phase = 0; phase < 3; ++phase)
+      state["inverter"][std::string("i") + "abc"[phase]] = initial_current[phase];
+    Testing::TestStatus                            success = system.initialize(state) == 0;
     AnalysisManager::Sundials::Ida<double, size_t> ida(&system);
     ida.setTolerance(1e-8, 1e-9);
     ida.setMaxSteps(20000);
     events.configure(ida);
-    auto&  source                 = dynamic_cast<EMT::Regfma<double, size_t>&>(system.component("inverter"));
-    auto&  bus                    = system.component("bus");
-    bool   saw_fault_limit        = false;
-    bool   saw_frequency_response = false;
-    double final_voltage          = 0;
-    double final_current          = 0;
+    auto&                 source                 = dynamic_cast<EMT::Regfma<double, size_t>&>(system.component("inverter"));
+    auto&                 bus                    = system.component("bus");
+    bool                  saw_fault_limit        = false;
+    bool                  saw_frequency_response = false;
+    double                final_voltage          = 0;
+    double                final_current          = 0;
+    double                previous_time          = -1;
+    std::array<double, 3> previous_current{};
+    std::array<double, 3> previous_voltage{};
+    double                peak_current  = 0;
+    // This bound follows from the stable RL equation driven by a voltage
+    // drop of magnitude at most |R+jX| ImaxF, rather than an instantaneous
+    // cap on a differential current state.
+    const double          current_bound = 2.0 * std::abs(Complex(0.03, reactance)) / 0.03;
     events.run(ida, [&](double time)
                {
-        std::array<double, 3> voltage, current;
+        std::array<double, 3> voltage, current, drop;
         for (size_t phase = 0; phase < 3; ++phase)
         {
           voltage[phase] = bus.y().getData()[phase];
           current[phase] = source.currentSignal(phase).read();
+          drop[phase] = inductance * source.yp().getData()[index(Internal::IA) + phase] + 0.03 * base_impedance * current[phase];
         }
         const double v  = std::abs(phasor(voltage, base_voltage));
         const double i  = std::abs(phasor(current, base_power / base_voltage));
-        success        *= std::isfinite(v) && i <= 2.00001;
+        const double command = std::abs(phasor(drop, base_voltage) / Complex(0.03, reactance));
+        success        *= std::isfinite(v) && i <= current_bound && command <= 2.00001;
+        peak_current = std::max(peak_current, i);
+        if (time == previous_time)
+          for (size_t phase = 0; phase < 3; ++phase)
+          {
+            success *= near(current[phase], previous_current[phase], 1e-8);
+            success *= near(voltage[phase], previous_voltage[phase], 1e-8);
+          }
         if (time < 0.015)
           success *= std::abs(source.yp().getData()[index(Internal::DELTA)]) < 1e-3;
         if (time > 0.020 && time < 0.040)
           saw_frequency_response = saw_frequency_response || source.yp().getData()[index(Internal::DELTA)] < -0.05;
         if (time > 0.040 && time < 0.045)
-          saw_fault_limit = saw_fault_limit || (i > 1.99 && v < 0.15);
+          saw_fault_limit = saw_fault_limit || (command > 1.99 && v < 0.15);
+        previous_time = time;
+        previous_current = current;
+        previous_voltage = voltage;
         final_voltage = v;
         final_current = i; });
-    success *= saw_fault_limit && saw_frequency_response;
-    success *= final_voltage > 0.85 && final_current < 1.0;
-    return success.report("REGFMA island load step, bounded fault current and voltage recovery in 0.1 s");
+    success                *= saw_fault_limit && saw_frequency_response;
+    success                *= final_voltage > 0.85 && final_voltage < 1.2 && final_current < 1.0;
+    const auto description  = "REGFMA RL and shunt-C load step, continuous electrical states and fault recovery (peak current " + std::to_string(peak_current) + " pu)";
+    return success.report(description.c_str());
   }
 #endif
 } // namespace
@@ -693,6 +776,7 @@ int main()
   GridKit::Testing::TestingResults results;
   results += initialization();
   results += droopAndFaultCurrent();
+  results += physicalCurrentDynamics();
   results += powerLimits();
   results += specificationControls();
   results += externalReferences();

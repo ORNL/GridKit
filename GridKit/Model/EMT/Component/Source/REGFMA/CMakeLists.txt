@@ -16,7 +16,9 @@ if(GRIDKIT_ENABLE_ENZYME)
     COMPILE_OPTIONS
       PRIVATE
       -mllvm
-      -enzyme-auto-sparsity=1
+      # Enzyme 16 stalls in automatic sparsity optimization for this residual.
+      # SparseJacobian still lowers its explicit sparse load/store callbacks.
+      -enzyme-auto-sparsity=0
       -fno-math-errno
       -fno-vectorize)
 else()

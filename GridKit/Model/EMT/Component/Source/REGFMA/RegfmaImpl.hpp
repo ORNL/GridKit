@@ -36,6 +36,7 @@ namespace GridKit
       V_               = parameter<RealT>(data, P::V);
       omega0_          = parameter<RealT>(data, P::omega0, RealT{2} * std::numbers::pi_v<RealT> * RealT{60});
       XL_              = parameter<RealT>(data, P::XL, RealT{0.15});
+      RL_              = parameter<RealT>(data, P::RL, RealT{0.03});
       mp_              = parameter<RealT>(data, P::mp, RealT{0.01});
       mq_              = parameter<RealT>(data, P::mq, RealT{0.05});
       kpv_             = parameter<RealT>(data, P::kpv, RealT{0});
@@ -58,9 +59,9 @@ namespace GridKit
       QVFlag_          = parameter<bool>(data, P::QVFlag, true);
       voltage_control_ = VFlag ? RealT{1} : RealT{0};
 
-      for (RealT value : {S_, V_, omega0_, XL_, mp_, TPf_, TQf_, TVf_, ImaxF_})
+      for (RealT value : {S_, V_, omega0_, XL_, RL_, mp_, TPf_, TQf_, TVf_, ImaxF_})
         if (!std::isfinite(value) || value <= RealT{0})
-          throw std::invalid_argument("Regfma: bases, frequency, reactance, active droop, filter times, and current limit must be positive");
+          throw std::invalid_argument("Regfma: bases, frequency, coupling impedance, active droop, filter times, and current limit must be positive");
       for (RealT value : {mq_, kpv_, kiv_, kppmax_, kipmax_, kpqmax_, kiqmax_})
         if (!std::isfinite(value) || value < RealT{0})
           throw std::invalid_argument("Regfma: control gains must be finite and nonnegative");
@@ -73,8 +74,10 @@ namespace GridKit
       kpP_          = kppmax_ / mp_;
       kiP_          = kipmax_ / mp_;
       if (!std::isfinite(current_base_) || current_base_ <= RealT{0}
-          || !std::isfinite(kpP_) || !std::isfinite(kiP_))
-        throw std::invalid_argument("Regfma: nonfinite derived base or gain");
+          || !std::isfinite(kpP_) || !std::isfinite(kiP_)
+          || !std::isfinite(RL_ * RL_ + XL_ * XL_) || RL_ * RL_ + XL_ * XL_ <= RealT{0}
+          || !std::isfinite(omega0_ / XL_) || omega0_ / XL_ <= RealT{0})
+        throw std::invalid_argument("Regfma: invalid derived base, gain, or coupling coefficient");
     }
 
     template <typename scalar_type, typename index_type>
@@ -199,13 +202,15 @@ namespace GridKit
     __attribute__((always_inline)) inline std::array<scalar_type, 2>
     Regfma<scalar_type, index_type>::source(const ScalarT* y, const ScalarT* ye) const
     {
+      const RealT impedance_squared = RL_ * RL_ + XL_ * XL_;
+
       const auto    m       = measurements(y, ye);
       const auto    c       = controls(y, ye);
       const ScalarT theta   = omega0_ * this->time_ + y[DELTA];
       const ScalarT ea      = c[3] * std::cos(theta);
       const ScalarT eb      = c[3] * std::sin(theta);
-      const ScalarT trial_a = (eb - m[1]) / XL_;
-      const ScalarT trial_b = (m[0] - ea) / XL_;
+      const ScalarT trial_a = (RL_ * (ea - m[0]) + XL_ * (eb - m[1])) / impedance_squared;
+      const ScalarT trial_b = (RL_ * (eb - m[1]) - XL_ * (ea - m[0])) / impedance_squared;
       const ScalarT scale   = std::sqrt(Math::max(RealT{1}, (trial_a * trial_a + trial_b * trial_b) / (ImaxF_ * ImaxF_)));
       const ScalarT ia      = trial_a / scale;
       const ScalarT ib      = trial_b / scale;
@@ -231,9 +236,14 @@ namespace GridKit
       f[DELTA]                 = -yp[DELTA] + c[4];
       const RealT a            = std::sqrt(RealT{2} / RealT{3});
       const RealT b            = RealT{1} / std::numbers::sqrt2_v<RealT>;
-      f[IA]                    = -y[IA] + current_base_ * a * s[0];
-      f[IB]                    = -y[IB] + current_base_ * (-RealT{0.5} * a * s[0] + b * s[1]);
-      f[IC]                    = -y[IC] + current_base_ * (-RealT{0.5} * a * s[0] - b * s[1]);
+
+      // L di/dt = e - v - R i, with the limited voltage drop (R_L + j X_L) i_lim.
+      const ScalarT drop_a = current_base_ * (RL_ * s[0] - XL_ * s[1]);
+      const ScalarT drop_b = current_base_ * (RL_ * s[1] + XL_ * s[0]);
+      const RealT   rate   = omega0_ / XL_;
+      f[IA]                = -yp[IA] + rate * (a * drop_a - RL_ * y[IA]);
+      f[IB]                = -yp[IB] + rate * (-RealT{0.5} * a * drop_a + b * drop_b - RL_ * y[IB]);
+      f[IC]                = -yp[IC] + rate * (-RealT{0.5} * a * drop_a - b * drop_b - RL_ * y[IC]);
       return 0;
     }
 
@@ -305,8 +315,8 @@ namespace GridKit
           upper = middle;
       }
       const RealT scale     = std::sqrt(lower + RealT{0.5} * (upper - lower));
-      const RealT ea        = va - XL_ * ib * scale;
-      const RealT eb        = vb + XL_ * ia * scale;
+      const RealT ea        = va + (RL_ * ia - XL_ * ib) * scale;
+      const RealT eb        = vb + (RL_ * ib + XL_ * ia) * scale;
       const RealT magnitude = std::hypot(ea, eb);
       const RealT command   = initialVoltageCommand(magnitude);
       state[PF]             = m[4];
@@ -336,7 +346,7 @@ namespace GridKit
       this->yp_.setToConst(ScalarT{0});
       this->y_.setDataUpdated();
       evaluateResidual();
-      for (size_t n = 0; n < IA; ++n)
+      for (size_t n = 0; n < static_cast<size_t>(I::MAXIMUM); ++n)
         this->yp_.getData()[n] = this->f_.getData()[n];
       this->yp_.setDataUpdated();
       return evaluateResidual();
@@ -388,14 +398,14 @@ namespace GridKit
           return V_ * std::sqrt(m[0] * m[0] + m[1] * m[1] + VOLTAGE_EPSILON * VOLTAGE_EPSILON);
         return S_ * m[variable == Mon::p ? 4 : 5];
       }
-      const auto    m  = measurements(y, ye);
-      const ScalarT ea = m[0] - XL_ * m[3];
-      const ScalarT eb = m[1] + XL_ * m[2];
+      const auto    s  = source(y, ye);
+      const ScalarT ea = RL_ * s[0] - XL_ * s[1];
+      const ScalarT eb = RL_ * s[1] + XL_ * s[0];
       const RealT   a  = std::sqrt(RealT{2} / RealT{3});
       const RealT   b  = RealT{1} / std::numbers::sqrt2_v<RealT>;
       if (variable == Mon::ea)
-        return V_ * a * ea;
-      return V_ * (-RealT{0.5} * a * ea + (variable == Mon::eb ? b : -b) * eb);
+        return ye[VA] + V_ * a * ea;
+      return ye[variable == Mon::eb ? VB : VC] + V_ * (-RealT{0.5} * a * ea + (variable == Mon::eb ? b : -b) * eb);
     }
   } // namespace EMT
 } // namespace GridKit
