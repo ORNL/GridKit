@@ -145,8 +145,17 @@ def reference(run, signal):
     return values
 
 
+def mu_label(mu):
+    value = f'{mu:g}'
+    if 'e' in value:
+        coefficient, exponent = value.split('e')
+        value = ('' if coefficient == '1' else coefficient + r'\times') + f'10^{{{int(exponent)}}}'
+    return rf'$\mu={value}\,\mathrm{{s}}^{{-1}}$'
+
+
 def time_axes(axes, run, end):
     for ax in axes:
+        ax.ticklabel_format(axis='y', style='plain', useOffset=False)
         ax.set_xlim(0, end)
         ax.set_xticks(np.linspace(0, end, 6))
         for event in run['solver']['events']:
@@ -170,8 +179,9 @@ def control_figure(run, end):
     else:
         trace(ax[0], run, 'Park_voltage_y1', '$v_d$')
         trace(ax[1], run, 'Park_voltage_y2', '$v_q$')
-        ax[0].plot(d['t'], reference(run, 'vrefd'), '--', color=ORANGE, label=r'$v_d^{\mathrm{ref}}$')
-        ax[1].axhline(0, color=ORANGE, linestyle='--', label=r'$v_q^{\mathrm{ref}}$')
+        vrefd, vrefq = run['devices']['voltage_control']['inputs']['vref']
+        ax[0].plot(d['t'], reference(run, vrefd), '--', color=ORANGE, label=r'$v_d^{\mathrm{ref}}$')
+        ax[1].plot(d['t'], reference(run, vrefq), '--', color=ORANGE, label=r'$v_q^{\mathrm{ref}}$')
         ax[0].set_ylabel('d-axis voltage [V]')
         ax[1].set_ylabel('q-axis voltage [V]')
     command = np.hypot(d['InnerCurrentControl_current_control_ud'], d['InnerCurrentControl_current_control_uq'])
@@ -181,7 +191,7 @@ def control_figure(run, end):
     ax[2].set_ylabel('Voltage command [V]')
     ax[3].plot(d['t'], d['DCLink_dc_vdc'], color=BLUE, label='$v_{\\mathrm{dc}}$')
     ax[3].set_ylabel('DC voltage [V]')
-    ax[0].set_title(fr'{name}: $\mu={run["mu"]:g}$')
+    ax[0].set_title(f'{name}: {mu_label(run["mu"])}')
     time_axes(ax, run, end)
     ax[2].legend(loc='lower right', ncol=2, fontsize=9)
     fig.supxlabel('Feedback traces: faint instantaneous values; solid carrier-period means.', fontsize=9)
@@ -194,7 +204,7 @@ def switching_figure(run, prediction, end):
     ax[0].plot(d['t'], d['PWM_pwm_sa'], color=BLUE, label='$s_a$')
     ax[0].plot(d['t'], prediction[:, 0], '--', color=ORANGE, label='continuous PWM reference')
     ax[0].set_ylabel('Switching function [−]')
-    ax[0].set_title(fr'{run["fc"]:g} Hz PWM, islanded voltage control, $\mu={run["mu"]:g}$')
+    ax[0].set_title(f'{run["fc"]:g} Hz PWM, islanded voltage control, {mu_label(run["mu"])}')
     ax[1].plot(d['t'], d['Converter_bridge_voa'], color=BLUE, label=r'bridge $v_{o,a}$')
     ax[1].plot(d['t'], d['Bus_capacitor_va'], color=ORANGE, label='capacitor $v_a$')
     ax[1].set_ylabel('Phase voltage [V]')
@@ -214,7 +224,7 @@ def summarize(run, prediction, spectrum):
     energy = d['DCLink_dc_energy']
     power = vdc * (d['DCLink_dc_isrc'] - d['DCLink_dc_idc'])
     balance = energy - energy[0] - integral(t, power, t)
-    result = {'final_time_s': run['solver']['tmax'], 'monitor_samples': run['samples'],
+    result = {'final_time_s': float(t[-1]), 'monitor_samples': len(t),
               'carrier_hz': run['fc'], 'mu': run['mu'],
               'initial_dc_voltage_V': float(vdc[0]), 'final_dc_voltage_V': float(vdc[-1]),
               'minimum_dc_voltage_V': float(vdc.min()),
@@ -252,7 +262,6 @@ def main():
         summary = {'time_window_s': [0, end], 'studies': {}}
         fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
         for ax, (name, run) in zip(axes, studies.items()):
-            run['samples'] = len(run['data']['t'])
             mask = run['data']['t'] <= end
             run['data'] = {key: value[mask] for key, value in run['data'].items()}
             prediction = pulse_prediction(run)
@@ -268,7 +277,7 @@ def main():
             ax.set_ylim(bottom=1e-3)
             ax.set_xlim(-.6, len(x) - .4)
             ax.set_ylabel('Peak amplitude [V]')
-            ax.set_title(fr'{name}: $\mu={run["mu"]:g}$')
+            ax.set_title(f'{name}: {mu_label(run["mu"])}')
             ax.legend(loc='upper right')
         axes[-1].set_xticks(x, [f'{f:g}' for f in spectrum['frequencies_hz']])
         axes[-1].set_xlabel('Frequency [Hz]')
