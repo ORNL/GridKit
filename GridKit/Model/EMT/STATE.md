@@ -57,6 +57,7 @@ Container, for example `plant.machine`:
   `xid`, `xiq` | Optional `InnerCurrentControl` integral contributions in volts, default zero
   `etad`, `etaq` | Optional `OuterVoltageControl` integral contributions in amperes, default zero
   `i12a`, `i12b`, `i12c` | Optional instantaneous `LineLumped` or `Switch` series currents from terminal 1 to terminal 2, in amperes
+  `psi1a`, `psi1b`, `psi1c`, `psi2a`, `psi2b`, `psi2c` | Optional `Transformer` magnetizing flux linkages in per unit, default zero
   `ia`, `ib`, `ic` | Optional instantaneous `Machine`, `LoadZ`, `VoltageSource`, or `DependentVoltageSource` current injections into the bus, in amperes
 
 Other outputs use their model output names and units. All state values must

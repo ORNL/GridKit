@@ -1,0 +1,77 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../diagram-style.tex}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram]
+
+% ================= Winding 1 =================
+\node[hblock] (P1) at (-8.4, 0) {$\mathbf{P}_1^\mathsf{T}$};
+\node[hblock] (R1) at (-5.6, 0) {$R_1$};
+\coordinate (node1) at (-4.0, 0);
+
+% ================= Series leakage =================
+\node[hblock] (X) at (-2.4, 0) {$X$};
+\coordinate (node2) at (-0.8, 0);
+
+% ================= Winding 2 =================
+\node[hblock] (tau) at (0.8, 0) {$\tau : 1$};
+\node[hblock] (R2) at (3.6, 0) {$R_2$};
+\node[hblock] (P2) at (6.4, 0) {$\mathbf{P}_2^\mathsf{T}$};
+
+% ================= Magnetizing branches =================
+\node[vblock] (G1) at (-4.0, -2.2) {$\beta_1 g$};
+\node[vblock] (G2) at (-0.8, -2.2) {$\beta_2 g$};
+
+% ================= Terminal voltages and injections =================
+\node[signal, label={[sig]above:$\mathbf{v}_1$}] (T1) at (-10.4, 0) {};
+\node[signal, label={[sig]above:$\mathbf{v}_2$}] (T2) at (8.4, 0) {};
+\draw[->, line] (T1) -- (-11.6, 0);
+\draw[->, line] (T2) -- (9.6, 0);
+\node[sig, anchor=east] at (-11.85, 0) {$\mathbf{i}_1$};
+\node[sig, anchor=west] at (9.85, 0) {$\mathbf{i}_2$};
+
+% ================= Series wiring =================
+\draw[line] (T1) -- (P1.west);
+\draw[->, line] (P1.east) -- (R1.west)
+    node[midway, above, sig] {$\mathbf{i}_\mathrm{w1}$};
+\draw[line] (R1.east) -- (node1);
+\draw[line] (node1) -- (X.west);
+\draw[line] (X.east) -- (node2);
+\draw[line] (node2) -- (tau.west);
+\draw[line] (tau.east) -- (R2.west);
+\draw[->, line] (P2.west) -- (R2.east)
+    node[midway, above, sig] {$\mathbf{i}_\mathrm{w2}$};
+\draw[line] (P2.east) -- (T2);
+
+% ================= Node voltages =================
+\node[signal, label={[sig]above:$\mathbf{e}_1$}] at (node1) {};
+\node[signal, label={[sig]above:$\mathbf{e}_2$}] at (node2) {};
+
+% ================= Series-current direction =================
+\draw[->, line] (-3.3, 1.15) -- (-1.5, 1.15);
+\node[sig, anchor=south] at (-2.4, 1.15) {$\mathbf{i}_{12}$};
+
+% ================= Shunt wiring =================
+\draw[->, line] (node1) -- (G1.north)
+    node[midway, right, sig] {$\mathbf{i}_\mathrm{m1}$};
+\draw[->, line] (node2) -- (G2.north)
+    node[midway, right, sig] {$\mathbf{i}_\mathrm{m2}$};
+\draw[line] (G1.south) -- (-4.0, -4.1);
+\draw[line] (G2.south) -- (-0.8, -4.1);
+\node[sig, anchor=east] at (-4.8, -2.2) {$\boldsymbol{\psi}_1$};
+\node[sig, anchor=west] at (0.0, -2.2) {$\boldsymbol{\psi}_2$};
+
+% ================= Ground symbols =================
+\draw[semithick] (-4.35, -4.10) -- (-3.65, -4.10);
+\draw[semithick] (-4.22, -4.25) -- (-3.78, -4.25);
+\draw[semithick] (-4.09, -4.40) -- (-3.91, -4.40);
+
+\draw[semithick] (-1.15, -4.10) -- (-0.45, -4.10);
+\draw[semithick] (-1.02, -4.25) -- (-0.58, -4.25);
+\draw[semithick] (-0.89, -4.40) -- (-0.71, -4.40);
+
+% ================= Model enclosure =================
+\draw[enclosure] (-9.9, -4.9) rectangle (7.9, 1.9);
+
+\end{tikzpicture}
+\end{document}

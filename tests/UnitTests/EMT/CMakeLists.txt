@@ -77,6 +77,17 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTMachineTest COMMAND test_emt_machine)
 
+add_executable(test_emt_transformer runTransformerTests.cpp)
+target_link_libraries(
+  test_emt_transformer
+  GridKit::definitions
+  GridKit::emt_transformer
+  GridKit::emt_transformer_dependency_tracking
+  GridKit::emt_bus
+  GridKit::emt_bus_dependency_tracking
+  GridKit::testing)
+add_test(NAME EMTTransformerTest COMMAND test_emt_transformer)
+
 add_executable(test_emt_vector_fit runVectorFitTests.cpp)
 target_link_libraries(
   test_emt_vector_fit
@@ -135,6 +146,7 @@ install(
           test_emt_enzyme_spike
           test_emt_line_lumped
           test_emt_machine
+          test_emt_transformer
           test_emt_system
           test_emt_vector_fit
   RUNTIME DESTINATION bin)

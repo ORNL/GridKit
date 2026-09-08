@@ -282,6 +282,9 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Ieeet1`                 | `efd`   | Output    | Signal        | Yes
   `Switch`                 | `v1a`, `v1b`, `v1c` | Input | Voltage signal | Yes
   `Switch`                 | `v2a`, `v2b`, `v2c` | Input | Voltage signal | Yes
+  `Transformer`            | `v1a`, `v1b`, `v1c` | Input | Voltage signal | Yes
+  `Transformer`            | `v2a`, `v2b`, `v2c` | Input | Voltage signal | Yes
+  `Transformer`            | `i1a`, `i1b`, `i1c`, `i2a`, `i2b`, `i2c` | Output | Signal | No
   `GastPti`                | `speed`, `pref` | Input | Signal | No
   `GastPti`                | `pmech` | Output | Signal | Yes
   `Ieeest`                 | `input`, `speed` | Input | Signal | Exactly one
@@ -416,6 +419,7 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `LineDistributed`     | [LineDistributed](Component/Line/LineDistributed/README.md)
   `LoadZ`               | [LoadZ](Component/Load/LoadZ/README.md)
   `Switch`              | [Switch](Component/Switch/README.md)
+  `Transformer`         | [Transformer](Component/Transformer/README.md)
   `Machine`              | [Machine](Component/Source/Machine/README.md)
   `REGFMA`, `Regfma`      | [REGFMA/REGFM_A1](Component/Source/REGFMA/README.md)
   `Tgov1`                | [TGOV1](Component/Controller/TGOV1/README.md)

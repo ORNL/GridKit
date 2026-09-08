@@ -163,6 +163,13 @@ namespace GridKit
         add<Switch<ScalarT, IdxT>>(switch_data.id, qualified_data);
       }
 
+      for (const auto& transformer_data : data.transformer)
+      {
+        auto qualified_data = transformer_data;
+        qualified_data.id   = qualify(transformer_data.id);
+        add<Transformer<ScalarT, IdxT>>(transformer_data.id, qualified_data);
+      }
+
       for (const auto& model_data : data.inner_current_control)
       {
         auto qualified_data = model_data;
@@ -672,6 +679,20 @@ namespace GridKit
             switch_model.getSignals().attachSignal(static_cast<SwitchExternalVariables>(3 * end + p), voltage[p]);
             bus->addCurrent(phases[p], switch_model.currentSignal(p), end == 0 ? -ONE<RealT> : ONE<RealT>);
           }
+        }
+      }
+
+      for (const auto& transformer_data : data.transformer)
+      {
+        auto& transformer_model = component<Transformer<ScalarT, IdxT>>(transformer_data.id);
+        for (const auto& [output, reference] : transformer_data.outputs)
+          transformer_model.assignOutput(output, &signal(reference));
+        for (size_t end = 0; end < 2; ++end)
+        {
+          auto [bus, phases, voltage] = terminal(transformer_data.inputs, static_cast<TransformerInputs>(3 * end));
+          transformer_model.attachTerminal(end, voltage);
+          for (size_t p = 0; p < 3; ++p)
+            bus->addCurrent(phases[p], transformer_model.currentSignal(end, p));
         }
       }
     }
