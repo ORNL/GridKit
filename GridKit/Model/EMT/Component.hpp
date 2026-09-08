@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
 #include <map>
 #include <vector>
 
@@ -8,6 +9,7 @@
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/EMT/DaeAnalysis.hpp>
+#include <GridKit/Model/EMT/HistoryDiscontinuity.hpp>
 #include <GridKit/Model/EMT/InitialState.hpp>
 #include <GridKit/Model/EMT/Signal/Signal.hpp>
 #include <GridKit/Model/Evaluator.hpp>
@@ -112,11 +114,24 @@ namespace GridKit
           op->acceptStep(time);
       }
 
-      RealT nextDiscontinuityTime(RealT after) const override
+      /// Only Delay history reports discontinuities; see HistoryDiscontinuity.
+      RealT nextDiscontinuityTime(RealT after) const override final
+      {
+        RealT time = std::numeric_limits<RealT>::infinity();
+        if (const auto* history = dynamic_cast<const HistoryDiscontinuity<RealT>*>(this))
+          time = std::min(time, history->nextHistoryDiscontinuity(after));
+        for (const auto* op : operators_)
+          time = std::min(time, op->nextDiscontinuityTime(after));
+        forEachChild([&](const Component& child)
+                     { time = std::min(time, child.nextDiscontinuityTime(after)); });
+        return time;
+      }
+
+      RealT nextSampleTime(RealT after) const override
       {
         RealT time = std::numeric_limits<RealT>::infinity();
         for (const auto* op : operators_)
-          time = std::min(time, op->nextDiscontinuityTime(after));
+          time = std::min(time, op->nextSampleTime(after));
         return time;
       }
 
@@ -140,6 +155,11 @@ namespace GridKit
       }
 
     protected:
+      /// Visit directly owned child components; containers override.
+      virtual void forEachChild(const std::function<void(const Component&)>&) const
+      {
+      }
+
       template <typename ModelT>
       static int initializeOutputs(ModelT& model, const std::map<std::string, RealT>& values);
 

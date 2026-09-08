@@ -77,13 +77,22 @@ def trace(ax, run, key, label, color=BLUE):
 
 
 def duty(run, intervals):
-    """Use the pre-latch command from the preceding accepted carrier boundary."""
+    """Command applied over each interval: the value sampled one carrier earlier."""
     t = run['data']['t']
     times = np.maximum(np.asarray(intervals) - 1, 0) / run['fc']
-    indices = np.searchsorted(t, times - 1e-12)
-    if np.any(indices >= len(t)) or np.max(np.abs(t[indices] - times)) > 1e-10:
+    if times.max() > t[-1] + 1e-10:
         raise ValueError('Carrier-boundary command samples are missing')
-    return .5 * (1 + np.column_stack([run['data'][f'Modulation_modulation_m{p}'][indices] for p in 'abc']))
+    # Sampling instants add no output rows. Interpolate the smooth command, taking
+    # the left limit (the first of two rows) when a sample coincides with an event.
+    upper = np.clip(np.searchsorted(t, times - 1e-12), 1, len(t) - 1)
+    lower = upper - 1
+    span = t[upper] - t[lower]
+    weight = np.clip(np.divide(times - t[lower], span, out=np.ones_like(times), where=span > 0), 0, 1)
+    columns = []
+    for p in 'abc':
+        m = run['data'][f'Modulation_modulation_m{p}']
+        columns.append(m[lower] + weight * (m[upper] - m[lower]))
+    return .5 * (1 + np.column_stack(columns))
 
 
 def attenuation(x):
@@ -91,11 +100,9 @@ def attenuation(x):
                      out=np.ones_like(x, dtype=float), where=x != 0)
 
 
-def pulse_prediction(run):
-    t, fc, mu = run['data']['t'], run['fc'], run['mu']
-    intervals = np.floor(t * fc + 1e-9).astype(int)
-    d = duty(run, intervals)
-    phase = (t * fc - intervals)[:, None]
+def train(run, d, phase):
+    """Periodic pulse train of one held command, evaluated at carrier phase."""
+    fc, mu = run['fc'], run['mu']
     alignment = run['devices']['pwm']['params'].get('alignment', .5)
     on, off = alignment * (1 - d), alignment + (1 - alignment) * d
     tail = np.log(4 / np.finfo(float).eps)
@@ -113,6 +120,21 @@ def pulse_prediction(run):
     center = .5 * (on + off)
     for n in range(1, count + 1):
         s += 2 * d * np.sinc(n * d) * attenuation(np.asarray(n * decay)) * np.cos(2 * np.pi * n * (phase - center))
+    return s
+
+
+def pulse_prediction(run):
+    """Crossfade the committed trains at the carrier boundaries as the model does."""
+    t, fc, mu = run['data']['t'], run['fc'], run['mu']
+    intervals = np.floor(t * fc + 1e-9).astype(int)
+    phase = (t * fc - intervals)[:, None]
+    rate = max(mu, 2 * np.log(4 / np.finfo(float).eps) * fc)
+    crossfade = lambda x: .5 * (1 + np.tanh(.5 * rate * x))
+    s = np.zeros((len(t), 3))
+    for offset in [-1, 0, 1]:
+        held = intervals + offset
+        weight = crossfade(t - held / fc) - crossfade(t - (held + 1) / fc)
+        s += weight[:, None] * train(run, duty(run, held), phase)
     return s
 
 

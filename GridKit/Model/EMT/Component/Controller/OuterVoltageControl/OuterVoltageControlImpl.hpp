@@ -141,8 +141,12 @@ namespace GridKit
       int OuterVoltageControl<scalar_type, index_type>::initializeState(const std::map<std::string, RealT>& values)
       {
         validateInitialState(values);
-        return initialize({values.contains("etad") ? values.at("etad") : RealT{0},
-                           values.contains("etaq") ? values.at("etaq") : RealT{0}});
+        std::array<RealT, 2> integral{};
+        if (values.contains("etad"))
+          integral[0] = values.at("etad");
+        if (values.contains("etaq"))
+          integral[1] = values.at("etaq");
+        return initialize(integral);
       }
 
       template <typename scalar_type, typename index_type>
@@ -178,8 +182,10 @@ namespace GridKit
         if (axis >= output_.size() || verify() != 0)
           throw std::logic_error("OuterVoltageControl: invalid output or unconnected input");
         const auto other = 1 - axis;
-        const auto sign  = axis == 0 ? RealT{-1} : RealT{1};
-        return input_.at(axis + 4)->read()
+        RealT      sign  = ONE<RealT>;
+        if (axis == 0)
+          sign = -ONE<RealT>;
+        return input_[axis + 4]->read()
                + sign * input_[6]->read() * capacitance_ * input_[other + 2]->read()
                + kp_ * (input_[axis]->read() - input_[axis + 2]->read())
                + this->y_.getData()[axis];
@@ -204,7 +210,9 @@ namespace GridKit
         if (axis >= output_.size() || verify() != 0)
           throw std::logic_error("OuterVoltageControl: invalid output or unconnected input");
         const auto other = 1 - axis;
-        const auto sign  = axis == 0 ? RealT{-1} : RealT{1};
+        RealT      sign  = ONE<RealT>;
+        if (axis == 0)
+          sign = -ONE<RealT>;
         input_[axis + 4]->appendGradient(gradient, scale);
         input_[other + 2]->appendGradient(gradient, scale * sign * capacitance_ * static_cast<RealT>(input_[6]->read()));
         input_[6]->appendGradient(gradient, scale * sign * capacitance_ * static_cast<RealT>(input_[other + 2]->read()));
@@ -251,7 +259,9 @@ namespace GridKit
             this->J_cols_buffer_[j] = column;
             this->J_vals_buffer_[j] = value;
           }
-        return entries == 0 ? 0 : this->constructCoo();
+        if (entries == 0)
+          return 0;
+        return this->constructCoo();
       }
     } // namespace Controller
   } // namespace EMT

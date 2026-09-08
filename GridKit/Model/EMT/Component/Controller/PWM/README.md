@@ -170,33 +170,53 @@ None.
 
 ### External Equations
 
-With a modulation input, the active held command defines a periodic pulse
-waveform over $t_k \le t < t_{k+1}$:
+With a modulation input, each held command defines a periodic pulse train,
 
 ```math
-s_\ell(t)
-\leftarrow
+p_{\ell,k}(t)
+=
 \sum_{r\in\mathbb{Z}}
 \left[
   \sigma\left(t-t_{\ell,k}^{\mathrm{on}}-rT_{\mathrm{c}}\right)
   -\sigma\left(t-t_{\ell,k}^{\mathrm{off}}-rT_{\mathrm{c}}\right)
 \right],
-\qquad
-\ell\in\{a,b,c\}.
 ```
 
-Every replica uses $m_{\ell,k}$; replicas define the current waveform without
-using past or future modulation commands. Smoothing preserves its period mean:
+and the switching function crossfades the trains at the carrier boundaries
+with the smoothed interval indicator:
+
+```math
+s_\ell(t)
+\leftarrow
+\sum_{k\in\mathbb{Z}}
+\left[\sigma_{\mathrm{c}}(t-t_k)-\sigma_{\mathrm{c}}(t-t_{k+1})\right]
+p_{\ell,k}(t),
+\qquad
+\sigma_{\mathrm{c}}(x)=\dfrac{1}{2}\left[1+\tanh\left(\dfrac{\mu_{\mathrm{c}}x}{2}\right)\right],
+\qquad
+\mu_{\mathrm{c}}=\max\left(\mu,\ \dfrac{2\ln(4/\varepsilon)}{T_{\mathrm{c}}}\right).
+```
+
+The crossfade rate equals $\mu$ unless that would spread a transition beyond
+half a carrier period; the floor keeps the hold causal with the one-carrier
+delay, so the weights over $t_k \le t < t_{k+1}$ involve only the committed
+trains $k-1$, $k$, and $k+1$. The switching function is therefore smooth
+everywhere and the integrator never restarts. Smoothing preserves the period
+mean of each train:
 
 ```math
 \dfrac{1}{T_{\mathrm{c}}}
-\int_{t_k}^{t_{k+1}}s_\ell(t)\,\mathrm{d}t
+\int_{t_k}^{t_{k+1}}p_{\ell,k}(t)\,\mathrm{d}t
 =d_{\ell,k}.
 ```
 
 Thus $A(nf_{\mathrm{c}},\mu)$ attenuates the carrier harmonics while retaining
-the commanded mean. The waveform approaches $d_{\ell,k}$ as $\mu$ decreases.
-The held command changes only at sampling instants, where the output may jump.
+the commanded mean. Each train approaches $d_{\ell,k}$ as $\mu$ decreases.
+While consecutive commands differ, the crossfade shifts the interval mean of
+$s_\ell$ from $d_{\ell,k}$ by at most $2\ln 2/(\mu_{\mathrm{c}}T_{\mathrm{c}})$;
+equal neighbouring commands leave it exact.
+The implementation evaluates a train in the time domain or as its Fourier
+series, whichever needs fewer terms; both agree to rounding.
 
 Without a modulation input, pulses retain their prescribed sinusoidal samples:
 
@@ -212,16 +232,16 @@ s_\ell(t)
 \ell\in\{a,b,c\}
 ```
 
-For sampled input operation, the solver stops and restarts at each sampling
-instant. Its maximum step is
+For sampled input operation, the solver stops at each sampling instant to
+commit the sample and continues without restarting. Its maximum step is
 bounded by $\min(T_{\mathrm{c}}/20,\mu^{-1})$ to resolve carrier edges.
 
 ## Initialization
 
 With a modulation input, the initialized input supplies the commands of the
-current and next carrier intervals. Only these two commands are retained;
-no modulation prehistory is required. Starting a new study resets both commands.
-A restart within a carrier interval retains them.
+previous, current, and next carrier intervals. Only these three commands are
+retained; no modulation prehistory is required. Starting a new study resets
+them. A restart within a carrier interval retains them.
 Without an input, the sinusoidal switching sequence supplies its own prehistory.
 
 ## Monitors
