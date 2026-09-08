@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate GFL current control against the balanced LCL steady state (stdlib only)."""
+"""Validate PLL-synchronized current and voltage control (stdlib only)."""
 import argparse
 import csv
 import json
@@ -29,8 +29,8 @@ def steady_state(case, irefd, irefq):
             'q_var': -voltage * irefq}
 
 
-def measure(path, begin, end):
-    integral = dict.fromkeys(['voltage_V', 'id_A', 'iq_A', 'p_W', 'q_var'], 0.0)
+def measure(path, begin, end, final_time=None):
+    integral = dict.fromkeys(['voltage_V', 'id_A', 'iq_A', 'p_W', 'q_var', 'vq_V', 'frequency_Hz'], 0.0)
     previous = None
     count = 0
     max_identity = 0.0
@@ -55,7 +55,8 @@ def measure(path, begin, end):
             minimum_dc = min(minimum_dc, row['DCLink_dc_vdc'])
             values = {'voltage_V': math.sqrt(sum(x*x for x in v)),
                       'id_A': row['Park_current_y1'], 'iq_A': row['Park_current_y2'],
-                      'p_W': power, 'q_var': reactive}
+                      'p_W': power, 'q_var': reactive, 'vq_V': vq,
+                      'frequency_Hz': row['PLL_pll_omega'] / (2 * math.pi)}
             if previous:
                 old_t, old = previous
                 assert t >= old_t, 'Decreasing monitor time'
@@ -66,7 +67,7 @@ def measure(path, begin, end):
                         integral[key] += (hi-lo)*(old[key] + slope*((lo+hi)/2-old_t))
             previous = t, values
             count += 1
-    assert abs(previous[0] - end) < 1e-10, 'Incomplete simulation'
+    assert abs(previous[0] - (end if final_time is None else final_time)) < 1e-10, 'Incomplete simulation'
     return {'mean': {key: value / (end-begin) for key, value in integral.items()},
             'samples': count, 'measurement_identity_error': max_identity,
             'maximum_limited_current_A': max_limited, 'minimum_dc_voltage_V': minimum_dc}
@@ -108,17 +109,63 @@ def validate(exe, output):
     return report
 
 
+def validate_voltage(exe, output):
+    """Check phase-domain voltage tracking before, during, and after a reference step."""
+    solver = json.loads((HERE / 'GFM.solver.json').read_text())
+    case_file = (HERE / solver['system_model_file']).resolve()
+    state_file = (HERE / solver['state_file']).resolve()
+    case = json.loads(case_file.read_text())
+    devices = {d['id']: d for d in case['devices']}
+    reference = next(s['value'] for s in case['signals'] if s['id'] == 'vrefd')
+    frequency = devices['grid']['params']['omega'] / (2 * math.pi)
+    # Each interval ends at an event or the final time. Use its last 20 ms
+    # to measure tracking after the controller has responded.
+    ends = [event['time'] for event in solver['events']] + [solver['tmax']]
+    references = [reference] + [event['value'] for event in solver['events']]
+    report = {}
+    for name, mu in [('voltage_smooth', 240), ('voltage_switching', 1e6)]:
+        waveform = output / f'{name}.csv'
+        config = dict(solver, system_model_file=str(case_file), state_file=str(state_file),
+                      dt_monitor=2e-6, mu=mu, output_file=str(waveform))
+        path = output / f'{name}.solver.json'
+        path.write_text(json.dumps(config, indent=2) + '\n')
+        with (output / f'{name}.log').open('w') as log:
+            subprocess.run([str(exe), str(path)], cwd=output, stdout=log,
+                           stderr=subprocess.STDOUT, check=True)
+        intervals = []
+        for end, target in zip(ends, references):
+            measured = measure(waveform, end - .02, end, solver['tmax'])
+            errors = {'voltage_V': abs(measured['mean']['voltage_V'] - target),
+                      'vq_V': abs(measured['mean']['vq_V']),
+                      'frequency_Hz': abs(measured['mean']['frequency_Hz'] - frequency)}
+            measured.update(reference_V=target, absolute_errors=errors, mean_window_s=[end - .02, end])
+            intervals.append(measured)
+            print(name, end, json.dumps(errors), flush=True)
+            # Physical tracking bounds, including settling and switching ripple.
+            assert errors['voltage_V'] < .05, (name, end, errors)
+            assert errors['vq_V'] < .05, (name, end, errors)
+            assert errors['frequency_Hz'] < .05, (name, end, errors)
+            assert measured['measurement_identity_error'] < 1e-8
+            assert measured['maximum_limited_current_A'] <= devices['current_control']['params']['Imax'] + 1e-10
+            assert measured['minimum_dc_voltage_V'] > 0
+        report[name] = {'mu': mu, 'intervals': intervals}
+    (output / 'metrics.json').write_text(json.dumps(report, indent=2) + '\n')
+    return report
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--exe', type=Path, required=True)
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--scenario', choices=['GFL', 'GFM'], default='GFL')
     args = parser.parse_args()
+    validator = validate if args.scenario == 'GFL' else validate_voltage
     if args.output:
         args.output.mkdir(parents=True, exist_ok=True)
-        validate(args.exe.resolve(), args.output.resolve())
+        validator(args.exe.resolve(), args.output.resolve())
     else:
-        with tempfile.TemporaryDirectory(prefix='gridkit-gfl-') as directory:
-            validate(args.exe.resolve(), Path(directory))
+        with tempfile.TemporaryDirectory(prefix='gridkit-current-control-') as directory:
+            validator(args.exe.resolve(), Path(directory))
 
 
 if __name__ == '__main__':

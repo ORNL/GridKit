@@ -11,16 +11,16 @@
   "output_file": "GFM.csv",
   "events": [
     {
-      "type": "switch",
+      "type": "signal_step",
       "time": 0.04,
-      "element_id": "load_switch",
-      "open": false
+      "signal_id": "vrefd",
+      "value": 209
     },
     {
-      "type": "switch",
+      "type": "signal_step",
       "time": 0.12,
-      "element_id": "load_switch",
-      "open": true
+      "signal_id": "vrefd",
+      "value": 208
     }
   ]
 }

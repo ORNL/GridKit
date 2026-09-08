@@ -54,7 +54,6 @@ Container, for example `plant.machine`:
  ---------|-------------------------------------------------------
   `open`  | Optional Boolean switch command, true is open
   `theta`, `omega` | Optional `PLL` angle in radians and angular frequency in radians per second; defaults are the inferred voltage angle and nominal frequency
-  `theta` | Optional `Angle` reference angle in radians, default zero
   `ud`, `uq`, `ilimd`, `ilimq` | Optional `InnerCurrentControl` outputs; voltage commands determine the integral, limited currents must match the limiter
   `icmdd`, `icmdq` | Optional `OuterVoltageControl` current-command outputs in amperes; determine the integral contributions
   `icmdd`, `icmdq` | Optional `OuterPowerControl` current commands in amperes; defaults give zero integral contribution

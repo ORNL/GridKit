@@ -238,8 +238,6 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Park`                   | `input` | Input     | Three Signal IDs | Yes
   `Park`                   | `theta` | Input     | Signal | Yes
   `Park`                   | `out` | Output | Three Signal IDs | No
-  `Angle`                  | `omega` | Input | Signal | Yes
-  `Angle`                  | `theta` | Output | Signal | No
   `Modulation`             | `u` | Input | Three Signal IDs | Yes
   `Modulation`             | `vdc` | Input | Signal | Yes
   `Modulation`             | `m` | Output | Three Signal IDs | No
@@ -390,8 +388,8 @@ connected Park transforms and controller inputs. For example:
 
 Use `Park` with `input` in `a`, `b`, `c` order and `out` in `d`, `q`, `0` order.
 Set `params: {"inverse": true}` to reverse the transformation. Its scalar keys
-are `u1`, `u2`, `u3` and `y1`, `y2`, `y3`. Connect `Angle.theta` to each Park
-operator and supply the same `omega` to the Angle and controllers.
+are `u1`, `u2`, `u3` and `y1`, `y2`, `y3`. Connect `PLL.theta` to each Park
+operator and `PLL.omega` to the controllers through their signal input ports.
 
 For the switching bridge, inverse-transform `[ud, uq, 0]`, connect the resulting
 three-phase voltage command to `Modulation.u`, and connect `Modulation.m` to
@@ -411,7 +409,6 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `PWM`                 | [PWM](Component/Controller/PWM/README.md)
   `Park`                | [Park](Operators/Reference/Park/README.md)
   `PLL`                 | [PLL](Operators/Reference/PLL/README.md)
-  `Angle`               | [Angle](Operators/Reference/Angle/README.md)
   `Modulation`          | [Modulation](Operators/Modulation/README.md)
   `InnerCurrentControl` | [InnerCurrentControl](Component/Controller/InnerCurrentControl/README.md)
   `OuterPowerControl`   | [OuterPowerControl](Component/Controller/OuterPowerControl/README.md)

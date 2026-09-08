@@ -203,12 +203,6 @@ namespace GridKit
         qualified_data.id   = qualify(model_data.id);
         add<Pll<ScalarT, IdxT>>(model_data.id, qualified_data);
       }
-      for (const auto& model_data : data.angle)
-      {
-        auto qualified_data = model_data;
-        qualified_data.id   = qualify(model_data.id);
-        add<Angle<ScalarT, IdxT>>(model_data.id, qualified_data);
-      }
 
       for (const auto& model_data : data.modulation)
       {
@@ -362,13 +356,6 @@ namespace GridKit
                            &source(model_data.inputs.at(PllInputs::vc))});
         for (const auto& [output, id] : model_data.outputs)
           model.assignOutput(output, &signal(id));
-      }
-      for (const auto& model_data : data.angle)
-      {
-        auto& model = component<Angle<ScalarT, IdxT>>(model_data.id);
-        model.attachInput(&source(model_data.inputs.at(AngleInputs::omega)));
-        for (const auto& [output, reference] : model_data.outputs)
-          model.assignOutput(output, &signal(reference));
       }
 
       for (const auto& model_data : data.modulation)

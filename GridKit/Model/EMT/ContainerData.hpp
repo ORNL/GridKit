@@ -27,7 +27,6 @@
 #include <GridKit/Model/EMT/Component/Transformer/TransformerData.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/ConverterData.hpp>
 #include <GridKit/Model/EMT/Operators/Modulation/ModulationData.hpp>
-#include <GridKit/Model/EMT/Operators/Reference/Angle/AngleData.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/PLL/PllData.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Park/ParkData.hpp>
 #include <GridKit/Model/EMT/Signal/SignalData.hpp>
@@ -54,7 +53,6 @@ namespace GridKit
       using OuterPowerControlDataT      = Controller::OuterPowerControlData<RealT, IdxT>;
       using ParkDataT                   = ParkData<RealT, IdxT>;
       using PllDataT                    = PllData<RealT, IdxT>;
-      using AngleDataT                  = AngleData<RealT, IdxT>;
       using ModulationDataT             = ModulationData<RealT, IdxT>;
       using PwmDataT                    = Controller::PwmData<RealT, IdxT>;
       using DcLinkDataT                 = Controller::DcLinkData<RealT, IdxT>;
@@ -92,7 +90,6 @@ namespace GridKit
       std::vector<OuterPowerControlDataT>           outer_power_control;
       std::vector<ParkDataT>                        park;
       std::vector<PllDataT>                         pll;
-      std::vector<AngleDataT>                       angle;
       std::vector<ModulationDataT>                  modulation;
       std::vector<PwmDataT>                         pwm;
       std::vector<DcLinkDataT>                      dc_link;
