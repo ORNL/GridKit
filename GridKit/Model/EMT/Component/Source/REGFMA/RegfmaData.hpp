@@ -12,6 +12,7 @@ namespace GridKit
       V,      ///< \f$V_\mathrm{b}\f$ Line-to-line RMS voltage base [V]
       omega0, ///< \f$\omega_0\f$ Rated angular frequency [rad/s]
       XL,     ///< \f$X_L\f$ Coupling reactance [p.u.]
+      RL,     ///< \f$R_L\f$ Coupling resistance [p.u.]
       mp,     ///< \f$m_p\f$ Active-power droop [p.u.]
       mq,     ///< \f$m_q\f$ Reactive-power droop [p.u.]
       kpv,    ///< \f$k_{\mathrm{pv}}\f$ Voltage proportional gain [p.u.]
@@ -29,7 +30,7 @@ namespace GridKit
       TPf,    ///< \f$T_{Pf}\f$ Active-power measurement time constant [s]
       TQf,    ///< \f$T_{Qf}\f$ Reactive-power measurement time constant [s]
       TVf,    ///< \f$T_{Vf}\f$ Voltage measurement time constant [s]
-      ImaxF,  ///< \f$I_F^{\max}\f$ Maximum transient current [p.u.]
+      ImaxF,  ///< \f$I_F^{\max}\f$ Transient current-reference limit [p.u.]
       VFlag,  ///< \f$\mathrm{VFlag}\f$ Regulate terminal voltage when true, internal voltage otherwise
       QVFlag, ///< \f$\mathrm{QVFlag}\f$ Infer the voltage reference when true, reactive reference otherwise
     };
@@ -67,9 +68,9 @@ namespace GridKit
       ia,     ///< \f$i_a\f$ Phase-a current injection [A]
       ib,     ///< \f$i_b\f$ Phase-b current injection [A]
       ic,     ///< \f$i_c\f$ Phase-c current injection [A]
-      ea,     ///< \f$e_a\f$ Corrected phase-a source voltage [V]
-      eb,     ///< \f$e_b\f$ Corrected phase-b source voltage [V]
-      ec,     ///< \f$e_c\f$ Corrected phase-c source voltage [V]
+      ea,     ///< \f$e_a\f$ Applied phase-a source voltage [V]
+      eb,     ///< \f$e_b\f$ Applied phase-b source voltage [V]
+      ec,     ///< \f$e_c\f$ Applied phase-c source voltage [V]
       omega,  ///< \f$\omega\f$ Internal angular frequency [rad/s]
       edroop, ///< \f$E_\mathrm{droop}\f$ Droop voltage magnitude [p.u.]
       p,      ///< \f$S_\mathrm{b}P\f$ Terminal active power [W]

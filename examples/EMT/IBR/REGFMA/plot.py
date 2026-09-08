@@ -60,6 +60,7 @@ def main():
 
     sources = {}
     checks = {'max_kcl_error_A': 0., 'max_zero_sequence_current_A': 0.,
+              'max_damping_voltage_error_V': 0., 'max_event_current_jump_A': 0.,
               'max_active_power_error_W': 0., 'max_reactive_power_error_var': 0.}
     summary = {}
     for bus, remote in ((4, 7), (5, 8), (6, 8)):
@@ -67,23 +68,37 @@ def main():
         params = devices[f'regfma_{bus}']['params']
         voltage = phases(data, f'Bus_bus_{bus}', 'v')
         current = phases(data, prefix, 'i')
+        emf = phases(data, prefix, 'e')
+        capacitor = phases(data, f'Bus_capacitor_{bus}', 'v')
+        capacitor_current = phases(data, f'LineLumped_damping_{bus}', 'i12')
         vab, iab = voltage @ CLARKE.T, current @ CLARKE.T
         magnitude = np.linalg.norm(iab, axis=1) / (params['S'] / params['V'])
+        drop = (emf - voltage) @ CLARKE.T / params['V']
+        reference = (drop[:, 0] + 1j * drop[:, 1]) / complex(params['RL'], params['XL'])
+        reference_magnitude = np.abs(reference)
         frequency = data[f'{prefix}_omega'] / (2 * np.pi)
         vpu = np.linalg.norm(vab, axis=1) / params['V']
         p = np.sum(voltage * current, axis=1)
         q = vab[:, 1] * iab[:, 0] - vab[:, 0] * iab[:, 1]
         kcl = (current + phases(data, f'LoadZ_load_{bus}', 'i')
                - phases(data, f'LineLumped_line_{bus}_{remote}', 'i12')
+               - capacitor_current
                - phases(data, f'Bus_bus_{bus}', 'i_sh'))
+        capacitor_kcl = capacitor_current - phases(data, f'Bus_capacitor_{bus}', 'i_sh')
+        resistance = devices[f'damping_{bus}']['params']['Rp'][0][0]
+        damping_error = voltage - capacitor - resistance * capacitor_current
+        jumps = [np.ptp(current[np.isclose(t, event['time'], rtol=0, atol=1e-12)], axis=0)
+                 for event in events]
         for key, error in (
-                ('max_kcl_error_A', np.max(np.abs(kcl))),
+                ('max_kcl_error_A', max(np.max(np.abs(kcl)), np.max(np.abs(capacitor_kcl)))),
+                ('max_damping_voltage_error_V', np.max(np.abs(damping_error))),
+                ('max_event_current_jump_A', np.max(jumps)),
                 ('max_zero_sequence_current_A', np.max(np.abs(current.sum(axis=1) / 3))),
                 ('max_active_power_error_W', np.max(np.abs(p - data[f'{prefix}_p']))),
                 ('max_reactive_power_error_var', np.max(np.abs(q - data[f'{prefix}_q'])))):
             checks[key] = max(checks[key], float(error))
-        if magnitude.max() > params['ImaxF'] + 1e-5:
-            raise ValueError(f'Bus {bus}: current exceeds ImaxF')
+        if reference_magnitude.max() > params['ImaxF'] + 1e-5:
+            raise ValueError(f'Bus {bus}: current reference exceeds ImaxF')
         sources[bus] = {'v': vpu, 'i': magnitude, 'f': frequency, 'p': p / 1e6, 'q': q / 1e6,
                         'pf': data[f'{prefix}_pf'] * params['S'] / 1e6,
                         'qf': data[f'{prefix}_qf'] * params['S'] / 1e6,
@@ -91,10 +106,12 @@ def main():
         summary[f'regfma_{bus}'] = {
             'minimum_voltage_pu': float(vpu.min()), 'maximum_voltage_pu': float(vpu.max()),
             'maximum_current_pu': float(magnitude.max()),
+            'maximum_current_reference_pu': float(reference_magnitude.max()),
             'minimum_frequency_Hz': float(frequency.min()), 'maximum_frequency_Hz': float(frequency.max()),
             'final_frequency_Hz': float(frequency[-1]), 'final_voltage_pu': float(vpu[-1]),
             'final_active_power_MW': float(p[-1] / 1e6), 'final_reactive_power_Mvar': float(q[-1] / 1e6)}
     if (checks['max_kcl_error_A'] > .01 or checks['max_zero_sequence_current_A'] > .001
+            or checks['max_damping_voltage_error_V'] > .001 or checks['max_event_current_jump_A'] > .001
             or checks['max_active_power_error_W'] > .1 or checks['max_reactive_power_error_var'] > .1):
         raise ValueError(f'Terminal consistency check failed: {checks}')
     v7 = np.linalg.norm(phases(data, 'Bus_bus_7', 'v') @ CLARKE.T, axis=1) / 13800
@@ -149,13 +166,13 @@ def main():
     inset.plot(t, v7, color=COLORS[3], ls='--', lw=1)
     inset.axvspan(fault_start, fault_end, color='#555555', alpha=.10, linewidth=0)
     inset.set(xlim=(fault_start - .01, fault_end + .01), ylim=(0, 1.08 * v7.max()),
-              xticks=[fault_start, fault_end], yticks=[0, 4, 8])
+              xticks=[fault_start, fault_end])
     inset.set_title('Event voltage [p.u.]', fontsize=8)
     inset.tick_params(labelsize=7)
     for machine, color in zip((1, 2, 3), COLORS):
         axes[0, 1].plot(t, data[f'Machine_machine_{machine}_omega'] * 60,
                         color=color, lw=.8, ls='--', label=f'Machine {machine}')
-    axes[2, 0].axhline(devices['regfma_4']['params']['ImaxF'], color='#555555', ls='--', lw=1, label='Current limit')
+    axes[2, 0].axhline(devices['regfma_4']['params']['ImaxF'], color='#555555', ls='--', lw=1, label='Current-reference limit')
     finish(fig, axes, 'response', (0, study['tmax']))
 
     fig, axes = plt.subplots(3, 2, figsize=(12, 9), sharex=True, constrained_layout=True)
@@ -173,7 +190,7 @@ def main():
         axes[2, 1].plot(t, sources[4]['iabc'][:, index], lw=1, label=f'Phase {phase}')
     axes[2, 0].set_ylabel('Bus 4 phase voltage [kV]')
     axes[2, 1].set_ylabel('REGFMA at bus 4 current [A]')
-    axes[0, 1].axhline(devices['regfma_4']['params']['ImaxF'], color='#555555', ls='--', lw=1, label='Current limit')
+    axes[0, 1].axhline(devices['regfma_4']['params']['ImaxF'], color='#555555', ls='--', lw=1, label='Current-reference limit')
     finish(fig, axes, 'fault', (fault_start - .05, fault_end + .14))
 
     (directory / 'index.html').write_text(f'''<!doctype html>
@@ -183,6 +200,8 @@ img{{width:100%;height:auto}}a{{color:#176b9c}}</style>
 <h1>Ten-bus REGFMA response</h1>
 <p>Three 5 MVA REGFMA sources and three synchronous machines. Three-phase 2 Ω/phase
 fault from 1.00 to 1.06 s; 3 s simulation, μ = {study['mu']:g}.</p>
+<p>Each source has physical RL coupling and a damped capacitor shunt.
+The dashed current line limits the reference; physical current can overshoot.</p>
 <p>{run['wall_seconds']:.3f} s wall time; {run['simulation_cpu_seconds']:.3f} s simulation CPU;
 {run['ida']['steps']:,} accepted steps; {len(t):,} monitor samples.</p>
 <p>Recorded voltage peaks: {max(source['v'].max() for source in sources.values()):.3f} p.u.

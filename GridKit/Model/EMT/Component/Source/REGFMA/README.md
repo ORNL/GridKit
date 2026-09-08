@@ -1,13 +1,13 @@
 # Droop-Controlled Grid-Forming Inverter (REGFMA/REGFM_A1) Model
 
-`Regfma` represents the WECC REGFM_A1 voltage source behind coupling
-reactance, with active- and reactive-power droop, power-limit controls,
-terminal-voltage control, and transient fault-current limiting.[^wecc]
+`Regfma` implements an averaged EMT realization of the WECC REGFM_A1
+active- and reactive-power droop, power-limit, voltage, and fault-current
+controls behind a physical RL branch.[^wecc]
 Current $\mathbf{i}$ is injected from the inverter into the EMT bus.
 
-The positive-sequence model uses stationary, power-invariant $\alpha\beta$
-coordinates for balanced fundamental studies. The coupling reactance is
-algebraic.
+The controls use stationary, power-invariant $\alpha\beta$ coordinates for
+balanced fundamental studies. The current-reference realization below replaces
+the detailed PSCAD inner controls.[^pscad]
 
 ## Block Diagram
 
@@ -22,7 +22,8 @@ Symbol | Units | JSON | Description | Note
 $S_\mathrm{b}$ | [VA] | `S` | Rated three-phase apparent power | Required, positive
 $V_\mathrm{b}$ | [V] | `V` | Rated line-to-line RMS voltage | Required, positive
 $\omega_0$ | [rad/s] | `omega0` | Rated electrical angular frequency | Default $120\pi$
-$X_L$ | [p.u.] | `XL` | Coupling reactance | Default $0.15$
+$X_L$ | [p.u.] | `XL` | Filter series reactance | Default $0.15$
+$R_L$ | [p.u.] | `RL` | Filter series resistance | Default $0.03$
 $m_p$ | [p.u.] | `mp` | Active-power droop gain | Default $0.01$
 $m_q$ | [p.u.] | `mq` | Reactive-power droop gain | Default $0.05$
 $k_{\mathrm{pv}}$ | [p.u.] | `kpv` | Voltage proportional gain | Default $0$
@@ -40,7 +41,7 @@ $k_{\mathrm{iqmax}}$ | [$\mathrm{s}^{-1}$] | `kiqmax` | Reactive-power-limit int
 $T_{Pf}$ | [s] | `TPf` | Active-power filter time constant | Default $0.01$
 $T_{Qf}$ | [s] | `TQf` | Reactive-power filter time constant | Default $0.01$
 $T_{Vf}$ | [s] | `TVf` | Voltage filter time constant | Default $0.01$
-$I_F^{\max}$ | [p.u.] | `ImaxF` | Maximum transient current | Default $2$
+$I_F^{\max}$ | [p.u.] | `ImaxF` | Transient current-reference limit | Default $2$
 $\mathrm{VFlag}$ | [-] | `VFlag` | Enable terminal-voltage PI control | Default `true`
 $\mathrm{QVFlag}$ | [-] | `QVFlag` | Select plant voltage-reference control | Default `true`
 
@@ -54,7 +55,7 @@ All parameters and derived coefficients must be finite.
 
 ```math
 \begin{aligned}
-S_\mathrm{b}, V_\mathrm{b}, \omega_0, X_L, m_p &> 0 \\
+S_\mathrm{b}, V_\mathrm{b}, \omega_0, R_L, X_L, m_p &> 0 \\
 T_{Pf}, T_{Qf}, T_{Vf}, I_F^{\max} &> 0 \\
 m_q, k_{\mathrm{pv}}, k_{\mathrm{iv}} &\ge 0 \\
 k_{\mathrm{ppmax}}, k_{\mathrm{ipmax}}, k_{\mathrm{pqmax}}, k_{\mathrm{iqmax}} &\ge 0 \\
@@ -68,12 +69,15 @@ Q^{\min} &\le Q^{\max}
 
 ### Derived Parameters
 
-The phase count is fixed at $N=3$. The current base and normalized
-active-power-limit gains are
+The phase count is fixed at $N=3$. The base quantities, physical filter
+parameters, and normalized active-power-limit gains are
 
 ```math
 \begin{aligned}
 I_\mathrm{b} &= \dfrac{S_\mathrm{b}}{V_\mathrm{b}} \\
+Z_\mathrm{b} &= \dfrac{V_\mathrm{b}^2}{S_\mathrm{b}} \\
+R &= R_L Z_\mathrm{b} \\
+L &= \dfrac{X_L Z_\mathrm{b}}{\omega_0} \\
 K_P^P &= \dfrac{k_{\mathrm{ppmax}}}{m_p} \\
 K_I^P &= \dfrac{k_{\mathrm{ipmax}}}{m_p}
 \end{aligned}
@@ -106,6 +110,14 @@ The stationary transformation and matrix representation of the complex unit are
 
 $\mathbf{C}$ contains the $\alpha\beta$ rows of the
 [Clarke](../../../Operators/Reference/Clarke/README.md) transformation.
+The nominal-frequency impedance and its inverse are
+
+```math
+\mathbf{Z}_L = R_L\mathbf{I}_2+X_L\mathbf{J},
+\qquad
+\mathbf{Z}_L^{-1} = \dfrac{R_L\mathbf{I}_2-X_L\mathbf{J}}{R_L^2+X_L^2}
+```
+
 The voltage-magnitude regularization is $\epsilon_V=10^{-8}$ p.u.
 
 ## Model Ports
@@ -146,12 +158,11 @@ $x_Q^{\max}$ | [p.u.] | Upper reactive-power-limit integral contribution |
 $x_Q^{\min}$ | [p.u.] | Lower reactive-power-limit integral contribution |
 $x_V$ | [p.u.] | Voltage integral contribution | Held when `VFlag` is `false`
 $\delta$ | [rad] | Internal angle in the rated-frequency frame |
+$\mathbf{i}$ | [A] | Filter current injection | $\mathbf{i} \in \mathbb{R}^N$
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{i}$ | [A] | Phase current injection | $\mathbf{i} \in \mathbb{R}^N$
+None.
 
 ### External Variables
 
@@ -221,7 +232,7 @@ The control limits and integrator bounds use the CommonMath smooth
 [`clamp`](../../../../../CommonMath.md#clamp), and
 [`antiwindup`](../../../../../CommonMath.md#antiwindup) functions.
 
-The source voltage, trial current, and current-limit factor are
+The source voltage and limited current reference are
 
 ```math
 \begin{aligned}
@@ -231,17 +242,19 @@ The source voltage, trial current, and current-limit factor are
 \cos\theta \\
 \sin\theta
 \end{bmatrix} \\
-\mathbf{i}^{\mathrm{trial}} &= -\dfrac{\mathbf{J}}{X_L}
+\mathbf{i}^{\mathrm{trial}} &= \mathbf{Z}_L^{-1}
   (\widehat{\mathbf{e}}^{\mathrm{droop}}-\widehat{\mathbf{v}}) \\
 \mathcal{L}_F &= \max\left(1,
   \dfrac{\|\mathbf{i}^{\mathrm{trial}}\|_2^2}{(I_F^{\max})^2}\right) \\
-\widehat{\mathbf{e}} &= \widehat{\mathbf{v}}+X_L\mathbf{J}\widehat{\mathbf{i}} \\
-\mathbf{e} &= V_\mathrm{b}\mathbf{C}^\mathsf{T}\widehat{\mathbf{e}}
+\mathbf{i}^{\mathrm{lim}} &= \dfrac{\mathbf{i}^{\mathrm{trial}}}{\sqrt{\mathcal{L}_F}} \\
+\mathbf{e} &= \mathbf{v}+V_\mathrm{b}\mathbf{C}^\mathsf{T}\mathbf{Z}_L\mathbf{i}^{\mathrm{lim}}
 \end{aligned}
 ```
 
-The current limiter acts on squared per-unit current and preserves its
-direction. $\mathbf{e}$ is the corrected internal voltage.
+The limiter bounds the nominal-frequency current reference and preserves its
+direction. The physical filter current can overshoot. $\mathbf{e}$ includes
+the bus common-mode voltage; zero-sequence current decays with time constant
+$L/R$. Shunt capacitance and damping are external circuit elements.
 
 ### Internal Equations
 
@@ -266,16 +279,15 @@ direction. $\mathbf{e}$ is the corrected internal voltage.
     \mathrm{antiwindup}(x_V,k_{\mathrm{iv}}e_V;E^{\min},E^{\max}),
       & \mathrm{VFlag}=\mathrm{true}
   \end{cases} \\
-0 &= -\dfrac{\mathrm{d}\delta}{\mathrm{d}t}+\Delta\omega
+0 &= -\dfrac{\mathrm{d}\delta}{\mathrm{d}t}+\Delta\omega \\
+0 &= -\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}
+  +\dfrac{\mathbf{e}-\mathbf{v}-R\mathbf{i}}{L}
 \end{aligned}
 ```
 
 #### Algebraic
 
-```math
-0 = -\mathbf{i}+I_\mathrm{b}\mathbf{C}^\mathsf{T}
-  \dfrac{\mathbf{i}^{\mathrm{trial}}}{\sqrt{\mathcal{L}_F}}
-```
+None.
 
 ### External Equations
 
@@ -296,7 +308,7 @@ The inverse of the CommonMath smooth clamp is denoted by $\mathrm{clamp}^{-1}$.
 \begin{aligned}
 \mathbf{i}^{\mathrm{trial}}_0 &\leftarrow \sqrt{\mathcal{L}_{F,0}}\,\widehat{\mathbf{i}}_0 \\
 \widehat{\mathbf{e}}^{\mathrm{droop}}_0 &\leftarrow
-  \widehat{\mathbf{v}}_0+X_L\mathbf{J}\mathbf{i}^{\mathrm{trial}}_0 \\
+  \widehat{\mathbf{v}}_0+\mathbf{Z}_L\mathbf{i}^{\mathrm{trial}}_0 \\
 E_0 &\leftarrow \|\widehat{\mathbf{e}}^{\mathrm{droop}}_0\|_2 \\
 E_{\mathrm{raw},0} &\leftarrow \mathrm{clamp}^{-1}(E_0;E^{\min},E^{\max}) \\
 P_f &\leftarrow P_0 \\
@@ -329,11 +341,17 @@ E_{\mathrm{raw},0}-k_{\mathrm{pv}}e_V, & \mathrm{VFlag}=\mathrm{true}
 
 The initial magnitude must satisfy $E^{\min}<E_0<E^{\max}$; the active voltage
 integral must lie within $[E^{\min},E^{\max}]$. Inferred references are latched
-when unattached. Attached references are preserved; in direct-voltage mode,
-incompatible references make the phase currents initial guesses. Consistent
-initialization preserves the differential states and resolves the algebraic
-currents and state derivatives. Power-limit integral derivatives can initially
-be nonzero under smooth anti-windup.
+when unattached. Attached references and all differential states are preserved.
+At the matched nominal-frequency operating point,
+
+```math
+\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}\leftarrow
+\omega_0 I_\mathrm{b}\mathbf{C}^\mathsf{T}\mathbf{J}\widehat{\mathbf{i}}_0
+```
+
+Consistent initialization resolves the state derivatives from the applied
+references. Power-limit integral derivatives can initially be nonzero under
+smooth anti-windup.
 
 ## Monitors
 
@@ -348,8 +366,8 @@ Monitor | Units | Description | Note
 `xqmin` | [p.u.] | Lower reactive-power-limit integral contribution |
 `xv` | [p.u.] | Voltage integral contribution |
 `delta` | [rad] | Internal angle in the rated-frequency frame |
-`i` | [A] | Phase current injection | $\mathbf{i} \in \mathbb{R}^N$
-`e` | [V] | Corrected internal voltage | $\mathbf{e} \in \mathbb{R}^N$
+`i` | [A] | Filter current injection | $\mathbf{i} \in \mathbb{R}^N$
+`e` | [V] | Applied internal voltage | $\mathbf{e} \in \mathbb{R}^N$
 `omega` | [rad/s] | Internal angular frequency |
 `edroop` | [p.u.] | Droop voltage magnitude |
 `p` | [W] | Active power injection | $S_\mathrm{b}P$
@@ -362,3 +380,8 @@ ports and monitor expansion.
 [^wecc]: Pacific Northwest National Laboratory,
     [*Model Specification of Droop-Controlled, Grid-Forming Inverters (REGFM_A1)*](https://www.wecc.org/sites/default/files/documents/products/2024/Model%20Specification%20of%20Droop-Controlled%20Grid-Forming%20Inverters-REGFM_A1.pdf),
     PNNL-32278, September 2023, Table 1, Figures 3–4, equations (4)–(9), and Section 5.
+
+[^pscad]: Pacific Northwest National Laboratory,
+    [*PSCAD and PSSE Version of WECC Grid-Forming Inverter Models*](https://github.com/pnnl/PSCAD-and-PSSE-Version-of-WECC-Grid-Forming-Inverter-Models/releases/tag/V1),
+    release V1, REGFM_A1 main-circuit parameters `L1_pu` and `R1_pu`.
+    The published model includes virtual-admittance and inner-current controls.
