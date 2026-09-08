@@ -53,7 +53,7 @@ All vectors use $(d,q)$ order in the same power-invariant
 transform supplies the measured currents directly. The controller uses its
 derived current references internally. All inputs must be connected and finite.
 
-Connect `icmd` to InnerCurrentControl's `iref` input and return its `ilim`
+Connect `icmd` to InnerCurrentControl's `icmd` input and return its `ilim`
 output. For an LCL filter, the outer loop measures grid-side current while
 InnerCurrentControl measures inverter-side current.
 

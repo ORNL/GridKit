@@ -47,7 +47,7 @@ def read_run(folder, name):
     return {'name': name, 'folder': folder, 'data': data, 'solver': solver,
             'signals': signals, 'devices': devices, 'record': record,
             'fc': devices['pwm']['params']['fc'], 'mu': solver['mu'],
-            'frequency': signals['omega'] / (2 * np.pi)}
+            'frequency': devices['grid']['params']['omega'] / (2 * np.pi) if name == 'GFL' else signals['omega'] / (2 * np.pi)}
 
 
 def integral(t, x, points):
@@ -160,11 +160,11 @@ def control_figure(run, end):
     name, d = run['name'], run['data']
     fig, ax = plt.subplots(4, 1, figsize=(10, 9), sharex=True)
     if name == 'GFL':
-        ax[0].plot(d['t'], reference(run, 'irefd'), '--', color=GREY, label='requested $i_d$')
-        ax[0].plot(d['t'], d['InnerCurrentControl_current_control_ilimd'], color=ORANGE, label='limited $i_d$')
-        trace(ax[0], run, 'Park_current_y1', '$i_d$')
-        trace(ax[1], run, 'Park_current_y2', '$i_q$')
-        ax[1].plot(d['t'], reference(run, 'irefq'), '--', color=ORANGE, label='requested $i_q$')
+        trace(ax[0], run, 'Park_grid_current_y1', '$i_d$')
+        trace(ax[1], run, 'Park_grid_current_y2', '$i_q$')
+        params = run['devices']['power_control']['params']
+        ax[0].axhline(params['Pref'] / params['V'], linestyle='--', color=ORANGE, label=r'$i_d^{\mathrm{ref}}$')
+        ax[1].axhline(-params['Qref'] / params['V'], linestyle='--', color=ORANGE, label=r'$i_q^{\mathrm{ref}}$')
         ax[0].set_ylabel('d-axis current [A]')
         ax[1].set_ylabel('q-axis current [A]')
     else:

@@ -9,24 +9,5 @@
   "max_steps": 1000000,
   "consistent_ic_type": "ya_ydp",
   "output_file": "GFL.csv",
-  "events": [
-    {
-      "type": "signal_step",
-      "time": 0.04,
-      "signal_id": "irefd",
-      "value": 16
-    },
-    {
-      "type": "signal_step",
-      "time": 0.08,
-      "signal_id": "irefd",
-      "value": 45
-    },
-    {
-      "type": "signal_step",
-      "time": 0.12,
-      "signal_id": "irefd",
-      "value": 8
-    }
-  ]
+  "events": []
 }
