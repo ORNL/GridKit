@@ -57,6 +57,7 @@ Container, for example `plant.machine`:
   `theta` | Optional `Angle` reference angle in radians, default zero
   `xid`, `xiq` | Optional `InnerCurrentControl` integral contributions in volts, default zero
   `etad`, `etaq` | Optional `OuterVoltageControl` integral contributions in amperes, default zero
+  `icmdd`, `icmdq` | Optional `OuterPowerControl` current commands in amperes; defaults give zero integral contribution
   `i12a`, `i12b`, `i12c` | Optional instantaneous `LineLumped` or `Switch` series currents from terminal 1 to terminal 2, in amperes
   `i12a`, `i12b`, `i12c`, `psi1a`, `psi1b`, `psi1c`, `psi2a`, `psi2b`, `psi2c` | Optional `Transformer` series leakage current and magnetizing flux linkages in per unit, default zero
   `ia`, `ib`, `ic` | Optional instantaneous `Machine`, `LoadZ`, `VoltageSource`, or `DependentVoltageSource` current injections into the bus, in amperes

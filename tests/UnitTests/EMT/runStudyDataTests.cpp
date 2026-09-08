@@ -154,7 +154,8 @@ int main()
   state_model["devices"][0]["devices"] = {{{"class", "Bus"}, {"id", "bus"}},
                                           {{"class", "LoadZ"}, {"id", "load"}},
                                           {{"class", "REGFMA"}, {"id", "regfma"}},
-                                          {{"class", "PLL"}, {"id", "pll"}, {"inputs", {{"bus", "bus"}}}}};
+                                          {{"class", "PLL"}, {"id", "pll"}, {"inputs", {{"bus", "bus"}}}},
+                                          {{"class", "OuterPowerControl"}, {"id", "power"}}};
   state_model["devices"].push_back({{"class", "Switch"}, {"id", "switch"}});
   std::ofstream(directory / "case.json") << state_model.dump();
   auto parse_state = [&](const json& state)
@@ -175,10 +176,16 @@ int main()
   success *= parse_state({{"devices", {{"child.pll", {{"theta", 0.37}, {"omega", 380.0}}}}}})
              == std::map<std::string, std::map<std::string, double>>{{"child.pll", {{"theta", 0.37}, {"omega", 380.0}}}};
   success *= parse_state({{"devices", {{"child.pll", {{"theta", nullptr}, {"omega", nullptr}}}}}}).empty();
+  success *= parse_state({{"devices", {{"child.power", {{"icmdd", 8.0}, {"icmdq", -3.0}}}}}})
+             == std::map<std::string, std::map<std::string, double>>{{"child.power", {{"icmdd", 8.0}, {"icmdq", -3.0}}}};
+  success *= parse_state({{"devices", {{"child.power", {{"icmdd", nullptr}, {"icmdq", nullptr}}}}}}).empty();
   for (const auto& invalid : {json(0.0), json(nullptr)})
   {
     success *= rejects([&]
                        { parse_state({{"devices", {{"child.pll", {{"xi", invalid}}}}}}); });
+    for (const auto* key : {"etad", "etaq"})
+      success *= rejects([&]
+                         { parse_state({{"devices", {{"child.power", {{key, invalid}}}}}}); });
   }
   for (const auto& invalid : {json(true), json("1"), json::array({1})})
   {
