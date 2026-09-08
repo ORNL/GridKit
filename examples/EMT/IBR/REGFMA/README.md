@@ -44,6 +44,7 @@ The response figure shows terminal voltage, REGFMA internal frequency and
 machine rotor frequency, filtered active and reactive power, terminal current,
 and internal voltage command. The detail figure shows instantaneous power and
 the recorded three-phase voltage and current at bus 4 around the fault.
+The response figure's voltage inset retains the full event peaks.
 Shading marks the fault interval. Positive source power denotes injection.
 Buses 4 and 5 have identical source and feeder parameters; their responses
 coincide with the 7–8 tie closed.
