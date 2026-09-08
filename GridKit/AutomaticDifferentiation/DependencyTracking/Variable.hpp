@@ -208,7 +208,8 @@ namespace GridKit
       */
       double der(size_t i) const
       {
-        return dependencies_[i];
+        auto it = dependencies_.find(i);
+        return it != dependencies_.end() ? it->second : 0.0;
       }
 
       /**
@@ -300,7 +301,7 @@ namespace GridKit
       size_t variable_number_; ///< Independent variable ID
       bool   is_fixed_;        ///< Constant parameter flag.
 
-      mutable DependencyMap dependencies_;
+      DependencyMap dependencies_;
       static const size_t   INVALID_VAR_NUMBER = INVALID_INDEX<size_t>;
     };
 
