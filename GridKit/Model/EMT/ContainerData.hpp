@@ -10,6 +10,8 @@
 #include <GridKit/Model/EMT/Component/Controller/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1Data.hpp>
+#include <GridKit/Model/EMT/Component/Controller/InnerCurrentControl/InnerCurrentControlData.hpp>
+#include <GridKit/Model/EMT/Component/Controller/OuterVoltageControl/OuterVoltageControlData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1Data.hpp>
@@ -21,6 +23,9 @@
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSourceData.hpp>
 #include <GridKit/Model/EMT/Component/Switch/SwitchData.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/ConverterData.hpp>
+#include <GridKit/Model/EMT/Operators/Modulation/ModulationData.hpp>
+#include <GridKit/Model/EMT/Operators/Reference/Angle/AngleData.hpp>
+#include <GridKit/Model/EMT/Operators/Reference/Park/ParkData.hpp>
 #include <GridKit/Model/EMT/Signal/SignalData.hpp>
 
 namespace GridKit
@@ -40,6 +45,11 @@ namespace GridKit
       using RealT = real_type;
       using IdxT  = index_type;
 
+      using InnerCurrentControlDataT    = Controller::InnerCurrentControlData<RealT, IdxT>;
+      using OuterVoltageControlDataT    = Controller::OuterVoltageControlData<RealT, IdxT>;
+      using ParkDataT                   = ParkData<RealT, IdxT>;
+      using AngleDataT                  = AngleData<RealT, IdxT>;
+      using ModulationDataT             = ModulationData<RealT, IdxT>;
       using PwmDataT                    = Controller::PwmData<RealT, IdxT>;
       using DcLinkDataT                 = Controller::DcLinkData<RealT, IdxT>;
       using ConverterDataT              = ConverterData<RealT, IdxT>;
@@ -69,6 +79,11 @@ namespace GridKit
       std::vector<SignalDataT>   signal;    ///< Signals local to this scope
       std::vector<ContainerData> container; ///< Child scopes
 
+      std::vector<InnerCurrentControlDataT>         inner_current_control;
+      std::vector<OuterVoltageControlDataT>         outer_voltage_control;
+      std::vector<ParkDataT>                        park;
+      std::vector<AngleDataT>                       angle;
+      std::vector<ModulationDataT>                  modulation;
       std::vector<PwmDataT>                         pwm;
       std::vector<DcLinkDataT>                      dc_link;
       std::vector<ConverterDataT>                   converter;

@@ -7,6 +7,8 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/EMT/Component/Bus/BusDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Controller/InnerCurrentControl/InnerCurrentControlDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Controller/OuterVoltageControl/OuterVoltageControlDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineDistributed/LineDistributedDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedDataJSONParser.hpp>
@@ -16,6 +18,8 @@
 #include <GridKit/Model/EMT/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/EMT/ContainerData.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/ConverterDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Operators/Modulation/ModulationDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Operators/Reference/Park/ParkDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Signal/SignalDataJSONParser.hpp>
 
 namespace GridKit
@@ -125,6 +129,26 @@ namespace GridKit
           auto& child = data.container.emplace_back();
           raw_device.at("id").get_to(child.id);
           parseContainerData(raw_device, child, scope + "." + child.id);
+        }
+        else if (kind == "InnerCurrentControl")
+        {
+          raw_device.get_to(data.inner_current_control.emplace_back());
+        }
+        else if (kind == "OuterVoltageControl")
+        {
+          raw_device.get_to(data.outer_voltage_control.emplace_back());
+        }
+        else if (kind == "Park")
+        {
+          raw_device.get_to(data.park.emplace_back());
+        }
+        else if (kind == "Angle")
+        {
+          raw_device.get_to(data.angle.emplace_back());
+        }
+        else if (kind == "Modulation")
+        {
+          raw_device.get_to(data.modulation.emplace_back());
         }
         else if (kind == "PWM")
         {

@@ -4,7 +4,7 @@
 
 This document describes the JSON data format for EMT operating points. A
 case file carries parameters and topology only; a state file carries the
-operating point. Fields use each component's existing `Outputs` enum.
+operating point. Fields use each model's documented initial-state names.
 Missing records or null fields use model defaults. Every supplied component
 path and output name must exist in the case, including those with null values.
 Unknown fields and duplicate component paths across sections are errors.
@@ -53,11 +53,17 @@ Container, for example `plant.machine`:
    Name   | Value
  ---------|-------------------------------------------------------
   `open`  | Optional Boolean switch command, true is open
+  `theta` | Optional `Angle` reference angle in radians, default zero
+  `xid`, `xiq` | Optional `InnerCurrentControl` integral contributions in volts, default zero
+  `etad`, `etaq` | Optional `OuterVoltageControl` integral contributions in amperes, default zero
   `i12a`, `i12b`, `i12c` | Optional instantaneous `LineLumped` or `Switch` series currents from terminal 1 to terminal 2, in amperes
   `ia`, `ib`, `ic` | Optional instantaneous `Machine`, `LoadZ`, `VoltageSource`, or `DependentVoltageSource` current injections into the bus, in amperes
 
-Other outputs use their model output names and units. All output values must
-be finite; missing or null values use model defaults.
+Other outputs use their model output names and units. All state values must
+be finite; missing or null values use model defaults. The current and voltage
+controllers preserve their supplied integral states; consistent initialization
+resolves their derivatives. Their computed control outputs cannot be prescribed
+in the state file.
 
 ### History
 

@@ -6,3 +6,5 @@ add_subdirectory(Distributed)
 add_subdirectory(CoupledGrid)
 
 add_subdirectory(DCLink)
+
+add_subdirectory(CurrentControl)

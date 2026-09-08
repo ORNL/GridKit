@@ -45,6 +45,17 @@ namespace GridKit
       Pwm<scalar_type, index_type>::~Pwm() = default;
 
       template <typename scalar_type, typename index_type>
+      void Pwm<scalar_type, index_type>::assignInput(size_t phase, SignalT* signal)
+      {
+        if (this->allocated_)
+          throw std::logic_error("Assign PWM inputs before allocation");
+        auto& input = input_.at(phase);
+        if (signal == nullptr || (input != nullptr && input != signal))
+          throw std::invalid_argument("Invalid PWM input assignment");
+        input = signal;
+      }
+
+      template <typename scalar_type, typename index_type>
       void Pwm<scalar_type, index_type>::assignOutput(size_t phase, SignalT* signal)
       {
         auto& assigned = assigned_output_.at(phase);
@@ -83,6 +94,9 @@ namespace GridKit
       int Pwm<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
         this->validateOutputValues(outputs);
+        if (const int status = verify(); status != 0)
+          return status;
+        resetHistory();
         for (const auto& [key, value] : outputs)
         {
           this->checkOutputValue(outputs, key, static_cast<RealT>(output(static_cast<size_t>(key))));
@@ -137,17 +151,20 @@ namespace GridKit
         alignment_         = parameter<RealT>(data, Parameter::alignment, RealT{0.5});
         horizon_           = std::log(4 / std::numeric_limits<RealT>::epsilon()) / Math::MU<RealT>;
 
-        const RealT ratio     = fc_ / fm_;
-        const RealT triple    = std::round(ratio / 3);
-        const RealT tolerance = 100 * std::numeric_limits<RealT>::epsilon() * ratio;
-        parameters_valid_     = std::isfinite(M_) && M_ >= 0 && M_ <= 1
-                            && std::isfinite(fm_) && fm_ > 0
-                            && std::isfinite(fc_) && fc_ > fm_
+        parameters_valid_ = std::isfinite(fc_) && fc_ > 0
+                            && std::isfinite(1 / fc_)
                             && std::isfinite(alignment_) && alignment_ >= 0 && alignment_ <= 1
-                            && std::isfinite(ratio) && triple >= 1
-                            && std::abs(ratio - 3 * triple) <= tolerance
-                            && std::isfinite(1 / fm_) && std::isfinite(1 / fc_)
-                            && ratio + horizon_ * fc_ < static_cast<RealT>(std::numeric_limits<long long>::max() / 2);
+                            && std::isfinite(horizon_) && horizon_ > 0
+                            && horizon_ * fc_ < static_cast<RealT>(std::numeric_limits<long long>::max() / 2);
+        const RealT ratio            = fc_ / fm_;
+        const RealT triple           = std::round(ratio / 3);
+        const RealT tolerance        = 100 * std::numeric_limits<RealT>::epsilon() * ratio;
+        sinusoidal_parameters_valid_ = parameters_valid_ && std::isfinite(M_) && M_ >= 0 && M_ <= 1
+                                       && std::isfinite(fm_) && fm_ > 0 && fc_ > fm_
+                                       && std::isfinite(ratio) && triple >= 1
+                                       && std::abs(ratio - 3 * triple) <= tolerance
+                                       && std::isfinite(1 / fm_)
+                                       && ratio + horizon_ * fc_ < static_cast<RealT>(std::numeric_limits<long long>::max() / 2);
       }
 
       template <typename scalar_type, typename index_type>
@@ -155,16 +172,117 @@ namespace GridKit
       {
         if (!parameters_valid_)
         {
-          Log::error() << "PWM: require finite 0 <= M <= 1, fc > fm > 0, fc/fm in 3N, and 0 <= alignment <= 1\n";
+          Log::error() << "PWM: require finite fc > 0 and 0 <= alignment <= 1\n";
+          return 1;
+        }
+        if (sampledInput())
+        {
+          for (const auto* signal : input_)
+            if (signal == nullptr || !signal->linked())
+            {
+              Log::error() << "PWM: all three modulation inputs must have linked sources\n";
+              return 1;
+            }
+        }
+        else if (!sinusoidal_parameters_valid_)
+        {
+          Log::error() << "PWM: without modulation inputs require finite 0 <= M <= 1, fc > fm > 0, and fc/fm in 3N\n";
           return 1;
         }
         return 0;
       }
 
       template <typename scalar_type, typename index_type>
+      bool Pwm<scalar_type, index_type>::sampledInput() const
+      {
+        return std::any_of(input_.begin(), input_.end(), [](const auto* signal)
+                           { return signal != nullptr; });
+      }
+
+      template <typename scalar_type, typename index_type>
+      auto Pwm<scalar_type, index_type>::readModulation() const -> std::array<RealT, 3>
+      {
+        std::array<RealT, 3> modulation;
+        for (size_t phase = 0; phase < 3; ++phase)
+        {
+          const RealT value = static_cast<RealT>(input_[phase]->read());
+          if (!std::isfinite(value) || std::abs(value) > 1 + 100 * std::numeric_limits<RealT>::epsilon())
+            throw std::domain_error("PWM: sampled modulation must lie in [-1,1]");
+          modulation[phase] = std::clamp(value, RealT{-1}, RealT{1});
+        }
+        return modulation;
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Pwm<scalar_type, index_type>::invalidateCache()
+      {
+        cached_time_.fill(std::numeric_limits<RealT>::quiet_NaN());
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Pwm<scalar_type, index_type>::resetHistory()
+      {
+        samples_.clear();
+        invalidateCache();
+        if (sampledInput())
+        {
+          if (verify() != 0 || !std::isfinite(this->time_)
+              || std::abs(this->time_ * fc_) >= static_cast<RealT>(std::numeric_limits<long long>::max() / 2))
+            throw std::domain_error("Cannot initialize sampled PWM with invalid inputs or time");
+          // Initialize the active command and the one queued for the next interval.
+          const auto interval   = static_cast<long long>(std::floor(this->time_ * fc_));
+          const auto modulation = readModulation();
+          samples_.push_back({interval, modulation});
+          samples_.push_back({interval + 1, modulation});
+        }
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Pwm<scalar_type, index_type>::acceptStep(RealT time)
+      {
+        if (!sampledInput())
+          return;
+        if (samples_.empty())
+          throw std::logic_error("PWM: initialize held modulation before accepting steps");
+        // Interval k+1 is sampled at t_k: one carrier of computational delay.
+        const auto  next_interval = samples_.back().interval + 1;
+        const RealT next          = static_cast<RealT>(next_interval - 1) / fc_;
+        if (time < next)
+          return;
+        const RealT tolerance = 16 * std::numeric_limits<RealT>::epsilon() * std::max(RealT{1}, std::abs(next));
+        if (time > next + tolerance)
+          throw std::logic_error("PWM: solver skipped a modulation sampling instant");
+        samples_.push_back({next_interval, readModulation()});
+        // Retain only the active command and the one queued for the next interval.
+        while (samples_.size() > 2)
+          samples_.pop_front();
+        invalidateCache();
+      }
+
+      template <typename scalar_type, typename index_type>
+      auto Pwm<scalar_type, index_type>::nextDiscontinuityTime(RealT after) const -> RealT
+      {
+        if (!sampledInput())
+          return std::numeric_limits<RealT>::infinity();
+        if (samples_.empty())
+          throw std::logic_error("PWM: initialize held modulation before requesting sampling times");
+        const RealT next = static_cast<RealT>(samples_.back().interval) / fc_;
+        if (next <= after)
+          throw std::logic_error("PWM: uncommitted modulation sampling instant");
+        return next;
+      }
+
+      template <typename scalar_type, typename index_type>
+      auto Pwm<scalar_type, index_type>::maximumStepSize() const -> RealT
+      {
+        return sampledInput() ? std::min(1 / (20 * fc_), 1 / Math::MU<RealT>)
+                              : std::numeric_limits<RealT>::infinity();
+      }
+
+      template <typename scalar_type, typename index_type>
       auto Pwm<scalar_type, index_type>::output(size_t phase) const -> ScalarT
       {
-        if (phase >= 3 || !parameters_valid_ || !std::isfinite(this->time_))
+        if (phase >= 3 || verify() != 0 || !std::isfinite(this->time_))
         {
           throw std::domain_error("Cannot evaluate PWM with invalid parameters, time, or phase");
         }
@@ -174,19 +292,31 @@ namespace GridKit
         }
         const RealT                pi = std::numbers::pi_v<RealT>;
         const std::array<RealT, 3> phi{0, -2 * pi / 3, 2 * pi / 3};
-        const RealT                tc         = 1 / fc_;
-        const RealT                t          = std::remainder(this->time_, 1 / fm_);
-        const auto                 first      = static_cast<long long>(std::floor((t - horizon_) * fc_));
-        const auto                 last       = static_cast<long long>(std::floor((t + horizon_) * fc_));
-        const auto                 intervals  = static_cast<long long>(std::round(fc_ / fm_));
-        RealT                      sum        = 0;
-        RealT                      correction = 0;
+        const RealT                tc      = 1 / fc_;
+        const bool                 sampled = sampledInput();
+        if (sampled && samples_.empty())
+          throw std::logic_error("PWM: initialize held modulation before evaluating switching outputs");
+        const RealT t          = sampled ? this->time_ : std::remainder(this->time_, 1 / fm_);
+        const auto  first      = static_cast<long long>(std::floor((t - horizon_) * fc_));
+        const auto  last       = static_cast<long long>(std::floor((t + horizon_) * fc_));
+        const auto  intervals  = sampled ? 0LL : static_cast<long long>(std::round(fc_ / fm_));
+        RealT       sum        = 0;
+        RealT       correction = 0;
         for (auto k = first; k <= last; ++k)
         {
-          // Reduce the modulation argument while retaining the carrier interval
-          // on the whole time axis, including the prehistory before t = 0.
-          const auto  sample     = static_cast<RealT>(k % intervals) + alignment_;
-          const RealT duty       = (1 + M_ * std::sin(2 * pi * sample / static_cast<RealT>(intervals) + phi[phase])) / 2;
+          RealT modulation;
+          if (sampled)
+          {
+            // Every periodic pulse replica uses the active held command.
+            modulation = samples_.front().modulation[phase];
+          }
+          else
+          {
+            // Reduce the prescribed sinusoid while retaining carrier prehistory.
+            const auto sample = static_cast<RealT>(k % intervals) + alignment_;
+            modulation        = M_ * std::sin(2 * pi * sample / static_cast<RealT>(intervals) + phi[phase]);
+          }
+          const RealT duty       = (1 + modulation) / 2;
           const RealT local_time = t - static_cast<RealT>(k) * tc;
           const RealT on         = alignment_ * (1 - duty) * tc;
           const RealT off        = (alignment_ + (1 - alignment_) * duty) * tc;
