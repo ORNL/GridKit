@@ -1,3 +1,4 @@
+
 #include "InnerCurrentControlImpl.hpp"
 
 namespace GridKit
@@ -6,8 +7,24 @@ namespace GridKit
   {
     namespace Controller
     {
+      /**
+       * @brief Jacobian evaluation not implemented
+       *
+       * @return int - error code, 0 = success
+       */
+      template <typename scalar_type, typename index_type>
+      int InnerCurrentControl<scalar_type, index_type>::assembleJacobian(RealT, RealT)
+      {
+        Log::misc() << "Evaluate Jacobian for InnerCurrentControl..." << std::endl;
+        Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
+
+        return 0;
+      }
+
+      // Available template instantiations
       template class InnerCurrentControl<DependencyTracking::Variable, long int>;
       template class InnerCurrentControl<DependencyTracking::Variable, size_t>;
+
     } // namespace Controller
   } // namespace EMT
 } // namespace GridKit

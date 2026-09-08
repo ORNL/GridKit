@@ -1,13 +1,12 @@
 {
   "header": {
     "case_name": "GFL switching inverter",
-    "case_description": "Cascaded dq control with continuous PWM and a physical LCL filter",
+    "case_description": "PLL and cascaded grid-side and inverter-side current control with continuous PWM and a physical LCL filter",
     "case_comments": "Power-invariant dq controls; dynamic DC link; continuous PWM with selectable smoothing."
   },
   "signals": [
     {
-      "id": "omega",
-      "value": 376.99111843077515
+      "id": "omega"
     },
     {
       "id": "vdc"
@@ -17,16 +16,10 @@
       "value": 0
     },
     {
-      "id": "vrefd",
-      "value": 208
+      "id": "icmdd"
     },
     {
-      "id": "irefd",
-      "value": 8
-    },
-    {
-      "id": "irefq",
-      "value": 0
+      "id": "icmdq"
     },
     {
       "id": "voa"
@@ -135,7 +128,7 @@
     },
     {
       "id": "isrc",
-      "value": 4.26837797727696
+      "value": 4.222736286791393
     },
     {
       "id": "idc"
@@ -345,16 +338,25 @@
       ]
     },
     {
-      "class": "Angle",
-      "id": "angle",
+      "class": "PLL",
+      "id": "pll",
+      "params": {
+        "V": 208,
+        "f": 60,
+        "Kp": 80,
+        "Ki": 2500
+      },
       "inputs": {
-        "omega": "omega"
+        "bus": "capacitor"
       },
       "outputs": {
-        "theta": "theta"
+        "theta": "theta",
+        "omega": "omega"
       },
       "mon": [
-        "theta"
+        "theta",
+        "omega",
+        "vq"
       ]
     },
     {
@@ -443,12 +445,12 @@
           "id",
           "iq"
         ],
-        "iref": [
-          "irefd",
-          "irefq"
-        ],
         "omega": "omega",
-        "vdc": "vdc"
+        "vdc": "vdc",
+        "icmd": [
+          "icmdd",
+          "icmdq"
+        ]
       },
       "outputs": {
         "ilim": [
@@ -562,6 +564,38 @@
       "mon": [
         "vo",
         "idc"
+      ]
+    },
+    {
+      "class": "OuterPowerControl",
+      "id": "power_control",
+      "params": {
+        "V": 208.0,
+        "Pref": 1657.8204340800326,
+        "Qref": -7.777712545520165e-14,
+        "Kp": 0.01,
+        "Ki": 40,
+        "Kaw": 200
+      },
+      "inputs": {
+        "i": [
+          "igd",
+          "igq"
+        ],
+        "ilim": [
+          "ilimd",
+          "ilimq"
+        ]
+      },
+      "outputs": {
+        "icmd": [
+          "icmdd",
+          "icmdq"
+        ]
+      },
+      "mon": [
+        "eta",
+        "icmd"
       ]
     }
   ]
