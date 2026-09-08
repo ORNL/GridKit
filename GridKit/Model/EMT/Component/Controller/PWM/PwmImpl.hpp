@@ -28,11 +28,11 @@ namespace GridKit
       {
         initializeParameters(data);
         monitor_->set(ModelDataT::MonitorableVariables::sa, [this]
-                      { return output(Outputs::sa); });
+                      { return output_port_[0].read(); });
         monitor_->set(ModelDataT::MonitorableVariables::sb, [this]
-                      { return output(Outputs::sb); });
+                      { return output_port_[1].read(); });
         monitor_->set(ModelDataT::MonitorableVariables::sc, [this]
-                      { return output(Outputs::sc); });
+                      { return output_port_[2].read(); });
         for (size_t n = 0; n < output_port_.size(); ++n)
         {
           const auto key = static_cast<Outputs>(n);

@@ -21,13 +21,13 @@ namespace GridKit
       : monitor_(std::make_unique<MonitorT>(data))
     {
       monitor_->set(ModelDataT::MonitorableVariables::voa, [this]
-                    { return output(Outputs::voa); });
+                    { return output_port_[0].read(); });
       monitor_->set(ModelDataT::MonitorableVariables::vob, [this]
-                    { return output(Outputs::vob); });
+                    { return output_port_[1].read(); });
       monitor_->set(ModelDataT::MonitorableVariables::voc, [this]
-                    { return output(Outputs::voc); });
+                    { return output_port_[2].read(); });
       monitor_->set(ModelDataT::MonitorableVariables::idc, [this]
-                    { return output(Outputs::idc); });
+                    { return output_port_[3].read(); });
       for (size_t n = 0; n < output_port_.size(); ++n)
       {
         const auto key = static_cast<Outputs>(n);
