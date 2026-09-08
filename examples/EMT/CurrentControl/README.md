@@ -1,11 +1,14 @@
 # Inverter current and voltage control
 
 `GFL` tracks parameter-derived dq grid-current references against a stiff grid using
-a terminal-voltage PLL and cascaded grid-side and inverter-side current control.
+a capacitor-voltage PLL and cascaded grid-side and inverter-side current control.
 `GFM` regulates capacitor voltage against a stiff grid through
 cascaded voltage and current control. Both cases obtain frame angle and
 frequency from the capacitor-voltage PLL through signal ports.
 Both use the same continuous PWM, converter, and physical LCL filter.
+The [Filter](../../../GridKit/Model/EMT/Component/Filter/README.md) component
+connects the converter to the terminal Bus and supplies converter-side current,
+capacitor voltage, and grid-side current through its `i`, `vo`, and `ig` outputs.
 
 The bridge has a 20 mF DC link initialized at 400 V and 6 kHz centered PWM.
 Constant source current matches the initial fundamental power balance. The

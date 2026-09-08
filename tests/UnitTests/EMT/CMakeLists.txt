@@ -99,6 +99,18 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTPllTest COMMAND test_emt_pll)
 
+add_executable(test_emt_filter runFilterTests.cpp)
+target_include_directories(
+  test_emt_filter
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+          ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+target_link_libraries(
+  test_emt_filter
+  GridKit::emt_systemmodel
+  GridKit::emt_filter_dependency_tracking
+  GridKit::testing)
+add_test(NAME EMTFilterTest COMMAND test_emt_filter)
+
 add_executable(test_emt_outer_power_control runOuterPowerControlTests.cpp)
 target_link_libraries(
   test_emt_outer_power_control
