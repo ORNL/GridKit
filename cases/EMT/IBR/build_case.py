@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-VLL, FREQUENCY, MU = 13800.0, 60.0, 240.0
+VLL, FREQUENCY = 13800.0, 60.0
 OMEGA = 2 * np.pi * FREQUENCY
 M, FC = 0.8, 900.0
 
@@ -19,18 +19,9 @@ def write_json(path, data):
 
 
 def main():
-    # Exact fundamental coefficient of the ideal pulse train, followed by the
-    # Fourier transform of the logistic smoothing kernel. This estimates only
-    # the operating point; all time-domain results come from GridKit/IDA.
-    k = np.arange(round(FC / FREQUENCY))
-    duty = (1 + M * np.sin(OMEGA * (k + 0.5) / FC)) / 2
-    on = (k + 0.5 * (1 - duty)) / FC
-    off = (k + 0.5 + 0.5 * duty) / FC
-    coefficient = np.sum(np.exp(-1j * OMEGA * on) - np.exp(-1j * OMEGA * off)) / (1j * OMEGA / FREQUENCY)
-    attenuation = (np.pi * OMEGA / MU) / np.sinh(np.pi * OMEGA / MU)
-    unit_peak = 2 * coefficient * attenuation
-    dc = float(1.02 * VLL * np.sqrt(2 / 3) / abs(unit_peak))
-    source_voltage = dc * unit_peak / np.sqrt(2)
+    # Continuous PWM preserves duty; its mean phase voltage is M * Vdc / 2.
+    dc = float(2 * np.sqrt(2 / 3) * 1.02 * VLL / M)
+    source_voltage = -1j * M * dc / (2 * np.sqrt(2))
     machine_voltage = VLL / np.sqrt(3) * np.exp(1j * (np.angle(source_voltage) - 0.025))
 
     # SI series R [ohm], L [H]; dx=1 makes the per-length matrices equal totals.
@@ -70,7 +61,7 @@ def main():
 
     case = {"header": {"case_name": "Synthetic EMT 10-bus hybrid grid",
                        "case_description": "Three governed synchronous machines, three PWM converters, seven resistive loads and three event switches",
-                       "case_comments": "13.8 kV, 60 Hz synthetic demonstration; open-loop ideal DC sources; shared PWM mu=240 1/s. See README.md for smoothing compensation and limitations."},
+                       "case_comments": "13.8 kV, 60 Hz synthetic demonstration; open-loop ideal DC sources; continuous PWM with the same DC voltage at every mu. See README.md for model scope."},
             "signals": [], "devices": []}
     devices = case["devices"]
     for bus in range(1, 11):
@@ -114,17 +105,25 @@ def main():
     for name, a, b, is_open in [("tie", 7, 8, False), ("load_step", 8, 9, True), ("fault", 7, 10, True)]:
         devices.append({"class": "Switch", "id": name, "params": {"open": is_open},
                         "inputs": {"bus1": f"bus_{a}", "bus2": f"bus_{b}"}, "mon": ["open", "i12a", "i12b", "i12c"]})
-    state = {"header": {"version": 1, "time": 0.0, "description": "Fundamental phasor estimate; line/filter currents are initialized by the models, so startup transients remain."},
+    state = {"header": {"version": 1, "time": 0.0, "description": "Fundamental phasor estimate for bus voltages and machine, line and filter currents."},
              "buses": {}, "devices": {}}
+    def phases(value):
+        return (np.sqrt(2) * np.real(value * np.exp(1j * np.array([0, -2*np.pi/3, 2*np.pi/3])))).tolist()
+
     for bus, voltage in enumerate(voltages, 1):
-        state["buses"][f"bus_{bus}"] = dict(zip(("va", "vb", "vc"), (np.sqrt(2) * np.real(voltage * np.exp(1j * np.array([0, -2*np.pi/3, 2*np.pi/3])))).tolist()))
+        state["buses"][f"bus_{bus}"] = dict(zip(("va", "vb", "vc"), phases(voltage)))
     for bus, power in enumerate(machine_power, 1):
         current = np.conj(power / (3 * voltages[bus - 1]))
-        phases = np.sqrt(2) * np.real(current * np.exp(1j * np.array([0, -2*np.pi/3, 2*np.pi/3])))
-        state["devices"][f"machine_{bus}"] = dict(zip(("ia", "ib", "ic"), phases.tolist()))
+        state["devices"][f"machine_{bus}"] = dict(zip(("ia", "ib", "ic"), phases(current)))
+    for bus in (4, 5, 6):
+        current = (source_voltage - voltages[bus - 1]) / (source_r + 1j * OMEGA * source_l)
+        state["devices"][f"filter_{bus}"] = dict(zip(("ia", "ib", "ic"), phases(current)))
+    for a, b, r, l in lines:
+        current = (voltages[a - 1] - voltages[b - 1]) / (r + 1j * OMEGA * l)
+        state["devices"][f"line_{a}_{b}"] = dict(zip(("i12a", "i12b", "i12c"), phases(current)))
     write_json(HERE / "TenBus.case.json", case)
     write_json(HERE / "TenBus.state.json", state)
-    print(f"Smoothing fundamental gain: {attenuation:.8f}; effective DC: {dc:.3f} V")
+    print(f"DC voltage: {dc:.3f} V; mean open-circuit line-line RMS: {1.02 * VLL:.3f} V")
     print("Machine initial P+jQ [MVA]:", machine_power / 1e6)
 
 

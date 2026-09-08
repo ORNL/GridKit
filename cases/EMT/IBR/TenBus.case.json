@@ -2,7 +2,7 @@
     "header": {
         "case_name": "Synthetic EMT 10-bus hybrid grid",
         "case_description": "Three governed synchronous machines, three PWM converters, seven resistive loads and three event switches",
-        "case_comments": "13.8 kV, 60 Hz synthetic demonstration; open-loop ideal DC sources; shared PWM mu=240 1/s. See README.md for smoothing compensation and limitations."
+        "case_comments": "13.8 kV, 60 Hz synthetic demonstration; open-loop ideal DC sources; continuous PWM with the same DC voltage at every mu. See README.md for model scope."
     },
     "signals": [
         {
@@ -25,7 +25,7 @@
         },
         {
             "id": "dc_4",
-            "value": 407357.3021393752
+            "value": 28732.51468284668
         },
         {
             "id": "sa_4"
@@ -46,8 +46,17 @@
             "id": "ec_4"
         },
         {
+            "id": "filter_4_ia"
+        },
+        {
+            "id": "filter_4_ib"
+        },
+        {
+            "id": "filter_4_ic"
+        },
+        {
             "id": "dc_5",
-            "value": 407357.3021393752
+            "value": 28732.51468284668
         },
         {
             "id": "sa_5"
@@ -68,8 +77,17 @@
             "id": "ec_5"
         },
         {
+            "id": "filter_5_ia"
+        },
+        {
+            "id": "filter_5_ib"
+        },
+        {
+            "id": "filter_5_ic"
+        },
+        {
             "id": "dc_6",
-            "value": 407357.3021393752
+            "value": 28732.51468284668
         },
         {
             "id": "sa_6"
@@ -88,24 +106,6 @@
         },
         {
             "id": "ec_6"
-        },
-        {
-            "id": "filter_4_ia"
-        },
-        {
-            "id": "filter_4_ib"
-        },
-        {
-            "id": "filter_4_ic"
-        },
-        {
-            "id": "filter_5_ia"
-        },
-        {
-            "id": "filter_5_ib"
-        },
-        {
-            "id": "filter_5_ic"
         },
         {
             "id": "filter_6_ia"
@@ -541,6 +541,11 @@
                 "eb": "eb_4",
                 "ec": "ec_4"
             },
+            "outputs": {
+                "ia": "filter_4_ia",
+                "ib": "filter_4_ib",
+                "ic": "filter_4_ic"
+            },
             "mon": [
                 "ea",
                 "eb",
@@ -548,12 +553,7 @@
                 "ia",
                 "ib",
                 "ic"
-            ],
-            "outputs": {
-                "ia": "filter_4_ia",
-                "ib": "filter_4_ib",
-                "ic": "filter_4_ic"
-            }
+            ]
         },
         {
             "class": "PWM",
@@ -648,6 +648,11 @@
                 "eb": "eb_5",
                 "ec": "ec_5"
             },
+            "outputs": {
+                "ia": "filter_5_ia",
+                "ib": "filter_5_ib",
+                "ic": "filter_5_ic"
+            },
             "mon": [
                 "ea",
                 "eb",
@@ -655,12 +660,7 @@
                 "ia",
                 "ib",
                 "ic"
-            ],
-            "outputs": {
-                "ia": "filter_5_ia",
-                "ib": "filter_5_ib",
-                "ic": "filter_5_ic"
-            }
+            ]
         },
         {
             "class": "PWM",
@@ -755,6 +755,11 @@
                 "eb": "eb_6",
                 "ec": "ec_6"
             },
+            "outputs": {
+                "ia": "filter_6_ia",
+                "ib": "filter_6_ib",
+                "ic": "filter_6_ic"
+            },
             "mon": [
                 "ea",
                 "eb",
@@ -762,12 +767,7 @@
                 "ia",
                 "ib",
                 "ic"
-            ],
-            "outputs": {
-                "ia": "filter_6_ia",
-                "ib": "filter_6_ib",
-                "ic": "filter_6_ic"
-            }
+            ]
         },
         {
             "class": "LineLumped",
