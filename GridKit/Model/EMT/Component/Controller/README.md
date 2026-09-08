@@ -2,14 +2,18 @@
 
 EMT controller models exchange signals with other components.
 
-![Switching inverter model wiring](../../../../../docs/Figures/EMT/Controller/diagram.png)
+## Grid Following
 
-Figure 1: Switching inverter model wiring
+![Grid-following inverter wiring](../../../../../docs/Figures/EMT/Controller/diagram_gfl.png)
+
+## Grid Forming
+
+![Grid-forming inverter wiring](../../../../../docs/Figures/EMT/Controller/diagram_gfm.png)
 
 ## Models
 
 - [InnerCurrentControl](InnerCurrentControl/README.md): converter current control in $dq$ coordinates.
-- [OuterPowerControl](OuterPowerControl/README.md): outer-loop current-command control in $dq$ coordinates.
+- [OuterPowerControl](OuterPowerControl/README.md): active and reactive power control in $dq$ coordinates.
 - [OuterVoltageControl](OuterVoltageControl/README.md): filter-capacitor voltage control in $dq$ coordinates.
 - [DC Link](DCLink/README.md): capacitor voltage and current balance.
 - [IEEET1](IEEET1/README.md)
