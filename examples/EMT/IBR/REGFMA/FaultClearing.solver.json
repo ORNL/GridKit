@@ -1,0 +1,27 @@
+{
+    "system_model_file": "../../../../cases/EMT/IBR/REGFMA.case.json",
+    "state_file": "../../../../cases/EMT/IBR/REGFMA.state.json",
+    "dt_monitor": 0.0001,
+    "tmax": 3.0,
+    "mu": 240.0,
+    "rel_tol": 1e-07,
+    "abs_tol": 1e-09,
+    "max_steps": 300000,
+    "consistent_ic_type": "ya_ydp",
+    "output_file": "FaultClearing.csv",
+    "step_output_file": "steps.csv",
+    "events": [
+        {
+            "time": 1.0,
+            "type": "switch",
+            "element_id": "fault",
+            "open": false
+        },
+        {
+            "time": 1.06,
+            "type": "switch",
+            "element_id": "fault",
+            "open": true
+        }
+    ]
+}
