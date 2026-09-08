@@ -7,6 +7,11 @@ and reusable operators in instantaneous phase coordinates.
 > The formulation supports $N$ phases; initial development targets three
 > phases.
 
+> [!NOTE]
+> PWM smoothing $\mu$ selects simulation resolution within the same model:
+> small values intentionally suppress switching; large values resolve it.
+> The commanded carrier-period mean is preserved throughout this range.
+
 ## Conventions
 
 - $N$ denotes a phase or output dimension, $K$ a conductor or input dimension,

@@ -84,6 +84,21 @@
 \addplot table [x=t, y=sc_bottom] {diagram.dat};
 
 \end{groupplot}
+
+% Modulation input and the sampled switching interface.
+\node[block, minimum width=2.6cm, align=center] (sample)
+  at ([xshift=2.5cm,yshift=1.5cm]pwm c1r1.north west)
+  {Sample and hold\\$\mathbf{m}_k=\mathbf{m}(t_{k-1})$};
+\node[block, minimum width=2.6cm, align=center] (switching)
+  at ([xshift=7cm,yshift=1.5cm]pwm c1r1.north west)
+  {Pulse timing\\and switching};
+\draw[->, line] ([xshift=-1.3cm]sample.west)
+  -- node[sig, above] {$\mathbf{m}$} (sample.west);
+\draw[->, line] (sample.east)
+  -- node[sig, above] {$\mathbf{m}_k$} (switching.west);
+\draw[->, line] (switching.east)
+  -- node[sig, above] {$\mathbf{s}$} ++(1.3cm,0);
+
 \node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r2.east)
   {$\mu^{-1}=0.005\,\mathrm{ms}$};
 \node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r6.east)

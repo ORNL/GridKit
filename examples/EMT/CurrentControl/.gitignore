@@ -1,0 +1,6 @@
+simulation/*
+!simulation/*.png
+!simulation/*.pdf
+simulation-smooth/*
+!simulation-smooth/*.png
+!simulation-smooth/*.pdf

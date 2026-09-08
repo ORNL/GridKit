@@ -5,6 +5,8 @@
 :titlesonly:
 :hidden:
 
+InnerCurrentControl <InnerCurrentControl/README>
+OuterVoltageControl <OuterVoltageControl/README>
 IEEET1 <IEEET1/README>
 PWM <PWM/README>
 TGOV1 <TGOV1/README>

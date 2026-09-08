@@ -13,3 +13,7 @@ add_subdirectory(SEXS-PTI)
 add_subdirectory(GASTPTI)
 
 add_subdirectory(IEEEST)
+
+add_subdirectory(InnerCurrentControl)
+
+add_subdirectory(OuterVoltageControl)

@@ -1,7 +1,8 @@
 # Park Model
 
 `Park` transforms three-phase quantities from $abc$ to rotating $dq0$
-coordinates with power-invariant normalization.
+coordinates with power-invariant normalization. The operator adds no DAE
+variables or residual rows.
 
 ## Block Diagram
 
@@ -53,9 +54,7 @@ None.
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{y}$ | $[u]$ | Transformed output | $\mathbf{y} \in \mathbb{R}^3$
+None.
 
 ### External Variables
 
@@ -99,17 +98,17 @@ None.
 
 #### Algebraic
 
+None.
+
+### External Equations
+
 ```math
-0 = -\mathbf{y} +
+\mathbf{y} \leftarrow
 \begin{cases}
 \mathbf{T}(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{false} \\
 \mathbf{T}^\top(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
 \end{cases}
 ```
-
-### External Equations
-
-None.
 
 ## Initialization
 
@@ -123,24 +122,10 @@ From the initialized $\mathbf{u}$ and $\theta$,
 \end{cases}
 ```
 
-If initial output derivatives are required:
-
-```math
-\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t} \leftarrow
-\begin{cases}
-\mathbf{T}(\theta)\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-  + \dfrac{\partial\mathbf{T}(\theta)}{\partial\theta}
-    \mathbf{u}\dfrac{\mathrm{d}\theta}{\mathrm{d}t},
-  & \mathrm{inverse} = \mathrm{false} \\
-\mathbf{T}^\top(\theta)\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-  + \dfrac{\partial\mathbf{T}^\top(\theta)}{\partial\theta}
-    \mathbf{u}\dfrac{\mathrm{d}\theta}{\mathrm{d}t},
-  & \mathrm{inverse} = \mathrm{true}
-\end{cases}
-```
-
-Required input derivatives must be available and finite (zero for constants).
-
 ## Monitors
 
-None.
+Monitor | Units | Description | Note
+------- | ----- | ----------- | ----
+`out` | $[u]$ | Transformed output | $\mathbf{y} \in \mathbb{R}^3$
+
+In case JSON, `mon: ["out"]` expands to the scalar monitors `y1`, `y2`, `y3`.

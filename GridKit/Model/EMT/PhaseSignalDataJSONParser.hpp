@@ -6,8 +6,9 @@ namespace GridKit
 {
   namespace EMT
   {
-    /// Expand a documented three-phase port into the scalar signal map.
-    inline void expandPhasePort(json& j, const char* direction, const char* port, const std::array<const char*, 3>& phases)
+    /// Expand a documented vector port into the scalar signal map.
+    template <size_t N = 3>
+    inline void expandPhasePort(json& j, const char* direction, const char* port, const std::array<const char*, N>& phases)
     {
       if (!j.contains(direction) || !j.at(direction).contains(port))
       {
@@ -15,11 +16,11 @@ namespace GridKit
       }
       auto&      ports  = j.at(direction);
       const auto values = ports.at(port).get<std::vector<std::string>>();
-      if (values.size() != 3)
+      if (values.size() != N)
       {
-        throw std::invalid_argument(std::string(port) + " requires three signal IDs");
+        throw std::invalid_argument(std::string(port) + " requires " + std::to_string(N) + " signal IDs");
       }
-      for (size_t n = 0; n < 3; ++n)
+      for (size_t n = 0; n < N; ++n)
       {
         if (values[n].empty() || ports.contains(phases[n]))
         {
@@ -31,7 +32,8 @@ namespace GridKit
     }
 
     /// Vector monitors use one scalar column per phase in every output format.
-    inline void expandPhaseMonitor(json& j, const char* name, const std::array<const char*, 3>& phases)
+    template <size_t N = 3>
+    inline void expandPhaseMonitor(json& j, const char* name, const std::array<const char*, N>& phases)
     {
       if (!j.contains("mon"))
       {
