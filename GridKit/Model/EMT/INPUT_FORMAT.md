@@ -5,8 +5,8 @@
 This document describes the JSON data format for EMT cases. The format
 follows the grid dynamics case format described in
 [PhasorDynamics INPUT_FORMAT](../PhasorDynamics/INPUT_FORMAT.md), specialized
-to instantaneous phase-coordinate models: every quantity is in SI units, and
-there is no system-wide power or frequency base.
+to instantaneous phase-coordinate models. Quantities use each model's documented
+units; there is no system-wide power or frequency base.
 
 ## Format
 
@@ -67,8 +67,9 @@ represents a device and has the following fields:
 
 All model inputs are scalar signals. Electrical models read `va`, `vb`, and
 `vc`; two-terminal models read `v1a`, `v1b`, `v1c`, `v2a`, `v2b`, and `v2c`.
-A voltage phase signal also carries its derivative and KCL residual row, so
-connected devices accumulate their currents without separate output wiring.
+Voltage signals expose the bus values and derivatives. The bus registers
+connected-device current signals and owns their KCL contributions; electrical
+connections do not require separate current-output wiring.
 
 The case parser accepts `"bus": "b"` as shorthand for
 `"va": "b.va", "vb": "b.vb", "vc": "b.vc"`. Likewise `bus1` and `bus2`
@@ -278,6 +279,11 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Ieeet1`                 | `efd`   | Output    | Signal        | Yes
   `Switch`                 | `v1a`, `v1b`, `v1c` | Input | Voltage signal | Yes
   `Switch`                 | `v2a`, `v2b`, `v2c` | Input | Voltage signal | Yes
+  `GastPti`                | `speed`, `pref` | Input | Signal | No
+  `GastPti`                | `pmech` | Output | Signal | Yes
+  `Ieeest`                 | `input`, `speed` | Input | Signal | Exactly one
+  `Ieeest`                 | `vct` | Input | Signal | When voltage cutout is enabled
+  `Ieeest`                 | `output` | Output | Signal | Yes
   `Container`              | user-defined | Input/output | Public boundary | No
 
 Declaring a signal creates a named connection. Its value is supplied by the
@@ -399,7 +405,7 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `Modulation`          | [Modulation](Operators/Modulation/README.md)
   `InnerCurrentControl` | [InnerCurrentControl](Component/Controller/InnerCurrentControl/README.md)
   `OuterVoltageControl` | [OuterVoltageControl](Component/Controller/OuterVoltageControl/README.md)
-  `DCLink`              | [DC Link](Component/Controller/DCLink/README.md)
+  `DCLink`              | [DCLink](Component/Controller/DCLink/README.md)
   `Converter`           | [Converter](Operators/Converter/README.md)
   `Bus`                 | [Bus](Component/Bus/README.md)
   `DependentVoltageSource` | [DependentVoltageSource](Component/Source/DependentVoltageSource/README.md)
@@ -410,6 +416,10 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `Switch`              | [Switch](Component/Switch/README.md)
   `Machine`              | [Machine](Component/Source/Machine/README.md)
   `Tgov1`                | [TGOV1](Component/Controller/TGOV1/README.md)
+  `Ieeet1`              | [IEEET1](Component/Controller/IEEET1/README.md)
+  `SexsPti`             | [SEXS-PTI](Component/Controller/SEXS-PTI/README.md)
+  `GastPti`             | [GASTPTI](Component/Controller/GASTPTI/README.md)
+  `Ieeest`              | [IEEEST](Component/Controller/IEEEST/README.md)
   `Container`            | Recursive collection of devices and signals
 
 #### Parameter values

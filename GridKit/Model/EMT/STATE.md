@@ -9,9 +9,9 @@ Missing records or null fields use model defaults. Every supplied component
 path and output name must exist in the case, including those with null values.
 Unknown fields and duplicate component paths across sections are errors.
 
-The state carries instantaneous SI values at the initialization instant.
-Synthesizing instantaneous values from an RMS or phasor description is an
-upstream tool concern and is outside the EMT model specification.
+State fields use each model's documented quantities and units. Phase voltages
+and currents are instantaneous SI values. Initialization helpers may derive
+them from RMS or phasor data before applying the state.
 
 ## Format
 
@@ -72,9 +72,9 @@ component path. All five fields are required:
 
 Name | Units | Value
 ---- | ----- | -----
-`omega` | rad/s | Finite nonnegative prehistory angular frequency
-`i_ref1`, `i_ref2` | A | Three instantaneous reflected-current values per terminal
-`d_i_ref1`, `d_i_ref2` | A/s | Three reflected-current derivatives per terminal
+`omega` | [rad/s] | Finite nonnegative prehistory angular frequency
+`i_ref1`, `i_ref2` | [A] | Three instantaneous reflected-current values per terminal
+`d_i_ref1`, `d_i_ref2` | [A/s] | Three reflected-current derivatives per terminal
 
 For `omega: 0`, both derivatives must be zero and the prehistory is constant.
 For positive frequency the values and derivatives define the harmonic

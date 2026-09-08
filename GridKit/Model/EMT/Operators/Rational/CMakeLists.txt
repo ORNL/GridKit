@@ -1,7 +1,7 @@
 # [[
 #  Author(s):
 #    - Luke Lowery <lukel@tamu.edu>
-#]]
+# ]]
 
 add_subdirectory(VectorFit)
 add_subdirectory(StateSpace)

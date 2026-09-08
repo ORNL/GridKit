@@ -8,6 +8,6 @@ direction through the `inverse` parameter.
 ## Models
 
 - [Angle](Angle/README.md): electrical angular frequency to reference angle.
-- [Clarke](Clarke/README.md): $abc$ to $\alpha\beta0$.
+- [Clarke](Clarke/README.md): $abc$ to $\alpha\beta0$; specification only.
 - [Park](Park/README.md): $abc$ to $dq0$.
-- [Rotation](Rotation/README.md): $\alpha\beta0$ to $dq0$.
+- [Rotation](Rotation/README.md): $\alpha\beta0$ to $dq0$; specification only.

@@ -1,47 +1,51 @@
-# **IEEE Stabilizer Model (IEEEST)**
+# IEEEST Model
 
 Standard IEEE power system stabilizer: 4th-order notch filter, two lead–lag
 blocks, washout, and output limiter.
 
 ## Block Diagram
 
-![](../../../../../../docs/Figures/stabilizer_ieeest_diagram.png)
+![IEEEST model block diagram](../../../../../../docs/Figures/stabilizer_ieeest_diagram.png)
 
 Figure 1: Stabilizer IEEEST model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 
-Symbol      | Units  | Description                          | Typical Value
-------------|--------|--------------------------------------|--------------
-$A_1$       | [s]    | Notch denominator coefficient        | 1.013
-$A_2$       | [s²]   | Notch denominator coefficient        | 0.013
-$A_3$       | [s]    | Notch denominator coefficient        | 0.0
-$A_4$       | [s²]   | Notch denominator coefficient        | 0.0
-$A_5$       | [s]    | Notch numerator coefficient          | 1.013
-$A_6$       | [s²]   | Notch numerator coefficient          | 0.113
-$T_1$       | [s]    | Lead–lag 1 numerator time constant   | 0.0
-$T_2$       | [s]    | Lead–lag 1 denominator time constant | 0.02
-$T_3$       | [s]    | Lead–lag 2 numerator time constant   | 0.0
-$T_4$       | [s]    | Lead–lag 2 denominator time constant | 0.0
-$T_5$       | [s]    | Washout numerator time constant      | 1.65
-$T_6$       | [s]    | Washout denominator time constant    | 1.65
-$K_s$       | [p.u.] | Stabilizer gain                      | 3.0
-$L_s^{\min}$ | [p.u.] | Minimum stabilizer output limit      | -0.1
-$L_s^{\max}$ | [p.u.] | Maximum stabilizer output limit      | 0.1
+Symbol | Units | JSON | Description | Note
+------ | ----- | ---- | ----------- | ----
+$A_1,A_3$ | [s] | `A1`, `A3` | Notch denominator coefficients | Default $0$
+$A_2,A_4$ | [s$^2$] | `A2`, `A4` | Notch denominator coefficients | Default $0$
+$A_5$ | [s] | `A5` | Notch numerator coefficient | Default $0$
+$A_6$ | [s$^2$] | `A6` | Notch numerator coefficient | Default $0$
+$T_1$ | [s] | `T1` | First lead-lag numerator time constant | Default $0$
+$T_2$ | [s] | `T2` | First lead-lag denominator time constant | Default $1$
+$T_3$ | [s] | `T3` | Second lead-lag numerator time constant | Default $0$
+$T_4$ | [s] | `T4` | Second lead-lag denominator time constant | Default $1$
+$T_5$ | [s] | `T5` | Washout numerator time constant | Default $0$
+$T_6$ | [s] | `T6` | Washout denominator time constant | Default $1$
+$K_s$ | [p.u.] | `Ks` | Stabilizer gain | Default $1$
+$L_s^{\min}$ | [p.u.] | `Lsmin` | Minimum stabilizer output | Default $-0.1$
+$L_s^{\max}$ | [p.u.] | `Lsmax` | Maximum stabilizer output | Default $0.1$
+$V_{\mathrm{cl}}$ | [p.u.] | `Vcl` | Lower voltage-cutout threshold | Default $0$; zero disables
+$V_{\mathrm{cu}}$ | [p.u.] | `Vcu` | Upper voltage-cutout threshold | Default $0$; zero disables
+$T_{\mathrm{delay}}$ | [s] | `Tdelay` | PSLF transport-delay extension | Only $0$ supported
 
-`Vcl` and `Vcu` are the lower and upper compensated-voltage cutout
-thresholds in per unit. Zero disables the corresponding threshold. An
-attached `vct` input is required when either threshold is enabled.
-The PSS/E model has no transport delay; nonzero `Tdelay` (the PSLF
-extension shown in the [PowerWorld diagram](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Stabilizer%20IEEEST.htm))
-is rejected, rather than ignored.
+### Parameter Validation
 
-The parameter names above are the JSON keys, with `Ks`, `Lsmin`, and
-`Lsmax` for the gain and limits. Defaults match PhasorDynamics: all `A`
-coefficients, `T1`, `T3`, and `T5` are zero; `T2`, `T4`, `T6`, and `Ks`
-are one; output limits are −0.1 and 0.1; cutout thresholds and delay are
-zero. Parameters must be finite, time constants nonnegative, and limits
-ordered.
+All parameters and derived coefficients must be finite.
+
+```math
+\begin{aligned}
+T_1,T_2,T_3,T_4,T_5,T_6 &\ge 0 \\
+L_s^{\min} &< L_s^{\max} \\
+V_{\mathrm{cl}},V_{\mathrm{cu}} &\ge 0 \\
+V_{\mathrm{cl}} &< V_{\mathrm{cu}},\quad\text{when both are enabled} \\
+T_{\mathrm{delay}} &= 0
+\end{aligned}
+```
+
+A lone first-order notch denominator is rejected. The PSS/E model has no
+transport delay; the PSLF extension shown in the diagram is unsupported.
 
 ### Derived Parameters
 
@@ -55,55 +59,88 @@ a_4 &= A_2 A_4
 \end{aligned}
 ```
 
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$u$ | `input` | Input | [p.u.] | Stabilizing signal | Alternative to `speed`
+$\omega_r$ | `speed` | Input | [p.u.] | Machine rotor speed | Alternative to `input`; $u=\omega_r-1$
+$V_{ct}$ | `vct` | Input | [p.u.] | Compensated voltage magnitude | Required when either cutout is enabled
+$V_{ss}$ | `output` | Output | [p.u.] | Stabilizer signal | Required; connects to exciter `vs`
+
+Exactly one of `input` and `speed` must be connected. All attached signals
+must be linked.
+
+## Submodels
+
+None.
+
+### Submodel Validation
+
+None.
+
 ## Model Variables
 
 ### Internal Variables
 
 #### Differential
 
-Symbol                | Units  | Description
-----------------------|--------|------------
-$x_1, x_2, x_3, x_4$  | [-]    | Notch filter states
-$x_5$                 | [-]    | Lead–lag 1 state
-$x_6$                 | [-]    | Lead–lag 2 state
-$x_7$                 | [-]    | Washout state
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$x_1$ | [p.u.] | Notch filter state |
+$x_2$ | [p.u./s] | Notch filter state |
+$x_3$ | [p.u./s$^2$] | Notch filter state |
+$x_4$ | [p.u./s$^3$] | Notch filter state |
+$x_5$ | [p.u.] | First lead-lag state | Algebraic when $T_2=0$
+$x_6$ | [p.u.] | Second lead-lag state | Algebraic when $T_4=0$
+$x_7$ | [p.u.] | Washout state | Algebraic when $T_6=0$
 
 #### Algebraic
 
-Symbol     | Units  | Description
------------|--------|------------
-$v_4$      | [p.u.] | Notch filter output
-$v_5$      | [p.u.] | Lead–lag 1 output
-$v_6$      | [p.u.] | Lead–lag 2 output
-$v_7$      | [p.u.] | Unlimited stabilizer signal
-$V_{ss}$   | [p.u.] | Limited stabilizer signal (model output)
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$v_4$      | [p.u.] | Notch filter output |
+$v_5$      | [p.u.] | Lead–lag 1 output |
+$v_6$      | [p.u.] | Lead–lag 2 output |
+$v_7$      | [p.u.] | Unlimited stabilizer signal |
+$V_{ss}$   | [p.u.] | Limited stabilizer signal (model output) |
 
 ### External Variables
 
+#### Differential
+
+None.
+
 #### Algebraic
 
-Symbol | Units  | Description
--------|--------|------------
-$u$    | [p.u.] | `input`, or `speed` minus one
-$V_{ct}$ | [p.u.] | Compensated voltage magnitude for the cutout
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$u$ | [p.u.] | Stabilizing input | Connected `input`
+$\omega_r$ | [p.u.] | Machine rotor speed | Connected `speed`
+$V_{ct}$ | [p.u.] | Compensated voltage magnitude | Optional when both cutouts are disabled
 
 ## Model Equations
 
-### Differential Equations
+### Internal Equations
+
+#### Differential
+
+For a fourth-order notch and positive $T_2,T_4,T_6$:
+
 
 ```math
 \begin{aligned}
-0 &= -\dot{x}_1 + x_2 \\
-0 &= -\dot{x}_2 + x_3 \\
-0 &= -\dot{x}_3 + x_4 \\
-0 &= -\dot{x}_4 - \dfrac{a_0}{a_4}x_1 - \dfrac{a_1}{a_4}x_2 - \dfrac{a_2}{a_4}x_3 - \dfrac{a_3}{a_4}x_4 + \dfrac{1}{a_4}u \\
-0 &= -T_2 \dot{x}_5 - x_5 + v_4 \\
-0 &= -T_4 \dot{x}_6 - x_6 + v_5 \\
-0 &= -T_6 \dot{x}_7 - x_7 + v_6
+0 &= -\dfrac{\mathrm{d}x_1}{\mathrm{d}t} + x_2 \\
+0 &= -\dfrac{\mathrm{d}x_2}{\mathrm{d}t} + x_3 \\
+0 &= -\dfrac{\mathrm{d}x_3}{\mathrm{d}t} + x_4 \\
+0 &= -\dfrac{\mathrm{d}x_4}{\mathrm{d}t} - \dfrac{a_0}{a_4}x_1 - \dfrac{a_1}{a_4}x_2 - \dfrac{a_2}{a_4}x_3 - \dfrac{a_3}{a_4}x_4 + \dfrac{1}{a_4}u \\
+0 &= -T_2 \dfrac{\mathrm{d}x_5}{\mathrm{d}t} - x_5 + v_4 \\
+0 &= -T_4 \dfrac{\mathrm{d}x_6}{\mathrm{d}t} - x_6 + v_5 \\
+0 &= -T_6 \dfrac{\mathrm{d}x_7}{\mathrm{d}t} - x_7 + v_6
 \end{aligned}
 ```
 
-### Algebraic Equations
+#### Algebraic
 
 ```math
 \begin{aligned}
@@ -120,7 +157,7 @@ The output limiter uses GridKit's smooth
 thresholds, the voltage gate is
 
 ```math
-g(V_{ct}) = \sigma(V_{ct}-V_{cl})\,\sigma(V_{cu}-V_{ct}).
+g(V_{ct}) = \sigma(V_{ct}-V_{\mathrm{cl}})\,\sigma(V_{\mathrm{cu}}-V_{ct}).
 ```
 
 Each disabled threshold contributes a factor of one. `sigmoid` uses the
@@ -134,6 +171,10 @@ PhasorDynamics implementation. `T2=0` or `T4=0` bypasses that lead–lag;
 `T6=0` gives the direct gain `Ks`. Unused notch states retain zero
 initial derivatives. No time-constant floors are applied.
 
+### External Equations
+
+None.
+
 ## Initialization
 
 The current input initializes the filter and lag states at equilibrium.
@@ -142,10 +183,8 @@ For a washout with `T6>0`, the stabilizer output starts at zero; with
 The machine initializes before IEEEST, and exciters initialize afterward
 so their reference incorporates the initial stabilizer output.
 
-## Inputs and Outputs
+## Monitors
 
-Exactly one of `input` and `speed` must be connected. `input` is a generic
-per-unit stabilizing signal; `speed` is absolute per-unit rotor speed,
-with one subtracted inside the model. `vct` is optional when both voltage
-cutouts are disabled. Required `output` connects to an exciter's `vs`.
-The `vss` monitor reports the final output including the cutout.
+Monitor | Units | Description | Note
+------- | ----- | ----------- | ----
+`vss` | [p.u.] | Stabilizer output | Includes voltage cutout

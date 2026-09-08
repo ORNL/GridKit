@@ -42,78 +42,21 @@ f_{\mathrm{c}} &> f_{\mathrm{m}} > 0 \\
 
 ```math
 \begin{aligned}
-\omega_{\mathrm{m}} &:= 2\pi f_{\mathrm{m}} \\
-\omega_{\mathrm{c}} &:= 2\pi f_{\mathrm{c}} \\
-T_{\mathrm{c}} &:= \dfrac{2\pi}{\omega_{\mathrm{c}}}
+\omega_{\mathrm{m}} &= 2\pi f_{\mathrm{m}} \\
+\omega_{\mathrm{c}} &= 2\pi f_{\mathrm{c}} \\
+T_{\mathrm{c}} &= \dfrac{2\pi}{\omega_{\mathrm{c}}}
                    = \dfrac{1}{f_{\mathrm{c}}} \\
 \boldsymbol{\phi}
-&:=
+&=
 \begin{bmatrix}
 \phi_a & \phi_b & \phi_c
-\end{bmatrix}^{\mathsf T}
+\end{bmatrix}^{\mathsf{T}}
 =
 \begin{bmatrix}
 0 & -\dfrac{2\pi}{3} & \dfrac{2\pi}{3}
-\end{bmatrix}^{\mathsf T}
+\end{bmatrix}^{\mathsf{T}}
 \end{aligned}
 ```
-
-For phase $\ell\in\{a,b,c\}$ and carrier interval $k\in\mathbb{Z}$,
-regular sampling holds the modulation command for one carrier period:
-
-```math
-\begin{aligned}
-t_k &:= kT_{\mathrm{c}} \\
-m_{\ell,k} &:= m_\ell(t_{k-1}^-),
-\qquad -1 \le m_{\ell,k} \le 1.
-\end{aligned}
-```
-
-The command sampled at the accepted carrier boundary $t_{k-1}$ is applied over
-interval $k$, a one-carrier computational delay. Trial residual evaluations
-and interpolated monitor samples do not change the held command. Without an
-input, the prescribed sinusoid retains its alignment-dependent sample:
-
-```math
-m_{\ell,k}
-:= M\sin\left(\omega_{\mathrm{m}}(k+\alpha)T_{\mathrm{c}}+\phi_\ell\right).
-```
-
-The full duty ratio and switching instants are
-
-```math
-\begin{aligned}
-d_{\ell,k} &:= \dfrac{1+m_{\ell,k}}{2} \\
-t_{\ell,k}^{\mathrm{on}}
-&:= \left[k+\alpha(1-d_{\ell,k})\right]T_{\mathrm{c}} \\
-t_{\ell,k}^{\mathrm{off}}
-&:= \left[k+\alpha+(1-\alpha)d_{\ell,k}\right]T_{\mathrm{c}}.
-\end{aligned}
-```
-
-The switching function uses the GridKit
-[`sigmoid`](../../../../../CommonMath.md#primitives) with shared sharpness
-$\mu>0$.
-
-The isolated-edge width and harmonic attenuation of a periodically repeated
-pulse are
-
-```math
-\begin{aligned}
-\Delta t_{10\text{–}90} &= \dfrac{2\ln 9}{\mu} \\
-A(f,\mu) &= \dfrac{2\pi^2 f/\mu}{\sinh(2\pi^2 f/\mu)}
-\end{aligned}
-```
-
-$\mu$ | $\Delta t_{10\text{–}90}$ | Interpretation at $f_{\mathrm{c}}=900\,\mathrm{Hz}$
------ | ------------------------- | ---------------------------------------------------------
-$240$ | $18.3\,\mathrm{ms}$ | Broad smoothing; switching suppressed
-$50000$ | $87.9\,\mathrm{\mu s}$ | Resolved smoothed switching with sufficiently fine steps
-$200000$ | $22.0\,\mathrm{\mu s}$ | Sharper edges; finer steps required
-
-Set solver `mu` before model construction. It also affects other CommonMath
-primitives. Monitor spacing alone does not establish integration accuracy;
-check switching harmonics against the sampled-edge prediction.
 
 ## Model Ports
 
@@ -144,6 +87,9 @@ None.
 
 ### External Variables
 
+The modulation input is sampled at accepted boundaries; it introduces no
+continuous DAE dependency.
+
 #### Differential
 
 None.
@@ -153,6 +99,64 @@ None.
 None.
 
 ## Model Equations
+
+For phase $\ell\in\{a,b,c\}$ and carrier interval $k\in\mathbb{Z}$,
+regular sampling holds the modulation command for one carrier period:
+
+```math
+\begin{aligned}
+t_k &= kT_{\mathrm{c}} \\
+m_{\ell,k} &= m_\ell(t_{k-1}^-),
+\qquad -1 \le m_{\ell,k} \le 1.
+\end{aligned}
+```
+
+The command sampled at the accepted carrier boundary $t_{k-1}$ is applied over
+interval $k$, a one-carrier computational delay. Trial residual evaluations
+and interpolated monitor samples do not change the held command. Without an
+input, the prescribed sinusoid retains its alignment-dependent sample:
+
+```math
+m_{\ell,k}
+= M\sin\left(\omega_{\mathrm{m}}(k+\alpha)T_{\mathrm{c}}+\phi_\ell\right).
+```
+
+The full duty ratio and switching instants are
+
+```math
+\begin{aligned}
+d_{\ell,k} &= \dfrac{1+m_{\ell,k}}{2} \\
+t_{\ell,k}^{\mathrm{on}}
+&= \left[k+\alpha(1-d_{\ell,k})\right]T_{\mathrm{c}} \\
+t_{\ell,k}^{\mathrm{off}}
+&= \left[k+\alpha+(1-\alpha)d_{\ell,k}\right]T_{\mathrm{c}}.
+\end{aligned}
+```
+
+The switching function uses the GridKit
+[`sigmoid`](../../../../../CommonMath.md#primitives) with shared sharpness
+$\mu>0$.
+
+The isolated-edge width and harmonic attenuation of a periodically repeated
+pulse are
+
+```math
+\begin{aligned}
+\Delta t_{10\text{–}90} &= \dfrac{2\ln 9}{\mu} \\
+A(f,\mu) &= \dfrac{2\pi^2 f/\mu}{\sinh(2\pi^2 f/\mu)}
+\end{aligned}
+```
+
+$\mu$ | $\Delta t_{10\text{–}90}$ | Interpretation at $f_{\mathrm{c}}=900\,\mathrm{Hz}$
+----- | ------------------------- | ---------------------------------------------------------
+$240$ | $18.3\,\mathrm{ms}$ | Broad smoothing; switching suppressed
+$50000$ | $87.9\,\mathrm{\mu s}$ | Resolved smoothed switching with sufficiently fine steps
+$200000$ | $22.0\,\mathrm{\mu s}$ | Sharper edges; finer steps required
+
+Set solver `mu` before model construction. It also affects other CommonMath
+primitives. Monitor spacing alone does not establish integration accuracy;
+check switching harmonics against the sampled-edge prediction.
+
 
 ### Internal Equations
 
@@ -226,5 +230,4 @@ Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `s` | [-] | Three-phase switching function | $\mathbf{s} \in [0,1]^3$
 
-In case JSON, `mon: ["s"]` expands to the scalar monitors `sa`, `sb`, `sc`.
 See [case connections](../../../INPUT_FORMAT.md#case-connections) for vector signal wiring.
