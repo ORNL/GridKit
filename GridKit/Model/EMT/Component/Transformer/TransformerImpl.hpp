@@ -336,17 +336,17 @@ namespace GridKit
     /**
      * Initialization of the transformer model
      *
-     * The series current and flux linkages start de-energized unless flux
-     * linkages are supplied. The assembled consistent initialization resolves
-     * the algebraic variables.
+     * The series current and flux linkages start de-energized unless they
+     * are supplied. The assembled consistent initialization resolves the
+     * algebraic variables.
      */
     template <typename scalar_type, typename index_type>
-    int Transformer<scalar_type, index_type>::initialize(const std::array<RealT, 6>& flux)
+    int Transformer<scalar_type, index_type>::initialize(const std::array<RealT, 9>& state)
     {
-      for (const auto value : flux)
+      for (const auto value : state)
       {
         if (!std::isfinite(value))
-          throw std::invalid_argument("Transformer: nonfinite flux linkage state");
+          throw std::invalid_argument("Transformer: nonfinite differential state");
       }
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
@@ -356,9 +356,9 @@ namespace GridKit
         y[j]  = 0.0;
         yp[j] = 0.0;
       }
-      for (size_t n = 0; n < 6; ++n)
+      for (size_t n = 0; n < 9; ++n)
       {
-        y[3 + n] = static_cast<ScalarT>(flux[n]);
+        y[n] = static_cast<ScalarT>(state[n]);
       }
 
       y_.setDataUpdated();
@@ -371,7 +371,7 @@ namespace GridKit
     void Transformer<scalar_type, index_type>::validateInitialState(const std::map<std::string, RealT>& values) const
     {
       for (const auto& [key, value] : values)
-        if (std::find(flux_keys_.begin(), flux_keys_.end(), key) == flux_keys_.end() || !std::isfinite(value))
+        if (std::find(state_keys_.begin(), state_keys_.end(), key) == state_keys_.end() || !std::isfinite(value))
           throw std::invalid_argument("Transformer: invalid initial state " + key);
     }
 
@@ -379,14 +379,14 @@ namespace GridKit
     int Transformer<scalar_type, index_type>::initializeState(const std::map<std::string, RealT>& values)
     {
       validateInitialState(values);
-      std::array<RealT, 6> flux{};
-      for (size_t n = 0; n < 6; ++n)
+      std::array<RealT, 9> state{};
+      for (size_t n = 0; n < 9; ++n)
       {
-        const auto entry = values.find(std::string(flux_keys_[n]));
+        const auto entry = values.find(std::string(state_keys_[n]));
         if (entry != values.end())
-          flux[n] = entry->second;
+          state[n] = entry->second;
       }
-      return initialize(flux);
+      return initialize(state);
     }
 
     /**
