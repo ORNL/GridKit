@@ -31,7 +31,7 @@ namespace GridKit
       using InnerT                       = EMT::Controller::InnerCurrentControl<ScalarT, IdxT>;
       using SignalT                      = EMT::Signal<ScalarT, IdxT>;
       using Data                         = typename OuterT::ModelDataT;
-      static constexpr IdxT  system_size = 14;
+      static constexpr IdxT  system_size = 18;
       static constexpr RealT omega       = RealT{120} * std::numbers::pi_v<RealT>;
 
       static Data makeData()
@@ -123,7 +123,7 @@ namespace GridKit
 
         void setProbeState()
         {
-          const std::array<RealT, system_size> state{12, -5, 208, 13, 8, -3, omega, 400, 0.3, -0.2, 29, 8, 1.3, -0.8};
+          const std::array<RealT, system_size> state{12, -5, 208, 13, 8, -3, omega, 400, 0.3, -0.2, 29, 8, 1.3, -0.8, 28, 7, 200, 20};
           for (IdxT n = 0; n < system_size; ++n)
           {
             y.getData()[n]  = state[n];
@@ -216,6 +216,7 @@ namespace GridKit
         {
           auto* y = fixture.y.getData();
           y[10]   = reference;
+          fixture.inner.initialize();
           fixture.evaluateResidual();
           const auto* yp   = fixture.yp.getData();
           const auto* f    = fixture.f.getData();
@@ -255,12 +256,14 @@ namespace GridKit
         y[9]  = igq + omega * 0.0001 * vd;
         y[10] = igd;
         y[11] = igq + omega * 0.0001 * vd;
+        fixture.inner.initialize();
         fixture.evaluateResidual();
         for (size_t n = 8; n < 12; ++n)
           success *= std::abs(fixture.f.getData()[n]) < 1e-10;
         // At identical current error, saturation supplies the restoring tracking term.
         y[10] = 45;
         y[11] = 0;
+        fixture.inner.initialize();
         fixture.evaluateResidual();
         success *= fixture.f.getData()[8] < -2900;
         return success.report(__func__);
@@ -316,13 +319,13 @@ namespace GridKit
           const RealT y_saved = y_data[j];
           y_data[j]           = y_saved + step;
           fixture.evaluateResidual();
-          for (IdxT i = 8; i < 12; ++i)
+          for (IdxT i = 8; i < system_size; ++i)
           {
             fd_column[static_cast<size_t>(i)] = f_data[i];
           }
           y_data[j] = y_saved - step;
           fixture.evaluateResidual();
-          for (IdxT i = 8; i < 12; ++i)
+          for (IdxT i = 8; i < system_size; ++i)
           {
             fd_column[static_cast<size_t>(i)] = (fd_column[static_cast<size_t>(i)] - f_data[i]) / (2.0 * step);
           }
@@ -332,19 +335,19 @@ namespace GridKit
           yp_data[j]           = yp_saved + step;
           fixture.evaluateResidual();
           std::array<RealT, system_size> fp_plus{};
-          for (IdxT i = 8; i < 12; ++i)
+          for (IdxT i = 8; i < system_size; ++i)
           {
             fp_plus[static_cast<size_t>(i)] = f_data[i];
           }
           yp_data[j] = yp_saved - step;
           fixture.evaluateResidual();
-          for (IdxT i = 8; i < 12; ++i)
+          for (IdxT i = 8; i < system_size; ++i)
           {
             fd_column[static_cast<size_t>(i)] += alpha * (fp_plus[static_cast<size_t>(i)] - f_data[i]) / (2.0 * step);
           }
           yp_data[j] = yp_saved;
 
-          for (IdxT i = 8; i < 12; ++i)
+          for (IdxT i = 8; i < system_size; ++i)
           {
             const RealT fd_value     = fd_column[static_cast<size_t>(i)];
             const auto  it           = enzyme_entries.find({i, j});

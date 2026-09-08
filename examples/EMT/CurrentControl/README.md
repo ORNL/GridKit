@@ -1,6 +1,7 @@
 # Inverter current and voltage control
 
-`GFL` tracks a current reference against a stiff grid with a known angle.
+`GFL` tracks parameter-derived dq grid-current references against a stiff grid using
+a terminal-voltage PLL and cascaded grid-side and inverter-side current control.
 `GFM` supplies an islanded load through cascaded voltage and current control.
 Both use the same continuous PWM, converter, and physical LCL filter.
 
@@ -10,7 +11,10 @@ filter uses 2 mH / 0.2 Ω, 100 µF, and 1 mH / 0.1 Ω. Nominal voltage is 208 V
 line-to-line RMS at 60 Hz; dq quantities use the power-invariant Park transform.
 Current and voltage loop bandwidths are nominally 400 Hz and 60 Hz.
 
-The current reference steps through 8, 16, 45, and 8 A, with a 30 A limit.
+The current targets are fixed derived parameters `Pref/V` and `-Qref/V`,
+chosen to match the initial measured grid current. The q-axis target is zero
+up to roundoff, and the inverter-current limit is 30 A. The PLL gains are
+80 rad/s and 2500 rad/s²; the outer loop uses `Kp=0.01`, `Ki=40`, and `Kaw=200`.
 The voltage study connects and disconnects a second 20 Ω/phase load.
 Initial states are fundamental operating-point estimates; switching ripple
 develops during startup. See the [cases](../../../cases/EMT/CurrentControl/README.md)
@@ -61,3 +65,22 @@ Fourier amplitudes | [Harmonics](simulation/harmonics.png) | [Harmonics](simulat
 The continuous-PWM unit fixture checks duty mean, the smoothing-to-switching
 transition, and input values and gradients at the same evaluation time. These
 examples report closed-loop behavior without prescribing exact transients or solver steps.
+
+`validate.py` runs the GFL model against the analytic high-voltage LCL solution
+for prescribed dq grid current. It checks broad smoothing and resolved
+switching, and is registered as `EMTGflPowerControl`.
+The validator uses only the Python standard library.
+
+```bash
+python3 examples/EMT/CurrentControl/validate.py --exe build/application/EMT/EMTDynamicSimulation
+```
+
+The saved GFL plots and `PQ.metrics.json` belong to the previous P/Q-input
+controller. Saved GFM plots also predate the controller output-initialization
+migration. They have not been regenerated or revalidated for the current-input
+interface. The validator now uses the balanced LCL solution for supplied dq
+current targets and reconstructs P and Q independently from phase samples and
+Park measurements. The reactive-power bound is 0.002 var: repeated resolved-switching runs
+differed from the balanced analytic solution by 0.001194 var. The current
+reference fixes dq current; it does not impose exact average reactive power
+in the presence of switching ripple.
