@@ -169,7 +169,9 @@ namespace GridKit
         this->J_cols_buffer_[j] = column;
         this->J_vals_buffer_[j] = value;
       }
-      return entries == 0 ? 0 : this->constructCoo();
+      if (entries == 0)
+        return 0;
+      return this->constructCoo();
     }
 
     template <typename scalar_type, typename index_type>
