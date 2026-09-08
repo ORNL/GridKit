@@ -30,9 +30,10 @@ The generator preserves initial terminal dispatch, includes both reactor losses
 in DC power, and initializes capacitor voltage and both inductor currents.
 The filter and controller parameters are synthetic, as listed in the case README.
 
-Generate current results using the commands below. Plots, editable TeX/data,
-and measured validation/comparison statistics are written under ignored
-`results/`; no numerical snapshot is assumed to describe a regenerated case.
+Generate current results using the commands below. The four PNG/PDF plots in
+`results/` are tracked. Editable TeX/data and measured validation/comparison
+statistics remain ignored; no numerical snapshot is assumed to describe a
+regenerated case.
 
 Each phase of the fault uses a 5.05158 mH inductor. At clearing, a second
 switch connects a 1.9044 ohm discharge resistor while the grid switch opens.
