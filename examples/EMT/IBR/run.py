@@ -38,7 +38,7 @@ def validate_nominal_voltage(path):
     with path.open(newline='') as stream:
         initial = next(csv.DictReader(stream))
     for bus in (4, 5, 6):
-        v = [float(initial[f'Converter_converter_{bus}_vo{p}']) for p in 'abc']
+        v = [float(initial[f'Converter_converter_{bus}_e{p}']) for p in 'abc']
         vll = math.sqrt(sum((v[p] - v[(p + 1) % 3])**2 for p in range(3)) / 3)
         if not math.isclose(vll, 1.02 * 13800, rel_tol=1e-6):
             raise ValueError(f'{path}: converter {bus} starts at {vll} V line-line RMS; expected 14076 V')

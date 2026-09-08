@@ -31,7 +31,10 @@
 % ================= LCL filter and terminal =================
 \node[block] (filter) at (12.4, 0) {Filter\\{\small LCL}};
 \node[block] (tbus) at (20.0, 0) {Bus\\{\small terminal}};
-\draw[->, line] (bridge.east) -- node[sig, above] {$\mathbf{e}$} (filter.west);
+\draw[->, line] ([yshift=2.5mm]bridge.east)
+    -- node[sig, above] {$\mathbf{e}$} ([yshift=2.5mm]filter.west);
+\draw[->, line] ([yshift=-2.5mm]filter.west)
+    -- node[sig, below] {$\mathbf{i}$} ([yshift=-2.5mm]bridge.east);
 \draw[->, line] (filter.east) -- (tbus.west);
 % The grid-current tap sits over the outer controller input it feeds.
 \node[signal, label={[sig]above:$\mathbf{i}_g$}] (igabc)
@@ -46,8 +49,6 @@
 % reference-frame transformations are implicit at the dq boundary.
 \draw[->, line] ([xshift=-2.5mm]filter.south) -- ([xshift=-2.5mm]icc.north);
 \node[sig, anchor=east] at (12.0, -1.2) {$\mathbf{i}$};
-\node[signal] (ibridge) at (12.15, -1.6) {};
-\draw[->, line] (ibridge) -- (9.5, -1.6) -- ([xshift=7mm]bridge.south);
 \draw[->, line] ([xshift=2.5mm]filter.south) -- ([xshift=2.5mm]icc.north);
 \node[sig, anchor=west] at (12.8, -1.2) {$\mathbf{v}_{\mathrm{o}}$};
 \draw[->, line] (igabc) -- ([xshift=\ifgfm 2.5mm\else 0mm\fi]outer.north);

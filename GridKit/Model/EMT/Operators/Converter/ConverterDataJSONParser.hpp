@@ -11,10 +11,10 @@ namespace GridKit
     void from_json(const json& raw, ConverterData<RealT, IdxT>& data)
     {
       auto j = raw;
-      expandPhasePort(j, "outputs", "vo", {"voa", "vob", "voc"});
+      expandPhasePort(j, "outputs", "e", {"ea", "eb", "ec"});
       expandPhasePort(j, "inputs", "s", {"sa", "sb", "sc"});
       expandPhasePort(j, "inputs", "i", {"ia", "ib", "ic"});
-      expandPhaseMonitor(j, "vo", {"voa", "vob", "voc"});
+      expandPhaseMonitor(j, "e", {"ea", "eb", "ec"});
       using BaseT = ComponentData<RealT, IdxT, ConverterParameters, ConverterInputs, ConverterOutputs, ConverterMonitorableVariables>;
       from_json(j, static_cast<BaseT&>(data));
     }

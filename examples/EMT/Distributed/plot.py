@@ -319,7 +319,7 @@ def network(records, output):
                 mask = (t > meta["horizon_s"] * 0.4) & (t < meta["horizon_s"] * 0.45)
                 axes[0].plot(
                     t[mask] * 1e3,
-                    d[f"Converter_converter{g}_voa"][mask] / 1e3,
+                    d[f"Converter_converter{g}_ea"][mask] / 1e3,
                     color=color,
                     label=label,
                     lw=0.8,

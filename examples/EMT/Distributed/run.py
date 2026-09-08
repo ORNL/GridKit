@@ -309,7 +309,7 @@ def network(count, kind, hybrid, fits):
                     "vdc": f"dc{i}",
                     "i": [f"if{p}{i}" for p in "abc"],
                 },
-                outputs={"vo": [f"e{p}{i}" for p in "abc"]},
+                outputs={"e": [f"e{p}{i}" for p in "abc"]},
             )
             filt.update(
                 id=f"filter{i}",

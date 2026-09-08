@@ -2,7 +2,7 @@
 
 `Filter` represents a three-phase LCL filter between a converter and a terminal
 Bus. It owns the converter-side current $\mathbf{i}$, capacitor voltage
-$\mathbf{v}_{\mathrm{o}}$, and grid-side current $\mathbf{i}_{\mathrm{g}}$.
+$\mathbf{v}_{\mathrm{o}}$, and grid-side current $\mathbf{i}_g$.
 Both currents are positive from the converter toward the Bus.
 
 ## Block Diagram
@@ -15,11 +15,11 @@ Figure 1: Filter model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$\mathbf{R}_{\mathrm{s}}$ | [Ω] | `Rs` | Converter-side series resistance | $\mathbb{R}^{3\times3}$, default zero
-$\mathbf{L}_{\mathrm{s}}$ | [H] | `Ls` | Converter-side series inductance | $\mathbb{R}^{3\times3}$, required
-$\mathbf{C}$ | [F] | `C` | Shunt capacitance | $\mathbb{R}^{3\times3}$, required
-$\mathbf{R}_{\mathrm{g}}$ | [Ω] | `Rg` | Grid-side series resistance | $\mathbb{R}^{3\times3}$, default zero
-$\mathbf{L}_{\mathrm{g}}$ | [H] | `Lg` | Grid-side series inductance | $\mathbb{R}^{3\times3}$, required
+$\mathbf{R}_{\mathrm{s}}$ | [$\Omega$] | `Rs` | Converter-side series resistance | $\mathbf{R}_{\mathrm{s}} \in \mathbb{R}^{3\times3}$, default zero
+$\mathbf{L}_{\mathrm{s}}$ | [H] | `Ls` | Converter-side series inductance | $\mathbf{L}_{\mathrm{s}} \in \mathbb{R}^{3\times3}$, required
+$\mathbf{C}$ | [F] | `C` | Shunt capacitance | $\mathbf{C} \in \mathbb{R}^{3\times3}$, required
+$\mathbf{R}_g$ | [$\Omega$] | `Rg` | Grid-side series resistance | $\mathbf{R}_g \in \mathbb{R}^{3\times3}$, default zero
+$\mathbf{L}_g$ | [H] | `Lg` | Grid-side series inductance | $\mathbf{L}_g \in \mathbb{R}^{3\times3}$, required
 
 ### Parameter Validation
 
@@ -35,18 +35,18 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{v}$ | `v` | Input | [V] | Terminal Bus voltage | $\mathbb{R}^3$
-$\mathbf{e}$ | `e` | Input | [V] | Converter output voltage | $\mathbb{R}^3$
-$\mathbf{i}$ | `i` | Output | [A] | Converter-side current | $\mathbb{R}^3$
-$\mathbf{v}_{\mathrm{o}}$ | `vo` | Output | [V] | Capacitor voltage | $\mathbb{R}^3$
-$\mathbf{i}_{\mathrm{g}}$ | `ig` | Output | [A] | Current injected into the terminal Bus | $\mathbb{R}^3$
+$\mathbf{v}$ | `v` | Input | [V] | Terminal Bus voltage | $\mathbf{v} \in \mathbb{R}^3$
+$\mathbf{e}$ | `e` | Input | [V] | Converter output voltage | $\mathbf{e} \in \mathbb{R}^3$
+$\mathbf{i}$ | `i` | Output | [A] | Converter-side current | $\mathbf{i} \in \mathbb{R}^3$
+$\mathbf{v}_{\mathrm{o}}$ | `vo` | Output | [V] | Capacitor voltage | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
+$\mathbf{i}_g$ | `ig` | Output | [A] | Current injected into the terminal Bus | $\mathbf{i}_g \in \mathbb{R}^3$
 
 Vector ports use phase order `a`, `b`, `c`. Scalar names append the phase letter,
 for example `ea`, `voa`, and `iga`. The `bus` input shortcut binds `v` to the
 terminal Bus. Output aliases are optional; the Bus receives the grid-side current
 without an explicit signal alias.
 
-Connect `Converter.vo` to `e` and return `i` to `Converter.i`. Controllers and
+Connect `Converter.e` to `e` and return `i` to `Converter.i`. Controllers and
 reference-frame operators read `i`, `vo`, and `ig` through signal ports. A PLL
 can read `vo` and supply angle and frequency to the controllers.
 
@@ -66,9 +66,9 @@ None.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{i}$ | [A] | Converter-side inductor current | $\mathbb{R}^3$
-$\mathbf{v}_{\mathrm{o}}$ | [V] | Capacitor voltage | $\mathbb{R}^3$
-$\mathbf{i}_{\mathrm{g}}$ | [A] | Grid-side inductor current | $\mathbb{R}^3$
+$\mathbf{i}$ | [A] | Converter-side inductor current | $\mathbf{i} \in \mathbb{R}^3$
+$\mathbf{v}_{\mathrm{o}}$ | [V] | Capacitor voltage | $\mathbf{v}_{\mathrm{o}} \in \mathbb{R}^3$
+$\mathbf{i}_g$ | [A] | Grid-side inductor current | $\mathbf{i}_g \in \mathbb{R}^3$
 
 #### Algebraic
 
@@ -85,8 +85,8 @@ other components. The Filter does not use their derivatives.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{v}$ | [V] | Terminal voltage owned by the Bus | $\mathbb{R}^3$, when algebraic
-$\mathbf{e}$ | [V] | Converter output voltage | $\mathbb{R}^3$, may be computed from other signals
+$\mathbf{v}$ | [V] | Terminal voltage owned by the Bus | $\mathbf{v} \in \mathbb{R}^3$, when algebraic
+$\mathbf{e}$ | [V] | Converter output voltage | $\mathbf{e} \in \mathbb{R}^3$, may be computed from other signals
 
 ## Model Equations
 
@@ -99,9 +99,9 @@ $\mathbf{e}$ | [V] | Converter output voltage | $\mathbb{R}^3$, may be computed 
 0 &= \mathbf{L}_{\mathrm{s}}\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}
    + \mathbf{R}_{\mathrm{s}}\mathbf{i} + \mathbf{v}_{\mathrm{o}}-\mathbf{e} \\
 0 &= \mathbf{C}\dfrac{\mathrm{d}\mathbf{v}_{\mathrm{o}}}{\mathrm{d}t}
-   + \mathbf{i}_{\mathrm{g}}-\mathbf{i} \\
-0 &= \mathbf{L}_{\mathrm{g}}\dfrac{\mathrm{d}\mathbf{i}_{\mathrm{g}}}{\mathrm{d}t}
-   + \mathbf{R}_{\mathrm{g}}\mathbf{i}_{\mathrm{g}} + \mathbf{v}-\mathbf{v}_{\mathrm{o}}
+   + \mathbf{i}_g-\mathbf{i} \\
+0 &= \mathbf{L}_g\dfrac{\mathrm{d}\mathbf{i}_g}{\mathrm{d}t}
+   + \mathbf{R}_g\mathbf{i}_g + \mathbf{v}-\mathbf{v}_{\mathrm{o}}
 \end{aligned}
 ```
 
@@ -111,7 +111,7 @@ None.
 
 ### External Equations
 
-None. The terminal Bus registers $\mathbf{i}_{\mathrm{g}}$ as a current
+None. The terminal Bus registers $\mathbf{i}_g$ as a current
 injection and owns its KCL equations.
 
 ## Initialization

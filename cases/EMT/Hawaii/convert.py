@@ -351,7 +351,7 @@ def convert(source):
         add('PWM', prefix + '_pwm', {'fc': CHOICES['carrier_Hz'], 'alignment': CHOICES['carrier_alignment']},
             {'m': vector('m', 'abc')}, {'s': vector('s', 'abc')})
         add('Converter', prefix + '_bridge', inputs={'s': vector('s', 'abc'), 'vdc': s('vdc'), 'i': vector('i', 'abc')},
-            outputs={'vo': vector('e', 'abc'), 'idc': s('idc')})
+            outputs={'e': vector('e', 'abc'), 'idc': s('idc')})
         state['devices'][prefix + '_dc'] = {'vdc': vdc}
         state['devices'][prefix + '_filter'] = samples(current, 'i', math.sqrt(2 / 3))
         state['devices'][prefix + '_power'] = {'icmdd': current_dq.real, 'icmdq': current_dq.imag}
