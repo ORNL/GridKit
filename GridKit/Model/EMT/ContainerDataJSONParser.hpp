@@ -143,6 +143,10 @@ namespace GridKit
         {
           raw_device.get_to(data.park.emplace_back());
         }
+        else if (kind == "PLL")
+        {
+          raw_device.get_to(data.pll.emplace_back());
+        }
         else if (kind == "Angle")
         {
           raw_device.get_to(data.angle.emplace_back());
