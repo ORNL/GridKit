@@ -1,8 +1,12 @@
 #pragma once
 
+#include <cmath>
+#include <limits>
+
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/EMT/Component/Controller/InnerCurrentControl/InnerCurrentControl.hpp>
+#include <GridKit/Model/EMT/ComponentInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
@@ -12,163 +16,273 @@ namespace GridKit
     namespace Controller
     {
       template <typename scalar_type, typename index_type>
-      InnerCurrentControl<scalar_type, index_type>::InnerCurrentControl(const ModelDataT& data)
-        : inductance_(parameter<RealT>(data, InnerCurrentControlParameters::L)),
-          kp_(parameter<RealT>(data, InnerCurrentControlParameters::Kp)),
-          ki_(parameter<RealT>(data, InnerCurrentControlParameters::Ki)),
-          kaw_(parameter<RealT>(data, InnerCurrentControlParameters::Kaw)),
-          current_limit_(parameter<RealT>(data, InnerCurrentControlParameters::Imax)),
-          modulation_limit_(parameter<RealT>(data, InnerCurrentControlParameters::Mmax)),
-          current_coefficient_(RealT{1} / (current_limit_ * current_limit_)),
-          voltage_coefficient_(RealT{8} / (RealT{3} * modulation_limit_ * modulation_limit_)),
-          monitor_(std::make_unique<MonitorT>(data))
+      InnerCurrentControl<scalar_type, index_type>::InnerCurrentControl()
+        : InnerCurrentControl(ModelDataT{})
       {
-        if (inductance_ <= 0 || kp_ <= 0 || ki_ <= 0 || kaw_ <= 0 || current_limit_ <= 0
-            || modulation_limit_ <= 0 || modulation_limit_ > 1
-            || current_coefficient_ <= 0 || voltage_coefficient_ <= 0
-            || !std::isfinite(current_coefficient_) || !std::isfinite(voltage_coefficient_))
-          throw std::invalid_argument("InnerCurrentControl: invalid control parameters");
-        this->equation_size_ = this->size_ = 2;
-        using Mon                          = typename ModelDataT::MonitorableVariables;
-        monitor_->set(Mon::xid, [this]
-                      { return this->y_.getData()[0]; });
-        monitor_->set(Mon::xiq, [this]
-                      { return this->y_.getData()[1]; });
-        for (size_t n = 0; n < output_.size(); ++n)
-        {
-          const auto key = static_cast<Outputs>(n);
-          output_[n].setComputed(
-              [this, key]
-              { return output(key); },
-              [this, key](typename SignalT::GradientT& gradient, RealT scale)
-              { appendOutputGradient(key, gradient, scale); });
-          monitor_->set(static_cast<Mon>(n + 2), [this, n]
-                        { return output_[n].read(); });
-        }
+      }
+
+      template <typename scalar_type, typename index_type>
+      InnerCurrentControl<scalar_type, index_type>::InnerCurrentControl(const ModelDataT& data)
+        : monitor_(std::make_unique<MonitorT>(data))
+      {
+        initializeParameters(data);
+        size_ = 6;
+        signals_.template assignSignal<InnerCurrentControlInternalVariables::ILIMD>(&output_[0]);
+        signals_.template assignSignal<InnerCurrentControlInternalVariables::ILIMQ>(&output_[1]);
+        signals_.template assignSignal<InnerCurrentControlInternalVariables::UD>(&output_[2]);
+        signals_.template assignSignal<InnerCurrentControlInternalVariables::UQ>(&output_[3]);
+        initializeMonitor();
       }
 
       template <typename scalar_type, typename index_type>
       InnerCurrentControl<scalar_type, index_type>::~InnerCurrentControl() = default;
 
       template <typename scalar_type, typename index_type>
-      typename InnerCurrentControl<scalar_type, index_type>::SignalT&
-      InnerCurrentControl<scalar_type, index_type>::outputSignal(Outputs output)
+      void InnerCurrentControl<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        return output_.at(static_cast<size_t>(output));
+        using Parameter = typename ModelDataT::Parameters;
+        L_              = parameter<RealT>(data, Parameter::L, L_);
+        Kp_             = parameter<RealT>(data, Parameter::Kp, Kp_);
+        Ki_             = parameter<RealT>(data, Parameter::Ki, Ki_);
+        Kaw_            = parameter<RealT>(data, Parameter::Kaw, Kaw_);
+        Imax_           = parameter<RealT>(data, Parameter::Imax, Imax_);
+        Mmax_           = parameter<RealT>(data, Parameter::Mmax, Mmax_);
+        if (Imax_ > ZERO<RealT> && Mmax_ > ZERO<RealT>)
+        {
+          ai_ = ONE<RealT> / (Imax_ * Imax_);
+          au_ = RealT{8} / (RealT{3} * Mmax_ * Mmax_);
+        }
       }
 
       template <typename scalar_type, typename index_type>
-      void InnerCurrentControl<scalar_type, index_type>::attachInput(const std::array<SignalT*, 8>& inputs)
+      void InnerCurrentControl<scalar_type, index_type>::attachInput(InputSignals inputs)
       {
-        if (this->allocated_)
-          throw std::logic_error("InnerCurrentControl: attach inputs before allocation");
-        for (auto* signal : inputs)
-          if (!signal)
-            throw std::invalid_argument("InnerCurrentControl: all inputs are required");
-        input_ = inputs;
+        if (allocated_)
+          throw std::logic_error("InnerCurrentControl inputs cannot change after allocation");
+        for (size_t p = 0; p < inputs.size(); ++p)
+          signals_.attachSignal(static_cast<InnerCurrentControlExternalVariables>(p), inputs[p]);
       }
 
       template <typename scalar_type, typename index_type>
       void InnerCurrentControl<scalar_type, index_type>::assignOutput(Outputs output, SignalT* signal)
       {
-        if (this->allocated_)
-          throw std::logic_error("InnerCurrentControl: assign outputs before allocation");
-        const auto index    = static_cast<size_t>(output);
-        auto&      assigned = alias_.at(index);
-        if (!signal || (assigned && assigned != signal))
-          throw std::invalid_argument("InnerCurrentControl: invalid output assignment");
-        if (assigned == signal)
-          return;
+        if (allocated_)
+          throw std::logic_error("InnerCurrentControl outputs cannot change after allocation");
+        const auto n = static_cast<size_t>(output);
+        if (n >= output_.size() || !signal || alias_[n])
+          throw std::invalid_argument("InnerCurrentControl: invalid or duplicate output assignment");
         signal->claimProducer();
-        assigned = signal;
-        signal->setComputed(
-            [this, index]
-            { return output_[index].read(); },
-            [this, index](typename SignalT::GradientT& gradient, RealT scale)
-            { output_[index].appendGradient(gradient, scale); });
+        alias_[n] = signal;
+      }
+
+      template <typename scalar_type, typename index_type>
+      typename InnerCurrentControl<scalar_type, index_type>::SignalT& InnerCurrentControl<scalar_type, index_type>::outputSignal(Outputs output)
+      {
+        return output_.at(static_cast<size_t>(output));
       }
 
       template <typename scalar_type, typename index_type>
       int InnerCurrentControl<scalar_type, index_type>::setGridKitComponentID(IdxT id)
       {
-        this->gridkit_component_id_ = id;
+        gridkit_component_id_ = id;
         return 0;
       }
 
       template <typename scalar_type, typename index_type>
       int InnerCurrentControl<scalar_type, index_type>::allocate()
       {
-        for (auto* signal : input_)
-          if (!signal)
-            throw std::invalid_argument("InnerCurrentControl: all inputs are required");
-        if (!this->allocated_)
-          this->allocateVectors(2);
-        this->tag_.resize(2);
-        this->variable_indices_.resize(2);
-        this->residual_indices_.resize(2);
+        if (!allocated_)
+          this->allocateVectors(size_);
+        tag_.resize(static_cast<size_t>(size_));
+        variable_indices_.resize(static_cast<size_t>(size_));
+        residual_indices_.resize(static_cast<size_t>(size_));
         this->assignGlobalIndices(0);
-        this->allocateExternalVectors(static_cast<IdxT>(input_.size()), 0);
-        for (size_t n = 0; n < input_.size(); ++n)
-          this->setExternalVariableSignal(static_cast<IdxT>(n), input_[n]);
-        this->allocated_ = true;
+        this->allocateExternalVectors(static_cast<IdxT>(InnerCurrentControlExternalVariables::MAXIMUM), 0);
+        signals_.registerExternalVariableSignals(*this);
+        signals_.bindInternalVariableSignals(*this);
+        for (size_t n = 0; n < alias_.size(); ++n)
+          if (alias_[n])
+            this->bindSignal(*alias_[n], static_cast<IdxT>(2 + n));
+        allocated_ = true;
         return 0;
       }
 
       template <typename scalar_type, typename index_type>
       int InnerCurrentControl<scalar_type, index_type>::verify() const
       {
-        for (const auto* signal : input_)
-          if (!signal || !signal->linked())
-            return 1;
-        return 0;
-      }
-
-      template <typename scalar_type, typename index_type>
-      int InnerCurrentControl<scalar_type, index_type>::initialize(const std::array<RealT, 2>& integral)
-      {
-        for (size_t n = 0; n < 2; ++n)
+        int error_count   = 0;
+        using V           = InnerCurrentControlExternalVariables;
+        const auto inputs = signals_.attachedSignals({V::VD, V::VQ, V::ID, V::IQ, V::ICMDD, V::ICMDQ, V::OMEGA, V::VDC});
+        if (inputs.size() != static_cast<size_t>(V::MAXIMUM))
         {
-          if (!std::isfinite(integral[n]))
-            throw std::invalid_argument("InnerCurrentControl: nonfinite integral state");
-          this->y_.getData()[n]  = integral[n];
-          this->yp_.getData()[n] = ScalarT{0};
+          Log::error() << "InnerCurrentControl: all inputs are required\n";
+          ++error_count;
         }
-        this->y_.setDataUpdated();
-        this->yp_.setDataUpdated();
-        return 0;
+        for (const auto* input : inputs)
+          if (!input->linked())
+          {
+            Log::error() << "InnerCurrentControl: inputs must have linked sources\n";
+            ++error_count;
+          }
+        for (const auto value : {L_, Kp_, Ki_, Kaw_, Imax_, Mmax_, ai_, au_})
+          if (!std::isfinite(value) || value <= ZERO<RealT>)
+          {
+            Log::error() << "InnerCurrentControl: parameters must be finite and positive\n";
+            ++error_count;
+          }
+        if (Mmax_ > ONE<RealT>)
+        {
+          Log::error() << "InnerCurrentControl: modulation limit must not exceed one\n";
+          ++error_count;
+        }
+        return error_count;
       }
 
       template <typename scalar_type, typename index_type>
       void InnerCurrentControl<scalar_type, index_type>::validateInitialState(const std::map<std::string, RealT>& values) const
       {
-        for (const auto& [key, value] : values)
-          if ((key != "xid" && key != "xiq") || !std::isfinite(value))
-            throw std::invalid_argument("InnerCurrentControl: invalid initial state " + key);
+        this->template parseInitialOutputs<InnerCurrentControl>(values);
       }
 
       template <typename scalar_type, typename index_type>
       int InnerCurrentControl<scalar_type, index_type>::initializeState(const std::map<std::string, RealT>& values)
       {
-        validateInitialState(values);
-        std::array<RealT, 2> integral{};
-        if (values.contains("xid"))
-          integral[0] = values.at("xid");
-        if (values.contains("xiq"))
-          integral[1] = values.at("xiq");
-        return initialize(integral);
+        return this->initializeOutputs(*this, values);
       }
 
       template <typename scalar_type, typename index_type>
-      typename InnerCurrentControl<scalar_type, index_type>::Base::InitializationPortsT
-      InnerCurrentControl<scalar_type, index_type>::initializationPorts()
+      int InnerCurrentControl<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
-        return {};
+        this->validateOutputValues(outputs);
+        if (const int errors = verify(); errors != 0)
+          return errors;
+        using V           = InnerCurrentControlExternalVariables;
+        const RealT vd    = static_cast<RealT>(signals_.template readExternalVariable<V::VD>());
+        const RealT vq    = static_cast<RealT>(signals_.template readExternalVariable<V::VQ>());
+        const RealT id    = static_cast<RealT>(signals_.template readExternalVariable<V::ID>());
+        const RealT iq    = static_cast<RealT>(signals_.template readExternalVariable<V::IQ>());
+        const RealT icmdd = static_cast<RealT>(signals_.template readExternalVariable<V::ICMDD>());
+        const RealT icmdq = static_cast<RealT>(signals_.template readExternalVariable<V::ICMDQ>());
+        const RealT omega = static_cast<RealT>(signals_.template readExternalVariable<V::OMEGA>());
+        const RealT vdc   = static_cast<RealT>(signals_.template readExternalVariable<V::VDC>());
+        for (const auto value : {vd, vq, id, iq, icmdd, icmdq, omega, vdc})
+          if (!std::isfinite(value))
+            throw std::invalid_argument("InnerCurrentControl: nonfinite initial input");
+        if (vdc < ZERO<RealT>)
+          throw std::invalid_argument("InnerCurrentControl: initial DC voltage must be nonnegative");
+        const RealT                li = std::sqrt(Math::max(ONE<RealT>, ai_ * (icmdd * icmdd + icmdq * icmdq)));
+        const std::array<RealT, 2> limited{icmdd / li, icmdq / li};
+        const RealT                tolerance = RealT{64} * std::numeric_limits<RealT>::epsilon();
+        for (size_t n = 0; n < 2; ++n)
+        {
+          const auto  key   = static_cast<Outputs>(n);
+          const RealT value = this->outputValue(outputs, key, limited[n]);
+          if (std::abs(value - limited[n]) > tolerance * (ONE<RealT> + std::abs(limited[n])))
+            throw std::invalid_argument("InnerCurrentControl: initial limited current must match the current command");
+        }
+        const std::array<RealT, 2> base{vd - omega * L_ * iq + Kp_ * (limited[0] - id),
+                                        vq + omega * L_ * id + Kp_ * (limited[1] - iq)};
+        const RealT                lu = std::sqrt(Math::max(vdc * vdc, au_ * (base[0] * base[0] + base[1] * base[1])));
+        std::array<RealT, 2>       u{vdc * base[0] / lu, vdc * base[1] / lu};
+        std::array<RealT, 2>       z = base;
+        if (outputs.contains(Outputs::ud) || outputs.contains(Outputs::uq))
+        {
+          u[0]             = this->outputValue(outputs, Outputs::ud, u[0]);
+          u[1]             = this->outputValue(outputs, Outputs::uq, u[1]);
+          const RealT norm = std::hypot(u[0], u[1]);
+          if (vdc == ZERO<RealT>)
+          {
+            if (norm != ZERO<RealT>)
+              throw std::invalid_argument("InnerCurrentControl: initial voltage command must be zero at zero DC voltage");
+          }
+          else
+          {
+            if (norm >= vdc / std::sqrt(au_))
+              throw std::invalid_argument("InnerCurrentControl: initial voltage command must be inside the modulation limit");
+            // Invert the radial smooth limiter to recover the integral contribution.
+            // A clipped output alone cannot determine a unique integral state.
+            const auto gain = [&](RealT scale)
+            {
+              const RealT radius = scale * norm;
+              return vdc * scale / std::sqrt(Math::max(vdc * vdc, au_ * radius * radius));
+            };
+            RealT lower = ZERO<RealT>;
+            RealT upper = ONE<RealT>;
+            while (gain(upper) < ONE<RealT> - tolerance)
+            {
+              upper *= RealT{2};
+              if (!std::isfinite(upper) || !std::isfinite(gain(upper)))
+                throw std::invalid_argument("InnerCurrentControl: initial voltage command cannot be inverted");
+            }
+            for (size_t n = 0; n < 64; ++n)
+            {
+              const RealT middle = lower + (upper - lower) / RealT{2};
+              if (gain(middle) < ONE<RealT>)
+                lower = middle;
+              else
+                upper = middle;
+            }
+            const RealT scale = lower + (upper - lower) / RealT{2};
+            z                 = {scale * u[0], scale * u[1]};
+          }
+        }
+        const std::array<RealT, 6> values{z[0] - base[0], z[1] - base[1], limited[0], limited[1], u[0], u[1]};
+        for (const RealT value : values)
+          if (!std::isfinite(value))
+            throw std::invalid_argument("InnerCurrentControl: nonfinite derived initial value");
+        auto* y = y_.getData();
+        for (size_t n = 0; n < values.size(); ++n)
+          y[n] = values[n];
+        auto* yp = yp_.getData();
+        for (IdxT n = 0; n < size_; ++n)
+          yp[n] = ZERO<RealT>;
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      typename Component<scalar_type, index_type>::InitializationPortsT InnerCurrentControl<scalar_type, index_type>::initializationPorts()
+      {
+        using V = InnerCurrentControlExternalVariables;
+        return {signals_.attachedSignals({V::VD, V::VQ, V::ID, V::IQ, V::ICMDD, V::ICMDQ, V::OMEGA, V::VDC}), {}, {}};
       }
 
       template <typename scalar_type, typename index_type>
       int InnerCurrentControl<scalar_type, index_type>::setAbsoluteTolerance(RealT tolerance)
       {
-        this->abs_tol_.setToConst(static_cast<ScalarT>(tolerance));
+        abs_tol_.setToConst(static_cast<ScalarT>(tolerance));
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int InnerCurrentControl<scalar_type, index_type>::evaluateInternalResidual(
+          const ScalarT* y, const ScalarT* yp, const ScalarT* input, const ScalarT*, ScalarT* f)
+      {
+        const ScalarT li = std::sqrt(Math::max(ONE<RealT>, ai_ * (input[4] * input[4] + input[5] * input[5])));
+        const ScalarT ed = y[2] - input[2];
+        const ScalarT eq = y[3] - input[3];
+        const ScalarT zd = input[0] - input[6] * L_ * input[3] + Kp_ * ed + y[0];
+        const ScalarT zq = input[1] + input[6] * L_ * input[2] + Kp_ * eq + y[1];
+        const ScalarT lu = std::sqrt(Math::max(input[7] * input[7], au_ * (zd * zd + zq * zq)));
+        f[0]             = -yp[0] + Ki_ * ed + Kaw_ * (y[4] - zd);
+        f[1]             = -yp[1] + Ki_ * eq + Kaw_ * (y[5] - zq);
+        f[2]             = y[2] - input[4] / li;
+        f[3]             = y[3] - input[5] / li;
+        f[4]             = y[4] - input[7] * zd / lu;
+        f[5]             = y[5] - input[7] * zq / lu;
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int InnerCurrentControl<scalar_type, index_type>::evaluateInternalResidual()
+      {
+        this->gatherExternalVariables();
+        const RealT vdc = static_cast<RealT>(y_ext_[7]);
+        if (!std::isfinite(vdc) || vdc < ZERO<RealT>)
+          throw std::invalid_argument("InnerCurrentControl: DC voltage must be finite and nonnegative");
+        evaluateInternalResidual(y_.getData(), yp_.getData(), y_ext_.data(), yp_ext_.data(), f_.getData());
+        f_.setDataUpdated();
         return 0;
       }
 
@@ -179,178 +293,27 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
+      void InnerCurrentControl<scalar_type, index_type>::initializeMonitor()
+      {
+        using Mon = typename ModelDataT::MonitorableVariables;
+        monitor_->set(Mon::xid, [this]
+                      { return y_.getData()[0]; });
+        monitor_->set(Mon::xiq, [this]
+                      { return y_.getData()[1]; });
+        monitor_->set(Mon::ilimd, [this]
+                      { return y_.getData()[2]; });
+        monitor_->set(Mon::ilimq, [this]
+                      { return y_.getData()[3]; });
+        monitor_->set(Mon::ud, [this]
+                      { return y_.getData()[4]; });
+        monitor_->set(Mon::uq, [this]
+                      { return y_.getData()[5]; });
+      }
+
+      template <typename scalar_type, typename index_type>
       const Model::VariableMonitorBase* InnerCurrentControl<scalar_type, index_type>::getMonitor() const
       {
         return monitor_.get();
-      }
-
-      template <typename scalar_type, typename index_type>
-      scalar_type InnerCurrentControl<scalar_type, index_type>::dcVoltage() const
-      {
-        const auto value = input_[7]->read();
-        if (!std::isfinite(static_cast<RealT>(value)) || static_cast<RealT>(value) < RealT{0})
-          throw std::invalid_argument("InnerCurrentControl: vdc must be finite and nonnegative");
-        return value;
-      }
-
-      template <typename scalar_type, typename index_type>
-      std::array<scalar_type, 2> InnerCurrentControl<scalar_type, index_type>::limitedReference() const
-      {
-        const auto d      = input_[4]->read();
-        const auto q      = input_[5]->read();
-        const auto factor = std::sqrt(Math::max(RealT{1}, current_coefficient_ * (d * d + q * q)));
-        return {d / factor, q / factor};
-      }
-
-      template <typename scalar_type, typename index_type>
-      std::array<scalar_type, 2> InnerCurrentControl<scalar_type, index_type>::unlimitedVoltage() const
-      {
-        const auto  limited = limitedReference();
-        const auto  id      = input_[2]->read();
-        const auto  iq      = input_[3]->read();
-        const auto  omega_l = input_[6]->read() * inductance_;
-        const auto* xi      = this->y_.getData();
-        return {input_[0]->read() - omega_l * iq + kp_ * (limited[0] - id) + xi[0],
-                input_[1]->read() + omega_l * id + kp_ * (limited[1] - iq) + xi[1]};
-      }
-
-      template <typename scalar_type, typename index_type>
-      scalar_type InnerCurrentControl<scalar_type, index_type>::output(Outputs output) const
-      {
-        const auto index = static_cast<size_t>(output);
-        if (index >= output_.size() || verify() != 0)
-          throw std::logic_error("InnerCurrentControl: invalid output or unconnected input");
-        if (index < 2)
-          return limitedReference()[index];
-        const auto z      = unlimitedVoltage();
-        const auto vdc    = dcVoltage();
-        const auto factor = std::sqrt(Math::max(vdc * vdc, voltage_coefficient_ * (z[0] * z[0] + z[1] * z[1])));
-        return vdc * z.at(index - 2) / factor;
-      }
-
-      template <typename scalar_type, typename index_type>
-      int InnerCurrentControl<scalar_type, index_type>::evaluateInternalResidual()
-      {
-        const auto limited = limitedReference();
-        const auto z       = unlimitedVoltage();
-        for (size_t n = 0; n < 2; ++n)
-          this->f_.getData()[n] = ki_ * (limited[n] - input_[n + 2]->read())
-                                  + kaw_ * (output(static_cast<Outputs>(n + 2)) - z[n])
-                                  - this->yp_.getData()[n];
-        this->f_.setDataUpdated();
-        return 0;
-      }
-
-      template <typename scalar_type, typename index_type>
-      void InnerCurrentControl<scalar_type, index_type>::appendLimitedGradient(
-          size_t axis, typename SignalT::GradientT& gradient, RealT scale) const
-      {
-        const std::array<RealT, 2> reference{static_cast<RealT>(input_[4]->read()),
-                                             static_cast<RealT>(input_[5]->read())};
-        const auto                 norm   = current_coefficient_ * (reference[0] * reference[0] + reference[1] * reference[1]);
-        const auto                 factor = std::sqrt(Math::max(RealT{1}, norm));
-        const auto                 slope  = Math::sigmoid(norm - RealT{1});
-        for (size_t n = 0; n < 2; ++n)
-        {
-          RealT diagonal = ZERO<RealT>;
-          if (n == axis)
-            diagonal = ONE<RealT>;
-          const auto derivative = diagonal / factor
-                                  - reference[axis] * current_coefficient_ * reference[n] * slope
-                                        / (factor * factor * factor);
-          input_[n + 4]->appendGradient(gradient, scale * derivative);
-        }
-      }
-
-      template <typename scalar_type, typename index_type>
-      void InnerCurrentControl<scalar_type, index_type>::appendUnlimitedVoltageGradient(
-          size_t axis, typename SignalT::GradientT& gradient, RealT scale) const
-      {
-        const auto other = 1 - axis;
-        RealT      sign  = ONE<RealT>;
-        if (axis == 0)
-          sign = -ONE<RealT>;
-        input_[axis]->appendGradient(gradient, scale);
-        input_[other + 2]->appendGradient(gradient, scale * sign * inductance_ * static_cast<RealT>(input_[6]->read()));
-        input_[6]->appendGradient(gradient, scale * sign * inductance_ * static_cast<RealT>(input_[other + 2]->read()));
-        appendLimitedGradient(axis, gradient, scale * kp_);
-        input_[axis + 2]->appendGradient(gradient, -scale * kp_);
-        gradient.emplace_back(this->getVariableIndex(static_cast<IdxT>(axis)), scale);
-      }
-
-      template <typename scalar_type, typename index_type>
-      void InnerCurrentControl<scalar_type, index_type>::appendOutputGradient(
-          Outputs output, typename SignalT::GradientT& gradient, RealT scale) const
-      {
-        const auto index = static_cast<size_t>(output);
-        if (index >= output_.size() || verify() != 0)
-          throw std::logic_error("InnerCurrentControl: invalid output or unconnected input");
-        if (index < 2)
-        {
-          appendLimitedGradient(index, gradient, scale);
-          return;
-        }
-        const auto                 axis    = index - 2;
-        const auto                 command = unlimitedVoltage();
-        const std::array<RealT, 2> z{static_cast<RealT>(command[0]), static_cast<RealT>(command[1])};
-        const auto                 vdc          = static_cast<RealT>(dcVoltage());
-        const auto                 voltage_norm = voltage_coefficient_ * (z[0] * z[0] + z[1] * z[1]);
-        const auto                 factor       = std::sqrt(Math::max(vdc * vdc, voltage_norm));
-        const auto                 slope        = Math::sigmoid(voltage_norm - vdc * vdc);
-        for (size_t n = 0; n < 2; ++n)
-        {
-          RealT diagonal = ZERO<RealT>;
-          if (n == axis)
-            diagonal = ONE<RealT>;
-          const auto derivative = vdc * (diagonal / factor - z[axis] * voltage_coefficient_ * z[n] * slope / (factor * factor * factor));
-          appendUnlimitedVoltageGradient(n, gradient, scale * derivative);
-        }
-        const auto derivative = z[axis] / factor
-                                - vdc * vdc * z[axis] * (RealT{1} - slope) / (factor * factor * factor);
-        input_[7]->appendGradient(gradient, scale * derivative);
-      }
-
-      template <typename scalar_type, typename index_type>
-      int InnerCurrentControl<scalar_type, index_type>::assembleJacobian(RealT y_scale, RealT yp_scale)
-      {
-        std::array<typename SignalT::GradientT, 2> gradient;
-        size_t                                     entries = 0;
-        for (size_t n = 0; n < 2; ++n)
-        {
-          if (y_scale != RealT{0})
-          {
-            appendLimitedGradient(n, gradient[n], y_scale * ki_);
-            input_[n + 2]->appendGradient(gradient[n], -y_scale * ki_);
-            appendOutputGradient(static_cast<Outputs>(n + 2), gradient[n], y_scale * kaw_);
-            appendUnlimitedVoltageGradient(n, gradient[n], -y_scale * kaw_);
-          }
-          if (yp_scale != RealT{0})
-            gradient[n].emplace_back(this->getVariableIndex(static_cast<IdxT>(n)), -yp_scale);
-          entries += gradient[n].size();
-        }
-        if (entries != capacity_)
-        {
-          this->resetJacobianStructure();
-          delete[] this->J_rows_buffer_;
-          delete[] this->J_cols_buffer_;
-          delete[] this->J_vals_buffer_;
-          this->J_rows_buffer_ = new IdxT[entries];
-          this->J_cols_buffer_ = new IdxT[entries];
-          this->J_vals_buffer_ = new RealT[entries];
-          capacity_            = entries;
-        }
-        this->nnz_ = 0;
-        for (size_t n = 0; n < 2; ++n)
-          for (const auto& [column, value] : gradient[n])
-          {
-            const auto j            = this->nnz_++;
-            this->J_rows_buffer_[j] = this->getResidualIndex(static_cast<IdxT>(n));
-            this->J_cols_buffer_[j] = column;
-            this->J_vals_buffer_[j] = value;
-          }
-        if (entries == 0)
-          return 0;
-        return this->constructCoo();
       }
     } // namespace Controller
   } // namespace EMT

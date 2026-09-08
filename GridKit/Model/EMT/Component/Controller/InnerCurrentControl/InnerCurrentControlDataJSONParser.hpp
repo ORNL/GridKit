@@ -15,7 +15,7 @@ namespace GridKit
         auto j = raw;
         expandPhasePort<2>(j, "inputs", "v", {"vd", "vq"});
         expandPhasePort<2>(j, "inputs", "i", {"id", "iq"});
-        expandPhasePort<2>(j, "inputs", "iref", {"irefd", "irefq"});
+        expandPhasePort<2>(j, "inputs", "icmd", {"icmdd", "icmdq"});
         expandPhasePort<2>(j, "outputs", "ilim", {"ilimd", "ilimq"});
         expandPhasePort<2>(j, "outputs", "u", {"ud", "uq"});
         expandPhaseMonitor<2>(j, "xi", {"xid", "xiq"});

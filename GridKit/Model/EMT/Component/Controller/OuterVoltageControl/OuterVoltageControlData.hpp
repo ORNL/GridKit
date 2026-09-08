@@ -1,3 +1,8 @@
+/**
+ * @file OuterVoltageControlData.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @brief Modeling data for the EMT outer-loop voltage controller.
+ */
 #pragma once
 
 #include <GridKit/Model/EMT/ComponentData.hpp>
@@ -10,7 +15,7 @@ namespace GridKit
     {
       enum class OuterVoltageControlParameters
       {
-        C,   ///< \f$C\f$ Capacitance [F]
+        C,   ///< \f$C\f$ Filter capacitance [F]
         Kp,  ///< \f$K_P\f$ Proportional gain [S]
         Ki,  ///< \f$K_I\f$ Integral gain [S/s]
         Kaw, ///< \f$K_{\mathrm{aw}}\f$ Tracking anti-windup gain [1/s]
@@ -25,15 +30,15 @@ namespace GridKit
         igd,   ///< \f$i_{g,d}\f$ Grid-side current [A]
         igq,   ///< \f$i_{g,q}\f$ Grid-side current [A]
         omega, ///< \f$\omega\f$ Electrical angular frequency [rad/s]
-        ilimd, ///< \f$i_d^{\mathrm{lim}}\f$ Limited current reference [A]
-        ilimq, ///< \f$i_q^{\mathrm{lim}}\f$ Limited current reference [A]
+        ilimd, ///< \f$i_d^{\mathrm{lim}}\f$ Limited current command [A]
+        ilimq, ///< \f$i_q^{\mathrm{lim}}\f$ Limited current command [A]
         SIZE,
       };
 
       enum class OuterVoltageControlOutputs : size_t
       {
-        irefd, ///< \f$i_d^{\mathrm{ref}}\f$ Current reference [A]
-        irefq, ///< \f$i_q^{\mathrm{ref}}\f$ Current reference [A]
+        icmdd, ///< \f$i_d^{\mathrm{cmd}}\f$ Current command [A]
+        icmdq, ///< \f$i_q^{\mathrm{cmd}}\f$ Current command [A]
         SIZE,
       };
 
@@ -41,8 +46,8 @@ namespace GridKit
       {
         etad,  ///< \f$\eta_d\f$ Integral contribution [A]
         etaq,  ///< \f$\eta_q\f$ Integral contribution [A]
-        irefd, ///< \f$i_d^{\mathrm{ref}}\f$ Current reference [A]
-        irefq, ///< \f$i_q^{\mathrm{ref}}\f$ Current reference [A]
+        icmdd, ///< \f$i_d^{\mathrm{cmd}}\f$ Current command [A]
+        icmdq, ///< \f$i_q^{\mathrm{cmd}}\f$ Current command [A]
       };
 
       template <typename real_type, typename index_type>

@@ -15,12 +15,12 @@ Figure 1: InnerCurrentControl model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$L$ | [H] | `L` | Inverter-side filter inductance | Required
-$K_P$ | [$\Omega$] | `Kp` | Proportional gain | Required
-$K_I$ | [$\Omega/\mathrm{s}$] | `Ki` | Integral gain | Required
-$K_{\mathrm{aw}}$ | [$\mathrm{s}^{-1}$] | `Kaw` | Tracking anti-windup gain | Required
-$I^{\max}$ | [A] | `Imax` | Current-reference norm limit | Required
-$M^{\max}$ | [-] | `Mmax` | Sinusoidal modulation limit | Required
+$L$ | [H] | `L` | Inverter-side filter inductance | Required, positive
+$K_P$ | [$\Omega$] | `Kp` | Proportional gain | Required, positive
+$K_I$ | [$\Omega/\mathrm{s}$] | `Ki` | Integral gain | Required, positive
+$K_{\mathrm{aw}}$ | [$\mathrm{s}^{-1}$] | `Kaw` | Tracking anti-windup gain | Required, positive
+$I^{\max}$ | [A] | `Imax` | Current-command norm limit | Required, positive
+$M^{\max}$ | [-] | `Mmax` | Sinusoidal modulation limit | Required, $0 < M^{\max} \le 1$
 
 For a balanced fundamental, $I^{\max} = \sqrt{3}\,I_{\mathrm{phase,rms}}^{\max}$.
 
@@ -57,10 +57,10 @@ Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{v}$ | `v` | Input | [V] | Filter-capacitor voltage | $\mathbf{v} \in \mathbb{R}^2$
 $\mathbf{i}$ | `i` | Input | [A] | Inverter-side filter current | $\mathbf{i} \in \mathbb{R}^2$
-$\mathbf{i}^{\mathrm{ref}}$ | `iref` | Input | [A] | Total current reference | $\mathbf{i}^{\mathrm{ref}} \in \mathbb{R}^2$
+$\mathbf{i}^{\mathrm{cmd}}$ | `icmd` | Input | [A] | Total current command | $\mathbf{i}^{\mathrm{cmd}} \in \mathbb{R}^2$
 $\omega$ | `omega` | Input | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied by the angle source
 $v_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC-link voltage | $v_{\mathrm{dc}} \ge 0$
-$\mathbf{i}^{\mathrm{lim}}$ | `ilim` | Output | [A] | Limited current reference | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
+$\mathbf{i}^{\mathrm{lim}}$ | `ilim` | Output | [A] | Limited current command | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
 $\mathbf{u}$ | `u` | Output | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
 
 All vectors use $(d,q)$ order in the same power-invariant
@@ -91,13 +91,16 @@ $\boldsymbol{\xi}$ | [V] | Integral contribution | $\boldsymbol{\xi} \in \mathbb
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{i}^{\mathrm{lim}}$ | [A] | Limited current command | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
+$\mathbf{u}$ | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
 
 ### External Variables
 
 #### Differential
 
-None.
+Connected voltage, current, and angle-source variables may be differential.
 
 #### Algebraic
 
@@ -105,7 +108,7 @@ Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{v}$ | [V] | Filter-capacitor voltage | $\mathbf{v} \in \mathbb{R}^2$
 $\mathbf{i}$ | [A] | Inverter-side filter current | $\mathbf{i} \in \mathbb{R}^2$
-$\mathbf{i}^{\mathrm{ref}}$ | [A] | Total current reference | $\mathbf{i}^{\mathrm{ref}} \in \mathbb{R}^2$
+$\mathbf{i}^{\mathrm{cmd}}$ | [A] | Total current command | $\mathbf{i}^{\mathrm{cmd}} \in \mathbb{R}^2$
 $\omega$ | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied by the angle source
 $v_{\mathrm{dc}}$ | [V] | DC-link voltage | $v_{\mathrm{dc}} \ge 0$
 
@@ -124,8 +127,8 @@ The current error, feedforward voltage, unlimited voltage command, and limiter f
 \mathbf{e} &= \mathbf{i}^{\mathrm{lim}} - \mathbf{i} \\
 \mathbf{b} &= \mathbf{v} + \mathbf{J}\omega L\mathbf{i} \\
 \mathbf{z} &= \mathbf{b} + K_P\mathbf{e} + \boldsymbol{\xi} \\
-\mathcal{L}_i(\mathbf{i}^{\mathrm{ref}}) &=
-  \max\left(1,a_i\|\mathbf{i}^{\mathrm{ref}}\|_2^2\right) \\
+\mathcal{L}_i(\mathbf{i}^{\mathrm{cmd}}) &=
+  \max\left(1,a_i\|\mathbf{i}^{\mathrm{cmd}}\|_2^2\right) \\
 \mathcal{L}_u(v_{\mathrm{dc}},\mathbf{z}) &=
   \max\left(v_{\mathrm{dc}}^2,a_u\|\mathbf{z}\|_2^2\right)
 \end{aligned}
@@ -153,37 +156,55 @@ voltage, the voltage command is zero.
 
 #### Algebraic
 
-None.
-
-### External Equations
-
 ```math
 \begin{aligned}
-\mathbf{i}^{\mathrm{lim}} &\leftarrow
-  \dfrac{\mathbf{i}^{\mathrm{ref}}}{\sqrt{\mathcal{L}_i(\mathbf{i}^{\mathrm{ref}})}} \\
-\mathbf{u} &\leftarrow
+0 &= \mathbf{i}^{\mathrm{lim}}-
+  \dfrac{\mathbf{i}^{\mathrm{cmd}}}{\sqrt{\mathcal{L}_i(\mathbf{i}^{\mathrm{cmd}})}} \\
+0 &= \mathbf{u}-
   \dfrac{v_{\mathrm{dc}}\mathbf{z}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{z})}}
 \end{aligned}
 ```
 
-The outputs are algebraic expressions without owned DAE variables. The
-current limit bounds the reference; instantaneous filter current can overshoot.
-The anti-windup correction uses the limited voltage command, not the switched
-bridge voltage.
+### External Equations
+
+None.
+
+Both output vectors are owned algebraic variables. The current limit bounds
+the command; instantaneous filter current can overshoot. Anti-windup tracks
+the limited voltage command, not the switched bridge voltage.
 
 ## Initialization
 
-Initialize $\boldsymbol{\xi}$ from the finite state-file values `xid` and `xiq`
-(default zero). The consistent-initial-condition solve preserves these states
-and obtains their derivatives from the connected inputs. In unsaturated balanced
-steady state with zero current error, $\boldsymbol{\xi}=R\mathbf{i}$.
+The initialized current command defines $\mathbf{i}^{\mathrm{lim}}$ and
+$\mathbf{e}$. The default voltage output is the limited value of
+$\mathbf{b}+K_P\mathbf{e}$, giving zero integral contribution.
+
+The state-file keys `ud` and `uq` replace the respective defaults with finite
+output values. For positive DC voltage, prescribed voltage outputs must lie
+strictly inside the modulation limit. The radial smooth limiter is inverted
+to recover $\mathbf{z}$, then
+
+```math
+\boldsymbol{\xi} \leftarrow \mathbf{z}-\mathbf{b}-K_P\mathbf{e}.
+```
+
+A clipped output does not uniquely determine the integral state. At zero DC
+voltage, only zero voltage outputs are admissible and the integral defaults
+to zero. Optional `ilimd` and `ilimq` must agree with the current limiter;
+they cannot override the connected command. The integral states `xid` and
+`xiq` cannot be prescribed in the state file.
+
+Derivatives start at zero; the consistent-initial-condition solve preserves
+the integral states and obtains derivatives and algebraic outputs from the
+connected inputs. In unsaturated balanced steady state with zero current
+error, $\boldsymbol{\xi}=R\mathbf{i}$.
 
 ## Monitors
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `xi` | [V] | Integral contribution | $\boldsymbol{\xi} \in \mathbb{R}^2$
-`ilim` | [A] | Limited current reference | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
+`ilim` | [A] | Limited current command | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
 `u` | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
 
 See [case connections](../../../INPUT_FORMAT.md#case-connections) for vector
