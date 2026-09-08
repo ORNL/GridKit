@@ -541,8 +541,7 @@ namespace GridKit
         // Construct the partition interface
         // ---------------------------------------------------------------------
 
-        auto* comp3_copy = new HiresComponent3<ScalarT, IdxT>(*comp3_);
-        bus_interface_   = new BusPartitionInterface<ScalarT, IdxT>(&bus_, comp3_copy, 4);
+        bus_interface_ = new BusPartitionInterface<ScalarT, IdxT>(&bus_, comp3_, 4);
 
         bus_interface_->allocate();
 
