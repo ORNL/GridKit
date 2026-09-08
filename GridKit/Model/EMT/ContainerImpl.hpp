@@ -86,6 +86,13 @@ namespace GridKit
         add<DependentVoltageSource<ScalarT, IdxT>>(source_data.id, qualified_data);
       }
 
+      for (const auto& filter_data : data.filter)
+      {
+        auto qualified_data = filter_data;
+        qualified_data.id   = qualify(filter_data.id);
+        add<Filter<ScalarT, IdxT>>(filter_data.id, qualified_data);
+      }
+
       for (const auto& machine_data : data.machine)
       {
         auto qualified_data = machine_data;
@@ -398,6 +405,17 @@ namespace GridKit
                            &source(model_data.inputs.at(ConverterInputs::ic))});
         for (const auto& [output, reference] : model_data.outputs)
           model.assignOutput(output, &signal(reference));
+      }
+
+      for (const auto& filter_data : data.filter)
+      {
+        auto& filter = component<Filter<ScalarT, IdxT>>(filter_data.id);
+        for (const auto& [output, reference] : filter_data.outputs)
+          filter.assignOutput(output, &signal(reference));
+        auto [bus, phases, voltage] = terminal(filter_data.inputs, FilterInputs::va);
+        filter.attachInput(voltage, {&source(filter_data.inputs.at(FilterInputs::ea)), &source(filter_data.inputs.at(FilterInputs::eb)), &source(filter_data.inputs.at(FilterInputs::ec))});
+        for (size_t p = 0; p < 3; ++p)
+          bus->addCurrent(phases[p], filter.currentSignal(p));
       }
 
       for (const auto& source_data : data.voltage_source)

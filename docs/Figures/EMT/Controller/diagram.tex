@@ -14,11 +14,10 @@
     block/.append style={minimum height=1.25cm, align=center}]
 
 % ================= Modulation, bridge, and DC link =================
-% The bridge owns its terminal impedance and injects into the capacitor bus;
-% the DC link sits under the bridge.
+% The bridge supplies voltage to the LCL filter; the DC link sits below it.
 \node[block] (pwm) at (4.8, 0) {PWM};
 \node[block, minimum width=2.6cm] (bridge) at (8.8, 0)
-    {Converter\\{\small $\mathbf{R}_\mathrm{s},\ \mathbf{L}_\mathrm{s}$}};
+    {Converter};
 \node[block] (mod) at (4.8, \controlrow) {Modulation};
 \node[block] (dclink) at (8.8, \controlrow) {DCLink};
 \draw[->, line] (pwm.east) -- node[sig, above] {$\mathbf{s}$} (bridge.west);
@@ -30,9 +29,9 @@
 \draw[->, line] (dclink.west) -- node[sig, above] {$v_{\mathrm{dc}}$} (mod.east);
 
 % ================= LCL filter and terminal =================
-\node[block] (filter) at (12.4, 0) {Filter};
+\node[block] (filter) at (12.4, 0) {Filter\\{\small LCL}};
 \node[block] (tbus) at (20.0, 0) {Bus\\{\small terminal}};
-\draw[->, line] (bridge.east) -- (filter.west);
+\draw[->, line] (bridge.east) -- node[sig, above] {$\mathbf{e}$} (filter.west);
 \draw[->, line] (filter.east) -- (tbus.west);
 % The grid-current tap sits over the outer controller input it feeds.
 \node[signal, label={[sig]above:$\mathbf{i}_g$}] (igabc)
@@ -47,6 +46,8 @@
 % reference-frame transformations are implicit at the dq boundary.
 \draw[->, line] ([xshift=-2.5mm]filter.south) -- ([xshift=-2.5mm]icc.north);
 \node[sig, anchor=east] at (12.0, -1.2) {$\mathbf{i}$};
+\node[signal] (ibridge) at (12.15, -1.6) {};
+\draw[->, line] (ibridge) -- (9.5, -1.6) -- ([xshift=7mm]bridge.south);
 \draw[->, line] ([xshift=2.5mm]filter.south) -- ([xshift=2.5mm]icc.north);
 \node[sig, anchor=west] at (12.8, -1.2) {$\mathbf{v}_{\mathrm{o}}$};
 \draw[->, line] (igabc) -- ([xshift=\ifgfm 2.5mm\else 0mm\fi]outer.north);

@@ -5,6 +5,7 @@
 
 add_subdirectory(Bus)
 add_subdirectory(Controller)
+add_subdirectory(Filter)
 add_subdirectory(Line)
 add_subdirectory(Load)
 add_subdirectory(Source)
