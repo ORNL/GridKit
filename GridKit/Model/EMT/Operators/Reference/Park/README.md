@@ -106,7 +106,7 @@ None.
 \mathbf{y} \leftarrow
 \begin{cases}
 \mathbf{T}(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{false} \\
-\mathbf{T}^\top(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
+\mathbf{T}^\mathsf{T}(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
 \end{cases}
 ```
 
@@ -118,7 +118,7 @@ From the initialized $\mathbf{u}$ and $\theta$,
 \mathbf{y} \leftarrow
 \begin{cases}
 \mathbf{T}(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{false} \\
-\mathbf{T}^\top(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
+\mathbf{T}^\mathsf{T}(\theta)\mathbf{u}, & \mathrm{inverse} = \mathrm{true}
 \end{cases}
 ```
 
@@ -127,5 +127,3 @@ From the initialized $\mathbf{u}$ and $\theta$,
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `out` | $[u]$ | Transformed output | $\mathbf{y} \in \mathbb{R}^3$
-
-In case JSON, `mon: ["out"]` expands to the scalar monitors `y1`, `y2`, `y3`.

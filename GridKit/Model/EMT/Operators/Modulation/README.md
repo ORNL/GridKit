@@ -96,5 +96,3 @@ From the initialized inputs,
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `m` | [-] | Modulation command | $\mathbf{m} \in \mathbb{R}^3$
-
-In case JSON, `mon: ["m"]` expands to the scalar monitors `ma`, `mb`, `mc`.

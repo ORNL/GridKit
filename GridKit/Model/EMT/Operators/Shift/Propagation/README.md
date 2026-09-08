@@ -39,7 +39,7 @@ the number of fitted delay groups need not equal the channel count.
 ```math
 \begin{aligned}
 M &= \operatorname{size}(\texttt{modes}) \\
-\boldsymbol{\tau} &= [\tau_1,\ldots,\tau_M]^\mathsf T
+\boldsymbol{\tau} &= [\tau_1,\ldots,\tau_M]^\mathsf{T}
 \end{aligned}
 ```
 
@@ -59,7 +59,6 @@ Symbol | Description | Type | Order | JSON | Inputs | Outputs
 ------ | ----------- | ---- | ----- | ---- | ------ | -------
 $\mathbf{h}^{\mathrm{mps}}_m$ | Rational part of mode $m$ | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_m$ | `modes[m].H` | $\mathbb{R}^K$ | $\mathbb{R}^K$
 $\mathbf{d}_m$ | Transport delay of mode $m$ | [Delay](../Delay/README.md) | $K$ algebraic rows and history | `modes[m].tau` | $\mathbb{R}^K$ | $\mathbb{R}^K$
-
 
 ### Submodel Validation
 
@@ -130,15 +129,23 @@ frequency response gives the filtered prehistory supplied to the delay bank.
 The two propagation directions of a line use independent instances.
 
 For $\omega>0$, write
-$\widehat{\mathbf{u}}=\mathbf{u}(t_0)-j\mathbf{u}'(t_0)/\omega$. Then
+the initial phasor as
+
+```math
+\widehat{\mathbf{u}} = \mathbf{u}(t_0)
+  - \dfrac{\mathrm{j}}{\omega}
+    \left.\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}\right|_{t_0}.
+```
+
+Then
 
 ```math
 \begin{aligned}
 \widehat{\mathbf{w}}_m
-  &\leftarrow \mathbf{H}^{\mathrm{mps}}_m(j\omega)\widehat{\mathbf{u}} \\
+  &\leftarrow \mathbf{H}^{\mathrm{mps}}_m(\mathrm{j}\omega)\widehat{\mathbf{u}} \\
 \mathbf{y}(t_0)
   &\leftarrow \operatorname{Re}\!\left(
-    \sum_{m=1}^M e^{-j\omega\tau_m}\widehat{\mathbf{w}}_m\right).
+    \sum_{m=1}^M e^{-\mathrm{j}\omega\tau_m}\widehat{\mathbf{w}}_m\right).
 \end{aligned}
 ```
 
