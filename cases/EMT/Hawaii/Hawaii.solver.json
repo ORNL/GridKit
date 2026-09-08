@@ -2,7 +2,7 @@
   "system_model_file": "Hawaii.case.json",
   "state_file": "Hawaii.state.json",
   "dt_monitor": 0.0001388888888888889,
-  "tmax": 10.0,
+  "tmax": 5.0,
   "mu": 50000.0,
   "rel_tol": 1e-5,
   "abs_tol": 1e-6,
@@ -12,6 +12,8 @@
   "step_output_file": "steps.csv",
   "events": [
     {"type": "switch", "time": 1.0, "element_id": "fault_switch", "open": false},
-    {"type": "switch", "time": 1.1, "element_id": "fault_switch", "open": true}
+    {"type": "switch", "time": 1.0, "element_id": "fault_discharge_switch", "open": true},
+    {"type": "switch", "time": 1.15, "element_id": "fault_switch", "open": true},
+    {"type": "switch", "time": 1.15, "element_id": "fault_discharge_switch", "open": false}
   ]
 }

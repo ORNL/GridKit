@@ -23,7 +23,7 @@ def require(condition, message):
 def conversion_checks(case, state, report):
     counts = collections.Counter(d['class'] for d in case['devices'])
     expected = {'Machine': 30, 'Tgov1': 30, 'Ieeet1': 30, 'Ieeest': 14,
-                'LineLumped': 77, 'Transformer': 12, 'LoadZ': 28, 'Switch': 1,
+                'LineLumped': 77, 'Transformer': 12, 'LoadZ': 29, 'Switch': 2,
                 'PLL': 9, 'OuterPowerControl': 9, 'InnerCurrentControl': 9,
                 'PWM': 9, 'Converter': 9, 'DCLink': 9, 'Filter': 9, 'Park': 36}
     for kind, count in expected.items():
@@ -32,6 +32,23 @@ def conversion_checks(case, state, report):
     require(not counts['DependentVoltageSource'], 'Inverter plants must use LCL Filters')
     devices = {d['id']: d for d in case['devices']}
     signals = {s['id']: s.get('value') for s in case['signals']}
+    fault, discharge = devices['fault_load'], devices['fault_discharge_load']
+    require(devices['fault_switch']['inputs'] == {'bus1': 'bus_1', 'bus2': 'fault_bus'}, 'Fault connection')
+    require(devices['fault_discharge_switch']['inputs'] ==
+            {'bus1': 'fault_bus', 'bus2': 'fault_discharge_bus'}, 'Discharge connection')
+    require(fault['inputs']['bus'] == 'fault_bus' and discharge['inputs']['bus'] == 'fault_discharge_bus',
+            'Fault and discharge loads')
+    for i in range(3):
+        for j in range(3):
+            expected_x = 0.01 if i == j else 0.0
+            require(fault['params']['R'][i][j] == 0, 'Fault must be purely inductive')
+            require(abs(2 * math.pi * 60 * fault['params']['L'][i][j] / (138e3**2 / 1e8) - expected_x) < 1e-12,
+                    'Fault reactance must match the phasor case')
+            require(abs(discharge['params']['R'][i][j] / (138e3**2 / 1e8) - expected_x) < 1e-12,
+                    'Discharge resistance')
+    require(state['devices']['fault_switch']['open'] and
+            not state['devices']['fault_discharge_switch']['open'], 'Initial fault switch states')
+    require(all(value == 0 for value in state['devices']['fault_load'].values()), 'De-energized fault inductance')
 
     def phasor(values, prefix):
         a, b, c = (values[prefix + p] for p in 'abc')
@@ -57,7 +74,9 @@ def conversion_checks(case, state, report):
         require(outer['inputs']['ilim'] == inner['outputs']['ilim']
                 and inner['inputs']['icmd'] == outer['outputs']['icmd'], 'Outer-loop anti-windup connection')
         require(dc['inputs']['idc'] == bridge['outputs']['idc'], 'DC current feedback')
-        require(dc['outputs']['vdc'] == inner['inputs']['vdc'] == bridge['inputs']['vdc'], 'Shared DC voltage')
+        modulation = devices[plant + '_modulation']
+        require(dc['outputs']['vdc'] == modulation['inputs']['vdc'] == bridge['inputs']['vdc'], 'Shared DC voltage')
+        require(inner['inputs']['ulim'] == modulation['outputs']['ulim'], 'Limited voltage feedback')
         initial = state['devices'][filt['id']]
         v = phasor(state['buses'][filt['inputs']['bus']], 'v')
         vo, i, ig = (phasor(initial, key) for key in ('vo', 'i', 'ig'))
@@ -99,7 +118,7 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
     metrics['input_sha256'] = record['input_sha256']
     metrics['executable_sha256'] = record['executable_sha256']
     metrics['library_sha256'] = record['library_sha256']
-    buses = [d for d in case['devices'] if d['class'] == 'Bus' and d['id'] != 'fault_bus']
+    buses = [d for d in case['devices'] if d['class'] == 'Bus' and d['id'].startswith('bus_')]
     machines = list(report['machines'])
     inverters = list(report['inverters'])
     vb = {d['inputs']['bus']: d['params']['V'] for d in case['devices'] if d['class'] == 'Machine'}
@@ -132,6 +151,13 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
     pq_initial_error = 0.0
     v1_min = math.inf
     samples_seen = 0
+    fault_current_base = 1e8 / 138e3
+    fault_params = next(d['params'] for d in case['devices'] if d['id'] == 'fault_load')
+    discharge_params = next(d['params'] for d in case['devices'] if d['id'] == 'fault_discharge_load')
+    decay_rate = discharge_params['R'][0][0] / fault_params['L'][0][0]
+    previous_fault = None
+    clearing_current = None
+    current_jump = open_current = decay_error = 0.0
     with csv_path.open(newline='') as stream:
         for raw in csv.DictReader(stream):
             row = {key: float(value) for key, value in raw.items()}
@@ -139,9 +165,25 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
             time = row['t']
             require(time >= last_time - 1e-12, 'Monitor time runs backwards')
             opened = row['Switch_fault_switch_open'] > 0.5
+            require(opened != (row['Switch_fault_discharge_switch_open'] > 0.5), 'Complementary fault switches')
+            fault_current = [row[f'LoadZ_fault_load_i{p}'] for p in 'abc']
             if switch_state is not None and opened != switch_state:
                 switch_changes.append([time, opened])
+                require(abs(time - previous_fault[0]) < 1e-10, 'Fault event must record both sides')
+                current_jump = max(current_jump, *(abs(a - b) / fault_current_base
+                                                   for a, b in zip(fault_current, previous_fault[1])))
+                if opened:
+                    clearing_current = (time, fault_current)
             switch_state = opened
+            previous_fault = (time, fault_current)
+            if opened:
+                open_current = max(open_current, *(abs(row[f'Switch_fault_switch_i12{p}']) / fault_current_base
+                                                   for p in 'abc'))
+            if clearing_current is not None:
+                factor = math.exp(-decay_rate * (time - clearing_current[0]))
+                scale = max(fault_current_base, *map(abs, clearing_current[1]))
+                decay_error = max(decay_error, *(abs(a - factor * b) / scale
+                                                for a, b in zip(fault_current, clearing_current[1])))
             if first is None:
                 first = row
             for m in machines:
@@ -188,8 +230,12 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
     require(first is not None, 'Empty monitor output')
     require(abs(last_time - study['tmax']) < 1e-9, 'Study stopped before its final time')
     require(len(switch_changes) == 2, f'Expected two fault events, got {switch_changes}')
-    for actual, expected in zip(switch_changes, ((1.0, False), (1.1, True))):
+    expected_events = ((report['choices']['fault_on_s'], False), (report['choices']['fault_off_s'], True))
+    for actual, expected in zip(switch_changes, expected_events):
         require(abs(actual[0] - expected[0]) < 1e-10 and actual[1] == expected[1], 'Fault event timing')
+    require(current_jump < 1e-8, f'Fault inductor current changed at an event: {current_jump}')
+    require(open_current < 1e-5, f'Open fault switch draws current: {open_current}')
+    require(decay_error < 5e-4, f'Fault discharge differs from the analytical RL decay: {decay_error}')
     for m, data in report['machines'].items():
         for kind, unit in (('p', 'W'), ('q', 'var')):
             error = abs(first[f'Machine_{m}_{kind}'] - data[f'dispatch_{unit}']) / data['rating_VA']
@@ -225,6 +271,9 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
     require(steps and all(math.isfinite(step) and step > 0 for step in steps), 'Invalid accepted solver steps')
     metrics.update({
         'samples': samples_seen, 'final_time_s': last_time, 'events': switch_changes,
+        'fault': {'inductance_H': fault_params['L'][0][0], 'discharge_resistance_ohm': discharge_params['R'][0][0],
+                  'discharge_time_constant_s': 1 / decay_rate, 'event_current_jump_pu': current_jump,
+                  'open_switch_current_pu': open_current, 'maximum_discharge_current_relative_error': decay_error},
         'initial_dispatch_max_error_pu_plant_base': pq_initial_error,
         'maximum_limited_current_ratio': imax_ratio,
         'limited_current_ratio_tolerance': current_limit_tolerance, 'dc_voltage_ratio_range': dc_range,
@@ -244,7 +293,7 @@ def main():
     parser.add_argument('--exe', type=Path)
     parser.add_argument('--output', type=Path)
     parser.add_argument('--reuse', type=Path, help='Completed run directory with immutable inputs and run.json')
-    parser.add_argument('--tmax', type=float, default=1.5, help='CTest covers inception, clearing, and recovery; full study is 10 s')
+    parser.add_argument('--tmax', type=float, default=1.5, help='CTest covers inception, clearing, and recovery; full study is 5 s')
     parser.add_argument('--rel-tol', type=float)
     parser.add_argument('--abs-tol', type=float)
     args = parser.parse_args()

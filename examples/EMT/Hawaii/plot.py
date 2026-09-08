@@ -1,20 +1,16 @@
-"""Build editable PGFPlots comparisons against the frozen PowerWorld reference."""
+"""Build editable PGFPlots comparisons against a fresh GridKit PhasorDynamics run."""
 
 import argparse
 import bisect
 import csv
 import hashlib
-import io
 import json
 import math
 import os
 from pathlib import Path
 import subprocess
-import tempfile
 
 ROOT = Path(__file__).resolve().parent
-REVISION = 'f16f3815e6f84c08bd0869773d3033b3dcb3dd0f'
-REFERENCE = 'examples/PhasorDynamics/Validation/Hawaii/reference'
 LABELS = {'vmag': r'$|V|$ [p.u.]', 'omega': r'$\omega_r-1$ [p.u.]',
           'p': r'$P$ [p.u., 100 MVA]', 'q': r'$Q$ [p.u., 100 MVA]'}
 
@@ -27,7 +23,8 @@ def interpolate(time, values, point):
     return values[k] + fraction * (values[k + 1] - values[k])
 
 
-def document(kind, names, lower, upper, error_lower, error_upper, style_path, duration):
+def document(kind, names, lower, upper, error_lower, error_upper, style_path, duration,
+             emt_fault, phasor_fault):
     """Use the EMT shared fonts/styles; data and size remain directly editable."""
     # All channels are retained. Highlight fault bus 1; other channels share a
     # neutral style so the comparison is readable without a 37-entry legend.
@@ -49,12 +46,13 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path, du
              f'width=\\figwidth,height=\\panelheight,xmin=0,xmax={duration:g},grid=major,grid style={{gray!20}},',
              r'tick label style={font=\footnotesize},scaled y ticks=false,',
              r'xlabel={Time [s]},ylabel style={font=\small},legend style={draw=none,font=\footnotesize}]']
-    for panel, color, title, clear in [('e', 'emtBlue', '(a) EMT: switching GFL plants; fault cleared at 1.10 s', 1.1),
-                                      ('r', 'referenceOrange', '(b) PowerWorld reference; fault cleared at 1.15 s', 1.15)]:
+    for panel, color, title, fault in [
+            ('e', 'emtBlue', f'(a) GridKit EMT; fault cleared at {emt_fault[1]:.2f} s', emt_fault),
+            ('r', 'referenceOrange', f'(b) GridKit PhasorDynamics; fault cleared at {phasor_fault[1]:.2f} s', phasor_fault)]:
         legend = (r',legend style={at={(0.02,0.98)},anchor=north west,legend columns=3,fill=white,draw=none,font=\scriptsize}'
                   if kind != 'vmag' else '')
         lines.append(f'\\nextgroupplot[title={{{title}}},ylabel={{{LABELS[kind]}}},ymin=\\ylower,ymax=\\yupper{legend}]')
-        lines.append(f'\\path[fill=gray!15] (axis cs:1,\\ylower) rectangle (axis cs:{clear},\\yupper);')
+        lines.append(f'\\path[fill=gray!15] (axis cs:{fault[0]},\\ylower) rectangle (axis cs:{fault[1]},\\yupper);')
         order = list(range(1, count)) + [0] if kind == 'vmag' else range(count)
         for k in order:
             style = f'{color}!65,line width=0.35pt'
@@ -69,7 +67,7 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path, du
                 lines.extend([f'\\addlegendimage{{{palette[k]},line width=0.7pt}}', f'\\addlegendentry{{Bus {bus}}}'])
         label = 'All 37 buses; bus 1 in black' if kind == 'vmag' else 'All 30 synchronous machines'
         lines.append(f'\\node[anchor=south west,font=\\footnotesize,fill=white,inner sep=2pt] at (rel axis cs:0.01,0.02) {{{label}}};')
-    lines.append(f'\\nextgroupplot[title={{(c) EMT minus PowerWorld: range across channels}},ylabel={{Difference [p.u.]}},ymin={error_lower:.8g},ymax={error_upper:.8g}]')
+    lines.append(f'\\nextgroupplot[title={{(c) EMT minus PhasorDynamics: range across channels}},ylabel={{Difference [p.u.]}},ymin={error_lower:.8g},ymax={error_upper:.8g}]')
     lines.extend([
         f'\\addplot[name path=lo,draw=none] table[x=time,y=minimum,col sep=comma] {{Hawaii.{kind}.csv}};',
         f'\\addplot[name path=hi,draw=none] table[x=time,y=maximum,col sep=comma] {{Hawaii.{kind}.csv}};',
@@ -84,6 +82,7 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path, du
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--averaged', type=Path, required=True)
+    parser.add_argument('--reference', type=Path, default=ROOT / 'phasor-reference/monitored')
     parser.add_argument('--output', type=Path, default=ROOT / 'results')
     parser.add_argument('--no-render', action='store_true')
     args = parser.parse_args()
@@ -93,19 +92,30 @@ def main():
     averaged_hash = hashlib.sha256(args.averaged.read_bytes()).hexdigest()
     if averaged_hash != run_metrics['averaged_sha256']:
         raise ValueError('Averaged data do not match the validated run')
-    if run_metrics['final_time_s'] < 1.5 or run_metrics['source_revision'] != REVISION:
-        raise ValueError('Comparison requires fault recovery through 1.5 s at the frozen source revision')
+    reference_metrics = json.loads((args.reference / 'metrics.json').read_text())
+    if run_metrics['source_revision'] != reference_metrics['source']['revision']:
+        raise ValueError('EMT conversion and PhasorDynamics case must use the same source revision')
+    if run_metrics['final_time_s'] < 1.5:
+        raise ValueError('Comparison requires fault recovery through 1.5 s')
     with args.averaged.open(newline='') as stream:
         emt = [{key: float(value) for key, value in row.items()} for row in csv.DictReader(stream)]
-    metrics = {'source_revision': REVISION, 'averaged_sha256': averaged_hash,
+    emt_fault = [event['time'] for event in run_metrics['study']['events'] if event['element_id'] == 'fault_switch']
+    phasor_fault = [event['time'] for event in reference_metrics['study']['events']]
+    metrics = {'source_revision': run_metrics['source_revision'], 'averaged_sha256': averaged_hash,
                'input_sha256': run_metrics['input_sha256'],
-               'description': 'Descriptive errors between different models and fault clearing times; not validation tolerances.',
-               'emt_fault_interval_s': [1.0, 1.1], 'reference_fault_interval_s': [1.0, 1.15], 'channels': {}}
+               'reference': reference_metrics,
+               'description': 'Descriptive differences between GridKit EMT and PhasorDynamics simulations.',
+               'emt_fault_interval_s': emt_fault, 'reference_fault_interval_s': phasor_fault, 'channels': {}}
     for kind in LABELS:
-        raw = subprocess.check_output(['git', 'show', f'{REVISION}:{REFERENCE}/Hawaii.{kind}.ref.csv'], cwd=ROOT).decode()
-        reference = list(csv.DictReader(io.StringIO(raw)))
+        path = args.reference / f'Hawaii.{kind}.csv'
+        if hashlib.sha256(path.read_bytes()).hexdigest() != reference_metrics['channels_sha256'][path.name]:
+            raise ValueError(f'PhasorDynamics data changed since simulation: {path}')
+        with path.open(newline='') as stream:
+            reference = list(csv.DictReader(stream))
         names = [name for name in reference[0] if name != 'time']
         time = [float(row['time']) for row in reference]
+        if time[0] > emt[0]['time'] or time[-1] < emt[-1]['time']:
+            raise ValueError('PhasorDynamics simulation must cover the EMT comparison interval')
         values = {name: [float(row[name]) for row in reference] for name in names}
         aligned = [[interpolate(time, values[name], row['time']) for name in names] for row in emt]
         actual = [[row[f'{kind}:{name}'] for name in names] for row in emt]
@@ -138,15 +148,15 @@ def main():
         name = f'Hawaii.{kind}'
         style = os.path.relpath(ROOT.parents[2] / 'docs/Figures/EMT/diagram-style.tex', output)
         (output / (name + '.tex')).write_text(document(kind, names, low - margin, high + margin,
-                                                     elow - emargin, ehigh + emargin, style, run_metrics['final_time_s']))
+                                                     elow - emargin, ehigh + emargin, style, run_metrics['final_time_s'],
+                                                     emt_fault, phasor_fault))
         if not args.no_render:
-            with tempfile.TemporaryDirectory(prefix='gridkit-hawaii-plot-') as temporary:
-                command = ['pdflatex', '-interaction=nonstopmode', '-halt-on-error', '-output-directory=' + temporary, name + '.tex']
-                for _ in range(2):
-                    result = subprocess.run(command, cwd=output, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                    if result.returncode:
-                        raise RuntimeError(result.stdout.decode()[-5000:])
-                (output / (name + '.pdf')).write_bytes((Path(temporary) / (name + '.pdf')).read_bytes())
+            command = ['pdflatex', '-cnf-line=extra_mem_top=20000000', '-cnf-line=extra_mem_bot=20000000',
+                       '-interaction=nonstopmode', '-halt-on-error', name + '.tex']
+            for _ in range(2):
+                result = subprocess.run(command, cwd=output, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                if result.returncode:
+                    raise RuntimeError(result.stdout.decode()[-5000:])
             subprocess.run(['pdftoppm', '-png', '-r', '600', '-singlefile', name + '.pdf', name], cwd=output, check=True)
     (output / 'comparison.json').write_text(json.dumps(metrics, indent=2) + '\n')
 
