@@ -1,28 +1,15 @@
 #!/usr/bin/env python3
-"""Predict PWM and converter harmonics by integrating the ideal pulse edges.
+"""Predict continuous PWM harmonics from an independent periodic sigmoid sum.
 
-Pwm.output replaces each ideal pulse edge with sigmoid(mu * time). Equivalently,
-the ideal periodic pulse train is convolved with the logistic density
-mu / (4 cosh(mu * time / 2)**2). Its Fourier transform is x / sinh(x), where
-x = 2 pi**2 frequency / mu. This changes harmonic amplitudes without phase lag.
-The calculation below does not evaluate GridKit's sampled switching waveform.
+Every pulse replica uses the instantaneous sinusoidal duty. Fourier quadrature
+resolves the sigmoid edges independently of the simulation's monitor spacing.
 """
 
 import argparse
-import cmath
 import json
 import math
 
-
-def attenuation(frequency, mu):
-    """Exact amplitude ratio of a smoothed edge train to ideal switching."""
-    if not math.isfinite(mu) or mu <= 0 or not math.isfinite(frequency):
-        raise ValueError('Require positive finite mu and finite frequency')
-    x = 2 * math.pi**2 * abs(frequency) / mu
-    if x == 0:
-        return 1.
-    # Avoid overflow at heavily attenuated harmonics and cancellation at x=0.
-    return 2 * x * math.exp(-x) / -math.expm1(-2 * x)
+import numpy as np
 
 
 def pwm_peak_coefficients(mu, fc=900., f=60., M=.8, vdc=1.,
@@ -34,35 +21,33 @@ def pwm_peak_coefficients(mu, fc=900., f=60., M=.8, vdc=1.,
     excluded: the gate mean is 1/2 and the converter mean is zero. Converter
     voltage is Vdc * (sa - (sa + sb + sc)/3), which removes triplen harmonics.
     """
-    if not all(math.isfinite(x) for x in (fc, f, M, vdc, alignment)):
+    if not all(math.isfinite(x) for x in (mu, fc, f, M, vdc, alignment)):
         raise ValueError('Require finite PWM parameters')
-    if not (fc > f > 0 and 0 <= M <= 1 and 0 <= alignment <= 1 and vdc >= 0):
+    if not (mu > 0 and fc > f > 0 and 0 <= M <= 1 and 0 <= alignment <= 1 and vdc >= 0):
         raise ValueError('Invalid PWM frequency, modulation, alignment, or DC voltage')
+    if not isinstance(max_harmonic, int) or max_harmonic < 1:
+        raise ValueError('Require a positive integer maximum harmonic')
     count = round(fc / f)
     if count % 3 or not math.isclose(fc / f, count, rel_tol=1e-13):
         raise ValueError('Require fc / f to be a positive multiple of three')
-    period = 1 / f
-    edges = []
-    for k in range(count):
-        duty = (1 + M * math.sin(2 * math.pi * (k + alignment) / count)) / 2
-        on = (k + alignment * (1 - duty)) / fc
-        off = (k + alignment + (1 - alignment) * duty) / fc
-        edges.append((on, off))
+    points = max(8192, math.ceil(16 * mu / f), 64 * max_harmonic)
+    time = np.arange(points) / (points * f)
+    duty = (1 + M * np.sin(2 * np.pi * f * time)) / 2
+    on = alignment * (1 - duty)
+    off = on + duty
+    carrier = np.remainder(time * fc, 1)
+    radius = math.ceil(math.log(4 / np.finfo(float).eps) * fc / mu)
+    gate = np.zeros(points)
+    for k in range(-radius, radius + 1):
+        gate += .5 * (np.tanh(.5 * mu / fc * (carrier - on - k))
+                      - np.tanh(.5 * mu / fc * (carrier - off - k)))
+    peaks = 2 * np.abs(np.fft.rfft(gate)) / points
     coefficients = []
     for harmonic in range(1, max_harmonic + 1):
-        frequency = harmonic * f
-        omega = 2 * math.pi * frequency
-        coefficient = sum((cmath.exp(-1j * omega * on)
-                           - cmath.exp(-1j * omega * off)) / (1j * omega)
-                          for on, off in edges) / period
-        ideal_gate_peak = 2 * abs(coefficient)
-        factor = attenuation(frequency, mu)
-        gate_peak = ideal_gate_peak * factor
+        gate_peak = float(peaks[harmonic])
         coefficients.append({
             'harmonic': harmonic,
-            'frequency_hz': frequency,
-            'attenuation': factor,
-            'ideal_gate_peak': ideal_gate_peak,
+            'frequency_hz': harmonic * f,
             'gate_peak': gate_peak,
             'converter_peak_v': 0. if harmonic % 3 == 0 else vdc * gate_peak,
         })
@@ -83,12 +68,12 @@ def main():
         'parameters': {'fc_hz': args.fc, 'f_hz': args.f, 'M': args.M,
                        'vdc_v': args.vdc, 'alignment': args.alignment},
         'interpretation': (
-            'Changing mu changes the applied PWM voltage and the CommonMath '
-            'saturation and limiter equations, independently of solver tolerances. '
+            'Small mu suppresses switching and approaches instantaneous duty; '
+            'large mu resolves switching. Fixed-duty carrier means are preserved. '
+            'CommonMath saturation and limiters also depend on mu. '
             'Converter common-mode removal cancels triplen harmonics, including '
             'the 900 Hz carrier for fc/f = 15. The 780 and 1020 Hz sidebands remain. '
-            'Network real or reactive power cannot be inferred from voltage '
-            'attenuation alone; use simulated terminal voltages and currents.'),
+            'Measure network power from terminal voltages and currents.'),
         'predictions': [],
     }
     for mu in mus:

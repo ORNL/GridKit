@@ -92,13 +92,18 @@ evidence of matching GENROU fault dynamics.
 
 ## Inverter plants
 
-Each source REGCA unit is replaced by a PLL, voltage and current Park
-transforms, OuterPowerControl, InnerCurrentControl, inverse Park, Modulation,
-PWM, Converter, DCLink, and a DependentVoltageSource with an RL filter.
-The filter connects directly to the original bus. Its measured injection is
-the outer loop's measured dq-current feedback. Current targets `Pref/V` and
+Each source REGCA unit is replaced by the
+[GFL switching-inverter arrangement](../CurrentControl/README.md): PLL,
+voltage and current Park transforms, OuterPowerControl, InnerCurrentControl,
+inverse Park, Modulation, PWM, Converter, DCLink, and a physical LCL Filter.
+`Converter.e` drives `Filter.e`; `Filter.ig` injects into the original bus.
+`Filter.i` supplies Converter and the inner current loop, while `Filter.ig`
+supplies the outer loop through a separate Park transform. PLL and the
+voltage Park transform read `Filter.vo`. All Park transforms share PLL's
+`theta`, and the inner controller receives PLL's `omega`.
+Current targets `Pref/V` and
 `-Qref/V` are derived from power-reference parameters and rated voltage.
-Those parameters are chosen to reproduce the initialized dq injection.
+Those parameters reproduce the initialized grid current in the capacitor-voltage frame.
 The targets remain fixed as voltage changes; this replacement does not
 regulate constant P/Q.
 Power-invariant current base is $S/V$.
@@ -108,8 +113,11 @@ filter, DC energy, or switching-control parameters:
 
 Parameter | Value
 --------- | -----
-Filter resistance and reactance | 0.01 and 0.20 p.u. on the plant rating
-Inner-loop bandwidth | $2\pi\,300$ rad/s; $K_P=L\omega_c$, $K_I=R\omega_c$, $K_{\mathrm{aw}}=\omega_c$
+Converter-side resistance and reactance | 0.01 and 0.20 p.u. on the plant rating
+Grid-side resistance and reactance | 0.005 and 0.10 p.u. on the plant rating
+Capacitor susceptance | 0.10 p.u.; $C=0.10/(\omega_\mathrm{b}Z_\mathrm{b})$
+Undamped LCL resonance | 734.85 Hz; $\sqrt{(L_{\mathrm{s}}+L_g)/(L_{\mathrm{s}}L_g C)}/(2\pi)$
+Inner-loop bandwidth | $2\pi\,300$ rad/s; $K_P=L_{\mathrm{s}}\omega_c$, $K_I=R_{\mathrm{s}}\omega_c$, $K_{\mathrm{aw}}=\omega_c$
 Current limit | Source REECB `Imax` times $S/V$
 Modulation limit | 0.95
 PLL | $K_P=80$ rad/s, $K_I=2500$ rad/s$^2$
@@ -127,10 +135,22 @@ interval. Accepted-step statistics are reported separately. This study does
 not use the low-$\mu$ fundamental-only setting.
 
 The large DC energy represents an aggregate energy buffer; it is not a
-manufacturer capacitor value or a DC-voltage regulator. Initial current-loop
-integrals supply filter resistive drop, and outer-loop integrals supply the
-dispatched current. Initial conditions describe the fundamental operating
-point, not the periodic switching orbit.
+manufacturer capacitor value or a DC-voltage regulator. With power-invariant
+balanced phasors and the original terminal injection $I_g$, initialization uses
+
+```math
+\begin{aligned}
+V_{\mathrm{o}} &= V+(R_g+\mathrm{j}\omega_{\mathrm{b}}L_g)I_g, \\
+I &= I_g+\mathrm{j}\omega_{\mathrm{b}}CV_{\mathrm{o}}, \\
+E &= V_{\mathrm{o}}+(R_{\mathrm{s}}+\mathrm{j}\omega_{\mathrm{b}}L_{\mathrm{s}})I, \\
+P_{\mathrm{dc}} &= P_{\mathrm{grid}}+R_g|I_g|^2+R_{\mathrm{s}}|I|^2.
+\end{aligned}
+```
+
+The nine Filter states follow these phasors. PLL aligns to capacitor voltage;
+inner-loop output initializes to $E$ in that frame, and outer-loop output
+initializes to the converter-side current $I$. Initial conditions describe
+the fundamental operating point, not the periodic switching orbit.
 
 The replacement omits REGCA current-source lag, LVPL, high-voltage reactive
 current logic, and source ramp-rate behavior; REECB voltage-dip reactive
@@ -182,12 +202,10 @@ python3 validate.py --exe ../../../build/application/EMT/EMTDynamicSimulation
 ```
 
 The validator uses only the Python standard library. It checks conversion
-invariants, finite trajectories, event timing, initial dispatch, current-reference
-limits, DC voltage, and the fault/recovery response. The monitored current-limit
-ratio allows $10^{-4}$ numerical error: the full baseline run exceeds unity
-by $5.543\times10^{-5}$ at 2.000556 s. Through 1.5 s, the maximum excess is
-$6.813\times10^{-6}$, decreasing to $3.561\times10^{-11}$ with tenfold tighter
-solver tolerances. This refinement covers early recovery only. Solver monitor cadence
+invariants, LCL wiring and initial KVL/current/DC-power balances, finite
+trajectories, event timing, terminal dispatch, current-reference limits,
+DC voltage, and the fault/recovery response. The monitored current-limit
+ratio allows $10^{-4}$ numerical interpolation error. Solver monitor cadence
 does not measure accepted solver steps. The full ten-second study and
-PowerWorld comparison artifacts live in `examples/EMT/Hawaii`; raw simulation
-CSVs and logs belong in a local run directory.
+PowerWorld comparison scripts live in `examples/EMT/Hawaii`; generated plots,
+metrics, raw simulation CSVs, and logs belong in ignored result directories.

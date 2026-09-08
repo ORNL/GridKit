@@ -34,7 +34,7 @@ def amplitude(time, values, frequency):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--exe', type=Path, required=True)
-    parser.add_argument('--output', type=Path, default=ROOT / 'switching.json')
+    parser.add_argument('--output', type=Path, default=ROOT / 'results/switching.json')
     args = parser.parse_args()
     case = json.loads((CASE / 'Hawaii.case.json').read_text())
     report = json.loads((CASE / 'conversion.json').read_text())
@@ -45,7 +45,7 @@ def main():
     for device in case['devices']:
         device.pop('mon', None)
         monitors = {'PWM': ['s'], 'Modulation': ['m'], 'Converter': ['e', 'idc'],
-                    'DependentVoltageSource': ['ia', 'ib', 'ic'], 'DCLink': ['vdc']}
+                    'Filter': ['i'], 'DCLink': ['vdc']}
         if device['class'] in monitors:
             device['mon'] = monitors[device['class']]
     with tempfile.TemporaryDirectory(prefix='gridkit-hawaii-switching-') as temporary:
@@ -79,7 +79,7 @@ def main():
             edges = [pulse(row['t'], row[f'Modulation_{plant}_modulation_m{p}'], fc, mu) for p in 'abc']
             pulse_error = max(pulse_error, *(abs(a - row[f'PWM_{plant}_pwm_s{p}']) for a, p in zip(edges, 'abc')))
             voltage = [row[f'Converter_{plant}_bridge_e{p}'] for p in 'abc']
-            current = [row[f'DependentVoltageSource_{plant}_filter_i{p}'] for p in 'abc']
+            current = [row[f'Filter_{plant}_filter_i{p}'] for p in 'abc']
             vdc = row[f'DCLink_{plant}_dc_vdc']
             power_error = max(power_error, abs(sum(v * i for v, i in zip(voltage, current))
                                               - vdc * row[f'Converter_{plant}_bridge_idc']) / parameters['rating_VA'])
@@ -94,6 +94,7 @@ def main():
         metrics['plants'][plant] = {'pulse_max_error': pulse_error, 'bridge_power_identity_error_pu': power_error,
                                     'frequencies_Hz': frequencies, 'measured_peak_V': observed,
                                     'predicted_peak_V': expected, 'maximum_harmonic_error_V': error}
+    args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(metrics, indent=2) + '\n')
     print('All nine switching bridges pass pulse-edge, harmonic, and power-identity checks.')
 
