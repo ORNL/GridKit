@@ -1,17 +1,16 @@
+// PartitionUtilities.hpp
 #pragma once
 
 #include <omp.h>
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <vector>
 
-#include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
 #include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 
-#include "MicrogridNetwork.hpp"
+#include <examples/PowerElectronics/ExamplesHelper/MicrogridNetwork.hpp>
 
 /**
  * @brief Partition a scaled microgrid network into subsystem models.
@@ -72,8 +71,7 @@ void partitionNetwork(
     // Divide the IBRs as evenly as possible among the partitions.
     // Each partition receives q IBRs, and the first r partitions receive
     // one additional IBR to account for any remainder. The partition spans
-    // [partition_begin, partition_end), where partition_end is the first
-    // IBR index not included in this partition.
+    // [partition_begin, partition_end).
     const IdxT partition_size = q + ((j < r) ? 1 : 0);
     const IdxT partition_end  = partition_begin + partition_size;
 
@@ -168,6 +166,7 @@ void evaluatePartitionResiduals(
     auto* external_y  = partition->getExternalDataY().getData();
     auto* external_yp = partition->getExternalDataYP().getData();
 
+    // Supply external variable values required by this partition from neighboring subsystems.
     for (size_t i = 0; i < partition->getExternSize(); ++i)
     {
       const auto global_index = partition->getExternalDataIndices()[i];
@@ -182,6 +181,7 @@ void evaluatePartitionResiduals(
     auto* partition_y  = partition->y().getData();
     auto* partition_yp = partition->yp().getData();
 
+    // Supply external variable values required by this partition.
     for (size_t i = 0; i < partition->getInternalSize(); i++)
     {
       partition_y[i]  = y[partition->getNodeConnection(i)];
@@ -191,10 +191,12 @@ void evaluatePartitionResiduals(
     partition->y().setDataUpdated();
     partition->yp().setDataUpdated();
 
+    // Evaluate this partition's residuals
     partition->evaluateResidual();
 
     auto* residual = partition->getResidual().getData();
 
+    // Gather the residuals from the partition into the full monolithic vector
     for (size_t i = 0; i < partition->getInternalSize(); i++)
     {
       f[partition->getNodeConnection(i)] = residual[i];
