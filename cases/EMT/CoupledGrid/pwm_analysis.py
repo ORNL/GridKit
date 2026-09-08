@@ -27,7 +27,7 @@ def attenuation(frequency, mu):
 
 def pwm_peak_coefficients(mu, fc=900., f=60., M=.8, vdc=1.,
                           alignment=.5, max_harmonic=49):
-    """Return phase-a peak amplitudes for gate s and converter voltage vo.
+    """Return phase-a peak amplitudes for gate s and converter voltage e.
 
     Every harmonic is included, even zero or tiny coefficients. Peak amplitudes
     are twice the magnitude of the complex Fourier-series coefficient. DC is

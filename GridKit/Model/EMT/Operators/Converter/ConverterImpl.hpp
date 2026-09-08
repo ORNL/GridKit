@@ -20,11 +20,11 @@ namespace GridKit
     Converter<scalar_type, index_type>::Converter(const ModelDataT& data)
       : monitor_(std::make_unique<MonitorT>(data))
     {
-      monitor_->set(ModelDataT::MonitorableVariables::voa, [this]
+      monitor_->set(ModelDataT::MonitorableVariables::ea, [this]
                     { return output_port_[0].read(); });
-      monitor_->set(ModelDataT::MonitorableVariables::vob, [this]
+      monitor_->set(ModelDataT::MonitorableVariables::eb, [this]
                     { return output_port_[1].read(); });
-      monitor_->set(ModelDataT::MonitorableVariables::voc, [this]
+      monitor_->set(ModelDataT::MonitorableVariables::ec, [this]
                     { return output_port_[2].read(); });
       monitor_->set(ModelDataT::MonitorableVariables::idc, [this]
                     { return output_port_[3].read(); });
