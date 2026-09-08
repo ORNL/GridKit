@@ -5,6 +5,8 @@
 #include <GridKit/Model/EMT/Component/Controller/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1.hpp>
+#include <GridKit/Model/EMT/Component/Controller/InnerCurrentControl/InnerCurrentControl.hpp>
+#include <GridKit/Model/EMT/Component/Controller/OuterVoltageControl/OuterVoltageControl.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/Pwm.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1.hpp>
@@ -16,4 +18,7 @@
 #include <GridKit/Model/EMT/Component/Source/VoltageSource/VoltageSource.hpp>
 #include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/Converter.hpp>
+#include <GridKit/Model/EMT/Operators/Modulation/Modulation.hpp>
+#include <GridKit/Model/EMT/Operators/Reference/Angle/Angle.hpp>
+#include <GridKit/Model/EMT/Operators/Reference/Park/Park.hpp>
 #include <GridKit/Model/EMT/Signal/Signal.hpp>

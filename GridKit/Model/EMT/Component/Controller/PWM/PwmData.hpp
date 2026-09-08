@@ -18,6 +18,9 @@ namespace GridKit
 
       enum class PwmInputs : size_t
       {
+        ma,
+        mb,
+        mc,
         SIZE,
       };
 

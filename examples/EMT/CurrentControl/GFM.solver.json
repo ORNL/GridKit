@@ -1,0 +1,26 @@
+{
+  "system_model_file": "../../../cases/EMT/CurrentControl/GFM.case.json",
+  "state_file": "../../../cases/EMT/CurrentControl/GFM.state.json",
+  "dt_monitor": 2e-06,
+  "tmax": 0.2,
+  "mu": 1000000.0,
+  "rel_tol": 1e-07,
+  "abs_tol": 1e-09,
+  "max_steps": 1000000,
+  "consistent_ic_type": "ya_ydp",
+  "output_file": "GFM.csv",
+  "events": [
+    {
+      "type": "switch",
+      "time": 0.04,
+      "element_id": "load_switch",
+      "open": false
+    },
+    {
+      "type": "switch",
+      "time": 0.12,
+      "element_id": "load_switch",
+      "open": true
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../../diagram-style.tex}
+
+% TUNABLES: gain width and spacing of the two lower branches.
+\def\gainwidth{1.35cm}
+\def\integralrow{-1.9}
+\def\trackingrow{-3.8}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram]
+
+% Current reference and proportional path.
+\node[block, minimum width=2.9cm, minimum height=1.3cm]
+    (Ilim) at (-0.4,0)
+    {$\dfrac{\mathbf{i}^{\mathrm{ref}}}
+        {\sqrt{\mathcal{L}_i(\mathbf{i}^{\mathrm{ref}})}}$};
+\node[signal] (ilim) at (1.65,0) {};
+\node[sum] (error) at (3,0) {$\Sigma$};
+\coordinate (esplit) at (4.2,0);
+\node[block, minimum width=\gainwidth] (Kp) at (6,0) {$K_P$};
+\node[sum] (command) at (10.2,0) {$\Sigma$};
+\draw[line] (Ilim.east) -- (ilim);
+\draw[->, line] (ilim) -- (error.west);
+\node[pm, above left=0pt and 1pt of error.west] {$+$};
+\draw[line] (error.east) -- (esplit);
+\draw[->, line] (esplit) -- node[sig, above] {$\mathbf{e}$} (Kp.west);
+\draw[->, line] (Kp.east) -- (command.west);
+\node[pm, above left=0pt and 1pt of command.west] {$+$};
+
+% Integral path, with anti-windup added before integration.
+\node[block, minimum width=\gainwidth] (Ki)
+    at (4.2,\integralrow) {$K_I$};
+\node[sum] (rate) at (6,\integralrow) {$\Sigma$};
+\node[block, minimum width=\gainwidth] (integrator)
+    at (8.1,\integralrow) {$\dfrac{\mathbf{I}}{s}$};
+\node[signal, label={[sig]above:$\boldsymbol{\xi}$}] (xi)
+    at (9.35,\integralrow) {};
+\draw[->, line] (esplit) -- (Ki.north);
+\draw[->, line] (Ki.east) -- (rate.west);
+\node[pm, above left=0pt and 1pt of rate.west] {$+$};
+\draw[->, line] (rate.east) -- (integrator.west);
+\draw[line] (integrator.east) -- (xi);
+\draw[->, line] (xi) -| (command.south);
+\node[pm, below right=1pt and 0pt of command.south] {$+$};
+
+% Capacitor-voltage feedforward and synchronous-frame decoupling.
+\node[block, minimum width=4cm, minimum height=1.7cm]
+    (feedforward) at (10.2,3)
+    {$\mathbf{v}+\mathcal{J}\omega L\mathbf{i}$};
+\draw[->, line] (feedforward.south)
+    -- node[sig, right] {$\mathbf{b}$} (command.north);
+\node[pm, above right=1pt and 0pt of command.north] {$+$};
+
+% DC-dependent voltage-command limit.
+\node[signal, label={[sig]above:$\mathbf{z}$}] (z) at (11.35,0) {};
+\node[block, minimum width=3.2cm, minimum height=1.3cm]
+    (Ulim) at (13.6,0)
+    {$\dfrac{v_{\mathrm{dc}}\mathbf{z}}
+        {\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{z})}}$};
+\node[signal, label={[sig]above:$\mathbf{u}$}] (u) at (16.3,0) {};
+\draw[line] (command.east) -- (z);
+\draw[->, line] (z) -- (Ulim.west);
+\draw[line] (Ulim.east) -- (u);
+\draw[->, line] (u) -- (18,0);
+
+% Tracking anti-windup: limited minus unlimited voltage command.
+\node[sum] (tracking) at (11.35,\trackingrow) {$\Sigma$};
+\node[block, minimum width=\gainwidth] (Kaw)
+    at (8.1,\trackingrow) {$K_{\mathrm{aw}}$};
+\coordinate (uloop) at (16.3,-4.9);
+\draw[->, line] (z) -- (tracking.north);
+\node[pm, above left=1pt and 0pt of tracking.north] {$-$};
+\draw[->, line] (u) -- (uloop) -| (tracking.south);
+\node[pm, below left=1pt and 0pt of tracking.south] {$+$};
+\draw[->, line] (tracking.west) -- (Kaw.east);
+\draw[->, line] (Kaw.west) -| (rate.south);
+\node[pm, below left=1pt and 0pt of rate.south] {$+$};
+
+% External inputs share the same frame and signal ownership conventions.
+\node[signal, label={[sig]above:$\mathbf{i}^{\mathrm{ref}}$}]
+    (iref) at (-3.8,0) {};
+\node[signal, label={[sig]above:$\mathbf{i}$}] (i) at (-3.8,2.5) {};
+\node[signal, label={[sig]above:$\omega$}] (omega) at (-3.8,3) {};
+\node[signal, label={[sig]above:$\mathbf{v}$}] (v) at (-3.8,3.5) {};
+\node[signal, label={[sig]right:$v_{\mathrm{dc}}$}]
+    (vdc) at (13.6,5.4) {};
+\coordinate (isplit) at (error |- i);
+\draw[->, line] ($(iref)+(-0.8,0)$) -- (Ilim.west);
+\draw[->, line] ($(i)+(-0.8,0)$) -- (feedforward.west |- i);
+\draw[->, line] (isplit) -- (error.north);
+\node[pm, above left=1pt and 0pt of error.north] {$-$};
+\draw[->, line] ($(omega)+(-0.8,0)$) -- (feedforward.west |- omega);
+\draw[->, line] ($(v)+(-0.8,0)$) -- (feedforward.west |- v);
+\draw[->, line] ($(vdc)+(0,0.8)$) -- (Ulim.north);
+
+% The outer voltage loop can track the limited current reference.
+\draw[->, line] (ilim) -- (1.65,-6.2);
+\node[sig, right] at (1.65,-5.9) {$\mathbf{i}^{\mathrm{lim}}$};
+
+% Enclose the model-owned states, variables, and feedback paths.
+\begin{scope}[on background layer]
+    \node[operator enclosure,
+        fit=(Ilim)(ilim)(error)(Kp)(Ki)(rate)(integrator)(xi)
+            (feedforward)(command)(z)(Ulim)(u)(tracking)(Kaw)(uloop)] {};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}
