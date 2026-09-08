@@ -78,10 +78,10 @@
       "id": "ig0"
     },
     {
-      "id": "irefd"
+      "id": "icmdd"
     },
     {
-      "id": "irefq"
+      "id": "icmdq"
     },
     {
       "id": "ilimd"
@@ -505,14 +505,14 @@
         ]
       },
       "outputs": {
-        "iref": [
-          "irefd",
-          "irefq"
+        "icmd": [
+          "icmdd",
+          "icmdq"
         ]
       },
       "mon": [
         "eta",
-        "iref"
+        "icmd"
       ]
     },
     {
@@ -535,12 +535,12 @@
           "id",
           "iq"
         ],
-        "iref": [
-          "irefd",
-          "irefq"
-        ],
         "omega": "omega",
-        "vdc": "vdc"
+        "vdc": "vdc",
+        "icmd": [
+          "icmdd",
+          "icmdq"
+        ]
       },
       "outputs": {
         "ilim": [

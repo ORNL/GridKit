@@ -243,12 +243,12 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Modulation`             | `u` | Input | Three Signal IDs | Yes
   `Modulation`             | `vdc` | Input | Signal | Yes
   `Modulation`             | `m` | Output | Three Signal IDs | No
-  `InnerCurrentControl`    | `v`, `i`, `iref` | Input | Two Signal IDs | Yes
+  `InnerCurrentControl`    | `v`, `i`, `icmd` | Input | Two Signal IDs | Yes
   `InnerCurrentControl`    | `omega`, `vdc` | Input | Signal | Yes
   `InnerCurrentControl`    | `ilim`, `u` | Output | Two Signal IDs | No
   `OuterVoltageControl`    | `vref`, `v`, `ig`, `ilim` | Input | Two Signal IDs | Yes
   `OuterVoltageControl`    | `omega` | Input | Signal | Yes
-  `OuterVoltageControl`    | `iref` | Output | Two Signal IDs | No
+  `OuterVoltageControl`    | `icmd` | Output | Two Signal IDs | No
   `DCLink`                 | `isrc`, `idc` | Input | Signal | Yes
   `DCLink`                 | `vdc` | Output | Signal | No
   `Converter`              | `s`     | Input     | Three Signal IDs | Yes
@@ -382,7 +382,7 @@ connected Park transforms and controller inputs. For example:
   "class": "InnerCurrentControl",
   "id": "current",
   "params": { "L": 0.002, "Kp": 4.0, "Ki": 200.0, "Kaw": 2000.0, "Imax": 30.0, "Mmax": 0.95 },
-  "inputs": { "v": ["vd", "vq"], "i": ["id", "iq"], "iref": ["irefd", "irefq"], "omega": "omega", "vdc": "dc" },
+  "inputs": { "v": ["vd", "vq"], "i": ["id", "iq"], "icmd": ["icmdd", "icmdq"], "omega": "omega", "vdc": "dc" },
   "outputs": { "ilim": ["ilimd", "ilimq"], "u": ["ud", "uq"] },
   "mon": ["xi", "ilim", "u"]
 }
@@ -398,8 +398,8 @@ three-phase voltage command to `Modulation.u`, and connect `Modulation.m` to
 `PWM.m`. Both the current controller and Modulation use the bridge's DC-link
 voltage. Modulation requires a finite positive DC voltage.
 
-For cascaded grid-forming control, connect `OuterVoltageControl.iref` to the
-current controller's `iref`, and return the limited `ilim` to the voltage
+For cascaded grid-forming control, connect `OuterVoltageControl.icmd` to the
+current controller's `icmd`, and return the limited `ilim` to the voltage
 controller. The `v` input is the filter-capacitor voltage; the current loop's
 `i` input is the inverter-side current and the voltage loop's `ig` input is the
 grid-side current. Vector monitors expand to scalar `d` and `q` columns.

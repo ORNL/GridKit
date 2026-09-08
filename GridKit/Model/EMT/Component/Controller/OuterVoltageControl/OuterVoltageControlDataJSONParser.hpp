@@ -17,9 +17,9 @@ namespace GridKit
         expandPhasePort<2>(j, "inputs", "v", {"vd", "vq"});
         expandPhasePort<2>(j, "inputs", "ig", {"igd", "igq"});
         expandPhasePort<2>(j, "inputs", "ilim", {"ilimd", "ilimq"});
-        expandPhasePort<2>(j, "outputs", "iref", {"irefd", "irefq"});
+        expandPhasePort<2>(j, "outputs", "icmd", {"icmdd", "icmdq"});
         expandPhaseMonitor<2>(j, "eta", {"etad", "etaq"});
-        expandPhaseMonitor<2>(j, "iref", {"irefd", "irefq"});
+        expandPhaseMonitor<2>(j, "icmd", {"icmdd", "icmdq"});
         using BaseT = ComponentData<RealT, IdxT, OuterVoltageControlParameters, OuterVoltageControlInputs, OuterVoltageControlOutputs, OuterVoltageControlMonitorableVariables>;
         from_json(j, static_cast<BaseT&>(data));
       }

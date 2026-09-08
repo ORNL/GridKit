@@ -1,3 +1,8 @@
+/**
+ * @file InnerCurrentControlData.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @brief Modeling data for the EMT inner-loop current controller.
+ */
 #pragma once
 
 #include <GridKit/Model/EMT/ComponentData.hpp>
@@ -14,7 +19,7 @@ namespace GridKit
         Kp,   ///< \f$K_P\f$ Proportional gain [ohm]
         Ki,   ///< \f$K_I\f$ Integral gain [ohm/s]
         Kaw,  ///< \f$K_{\mathrm{aw}}\f$ Tracking anti-windup gain [1/s]
-        Imax, ///< \f$I^{\max}\f$ Current-reference norm limit [A]
+        Imax, ///< \f$I^{\max}\f$ Current-command norm limit [A]
         Mmax, ///< \f$M^{\max}\f$ Modulation limit [-]
       };
 
@@ -22,10 +27,10 @@ namespace GridKit
       {
         vd,    ///< \f$v_d\f$ Capacitor voltage [V]
         vq,    ///< \f$v_q\f$ Capacitor voltage [V]
-        id,    ///< \f$i_d\f$ Converter current [A]
-        iq,    ///< \f$i_q\f$ Converter current [A]
-        irefd, ///< \f$i_d^{\mathrm{ref}}\f$ Current reference [A]
-        irefq, ///< \f$i_q^{\mathrm{ref}}\f$ Current reference [A]
+        id,    ///< \f$i_d\f$ Inverter-side filter current [A]
+        iq,    ///< \f$i_q\f$ Inverter-side filter current [A]
+        icmdd, ///< \f$i_d^{\mathrm{cmd}}\f$ Current command [A]
+        icmdq, ///< \f$i_q^{\mathrm{cmd}}\f$ Current command [A]
         omega, ///< \f$\omega\f$ Electrical angular frequency [rad/s]
         vdc,   ///< \f$v_{\mathrm{dc}}\f$ DC-link voltage [V]
         SIZE,
@@ -33,8 +38,8 @@ namespace GridKit
 
       enum class InnerCurrentControlOutputs : size_t
       {
-        ilimd, ///< \f$i_d^{\mathrm{lim}}\f$ Limited current reference [A]
-        ilimq, ///< \f$i_q^{\mathrm{lim}}\f$ Limited current reference [A]
+        ilimd, ///< \f$i_d^{\mathrm{lim}}\f$ Limited current command [A]
+        ilimq, ///< \f$i_q^{\mathrm{lim}}\f$ Limited current command [A]
         ud,    ///< \f$u_d\f$ Converter voltage command [V]
         uq,    ///< \f$u_q\f$ Converter voltage command [V]
         SIZE,
@@ -44,8 +49,8 @@ namespace GridKit
       {
         xid,   ///< \f$\xi_d\f$ Integral contribution [V]
         xiq,   ///< \f$\xi_q\f$ Integral contribution [V]
-        ilimd, ///< \f$i_d^{\mathrm{lim}}\f$ Limited current reference [A]
-        ilimq, ///< \f$i_q^{\mathrm{lim}}\f$ Limited current reference [A]
+        ilimd, ///< \f$i_d^{\mathrm{lim}}\f$ Limited current command [A]
+        ilimq, ///< \f$i_q^{\mathrm{lim}}\f$ Limited current command [A]
         ud,    ///< \f$u_d\f$ Converter voltage command [V]
         uq,    ///< \f$u_q\f$ Converter voltage command [V]
       };

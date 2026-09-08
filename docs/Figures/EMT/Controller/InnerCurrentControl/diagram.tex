@@ -11,19 +11,16 @@
 
 % Current limit and proportional path.
 \node[block, minimum width=2.9cm, minimum height=1.3cm]
-    (Ilim) at (0,2.4)
-    {$\dfrac{1}
-        {\sqrt{\mathcal{L}_i(\mathbf{i}^{\mathrm{ref}})}}$};
-\node[signal] (ilim) at (0,1.1) {};
-\node[sum] (error) at (0,0) {$\Sigma$};
-\node[signal] (esplit) at (0,-0.8) {};
+    (Ilim) at (-3,-0.8)
+    {$\mathcal{L}_i^{-1/2}$};
+\node[signal] (ilim) at (-1,-0.8) {};
+\node[sum] (error) at (0,-0.8) {$\Sigma$};
 \node[block, minimum width=\gainwidth] (Kp) at (2.2,-0.8) {$K_P$};
 \node[sum] (command) at (6.3,-0.8) {$\Sigma$};
-\draw[line] (Ilim.south) -- (ilim);
-\draw[->, line] (ilim) -- (error.north);
-\node[pm, above right=1pt and 0pt of error.north] {$+$};
-\draw[line] (error.south) -- (esplit);
-\draw[->, line] (esplit) -- node[sig, above] {$\mathbf{e}$} (Kp.west);
+\draw[line] (Ilim.east) -- (ilim);
+\draw[->, line] (ilim) -- (error.west);
+\node[pm, above left=0pt and 1pt of error.west] {$+$};
+\draw[->, line] (error.east) -- (Kp.west);
 \draw[->, line] (Kp.east) -- (command.west);
 \node[pm, above left=0pt and 1pt of command.west] {$+$};
 
@@ -32,15 +29,12 @@
     at (0,\integralrow) {$K_I$};
 \node[sum] (rate) at (2.2,\integralrow) {$\Sigma$};
 \node[block, minimum width=\gainwidth] (integrator)
-    at (4.2,\integralrow) {$\dfrac{\mathbf{I}}{s}$};
-\node[signal, label={[sig]above:$\boldsymbol{\xi}$}] (xi)
-    at (5.4,\integralrow) {};
-\draw[->, line] (esplit) -- (Ki.north);
+    at (6.3,\integralrow) {$\dfrac{1}{s}$};
+\draw[->, line] (error.south) -- (Ki.north);
 \draw[->, line] (Ki.east) -- (rate.west);
 \node[pm, above left=0pt and 1pt of rate.west] {$+$};
 \draw[->, line] (rate.east) -- (integrator.west);
-\draw[line] (integrator.east) -- (xi);
-\draw[->, line] (xi) -| (command.south);
+\draw[->, line] (integrator.north) -- (command.south);
 \node[pm, below right=1pt and 0pt of command.south] {$+$};
 
 % Capacitor-voltage feedforward and synchronous-frame decoupling.
@@ -48,62 +42,58 @@
     (feedforward) at (6.3,2.4)
     {$\mathbf{v}+\mathbf{J}\omega L\mathbf{i}$};
 \draw[->, line] (feedforward.south)
-    -- node[sig, right] {$\mathbf{b}$} (command.north);
+    -- (command.north);
 \node[pm, above right=1pt and 0pt of command.north] {$+$};
 
 % DC-dependent voltage-command limit.
-\node[signal, label={[sig]above:$\mathbf{z}$}] (z) at (7.4,-0.8) {};
+\node[signal, label={[sig]above:$\mathbf{z}$}] (z) at (7.8,-0.8) {};
 \node[block, minimum width=3.2cm, minimum height=1.3cm]
-    (Ulim) at (10,-0.8)
-    {$\dfrac{\mathbf{z}}
-        {\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{z})}}$};
-\node[signal, label={[sig]above:$\mathbf{u}$}] (u) at (12.6,-1.1) {};
+    (Ulim) at (10.4,-0.8)
+    {$v_{\mathrm{dc}}\mathcal{L}_u^{-1/2}$};
+\node[signal] (u) at (12.8,-0.8) {};
 \draw[line] (command.east) -- (z);
 \draw[->, line] (z) -- (Ulim.west);
-\draw[line] (Ulim.east |- u) -- (u);
-\draw[->, line] (u) -- (14,-1.1);
+\draw[line] (Ulim.east) -- (u);
+\draw[->, line] (u) -- node[sig, above, pos=0.75] {$\mathbf{u}$} (14.5,-0.8);
 
 % Tracking anti-windup: limited minus unlimited voltage command.
-\node[sum] (tracking) at (7.4,\trackingrow) {$\Sigma$};
+\node[sum] (tracking) at (7.8,\trackingrow) {$\Sigma$};
 \node[block, minimum width=\gainwidth] (Kaw)
-    at (4.2,\trackingrow) {$K_{\mathrm{aw}}$};
-\coordinate (uloop) at (12.6,\trackingrow);
+    at (2.2,\trackingrow) {$K_{\mathrm{aw}}$};
+\coordinate (uloop) at (12.8,\trackingrow);
 \draw[->, line] (z) -- (tracking.north);
 \node[pm, above left=1pt and 0pt of tracking.north] {$-$};
 \draw[->, line] (u) -- (uloop) -- (tracking.east);
 \node[pm, above right=0pt and 1pt of tracking.east] {$+$};
 \draw[->, line] (tracking.west) -- (Kaw.east);
-\draw[->, line] (Kaw.west) -| (rate.south);
+\draw[->, line] (Kaw.north) -- (rate.south);
 \node[pm, below left=1pt and 0pt of rate.south] {$+$};
 
-% External inputs share the same frame and signal ownership conventions.
-\node[signal, label={[sig]above:$\mathbf{i}^{\mathrm{ref}}$}]
-    (iref) at (0,6) {};
-\node[signal, label={[sig]above:$\mathbf{i}$}] (i) at (5.5,6) {};
-\node[signal, label={[sig]above:$\omega$}] (omega) at (6.3,6) {};
-\node[signal, label={[sig]above:$\mathbf{v}$}] (v) at (7.1,6) {};
-\node[signal, label={[sig]above:$v_{\mathrm{dc}}$}]
-    (vdc) at (14,-0.5) {};
-\node[signal] (isplit) at (5.5,3.6) {};
-\coordinate (iminus) at (2.5,0);
-\draw[->, line] (iref) -- (Ilim.north);
-\draw[->, line] (i) -- (feedforward.north -| i);
-\draw[->, line] (isplit) -- (2.5,3.6) -- (iminus) -- (error.east);
-\node[pm, above right=0pt and 1pt of error.east] {$-$};
-\draw[->, line] (omega) -- (feedforward.north -| omega);
-\draw[->, line] (v) -- (feedforward.north -| v);
-\draw[->, line] (vdc) -- (Ulim.east |- vdc);
+% External command and measured quantities share the synchronous frame.
+\node[sig] (icmd) at (-6,-0.8) {$\mathbf{i}^{\mathrm{cmd}}$};
+\node[sig] (i) at (0,5) {$\mathbf{i}$};
+\node[sig] (omega) at (6.3,5) {$\omega$};
+\node[sig] (v) at (7.1,5) {$\mathbf{v}$};
+\node[sig] (vdc) at (10.4,5) {$v_{\mathrm{dc}}$};
+\node[signal] (isplit) at (0,3.6) {};
+\draw[->, line] (icmd.east) -- (Ilim.west);
+\draw[->, line] (i.south) -- (error.north);
+\node[pm, above right=1pt and 0pt of error.north] {$-$};
+\draw[->, line] (isplit) -- (5.5,3.6) -- (feedforward.north -| 5.5,0);
+\draw[->, line] (omega.south) -- (feedforward.north -| omega);
+\draw[->, line] (v.south) -- (feedforward.north -| v);
+\draw[->, line] (vdc.south) -- (Ulim.north);
 
-% The outer voltage loop can track the limited current reference.
-\draw[->, line] (ilim) -- (1.8,1.1) -- (1.8,6);
-\node[sig, above] at (1.8,6) {$\mathbf{i}^{\mathrm{lim}}$};
+% Limited current is returned to the outer controller.
+\draw[->, line] (ilim) -- (-1,5);
+\node[sig, above] at (-1,5) {$\mathbf{i}^{\mathrm{lim}}$};
 
 % Enclose the model-owned states, variables, and feedback paths.
 \begin{scope}[on background layer]
-    \node[operator enclosure,
-        fit=(Ilim)(ilim)(error)(Kp)(Ki)(rate)(integrator)(xi)
+    \node[operator enclosure, densely dotted,
+        fit=(Ilim)(ilim)(error)(Kp)(Ki)(rate)(integrator)
             (feedforward)(command)(z)(Ulim)(u)(tracking)(Kaw)(uloop)
-            (isplit)(iminus)] {};
+            (isplit)] {};
 \end{scope}
 
 \end{tikzpicture}

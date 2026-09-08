@@ -352,10 +352,6 @@ namespace GridKit
             for (const auto output : magic_enum::enum_values<Outputs>())
               if (output != Outputs::SIZE)
                 names.emplace(magic_enum::enum_name(output));
-            if constexpr (std::is_same_v<Outputs, Controller::InnerCurrentControlOutputs>)
-              names = {"xid", "xiq"};
-            if constexpr (std::is_same_v<Outputs, Controller::OuterVoltageControlOutputs>)
-              names = {"etad", "etaq"};
             if constexpr (std::is_same_v<Outputs, SwitchOutputs>)
               names.insert("open");
             if constexpr (std::is_same_v<Outputs, TransformerOutputs>)
