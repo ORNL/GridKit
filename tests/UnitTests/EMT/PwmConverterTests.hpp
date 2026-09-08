@@ -557,9 +557,16 @@ namespace GridKit
         const std::array<std::array<double, 3>, 4> commands{{{-1, 0, 1}, {0.6, -0.4, 0.2}, {-0.2, 0.8, -0.6}, {0, 0, 0}}};
         for (double sharpness : {0.04, 4.0, 20.0, 200.0})
         {
-          Math::MU<double> = sharpness * 6000;
-          // At least 17 samples across each 10-90% edge; check refinement too.
-          const auto count = static_cast<size_t>(std::max(32.0, std::ceil(4 * sharpness)));
+          Math::MU<double>        = sharpness * 6000;
+          // The hold crossfade rate is floored so it completes within one carrier.
+          const double crossfade  = std::max(sharpness, 2 * std::log(4 / std::numeric_limits<double>::epsilon()));
+          // At least 17 samples across each 10-90% edge and crossfade; check refinement too.
+          const auto   count      = static_cast<size_t>(std::max(32.0, std::ceil(4 * crossfade)));
+          // A crossfade between different commands shifts the interval mean by at most
+          // 2 ln 2 / (mu_c Tc); equal neighbouring commands leave it exact.
+          const double shift      = 2 * std::log(2.0) / crossfade;
+          // Midpoint-rule bound for a slope of at most mu_c / 4 at the window ends.
+          const double quadrature = 1e-7 + crossfade / (24.0 * static_cast<double>(count * count));
           for (double alignment : {0.0, 0.5, 1.0})
           {
             SampledPwm fixture(commands[0], 6000, alignment);
@@ -568,15 +575,18 @@ namespace GridKit
               fixture.command(commands[interval]);
               if (interval != 0)
                 fixture.accept(interval);
-              const auto  coarse  = fixture.measure(interval, count);
-              const auto  fine    = fixture.measure(interval, 2 * count);
-              const auto& active  = commands[interval == 0 ? 0 : interval - 1];
-              success            *= coarse.bounded && fine.bounded;
+              const auto  coarse = fixture.measure(interval, count);
+              const auto  fine   = fixture.measure(interval, 2 * count);
+              const auto& active = commands[interval == 0 ? 0 : interval - 1];
+              double      bound  = 1e-6;
+              if (interval != 0)
+                bound += shift;
+              success *= coarse.bounded && fine.bounded;
               for (size_t phase = 0; phase < 3; ++phase)
               {
                 // Duty tolerance is independent of the production pulse sum.
-                success *= std::abs(fine.mean[phase] - (1 + active[phase]) / 2) < 1e-6;
-                success *= std::abs(fine.mean[phase] - coarse.mean[phase]) < 1e-7;
+                success *= std::abs(fine.mean[phase] - (1 + active[phase]) / 2) < bound;
+                success *= std::abs(fine.mean[phase] - coarse.mean[phase]) < quadrature;
               }
             }
           }

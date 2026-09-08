@@ -61,7 +61,7 @@ namespace GridKit
 
         void  resetHistory() override final;
         void  acceptStep(RealT time) override final;
-        RealT nextDiscontinuityTime(RealT after) const override final;
+        RealT nextSampleTime(RealT after) const override final;
         RealT maximumStepSize() const override final;
 
         void assignInput(size_t phase, SignalT* signal);
@@ -81,6 +81,9 @@ namespace GridKit
         bool                              sampledInput() const;
         std::array<RealT, 3>              readModulation() const;
         void                              invalidateCache();
+        RealT                             pulse(RealT duty, RealT local_time) const;
+        RealT                             train(RealT duty, RealT t) const;
+        RealT                             crossfade(RealT x) const;
 
         struct Sample
         {
@@ -95,6 +98,7 @@ namespace GridKit
         bool               parameters_valid_{false};
         bool               sinusoidal_parameters_valid_{false};
         RealT              horizon_{0.0};
+        RealT              crossfade_rate_{0.0};
         std::deque<Sample> samples_;
 
         // Output workspace, independent of the DAE state.

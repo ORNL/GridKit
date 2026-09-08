@@ -157,10 +157,12 @@ namespace GridKit
       void  resetHistory() override;
       void  acceptStep(RealT time) override;
       RealT maximumStepSize() const override;
-      RealT nextDiscontinuityTime(RealT after) const override;
+      RealT nextSampleTime(RealT after) const override;
       void  beginDiscontinuity(RealT time) override;
 
     protected:
+      void forEachChild(const std::function<void(const ComponentT&)>& visitor) const override;
+
       virtual ComponentT* initialStateComponent()
       {
         return nullptr;

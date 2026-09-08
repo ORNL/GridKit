@@ -177,7 +177,12 @@ namespace GridKit
       const auto matrix = transformation(input_[3]->read());
       ScalarT    value{0};
       for (size_t n = 0; n < 3; ++n)
-        value += (inverse_ ? matrix[n][row] : matrix[row][n]) * input_[n]->read();
+      {
+        auto coefficient = matrix[row][n];
+        if (inverse_)
+          coefficient = matrix[n][row];
+        value += coefficient * input_[n]->read();
+      }
       return value;
     }
 
@@ -192,11 +197,21 @@ namespace GridKit
       RealT      dtheta{0};
       for (size_t n = 0; n < 3; ++n)
       {
-        const auto r = inverse_ ? n : row;
-        const auto c = inverse_ ? row : n;
+        size_t r = row;
+        size_t c = n;
+        if (inverse_)
+        {
+          r = n;
+          c = row;
+        }
         input_[n]->appendGradient(gradient, scale * matrix[r][c]);
-        const RealT derivative  = r == 0 ? matrix[1][c] : (r == 1 ? -matrix[0][c] : RealT{0});
-        dtheta                 += derivative * static_cast<RealT>(input_[n]->read());
+        // The angle derivative of the cosine row is the sine row and vice versa.
+        RealT derivative = ZERO<RealT>;
+        if (r == 0)
+          derivative = matrix[1][c];
+        if (r == 1)
+          derivative = -matrix[0][c];
+        dtheta += derivative * static_cast<RealT>(input_[n]->read());
       }
       input_[3]->appendGradient(gradient, scale * dtheta);
     }
