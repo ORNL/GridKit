@@ -23,9 +23,11 @@
     "dc_energy_seconds": 10.0,
     "carrier_Hz": 1800.0,
     "carrier_alignment": 0.5,
-    "fault_R_pu": 0.01,
+    "fault_R_pu": 0.0,
+    "fault_X_pu": 0.01,
+    "fault_discharge_R_pu": 0.01,
     "fault_on_s": 1.0,
-    "fault_off_s": 1.1
+    "fault_off_s": 1.15
   },
   "source_counts": {
     "Branch": 89,
@@ -1455,10 +1457,10 @@
     }
   },
   "emt_counts": {
-    "Bus": 38,
+    "Bus": 39,
     "Transformer": 12,
     "LineLumped": 77,
-    "LoadZ": 28,
+    "LoadZ": 29,
     "Machine": 30,
     "Tgov1": 30,
     "Ieeet1": 30,
@@ -1472,7 +1474,7 @@
     "Modulation": 9,
     "PWM": 9,
     "Converter": 9,
-    "Switch": 1
+    "Switch": 2
   },
   "source_sha256": "26ae4ece0bd74a54e41fee6345bb76095b11f03742d662845ea2ce5c70dd6899"
 }

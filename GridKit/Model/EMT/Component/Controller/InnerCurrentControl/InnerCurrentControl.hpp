@@ -38,7 +38,8 @@ namespace GridKit
         ICMDD,
         ICMDQ,
         OMEGA,
-        VDC,
+        ULIMD,
+        ULIMQ,
         MAXIMUM
       };
 
@@ -73,7 +74,7 @@ namespace GridKit
         using Outputs      = typename ModelDataT::Outputs;
         using SignalT      = Signal<ScalarT, IdxT>;
         using MonitorT     = Model::VariableMonitor<InnerCurrentControl, InnerCurrentControlData>;
-        using InputSignals = std::array<SignalT*, 8>;
+        using InputSignals = std::array<SignalT*, 9>;
 
         InnerCurrentControl();
         explicit InnerCurrentControl(const ModelDataT& data);
@@ -116,9 +117,7 @@ namespace GridKit
         RealT                                                                                                       Ki_{0.0};
         RealT                                                                                                       Kaw_{0.0};
         RealT                                                                                                       Imax_{0.0};
-        RealT                                                                                                       Mmax_{0.0};
         RealT                                                                                                       ai_{0.0};
-        RealT                                                                                                       au_{0.0};
         ComponentSignals<ScalarT, IdxT, InnerCurrentControlInternalVariables, InnerCurrentControlExternalVariables> signals_;
         std::array<SignalT, 4>                                                                                      output_;
         std::array<SignalT*, 4>                                                                                     alias_{};

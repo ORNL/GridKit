@@ -6,27 +6,25 @@
 % TUNABLES: tier heights, the PLL frame boundary, and the setpoint column.
 \def\framerow{-2.8}
 \def\controlrow{-4.4}
-\def\returnrow{-5.8}
+\def\modulationrow{-7.6}
+\def\returnrow{-9.0}
 \def\setpointcolumn{18.6}
 
 \begin{document}
 \begin{tikzpicture}[emt diagram,
     block/.append style={minimum height=1.25cm, align=center}]
 
-% ================= Modulation, bridge, and DC link =================
+% ================= PWM, bridge, and DC link =================
 % The bridge supplies voltage to the LCL filter; the DC link sits below it.
 \node[block] (pwm) at (4.8, 0) {PWM};
 \node[block, minimum width=2.6cm] (bridge) at (8.8, 0)
     {Converter};
-\node[block] (mod) at (4.8, \controlrow) {Modulation};
 \node[block] (dclink) at (8.8, \controlrow) {DCLink};
 \draw[->, line] (pwm.east) -- node[sig, above] {$\mathbf{s}$} (bridge.west);
-\draw[->, line] (mod.north) -- node[sig, right] {$\mathbf{m}$} (pwm.south);
 \draw[->, line] ([xshift=2.5mm]dclink.north)
     -- node[sig, right] {$v_{\mathrm{dc}}$} ([xshift=2.5mm]bridge.south);
 \draw[->, line] ([xshift=-2.5mm]bridge.south)
     -- node[sig, left] {$i_{\mathrm{dc}}$} ([xshift=-2.5mm]dclink.north);
-\draw[->, line] (dclink.west) -- node[sig, above] {$v_{\mathrm{dc}}$} (mod.east);
 
 % ================= LCL filter and terminal =================
 \node[block] (filter) at (12.4, 0) {Filter\\{\small LCL}};
@@ -65,10 +63,20 @@
     -- node[sig, below] {$\mathbf{i}^{\mathrm{cmd}}$} ([yshift=-2.5mm]icc.east);
 \draw[->, line] ([yshift=2.5mm]icc.east)
     -- node[sig, above] {$\mathbf{i}^{\mathrm{lim}}$} ([yshift=2.5mm]outer.west);
-\coordinate (ureturn) at (12.4, \returnrow);
-\draw[->, line] (icc.south) -- (ureturn) -- (4.8, \returnrow) -- (mod.south);
-\node[sig, anchor=north] at (8.6, -5.9) {$\mathbf{u}$};
-\draw[->, line] (dclink.east) -- node[sig, above, pos=0.2] {$v_{\mathrm{dc}}$} (icc.west);
+
+% ================= Modulation =================
+% The voltage limiter sits under the current loop, returns the limited
+% command, and sends the modulation command out of the frame to PWM.
+\node[block] (mod) at (12.4, \modulationrow) {Modulation};
+\draw[->, line] ([xshift=-2.5mm]icc.south)
+    -- node[sig, left] {$\mathbf{u}$} ([xshift=-2.5mm]mod.north);
+\draw[->, line] ([xshift=2.5mm]mod.north)
+    -- node[sig, right] {$\mathbf{u}^{\mathrm{lim}}$} ([xshift=2.5mm]icc.south);
+\coordinate (mreturn) at (4.8, \returnrow);
+\draw[->, line] (mod.south) -- (12.4, \returnrow) -- (mreturn) -- (pwm.south);
+\node[sig, anchor=north] at ($(8.6, \returnrow)+(0,-0.1)$) {$\mathbf{m}$};
+\draw[->, line] (dclink.south) -- (8.8, \modulationrow)
+    -- node[sig, above] {$v_{\mathrm{dc}}$} (mod.west);
 
 % ================= Setpoints =================
 % Setpoints enter the outer controller from outside the enclosure.
@@ -85,8 +93,8 @@
 % ================= Configuration and frame enclosures =================
 \begin{scope}[on background layer]
     \node[operator enclosure, densely dotted,
-        fit=(pwm)(bridge)(mod)(dclink)(filter)
-            (icc)(outer)(ureturn)] (enclosure) {};
+        fit=(pwm)(bridge)(dclink)(filter)
+            (icc)(outer)(mod)(mreturn)] (enclosure) {};
     % The PLL defines the dq frame; the region is labelled with it.
     \coordinate (frame) at (10.5, \framerow);
     \draw[enclosure, densely dotted]

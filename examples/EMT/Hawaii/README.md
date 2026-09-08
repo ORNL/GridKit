@@ -2,8 +2,8 @@
 
 The [case README](../../../cases/EMT/Hawaii/README.md) documents the conversion,
 fabricated data, and deviations from the validated PhasorDynamics case.
-The EMT fault runs from 1.0 to 1.10 s. The PowerWorld reference fault runs from
-1.0 to 1.15 s. Both intervals are labelled in the plots.
+The EMT and GridKit PhasorDynamics validation solvers both apply the fault
+from 1.0 to 1.15 s. The plots label the actual intervals recorded by each run.
 
 The four figures contain all 37 buses or all 30 synchronous machines, followed
 by the range of differences across matching channels. Bus voltage uses a
@@ -11,8 +11,19 @@ one-cycle positive-sequence estimate. Machine speed, active power, and reactive
 power use cycle means; their colours identify the six machine buses. The time
 label is the centre of the averaging window;
 the approximately half-cycle transition spreading is a measurement effect.
-Powers use the 100 MVA system base. These are comparisons between different
-dynamic models, not a new PowerWorld validation.
+Powers use the 100 MVA system base. Both trajectories are simulated by GridKit;
+the fault impedance at 60 Hz and the event times match, while the dynamic
+models retain the differences documented in the case README.
+
+The current plots cover 0–5 s with the inductive fault cleared at 1.15 s.
+
+![Bus voltage magnitudes](results/Hawaii.vmag.png)
+
+![Machine speed deviations](results/Hawaii.omega.png)
+
+![Machine active powers](results/Hawaii.p.png)
+
+![Machine reactive powers](results/Hawaii.q.png)
 
 The inverter plants use the same LCL Filter wiring as the GFL control example.
 The generator preserves initial terminal dispatch, includes both reactor losses
@@ -23,23 +34,36 @@ Generate current results using the commands below. Plots, editable TeX/data,
 and measured validation/comparison statistics are written under ignored
 `results/`; no numerical snapshot is assumed to describe a regenerated case.
 
-Differences from the reference include the unequal fault intervals. The
-resistive EMT fault produces an active-power surge and initial machine deceleration; the inductive
-reference fault produces a different initial response. The comparison therefore
-does not establish equivalent disturbance dynamics, despite similar recovery
-trends. The [deviation list](../../../cases/EMT/Hawaii/README.md#fault-and-comparison)
-also covers the winding approximation and replacement inverter controls.
+Each phase of the fault uses a 5.05158 mH inductor. At clearing, a second
+switch connects a 1.9044 ohm discharge resistor while the grid switch opens.
+The resistor is disconnected during the fault; afterward it dissipates the
+isolated inductor energy with a 2.65258 ms time constant. The validator checks
+paired switch commands, current continuity, zero current through the open grid
+switch, and the analytical discharge decay. Remaining model differences include
+the [winding approximation and replacement inverter controls](../../../cases/EMT/Hawaii/README.md#fault-and-comparison).
 
 `results/Hawaii.{vmag,omega,p,q}.pdf` contains the four vector figures;
 matching PNGs are rendered at 600 DPI. Each figure retains its editable
 `.tex` source and `.csv` data. The figures remain on the TeX editing path.
-`results/comparison.json` records per-channel errors against the frozen
-PowerWorld reference. The validated run's `metrics.json` records physical
+`results/comparison.json` records per-channel differences against the newly
+simulated PhasorDynamics run. `results/emt/metrics.json` records physical
 checks, input/executable/library hashes, and accepted-step statistics.
 
-`convergence.py` compares the full run with a tenfold tighter run through
-1.5 s, covering the disturbance and early recovery. It requires matching
-physical inputs and records maximum differences in `results/convergence.json`.
+The normal EMT workflow uses the case solver's `rel_tol = 1e-5` and
+`abs_tol = 1e-6`, including the CTest and switching studies. It does not run a
+tighter-tolerance study.
+
+`phasor.py` copies the case and validation inputs from `lukel/cases-polish-dev`
+into the ignored, untracked `phasor-reference/` directory and runs the original
+`DynamicSimulation Hawaii.solver.json` validation command unchanged. The
+branch's recorded reference is used only by that original validation check.
+An additional run changes only monitors and output selection to record all
+four comparison quantities; its speed trace must match the original run.
+The EMT plotter reads only these newly simulated GridKit traces.
+
+The original copied inputs remain unchanged. Source revisions, input hashes,
+timings, and output hashes are saved with the runs. The former resistive-fault
+comparison is archived under `results/history/`.
 
 `switching.py` checks all nine bridges in a separate one-cycle run sampled at
 720 kHz, using the same physical case and solver tolerances. It compares the
@@ -54,27 +78,24 @@ From the repository root, with Enzyme and SUNDIALS KLU enabled:
 
 ```bash
 python3 cases/EMT/Hawaii/convert.py
-cmake --build build --target EMTDynamicSimulation -j 10
+cmake --build build --target EMTDynamicSimulation DynamicSimulation -j 10
 python3 cases/EMT/Hawaii/validate.py \
   --exe build/application/EMT/EMTDynamicSimulation \
-  --tmax 10 --output /tmp/gridkit-hawaii-run
+  --tmax 5 --output examples/EMT/Hawaii/results/emt
+python3 examples/EMT/Hawaii/phasor.py \
+  --exe build/application/PhasorDynamics/DynamicSimulation
 python3 examples/EMT/Hawaii/plot.py \
-  --averaged /tmp/gridkit-hawaii-run/Hawaii.averaged.csv
-python3 cases/EMT/Hawaii/validate.py \
-  --exe build/application/EMT/EMTDynamicSimulation \
-  --tmax 1.5 --rel-tol 1e-6 --abs-tol 1e-7 --output /tmp/gridkit-hawaii-refined
-python3 examples/EMT/Hawaii/convergence.py \
-  --baseline /tmp/gridkit-hawaii-run --refined /tmp/gridkit-hawaii-refined
+  --averaged examples/EMT/Hawaii/results/emt/Hawaii.averaged.csv
 python3 examples/EMT/Hawaii/switching.py \
   --exe build/application/EMT/EMTDynamicSimulation
 ctest --test-dir build -R EMTHawaiiCase --output-on-failure
 ```
 
 The CTest study ends at 1.5 s and covers fault inception, clearing, and early
-recovery. The ten-second run checks the longer response separately.
-For a quicker plot, use `--tmax 1.5` in the first validation command; the
-plotter follows the validated run duration.
-Plot generation reads the PowerWorld CSVs with `git show` at the same frozen
-source revision used by the converter; no checkout is needed. It requires
-PGFPlots, pdfLaTeX, and Poppler. Simulation and validation require only Python's
-standard library in addition to the EMT executable.
+recovery. The example solver and plotting command run to 5 s; the plotter
+follows the completed run duration. The copied PhasorDynamics
+study always retains the validation case's ten-second duration and solver
+settings. No branch checkout is needed.
+
+Plot generation requires PGFPlots, pdfLaTeX, and Poppler. Simulation and
+validation require only Python's standard library and the GridKit executables.
