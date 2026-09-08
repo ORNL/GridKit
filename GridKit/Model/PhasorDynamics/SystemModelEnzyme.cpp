@@ -214,12 +214,11 @@ namespace GridKit
         }
       }
 
-      //Log::misc() << "System DependencyTracking Jacobian\n";
-      //csr_jac_->print(Log::misc());
+      // Log::misc() << "System DependencyTracking Jacobian\n";
+      // csr_jac_->print(Log::misc());
 
       return 0;
     }
-
 
     // Available template instantiations
     // template class SystemModel<double, long int>;

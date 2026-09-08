@@ -10,6 +10,7 @@
 
 // Include all components
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -1009,26 +1010,14 @@ namespace GridKit
         status += component->initialize();
       }
 
-     // For DependencyTracking::Variable, set variable numbers
-     if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
-     {
-       auto* y  = y_.getData();
-       auto* yp = yp_.getData();
-
-       for (IdxT j = 0; j < size_; ++j)
-       {
-          const IdxT var_idx = this->getVariableIndex(j);
-          if (var_idx != INVALID_INDEX<IdxT>) 
-          {
-            // Even indices for y and odd indices for yp
-            y[j].setVariableNumber(static_cast<size_t>(2 * var_idx));
-            yp[j].setVariableNumber(static_cast<size_t>(2 * var_idx + 1));
-          }
-        }
-      } 
-
       y_.setDataUpdated();
       yp_.setDataUpdated();
+
+      // For DependencyTracking::Variable, set variable numbers
+      if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
+      {
+        this->initializeDependencyTrackingVariableNumbers();
+      }
 
       return status;
     }
