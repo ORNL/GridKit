@@ -8,7 +8,6 @@ foreach(
   06_FaultClearingSwitching.solver.json
   run.py
   plot.py
-  switching_transient.png
   README.md)
   gridkit_example_add_file(${_file})
 endforeach()
@@ -37,5 +36,5 @@ if(Python3_Interpreter_FOUND
     COMMAND
       ${Python3_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/run.py --exe
       $<TARGET_FILE:EMTDynamicSimulation> --results ${CMAKE_CURRENT_BINARY_DIR}/smoke --smoke)
-  set_tests_properties(EMTTenBusIBR PROPERTIES TIMEOUT 180)
+  set_tests_properties(EMTTenBusIBR PROPERTIES TIMEOUT 30)
 endif()
