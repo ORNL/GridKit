@@ -12,9 +12,8 @@
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 
-#include "PowerElectronicsExamplesHelper/JacTestHelper.hpp"
-#include "PowerElectronicsExamplesHelper/MicrogridNetwork.hpp"
-#include "PowerElectronicsExamplesHelper/PartitionUtilities.hpp"
+#include <examples/PowerElectronics/ExamplesHelper/JacTestHelper.hpp>
+#include <examples/PowerElectronics/ExamplesHelper/PartitionUtilities.hpp>
 
 using Component = GridKit::CircuitComponent<double, size_t>;
 using Node      = GridKit::PowerElectronics::NodeBase<double, size_t>;
@@ -178,10 +177,10 @@ int main()
     auto* partition_jacobian = partition->getCsrJacobian();
 
     jacobians_match = jacobians_match
-                      && GridKit::Testing::verifySubsystemJacobian(*system_jacobian,
-                                                                   *partition_jacobian,
-                                                                   *partition,
-                                                                   1e-13);
+                      && verifySubsystemJacobian(*system_jacobian,
+                                                 *partition_jacobian,
+                                                 *partition,
+                                                 1e-13);
   }
 
   if (!jacobians_match)
