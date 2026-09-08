@@ -241,11 +241,11 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Park`                   | `input` | Input     | Three Signal IDs | Yes
   `Park`                   | `theta` | Input     | Signal | Yes
   `Park`                   | `out` | Output | Three Signal IDs | No
-  `Modulation`             | `u` | Input | Three Signal IDs | Yes
+  `Modulation`             | `u` | Input | Two Signal IDs | Yes
   `Modulation`             | `vdc` | Input | Signal | Yes
-  `Modulation`             | `m` | Output | Three Signal IDs | No
-  `InnerCurrentControl`    | `v`, `i`, `icmd` | Input | Two Signal IDs | Yes
-  `InnerCurrentControl`    | `omega`, `vdc` | Input | Signal | Yes
+  `Modulation`             | `m`, `ulim` | Output | Two Signal IDs | No
+  `InnerCurrentControl`    | `v`, `i`, `icmd`, `ulim` | Input | Two Signal IDs | Yes
+  `InnerCurrentControl`    | `omega` | Input | Signal | Yes
   `InnerCurrentControl`    | `ilim`, `u` | Output | Two Signal IDs | No
   `OuterVoltageControl`    | `vref`, `v`, `ig`, `ilim` | Input | Two Signal IDs | Yes
   `OuterVoltageControl`    | `omega` | Input | Signal | Yes
@@ -307,10 +307,10 @@ Omit an optional input to use the model's internal default or latched value.
 line-to-line RMS voltage parameter `V` converts bus voltages to per unit;
 connect its `efd` output to the Machine field-voltage input.
 
-PWM, Converter, and Modulation vector ports use arrays of three scalar signal
-IDs in phase order `a`, `b`, `c`. The scalar keys `ma`, `mb`, `mc`, `sa`, `sb`,
-`sc`, and `ea`, `eb`, `ec` address individual phases. Vector monitors `m`,
-`s`, and `e` expand to these three scalar columns. Filter capacitor voltage
+PWM and Converter vector ports use arrays of three scalar signal IDs in
+phase order `a`, `b`, `c`. The scalar keys `ma`, `mb`, `mc`, `sa`, `sb`,
+`sc`, and `ea`, `eb`, `ec` address individual phases. Vector monitors `s`
+and `e` expand to these three scalar columns. Filter capacitor voltage
 uses the separate vector `vo` and scalar names `voa`, `vob`, `voc`.
 
 ```json
@@ -408,8 +408,8 @@ connected Park transforms and controller inputs. For example:
 {
   "class": "InnerCurrentControl",
   "id": "current",
-  "params": { "L": 0.002, "Kp": 4.0, "Ki": 200.0, "Kaw": 2000.0, "Imax": 30.0, "Mmax": 0.95 },
-  "inputs": { "v": ["vd", "vq"], "i": ["id", "iq"], "icmd": ["icmdd", "icmdq"], "omega": "omega", "vdc": "dc" },
+  "params": { "L": 0.002, "Kp": 4.0, "Ki": 200.0, "Kaw": 2000.0, "Imax": 30.0 },
+  "inputs": { "v": ["vd", "vq"], "i": ["id", "iq"], "icmd": ["icmdd", "icmdq"], "omega": "omega", "ulim": ["ulimd", "ulimq"] },
   "outputs": { "ilim": ["ilimd", "ilimq"], "u": ["ud", "uq"] },
   "mon": ["xi", "ilim", "u"]
 }
@@ -420,10 +420,22 @@ Set `params: {"inverse": true}` to reverse the transformation. Its scalar keys
 are `u1`, `u2`, `u3` and `y1`, `y2`, `y3`. Connect `PLL.theta` to each Park
 operator and `PLL.omega` to the controllers through their signal input ports.
 
-For the switching bridge, inverse-transform `[ud, uq, 0]`, connect the resulting
-three-phase voltage command to `Modulation.u`, and connect `Modulation.m` to
-`PWM.m`. Both the current controller and Modulation use the bridge's DC-link
-voltage. Modulation requires a finite positive DC voltage.
+For the switching bridge, connect `InnerCurrentControl.u` to `Modulation.u`
+and return `Modulation.ulim` to `InnerCurrentControl.ulim`. Inverse-transform
+`[md, mq, 0]` and connect the resulting three-phase modulation command to
+`PWM.m`. Modulation and Converter use the bridge's DC-link voltage; Modulation
+requires a finite nonnegative DC voltage. For example:
+
+```json
+{
+  "class": "Modulation",
+  "id": "modulation",
+  "params": { "Mmax": 0.95 },
+  "inputs": { "u": ["ud", "uq"], "vdc": "dc" },
+  "outputs": { "m": ["md", "mq"], "ulim": ["ulimd", "ulimq"] },
+  "mon": ["m"]
+}
+```
 
 For cascaded grid-forming control, connect `OuterVoltageControl.icmd` to the
 current controller's `icmd`, and return the limited `ilim` to the voltage

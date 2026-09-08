@@ -368,9 +368,8 @@ namespace GridKit
       for (const auto& model_data : data.modulation)
       {
         auto& model = component<Modulation<ScalarT, IdxT>>(model_data.id);
-        model.attachInput({&source(model_data.inputs.at(ModulationInputs::ua)),
-                           &source(model_data.inputs.at(ModulationInputs::ub)),
-                           &source(model_data.inputs.at(ModulationInputs::uc))},
+        model.attachInput({&source(model_data.inputs.at(ModulationInputs::ud)),
+                           &source(model_data.inputs.at(ModulationInputs::uq))},
                           &source(model_data.inputs.at(ModulationInputs::vdc)));
         for (const auto& [output, reference] : model_data.outputs)
           model.assignOutput(output, &signal(reference));

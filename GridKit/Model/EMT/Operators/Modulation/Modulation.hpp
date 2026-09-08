@@ -8,7 +8,7 @@ namespace GridKit
 {
   namespace EMT
   {
-    /// DC normalization of three-phase voltage commands without DAE variables.
+    /// Radial limit and DC normalization of the dq voltage command without DAE variables.
     template <typename scalar_type, typename index_type>
     class Modulation : public Component<scalar_type, index_type>
     {
@@ -55,7 +55,7 @@ namespace GridKit
       /// Publish a modulation output on a named scalar signal. No DAE index is assigned.
       void    assignOutput(Outputs output, SignalT* signal);
       ScalarT output(Outputs output) const;
-      void    attachInput(const std::array<SignalT*, 3>& command, SignalT* vdc);
+      void    attachInput(const std::array<SignalT*, 2>& command, SignalT* vdc);
 
       SignalT& outputSignal(Outputs output)
       {
@@ -63,12 +63,15 @@ namespace GridKit
       }
 
     private:
+      void                              initializeParameters(const ModelDataT& data);
       void                              appendOutputGradient(Outputs output, typename SignalT::GradientT& gradient, RealT scale) const;
       const Model::VariableMonitorBase* getMonitor() const override;
 
-      std::array<SignalT*, 4>   input_{};
-      std::array<SignalT, 3>    output_port_;
-      std::array<SignalT*, 3>   assigned_output_{};
+      RealT                     Mmax_{1.0};
+      RealT                     au_{0.0};
+      std::array<SignalT*, 3>   input_{};
+      std::array<SignalT, 4>    output_port_;
+      std::array<SignalT*, 4>   assigned_output_{};
       std::unique_ptr<MonitorT> monitor_;
     };
   } // namespace EMT

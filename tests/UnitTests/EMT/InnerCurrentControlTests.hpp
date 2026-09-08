@@ -79,8 +79,9 @@ namespace GridKit
 
         bool jacobian()
         {
-          bool   success       = true;
-          double maximum_error = 0;
+          bool                  success       = true;
+          double                maximum_error = 0;
+          std::array<double, 5> worst{};
           for (const auto& [ys, yps] : {std::pair{1.0, 0.0}, std::pair{0.0, 1.0}, std::pair{2.0, 3.0}, std::pair{0.0, 0.0}})
           {
             std::map<std::pair<size_t, size_t>, double> entries;
@@ -90,7 +91,7 @@ namespace GridKit
             {
               double&               y        = j < count ? values[j] : model.y().getData()[j - count];
               const double          original = y;
-              const double          h        = (ys == 0 ? 1e-3 : 1e-6) * (1 + std::abs(original));
+              const double          h        = (ys == 0 ? 1e-3 : 1e-5) * (1 + std::abs(original));
               std::array<double, 6> plus, minus;
               for (const double sign : {1.0, -1.0})
               {
@@ -106,14 +107,18 @@ namespace GridKit
                 model.yp().getData()[j - count] = 0;
               for (size_t n = 0; n < model.size(); ++n)
               {
-                const double fd     = (plus[n] - minus[n]) / (2 * h);
-                const double error  = std::abs(entries[{count + n, j}] - fd) / (1 + std::abs(fd));
-                maximum_error       = std::max(maximum_error, error);
-                success            &= error < 1e-7;
+                const double fd    = (plus[n] - minus[n]) / (2 * h);
+                const double error = std::abs(entries[{count + n, j}] - fd) / (1 + std::abs(fd));
+                if (error > maximum_error)
+                  worst = {static_cast<double>(n), static_cast<double>(j), entries[{count + n, j}], fd, ys};
+                maximum_error  = std::max(maximum_error, error);
+                success       &= error < 1e-7;
               }
             }
           }
-          std::cout << "Jacobian maximum scaled error: " << maximum_error << "\n";
+          std::cout << "Jacobian maximum scaled error: " << maximum_error
+                    << " at row " << worst[0] << ", column " << worst[1]
+                    << " (" << worst[2] << " vs " << worst[3] << ", y scale " << worst[4] << ")\n";
           return success;
         }
       };
@@ -122,7 +127,7 @@ namespace GridKit
       {
         typename Inner::ModelDataT data;
         using P         = typename Inner::ModelDataT::Parameters;
-        data.parameters = {{P::L, .002}, {P::Kp, 5.0}, {P::Ki, 500.0}, {P::Kaw, 2000.0}, {P::Imax, 30.0}, {P::Mmax, .95}};
+        data.parameters = {{P::L, .002}, {P::Kp, 5.0}, {P::Ki, 500.0}, {P::Kaw, 2000.0}, {P::Imax, 30.0}};
         return data;
       }
 
@@ -130,7 +135,7 @@ namespace GridKit
       Testing::TestOutcome innerControl()
       {
         Testing::TestStatus success = true;
-        Fixture<Inner>      f(innerData(), {208, 3, 8, -2, 8, -2, 377, 400});
+        Fixture<Inner>      f(innerData(), {208, 3, 8, -2, 8, -2, 377, 211, 9});
         success *= f.model.verify() == 0 && f.model.size() == 6;
         success *= f.model.initializeState({{"ud", 211}, {"uq", 9}}) == 0;
         success *= f.algebraicResidualsZero();
@@ -141,8 +146,8 @@ namespace GridKit
         success *= rejects([&]
                            { f.model.initializeState({{"ilimd", 100}}); });
         success *= rejects([&]
-                           { f.model.initializeState({{"ud", 400}}); });
-        success *= f.model.initializationPorts().inputs.size() == 8;
+                           { f.model.initializeState({{"ud", std::numeric_limits<double>::infinity()}}); });
+        success *= f.model.initializationPorts().inputs.size() == 7;
 #ifdef GRIDKIT_ENABLE_ENZYME
         f.model.tagDifferentiable();
         for (size_t n = 0; n < 6; ++n)
@@ -159,27 +164,28 @@ namespace GridKit
           const double ud  = f.model.outputSignal(Inner::Outputs::ud).read();
           const double uq  = f.model.outputSignal(Inner::Outputs::uq).read();
           success         *= std::hypot(id, iq) <= 30 + 1e-12 && iq == 0 && id > 0;
-          success         *= std::hypot(ud, uq) <= std::sqrt(3.0 / 8) * .95 * 400 + 1e-12;
+          // The default voltage command is the feedforward plus proportional action.
+          success         *= std::abs(ud - (208 + 377 * .002 * 2 + 5 * (id - 8))) < 1e-9;
+          success         *= std::abs(uq - (3 + 377 * .002 * 8 + 5 * (iq + 2))) < 1e-9;
+          // Tracking the unclipped command leaves the pure integral rate.
+          f.values[7]      = ud;
+          f.values[8]      = uq;
+          f.model.evaluateResidual();
+          success *= std::abs(f.model.getResidual().getData()[0] - 500 * (id - 8)) < 1e-9;
 #ifdef GRIDKIT_ENABLE_ENZYME
           success *= f.jacobian();
 #endif
+          // A clipped command from the voltage limiter restores the integral.
+          f.values[7] = 100;
+          f.values[8] = 0;
+          f.model.evaluateResidual();
+          success *= f.model.getResidual().getData()[0] < 0;
         }
-        // At small voltages the smooth transition is resolvable, exercising its inverse.
-        f.values[7]                                              = .001;
-        success                                                 *= f.model.initializeState({{"ud", .0003}, {"uq", -.0002}}) == 0;
-        success                                                 *= f.algebraicResidualsZero();
-        f.values[7]                                              = 0;
-        success                                                 *= f.model.initializeState({{"ud", 0}, {"uq", 0}}) == 0 && f.algebraicResidualsZero();
-        success                                                 *= rejects([&]
-                           { f.model.initializeState({{"ud", .1}}); });
-        f.values[7]                                              = -1;
-        success                                                 *= rejects([&]
-                           { f.model.initialize(); });
-        auto invalid                                             = innerData();
-        invalid.parameters[Inner::ModelDataT::Parameters::Mmax]  = 1.1;
+        auto invalid                                            = innerData();
+        invalid.parameters[Inner::ModelDataT::Parameters::Imax] = -1.0;
         Fixture<Inner> bad(invalid, f.values);
         success *= bad.model.verify() != 0 && bad.model.initialize() != 0;
-        return success.report("InnerCurrentControl output initialization, smooth limits and Jacobian");
+        return success.report("InnerCurrentControl output initialization, smooth current limit and Jacobian");
       }
     };
   } // namespace Testing

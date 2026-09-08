@@ -37,9 +37,11 @@ CHOICES = {
     'dc_energy_seconds': 10.0,
     'carrier_Hz': 1800.0,
     'carrier_alignment': 0.5,
-    'fault_R_pu': 0.01,
+    'fault_R_pu': 0.0,
+    'fault_X_pu': 0.01,
+    'fault_discharge_R_pu': 0.01,
     'fault_on_s': 1.0,
-    'fault_off_s': 1.1,
+    'fault_off_s': 1.15,
 }
 
 
@@ -353,15 +355,15 @@ def convert(source):
             {'i': vector('ig', 'dq'), 'ilim': vector('ilim', 'dq')},
             {'icmd': vector('icmd', 'dq')}, ['icmd'])
         add('InnerCurrentControl', prefix + '_inner',
-            {'L': ls, 'Kp': ls * wc, 'Ki': rs * wc, 'Kaw': wc,
-             'Imax': imax, 'Mmax': CHOICES['Mmax']},
+            {'L': ls, 'Kp': ls * wc, 'Ki': rs * wc, 'Kaw': wc, 'Imax': imax},
             {'v': vector('v', 'dq'), 'i': vector('i', 'dq'), 'icmd': vector('icmd', 'dq'),
-             'omega': s('omega'), 'vdc': s('vdc')},
+             'omega': s('omega'), 'ulim': vector('ulim', 'dq')},
             {'ilim': vector('ilim', 'dq'), 'u': vector('u', 'dq')}, ['ilim'])
+        add('Modulation', prefix + '_modulation', {'Mmax': CHOICES['Mmax']},
+            {'u': vector('u', 'dq'), 'vdc': s('vdc')},
+            {'m': vector('m', 'dq'), 'ulim': vector('ulim', 'dq')})
         add('Park', prefix + '_inverse', {'inverse': True},
-            {'input': vector('u', 'dq') + ['zero'], 'theta': s('theta')}, {'out': vector('u', 'abc')})
-        add('Modulation', prefix + '_modulation', inputs={'u': vector('u', 'abc'), 'vdc': s('vdc')},
-            outputs={'m': vector('m', 'abc')})
+            {'input': vector('m', 'dq') + ['zero'], 'theta': s('theta')}, {'out': vector('m', 'abc')})
         add('PWM', prefix + '_pwm', {'fc': CHOICES['carrier_Hz'], 'alignment': CHOICES['carrier_alignment']},
             {'m': vector('m', 'abc')}, {'s': vector('s', 'abc')})
         add('Converter', prefix + '_bridge', inputs={'s': vector('s', 'abc'), 'vdc': s('vdc'), 'i': vector('i', 'abc')},
@@ -381,11 +383,21 @@ def convert(source):
                                        'filter_Rg_ohm': rg, 'filter_Lg_H': lg,
                                        'filter_resonance_Hz': math.sqrt((ls + lg) / (ls * lg * c)) / (2 * math.pi),
                                        'initial_bridge_power_W': bridge_power}
+    fault_base = (buses[1]['params']['kv'] * 1000)**2 / SYSTEM_BASE
     add('Bus', 'fault_bus')
-    add('Switch', 'fault_switch', {'open': True}, {'bus1': 'bus_1', 'bus2': 'fault_bus'}, mon=['open'])
-    add('LoadZ', 'fault_load', {'R': diagonal(CHOICES['fault_R_pu'] * (buses[1]['params']['kv'] * 1000)**2 / SYSTEM_BASE)},
-        {'bus': 'fault_bus'})
+    add('Bus', 'fault_discharge_bus')
+    add('Switch', 'fault_switch', {'open': True},
+        {'bus1': 'bus_1', 'bus2': 'fault_bus'}, mon=['open', 'i12a', 'i12b', 'i12c'])
+    add('LoadZ', 'fault_load', {'R': diagonal(CHOICES['fault_R_pu'] * fault_base),
+                               'L': diagonal(CHOICES['fault_X_pu'] * fault_base / OMEGA)},
+        {'bus': 'fault_bus'}, mon=['ia', 'ib', 'ic'])
+    add('Switch', 'fault_discharge_switch', {'open': False},
+        {'bus1': 'fault_bus', 'bus2': 'fault_discharge_bus'}, mon=['open'])
+    add('LoadZ', 'fault_discharge_load', {'R': diagonal(CHOICES['fault_discharge_R_pu'] * fault_base)},
+        {'bus': 'fault_discharge_bus'})
     state['devices']['fault_switch'] = {'open': True}
+    state['devices']['fault_discharge_switch'] = {'open': False}
+    state['devices']['fault_load'] = {'ia': 0.0, 'ib': 0.0, 'ic': 0.0}
     case = {'header': {'case_name': 'Hawaii EMT',
                        'case_description': '37-bus network with winding machines and nine switching GFL plants',
                        'case_comments': 'Conversion choices and differences from PowerWorld are documented in README.md.'},

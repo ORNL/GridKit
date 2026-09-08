@@ -8,30 +8,32 @@ namespace GridKit
   {
     enum class ModulationParameters
     {
+      Mmax, ///< \f$M^{\max}\f$ Sinusoidal modulation limit [-]
     };
 
     enum class ModulationInputs : size_t
     {
-      ua,  ///< \f$u_a\f$ Phase voltage command [V]
-      ub,  ///< \f$u_b\f$ Phase voltage command [V]
-      uc,  ///< \f$u_c\f$ Phase voltage command [V]
+      ud,  ///< \f$u_d\f$ Converter voltage command [V]
+      uq,  ///< \f$u_q\f$ Converter voltage command [V]
       vdc, ///< \f$v_{\mathrm{dc}}\f$ DC-link voltage [V]
       SIZE,
     };
 
     enum class ModulationOutputs : size_t
     {
-      ma, ///< \f$m_a\f$ Phase modulation command [-]
-      mb, ///< \f$m_b\f$ Phase modulation command [-]
-      mc, ///< \f$m_c\f$ Phase modulation command [-]
+      md,    ///< \f$m_d\f$ Modulation command [-]
+      mq,    ///< \f$m_q\f$ Modulation command [-]
+      ulimd, ///< \f$u_d^{\mathrm{lim}}\f$ Limited voltage command [V]
+      ulimq, ///< \f$u_q^{\mathrm{lim}}\f$ Limited voltage command [V]
       SIZE,
     };
 
     enum class ModulationMonitorableVariables
     {
-      ma, ///< \f$m_a\f$ Phase modulation command [-]
-      mb, ///< \f$m_b\f$ Phase modulation command [-]
-      mc, ///< \f$m_c\f$ Phase modulation command [-]
+      md,    ///< \f$m_d\f$ Modulation command [-]
+      mq,    ///< \f$m_q\f$ Modulation command [-]
+      ulimd, ///< \f$u_d^{\mathrm{lim}}\f$ Limited voltage command [V]
+      ulimq, ///< \f$u_q^{\mathrm{lim}}\f$ Limited voltage command [V]
     };
 
     template <typename real_type, typename index_type>
