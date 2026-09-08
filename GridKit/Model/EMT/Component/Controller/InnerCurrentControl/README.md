@@ -2,7 +2,7 @@
 
 `InnerCurrentControl` regulates converter current in power-invariant $dq$
 coordinates using PI control, capacitor-voltage feedforward, and cross-coupling
-compensation.[^unifi] A direction-preserving current limit bounds the command,
+compensation.[^unifi] A direction-preserving limit bounds the current command,
 and tracking anti-windup[^tracking-anti-windup] follows the limited voltage
 command returned by [Modulation](../../../Operators/Modulation/README.md).
 
@@ -53,21 +53,16 @@ Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{v}$ | `v` | Input | [V] | Filter-capacitor voltage | $\mathbf{v} \in \mathbb{R}^2$
 $\mathbf{i}$ | `i` | Input | [A] | Inverter-side filter current | $\mathbf{i} \in \mathbb{R}^2$
-$\mathbf{i}^{\mathrm{cmd}}$ | `icmd` | Input | [A] | Total current command | $\mathbf{i}^{\mathrm{cmd}} \in \mathbb{R}^2$
-$\omega$ | `omega` | Input | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied through the frequency signal port
+$\mathbf{i}^{\mathrm{cmd}}$ | `icmd` | Input | [A] | Current command | From the outer controller
+$\omega$ | `omega` | Input | [rad/s] | Electrical angular frequency of the $dq$ frame | From PLL
 $\mathbf{u}^{\mathrm{lim}}$ | `ulim` | Input | [V] | Limited voltage command | From Modulation
 $\mathbf{i}^{\mathrm{lim}}$ | `ilim` | Output | [A] | Limited current command | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
 $\mathbf{u}$ | `u` | Output | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
 
 All vectors use $(d,q)$ order in the same power-invariant
 [Park](../../../Operators/Reference/Park/README.md) frame, with zero-sequence
-components omitted. All inputs must be connected and finite.
-
-The `omega` signal input is read throughout the simulation. In the switching
-examples, [PLL](../../../Operators/Reference/PLL/README.md) supplies this frequency
-and the common Park angle through its output signals. The `ilim` output
-provides outer-loop anti-windup feedback. Connect `u` to Modulation's `u`
-input and return its `ulim` output.
+components omitted. All inputs must be connected and finite. Return `ilim` to
+the outer controller and `u` to Modulation.
 
 ## Submodels
 
@@ -98,7 +93,7 @@ $\mathbf{u}$ | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
 
 #### Differential
 
-Connected voltage, current, and angle-source variables may be differential.
+Connected voltage, current, and frequency variables may be differential.
 
 #### Algebraic
 
@@ -106,17 +101,11 @@ Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{v}$ | [V] | Filter-capacitor voltage | $\mathbf{v} \in \mathbb{R}^2$
 $\mathbf{i}$ | [A] | Inverter-side filter current | $\mathbf{i} \in \mathbb{R}^2$
-$\mathbf{i}^{\mathrm{cmd}}$ | [A] | Total current command | $\mathbf{i}^{\mathrm{cmd}} \in \mathbb{R}^2$
-$\omega$ | [rad/s] | Electrical angular frequency of the $dq$ frame | Supplied through the frequency signal port
+$\mathbf{i}^{\mathrm{cmd}}$ | [A] | Current command | $\mathbf{i}^{\mathrm{cmd}} \in \mathbb{R}^2$
+$\omega$ | [rad/s] | Electrical angular frequency of the $dq$ frame | From PLL
 $\mathbf{u}^{\mathrm{lim}}$ | [V] | Limited voltage command | From Modulation
 
 ## Model Equations
-
-The supplied frequency and the common Park angle $\theta$ satisfy
-
-```math
-\omega = \dfrac{\mathrm{d}\theta}{\mathrm{d}t}
-```
 
 The current error, feedforward voltage, and limiter factor are
 
@@ -129,12 +118,7 @@ The current error, feedforward voltage, and limiter factor are
 \end{aligned}
 ```
 
-The filter resistance $R$ remains in the physical circuit. Nominal RL-based
-tuning is $K_P=L\omega_{ci}$ and $K_I=R\omega_{ci}$, where $\omega_{ci}$ is the
-current-loop bandwidth in rad/s; PWM delay and filter dynamics constrain the
-usable bandwidth.
-
-The direction-preserving limit uses the CommonMath smooth
+The limit uses the CommonMath smooth
 [`max`](../../../../../CommonMath.md#maximum).
 
 ### Internal Equations
@@ -160,10 +144,8 @@ The direction-preserving limit uses the CommonMath smooth
 
 None.
 
-Both output vectors are owned algebraic variables. The current limit bounds
-the command; instantaneous filter current can overshoot. Anti-windup tracks
-the limited voltage command returned by Modulation, not the switched bridge
-voltage.
+Modulation owns the voltage limit. Tracking its limited command prevents
+windup. Both outputs are owned algebraic variables.
 
 ## Initialization
 
@@ -178,15 +160,11 @@ output values. The integral contribution is then derived from them:
 \boldsymbol{\xi} \leftarrow \mathbf{u}-\mathbf{b}-K_P\mathbf{e}.
 ```
 
-Optional `ilimd` and `ilimq` must agree with the current limiter; they cannot
-override the connected command. The integral states `xid` and `xiq` cannot be
-prescribed in the state file.
-
-Derivatives start at zero; the consistent-initial-condition solve preserves
-the integral states and obtains derivatives and algebraic outputs from the
-connected inputs, including the returned limited voltage command. In
-unsaturated balanced steady state with zero current error,
-$\boldsymbol{\xi}=R\mathbf{i}$.
+Optional `ilimd` and `ilimq` must match the limiter and cannot override the
+connected command. The integral states `xid` and `xiq` cannot be prescribed in
+the state file. Derivatives start at zero; the consistent-initial-condition
+solve preserves the integral states and obtains derivatives and algebraic
+outputs from the connected inputs.
 
 ## Monitors
 
@@ -200,9 +178,7 @@ See [case connections](../../../INPUT_FORMAT.md#case-connections) for vector
 ports and monitor expansion.
 
 [^unifi]: UNIFI Consortium, [*UNIFI's Grid-Forming (GFM) Inverter Reference Design: A Tutorial on Modeling, Control, and Experimental Implementation*](https://docs.nlr.gov/docs/fy25osti/92994.pdf),
-    NREL/TP-5D00-92994, July 2025, Section 2.2, equations (7), (12), and Section 5.1.
-    The tracking anti-windup against the modulation limit extends the
-    reference current PI realization.
+    NREL/TP-5D00-92994, July 2025, Section 2.2, equation (7).
 
 [^tracking-anti-windup]: K. J. Åström and L. Rundqwist,
     [*Integrator Windup and How to Avoid It*](https://doi.org/10.23919/ACC.1989.4790464),
