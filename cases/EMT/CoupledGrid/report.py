@@ -10,8 +10,6 @@ import statistics
 
 import numpy as np
 
-from pwm_analysis import attenuation
-
 HERE = Path(__file__).resolve().parent
 
 
@@ -143,31 +141,30 @@ def make_report(summary, metrics, case, fit, line_model):
                     "Monitor spacing (us)", "DAE variables", "Initial Jacobian nnz"], rows), "",
              "[Runtime and solver-work plot](plots/runtime_comparison.svg)", "",
              "## What changing mu does", "",
-             "Mu changes the applied PWM voltage and the global CommonMath smoothing in machine saturation "
-             "and controller limits. It changes the model equations; it is not an integration tolerance. "
+             "Mu selects switching resolution in continuous PWM and changes the global CommonMath smoothing "
+             "in machine saturation and controller limits. It is not an integration tolerance. "
              "All runs keep the physical case and ideal DC-source voltage fixed. The highest mu is a "
              "comparison baseline, not a hard-switching limit or an accuracy oracle.", "",
-             "For a smoothed pulse train, the harmonic amplitude multiplier is "
-             "`A(f,mu) = x/sinh(x)`, with `x = 2*pi^2*f/mu`. The isolated sigmoid edge's "
-             "10–90% rise time is `2*ln(9)/mu`. The independent pulse-edge Fourier calculation "
-             "also includes PWM sampling and alignment.", ""]
+             "Small mu approaches instantaneous duty; large mu resolves switching. The carrier-period mean "
+             "is exactly the duty for a fixed command. The isolated sigmoid edge's 10–90% rise time is "
+             "`2*ln(9)/mu`. Independent Fourier quadrature evaluates the periodic sigmoid sum with the "
+             "current duty in every replica, including pulse alignment.", ""]
     rows = []
     for run in runs:
         converters = run["converter_validation"]
         name = sorted(converters)[0]
         validation = converters[name]
         harmonics = {h["harmonic"]: h for h in validation["selected_harmonics"]}
-        rows.append([number(run["mu"], 8), number(attenuation(frequency, run["mu"]), 7),
+        rows.append([number(run["mu"], 8),
                      number(2000 * math.log(9) / run["mu"], 6),
                      number(validation["dc_voltage_v"], 8),
                      *[number(harmonics[h]["predicted_peak_v"], 7) for h in (1, 13, 15, 17)]])
-    text += [table(["Mu", "60 Hz gain", "Edge rise (ms)", "DC voltage (V)",
+    text += [table(["Mu", "Edge rise (ms)", "DC voltage (V)",
                     "60 Hz peak (V)", "780 Hz peak (V)", "900 Hz peak (V)", "1020 Hz peak (V)"], rows), "",
              "Peak predictions refer to one converter phase after common-mode removal. The converters have "
              "identical PWM settings; the 900 Hz triplen carrier cancels from their phase voltages. "
              "The 780 Hz and 1020 Hz sidebands remain. These are open-loop ideal-DC sources behind RL reactors, "
-             "without PLLs, current regulation, DC-link dynamics, or protection. Large reactive absorption "
-             "at low mu is behavior of this ideal-source model, not credible protected IBR operation.", "",
+             "without PLLs, current regulation, DC-link dynamics, or protection.", "",
              "[Overlaid switching waveforms](plots/switching_waveforms.svg) · "
              "[Harmonic spectra](plots/switching_spectrum.svg)", "",
              "## Measured operating windows", "",

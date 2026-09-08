@@ -14,61 +14,41 @@ the approximately half-cycle transition spreading is a measurement effect.
 Powers use the 100 MVA system base. These are comparisons between different
 dynamic models, not a new PowerWorld validation.
 
-The ten-second study completes with 4,722,429 accepted steps (median 2.252
-microseconds) in 898.07 seconds of solver CPU time in one local run. Final
-cycle-averaged bus voltages span 0.97457--1.00167 p.u. Machine speed deviations
-span -0.01454--0.01387 p.u. over the run, and DC voltage remains within
-0.56 percent of its initial value. The maximum monitored limited-current
-ratio is 1.00005543; the validator allows $10^{-4}$ numerical error in that
-algebraic quantity.
+The inverter plants use the same LCL Filter wiring as the GFL control example.
+The generator preserves initial terminal dispatch, includes both reactor losses
+in DC power, and initializes capacitor voltage and both inductor currents.
+The filter and controller parameters are synthetic, as listed in the case README.
 
-Channel | RMSE [p.u.] | Maximum absolute difference [p.u.]
-------- | ----------- | ----------------------------------
-Bus voltage magnitude | 0.032438 | 0.63278
-Machine speed deviation | 0.0021838 | 0.023729
-Machine active power, 100 MVA base | 0.069352 | 1.9792
-Machine reactive power, 100 MVA base | 0.032967 | 1.1947
+Generate current results using the commands below. Plots, editable TeX/data,
+and measured validation/comparison statistics are written under ignored
+`results/`; no numerical snapshot is assumed to describe a regenerated case.
 
-These differences include the unequal fault intervals. The resistive EMT fault
-produces an active-power surge and initial machine deceleration; the inductive
+Differences from the reference include the unequal fault intervals. The
+resistive EMT fault produces an active-power surge and initial machine deceleration; the inductive
 reference fault produces a different initial response. The comparison therefore
 does not establish equivalent disturbance dynamics, despite similar recovery
 trends. The [deviation list](../../../cases/EMT/Hawaii/README.md#fault-and-comparison)
 also covers the winding approximation and replacement inverter controls.
 
-![Bus voltage magnitudes](Hawaii.vmag.png)
+`results/Hawaii.{vmag,omega,p,q}.pdf` contains the four vector figures;
+matching PNGs are rendered at 600 DPI. Each figure retains its editable
+`.tex` source and `.csv` data. The figures remain on the TeX editing path.
+`results/comparison.json` records per-channel errors against the frozen
+PowerWorld reference. The validated run's `metrics.json` records physical
+checks, input/executable/library hashes, and accepted-step statistics.
 
-![Machine speed deviations](Hawaii.omega.png)
-
-![Machine active powers](Hawaii.p.png)
-
-![Machine reactive powers](Hawaii.q.png)
-
-`metrics.json` records the EMT checks and accepted-step statistics;
-`comparison.json` records per-channel errors against the frozen reference.
-Input and averaged-data hashes connect these reports to the completed runs.
-The validator snapshots case inputs before execution; `--reuse` analyzes a
-completed snapshot without substituting newer workspace inputs.
-`convergence.json` records the tolerance refinement through 1.5 s, including
-both fault events. Tightening relative/absolute tolerances from
-$10^{-5}/10^{-6}$ to $10^{-6}/10^{-7}$ changes centred cycle channels by at
-most $8.11\times10^{-6}$ p.u. in voltage, $4.84\times10^{-7}$ p.u. in speed,
-$2.60\times10^{-5}$ p.u. in active power, and $2.58\times10^{-5}$ p.u. in
-reactive power on the 100 MVA base. This refinement covers the disturbance
-and early recovery; it is not a second ten-second run.
-`Hawaii.*.csv` contains the editable figure data and `Hawaii.*.tex` the PGFPlots
-sources. PDFs are vector figures and PNGs are rendered at 600 DPI. The figures
-remain editable through their TeX/data sources.
+`convergence.py` compares the full run with a tenfold tighter run through
+1.5 s, covering the disturbance and early recovery. It requires matching
+physical inputs and records maximum differences in `results/convergence.json`.
 
 `switching.py` checks all nine bridges in a separate one-cycle run sampled at
-720 kHz, using the same physical case and solver tolerances. At $\mu=50000$,
-the independent periodic logistic-edge sum matches switching functions within
-$1.27\times10^{-14}$ and the measured bridge harmonic amplitudes within
-$5.10\times10^{-11}$ V. The bridge power identity error is below
-$5.90\times10^{-16}$ p.u. on each plant base. `switching.json` records the
-fundamental, carrier, and sideband amplitudes. The window includes startup;
-these checks establish the continuous switching waveform and DC conversion,
-not a steady-state harmonic-performance specification.
+720 kHz, using the same physical case and solver tolerances. It compares the
+switching functions and bridge harmonics with an independent periodic sigmoid
+sum at the instantaneous duty, and checks bridge AC/DC power balance using
+Filter's converter-side current. `results/switching.json` records fundamental,
+carrier, and sideband amplitudes. The window includes startup; these checks
+establish the continuous switching equations and DC conversion, not a
+steady-state harmonic-performance specification.
 
 From the repository root, with Enzyme and SUNDIALS KLU enabled:
 
@@ -78,7 +58,6 @@ cmake --build build --target EMTDynamicSimulation -j 10
 python3 cases/EMT/Hawaii/validate.py \
   --exe build/application/EMT/EMTDynamicSimulation \
   --tmax 10 --output /tmp/gridkit-hawaii-run
-cp /tmp/gridkit-hawaii-run/metrics.json examples/EMT/Hawaii/metrics.json
 python3 examples/EMT/Hawaii/plot.py \
   --averaged /tmp/gridkit-hawaii-run/Hawaii.averaged.csv
 python3 cases/EMT/Hawaii/validate.py \
@@ -92,7 +71,9 @@ ctest --test-dir build -R EMTHawaiiCase --output-on-failure
 ```
 
 The CTest study ends at 1.5 s and covers fault inception, clearing, and early
-recovery. The delivered ten-second study checks the longer response separately.
+recovery. The ten-second run checks the longer response separately.
+For a quicker plot, use `--tmax 1.5` in the first validation command; the
+plotter follows the validated run duration.
 Plot generation reads the PowerWorld CSVs with `git show` at the same frozen
 source revision used by the converter; no checkout is needed. It requires
 PGFPlots, pdfLaTeX, and Poppler. Simulation and validation require only Python's

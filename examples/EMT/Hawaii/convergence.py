@@ -26,7 +26,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline', type=Path, required=True)
     parser.add_argument('--refined', type=Path, required=True)
-    parser.add_argument('--output', type=Path, default=ROOT / 'convergence.json')
+    parser.add_argument('--output', type=Path, default=ROOT / 'results/convergence.json')
     args = parser.parse_args()
     baseline, a = read_run(args.baseline)
     refined, b = read_run(args.refined)
@@ -65,6 +65,7 @@ def main():
         'baseline_averaged_sha256': baseline['averaged_sha256'],
         'refined_averaged_sha256': refined['averaged_sha256'],
     }
+    args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps(maxima, indent=2))
 
