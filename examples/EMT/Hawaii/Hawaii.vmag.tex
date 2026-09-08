@@ -1,0 +1,111 @@
+\documentclass[border=3pt]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\input{../../../docs/Figures/EMT/diagram-style.tex}
+\usepgfplotslibrary{groupplots,fillbetween}
+\pgfplotsset{compat=1.18}
+\definecolor{emtBlue}{RGB}{0,114,178}
+\definecolor{referenceOrange}{RGB}{213,94,0}
+\definecolor{busGreen}{RGB}{0,158,115}
+\definecolor{busPurple}{RGB}{204,121,167}
+\definecolor{busSky}{RGB}{86,180,233}
+% TUNABLES: panel width, height, and shared axis limits
+\def\figwidth{183mm}
+\def\panelheight{49mm}
+\def\ylower{0.16360167}\def\yupper{1.0971245}
+\begin{document}
+\begin{tikzpicture}[font=\small]
+\begin{groupplot}[group style={group size=1 by 3,vertical sep=11mm,x descriptions at=edge bottom},
+width=\figwidth,height=\panelheight,xmin=0,xmax=10,grid=major,grid style={gray!20},
+tick label style={font=\footnotesize},scaled y ticks=false,
+xlabel={Time [s]},ylabel style={font=\small},legend style={draw=none,font=\footnotesize}]
+\nextgroupplot[title={(a) EMT: switching GFL plants; fault cleared at 1.10 s},ylabel={$|V|$ [p.u.]},ymin=\ylower,ymax=\yupper]
+\path[fill=gray!15] (axis cs:1,\ylower) rectangle (axis cs:1.1,\yupper);
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e1,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e2,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e3,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e4,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e5,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e6,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e7,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e8,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e9,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e10,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e11,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e12,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e13,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e14,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e15,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e16,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e17,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e18,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e19,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e20,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e21,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e22,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e23,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e24,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e25,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e26,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e27,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e28,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e29,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e30,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e31,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e32,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e33,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e34,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e35,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!65,line width=0.35pt,no marks,forget plot] table[x=time,y=e36,col sep=comma] {Hawaii.vmag.csv};
+\addplot[black,line width=0.8pt,no marks,forget plot] table[x=time,y=e0,col sep=comma] {Hawaii.vmag.csv};
+\node[anchor=south east,font=\footnotesize,fill=white,inner sep=2pt] at (rel axis cs:0.99,0.02) {All 37 buses; bus 1 in black};
+\nextgroupplot[title={(b) PowerWorld reference; fault cleared at 1.15 s},ylabel={$|V|$ [p.u.]},ymin=\ylower,ymax=\yupper]
+\path[fill=gray!15] (axis cs:1,\ylower) rectangle (axis cs:1.15,\yupper);
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r1,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r2,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r3,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r4,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r5,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r6,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r7,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r8,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r9,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r10,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r11,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r12,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r13,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r14,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r15,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r16,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r17,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r18,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r19,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r20,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r21,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r22,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r23,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r24,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r25,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r26,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r27,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r28,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r29,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r30,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r31,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r32,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r33,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r34,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r35,col sep=comma] {Hawaii.vmag.csv};
+\addplot[referenceOrange!65,line width=0.35pt,no marks,forget plot] table[x=time,y=r36,col sep=comma] {Hawaii.vmag.csv};
+\addplot[black,line width=0.8pt,no marks,forget plot] table[x=time,y=r0,col sep=comma] {Hawaii.vmag.csv};
+\node[anchor=south east,font=\footnotesize,fill=white,inner sep=2pt] at (rel axis cs:0.99,0.02) {All 37 buses; bus 1 in black};
+\nextgroupplot[title={(c) EMT minus PowerWorld: range across channels},ylabel={Difference [p.u.]},ymin=-0.45448386,ymax=0.73161869]
+\addplot[name path=lo,draw=none] table[x=time,y=minimum,col sep=comma] {Hawaii.vmag.csv};
+\addplot[name path=hi,draw=none] table[x=time,y=maximum,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue!25] fill between[of=lo and hi];
+\addplot[emtBlue,line width=0.5pt] table[x=time,y=minimum,col sep=comma] {Hawaii.vmag.csv};
+\addplot[emtBlue,line width=0.5pt] table[x=time,y=maximum,col sep=comma] {Hawaii.vmag.csv};
+\addplot[gray,dashed] coordinates {(0,0) (10,0)};
+\end{groupplot}
+\end{tikzpicture}
+\end{document}

@@ -10,3 +10,5 @@ add_subdirectory(DCLink)
 add_subdirectory(CurrentControl)
 
 add_subdirectory(Transformer)
+
+add_subdirectory(Hawaii)
