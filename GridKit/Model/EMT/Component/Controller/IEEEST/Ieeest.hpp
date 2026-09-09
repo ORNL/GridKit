@@ -102,6 +102,17 @@ namespace GridKit
 
         int initialize(const std::map<Outputs, RealT>& outputs = {});
 
+        typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+        {
+          typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+          ports.inputs = this->externalVariableSignals();
+          if (signals_.template isAssigned<IeeestInternalVariables::VSS>())
+            ports.outputs.emplace("output", signals_.template getSignal<IeeestInternalVariables::VSS>());
+          return ports;
+        }
+
+        void prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial) override;
+
         int initializeState(const std::map<std::string, RealT>& values) override
         {
           return this->initializeOutputs(*this, values);

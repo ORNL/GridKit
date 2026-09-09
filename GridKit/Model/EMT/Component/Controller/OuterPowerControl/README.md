@@ -1,9 +1,8 @@
 # OuterPowerControl Model
 
-`OuterPowerControl` implements an outer-loop PI controller in power-invariant
-$dq$ coordinates. It compares derived current references with measured
-currents and supplies a current command to
-[InnerCurrentControl](../InnerCurrentControl/README.md).
+`OuterPowerControl` regulates measured terminal active and reactive power in
+power-invariant $dq$ coordinates. Its PI controller supplies a current command
+to [InnerCurrentControl](../InnerCurrentControl/README.md).
 
 ## Block Diagram
 
@@ -29,33 +28,24 @@ power setpoints may be positive, zero, or negative.
 
 ### Derived Parameters
 
-For the voltage-aligned, power-invariant $dq$ convention,
-
-```math
-\mathbf{i}^{\mathrm{ref}} =
-\begin{bmatrix}P^{\mathrm{ref}}/V\\-Q^{\mathrm{ref}}/V\end{bmatrix}.
-```
-
-These setpoints use rated voltage and remain fixed during a run. They match
-requested P/Q at $v_d=V$, $v_q=0$; they do not impose constant power when the
-terminal voltage differs from its rating.
+None.
 
 ## Model Ports
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{i}$ | `i` | Input | [A] | Measured current | $\mathbf{i} \in \mathbb{R}^2$
+$\mathbf{v}$ | `v` | Input | [V] | Terminal voltage | $\mathbf{v} \in \mathbb{R}^2$
+$\mathbf{i}$ | `i` | Input | [A] | Terminal current | $\mathbf{i} \in \mathbb{R}^2$
 $\mathbf{i}^{\mathrm{lim}}$ | `ilim` | Input | [A] | Limited current command | From InnerCurrentControl
 $\mathbf{i}^{\mathrm{cmd}}$ | `icmd` | Output | [A] | Inverter-side current command | $\mathbf{i}^{\mathrm{cmd}} \in \mathbb{R}^2$
 
 All vectors use $(d,q)$ order in the same power-invariant
-[Park](../../../Operators/Reference/Park/README.md) frame. A forward Park
-transform supplies the measured currents directly. The controller uses its
-derived current references internally. All inputs must be connected and finite.
+[Park](../../../Operators/Reference/Park/README.md) frame. Measure voltage and
+injected current at the same terminal: Bus voltage and Filter `ig` for an LCL
+filter. All inputs must be connected and finite.
 
-Connect `icmd` to InnerCurrentControl's `icmd` input and return its `ilim`
-output. For an LCL filter, the outer loop measures grid-side current while
-InnerCurrentControl measures inverter-side current.
+Connect `icmd` to InnerCurrentControl and return its `ilim` output for
+tracking anti-windup.
 
 ## Submodels
 
@@ -85,21 +75,29 @@ $\mathbf{i}^{\mathrm{cmd}}$ | [A] | Inverter-side current command | $\mathbf{i}^
 
 #### Differential
 
-The connected measured-current variables may be differential.
+The connected terminal voltage and current variables may be differential.
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{i}$ | [A] | Measured current | When algebraic
+$\mathbf{v}$ | [V] | Terminal voltage | When algebraic
+$\mathbf{i}$ | [A] | Terminal current | When algebraic
 $\mathbf{i}^{\mathrm{lim}}$ | [A] | Limited current command |
 
 ## Model Equations
 
-The current error is
+The terminal powers are
 
 ```math
-\mathbf{e} = \mathbf{i}^{\mathrm{ref}}-\mathbf{i}.
+P=v_di_d+v_qi_q,\qquad Q=v_qi_d-v_di_q.
+```
+
+The power error normalized by rated voltage is
+
+```math
+\mathbf{e}=\frac{1}{V}
+\begin{bmatrix}P^{\mathrm{ref}}-P\\Q-Q^{\mathrm{ref}}\end{bmatrix}.
 ```
 
 ### Internal Equations
@@ -122,45 +120,21 @@ The current error is
 
 None.
 
-InnerCurrentControl owns the smooth circular current limiter. Tracking the
-limited command prevents outer-loop windup. Both command components are owned
-algebraic variables, so the feedback has no recursive computed-signal dependency.
-
 ## Initialization
 
-The derived current references and initialized measurements define $\mathbf{e}$.
-The default current-command outputs are
-
-```math
-\mathbf{i}^{\mathrm{cmd}} \leftarrow K_P\mathbf{e}.
-```
-
-The state-file keys `icmdd` and `icmdq` replace the respective defaults with
-finite output values. The integral contribution is then derived from them:
+[Balanced initialization](../../../STATE.md#application) receives the current
+command requested by the inner controller and checks that terminal power matches
+`Pref` and `Qref`. The integral contribution follows from the resolved outputs:
 
 ```math
 \boldsymbol{\eta} \leftarrow \mathbf{i}^{\mathrm{cmd}}-K_P\mathbf{e}.
 ```
 
-Omitted outputs give zero integral contribution, up to roundoff. The integral
-states `etad` and `etaq` cannot be prescribed in the state file. Derivatives
-start at zero; the consistent-initial-condition solve preserves the integral
-states and obtains derivatives and algebraic commands from the connected inputs.
-
-In unsaturated steady state, $\mathbf{i}=\mathbf{i}^{\mathrm{ref}}$ and
-$\boldsymbol{\eta}$ equals the inverter-side current command. For an L filter,
-initialize the command from measured current. For an LCL filter in balanced
-steady state, include capacitor current:
-
-```math
-\mathbf{i}^{\mathrm{cmd}} \leftarrow
-\mathbf{i}+\mathbf{J}\omega C\mathbf{v},\qquad
-\mathbf{J}=\begin{bmatrix}0&-1\\1&0\end{bmatrix}.
-```
-
-Here $C$ is filter capacitance, $\omega$ is frame angular frequency, and
-$\mathbf{v}$ is capacitor voltage. They are operating-point quantities supplied
-by the surrounding circuit, not controller parameters or inputs.
+Without an initialization frequency, omitted `icmdd`, `icmdq` default to
+$K_P\mathbf{e}$, giving zero integral contribution. The integral states `etad`
+and `etaq` cannot be prescribed. Their derivatives start at zero; consistent
+initialization preserves the integrals and resolves derivatives and algebraic
+commands.
 
 ## Monitors
 

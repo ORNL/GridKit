@@ -1,7 +1,7 @@
 /**
  * @file OuterPowerControl.hpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief Outer-loop current-command controller.
+ * @brief Outer power controller.
  */
 #pragma once
 
@@ -29,6 +29,8 @@ namespace GridKit
       };
       enum class OuterPowerControlExternalVariables : size_t
       {
+        VD,
+        VQ,
         ID,
         IQ,
         ILIMD,
@@ -67,7 +69,7 @@ namespace GridKit
         using Outputs      = typename ModelDataT::Outputs;
         using SignalT      = Signal<ScalarT, IdxT>;
         using MonitorT     = Model::VariableMonitor<OuterPowerControl, OuterPowerControlData>;
-        using InputSignals = std::array<SignalT*, 4>;
+        using InputSignals = std::array<SignalT*, 6>;
 
         OuterPowerControl();
         explicit OuterPowerControl(const ModelDataT& data);
@@ -88,6 +90,7 @@ namespace GridKit
         int                                                     initializeState(const std::map<std::string, RealT>& values) override;
         void                                                    validateInitialState(const std::map<std::string, RealT>& values) const override;
         typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override;
+        void                                                    prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial) override;
         int                                                     setAbsoluteTolerance(RealT) override final;
         int                                                     evaluateInternalResidual() override final;
         int                                                     evaluateResidual() override final;
@@ -108,8 +111,6 @@ namespace GridKit
         RealT                                                                                                   V_{0.0};
         RealT                                                                                                   Pref_{0.0};
         RealT                                                                                                   Qref_{0.0};
-        RealT                                                                                                   irefd_{0.0};
-        RealT                                                                                                   irefq_{0.0};
         RealT                                                                                                   Kp_{0.0};
         RealT                                                                                                   Ki_{0.0};
         RealT                                                                                                   Kaw_{0.0};

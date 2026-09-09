@@ -112,8 +112,21 @@ None.
 
 ## Initialization
 
-The state file may prescribe the nine scalar output values; omitted values
-default to zero. Consistent initialization determines their derivatives.
+With [balanced initialization](../../STATE.md#application), terminal Bus voltage
+and prescribed `iga`, `igb`, `igc` determine the peak phasors
+
+```math
+\begin{aligned}
+\hat{\mathbf{v}}_{\mathrm{o}} &= \hat{\mathbf{v}}+(\mathbf{R}_g+\mathrm{j}\omega\mathbf{L}_g)\hat{\mathbf{i}}_g,\\
+\hat{\mathbf{i}} &= \hat{\mathbf{i}}_g+\mathrm{j}\omega\mathbf{C}\hat{\mathbf{v}}_{\mathrm{o}},\\
+\hat{\mathbf{e}} &= \hat{\mathbf{v}}_{\mathrm{o}}+(\mathbf{R}_{\mathrm{s}}+\mathrm{j}\omega\mathbf{L}_{\mathrm{s}})\hat{\mathbf{i}}.
+\end{aligned}
+```
+
+Filter initializes its currents, capacitor voltage, and sinusoidal derivatives,
+and requests the bridge voltage from its source. Additional prescribed outputs
+must agree. Without an initialization frequency, omitted outputs default to zero
+and consistent initialization determines the derivatives.
 
 ## Monitors
 

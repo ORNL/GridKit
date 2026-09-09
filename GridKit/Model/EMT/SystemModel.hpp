@@ -61,7 +61,7 @@ namespace GridKit
       ~SystemModel() override;
 
       int  allocate() override;
-      int  initialize(const std::map<std::string, std::map<std::string, RealT>>& state = {}) override;
+      int  initialize(const std::map<std::string, std::map<std::string, RealT>>& state = {}, RealT omega = RealT{0}) override;
       bool hasJacobian() override;
       int  tagDifferentiable() override;
       int  assembleJacobian(RealT y_scale, RealT yp_scale) override;

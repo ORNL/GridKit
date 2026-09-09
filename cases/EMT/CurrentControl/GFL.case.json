@@ -1,8 +1,8 @@
 {
   "header": {
     "case_name": "GFL switching inverter",
-    "case_description": "PLL and cascaded grid-side and inverter-side current control with continuous PWM and a physical LCL filter",
-    "case_comments": "Power-invariant dq controls; dynamic DC link; continuous PWM with selectable smoothing."
+    "case_description": "PLL and cascaded terminal power and inverter-side current control with continuous PWM and a physical LCL filter",
+    "case_comments": "Power-invariant dq controls; constant DC voltage; continuous PWM with selectable smoothing."
   },
   "signals": [
     {
@@ -119,6 +119,15 @@
     },
     {
       "id": "vc"
+    },
+    {
+      "id": "vgd"
+    },
+    {
+      "id": "vgq"
+    },
+    {
+      "id": "vg0"
     }
   ],
   "devices": [
@@ -472,6 +481,25 @@
       ]
     },
     {
+      "class": "Park",
+      "id": "terminal_voltage",
+      "inputs": {
+        "input": [
+          "va",
+          "vb",
+          "vc"
+        ],
+        "theta": "theta"
+      },
+      "outputs": {
+        "out": [
+          "vgd",
+          "vgq",
+          "vg0"
+        ]
+      }
+    },
+    {
       "class": "OuterPowerControl",
       "id": "power_control",
       "params": {
@@ -483,6 +511,10 @@
         "Kaw": 200
       },
       "inputs": {
+        "v": [
+          "vgd",
+          "vgq"
+        ],
         "i": [
           "igd",
           "igq"

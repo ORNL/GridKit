@@ -115,6 +115,65 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
+      typename Component<scalar_type, index_type>::InitializationPortsT Pwm<scalar_type, index_type>::initializationPorts()
+      {
+        typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+        if (hasInput())
+        {
+          ports.inputs.assign(input_.begin(), input_.end());
+          ports.targets = {input_[0], input_[1]};
+        }
+        for (size_t n = 0; n < output_port_.size(); ++n)
+        {
+          const auto name = std::string(magic_enum::enum_name(static_cast<Outputs>(n)));
+          ports.outputs.emplace(name, &output_port_[n]);
+          if (assigned_output_[n])
+            ports.outputs.emplace(name, assigned_output_[n]);
+        }
+        return ports;
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Pwm<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
+      {
+        if (initial.omega() == ZERO<RealT>)
+          return;
+        const auto outputs = this->template parseInitialOutputs<Pwm>(initial.outputs(*this));
+        if (!hasInput())
+        {
+          if (outputs.contains(Outputs::ulimd) || outputs.contains(Outputs::ulimq))
+            throw std::invalid_argument("PWM: limited-voltage outputs require voltage inputs");
+          for (size_t p = 0; p < 3; ++p)
+            initial.provide(output_port_[p], (ONE<RealT> + static_cast<RealT>(modulation(p))) / 2);
+          return;
+        }
+        const RealT          vdc    = initial.value(*input_[2]);
+        const auto           matrix = Park<ScalarT, IdxT>::transformation(initial.value(*input_[3]));
+        std::array<RealT, 2> u{};
+        for (size_t p = 0; p < 3; ++p)
+        {
+          const auto key = static_cast<Outputs>(p);
+          if (!outputs.contains(key))
+            throw std::invalid_argument("PWM: balanced initialization requires the three carrier means");
+          const RealT s = outputs.at(key);
+          if (s < ZERO<RealT> || s > ONE<RealT>)
+            throw std::invalid_argument("PWM: initial carrier mean must lie in [0, 1]");
+          for (size_t n = 0; n < 2; ++n)
+            u[n] += matrix[n][p] * vdc * (s - HALF<RealT>);
+        }
+        const RealT scale = std::sqrt(Math::max(vdc * vdc, au_ * (u[0] * u[0] + u[1] * u[1])));
+        if (vdc <= ZERO<RealT> || std::abs(scale - vdc) > RealT{1e-10} * vdc)
+          throw std::invalid_argument("PWM: initial voltage command must lie inside the voltage limit");
+        for (size_t n = 0; n < 2; ++n)
+        {
+          initial.require(*input_[n], u[n], *this);
+          initial.provide(output_port_[3 + n], vdc * u[n] / scale);
+        }
+        for (size_t p = 0; p < 3; ++p)
+          initial.provide(output_port_[p], HALF<RealT> + (matrix[0][p] * u[0] + matrix[1][p] * u[1]) / scale);
+      }
+
+      template <typename scalar_type, typename index_type>
       int Pwm<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
         this->validateOutputValues(outputs);

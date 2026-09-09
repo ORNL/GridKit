@@ -87,6 +87,11 @@ namespace GridKit
         throw std::invalid_argument("Component has no state initializer");
       }
 
+      virtual int initializeState(const std::map<std::string, RealT>& values, RealT)
+      {
+        return initializeState(values);
+      }
+
       virtual void validateInitialState(const std::map<std::string, RealT>& values) const
       {
         if (!values.empty())
@@ -117,13 +122,25 @@ namespace GridKit
       /// Only Delay history reports discontinuities; see HistoryDiscontinuity.
       RealT nextDiscontinuityTime(RealT after) const override final
       {
+        if (!history_collected_)
+        {
+          history_.clear();
+          auto collect = [&](auto&& self, const Component& component) -> void
+          {
+            if (const auto* history = dynamic_cast<const HistoryDiscontinuity<RealT>*>(&component))
+              history_.push_back(history);
+            for (const auto* op : component.operators_)
+              self(self, *op);
+            component.forEachChild([&](const Component& child)
+                                   { self(self, child); });
+          };
+          collect(collect, *this);
+          // Allocation fixes ownership; the owners' event times remain dynamic.
+          history_collected_ = allocated_;
+        }
         RealT time = std::numeric_limits<RealT>::infinity();
-        if (const auto* history = dynamic_cast<const HistoryDiscontinuity<RealT>*>(this))
+        for (const auto* history : history_)
           time = std::min(time, history->nextHistoryDiscontinuity(after));
-        for (const auto* op : operators_)
-          time = std::min(time, op->nextDiscontinuityTime(after));
-        forEachChild([&](const Component& child)
-                     { time = std::min(time, child.nextDiscontinuityTime(after)); });
         return time;
       }
 
@@ -874,6 +891,9 @@ namespace GridKit
       std::vector<Component*> operators_;
       /// Local row offset of each embedded operator
       std::vector<IdxT>       operator_offsets_;
+
+      mutable std::vector<const HistoryDiscontinuity<RealT>*> history_;
+      mutable bool                                            history_collected_{false};
 
       std::vector<ScalarT> g_;
 

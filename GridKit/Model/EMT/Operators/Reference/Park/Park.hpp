@@ -31,9 +31,12 @@ namespace GridKit
 
       int initialize(const std::map<Outputs, RealT>& outputs = {});
 
-      typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
+      typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override;
+      void                                                    prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial) override;
+
+      int initializeState(const std::map<std::string, RealT>& values, RealT omega) override
       {
-        return {};
+        return omega > ZERO<RealT> ? verify() : initializeState(values);
       }
 
       int initializeState(const std::map<std::string, RealT>& values) override

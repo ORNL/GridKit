@@ -360,6 +360,8 @@ namespace GridKit
       for (size_t p = 0; p < 3; ++p)
         voltage[p] = static_cast<ScalarT>(initial.value(*signals_.getAttachedSignal(static_cast<V>(p))));
       const auto point = operatingPoint(this->template parseInitialOutputs<Machine>(initial.outputs(*this)), voltage);
+      if (signals_.template isAssigned<MachineInternalVariables::OMEGA>())
+        initial.provide(*signals_.template getSignal<MachineInternalVariables::OMEGA>(), static_cast<RealT>(point[1]));
       if (signals_.template isAttached<V::PM>())
         initial.require(*signals_.template getAttachedSignal<V::PM>(), static_cast<RealT>(point[20] + Fric_), *this);
       if (signals_.template isAttached<V::EFD>())
@@ -591,14 +593,14 @@ namespace GridKit
                     {
                       // Reactive power from the rotor-frame quantities scaled
                       // to the machine base
-                      const auto* y  = y_.getData();
-                      const auto  ct = std::cos(y[0]);
-                      const auto  st = std::sin(y[0]);
-                      const auto  va = toMachinePU(signals_.template readExternalVariable<Variables::VA>());
-                      const auto  vb = toMachinePU(signals_.template readExternalVariable<Variables::VB>());
-                      const auto  vc = toMachinePU(signals_.template readExternalVariable<Variables::VC>());
+                      const auto* y     = y_.getData();
+                      const auto  ct    = std::cos(y[0]);
+                      const auto  st    = std::sin(y[0]);
+                      const auto  va    = toMachinePU(signals_.template readExternalVariable<Variables::VA>());
+                      const auto  vb    = toMachinePU(signals_.template readExternalVariable<Variables::VB>());
+                      const auto  vc    = toMachinePU(signals_.template readExternalVariable<Variables::VC>());
                       const auto  gamma = TWO<RealT> * std::numbers::pi_v<RealT> / THREE<RealT>;
-                      const auto  vd = (TWO<RealT> / THREE<RealT>)
+                      const auto  vd    = (TWO<RealT> / THREE<RealT>)
                                       * (va * ct + vb * std::cos(y[0] - gamma) + vc * std::cos(y[0] + gamma));
                       const auto vq = -(TWO<RealT> / THREE<RealT>)
                                       * (va * st + vb * std::sin(y[0] - gamma) + vc * std::sin(y[0] + gamma));

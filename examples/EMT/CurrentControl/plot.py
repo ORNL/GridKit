@@ -169,13 +169,18 @@ def control_figure(run, end):
     name, d = run['name'], run['data']
     fig, ax = plt.subplots(4, 1, figsize=(10, 9), sharex=True)
     if name == 'GFL':
-        trace(ax[0], run, 'Park_grid_current_y1', '$i_d$')
-        trace(ax[1], run, 'Park_grid_current_y2', '$i_q$')
+        v = [d[f'Bus_terminal_v{phase}'] for phase in 'abc']
+        i = [d[f'Filter_filter_ig{phase}'] for phase in 'abc']
+        p = sum(a * b for a, b in zip(v, i))
+        q = ((v[1] - v[2]) * i[0] + (v[2] - v[0]) * i[1]
+             + (v[0] - v[1]) * i[2]) / np.sqrt(3)
         params = run['devices']['power_control']['params']
-        ax[0].axhline(params['Pref'] / params['V'], linestyle='--', color=ORANGE, label=r'$i_d^{\mathrm{ref}}$')
-        ax[1].axhline(-params['Qref'] / params['V'], linestyle='--', color=ORANGE, label=r'$i_q^{\mathrm{ref}}$')
-        ax[0].set_ylabel('d-axis current [A]')
-        ax[1].set_ylabel('q-axis current [A]')
+        for axis, values, key, label, unit in zip(ax[:2], (p, q), ('Pref', 'Qref'), ('P', 'Q'), ('W', 'var')):
+            axis.plot(d['t'], values, color=BLUE, alpha=.18, linewidth=.45)
+            tm, xm = carrier_mean(d['t'], values, run['fc'])
+            axis.plot(tm, xm, color=BLUE, label=f'${label}$')
+            axis.axhline(params[key], linestyle='--', color=ORANGE, label=rf'${label}^{{\mathrm{{ref}}}}$')
+            axis.set_ylabel(f'{label} [{unit}]')
     else:
         trace(ax[0], run, 'Park_voltage_y1', '$v_d$')
         trace(ax[1], run, 'Park_voltage_y2', '$v_q$')

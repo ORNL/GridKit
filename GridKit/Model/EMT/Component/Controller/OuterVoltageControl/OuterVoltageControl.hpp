@@ -93,6 +93,7 @@ namespace GridKit
         int                                                     initializeState(const std::map<std::string, RealT>& values) override;
         void                                                    validateInitialState(const std::map<std::string, RealT>& values) const override;
         typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override;
+        void                                                    prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial) override;
         int                                                     setAbsoluteTolerance(RealT) override final;
         int                                                     evaluateInternalResidual() override final;
         int                                                     evaluateResidual() override final;
