@@ -1,4 +1,4 @@
-# Western Electricity Coordinating Council (ACTIVSg10k)
+# Synthetic Western United States (ACTIVSg10k)
 
 ## One-Line Diagram
 
