@@ -734,6 +734,47 @@ namespace GridKit
     class IdaTests
     {
     public:
+      TestOutcome maximumOrder()
+      {
+        TestStatus success = true;
+        for (const int limit : {1, 2, 5})
+        {
+          Model::AlgebraicErrorControlEvaluator<ScalarT, IdxT> model;
+          model.initialize();
+          Ida<ScalarT, IdxT> ida(&model);
+          ida.setMaxOrder(limit);
+          ida.setTolerance(1e-5, 1e-7);
+          ida.setMaxSteps(100000);
+          int observed = 0;
+          ida.setAcceptedStepCallback([&](auto, auto, int order)
+                                      {
+                                        observed = std::max(observed, order);
+                                        success *= order <= limit; });
+          ida.configureSimulation();
+          ida.initializeSimulation(0.0);
+          ida.runSimulation(0.05, 0.001, [&](auto time)
+                            { success *= std::abs(model.y().getData()[1] - std::sin(100.0 * time)) < 1e-3; });
+          ida.restartSimulation(0.05);
+          ida.runSimulation(0.1);
+          success *= observed == limit;
+          success *= std::abs(model.y().getData()[1] - std::sin(10.0)) < 1e-5;
+          for (const int invalid : {0, -1, 6})
+          {
+            bool rejected = false;
+            try
+            {
+              ida.setMaxOrder(invalid);
+            }
+            catch (const std::invalid_argument&)
+            {
+              rejected = true;
+            }
+            success *= rejected;
+          }
+        }
+        return success.report(__func__);
+      }
+
       TestOutcome acceptedHistory()
       {
         using ModelT       = Model::HistoryEvaluator<ScalarT, IdxT>;

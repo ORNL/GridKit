@@ -49,6 +49,7 @@ int main(int argc, const char* argv[])
   ida.setTolerance(study.rel_tol, study.abs_tol);
   ida.setFixedStep(study.dt_fixed);
   ida.setMaxSteps(study.max_steps);
+  ida.setMaxOrder(study.max_order);
   ida.setConsistentICType(study.consistent_ic_type);
   std::ofstream step_output;
   if (!study.step_output_file.empty())

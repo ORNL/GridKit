@@ -106,7 +106,7 @@ namespace AnalysisManager
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
 
-      setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_, suppress_alg_);
+      setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_, suppress_alg_, max_order_);
       setMaximumStep();
 
       // Set up linear solver
@@ -1333,6 +1333,14 @@ namespace AnalysisManager
       consistent_ic_type_ = consistent_ic_type;
     }
 
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setMaxOrder(int max_order)
+    {
+      if (max_order < 1 || max_order > 5)
+        throw std::invalid_argument("Maximum BDF order must be between 1 and 5");
+      max_order_ = max_order;
+    }
+
     /**
      * @brief Set the maximum number of steps
      *
@@ -1371,6 +1379,7 @@ namespace AnalysisManager
      * @param max_steps The maximum number of steps
      * @param suppress_alg If true, algebraic variables are excluded from IDA's
      *        local error test
+     * @param max_order Maximum BDF order for adaptive integration
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Index data type
      */
@@ -1380,7 +1389,8 @@ namespace AnalysisManager
                                            ScalarT rel_tol,
                                            ScalarT abs_tol_override,
                                            IdxT    max_steps,
-                                           bool    suppress_alg)
+                                           bool    suppress_alg,
+                                           int     max_order)
     {
       int retval = 0;
       retval     = IDASetMinStep(mem, time_step);
@@ -1394,6 +1404,8 @@ namespace AnalysisManager
 
       if (time_step == 0)
       {
+        retval = IDASetMaxOrd(mem, max_order);
+        checkOutput(retval, "IDASetMaxOrd");
         setTolerance(mem, rel_tol, abs_tol_override);
       }
       else

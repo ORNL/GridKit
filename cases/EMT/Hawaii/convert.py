@@ -85,6 +85,16 @@ def transformer_point(p, v1, v2):
     return e1, e2, i12, ym * e1 + i12, ym * e2 - i12
 
 
+def decay_poles(trace, product):
+    fast = (trace + math.sqrt(trace * trace - 4 * product)) / 2
+    return [-product / fast, -fast]
+
+
+def genrou_open_poles(x, xp, xpp, xl, tp, tpp):
+    coupling = (x - xp) * (xp - xpp) / (xp - xl)**2
+    return decay_poles((1 + coupling) / tp + 1 / tpp, 1 / (tp * tpp))
+
+
 def axis_windings(p, axis):
     x, xp, xpp = p['X' + axis], p['X' + axis + 'p'], p['X' + axis + 'pp']
     xl = p['Xl']
@@ -103,12 +113,12 @@ def axis_windings(p, axis):
     determinant = (lm + l1) * (lm + l2) - lm * lm
     trace = OMEGA * ((lm + l2) * r1 + (lm + l1) * r2) / determinant
     product = OMEGA**2 * r1 * r2 / determinant
-    fast = (trace + math.sqrt(trace * trace - 4 * product)) / 2
-    slow = product / fast
     record = {
         'source_X': x, 'source_Xp': xp, 'source_Xpp': xpp,
-        'effective_Xpp': effective, 'source_open_times_s': [t1, t2],
-        'winding_open_times_s': [1 / slow, 1 / fast],
+        'effective_Xpp': effective, 'source_time_parameters_s': [t1, t2],
+        'source_open_poles_per_s': genrou_open_poles(x, xp, xpp, xl, t1, t2),
+        'effective_open_poles_per_s': genrou_open_poles(x, xp, effective, xl, t1, t2),
+        'winding_open_poles_per_s': decay_poles(trace, product),
         'reconstructed_Xp': xl + 1 / (1 / lm + 1 / l1),
         'reconstructed_Xpp': xl + 1 / (1 / lm + 1 / l1 + 1 / l2),
     }

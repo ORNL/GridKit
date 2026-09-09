@@ -145,6 +145,8 @@ namespace AnalysisManager
       void setSuppressAlgebraicErrors(bool suppress);
       void setBackwardSuppressAlgebraicErrors(bool suppress);
       void setConsistentICType(IdaConsistentICType consistent_ic_type);
+      /// Maximum BDF order for adaptive integration, from 1 to 5.
+      void setMaxOrder(int max_order);
       void setMaxSteps(IdxT maxSteps) override;
       void setBackwardMaxSteps(IdxT maxSteps);
 
@@ -244,6 +246,7 @@ namespace AnalysisManager
       RealT               rel_tol_{DEFAULT_REL_TOL};
       RealT               abs_tol_override_{};
       IdxT                max_steps_{DEFAULT_MAX_STEPS};
+      int                 max_order_{5};
       bool                suppress_alg_{false};
       IdaConsistentICType consistent_ic_type_{IdaConsistentICType::YA_YDP};
 
@@ -275,7 +278,8 @@ namespace AnalysisManager
                          ScalarT rel_tol,
                          ScalarT abs_tol_override,
                          IdxT    max_steps,
-                         bool    suppress_alg);
+                         bool    suppress_alg,
+                         int     max_order = 5);
       void setTolerance(void*   mem,
                         ScalarT rel_tol,
                         ScalarT abs_tol_override,

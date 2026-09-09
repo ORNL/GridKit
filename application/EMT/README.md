@@ -25,7 +25,8 @@ at each restart, including switch events.
   `mu`                | Positive finite CommonMath smoothing scale (default: 240); configured before model construction
   `signal_values`     | Optional object overriding declared constant signals by qualified path, e.g. `{"dc_4": 28918.846170570516}`; cannot override component outputs
   `dt_fixed`           | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
-  `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
+  `max_steps`          | Maximum number of solver time steps, a nonnegative integer; 0 selects the IDA default (default: 0)
+  `max_order`          | Maximum BDF order for adaptive integration, an integer from 1 to 5 (default: 5)
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
   `events`             | An ordered array of actions (see [Events](#events) below)
   `output_file`        | Path to output (CSV) file (optional)
