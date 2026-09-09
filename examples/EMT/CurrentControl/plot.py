@@ -77,7 +77,7 @@ def trace(ax, run, key, label, color=BLUE):
 
 
 def duty(run):
-    return .5 * (1 + np.column_stack([run['data'][f'Park_inverse_y{n}'] for n in (1, 2, 3)]))
+    return .5 * (1 + np.column_stack([run['data'][f'PWM_pwm_m{p}'] for p in 'abc']))
 
 
 def attenuation(x):
@@ -185,7 +185,7 @@ def control_figure(run, end):
         ax[0].set_ylabel('d-axis voltage [V]')
         ax[1].set_ylabel('q-axis voltage [V]')
     command = np.hypot(d['InnerCurrentControl_current_control_ud'], d['InnerCurrentControl_current_control_uq'])
-    limit = np.sqrt(3 / 8) * run['devices']['modulation']['params']['Mmax'] * d['DCLink_dc_vdc']
+    limit = np.sqrt(3 / 8) * run['devices']['pwm']['params']['Mmax'] * d['DCLink_dc_vdc']
     ax[2].plot(d['t'], command, color=BLUE, label=r'$\|\mathbf{u}\|_2$')
     ax[2].plot(d['t'], limit, color=ORANGE, linestyle='--', label='available voltage command')
     ax[2].set_ylabel('Voltage command [V]')

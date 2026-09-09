@@ -27,7 +27,6 @@
 #include <GridKit/Model/EMT/Component/Switch/SwitchData.hpp>
 #include <GridKit/Model/EMT/Component/Transformer/TransformerData.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/ConverterData.hpp>
-#include <GridKit/Model/EMT/Operators/Modulation/ModulationData.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/PLL/PllData.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Park/ParkData.hpp>
 #include <GridKit/Model/EMT/Signal/SignalData.hpp>
@@ -55,7 +54,6 @@ namespace GridKit
       using ParkDataT                   = ParkData<RealT, IdxT>;
       using PllDataT                    = PllData<RealT, IdxT>;
       using FilterDataT                 = FilterData<RealT, IdxT>;
-      using ModulationDataT             = ModulationData<RealT, IdxT>;
       using PwmDataT                    = Controller::PwmData<RealT, IdxT>;
       using DcLinkDataT                 = Controller::DcLinkData<RealT, IdxT>;
       using ConverterDataT              = ConverterData<RealT, IdxT>;
@@ -93,7 +91,6 @@ namespace GridKit
       std::vector<ParkDataT>                        park;
       std::vector<PllDataT>                         pll;
       std::vector<FilterDataT>                      filter;
-      std::vector<ModulationDataT>                  modulation;
       std::vector<PwmDataT>                         pwm;
       std::vector<DcLinkDataT>                      dc_link;
       std::vector<ConverterDataT>                   converter;

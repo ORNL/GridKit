@@ -61,10 +61,11 @@ namespace GridKit
         return output_port_.at(static_cast<size_t>(output));
       }
 
-    private:
+      /// Power-invariant transformation matrix; its transpose is the inverse.
       template <typename T>
       static ABCMatrix<T> transformation(T theta);
 
+    private:
       void                              appendOutputGradient(Outputs output, typename SignalT::GradientT& gradient, RealT scale) const;
       const Model::VariableMonitorBase* getMonitor() const override;
 

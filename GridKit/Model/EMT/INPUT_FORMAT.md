@@ -232,8 +232,10 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Filter`                 | `v` | Input | Three Bus-voltage signals | Yes
   `Filter`                 | `e` | Input | Three Signal IDs | Yes
   `Filter`                 | `i`, `vo`, `ig` | Output | Three Signal IDs | No
-  `PWM`                    | `m`     | Input     | Three Signal IDs | No
+  `PWM`                    | `u`     | Input     | Two Signal IDs | No
+  `PWM`                    | `vdc`, `theta` | Input | Signal | No
   `PWM`                    | `s`     | Output    | Three Signal IDs | No
+  `PWM`                    | `ulim`  | Output    | Two Signal IDs | No
   `OuterPowerControl`      | `i`, `ilim` | Input | Two Signal IDs | Yes
   `OuterPowerControl`      | `icmd` | Output | Two Signal IDs | No
   `PLL`                    | `va`, `vb`, `vc` | Input | Voltage signal | Yes
@@ -241,9 +243,6 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Park`                   | `input` | Input     | Three Signal IDs | Yes
   `Park`                   | `theta` | Input     | Signal | Yes
   `Park`                   | `out` | Output | Three Signal IDs | No
-  `Modulation`             | `u` | Input | Two Signal IDs | Yes
-  `Modulation`             | `vdc` | Input | Signal | Yes
-  `Modulation`             | `m`, `ulim` | Output | Two Signal IDs | No
   `InnerCurrentControl`    | `v`, `i`, `icmd`, `ulim` | Input | Two Signal IDs | Yes
   `InnerCurrentControl`    | `omega` | Input | Signal | Yes
   `InnerCurrentControl`    | `ilim`, `u` | Output | Two Signal IDs | No
@@ -307,10 +306,10 @@ Omit an optional input to use the model's internal default or latched value.
 line-to-line RMS voltage parameter `V` converts bus voltages to per unit;
 connect its `efd` output to the Machine field-voltage input.
 
-PWM and Converter vector ports use arrays of three scalar signal IDs in
-phase order `a`, `b`, `c`. The scalar keys `ma`, `mb`, `mc`, `sa`, `sb`,
-`sc`, and `ea`, `eb`, `ec` address individual phases. Vector monitors `s`
-and `e` expand to these three scalar columns. Filter capacitor voltage
+PWM and Converter three-phase ports use arrays of three scalar signal IDs
+in phase order `a`, `b`, `c`. The scalar keys `sa`, `sb`, `sc`, and `ea`,
+`eb`, `ec` address individual phases. Vector monitors `s`, `m`, and `e`
+expand to three scalar columns. Filter capacitor voltage
 uses the separate vector `vo` and scalar names `voa`, `vob`, `voc`.
 
 ```json
@@ -323,19 +322,20 @@ uses the separate vector `vo` and scalar names `voa`, `vob`, `voc`.
 }
 ```
 
-To drive PWM from a controller, connect all three modulation inputs. Only
-`fc` is required in this mode; `M` and `fm` apply to the unconnected sinusoidal
-mode. The switching function uses the current modulation input and propagates
-its derivatives through the connected signals.
+To drive PWM from a controller, connect the dq voltage command `u`, the
+DC-link voltage `vdc`, and the frame angle `theta` together. Only `fc` is
+required in this mode; `M` and `fm` apply to the unconnected sinusoidal mode,
+and `Mmax` bounds the modulation command. PWM applies the inverse Park
+transform internally and returns the limited voltage command `ulim`.
 
 ```json
 {
   "class": "PWM",
   "id": "pwm",
-  "params": { "fc": 10000 },
-  "inputs": { "m": ["ma", "mb", "mc"] },
-  "outputs": { "s": ["sa", "sb", "sc"] },
-  "mon": ["s"]
+  "params": { "fc": 10000, "Mmax": 0.95 },
+  "inputs": { "u": ["ud", "uq"], "vdc": "dc", "theta": "theta" },
+  "outputs": { "s": ["sa", "sb", "sc"], "ulim": ["ulimd", "ulimq"] },
+  "mon": ["s", "m"]
 }
 ```
 
@@ -418,24 +418,12 @@ connected Park transforms and controller inputs. For example:
 Use `Park` with `input` in `a`, `b`, `c` order and `out` in `d`, `q`, `0` order.
 Set `params: {"inverse": true}` to reverse the transformation. Its scalar keys
 are `u1`, `u2`, `u3` and `y1`, `y2`, `y3`. Connect `PLL.theta` to each Park
-operator and `PLL.omega` to the controllers through their signal input ports.
+operator and to PWM, and `PLL.omega` to the controllers through their signal
+input ports.
 
-For the switching bridge, connect `InnerCurrentControl.u` to `Modulation.u`
-and return `Modulation.ulim` to `InnerCurrentControl.ulim`. Inverse-transform
-`[md, mq, 0]` and connect the resulting three-phase modulation command to
-`PWM.m`. Modulation and Converter use the bridge's DC-link voltage; Modulation
-requires a finite nonnegative DC voltage. For example:
-
-```json
-{
-  "class": "Modulation",
-  "id": "modulation",
-  "params": { "Mmax": 0.95 },
-  "inputs": { "u": ["ud", "uq"], "vdc": "dc" },
-  "outputs": { "m": ["md", "mq"], "ulim": ["ulimd", "ulimq"] },
-  "mon": ["m"]
-}
-```
+For the switching bridge, connect `InnerCurrentControl.u` to `PWM.u` and
+return `PWM.ulim` to `InnerCurrentControl.ulim`. PWM and Converter use the
+bridge's DC-link voltage; PWM requires a finite nonnegative DC voltage.
 
 For cascaded grid-forming control, connect `OuterVoltageControl.icmd` to the
 current controller's `icmd`, and return the limited `ilim` to the voltage
@@ -450,7 +438,6 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `PWM`                 | [PWM](Component/Controller/PWM/README.md)
   `Park`                | [Park](Operators/Reference/Park/README.md)
   `PLL`                 | [PLL](Operators/Reference/PLL/README.md)
-  `Modulation`          | [Modulation](Operators/Modulation/README.md)
   `InnerCurrentControl` | [InnerCurrentControl](Component/Controller/InnerCurrentControl/README.md)
   `OuterPowerControl`   | [OuterPowerControl](Component/Controller/OuterPowerControl/README.md)
   `OuterVoltageControl` | [OuterVoltageControl](Component/Controller/OuterVoltageControl/README.md)

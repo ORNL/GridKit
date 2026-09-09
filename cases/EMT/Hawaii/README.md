@@ -95,12 +95,12 @@ evidence of matching GENROU fault dynamics.
 Each source REGCA unit is replaced by the
 [GFL switching-inverter arrangement](../CurrentControl/README.md): PLL,
 voltage and current Park transforms, OuterPowerControl, InnerCurrentControl,
-Modulation, inverse Park, PWM, Converter, DCLink, and a physical LCL Filter.
+PWM, Converter, DCLink, and a physical LCL Filter.
 `Converter.e` drives `Filter.e`; `Filter.ig` injects into the original bus.
 `Filter.i` supplies Converter and the inner current loop, while `Filter.ig`
 supplies the outer loop through a separate Park transform. PLL and the
-voltage Park transform read `Filter.vo`. All Park transforms share PLL's
-`theta`, and the inner controller receives PLL's `omega`. Modulation limits
+voltage Park transform read `Filter.vo`. All Park transforms and PWM share
+PLL's `theta`, and the inner controller receives PLL's `omega`. PWM limits
 the dq voltage command and returns it to the inner controller.
 Current targets `Pref/V` and
 `-Qref/V` are derived from power-reference parameters and rated voltage.

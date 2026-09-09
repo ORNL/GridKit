@@ -6,8 +6,11 @@
 #include <numbers>
 #include <stdexcept>
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/Pwm.hpp>
 #include <GridKit/Model/EMT/ComponentInitialization.hpp>
+#include <GridKit/Model/EMT/Operators/Reference/Park/ParkImpl.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
@@ -27,12 +30,23 @@ namespace GridKit
         : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
-        monitor_->set(ModelDataT::MonitorableVariables::sa, [this]
+        using Mon = typename ModelDataT::MonitorableVariables;
+        monitor_->set(Mon::sa, [this]
                       { return output_port_[0].read(); });
-        monitor_->set(ModelDataT::MonitorableVariables::sb, [this]
+        monitor_->set(Mon::sb, [this]
                       { return output_port_[1].read(); });
-        monitor_->set(ModelDataT::MonitorableVariables::sc, [this]
+        monitor_->set(Mon::sc, [this]
                       { return output_port_[2].read(); });
+        monitor_->set(Mon::ma, [this]
+                      { return modulation(0); });
+        monitor_->set(Mon::mb, [this]
+                      { return modulation(1); });
+        monitor_->set(Mon::mc, [this]
+                      { return modulation(2); });
+        monitor_->set(Mon::ulimd, [this]
+                      { return output_port_[3].read(); });
+        monitor_->set(Mon::ulimq, [this]
+                      { return output_port_[4].read(); });
         for (size_t n = 0; n < output_port_.size(); ++n)
         {
           const auto key = static_cast<Outputs>(n);
@@ -48,21 +62,19 @@ namespace GridKit
       Pwm<scalar_type, index_type>::~Pwm() = default;
 
       template <typename scalar_type, typename index_type>
-      void Pwm<scalar_type, index_type>::assignInput(Inputs key, SignalT* signal)
+      void Pwm<scalar_type, index_type>::attachInput(
+          const std::array<SignalT*, 2>& command, SignalT* vdc, SignalT* theta)
       {
         if (this->allocated_)
-          throw std::logic_error("Assign PWM inputs before allocation");
-        auto& input = input_.at(static_cast<size_t>(key));
-        if (signal == nullptr || (input != nullptr && input != signal))
-          throw std::invalid_argument("Invalid PWM input assignment");
-        input = signal;
+          throw std::logic_error("Attach PWM inputs before allocation");
+        input_ = {command[0], command[1], vdc, theta};
       }
 
       template <typename scalar_type, typename index_type>
       void Pwm<scalar_type, index_type>::assignOutput(Outputs output, SignalT* signal)
       {
-        const auto phase    = static_cast<size_t>(output);
-        auto&      assigned = assigned_output_.at(phase);
+        const auto index    = static_cast<size_t>(output);
+        auto&      assigned = assigned_output_.at(index);
         if (signal == nullptr || (assigned != nullptr && assigned != signal))
         {
           throw std::invalid_argument("Invalid Pwm output assignment");
@@ -74,10 +86,10 @@ namespace GridKit
         signal->claimProducer();
         assigned = signal;
         signal->setComputed(
-            [this, phase]
-            { return output_port_[phase].read(); },
-            [this, phase](typename SignalT::GradientT& gradient, RealT scale)
-            { output_port_[phase].appendGradient(gradient, scale); });
+            [this, index]
+            { return output_port_[index].read(); },
+            [this, index](typename SignalT::GradientT& gradient, RealT scale)
+            { output_port_[index].appendGradient(gradient, scale); });
       }
 
       template <typename scalar_type, typename index_type>
@@ -160,11 +172,17 @@ namespace GridKit
         fm_                = parameter<RealT>(data, Parameter::fm, missing);
         fc_                = parameter<RealT>(data, Parameter::fc, missing);
         alignment_         = parameter<RealT>(data, Parameter::alignment, RealT{0.5});
+        Mmax_              = parameter<RealT>(data, Parameter::Mmax, RealT{1});
         horizon_           = std::log(4 / std::numeric_limits<RealT>::epsilon()) / Math::MU<RealT>;
+        if (Mmax_ > ZERO<RealT>)
+        {
+          au_ = RealT{8} / (RealT{3} * Mmax_ * Mmax_);
+        }
 
         parameters_valid_ = std::isfinite(fc_) && fc_ > 0
                             && std::isfinite(1 / fc_)
                             && std::isfinite(alignment_) && alignment_ >= 0 && alignment_ <= 1
+                            && std::isfinite(Mmax_) && Mmax_ > 0 && Mmax_ <= 1
                             && std::isfinite(horizon_) && horizon_ > 0
                             && horizon_ * fc_ < static_cast<RealT>(std::numeric_limits<long long>::max() / 2);
         sinusoidal_parameters_valid_ = parameters_valid_ && std::isfinite(M_) && M_ >= 0 && M_ <= 1
@@ -179,7 +197,7 @@ namespace GridKit
       {
         if (!parameters_valid_)
         {
-          Log::error() << "PWM: require finite fc > 0 and 0 <= alignment <= 1\n";
+          Log::error() << "PWM: require finite fc > 0, 0 <= alignment <= 1, and 0 < Mmax <= 1\n";
           return 1;
         }
         if (hasInput())
@@ -187,13 +205,19 @@ namespace GridKit
           for (const auto* signal : input_)
             if (signal == nullptr || !signal->linked())
             {
-              Log::error() << "PWM: all three modulation inputs must have linked sources\n";
+              Log::error() << "PWM: voltage command, DC voltage, and angle inputs must all have linked sources\n";
               return 1;
             }
+          return 0;
         }
-        else if (!sinusoidal_parameters_valid_)
+        if (!sinusoidal_parameters_valid_)
         {
-          Log::error() << "PWM: without modulation inputs require finite 0 <= M <= 1 and fc > fm > 0\n";
+          Log::error() << "PWM: without voltage command inputs require finite 0 <= M <= 1 and fc > fm > 0\n";
+          return 1;
+        }
+        if (assigned_output_[3] != nullptr || assigned_output_[4] != nullptr)
+        {
+          Log::error() << "PWM: the limited voltage command requires the voltage command inputs\n";
           return 1;
         }
         return 0;
@@ -207,14 +231,29 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
+      auto Pwm<scalar_type, index_type>::fraction() const -> std::array<ScalarT, 2>
+      {
+        const ScalarT vdc = input_[2]->read();
+        if (!std::isfinite(static_cast<RealT>(vdc)) || static_cast<RealT>(vdc) < ZERO<RealT>)
+          throw std::domain_error("PWM: DC voltage must be finite and nonnegative");
+        const ScalarT ud = input_[0]->read();
+        const ScalarT uq = input_[1]->read();
+        if (!std::isfinite(static_cast<RealT>(ud)) || !std::isfinite(static_cast<RealT>(uq))
+            || !std::isfinite(static_cast<RealT>(input_[3]->read())))
+          throw std::domain_error("PWM: voltage command and angle inputs must be finite");
+        // Radial limit of the command against the available DC voltage.
+        const ScalarT scale = std::sqrt(Math::max(vdc * vdc, au_ * (ud * ud + uq * uq)));
+        return {ud / scale, uq / scale};
+      }
+
+      template <typename scalar_type, typename index_type>
       auto Pwm<scalar_type, index_type>::modulation(size_t phase) const -> ScalarT
       {
         if (hasInput())
         {
-          const auto value = input_[phase]->read();
-          if (!std::isfinite(static_cast<RealT>(value)) || std::abs(static_cast<RealT>(value)) > 1)
-            throw std::domain_error("PWM: modulation must lie in [-1,1]");
-          return value;
+          const auto w      = fraction();
+          const auto matrix = Park<ScalarT, IdxT>::template transformation<ScalarT>(input_[3]->read());
+          return ScalarT{2} * (matrix[0][phase] * w[0] + matrix[1][phase] * w[1]);
         }
         const RealT                pi = std::numbers::pi_v<RealT>;
         const std::array<RealT, 3> phi{0, -2 * pi / 3, 2 * pi / 3};
@@ -242,12 +281,18 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       auto Pwm<scalar_type, index_type>::output(Outputs output) const -> ScalarT
       {
-        const auto phase = static_cast<size_t>(output);
-        if (phase >= 3 || verify() != 0 || !std::isfinite(this->time_))
+        const auto index = static_cast<size_t>(output);
+        if (index >= output_port_.size() || verify() != 0 || !std::isfinite(this->time_))
         {
-          throw std::domain_error("Cannot evaluate PWM with invalid parameters, time, or phase");
+          throw std::domain_error("Cannot evaluate PWM with invalid parameters, time, or output");
         }
-        const auto  duty  = (1 + modulation(phase)) / 2;
+        if (index >= 3)
+        {
+          if (!hasInput())
+            throw std::domain_error("PWM: the limited voltage command requires the voltage command inputs");
+          return input_[2]->read() * fraction()[index - 3];
+        }
+        const auto  duty  = (1 + modulation(index)) / 2;
         const RealT tc    = 1 / fc_;
         const RealT t     = std::remainder(this->time_, tc);
         const auto  first = static_cast<long long>(std::floor((t - horizon_) * fc_));
@@ -294,19 +339,50 @@ namespace GridKit
       void Pwm<scalar_type, index_type>::appendOutputGradient(
           Outputs output, typename SignalT::GradientT& gradient, RealT scale) const
       {
-        const auto phase = static_cast<size_t>(output);
-        if (phase >= 3 || verify() != 0 || !std::isfinite(this->time_))
-          throw std::domain_error("Cannot differentiate PWM with invalid parameters, time, or phase");
+        const auto index = static_cast<size_t>(output);
+        if (index >= output_port_.size() || verify() != 0 || !std::isfinite(this->time_))
+          throw std::domain_error("Cannot differentiate PWM with invalid parameters, time, or output");
         if (!hasInput())
           return;
-        const RealT duty  = (1 + static_cast<RealT>(modulation(phase))) / 2;
-        const RealT tc    = 1 / fc_;
-        const RealT t     = std::remainder(this->time_, tc);
-        const RealT on    = alignment_ * (1 - duty) * tc;
-        const RealT off   = (alignment_ + (1 - alignment_) * duty) * tc;
-        const auto  first = static_cast<long long>(std::floor((t - horizon_) * fc_));
-        const auto  last  = static_cast<long long>(std::floor((t + horizon_) * fc_));
-        RealT       derivative{0};
+        // Limiter geometry: w = u / sqrt(max(vdc^2, a_u |u|^2)) with a logistic gate on the smooth maximum.
+        const RealT                vdc = static_cast<RealT>(input_[2]->read());
+        const std::array<RealT, 2> u{static_cast<RealT>(input_[0]->read()), static_cast<RealT>(input_[1]->read())};
+        const RealT                radius = au_ * (u[0] * u[0] + u[1] * u[1]);
+        const RealT                square = Math::max(vdc * vdc, radius);
+        const RealT                norm   = std::sqrt(square);
+        const RealT                gate   = Math::sigmoid(radius - vdc * vdc);
+        const std::array<RealT, 2> w{u[0] / norm, u[1] / norm};
+        const auto                 fraction_command = [&](size_t k, size_t j)
+        {
+          RealT partial = -w[k] * gate * au_ * u[j] / square;
+          if (k == j)
+          {
+            partial += 1 / norm;
+          }
+          return partial;
+        };
+        const auto fraction_dc = [&](size_t k)
+        {
+          return -w[k] * (1 - gate) * vdc / square;
+        };
+        if (index >= 3)
+        {
+          const size_t k = index - 3;
+          for (size_t j = 0; j < 2; ++j)
+            input_[j]->appendGradient(gradient, scale * vdc * fraction_command(k, j));
+          input_[2]->appendGradient(gradient, scale * (w[k] + vdc * fraction_dc(k)));
+          return;
+        }
+        // Switching function: pulse slope, then the inverse Park transform and the limiter.
+        const size_t phase = index;
+        const RealT  duty  = (1 + static_cast<RealT>(modulation(phase))) / 2;
+        const RealT  tc    = 1 / fc_;
+        const RealT  t     = std::remainder(this->time_, tc);
+        const RealT  on    = alignment_ * (1 - duty) * tc;
+        const RealT  off   = (alignment_ + (1 - alignment_) * duty) * tc;
+        const auto   first = static_cast<long long>(std::floor((t - horizon_) * fc_));
+        const auto   last  = static_cast<long long>(std::floor((t + horizon_) * fc_));
+        RealT        derivative{0};
         for (auto k = first; k <= last; ++k)
         {
           const RealT local  = t - static_cast<RealT>(k) * tc;
@@ -314,7 +390,21 @@ namespace GridKit
           const RealT b      = Math::sigmoid(-std::abs(local - off));
           derivative        += alignment_ * a * (1 - a) + (1 - alignment_) * b * (1 - b);
         }
-        input_[phase]->appendGradient(gradient, scale * tc * Math::MU<RealT> * derivative / 2);
+        const RealT slope  = scale * tc * Math::MU<RealT> * derivative / 2;
+        const auto  matrix = Park<ScalarT, IdxT>::template transformation<RealT>(static_cast<RealT>(input_[3]->read()));
+        for (size_t j = 0; j < 2; ++j)
+        {
+          RealT partial{0};
+          for (size_t k = 0; k < 2; ++k)
+            partial += matrix[k][phase] * 2 * fraction_command(k, j);
+          input_[j]->appendGradient(gradient, slope * partial);
+        }
+        RealT dc_partial{0};
+        for (size_t k = 0; k < 2; ++k)
+          dc_partial += matrix[k][phase] * 2 * fraction_dc(k);
+        input_[2]->appendGradient(gradient, slope * dc_partial);
+        // The angle derivative of the cosine row is the sine row and vice versa.
+        input_[3]->appendGradient(gradient, slope * 2 * (matrix[1][phase] * w[0] - matrix[0][phase] * w[1]));
       }
     } // namespace Controller
   } // namespace EMT

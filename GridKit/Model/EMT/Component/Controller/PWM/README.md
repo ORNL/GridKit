@@ -1,34 +1,40 @@
 # PWM Model
 
-`PWM` produces a three-phase switching signal from a continuous modulation input.
-Without an input, it generates sinusoidal PWM. The model adds no DAE variables
-or residual rows.
+`PWM` produces a three-phase switching signal from the $dq$ converter voltage
+command. It limits the command to the voltage available from the DC link,
+returns the limited command to
+[InnerCurrentControl](../InnerCurrentControl/README.md) for tracking
+anti-windup, transforms the modulation command to phase coordinates, and
+compares it with a continuous carrier. Without inputs, it generates sinusoidal
+PWM. The model adds no DAE variables or residual rows.
 
 ## Block Diagram
 
-![PWM model switching signal](../../../../../../docs/Figures/EMT/Controller/PWM/diagram.png)
+![PWM model block diagram](../../../../../../docs/Figures/EMT/Controller/PWM/diagram.png)
 
-Figure 1: Continuous PWM interface and centered sinusoidal switching signals for $M=0.8$, $f_{\mathrm{m}}=60\,\mathrm{Hz}$, and $f_{\mathrm{c}}=900\,\mathrm{Hz}$ at $\mu^{-1}=0.005\,\mathrm{ms}$ and $\mu^{-1}=1\,\mathrm{ms}$.
+Figure 1: PWM model and centered sinusoidal switching signals for $M=0.8$, $f_{\mathrm{m}}=60\,\mathrm{Hz}$, and $f_{\mathrm{c}}=900\,\mathrm{Hz}$ at $\mu^{-1}=0.005\,\mathrm{ms}$ and $\mu^{-1}=1\,\mathrm{ms}$.
 
 ## Model Parameters
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$M$ | [-] | `M` | Modulation index | Required without `m`, $M \in [0,1]$
-$f_{\mathrm{m}}$ | [Hz] | `fm` | Modulation frequency | Required without `m`, positive
+$M$ | [-] | `M` | Modulation index | Required without inputs, $M \in [0,1]$
+$f_{\mathrm{m}}$ | [Hz] | `fm` | Modulation frequency | Required without inputs, positive
 $f_{\mathrm{c}}$ | [Hz] | `fc` | Carrier frequency | Required, positive
 $\alpha$ | [-] | `alignment` | Pulse alignment | Default $\frac{1}{2}$
+$M^{\max}$ | [-] | `Mmax` | Sinusoidal modulation limit | Default $1$, $0 < M^{\max} \le 1$
 
 ### Parameter Validation
 
 ```math
 \begin{aligned}
 f_{\mathrm{c}} &> 0 \\
-0 &\le \alpha \le 1
+0 &\le \alpha \le 1 \\
+0 &< M^{\max} \le 1
 \end{aligned}
 ```
 
-Without a modulation input, the sinusoidal parameters also satisfy
+Without inputs, the sinusoidal parameters also satisfy
 
 ```math
 \begin{aligned}
@@ -45,6 +51,7 @@ f_{\mathrm{c}} &> f_{\mathrm{m}} > 0.
 \omega_{\mathrm{c}} &= 2\pi f_{\mathrm{c}} \\
 T_{\mathrm{c}} &= \dfrac{2\pi}{\omega_{\mathrm{c}}}
                    = \dfrac{1}{f_{\mathrm{c}}} \\
+a_u &= \dfrac{8}{3(M^{\max})^2} \\
 \boldsymbol{\phi}
 &=
 \begin{bmatrix}
@@ -61,8 +68,16 @@ T_{\mathrm{c}} &= \dfrac{2\pi}{\omega_{\mathrm{c}}}
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{m}$ | `m` | Input | [-] | Three-phase modulation command | Optional, $\mathbf{m} \in [-1,1]^3$
+$\mathbf{u}$ | `u` | Input | [V] | Converter voltage command | Optional, $\mathbf{u} \in \mathbb{R}^2$
+$v_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC-link voltage | With `u`, $v_{\mathrm{dc}} \ge 0$
+$\theta$ | `theta` | Input | [rad] | Electrical reference angle | With `u`
 $\mathbf{s}$ | `s` | Output | [-] | Three-phase switching function | $\mathbf{s} \in [0,1]^3$
+$\mathbf{u}^{\mathrm{lim}}$ | `ulim` | Output | [V] | Limited voltage command | Requires `u`
+
+The command uses $(d,q)$ order in the power-invariant
+[Park](../../../Operators/Reference/Park/README.md) frame. Connect `u`,
+`vdc`, and `theta` together, from `InnerCurrentControl.u`, `DCLink.vdc`, and
+`PLL.theta`, and return `ulim` to the current controller.
 
 ## Submodels
 
@@ -88,28 +103,52 @@ None.
 
 #### Differential
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{m}$ | [-] | Modulation command | Differential-input configuration
+Connected voltage-command, DC-link, and angle variables may be differential.
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{m}$ | [-] | Modulation command | Algebraic-input configuration
+$\mathbf{u}$ | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
+$v_{\mathrm{dc}}$ | [V] | DC-link voltage | $v_{\mathrm{dc}} \ge 0$
+$\theta$ | [rad] | Electrical reference angle |
 
 ## Model Equations
+
+With inputs, the limiter factor and modulation command are
+
+```math
+\begin{aligned}
+\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u}) &=
+  \max\left(v_{\mathrm{dc}}^2,a_u\|\mathbf{u}\|_2^2\right) \\
+\mathbf{m} &= \dfrac{2\mathbf{u}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u})}}
+\end{aligned}
+```
+
+The direction-preserving limit uses the CommonMath smooth
+[`max`](../../../../../CommonMath.md#maximum) on squared voltages in
+$\mathrm{V}^2$. In the power-invariant frame, a balanced phase peak of
+$M^{\max}v_{\mathrm{dc}}/2$ corresponds to $\|\mathbf{u}\|_2 =
+\sqrt{3/8}\,M^{\max}v_{\mathrm{dc}}$, the largest command sinusoidal PWM
+realizes without zero-sequence injection. The phase modulation command is the
+inverse Park transform without zero sequence,
+
+```math
+\begin{bmatrix} m_a & m_b & m_c \end{bmatrix}^{\mathsf{T}}
+= \mathbf{T}^{\mathsf{T}}(\theta)
+\begin{bmatrix} m_d & m_q & 0 \end{bmatrix}^{\mathsf{T}},
+```
+
+so $|m_\ell| \le M^{\max}$. Without inputs,
+
+```math
+m_\ell(t)=M\sin\left(\omega_{\mathrm{m}}t+\phi_\ell\right).
+```
 
 For phase $\ell\in\{a,b,c\}$, the instantaneous duty ratio is
 
 ```math
 d_\ell(t)=\dfrac{1+m_\ell(t)}{2}.
-```
-
-Without a modulation input,
-
-```math
-m_\ell(t)=M\sin\left(\omega_{\mathrm{m}}t+\phi_\ell\right).
 ```
 
 For duty argument $d\in[0,1]$, the periodic pulse edges and switching function are
@@ -155,22 +194,34 @@ None.
 ### External Equations
 
 ```math
-s_\ell(t)\leftarrow S_\mu\left(t,d_\ell(t)\right),
-\qquad \ell\in\{a,b,c\}.
+\begin{aligned}
+\mathbf{u}^{\mathrm{lim}} &\leftarrow
+  \dfrac{v_{\mathrm{dc}}\mathbf{u}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u})}}
+  = \dfrac{v_{\mathrm{dc}}}{2}\mathbf{m} \\
+s_\ell(t) &\leftarrow S_\mu\left(t,d_\ell(t)\right),
+\qquad \ell\in\{a,b,c\}
+\end{aligned}
 ```
 
-The outputs are algebraic expressions without owned DAE variables. Input values
-and their derivatives are evaluated at the current solver iterate.
+Inside the limit, $\mathbf{m} = 2\mathbf{u}/v_{\mathrm{dc}}$ and
+$\mathbf{u}^{\mathrm{lim}} = \mathbf{u}$. Beyond it, both keep the command
+direction at the limit magnitude. The outputs are algebraic expressions
+without owned DAE variables and involve no division by $v_{\mathrm{dc}}$: at
+zero DC voltage, the limited command is zero and the modulation command lies
+on the limit circle. Input values are evaluated at the current solver iterate.
 
 ## Initialization
 
-Evaluate the switching function from the initialized modulation input and time.
+Evaluate the outputs from the initialized inputs and time. Prescribed
+`ulimd` and `ulimq` values must match the evaluated outputs.
 
 ## Monitors
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
-`s` | [-] | Three-phase switching function | $\mathbf{s} \in [0,1]^3$
+`s` | [-] | Three-phase switching function | Expands to `sa`, `sb`, `sc`
+`m` | [-] | Phase modulation command | Expands to `ma`, `mb`, `mc`
+`ulim` | [V] | Limited voltage command | Expands to `ulimd`, `ulimq`; requires `u`
 
 See [case connections](../../../INPUT_FORMAT.md#case-connections) for vector signal wiring.
 

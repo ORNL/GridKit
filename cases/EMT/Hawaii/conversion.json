@@ -1468,10 +1468,9 @@
     "DCLink": 9,
     "Filter": 9,
     "PLL": 9,
-    "Park": 36,
+    "Park": 27,
     "OuterPowerControl": 9,
     "InnerCurrentControl": 9,
-    "Modulation": 9,
     "PWM": 9,
     "Converter": 9,
     "Switch": 2
