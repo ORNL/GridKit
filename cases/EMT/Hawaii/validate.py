@@ -410,6 +410,7 @@ def main():
     parser.add_argument('--tmax', type=float, default=1.5, help='CTest covers inception, clearing, and recovery; full study is 5 s')
     parser.add_argument('--rel-tol', type=float)
     parser.add_argument('--abs-tol', type=float)
+    parser.add_argument('--mu', type=float, help='PWM smoothing sharpness [1/s]')
     args = parser.parse_args()
     temporary = None
     if args.reuse:
@@ -438,9 +439,9 @@ def main():
             record['input_sha256'][name] = hashlib.sha256(raw).hexdigest()
         study = json.loads((ROOT / 'Hawaii.solver.json').read_text())
         study.update(system_model_file='Hawaii.case.json', state_file='Hawaii.state.json', tmax=args.tmax)
-        for key, value in [('rel_tol', args.rel_tol), ('abs_tol', args.abs_tol)]:
+        for key, value in [('rel_tol', args.rel_tol), ('abs_tol', args.abs_tol), ('mu', args.mu)]:
             if value is not None:
-                require(math.isfinite(value) and value > 0, 'Tolerances must be finite and positive')
+                require(math.isfinite(value) and value > 0, 'Tolerances and mu must be finite and positive')
                 study[key] = value
         (run / 'study.json').write_text(json.dumps(study, indent=2) + '\n')
         record['study_sha256'] = hashlib.sha256((run / 'study.json').read_bytes()).hexdigest()
