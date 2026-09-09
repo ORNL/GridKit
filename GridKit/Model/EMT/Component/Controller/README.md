@@ -7,8 +7,8 @@ the controllers through signal ports.
 Arrows indicate signal flow. The converter current $\mathbf{i}$ is positive
 out of the bridge; $i_{\mathrm{dc}}$ is positive into the bridge. The converter
 receives $\mathbf{i}$ from the Filter and supplies $i_{\mathrm{dc}}$ to DCLink.
-The forward and inverse power-invariant Park transforms are implicit at the
-boundary of the $dq$ controller region.
+The forward power-invariant Park transforms are implicit at the boundary of
+the $dq$ controller region; PWM applies the inverse transform internally.
 
 Symbol | Producer | Consumer | Coordinates
 ------ | -------- | -------- | -----------
@@ -16,7 +16,7 @@ $\mathbf{e}$ | `Converter.e` | `Filter.e` | $abc$
 $\mathbf{v}_{\mathrm{o}}$ | `Filter.vo` | PLL and voltage Park inputs | $abc$
 $\mathbf{i}$ | `Filter.i` | `Converter.i` and current Park input | $abc$
 $\mathbf{i}_g$ | `Filter.ig` | Terminal Bus and grid-current Park input | $abc$
-$v_{\mathrm{dc}}$ | `DCLink.vdc` | Converter, Modulation, InnerCurrentControl | Scalar
+$v_{\mathrm{dc}}$ | `DCLink.vdc` | Converter and PWM | Scalar
 $i_{\mathrm{dc}}$ | `Converter.idc` | `DCLink.idc` | Scalar
 
 The current and voltage controllers retain their local voltage-input name

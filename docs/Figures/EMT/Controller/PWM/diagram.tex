@@ -4,12 +4,17 @@
 \usepgfplotslibrary{groupplots}
 \input{../../diagram-style.tex}
 
+% TUNABLES: rows of the block strip above the traces.
+\def\striprow{3.1}
+\def\returnrow{1.7}
+\def\supplyrow{4.5}
+
 \begin{document}
 
 \begin{tikzpicture}[emt diagram]
 \begin{groupplot}[
   group style={group name=pwm, group size=1 by 7, vertical sep=0.18cm},
-  width=11.2cm,
+  width=13.6cm,
   height=1.18cm,
   scale only axis,
   xmin=-0.00015,
@@ -85,19 +90,41 @@
 
 \end{groupplot}
 
-% Continuous modulation and switching interface.
-\node[block, minimum width=2.6cm] (duty)
-  at ([xshift=2.5cm,yshift=1.5cm]pwm c1r1.north west)
-  {$d_\ell=\dfrac{1+m_\ell}{2}$};
-\node[block, minimum width=2.6cm] (switching)
-  at ([xshift=7cm,yshift=1.5cm]pwm c1r1.north west)
-  {$S_\mu(t,d_\ell)$};
-\draw[->, line] ([xshift=-1.3cm]duty.west)
-  -- node[sig, above] {$m_\ell$} (duty.west);
-\draw[->, line] (duty.east)
-  -- node[sig, above] {$d_\ell$} (switching.west);
+% Voltage-command limit, DC normalization, inverse Park transform, and
+% carrier comparison; the limited command returns to the current controller.
+\coordinate (origin) at (pwm c1r1.north west);
+\node[block, minimum width=2.2cm] (limit)
+  at ($(origin)+(1.3,\striprow)$) {$v_{\mathrm{dc}}\mathcal{L}_u^{-1/2}$};
+\node[signal] (w) at ($(origin)+(3.1,\striprow)$) {};
+\node[block, minimum width=1.3cm] (gain)
+  at ($(origin)+(4.1,\striprow)$) {$\dfrac{2}{v_{\mathrm{dc}}}$};
+\node[block, minimum width=1.6cm] (park)
+  at ($(origin)+(6.0,\striprow)$) {$\mathbf{T}^{\mathsf{T}}(\theta)$};
+\node[block, minimum width=2.4cm] (duty)
+  at ($(origin)+(8.6,\striprow)$) {$d_\ell=\dfrac{1+m_\ell}{2}$};
+\node[block, minimum width=2.2cm] (switching)
+  at ($(origin)+(11.5,\striprow)$) {$S_\mu(t,d_\ell)$};
+\draw[->, line] ($(origin)+(-0.6,\striprow)$)
+  -- node[sig, above, pos=0.3] {$\mathbf{u}$} (limit.west);
+\draw[line] (limit.east) -- (w);
+\draw[->, line] (w) -- (gain.west);
+\draw[->, line] (gain.east) -- node[sig, above] {$\mathbf{m}$} (park.west);
+\draw[->, line] (park.east) -- node[sig, above] {$m_\ell$} (duty.west);
+\draw[->, line] (duty.east) -- node[sig, above] {$d_\ell$} (switching.west);
 \draw[->, line] (switching.east)
-  -- node[sig, above] {$s_\ell$} ++(1.3cm,0);
+  -- node[sig, above, pos=0.7] {$s_\ell$} ($(origin)+(13.7,\striprow)$);
+\draw[->, line] (w) -- ($(origin)+(3.1,\returnrow)$)
+  -- node[sig, above, pos=0.8] {$\mathbf{u}^{\mathrm{lim}}$}
+  ($(origin)+(-0.6,\returnrow)$);
+
+% DC-link voltage and frame angle inputs.
+\node[sig] (vdc) at ($(origin)+(2.7,\supplyrow+0.7)$) {$v_{\mathrm{dc}}$};
+\node[signal] (vsplit) at ($(origin)+(2.7,\supplyrow)$) {};
+\draw[line] (vdc.south) -- (vsplit);
+\draw[->, line] (vsplit) -- ($(origin)+(1.3,\supplyrow)$) -- (limit.north);
+\draw[->, line] (vsplit) -- ($(origin)+(4.1,\supplyrow)$) -- (gain.north);
+\node[sig] (theta) at ($(origin)+(6.0,\supplyrow+0.7)$) {$\theta$};
+\draw[->, line] (theta.south) -- (park.north);
 
 \node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r2.east)
   {$\mu^{-1}=0.005\,\mathrm{ms}$};

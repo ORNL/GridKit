@@ -211,13 +211,6 @@ namespace GridKit
         add<Pll<ScalarT, IdxT>>(model_data.id, qualified_data);
       }
 
-      for (const auto& model_data : data.modulation)
-      {
-        auto qualified_data = model_data;
-        qualified_data.id   = qualify(model_data.id);
-        add<Modulation<ScalarT, IdxT>>(model_data.id, qualified_data);
-      }
-
       for (const auto& model_data : data.pwm)
       {
         auto qualified_data = model_data;
@@ -365,21 +358,19 @@ namespace GridKit
           model.assignOutput(output, &signal(id));
       }
 
-      for (const auto& model_data : data.modulation)
-      {
-        auto& model = component<Modulation<ScalarT, IdxT>>(model_data.id);
-        model.attachInput({&source(model_data.inputs.at(ModulationInputs::ud)),
-                           &source(model_data.inputs.at(ModulationInputs::uq))},
-                          &source(model_data.inputs.at(ModulationInputs::vdc)));
-        for (const auto& [output, reference] : model_data.outputs)
-          model.assignOutput(output, &signal(reference));
-      }
-
       for (const auto& model_data : data.pwm)
       {
-        auto& model = component<Controller::Pwm<ScalarT, IdxT>>(model_data.id);
-        for (const auto& [input, reference] : model_data.inputs)
-          model.assignInput(input, &source(reference));
+        auto& model  = component<Controller::Pwm<ScalarT, IdxT>>(model_data.id);
+        using Inputs = Controller::PwmInputs;
+        if (!model_data.inputs.empty())
+        {
+          for (const auto key : {Inputs::ud, Inputs::uq, Inputs::vdc, Inputs::theta})
+            if (!model_data.inputs.contains(key))
+              throw std::invalid_argument("PWM \"" + model_data.id + "\" requires u, vdc, and theta inputs together");
+          model.attachInput({&source(model_data.inputs.at(Inputs::ud)), &source(model_data.inputs.at(Inputs::uq))},
+                            &source(model_data.inputs.at(Inputs::vdc)),
+                            &source(model_data.inputs.at(Inputs::theta)));
+        }
         for (const auto& [output, reference] : model_data.outputs)
           model.assignOutput(output, &signal(reference));
       }

@@ -191,15 +191,6 @@ if(GRIDKIT_ENABLE_SUNDIALS)
 endif()
 add_test(NAME EMTPwmConverterTest COMMAND test_emt_pwm_converter)
 
-add_executable(test_emt_modulation runModulationTests.cpp)
-target_link_libraries(
-  test_emt_modulation
-  GridKit::definitions
-  GridKit::emt_modulation
-  GridKit::emt_modulation_dependency_tracking
-  GridKit::testing)
-add_test(NAME EMTModulationTest COMMAND test_emt_modulation)
-
 install(
   TARGETS test_emt_pwm_converter
           test_emt_dependent_voltage_source
