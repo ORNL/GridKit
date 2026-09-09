@@ -24,7 +24,7 @@ def interpolate(time, values, point):
 
 
 def document(kind, names, lower, upper, error_lower, error_upper, style_path, duration,
-             emt_fault, phasor_fault):
+             emt_fault, phasor_fault, mu):
     """Use the EMT shared fonts/styles; data and size remain directly editable."""
     # All channels are retained. Highlight fault bus 1; other channels share a
     # neutral style so the comparison is readable without a 37-entry legend.
@@ -47,7 +47,7 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path, du
              r'tick label style={font=\footnotesize},scaled y ticks=false,',
              r'xlabel={Time [s]},ylabel style={font=\small},legend style={draw=none,font=\footnotesize}]']
     for panel, color, title, fault in [
-            ('e', 'emtBlue', f'(a) GridKit EMT; fault cleared at {emt_fault[1]:.2f} s', emt_fault),
+            ('e', 'emtBlue', f'(a) GridKit EMT ($\\mu={mu:g}$); fault cleared at {emt_fault[1]:.2f} s', emt_fault),
             ('r', 'referenceOrange', f'(b) GridKit PhasorDynamics; fault cleared at {phasor_fault[1]:.2f} s', phasor_fault)]:
         if kind != 'vmag':
             title += f' ({count} machines)'
@@ -135,7 +135,7 @@ def main():
             'maximum_absolute_error_pu': max(abs(e) for row in differences for e in row),
             'rmse_pu': math.sqrt(sum(e * e for row in differences for e in row) / (len(emt) * len(names))),
         }
-        # Retain 240 Hz around the fault and 60 Hz elsewhere in the editable plot data.
+        # Retain every available cycle average around the fault.
         selected = [k for k, row in enumerate(emt) if 0.9 <= row['time'] <= 1.4 or k % 4 == 0 or k == len(emt) - 1]
         with (output / f'Hawaii.{kind}.csv').open('w', newline='') as stream:
             writer = csv.writer(stream, lineterminator='\n')
@@ -153,7 +153,7 @@ def main():
         style = os.path.relpath(ROOT.parents[2] / 'docs/Figures/EMT/diagram-style.tex', output)
         (output / (name + '.tex')).write_text(document(kind, names, low - margin, high + margin,
                                                      elow - emargin, ehigh + emargin, style, run_metrics['final_time_s'],
-                                                     emt_fault, phasor_fault))
+                                                     emt_fault, phasor_fault, run_metrics['study']['mu']))
         if not args.no_render:
             command = ['pdflatex', '-cnf-line=extra_mem_top=20000000', '-cnf-line=extra_mem_bot=20000000',
                        '-interaction=nonstopmode', '-halt-on-error', name + '.tex']

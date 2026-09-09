@@ -15,6 +15,7 @@ namespace GridKit
     /// Initial parameters for a switch
     enum class SwitchParameters
     {
+      I,    ///< Nominal phase RMS current for absolute tolerances [A]
       N,    ///< Number of phases
       open, ///< Ganged switch command, true is open and false is closed
     };

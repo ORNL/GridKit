@@ -41,6 +41,8 @@ namespace GridKit
       void InnerCurrentControl<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Parameter = typename ModelDataT::Parameters;
+        i_scale_        = nominalScale<RealT>(data, Parameter::I, std::sqrt(THREE<RealT>));
+        v_scale_        = nominalScale<RealT>(data, Parameter::V, ONE<RealT>);
         L_              = parameter<RealT>(data, Parameter::L, L_);
         Kp_             = parameter<RealT>(data, Parameter::Kp, Kp_);
         Ki_             = parameter<RealT>(data, Parameter::Ki, Ki_);
@@ -234,7 +236,14 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int InnerCurrentControl<scalar_type, index_type>::setAbsoluteTolerance(RealT tolerance)
       {
-        abs_tol_.setToConst(static_cast<ScalarT>(tolerance));
+        auto* absolute = abs_tol_.getData();
+        for (size_t p = 0; p < 2; ++p)
+        {
+          absolute[p]     = tolerance * v_scale_;
+          absolute[2 + p] = tolerance * i_scale_;
+          absolute[4 + p] = tolerance * v_scale_;
+        }
+        abs_tol_.setDataUpdated();
         return 0;
       }
 
