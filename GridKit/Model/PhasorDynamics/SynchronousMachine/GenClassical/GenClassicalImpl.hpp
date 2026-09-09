@@ -14,8 +14,8 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/ConfigurationChecks.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/ParameterReader.hpp>
 
 namespace GridKit
