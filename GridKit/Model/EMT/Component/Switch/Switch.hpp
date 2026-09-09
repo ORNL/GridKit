@@ -164,6 +164,8 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
+      RealT i_scale_{ONE<RealT>};
+
       std::array<SignalT, 3> current_;
 
       /* Setpoints for control variables */

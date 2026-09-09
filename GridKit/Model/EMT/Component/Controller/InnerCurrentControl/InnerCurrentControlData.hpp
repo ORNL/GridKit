@@ -15,6 +15,8 @@ namespace GridKit
     {
       enum class InnerCurrentControlParameters
       {
+        V,    ///< Rated line-to-line RMS voltage [V]
+        I,    ///< Nominal phase RMS current for absolute tolerances [A]
         L,    ///< \f$L\f$ Filter inductance [H]
         Kp,   ///< \f$K_P\f$ Proportional gain [ohm]
         Ki,   ///< \f$K_I\f$ Integral gain [ohm/s]

@@ -11,6 +11,9 @@ one-cycle positive-sequence estimate. Machine speed, active power, and reactive
 power use cycle means; their colours identify the six machine buses. The time
 label is the centre of the averaging window;
 the approximately half-cycle transition spreading is a measurement effect.
+Around the fault, averages retain the 7200 Hz monitor cadence so that residual
+power ripple is drawn smoothly. This changes sampling density, not the
+one-cycle averaging window.
 Powers use the 100 MVA system base. Both trajectories are simulated by GridKit;
 the fault impedance at 60 Hz and the event times match, while the dynamic
 models retain the differences documented in the case README.
@@ -51,9 +54,10 @@ matching PNGs are rendered at 600 DPI. Each figure retains its editable
 simulated PhasorDynamics run. `results/emt/metrics.json` records physical
 checks, input/executable/library hashes, and accepted-step statistics.
 
-The normal EMT workflow uses the case solver's `rel_tol = 1e-5` and
-`abs_tol = 1e-6`, including the CTest and switching studies. It does not run a
-tighter-tolerance study.
+The normal EMT workflow and CTest use `mu = 240`, `max_order = 2`,
+`rel_tol = 1e-5`, and model-scaled `abs_tol = 1e-6`. The generated case supplies
+fixed nominal voltage/current ratings. The separate switching check retains
+`mu = 50000`, order 5, and scalar `abs_tol = 1e-6`.
 
 The lumped lines use coupled GridWorkbench-based parameters calibrated to
 the source positive sequence; see the case README for the geometry assumptions.
@@ -64,7 +68,10 @@ solver settings, run:
 python3 examples/EMT/Hawaii/benchmark.py --baseline /path/to/saved/Hawaii
 ```
 
-This runs three sequential trials per case and mu, with no intermediate monitoring
+This uses scalar absolute tolerances and order 5 by default so older cases
+without nominal ratings receive the same error weights. `--max-order 2` selects
+the smoothed-study order; `--scaled-abs-tol` requires matching nominal ratings
+in both cases. It runs three sequential trials per case and mu, with no intermediate monitoring
 and a 0.2 s duration. `--tmax 5 --dt-monitor 0.0001388888888888889` includes
 the fault and recovery with the usual output cadence. Logs, input and binary
 hashes, CPU/wall timings, and IDA counters are saved below

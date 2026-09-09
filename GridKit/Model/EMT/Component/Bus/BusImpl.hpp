@@ -26,10 +26,19 @@ namespace GridKit
     {
       if (parameter<IdxT>(data, ModelDataT::Parameters::N, IdxT{3}) != 3)
         throw std::invalid_argument("Bus \"" + data.id + "\" requires N = 3");
+      v_scale_ = nominalScale<RealT>(data, ModelDataT::Parameters::V, std::sqrt(TWO<RealT> / THREE<RealT>));
       monitor_ = std::make_unique<MonitorT>(data);
       for (const auto& [name, Y] : data.shunts)
         addShunt(name, Y);
       initializeMonitor();
+    }
+
+    template <typename scalar_type, typename index_type>
+    int Bus<scalar_type, index_type>::setAbsoluteTolerance(RealT tolerance)
+    {
+      const int status = Base::setAbsoluteTolerance(tolerance);
+      kcl_.absoluteTolerance().setToConst(static_cast<ScalarT>(tolerance * v_scale_));
+      return status;
     }
 
     template <typename scalar_type, typename index_type>

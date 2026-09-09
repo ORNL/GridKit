@@ -12,6 +12,7 @@ int main()
   result += test.historyStepLimits();
   result += test.maximumSteps();
   result += test.maximumOrder();
+  result += test.modelTolerances();
   result += test.invalidTimes();
   result += test.quadratureAndAdjoint();
   result += test.evaluationFailures();

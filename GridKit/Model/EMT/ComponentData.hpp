@@ -142,6 +142,19 @@ namespace GridKit
       }
     }
 
+    /// Fixed nominal scale for absolute tolerances; omitted ratings retain unit scaling.
+    template <typename T, typename Data, typename Parameter>
+    T nominalScale(const Data& data, Parameter key, T factor = T{1})
+    {
+      if (!data.parameters.contains(key))
+        return T{1};
+      const T value = parameter<T>(data, key);
+      if (value <= T{0} || !std::isfinite(factor * value))
+        throw std::invalid_argument(data.device_class + " \"" + data.id + "\" parameter \""
+                                    + std::string(magic_enum::enum_name(key)) + "\" must give a positive finite nominal scale");
+      return factor * value;
+    }
+
     /// Read an optional parameter, preserving the model default when omitted.
     template <typename T, typename Data, typename Parameter>
     T parameter(const Data& data, Parameter key, const T& fallback)

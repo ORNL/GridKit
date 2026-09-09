@@ -45,6 +45,7 @@ namespace GridKit
       }
 
       int initializeSteadyState(RealT omega);
+      int setAbsoluteTolerance(RealT tolerance) override;
 
       void addCurrent(size_t phase, SignalT& signal, RealT sign = ONE<RealT>)
       {
@@ -91,6 +92,7 @@ namespace GridKit
       void                              initializeMonitor();
       const Model::VariableMonitorBase* getMonitor() const override;
 
+      RealT                                                     v_scale_{ONE<RealT>};
       KCLT&                                                     kcl_;
       SignalT                                                   zero_;
       std::array<std::vector<SignalT*>, 3>                      shunt_monitors_;

@@ -140,6 +140,8 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
+      RealT i_scale_{ONE<RealT>};
+
       /* Input parameters */
       IdxT             n_phases_{3};
       ABCMatrix<RealT> R_{{{{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}}}};

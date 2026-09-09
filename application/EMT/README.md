@@ -21,7 +21,8 @@ at each restart, including switch events.
   `dt_monitor`         | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
   `tmax`               | Finite, nonnegative simulation end time
   `rel_tol`            | Relative solver tolerance (default: 1.0e-7)
-  `abs_tol`            | Absolute solver tolerance override (default: 1.0e-9)
+  `abs_tol`            | Absolute tolerance, in state units unless `scaled_abs_tol` is true (default: 1.0e-9)
+  `scaled_abs_tol`    | Use model-provided per-state absolute tolerances (default: false)
   `mu`                | Positive finite CommonMath smoothing scale (default: 240); configured before model construction
   `signal_values`     | Optional object overriding declared constant signals by qualified path, e.g. `{"dc_4": 28918.846170570516}`; cannot override component outputs
   `dt_fixed`           | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
@@ -43,6 +44,30 @@ The `mu` option follows `lukel/mu-control-dev`: it sets the process-wide
 `Math::MU<RealT>`, affecting all CommonMath primitives, not only PWM. Configure
 it before constructing models or starting workers, and keep it fixed during
 the run. Separate application processes can use different values.
+
+## Absolute tolerances
+
+With `scaled_abs_tol: true`, `abs_tol` is a normalized floor and each model
+fills its existing tolerance vector. The relative tolerance is unchanged.
+Nominal ratings are fixed; instantaneous states do not determine the weights.
+The scalar override remains available with `scaled_abs_tol: false`.
+
+State units | Nominal scale
+----------- | -------------
+Phase voltage [V] | $\sqrt{2/3}V$
+Phase current [A] | $\sqrt{2}I$
+Power-invariant dq voltage [V] | $V$
+Power-invariant dq current [A] | $\sqrt{3}I$
+Per-unit quantities and angle [rad] | 1
+PLL integrator [s] | $\omega_0/K_I$
+PLL frequency [rad/s] | $\omega_0$
+
+`V` is nominal line-to-line RMS voltage and `I` is nominal phase RMS current.
+Bus, Filter, LineLumped, LoadZ, Switch, and the current/power controllers accept
+the applicable ratings in their parameter tables. An omitted rating retains a
+unit scale. Independent rational-realization states retain their existing
+tolerances; terminal SI ratings must not be applied to arbitrary realization
+coordinates. Machine and Transformer internal currents are already per unit.
 
 ## Events
 

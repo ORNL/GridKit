@@ -15,6 +15,8 @@ namespace GridKit
     /// Initial parameters for a filter
     enum class FilterParameters
     {
+      V,  ///< Rated line-to-line RMS voltage [V]
+      I,  ///< Nominal phase RMS current for absolute tolerances [A]
       Rs, ///< \f$\mathbf{R}_\mathrm{s}\f$ Converter-side resistance [ohm]
       Ls, ///< \f$\mathbf{L}_\mathrm{s}\f$ Converter-side inductance [H]
       C,  ///< \f$\mathbf{C}\f$ Shunt capacitance [F]
