@@ -119,6 +119,8 @@ namespace GridKit
         RealT                                                                                                       Kaw_{0.0};
         RealT                                                                                                       Imax_{0.0};
         RealT                                                                                                       ai_{0.0};
+        RealT                                                                                                       i_scale_{ONE<RealT>};
+        RealT                                                                                                       v_scale_{ONE<RealT>};
         ComponentSignals<ScalarT, IdxT, InnerCurrentControlInternalVariables, InnerCurrentControlExternalVariables> signals_;
         std::array<SignalT, 4>                                                                                      output_;
         std::array<SignalT*, 4>                                                                                     alias_{};

@@ -46,7 +46,10 @@ int main(int argc, const char* argv[])
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
-  ida.setTolerance(study.rel_tol, study.abs_tol);
+  if (study.scaled_abs_tol)
+    ida.setModelTolerance(study.rel_tol, study.abs_tol);
+  else
+    ida.setTolerance(study.rel_tol, study.abs_tol);
   ida.setFixedStep(study.dt_fixed);
   ida.setMaxSteps(study.max_steps);
   ida.setMaxOrder(study.max_order);

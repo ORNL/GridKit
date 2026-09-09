@@ -46,6 +46,7 @@ namespace GridKit
     void Switch<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
+      i_scale_        = nominalScale<RealT>(data, Parameter::I, std::sqrt(TWO<RealT>));
       if (data.parameters.contains(Parameter::open))
       {
         setOpen(parameter<bool>(data, Parameter::open));
@@ -168,7 +169,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Switch<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol * i_scale_));
       return 0;
     }
 

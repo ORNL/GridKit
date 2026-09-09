@@ -22,6 +22,7 @@ def benchmark(args):
     study = json.loads((ROOT / 'cases/EMT/Hawaii/Hawaii.solver.json').read_text())
     study.update(tmax=args.tmax, dt_monitor=args.dt_monitor,
                  output_file='Hawaii.csv', step_output_file='')
+    study.update(max_order=args.max_order, scaled_abs_tol=args.scaled_abs_tol)
     study['events'] = [event for event in study['events'] if event['time'] <= args.tmax]
     exe = args.exe.resolve()
     libraries = sorted((exe.parents[2] / 'GridKit').rglob('libgridkit*.so'))
@@ -79,6 +80,8 @@ def main():
     parser.add_argument('--mu', type=float, nargs='+', default=[240., 50000.])
     parser.add_argument('--tmax', type=float, default=0.2)
     parser.add_argument('--dt-monitor', type=float, default=0.)
+    parser.add_argument('--max-order', type=int, choices=range(1, 6), default=5)
+    parser.add_argument('--scaled-abs-tol', action='store_true', help='Both cases must supply the same nominal ratings')
     parser.add_argument('--trials', type=int, default=3)
     parser.add_argument('--timeout', type=float, default=600.)
     args = parser.parse_args()

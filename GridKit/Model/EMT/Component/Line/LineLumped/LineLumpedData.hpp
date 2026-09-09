@@ -18,6 +18,7 @@ namespace GridKit
     /// Initial parameters for a lumped line
     enum class LineLumpedParameters
     {
+      I,          ///< Nominal phase RMS current for absolute tolerances [A]
       N,          ///< Number of phases
       K,          ///< Number of conductors
       conductors, ///< Conductor phase-index list

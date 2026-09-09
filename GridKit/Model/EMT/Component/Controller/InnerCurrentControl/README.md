@@ -16,6 +16,8 @@ Figure 1: InnerCurrentControl model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
+$V$ | [V] | `V` | Nominal line-to-line RMS voltage | Optional, positive; absolute-tolerance scale
+$I$ | [A] | `I` | Nominal phase RMS current | Optional, positive; absolute-tolerance scale
 $L$ | [H] | `L` | Inverter-side filter inductance | Required, positive
 $K_P$ | [$\Omega$] | `Kp` | Proportional gain | Required, positive
 $K_I$ | [$\Omega/\mathrm{s}$] | `Ki` | Integral gain | Required, positive

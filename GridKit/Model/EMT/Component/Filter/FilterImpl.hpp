@@ -39,6 +39,8 @@ namespace GridKit
     void Filter<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
+      i_scale_        = nominalScale<RealT>(data, Parameter::I, std::sqrt(TWO<RealT>));
+      v_scale_        = nominalScale<RealT>(data, Parameter::V, std::sqrt(TWO<RealT> / THREE<RealT>));
       Rs_             = parameter<ABCMatrix<RealT>>(data, Parameter::Rs, Rs_);
       Ls_             = parameter<ABCMatrix<RealT>>(data, Parameter::Ls);
       C_              = parameter<ABCMatrix<RealT>>(data, Parameter::C);
@@ -324,7 +326,14 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Filter<scalar_type, index_type>::setAbsoluteTolerance(RealT tolerance)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(tolerance));
+      auto* absolute = abs_tol_.getData();
+      for (size_t p = 0; p < 3; ++p)
+      {
+        absolute[p]     = tolerance * i_scale_;
+        absolute[3 + p] = tolerance * v_scale_;
+        absolute[6 + p] = tolerance * i_scale_;
+      }
+      abs_tol_.setDataUpdated();
       return 0;
     }
 

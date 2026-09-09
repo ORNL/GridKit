@@ -312,10 +312,13 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
                 _, old = window.popleft()
                 for k, value in enumerate(old):
                     sums[k] -= value
-            if len(window) == window_count and samples_seen % decimation == 0:
-                average = [abs(value / window_count) if k < len(buses) else (value / window_count).real
-                           for k, value in enumerate(sums)]
-                averaged.append([(window[0][0] + time) / 2] + average)
+            if len(window) == window_count:
+                centre = (window[0][0] + time) / 2
+                fault_window = report['choices']['fault_on_s'] - 1 / 60 <= centre <= report['choices']['fault_off_s'] + 1 / 60
+                if fault_window or samples_seen % decimation == 0:
+                    average = [abs(value / window_count) if k < len(buses) else (value / window_count).real
+                               for k, value in enumerate(sums)]
+                    averaged.append([centre] + average)
     require(first is not None, 'Empty monitor output')
     require(abs(last_time - study['tmax']) < 1e-9, 'Study stopped before its final time')
     require(len(switch_changes) == 2, f'Expected two fault events, got {switch_changes}')
@@ -373,6 +376,7 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
         'accepted_steps': {'count': len(steps), 'minimum_s': min(steps), 'median_s': statistics.median(steps),
                            'maximum_s': max(steps), 'orders': dict(orders)},
         'averaging': {'cycles': 1, 'samples_per_cycle': window_count,
+                      'fault_output_interval_s': sample_period, 'outside_fault_output_interval_s': decimation * sample_period,
                       'description': '60 Hz demodulated voltage vector and P/Q/speed cycle means, labelled at window centre'},
     })
     metrics['averaged_sha256'] = hashlib.sha256((output / 'Hawaii.averaged.csv').read_bytes()).hexdigest()

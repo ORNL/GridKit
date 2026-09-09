@@ -17,6 +17,7 @@ namespace GridKit
     enum class BusParameters
     {
       N, ///< Number of phases
+      V, ///< Rated line-to-line RMS voltage [V]
     };
 
     /// Inputs supported by a bus

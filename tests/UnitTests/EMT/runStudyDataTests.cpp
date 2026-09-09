@@ -24,13 +24,17 @@ int main()
     }
     return false;
   };
-  const json base      = {{"system_model_file", "case.json"}, {"tmax", 1.0}};
-  const auto defaults  = base.get<EMT::StudyData>();
-  success             *= defaults.mu == Math::DEFAULT_MU<double>;
-  success             *= defaults.max_order == 5;
-  auto input           = base;
-  input["mu"]          = 50000.0;
-  const auto sharp     = input.get<EMT::StudyData>();
+  const json base           = {{"system_model_file", "case.json"}, {"tmax", 1.0}};
+  const auto defaults       = base.get<EMT::StudyData>();
+  success                  *= defaults.mu == Math::DEFAULT_MU<double>;
+  success                  *= defaults.max_order == 5;
+  success                  *= !defaults.scaled_abs_tol;
+  auto scaled               = base;
+  scaled["scaled_abs_tol"]  = true;
+  success                  *= scaled.get<EMT::StudyData>().scaled_abs_tol;
+  auto input                = base;
+  input["mu"]               = 50000.0;
+  const auto sharp          = input.get<EMT::StudyData>();
   EMT::configureCommonMath<double>(sharp);
   success *= std::abs(Math::ramp(0.0) - std::log(2.0) / 50000.0) < 1e-18;
   EMT::configureCommonMath<double>(defaults);
@@ -56,7 +60,7 @@ int main()
   }
 
   for (const auto& patch : {
-           json{{"unknown", 1}}, json{{"consistent_ic_type", "typo"}}, json{{"error_type", "typo"}}, json{{"max_steps", -1}}, json{{"max_steps", 1.5}}, json{{"max_steps", true}}, json{{"max_steps", std::numeric_limits<uint64_t>::max()}}, json{{"dt_monitor", -1}}, json{{"dt_fixed", -1}}, json{{"rel_tol", -1}}, json{{"abs_tol", -1}}, json{{"error_tolerance", json::array()}}, json{{"error_tolerance", {1.0, -1.0}}}, json{{"abs_err_threshold", -1}}, json{{"tmax", true}}})
+           json{{"unknown", 1}}, json{{"scaled_abs_tol", 1}}, json{{"scaled_abs_tol", "true"}}, json{{"scaled_abs_tol", nullptr}}, json{{"consistent_ic_type", "typo"}}, json{{"error_type", "typo"}}, json{{"max_steps", -1}}, json{{"max_steps", 1.5}}, json{{"max_steps", true}}, json{{"max_steps", std::numeric_limits<uint64_t>::max()}}, json{{"dt_monitor", -1}}, json{{"dt_fixed", -1}}, json{{"rel_tol", -1}}, json{{"abs_tol", -1}}, json{{"error_tolerance", json::array()}}, json{{"error_tolerance", {1.0, -1.0}}}, json{{"abs_err_threshold", -1}}, json{{"tmax", true}}})
   {
     input = base;
     input.update(patch);

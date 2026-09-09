@@ -36,6 +36,7 @@ namespace GridKit
       void OuterPowerControl<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Parameter = typename ModelDataT::Parameters;
+        i_scale_        = nominalScale<RealT>(data, Parameter::I, std::sqrt(THREE<RealT>));
         V_              = parameter<RealT>(data, Parameter::V, V_);
         Pref_           = parameter<RealT>(data, Parameter::Pref, Pref_);
         Qref_           = parameter<RealT>(data, Parameter::Qref, Qref_);
@@ -215,7 +216,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int OuterPowerControl<scalar_type, index_type>::setAbsoluteTolerance(RealT tolerance)
       {
-        abs_tol_.setToConst(static_cast<ScalarT>(tolerance));
+        abs_tol_.setToConst(static_cast<ScalarT>(tolerance * i_scale_));
         return 0;
       }
 

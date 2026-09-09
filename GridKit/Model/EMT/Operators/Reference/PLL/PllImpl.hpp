@@ -210,7 +210,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Pll<scalar_type, index_type>::setAbsoluteTolerance(RealT tolerance)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(tolerance));
+      auto* absolute = abs_tol_.getData();
+      absolute[0]    = tolerance;
+      absolute[1]    = tolerance * omega0_ / Ki_;
+      absolute[2]    = tolerance * omega0_;
+      abs_tol_.setDataUpdated();
       return 0;
     }
 

@@ -15,6 +15,7 @@ namespace GridKit
     {
       enum class OuterPowerControlParameters
       {
+        I,    ///< Nominal phase RMS current for absolute tolerances [A]
         V,    ///< \f$V\f$ Rated line-to-line RMS voltage [V]
         Pref, ///< \f$P^{\mathrm{ref}}\f$ Active-power setpoint [W]
         Qref, ///< \f$Q^{\mathrm{ref}}\f$ Reactive-power setpoint [var]

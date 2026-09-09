@@ -25,6 +25,7 @@ Define the phase- and conductor-index sets
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
+$I$ | [A] | `I` | Nominal phase RMS current | Optional, positive; absolute-tolerance scale
 $N$ | [-] | `N` | Number of phases | Required, positive integer
 $K$ | [-] | `K` | Number of conductors | Required, positive integer
 $\mathbf{c}$ | [-] | `conductors` | Conductor phase-index list | $\mathbf{c} \in \mathcal{N}^K$

@@ -158,6 +158,8 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
+      RealT i_scale_{ONE<RealT>};
+
       /* Input parameters */
       ABCVector<IdxT>  conductors_{{1, 2, 3}};
       RealT            dx_{0.0};
