@@ -5,8 +5,6 @@ add_subdirectory(FrequencyDependent)
 add_subdirectory(Distributed)
 add_subdirectory(CoupledGrid)
 
-add_subdirectory(CurrentControl)
-
 add_subdirectory(Transformer)
 
 add_subdirectory(Hawaii)

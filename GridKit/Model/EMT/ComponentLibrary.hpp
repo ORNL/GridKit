@@ -5,7 +5,6 @@
 #include <GridKit/Model/EMT/Component/Controller/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/EMT/Component/Controller/InnerCurrentControl/InnerCurrentControl.hpp>
-#include <GridKit/Model/EMT/Component/Controller/OuterPowerControl/OuterPowerControl.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/Pwm.hpp>
 #include <GridKit/Model/EMT/Component/Controller/REECB/Reecb.hpp>
 #include <GridKit/Model/EMT/Component/Controller/REPCA/Repca.hpp>

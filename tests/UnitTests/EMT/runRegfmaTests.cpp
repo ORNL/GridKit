@@ -474,11 +474,14 @@ namespace
           for (size_t row = 0; row < states; ++row)
             for (const auto& [column, value] : direct.model.getResidual().getData()[row].getDependencies())
               tracked[{row, column}] += value;
+          // Physical current residuals amplify subtraction roundoff. Check two
+          // central-difference steps to avoid relying on one cancellation-prone step.
+          for (const double step : {1e-5, 3e-5})
           for (size_t column = 0; column < states + 7; ++column)
           {
             double&      value  = column < states ? y[column] : column < states + 6 ? fixture.inputs[column - states]
                                                                                     : composed;
-            const double h      = 1e-6 * std::max(1.0, std::abs(value));
+            const double h      = step * std::max(1.0, std::abs(value));
             value              += h * y_scale;
             if (column < states)
               yp[column] += h * yp_scale;

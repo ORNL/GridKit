@@ -105,7 +105,6 @@ PCC opens. Reconnection also requires synchronization across the disconnect.
 - [InnerCurrentControl](InnerCurrentControl/README.md): converter current control in $dq$ coordinates.
 - [REECB](REECB/README.md): terminal power, voltage, and current-priority control.
 - [REPCA](REPCA/README.md): renewable plant voltage, reactive-power, and frequency control.
-- [OuterPowerControl](OuterPowerControl/README.md): active and reactive power control in $dq$ coordinates.
 - [IEEET1](IEEET1/README.md)
 - [PWM](PWM/README.md)
 - [TGOV1](TGOV1/README.md)

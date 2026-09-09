@@ -96,7 +96,6 @@ def conversion_checks(case, state, report):
         require(counts[kind] == count, f'{kind} count: {counts[kind]} != {count}')
     require(not counts['Regfma'] and not counts['REGFMA'], 'Unexpected REGFMA replacement')
     require(not counts['DependentVoltageSource'], 'Inverter plants must use LCL Filters')
-    require(not counts['OuterPowerControl'], 'Hawaii must use the source electrical controllers')
     devices = {d['id']: d for d in case['devices']}
     signals = {s['id']: s.get('value') for s in case['signals']}
     fault, discharge = devices['fault_load'], devices['fault_discharge_load']
