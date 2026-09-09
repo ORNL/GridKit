@@ -241,6 +241,9 @@ future file-backed Containers; file inclusion is not part of this revision.
   `Repca`                  | `v`, `i` | Input | Two Signal IDs | Yes
   `Repca`                  | `freq`, `vref`, `pref`, `qref`, `freqref` | Input | Signal ID | No
   `Repca`                  | `qext`, `pext` | Output | Signal ID | No
+  `Reecb`                  | `v`, `i` | Input | Two Signal IDs | Yes
+  `Reecb`                  | `Pref`, `Qref`, `Vref`, `pfaref` | Input | Signal ID | No
+  `Reecb`                  | `icmd` | Output | Two Signal IDs | No
   `OuterPowerControl`      | `icmd` | Output | Two Signal IDs | No
   `PLL`                    | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `PLL`                    | `theta`, `omega` | Output | Signal | No
@@ -422,6 +425,7 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `PLL`                 | [PLL](Operators/Reference/PLL/README.md)
   `InnerCurrentControl` | [InnerCurrentControl](Component/Controller/InnerCurrentControl/README.md)
   `Repca`               | [REPCA](Component/Controller/REPCA/README.md)
+  `Reecb`               | [REECB](Component/Controller/REECB/README.md)
   `OuterPowerControl`   | [OuterPowerControl](Component/Controller/OuterPowerControl/README.md)
   `OuterVoltageControl` | [OuterVoltageControl](Component/Controller/OuterVoltageControl/README.md)
   `Converter`           | [Converter](Operators/Converter/README.md)

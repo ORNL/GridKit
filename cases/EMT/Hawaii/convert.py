@@ -31,9 +31,8 @@ CHOICES = {
     'Mmax': 0.95,
     'PLL_Kp': 80.0,
     'PLL_Ki': 2500.0,
-    'outer_Kp': 0.001,
-    'outer_Ki': 40.0,
-    'outer_Kaw': 200.0,
+    'bridge_Imax_pu': 1.5,
+    'capacitor_measurement_s': 0.005,
     'dc_voltage_ratio': 2.0,
     'carrier_Hz': 1800.0,
     'carrier_alignment': 0.5,
@@ -365,7 +364,7 @@ def convert(source, line_data):
         current = ig + 1j * OMEGA * c * vo
         bridge_power = pq.real + rg * abs(ig)**2 + rs * abs(current)**2
         reecb = next(e for e in source['devices'] if e['id'] == prefix + '_reecb')
-        imax = reecb['params']['Imax'] * rating / vb
+        imax = CHOICES['bridge_Imax_pu'] * rating / vb
 
         def s(key, value=None):
             return signal(prefix + '_' + key, value)
@@ -398,14 +397,15 @@ def convert(source, line_data):
             outputs={'out': vector('vg', 'dq0')})
         add('Park', prefix + '_grid_current', inputs={'input': vector('ig', 'abc'), 'theta': s('theta')},
             outputs={'out': vector('ig', 'dq0')}, mon=['out'])
-        add('OuterPowerControl', prefix + '_power',
-            {'V': vb, 'I': rating / (math.sqrt(3) * vb),
-             'Kp': CHOICES['outer_Kp'], 'Ki': CHOICES['outer_Ki'], 'Kaw': CHOICES['outer_Kaw']},
-            {'v': vector('vg', 'dq'), 'i': vector('ig', 'dq'), 'ilim': vector('ilim', 'dq'),
+        electrical_params = dict(reecb['params'])
+        electrical_params['S'] = electrical_params.pop('mva') * 1e6
+        electrical_params['V'] = vb
+        add('Reecb', prefix + '_electrical', electrical_params,
+            {'v': vector('vg', 'dq'), 'i': vector('ig', 'dq'),
              'Pref': s('Pref'), 'Qref': s('Qref')},
-            {'icmd': vector('icmd', 'dq')}, ['icmd'])
+            {'icmd': vector('icmd', 'dq')}, ['icmd', 'ipcmd', 'iqcmd', 'iqv', 'vmeas'])
         add('InnerCurrentControl', prefix + '_inner',
-            {'V': vb, 'I': rating / (math.sqrt(3) * vb), 'L': ls, 'Kp': ls * wc, 'Ki': rs * wc, 'Kaw': wc, 'Imax': imax},
+            {'V': vb, 'I': rating / (math.sqrt(3) * vb), 'L': ls, 'C': c, 'Tf': CHOICES['capacitor_measurement_s'], 'Kp': ls * wc, 'Ki': rs * wc, 'Kaw': wc, 'Imax': imax},
             {'v': vector('v', 'dq'), 'i': vector('i', 'dq'), 'icmd': vector('icmd', 'dq'),
              'omega': s('omega'), 'ulim': vector('ulim', 'dq')},
             {'ilim': vector('ilim', 'dq'), 'u': vector('u', 'dq')}, ['ilim'])
@@ -420,6 +420,8 @@ def convert(source, line_data):
                                        'dispatch_W': pq.real, 'dispatch_var': pq.imag,
                                        'vdc_V': vdc, 'plant_controller': repca['id'],
                                        'plant_parameters': repca['params'],
+                                       'electrical_controller': reecb['id'],
+                                       'electrical_parameters': reecb['params'],
                                        'filter_Rs_ohm': rs, 'filter_Ls_H': ls, 'filter_C_F': c,
                                        'filter_Rg_ohm': rg, 'filter_Lg_H': lg,
                                        'filter_resonance_Hz': math.sqrt((ls + lg) / (ls * lg * c)) / (2 * math.pi),

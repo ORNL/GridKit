@@ -26,7 +26,7 @@ namespace GridKit
         : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
-        size_ = 6;
+        size_ = 8;
         signals_.template assignSignal<InnerCurrentControlInternalVariables::ILIMD>(&output_[0]);
         signals_.template assignSignal<InnerCurrentControlInternalVariables::ILIMQ>(&output_[1]);
         signals_.template assignSignal<InnerCurrentControlInternalVariables::UD>(&output_[2]);
@@ -43,6 +43,8 @@ namespace GridKit
         using Parameter = typename ModelDataT::Parameters;
         i_scale_        = nominalScale<RealT>(data, Parameter::I, std::sqrt(THREE<RealT>));
         v_scale_        = nominalScale<RealT>(data, Parameter::V, ONE<RealT>);
+        C_              = parameter<RealT>(data, Parameter::C, C_);
+        Tf_             = parameter<RealT>(data, Parameter::Tf, Tf_);
         L_              = parameter<RealT>(data, Parameter::L, L_);
         Kp_             = parameter<RealT>(data, Parameter::Kp, Kp_);
         Ki_             = parameter<RealT>(data, Parameter::Ki, Ki_);
@@ -124,6 +126,16 @@ namespace GridKit
             Log::error() << "InnerCurrentControl: inputs must have linked sources\n";
             ++error_count;
           }
+        if (!std::isfinite(Tf_) || Tf_ <= ZERO<RealT>)
+        {
+          Log::error() << "InnerCurrentControl: Tf must be finite and positive\n";
+          ++error_count;
+        }
+        if (!std::isfinite(C_) || C_ < ZERO<RealT>)
+        {
+          Log::error() << "InnerCurrentControl: C must be finite and nonnegative\n";
+          ++error_count;
+        }
         for (const auto value : {L_, Kp_, Ki_, Kaw_, Imax_, ai_})
           if (!std::isfinite(value) || value <= ZERO<RealT>)
           {
@@ -156,9 +168,9 @@ namespace GridKit
         const RealT vq    = static_cast<RealT>(signals_.template readExternalVariable<V::VQ>());
         const RealT id    = static_cast<RealT>(signals_.template readExternalVariable<V::ID>());
         const RealT iq    = static_cast<RealT>(signals_.template readExternalVariable<V::IQ>());
-        const RealT icmdd = static_cast<RealT>(signals_.template readExternalVariable<V::ICMDD>());
-        const RealT icmdq = static_cast<RealT>(signals_.template readExternalVariable<V::ICMDQ>());
         const RealT omega = static_cast<RealT>(signals_.template readExternalVariable<V::OMEGA>());
+        const RealT icmdd = static_cast<RealT>(signals_.template readExternalVariable<V::ICMDD>()) - omega * C_ * vq;
+        const RealT icmdq = static_cast<RealT>(signals_.template readExternalVariable<V::ICMDQ>()) + omega * C_ * vd;
         for (const auto value : {vd, vq, id, iq, icmdd, icmdq, omega})
           if (!std::isfinite(value))
             throw std::invalid_argument("InnerCurrentControl: nonfinite initial input");
@@ -183,6 +195,8 @@ namespace GridKit
         auto* y = y_.getData();
         for (size_t n = 0; n < values.size(); ++n)
           y[n] = values[n];
+        y[6]     = vd;
+        y[7]     = vq;
         auto* yp = yp_.getData();
         for (IdxT n = 0; n < size_; ++n)
           yp[n] = ZERO<RealT>;
@@ -219,8 +233,10 @@ namespace GridKit
         const RealT li = std::sqrt(Math::max(ONE<RealT>, ai_ * (id * id + iq * iq)));
         if (std::abs(li - ONE<RealT>) > RealT{1e-10})
           throw std::invalid_argument("InnerCurrentControl: initial current must lie inside the current limit");
-        initial.require(*signals_.template getAttachedSignal<V::ICMDD>(), id, *this);
-        initial.require(*signals_.template getAttachedSignal<V::ICMDQ>(), iq, *this);
+        const RealT vd = initial.value(*signals_.template getAttachedSignal<V::VD>());
+        const RealT vq = initial.value(*signals_.template getAttachedSignal<V::VQ>());
+        initial.require(*signals_.template getAttachedSignal<V::ICMDD>(), id + initial.omega() * C_ * vq, *this);
+        initial.require(*signals_.template getAttachedSignal<V::ICMDQ>(), iq - initial.omega() * C_ * vd, *this);
         initial.provide(output_[0], id / li);
         initial.provide(output_[1], iq / li);
         const auto outputs = this->template parseInitialOutputs<InnerCurrentControl>(initial.outputs(*this));
@@ -242,6 +258,7 @@ namespace GridKit
           absolute[p]     = tolerance * v_scale_;
           absolute[2 + p] = tolerance * i_scale_;
           absolute[4 + p] = tolerance * v_scale_;
+          absolute[6 + p] = tolerance * v_scale_;
         }
         abs_tol_.setDataUpdated();
         return 0;
@@ -251,15 +268,21 @@ namespace GridKit
       int InnerCurrentControl<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y, const ScalarT* yp, const ScalarT* input, const ScalarT*, ScalarT* f)
       {
-        const ScalarT li = std::sqrt(Math::max(ONE<RealT>, ai_ * (input[4] * input[4] + input[5] * input[5])));
-        const ScalarT ed = y[2] - input[2];
-        const ScalarT eq = y[3] - input[3];
-        f[0]             = -yp[0] + Ki_ * ed + Kaw_ * (input[7] - y[4]);
-        f[1]             = -yp[1] + Ki_ * eq + Kaw_ * (input[8] - y[5]);
-        f[2]             = y[2] - input[4] / li;
-        f[3]             = y[3] - input[5] / li;
-        f[4]             = y[4] - (input[0] - input[6] * L_ * input[3] + Kp_ * ed + y[0]);
-        f[5]             = y[5] - (input[1] + input[6] * L_ * input[2] + Kp_ * eq + y[1]);
+        const ScalarT vfd   = y[6];
+        const ScalarT vfq   = y[7];
+        const ScalarT icmdd = input[4] - input[6] * C_ * vfq;
+        const ScalarT icmdq = input[5] + input[6] * C_ * vfd;
+        const ScalarT li    = std::sqrt(Math::max(ONE<RealT>, ai_ * (icmdd * icmdd + icmdq * icmdq)));
+        const ScalarT ed    = y[2] - input[2];
+        const ScalarT eq    = y[3] - input[3];
+        f[0]                = -yp[0] + Ki_ * ed + Kaw_ * (input[7] - y[4]);
+        f[1]                = -yp[1] + Ki_ * eq + Kaw_ * (input[8] - y[5]);
+        f[2]                = y[2] - icmdd / li;
+        f[3]                = y[3] - icmdq / li;
+        f[4]                = y[4] - (input[0] - input[6] * L_ * input[3] + Kp_ * ed + y[0]);
+        f[5]                = y[5] - (input[1] + input[6] * L_ * input[2] + Kp_ * eq + y[1]);
+        f[6]                = -yp[6] + (input[0] - vfd) / Tf_;
+        f[7]                = -yp[7] + (input[1] - vfq) / Tf_;
         return 0;
       }
 

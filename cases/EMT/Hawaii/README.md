@@ -134,21 +134,21 @@ full fault trajectories, which include the other model differences below.
 
 Each source REGCA unit is replaced by the
 [GFL switching-inverter arrangement](../CurrentControl/README.md): PLL,
-voltage and current Park transforms, OuterPowerControl, InnerCurrentControl,
+voltage and current Park transforms, REECB, InnerCurrentControl,
 PWM, Converter, and a physical LCL Filter.
 `Converter.e` drives `Filter.e`; `Filter.ig` injects into the original bus.
 `Filter.i` supplies the inner current loop, while `Filter.ig`
 supplies the outer loop through a separate Park transform. PLL reads terminal
 Bus voltage. Separate voltage Park transforms supply Bus voltage to
-OuterPowerControl and `Filter.vo` to InnerCurrentControl. All Park transforms
+REECB and `Filter.vo` to InnerCurrentControl. All Park transforms
 and PWM share PLL's `theta`, and the inner controller receives PLL's `omega`.
 PWM limits the dq voltage command and returns it to the inner controller.
-REPCA reads the same terminal voltage and grid current as OuterPowerControl.
+REPCA reads the same terminal voltage and grid current as REECB.
 Its source parameters, selectors, and plant rating are retained. All nine
 plants regulate terminal voltage (`RefFlag = true`); their initialized voltage
-references are latched locally. REPCA `qext` supplies OuterPowerControl `Qref`,
-while `Pref` is an external constant at the source active dispatch. Power
-errors are normalized by rated voltage.
+references are latched locally. REPCA `qext` supplies REECB `Qref`,
+while `Pref` is an external constant at the source active dispatch. REECB retains the source measurement lags, voltage-response logic, and current
+priority. All nine plants use reactive-power references and Q priority.
 Power-invariant current base is $S/V$.
 
 The following plant data are fabricated because REGCA supplies no bridge,
@@ -161,10 +161,10 @@ Grid-side resistance and reactance | 0.005 and 0.10 p.u. on the plant rating
 Capacitor susceptance | 0.10 p.u.; $C=0.10/(\omega_\mathrm{b}Z_\mathrm{b})$
 Undamped LCL resonance | 734.85 Hz; $\sqrt{(L_{\mathrm{s}}+L_g)/(L_{\mathrm{s}}L_g C)}/(2\pi)$
 Inner-loop bandwidth | $2\pi\,300$ rad/s; $K_P=L_{\mathrm{s}}\omega_c$, $K_I=R_{\mathrm{s}}\omega_c$, $K_{\mathrm{aw}}=\omega_c$
-Current limit | Source REECB `Imax` times $S/V$
+Capacitor-voltage measurement | 5 ms lag for current-reference compensation
+Bridge current limit | $1.5S/V$; separate from source REECB terminal-current limit $1.3S/V$
 Modulation limit | 0.95
 PLL | $K_P=80$ rad/s, $K_I=2500$ rad/s$^2$
-Outer current loop | $K_P=0.001$, $K_I=40$ s$^{-1}$, $K_{\mathrm{aw}}=200$ s$^{-1}$
 DC voltage | Constant $2V_\mathrm{b}$, shared by PWM and Converter
 Carrier | 1800 Hz, centre aligned
 
@@ -191,20 +191,22 @@ P_{\mathrm{bridge}} &= P_{\mathrm{grid}}+R_g|I_g|^2+R_{\mathrm{s}}|I|^2.
 ```
 
 The nine Filter states follow these phasors. PLL aligns to terminal Bus voltage;
-inner-loop output initializes to $E$ in that frame, and outer-loop output
-initializes to the converter-side current $I$. OuterPowerControl requests the
-initial terminal Q from REPCA, which derives its PI/lead-lag states and voltage
-reference through the normal initialization procedure. Initial conditions describe
+inner-loop voltage output initializes to $E$ in that frame. Its capacitor
+compensation maps REECB terminal-current commands to converter-current commands
+using $\mathbf i^\star=\mathbf i_g^{\mathrm{cmd}}+\omega C\mathbf J\mathbf v_f$.
+Here $\mathbf v_f$ is the filtered capacitor voltage, equal to $\mathbf v_o$
+in steady state. Initialization reverses that map and requests terminal current from REECB.
+REECB derives its states and requests terminal Q from REPCA, which derives its
+PI/lead-lag states and voltage reference through the normal initialization procedure. Initial conditions describe
 the fundamental operating point, not the periodic switching orbit.
 
 The replacement omits REGCA current-source lag, LVPL, high-voltage reactive
-current logic, and source ramp-rate behavior; REECB voltage-dip reactive
-injection, P/Q priority, voltage/Q control flags, measurement lags, and
-current-order recovery. REPCA plant control is retained; its frequency-control
-output is disabled in every source plant.
-Its PLL, outer current PI loop, circular current limiter, and physical bridge are
-different dynamics. Matching initial dispatch does not validate those omitted
-controls. See
+current logic, and source reactive-current rate limits. REPCA and REECB control
+equations and parameters are retained; REPCA frequency control is disabled in
+every source plant. The explicit PLL, inner current regulator, LCL filter, and
+switching bridge supply additional dynamics. Capacitor-reference compensation
+is a balanced-fundamental relation; capacitor transients remain physical.
+Matching initial dispatch does not establish complete REGCA equivalence. See
 [REGCA correspondence](../../../GridKit/Model/EMT/Component/Controller/README.md#regca-correspondence)
 for LVPL and LVACM.
 
@@ -244,7 +246,8 @@ Transformer no-load and connection data | Fabricated core branches and grounded-
 Initial power flow | At bus 23, total synchronous dispatch changes by -0.152426 MW and +1.179855 Mvar; maximum bus phasor change is 0.000156170 p.u.
 Positive-sequence network | Coupled transposed equivalents calibrated to source R/X/B; zero sequence inferred from synthetic geometry
 Exciter sensing | Existing 1 ms sensing floor replaces source zero lag
-REGCA/REECB | Explicit switching plants with fabricated filter/control/DC data and the omitted functions listed above
+REGCA | Explicit switching plants with fabricated filter/inner-control/DC data and the omitted functions listed above
+REECB | Source electrical-control equations and parameters retained; SI terminal inputs and current commands
 REPCA | Source plant-control equations and parameters retained; SI terminal measurements and power outputs
 Fault impedance | 5.05158 mH per phase reproduces the source inductive impedance at 60 Hz
 Fault clearing circuit | Isolated switched discharge resistors preserve inductor current and dissipate stored energy
