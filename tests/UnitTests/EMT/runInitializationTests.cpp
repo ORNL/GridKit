@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
-#include <filesystem>
-#include <fstream>
 #include <limits>
 #include <map>
 #include <sstream>
@@ -267,64 +265,95 @@ namespace
     return success;
   }
 
-  json read(const std::filesystem::path& path)
-  {
-    std::ifstream stream(path);
-    return json::parse(stream);
-  }
-
   bool inverterEquilibrium()
   {
-    const auto   directory = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path() / "cases/EMT/CurrentControl";
-    const double omega     = 120 * std::acos(-1.0);
-    bool         success   = true;
-    auto         input     = read(directory / "GFL.case.json");
-    const auto   data      = read(directory / "GFL.state.json");
-    State        state;
-    for (const std::string section : {"buses", "devices"})
-      for (const auto& [path, outputs] : data.at(section).items())
-        state[path] = outputs.get<std::map<std::string, double>>();
+    const double omega   = 120 * std::acos(-1.0);
+    auto         input   = json::parse(R"({
+      "header":{"case_name":"Current controller initialization", "case_description":"", "case_comments":""},
+      "signals":[{"id":"omega"}, {"id":"theta"}, {"id":"vdc", "value":400},
+                 {"id":"icmdd", "value":8}, {"id":"icmdq", "value":0},
+                 {"id":"va"}, {"id":"vb"}, {"id":"vc"},
+                 {"id":"voa"}, {"id":"vob"}, {"id":"voc"},
+                 {"id":"ia"}, {"id":"ib"}, {"id":"ic"},
+                 {"id":"vd"}, {"id":"vq"}, {"id":"v0"},
+                 {"id":"id"}, {"id":"iq"}, {"id":"i0"},
+                 {"id":"ud"}, {"id":"uq"}, {"id":"ulimd"}, {"id":"ulimq"},
+                 {"id":"sa"}, {"id":"sb"}, {"id":"sc"},
+                 {"id":"ea"}, {"id":"eb"}, {"id":"ec"}],
+      "devices":[
+        {"class":"Bus", "id":"terminal", "outputs":{"va":"va", "vb":"vb", "vc":"vc"}},
+        {"class":"VoltageSource", "id":"grid", "inputs":{"bus":"terminal"},
+         "params":{"E":[120,120,120], "phi":[0,-2.0943951023931953,2.0943951023931953],
+                   "omega":376.99111843077515}},
+        {"class":"Filter", "id":"filter", "inputs":{"bus":"terminal", "e":["ea","eb","ec"]},
+         "params":{"Rs":[[0.2,0,0],[0,0.2,0],[0,0,0.2]],
+                   "Ls":[[0.002,0,0],[0,0.002,0],[0,0,0.002]],
+                   "C":[[0.0001,0,0],[0,0.0001,0],[0,0,0.0001]],
+                   "Rg":[[0.1,0,0],[0,0.1,0],[0,0,0.1]],
+                   "Lg":[[0.001,0,0],[0,0.001,0],[0,0,0.001]]},
+         "outputs":{"i":["ia","ib","ic"], "vo":["voa","vob","voc"]}},
+        {"class":"PLL", "id":"pll", "params":{"V":208, "f":60, "Kp":80, "Ki":2500},
+         "inputs":{"va":"va", "vb":"vb", "vc":"vc"}, "outputs":{"theta":"theta", "omega":"omega"}},
+        {"class":"Park", "id":"voltage", "inputs":{"input":["voa","vob","voc"], "theta":"theta"},
+         "outputs":{"out":["vd","vq","v0"]}},
+        {"class":"Park", "id":"current", "inputs":{"input":["ia","ib","ic"], "theta":"theta"},
+         "outputs":{"out":["id","iq","i0"]}},
+        {"class":"InnerCurrentControl", "id":"current_control",
+         "params":{"L":0.002, "C":0.0001, "Kp":5, "Ki":500, "Kaw":2500, "Imax":30},
+         "inputs":{"v":["vd","vq"], "i":["id","iq"], "omega":"omega",
+                   "icmd":["icmdd","icmdq"], "ulim":["ulimd","ulimq"]},
+         "outputs":{"u":["ud","uq"]}},
+        {"class":"PWM", "id":"pwm", "params":{"fc":6000, "alignment":0.5, "Mmax":0.95},
+         "inputs":{"u":["ud","uq"], "vdc":"vdc", "theta":"theta"},
+         "outputs":{"s":["sa","sb","sc"], "ulim":["ulimd","ulimq"]}},
+        {"class":"Converter", "id":"bridge", "inputs":{"s":["sa","sb","sc"], "vdc":"vdc"},
+         "outputs":{"e":["ea","eb","ec"]}}
+      ]
+    })");
+    const double voltage = 120 * std::sqrt(2.0);
+    const double current = 8 * std::sqrt(2.0 / 3.0);
+    const State  state{{"terminal", {{"va", voltage}, {"vb", -voltage / 2}, {"vc", -voltage / 2}}},
+                       {"filter", {{"iga", current}, {"igb", -current / 2}, {"igc", -current / 2}}}};
+    // Independent balanced LCL solution in the terminal-voltage frame.
+    const auto   vo      = 120 * std::sqrt(3.0) + std::complex<double>(0.1, omega * 0.001) * 8.0;
+    const auto   i       = 8.0 + std::complex<double>(0.0, omega * 0.0001) * vo;
+    bool         success = true;
     for (bool reverse : {false, true})
     {
       if (reverse)
         std::reverse(input["devices"].begin(), input["devices"].end());
       System system(model(input));
       system.allocate();
-      success           &= system.initialize(state, omega) == 0;
-      auto&      filter  = system.component("filter");
-      auto&      inner   = system.component("current_control");
-      auto&      outer   = system.component("power_control");
-      // Independent dq circuit identity: the PI supplies the inverter-side copper drop.
-      const auto params  = std::find_if(input["devices"].begin(), input["devices"].end(), [](const auto& device)
-                                       { return device.at("id") == "filter"; })
-                              ->at("params");
-      const double resistance  = params.at("Rs")[0][0];
-      const double id          = system.signal("id").read();
-      const double iq          = system.signal("iq").read();
-      success                 &= near(inner.y().getData()[0], resistance * id, 1e-8);
-      success                 &= near(inner.y().getData()[1], resistance * iq, 1e-8);
-      success                 &= near(inner.y().getData()[2], id, 1e-8);
-      success                 &= near(inner.y().getData()[3], iq, 1e-8);
-      success                 &= near(outer.y().getData()[2], id, 1e-8);
-      success                 &= near(outer.y().getData()[3], iq, 1e-8);
+      success      &= system.initialize(state, omega) == 0;
+      auto& filter  = system.component("filter");
+      auto& inner   = system.component("current_control");
+      success      &= near(system.signal("vd").read(), vo.real(), 1e-8);
+      success      &= near(system.signal("vq").read(), vo.imag(), 1e-8);
+      success      &= near(system.signal("id").read(), i.real(), 1e-8);
+      success      &= near(system.signal("iq").read(), i.imag(), 1e-8);
+      // The PI supplies the inverter-side copper drop.
+      success      &= near(inner.y().getData()[0], 0.2 * i.real(), 1e-8);
+      success      &= near(inner.y().getData()[1], 0.2 * i.imag(), 1e-8);
+      success      &= near(inner.y().getData()[2], i.real(), 1e-8);
+      success      &= near(inner.y().getData()[3], i.imag(), 1e-8);
       inner.evaluateResidual();
-      outer.evaluateResidual();
       for (size_t n = 0; n < 2; ++n)
-      {
         success &= near(inner.getResidual().getData()[n], 0.0, 1e-7);
-        success &= near(outer.getResidual().getData()[n], 0.0, 1e-7);
-      }
       // The physical LCL capacitor and grid inductor start on their sinusoidal orbit.
       filter.evaluateResidual();
       for (size_t n = 3; n < filter.size(); ++n)
         success &= near(filter.getResidual().getData()[n], 0.0, 1e-8);
-      success                               &= std::abs(filter.yp().getData()[4]) > 1.0;
-      auto conflicting                       = state;
-      conflicting["power_control"]["icmdd"]  = id + 1.0;
-      success                               &= rejectsWithoutMutation(system, conflicting, "icmdd", omega);
-      conflicting                            = state;
-      conflicting["filter"]["voa"]           = 1.0;
-      success                               &= rejectsWithoutMutation(system, conflicting, "filter.voa", omega);
+      success                      &= std::abs(filter.yp().getData()[4]) > 1.0;
+      auto conflicting              = state;
+      conflicting["filter"]["voa"]  = 1.0;
+      success                      &= rejectsWithoutMutation(system, conflicting, "filter.voa", omega);
+      auto conflicting_input        = input;
+      for (auto& signal : conflicting_input["signals"])
+        if (signal["id"] == "icmdd")
+          signal["value"] = 9.0;
+      System conflicting_system(model(conflicting_input));
+      conflicting_system.allocate();
+      success &= rejectsWithoutMutation(conflicting_system, state, "constant icmdd", omega);
     }
     return success;
   }
