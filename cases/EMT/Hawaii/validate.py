@@ -90,12 +90,13 @@ def conversion_checks(case, state, report):
     counts = collections.Counter(d['class'] for d in case['devices'])
     expected = {'Machine': 30, 'Tgov1': 30, 'Ieeet1': 30, 'Ieeest': 14,
                 'LineLumped': 77, 'Transformer': 12, 'LoadZ': 29, 'Switch': 2,
-                'PLL': 9, 'Repca': 9, 'OuterPowerControl': 9, 'InnerCurrentControl': 9,
+                'PLL': 9, 'Repca': 9, 'Reecb': 9, 'InnerCurrentControl': 9,
                 'PWM': 9, 'Converter': 9, 'Filter': 9, 'Park': 36}
     for kind, count in expected.items():
         require(counts[kind] == count, f'{kind} count: {counts[kind]} != {count}')
     require(not counts['Regfma'] and not counts['REGFMA'], 'Unexpected REGFMA replacement')
     require(not counts['DependentVoltageSource'], 'Inverter plants must use LCL Filters')
+    require(not counts['OuterPowerControl'], 'Hawaii must use the source electrical controllers')
     devices = {d['id']: d for d in case['devices']}
     signals = {s['id']: s.get('value') for s in case['signals']}
     fault, discharge = devices['fault_load'], devices['fault_discharge_load']
@@ -140,7 +141,7 @@ def conversion_checks(case, state, report):
 
     for plant, data in report['inverters'].items():
         filt, pll, inner, outer, bridge = (devices[plant + suffix] for suffix in
-                                             ('_filter', '_pll', '_inner', '_power', '_bridge'))
+                                             ('_filter', '_pll', '_inner', '_electrical', '_bridge'))
         terminal_voltage = devices[plant + '_terminal_voltage']
         voltage, current, grid_current, pwm = (devices[plant + suffix] for suffix in
                                                ('_voltage', '_current', '_grid_current', '_pwm'))
@@ -163,6 +164,11 @@ def conversion_checks(case, state, report):
         parameters['S'] = parameters.pop('mva') * 1e6
         parameters['V'] = data['voltage_V']
         require(controller['params'] == parameters, 'Source REPCA parameters')
+        parameters = dict(data['electrical_parameters'])
+        parameters['S'] = parameters.pop('mva') * 1e6
+        parameters['V'] = data['voltage_V']
+        require(outer['params'] == parameters, 'Source REECB parameters')
+        require(inner['params']['C'] == filt['params']['C'][0][0], 'Filter-capacitor reference compensation')
         require(grid_current['inputs']['input'] == filt['outputs']['ig'], 'Grid-current measurement')
         require(outer['inputs']['i'] == grid_current['outputs']['out'][:2], 'Outer-loop grid-current feedback')
         require(inner['inputs']['i'] == current['outputs']['out'][:2], 'Inner-loop converter-current feedback')
@@ -172,8 +178,7 @@ def conversion_checks(case, state, report):
         require(pwm['inputs']['u'] == inner['outputs']['u'], 'PWM voltage command')
         require(bridge['inputs']['s'] == pwm['outputs']['s'], 'Bridge switching input')
         require(inner['inputs']['omega'] == pll['outputs']['omega'], 'Inner loop must use PLL frequency')
-        require(outer['inputs']['ilim'] == inner['outputs']['ilim']
-                and inner['inputs']['icmd'] == outer['outputs']['icmd'], 'Outer-loop anti-windup connection')
+        require(inner['inputs']['icmd'] == outer['outputs']['icmd'], 'Electrical-controller current command')
         require(pwm['inputs']['vdc'] == bridge['inputs']['vdc'], 'Shared DC voltage')
         require(signals[bridge['inputs']['vdc']] == data['vdc_V'], 'Constant DC voltage')
         require(inner['inputs']['ulim'] == pwm['outputs']['ulim'], 'Limited voltage feedback')
@@ -245,6 +250,7 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
     switch_changes = []
     switch_state = None
     imax_ratio = 0.0
+    terminal_imax_ratio = 0.0
     omega_range = [math.inf, -math.inf]
     pq_initial_error = 0.0
     v1_min = math.inf
@@ -292,6 +298,9 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
                 limit = math.hypot(row[f'InnerCurrentControl_{plant}_inner_ilimd'],
                                    row[f'InnerCurrentControl_{plant}_inner_ilimq']) / data['Imax_A']
                 imax_ratio = max(imax_ratio, limit)
+                terminal_limit = math.hypot(row[f'Reecb_{plant}_electrical_ipcmd'],
+                                           row[f'Reecb_{plant}_electrical_iqcmd']) / data['electrical_parameters']['Imax']
+                terminal_imax_ratio = max(terminal_imax_ratio, terminal_limit)
             instantaneous_v1 = math.sqrt(sum(row[f'Bus_bus_1_v{p}']**2 for p in 'abc')) / vb['bus_1']
             if 1.02 < time < 1.09:
                 v1_min = min(v1_min, instantaneous_v1)
@@ -354,6 +363,8 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
     # Allow numerical interpolation error in the monitored algebraic limiter.
     current_limit_tolerance = 1e-4
     require(imax_ratio <= 1 + current_limit_tolerance, f'Current limiter exceeded: {imax_ratio}')
+    require(terminal_imax_ratio <= 1 + current_limit_tolerance,
+            f'REECB terminal-current limiter exceeded: {terminal_imax_ratio}')
     require(max(map(abs, omega_range)) < 0.05, f'Machine speed range: {omega_range}')
     require(v1_min < 0.7, f'Fault did not depress bus 1: {v1_min}')
     final_voltage = averaged[-1][1:1 + len(buses)]
@@ -377,6 +388,7 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
         'initial_dispatch_max_error_pu_plant_base': pq_initial_error,
         'initial_dispatch_tolerance_pu_plant_base': initial_dispatch_tolerance,
         'maximum_limited_current_ratio': imax_ratio,
+        'maximum_terminal_current_ratio': terminal_imax_ratio,
         'limited_current_ratio_tolerance': current_limit_tolerance,
         'machine_speed_deviation_pu_range': omega_range, 'fault_bus_1_minimum_voltage_pu': v1_min,
         'final_cycle_voltage_pu_range': [min(final_voltage), max(final_voltage)],
