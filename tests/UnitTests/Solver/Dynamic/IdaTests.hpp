@@ -734,6 +734,26 @@ namespace GridKit
     class IdaTests
     {
     public:
+      TestOutcome modelTolerances()
+      {
+        TestStatus success = true;
+        for (const double step : {0.0, 0.001})
+        {
+          Model::NullEvaluator<ScalarT, IdxT> model;
+          model.initialize();
+          Ida<ScalarT, IdxT> ida(&model);
+          ida.setFixedStep(step);
+          ida.setModelTolerance(1e-5, 1e-6);
+          ida.configureSimulation();
+          success *= model.absoluteTolerance().getData()[0] == ScalarT(1e-6);
+          ida.initializeSimulation(0.0);
+          ida.runSimulation(0.01);
+          ida.restartSimulation(0.01);
+          success *= model.absoluteTolerance().getData()[0] == ScalarT(1e-6);
+        }
+        return success.report(__func__);
+      }
+
       TestOutcome maximumOrder()
       {
         TestStatus success = true;

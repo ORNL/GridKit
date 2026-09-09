@@ -18,6 +18,7 @@ namespace GridKit
     /// Initial parameters for an impedance load
     enum class LoadZParameters
     {
+      I, ///< Nominal phase RMS current for absolute tolerances [A]
       N, ///< Number of phases
       R, ///< Load resistance matrix
       L, ///< Load inductance matrix

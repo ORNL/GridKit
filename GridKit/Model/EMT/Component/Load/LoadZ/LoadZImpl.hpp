@@ -70,6 +70,7 @@ namespace GridKit
     void LoadZ<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
+      i_scale_        = nominalScale<RealT>(data, Parameter::I, std::sqrt(TWO<RealT>));
       n_phases_       = parameter<IdxT>(data, Parameter::N, n_phases_);
       R_              = parameter<ABCMatrix<RealT>>(data, Parameter::R, R_);
       L_              = parameter<ABCMatrix<RealT>>(data, Parameter::L, L_);
@@ -325,7 +326,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol * i_scale_));
       return this->setAbsoluteToleranceOperators(rel_tol);
     }
 

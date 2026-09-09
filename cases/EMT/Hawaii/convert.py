@@ -243,7 +243,15 @@ def convert(source, line_data):
             signals[name]['value'] = value
         return name
 
+    nominal_voltage = {f'bus_{n}': bus['params']['kv'] * 1000 for n, bus in buses.items()}
+    nominal_voltage.update(fault_bus=nominal_voltage['bus_1'], fault_discharge_bus=nominal_voltage['bus_1'])
+
     def add(kind, name, params=None, inputs=None, outputs=None, mon=None, **extra):
+        if kind == 'Bus':
+            params = dict(params or {}, V=nominal_voltage[name])
+        elif kind in ('LineLumped', 'LoadZ', 'Switch'):
+            bus = inputs.get('bus', inputs.get('bus1'))
+            params = dict(params or {}, I=SYSTEM_BASE / (math.sqrt(3) * nominal_voltage[bus]))
         d = {'class': kind, 'id': name}
         for key, value in [('params', params), ('inputs', inputs), ('outputs', outputs), ('mon', mon)]:
             if value:
@@ -367,7 +375,7 @@ def convert(source, line_data):
 
         s('vdc', vdc)
         add('Filter', prefix + '_filter',
-            {'Rs': diagonal(rs), 'Ls': diagonal(ls), 'C': diagonal(c), 'Rg': diagonal(rg), 'Lg': diagonal(lg)},
+            {'V': vb, 'I': rating / (math.sqrt(3) * vb), 'Rs': diagonal(rs), 'Ls': diagonal(ls), 'C': diagonal(c), 'Rg': diagonal(rg), 'Lg': diagonal(lg)},
             {'e': vector('e', 'abc'), 'bus': f'bus_{n}'},
             {'i': vector('i', 'abc'), 'vo': vector('vo', 'abc'), 'ig': vector('ig', 'abc')}, ['i', 'vo', 'ig'])
         add('PLL', prefix + '_pll', {'V': vb, 'f': FREQUENCY, 'Kp': CHOICES['PLL_Kp'], 'Ki': CHOICES['PLL_Ki']},
@@ -383,12 +391,12 @@ def convert(source, line_data):
         add('Park', prefix + '_grid_current', inputs={'input': vector('ig', 'abc'), 'theta': s('theta')},
             outputs={'out': vector('ig', 'dq0')}, mon=['out'])
         add('OuterPowerControl', prefix + '_power',
-            {'V': vb, 'Pref': pq.real, 'Qref': pq.imag,
+            {'V': vb, 'I': rating / (math.sqrt(3) * vb), 'Pref': pq.real, 'Qref': pq.imag,
              'Kp': CHOICES['outer_Kp'], 'Ki': CHOICES['outer_Ki'], 'Kaw': CHOICES['outer_Kaw']},
             {'v': vector('vg', 'dq'), 'i': vector('ig', 'dq'), 'ilim': vector('ilim', 'dq')},
             {'icmd': vector('icmd', 'dq')}, ['icmd'])
         add('InnerCurrentControl', prefix + '_inner',
-            {'L': ls, 'Kp': ls * wc, 'Ki': rs * wc, 'Kaw': wc, 'Imax': imax},
+            {'V': vb, 'I': rating / (math.sqrt(3) * vb), 'L': ls, 'Kp': ls * wc, 'Ki': rs * wc, 'Kaw': wc, 'Imax': imax},
             {'v': vector('v', 'dq'), 'i': vector('i', 'dq'), 'icmd': vector('icmd', 'dq'),
              'omega': s('omega'), 'ulim': vector('ulim', 'dq')},
             {'ilim': vector('ilim', 'dq'), 'u': vector('u', 'dq')}, ['ilim'])

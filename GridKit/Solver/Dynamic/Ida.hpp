@@ -137,6 +137,8 @@ namespace AnalysisManager
       void setBackwardFixedStep(ScalarT time_step);
       using DynamicSolver<ScalarT, IdxT>::setTolerance;
       void setTolerance(ScalarT rel_tol, ScalarT abs_tol_override) override;
+      /// Ask the model for per-state absolute tolerances at the supplied floor.
+      void setModelTolerance(ScalarT rel_tol, ScalarT abs_tol);
       void setBackwardTolerance(ScalarT rel_tol, ScalarT abs_tol_override = 0);
       void setQuadratureTolerance(ScalarT rel_tol,
                                   ScalarT abs_tol_override = 0);
@@ -245,6 +247,7 @@ namespace AnalysisManager
       RealT               time_step_{};
       RealT               rel_tol_{DEFAULT_REL_TOL};
       RealT               abs_tol_override_{};
+      RealT               model_abs_tol_{};
       IdxT                max_steps_{DEFAULT_MAX_STEPS};
       int                 max_order_{5};
       bool                suppress_alg_{false};

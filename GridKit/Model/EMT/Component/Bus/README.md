@@ -14,6 +14,7 @@ Figure 1: Bus model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
+$V$ | [V] | `V` | Nominal line-to-line RMS voltage | Optional, positive; absolute-tolerance scale
 $N$ | [-] | `N` | Number of phases | Optional; defaults to 3, the supported phase count
 
 ### Parameter Validation

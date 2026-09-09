@@ -365,12 +365,39 @@ namespace
     std::filesystem::remove(path);
     return success.report("Filter nested vector ports, permuted bus KCL, PLL initialization and monitors");
   }
+
+  GridKit::Testing::TestOutcome tolerances()
+  {
+    GridKit::Testing::TestStatus success = true;
+    auto                         input   = data();
+    input.parameters[P::V]               = 208.0;
+    input.parameters[P::I]               = 10.0;
+    Fixture fixture(input);
+    fixture.model.setAbsoluteTolerance(1e-6);
+    const auto* absolute = fixture.model.absoluteTolerance().getData();
+    for (size_t p = 0; p < 3; ++p)
+    {
+      success *= near(absolute[p], 1e-6 * std::sqrt(2.0) * 10.0);
+      success *= near(absolute[3 + p], 1e-6 * std::sqrt(2.0 / 3.0) * 208.0);
+      success *= near(absolute[6 + p], absolute[p]);
+    }
+    for (const auto parameter : {P::V, P::I})
+      for (const double invalid : {0.0, -1.0})
+      {
+        auto bad                   = input;
+        bad.parameters[parameter]  = invalid;
+        success                   *= rejects([&]
+                           { Filter model(bad); });
+      }
+    return success.report("Filter absolute tolerances use fixed voltage and current ratings");
+  }
 } // namespace
 
 int main()
 {
   GridKit::Testing::TestingResults results;
   results += contracts();
+  results += tolerances();
   results += frequencyResponse();
   results += losslessOscillation();
 #ifdef GRIDKIT_ENABLE_ENZYME

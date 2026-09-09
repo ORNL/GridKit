@@ -1232,6 +1232,16 @@ namespace AnalysisManager
     {
       rel_tol_          = rel_tol;
       abs_tol_override_ = abs_tol_override;
+      model_abs_tol_    = 0;
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setModelTolerance(ScalarT rel_tol, ScalarT abs_tol)
+    {
+      if (!std::isfinite(rel_tol) || rel_tol <= 0 || !std::isfinite(abs_tol) || abs_tol <= 0)
+        throw std::invalid_argument("Model tolerances must be positive and finite");
+      setTolerance(rel_tol, 0);
+      model_abs_tol_ = abs_tol;
     }
 
     /**
@@ -1465,7 +1475,8 @@ namespace AnalysisManager
         return;
       }
 
-      checkModelOutput(model_->setAbsoluteTolerance(rel_tol), "setAbsoluteTolerance");
+      const ScalarT tolerance = mem == solver_ && model_abs_tol_ > 0 ? model_abs_tol_ : rel_tol;
+      checkModelOutput(model_->setAbsoluteTolerance(tolerance), "setAbsoluteTolerance");
       N_Vector abs_tol_vec = N_VClone(yy_);
       checkAllocation((void*) abs_tol_vec, "N_VClone");
       copyVec(model_->absoluteTolerance(), abs_tol_vec);

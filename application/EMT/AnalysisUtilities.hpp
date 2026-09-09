@@ -81,6 +81,7 @@ namespace GridKit
       double                                               rel_tol;
       /// absolute tolerance for the solver
       double                                               abs_tol;
+      bool                                                 scaled_abs_tol{false};
       /// Process-wide CommonMath smoothing scale
       double                                               mu{Math::DEFAULT_MU<double>};
       /// Study overrides for declared constant signals, by component path
@@ -170,7 +171,7 @@ namespace GridKit
     {
       using namespace magic_enum;
 
-      validateJsonFields(j, "EMT study", {"system_model_file", "state_file", "dt_monitor", "tmax", "rel_tol", "abs_tol", "mu", "signal_values", "dt_fixed", "max_steps", "max_order", "consistent_ic_type", "events", "output_file", "state_output_file", "step_output_file", "reference_file", "error_tolerance", "error_type", "abs_err_threshold"});
+      validateJsonFields(j, "EMT study", {"system_model_file", "state_file", "dt_monitor", "tmax", "rel_tol", "abs_tol", "scaled_abs_tol", "mu", "signal_values", "dt_fixed", "max_steps", "max_order", "consistent_ic_type", "events", "output_file", "state_output_file", "step_output_file", "reference_file", "error_tolerance", "error_type", "abs_err_threshold"});
       const auto real = [&j](const char* key, double fallback)
       { return j.contains(key) ? parseFiniteReal<double>(j.at(key), key) : fallback; };
 
@@ -179,11 +180,18 @@ namespace GridKit
       {
         j.at("state_file").get_to(c.state_file);
       }
-      c.dt_monitor = real("dt_monitor", 0.0);
-      c.tmax       = parseFiniteReal<double>(j.at("tmax"), "tmax");
-      c.rel_tol    = real("rel_tol", DEFAULT_SOLVER_REL_TOL);
-      c.abs_tol    = real("abs_tol", DEFAULT_SOLVER_ABS_TOL);
-      c.mu         = real("mu", Math::DEFAULT_MU<double>);
+      c.dt_monitor     = real("dt_monitor", 0.0);
+      c.tmax           = parseFiniteReal<double>(j.at("tmax"), "tmax");
+      c.rel_tol        = real("rel_tol", DEFAULT_SOLVER_REL_TOL);
+      c.abs_tol        = real("abs_tol", DEFAULT_SOLVER_ABS_TOL);
+      c.scaled_abs_tol = false;
+      if (j.contains("scaled_abs_tol"))
+      {
+        if (!j.at("scaled_abs_tol").is_boolean())
+          throw std::invalid_argument("scaled_abs_tol must be a boolean");
+        c.scaled_abs_tol = j.at("scaled_abs_tol").get<bool>();
+      }
+      c.mu = real("mu", Math::DEFAULT_MU<double>);
       if (!std::isfinite(c.mu) || c.mu <= 0.0)
       {
         throw std::invalid_argument("\"mu\" must be a positive finite number");

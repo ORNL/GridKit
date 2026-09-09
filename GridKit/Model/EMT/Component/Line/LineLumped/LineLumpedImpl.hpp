@@ -68,6 +68,7 @@ namespace GridKit
     void LineLumped<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
+      i_scale_        = nominalScale<RealT>(data, Parameter::I, std::sqrt(TWO<RealT>));
       conductors_     = parameter<ABCVector<IdxT>>(data, Parameter::conductors, conductors_);
       dx_             = parameter<RealT>(data, Parameter::dx, dx_);
       Rp_             = parameter<ABCMatrix<RealT>>(data, Parameter::Rp, Rp_);
@@ -315,7 +316,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LineLumped<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol * i_scale_));
       return this->setAbsoluteToleranceOperators(rel_tol);
     }
 

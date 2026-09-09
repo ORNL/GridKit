@@ -14,6 +14,7 @@ Figure 1: OuterPowerControl model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
+$I$ | [A] | `I` | Nominal phase RMS current | Optional, positive; absolute-tolerance scale
 $V$ | [V] | `V` | Rated line-to-line RMS voltage | Required, positive
 $P^{\mathrm{ref}}$ | [W] | `Pref` | Active-power setpoint | Default zero
 $Q^{\mathrm{ref}}$ | [var] | `Qref` | Reactive-power setpoint | Default zero

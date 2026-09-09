@@ -50,7 +50,7 @@ def main():
     run.mkdir(parents=True, exist_ok=True)
     (run / 'case.json').write_text(json.dumps(case, indent=2) + '\n')
     study.update(system_model_file=str(run / 'case.json'), state_file=str(CASE / 'Hawaii.state.json'),
-                 tmax=1 / 60, dt_monitor=1 / 720000, events=[], output_file='switching.csv', step_output_file='')
+                 mu=50000, max_order=5, scaled_abs_tol=False, tmax=1 / 60, dt_monitor=1 / 720000, events=[], output_file='switching.csv', step_output_file='')
     (run / 'study.json').write_text(json.dumps(study, indent=2) + '\n')
     with (run / 'simulation.log').open('w') as log_file:
         subprocess.run([str(args.exe.resolve()), str(run / 'study.json')], cwd=run,

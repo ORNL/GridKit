@@ -13,6 +13,7 @@ Figure 1: LoadZ model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
+$I$ | [A] | `I` | Nominal phase RMS current | Optional, positive; absolute-tolerance scale
 $N$ | [-] | `N` | Number of phases | Fixed at $3$
 $\mathbf{R}$ | [$\Omega$] | `R` | Resistance matrix | Used when `Z` is absent
 $\mathbf{L}$ | [H] | `L` | Inductance matrix | Used when `Z` is absent

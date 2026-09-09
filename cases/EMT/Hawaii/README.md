@@ -164,12 +164,16 @@ Outer current loop | $K_P=0.001$, $K_I=40$ s$^{-1}$, $K_{\mathrm{aw}}=200$ s$^{-
 DC voltage | Constant $2V_\mathrm{b}$, shared by PWM and Converter
 Carrier | 1800 Hz, centre aligned
 
-The study uses shared $\mu=50000$ s$^{-1}$, giving a logistic 10--90 percent
-edge width of $2\ln(9)/\mu=87.9$ microseconds. Relative and absolute solver
-tolerances are $10^{-5}$ and $10^{-6}$; the monitor interval is $1/7200$ s.
-Adaptive accepted steps resolve the edges more finely than the monitor
-interval. Accepted-step statistics are reported separately. This study does
-not use the low-$\mu$ fundamental-only setting.
+The default study uses $\mu=240$ s$^{-1}$ and BDF order at most 2.
+It retains `rel_tol = 1e-5` and uses model-scaled `abs_tol = 1e-6` with
+`scaled_abs_tol = true`. Conversion supplies nominal Bus voltages, network
+phase-current bases on 100 MVA, and inverter phase-current ratings on each
+plant base. The monitor interval is $1/7200$ s; accepted steps are recorded
+separately.
+
+The separate switching check uses $\mu=50000$ s$^{-1}$, order 5, and scalar
+`abs_tol = 1e-6`. Its logistic 10--90 percent edge width is
+$2\ln(9)/\mu=87.9$ microseconds.
 
 With power-invariant balanced phasors and the original terminal injection $I_g$, initialization uses
 
@@ -269,5 +273,5 @@ discharge decay, terminal dispatch, current-reference limits,
 DC voltage, and the fault/recovery response. The monitored current-limit
 ratio allows $10^{-4}$ numerical interpolation error. Solver monitor cadence
 does not measure accepted solver steps. The full five-second study and
-GridKit PhasorDynamics comparison scripts live in `examples/EMT/Hawaii`; generated plots,
-metrics, raw simulation CSVs, and logs belong in ignored result directories.
+GridKit PhasorDynamics comparison scripts live in `examples/EMT/Hawaii`; the four comparison figures are tracked, while metrics, raw simulation CSVs,
+and logs remain in ignored result directories.
