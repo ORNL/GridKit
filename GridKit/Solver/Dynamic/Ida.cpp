@@ -1334,6 +1334,14 @@ namespace AnalysisManager
       consistent_ic_type_ = consistent_ic_type;
     }
 
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setMaxOrder(int max_order)
+    {
+      if (max_order < 1 || max_order > 5)
+        throw std::invalid_argument("Maximum BDF order must be between 1 and 5");
+      max_order_ = max_order;
+    }
+
     /**
      * @brief Set the maximum number of steps
      *
@@ -1360,18 +1368,6 @@ namespace AnalysisManager
       backward_max_steps_ = max_steps;
     }
 
-    /**
-     * @brief Set the maximum integration method order
-     *
-     * @param max_order The maximum integration method order
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setMaxOrder(int max_order)
-    {
-      max_order_ = max_order;
-    }
 
     /**
      * @brief Set the maximum integration method order for the backward simulation

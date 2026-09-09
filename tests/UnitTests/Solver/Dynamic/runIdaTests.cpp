@@ -11,6 +11,7 @@ int main()
   result += test.acceptedHistory();
   result += test.historyStepLimits();
   result += test.maximumSteps();
+  result += test.maximumOrder();
   result += test.invalidTimes();
   result += test.quadratureAndAdjoint();
   result += test.evaluationFailures();

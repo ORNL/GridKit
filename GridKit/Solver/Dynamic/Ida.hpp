@@ -145,9 +145,10 @@ namespace AnalysisManager
       void setSuppressAlgebraicErrors(bool suppress);
       void setBackwardSuppressAlgebraicErrors(bool suppress);
       void setConsistentICType(IdaConsistentICType consistent_ic_type);
+      /// Maximum BDF order for adaptive integration, from 1 to 5.
+      void setMaxOrder(int max_order);
       void setMaxSteps(IdxT maxSteps) override;
       void setBackwardMaxSteps(IdxT maxSteps);
-      void setMaxOrder(int max_order);
       void setBackwardMaxOrder(int max_order);
 
       IdaStats getStats() const;
