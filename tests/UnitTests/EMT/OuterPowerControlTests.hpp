@@ -31,7 +31,7 @@ namespace GridKit
       using InnerT                       = EMT::Controller::InnerCurrentControl<ScalarT, IdxT>;
       using SignalT                      = EMT::Signal<ScalarT, IdxT>;
       using Data                         = typename OuterT::ModelDataT;
-      static constexpr IdxT  system_size = 21;
+      static constexpr IdxT  system_size = 23;
       static constexpr RealT omega       = RealT{120} * std::numbers::pi_v<RealT>;
 
       static Data makeData()
@@ -77,7 +77,7 @@ namespace GridKit
           f.setToConst(0.0);
           for (size_t n = 0; n < input.size(); ++n)
           {
-            indices[n] = static_cast<IdxT>(n < 9 ? n : n + 10);
+            indices[n] = static_cast<IdxT>(n < 9 ? n : n + 12);
             input[n].set(&y.getData()[indices[n]], &yp.getData()[indices[n]], &f.getData()[indices[n]], &indices[n], &indices[n]);
           }
           using O = typename OuterT::Outputs;
@@ -120,7 +120,7 @@ namespace GridKit
 
         void setProbeState()
         {
-          const std::array<RealT, system_size> state{182, 26, 208, 13, 8, -3, omega, 200, 20, 0.3, -0.2, 29, 8, 1.3, -0.8, 28, 7, 200, 20, 2496, 1040};
+          const std::array<RealT, system_size> state{182, 26, 208, 13, 8, -3, omega, 200, 20, 0.3, -0.2, 29, 8, 1.3, -0.8, 28, 7, 200, 20, 208, 13, 2496, 1040};
           for (IdxT n = 0; n < system_size; ++n)
           {
             y.getData()[n]  = state[n];
