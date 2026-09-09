@@ -2,7 +2,7 @@
   "header": {
     "version": 1,
     "time": 0,
-    "description": "Balanced fundamental P/Q solution at the capacitor terminal"
+    "description": "Balanced LCL operating point in the terminal-bus PLL frame"
   },
   "buses": {
     "terminal": {
@@ -24,15 +24,12 @@
       "igc": -3.3349323382409826
     },
     "current_control": {
-      "ud": 204.43505714310925,
-      "uq": 7.583586361994441
+      "ud": 204.30417406918627,
+      "uq": 10.536025300074103
     },
     "power_control": {
-      "icmdd": 7.970290548461698,
-      "icmdq": 7.870644329144112
-    },
-    "dc": {
-      "vdc": 400
+      "icmdd": 7.855761036421136,
+      "icmdq": 7.984960370686493
     }
   }
 }

@@ -13,7 +13,6 @@ namespace GridKit
       auto j = raw;
       expandPhasePort(j, "outputs", "e", {"ea", "eb", "ec"});
       expandPhasePort(j, "inputs", "s", {"sa", "sb", "sc"});
-      expandPhasePort(j, "inputs", "i", {"ia", "ib", "ic"});
       expandPhaseMonitor(j, "e", {"ea", "eb", "ec"});
       using BaseT = ComponentData<RealT, IdxT, ConverterParameters, ConverterInputs, ConverterOutputs, ConverterMonitorableVariables>;
       from_json(j, static_cast<BaseT&>(data));

@@ -9,15 +9,12 @@
       "id": "omega"
     },
     {
-      "id": "vdc"
-    },
-    {
-      "id": "zero",
-      "value": 0
+      "id": "vdc",
+      "value": 400.0
     },
     {
       "id": "vrefd",
-      "value": 208
+      "value": 207.96342461564828
     },
     {
       "id": "voa"
@@ -119,34 +116,20 @@
       "id": "ec"
     },
     {
-      "id": "isrc",
-      "value": 5.4619491308650945
+      "id": "va"
     },
     {
-      "id": "idc"
+      "id": "vb"
+    },
+    {
+      "id": "vc"
+    },
+    {
+      "id": "vrefq",
+      "value": 3.9005156238083356
     }
   ],
   "devices": [
-    {
-      "class": "DCLink",
-      "id": "dc",
-      "params": {
-        "C": 0.02
-      },
-      "inputs": {
-        "isrc": "isrc",
-        "idc": "idc"
-      },
-      "outputs": {
-        "vdc": "vdc"
-      },
-      "mon": [
-        "vdc",
-        "isrc",
-        "idc",
-        "energy"
-      ]
-    },
     {
       "class": "Bus",
       "id": "terminal",
@@ -154,7 +137,12 @@
         "va",
         "vb",
         "vc"
-      ]
+      ],
+      "outputs": {
+        "va": "va",
+        "vb": "vb",
+        "vc": "vc"
+      }
     },
     {
       "class": "Filter",
@@ -312,9 +300,9 @@
         "Ki": 2500
       },
       "inputs": {
-        "va": "voa",
-        "vb": "vob",
-        "vc": "voc"
+        "va": "va",
+        "vb": "vb",
+        "vc": "vc"
       },
       "outputs": {
         "theta": "theta",
@@ -404,7 +392,7 @@
       "inputs": {
         "vref": [
           "vrefd",
-          "zero"
+          "vrefq"
         ],
         "v": [
           "vd",
@@ -517,24 +505,17 @@
           "sb",
           "sc"
         ],
-        "vdc": "vdc",
-        "i": [
-          "iia",
-          "iib",
-          "iic"
-        ]
+        "vdc": "vdc"
       },
       "outputs": {
         "e": [
           "ea",
           "eb",
           "ec"
-        ],
-        "idc": "idc"
+        ]
       },
       "mon": [
-        "e",
-        "idc"
+        "e"
       ]
     }
   ]
