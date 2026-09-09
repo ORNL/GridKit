@@ -325,11 +325,12 @@ uses the separate vector `vo` and scalar names `voa`, `vob`, `voc`.
 }
 ```
 
-To drive PWM from a controller, connect the dq voltage command `u`, the
+To drive PWM from a controller, connect the $dq$ voltage command
+$\mathbf{u}^{\mathrm{cmd}}$ (`u`), the
 DC-link voltage `vdc`, and the frame angle `theta` together. Only `fc` is
 required in this mode; `M` and `fm` apply to the unconnected sinusoidal mode,
 and `Mmax` bounds the modulation command. PWM applies the inverse Park
-transform internally and returns the limited voltage command `ulim`.
+transform internally and returns $\mathbf{u}^{\mathrm{lim}}$ (`ulim`).
 
 ```json
 {

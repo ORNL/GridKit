@@ -24,7 +24,7 @@
 \node[block, minimum width=2.2cm] (switching)
   at ($(origin)+(11.5,\striprow)$) {$S_\mu(t,d_\ell)$};
 \draw[->, line] ($(origin)+(-0.6,\striprow)$)
-  -- node[sig, above, pos=0.3] {$\mathbf{u}$} (limit.west);
+  -- node[sig, above, pos=0.3] {$\mathbf{u}^{\mathrm{cmd}}$} (limit.west);
 \draw[line] (limit.east) -- (w);
 \draw[->, line] (w) -- node[sig, above] {$\mathbf{m}_{dq}$} (park.west);
 \draw[->, line] (park.east) -- node[sig, above] {$m_\ell$} (duty.west);
