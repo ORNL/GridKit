@@ -8,7 +8,6 @@
 GASTPTI <GASTPTI/README>
 IEEEST <IEEEST/README>
 InnerCurrentControl <InnerCurrentControl/README>
-OuterVoltageControl <OuterVoltageControl/README>
 OuterPowerControl <OuterPowerControl/README>
 IEEET1 <IEEET1/README>
 PWM <PWM/README>

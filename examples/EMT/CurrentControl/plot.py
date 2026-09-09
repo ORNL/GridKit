@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-NAMES = ['GFL', 'GFM']
+NAMES = ['GFL']
 BLUE, ORANGE, GREY = '#0072B2', '#D55E00', '#555555'
 plt.rcParams.update({'font.size': 10, 'axes.spines.top': False, 'axes.spines.right': False,
                      'axes.grid': True, 'grid.alpha': .2, 'lines.linewidth': 1.2,
@@ -168,27 +168,19 @@ def time_axes(axes, run, end, begin=0):
 def control_figure(run, end):
     name, d = run['name'], run['data']
     fig, ax = plt.subplots(4, 1, figsize=(10, 9), sharex=True)
-    if name == 'GFL':
-        v = [d[f'Bus_terminal_v{phase}'] for phase in 'abc']
-        i = [d[f'Filter_filter_ig{phase}'] for phase in 'abc']
-        p = sum(a * b for a, b in zip(v, i))
-        q = ((v[1] - v[2]) * i[0] + (v[2] - v[0]) * i[1]
-             + (v[0] - v[1]) * i[2]) / np.sqrt(3)
-        params = run['devices']['power_control']['params']
-        for axis, values, key, label, unit in zip(ax[:2], (p, q), ('Pref', 'Qref'), ('P', 'Q'), ('W', 'var')):
-            axis.plot(d['t'], values, color=BLUE, alpha=.18, linewidth=.45)
-            tm, xm = carrier_mean(d['t'], values, run['fc'])
-            axis.plot(tm, xm, color=BLUE, label=f'${label}$')
-            axis.axhline(params[key], linestyle='--', color=ORANGE, label=rf'${label}^{{\mathrm{{ref}}}}$')
-            axis.set_ylabel(f'{label} [{unit}]')
-    else:
-        trace(ax[0], run, 'Park_voltage_y1', '$v_d$')
-        trace(ax[1], run, 'Park_voltage_y2', '$v_q$')
-        vrefd, vrefq = run['devices']['voltage_control']['inputs']['vref']
-        ax[0].plot(d['t'], reference(run, vrefd), '--', color=ORANGE, label=r'$v_d^{\mathrm{ref}}$')
-        ax[1].plot(d['t'], reference(run, vrefq), '--', color=ORANGE, label=r'$v_q^{\mathrm{ref}}$')
-        ax[0].set_ylabel('d-axis voltage [V]')
-        ax[1].set_ylabel('q-axis voltage [V]')
+    v = [d[f'Bus_terminal_v{phase}'] for phase in 'abc']
+    i = [d[f'Filter_filter_ig{phase}'] for phase in 'abc']
+    p = sum(a * b for a, b in zip(v, i))
+    q = ((v[1] - v[2]) * i[0] + (v[2] - v[0]) * i[1]
+         + (v[0] - v[1]) * i[2]) / np.sqrt(3)
+    inputs = run['devices']['power_control']['inputs']
+    for axis, values, key, label, unit in zip(ax[:2], (p, q), ('Pref', 'Qref'), ('P', 'Q'), ('W', 'var')):
+        axis.plot(d['t'], values, color=BLUE, alpha=.18, linewidth=.45)
+        tm, xm = carrier_mean(d['t'], values, run['fc'])
+        axis.plot(tm, xm, color=BLUE, label=f'${label}$')
+        axis.plot(d['t'], reference(run, inputs[key]), linestyle='--', color=ORANGE,
+                  label=rf'${label}^{{\mathrm{{ref}}}}$')
+        axis.set_ylabel(f'{label} [{unit}]')
     command = np.hypot(d['InnerCurrentControl_current_control_ud'], d['InnerCurrentControl_current_control_uq'])
     limit = np.sqrt(3 / 8) * run['devices']['pwm']['params']['Mmax'] * reference(run, run['devices']['bridge']['inputs']['vdc'])
     ax[2].plot(d['t'], command, color=BLUE, label=r'$\|\mathbf{u}\|_2$')
@@ -263,7 +255,8 @@ def main():
     summaries = {}
     for folder, studies in runs.items():
         summary = {'time_window_s': [0, end], 'studies': {}}
-        fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
+        fig, axes = plt.subplots(1, 1, figsize=(10, 4), squeeze=False)
+        axes = axes.ravel()
         for ax, (name, run) in zip(axes, studies.items()):
             mask = run['data']['t'] <= end
             run['data'] = {key: value[mask] for key, value in run['data'].items()}
@@ -271,8 +264,7 @@ def main():
             spectrum = harmonics(run, end, prediction)
             summary['studies'][name] = summarize(run, prediction, spectrum)
             figures[name].append((folder, control_figure(run, end)))
-            if name == 'GFM':
-                figures['switching'].append((folder, switching_figure(run, prediction, end)))
+            figures['switching'].append((folder, switching_figure(run, prediction, end)))
             x = np.arange(len(spectrum['frequencies_hz']))
             ax.bar(x - .18, spectrum['measured_peak_V'], .36, color=BLUE, label='simulated bridge voltage')
             ax.bar(x + .18, spectrum['predicted_peak_V'], .36, color=ORANGE, label='continuous PWM reference')
@@ -305,7 +297,7 @@ def main():
     for folder, summary in summaries.items():
         summary['axis_limits'] = limits
         (folder / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
-        print(f'{folder}: four PNG/PDF figures and summary.json')
+        print(f'{folder}: three PNG/PDF figures and summary.json')
 
 
 if __name__ == '__main__':

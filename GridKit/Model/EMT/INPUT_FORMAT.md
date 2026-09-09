@@ -253,9 +253,6 @@ future file-backed Containers; file inclusion is not part of this revision.
   `InnerCurrentControl`    | `v`, `i`, `icmd`, `ulim` | Input | Two Signal IDs | Yes
   `InnerCurrentControl`    | `omega` | Input | Signal | Yes
   `InnerCurrentControl`    | `ilim`, `u` | Output | Two Signal IDs | No
-  `OuterVoltageControl`    | `vref`, `v`, `ig`, `ilim` | Input | Two Signal IDs | Yes
-  `OuterVoltageControl`    | `omega` | Input | Signal | Yes
-  `OuterVoltageControl`    | `icmd` | Output | Two Signal IDs | No
   `Converter`              | `s`     | Input     | Three Signal IDs | Yes
   `Converter`              | `vdc`   | Input     | Signal        | Yes
   `Converter`              | `e`     | Output    | Three Signal IDs | No
@@ -411,12 +408,6 @@ For the switching bridge, connect `InnerCurrentControl.u` to `PWM.u` and
 return `PWM.ulim` to `InnerCurrentControl.ulim`. PWM and Converter use the
 bridge's DC-link voltage; PWM requires a finite nonnegative DC voltage.
 
-For cascaded grid-forming control, connect `OuterVoltageControl.icmd` to the
-current controller's `icmd`, and return the limited `ilim` to the voltage
-controller. The `v` input is the filter-capacitor voltage; the current loop's
-`i` input is the inverter-side current and the voltage loop's `ig` input is the
-grid-side current. Vector monitors expand to scalar `d` and `q` columns.
-
 #### Device classes
 
   Class                 | Model
@@ -428,7 +419,6 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `Repca`               | [REPCA](Component/Controller/REPCA/README.md)
   `Reecb`               | [REECB](Component/Controller/REECB/README.md)
   `OuterPowerControl`   | [OuterPowerControl](Component/Controller/OuterPowerControl/README.md)
-  `OuterVoltageControl` | [OuterVoltageControl](Component/Controller/OuterVoltageControl/README.md)
   `Converter`           | [Converter](Operators/Converter/README.md)
   `Bus`                 | [Bus](Component/Bus/README.md)
   `DependentVoltageSource` | [DependentVoltageSource](Component/Source/DependentVoltageSource/README.md)
