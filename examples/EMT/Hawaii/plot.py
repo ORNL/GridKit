@@ -23,7 +23,7 @@ def interpolate(time, values, point):
     return values[k] + fraction * (values[k + 1] - values[k])
 
 
-def document(kind, names, lower, upper, error_lower, error_upper, style_path, duration,
+def document(kind, names, lower, upper, style_path, duration,
              emt_fault, phasor_fault, mu):
     """Use the EMT shared fonts/styles; data and size remain directly editable."""
     # All channels are retained. Highlight fault bus 1; other channels share a
@@ -69,7 +69,7 @@ def document(kind, names, lower, upper, error_lower, error_upper, style_path, du
                 lines.extend([f'\\addlegendimage{{{palette[k]},line width=0.7pt}}', f'\\addlegendentry{{Bus {bus}}}'])
         if kind == 'vmag':
             lines.append(f'\\node[anchor=south east,font=\\footnotesize,fill=white,inner sep=2pt] at (rel axis cs:0.99,0.02) {{All {count} buses; bus 1 in black}};')
-    lines.append(f'\\nextgroupplot[title={{(c) EMT minus PhasorDynamics: range across channels}},ylabel={{Difference [p.u.]}},ymin={error_lower:.8g},ymax={error_upper:.8g}]')
+    lines.append(r'\nextgroupplot[title={(c) EMT minus PhasorDynamics: range across channels},ylabel={Difference [p.u.]},ymin=\ylower,ymax=\yupper]')
     lines.extend([
         f'\\addplot[name path=lo,draw=none] table[x=time,y=minimum,col sep=comma] {{Hawaii.{kind}.csv}};',
         f'\\addplot[name path=hi,draw=none] table[x=time,y=maximum,col sep=comma] {{Hawaii.{kind}.csv}};',
@@ -144,15 +144,13 @@ def main():
             for k in selected:
                 writer.writerow([f'{emt[k]["time"]:.9g}'] + [f'{x:.9g}' for x in actual[k] + aligned[k]]
                                 + [f'{min(differences[k]):.9g}', f'{max(differences[k]):.9g}'])
-        low = min(x for row in actual + aligned for x in row)
-        high = max(x for row in actual + aligned for x in row)
+        low = min(x for row in actual + aligned + differences for x in row)
+        high = max(x for row in actual + aligned + differences for x in row)
         margin = max(1e-6, 0.07 * (high - low))
-        elow, ehigh = min(min(row) for row in differences), max(max(row) for row in differences)
-        emargin = max(1e-6, 0.1 * (ehigh - elow))
         name = f'Hawaii.{kind}'
         style = os.path.relpath(ROOT.parents[2] / 'docs/Figures/EMT/diagram-style.tex', output)
         (output / (name + '.tex')).write_text(document(kind, names, low - margin, high + margin,
-                                                     elow - emargin, ehigh + emargin, style, run_metrics['final_time_s'],
+                                                     style, run_metrics['final_time_s'],
                                                      emt_fault, phasor_fault, run_metrics['study']['mu']))
         if not args.no_render:
             command = ['pdflatex', '-cnf-line=extra_mem_top=20000000', '-cnf-line=extra_mem_bot=20000000',

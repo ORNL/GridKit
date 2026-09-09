@@ -13,7 +13,8 @@ inputs. `PWM` limits the dq voltage command to the available DC voltage,
 returns the limited command to `InnerCurrentControl`, and applies the inverse
 transform before carrier comparison.
 
-`GFL` uses `OuterPowerControl` to regulate terminal active and reactive power.
+`GFL` uses `OuterPowerControl` to regulate terminal active and reactive power
+against external constant `Pref` and `Qref` signals.
 A separate Park transform supplies terminal Bus voltage; grid-side current
 comes from Filter `ig`. `GFM` uses `OuterVoltageControl` to regulate the
 capacitor voltage, with a magnitude reference step from 208 V to 209 V at 0.04 s

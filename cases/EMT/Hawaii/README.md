@@ -3,7 +3,7 @@
 This case ports the 37-bus Hawaii system at `f16f3815e6f84c08bd0869773d3033b3dcb3dd0f`
 on `lukel/cases-polish-dev`. It retains 30 synchronous machines, 30 TGOV1
 governors, 30 IEEET1 exciters, 14 IEEEST stabilizers, nine inverter plants,
-27 constant-impedance loads, and 89 branches, including 12 transformers.
+nine REPCA plant controllers, 27 constant-impedance loads, and 89 branches, including 12 transformers.
 The source system base is 100 MVA and 60 Hz. Bus voltage bases are 138 or 69 kV.
 
 `convert.py` reads the source JSON with `git show`; it does not check out the
@@ -143,8 +143,12 @@ Bus voltage. Separate voltage Park transforms supply Bus voltage to
 OuterPowerControl and `Filter.vo` to InnerCurrentControl. All Park transforms
 and PWM share PLL's `theta`, and the inner controller receives PLL's `omega`.
 PWM limits the dq voltage command and returns it to the inner controller.
-OuterPowerControl regulates measured terminal P/Q against the source dispatch,
-with power errors normalized by rated voltage.
+REPCA reads the same terminal voltage and grid current as OuterPowerControl.
+Its source parameters, selectors, and plant rating are retained. All nine
+plants regulate terminal voltage (`RefFlag = true`); their initialized voltage
+references are latched locally. REPCA `qext` supplies OuterPowerControl `Qref`,
+while `Pref` is an external constant at the source active dispatch. Power
+errors are normalized by rated voltage.
 Power-invariant current base is $S/V$.
 
 The following plant data are fabricated because REGCA supplies no bridge,
@@ -188,14 +192,16 @@ P_{\mathrm{bridge}} &= P_{\mathrm{grid}}+R_g|I_g|^2+R_{\mathrm{s}}|I|^2.
 
 The nine Filter states follow these phasors. PLL aligns to terminal Bus voltage;
 inner-loop output initializes to $E$ in that frame, and outer-loop output
-initializes to the converter-side current $I$. Initial conditions describe
+initializes to the converter-side current $I$. OuterPowerControl requests the
+initial terminal Q from REPCA, which derives its PI/lead-lag states and voltage
+reference through the normal initialization procedure. Initial conditions describe
 the fundamental operating point, not the periodic switching orbit.
 
 The replacement omits REGCA current-source lag, LVPL, high-voltage reactive
 current logic, and source ramp-rate behavior; REECB voltage-dip reactive
 injection, P/Q priority, voltage/Q control flags, measurement lags, and
-current-order recovery; and REPCA plant voltage/reactive-power regulation,
-line-drop compensation, voltage freeze, deadbands, and frequency dispatch.
+current-order recovery. REPCA plant control is retained; its frequency-control
+output is disabled in every source plant.
 Its PLL, outer current PI loop, circular current limiter, and physical bridge are
 different dynamics. Matching initial dispatch does not validate those omitted
 controls. See
@@ -238,7 +244,8 @@ Transformer no-load and connection data | Fabricated core branches and grounded-
 Initial power flow | At bus 23, total synchronous dispatch changes by -0.152426 MW and +1.179855 Mvar; maximum bus phasor change is 0.000156170 p.u.
 Positive-sequence network | Coupled transposed equivalents calibrated to source R/X/B; zero sequence inferred from synthetic geometry
 Exciter sensing | Existing 1 ms sensing floor replaces source zero lag
-REGCA/REECB/REPCA | Explicit switching plants with fabricated filter/control/DC data and the omitted functions listed above
+REGCA/REECB | Explicit switching plants with fabricated filter/control/DC data and the omitted functions listed above
+REPCA | Source plant-control equations and parameters retained; SI terminal measurements and power outputs
 Fault impedance | 5.05158 mH per phase reproduces the source inductive impedance at 60 Hz
 Fault clearing circuit | Isolated switched discharge resistors preserve inductor current and dissipate stored energy
 Fault clearing | 1.15 s, matching the PhasorDynamics validation solver

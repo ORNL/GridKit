@@ -16,8 +16,6 @@ Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 $I$ | [A] | `I` | Nominal phase RMS current | Optional, positive; absolute-tolerance scale
 $V$ | [V] | `V` | Rated line-to-line RMS voltage | Required, positive
-$P^{\mathrm{ref}}$ | [W] | `Pref` | Active-power setpoint | Default zero
-$Q^{\mathrm{ref}}$ | [var] | `Qref` | Reactive-power setpoint | Default zero
 $K_P$ | [-] | `Kp` | Proportional gain | Required, positive
 $K_I$ | [$\mathrm{s}^{-1}$] | `Ki` | Integral gain | Required, positive
 $K_{\mathrm{aw}}$ | [$\mathrm{s}^{-1}$] | `Kaw` | Tracking anti-windup gain | Required, positive
@@ -25,7 +23,7 @@ $K_{\mathrm{aw}}$ | [$\mathrm{s}^{-1}$] | `Kaw` | Tracking anti-windup gain | Re
 ### Parameter Validation
 
 All parameters must be finite. The voltage rating and gains must be positive;
-power setpoints may be positive, zero, or negative.
+Power-reference inputs may be positive, zero, or negative.
 
 ### Derived Parameters
 
@@ -35,6 +33,8 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
+$P^{\mathrm{ref}}$ | `Pref` | Input | [W] | Active-power reference | Required
+$Q^{\mathrm{ref}}$ | `Qref` | Input | [var] | Reactive-power reference | Required
 $\mathbf{v}$ | `v` | Input | [V] | Terminal voltage | $\mathbf{v} \in \mathbb{R}^2$
 $\mathbf{i}$ | `i` | Input | [A] | Terminal current | $\mathbf{i} \in \mathbb{R}^2$
 $\mathbf{i}^{\mathrm{lim}}$ | `ilim` | Input | [A] | Limited current command | From InnerCurrentControl
@@ -124,8 +124,8 @@ None.
 ## Initialization
 
 [Balanced initialization](../../../STATE.md#application) receives the current
-command requested by the inner controller and checks that terminal power matches
-`Pref` and `Qref`. The integral contribution follows from the resolved outputs:
+command requested by the inner controller and supplies measured terminal power
+as the required `Pref` and `Qref` inputs. Existing reference values must agree. The integral contribution follows from the resolved outputs:
 
 ```math
 \boldsymbol{\eta} \leftarrow \mathbf{i}^{\mathrm{cmd}}-K_P\mathbf{e}.

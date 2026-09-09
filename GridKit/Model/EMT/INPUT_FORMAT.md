@@ -237,6 +237,10 @@ future file-backed Containers; file inclusion is not part of this revision.
   `PWM`                    | `s`     | Output    | Three Signal IDs | No
   `PWM`                    | `ulim`  | Output    | Two Signal IDs | No
   `OuterPowerControl`      | `v`, `i`, `ilim` | Input | Two Signal IDs | Yes
+  `OuterPowerControl`      | `Pref`, `Qref` | Input | Signal ID | Yes
+  `Repca`                  | `v`, `i` | Input | Two Signal IDs | Yes
+  `Repca`                  | `freq`, `vref`, `pref`, `qref`, `freqref` | Input | Signal ID | No
+  `Repca`                  | `qext`, `pext` | Output | Signal ID | No
   `OuterPowerControl`      | `icmd` | Output | Two Signal IDs | No
   `PLL`                    | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `PLL`                    | `theta`, `omega` | Output | Signal | No
@@ -417,6 +421,7 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `Park`                | [Park](Operators/Reference/Park/README.md)
   `PLL`                 | [PLL](Operators/Reference/PLL/README.md)
   `InnerCurrentControl` | [InnerCurrentControl](Component/Controller/InnerCurrentControl/README.md)
+  `Repca`               | [REPCA](Component/Controller/REPCA/README.md)
   `OuterPowerControl`   | [OuterPowerControl](Component/Controller/OuterPowerControl/README.md)
   `OuterVoltageControl` | [OuterVoltageControl](Component/Controller/OuterVoltageControl/README.md)
   `Converter`           | [Converter](Operators/Converter/README.md)
