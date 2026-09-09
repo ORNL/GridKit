@@ -4,9 +4,6 @@
 grid with three machines and three converters, full monitoring, and plotting
 scripts.
 
-[Switching current control](CurrentControl/README.md) demonstrates current
-tracking and cascaded voltage control with sampled PWM and a physical LCL filter.
-
 [Distributed lines](Distributed/README.md) compares lossless Bergeron and π
 lines and runs adaptive frequency-dependent 8- and 20-bus studies, including
 machine, fault, load-switching, and open-loop PWM converter cases.

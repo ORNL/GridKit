@@ -123,8 +123,8 @@ namespace GridKit::Testing
       TestStatus success = true;
       using PdData       = PhasorDynamics::Exciter::SexsPtiData<double, size_t>;
       using P            = PdData::Parameters;
-      using PdExternal   = PhasorDynamics::Exciter::SexsPtiExternalVariables;
-      using PdInternal   = PhasorDynamics::Exciter::SexsPtiInternalVariables;
+      using PdExternal   = PhasorDynamics::Exciter::SexsPtiSignalInputs;
+      using PdInternal   = PhasorDynamics::Exciter::SexsPtiSignalOutputs;
       PdData pd;
       pd.parameters = {{P::Ta, 0.1}, {P::Tb, 0.5}, {P::Te, 0.2}, {P::K, 10.0}, {P::Efdmin, 0.0}, {P::Efdmax, 3.0}};
       PhasorDynamics::Bus<double, size_t> bus(0.8, 0.6);
@@ -135,12 +135,12 @@ namespace GridKit::Testing
       std::array<PhasorDynamics::SignalNode<double, size_t>, 4> signals;
       Fixture                                                   f;
       for (size_t i = 0; i < 4; ++i)
-        signals[i].set(&f.inputs[i], &f.indices[i]);
-      model.getSignals().template assignSignalNode<PdInternal::EFD>(&efd);
-      model.getSignals().template attachSignalNode<PdExternal::VREF>(&signals[0]);
-      model.getSignals().template attachSignalNode<PdExternal::VS>(&signals[1]);
-      model.getSignals().template attachSignalNode<PdExternal::VUEL>(&signals[2]);
-      model.getSignals().template attachSignalNode<PdExternal::VOEL>(&signals[3]);
+        signals[i].link(&f.inputs[i], &f.indices[i]);
+      model.getPorts().out.template port<PdInternal::efd>().connect(&efd);
+      model.getPorts().in.template port<PdExternal::vref>().connect(&signals[0]);
+      model.getPorts().in.template port<PdExternal::vs>().connect(&signals[1]);
+      model.getPorts().in.template port<PdExternal::vuel>().connect(&signals[2]);
+      model.getPorts().in.template port<PdExternal::voel>().connect(&signals[3]);
       model.allocate();
       efd.init(1.5);
       success *= model.initialize() == 0 && f.model.initialize() == 0;

@@ -133,7 +133,7 @@ full fault trajectories, which include the other model differences below.
 ## Inverter plants
 
 Each source REGCA unit is replaced by the
-[GFL switching-inverter arrangement](../CurrentControl/README.md): PLL,
+[GFL switching-inverter arrangement](../../../GridKit/Model/EMT/Component/Controller/README.md#grid-following): PLL,
 voltage and current Park transforms, REECB, InnerCurrentControl,
 PWM, Converter, and a physical LCL Filter.
 `Converter.e` drives `Filter.e`; `Filter.ig` injects into the original bus.
