@@ -44,11 +44,9 @@ def main():
     assert report['choices']['carrier_alignment'] == 0.5, 'Pulse oracle assumes centred carriers'
     for device in case['devices']:
         device.pop('mon', None)
-        monitors = {'PWM': ['s'], 'Converter': ['e', 'idc'], 'Filter': ['i'], 'DCLink': ['vdc']}
+        monitors = {'PWM': ['s', 'm'], 'Converter': ['e', 'idc'], 'Filter': ['i'], 'DCLink': ['vdc']}
         if device['class'] in monitors:
             device['mon'] = monitors[device['class']]
-        if device['class'] == 'Park' and device['id'].endswith('_inverse'):
-            device['mon'] = ['out']
     with tempfile.TemporaryDirectory(prefix='gridkit-hawaii-switching-') as temporary:
         run = Path(temporary)
         (run / 'case.json').write_text(json.dumps(case))
@@ -77,7 +75,7 @@ def main():
         predicted, measured = [], []
         pulse_error, power_error = 0.0, 0.0
         for row in data:
-            edges = [pulse(row['t'], row[f'Park_{plant}_inverse_y{n}'], fc, mu) for n in (1, 2, 3)]
+            edges = [pulse(row['t'], row[f'PWM_{plant}_pwm_m{p}'], fc, mu) for p in 'abc']
             pulse_error = max(pulse_error, *(abs(a - row[f'PWM_{plant}_pwm_s{p}']) for a, p in zip(edges, 'abc')))
             voltage = [row[f'Converter_{plant}_bridge_e{p}'] for p in 'abc']
             current = [row[f'Filter_{plant}_filter_i{p}'] for p in 'abc']

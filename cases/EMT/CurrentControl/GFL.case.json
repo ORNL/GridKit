@@ -12,10 +12,6 @@
       "id": "vdc"
     },
     {
-      "id": "zero",
-      "value": 0
-    },
-    {
       "id": "icmdd"
     },
     {
@@ -91,25 +87,10 @@
       "id": "uq"
     },
     {
-      "id": "md"
-    },
-    {
-      "id": "mq"
-    },
-    {
       "id": "ulimd"
     },
     {
       "id": "ulimq"
-    },
-    {
-      "id": "ma"
-    },
-    {
-      "id": "mb"
-    },
-    {
-      "id": "mc"
     },
     {
       "id": "sa"
@@ -449,9 +430,11 @@
       ]
     },
     {
-      "class": "Modulation",
-      "id": "modulation",
+      "class": "PWM",
+      "id": "pwm",
       "params": {
+        "fc": 6000,
+        "alignment": 0.5,
         "Mmax": 0.95
       },
       "inputs": {
@@ -459,12 +442,14 @@
           "ud",
           "uq"
         ],
-        "vdc": "vdc"
+        "vdc": "vdc",
+        "theta": "theta"
       },
       "outputs": {
-        "m": [
-          "md",
-          "mq"
+        "s": [
+          "sa",
+          "sb",
+          "sc"
         ],
         "ulim": [
           "ulimd",
@@ -472,57 +457,8 @@
         ]
       },
       "mon": [
+        "s",
         "m"
-      ]
-    },
-    {
-      "class": "Park",
-      "id": "inverse",
-      "params": {
-        "inverse": true
-      },
-      "inputs": {
-        "input": [
-          "md",
-          "mq",
-          "zero"
-        ],
-        "theta": "theta"
-      },
-      "outputs": {
-        "out": [
-          "ma",
-          "mb",
-          "mc"
-        ]
-      },
-      "mon": [
-        "out"
-      ]
-    },
-    {
-      "class": "PWM",
-      "id": "pwm",
-      "params": {
-        "fc": 6000,
-        "alignment": 0.5
-      },
-      "inputs": {
-        "m": [
-          "ma",
-          "mb",
-          "mc"
-        ]
-      },
-      "outputs": {
-        "s": [
-          "sa",
-          "sb",
-          "sc"
-        ]
-      },
-      "mon": [
-        "s"
       ]
     },
     {

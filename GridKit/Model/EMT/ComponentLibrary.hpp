@@ -22,7 +22,6 @@
 #include <GridKit/Model/EMT/Component/Switch/Switch.hpp>
 #include <GridKit/Model/EMT/Component/Transformer/Transformer.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/Converter.hpp>
-#include <GridKit/Model/EMT/Operators/Modulation/Modulation.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/PLL/Pll.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Park/Park.hpp>
 #include <GridKit/Model/EMT/Signal/Signal.hpp>

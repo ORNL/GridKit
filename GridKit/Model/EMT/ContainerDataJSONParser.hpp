@@ -21,7 +21,6 @@
 #include <GridKit/Model/EMT/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/EMT/ContainerData.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/ConverterDataJSONParser.hpp>
-#include <GridKit/Model/EMT/Operators/Modulation/ModulationDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Operators/Reference/Park/ParkDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Signal/SignalDataJSONParser.hpp>
 
@@ -156,10 +155,6 @@ namespace GridKit
         else if (kind == "PLL")
         {
           raw_device.get_to(data.pll.emplace_back());
-        }
-        else if (kind == "Modulation")
-        {
-          raw_device.get_to(data.modulation.emplace_back());
         }
         else if (kind == "PWM")
         {
