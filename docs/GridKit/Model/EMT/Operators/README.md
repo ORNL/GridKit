@@ -6,7 +6,6 @@
 :hidden:
 
 Converter <Converter/README>
-Modulation <Modulation/README>
 Rational <Rational/README>
 Reference <Reference/README>
 Shift <Shift/README>

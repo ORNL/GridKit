@@ -4,7 +4,7 @@
 coordinates using PI control, capacitor-voltage feedforward, and cross-coupling
 compensation.[^unifi] A direction-preserving limit bounds the current command,
 and tracking anti-windup[^tracking-anti-windup] follows the limited voltage
-command returned by [Modulation](../../../Operators/Modulation/README.md).
+command returned by [PWM](../PWM/README.md).
 
 ## Block Diagram
 
@@ -55,14 +55,14 @@ $\mathbf{v}$ | `v` | Input | [V] | Filter-capacitor voltage | $\mathbf{v} \in \m
 $\mathbf{i}$ | `i` | Input | [A] | Inverter-side filter current | $\mathbf{i} \in \mathbb{R}^2$
 $\mathbf{i}^{\mathrm{cmd}}$ | `icmd` | Input | [A] | Current command | From the outer controller
 $\omega$ | `omega` | Input | [rad/s] | Electrical angular frequency of the $dq$ frame | From PLL
-$\mathbf{u}^{\mathrm{lim}}$ | `ulim` | Input | [V] | Limited voltage command | From Modulation
+$\mathbf{u}^{\mathrm{lim}}$ | `ulim` | Input | [V] | Limited voltage command | From PWM
 $\mathbf{i}^{\mathrm{lim}}$ | `ilim` | Output | [A] | Limited current command | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
 $\mathbf{u}$ | `u` | Output | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
 
 All vectors use $(d,q)$ order in the same power-invariant
 [Park](../../../Operators/Reference/Park/README.md) frame, with zero-sequence
 components omitted. All inputs must be connected and finite. Return `ilim` to
-the outer controller and `u` to Modulation.
+the outer controller and `u` to PWM.
 
 ## Submodels
 
@@ -103,7 +103,7 @@ $\mathbf{v}$ | [V] | Filter-capacitor voltage | $\mathbf{v} \in \mathbb{R}^2$
 $\mathbf{i}$ | [A] | Inverter-side filter current | $\mathbf{i} \in \mathbb{R}^2$
 $\mathbf{i}^{\mathrm{cmd}}$ | [A] | Current command | $\mathbf{i}^{\mathrm{cmd}} \in \mathbb{R}^2$
 $\omega$ | [rad/s] | Electrical angular frequency of the $dq$ frame | From PLL
-$\mathbf{u}^{\mathrm{lim}}$ | [V] | Limited voltage command | From Modulation
+$\mathbf{u}^{\mathrm{lim}}$ | [V] | Limited voltage command | From PWM
 
 ## Model Equations
 
@@ -144,7 +144,7 @@ The limit uses the CommonMath smooth
 
 None.
 
-Modulation owns the voltage limit. Tracking its limited command prevents
+PWM owns the voltage limit. Tracking its limited command prevents
 windup. Both outputs are owned algebraic variables.
 
 ## Initialization
