@@ -30,7 +30,7 @@ namespace GridKit
 
         return 0;
       }
-      
+
       // Available template instantiations
       template class Esdc1a<DependencyTracking::Variable, long int>;
       template class Esdc1a<DependencyTracking::Variable, size_t>;

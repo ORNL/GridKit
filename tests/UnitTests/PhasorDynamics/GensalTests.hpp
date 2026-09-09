@@ -384,7 +384,8 @@ namespace GridKit
         std::cout << "Sparse Csr Matrix: Gensal DependencyTracking Jacobian\n";
         model_jacobian->print();
 
-        return GridKit::Testing::MapFromCsr(model_jacobian);      }
+        return GridKit::Testing::MapFromCsr(model_jacobian);
+      }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian()
       {

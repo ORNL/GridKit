@@ -804,10 +804,10 @@ namespace GridKit
           const auto& dependencies =
               transition.esdc1a.getResidual().getData()[static_cast<size_t>(Internal::EFDP)].getDependencies();
           const DepVar::DependencyMap expected{{
-              {2 * static_cast<size_t>(Internal::EFDP), -12.0}, // @todo Remove these
+              {2 * static_cast<size_t>(Internal::EFDP), -12.0},    // @todo Remove these
               {2 * static_cast<size_t>(Internal::EFDP) + 1, -1.0}, // @todo Remove these
-              {2 * static_cast<size_t>(Internal::VR), 1.0}, // @todo Remove these
-              {2 * static_cast<size_t>(Internal::VFE), -1.0}, // @todo Remove these
+              {2 * static_cast<size_t>(Internal::VR), 1.0},        // @todo Remove these
+              {2 * static_cast<size_t>(Internal::VFE), -1.0},      // @todo Remove these
           }};
           success *= isEqual(dependencies, expected, kTol);
         }

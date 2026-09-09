@@ -825,7 +825,7 @@ namespace GridKit
         const DependencyTracking::Variable::DependencyMap expected{
             {2 * index(Internal::VLOAD), 0.5}, // @todo Remove these
             {2 * index(Internal::VTEMP), 0.5}, // @todo Remove these
-            {2 * index(Internal::VLV), -1.0}, // @todo Remove these
+            {2 * index(Internal::VLV), -1.0},  // @todo Remove these
         };
         success *= jacobianRowMatches(
             selector.gastpti.getResidual().getData()[index(Internal::VLV)].getDependencies(),
