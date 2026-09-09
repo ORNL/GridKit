@@ -82,6 +82,9 @@ entry here without the `file_name` field. For example:
   "monitors": [ { "format": "YAML" } ]
 ```
 
+Invalid monitor formats, layouts, or batch sizes are rejected. Requesting Arrow
+output without Arrow support is an error.
+
 ### Buses
 
 Contained in the `buses` key is an array of objects, each of which represent

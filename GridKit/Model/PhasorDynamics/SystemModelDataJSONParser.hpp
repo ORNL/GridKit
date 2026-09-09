@@ -22,7 +22,6 @@ namespace GridKit
     using json          = nlohmann::json;
     using Log           = ::GridKit::Utilities::Logger;
     using MonitorFormat = ::GridKit::Model::VariableMonitorFormat;
-
     using MonitorSink   = ::GridKit::Model::VariableMonitorBase::SinkSpec;
     using MonitorLayout = ::GridKit::Model::VariableMonitorLayout;
 
@@ -104,7 +103,7 @@ namespace GridKit
       params.at("va_base").get_to(sm.va_base);
 
       // TODO: REMOVE. Case files should not configure output; the solver file
-      // sets it with `output_file` and `output_layout`.
+      // sets it with `monitors`, `output_file` and `output_layout`.
       if (j.contains("monitors"))
       {
         sm.monitor_sink = parseMonitorSinks(j.at("monitors"));

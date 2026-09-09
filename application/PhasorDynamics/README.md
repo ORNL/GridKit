@@ -14,6 +14,7 @@
   `max_order`          | Maximum IDA integration method order from 1 to 5 (default: 5; fixed stepping is capped at 2)
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
   `events`             | An array of event groups (see [Events](#events) below)
+  `monitors`           | An array of monitor outputs in the system model file's [format](../../GridKit/Model/PhasorDynamics/INPUT_FORMAT.md#monitors); when present it replaces the model file's `monitors` (optional)
   `output_file`        | Path to output (CSV) file (optional)
   `output_layout`      | Layout of `output_file`; one of { "wide", "long" } (default: "wide"). "long" writes one row per variable and sample. Event times are written twice, before and after the event, so use `sample` rather than `t` to identify a sample. Not supported with `reference_file`
   `reference_file`     | A string containing the name of the case (optional)

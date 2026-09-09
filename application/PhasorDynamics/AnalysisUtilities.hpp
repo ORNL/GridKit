@@ -5,6 +5,7 @@
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -14,6 +15,7 @@
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -94,6 +96,8 @@ namespace GridKit
       Testing::ErrorType                             error_type;
       /// Smallest value at which to scale for relative error
       double                                         abs_err_threshold;
+      /// Monitor sinks replacing those of the model file, when given
+      std::optional<std::vector<MonitorSink>>        monitors;
       /// Instance of model data
       SystemModelData<>                              model_data;
     };
@@ -224,6 +228,11 @@ namespace GridKit
       }
 
       c.abs_err_threshold = j.value("abs_err_threshold", Testing::DEFAULT_ABS_ERROR_THRESHOLD);
+
+      if (j.contains("monitors"))
+      {
+        c.monitors = parseMonitorSinks(j.at("monitors"));
+      }
     }
 
     /**
@@ -272,6 +281,10 @@ namespace GridKit
 
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
       data.model_data = parseSystemModelData(data.system_model_file);
+      if (data.monitors)
+      {
+        data.model_data.monitor_sink = *data.monitors;
+      }
       std::string model_output_file;
       // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)
