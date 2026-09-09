@@ -23,8 +23,8 @@ $v_{\mathrm{dc}}$ | External constant | Converter and PWM | Scalar
 $\mathbf{u}^{\mathrm{cmd}}$ | `InnerCurrentControl.u` | `PWM.u` | $dq$
 $\mathbf{u}^{\mathrm{lim}}$ | `PWM.ulim` | `InnerCurrentControl.ulim` | $dq$
 
-The current and voltage controllers retain their local voltage-input name
-`v`: it receives the $dq$ components of transformed $\mathbf{v}_{\mathrm{o}}$.
+InnerCurrentControl retains its local voltage-input name `v`: it receives the
+$dq$ components of transformed $\mathbf{v}_{\mathrm{o}}$.
 `Filter.v` is the separate $abc$ terminal voltage $\mathbf v_{\mathrm{t}}$.
 The LCL filter has series impedances
 $\mathbf Z_{\mathrm{s}}=\mathbf R_{\mathrm{s}}+s\mathbf L_{\mathrm{s}}$ and
@@ -75,7 +75,7 @@ and PWM; $\omega$ supplies current- and voltage-loop decoupling.
 The inner outline groups PWM, Current Control, and Voltage Control in this
 shared reference frame; angle and frequency connections are implicit.
 Voltage Control receives $\mathbf v^{\mathrm{ref}}$ and measures
-$\mathbf v_{\mathrm o}$ and $\mathbf i_g$, matching OuterVoltageControl.
+$\mathbf v_{\mathrm o}$ and $\mathbf i_g$.
 
 Plant Control regulates PCC exchange and supplies $P^{\mathrm{ref}}$ and
 $Q^{\mathrm{ref}}$ to Primary Control. REPCA is one plant-controller model;
@@ -83,9 +83,10 @@ its `pext` and `qext` are power commands, not voltage-loop inputs. The diagram
 shows active/reactive-power dispatch; plant voltage and frequency-response
 modes require their corresponding references and measurements.
 
-Primary Control and Plant Control are architectural blocks here, not a wired
-switching example. Islanded operation needs a local network and load, an
-autonomous primary controller, and coordination of plant references when the
+Voltage Control, Primary Control, and Plant Control denote functions in this
+general schematic; the cascade is not a wired switching example. Islanded
+operation needs a local network and load, an autonomous primary controller,
+and coordination of plant references when the
 PCC opens. Reconnection also requires synchronization across the disconnect.
 
 [^pcc]: NREL, [*Clause-by-Clause Summary of Requirements in IEEE Standard 1547-2018*](https://www.nlr.gov/docs/fy20osti/75184.pdf), 2020, Sections 1–2; EPRI, [*Definitions, Acronyms, and References*](https://der-interconnection.epri.com/hub/tiir/en/ch2-definitions.html).
@@ -100,7 +101,6 @@ PCC opens. Reconnection also requires synchronization across the disconnect.
 - [REECB](REECB/README.md): terminal power, voltage, and current-priority control.
 - [REPCA](REPCA/README.md): renewable plant voltage, reactive-power, and frequency control.
 - [OuterPowerControl](OuterPowerControl/README.md): active and reactive power control in $dq$ coordinates.
-- [OuterVoltageControl](OuterVoltageControl/README.md): filter-capacitor voltage control in $dq$ coordinates.
 - [IEEET1](IEEET1/README.md)
 - [PWM](PWM/README.md)
 - [TGOV1](TGOV1/README.md)
