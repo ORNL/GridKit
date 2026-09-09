@@ -6,6 +6,13 @@ namespace GridKit
   {
     namespace Controller
     {
+      template <typename scalar_type, typename index_type>
+      void Pwm<scalar_type, index_type>::appendOutputGradient(
+          Outputs, typename SignalT::GradientT&, RealT) const
+      {
+        throw std::logic_error("Computed-output derivatives require Enzyme");
+      }
+
       template class Pwm<DependencyTracking::Variable, long int>;
       template class Pwm<DependencyTracking::Variable, size_t>;
     } // namespace Controller

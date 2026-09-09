@@ -130,18 +130,18 @@ namespace GridKit
       {
         FuncT f;
 
-        std::string operator()() const
+        void operator()(std::string& out) const
         {
           using RetValueT = std::remove_cvref_t<RetT>;
 
           if constexpr (std::is_floating_point_v<RetValueT>
                         || std::is_same_v<RetValueT, ScalarT>)
           {
-            return VariableMonitorDetail::formatReal(static_cast<RealT>(f()));
+            VariableMonitorDetail::appendReal(out, static_cast<RealT>(f()));
           }
           else
           {
-            return (std::ostringstream{} << f()).str();
+            out += (std::ostringstream{} << f()).str();
           }
         }
       };
@@ -161,13 +161,13 @@ namespace GridKit
         {
         }
 
-        std::string operator()() const
+        void operator()(std::string& out) const
         {
-          return impl_();
+          impl_(out);
         }
 
       private:
-        std::function<std::string(void)> impl_;
+        std::function<void(std::string&)> impl_;
       };
 
       ///@}
@@ -188,7 +188,7 @@ namespace GridKit
         for (auto v : variables_)
         {
           out += csv.delim;
-          out += f_[static_cast<size_t>(enum_integer(v))]();
+          f_[static_cast<size_t>(enum_integer(v))](out);
         }
       }
 
@@ -200,7 +200,7 @@ namespace GridKit
         out += indent_ + "\"";
         out.append(enum_name(v));
         out += "\": ";
-        out += f_[static_cast<size_t>(enum_integer(v))]();
+        f_[static_cast<size_t>(enum_integer(v))](out);
         out += ",\n";
       }
 
@@ -232,7 +232,7 @@ namespace GridKit
         out += indent_;
         out.append(enum_name(v));
         out += ": ";
-        out += f_[static_cast<size_t>(enum_integer(v))]();
+        f_[static_cast<size_t>(enum_integer(v))](out);
         out += '\n';
       }
 

@@ -7,7 +7,9 @@ int main()
   result += test.waveform();
   result += test.validation();
   result += test.bridgeVoltages();
+#ifdef GRIDKIT_ENABLE_ENZYME
   result += test.signalGradients();
+#endif
   result += test.powerBalance();
   result += test.dependencyTracking();
   result += test.parseAndAssemble();
@@ -17,11 +19,14 @@ int main()
   result += test.continuousResolution();
   result += test.continuousInput();
   result += test.voltageCommand();
+#ifdef GRIDKIT_ENABLE_ENZYME
   result += test.commandGradients();
+#endif
   result += test.signalReadScope();
   result += test.monitors();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
+  result += test.computedPwmJacobian();
 #endif
 #ifdef GRIDKIT_ENABLE_SUNDIALS
   result += test.integrate();

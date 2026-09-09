@@ -52,9 +52,18 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    typename Bus<scalar_type, index_type>::NortonT& Bus<scalar_type, index_type>::addShunt(std::string name, const YDataT& Y)
+    typename Bus<scalar_type, index_type>::AdmittanceT& Bus<scalar_type, index_type>::addShunt(
+        std::string name, const YDataT& Y, RealT scale, PhaseOrder phases)
     {
-      return addNorton(std::move(name), Y);
+      if (Y.rows != 3 || Y.cols != 3 || Y.validate() != 0 || !std::isfinite(scale))
+        throw std::invalid_argument("Bus: expected a finite three-phase shunt admittance");
+      const auto voltage = voltages(phases);
+      auto&      shunt   = this->template add<AdmittanceT>(std::move(name), Y, -scale);
+      shunt.attachInput(voltage[0], voltage[1], voltage[2]);
+      shunt.attachOutput(voltage[0], voltage[1], voltage[2]);
+      for (size_t p = 0; p < 3; ++p)
+        shunts_[phases[p]].emplace_back(&shunt, static_cast<IdxT>(p));
+      return shunt;
     }
 
     template <typename scalar_type, typename index_type>
@@ -64,7 +73,9 @@ namespace GridKit
       this->forEachComponent([&](typename Base::ComponentT& component)
                              {
         if (auto* source = dynamic_cast<NortonT*>(&component); source && status == 0)
-          status = source->initialize(); });
+          status = source->initialize();
+        else if (auto* shunt = dynamic_cast<AdmittanceT*>(&component); shunt && status == 0)
+          status = shunt->initialize(); });
       return status;
     }
 
@@ -75,7 +86,9 @@ namespace GridKit
       this->forEachComponent([&](typename Base::ComponentT& component)
                              {
         if (auto* source = dynamic_cast<NortonT*>(&component); source && status == 0)
-          status = source->initializeSteadyState(omega); });
+          status = source->initializeSteadyState(omega);
+        else if (auto* shunt = dynamic_cast<AdmittanceT*>(&component); shunt && status == 0)
+          status = shunt->initializeSteadyState(omega); });
       return status;
     }
 
@@ -98,6 +111,8 @@ namespace GridKit
                         ScalarT current{};
                         for (const auto* signal : shunt_monitors_[p])
                           current += signal->read();
+                        for (const auto& [shunt, phase] : shunts_[p])
+                          current -= shunt->output(phase);
                         return current; });
       }
     }
