@@ -6,8 +6,8 @@
 :hidden:
 
 GenClassical <GenClassical/README>
-GENROU <GENROUwS/README>
-GENSAL <GENSALwS/README>
+GENROU <GENROU/README>
+GENSAL <GENSAL/README>
 ```
 
 ```{include} ../../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/README.md

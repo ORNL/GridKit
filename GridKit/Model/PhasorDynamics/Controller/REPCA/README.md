@@ -1,22 +1,19 @@
-# **Renewable Energy Plant Control Model (REPCA)**
+# REPCA
 
 REPCA is a WECC renewable energy plant control model for inverter-coupled
 resources.
 
-## Notes
+> [!WARNING]
+> GridKit does not yet apply the associated generator's Governor Response Limits
+> modes `Down Only` and `Fixed` to REPCA.
 
-- Fig. 1 hard nonlinearities use the linked CommonMath smooth approximations;
-  transition-point values may differ.
+## Notes
 
 > [!NOTE]
 > `freq` is optional because the regulated bus does not yet expose a frequency
 > signal. With frequency control and nonzero droop enabled, omitting it holds
 > frequency at 1.0 p.u. and logs a warning. `freq` and `freqref` use absolute
 > per-unit frequency.
-
-> [!WARNING]
-> GridKit does not yet apply the associated generator's Governor Response Limits
-> modes `Down Only` and `Fixed` to REPCA.
 
 ## Block Diagram
 
@@ -29,47 +26,48 @@ Figure 1: REPCA plant-control model. Figure courtesy of
 
 All parameters are optional; omitted keys use the defaults below.
 
-Symbol                              | Units     | JSON        | Description                                             | Default | Note
-------------------------------------|-----------|-------------|---------------------------------------------------------|---------------|------
-$S^\mathrm{base}$                  | [MVA]     | `mva`       | REPCA component power base                              | 100.0         | Set to the associated converter base
-$s_\mathrm{comp}$                  | [boolean] | `VcompFlag` | Voltage-compensation selector                           | `true`        | `true` = line-drop compensation, `false` = reactive droop
-$s_\mathrm{ref}$                   | [boolean] | `RefFlag`   | Reactive-loop reference selector                        | `true`        | `true` = voltage control, `false` = reactive-power control
-$s_\mathrm{freq}$                  | [boolean] | `Freqflag`  | Active-power output selector                            | `false`       | `true` = command enabled, `false` = zero output
-$T_\mathrm{fltr}$                  | [sec]     | `Tfltr`     | Voltage and reactive-power filter time constant         | 0.05          |
-$V^\mathrm{frz}$                   | [p.u.]    | `Vfrz`      | Reactive-power PI freeze-voltage threshold              | 0.7           |
-$R_c$                               | [p.u.]    | `Rc`        | Line-drop compensation resistance                       | 0.0           | Component base
-$X_c$                               | [p.u.]    | `Xc`        | Line-drop compensation reactance                        | 0.0           | Component base
-$K_c$                               | [p.u.]    | `Kc`        | Reactive-current compensation gain                      | 1.0           |
-$D_\mathrm{bd1}$                   | [p.u.]    | `dbdlow`    | Lower reactive-loop deadband threshold                  | 0.0           |
-$D_\mathrm{bd2}$                   | [p.u.]    | `dbdupper`  | Upper reactive-loop deadband threshold                  | 0.0           |
-$e^{\max}$                          | [p.u.]    | `emax`      | Maximum reactive-loop error limit                       | 1.0           |
-$e^{\min}$                          | [p.u.]    | `emin`      | Minimum reactive-loop error limit                       | -1.0          |
-$K_\mathrm{p}$                     | [p.u.]    | `Kp`        | Reactive-power controller proportional gain             | 10.0          |
-$K_\mathrm{i}$                     | [p.u./s]  | `Ki`        | Reactive-power controller integral gain                 | 10.0          |
-$Q^{\max}$                          | [p.u.]    | `Qmax`      | Maximum reactive-power command                          | 1.0           | Component base
-$Q^{\min}$                          | [p.u.]    | `Qmin`      | Minimum reactive-power command                          | -1.0          | Component base
-$T_\mathrm{ft}$                    | [sec]     | `Tft`       | Reactive-command lead time constant                     | 0.0           |
-$T_\mathrm{fv}$                    | [sec]     | `Tfv`       | Reactive-command lag time constant                      | 3.0           |
-$T_\mathrm{p}$                     | [sec]     | `Tp`        | Active-power measurement filter time constant           | 0.0           |
-$D_\mathrm{bd1}^{f}$               | [p.u.]    | `fdbd1`     | Lower frequency-error deadband threshold                | 0.0           |
-$D_\mathrm{bd2}^{f}$               | [p.u.]    | `fdbd2`     | Upper frequency-error deadband threshold                | 0.0           |
-$D_\mathrm{dn}$                    | [p.u./p.u.] | `Ddn`     | Down-regulation (overfrequency) gain                    | 20.0          |
-$D_\mathrm{up}$                    | [p.u./p.u.] | `Dup`     | Up-regulation (underfrequency) gain                     | 0.0           |
-$e_P^{\max}$                        | [p.u.]    | `femax`     | Maximum active-power error limit                        | 1.0           |
-$e_P^{\min}$                        | [p.u.]    | `femin`     | Minimum active-power error limit                        | -1.0          |
-$K_\mathrm{pg}$                    | [p.u.]    | `Kpg`       | Active-power controller proportional gain               | 10.0          |
-$K_\mathrm{ig}$                    | [p.u./s]  | `Kig`       | Active-power controller integral gain                   | 10.0          |
-$P^{\max}$                          | [p.u.]    | `Pmax`      | Maximum active-power command                            | 2.0           | Component base
-$P^{\min}$                          | [p.u.]    | `Pmin`      | Minimum active-power command                            | 0.0           | Component base
-$T_\mathrm{lag}$                   | [sec]     | `Tlag`      | Active-power command lag time constant                  | 3.0           |
+Symbol               | Units       | JSON        | Description                                     | Typical Value | Note
+---------------------|-------------|-------------|-------------------------------------------------|---------------|-----------------------------------------------------------
+$S^\mathrm{base}$    | [MVA]       | `mva`       | REPCA component power base                      | 100.0         | Set to the associated converter base
+$s_\mathrm{comp}$    | [boolean]   | `VcompFlag` | Voltage-compensation selector                   | `true`        | `true` = line-drop compensation, `false` = reactive droop
+$s_\mathrm{ref}$     | [boolean]   | `RefFlag`   | Reactive-loop reference selector                | `true`        | `true` = voltage control, `false` = reactive-power control
+$s_\mathrm{freq}$    | [boolean]   | `Freqflag`  | Active-power output selector                    | `false`       | `true` = command enabled, `false` = zero output
+$T_\mathrm{fltr}$    | [s]         | `Tfltr`     | Voltage and reactive-power filter time constant | 0.05          |
+$V^\mathrm{frz}$     | [p.u.]      | `Vfrz`      | Reactive-power PI freeze-voltage threshold      | 0.7           |
+$R_c$                | [p.u.]      | `Rc`        | Line-drop compensation resistance               | 0.0           | Component base
+$X_c$                | [p.u.]      | `Xc`        | Line-drop compensation reactance                | 0.0           | Component base
+$K_c$                | [p.u.]      | `Kc`        | Reactive-current compensation gain              | 1.0           |
+$D_\mathrm{bd1}$     | [p.u.]      | `dbdlow`    | Lower reactive-loop deadband threshold          | 0.0           |
+$D_\mathrm{bd2}$     | [p.u.]      | `dbdupper`  | Upper reactive-loop deadband threshold          | 0.0           |
+$e^{\max}$           | [p.u.]      | `emax`      | Upper limit on the signed reactive-loop error   | 1.0           |
+$e^{\min}$           | [p.u.]      | `emin`      | Lower limit on the signed reactive-loop error   | -1.0          |
+$K_\mathrm{p}$       | [p.u.]      | `Kp`        | Reactive-power controller proportional gain     | 10.0          |
+$K_\mathrm{i}$       | [p.u./s]    | `Ki`        | Reactive-power controller integral gain         | 10.0          |
+$Q^{\max}$           | [p.u.]      | `Qmax`      | Maximum reactive-power command                  | 1.0           | Component base
+$Q^{\min}$           | [p.u.]      | `Qmin`      | Minimum reactive-power command                  | -1.0          | Component base
+$T_\mathrm{ft}$      | [s]         | `Tft`       | Reactive-command lead time constant             | 0.0           |
+$T_\mathrm{fv}$      | [s]         | `Tfv`       | Reactive-command lag time constant              | 3.0           |
+$T_\mathrm{p}$       | [s]         | `Tp`        | Active-power measurement filter time constant   | 0.0           |
+$D_\mathrm{bd1}^{f}$ | [p.u.]      | `fdbd1`     | Lower frequency-error deadband threshold        | 0.0           |
+$D_\mathrm{bd2}^{f}$ | [p.u.]      | `fdbd2`     | Upper frequency-error deadband threshold        | 0.0           |
+$D_\mathrm{dn}$      | [p.u./p.u.] | `Ddn`       | Down-regulation (overfrequency) gain            | 20.0          |
+$D_\mathrm{up}$      | [p.u./p.u.] | `Dup`       | Up-regulation (underfrequency) gain             | 0.0           |
+$e_P^{\max}$         | [p.u.]      | `femax`     | Upper limit on the signed active-power error    | 1.0           |
+$e_P^{\min}$         | [p.u.]      | `femin`     | Lower limit on the signed active-power error    | -1.0          |
+$K_\mathrm{pg}$      | [p.u.]      | `Kpg`       | Active-power controller proportional gain       | 10.0          |
+$K_\mathrm{ig}$      | [p.u./s]    | `Kig`       | Active-power controller integral gain           | 10.0          |
+$P^{\max}$           | [p.u.]      | `Pmax`      | Maximum active-power command                    | 2.0           | Component base
+$P^{\min}$           | [p.u.]      | `Pmin`      | Minimum active-power command                    | 0.0           | Component base
+$T_\mathrm{lag}$     | [s]         | `Tlag`      | Active-power command lag time constant          | 3.0           |
 
 ### Parameter Validation
 
-All real parameters must be finite. Invalid parameter sets are rejected by:
+A valid REPCA parameter set must satisfy the following conditions:
 
 ```math
 \begin{aligned}
   S^\mathrm{base} &> 0 \\
+  T_\mathrm{fltr}, T_\mathrm{ft}, T_\mathrm{fv}, T_\mathrm{p}, T_\mathrm{lag} &\ge 0 \\
   D_\mathrm{bd1} &\le 0 \le D_\mathrm{bd2} \\
   e^{\min} &\le 0 \le e^{\max} \\
   Q^{\min} &\le Q^{\max} \\
@@ -79,6 +77,8 @@ All real parameters must be finite. Invalid parameter sets are rejected by:
   P^{\min} &\le P^{\max}
 \end{aligned}
 ```
+
+All real parameters must be finite.
 
 The power bases and both conversion ratios must also be finite and positive;
 `verify()` also enforces Model Ports.
@@ -94,8 +94,8 @@ floor with a warning:
   s_\mathrm{comp}^\mathrm{off} &= 1 - s_\mathrm{comp} \\
   s_\mathrm{ref}^\mathrm{off} &= 1 - s_\mathrm{ref} \\
   k_\mathrm{base} &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}} \\
-  I_\mathrm{r}^\mathrm{comp} &= k_\mathrm{base}I_\mathrm{r}, \quad
-  I_\mathrm{i}^\mathrm{comp} = k_\mathrm{base}I_\mathrm{i}
+  I_r^\mathrm{comp} &= k_\mathrm{base}I_r, \quad
+  I_i^\mathrm{comp} = k_\mathrm{base}I_i
 \end{aligned}
 ```
 
@@ -132,15 +132,15 @@ $s_\mathrm{freq}=1$; otherwise `pext` becomes zero.
 
 #### Differential
 
-Symbol                  | Units  | Description                         | Note
-------------------------|--------|-------------------------------------|------
-$V^\mathrm{meas}$      | [p.u.] | Filtered regulated voltage          | State 1 in Fig. 1
-$Q^\mathrm{meas}$      | [p.u.] | Filtered reactive-power signal      | State 2 in Fig. 1; component base
-$x_Q^\mathrm{PI}$      | [p.u.] | Reactive-power PI controller state  | State 3 in Fig. 1; component base
-$x_Q^\mathrm{lag}$     | [p.u.] | Reactive-command lead-lag state     | State 4 in Fig. 1; component base
-$P^\mathrm{meas}$      | [p.u.] | Filtered active-power signal        | State 5 in Fig. 1; component base
-$x_P^\mathrm{PI}$      | [p.u.] | Active-power PI controller state    | State 6 in Fig. 1; component base
-$P^\mathrm{ref}$       | [p.u.] | Active-power command lag state      | State 7 in Fig. 1; component base
+Symbol             | Units  | Description                        | Note
+-------------------|--------|------------------------------------|---------------------------------------------------------------
+$V^\mathrm{meas}$  | [p.u.] | Filtered regulated voltage         | State 1 in Fig. 1; Source label: `Vmeas`
+$Q^\mathrm{meas}$  | [p.u.] | Filtered reactive-power signal     | State 2 in Fig. 1; Source label: `Qmeas`; component base
+$x_Q^\mathrm{PI}$  | [p.u.] | Reactive-power PI controller state | State 3 in Fig. 1; Source label: `Reactive PI`; component base
+$x_Q^\mathrm{lag}$ | [p.u.] | Reactive-command lead–lag state    | State 4 in Fig. 1; Source label: `Qext`; component base
+$P^\mathrm{meas}$  | [p.u.] | Filtered active-power signal       | State 5 in Fig. 1; Source label: `Pmeas`; component base
+$x_P^\mathrm{PI}$  | [p.u.] | Active-power PI controller state   | State 6 in Fig. 1; Source label: `Power PI`; component base
+$P^\mathrm{ref}$   | [p.u.] | Active-power command lag state     | State 7 in Fig. 1; Source label: `Pref`; component base
 
 #### Algebraic
 
@@ -170,21 +170,23 @@ None.
 
 #### Algebraic
 
-Symbol                         | Units  | Init    | Description                       | Note
--------------------------------|--------|---------|-----------------------------------|------
-$V_\mathrm{r}$                | [p.u.] | Known   | Regulated-bus voltage, real component | Bus input
-$V_\mathrm{i}$                | [p.u.] | Known   | Regulated-bus voltage, imaginary component | Bus input
-$I_\mathrm{r}$                | [p.u.] | Known   | Branch-current real component     | Signal port `ir`; system base
-$I_\mathrm{i}$                | [p.u.] | Known   | Branch-current imaginary component | Signal port `ii`; system base
-$P$                           | [p.u.] | Known   | Branch active power               | Signal port `p`; system base
-$Q$                           | [p.u.] | Known   | Branch reactive power             | Signal port `q`; system base
-$f$                           | [p.u.] | Known   | Frequency input                   | Signal port `freq`
-$V^\mathrm{ref}$              | [p.u.] | Unknown | Voltage-control reference         | Optional signal port `vref`
-$P_\mathrm{plant}^\mathrm{ref}$ | [p.u.] | Unknown | Plant active-power reference      | Optional signal port `pref`; system base
-$Q^\mathrm{ref}$              | [p.u.] | Unknown | Reactive-power reference          | Optional signal port `qref`; system base
-$f^\mathrm{ref}$              | [p.u.] | Unknown | Frequency reference               | Optional signal port `freqref`
+Symbol                          | Units  | Description                                | Note
+--------------------------------|--------|--------------------------------------------|-----------------------------------------
+$V_r$                           | [p.u.] | Regulated-bus voltage, real component      | Bus input
+$V_i$                           | [p.u.] | Regulated-bus voltage, imaginary component | Bus input
+$I_r$                           | [p.u.] | Branch-current real component              | Signal port `ir`; system base
+$I_i$                           | [p.u.] | Branch-current imaginary component         | Signal port `ii`; system base
+$P$                             | [p.u.] | Branch active power                        | Signal port `p`; system base
+$Q$                             | [p.u.] | Branch reactive power                      | Signal port `q`; system base
+$f$                             | [p.u.] | Frequency input                            | Signal port `freq`
+$V^\mathrm{ref}$                | [p.u.] | Voltage-control reference                  | Optional signal port `vref`
+$P_\mathrm{plant}^\mathrm{ref}$ | [p.u.] | Plant active-power reference               | Optional signal port `pref`; system base
+$Q^\mathrm{ref}$                | [p.u.] | Reactive-power reference                   | Optional signal port `qref`; system base
+$f^\mathrm{ref}$                | [p.u.] | Frequency reference                        | Optional signal port `freqref`
 
 ## Model Equations
+
+Smooth functions: [`above`](../../../../CommonMath.md#above), [`antiwindup`](../../../../CommonMath.md#antiwindup), [`clamp`](../../../../CommonMath.md#clamp), [`deadband2`](../../../../CommonMath.md#type-ii-deadband).
 
 ### Internal Equations
 
@@ -198,19 +200,16 @@ $f^\mathrm{ref}$              | [p.u.] | Unknown | Frequency reference          
   0 &= -\dot{x}_Q^\mathrm{lag} + \dfrac{1}{T_\mathrm{fv}} (Q^\mathrm{PI} - x_Q^\mathrm{lag}) \\
   0 &= -\dot{P}^\mathrm{meas} + \dfrac{1}{T_\mathrm{p}} (k_\mathrm{base}P - P^\mathrm{meas}) \\
   0 &= -\dot{x}_P^\mathrm{PI} + \text{antiwindup}(P^\mathrm{PI}, K_\mathrm{ig}e_P^\mathrm{lim};\,P^{\min}, P^{\max}) \\
-  0 &= -\dot{P}^\mathrm{ref} + \dfrac{1}{T_\mathrm{lag}} (P^\mathrm{PI} - P^\mathrm{ref}).
+  0 &= -\dot{P}^\mathrm{ref} + \dfrac{1}{T_\mathrm{lag}} (P^\mathrm{PI} - P^\mathrm{ref})
 \end{aligned}
 ```
-
-CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
-target and smooth approximation.
 
 #### Algebraic
 
 ```math
 \begin{aligned}
-  0 &= -V^2 + V_\mathrm{r}^2 + V_\mathrm{i}^2 \\
-  0 &= -(V^\mathrm{ldc})^2 + (V_\mathrm{r} - R_c I_\mathrm{r}^\mathrm{comp} + X_c I_\mathrm{i}^\mathrm{comp})^2 + (V_\mathrm{i} - R_c I_\mathrm{i}^\mathrm{comp} - X_c I_\mathrm{r}^\mathrm{comp})^2 \\
+  0 &= -V^2 + V_r^2 + V_i^2 \\
+  0 &= -(V^\mathrm{ldc})^2 + (V_r - R_c I_r^\mathrm{comp} + X_c I_i^\mathrm{comp})^2 + (V_i - R_c I_i^\mathrm{comp} - X_c I_r^\mathrm{comp})^2 \\
   0 &= -V^\mathrm{droop} + V + K_c k_\mathrm{base}Q \\
   0 &= -V^\mathrm{ctrl} + s_\mathrm{comp}V^\mathrm{ldc} + s_\mathrm{comp}^\mathrm{off}V^\mathrm{droop} \\
   0 &= -s_\mathrm{frz} + \text{above}(V;\,V^\mathrm{frz}) \\
@@ -223,12 +222,11 @@ target and smooth approximation.
   0 &= -e_P + k_\mathrm{base}P_\mathrm{plant}^\mathrm{ref} - P^\mathrm{meas} + \text{droop}(e_f;D_\mathrm{dn},D_\mathrm{up}) \\
   0 &= -e_P^\mathrm{lim} + \text{clamp}(e_P;\,e_P^{\min},e_P^{\max}) \\
   0 &= -P^\mathrm{PI} + \text{clamp}(K_\mathrm{pg}e_P^\mathrm{lim}+x_P^\mathrm{PI};\,P^{\min},P^{\max}) \\
-  0 &= -k_\mathrm{base}P^\mathrm{ext} + s_\mathrm{freq}P^\mathrm{ref}.
+  0 &= -k_\mathrm{base}P^\mathrm{ext} + s_\mathrm{freq}P^\mathrm{ref}
 \end{aligned}
 ```
 
-CommonMath defines the [derived limiter functions](../../../../CommonMath.md#derived-functions)
-used above; Appendix A defines `droop`.
+[Appendix A](#appendix-a-droop) defines `droop`.
 
 ### External Equations
 
@@ -242,8 +240,8 @@ REPCA reconstructs a steady operating point; arbitrary-state restart is unsuppor
 
 ```math
 \begin{aligned}
-  V_\mathrm{r}, V_\mathrm{i} &\leftarrow \text{regulated-bus voltage} \\
-  I_\mathrm{r}, I_\mathrm{i} &\leftarrow \text{branch current} \\
+  V_r, V_i &\leftarrow \text{regulated-bus voltage} \\
+  I_r, I_i &\leftarrow \text{branch current} \\
   P, Q &\leftarrow \text{branch power} \\
   f &\leftarrow \text{frequency input} \\
   Q^\mathrm{ext} &\leftarrow \text{known reactive-power command on system base} \\
@@ -253,31 +251,33 @@ REPCA reconstructs a steady operating point; arbitrary-state restart is unsuppor
 
 ### Internal Initialization
 
-Initialization-only $\text{clamp}^{-1}$ and $\text{deadband2}^{-1}$ recover
-finite inputs that reproduce the requested smooth-block outputs.
+Initialization uses the smooth [initialization inverses](../../../../CommonMath.md#initialization-inverses)
+`iclamp` and `ideadband2`. Within $10^{-12}$ of a clamp bound, REPCA uses that
+bound moved outward by $0.1$; intervals of width at most $10^{-12}$ return
+$\ell$. Deadband outputs within $10^{-12}$ of zero use the midpoint; other
+values are inverted by bisection.
 
 ```math
 \begin{aligned}
-  V &\leftarrow \sqrt{V_\mathrm{r}^2 + V_\mathrm{i}^2} \\
-  V^\mathrm{ldc} &\leftarrow \sqrt{(V_\mathrm{r}-R_c I_\mathrm{r}^\mathrm{comp}+X_c I_\mathrm{i}^\mathrm{comp})^2 + (V_\mathrm{i}-R_c I_\mathrm{i}^\mathrm{comp}-X_c I_\mathrm{r}^\mathrm{comp})^2} \\
+  V &\leftarrow \sqrt{V_r^2 + V_i^2} \\
+  V^\mathrm{ldc} &\leftarrow \sqrt{(V_r-R_c I_r^\mathrm{comp}+X_c I_i^\mathrm{comp})^2 + (V_i-R_c I_i^\mathrm{comp}-X_c I_r^\mathrm{comp})^2} \\
   V^\mathrm{droop} &\leftarrow V + K_c k_\mathrm{base}Q \\
   V^\mathrm{ctrl} &\leftarrow s_\mathrm{comp}V^\mathrm{ldc} + s_\mathrm{comp}^\mathrm{off}V^\mathrm{droop} \\
   V^\mathrm{meas} &\leftarrow V^\mathrm{ctrl} \\
   Q^\mathrm{meas} &\leftarrow k_\mathrm{base}Q \\
   P^\mathrm{meas} &\leftarrow k_\mathrm{base}P \\
   s_\mathrm{frz} &\leftarrow \text{above}(V;\,V^\mathrm{frz}) \\
-  e_\mathrm{RQ}^\mathrm{db} &\leftarrow \text{clamp}^{-1}(0;\,e^{\min},e^{\max}) \\
-  e_\mathrm{RQ} &\leftarrow \text{deadband2}^{-1}(e_\mathrm{RQ}^\mathrm{db};\,D_\mathrm{bd1},D_\mathrm{bd2}) \\
+  e_\mathrm{RQ}^\mathrm{db} &\leftarrow \text{iclamp}(0;\,e^{\min},e^{\max}) \\
+  e_\mathrm{RQ} &\leftarrow \text{ideadband2}(e_\mathrm{RQ}^\mathrm{db};\,D_\mathrm{bd1},D_\mathrm{bd2}) \\
   e_\mathrm{RQ}^\mathrm{lim} &\leftarrow 0 \\
   Q^\mathrm{PI} &\leftarrow k_\mathrm{base}Q^\mathrm{ext} \\
   Q^{\min} &\leftarrow \min(Q^{\min},Q^\mathrm{PI}),\quad Q^{\max}\leftarrow \max(Q^{\max},Q^\mathrm{PI}) \\
   x_Q^\mathrm{lag} &\leftarrow Q^\mathrm{PI} \\
-  u_Q^\mathrm{PI} &\leftarrow \text{clamp}^{-1}(Q^\mathrm{PI};\,Q^{\min},Q^{\max}) \\
+  u_Q^\mathrm{PI} &\leftarrow \text{iclamp}(Q^\mathrm{PI};\,Q^{\min},Q^{\max}) \\
   x_Q^\mathrm{PI} &\leftarrow u_Q^\mathrm{PI} - K_\mathrm{p}e_\mathrm{RQ}^\mathrm{lim} \\
-  \Delta f_0 &\leftarrow \text{deadband2}^{-1}(0;\,D_\mathrm{bd1}^{f},D_\mathrm{bd2}^{f}) \\
   e_f &\leftarrow 0 \\
-  P^\mathrm{freq} &\leftarrow \text{droop}(e_f;D_\mathrm{dn},D_\mathrm{up}) = 0 \\
-  e_P &\leftarrow \text{clamp}^{-1}(0;\,e_P^{\min},e_P^{\max}) \\
+  P^\mathrm{freq} &\leftarrow \text{droop}(e_f;D_\mathrm{dn},D_\mathrm{up}) \\
+  e_P &\leftarrow \text{iclamp}(0;\,e_P^{\min},e_P^{\max}) \\
   e_P^\mathrm{lim} &\leftarrow 0 \\
   P^\mathrm{ref} &\leftarrow \begin{cases}
     k_\mathrm{base}P^\mathrm{ext} & s_\mathrm{freq}=1 \\
@@ -285,15 +285,16 @@ finite inputs that reproduce the requested smooth-block outputs.
   \end{cases} \\
   P^\mathrm{PI} &\leftarrow P^\mathrm{ref} \\
   P^{\min} &\leftarrow \min(P^{\min},P^\mathrm{PI}),\quad P^{\max}\leftarrow \max(P^{\max},P^\mathrm{PI}) \\
-  u_P^\mathrm{PI} &\leftarrow \text{clamp}^{-1}(P^\mathrm{PI};\,P^{\min},P^{\max}) \\
+  u_P^\mathrm{PI} &\leftarrow \text{iclamp}(P^\mathrm{PI};\,P^{\min},P^{\max}) \\
   x_P^\mathrm{PI} &\leftarrow u_P^\mathrm{PI} - K_\mathrm{pg}e_P^\mathrm{lim} \\
   P^\mathrm{ext} &\leftarrow \dfrac{s_\mathrm{freq}}{k_\mathrm{base}}P^\mathrm{ref} \\
-  \dot{V}^\mathrm{meas},\dot{Q}^\mathrm{meas}, \dot{x}_Q^\mathrm{PI},\dot{x}_Q^\mathrm{lag}, \dot{P}^\mathrm{meas},\dot{x}_P^\mathrm{PI},\dot{P}^\mathrm{ref} &\leftarrow 0.
+  \dot{V}^\mathrm{meas},\dot{Q}^\mathrm{meas}, \dot{x}_Q^\mathrm{PI},\dot{x}_Q^\mathrm{lag}, \dot{P}^\mathrm{meas},\dot{x}_P^\mathrm{PI},\dot{P}^\mathrm{ref} &\leftarrow 0
 \end{aligned}
 ```
 
 If an initial PI output falls outside its configured limits, REPCA expands the
-limits to include it and logs a warning.
+limits to include it and logs a warning. This matches PowerWorld's default
+`Modify Limits and Run` treatment of initial limit violations.
 
 Initialization rejects an operating point if:
 
@@ -310,36 +311,19 @@ Initialization is atomic; candidates are validated before state or signal writes
   V^\mathrm{ref} &\leftarrow V^\mathrm{meas} + s_\mathrm{ref}e_\mathrm{RQ} \\
   Q^\mathrm{ref} &\leftarrow Q + \dfrac{s_\mathrm{ref}^\mathrm{off}e_\mathrm{RQ}}{k_\mathrm{base}} \\
   P_\mathrm{plant}^\mathrm{ref} &\leftarrow P + \dfrac{e_P-P^\mathrm{freq}}{k_\mathrm{base}} \\
-  f^\mathrm{ref} &\leftarrow f + \Delta f_0.
+  f^\mathrm{ref} &\leftarrow f + \text{ideadband2}(0;\,D_\mathrm{bd1}^{f},D_\mathrm{bd2}^{f})
 \end{aligned}
 ```
 
-## Monitorable Outputs
+## Monitors
 
-Output          | Units  | Description                         | Note
+Monitor         | Units  | Description                         | Note
 ----------------|--------|-------------------------------------|------
 `qext`          | [p.u.] | Reactive-power command output       | $Q^\mathrm{ext}$; system base
 `pext`          | [p.u.] | Active-power command output         | $P^\mathrm{ext}$; system base
 `vmeas`         | [p.u.] | Filtered regulated voltage          | $V^\mathrm{meas}$
 `qmeas`         | [p.u.] | Filtered reactive-power signal      | $Q^\mathrm{meas}$; component base
 `pmeas`         | [p.u.] | Filtered active-power signal        | $P^\mathrm{meas}$; component base
-
-## Testing
-
-- `validation()` checks defaults, parameter domains, signal contracts, and time floors.
-- `initializationAndSignals()` checks reconstruction, bases, signals, monitors,
-  tags, and selectors.
-- `initializationDomain()` checks adjusted and collapsed limits, nonfinite
-  values, and atomicity.
-- `residualEquations()` checks every residual against a fixed answer key.
-- `reactiveControl()` checks compensation and reference modes, voltage freeze,
-  deadbands, smooth limits, anti-windup, and lead-lag behavior.
-- `activePowerControl()` checks frequency selection, deadband, droop, smooth
-  limits, anti-windup, and the output lag.
-- `derivatives()` checks differential-row derivative signs.
-- `dependencyTracking()` checks fixed numerical and structural Jacobian oracles.
-- `jacobian()` checks fixed numerical and structural oracles, plus Enzyme
-  agreement to $10^{-9}$ when enabled.
 
 ## Appendix A: `droop`
 
@@ -349,7 +333,7 @@ Output          | Units  | Description                         | Note
 ```
 
 where $\sigma$ is GridKit's smooth
-[`sigmoid`](../../../../CommonMath.md#primitives). The response preserves
+[`sigmoid`](../../../../CommonMath.md#logistic-function). The response preserves
 $\text{droop}(0;D_\mathrm{dn},D_\mathrm{up})=0$.
 
 [^frequency-measurement]: Background for phase-derived, filtered frequency

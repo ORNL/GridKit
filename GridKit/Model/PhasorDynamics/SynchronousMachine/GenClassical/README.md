@@ -18,9 +18,9 @@ Symbol            | Units  | JSON  | Description                      | Typical 
 $P_0$             | [p.u.] | `p0`  | Initial active power injection   | 1.0           | System base; required initialization source
 $Q_0$             | [p.u.] | `q0`  | Initial reactive power injection | 0.0           | System base; required initialization source
 $S^\mathrm{base}$ | [MVA]  | `mva` | GENCLS component power base      | 100.0         |
-$H$               | [sec]  | `H`   | Rotor inertia                    | 3.0           |
+$H$               | [s]  | `H`   | Rotor inertia                    | 3.0           |
 $D$               | [p.u.] | `D`   | Damping coefficient              | 0.0           |
-$R_a$             | [p.u.] | `Ra`  | Armature resistance              | 0.0           | Component base
+$R_\mathrm{a}$             | [p.u.] | `Ra`  | Armature resistance              | 0.0           | Component base
 $X'_d$            | [p.u.] | `Xdp` | Direct-axis transient reactance  | 0.2           | Component base
 
 ### Parameter Validation
@@ -32,9 +32,9 @@ None.
 ```math
 \begin{aligned}
   G
-    &= \dfrac{R_a}{R_a^2+(X'_d)^2} \\
+    &= \dfrac{R_\mathrm{a}}{R_\mathrm{a}^2+(X'_d)^2} \\
   B
-    &= -\dfrac{X'_d}{R_a^2+(X'_d)^2} \\
+    &= -\dfrac{X'_d}{R_\mathrm{a}^2+(X'_d)^2} \\
   k_\mathrm{base}
     &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}}
 \end{aligned}
@@ -143,11 +143,11 @@ All internal derivatives are initialized to zero:
   I_\mathrm{i}
     &\leftarrow k_\mathrm{base}\dfrac{V_\mathrm{i}P_0-V_\mathrm{r}Q_0}{V_\mathrm{r}^2+V_\mathrm{i}^2} \\
   \delta
-    &\leftarrow \text{arg}[V_\mathrm{r}+jV_\mathrm{i}+(R_a+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})] \\
+    &\leftarrow \text{arg}[V_\mathrm{r}+jV_\mathrm{i}+(R_\mathrm{a}+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})] \\
   \omega
     &\leftarrow 0 \\
   T_\mathrm{e}
-    &\leftarrow V_\mathrm{r}I_\mathrm{r}+V_\mathrm{i}I_\mathrm{i}+R_a(I_\mathrm{r}^2+I_\mathrm{i}^2)
+    &\leftarrow V_\mathrm{r}I_\mathrm{r}+V_\mathrm{i}I_\mathrm{i}+R_\mathrm{a}(I_\mathrm{r}^2+I_\mathrm{i}^2)
 \end{aligned}
 ```
 
@@ -158,7 +158,7 @@ All internal derivatives are initialized to zero:
   P_\mathrm{m}
     &\leftarrow \dfrac{T_\mathrm{e}}{k_\mathrm{base}} \\
   E_\mathrm{fd}
-    &\leftarrow |V_\mathrm{r}+jV_\mathrm{i}+(R_a+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})|
+    &\leftarrow |V_\mathrm{r}+jV_\mathrm{i}+(R_\mathrm{a}+jX'_d)(I_\mathrm{r}+jI_\mathrm{i})|
 \end{aligned}
 ```
 

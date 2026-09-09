@@ -4,6 +4,21 @@ For input units $[u]$, `Propagation` is the $K$-channel current-form propagation
 operator used by `LineDistributed`. It applies a fitted input factor, one scalar
 delay per mode, and a fitted output factor while preserving the input units.
 
+```math
+\begin{aligned}
+\mathbf{H}(s)
+  &= \sum_{m=1}^M \mathbf{H}^\mathrm{mps}_m(s) \exp(-s\tau_m)
+\end{aligned}
+```
+
+With $\mathbf{G}_\mathrm{in}$ and $\mathbf{G}_\mathrm{out}$ the transfer matrices
+of the input and output factors,
+
+```math
+\mathbf{H}^\mathrm{mps}_m(s)
+  = \mathbf{G}_\mathrm{out}(s)_{:,m}\,\mathbf{G}_\mathrm{in}(s)_{m,:}
+```
+
 ## Block Diagram
 
 ![Propagation operator block diagram](../../../../../../docs/Figures/EMT/Propagation/diagram.png)
@@ -50,30 +65,6 @@ Symbol | Description | Type | Order | JSON | Inputs | Outputs
 $\mathbf{g}_\mathrm{in}$ | Input factor | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_{\mathbf{g}_\mathrm{in}}$ | `input` | $\mathbb{R}^K$ | $\mathbb{R}^M$
 $\mathbf{d}$ | Modal delay bank | [Delay](../Delay/README.md) | History | `delays` | $\mathbb{R}^M$ | $\mathbb{R}^M$
 $\mathbf{g}_\mathrm{out}$ | Output factor | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_{\mathbf{g}_\mathrm{out}}$ | `output` | $\mathbb{R}^M$ | $\mathbb{R}^K$
-
-The offline fitting targets and propagation factorization are
-
-```math
-\begin{aligned}
-\mathbf{G}^\mathrm{in}(s)
-  &\approx \mathbf{H}^\mathrm{mps}(s)\mathbf{T}_i^{-1}(s) \\
-\mathbf{G}^\mathrm{out}(s) &\approx \mathbf{T}_i(s) \\
-\mathbf{H}^\mathrm{mps}(s)
-  &= \mathrm{diag}(h_1^\mathrm{mps}(s),\ldots,h_M^\mathrm{mps}(s)) \\
-\mathbf{D}_{\boldsymbol{\tau}}(s)
-  &= \mathrm{diag}(\exp(-s\tau_1),\ldots,\exp(-s\tau_M)) \\
-\mathbf{H}(s)
-  &= \mathbf{T}_i(s)\mathbf{D}_{\boldsymbol{\tau}}(s)
-     \mathbf{H}^\mathrm{mps}(s)\mathbf{T}_i^{-1}(s) \\
-  &\approx \mathbf{G}^\mathrm{out}(s)\mathbf{D}_{\boldsymbol{\tau}}(s)
-     \mathbf{G}^\mathrm{in}(s)
-\end{aligned}
-```
-
-$\mathbf{H}^\mathrm{mps}$ is the diagonal modal minimum-phase-shift propagation
-function with the modal delays removed. The current modal transformation
-$\mathbf{T}_i$ maps modal currents to phase coordinates, and
-$\mathbf{T}_i^{-1}$ maps phase currents to modal coordinates.
 
 ### Submodel Validation
 
@@ -138,7 +129,8 @@ None.
 
 ## Initialization
 
-TBD
+Initialize the rational factors using the [EMT initialization contract](../../../README.md#initialization).
+Provide the input-factor output history required by [Delay](../Delay/README.md#initialization).
 
 ## Monitors
 

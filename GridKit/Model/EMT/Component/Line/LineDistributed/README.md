@@ -18,7 +18,7 @@ Define the phase- and conductor-index sets
 ```math
 \mathcal{N} = \{1,\ldots,N\},
 \qquad
-\mathcal{K} = \{1,\ldots,K\}.
+\mathcal{K} = \{1,\ldots,K\}
 ```
 
 Symbol | Units | JSON | Description | Note
@@ -73,7 +73,7 @@ uniform line, so
 ```math
 \mathbf{Y}_1^{\mathrm{c}}(s)=\mathbf{Y}_2^{\mathrm{c}}(s),
 \qquad
-\mathbf{H}_{12}(s)=\mathbf{H}_{21}(s).
+\mathbf{H}_{12}(s)=\mathbf{H}_{21}(s)
 ```
 
 The two terminal-admittance instances maintain independent states, and the two
@@ -137,8 +137,6 @@ None.
 
 #### Algebraic
 
-The residuals use the signals defined under Submodel Wiring.
-
 ```math
 \begin{aligned}
 0 &= -\mathbf{i}_1^\mathrm{ref}
@@ -163,9 +161,7 @@ The residuals use the signals defined under Submodel Wiring.
 
 ## Initialization
 
-The characteristic-admittance and propagation submodels initialize according
-to their own specifications. There is no additional line-level initialization
-procedure.
+Initialize the characteristic-admittance and propagation submodels.
 
 ## Monitors
 
@@ -175,45 +171,3 @@ Monitor | Units | Description | Note
 `i_c2` | [A] | Characteristic-admittance current at terminal 2 | $\mathbf{i}_2^\mathrm{c} \in \mathbb{R}^K$
 `i_inc1` | [A] | Incident current at terminal 1 | $\mathbf{i}_1^\mathrm{inc} \in \mathbb{R}^K$
 `i_inc2` | [A] | Incident current at terminal 2 | $\mathbf{i}_2^\mathrm{inc} \in \mathbb{R}^K$
-
-## Development
-
-The initial three-phase formulation takes $N=K=3$ and
-$\mathbf{P}_\phi=\mathbf{I}_3$.
-
-```math
-\begin{aligned}
-0 &= -\mathbf{i}_1^\mathrm{ref}
-  + 2\mathbf{i}_1^\mathrm{c}
-  - \mathbf{i}_1^\mathrm{inc} \\
-0 &= -\mathbf{i}_2^\mathrm{ref}
-  + 2\mathbf{i}_2^\mathrm{c}
-  - \mathbf{i}_2^\mathrm{inc}
-\end{aligned}
-```
-
-the external equations reduce to
-
-```math
-\begin{aligned}
-\mathbf{i}_1
-  &\leftarrow \mathbf{i}_1^\mathrm{inc}-\mathbf{i}_1^\mathrm{c} \\
-\mathbf{i}_2
-  &\leftarrow \mathbf{i}_2^\mathrm{inc}-\mathbf{i}_2^\mathrm{c}
-\end{aligned}
-```
-
-and the submodel wiring reduces to
-
-```math
-\begin{aligned}
-\mathbf{i}_1^\mathrm{c}
-  &\leftarrow \mathbf{y}_1^\mathrm{c}[\mathbf{v}_1] \\
-\mathbf{i}_2^\mathrm{c}
-  &\leftarrow \mathbf{y}_2^\mathrm{c}[\mathbf{v}_2] \\
-\mathbf{i}_1^\mathrm{inc}
-  &\leftarrow \mathbf{h}_{21}[\mathbf{i}_2^\mathrm{ref}] \\
-\mathbf{i}_2^\mathrm{inc}
-  &\leftarrow \mathbf{h}_{12}[\mathbf{i}_1^\mathrm{ref}]
-\end{aligned}
-```
