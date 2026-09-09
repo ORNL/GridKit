@@ -47,12 +47,10 @@ exciters use the normal machine operating-point reconciliation.
 ## Machine winding conversion
 
 The source GENROU parameters describe transient and subtransient responses;
-the EMT Machine requires physical winding circuits. Fundamental and standard
-parameter sets are distinct, as described in the
-[MathWorks parameterization documentation](https://www.mathworks.com/help/sps/ug/machine-parameterization.html).
-The following classical separated-time-scale conversion is an approximation,
-not an exact GENROU reduction. For either axis, let $X$, $X'$, $X''$, and $X_l$
-denote the source reactances and $T'_0$, $T''_0$ its open-circuit time constants:
+the EMT Machine requires physical winding circuits. The conversion preserves
+the unsaturated coupled rotor dynamics on each axis, subject to the
+reactance regularization below. Let $X$, $X'$, $X''$, and $X_l$ denote the
+source reactances and $T'_0$, $T''_0$ its time parameters:
 
 ```math
 \begin{aligned}
@@ -69,26 +67,40 @@ axis they are the two dampers. `Ll = L0 = Xl`; rating, inertia, stator
 resistance, and saturation data are copied. All source damping coefficients
 are zero, so EMT friction is zero. Differential leakage is zero as required
 by the existing Machine model. The conversion records the two unsaturated
-open-circuit poles of each coupled winding circuit; these differ from the
-separated-time-scale inputs. The reactance limits are checked independently.
+open-circuit poles separately from the time parameters. GENROU retains rotor
+coupling, so its poles are the eigenvalues of
+
+```math
+A=\begin{bmatrix}
+-(1+a)/T'_0 & a/T'_0 \\
+1/T''_0 & -1/T''_0
+\end{bmatrix},\qquad
+a=\frac{(X-X')(X'-X'')}{(X'-X_l)^2}.
+```
+
+`conversion.json` distinguishes the source poles, the effective poles after
+regularization, and the winding poles, in inverse seconds from slow to fast.
+The validator checks the actual winding parameters against these poles and
+independently compares operational reactance and d-axis field response with
+the unsaturated GENROU equations.
 
 For the 18 units with $X'_d=X''_d$, the effective subtransient reactance is
 $X''_{d,\mathrm{eff}}=X_l+0.99(X'_d-X_l)$. This changes only one percent of
 the gap above leakage and gives finite positive damper leakage. Each changed
-value appears in `conversion.json`. Saturation acts on both EMT magnetizing
-axes, and stator transients are retained; those dynamics are absent from the
-phasor reduction. Exciter sensing uses the instantaneous balanced voltage
+value appears in `conversion.json`. EMT saturation uses air-gap flux and
+scales both magnetizing inductances; GENROU uses subtransient flux. EMT also
+retains stator transients and fault-induced DC current offsets. All source
+stator resistances are zero and are retained; the phasor stator equations
+omit these transient currents. Exciter sensing uses the instantaneous balanced voltage
 norm. Existing controller time-constant floors and shared smooth limiters
 remain those documented by their model READMEs. In particular, IEEET1 raises
 the source's zero voltage-sensing time constant to 0.001 s and reports that
 change at startup.
 
-The largest regularization changes $X''_d$ by 0.25 percent. The largest
-time-constant discrepancy is much larger: units `37_3` and `37_5` have a
-coupled q-axis slow time constant of 1.04168 s instead of 0.58 s (79.6 percent),
-and a fast time constant of 0.03898 s instead of 0.07 s. These are material
-model deviations. The approximate winding conversion should not be used as
-evidence of matching GENROU fault dynamics.
+The largest regularization changes $X''_d$ by 0.25 percent and an open-circuit
+pole by 0.371 percent. The effective GENROU and winding poles agree to
+roundoff. This rotor correspondence does not establish equivalence of the
+full fault trajectories, which include the other model differences below.
 
 ## Inverter plants
 
@@ -192,7 +204,7 @@ and bus voltage as the positive-sequence magnitude on its local voltage base.
 
 Deviation | EMT choice and consequence
 --------- | --------------------------
-GENROU reduction | Fundamental winding circuits, stator transients, shared-axis saturation, approximate open-circuit times
+GENROU reduction | Corresponding unsaturated rotor circuits, retained stator transients, shared-axis saturation
 Equal d-axis reactances | 18 positive-damper regularizations, at most 0.25 percent change in $X''_d$
 Transformer no-load and connection data | Fabricated core branches and grounded-wye banks; source voltage bases retain nominal ratio
 Initial power flow | At bus 23, total synchronous dispatch changes by -0.152426 MW and +1.179855 Mvar; maximum bus phasor change is 0.000156170 p.u.

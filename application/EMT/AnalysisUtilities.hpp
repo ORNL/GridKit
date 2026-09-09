@@ -87,6 +87,8 @@ namespace GridKit
       double                                               dt_fixed;
       /// maximum number of solver time steps, or 0 for the IDA default
       std::size_t                                          max_steps;
+      /// Maximum BDF order for adaptive integration
+      int                                                  max_order{5};
       /// IDA consistent initial condition calculation type
       AnalysisManager::Sundials::IdaConsistentICType       consistent_ic_type;
       /// set of system events
@@ -166,7 +168,7 @@ namespace GridKit
     {
       using namespace magic_enum;
 
-      validateJsonFields(j, "EMT study", {"system_model_file", "state_file", "dt_monitor", "tmax", "rel_tol", "abs_tol", "mu", "signal_values", "dt_fixed", "max_steps", "consistent_ic_type", "events", "output_file", "state_output_file", "step_output_file", "reference_file", "error_tolerance", "error_type", "abs_err_threshold"});
+      validateJsonFields(j, "EMT study", {"system_model_file", "state_file", "dt_monitor", "tmax", "rel_tol", "abs_tol", "mu", "signal_values", "dt_fixed", "max_steps", "max_order", "consistent_ic_type", "events", "output_file", "state_output_file", "step_output_file", "reference_file", "error_tolerance", "error_type", "abs_err_threshold"});
       const auto real = [&j](const char* key, double fallback)
       { return j.contains(key) ? parseFiniteReal<double>(j.at(key), key) : fallback; };
 
@@ -208,6 +210,14 @@ namespace GridKit
             || steps.get<uint64_t>() > static_cast<uint64_t>(std::numeric_limits<long int>::max()))
           throw std::invalid_argument("max_steps requires a nonnegative integer within the solver's index range");
         c.max_steps = steps.get<size_t>();
+      }
+      c.max_order = 5;
+      if (j.contains("max_order"))
+      {
+        const auto& order = j.at("max_order");
+        if (!order.is_number_integer() || order < 1 || order > 5)
+          throw std::invalid_argument("max_order requires an integer between 1 and 5");
+        c.max_order = order.get<int>();
       }
       c.consistent_ic_type = AnalysisManager::Sundials::IdaConsistentICType::YA_YDP;
       if (j.contains("consistent_ic_type"))
