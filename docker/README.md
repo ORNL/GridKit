@@ -1,8 +1,9 @@
 # GridKit image
 
-The runtime image contains the complete installed GridKit tree. It has no
-GridKit entrypoint: select an installed executable after the image name, or run
-the image interactively to open a shell.
+The runtime image contains the complete installed GridKit tree, built with
+Apache Arrow so the `arrow` and `arrow_stream` monitor formats are available.
+It has no GridKit entrypoint: select an installed executable after the image
+name, or run the image interactively to open a shell.
 
 Run all commands below from the repository root.
 
@@ -14,7 +15,8 @@ Build the development image first if it is not already available:
 /usr/bin/podman build -t gridkit-dev:latest .devcontainer
 ```
 
-Then build the application image:
+Then build the application image, tagged for what it carries (`latest`, or a
+dated tag such as `arrow-2026-09-09` that consumers can pin):
 
 ```bash
 /usr/bin/podman build \
@@ -28,8 +30,9 @@ Then build the application image:
 ## VS Code tasks
 
 Install the recommended **VSCode Action Buttons** extension and reload VS Code.
-Three status-bar buttons build `gridkit-dev:latest`, build `gridkit:latest`,
-or confirm and push `gridkit:latest` to `ghcr.io/lukelowry/gridkit:latest`.
+Three status-bar buttons build `gridkit-dev:latest`, build `gridkit:<tag>`,
+or confirm and push `gridkit:<tag>` to `ghcr.io/lukelowry/gridkit:<tag>`; the
+build and publish buttons prompt for the tag, defaulting to `latest`.
 Run **Refresh Action Buttons** from the Command Palette after changing their
 configuration.
 
