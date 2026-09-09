@@ -29,11 +29,16 @@ $dq$ components of transformed $\mathbf{v}_{\mathrm{o}}$.
 The LCL filter has series impedances
 $\mathbf Z_{\mathrm{s}}=\mathbf R_{\mathrm{s}}+s\mathbf L_{\mathrm{s}}$ and
 $\mathbf Z_g=\mathbf R_g+s\mathbf L_g$, and shunt capacitance $\mathbf C$.
-The GFM schematic shows the series resistors and inductors explicitly.
+Both schematics show the series resistors and inductors explicitly.
 
 ## Grid Following
 
 ![Grid-following inverter wiring](../../../../../docs/Figures/EMT/Controller/diagram_gfl.png)
+
+The GFL schematic uses the same electrical and plant-control layout as GFM,
+with Power Control supplying current commands directly to Current Control.
+Its PLL and current-limit feedback are implicit. REECB is one electrical-control
+model for this role; the schematic does not specify its current-priority law.
 
 ### REGCA correspondence
 
