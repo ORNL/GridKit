@@ -1,52 +1,130 @@
 \documentclass[tikz,border=12pt]{standalone}
 \input{../../diagram-style.tex}
+\input{../control-symbols.tex}
 
-% TUNABLES: channel spacing and control-block width.
-\def\channelspacing{2.9}
-\def\controlwidth{4.4cm}
+% TUNABLES: supplementary-current, reactive-lag, and active-order rows.
+\def\injectionrow{4.4}
+\def\lagrow{-3.1}
+\def\activerow{-7.1}
 
 \begin{document}
-\begin{tikzpicture}[emt diagram,block/.append style={align=center}]
-\node[block,minimum width=4.3cm,minimum height=2.8cm] (measure) at (0,0)
-    {$\hat v_d=v_d/V,\quad\hat v_q=v_q/V$\\[3pt]
-     $\hat i_d=Vi_d/S,\quad\hat i_q=Vi_q/S$\\[3pt]
-     $V_t=\sqrt{\hat v_d^2+\hat v_q^2}$\\[3pt]
-     $P_e=\hat v_d\hat i_d+\hat v_q\hat i_q$\\[3pt]
-     $Q_g=\hat v_q\hat i_d-\hat v_d\hat i_q$};
-\foreach \label/\shift in {v_d/0.9,v_q/0.3,i_d/-0.3,i_q/-0.9}
-    \draw[->,line] ([xshift=-1.2cm,yshift=\shift cm]measure.west)
-        node[sig,left] {$\label$} -- ([yshift=\shift cm]measure.west);
+\begin{tikzpicture}[emt diagram, block/.append style={align=center}]
 
-\node[block,minimum width=\controlwidth,minimum height=1.5cm] (active) at (8,\channelspacing)
-    {Active-power order\\[3pt]$T_{\mathrm{pord}},\ R_P^{\min},R_P^{\max},\ P^{\min},P^{\max}$};
-\draw[->,line] (8,4.7) node[sig,above] {$P^{\mathrm{ref}}/S$} -- (active.north);
-\node[block,minimum width=\controlwidth,minimum height=2cm] (reactive) at (8,-\channelspacing)
-    {Reactive-power / voltage control\\[3pt]
-     $s_{\mathrm{pf}},s_Q,s_V$\\[3pt]
-     Supplementary reactive current};
-\foreach \label/\shift in {{Q^{\mathrm{ref}}/S}/-1.4,{V^{\mathrm{ref}}/V}/0,\phi^{\mathrm{ref}}/1.4} {
-    \draw[->,line] ([yshift=-1cm,xshift=\shift cm]reactive.south)
-        node[sig,below] {$\label$} -- ([xshift=\shift cm]reactive.south);
-}
+% Voltage measurement and supplementary reactive-current injection.
+\node[block] (voltage) at (0,\injectionrow) {$\dfrac{1}{1+sT_{\mathrm{rv}}}$};
+\draw[->,line] (-3,\injectionrow) node[sig,left] {$V_t$} -- (voltage.west);
+\node[sum] (ev) at (3.8,\injectionrow) {$\Sigma$};
+\draw[->,line] (voltage.east) -- node[sig,above] {$V^{\mathrm{meas}}$} (ev.west);
+\node[pm,above left=0pt and 1pt of ev.west] {$-$};
+\draw[->,line] (3.8,6) node[sig,above] {$V_0^{\mathrm{ref}}$} -- (ev.north);
+\node[pm,above right=0pt and 1pt of ev.north] {$+$};
+\deadbandblock{db}{(6,\injectionrow)}{D_1^{\mathrm{db}}}{D_2^{\mathrm{db}}}
+\node[block,minimum width=1.5cm] (kqv) at (8.5,\injectionrow) {$K_{\mathrm{qv}}$};
+\staticlimit{inj}{(11,\injectionrow)}{I_{q,\mathrm{inj}}^{\min}}{I_{q,\mathrm{inj}}^{\max}}
+\draw[->,line] (ev.east) -- (db.west);
+\draw[->,line] (db.east) -- (kqv.west);
+\draw[->,line] (kqv.east) -- (inj.west);
 
-\node[block,minimum width=2.3cm,minimum height=2.5cm] (sense) at (4.2,0)
-    {$T_{\mathrm{rv}}$\\[3pt]$T_{\mathrm p}$\\[3pt]$s_{\mathrm{dip}}$};
-\draw[->,line] (measure.east) -- (sense.west);
-\draw[->,line] (sense.north) |- (active.west);
-\draw[->,line] (sense.south) |- (reactive.west);
+% Local Q / power-factor reference and cascaded Q / V regulation.
+\controlselector{pf}{(-0.1,0)}{s_{\mathrm{pf}}}
+\draw[->,line] (-3,0.4) node[sig,left] {$P^{\mathrm{meas}}\tan\phi^{\mathrm{ref}}$} -- (pf-one);
+\draw[->,line] (-3,-0.4) node[sig,left] {$Q^{\mathrm{ref}}/S$} -- (pf-zero);
+\node[block,minimum width=1.1cm] (qenable) at (1.5,0) {$s_{Q\mathrm{ref}}$};
+\draw[->,line] (pf-out) -- (qenable.west);
+\node[signal] (qc) at (2.6,0) {};
+\staticlimit{qlimit}{(3.8,0)}{Q^{\min}}{Q^{\max}}
+\draw[->,line] (qenable.east) -- (qc) -- (qlimit.west);
+\node[sum] (eq) at (5.3,0) {$\Sigma$};
+\draw[->,line] (qlimit.east) -- (eq.west);
+\node[pm,above left=0pt and 1pt of eq.west] {$+$};
+\draw[->,line] (5.3,-1.6) node[sig,below] {$Q_g$} -- (eq.south);
+\node[pm,below right=0pt and 1pt of eq.south] {$-$};
+\node[block] (qpi) at (7.5,0) {$K_{\mathrm{qp}}+\dfrac{K_{\mathrm{qi}}}{s}$};
+\nonwindup{qpi}{V^{\min}}{V^{\max}}
+\draw[->,line] (eq.east) -- node[sig,above] {$e_Q$} (qpi.west);
+\controlselector{vsel}{(10,0)}{s_V}
+\draw[->,line] (qpi.east) -- ++(0.4,0) |- (vsel-one);
+\draw[->,line] (9.6,-1.6) node[sig,below] {$V^{\mathrm{ref}}/V$} -- (vsel-zero);
+\node[sum] (evpi) at (11.6,0) {$\Sigma$};
+\draw[->,line] (vsel-out) -- (evpi.west);
+\node[pm,above left=0pt and 1pt of evpi.west] {$+$};
+\draw[->,line] (11.6,-1.6) node[sig,below] {$V^{\mathrm{meas}}$} -- (evpi.south);
+\node[pm,below right=0pt and 1pt of evpi.south] {$-$};
+\node[block] (vpi) at (15,0) {$K_{\mathrm{vp}}+\dfrac{K_{\mathrm{vi}}}{s}$};
+\nonwindup{vpi}{-I_q^{\max}}{I_q^{\max}}
+\node[block,minimum width=0.8cm,minimum height=0.8cm,inner sep=1pt]
+    (venable) at (12.9,0) {$s_Q$};
+\draw[->,line] (evpi.east) -- (venable.west);
+\draw[->,line] (venable.east) -- (vpi.west);
+\controlselector{qsel}{(17.5,0)}{s_Q}
+\draw[->,line] (vpi.east) -- ++(0.4,0) |- (qsel-one);
+\node[sum] (iqraw) at (19,0) {$\Sigma$};
+\draw[->,line] (qsel-out) -- (iqraw.west);
+\node[pm,above left=0pt and 1pt of iqraw.west] {$+$};
+\draw[->,line] (inj.east) -| node[sig,above,pos=0.3] {$I_q^{\mathrm{inj}}$} (iqraw.north);
+\node[pm,above right=0pt and 1pt of iqraw.north] {$+$};
+\staticlimit{iq}{(21,0)}{-I_q^{\max}}{I_q^{\max}}
+\node[block,minimum width=1.35cm] (qscale) at (24,0) {$-S/V$};
+\draw[->,line] (iqraw.east) -- (iq.west);
+\draw[->,line] (iq.east) -- node[sig,above] {$I_q^{\mathrm{cmd}}$} (qscale.west);
+\draw[->,line] (qscale.east) -- (26,0) node[sig,right] {$i_{gq}^{\mathrm{cmd}}$};
 
-\node[block,minimum width=3.2cm,minimum height=2.5cm] (limit) at (13.4,0)
-    {Current limits\\[3pt]$s_{\mathrm{pq}},\ I^{\max}$};
-\draw[->,line] (active.east) -| ([xshift=-0.6cm]limit.north);
-\draw[->,line] (reactive.east) -| ([xshift=-0.6cm]limit.south);
-\draw[->,line,dashed] ([xshift=0.6cm]limit.north) |- ([yshift=0.5cm]active.east);
-\draw[->,line,dashed] ([xshift=0.6cm]limit.south) |- ([yshift=-0.5cm]reactive.east);
+% Alternate reactive-current lag. Named signals avoid crossing the PI paths.
+\node[block] (qdivide) at (7.5,\lagrow) {$1/V^{\mathrm{safe}}$};
+\node[block] (qlag) at (15,\lagrow) {$\dfrac{1}{1+sT_{\mathrm{iq}}}$};
+\draw[->,line] (qc) |- node[sig,above,pos=0.7] {$Q_c^{\mathrm{ref}}$} (qdivide.west);
+\draw[->,line] (qdivide.east) -- (qlag.west);
+\draw[->,line] (qlag.east) -| node[sig,above,pos=0.3] {$Q_V$} (qsel-zero);
 
-\node[block,minimum width=3.5cm,minimum height=2.5cm] (project) at (18.7,0)
-    {Current-command conversion\\[3pt]PLL Park frame\\[3pt]$S/V$};
-\draw[->,line] ([yshift=0.55cm]limit.east) -- node[sig,above] {$I_p^{\mathrm{cmd}}$} ([yshift=0.55cm]project.west);
-\draw[->,line] ([yshift=-0.55cm]limit.east) -- node[sig,above] {$I_q^{\mathrm{cmd}}$} ([yshift=-0.55cm]project.west);
-\draw[->,line] ([yshift=0.55cm]project.east) -- ++(1.3,0) node[sig,right] {$i_{gd}^{\mathrm{cmd}}$};
-\draw[->,line] ([yshift=-0.55cm]project.east) -- ++(1.3,0) node[sig,right] {$i_{gq}^{\mathrm{cmd}}$};
+% State enables: PI gates apply to integral states only.
+\draw[->,line,dashed] (6.6,2) node[sig,above] {$s_{Q\mathrm{PI}}s_{\mathrm{dip}}$}
+    -- ([xshift=-9mm]qpi.north);
+\draw[->,line,dashed] (14.1,2) node[sig,above] {$s_Qs_{\mathrm{dip}}$}
+    -- ([xshift=-9mm]vpi.north);
+\draw[->,line,dashed] (15,-4.6) node[sig,below] {$(1-s_Q)s_{\mathrm{dip}}$} -- (qlag.south);
+
+% Named internal measurements in the shared power-invariant Park frame.
+\node[block,minimum width=4.8cm,minimum height=2.3cm] (measure) at (0,-6.8)
+    {$V_t=\|\mathbf v\|/V$\\[4pt]
+     $P_e=(v_di_{gd}+v_qi_{gq})/S$\\[4pt]
+     $Q_g=(v_qi_{gd}-v_di_{gq})/S$};
+\draw[->,line] (-3.6,-6.4) node[sig,left] {$\mathbf v$} -- ([yshift=4mm]measure.west);
+\draw[->,line] (-3.6,-7.2) node[sig,left] {$\mathbf i_g$} -- ([yshift=-4mm]measure.west);
+\node[block] (pmeas) at (0,-9.3) {$\dfrac{1}{1+sT_{\mathrm p}}$};
+\draw[->,line] (-3,-9.3) node[sig,left] {$P_e$} -- (pmeas.west);
+\draw[->,line] (pmeas.east) -- (3,-9.3) node[sig,right] {$P^{\mathrm{meas}}$};
+
+% Active-order lag expanded so the rate limit acts on the state derivative.
+\node[sum] (ep) at (5.3,\activerow) {$\Sigma$};
+\draw[->,line] (5.3,-5.5) node[sig,above] {$P^{\mathrm{ref}}/S$} -- (ep.north);
+\node[pm,above right=0pt and 1pt of ep.north] {$+$};
+\node[block,minimum width=1.5cm] (tpord) at (7.5,\activerow) {$1/T_{\mathrm{pord}}$};
+\staticlimit{rate}{(10,\activerow)}{R_P^{\min}}{R_P^{\max}}
+\node[block,minimum width=1.6cm] (pord) at (12.5,\activerow) {$\dfrac{1}{s}$};
+\nonwindup{pord}{P^{\min}}{P^{\max}}
+\draw[->,line] (ep.east) -- (tpord.west);
+\draw[->,line] (tpord.east) -- (rate.west);
+\draw[->,line] (rate.east) -- (pord.west);
+\node[signal] (po) at (14,\activerow) {};
+\node[block] (pdivide) at (16.5,\activerow) {$1/V^{\mathrm{safe}}$};
+\draw[->,line] (pord.east) -- (po) -- node[sig,above] {$P^{\mathrm{ord}}$} (pdivide.west);
+\draw[->,line] (po) -- (14,-9.3) -| (ep.south);
+\node[pm,below right=0pt and 1pt of ep.south] {$-$};
+\draw[->,line,dashed] (11.9,-5.5) node[sig,above] {$s_{\mathrm{dip}}$}
+    -- ([xshift=-6mm]pord.north);
+\staticlimit{ip}{(21,\activerow)}{0}{I_p^{\max}}
+\node[block,minimum width=1.35cm] (pscale) at (24,\activerow) {$S/V$};
+\draw[->,line] (pdivide.east) -- (ip.west);
+\draw[->,line] (ip.east) -- node[sig,above] {$I_p^{\mathrm{cmd}}$} (pscale.west);
+\draw[->,line] (pscale.east) -- (26,\activerow) node[sig,right] {$i_{gd}^{\mathrm{cmd}}$};
+
+% Priority allocation uses the limited commands, including supplementary Iq.
+\node[block,minimum width=3cm,minimum height=1.6cm] (capacity) at (21.4,-3.4)
+    {Current priority\\[3pt]$s_{\mathrm{pq}},\ I^{\max}$};
+\draw[->,line] (18.4,-3.1) node[sig,left] {$I_q^{\mathrm{cmd}}$} -- ([yshift=3mm]capacity.west);
+\draw[->,line] (18.4,-3.7) node[sig,left] {$I_p^{\mathrm{cmd}}$} -- ([yshift=-3mm]capacity.west);
+\draw[->,line] ([yshift=3mm]capacity.east) -- (24.3,-3.1) node[sig,right] {$I_q^{\max}$};
+\draw[->,line] ([yshift=-3mm]capacity.east) -- (24.3,-3.7) node[sig,right] {$I_p^{\max}$};
+
 \end{tikzpicture}
 \end{document}
