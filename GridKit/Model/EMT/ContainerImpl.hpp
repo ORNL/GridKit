@@ -202,6 +202,12 @@ namespace GridKit
         qualified_data.id   = qualify(model_data.id);
         add<Controller::Repca<ScalarT, IdxT>>(model_data.id, qualified_data);
       }
+      for (const auto& model_data : data.reecb)
+      {
+        auto qualified_data = model_data;
+        qualified_data.id   = qualify(model_data.id);
+        add<Controller::Reecb<ScalarT, IdxT>>(model_data.id, qualified_data);
+      }
 
       for (const auto& model_data : data.park)
       {
@@ -339,6 +345,18 @@ namespace GridKit
       {
         auto& model  = component<Controller::Repca<ScalarT, IdxT>>(model_data.id);
         using Inputs = Controller::RepcaInputs;
+        std::array<SignalT*, static_cast<size_t>(Inputs::SIZE)> inputs{};
+        for (size_t n = 0; n < inputs.size(); ++n)
+          if (model_data.inputs.contains(static_cast<Inputs>(n)))
+            inputs[n] = &source(model_data.inputs.at(static_cast<Inputs>(n)));
+        model.attachInput(inputs);
+        for (const auto& [output, reference] : model_data.outputs)
+          model.assignOutput(output, &signal(reference));
+      }
+      for (const auto& model_data : data.reecb)
+      {
+        auto& model  = component<Controller::Reecb<ScalarT, IdxT>>(model_data.id);
+        using Inputs = Controller::ReecbInputs;
         std::array<SignalT*, static_cast<size_t>(Inputs::SIZE)> inputs{};
         for (size_t n = 0; n < inputs.size(); ++n)
           if (model_data.inputs.contains(static_cast<Inputs>(n)))

@@ -33,7 +33,7 @@ The inverter plants use the same LCL Filter wiring as the GFL control example.
 The generator preserves terminal dispatch and supplies frequency, Bus voltage,
 and Filter grid current. EMT initialization derives the capacitor voltage,
 converter current, and controller commands.
-The filter and local converter-control parameters are synthetic; REPCA parameters
+The filter and local converter-control parameters are synthetic; REPCA and REECB parameters
 come from the source case, as listed in the case README.
 
 Generate current results using the commands below. The four PNG/PDF plots in
@@ -125,7 +125,10 @@ settings. No branch checkout is needed.
 Plot generation requires PGFPlots, pdfLaTeX, and Poppler. Simulation and
 validation require only Python's standard library and the GridKit executables.
 
-The nine EMT plants retain their source REPCA voltage controllers. Their reactive
-commands drive external `OuterPowerControl.Qref` inputs; active references remain
-constant signals. Converter, PLL, Filter, and inner-loop parameters are unchanged.
-The remaining REECB/REGCA differences are listed in the case README.
+The nine EMT plants retain their source REPCA voltage controllers and REECB
+electrical controllers. REPCA `qext` drives REECB `Qref`; active references remain
+constant signals. REECB replaces Hawaii's generic OuterPowerControl, which remains
+available for the standalone GFL example. InnerCurrentControl compensates the
+fundamental capacitor current and retains converter-current feedback. Source
+terminal-current priority and the synthetic bridge current rating are distinct.
+The remaining REGCA differences are listed in the case README.

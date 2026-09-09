@@ -27,6 +27,8 @@ namespace GridKit
         ILIMQ,
         UD,
         UQ,
+        VFD,
+        VFQ,
         MAXIMUM
       };
       enum class InnerCurrentControlExternalVariables : size_t
@@ -113,6 +115,8 @@ namespace GridKit
         void                                                                                                        initializeParameters(const ModelDataT& data);
         void                                                                                                        initializeMonitor();
         const Model::VariableMonitorBase*                                                                           getMonitor() const override;
+        RealT                                                                                                       Tf_{0.005};
+        RealT                                                                                                       C_{0.0};
         RealT                                                                                                       L_{0.0};
         RealT                                                                                                       Kp_{0.0};
         RealT                                                                                                       Ki_{0.0};

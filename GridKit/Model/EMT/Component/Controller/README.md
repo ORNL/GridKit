@@ -43,6 +43,7 @@ LVACM, the $\text{linseg}(V_T;V_{A0},V_{A1},1)$ factor on injected active curren
 ## Models
 
 - [InnerCurrentControl](InnerCurrentControl/README.md): converter current control in $dq$ coordinates.
+- [REECB](REECB/README.md): terminal power, voltage, and current-priority control.
 - [REPCA](REPCA/README.md): renewable plant voltage, reactive-power, and frequency control.
 - [OuterPowerControl](OuterPowerControl/README.md): active and reactive power control in $dq$ coordinates.
 - [OuterVoltageControl](OuterVoltageControl/README.md): filter-capacitor voltage control in $dq$ coordinates.

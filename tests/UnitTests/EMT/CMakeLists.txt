@@ -126,6 +126,15 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTRepcaTest COMMAND test_emt_repca)
 
+add_executable(test_emt_reecb runReecbTests.cpp)
+target_link_libraries(
+  test_emt_reecb
+  GridKit::definitions
+  GridKit::emt_reecb
+  GridKit::phasor_dynamics_controller_reecb
+  GridKit::testing)
+add_test(NAME EMTReecbTest COMMAND test_emt_reecb)
+
 add_executable(test_emt_outer_power_control runOuterPowerControlTests.cpp)
 target_link_libraries(
   test_emt_outer_power_control

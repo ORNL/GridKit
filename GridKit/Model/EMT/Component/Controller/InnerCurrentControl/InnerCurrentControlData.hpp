@@ -17,6 +17,8 @@ namespace GridKit
       {
         V,    ///< Rated line-to-line RMS voltage [V]
         I,    ///< Nominal phase RMS current for absolute tolerances [A]
+        Tf,   ///< \f$T_f\f$ Capacitor-voltage measurement time constant [s]
+        C,    ///< \f$C\f$ Compensated filter capacitance [F]
         L,    ///< \f$L\f$ Filter inductance [H]
         Kp,   ///< \f$K_P\f$ Proportional gain [ohm]
         Ki,   ///< \f$K_I\f$ Integral gain [ohm/s]
