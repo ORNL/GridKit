@@ -179,7 +179,32 @@ namespace GridKit
     typename Component<scalar_type, index_type>::InitializationPortsT Pll<scalar_type, index_type>::initializationPorts()
     {
       using V = PllExternalVariables;
-      return {signals_.attachedSignals({V::VA, V::VB, V::VC}), {}, {}};
+      typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+      ports.inputs = signals_.attachedSignals({V::VA, V::VB, V::VC});
+      for (size_t n = 0; n < output_.size(); ++n)
+      {
+        const auto name = std::string(magic_enum::enum_name(static_cast<Outputs>(n)));
+        ports.outputs.emplace(name, &output_[n]);
+        if (alias_[n])
+          ports.outputs.emplace(name, alias_[n]);
+      }
+      return ports;
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Pll<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
+    {
+      if (initial.omega() == ZERO<RealT>)
+        return;
+      const RealT va    = initial.value(inputSignal(PllInputs::va));
+      const RealT vb    = initial.value(inputSignal(PllInputs::vb));
+      const RealT vc    = initial.value(inputSignal(PllInputs::vc));
+      const RealT alpha = (TWO<RealT> * va - vb - vc) / THREE<RealT>;
+      const RealT beta  = (vb - vc) / std::sqrt(THREE<RealT>);
+      if (std::hypot(alpha, beta) == ZERO<RealT>)
+        throw std::invalid_argument("PLL: balanced initialization requires nonzero voltage");
+      initial.provide(output_[0], std::atan2(beta, alpha));
+      initial.provide(output_[1], initial.omega());
     }
 
     template <typename scalar_type, typename index_type>

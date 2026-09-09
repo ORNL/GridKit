@@ -1,10 +1,14 @@
 #include <array>
 #include <cmath>
 #include <map>
+#include <memory>
+#include <utility>
 #include <vector>
 
 #include <GridKit/Model/EMT/Component/Bus/Bus.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineDistributed/LineDistributed.hpp>
+#include <GridKit/Model/EMT/Container.hpp>
+#include <GridKit/Model/EMT/Operators/Shift/Delay/Delay.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
 namespace
@@ -179,6 +183,19 @@ namespace
       return jacobian(1.0, 3.7);
     }
 
+    bool discontinuities()
+    {
+      bool success     = std::isinf(line.nextDiscontinuityTime(0.1));
+      y.getData()[12] += 1.0;
+      line.acceptStep(0.1);
+      success &= std::abs(line.nextDiscontinuityTime(0.1) - 0.3) < 1e-14;
+      line.beginDiscontinuity(0.3);
+      success &= std::isinf(line.nextDiscontinuityTime(0.3));
+      line.resetHistory();
+      success &= std::isinf(line.nextDiscontinuityTime(0.0));
+      return success;
+    }
+
     bool jacobian(double y_scale, double yp_scale)
     {
       std::map<std::pair<size_t, size_t>, double> entries;
@@ -229,6 +246,35 @@ namespace
       return true;
     }
   };
+
+  bool nestedHistory()
+  {
+    Container<double, size_t> root;
+    bool                      success = std::isinf(root.nextDiscontinuityTime(0.0));
+    auto                      child   = std::make_unique<Container<double, size_t>>();
+    auto                      delay   = std::make_unique<Delay<double, size_t>>(DelayData<double, size_t>{1, {0.2}});
+    Signal<double, size_t>    input;
+    input.bindConstant(1.0);
+    delay->attachInput({&input});
+    delay->setInputDerivative([](size_t)
+                              { return 0.0; });
+    delay->setPrehistory(0.0, [](size_t, double)
+                         { return std::pair{0.0, 0.0}; });
+    auto* history = delay.get();
+    child->add("delay", std::move(delay));
+    root.add("child", std::move(child));
+    success &= root.allocate() == 0 && history->initialize() == 0;
+    success &= std::isinf(root.nextDiscontinuityTime(0.0));
+    root.acceptStep(0.0);
+    success &= std::abs(root.nextDiscontinuityTime(0.0) - 0.2) < 1e-14;
+    root.beginDiscontinuity(0.2);
+    success &= std::isinf(root.nextDiscontinuityTime(0.2));
+    root.resetHistory();
+    success &= std::isinf(root.nextDiscontinuityTime(0.0));
+    root.acceptStep(0.0);
+    success &= std::abs(root.nextDiscontinuityTime(0.0) - 0.2) < 1e-14;
+    return success;
+  }
 } // namespace
 
 int main()
@@ -246,7 +292,10 @@ int main()
     success *= fixture.jacobian(0.0, 1.0);
     success *= fixture.jacobian(1.0, 3.7);
     success *= fixture.acceptedHistory();
+    success *= fixture.discontinuities();
     result  += success.report(singular ? "singular Yc.E" : "coupled Yc.E");
   }
+  TestStatus history  = nestedHistory();
+  result             += history.report("nested delayed-history discontinuities and reset");
   return result.summary();
 }

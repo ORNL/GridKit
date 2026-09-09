@@ -193,9 +193,42 @@ namespace GridKit
       typename Component<scalar_type, index_type>::InitializationPortsT InnerCurrentControl<scalar_type, index_type>::initializationPorts()
       {
         using V = InnerCurrentControlExternalVariables;
-        // The tracking input is resolved with the connected voltage limiter
-        // by the consistent-initial-condition solve, after the integral is set.
-        return {signals_.attachedSignals({V::VD, V::VQ, V::ID, V::IQ, V::ICMDD, V::ICMDQ, V::OMEGA}), {}, {}};
+        typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+        ports.inputs  = signals_.attachedSignals({V::VD, V::VQ, V::ID, V::IQ, V::ICMDD, V::ICMDQ, V::OMEGA});
+        ports.targets = signals_.attachedSignals({V::ICMDD, V::ICMDQ});
+        for (size_t n = 0; n < output_.size(); ++n)
+        {
+          const auto name = std::string(magic_enum::enum_name(static_cast<Outputs>(n)));
+          ports.outputs.emplace(name, &output_[n]);
+          if (alias_[n])
+            ports.outputs.emplace(name, alias_[n]);
+        }
+        return ports;
+      }
+
+      template <typename scalar_type, typename index_type>
+      void InnerCurrentControl<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
+      {
+        if (initial.omega() == ZERO<RealT>)
+          return;
+        using V        = InnerCurrentControlExternalVariables;
+        const RealT id = initial.value(*signals_.template getAttachedSignal<V::ID>());
+        const RealT iq = initial.value(*signals_.template getAttachedSignal<V::IQ>());
+        const RealT li = std::sqrt(Math::max(ONE<RealT>, ai_ * (id * id + iq * iq)));
+        if (std::abs(li - ONE<RealT>) > RealT{1e-10})
+          throw std::invalid_argument("InnerCurrentControl: initial current must lie inside the current limit");
+        initial.require(*signals_.template getAttachedSignal<V::ICMDD>(), id, *this);
+        initial.require(*signals_.template getAttachedSignal<V::ICMDQ>(), iq, *this);
+        initial.provide(output_[0], id / li);
+        initial.provide(output_[1], iq / li);
+        const auto outputs = this->template parseInitialOutputs<InnerCurrentControl>(initial.outputs(*this));
+        for (size_t n = 2; n < output_.size(); ++n)
+        {
+          const auto key = static_cast<Outputs>(n);
+          if (!outputs.contains(key))
+            throw std::invalid_argument("InnerCurrentControl: balanced initialization requires ud and uq");
+          initial.provide(output_[n], outputs.at(key));
+        }
       }
 
       template <typename scalar_type, typename index_type>

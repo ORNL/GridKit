@@ -5,6 +5,7 @@
 #include <GridKit/Model/EMT/Component.hpp>
 #include <GridKit/Model/EMT/Component/Bus/BusData.hpp>
 #include <GridKit/Model/EMT/ComponentInitialization.hpp>
+#include <GridKit/Model/EMT/PhasorInitialization.hpp>
 
 namespace GridKit
 {
@@ -119,14 +120,42 @@ namespace GridKit
         return this->initializeOutputs(*this, values);
       }
 
+      int initializeState(const std::map<std::string, RealT>& values, RealT omega) override
+      {
+        const int status = initializeState(values);
+        if (status != 0 || omega == RealT{0})
+          return status;
+        ABCVector<RealT> voltage;
+        for (size_t p = 0; p < 3; ++p)
+          voltage[p] = static_cast<RealT>(voltage_[p].read());
+        const auto phasor = balancedPhasor(voltage);
+        for (size_t p = 0; p < 3; ++p)
+          voltage_[p].initDerivative(static_cast<ScalarT>(-omega * phasor[p].imag()));
+        this->yp_.setDataUpdated();
+        return 0;
+      }
+
       typename Base::InitializationPortsT initializationPorts() override
       {
-        return {{}, {{"va", &voltage_[0]}, {"vb", &voltage_[1]}, {"vc", &voltage_[2]}}, {}};
+        typename Base::InitializationPortsT ports;
+        for (size_t p = 0; p < 3; ++p)
+        {
+          const auto name = std::string("v") + "abc"[p];
+          ports.outputs.emplace(name, &voltage_[p]);
+          if (aliases_[p])
+            ports.outputs.emplace(name, aliases_[p]);
+        }
+        return ports;
       }
 
       void prepareInitialization(typename Base::InitialStateT& initial) override
       {
-        const auto outputs = this->template parseInitialOutputs<KCL>(initial.outputs(*this));
+        const auto       outputs = this->template parseInitialOutputs<KCL>(initial.outputs(*this));
+        ABCVector<RealT> voltage;
+        for (size_t p = 0; p < 3; ++p)
+          voltage[p] = this->outputValue(outputs, static_cast<Outputs>(p), RealT{0});
+        if (initial.omega() > RealT{0})
+          balancedPhasor(voltage);
         for (size_t p = 0; p < 3; ++p)
         {
           const auto value = this->outputValue(outputs, static_cast<Outputs>(p), RealT{0});

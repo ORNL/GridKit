@@ -27,7 +27,7 @@
 \draw[->, line] (filter.east) -- (tbus.west);
 % The grid-current tap sits over the outer controller input it feeds.
 \node[signal, label={[sig]above:$\mathbf{i}_g$}] (igabc)
-    at (\ifgfm 16.15\else 15.9\fi, 0) {};
+    at (\ifgfm 16.15\else 15.65\fi, 0) {};
 
 % ================= Reference frame and control =================
 \node[block] (icc) at (12.4, \controlrow) {ICC};
@@ -40,7 +40,7 @@
 \node[sig, anchor=east] at (12.0, -1.2) {$\mathbf{i}$};
 \draw[->, line] ([xshift=2.5mm]filter.south) -- ([xshift=2.5mm]icc.north);
 \node[sig, anchor=west] at (12.8, -1.2) {$\mathbf{v}_{\mathrm{o}}$};
-\draw[->, line] (igabc) -- ([xshift=\ifgfm 2.5mm\else 0mm\fi]outer.north);
+\draw[->, line] (igabc) -- ([xshift=\ifgfm 2.5mm\else -2.5mm\fi]outer.north);
 
 \ifgfm
 % ================= Outer voltage-control wiring =================
@@ -70,6 +70,10 @@
 % ================= Terminal-voltage PLL =================
 \node[block] (pll) at (20, \framerow) {PLL};
 \draw[->, line] (tbus.south) -- node[sig, right] {$\mathbf{v}$} (pll.north);
+\ifgfm\else
+\node[signal] (vterminal) at (20,-1.6) {};
+\draw[->, line] (vterminal) -- (16.15,-1.6) -- ([xshift=2.5mm]outer.north);
+\fi
 
 % ================= Setpoints =================
 % Setpoints enter the outer controller from outside the enclosure.

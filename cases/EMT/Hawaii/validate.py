@@ -91,7 +91,7 @@ def conversion_checks(case, state, report):
     expected = {'Machine': 30, 'Tgov1': 30, 'Ieeet1': 30, 'Ieeest': 14,
                 'LineLumped': 77, 'Transformer': 12, 'LoadZ': 29, 'Switch': 2,
                 'PLL': 9, 'OuterPowerControl': 9, 'InnerCurrentControl': 9,
-                'PWM': 9, 'Converter': 9, 'Filter': 9, 'Park': 27}
+                'PWM': 9, 'Converter': 9, 'Filter': 9, 'Park': 36}
     for kind, count in expected.items():
         require(counts[kind] == count, f'{kind} count: {counts[kind]} != {count}')
     require(not counts['Regfma'] and not counts['REGFMA'], 'Unexpected REGFMA replacement')
@@ -141,6 +141,7 @@ def conversion_checks(case, state, report):
     for plant, data in report['inverters'].items():
         filt, pll, inner, outer, bridge = (devices[plant + suffix] for suffix in
                                              ('_filter', '_pll', '_inner', '_power', '_bridge'))
+        terminal_voltage = devices[plant + '_terminal_voltage']
         voltage, current, grid_current, pwm = (devices[plant + suffix] for suffix in
                                                ('_voltage', '_current', '_grid_current', '_pwm'))
         require(filt['inputs']['e'] == bridge['outputs']['e'], 'Bridge voltage must drive its Filter')
@@ -149,11 +150,17 @@ def conversion_checks(case, state, report):
         bus = devices[filt['inputs']['bus']]
         require([pll['inputs']['v' + p] for p in 'abc'] == [bus['outputs']['v' + p] for p in 'abc'],
                 'PLL must read the terminal Bus voltage')
+        require(terminal_voltage['inputs']['input'] == [bus['outputs']['v' + p] for p in 'abc'],
+                'Outer-loop terminal Bus voltage measurement')
+        require(outer['inputs']['v'] == terminal_voltage['outputs']['out'][:2],
+                'Outer-loop terminal voltage feedback')
+        require(outer['params']['Pref'] == data['dispatch_W']
+                and outer['params']['Qref'] == data['dispatch_var'], 'Terminal power setpoints')
         require(grid_current['inputs']['input'] == filt['outputs']['ig'], 'Grid-current measurement')
         require(outer['inputs']['i'] == grid_current['outputs']['out'][:2], 'Outer-loop grid-current feedback')
         require(inner['inputs']['i'] == current['outputs']['out'][:2], 'Inner-loop converter-current feedback')
         require(inner['inputs']['v'] == voltage['outputs']['out'][:2], 'Inner-loop capacitor-voltage feedback')
-        require(all(p['inputs']['theta'] == pll['outputs']['theta'] for p in (voltage, current, grid_current, pwm)),
+        require(all(p['inputs']['theta'] == pll['outputs']['theta'] for p in (voltage, current, grid_current, terminal_voltage, pwm)),
                 'Park transforms and PWM must share the PLL angle')
         require(pwm['inputs']['u'] == inner['outputs']['u'], 'PWM voltage command')
         require(bridge['inputs']['s'] == pwm['outputs']['s'], 'Bridge switching input')
@@ -165,18 +172,16 @@ def conversion_checks(case, state, report):
         require(inner['inputs']['ulim'] == pwm['outputs']['ulim'], 'Limited voltage feedback')
         initial = state['devices'][filt['id']]
         v = phasor(state['buses'][filt['inputs']['bus']], 'v')
-        vo, i, ig = (phasor(initial, key) for key in ('vo', 'i', 'ig'))
-        params = filt['params']
-        omega = 2 * math.pi * 60
-        zs = complex(params['Rs'][0][0], omega * params['Ls'][0][0])
-        zg = complex(params['Rg'][0][0], omega * params['Lg'][0][0])
-        base_i, base_v = data['rating_VA'] / data['voltage_V'], data['voltage_V']
-        require(abs(vo - v - zg * ig) / base_v < 1e-12, 'Initial grid-side KVL')
-        require(abs(i - ig - 1j * omega * params['C'][0][0] * vo) / base_i < 1e-12,
-                'Initial capacitor current balance')
-        u = state['devices'][inner['id']]
-        e = complex(u['ud'], u['uq']) * v / abs(v)
-        require(abs(e - vo - zs * i) / base_v < 1e-12, 'Initial converter-side KVL')
+        ig = phasor(initial, 'ig')
+        power = v * ig.conjugate()
+        require(abs(power - complex(data['dispatch_W'], data['dispatch_var'])) / data['rating_VA'] < 1e-12,
+                'Initial terminal dispatch')
+        require(set(initial) == {'iga', 'igb', 'igc'}, 'Filter state must prescribe only grid current')
+        require(inner['id'] not in state['devices'] and outer['id'] not in state['devices'],
+                'Controller commands must be derived by initialization')
+    for name, change in report['exciter_adjustments'].items():
+        require(change['Ke_original'] < 0 and devices[name]['params']['Ke'] == 0,
+                'Hawaii exciter automatic Ke initialization')
     regularized = 0
     largest_pole_error = largest_response_error = largest_pole_change = 0.0
     for name, machine in report['machines'].items():
@@ -200,7 +205,7 @@ def conversion_checks(case, state, report):
 
 def analyze(csv_path, step_path, study, case, state, report, record, output):
     metrics = {'conversion': conversion_checks(case, state, report), 'study': study,
-               'source_revision': report['source_revision'], 'cpu_time_s': record['cpu_time_s'],
+               'source_revision': report['source_revision'], 'exciter_adjustments': report['exciter_adjustments'], 'cpu_time_s': record['cpu_time_s'],
                'study_sha256': record['study_sha256']}
     metrics['input_sha256'] = record['input_sha256']
     metrics['executable_sha256'] = record['executable_sha256']

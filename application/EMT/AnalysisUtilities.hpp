@@ -67,6 +67,8 @@ namespace GridKit
     {
       std::map<std::string, LineHistory>                   history;
       std::map<std::string, std::map<std::string, double>> state;
+      /// Angular frequency of a balanced initial operating point; zero uses explicit output values.
+      double                                               initial_omega{0.0};
       /// path to system model JSON file
       fs::path                                             system_model_file;
       /// path to model state JSON file, empty for none
@@ -330,7 +332,9 @@ namespace GridKit
       if (state.contains("header") && !state.at("header").is_null())
       {
         const auto& header = state.at("header");
-        validateJsonFields(header, "State header", {"version", "time", "created", "description"});
+        validateJsonFields(header, "State header", {"version", "time", "omega", "created", "description"});
+        if (header.contains("omega") && !header.at("omega").is_null() && parseFiniteReal<double>(header.at("omega"), "Initial angular frequency") <= 0.0)
+          throw std::invalid_argument("Initial angular frequency must be positive");
         if (header.contains("version") && !header.at("version").is_null())
         {
           const auto& version = header.at("version");
@@ -484,6 +488,9 @@ namespace GridKit
           throw std::invalid_argument("Cannot open state file: " + data.state_file.string());
         const auto state = json::parse(state_stream);
         data.state       = parseInitialState(state, data.model_data);
+        if (state.contains("header") && state.at("header").is_object()
+            && state.at("header").contains("omega") && !state.at("header").at("omega").is_null())
+          data.initial_omega = state.at("header").at("omega").get<double>();
         if (state.contains("history"))
         {
           if (!state.at("history").is_object())

@@ -1,6 +1,96 @@
 {
   "source_revision": "f16f3815e6f84c08bd0869773d3033b3dcb3dd0f",
   "source_path": "cases/PhasorDynamics/Hawaii/Hawaii.case.json",
+  "exciter_adjustments": {
+    "23_1_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "23_2_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "23_3_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "23_4_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "23_5_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "23_6_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "23_7_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "23_8_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "34_1_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "34_2_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "34_3_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "34_4_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "34_5_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "34_6_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "35_1_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "35_2_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "35_4_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "35_5_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "35_7_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "35_8_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "37_3_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    },
+    "37_5_ieeet1": {
+      "Ke_original": -0.05999999865889549,
+      "Ke": 0.0
+    }
+  },
   "choices": {
     "damper_gap_fraction": 0.99,
     "transformer_I0": 0.001,
@@ -1942,7 +2032,7 @@
     "Ieeest": 14,
     "Filter": 9,
     "PLL": 9,
-    "Park": 27,
+    "Park": 36,
     "OuterPowerControl": 9,
     "InnerCurrentControl": 9,
     "PWM": 9,
