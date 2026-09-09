@@ -12,6 +12,7 @@
 #include <GridKit/Testing/Testing.hpp>
 
 #include <examples/PowerElectronics/ExamplesHelper/JacTestHelper.hpp>
+#include <examples/PowerElectronics/ExamplesHelper/MicrogridNetwork.hpp>
 #include <examples/PowerElectronics/ExamplesHelper/PartitionUtilities.hpp>
 
 using index_type = size_t;
@@ -42,8 +43,7 @@ struct RunResult
  * Reference data from the monolithic system evaluation.
  *
  * The monolithic system is evaluated once and its states, residual, and
- * evaluation time are stored here. Each partition configuration reuses this
- * data for validation and performance comparison.
+ * evaluation time are stored here.
  */
 struct MonolithicReference
 {
@@ -198,18 +198,16 @@ RunResult evaluatePartitioning(
 
   evaluatePartitionResiduals(subsystems, reference.y, reference.yp, f, 0.1, 0.1);
 
-  auto end_time = std::chrono::high_resolution_clock::now();
-
+  auto end_time            = std::chrono::high_resolution_clock::now();
   auto partition_eval_time = std::chrono::duration<real_type>(end_time - start_time);
 
   // ---------------------------------------------------------------------------
   // Verify subsystem Jacobians against the monolithic Jacobian
   // ---------------------------------------------------------------------------
 
-  auto* system_jacobian = system->getCsrJacobian();
-
-  bool      jacobian_match = true;
-  real_type Jac_tol        = 1e-13;
+  auto*     system_jacobian = system->getCsrJacobian();
+  bool      jacobian_match  = true;
+  real_type Jac_tol         = 1e-13;
 
   for (auto* partition : subsystems)
   {

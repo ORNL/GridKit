@@ -13,6 +13,7 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 
 #include <examples/PowerElectronics/ExamplesHelper/JacTestHelper.hpp>
+#include <examples/PowerElectronics/ExamplesHelper/MicrogridNetwork.hpp>
 #include <examples/PowerElectronics/ExamplesHelper/PartitionUtilities.hpp>
 
 using Component = GridKit::CircuitComponent<double, size_t>;
@@ -168,7 +169,8 @@ int main()
   // Verify the subsystem Jacobians
   // ---------------------------------------------------------------------------
 
-  bool jacobians_match = true;
+  bool   jacobians_match = true;
+  double jac_tol         = 1e-13;
 
   for (auto* partition : partitions)
   {
@@ -180,7 +182,7 @@ int main()
                       && verifySubsystemJacobian(*system_jacobian,
                                                  *partition_jacobian,
                                                  *partition,
-                                                 1e-13);
+                                                 jac_tol);
   }
 
   if (!jacobians_match)
@@ -283,11 +285,12 @@ std::vector<size_t> getNodeConnections(const std::vector<Node*>& nodes)
   std::vector<size_t> connections;
 
   for (auto* node : nodes)
-
+  {
     for (size_t i = 0; i < node->size(); ++i)
     {
       connections.push_back(node->getNodeConnection(i).idx_);
     }
+  }
 
   return connections;
 }
