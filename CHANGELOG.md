@@ -81,6 +81,7 @@
 - Added `REPCA` controller model implementation for PhasorDynamics.
 - Added `REECB` electrical-control model implementation for PhasorDynamics.
 - Added cases and validation for ACTIVSg10k, ACTIVSg200, ACTIVSg500, and WECC240.
+- Added ACTIVSg2000, Hawaii, and IEEE39 cases and validation.
 - Added IDA option to choose the consistent initial condition calculation type.
 - Implemented `tagDifferentiable()` for `PowerElectronics` models.
 - Fixed the `TenGenGenrou` example to output the correct omega values.

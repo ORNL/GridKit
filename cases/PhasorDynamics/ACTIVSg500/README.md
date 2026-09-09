@@ -1,15 +1,15 @@
 # Synthetic South Carolina (ACTIVSg500)
 
-Texas A&M University [Grid Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/activsg500/)
+## One-Line Diagram
 
-# One-Line Diagram
+![ACTIVSg500 one-line diagram](ACTIVSg500.png)
 
-![](ACTIVSg500.png)
-
-Figure 1: Oneline of the ACTIVSg500 Case
+Figure 1: One-line diagram of the ACTIVSg500 case.[^1]
 
 ## Development
 
-The compelete dynamics of this case are modeled in GridKit.
+The complete dynamics of this case are modeled in GridKit.
 
-[Validation results](../../../examples/PhasorDynamics/Validation/ACTIVSg500/README.md)
+This case was validated against PowerWorld. The comparison results are provided [here](../../../examples/PhasorDynamics/Validation/ACTIVSg500/README.md).
+
+[^1]: Texas A&M University, [Grid Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/activsg500/).

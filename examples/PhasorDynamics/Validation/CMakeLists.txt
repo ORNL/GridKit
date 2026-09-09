@@ -1,3 +1,7 @@
 add_subdirectory(ACTIVSg200)
 add_subdirectory(ACTIVSg500)
+add_subdirectory(ACTIVSg2000)
+add_subdirectory(ACTIVSg10k)
+add_subdirectory(Hawaii)
+add_subdirectory(IEEE39)
 add_subdirectory(WECC240)

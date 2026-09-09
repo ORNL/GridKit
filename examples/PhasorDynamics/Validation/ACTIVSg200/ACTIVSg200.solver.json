@@ -1,5 +1,6 @@
 {
     "system_model_file": "ACTIVSg200.case.json",
+    "output_file": "ACTIVSg200.omega.csv",
     "dt_monitor": 0.004166666666666667,
     "tmax": 10.0,
     "events": [

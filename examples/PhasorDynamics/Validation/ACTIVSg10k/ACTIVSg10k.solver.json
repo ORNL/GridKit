@@ -1,0 +1,15 @@
+{
+    "system_model_file": "ACTIVSg10k.case.json",
+    "output_file": "ACTIVSg10k.omega.csv",
+    "dt_monitor": 0.016666666666666667,
+    "tmax": 10.0,
+    "max_steps": 1000000,
+    "events": [
+        { "time": 1.0, "type": "fault_on", "element_id": 0 },
+        { "time": 1.15, "type": "fault_off", "element_id": 0 }
+    ],
+    "reference_file": "reference/ACTIVSg10k.omega.ref.csv",
+    "error_type": "relative",
+    "error_tolerance": 4e-2,
+    "abs_err_threshold": 1e-6
+}
