@@ -154,7 +154,7 @@ namespace GridKit
         }
 
         checks.check(std::isfinite(Dturb_) && Dturb_ >= ZERO<RealT>,
-              "Dturb must be finite and non-negative");
+                     "Dturb must be finite and non-negative");
         const bool valid_component_base = std::isfinite(va_component_base_)
                                           && va_component_base_ > ZERO<RealT>;
         const bool valid_system_base = std::isfinite(va_system_base_)
@@ -167,10 +167,10 @@ namespace GridKit
           const RealT system_to_component = va_system_base_ / va_component_base_;
           const RealT component_to_system = va_component_base_ / va_system_base_;
           checks.check(std::isfinite(system_to_component)
-                    && system_to_component > ZERO<RealT>
-                    && std::isfinite(component_to_system)
-                    && component_to_system > ZERO<RealT>,
-                "system/component power-base conversion ratios must be finite and positive");
+                           && system_to_component > ZERO<RealT>
+                           && std::isfinite(component_to_system)
+                           && component_to_system > ZERO<RealT>,
+                       "system/component power-base conversion ratios must be finite and positive");
         }
 
         checks.check(ports_.out.template port<GastPtiSignalOutputs::pmech>().connected(),
