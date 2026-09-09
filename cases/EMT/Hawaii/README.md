@@ -172,7 +172,9 @@ current-order recovery; and REPCA plant voltage/reactive-power regulation,
 line-drop compensation, voltage freeze, deadbands, and frequency dispatch.
 Its PLL, outer current PI loop, circular current limiter, and physical bridge are
 different dynamics. Matching initial dispatch does not validate those omitted
-controls.
+controls. See
+[REGCA correspondence](../../../GridKit/Model/EMT/Component/Controller/README.md#regca-correspondence)
+for LVPL and LVACM.
 
 ## Fault and comparison
 

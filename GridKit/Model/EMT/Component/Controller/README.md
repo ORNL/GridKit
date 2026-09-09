@@ -27,6 +27,16 @@ The current and voltage controllers retain their local voltage-input name
 
 ![Grid-following inverter wiring](../../../../../docs/Figures/EMT/Controller/diagram_gfl.png)
 
+### REGCA correspondence
+
+[REGCA](../../../PhasorDynamics/Converter/REGCA/README.md) is a controlled
+current source. Its two low-voltage functions have no block here.
+
+REGCA | Grid following
+----- | --------------
+LVPL, the $I_L(V_M)$ ceiling on active current | Not modeled. The only current bound is the fixed [InnerCurrentControl](InnerCurrentControl/README.md) limit $I^{\max}$ on $\|\mathbf{i}^{\mathrm{cmd}}\|_2$.
+LVACM, the $\text{linseg}(V_T;V_{A0},V_{A1},1)$ factor on injected active current | Not modeled. REGCA scales the injection because it has no converter or current loop. Here the injected current follows the current loop, PWM, Converter, and Filter.
+
 ## GFM Voltage Control
 
 ![GFM case wiring with PLL](../../../../../docs/Figures/EMT/Controller/diagram_gfm.png)
