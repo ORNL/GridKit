@@ -23,6 +23,7 @@ RUN set -eux; \
       -DCMAKE_INSTALL_PREFIX=/opt/gridkit \
       -DBUILD_SHARED_LIBS=ON \
       -DBUILD_TESTING=OFF \
+      -DGridKit_ENABLE_ARROW=ON \
       -DGridKit_ENABLE_ENZYME=ON \
       -DGridKit_ENABLE_IPOPT=OFF \
       -DGridKit_ENABLE_SUNDIALS=ON \
@@ -35,12 +36,25 @@ RUN set -eux; \
 
 FROM ubuntu:24.04 AS runtime
 
+# The Arrow runtime library comes from the same apt repository the development
+# image compiled against: its key and source entry are copied rather than
+# installed, which keeps gnupg out of the image.
+ARG ARROW_VERSION=25.0.1-1
+COPY --from=build /usr/share/keyrings/apache-arrow-apt-source.asc /usr/share/keyrings/
+COPY --from=build /etc/apt/sources.list.d/apache-arrow.sources /etc/apt/sources.list.d/
+
+# Ubuntu's packages first: ca-certificates is needed before the Arrow
+# repository (https) can be read.
 RUN set -eux; \
     apt-get -o APT::Sandbox::User=root update; \
     apt-get -o APT::Sandbox::User=root install -y --no-install-recommends \
+      ca-certificates \
       libgomp1 \
       libklu2 \
       libstdc++6; \
+    apt-get -o APT::Sandbox::User=root update; \
+    apt-get -o APT::Sandbox::User=root install -y --no-install-recommends \
+      "libarrow2500=${ARROW_VERSION}"; \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /stage/opt/gridkit/ /opt/gridkit/

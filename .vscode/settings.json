@@ -15,21 +15,21 @@
 			},
 			{
 				"name": "$(package) gridkit",
-				"tooltip": "Build gridkit:latest",
+				"tooltip": "Build gridkit:<tag> (prompts for the tag, default latest)",
 				"useVsCodeApi": true,
 				"command": "workbench.action.tasks.runTask",
 				"args": [
-					"Containers: Build gridkit:latest"
+					"Containers: Build gridkit:<tag>"
 				]
 			},
 			{
 				"name": "$(cloud-upload) publish: lukelowry",
-				"tooltip": "Confirm and push gridkit:latest to ghcr.io/lukelowry/gridkit:latest",
+				"tooltip": "Confirm and push gridkit:<tag> to ghcr.io/lukelowry/gridkit:<tag> (prompts for the tag)",
 				"color": "orange",
 				"useVsCodeApi": true,
 				"command": "workbench.action.tasks.runTask",
 				"args": [
-					"Containers: Publish gridkit:latest to personal GHCR"
+					"Containers: Publish gridkit:<tag> to personal GHCR"
 				]
 			}
 		]

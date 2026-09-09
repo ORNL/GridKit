@@ -144,4 +144,17 @@ RUN set -eux; \
       > /etc/ld.so.conf.d/gridkit-deps.conf; \
     ldconfig
 
+# Apache Arrow for the optional monitor output formats (GridKit_ENABLE_ARROW),
+# from the project's apt repository; Ubuntu's own package is too old.
+ARG ARROW_VERSION=25.0.1-1
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends lsb-release wget; \
+    wget -O /tmp/arrow-apt-source.deb \
+      "https://packages.apache.org/artifactory/arrow/ubuntu/apache-arrow-apt-source-latest-$(lsb_release -cs).deb"; \
+    apt-get install -y --no-install-recommends /tmp/arrow-apt-source.deb; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends "libarrow-dev=${ARROW_VERSION}"; \
+    rm -rf /var/lib/apt/lists/* /tmp/arrow-apt-source.deb
+
 USER vscode
