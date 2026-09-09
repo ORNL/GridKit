@@ -56,7 +56,6 @@ Container, for example `plant.machine`:
   `open`  | Optional Boolean switch command, true is open
   `theta`, `omega` | Optional `PLL` angle in radians and angular frequency in radians per second; defaults are the inferred voltage angle and nominal frequency
   `ud`, `uq`, `ilimd`, `ilimq` | Optional `InnerCurrentControl` outputs; voltage commands determine the integral, limited currents must match the limiter
-  `icmdd`, `icmdq` | Optional `OuterVoltageControl` current-command outputs in amperes; determine the integral contributions
   `icmdd`, `icmdq` | Optional `OuterPowerControl` current commands in amperes; defaults give zero integral contribution
   `i12a`, `i12b`, `i12c` | Optional instantaneous `LineLumped` or `Switch` series currents from terminal 1 to terminal 2, in amperes
   `i12a`, `i12b`, `i12c`, `psi1a`, `psi1b`, `psi1c`, `psi2a`, `psi2b`, `psi2c` | Optional `Transformer` series leakage current and magnetizing flux linkages in per unit, default zero
