@@ -27,6 +27,7 @@ int main()
   const json base      = {{"system_model_file", "case.json"}, {"tmax", 1.0}};
   const auto defaults  = base.get<EMT::StudyData>();
   success             *= defaults.mu == Math::DEFAULT_MU<double>;
+  success             *= defaults.max_order == 5;
   auto input           = base;
   input["mu"]          = 50000.0;
   const auto sharp     = input.get<EMT::StudyData>();
@@ -34,6 +35,19 @@ int main()
   success *= std::abs(Math::ramp(0.0) - std::log(2.0) / 50000.0) < 1e-18;
   EMT::configureCommonMath<double>(defaults);
   success *= Math::MU<double> == Math::DEFAULT_MU<double>;
+  for (int order : {1, 2, 5})
+  {
+    auto configured          = base;
+    configured["max_order"]  = order;
+    success                 *= configured.get<EMT::StudyData>().max_order == order;
+  }
+  for (const auto& invalid : {json(0), json(6), json(-1), json(2.5), json(true), json(nullptr), json("2"), json(std::numeric_limits<uint64_t>::max())})
+  {
+    auto configured          = base;
+    configured["max_order"]  = invalid;
+    success                 *= rejects([&]
+                       { configured.get<EMT::StudyData>(); });
+  }
   for (const auto& invalid : {json(0), json(-1), json(nullptr), json("50000"), json(true), json(std::numeric_limits<double>::infinity())})
   {
     input["mu"]  = invalid;

@@ -8,7 +8,6 @@ import math
 from pathlib import Path
 import re
 import subprocess
-import tempfile
 
 ROOT = Path(__file__).resolve().parent
 CASE = ROOT.parents[2] / 'cases/EMT/Hawaii'
@@ -47,21 +46,22 @@ def main():
         monitors = {'PWM': ['s', 'm'], 'Converter': ['e', 'idc'], 'Filter': ['i'], 'DCLink': ['vdc']}
         if device['class'] in monitors:
             device['mon'] = monitors[device['class']]
-    with tempfile.TemporaryDirectory(prefix='gridkit-hawaii-switching-') as temporary:
-        run = Path(temporary)
-        (run / 'case.json').write_text(json.dumps(case))
-        study.update(system_model_file=str(run / 'case.json'), state_file=str(CASE / 'Hawaii.state.json'),
-                     tmax=1 / 60, dt_monitor=1 / 720000, events=[], output_file='switching.csv', step_output_file='')
-        (run / 'study.json').write_text(json.dumps(study))
-        result = subprocess.run([str(args.exe.resolve()), str(run / 'study.json')], cwd=run,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-        with (run / 'switching.csv').open(newline='') as stream:
-            data = [{key: float(value) for key, value in row.items()} for row in csv.DictReader(stream)]
+    run = args.output.resolve().with_suffix('')
+    run.mkdir(parents=True, exist_ok=True)
+    (run / 'case.json').write_text(json.dumps(case, indent=2) + '\n')
+    study.update(system_model_file=str(run / 'case.json'), state_file=str(CASE / 'Hawaii.state.json'),
+                 tmax=1 / 60, dt_monitor=1 / 720000, events=[], output_file='switching.csv', step_output_file='')
+    (run / 'study.json').write_text(json.dumps(study, indent=2) + '\n')
+    with (run / 'simulation.log').open('w') as log_file:
+        subprocess.run([str(args.exe.resolve()), str(run / 'study.json')], cwd=run,
+                       stdout=log_file, stderr=subprocess.STDOUT, check=True)
+    with (run / 'switching.csv').open(newline='') as stream:
+        data = [{key: float(value) for key, value in row.items()} for row in csv.DictReader(stream)]
     assert data and all(math.isfinite(value) for row in data for value in row.values()), 'Nonfinite or empty output'
     time = [row['t'] for row in data]
     assert abs(time[0]) < 1e-12 and abs(time[-1] - study['tmax']) < 1e-12, 'Incomplete switching window'
     assert all(b > a for a, b in zip(time, time[1:])), 'Nonmonotone switching samples'
-    log = result.stdout.decode()
+    log = (run / 'simulation.log').read_text()
     fc, mu = report['choices']['carrier_Hz'], study['mu']
     frequencies = [60, fc - 120, fc - 60, fc, fc + 60, fc + 120, 2 * fc - 60, 2 * fc + 60, 3 * fc - 120, 3 * fc + 120]
     metrics = {'mu': mu, 'carrier_Hz': fc, 'edge_10_90_s': 2 * math.log(9) / mu,

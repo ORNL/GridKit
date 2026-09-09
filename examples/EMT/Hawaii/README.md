@@ -41,7 +41,7 @@ The resistor is disconnected during the fault; afterward it dissipates the
 isolated inductor energy with a 2.65258 ms time constant. The validator checks
 paired switch commands, current continuity, zero current through the open grid
 switch, and the analytical discharge decay. Remaining model differences include
-the [winding approximation and replacement inverter controls](../../../cases/EMT/Hawaii/README.md#fault-and-comparison).
+[stator transients, saturation formulations, and replacement inverter controls](../../../cases/EMT/Hawaii/README.md#fault-and-comparison).
 
 `results/Hawaii.{vmag,omega,p,q}.pdf` contains the four vector figures;
 matching PNGs are rendered at 600 DPI. Each figure retains its editable
