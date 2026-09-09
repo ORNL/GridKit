@@ -391,7 +391,7 @@ namespace GridKit
 
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
-        
+
         // For DependencyTracking::Variable, set variable numbers
         if constexpr (std::is_same_v<scalar_type, DependencyTracking::Variable>)
         {

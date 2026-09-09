@@ -257,7 +257,7 @@ namespace GridKit
           @brief Turns variable into parameter, or vice versa.
 
           @todo is_fixed_ is currently not contributing to the semantics of
-                the derivatives. Leaving as-is for now, as it is not used 
+                the derivatives. Leaving as-is for now, as it is not used
                 for anything other than printed diagnostics.
        */
       void setFixed(bool b = false)
@@ -305,8 +305,8 @@ namespace GridKit
       size_t variable_number_; ///< Independent variable ID
       bool   is_fixed_;        ///< Constant parameter flag.
 
-      DependencyMap dependencies_;
-      static const size_t   INVALID_VAR_NUMBER = INVALID_INDEX<size_t>;
+      DependencyMap       dependencies_;
+      static const size_t INVALID_VAR_NUMBER = INVALID_INDEX<size_t>;
     };
 
     //------------------------------------

@@ -661,7 +661,7 @@ namespace GridKit
 
           const DepVar::DependencyMap expected{{
               {2 * index(Vars::VT), 0.5 * kHvrcmGain}, // @todo remove these
-              {2 * index(Vars::IQEXTRA), -1.0}, // @todo remove these
+              {2 * index(Vars::IQEXTRA), -1.0},        // @todo remove these
           }};
           success *= isEqual(dependencies, expected, kTol);
         }
@@ -694,7 +694,7 @@ namespace GridKit
                 dependencyTrackingJacobian(data, current, success);
             const auto enzyme_jacobian = enzymeJacobian(data, current, success);
 
-            const auto nrows  = std::min(dependency_tracking_jacobian.size(),
+            const auto nrows = std::min(dependency_tracking_jacobian.size(),
                                         enzyme_jacobian.size());
 
             for (size_t i = 0; i < nrows; ++i)

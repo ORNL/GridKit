@@ -1020,9 +1020,9 @@ namespace GridKit
 
           const DependencyTracking::Variable::DependencyMap expected{
               {2 * index(Vars::XQPI) + 1, -1.0}, // @todo Remove these
-              {2 * index(Vars::SFRZ), 0.0}, // @todo Remove these
-              {2 * index(Vars::ERQLIM), 0.0}, // @todo Remove these
-              {2 * index(Vars::QPI), 0.0}, // @todo Remove these
+              {2 * index(Vars::SFRZ), 0.0},      // @todo Remove these
+              {2 * index(Vars::ERQLIM), 0.0},    // @todo Remove these
+              {2 * index(Vars::QPI), 0.0},       // @todo Remove these
           };
 
           success *= jacobianRowMatches(
