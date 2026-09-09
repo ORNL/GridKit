@@ -156,8 +156,7 @@ validation require only Python's standard library and the GridKit executables.
 
 The nine EMT plants retain their source REPCA voltage controllers and REECB
 electrical controllers. REPCA `qext` drives REECB `Qref`; active references remain
-constant signals. REECB replaces Hawaii's generic OuterPowerControl, which remains
-available for the standalone GFL example. InnerCurrentControl compensates the
-fundamental capacitor current and retains converter-current feedback. Source
+constant signals. InnerCurrentControl compensates the fundamental capacitor
+current and retains converter-current feedback. Source
 terminal-current priority and the synthetic bridge current rating are distinct.
 The remaining REGCA differences are listed in the case README.

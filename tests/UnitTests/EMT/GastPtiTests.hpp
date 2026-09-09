@@ -110,8 +110,8 @@ namespace GridKit::Testing
       TestStatus success = true;
       using PdData       = PhasorDynamics::Governor::GastPtiData<double, size_t>;
       using P            = PdData::Parameters;
-      using PdExternal   = PhasorDynamics::Governor::GastPtiExternalVariables;
-      using PdInternal   = PhasorDynamics::Governor::GastPtiInternalVariables;
+      using PdExternal   = PhasorDynamics::Governor::GastPtiSignalInputs;
+      using PdInternal   = PhasorDynamics::Governor::GastPtiSignalOutputs;
       PdData d;
       d.parameters = {{P::Trate, 50.0}, {P::R, 0.06}, {P::T1, 0.35}, {P::T2, 0.45}, {P::T3, 2.2}, {P::At, 1.8}, {P::Kt, 0.4}, {P::Vmin, 0.05}, {P::Vmax, 1.1}, {P::Dturb, 0.12}};
       PhasorDynamics::Governor::GastPti<double, size_t> pd(d);
@@ -121,10 +121,10 @@ namespace GridKit::Testing
       std::array<PhasorDynamics::SignalNode<double, size_t>, 2> signals;
       PhasorDynamics::SignalNode<double, size_t>                pmech;
       for (size_t i = 0; i < 2; ++i)
-        signals[i].set(&inputs[i], &indices[i]);
-      pd.getSignals().template attachSignalNode<PdExternal::OMEGA>(&signals[0]);
-      pd.getSignals().template attachSignalNode<PdExternal::PREF>(&signals[1]);
-      pd.getSignals().template assignSignalNode<PdInternal::PMECH>(&pmech);
+        signals[i].link(&inputs[i], &indices[i]);
+      pd.getPorts().in.template port<PdExternal::speed>().connect(&signals[0]);
+      pd.getPorts().in.template port<PdExternal::pref>().connect(&signals[1]);
+      pd.getPorts().out.template port<PdInternal::pmech>().connect(&pmech);
       pd.allocate();
       pmech.init(0.4);
       Fixture f;

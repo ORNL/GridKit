@@ -10,7 +10,6 @@
 #include <GridKit/Model/EMT/Component/Controller/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/EMT/Component/Controller/InnerCurrentControl/InnerCurrentControlData.hpp>
-#include <GridKit/Model/EMT/Component/Controller/OuterPowerControl/OuterPowerControlData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/REPCA/RepcaData.hpp>
@@ -49,7 +48,6 @@ namespace GridKit
       using IdxT  = index_type;
 
       using InnerCurrentControlDataT    = Controller::InnerCurrentControlData<RealT, IdxT>;
-      using OuterPowerControlDataT      = Controller::OuterPowerControlData<RealT, IdxT>;
       using RepcaDataT                  = Controller::RepcaData<RealT, IdxT>;
       using ReecbDataT                  = Controller::ReecbData<RealT, IdxT>;
       using ParkDataT                   = ParkData<RealT, IdxT>;
@@ -86,7 +84,6 @@ namespace GridKit
       std::vector<ContainerData> container; ///< Child scopes
 
       std::vector<InnerCurrentControlDataT>         inner_current_control;
-      std::vector<OuterPowerControlDataT>           outer_power_control;
       std::vector<RepcaDataT>                       repca;
       std::vector<ReecbDataT>                       reecb;
       std::vector<ParkDataT>                        park;

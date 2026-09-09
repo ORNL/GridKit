@@ -848,7 +848,10 @@ namespace GridKit
           success *= model.resets == 2 && model.history.size() == count + 1;
           success *= model.history.back().time == left.time;
           success *= isEqual(model.history.back().y, left.y, 1e-12);
-          success *= isEqual(model.history.back().yp, left.yp + 1.0, 1e-6);
+          // The accepted-step derivative is an IDA approximation. Check the
+          // restarted derivative against the right-limit equation instead.
+          model.evaluateResidual();
+          success *= isEqual(model.getResidual().getData()[0], 0.0, 1e-8);
 
           bool rejected_rewind = false;
           try

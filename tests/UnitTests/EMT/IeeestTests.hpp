@@ -73,8 +73,8 @@ namespace GridKit::Testing
     {
       TestStatus success = true;
       using PdData       = PhasorDynamics::Stabilizer::IeeestData<double, size_t>;
-      using PdInput      = PhasorDynamics::Stabilizer::IeeestExternalVariables;
-      using PdOutput     = PhasorDynamics::Stabilizer::IeeestInternalVariables;
+      using PdInput      = PhasorDynamics::Stabilizer::IeeestSignalInputs;
+      using PdOutput     = PhasorDynamics::Stabilizer::IeeestSignalOutputs;
       for (int order : {0, 2, 3, 4})
         for (bool bypass : {false, true})
         {
@@ -89,9 +89,9 @@ namespace GridKit::Testing
           double                                             u     = .002;
           size_t                                             index = 12;
           PhasorDynamics::SignalNode<double, size_t>         input, output;
-          input.set(&u, &index);
-          pd.getSignals().template attachSignalNode<PdInput::U>(&input);
-          pd.getSignals().template assignSignalNode<PdOutput::VSS>(&output);
+          input.link(&u, &index);
+          pd.getPorts().in.template port<PdInput::input>().connect(&input);
+          pd.getPorts().out.template port<PdOutput::output>().connect(&output);
           pd.allocate();
           Fixture f(d), speed(d, true);
           success *= pd.initialize() == 0 && f.model.initialize() == 0 && speed.model.initialize() == 0;
