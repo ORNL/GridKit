@@ -117,6 +117,15 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTFilterTest COMMAND test_emt_filter)
 
+add_executable(test_emt_repca runRepcaTests.cpp)
+target_link_libraries(
+  test_emt_repca
+  GridKit::definitions
+  GridKit::emt_repca
+  GridKit::phasor_dynamics_controller_repca
+  GridKit::testing)
+add_test(NAME EMTRepcaTest COMMAND test_emt_repca)
+
 add_executable(test_emt_outer_power_control runOuterPowerControlTests.cpp)
 target_link_libraries(
   test_emt_outer_power_control

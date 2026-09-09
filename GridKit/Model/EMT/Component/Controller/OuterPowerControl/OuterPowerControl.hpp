@@ -35,6 +35,8 @@ namespace GridKit
         IQ,
         ILIMD,
         ILIMQ,
+        PREF,
+        QREF,
         MAXIMUM
       };
 
@@ -69,7 +71,7 @@ namespace GridKit
         using Outputs      = typename ModelDataT::Outputs;
         using SignalT      = Signal<ScalarT, IdxT>;
         using MonitorT     = Model::VariableMonitor<OuterPowerControl, OuterPowerControlData>;
-        using InputSignals = std::array<SignalT*, 6>;
+        using InputSignals = std::array<SignalT*, 8>;
 
         OuterPowerControl();
         explicit OuterPowerControl(const ModelDataT& data);
@@ -109,8 +111,6 @@ namespace GridKit
         void                                                                                                    initializeMonitor();
         const Model::VariableMonitorBase*                                                                       getMonitor() const override;
         RealT                                                                                                   V_{0.0};
-        RealT                                                                                                   Pref_{0.0};
-        RealT                                                                                                   Qref_{0.0};
         RealT                                                                                                   Kp_{0.0};
         RealT                                                                                                   Ki_{0.0};
         RealT                                                                                                   Kaw_{0.0};

@@ -31,19 +31,17 @@ namespace GridKit
       using InnerT                       = EMT::Controller::InnerCurrentControl<ScalarT, IdxT>;
       using SignalT                      = EMT::Signal<ScalarT, IdxT>;
       using Data                         = typename OuterT::ModelDataT;
-      static constexpr IdxT  system_size = 19;
+      static constexpr IdxT  system_size = 21;
       static constexpr RealT omega       = RealT{120} * std::numbers::pi_v<RealT>;
 
       static Data makeData()
       {
         Data data;
-        using P                  = typename Data::Parameters;
-        data.parameters[P::V]    = RealT{208};
-        data.parameters[P::Pref] = RealT{2496};
-        data.parameters[P::Qref] = RealT{1040};
-        data.parameters[P::Kp]   = RealT{0.3};
-        data.parameters[P::Ki]   = RealT{40};
-        data.parameters[P::Kaw]  = RealT{200};
+        using P                 = typename Data::Parameters;
+        data.parameters[P::V]   = RealT{208};
+        data.parameters[P::Kp]  = RealT{0.3};
+        data.parameters[P::Ki]  = RealT{40};
+        data.parameters[P::Kaw] = RealT{200};
         return data;
       }
 
@@ -61,11 +59,11 @@ namespace GridKit
 
       struct Fixture
       {
-        VectorT                y, yp, f, abs_tol;
-        std::array<SignalT, 9> input;
-        std::array<IdxT, 9>    indices{};
-        OuterT                 outer;
-        InnerT                 inner;
+        VectorT                 y, yp, f, abs_tol;
+        std::array<SignalT, 11> input;
+        std::array<IdxT, 11>    indices{};
+        OuterT                  outer;
+        InnerT                  inner;
 
         Fixture()
           : outer(makeData()), inner(makeInnerData())
@@ -79,12 +77,12 @@ namespace GridKit
           f.setToConst(0.0);
           for (size_t n = 0; n < input.size(); ++n)
           {
-            indices[n] = static_cast<IdxT>(n);
-            input[n].set(&y.getData()[n], &yp.getData()[n], &f.getData()[n], &indices[n], &indices[n]);
+            indices[n] = static_cast<IdxT>(n < 9 ? n : n + 10);
+            input[n].set(&y.getData()[indices[n]], &yp.getData()[indices[n]], &f.getData()[indices[n]], &indices[n], &indices[n]);
           }
           using O = typename OuterT::Outputs;
           using I = typename InnerT::Outputs;
-          outer.attachInput({&input[0], &input[1], &input[4], &input[5], &inner.outputSignal(I::ilimd), &inner.outputSignal(I::ilimq)});
+          outer.attachInput({&input[0], &input[1], &input[4], &input[5], &inner.outputSignal(I::ilimd), &inner.outputSignal(I::ilimq), &input[9], &input[10]});
           inner.attachInput({&input[2], &input[3], &input[4], &input[5], &outer.outputSignal(O::icmdd), &outer.outputSignal(O::icmdq), &input[6], &input[7], &input[8]});
           IdxT offset = 9;
           for (auto* component : components())
@@ -122,7 +120,7 @@ namespace GridKit
 
         void setProbeState()
         {
-          const std::array<RealT, system_size> state{182, 26, 208, 13, 8, -3, omega, 200, 20, 0.3, -0.2, 29, 8, 1.3, -0.8, 28, 7, 200, 20};
+          const std::array<RealT, system_size> state{182, 26, 208, 13, 8, -3, omega, 200, 20, 0.3, -0.2, 29, 8, 1.3, -0.8, 28, 7, 200, 20, 2496, 1040};
           for (IdxT n = 0; n < system_size; ++n)
           {
             y.getData()[n]  = state[n];

@@ -11,6 +11,7 @@
 #include <GridKit/Model/EMT/Component/Controller/OuterPowerControl/OuterPowerControlDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Controller/OuterVoltageControl/OuterVoltageControlDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmDataJSONParser.hpp>
+#include <GridKit/Model/EMT/Component/Controller/REPCA/RepcaDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Filter/FilterDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineDistributed/LineDistributedDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Component/Line/LineLumped/LineLumpedDataJSONParser.hpp>
@@ -139,6 +140,10 @@ namespace GridKit
         else if (kind == "OuterPowerControl")
         {
           raw_device.get_to(data.outer_power_control.emplace_back());
+        }
+        else if (kind == "Repca")
+        {
+          raw_device.get_to(data.repca.emplace_back());
         }
         else if (kind == "OuterVoltageControl")
         {
