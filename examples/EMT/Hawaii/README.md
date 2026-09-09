@@ -6,7 +6,8 @@ The EMT and GridKit PhasorDynamics validation solvers both apply the fault
 from 1.0 to 1.15 s. The plots label the actual intervals recorded by each run.
 
 The four figures contain all 37 buses or all 30 synchronous machines, followed
-by the range of differences across matching channels. Bus voltage uses a
+by the range of differences across matching channels. All three rows share
+the same vertical limits within each figure. Bus voltage uses a
 one-cycle positive-sequence estimate. Machine speed, active power, and reactive
 power use cycle means; their colours identify the six machine buses. The time
 label is the centre of the averaging window;
@@ -32,7 +33,8 @@ The inverter plants use the same LCL Filter wiring as the GFL control example.
 The generator preserves terminal dispatch and supplies frequency, Bus voltage,
 and Filter grid current. EMT initialization derives the capacitor voltage,
 converter current, and controller commands.
-The filter and controller parameters are synthetic, as listed in the case README.
+The filter and local converter-control parameters are synthetic; REPCA parameters
+come from the source case, as listed in the case README.
 
 Generate current results using the commands below. The four PNG/PDF plots in
 `results/` are tracked. Editable TeX/data and measured validation/comparison
@@ -122,3 +124,8 @@ settings. No branch checkout is needed.
 
 Plot generation requires PGFPlots, pdfLaTeX, and Poppler. Simulation and
 validation require only Python's standard library and the GridKit executables.
+
+The nine EMT plants retain their source REPCA voltage controllers. Their reactive
+commands drive external `OuterPowerControl.Qref` inputs; active references remain
+constant signals. Converter, PLL, Filter, and inner-loop parameters are unchanged.
+The remaining REECB/REGCA differences are listed in the case README.

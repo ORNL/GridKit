@@ -2,27 +2,27 @@
 \input{../../diagram-style.tex}
 
 % TUNABLES: channel spacing and gain-block width.
-\def\channelspacing{4.8}
+\def\channelspacing{2.8}
 \def\gainwidth{1.25cm}
 
 \begin{document}
 \begin{tikzpicture}[emt diagram]
 
 % Local scalar measurements for each power product.
-\foreach \name/\y/\voltage/\current/\side/\dy in {
-    pd/-1.6/d/d/south/-0.8,pq/0/q/q/north/0.8,
-    qd/{-\channelspacing}/q/d/north/0.8,
-    qq/{-\channelspacing-1.6}/d/q/south/-0.8} {
-    \node[sum] (\name) at (4.2,\y) {$\times$};
+\foreach \name/\x/\y/\voltage/\current/\side/\dy in {
+    pd/5.7/0.8/d/d/north/0.8,pq/4.2/-0.8/q/q/south/-0.8,
+    qd/4.2/{-\channelspacing-0.8}/q/d/north/0.8,
+    qq/5.7/{-\channelspacing-2.4}/d/q/south/-0.8} {
+    \node[sum] (\name) at (\x,\y) {$\times$};
     \draw[->, line] (2.5,\y) node[sig, left] {$v_\voltage$}
         -- (\name.west);
     \draw[->, line] (2.5,\y+\dy) node[sig, left] {$i_\current$}
-        -- (4.2,\y+\dy) -- (\name.\side);
+        -- (\x,\y+\dy) -- (\name.\side);
 }
 
 % Parallel d- and q-axis PI controllers with tracking anti-windup.
-\foreach \axis/\offset/\upperProduct/\lowerProduct/\power/\measured/\lowerSign/\direction/\toward/\away in {
-    d/0/pq/pd/P/-/+/-1/south/north,q/\channelspacing/qd/qq/Q/+/-/1/north/south} {
+\foreach \axis/\offset/\power/\measured/\direction/\toward/\away in {
+    d/0/P/-/-1/south/north,q/\channelspacing/Q/+/1/north/south} {
     \begin{scope}[yshift=-\offset cm]
         \node[sum] (power-\axis) at (5.7,-0.8) {$\Sigma$};
         \node[sum] (error-\axis) at (7.2,-0.8) {$\Sigma$};
@@ -61,11 +61,16 @@
         \draw[->, line] (Kaw-\axis.\toward) -- (rate-\axis.\away);
         \node[pm, anchor=east] at ([xshift=-2pt,yshift={-\direction*4pt}]rate-\axis.\away) {$+$};
     \end{scope}
-    \draw[->, line] (\upperProduct.east) -| (power-\axis.north);
-    \node[pm, above right=1pt and 0pt of power-\axis.north] {$+$};
-    \draw[->, line] (\lowerProduct.east) -| (power-\axis.south);
-    \node[pm, below right=1pt and 0pt of power-\axis.south] {$\lowerSign$};
 }
+
+\draw[->, line] (pd.south) -- (power-d.north);
+\node[pm, above right=1pt and 0pt of power-d.north] {$+$};
+\draw[->, line] (pq.east) -- (power-d.west);
+\node[pm, above left=0pt and 1pt of power-d.west] {$+$};
+\draw[->, line] (qd.east) -- (power-q.west);
+\node[pm, above left=0pt and 1pt of power-q.west] {$+$};
+\draw[->, line] (qq.north) -- (power-q.south);
+\node[pm, below right=1pt and 0pt of power-q.south] {$-$};
 
 \node[sig] (pref) at (7.2,0.8) {$P^{\mathrm{ref}}$};
 \draw[->, line] (pref.south) -- (error-d.north);

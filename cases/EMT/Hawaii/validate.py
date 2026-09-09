@@ -90,7 +90,7 @@ def conversion_checks(case, state, report):
     counts = collections.Counter(d['class'] for d in case['devices'])
     expected = {'Machine': 30, 'Tgov1': 30, 'Ieeet1': 30, 'Ieeest': 14,
                 'LineLumped': 77, 'Transformer': 12, 'LoadZ': 29, 'Switch': 2,
-                'PLL': 9, 'OuterPowerControl': 9, 'InnerCurrentControl': 9,
+                'PLL': 9, 'Repca': 9, 'OuterPowerControl': 9, 'InnerCurrentControl': 9,
                 'PWM': 9, 'Converter': 9, 'Filter': 9, 'Park': 36}
     for kind, count in expected.items():
         require(counts[kind] == count, f'{kind} count: {counts[kind]} != {count}')
@@ -154,8 +154,15 @@ def conversion_checks(case, state, report):
                 'Outer-loop terminal Bus voltage measurement')
         require(outer['inputs']['v'] == terminal_voltage['outputs']['out'][:2],
                 'Outer-loop terminal voltage feedback')
-        require(outer['params']['Pref'] == data['dispatch_W']
-                and outer['params']['Qref'] == data['dispatch_var'], 'Terminal power setpoints')
+        controller = devices[plant + '_plant']
+        require(signals[outer['inputs']['Pref']] == data['dispatch_W'], 'Active-power reference')
+        require(outer['inputs']['Qref'] == controller['outputs']['qext'], 'Plant reactive-power reference')
+        require(controller['inputs']['v'] == outer['inputs']['v']
+                and controller['inputs']['i'] == outer['inputs']['i'], 'Plant terminal measurements')
+        parameters = dict(data['plant_parameters'])
+        parameters['S'] = parameters.pop('mva') * 1e6
+        parameters['V'] = data['voltage_V']
+        require(controller['params'] == parameters, 'Source REPCA parameters')
         require(grid_current['inputs']['input'] == filt['outputs']['ig'], 'Grid-current measurement')
         require(outer['inputs']['i'] == grid_current['outputs']['out'][:2], 'Outer-loop grid-current feedback')
         require(inner['inputs']['i'] == current['outputs']['out'][:2], 'Inner-loop converter-current feedback')

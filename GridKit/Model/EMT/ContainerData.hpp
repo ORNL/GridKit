@@ -13,6 +13,7 @@
 #include <GridKit/Model/EMT/Component/Controller/OuterPowerControl/OuterPowerControlData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/OuterVoltageControl/OuterVoltageControlData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/PwmData.hpp>
+#include <GridKit/Model/EMT/Component/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1Data.hpp>
 #include <GridKit/Model/EMT/Component/Filter/FilterData.hpp>
@@ -50,6 +51,7 @@ namespace GridKit
       using InnerCurrentControlDataT    = Controller::InnerCurrentControlData<RealT, IdxT>;
       using OuterVoltageControlDataT    = Controller::OuterVoltageControlData<RealT, IdxT>;
       using OuterPowerControlDataT      = Controller::OuterPowerControlData<RealT, IdxT>;
+      using RepcaDataT                  = Controller::RepcaData<RealT, IdxT>;
       using ParkDataT                   = ParkData<RealT, IdxT>;
       using PllDataT                    = PllData<RealT, IdxT>;
       using FilterDataT                 = FilterData<RealT, IdxT>;
@@ -86,6 +88,7 @@ namespace GridKit
       std::vector<InnerCurrentControlDataT>         inner_current_control;
       std::vector<OuterVoltageControlDataT>         outer_voltage_control;
       std::vector<OuterPowerControlDataT>           outer_power_control;
+      std::vector<RepcaDataT>                       repca;
       std::vector<ParkDataT>                        park;
       std::vector<PllDataT>                         pll;
       std::vector<FilterDataT>                      filter;
