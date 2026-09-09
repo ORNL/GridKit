@@ -5,7 +5,7 @@ fabricated data, and deviations from the validated PhasorDynamics case.
 The EMT and GridKit PhasorDynamics validation solvers both apply the fault
 from 1.0 to 1.15 s. The plots label the actual intervals recorded by each run.
 
-The four figures contain all 37 buses or all 30 synchronous machines, followed
+The four comparison figures contain all 37 buses or all 30 synchronous machines, followed
 by the range of differences across matching channels. All three rows share
 the same vertical limits within each figure. Bus voltage uses a
 one-cycle positive-sequence estimate. Machine speed, active power, and reactive
@@ -36,8 +36,9 @@ converter current, and controller commands.
 The filter and local converter-control parameters are synthetic; REPCA and REECB parameters
 come from the source case, as listed in the case README.
 
-Generate current results using the commands below. The four PNG/PDF plots in
-`results/` are tracked. Editable TeX/data and measured validation/comparison
+Generate current results using the commands below. PNG/PDF plots in
+`results/` and `results/mu50000/` are included in the figure allowlist.
+Editable TeX/data and measured validation/comparison
 statistics remain ignored; no numerical snapshot is assumed to describe a
 regenerated case.
 
@@ -110,11 +111,39 @@ python3 cases/EMT/Hawaii/validate.py \
 python3 examples/EMT/Hawaii/phasor.py \
   --exe build/application/PhasorDynamics/DynamicSimulation
 python3 examples/EMT/Hawaii/plot.py \
-  --averaged examples/EMT/Hawaii/results/emt/Hawaii.averaged.csv
+  --averaged examples/EMT/Hawaii/results/emt/Hawaii.averaged.csv --waveforms
+python3 cases/EMT/Hawaii/validate.py \
+  --exe build/application/EMT/EMTDynamicSimulation \
+  --tmax 5 --mu 50000 --output examples/EMT/Hawaii/results/mu50000/emt
 python3 examples/EMT/Hawaii/switching.py \
-  --exe build/application/EMT/EMTDynamicSimulation
+  --exe build/application/EMT/EMTDynamicSimulation \
+  --output examples/EMT/Hawaii/results/mu50000/switching.json
+python3 examples/EMT/Hawaii/plot.py \
+  --averaged examples/EMT/Hawaii/results/mu50000/emt/Hawaii.averaged.csv \
+  --output examples/EMT/Hawaii/results/mu50000 --waveforms \
+  --switching examples/EMT/Hawaii/results/mu50000/switching
 ctest --test-dir build -R EMTHawaiiCase --output-on-failure
 ```
+
+The two 5 s fault runs differ only in `mu`; both retain order 2, scaled absolute
+tolerances, and 7200 Hz monitoring. The separate startup switching detail uses
+720 kHz monitoring and the settings documented above; it is not a fault-time
+switching zoom.
+
+Additional figure | Default `mu=240` | `mu=50000`
+----------------- | ---------------- | ----------
+Three-phase bus voltages | [Voltages](results/Hawaii.voltage-abc.png) | [Voltages](results/mu50000/Hawaii.voltage-abc.png)
+Converter and grid phase currents | [Currents](results/Hawaii.current-abc.png) | [Currents](results/mu50000/Hawaii.current-abc.png)
+Grid-current commands and measured dq currents, all nine plants | [Tracking](results/Hawaii.current-dq.png) | [Tracking](results/mu50000/Hawaii.current-dq.png)
+Instantaneous inverter active/reactive power, all nine plants | [Power](results/Hawaii.inverter-pq.png) | [Power](results/mu50000/Hawaii.inverter-pq.png)
+PLL frequency, all nine plants | [Frequency](results/Hawaii.pll.png) | [Frequency](results/mu50000/Hawaii.pll.png)
+Switching functions and bridge phase voltages | — | [Startup detail](results/mu50000/Hawaii.switching.png)
+
+These additional figures use instantaneous samples, without RMS or cycle
+averaging. Phase panels retain every 7200 Hz sample in windows around fault
+inception, clearing, and final recovery. Full-duration control and power plots
+display every sixth sample near the fault and every 24th elsewhere; use the
+separate 720 kHz detail to inspect switching edges.
 
 The CTest study ends at 1.5 s and covers fault inception, clearing, and early
 recovery. The example solver and plotting command run to 5 s; the plotter
