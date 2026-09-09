@@ -278,56 +278,53 @@ namespace
     const auto   directory = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path() / "cases/EMT/CurrentControl";
     const double omega     = 120 * std::acos(-1.0);
     bool         success   = true;
-    for (const std::string name : {"GFL", "GFM"})
+    auto         input     = read(directory / "GFL.case.json");
+    const auto   data      = read(directory / "GFL.state.json");
+    State        state;
+    for (const std::string section : {"buses", "devices"})
+      for (const auto& [path, outputs] : data.at(section).items())
+        state[path] = outputs.get<std::map<std::string, double>>();
+    for (bool reverse : {false, true})
     {
-      auto       input = read(directory / (name + ".case.json"));
-      const auto data  = read(directory / (name + ".state.json"));
-      State      state;
-      for (const std::string section : {"buses", "devices"})
-        for (const auto& [path, outputs] : data.at(section).items())
-          state[path] = outputs.get<std::map<std::string, double>>();
-      for (bool reverse : {false, true})
+      if (reverse)
+        std::reverse(input["devices"].begin(), input["devices"].end());
+      System system(model(input));
+      system.allocate();
+      success           &= system.initialize(state, omega) == 0;
+      auto&      filter  = system.component("filter");
+      auto&      inner   = system.component("current_control");
+      auto&      outer   = system.component("power_control");
+      // Independent dq circuit identity: the PI supplies the inverter-side copper drop.
+      const auto params  = std::find_if(input["devices"].begin(), input["devices"].end(), [](const auto& device)
+                                       { return device.at("id") == "filter"; })
+                              ->at("params");
+      const double resistance  = params.at("Rs")[0][0];
+      const double id          = system.signal("id").read();
+      const double iq          = system.signal("iq").read();
+      success                 &= near(inner.y().getData()[0], resistance * id, 1e-8);
+      success                 &= near(inner.y().getData()[1], resistance * iq, 1e-8);
+      success                 &= near(inner.y().getData()[2], id, 1e-8);
+      success                 &= near(inner.y().getData()[3], iq, 1e-8);
+      success                 &= near(outer.y().getData()[2], id, 1e-8);
+      success                 &= near(outer.y().getData()[3], iq, 1e-8);
+      inner.evaluateResidual();
+      outer.evaluateResidual();
+      for (size_t n = 0; n < 2; ++n)
       {
-        if (reverse)
-          std::reverse(input["devices"].begin(), input["devices"].end());
-        System system(model(input));
-        system.allocate();
-        success           &= system.initialize(state, omega) == 0;
-        auto&      filter  = system.component("filter");
-        auto&      inner   = system.component("current_control");
-        auto&      outer   = system.component(name == "GFL" ? "power_control" : "voltage_control");
-        // Independent dq circuit identity: the PI supplies the inverter-side copper drop.
-        const auto params  = std::find_if(input["devices"].begin(), input["devices"].end(), [](const auto& device)
-                                         { return device.at("id") == "filter"; })
-                                ->at("params");
-        const double resistance  = params.at("Rs")[0][0];
-        const double id          = system.signal("id").read();
-        const double iq          = system.signal("iq").read();
-        success                 &= near(inner.y().getData()[0], resistance * id, 1e-8);
-        success                 &= near(inner.y().getData()[1], resistance * iq, 1e-8);
-        success                 &= near(inner.y().getData()[2], id, 1e-8);
-        success                 &= near(inner.y().getData()[3], iq, 1e-8);
-        success                 &= near(outer.y().getData()[2], id, 1e-8);
-        success                 &= near(outer.y().getData()[3], iq, 1e-8);
-        inner.evaluateResidual();
-        outer.evaluateResidual();
-        for (size_t n = 0; n < 2; ++n)
-        {
-          success &= near(inner.getResidual().getData()[n], 0.0, 1e-7);
-          success &= near(outer.getResidual().getData()[n], 0.0, 1e-7);
-        }
-        // The physical LCL capacitor and grid inductor start on their sinusoidal orbit.
-        filter.evaluateResidual();
-        for (size_t n = 3; n < filter.size(); ++n)
-          success &= near(filter.getResidual().getData()[n], 0.0, 1e-8);
-        success                                                                   &= std::abs(filter.yp().getData()[4]) > 1.0;
-        auto conflicting                                                           = state;
-        conflicting[name == "GFL" ? "power_control" : "voltage_control"]["icmdd"]  = id + 1.0;
-        success                                                                   &= rejectsWithoutMutation(system, conflicting, "icmdd", omega);
-        conflicting                                                                = state;
-        conflicting["filter"]["voa"]                                               = 1.0;
-        success                                                                   &= rejectsWithoutMutation(system, conflicting, "filter.voa", omega);
+        success &= near(inner.getResidual().getData()[n], 0.0, 1e-7);
+        success &= near(outer.getResidual().getData()[n], 0.0, 1e-7);
       }
+      // The physical LCL capacitor and grid inductor start on their sinusoidal orbit.
+      filter.evaluateResidual();
+      for (size_t n = 3; n < filter.size(); ++n)
+        success &= near(filter.getResidual().getData()[n], 0.0, 1e-8);
+      success                               &= std::abs(filter.yp().getData()[4]) > 1.0;
+      auto conflicting                       = state;
+      conflicting["power_control"]["icmdd"]  = id + 1.0;
+      success                               &= rejectsWithoutMutation(system, conflicting, "icmdd", omega);
+      conflicting                            = state;
+      conflicting["filter"]["voa"]           = 1.0;
+      success                               &= rejectsWithoutMutation(system, conflicting, "filter.voa", omega);
     }
     return success;
   }

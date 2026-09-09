@@ -145,15 +145,6 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTOuterPowerControlTest COMMAND test_emt_outer_power_control)
 
-add_executable(test_emt_outer_voltage_control runOuterVoltageControlTests.cpp)
-target_link_libraries(
-  test_emt_outer_voltage_control
-  GridKit::definitions
-  GridKit::emt_outer_voltage_control
-  GridKit::emt_outer_voltage_control_dependency_tracking
-  GridKit::testing)
-add_test(NAME EMTOuterVoltageControlTest COMMAND test_emt_outer_voltage_control)
-
 add_executable(test_emt_inner_current_control runInnerCurrentControlTests.cpp)
 target_link_libraries(
   test_emt_inner_current_control

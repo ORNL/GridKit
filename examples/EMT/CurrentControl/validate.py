@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate PLL-synchronized current and voltage control (stdlib only)."""
+"""Validate PLL-synchronized power and current control (stdlib only)."""
 import argparse
 import csv
 import json
@@ -18,7 +18,7 @@ def wiring_checks(case):
     filt, pll, pwm, bridge, inner = (devices[key] for key in
                                        ('filter', 'pll', 'pwm', 'bridge', 'current_control'))
     voltage, current, grid_current = (devices[key] for key in ('voltage', 'current', 'grid_current'))
-    outer = devices.get('power_control', devices.get('voltage_control'))
+    outer = devices['power_control']
     assert filt['inputs']['e'] == bridge['outputs']['e']
     assert current['inputs']['input'] == filt['outputs']['i']
     assert voltage['inputs']['input'] == filt['outputs']['vo']
@@ -27,16 +27,11 @@ def wiring_checks(case):
     assert grid_current['inputs']['input'] == filt['outputs']['ig']
     assert inner['inputs']['i'] == current['outputs']['out'][:2]
     assert inner['inputs']['v'] == voltage['outputs']['out'][:2]
-    grid_input = 'ig' if outer['class'] == 'OuterVoltageControl' else 'i'
-    assert outer['inputs'][grid_input] == grid_current['outputs']['out'][:2]
-    if outer['class'] == 'OuterVoltageControl':
-        assert outer['inputs']['v'] == voltage['outputs']['out'][:2]
-        assert outer['inputs']['omega'] == pll['outputs']['omega']
-    else:
-        terminal_voltage = devices['terminal_voltage']
-        assert terminal_voltage['inputs']['input'] == [bus['outputs']['v' + p] for p in 'abc']
-        assert outer['inputs']['v'] == terminal_voltage['outputs']['out'][:2]
-        assert terminal_voltage['inputs']['theta'] == pll['outputs']['theta']
+    assert outer['inputs']['i'] == grid_current['outputs']['out'][:2]
+    terminal_voltage = devices['terminal_voltage']
+    assert terminal_voltage['inputs']['input'] == [bus['outputs']['v' + p] for p in 'abc']
+    assert outer['inputs']['v'] == terminal_voltage['outputs']['out'][:2]
+    assert terminal_voltage['inputs']['theta'] == pll['outputs']['theta']
     assert all(d['inputs']['theta'] == pll['outputs']['theta'] for d in (voltage, current, grid_current, pwm))
     assert inner['inputs']['omega'] == pll['outputs']['omega']
     assert pwm['inputs']['u'] == inner['outputs']['u']
@@ -119,7 +114,10 @@ def validate(exe, output):
     state_file = (HERE / solver['state_file']).resolve()
     case = json.loads(case_file.read_text())
     wiring_checks(case)
-    params = next(d['params'] for d in case['devices'] if d['id'] == 'power_control')
+    inputs = next(d['inputs'] for d in case['devices'] if d['id'] == 'power_control')
+    signals = {s['id']: s['value'] for s in case['signals'] if 'value' in s}
+    signals.update(solver.get('signal_values', {}))
+    expected = steady_state(case, signals[inputs['Pref']], signals[inputs['Qref']])
     report = {}
     for name, mu in [('steady_smooth', 240), ('steady_switching', 1e6)]:
         config = dict(solver, system_model_file=str(case_file), state_file=str(state_file),
@@ -131,7 +129,6 @@ def validate(exe, output):
             subprocess.run([str(exe), str(path)], cwd=output, stdout=log,
                            stderr=subprocess.STDOUT, check=True)
         measured = measure(output / f'{name}.csv', 0.25, 0.3)
-        expected = steady_state(case, params['Pref'], params['Qref'])
         errors = {key: abs(measured['mean'][key] - value) for key, value in expected.items()}
         measured.update(expected=expected, absolute_errors=errors, mu=mu, mean_window_s=[0.25,0.3])
         report[name] = measured
@@ -147,72 +144,17 @@ def validate(exe, output):
     return report
 
 
-def validate_voltage(exe, output):
-    """Check phase-domain voltage tracking before, during, and after a reference step."""
-    solver = json.loads((HERE / 'GFM.solver.json').read_text())
-    final_time = max(solver['tmax'], 0.5)
-    case_file = (HERE / solver['system_model_file']).resolve()
-    state_file = (HERE / solver['state_file']).resolve()
-    case = json.loads(case_file.read_text())
-    wiring_checks(case)
-    devices = {d['id']: d for d in case['devices']}
-    constants = {s['id']: s['value'] for s in case['signals'] if 'value' in s}
-    reference = [constants[name] for name in devices['voltage_control']['inputs']['vref']]
-    frequency = devices['grid']['params']['omega'] / (2 * math.pi)
-    # Each interval ends at an event or the final time. Use its last 20 ms
-    # to measure tracking after the controller has responded.
-    ends = sorted({event['time'] for event in solver['events']} | {solver['tmax'], final_time})
-    references = []
-    for end in ends:
-        target = reference.copy()
-        for event in solver['events']:
-            if event['time'] < end:
-                target['dq'.index(event['signal_id'][-1])] = event['value']
-        references.append(target)
-    report = {}
-    for name, mu in [('voltage_smooth', 240), ('voltage_switching', 1e6)]:
-        waveform = output / f'{name}.csv'
-        config = dict(solver, system_model_file=str(case_file), state_file=str(state_file),
-                      tmax=final_time, dt_monitor=2e-6, mu=mu, output_file=str(waveform))
-        path = output / f'{name}.solver.json'
-        path.write_text(json.dumps(config, indent=2) + '\n')
-        with (output / f'{name}.log').open('w') as log:
-            subprocess.run([str(exe), str(path)], cwd=output, stdout=log,
-                           stderr=subprocess.STDOUT, check=True)
-        intervals = []
-        for end, target in zip(ends, references):
-            measured = measure(waveform, end - .02, end, final_time)
-            errors = {'voltage_V': abs(measured['mean']['voltage_V'] - math.hypot(*target)),
-                      'vq_V': abs(measured['mean']['vq_V'] - target[1]),
-                      'frequency_Hz': abs(measured['mean']['frequency_Hz'] - frequency)}
-            measured.update(reference_V=target, absolute_errors=errors, mean_window_s=[end - .02, end])
-            intervals.append(measured)
-            print(name, end, json.dumps(errors), flush=True)
-            # Allow 20% of the 1 V step during recovery; check settled tracking separately.
-            voltage_bound = .05 if end == final_time else .2
-            assert errors['voltage_V'] < voltage_bound, (name, end, errors)
-            assert errors['vq_V'] < voltage_bound, (name, end, errors)
-            assert errors['frequency_Hz'] < .05, (name, end, errors)
-            assert measured['measurement_identity_error'] < 1e-8
-            assert measured['maximum_limited_current_A'] <= devices['current_control']['params']['Imax'] + 1e-10
-        report[name] = {'mu': mu, 'intervals': intervals}
-    (output / 'metrics.json').write_text(json.dumps(report, indent=2) + '\n')
-    return report
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--exe', type=Path, required=True)
     parser.add_argument('--output', type=Path)
-    parser.add_argument('--scenario', choices=['GFL', 'GFM'], default='GFL')
     args = parser.parse_args()
-    validator = validate if args.scenario == 'GFL' else validate_voltage
     if args.output:
         args.output.mkdir(parents=True, exist_ok=True)
-        validator(args.exe.resolve(), args.output.resolve())
+        validate(args.exe.resolve(), args.output.resolve())
     else:
         with tempfile.TemporaryDirectory(prefix='gridkit-current-control-') as directory:
-            validator(args.exe.resolve(), Path(directory))
+            validate(args.exe.resolve(), Path(directory))
 
 
 if __name__ == '__main__':
