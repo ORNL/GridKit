@@ -5,14 +5,16 @@ command. It limits the command to the voltage available from the DC link,
 returns the limited command to
 [InnerCurrentControl](../InnerCurrentControl/README.md) for tracking
 anti-windup, transforms the modulation command to phase coordinates, and
-compares it with a continuous carrier. Without inputs, it generates sinusoidal
-PWM. The model adds no DAE variables or residual rows.
+evaluates a smooth periodic switching function. Without inputs, it generates
+sinusoidal PWM. Outputs are computed from the current input signals and time;
+there are no internal DAE variables or residual rows. Enzyme generates the
+output derivatives, which consumers compose through the signal Jacobian interface.
 
 ## Block Diagram
 
 ![PWM model block diagram](../../../../../../docs/Figures/EMT/Controller/PWM/diagram.png)
 
-Figure 1: PWM model and centered sinusoidal switching signals for $M=0.8$, $f_{\mathrm{m}}=60\,\mathrm{Hz}$, and $f_{\mathrm{c}}=900\,\mathrm{Hz}$ at $\mu^{-1}=0.005\,\mathrm{ms}$ and $\mu^{-1}=1\,\mathrm{ms}$.
+Figure 1: PWM model.
 
 ## Model Parameters
 
@@ -22,7 +24,7 @@ $M$ | [-] | `M` | Modulation index | Required without inputs, $M \in [0,1]$
 $f_{\mathrm{m}}$ | [Hz] | `fm` | Modulation frequency | Required without inputs, positive
 $f_{\mathrm{c}}$ | [Hz] | `fc` | Carrier frequency | Required, positive
 $\alpha$ | [-] | `alignment` | Pulse alignment | Default $\frac{1}{2}$
-$M^{\max}$ | [-] | `Mmax` | Sinusoidal modulation limit | Default $1$, $0 < M^{\max} \le 1$
+$M^{\max}$ | [-] | `Mmax` | Sinusoidal modulation limit with voltage inputs | Default $1$, $0 < M^{\max} \le 1$
 
 ### Parameter Validation
 
@@ -42,6 +44,8 @@ Without inputs, the sinusoidal parameters also satisfy
 f_{\mathrm{c}} &> f_{\mathrm{m}} > 0.
 \end{aligned}
 ```
+
+All parameters and the derived coefficient $a_u$ must be finite.
 
 ### Derived Parameters
 
@@ -121,7 +125,7 @@ With inputs, the limiter factor and modulation command are
 \begin{aligned}
 \mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u}) &=
   \max\left(v_{\mathrm{dc}}^2,a_u\|\mathbf{u}\|_2^2\right) \\
-\mathbf{m} &= \dfrac{2\mathbf{u}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u})}}
+\mathbf{m}_{dq} &= \dfrac{2\mathbf{u}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u})}}
 \end{aligned}
 ```
 
@@ -129,12 +133,12 @@ The direction-preserving limit uses the CommonMath smooth
 [`max`](../../../../../CommonMath.md#maximum) on squared voltages in
 $\mathrm{V}^2$. In the power-invariant frame, a balanced phase peak of
 $M^{\max}v_{\mathrm{dc}}/2$ corresponds to $\|\mathbf{u}\|_2 =
-\sqrt{3/8}\,M^{\max}v_{\mathrm{dc}}$, the largest command sinusoidal PWM
-realizes without zero-sequence injection. The phase modulation command is the
+\sqrt{3/8}\,M^{\max}v_{\mathrm{dc}}$, the configured linear modulation limit.
+$M^{\max}=1$ gives the full sinusoidal PWM range without zero-sequence injection.[^spwm] The phase modulation command is the
 inverse Park transform without zero sequence,
 
 ```math
-\begin{bmatrix} m_a & m_b & m_c \end{bmatrix}^{\mathsf{T}}
+\mathbf{m}_{abc} = \begin{bmatrix} m_a & m_b & m_c \end{bmatrix}^{\mathsf{T}}
 = \mathbf{T}^{\mathsf{T}}(\theta)
 \begin{bmatrix} m_d & m_q & 0 \end{bmatrix}^{\mathsf{T}},
 ```
@@ -165,6 +169,8 @@ S_\mu(t,d)&=\sum_{k\in\mathbb{Z}}
 Here $\sigma$ is the CommonMath
 [`sigmoid`](../../../../../CommonMath.md#primitives) with sharpness $\mu>0$.
 Every term uses the current duty argument; $k$ indexes periodic copies.
+The command is continuous in time, with no carrier-synchronous sample-and-hold.
+Single- or double-rate digital duty updates are distinct sampling models.[^sampling]
 
 > [!NOTE]
 > $\mu$ selects simulation resolution within the same continuous model:
@@ -189,38 +195,40 @@ None.
 
 #### Algebraic
 
-None.
-
-### External Equations
-
 ```math
 \begin{aligned}
-\mathbf{u}^{\mathrm{lim}} &\leftarrow
-  \dfrac{v_{\mathrm{dc}}\mathbf{u}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u})}}
-  = \dfrac{v_{\mathrm{dc}}}{2}\mathbf{m} \\
-s_\ell(t) &\leftarrow S_\mu\left(t,d_\ell(t)\right),
+\mathbf{m}_{abc} &= \mathbf{T}^{\mathsf{T}}(\theta)
+  \begin{bmatrix} m_d & m_q & 0 \end{bmatrix}^{\mathsf{T}} \\
+\mathbf{u}^{\mathrm{lim}} &= \dfrac{v_{\mathrm{dc}}\mathbf{u}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u})}} \\
+s_\ell(t) &= S_\mu\left(t,d_\ell(t)\right),
 \qquad \ell\in\{a,b,c\}
 \end{aligned}
 ```
 
-Inside the limit, $\mathbf{m} = 2\mathbf{u}/v_{\mathrm{dc}}$ and
-$\mathbf{u}^{\mathrm{lim}} = \mathbf{u}$. Beyond it, both keep the command
-direction at the limit magnitude. The outputs are algebraic expressions
-without owned DAE variables and involve no division by $v_{\mathrm{dc}}$: at
-zero DC voltage, the limited command is zero and the modulation command lies
-on the limit circle. Input values are evaluated at the current solver iterate.
+The modulation and limited-voltage equations apply only with voltage inputs, and
+$\mathbf{u}^{\mathrm{lim}}=(v_{\mathrm{dc}}/2)\mathbf{m}_{dq}$.
+In the hard-maximum limit, the command is unchanged inside the voltage limit
+and keeps its direction at the limit magnitude outside it. CommonMath's smooth
+maximum approaches this behavior continuously. Neither expression divides by
+$v_{\mathrm{dc}}$: at zero DC voltage, the limited command is zero and the
+modulation command remains finite. If the voltage command is also zero, both
+are zero. Input values are evaluated at the current solver iterate.
+
+### External Equations
+
+None.
 
 ## Initialization
 
-Evaluate the outputs from the initialized inputs and time. Prescribed
-`ulimd` and `ulimq` values must match the evaluated outputs.
+There are no internal initial conditions. Prescribed `sa`, `sb`, `sc`, `ulimd`,
+and `ulimq` values must match these evaluated outputs. The limited-voltage outputs require voltage inputs.
 
 ## Monitors
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `s` | [-] | Three-phase switching function | Expands to `sa`, `sb`, `sc`
-`m` | [-] | Phase modulation command | Expands to `ma`, `mb`, `mc`
+`m` | [-] | Phase modulation command $\mathbf{m}_{abc}$ | Expands to `ma`, `mb`, `mc`
 `ulim` | [V] | Limited voltage command | Expands to `ulimd`, `ulimq`; requires `u`
 
 See [case connections](../../../INPUT_FORMAT.md#case-connections) for vector signal wiring.
@@ -262,15 +270,39 @@ does not assert an exact carrier-period mean for a changing command.
 
 ## Appendix B: Pulse-sum evaluation
 
-Outside a pulse interval, let $\delta$ be the distance to its nearest edge.
-With $r=e^{-\mu dT_{\mathrm{c}}}$ and $z=e^{-\mu\delta}$, its contribution is
+The numerical evaluation preserves the periodic pulse sum to roundoff.
+For $\mu T_{\mathrm{c}} < 0.4$, the switching ripple is less than
+$2.4\times10^{-20}$, so $S_\mu(t,d)=d$ to double precision.
+Otherwise, reduce time to $[-T_{\mathrm{c}}/2,T_{\mathrm{c}}/2]$ and sum
+$k=-R,\ldots,R$, where
 
 ```math
-\sigma(t-a_k)-\sigma(t-b_k)
-=\dfrac{z(1-r)}{(1+z)(1+zr)}.
+R=\begin{cases}
+127, & 0.4\le\mu T_{\mathrm{c}}<4, \\
+16, & 4\le\mu T_{\mathrm{c}}<16, \\
+4, & \mu T_{\mathrm{c}}\ge16.
+\end{cases}
 ```
 
-The nearest pulse is evaluated directly. Each outward replica updates
-$z\leftarrow z e^{-\mu T_{\mathrm{c}}}$, avoiding repeated sigmoid evaluations.
-The same pulse window and compensated summation are retained; this recurrence
-is an algebraic rearrangement of the pulse sum.
+The omitted sigmoid tails are below $10^{-21}$ for $d\in[0,1]$.
+
+The broad-smoothing bound follows from the Fourier coefficients of the
+periodized sigmoid kernel. With $x=2\pi^2/(\mu T_{\mathrm{c}})$,
+
+```math
+|S_\mu(t,d)-d|
+\le \frac{4x}{\pi}\,
+\frac{e^{-x}}{(1-e^{-x})(1-e^{-2x})}.
+```
+
+This bound selects a roundoff-equivalent evaluation; the resolved switching
+function is evaluated directly from sigmoid pulses.
+
+## Appendix C: Switching waveforms
+
+![Centered sinusoidal switching signals](../../../../../../docs/Figures/EMT/Controller/PWM/waveforms.png)
+
+Figure 2: Centered sinusoidal switching signals for $M=0.8$, $f_{\mathrm{m}}=60\,\mathrm{Hz}$, and $f_{\mathrm{c}}=900\,\mathrm{Hz}$ at $\mu^{-1}=0.005\,\mathrm{ms}$ and $\mu^{-1}=1\,\mathrm{ms}$.
+
+[^spwm]: MathWorks, [*PWM Generator (Three-phase, Two-level)*](https://www.mathworks.com/help/sps/ref/pwmgeneratorthreephasetwolevel.html), "Overmodulation": $V_{\mathrm{peak}}=Mv_{\mathrm{dc}}/2$ for SPWM.
+[^sampling]: Imperix, [*Carrier-based PWM*](https://imperix.com/doc/software/carrier-based-pwm), "PWM parameters update rate".

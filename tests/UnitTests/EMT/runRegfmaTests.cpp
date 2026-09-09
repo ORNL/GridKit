@@ -13,6 +13,7 @@
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/EMT/Component/Source/REGFMA/Regfma.hpp>
 #include <GridKit/Model/EMT/SystemModel.hpp>
 #include <GridKit/Model/EMT/SystemModelDataJSONParser.hpp>

@@ -3,13 +3,21 @@ gridkit_add_library(
   SOURCES StateSpace.cpp
   HEADERS StateSpace.hpp StateSpaceData.hpp StateSpaceDataJSONParser.hpp
   INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
-  LINK_LIBRARIES PUBLIC GridKit::emt_core GridKit::emt_signal)
+  LINK_LIBRARIES
+    PUBLIC
+    GridKit::emt_core
+    GridKit::emt_signal
+    GridKit::emt_rational)
 
 gridkit_add_library(
   emt_state_space_dependency_tracking
   SOURCES StateSpaceDependencyTracking.cpp
   INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
-  LINK_LIBRARIES PUBLIC GridKit::emt_core GridKit::emt_signal_dependency_tracking)
+  LINK_LIBRARIES
+    PUBLIC
+    GridKit::emt_core
+    GridKit::emt_signal_dependency_tracking
+    GridKit::emt_rational_dependency_tracking)
 
 target_link_libraries(
   emt_components

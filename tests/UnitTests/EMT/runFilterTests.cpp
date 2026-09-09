@@ -11,6 +11,7 @@
 #include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/EMT/Component/Bus/Bus.hpp>
 #include <GridKit/Model/EMT/Component/Filter/Filter.hpp>
 #include <GridKit/Model/EMT/Component/Filter/FilterDataJSONParser.hpp>
@@ -252,7 +253,7 @@ namespace
     for (double probe : {.3, 0., -.4})
     {
       extra = probe;
-      for (const auto [ys, yps] : {std::pair{1., 0.}, {0., 1.}, {2., 3.}, {0., 0.}, {1., 1.}})
+      for (const auto& [ys, yps] : {std::pair{1., 0.}, {0., 1.}, {2., 3.}, {0., 0.}, {1., 1.}})
       {
         std::map<std::pair<size_t, size_t>, double> enzyme, dependency;
         for (const auto& entry : fixture.model.jacobianEntries(ys, yps))

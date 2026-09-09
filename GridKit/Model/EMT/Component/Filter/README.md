@@ -1,9 +1,7 @@
 # Filter Model
 
 `Filter` represents a three-phase LCL filter between a converter and a terminal
-Bus. It owns the converter-side current $\mathbf{i}$, capacitor voltage
-$\mathbf{v}_{\mathrm{o}}$, and grid-side current $\mathbf{i}_g$.
-Both currents are positive from the converter toward the Bus.
+Bus. Currents are positive from the converter toward the Bus.
 
 ## Block Diagram
 
@@ -23,9 +21,8 @@ $\mathbf{L}_g$ | [H] | `Lg` | Grid-side series inductance | $\mathbf{L}_g \in \m
 
 ### Parameter Validation
 
-All matrices must be finite and symmetric. The resistance matrices must be
-positive semidefinite; the inductance and capacitance matrices must be positive
-definite. Off-diagonal entries represent coupling between phases.
+All matrices must be finite and symmetric. Resistance matrices must be positive
+semidefinite; inductance and capacitance matrices must be positive definite.
 
 ### Derived Parameters
 
@@ -42,13 +39,8 @@ $\mathbf{v}_{\mathrm{o}}$ | `vo` | Output | [V] | Capacitor voltage | $\mathbf{v
 $\mathbf{i}_g$ | `ig` | Output | [A] | Current injected into the terminal Bus | $\mathbf{i}_g \in \mathbb{R}^3$
 
 Vector ports use phase order `a`, `b`, `c`. Scalar names append the phase letter,
-for example `ea`, `voa`, and `iga`. The `bus` input shortcut binds `v` to the
-terminal Bus. Output aliases are optional; the Bus receives the grid-side current
-without an explicit signal alias.
-
-Connect `Converter.e` to `e` and return `i` to `Converter.i`. Controllers and
-reference-frame operators read `i`, `vo`, and `ig` through signal ports. A PLL
-can read `vo` and supply angle and frequency to the controllers.
+for example `ea`, `voa`, and `iga`. The `bus` input binds the terminal Bus voltage
+and registers $\mathbf{i}_g$ as a current injection.
 
 ## Submodels
 
@@ -78,15 +70,20 @@ None.
 
 #### Differential
 
-The connected voltage signals may depend on differential variables owned by
-other components. The Filter does not use their derivatives.
-
-#### Algebraic
+When a connected equation depends on the bus-voltage derivative:
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{v}$ | [V] | Terminal voltage owned by the Bus | $\mathbf{v} \in \mathbb{R}^3$, when algebraic
-$\mathbf{e}$ | [V] | Converter output voltage | $\mathbf{e} \in \mathbb{R}^3$, may be computed from other signals
+$\mathbf{v}$ | [V] | Terminal Bus voltage | $\mathbf{v} \in \mathbb{R}^3$
+
+#### Algebraic
+
+Otherwise, $\mathbf{v}$ is algebraic. The converter supplies its voltage as a
+signal, which may be computed from other variables.
+
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{e}$ | [V] | Converter output voltage | $\mathbf{e} \in \mathbb{R}^3$
 
 ## Model Equations
 
@@ -111,16 +108,12 @@ None.
 
 ### External Equations
 
-None. The terminal Bus registers $\mathbf{i}_g$ as a current
-injection and owns its KCL equations.
+None.
 
 ## Initialization
 
-The state file may prescribe `ia`, `ib`, `ic`, `voa`, `vob`, `voc`, `iga`,
-`igb`, and `igc`; omitted values default to zero. The Filter publishes these
-initial output values to downstream components, including a connected PLL.
-Consistent initialization preserves all nine differential states and resolves
-their derivatives under the EMT initialization contract.
+The state file may prescribe the nine scalar output values; omitted values
+default to zero. Consistent initialization determines their derivatives.
 
 ## Monitors
 

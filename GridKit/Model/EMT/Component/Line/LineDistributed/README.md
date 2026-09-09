@@ -90,9 +90,9 @@ the characteristic and incident currents shown above.
 
 ### Submodel Validation
 
-The characteristic-admittance fits must be stable, proper, and positive real.
+The characteristic-admittance fits must be stable and positive real.
 Together with the propagation fits, they must produce a passive line model.
-The runtime validates dimensions, properness, and stable poles. Positive
+The runtime validates dimensions and stable poles. Positive
 realness and passivity of the combined fitted line are offline fitting
 requirements; pole stability alone does not establish either property.
 

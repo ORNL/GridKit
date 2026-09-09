@@ -2,8 +2,7 @@
 
 `LineLumped` represents an $N$-phase, $K$-conductor lumped EMT line over length
 $\Delta x$. Series current $\mathbf{i}_{12}$ is directed from terminal 1 to
-terminal 2. Each terminal Bus owns its shunt current and
-admittance states.
+terminal 2. Each terminal Bus owns its shunt admittance.
 
 ## Block Diagram
 
@@ -126,8 +125,8 @@ None.
 
 ### External Equations
 
-None. The buses register $-\mathbf{i}_{12}$ and $-\mathbf{i}_{21}$ as
-series-current injections at terminals 1 and 2. Each bus owns its shunt branch.
+None. The buses register $\mathbf{i}_{21}$ and $\mathbf{i}_{12}$ as
+series-current injections at terminals 1 and 2 and evaluate their shunts.
 
 ## Initialization
 

@@ -1,1 +1,3 @@
-results/
+results/*
+!results/switching.png
+!results/switching.pdf

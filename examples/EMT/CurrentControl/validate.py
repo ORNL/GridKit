@@ -11,6 +11,36 @@ import tempfile
 HERE = Path(__file__).resolve().parent
 
 
+def wiring_checks(case):
+    """Keep the complete LCL feedback chain aligned with the component ports."""
+    devices = {device['id']: device for device in case['devices']}
+    assert not any(d['class'] in ('Angle', 'Modulation') for d in devices.values())
+    filt, pll, pwm, bridge, dc, inner = (devices[key] for key in
+                                       ('filter', 'pll', 'pwm', 'bridge', 'dc', 'current_control'))
+    voltage, current, grid_current = (devices[key] for key in ('voltage', 'current', 'grid_current'))
+    outer = devices.get('power_control', devices.get('voltage_control'))
+    assert filt['inputs']['e'] == bridge['outputs']['e']
+    assert bridge['inputs']['i'] == current['inputs']['input'] == filt['outputs']['i']
+    assert voltage['inputs']['input'] == [pll['inputs']['v' + p] for p in 'abc'] == filt['outputs']['vo']
+    assert grid_current['inputs']['input'] == filt['outputs']['ig']
+    assert inner['inputs']['i'] == current['outputs']['out'][:2]
+    assert inner['inputs']['v'] == voltage['outputs']['out'][:2]
+    grid_input = 'ig' if outer['class'] == 'OuterVoltageControl' else 'i'
+    assert outer['inputs'][grid_input] == grid_current['outputs']['out'][:2]
+    if outer['class'] == 'OuterVoltageControl':
+        assert outer['inputs']['v'] == voltage['outputs']['out'][:2]
+        assert outer['inputs']['omega'] == pll['outputs']['omega']
+    assert all(d['inputs']['theta'] == pll['outputs']['theta'] for d in (voltage, current, grid_current, pwm))
+    assert inner['inputs']['omega'] == pll['outputs']['omega']
+    assert pwm['inputs']['u'] == inner['outputs']['u']
+    assert inner['inputs']['ulim'] == pwm['outputs']['ulim']
+    assert inner['inputs']['icmd'] == outer['outputs']['icmd']
+    assert outer['inputs']['ilim'] == inner['outputs']['ilim']
+    assert bridge['inputs']['s'] == pwm['outputs']['s']
+    assert bridge['inputs']['vdc'] == pwm['inputs']['vdc'] == dc['outputs']['vdc']
+    assert dc['inputs']['idc'] == bridge['outputs']['idc']
+
+
 def steady_state(case, irefd, irefq):
     """Balanced LCL solution with supplied current in the terminal-voltage frame."""
     devices = {d['id']: d for d in case['devices']}
@@ -78,6 +108,7 @@ def validate(exe, output):
     case_file = (HERE / solver['system_model_file']).resolve()
     state_file = (HERE / solver['state_file']).resolve()
     case = json.loads(case_file.read_text())
+    wiring_checks(case)
     params = next(d['params'] for d in case['devices'] if d['id'] == 'power_control')
     irefd, irefq = params['Pref'] / params['V'], -params['Qref'] / params['V']
     report = {}
@@ -115,6 +146,7 @@ def validate_voltage(exe, output):
     case_file = (HERE / solver['system_model_file']).resolve()
     state_file = (HERE / solver['state_file']).resolve()
     case = json.loads(case_file.read_text())
+    wiring_checks(case)
     devices = {d['id']: d for d in case['devices']}
     reference = next(s['value'] for s in case['signals'] if s['id'] == 'vrefd')
     frequency = devices['grid']['params']['omega'] / (2 * math.pi)

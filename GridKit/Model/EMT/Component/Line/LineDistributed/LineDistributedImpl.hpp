@@ -47,10 +47,6 @@ namespace GridKit
       for (auto pole : data.Yc.poles)
         if (pole.real() >= ZERO<RealT>)
           throw std::invalid_argument("LineDistributed: characteristic admittance must be stable");
-      for (const auto& row : data.Yc.E)
-        for (auto value : row)
-          if (value != ZERO<RealT>)
-            throw std::invalid_argument("LineDistributed: characteristic admittance must be proper");
     }
 
     template <typename scalar_type, typename index_type>

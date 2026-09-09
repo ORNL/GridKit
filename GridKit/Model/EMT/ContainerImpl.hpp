@@ -522,8 +522,13 @@ namespace GridKit
           i12[p] = &line_model.outputSignal(static_cast<LineLumpedOutputs>(p));
           i21[p] = &line_model.outputSignal(static_cast<LineLumpedOutputs>(3 + p));
         }
-        bus1->addNorton(name + "_1", Y, i21, HALF<RealT> * dx, phases1);
-        bus2->addNorton(name + "_2", Y, i12, HALF<RealT> * dx, phases2);
+        for (size_t p = 0; p < 3; ++p)
+        {
+          bus1->addCurrent(phases1[p], *i21[p]);
+          bus2->addCurrent(phases2[p], *i12[p]);
+        }
+        bus1->addShunt(name + "_1", Y, HALF<RealT> * dx, phases1);
+        bus2->addShunt(name + "_2", Y, HALF<RealT> * dx, phases2);
         line_model.attachTerminal(0, voltage1);
         line_model.attachTerminal(1, voltage2);
       }

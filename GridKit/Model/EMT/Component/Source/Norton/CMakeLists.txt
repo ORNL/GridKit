@@ -1,14 +1,59 @@
-gridkit_add_library(
-  emt_norton
-  INTERFACE_TARGET
-  HEADERS Norton.hpp
-  LINK_LIBRARIES INTERFACE GridKit::emt_core GridKit::emt_vector_fit)
+# [[
+#  Author(s):
+#    - Luke Lowery <lukel@tamu.edu>
+# ]]
+
+set(_install_headers Norton.hpp)
+
+if(GRIDKIT_ENABLE_ENZYME)
+  gridkit_add_library(
+    emt_norton
+    SOURCES NortonEnzyme.cpp
+    HEADERS ${_install_headers}
+    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+    LINK_LIBRARIES
+      PUBLIC
+      GridKit::emt_core
+      PUBLIC
+      GridKit::emt_signal
+      PUBLIC
+      GridKit::emt_vector_fit
+      PRIVATE
+      ClangEnzymeFlags
+    COMPILE_OPTIONS
+      PRIVATE
+      -mllvm
+      -enzyme-auto-sparsity=1
+      -fno-math-errno
+      -fno-vectorize)
+else()
+  gridkit_add_library(
+    emt_norton
+    SOURCES Norton.cpp
+    HEADERS ${_install_headers}
+    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+    LINK_LIBRARIES
+      PUBLIC
+      GridKit::emt_core
+      PUBLIC
+      GridKit::emt_signal
+      PUBLIC
+      GridKit::emt_vector_fit)
+endif()
 
 gridkit_add_library(
   emt_norton_dependency_tracking
-  INTERFACE_TARGET
-  LINK_LIBRARIES INTERFACE GridKit::emt_core GridKit::emt_vector_fit_dependency_tracking)
+  SOURCES NortonDependencyTracking.cpp
+  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+  LINK_LIBRARIES
+    PUBLIC
+    GridKit::emt_core
+    PUBLIC
+    GridKit::emt_signal_dependency_tracking
+    PUBLIC
+    GridKit::emt_vector_fit_dependency_tracking)
 
+# Link to interface target for all components
 target_link_libraries(
   emt_components
   INTERFACE GridKit::emt_norton)
