@@ -358,7 +358,7 @@ namespace GridKit
       y_ext[2] = pmech_set_;
       if (ports_.in.template port<GenClassicalSignalInputs::pmech>().connected())
       {
-        y_ext[2]                = ports_.in.template port<GenClassicalSignalInputs::pmech>().readSignal();
+        y_ext[2]                 = ports_.in.template port<GenClassicalSignalInputs::pmech>().readSignal();
         variable_indices_ext_[2] = ports_.in.template port<GenClassicalSignalInputs::pmech>().signalVariableIndex();
       }
 
@@ -366,7 +366,7 @@ namespace GridKit
       y_ext[3] = efd_set_;
       if (ports_.in.template port<GenClassicalSignalInputs::efd>().connected())
       {
-        y_ext[3]                = ports_.in.template port<GenClassicalSignalInputs::efd>().readSignal();
+        y_ext[3]                 = ports_.in.template port<GenClassicalSignalInputs::efd>().readSignal();
         variable_indices_ext_[3] = ports_.in.template port<GenClassicalSignalInputs::efd>().signalVariableIndex();
       }
     }
