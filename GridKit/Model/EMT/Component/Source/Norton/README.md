@@ -31,7 +31,7 @@ $\mathbf{i}^\mathrm{sh}$ | `Ish` | Output | [A] | Shunt current | $\mathbb{R}^K$
 
 Symbol | Description | Type | Order | JSON | Inputs | Outputs
 ------ | ----------- | ---- | ----- | ---- | ------ | -------
-$\mathbf{y}$ | Shunt admittance | [VectorFit](../../../Operators/Rational/VectorFit/README.md) | $KQ$ | Bus `shunts` or device coefficients | $\mathbf{v}$ | $\mathbb{R}^K$
+$\mathbf{y}$ | Shunt admittance | [VectorFit](../../../Operators/Rational/VectorFit/README.md) | $KQ$ | Device coefficients | $\mathbf{v}$ | $\mathbb{R}^K$
 
 ### Submodel Validation
 
@@ -81,7 +81,7 @@ None.
 
 ### External Equations
 
-None. The bus owns terminal-current accumulation.
+None.
 
 ## Initialization
 

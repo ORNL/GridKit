@@ -36,7 +36,7 @@ namespace GridKit
       using BusT    = GridKit::EMT::Bus<ScalarT, IdxT>;
       using LineT   = GridKit::EMT::LineLumped<ScalarT, IdxT>;
 
-      static constexpr IdxT system_size = 15;
+      static constexpr IdxT system_size = 9;
 
       LineLumpedTests()  = default;
       ~LineLumpedTests() = default;
@@ -67,8 +67,8 @@ namespace GridKit
       /**
        * @brief Two buses joined by one lumped line.
        *
-       * Variable layout: bus 1 voltage/shunt current [0, 6), bus 2
-       * voltage/shunt current [6, 12), series current [12, 15).
+       * Variable layout: bus 1 voltage [0, 3), bus 2 voltage [3, 6),
+       * series current [6, 9).
        */
       struct Fixture
       {
@@ -96,8 +96,13 @@ namespace GridKit
           Y.E              = std::get<EMT::ABCMatrix<RealT>>(data.parameters.at(Parameter::Cp));
           const auto scale = 0.5 * std::get<RealT>(data.parameters.at(Parameter::dx));
           using Output     = EMT::LineLumpedOutputs;
-          bus1.addNorton("line_1", Y, {&line.outputSignal(Output::i21a), &line.outputSignal(Output::i21b), &line.outputSignal(Output::i21c)}, scale);
-          bus2.addNorton("line_2", Y, {&line.outputSignal(Output::i12a), &line.outputSignal(Output::i12b), &line.outputSignal(Output::i12c)}, scale);
+          for (size_t p = 0; p < 3; ++p)
+          {
+            bus1.addCurrent(p, line.outputSignal(static_cast<Output>(static_cast<size_t>(Output::i21a) + p)));
+            bus2.addCurrent(p, line.outputSignal(static_cast<Output>(static_cast<size_t>(Output::i12a) + p)));
+          }
+          bus1.addShunt("line_1", Y, scale);
+          bus2.addShunt("line_2", Y, scale);
           line.attachTerminal(0, bus1.voltages());
           line.attachTerminal(1, bus2.voltages());
 
@@ -113,10 +118,12 @@ namespace GridKit
           bus1.initialize();
           bus2.initialize();
           line.initialize();
+#ifdef GRIDKIT_ENABLE_ENZYME
           for (auto* component : components())
           {
             component->tagDifferentiable();
           }
+#endif
         }
 
         std::array<GridKit::EMT::Component<ScalarT, IdxT>*, 3> components()
@@ -205,7 +212,9 @@ namespace GridKit
         success *= bus.verify() == 0;
         success *= bus.initialize({{EMT::BusOutputs::va, 2.0}, {EMT::BusOutputs::vb, -4.0}, {EMT::BusOutputs::vc, 6.0}}) == 0;
         success *= bus.initializeSteadyState(0.0) == 0;
+#ifdef GRIDKIT_ENABLE_ENZYME
         bus.tagDifferentiable();
+#endif
         bus.evaluateResidual();
         const std::array<RealT, 3> voltage{2.0, -4.0, 6.0};
         std::array<RealT, 3>       expected_kcl{};
@@ -218,8 +227,10 @@ namespace GridKit
           success               *= isEqual(second.outputSignal(p).read(), 4.0 * voltage[q], 1e-13);
           expected_kcl[p]       += incoming - 2.0 * voltage[p];
           expected_kcl[q]       += 2.0 * voltage[p] - 4.0 * voltage[q];
-          success               *= bus.tag()[p] && !first.tag()[p] && first.tag()[3 + p];
-          success               *= first.getVariableIndex(static_cast<IdxT>(3 + p))
+#ifdef GRIDKIT_ENABLE_ENZYME
+          success *= bus.tag()[p] && !first.tag()[p] && first.tag()[3 + p];
+#endif
+          success *= first.getVariableIndex(static_cast<IdxT>(3 + p))
                      != second.getVariableIndex(static_cast<IdxT>(3 + p));
         }
         for (size_t p = 0; p < 3; ++p)
@@ -227,6 +238,7 @@ namespace GridKit
         for (IdxT row = 3; row < bus.size(); ++row)
           success *= std::abs(bus.getResidual().getData()[row]) < 1e-12;
 
+#ifdef GRIDKIT_ENABLE_ENZYME
         const RealT alpha = 2.7, step = 1e-6;
         bus.updateTime(0.0, alpha);
         success *= bus.evaluateJacobian() == 0;
@@ -254,6 +266,7 @@ namespace GridKit
           y[col]  = saved_y;
           yp[col] = saved_yp;
         }
+#endif
         bool frozen = false;
         try
         {
@@ -264,6 +277,80 @@ namespace GridKit
           frozen = true;
         }
         success *= frozen;
+        return success.report(__func__);
+      }
+
+      TestOutcome directShunts()
+      {
+        TestStatus            success = true;
+        BusT                  bus;
+        typename BusT::YDataT Y;
+        Y.poles = {{-2.0, 0.0}};
+        Y.residues.resize(1);
+        for (size_t p = 0; p < 3; ++p)
+        {
+          Y.D[p][p]           = 0.5;
+          Y.D[p][(p + 1) % 3] = 0.1;
+          Y.residues[0][p][p] = 3.0;
+        }
+        Y.E[0][0] = 0.25;
+        Y.E[0][1] = -0.25;
+        const typename BusT::PhaseOrder phases{2, 0, 1};
+        auto&                           first   = bus.addShunt("first", Y, 2.0, phases);
+        auto&                           second  = bus.addShunt("second", Y, 3.0);
+        success                                *= bus.size() == 9;
+        success                                *= bus.allocate() == 0;
+        success                                *= bus.initialize({{EMT::BusOutputs::va, 2.0}, {EMT::BusOutputs::vb, -4.0}, {EMT::BusOutputs::vc, 6.0}}) == 0;
+        success                                *= bus.initializeSteadyState(0.0) == 0;
+        success                                *= bus.evaluateResidual() == 0;
+        const std::array<RealT, 3> v{2.0, -4.0, 6.0};
+        std::array<RealT, 3>       expected{};
+        for (size_t p = 0; p < 3; ++p)
+        {
+          expected[phases[p]] -= 2.0 * (2.0 * v[phases[p]] + 0.1 * v[phases[(p + 1) % 3]]);
+          expected[p]         -= 3.0 * (2.0 * v[p] + 0.1 * v[(p + 1) % 3]);
+          success             *= first.getVariableIndex(static_cast<IdxT>(p)) != second.getVariableIndex(static_cast<IdxT>(p));
+        }
+        for (size_t p = 0; p < 3; ++p)
+          success *= isEqual(bus.getResidual().getData()[p], expected[p], 1e-13);
+        for (IdxT row = 3; row < bus.size(); ++row)
+          success *= std::abs(bus.getResidual().getData()[row]) < 1e-12;
+#ifdef GRIDKIT_ENABLE_ENZYME
+        for (const auto& [y_scale, yp_scale] : {std::pair{1.0, 0.0}, std::pair{0.0, 1.0}, std::pair{1.0, 2.7}})
+        {
+          success                                    *= bus.evaluateJacobian(y_scale, yp_scale) == 0;
+          auto*                                  coo  = bus.getCooJacobian();
+          std::map<std::pair<IdxT, IdxT>, RealT> jacobian;
+          for (IdxT j = 0; j < coo->getNnz(); ++j)
+            jacobian[{coo->getRowData()[j], coo->getColData()[j]}] += coo->getValues()[j];
+          const RealT step = 1e-6;
+          for (IdxT col = 0; col < bus.size(); ++col)
+          {
+            auto*      y       = bus.y().getData();
+            auto*      yp      = bus.yp().getData();
+            const auto saved_y = y[col], saved_yp = yp[col];
+            y[col]  = saved_y + y_scale * step;
+            yp[col] = saved_yp + yp_scale * step;
+            bus.evaluateResidual();
+            const std::vector<RealT> plus(bus.getResidual().getData(), bus.getResidual().getData() + bus.size());
+            y[col]  = saved_y - y_scale * step;
+            yp[col] = saved_yp - yp_scale * step;
+            bus.evaluateResidual();
+            for (IdxT row = 0; row < bus.size(); ++row)
+              success *= std::abs(jacobian[{row, col}] - (plus[static_cast<size_t>(row)] - bus.getResidual().getData()[row]) / (2 * step)) < 2e-8;
+            y[col]  = saved_y;
+            yp[col] = saved_yp;
+          }
+        }
+#endif
+        BusT empty;
+        empty.addShunt("zero", typename BusT::YDataT{});
+        success *= empty.size() == 3;
+        success *= empty.allocate() == 0;
+        success *= empty.initialize() == 0;
+        success *= empty.evaluateResidual() == 0;
+        for (size_t p = 0; p < 3; ++p)
+          success *= empty.getResidual().getData()[p] == 0;
         return success.report(__func__);
       }
 
@@ -282,12 +369,13 @@ namespace GridKit
                    == &fixture.bus1.outputSignal(EMT::BusOutputs::va);
         success *= &fixture.line.inputSignal(EMT::LineLumpedInputs::v2c)
                    == &fixture.bus2.outputSignal(EMT::BusOutputs::vc);
-        success *= &fixture.bus1.inputSignal("line_1_inc_a") == &fixture.line.outputSignal(EMT::LineLumpedOutputs::i21a);
-        success *= &fixture.bus2.inputSignal("line_2_inc_c") == &fixture.line.outputSignal(EMT::LineLumpedOutputs::i12c);
+        success *= (fixture.bus1.size() == 3);
+        success *= (fixture.bus2.size() == 3);
         success *= (fixture.bus1.verify() == 0);
         success *= (fixture.bus2.verify() == 0);
         success *= (fixture.line.verify() == 0);
 
+#ifdef GRIDKIT_ENABLE_ENZYME
         success *= (fixture.bus1.tag()[0] == true);
         success *= (fixture.bus1.tag()[1] == true);
         success *= (fixture.bus1.tag()[2] == true);
@@ -296,9 +384,8 @@ namespace GridKit
         success *= (fixture.bus2.tag()[2] == true);
 
         success *= (fixture.line.tag()[0] == true);
-        success *= (fixture.bus1.tag()[3] == false);
-        success *= (fixture.bus2.tag()[3] == false);
 
+#endif
         return success.report(__func__);
       }
 
@@ -331,24 +418,18 @@ namespace GridKit
         // The series current is positive from bus 1 to bus 2.
         for (size_t n = 0; n < 3; ++n)
         {
-          expected[n]     = -y[12 + n] - y[3 + n];
-          expected[6 + n] = y[12 + n] - y[9 + n];
-        }
-
-        for (size_t n = 0; n < 3; ++n)
-        {
-          RealT series = y[6 + n] - y[n];
-          RealT shunt1 = -y[3 + n];
-          RealT shunt2 = -y[9 + n];
+          RealT series = y[3 + n] - y[n];
+          RealT shunt1 = 0.0;
+          RealT shunt2 = 0.0;
           for (size_t k = 0; k < 3; ++k)
           {
-            series += dx * Rp[n][k] * y[12 + k] + dx * Lp[n][k] * yp[12 + k];
+            series += dx * (Rp[n][k] * y[6 + k] + Lp[n][k] * yp[6 + k]);
             shunt1 += 0.5 * dx * (Gp[n][k] * y[k] + Cp[n][k] * yp[k]);
-            shunt2 += 0.5 * dx * (Gp[n][k] * y[6 + k] + Cp[n][k] * yp[6 + k]);
+            shunt2 += 0.5 * dx * (Gp[n][k] * y[3 + k] + Cp[n][k] * yp[3 + k]);
           }
-          expected[12 + n] = series;
-          expected[3 + n]  = shunt1;
-          expected[9 + n]  = shunt2;
+          expected[n]     = -y[6 + n] - shunt1;
+          expected[3 + n] = y[6 + n] - shunt2;
+          expected[6 + n] = series;
         }
 
         for (IdxT j = 0; j < system_size; ++j)

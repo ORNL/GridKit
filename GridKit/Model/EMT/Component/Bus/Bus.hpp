@@ -27,6 +27,7 @@ namespace GridKit
       using Outputs      = typename ModelDataT::Outputs;
       using KCLT         = KCL<ScalarT, IdxT>;
       using NortonT      = Norton<ScalarT, IdxT>;
+      using AdmittanceT  = VectorFit<ScalarT, IdxT>;
       using PhaseSignals = typename NortonT::PhaseSignals;
       using PhaseOrder   = typename KCLT::PhaseOrder;
       using YDataT       = typename NortonT::YDataT;
@@ -72,8 +73,8 @@ namespace GridKit
         return kcl_.voltagePhase(signal);
       }
 
-      NortonT& addNorton(std::string name, const YDataT& Y, PhaseSignals incident = {}, RealT scale = ONE<RealT>, PhaseOrder phases = {0, 1, 2});
-      NortonT& addShunt(std::string name, const YDataT& Y);
+      NortonT&     addNorton(std::string name, const YDataT& Y, PhaseSignals incident = {}, RealT scale = ONE<RealT>, PhaseOrder phases = {0, 1, 2});
+      AdmittanceT& addShunt(std::string name, const YDataT& Y, RealT scale = ONE<RealT>, PhaseOrder phases = {0, 1, 2});
 
       NortonT& norton(std::string_view name)
       {
@@ -90,10 +91,11 @@ namespace GridKit
       void                              initializeMonitor();
       const Model::VariableMonitorBase* getMonitor() const override;
 
-      KCLT&                                kcl_;
-      SignalT                              zero_;
-      std::array<std::vector<SignalT*>, 3> shunt_monitors_;
-      std::unique_ptr<MonitorT>            monitor_;
+      KCLT&                                                     kcl_;
+      SignalT                                                   zero_;
+      std::array<std::vector<SignalT*>, 3>                      shunt_monitors_;
+      std::array<std::vector<std::pair<AdmittanceT*, IdxT>>, 3> shunts_;
+      std::unique_ptr<MonitorT>                                 monitor_;
     };
   } // namespace EMT
 } // namespace GridKit

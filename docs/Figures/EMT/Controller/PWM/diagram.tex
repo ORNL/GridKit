@@ -1,10 +1,7 @@
 \documentclass[tikz,border=12pt]{standalone}
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.18}
-\usepgfplotslibrary{groupplots}
 \input{../../diagram-style.tex}
 
-% TUNABLES: rows of the block strip above the traces.
+% TUNABLES: forward path, limited-command return, and supply rows.
 \def\striprow{3.1}
 \def\returnrow{1.7}
 \def\supplyrow{4.5}
@@ -12,92 +9,14 @@
 \begin{document}
 
 \begin{tikzpicture}[emt diagram]
-\begin{groupplot}[
-  group style={group name=pwm, group size=1 by 7, vertical sep=0.18cm},
-  width=13.6cm,
-  height=1.18cm,
-  scale only axis,
-  xmin=-0.00015,
-  xmax=0.01682,
-  ymin=-0.08,
-  ymax=1.08,
-  ytick={0,1},
-  axis y line=left,
-  axis line style={black!75, line width=0.5pt, -},
-  tick style={black!75, line width=0.4pt},
-  ticklabel style={font=\scriptsize},
-  scaled x ticks=false,
-  ylabel style={
-    font=\small,
-    rotate=0,
-    at={(axis description cs:-0.11,0.5)},
-    anchor=east
-  },
-  every axis plot/.append style={black, semithick, no markers},
-  cycle list={{black}},
-  clip=true
-]
-
-\nextgroupplot[
-  ylabel={$s_a$},
-  axis x line=none,
-  xtick=\empty
-]
-\addplot table [x=t, y=sa_top] {diagram.dat};
-
-\nextgroupplot[
-  ylabel={$s_b$},
-  axis x line=none,
-  xtick=\empty
-]
-\addplot table [x=t, y=sb_top] {diagram.dat};
-
-\nextgroupplot[
-  ylabel={$s_c$},
-  axis x line=bottom,
-  xtick={0,0.0041667,0.0083333,0.0125,0.0166667},
-  xticklabels={$0$,$0.0042$,$0.0083$,$0.0125$,$0.0167$},
-  xlabel={$t\,[\mathrm{s}]$},
-  xlabel style={font=\small}
-]
-\addplot table [x=t, y=sc_top] {diagram.dat};
-
-\nextgroupplot[hide axis]
-
-\nextgroupplot[
-  ylabel={$s_a$},
-  axis x line=none,
-  xtick=\empty
-]
-\addplot table [x=t, y=sa_bottom] {diagram.dat};
-
-\nextgroupplot[
-  ylabel={$s_b$},
-  axis x line=none,
-  xtick=\empty
-]
-\addplot table [x=t, y=sb_bottom] {diagram.dat};
-
-\nextgroupplot[
-  ylabel={$s_c$},
-  axis x line=bottom,
-  xtick={0,0.0041667,0.0083333,0.0125,0.0166667},
-  xticklabels={$0$,$0.0042$,$0.0083$,$0.0125$,$0.0167$},
-  xlabel={$t\,[\mathrm{s}]$},
-  xlabel style={font=\small}
-]
-\addplot table [x=t, y=sc_bottom] {diagram.dat};
-
-\end{groupplot}
-
 % Voltage-command limit, DC normalization, inverse Park transform, and
 % carrier comparison; the limited command returns to the current controller.
-\coordinate (origin) at (pwm c1r1.north west);
+\coordinate (origin) at (0,0);
 \node[block, minimum width=2.2cm] (limit)
-  at ($(origin)+(1.3,\striprow)$) {$v_{\mathrm{dc}}\mathcal{L}_u^{-1/2}$};
+  at ($(origin)+(1.3,\striprow)$) {$2\mathcal{L}_u^{-1/2}$};
 \node[signal] (w) at ($(origin)+(3.1,\striprow)$) {};
 \node[block, minimum width=1.3cm] (gain)
-  at ($(origin)+(4.1,\striprow)$) {$\dfrac{2}{v_{\mathrm{dc}}}$};
+  at ($(origin)+(1.3,\returnrow)$) {$\dfrac{v_{\mathrm{dc}}}{2}$};
 \node[block, minimum width=1.6cm] (park)
   at ($(origin)+(6.0,\striprow)$) {$\mathbf{T}^{\mathsf{T}}(\theta)$};
 \node[block, minimum width=2.4cm] (duty)
@@ -107,28 +26,25 @@
 \draw[->, line] ($(origin)+(-0.6,\striprow)$)
   -- node[sig, above, pos=0.3] {$\mathbf{u}$} (limit.west);
 \draw[line] (limit.east) -- (w);
-\draw[->, line] (w) -- (gain.west);
-\draw[->, line] (gain.east) -- node[sig, above] {$\mathbf{m}$} (park.west);
+\draw[->, line] (w) -- node[sig, above] {$\mathbf{m}_{dq}$} (park.west);
 \draw[->, line] (park.east) -- node[sig, above] {$m_\ell$} (duty.west);
 \draw[->, line] (duty.east) -- node[sig, above] {$d_\ell$} (switching.west);
 \draw[->, line] (switching.east)
   -- node[sig, above, pos=0.7] {$s_\ell$} ($(origin)+(13.7,\striprow)$);
-\draw[->, line] (w) -- ($(origin)+(3.1,\returnrow)$)
-  -- node[sig, above, pos=0.8] {$\mathbf{u}^{\mathrm{lim}}$}
+\draw[->, line] (w) -- ($(origin)+(3.1,\returnrow)$) -- (gain.east);
+\draw[->, line] (gain.west)
+  -- node[sig, above, pos=0.7] {$\mathbf{u}^{\mathrm{lim}}$}
   ($(origin)+(-0.6,\returnrow)$);
 
 % DC-link voltage and frame angle inputs.
-\node[sig] (vdc) at ($(origin)+(2.7,\supplyrow+0.7)$) {$v_{\mathrm{dc}}$};
-\node[signal] (vsplit) at ($(origin)+(2.7,\supplyrow)$) {};
+\node[sig] (vdc) at ($(origin)+(-1.2,\supplyrow+0.7)$) {$v_{\mathrm{dc}}$};
+\node[signal] (vsplit) at ($(origin)+(-1.2,\supplyrow)$) {};
 \draw[line] (vdc.south) -- (vsplit);
 \draw[->, line] (vsplit) -- ($(origin)+(1.3,\supplyrow)$) -- (limit.north);
-\draw[->, line] (vsplit) -- ($(origin)+(4.1,\supplyrow)$) -- (gain.north);
+\draw[->, line] (vsplit) -- ($(origin)+(-1.2,0.8)$)
+  -- ($(origin)+(1.3,0.8)$) -- (gain.south);
 \node[sig] (theta) at ($(origin)+(6.0,\supplyrow+0.7)$) {$\theta$};
 \draw[->, line] (theta.south) -- (park.north);
 
-\node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r2.east)
-  {$\mu^{-1}=0.005\,\mathrm{ms}$};
-\node[font=\small, anchor=west] at ([xshift=0.25cm]pwm c1r6.east)
-  {$\mu^{-1}=1\,\mathrm{ms}$};
 \end{tikzpicture}
 \end{document}

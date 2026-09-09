@@ -1,3 +1,9 @@
+/**
+ * @file Filter.cpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ *
+ */
+
 #include "FilterImpl.hpp"
 
 namespace GridKit

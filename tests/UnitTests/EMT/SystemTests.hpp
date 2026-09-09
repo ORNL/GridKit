@@ -38,7 +38,8 @@ namespace GridKit
     class SystemTests
     {
     public:
-      using RealT = ScalarT;
+      using RealT       = ScalarT;
+      using AdmittanceT = EMT::VectorFit<ScalarT, IdxT>;
 
       SystemTests()  = default;
       ~SystemTests() = default;
@@ -1155,9 +1156,10 @@ namespace GridKit
           }}]
         })");
         EMT::SystemModel<ScalarT, IdxT> sys(EMT::parseSystemModelData(stream));
-        success *= sys.allocate() == 0;
-        success *= sys.initialize({{"bus", {{"va", 10.0}, {"vb", -4.0}, {"vc", 2.0}}}}) == 0;
-        success *= sys.verify() == 0 && sys.size() == 6;
+        success                                             *= sys.allocate() == 0;
+        success                                             *= sys.initialize({{"bus", {{"va", 10.0}, {"vb", -4.0}, {"vc", 2.0}}}}) == 0;
+        success                                             *= sys.verify() == 0 && sys.size() == 3;
+        auto&                                         shunt  = sys.template component<EMT::Bus<ScalarT, IdxT>>("bus").template component<AdmittanceT>("rc");
         AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida(&sys);
         ida.setTolerance(1e-10, 1e-10);
         ida.configureSimulation();
@@ -1170,7 +1172,8 @@ namespace GridKit
           {
             // Independent RC solution: C dv/dt + G v = 0.
             success *= std::abs(sys.y().getData()[p] - initial[p] * std::exp(-20.0 * time)) < 1e-7;
-            success *= std::abs(sys.y().getData()[3 + p]) < 1e-9;
+            // The observed current uses IDA's interpolated voltage derivative.
+            success *= std::abs(shunt.output(static_cast<IdxT>(p))) < 1e-7;
           }
         }
         return success.report(__func__);
@@ -1193,7 +1196,7 @@ namespace GridKit
         sys.allocate();
         sys.initialize();
 
-        success *= (sys.size() == 24);
+        success *= (sys.size() == 18);
 
         sys.tagDifferentiable();
         const auto& tag = sys.tag();
@@ -1202,7 +1205,7 @@ namespace GridKit
         for (size_t j = 0; j < 3; ++j)
         {
           success *= (tag[j] == true);
-          success *= (tag[6 + j] == true);
+          success *= (tag[3 + j] == true);
         }
 
         AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida(&sys);
@@ -1250,18 +1253,15 @@ namespace GridKit
           const std::complex<RealT> ish2 = -Yh * v2;
           const std::complex<RealT> ild  = -v2 / Zload;
 
-          // Layout: bus1 v/shunt [0,6), bus2 v/shunt [6,12), source e/i
-          // [12,18), line i12 [18,21), load i [21,24).
-          // Tolerance is the measured error floor at the 1.0e-9 solver
-          // tolerance with headroom, phase-a bus 1 voltage 1.5e-8, dominated
-          // by integration error over the stiff shunt dynamics.
+          // Layout: bus1 v [0,3), bus2 v [3,6), source e/i [6,12),
+          // line i12 [12,15), load i [15,18).
           success *= isEqual(y[n], (v1 * rotation).real(), 3.0e-8);
-          success *= isEqual(y[6 + n], (v2 * rotation).real(), 3.0e-8);
-          success *= isEqual(y[15 + n], (isrc * rotation).real(), 3.0e-8);
-          success *= isEqual(y[18 + n], (i12 * rotation).real(), 3.0e-8);
-          success *= isEqual(-bus1.outputSignal(std::string("line_1_2_1_Ish_") + "abc"[n]).read(), (ish1 * rotation).real(), 3.0e-8);
-          success *= isEqual(-bus2.outputSignal(std::string("line_1_2_2_Ish_") + "abc"[n]).read(), (ish2 * rotation).real(), 3.0e-8);
-          success *= isEqual(y[21 + n], (ild * rotation).real(), 3.0e-8);
+          success *= isEqual(y[3 + n], (v2 * rotation).real(), 3.0e-8);
+          success *= isEqual(y[9 + n], (isrc * rotation).real(), 3.0e-8);
+          success *= isEqual(y[12 + n], (i12 * rotation).real(), 3.0e-8);
+          success *= isEqual(bus1.template component<AdmittanceT>("line_1_2_1").output(static_cast<IdxT>(n)), (ish1 * rotation).real(), 3.0e-8);
+          success *= isEqual(bus2.template component<AdmittanceT>("line_1_2_2").output(static_cast<IdxT>(n)), (ish2 * rotation).real(), 3.0e-8);
+          success *= isEqual(y[15 + n], (ild * rotation).real(), 3.0e-8);
         }
 
         return success.report(__func__);
@@ -1302,17 +1302,17 @@ namespace GridKit
 
         sys.allocate();
         sys.initialize();
-        success              *= (sys.size() == 24);
-        success              *= (left.size() == 12);
-        success              *= (right.size() == 9);
+        success              *= (sys.size() == 18);
+        success              *= (left.size() == 9);
+        success              *= (right.size() == 6);
         const auto* system_y  = sys.y().getData();
         success              *= (left.y().getData() == system_y);
-        success              *= (right.y().getData() == system_y + 12);
-        success              *= (line.y().getData() == system_y + 21);
+        success              *= (right.y().getData() == system_y + 9);
+        success              *= (line.y().getData() == system_y + 15);
         success              *= (bus1.y().getData() == left.y().getData());
-        success              *= (source.y().getData() == left.y().getData() + 6);
+        success              *= (source.y().getData() == left.y().getData() + 3);
         success              *= (bus2.y().getData() == right.y().getData());
-        success              *= (load.y().getData() == right.y().getData() + 6);
+        success              *= (load.y().getData() == right.y().getData() + 3);
 
         sys.tagDifferentiable();
         for (size_t j = 0; j < 3; ++j)
@@ -1369,8 +1369,8 @@ namespace GridKit
           success *= isEqual(y_bus2[n], (v2 * rotation).real(), 3.0e-8);
           success *= isEqual(y_source[3 + n], (isrc * rotation).real(), 3.0e-8);
           success *= isEqual(y_line[n], (i12 * rotation).real(), 3.0e-8);
-          success *= isEqual(-bus1.outputSignal(std::string("tie_line_1_Ish_") + "abc"[n]).read(), (ish1 * rotation).real(), 3.0e-8);
-          success *= isEqual(-bus2.outputSignal(std::string("tie_line_2_Ish_") + "abc"[n]).read(), (ish2 * rotation).real(), 3.0e-8);
+          success *= isEqual(bus1.template component<AdmittanceT>("tie_line_1").output(static_cast<IdxT>(n)), (ish1 * rotation).real(), 3.0e-8);
+          success *= isEqual(bus2.template component<AdmittanceT>("tie_line_2").output(static_cast<IdxT>(n)), (ish2 * rotation).real(), 3.0e-8);
           success *= isEqual(y_load[n], (ild * rotation).real(), 3.0e-8);
         }
 
@@ -1680,8 +1680,8 @@ namespace GridKit
         rational.initialize();
 
         // The rational shunt memories now belong to the terminal buses.
-        success *= (matrix.size() == 30);
-        success *= (rational.size() == 30);
+        success *= (matrix.size() == 24);
+        success *= (rational.size() == 24);
         success *= (rational.verify() == 0);
 
         AnalysisManager::Sundials::Ida<ScalarT, IdxT> ida_matrix(&matrix);
@@ -1717,14 +1717,12 @@ namespace GridKit
           }
           for (size_t n = 0; n < 3; ++n)
           {
-            const auto port1  = std::string("line_1_2_1_Ish_") + "abc"[n];
-            const auto port2  = std::string("line_1_2_2_Ish_") + "abc"[n];
-            success          *= isEqual(-rational.template component<BusT>("bus_1").outputSignal(port1).read(),
-                               -matrix.template component<BusT>("bus_1").outputSignal(port1).read()
+            success *= isEqual(rational.template component<BusT>("bus_1").template component<AdmittanceT>("line_1_2_1").output(static_cast<IdxT>(n)),
+                               matrix.template component<BusT>("bus_1").template component<AdmittanceT>("line_1_2_1").output(static_cast<IdxT>(n))
                                    + matrix.component("load_sh1").y().getData()[n],
                                agreement_tol);
-            success          *= isEqual(-rational.template component<BusT>("bus_2").outputSignal(port2).read(),
-                               -matrix.template component<BusT>("bus_2").outputSignal(port2).read()
+            success *= isEqual(rational.template component<BusT>("bus_2").template component<AdmittanceT>("line_1_2_2").output(static_cast<IdxT>(n)),
+                               matrix.template component<BusT>("bus_2").template component<AdmittanceT>("line_1_2_2").output(static_cast<IdxT>(n))
                                    + matrix.component("load_sh2").y().getData()[n],
                                agreement_tol);
           }

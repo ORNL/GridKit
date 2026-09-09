@@ -1,13 +1,36 @@
-gridkit_add_library(
-  emt_pwm
-  SOURCES Pwm.cpp
-  HEADERS Pwm.hpp PwmData.hpp
-  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
-  LINK_LIBRARIES
-    PUBLIC
-    GridKit::emt_core
-    PUBLIC
-    GridKit::emt_signal)
+# [[
+#  Author(s):
+#    - Luke Lowery <lukel@tamu.edu>
+# ]]
+
+set(_install_headers Pwm.hpp PwmData.hpp PwmDataJSONParser.hpp)
+
+if(GRIDKIT_ENABLE_ENZYME)
+  gridkit_add_library(
+    emt_pwm
+    SOURCES PwmEnzyme.cpp
+    HEADERS ${_install_headers}
+    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+    LINK_LIBRARIES
+      PUBLIC
+      GridKit::emt_core
+      PUBLIC
+      GridKit::emt_signal
+      PRIVATE
+      ClangEnzymeFlags
+    COMPILE_OPTIONS PRIVATE -fno-math-errno -fno-vectorize)
+else()
+  gridkit_add_library(
+    emt_pwm
+    SOURCES Pwm.cpp
+    HEADERS ${_install_headers}
+    INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+    LINK_LIBRARIES
+      PUBLIC
+      GridKit::emt_core
+      PUBLIC
+      GridKit::emt_signal)
+endif()
 
 gridkit_add_library(
   emt_pwm_dependency_tracking
@@ -19,6 +42,7 @@ gridkit_add_library(
     PUBLIC
     GridKit::emt_signal_dependency_tracking)
 
+# Link to interface target for all components
 target_link_libraries(
   emt_components
   INTERFACE GridKit::emt_pwm)
