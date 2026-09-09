@@ -19,8 +19,8 @@ namespace GridKit
 
       enum class PwmInputs : size_t
       {
-        ud,    ///< \f$u_d\f$ Converter voltage command [V]
-        uq,    ///< \f$u_q\f$ Converter voltage command [V]
+        ud,    ///< \f$u_d^{\mathrm{cmd}}\f$ Converter voltage command [V]
+        uq,    ///< \f$u_q^{\mathrm{cmd}}\f$ Converter voltage command [V]
         vdc,   ///< \f$v_{\mathrm{dc}}\f$ DC-link voltage [V]
         theta, ///< \f$\theta\f$ Electrical reference angle [rad]
         SIZE,
