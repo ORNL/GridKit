@@ -1,11 +1,9 @@
-# Inverter current and voltage control
+# Inverter power and current control
 
 `GFL` regulates terminal active and reactive power against a stiff grid using
 a terminal-voltage PLL and an inner inverter-side current controller.
-`GFM` regulates capacitor voltage against a stiff grid through
-cascaded voltage and current control. Both cases obtain frame angle and
-frequency from the terminal-voltage PLL through signal ports.
-Both use the same continuous PWM, converter, and physical LCL filter.
+Frame angle and frequency come from the terminal-voltage PLL through signal ports.
+The case uses continuous PWM, a converter, and a physical LCL filter.
 The [Filter](../../../GridKit/Model/EMT/Component/Filter/README.md) component
 connects the converter to the terminal Bus and supplies converter-side current,
 capacitor voltage, and grid-side current through its `i`, `vo`, and `ig` outputs.
@@ -13,17 +11,13 @@ capacitor voltage, and grid-side current through its `i`, `vo`, and `ig` outputs
 A constant 400 V signal feeds PWM and Converter, with 6 kHz centered PWM.
 The filter uses 2 mH / 0.2 Ω, 100 µF, and 1 mH / 0.1 Ω. Nominal voltage is 208 V
 line-to-line RMS at 60 Hz; dq quantities use the power-invariant Park transform.
-The current loop has a nominal 400 Hz bandwidth. The grid-connected voltage
-loop uses `Kp=0.1507964474` S, `Ki=2.131834551` S/s, and `Kaw=376.9911184` s⁻¹.
+The current loop has a nominal 400 Hz bandwidth.
 
 The power loop measures terminal Bus voltage and Filter `ig` in the same
 PLL frame. Its setpoints match the initial terminal P/Q, and its power errors
 are normalized by the rated voltage. The inverter-current limit is 30 A.
 The PLL gains are
 80 rad/s and 2500 rad/s²; the outer loop uses `Kp=0.01`, `Ki=40`, and `Kaw=200`.
-The voltage study scales both dq reference components to step capacitor-voltage
-magnitude from 208 V to 209 V at 0.04 s and restores 208 V at 0.12 s. Its grid voltage matches
-the initial terminal phasor (206.93 V line-to-line RMS).
 Initial states are fundamental operating-point estimates; switching ripple
 develops during startup. See the [cases](../../../cases/EMT/CurrentControl/README.md)
 for connections and initialization.
@@ -38,8 +32,7 @@ python3 examples/EMT/CurrentControl/run.py
 python3 examples/EMT/CurrentControl/plot.py
 ```
 
-Compare resolved switching and broad smoothing over the same 0.2 s window,
-including the voltage-reference step and return:
+Compare resolved switching and broad smoothing over the same 0.2 s window:
 
 ```bash
 python3 examples/EMT/CurrentControl/run.py --tmax 0.2
@@ -51,8 +44,8 @@ python3 examples/EMT/CurrentControl/plot.py --compare simulation-smooth
 carrier-period mean. The logistic 10–90% width is 4.39 µs at `1000000`
 and 18.3 ms at `240`. The circuit and controller parameters are unchanged.
 
-`--scenario GFL` or `--scenario GFM` selects one study. `--exe` selects the
-executable; output and comparison paths are relative to this example.
+`--exe` selects the executable; output and comparison paths are relative to
+this example.
 The plotter uses the common available interval, or its `--tmax` option,
 and gives corresponding panels identical x- and y-axis limits.
 The PWM and bridge figure shows the final six carrier periods so individual
@@ -66,29 +59,21 @@ CSV waveforms may be removed after plotting; the plotter also reads NPZ files.
 Plot | Resolved switching | Broad smoothing
 ---- | ------------------ | ---------------
 Current tracking | [GFL](simulation/GFL.png) | [GFL](simulation-smooth/GFL.png)
-Voltage control | [GFM](simulation/GFM.png) | [GFM](simulation-smooth/GFM.png)
 PWM and bridge | [Switching](simulation/switching.png) | [Switching](simulation-smooth/switching.png)
 Fourier amplitudes | [Harmonics](simulation/harmonics.png) | [Harmonics](simulation-smooth/harmonics.png)
 
 ## Regression coverage
 
 The continuous-PWM unit fixture checks duty mean, the smoothing-to-switching
-transition, and input values and gradients at the same evaluation time. These
-examples report closed-loop behavior without prescribing exact transients or solver steps.
+transition, and input values and gradients at the same evaluation time. This
+example reports closed-loop behavior without prescribing exact transients or solver steps.
 
-`validate.py` runs the GFL model against the analytic high-voltage LCL solution
-for prescribed dq grid current. It checks broad smoothing and resolved
-switching, and is registered as `EMTGflPowerControl`.
-`--scenario GFM` checks phase-domain voltage tracking, PLL
-alignment and frequency, and current limiting before, during, and after the
-reference step, in both PWM resolutions. Its 0.5 s validation window checks
-settled tracking within 0.05 V and transient cycle means within 0.2 V of
-the reference. It is registered as
-`EMTPLLVoltageControl`. Both validators use only the Python standard library.
+`validate.py` runs the GFL model against the balanced LCL solution for prescribed
+terminal P/Q. It checks broad smoothing and resolved switching, uses only the
+Python standard library, and is registered as `EMTGflPowerControl`.
 
 ```bash
 python3 examples/EMT/CurrentControl/validate.py --exe build/application/EMT/EMTDynamicSimulation
-python3 examples/EMT/CurrentControl/validate.py --exe build/application/EMT/EMTDynamicSimulation --scenario GFM
 ```
 
 The validator uses the balanced LCL solution for the specified terminal P/Q

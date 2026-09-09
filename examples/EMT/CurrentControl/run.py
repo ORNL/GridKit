@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the current-control examples at a selected PWM resolution."""
+"""Run the current-control example at a selected PWM resolution."""
 import argparse
 import hashlib
 import json
@@ -55,7 +55,6 @@ def run(name, exe, output, overrides):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--exe', type=Path, default=HERE.parents[2] / 'build/application/EMT/EMTDynamicSimulation')
-    parser.add_argument('--scenario', choices=['GFL', 'GFM'])
     parser.add_argument('--output', type=Path, default=Path('simulation'), help='Output directory, relative to this example')
     parser.add_argument('--mu', type=float, help='PWM smoothing sharpness [1/s]')
     parser.add_argument('--tmax', type=float, help='Final time [s]')
@@ -68,8 +67,7 @@ def main():
     if output == HERE:
         parser.error('Use a separate output directory')
     output.mkdir(parents=True, exist_ok=True)
-    for name in [args.scenario] if args.scenario else ['GFL', 'GFM']:
-        run(name, args.exe.resolve(), output, overrides)
+    run('GFL', args.exe.resolve(), output, overrides)
 
 
 if __name__ == '__main__':
