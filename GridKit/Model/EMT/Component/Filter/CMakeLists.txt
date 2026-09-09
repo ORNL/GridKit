@@ -21,9 +21,7 @@ if(GRIDKIT_ENABLE_ENZYME)
     COMPILE_OPTIONS
       PRIVATE
       -mllvm
-      # Enzyme 16 crashes while lowering automatic sparsity for the coupled
-      # LCL rows. SparseJacobian still uses its explicit sparse callbacks.
-      -enzyme-auto-sparsity=0
+      -enzyme-auto-sparsity=1
       -fno-math-errno
       -fno-vectorize)
 else()

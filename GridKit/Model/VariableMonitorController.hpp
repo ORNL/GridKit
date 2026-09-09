@@ -170,18 +170,44 @@ namespace GridKit
        */
       void print() const
       {
-        for (auto&& sink : sinks_)
+        auto same_format = [](const auto& left, const auto& right)
         {
-          std::visit([this](auto&& sink)
-                     {
-              this->printFull(*sink.os, sink.format);
-              using T = std::remove_cvref_t<decltype(sink)>;
-              if constexpr (std::is_same_v<T, Sink<Json>>)
-              {
-                sink.format.after_first = true;
-              } },
-                     sink);
+          return std::visit([](const auto& a, const auto& b)
+                            {
+            using A = std::remove_cvref_t<decltype(a)>;
+            using B = std::remove_cvref_t<decltype(b)>;
+            if constexpr (!std::is_same_v<A, B>)
+              return false;
+            else if constexpr (std::is_same_v<A, Sink<Csv>>)
+              return a.format.delim == b.format.delim;
+            else if constexpr (std::is_same_v<A, Sink<Json>>)
+              return a.format.after_first == b.format.after_first;
+            else
+              return true; },
+                            left,
+                            right);
+        };
+        for (size_t i = 0; i < sinks_.size(); ++i)
+        {
+          bool printed = false;
+          for (size_t j = 0; j < i; ++j)
+            printed |= same_format(sinks_[i], sinks_[j]);
+          if (printed)
+            continue;
+          buffer_.clear();
+          std::visit([this](const auto& sink)
+                     { append(buffer_, sink.format); },
+                     sinks_[i]);
+          buffer_ += '\n';
+          for (size_t j = i; j < sinks_.size(); ++j)
+            if (same_format(sinks_[i], sinks_[j]))
+              std::visit([this](const auto& sink)
+                         { sink.os->write(buffer_.data(), static_cast<std::streamsize>(buffer_.size())); },
+                         sinks_[j]);
         }
+        for (const auto& sink : sinks_)
+          if (const auto* json = std::get_if<Sink<Json>>(&sink))
+            json->format.after_first = true;
       }
 
       /**
@@ -243,11 +269,11 @@ namespace GridKit
 
       void append(std::string& out, Csv csv) const override
       {
-        out += VariableMonitorDetail::formatReal(*time_);
+        VariableMonitorDetail::appendReal(out, *time_);
         for (auto&& var : variables_)
         {
           out += csv.delim;
-          out += VariableMonitorDetail::formatReal(*var.value);
+          VariableMonitorDetail::appendReal(out, *var.value);
         }
 
         for (auto* mon : monitors_)

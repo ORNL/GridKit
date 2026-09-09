@@ -55,6 +55,8 @@ and 18.3 ms at `240`. The circuit and controller parameters are unchanged.
 executable; output and comparison paths are relative to this example.
 The plotter uses the common available interval, or its `--tmax` option,
 and gives corresponding panels identical x- and y-axis limits.
+The PWM and bridge figure shows the final six carrier periods so individual
+switching pulses are visible.
 
 Each run retains its effective inputs, hashes, waveforms, log, and IDA statistics.
 The plotter writes PNG/PDF figures, compressed waveforms, and `summary.json`

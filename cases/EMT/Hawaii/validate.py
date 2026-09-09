@@ -25,7 +25,7 @@ def conversion_checks(case, state, report):
     expected = {'Machine': 30, 'Tgov1': 30, 'Ieeet1': 30, 'Ieeest': 14,
                 'LineLumped': 77, 'Transformer': 12, 'LoadZ': 29, 'Switch': 2,
                 'PLL': 9, 'OuterPowerControl': 9, 'InnerCurrentControl': 9,
-                'PWM': 9, 'Converter': 9, 'DCLink': 9, 'Filter': 9, 'Park': 36}
+                'PWM': 9, 'Converter': 9, 'DCLink': 9, 'Filter': 9, 'Park': 27}
     for kind, count in expected.items():
         require(counts[kind] == count, f'{kind} count: {counts[kind]} != {count}')
     require(not counts['Regfma'] and not counts['REGFMA'], 'Unexpected REGFMA replacement')
@@ -57,8 +57,8 @@ def conversion_checks(case, state, report):
     for plant, data in report['inverters'].items():
         filt, pll, inner, outer, bridge, dc = (devices[plant + suffix] for suffix in
                                              ('_filter', '_pll', '_inner', '_power', '_bridge', '_dc'))
-        voltage, current, grid_current, inverse = (devices[plant + suffix] for suffix in
-                                                  ('_voltage', '_current', '_grid_current', '_inverse'))
+        voltage, current, grid_current, pwm = (devices[plant + suffix] for suffix in
+                                               ('_voltage', '_current', '_grid_current', '_pwm'))
         require(filt['inputs']['e'] == bridge['outputs']['e'], 'Bridge voltage must drive its Filter')
         require(bridge['inputs']['i'] == current['inputs']['input'] == filt['outputs']['i'],
                 'Bridge and inner loop must read converter-side current')
@@ -68,15 +68,16 @@ def conversion_checks(case, state, report):
         require(outer['inputs']['i'] == grid_current['outputs']['out'][:2], 'Outer-loop grid-current feedback')
         require(inner['inputs']['i'] == current['outputs']['out'][:2], 'Inner-loop converter-current feedback')
         require(inner['inputs']['v'] == voltage['outputs']['out'][:2], 'Inner-loop capacitor-voltage feedback')
-        require(all(p['inputs']['theta'] == pll['outputs']['theta'] for p in (voltage, current, grid_current, inverse)),
-                'Park transforms must share the PLL angle')
+        require(all(p['inputs']['theta'] == pll['outputs']['theta'] for p in (voltage, current, grid_current, pwm)),
+                'Park transforms and PWM must share the PLL angle')
+        require(pwm['inputs']['u'] == inner['outputs']['u'], 'PWM voltage command')
+        require(bridge['inputs']['s'] == pwm['outputs']['s'], 'Bridge switching input')
         require(inner['inputs']['omega'] == pll['outputs']['omega'], 'Inner loop must use PLL frequency')
         require(outer['inputs']['ilim'] == inner['outputs']['ilim']
                 and inner['inputs']['icmd'] == outer['outputs']['icmd'], 'Outer-loop anti-windup connection')
         require(dc['inputs']['idc'] == bridge['outputs']['idc'], 'DC current feedback')
-        modulation = devices[plant + '_modulation']
-        require(dc['outputs']['vdc'] == modulation['inputs']['vdc'] == bridge['inputs']['vdc'], 'Shared DC voltage')
-        require(inner['inputs']['ulim'] == modulation['outputs']['ulim'], 'Limited voltage feedback')
+        require(dc['outputs']['vdc'] == pwm['inputs']['vdc'] == bridge['inputs']['vdc'], 'Shared DC voltage')
+        require(inner['inputs']['ulim'] == pwm['outputs']['ulim'], 'Limited voltage feedback')
         initial = state['devices'][filt['id']]
         v = phasor(state['buses'][filt['inputs']['bus']], 'v')
         vo, i, ig = (phasor(initial, key) for key in ('vo', 'i', 'ig'))

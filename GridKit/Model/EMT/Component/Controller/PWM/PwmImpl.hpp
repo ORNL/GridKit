@@ -173,7 +173,6 @@ namespace GridKit
         fc_                = parameter<RealT>(data, Parameter::fc, missing);
         alignment_         = parameter<RealT>(data, Parameter::alignment, RealT{0.5});
         Mmax_              = parameter<RealT>(data, Parameter::Mmax, RealT{1});
-        horizon_           = std::log(4 / std::numeric_limits<RealT>::epsilon()) / Math::MU<RealT>;
         if (Mmax_ > ZERO<RealT>)
         {
           au_ = RealT{8} / (RealT{3} * Mmax_ * Mmax_);
@@ -183,13 +182,11 @@ namespace GridKit
                             && std::isfinite(1 / fc_)
                             && std::isfinite(alignment_) && alignment_ >= 0 && alignment_ <= 1
                             && std::isfinite(Mmax_) && Mmax_ > 0 && Mmax_ <= 1
-                            && std::isfinite(horizon_) && horizon_ > 0
-                            && horizon_ * fc_ < static_cast<RealT>(std::numeric_limits<long long>::max() / 2);
+                            && std::isfinite(au_) && au_ > 0
+                            && std::isfinite(Math::MU<RealT>) && Math::MU<RealT> > 0;
         sinusoidal_parameters_valid_ = parameters_valid_ && std::isfinite(M_) && M_ >= 0 && M_ <= 1
                                        && std::isfinite(fm_) && fm_ > 0 && fc_ > fm_
                                        && std::isfinite(1 / fm_);
-        if (parameters_valid_)
-          replica_decay_ = std::exp(-Math::MU<RealT> / fc_);
       }
 
       template <typename scalar_type, typename index_type>
@@ -231,30 +228,42 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      auto Pwm<scalar_type, index_type>::fraction() const -> std::array<ScalarT, 2>
+      auto Pwm<scalar_type, index_type>::inputValues() const -> std::array<ScalarT, 4>
       {
-        const ScalarT vdc = input_[2]->read();
-        if (!std::isfinite(static_cast<RealT>(vdc)) || static_cast<RealT>(vdc) < ZERO<RealT>)
-          throw std::domain_error("PWM: DC voltage must be finite and nonnegative");
-        const ScalarT ud = input_[0]->read();
-        const ScalarT uq = input_[1]->read();
-        if (!std::isfinite(static_cast<RealT>(ud)) || !std::isfinite(static_cast<RealT>(uq))
-            || !std::isfinite(static_cast<RealT>(input_[3]->read())))
-          throw std::domain_error("PWM: voltage command and angle inputs must be finite");
-        // Radial limit of the command against the available DC voltage.
-        const ScalarT scale = std::sqrt(Math::max(vdc * vdc, au_ * (ud * ud + uq * uq)));
-        return {ud / scale, uq / scale};
+        std::array<ScalarT, 4> values{};
+        for (size_t n = 0; n < values.size(); ++n)
+        {
+          values[n] = input_[n]->read();
+          if (!std::isfinite(static_cast<RealT>(values[n])))
+            throw std::domain_error("PWM: voltage command, DC voltage, and angle must be finite");
+        }
+        if (static_cast<RealT>(values[2]) < ZERO<RealT>)
+          throw std::domain_error("PWM: DC voltage must be nonnegative");
+        return values;
+      }
+
+      template <typename scalar_type, typename index_type>
+      auto Pwm<scalar_type, index_type>::fraction(const ScalarT* input) const -> std::array<ScalarT, 2>
+      {
+        const ScalarT scale = std::sqrt(Math::max(input[2] * input[2], au_ * (input[0] * input[0] + input[1] * input[1])));
+        return {input[0] / scale, input[1] / scale};
+      }
+
+      template <typename scalar_type, typename index_type>
+      auto Pwm<scalar_type, index_type>::phaseModulation(size_t phase, const ScalarT* input) const -> ScalarT
+      {
+        const auto w      = fraction(input);
+        const auto matrix = Park<ScalarT, IdxT>::template transformation<ScalarT>(input[3]);
+        return ScalarT{2} * (matrix[0][phase] * w[0] + matrix[1][phase] * w[1]);
       }
 
       template <typename scalar_type, typename index_type>
       auto Pwm<scalar_type, index_type>::modulation(size_t phase) const -> ScalarT
       {
+        if (phase >= 3 || verify() != 0 || !std::isfinite(this->time_))
+          throw std::domain_error("PWM: invalid modulation phase, configuration, or time");
         if (hasInput())
-        {
-          const auto w      = fraction();
-          const auto matrix = Park<ScalarT, IdxT>::template transformation<ScalarT>(input_[3]->read());
-          return ScalarT{2} * (matrix[0][phase] * w[0] + matrix[1][phase] * w[1]);
-        }
+          return phaseModulation(phase, inputValues().data());
         const RealT                pi = std::numbers::pi_v<RealT>;
         const std::array<RealT, 3> phi{0, -2 * pi / 3, 2 * pi / 3};
         return ScalarT{M_ * std::sin(2 * pi * fm_ * std::remainder(this->time_, 1 / fm_) + phi[phase])};
@@ -279,132 +288,41 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      auto Pwm<scalar_type, index_type>::output(Outputs output) const -> ScalarT
+      auto Pwm<scalar_type, index_type>::switching(ScalarT duty) const -> ScalarT
       {
-        const auto index = static_cast<size_t>(output);
-        if (index >= output_port_.size() || verify() != 0 || !std::isfinite(this->time_))
-        {
-          throw std::domain_error("Cannot evaluate PWM with invalid parameters, time, or output");
-        }
-        if (index >= 3)
-        {
-          if (!hasInput())
-            throw std::domain_error("PWM: the limited voltage command requires the voltage command inputs");
-          return input_[2]->read() * fraction()[index - 3];
-        }
-        const auto  duty  = (1 + modulation(index)) / 2;
-        const RealT tc    = 1 / fc_;
-        const RealT t     = std::remainder(this->time_, tc);
-        const auto  first = static_cast<long long>(std::floor((t - horizon_) * fc_));
-        const auto  last  = static_cast<long long>(std::floor((t + horizon_) * fc_));
-        const RealT mu    = Math::MU<RealT>;
-        const auto  on    = alignment_ * (1 - duty) * tc;
-        const auto  off   = (alignment_ + (1 - alignment_) * duty) * tc;
-
-        // Evaluate the nearest pulse directly; the remaining replicas form two tails.
-        const auto center = std::clamp(
-            static_cast<long long>(std::round((t - static_cast<RealT>((on + off) / 2)) * fc_)),
-            first,
-            last);
-        const auto width = mu * duty * tc;
-        const auto r     = std::exp(-width);
-        const auto h     = std::tanh(width / 2);
-        const auto span  = 2 * h / (1 + h); // Stable 1 - exp(-width).
-
-        ScalarT                        sum = pulse(duty, t - static_cast<RealT>(center) * tc);
-        ScalarT                        correction{0};
-        const std::array<long long, 2> count{center - first, last - center};
-        const std::array<ScalarT, 2>   distance{
-            t - static_cast<RealT>(center - 1) * tc - off,
-            static_cast<RealT>(center + 1) * tc + on - t};
-
-        for (size_t side = 0; side < count.size(); ++side)
-        {
-          if (count[side] == 0)
-            continue;
-          auto z = std::exp(-mu * distance[side]);
-          for (long long k = 0; k < count[side]; ++k)
-          {
-            const auto term  = z * span / ((1 + z) * (1 + z * r)) - correction;
-            const auto next  = sum + term;
-            correction       = (next - sum) - term;
-            sum              = next;
-            z               *= replica_decay_;
-          }
-        }
+        const RealT resolution = Math::MU<RealT> / fc_;
+        // The omitted periodic ripple is below double roundoff.
+        if (resolution < RealT{0.4})
+          return duty;
+        const int   radius = resolution >= RealT{16} ? 4 : (resolution >= RealT{4} ? 16 : 127);
+        const RealT tc     = 1 / fc_;
+        const RealT t      = std::remainder(this->time_, tc);
+        ScalarT     sum{0};
+        for (int k = -radius; k <= radius; ++k)
+          sum += pulse(duty, t - k * tc);
         return sum;
       }
 
       template <typename scalar_type, typename index_type>
-      void Pwm<scalar_type, index_type>::appendOutputGradient(
-          Outputs output, typename SignalT::GradientT& gradient, RealT scale) const
+      auto Pwm<scalar_type, index_type>::evaluateOutput(Outputs output, const ScalarT* input) const -> ScalarT
+      {
+        const auto index = static_cast<size_t>(output);
+        if (index >= 3)
+          return input[2] * fraction(input)[index - 3];
+        return switching((ScalarT{1} + phaseModulation(index, input)) / 2);
+      }
+
+      template <typename scalar_type, typename index_type>
+      auto Pwm<scalar_type, index_type>::output(Outputs output) const -> ScalarT
       {
         const auto index = static_cast<size_t>(output);
         if (index >= output_port_.size() || verify() != 0 || !std::isfinite(this->time_))
-          throw std::domain_error("Cannot differentiate PWM with invalid parameters, time, or output");
-        if (!hasInput())
-          return;
-        // Limiter geometry: w = u / sqrt(max(vdc^2, a_u |u|^2)) with a logistic gate on the smooth maximum.
-        const RealT                vdc = static_cast<RealT>(input_[2]->read());
-        const std::array<RealT, 2> u{static_cast<RealT>(input_[0]->read()), static_cast<RealT>(input_[1]->read())};
-        const RealT                radius = au_ * (u[0] * u[0] + u[1] * u[1]);
-        const RealT                square = Math::max(vdc * vdc, radius);
-        const RealT                norm   = std::sqrt(square);
-        const RealT                gate   = Math::sigmoid(radius - vdc * vdc);
-        const std::array<RealT, 2> w{u[0] / norm, u[1] / norm};
-        const auto                 fraction_command = [&](size_t k, size_t j)
-        {
-          RealT partial = -w[k] * gate * au_ * u[j] / square;
-          if (k == j)
-          {
-            partial += 1 / norm;
-          }
-          return partial;
-        };
-        const auto fraction_dc = [&](size_t k)
-        {
-          return -w[k] * (1 - gate) * vdc / square;
-        };
+          throw std::domain_error("PWM: invalid output, configuration, or time");
+        if (hasInput())
+          return evaluateOutput(output, inputValues().data());
         if (index >= 3)
-        {
-          const size_t k = index - 3;
-          for (size_t j = 0; j < 2; ++j)
-            input_[j]->appendGradient(gradient, scale * vdc * fraction_command(k, j));
-          input_[2]->appendGradient(gradient, scale * (w[k] + vdc * fraction_dc(k)));
-          return;
-        }
-        // Switching function: pulse slope, then the inverse Park transform and the limiter.
-        const size_t phase = index;
-        const RealT  duty  = (1 + static_cast<RealT>(modulation(phase))) / 2;
-        const RealT  tc    = 1 / fc_;
-        const RealT  t     = std::remainder(this->time_, tc);
-        const RealT  on    = alignment_ * (1 - duty) * tc;
-        const RealT  off   = (alignment_ + (1 - alignment_) * duty) * tc;
-        const auto   first = static_cast<long long>(std::floor((t - horizon_) * fc_));
-        const auto   last  = static_cast<long long>(std::floor((t + horizon_) * fc_));
-        RealT        derivative{0};
-        for (auto k = first; k <= last; ++k)
-        {
-          const RealT local  = t - static_cast<RealT>(k) * tc;
-          const RealT a      = Math::sigmoid(-std::abs(local - on));
-          const RealT b      = Math::sigmoid(-std::abs(local - off));
-          derivative        += alignment_ * a * (1 - a) + (1 - alignment_) * b * (1 - b);
-        }
-        const RealT slope  = scale * tc * Math::MU<RealT> * derivative / 2;
-        const auto  matrix = Park<ScalarT, IdxT>::template transformation<RealT>(static_cast<RealT>(input_[3]->read()));
-        for (size_t j = 0; j < 2; ++j)
-        {
-          RealT partial{0};
-          for (size_t k = 0; k < 2; ++k)
-            partial += matrix[k][phase] * 2 * fraction_command(k, j);
-          input_[j]->appendGradient(gradient, slope * partial);
-        }
-        RealT dc_partial{0};
-        for (size_t k = 0; k < 2; ++k)
-          dc_partial += matrix[k][phase] * 2 * fraction_dc(k);
-        input_[2]->appendGradient(gradient, slope * dc_partial);
-        // The angle derivative of the cosine row is the sine row and vice versa.
-        input_[3]->appendGradient(gradient, slope * 2 * (matrix[1][phase] * w[0] - matrix[0][phase] * w[1]));
+          throw std::logic_error("PWM: limited voltage requires voltage command inputs");
+        return switching((ScalarT{1} + modulation(index)) / 2);
       }
     } // namespace Controller
   } // namespace EMT

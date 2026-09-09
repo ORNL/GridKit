@@ -153,13 +153,13 @@ def mu_label(mu):
     return rf'$\mu={value}\,\mathrm{{s}}^{{-1}}$'
 
 
-def time_axes(axes, run, end):
+def time_axes(axes, run, end, begin=0):
     for ax in axes:
-        ax.ticklabel_format(axis='y', style='plain', useOffset=False)
-        ax.set_xlim(0, end)
-        ax.set_xticks(np.linspace(0, end, 6))
+        ax.ticklabel_format(axis='both', style='plain', useOffset=False)
+        ax.set_xlim(begin, end)
+        ax.set_xticks(np.linspace(begin, end, 6))
         for event in run['solver']['events']:
-            if event['time'] <= end:
+            if begin <= event['time'] <= end:
                 ax.axvline(event['time'], color=GREY, linewidth=.7, linestyle=':')
         ax.legend(loc='upper right', ncol=3, fontsize=9)
     axes[-1].set_xlabel('Time [s]')
@@ -202,19 +202,21 @@ def control_figure(run, end):
 
 
 def switching_figure(run, prediction, end):
-    d = run['data']
+    begin = max(0, end - 6 / run['fc'])
+    mask = (run['data']['t'] >= begin) & (run['data']['t'] <= end)
+    d = {key: value[mask] for key, value in run['data'].items()}
     fig, ax = plt.subplots(3, 1, figsize=(10, 7), sharex=True)
     ax[0].plot(d['t'], d['PWM_pwm_sa'], color=BLUE, label='$s_a$')
-    ax[0].plot(d['t'], prediction[:, 0], '--', color=ORANGE, label='continuous PWM reference')
+    ax[0].plot(d['t'], prediction[mask, 0], '--', color=ORANGE, label='continuous PWM reference')
     ax[0].set_ylabel('Switching function [−]')
-    ax[0].set_title(f'{run["fc"]:g} Hz PWM, PLL-synchronized voltage control, {mu_label(run["mu"])}')
+    ax[0].set_title(f'{run["fc"]:g} Hz PWM, {run["name"]}, {mu_label(run["mu"])}')
     ax[1].plot(d['t'], d['Converter_bridge_ea'], color=BLUE, label=r'bridge $e_a$')
     ax[1].plot(d['t'], d['Filter_filter_voa'], color=ORANGE, label=r'capacitor $v_{\mathrm{o},a}$')
     ax[1].set_ylabel('Phase voltage [V]')
     ax[2].plot(d['t'], d['Filter_filter_ia'], color=BLUE, label='inverter-side $i_a$')
     ax[2].plot(d['t'], d['Filter_filter_iga'], color=ORANGE, label='grid-side $i_{g,a}$')
     ax[2].set_ylabel('Phase current [A]')
-    time_axes(ax, run, end)
+    time_axes(ax, run, end, begin)
     return fig
 
 

@@ -19,5 +19,5 @@ for mu in [200000., 1000.]:
         x, y = .5 * mu / fc * (phase - on - k), .5 * mu / fc * (phase - off - k)
         s += .5 * (np.tanh(x) - np.tanh(y))
     columns.extend(s.T)
-np.savetxt(HERE / 'diagram.dat', np.column_stack(columns), fmt='%.12g',
+np.savetxt(HERE / 'waveforms.dat', np.column_stack(columns), fmt='%.12g',
            header='t sa_top sb_top sc_top sa_bottom sb_bottom sc_bottom', comments='')

@@ -29,7 +29,7 @@ namespace GridKit
     namespace VariableMonitorDetail
     {
       template <typename RealT>
-      std::string formatReal(RealT value)
+      void appendReal(std::string& out, RealT value)
       {
         std::array<char, 128> buffer{};
         constexpr auto        precision = std::numeric_limits<RealT>::digits10 + 1;
@@ -42,13 +42,14 @@ namespace GridKit
 
         if (ec == std::errc{})
         {
-          return std::string(buffer.data(), ptr);
+          out.append(buffer.data(), ptr);
+          return;
         }
 
         std::ostringstream os;
         os.precision(precision);
         os << std::scientific << value;
-        return os.str();
+        out += os.str();
       }
     } // namespace VariableMonitorDetail
 

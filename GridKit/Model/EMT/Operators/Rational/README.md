@@ -1,11 +1,7 @@
 # Rational Operators
 
-Rational operators represent fitted transfer functions with real runtime
-states. The shared `Rational` implementation evaluates residuals, initializes
-memory states, and assembles the exact linear Jacobian, including gradients of
-computed algebraic input signals. It supports rectangular input/output maps;
-three-phase components use the same implementation with three inputs and
-three outputs.
+Rational operators represent fitted transfer functions with real states and
+rectangular input/output maps.
 
 ## Models
 
@@ -19,4 +15,4 @@ inversion. Consumers impose their own physical constraints on the coefficients.
 An output may be read through `output()` and `appendOutputGradient()` without
 a residual destination. A bound output destination receives the operator
 contribution in its equation. Computed current outputs require zero derivative
-feedthrough; derivative-dependent shunts retain their explicit current equation.
+feedthrough; derivative-dependent outputs contribute to residual equations.

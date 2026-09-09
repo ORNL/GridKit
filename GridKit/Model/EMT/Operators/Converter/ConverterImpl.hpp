@@ -163,38 +163,26 @@ namespace GridKit
       {
         throw std::logic_error("Cannot evaluate an unconnected Converter or invalid output");
       }
-      const ABCVector<ScalarT> switching{input_[0]->read(), input_[1]->read(), input_[2]->read()};
+      std::array<ScalarT, 7> values{};
+      for (size_t n = 0; n < 3; ++n)
+        values[n] = input_[n]->read();
       if (output == Outputs::idc)
-        return dcCurrent(switching, {input_[4]->read(), input_[5]->read(), input_[6]->read()});
-      return voltage(switching, input_[3]->read())[index];
+      {
+        for (size_t n = 4; n < values.size(); ++n)
+          values[n] = input_[n]->read();
+      }
+      else
+        values[3] = input_[3]->read();
+      return evaluateOutput(output, values.data());
     }
 
     template <typename scalar_type, typename index_type>
-    void Converter<scalar_type, index_type>::appendOutputGradient(
-        Outputs output, typename SignalT::GradientT& gradient, RealT scale) const
+    auto Converter<scalar_type, index_type>::evaluateOutput(Outputs output, const ScalarT* input) const -> ScalarT
     {
-      if (verify() != 0)
-      {
-        throw std::logic_error("Cannot differentiate an unconnected Converter");
-      }
-      const auto unit_voltage = voltage({input_[0]->read(), input_[1]->read(), input_[2]->read()}, ScalarT{1});
+      const ABCVector<ScalarT> switching{input[0], input[1], input[2]};
       if (output == Outputs::idc)
-      {
-        const auto current = voltage({input_[4]->read(), input_[5]->read(), input_[6]->read()}, ScalarT{1});
-        for (size_t n = 0; n < 3; ++n)
-        {
-          input_[n]->appendGradient(gradient, scale * static_cast<RealT>(current[n]));
-          input_[n + 4]->appendGradient(gradient, scale * static_cast<RealT>(unit_voltage[n]));
-        }
-        return;
-      }
-      const auto  phase = static_cast<size_t>(output);
-      const RealT vdc   = static_cast<RealT>(input_[3]->read());
-      for (size_t n = 0; n < 3; ++n)
-      {
-        input_[n]->appendGradient(gradient, scale * vdc * (n == phase ? RealT{2} : RealT{-1}) / 3);
-      }
-      input_[3]->appendGradient(gradient, scale * static_cast<RealT>(unit_voltage[phase]));
+        return dcCurrent(switching, {input[4], input[5], input[6]});
+      return voltage(switching, input[3])[static_cast<size_t>(output)];
     }
   } // namespace EMT
 } // namespace GridKit

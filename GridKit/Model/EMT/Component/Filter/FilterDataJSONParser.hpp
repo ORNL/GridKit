@@ -1,3 +1,9 @@
+/**
+ * @file FilterDataJSONParser.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ *
+ */
+
 #pragma once
 
 #include <GridKit/Model/EMT/Component/Filter/FilterData.hpp>
@@ -19,7 +25,12 @@ namespace GridKit
       expandPhaseMonitor(j, "i", {"ia", "ib", "ic"});
       expandPhaseMonitor(j, "vo", {"voa", "vob", "voc"});
       expandPhaseMonitor(j, "ig", {"iga", "igb", "igc"});
-      using BaseT = ComponentData<RealT, IdxT, FilterParameters, FilterInputs, FilterOutputs, FilterMonitorableVariables>;
+      using BaseT = ComponentData<RealT,
+                                  IdxT,
+                                  FilterParameters,
+                                  FilterInputs,
+                                  FilterOutputs,
+                                  FilterMonitorableVariables>;
       from_json(j, static_cast<BaseT&>(data));
     }
   } // namespace EMT

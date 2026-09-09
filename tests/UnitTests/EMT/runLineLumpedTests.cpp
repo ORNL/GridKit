@@ -7,6 +7,7 @@ int main()
   GridKit::Testing::LineLumpedTests<double, size_t> test;
 
   result += test.nortonTerminals();
+  result += test.directShunts();
   result += test.wiring();
   result += test.residual();
 #ifdef GRIDKIT_ENABLE_ENZYME

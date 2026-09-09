@@ -55,6 +55,7 @@ namespace GridKit
       /// Publish a bridge output on a named scalar signal. No DAE index is assigned.
       void    assignOutput(Outputs output, SignalT* signal);
       ScalarT output(Outputs output) const;
+      ScalarT evaluateOutput(Outputs output, const ScalarT* input) const;
       void    attachInput(const std::array<SignalT*, 3>& switching, SignalT* vdc, const std::array<SignalT*, 3>& current);
 
       SignalT& outputSignal(Outputs output)

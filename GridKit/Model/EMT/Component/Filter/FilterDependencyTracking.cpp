@@ -1,3 +1,9 @@
+/**
+ * @file FilterDependencyTracking.cpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ *
+ */
+
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 
 #include "FilterImpl.hpp"
