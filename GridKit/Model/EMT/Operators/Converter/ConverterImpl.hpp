@@ -82,6 +82,47 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
+    typename Component<scalar_type, index_type>::InitializationPortsT Converter<scalar_type, index_type>::initializationPorts()
+    {
+      typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+      ports.inputs  = {input_[3]};
+      ports.targets = {input_[0], input_[1], input_[2]};
+      for (size_t n = 0; n < output_port_.size(); ++n)
+      {
+        const auto name = std::string(magic_enum::enum_name(static_cast<Outputs>(n)));
+        ports.outputs.emplace(name, &output_port_[n]);
+        if (assigned_output_[n])
+          ports.outputs.emplace(name, assigned_output_[n]);
+      }
+      return ports;
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Converter<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
+    {
+      if (initial.omega() == ZERO<RealT>)
+        return;
+      const auto  outputs = this->template parseInitialOutputs<Converter>(initial.outputs(*this));
+      const RealT vdc     = initial.value(*input_[3]);
+      if (vdc <= ZERO<RealT>)
+        throw std::invalid_argument("Converter: balanced initialization requires positive DC voltage");
+      ABCVector<RealT> e;
+      for (size_t p = 0; p < 3; ++p)
+      {
+        const auto key = static_cast<Outputs>(p);
+        if (!outputs.contains(key))
+          throw std::invalid_argument("Converter: balanced initialization requires ea, eb and ec");
+        e[p] = outputs.at(key);
+        initial.provide(output_port_[p], e[p]);
+      }
+      const RealT scale = std::max({ONE<RealT>, std::abs(e[0]), std::abs(e[1]), std::abs(e[2])});
+      if (std::abs(e[0] + e[1] + e[2]) > RealT{1e-10} * scale)
+        throw std::invalid_argument("Converter: bridge voltage must have zero common mode");
+      for (size_t p = 0; p < 3; ++p)
+        initial.require(*input_[p], HALF<RealT> + e[p] / vdc, *this);
+    }
+
+    template <typename scalar_type, typename index_type>
     int Converter<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
     {
       this->validateOutputValues(outputs);

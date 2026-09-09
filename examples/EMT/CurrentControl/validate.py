@@ -32,6 +32,11 @@ def wiring_checks(case):
     if outer['class'] == 'OuterVoltageControl':
         assert outer['inputs']['v'] == voltage['outputs']['out'][:2]
         assert outer['inputs']['omega'] == pll['outputs']['omega']
+    else:
+        terminal_voltage = devices['terminal_voltage']
+        assert terminal_voltage['inputs']['input'] == [bus['outputs']['v' + p] for p in 'abc']
+        assert outer['inputs']['v'] == terminal_voltage['outputs']['out'][:2]
+        assert terminal_voltage['inputs']['theta'] == pll['outputs']['theta']
     assert all(d['inputs']['theta'] == pll['outputs']['theta'] for d in (voltage, current, grid_current, pwm))
     assert inner['inputs']['omega'] == pll['outputs']['omega']
     assert pwm['inputs']['u'] == inner['outputs']['u']
@@ -44,22 +49,22 @@ def wiring_checks(case):
     assert constants[bridge['inputs']['vdc']] > 0
 
 
-def steady_state(case, irefd, irefq):
-    """Balanced LCL solution with supplied current in the terminal-voltage frame."""
+def steady_state(case, active, reactive):
+    """Balanced LCL solution for the specified terminal powers."""
     devices = {d['id']: d for d in case['devices']}
     grid = devices['grid']['params']
     omega = grid['omega']
     source = math.sqrt(3) * grid['E'][0]
     filt = devices['filter']['params']
     z = complex(filt['Rg'][0][0], omega * filt['Lg'][0][0])
-    current = complex(irefd, irefq)
+    current = complex(active, -reactive) / source
     drop = z * current
     voltage = source + drop
     c = filt['C'][0][0]
     inverter_current = current + 1j * omega * c * voltage
     return {'voltage_V': abs(voltage), 'vq_V': voltage.imag, 'id_A': inverter_current.real,
-            'iq_A': inverter_current.imag, 'p_W': source * irefd,
-            'q_var': -source * irefq}
+            'iq_A': inverter_current.imag, 'p_W': active,
+            'q_var': reactive}
 
 
 def measure(path, begin, end, final_time=None):
@@ -115,7 +120,6 @@ def validate(exe, output):
     case = json.loads(case_file.read_text())
     wiring_checks(case)
     params = next(d['params'] for d in case['devices'] if d['id'] == 'power_control')
-    irefd, irefq = params['Pref'] / params['V'], -params['Qref'] / params['V']
     report = {}
     for name, mu in [('steady_smooth', 240), ('steady_switching', 1e6)]:
         config = dict(solver, system_model_file=str(case_file), state_file=str(state_file),
@@ -127,7 +131,7 @@ def validate(exe, output):
             subprocess.run([str(exe), str(path)], cwd=output, stdout=log,
                            stderr=subprocess.STDOUT, check=True)
         measured = measure(output / f'{name}.csv', 0.25, 0.3)
-        expected = steady_state(case, irefd, irefq)
+        expected = steady_state(case, params['Pref'], params['Qref'])
         errors = {key: abs(measured['mean'][key] - value) for key, value in expected.items()}
         measured.update(expected=expected, absolute_errors=errors, mu=mu, mean_window_s=[0.25,0.3])
         report[name] = measured

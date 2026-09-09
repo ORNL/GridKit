@@ -84,7 +84,7 @@ namespace GridKit
           }
           using O = typename OuterT::Outputs;
           using I = typename InnerT::Outputs;
-          outer.attachInput({&input[4], &input[5], &inner.outputSignal(I::ilimd), &inner.outputSignal(I::ilimq)});
+          outer.attachInput({&input[0], &input[1], &input[4], &input[5], &inner.outputSignal(I::ilimd), &inner.outputSignal(I::ilimq)});
           inner.attachInput({&input[2], &input[3], &input[4], &input[5], &outer.outputSignal(O::icmdd), &outer.outputSignal(O::icmdq), &input[6], &input[7], &input[8]});
           IdxT offset = 9;
           for (auto* component : components())
@@ -122,7 +122,7 @@ namespace GridKit
 
         void setProbeState()
         {
-          const std::array<RealT, system_size> state{12, -5, 208, 13, 8, -3, omega, 200, 20, 0.3, -0.2, 29, 8, 1.3, -0.8, 28, 7, 200, 20};
+          const std::array<RealT, system_size> state{182, 26, 208, 13, 8, -3, omega, 200, 20, 0.3, -0.2, 29, 8, 1.3, -0.8, 28, 7, 200, 20};
           for (IdxT n = 0; n < system_size; ++n)
           {
             y.getData()[n]  = state[n];
@@ -154,8 +154,8 @@ namespace GridKit
         TestStatus success = true;
         Fixture    fixture;
         using Outputs  = typename OuterT::Outputs;
-        const RealT ed = RealT{12} - 8;
-        const RealT eq = RealT{-5} + 3;
+        const RealT ed = RealT{5.375};
+        const RealT eq = RealT{-1.375};
         auto*       y  = fixture.y.getData();
         std::cout << "OuterPowerControl default integral (A): " << y[9] << ", " << y[10] << "\n";
         success *= std::abs(y[9]) < 1e-12 && std::abs(y[10]) < 1e-12;
@@ -171,7 +171,7 @@ namespace GridKit
         fixture.outer.initializeState({{"icmdd", 4.0}});
         success *= y[11] == 4 && std::abs(y[10]) < 1e-12;
         success *= std::abs(y[12] - RealT{0.3} * eq) < 1e-12;
-        success *= y[0] == 12 && y[1] == -5;
+        success *= y[0] == 182 && y[1] == 26;
         for (size_t n = 9; n < 13; ++n)
           success *= fixture.yp.getData()[n] == 0;
         for (const auto& values : {std::map<std::string, RealT>{{"etad", 0.0}},
@@ -224,7 +224,7 @@ namespace GridKit
           {
             return std::max(x, RealT{0}) + std::log1p(std::exp(-mu * std::abs(x))) / mu;
           };
-          const std::array<RealT, 2> e{RealT{12} - y[4], RealT{-5} - y[5]};
+          const std::array<RealT, 2> e{RealT{5.375}, RealT{-1.375}};
           const RealT                limiter = std::sqrt(1 + ramp((y[11] * y[11] + y[12] * y[12]) / 900 - 1));
           for (size_t n = 0; n < 2; ++n)
           {
@@ -238,6 +238,37 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome powerMeasurements()
+      {
+        TestStatus success = true;
+        Fixture    fixture;
+        fixture.yp.setToConst(0);
+        auto* y = fixture.y.getData();
+        for (size_t n = 9; n < 13; ++n)
+          y[n] = 0;
+        fixture.inner.initialize();
+        // Terminal voltage, terminal current, and independently evaluated power errors / V.
+        const std::array<std::array<RealT, 6>, 5> points{{{208, 0, 8, -3, 4, -2},
+                                                          {104, 0, 8, -3, 8, -3.5},
+                                                          {182, 26, 8, -3, 5.375, -1.375},
+                                                          {-26, 182, 3, 8, 5.375, -1.375},
+                                                          {0, 0, 8, -3, 12, -5}}};
+        for (const auto& point : points)
+        {
+          y[0] = point[0];
+          y[1] = point[1];
+          y[4] = point[2];
+          y[5] = point[3];
+          fixture.evaluateResidual();
+          for (size_t n = 0; n < 2; ++n)
+          {
+            success *= std::abs(fixture.f.getData()[9 + n] - 40 * point[4 + n]) < 1e-12;
+            success *= std::abs(fixture.f.getData()[11 + n] + 0.3 * point[4 + n]) < 1e-12;
+          }
+        }
+        return success.report(__func__);
+      }
+
       TestOutcome steadyState()
       {
         TestStatus success = true;
@@ -245,8 +276,8 @@ namespace GridKit
         auto*      y = fixture.y.getData();
         fixture.yp.setToConst(0);
         const RealT vd = 208, igd = 12, igq = -5;
-        y[0]  = igd;
-        y[1]  = igq;
+        y[0]  = vd;
+        y[1]  = 0;
         y[2]  = vd;
         y[3]  = 0;
         y[4]  = igd;

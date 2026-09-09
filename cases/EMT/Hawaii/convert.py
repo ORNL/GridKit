@@ -3,6 +3,7 @@
 import argparse
 import cmath
 import collections
+import copy
 import hashlib
 import json
 import math
@@ -52,6 +53,17 @@ def read_source(path=None):
     if path:
         return path.read_bytes()
     return subprocess.check_output(['git', 'show', f'{SOURCE_REVISION}:{SOURCE_PATH}'], cwd=ROOT)
+
+
+def adjust_exciters(source):
+    """Use IEEET1's automatic Ke initialization for the negative-Ke Hawaii exciters."""
+    adjusted = copy.deepcopy(source)
+    changes = {}
+    for device in adjusted['devices']:
+        if device['class'] == 'Ieeet1' and device['params']['Ke'] < 0:
+            changes[device['id']] = {'Ke_original': device['params']['Ke'], 'Ke': 0.0}
+            device['params']['Ke'] = 0.0
+    return adjusted, changes
 
 
 def samples(value, prefix, scale=1.0):
@@ -212,12 +224,14 @@ def operating_point(source):
 def convert(source, line_data):
     assert source['params']['va_base'] == SYSTEM_BASE
     assert source['params']['freq_base'] == FREQUENCY
+    source, exciter_adjustments = adjust_exciters(source)
     buses, voltage, dispatch, flow_report = operating_point(source)
     devices, signals = [], {}
-    state = {'header': {'version': 1, 'time': 0.0,
+    state = {'header': {'version': 1, 'time': 0.0, 'omega': OMEGA,
                         'description': 'Balanced fundamental operating point; see conversion.json'},
              'buses': {}, 'devices': {}}
     report = {'source_revision': SOURCE_REVISION, 'source_path': SOURCE_PATH,
+              'exciter_adjustments': exciter_adjustments,
               'choices': CHOICES, 'source_counts': dict(collections.Counter(d['class'] for d in source['devices'])),
               'power_flow': flow_report, 'machines': {}, 'inverters': {},
               'lines': {'description': line_data['description'],
@@ -341,9 +355,6 @@ def convert(source, line_data):
         ig = (pq / v).conjugate()
         vo = v + complex(rg, OMEGA * lg) * ig
         current = ig + 1j * OMEGA * c * vo
-        e = vo + complex(rs, OMEGA * ls) * current
-        rotation = cmath.exp(-1j * cmath.phase(v))
-        current_dq, grid_current_dq = current * rotation, ig * rotation
         bridge_power = pq.real + rg * abs(ig)**2 + rs * abs(current)**2
         reecb = next(e for e in source['devices'] if e['id'] == prefix + '_reecb')
         imax = reecb['params']['Imax'] * rating / vb
@@ -366,12 +377,15 @@ def convert(source, line_data):
             outputs={'out': vector('v', 'dq0')}, mon=['out'])
         add('Park', prefix + '_current', inputs={'input': vector('i', 'abc'), 'theta': s('theta')},
             outputs={'out': vector('i', 'dq0')}, mon=['out'])
+        add('Park', prefix + '_terminal_voltage',
+            inputs={'input': [f'b{n}_v{phase}' for phase in 'abc'], 'theta': s('theta')},
+            outputs={'out': vector('vg', 'dq0')})
         add('Park', prefix + '_grid_current', inputs={'input': vector('ig', 'abc'), 'theta': s('theta')},
             outputs={'out': vector('ig', 'dq0')}, mon=['out'])
         add('OuterPowerControl', prefix + '_power',
-            {'V': vb, 'Pref': vb * grid_current_dq.real, 'Qref': -vb * grid_current_dq.imag,
+            {'V': vb, 'Pref': pq.real, 'Qref': pq.imag,
              'Kp': CHOICES['outer_Kp'], 'Ki': CHOICES['outer_Ki'], 'Kaw': CHOICES['outer_Kaw']},
-            {'i': vector('ig', 'dq'), 'ilim': vector('ilim', 'dq')},
+            {'v': vector('vg', 'dq'), 'i': vector('ig', 'dq'), 'ilim': vector('ilim', 'dq')},
             {'icmd': vector('icmd', 'dq')}, ['icmd'])
         add('InnerCurrentControl', prefix + '_inner',
             {'L': ls, 'Kp': ls * wc, 'Ki': rs * wc, 'Kaw': wc, 'Imax': imax},
@@ -384,13 +398,7 @@ def convert(source, line_data):
             {'s': vector('s', 'abc'), 'ulim': vector('ulim', 'dq')})
         add('Converter', prefix + '_bridge', inputs={'s': vector('s', 'abc'), 'vdc': s('vdc')},
             outputs={'e': vector('e', 'abc')})
-        state['devices'][prefix + '_filter'] = {
-            **samples(current, 'i', math.sqrt(2 / 3)),
-            **samples(vo, 'vo', math.sqrt(2 / 3)),
-            **samples(ig, 'ig', math.sqrt(2 / 3))}
-        state['devices'][prefix + '_power'] = {'icmdd': current_dq.real, 'icmdq': current_dq.imag}
-        command = e * rotation
-        state['devices'][prefix + '_inner'] = {'ud': command.real, 'uq': command.imag}
+        state['devices'][prefix + '_filter'] = samples(ig, 'ig', math.sqrt(2 / 3))
         report['inverters'][prefix] = {'rating_VA': rating, 'voltage_V': vb, 'Imax_A': imax,
                                        'dispatch_W': pq.real, 'dispatch_var': pq.imag,
                                        'vdc_V': vdc,

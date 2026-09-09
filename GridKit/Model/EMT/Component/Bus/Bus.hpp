@@ -39,9 +39,9 @@ namespace GridKit
 
       int initialize(const std::map<Outputs, RealT>& outputs = {});
 
-      int initialize(const std::map<std::string, std::map<std::string, RealT>>& state) override
+      int initialize(const std::map<std::string, std::map<std::string, RealT>>& state, RealT omega = RealT{0}) override
       {
-        return Base::initialize(state);
+        return Base::initialize(state, omega);
       }
 
       int initializeSteadyState(RealT omega);

@@ -4,11 +4,29 @@
 #include <cmath>
 #include <complex>
 #include <limits>
+#include <stdexcept>
 
 #include <GridKit/Model/EMT/ComponentData.hpp>
 
 namespace GridKit::EMT
 {
+  /// Peak phasors of a balanced positive-sequence three-phase sample at t = 0.
+  template <typename RealT>
+  ABCVector<std::complex<RealT>> balancedPhasor(const ABCVector<RealT>& value)
+  {
+    const RealT scale = std::max({RealT{1}, std::abs(value[0]), std::abs(value[1]), std::abs(value[2])});
+    if (!std::isfinite(scale) || std::abs(value[0] + value[1] + value[2]) > RealT{1e-10} * scale)
+      throw std::invalid_argument("Balanced initialization requires finite, zero-sum phase values");
+    ABCVector<std::complex<RealT>> phasor;
+    for (size_t p = 0; p < 3; ++p)
+    {
+      if (!std::isfinite(value[p]))
+        throw std::invalid_argument("Balanced initialization requires finite phase values");
+      phasor[p] = {value[p], (value[(p + 1) % 3] - value[(p + 2) % 3]) / std::sqrt(RealT{3})};
+    }
+    return phasor;
+  }
+
   /** Whether the nonzero derivative columns define independent current variables. */
   template <typename RealT, typename MatrixT>
   bool independentDerivativeColumns(const MatrixT& coefficient)

@@ -479,7 +479,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int Container<scalar_type, index_type>::initialize(const std::map<std::string, std::map<std::string, RealT>>& state)
+    int Container<scalar_type, index_type>::initialize(const std::map<std::string, std::map<std::string, RealT>>& state, RealT omega)
     {
       std::map<ComponentT*, std::string> paths;
       auto                               collect = [&](auto&& self, Container& scope, const std::string& prefix) -> void
@@ -509,7 +509,7 @@ namespace GridKit
         if (!initial_paths.contains(path))
           throw std::invalid_argument("Unknown initial state path: " + path);
 
-      typename ComponentT::InitialStateT initial;
+      typename ComponentT::InitialStateT initial(omega);
       const std::map<std::string, RealT> empty;
       for (auto* leaf : leaves)
       {

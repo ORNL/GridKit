@@ -1,7 +1,7 @@
 /**
  * @file OuterPowerControlData.hpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief Modeling data for the EMT outer-loop current-command controller.
+ * @brief Modeling data for the EMT outer power controller.
  */
 #pragma once
 
@@ -25,6 +25,8 @@ namespace GridKit
 
       enum class OuterPowerControlInputs : size_t
       {
+        vd,    ///< \f$v_d\f$ Terminal voltage [V]
+        vq,    ///< \f$v_q\f$ Terminal voltage [V]
         id,    ///< \f$i_d\f$ Measured current [A]
         iq,    ///< \f$i_q\f$ Measured current [A]
         ilimd, ///< \f$i_d^{\mathrm{lim}}\f$ Limited current command [A]

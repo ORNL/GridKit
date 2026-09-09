@@ -12,6 +12,7 @@
 
 #include <GridKit/Model/EMT/Component/Filter/Filter.hpp>
 #include <GridKit/Model/EMT/ComponentInitialization.hpp>
+#include <GridKit/Model/EMT/PhasorInitialization.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
@@ -222,14 +223,73 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
+    auto Filter<scalar_type, index_type>::operatingPoint(const ABCVector<RealT>& voltage, const ABCVector<RealT>& current, RealT omega) const
+        -> std::array<ABCVector<std::complex<RealT>>, 4>
+    {
+      const auto                                    v = balancedPhasor(voltage);
+      const std::complex<RealT>                     jw{0, omega};
+      std::array<ABCVector<std::complex<RealT>>, 4> point{};
+      auto& [i, vo, ig, e] = point;
+      ig                   = balancedPhasor(current);
+      for (size_t p = 0; p < 3; ++p)
+      {
+        vo[p] = v[p];
+        for (size_t k = 0; k < 3; ++k)
+          vo[p] += (Rg_[p][k] + jw * Lg_[p][k]) * ig[k];
+      }
+      for (size_t p = 0; p < 3; ++p)
+      {
+        i[p] = ig[p];
+        for (size_t k = 0; k < 3; ++k)
+          i[p] += jw * C_[p][k] * vo[k];
+      }
+      for (size_t p = 0; p < 3; ++p)
+      {
+        e[p] = vo[p];
+        for (size_t k = 0; k < 3; ++k)
+          e[p] += (Rs_[p][k] + jw * Ls_[p][k]) * i[k];
+      }
+      return point;
+    }
+
+    template <typename scalar_type, typename index_type>
+    int Filter<scalar_type, index_type>::initializeState(const std::map<std::string, RealT>& values, RealT omega)
+    {
+      if (omega == ZERO<RealT>)
+        return initializeState(values);
+      ABCVector<RealT> voltage, current;
+      const auto       outputs = this->template parseInitialOutputs<Filter>(values);
+      for (size_t p = 0; p < 3; ++p)
+      {
+        voltage[p] = static_cast<RealT>(inputSignal(static_cast<FilterInputs>(p)).read());
+        current[p] = outputs.at(static_cast<Outputs>(6 + p));
+      }
+      const auto point = operatingPoint(voltage, current, omega);
+      for (size_t n = 0; n < output_.size(); ++n)
+      {
+        output_[n].init(static_cast<ScalarT>(point[n / 3][n % 3].real()));
+        output_[n].initDerivative(static_cast<ScalarT>(-omega * point[n / 3][n % 3].imag()));
+      }
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
     typename Component<scalar_type, index_type>::InitializationPortsT Filter<scalar_type, index_type>::initializationPorts()
     {
+      using V = FilterExternalVariables;
       typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+      ports.inputs  = signals_.attachedSignals({V::VA, V::VB, V::VC});
+      ports.targets = signals_.attachedSignals({V::EA, V::EB, V::EC});
       for (const auto output : magic_enum::enum_values<Outputs>())
       {
         if (output != Outputs::SIZE)
         {
-          ports.outputs.emplace(std::string(magic_enum::enum_name(output)), &outputSignal(output));
+          const auto name = std::string(magic_enum::enum_name(output));
+          ports.outputs.emplace(name, &outputSignal(output));
+          if (alias_[static_cast<size_t>(output)])
+            ports.outputs.emplace(name, alias_[static_cast<size_t>(output)]);
         }
       }
       return ports;
@@ -239,15 +299,26 @@ namespace GridKit
     void Filter<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
     {
       const auto outputs = this->template parseInitialOutputs<Filter>(initial.outputs(*this));
-      for (size_t n = 0; n < output_.size(); ++n)
+      if (initial.omega() == ZERO<RealT>)
       {
-        const auto value = this->outputValue(outputs, static_cast<Outputs>(n), ZERO<RealT>);
-        initial.provide(output_[n], value);
-        if (alias_[n])
-        {
-          initial.provide(*alias_[n], value);
-        }
+        for (size_t n = 0; n < output_.size(); ++n)
+          initial.provide(output_[n], this->outputValue(outputs, static_cast<Outputs>(n), ZERO<RealT>));
+        return;
       }
+      ABCVector<RealT> voltage, current;
+      for (size_t p = 0; p < 3; ++p)
+      {
+        voltage[p]        = initial.value(inputSignal(static_cast<FilterInputs>(p)));
+        const auto output = static_cast<Outputs>(6 + p);
+        if (!outputs.contains(output))
+          throw std::invalid_argument("Filter: balanced initialization requires iga, igb and igc");
+        current[p] = outputs.at(output);
+      }
+      const auto point = operatingPoint(voltage, current, initial.omega());
+      for (size_t n = 0; n < output_.size(); ++n)
+        initial.provide(output_[n], point[n / 3][n % 3].real());
+      for (size_t p = 0; p < 3; ++p)
+        initial.require(inputSignal(static_cast<FilterInputs>(3 + p)), point[3][p].real(), *this);
     }
 
     template <typename scalar_type, typename index_type>

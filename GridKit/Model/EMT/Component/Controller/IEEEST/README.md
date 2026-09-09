@@ -177,6 +177,9 @@ None.
 
 ## Initialization
 
+The preparation pass publishes the steady output for the connected exciter,
+using the same washout bypass and voltage gate as state initialization.
+
 The current input initializes the filter and lag states at equilibrium.
 For a washout with `T6>0`, the stabilizer output starts at zero; with
 `T6=0` it starts at the limited and voltage-gated `Ks*u`.

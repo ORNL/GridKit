@@ -236,7 +236,7 @@ future file-backed Containers; file inclusion is not part of this revision.
   `PWM`                    | `vdc`, `theta` | Input | Signal | No
   `PWM`                    | `s`     | Output    | Three Signal IDs | No
   `PWM`                    | `ulim`  | Output    | Two Signal IDs | No
-  `OuterPowerControl`      | `i`, `ilim` | Input | Two Signal IDs | Yes
+  `OuterPowerControl`      | `v`, `i`, `ilim` | Input | Two Signal IDs | Yes
   `OuterPowerControl`      | `icmd` | Output | Two Signal IDs | No
   `PLL`                    | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `PLL`                    | `theta`, `omega` | Output | Signal | No

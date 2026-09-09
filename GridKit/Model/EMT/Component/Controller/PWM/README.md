@@ -220,8 +220,11 @@ None.
 
 ## Initialization
 
-There are no internal initial conditions. Prescribed `sa`, `sb`, `sc`, `ulimd`,
-and `ulimq` values must match these evaluated outputs. The limited-voltage outputs require voltage inputs.
+PWM owns no state. In [balanced initialization](../../../STATE.md#application),
+`sa`, `sb`, `sc` are carrier means supplied by Converter. PWM transforms their
+voltage to the PLL frame, checks the voltage limit, and requests `ud`, `uq`
+from the controller. Otherwise, prescribed outputs must match the instantaneous
+evaluated outputs. Limited-voltage outputs require voltage inputs.
 
 ## Monitors
 

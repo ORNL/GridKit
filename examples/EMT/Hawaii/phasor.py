@@ -3,6 +3,7 @@
 import argparse
 import csv
 import hashlib
+import importlib.util
 import json
 import math
 from pathlib import Path
@@ -15,6 +16,14 @@ REPOSITORY = ROOT.parents[2]
 BRANCH = 'lukel/cases-polish-dev'
 VALIDATION = 'examples/PhasorDynamics/Validation/Hawaii'
 CASE = 'cases/PhasorDynamics/Hawaii/Hawaii.case.json'
+
+
+def adjust_exciters(case):
+    path = REPOSITORY / 'cases/EMT/Hawaii/convert.py'
+    spec = importlib.util.spec_from_file_location('hawaii_conversion', path)
+    conversion = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(conversion)
+    return conversion.adjust_exciters(case)
 
 
 def digest(path):
@@ -99,7 +108,7 @@ def main():
     # This is exactly the branch's Hawaii_validation command and input pair.
     validation = run(exe, directory)
     original = read_csv(directory / 'Hawaii.omega.csv')
-    case = json.loads((directory / 'Hawaii.case.json').read_text())
+    case, adjustments = adjust_exciters(json.loads((directory / 'Hawaii.case.json').read_text()))
     study = json.loads((directory / 'Hawaii.solver.json').read_text())
     for bus in case['buses']:
         bus['mon'] = ['Vm']
@@ -109,7 +118,7 @@ def main():
     study['output_file'] = 'Hawaii.csv'
     for key in ('reference_file', 'error_type', 'error_tolerance', 'abs_err_threshold'):
         study.pop(key, None)
-    # Added monitors preserve the source physical model and solver settings.
+    # Use the same local exciter adjustment as the EMT conversion.
     target = directory / 'monitored'
     target.mkdir(exist_ok=True)
     write_json(target / 'Hawaii.case.json', case)
@@ -119,12 +128,15 @@ def main():
     if len(original) != len(rows):
         raise ValueError('Adding monitors changed the sample count')
     difference = max(abs(row[key] - ref[key]) for row, ref in zip(rows, original) for key in ref)
-    if difference > 1e-10:
-        raise ValueError(f'Adding monitors changed the speed trajectory: {difference}')
+    initial_difference = max(abs(rows[0][key] - original[0][key]) for key in original[0])
+    if initial_difference > 1e-10:
+        raise ValueError(f'Exciter adjustment changed the initial speed: {initial_difference}')
     record.update(source=source, validation=validation, channels_sha256=hashes,
-                  maximum_validation_trace_difference_pu=difference,
+                  maximum_original_trace_difference_pu=difference,
+                  initial_speed_difference_pu=initial_difference,
                   final_time_s=rows[-1]['t'], study=study,
-                  description='Original validation physics; only monitors and output selection changed.')
+                  description='Validated source with negative IEEET1 Ke set to zero for automatic initialization, matching EMT.',
+                  exciter_adjustments=adjustments)
     write_json(target / 'metrics.json', record)
     print(f'monitored: {record["cpu_time_s"]:.6g} CPU seconds, final time {rows[-1]["t"]:g} s')
     print(f'Unmodified Hawaii_validation passed: {validation["cpu_time_s"]:.6g} CPU seconds')

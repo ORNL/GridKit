@@ -171,8 +171,35 @@ namespace GridKit
       typename Component<scalar_type, index_type>::InitializationPortsT OuterVoltageControl<scalar_type, index_type>::initializationPorts()
       {
         using V = OuterVoltageControlExternalVariables;
-        // Tracking feedback is resolved by the consistent-initial-condition solve.
-        return {signals_.attachedSignals({V::VREFD, V::VREFQ, V::VD, V::VQ, V::IGD, V::IGQ, V::OMEGA}), {}, {}};
+        typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+        ports.inputs  = signals_.attachedSignals({V::VREFD, V::VREFQ, V::VD, V::VQ, V::IGD, V::IGQ, V::OMEGA});
+        ports.targets = signals_.attachedSignals({V::VREFD, V::VREFQ});
+        for (size_t n = 0; n < output_.size(); ++n)
+        {
+          const auto name = std::string(magic_enum::enum_name(static_cast<Outputs>(n)));
+          ports.outputs.emplace(name, &output_[n]);
+          if (alias_[n])
+            ports.outputs.emplace(name, alias_[n]);
+        }
+        return ports;
+      }
+
+      template <typename scalar_type, typename index_type>
+      void OuterVoltageControl<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
+      {
+        if (initial.omega() == ZERO<RealT>)
+          return;
+        using V = OuterVoltageControlExternalVariables;
+        initial.require(*signals_.template getAttachedSignal<V::VREFD>(), initial.value(*signals_.template getAttachedSignal<V::VD>()), *this);
+        initial.require(*signals_.template getAttachedSignal<V::VREFQ>(), initial.value(*signals_.template getAttachedSignal<V::VQ>()), *this);
+        const auto outputs = this->template parseInitialOutputs<OuterVoltageControl>(initial.outputs(*this));
+        for (size_t n = 0; n < output_.size(); ++n)
+        {
+          const auto key = static_cast<Outputs>(n);
+          if (!outputs.contains(key))
+            throw std::invalid_argument("OuterVoltageControl: balanced initialization requires icmdd and icmdq");
+          initial.provide(output_[n], outputs.at(key));
+        }
       }
 
       template <typename scalar_type, typename index_type>

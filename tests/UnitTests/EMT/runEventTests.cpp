@@ -158,7 +158,7 @@ namespace
   {
     System system(model(json::parse(R"({
       "header":{"case_name":"Constant references", "case_description":"", "case_comments":""},
-      "signals":[{"id":"pref", "value":0.3}, {"id":"vref", "value":1.1},
+      "signals":[{"id":"pref", "value":0.3}, {"id":"vref", "value":0.02},
                  {"id":"steam_power"}, {"id":"gas_power"}, {"id":"sexs_field"}, {"id":"ieee_field"}],
       "devices":[{"class":"Bus", "id":"bus"},
         {"class":"VoltageSource", "id":"source", "params":{"omega":1.0}, "inputs":{"bus":"bus"}},
@@ -168,12 +168,12 @@ namespace
         {"class":"SexsPti", "id":"sexs",
          "params":{"V":100.0, "Ta":0.1, "Tb":0.5, "Te":0.2, "K":10.0, "Efdmin":-5.0, "Efdmax":5.0},
          "inputs":{"bus":"bus", "vref":"vref"}, "outputs":{"efd":"sexs_field"}},
-        {"class":"Ieeet1", "id":"ieee", "params":{"V":100.0, "Ke":1.0},
+        {"class":"Ieeet1", "id":"ieee", "params":{"V":100.0, "Ka":10.0, "Ke":1.0, "Se1":0.0, "Se2":0.0},
          "inputs":{"bus":"bus", "vref":"vref"}, "outputs":{"efd":"ieee_field"}}]
     })")));
     system.allocate();
     system.initialize({{"steam", {{"pmech", 0.2}}}, {"gas", {{"pmech", 0.2}}}, {"sexs", {{"efd", 0.2}}}, {"ieee", {{"efd", 0.2}}}});
-    return system.signal("pref").read() == 0.3 && system.signal("vref").read() == 1.1
+    return system.signal("pref").read() == 0.3 && system.signal("vref").read() == 0.02
            && near(system.signal("steam_power").read(), 0.2)
            && near(system.signal("gas_power").read(), 0.2)
            && near(system.signal("sexs_field").read(), 0.2)

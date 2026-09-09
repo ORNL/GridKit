@@ -13,6 +13,7 @@ namespace GridKit
       void from_json(const json& raw, OuterPowerControlData<RealT, IdxT>& data)
       {
         auto j = raw;
+        expandPhasePort<2>(j, "inputs", "v", {"vd", "vq"});
         expandPhasePort<2>(j, "inputs", "i", {"id", "iq"});
         expandPhasePort<2>(j, "inputs", "ilim", {"ilimd", "ilimq"});
         expandPhasePort<2>(j, "outputs", "icmd", {"icmdd", "icmdq"});

@@ -185,29 +185,20 @@ namespace GridKit
 
       /** Initialize from the resolved field-voltage output. */
       template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
+      auto Ieeet1<scalar_type, index_type>::operatingPoint(RealT efd, const ScalarT* external) const
+          -> std::optional<OperatingPoint>
       {
-        this->validateOutputValues(outputs);
-        if (!allocated_ || verify() != 0)
-        {
-          Log::error() << "Ieeet1: cannot initialize with invalid configuration\n";
-          return 1;
-        }
-        gatherExternalVariables();
-        const auto*   external     = y_ext_.data();
         const ScalarT omega        = external[3];
         const ScalarT vs           = external[5];
         const ScalarT vuel         = external[6];
         const ScalarT voel         = external[7];
         const ScalarT speed_factor = ONE<RealT> + (omega - ONE<RealT>) *Ispdlim_;
-        auto*         y            = y_.getData();
-        const ScalarT efd0         = static_cast<ScalarT>(this->outputValue(outputs, Outputs::efd, static_cast<RealT>(y[7])));
-        y[7]                       = efd0;
+        const ScalarT efd0         = static_cast<ScalarT>(efd);
         if (!(static_cast<RealT>(speed_factor) > ZERO<RealT>)
             || !std::isfinite(static_cast<RealT>(speed_factor)))
         {
           Log::error() << "Ieeet1: initial field-voltage speed multiplier must be finite and positive\n";
-          return 1;
+          return std::nullopt;
         }
         const ScalarT efdp   = efd0 / speed_factor;
         const ScalarT ksat   = SB_ * Math::qramp(efdp - SA_);
@@ -217,7 +208,7 @@ namespace GridKit
           if (static_cast<RealT>(efdp) == ZERO<RealT>)
           {
             Log::error() << "Ieeet1: automatic Ke requires nonzero initial field voltage\n";
-            return 1;
+            return std::nullopt;
           }
           ke_eff = (Vrmax_ / static_cast<RealT>(10) - static_cast<RealT>(ksat)) / static_cast<RealT>(efdp);
         }
@@ -231,7 +222,7 @@ namespace GridKit
           if (!std::isfinite(static_cast<RealT>(value)) || !std::isfinite(ke_eff))
           {
             Log::error() << "Ieeet1: initial states and effective Ke must be finite\n";
-            return 1;
+            return std::nullopt;
           }
         }
         const RealT tolerance = static_cast<RealT>(4) * std::numeric_limits<RealT>::epsilon()
@@ -239,19 +230,50 @@ namespace GridKit
         if (static_cast<RealT>(vr) < Vrmin_ - tolerance || static_cast<RealT>(vr) > Vrmax_ + tolerance)
         {
           Log::error() << "Ieeet1: initial regulator voltage is outside [Vrmin, Vrmax]\n";
-          return 1;
+          return std::nullopt;
         }
 
-        Ke_eff_   = ke_eff;
-        y[0]      = ec;
-        y[1]      = vr;
-        y[2]      = efdp;
-        y[3]      = vfx;
-        y[4]      = vtr;
-        y[5]      = ZERO<RealT>;
-        y[6]      = ksat;
-        y[8]      = ksat;
-        vref_set_ = vref;
+        return OperatingPoint{{ec, vr, efdp, vfx, vtr, ScalarT{0}, ksat, efd0, ksat}, vref, ke_eff};
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Ieeet1<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
+      {
+        using V = Ieeet1ExternalVariables;
+        std::array<ScalarT, 8> external{ScalarT{0}, ScalarT{0}, ScalarT{0}, omega_set_, vref_set_, vs_set_, vuel_set_, voel_set_};
+        for (size_t n = 0; n < external.size(); ++n)
+        {
+          if (n == static_cast<size_t>(V::VREF))
+            continue;
+          if (const auto* signal = this->externalVariableSignals()[n])
+            external[n] = static_cast<ScalarT>(initial.value(*signal));
+        }
+        const auto outputs = this->template parseInitialOutputs<Ieeet1>(initial.outputs(*this));
+        const auto point   = operatingPoint(this->outputValue(outputs, Outputs::efd, ZERO<RealT>), external.data());
+        if (!point)
+          throw std::invalid_argument("Ieeet1: invalid initial operating point");
+        if (signals_.template isAttached<V::VREF>())
+          initial.require(*signals_.template getAttachedSignal<V::VREF>(), static_cast<RealT>(point->vref), *this);
+        if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
+          initial.provide(*signals_.template getSignal<Ieeet1InternalVariables::EFD>(), static_cast<RealT>(point->state[7]));
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
+      {
+        this->validateOutputValues(outputs);
+        if (!allocated_ || verify() != 0)
+        {
+          Log::error() << "Ieeet1: cannot initialize with invalid configuration\n";
+          return 1;
+        }
+        gatherExternalVariables();
+        const auto point = operatingPoint(this->outputValue(outputs, Outputs::efd, static_cast<RealT>(y_.getData()[7])), y_ext_.data());
+        if (!point)
+          return 1;
+        std::copy(point->state.begin(), point->state.end(), y_.getData());
+        Ke_eff_   = point->Ke;
+        vref_set_ = point->vref;
         y_.setDataUpdated();
         yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
         return 0;

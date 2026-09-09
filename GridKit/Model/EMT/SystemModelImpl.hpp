@@ -62,9 +62,9 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    int SystemModel<scalar_type, index_type>::initialize(const std::map<std::string, std::map<std::string, RealT>>& state)
+    int SystemModel<scalar_type, index_type>::initialize(const std::map<std::string, std::map<std::string, RealT>>& state, RealT omega)
     {
-      const int status = ContainerT::initialize(state);
+      const int status = ContainerT::initialize(state, omega);
       if (status != 0)
         return status;
       if (hasJacobian())

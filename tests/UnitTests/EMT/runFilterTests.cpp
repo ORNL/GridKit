@@ -135,8 +135,8 @@ namespace
     success *= model.initializeState({{"ia", 2}, {"voa", 120}, {"iga", 1}}) == 0;
     success *= alias.read() == 120 && model.currentSignal(0).read() == 1;
     success *= model.outputSignal(O::ia).read() == 2;
-    success *= model.initializationPorts().inputs.empty();
-    success *= model.initializationPorts().outputs.size() == 9;
+    success *= model.initializationPorts().inputs.size() == 3;
+    success *= model.initializationPorts().outputs.count("voa") == 2 && model.initializationPorts().outputs.size() == 10;
     success *= rejects([&]
                        { model.attachInput({&voltage, &voltage, &voltage}, {&source, &source, &source}); });
     success *= rejects([&]
