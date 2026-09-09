@@ -301,7 +301,6 @@ def convert(source):
             add('Ieeest', name, p, {'speed': signal(f's{ports["input"]}')},
                 {'output': signal(f's{ports["output"]}')})
 
-    signal('zero', 0.0)
     for d in source['devices']:
         if d['class'] != 'Regca':
             continue
@@ -359,13 +358,10 @@ def convert(source):
             {'v': vector('v', 'dq'), 'i': vector('i', 'dq'), 'icmd': vector('icmd', 'dq'),
              'omega': s('omega'), 'ulim': vector('ulim', 'dq')},
             {'ilim': vector('ilim', 'dq'), 'u': vector('u', 'dq')}, ['ilim'])
-        add('Modulation', prefix + '_modulation', {'Mmax': CHOICES['Mmax']},
-            {'u': vector('u', 'dq'), 'vdc': s('vdc')},
-            {'m': vector('m', 'dq'), 'ulim': vector('ulim', 'dq')})
-        add('Park', prefix + '_inverse', {'inverse': True},
-            {'input': vector('m', 'dq') + ['zero'], 'theta': s('theta')}, {'out': vector('m', 'abc')})
-        add('PWM', prefix + '_pwm', {'fc': CHOICES['carrier_Hz'], 'alignment': CHOICES['carrier_alignment']},
-            {'m': vector('m', 'abc')}, {'s': vector('s', 'abc')})
+        add('PWM', prefix + '_pwm',
+            {'fc': CHOICES['carrier_Hz'], 'alignment': CHOICES['carrier_alignment'], 'Mmax': CHOICES['Mmax']},
+            {'u': vector('u', 'dq'), 'vdc': s('vdc'), 'theta': s('theta')},
+            {'s': vector('s', 'abc'), 'ulim': vector('ulim', 'dq')})
         add('Converter', prefix + '_bridge', inputs={'s': vector('s', 'abc'), 'vdc': s('vdc'), 'i': vector('i', 'abc')},
             outputs={'e': vector('e', 'abc'), 'idc': s('idc')})
         state['devices'][prefix + '_dc'] = {'vdc': vdc}

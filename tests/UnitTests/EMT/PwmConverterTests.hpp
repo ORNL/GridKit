@@ -58,26 +58,36 @@ namespace GridKit
           bool                  bounded = true;
         };
 
-        std::array<Signal, 3> inputs;
+        std::array<Signal, 4> inputs;
         Pwm                   model;
         double                fc;
+
+        /// Power-invariant dq command reproducing a zero-sum phase command at zero angle.
+        static std::array<double, 2> dq(const std::array<double, 3>& modulation)
+        {
+          const double n = std::sqrt(2.0 / 3);
+          return {n * (modulation[0] - (modulation[1] + modulation[2]) / 2),
+                  n * std::sqrt(3.0) / 2 * (modulation[1] - modulation[2])};
+        }
 
         ContinuousPwm(const std::array<double, 3>& modulation, double frequency, double alignment = 0.5)
           : model(pwmData(0, 60, frequency, alignment)), fc(frequency)
         {
-          for (size_t phase = 0; phase < 3; ++phase)
-          {
-            inputs[phase].bindConstant(modulation[phase]);
-            model.assignInput(static_cast<Pwm::Inputs>(phase), &inputs[phase]);
-          }
+          const auto value = dq(modulation);
+          inputs[0].bindConstant(value[0]);
+          inputs[1].bindConstant(value[1]);
+          inputs[2].bindConstant(2.0);
+          inputs[3].bindConstant(0.0);
+          model.attachInput({&inputs[0], &inputs[1]}, &inputs[2], &inputs[3]);
           if (model.allocate() != 0 || model.initialize() != 0)
             throw std::runtime_error("Cannot initialize continuous PWM fixture");
         }
 
         void command(const std::array<double, 3>& modulation)
         {
-          for (size_t phase = 0; phase < 3; ++phase)
-            inputs[phase].setConstantValue(modulation[phase]);
+          const auto value = dq(modulation);
+          inputs[0].setConstantValue(value[0]);
+          inputs[1].setConstantValue(value[1]);
         }
 
         std::array<double, 3> output(double carrier_time)
@@ -127,6 +137,58 @@ namespace GridKit
         }
         return static_cast<double>(result);
       }
+
+      static PwmData commandData(double limit = 0.95, double fc = 6000)
+      {
+        auto data                                  = pwmData(0.8, 60, fc);
+        data.parameters[PwmData::Parameters::Mmax] = limit;
+        return data;
+      }
+
+      /// Closed-loop PWM on indexed signals for output and gradient checks.
+      struct CommandPwm
+      {
+        std::array<double, 4> values;
+        std::array<size_t, 4> indices{3, 5, 8, 13};
+        std::array<Signal, 4> signals;
+        Pwm                   model;
+
+        CommandPwm(std::array<double, 4> inputs, double limit = 0.95)
+          : values(inputs), model(commandData(limit))
+        {
+          for (size_t n = 0; n < 4; ++n)
+            signals[n].set(&values[n], &indices[n]);
+          model.attachInput({&signals[0], &signals[1]}, &signals[2], &signals[3]);
+          model.allocate();
+          model.updateTime(0.31 / 6000, 0);
+        }
+
+        double read(Pwm::Outputs output)
+        {
+          return model.outputSignal(output).read();
+        }
+
+        /// Sum gradient coefficients on one input index.
+        double derivative(Pwm::Outputs output, size_t n)
+        {
+          Signal::GradientT gradient;
+          model.outputSignal(output).appendGradient(gradient);
+          double total = 0;
+          for (const auto& [index, coefficient] : gradient)
+            if (index == indices[n])
+              total += coefficient;
+          return total;
+        }
+
+        /// Independent inverse Park transform of a dq modulation command.
+        double phaseModulation(size_t phase, double md, double mq) const
+        {
+          const double                pi = std::numbers::pi;
+          const std::array<double, 3> gamma{0, -2 * pi / 3, 2 * pi / 3};
+          const double                angle = values[3] + gamma[phase];
+          return std::sqrt(2.0 / 3) * (md * std::cos(angle) - mq * std::sin(angle));
+        }
+      };
 
       static json caseJson()
       {
@@ -228,7 +290,7 @@ namespace GridKit
           success *= throws([&]
                             { pwm.output(Pwm::Outputs::sa); });
         }
-        for (auto key : {P::M, P::fm, P::fc, P::alignment})
+        for (auto key : {P::M, P::fm, P::fc, P::alignment, P::Mmax})
         {
           for (double value : {std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::infinity(),
@@ -247,7 +309,7 @@ namespace GridKit
           success              *= throws([&]
                             { Pwm invalid(data); });
         }
-        for (const auto& data : {pwmData(1.1), pwmData(0.8, 0), pwmData(0.8, 60, 60), pwmData(0.8, 60, 900, 1.1)})
+        for (const auto& data : {pwmData(1.1), pwmData(0.8, 0), pwmData(0.8, 60, 60), pwmData(0.8, 60, 900, 1.1), commandData(1.1)})
         {
           success *= Pwm(data).verify() != 0;
         }
@@ -547,7 +609,7 @@ namespace GridKit
       {
         TestStatus                                 success = true;
         RestoreMu                                  restore;
-        const std::array<std::array<double, 3>, 4> commands{{{-1, 0, 1}, {0.6, -0.4, 0.2}, {-0.2, 0.8, -0.6}, {0, 0, 0}}};
+        const std::array<std::array<double, 3>, 4> commands{{{-0.8, 0.1, 0.7}, {0.6, -0.4, -0.2}, {-0.2, 0.8, -0.6}, {0, 0, 0}}};
         for (double sharpness : {0.04, 4.0, 20.0, 200.0})
         {
           Math::MU<double> = sharpness * 6000;
@@ -605,20 +667,20 @@ namespace GridKit
 
       TestOutcome continuousInput()
       {
-        TestStatus success = true;
-        RestoreMu  restore;
+        TestStatus                  success = true;
+        RestoreMu                   restore;
+        const std::array<double, 3> modulation{-0.6, 0, 0.6};
         for (double sharpness : {0.04, 20.0, 200.0})
         {
-          Math::MU<double> = sharpness * 6000;
-          std::array<double, 3> values{-0.6, 0, 0.6};
-          std::array<size_t, 3> indices{0, 1, 2};
-          std::array<Signal, 3> inputs;
+          Math::MU<double>              = sharpness * 6000;
+          const auto            command = ContinuousPwm::dq(modulation);
+          std::array<double, 4> values{command[0], command[1], 2, 0};
+          std::array<size_t, 4> indices{0, 1, 2, 3};
+          std::array<Signal, 4> inputs;
           Pwm                   model(pwmData(0, 60, 6000));
-          for (size_t phase = 0; phase < 3; ++phase)
-          {
-            inputs[phase].set(&values[phase], &indices[phase]);
-            model.assignInput(static_cast<Pwm::Inputs>(phase), &inputs[phase]);
-          }
+          for (size_t n = 0; n < 4; ++n)
+            inputs[n].set(&values[n], &indices[n]);
+          model.attachInput({&inputs[0], &inputs[1]}, &inputs[2], &inputs[3]);
           success *= model.allocate() == 0 && model.initialize() == 0;
           for (double time : {0.31, 0.72, 0.41, 0.93})
           {
@@ -629,24 +691,135 @@ namespace GridKit
               const auto        base = model.output(key);
               Signal::GradientT gradient;
               model.outputSignal(key).appendGradient(gradient);
-              success                        *= gradient.size() == 1 && gradient[0].first == phase;
-              const double saved              = values[phase];
-              values[phase]                   = saved + 1e-6;
-              const auto plus                 = model.output(key);
-              values[phase]                   = saved - 1e-6;
-              const auto minus                = model.output(key);
-              values[phase]                   = saved;
-              const double finite_difference  = (plus - minus) / 2e-6;
-              success                        *= std::abs(gradient[0].second - finite_difference) < 1e-6 * (1 + std::abs(finite_difference));
-              success                        *= model.output(key) == base;
-              if (sharpness == 0.04)
+              success *= gradient.size() == 4;
+              for (size_t n = 0; n < 4; ++n)
               {
-                success *= std::abs(base - (1 + saved) / 2) < 1e-12;
-                success *= std::abs(gradient[0].second - .5) < 1e-12;
+                success                        *= gradient[n].first == n;
+                const double saved              = values[n];
+                const double h                  = 1e-6 * (1 + std::abs(saved));
+                values[n]                       = saved + h;
+                const auto plus                 = model.output(key);
+                values[n]                       = saved - h;
+                const auto minus                = model.output(key);
+                values[n]                       = saved;
+                const double finite_difference  = (plus - minus) / (2 * h);
+                success                        *= std::abs(gradient[n].second - finite_difference) < 1e-6 * (1 + std::abs(finite_difference));
               }
+              success *= model.output(key) == base;
+              if (sharpness == 0.04)
+                success *= std::abs(base - (1 + modulation[phase]) / 2) < 1e-12;
             }
           }
         }
+        return success.report(__func__);
+      }
+
+      TestOutcome voltageCommand()
+      {
+        TestStatus   success   = true;
+        const double available = std::sqrt(3.0 / 8) * 0.95;
+        // Inside the limit the command returns unchanged and the phases follow the inverse transform.
+        CommandPwm   linear({150, -40, 400, 0.7});
+        success *= linear.model.verify() == 0 && linear.model.initialize() == 0;
+        success *= linear.model.size() == 0 && linear.model.nnz() == 0;
+        success *= std::abs(linear.read(Pwm::Outputs::ulimd) - 150) < 1e-9;
+        success *= std::abs(linear.read(Pwm::Outputs::ulimq) + 40) < 1e-9;
+        for (size_t phase = 0; phase < 3; ++phase)
+          success *= std::abs(linear.model.modulation(phase) - linear.phaseModulation(phase, 0.75, -0.2)) < 1e-12;
+        // Beyond the limit the direction is preserved and the magnitude clipped.
+        CommandPwm   clipped({300, 400, 100, -1.3});
+        const double ulimd  = clipped.read(Pwm::Outputs::ulimd);
+        const double ulimq  = clipped.read(Pwm::Outputs::ulimq);
+        success            *= std::abs(std::hypot(ulimd, ulimq) - available * 100) < 1e-9;
+        success            *= std::abs(ulimq / ulimd - 4.0 / 3) < 1e-12;
+        double norm         = 0;
+        for (size_t phase = 0; phase < 3; ++phase)
+        {
+          const double m  = clipped.model.modulation(phase);
+          norm           += m * m;
+          success        *= std::abs(m) <= 0.95 + 1e-12;
+          success        *= clipped.read(static_cast<Pwm::Outputs>(phase)) >= -1e-13 && clipped.read(static_cast<Pwm::Outputs>(phase)) <= 1 + 1e-13;
+        }
+        success *= std::abs(std::sqrt(norm) - std::sqrt(1.5) * 0.95) < 1e-12;
+        // At zero DC voltage the limited command vanishes and the modulation sits on the boundary.
+        CommandPwm collapsed({30, -40, 0, 0.7});
+        success *= collapsed.read(Pwm::Outputs::ulimd) == 0 && collapsed.read(Pwm::Outputs::ulimq) == 0;
+        norm     = 0;
+        for (size_t phase = 0; phase < 3; ++phase)
+          norm += collapsed.model.modulation(phase) * collapsed.model.modulation(phase);
+        success *= std::abs(std::sqrt(norm) - std::sqrt(1.5) * 0.95) < 1e-12;
+        // The default limit is the full sinusoidal range.
+        CommandPwm full({600, 0, 400, 0}, 1.0);
+        success *= std::abs(full.read(Pwm::Outputs::ulimd) - std::sqrt(3.0 / 8) * 400) < 1e-9;
+        success *= std::abs(full.model.modulation(0) - 1) < 1e-12;
+        // Prescribed outputs must match the computed values.
+        success *= linear.model.initialize({{Pwm::Outputs::ulimq, -40.0}}) == 0;
+        success *= throws([&]
+                          { linear.model.initialize({{Pwm::Outputs::ulimd, 140.0}}); });
+        // Negative DC voltage, partial inputs, and invalid limits are rejected.
+        CommandPwm negative({150, -40, -1, 0});
+        success *= throws([&]
+                          { negative.read(Pwm::Outputs::sa); });
+        success *= throws([&]
+                          { negative.read(Pwm::Outputs::ulimd); });
+        Pwm partial(commandData());
+        partial.attachInput({&linear.signals[0], &linear.signals[1]}, &linear.signals[2], nullptr);
+        success *= partial.verify() != 0;
+        for (const double limit : {1.1, 0.0, -0.5})
+        {
+          CommandPwm invalid({150, -40, 400, 0}, limit);
+          success *= invalid.model.verify() != 0;
+          success *= throws([&]
+                            { invalid.read(Pwm::Outputs::sa); });
+        }
+        // The sinusoidal generator has no limited command.
+        Pwm    generator(pwmData());
+        Signal alias;
+        generator.assignOutput(Pwm::Outputs::ulimd, &alias);
+        success *= generator.verify() != 0;
+        success *= throws([&]
+                          { generator.output(Pwm::Outputs::ulimd); });
+        return success.report(__func__);
+      }
+
+      TestOutcome commandGradients()
+      {
+        TestStatus success = true;
+        RestoreMu  restore;
+        double     maximum_error = 0;
+        for (double sharpness : {0.04, 20.0})
+        {
+          Math::MU<double> = sharpness * 6000;
+          for (const auto& inputs : {std::array<double, 4>{150, -40, 400, 0.7},
+                                     std::array<double, 4>{300, 400, 100, -1.3},
+                                     std::array<double, 4>{200, 150, 250, 2.1},
+                                     std::array<double, 4>{-90, 20, 150, 0.4}})
+          {
+            CommandPwm f(inputs);
+            for (const auto output : {Pwm::Outputs::sa, Pwm::Outputs::sb, Pwm::Outputs::sc, Pwm::Outputs::ulimd, Pwm::Outputs::ulimq})
+              for (size_t n = 0; n < 4; ++n)
+              {
+                const double original  = f.values[n];
+                const double h         = 1e-6 * (1 + std::abs(original));
+                f.values[n]            = original + h;
+                const double plus      = f.read(output);
+                f.values[n]            = original - h;
+                const double minus     = f.read(output);
+                f.values[n]            = original;
+                const double fd        = (plus - minus) / (2 * h);
+                const double error     = std::abs(f.derivative(output, n) - fd) / (1 + std::abs(fd));
+                maximum_error          = std::max(maximum_error, error);
+                success               *= error < 1e-6;
+              }
+          }
+        }
+        std::cout << "PWM command gradient maximum scaled error: " << maximum_error << "\n";
+        // At zero DC voltage the limited command grows linearly with the DC voltage.
+        CommandPwm   collapsed({30, -40, 0, 0.7});
+        const double norm  = std::sqrt(8.0 / 3) / 0.95 * 50;
+        success           *= std::abs(collapsed.derivative(Pwm::Outputs::ulimd, 2) - 30 / norm) < 1e-12;
+        success           *= std::abs(collapsed.derivative(Pwm::Outputs::ulimq, 2) + 40 / norm) < 1e-12;
+        success           *= std::abs(collapsed.derivative(Pwm::Outputs::sa, 2)) < 1e-12;
         return success.report(__func__);
       }
 

@@ -10,7 +10,7 @@ namespace GridKit
   {
     namespace Controller
     {
-      /// Continuous pulse-width modulation with no DAE variables or residual rows.
+      /// Continuous pulse-width modulation of a limited dq voltage command with no DAE variables or residual rows.
       template <typename scalar_type, typename index_type>
       class Pwm : public Component<scalar_type, index_type>
       {
@@ -57,11 +57,15 @@ namespace GridKit
 
         RealT maximumStepSize() const override final;
 
-        void assignInput(Inputs key, SignalT* signal);
+        /// Attach the dq voltage command, DC-link voltage, and frame angle together.
+        void attachInput(const std::array<SignalT*, 2>& command, SignalT* vdc, SignalT* theta);
 
-        /// Publish one phase on a named scalar signal. No DAE index is assigned.
+        /// Publish one output on a named scalar signal. No DAE index is assigned.
         void    assignOutput(Outputs output, SignalT* signal);
         ScalarT output(Outputs output) const;
+
+        /// Phase modulation command from the limited voltage command or the sinusoidal generator.
+        ScalarT modulation(size_t phase) const;
 
         SignalT& outputSignal(Outputs output)
         {
@@ -72,7 +76,7 @@ namespace GridKit
         void                              initializeParameters(const ModelDataT& data);
         const Model::VariableMonitorBase* getMonitor() const override;
         bool                              hasInput() const;
-        ScalarT                           modulation(size_t phase) const;
+        std::array<ScalarT, 2>            fraction() const;
         ScalarT                           pulse(ScalarT duty, RealT local_time) const;
         void                              appendOutputGradient(Outputs output, typename SignalT::GradientT& gradient, RealT scale) const;
 
@@ -80,14 +84,16 @@ namespace GridKit
         RealT fm_{0.0};
         RealT fc_{0.0};
         RealT alignment_{0.5};
+        RealT Mmax_{1.0};
+        RealT au_{0.0};
         bool  parameters_valid_{false};
         bool  sinusoidal_parameters_valid_{false};
         RealT horizon_{0.0};
         RealT replica_decay_{0.0};
 
-        std::array<SignalT*, 3>   input_{};
-        std::array<SignalT, 3>    output_port_;
-        std::array<SignalT*, 3>   assigned_output_{};
+        std::array<SignalT*, 4>   input_{};
+        std::array<SignalT, 5>    output_port_;
+        std::array<SignalT*, 5>   assigned_output_{};
         std::unique_ptr<MonitorT> monitor_;
       };
     } // namespace Controller
