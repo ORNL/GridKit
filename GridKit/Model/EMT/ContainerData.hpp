@@ -6,7 +6,6 @@
 #include <vector>
 
 #include <GridKit/Model/EMT/Component/Bus/BusData.hpp>
-#include <GridKit/Model/EMT/Component/Controller/DCLink/DcLinkData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1Data.hpp>
@@ -55,7 +54,6 @@ namespace GridKit
       using PllDataT                    = PllData<RealT, IdxT>;
       using FilterDataT                 = FilterData<RealT, IdxT>;
       using PwmDataT                    = Controller::PwmData<RealT, IdxT>;
-      using DcLinkDataT                 = Controller::DcLinkData<RealT, IdxT>;
       using ConverterDataT              = ConverterData<RealT, IdxT>;
       using BusDataT                    = BusData<RealT, IdxT>;
       using DependentVoltageSourceDataT = DependentVoltageSourceData<RealT, IdxT>;
@@ -92,7 +90,6 @@ namespace GridKit
       std::vector<PllDataT>                         pll;
       std::vector<FilterDataT>                      filter;
       std::vector<PwmDataT>                         pwm;
-      std::vector<DcLinkDataT>                      dc_link;
       std::vector<ConverterDataT>                   converter;
       std::vector<BusDataT>                         bus;
       std::vector<DependentVoltageSourceDataT>      dependent_voltage_source;

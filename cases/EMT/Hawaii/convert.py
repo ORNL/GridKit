@@ -30,11 +30,10 @@ CHOICES = {
     'Mmax': 0.95,
     'PLL_Kp': 80.0,
     'PLL_Ki': 2500.0,
-    'outer_Kp': 0.01,
+    'outer_Kp': 0.001,
     'outer_Ki': 40.0,
     'outer_Kaw': 200.0,
     'dc_voltage_ratio': 2.0,
-    'dc_energy_seconds': 10.0,
     'carrier_Hz': 1800.0,
     'carrier_alignment': 0.5,
     'fault_R_pu': 0.0,
@@ -47,6 +46,12 @@ CHOICES = {
 
 def diagonal(value):
     return [[value if i == j else 0.0 for j in range(3)] for i in range(3)]
+
+
+def read_source(path=None):
+    if path:
+        return path.read_bytes()
+    return subprocess.check_output(['git', 'show', f'{SOURCE_REVISION}:{SOURCE_PATH}'], cwd=ROOT)
 
 
 def samples(value, prefix, scale=1.0):
@@ -204,7 +209,7 @@ def operating_point(source):
     return buses, voltage, adjusted, report
 
 
-def convert(source):
+def convert(source, line_data):
     assert source['params']['va_base'] == SYSTEM_BASE
     assert source['params']['freq_base'] == FREQUENCY
     buses, voltage, dispatch, flow_report = operating_point(source)
@@ -214,7 +219,9 @@ def convert(source):
              'buses': {}, 'devices': {}}
     report = {'source_revision': SOURCE_REVISION, 'source_path': SOURCE_PATH,
               'choices': CHOICES, 'source_counts': dict(collections.Counter(d['class'] for d in source['devices'])),
-              'power_flow': flow_report, 'machines': {}, 'inverters': {}}
+              'power_flow': flow_report, 'machines': {}, 'inverters': {},
+              'lines': {'description': line_data['description'],
+                        'geometries': len(line_data['geometries'])}}
 
     def signal(name, value=None):
         signals.setdefault(name, {'id': name})
@@ -256,9 +263,14 @@ def convert(source):
             else:
                 assert v1 == v2
                 zb = v1**2 / SYSTEM_BASE
-                add('LineLumped', name, {'dx': 1.0, 'Rp': diagonal(p['R'] * zb),
-                                        'Lp': diagonal(p['X'] * zb / OMEGA),
-                                        'Cp': diagonal(p['B'] / (OMEGA * zb))},
+                params = line_data['geometries'][line_data['lines'][name]]['params']
+                for key, expected in [('Rp', p['R'] * zb), ('Lp', p['X'] * zb / OMEGA),
+                                      ('Cp', p['B'] / (OMEGA * zb))]:
+                    matrix = params[key]
+                    actual = params['dx'] * (matrix[0][0] - matrix[0][1])
+                    if not math.isclose(actual, expected, rel_tol=1e-12):
+                        raise ValueError(f'Line parameters do not preserve source {key}: {name}')
+                add('LineLumped', name, params,
                     {'bus1': f'bus_{i}', 'bus2': f'bus_{j}'})
                 current = (voltage[i] - voltage[j]) / complex(p['R'], p['X'])
                 state['devices'][name] = samples(current, 'i12', math.sqrt(2 / 3) * SYSTEM_BASE / v1)
@@ -324,14 +336,13 @@ def convert(source):
         c = CHOICES['filter_B_pu'] / (OMEGA * zb)
         wc = 2 * math.pi * CHOICES['inner_bandwidth_Hz']
         vdc = CHOICES['dc_voltage_ratio'] * vb
-        capacitance = 2 * CHOICES['dc_energy_seconds'] * rating / vdc**2
         pq = dispatch[d['id']] * SYSTEM_BASE
         v = vb * voltage[n]
         ig = (pq / v).conjugate()
         vo = v + complex(rg, OMEGA * lg) * ig
         current = ig + 1j * OMEGA * c * vo
         e = vo + complex(rs, OMEGA * ls) * current
-        rotation = cmath.exp(-1j * cmath.phase(vo))
+        rotation = cmath.exp(-1j * cmath.phase(v))
         current_dq, grid_current_dq = current * rotation, ig * rotation
         bridge_power = pq.real + rg * abs(ig)**2 + rs * abs(current)**2
         reecb = next(e for e in source['devices'] if e['id'] == prefix + '_reecb')
@@ -343,14 +354,13 @@ def convert(source):
         def vector(key, phases):
             return [s(key + phase) for phase in phases]
 
-        add('DCLink', prefix + '_dc', {'C': capacitance},
-            {'isrc': s('isrc', bridge_power / vdc), 'idc': s('idc')}, {'vdc': s('vdc')}, ['vdc'])
+        s('vdc', vdc)
         add('Filter', prefix + '_filter',
             {'Rs': diagonal(rs), 'Ls': diagonal(ls), 'C': diagonal(c), 'Rg': diagonal(rg), 'Lg': diagonal(lg)},
             {'e': vector('e', 'abc'), 'bus': f'bus_{n}'},
             {'i': vector('i', 'abc'), 'vo': vector('vo', 'abc'), 'ig': vector('ig', 'abc')}, ['i', 'vo', 'ig'])
         add('PLL', prefix + '_pll', {'V': vb, 'f': FREQUENCY, 'Kp': CHOICES['PLL_Kp'], 'Ki': CHOICES['PLL_Ki']},
-            dict(zip(('va', 'vb', 'vc'), vector('vo', 'abc'))),
+            {f'v{phase}': f'b{n}_v{phase}' for phase in 'abc'},
             {'theta': s('theta'), 'omega': s('omega')}, ['omega'])
         add('Park', prefix + '_voltage', inputs={'input': vector('vo', 'abc'), 'theta': s('theta')},
             outputs={'out': vector('v', 'dq0')}, mon=['out'])
@@ -372,9 +382,8 @@ def convert(source):
             {'fc': CHOICES['carrier_Hz'], 'alignment': CHOICES['carrier_alignment'], 'Mmax': CHOICES['Mmax']},
             {'u': vector('u', 'dq'), 'vdc': s('vdc'), 'theta': s('theta')},
             {'s': vector('s', 'abc'), 'ulim': vector('ulim', 'dq')})
-        add('Converter', prefix + '_bridge', inputs={'s': vector('s', 'abc'), 'vdc': s('vdc'), 'i': vector('i', 'abc')},
-            outputs={'e': vector('e', 'abc'), 'idc': s('idc')})
-        state['devices'][prefix + '_dc'] = {'vdc': vdc}
+        add('Converter', prefix + '_bridge', inputs={'s': vector('s', 'abc'), 'vdc': s('vdc')},
+            outputs={'e': vector('e', 'abc')})
         state['devices'][prefix + '_filter'] = {
             **samples(current, 'i', math.sqrt(2 / 3)),
             **samples(vo, 'vo', math.sqrt(2 / 3)),
@@ -384,7 +393,7 @@ def convert(source):
         state['devices'][prefix + '_inner'] = {'ud': command.real, 'uq': command.imag}
         report['inverters'][prefix] = {'rating_VA': rating, 'voltage_V': vb, 'Imax_A': imax,
                                        'dispatch_W': pq.real, 'dispatch_var': pq.imag,
-                                       'initial_vdc_V': vdc, 'dc_C_F': capacitance,
+                                       'vdc_V': vdc,
                                        'filter_Rs_ohm': rs, 'filter_Ls_H': ls, 'filter_C_F': c,
                                        'filter_Rg_ohm': rg, 'filter_Lg_H': lg,
                                        'filter_resonance_Hz': math.sqrt((ls + lg) / (ls * lg * c)) / (2 * math.pi),
@@ -415,13 +424,18 @@ def convert(source):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path)
+    parser.add_argument('--line-parameters', type=Path, default=ROOT / 'line_parameters.json')
     parser.add_argument('--output', type=Path, default=ROOT)
     args = parser.parse_args()
-    if args.source:
-        raw = args.source.read_bytes()
-    else:
-        raw = subprocess.check_output(['git', 'show', f'{SOURCE_REVISION}:{SOURCE_PATH}'], cwd=ROOT)
-    case, state, report = convert(json.loads(raw))
+    raw = read_source(args.source)
+    line_raw = args.line_parameters.read_bytes()
+    line_data = json.loads(line_raw)
+    if line_data['frequency_Hz'] != FREQUENCY:
+        raise ValueError('Line parameters use a different fundamental frequency')
+    if line_data['source_sha256'] != hashlib.sha256(raw).hexdigest():
+        raise ValueError('Line parameters use a different source; regenerate them with line_parameters.py')
+    case, state, report = convert(json.loads(raw), line_data)
+    report['lines']['parameters_sha256'] = hashlib.sha256(line_raw).hexdigest()
     report['source_sha256'] = hashlib.sha256(raw).hexdigest()
     if args.source:
         report['source_revision'] = None

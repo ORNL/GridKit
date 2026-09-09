@@ -5,7 +5,6 @@
 :titlesonly:
 :hidden:
 
-DCLink <DCLink/README>
 GASTPTI <GASTPTI/README>
 IEEEST <IEEEST/README>
 InnerCurrentControl <InnerCurrentControl/README>

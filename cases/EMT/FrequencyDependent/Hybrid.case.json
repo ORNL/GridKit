@@ -611,12 +611,7 @@
                     "sb",
                     "sc"
                 ],
-                "vdc": "dc",
-                "i": [
-                    "filter_ia",
-                    "filter_ib",
-                    "filter_ic"
-                ]
+                "vdc": "dc"
             },
             "outputs": {
                 "e": [
@@ -626,8 +621,7 @@
                 ]
             },
             "mon": [
-                "e",
-                "idc"
+                "e"
             ]
         },
         {

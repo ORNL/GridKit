@@ -13,24 +13,17 @@
 \begin{tikzpicture}[emt diagram,
     block/.append style={minimum height=1.25cm, align=center}]
 
-% ================= DC link and bridge =================
-% The DC link feeds the bridge from the left; the bridge supplies voltage to
-% the LCL filter.
-\node[block] (dclink) at (4.8, 0) {DCLink};
-\node[block, minimum width=2.6cm] (bridge) at (8.8, 0)
-    {Converter};
-\draw[->, line] ([yshift=2.5mm]dclink.east)
-    -- node[sig, above] {$v_{\mathrm{dc}}$} ([yshift=2.5mm]bridge.west);
-\draw[->, line] ([yshift=-2.5mm]bridge.west)
-    -- node[sig, below] {$i_{\mathrm{dc}}$} ([yshift=-2.5mm]dclink.east);
+% ================= DC supply and bridge =================
+\node[signal, label={[sig]above:$v_{\mathrm{dc}}$}] (vdc) at (4.8, 0) {};
+\node[block, minimum width=2.6cm] (bridge) at (8.8, 0) {Converter};
+\node[signal] (dcbranch) at (7.2, 0) {};
+\draw[->, line] (vdc) -- (bridge.west);
 
 % ================= LCL filter and terminal =================
 \node[block] (filter) at (12.4, 0) {Filter\\{\small LCL}};
 \node[block] (tbus) at (20.0, 0) {Bus\\{\small terminal}};
-\draw[->, line] ([yshift=2.5mm]bridge.east)
-    -- node[sig, above] {$\mathbf{e}$} ([yshift=2.5mm]filter.west);
-\draw[->, line] ([yshift=-2.5mm]filter.west)
-    -- node[sig, below] {$\mathbf{i}$} ([yshift=-2.5mm]bridge.east);
+\draw[->, line] (bridge.east)
+    -- node[sig, above] {$\mathbf{e}$} (filter.west);
 \draw[->, line] (filter.east) -- (tbus.west);
 % The grid-current tap sits over the outer controller input it feeds.
 \node[signal, label={[sig]above:$\mathbf{i}_g$}] (igabc)
@@ -72,8 +65,11 @@
     -- node[sig, above] {$\mathbf{u}$} ([yshift=2.5mm]pwm.east);
 \draw[->, line] ([yshift=-2.5mm]pwm.east)
     -- node[sig, below] {$\mathbf{u}^{\mathrm{lim}}$} ([yshift=-2.5mm]icc.west);
-\draw[->, line] (dclink.south) -- (4.8, \controlrow)
-    -- node[sig, above] {$v_{\mathrm{dc}}$} (pwm.west);
+\draw[->, line] (dcbranch) |- (pwm.west);
+
+% ================= Terminal-voltage PLL =================
+\node[block] (pll) at (20, \framerow) {PLL};
+\draw[->, line] (tbus.south) -- node[sig, right] {$\mathbf{v}$} (pll.north);
 
 % ================= Setpoints =================
 % Setpoints enter the outer controller from outside the enclosure.
@@ -90,14 +86,16 @@
 % ================= Configuration and frame enclosures =================
 \begin{scope}[on background layer]
     \node[operator enclosure, densely dotted,
-        fit=(dclink)(bridge)(filter)
+        fit=(bridge)(filter)
             (icc)(outer)(pwm)] (enclosure) {};
     % The PLL defines the dq frame; the region is labelled with it.
     \coordinate (frame) at (\framecolumn, \framerow);
     \draw[enclosure, densely dotted]
         (frame |- enclosure.south) -- (frame) -- (frame -| enclosure.east);
 \end{scope}
-\node[sig, anchor=north west] at ($(frame)+(0.15,-0.1)$) {PLL};
+\draw[->, line] (pll.west)
+    -- node[sig, above] {$\theta,\omega$} (frame -| enclosure.east);
+\node[sig, anchor=north west] at ($(frame)+(0.7,-0.1)$) {$dq$};
 
 \end{tikzpicture}
 \end{document}

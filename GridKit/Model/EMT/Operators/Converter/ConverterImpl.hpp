@@ -26,8 +26,6 @@ namespace GridKit
                     { return output_port_[1].read(); });
       monitor_->set(ModelDataT::MonitorableVariables::ec, [this]
                     { return output_port_[2].read(); });
-      monitor_->set(ModelDataT::MonitorableVariables::idc, [this]
-                    { return output_port_[3].read(); });
       for (size_t n = 0; n < output_port_.size(); ++n)
       {
         const auto key = static_cast<Outputs>(n);
@@ -132,13 +130,13 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     void Converter<scalar_type, index_type>::attachInput(
-        const std::array<SignalT*, 3>& switching, SignalT* vdc, const std::array<SignalT*, 3>& current)
+        const std::array<SignalT*, 3>& switching, SignalT* vdc)
     {
       if (this->allocated_)
       {
         throw std::logic_error("Attach Converter inputs before allocation");
       }
-      input_ = {switching[0], switching[1], switching[2], vdc, current[0], current[1], current[2]};
+      input_ = {switching[0], switching[1], switching[2], vdc};
     }
 
     template <typename scalar_type, typename index_type>
@@ -148,7 +146,7 @@ namespace GridKit
       {
         if (signal == nullptr || !signal->linked())
         {
-          Log::error() << "Converter: all switching, DC voltage, and AC current inputs must have linked sources\n";
+          Log::error() << "Converter: all switching and DC voltage inputs must have linked sources\n";
           return 1;
         }
       }
@@ -163,16 +161,9 @@ namespace GridKit
       {
         throw std::logic_error("Cannot evaluate an unconnected Converter or invalid output");
       }
-      std::array<ScalarT, 7> values{};
-      for (size_t n = 0; n < 3; ++n)
+      std::array<ScalarT, 4> values{};
+      for (size_t n = 0; n < values.size(); ++n)
         values[n] = input_[n]->read();
-      if (output == Outputs::idc)
-      {
-        for (size_t n = 4; n < values.size(); ++n)
-          values[n] = input_[n]->read();
-      }
-      else
-        values[3] = input_[3]->read();
       return evaluateOutput(output, values.data());
     }
 
@@ -180,8 +171,6 @@ namespace GridKit
     auto Converter<scalar_type, index_type>::evaluateOutput(Outputs output, const ScalarT* input) const -> ScalarT
     {
       const ABCVector<ScalarT> switching{input[0], input[1], input[2]};
-      if (output == Outputs::idc)
-        return dcCurrent(switching, {input[4], input[5], input[6]});
       return voltage(switching, input[3])[static_cast<size_t>(output)];
     }
   } // namespace EMT
