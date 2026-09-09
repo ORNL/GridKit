@@ -119,7 +119,9 @@ The current error, feedforward voltage, and limiter factor are
 ```
 
 The limit uses the CommonMath smooth
-[`max`](../../../../../CommonMath.md#maximum).
+[`max`](../../../../../CommonMath.md#maximum) and does not depend on terminal
+voltage. See [REGCA correspondence](../README.md#regca-correspondence) for
+the unmodeled LVPL and LVACM functions.
 
 ### Internal Equations
 
