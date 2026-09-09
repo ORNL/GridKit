@@ -27,7 +27,7 @@ The current plots cover 0–5 s with the inductive fault cleared at 1.15 s.
 
 The inverter plants use the same LCL Filter wiring as the GFL control example.
 The generator preserves initial terminal dispatch, includes both reactor losses
-in DC power, and initializes capacitor voltage and both inductor currents.
+in initial bridge power, and initializes capacitor voltage and both inductor currents.
 The filter and controller parameters are synthetic, as listed in the case README.
 
 Generate current results using the commands below. The four PNG/PDF plots in
@@ -54,6 +54,21 @@ The normal EMT workflow uses the case solver's `rel_tol = 1e-5` and
 `abs_tol = 1e-6`, including the CTest and switching studies. It does not run a
 tighter-tolerance study.
 
+The lumped lines use coupled GridWorkbench-based parameters calibrated to
+the source positive sequence; see the case README for the geometry assumptions.
+To compare regenerated lines against a saved case/state directory with identical
+solver settings, run:
+
+```bash
+python3 examples/EMT/Hawaii/benchmark.py --baseline /path/to/saved/Hawaii
+```
+
+This runs three sequential trials per case and mu, with no intermediate monitoring
+and a 0.2 s duration. `--tmax 5 --dt-monitor 0.0001388888888888889` includes
+the fault and recovery with the usual output cadence. Logs, input and binary
+hashes, CPU/wall timings, and IDA counters are saved below
+`results/line-parameters/benchmark`. This benchmark does not regenerate plots.
+
 `phasor.py` copies the case and validation inputs from `lukel/cases-polish-dev`
 into the ignored, untracked `phasor-reference/` directory and runs the original
 `DynamicSimulation Hawaii.solver.json` validation command unchanged. The
@@ -69,10 +84,9 @@ comparison is archived under `results/history/`.
 `switching.py` checks all nine bridges in a separate one-cycle run sampled at
 720 kHz, using the same physical case and solver tolerances. It compares the
 switching functions and bridge harmonics with an independent periodic sigmoid
-sum at the instantaneous duty, and checks bridge AC/DC power balance using
-Filter's converter-side current. `results/switching.json` records fundamental,
+sum at the instantaneous duty, and checks the bridge voltage projection. `results/switching.json` records fundamental,
 carrier, and sideband amplitudes. The window includes startup; these checks
-establish the continuous switching equations and DC conversion, not a
+establish the continuous switching equations and voltage conversion, not a
 steady-state harmonic-performance specification.
 
 From the repository root, with Enzyme and SUNDIALS KLU enabled:

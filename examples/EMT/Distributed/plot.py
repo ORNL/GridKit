@@ -310,7 +310,7 @@ def network(records, output):
             output / f'network{buses}_{"hybrid" if hybrid else "machine"}_{event}.png',
         )
         if hybrid:
-            fig, axes = plt.subplots(3, 1, figsize=(11, 8))
+            fig, axes = plt.subplots(2, 1, figsize=(11, 6))
             for meta, d, _ in cases:
                 color = COLORS[meta["kind"]]
                 label = LABELS[meta["kind"]]
@@ -331,18 +331,11 @@ def network(records, output):
                     label=label,
                     lw=0.8,
                 )
-                axes[2].plot(
-                    t * 1e3,
-                    d[f"Converter_converter{g}_idc"],
-                    color=color,
-                    label=label,
-                    lw=0.8,
-                )
             axes[0].set_title(
                 f"{buses}-bus open-loop converter, 900 Hz PWM ({event} case)"
             )
             for ax, label in zip(
-                axes, ["Converter phase a [kV]", "Filter phase a [A]", "DC current [A]"]
+                axes, ["Converter phase a [kV]", "Filter phase a [A]"]
             ):
                 ax.set_ylabel(label)
                 ax.set_xlabel("Time [ms]")

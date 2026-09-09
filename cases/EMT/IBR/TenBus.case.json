@@ -477,12 +477,7 @@
                     "sb_4",
                     "sc_4"
                 ],
-                "vdc": "dc_4",
-                "i": [
-                    "filter_4_ia",
-                    "filter_4_ib",
-                    "filter_4_ic"
-                ]
+                "vdc": "dc_4"
             },
             "outputs": {
                 "e": [
@@ -492,8 +487,7 @@
                 ]
             },
             "mon": [
-                "e",
-                "idc"
+                "e"
             ]
         },
         {
@@ -584,12 +578,7 @@
                     "sb_5",
                     "sc_5"
                 ],
-                "vdc": "dc_5",
-                "i": [
-                    "filter_5_ia",
-                    "filter_5_ib",
-                    "filter_5_ic"
-                ]
+                "vdc": "dc_5"
             },
             "outputs": {
                 "e": [
@@ -599,8 +588,7 @@
                 ]
             },
             "mon": [
-                "e",
-                "idc"
+                "e"
             ]
         },
         {
@@ -691,12 +679,7 @@
                     "sb_6",
                     "sc_6"
                 ],
-                "vdc": "dc_6",
-                "i": [
-                    "filter_6_ia",
-                    "filter_6_ib",
-                    "filter_6_ic"
-                ]
+                "vdc": "dc_6"
             },
             "outputs": {
                 "e": [
@@ -706,8 +689,7 @@
                 ]
             },
             "mon": [
-                "e",
-                "idc"
+                "e"
             ]
         },
         {

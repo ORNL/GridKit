@@ -16,9 +16,6 @@ namespace GridKit
       sb,
       sc,
       vdc,
-      ia,
-      ib,
-      ic,
       SIZE,
     };
 
@@ -27,7 +24,6 @@ namespace GridKit
       ea,
       eb,
       ec,
-      idc,
       SIZE,
     };
 
@@ -36,7 +32,6 @@ namespace GridKit
       ea,
       eb,
       ec,
-      idc,
     };
 
     template <typename real_type, typename index_type>

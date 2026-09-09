@@ -249,12 +249,8 @@ future file-backed Containers; file inclusion is not part of this revision.
   `OuterVoltageControl`    | `vref`, `v`, `ig`, `ilim` | Input | Two Signal IDs | Yes
   `OuterVoltageControl`    | `omega` | Input | Signal | Yes
   `OuterVoltageControl`    | `icmd` | Output | Two Signal IDs | No
-  `DCLink`                 | `isrc`, `idc` | Input | Signal | Yes
-  `DCLink`                 | `vdc` | Output | Signal | No
   `Converter`              | `s`     | Input     | Three Signal IDs | Yes
   `Converter`              | `vdc`   | Input     | Signal        | Yes
-  `Converter`              | `i`     | Input     | Three Signal IDs | Yes
-  `Converter`              | `idc`   | Output    | Signal        | No
   `Converter`              | `e`     | Output    | Three Signal IDs | No
   `Machine`                | `va`, `vb`, `vc` | Input | Voltage signal | Yes
   `Machine`                | `pm`    | Input     | Signal        | No
@@ -343,17 +339,17 @@ transform internally and returns the limited voltage command `ulim`.
 {
   "class": "Converter",
   "id": "bridge",
-  "inputs": { "s": ["sa", "sb", "sc"], "vdc": "dc", "i": ["ia", "ib", "ic"] },
-  "outputs": { "e": ["ea", "eb", "ec"], "idc": "idc" },
-  "mon": ["e", "idc"]
+  "inputs": { "s": ["sa", "sb", "sc"], "vdc": "dc" },
+  "outputs": { "e": ["ea", "eb", "ec"] },
+  "mon": ["e"]
 }
 ```
 
-For a constant DC link, declare `{"id": "dc", "value": 1000.0}`.
+For a constant DC voltage, declare `{"id": "dc", "value": 1000.0}`.
 Alternatively, the embedding program or another component supplies `dc`. A
 `Filter` can consume `ea`, `eb`, and `ec` and publish its converter-side
 currents to `ia`, `ib`, and `ic`. It injects its grid-side current into the
-terminal Bus and exposes capacitor voltage for the PLL and controllers:
+terminal Bus and exposes capacitor voltage for the controllers:
 
 ```json
 {
@@ -377,28 +373,10 @@ terminal Bus and exposes capacitor voltage for the PLL and controllers:
 ```
 
 Declare the output signal IDs in `signals`, and a Bus named `terminal` in
-`devices`. The bridge publishes the current drawn from
-the DC link as `idc`, with `vdc * idc = e · i`. Computed signals
-are evaluated when read, including through Container boundaries. These
-connections introduce no DAE variables.
-
-For a dynamic DC link, declare `dc` and `idc` without constant values, and a
-source-current signal such as `{"id": "isrc", "value": 80.0}`. Connect the capacitor
-to the bridge above:
-
-```json
-{
-  "class": "DCLink",
-  "id": "capacitor",
-  "params": { "C": 0.02 },
-  "inputs": { "isrc": "isrc", "idc": "idc" },
-  "outputs": { "vdc": "dc" },
-  "mon": ["vdc", "isrc", "idc", "energy"]
-}
-```
-
-The capacitor adds one differential voltage. Set its initial value with
-`"capacitor": {"vdc": 600.0}` in the state file's `devices` object.
+`devices`. Connect PLL to the terminal Bus voltage outputs; the voltage Park
+operator reads `Filter.vo`. Computed signals are evaluated when read,
+including through Container boundaries. These signal connections introduce
+no DAE variables.
 
 The current and voltage controllers use two-signal vector ports in power-invariant
 `d`, `q` order. The same angle and angular frequency must be used for all
@@ -441,7 +419,6 @@ grid-side current. Vector monitors expand to scalar `d` and `q` columns.
   `InnerCurrentControl` | [InnerCurrentControl](Component/Controller/InnerCurrentControl/README.md)
   `OuterPowerControl`   | [OuterPowerControl](Component/Controller/OuterPowerControl/README.md)
   `OuterVoltageControl` | [OuterVoltageControl](Component/Controller/OuterVoltageControl/README.md)
-  `DCLink`              | [DCLink](Component/Controller/DCLink/README.md)
   `Converter`           | [Converter](Operators/Converter/README.md)
   `Bus`                 | [Bus](Component/Bus/README.md)
   `DependentVoltageSource` | [DependentVoltageSource](Component/Source/DependentVoltageSource/README.md)

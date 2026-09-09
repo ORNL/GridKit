@@ -14,13 +14,25 @@
       "type": "signal_step",
       "time": 0.04,
       "signal_id": "vrefd",
-      "value": 209
+      "value": 208.96324877245428
+    },
+    {
+      "type": "signal_step",
+      "time": 0.04,
+      "signal_id": "vrefq",
+      "value": 3.9192681027689527
     },
     {
       "type": "signal_step",
       "time": 0.12,
       "signal_id": "vrefd",
-      "value": 208
+      "value": 207.9634246156483
+    },
+    {
+      "type": "signal_step",
+      "time": 0.12,
+      "signal_id": "vrefq",
+      "value": 3.9005156238083356
     }
   ]
 }

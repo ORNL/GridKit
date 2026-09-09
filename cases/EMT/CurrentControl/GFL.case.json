@@ -9,7 +9,8 @@
       "id": "omega"
     },
     {
-      "id": "vdc"
+      "id": "vdc",
+      "value": 400
     },
     {
       "id": "icmdd"
@@ -111,34 +112,16 @@
       "id": "ec"
     },
     {
-      "id": "isrc",
-      "value": 4.222736286791393
+      "id": "va"
     },
     {
-      "id": "idc"
+      "id": "vb"
+    },
+    {
+      "id": "vc"
     }
   ],
   "devices": [
-    {
-      "class": "DCLink",
-      "id": "dc",
-      "params": {
-        "C": 0.02
-      },
-      "inputs": {
-        "isrc": "isrc",
-        "idc": "idc"
-      },
-      "outputs": {
-        "vdc": "vdc"
-      },
-      "mon": [
-        "vdc",
-        "isrc",
-        "idc",
-        "energy"
-      ]
-    },
     {
       "class": "Bus",
       "id": "terminal",
@@ -146,7 +129,12 @@
         "va",
         "vb",
         "vc"
-      ]
+      ],
+      "outputs": {
+        "va": "va",
+        "vb": "vb",
+        "vc": "vc"
+      }
     },
     {
       "class": "Filter",
@@ -304,9 +292,9 @@
         "Ki": 2500
       },
       "inputs": {
-        "va": "voa",
-        "vb": "vob",
-        "vc": "voc"
+        "va": "va",
+        "vb": "vb",
+        "vc": "vc"
       },
       "outputs": {
         "theta": "theta",
@@ -470,24 +458,17 @@
           "sb",
           "sc"
         ],
-        "vdc": "vdc",
-        "i": [
-          "iia",
-          "iib",
-          "iic"
-        ]
+        "vdc": "vdc"
       },
       "outputs": {
         "e": [
           "ea",
           "eb",
           "ec"
-        ],
-        "idc": "idc"
+        ]
       },
       "mon": [
-        "e",
-        "idc"
+        "e"
       ]
     },
     {
@@ -495,8 +476,8 @@
       "id": "power_control",
       "params": {
         "V": 208.0,
-        "Pref": 1657.8204340800326,
-        "Qref": -7.777712545520165e-14,
+        "Pref": 1657.64744685731,
+        "Qref": -23.948561141535574,
         "Kp": 0.01,
         "Ki": 40,
         "Kaw": 200
