@@ -205,13 +205,21 @@
         "source_Xp": 0.15000000596046448,
         "source_Xpp": 0.15000000596046448,
         "effective_Xpp": 0.14970000587403776,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           7.619999885559082,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          7.648221271469619,
-          0.05977860298313217
+        "source_open_poles_per_s": [
+          -0.13123359777145582,
+          -16.666667039195705
+        ],
+        "effective_open_poles_per_s": [
+          -0.1307493552429411,
+          -16.72839360736101
+        ],
+        "winding_open_poles_per_s": [
+          -0.13074935524294112,
+          -16.72839360736101
         ],
         "reconstructed_Xp": 0.15000000596046448,
         "reconstructed_Xpp": 0.14970000587403776
@@ -221,13 +229,21 @@
         "source_Xp": 0.47999998927116394,
         "source_Xpp": 0.15000000596046448,
         "effective_Xpp": 0.15000000596046448,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           1.309999942779541,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          1.4189984113977105,
-          0.03692745257433837
+        "source_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.08012414305883
+        ],
+        "effective_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.08012414305883
+        ],
+        "winding_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.080124143058818
         ],
         "reconstructed_Xp": 0.4799999892711639,
         "reconstructed_Xpp": 0.15000000596046448
@@ -242,13 +258,21 @@
         "source_Xp": 0.15000000596046448,
         "source_Xpp": 0.15000000596046448,
         "effective_Xpp": 0.14970000587403776,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           7.619999885559082,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          7.648221271469619,
-          0.05977860298313217
+        "source_open_poles_per_s": [
+          -0.13123359777145582,
+          -16.666667039195705
+        ],
+        "effective_open_poles_per_s": [
+          -0.1307493552429411,
+          -16.72839360736101
+        ],
+        "winding_open_poles_per_s": [
+          -0.13074935524294112,
+          -16.72839360736101
         ],
         "reconstructed_Xp": 0.15000000596046448,
         "reconstructed_Xpp": 0.14970000587403776
@@ -258,13 +282,21 @@
         "source_Xp": 0.47999998927116394,
         "source_Xpp": 0.15000000596046448,
         "effective_Xpp": 0.15000000596046448,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           1.309999942779541,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          1.4189984113977105,
-          0.03692745257433837
+        "source_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.08012414305883
+        ],
+        "effective_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.08012414305883
+        ],
+        "winding_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.080124143058818
         ],
         "reconstructed_Xp": 0.4799999892711639,
         "reconstructed_Xpp": 0.15000000596046448
@@ -279,13 +311,21 @@
         "source_Xp": 0.15000000596046448,
         "source_Xpp": 0.15000000596046448,
         "effective_Xpp": 0.14970000587403776,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           7.619999885559082,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          7.648221271469619,
-          0.05977860298313217
+        "source_open_poles_per_s": [
+          -0.13123359777145582,
+          -16.666667039195705
+        ],
+        "effective_open_poles_per_s": [
+          -0.1307493552429411,
+          -16.72839360736101
+        ],
+        "winding_open_poles_per_s": [
+          -0.13074935524294112,
+          -16.72839360736101
         ],
         "reconstructed_Xp": 0.15000000596046448,
         "reconstructed_Xpp": 0.14970000587403776
@@ -295,13 +335,21 @@
         "source_Xp": 0.47999998927116394,
         "source_Xpp": 0.15000000596046448,
         "effective_Xpp": 0.15000000596046448,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           1.309999942779541,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          1.4189984113977105,
-          0.03692745257433837
+        "source_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.08012414305883
+        ],
+        "effective_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.08012414305883
+        ],
+        "winding_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.080124143058818
         ],
         "reconstructed_Xp": 0.4799999892711639,
         "reconstructed_Xpp": 0.15000000596046448
@@ -316,13 +364,21 @@
         "source_Xp": 0.15000000596046448,
         "source_Xpp": 0.15000000596046448,
         "effective_Xpp": 0.14970000587403776,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           7.619999885559082,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          7.648221271469619,
-          0.05977860298313217
+        "source_open_poles_per_s": [
+          -0.13123359777145582,
+          -16.666667039195705
+        ],
+        "effective_open_poles_per_s": [
+          -0.1307493552429411,
+          -16.72839360736101
+        ],
+        "winding_open_poles_per_s": [
+          -0.13074935524294112,
+          -16.72839360736101
         ],
         "reconstructed_Xp": 0.15000000596046448,
         "reconstructed_Xpp": 0.14970000587403776
@@ -332,13 +388,21 @@
         "source_Xp": 0.47999998927116394,
         "source_Xpp": 0.15000000596046448,
         "effective_Xpp": 0.15000000596046448,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           1.309999942779541,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          1.4189984113977105,
-          0.03692745257433837
+        "source_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.08012414305883
+        ],
+        "effective_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.08012414305883
+        ],
+        "winding_open_poles_per_s": [
+          -0.7047224239067343,
+          -27.080124143058818
         ],
         "reconstructed_Xp": 0.4799999892711639,
         "reconstructed_Xpp": 0.15000000596046448
@@ -353,13 +417,21 @@
         "source_Xp": 0.3199999928474426,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3192999929189682,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           9.229999542236328,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          9.235503134599277,
-          0.029982121822960905
+        "source_open_poles_per_s": [
+          -0.10834236723674968,
+          -33.33333407839142
+        ],
+        "effective_open_poles_per_s": [
+          -0.1082778041895375,
+          -33.35320981966592
+        ],
+        "winding_open_poles_per_s": [
+          -0.10827780418953746,
+          -33.353209819665935
         ],
         "reconstructed_Xp": 0.3199999928474426,
         "reconstructed_Xpp": 0.3192999929189682
@@ -369,13 +441,21 @@
         "source_Xp": 0.5899999737739563,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3199999928474426,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.5400000214576721,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          0.688902983534759,
-          0.04703129662324811
+        "source_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "effective_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "winding_open_poles_per_s": [
+          -1.4515832038772765,
+          -21.262437393777667
         ],
         "reconstructed_Xp": 0.5899999737739563,
         "reconstructed_Xpp": 0.3199999928474426
@@ -390,13 +470,21 @@
         "source_Xp": 0.3199999928474426,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3192999929189682,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           9.229999542236328,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          9.235503134599277,
-          0.029982121822960905
+        "source_open_poles_per_s": [
+          -0.10834236723674968,
+          -33.33333407839142
+        ],
+        "effective_open_poles_per_s": [
+          -0.1082778041895375,
+          -33.35320981966592
+        ],
+        "winding_open_poles_per_s": [
+          -0.10827780418953746,
+          -33.353209819665935
         ],
         "reconstructed_Xp": 0.3199999928474426,
         "reconstructed_Xpp": 0.3192999929189682
@@ -406,13 +494,21 @@
         "source_Xp": 0.5899999737739563,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3199999928474426,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.5400000214576721,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          0.688902983534759,
-          0.04703129662324811
+        "source_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "effective_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "winding_open_poles_per_s": [
+          -1.4515832038772765,
+          -21.262437393777667
         ],
         "reconstructed_Xp": 0.5899999737739563,
         "reconstructed_Xpp": 0.3199999928474426
@@ -427,13 +523,21 @@
         "source_Xp": 0.3199999928474426,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3192999929189682,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           9.229999542236328,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          9.235503134599277,
-          0.029982121822960905
+        "source_open_poles_per_s": [
+          -0.10834236723674968,
+          -33.33333407839142
+        ],
+        "effective_open_poles_per_s": [
+          -0.1082778041895375,
+          -33.35320981966592
+        ],
+        "winding_open_poles_per_s": [
+          -0.10827780418953746,
+          -33.353209819665935
         ],
         "reconstructed_Xp": 0.3199999928474426,
         "reconstructed_Xpp": 0.3192999929189682
@@ -443,13 +547,21 @@
         "source_Xp": 0.5899999737739563,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3199999928474426,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.5400000214576721,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          0.688902983534759,
-          0.04703129662324811
+        "source_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "effective_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "winding_open_poles_per_s": [
+          -1.4515832038772765,
+          -21.262437393777667
         ],
         "reconstructed_Xp": 0.5899999737739563,
         "reconstructed_Xpp": 0.3199999928474426
@@ -464,13 +576,21 @@
         "source_Xp": 0.3199999928474426,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3192999929189682,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           9.229999542236328,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          9.235503134599277,
-          0.029982121822960905
+        "source_open_poles_per_s": [
+          -0.10834236723674968,
+          -33.33333407839142
+        ],
+        "effective_open_poles_per_s": [
+          -0.1082778041895375,
+          -33.35320981966592
+        ],
+        "winding_open_poles_per_s": [
+          -0.10827780418953746,
+          -33.353209819665935
         ],
         "reconstructed_Xp": 0.3199999928474426,
         "reconstructed_Xpp": 0.3192999929189682
@@ -480,13 +600,21 @@
         "source_Xp": 0.5899999737739563,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3199999928474426,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.5400000214576721,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          0.688902983534759,
-          0.04703129662324811
+        "source_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "effective_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "winding_open_poles_per_s": [
+          -1.4515832038772765,
+          -21.262437393777667
         ],
         "reconstructed_Xp": 0.5899999737739563,
         "reconstructed_Xpp": 0.3199999928474426
@@ -501,13 +629,21 @@
         "source_Xp": 0.3199999928474426,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3192999929189682,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           9.229999542236328,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          9.235503134599277,
-          0.029982121822960905
+        "source_open_poles_per_s": [
+          -0.10834236723674968,
+          -33.33333407839142
+        ],
+        "effective_open_poles_per_s": [
+          -0.1082778041895375,
+          -33.35320981966592
+        ],
+        "winding_open_poles_per_s": [
+          -0.10827780418953746,
+          -33.353209819665935
         ],
         "reconstructed_Xp": 0.3199999928474426,
         "reconstructed_Xpp": 0.3192999929189682
@@ -517,13 +653,21 @@
         "source_Xp": 0.5899999737739563,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3199999928474426,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.5400000214576721,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          0.688902983534759,
-          0.04703129662324811
+        "source_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "effective_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "winding_open_poles_per_s": [
+          -1.4515832038772765,
+          -21.262437393777667
         ],
         "reconstructed_Xp": 0.5899999737739563,
         "reconstructed_Xpp": 0.3199999928474426
@@ -538,13 +682,21 @@
         "source_Xp": 0.3199999928474426,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3192999929189682,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           9.229999542236328,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          9.235503134599277,
-          0.029982121822960905
+        "source_open_poles_per_s": [
+          -0.10834236723674968,
+          -33.33333407839142
+        ],
+        "effective_open_poles_per_s": [
+          -0.1082778041895375,
+          -33.35320981966592
+        ],
+        "winding_open_poles_per_s": [
+          -0.10827780418953746,
+          -33.353209819665935
         ],
         "reconstructed_Xp": 0.3199999928474426,
         "reconstructed_Xpp": 0.3192999929189682
@@ -554,13 +706,21 @@
         "source_Xp": 0.5899999737739563,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3199999928474426,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.5400000214576721,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          0.688902983534759,
-          0.04703129662324811
+        "source_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "effective_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "winding_open_poles_per_s": [
+          -1.4515832038772765,
+          -21.262437393777667
         ],
         "reconstructed_Xp": 0.5899999737739563,
         "reconstructed_Xpp": 0.3199999928474426
@@ -575,13 +735,21 @@
         "source_Xp": 0.3199999928474426,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3192999929189682,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           9.229999542236328,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          9.235503134599277,
-          0.029982121822960905
+        "source_open_poles_per_s": [
+          -0.10834236723674968,
+          -33.33333407839142
+        ],
+        "effective_open_poles_per_s": [
+          -0.1082778041895375,
+          -33.35320981966592
+        ],
+        "winding_open_poles_per_s": [
+          -0.10827780418953746,
+          -33.353209819665935
         ],
         "reconstructed_Xp": 0.3199999928474426,
         "reconstructed_Xpp": 0.3192999929189682
@@ -591,13 +759,21 @@
         "source_Xp": 0.5899999737739563,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3199999928474426,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.5400000214576721,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          0.688902983534759,
-          0.04703129662324811
+        "source_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "effective_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "winding_open_poles_per_s": [
+          -1.4515832038772765,
+          -21.262437393777667
         ],
         "reconstructed_Xp": 0.5899999737739563,
         "reconstructed_Xpp": 0.3199999928474426
@@ -612,13 +788,21 @@
         "source_Xp": 0.3199999928474426,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3192999929189682,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           9.229999542236328,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          9.235503134599277,
-          0.029982121822960905
+        "source_open_poles_per_s": [
+          -0.10834236723674968,
+          -33.33333407839142
+        ],
+        "effective_open_poles_per_s": [
+          -0.1082778041895375,
+          -33.35320981966592
+        ],
+        "winding_open_poles_per_s": [
+          -0.10827780418953746,
+          -33.353209819665935
         ],
         "reconstructed_Xp": 0.3199999928474426,
         "reconstructed_Xpp": 0.3192999929189682
@@ -628,13 +812,21 @@
         "source_Xp": 0.5899999737739563,
         "source_Xpp": 0.3199999928474426,
         "effective_Xpp": 0.3199999928474426,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.5400000214576721,
           0.05999999865889549
         ],
-        "winding_open_times_s": [
-          0.688902983534759,
-          0.04703129662324811
+        "source_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "effective_open_poles_per_s": [
+          -1.4515832038772762,
+          -21.262437393777667
+        ],
+        "winding_open_poles_per_s": [
+          -1.4515832038772765,
+          -21.262437393777667
         ],
         "reconstructed_Xp": 0.5899999737739563,
         "reconstructed_Xpp": 0.3199999928474426
@@ -649,13 +841,21 @@
         "source_Xp": 0.1599999964237213,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.159599996432662,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           4.989999771118164,
           0.019999999552965164
         ],
-        "winding_open_times_s": [
-          4.997931511274449,
-          0.019968259462245213
+        "source_open_poles_per_s": [
+          -0.2004008107952115,
+          -50.00000111758712
+        ],
+        "effective_open_poles_per_s": [
+          -0.20008277379235326,
+          -50.07947747728038
+        ],
+        "winding_open_poles_per_s": [
+          -0.20008277379235329,
+          -50.079477477280385
         ],
         "reconstructed_Xp": 0.1599999964237213,
         "reconstructed_Xpp": 0.159599996432662
@@ -665,13 +865,21 @@
         "source_Xp": 0.28999999165534973,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.1599999964237213,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.8899999856948853,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          1.1472744146287754,
-          0.031030064105101285
+        "source_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "effective_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "winding_open_poles_per_s": [
+          -0.8716310476805768,
+          -32.22681063799678
         ],
         "reconstructed_Xp": 0.28999999165534973,
         "reconstructed_Xpp": 0.1599999964237213
@@ -686,13 +894,21 @@
         "source_Xp": 0.1599999964237213,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.159599996432662,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           4.989999771118164,
           0.019999999552965164
         ],
-        "winding_open_times_s": [
-          4.997931511274449,
-          0.019968259462245213
+        "source_open_poles_per_s": [
+          -0.2004008107952115,
+          -50.00000111758712
+        ],
+        "effective_open_poles_per_s": [
+          -0.20008277379235326,
+          -50.07947747728038
+        ],
+        "winding_open_poles_per_s": [
+          -0.20008277379235329,
+          -50.079477477280385
         ],
         "reconstructed_Xp": 0.1599999964237213,
         "reconstructed_Xpp": 0.159599996432662
@@ -702,13 +918,21 @@
         "source_Xp": 0.28999999165534973,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.1599999964237213,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.8899999856948853,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          1.1472744146287754,
-          0.031030064105101285
+        "source_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "effective_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "winding_open_poles_per_s": [
+          -0.8716310476805768,
+          -32.22681063799678
         ],
         "reconstructed_Xp": 0.28999999165534973,
         "reconstructed_Xpp": 0.1599999964237213
@@ -723,13 +947,21 @@
         "source_Xp": 0.1599999964237213,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.159599996432662,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           4.989999771118164,
           0.019999999552965164
         ],
-        "winding_open_times_s": [
-          4.997931511274449,
-          0.019968259462245213
+        "source_open_poles_per_s": [
+          -0.2004008107952115,
+          -50.00000111758712
+        ],
+        "effective_open_poles_per_s": [
+          -0.20008277379235326,
+          -50.07947747728038
+        ],
+        "winding_open_poles_per_s": [
+          -0.20008277379235329,
+          -50.079477477280385
         ],
         "reconstructed_Xp": 0.1599999964237213,
         "reconstructed_Xpp": 0.159599996432662
@@ -739,13 +971,21 @@
         "source_Xp": 0.28999999165534973,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.1599999964237213,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.8899999856948853,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          1.1472744146287754,
-          0.031030064105101285
+        "source_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "effective_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "winding_open_poles_per_s": [
+          -0.8716310476805768,
+          -32.22681063799678
         ],
         "reconstructed_Xp": 0.28999999165534973,
         "reconstructed_Xpp": 0.1599999964237213
@@ -760,13 +1000,21 @@
         "source_Xp": 0.1599999964237213,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.159599996432662,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           4.989999771118164,
           0.019999999552965164
         ],
-        "winding_open_times_s": [
-          4.997931511274449,
-          0.019968259462245213
+        "source_open_poles_per_s": [
+          -0.2004008107952115,
+          -50.00000111758712
+        ],
+        "effective_open_poles_per_s": [
+          -0.20008277379235326,
+          -50.07947747728038
+        ],
+        "winding_open_poles_per_s": [
+          -0.20008277379235329,
+          -50.079477477280385
         ],
         "reconstructed_Xp": 0.1599999964237213,
         "reconstructed_Xpp": 0.159599996432662
@@ -776,13 +1024,21 @@
         "source_Xp": 0.28999999165534973,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.1599999964237213,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.8899999856948853,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          1.1472744146287754,
-          0.031030064105101285
+        "source_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "effective_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "winding_open_poles_per_s": [
+          -0.8716310476805768,
+          -32.22681063799678
         ],
         "reconstructed_Xp": 0.28999999165534973,
         "reconstructed_Xpp": 0.1599999964237213
@@ -797,13 +1053,21 @@
         "source_Xp": 0.1599999964237213,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.159599996432662,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           4.989999771118164,
           0.019999999552965164
         ],
-        "winding_open_times_s": [
-          4.997931511274449,
-          0.019968259462245213
+        "source_open_poles_per_s": [
+          -0.2004008107952115,
+          -50.00000111758712
+        ],
+        "effective_open_poles_per_s": [
+          -0.20008277379235326,
+          -50.07947747728038
+        ],
+        "winding_open_poles_per_s": [
+          -0.20008277379235329,
+          -50.079477477280385
         ],
         "reconstructed_Xp": 0.1599999964237213,
         "reconstructed_Xpp": 0.159599996432662
@@ -813,13 +1077,21 @@
         "source_Xp": 0.28999999165534973,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.1599999964237213,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.8899999856948853,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          1.1472744146287754,
-          0.031030064105101285
+        "source_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "effective_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "winding_open_poles_per_s": [
+          -0.8716310476805768,
+          -32.22681063799678
         ],
         "reconstructed_Xp": 0.28999999165534973,
         "reconstructed_Xpp": 0.1599999964237213
@@ -834,13 +1106,21 @@
         "source_Xp": 0.1599999964237213,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.159599996432662,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           4.989999771118164,
           0.019999999552965164
         ],
-        "winding_open_times_s": [
-          4.997931511274449,
-          0.019968259462245213
+        "source_open_poles_per_s": [
+          -0.2004008107952115,
+          -50.00000111758712
+        ],
+        "effective_open_poles_per_s": [
+          -0.20008277379235326,
+          -50.07947747728038
+        ],
+        "winding_open_poles_per_s": [
+          -0.20008277379235329,
+          -50.079477477280385
         ],
         "reconstructed_Xp": 0.1599999964237213,
         "reconstructed_Xpp": 0.159599996432662
@@ -850,13 +1130,21 @@
         "source_Xp": 0.28999999165534973,
         "source_Xpp": 0.1599999964237213,
         "effective_Xpp": 0.1599999964237213,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.8899999856948853,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          1.1472744146287754,
-          0.031030064105101285
+        "source_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "effective_open_poles_per_s": [
+          -0.871631047680577,
+          -32.226810637996806
+        ],
+        "winding_open_poles_per_s": [
+          -0.8716310476805768,
+          -32.22681063799678
         ],
         "reconstructed_Xp": 0.28999999165534973,
         "reconstructed_Xpp": 0.1599999964237213
@@ -871,13 +1159,21 @@
         "source_Xp": 0.4000000059604645,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           6.239999771118164,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          6.395172120554885,
-          0.029272079847173258
+        "source_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "effective_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "winding_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038278
         ],
         "reconstructed_Xp": 0.4000000059604645,
         "reconstructed_Xpp": 0.2800000011920929
@@ -887,13 +1183,21 @@
         "source_Xp": 0.6700000166893005,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           1.059999942779541,
           0.07999999821186066
         ],
-        "winding_open_times_s": [
-          1.231370627119108,
-          0.06886634426657731
+        "source_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "effective_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "winding_open_poles_per_s": [
+          -0.8121031783416676,
+          -14.52088114520879
         ],
         "reconstructed_Xp": 0.6700000166893005,
         "reconstructed_Xpp": 0.2800000011920929
@@ -908,13 +1212,21 @@
         "source_Xp": 0.4000000059604645,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           6.239999771118164,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          6.395172120554885,
-          0.029272079847173258
+        "source_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "effective_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "winding_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038278
         ],
         "reconstructed_Xp": 0.4000000059604645,
         "reconstructed_Xpp": 0.2800000011920929
@@ -924,13 +1236,21 @@
         "source_Xp": 0.6700000166893005,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           1.059999942779541,
           0.07999999821186066
         ],
-        "winding_open_times_s": [
-          1.231370627119108,
-          0.06886634426657731
+        "source_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "effective_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "winding_open_poles_per_s": [
+          -0.8121031783416676,
+          -14.52088114520879
         ],
         "reconstructed_Xp": 0.6700000166893005,
         "reconstructed_Xpp": 0.2800000011920929
@@ -945,13 +1265,21 @@
         "source_Xp": 0.4000000059604645,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           6.239999771118164,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          6.395172120554885,
-          0.029272079847173258
+        "source_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "effective_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "winding_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038278
         ],
         "reconstructed_Xp": 0.4000000059604645,
         "reconstructed_Xpp": 0.2800000011920929
@@ -961,13 +1289,21 @@
         "source_Xp": 0.6700000166893005,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           1.059999942779541,
           0.07999999821186066
         ],
-        "winding_open_times_s": [
-          1.231370627119108,
-          0.06886634426657731
+        "source_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "effective_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "winding_open_poles_per_s": [
+          -0.8121031783416676,
+          -14.52088114520879
         ],
         "reconstructed_Xp": 0.6700000166893005,
         "reconstructed_Xpp": 0.2800000011920929
@@ -982,13 +1318,21 @@
         "source_Xp": 0.4000000059604645,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           6.239999771118164,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          6.395172120554885,
-          0.029272079847173258
+        "source_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "effective_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "winding_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038278
         ],
         "reconstructed_Xp": 0.4000000059604645,
         "reconstructed_Xpp": 0.2800000011920929
@@ -998,13 +1342,21 @@
         "source_Xp": 0.6700000166893005,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           1.059999942779541,
           0.07999999821186066
         ],
-        "winding_open_times_s": [
-          1.231370627119108,
-          0.06886634426657731
+        "source_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "effective_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "winding_open_poles_per_s": [
+          -0.8121031783416676,
+          -14.52088114520879
         ],
         "reconstructed_Xp": 0.6700000166893005,
         "reconstructed_Xpp": 0.2800000011920929
@@ -1019,13 +1371,21 @@
         "source_Xp": 0.4000000059604645,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           6.239999771118164,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          6.395172120554885,
-          0.029272079847173258
+        "source_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "effective_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "winding_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038278
         ],
         "reconstructed_Xp": 0.4000000059604645,
         "reconstructed_Xpp": 0.2800000011920929
@@ -1035,13 +1395,21 @@
         "source_Xp": 0.6700000166893005,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           1.059999942779541,
           0.07999999821186066
         ],
-        "winding_open_times_s": [
-          1.231370627119108,
-          0.06886634426657731
+        "source_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "effective_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "winding_open_poles_per_s": [
+          -0.8121031783416676,
+          -14.52088114520879
         ],
         "reconstructed_Xp": 0.6700000166893005,
         "reconstructed_Xpp": 0.2800000011920929
@@ -1056,13 +1424,21 @@
         "source_Xp": 0.4000000059604645,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           6.239999771118164,
           0.029999999329447746
         ],
-        "winding_open_times_s": [
-          6.395172120554885,
-          0.029272079847173258
+        "source_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "effective_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038276
+        ],
+        "winding_open_poles_per_s": [
+          -0.1563679571322052,
+          -34.16224625038278
         ],
         "reconstructed_Xp": 0.4000000059604645,
         "reconstructed_Xpp": 0.2800000011920929
@@ -1072,13 +1448,21 @@
         "source_Xp": 0.6700000166893005,
         "source_Xpp": 0.2800000011920929,
         "effective_Xpp": 0.2800000011920929,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           1.059999942779541,
           0.07999999821186066
         ],
-        "winding_open_times_s": [
-          1.231370627119108,
-          0.06886634426657731
+        "source_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "effective_open_poles_per_s": [
+          -0.8121031783416677,
+          -14.52088114520879
+        ],
+        "winding_open_poles_per_s": [
+          -0.8121031783416676,
+          -14.52088114520879
         ],
         "reconstructed_Xp": 0.6700000166893005,
         "reconstructed_Xpp": 0.2800000011920929
@@ -1093,13 +1477,21 @@
         "source_Xp": 0.2199999988079071,
         "source_Xpp": 0.17000000178813934,
         "effective_Xpp": 0.17000000178813934,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           5.21999979019165,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          5.630322223472746,
-          0.037084908936497116
+        "source_open_poles_per_s": [
+          -0.17760972823740215,
+          -26.96514643496538
+        ],
+        "effective_open_poles_per_s": [
+          -0.17760972823740215,
+          -26.96514643496538
+        ],
+        "winding_open_poles_per_s": [
+          -0.17760972823740212,
+          -26.965146434965355
         ],
         "reconstructed_Xp": 0.2199999988079071,
         "reconstructed_Xpp": 0.17000000178813934
@@ -1109,13 +1501,21 @@
         "source_Xp": 0.550000011920929,
         "source_Xpp": 0.17000000178813934,
         "effective_Xpp": 0.17000000178813934,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.550000011920929,
           0.07000000029802322
         ],
-        "winding_open_times_s": [
-          0.7544453174718886,
-          0.05103087010651682
+        "source_open_poles_per_s": [
+          -1.325477111251686,
+          -19.59598176383624
+        ],
+        "effective_open_poles_per_s": [
+          -1.325477111251686,
+          -19.59598176383624
+        ],
+        "winding_open_poles_per_s": [
+          -1.3254771112516859,
+          -19.59598176383625
         ],
         "reconstructed_Xp": 0.5500000119209288,
         "reconstructed_Xpp": 0.17000000178813934
@@ -1130,13 +1530,21 @@
         "source_Xp": 0.2199999988079071,
         "source_Xpp": 0.17000000178813934,
         "effective_Xpp": 0.17000000178813934,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           5.21999979019165,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          5.630322223472746,
-          0.037084908936497116
+        "source_open_poles_per_s": [
+          -0.17760972823740215,
+          -26.96514643496538
+        ],
+        "effective_open_poles_per_s": [
+          -0.17760972823740215,
+          -26.96514643496538
+        ],
+        "winding_open_poles_per_s": [
+          -0.17760972823740212,
+          -26.965146434965355
         ],
         "reconstructed_Xp": 0.2199999988079071,
         "reconstructed_Xpp": 0.17000000178813934
@@ -1146,13 +1554,21 @@
         "source_Xp": 0.550000011920929,
         "source_Xpp": 0.17000000178813934,
         "effective_Xpp": 0.17000000178813934,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.550000011920929,
           0.07000000029802322
         ],
-        "winding_open_times_s": [
-          0.7544453174718886,
-          0.05103087010651682
+        "source_open_poles_per_s": [
+          -1.325477111251686,
+          -19.59598176383624
+        ],
+        "effective_open_poles_per_s": [
+          -1.325477111251686,
+          -19.59598176383624
+        ],
+        "winding_open_poles_per_s": [
+          -1.3254771112516859,
+          -19.59598176383625
         ],
         "reconstructed_Xp": 0.5500000119209288,
         "reconstructed_Xpp": 0.17000000178813934
@@ -1167,13 +1583,21 @@
         "source_Xp": 0.2199999988079071,
         "source_Xpp": 0.17000000178813934,
         "effective_Xpp": 0.17000000178813934,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           5.21999979019165,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          5.630322223472746,
-          0.037084908936497116
+        "source_open_poles_per_s": [
+          -0.17760972823740215,
+          -26.96514643496538
+        ],
+        "effective_open_poles_per_s": [
+          -0.17760972823740215,
+          -26.96514643496538
+        ],
+        "winding_open_poles_per_s": [
+          -0.17760972823740212,
+          -26.965146434965355
         ],
         "reconstructed_Xp": 0.2199999988079071,
         "reconstructed_Xpp": 0.17000000178813934
@@ -1183,13 +1607,21 @@
         "source_Xp": 0.550000011920929,
         "source_Xpp": 0.17000000178813934,
         "effective_Xpp": 0.17000000178813934,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.550000011920929,
           0.07000000029802322
         ],
-        "winding_open_times_s": [
-          0.7544453174718886,
-          0.05103087010651682
+        "source_open_poles_per_s": [
+          -1.325477111251686,
+          -19.59598176383624
+        ],
+        "effective_open_poles_per_s": [
+          -1.325477111251686,
+          -19.59598176383624
+        ],
+        "winding_open_poles_per_s": [
+          -1.3254771112516859,
+          -19.59598176383625
         ],
         "reconstructed_Xp": 0.5500000119209288,
         "reconstructed_Xpp": 0.17000000178813934
@@ -1204,13 +1636,21 @@
         "source_Xp": 0.2199999988079071,
         "source_Xpp": 0.17000000178813934,
         "effective_Xpp": 0.17000000178813934,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           5.21999979019165,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          5.630322223472746,
-          0.037084908936497116
+        "source_open_poles_per_s": [
+          -0.17760972823740215,
+          -26.96514643496538
+        ],
+        "effective_open_poles_per_s": [
+          -0.17760972823740215,
+          -26.96514643496538
+        ],
+        "winding_open_poles_per_s": [
+          -0.17760972823740212,
+          -26.965146434965355
         ],
         "reconstructed_Xp": 0.2199999988079071,
         "reconstructed_Xpp": 0.17000000178813934
@@ -1220,13 +1660,21 @@
         "source_Xp": 0.550000011920929,
         "source_Xpp": 0.17000000178813934,
         "effective_Xpp": 0.17000000178813934,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.550000011920929,
           0.07000000029802322
         ],
-        "winding_open_times_s": [
-          0.7544453174718886,
-          0.05103087010651682
+        "source_open_poles_per_s": [
+          -1.325477111251686,
+          -19.59598176383624
+        ],
+        "effective_open_poles_per_s": [
+          -1.325477111251686,
+          -19.59598176383624
+        ],
+        "winding_open_poles_per_s": [
+          -1.3254771112516859,
+          -19.59598176383625
         ],
         "reconstructed_Xp": 0.5500000119209288,
         "reconstructed_Xpp": 0.17000000178813934
@@ -1241,13 +1689,21 @@
         "source_Xp": 0.18000000715255737,
         "source_Xpp": 0.12999999523162842,
         "effective_Xpp": 0.12999999523162842,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           5.900000095367432,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          6.337134333695391,
-          0.03724080729752606
+        "source_open_poles_per_s": [
+          -0.15780003189815092,
+          -26.85226429198358
+        ],
+        "effective_open_poles_per_s": [
+          -0.15780003189815092,
+          -26.85226429198358
+        ],
+        "winding_open_poles_per_s": [
+          -0.1578000318981509,
+          -26.852264291983566
         ],
         "reconstructed_Xp": 0.18000000715255737,
         "reconstructed_Xpp": 0.12999999523162842
@@ -1257,13 +1713,21 @@
         "source_Xp": 0.27000001072883606,
         "source_Xpp": 0.12999999523162842,
         "effective_Xpp": 0.12999999523162842,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.5799999833106995,
           0.07000000029802322
         ],
-        "winding_open_times_s": [
-          1.0416819832237727,
-          0.038975425953854496
+        "source_open_poles_per_s": [
+          -0.9599858844685245,
+          -25.657192334061072
+        ],
+        "effective_open_poles_per_s": [
+          -0.9599858844685245,
+          -25.657192334061072
+        ],
+        "winding_open_poles_per_s": [
+          -0.9599858844685244,
+          -25.657192334061058
         ],
         "reconstructed_Xp": 0.27000001072883606,
         "reconstructed_Xpp": 0.12999999523162842
@@ -1278,13 +1742,21 @@
         "source_Xp": 0.18000000715255737,
         "source_Xpp": 0.12999999523162842,
         "effective_Xpp": 0.12999999523162842,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           5.900000095367432,
           0.03999999910593033
         ],
-        "winding_open_times_s": [
-          6.337134333695391,
-          0.03724080729752606
+        "source_open_poles_per_s": [
+          -0.15780003189815092,
+          -26.85226429198358
+        ],
+        "effective_open_poles_per_s": [
+          -0.15780003189815092,
+          -26.85226429198358
+        ],
+        "winding_open_poles_per_s": [
+          -0.1578000318981509,
+          -26.852264291983566
         ],
         "reconstructed_Xp": 0.18000000715255737,
         "reconstructed_Xpp": 0.12999999523162842
@@ -1294,13 +1766,21 @@
         "source_Xp": 0.27000001072883606,
         "source_Xpp": 0.12999999523162842,
         "effective_Xpp": 0.12999999523162842,
-        "source_open_times_s": [
+        "source_time_parameters_s": [
           0.5799999833106995,
           0.07000000029802322
         ],
-        "winding_open_times_s": [
-          1.0416819832237727,
-          0.038975425953854496
+        "source_open_poles_per_s": [
+          -0.9599858844685245,
+          -25.657192334061072
+        ],
+        "effective_open_poles_per_s": [
+          -0.9599858844685245,
+          -25.657192334061072
+        ],
+        "winding_open_poles_per_s": [
+          -0.9599858844685244,
+          -25.657192334061058
         ],
         "reconstructed_Xp": 0.27000001072883606,
         "reconstructed_Xpp": 0.12999999523162842

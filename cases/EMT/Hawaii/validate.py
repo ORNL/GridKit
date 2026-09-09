@@ -20,6 +20,72 @@ def require(condition, message):
         raise AssertionError(message)
 
 
+def solve_pair(matrix, rhs):
+    (a, b), (c, d) = matrix
+    determinant = a * d - b * c
+    return ((d * rhs[0] - b * rhs[1]) / determinant,
+            (a * rhs[1] - c * rhs[0]) / determinant)
+
+
+def decay_poles(matrix):
+    (a, b), (c, d) = matrix
+    trace, product = -(a + d), a * d - b * c
+    require(trace > 0 and product > 0, 'Unstable rotor circuit')
+    fast = (trace + math.sqrt(trace * trace - 4 * product)) / 2
+    return [-product / fast, -fast]
+
+
+def winding_checks(params, axis, data):
+    keys = ('Lmd', 'Llfd', 'Ll1d', 'Rfd', 'R1d') if axis == 'd' else (
+        'Lmq', 'Ll1q', 'Ll2q', 'R1q', 'R2q')
+    lm, l1, l2, r1, r2 = (params[key] for key in keys)
+    xl, omega = params['Ll'], 2 * math.pi * params['f']
+    x, xp, xpp = (data[key] for key in ('source_X', 'source_Xp', 'effective_Xpp'))
+    tp, tpp = data['source_time_parameters_s']
+    require(all(value > 0 for value in (lm, l1, l2, r1, r2, tp, tpp)), 'Nonpositive winding parameter')
+    require(abs(xl + lm - x) < 1e-12, 'Synchronous reactance conversion')
+    require(abs(xl + 1 / (1 / lm + 1 / l1) - xp) < 1e-12, 'Transient reactance conversion')
+    require(abs(xl + 1 / (1 / lm + 1 / l1 + 1 / l2) - xpp) < 1e-12,
+            'Subtransient reactance conversion')
+
+    # GENROU rotor equations at zero stator current, field voltage, and saturation.
+    def genrou_matrix(subtransient):
+        coupling = (x - xp) * (xp - subtransient) / (xp - xl)**2
+        return [[-(1 + coupling) / tp, coupling / tp], [1 / tpp, -1 / tpp]]
+
+    source_poles = decay_poles(genrou_matrix(data['source_Xpp']))
+    effective = genrou_matrix(xpp)
+    effective_poles = decay_poles(effective)
+    rotor = [[lm + l1, lm], [lm, lm + l2]]
+    winding_poles = decay_poles(list(zip(solve_pair(rotor, [-omega * r1, 0]),
+                                        solve_pair(rotor, [0, -omega * r2]))))
+    for label, poles in (('source', source_poles), ('effective', effective_poles), ('winding', winding_poles)):
+        require(all(math.isclose(a, b, rel_tol=1e-12) for a, b in
+                    zip(poles, data[label + '_open_poles_per_s'])), f'{label} pole report')
+    pole_error = max(abs(a / b - 1) for a, b in zip(winding_poles, effective_poles))
+    require(pole_error < 1e-12, 'Winding poles differ from coupled GENROU poles')
+
+    # Compare operational reactance from the two independent state equations.
+    coupling = (x - xp) * (xp - xpp) / (xp - xl)**2
+    forcing = [(x - xp - coupling * (xp - xl)) / tp, (xp - xl) / tpp]
+    weights = [(xpp - xl) / (xp - xl), (xp - xpp) / (xp - xl)]
+    response_error = 0.0
+    for s in (0.01 + 0.1j, 1 + 1j, 10 + 60j, 1 + 377j, 0.1 + 1e5j):
+        source = [[s - effective[0][0], -effective[0][1]],
+                  [-effective[1][0], s - effective[1][1]]]
+        windings = [[s * rotor[0][0] + omega * r1, s * lm],
+                    [s * lm, s * rotor[1][1] + omega * r2]]
+        source_x = xpp + sum(a * b for a, b in zip(weights, solve_pair(source, forcing)))
+        winding_x = xl + lm - s * lm**2 * sum(solve_pair(windings, [1, 1]))
+        response_error = max(response_error, abs(winding_x / source_x - 1))
+        if axis == 'd':
+            source_field = sum(a * b for a, b in zip(weights, solve_pair(source, [1 / tp, 0])))
+            winding_field = sum(solve_pair(windings, [omega * r1, 0]))
+            response_error = max(response_error, abs(winding_field / source_field - 1))
+    require(response_error < 1e-12, 'Winding transfer differs from unsaturated GENROU dynamics')
+    return pole_error, response_error, max(abs(a / b - 1) for a, b in zip(effective_poles, source_poles))
+
+
 def conversion_checks(case, state, report):
     counts = collections.Counter(d['class'] for d in case['devices'])
     expected = {'Machine': 30, 'Tgov1': 30, 'Ieeet1': 30, 'Ieeest': 14,
@@ -95,20 +161,23 @@ def conversion_checks(case, state, report):
         pdc = signals[dc['inputs']['isrc']] * state['devices'][dc['id']]['vdc']
         require(abs(pdc - (e * i.conjugate()).real) / data['rating_VA'] < 1e-12, 'Initial DC power balance')
     regularized = 0
-    largest_time_error = 0.0
-    for machine in report['machines'].values():
+    largest_pole_error = largest_response_error = largest_pole_change = 0.0
+    for name, machine in report['machines'].items():
         for axis in ('d', 'q'):
             data = machine[axis]
             require(abs(data['reconstructed_Xp'] - data['source_Xp']) < 1e-12, 'Transient reactance conversion')
             require(abs(data['reconstructed_Xpp'] - data['effective_Xpp']) < 1e-12, 'Subtransient reactance conversion')
-            require(all(t > 0 for t in data['winding_open_times_s']), 'Unstable winding pole')
-            largest_time_error = max(largest_time_error, *(abs(a / b - 1) for a, b in
-                                     zip(data['winding_open_times_s'], data['source_open_times_s'])))
+            pole_error, response_error, pole_change = winding_checks(devices[name]['params'], axis, data)
+            largest_pole_error = max(largest_pole_error, pole_error)
+            largest_response_error = max(largest_response_error, response_error)
+            largest_pole_change = max(largest_pole_change, pole_change)
             regularized += data['effective_Xpp'] != data['source_Xpp']
     require(regularized == 18, 'Damper regularization count')
     require(report['power_flow']['max_KCL_pu'] < 1e-10, 'Initial network current balance')
     return {'LCL_plants': counts['Filter'], 'regularized_machines': regularized,
-            'largest_open_time_relative_change': largest_time_error,
+            'largest_open_pole_relative_error': largest_pole_error,
+            'largest_rotor_transfer_relative_error': largest_response_error,
+            'largest_regularized_open_pole_relative_change': largest_pole_change,
             'initial_max_KCL_pu': report['power_flow']['max_KCL_pu']}
 
 
@@ -250,7 +319,9 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
         for kind, unit in (('p', 'W'), ('q', 'var')):
             error = abs(power[kind] - data[f'dispatch_{unit}']) / data['rating_VA']
             pq_initial_error = max(pq_initial_error, error)
-    require(pq_initial_error < 1e-10, f'Initial dispatch error: {pq_initial_error}')
+    # Allow the study's relative accuracy in post-IC dispatch on each plant base.
+    initial_dispatch_tolerance = study['rel_tol']
+    require(pq_initial_error <= initial_dispatch_tolerance, f'Initial dispatch error: {pq_initial_error}')
     # Allow numerical interpolation error in the monitored algebraic limiter.
     current_limit_tolerance = 1e-4
     require(imax_ratio <= 1 + current_limit_tolerance, f'Current limiter exceeded: {imax_ratio}')
@@ -276,6 +347,7 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
                   'discharge_time_constant_s': 1 / decay_rate, 'event_current_jump_pu': current_jump,
                   'open_switch_current_pu': open_current, 'maximum_discharge_current_relative_error': decay_error},
         'initial_dispatch_max_error_pu_plant_base': pq_initial_error,
+        'initial_dispatch_tolerance_pu_plant_base': initial_dispatch_tolerance,
         'maximum_limited_current_ratio': imax_ratio,
         'limited_current_ratio_tolerance': current_limit_tolerance, 'dc_voltage_ratio_range': dc_range,
         'machine_speed_deviation_pu_range': omega_range, 'fault_bus_1_minimum_voltage_pu': v1_min,
