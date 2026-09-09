@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <cstdint>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -115,6 +116,8 @@ namespace GridKit
         std::string file_name{};
         /// Delimiter (used only with CSV format currently)
         std::string delim{","};
+        /// Rows buffered before a record batch is written (Arrow formats only)
+        int64_t     batch_rows{256};
       };
 
       virtual ~VariableMonitorBase()

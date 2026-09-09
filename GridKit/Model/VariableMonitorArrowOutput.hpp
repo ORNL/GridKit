@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -37,8 +38,10 @@ namespace GridKit
        * @param file_name Output file name (may be a FIFO for live streaming)
        * @param stream_format Write the IPC stream format instead of the IPC
        * file format
+       * @param batch_rows Rows buffered before a record batch is written and
+       * flushed
        */
-      VariableMonitorArrowOutput(const std::string& file_name, bool stream_format);
+      VariableMonitorArrowOutput(const std::string& file_name, bool stream_format, int64_t batch_rows);
 
       VariableMonitorArrowOutput(const VariableMonitorArrowOutput&) = delete;
 
@@ -71,6 +74,9 @@ namespace GridKit
 
       /// Write the IPC stream format instead of the IPC file format
       [[maybe_unused]] bool stream_format_{false};
+
+      /// Rows buffered before a record batch is written and flushed
+      [[maybe_unused]] int64_t batch_rows_{256};
 
       /// Arrow-dependent implementation; defined in the only TU that
       /// includes Arrow headers
