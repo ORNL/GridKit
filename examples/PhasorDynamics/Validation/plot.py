@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Plot GridKit results alongside PowerWorld reference data."""
+
 import argparse
 import json
 from pathlib import Path
@@ -16,13 +18,12 @@ MUTED = "#52514e"
 GRID = "#e3e2df"
 COLORS = ("#2a78d6", "#eb6834", "#1baf7a")
 FIELDS = {
-    "omega": ("Δω  (pu)", "generator speed deviation"),
-    "speed": ("ω  (pu)", "generator speed"),
-    "delta": ("δ  (rad)", "generator rotor angle"),
-    "p": ("P  (pu)", "generator real power"),
-    "q": ("Q  (pu)", "generator reactive power"),
-    "vmag": ("|V|  (pu)", "bus voltage magnitude"),
-    "Va": ("∠V  (rad)", "bus voltage angle"),
+    "omega": ("ω", "pu", "generator speed deviation"),
+    "delta": ("δ", "rad", "generator rotor angle"),
+    "p": ("P", "pu", "generator real power"),
+    "q": ("Q", "pu", "generator reactive power"),
+    "vmag": ("|V|", "pu", "bus voltage magnitude"),
+    "Va": ("θ", "rad", "bus voltage angle"),
 }
 
 
@@ -32,6 +33,7 @@ def sci(value):
 
 
 def column_key(column):
+    """Get the device name from a CSV column heading."""
     parts = column.split("_")
     if len(parts) < 3:
         return column.strip()
@@ -42,28 +44,18 @@ def column_key(column):
 
 
 def load(path):
+    """Read column labels, times, and values from a CSV."""
     with path.open() as stream:
         labels = [column_key(column) for column in stream.readline().strip().split(",")[1:]]
     data = np.loadtxt(path, delimiter=",", skiprows=1)
     return labels, data[:, 0], data[:, 1:]
 
 
-def resolve(base, path):
-    path = Path(path)
-    return path if path.is_absolute() else base / path
-
-
-def find_case(study, study_dir, run_dir):
-    path = Path(study["system_model_file"])
-    if path.is_absolute():
-        return path
-    source = study_dir / path
-    return source if source.exists() else run_dir / path
-
-
-def fault(study, case):
-    on = next(event for event in study["events"] if event["type"] == "fault_on")
-    off = next(event for event in study["events"] if event["type"] == "fault_off")
+def fault(solver, case):
+    on = next((event for event in solver["events"] if event["type"] == "fault_on"), None)
+    off = next((event for event in solver["events"] if event["type"] == "fault_off"), None)
+    if on is None or off is None:
+        raise ValueError("Solver JSON must contain fault_on and fault_off events")
     devices = [device for device in case["devices"] if device["class"] == "BusFault"]
     device = devices[on["element_id"]]
     bus = next(bus for bus in case["buses"] if bus["number"] == device["ports"]["bus"])
@@ -77,34 +69,65 @@ def fault(study, case):
 
 
 def variable(reference):
-    parts = Path(reference).name.split(".")
-    return parts[-3] if parts[-2:] == ["ref", "csv"] else Path(reference).stem.rsplit(".", 1)[-1]
+    return Path(reference).stem.removesuffix(".ref").rsplit(".", 1)[-1]
 
 
-def plot(output, reference, png, title, ylabel, fault_data):
+def error_summary(axis, rmse, max_error, relative_rmse, relative_max_error, unit):
+    """Draw the error summary inside the difference plot."""
+    axis.add_patch(
+        Rectangle(
+            (0.558, 0.700),
+            0.440,
+            0.290,
+            transform=axis.transAxes,
+            facecolor=SURFACE,
+            edgecolor=GRID,
+            lw=0.8,
+            zorder=3,
+        )
+    )
+    cells = (
+        (0.945, "", "$\\epsilon_{\\mathrm{RMSE}}$", "$\\epsilon_{\\infty}$", MUTED),
+        (0.845, "Absolute", f"${sci(rmse)}$ {unit}", f"${sci(max_error)}$ {unit}", INK),
+        (0.755, "Relative", f"{relative_rmse * 100:.3f} %", f"{relative_max_error * 100:.3f} %", INK),
+    )
+    for y, row_label, rmse_cell, max_error_cell, color in cells:
+        axis.text(0.578, y, row_label, transform=axis.transAxes, ha="left", va="center", color=MUTED, fontsize=10, zorder=4)
+        axis.text(0.800, y, rmse_cell, transform=axis.transAxes, ha="right", va="center", color=color, fontsize=10, zorder=4)
+        axis.text(0.985, y, max_error_cell, transform=axis.transAxes, ha="right", va="center", color=color, fontsize=10, zorder=4)
+
+
+def plot(output, reference, png, title, ylabel, unit, fault_data):
+    """Save GridKit, PowerWorld, and difference plots in one PNG."""
     labels, output_time, values = load(output)
     reference_labels, reference_time, reference_values = load(reference)
     if len(output_time) != len(reference_time):
         raise ValueError(f"Sample-count mismatch: {len(output_time)} != {len(reference_time)}")
     if not np.allclose(output_time, reference_time, rtol=0.0, atol=1e-6):
         raise ValueError("Output and reference time grids differ")
-    if labels != reference_labels and sorted(labels) == sorted(reference_labels):
+    if sorted(labels) != sorted(reference_labels):
+        raise ValueError("Output and reference CSV columns differ")
+    if len(set(labels)) != len(labels):
+        raise ValueError("CSV column names must identify unique devices")
+    if labels != reference_labels:
         values = values[:, [labels.index(label) for label in reference_labels]]
 
     samples = len(output_time)
     error = values - reference_values
-    baseline = reference_values
+    absolute_error = np.abs(error)
+    error_norm = np.linalg.norm(error)
     steps = np.diff(reference_time)
     dt = np.median(steps[steps > 0])
     duration = reference_time[-1] - reference_time[0]
     series = error.shape[1]
-    rmse = np.sqrt(dt / (series * duration)) * np.linalg.norm(error)
-    inf = np.abs(error).max()
-    rel_rmse = np.linalg.norm(error) / np.linalg.norm(baseline)
-    rel_inf = inf / np.abs(baseline).max()
+    rmse = np.sqrt(dt / (series * duration)) * error_norm
+    max_error = absolute_error.max()
+    relative_rmse = error_norm / np.linalg.norm(reference_values)
+    relative_max_error = max_error / np.abs(reference_values).max()
     fault_on, fault_off, fault_lines = fault_data
 
     figure, axes = plt.subplots(3, 1, figsize=(11, 9.5), sharex=True, dpi=150)
+    error_axis = axes[2]
     figure.patch.set_facecolor(SURFACE)
     panels = (
         (output_time, values, COLORS[0], "GridKit"),
@@ -133,40 +156,19 @@ def plot(output, reference, png, title, ylabel, fault_data):
     lower, upper = lower - padding, upper + padding
     axes[0].set_ylim(lower, upper)
     axes[1].set_ylim(lower, upper)
-    axes[2].set_ylim((lower, upper) if lower < 0 < upper else (-0.5 * (upper - lower), 0.5 * (upper - lower)))
-    axes[2].set_xlim(output_time[0], output_time[-1])
-    axes[2].set_xlabel("time (s)", color=MUTED, fontsize=9)
-    axes[2].add_patch(
-        Rectangle(
-            (0.558, 0.700),
-            0.440,
-            0.290,
-            transform=axes[2].transAxes,
-            facecolor=SURFACE,
-            edgecolor=GRID,
-            lw=0.8,
-            zorder=3,
-        )
-    )
+    error_axis.set_ylim((lower, upper) if lower < 0 < upper else (-0.5 * (upper - lower), 0.5 * (upper - lower)))
+    error_axis.set_xlim(output_time[0], output_time[-1])
+    error_axis.set_xlabel("time (s)", color=MUTED, fontsize=9)
+    error_summary(error_axis, rmse, max_error, relative_rmse, relative_max_error, unit)
 
-    cells = (
-        (0.945, "", "$\\epsilon_{\\mathrm{RMSE}}$", "$\\epsilon_{\\infty}$", MUTED),
-        (0.845, "Absolute", f"${sci(rmse)}$ pu", f"${sci(inf)}$ pu", INK),
-        (0.755, "Relative", f"{rel_rmse * 100:.3f} %", f"{rel_inf * 100:.3f} %", INK),
-    )
-    for y, row_label, rmse_cell, inf_cell, color in cells:
-        axes[2].text(0.578, y, row_label, transform=axes[2].transAxes, ha="left", va="center", color=MUTED, fontsize=10, zorder=4)
-        axes[2].text(0.800, y, rmse_cell, transform=axes[2].transAxes, ha="right", va="center", color=color, fontsize=10, zorder=4)
-        axes[2].text(0.985, y, inf_cell, transform=axes[2].transAxes, ha="right", va="center", color=color, fontsize=10, zorder=4)
-
-    row, column = np.unravel_index(np.abs(error).argmax(), error.shape)
-    x_min, x_max = axes[2].get_xlim()
+    row, column = np.unravel_index(absolute_error.argmax(), error.shape)
+    x_min, x_max = error_axis.get_xlim()
     x_fraction = (reference_time[row] - x_min) / (x_max - x_min)
-    axes[2].annotate(
+    error_axis.annotate(
         f"max at {reference_labels[column]},  t = {reference_time[row]:.3f} s",
         xy=(reference_time[row], error[row, column]),
         xytext=(0.32 if x_fraction < 0.25 else 0.03, 0.58),
-        textcoords=axes[2].transAxes,
+        textcoords=error_axis.transAxes,
         color=INK,
         fontsize=9,
         ha="left",
@@ -185,25 +187,37 @@ def plot(output, reference, png, title, ylabel, fault_data):
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("study", type=Path)
-    parser.add_argument("--rundir", type=Path)
-    parser.add_argument("--outdir", type=Path)
+    """Plot the CSV files listed in a solver JSON.
+
+    After running the simulation:
+
+        python plot.py path/to/IEEE39.solver.json --dir figures
+
+    Leave out --dir to save the plot beside the output CSV.
+    """
+    parser = argparse.ArgumentParser(description="Plot a validation run.")
+    parser.add_argument("solver", type=Path, help="*.solver.json from the completed run's build directory")
+    parser.add_argument("--dir", type=Path, help="PNG folder (default: beside the output CSV)")
     args = parser.parse_args()
-    study_path = args.study.resolve()
-    study_dir = study_path.parent
-    run_dir = args.rundir.resolve() if args.rundir else study_dir
-    out_dir = args.outdir.resolve() if args.outdir else study_dir
-    out_dir.mkdir(parents=True, exist_ok=True)
-    study = json.loads(study_path.read_text())
-    case = json.loads(find_case(study, study_dir, run_dir).read_text())
-    case_name = case.get("header", {}).get("case_name", study_path.stem)
-    fault_data = fault(study, case)
-    output = resolve(run_dir, study["output_file"])
-    reference = resolve(study_dir, study["reference_file"])
-    field = variable(reference)
-    ylabel, description = FIELDS.get(field, (f"{field}  (pu)", field))
-    plot(output, reference, out_dir / f"{output.stem}.png", f"{case_name} · {description}", ylabel, fault_data)
+    solver_path = args.solver.resolve()
+    solver_dir = solver_path.parent
+    try:
+        solver = json.loads(solver_path.read_text())
+        case = json.loads((solver_dir / solver["system_model_file"]).read_text())
+        case_name = case.get("header", {}).get("case_name", solver_path.stem)
+        fault_data = fault(solver, case)
+        output = solver_dir / solver["output_file"]
+        reference = solver_dir / solver["reference_file"]
+        field = variable(reference)
+        symbol, unit, description = FIELDS.get(field, (field, "pu", field))
+        png = (args.dir or output.parent).resolve() / f"{output.stem}.png"
+        png.parent.mkdir(parents=True, exist_ok=True)
+        plot(output, reference, png, f"{case_name} · {description}", f"{symbol}  ({unit})", unit, fault_data)
+        print(f"Saved {png}")
+    except KeyError as error:
+        parser.error(f"Missing JSON field: {error}")
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
 
 
 if __name__ == "__main__":
