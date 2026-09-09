@@ -38,8 +38,6 @@ namespace GridKit
         using Parameter = typename ModelDataT::Parameters;
         i_scale_        = nominalScale<RealT>(data, Parameter::I, std::sqrt(THREE<RealT>));
         V_              = parameter<RealT>(data, Parameter::V, V_);
-        Pref_           = parameter<RealT>(data, Parameter::Pref, Pref_);
-        Qref_           = parameter<RealT>(data, Parameter::Qref, Qref_);
         Kp_             = parameter<RealT>(data, Parameter::Kp, Kp_);
         Ki_             = parameter<RealT>(data, Parameter::Ki, Ki_);
         Kaw_            = parameter<RealT>(data, Parameter::Kaw, Kaw_);
@@ -103,7 +101,7 @@ namespace GridKit
       {
         int error_count   = 0;
         using V           = OuterPowerControlExternalVariables;
-        const auto inputs = signals_.attachedSignals({V::VD, V::VQ, V::ID, V::IQ, V::ILIMD, V::ILIMQ});
+        const auto inputs = signals_.attachedSignals({V::VD, V::VQ, V::ID, V::IQ, V::ILIMD, V::ILIMQ, V::PREF, V::QREF});
         if (inputs.size() != static_cast<size_t>(V::MAXIMUM))
         {
           Log::error() << "OuterPowerControl: all inputs are required\n";
@@ -121,11 +119,6 @@ namespace GridKit
             Log::error() << "OuterPowerControl: voltage rating and gains must be finite and positive\n";
             ++error_count;
           }
-        if (!std::isfinite(Pref_) || !std::isfinite(Qref_))
-        {
-          Log::error() << "OuterPowerControl: power setpoints must be finite\n";
-          ++error_count;
-        }
         return error_count;
       }
 
@@ -155,10 +148,14 @@ namespace GridKit
         for (const auto value : {vd, vq, id, iq})
           if (!std::isfinite(value))
             throw std::invalid_argument("OuterPowerControl: nonfinite initial measurement");
-        const RealT p  = vd * id + vq * iq;
-        const RealT q  = vq * id - vd * iq;
-        const RealT ed = (Pref_ - p) / V_;
-        const RealT eq = (q - Qref_) / V_;
+        const RealT p    = vd * id + vq * iq;
+        const RealT q    = vq * id - vd * iq;
+        const RealT pref = static_cast<RealT>(signals_.template readExternalVariable<V::PREF>());
+        const RealT qref = static_cast<RealT>(signals_.template readExternalVariable<V::QREF>());
+        if (!std::isfinite(pref) || !std::isfinite(qref))
+          throw std::invalid_argument("OuterPowerControl: nonfinite initial reference");
+        const RealT ed = (pref - p) / V_;
+        const RealT eq = (q - qref) / V_;
         auto*       y  = y_.getData();
         auto*       yp = yp_.getData();
         y[2]           = this->outputValue(outputs, Outputs::icmdd, Kp_ * ed);
@@ -177,7 +174,8 @@ namespace GridKit
       {
         using V = OuterPowerControlExternalVariables;
         typename Component<ScalarT, IdxT>::InitializationPortsT ports;
-        ports.inputs = signals_.attachedSignals({V::VD, V::VQ, V::ID, V::IQ});
+        ports.inputs  = signals_.attachedSignals({V::VD, V::VQ, V::ID, V::IQ, V::PREF, V::QREF});
+        ports.targets = signals_.attachedSignals({V::PREF, V::QREF});
         for (size_t n = 0; n < output_.size(); ++n)
         {
           const auto name = std::string(magic_enum::enum_name(static_cast<Outputs>(n)));
@@ -193,16 +191,15 @@ namespace GridKit
       {
         if (initial.omega() == ZERO<RealT>)
           return;
-        using V               = OuterPowerControlExternalVariables;
-        const RealT vd        = initial.value(*signals_.template getAttachedSignal<V::VD>());
-        const RealT vq        = initial.value(*signals_.template getAttachedSignal<V::VQ>());
-        const RealT id        = initial.value(*signals_.template getAttachedSignal<V::ID>());
-        const RealT iq        = initial.value(*signals_.template getAttachedSignal<V::IQ>());
-        const RealT p         = vd * id + vq * iq;
-        const RealT q         = vq * id - vd * iq;
-        const RealT tolerance = RealT{1e-10} * std::max({ONE<RealT>, std::abs(Pref_), std::abs(Qref_), std::hypot(vd, vq) * std::hypot(id, iq)});
-        if (std::abs(p - Pref_) > tolerance || std::abs(q - Qref_) > tolerance)
-          throw std::invalid_argument("OuterPowerControl: initial terminal power must match Pref and Qref");
+        using V        = OuterPowerControlExternalVariables;
+        const RealT vd = initial.value(*signals_.template getAttachedSignal<V::VD>());
+        const RealT vq = initial.value(*signals_.template getAttachedSignal<V::VQ>());
+        const RealT id = initial.value(*signals_.template getAttachedSignal<V::ID>());
+        const RealT iq = initial.value(*signals_.template getAttachedSignal<V::IQ>());
+        const RealT p  = vd * id + vq * iq;
+        const RealT q  = vq * id - vd * iq;
+        initial.require(*signals_.template getAttachedSignal<V::PREF>(), p, *this);
+        initial.require(*signals_.template getAttachedSignal<V::QREF>(), q, *this);
         const auto outputs = this->template parseInitialOutputs<OuterPowerControl>(initial.outputs(*this));
         for (size_t n = 0; n < output_.size(); ++n)
         {
@@ -226,8 +223,8 @@ namespace GridKit
       {
         const ScalarT p  = input[0] * input[2] + input[1] * input[3];
         const ScalarT q  = input[1] * input[2] - input[0] * input[3];
-        const ScalarT ed = (Pref_ - p) / V_;
-        const ScalarT eq = (q - Qref_) / V_;
+        const ScalarT ed = (input[6] - p) / V_;
+        const ScalarT eq = (q - input[7]) / V_;
         f[0]             = -yp[0] + Ki_ * ed + Kaw_ * (input[4] - y[2]);
         f[1]             = -yp[1] + Ki_ * eq + Kaw_ * (input[5] - y[3]);
         f[2]             = y[2] - (Kp_ * ed + y[0]);

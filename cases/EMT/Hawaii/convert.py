@@ -374,6 +374,14 @@ def convert(source, line_data):
             return [s(key + phase) for phase in phases]
 
         s('vdc', vdc)
+        s('Pref', pq.real)
+        repca = next(e for e in source['devices'] if e['id'] == prefix + '_repca')
+        plant_params = dict(repca['params'])
+        plant_params['S'] = plant_params.pop('mva') * 1e6
+        plant_params['V'] = vb
+        add('Repca', prefix + '_plant', plant_params,
+            {'v': vector('vg', 'dq'), 'i': vector('ig', 'dq')},
+            {'qext': s('Qref')}, ['qext', 'vmeas'])
         add('Filter', prefix + '_filter',
             {'V': vb, 'I': rating / (math.sqrt(3) * vb), 'Rs': diagonal(rs), 'Ls': diagonal(ls), 'C': diagonal(c), 'Rg': diagonal(rg), 'Lg': diagonal(lg)},
             {'e': vector('e', 'abc'), 'bus': f'bus_{n}'},
@@ -391,9 +399,10 @@ def convert(source, line_data):
         add('Park', prefix + '_grid_current', inputs={'input': vector('ig', 'abc'), 'theta': s('theta')},
             outputs={'out': vector('ig', 'dq0')}, mon=['out'])
         add('OuterPowerControl', prefix + '_power',
-            {'V': vb, 'I': rating / (math.sqrt(3) * vb), 'Pref': pq.real, 'Qref': pq.imag,
+            {'V': vb, 'I': rating / (math.sqrt(3) * vb),
              'Kp': CHOICES['outer_Kp'], 'Ki': CHOICES['outer_Ki'], 'Kaw': CHOICES['outer_Kaw']},
-            {'v': vector('vg', 'dq'), 'i': vector('ig', 'dq'), 'ilim': vector('ilim', 'dq')},
+            {'v': vector('vg', 'dq'), 'i': vector('ig', 'dq'), 'ilim': vector('ilim', 'dq'),
+             'Pref': s('Pref'), 'Qref': s('Qref')},
             {'icmd': vector('icmd', 'dq')}, ['icmd'])
         add('InnerCurrentControl', prefix + '_inner',
             {'V': vb, 'I': rating / (math.sqrt(3) * vb), 'L': ls, 'Kp': ls * wc, 'Ki': rs * wc, 'Kaw': wc, 'Imax': imax},
@@ -409,7 +418,8 @@ def convert(source, line_data):
         state['devices'][prefix + '_filter'] = samples(ig, 'ig', math.sqrt(2 / 3))
         report['inverters'][prefix] = {'rating_VA': rating, 'voltage_V': vb, 'Imax_A': imax,
                                        'dispatch_W': pq.real, 'dispatch_var': pq.imag,
-                                       'vdc_V': vdc,
+                                       'vdc_V': vdc, 'plant_controller': repca['id'],
+                                       'plant_parameters': repca['params'],
                                        'filter_Rs_ohm': rs, 'filter_Ls_H': ls, 'filter_C_F': c,
                                        'filter_Rg_ohm': rg, 'filter_Lg_H': lg,
                                        'filter_resonance_Hz': math.sqrt((ls + lg) / (ls * lg * c)) / (2 * math.pi),

@@ -128,6 +128,14 @@
     },
     {
       "id": "vg0"
+    },
+    {
+      "id": "power_control_Pref",
+      "value": 1657.64744685731
+    },
+    {
+      "id": "power_control_Qref",
+      "value": -23.948561141535574
     }
   ],
   "devices": [
@@ -504,8 +512,6 @@
       "id": "power_control",
       "params": {
         "V": 208.0,
-        "Pref": 1657.64744685731,
-        "Qref": -23.948561141535574,
         "Kp": 0.01,
         "Ki": 40,
         "Kaw": 200
@@ -522,7 +528,9 @@
         "ilim": [
           "ilimd",
           "ilimq"
-        ]
+        ],
+        "Pref": "power_control_Pref",
+        "Qref": "power_control_Qref"
       },
       "outputs": {
         "icmd": [
