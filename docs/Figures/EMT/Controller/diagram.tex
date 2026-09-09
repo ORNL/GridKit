@@ -8,6 +8,11 @@
 \def\controlrow{-4.4}
 \def\setpointcolumn{18.6}
 \definecolor{measurementblue}{HTML}{0072B2}
+\ifgfm
+\usepackage{circuitikz}
+\ctikzset{bipoles/thickness=1}
+\input{control-symbols.tex}
+\fi
 
 \begin{document}
 \begin{tikzpicture}[emt diagram,
@@ -32,17 +37,46 @@
 \end{scope}
 
 % ================= LCL filter and terminal =================
-% Z_s bisects the converter-to-capacitor span; Z_g aligns between controllers.
-\node[signal] (voabc) at (12.65, 0) {};
+% GFM: retain the capacitor, resistor centers, and current-measurement locations.
+\node[signal] (voabc) at (\ifgfm 14.15\else 12.65\fi, 0) {};
+\ifgfm
+\node[minimum width=1.35cm, minimum height=0.65cm]
+    (zs) at ($(voabc)+(-3,0)$) {};
+\node[minimum width=1.35cm, minimum height=0.65cm]
+    (zg) at ($(voabc)+(3,0)$) {};
+\draw[semithick] (zs.west) to[american resistor] (zs.east);
+\draw[semithick] (zg.west) to[american resistor] (zg.east);
+\node[sig] at ($(zs.center)+(0,0.5)$) {$\mathbf R_{\mathrm{s}}$};
+\node[sig] at ($(zg.center)+(0,0.5)$) {$\mathbf R_g$};
+\else
 \node[block, minimum width=1.35cm, minimum height=0.65cm]
     (zs) at ($(converter.east)!0.5!(voabc)$) {$\mathbf Z_{\mathrm{s}}$};
 \node[block, minimum width=1.35cm, minimum height=0.65cm]
     (zg) at (14.15, 0) {$\mathbf Z_g$};
-\node[signal] (tbus) at (\ifgfm 16.5\else 16.15\fi, 0) {};
+\fi
+\node[signal] (tbus) at (\ifgfm 19.65\else 16.15\fi, 0) {};
 \draw[line] (converter.east) -- (zs.west);
+\ifgfm
+\draw[semithick] (zs.east) -- (12.15,0)
+    to[american inductor] (voabc)
+    to[american inductor] (16.15,0) -- (zg.west);
+\node[sig] at ($(voabc)+(-1,0.5)$) {$\mathbf L_{\mathrm{s}}$};
+\node[sig] at ($(voabc)+(1,0.5)$) {$\mathbf L_g$};
+\else
 \draw[line] (zs.east) -- (voabc) -- (zg.west);
+\fi
 \draw[line] (zg.east) -- (tbus);
+\ifgfm
+% Ideal disconnect at the PCC, using the established Switch contact symbol.
+\node[signal] (pccleft) at (20.75,0) {};
+\node[signal] (pcc) at (21.55,0) {};
+\draw[line] (tbus) -- (pccleft);
+\draw[line] (pccleft) -- (21.4,0.4);
+\node[sig, above right=2pt and 2pt of pcc] {PCC};
+\draw[->, line] (pcc) -- (25.6,0) node[sig, right] {Bus};
+\else
 \draw[->, line] (tbus) -- (18.6,0) node[sig, right] {Bus};
+\fi
 % Compact single-line representation of the three-phase shunt capacitor.
 \begin{scope}[shift={(voabc)}]
     \draw[line] (0,0) -- (0,0.65);
@@ -58,9 +92,9 @@
 % Current sensors encircle the conductors without electrical junction dots.
 \draw[measurement] (12.15,0) ellipse[x radius=0.13, y radius=0.26];
 \coordinate (iabc) at (12.15,-0.26);
-\draw[measurement] (\ifgfm 15.9\else 15.65\fi,0)
+\draw[measurement] (\ifgfm 16.15\else 15.65\fi,0)
     ellipse[x radius=0.13, y radius=0.26];
-\coordinate (igabc) at (\ifgfm 15.9\else 15.65\fi,-0.26);
+\coordinate (igabc) at (\ifgfm 16.15\else 15.65\fi,-0.26);
 
 % ================= Reference frame and control =================
 \node[block] (icc) at (12.4, \controlrow) {Current\\Control};
@@ -70,26 +104,46 @@
 % Reference-frame transformations are implicit at the controller boundary.
 \draw[->, measurement] (iabc) -- ([xshift=-2.5mm]icc.north);
 \node[sig, text=measurementblue, anchor=east] at (12.0, -1.2) {$\mathbf{i}$};
+\ifgfm
+\node[sig, text=measurementblue, anchor=west] at (14.3, -1.2) {$\mathbf v_{\mathrm{o}}$};
+\else
 \draw[->, measurement] (voabc) -- ([xshift=2.5mm]icc.north);
 \node[sig, text=measurementblue, anchor=west] at (12.8, -1.2) {$\mathbf v_{\mathrm{o}}$};
-\draw[->, measurement] (igabc) -- ([xshift=\ifgfm 0mm\else -2.5mm\fi]outer.north);
-\node[sig, text=measurementblue, anchor=east]
-    at (\ifgfm 15.75\else 15.5\fi,-1.2) {$\mathbf i_g$};
+\fi
+\draw[->, measurement] (igabc) -- ([xshift=\ifgfm 2.5mm\else -2.5mm\fi]outer.north);
+\ifgfm
+\node[sig, text=measurementblue, anchor=west] at (16.3,-1.2) {$\mathbf i_g$};
+\else
+\node[sig, text=measurementblue, anchor=east] at (15.5,-1.2) {$\mathbf i_g$};
+\fi
 
 \ifgfm
 % ================= Outer voltage-control wiring =================
 % Branch one-quarter of the measurement-arrow height above current control.
 \coordinate (voicc) at ([xshift=2.5mm]icc.north);
-\coordinate (voovc) at ([xshift=-6mm]outer.north);
-\node[signal, fill=measurementblue] (vouter) at ($(voicc)!0.25!(voabc)$) {};
+\coordinate (voovc) at ([xshift=-2.5mm]outer.north);
+\coordinate (vbranchheight) at ($(voicc)!0.25!(voabc)$);
+\node[signal, fill=measurementblue] (vouter) at (voabc |- vbranchheight) {};
+\draw[measurement] (voabc) -- (vouter);
+\draw[->, measurement] (vouter) -- (vouter -| voicc) -- (voicc);
 \draw[->, measurement] (vouter) -- (vouter -| voovc) -- (voovc);
 \fi
 
 % ================= Control chain =================
+\ifgfm
+% Show the current-control input limiter with the shared saturation glyph.
+\begin{scope}[shift={(14.15,\controlrow)}, xscale=0.55, yscale=-0.55, transform shape]
+    \staticlimit{currentlimit}{(0,0)}{}{}
+\end{scope}
+\draw[line] (outer.west) -- (currentlimit.east);
+\draw[->, line] (currentlimit.west) -- (icc.east);
+\node[sig, below] at (14.15,\controlrow-0.35) {$\mathbf{i}^{\mathrm{cmd}}$};
+\else
 \draw[->, line] ([yshift=-2.5mm]outer.west)
     -- node[sig, below] {$\mathbf{i}^{\mathrm{cmd}}$} ([yshift=-2.5mm]icc.east);
 \draw[->, line] ([yshift=2.5mm]icc.east)
     -- node[sig, above] {$\mathbf{i}^{\mathrm{lim}}$} ([yshift=2.5mm]outer.west);
+\fi
 
 % ================= PWM =================
 % The modulator sits under the bridge inside the dq frame: it limits the
@@ -103,24 +157,53 @@
 \draw[->, line] ([yshift=2.5mm]pwm.east)
     -- node[sig, above] {$\mathbf{u}^{\mathrm{lim}}$} ([yshift=2.5mm]icc.west);
 
-% ================= Grid-voltage measurement =================
-% In the GFM draft this is an additional proposed voltage-control input;
-% the implemented OuterVoltageControl uses capacitor-voltage feedback.
+% ================= Inverter-terminal voltage measurement =================
+% GFL power control measures terminal voltage; GFM uses it in primary control.
+\ifgfm\else
 \draw[->, measurement] (tbus)
-    -- ([xshift=\ifgfm 6mm\else 2.5mm\fi]outer.north);
+    -- ([xshift=2.5mm]outer.north);
 \node[sig, text=measurementblue, anchor=west]
-    at (\ifgfm 16.65\else 16.3\fi,-1.2) {$\mathbf v_g$};
+    at (16.3,-1.2) {$\mathbf v_{\mathrm{t}}$};
+\fi
 
 % The DC-terminal voltage is measured by the modulator.
 \draw[->, measurement] (vdc) -- ([xshift=-4mm]pwm.north);
 \node[sig, text=measurementblue, anchor=east] at (8.25,-1.2) {$v_{\mathrm{dc}}$};
 
 % ================= Setpoints =================
-% Setpoints enter the outer controller from outside the enclosure.
+% GFM primary and plant control are functional blocks in the general architecture.
 \ifgfm
-\node[signal, label={[sig]above:$\mathbf{v}^{\mathrm{ref}}$}] (vref) at (\setpointcolumn, \controlrow) {};
-\draw[->, line] (vref) -- (outer.east);
+\node[block] (primary) at (19.4, \controlrow) {Primary\\Control};
+\node[block] (plant) at (22.9, \controlrow) {Plant\\Control};
+\coordinate (controlextent) at (plant.south east);
+% Primary control measures inverter-terminal power before the PCC disconnect.
+\draw[measurement] (19.15,0) ellipse[x radius=0.13, y radius=0.26];
+\draw[->, measurement] (19.15,-0.26) -- ([xshift=-2.5mm]primary.north);
+\draw[->, measurement] (tbus) -- ([xshift=2.5mm]primary.north);
+\node[sig, text=measurementblue, anchor=east] at (19.0,-1.2) {$\mathbf i_g$};
+\node[sig, text=measurementblue, anchor=west] at (19.8,-1.2) {$\mathbf v_{\mathrm{t}}$};
+\draw[->, line] (primary.west)
+    -- node[sig, above] {$\mathbf v^{\mathrm{ref}}$} (outer.east);
+% Plant control regulates grid exchange at the PCC.
+\draw[measurement] (22.65,0) ellipse[x radius=0.13, y radius=0.26];
+\node[signal] (vplant) at (23.15,0) {};
+\draw[->, measurement] (22.65,-0.26) -- ([xshift=-2.5mm]plant.north);
+\draw[->, measurement] (vplant) -- ([xshift=2.5mm]plant.north);
+\node[sig, text=measurementblue, anchor=east] at (22.5,-1.2) {$\mathbf i_{\mathrm{PCC}}$};
+\node[sig, text=measurementblue, anchor=west] at (23.3,-1.2) {$\mathbf v_{\mathrm{PCC}}$};
+\draw[->, line] ([yshift=2.5mm]plant.west)
+    -- node[sig, above] {$P^{\mathrm{ref}}$} ([yshift=2.5mm]primary.east);
+\draw[->, line] ([yshift=-2.5mm]plant.west)
+    -- node[sig, below] {$Q^{\mathrm{ref}}$} ([yshift=-2.5mm]primary.east);
+\node[signal, label={[sig]above:$P_{\mathrm{plant}}^{\mathrm{ref}}$}]
+    (pref) at (25.6,-4.15) {};
+\node[signal, label={[sig]below:$Q_{\mathrm{plant}}^{\mathrm{ref}}$}]
+    (qref) at (25.6,-4.65) {};
+\draw[->, line] (pref) -- ([yshift=2.5mm]plant.east);
+\draw[->, line] (qref) -- ([yshift=-2.5mm]plant.east);
+% Primary-control angle and frequency connections are implicit.
 \else
+\coordinate (controlextent) at (outer.south east);
 \node[signal, label={[sig]above:$P^{\mathrm{ref}}$}] (pref) at (\setpointcolumn, -4.15) {};
 \draw[->, line] (pref) -- ([yshift=2.5mm]outer.east);
 \node[signal, label={[sig]below:$Q^{\mathrm{ref}}$}] (qref) at (\setpointcolumn, -4.65) {};
@@ -131,13 +214,20 @@
 \begin{scope}[on background layer]
     \node[operator enclosure, densely dotted,
         fit=(bridge)(zs)(zg)(cground)
-            (icc)(outer)(pwm)] (enclosure) {};
+            (icc)(outer)(pwm)(controlextent)] (enclosure) {};
     % Measurements and commands cross the reference-frame boundary.
     \coordinate (frame) at (\framecolumn,0 |- enclosure.center);
+    \ifgfm
+    \coordinate (frameedge) at ([xshift=3mm]outer.east);
+    \draw[enclosure, densely dotted]
+        (frame |- enclosure.south) -- (frame) -- (frame -| frameedge)
+        -- (frameedge |- enclosure.south);
+    \else
     \draw[enclosure, densely dotted]
         (frame |- enclosure.south) -- (frame) -- (frame -| enclosure.east);
+    \fi
 \end{scope}
-\coordinate (framesymbol) at ($(frame -| enclosure.east)+(0.65,0)$);
+\coordinate (framesymbol) at ($(frame)+(-0.65,0)$);
 \node[sig] at ($(framesymbol)+(0,0.6)$) {$abc$};
 \draw[->, line] ($(framesymbol)+(-0.12,0.32)$) -- ($(framesymbol)+(-0.12,-0.32)$);
 \draw[->, line] ($(framesymbol)+(0.12,-0.32)$) -- ($(framesymbol)+(0.12,0.32)$);
