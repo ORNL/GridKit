@@ -72,7 +72,7 @@ a_u &= \dfrac{8}{3(M^{\max})^2} \\
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{u}$ | `u` | Input | [V] | Converter voltage command | Optional, $\mathbf{u} \in \mathbb{R}^2$
+$\mathbf{u}^{\mathrm{cmd}}$ | `u` | Input | [V] | Converter voltage command | Optional, $\mathbf{u}^{\mathrm{cmd}} \in \mathbb{R}^2$
 $v_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC voltage | With `u`, $v_{\mathrm{dc}} \ge 0$
 $\theta$ | `theta` | Input | [rad] | Electrical reference angle | With `u`
 $\mathbf{s}$ | `s` | Output | [-] | Three-phase switching function | $\mathbf{s} \in [0,1]^3$
@@ -113,7 +113,7 @@ Connected voltage-command, DC, and angle variables may be differential.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{u}$ | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
+$\mathbf{u}^{\mathrm{cmd}}$ | [V] | Converter voltage command | $\mathbf{u}^{\mathrm{cmd}} \in \mathbb{R}^2$
 $v_{\mathrm{dc}}$ | [V] | DC voltage | $v_{\mathrm{dc}} \ge 0$
 $\theta$ | [rad] | Electrical reference angle |
 
@@ -123,16 +123,16 @@ With inputs, the limiter factor and modulation command are
 
 ```math
 \begin{aligned}
-\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u}) &=
-  \max\left(v_{\mathrm{dc}}^2,a_u\|\mathbf{u}\|_2^2\right) \\
-\mathbf{m}_{dq} &= \dfrac{2\mathbf{u}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u})}}
+\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u}^{\mathrm{cmd}}) &=
+  \max\left(v_{\mathrm{dc}}^2,a_u\|\mathbf{u}^{\mathrm{cmd}}\|_2^2\right) \\
+\mathbf{m}_{dq} &= \dfrac{2\mathbf{u}^{\mathrm{cmd}}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u}^{\mathrm{cmd}})}}
 \end{aligned}
 ```
 
 The direction-preserving limit uses the CommonMath smooth
 [`max`](../../../../../CommonMath.md#maximum) on squared voltages in
 $\mathrm{V}^2$. In the power-invariant frame, a balanced phase peak of
-$M^{\max}v_{\mathrm{dc}}/2$ corresponds to $\|\mathbf{u}\|_2 =
+$M^{\max}v_{\mathrm{dc}}/2$ corresponds to $\|\mathbf{u}^{\mathrm{cmd}}\|_2 =
 \sqrt{3/8}\,M^{\max}v_{\mathrm{dc}}$, the configured linear modulation limit.
 $M^{\max}=1$ gives the full sinusoidal PWM range without zero-sequence injection.[^spwm] The phase modulation command is the
 inverse Park transform without zero sequence,
@@ -199,7 +199,7 @@ None.
 \begin{aligned}
 \mathbf{m}_{abc} &= \mathbf{T}^{\mathsf{T}}(\theta)
   \begin{bmatrix} m_d & m_q & 0 \end{bmatrix}^{\mathsf{T}} \\
-\mathbf{u}^{\mathrm{lim}} &= \dfrac{v_{\mathrm{dc}}\mathbf{u}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u})}} \\
+\mathbf{u}^{\mathrm{lim}} &= \dfrac{v_{\mathrm{dc}}\mathbf{u}^{\mathrm{cmd}}}{\sqrt{\mathcal{L}_u(v_{\mathrm{dc}},\mathbf{u}^{\mathrm{cmd}})}} \\
 s_\ell(t) &= S_\mu\left(t,d_\ell(t)\right),
 \qquad \ell\in\{a,b,c\}
 \end{aligned}

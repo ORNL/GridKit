@@ -44,8 +44,8 @@ namespace GridKit
       {
         ilimd, ///< \f$i_d^{\mathrm{lim}}\f$ Limited current command [A]
         ilimq, ///< \f$i_q^{\mathrm{lim}}\f$ Limited current command [A]
-        ud,    ///< \f$u_d\f$ Converter voltage command [V]
-        uq,    ///< \f$u_q\f$ Converter voltage command [V]
+        ud,    ///< \f$u_d^{\mathrm{cmd}}\f$ Converter voltage command [V]
+        uq,    ///< \f$u_q^{\mathrm{cmd}}\f$ Converter voltage command [V]
         SIZE,
       };
 
@@ -55,8 +55,8 @@ namespace GridKit
         xiq,   ///< \f$\xi_q\f$ Integral contribution [V]
         ilimd, ///< \f$i_d^{\mathrm{lim}}\f$ Limited current command [A]
         ilimq, ///< \f$i_q^{\mathrm{lim}}\f$ Limited current command [A]
-        ud,    ///< \f$u_d\f$ Converter voltage command [V]
-        uq,    ///< \f$u_q\f$ Converter voltage command [V]
+        ud,    ///< \f$u_d^{\mathrm{cmd}}\f$ Converter voltage command [V]
+        uq,    ///< \f$u_q^{\mathrm{cmd}}\f$ Converter voltage command [V]
       };
 
       template <typename real_type, typename index_type>

@@ -61,7 +61,7 @@ $\mathbf{i}^{\mathrm{cmd}}$ | `icmd` | Input | [A] | Current command | From the 
 $\omega$ | `omega` | Input | [rad/s] | Electrical angular frequency of the $dq$ frame | From PLL
 $\mathbf{u}^{\mathrm{lim}}$ | `ulim` | Input | [V] | Limited voltage command | From PWM
 $\mathbf{i}^{\mathrm{lim}}$ | `ilim` | Output | [A] | Limited current command | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
-$\mathbf{u}$ | `u` | Output | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
+$\mathbf{u}^{\mathrm{cmd}}$ | `u` | Output | [V] | Converter voltage command | $\mathbf{u}^{\mathrm{cmd}} \in \mathbb{R}^2$
 
 With $C>0$, `icmd` is the grid-side current reference for a balanced LCL filter;
 the controller adds its filtered capacitor-current reference before limiting.
@@ -96,7 +96,7 @@ $\mathbf v_f$ | [V] | Filtered capacitor voltage | $\mathbf v_f\in\mathbb R^2$
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{i}^{\mathrm{lim}}$ | [A] | Limited current command | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
-$\mathbf{u}$ | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
+$\mathbf{u}^{\mathrm{cmd}}$ | [V] | Converter voltage command | $\mathbf{u}^{\mathrm{cmd}} \in \mathbb{R}^2$
 
 ### External Variables
 
@@ -146,7 +146,7 @@ the unmodeled LVPL and LVACM functions.
 ```math
 \begin{aligned}
 0 &= -\dfrac{\mathrm{d}\boldsymbol{\xi}}{\mathrm{d}t}
-    + K_I\mathbf{e} + K_{\mathrm{aw}}(\mathbf{u}^{\mathrm{lim}}-\mathbf{u}) \\
+    + K_I\mathbf{e} + K_{\mathrm{aw}}(\mathbf{u}^{\mathrm{lim}}-\mathbf{u}^{\mathrm{cmd}}) \\
 0 &= -\dfrac{\mathrm{d}\mathbf v_f}{\mathrm{d}t}+(\mathbf v-\mathbf v_f)/T_f.
 \end{aligned}
 ```
@@ -157,7 +157,7 @@ the unmodeled LVPL and LVACM functions.
 \begin{aligned}
 0 &= \mathbf{i}^{\mathrm{lim}}-
   \dfrac{\mathbf i^\star}{\sqrt{\mathcal{L}_i(\mathbf i^\star)}} \\
-0 &= \mathbf{u}-\mathbf{b}-K_P\mathbf{e}-\boldsymbol{\xi}
+0 &= \mathbf{u}^{\mathrm{cmd}}-\mathbf{b}-K_P\mathbf{e}-\boldsymbol{\xi}
 \end{aligned}
 ```
 
@@ -183,7 +183,7 @@ The state-file keys `ud` and `uq` replace the respective defaults with finite
 output values. The integral contribution is then derived from them:
 
 ```math
-\boldsymbol{\xi} \leftarrow \mathbf{u}-\mathbf{b}-K_P\mathbf{e}.
+\boldsymbol{\xi} \leftarrow \mathbf{u}^{\mathrm{cmd}}-\mathbf{b}-K_P\mathbf{e}.
 ```
 
 Optional `ilimd` and `ilimq` must match the limiter and cannot override the
@@ -198,7 +198,7 @@ Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `xi` | [V] | Integral contribution | $\boldsymbol{\xi} \in \mathbb{R}^2$
 `ilim` | [A] | Limited current command | $\mathbf{i}^{\mathrm{lim}} \in \mathbb{R}^2$
-`u` | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
+`u` | [V] | Converter voltage command | $\mathbf{u}^{\mathrm{cmd}} \in \mathbb{R}^2$
 
 See [case connections](../../../INPUT_FORMAT.md#case-connections) for vector
 ports and monitor expansion.

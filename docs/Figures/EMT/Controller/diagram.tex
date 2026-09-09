@@ -1,52 +1,88 @@
 % Shared body for the inverter wiring figures. The wrappers diagram_gfl.tex
 % and diagram_gfm.tex set \gfmfalse or \gfmtrue before inputting this file;
 % the switch selects the outer controller, its setpoint inputs, and the extra
-% voltage and frequency wiring the voltage loop needs.
+% measurement wiring for the outer-control variants.
 
-% TUNABLES: tier heights, the PLL frame boundary, and the setpoint column.
-\def\framerow{-2.8}
+% TUNABLES: control-row height, frame column, and setpoint column.
 \def\framecolumn{6.8}
 \def\controlrow{-4.4}
 \def\setpointcolumn{18.6}
+\definecolor{measurementblue}{HTML}{0072B2}
 
 \begin{document}
 \begin{tikzpicture}[emt diagram,
-    block/.append style={minimum height=1.25cm, align=center}]
+    block/.append style={minimum height=1.25cm, align=center},
+    measurement/.style={line, dashed, draw=measurementblue}]
 
 % ================= DC supply and bridge =================
-\node[signal, label={[sig]above:$v_{\mathrm{dc}}$}] (vdc) at (4.8, 0) {};
-\node[block, minimum width=2.6cm] (bridge) at (8.8, 0) {Converter};
-\node[signal] (dcbranch) at (7.2, 0) {};
-\draw[->, line] (vdc) -- (bridge.west);
+\node[minimum width=2.6cm, minimum height=1.9cm] (bridge) at (8.8, 0) {};
+% DC/AC converter glyph with separate voltage-measurement and switching ports.
+\node[circle, draw, semithick, minimum size=1.5cm, inner sep=0pt]
+    (converter) at (bridge.center) {};
+\begin{scope}[shift={(bridge.center)}]
+    \draw[semithick] (converter.south west) -- (converter.north east);
+    \draw[semithick] (-0.47,0.32) -- (-0.07,0.32);
+    \draw[semithick, dash pattern=on 1.2pt off 0.8pt]
+        (-0.47,0.22) -- (-0.07,0.22);
+    \draw[semithick] (0.05,-0.27)
+        sin (0.16,-0.16) cos (0.27,-0.27)
+        sin (0.38,-0.38) cos (0.49,-0.27);
+    \coordinate (vdc) at (-0.4,-0.63443);
+    \coordinate (gates) at (0.4,-0.63443);
+\end{scope}
 
 % ================= LCL filter and terminal =================
-\node[block] (filter) at (12.4, 0) {Filter\\{\small LCL}};
-\node[block] (tbus) at (20.0, 0) {Bus\\{\small terminal}};
-\draw[->, line] (bridge.east)
-    -- node[sig, above] {$\mathbf{e}$} (filter.west);
-\draw[->, line] (filter.east) -- (tbus.west);
-% The grid-current tap sits over the outer controller input it feeds.
-\node[signal, label={[sig]above:$\mathbf{i}_g$}] (igabc)
-    at (\ifgfm 16.15\else 15.65\fi, 0) {};
+% Z_s bisects the converter-to-capacitor span; Z_g aligns between controllers.
+\node[signal] (voabc) at (12.65, 0) {};
+\node[block, minimum width=1.35cm, minimum height=0.65cm]
+    (zs) at ($(converter.east)!0.5!(voabc)$) {$\mathbf Z_{\mathrm{s}}$};
+\node[block, minimum width=1.35cm, minimum height=0.65cm]
+    (zg) at (14.15, 0) {$\mathbf Z_g$};
+\node[signal] (tbus) at (\ifgfm 16.5\else 16.15\fi, 0) {};
+\draw[line] (converter.east) -- (zs.west);
+\draw[line] (zs.east) -- (voabc) -- (zg.west);
+\draw[line] (zg.east) -- (tbus);
+\draw[->, line] (tbus) -- (18.6,0) node[sig, right] {Bus};
+% Compact single-line representation of the three-phase shunt capacitor.
+\begin{scope}[shift={(voabc)}]
+    \draw[line] (0,0) -- (0,0.65);
+    \draw[semithick] (-0.27,0.65) -- (0.27,0.65);
+    \draw[semithick] (-0.27,0.8) -- (0.27,0.8);
+    \node[sig, anchor=west] at (0.37,0.725) {$\mathbf C$};
+    \draw[line] (0,0.8) -- (0,1.15);
+    \draw[semithick] (-0.27,1.15) -- (0.27,1.15);
+    \draw[semithick] (-0.18,1.27) -- (0.18,1.27);
+    \draw[semithick] (-0.09,1.39) -- (0.09,1.39);
+    \coordinate (cground) at (0,1.39);
+\end{scope}
+% Current sensors encircle the conductors without electrical junction dots.
+\draw[measurement] (12.15,0) ellipse[x radius=0.13, y radius=0.26];
+\coordinate (iabc) at (12.15,-0.26);
+\draw[measurement] (\ifgfm 15.9\else 15.65\fi,0)
+    ellipse[x radius=0.13, y radius=0.26];
+\coordinate (igabc) at (\ifgfm 15.9\else 15.65\fi,-0.26);
 
 % ================= Reference frame and control =================
-\node[block] (icc) at (12.4, \controlrow) {ICC};
-\node[block] (outer) at (15.9, \controlrow) {\ifgfm OVC\else OPC\fi};
+\node[block] (icc) at (12.4, \controlrow) {Current\\Control};
+\node[block] (outer) at (15.9, \controlrow) {\ifgfm Voltage\else Power\fi\\Control};
 
 % ================= Phase-domain measurements =================
-% The filter publishes its inverter current and capacitor voltage from below;
-% reference-frame transformations are implicit at the dq boundary.
-\draw[->, line] ([xshift=-2.5mm]filter.south) -- ([xshift=-2.5mm]icc.north);
-\node[sig, anchor=east] at (12.0, -1.2) {$\mathbf{i}$};
-\draw[->, line] ([xshift=2.5mm]filter.south) -- ([xshift=2.5mm]icc.north);
-\node[sig, anchor=west] at (12.8, -1.2) {$\mathbf{v}_{\mathrm{o}}$};
-\draw[->, line] (igabc) -- ([xshift=\ifgfm 2.5mm\else -2.5mm\fi]outer.north);
+% Reference-frame transformations are implicit at the controller boundary.
+\draw[->, measurement] (iabc) -- ([xshift=-2.5mm]icc.north);
+\node[sig, text=measurementblue, anchor=east] at (12.0, -1.2) {$\mathbf{i}$};
+\draw[->, measurement] (voabc) -- ([xshift=2.5mm]icc.north);
+\node[sig, text=measurementblue, anchor=west] at (12.8, -1.2) {$\mathbf v_{\mathrm{o}}$};
+\draw[->, measurement] (igabc) -- ([xshift=\ifgfm 0mm\else -2.5mm\fi]outer.north);
+\node[sig, text=measurementblue, anchor=east]
+    at (\ifgfm 15.75\else 15.5\fi,-1.2) {$\mathbf i_g$};
 
 \ifgfm
 % ================= Outer voltage-control wiring =================
-% The voltage loop also reads the capacitor voltage.
-\node[signal] (vouter) at (12.65, -2.2) {};
-\draw[->, line] (vouter) -- (15.65, -2.2) -- ([xshift=-2.5mm]outer.north);
+% Branch one-quarter of the measurement-arrow height above current control.
+\coordinate (voicc) at ([xshift=2.5mm]icc.north);
+\coordinate (voovc) at ([xshift=-6mm]outer.north);
+\node[signal, fill=measurementblue] (vouter) at ($(voicc)!0.25!(voabc)$) {};
+\draw[->, measurement] (vouter) -- (vouter -| voovc) -- (voovc);
 \fi
 
 % ================= Control chain =================
@@ -60,20 +96,24 @@
 % voltage command, returns the limited command, and sends the switching
 % functions straight up to the bridge.
 \node[block] (pwm) at (8.8, \controlrow) {PWM};
-\draw[->, line] (pwm.north) -- node[sig, right] {$\mathbf{s}$} (bridge.south);
-\draw[->, line] ([yshift=2.5mm]icc.west)
-    -- node[sig, above] {$\mathbf{u}$} ([yshift=2.5mm]pwm.east);
-\draw[->, line] ([yshift=-2.5mm]pwm.east)
-    -- node[sig, below] {$\mathbf{u}^{\mathrm{lim}}$} ([yshift=-2.5mm]icc.west);
-\draw[->, line] (dcbranch) |- (pwm.west);
+\draw[->, measurement] ([xshift=4mm]pwm.north) -- (gates);
+\node[sig, text=measurementblue, anchor=west] at (9.35,-1.2) {$\mathbf{s}$};
+\draw[->, line] ([yshift=-2.5mm]icc.west)
+    -- node[sig, below] {$\mathbf{u}^{\mathrm{cmd}}$} ([yshift=-2.5mm]pwm.east);
+\draw[->, line] ([yshift=2.5mm]pwm.east)
+    -- node[sig, above] {$\mathbf{u}^{\mathrm{lim}}$} ([yshift=2.5mm]icc.west);
 
-% ================= Terminal-voltage PLL =================
-\node[block] (pll) at (20, \framerow) {PLL};
-\draw[->, line] (tbus.south) -- node[sig, right] {$\mathbf{v}$} (pll.north);
-\ifgfm\else
-\node[signal] (vterminal) at (20,-1.6) {};
-\draw[->, line] (vterminal) -- (16.15,-1.6) -- ([xshift=2.5mm]outer.north);
-\fi
+% ================= Grid-voltage measurement =================
+% In the GFM draft this is an additional proposed voltage-control input;
+% the implemented OuterVoltageControl uses capacitor-voltage feedback.
+\draw[->, measurement] (tbus)
+    -- ([xshift=\ifgfm 6mm\else 2.5mm\fi]outer.north);
+\node[sig, text=measurementblue, anchor=west]
+    at (\ifgfm 16.65\else 16.3\fi,-1.2) {$\mathbf v_g$};
+
+% The DC-terminal voltage is measured by the modulator.
+\draw[->, measurement] (vdc) -- ([xshift=-4mm]pwm.north);
+\node[sig, text=measurementblue, anchor=east] at (8.25,-1.2) {$v_{\mathrm{dc}}$};
 
 % ================= Setpoints =================
 % Setpoints enter the outer controller from outside the enclosure.
@@ -90,16 +130,18 @@
 % ================= Configuration and frame enclosures =================
 \begin{scope}[on background layer]
     \node[operator enclosure, densely dotted,
-        fit=(bridge)(filter)
+        fit=(bridge)(zs)(zg)(cground)
             (icc)(outer)(pwm)] (enclosure) {};
-    % The PLL defines the dq frame; the region is labelled with it.
-    \coordinate (frame) at (\framecolumn, \framerow);
+    % Measurements and commands cross the reference-frame boundary.
+    \coordinate (frame) at (\framecolumn,0 |- enclosure.center);
     \draw[enclosure, densely dotted]
         (frame |- enclosure.south) -- (frame) -- (frame -| enclosure.east);
 \end{scope}
-\draw[->, line] (pll.west)
-    -- node[sig, above] {$\theta,\omega$} (frame -| enclosure.east);
-\node[sig, anchor=north west] at ($(frame)+(0.7,-0.1)$) {$dq$};
+\coordinate (framesymbol) at ($(frame -| enclosure.east)+(0.65,0)$);
+\node[sig] at ($(framesymbol)+(0,0.6)$) {$abc$};
+\draw[->, line] ($(framesymbol)+(-0.12,0.32)$) -- ($(framesymbol)+(-0.12,-0.32)$);
+\draw[->, line] ($(framesymbol)+(0.12,-0.32)$) -- ($(framesymbol)+(0.12,0.32)$);
+\node[sig] at ($(framesymbol)+(0,-0.6)$) {$dq0$};
 
 \end{tikzpicture}
 \end{document}
