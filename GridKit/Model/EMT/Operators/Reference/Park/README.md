@@ -112,7 +112,8 @@ None.
 
 ## Initialization
 
-From the initialized $\mathbf{u}$ and $\theta$,
+The preparation pass publishes the transformed operating-point values from
+$\mathbf{u}$ and $\theta$; prescribed outputs must agree:
 
 ```math
 \mathbf{y} \leftarrow

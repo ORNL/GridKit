@@ -127,6 +127,10 @@ None.
 
 ## Initialization
 
+Balanced initialization publishes the inferred angle and state-file frequency
+before connected controllers prepare their operating points. Prescribed outputs
+must agree.
+
 The initialized bus samples define the stationary voltage phasor at $t_0$.
 The default outputs are
 

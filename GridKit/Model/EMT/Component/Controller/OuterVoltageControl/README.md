@@ -133,24 +133,21 @@ algebraic variables.
 
 ## Initialization
 
-The initialized inputs define $\mathbf{e}$ and $\mathbf{b}$. The default
-current-command outputs are
+Balanced initialization receives the current command requested by the inner
+controller and requests the measured capacitor voltage from the reference source.
+Prescribed references must agree.
 
-```math
-\mathbf{i}^{\mathrm{cmd}} \leftarrow \mathbf{b}+K_P\mathbf{e}.
-```
-
-The state-file keys `icmdd` and `icmdq` replace the respective defaults with
-finite output values. The integral contribution is then derived from them:
+The resolved outputs determine the integral contribution:
 
 ```math
 \boldsymbol{\eta} \leftarrow \mathbf{i}^{\mathrm{cmd}}-\mathbf{b}-K_P\mathbf{e}.
 ```
 
-Omitted outputs give zero integral contribution, up to roundoff. The integral
-states `etad` and `etaq` cannot be prescribed in the state file. Derivatives
-start at zero; the consistent-initial-condition solve preserves the integral
-states and obtains derivatives and algebraic commands from the connected inputs.
+Without an initialization frequency, omitted `icmdd`, `icmdq` default to
+$\mathbf{b}+K_P\mathbf{e}$, giving zero integral contribution. The integral
+states `etad` and `etaq` cannot be prescribed. Their derivatives start at zero;
+consistent initialization preserves the integrals and resolves derivatives and
+algebraic commands.
 
 ## Monitors
 

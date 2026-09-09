@@ -25,6 +25,7 @@ Contained in the optional `header` key is an object with the following items:
  ----------------|-------------------------------------------------------
   `version`      | Optional integer identifying the state format version
   `time`         | Optional floating-point model time of the state
+  `omega`        | Optional positive angular frequency [rad/s] for balanced initialization
   `created`      | Optional string with the wall-clock creation time
   `description`  | Optional string describing the state
 
@@ -65,10 +66,8 @@ Container, for example `plant.machine`:
   `iga`, `igb`, `igc` | Optional `Filter` grid-side current injections into the terminal Bus, in amperes; default zero
 
 Other outputs use their model output names and units. All state values must
-be finite; missing or null values use model defaults. The current and voltage
-controllers preserve their supplied integral states; consistent initialization
-resolves their derivatives. Their computed control outputs cannot be prescribed
-in the state file.
+be finite; missing or null values use model defaults. Controller output values
+determine their integral states; integral states are not state-file inputs.
 
 ### History
 
@@ -99,11 +98,23 @@ coefficients. A zero history is suitable for a line energized at time zero:
 
 ## Application
 
-The application reads the state file and passes its values to
-`SystemModel::initialize(state)` after allocation. The integrator then solves
-consistent algebraic variables and derivatives.
+The application calls `SystemModel::initialize(state, omega)` after allocation.
+Without `header.omega`, initialization uses the model defaults and supplied
+outputs. With `header.omega`, balanced positive-sequence Bus voltages and Filter
+`iga`, `igb`, `igc` determine the LCL operating point and its sinusoidal derivatives.
+The required bridge voltage propagates through Converter and PWM to the inner
+and outer controller commands. PLL publishes the Bus voltage angle and specified
+frequency. Park transforms use that same frame.
 
-The system validates component paths and output names, resolves initialization
-dependencies, and reconciles machine operating-point requirements with
-prescribed controller outputs before changing state. Conflicting requirements
-or constants are rejected; components initialize only their own variables.
+Each component declares the inputs it reads, its output owners, and the inputs
+it can request upstream. A preparation pass reconciles those requirements,
+including output aliases and prescribed constants, before any state changes.
+A separate dependency order then initializes each component's own variables.
+Conflicts, missing required values, and dependency cycles are errors.
+
+Balanced initialization uses PWM carrier means and requires current and voltage
+commands inside their smooth limits. Terminal power must match the configured
+power references. It supplies a fundamental operating point; resolved switching
+ripple develops afterward. IDA preserves differential states while solving
+consistent algebraic values and derivatives. Distributed-line history remains
+explicit, as described above.

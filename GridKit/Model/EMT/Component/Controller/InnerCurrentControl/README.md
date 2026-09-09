@@ -151,9 +151,13 @@ windup. Both outputs are owned algebraic variables.
 
 ## Initialization
 
+Balanced initialization receives the required voltage command through PWM and
+requests the measured converter current from the current-command source. The
+initial current must lie inside the smooth current limit.
+
 The initialized current command defines $\mathbf{i}^{\mathrm{lim}}$ and
-$\mathbf{e}$. The default voltage output is $\mathbf{b}+K_P\mathbf{e}$,
-giving zero integral contribution.
+$\mathbf{e}$. Without an initialization frequency, omitted voltage outputs
+default to $\mathbf{b}+K_P\mathbf{e}$, giving zero integral contribution.
 
 The state-file keys `ud` and `uq` replace the respective defaults with finite
 output values. The integral contribution is then derived from them:

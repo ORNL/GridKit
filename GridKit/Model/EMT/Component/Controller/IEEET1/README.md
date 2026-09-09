@@ -175,8 +175,11 @@ None.
 
 ## Initialization
 
-The machine initializes first and seeds `efd`. The controller reads the
-terminal voltages and attached scalar inputs, then sets
+The preparation pass derives the operating point from the requested field
+voltage and measured inputs. A connected `vref` receives an upstream requirement;
+a prescribed constant must agree. No model state changes during this pass.
+
+The machine requests `efd`. The controller derives
 
 ```math
 \begin{aligned}
@@ -189,9 +192,8 @@ V_\mathrm{ref} &\leftarrow E_C+V_{tr}-V_S-V_\mathrm{UEL}-V_\mathrm{OEL}.
 ```
 
 All internal derivatives initially default to zero. The inferred reference
-above is held locally for an unattached `vref`. An attached reference is
-preserved and read live during residual and Jacobian evaluations; consistent
-initialization resolves the derivatives if it differs from the inferred value.
+above is held locally for an unattached `vref`. A connected reference is
+resolved during preparation and read live during simulation.
 
 ## Monitors
 

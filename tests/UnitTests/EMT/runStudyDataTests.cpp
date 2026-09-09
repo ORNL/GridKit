@@ -183,7 +183,15 @@ int main()
   success          *= state == std::map<std::string, std::map<std::string, double>>{{"child.bus", {{"va", 10.0}, {"vb", -5.0}}}, {"child.load", {{"ia", -2.0}}}, {"switch", {{"open", 1.0}}}};
   success          *= parse_state({{"devices", {{"child.load", {{"ia", nullptr}}}, {"switch", nullptr}}}}).empty();
   success          *= parse_state({{"header", nullptr}, {"buses", nullptr}, {"devices", nullptr}}).empty();
-  success          *= parse_state({{"devices", {{"child.regfma", {{"ia", 2.0}, {"ib", -1.0}, {"ic", -1.0}}}}}})
+  success          *= parse().initial_omega == 0.0;
+  parse_state({{"header", {{"omega", 376.99111843077515}}}});
+  success *= parse().initial_omega == 376.99111843077515;
+  parse_state({{"header", {{"omega", nullptr}}}});
+  success *= parse().initial_omega == 0.0;
+  for (const auto& invalid : {json(0.0), json(-1.0), json(true), json("60")})
+    success *= rejects([&]
+                       { parse_state({{"header", {{"omega", invalid}}}}); });
+  success *= parse_state({{"devices", {{"child.regfma", {{"ia", 2.0}, {"ib", -1.0}, {"ic", -1.0}}}}}})
              == std::map<std::string, std::map<std::string, double>>{{"child.regfma", {{"ia", 2.0}, {"ib", -1.0}, {"ic", -1.0}}}};
   success *= rejects([&]
                      { parse_state({{"devices", {{"child.regfma", {{"pf", 0.4}}}}}}); });

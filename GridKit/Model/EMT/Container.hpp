@@ -142,7 +142,7 @@ namespace GridKit
       int         setGridKitComponentID(IdxT component_id) override;
       int         allocate() override;
       int         verify() const override;
-      virtual int initialize(const std::map<std::string, std::map<std::string, RealT>>& state = {});
+      virtual int initialize(const std::map<std::string, std::map<std::string, RealT>>& state = {}, RealT omega = RealT{0});
       void        setDifferentialTags(const std::set<size_t>& columns) override;
       std::string describeDaeIndex(IdxT index) const;
       int         setAbsoluteTolerance(RealT rel_tol) override;

@@ -137,7 +137,12 @@ namespace GridKit
       typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override
       {
         using V = MachineExternalVariables;
-        return {signals_.attachedSignals({V::VA, V::VB, V::VC}), {}, signals_.attachedSignals({V::PM, V::EFD})};
+        typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+        ports.inputs  = signals_.attachedSignals({V::VA, V::VB, V::VC});
+        ports.targets = signals_.attachedSignals({V::PM, V::EFD});
+        if (signals_.template isAssigned<MachineInternalVariables::OMEGA>())
+          ports.outputs.emplace("speed", signals_.template getSignal<MachineInternalVariables::OMEGA>());
+        return ports;
       }
 
       void prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial) override;

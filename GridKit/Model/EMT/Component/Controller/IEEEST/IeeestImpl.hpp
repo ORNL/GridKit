@@ -185,6 +185,21 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
+      void Ieeest<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
+      {
+        std::array<ScalarT, 3> input{ScalarT{0}, ScalarT{1}, ScalarT{1}};
+        for (size_t n = 0; n < input.size(); ++n)
+          if (const auto* signal = this->externalVariableSignals()[n])
+            input[n] = static_cast<ScalarT>(initial.value(*signal));
+        const ScalarT u      = (ONE<RealT> - use_speed_) * input[0] + use_speed_ * (input[1] - ONE<RealT>);
+        const ScalarT output = cutoutGate(input[2]) * Math::clamp(bypass_T6_block_ * Ks_ * u, Lsmin_, Lsmax_);
+        const auto    values = this->template parseInitialOutputs<Ieeest>(initial.outputs(*this));
+        this->checkOutputValue(values, Outputs::output, static_cast<RealT>(output));
+        if (signals_.template isAssigned<IeeestInternalVariables::VSS>())
+          initial.provide(*signals_.template getSignal<IeeestInternalVariables::VSS>(), static_cast<RealT>(output));
+      }
+
+      template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
       {
         this->validateOutputValues(outputs);

@@ -95,6 +95,8 @@ def main():
     if averaged_hash != run_metrics['averaged_sha256']:
         raise ValueError('Averaged data do not match the validated run')
     reference_metrics = json.loads((args.reference / 'metrics.json').read_text())
+    if run_metrics['exciter_adjustments'] != reference_metrics['exciter_adjustments']:
+        raise ValueError('EMT and PhasorDynamics exciter adjustments differ')
     if run_metrics['source_revision'] != reference_metrics['source']['revision']:
         raise ValueError('EMT conversion and PhasorDynamics case must use the same source revision')
     if run_metrics['final_time_s'] < 1.5:

@@ -42,11 +42,6 @@ namespace GridKit
         Kp_             = parameter<RealT>(data, Parameter::Kp, Kp_);
         Ki_             = parameter<RealT>(data, Parameter::Ki, Ki_);
         Kaw_            = parameter<RealT>(data, Parameter::Kaw, Kaw_);
-        if (V_ > ZERO<RealT>)
-        {
-          irefd_ = Pref_ / V_;
-          irefq_ = -Qref_ / V_;
-        }
       }
 
       template <typename scalar_type, typename index_type>
@@ -107,7 +102,7 @@ namespace GridKit
       {
         int error_count   = 0;
         using V           = OuterPowerControlExternalVariables;
-        const auto inputs = signals_.attachedSignals({V::ID, V::IQ, V::ILIMD, V::ILIMQ});
+        const auto inputs = signals_.attachedSignals({V::VD, V::VQ, V::ID, V::IQ, V::ILIMD, V::ILIMQ});
         if (inputs.size() != static_cast<size_t>(V::MAXIMUM))
         {
           Log::error() << "OuterPowerControl: all inputs are required\n";
@@ -125,10 +120,9 @@ namespace GridKit
             Log::error() << "OuterPowerControl: voltage rating and gains must be finite and positive\n";
             ++error_count;
           }
-        if (!std::isfinite(Pref_) || !std::isfinite(Qref_)
-            || !std::isfinite(irefd_) || !std::isfinite(irefq_))
+        if (!std::isfinite(Pref_) || !std::isfinite(Qref_))
         {
-          Log::error() << "OuterPowerControl: setpoints and derived current references must be finite\n";
+          Log::error() << "OuterPowerControl: power setpoints must be finite\n";
           ++error_count;
         }
         return error_count;
@@ -153,13 +147,17 @@ namespace GridKit
         if (const int errors = verify(); errors != 0)
           return errors;
         using V        = OuterPowerControlExternalVariables;
+        const RealT vd = static_cast<RealT>(signals_.template readExternalVariable<V::VD>());
+        const RealT vq = static_cast<RealT>(signals_.template readExternalVariable<V::VQ>());
         const RealT id = static_cast<RealT>(signals_.template readExternalVariable<V::ID>());
         const RealT iq = static_cast<RealT>(signals_.template readExternalVariable<V::IQ>());
-        for (const auto value : {id, iq})
+        for (const auto value : {vd, vq, id, iq})
           if (!std::isfinite(value))
-            throw std::invalid_argument("OuterPowerControl: nonfinite initial current measurement");
-        const RealT ed = irefd_ - id;
-        const RealT eq = irefq_ - iq;
+            throw std::invalid_argument("OuterPowerControl: nonfinite initial measurement");
+        const RealT p  = vd * id + vq * iq;
+        const RealT q  = vq * id - vd * iq;
+        const RealT ed = (Pref_ - p) / V_;
+        const RealT eq = (q - Qref_) / V_;
         auto*       y  = y_.getData();
         auto*       yp = yp_.getData();
         y[2]           = this->outputValue(outputs, Outputs::icmdd, Kp_ * ed);
@@ -177,9 +175,41 @@ namespace GridKit
       typename Component<scalar_type, index_type>::InitializationPortsT OuterPowerControl<scalar_type, index_type>::initializationPorts()
       {
         using V = OuterPowerControlExternalVariables;
-        // The tracking input is resolved with the connected current limiter
-        // by the consistent-initial-condition solve, after the integral is set.
-        return {signals_.attachedSignals({V::ID, V::IQ}), {}, {}};
+        typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+        ports.inputs = signals_.attachedSignals({V::VD, V::VQ, V::ID, V::IQ});
+        for (size_t n = 0; n < output_.size(); ++n)
+        {
+          const auto name = std::string(magic_enum::enum_name(static_cast<Outputs>(n)));
+          ports.outputs.emplace(name, &output_[n]);
+          if (alias_[n])
+            ports.outputs.emplace(name, alias_[n]);
+        }
+        return ports;
+      }
+
+      template <typename scalar_type, typename index_type>
+      void OuterPowerControl<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
+      {
+        if (initial.omega() == ZERO<RealT>)
+          return;
+        using V               = OuterPowerControlExternalVariables;
+        const RealT vd        = initial.value(*signals_.template getAttachedSignal<V::VD>());
+        const RealT vq        = initial.value(*signals_.template getAttachedSignal<V::VQ>());
+        const RealT id        = initial.value(*signals_.template getAttachedSignal<V::ID>());
+        const RealT iq        = initial.value(*signals_.template getAttachedSignal<V::IQ>());
+        const RealT p         = vd * id + vq * iq;
+        const RealT q         = vq * id - vd * iq;
+        const RealT tolerance = RealT{1e-10} * std::max({ONE<RealT>, std::abs(Pref_), std::abs(Qref_), std::hypot(vd, vq) * std::hypot(id, iq)});
+        if (std::abs(p - Pref_) > tolerance || std::abs(q - Qref_) > tolerance)
+          throw std::invalid_argument("OuterPowerControl: initial terminal power must match Pref and Qref");
+        const auto outputs = this->template parseInitialOutputs<OuterPowerControl>(initial.outputs(*this));
+        for (size_t n = 0; n < output_.size(); ++n)
+        {
+          const auto key = static_cast<Outputs>(n);
+          if (!outputs.contains(key))
+            throw std::invalid_argument("OuterPowerControl: balanced initialization requires icmdd and icmdq");
+          initial.provide(output_[n], outputs.at(key));
+        }
       }
 
       template <typename scalar_type, typename index_type>
@@ -193,10 +223,12 @@ namespace GridKit
       int OuterPowerControl<scalar_type, index_type>::evaluateInternalResidual(
           const ScalarT* y, const ScalarT* yp, const ScalarT* input, const ScalarT*, ScalarT* f)
       {
-        const ScalarT ed = irefd_ - input[0];
-        const ScalarT eq = irefq_ - input[1];
-        f[0]             = -yp[0] + Ki_ * ed + Kaw_ * (input[2] - y[2]);
-        f[1]             = -yp[1] + Ki_ * eq + Kaw_ * (input[3] - y[3]);
+        const ScalarT p  = input[0] * input[2] + input[1] * input[3];
+        const ScalarT q  = input[1] * input[2] - input[0] * input[3];
+        const ScalarT ed = (Pref_ - p) / V_;
+        const ScalarT eq = (q - Qref_) / V_;
+        f[0]             = -yp[0] + Ki_ * ed + Kaw_ * (input[4] - y[2]);
+        f[1]             = -yp[1] + Ki_ * eq + Kaw_ * (input[5] - y[3]);
         f[2]             = y[2] - (Kp_ * ed + y[0]);
         f[3]             = y[3] - (Kp_ * eq + y[1]);
         return 0;

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include <GridKit/Model/EMT/Component.hpp>
 #include <GridKit/Model/EMT/Component/Controller/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/EMT/ComponentSignals.hpp>
@@ -115,8 +117,11 @@ namespace GridKit
           ports.inputs = signals_.attachedSignals({V::VA, V::VB, V::VC, V::OMEGA, V::VS, V::VUEL, V::VOEL});
           if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
             ports.outputs.emplace("efd", signals_.template getSignal<Ieeet1InternalVariables::EFD>());
+          ports.targets = signals_.attachedSignals({V::VREF});
           return ports;
         }
+
+        void prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial) override;
 
         int initializeState(const std::map<std::string, RealT>& values) override
         {
@@ -149,6 +154,15 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
+        struct OperatingPoint
+        {
+          std::array<ScalarT, 9> state;
+          ScalarT                vref;
+          RealT                  Ke;
+        };
+
+        std::optional<OperatingPoint> operatingPoint(RealT efd, const ScalarT* external) const;
+
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
         static void            logTimeConstantWarning();
 

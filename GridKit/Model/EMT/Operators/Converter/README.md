@@ -106,7 +106,10 @@ None.
 
 ## Initialization
 
-None beyond the EMT initialization contract.
+[Balanced initialization](../../STATE.md#application) requires zero-sum bridge
+voltage and positive DC voltage. It requests the carrier means
+$\bar{s}_p=1/2+e_p/v_{\mathrm{dc}}$ from PWM. Otherwise, prescribed outputs must
+match the evaluated bridge voltage.
 
 ## Monitors
 

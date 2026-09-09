@@ -468,9 +468,9 @@ namespace GridKit
     {
       if (!coupling_allocated_ || errors_)
         return 1;
-      this->gatherExternalVariables();
       if (size_ == 0)
         return 0;
+      this->gatherExternalVariables();
       const int status = evaluateInternalResidual(y_.getData(), yp_.getData(), y_ext_.data(), yp_ext_.data(), f_.getData());
       f_.setDataUpdated();
       return status;

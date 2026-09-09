@@ -26,8 +26,9 @@ The current plots cover 0–5 s with the inductive fault cleared at 1.15 s.
 ![Machine reactive powers](results/Hawaii.q.png)
 
 The inverter plants use the same LCL Filter wiring as the GFL control example.
-The generator preserves initial terminal dispatch, includes both reactor losses
-in initial bridge power, and initializes capacitor voltage and both inductor currents.
+The generator preserves terminal dispatch and supplies frequency, Bus voltage,
+and Filter grid current. EMT initialization derives the capacitor voltage,
+converter current, and controller commands.
 The filter and controller parameters are synthetic, as listed in the case README.
 
 Generate current results using the commands below. The four PNG/PDF plots in
@@ -73,8 +74,8 @@ hashes, CPU/wall timings, and IDA counters are saved below
 into the ignored, untracked `phasor-reference/` directory and runs the original
 `DynamicSimulation Hawaii.solver.json` validation command unchanged. The
 branch's recorded reference is used only by that original validation check.
-An additional run changes only monitors and output selection to record all
-four comparison quantities; its speed trace must match the original run.
+The comparison run records all four quantities and applies the same
+negative-`Ke` exciter adjustment as the EMT conversion. Its initial speed must match the original run.
 The EMT plotter reads only these newly simulated GridKit traces.
 
 The original copied inputs remain unchanged. Source revisions, input hashes,

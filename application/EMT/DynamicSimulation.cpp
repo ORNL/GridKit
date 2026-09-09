@@ -41,7 +41,7 @@ int main(int argc, const char* argv[])
   for (const auto& [path, history] : study.history)
     sys.component<LineDistributed<scalar_type, index_type>>(path).setPrehistory(history.omega, history.value, history.derivative);
   sys.allocate();
-  if (sys.initialize(study.state) != 0)
+  if (sys.initialize(study.state, study.initial_omega) != 0)
     throw std::runtime_error("EMT model initialization failed");
 
   // Set up simulation
