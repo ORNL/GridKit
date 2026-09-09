@@ -10,12 +10,14 @@
         {
             "time": 1,
             "type": "fault_on",
-            "element_id": 0
+            "bus": 2,
+            "R": 0.0,
+            "X": 1e-05
         },
         {
             "time": 1.1,
             "type": "fault_off",
-            "element_id": 0
+            "bus": 2
         }
     ]
 }
