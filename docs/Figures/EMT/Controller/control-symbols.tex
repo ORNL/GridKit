@@ -1,0 +1,39 @@
+% Scalar control symbols shared by the REECB and REPCA figures.
+% Static saturation characteristics and non-windup limits on dynamic blocks.
+% The model READMEs define smooth realizations and state-enable gates.
+\newcommand{\staticlimit}[4]{%
+    \node[minimum width=1.1cm, minimum height=1cm, inner sep=0pt]
+        (#1) at #2 {};
+    \draw[semithick] (#1.west) -- (#1.east);
+    \draw[semithick] ($(#1.center)+(-0.43,-0.4)$)
+        -- ++(0.28,0) -- ++(0.3,0.8) -- ++(0.28,0);
+    \node[sig, above=1pt of #1] {$#4$};
+    \node[sig, below=1pt of #1] {$#3$};
+}
+\newcommand{\nonwindup}[3]{%
+    \draw[semithick] (#1.north) -- ++(0.12,0.26) -- ++(0.3,0)
+        node[sig, above] {$#3$};
+    \draw[semithick] (#1.south) -- ++(-0.12,-0.26) -- ++(-0.3,0)
+        node[sig, below] {$#2$};
+}
+\newcommand{\deadbandblock}[4]{%
+    \node[block, minimum width=1.4cm, minimum height=1.15cm]
+        (#1) at #2 {};
+    \draw[thin] ($(#1.center)+(-0.53,0)$) -- ++(1.06,0);
+    \draw[thin] ($(#1.center)+(0,-0.43)$) -- ++(0,0.86);
+    \draw[semithick] ($(#1.center)+(-0.45,-0.38)$)
+        -- ++(0.27,0.38) -- ++(0.36,0) -- ++(0.27,0.38);
+    \node[sig, above=2pt of #1] {$#3,\,#4$};
+}
+% Inputs are -one (upper) and -zero (lower); output is -out.
+\newcommand{\controlselector}[3]{%
+    \coordinate (#1-one) at ($#2+(-0.4,0.4)$);
+    \coordinate (#1-zero) at ($#2+(-0.4,-0.4)$);
+    \coordinate (#1-out) at ($#2+(0.45,0)$);
+    \fill (#1-one) circle (1.4pt);
+    \fill (#1-zero) circle (1.4pt);
+    \draw[semithick] (#1-out) -- ($#2+(-0.26,0.32)$);
+    \node[pm, right=3pt] at (#1-one) {$1$};
+    \node[pm, right=3pt] at (#1-zero) {$0$};
+    \node[sig, above=15pt] at #2 {$#3$};
+}

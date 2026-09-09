@@ -10,7 +10,11 @@ and inner current regulator remain separate models.
 
 ![REECB model block diagram](../../../../../../docs/Figures/EMT/Controller/REECB/diagram.png)
 
-Figure 1: REECB signal paths. The equations below define the selector modes and limits.
+Figure 1: REECB signal paths. Limit marks on dynamic blocks denote non-windup
+limits; dashed inputs enable state evolution and act only on the integral state
+of a PI block. Repeated signal names denote the same internal quantity.
+The equations below define the smooth characteristics, moving current bounds,
+guarded voltage, and selector gates.
 
 ## Model Parameters
 

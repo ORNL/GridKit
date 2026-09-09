@@ -1,78 +1,100 @@
 \documentclass[tikz,border=12pt]{standalone}
 \input{../../diagram-style.tex}
+\input{../control-symbols.tex}
 
-% TUNABLES: channel separation and block widths.
-\def\rowseparation{4.8}
+% TUNABLES: reactive-command, active-command, and frequency-response rows.
+\def\reactiverow{1.6}
+\def\activerow{-3.6}
+\def\frequencyrow{-7.2}
+
 \begin{document}
 \begin{tikzpicture}[emt diagram, block/.append style={align=center}]
-% Terminal measurements in a common power-invariant Park frame.
-\node[block, minimum width=5.8cm, minimum height=2.4cm] (measure) at (3,3.8)
-    {$\hat v_d=v_d/V,\quad\hat v_q=v_q/V$\\[3pt]
-     $\hat i_d=Vi_d/S,\quad\hat i_q=Vi_q/S$\\[3pt]
-     $P=\hat v_d\hat i_d+\hat v_q\hat i_q$\\[3pt]
-     $Q=\hat v_q\hat i_d-\hat v_d\hat i_q$};
-\foreach \label/\shift in {v_d/0.9,v_q/0.3,i_d/-0.3,i_q/-0.9}
-    \draw[->,line] ([xshift=-1.2cm,yshift=\shift cm]measure.west)
-        node[sig,left] {$\label$} -- ([yshift=\shift cm]measure.west);
-\node[block, minimum width=7cm, minimum height=2.4cm] (comp) at (11,3.8)
-    {$V_t=\sqrt{\hat v_d^2+\hat v_q^2}$\\[3pt]
-     $V^{\mathrm{ldc}}=|\hat v_d+\mathrm{j}\hat v_q-(R_c+\mathrm{j}X_c)(\hat i_d+\mathrm{j}\hat i_q)|$\\[3pt]
-     $V^{\mathrm{droop}}=V_t+K_cQ$\\[3pt]
-     $V^{\mathrm{ctrl}}=s_{\mathrm{comp}}V^{\mathrm{ldc}}+(1-s_{\mathrm{comp}})V^{\mathrm{droop}}$};
-\draw[->,line] (measure.east) -- (comp.west);
 
-% Reactive path. Select the error after the source measurement lags.
-\node[block, minimum width=2.6cm] (sense) at (1.2,0) {$\dfrac{1}{1+sT_{\mathrm{fltr}}}$};
-\draw[->,line] (-1,0) node[sig,left] {$V^{\mathrm{ctrl}},\ Q$} -- (sense.west);
-\node[block, minimum width=4.2cm] (errorq) at (5.2,0)
-    {$s_{\mathrm{ref}}(V^{\mathrm{ref}}/V-V^{\mathrm{meas}})$\\
-     $+(1-s_{\mathrm{ref}})(Q^{\mathrm{ref}}/S-Q^{\mathrm{meas}})$};
-\draw[->,line] (sense.east) -- (errorq.west);
-\draw[->,line] (5.2,1.9) node[sig,above] {$V^{\mathrm{ref}},\ Q^{\mathrm{ref}}$} -- (errorq.north);
-\node[block] (deadq) at (8.9,0) {$\mathrm{deadband2}$};
-\node[block] (limitq) at (11.9,0) {$\mathrm{clamp}$};
-\draw[->,line] (errorq.east) -- (deadq.west);
-\draw[->,line] (deadq.east) -- (limitq.west);
-\node[sig,above=2pt of deadq] {$D_{\mathrm{bd1}},D_{\mathrm{bd2}}$};
-\node[sig,above=2pt of limitq] {$e^{\min},e^{\max}$};
-\node[block,minimum width=2.8cm] (piq) at (15.0,0) {$K_{\mathrm{p}}+\dfrac{K_{\mathrm{i}}}{s}$};
-\draw[->,line] (limitq.east) -- (piq.west);
-\node[sig,below=2pt of piq] {$Q^{\min},Q^{\max}$};
-\draw[->,line,dashed] (15,1.9) node[sig,above] {$s_{\mathrm{frz}}=\mathrm{above}(V_t;V^{\mathrm{frz}})$} -- (piq.north);
-\node[block,minimum width=3cm] (lagq) at (18.6,0) {$\dfrac{1+sT_{\mathrm{ft}}}{1+sT_{\mathrm{fv}}}$};
-\draw[->,line] (piq.east) -- (lagq.west);
-\node[block,minimum width=1cm] (scaleq) at (21.3,0) {$S$};
-\draw[->,line] (lagq.east) -- (scaleq.west);
-\draw[->,line] (scaleq.east) -- (23,0) node[sig,right] {$Q^{\mathrm{ext}}$};
+% Compensated voltage and independently filtered voltage / reactive power.
+\node[block,minimum width=3.7cm] (ldc) at (0,3.3)
+    {$|\hat v_d+\mathrm j\hat v_q-(R_c+\mathrm jX_c)(\hat i_d+\mathrm j\hat i_q)|$};
+\draw[->,line] ([xshift=-1cm]ldc.west) node[sig,left] {$\hat{\mathbf v},\hat{\mathbf i}$} -- (ldc.west);
+\node[block,minimum width=1.3cm] (kc) at (-1,1) {$K_c$};
+\draw[->,line] (-3,1) node[sig,left] {$Q$} -- (kc.west);
+\node[sum] (droopv) at (1,1) {$\Sigma$};
+\draw[->,line] (kc.east) -- (droopv.west);
+\node[pm,above left=0pt and 1pt of droopv.west] {$+$};
+\draw[->,line] (1,-0.4) node[sig,below] {$V_t$} -- (droopv.south);
+\node[pm,below right=0pt and 1pt of droopv.south] {$+$};
+\controlselector{comp}{(4.3,2.9)}{s_{\mathrm{comp}}}
+\draw[->,line] (ldc.east) -- (comp-one);
+\draw[->,line] (droopv.east) -| (comp-zero);
+\node[block] (vlag) at (6.9,2.9) {$\dfrac{1}{1+sT_{\mathrm{fltr}}}$};
+\draw[->,line] (comp-out) -- node[sig,above] {$V^{\mathrm{ctrl}}$} (vlag.west);
+\node[sum] (ev) at (9.3,2.9) {$\Sigma$};
+\draw[->,line] (vlag.east) -- (ev.west);
+\node[pm,above left=0pt and 1pt of ev.west] {$-$};
+\draw[->,line] (9.3,4.5) node[sig,above] {$V^{\mathrm{ref}}/V$} -- (ev.north);
+\node[pm,above right=0pt and 1pt of ev.north] {$+$};
+\node[block] (qlag) at (6.9,0) {$\dfrac{1}{1+sT_{\mathrm{fltr}}}$};
+\draw[->,line] (4.8,0) node[sig,left] {$Q$} -- (qlag.west);
+\node[sum] (eq) at (9.3,0) {$\Sigma$};
+\draw[->,line] (qlag.east) -- (eq.west);
+\node[pm,above left=0pt and 1pt of eq.west] {$-$};
+\draw[->,line] (9.3,-1.4) node[sig,below] {$Q^{\mathrm{ref}}/S$} -- (eq.south);
+\node[pm,below right=0pt and 1pt of eq.south] {$+$};
+\controlselector{ref}{(11.3,\reactiverow)}{s_{\mathrm{ref}}}
+\draw[->,line] (ev.east) -| (ref-one);
+\draw[->,line] (eq.east) -| (ref-zero);
+\deadbandblock{dbq}{(13.4,\reactiverow)}{D_{\mathrm{bd1}}}{D_{\mathrm{bd2}}}
+\staticlimit{eqmax}{(15.5,\reactiverow)}{e^{\min}}{e^{\max}}
+\node[block] (piq) at (18,\reactiverow) {$K_{\mathrm p}+\dfrac{K_{\mathrm i}}{s}$};
+\nonwindup{piq}{Q^{\min}}{Q^{\max}}
+\node[block,minimum width=2.7cm] (leadlag) at (21.7,\reactiverow) {$\dfrac{1+sT_{\mathrm{ft}}}{1+sT_{\mathrm{fv}}}$};
+\node[block,minimum width=1cm] (qscale) at (24.4,\reactiverow) {$S$};
+\draw[->,line] (ref-out) -- (dbq.west);
+\draw[->,line] (dbq.east) -- (eqmax.west);
+\draw[->,line] (eqmax.east) -- (piq.west);
+\draw[->,line] (piq.east) -- node[sig,above] {$Q^{\mathrm{PI}}$} (leadlag.west);
+\draw[->,line] (leadlag.east) -- (qscale.west);
+\draw[->,line] (qscale.east) -- (26,\reactiverow) node[sig,right] {$Q^{\mathrm{ext}}$};
+\draw[->,line,dashed] (17.1,4.5) node[sig,above] {$s_{\mathrm{frz}}$}
+    -- ([xshift=-9mm]piq.north);
 
-% Active path and asymmetric frequency response.
-\node[block] (sensep) at (1.2,-\rowseparation) {$\dfrac{1}{1+sT_{\mathrm{p}}}$};
-\draw[->,line] (-1,-\rowseparation) node[sig,left] {$P$} -- (sensep.west);
-\node[sum] (errorp) at (5.2,-\rowseparation) {$\Sigma$};
-\draw[->,line] (sensep.east) -- (errorp.west);
-\node[pm,above left=0pt and 1pt of errorp.west] {$-$};
-\draw[->,line] (5.2,-2.9) node[sig,above] {$P_{\mathrm{plant}}^{\mathrm{ref}}/S$} -- (errorp.north);
-\node[pm,above right=0pt and 1pt of errorp.north] {$+$};
-\node[block,minimum width=4.2cm] (droop) at (2.2,-7.1)
-    {$e_f=\mathrm{deadband2}(f^{\mathrm{ref}}-f)$\\[3pt]
-     $e_f[D_{\mathrm{dn}}+(D_{\mathrm{up}}-D_{\mathrm{dn}})\sigma(e_f)]$};
-\draw[->,line] (-1,-7.1) node[sig,left] {$f^{\mathrm{ref}},f$} -- (droop.west);
-\draw[->,line] (droop.east) -| (errorp.south);
-\node[pm,below right=0pt and 1pt of errorp.south] {$+$};
-\node[block] (limitp) at (8.9,-\rowseparation) {$\mathrm{clamp}$};
-\draw[->,line] (errorp.east) -- (limitp.west);
-\node[sig,above=2pt of limitp] {$e_P^{\min},e_P^{\max}$};
-\node[block,minimum width=2.8cm] (pip) at (12.2,-\rowseparation) {$K_{\mathrm{pg}}+\dfrac{K_{\mathrm{ig}}}{s}$};
-\draw[->,line] (limitp.east) -- (pip.west);
-\node[sig,below=2pt of pip] {$P^{\min},P^{\max}$};
-\node[block] (lagp) at (15.5,-\rowseparation) {$\dfrac{1}{1+sT_{\mathrm{lag}}}$};
-\draw[->,line] (pip.east) -- (lagp.west);
-\node[block] (enable) at (18.6,-\rowseparation) {$s_{\mathrm{freq}}$};
-\draw[->,line] (lagp.east) -- (enable.west);
-\node[block,minimum width=1cm] (scalep) at (21.3,-\rowseparation) {$S$};
-\draw[->,line] (enable.east) -- (scalep.west);
-\draw[->,line] (scalep.east) -- (23,-\rowseparation) node[sig,right] {$P^{\mathrm{ext}}$};
-\node[sig,anchor=west] at (7,-7.1) {PI blocks include output limits and integral anti-windup.};
-\node[sig,anchor=west] at (7,-7.7) {The voltage gate freezes only the reactive integral state.};
+% Plant active-power feedback, error limit, and non-windup PI.
+\node[block] (plag) at (6.9,\activerow) {$\dfrac{1}{1+sT_{\mathrm p}}$};
+\draw[->,line] (4.8,\activerow) node[sig,left] {$P$} -- (plag.west);
+\node[sum] (ep) at (11.3,\activerow) {$\Sigma$};
+\draw[->,line] (plag.east) -- node[sig,above] {$P^{\mathrm{meas}}$} (ep.west);
+\node[pm,above left=0pt and 1pt of ep.west] {$-$};
+\draw[->,line] (11.3,-2) node[sig,above] {$P_{\mathrm{plant}}^{\mathrm{ref}}/S$} -- (ep.north);
+\node[pm,above right=0pt and 1pt of ep.north] {$+$};
+\staticlimit{epmax}{(13.4,\activerow)}{e_P^{\min}}{e_P^{\max}}
+\node[block] (pip) at (16,\activerow) {$K_{\mathrm{pg}}+\dfrac{K_{\mathrm{ig}}}{s}$};
+\nonwindup{pip}{P^{\min}}{P^{\max}}
+\node[block] (lagp) at (19.5,\activerow) {$\dfrac{1}{1+sT_{\mathrm{lag}}}$};
+\controlselector{freq}{(22.6,-4)}{s_{\mathrm{freq}}}
+\draw[->,line] (ep.east) -- (epmax.west);
+\draw[->,line] (epmax.east) -- (pip.west);
+\draw[->,line] (pip.east) -- node[sig,above] {$P^{\mathrm{PI}}$} (lagp.west);
+\draw[->,line] (lagp.east) -- (freq-one);
+\draw[->,line] (22.2,-5.4) node[sig,below] {$0$} -- (freq-zero);
+\node[block,minimum width=1cm] (pscale) at (24.4,-4) {$S$};
+\draw[->,line] (freq-out) -- (pscale.west);
+\draw[->,line] (pscale.east) -- (26,-4) node[sig,right] {$P^{\mathrm{ext}}$};
+
+% Asymmetric frequency droop, drawn as its input-output characteristic.
+\node[sum] (ef) at (0,\frequencyrow) {$\Sigma$};
+\draw[->,line] (-3,\frequencyrow) node[sig,left] {$f^{\mathrm{ref}}$} -- (ef.west);
+\node[pm,above left=0pt and 1pt of ef.west] {$+$};
+\draw[->,line] (0,-5.8) node[sig,above] {$f$} -- (ef.north);
+\node[pm,above right=0pt and 1pt of ef.north] {$-$};
+\deadbandblock{dbf}{(3,\frequencyrow)}{D_{\mathrm{bd1}}^f}{D_{\mathrm{bd2}}^f}
+\node[block,minimum width=2.3cm,minimum height=1.7cm] (df) at (6.9,\frequencyrow) {};
+\draw[thin] ($(df.center)+(-0.95,0)$) -- ++(1.9,0);
+\draw[thin] ($(df.center)+(0,-0.65)$) -- ++(0,1.3);
+\draw[semithick] ($(df.center)+(-0.8,-0.55)$) -- (df.center) -- ++(0.8,0.32);
+\node[pm,anchor=north west] at ($(df.center)+(-0.55,-0.46)$) {$D_{\mathrm{dn}}$};
+\node[pm,anchor=south east] at ($(df.center)+(0.95,0.38)$) {$D_{\mathrm{up}}$};
+\draw[->,line] (ef.east) -- (dbf.west);
+\draw[->,line] (dbf.east) -- node[sig,above] {$e_f$} (df.west);
+\draw[->,line] (df.east) -| (ep.south);
+\node[pm,below right=0pt and 1pt of ep.south] {$+$};
+
 \end{tikzpicture}
 \end{document}

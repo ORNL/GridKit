@@ -9,7 +9,10 @@ and control parameters use the plant per-unit base.
 
 ![REPCA model block diagram](../../../../../../docs/Figures/EMT/Controller/REPCA/diagram.png)
 
-Figure 1: REPCA model
+Figure 1: REPCA signal paths on the plant per-unit base. Limit marks on PI
+blocks denote non-windup limits; the dashed voltage gate enables only the
+reactive integral state. The equations below define measurement normalization,
+the gate, and the smooth limiter, deadband, and droop characteristics.
 
 ## Model Parameters
 
