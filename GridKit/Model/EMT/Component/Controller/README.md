@@ -5,19 +5,18 @@ inverter examples, PLL supplies angle to the Park operators and frequency to
 the controllers through signal ports.
 
 Arrows indicate signal flow. The converter current $\mathbf{i}$ is positive
-out of the bridge; $i_{\mathrm{dc}}$ is positive into the bridge. The converter
-receives $\mathbf{i}$ from the Filter and supplies $i_{\mathrm{dc}}$ to DCLink.
+out of the bridge.
 The forward power-invariant Park transforms are implicit at the boundary of
 the $dq$ controller region; PWM applies the inverse transform internally.
 
 Symbol | Producer | Consumer | Coordinates
 ------ | -------- | -------- | -----------
 $\mathbf{e}$ | `Converter.e` | `Filter.e` | $abc$
-$\mathbf{v}_{\mathrm{o}}$ | `Filter.vo` | PLL and voltage Park inputs | $abc$
-$\mathbf{i}$ | `Filter.i` | `Converter.i` and current Park input | $abc$
+$\mathbf{v}$ | Terminal Bus | PLL | $abc$
+$\mathbf{v}_{\mathrm{o}}$ | `Filter.vo` | Voltage Park input | $abc$
+$\mathbf{i}$ | `Filter.i` | Current Park input | $abc$
 $\mathbf{i}_g$ | `Filter.ig` | Terminal Bus and grid-current Park input | $abc$
-$v_{\mathrm{dc}}$ | `DCLink.vdc` | Converter and PWM | Scalar
-$i_{\mathrm{dc}}$ | `Converter.idc` | `DCLink.idc` | Scalar
+$v_{\mathrm{dc}}$ | External constant | Converter and PWM | Scalar
 
 The current and voltage controllers retain their local voltage-input name
 `v`: it receives the $dq$ components of transformed $\mathbf{v}_{\mathrm{o}}$.
@@ -46,7 +45,6 @@ LVACM, the $\text{linseg}(V_T;V_{A0},V_{A1},1)$ factor on injected active curren
 - [InnerCurrentControl](InnerCurrentControl/README.md): converter current control in $dq$ coordinates.
 - [OuterPowerControl](OuterPowerControl/README.md): active and reactive power control in $dq$ coordinates.
 - [OuterVoltageControl](OuterVoltageControl/README.md): filter-capacitor voltage control in $dq$ coordinates.
-- [DC Link](DCLink/README.md): capacitor voltage and current balance.
 - [IEEET1](IEEET1/README.md)
 - [PWM](PWM/README.md)
 - [TGOV1](TGOV1/README.md)

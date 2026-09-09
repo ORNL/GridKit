@@ -2,7 +2,7 @@
   "header": {
     "version": 1,
     "time": 0,
-    "description": "Balanced 208 V capacitor operating point; PLL infers its initial angle from capacitor voltage"
+    "description": "Balanced LCL operating point in the terminal-bus PLL frame"
   },
   "devices": {
     "filter": {
@@ -17,15 +17,12 @@
       "igc": -4.08597946805662
     },
     "current_control": {
-      "ud": 204.30292479085702,
-      "uq": 9.329138265971121
+      "ud": 204.0920550429652,
+      "uq": 13.158684099234241
     },
     "voltage_control": {
-      "icmdd": 10.344619684717859,
-      "icmdq": 7.647393883027645
-    },
-    "dc": {
-      "vdc": 400.0
+      "icmdd": 10.199393060856769,
+      "icmdq": 7.840036403854744
     }
   },
   "buses": {

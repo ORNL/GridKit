@@ -43,7 +43,7 @@ def main():
     assert report['choices']['carrier_alignment'] == 0.5, 'Pulse oracle assumes centred carriers'
     for device in case['devices']:
         device.pop('mon', None)
-        monitors = {'PWM': ['s', 'm'], 'Converter': ['e', 'idc'], 'Filter': ['i'], 'DCLink': ['vdc']}
+        monitors = {'PWM': ['s', 'm'], 'Converter': ['e']}
         if device['class'] in monitors:
             device['mon'] = monitors[device['class']]
     run = args.output.resolve().with_suffix('')
@@ -73,29 +73,28 @@ def main():
                'plants': {}}
     for plant, parameters in report['inverters'].items():
         predicted, measured = [], []
-        pulse_error, power_error = 0.0, 0.0
+        pulse_error, voltage_error = 0.0, 0.0
         for row in data:
             edges = [pulse(row['t'], row[f'PWM_{plant}_pwm_m{p}'], fc, mu) for p in 'abc']
             pulse_error = max(pulse_error, *(abs(a - row[f'PWM_{plant}_pwm_s{p}']) for a, p in zip(edges, 'abc')))
             voltage = [row[f'Converter_{plant}_bridge_e{p}'] for p in 'abc']
-            current = [row[f'Filter_{plant}_filter_i{p}'] for p in 'abc']
-            vdc = row[f'DCLink_{plant}_dc_vdc']
-            power_error = max(power_error, abs(sum(v * i for v, i in zip(voltage, current))
-                                              - vdc * row[f'Converter_{plant}_bridge_idc']) / parameters['rating_VA'])
+            vdc = parameters['vdc_V']
+            voltage_error = max(voltage_error, *(abs(v - vdc * (edge - sum(edges) / 3))
+                                                for v, edge in zip(voltage, edges)))
             measured.append(voltage[0])
             predicted.append(vdc * (edges[0] - sum(edges) / 3))
         observed = [amplitude(time, measured, f) for f in frequencies]
         expected = [amplitude(time, predicted, f) for f in frequencies]
         error = max(abs(a - b) for a, b in zip(observed, expected))
         assert pulse_error < 5e-13, (plant, pulse_error)
-        assert power_error < 1e-13, (plant, power_error)
+        assert voltage_error < 1e-8, (plant, voltage_error)
         assert error < 1e-8, (plant, error)
-        metrics['plants'][plant] = {'pulse_max_error': pulse_error, 'bridge_power_identity_error_pu': power_error,
+        metrics['plants'][plant] = {'pulse_max_error': pulse_error, 'bridge_voltage_identity_error_V': voltage_error,
                                     'frequencies_Hz': frequencies, 'measured_peak_V': observed,
                                     'predicted_peak_V': expected, 'maximum_harmonic_error_V': error}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(metrics, indent=2) + '\n')
-    print('All nine switching bridges pass pulse-edge, harmonic, and power-identity checks.')
+    print('All nine switching bridges pass pulse-edge, harmonic, and voltage-identity checks.')
 
 
 if __name__ == '__main__':

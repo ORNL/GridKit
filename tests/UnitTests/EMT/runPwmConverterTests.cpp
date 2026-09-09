@@ -10,7 +10,6 @@ int main()
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.signalGradients();
 #endif
-  result += test.powerBalance();
   result += test.dependencyTracking();
   result += test.parseAndAssemble();
   result += test.constantSignals();

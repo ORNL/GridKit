@@ -124,7 +124,7 @@ def harmonics(run, end, prediction):
     begin, end = (last - count) / fc, last / fc
     data = run['data']
     t, voltage = data['t'], data['Converter_bridge_ea']
-    bridge = data['DCLink_dc_vdc'] * (prediction[:, 0] - prediction.mean(axis=1))
+    bridge = reference(run, run['devices']['bridge']['inputs']['vdc']) * (prediction[:, 0] - prediction.mean(axis=1))
     frequencies = np.array([fm, fc-2*fm, fc-fm, fc, fc+fm, fc+2*fm,
                             2*fc-fm, 2*fc+fm, 3*fc-2*fm, 3*fc+2*fm])
     measured, predicted = [], []
@@ -167,7 +167,7 @@ def time_axes(axes, run, end, begin=0):
 
 def control_figure(run, end):
     name, d = run['name'], run['data']
-    fig, ax = plt.subplots(5, 1, figsize=(10, 10), sharex=True)
+    fig, ax = plt.subplots(4, 1, figsize=(10, 9), sharex=True)
     if name == 'GFL':
         trace(ax[0], run, 'Park_grid_current_y1', '$i_d$')
         trace(ax[1], run, 'Park_grid_current_y2', '$i_q$')
@@ -185,15 +185,13 @@ def control_figure(run, end):
         ax[0].set_ylabel('d-axis voltage [V]')
         ax[1].set_ylabel('q-axis voltage [V]')
     command = np.hypot(d['InnerCurrentControl_current_control_ud'], d['InnerCurrentControl_current_control_uq'])
-    limit = np.sqrt(3 / 8) * run['devices']['pwm']['params']['Mmax'] * d['DCLink_dc_vdc']
+    limit = np.sqrt(3 / 8) * run['devices']['pwm']['params']['Mmax'] * reference(run, run['devices']['bridge']['inputs']['vdc'])
     ax[2].plot(d['t'], command, color=BLUE, label=r'$\|\mathbf{u}\|_2$')
     ax[2].plot(d['t'], limit, color=ORANGE, linestyle='--', label='available voltage command')
     ax[2].set_ylabel('Voltage command [V]')
-    ax[3].plot(d['t'], d['DCLink_dc_vdc'], color=BLUE, label='$v_{\\mathrm{dc}}$')
-    ax[3].set_ylabel('DC voltage [V]')
-    ax[4].plot(d['t'], d['PLL_pll_omega'] / (2 * np.pi), color=BLUE, label='PLL frequency')
-    ax[4].axhline(run['frequency'], color=ORANGE, linestyle='--', label='grid frequency')
-    ax[4].set_ylabel('Frequency [Hz]')
+    ax[3].plot(d['t'], d['PLL_pll_omega'] / (2 * np.pi), color=BLUE, label='PLL frequency')
+    ax[3].axhline(run['frequency'], color=ORANGE, linestyle='--', label='grid frequency')
+    ax[3].set_ylabel('Frequency [Hz]')
     ax[0].set_title(f'{name}: {mu_label(run["mu"])}')
     time_axes(ax, run, end)
     ax[2].legend(loc='lower right', ncol=2, fontsize=9)
@@ -224,21 +222,14 @@ def summarize(run, prediction, spectrum):
     d, t = run['data'], run['data']['t']
     s = np.column_stack([d[f'PWM_pwm_s{p}'] for p in 'abc'])
     voltage = np.column_stack([d[f'Converter_bridge_e{p}'] for p in 'abc'])
-    current = np.column_stack([d[f'Filter_filter_i{p}'] for p in 'abc'])
-    vdc = d['DCLink_dc_vdc']
-    energy = d['DCLink_dc_energy']
-    power = vdc * (d['DCLink_dc_isrc'] - d['DCLink_dc_idc'])
-    balance = energy - energy[0] - integral(t, power, t)
+    vdc = reference(run, run['devices']['bridge']['inputs']['vdc'])
     result = {'final_time_s': float(t[-1]), 'monitor_samples': len(t),
               'carrier_hz': run['fc'], 'mu': run['mu'],
               'mean_pll_frequency_Hz': mean(t, d['PLL_pll_omega'], *spectrum['window_s']) / (2 * np.pi),
               'maximum_pll_frequency_error_Hz': float(np.max(np.abs(d['PLL_pll_omega'] / (2 * np.pi) - run['frequency']))),
-              'initial_dc_voltage_V': float(vdc[0]), 'final_dc_voltage_V': float(vdc[-1]),
-              'minimum_dc_voltage_V': float(vdc.min()),
-              'dc_energy_balance_max_error_J': float(np.max(np.abs(balance))),
+              'dc_voltage_V': float(vdc[0]),
               'edge_10_90_s': 2 * np.log(9) / run['mu'],
               'bridge_identity_max_error_V': float(np.max(np.abs(voltage - vdc[:, None] * (s - s.mean(axis=1)[:, None])))),
-              'bridge_power_max_error_W': float(np.max(np.abs((voltage * current).sum(axis=1) - vdc * d['Converter_bridge_idc']))),
               'pulse_prediction_max_error': float(np.max(np.abs(prediction - s))),
               'maximum_reference_norm_A': float(np.max(np.hypot(d['InnerCurrentControl_current_control_ilimd'], d['InnerCurrentControl_current_control_ilimq']))),
               'maximum_voltage_command_V': float(np.max(np.hypot(d['InnerCurrentControl_current_control_ud'], d['InnerCurrentControl_current_control_uq']))),

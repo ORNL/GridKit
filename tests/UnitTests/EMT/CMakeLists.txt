@@ -291,11 +291,6 @@ target_link_libraries(
   test_emt_initialization GridKit::emt_systemmodel GridKit::testing)
 add_test(NAME EMTInitializationTest COMMAND test_emt_initialization)
 
-add_executable(test_emt_dc_link runDcLinkTests.cpp)
-target_link_libraries(
-  test_emt_dc_link GridKit::emt_dc_link GridKit::testing)
-add_test(NAME EMTDcLinkTest COMMAND test_emt_dc_link)
-
 add_executable(test_emt_regfma runRegfmaTests.cpp)
 target_link_libraries(
   test_emt_regfma
