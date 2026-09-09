@@ -10,6 +10,7 @@
 #include <cmath>
 #include <limits>
 #include <map>
+#include <vector>
 
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Definitions.hpp>
@@ -71,7 +72,7 @@ namespace GridKit
         bool algebraicResidualsZero()
         {
           model.evaluateResidual();
-          for (size_t n = 2; n < model.size(); ++n)
+          for (size_t n = 2; n < 6; ++n)
             if (std::abs(model.getResidual().getData()[n]) > 1e-10)
               return false;
           return true;
@@ -89,10 +90,10 @@ namespace GridKit
               entries[{entry.row, entry.column}] += entry.value;
             for (size_t j = 0; j < count + model.size(); ++j)
             {
-              double&               y        = j < count ? values[j] : model.y().getData()[j - count];
-              const double          original = y;
-              const double          h        = (ys == 0 ? 1e-3 : 1e-5) * (1 + std::abs(original));
-              std::array<double, 6> plus, minus;
+              double&             y        = j < count ? values[j] : model.y().getData()[j - count];
+              const double        original = y;
+              const double        h        = (ys == 0 ? 1e-3 : 1e-5) * (1 + std::abs(original));
+              std::vector<double> plus(model.size()), minus(model.size());
               for (const double sign : {1.0, -1.0})
               {
                 y = original + sign * h * ys;
@@ -136,7 +137,7 @@ namespace GridKit
       {
         Testing::TestStatus success = true;
         Fixture<Inner>      f(innerData(), {208, 3, 8, -2, 8, -2, 377, 211, 9});
-        success *= f.model.verify() == 0 && f.model.size() == 6;
+        success *= f.model.verify() == 0 && f.model.size() == 8;
         success *= f.model.initializeState({{"ud", 211}, {"uq", 9}}) == 0;
         success *= f.algebraicResidualsZero();
         success *= std::abs(f.model.y().getData()[0] - (211 - 208 - 377 * .002 * 2)) < 1e-10;
@@ -150,8 +151,8 @@ namespace GridKit
         success *= f.model.initializationPorts().inputs.size() == 7;
 #ifdef GRIDKIT_ENABLE_ENZYME
         f.model.tagDifferentiable();
-        for (size_t n = 0; n < 6; ++n)
-          success *= f.model.tag()[n] == (n < 2);
+        for (size_t n = 0; n < 8; ++n)
+          success *= f.model.tag()[n] == (n < 2 || n >= 6);
         success *= f.jacobian();
 #endif
         for (const double command : {29.0, 30.0, 45.0})
@@ -181,6 +182,19 @@ namespace GridKit
           f.model.evaluateResidual();
           success *= f.model.getResidual().getData()[0] < 0;
         }
+        auto compensated                                         = innerData();
+        compensated.parameters[Inner::ModelDataT::Parameters::C] = 1e-4;
+        Fixture<Inner> c(compensated, {208, 3, 8, -2, 8 + 377 * 1e-4 * 3, -2 - 377 * 1e-4 * 208, 377, 211, 9});
+        success *= c.model.initializeState({{"ud", 211}, {"uq", 9}}) == 0;
+        success *= c.algebraicResidualsZero();
+        c.model.tagDifferentiable();
+        success *= c.model.size() == 8 && c.model.tag()[6] && c.model.tag()[7];
+        success *= c.model.getResidual().getData()[6] == 0 && c.model.getResidual().getData()[7] == 0;
+        success *= std::abs(c.model.outputSignal(Inner::Outputs::ilimd).read() - 8) < 1e-10;
+        success *= std::abs(c.model.outputSignal(Inner::Outputs::ilimq).read() + 2) < 1e-10;
+#ifdef GRIDKIT_ENABLE_ENZYME
+        success *= c.jacobian();
+#endif
         auto invalid                                            = innerData();
         invalid.parameters[Inner::ModelDataT::Parameters::Imax] = -1.0;
         Fixture<Inner> bad(invalid, f.values);
