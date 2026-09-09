@@ -91,7 +91,7 @@ def conversion_checks(case, state, report):
     expected = {'Machine': 30, 'Tgov1': 30, 'Ieeet1': 30, 'Ieeest': 14,
                 'LineLumped': 77, 'Transformer': 12, 'LoadZ': 29, 'Switch': 2,
                 'PLL': 9, 'OuterPowerControl': 9, 'InnerCurrentControl': 9,
-                'PWM': 9, 'Converter': 9, 'DCLink': 9, 'Filter': 9, 'Park': 27}
+                'PWM': 9, 'Converter': 9, 'Filter': 9, 'Park': 27}
     for kind, count in expected.items():
         require(counts[kind] == count, f'{kind} count: {counts[kind]} != {count}')
     require(not counts['Regfma'] and not counts['REGFMA'], 'Unexpected REGFMA replacement')
@@ -120,16 +120,35 @@ def conversion_checks(case, state, report):
         a, b, c = (values[prefix + p] for p in 'abc')
         return complex(math.sqrt(2 / 3) * (a - (b + c) / 2), (b - c) / math.sqrt(2))
 
+    for line in (d for d in case['devices'] if d['class'] == 'LineLumped'):
+        p = line['params']
+        require(math.isfinite(p['dx']) and p['dx'] > 0, 'Positive line length')
+        for key in ('Rp', 'Lp', 'Gp', 'Cp'):
+            matrix = p[key]
+            require(len(matrix) == 3 and all(len(row) == 3 for row in matrix), 'Line matrix dimensions')
+            require(all(math.isfinite(v) for row in matrix for v in row), 'Finite line matrix')
+            diagonal, mutual = matrix[0][:2]
+            require(diagonal - mutual >= 0 and diagonal + 2 * mutual >= 0, 'Passive transposed line')
+            require(all(math.isclose(matrix[i][j], diagonal if i == j else mutual, rel_tol=1e-12)
+                        for i in range(3) for j in range(3)), 'Transposed line symmetry')
+        require(p['Lp'][0][1] > 0 and p['Cp'][0][1] < 0, 'Mutual line inductance and capacitance')
+        v1, v2 = (phasor(state['buses'][line['inputs'][port]], 'v') for port in ('bus1', 'bus2'))
+        current = phasor(state['devices'][line['id']], 'i12')
+        z = p['dx'] * complex(p['Rp'][0][0] - p['Rp'][0][1],
+                             2 * math.pi * 60 * (p['Lp'][0][0] - p['Lp'][0][1]))
+        require(abs(v1 - v2 - z * current) / max(abs(v1), abs(v2)) < 1e-12, 'Initial coupled line KVL')
+
     for plant, data in report['inverters'].items():
-        filt, pll, inner, outer, bridge, dc = (devices[plant + suffix] for suffix in
-                                             ('_filter', '_pll', '_inner', '_power', '_bridge', '_dc'))
+        filt, pll, inner, outer, bridge = (devices[plant + suffix] for suffix in
+                                             ('_filter', '_pll', '_inner', '_power', '_bridge'))
         voltage, current, grid_current, pwm = (devices[plant + suffix] for suffix in
                                                ('_voltage', '_current', '_grid_current', '_pwm'))
         require(filt['inputs']['e'] == bridge['outputs']['e'], 'Bridge voltage must drive its Filter')
-        require(bridge['inputs']['i'] == current['inputs']['input'] == filt['outputs']['i'],
-                'Bridge and inner loop must read converter-side current')
-        require(voltage['inputs']['input'] == [pll['inputs']['v' + p] for p in 'abc'] == filt['outputs']['vo'],
-                'PLL and voltage feedback must read capacitor voltage')
+        require(current['inputs']['input'] == filt['outputs']['i'], 'Inner-loop converter-current measurement')
+        require(voltage['inputs']['input'] == filt['outputs']['vo'], 'Capacitor-voltage feedback')
+        bus = devices[filt['inputs']['bus']]
+        require([pll['inputs']['v' + p] for p in 'abc'] == [bus['outputs']['v' + p] for p in 'abc'],
+                'PLL must read the terminal Bus voltage')
         require(grid_current['inputs']['input'] == filt['outputs']['ig'], 'Grid-current measurement')
         require(outer['inputs']['i'] == grid_current['outputs']['out'][:2], 'Outer-loop grid-current feedback')
         require(inner['inputs']['i'] == current['outputs']['out'][:2], 'Inner-loop converter-current feedback')
@@ -141,8 +160,8 @@ def conversion_checks(case, state, report):
         require(inner['inputs']['omega'] == pll['outputs']['omega'], 'Inner loop must use PLL frequency')
         require(outer['inputs']['ilim'] == inner['outputs']['ilim']
                 and inner['inputs']['icmd'] == outer['outputs']['icmd'], 'Outer-loop anti-windup connection')
-        require(dc['inputs']['idc'] == bridge['outputs']['idc'], 'DC current feedback')
-        require(dc['outputs']['vdc'] == pwm['inputs']['vdc'] == bridge['inputs']['vdc'], 'Shared DC voltage')
+        require(pwm['inputs']['vdc'] == bridge['inputs']['vdc'], 'Shared DC voltage')
+        require(signals[bridge['inputs']['vdc']] == data['vdc_V'], 'Constant DC voltage')
         require(inner['inputs']['ulim'] == pwm['outputs']['ulim'], 'Limited voltage feedback')
         initial = state['devices'][filt['id']]
         v = phasor(state['buses'][filt['inputs']['bus']], 'v')
@@ -156,10 +175,8 @@ def conversion_checks(case, state, report):
         require(abs(i - ig - 1j * omega * params['C'][0][0] * vo) / base_i < 1e-12,
                 'Initial capacitor current balance')
         u = state['devices'][inner['id']]
-        e = complex(u['ud'], u['uq']) * vo / abs(vo)
+        e = complex(u['ud'], u['uq']) * v / abs(v)
         require(abs(e - vo - zs * i) / base_v < 1e-12, 'Initial converter-side KVL')
-        pdc = signals[dc['inputs']['isrc']] * state['devices'][dc['id']]['vdc']
-        require(abs(pdc - (e * i.conjugate()).real) / data['rating_VA'] < 1e-12, 'Initial DC power balance')
     regularized = 0
     largest_pole_error = largest_response_error = largest_pole_change = 0.0
     for name, machine in report['machines'].items():
@@ -216,7 +233,6 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
     switch_changes = []
     switch_state = None
     imax_ratio = 0.0
-    dc_range = [math.inf, -math.inf]
     omega_range = [math.inf, -math.inf]
     pq_initial_error = 0.0
     v1_min = math.inf
@@ -264,8 +280,6 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
                 limit = math.hypot(row[f'InnerCurrentControl_{plant}_inner_ilimd'],
                                    row[f'InnerCurrentControl_{plant}_inner_ilimq']) / data['Imax_A']
                 imax_ratio = max(imax_ratio, limit)
-                dc = row[f'DCLink_{plant}_dc_vdc'] / data['initial_vdc_V']
-                dc_range = [min(dc_range[0], dc), max(dc_range[1], dc)]
             instantaneous_v1 = math.sqrt(sum(row[f'Bus_bus_1_v{p}']**2 for p in 'abc')) / vb['bus_1']
             if 1.02 < time < 1.09:
                 v1_min = min(v1_min, instantaneous_v1)
@@ -325,7 +339,6 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
     # Allow numerical interpolation error in the monitored algebraic limiter.
     current_limit_tolerance = 1e-4
     require(imax_ratio <= 1 + current_limit_tolerance, f'Current limiter exceeded: {imax_ratio}')
-    require(0.8 < dc_range[0] and dc_range[1] < 1.2, f'DC voltage range: {dc_range}')
     require(max(map(abs, omega_range)) < 0.05, f'Machine speed range: {omega_range}')
     require(v1_min < 0.7, f'Fault did not depress bus 1: {v1_min}')
     final_voltage = averaged[-1][1:1 + len(buses)]
@@ -349,7 +362,7 @@ def analyze(csv_path, step_path, study, case, state, report, record, output):
         'initial_dispatch_max_error_pu_plant_base': pq_initial_error,
         'initial_dispatch_tolerance_pu_plant_base': initial_dispatch_tolerance,
         'maximum_limited_current_ratio': imax_ratio,
-        'limited_current_ratio_tolerance': current_limit_tolerance, 'dc_voltage_ratio_range': dc_range,
+        'limited_current_ratio_tolerance': current_limit_tolerance,
         'machine_speed_deviation_pu_range': omega_range, 'fault_bus_1_minimum_voltage_pu': v1_min,
         'final_cycle_voltage_pu_range': [min(final_voltage), max(final_voltage)],
         'accepted_steps': {'count': len(steps), 'minimum_s': min(steps), 'median_s': statistics.median(steps),

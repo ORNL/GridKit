@@ -142,8 +142,8 @@ def main():
         devices += [
             {"class": "PWM", "id": f"pwm_{bus}", "params": dict(M=M, fm=F, fc=FC, alignment=.5),
              "outputs": {"s": gates}, "mon": ["s"]},
-            {"class": "Converter", "id": f"converter_{bus}", "inputs": {"s": gates, "vdc": f"dc_{bus}", "i": current},
-             "outputs": {"e": emf}, "mon": ["e", "idc"]},
+            {"class": "Converter", "id": f"converter_{bus}", "inputs": {"s": gates, "vdc": f"dc_{bus}"},
+             "outputs": {"e": emf}, "mon": ["e"]},
             {"class": "DependentVoltageSource", "id": f"filter_{bus}",
              "submodels": {"Y": rl_admittance(filter_r, filter_l)},
              "inputs": dict(bus=f"bus_{bus}", **dict(zip(("ea", "eb", "ec"), emf))),

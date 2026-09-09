@@ -307,7 +307,6 @@ def network(count, kind, hybrid, fits):
                 inputs={
                     "s": [f"s{p}{i}" for p in "abc"],
                     "vdc": f"dc{i}",
-                    "i": [f"if{p}{i}" for p in "abc"],
                 },
                 outputs={"e": [f"e{p}{i}" for p in "abc"]},
             )

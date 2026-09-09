@@ -13,13 +13,33 @@ point adjustment. To regenerate from an exported source JSON, pass `--source`.
 
 ## Network and operating point
 
-The 77 lines are balanced, uncoupled three-phase pi sections. With
-$Z_\mathrm{b}=V_\mathrm{b}^2/S_\mathrm{b}$, their phase parameters are
-$R=R_\mathrm{pu}Z_\mathrm{b}$, $L=X_\mathrm{pu}Z_\mathrm{b}/\omega_\mathrm{b}$,
-and total $C=B_\mathrm{pu}/(\omega_\mathrm{b}Z_\mathrm{b})$. Length is one metre;
-these are lumped equivalent coefficients, not inferred conductor geometry.
-Positive- and zero-sequence impedances are identical because the source has
-only positive-sequence data. This case is for a balanced fault.
+The 77 lines are coupled, ideally transposed three-phase pi sections.
+`line_parameters.py` uses GridWorkbench's overhead-line calculations at
+60 Hz, including conductor internal impedance, earth return, and mutual
+capacitance. It fits synthetic conductor radius, phase spacing, and length
+to each distinct source R/X/B combination. The horizontal three-wire
+geometry has no shield wires; heights are 14 m at 69 kV and 20 m at 138 kV.
+`line_parameters.json` records the assumptions, bounds, calculator hashes,
+geometries, calibration factors, and full per-metre matrices.
+
+The source's positive-sequence values do not determine a physical geometry.
+Many branches cannot be matched within the chosen overhead-geometry bounds.
+The generator therefore scales each complete R, L, and C matrix by a positive
+factor to preserve the source positive sequence exactly. These are calibrated
+lumped equivalents, not raw geometry results or surveyed Hawaii lines.
+The largest uncalibrated relative error is 243%; the calibration must not be
+interpreted as an independently validated zero-sequence or broadband model.
+
+For each per-metre matrix $\mathbf M$, ideal transposition gives equal self
+terms $M_s$ and mutual terms $M_m$. Its positive-sequence value is $M_s-M_m$;
+its zero-sequence value is $M_s+2M_m$. Calibration preserves the geometry's
+ratio between these values and its positive semidefiniteness. With
+$Z_\mathrm{b}=V_\mathrm{b}^2/S_\mathrm{b}$, the total positive-sequence values
+remain $R=R_\mathrm{pu}Z_\mathrm{b}$,
+$L=X_\mathrm{pu}Z_\mathrm{b}/\omega_\mathrm{b}$, and
+$C=B_\mathrm{pu}/(\omega_\mathrm{b}Z_\mathrm{b})$.
+`LineLumped` applies the physical fitted length and half-length terminal shunts.
+This case is for a balanced fault.
 
 All source ZIP fractions have `alphaI = alphaP = 0`. Each load resistance
 preserves its initial active power at the source voltage magnitude. The
@@ -107,22 +127,22 @@ full fault trajectories, which include the other model differences below.
 Each source REGCA unit is replaced by the
 [GFL switching-inverter arrangement](../CurrentControl/README.md): PLL,
 voltage and current Park transforms, OuterPowerControl, InnerCurrentControl,
-PWM, Converter, DCLink, and a physical LCL Filter.
+PWM, Converter, and a physical LCL Filter.
 `Converter.e` drives `Filter.e`; `Filter.ig` injects into the original bus.
-`Filter.i` supplies Converter and the inner current loop, while `Filter.ig`
-supplies the outer loop through a separate Park transform. PLL and the
-voltage Park transform read `Filter.vo`. All Park transforms and PWM share
+`Filter.i` supplies the inner current loop, while `Filter.ig`
+supplies the outer loop through a separate Park transform. PLL reads terminal
+Bus voltage; the voltage Park transform reads `Filter.vo`. All Park transforms and PWM share
 PLL's `theta`, and the inner controller receives PLL's `omega`. PWM limits
 the dq voltage command and returns it to the inner controller.
 Current targets `Pref/V` and
 `-Qref/V` are derived from power-reference parameters and rated voltage.
-Those parameters reproduce the initialized grid current in the capacitor-voltage frame.
+Those parameters reproduce the initialized grid current in the terminal-voltage frame.
 The targets remain fixed as voltage changes; this replacement does not
 regulate constant P/Q.
 Power-invariant current base is $S/V$.
 
 The following plant data are fabricated because REGCA supplies no bridge,
-filter, DC energy, or switching-control parameters:
+filter, or switching-control parameters:
 
 Parameter | Value
 --------- | -----
@@ -134,10 +154,8 @@ Inner-loop bandwidth | $2\pi\,300$ rad/s; $K_P=L_{\mathrm{s}}\omega_c$, $K_I=R_{
 Current limit | Source REECB `Imax` times $S/V$
 Modulation limit | 0.95
 PLL | $K_P=80$ rad/s, $K_I=2500$ rad/s$^2$
-Outer current loop | $K_P=0.01$, $K_I=40$ s$^{-1}$, $K_{\mathrm{aw}}=200$ s$^{-1}$
-DC voltage | $2V_\mathrm{b}$
-DC energy | $H_\mathrm{dc}=10$ s; $C=2H_\mathrm{dc}S/V_\mathrm{dc}^2$
-DC source | Constant current equal to initial bridge power divided by initial DC voltage
+Outer current loop | $K_P=0.001$, $K_I=40$ s$^{-1}$, $K_{\mathrm{aw}}=200$ s$^{-1}$
+DC voltage | Constant $2V_\mathrm{b}$, shared by PWM and Converter
 Carrier | 1800 Hz, centre aligned
 
 The study uses shared $\mu=50000$ s$^{-1}$, giving a logistic 10--90 percent
@@ -147,20 +165,18 @@ Adaptive accepted steps resolve the edges more finely than the monitor
 interval. Accepted-step statistics are reported separately. This study does
 not use the low-$\mu$ fundamental-only setting.
 
-The large DC energy represents an aggregate energy buffer; it is not a
-manufacturer capacitor value or a DC-voltage regulator. With power-invariant
-balanced phasors and the original terminal injection $I_g$, initialization uses
+With power-invariant balanced phasors and the original terminal injection $I_g$, initialization uses
 
 ```math
 \begin{aligned}
 V_{\mathrm{o}} &= V+(R_g+\mathrm{j}\omega_{\mathrm{b}}L_g)I_g, \\
 I &= I_g+\mathrm{j}\omega_{\mathrm{b}}CV_{\mathrm{o}}, \\
 E &= V_{\mathrm{o}}+(R_{\mathrm{s}}+\mathrm{j}\omega_{\mathrm{b}}L_{\mathrm{s}})I, \\
-P_{\mathrm{dc}} &= P_{\mathrm{grid}}+R_g|I_g|^2+R_{\mathrm{s}}|I|^2.
+P_{\mathrm{bridge}} &= P_{\mathrm{grid}}+R_g|I_g|^2+R_{\mathrm{s}}|I|^2.
 \end{aligned}
 ```
 
-The nine Filter states follow these phasors. PLL aligns to capacitor voltage;
+The nine Filter states follow these phasors. PLL aligns to terminal Bus voltage;
 inner-loop output initializes to $E$ in that frame, and outer-loop output
 initializes to the converter-side current $I$. Initial conditions describe
 the fundamental operating point, not the periodic switching orbit.
@@ -210,7 +226,7 @@ GENROU reduction | Corresponding unsaturated rotor circuits, retained stator tra
 Equal d-axis reactances | 18 positive-damper regularizations, at most 0.25 percent change in $X''_d$
 Transformer no-load and connection data | Fabricated core branches and grounded-wye banks; source voltage bases retain nominal ratio
 Initial power flow | At bus 23, total synchronous dispatch changes by -0.152426 MW and +1.179855 Mvar; maximum bus phasor change is 0.000156170 p.u.
-Positive-sequence network | Uncoupled balanced three-phase equivalents; no source-derived zero-sequence or frequency-dependent data
+Positive-sequence network | Coupled transposed equivalents calibrated to source R/X/B; zero sequence inferred from synthetic geometry
 Exciter sensing | Existing 1 ms sensing floor replaces source zero lag
 REGCA/REECB/REPCA | Explicit switching plants with fabricated filter/control/DC data and the omitted functions listed above
 Fault impedance | 5.05158 mH per phase reproduces the source inductive impedance at 60 Hz
@@ -227,6 +243,18 @@ python3 convert.py
 ../../../build/application/EMT/EMTDynamicSimulation Hawaii.solver.json
 python3 validate.py --exe ../../../build/application/EMT/EMTDynamicSimulation
 ```
+
+Ordinary conversion uses the stored `line_parameters.json` and requires only
+Python's standard library. To regenerate those parameters, use NumPy, SciPy,
+and a GridWorkbench checkout containing `gridworkbench.emt.parameters`:
+
+```bash
+python3 line_parameters.py --gridworkbench /path/to/GridWorkbench
+python3 convert.py
+```
+
+Pass the same `--source` to both scripts when using an exported source case.
+The converter rejects coefficients generated from a different source file.
 
 The validator uses only the Python standard library. It checks conversion
 invariants, LCL wiring and initial KVL/current/DC-power balances, finite

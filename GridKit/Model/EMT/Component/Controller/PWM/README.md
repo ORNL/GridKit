@@ -1,7 +1,7 @@
 # PWM Model
 
 `PWM` produces a three-phase switching signal from the $dq$ converter voltage
-command. It limits the command to the voltage available from the DC link,
+command. It limits the command to the voltage available from the DC supply,
 returns the limited command to
 [InnerCurrentControl](../InnerCurrentControl/README.md) for tracking
 anti-windup, transforms the modulation command to phase coordinates, and
@@ -73,15 +73,15 @@ a_u &= \dfrac{8}{3(M^{\max})^2} \\
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{u}$ | `u` | Input | [V] | Converter voltage command | Optional, $\mathbf{u} \in \mathbb{R}^2$
-$v_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC-link voltage | With `u`, $v_{\mathrm{dc}} \ge 0$
+$v_{\mathrm{dc}}$ | `vdc` | Input | [V] | DC voltage | With `u`, $v_{\mathrm{dc}} \ge 0$
 $\theta$ | `theta` | Input | [rad] | Electrical reference angle | With `u`
 $\mathbf{s}$ | `s` | Output | [-] | Three-phase switching function | $\mathbf{s} \in [0,1]^3$
 $\mathbf{u}^{\mathrm{lim}}$ | `ulim` | Output | [V] | Limited voltage command | Requires `u`
 
 The command uses $(d,q)$ order in the power-invariant
 [Park](../../../Operators/Reference/Park/README.md) frame. Connect `u`,
-`vdc`, and `theta` together, from `InnerCurrentControl.u`, `DCLink.vdc`, and
-`PLL.theta`, and return `ulim` to the current controller.
+`vdc`, and `theta` together, from `InnerCurrentControl.u`, an external DC
+voltage, and `PLL.theta`. Return `ulim` to the current controller.
 
 ## Submodels
 
@@ -107,14 +107,14 @@ None.
 
 #### Differential
 
-Connected voltage-command, DC-link, and angle variables may be differential.
+Connected voltage-command, DC, and angle variables may be differential.
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{u}$ | [V] | Converter voltage command | $\mathbf{u} \in \mathbb{R}^2$
-$v_{\mathrm{dc}}$ | [V] | DC-link voltage | $v_{\mathrm{dc}} \ge 0$
+$v_{\mathrm{dc}}$ | [V] | DC voltage | $v_{\mathrm{dc}} \ge 0$
 $\theta$ | [rad] | Electrical reference angle |
 
 ## Model Equations

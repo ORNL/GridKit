@@ -15,13 +15,15 @@ def wiring_checks(case):
     """Keep the complete LCL feedback chain aligned with the component ports."""
     devices = {device['id']: device for device in case['devices']}
     assert not any(d['class'] in ('Angle', 'Modulation') for d in devices.values())
-    filt, pll, pwm, bridge, dc, inner = (devices[key] for key in
-                                       ('filter', 'pll', 'pwm', 'bridge', 'dc', 'current_control'))
+    filt, pll, pwm, bridge, inner = (devices[key] for key in
+                                       ('filter', 'pll', 'pwm', 'bridge', 'current_control'))
     voltage, current, grid_current = (devices[key] for key in ('voltage', 'current', 'grid_current'))
     outer = devices.get('power_control', devices.get('voltage_control'))
     assert filt['inputs']['e'] == bridge['outputs']['e']
-    assert bridge['inputs']['i'] == current['inputs']['input'] == filt['outputs']['i']
-    assert voltage['inputs']['input'] == [pll['inputs']['v' + p] for p in 'abc'] == filt['outputs']['vo']
+    assert current['inputs']['input'] == filt['outputs']['i']
+    assert voltage['inputs']['input'] == filt['outputs']['vo']
+    bus = devices[filt['inputs']['bus']]
+    assert [pll['inputs']['v' + p] for p in 'abc'] == [bus['outputs']['v' + p] for p in 'abc']
     assert grid_current['inputs']['input'] == filt['outputs']['ig']
     assert inner['inputs']['i'] == current['outputs']['out'][:2]
     assert inner['inputs']['v'] == voltage['outputs']['out'][:2]
@@ -37,8 +39,9 @@ def wiring_checks(case):
     assert inner['inputs']['icmd'] == outer['outputs']['icmd']
     assert outer['inputs']['ilim'] == inner['outputs']['ilim']
     assert bridge['inputs']['s'] == pwm['outputs']['s']
-    assert bridge['inputs']['vdc'] == pwm['inputs']['vdc'] == dc['outputs']['vdc']
-    assert dc['inputs']['idc'] == bridge['outputs']['idc']
+    assert bridge['inputs']['vdc'] == pwm['inputs']['vdc']
+    constants = {s['id']: s['value'] for s in case['signals'] if 'value' in s}
+    assert constants[bridge['inputs']['vdc']] > 0
 
 
 def steady_state(case, irefd, irefq):
@@ -51,12 +54,12 @@ def steady_state(case, irefd, irefq):
     z = complex(filt['Rg'][0][0], omega * filt['Lg'][0][0])
     current = complex(irefd, irefq)
     drop = z * current
-    voltage = math.sqrt(source * source - drop.imag * drop.imag) + drop.real
+    voltage = source + drop
     c = filt['C'][0][0]
     inverter_current = current + 1j * omega * c * voltage
-    return {'voltage_V': voltage, 'id_A': inverter_current.real,
-            'iq_A': inverter_current.imag, 'p_W': voltage * irefd,
-            'q_var': -voltage * irefq}
+    return {'voltage_V': abs(voltage), 'vq_V': voltage.imag, 'id_A': inverter_current.real,
+            'iq_A': inverter_current.imag, 'p_W': source * irefd,
+            'q_var': -source * irefq}
 
 
 def measure(path, begin, end, final_time=None):
@@ -65,7 +68,6 @@ def measure(path, begin, end, final_time=None):
     count = 0
     max_identity = 0.0
     max_limited = 0.0
-    minimum_dc = math.inf
     with path.open() as stream:
         for raw in csv.DictReader(stream):
             row = {key: float(value) for key, value in raw.items()}
@@ -82,7 +84,10 @@ def measure(path, begin, end, final_time=None):
                                abs(reactive - vq * id_ + vd * iq))
             max_limited = max(max_limited, math.hypot(row['InnerCurrentControl_current_control_ilimd'],
                                                     row['InnerCurrentControl_current_control_ilimq']))
-            minimum_dc = min(minimum_dc, row['DCLink_dc_vdc'])
+            bus_v = [row[f'Bus_terminal_v{p}'] for p in 'abc']
+            power = sum(a * b for a, b in zip(bus_v, i))
+            reactive = ((bus_v[1]-bus_v[2])*i[0] + (bus_v[2]-bus_v[0])*i[1]
+                        + (bus_v[0]-bus_v[1])*i[2]) / math.sqrt(3)
             values = {'voltage_V': math.sqrt(sum(x*x for x in v)),
                       'id_A': row['Park_current_y1'], 'iq_A': row['Park_current_y2'],
                       'p_W': power, 'q_var': reactive, 'vq_V': vq,
@@ -100,7 +105,7 @@ def measure(path, begin, end, final_time=None):
     assert abs(previous[0] - (end if final_time is None else final_time)) < 1e-10, 'Incomplete simulation'
     return {'mean': {key: value / (end-begin) for key, value in integral.items()},
             'samples': count, 'measurement_identity_error': max_identity,
-            'maximum_limited_current_A': max_limited, 'minimum_dc_voltage_V': minimum_dc}
+            'maximum_limited_current_A': max_limited}
 
 
 def validate(exe, output):
@@ -127,15 +132,13 @@ def validate(exe, output):
         measured.update(expected=expected, absolute_errors=errors, mu=mu, mean_window_s=[0.25,0.3])
         report[name] = measured
         print(name, json.dumps(errors), flush=True)
-        # The balanced oracle omits switching ripple. Repeated current-reference
-        # runs differ by 0.001194 var at resolved switching; allow 0.002 var.
+        # The balanced oracle omits switching ripple.
         bounds = {'p_W': .001, 'q_var': .002, 'voltage_V': .0003,
-                  'id_A': .00002, 'iq_A': .00002}
+                  'id_A': .00002, 'iq_A': .00002, 'vq_V': .0003}
         for key, bound in bounds.items():
             assert errors[key] < bound, (name, key, errors[key], bound)
         assert measured['measurement_identity_error'] < 1e-8
         assert measured['maximum_limited_current_A'] <= 30 + 1e-10
-        assert measured['minimum_dc_voltage_V'] > 0
     (output / 'metrics.json').write_text(json.dumps(report, indent=2) + '\n')
     return report
 
@@ -143,22 +146,30 @@ def validate(exe, output):
 def validate_voltage(exe, output):
     """Check phase-domain voltage tracking before, during, and after a reference step."""
     solver = json.loads((HERE / 'GFM.solver.json').read_text())
+    final_time = max(solver['tmax'], 0.5)
     case_file = (HERE / solver['system_model_file']).resolve()
     state_file = (HERE / solver['state_file']).resolve()
     case = json.loads(case_file.read_text())
     wiring_checks(case)
     devices = {d['id']: d for d in case['devices']}
-    reference = next(s['value'] for s in case['signals'] if s['id'] == 'vrefd')
+    constants = {s['id']: s['value'] for s in case['signals'] if 'value' in s}
+    reference = [constants[name] for name in devices['voltage_control']['inputs']['vref']]
     frequency = devices['grid']['params']['omega'] / (2 * math.pi)
     # Each interval ends at an event or the final time. Use its last 20 ms
     # to measure tracking after the controller has responded.
-    ends = [event['time'] for event in solver['events']] + [solver['tmax']]
-    references = [reference] + [event['value'] for event in solver['events']]
+    ends = sorted({event['time'] for event in solver['events']} | {solver['tmax'], final_time})
+    references = []
+    for end in ends:
+        target = reference.copy()
+        for event in solver['events']:
+            if event['time'] < end:
+                target['dq'.index(event['signal_id'][-1])] = event['value']
+        references.append(target)
     report = {}
     for name, mu in [('voltage_smooth', 240), ('voltage_switching', 1e6)]:
         waveform = output / f'{name}.csv'
         config = dict(solver, system_model_file=str(case_file), state_file=str(state_file),
-                      dt_monitor=2e-6, mu=mu, output_file=str(waveform))
+                      tmax=final_time, dt_monitor=2e-6, mu=mu, output_file=str(waveform))
         path = output / f'{name}.solver.json'
         path.write_text(json.dumps(config, indent=2) + '\n')
         with (output / f'{name}.log').open('w') as log:
@@ -166,20 +177,20 @@ def validate_voltage(exe, output):
                            stderr=subprocess.STDOUT, check=True)
         intervals = []
         for end, target in zip(ends, references):
-            measured = measure(waveform, end - .02, end, solver['tmax'])
-            errors = {'voltage_V': abs(measured['mean']['voltage_V'] - target),
-                      'vq_V': abs(measured['mean']['vq_V']),
+            measured = measure(waveform, end - .02, end, final_time)
+            errors = {'voltage_V': abs(measured['mean']['voltage_V'] - math.hypot(*target)),
+                      'vq_V': abs(measured['mean']['vq_V'] - target[1]),
                       'frequency_Hz': abs(measured['mean']['frequency_Hz'] - frequency)}
             measured.update(reference_V=target, absolute_errors=errors, mean_window_s=[end - .02, end])
             intervals.append(measured)
             print(name, end, json.dumps(errors), flush=True)
-            # Physical tracking bounds, including settling and switching ripple.
-            assert errors['voltage_V'] < .05, (name, end, errors)
-            assert errors['vq_V'] < .05, (name, end, errors)
+            # Allow 20% of the 1 V step during recovery; check settled tracking separately.
+            voltage_bound = .05 if end == final_time else .2
+            assert errors['voltage_V'] < voltage_bound, (name, end, errors)
+            assert errors['vq_V'] < voltage_bound, (name, end, errors)
             assert errors['frequency_Hz'] < .05, (name, end, errors)
             assert measured['measurement_identity_error'] < 1e-8
             assert measured['maximum_limited_current_A'] <= devices['current_control']['params']['Imax'] + 1e-10
-            assert measured['minimum_dc_voltage_V'] > 0
         report[name] = {'mu': mu, 'intervals': intervals}
     (output / 'metrics.json').write_text(json.dumps(report, indent=2) + '\n')
     return report

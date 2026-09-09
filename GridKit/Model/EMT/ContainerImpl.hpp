@@ -218,13 +218,6 @@ namespace GridKit
         add<Controller::Pwm<ScalarT, IdxT>>(model_data.id, qualified_data);
       }
 
-      for (const auto& model_data : data.dc_link)
-      {
-        auto qualified_data = model_data;
-        qualified_data.id   = qualify(model_data.id);
-        add<Controller::DcLink<ScalarT, IdxT>>(model_data.id, qualified_data);
-      }
-
       for (const auto& model_data : data.converter)
       {
         auto qualified_data = model_data;
@@ -375,24 +368,13 @@ namespace GridKit
           model.assignOutput(output, &signal(reference));
       }
 
-      for (const auto& model_data : data.dc_link)
-      {
-        auto& model = component<Controller::DcLink<ScalarT, IdxT>>(model_data.id);
-        model.attachInput(&source(model_data.inputs.at(Controller::DcLinkInputs::isrc)), &source(model_data.inputs.at(Controller::DcLinkInputs::idc)));
-        for (const auto& [output, reference] : model_data.outputs)
-          model.assignOutput(output, &signal(reference));
-      }
-
       for (const auto& model_data : data.converter)
       {
         auto& model = component<Converter<ScalarT, IdxT>>(model_data.id);
         model.attachInput({&source(model_data.inputs.at(ConverterInputs::sa)),
                            &source(model_data.inputs.at(ConverterInputs::sb)),
                            &source(model_data.inputs.at(ConverterInputs::sc))},
-                          &source(model_data.inputs.at(ConverterInputs::vdc)),
-                          {&source(model_data.inputs.at(ConverterInputs::ia)),
-                           &source(model_data.inputs.at(ConverterInputs::ib)),
-                           &source(model_data.inputs.at(ConverterInputs::ic))});
+                          &source(model_data.inputs.at(ConverterInputs::vdc)));
         for (const auto& [output, reference] : model_data.outputs)
           model.assignOutput(output, &signal(reference));
       }
