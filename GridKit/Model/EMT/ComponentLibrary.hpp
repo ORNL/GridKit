@@ -8,6 +8,7 @@
 #include <GridKit/Model/EMT/Component/Controller/OuterPowerControl/OuterPowerControl.hpp>
 #include <GridKit/Model/EMT/Component/Controller/OuterVoltageControl/OuterVoltageControl.hpp>
 #include <GridKit/Model/EMT/Component/Controller/PWM/Pwm.hpp>
+#include <GridKit/Model/EMT/Component/Controller/REPCA/Repca.hpp>
 #include <GridKit/Model/EMT/Component/Controller/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/EMT/Component/Controller/TGOV1/Tgov1.hpp>
 #include <GridKit/Model/EMT/Component/Filter/Filter.hpp>
