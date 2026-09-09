@@ -8,6 +8,7 @@
 #pragma once
 
 #include <array>
+#include <complex>
 #include <memory>
 
 #include <GridKit/Model/EMT/Component.hpp>
@@ -107,6 +108,7 @@ namespace GridKit
       int initialize(const std::map<Outputs, RealT>& outputs = {});
 
       int  initializeState(const std::map<std::string, RealT>& values) override;
+      int  initializeState(const std::map<std::string, RealT>& values, RealT omega) override;
       void validateInitialState(const std::map<std::string, RealT>& values) const override;
 
       typename Component<ScalarT, IdxT>::InitializationPortsT initializationPorts() override;
@@ -126,8 +128,9 @@ namespace GridKit
       }
 
     private:
-      void initializeParameters(const ModelDataT& data);
-      void initializeMonitor();
+      std::array<ABCVector<std::complex<RealT>>, 4> operatingPoint(const ABCVector<RealT>& voltage, const ABCVector<RealT>& current, RealT omega) const;
+      void                                          initializeParameters(const ModelDataT& data);
+      void                                          initializeMonitor();
 
       const Model::VariableMonitorBase* getMonitor() const override;
 

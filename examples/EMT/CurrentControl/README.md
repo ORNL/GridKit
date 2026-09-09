@@ -1,7 +1,7 @@
 # Inverter current and voltage control
 
-`GFL` tracks parameter-derived dq grid-current references against a stiff grid using
-a terminal-voltage PLL and cascaded grid-side and inverter-side current control.
+`GFL` regulates terminal active and reactive power against a stiff grid using
+a terminal-voltage PLL and an inner inverter-side current controller.
 `GFM` regulates capacitor voltage against a stiff grid through
 cascaded voltage and current control. Both cases obtain frame angle and
 frequency from the terminal-voltage PLL through signal ports.
@@ -16,9 +16,10 @@ line-to-line RMS at 60 Hz; dq quantities use the power-invariant Park transform.
 The current loop has a nominal 400 Hz bandwidth. The grid-connected voltage
 loop uses `Kp=0.1507964474` S, `Ki=2.131834551` S/s, and `Kaw=376.9911184` s⁻¹.
 
-The current targets are fixed derived parameters `Pref/V` and `-Qref/V`,
-chosen to match the initial measured grid current in the terminal-voltage
-frame. The inverter-current limit is 30 A. The PLL gains are
+The power loop measures terminal Bus voltage and Filter `ig` in the same
+PLL frame. Its setpoints match the initial terminal P/Q, and its power errors
+are normalized by the rated voltage. The inverter-current limit is 30 A.
+The PLL gains are
 80 rad/s and 2500 rad/s²; the outer loop uses `Kp=0.01`, `Ki=40`, and `Kaw=200`.
 The voltage study scales both dq reference components to step capacitor-voltage
 magnitude from 208 V to 209 V at 0.04 s and restores 208 V at 0.12 s. Its grid voltage matches
@@ -90,8 +91,6 @@ python3 examples/EMT/CurrentControl/validate.py --exe build/application/EMT/EMTD
 python3 examples/EMT/CurrentControl/validate.py --exe build/application/EMT/EMTDynamicSimulation --scenario GFM
 ```
 
-The validator uses the balanced LCL solution for the supplied
-dq current targets and reconstructs P and Q independently from phase samples
-and Park measurements. The reactive-power bound is 0.002 var. The current
-reference fixes dq current; it does not impose exact average reactive power
-in the presence of switching ripple.
+The validator uses the balanced LCL solution for the specified terminal P/Q
+and reconstructs power independently from phase samples and Park measurements.
+The reactive-power bound is 0.002 var.

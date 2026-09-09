@@ -2,27 +2,14 @@
   "header": {
     "version": 1,
     "time": 0,
-    "description": "Balanced LCL operating point in the terminal-bus PLL frame"
+    "description": "Balanced LCL operating point in the terminal-bus PLL frame",
+    "omega": 376.99111843077515
   },
   "devices": {
     "filter": {
-      "ia": 8.446346603569783,
-      "ib": 1.1843507713084827,
-      "ic": -9.630697374878261,
-      "voa": 169.831288832967,
-      "vob": -84.91564441648347,
-      "voc": -84.91564441648347,
       "iga": 8.446346603569783,
       "igb": -4.360367135513159,
       "igc": -4.08597946805662
-    },
-    "current_control": {
-      "ud": 204.0920550429652,
-      "uq": 13.158684099234241
-    },
-    "voltage_control": {
-      "icmdd": 10.199393060856769,
-      "icmdq": 7.840036403854744
     }
   },
   "buses": {

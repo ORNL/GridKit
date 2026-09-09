@@ -13,8 +13,9 @@ inputs. `PWM` limits the dq voltage command to the available DC voltage,
 returns the limited command to `InnerCurrentControl`, and applies the inverse
 transform before carrier comparison.
 
-`GFL` uses `OuterPowerControl` with grid-current targets derived as `Pref/V`
-and `-Qref/V`. `GFM` uses `OuterVoltageControl` to regulate the
+`GFL` uses `OuterPowerControl` to regulate terminal active and reactive power.
+A separate Park transform supplies terminal Bus voltage; grid-side current
+comes from Filter `ig`. `GFM` uses `OuterVoltageControl` to regulate the
 capacitor voltage, with a magnitude reference step from 208 V to 209 V at 0.04 s
 and back at 0.12 s. It is a PLL-synchronized, grid-connected voltage-control
 study. Both outer loops supply `icmd` to `InnerCurrentControl` and receive
@@ -24,9 +25,9 @@ A constant 400 V signal supplies `vdc` to PWM and Converter. The GFM
 reference step scales both components of the initial capacitor-voltage
 reference in the terminal-voltage frame.
 
-Initial states are balanced fundamental operating-point estimates. The PLL
-infers its initial angle from terminal Bus voltage; controller outputs determine
-the PI integral contributions. IDA preserves differential states and obtains
+The state files prescribe frequency, terminal Bus voltage, and Filter grid
+current. Initialization derives the remaining Filter outputs and controller
+commands through their signal connections, including the PI integral contributions. IDA preserves differential states and obtains
 consistent algebraic values and derivatives. Switching ripple develops during
 startup. In `GFM`, the stiff-grid magnitude and phase match the
 initialized terminal phasor, preserving the initial filter operating point.

@@ -1,5 +1,8 @@
 #include <algorithm>
 #include <cmath>
+#include <complex>
+#include <filesystem>
+#include <fstream>
 #include <limits>
 #include <map>
 #include <sstream>
@@ -84,7 +87,7 @@ namespace
     return std::isfinite(actual) && std::abs(actual - expected) < tolerance;
   }
 
-  bool rejectsWithoutMutation(System& system, const State& state, const std::string& diagnostic)
+  bool rejectsWithoutMutation(System& system, const State& state, const std::string& diagnostic, double omega = 0.0)
   {
     for (size_t n = 0; n < system.size(); ++n)
     {
@@ -96,7 +99,7 @@ namespace
     bool                      rejected = false;
     try
     {
-      system.initialize(state);
+      system.initialize(state, omega);
     }
     catch (const std::invalid_argument& error)
     {
@@ -236,6 +239,99 @@ namespace
     return rejectsWithoutMutation(system, {}, "Cyclic initialization dependency");
   }
 
+  bool exciterReference()
+  {
+    auto input                             = machineCase();
+    input["devices"][4]["class"]           = "Ieeet1";
+    input["devices"][4]["params"]          = {{"V", 13800.0}, {"Ka", 10.0}, {"Ke", 1.0}, {"Vrmin", -5.0}, {"Vrmax", 5.0}, {"Se1", 0.0}, {"Se2", 0.0}};
+    input["devices"][4]["inputs"]["speed"] = "speed";
+    input["devices"][4]["inputs"]["vs"]    = "vs";
+    input["signals"].push_back({{"id", "vs"}});
+    input["devices"].push_back({{"class", "Ieeest"}, {"id", "stabilizer"}, {"params", {{"T6", 0.1}}}, {"inputs", {{"speed", "speed"}}}, {"outputs", {{"output", "vs"}}}});
+    System reference(model(input));
+    reference.allocate();
+    bool         success = reference.initialize(machineState()) == 0;
+    const double vref    = 1.0 + reference.signal("efd").read() / 10.0 - reference.signal("vs").read();
+    input["signals"].push_back({{"id", "vref"}, {"value", vref}});
+    input["devices"][4]["inputs"]["vref"] = "vref";
+    System matching(model(input));
+    matching.allocate();
+    success &= matching.initialize(machineState()) == 0;
+    matching.component("exciter").evaluateResidual();
+    for (size_t n = 0; n < matching.component("exciter").size(); ++n)
+      success &= near(matching.component("exciter").getResidual().getData()[n], 0.0, 1e-8);
+    input["signals"].back()["value"] = vref + 0.1;
+    System conflicting(model(input));
+    conflicting.allocate();
+    success &= rejectsWithoutMutation(conflicting, machineState(), "constant vref");
+    return success;
+  }
+
+  json read(const std::filesystem::path& path)
+  {
+    std::ifstream stream(path);
+    return json::parse(stream);
+  }
+
+  bool inverterEquilibrium()
+  {
+    const auto   directory = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path() / "cases/EMT/CurrentControl";
+    const double omega     = 120 * std::acos(-1.0);
+    bool         success   = true;
+    for (const std::string name : {"GFL", "GFM"})
+    {
+      auto       input = read(directory / (name + ".case.json"));
+      const auto data  = read(directory / (name + ".state.json"));
+      State      state;
+      for (const std::string section : {"buses", "devices"})
+        for (const auto& [path, outputs] : data.at(section).items())
+          state[path] = outputs.get<std::map<std::string, double>>();
+      for (bool reverse : {false, true})
+      {
+        if (reverse)
+          std::reverse(input["devices"].begin(), input["devices"].end());
+        System system(model(input));
+        system.allocate();
+        success           &= system.initialize(state, omega) == 0;
+        auto&      filter  = system.component("filter");
+        auto&      inner   = system.component("current_control");
+        auto&      outer   = system.component(name == "GFL" ? "power_control" : "voltage_control");
+        // Independent dq circuit identity: the PI supplies the inverter-side copper drop.
+        const auto params  = std::find_if(input["devices"].begin(), input["devices"].end(), [](const auto& device)
+                                         { return device.at("id") == "filter"; })
+                                ->at("params");
+        const double resistance  = params.at("Rs")[0][0];
+        const double id          = system.signal("id").read();
+        const double iq          = system.signal("iq").read();
+        success                 &= near(inner.y().getData()[0], resistance * id, 1e-8);
+        success                 &= near(inner.y().getData()[1], resistance * iq, 1e-8);
+        success                 &= near(inner.y().getData()[2], id, 1e-8);
+        success                 &= near(inner.y().getData()[3], iq, 1e-8);
+        success                 &= near(outer.y().getData()[2], id, 1e-8);
+        success                 &= near(outer.y().getData()[3], iq, 1e-8);
+        inner.evaluateResidual();
+        outer.evaluateResidual();
+        for (size_t n = 0; n < 2; ++n)
+        {
+          success &= near(inner.getResidual().getData()[n], 0.0, 1e-7);
+          success &= near(outer.getResidual().getData()[n], 0.0, 1e-7);
+        }
+        // The physical LCL capacitor and grid inductor start on their sinusoidal orbit.
+        filter.evaluateResidual();
+        for (size_t n = 3; n < filter.size(); ++n)
+          success &= near(filter.getResidual().getData()[n], 0.0, 1e-8);
+        success                                                                   &= std::abs(filter.yp().getData()[4]) > 1.0;
+        auto conflicting                                                           = state;
+        conflicting[name == "GFL" ? "power_control" : "voltage_control"]["icmdd"]  = id + 1.0;
+        success                                                                   &= rejectsWithoutMutation(system, conflicting, "icmdd", omega);
+        conflicting                                                                = state;
+        conflicting["filter"]["voa"]                                               = 1.0;
+        success                                                                   &= rejectsWithoutMutation(system, conflicting, "filter.voa", omega);
+      }
+    }
+    return success;
+  }
+
   struct HistoryProbe : Container<double, size_t>
   {
     int                 resets = 0;
@@ -304,6 +400,8 @@ int main()
   result += GridKit::Testing::TestStatus(constantOperatingPoint()).report("constantOperatingPoint");
   result += GridKit::Testing::TestStatus(invalidStates()).report("invalidStates");
   result += GridKit::Testing::TestStatus(dependencyCycle()).report("dependencyCycle");
+  result += GridKit::Testing::TestStatus(exciterReference()).report("exciterReference");
+  result += GridKit::Testing::TestStatus(inverterEquilibrium()).report("inverterEquilibrium");
   result += GridKit::Testing::TestStatus(nestedHistory()).report("nestedHistory");
   return result.summary();
 }

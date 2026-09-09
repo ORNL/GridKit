@@ -117,6 +117,14 @@ remain those documented by their model READMEs. In particular, IEEET1 raises
 the source's zero voltage-sensing time constant to 0.001 s and reports that
 change at startup.
 
+The local phasor study and EMT conversion set the 22 negative IEEET1 `Ke`
+parameters to zero, selecting the model's existing automatic initialization.
+At this operating point those exciters are below the saturation knee; retaining
+negative `Ke` leaves an unstable field-voltage difference mode between colocated
+machines. The eight positive `Ke` values are preserved. This is a documented
+study adjustment, not recovered equipment data; `conversion.json` records each
+changed value. The original exported validation inputs remain intact.
+
 The largest regularization changes $X''_d$ by 0.25 percent and an open-circuit
 pole by 0.371 percent. The effective GENROU and winding poles agree to
 roundoff. This rotor correspondence does not establish equivalence of the
@@ -131,14 +139,12 @@ PWM, Converter, and a physical LCL Filter.
 `Converter.e` drives `Filter.e`; `Filter.ig` injects into the original bus.
 `Filter.i` supplies the inner current loop, while `Filter.ig`
 supplies the outer loop through a separate Park transform. PLL reads terminal
-Bus voltage; the voltage Park transform reads `Filter.vo`. All Park transforms and PWM share
-PLL's `theta`, and the inner controller receives PLL's `omega`. PWM limits
-the dq voltage command and returns it to the inner controller.
-Current targets `Pref/V` and
-`-Qref/V` are derived from power-reference parameters and rated voltage.
-Those parameters reproduce the initialized grid current in the terminal-voltage frame.
-The targets remain fixed as voltage changes; this replacement does not
-regulate constant P/Q.
+Bus voltage. Separate voltage Park transforms supply Bus voltage to
+OuterPowerControl and `Filter.vo` to InnerCurrentControl. All Park transforms
+and PWM share PLL's `theta`, and the inner controller receives PLL's `omega`.
+PWM limits the dq voltage command and returns it to the inner controller.
+OuterPowerControl regulates measured terminal P/Q against the source dispatch,
+with power errors normalized by rated voltage.
 Power-invariant current base is $S/V$.
 
 The following plant data are fabricated because REGCA supplies no bridge,
@@ -215,7 +221,7 @@ The source PhasorDynamics validation solver and EMT solver both clear at
 trajectories and label the actual intervals recorded by each run. Differences include
 machine conversion, core branches, and replacement
 inverter controls; the error statistics describe these different models.
-The copied phasor case is unchanged. Both faults have the same fundamental
+The phasor comparison uses the same exciter adjustment as EMT. Both faults have the same fundamental
 impedance and clearing time; EMT additionally retains the inductor transient.
 Machine speed is plotted as $\omega_r-1$, powers on the 100 MVA system base,
 and bus voltage as the positive-sequence magnitude on its local voltage base.

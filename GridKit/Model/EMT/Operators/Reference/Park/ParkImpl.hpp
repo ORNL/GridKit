@@ -59,6 +59,36 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
+    typename Component<scalar_type, index_type>::InitializationPortsT Park<scalar_type, index_type>::initializationPorts()
+    {
+      typename Component<ScalarT, IdxT>::InitializationPortsT ports;
+      ports.inputs.assign(input_.begin(), input_.end());
+      for (size_t n = 0; n < output_port_.size(); ++n)
+      {
+        const auto name = std::string(magic_enum::enum_name(static_cast<Outputs>(n)));
+        ports.outputs.emplace(name, &output_port_[n]);
+        if (assigned_output_[n])
+          ports.outputs.emplace(name, assigned_output_[n]);
+      }
+      return ports;
+    }
+
+    template <typename scalar_type, typename index_type>
+    void Park<scalar_type, index_type>::prepareInitialization(typename Component<ScalarT, IdxT>::InitialStateT& initial)
+    {
+      if (initial.omega() == ZERO<RealT>)
+        return;
+      const auto matrix = transformation(initial.value(*input_[3]));
+      for (size_t p = 0; p < 3; ++p)
+      {
+        RealT value{0};
+        for (size_t k = 0; k < 3; ++k)
+          value += (inverse_ ? matrix[k][p] : matrix[p][k]) * initial.value(*input_[k]);
+        initial.provide(output_port_[p], value);
+      }
+    }
+
+    template <typename scalar_type, typename index_type>
     int Park<scalar_type, index_type>::initialize(const std::map<Outputs, RealT>& outputs)
     {
       if (verify() != 0)

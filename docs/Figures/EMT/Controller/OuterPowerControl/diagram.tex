@@ -1,65 +1,83 @@
 \documentclass[tikz,border=12pt]{standalone}
 \input{../../diagram-style.tex}
 
-% TUNABLES: gain width and spacing of the two lower branches.
-\def\gainwidth{1.35cm}
-\def\integralrow{-2.2}
-\def\trackingrow{-4.2}
+% TUNABLES: channel spacing and gain-block width.
+\def\channelspacing{4.8}
+\def\gainwidth{1.25cm}
 
 \begin{document}
 \begin{tikzpicture}[emt diagram]
 
-% Current error and proportional path.
-\node[sum] (error) at (3.8,0) {$\Sigma$};
-\node[block, minimum width=\gainwidth] (Kp) at (5.6,0) {$K_P$};
-\node[sum] (command) at (8,0) {$\Sigma$};
-\draw[->, line] (error.east) -- (Kp.west);
-\draw[->, line] (Kp.east) -- (command.west);
-\node[pm, above left=0pt and 1pt of command.west] {$+$};
+% Local scalar measurements for each power product.
+\foreach \name/\y/\voltage/\current/\side/\dy in {
+    pd/-1.6/d/d/south/-0.8,pq/0/q/q/north/0.8,
+    qd/{-\channelspacing}/q/d/north/0.8,
+    qq/{-\channelspacing-1.6}/d/q/south/-0.8} {
+    \node[sum] (\name) at (4.2,\y) {$\times$};
+    \draw[->, line] (2.5,\y) node[sig, left] {$v_\voltage$}
+        -- (\name.west);
+    \draw[->, line] (2.5,\y+\dy) node[sig, left] {$i_\current$}
+        -- (4.2,\y+\dy) -- (\name.\side);
+}
 
-% Integral path, with tracking anti-windup added before integration.
-\node[block, minimum width=\gainwidth] (Ki)
-    at (3.8,\integralrow) {$K_I$};
-\node[sum] (rate) at (5.6,\integralrow) {$\Sigma$};
-\node[block, minimum width=\gainwidth] (integrator)
-    at (8,\integralrow) {$\dfrac{1}{s}$};
-\draw[->, line] (error.south) -- (Ki.north);
-\draw[->, line] (Ki.east) -- (rate.west);
-\node[pm, above left=0pt and 1pt of rate.west] {$+$};
-\draw[->, line] (rate.east) -- (integrator.west);
-\draw[->, line] (integrator.north) -- (command.south);
-\node[pm, below right=1pt and 0pt of command.south] {$+$};
+% Parallel d- and q-axis PI controllers with tracking anti-windup.
+\foreach \axis/\offset/\upperProduct/\lowerProduct/\power/\measured/\lowerSign/\direction/\toward/\away in {
+    d/0/pq/pd/P/-/+/-1/south/north,q/\channelspacing/qd/qq/Q/+/-/1/north/south} {
+    \begin{scope}[yshift=-\offset cm]
+        \node[sum] (power-\axis) at (5.7,-0.8) {$\Sigma$};
+        \node[sum] (error-\axis) at (7.2,-0.8) {$\Sigma$};
+        \node[block, minimum width=\gainwidth] (scale-\axis) at (8.6,-0.8) {$\dfrac{1}{V}$};
+        \node[signal] (split-\axis) at (9.8,-0.8) {};
+        \node[block, minimum width=\gainwidth] (Kp-\axis) at (11.2,-0.8) {$K_P$};
+        \node[sum] (command-\axis) at (15.2,-0.8) {$\Sigma$};
+        \node[signal] (output-\axis) at (16.4,-0.8) {};
 
-% Current command output and tracking return on the right boundary.
-\node[signal] (icmd) at (9.6,0) {};
-\node[sum] (tracking) at (9.6,\trackingrow) {$\Sigma$};
-\node[block, minimum width=\gainwidth] (Kaw)
-    at (5.6,\trackingrow) {$K_{\mathrm{aw}}$};
-\draw[line] (command.east) -- (icmd);
-\draw[->, line] (icmd) -- node[sig, above, pos=0.75]
-    {$\mathbf{i}^{\mathrm{cmd}}$} (12,0);
-\draw[->, line] (icmd) -- (tracking.north);
-\node[pm, above left=1pt and 0pt of tracking.north] {$-$};
-\draw[->, line] (12,\trackingrow) -- node[sig, above, pos=0.25]
-    {$\mathbf{i}^{\mathrm{lim}}$} (tracking.east);
-\node[pm, above right=0pt and 1pt of tracking.east] {$+$};
-\draw[->, line] (tracking.west) -- (Kaw.east);
-\draw[->, line] (Kaw.north) -- (rate.south);
-\node[pm, below left=1pt and 0pt of rate.south] {$+$};
+        \draw[->, line] (power-\axis.east) -- node[sig, above, pos=0.2] {$\power$} (error-\axis.west);
+        \node[pm, above left=0pt and 1pt of error-\axis.west] {$\measured$};
+        \draw[->, line] (error-\axis.east) -- (scale-\axis.west);
+        \draw[->, line] (scale-\axis.east) -- (Kp-\axis.west);
+        \draw[->, line] (Kp-\axis.east) -- (command-\axis.west);
+        \node[pm, above left=0pt and 1pt of command-\axis.west] {$+$};
+        \draw[line] (command-\axis.east) -- (output-\axis);
+        \draw[->, line] (output-\axis) -- node[sig, above, pos=0.85] {$i_\axis^{\mathrm{cmd}}$} (18.6,-0.8);
 
-% Derived current reference is internal; measured current enters from above.
-\node[sig] (reference) at (2,0) {$\mathbf{i}^{\mathrm{ref}}$};
-\draw[->, line] (reference.east) -- (error.west);
-\node[pm, above left=0pt and 1pt of error.west] {$+$};
-\node[sig] (current) at (3.8,2) {$\mathbf{i}$};
-\draw[->, line] (current.south) -- (error.north);
-\node[pm, above right=1pt and 0pt of error.north] {$-$};
+        \node[block, minimum width=\gainwidth] (Ki-\axis) at (11.2,{-0.8-1.5*\direction}) {$K_I$};
+        \node[sum] (rate-\axis) at (13.2,{-0.8-1.5*\direction}) {$\Sigma$};
+        \node[block, minimum width=\gainwidth] (integrator-\axis) at (15.2,{-0.8-1.5*\direction}) {$\dfrac{1}{s}$};
+        \draw[->, line] (split-\axis) |- (Ki-\axis.west);
+        \draw[->, line] (Ki-\axis.east) -- (rate-\axis.west);
+        \node[pm, above left=0pt and 1pt of rate-\axis.west] {$+$};
+        \draw[->, line] (rate-\axis.east) -- (integrator-\axis.west);
+        \draw[->, line] (integrator-\axis.\toward) -- (command-\axis.\away);
+        \node[pm, anchor=west] at ([xshift=2pt,yshift={-\direction*4pt}]command-\axis.\away) {$+$};
 
-% Enclose the model-owned states, variables, and feedback paths.
+        \node[sum] (tracking-\axis) at (16.4,{-0.8-3*\direction}) {$\Sigma$};
+        \node[block, minimum width=\gainwidth] (Kaw-\axis) at (13.2,{-0.8-3*\direction}) {$K_{\mathrm{aw}}$};
+        \draw[->, line] (output-\axis) -- (tracking-\axis.\toward);
+        \node[pm, anchor=east] at ([xshift=-2pt,yshift={\direction*4pt}]tracking-\axis.\toward) {$-$};
+        \draw[->, line] (18.6,{-0.8-3*\direction}) -- node[sig, above, pos=0.2] {$i_\axis^{\mathrm{lim}}$} (tracking-\axis.east);
+        \node[pm, above right=0pt and 1pt of tracking-\axis.east] {$+$};
+        \draw[->, line] (tracking-\axis.west) -- (Kaw-\axis.east);
+        \draw[->, line] (Kaw-\axis.\toward) -- (rate-\axis.\away);
+        \node[pm, anchor=east] at ([xshift=-2pt,yshift={-\direction*4pt}]rate-\axis.\away) {$+$};
+    \end{scope}
+    \draw[->, line] (\upperProduct.east) -| (power-\axis.north);
+    \node[pm, above right=1pt and 0pt of power-\axis.north] {$+$};
+    \draw[->, line] (\lowerProduct.east) -| (power-\axis.south);
+    \node[pm, below right=1pt and 0pt of power-\axis.south] {$\lowerSign$};
+}
+
+\node[sig] (pref) at (7.2,0.8) {$P^{\mathrm{ref}}$};
+\draw[->, line] (pref.south) -- (error-d.north);
+\node[pm, above right=1pt and 0pt of error-d.north] {$+$};
+\node[sig] (qref) at (7.2,-\channelspacing-2.4) {$Q^{\mathrm{ref}}$};
+\draw[->, line] (qref.north) -- (error-q.south);
+\node[pm, below right=1pt and 0pt of error-q.south] {$-$};
+
 \begin{scope}[on background layer]
     \node[operator enclosure, densely dotted,
-        fit=(error)(Kp)(command)(Ki)(rate)
-            (integrator)(icmd)(tracking)(Kaw)(reference)] {};
+        fit=(pd)(pq)(pref)(Kaw-d)(tracking-d)(Kp-d)(output-d)
+            (qq)(Kaw-q)(tracking-q)] {};
 \end{scope}
 
 \end{tikzpicture}

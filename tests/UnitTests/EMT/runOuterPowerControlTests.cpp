@@ -7,6 +7,7 @@ int main()
   result += test.wiring();
   result += test.initialState();
   result += test.residual();
+  result += test.powerMeasurements();
   result += test.steadyState();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
