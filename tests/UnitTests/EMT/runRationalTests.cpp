@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/EMT/Operators/Rational/StateSpace/StateSpace.hpp>
 #include <GridKit/Model/EMT/Operators/Rational/StateSpace/StateSpaceDataJSONParser.hpp>
 #include <GridKit/Model/EMT/Operators/Rational/VectorFit/VectorFit.hpp>
@@ -59,7 +60,9 @@ namespace
       {
         throw std::runtime_error("Rational fixture allocation failed");
       }
+#ifdef GRIDKIT_ENABLE_ENZYME
       model.tagDifferentiable();
+#endif
     }
 
     std::vector<double> residual()
@@ -102,7 +105,12 @@ namespace
         derivative       = original_derivative;
         for (size_t n = 0; n < plus.size(); ++n)
         {
-          success &= isEqual(entries[{n, k}], (plus[n] - minus[n]) / (2 * h), 1.e-8);
+          const auto expected = (plus[n] - minus[n]) / (2 * h);
+          if (!isEqual(entries[{n, k}], expected, 1.e-8))
+          {
+            std::cerr << "Jacobian mismatch (" << n << ", " << k << "): " << entries[{n, k}] << " != " << expected << '\n';
+            success = false;
+          }
         }
       }
       return success;
@@ -214,7 +222,9 @@ namespace
         }
         success &= isEqual(fixture.out[n], output, 2.e-13);
       }
+#ifdef GRIDKIT_ENABLE_ENZYME
       success &= fixture.jacobian(3.7) && fixture.jacobian(-0.8);
+#endif
     }
     return success;
   }
@@ -305,9 +315,12 @@ namespace
     data.poles.clear();
     data.residues.clear();
     Fixture<VF> feedthrough(data);
-    success       &= feedthrough.model.size() == 0 && feedthrough.jacobian(0.0) && feedthrough.jacobian(2.0);
-    data           = vectorData();
-    data.poles[0]  = {0, 0};
+    success &= feedthrough.model.size() == 0;
+#ifdef GRIDKIT_ENABLE_ENZYME
+    success &= feedthrough.jacobian(0.0) && feedthrough.jacobian(2.0);
+#endif
+    data          = vectorData();
+    data.poles[0] = {0, 0};
     Fixture<VF> integrator(data);
     success       &= integrator.model.initializeSteadyState(0, integrator.u, integrator.udot) != 0;
     data           = vectorData();
@@ -323,9 +336,13 @@ namespace
           gradient.emplace_back(fixture.input_indices[0], scale * 2.0 * fixture.u[0]);
           gradient.emplace_back(fixture.input_indices[2], scale * 2.0);
         });
-    success      &= fixture.jacobian(1.7);
-    fixture.u[0]  = 0.0;
-    success      &= fixture.jacobian(-2.0);
+#ifdef GRIDKIT_ENABLE_ENZYME
+    success &= fixture.jacobian(1.7);
+#endif
+    fixture.u[0] = 0.0;
+#ifdef GRIDKIT_ENABLE_ENZYME
+    success &= fixture.jacobian(-2.0);
+#endif
     fixture.input_signals[1].setComputed([]()
                                          { return 0.0; },
                                          [](auto&, double) {});
@@ -334,6 +351,73 @@ namespace
     success &= states.model.size() == 4;
     return success;
   }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+  bool computedOutputs()
+  {
+    auto data    = vectorData();
+    data.E[0][1] = 0.0;
+    VF                                   model(data);
+    std::vector<double>                  u(static_cast<size_t>(data.cols), 0.4), udot(u.size(), 0.2);
+    std::vector<size_t>                  indices(u.size());
+    std::vector<Signal<double, size_t>>  signals(u.size());
+    std::vector<Signal<double, size_t>*> inputs;
+    for (size_t k = 0; k < u.size(); ++k)
+    {
+      indices[k] = model.size() + k;
+      signals[k].set(&u[k], &udot[k], nullptr, &indices[k], nullptr);
+      inputs.push_back(&signals[k]);
+    }
+    model.attachInput(inputs);
+    bool success  = model.allocate() == 0 && model.initialize() == 0;
+    success      &= model.evaluateJacobian(1.0, 2.0) == 0;
+    auto* coo     = model.getCooJacobian();
+    success      &= coo->getNnz() <= model.jacobianCapacity();
+    for (size_t j = 0; j < coo->getNnz(); ++j)
+      success &= coo->getRowData()[j] < model.size();
+    auto check_gradient = [&]()
+    {
+      Signal<double, size_t>::GradientT gradient;
+      model.appendOutputGradient(0, gradient, 1.0);
+      std::map<size_t, double> derivatives;
+      for (const auto& [column, value] : gradient)
+        derivatives[column] += value;
+      const double step  = 1e-6;
+      bool         valid = true;
+      for (size_t j = 0; j < model.size() + u.size(); ++j)
+      {
+        auto&      value  = j < model.size() ? model.y().getData()[j] : u[j - model.size()];
+        const auto saved  = value;
+        value             = saved + step;
+        const auto plus   = model.output(0);
+        value             = saved - step;
+        const auto minus  = model.output(0);
+        value             = saved;
+        valid            &= isEqual(derivatives[j], (plus - minus) / (2 * step), 1e-8);
+      }
+      return valid;
+    };
+    success &= check_gradient();
+    signals[0].setComputed([&]
+                           { return u[0] * u[0]; },
+                           [&](auto& gradient, double scale)
+                           { gradient.emplace_back(indices[0], scale * 2.0 * u[0]); });
+    success &= check_gradient();
+    u[0]     = 0.0;
+    success &= check_gradient();
+    Signal<double, size_t>::GradientT gradient;
+    bool                              rejected = false;
+    try
+    {
+      model.appendOutputGradient(1, gradient, 1.0);
+    }
+    catch (const std::logic_error&)
+    {
+      rejected = true;
+    }
+    return success && rejected;
+  }
+#endif
 } // namespace
 
 int main()
@@ -347,5 +431,9 @@ int main()
   results                             += valid.report("rational coefficient and JSON validation");
   TestStatus edge                      = boundaries();
   results                             += edge.report("rational zero-state and singular E cases");
+#ifdef GRIDKIT_ENABLE_ENZYME
+  TestStatus output  = computedOutputs();
+  results           += output.report("rational computed outputs and residual destinations");
+#endif
   return results.summary();
 }

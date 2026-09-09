@@ -1,7 +1,8 @@
 /**
  * @file FilterData.hpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief Modeling data for the three-phase LCL filter.
+ * @brief Modeling data for the three-phase LCL filter
+ *
  */
 #pragma once
 
@@ -11,6 +12,7 @@ namespace GridKit
 {
   namespace EMT
   {
+    /// Initial parameters for a filter
     enum class FilterParameters
     {
       Rs, ///< \f$\mathbf{R}_\mathrm{s}\f$ Converter-side resistance [ohm]
@@ -20,6 +22,7 @@ namespace GridKit
       Lg, ///< \f$\mathbf{L}_g\f$ Grid-side inductance [H]
     };
 
+    /// Inputs supported by a filter
     enum class FilterInputs : size_t
     {
       va, ///< Terminal bus phase-a voltage [V]
@@ -31,6 +34,7 @@ namespace GridKit
       SIZE,
     };
 
+    /// Outputs supported by a filter
     enum class FilterOutputs : size_t
     {
       ia,  ///< Converter-side phase-a current [A]
@@ -45,6 +49,7 @@ namespace GridKit
       SIZE,
     };
 
+    /// Variables able to be monitored for a filter
     enum class FilterMonitorableVariables
     {
       ia,

@@ -8,7 +8,7 @@
 #include <sstream>
 
 #include <GridKit/Definitions.hpp>
-#include <GridKit/Model/EMT/Component/Controller/PWM/Pwm.hpp>
+#include <GridKit/Model/EMT/Component/Controller/PWM/PwmImpl.hpp>
 #include <GridKit/Model/EMT/ComponentLibrary.hpp>
 #include <GridKit/Model/EMT/Operators/Converter/Converter.hpp>
 #include <GridKit/Model/EMT/SystemModel.hpp>
@@ -787,24 +787,26 @@ namespace GridKit
         TestStatus success = true;
         RestoreMu  restore;
         double     maximum_error = 0;
-        for (double sharpness : {0.04, 20.0})
+        for (double sharpness : {0.04, 0.3999, 0.4001, 3.9999, 4.0001, 15.9999, 16.0001, 200.0})
         {
           Math::MU<double> = sharpness * 6000;
           for (const auto& inputs : {std::array<double, 4>{150, -40, 400, 0.7},
                                      std::array<double, 4>{300, 400, 100, -1.3},
                                      std::array<double, 4>{200, 150, 250, 2.1},
-                                     std::array<double, 4>{-90, 20, 150, 0.4}})
+                                     std::array<double, 4>{-90, 20, 150, 0.4},
+                                     std::array<double, 4>{30, -40, 0, 0.7},
+                                     std::array<double, 4>{0, 0, 0, 0.7}})
           {
             CommandPwm f(inputs);
             for (const auto output : {Pwm::Outputs::sa, Pwm::Outputs::sb, Pwm::Outputs::sc, Pwm::Outputs::ulimd, Pwm::Outputs::ulimq})
               for (size_t n = 0; n < 4; ++n)
               {
                 const double original  = f.values[n];
-                const double h         = 1e-6 * (1 + std::abs(original));
+                const double h         = 1e-8 * (1 + std::abs(original));
                 f.values[n]            = original + h;
-                const double plus      = f.read(output);
+                const double plus      = f.model.evaluateOutput(output, f.values.data());
                 f.values[n]            = original - h;
-                const double minus     = f.read(output);
+                const double minus     = f.model.evaluateOutput(output, f.values.data());
                 f.values[n]            = original;
                 const double fd        = (plus - minus) / (2 * h);
                 const double error     = std::abs(f.derivative(output, n) - fd) / (1 + std::abs(fd));
@@ -920,6 +922,59 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome computedPwmJacobian()
+      {
+        TestStatus success = true;
+        RestoreMu  restore;
+        Math::MU<double>                                = 50000;
+        auto raw                                        = caseJson();
+        raw["devices"][4]["devices"][0]["params"]["fc"] = 6000;
+        System                system(raw.get<EMT::SystemModelData<double, size_t>>());
+        std::array<double, 4> values{150, -40, 400, 0.7};
+        std::array<size_t, 4> indices{0, 1, 2, 3};
+        std::array<Signal, 4> inputs;
+        for (size_t n = 0; n < inputs.size(); ++n)
+          inputs[n].set(&values[n], &indices[n]);
+        system.signal("dc").set(&values[2], &indices[2]);
+        system.component<Pwm>("control.pwm").attachInput({&inputs[0], &inputs[1]}, &inputs[2], &inputs[3]);
+        system.allocate();
+        system.initialize();
+        auto* y = system.y().getData();
+        for (size_t n = 0; n < inputs.size(); ++n)
+        {
+          y[n] = values[n];
+          inputs[n].set(&y[n], &indices[n]);
+        }
+        system.signal("dc").set(&y[2], &indices[2]);
+        system.updateTime(.31 / 6000, 0);
+        system.evaluateJacobian(1, 0);
+        const size_t size        = system.size();
+        success                 *= size == 9;
+        auto*               jac  = system.getCsrJacobian();
+        std::vector<double> dense(size * size, 0);
+        for (size_t row = 0; row < size; ++row)
+          for (size_t k = jac->getRowData()[row]; k < jac->getRowData()[row + 1]; ++k)
+            dense[row * size + jac->getColData()[k]] = jac->getValues()[k];
+        for (size_t col = 0; col < size; ++col)
+        {
+          const double saved = y[col];
+          const double h     = 1e-7 * (1 + std::abs(saved));
+          y[col]             = saved + h;
+          system.evaluateResidual();
+          const auto*               f = system.getResidual().getData();
+          const std::vector<double> plus(f, f + size);
+          y[col] = saved - h;
+          system.evaluateResidual();
+          for (size_t row = 0; row < size; ++row)
+          {
+            const double fd  = (plus[row] - f[row]) / (2 * h);
+            success         *= std::abs(dense[row * size + col] - fd) / (1 + std::abs(fd)) < 1e-6;
+          }
+          y[col] = saved;
+        }
+        return success.report(__func__);
+      }
+
       TestOutcome jacobian()
       {
         TestStatus success = true;

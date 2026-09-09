@@ -61,8 +61,9 @@ namespace GridKit
         void attachInput(const std::array<SignalT*, 2>& command, SignalT* vdc, SignalT* theta);
 
         /// Publish one output on a named scalar signal. No DAE index is assigned.
-        void    assignOutput(Outputs output, SignalT* signal);
-        ScalarT output(Outputs output) const;
+        void                                          assignOutput(Outputs output, SignalT* signal);
+        ScalarT                                       output(Outputs output) const;
+        __attribute__((always_inline)) inline ScalarT evaluateOutput(Outputs output, const ScalarT* input) const;
 
         /// Phase modulation command from the limited voltage command or the sinusoidal generator.
         ScalarT modulation(size_t phase) const;
@@ -73,12 +74,15 @@ namespace GridKit
         }
 
       private:
-        void                              initializeParameters(const ModelDataT& data);
-        const Model::VariableMonitorBase* getMonitor() const override;
-        bool                              hasInput() const;
-        std::array<ScalarT, 2>            fraction() const;
-        ScalarT                           pulse(ScalarT duty, RealT local_time) const;
-        void                              appendOutputGradient(Outputs output, typename SignalT::GradientT& gradient, RealT scale) const;
+        void                                                         initializeParameters(const ModelDataT& data);
+        const Model::VariableMonitorBase*                            getMonitor() const override;
+        bool                                                         hasInput() const;
+        __attribute__((always_inline)) inline std::array<ScalarT, 2> fraction(const ScalarT* input) const;
+        std::array<ScalarT, 4>                                       inputValues() const;
+        __attribute__((always_inline)) inline ScalarT                phaseModulation(size_t phase, const ScalarT* input) const;
+        __attribute__((always_inline)) inline ScalarT                switching(ScalarT duty) const;
+        __attribute__((always_inline)) inline ScalarT                pulse(ScalarT duty, RealT local_time) const;
+        void                                                         appendOutputGradient(Outputs output, typename SignalT::GradientT& gradient, RealT scale) const;
 
         RealT M_{0.0};
         RealT fm_{0.0};
@@ -88,8 +92,6 @@ namespace GridKit
         RealT au_{0.0};
         bool  parameters_valid_{false};
         bool  sinusoidal_parameters_valid_{false};
-        RealT horizon_{0.0};
-        RealT replica_decay_{0.0};
 
         std::array<SignalT*, 4>   input_{};
         std::array<SignalT, 5>    output_port_;

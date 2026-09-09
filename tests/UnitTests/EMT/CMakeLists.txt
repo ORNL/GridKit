@@ -66,6 +66,12 @@ target_link_libraries(
   GridKit::testing)
 add_test(NAME EMTLineLumpedTest COMMAND test_emt_line_lumped)
 
+if(GRIDKIT_ENABLE_ENZYME)
+  add_executable(test_emt_line_distributed runLineDistributedTests.cpp)
+  target_link_libraries(test_emt_line_distributed GridKit::emt_systemmodel GridKit::testing)
+  add_test(NAME EMTLineDistributedTest COMMAND test_emt_line_distributed)
+endif()
+
 add_executable(test_emt_machine runMachineTests.cpp)
 target_link_libraries(
   test_emt_machine
@@ -302,3 +308,12 @@ if(GRIDKIT_ENABLE_ENZYME AND GRIDKIT_ENABLE_SUNDIALS_SPARSE)
 endif()
 add_test(NAME EMTRegfmaTest COMMAND test_emt_regfma)
 install(TARGETS test_emt_regfma RUNTIME DESTINATION bin)
+
+add_executable(test_variable_monitor runVariableMonitorTests.cpp)
+target_include_directories(
+  test_variable_monitor
+  PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+          ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+target_link_libraries(
+  test_variable_monitor GridKit::definitions GridKit::testing)
+add_test(NAME VariableMonitorTest COMMAND test_variable_monitor)
