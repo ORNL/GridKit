@@ -4,23 +4,30 @@ EMT controller models exchange signals with other components. In the switching
 inverter examples, PLL supplies angle to the Park operators and frequency to
 the controllers through signal ports.
 
-Arrows indicate signal flow. The converter current $\mathbf{i}$ is positive
+Arrows indicate signal flow; dashed blue paths denote measurements and switching signals.
+The converter current $\mathbf{i}$ is positive
 out of the bridge.
-The forward power-invariant Park transforms are implicit at the boundary of
-the $dq$ controller region; PWM applies the inverse transform internally.
+The power-invariant transforms are implicit at the $abc$/$dq0$ boundary;
+the implemented controllers use the $d$ and $q$ components. PWM applies the
+inverse transform internally.
 
 Symbol | Producer | Consumer | Coordinates
 ------ | -------- | -------- | -----------
 $\mathbf{e}$ | `Converter.e` | `Filter.e` | $abc$
-$\mathbf{v}$ | Terminal Bus | PLL | $abc$
+$\mathbf{v}_g$ | Terminal Bus | Grid-voltage Park input | $abc$
 $\mathbf{v}_{\mathrm{o}}$ | `Filter.vo` | Voltage Park input | $abc$
 $\mathbf{i}$ | `Filter.i` | Current Park input | $abc$
 $\mathbf{i}_g$ | `Filter.ig` | Terminal Bus and grid-current Park input | $abc$
 $v_{\mathrm{dc}}$ | External constant | Converter and PWM | Scalar
+$\mathbf{u}^{\mathrm{cmd}}$ | `InnerCurrentControl.u` | `PWM.u` | $dq$
+$\mathbf{u}^{\mathrm{lim}}$ | `PWM.ulim` | `InnerCurrentControl.ulim` | $dq$
 
 The current and voltage controllers retain their local voltage-input name
 `v`: it receives the $dq$ components of transformed $\mathbf{v}_{\mathrm{o}}$.
 `Filter.v` is the separate $abc$ voltage input from the terminal Bus.
+The filter is drawn as a Z–C–Z circuit, with series impedances
+$\mathbf Z_{\mathrm{s}}=\mathbf R_{\mathrm{s}}+s\mathbf L_{\mathrm{s}}$ and
+$\mathbf Z_g=\mathbf R_g+s\mathbf L_g$, and shunt capacitance $\mathbf C$.
 
 ## Grid Following
 
@@ -38,7 +45,11 @@ LVACM, the $\text{linseg}(V_T;V_{A0},V_{A1},1)$ factor on injected active curren
 
 ## GFM Voltage Control
 
-![GFM case wiring with PLL](../../../../../docs/Figures/EMT/Controller/diagram_gfm.png)
+![GFM control schematic](../../../../../docs/Figures/EMT/Controller/diagram_gfm.png)
+
+The $\mathbf v_g$ input to Voltage Control is proposed in this general schematic.
+The implemented OuterVoltageControl uses $\mathbf v_{\mathrm{o}}$ and
+$\mathbf i_g$; its measurement interface is unchanged.
 
 ## Models
 
