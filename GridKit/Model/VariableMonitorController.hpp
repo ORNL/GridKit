@@ -501,7 +501,9 @@ namespace GridKit
         case Format::ARROW_STREAM:
           if constexpr (std::is_constructible_v<std::string, T&&>)
           {
-            return VariableMonitorArrowOutput(std::forward<T>(arg), spec.format == Format::ARROW_STREAM);
+            return VariableMonitorArrowOutput(std::forward<T>(arg),
+                                              spec.format == Format::ARROW_STREAM,
+                                              spec.batch_rows);
           }
           else
           {

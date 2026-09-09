@@ -21,9 +21,6 @@ namespace GridKit
   {
     namespace
     {
-      /// Rows buffered before a record batch is written and flushed
-      constexpr int64_t batch_rows = 256;
-
       /// Convert a failed arrow::Status into an exception
       void throwOnFailure(const arrow::Status& status, const char* what)
       {
@@ -111,9 +108,10 @@ namespace GridKit
     class VariableMonitorArrowOutputImpl
     {
     public:
-      VariableMonitorArrowOutputImpl(const std::string& file_name, bool stream_format)
+      VariableMonitorArrowOutputImpl(const std::string& file_name, bool stream_format, int64_t batch_rows)
         : file_(file_name, std::ios::binary | std::ios::trunc),
-          stream_format_(stream_format)
+          stream_format_(stream_format),
+          batch_rows_(batch_rows)
       {
         if (!file_.is_open())
         {
@@ -143,12 +141,12 @@ namespace GridKit
         columns_.resize(names.size());
         for (auto& column : columns_)
         {
-          column.reserve(static_cast<size_t>(batch_rows));
+          column.reserve(static_cast<size_t>(batch_rows_));
         }
       }
 
       /**
-       * @brief Buffer one row; write a record batch every `batch_rows` rows
+       * @brief Buffer one row; write a record batch every `batch_rows_` rows
        */
       void appendRow(const std::vector<double>& values)
       {
@@ -166,7 +164,7 @@ namespace GridKit
           columns_[i].push_back(values[i]);
         }
 
-        if (static_cast<int64_t>(columns_.front().size()) >= batch_rows)
+        if (static_cast<int64_t>(columns_.front().size()) >= batch_rows_)
         {
           flushBatch();
         }
@@ -237,6 +235,9 @@ namespace GridKit
       /// Write the IPC stream format instead of the IPC file format
       bool stream_format_{false};
 
+      /// Rows buffered before a record batch is written and flushed
+      int64_t batch_rows_{256};
+
       /// Arrow view of the output file stream
       std::shared_ptr<OstreamOutputStream> out_;
 
@@ -251,9 +252,12 @@ namespace GridKit
       std::vector<std::vector<double>> columns_;
     };
 
-    VariableMonitorArrowOutput::VariableMonitorArrowOutput(const std::string& file_name, bool stream_format)
+    VariableMonitorArrowOutput::VariableMonitorArrowOutput(const std::string& file_name,
+                                                           bool               stream_format,
+                                                           int64_t            batch_rows)
       : file_name_(file_name),
-        stream_format_(stream_format)
+        stream_format_(stream_format),
+        batch_rows_(batch_rows)
     {
     }
 
@@ -265,7 +269,7 @@ namespace GridKit
     {
       if (!impl_)
       {
-        impl_ = std::make_unique<VariableMonitorArrowOutputImpl>(file_name_, stream_format_);
+        impl_ = std::make_unique<VariableMonitorArrowOutputImpl>(file_name_, stream_format_, batch_rows_);
       }
     }
 
@@ -312,7 +316,7 @@ namespace GridKit
     {
     };
 
-    VariableMonitorArrowOutput::VariableMonitorArrowOutput(const std::string&, bool)
+    VariableMonitorArrowOutput::VariableMonitorArrowOutput(const std::string&, bool, int64_t)
     {
       throw std::runtime_error(
           "GridKit was built without Apache Arrow support; "

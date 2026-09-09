@@ -61,10 +61,11 @@ namespace GridKit
       {
         for (auto&& raw_mon : j.at("monitors"))
         {
-          auto file_name = raw_mon.value("file_name", std::string{});
-          auto fmt_str   = raw_mon.at("format").get<std::string>();
-          auto format    = enum_parse(MonitorFormat{}, fmt_str);
-          auto delim     = raw_mon.value("delim", std::string(","));
+          auto file_name  = raw_mon.value("file_name", std::string{});
+          auto fmt_str    = raw_mon.at("format").get<std::string>();
+          auto format     = enum_parse(MonitorFormat{}, fmt_str);
+          auto delim      = raw_mon.value("delim", std::string(","));
+          auto batch_rows = raw_mon.value("batch_rows", int64_t{256});
           if (format.has_value())
           {
             auto is_arrow = format.value() == MonitorFormat::ARROW
@@ -85,7 +86,14 @@ namespace GridKit
                            << std::endl;
               continue;
             }
-            sm.monitor_sink.emplace_back(format.value(), file_name, delim);
+            if (batch_rows < 1)
+            {
+              Log::error() << "\n\tMonitor \"batch_rows\" must be a positive integer."
+                           << "\n\tSee the \"monitors\" list in your JSON file."
+                           << std::endl;
+              continue;
+            }
+            sm.monitor_sink.emplace_back(format.value(), file_name, delim, batch_rows);
           }
           else
           {
