@@ -22,7 +22,7 @@
 			}
 		},
 		{
-			"label": "Containers: Build gridkit:latest",
+			"label": "Containers: Build gridkit:<tag>",
 			"type": "process",
 			"command": "/usr/bin/podman",
 			"args": [
@@ -32,7 +32,7 @@
 				"--file",
 				"docker/Dockerfile",
 				"--tag",
-				"gridkit:latest",
+				"gridkit:${input:tag}",
 				"."
 			],
 			"options": {
@@ -50,12 +50,13 @@
 			}
 		},
 		{
-			"label": "Containers: Publish gridkit:latest to personal GHCR",
+			"label": "Containers: Publish gridkit:<tag> to personal GHCR",
 			"type": "process",
 			"command": "/usr/bin/bash",
 			"args": [
 				"-c",
-				"read -r -p 'Publish gridkit:latest to ghcr.io/lukelowry/gridkit:latest? Type PUBLISH to continue: ' answer\nif [[ \"$answer\" != \"PUBLISH\" ]]; then\n  echo 'Publish cancelled.'\n  exit 0\nfi\nexec /usr/bin/podman push gridkit:latest docker://ghcr.io/lukelowry/gridkit:latest"
+				"read -r -p \"Publish gridkit:$0 to ghcr.io/lukelowry/gridkit:$0? Type PUBLISH to continue: \" answer\nif [[ \"$answer\" != \"PUBLISH\" ]]; then\n  echo 'Publish cancelled.'\n  exit 0\nfi\nexec /usr/bin/podman push \"gridkit:$0\" \"docker://ghcr.io/lukelowry/gridkit:$0\"",
+				"${input:tag}"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -67,6 +68,14 @@
 				"clear": true,
 				"focus": true
 			}
+		}
+	],
+	"inputs": [
+		{
+			"id": "tag",
+			"type": "promptString",
+			"description": "Image tag, e.g. latest or arrow-2026-09-09",
+			"default": "latest"
 		}
 	]
 }
