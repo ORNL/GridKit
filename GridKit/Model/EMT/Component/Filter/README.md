@@ -13,6 +13,8 @@ Figure 1: Filter model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
+$V$ | [V] | `V` | Nominal line-to-line RMS voltage | Optional, positive; absolute-tolerance scale
+$I$ | [A] | `I` | Nominal phase RMS current | Optional, positive; absolute-tolerance scale
 $\mathbf{R}_{\mathrm{s}}$ | [$\Omega$] | `Rs` | Converter-side series resistance | $\mathbf{R}_{\mathrm{s}} \in \mathbb{R}^{3\times3}$, default zero
 $\mathbf{L}_{\mathrm{s}}$ | [H] | `Ls` | Converter-side series inductance | $\mathbf{L}_{\mathrm{s}} \in \mathbb{R}^{3\times3}$, required
 $\mathbf{C}$ | [F] | `C` | Shunt capacitance | $\mathbf{C} \in \mathbb{R}^{3\times3}$, required

@@ -16,6 +16,7 @@ Figure 1: Switch model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
+$I$ | [A] | `I` | Nominal phase RMS current | Optional, positive; absolute-tolerance scale
 $N$ | [-] | `N` | Number of phases | Fixed at $3$
 $\mathrm{open}$ | [-] | `open` | Ganged switch command | Default `false` (closed)
 

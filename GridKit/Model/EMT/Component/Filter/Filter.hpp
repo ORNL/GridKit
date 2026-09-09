@@ -139,6 +139,9 @@ namespace GridKit
           const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
+      RealT i_scale_{ONE<RealT>};
+      RealT v_scale_{ONE<RealT>};
+
       /* Input parameters */
       ABCMatrix<RealT> Rs_{};
       ABCMatrix<RealT> Ls_{};
