@@ -150,7 +150,7 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    CircuitComponent<ScalarT, IdxT>* InductionMotor<ScalarT, IdxT>::clone() const
+    Component<ScalarT, IdxT>* InductionMotor<ScalarT, IdxT>::clone() const
     {
       return new InductionMotor<ScalarT, IdxT>(*this);
     }

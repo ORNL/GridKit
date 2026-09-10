@@ -15,24 +15,24 @@ namespace GridKit
      * @brief Circuit node representing a connection point.
      */
     template <typename ScalarT, typename IdxT>
-    class CircuitNode : public Model::Evaluator<ScalarT, IdxT>
+    class Node : public Model::Evaluator<ScalarT, IdxT>
     {
       using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
     public:
-      CircuitNode()
+      Node()
       {
         size_ = 1;
       }
 
-      CircuitNode(ScalarT v0)
+      Node(ScalarT v0)
         : V0_(v0)
       {
         size_ = 1;
       }
 
-      ~CircuitNode() = default;
+      ~Node() = default;
 
       int setNodeID(IdxT id)
       {

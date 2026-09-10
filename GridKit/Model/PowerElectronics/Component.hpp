@@ -16,18 +16,18 @@ namespace GridKit
   namespace PowerElectronics
   {
     /*!
-     * @brief Declaration of a CircuitComponent class.
+     * @brief Declaration of a Component class.
      *
      */
     template <class ScalarT, typename IdxT>
-    class CircuitComponent : public Model::Evaluator<ScalarT, IdxT>
+    class Component : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
       using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
-      CircuitComponent() = default;
+      Component() = default;
 
     protected:
       /**
@@ -55,7 +55,7 @@ namespace GridKit
        *       system, its state, state-derivative, and residual pointers must be
        *       reassigned to the storage provided by that system before evaluation.
        */
-      CircuitComponent(const CircuitComponent& other)
+      Component(const Component& other)
         : n_extern_(other.n_extern_),
           n_intern_(other.n_intern_),
           extern_indices_(other.extern_indices_),
@@ -181,7 +181,7 @@ namespace GridKit
        * residual pointers are not set. The user is responsible for setting these
        * pointers to the appropriate storage before evaluating the residual.
        */
-      virtual CircuitComponent<ScalarT, IdxT>* clone() const
+      virtual Component<ScalarT, IdxT>* clone() const
       {
         throw std::runtime_error("clone() is not supported for this component.");
       }
@@ -369,8 +369,8 @@ namespace GridKit
       }
 
       /**
-       * @brief Evaluating the residual of a CircuitComponent should be done by evaluating the
-       * internal residuals and external residuals. CircuitComponents should overload those
+       * @brief Evaluating the residual of a Component should be done by evaluating the
+       * internal residuals and external residuals. Components should overload those
        * functions for their residuals (and the system will call those function instead of this one),
        * so there is no reason to overload this functionality.
        *

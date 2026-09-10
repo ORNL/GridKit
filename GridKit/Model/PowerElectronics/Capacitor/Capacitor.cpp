@@ -138,7 +138,7 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    CircuitComponent<ScalarT, IdxT>* Capacitor<ScalarT, IdxT>::clone() const
+    Component<ScalarT, IdxT>* Capacitor<ScalarT, IdxT>::clone() const
     {
       return new Capacitor<ScalarT, IdxT>(*this);
     }

@@ -104,7 +104,7 @@ namespace GridKit
 
       /**
        * @brief Create the mappings from local to global indices for a node variable (either internal or external),
-       * to be used from an attached component. \see CircuitComponent::setExternalConnectionNodes()
+       * to be used from an attached component. \see Component::setExternalConnectionNodes()
        *
        * @param local_index The index of the local variable
        * @param connection The necessary connection information for the variable

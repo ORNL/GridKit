@@ -389,7 +389,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int DistributedGenerator<ScalarT, IdxT>::allocate()
     {
-      CircuitComponent<ScalarT, IdxT>::allocate();
+      Component<ScalarT, IdxT>::allocate();
 
       this->setExternalConnectionNodes(0, node_ref_->getNodeConnection(0));
       this->setExternalConnectionNodes(1, node_bus_->getNodeConnection(0));
@@ -423,7 +423,7 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    CircuitComponent<ScalarT, IdxT>* DistributedGenerator<ScalarT, IdxT>::clone() const
+    Component<ScalarT, IdxT>* DistributedGenerator<ScalarT, IdxT>::clone() const
     {
       return new DistributedGenerator<ScalarT, IdxT>(*this);
     }

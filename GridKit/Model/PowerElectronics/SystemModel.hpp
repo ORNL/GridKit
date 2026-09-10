@@ -6,8 +6,8 @@
 #include <vector>
 
 #include <GridKit/Constants.hpp>
-#include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
-#include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
+#include <GridKit/Model/PowerElectronics/Component.hpp>
+#include <GridKit/Model/PowerElectronics/Node.hpp>
 #include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
@@ -16,29 +16,29 @@ namespace GridKit
   namespace PowerElectronics
   {
     template <class ScalarT, typename IdxT>
-    class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
+    class SystemModel : public Component<ScalarT, IdxT>
     {
-      using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
-      using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
-      using component_type = CircuitComponent<ScalarT, IdxT>;
-      using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
+      using RealT          = typename Component<ScalarT, IdxT>::RealT;
+      using CsrMatrixT     = typename Component<ScalarT, IdxT>::CsrMatrixT;
+      using component_type = Component<ScalarT, IdxT>;
+      using node_type      = NodeBase<ScalarT, IdxT>;
 
-      using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-      using CircuitComponent<ScalarT, IdxT>::allocated_;
-      using CircuitComponent<ScalarT, IdxT>::allocateVectors;
-      using CircuitComponent<ScalarT, IdxT>::alpha_;
-      using CircuitComponent<ScalarT, IdxT>::f_ext_;
-      using CircuitComponent<ScalarT, IdxT>::f_int_;
-      using CircuitComponent<ScalarT, IdxT>::n_extern_;
-      using CircuitComponent<ScalarT, IdxT>::n_intern_;
-      using CircuitComponent<ScalarT, IdxT>::nnz_;
-      using CircuitComponent<ScalarT, IdxT>::size_;
-      using CircuitComponent<ScalarT, IdxT>::tag_;
-      using CircuitComponent<ScalarT, IdxT>::time_;
-      using CircuitComponent<ScalarT, IdxT>::y_ext_;
-      using CircuitComponent<ScalarT, IdxT>::y_int_;
-      using CircuitComponent<ScalarT, IdxT>::yp_ext_;
-      using CircuitComponent<ScalarT, IdxT>::yp_int_;
+      using Component<ScalarT, IdxT>::abs_tol_;
+      using Component<ScalarT, IdxT>::allocated_;
+      using Component<ScalarT, IdxT>::allocateVectors;
+      using Component<ScalarT, IdxT>::alpha_;
+      using Component<ScalarT, IdxT>::f_ext_;
+      using Component<ScalarT, IdxT>::f_int_;
+      using Component<ScalarT, IdxT>::n_extern_;
+      using Component<ScalarT, IdxT>::n_intern_;
+      using Component<ScalarT, IdxT>::nnz_;
+      using Component<ScalarT, IdxT>::size_;
+      using Component<ScalarT, IdxT>::tag_;
+      using Component<ScalarT, IdxT>::time_;
+      using Component<ScalarT, IdxT>::y_ext_;
+      using Component<ScalarT, IdxT>::y_int_;
+      using Component<ScalarT, IdxT>::yp_ext_;
+      using Component<ScalarT, IdxT>::yp_int_;
 
     public:
       /**
@@ -46,7 +46,7 @@ namespace GridKit
        *
        * @post System model parameters set as default
        */
-      PowerElectronicsModel()
+      SystemModel()
       {
         // By default don't use the jacobian
         use_jac_ = false;
@@ -59,7 +59,7 @@ namespace GridKit
        *
        * @post System model parameters set as input
        */
-      PowerElectronicsModel(bool use_jac = false)
+      SystemModel(bool use_jac = false)
       {
         // Can choose if to use jacobian
         use_jac_ = use_jac;
@@ -73,7 +73,7 @@ namespace GridKit
        * @post System components are deallocated
        *
        */
-      virtual ~PowerElectronicsModel()
+      virtual ~SystemModel()
       {
         for (auto comp : this->components_)
         {
@@ -111,7 +111,7 @@ namespace GridKit
        * @post System model vectors allocated with the computed total number of unknowns
        * @post CSR Jacobian sparsity pattern is computed
        * @post COO->CSR mapping is computed
-       * @post Every component's \ref CircuitComponent::y_int_, \ref CircuitComponent::yp_int_, and \ref CircuitComponent::f_int_ pointers
+       * @post Every component's \ref Component::y_int_, \ref Component::yp_int_, and \ref Component::f_int_ pointers
        * are set to their appropriate offsets in the system vector, allowing them to directly access their internal variables, derivatives,
        * and residuals.
        *
@@ -290,7 +290,7 @@ namespace GridKit
           component->initialize();
         }
 
-        return CircuitComponent<ScalarT, IdxT>::initialize();
+        return Component<ScalarT, IdxT>::initialize();
       }
 
       /**
@@ -527,6 +527,6 @@ namespace GridKit
       int  jac_call_count_{0};
       bool use_jac_;
 
-    }; // class PowerElectronicsModel
+    }; // class SystemModel
   } // namespace PowerElectronics
 } // namespace GridKit

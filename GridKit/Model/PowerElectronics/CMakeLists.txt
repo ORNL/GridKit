@@ -23,9 +23,9 @@ add_subdirectory(MicrogridLine)
 add_subdirectory(MicrogridBusDQ)
 
 install(
-  FILES CircuitComponent.hpp
-        CircuitNode.hpp
-        SystemModelPowerElectronics.hpp
+  FILES Component.hpp
+        Node.hpp
+        SystemModel.hpp
         NodeBase.hpp
         ExternalConnection.hpp
   DESTINATION include/GridKit/Model/PowerElectronics)
