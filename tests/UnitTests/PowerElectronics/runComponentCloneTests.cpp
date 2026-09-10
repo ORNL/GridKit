@@ -2,7 +2,7 @@
 
 int main()
 {
-  GridKit::Testing::CircuitComponentCloneTests<double, size_t> tests;
+  GridKit::Testing::ComponentCloneTests<double, size_t> tests;
 
   GridKit::Testing::TestingResults result;
 

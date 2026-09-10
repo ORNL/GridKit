@@ -116,7 +116,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Inductor<ScalarT, IdxT>::allocate()
     {
-      CircuitComponent<ScalarT, IdxT>::allocate();
+      Component<ScalarT, IdxT>::allocate();
 
       this->setExternalConnectionNodes(0, node1_->getNodeConnection(0));
       this->setExternalConnectionNodes(1, node2_->getNodeConnection(0));
@@ -149,7 +149,7 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    CircuitComponent<ScalarT, IdxT>* Inductor<ScalarT, IdxT>::clone() const
+    Component<ScalarT, IdxT>* Inductor<ScalarT, IdxT>::clone() const
     {
       return new Inductor<ScalarT, IdxT>(*this);
     }

@@ -13,7 +13,7 @@
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
-#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModel.hpp>
 
 /*
  * Contains components and nodes that make up the scaled microgrid network.

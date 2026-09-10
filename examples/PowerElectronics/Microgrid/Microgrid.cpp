@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <iostream>
 
-#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 
@@ -19,7 +19,7 @@ int main(int /* argc */, char const** /* argv */)
   bool   debug_output    = true;
 
   // Create model
-  auto* sysmodel = new GridKit::PowerElectronics::PowerElectronicsModel<double, size_t>(use_jac);
+  auto* sysmodel = new GridKit::PowerElectronics::SystemModel<double, size_t>(use_jac);
 
   // Build the four-generator microgrid network.
   size_t                                N_size = 2;

@@ -149,7 +149,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int MicrogridLine<ScalarT, IdxT>::allocate()
     {
-      CircuitComponent<ScalarT, IdxT>::allocate();
+      Component<ScalarT, IdxT>::allocate();
 
       this->setExternalConnectionNodes(0, node_ref_->getNodeConnection(0));
       this->setExternalConnectionNodes(1, bus1_->getNodeConnection(0));
@@ -185,7 +185,7 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    CircuitComponent<ScalarT, IdxT>* MicrogridLine<ScalarT, IdxT>::clone() const
+    Component<ScalarT, IdxT>* MicrogridLine<ScalarT, IdxT>::clone() const
     {
       return new MicrogridLine<ScalarT, IdxT>(*this);
     }

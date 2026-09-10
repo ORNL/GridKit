@@ -185,7 +185,7 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    CircuitComponent<ScalarT, IdxT>* SynchronousMachine<ScalarT, IdxT>::clone() const
+    Component<ScalarT, IdxT>* SynchronousMachine<ScalarT, IdxT>::clone() const
     {
       return new SynchronousMachine<ScalarT, IdxT>(*this);
     }

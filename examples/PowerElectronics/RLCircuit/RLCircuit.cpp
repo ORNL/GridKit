@@ -7,7 +7,7 @@
 #include <GridKit/Model/PowerElectronics/Capacitor/Capacitor.hpp>
 #include <GridKit/Model/PowerElectronics/Inductor/Inductor.hpp>
 #include <GridKit/Model/PowerElectronics/Resistor/Resistor.hpp>
-#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModel.hpp>
 #include <GridKit/Model/PowerElectronics/VoltageSource/VoltageSource.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -20,7 +20,7 @@ int main(int /* argc */, char const** /* argv */)
 
   // TODO:setup as named parameters
   // Create circuit model
-  GridKit::PowerElectronics::PowerElectronicsModel<double, size_t> sysmodel(use_jac);
+  GridKit::PowerElectronics::SystemModel<double, size_t> sysmodel(use_jac);
 
   size_t idoff = 0;
 

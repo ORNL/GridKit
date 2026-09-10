@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
+#include <GridKit/Model/PowerElectronics/Node.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
@@ -24,10 +24,10 @@ namespace GridKit
 
         ScalarT V{1.0};
 
-        PowerElectronics::CircuitNode<ScalarT, IdxT>* node = nullptr;
+        PowerElectronics::Node<ScalarT, IdxT>* node = nullptr;
 
         // Default construct
-        node = new PowerElectronics::CircuitNode<ScalarT, IdxT>();
+        node = new PowerElectronics::Node<ScalarT, IdxT>();
         node->allocate();
         node->initialize();
         success *= isEqual(node->V(), static_cast<ScalarT>(0));
@@ -35,7 +35,7 @@ namespace GridKit
         delete node;
 
         // Construct with initial voltage
-        node = new PowerElectronics::CircuitNode<ScalarT, IdxT>(V);
+        node = new PowerElectronics::Node<ScalarT, IdxT>(V);
         node->allocate();
         node->initialize();
         success *= isEqual(node->V(), V);
@@ -56,7 +56,7 @@ namespace GridKit
         ScalarT V{1.0};
         ScalarT I{1.0};
 
-        PowerElectronics::CircuitNode<ScalarT, IdxT> node(V);
+        PowerElectronics::Node<ScalarT, IdxT> node(V);
         node.allocate();
         node.initialize();
         success *= isEqual(node.V(), V);

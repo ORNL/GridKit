@@ -13,7 +13,7 @@ namespace GridKit
   namespace Testing
   {
     template <typename ScalarT, typename IdxT>
-    class CircuitComponentCloneTests
+    class ComponentCloneTests
     {
       using SignalNode          = PowerElectronics::SignalNode<ScalarT, IdxT>;
       using Bus                 = PowerElectronics::MicrogridBus<ScalarT, IdxT>;
@@ -24,7 +24,7 @@ namespace GridKit
       using Load                = PowerElectronics::MicrogridLoad<ScalarT, IdxT>;
 
     public:
-      CircuitComponentCloneTests()
+      ComponentCloneTests()
       {
         /**************************************************************************
          * Construct Network Nodes
@@ -77,7 +77,7 @@ namespace GridKit
         bus_dq_->allocate();
       }
 
-      ~CircuitComponentCloneTests()
+      ~ComponentCloneTests()
       {
         delete generator_;
         delete line_;
@@ -125,7 +125,7 @@ namespace GridKit
       template <typename ComponentT>
       bool verifyComponentClone(ComponentT& component)
       {
-        using RealT = typename PowerElectronics::CircuitComponent<ScalarT, IdxT>::RealT;
+        using RealT = typename PowerElectronics::Component<ScalarT, IdxT>::RealT;
 
         bool success = true;
 

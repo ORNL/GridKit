@@ -685,7 +685,7 @@ namespace GridKit
       std::set<IdxT>          extern_indices_;
       /**
        * @brief A map from local variable indices to system (global) variable indices. Used for Jacobian construction in
-       * \ref PowerElectronicsModel::evaluateJacobian().
+       * \ref PowerElectronics::SystemModel::evaluateJacobian().
        * @note If a variable does not map to a corresponding variable in the system (such as with reference nodes), a special
        * sentinel value of \ref INVALID_INDEX is used. During Jacobian construction, such rows and columns will be pruned.
        */

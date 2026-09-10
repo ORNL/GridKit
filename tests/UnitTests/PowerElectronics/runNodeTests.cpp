@@ -1,4 +1,4 @@
-#include "CircuitNodeTests.hpp"
+#include "NodeTests.hpp"
 
 int main()
 {
