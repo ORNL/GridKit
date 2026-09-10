@@ -124,20 +124,23 @@ Smooth functions: [$q$](../../../../CommonMath.md#quadratic-ramp).
 
 #### Differential
 
+The winding time constants multiply their state derivatives. A zero value
+makes the corresponding winding state algebraic.
+
 ```math
 \begin{aligned}
   \dot\delta      &= \omega \cdot 2\pi f_\mathrm{base} \\
   \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{(S^\mathrm{sys}/S^\mathrm{base})P_\mathrm{m}-D\omega}{1+\omega}
                    - T_\mathrm{e}\right)\\
-  \dot{E}'_{q} &= \dfrac{1}{T'_{d0}}
+  T'_{d0} \dot{E}'_{q} &=
     (
       E_{\mathrm{fd}}-E'_{q}-X_{d1}
       (I_d+X_{d3}(E'_{q}-\psi'_{d}-X_{d2}I_d))
       -\psi''_{d}k_{\mathrm{sat}}
     )\\
-  \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_d)\\
-  \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_q)\\
-  \dot{E}'_{d}    &= \dfrac{1}{T'_{q0}}
+  T''_{d0} \dot{\psi}'_{d} &= (E'_{q}-\psi'_{d}-X_{d2}I_d)\\
+  T''_{q0} \dot{\psi}'_{q} &= (E'_{d}-\psi'_{q}+X_{q2}I_q)\\
+  T'_{q0} \dot{E}'_{d} &=
     ( -E'_{d}+X_{q1}
       (I_q-X_{q3}(E'_{d}-\psi'_{q}+X_{q2}I_q))
       + X_{qd}\psi''_{q}k_{\mathrm{sat}}

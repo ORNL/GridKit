@@ -139,6 +139,10 @@ namespace GridKit
           }
         };
 
+        check(Tr_ >= ZERO<RealT>, "Tr must be non-negative");
+        check(Ta_ >= ZERO<RealT>, "Ta must be non-negative");
+        check(Te_ >= ZERO<RealT>, "Te must be non-negative");
+        check(Tf_ >= ZERO<RealT>, "Tf must be non-negative");
         check(Ka_ > ZERO<RealT>, "Ka must be positive");
         check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
         check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
@@ -281,7 +285,7 @@ namespace GridKit
         ScalarT vr  = Ke_eff_ * efdp + ve;
         ScalarT vtr = vr / Ka_;
         ScalarT vf{0};
-        ScalarT vfx = (Kf_ / Tf_) * efdp;
+        ScalarT vfx = Kf_ * efdp;
 
         const ScalarT vref = Ec + vtr + vf - vs - uel_on_ * vuel - oel_on_ * voel;
 
@@ -331,15 +335,15 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::tagDifferentiable()
       {
-        tag_[0] = true;  // y0 - vts  - Sensed term volt
-        tag_[1] = true;  // y1 - vr   - Voltage reg
-        tag_[2] = true;  // y2 - efdp - Efd pre mult
-        tag_[3] = true;  // y3 - vfx  - Exciter feedback
-        tag_[4] = false; // y4 - vtr  - Term Volt Err
-        tag_[5] = false; // y5 - vf   - Feedback volt
-        tag_[6] = false; // y6 - ve   - Excit. Cntrl Volt
-        tag_[7] = false; // y7 - efd  - Efd
-        tag_[8] = false; // y8 - ksat - Saturation
+        tag_[0] = (Tr_ != ZERO<RealT>); // y0 - vts  - Sensed term volt
+        tag_[1] = (Ta_ != ZERO<RealT>); // y1 - vr   - Voltage reg
+        tag_[2] = (Te_ != ZERO<RealT>); // y2 - efdp - Efd pre mult
+        tag_[3] = (Tf_ != ZERO<RealT>); // y3 - vfx  - Exciter feedback
+        tag_[4] = false;                // y4 - vtr  - Term Volt Err
+        tag_[5] = false;                // y5 - vf   - Feedback volt
+        tag_[6] = false;                // y6 - ve   - Excit. Cntrl Volt
+        tag_[7] = false;                // y7 - efd  - Efd
+        tag_[8] = false;                // y8 - ksat - Saturation
 
         return 0;
       }
@@ -411,17 +415,19 @@ namespace GridKit
         ScalarT voel  = ws[VOEL];
 
         // The 'pre-limit' derivative of Vr.
-        ScalarT func = (-vr + Ka_ * vtr) / Ta_;
+        ScalarT func = (-vr + Ka_ * vtr) / (Ta_ + zero_Ta_);
 
         // Internal Differential Equations
-        f[0] = -vts_dot + (Ec - vts) / Tr_;
-        f[1] = -vr_dot + Math::antiwindup(vr, func, Vrmin_, Vrmax_);
-        f[2] = -efdp_dot + (vr - ve - Ke_eff_ * efdp) / Te_;
-        f[3] = -vfx_dot + vf / Tf_;
+        f[0] = -Tr_ * vts_dot + Ec - vts;
+        f[1] = -Ta_ * vr_dot
+               + (ONE<RealT> - zero_Ta_) * Math::indicator(vr, func, Vrmin_, Vrmax_) * (-vr + Ka_ * vtr)
+               + zero_Ta_ * (-vr + Math::clamp(Ka_ * vtr, Vrmin_, Vrmax_));
+        f[2] = -Te_ * efdp_dot + vr - ve - Ke_eff_ * efdp;
+        f[3] = -Tf_ * vfx_dot - vfx + Kf_ * efdp;
 
         // Internal Algebraic Equations
         f[4] = -vts + vref + vs + uel_on_ * vuel + oel_on_ * voel - vtr - vf;
-        f[5] = -Tf_ * (vf + vfx) + Kf_ * efdp;
+        f[5] = -vf + vfx_dot;
         f[6] = -ve + ksat;
         f[7] = -efd + efdp + omega * efdp * Ispdlim_;
         f[8] = -ksat + SB_ * Math::qramp(efdp - SA_);
@@ -548,39 +554,12 @@ namespace GridKit
       }
 
       /**
-       * @brief Static method to log time constant warnings
-       *
-       * @note Guarded by a static std::atomic<bool> flag so the warning is
-       *       printed at most once per model type.
-       */
-      template <typename scalar_type, typename index_type>
-      void Ieeet1<scalar_type, index_type>::logTimeConstantWarning()
-      {
-        Log::warning() << "Ieeet1: Tr, Ta, Te, and Tf below "
-                       << TIME_CONSTANT_MINIMUM
-                       << " s are raised to that floor\n";
-      }
-
-      /**
        * @brief Resolve the parameter-derived constants
        */
       template <typename scalar_type, typename index_type>
       void Ieeet1<scalar_type, index_type>::setDerivedParameters()
       {
-        if (Tr_ < TIME_CONSTANT_MINIMUM || Ta_ < TIME_CONSTANT_MINIMUM
-            || Te_ < TIME_CONSTANT_MINIMUM || Tf_ < TIME_CONSTANT_MINIMUM)
-        {
-          static std::atomic<bool> time_constant_warning_flag_{false};
-          if (!time_constant_warning_flag_.exchange(true))
-          {
-            logTimeConstantWarning();
-          }
-        }
-
-        Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);
-        Ta_ = std::max(Ta_, TIME_CONSTANT_MINIMUM);
-        Te_ = std::max(Te_, TIME_CONSTANT_MINIMUM);
-        Tf_ = std::max(Tf_, TIME_CONSTANT_MINIMUM);
+        zero_Ta_ = static_cast<RealT>(Ta_ == ZERO<RealT>);
 
         SA_ = ZERO<RealT>;
         SB_ = ZERO<RealT>;

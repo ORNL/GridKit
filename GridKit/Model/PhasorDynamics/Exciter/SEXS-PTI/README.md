@@ -32,7 +32,8 @@ A valid SEXS-PTI parameter set must satisfy the following conditions:
 ```math
 \begin{aligned}
   T_A &\ge 0 \\
-  T_B, T_E, K &> 0 \\
+  T_B, T_E &\ge 0 \\
+  K &> 0 \\
   E_{\mathrm{fd}}^{\min} &< E_{\mathrm{fd}}^{\max}
 \end{aligned}
 ```
@@ -90,6 +91,16 @@ $V_{\mathrm{uel}}$ | [p.u.] | Under-excitation limiter signal       | Signal por
 
 Smooth functions: [`antiwindup`](../../../../CommonMath.md#antiwindup).
 
+Zero $T_B$ or $T_E$ makes the corresponding state algebraic. For positive
+$T_E$, limiter smoothing uses the pre-limit rate $f/T_E$. At $T_E=0$,
+$E_{\mathrm{fd}}$ equals $K(V_{\mathrm{tr}}+\dot V_R)$ clamped to its field limits.
+For positive $T_B$, the implementation substitutes the first equation for
+$\dot V_R$ in this command. Setting $T_A=T_B=0$ bypasses the lead-lag block;
+$T_B=0$ with positive $T_A$ instead gives an ideal differentiator and requires
+a differentiable input.
+
+Define the compensated terminal voltage magnitude for readability:
+
 ```math
 E_C = \sqrt{V_r^2+V_i^2}
 ```
@@ -98,11 +109,13 @@ E_C = \sqrt{V_r^2+V_i^2}
 
 #### Differential
 
+For positive $T_E$, define the pre-limit drive and scaled smooth residuals:
+
 ```math
 \begin{aligned}
-f &= \dfrac{-E_{\mathrm{fd}}+(K/T_B)(-V_R+T_AV_{\mathrm{tr}})}{T_E} \\
-0 &= -\dot V_R-V_{\mathrm{tr}}+\dfrac{-V_R+T_AV_{\mathrm{tr}}}{T_B} \\
-0 &= -\dot E_{\mathrm{fd}}+\text{antiwindup}(E_{\mathrm{fd}},f;E_{\mathrm{fd}}^{\min},E_{\mathrm{fd}}^{\max})
+f &= -E_{\mathrm{fd}} + K(V_{\mathrm{tr}}+\dot V_R) \\
+0 &= -T_B\dot V_R - V_R + (T_A-T_B)V_{\mathrm{tr}} \\
+0 &= -T_E\dot E_{\mathrm{fd}} + T_E\,\text{antiwindup}(E_{\mathrm{fd}},f/T_E;E_{\mathrm{fd}}^{\min},E_{\mathrm{fd}}^{\max})
 \end{aligned}
 ```
 

@@ -34,16 +34,10 @@ component power base is not supported.
 
 ### Model Derived Parameters
 
-Let $\epsilon_T=10^{-3}\ \mathrm{s}$. A time constant below $\epsilon_T$ is
-raised to that floor in place, so every equation below uses the raised value:
-
-```math
-\begin{aligned}
-  T_x
-    &\leftarrow \max\!(T_x,\epsilon_T),
-       \quad x\in\{1,3\}
-\end{aligned}
-```
+Time constants are retained as supplied. A zero lag time constant makes its
+state algebraic; positive values remain differential.
+At $T_1=0$, the valve position equals $(P_{\mathrm{ref}}-\omega)/R$
+clamped to its valve limits.
 
 ## Model Ports
 
@@ -100,10 +94,10 @@ g_v=-P_\mathrm{v}+\dfrac{P_\mathrm{ref}-\omega}{R}
 
 ```math
 \begin{aligned}
-  0 &= -\dot P_\mathrm{v}
-       + \dfrac{1}{T_1}\text{antiwindup}
-         (P_\mathrm{v},g_v;P_\mathrm{v}^{\min},P_\mathrm{v}^{\max}) \\
-  0 &= -\dot P_\mathrm{t}-\dfrac{P_\mathrm{t}-P_\mathrm{v}-T_2\dot P_\mathrm{v}}{T_3}
+  0 &= -T_1\dot P_\mathrm{v}
+       + \text{antiwindup}
+         \left(P_\mathrm{v},g_v;P_\mathrm{v}^{\min},P_\mathrm{v}^{\max}\right) \\
+  0 &= -T_3\dot P_\mathrm{t}-P_\mathrm{t}+P_\mathrm{v}+T_2\dot P_\mathrm{v}.
 \end{aligned}
 ```
 
