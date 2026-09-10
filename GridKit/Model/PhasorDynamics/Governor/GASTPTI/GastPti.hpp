@@ -114,15 +114,11 @@ namespace GridKit
                                GastPtiParameters parameter,
                                RealT&            target,
                                const char*       name);
-        bool floorTimeConstant(RealT& value, const char* name);
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
 
         static RealT iramp(RealT value);
-
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static void            logTimeConstantWarning();
 
         RealT R_{static_cast<RealT>(0.05)};
         RealT T1_{static_cast<RealT>(0.4)};
@@ -136,6 +132,7 @@ namespace GridKit
         RealT Vmin_response_{ZERO<RealT>};
         RealT Vmax_response_{ONE<RealT>};
         RealT s_valve_{ONE<RealT>};
+        RealT zero_T1_{ZERO<RealT>};
 
         IdxT    parameter_error_count_{0};
         ScalarT pref_set_{0};

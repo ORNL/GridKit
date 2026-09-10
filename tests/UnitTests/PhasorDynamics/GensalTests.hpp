@@ -11,6 +11,8 @@
 #include <GridKit/Testing/Tokenizer.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
+#include "TimeConstantTests.hpp"
+
 namespace GridKit
 {
   namespace Testing
@@ -55,6 +57,27 @@ namespace GridKit
     public:
       GensalTests()  = default;
       ~GensalTests() = default;
+
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                         = makeGensalData();
+          using Parameter                   = typename decltype(data)::Parameters;
+          data.parameters[Parameter::Tdop]  = time_constant;
+          data.parameters[Parameter::Tdopp] = time_constant;
+          data.parameters[Parameter::Tqopp] = time_constant;
+          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+          bus.allocate();
+          bus.initialize();
+          PhasorDynamics::Gensal<ScalarT, IdxT> model(&bus, data);
+          success *= implicitTimeConstant(model, 2, time_constant, 1.0);
+          success *= implicitTimeConstant(model, 3, time_constant, 1.0);
+          success *= implicitTimeConstant(model, 4, time_constant, 1.0);
+        }
+        return success.report(__func__);
+      }
 
       TestOutcome constructor()
       {
@@ -267,9 +290,9 @@ namespace GridKit
         const std::vector<ScalarT> res_answer = {
             0.0,
             0.0,
-            2.2083333333333335,
-            -1.028125,
-            0.65,
+            4.416666666666667,
+            -4.1125,
+            3.25,
             0.0,
             0.2,
             -1.1,
