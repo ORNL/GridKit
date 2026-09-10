@@ -36,13 +36,13 @@ $I_{\mathrm{spdlim}}$ | [binary] | `Ispdlim` | Speed limit flag indicator       
 
 ### Parameter Validation
 
-A valid IEEET1 parameter set must satisfy the following conditions:
+Invalid IEEET1 parameter sets are rejected by the following checks.
+Time constants are retained as supplied. A zero lag time constant makes its
+state algebraic; positive values remain differential.
 
 ```math
 \begin{aligned}
-  \epsilon_T &= 10^{-3} \\
-  T &\leftarrow \max\!(T, \epsilon_T)
-    \quad T \in \{T_R, T_A, T_E, T_F\} \\
+  T &\ge 0 \quad T \in \{T_R, T_A, T_E, T_F\} \\
   K_A
     &> 0 \\
   V_R^{\min}
@@ -59,8 +59,7 @@ A valid IEEET1 parameter set must satisfy the following conditions:
 \end{aligned}
 ```
 
-Time constants below $\epsilon_T$ are raised to $\epsilon_T$ and logged as a warning;
-every other condition is a configuration error.
+Violating any condition above is a configuration error.
 
 ### Model Derived Parameters
 
@@ -157,12 +156,13 @@ Name    | Port   | Init    | Description
 
 #### Differential
 
-Symbol             | Units  | Description                               | Note
--------------------|--------|-------------------------------------------|-----
-$V_\mathrm{ts}$           | [p.u.] | Sensed terminal voltage                   |
-$V_R$              | [p.u.] | Voltage regulator                         |
+Symbol    | Units  | Description                        | Note
+----------|--------|------------------------------------|-------
+$V_\mathrm{ts}$  | [p.u.] | Sensed terminal voltage            |
+$V_R$     | [p.u.] | Voltage regulator                  |
 $E_{\mathrm{fd}}'$ | [p.u.] | Field voltage before the speed multiplier |
-$V_\mathrm{fx}$           | [p.u.] | Exciter feedback internal state           |
+$V_\mathrm{fx}$  | [p.u. s] | Scaled exciter feedback internal state    |
+
 
 #### Algebraic
 
@@ -209,16 +209,19 @@ E_C &:= \sqrt{V_r^2 + V_i^2}
 \end{aligned}
 ```
 
+At $T_A=0$, the regulator equation becomes
+$V_R=\operatorname{clamp}(K_A V_{tr}, V_R^{\min}, V_R^{\max})$.
+
 The IEEET1 differential equations, as derived from the model diagram, are:
 
 ```math
 \begin{aligned}
-   0 &= -\dot V_\mathrm{ts} + \dfrac{1}{T_R}(E_C - V_\mathrm{ts}) \\
-   0 &= -\dot V_R
-      + \text{antiwindup}
-        (V_R, f_R; V_R^{\min}, V_R^{\max}) \\
-   0 &= -\dot E_{\mathrm{fd}}' + \dfrac{1}{T_E}(V_R - V_E - K_E^{\mathrm{eff}} E_{\mathrm{fd}}') \\
-   0 &= -\dot V_\mathrm{fx} + \dfrac{1}{T_F}(V_\mathrm{f})
+   0 &= -T_R \dot V_\mathrm{ts} + \left(E_C - V_\mathrm{ts}\right) \\
+   0 &= -T_A\dot V_R
+      + \text{indicator}
+        \left(V_R, f_R; V_R^{\min}, V_R^{\max}\right)(-V_R+K_A V_{\mathrm{tr}}) \\
+   0 &= -T_E \dot E_{\mathrm{fd}}' + \left(V_R - V_E - K_E^{\mathrm{eff}} E_{\mathrm{fd}}'\right) \\
+   0 &= -T_F\dot V_\mathrm{fx} - V_\mathrm{fx} + K_F E_{\mathrm{fd}}'
 \end{aligned}
 ```
 
@@ -227,7 +230,7 @@ The IEEET1 differential equations, as derived from the model diagram, are:
 ```math
 \begin{aligned}
    0 &= -V_\mathrm{ts} + V_\mathrm{ref} + V_{\mathrm{uel}} + V_{\mathrm{oel}} + V_S - V_{\mathrm{tr}} - V_\mathrm{f} \\
-   0 &= -T_F(V_\mathrm{f} + V_\mathrm{fx}) + K_F E_{\mathrm{fd}}' \\
+   0 &= -V_\mathrm{f} + \dot V_\mathrm{fx} \\
    0 &= -V_E + k_\mathrm{sat} \\
    0 &= -E_{\mathrm{fd}} + (1 + \omega I_{\mathrm{spdlim}})E_{\mathrm{fd}}' \\
    0 &= -k_\mathrm{sat} + S_B\, q(E_{\mathrm{fd}}' - S_A)
@@ -251,7 +254,7 @@ the $V_{\mathrm{tr}}$ equation:
    V_E      &\leftarrow k_\mathrm{sat} \\
    V_R      &\leftarrow K_E^{\mathrm{eff}} E_{\mathrm{fd}}' + V_E \\
    V_{\mathrm{tr}}   &\leftarrow \dfrac{V_R}{K_A} \\
-   V_\mathrm{fx}   &\leftarrow \dfrac{K_F}{T_F}\, E_{\mathrm{fd}}' \\
+   V_\mathrm{fx}   &\leftarrow K_F E_{\mathrm{fd}}' \\
    V_\mathrm{ts}   &\leftarrow E_C \\
    V_\mathrm{f}      &\leftarrow 0 \\
    V_\mathrm{ref}  &\leftarrow E_C + V_{\mathrm{tr}} - V_{\mathrm{uel}} - V_{\mathrm{oel}} - V_S

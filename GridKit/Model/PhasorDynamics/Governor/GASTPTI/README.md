@@ -53,13 +53,13 @@ A valid GASTPTI parameter set must satisfy the following conditions:
 
 ### Model Derived Parameters
 
-Let $\epsilon_T=10^{-3}\ \mathrm{s}$. Accepted time constants below
-$\epsilon_T$ are raised to that floor in place:
+Time constants are retained as supplied. A zero lag time constant makes its
+state algebraic; positive values remain differential.
+At $T_1=0$, the valve position equals $V$ clamped to its
+effective valve limits, including coincident limits.
 
 ```math
 \begin{aligned}
-  T_x &\leftarrow \max\!(T_x,\epsilon_T),
-    && x\in\{1,2,3\} \\
   S^{\mathrm{base}}
     &\leftarrow 10^6 T^\mathrm{rate} \\
   k_{\mathrm{base}}
@@ -127,18 +127,18 @@ $V_{\mathrm{resp}}^{\max}$, and $s^{\mathrm{valve}}$ are defined under
 ```math
 \begin{aligned}
   0 &=
-    -\dot{x}_V
-    + \dfrac{s^{\mathrm{valve}}}{T_1}
+    -T_1\dot{x}_V
+    + s^{\mathrm{valve}}
       \text{antiwindup}\!(
         x_V,V-x_V;
         V_{\mathrm{resp}}^{\min},V_{\mathrm{resp}}^{\max}
       ) \\
   0 &=
-    -\dot{x}_F
-    + \dfrac{1}{T_2}(-x_F+x_V) \\
+    -T_2 \dot{x}_F
+    + \left(-x_F+x_V\right) \\
   0 &=
-    -\dot{x}_T
-    + \dfrac{1}{T_3}(-x_T+x_F)
+    -T_3 \dot{x}_T
+    + \left(-x_T+x_F\right).
 \end{aligned}
 ```
 
