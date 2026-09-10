@@ -33,9 +33,10 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Destroy the Ida< Scalar T,  Idx T>:: Ida object
+     * @brief Destroy the @ref Ida object
      *
-     * @note if sysmodel is freed before this will fail. May want something agnostic to this
+     * @note if sysmodel is freed before this will fail
+     * @todo consider making this agnostic to the above
      *
      * @tparam ScalarT
      * @tparam IdxT
@@ -96,7 +97,15 @@ namespace AnalysisManager
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
 
-      setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_, max_order_, suppress_alg_);
+      setIDAOptions(
+        solver_,
+        time_step_,
+        rel_tol_,
+        abs_tol_override_,
+        max_steps_,
+        max_order_,
+        suppress_alg_
+      );
 
       // Set up linear solver
       return this->configureLinearSolver();
@@ -106,7 +115,7 @@ namespace AnalysisManager
      * @brief Configure the linear solver
      *
      * @note This currently uses pre-processor directives to set dense or sparse
-     * linear solvers
+     *       linear solvers
      *
      * @tparam ScalarT
      * @tparam IdxT
@@ -116,7 +125,7 @@ namespace AnalysisManager
     {
       int retval = 0;
 
-/// Todo - Implement a cleaner way to handle the Sparse versus Dense solvers
+// TODO: Implement a cleaner way to handle the Sparse versus Dense solvers
 #ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
       if (model_->hasJacobian())
       {
@@ -127,10 +136,11 @@ namespace AnalysisManager
         this->configureLinearSolverDense();
       }
 #else
-      /// Todo - Improve error handling capabilities and hasJacobian_ ownership
+      // TODO: Improve error handling capabilities and hasJacobian_ ownership
       if (model_->hasJacobian())
       {
-        Log::warning() << "SUNDIALS is not configured with KLU, but the model has a (sparse) Jacobian. "
+        Log::warning() << "SUNDIALS is not configured with KLU, but the model "
+                          "has a (sparse) Jacobian. "
                        << "Falling back to dense Jacobian.\n";
       }
       this->configureLinearSolverDense();
@@ -153,14 +163,11 @@ namespace AnalysisManager
     {
       int retval = 0;
 
-      sunindextype n   = static_cast<sunindextype>(model_->size());
-      sunindextype nnz = static_cast<sunindextype>(model_->getCsrJacobian()->getNnz());
+      sunindextype n = static_cast<sunindextype>(model_->size());
+      sunindextype nnz =
+        static_cast<sunindextype>(model_->getCsrJacobian()->getNnz());
 
-      JacobianMat_ = SUNSparseMatrix(n,
-                                     n,
-                                     nnz,
-                                     CSR_MAT,
-                                     context_);
+      JacobianMat_ = SUNSparseMatrix(n, n, nnz, CSR_MAT, context_);
       checkAllocation((void*) JacobianMat_, "SUNSparseMatrix");
 
       linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
@@ -191,9 +198,11 @@ namespace AnalysisManager
     {
       int retval = 0;
 
-      JacobianMat_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
-                                    static_cast<sunindextype>(model_->size()),
-                                    context_);
+      JacobianMat_ = SUNDenseMatrix(
+        static_cast<sunindextype>(model_->size()),
+        static_cast<sunindextype>(model_->size()),
+        context_
+      );
       checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
 
       linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
@@ -229,7 +238,9 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::initializeSimulation(RealT t0, bool findConsistent)
+    int Ida<ScalarT, IdxT>::initializeSimulation(
+      RealT t0, bool findConsistent, bool printMonitor
+    )
     {
       int retval = 0;
 
@@ -243,7 +254,8 @@ namespace AnalysisManager
       if (findConsistent)
       {
         const int consistentICType = getIDAConsistentICType();
-        retval                     = IDACalcIC(solver_, consistentICType, t0 + 0.1);
+
+        retval = IDACalcIC(solver_, consistentICType, t0 + 0.1);
         checkOutput(retval, "IDACalcIC");
 
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
@@ -253,7 +265,7 @@ namespace AnalysisManager
         copyVec(yp_, model_->yp());
       }
 
-      if (model_->monitoring())
+      if (printMonitor && model_->monitoring())
       {
         updateModelState(t0);
         model_->printMonitoredVariables();
@@ -277,10 +289,10 @@ namespace AnalysisManager
         return 1;
       }
 
-      const RealT n_est   = (tf - t_init_) / dt;
-      const RealT epsilon = std::numeric_limits<RealT>::epsilon()
-                            * std::max({std::abs(t_init_), std::abs(tf), RealT(1.0)})
-                            / dt;
+      const RealT n_est = (tf - t_init_) / dt;
+      const RealT epsilon =
+        std::numeric_limits<RealT>::epsilon()
+        * std::max({std::abs(t_init_), std::abs(tf), RealT(1.0)}) / dt;
       return static_cast<int>(std::ceil(n_est - epsilon));
     }
 
@@ -291,7 +303,9 @@ namespace AnalysisManager
      * repeated time-step arithmetic.
      */
     template <class ScalarT, typename IdxT>
-    typename Ida<ScalarT, IdxT>::RealT Ida<ScalarT, IdxT>::getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const
+    typename Ida<ScalarT, IdxT>::RealT Ida<ScalarT, IdxT>::getMonitorTime(
+      RealT tf, RealT dt_monitor, int step, int nsteps
+    ) const
     {
       return step == nsteps ? tf : std::fma((RealT) step, dt_monitor, t_init_);
     }
@@ -318,21 +332,25 @@ namespace AnalysisManager
         return IDA_YA_YDP_INIT;
       default:
         GridKit::Utilities::Logger::error()
-            << "Invalid IDA consistent initial condition type "
-            << static_cast<int>(consistent_ic_type_)
-            << ".\n";
+          << "Invalid IDA consistent initial condition type "
+          << static_cast<int>(consistent_ic_type_) << ".\n";
         throw SundialsException();
       }
     }
 
     /**
-     * @brief Run the IDA solver and optionally produce monitor output every `dt_monitor`.
+     * @brief Run the IDA solver and optionally produce monitor output every
+     *        `dt_monitor`.
      *
      * When `dt_monitor` is zero, the simulation runs directly to the final
      * time. The final time is always solved and monitored.
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<StepCallback> step_callback)
+    int Ida<ScalarT, IdxT>::runSimulation(
+      RealT                             tf,
+      RealT                             dt_monitor,
+      const std::optional<StepCallback> step_callback
+    )
     {
       int retval = 0;
       int nsteps = getStepCount(tf, dt_monitor);
@@ -349,21 +367,24 @@ namespace AnalysisManager
 
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulationStep(
-        RealT tf, RealT dt_monitor, int step, int nsteps, const std::optional<StepCallback> callback)
+      RealT                             tf,
+      RealT                             dt_monitor,
+      int                               step,
+      int                               nsteps,
+      const std::optional<StepCallback> callback,
+      bool                              printMonitor
+    )
     {
       const RealT tout = getMonitorTime(tf, dt_monitor, step, nsteps);
       RealT       tret;
       auto        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
       checkOutput(retval, "IDASolve");
 
+      // always allow observation of the updated values even without a callback
+      updateModelState(tret);
       if (callback.has_value() || model_->monitoring())
       {
-        // The callback may try to observe updated values in the model, so we
-        // should update them here (At this point, the model's values are one
-        // internal integrator step out of date)
-        updateModelState(tret);
-
-        if (model_->monitoring())
+        if (printMonitor && model_->monitoring())
         {
           model_->printMonitoredVariables();
         }
@@ -408,7 +429,9 @@ namespace AnalysisManager
       int retval = 0;
 
       // Create and initialize quadratures
-      q_ = N_VNew_Serial(static_cast<sunindextype>(model_->sizeQuadrature()), context_);
+      q_ = N_VNew_Serial(
+        static_cast<sunindextype>(model_->sizeQuadrature()), context_
+      );
       checkAllocation((void*) q_, "N_VNew_Serial");
 
       // Set integrand function and allocate quadrature workspace
@@ -416,7 +439,9 @@ namespace AnalysisManager
       checkOutput(retval, "IDAQuadInit");
 
       // Set tolerances and error control for quadratures
-      setQuadratureTolerance(solver_, quadrature_rel_tol_, quadrature_abs_tol_override_);
+      setQuadratureTolerance(
+        solver_, quadrature_rel_tol_, quadrature_abs_tol_override_
+      );
 
       // Include quadrature in error checking
       retval = IDASetQuadErrCon(solver_, SUNTRUE);
@@ -511,7 +536,9 @@ namespace AnalysisManager
       ypB_ = N_VClone(yyB_);
       checkAllocation((void*) ypB_, "N_VClone");
 
-      qB_ = N_VNew_Serial(static_cast<sunindextype>(model_->sizeParams()), context_);
+      qB_ = N_VNew_Serial(
+        static_cast<sunindextype>(model_->sizeParams()), context_
+      );
       checkAllocation((void*) qB_, "N_VNew_Serial");
 
       return 0;
@@ -556,16 +583,19 @@ namespace AnalysisManager
       checkOutput(retval, "IDACreateB");
 
       // IDAInitB must be called after forward simulation run.
-      retval = IDAInitB(solver_, backwardID_, this->adjointResidual, tf, yyB_, ypB_);
+      retval =
+        IDAInitB(solver_, backwardID_, this->adjointResidual, tf, yyB_, ypB_);
       checkOutput(retval, "IDAInitB");
 
-      setIDAOptions(IDAGetAdjIDABmem(solver_, backwardID_),
-                    backward_time_step_,
-                    backward_rel_tol_,
-                    backward_abs_tol_override_,
-                    backward_max_steps_,
-                    backward_max_order_,
-                    backward_suppress_alg_);
+      setIDAOptions(
+        IDAGetAdjIDABmem(solver_, backwardID_),
+        backward_time_step_,
+        backward_rel_tol_,
+        backward_abs_tol_override_,
+        backward_max_steps_,
+        backward_max_order_,
+        backward_suppress_alg_
+      );
 
       retval = IDASetUserDataB(solver_, backwardID_, model_);
       checkOutput(retval, "IDASetUserDataB");
@@ -573,9 +603,11 @@ namespace AnalysisManager
       // Allocate Jacobian matrix, if not already
       if (JacobianMatB_ == nullptr)
       {
-        JacobianMatB_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
-                                       static_cast<sunindextype>(model_->size()),
-                                       context_);
+        JacobianMatB_ = SUNDenseMatrix(
+          static_cast<sunindextype>(model_->size()),
+          static_cast<sunindextype>(model_->size()),
+          context_
+        );
         checkAllocation((void*) JacobianMatB_, "SUNDenseMatrix");
       }
 
@@ -587,14 +619,20 @@ namespace AnalysisManager
       }
 
       // Setup linear solver (only dense supported at this time)
-      retval = IDASetLinearSolverB(solver_, backwardID_, linearSolverB_, JacobianMatB_);
+      retval = IDASetLinearSolverB(
+        solver_, backwardID_, linearSolverB_, JacobianMatB_
+      );
       checkOutput(retval, "IDASetLinearSolverB");
 
       // Also reinitialize quadratures.
       retval = IDAQuadInitB(solver_, backwardID_, this->adjointIntegrand, qB_);
       checkOutput(retval, "IDAQuadInitB");
 
-      setQuadratureTolerance(IDAGetAdjIDABmem(solver_, backwardID_), backward_quadrature_rel_tol_, backward_quadrature_abs_tol_override_);
+      setQuadratureTolerance(
+        IDAGetAdjIDABmem(solver_, backwardID_),
+        backward_quadrature_rel_tol_,
+        backward_quadrature_abs_tol_override_
+      );
 
       // Include quadratures in error control
       retval = IDASetQuadErrConB(solver_, backwardID_, SUNTRUE);
@@ -617,9 +655,11 @@ namespace AnalysisManager
       int retval = 0;
 
       // Create Jacobian matrix
-      JacobianMatB_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
-                                     static_cast<sunindextype>(model_->size()),
-                                     context_);
+      JacobianMatB_ = SUNDenseMatrix(
+        static_cast<sunindextype>(model_->size()),
+        static_cast<sunindextype>(model_->size()),
+        context_
+      );
       checkAllocation((void*) JacobianMatB_, "SUNDenseMatrix");
 
       // Create linear solver
@@ -627,14 +667,17 @@ namespace AnalysisManager
       checkAllocation((void*) linearSolverB_, "SUNLinSol_Dense");
 
       // Attach linear solver to IDA
-      retval = IDASetLinearSolverB(solver_, backwardID_, linearSolverB_, JacobianMatB_);
+      retval = IDASetLinearSolverB(
+        solver_, backwardID_, linearSolverB_, JacobianMatB_
+      );
       checkOutput(retval, "IDASetLinearSolverB");
 
       return retval;
     }
 
     /**
-     * @brief Run forward simulation for adjoint analysis with optional output every `dt_monitor`.
+     * @brief Run forward simulation for adjoint analysis with optional output
+     * every `dt_monitor`.
      *
      * When `dt_monitor` is zero, the simulation runs directly to the final
      * time. The final time is always solved.
@@ -685,7 +728,8 @@ namespace AnalysisManager
       checkOutput(retval, "IDASolveB");
 
       IDAGetNumSteps(IDAGetAdjIDABmem(solver_, backwardID_), &nstB);
-      Log::summary() << "Backward integration for adjoint analysis done (nst = " << nstB << ")\n";
+      Log::summary() << "Backward integration for adjoint analysis done (nst = "
+                     << nstB << ")\n";
 
       retval = IDAGetB(solver_, backwardID_, &time, yyB_, ypB_);
       checkOutput(retval, "IDAGetB");
@@ -738,9 +782,12 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Residual(RealT tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
+    int Ida<ScalarT, IdxT>::Residual(
+      RealT tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data
+    )
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+        static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
@@ -761,9 +808,21 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Jac(RealT t, RealT cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
+    int Ida<ScalarT, IdxT>::Jac(
+      RealT    t,
+      RealT    cj,
+      N_Vector yy,
+      N_Vector yp,
+      N_Vector,
+      SUNMatrix J,
+      void*     user_data,
+      N_Vector,
+      N_Vector,
+      N_Vector
+    )
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+        static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
@@ -803,9 +862,12 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Integrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
+    int Ida<ScalarT, IdxT>::Integrand(
+      RealT tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data
+    )
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+        static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
@@ -824,9 +886,18 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointResidual(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
+    int Ida<ScalarT, IdxT>::adjointResidual(
+      RealT    tt,
+      N_Vector yy,
+      N_Vector yp,
+      N_Vector yyB,
+      N_Vector ypB,
+      N_Vector rrB,
+      void*    user_data
+    )
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+        static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
@@ -847,9 +918,18 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointIntegrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
+    int Ida<ScalarT, IdxT>::adjointIntegrand(
+      RealT    tt,
+      N_Vector yy,
+      N_Vector yp,
+      N_Vector yyB,
+      N_Vector ypB,
+      N_Vector rhsQB,
+      void*    user_data
+    )
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+        static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
@@ -876,8 +956,9 @@ namespace AnalysisManager
       const auto ysize = static_cast<size_t>(y.getSize());
       if (xsize != ysize)
       {
-        GridKit::Utilities::Logger::error() << "N_Vector size (" << xsize << ") does not match vector size ("
-                                            << y.getSize() << ").\n";
+        GridKit::Utilities::Logger::error()
+          << "N_Vector size (" << xsize << ") does not match vector size ("
+          << y.getSize() << ").\n";
         throw SundialsException();
       }
 
@@ -899,8 +980,9 @@ namespace AnalysisManager
       const auto xsize = static_cast<size_t>(x.getSize());
       if (xsize != ysize)
       {
-        GridKit::Utilities::Logger::error() << "vector size (" << x.getSize() << ") does not match N_Vector size ("
-                                            << ysize << ").\n";
+        GridKit::Utilities::Logger::error()
+          << "vector size (" << x.getSize()
+          << ") does not match N_Vector size (" << ysize << ").\n";
         throw SundialsException();
       }
 
@@ -921,8 +1003,9 @@ namespace AnalysisManager
       const auto ysize = static_cast<size_t>(N_VGetLength(y));
       if (x.size() != ysize)
       {
-        GridKit::Utilities::Logger::error() << "std::vector size (" << x.size() << ") does not match N_Vector size ("
-                                            << ysize << ").\n";
+        GridKit::Utilities::Logger::error()
+          << "std::vector size (" << x.size()
+          << ") does not match N_Vector size (" << ysize << ").\n";
         throw SundialsException();
       }
 
@@ -988,24 +1071,25 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Accumulate another stats object into this one, allowing for stats to be kept
-     *        across multiple simulations with IDA
+     * @brief Accumulate another stats object into this one, allowing for stats
+     *        to be kept across multiple simulations with IDA
      */
     IdaStats& IdaStats::operator+=(const IdaStats& other)
     {
-      num_steps_                       += other.num_steps_;
-      num_residual_evals_              += other.num_residual_evals_;
-      num_linear_decompositions_       += other.num_linear_decompositions_;
-      num_error_test_fails_            += other.num_error_test_fails_;
-      num_nonlinear_iters_             += other.num_nonlinear_iters_;
-      num_nonlinear_convergence_fails_ += other.num_nonlinear_convergence_fails_;
+      num_steps_                 += other.num_steps_;
+      num_residual_evals_        += other.num_residual_evals_;
+      num_linear_decompositions_ += other.num_linear_decompositions_;
+      num_error_test_fails_      += other.num_error_test_fails_;
+      num_nonlinear_iters_       += other.num_nonlinear_iters_;
+      num_nonlinear_convergence_fails_ +=
+        other.num_nonlinear_convergence_fails_;
 
       return *this;
     }
 
     /**
-     * @brief Generate a string containing all of the stats in a formatted report.
-     *        All columns are aligned. To change the width of a column,
+     * @brief Generate a string containing all of the stats in a formatted
+     *        report. All columns are aligned. To change the width of a column,
      *        modify `label_width` or `stat_width`.
      */
     std::string IdaStats::report() const
@@ -1014,20 +1098,28 @@ namespace AnalysisManager
       int               stat_width  = 12;
       std::stringstream out;
 
-      out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width) << num_steps_ << '\n'
-          << std::setw(label_width) << "Residual evals" << " : " << std::setw(stat_width) << num_residual_evals_ << '\n'
-          << std::setw(label_width) << "Linear decompositions" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
-          << std::setw(label_width) << "Error test failures" << " : " << std::setw(stat_width) << num_error_test_fails_ << '\n'
-          << std::setw(label_width) << "Nonlinear iterations" << " : " << std::setw(stat_width) << num_nonlinear_iters_ << '\n'
-          << std::setw(label_width) << "Nonlinear convergence failures" << " : " << std::setw(stat_width) << num_nonlinear_convergence_fails_;
+      out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width)
+          << num_steps_ << '\n'
+          << std::setw(label_width) << "Residual evals" << " : "
+          << std::setw(stat_width) << num_residual_evals_ << '\n'
+          << std::setw(label_width) << "Linear decompositions" << " : "
+          << std::setw(stat_width) << num_linear_decompositions_ << '\n'
+          << std::setw(label_width) << "Error test failures" << " : "
+          << std::setw(stat_width) << num_error_test_fails_ << '\n'
+          << std::setw(label_width) << "Nonlinear iterations" << " : "
+          << std::setw(stat_width) << num_nonlinear_iters_ << '\n'
+          << std::setw(label_width) << "Nonlinear convergence failures" << " : "
+          << std::setw(stat_width) << num_nonlinear_convergence_fails_;
 
       return out.str();
     }
 
     /**
-     * @brief Construct and return an `IdaStats` object containing the statistics of the current IDA workspace.
-     *        Several statistics returned by IDA are ignored because they are about the current state of IDA,
-     *        rather than about the simulation at large.
+     * @brief Construct and return an `IdaStats` object containing the
+     *        statistics of the current IDA workspace.
+     *
+     * Several statistics returned by IDA are ignored because they are about the
+     * current state of IDA, rather than about the simulation at large.
      */
     template <class ScalarT, typename IdxT>
     IdaStats Ida<ScalarT, IdxT>::getStats() const
@@ -1038,20 +1130,26 @@ namespace AnalysisManager
       int         dummy;
       sunrealtype dummy2;
 
-      int retval = IDAGetIntegratorStats(solver_,
-                                         &stats.num_steps_,
-                                         &stats.num_residual_evals_,
-                                         &stats.num_linear_decompositions_,
-                                         &stats.num_error_test_fails_,
-                                         &dummy,
-                                         &dummy,
-                                         &dummy2,
-                                         &dummy2,
-                                         &dummy2,
-                                         &dummy2);
+      int retval = IDAGetIntegratorStats(
+        solver_,
+        &stats.num_steps_,
+        &stats.num_residual_evals_,
+        &stats.num_linear_decompositions_,
+        &stats.num_error_test_fails_,
+        &dummy,
+        &dummy,
+        &dummy2,
+        &dummy2,
+        &dummy2,
+        &dummy2
+      );
       checkOutput(retval, "IDAGetIntegratorStats");
 
-      retval = IDAGetNonlinSolvStats(solver_, &stats.num_nonlinear_iters_, &stats.num_nonlinear_convergence_fails_);
+      retval = IDAGetNonlinSolvStats(
+        solver_,
+        &stats.num_nonlinear_iters_,
+        &stats.num_nonlinear_convergence_fails_
+      );
       checkOutput(retval, "IDAGetNonlinSolvStats");
 
       return stats;
@@ -1068,7 +1166,9 @@ namespace AnalysisManager
     {
       if (v == NULL)
       {
-        GridKit::Utilities::Logger::error() << "Function " << functionName << " failed -- returned NULL pointer!\n";
+        GridKit::Utilities::Logger::error()
+          << "Function " << functionName
+          << " failed -- returned NULL pointer!\n";
         throw SundialsException();
       }
     }
@@ -1085,7 +1185,9 @@ namespace AnalysisManager
       if (retval < 0)
       {
         char* msg = IDAGetReturnFlagName(retval);
-        GridKit::Utilities::Logger::error() << "Function " << functionName << " failed with flag " << msg << "!\n";
+        GridKit::Utilities::Logger::error()
+          << "Function " << functionName << " failed with flag " << msg
+          << "!\n";
         std::free(msg);
         throw SundialsException();
       }
@@ -1130,8 +1232,9 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setTolerance(ScalarT rel_tol,
-                                          ScalarT abs_tol_override)
+    void Ida<ScalarT, IdxT>::setTolerance(
+      ScalarT rel_tol, ScalarT abs_tol_override
+    )
     {
       rel_tol_          = rel_tol;
       abs_tol_override_ = abs_tol_override;
@@ -1149,8 +1252,9 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardTolerance(ScalarT rel_tol,
-                                                  ScalarT abs_tol_override)
+    void Ida<ScalarT, IdxT>::setBackwardTolerance(
+      ScalarT rel_tol, ScalarT abs_tol_override
+    )
     {
       backward_rel_tol_          = rel_tol;
       backward_abs_tol_override_ = abs_tol_override;
@@ -1168,8 +1272,9 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setQuadratureTolerance(ScalarT rel_tol,
-                                                    ScalarT abs_tol_override)
+    void Ida<ScalarT, IdxT>::setQuadratureTolerance(
+      ScalarT rel_tol, ScalarT abs_tol_override
+    )
     {
       quadrature_rel_tol_          = rel_tol;
       quadrature_abs_tol_override_ = abs_tol_override;
@@ -1187,15 +1292,17 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardQuadratureTolerance(ScalarT rel_tol,
-                                                            ScalarT abs_tol_override)
+    void Ida<ScalarT, IdxT>::setBackwardQuadratureTolerance(
+      ScalarT rel_tol, ScalarT abs_tol_override
+    )
     {
       backward_quadrature_rel_tol_          = rel_tol;
       backward_quadrature_abs_tol_override_ = abs_tol_override;
     }
 
     /**
-     * @brief Set whether IDA suppresses local error tests on algebraic variables
+     * @brief Set whether IDA suppresses local error tests on algebraic
+     * variables
      *
      * @param suppress If true, algebraic variables are excluded from IDA's
      *        local error test
@@ -1231,7 +1338,9 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setConsistentICType(IdaConsistentICType consistent_ic_type)
+    void Ida<ScalarT, IdxT>::setConsistentICType(
+      IdaConsistentICType consistent_ic_type
+    )
     {
       consistent_ic_type_ = consistent_ic_type;
     }
@@ -1276,7 +1385,8 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Set the maximum integration method order for the backward simulation
+     * @brief Set the maximum integration method order for the backward
+     *        simulation
      *
      * @param max_order The maximum integration method order
      * @tparam ScalarT Scalar data type
@@ -1305,13 +1415,15 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setIDAOptions(void*   mem,
-                                           ScalarT time_step,
-                                           ScalarT rel_tol,
-                                           ScalarT abs_tol_override,
-                                           IdxT    max_steps,
-                                           int     max_order,
-                                           bool    suppress_alg)
+    void Ida<ScalarT, IdxT>::setIDAOptions(
+      void*   mem,
+      ScalarT time_step,
+      ScalarT rel_tol,
+      ScalarT abs_tol_override,
+      IdxT    max_steps,
+      int     max_order,
+      bool    suppress_alg
+    )
     {
       int retval = 0;
       retval     = IDASetMinStep(mem, time_step);
@@ -1320,7 +1432,8 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetMaxStep");
       retval = IDASetMaxNumSteps(mem, static_cast<long int>(max_steps));
       checkOutput(retval, "IDASetMaxNumSteps");
-      retval = IDASetMaxOrd(mem, time_step == 0 ? max_order : std::min(max_order, 2));
+      retval =
+        IDASetMaxOrd(mem, time_step == 0 ? max_order : std::min(max_order, 2));
       checkOutput(retval, "IDASetMaxOrd");
       retval = IDASetSuppressAlg(mem, suppress_alg ? SUNTRUE : SUNFALSE);
       checkOutput(retval, "IDASetSuppressAlg");
@@ -1334,7 +1447,8 @@ namespace AnalysisManager
         /* Enable more nonlinear iterations because a failed nonlinear solve
          * causes a failed integration with fixed steps */
         static constexpr int FIXED_STEP_NONLIN_ITRS = 16;
-        retval                                      = IDASetMaxNonlinIters(mem, FIXED_STEP_NONLIN_ITRS);
+
+        retval = IDASetMaxNonlinIters(mem, FIXED_STEP_NONLIN_ITRS);
         checkOutput(retval, "IDASetMaxNonlinIters");
 
         // Set a large tolerance so the error test will never fail
@@ -1349,12 +1463,15 @@ namespace AnalysisManager
 
         static constexpr RealT DEFAULT_NONLIN_CONV_COEF_IC = 0.0033;
 
-        retval = IDASetNonlinConvCoefIC(mem, DEFAULT_NONLIN_CONV_COEF_IC / FIXED_STEP_TOL_FAC);
+        retval = IDASetNonlinConvCoefIC(
+          mem, DEFAULT_NONLIN_CONV_COEF_IC / FIXED_STEP_TOL_FAC
+        );
         checkOutput(retval, "IDASetNonlinConvCoefIC");
 
         // Scale the IC line-search threshold with the same error weights.
-        const RealT step_tol_ic = std::pow(std::numeric_limits<RealT>::epsilon(), 2.0 / 3.0);
-        retval                  = IDASetStepToleranceIC(mem, step_tol_ic / FIXED_STEP_TOL_FAC);
+        const RealT step_tol_ic =
+          std::pow(std::numeric_limits<RealT>::epsilon(), 2.0 / 3.0);
+        retval = IDASetStepToleranceIC(mem, step_tol_ic / FIXED_STEP_TOL_FAC);
         checkOutput(retval, "IDASetStepToleranceIC");
       }
     }
@@ -1373,16 +1490,16 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setTolerance(void*   mem,
-                                          ScalarT rel_tol,
-                                          ScalarT abs_tol_override,
-                                          ScalarT tol_fac)
+    void Ida<ScalarT, IdxT>::setTolerance(
+      void* mem, ScalarT rel_tol, ScalarT abs_tol_override, ScalarT tol_fac
+    )
     {
       int retval = 0;
 
       if (abs_tol_override > 0)
       {
-        retval = IDASStolerances(mem, tol_fac * rel_tol, tol_fac * abs_tol_override);
+        retval =
+          IDASStolerances(mem, tol_fac * rel_tol, tol_fac * abs_tol_override);
         checkOutput(retval, "IDASStolerances");
         return;
       }
@@ -1414,9 +1531,9 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setQuadratureTolerance(void*   mem,
-                                                    ScalarT rel_tol,
-                                                    ScalarT abs_tol_override)
+    void Ida<ScalarT, IdxT>::setQuadratureTolerance(
+      void* mem, ScalarT rel_tol, ScalarT abs_tol_override
+    )
     {
       int retval = 0;
 
@@ -1438,10 +1555,10 @@ namespace AnalysisManager
       N_VDestroy(abs_tol_vec);
     }
 
-    // Compiler will prevent building modules with data type incompatible with sunrealtype
+    // Compiler will prevent building modules with data type incompatible with
+    // sunrealtype
     template class Ida<sunrealtype, long int>;
     template class Ida<sunrealtype, int>;
     template class Ida<sunrealtype, size_t>;
-
   } // namespace Sundials
 } // namespace AnalysisManager

@@ -1,6 +1,8 @@
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Definitions.hpp.in
                ${CMAKE_CURRENT_BINARY_DIR}/Definitions.hpp)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Definitions.hpp DESTINATION include/GridKit)
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/Definitions.hpp
+  DESTINATION include/GridKit)
 add_library(definitions INTERFACE)
 target_include_directories(
   definitions
@@ -18,12 +20,19 @@ set_target_properties(
   PROPERTIES EXPORT_NAME magic_enum)
 add_library(GridKit::magic_enum ALIAS gridkit_magic_enum)
 install(TARGETS gridkit_magic_enum EXPORT gridkit-targets)
-install(DIRECTORY ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include/magic_enum DESTINATION include)
+install(
+  DIRECTORY ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include/magic_enum
+  DESTINATION include)
 install(FILES ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/LICENSE
         DESTINATION share/licenses/GridKit/magic_enum)
 
 # General Utilities and File IO
 add_subdirectory(Utilities)
+
+if(GRIDKIT_ENABLE_ZMQ)
+  # Co-simulation support
+  add_subdirectory(CoSim)
+endif()
 
 # Memory management utilities
 add_subdirectory(MemoryUtilities)
@@ -43,4 +52,6 @@ add_subdirectory(Solver)
 # Testing library
 add_subdirectory(Testing)
 
-install(FILES Constants.hpp CommonMath.hpp ScalarTraits.hpp DESTINATION include/GridKit)
+install(
+  FILES Constants.hpp CommonMath.hpp ScalarTraits.hpp
+  DESTINATION include/GridKit)

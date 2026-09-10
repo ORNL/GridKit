@@ -20,6 +20,15 @@ target_include_directories(
   ContingencyAnalysis
   PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
+if(GRIDKIT_ENABLE_ZMQ)
+  target_link_libraries(
+    DynamicSimulation
+    PRIVATE GridKit::co_sim GridKit::solvers_steady)
+  target_link_libraries(
+    ContingencyAnalysis
+    PRIVATE GridKit::co_sim GridKit::solvers_steady)
+endif()
+
 if(GRIDKIT_ENABLE_OPENMP)
   target_link_libraries(ContingencyAnalysis PUBLIC OpenMP::OpenMP_CXX)
 endif()

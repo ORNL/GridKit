@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <sstream>
 #include <string>
 
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -38,21 +39,22 @@ namespace GridKit
 
         TestStatus status{true};
 
-        CliArgs args{{.name = {"--opt1"},
-                      .help = "an option with an argument"},
+        CliArgs args{
+          {.name = {"--opt1"}, .help = "an option with an argument"},
 
-                     {.name     = {"--opt2", "-o"},
-                      .help     = "An option with an argument and a short-hand",
-                      .type     = ArgType::Integer,
-                      .defaults = 0},
+          {.name     = {"--opt2", "-o"},
+           .help     = "An option with an argument and a short-hand",
+           .type     = ArgType::Integer,
+           .defaults = 0},
 
-                     {.name  = {"--opt3"},
-                      .help  = "An option with two arguments",
-                      .nargs = 2},
+          {.name  = {"--opt3"},
+           .help  = "An option with two arguments",
+           .nargs = 2},
 
-                     {.name = {"--flag1", "-f"},
-                      .help = "A flag option (no argument)",
-                      .flag = true}};
+          {.name = {"--flag1", "-f"},
+           .help = "A flag option (no argument)",
+           .flag = true}
+        };
 
         status *= args["opt1"].empty();
         status *= !args["opt2"].empty();
@@ -67,19 +69,17 @@ namespace GridKit
         Log::misc() << "Expect error because options cannot be duplicated\n";
         Log::setVerbosity(previous_verbosity);
         status *= throws<std::runtime_error>(
-            [&]()
-            {
-              CliArgs args{
-                  {.name = {"--opt1"}},
-                  {.name = {"--opt1", "-o"}}};
-            });
+          [&]()
+          { CliArgs args{{.name = {"--opt1"}}, {.name = {"--opt1", "-o"}}}; }
+        );
         status *= throws<std::runtime_error>(
-            [&]()
-            {
-              CliArgs args{
-                  {.name = {"--opt1", "-o"}},
-                  {.name = {"--opt2", "-o"}}};
-            });
+          [&]()
+          {
+            CliArgs args{
+              {.name = {"--opt1", "-o"}}, {.name = {"--opt2", "-o"}}
+            };
+          }
+        );
 
         return status.report(__func__);
       }
@@ -91,38 +91,37 @@ namespace GridKit
       {
         using namespace GridKit::Utilities;
 
-        CliArgs args{{.name     = {"--file"},
-                      .required = true},
+        CliArgs args{
+          {.name = {"--file"}, .required = true},
 
-                     {.name  = {"--twoargs"},
-                      .nargs = 2},
+          {.name = {"--twoargs"}, .nargs = 2},
 
-                     {.name = {"--size", "-N"},
-                      .type = ArgType::Integer},
+          {.name = {"--size", "-N"}, .type = ArgType::Integer},
 
-                     {.name = {"--tol", "-t"},
-                      .type = ArgType::Real},
+          {.name = {"--tol", "-t"}, .type = ArgType::Real},
 
-                     {.name     = {"--params", "-p"},
-                      .type     = ArgType::Real,
-                      .nargs    = 3,
-                      .defaults = {0, 0, 0}}};
+          {.name     = {"--params", "-p"},
+           .type     = ArgType::Real,
+           .nargs    = 3,
+           .defaults = {0, 0, 0}}
+        };
 
         CommandLine cl{
-            "phony",
-            "--file",
-            "fake.txt",
-            "--twoargs",
-            "arg1",
-            "arg2",
-            "-N",
-            "16",
-            "-t",
-            "0.01",
-            "--params",
-            "0.025",
-            "-1.14",
-            "-21"};
+          "phony",
+          "--file",
+          "fake.txt",
+          "--twoargs",
+          "arg1",
+          "arg2",
+          "-N",
+          "16",
+          "-t",
+          "0.01",
+          "--params",
+          "0.025",
+          "-1.14",
+          "-21"
+        };
 
         args.parseArgs(cl.argc, cl.argv);
 
@@ -150,15 +149,129 @@ namespace GridKit
         status *= isEqual(y, -1.14);
         status *= isEqual(z, -21.0);
         status *=
-            args.get<double, 3>("params") == args["params"].as<double, 3>();
+          args.get<double, 3>("params") == args["params"].as<double, 3>();
 
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Expect error while testing that unrecognized options are rejected\n";
+        Log::misc() << "Expect error while testing that unrecognized options "
+                       "are rejected\n";
         Log::setVerbosity(previous_verbosity);
-        status *= throws<std::runtime_error>(
+        status *= throws<std::runtime_error>([&]()
+                                             { args.get("bad"); });
+
+        return status.report(__func__);
+      }
+
+      TestOutcome positionalAndRepeatable()
+      {
+        using namespace GridKit::Utilities;
+        CliArgs args{
+          {.name = {"study"}, .required = true, .positional = true},
+          {.name = {"--item", "-i"}, .repeatable = true},
+          {.name       = {"--pair"},
+           .nargs      = 2,
+           .defaults   = {0, 0},
+           .repeatable = true},
+          {.name = {"--flag", "-f"}, .flag = true}
+        };
+        CommandLine cl{
+          "app",
+          "-f",
+          "--item",
+          "friendly name=1",
+          "study with spaces.json",
+          "--pair",
+          "-1",
+          "2",
+          "-i",
+          "other=2",
+          "--pair",
+          "3",
+          "4"
+        };
+
+        args.parseArgs(cl.argc, cl.argv);
+
+        TestStatus status{true};
+        status *= args.get("study") == "study with spaces.json";
+        status *= args.get<bool>("flag");
+        status *= args["item"].size() == 2;
+        status *= args["item"][0]() == "friendly name=1";
+        status *= args["item"][1]() == "other=2";
+        status *= args["pair"].as<int, 4>() == std::array{-1, 2, 3, 4};
+        std::ostringstream help;
+        args.printHelp(help);
+        status *= help.str().find("STUDY") != std::string::npos;
+        status *= help.str().find("--study") == std::string::npos;
+        status *= help.str().find("[-i ITEM]...") != std::string::npos;
+
+        CommandLine escaped{"app", "--", "-study.json"};
+        args.parseArgs(escaped.argc, escaped.argv);
+        status *= args.get("study") == "-study.json";
+        status *= !args.get<bool>("flag");
+        status *= args["item"].empty();
+        status *= args["pair"].as<int, 2>() == std::array{0, 0};
+
+        CliArgs positionals{
+          {.name = {"first"}, .positional = true},
+          {.name = {"second"}, .nargs = 2, .positional = true},
+          {.name = {"--flag"}, .flag = true}
+        };
+        CommandLine multiple{"app", "one", "--flag", "two", "three"};
+        positionals.parseArgs(multiple.argc, multiple.argv);
+        status *= positionals.get("first") == "one";
+        status *= positionals["second"].as<2>() == std::array{"two"s, "three"s};
+        status *= positionals.get<bool>("flag");
+        return status.report(__func__);
+      }
+
+      TestOutcome positionalAndRepeatableErrors()
+      {
+        using namespace GridKit::Utilities;
+        const auto argsAreBad = [&](auto&& cl)
+        {
+          CliArgs args{
+            {.name = {"study"}, .required = true, .positional = true},
+            {.name = {"--one"}},
+            {.name = {"--item"}, .nargs = 2, .repeatable = true},
+            {.name = {"--flag"}, .flag = true}
+          };
+          return throws<std::runtime_error>(
             [&]()
-            { args.get("bad"); });
+            { args.parseArgs(cl.argc, cl.argv); }
+          );
+        };
+        TestStatus status{true};
+        status *= argsAreBad(CommandLine{"app"});
+        status *= argsAreBad(CommandLine{"app", "a.json", "b.json"});
+        status *= argsAreBad(CommandLine{"app", "--study", "a.json"});
+        status *=
+          argsAreBad(CommandLine{"app", "a.json", "--one", "1", "--one", "2"});
+        status *= argsAreBad(
+          CommandLine{"app", "a.json", "--item", "1", "--item", "2", "3"}
+        );
+        status *= argsAreBad(
+          CommandLine{"app", "a.json", "--item", "1", "2", "--item", "3"}
+        );
+        status *= argsAreBad(CommandLine{"app", "a.json", "--item", "--flag"});
+        status *= argsAreBad(CommandLine{"app", "a.json", "--flag", "--flag"});
+        status *= throws<std::runtime_error>(
+          []
+          {
+            CliArgs args{{.name = {"pair"}, .nargs = 2, .positional = true}};
+
+            CommandLine cl{"app", "one"};
+            args.parseArgs(cl.argc, cl.argv);
+          }
+        );
+        status *= throws<std::invalid_argument>(
+          []
+          {
+            CliArgs args{
+              {.name = {"file"}, .positional = true, .repeatable = true}
+            };
+          }
+        );
 
         return status.report(__func__);
       }
@@ -174,18 +287,18 @@ namespace GridKit
 
         auto argsAreBad = [&](auto&& cl)
         {
-          CliArgs args{{.name     = {"--opt1"},
-                        .required = true},
+          CliArgs args{
+            {.name = {"--opt1"}, .required = true},
 
-                       {.name  = {"--opt2", "-o"},
-                        .nargs = 2},
+            {.name = {"--opt2", "-o"}, .nargs = 2},
 
-                       {.name = {"--flag1", "-f"},
-                        .flag = true}};
+            {.name = {"--flag1", "-f"}, .flag = true}
+          };
 
           return throws<std::runtime_error>(
-              [&]()
-              { args.parseArgs(cl.argc, cl.argv); });
+            [&]()
+            { args.parseArgs(cl.argc, cl.argv); }
+          );
         };
 
         const auto previous_verbosity = Log::verbosity();
@@ -201,11 +314,12 @@ namespace GridKit
 
         // incorrect number of values for an option
         Log::misc() << "Expect error because 1 < 2\n";
-        status *= argsAreBad(
-            CommandLine{"app", "--opt1", "val", "--opt2", "6"});
+        status *=
+          argsAreBad(CommandLine{"app", "--opt1", "val", "--opt2", "6"});
         Log::misc() << "Expect error because 3 > 2\n";
         status *= argsAreBad(
-            CommandLine{"app", "--opt1", "val", "--opt2", "6", "7", "8"});
+          CommandLine{"app", "--opt1", "val", "--opt2", "6", "7", "8"}
+        );
 
         // passing a value to a flag option
         Log::misc() << "Expect error because flag options don't take args\n";
@@ -213,14 +327,14 @@ namespace GridKit
 
         Log::misc() << "Expect error because option name can't be a number\n";
         status *= throws<std::runtime_error>(
-            []
-            { CliArgs args{{.name = {"--one", "-1"}}}; });
+          []
+          { CliArgs args{{.name = {"--one", "-1"}}}; }
+        );
 
         Log::setVerbosity(previous_verbosity);
         return status.report(__func__);
       }
 
     }; // class CliArgsTests
-
   } // namespace Testing
 } // namespace GridKit

@@ -43,7 +43,9 @@
           enzyme = (pkgs.enzyme.override { inherit llvmPackages; }).overrideAttrs (old: {
             version = "0.0.303";
             src = enzyme-src;
-            patches = (old.patches or [ ]) ++ [ ./nix/enzyme-optimization-levels.patch ];
+            patches = (old.patches or [ ]) ++ [
+              ./nix/enzyme-optimization-levels.patch
+            ];
           });
           sundials79 = pkgs.sundials.overrideAttrs (old: {
             version = "7.9.0";
@@ -84,7 +86,8 @@
               mkdir -p third-party/magic-enum third-party/nlohmann-json
               ln -s ${pkgs.magic-enum}/include third-party/magic-enum/include
               ln -s ${nlohmannJson}/include third-party/nlohmann-json/include
-              ln -s ${nlohmannJson}/include third-party/nlohmann-json/single_include
+              ln -s ${nlohmannJson}/include \
+                third-party/nlohmann-json/single_include
             '';
 
             cmakeBuildType = "Release";
@@ -92,6 +95,7 @@
               (lib.cmakeBool "GridKit_ENABLE_ENZYME" true)
               (lib.cmakeFeature "ENZYME_DIR" "${enzyme}")
               (lib.cmakeBool "GridKit_ENABLE_SUNDIALS" true)
+              (lib.cmakeBool "GridKit_ENABLE_ZMQ" true)
               (lib.cmakeBool "GridKit_ENABLE_IPOPT" true)
               (lib.cmakeFeature "SUNDIALS_DIR" "${sundials79}")
               (lib.cmakeFeature "IPOPT_DIR" "${pkgs.ipopt}")
@@ -122,13 +126,17 @@
           pkgs = import nixpkgs { inherit system; };
         in
         {
-          default = (pkgs.mkShell.override { stdenv = pkgs.llvmPackages_21.stdenv; }) {
-            inputsFrom = [ self.packages.${system}.gridkit ];
-            inherit (self.packages.${system}.gridkit) cmakeFlags;
-            packages = [
-              pkgs.ninja
-            ];
-          };
+          default =
+            (pkgs.mkShell.override {
+              stdenv = pkgs.llvmPackages_21.stdenv;
+            })
+              {
+                inputsFrom = [ self.packages.${system}.gridkit ];
+                inherit (self.packages.${system}.gridkit) cmakeFlags;
+                packages = [
+                  pkgs.ninja
+                ];
+              };
         }
       );
     };

@@ -5,20 +5,23 @@
  *
  * Contains declaration of interface to KINSOL nonlinear solver from
  * SUNDIALS library.
- *
  */
+
 #pragma once
 
 #include <exception>
+#include <functional>
 #include <iostream>
+#include <span>
 
 #include <nvector/nvector_serial.h>
-#include <sunmatrix/sunmatrix_sparse.h> /* access to sparse SUNMatrix           */
-// #include <sunlinsol/sunlinsol_klu.h>       /* access to KLU linear solver          */
-#include <sunlinsol/sunlinsol_dense.h> /* access to dense linear solver        */
+#include <sunlinsol/sunlinsol_dense.h>
+#include <sunmatrix/sunmatrix_sparse.h>
 
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Solver/SteadyState/SteadyStateSolver.hpp>
+#include <GridKit/Solver/SundialsException.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace AnalysisManager
 {
@@ -28,14 +31,23 @@ namespace AnalysisManager
     class Kinsol : public SteadyStateSolver<ScalarT, IdxT>
     {
       using SteadyStateSolver<ScalarT, IdxT>::model_;
+      using Logger = ::GridKit::Utilities::Logger;
+      using RealT  = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using VectorT =
+        typename GridKit::Model::Evaluator<ScalarT, IdxT>::VectorT;
 
-      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      using VectorT = typename GridKit::Model::Evaluator<ScalarT, IdxT>::VectorT;
-
-      static_assert(std::is_same_v<RealT, sunrealtype>, "RealT must be the same type as sunrealtype");
+      static_assert(
+        std::is_same_v<RealT, sunrealtype>,
+        "RealT must be the same type as sunrealtype"
+      );
 
     public:
+      using ResidualFunction =
+        std::function<int(std::span<const ScalarT>, std::span<ScalarT>)>;
+
       Kinsol(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
+      explicit Kinsol(IdxT size);
+
       ~Kinsol();
 
       int configureSimulation();
@@ -44,7 +56,30 @@ namespace AnalysisManager
       // int setIntegrationTime(RealT t_init, RealT t_final, int nout);
       // int initializeSimulation();
       int runSimulation();
+
+      /// Use the given values as the initial guess and return the accepted
+      /// solution in the same vector.
+      ///
+      /// @param line_search whether or not to use KINSOL's backtracking line
+      ///                    search
+      int runSimulation(
+        std::span<ScalarT> values,
+        ResidualFunction   residual,
+        bool               line_search = true
+      );
+
       int deleteSimulation();
+
+      void setTolerance(ScalarT tol) override;
+      void setTolerance(ScalarT residual_tol, ScalarT step_tol);
+
+      /// Estimated relative error of residual evaluations.
+      ///
+      /// This is used to choose finite-difference perturbations.
+      void setFunctionError(RealT error);
+
+      /// Maximum number of Newton iterations between Jacobian evaluations.
+      void setJacobianUpdateInterval(long int iterations);
 
       // int configureQuadrature();
       // int initializeQuadrature();
@@ -112,6 +147,7 @@ namespace AnalysisManager
 
     private:
       static int Residual(N_Vector yy, N_Vector rr, void* user_data);
+      int        solve(bool line_search = true);
 
       // static int Integrand(sunrealtype t,
       //                      N_Vector yy,   N_Vector yp,
@@ -133,6 +169,10 @@ namespace AnalysisManager
       SUNMatrix       JacobianMat_{};
       SUNLinearSolver linearSolver_{};
 
+      IdxT               size_;
+      ResidualFunction   residual_;
+      std::exception_ptr callback_error_;
+
       N_Vector yy_{};    ///< Solution vector
       N_Vector scale_{}; ///< Scaling vector
       N_Vector q_{};     ///< Integrand vector
@@ -146,19 +186,10 @@ namespace AnalysisManager
       static void copyVec(const std::vector<bool>& x, N_Vector y);
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);
-      static inline void checkAllocation(void* v, const char* functionName);
+      static inline void checkAllocation(
+        SUNContext ctx, void* v, const char* functionName
+      );
       static inline void checkOutput(int retval, const char* functionName);
-
-      void setTolerance(ScalarT tol) override;
-    };
-
-    /// Simple exception to use within Kinsol class.
-    class SundialsException : public std::exception
-    {
-      virtual const char* what() const throw()
-      {
-        return "Method in Kinsol class failed!\n";
-      }
     };
 
   } // namespace Sundials

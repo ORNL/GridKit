@@ -4,6 +4,7 @@ BasedOnStyle:  Microsoft
 
 # Indentation
 IndentWidth: 2                    # 2 spaces per indent
+ContinuationIndentWidth: 2
 AccessModifierOffset: -2
 IndentAccessModifiers: false      # Align access modifiers to braces
 NamespaceIndentation: All       # Indent namspace contents
@@ -36,6 +37,7 @@ AlignConsecutiveMacros:
   AcrossComments:   true
 
 # Newlines
+AlignAfterOpenBracket: BlockIndent # this will need to be replaced w/ clang-format 22
 ColumnLimit:     0
 BreakBeforeBraces: Allman         # Braces on their own lines
 SeparateDefinitionBlocks: Always  # Separate definitions (functions etc.) with an empty line

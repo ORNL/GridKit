@@ -19,7 +19,6 @@ namespace GridKit
 {
   namespace Utilities
   {
-
     /**
      * @brief Table with which to specify and parse command-line arguments
      *
@@ -28,12 +27,11 @@ namespace GridKit
      *
      * ```
      * CliArgs args{{.name     = {"--opt1"},
-     *               .help     = "an option with an argument"},
+     *               .help     = "An option with an argument"},
      *
      *              {.name     = {"--opt2", "-o"},
-     *               .help     = "An option with an argument (and a short-hand)",
-     *               .type     = ArgType::Integer,
-     *               .defaults = 0},
+     *               .help     = "An option with an argument (and shorthand)",
+     *               .type     = ArgType::Integer, .defaults = 0},
      *
      *              {.name     = {"--flag1", "-f"},
      *               .help     = "A flag option (no argument)",
@@ -41,11 +39,13 @@ namespace GridKit
      * ```
      *
      * @note The `{"--help", "-h"}` argument is added automatically. When it is
-     * parsed from the command line. The help description will be printed and
-     * the application will exit.
+     *       parsed from the command line. The help description will be printed
+     *       and the application will exit.
      *
      * @note The usage syntax is intended to be similar to
-     * [ArgParse.jl](https://carlobaldassi.github.io/ArgParse.jl/stable/).
+     *       [ArgParse.jl](https://carlobaldassi.github.io/ArgParse.jl/stable/).
+     *
+     * @note `repeatable = true` allows a named option to occur multiple times.
      *
      * @todo Allow option grouping for a more expressive help description.
      */
@@ -124,14 +124,13 @@ namespace GridKit
        * @brief Stream insertion operator for printing the argument table
        *
        * @note This is useful mainly for debugging purposes. It prints both the
-       * list of options and the option name map, so the same Option will be
-       * shown multiple times. Each Option is printed with its associated parsed
-       * argument values.
+       *       list of options and the option name map, so the same Option will
+       *       be shown multiple times. Each Option is printed with its
+       *       associated parsed argument values.
        */
       friend std::ostream& operator<<(std::ostream& os, const CliArgs& args);
 
       std::unique_ptr<CliArgsImpl> pImpl_;
     };
-
   } // namespace Utilities
 } // namespace GridKit

@@ -176,10 +176,21 @@ namespace GridKit
         success *= isEqual(bus.Ir(), Ir);
         success *= isEqual(bus.Ii(), Ii);
 
+        success *= bus.setFault(true, 0.3, 0.4) == 0;
+        bus.evaluateResidual();
+        success *= isEqual(bus.Ir(), Ir - (1.2 * Vr + 1.6 * Vi), 1e-12);
+        success *= isEqual(bus.Ii(), Ii - (-1.6 * Vr + 1.2 * Vi), 1e-12);
+        success *= bus.setFault(true, 0.0, 0.0) != 0;
+        success *= bus.clearFault() == 0;
+        bus.evaluateResidual();
+        success *= isEqual(bus.Ir(), Ir);
+        success *= isEqual(bus.Ii(), Ii);
+
         return success.report(__func__);
       }
 
-      /// verify() reports errors for current inlets that are unconnected or unlinked
+      /// verify() reports errors for current inlets that are unconnected or
+      /// unlinked
       TestOutcome verifyUnlinked()
       {
         TestStatus success = true;
@@ -253,10 +264,23 @@ namespace GridKit
         success *= isEqual(f[0].getValue(), -3.7);
         success *= isEqual(f[1].getValue(), 2.4);
 
-        VariableT::DependencyMap expected_f0{{ir_var_number, 1.0}};
-        VariableT::DependencyMap expected_f1{{ii_var_number, 1.0}};
+        VariableT::DependencyMap expected_f0{
+          {6, 0.0}, {8, 0.0}, {ir_var_number, 1.0}
+        };
+        VariableT::DependencyMap expected_f1{
+          {6, 0.0}, {8, 0.0}, {ii_var_number, 1.0}
+        };
         success *= isEqual(f[0].getDependencies(), expected_f0);
         success *= isEqual(f[1].getDependencies(), expected_f1);
+
+        bus.setFault(true, 0.3, 0.4);
+        bus.evaluateResidual();
+        expected_f0[6]  = -1.2;
+        expected_f0[8]  = -1.6;
+        expected_f1[6]  = 1.6;
+        expected_f1[8]  = -1.2;
+        success        *= isEqual(f[0].getDependencies(), expected_f0, 1e-12);
+        success        *= isEqual(f[1].getDependencies(), expected_f1, 1e-12);
 
         return success.report(__func__);
       }
@@ -306,7 +330,8 @@ namespace GridKit
         const auto*                                values   = jac->getValues();
         for (IdxT k = 0; k < jac->getNnz(); ++k)
         {
-          rows[static_cast<size_t>(row_data[k])][static_cast<size_t>(col_data[k])] += values[k];
+          rows[static_cast<size_t>(row_data[k])]
+              [static_cast<size_t>(col_data[k])] += values[k];
         }
 
         std::map<size_t, double> expected_row0{{3, 0.0}, {4, 0.0}, {5, 1.0}};
@@ -314,6 +339,21 @@ namespace GridKit
         success *= (rows.size() == 2);
         success *= isEqual(rows[3], expected_row0);
         success *= isEqual(rows[4], expected_row1);
+
+        bus.setFault(true, 0.3, 0.4);
+        bus.evaluateJacobian();
+        rows.clear();
+        for (IdxT k = 0; k < jac->getNnz(); ++k)
+        {
+          rows[static_cast<size_t>(row_data[k])]
+              [static_cast<size_t>(col_data[k])] += values[k];
+        }
+        expected_row0[3]  = -1.2;
+        expected_row0[4]  = -1.6;
+        expected_row1[3]  = 1.6;
+        expected_row1[4]  = -1.2;
+        success          *= isEqual(rows[3], expected_row0, 1e-12);
+        success          *= isEqual(rows[4], expected_row1, 1e-12);
 
         return success.report(__func__);
       }

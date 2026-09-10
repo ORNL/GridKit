@@ -24,7 +24,8 @@ message(STATUS "Enzyme configuration found: ${Enzyme_CONFIG}")
 
 find_library(
   ENZYME_LLVM_PLUGIN_LIBRARY
-  NAMES LLVMEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.so LLVMEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.dylib
+  NAMES LLVMEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.so
+        LLVMEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.dylib
         LLVMEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.dll
   PATHS ${ENZYME_DIR}
         ENV
@@ -36,7 +37,8 @@ message(STATUS "Enzyme LLVM plugin library: ${ENZYME_LLVM_PLUGIN_LIBRARY}")
 
 find_library(
   ENZYME_CLANG_PLUGIN_LIBRARY
-  NAMES ClangEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.so ClangEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.dylib
+  NAMES ClangEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.so
+        ClangEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.dylib
         ClangEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.dll
   PATHS ${ENZYME_DIR}
         ENV
