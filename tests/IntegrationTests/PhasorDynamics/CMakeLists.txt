@@ -6,6 +6,10 @@ target_link_libraries(
 add_test(
   NAME PhasorDynamicsIntegrationTest
   COMMAND test_pd_integration
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/examples/PhasorDynamics/Tiny)
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/examples/PhasorDynamics/Simulation)
 
 install(TARGETS test_pd_integration)
+
+if(GRIDKIT_ENABLE_ENZYME)
+  add_subdirectory(ContingencyAnalysis)
+endif()
