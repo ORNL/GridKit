@@ -13,6 +13,8 @@
 #include <GridKit/Testing/Tokenizer.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
+#include "TimeConstantTests.hpp"
+
 namespace GridKit
 {
   namespace Testing
@@ -60,6 +62,29 @@ namespace GridKit
     public:
       GenrouTests()  = default;
       ~GenrouTests() = default;
+
+      TestOutcome timeConstants()
+      {
+        TestStatus success = true;
+        for (const RealT time_constant : {0.0, 1.0e-4, 0.2})
+        {
+          auto data                         = makeGenrouData();
+          using Parameter                   = typename decltype(data)::Parameters;
+          data.parameters[Parameter::Tdop]  = time_constant;
+          data.parameters[Parameter::Tdopp] = time_constant;
+          data.parameters[Parameter::Tqopp] = time_constant;
+          data.parameters[Parameter::Tqop]  = time_constant;
+          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+          bus.allocate();
+          bus.initialize();
+          PhasorDynamics::Genrou<ScalarT, IdxT> model(&bus, data);
+          success *= implicitTimeConstant(model, 2, time_constant, 1.0);
+          success *= implicitTimeConstant(model, 3, time_constant, 1.0);
+          success *= implicitTimeConstant(model, 4, time_constant, 1.0);
+          success *= implicitTimeConstant(model, 5, time_constant, 1.0);
+        }
+        return success.report(__func__);
+      }
 
       TestOutcome constructor()
       {
@@ -223,10 +248,10 @@ namespace GridKit
         const std::vector<ScalarT> res_answer = {
             -2.0 * std::numbers::pi_v<RealT> * 60.0,
             -static_cast<ScalarT>(10.) / static_cast<ScalarT>(9.),
-            -static_cast<ScalarT>(223.) / static_cast<ScalarT>(525.),
-            -54.75,
-            -9.6,
-            static_cast<ScalarT>(892.) / static_cast<ScalarT>(375.),
+            -static_cast<ScalarT>(223.) / static_cast<ScalarT>(75.),
+            -2.19,
+            -0.48,
+            static_cast<ScalarT>(223.) / static_cast<ScalarT>(125.),
             0.21,
             -0.07,
             -0.19223748416156686,
